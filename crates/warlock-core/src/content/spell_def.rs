@@ -38,6 +38,8 @@ pub const MAX_DICE: u8 = 20;
 pub const MAX_PER_LEVELS: u8 = 20;
 /// The most `casts` a spell may take.
 pub const MAX_CASTS: u8 = 10;
+/// The most mana a spell's explicit `mana` may ask.
+pub const MAX_SPELL_MANA: u16 = 500;
 /// The largest `max_lift` a tier may have, in percent of its cap.
 pub const MAX_LIFT: u16 = 200;
 /// The percents a shape's or a resolution's multiplier may be.
@@ -428,6 +430,12 @@ impl SpellRules {
         overreach_percent: i32,
     ) -> i32 {
         let tier = usize::from(spell.tier).min(TIERS - 1);
+        // An explicit cost (Identify's) stands in for the tier's, overreach, shape, and
+        // resolution: only the armour is added.
+        if let Some(mana) = spell.mana {
+            let num = u64::from(mana) * (100 + u64::from(armour));
+            return i32::try_from((num + 50) / 100).unwrap_or(i32::MAX).max(1);
+        }
         let over = u64::from(spell.tier.saturating_sub(self.tier_of(caster_level)));
         let radius = spell.radius.unwrap_or(1);
         let per_tier = i64::from(self.overreach_cost) * i64::from(100 + overreach_percent).max(0);
@@ -506,6 +514,7 @@ struct SpellSpec {
     casts: Option<u8>,
     #[serde(default)]
     open_sky: bool,
+    mana: Option<u16>,
     damage: Option<DiceSpec>,
     effect: Option<EffectSpec>,
     cast: Option<CastSpec>,
@@ -548,6 +557,8 @@ struct EffectSpec {
     cures: Vec<String>,
     #[serde(default)]
     diseases: bool,
+    #[serde(default)]
+    identify: bool,
 }
 
 #[derive(Deserialize)]
@@ -622,6 +633,8 @@ pub struct SpellEffect {
     pub cures: Vec<StatusId>,
     /// Whether a `cleanse` ends every disease.
     pub diseases: bool,
+    /// Whether a `utility` spell identifies one stack the caster carries (Identify).
+    pub identify: bool,
 }
 
 /// How a spell shows and sounds, and what its area does to walls and ice (`[spell.cast]`).
@@ -673,6 +686,9 @@ pub struct SpellData {
     pub casts: u8,
     /// It is cast only under the open sky (call lightning).
     pub open_sky: bool,
+    /// Its base mana cost given outright (Identify), in place of the tier table's: no tier,
+    /// overreach, shape, or resolution counts; armour and the talents still do.
+    pub mana: Option<u16>,
     /// How it shows and sounds.
     pub look: SpellLook,
     /// A `damage` spell's damage.
@@ -690,6 +706,11 @@ impl SpellData {
     /// Whether it asks for a cell when cast: anything but a spell on oneself.
     pub fn aimed(&self) -> bool {
         self.shape != Shape::Myself
+    }
+
+    /// Whether it asks for a stack the caster carries when cast (Identify).
+    pub fn aims_item(&self) -> bool {
+        self.effect.identify
     }
 
     /// How far a cell it is aimed at may be, before Willpower: a ray's, bolt's, or burst's
@@ -847,6 +868,12 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
     if !(1..=MAX_CASTS).contains(&casts) {
         return Err(format!("`casts` is 1 to {MAX_CASTS}"));
     }
+    if spec
+        .mana
+        .is_some_and(|m| !(1..=MAX_SPELL_MANA).contains(&m))
+    {
+        return Err(format!("`mana` is 1 to {MAX_SPELL_MANA}"));
+    }
     let damage_type = match &spec.damage_type {
         None => None,
         Some(name) => Some(
@@ -874,8 +901,14 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         SpellPurpose::Cleanse => {
             (effect.cures.is_empty() && !effect.diseases).then_some("`cures` or `diseases`")
         }
-        SpellPurpose::Damage | SpellPurpose::Utility => None,
+        SpellPurpose::Utility => (!effect.identify).then_some("`identify`"),
+        SpellPurpose::Damage => None,
     };
+    if effect.identify && shape != Shape::Myself {
+        return Err(
+            "an `identify` spell is cast on `self`: it asks for a stack, not a cell".into(),
+        );
+    }
     if let Some(what) = needs {
         return Err(format!(
             "a `{}` spell needs {what} in [spell.effect]",
@@ -923,6 +956,7 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         length,
         casts,
         open_sky: spec.open_sky,
+        mana: spec.mana,
         look,
         damage,
         effect,
@@ -1049,6 +1083,7 @@ fn effect(
     only("severity", e.severity.is_some(), &marks)?;
     only("cures", !e.cures.is_empty(), &[SpellPurpose::Cleanse])?;
     only("diseases", e.diseases, &[SpellPurpose::Cleanse])?;
+    only("identify", e.identify, &[SpellPurpose::Utility])?;
     let status = |name: &str| {
         content
             .status_id(name)
@@ -1085,6 +1120,7 @@ fn effect(
         status: marked,
         cures,
         diseases: e.diseases,
+        identify: e.identify,
     })
 }
 
@@ -1749,10 +1785,12 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             ("frost", 2, Some("2d6"), 14, true),
             ("haste", 3, None, 11, false),
             ("hex_of_weakness", 1, None, 3, true),
+            ("light", 0, None, 1, false),
             ("lightning_bolt", 3, Some("2d6"), 20, false),
             ("magic_missile", 1, Some("1d4"), 3, true),
             ("mend", 0, None, 1, true),
             ("ray_of_frost", 0, Some("1d6"), 1, true),
+            ("identify", 2, None, 60, false),
             ("remove_disease", 3, None, 11, true),
             ("scorching_ray", 2, Some("1d6"), 6, false),
             ("sleep", 2, None, 11, false),

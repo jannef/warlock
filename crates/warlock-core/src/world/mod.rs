@@ -115,6 +115,7 @@ mod element_gifts;
 mod equip;
 mod experience;
 mod eyes;
+mod feature;
 mod fight;
 mod flavour;
 mod focus;
@@ -496,6 +497,9 @@ pub struct World {
     /// The game time of the last perception (not saved: a loaded world has just perceived its
     /// moment): the birthday's note looks for the dawn between it and now.
     perceived_at: GameTime,
+    /// Where the player stood at the last perception (`feature.rs`; not saved): arriving
+    /// elsewhere names a feature of the ground there.
+    stood_on: feature::StoodOn,
 }
 
 /// How much time an action took.
@@ -768,6 +772,9 @@ impl World {
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }
+        if let Some(text) = feature::feature_line(&state, &content) {
+            state.messages.push(0, text);
+        }
         let mut world = Self::assemble(content, state);
         if world.settle_in() {
             *world.perception =
@@ -886,6 +893,7 @@ impl World {
         let perception = Box::new(Perception::compute(&state, &content, &mut lights));
         perception.remember(state.current_mut());
         let time = state.time;
+        let stood_on = feature::standing(&state);
         let labels = Labels::draw(&content, state.seed);
         Self {
             content,
@@ -905,6 +913,7 @@ impl World {
             mutters: Vec::new(),
             resting: false,
             perceived_at: time,
+            stood_on,
         }
     }
 
@@ -1219,7 +1228,14 @@ impl World {
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
-            Action::Cast(spell, at) => return self.cast_spell(spell, *at, events),
+            Action::Cast(spell, at) => {
+                let at = at.map(crate::action::ReadTarget::Cell);
+                return self.cast_spell(spell, at, events);
+            }
+            Action::CastOn(spell, on) => {
+                let on = Some(crate::action::ReadTarget::Item(*on));
+                return self.cast_spell(spell, on, events);
+            }
             Action::Talent { id, choice } => return self.take_talent(id, choice.as_deref()),
             Action::Advance(skill) => return self.advance_skill(skill),
             Action::SetVision(id) => return self.set_vision(id),
@@ -1350,6 +1366,8 @@ mod equip_tests;
 #[cfg(test)]
 mod experience_tests;
 #[cfg(test)]
+mod feature_tests;
+#[cfg(test)]
 mod fight_tests;
 #[cfg(test)]
 mod fixture_factions;
@@ -1389,6 +1407,8 @@ mod hurl_tests;
 mod ice_tests;
 #[cfg(test)]
 mod identify_service_tests;
+#[cfg(test)]
+mod identify_spell_tests;
 #[cfg(test)]
 mod incorporeal_tests;
 #[cfg(test)]
@@ -1491,6 +1511,8 @@ mod speed_tests;
 mod spell_list_tests;
 #[cfg(test)]
 mod spell_talent_tests;
+#[cfg(test)]
+mod stamina_tests;
 #[cfg(test)]
 mod stars_roc_tests;
 #[cfg(test)]

@@ -973,6 +973,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Direction => "a direction",
         Aim::Cell => "a cell",
         Aim::Ailment => "what to treat",
+        Aim::Item => "an item you carry",
     }
 }
 
@@ -1151,7 +1152,7 @@ fn actor_rows(world: &World) -> Vec<String> {
             let resources: Vec<String> = (a.resources.iter())
                 .map(|p| {
                     let id = &content.resource(p.resource).id;
-                    let max = a.resource_max(content, p.resource);
+                    let max = a.resource_max(content, p.resource, world.holder_level(a.id));
                     format!("{id} {}/{max} ({})", p.value, p.progress)
                 })
                 .collect();

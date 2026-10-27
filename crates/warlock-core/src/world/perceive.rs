@@ -46,7 +46,7 @@ impl World {
     }
 
     /// Phase 4: recomputes perception, updates memory, tells the player about a special room they
-    /// are in for the first time, says what news they heard and how the weather changed, reports
+    /// are in for the first time and the feature of the ground they arrived on, says what news they heard and how the weather changed, reports
     /// the attacks they perceived, and drops events they did not see.
     pub(super) fn perceive(&mut self, events: &mut Vec<Event>) {
         let now = self.state.time;
@@ -71,6 +71,7 @@ impl World {
         if let Some(text) = enter_room(&mut self.state, &self.content) {
             self.say(text);
         }
+        self.announce_feature();
         self.hear();
         self.say_mutters();
         if let (Some(from), Some(to)) = (before, self.perception.weather()) {

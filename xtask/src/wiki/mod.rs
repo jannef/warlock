@@ -496,11 +496,17 @@ mod tests {
             ),
             "{scrolls}"
         );
-        assert!(scrolls.contains("| Scroll of identify `?` | Identifies one unidentified item"));
         assert!(
-            !scrolls.contains("Scroll of light `"),
-            "nothing to read on it yet"
+            scrolls.contains("| Scroll of identify `?` | Casts Identify at caster level 6"),
+            "{scrolls}"
         );
+        assert!(scrolls.contains("| an item you carry |"), "{scrolls}");
+        assert!(
+            scrolls.contains("| Scroll of light `?` | Casts Light at caster level 1"),
+            "{scrolls}"
+        );
+        assert!(text("lights.md").contains("| You, while Lit | 6 cells | visible |"));
+        assert!(text("status-effects.md").contains("You shed light 6 cells around you"));
         assert!(
             text("moons.md").contains(
                 "| Moon | 30 days | standard | about 17% of full light | 1 Frostmere, Year 1 |"
@@ -1059,7 +1065,11 @@ mod tests {
             "{resources}"
         );
         assert!(resources.contains(
-            "| Focus | 10 | 10 | a point back every 6 seconds, not while resting | - | stays, empty |"
+            "| Focus | 10 | full | a point back every 6 seconds, not while resting | - | stays, empty |"
+        ));
+        assert!(resources.contains(
+            "| Stamina | 10 + the Toughness modifier + 1 per 10 levels (at least 5) | full | a point \
+             back every 12 seconds | - | stays, empty |"
         ));
         assert!(resources.contains("| +1 for a kill |"));
         let healing = text("healing.md");

@@ -44,7 +44,7 @@ use super::messages_screen::MessagesScreen;
 use super::motion::Motion;
 use super::name_screen::NameScreen;
 use super::new_run_screen::{self, NewRunScreen};
-use super::object_screen::{ObjectList, ObjectScreen};
+use super::object_screen::{IdentifyBy, ObjectList, ObjectScreen};
 use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
 use super::sign_screen::SignScreen;
@@ -394,7 +394,9 @@ impl Screen {
             ScreenName::Eat => objects(ObjectList::Eat),
             ScreenName::Read => objects(ObjectList::Read),
             ScreenName::Study => objects(ObjectList::Study),
-            ScreenName::Identify => objects(ObjectList::Identify(beneath.item.unwrap_or(0))),
+            ScreenName::Identify => objects(ObjectList::Identify(IdentifyBy::Scroll(
+                beneath.item.unwrap_or(0),
+            ))),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
@@ -827,6 +829,15 @@ impl Screens<'_> {
         if skipped {
             self.open_on(ScreenName::Race, item);
         }
+    }
+
+    /// Opens the identify list for a spell cast on a stack the player carries (Identify, chosen
+    /// in the abilities menu): choosing a stack casts it there.
+    pub fn open_identify_spell(&mut self, spell: warlock_core::content::SpellId) {
+        let view = self.game.as_ref().map(|game| game.world.perception());
+        let list = ObjectList::Identify(IdentifyBy::Spell(spell));
+        let screen = Screen::Objects(ObjectScreen::new(list, view.as_ref()));
+        self.stack.screens.push(screen);
     }
 
     /// Replaces the top screen with screen `name`: the same stack depth, so closing it returns

@@ -205,7 +205,9 @@ pub use quest::{
 pub(crate) use quest_roll::roll_known;
 pub use quest_roll::{Candidate, MAX_VARIANTS, MAX_WEIGHT, Pick, Roll, Rolled, Variant, one_of};
 pub use race::{HUNGER, LightBlind, RaceDef, Races};
-pub use resource::{Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, OverTime, ResourceDef, ResourceId};
+pub use resource::{
+    Build, MAX_EVERY, MAX_RESOURCE, MAX_SHORT, MaxFrom, OverTime, ResourceDef, ResourceId,
+};
 pub use rod::{
     MAX_ROD_MANA, MAX_ROD_POWER, MAX_ROD_RADIUS, MAX_ROD_REACH, Rod, RodDoes, RodEffect, RodShape,
 };
@@ -1113,6 +1115,12 @@ impl Content {
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_terrain_ice(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_kicking(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
+            if spec.announce && !spec.walkable {
+                return Err(err(format!(
+                    "terrain `{}`: only walkable terrain may `announce`",
+                    spec.id
+                )));
+            }
             let breaks = match (spec.hardness, &spec.becomes) {
                 (None, None) => None,
                 (Some(hardness), Some(_)) if (1..=MAX_HARDNESS).contains(&hardness) => {
@@ -1147,6 +1155,7 @@ impl Content {
                 id: spec.id.clone(),
                 name: spec.name.clone(),
                 description: spec.description.clone(),
+                announce: spec.announce,
                 glyph: spec.glyph,
                 variants: spec.variants.chars().collect(),
                 fg: spec.fg,
@@ -1649,7 +1658,12 @@ impl Content {
         let Some(text) = files.get_optional(path) else {
             return Ok(());
         };
-        let (healing, list) = status::parse(path, text, |id| self.damage_type_id(id))?;
+        let (healing, list) = status::parse(
+            path,
+            text,
+            |id| self.damage_type_id(id),
+            |id| self.light_id(id),
+        )?;
         for (i, def) in list.iter().enumerate() {
             let id = u16::try_from(i).map_err(|_| ContentError::new(path, "too many statuses"))?;
             self.status_ids.insert(def.id.clone(), StatusId(id));

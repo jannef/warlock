@@ -246,6 +246,7 @@ fn the_spells_are_abilities_by_tier() {
         [
             // Tier 0.
             "Evil eye",
+            "Light",
             "Mend",
             "Ray of frost",
             "Spark",
@@ -262,6 +263,7 @@ fn the_spells_are_abilities_by_tier() {
             "Arcane bolt",
             "Blight",
             "Frost",
+            "Identify",
             "Scorching ray",
             "Sleep",
             "Web",

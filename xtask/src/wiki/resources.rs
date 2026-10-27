@@ -1,5 +1,6 @@
-//! Alternative resources (spec §8 "Resources"): each resource's maximum, start, how it changes
-//! over time, what builds it, and whether it ends at zero.
+//! Alternative resources (spec §8 "Resources"): each resource's maximum (with what a stat and
+//! the level add), its start, how it changes over time, what builds it, and whether it ends at
+//! zero.
 
 use std::fmt::Write as _;
 use warlock_core::content::{Build, Content, OverTime, ResourceDef};
@@ -44,10 +45,27 @@ pub(super) fn resources(content: &Content) -> String {
         } else {
             "stays, empty".to_string()
         };
+        let most = def.max_from.map_or_else(
+            || def.max.to_string(),
+            |from| {
+                format!(
+                    "{} + the {} modifier + 1 per {} levels (at least {})",
+                    def.max,
+                    from.stat.name(),
+                    from.per_levels,
+                    from.least
+                )
+            },
+        );
+        let start = if def.starts_full {
+            "full".to_string()
+        } else {
+            def.start.to_string()
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {over} | {built} | {zero} |",
-            def.name, def.max, def.start
+            "| {} | {most} | {start} | {over} | {built} | {zero} |",
+            def.name
         );
     }
     out

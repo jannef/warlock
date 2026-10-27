@@ -27,6 +27,9 @@
 #                 a cell per two modifier points) up to the cap. A burst costs by its `radius`
 #   casts         its time, in `cast` actions (1 to 10; default 1)
 #   open_sky      true: it is cast only under the open sky (default false)
+#   mana          its base mana cost given outright (1 to 500), in place of the tier table's:
+#                 tier, overreach, shape, and resolution do not count; the armour worn and the
+#                 talents still do. For a spell whose price is not its difficulty (Identify)
 #   [spell.damage]  a `damage` spell's damage, rolled:
 #     dice        what it rolls at the tier's comfortable caster level: dice only, `1d6`
 #     per_levels  one die more per this many caster levels above that (0: never more;
@@ -41,6 +44,8 @@
 #                 (below; Presence's a degree per two modifier points), up to the status's `max`)
 #     cures, diseases   a `cleanse` ends these statuses, and with `diseases = true` every
 #                 disease
+#     identify    true: a `utility` spell on `self` that identifies one stack the caster carries
+#                 (asked for as it is cast, `use:identify:c`)
 #   [spell.cast]  how it shows and sounds (needed by a `damage` spell cast at a distance):
 #     effect      the effect presentation shows (../effects.toml): a burst's for a burst or a
 #                 cone, a bolt's for a ray, a bolt, or a line; none for touch or self

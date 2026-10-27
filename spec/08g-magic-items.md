@@ -169,8 +169,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     scroll of identify's own type by its first read, when it is in the character's starting kit
     (a chosen character knows their kit's scrolls), or by the dev `identify` (and F8). Reading an
     unknown scroll works as reading a known one does (a gamble: what it does is not known until
-    it is done); a label changes no outcome, only names. A scroll that cannot be read (the
-    scroll of light) has no label and is known on sight. **Identified is not learned**: a spell
+    it is done); a label changes no outcome, only names. A scroll that cannot be read (a
+    sealed letter) has no label and is known on sight. **Identified is not learned**: a spell
     scroll whose type is identified shows by its name and can be studied (§8 "Spells":
     "Learning") by anyone who has not learned its spell; study is refused only for a scroll still under its label and for
     a spell already learned. `Lore::is_identified(object)` is what the study list asks.
@@ -204,7 +204,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **The scroll of identify** identifies one unidentified stack the player carries: a magic
     item's affixes, a labelled scroll's, wand's, or rod's type, or a wand's charges
     (`World::identify`: "This is a Sharp dagger of the Lynx!"); a stronger "identify all" can
-    come later. It is the commonest scroll in loot (`frequency` 300 against the spell scrolls'
+    come later. It is a scroll of the spell Identify (#592, §8 "Spells"): read, it casts it free
+    of mana through the one cast path (`read:b:c`); studied, it teaches it. It is the commonest scroll in loot (`frequency` 300 against the spell scrolls'
     20 to 60, by tier) and a regular general-store item.
   - **Where**: loot (by `level` and `frequency`, never magic), general stores' stock (they sell
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7

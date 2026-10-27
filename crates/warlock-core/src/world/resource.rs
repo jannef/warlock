@@ -28,34 +28,63 @@ use crate::resource::Pace;
 use crate::status::Effect;
 
 impl Actor {
-    /// The most of `resource` it may hold: its `max` in data, and what its talents add (Mighty
-    /// rage's 10 more rage). The one place that decides it; the player is shown it.
-    pub fn resource_max(&self, content: &Content, resource: ResourceId) -> u16 {
+    /// The most of `resource` it may hold at character `level`: its maximum by data
+    /// ([`Actor::data_resource_max`]) and what its talents add (Mighty rage's 10 more rage). The
+    /// one place that decides it; the player is shown it.
+    pub fn resource_max(&self, content: &Content, resource: ResourceId, level: u8) -> u16 {
         let more: u16 = (self.talent_mods(content).resource_max.iter())
             .filter(|(r, _)| *r == resource)
             .map(|(_, more)| *more)
             .sum();
-        content.resource(resource).max.saturating_add(more)
+        (self.data_resource_max(content, resource, level)).saturating_add(more)
     }
 
-    /// What `resource` holds when it is granted: its `start` in data and what its talents add
-    /// (Battle trance's 6 more rage), at most its maximum. The one place that decides it.
-    pub fn resource_start(&self, content: &Content, resource: ResourceId) -> u16 {
-        let mods = self.talent_mods(content);
-        let more: u16 = (mods.resource_start.iter())
+    /// The most of `resource` it may hold at character `level` before its talents: the `max` in
+    /// data, with what its `max_from` adds (stamina: the Toughness modifier, of the scores as
+    /// the rules read them, and a point per 10 levels, at least 5).
+    fn data_resource_max(&self, content: &Content, resource: ResourceId, level: u8) -> u16 {
+        let def = content.resource(resource);
+        def.max_from.map_or(def.max, |from| {
+            let modifier = self.effective_stats(content).modifier(from.stat);
+            from.max(def.max, modifier, level)
+        })
+    }
+
+    /// What `resource` holds when it is granted at character `level`: its `start` in data (one
+    /// without starts full: at its maximum by data, [`Actor::data_resource_max`], so stamina
+    /// starts at what Toughness and the level give) and what its talents add (Battle trance's 6
+    /// more rage), at most its maximum. The one place that decides it.
+    pub fn resource_start(&self, content: &Content, resource: ResourceId, level: u8) -> u16 {
+        let def = content.resource(resource);
+        let start = if def.starts_full {
+            self.data_resource_max(content, resource, level)
+        } else {
+            def.start
+        };
+        let more: u16 = (self.talent_mods(content).resource_start.iter())
             .filter(|(r, _)| *r == resource)
             .map(|(_, more)| *more)
             .sum();
-        (content.resource(resource).start)
+        start
             .saturating_add(more)
-            .min(self.resource_max(content, resource))
+            .min(self.resource_max(content, resource, level))
     }
 }
 
 impl World {
+    /// The character level of actor `id`, as its resources' maximums read it: the player's
+    /// own, a creature's type's.
+    pub(crate) fn holder_level(&self, id: ActorId) -> u8 {
+        if id == self.state.player {
+            return self.player_level();
+        }
+        (self.state.actors.get(&id)).map_or(1, |a| self.content.creature(a.creature).level)
+    }
+
     /// The most of `resource` actor `id` may hold ([`Actor::resource_max`]).
     fn resource_max(&self, id: ActorId, resource: ResourceId) -> u16 {
-        (self.state.actors.get(&id)).map_or(0, |a| a.resource_max(&self.content, resource))
+        let level = self.holder_level(id);
+        (self.state.actors.get(&id)).map_or(0, |a| a.resource_max(&self.content, resource, level))
     }
 
     /// How fast `resource` changes over time for actor `id` now, in percent of its normal pace:
@@ -113,10 +142,11 @@ impl World {
     /// Actor `id` is granted `resource`: it holds it from now on, at its start
     /// ([`Actor::resource_start`]; or what it already holds, if that is more). Says nothing: what grants it does.
     pub(crate) fn grant_resource(&mut self, id: ActorId, resource: ResourceId) {
+        let level = self.holder_level(id);
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;
         };
-        let start = actor.resource_start(&self.content, resource);
+        let start = actor.resource_start(&self.content, resource, level);
         let value = actor.resources.get(resource).map_or(0, |p| p.value);
         actor.resources.set(resource, value.max(start));
     }

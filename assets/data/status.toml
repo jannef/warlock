@@ -66,6 +66,8 @@
 #              entry's `difficulty`, else this one, 1 to 40): made, they break free and step;
 #              failed, the turn is spent. A dose's degrees are drawn from `turns` (1 to max), and
 #              a hold needs `eases` (a degree a turn: 6), stacking "highest", and blocks "step"
+#   light      a light of lights.toml its sufferer sheds while it lasts (Lit; spec §5); the
+#              brightest of several
 # Creatures' attacks may cause statuses too: `on_hit` in creatures.toml. Diseases (diseases.toml)
 # show as one status here, named by their `status`.
 
@@ -321,6 +323,19 @@ max = 1
 stacking = "refresh"
 start = "A soft light shines about you."
 end = "Your light fades."
+
+# Light's (the spell, and the scroll of light that casts it): a pale light about the caster,
+# half an hour a degree; the caster's Presence lengthens it (spells.toml).
+[[status]]
+id = "lit"
+name = "Lit"
+seen = "glowing"
+max = 3
+stacking = "refresh"
+eases = 1800
+light = "spell_light"
+start = "A pale light gathers about you."
+end = "The light about you fades."
 
 # Blessing's (the priest's spell): ten minutes of a god's favour, blows truer and the will firmer.
 # Up to three degrees: the caster's Presence lengthens it (a degree is ten minutes; spells.toml).
