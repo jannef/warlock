@@ -90,6 +90,13 @@ impl Talents {
         1
     }
 
+    /// Holds talent `id` for `choice` at rank 1 at least: taken once if it is not held.
+    pub(crate) fn hold(&mut self, id: &str, choice: Option<&str>) {
+        if self.rank_of(id, choice) == 0 {
+            self.take(id, choice);
+        }
+    }
+
     /// Replaces the granted talents held (those `content` marks `granted` outside a class tree:
     /// a race's, the birth sign's; a class's abilities are left alone) with `ids`, first and in
     /// that order, each at rank 1 (spec §8 "Birth sign": a sign's gifts are computed, never
@@ -368,6 +375,8 @@ pub struct TalentMods {
     /// A forgotten altar's lean counts double when it agrees, and not at all when it opposes
     /// (Devout).
     pub devout: bool,
+    /// A forgotten altar's great bane becomes nothing (Penitent).
+    pub penitent: bool,
     /// Percent more a special room's quickening of healing and mana (Hallowed rest).
     pub room_pace_percent: i32,
     /// A collapsed floor never gives way under it (Light tread).
@@ -1173,6 +1182,7 @@ impl TalentMods {
             TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
             TalentEffect::SenseOfPlace => self.sense_of_place = true,
             TalentEffect::Devout => self.devout = true,
+            TalentEffect::Penitent => self.penitent = true,
             TalentEffect::RoomPacePercent { value } => self.room_pace_percent += value,
             TalentEffect::RoomStatusImmune { status } => {
                 if let Some(status) = content.status_id(&status) {

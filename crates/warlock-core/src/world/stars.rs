@@ -13,15 +13,25 @@ use crate::content::{Content, TerrainDef};
 use crate::damage::Damage;
 use crate::geom::Pos;
 use crate::ice::Shock;
-use crate::talent::Talents;
+use crate::talent::{Taken, Talents};
 
-/// Puts the talents `character`'s race grants (Versatile, `racial.rs`) and the gifts of their
-/// sign into `talents` in grant order, in place of whatever granted talents it held (none for a
-/// run without a character).
-pub(super) fn grant(content: &Content, character: Option<&Character>, talents: &mut Talents) {
+/// Puts the talents `character`'s race grants (Versatile, `racial.rs`), the gifts of their
+/// sign, and the flaws a forgotten altar marked them with (`boons`, spec §7 "Special rooms":
+/// Forsaken) into `talents` in grant order, in place of whatever granted talents it held (none
+/// for a run without a character); an altar's other boons (Chosen) are held too.
+pub(super) fn grant(
+    content: &Content,
+    character: Option<&Character>,
+    boons: &[Taken],
+    talents: &mut Talents,
+) {
     let mut grants = super::racial::grants(content, character);
     grants.extend(character.map_or(Vec::new(), |c| c.grants(content)));
+    grants.extend(boons.iter().map(|b| b.id.as_str()));
     talents.regrant(content, &grants);
+    for boon in boons {
+        talents.hold(&boon.id, boon.choice.as_deref());
+    }
 }
 
 /// Whether stepping onto `terrain` is wading (spec §8 "Birth sign": Strong swimmer): water

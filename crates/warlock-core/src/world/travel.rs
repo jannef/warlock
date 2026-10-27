@@ -589,6 +589,7 @@ pub(super) fn make_creature(
         stance: CombatStance::Neutral,
         free_blows: FreeBlows::default(),
         talents: Default::default(),
+        boons: Vec::new(),
         stat_marks: Default::default(),
     };
     actor.hp = actor.max_hp(content);
