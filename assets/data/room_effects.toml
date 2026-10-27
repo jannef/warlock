@@ -236,6 +236,8 @@ enter = "Treasure lies here, unguarded."
 weight = 5
 needs_danger = true
 hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1 }
+
+[[effect]]
 id = "collapsed"
 name = "collapsed floor"
 mark = "k"
