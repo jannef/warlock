@@ -50,6 +50,7 @@ lines = [
     "A fever caught in the fen is no shame. Leaving it be is.",
     "The Mynster asks gold for its cures. The roof does not mend itself.",
     "Bring me no dead man's silver unless it was given freely.",
+    "Brother Osrick sold the faithful to anatomists. We do not say his name.",
 ]
 mutter = { chance = 2, verb = "prays", lines = [
     "...and keep us from the cold places...",

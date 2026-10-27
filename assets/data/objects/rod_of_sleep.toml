@@ -1,0 +1,20 @@
+# A rod of sleep (spec §8 "Magic items": "Rods"): ready it in the missile weapon slot and use it
+# as a missile weapon (`t`), and creatures where you aim no stronger than your caster level fall
+# asleep until woken (data/rod_effects/sleep.toml). Each use costs you mana; it never runs out.
+[[object]]
+id = "rod_of_sleep"
+name = "rod of sleep"
+plural = "rods of sleep"
+glyph = "-"
+fg = "#d8c070"
+class = "rods"
+materials = ["iron"]
+weight = 600
+value = 700
+slot = "missile_weapon"
+level = 6
+frequency = 5
+
+[object.rod]
+effect = "sleep"
+mana = 9

@@ -12,42 +12,42 @@ ember_beetle at (68, 7) route E S N E E W W W W W E E E E E W W S N W
 kobold at (67, 7) route W W W W W E W E E E E E carrying a flint spear (wielded), a steel cap (being worn), 9 copper coins
 ember_beetle at (36, 10) route W N N N W W E E W W E E S S S E
 ember_beetle at (71, 11) route W W W W W W W W W W E E E E E E E E E E
-duergar_slinger at (33, 19) route W W W W W W W E E E E E E E carrying a sling (readied), 12 sling stones (quivered), a hand axe (wielded)
-kobold at (9, 14) route S N S S N N S N carrying a bone spear (wielded)
-ember_beetle at (50, 10) route W W W N N N N E W S S S S E E E
+ember_beetle at (33, 19) route W W W W W W W E E E E E E E
+kobold_archer at (9, 14) route S N S S N N S N carrying a horn short bow (readied), 12 horn arrows (quivered)
+giant_centipede at (50, 10) route W W W N N N N E W S S S S E E E
 ember_beetle at (4, 12) route N N N S S S N N N S S S N N N S S S
 ember_beetle at (75, 7) route S S W W W W W E W E E E E E N N
 warg at (5, 15) route S S W W N N N E E W W S S S E E N N
-kobold at (70, 9) route E E W W E E W W carrying a horn spear (wielded), a padded coat (being worn), 9 copper coins
+kobold_archer at (70, 9) route E E W W E E W W carrying a hardwood short bow (readied), 12 tin arrows (quivered)
 dretch at (31, 16) route N E E E S S W E N N W W W S
 dretch at (3, 2) route E W E E S S S N N N W W E W
-duergar_slinger at (63, 8) route E E E E E W W W W W carrying a sling (readied), 20 sling stones (quivered), a tin hand axe (wielded), a leather cap (being worn)
-orc_raider at (4, 16) route N N E E W W S S carrying a battle axe (wielded), a bone cap (being worn)
+ember_beetle at (63, 8) route E E E E E W W W W W
+orc_raider at (4, 16) route N N E E W W S S carrying a zinc battle axe (wielded), a studded hardened leather jerkin (being worn), a fur cap (being worn)
 bat at (66, 8) route S S W W W E E E N N
-kobold at (32, 17) route W E W N N E W S S E W E carrying an obsidian spear (wielded)
+kobold_archer at (32, 17) route W E W N N E W S S E W E carrying a short bow (readied), 20 tin arrows (quivered), a copper cap (being worn)
 ember_beetle at (34, 8) route S S W N N S S E N N
 ember_beetle at (4, 6) route N N N N E S N W S S S S
 warg at (36, 17) route N N E E E S N W W W S S
-duergar_slinger at (71, 9) route E E N N E E S S S N N N W W S S W W carrying a sling (readied), 20 sling stones (quivered), a flint hand axe (wielded), a copper cap (being worn)
+ember_beetle at (71, 9) route E E N N E E S S S N N N W W S S W W
 bat at (73, 9) route W W W N S E E E
-duergar_slinger at (5, 4) route S S S W N N N S S S E N N N carrying a sling (readied), 20 sling stones (quivered)
+ember_beetle at (5, 4) route S S S W N N N S S S E N N N
 dretch at (40, 9) route W E E E E E W W W W W E
 spear trap at (19, 16)
 alarm trap at (46, 10)
 arrow trap at (50, 11)
 2 placed lights
-special room silent at (2, 1)-(6, 8)
+special room heavy at (2, 1)-(6, 8)
 
   #####
-  #uvv#
-  #vvv#
-  #vvh#         ###########
-  #vvv#         #(..#.....###                #######
-  #vav#         #...+...h.+.#   #######      #....¡#        #################
-  #¡vv#         #..(#.....#.#   #....¡#      #...[.#        #¡....?ka......a#
-  ##+##         ###########.#####.a...########.....#        #..h..b.........#
-   #.#                    #...........'.u....+.....##########.........kh.b..#
-   #.#                    #.#####...a.########^...a.........+...............#
+  #uww#
+  #www#
+  #wwa#         ###########
+  #www#         #(..#.....###                #######
+  #waw#         #...+...h.+.#   #######      #....¡#        #################
+  #¡ww#         #..(#.....#.#   #....¡#      #...[.#        #¡....?ka......a#
+  ##+##         ###########.#####.a...########.....#        #..a..b.........#
+   #.#                    #...........'.u....+.....##########.........ka.b..#
+   #.#                    #.#####...a.########^...c.........+...............#
    #.#                    #.#   #######      #....^#######.##..........a...¡#
    #a#           #######  #.#                #¡....#     #.####'#############
  ###S#######     #...<¡####.#                #######     #.#  #.#
@@ -56,5 +56,5 @@ special room silent at (2, 1)-(6, 8)
  #..o....).+.....S.^...#  #.# #uk..&..*.#               #..>)....¡#
  #¡........#####.#¡....#  #.# #.k..#C)%a#               #.........#
  ###########   #.####+#####.#####+#######               #¡........#
-               #.................h#                     ###########
+               #.................a#                     ###########
                ####################

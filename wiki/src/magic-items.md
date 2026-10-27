@@ -13,7 +13,7 @@ the lists and numbers below will change after playtesting.
 | Rare | up to three prefixes and three suffixes (usually three or four in all) | "Grim Bite, long sword" | yellow |
 
 The color is the name's, in your pack, on the equipment screen, and in an item's description; the
-item's glyph keeps its own color. Unique items come later.
+item's glyph keeps its own color. [Unique items](#unique-items) are rares too.
 
 How often loot is normal, magic, or rare, and how many affixes magic and rare items have:
 

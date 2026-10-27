@@ -1,0 +1,37 @@
+# Bānfeld, "the bone field" (docs/design/adventurers-guild.md §8; the fields: data/dungeons.toml):
+# a barrow field on Hlāwdūn and the grave passages under it, where Brother Osrick, the
+# Resurrection Man the Mynster cast out, keeps what he dug up and what he raised. Its way in on
+# the overworld is hidden until Wat One-Eye's "Wanted" names him (the quest's variant reveals
+# it); the other three lairs stay hidden for that run. Four floors of passages, the unhallowed
+# chapel at the bottom.
+
+[[dungeon]]
+id = "banfeld"
+name = "Bānfeld"
+arrival = "Fresh earth on old graves. Someone has been digging."
+generator = "rooms"
+depth = 4
+size = [80, 21]
+traps = ["arrow", "spear", "pit", "alarm"]
+secret_doors = [1, 2]
+hidden_per_depth = 1
+locks_per_depth = 1
+loot = [2, 4]
+key = "rusty_key"
+temperature = 8
+# Danger 6 on the first floor to 9 on the fourth (spec §7 "Danger levels"): his dead, and what
+# comes to feed where the dead are.
+danger = 6
+population = [
+    "grave_worm", "barrow_spider", "skeleton", "zombie", "barrow_ghoul", "drowned", "ghost",
+]
+# The dark holds here (spec §7 "Special rooms"): a room is special one time in four, at most two
+# a level, shadowed or hushed most of the time.
+room_effects = { chance = 25, per_level = 2, favoured = { shadowed = 35, hushed = 35 } }
+# Nobody trades with the dead (spec §7 "Shops").
+shops = { chance = 0 }
+
+# The bottom: the unhallowed chapel.
+[[dungeon.levels]]
+from = 4
+vaults = ["unhallowed_chapel"]

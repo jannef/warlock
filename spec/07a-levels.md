@@ -99,6 +99,9 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   location on any other level, on a cell that is not walkable or is a location already, with an
   unknown `terrain` or one that is no way down, an unknown `to`, or no `name` is a content error.
   Without `to` it leads nowhere yet (its level is not built), like stairs without one.
+  The Ascmearc hides six: Fennmynster and Fyrdelf, and the four lairs of the wanted (Wyrtholm,
+  Wulfeshol, Bānfeld, Brocenburg; #426), each revealed by its own variant of Wat One-Eye's
+  "Wanted" (§8 "Quests": a variant's `reveals`), so a run is shown one lair and never the others.
 - **Named places** (#332): a legend entry may name the place on its cell, `name = "Beorggeat"`,
   and give look mode a sentence about it, `note = "The way you came; snow has closed it behind
   you."` (only with a `name`). Look mode names it on a cell the player sees or remembers ("A

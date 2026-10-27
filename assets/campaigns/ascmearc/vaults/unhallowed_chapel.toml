@@ -1,0 +1,26 @@
+# Vault of the Ascmearc (docs/design/adventurers-guild.md §8): the unhallowed chapel at the bottom
+# of Bānfeld. An old barrow's burial hall made over into a chapel: an altar he defiled, bones
+# heaped along the walls, the dead he raised standing in the aisle, and Brother Osrick at the
+# altar. Bānfeld names it for its fourth floor (`vaults` in its `[[dungeon.levels]]`), so it is
+# stamped there and nowhere else, and he (unique) is met only there.
+name = "Unhallowed chapel"
+map = '''
+###############
+#b,b,b,b,b,b,b#
+#.............#
+#_O..z...z....+
+#.............#
+#b,b,b,b,b,b,b#
+###############
+'''
+
+[legend]
+"," = "fungus"
+# Brother Osrick at his altar: he wakes to what he sees or hears.
+"O" = { terrain = "floor", creature = "osrick" }
+# His congregation.
+"z" = { terrain = "floor", creature = "zombie" }
+# The altar he defiled, bones on it.
+"_" = { terrain = "altar", objects = ["bones"] }
+# The dead he had no use for yet.
+"b" = { terrain = "floor", objects = ["bones"] }
