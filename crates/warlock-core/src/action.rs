@@ -184,6 +184,10 @@ pub enum Action {
     /// for an unknown spell, without the spell, without the mana, or without the cell it asks.
     /// Any `use:ID` that is no class or birth sign ability is read as this.
     Cast(String, Option<Pos>),
+    /// Cast a spell the player knows on a stack they carry, by its position (Identify,
+    /// `use:identify:c`). Refused as [`Action::Cast`] is, and for a spell that asks for no
+    /// stack.
+    CastOn(String, usize),
     /// Use a class active aimed at a cell (spec §8 "Class abilities"): the ranger's Volley
     /// (`use:volley:12,5`). Takes the time of its cost's action; refused (no time) without the
     /// ability or while its cooldown lasts.
@@ -746,6 +750,7 @@ impl fmt::Display for Action {
             Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
             Action::Cast(spell, None) => write!(f, "use:{spell}"),
             Action::Cast(spell, Some(at)) => write!(f, "use:{spell}:{},{}", at.x, at.y),
+            Action::CastOn(spell, on) => write!(f, "use:{spell}:{}", position_text(*on)),
             Action::UseAt(active, at) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::Gift(active, None) => write!(f, "use:{}", active.id()),
             Action::Gift(active, Some(at)) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
@@ -863,6 +868,14 @@ impl FromStr for Action {
                 let Some(active) = ClassActive::from_id(id) else {
                     if id.is_empty() || !id.chars().all(|c| c.is_ascii_lowercase() || c == '_') {
                         return Err(format!("`{id}` is no ability that is used"));
+                    }
+                    // A spell on a stack the player carries names it by position,
+                    // `use:identify:c`.
+                    if let Some(on) = aim.filter(|a| !a.contains(',')) {
+                        let on = parse_position(on).ok_or_else(|| {
+                            format!("`use:{id}` needs a cell or a stack, e.g. `use:{id}:12,5`")
+                        })?;
+                        return Ok(Action::CastOn(id.to_string(), on));
                     }
                     let at = aim.map(parse_cell).transpose()?;
                     return Ok(Action::Cast(id.to_string(), at));
@@ -1335,6 +1348,8 @@ mod tests {
             Action::Gift(SignActive::Blaze, None),
             Action::Cast("blessing".into(), None),
             Action::Cast("arcane_bolt".into(), Some(Pos::new(12, 5))),
+            Action::CastOn("identify".into(), 2),
+            Action::CastOn("identify".into(), 30),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
             Action::Freeze {

@@ -747,7 +747,9 @@ pub fn route_keys(
                 // From the abilities menu, or from play (its key, the quick repeat).
                 screens.stack.close();
                 screens.stack.remember_ability(ability);
-                if let Some(dialog) = play.use_ability(ability) {
+                if let Some(spell) = play.item_spell(ability) {
+                    screens.open_identify_spell(spell);
+                } else if let Some(dialog) = play.use_ability(ability) {
                     screens.ask(dialog);
                 }
             }
@@ -1188,6 +1190,18 @@ impl Gameplay<'_> {
         None
     }
 
+    /// The spell `ability` casts on a stack the player carries, when they can cast it now
+    /// (Identify): the identify list asks which stack.
+    fn item_spell(&self, ability: Ability) -> Option<warlock_core::content::SpellId> {
+        let game = self.game.as_ref()?;
+        let Ability::Spell(spell) = ability else {
+            return None;
+        };
+        let usable = (game.world.perception().abilities().iter())
+            .any(|own| own.ability == ability && own.unavailable.is_none());
+        (usable && ability.aim(game.world.content()) == ability::Aim::Item).then_some(spell)
+    }
+
     /// Uses `ability`: asks for what it needs (a direction in the message line, a cell in the
     /// aiming mode), then applies its action. One the player cannot use now is applied at once
     /// all the same, so the rules say why, taking no time (a shield bash without a shield).
@@ -1201,6 +1215,8 @@ impl Gameplay<'_> {
         match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
+            // The identify list asks which stack (`item_spell`, before this).
+            (true, ability::Aim::Item) => {}
             (true, ability::Aim::Nothing) => {
                 if let Some(action) = ability.action(&content, None) {
                     self.actions.write(PlayerAction(action));
@@ -1219,7 +1235,8 @@ impl Gameplay<'_> {
             (false, _) => {
                 let here = game.world.player_pos();
                 let action = (ability.action(&content, Some(Dir::N)))
-                    .or_else(|| ability.action_at(&content, here));
+                    .or_else(|| ability.action_at(&content, here))
+                    .or_else(|| ability.action_on(&content, 0));
                 if let Some(action) = action {
                     self.actions.write(PlayerAction(action));
                 }
@@ -1648,12 +1665,15 @@ mod tests {
         assert!(leaving_dialog(&view, Dir::E).is_none(), "a step inside");
         // Selling the scroll asks; putting back the dagger does not.
         let offer = view.sale(&Positions::of([1])).expect("an offer").offer;
+        // Unread, the scroll goes by its label.
+        let scroll = view.lore().describe(&view.inventory()[1]);
+        assert!(scroll.starts_with("a scroll labelled "), "{scroll}");
         assert_eq!(
             sale_dialog(&view, &Positions::of([1])),
             Some(
                 Dialog::new(
                     "Grimbold's General Store",
-                    format!("Grimbold offers {offer} gold for a scroll of light.")
+                    format!("Grimbold offers {offer} gold for {scroll}.")
                 )
                 .accept(
                     format!("Sell for {offer} gold"),

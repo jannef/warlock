@@ -1,0 +1,12 @@
+# Light (spec §8 "Spells", "Scrolls"): a cantrip, a pale light about the caster a while. The
+# scroll of light casts it.
+[[spell]]
+id = "light"
+name = "Light"
+description = "A pale, steady light gathers about you a while and goes where you go."
+tier = 0
+school = "evocation"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "lit" }

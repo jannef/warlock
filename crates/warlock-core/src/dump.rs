@@ -973,6 +973,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Direction => "a direction",
         Aim::Cell => "a cell",
         Aim::Ailment => "what to treat",
+        Aim::Item => "an item you carry",
     }
 }
 
