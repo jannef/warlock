@@ -7,8 +7,8 @@ the code, as CLAUDE.md says.
 
 A1 (#483) is the household tier: brooms, stools, candlesticks, teapots, the rug of smothering;
 A2 (#484) breaks what does not fall whole into its parts; A3 (#485) adds families and the first
-of them, blades; A4 (#486) the composites, hollow armour and panoplies. Their homes (A5, #487)
-and the chromatic look of composites (A6, #463) come after.
+of them, blades; A4 (#486) the composites, hollow armour and panoplies; A5 (#487) their homes,
+the armoury and the workshop (special rooms); A6 (#463) the chromatic look of composites.
 
 ## Generated creature types (`content/animated.rs`)
 
@@ -184,8 +184,11 @@ The household objects are `data/objects/<body>.toml`, class `household` (the gen
 them). Populations: Cealdhlāw (candlestick, cutlery, teapot, cooking pot), Fennmynster
 (candlestick, book, lantern, rug), `animated_blade` in Cealdhlāw and Fyrdelf, and
 `animated_armour` in Fyrdelf; the stray list follows (animated objects stray only through the populations that name them,
-`Content::may_stray`). `animated_panoply` is in no population
-(legends and the dev `spawn` only) until a deeper branch lists it (#487). Talents: system
+`Content::may_stray`). `animated_panoply` is in no branch's population (none reaches danger
+20): its home is the **armoury** (#487, `docs/dev/special-rooms.md` "Homes of animated
+things"), a special room whose own population is the three families drawn four dangers deeper,
+so Fyrdelf's bottom floor (danger 16, which favours armouries at 20) has them; the **workshop**
+holds the household things of a house's work. Legends and the dev `spawn` place them too. Talents: system
 `animated` with Salvager (delver), Unbinder (weaponcraft), and Appraiser's eye (scholar).
 
 ## Tests
@@ -201,5 +204,6 @@ numbers, slot lines by `from` and `count`, the two-handed rule, ranks, shape, st
 inherited powers by `fight`: a Flaming sword, rings of the Bear and the Ox, a resistance, a
 glowing ring; Appraiser's eye, populations, saves), `content/danger.rs` (a family candidate's weight and member,
 out of depth too), `ui/look.rs` (the look lines, a blade's and the composites', with and without Appraiser's eye,
-as insta snapshots). The wiki's
+as insta snapshots), `mapgen/homes_tests.rs` (the armoury and the workshop: dressing, their own
+sleepers in a branch of kobolds, eligibility by danger, Fyrdelf's panoplies). The wiki's
 tables are `xtask/src/wiki/animated.rs`.

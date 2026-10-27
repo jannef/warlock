@@ -96,8 +96,15 @@ The barrow of Cealdhlāw keeps candlesticks, cutlery, teapots, and cooking pots 
 goods; the drowned minster of Fennmynster its candlesticks, books, lanterns, and rugs. Blades
 dance in the barrow's lower floors and all through Fyrdelf, where the duergar smiths' work
 wakes, and empty suits of armour walk Fyrdelf's deeper floors (they are of level 12 at least).
-Now and then one strays elsewhere. No panoply walks anywhere in the Ascmearc: it waits for deeper
-places.
+They never stray anywhere else.
+
+Their homes are two [special rooms](special-rooms.md#homes-of-animated-things), which may turn
+up in any dungeon with a danger, whatever lives there: an **armoury**, weapon racks along its
+walls and blades, hollow armour, and panoplies asleep among them, drawn as if the level were
+four dangers deeper; and a **workshop**, workbenches along its walls and the household things of
+a house's work asleep about them. Fyrdelf favours armouries, and on its bottom floor an
+armoury is where a panoply stands; no dungeon of the Ascmearc goes deep enough for one to walk
+its halls.
 
 ## In numbers
 

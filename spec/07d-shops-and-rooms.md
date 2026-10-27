@@ -227,7 +227,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level with `level_chance` 5 ("The dead do not rest on this level."). Fennmynster favours it
     at 15; an *altar room* (8, #406; only in a room of at least 9 floor cells) holds a
     forgotten altar to pray at ("A faint glow rises from an altar ahead." when glimpsed, "An old
-    altar stands here, its god long forgotten." on entering; below). Blood washing
+    altar stands here, its god long forgotten." on entering; below); an *armoury* (4, #487;
+    as a teeming den) has weapon racks along its walls and hollow armour, blades, and panoplies
+    asleep among them ("Racks of old arms line the walls. Not everything here is hanging up." on
+    entering; Fyrdelf favours it at 20); a *workshop* (4, #487; as a teeming den) has
+    workbenches along its walls and household things asleep about them ("Benches line the
+    walls, littered with tools and pots. Something shifts on one of them."; both below, "Homes of
+    animated things"). Blood washing
     away in a flooded room waits for blood (#127).
   - **Hot and cold rooms** (`temperature`, #404): a room sets its cells' temperature and
     nothing else: no status, no damage, nothing done to items or food. The temperature at a cell
@@ -450,6 +456,25 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the room drawn anew; both are made when the level is first entered, so the corpses are
     fresh then. The **beast den** (`beast_den`, #410) is the one such kind: `factions =
     ["wildlife", "vermin", "marsh"]`, `hoard = "corpses"`, otherwise a teeming den's numbers.
+  - **Homes of animated things** (#487; §8 "Animated objects"): a den kind may have a
+    **population of its own** (`swarm.population`, creature ids, a family by its own id): its
+    sleepers are drawn only among those types (any faction, never unique, no strays), whatever
+    the branch's population, and the kind is eligible only where one of them weighs something
+    in a draw at the floor's least danger (§7 "Danger levels", for a player of level 1);
+    `swarm.danger` (0 to 10) draws them that many dangers deeper than the floor. A room may
+    have **dressing** (`dressing = { terrain, per_cells, most }`): pieces of a terrain seen
+    through but not walked, one per `per_cells` of its floor cells (at least one, at most
+    `most`), stood by the generator (from the map stream, after the room is made) on plain free
+    floor beside its walls, never beside a door or where they would cut its floor apart. The
+    **armoury** draws from `animated_blade`, `animated_armour`, and `animated_panoply` four
+    dangers deeper (one sleeper per 6 cells, 2 to 8, a warren 20 %), among weapon racks (`‡`,
+    one per 8 cells, at most 6), and its hoard is a level above the floor's; on Fyrdelf's bottom
+    floor (danger 16, drawn at 20) panoplies stand among the hollow armour. The **workshop**
+    draws from the household things of a house's work (bellows, broom, bucket, chair, coat
+    stand, cooking pot, kettle, ladle, stool, warming pan; one per 5 cells, 3 to 10, a warren
+    20 %) among workbenches (`π`, one per 10 cells, at most 4); deeper than danger 16 none of
+    them weighs anything, so no workshop is drawn. A hand-made level that marks one draws its
+    own racks and fills it itself.
   - **Sleep** (the status *Asleep*, §8 "Status effects": `sleeps = true`, no easing): a sleeper
     takes no turn (its turn is a wait, a stride's waits at once while the player rests; what it
     heard is forgotten) and is unaware of everyone (§8 "Class abilities": a sneak attack lands

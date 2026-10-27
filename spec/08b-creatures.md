@@ -164,10 +164,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   most 40, armour) and 20 + L % (at most 80, panoply), rare from L20. Everything they wear and
   wield works for them as for anyone (`Mods::worn`: stats, riders, resistances, light, ...); max
   mana, mana regeneration, and caster level are held but unread until creatures cast. Fyrdelf
-  lists `animated_armour`; no population lists `animated_panoply` yet (legends and the dev
-  `spawn` only). Talent **Appraiser's eye** (scholar): look mode adds "It hums with power." when
+  lists `animated_armour`; no branch population lists `animated_panoply` yet (none reaches
+  danger 20): it stands in armouries (§7 "Special rooms", #487), whose sleepers are drawn four
+  dangers deeper, so on Fyrdelf's bottom floor, and comes by a legend or the dev `spawn`. Talent **Appraiser's eye** (scholar): look mode adds "It hums with power." when
   anything an animated creature carries is magic or rare (perception's `SeenActor::hums`).
-  Their homes follow (#487), and the chromatic look of composites (#463).
+  Their homes (#487) are two special rooms with populations of their own (§7 "Special rooms"):
+  the **armoury** (blades, hollow armour, panoplies, among weapon racks) and the **workshop**
+  (household things, among workbenches); the chromatic look of composites follows (#463).
 - **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
   campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
   rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines
