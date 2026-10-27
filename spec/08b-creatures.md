@@ -92,7 +92,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   for every other spawn; a legend may give the material (`animated = { material = "silver" }`).
   It is seen by its body (the object's glyph in its material's colour; look mode adds "of
   silver" and how it moves). When it dies its body falls **whole** by `[drops] intact` (50 %,
-  plus the player's Salvager), drawn from `drop/<actor id>`, else nothing of it. Nothing can be
+  plus the player's Salvager), drawn from `drop/<actor id>`, else it **breaks into the parts it
+  is made of** (§7 "Pieces and breaking": loose gems, pieces of its grouped materials by
+  `[drops] pieces`, nothing of paper; its magic lost), with a line if the player sees it ("The
+  silver candlestick breaks apart.", after the death line). Nothing can be
   stolen from one ("It is all of a piece.", no time). Talents (system `animated`): Salvager,
   Unbinder (+1 to hit, +2 damage against a creature tagged `animated`). Blades, hollow armour,
   and panoplies follow (#484 to #487, #463).
@@ -111,7 +114,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   rest of what it carried. Others see what it wears and wields, never what else it carries.
   Gear adds no state: it is the creature's inventory and equipment. **Scavenger** (Delver
   talent, the `creature_gear` system): what a creature the player kills drops is identified as
-  it lands. The wiki's creatures table states each type's gear exactly.
+  it lands. The wiki's creatures table states each type's gear exactly. A gear line may name a
+  unique item (`unique:ID`, §8 "Magic items"): the Ascmearc's four wanted criminals (the
+  `outlaws` faction, hostile to the player only and to no one else, with the footpads and
+  footpad archers; #424, the guild design §8) each wield or wear their own this way.
+- **Named monsters** (#424): a creature type whose `name` starts upper-case is a proper name
+  ("Black Wystan"), said without an article wherever the game names a seen creature (combat,
+  deaths, falls, waking, refusals, look mode: "Black Wystan (hostile, unhurt), ..."), as quest
+  texts already do. Every other type's name is lower-case.
 - **Dialogue** (`warlock-core/src/content/dialogue.rs`, the data; `world/talk.rs`, the rules;
   M28, #146): NPCs are creatures with a dialogue (§7), by their type or by the unique `npc` id
   their level gave them (which wins). A unique character with a proper name (the dialogue's

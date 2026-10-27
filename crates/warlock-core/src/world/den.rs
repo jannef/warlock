@@ -114,7 +114,7 @@ impl World {
         let (pos, creature) = (actor.pos, actor.creature);
         if id != self.state.player && self.perception.sees_actors_at(pos) {
             let name = self.content.creature(creature).name.clone();
-            self.say(format!("The {name} wakes up."));
+            self.say(format!("{} wakes up.", crate::content::the_start(&name)));
         }
         let level = self.state.current();
         let cry = (level.effects_at(&self.content, pos).swarm()).map_or(0, |s| s.cry);

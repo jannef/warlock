@@ -1,7 +1,10 @@
 //! Unidentified scrolls (spec §8 "Scrolls"): a readable scroll type (an object with `read`) is
 //! unknown to the player until they read one or identify one, and shows meanwhile as "a scroll
 //! labelled ZUNBAR" in one plain colour (`data/scroll_labels.toml`,
-//! [`crate::content::ScrollLabelDef`]).
+//! [`crate::content::ScrollLabelDef`]). Wands the same (spec §8 "Magic items": "Wands"): a wand
+//! type is unknown until one is used or identified, and shows as "an oak wand"
+//! (`data/wand_labels.toml`, the same format); their labels are drawn after the scrolls', from
+//! the same stream, so adding wands changes no scroll's label.
 //!
 //! - **Labels** ([`Labels`]) are derived, never saved: one per readable scroll type, all
 //!   different, drawn at once when the world is made or loaded from the run's `identification`
@@ -33,39 +36,57 @@ impl Labels {
         let Some(def) = content.scroll_labels() else {
             return Self::default();
         };
-        let mut types: Vec<ObjectId> = (0..content.object_defs().len())
-            .map(|o| ObjectId(o as u16))
-            .filter(|&o| content.object(o).read.is_some())
-            .collect();
-        types.sort_by(|a, b| content.object(*a).id.cmp(&content.object(*b).id));
         let mut rng = Rng::stream(seed, "identification");
-        let [least, most] = def.syllables;
         let mut labels = BTreeMap::new();
-        let mut used = BTreeSet::new();
-        for object in types {
-            let mut label = String::new();
-            for attempt in 0.. {
-                let n = rng.range(i32::from(least), i32::from(most));
-                label = (0..n)
-                    .filter_map(|_| rng.pick(&def.parts).cloned())
-                    .collect();
-                // Never stuck: after many draws the same, a number tells it apart.
-                if attempt >= 100 {
-                    label = format!("{label}{}", used.len());
-                }
-                if !used.contains(&label) {
-                    break;
-                }
-            }
-            used.insert(label.clone());
-            labels.insert(object, label);
+        let scrolls = |o: &crate::content::ObjectDef| o.read.is_some();
+        draw_into(&mut labels, &mut rng, content, def, scrolls);
+        // Wands after scrolls, from the same stream: the scrolls' labels stay as they were.
+        if let Some(def) = content.wand_labels() {
+            let wands = |o: &crate::content::ObjectDef| o.wand.is_some();
+            draw_into(&mut labels, &mut rng, content, def, wands);
         }
         Self(labels)
     }
 
-    /// The label of scroll type `object`, if it has one (whether or not it is known).
+    /// The label of scroll or wand type `object`, if it has one (whether or not it is known).
     pub fn get(&self, object: ObjectId) -> Option<&str> {
         self.0.get(&object).map(String::as_str)
+    }
+}
+
+/// Draws a label made as `def` says for every object type `of` picks, in object id order (the
+/// string), all different, into `labels`.
+fn draw_into(
+    labels: &mut BTreeMap<ObjectId, String>,
+    rng: &mut Rng,
+    content: &Content,
+    def: &crate::content::ScrollLabelDef,
+    of: impl Fn(&crate::content::ObjectDef) -> bool,
+) {
+    let mut types: Vec<ObjectId> = (0..content.object_defs().len())
+        .map(|o| ObjectId(o as u16))
+        .filter(|&o| of(content.object(o)))
+        .collect();
+    types.sort_by(|a, b| content.object(*a).id.cmp(&content.object(*b).id));
+    let [least, most] = def.syllables;
+    let mut used = BTreeSet::new();
+    for object in types {
+        let mut label = String::new();
+        for attempt in 0.. {
+            let n = rng.range(i32::from(least), i32::from(most));
+            label = (0..n)
+                .filter_map(|_| rng.pick(&def.parts).cloned())
+                .collect();
+            // Never stuck: after many draws the same, a number tells it apart.
+            if attempt >= 100 {
+                label = format!("{label}{}", used.len());
+            }
+            if !used.contains(&label) {
+                break;
+            }
+        }
+        used.insert(label.clone());
+        labels.insert(object, label);
     }
 }
 
@@ -107,9 +128,12 @@ impl<'a> Lore<'a> {
         self.label(object).is_none()
     }
 
-    /// Whether the player knows all there is to know of `stack`: its type, and its magic.
+    /// Whether the player knows all there is to know of `stack`: its type, its magic, and a
+    /// wand's charges.
     pub fn knows(&self, stack: &Stack) -> bool {
-        self.is_identified(stack.object) && stack.is_identified()
+        self.is_identified(stack.object)
+            && stack.is_identified()
+            && stack.charges_known(self.content)
     }
 
     /// `count` of `object` as the player knows it, a fresh one made plainly: "2 scrolls
@@ -124,9 +148,14 @@ impl<'a> Lore<'a> {
     /// `stack` as the player knows it: a labelled scroll by its label, "2 scrolls labelled
     /// ZUNBAR", anything else as [`Stack::describe`] says.
     pub fn describe(&self, stack: &Stack) -> String {
-        match self.labelled_names(stack.object) {
+        let text = match self.labelled_names(stack.object) {
             Some((name, plural)) => counted(&name, &plural, stack.count),
             None => stack.describe(self.content),
+        };
+        // A wand whose charges the player knows says them: "a wand of fireball (7 charges)".
+        match stack.known_charges(self.content) {
+            Some(left) => format!("{text} ({})", crate::object::charges_text(left)),
+            None => text,
         }
     }
 
@@ -148,15 +177,25 @@ impl<'a> Lore<'a> {
     /// The colour `stack` shows in: the labels' one while it is a labelled scroll, else
     /// [`Stack::fg`].
     pub fn fg(&self, stack: &Stack) -> Rgb {
-        match (self.label(stack.object), self.content.scroll_labels()) {
+        match (self.label(stack.object), self.label_def(stack.object)) {
             (Some(_), Some(def)) => def.fg,
             _ => stack.fg(self.content),
         }
     }
 
-    /// The names (singular, plural) of labelled scroll type `object`, while it is unknown.
+    /// The names (singular, plural) of labelled scroll or wand type `object`, while it is
+    /// unknown.
     fn labelled_names(&self, object: ObjectId) -> Option<(String, String)> {
         let label = self.label(object)?;
-        Some(self.content.scroll_labels()?.names(label))
+        Some(self.label_def(object)?.names(label))
+    }
+
+    /// How labels of type `object` are made and shown: a wand's, or a scroll's.
+    fn label_def(&self, object: ObjectId) -> Option<&'a crate::content::ScrollLabelDef> {
+        if self.content.object(object).wand.is_some() {
+            self.content.wand_labels()
+        } else {
+            self.content.scroll_labels()
+        }
     }
 }

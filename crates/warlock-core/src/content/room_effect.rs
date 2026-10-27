@@ -175,7 +175,7 @@ pub struct Mirrors {
 /// A teeming den's numbers (`swarm = { per_cells = 4, ... }`, spec §7 "Special rooms"): the
 /// generator fills such a room with sleepers of the floor's danger and their hoard
 /// (`mapgen/den.rs`); they wake by noise, a blow, or a cry (`world/den.rs`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Swarm {
     /// One sleeper for this many floor cells of the room...
@@ -193,6 +193,25 @@ pub struct Swarm {
     /// Percent chances that a den is themed: all of one creature type, or all of one faction.
     #[serde(default)]
     pub themes: Themes,
+    /// The factions (ids in `data/factions.toml`) its sleepers are of, whether hostile or not (a
+    /// beast den's `wildlife`, `vermin`, and `marsh`); empty: any type hostile to the player.
+    /// Checked against the factions once they load ([`RoomEffects::check_factions`]).
+    #[serde(default)]
+    pub factions: Vec<String>,
+    /// What its hoard is: items (`items`, the default) or bones and fresh corpses (`corpses`).
+    #[serde(default)]
+    pub hoard: Hoard,
+}
+
+/// What a den's hoard holds (`swarm.hoard`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Hoard {
+    /// Loot at the floor's item level + `loot_level` (a teeming den's).
+    #[default]
+    Items,
+    /// Fresh corpses of the branch's creatures, each with a pile of bones (a beast den's).
+    Corpses,
 }
 
 /// A den's themes (`themes = { kind = 10, faction = 20 }`): percents, at most 100 together.
@@ -522,6 +541,28 @@ impl RoomEffects {
     /// Whether generated levels get special rooms at all.
     pub fn generated(&self) -> bool {
         self.chance > 0 && self.per_level > 0 && !self.defs.is_empty()
+    }
+
+    /// Checks the dens' `swarm.factions` against the factions loaded (`factions`): each must be
+    /// one, named once.
+    pub(super) fn check_factions(&self, factions: &super::Factions) -> Result<(), ContentError> {
+        for def in &self.defs {
+            let Some(swarm) = &def.swarm else { continue };
+            for (i, name) in swarm.factions.iter().enumerate() {
+                let fault = if factions.id(name).is_none() {
+                    "is unknown"
+                } else if swarm.factions[..i].contains(name) {
+                    "is named twice"
+                } else {
+                    continue;
+                };
+                return Err(ContentError::new(
+                    "data/room_effects.toml",
+                    format!("effect `{}`: swarm faction `{name}` {fault}", def.id),
+                ));
+            }
+        }
+        Ok(())
     }
 
     /// Parses `data/room_effects.toml` with no statuses known; `terrain` resolves a floor's

@@ -134,8 +134,11 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                     .collect();
                 let gear = format!("{}{}", made_of(content, actor).1, gear(view, actor.id));
                 // A unique character the player knows by name: "Sister Hild (unhurt), who
-                // cures and mends for gold, on plank floor."
-                let proper = (actor.dialogue).and_then(|d| content.dialogue(d).name.as_deref());
+                // cures and mends for gold, on plank floor."; or a named monster by its type's
+                // proper name: "Black Wystan (hostile, unhurt), ...".
+                let proper = (actor.dialogue)
+                    .and_then(|d| content.dialogue(d).name.as_deref())
+                    .or_else(|| warlock_core::content::is_proper(name).then_some(name.as_str()));
                 match proper {
                     Some(proper) => format!(
                         "{proper} ({stance}{health}{effects}){}{gear}, on {}{here}.",

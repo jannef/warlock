@@ -134,6 +134,12 @@ Sometimes the whole den is of one kind (a *warren*: a nest of rats, say) or of o
 *tribe*: a goblin camp). They lie on the floor among their hoard, a few items a little better
 than the level's own.
 
+A *beast den* is a den of animals and fen things only: its sleepers are drawn the same way, but
+only among the wildlife, the vermin, and the marsh things, whether they are hostile to you or
+not. A dungeon whose own creatures hold none of these never has one. Its hoard is no treasure
+but what the beasts dragged in: piles of bones and fresh corpses of the level's creatures, good
+to eat when you first come to the level (they rot from then on).
+
 {{#include generated/teeming-dens.md}}
 
 "Wakes at" is how loud a noise must be where a sleeper lies, in percent of the loudness it can

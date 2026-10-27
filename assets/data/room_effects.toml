@@ -54,7 +54,11 @@
 #            (100 to 1000); `cry`: how loud a waking sleeper cries out, which may wake the next
 #            (0 to 300); `loot_level`: the hoard (an item per four sleepers, at least one) is
 #            this many item levels above the floor's; `themes = { kind, faction }`: percent
-#            chances that every sleeper is of one type (a warren) or of one faction (a tribe)
+#            chances that every sleeper is of one type (a warren) or of one faction (a tribe);
+#            `factions`: faction ids (factions.toml): its sleepers are only of these, hostile or
+#            not, and it is drawn only in a branch whose own population holds one (a beast den);
+#            `hoard`: `items` (the default) or `corpses`: per four sleepers (at least one) a
+#            fresh corpse of a creature drawn from the branch's population and a pile of bones
 #   temperature  degrees Celsius added to the level's temperature inside, -40 to 40; default 0.
 #            The room sets its cells' temperature and nothing else: what the temperature does
 #            (ice today) is the environment's (spec §5 "Temperature"); the status bar shows it
@@ -206,6 +210,20 @@ enter = "The floor shimmers under your feet."
 weight = 4
 max_cells = 60
 warp = 10
+
+# A beast den: a teeming den of animals and fen things only (the factions wildlife, vermin, and
+# marsh, hostile or not), drawn only in a branch whose population holds one. Its hoard is what
+# they dragged in: bones and fresh corpses of the branch's creatures (`loot_level` unused).
+[[effect]]
+id = "beast_den"
+name = "beast den"
+mark = "n"
+near = "You smell musk and old blood."
+enter = "Heavy shapes breathe in the dark around you."
+weight = 5
+needs_danger = true
+min_cells = 16
+swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 0, themes = { kind = 10, faction = 20 }, factions = ["wildlife", "vermin", "marsh"], hoard = "corpses" }
 
 # A forgotten altar (spec §7 "Special rooms"): ADOM's pool with another flavour. Pray beside it;
 # its glow's colour is its hidden side. data/outcomes/forgotten_altar.toml has what a prayer draws.

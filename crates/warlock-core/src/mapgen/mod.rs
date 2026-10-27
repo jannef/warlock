@@ -197,6 +197,9 @@ pub(crate) struct Canvas<'a> {
     /// Whether the level has a danger (some effects need one) and another level below it.
     pub danger: bool,
     pub below: bool,
+    /// The branch's own population: a den kind that names factions needs one of them in it
+    /// (`den::peopled`).
+    pub population: &'a [CreatureId],
     /// Shops (spec §7 "Shops"; `shop.rs`), their keepers among `creatures`.
     pub shops: Vec<ShopPlan>,
     /// Cells stamped from vaults; later passes leave them alone.
@@ -232,6 +235,7 @@ impl<'a> Canvas<'a> {
             pervading: None,
             danger: false,
             below: false,
+            population: &[],
             shops: Vec::new(),
             stamped: Grid::new(width, height, false),
             up: None,
@@ -446,6 +450,7 @@ pub fn generate_for(
         let size = (plan.width, plan.height);
         let mut canvas = Canvas::new(content, pal, odds, vaults, size);
         canvas.danger = content.spawning(id).is_some();
+        canvas.population = content.spawning(id).map_or(&[], |(_, _, s)| &s.population);
         canvas.below = needs.down;
         let built = match plan.generator {
             Generator::Rooms => rooms::build(&mut canvas, &mut rng, needs),

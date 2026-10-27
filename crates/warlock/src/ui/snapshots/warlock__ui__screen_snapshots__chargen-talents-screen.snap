@@ -19,17 +19,17 @@ expression: "render(case, content.clone())"
               │   h  Far shot         Your shots fly 2 cells farther, and what you … │
               │   i  Sworn foe        You have sworn yourself against one kind of c… │
               │   j  Unbinder         You strike at the binding, not the thing: you… │
-              │   k  Weapon focus     You have drilled with one kind of weapon unti… │
+              │   k  Wand mastery     You draw more from a wand than its maker put … │
+              │   l  Weapon focus     You have drilled with one kind of weapon unti… │
               │ Guard                                                                │
-              │   l  Armour training  You move freely in armour: it hampers your De… │
+              │   m  Armour training  You move freely in armour: it hampers your De… │
               │ Shadow                                                               │
-              │   m  Hush-foot        You move among sleepers as a breath of air: i… │
-              │   n  Keen ears        You hear fainter sounds, fainter still at the… │
-              │   o  Lamplighter      You tend your lantern well: it burns brighter… │
-              │   p  Night eyes       Your eyes grow used to the dark: you see by h… │
-              │   q  Silent feet      Your footsteps are a fifth quieter for each r… │
+              │   n  Hush-foot        You move among sleepers as a breath of air: i… │
+              │   o  Keen ears        You hear fainter sounds, fainter still at the… │
+              │   p  Lamplighter      You tend your lantern well: it burns brighter… │
+              │   q  Night eyes       Your eyes grow used to the dark: you see by h… │
+              │   r  Silent feet      Your footsteps are a fifth quieter for each r… │
               │ Wayfarer                                                             │
-              │   r  Devout           You pray as one who means it: an altar of you… │
               │   s  Long strider     Your journeys across the overworld go quicker. │
               │   t  Pilgrim          You have knelt in many temples: their cures a… │
               │   u  Sense of place   You read a place at a glance: a special room'… │

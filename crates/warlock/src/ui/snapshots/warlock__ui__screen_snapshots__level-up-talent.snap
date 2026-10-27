@@ -16,15 +16,15 @@ expression: "render(case, content.clone())"
             │   f  Far shot                         Your shots fly 2 cells farther, a… │
             │   g  Sworn foe                        You have sworn yourself against o… │
             │   h  Unbinder                         You strike at the binding, not th… │
-            │   i  Weapon focus (long blades)       You have drilled with one kind of… │
+            │   i  Wand mastery                     You draw more from a wand than it… │
+            │   j  Weapon focus (long blades)       You have drilled with one kind of… │
             │ Guard                                                                    │
-            │   j  Armour training             1/2  You move freely in armour: it ham… │
-            │   k  Unflinching                      Even as a coward you keep your he… │
+            │   k  Armour training             1/2  You move freely in armour: it ham… │
+            │   l  Unflinching                      Even as a coward you keep your he… │
             │ Shadow                                                                   │
-            │   l  Keen ears                   1/2  You hear fainter sounds, fainter … │
-            │   m  Lamplighter                      You tend your lantern well: it bu… │
+            │   m  Keen ears                   1/2  You hear fainter sounds, fainter … │
+            │   n  Night eyes                       Your eyes grow used to the dark: … │
             │ Wayfarer                                                                 │
-            │   n  Devout                           You pray as one who means it: an … │
             │   o  Long strider                     Your journeys across the overworl… │
             │   p  Sense of place                   You read a place at a glance: a s… │
             │   q  Sun-blessed                      The sun mends you: under the open… │

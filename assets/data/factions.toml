@@ -62,6 +62,14 @@ id = "cult"
 name = "cultists"
 hostile = ["player", "marsh"]
 
+# The outlaws (the adventurers' guild design §8, #424): footpads and the four wanted criminals
+# who hide in old places with whatever lives there. Hostile to the player only, and no faction
+# lists them: the things of a criminal's lair never fight their master or the footpads.
+[[faction]]
+id = "outlaws"
+name = "outlaws"
+hostile = ["player"]
+
 # The hags (#451): the green hag, the sea hag, the annis hag, and the bheur hag, who keep to
 # themselves and run with no one's band. The bog hag is not among them: the fen's things serve her,
 # and she stays theirs (`marsh`). Hostile to the player only.

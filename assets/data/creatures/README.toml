@@ -57,7 +57,8 @@
 #            (not the basilisk), marsh-thing (the fens' living things and the bog hag),
 #            hag (the bog hag and her kin, every creature of the "hags" faction, the night
 #            hag among them), duergar (not their trader, a merchant), fire-thing (the delf's
-#            burning things),
+#            burning things), outlaw (every creature of the "outlaws" faction: the footpads
+#            and the four wanted criminals, #424),
 #            elemental (every elemental, #453, with its element's word: fire, earth, air, water,
 #            ice, or lightning; content::elemental_roster_tests checks them),
 #            fey (every creature of the fey courts, seelie or unseelie),

@@ -283,6 +283,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   cut"), it adds its gem's worth to the item's, and it has no rules effect yet. Like every
   material, gems show at once, identified or not. Loot rolls them (§8 "Magic items"), general
   stores buy them (§7 "Shops"), and level files place them (§7 "Levels").
+- **Pieces and breaking** (#484): nothing in the world is raw material but **a piece**, the one
+  generic object `piece` (`objects/piece.toml`: `,`, item class miscellaneous, 100 g and 1 gold
+  of steel, `made_of = ["any"]`), made of whatever material with a group its main part carries,
+  as the loose gem is made of its gem: named by it ("a piece of tin", "3 pieces of silk"), drawn
+  in its colour, weighing its `weight` % and worth its `value` % of the steel piece's (a piece of
+  gold 246 g and 20 gold; of tin 93 g and nothing). Pieces of one material stack. **Breaking**
+  an item (`object::break_up`; an animated thing's broken component, §8 "Animated objects")
+  turns it into the parts it is made of, part by part: a gem part falls as its loose gem (size
+  and cut kept; a base item's gem part the plain ones), a material with a group as pieces of it,
+  `max(1, round(its grams × percent / 100 / one piece's grams))` (its parts of that material
+  summed, the whole stack's; an animated thing's percent is `[drops] pieces`, 50), and a
+  material without one (paper, wax, flesh) as nothing. Its magic is lost. A broken tin dagger
+  with a ruby pommel gives 2 pieces of tin and the ruby; a steel long sword 8 pieces of steel and
+  3 of leather.
 - **Materials** (#193, #194): a material's properties are on one scale, steel's (all optional,
   so a material without them is as it was): `group` (one word, not `any`: metal, wood, bone,
   stone, hide, cloth, glass, resin; none for paper, wax, food, and the gems, which are set in

@@ -54,7 +54,9 @@ adds a labelled type (true if it was news); it is called by `say_read` (every re
 identify: "You read the scroll labelled ZUNBAR." then "It is a scroll of fireball."), by
 `World::identify` (a labelled scroll stack: "This is 2 scrolls of lightning!"; so the dev
 `identify` and F8 too), and `World::new` puts the kit's readable scrolls in the set (a chosen
-character knows their kit; a scenario's own pack is not a kit).
+character knows their kit; a scenario's own pack is not a kit). Wand types (#398) are labelled
+the same way from `data/wand_labels.toml` ("an oak wand"), drawn after the scrolls from the
+same stream, and learned by `World::use_charge` (docs/dev/spells.md "Wands").
 
 `Lore` (`World::lore()`, `PerceptionView::lore()`) is how everything the player is shown names
 a stack: `describe`, `title`, `names`, `fg`, `describe_object(object, count)`, `knows(stack)`

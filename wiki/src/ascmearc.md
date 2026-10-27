@@ -79,6 +79,18 @@ have names of the same kind. Creatures keep their plain English names.
 
 The game writes *ǣ* as **æ** and *ȳ* as **y** (Græg-, Fyr-), as its font draws them.
 
+The language has moved on since the old places were named. People of the march's own day go by
+the later forms of the old names, and the outlaws by the bynames the broadsheets give them, in
+the English of the day:
+
+| Name | From | Register | Who |
+|---|---|---|---|
+| Mother Sallow, the Fennhām Poisoner | *sallow*, the willow of the fens | a commoner's byname | a wanted poisoner |
+| Black Wystan, the Gentleman of the Road | Wystan, from *Wulfstān* "wolf stone" | the later form; a Victorian byname | a wanted highwayman |
+| Brother Osrick, the Resurrection Man | Osrick, from *Ōsrīc* "god ruler" | the later form; a Victorian byname | a wanted grave robber |
+| Sergeant Herrick, the Deserter | Herrick, from *Hererīc* "army ruler" | the later form; a Victorian byname | a wanted deserter |
+| footpad | *foot* + *pad* "road" | Victorian, as the commons say it | a robber on foot |
+
 ## Regions
 
 The status bar names the region you are in, on the overworld and in its local areas:

@@ -2,7 +2,7 @@
 
 use super::text::capital;
 use std::fmt::Write as _;
-use warlock_core::content::{Content, StatusId};
+use warlock_core::content::{Content, Hoard, StatusId};
 
 /// How many times as much `percent` is, in words: "twice", "two fifths", "30% of".
 fn times(percent: u16) -> String {
@@ -156,6 +156,16 @@ pub(super) fn special_rooms(content: &Content) -> String {
         if e.needs_below {
             only.push("with a level below".into());
         }
+        if let Some(s) = e.swarm.as_ref().filter(|s| !s.factions.is_empty()) {
+            let names: Vec<_> = (s.factions.iter())
+                .filter_map(|f| content.factions().id(f))
+                .map(|f| content.factions().def(f).name.clone())
+                .collect();
+            only.push(format!(
+                "in a dungeon whose own creatures include {}",
+                names.join(" or ")
+            ));
+        }
         if e.min_cells > 0 {
             only.push(format!("in a room of {} floor cells or more", e.min_cells));
         }
@@ -221,28 +231,45 @@ fn held(content: &Content, status: StatusId) -> String {
 }
 
 /// The numbers of each teeming den (spec §7 "Special rooms": an effect with a `swarm`), by name:
-/// how many sleepers, what wakes them, their cry, the hoard, and the themes.
+/// how many sleepers and of what, what wakes them, their cry, the hoard, and the themes.
 pub(super) fn teeming_dens(content: &Content) -> String {
     let mut out = String::from(
-        "| Den | Sleepers | Wakes at | Cry | Hoard | Warren | Tribe |\n\
-         |---|---|:---:|:---:|---|:---:|:---:|\n",
+        "| Den | Sleepers | Of | Wakes at | Cry | Hoard | Warren | Tribe |\n\
+         |---|---|---|:---:|:---:|---|:---:|:---:|\n",
     );
     let mut dens: Vec<_> = (content.room_effects().defs().iter())
-        .filter_map(|e| e.swarm.map(|s| (e, s)))
+        .filter_map(|e| e.swarm.as_ref().map(|s| (e, s)))
         .collect();
     dens.sort_by(|a, b| a.0.name.cmp(&b.0.name));
     for (e, s) in dens {
+        let of = if s.factions.is_empty() {
+            "any type hostile to you".to_string()
+        } else {
+            let names: Vec<_> = (s.factions.iter())
+                .filter_map(|f| content.factions().id(f))
+                .map(|f| content.factions().def(f).name.clone())
+                .collect();
+            format!("{}, hostile or not", names.join(", "))
+        };
+        let hoard = match s.hoard {
+            Hoard::Items => format!(
+                "one item per 4 sleepers (at least 1), item level +{}",
+                s.loot_level
+            ),
+            Hoard::Corpses => "per 4 sleepers (at least 1), a pile of bones and a fresh corpse \
+                               of a creature of the branch"
+                .to_string(),
+        };
         let _ = writeln!(
             out,
-            "| {} | one per {} floor cells, {} to {} | {}% of the hearing threshold | {} | one \
-             item per 4 sleepers (at least 1), item level +{} | {}% | {}% |",
+            "| {} | one per {} floor cells, {} to {} | {of} | {}% of the hearing threshold | {} \
+             | {hoard} | {}% | {}% |",
             capital(&e.name),
             s.per_cells,
             s.min,
             s.max,
             s.wake,
             s.cry,
-            s.loot_level,
             s.themes.kind,
             s.themes.faction,
         );

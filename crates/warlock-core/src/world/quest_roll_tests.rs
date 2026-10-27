@@ -511,10 +511,10 @@ fn picks_variants_and_placeholders_are_checked_at_load() {
     );
     bad(
         &quest(
-            "type = \"bring\"\npick = { objects = { class = \"wands\" } }",
+            "type = \"bring\"\npick = { objects = { class = \"trinkets\" } }",
             "O.",
         ),
-        "unknown item class `wands`",
+        "unknown item class `trinkets`",
     );
     bad(
         &quest(

@@ -172,6 +172,7 @@ mod travel;
 mod voice;
 mod volley;
 mod warp;
+mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
@@ -1241,6 +1242,8 @@ mod ascmearc_tests;
 #[cfg(test)]
 mod attacks_tests;
 #[cfg(test)]
+mod beast_den_tests;
+#[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]
 mod blood_tests;
@@ -1365,6 +1368,8 @@ mod openings_tests;
 #[cfg(test)]
 mod outcome_tests;
 #[cfg(test)]
+mod outlaw_tests;
+#[cfg(test)]
 mod overworld_tests;
 #[cfg(test)]
 mod parts_tests;
@@ -1466,3 +1471,5 @@ mod voice_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+#[cfg(test)]
+mod zap_tests;
