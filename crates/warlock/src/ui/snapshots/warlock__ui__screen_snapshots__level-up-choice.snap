@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Your athletics improves. (×6)
- You learn Weather-wise.
+ You learn Swimmer.
 
 
 
