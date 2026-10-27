@@ -151,7 +151,12 @@ fn the_cap_holds_with_every_talent_combination() {
             }
         }
         for spell in ["fireball", "magic_missile", "ray_of_frost"] {
-            let cap = rules.cap_of(BUILTIN.spell(sp(spell)));
+            // The caster's cap: the spell's, lifted by the stats its scales name.
+            let cap = w
+                .state
+                .player()
+                .spell_cap(&BUILTIN, BUILTIN.spell(sp(spell)));
+            assert!(cap >= rules.cap_of(BUILTIN.spell(sp(spell))));
             let mut most = 0;
             for _ in 0..12 {
                 let hurt = cast_hurt(&mut w, spell, target, 3);

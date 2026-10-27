@@ -19,7 +19,9 @@ takes the statuses' lookup, `parse` in tests none), `swarm` (a teeming den's num
 `noise::MAX_LOUDNESS`), `loot_level`, `themes = { kind, faction }` (percents, at most 100
 together), `factions` (faction ids, checked once the factions load,
 `RoomEffects::check_factions`: known, none twice), `hoard` (`Hoard::Items`, the default, or
-`Hoard::Corpses`); it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
+`Hoard::Corpses`), `population` (creature ids, resolved into `Swarm::kinds` once the creatures
+load, `RoomEffects::resolve_populations`: known, not unique, none twice; never with `factions`),
+`danger` (0 to `MAX_DEN_DANGER` 10, default 0); it needs `needs_danger` and can never pervade), `temperature` (degrees Celsius added to
 the level's, -40 to 40, default 0), `burden` (percent of the carrying limit, `BURDEN` 10 to
 1000, default 100), `mirrors` (`{ images = N }`, 1 to 8, `content::Mirrors`), `warp` (percent a
 step inside warps the stepper, 0 to 100, default 0), `collapse` (`{ chance, damage }`,
@@ -28,9 +30,11 @@ step inside warps the stepper, 0 to 100, default 0), `collapse` (`{ chance, dama
 `RoomEffects::check_factions`), `unholy` (Consecrate lifts it), `feature` (a terrain id,
 transparent and not walkable, not stairs or a door), `sides` (`{ good = LIGHT, evil = LIGHT }`: the
 room draws a hidden side, its feature a light per side; the lights are resolved after they load,
-`RoomEffects::resolve_places`), `offers` (`{ pray = TABLE }` or `{ temper = TABLE }`, exactly
-one: `Offer::Pray`/`Offer::Temper` and an outcome table id, checked in `resolve_places` once
-`data/outcomes/` is loaded; `offers` and `sides` need a `feature`), `shrine` (`{ regen, status, welcome, unwelcome }`, `content::Shrine`,
+`RoomEffects::resolve_places`), `dressing` (`{ terrain, per_cells, most }`, `content::Dressing`:
+a terrain as a feature's, `per_cells` at least 1, `most` 1 to `MAX_DRESSING` 16; never pervades),
+`offers` (`{ pray = TABLE }` or `{ temper = TABLE }`, exactly one: `Offer::Pray`/`Offer::Temper`
+and an outcome table id, checked in `resolve_places` once `data/outcomes/` is loaded; `offers` and
+`sides` need a `feature`), `shrine` (`{ regen, status, welcome, unwelcome }`, `content::Shrine`,
 `content/room_shrine.rs`: a shrine of a side; needs `sides`; `status` resolved and held to a
 room status's easing), `hoard` (a tempting hoard, `content::Treasure`: `items` 1 to 16, `loot_level`,
 `guardians = [least, most]` at most 16, `danger`; it needs `needs_danger` and can never pervade),
@@ -62,8 +66,11 @@ guardians = [2, 4], danger = 1 }`, #415), cursed (6, mark
 #418), shrine (4, mark `i`, `min_cells = 9`, `feature = "shrine_stone"`, `sides` with the
 altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413), scriptorium (5, mark
 `r`, `min_cells = 9`, `feature = "shelves"`, `loot = { class = "scrolls", count = [2, 4] }`,
-`train = { decipher_script = 200 }`, #414). Draining (also `unholy`) and cursed are the ones with a
-`level_chance`.
+`train = { decipher_script = 200 }`, #414), armoury (4, mark `R`, `needs_danger`, `min_cells` 16,
+`dressing` of `weapon_rack`, `swarm` with its own `population` of the three animated families and
+`danger = 4`, #487), workshop (4, mark `W`, as the armoury with `workbench` and ten household
+types, #487). Draining (also `unholy`) and cursed are the ones with a `level_chance`. Fyrdelf
+favours the armoury at 20.
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
 `RoomOddsSpec::layer`/`resolve`, field by field: the range's, the branch's, the shared file's)
@@ -151,6 +158,36 @@ Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` 
 Sleepers are ordinary hostile actors otherwise: `hostiles_here` counts them toward the spawn cap,
 a kill is `kill_hostile`, the status is saved and hashed with the actor. The `bench-turns` `delf`
 fixture branch favours teeming dens (`xtask/src/bench.rs`).
+
+## Homes of animated things
+
+#487 (animated objects A5, `docs/design/animated-objects.md` §10.4): the armoury and the
+workshop, teeming dens with two additions any den kind may use.
+
+- **A den's own population** (`swarm.population` → `Swarm::kinds`): `den::fill` draws its
+  sleepers from `Content::candidates(kinds)` (no uniques, any faction) with no generic list (no
+  strays; an out-of-depth draw that finds nothing deeper falls back to the danger), the theme
+  rolled over the same; `den::deeper` adds `swarm.danger` to the floor's danger for the draw
+  (capped at `MAX_DANGER`; none on a floor without one). Eligibility (`den::peopled`, asked by
+  `special::pick`): such a kind is drawn only where a candidate of its population
+  `danger::weighs` at `Canvas::least` (`DangerRule::at(depth, 1)`, the floor's danger for a
+  player of level 1: the map stage reads no player) + `swarm.danger`. A player-scaled floor
+  deeper than that may then draw nothing (a workshop past danger 16): the room keeps its
+  dressing and no sleepers or hoard. The branch's own population is not read, so a branch of
+  kobolds has armouries of blades; corpses (`hoard = "corpses"`) would still be the branch's prey.
+- **Dressing** (`mapgen/dress.rs`, `dress::dress`, called by `special::place` after `make`
+  succeeds, from the map stream: only a room with `dressing` draws more): `Dressing::pieces`
+  of its walkable cells; candidates are its cells of free plain floor (`is_free_floor`, no
+  patrol, trap, or object) with a cardinal neighbour that is not walkable and no door among the
+  eight; each is drawn (`swap_remove`), skipped if the room's walkable cells would no longer be
+  joined without it (`special::joined`), else set to the terrain. The den's fill runs after the
+  map, so racks are never a sleeper's or a hoard's cell (they are not plain floor). A hand-made
+  level's `[[room]]` gets no dressing and no sleepers.
+
+Terrain: `weapon_rack` (`‡`) and `workbench` (`π`), not walkable, transparent, with a
+description. Tests: `content/room_homes_tests.rs` (dressing's and the den fields' parsing and
+refusals, resolving the population) and `mapgen/homes_tests.rs` (fixture branches of kobolds at
+danger 3 and 30, and Fyrdelf's bottom floor).
 
 ## Tempting hoards
 
@@ -533,6 +570,16 @@ saved beyond the level change; the cracked floor stays.
 `world/rooms.rs`: `glimpse_rooms` (in `perceive`, before `enter_room`) marks each room of which
 the player sees a cell `glimpsed` and says its `near` line, unless they are inside it;
 `enter_room` (`world/travel.rs`) says `enter` once per room and marks it entered and glimpsed;
+A feature of the ground (terrain with `announce`, `data/terrain.toml`: `altar`, `uv_rune`;
+walkable terrain only, content loading refuses it elsewhere) is named by `world/feature.rs`:
+`World::announce_feature` says `There is an altar here.` (and the terrain's `description`, if
+any) when the player stands on another cell or level than at its last call (`World::stood_on`,
+not saved; a loaded world starts where it stands). A step calls it before the objects line
+(`travel.rs`), so it comes after the staircase line and before `You see here ...`, and before a
+room's `enter` line (said in `perceive`); `perceive` calls it after `enter_room` for every other
+arrival (stairs, falls, teleports), and `World::new` says it at the start of a run. Blood is
+left out of it (look mode's blood word follows the blood effect switch, a presentation setting;
+messages do not). Tests: `world/feature_tests.rs`.
 `pervade_line` is said on every arrival on a pervaded level (`World::travel`, and at the start of
 a run), with Sense of place followed by what the effect is. `PerceptionView::room` names a room
 once entered (with Sense of place, once glimpsed) on cells seen or remembered; look mode reads it.

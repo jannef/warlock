@@ -216,6 +216,8 @@ impl World {
             };
             self.say(text);
         }
+        // A feature of the ground there ("There is an altar here."), before what lies on it.
+        self.announce_feature();
         // Goods for sale say their price (spec §7 "Shops").
         let text = match self.state.current().objects_at(to) {
             [] => None,

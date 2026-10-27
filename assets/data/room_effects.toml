@@ -58,7 +58,12 @@
 #            `factions`: faction ids (factions.toml): its sleepers are only of these, hostile or
 #            not, and it is drawn only in a branch whose own population holds one (a beast den);
 #            `hoard`: `items` (the default) or `corpses`: per four sleepers (at least one) a
-#            fresh corpse of a creature drawn from the branch's population and a pile of bones
+#            fresh corpse of a creature drawn from the branch's population and a pile of bones;
+#            `population`: creature ids (families by their own id, `animated_blade`): its
+#            sleepers are drawn only among these (hostile or not, no strays, never with
+#            `factions`), whatever the branch's population, and it is drawn only where one of them
+#            weighs something at the floor's least danger (an armoury); `danger`: its sleepers are
+#            drawn this many dangers deeper than the floor's (0 to 10; default 0)
 #   temperature  degrees Celsius added to the level's temperature inside, -40 to 40; default 0.
 #            The room sets its cells' temperature and nothing else: what the temperature does
 #            (ice today) is the environment's (spec §5 "Temperature"); the status bar shows it
@@ -97,6 +102,10 @@
 #            { good = LIGHT, evil = LIGHT } (lights.toml; a side left out keeps the terrain's)
 #   offers   what the player may do beside the feature, in the abilities menu's Here group:
 #            { pray = TABLE }, an outcome table in data/outcomes/ (Pray: spec §7 "Special rooms")
+#   dressing pieces of a terrain (not walkable, transparent) generators stand along the room's
+#            walls: { terrain, per_cells, most }, one per `per_cells` floor cells, at least one
+#            and at most `most` (1 to 16), never beside a door or where it would cut the room's
+#            floor apart; a hand-made level draws its own. Never the whole level
 
 chance = 12
 per_level = 1
@@ -307,6 +316,34 @@ weight = 3
 min_cells = 9
 feature = "anvil"
 offers = { temper = "forge" }
+
+# An armoury (#487, animated objects A5): racks of old arms along the walls, and among them hollow
+# armour and blades that sleep until something wakes them; deep down, a panoply in full kit. Its
+# sleepers are its own (the armoury's population, four dangers deeper than the floor), whatever
+# the branch's population.
+[[effect]]
+id = "armoury"
+name = "armoury"
+mark = "R"
+enter = "Racks of old arms line the walls. Not everything here is hanging up."
+weight = 4
+needs_danger = true
+min_cells = 16
+dressing = { terrain = "weapon_rack", per_cells = 8, most = 6 }
+swarm = { per_cells = 6, min = 2, max = 8, wake = 200, cry = 40, loot_level = 1, themes = { kind = 20 }, population = ["animated_blade", "animated_armour", "animated_panoply"], danger = 4 }
+
+# A workshop (#487): benches along the walls, and the household things of a house's work lying
+# about them, asleep until they are not. Its sleepers are its own (the workshop's population).
+[[effect]]
+id = "workshop"
+name = "workshop"
+mark = "W"
+enter = "Benches line the walls, littered with tools and pots. Something shifts on one of them."
+weight = 4
+needs_danger = true
+min_cells = 16
+dressing = { terrain = "workbench", per_cells = 10, most = 4 }
+swarm = { per_cells = 5, min = 3, max = 10, wake = 200, cry = 30, loot_level = 0, themes = { kind = 20 }, population = ["animated_bellows", "animated_broom", "animated_bucket", "animated_chair", "animated_coat_stand", "animated_cooking_pot", "animated_kettle", "animated_ladle", "animated_stool", "animated_warming_pan"] }
 
 # A shrine of a side (design §9.3): good or evil, one to one, shown only by its stone's light.
 # One of its side heals twice as fast inside; one of the other is Unwelcome (status.toml); a

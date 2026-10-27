@@ -65,6 +65,13 @@ population = [
 # How many: the default, 35 a thousand walkable cells, 25 to 80. A gallery floor (about 350 cells)
 # gets the least, 25, as Cealdhlāw's passages do; the deep workings (about 3 000) the ceiling, 80.
 
+# The duergar smiths' armouries (#487, animated objects A5): a fifth of the special rooms, racks of
+# their old work that wakes. An armoury draws its sleepers four dangers deeper than the floor, so
+# on the bottom floor (danger 16) it is where a panoply (`animated_panoply`, level 20 and more)
+# stands among the hollow armour; no branch lists the panoply in its population until one reaches
+# danger 20.
+room_effects = { favoured = { armoury = 20 } }
+
 # The duergar traders (spec §7 "Shops"): every gallery floor with a fitting room has a general
 # store kept by a duergar. Shops stand on rooms levels only, so the deep workings have none.
 shops = { chance = 100, kinds = ["general_store"], keeper = "duergar_trader", names = [

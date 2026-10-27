@@ -56,8 +56,18 @@ pub(super) fn fill(
     let all_own = plain(content, content.candidates(&spawning.population, &none));
     let all_generic = plain(content, content.candidates(&spawning.generic, &none));
     for (i, swarm) in dens {
-        let own = sleepers(content, swarm, &all_own);
-        let generic = sleepers(content, swarm, &all_generic);
+        let (own, generic) = if swarm.kinds.is_empty() {
+            (
+                sleepers(content, swarm, &all_own),
+                sleepers(content, swarm, &all_generic),
+            )
+        } else {
+            (
+                plain(content, content.candidates(&swarm.kinds, &none)),
+                Vec::new(),
+            )
+        };
+        let danger = deeper(danger, swarm);
         let room = template.rooms[i].clone();
         let floor: Vec<Pos> = (room.cells().into_iter())
             .filter(|&p| template.terrain.get(p) == Some(&pal.floor))
@@ -154,12 +164,34 @@ fn of_factions(content: &Content, swarm: &Swarm, c: CreatureId) -> bool {
 }
 
 /// Whether a den of `swarm` may be made on a level whose branch's own population is
-/// `population`: always for one that names no factions, else when a type of the population that
-/// is not unique is of one of them.
-pub(super) fn peopled(content: &Content, swarm: &Swarm, population: &[CreatureId]) -> bool {
+/// `population` and whose least danger is `least`: for one with a population of its own (an
+/// armoury's), when a type of it weighs something in a draw at `least` made [`deeper`]; else
+/// always for one that names no factions, else when a type of the population that is not unique
+/// is of one of them.
+pub(super) fn peopled(
+    content: &Content,
+    swarm: &Swarm,
+    population: &[CreatureId],
+    least: u8,
+) -> bool {
+    if !swarm.kinds.is_empty() {
+        let at = deeper(least, swarm);
+        let none = Default::default();
+        return (content.candidates(&swarm.kinds, &none).into_iter())
+            .any(|c| danger::weighs(c, at));
+    }
     swarm.factions.is_empty()
         || (population.iter())
             .any(|&c| !content.creature(c).unique && of_factions(content, swarm, c))
+}
+
+/// The danger a den of `swarm` draws its sleepers at on a floor of `danger`: its `danger` deeper
+/// (none on a floor without one).
+fn deeper(danger: u8, swarm: &Swarm) -> u8 {
+    if danger == 0 {
+        return 0;
+    }
+    danger.saturating_add(swarm.danger).min(danger::MAX_DANGER)
 }
 
 /// A den's corpse hoard (`hoard = "corpses"`) of `placed` sleepers on `floor`: per piece
