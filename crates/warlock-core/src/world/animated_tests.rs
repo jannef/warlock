@@ -200,6 +200,7 @@ fn kill_at(w: &mut World, p: Pos) -> Vec<crate::object::Stack> {
         w.hurt(id, 10_000, Harm::Actor(player), &mut Vec::new()),
         "it died"
     );
+    w.say_news();
     w.state.current().objects_at(p).to_vec()
 }
 
@@ -215,11 +216,69 @@ fn the_body_falls_whole_by_the_drop_rule_or_not_at_all() {
         pile[0].parts(&content)[0].material,
         content.material_id("silver").expect("silver")
     );
-    // No corpse, no loot: nothing else.
+    assert!(!last(&w).contains("breaks apart"), "nothing broke");
+}
+
+#[test]
+fn a_broken_body_falls_as_the_parts_it_is_made_of() {
+    // No corpse, no loot: its pieces only, and a line for each the player sees break.
     let mut w = hall(0);
+    let content = w.content().clone();
     for p in [Pos::new(2, 2), Pos::new(4, 2), Pos::new(6, 2)] {
-        assert!(kill_at(&mut w, p).is_empty(), "nothing falls");
+        let body = w.state.actors[&at(&w, p)].inventory[0].clone();
+        let before = w.messages().iter().count();
+        let pile = kill_at(&mut w, p);
+        assert!(!pile.is_empty(), "its pieces fall");
+        assert_eq!(pile, crate::object::break_up(&body, &content, 50));
+        // Said first, with the death, before what the kill taught the player.
+        let (name, _) = body.names(&content);
+        let said = w.messages().iter().nth(before).expect("a line");
+        assert_eq!(said.text, format!("The {name} breaks apart."));
     }
+    // The candlestick of silver: pieces of silver, worth real coin.
+    let silver = content.material_id("silver").expect("silver");
+    let mut w = hall(0);
+    let pile = kill_at(&mut w, Pos::new(2, 2));
+    assert_eq!(pile.len(), 1);
+    assert_eq!(pile[0].parts(&content)[0].material, silver);
+    assert_eq!(pile[0].describe(&content), "4 pieces of silver");
+    assert!(pile[0].value(&content) > 0);
+}
+
+#[test]
+fn a_gem_falls_loose_and_paper_falls_as_nothing() {
+    let mut w = hall(0);
+    let content = w.content().clone();
+    let gems = content.gems().expect("gems");
+    let ruby = content.material_id("ruby").expect("ruby");
+    let silver = crate::item_parts::ItemPart::material(
+        &content,
+        None,
+        content.material_id("silver").expect("silver"),
+    );
+    let set = crate::item_parts::ItemPart::gem(&content, None, ruby, gems.plain());
+    // The candlestick set with a ruby (an added part, as an ornament is): a loose ruby too.
+    let set = crate::item_parts::ItemPart {
+        part: Some("pommel".into()),
+        ..set
+    };
+    let candlestick = at(&w, Pos::new(2, 2));
+    let body = &mut w.state.actors.get_mut(&candlestick).expect("it").inventory[0];
+    *body = crate::object::Stack::one(body.object).with_parts(vec![silver, set]);
+    assert!(body.is_valid_for(&content));
+    let pile = kill_at(&mut w, Pos::new(2, 2));
+    let names: Vec<String> = pile.iter().map(|s| s.describe(&content)).collect();
+    assert_eq!(names, ["4 pieces of silver", "a ruby"]);
+    // A book is paper with a leather trim: the leather falls, nothing of the paper.
+    let book = content.object_id("book").expect("a book");
+    let teapot = at(&w, Pos::new(4, 2));
+    let mut w2 = hall(0);
+    let actor = w2.state.actors.get_mut(&teapot).expect("it");
+    actor.creature = content.creature_id("animated_book").expect("the type");
+    actor.inventory = vec![crate::object::Stack::one(book)];
+    let pile = kill_at(&mut w2, Pos::new(4, 2));
+    let names: Vec<String> = pile.iter().map(|s| s.describe(&content)).collect();
+    assert_eq!(names, ["3 pieces of leather"]);
 }
 
 #[test]
@@ -234,7 +293,10 @@ fn salvager_raises_the_share_that_falls_whole() {
             }
             whole += [Pos::new(2, 2), Pos::new(4, 2), Pos::new(6, 2)]
                 .into_iter()
-                .filter(|&p| !kill_at(&mut w, p).is_empty())
+                .filter(|&p| {
+                    let body = w.state.actors[&at(&w, p)].inventory[0].object;
+                    kill_at(&mut w, p).first().is_some_and(|s| s.object == body)
+                })
                 .count();
         }
         whole

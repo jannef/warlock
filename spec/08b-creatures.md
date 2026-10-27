@@ -92,7 +92,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   for every other spawn; a legend may give the material (`animated = { material = "silver" }`).
   It is seen by its body (the object's glyph in its material's colour; look mode adds "of
   silver" and how it moves). When it dies its body falls **whole** by `[drops] intact` (50 %,
-  plus the player's Salvager), drawn from `drop/<actor id>`, else nothing of it. Nothing can be
+  plus the player's Salvager), drawn from `drop/<actor id>`, else it **breaks into the parts it
+  is made of** (§7 "Pieces and breaking": loose gems, pieces of its grouped materials by
+  `[drops] pieces`, nothing of paper; its magic lost), with a line if the player sees it ("The
+  silver candlestick breaks apart.", after the death line). Nothing can be
   stolen from one ("It is all of a piece.", no time). Talents (system `animated`): Salvager,
   Unbinder (+1 to hit, +2 damage against a creature tagged `animated`). Blades, hollow armour,
   and panoplies follow (#484 to #487, #463).
