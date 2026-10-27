@@ -364,6 +364,16 @@ const CASES: &[Case] = &[
         size: (100, 40),
         ..BASE
     },
+    // A level-3 wizard's pick, School focus for evocation: the Spellcraft tree, Arcane
+    // training among the class abilities (#400).
+    Case {
+        name: "talents-screen-spellcraft",
+        character: Some("human,male,wizard"),
+        actions: "xp:3100 talent:school_focus:evocation advance:spellcraft*8",
+        screen: Some("talents"),
+        size: (100, 40),
+        ..BASE
+    },
     // A Unicorn (seed 12) after Horn's grace: the Birth sign group, the grace greyed out while
     // Graceless (#266).
     Case {
