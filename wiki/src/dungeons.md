@@ -137,3 +137,32 @@ plank wall. Duergar traders keep general stores in the galleries, where a room i
 (about one gallery floor in four). At the very bottom lies the **drake's hoard**: a hall ringed
 with lava where the fire drake sleeps on its gold, with a rare treasure and a magic one. The
 drake lives nowhere else.
+
+### The lairs of the wanted
+
+Four more dungeons, each four floors deep, of danger 6 on the first floor and 9 on the fourth, are
+the lairs of the criminals the [Weyfarers' Gilde](guild.md#the-wanted) wants dead. Each is hidden
+until Wat One-Eye names its criminal and marks it on your map; the other three stay hidden for
+the rest of your life. No one trades in any of them. At the bottom of each, and nowhere else,
+the criminal waits in a room of their own:
+
+- **Wyrtholm**, the herb islet, is the caves under an islet out in Micelfenn (9 °C), where
+  **Mother Sallow** brews among the fen's leeches, frogs, crocodiles, wisps, mud golems, and
+  marsh trolls, with footpads in her pay. Its traps are pits and alarms. Her **still-room** at
+  the bottom holds her pots, her jars of potions, and angelica root.
+- **Wulfeshol**, the wolf's hole, is a cave under Deorcholt where **Black Wystan**'s footpads and
+  their archers keep watch, with goblin bowmen he hires, and bats, centipedes, and barrow spiders
+  in the dark. Its traps are pits, arrows, and alarms. At the bottom, the **robbers' hoard**:
+  the coin of the Fennhām road, a rare thing among it, two footpads at the door, and him.
+- **Bānfeld**, the bone field, is the grave passages under a barrow field on Hlāwdūn (8 °C),
+  where **Brother Osrick** keeps the dead he raised: skeletons, zombies, ghouls, the drowned,
+  ghosts, and the worms and spiders that feed where the dead are. One room in four is shadowed or
+  hushed; its traps are arrows, spears, pits, and alarms, and rusty keys open its locked rooms.
+  At the bottom, the **unhallowed chapel**: bones heaped along the walls, two zombies in the
+  aisle, and Osrick at an altar he defiled.
+- **Brocenburg**, the broken fort, is the cellars under the ruined tower in Holegnwudu, where
+  **Sergeant Herrick** sells his axe to the goblins: goblins, their archers and chiefs, footpads
+  who ran with him, bats in the broken roof, and now and then an ogre he hired, far stronger
+  than the floor. Its traps are arrows, spears, and alarms, and iron keys open its locked rooms.
+  At the bottom, the **captain's hall**: the old table broken up, the captain he killed under a
+  cairn in the corner, and Herrick in the captain's place, with two goblins at the door.

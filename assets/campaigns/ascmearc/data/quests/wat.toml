@@ -2,7 +2,8 @@
 # Weyfarers' Gilde's chain, one link at a time, each requiring the one before and nothing else.
 # Every target is drawn as the quest is given and stands until it is done. Being given the first
 # makes the player a Tin of the Gilde, the second done a Pewter (data/guilds/weyfarers.toml).
-# Link 4, "Wanted", comes with the four lairs (#426). Wat speaks Cockney (decision 13).
+# The fourth, "Wanted", names one of four criminals and reveals their lair; done, it makes the
+# player an Iron. Wat speaks Cockney (decision 13).
 
 [[quest]]
 id = "guild_quarry"
@@ -44,3 +45,50 @@ reward = { gold = 200, xp = 150 }
 offer = "The Gilde keeps a few scrolls by, for when a job goes wrong, an' we're short {a_target}. Find one or buy one, I don't ask which, an' bring it 'ere."
 reminder = "{A_target}, for the Gilde's shelf. Bring it 'ere."
 done = "Lovely. That goes on the shelf, an' this goes in yer purse."
+
+# Link 4 (docs/design/adventurers-guild.md §8): one of the four wanted criminals, each at the
+# bottom of a lair of four floors that the variant reveals as the quest is given; the other three
+# lairs stay hidden for that run. A named monster: only the death counts, at any hand. Done, it
+# makes the player an Iron of the Gilde.
+[[quest]]
+id = "guild_wanted"
+name = "Wanted"
+giver = "wat"
+requires = "guild_scroll"
+type = "kill"
+reward = { gold = 500, xp = 800 }
+alignment = 10
+accept = "I'll mark it on yer map. Mind 'ow you go: this one bites back."
+reminder = "{Target}, still breathin'. {Where}"
+
+[[quest.variant]]
+id = "sallow"
+target = "sallow"
+reveals = { location = "wyrtholm", when = "given" }
+where = "Her lair, Wyrtholm, is an islet out in Micelfenn, east of the river."
+offer = "Mother Sallow. Sold 'erbs in Fennhām twenty year, an' a little somethin' extra to anyone with a rich uncle. Three dead at one weddin'. She's gone to ground on Wyrtholm, out in the Micelfenn."
+done = "Mother Sallow, done for. Fennhām'll sleep easier, an' so will every rich uncle in it. 'Ere's the Gilde's purse, an' you're Iron now."
+
+[[quest.variant]]
+id = "wystan"
+target = "wystan"
+reveals = { location = "wulfeshol", when = "given" }
+where = "His den, Wulfeshol, lies in Deorcholt, deep in Lindwudu."
+offer = "Black Wystan. Worked the Fennhām road six year, all 'stand an' deliver' an' lovely manners, till 'e done a carter for 'is boots. Reeve's lads won't go into the Deorcholt after 'im. Will you?"
+done = "Black Wystan! All them lovely manners, an' 'e still 'ad to be put down. The road's safe, the Gilde pays, an' you're Iron now."
+
+[[quest.variant]]
+id = "osrick"
+target = "osrick"
+reveals = { location = "banfeld", when = "given" }
+where = "Bānfeld is a barrow field on Hlāwdūn, south of the road."
+offer = "Brother Osrick, what the Mynster threw out. Resurrection man: dug up the dead an' sold 'em to the sawbones, then started gettin' 'em up again. 'E's at Bānfeld, on the Hlāwdūn."
+done = "Osrick stays down this time? The sisters'll want to 'ear it. 'Ere's the Gilde's purse, an' you're Iron now."
+
+[[quest.variant]]
+id = "herrick"
+target = "herrick"
+reveals = { location = "brocenburg", when = "given" }
+where = "Brocenburg, the old fort, stands in Holegnwudu, east of the deep wood."
+offer = "Sergeant 'Errick. Done 'is captain at the fort an' legged it, an' now 'e sells 'is axe to goblins out at Brocenburg in the Holegnwudu. Fort wants 'im back. In a box'll do."
+done = "The Sergeant, boxed! Fort pays for the box, the Gilde pays for the job, an' you're Iron now."

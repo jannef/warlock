@@ -65,11 +65,24 @@ every new run starts in it.
     player can enter; 40 gold, 60 XP), "The hundred" (kill 100 of a creature tag drawn from
     kobold, goblin, undead, vermin, marsh-thing, duergar, and fire-thing, those living in a
     branch the player can enter; 250 gold, 2 red potions, 500 XP), "A scroll for the Gilde"
-    (bring a scroll drawn from those loot can hold; 200 gold, 150 XP). Being given the first
-    makes the player a **Tin** of the Gilde, the second done a **Pewter**; the ranks are seven,
-    titles named by metals of the game's materials ordered by their value (Tin, Pewter, Iron,
-    Steel, Duralumin, Electrum, Gold; `campaigns/ascmearc/data/guilds/weyfarers.toml`), the
-    later ones reserved for the chain's later links (link 4, "Wanted", and Iron with it: #426).
+    (bring a scroll drawn from those loot can hold; 200 gold, 150 XP), "Wanted" (kill one of
+    four wanted criminals, drawn from the quest's four variants, each revealing its own lair as
+    it is given: the other three stay hidden for the run; a named monster, met by its death at
+    any hand; 500 gold, 800 XP, alignment 10). Being given the first makes the player a **Tin**
+    of the Gilde, the second done a **Pewter**, the fourth done an **Iron**; the ranks are
+    seven, titles named by metals of the game's materials ordered by their value (Tin, Pewter,
+    Iron, Steel, Duralumin, Electrum, Gold; `campaigns/ascmearc/data/guilds/weyfarers.toml`),
+    the later ones reserved for the chain's later links.
+  - **The four lairs** (#426; the guild design §8): four hidden branches of four floors each,
+    danger 6 to 9, on reserved sites of the overworld, each with its criminal's pinned vault on
+    the fourth floor and no shops: **Wyrtholm** ("herb islet", Mother Sallow; caves 100×40 under
+    an islet in Micelfenn at (88, 46), 9 °C; the still-room), **Wulfeshol** ("wolf's hole",
+    Black Wystan; caves 100×40 in Deorcholt at (18, 49); the robbers' hoard), **Bānfeld** ("bone
+    field", Brother Osrick; rooms 80×21 under a barrow field on Hlāwdūn at (42, 31), 8 °C,
+    shadowed and hushed rooms, rusty keys; the unhallowed chapel), **Brocenburg** ("broken
+    fort", Sergeant Herrick; rooms 80×21 under the ruined tower in Holegnwudu at (66, 12), iron
+    keys, ogres only out of depth; the captain's hall). Their populations are the design's
+    §8.2 with the footpads. Sister Hild has a line on Osrick.
     The chain is likely a requirement of the story's ending, to come.
   Every quest of the three helps someone and is a little good (`alignment` 5 to 30); of Wat's,
   only "The hundred" is (5). Each reach and bring
