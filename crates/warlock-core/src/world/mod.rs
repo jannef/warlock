@@ -737,6 +737,10 @@ impl World {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);
+        if world.settle_in() {
+            *world.perception =
+                Perception::compute(&world.state, &world.content, &mut world.lights);
+        }
         if let Some(text) = world.birthday_welcome() {
             world.state.messages.push(0, text);
         }
@@ -1386,6 +1390,8 @@ mod shop_tests;
 mod sidestep_tests;
 #[cfg(test)]
 mod sign_pick_tests;
+#[cfg(test)]
+mod silent_tests;
 #[cfg(test)]
 mod skill_roll_tests;
 #[cfg(test)]

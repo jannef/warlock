@@ -191,7 +191,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     feel your power seeping out of you."; over a level: "Something here drinks at your
     power."); a *sweltering chamber* (5, #404) is 25 °C warmer than the level and glows a faint
     red (`[30, 10, 0]`; "A wave of heat meets you."); a *frigid hall* (5) is 25 °C colder and
-    glows a faint blue (`[0, 8, 22]`; "Your breath mists in the bitter cold."); a *heavy hall*
+    glows a faint blue (`[0, 8, 22]`; "Your breath mists in the bitter cold."); a *silent
+    vault* (5, #409) keeps a hundredth of every noise made inside (`noise = 1`) and gives
+    everyone inside **Silenced** (§8 "Status effects": no casting, reading, or throwing one's
+    voice; "Your footsteps make no sound at all."); a *heavy hall*
     (4, #412) halves everyone's carrying limit ("Your pack drags at you, as if the stones pulled
     it down."); an *unstable room* (4, #411, only in a room of at most 60 floor cells) warps
     one step in ten ("The floor shimmers under your feet."). Blood washing
