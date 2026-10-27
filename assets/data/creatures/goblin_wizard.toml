@@ -1,0 +1,60 @@
+# The summoners (#520; content::summoner_roster_tests checks the numbers): the goblin tribe's
+# hedge-wizard, who whistles up its kin and the wolves they ride from somewhere out of sight
+# (a summoner: `[creature.summon]`). Its other spells are announced only, as every creature's;
+# it keeps a quarterstaff (its racial weapon) for whoever gets past what it called.
+[[creature]]
+id = "goblin_wizard"
+level = 8
+xp = 50
+rarity = "rare"
+loot = 40
+name = "goblin wizard"
+glyph = "g"
+fg = "#c070e0"
+faction = "goblins"
+tags = ["goblin", "caster", "summoner"]
+alignment = "evil"
+vision = "darkvision"
+combat = "caster"
+range = 6
+opens_doors = true
+footsteps = 100
+hearing = 12
+weight = 30000
+size = "small"
+stats = { strength = 11, dexterity = 12, toughness = 15, intelligence = 15, willpower = 16, presence = 10 }
+base_hp = 16
+mana = 22
+skills = { concentration = 30, spellcraft = 34 }
+on_eat = { message = "This goblin meat is rank, and tingles on the tongue.", vomit = 40, stat = { intelligence = 3 } }
+weapon_skills = { staves = 1 }
+racial_weapon = "quarterstaff"
+[[creature.gear]]
+chance = 60
+one_of = ["bone_amulet"]
+magic = 20
+[[creature.gear]]
+chance = 40
+one_of = ["copper_coin*10", "copper_coin*20"]
+
+# Its kin (a goblin twice as likely as any other), an archer, a hobgoblin, or a warg: one to
+# three at a time, every half a minute while its mana lasts, six of them at most.
+[creature.summon]
+creatures = ["goblin", "goblin", "goblin_archer", "hobgoblin", "warg"]
+count = "1d3"
+cooldown = 30
+mana = 8
+most = 6
+verb = "calls forth"
+
+[[creature.particles]]
+on = "attack"
+glyphs = "·*+"
+colors = ["#f0c8ff", "#c070e0", "#603080"]
+count = 5
+life = 0.4
+spread = [0.9, 0.9]
+area = [0.15, 0.15]
+scale = 0.5
+fade = 0.6
+glow = 0.5

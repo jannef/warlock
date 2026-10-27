@@ -91,6 +91,9 @@ mod stance;
 mod stat_training;
 mod status;
 mod steal;
+mod summon;
+#[cfg(test)]
+mod summoner_roster_tests;
 mod tag;
 mod talent;
 mod terrain;
@@ -215,6 +218,7 @@ pub use status::{
     MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId, Wound,
 };
 pub use steal::StealRules;
+pub use summon::Summon;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
@@ -876,6 +880,7 @@ impl Content {
         content.uniques = unique::parse(files.table("uniques"), &content)?;
         content.load_gear()?;
         content.load_throws()?;
+        content.load_summons()?;
         let path = "data/shops.toml";
         if let Some(text) = files.get_optional(path) {
             content.shops = Some(Shops::parse(path, text, &content)?);
@@ -1444,6 +1449,11 @@ impl Content {
                 })?,
             };
             check_combat(&spec).map_err(err)?;
+            if let Some(summon) = &spec.summon {
+                summon
+                    .check()
+                    .map_err(|m| err(format!("creature `{}`: {m}", spec.id)))?;
+            }
             if let Some(on_eat) = &spec.on_eat {
                 on_eat
                     .check()
@@ -1700,6 +1710,25 @@ impl Content {
             if !throw.named {
                 throw.attack.name = name;
             }
+        }
+        Ok(())
+    }
+
+    /// Resolves the creature types' summonings (spec §8 "Summoning") once every type is known:
+    /// their pools and their cooldown status (`content/summon.rs`).
+    fn load_summons(&mut self) -> Result<(), ContentError> {
+        for i in 0..self.creatures.len() {
+            let Some(spec) = self.creatures[i].summon_spec.clone() else {
+                continue;
+            };
+            let me = CreatureId(i as u16);
+            let summon = summon::resolve(self, me, &spec).map_err(|m| {
+                ContentError::new(
+                    "data/creatures/",
+                    format!("creature `{}`: {m}", self.creatures[i].id),
+                )
+            })?;
+            self.creatures[i].summon = Some(summon);
         }
         Ok(())
     }

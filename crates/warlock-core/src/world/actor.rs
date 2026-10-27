@@ -203,6 +203,10 @@ pub struct Actor {
     /// peaceful creatures in the showcase). Read the one that counts with [`Actor::faction`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub faction_override: Option<FactionId>,
+    /// The creature that summoned it (spec §8 "Summoning", `world/summon.rs`), if one did: it
+    /// counts toward that summoner's live summons. Left out of saves while `None`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summoner: Option<ActorId>,
     /// Its alignment score (spec §8 "Alignment"; [`crate::alignment`]): the player's, when the
     /// content has alignment rules; creatures have none, and stand where [`Actor::nature`]
     /// says. Moved only by `World::shift_alignment`; never shown as a number.

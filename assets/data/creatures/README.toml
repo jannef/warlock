@@ -68,10 +68,12 @@
 #            giant (every type of the "giant" faction, the ogres too), ogre (the ogres)
 #            animated (every animated object, #483: generated, never written here)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
-#            combat = "caster" type), cultist (the minster's cult), skeleton (walking bones),
-#            spirit (the incorporeal dead), troll (every troll: the tribe, the marsh troll, and
-#            the rotting troll), construct (things made, not born: the mud golem and every
-#            animated object)
+#            combat = "caster" type), cultist (the minster's cult, and the necromancer and dark
+#            wizard of its kind), skeleton (walking bones), spirit (the incorporeal dead), troll
+#            (every troll: the tribe, the marsh troll, and the rotting troll), construct (things
+#            made, not born: the mud golem and every animated object), summoner (every type with
+#            a summoning, #520: the goblin wizard, the necromancer, the dark wizard; each of some
+#            other tribe too)
 # A creature may carry several: the kobold shaman is ["kobold", "caster"].
 #
 # Alignment (spec §8 "Alignment"; never shown to the player): alignment, where it stands between
@@ -132,6 +134,19 @@
 #   incorporeal  it passes through solid terrain (walls, rock, closed doors; never the level's
 #             edge) and may stand inside it (spec §8 "Incorporeal creatures"):
 #             { wall_defence = 4 }: its Defence bonus while inside (the Wall category, 0 to 20)
+#   summon    it calls forth creatures of its side (spec §8 "Summoning"; enemy-only):
+#             [creature.summon] with its pool, either creatures (ids, each as likely; one named twice is twice as
+#             likely: ["goblin", "goblin", "warg"]) or tag and levels (every type carrying the tag
+#             with a level within [lowest, highest], uniques and itself left out; a shared type
+#             calls shared types only, a campaign's its own too), count (dice: how many at once,
+#             1 to 12: "1d3"), cooldown (seconds before the next, 6 to 600: the `summoning` status
+#             of status.toml, a degree per 6 s), mana (what one costs, 1 to 1000; the type needs
+#             mana), and optionally range (it summons at a hostile it sees within this many cells,
+#             1 to 20; default 8), spread (how far from it they appear, 1 to 5; default 2), most
+#             (how many of its summoned may live at once, 1 to 20; default 6), and verb (the
+#             message's: "calls forth"; default "summons"). It summons before anything else it
+#             would do; what comes takes its faction and pays its experience when killed. A type
+#             with a summoning carries the tag `summoner` (content::summoner_roster_tests)
 #   resist    what it resists, in percent per damage type (spec §8 "Damage types"):
 #             { acid = 50 }; -100 (it takes double) to 100 (immune: nothing of the kind hurts
 #             it, whatever it wears). What it wears adds up with this, capped at 75 short of
