@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/stale_list_tests.rs
+expression: shown
+---
+ You begin to study the scroll of fireball. The words twist away from you, and the scroll crumbles
+ to dust. The spell tears loose from the page! The fireball burns you.
+
+
+
+
+
+
+
+
+
+
+          ┌─ Study ──────────────────────────────────────────────────────────────────────┐
+          │                                                                              │
+          │   You carry no scroll whose spell you could learn.                           │
+          │                                                                              │
+          │ Enter study   Esc cancel                                                     │
+          └──────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+ Hall  ·  HP 498/510  ·  MP 10/10  ·  Lv 1  ·  08:40  ·  11 Darkening, Year 1444         ? controls

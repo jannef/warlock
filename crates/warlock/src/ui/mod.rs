@@ -60,6 +60,8 @@ mod sign_screen;
 mod skills_screen;
 mod sounds;
 mod spells;
+#[cfg(test)]
+mod stale_list_tests;
 mod talents_screen;
 mod target;
 mod weapon_skills_screen;

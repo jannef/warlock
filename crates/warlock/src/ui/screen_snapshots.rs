@@ -19,30 +19,30 @@ use std::sync::Arc;
 use warlock_core::content::Content;
 
 /// One snapshot: a run (or the main menu) and what is open over it.
-struct Case {
-    name: &'static str,
-    scenario: &'static str,
+pub(super) struct Case {
+    pub(super) name: &'static str,
+    pub(super) scenario: &'static str,
     /// `--seed`; none: the scenario's.
-    seed: Option<u64>,
+    pub(super) seed: Option<u64>,
     /// `--character`; the run starts with its kit.
-    character: Option<&'static str>,
+    pub(super) character: Option<&'static str>,
     /// Starts with the character's starting kit without naming a character.
-    kit: bool,
+    pub(super) kit: bool,
     /// Action text applied before the app starts; empty opens the main menu, unless `run`.
-    actions: &'static str,
+    pub(super) actions: &'static str,
     /// Starts the run even with no actions (screens over a run at its first turn).
-    run: bool,
+    pub(super) run: bool,
     /// `--screen`.
-    screen: Option<&'static str>,
+    pub(super) screen: Option<&'static str>,
     /// `--keys`, pressed once the screens are open.
-    keys: Option<&'static str>,
+    pub(super) keys: Option<&'static str>,
     /// `--save-dir`, relative to the workspace root.
-    save_dir: Option<&'static str>,
+    pub(super) save_dir: Option<&'static str>,
     /// The UI console's size (columns, rows).
-    size: (u32, u32),
+    pub(super) size: (u32, u32),
 }
 
-const BASE: Case = Case {
+pub(super) const BASE: Case = Case {
     name: "",
     scenario: "showcase",
     seed: None,
@@ -841,6 +841,13 @@ fn quest_refused_as_too_early() {
 /// The UI console's text once `case` has started and its keys were pressed: one line a row,
 /// trailing blanks trimmed.
 fn render(case: &Case, content: Arc<Content>) -> String {
+    let mut app = start(case, content);
+    press_keys(&mut app, case.keys.unwrap_or(""));
+    text(app.world().resource::<Console>())
+}
+
+/// The app of `case` started, its screens open, no keys pressed yet.
+pub(super) fn start(case: &Case, content: Arc<Content>) -> App {
     let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../..");
     let save_dir = case.save_dir.map(|dir| format!("{root}/{dir}"));
     let mut argv = vec![
@@ -920,12 +927,17 @@ fn render(case: &Case, content: Arc<Content>) -> String {
         app.insert_resource(game);
     }
     app.update();
-    for key in case.keys.iter().flat_map(|keys| keys.split_whitespace()) {
+    app
+}
+
+/// Presses `keys` (as `--keys` writes them) in one frame, then lets the run and the screens
+/// catch up.
+pub(super) fn press_keys(app: &mut App, keys: &str) {
+    for key in keys.split_whitespace() {
         app.world_mut().write_message(press(key));
     }
     app.update();
     app.update();
-    text(app.world().resource::<Console>())
 }
 
 /// Applies the actions input asked for, as the game plugin does.
@@ -965,7 +977,7 @@ fn press(key: &str) -> KeyboardInput {
 }
 
 /// The console's glyphs, one line a row; transparent cells are blanks.
-fn text(console: &Console) -> String {
+pub(super) fn text(console: &Console) -> String {
     let cols = console.cols() as usize;
     let lines: Vec<String> = (console.cells().chunks(cols))
         .map(|row| {

@@ -15,8 +15,10 @@
 //! marks its row, and Enter picks up or drops the marked stacks (the cursor's row if none is
 //! marked); marks belong to stacks, so they stay as the pages turn. That is one action, recorded
 //! like any other, naming the stacks by position. Esc cancels. The list is read from the
-//! perception snapshot when the screen opens; no game time passes while it is open, so it cannot
-//! go stale.
+//! perception snapshot when the screen opens, and read again whenever the run changes while it
+//! is open ([`ObjectScreen::refresh`]): the study list stays beneath the dialog that studies, and
+//! a scroll used up shifts the positions of the stacks after it, so a row kept from before would
+//! name another stack (#591).
 //!
 //! The eat screen (`E`, spec §8 "Hunger") lists what can be eaten: first what lies here
 //! ("lying here"; the cursor starts on it, as ADOM asks about the floor first), then what the
@@ -297,6 +299,18 @@ impl ObjectScreen {
             load: Some(view.own_load()),
             looked: None,
         }
+    }
+
+    /// Reads the list again from what the player perceives now: an action taken from it (a
+    /// study chosen in the dialog over it) may have used up or moved the stacks it named by
+    /// position, so a row kept from before would name another stack. The cursor stays on its
+    /// row (or the last one); marks, which name positions, are dropped.
+    pub fn refresh(&mut self, view: &PerceptionView<'_>) {
+        let (cursor, looked) = (self.entries.cursor(), self.looked);
+        *self = Self::new(self.list, Some(view));
+        self.entries
+            .select(cursor.min(self.entries.iter().count().saturating_sub(1)));
+        self.looked = looked.filter(|&i| i < view.inventory().len());
     }
 
     /// What choosing `item` does on a screen of one pick: aim it to throw, eat it, aim the

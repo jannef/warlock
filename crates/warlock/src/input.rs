@@ -683,7 +683,8 @@ impl Plugin for InputPlugin {
 /// open, every press goes to the top screen and gameplay sees none; otherwise presses are
 /// gameplay commands. Screens open and close at once, so the next press in the same frame
 /// already goes to the new top. A menu choice (starting or leaving a run) is applied after this
-/// system, so the rest of that frame's presses are dropped.
+/// system, so the rest of that frame's presses are dropped, and so are they after a screen's
+/// gameplay action while an object list stays open (#591).
 pub fn route_keys(
     mut keys: MessageReader<KeyboardInput>,
     mut screens: Screens,
@@ -738,6 +739,11 @@ pub fn route_keys(
                 if let Some(dialog) = play.act(action) {
                     screens.ask(dialog);
                 }
+                // A screen's action is applied after this system, and the screens left open
+                // read the run again after that (`screens::refresh`): until then an object list
+                // left open names stacks by positions the action may have changed (#591), so
+                // while one is, the rest of this frame's presses are dropped.
+                chosen |= screens.stack.shows_objects();
             }
             ScreenAction::Aim(kind) => {
                 screens.stack.close();

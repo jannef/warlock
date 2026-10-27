@@ -572,7 +572,6 @@ impl ScreenStack {
         })
     }
 
-    /// Whether an equipment screen is open (it shows the run as it changes, [`refresh`]).
     /// Shows what an import from the browser's file picker did on the controls screen, if it
     /// is open.
     pub(super) fn keymap_imported(&mut self, lines: Vec<String>) {
@@ -583,16 +582,28 @@ impl ScreenStack {
         }
     }
 
-    fn shows_equipment(&self) -> bool {
-        (self.screens.iter()).any(|s| matches!(s, Screen::Equipment(_)))
+    /// Whether a screen is open that shows the run as it changes ([`refresh`]): the equipment
+    /// screen, or an object list.
+    fn shows_run(&self) -> bool {
+        (self.screens.iter()).any(|s| matches!(s, Screen::Equipment(_) | Screen::Objects(_)))
+    }
+
+    /// Whether an object list is open: one left open beneath a dialog that acted names stacks
+    /// by position until [`refresh`] reads the run again after the action.
+    pub fn shows_objects(&self) -> bool {
+        (self.screens.iter()).any(|s| matches!(s, Screen::Objects(_)))
     }
 
     /// Reads the run again into the screens that stay open while it changes: the equipment
-    /// screen, beneath a choice that was just done.
+    /// screen beneath a choice that was just done, and any object list, which names stacks by
+    /// position (the study list beneath the dialog that studied: the scroll used up moves the
+    /// stacks after it, #591).
     fn refresh(&mut self, view: &PerceptionView<'_>) {
         for screen in &mut self.screens {
-            if let Screen::Equipment(screen) = screen {
-                screen.refresh(view);
+            match screen {
+                Screen::Equipment(screen) => screen.refresh(view),
+                Screen::Objects(screen) => screen.refresh(view),
+                _ => {}
             }
         }
     }
@@ -840,10 +851,10 @@ impl Screens<'_> {
     }
 }
 
-/// Shows the screens that stay open while the run changes what they show (the equipment screen,
-/// beneath a choice that was just done) the run as it is now.
+/// Shows the screens that stay open while the run changes what they show (the equipment screen
+/// beneath a choice that was just done, an object list beneath a dialog) the run as it is now.
 pub(super) fn refresh(game: Res<Game>, mut stack: ResMut<ScreenStack>) {
-    if game.is_changed() && stack.shows_equipment() {
+    if game.is_changed() && stack.shows_run() {
         stack.refresh(&game.world.perception());
     }
 }
