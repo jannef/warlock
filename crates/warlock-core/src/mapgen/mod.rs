@@ -25,13 +25,15 @@
 //!    then roll its loot from its loot stream ([`Rng::loot`]), then, on a branch with a danger,
 //!    lay its initial population down from its population stream ([`Rng::population`],
 //!    `population.rs`), then its teeming dens' sleepers and hoards from its swarm stream
-//!    ([`Rng::swarm`], `den.rs`), then its creatures' gear from its gear stream ([`Rng::gear`],
+//!    ([`Rng::swarm`], `den.rs`), then its chests from its chest stream ([`Rng::chests`],
+//!    `chest.rs`), then its creatures' gear from its gear stream ([`Rng::gear`],
 //!    [`crate::gear::arm`]).
 //!
 //! Generation is integer-only and never iterates a hash map. Seeds are stable within a game
 //! version; the snapshot tests in this module flag any change in generator output.
 
 mod caves;
+mod chest;
 mod connect;
 mod den;
 mod dress;
@@ -543,6 +545,13 @@ pub fn generate_for(
                 hoard::fill(&mut template, content, seed, (pal, danger), visit);
             }
             room_loot::fill(&mut template, content, seed, pal);
+            chest::fill(
+                &mut template,
+                content,
+                (seed, luck),
+                (pal, def),
+                &canvas.stamped,
+            );
             crate::gear::arm(&mut template, content, seed);
             crate::animated::arm(&mut template, content, seed);
             return Ok(template);
@@ -743,6 +752,9 @@ fn draw(template: &LevelTemplate, content: &Content, rooms: bool) -> String {
                     .find(|r| rooms && r.contains(p) && content.terrain(t).is_plain_ground());
                 if let Some(c) = template.creatures.iter().find(|c| c.pos == p) {
                     content.creature(c.creature).glyph
+                } else if template.chests.contains_key(&p) {
+                    // A chest by its own glyph, whatever its lock or trap.
+                    content.terrain(t).glyph
                 } else if let Some(trap) = template.traps.get(&p) {
                     content.trap(trap.kind).glyph
                 } else if let Some(top) = template.objects.get(&p).and_then(|o| o.first()) {
@@ -802,6 +814,8 @@ pub(crate) fn out_and_back(
 mod altar_tests;
 #[cfg(test)]
 mod cealdhlaw_tests;
+#[cfg(test)]
+mod chest_tests;
 #[cfg(test)]
 mod fennmynster_tests;
 #[cfg(test)]

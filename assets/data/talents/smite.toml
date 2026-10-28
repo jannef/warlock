@@ -6,4 +6,4 @@ granted = true
 description = "A blow of holy wrath in a direction (an ability), harder as you grow; then you are spent a while."
 effects = [{ kind = "smite", per_levels = 10, sides = 6, cooldown = "spent", degrees = 1 }]
 systems = ["combat"]
-needs = { requires_alignment = { min = "good" } }
+alignment = { min = "kind" }

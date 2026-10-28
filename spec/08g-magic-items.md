@@ -141,6 +141,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creature's level as the item level, or the level's item level where that is higher (an
     out-of-depth creature drops a deeper item), made of a material by the creature's level (its gear: `roll_from` with
     `Source::Gear`); by the gems' `chance` (one draw first) the drop is a loose gem instead.
+  - **Chest loot** (`chest::roll_contents`, §8 "Chests"; docs/design/chests-and-treasure.md
+    §4): a generated chest holds what its band's `loot` table rolls, from the level's chest
+    stream: `items` dice (one roll), then per item one `below(100)` for its grade (under `rare`
+    rare, under `magic` at least magic, else any: loot's own chance of a gem first) and the loot
+    roll at the floor's item level + `loot_level` with the finder's luck (Treasure hunter, Hoard
+    sense), nothing more when nothing is found; then the purse, `gold.dice` × `gold.each` coins
+    of the shops' currency (one roll; none at 0); then `gems` dice (0 or less: none), each a
+    loose gem rolled at the same level (`gem::roll`). Like stacks join. A coffer (`1d3`, 10 %
+    / 1 %, `2d6` gold, `1d4-3` gems) holds on average 2 items, 7 gold, and a gem one time in
+    four; a banded chest (`2d3+1` at +1, 25 % / 3 %, `3d6` × 3, `1d2`) 5 items, 31.5 gold, and
+    1.5 gems. A mimic (C4) will carry the same stacks from the same draws.
   - **Unique items** (`content/unique.rs`, data `data/uniques/` and each campaign's
     `data/uniques/`, §7; #423, docs/design/adventurers-guild.md §9): one of a kind, like ADOM's
     artifacts: a **rare** item with a set name, set affixes and parts, an item level, a

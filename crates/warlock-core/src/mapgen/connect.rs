@@ -3,6 +3,7 @@
 
 use super::CARDINALS;
 use crate::content::{Content, LevelTemplate, StairsDir, validate_route};
+use crate::door::Lock;
 use crate::geom::Pos;
 use crate::grid::Grid;
 use std::cmp::Reverse;
@@ -152,7 +153,7 @@ pub(super) enum Invalid {
 
 /// Checks a generated level: it has an up staircase (the arrival point and player start), and
 /// every stair, door (secret ones too), and walkable cell is reachable from it; locks lie only on
-/// closed doors, and the stairs and a key to every lock (lying, or carried by a creature) are
+/// closed doors and shut chests, and the stairs and a key to every door's lock (lying, or carried by a creature) are
 /// reachable without unlocking any door (spec §8 "Doors") or finding any secret door (spec §8
 /// "Searching"), so no level needs a key it does not give or a door the player may never find;
 /// every patrol stays on walkable terrain and loops; and at least one cell emits light.
@@ -180,12 +181,13 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
         return Err(Invalid::Unreachable(s.pos));
     }
     if !level.locks.is_empty() || !level.secrets.is_empty() {
+        let chest = |p: Pos| (terrain.get(p)).is_some_and(|t| content.terrain(*t).is_shut_chest());
         let closed = |p: Pos| {
             terrain
                 .get(p)
                 .is_some_and(|t| content.terrain(*t).is_closed_door())
         };
-        if let Some(p) = level.locks.keys().find(|p| !closed(**p)) {
+        if let Some(p) = level.locks.keys().find(|p| !closed(**p) && !chest(**p)) {
             return Err(Invalid::BadLock(*p));
         }
         let unlocked = |p: Pos| {
@@ -195,8 +197,11 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
         if let Some(s) = level.stairs.iter().find(|s| !open[s.pos]) {
             return Err(Invalid::LockedAway(s.pos));
         }
-        let keyless = |lock| !level.has_key_for(content, lock, |p| open[p]);
-        if let Some((p, _)) = level.locks.iter().find(|(_, lock)| keyless(*lock)) {
+        let keyless = |lock: &Lock| !level.has_key_for(content, lock, |p| open[p]);
+        // A generated chest's lock wants no key: Pick lock, Knock, or a kick open it, and a
+        // chest is never in the way (spec §8 "Chests").
+        let needs_key = |(p, lock): (&Pos, &Lock)| !chest(*p) && keyless(lock);
+        if let Some((p, _)) = level.locks.iter().find(|&entry| needs_key(entry)) {
             return Err(Invalid::NoKey(*p));
         }
     }

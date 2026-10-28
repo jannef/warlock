@@ -71,7 +71,8 @@ pub enum KeyCommand {
     WeaponSkills,
     /// Show the player's quests, active and done (no time passes).
     Quests,
-    /// Show the player's talents, and every other with what it needs (no time passes).
+    /// Show the player's talents, and every other with what it needs (no time passes). `G`, a
+    /// key ADOM leaves free (ADOM has no talents command).
     Talents,
     /// Show the messages so far, the newest at the bottom (no time passes).
     Messages,
@@ -478,6 +479,7 @@ impl Default for Bindings {
             (ch("A"), Skills),
             (ch("W"), WeaponSkills),
             (ch("q"), Quests),
+            (ch("G"), Talents),
             (ch("v"), Messages),
             (ch("b"), Rest),
             (ch("e"), Eat),
@@ -1501,6 +1503,7 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Missile), ["t"]);
         assert_eq!(keys(&b, KeyCommand::Throw), ["T"]);
         assert_eq!(keys(&b, KeyCommand::WeaponSkills), ["W"]);
+        assert_eq!(keys(&b, KeyCommand::Talents), ["G"]);
         assert!(keys(&b, KeyCommand::Bash).is_empty(), "an ability: unbound");
         assert!(
             keys(&b, KeyCommand::Disarm).is_empty(),

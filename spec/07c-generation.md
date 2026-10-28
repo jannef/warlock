@@ -15,7 +15,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   features are for each level below the first (`hidden_per_depth`, 0 to 5, default 0; the Depths
   1), how much harder its locks are to pick for each level below the first, on top of each lock's
   own difficulty (`locks_per_depth`, 0 to 5, default 0; the Depths 1; §8 "Doors"), ambient light, `loot = [fewest, most]` (items of loot on each
-  level's floor, at most 50; the Depths 2 to 4; §8 "Magic items"), `temperature` (°C, −40 to 40;
+  level's floor, at most 50; the Depths 2 to 4; §8 "Magic items"), `chests = { chance, count }`
+  (percent of its floors with chests, 0 to 100, and how many such a floor gets, `[least, most]`,
+  at most 8; default `{ chance = 20, count = [1, 1] }`, one floor in five; §8 "Chests"), `temperature` (°C, −40 to 40;
   default 10; §5 "Temperature"), a `key` (a key object: its rooms levels lock a few rooms with
   the lock it opens, §8 "Doors"; the Depths' is the rusty key), its own special-room and shop
   odds (`room_effects`, `shops`; §7 "Special rooms", "Shops"; default the shared ones), and
@@ -149,7 +151,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   far from it, a few creatures on looping patrols, and last, now and then, a special room
   (below). Every level is validated by flood fill —
   every stair, door, and walkable cell reachable from the up staircase; locks only on closed
-  doors, and the stairs and a key to every lock (lying, or carried by a creature) reachable from
+  doors and shut chests, and the stairs and a key to every door's lock (lying, or carried by a creature) reachable from
   it without unlocking a door, so no level needs a key it does not give; patrols valid, some
   light — and a level that fails is regenerated from the next derived stream. A valid level then
   hides its branch's traps (§8 "Traps"), all hidden, drawn from a stream of their own
