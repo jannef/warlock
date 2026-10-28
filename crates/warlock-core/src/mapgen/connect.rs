@@ -2,7 +2,7 @@
 //! every generated level must pass.
 
 use super::CARDINALS;
-use crate::content::{Content, LevelTemplate, StairsDir, validate_route};
+use crate::content::{Content, LevelTemplate, StairsDir, breach_fault, validate_route};
 use crate::door::Lock;
 use crate::geom::Pos;
 use crate::grid::Grid;
@@ -149,6 +149,10 @@ pub(super) enum Invalid {
     NoKey(Pos),
     BadPatrol(String),
     Dark,
+    /// A sealed room (`sealed = "dig"`) with no breach, at its corner.
+    NoBreach(Pos),
+    /// A sealed room's breach that does not open it ([`breach_fault`]).
+    BadBreach(Pos),
 }
 
 /// Checks a generated level: it has an up staircase (the arrival point and player start), and
@@ -156,7 +160,10 @@ pub(super) enum Invalid {
 /// closed doors and shut chests, and the stairs and a key to every door's lock (lying, or carried by a creature) are
 /// reachable without unlocking any door (spec §8 "Doors") or finding any secret door (spec §8
 /// "Searching"), so no level needs a key it does not give or a door the player may never find;
-/// every patrol stays on walkable terrain and loops; and at least one cell emits light.
+/// every patrol stays on walkable terrain and loops; and at least one cell emits light. The one
+/// exception to reaching every cell: a sealed room (a greater treasure room, `sealed = "dig"`),
+/// whose cells are reached by breaking its breach, provided the breach opens it
+/// ([`breach_fault`]); nothing the level needs (stairs, a key, a creature) is ever inside one.
 pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), Invalid> {
     let terrain = &level.terrain;
     let up = level
@@ -174,7 +181,22 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
             })
     };
     let reached = flood(terrain.width(), terrain.height(), up, passable);
-    if let Some((p, _)) = terrain.iter().find(|(p, _)| passable(*p) && !reached[*p]) {
+    let mut sealed = Vec::new();
+    for room in &level.rooms {
+        if content.room_effect(room.effect).sealed.is_none() {
+            continue;
+        }
+        let breach = room.breach.ok_or(Invalid::NoBreach(room.min))?;
+        let reach = |p: Pos| reached.get(p) == Some(&true);
+        if breach_fault(terrain, content, room, breach, reach).is_some() {
+            return Err(Invalid::BadBreach(breach));
+        }
+        sealed.push(room);
+    }
+    let walled = |p: Pos| sealed.iter().any(|r| r.contains(p));
+    if let Some((p, _)) =
+        (terrain.iter()).find(|(p, _)| passable(*p) && !reached[*p] && !walled(*p))
+    {
         return Err(Invalid::Unreachable(p));
     }
     if let Some(s) = level.stairs.iter().find(|s| !reached[s.pos]) {

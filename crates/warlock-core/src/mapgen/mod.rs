@@ -568,7 +568,8 @@ pub fn generate_for(
 /// stream ([`Rng::traps`]), so the rest of the level is the same with or without them. A trap
 /// lies on plain floor that nothing else claims: never on or next to a staircase (the player
 /// arrives there), never on a creature's patrol (creatures do not know where traps are, and
-/// would spring one every round), nor where objects lie or a light stands, nor in a shop.
+/// would spring one every round), nor where objects lie or a light stands, nor in a shop, nor in
+/// a sealed room (a greater treasure room).
 fn hide_traps(
     template: &mut LevelTemplate,
     content: &Content,
@@ -584,9 +585,15 @@ fn hide_traps(
     let count = least + rng.below(most - least + 1);
     let patrolled = patrolled(template);
     let near_stairs = |p: Pos| template.stairs.iter().any(|s| s.pos.chebyshev(p) <= 1);
+    // A sealed room (a greater treasure room) is walled up: nothing springs in it.
+    let sealed = |p: Pos| {
+        (template.rooms.iter())
+            .any(|r| content.room_effect(r.effect).sealed.is_some() && r.contains(p))
+    };
     let mut free: Vec<Pos> = (template.terrain.iter())
         .filter(|&(p, t)| {
             *t == pal.floor
+                && !sealed(p)
                 && !near_stairs(p)
                 && !patrolled.contains(&p)
                 && !template.objects.contains_key(&p)

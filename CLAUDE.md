@@ -222,7 +222,7 @@ order, each with its source and what it asks for or why it cannot be used now: `
 one a line), `locations` (the overworld locations the player knows, `(45, 23) The Hall`, a hidden
 one only once revealed), `quests` (the quest log, active
 first: name, stage, giver, objective, and status), `truth`
-(ground truth, hidden traps and secret doors (`S`) too, a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, and hidden locations by their entrance's
+(ground truth, hidden traps and secret doors (`S`) too, a sealed room's standing breach (`H`), a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, and hidden locations by their entrance's
 glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana (and, with any, its caster level, `cl 8`), its resources (`resources rage
 11/20 (0)`, with progress), and
@@ -251,7 +251,7 @@ ones held: `id`, `current`, `max`), `defence`, `protection`, `resistances` (by d
 word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `guilds` (`id`, `name`, `rank`; left out before joining one), `hunger`, `dazzled`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
-`known_traps`, `known_locations` (`pos`, `name`), `chests` (seen or remembered: `pos`, `band`, `state`, `locked` with Chest-wise, else null), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
+`known_traps`, `known_hollows` (the hollow walls found: positions), `known_locations` (`pos`, `name`), `chests` (seen or remembered: `pos`, `band`, `state`, `locked` with Chest-wise, else null), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
 `rank`, `progress`), `styles_in_use` (style ids), `attacks` (`source`, `kind`, `name`, `to_hit`, `damage` (the text),
 `range`), `talents` (in the order taken: `id`, `name`,
 `rank`, `ranks`, `choice`, `class`, `granted`, `flaw`), `character` (`name`, `race`, `gender`, `class`,

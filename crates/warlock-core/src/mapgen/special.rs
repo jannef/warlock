@@ -89,7 +89,8 @@ pub(crate) fn draw(
 /// one more draw, only for an effect that has one and while no effect covers the level yet).
 ///
 /// `fits` is what the generator asks besides: an effect with `secret_doors` needs a room it can
-/// seal, or a box in a cave's rock (`treasury.rs`).
+/// seal, or a box in a cave's rock, and a sealed one a box in the rock with its breach beside a
+/// cell reached from the up staircase (`treasury.rs`).
 pub(super) fn pick(
     canvas: &Canvas,
     rng: &mut Rng,
@@ -288,14 +289,14 @@ pub(super) fn cave_rooms(canvas: &mut Canvas, rng: &mut Rng, up: Pos) {
         if floor.len() < MIN_CHAMBER {
             continue;
         }
-        // A room with secret doors is a box of its own in the rock, not the chamber
-        // (`treasury.rs`).
-        let boxed =
-            |e: &RoomEffectDef| e.secret_doors.is_none() || super::treasury::fits_cave(canvas, e);
+        // A room with secret doors, or a sealed one, is a box of its own in the rock, not the
+        // chamber (`treasury.rs`).
+        let boxes = |e: &RoomEffectDef| e.secret_doors.is_some() || e.sealed.is_some();
+        let boxed = |e: &RoomEffectDef| !boxes(e) || super::treasury::fits_box(canvas, e);
         let Some((effect, whole)) = pick(canvas, rng, floor.len(), boxed) else {
             continue;
         };
-        if canvas.content.room_effect(effect).secret_doors.is_some() {
+        if boxes(canvas.content.room_effect(effect)) {
             super::treasury::stamp(canvas, rng, effect);
             continue;
         }

@@ -8,6 +8,11 @@
 //!   stamped into the rock ([`stamp`]): its floor, a ring of rock (walls once the walls are
 //!   built), and one closed door in the ring facing the cave; eligible only where such a box
 //!   fits ([`spots`]). Both come from the level's map stream, as every special room's draws.
+//! - A sealed room (`sealed = "dig"`, a greater treasure room) is a box on either generator
+//!   ([`stamp`]; on a rooms level in the rock the corridors left, so no corridor leads to it):
+//!   no door at all, and one cell of its ring beside a walkable cell reached from the up
+//!   staircase is its `breach`, the one wall guaranteed to open it. Eligible only where such a
+//!   box fits ([`fits_box`]); `connect::validate` lets its cells go unreached for that breach.
 //! - [`seal`], once the level is valid: every door of such a room (a doorway or an open door made
 //!   a closed one first) becomes a secret door ([`secret_look`]) of the branch's secret-door
 //!   difficulty, not counted against the branch's `secret_doors`. If the level is no longer valid
@@ -27,6 +32,7 @@ use crate::content::{
     secret_look,
 };
 use crate::geom::{Dir, Pos};
+use crate::grid::Grid;
 use crate::item_parts::ItemPart;
 use crate::magic::loot::Luck;
 use crate::object::{Stack, add_to_pile};
@@ -89,10 +95,11 @@ fn aside(canvas: &Canvas, doors: &[Pos]) -> bool {
     canvas.down.into_iter().chain(keys).all(|p| reached[p])
 }
 
-/// The top-left corners of the interior of every box of `size` that fits in the cave's rock: the
+/// The top-left corners of the interior of every box of `size` that fits in the level's rock: the
 /// box with its ring all rock (not stamped, in no special room, off the level's edge), and at
-/// least one [`door_spots`]. In row order.
-pub(super) fn spots(canvas: &Canvas, size: (i32, i32)) -> Vec<Pos> {
+/// least one [`door_spots`] (beside a cell `reached` holds, when given: a sealed box's breach).
+/// In row order.
+pub(super) fn spots(canvas: &Canvas, size: (i32, i32), reached: Option<&Grid<bool>>) -> Vec<Pos> {
     let (w, h) = size;
     (2..canvas.height() - h - 1)
         .flat_map(|y| (2..canvas.width() - w - 1).map(move |x| Pos::new(x, y)))
@@ -104,8 +111,25 @@ pub(super) fn spots(canvas: &Canvas, size: (i32, i32)) -> Vec<Pos> {
                     && !canvas.rooms.iter().any(|r| r.contains(p))
             })
         })
-        .filter(|&at| !door_spots(canvas, at, size).is_empty())
+        .filter(|&at| !door_spots(canvas, at, size, reached).is_empty())
         .collect()
+}
+
+/// The cells reached from the level's up staircase (4-connected, through walkable cells and
+/// closed doors, as `connect::validate` reaches them); `None` before the stairs are placed.
+fn reached(canvas: &Canvas) -> Option<Grid<bool>> {
+    let content = canvas.content;
+    let passable = |p: Pos| {
+        canvas.terrain.in_bounds(p)
+            && (canvas.is_walkable(p) || content.terrain(canvas.get(p)).is_closed_door())
+    };
+    let up = canvas.up?;
+    Some(connect::flood(
+        canvas.width(),
+        canvas.height(),
+        up,
+        passable,
+    ))
 }
 
 /// The cells of the box of `size` with its interior's top-left corner at `at`, its ring
@@ -114,14 +138,21 @@ fn ring(at: Pos, (w, h): (i32, i32)) -> impl Iterator<Item = Pos> {
     (at.y - 1..=at.y + h).flat_map(move |y| (at.x - 1..=at.x + w).map(move |x| Pos::new(x, y)))
 }
 
-/// The cells of a box's ring (corners left out) next to walkable cave floor outside it (not
-/// stamped, in no special room), where its door may go. In row order.
-fn door_spots(canvas: &Canvas, at: Pos, (w, h): (i32, i32)) -> Vec<Pos> {
+/// The cells of a box's ring (corners left out) next to walkable floor outside it (not stamped,
+/// in no special room, and reached from the up staircase when `reached` is given), where its
+/// door, or a sealed box's breach, may go. In row order.
+fn door_spots(
+    canvas: &Canvas,
+    at: Pos,
+    (w, h): (i32, i32),
+    reached: Option<&Grid<bool>>,
+) -> Vec<Pos> {
     let open = |p: Pos| {
         canvas.terrain.in_bounds(p)
             && canvas.is_walkable(p)
             && !canvas.is_stamped(p)
             && !canvas.rooms.iter().any(|r| r.contains(p))
+            && reached.is_none_or(|r| r[p])
     };
     let mut found = Vec::new();
     for x in at.x..at.x + w {
@@ -140,27 +171,53 @@ fn door_spots(canvas: &Canvas, at: Pos, (w, h): (i32, i32)) -> Vec<Pos> {
     found
 }
 
-/// Whether a cave level has room for a box for `effect` (see [`spots`]).
-pub(super) fn fits_cave(canvas: &Canvas, effect: &RoomEffectDef) -> bool {
-    !spots(canvas, box_size(effect.min_cells)).is_empty()
+/// Whether the level has room for a box for `effect` (see [`spots`]): a cave's treasure room,
+/// or a sealed room (a greater treasure room) on either generator, whose breach must lie beside
+/// a cell reached from the up staircase.
+pub(super) fn fits_box(canvas: &Canvas, effect: &RoomEffectDef) -> bool {
+    let reached = if effect.sealed.is_some() {
+        match reached(canvas) {
+            Some(reached) => Some(reached),
+            None => return false,
+        }
+    } else {
+        None
+    };
+    !spots(canvas, box_size(effect.min_cells), reached.as_ref()).is_empty()
 }
 
-/// Stamps the box of a cave level's special room of `effect` into the rock: one draw for its
-/// spot among [`spots`], one for its door among [`door_spots`]; its floor, its ring rock (walls
-/// once the walls are built), its door closed. Returns whether it did.
+/// Stamps the box of a special room of `effect` into the level's rock: one draw for its spot
+/// among [`spots`], one for its way in among [`door_spots`]; its floor, its ring rock (walls once
+/// the walls are built). A box with secret doors (a cave's treasure room) gets its door there,
+/// closed (hidden by [`seal`]); a sealed one (a greater treasure room, `sealed = "dig"`) no door
+/// at all, the cell its `breach`, beside a cell reached from the up staircase. Returns whether
+/// it did.
 pub(super) fn stamp(canvas: &mut Canvas, rng: &mut Rng, effect: RoomEffectId) -> bool {
-    let size = box_size(canvas.content.room_effect(effect).min_cells);
-    let spots = spots(canvas, size);
+    let def = canvas.content.room_effect(effect);
+    let size = box_size(def.min_cells);
+    let reached = if def.sealed.is_some() {
+        match reached(canvas) {
+            Some(reached) => Some(reached),
+            None => return false,
+        }
+    } else {
+        None
+    };
+    let spots = spots(canvas, size, reached.as_ref());
     let Some(&at) = rng.pick(&spots) else {
         return false;
     };
-    let doors = door_spots(canvas, at, size);
+    let doors = door_spots(canvas, at, size, reached.as_ref());
     let Some(&door) = rng.pick(&doors) else {
         return false;
     };
     let (w, h) = size;
     let (min, max) = (Pos::new(at.x - 1, at.y - 1), Pos::new(at.x + w, at.y + h));
-    if !super::special::make(canvas, SpecialRoom::rect(effect, min, max)) {
+    let mut room = SpecialRoom::rect(effect, min, max);
+    if reached.is_some() {
+        room.breach = Some(door);
+    }
+    if !super::special::make(canvas, room) {
         return false;
     }
     for y in at.y..at.y + h {
@@ -168,7 +225,9 @@ pub(super) fn stamp(canvas: &mut Canvas, rng: &mut Rng, effect: RoomEffectId) ->
             canvas.set(Pos::new(x, y), canvas.pal.floor);
         }
     }
-    canvas.set(door, canvas.pal.door_closed);
+    if reached.is_none() {
+        canvas.set(door, canvas.pal.door_closed);
+    }
     true
 }
 
@@ -298,12 +357,13 @@ fn floor(template: &LevelTemplate, room: &SpecialRoom, pal: Palette) -> Vec<Pos>
         .collect()
 }
 
-/// Whether `p` touches (8-way) a door or secret door of `room`'s rim, where a chest would stand in
-/// the way in.
+/// Whether `p` touches (8-way) a door, secret door, or breach of `room`'s rim, where a chest would
+/// stand in the way in.
 fn by_door(template: &LevelTemplate, content: &Content, room: &SpecialRoom, p: Pos) -> bool {
     Dir::ALL.iter().map(|d| p.step(*d)).any(|q| {
         room.contains(q)
             && (template.secrets.contains_key(&q)
+                || room.breach == Some(q)
                 || template
                     .terrain
                     .get(q)

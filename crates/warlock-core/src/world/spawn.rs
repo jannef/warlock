@@ -13,7 +13,7 @@
 //! of the generic creature list or one from deeper ([`crate::content::danger::draw`]: a unique
 //! type once a run), a cell out of the player's view
 //! by the perception rules and at least [`AWAY`] cells from them (walkable, free, no stairs,
-//! door, shop floor, or sanctuary; up to [`TRIES`] draws, else nothing comes), and a short route
+//! door, shop floor, sanctuary, or sealed room; up to [`TRIES`] draws, else nothing comes), and a short route
 //! where one fits, else a post. The newcomer is an ordinary creature from then on.
 //!
 //! Danger is hidden in the game: the Sixth sense talent says it in words, relative to the
@@ -217,7 +217,11 @@ impl World {
                 && level.stairs_at(p).is_none()
                 && !level.is_door(content, p)
                 && !level.shops.iter().any(|s| s.contains(p))
-                && !(level.room_at(p)).is_some_and(|r| content.room_effect(r.effect).shunned)
+                && !(level.room_at(p)).is_some_and(|r| {
+                    // Nothing comes into a sealed room (a greater treasure room) either.
+                    let effect = content.room_effect(r.effect);
+                    effect.shunned || effect.sealed.is_some()
+                })
         };
         let (w, h) = (level.width(), level.height());
         let mut cell = None;

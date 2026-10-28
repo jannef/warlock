@@ -228,6 +228,9 @@ struct RoomSpec {
     /// Its hidden side, for an effect with `sides` (a forgotten altar's); default neutral (a
     /// shrine's must be good or evil).
     side: Option<crate::alignment::Alignment>,
+    /// `[x, y]`: the wall that opens a sealed room (`sealed = "dig"`, a greater treasure room),
+    /// which it needs; on its rim, beside a cell reached from the start and floor of the room.
+    breach: Option<[i32; 2]>,
 }
 
 /// A named area of a level, e.g. a forest or a range of hills on the overworld.
@@ -904,6 +907,21 @@ pub(super) fn parse_level(
             (side, true) => room.side = Some(side.unwrap_or_default()),
             (None, false) => {}
         }
+        match (spec.breach, def.sealed.is_some()) {
+            (Some(_), false) => {
+                return Err(err(format!(
+                    "room `{}` has a `breach`, but its effect is not `sealed`",
+                    spec.effect
+                )));
+            }
+            (None, true) => {
+                return Err(err(format!(
+                    "room `{}` is sealed: it needs a `breach`, the wall that opens it",
+                    spec.effect
+                )));
+            }
+            (breach, _) => room.breach = breach.map(|[x, y]| Pos::new(x, y)),
+        }
         if def.shrine.is_some()
             && room
                 .side
@@ -1007,6 +1025,7 @@ pub(super) fn parse_level(
     }
     let shops =
         parse_shops(parsed.shop, &terrain, player_start, &mut creatures, content).map_err(err)?;
+    check_sealed(&terrain, &secrets, &rooms, player_start, content).map_err(err)?;
 
     let temperature = match parsed.temperature {
         Some(_) if parsed.kind.is_sky_exposed() => {
@@ -1559,6 +1578,63 @@ fn hide_secret_doors(
         secrets.insert(pos, secret);
     }
     Ok(secrets)
+}
+
+/// Checks a level file's sealed rooms (`sealed = "dig"`, a greater treasure room; spec §7
+/// "Special rooms"), as `connect::validate` checks a generated one's: its `breach` opens it
+/// ([`super::breach_fault`]: a wall that breaks, beside a cell reached from the player's start
+/// and floor of the room), and none of its cells is reached from the start without breaking a
+/// wall. Reached is 4-connected through walkable cells, closed doors, and secret doors; a level
+/// without a start is reached from beside the breach.
+fn check_sealed(
+    terrain: &Grid<TerrainId>,
+    secrets: &BTreeMap<Pos, Secret>,
+    rooms: &[SpecialRoom],
+    start: Option<Pos>,
+    content: &Content,
+) -> Result<(), String> {
+    let open = |p: Pos| {
+        secrets.contains_key(&p)
+            || terrain.get(p).is_some_and(|t| {
+                let def = content.terrain(*t);
+                def.walkable || def.is_closed_door()
+            })
+    };
+    let sides = [Dir::N, Dir::E, Dir::S, Dir::W];
+    for room in rooms {
+        let Some(breach) = room.breach else {
+            continue;
+        };
+        let from: Vec<Pos> = match start {
+            Some(start) => vec![start],
+            None => (sides.iter().map(|d| breach.step(*d)))
+                .filter(|&p| !room.contains(p) && open(p))
+                .collect(),
+        };
+        let mut reached: std::collections::BTreeSet<Pos> = from.into_iter().collect();
+        let mut queue: Vec<Pos> = reached.iter().copied().collect();
+        while let Some(p) = queue.pop() {
+            for q in sides.map(|d| p.step(d)) {
+                if open(q) && reached.insert(q) {
+                    queue.push(q);
+                }
+            }
+        }
+        let fault = super::breach_fault(terrain, content, room, breach, |p| reached.contains(&p));
+        if let Some(fault) = fault {
+            return Err(format!(
+                "sealed room at {}-{}: its breach {breach} {fault}",
+                room.min, room.max
+            ));
+        }
+        if let Some(p) = room.cells().into_iter().find(|p| reached.contains(p)) {
+            return Err(format!(
+                "sealed room at {}-{} is reached at {p} without breaking a wall",
+                room.min, room.max
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// Parses a route like `"E4 S2 W4 N2"` (count defaults to 1).

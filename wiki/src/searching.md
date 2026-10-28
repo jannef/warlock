@@ -6,6 +6,10 @@ the wall and the floor: you cannot see through a secret door, walk through it, o
 and neither can the creatures. You find them by **searching**, or **in passing**, if you are the
 kind who notices such things. Both work the same way for every hidden thing.
 
+The thin wall of a [greater treasure room](special-rooms.md) is hidden the same way, at a secret
+door's difficulty: found, *the wall here sounds hollow*, and it stays a hollow stone wall to you
+until you dig or blast through it.
+
 ## Searching
 
 - `s` searches the cells around you, once: it takes a turn (6 seconds).

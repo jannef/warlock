@@ -44,7 +44,7 @@
 
 use super::room_lore::{LootSpec, LoreNames, RoomLoot};
 use super::room_shrine::{Shrine, ShrineSpec};
-use super::room_treasury::{SecretDoors, Treasury};
+use super::room_treasury::{Sealed, SecretDoors, Treasury};
 use super::{
     ContentError, ItemClassId, LightId, OutcomeTables, StatusDef, StatusId, TerrainDef, TerrainId,
 };
@@ -167,6 +167,7 @@ struct RoomEffectSpec {
     #[serde(default)]
     train: BTreeMap<String, u16>,
     secret_doors: Option<SecretDoors>,
+    sealed: Option<Sealed>,
     treasure: Option<Treasury>,
     arrive: Option<String>,
 }
@@ -532,6 +533,9 @@ pub struct RoomEffectDef {
     lore: LoreNames,
     /// How its doors are hidden (a treasure room's: all of them secret; `mapgen/treasury.rs`).
     pub secret_doors: Option<SecretDoors>,
+    /// Whether it has no door at all (a greater treasure room's `sealed = "dig"`: a box in the
+    /// rock with its breach; `mapgen/treasury.rs`).
+    pub sealed: Option<Sealed>,
     /// What generators lay inside a treasure room: chests, heaps of gold, gems.
     pub treasure: Option<Treasury>,
     /// Said on every arrival on a level with such a room the player has not entered yet (one
@@ -573,6 +577,7 @@ impl RoomEffectDef {
             && self.dressing.is_none()
             && self.lore.loot.is_none()
             && self.secret_doors.is_none()
+            && self.sealed.is_none()
             && self.treasure.is_none()
             && self.arrive.is_none()
             && self.pervade.is_some()
@@ -954,6 +959,12 @@ impl RoomEffects {
             if let Some(treasure) = &spec.treasure {
                 treasure.check().map_err(bad)?;
             }
+            if spec.sealed.is_some() && spec.secret_doors.is_some() {
+                return Err(bad(
+                    "a `sealed` room has no door to hide: not both `sealed` and `secret_doors`"
+                        .into(),
+                ));
+            }
             for (what, value, range) in [
                 ("noise", spec.noise, NOISE),
                 ("regen", spec.regen, REGEN),
@@ -1167,6 +1178,7 @@ impl RoomEffects {
                 train: Vec::new(),
                 lore,
                 secret_doors: spec.secret_doors,
+                sealed: spec.sealed,
                 treasure: spec.treasure,
                 arrive: spec.arrive,
             };
@@ -1216,6 +1228,11 @@ pub struct SpecialRoom {
     /// neutral, or evil. Never told in words.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub side: Option<Alignment>,
+    /// The wall cell of a room with no door (a greater treasure room's, `sealed = "dig"`) that is
+    /// guaranteed to open it when broken: on its rim, beside a cell reached from the up staircase
+    /// and a walkable cell of the room. Found by searching (a hollow wall). Ground truth.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub breach: Option<Pos>,
 }
 
 fn is_zero(n: &u8) -> bool {
@@ -1235,6 +1252,7 @@ impl SpecialRoom {
             lifted: 0,
             sealed: false,
             side: None,
+            breach: None,
         }
     }
 
@@ -1261,6 +1279,7 @@ impl SpecialRoom {
             lifted: 0,
             sealed: false,
             side: None,
+            breach: None,
         }
     }
 

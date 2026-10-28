@@ -1289,6 +1289,18 @@ impl<'a> PerceptionView<'a> {
         }
     }
 
+    /// Whether the wall at `p` is one the player found sounds hollow (spec §7 "Special rooms": a
+    /// greater treasure room's breach, found by searching), until it is broken.
+    pub fn hollow(&self, p: Pos) -> bool {
+        self.level.hollows.contains(&p)
+    }
+
+    /// The hollow walls the player has found on this level ([`PerceptionView::hollow`]), by
+    /// position.
+    pub fn known_hollows(&self) -> Vec<Pos> {
+        self.level.hollows.iter().copied().collect()
+    }
+
     /// Every trap the player knows on this level ([`PerceptionView::trap`]), by position.
     pub fn known_traps(&self) -> Vec<(Pos, TrapId)> {
         let cells = (self.level.traps.keys()).chain(self.level.trap_memory.keys());

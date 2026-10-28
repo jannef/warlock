@@ -169,11 +169,16 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
         prop_assert_eq!(content.terrain(terrain[s.pos]).stairs, Some(s.dir));
     }
 
-    // Connectivity: the player reaches every stair and every walkable cell from the arrival.
+    // Connectivity: the player reaches every stair and every walkable cell from the arrival, but
+    // a sealed room's (a greater treasure room's), reached by breaking its breach.
     let reach = player_reach(level, level.stairs[0].pos);
+    let sealed = |p: Pos| {
+        (level.rooms.iter())
+            .any(|r| content.room_effect(r.effect).sealed.is_some() && r.contains(p))
+    };
     for (p, t) in terrain.iter() {
         let def = content.terrain(*t);
-        if def.walkable || def.is_closed_door() {
+        if (def.walkable || def.is_closed_door()) && !sealed(p) {
             prop_assert!(reach[p], "{} unreachable in {}", p, level.id);
         }
         let edge =
