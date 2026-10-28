@@ -3,7 +3,7 @@
 //! `data/animated/`, read through the generated creature types themselves.
 
 use super::creatures::on_hit;
-use super::text::{capital, glyph, signed};
+use super::text::{capital, damage_link, glyph, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, CreatureDef, Numbers};
 use warlock_core::item_parts::ItemPart;
@@ -334,7 +334,7 @@ pub(super) fn animated_bodies(content: &Content) -> String {
             text
         });
         let resists: Vec<String> = (def.resist.iter())
-            .map(|&(k, v)| format!("{} {}", content.damage_type(k).name, signed(v)))
+            .map(|&(k, v)| format!("{} {}", damage_link(content, k), signed(v)))
             .collect();
         let protection = def.natural.as_ref().map_or(0, |h| h.protection);
         let _ = writeln!(

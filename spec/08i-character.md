@@ -342,8 +342,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **What reads it**: good creatures **scorn** an Evil or Wicked character, evil creatures a
     Good or Saintly one (`Band::scorned_by`): they answer a chat with a cold line
     (`greet_evil`, `greet_good` in `data/dialogue.toml`) instead of their greeting and
-    one-liners, and offer no quest whose `alignment` is good (topics and quests they already
-    gave stay). A quest may name the bands it is offered to (`requires_alignment`). A good
+    one-liners, but offer their quests all the same (#692: a good giver's quests to an Evil
+    character too). A quest may name the bands it is offered to (`requires_alignment`). A good
     shopkeeper's prices move with the band, by a percent in data added to the player's favour
     (§7 "Shops": Saintly 10 % better, Evil 10 % worse, Wicked 20 % worse); the prices shown
     include it. **Alignment bars nothing** (#642): no class, talent, or ability asks for a
@@ -783,9 +783,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `night_sight` (Moon-eyed: overworld sight one cell longer at night, eyes low-light);
     `lantern_light` (Lamplighter: a lit lantern ready in the Tool slot burns as `lantern_bright`, a
     cell farther, not while hooded, in `WorldState::carried_light`, so creatures see it too); `ambush` (Ambusher: +1d6 after Protection on
-    a hit, any attack, at a creature that has not seen the attacker: it hunts no one it has seen,
-    `Mind::last_seen` unset, and its own eyes do not see the attacker's cell; the die is drawn
-    only then, `world/ambush.rs`); `terrain_as` (a step onto these terrains costs one onto
+    a hit, any attack, at a target that has not seen the attacker (`World::unaware`, §8
+    "Surprise and sneak attacks") or is Surprised; the die is drawn only then,
+    `world/ambush.rs`); `terrain_as` (a step onto these terrains costs one onto
     another, `World::step_price`: Pathfinder, forest, dense forest, hills, and swamp as plains
     on the overworld; Swimmer, still, running, and shallow water as floor; Marsh walker, marsh
     and reeds as floor); `plunge_proof` (Swimmer: a plunge through ice does no harm and draws
@@ -797,8 +797,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Weather-wise: the weather coming within 3 hours, §5 "Weather"); `sun_healing`
     (Sun-blessed: healing half again as fast while the sun is up over an unroofed cell of the
     current level, whatever the clouds, `World::healing_rate`). Silent feet also counts toward
-    the hearing system. The light, awareness, and factions systems stay `pending` until Hooded
-    light and the class tables bring their second talent. The `danger` system (#326, §7 "Danger
+    the hearing system. The light and factions systems stay `pending` until Hooded light and the
+    class tables bring their second talent. The `awareness` system came off `pending` with
+    surprise (#681, §8 "Surprise and sneak attacks"): Wary (Delver, Willpower 12,
+    `initiative_bonus = 4`: added to the initiative check) and Cool head (Grit, Willpower 14,
+    level 9, `surprise_ease = 100`: Surprised slows no action), beside Ambusher. The `danger` system (#326, §7 "Danger
     levels") came with its two: Quiet delver (`spawn_every_percent`) and Sixth sense
     (`danger_sense`, 2 ranks, after Alert), both Delver. The `special_rooms` system (#402, §7
     "Special rooms") came with its two: Sense of place (Wayfarer, free, `sense_of_place`: a

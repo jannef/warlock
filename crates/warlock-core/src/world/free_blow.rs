@@ -152,9 +152,19 @@ impl World {
     pub(super) fn free_blows_of(&self, actor: &Actor) -> FreeBlows {
         // Its own switches (class abilities), those its talents turn on, and those its weapon
         // abilities do with what it holds (`weapon_ability.rs`).
-        (actor.free_blows)
+        let blows = (actor.free_blows)
             .either(actor.talent_mods(&self.content).free_blows)
-            .either(self.ability_switches(actor).free_blows)
+            .either(self.ability_switches(actor).free_blows);
+        // Surprised, it strikes nothing out of its turn (`surprise.rs`).
+        if self.surprised(actor.id) {
+            return FreeBlows {
+                riposte: false,
+                opportunist: false,
+                gatekeeper: false,
+                ..blows
+            };
+        }
+        blows
     }
 
     /// Whether actor `id` still stands to strike or be struck: alive, and the run not over.

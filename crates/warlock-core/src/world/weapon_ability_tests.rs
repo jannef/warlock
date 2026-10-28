@@ -798,7 +798,7 @@ fn a_blocked_spell_is_turned_back_once_a_turn_of_the_reflectors() {
     }
     assert!(blocked > 1 && turned == 1, "{blocked} {turned}");
     // Its action spent, it turns the next blocked one back again.
-    w.spend_actions(kobold);
+    w.spend_actions(kobold, &mut Vec::new());
     let mut again = 0;
     for _ in 0..40 {
         let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
@@ -828,8 +828,8 @@ fn a_reflected_spell_is_never_reflected_again() {
     );
     let mut blocked_back = 0;
     for _ in 0..60 {
-        w.spend_actions(kobold);
-        w.spend_actions(player);
+        w.spend_actions(kobold, &mut Vec::new());
+        w.spend_actions(player, &mut Vec::new());
         let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
         assert!(blows.len() <= 2, "no third flight: {blows:?}");
         if let [_, (by, at, strike)] = blows[..] {
@@ -887,7 +887,7 @@ fn a_miss_by_parry_is_not_turned_back() {
     *w.perception = crate::perception::Perception::compute(&w.state, &content, &mut w.lights);
     let (mut parried, mut blocked) = (0, 0);
     for _ in 0..80 {
-        w.spend_actions(kobold);
+        w.spend_actions(kobold, &mut Vec::new());
         let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
         let back = blows.iter().filter(|b| b.0 == kobold).count();
         match blows[0].2 {
@@ -923,7 +923,7 @@ fn a_reflection_spends_no_more_mana_and_keeps_the_casters_lifted_cap() {
     assert_eq!(me.spell_cap(&content, bolt), 27, "lifted from 18");
     let mut most = 0;
     for _ in 0..400 {
-        w.spend_actions(kobold);
+        w.spend_actions(kobold, &mut Vec::new());
         let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
         // Paid once (a turn's regeneration may come back already).
         let mana = w.state.player().mana;
@@ -954,7 +954,7 @@ fn a_wands_bolt_is_turned_back() {
         let equip = crate::action::parse_actions(&format!("equip:missile_weapon:{item}"));
         w.apply(&equip.expect("equip")[0]);
         for _ in 0..5 {
-            w.spend_actions(kobold);
+            w.spend_actions(kobold, &mut Vec::new());
             let blows = cast_at_kobold(&mut w, kobold, "fire");
             assert!(blows.first().is_some_and(|b| b.0 == player), "{blows:?}");
             turned += blows.iter().filter(|b| b.0 == kobold).count();

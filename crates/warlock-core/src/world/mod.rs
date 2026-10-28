@@ -193,6 +193,7 @@ mod status;
 mod steal;
 mod stride;
 mod summon;
+mod surprise;
 mod talent;
 mod talk;
 mod temper;
@@ -1674,6 +1675,8 @@ mod style_tests;
 mod summon_tests;
 #[cfg(test)]
 mod sun_tests;
+#[cfg(test)]
+mod surprise_tests;
 #[cfg(test)]
 mod tag_tests;
 #[cfg(test)]

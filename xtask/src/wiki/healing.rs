@@ -3,7 +3,7 @@
 
 use super::combat::percent;
 use super::order;
-use super::text::{capital, signed, yes};
+use super::text::{Term, anchored, capital, signed, stat_link, yes};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Affliction, Content, DiseaseDef, DiseaseId, StatusDef};
@@ -162,6 +162,18 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             })
             .map(|o| format!("drinking a {}", o.name)),
     );
+    // Being caught unawares (the surprise rules, spec §8 "Surprise and sneak attacks").
+    if let Some(rules) = content
+        .surprise()
+        .filter(|r| usize::from(r.status.0) == status)
+    {
+        causes.push(format!(
+            "being caught unawares (an attack by someone you have not seen, or a hidden trap \
+             springing under you) and failing the initiative check: 2d12 + your Dexterity \
+             modifier against {}; a sleeper or a mimic in disguise always",
+            rules.difficulty
+        ));
+    }
     let ending = (content.status_defs().iter())
         .filter(|s| s.follows.is_some_and(|f| usize::from(f.0) == status))
         .map(|s| format!("the end of {}", s.name));
@@ -199,6 +211,16 @@ fn also(content: &Content, def: &StatusDef) -> String {
     .collect();
     if !fighting.is_empty() {
         parts.push(fighting.join(", "));
+    }
+    let surprise = content
+        .surprise()
+        .map(|r| content.status(r.status).id.as_str());
+    if surprise == Some(def.id.as_str()) {
+        parts.push(
+            "flat-footed: Dexterity and Dodge count nothing toward your Defence; no free blow \
+             out of your turn (riposte, opportunist, gatekeeper, a point-blank shot)"
+                .to_string(),
+        );
     }
     if def.cost != 100 {
         parts.push(format!("every action takes {}% of the time", def.cost));
@@ -325,7 +347,7 @@ pub(super) fn status_effects(content: &Content) -> String {
             |p| {
                 let lowered: Vec<String> = (p.by.iter())
                     .filter(|(_, by)| *by != 0)
-                    .map(|(stat, by)| format!("{} {}", stat.name(), signed(i32::from(by))))
+                    .map(|(stat, by)| format!("{} {}", stat_link(stat), signed(i32::from(by))))
                     .collect();
                 let when = if p.from > 1 { " when strong" } else { "" };
                 let per = if p.per_degree { " a degree" } else { "" };
@@ -340,7 +362,7 @@ pub(super) fn status_effects(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {seen} | {} | {} | {} | {} | {stats} | {cured} | {} |",
-            def.name,
+            anchored(Term::Status, &def.id, &def.name),
             causes(content, i, def),
             capital(&costs),
             capital(&eases),
@@ -429,7 +451,7 @@ pub(super) fn diseases(content: &Content) -> String {
     for (disease, def) in content.disease_ids() {
         let resisted = format!(
             "{}, {}",
-            def.check.name(),
+            stat_link(def.check),
             percent(check::ways(0, def.difficulty), 144)
         );
         let progresses = match def.interval {
@@ -438,7 +460,7 @@ pub(super) fn diseases(content: &Content) -> String {
         };
         let mut costs: Vec<String> = (def.damage.iter())
             .filter(|(_, d)| !d.is_zero())
-            .map(|(stat, d)| format!("{d} {}", stat.name()))
+            .map(|(stat, d)| format!("{d} {}", stat_link(stat)))
             .collect();
         if let Some(hp) = def.hp {
             costs.push(format!("{hp} hit points"));
@@ -452,7 +474,7 @@ pub(super) fn diseases(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {resisted} | {} | {progresses} | {} | {shaken} | {} | {} |",
-            capital(&def.name),
+            anchored(Term::Disease, &def.id, &capital(&def.name)),
             caught_by(content, disease, def),
             capital(&days(def.incubation)),
             costs.join(", "),

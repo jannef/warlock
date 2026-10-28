@@ -1,7 +1,7 @@
 //! Talents (spec §8 "Talents"): every tree with its talents, their prerequisites and their rules
 //! in full (the game says them in words), and the coverage matrix by system.
 
-use super::text::signed;
+use super::text::{Term, anchored, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Need, OverTime, Role, SignActive, SpellData, TalentDef, TalentEffect, TreeId,
@@ -27,7 +27,7 @@ pub(super) fn talents(content: &Content) -> String {
             let _ = writeln!(
                 out,
                 "| {} | {} | {} | {} | {} |",
-                name(def),
+                anchored(Term::Talent, &def.id, &name(def)),
                 def.rank_count(),
                 needs_text(content, def),
                 effects_text(content, def),
@@ -481,6 +481,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Ambush { dice } => format!(
             "+{dice} damage, after Protection, on a hit at a creature that has not seen you \
              (it hunts no one it has seen, and does not see you now)"
+        ),
+        TalentEffect::InitiativeBonus { value } => format!(
+            "{} to the initiative check when something catches you unawares (see Status effects: \
+             Surprised)",
+            signed(value)
+        ),
+        TalentEffect::SurpriseEase { value } => format!(
+            "{value}% of the extra time the action you take Surprised costs is spared (at 100%, \
+             it costs no more than any other)"
         ),
         TalentEffect::CarryPercent { value } => format!("carrying limit {}", percent(value)),
         TalentEffect::IgnoreBurdened => "being Burdened costs you nothing (as a dwarf)".to_string(),

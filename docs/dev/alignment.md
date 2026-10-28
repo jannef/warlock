@@ -25,7 +25,8 @@ Alignment is good against evil, ADOM's law and chaos turned. Three modules:
   never stop a rest), `player_did(deed)` (deeds whose worth the rules fix: `Deed::worth`),
   `judge_kill` (stance first, then nature: hostile by `kill_hostile`; a beast, neutral and
   without a dialogue, by `kill_beast`; anyone else not hostile by `kill_peaceful`),
-  `ate_corpse`, `scorns(actor)`, `cold_greeting`, `offers(quest, scorned)`, and
+  `ate_corpse`, `scorns(actor)`, `cold_greeting`, `offers(quest)` (only `requires_alignment`:
+  scorn withholds no quest, #692), and
   `keeper_favour` (free function: a good `[keeper]` type's favour by band).
 
 **State.** `Actor::alignment: Option<Score>` is the player's score (set at the start when the
@@ -43,8 +44,7 @@ checked only when races exist): eating such a corpse is kin to a character of th
 only the player's kills, a status they caused included), `shop.rs` (`provoke`: attacking a keeper
 who trades; `shop_step`: theft; `pay`: paying a debt; `favour`: `keeper_favour`), `eat.rs::finish`
 (`ate_corpse`, rotten or not), `quest.rs` (`complete`: the quest's `alignment`; `quest_topics`
-takes `scorned` and asks `offers`), `talk.rs` (`chat`: `cold_greeting` before the greeting and the
-lines; `topics` passes `scorns`). `steal.rs::got_away_with` (a theft that took something): `player_did(Deed::Theft)`. `consecrate.rs::consecrated` (Consecrate done): `player_did(Deed::Consecrated)`. Nothing else
+asks `offers`), `talk.rs` (`chat`: `cold_greeting` before the greeting and the lines). `steal.rs::got_away_with` (a theft that took something): `player_did(Deed::Theft)`. `consecrate.rs::consecrated` (Consecrate done): `player_did(Deed::Consecrated)`. Nothing else
 moves a score: a new deed is a `Deed` variant, a `[shift]` field, and one call where it happens.
 
 **Readers.** Presentation reads `PerceptionView::own_alignment()` (the band, `None` without
@@ -72,7 +72,8 @@ nothing of alignment.
 **Tests.** `alignment.rs` (diminishing, bands, scorn, requirements, loading), `content/alignment.rs`
 (the built-in bands cover the scale, news, bad files), `world/alignment_tests.rs` (starting bands, the birth animal's nudge, a paladin of a race not
 evil starting Good under the worst animal (#317: the class's 550 is set for it), each deed, diminishing in play, notes
-after the deed that do not count as said, cold greetings, quest gating and shifts, a good keeper's
+after the deed that do not count as said, cold greetings, quest gating (`requires_alignment`
+only: a scorning giver still offers a good quest) and shifts, a good keeper's
 prices, eating kin, a paladin's start inside their gifts' bands under any star, save and
 replay), `class_active_tests.rs` and `curse_tests.rs` (the holy gifts unanswered outside their
 bands: their time, nothing spent, no effect; Holy radiance put out after a fall). The wiki's tables are

@@ -2,6 +2,7 @@
 //! registry (`warlock_core::ability`).
 
 use super::actions::at_normal_pace;
+use super::text::{Term, anchored};
 use std::fmt::Write as _;
 use warlock_core::ability::{Ability, Aim};
 use warlock_core::content::{
@@ -98,7 +99,7 @@ pub(super) fn abilities(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {who} | {asks} | {} | {takes} |",
-            a.name(content),
+            anchored(Term::Ability, a.id(content), &a.name(content)),
             a.source().name(),
             a.description(content),
         );

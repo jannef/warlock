@@ -267,6 +267,10 @@ pub struct TalentMods {
     pub inner_light: Option<LightId>,
     /// Damage its attacks do a creature that has not seen it, after Protection.
     pub ambush: Option<Dice>,
+    /// Added to its initiative check when it is caught unawares (Wary).
+    pub initiative_bonus: i32,
+    /// Percent of the extra cost of its action taken Surprised that is spared (Cool head).
+    pub surprise_ease: i32,
     /// Percent more carrying limit.
     pub carry_percent: i32,
     /// Being Burdened costs it nothing.
@@ -1214,6 +1218,8 @@ impl TalentMods {
             TalentEffect::Ambush { dice } => {
                 self.ambush = Some(self.ambush.map_or(dice, |had| had.and(dice)));
             }
+            TalentEffect::InitiativeBonus { value } => self.initiative_bonus += value,
+            TalentEffect::SurpriseEase { value } => self.surprise_ease += value,
             TalentEffect::CarryPercent { value } => self.carry_percent += value,
             TalentEffect::IgnoreBurdened => self.ignore_burdened = true,
             TalentEffect::StepSlowdownPercent { value } => self.step_slowdown_percent += value,

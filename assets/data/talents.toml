@@ -237,10 +237,10 @@ pending = true
 id = "vision"
 name = "Vision, darkvision, UV"
 
+# Awareness (#681): who has seen whom, and being caught unawares (surprise.toml).
 [[system]]
 id = "awareness"
 name = "Creature sight and awareness"
-pending = true
 
 # Danger levels (#326): how dangerous a level is, and the creatures that keep coming to it.
 [[system]]

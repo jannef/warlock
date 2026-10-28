@@ -1,10 +1,11 @@
-//! `cargo xtask wiki [--build]`: the player wiki's generated tables.
+//! `cargo xtask wiki [--build | --check-links]`: the player wiki's generated tables.
 //!
 //! The wiki (`wiki/`, built with mdBook) is written by hand except for facts that live in data
 //! or in a few constants of the rules. Those are written to `wiki/src/generated/*.md` from the
 //! built-in content, and the pages pull them in with `{{#include generated/NAME.md}}`, so they
 //! cannot drift. Output is deterministic. The generated files are not committed (CI and the
-//! release workflow run this before `mdbook build wiki`); `--build` also runs `mdbook build wiki`.
+//! release workflow run this before `mdbook build wiki`); `--build` also runs `mdbook build wiki`,
+//! and `--check-links` builds and then checks every link and anchor in the book (`links`).
 //!
 //! Layout: one module per wiki topic (`calendar`, `terrain`, `combat`, ...), each a set of
 //! `pub(super) fn table(content: &Content) -> String`; `text` holds the helpers two or more of
@@ -34,6 +35,7 @@ mod horoscope;
 mod hunger;
 mod kits;
 mod learning;
+mod links;
 mod magic;
 mod mana;
 mod materials;
@@ -75,13 +77,16 @@ use warlock_core::content::Content;
 pub enum Mode {
     Write,
     Build,
+    /// Build, then check every link in the built book.
+    CheckLinks,
 }
 
 pub fn parse_mode(args: &[String]) -> Result<Mode, String> {
     match args {
         [] => Ok(Mode::Write),
         [a] if a == "--build" => Ok(Mode::Build),
-        _ => Err("usage: cargo xtask wiki [--build]".into()),
+        [a] if a == "--check-links" => Ok(Mode::CheckLinks),
+        _ => Err("usage: cargo xtask wiki [--build | --check-links]".into()),
     }
 }
 
@@ -99,8 +104,12 @@ pub fn run(mode: Mode) -> Result<(), String> {
         std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
     }
     println!("wiki: wrote {} files to {}", files.len(), dir.display());
-    if mode == Mode::Build {
+    if mode != Mode::Write {
         build_book()?;
+    }
+    if mode == Mode::CheckLinks {
+        let wiki = workspace_root().join("wiki");
+        links::check(&wiki.join("src"), &wiki.join("book"))?;
     }
     Ok(())
 }
@@ -354,6 +363,70 @@ fn generate(content: &Content) -> Vec<(String, String)> {
 mod tests {
     use super::*;
 
+    /// The generated files without their rows' anchors (`<a id="trap-pit"></a>Pit` is `Pit`) and
+    /// with links to wiki pages as their text (`[Spears](weapon-skills.md#weapon-skill-spears)` is
+    /// `Spears`), so the assertions read the tables as a reader does; `rows_have_anchors` checks
+    /// the anchors and links.
+    fn plain(content: &Content) -> Vec<(String, String)> {
+        (generate(content).into_iter())
+            .map(|(name, text)| (name, unlink(&strip_anchors(&text))))
+            .collect()
+    }
+
+    fn strip_anchors(text: &str) -> String {
+        let mut out = String::with_capacity(text.len());
+        let mut rest = text;
+        while let Some(at) = rest.find("<a id=\"") {
+            out.push_str(&rest[..at]);
+            let end = rest[at..].find("</a>").map_or(rest.len(), |e| at + e + 4);
+            rest = &rest[end..];
+        }
+        out.push_str(rest);
+        out
+    }
+
+    fn unlink(text: &str) -> String {
+        let mut out = String::with_capacity(text.len());
+        let mut rest = text;
+        while let Some(open) = rest.find('[') {
+            out.push_str(&rest[..open]);
+            let after = &rest[open + 1..];
+            let link = after.find("](").and_then(|mid| {
+                let target_end = after[mid + 2..].find(')')? + mid + 2;
+                let (name, target) = (&after[..mid], &after[mid + 2..target_end]);
+                let wiki = target.contains(".md") && !target.contains(' ') && !name.contains('[');
+                wiki.then_some((name, target_end + 1))
+            });
+            match link {
+                Some((name, len)) => {
+                    out.push_str(name);
+                    rest = &after[len..];
+                }
+                None => {
+                    out.push('[');
+                    rest = after;
+                }
+            }
+        }
+        out.push_str(rest);
+        out
+    }
+
+    /// Rows that define a term carry the anchor prose links to (`wiki/TERMS.md`).
+    #[test]
+    fn rows_have_anchors() {
+        let content = Content::builtin().expect("content loads");
+        let files = generate(&content);
+        let text = |name: &str| &files.iter().find(|(n, _)| n == name).expect("file").1;
+        assert!(text("traps.md").contains("| <a id=\"trap-pit\"></a>Pit `^` |"));
+        assert!(text("status-effects.md").contains("| <a id=\"status-bleeding\"></a>Bleeding |"));
+        assert!(text("potions.md").contains("<a id=\"potion-of-healing\"></a>Potion of healing"));
+        assert!(text("stats.md").contains("| <a id=\"stat-strength\"></a>Strength |"));
+        assert!(
+            text("weapon-abilities.md").contains("[Spears](weapon-skills.md#weapon-skill-spears)")
+        );
+    }
+
     /// The line of `page` that starts with `start` must contain every fragment: a row that lists
     /// creatures is checked by the parts that stay, so a new creature edits no assertion (#473).
     fn row_has(page: &str, start: &str, fragments: &[&str]) {
@@ -432,7 +505,7 @@ mod tests {
     #[test]
     fn hidden_numbers_are_exact() {
         let content = Content::builtin().expect("content loads");
-        let files = generate(&content);
+        let files = plain(&content);
         let text = |name: &str| &files.iter().find(|(n, _)| n == name).expect("file").1;
         let has = |name: &str, row: &str| {
             assert!(
@@ -555,8 +628,8 @@ mod tests {
     #[test]
     fn tables_are_deterministic_and_list_the_data() {
         let content = Content::builtin().expect("content loads");
-        let files = generate(&content);
-        assert_eq!(files, generate(&content));
+        let files = plain(&content);
+        assert_eq!(generate(&content), generate(&content));
         let text = |name: &str| &files.iter().find(|(n, _)| n == name).expect("file").1;
         assert!(text("calendar.md").contains("| 4 | Rainmoon |"));
         let traps = text("traps.md");

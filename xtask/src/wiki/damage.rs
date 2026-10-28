@@ -2,7 +2,7 @@
 //! stands against or resists. Never a creature's resistances: the player learns those by play.
 
 use super::order;
-use super::text::{capital, yes};
+use super::text::{Term, anchored, capital, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, DamageTypeId, Effect};
 
@@ -25,7 +25,7 @@ pub(super) fn damage_types(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {} | \"The kobold {} you.\" |",
-            capital(&t.name),
+            anchored(Term::Damage, &t.id, &capital(&t.name)),
             yes(t.physical),
             yes(bleed),
             t.verb
