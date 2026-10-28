@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
     │     Stone hide  (birth sign)                                                            │
     │     Stonewise  (birth sign)                                                             │
     │   Vigour                                                                                │
-    │     Healthy                                                                             │
+    │     Hardy 1/3                                                                           │
     │   Wayfarer                                                                              │
     │     Weather-wise                                                                        │
     │   Class abilities                                                                       │
@@ -25,6 +25,8 @@ expression: "render(case, content.clone())"
     │     Tentacles                                                                           │
     │         Needs: Twin Blades 3, to be born in the year of the Kraken                      │
     │   Vigour                                                                                │
+    │     Bellows                                                                             │
+    │         Needs: Toughness 12                                                             │
     │     Clotting                                                                            │
     │         Needs: Toughness 12                                                             │
     │     Deep lungs                                                                          │
@@ -33,8 +35,6 @@ expression: "render(case, content.clone())"
     │         Needs: Healthy, Toughness 13                                                    │
     │     Fever-proof                                                                         │
     │         Needs: Strong constitution, level 15                                            │
-    │     Hard training                                                                       │
-    │         Needs: nothing                                                                  │
     │                                                                                       ↓ │
     │ A weapon in each hand hampers you less, and with sword and shield your free bash comes  │
     │ more often.                                                                             │

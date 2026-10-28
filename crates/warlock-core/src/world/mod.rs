@@ -1344,6 +1344,8 @@ mod affix_spell_tests;
 #[cfg(test)]
 mod affix_stamina_tests;
 #[cfg(test)]
+mod affix_talent_tests;
+#[cfg(test)]
 mod ai_tests;
 #[cfg(test)]
 mod alignment_tests;
