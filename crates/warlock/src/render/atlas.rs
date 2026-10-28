@@ -346,4 +346,12 @@ mod tests {
             assert!(!draws(c), "{c:?}");
         }
     }
+
+    /// The chests' glyphs (shut, open, smashed; spec §8 "Chests") are in the font.
+    #[test]
+    fn the_font_draws_the_chests() {
+        for c in ['⊟', '⊔', '⊠'] {
+            assert!(draws(c), "{c:?}");
+        }
+    }
 }

@@ -350,6 +350,16 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A wizard at level 4 (spec §8 "Chests"): Knock among the class abilities, asking for a
+    // direction, paid in mana.
+    Case {
+        name: "abilities-menu-knock",
+        character: Some("human,male,wizard"),
+        kit: true,
+        actions: "xp:3000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
     Case {
         name: "abilities-menu-here",
