@@ -2,7 +2,7 @@
 
 use super::text::capital;
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Draught};
+use warlock_core::content::{Content, Draught, StatusId};
 
 /// The potions: what drinking each does in numbers, its colour, the training marks it gives,
 /// from which item level (depth) loot holds it and how often, and what it is worth. By name.
@@ -45,6 +45,47 @@ pub(super) fn potions(content: &Content) -> String {
                 dice.to_string().trim_start_matches('+'),
                 content.status(*status).name
             ),
+            Draught::Boost { status, severity } => {
+                let def = content.status(*status);
+                let raised: Vec<String> = (def.penalty.iter())
+                    .flat_map(|p| p.by.iter().filter(|&(_, v)| v > 0))
+                    .map(|(stat, v)| {
+                        let by = i32::from(v) * def.penalty_times(*severity);
+                        format!("+{by} {}", stat.name())
+                    })
+                    .collect();
+                format!(
+                    "{} ({}, {severity} degree{})",
+                    raised.join(", "),
+                    def.name,
+                    plural(*severity)
+                ) + &lasting(content, *status, *severity)
+            }
+            Draught::Vision { status } => {
+                let def = content.status(*status);
+                let eyes = def
+                    .vision
+                    .map(|i| content.vision_profiles()[i].name.as_str());
+                format!("{} eyes ({})", eyes.unwrap_or("other"), def.name)
+                    + &lasting(content, *status, 1)
+            }
+            Draught::Haste { status, severity } => {
+                let def = content.status(*status);
+                format!(
+                    "{}, {severity} degree{}: every action takes {} % of its time",
+                    def.name,
+                    plural(*severity),
+                    def.cost
+                ) + &lasting(content, *status, *severity)
+            }
+            Draught::Resistance { status } => {
+                let def = content.status(*status);
+                let kinds: Vec<String> = (def.resist.iter())
+                    .map(|&(kind, r)| format!("{r} % {}", content.damage_type(kind).name))
+                    .collect();
+                format!("resists {} ({}, as gear does)", kinds.join(", "), def.name)
+                    + &lasting(content, *status, 1)
+            }
         };
         let marks = match drink.marks.as_slice() {
             [] => "none".to_string(),
@@ -69,4 +110,26 @@ pub(super) fn potions(content: &Content) -> String {
         );
     }
     out
+}
+
+fn plural(n: u16) -> &'static str {
+    if n == 1 { "" } else { "s" }
+}
+
+/// How long a status given at `severity` lasts, by its `eases` a degree: "; lasts 10 minutes".
+fn lasting(content: &Content, status: StatusId, severity: u16) -> String {
+    let Some(every) = content.status(status).eases else {
+        return String::new();
+    };
+    let seconds = u64::from(every) * u64::from(severity);
+    let (n, unit) = match seconds % 60 {
+        0 => (seconds / 60, "minute"),
+        _ => (seconds, "second"),
+    };
+    let s = if n == 1 { "" } else { "s" };
+    let per = match severity {
+        1 => String::new(),
+        _ => format!(", a degree lost every {every} seconds"),
+    };
+    format!("; lasts {n} {unit}{s}{per}")
 }

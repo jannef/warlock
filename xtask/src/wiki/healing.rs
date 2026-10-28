@@ -153,6 +153,15 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             })
             .map(|a| format!("{} (a weapon ability)", a.name)),
     );
+    // The potions that lend it (the Potions page).
+    causes.extend(
+        (content.object_defs().iter())
+            .filter(|o| {
+                (o.drink.as_ref().and_then(|d| d.does.lends()))
+                    .is_some_and(|(s, _)| usize::from(s.0) == status)
+            })
+            .map(|o| format!("drinking a {}", o.name)),
+    );
     let ending = (content.status_defs().iter())
         .filter(|s| s.follows.is_some_and(|f| usize::from(f.0) == status))
         .map(|s| format!("the end of {}", s.name));
@@ -217,6 +226,19 @@ fn also(content: &Content, def: &StatusDef) -> String {
     if let Some(light) = def.light {
         let radius = content.light(light).radius;
         parts.push(format!("you shed light {radius} cells around you"));
+    }
+    if let Some(vision) = def.vision {
+        let eyes = &content.vision_profiles()[vision];
+        parts.push(format!(
+            "you see with {} eyes where they are better than yours",
+            eyes.name
+        ));
+    }
+    if !def.resist.is_empty() {
+        let kinds: Vec<String> = (def.resist.iter())
+            .map(|&(kind, r)| format!("{r}% {}", content.damage_type(kind).name))
+            .collect();
+        parts.push(format!("you resist {}, as armour does", kinds.join(", ")));
     }
     if parts.is_empty() {
         "—".into()
@@ -299,7 +321,8 @@ pub(super) fn status_effects(content: &Content) -> String {
                     .map(|(stat, by)| format!("{} {}", stat.name(), signed(i32::from(by))))
                     .collect();
                 let when = if p.from > 1 { " when strong" } else { "" };
-                format!("{}{when}", lowered.join(", "))
+                let per = if p.per_degree { " a degree" } else { "" };
+                format!("{}{per}{when}", lowered.join(", "))
             },
         );
         let cured = if def.cured_by.is_empty() {

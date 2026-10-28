@@ -71,7 +71,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     within 1 to 40); every rule reads the effective score (`Actor::effective_stats`): combat
     (to-hit, damage, Defence, hit points), burden (the limit), and healing. The player sees their
     scores lowered on the character screen. A positive number raises the score instead (Raging:
-    Strength +2), and the hit points a raised Toughness allows fall back as the status ends
+    Strength +2); `per_degree = true` counts it once a degree (a potion's boost: +2 a degree, so
+    Fortified at two degrees is Strength +4; its value times `max` stays within −10 to 10), and the hit points a raised Toughness allows fall back as the status ends
     (`World::keep_hp_within_max`: above the lasting maximum, and above the maximum other statuses
     still raise, never).
   - **Buffs, hexes, and cooldowns** (`world/buff.rs`, #227; design `docs/design/progression.md`
@@ -82,9 +83,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
       highest counts), creatures' as well as the player's (a hex is a status on a creature);
     - **slow** (`cost`, 50 to 1000 percent): every action's price is multiplied by it, after the
       burden and Bloated (`World::burdened`, the one place every price passes); several multiply.
-      Only a spell's buff on its caster may hasten (Haste's Hasted, 75; #397), and Light-footed
+      Only a spell's buff on its caster may hasten (Haste's Hasted, 75; #397), the potion of
+      quickness the same Hasted on the player who drinks it (§8 "Potions"), and Light-footed
       (50, the skirmisher's Hit and run, a weapon ability: one action), so a creature's quickest
       step stays what a rest's batching counts on;
+    - **lend eyes** (`vision`, an id of `data/vision.toml`): `Actor::eyes` betters its sufferer's
+      profile by it part by part, as a unique item's Vision power (the lower threshold, the
+      farther darkvision, ultraviolet if any sees it), so what the player sees in the dark
+      changes with it (a potion's Cat-eyed, Owl-eyed, Moth-eyed; #567);
+    - **resist** (`resist = { fire = 50 }`, each −100 to 75 and not 0): counted with what its
+      sufferer wears in `Actor::resistances`, gear-like and so never immunity (a potion's Warmed,
+      Chill-proof, Earthed, Proof against poison; #567);
     - **block** actions (`blocks = ["read"]`, ids in `data/actions.toml`): the rules refuse the
       player's action of that kind before it is tried, with no time taken ("You cannot read while
       raging."; a step into a hostile creature is `melee`, into a closed door `open_door`, off a
