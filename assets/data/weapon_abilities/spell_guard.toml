@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "spell_guard"
+name = "Spell guard"
+description = "A spell of yours that lands while you fight in armour leaves a ward about you until you act again: you are harder to hit."
+skills = ["battle_caster"]
+rank = 4
+kind = "triggered"
+trigger = "hit"
+systems = ["weapon_abilities", "styles", "spells", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "spell_ward"
+on = "self"

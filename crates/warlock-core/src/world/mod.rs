@@ -1346,6 +1346,8 @@ mod cast_tests;
 #[cfg(test)]
 mod caster_level_tests;
 #[cfg(test)]
+mod caster_style_tests;
+#[cfg(test)]
 mod caster_tests;
 #[cfg(test)]
 mod ceaptun_quest_tests;

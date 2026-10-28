@@ -1,0 +1,12 @@
+[[weapon_ability]]
+id = "withering_touch"
+name = "Withering touch"
+description = "Every touch of yours that lands leaves the foe's limbs weak and clumsy for a while."
+skills = ["toucher"]
+rank = 10
+kind = "triggered"
+trigger = "hit"
+systems = ["weapon_abilities", "styles", "spells", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "weakened"

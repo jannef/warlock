@@ -27,6 +27,7 @@ fn trained_by(role: Role) -> &'static str {
         Role::Unarmed => "blows with bare hands",
         Role::ShieldBlock => "blows your shield blocks",
         Role::ShieldBash => "bashing with a shield",
+        Role::Spell => "every spell you cast that rolls to hit",
         Role::Style => "every attack in its configuration",
     }
 }
@@ -37,8 +38,20 @@ fn weapons(table: &WeaponSkillTable) -> impl Iterator<Item = (WeaponSkillId, &We
 }
 
 /// The objects that draw on skill `id`: the weapons that name it, or for the shield skills the
-/// shields.
+/// shields; for the spell attack skill the spells that roll to hit.
 fn weapons_of(content: &Content, id: WeaponSkillId, role: Role) -> String {
+    if role == Role::Spell {
+        let mut names: Vec<String> = (content.spells().iter())
+            .filter(|s| s.rolls_to_hit())
+            .map(|s| s.name.clone())
+            .collect();
+        names.sort();
+        return if names.is_empty() {
+            "-".into()
+        } else {
+            names.join(", ")
+        };
+    }
     let names: Vec<String> = (order::objects(content).into_iter())
         .map(|(_, o)| o)
         .filter(|o| match role {
@@ -223,7 +236,7 @@ fn percent(v: i32) -> String {
     format!("{v}%")
 }
 
-const COLUMNS: [Column; 9] = [
+const COLUMNS: [Column; 12] = [
     ("To hit", |b| b.to_hit, plus),
     ("Damage", |b| b.damage, plus),
     ("Critical range", |b| i32::from(b.threat), wider),
@@ -233,6 +246,13 @@ const COLUMNS: [Column; 9] = [
     ("Shield", |b| b.shield, plus),
     ("Reload time", |b| i32::from(b.reload), faster),
     ("Shield bash after a hit", |b| i32::from(b.bash), percent),
+    ("To hit far away", |b| b.far_to_hit, plus),
+    (
+        "Critical range far away",
+        |b| i32::from(b.far_threat),
+        wider,
+    ),
+    ("Armour's extra mana cost", |b| i32::from(b.armour), faster),
 ];
 
 /// A two-weapon penalty as it reads: `−4`, or `none`.
@@ -313,6 +333,9 @@ fn grip_text(grip: Grip) -> &'static str {
         Grip::Unarmed => "nothing in your hands",
         Grip::Launcher => "shooting a missile weapon",
         Grip::Thrown => "throwing",
+        Grip::RangedSpell => "a ray or a bolt that rolls to hit",
+        Grip::TouchSpell => "a touch that rolls to hit",
+        Grip::ArmouredSpell => "a spell that rolls to hit, cast in armour that hinders casting",
     }
 }
 
@@ -331,6 +354,7 @@ pub fn styles(content: &Content) -> String {
             .collect();
         let weapons = match (style.grip, style.weapons.is_empty(), others.is_empty()) {
             (Grip::Unarmed, ..) => "fists".to_string(),
+            (g, ..) if g.casts() => "spells".to_string(),
             (_, false, _) => names(&style.weapons).join(", "),
             (_, true, true) => "any".to_string(),
             (_, true, false) => format!("any but {}", others.join(", ").to_lowercase()),
@@ -358,9 +382,11 @@ pub fn style_benefits(content: &Content) -> String {
     let two = table.two_weapons();
     let mut out = format!(
         "With a weapon in each hand and no rank in Twin Blades, the main hand strikes at **{}** \
-         to hit and the off hand at **{}**.\n\n",
+         to hit and the off hand at **{}**. A ranged spell's target is far away at **{}** \
+         cells or more (the larger of the two distances).\n\n",
         penalty(two.main),
-        penalty(two.off)
+        penalty(two.off),
+        table.spell_attacks().far
     );
     for (id, s, _) in table.styles() {
         let _ = writeln!(out, "**{}**\n", s.name);

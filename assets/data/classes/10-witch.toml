@@ -12,7 +12,8 @@ alignment = -200
 skills = { heal = "2d6+10", spellcraft = "2d6+10", concentration = "2d4+4", intimidate = "2d4+4" }
 known_for = ["heal", "spellcraft"]
 rolls = 2
-weapon_skills = { daggers = 1, staves = 1 }
+weapon_skills = { daggers = 1, staves = 1, spell_attack = 1 }
+styles = { toucher = 1 }
 # A ritual knife, a charm that may be more than it seems, herbs, and an unlabelled potion.
 kit = [
     { wield = "dagger" },
