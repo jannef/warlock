@@ -1,10 +1,11 @@
 # Chests
 
-Developer notes for chests (slices C1, #613, and C2, #614, of docs/design/chests-and-treasure.md);
-the rules are in spec/08d-traps-doors-digging.md "Chests" and the data in spec/07b-data.md
-"Chests". Keep it current with the code, as CLAUDE.md says. Generated chests and their loot (C3),
-and treasure rooms (C5, C6) come later; each extends this file. Mimics (C4, #616) have their
-own topic, `docs/dev/creatures/mimics.md`: a chest may be a mimic, which the perception snapshot
+Developer notes for chests (slices C1, #613, C2, #614, and C3, #615, of
+docs/design/chests-and-treasure.md); the rules are in spec/08d-traps-doors-digging.md "Chests",
+the loot in spec/08g-magic-items.md "Chest loot", and the data in spec/07b-data.md "Chests".
+Keep it current with the code, as CLAUDE.md says. Treasure rooms (C5, C6) come later; each
+extends this file. Mimics (C4, #616) have their own topic, `docs/dev/creatures/mimics.md`: a
+generated chest may be a mimic instead (`mapgen/chest.rs::lay`), which the perception snapshot
 shows as a shut chest (`chest_at`, `known_chests`), and touching what the player takes for a
 chest (`open_door`, the bump, `kick`, `pick_lock`, Knock) finds it out first.
 
@@ -20,6 +21,10 @@ chest (`open_door`, the bump, `kick`, `pick_lock`, Knock) finds it out first.
 | `world/chest.rs` | `chest_name`, `open_chest` (key or not), `open_lid` (the trap first, then `lift_lid` unless it blew the chest up), `spring_chest_trap` (`spring_trap`, then a burst on a shut chest blows it up: `TrapEffect::blows_fixture`, unless the burst's blast already did), `lift_lid` (the creak, `Act::OpenDoor`, spill, `chest_open`, "Inside you find ..."), `kick_chest` (broken: the trap, then smashed unless blown up), `break_chest` (smashed or blown up: `destroyed`, Deft breaker's cut on a smash, spill, `chest_smashed`, `Event::ChestBroken`, the lines), `chest_wise_look` (Chest-wise: hidden traps of shut chests in sight known, remembered, and said; called in `perceive` after `learn_traps`) |
 | `world/door.rs`, `world/travel.rs`, `world/lockpick.rs`, `world/dig.rs` | one arm each: `open_door` and the bump hand a shut chest to `open_chest`, `kick` to `kick_chest`, `pick_lock` picks a chest's lock and calls `open_lid`, `blast` blows apart shut chests whose band's `hardness` is below it (their traps dropped, sprung at no one); `set_terrain` keeps a lock on a closed door or a shut chest, and drops a chest's trap and its memory when the chest stops being shut |
 | `world/trap.rs`, `world/disarm.rs`, `world/search.rs` | trapped chests (C2): `step_onto_trap` skips a shut chest's cell; `slit` is the chest's own cell (a shot out of the box); a disarm failed badly springs through `spring_chest_trap` (a burst blows the chest up); `reveal` says "that the coffer is trapped" |
+| `chest.rs` (`roll_contents`) | what a generated chest holds (C3): the band's `loot` table rolled at the floor's level + `loot_level` with the finder's luck: the items (a grade draw each, then `loot::roll_with`), the purse (the shops' currency), the gems (`gem::roll`); like stacks joined |
+| `content/dungeon.rs` | `ChestOdds` (`chests = { chance, count }` per branch; default 20 %, one) on `DungeonDef::chests` |
+| `mapgen/chest.rs` | `fill` (C3): the chance and count, the cells (`cells`: plain floor with eight walkable non-door neighbours, `AWAY` 6 from the stairs, no vault, shop, kept special room, object, light, trap, lock, or patrol; two chests never touch), and per chest `lay`: lock, trap (of the branch's that fit a fixture), contents, the mimic draw, the shut terrain and the `Chest`. Run in `generate_for` after `room_loot::fill`, before `gear::arm` |
+| `mapgen/connect.rs` | `validate` accepts a lock on a shut chest and asks no key for it |
 | `world/knock.rs` | Knock (`ClassActive::Knock`, `TalentEffect::Knock { mana }`, `TalentMods::knock`): springs the lock in a direction; refused, no time or mana, where nothing locked stands. `ClassActive::strikes` keeps the "nobody hostile there" refusal to the aimed blows |
 | `world/travel.rs` | `instantiate_level` makes the food chests hold now (`rot::made_at`) and cuts their gems for Jeweller, as a level's piles |
 | `perception.rs` | `PerceptionView::chest_at(p)` (cells seen or remembered; `locked` only with Chest-wise on a shut chest in sight), `known_chests()` |
@@ -36,11 +41,19 @@ chest (`open_door`, the bump, `kick`, `pick_lock`, Knock) finds it out first.
 - Draws: the kick's break (one) and the destruction (one a stack rolled, in the order held) are
   the gameplay stream, as are a sprung trap's own rolls; a blast blowing a chest apart compares
   numbers and draws only the destruction. Chest-wise draws nothing. Nothing else about chests
-  draws.
+  in play draws (generation: below).
 - A chest's trap lies in `LevelState::traps` on the shut chest's cell and nowhere else: it is
   sprung only by `open_lid`, `kick_chest` (broken), and a failed `disarm`, always through
   `spring_chest_trap`; it goes with the lid (`set_terrain`). The order on a kick: the break draw,
   then the trap at the kicker, then the smash (or the blow-up). A kick that holds springs nothing.
+- Generated chests (C3) draw only from `chests/<level id>` (`Rng::chests`), after everything but
+  the gear: the map, traps, secrets, loot, population, dens, hoards, and scriptoria are the same
+  with or without them (the chest's cell becomes the shut terrain, its lock and trap join the
+  level's maps). Per chest, in order: the cell, `chance(locked)`, `chance(trapped)` and, if
+  trapped, one `index` among the fitting traps (made with none: a branch without traps draws
+  the same), `roll_contents`, `chance(mimic)` (C4 swaps the chest for a mimic there; drawn now so
+  that changes no stream). Cells avoid the population, so a fixture comparing a floor with and
+  without a danger sets `chests = { chance = 0 }` (`world/spawn_tests.rs`'s barrow).
 - No new action, key, or `KeyCommand`: `open`, `move`, `pick`, `kick`, and `use:knock:DIR`.
 
 ## Talents
@@ -65,4 +78,7 @@ nothing and one that breaks springing the trap, a fireball kicked, Pick lock, Di
 failed badly, searching with the chest's sign and the `view` glyph, Chest-wise, Trap sense's half,
 a blast from afar springing nothing, the `truth` line, replays), `warlock/src/ui/look.rs`
 (`a_chest_goes_by_its_band`, with a known trap), the
-`abilities-menu-knock` screen snapshot, and `render/atlas.rs` (the font has `⊟ ⊔ ⊠`).
+`abilities-menu-knock` screen snapshot, `render/atlas.rs` (the font has `⊟ ⊔ ⊠`), and `mapgen/chest_tests.rs` (C3: one floor in five,
+cells clear, the level the same without chests, locks and traps by the band, a branch without
+traps drawing the same, banded chests at depth 8, the loot's means and magic share);
+`content/dungeon.rs` (`chests` parsed and refused); `xtask/src/wiki/chests.rs` (the dice means).

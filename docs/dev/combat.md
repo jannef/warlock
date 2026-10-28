@@ -161,3 +161,5 @@ the target fell); a free blow draws only as the blow it is; free blows give none
 but cleave after cleave; noise only for the opportunist's and the gatekeeper's. Tests: `world/free_blow_tests.rs`
 (cleave order and count, great cleave, kicks, ripostes and their message order, no answer to a
 riposte, opportunists both ways, in the dark, no draws while triggers do not fire, saves).
+
+**Balance probe** (#569): `world/balance_probe.rs` (and `balance_probe/tables.rs`), an `#[ignore]` test that measures the player against the monsters of their level through the code above (`Actor::melee`, `World::target_of`, `combat::strike`, `World::attack_price`) and prints the tables of `docs/balance.md`, which holds the method, the command, and the tuning notes. It asserts nothing; rerun it and replace the tables after tuning combat data.

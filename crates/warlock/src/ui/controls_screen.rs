@@ -1,15 +1,16 @@
 //! The controls screen and rebinding UI (spec §6): select a command, press a key to bind it.
 //!
 //! Commands are listed by context (`input::Context`: in play, aiming, the rest prompt, menus
-//! and screens, info pages, dialogs, and in builds that have them the developer keys); a key is
-//! unique within its context only. Enter on a command waits for a key, which becomes the
-//! command's primary key (its other keys, such as the numpad, stay). A key another command of the
-//! same context uses moves to this one, and the message says so; Esc (fixed) and the last key of
-//! a vital command (`settings::keys::VITAL`) are refused, so the player cannot lock themselves
-//! out. Esc cancels, Delete resets one command, and "Reset all keys" restores the defaults.
-//! "Export keys" and "Import keys" write and read the keymap file (`settings::keymap`): in the
-//! config folder on the desktop, a download and a file picker on the web (whose file arrives a
-//! few frames later: [`receive_keymap`]).
+//! and screens, info pages, dialogs, and in builds that have them the developer keys), then, at
+//! the very bottom, the abilities' own keys (play commands, unbound by default: the abilities
+//! menu has them all; #644); a key is unique within its context only. Enter on a command waits
+//! for a key, which becomes the command's primary key (its other keys, such as the numpad,
+//! stay). A key another command of the same context uses moves to this one, and the message
+//! says so; Esc (fixed) and the last key of a vital command (`settings::keys::VITAL`) are
+//! refused, so the player cannot lock themselves out. Esc cancels, Delete resets one command,
+//! and "Reset all keys" restores the defaults. "Export keys" and "Import keys" write and read
+//! the keymap file (`settings::keymap`): in the config folder on the desktop, a download and a
+//! file picker on the web (whose file arrives a few frames later: [`receive_keymap`]).
 //!
 //! The `?` help is the same screen, read-only ([`ControlsScreen::help`]): it lists every
 //! command by context, including Esc, and closes on `?` or Esc. The list is drawn by one piece
@@ -20,7 +21,7 @@ use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, Context, KeyCommand};
 use crate::render::console::Console;
 use crate::settings::keymap::{self, KeymapFile};
-use crate::settings::keys::{Bound, REBINDABLE};
+use crate::settings::keys::{ABILITY_KEYS, Bound, REBINDABLE};
 use bevy::prelude::*;
 
 /// What the screen is doing.
@@ -43,6 +44,8 @@ enum Row {
     Blank,
     /// The heading of a context's group.
     Header(Context),
+    /// The heading of the abilities' own keys, the last group ([`ABILITY_KEYS`]).
+    AbilityKeys,
     Command(KeyCommand),
     Reset,
     Export,
@@ -65,10 +68,13 @@ impl Row {
             Row::Export => Some("Export keys…"),
             Row::Import => Some("Import keys…"),
             Row::Back => Some("Back"),
-            Row::Note(_) | Row::Blank | Row::Header(_) | Row::Command(_) => None,
+            Row::Note(_) | Row::Blank | Row::Header(_) | Row::AbilityKeys | Row::Command(_) => None,
         }
     }
 }
+
+/// The heading of the abilities' own keys, below every other group.
+const ABILITY_KEYS_TITLE: &str = "Ability keys (all in the abilities menu too)";
 
 /// What the list says first: the keys no binding changes.
 const NOTES: [&str; 2] = [
@@ -77,8 +83,8 @@ const NOTES: [&str; 2] = [
 ];
 
 /// Selection state of the controls screen. Rows are the notes, then each context's commands
-/// under its heading, then "Reset all keys", "Export keys…", "Import keys…", and "Back"; in
-/// help, the notes and every command.
+/// under its heading, then the abilities' own keys under theirs, then "Reset all keys",
+/// "Export keys…", "Import keys…", and "Back"; in help, the notes and every command.
 #[derive(Debug)]
 pub struct ControlsScreen {
     /// The selected row; in help, the first row shown.
@@ -124,8 +130,9 @@ impl ControlsScreen {
     }
 
     /// The rows shown: the notes, then every context's commands in [`REBINDABLE`] order under
-    /// its heading (help adds Esc's Cancel to play's); the rebinding screen ends with its
-    /// actions.
+    /// its heading (help adds Esc's Cancel to play's), then, at the very bottom, the abilities'
+    /// own keys ([`ABILITY_KEYS`]: play commands, niche, unbound by default; #644); the
+    /// rebinding screen ends with its actions.
     fn rows(&self) -> Vec<Row> {
         let read_only = self.mode == Mode::ReadOnly;
         let mut rows: Vec<Row> = NOTES.iter().map(|note| Row::Note(note)).collect();
@@ -134,12 +141,15 @@ impl ControlsScreen {
                 continue;
             }
             rows.extend([Row::Blank, Row::Header(context)]);
-            let commands = REBINDABLE.iter().filter(|c| c.context() == context);
+            let commands =
+                (REBINDABLE.iter()).filter(|c| c.context() == context && !ABILITY_KEYS.contains(c));
             rows.extend(commands.copied().map(Row::Command));
             if read_only && context == Context::Play {
                 rows.push(Row::Command(KeyCommand::Cancel));
             }
         }
+        rows.extend([Row::Blank, Row::AbilityKeys]);
+        rows.extend(ABILITY_KEYS.iter().copied().map(Row::Command));
         if !read_only {
             rows.extend([Row::Blank, Row::Reset, Row::Export, Row::Import, Row::Back]);
         }
@@ -317,6 +327,9 @@ impl ControlsScreen {
                 Row::Blank => {}
                 Row::Header(context) => {
                     console.print(panel.inner_x(), y, context.title(), ACCENT);
+                }
+                Row::AbilityKeys => {
+                    console.print(panel.inner_x(), y, ABILITY_KEYS_TITLE, ACCENT);
                 }
                 Row::Command(command) => {
                     let value = if selected && self.mode == Mode::Capture {
@@ -681,21 +694,35 @@ mod tests {
             .collect();
         assert_eq!(headers, Context::ALL[..Context::ALL.len() - 1]);
         assert!(!plain.contains(&Row::Command(KeyCommand::RevealMap)));
-        // Every rebindable command but the developer keys, each under its context's heading.
+        // Every rebindable command but the developer keys, each under its context's heading,
+        // and the abilities' own keys (play commands) last, under theirs.
         let mut context = None;
         for row in &plain {
             match row {
                 Row::Header(c) => context = Some(*c),
-                Row::Command(command) => assert_eq!(Some(command.context()), context),
+                Row::AbilityKeys => context = None,
+                Row::Command(command) if context.is_none() => {
+                    assert!(ABILITY_KEYS.contains(command), "{command:?}");
+                }
+                Row::Command(command) => {
+                    assert_eq!(Some(command.context()), context);
+                    assert!(!ABILITY_KEYS.contains(command), "{command:?}");
+                }
                 _ => {}
             }
         }
+        let last_group = plain.iter().rposition(|r| *r == Row::AbilityKeys);
+        let last_header = plain.iter().rposition(|r| matches!(r, Row::Header(_)));
+        assert!(last_group > last_header, "the ability keys come last");
         for command in REBINDABLE.iter().filter(|c| c.context() != Context::Dev) {
             assert!(plain.contains(&Row::Command(*command)), "{command:?}");
         }
         let dev = ControlsScreen::new(true, KeymapFile::Nowhere).rows();
         assert!(dev.contains(&Row::Header(Context::Dev)));
         assert!(dev.contains(&Row::Command(KeyCommand::RevealMap)));
+        let last_group = dev.iter().rposition(|r| *r == Row::AbilityKeys);
+        let dev_header = dev.iter().position(|r| *r == Row::Header(Context::Dev));
+        assert!(last_group > dev_header, "below the developer keys too");
     }
 
     #[test]

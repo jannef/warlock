@@ -599,7 +599,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     class resources, came with R5, §8 "Resources"): `resting_percent` (Fast healer: resting's pace
     half again, `World::healing_rate`); `second_wind` (Second wind, the first **active** talent:
     `Ability::SecondWind` under the abilities menu's new **Talents** group (`Source::Talent`,
-    between Class and Skills), `Action::SecondWind` (`second_wind`): 1 hit point per character
+    between Class and Skills), `Action::UseTalent` (`use:second_wind`, the verb every ability use has; #644): 1 hit point per character
     level back at once, at least 8, for the time of a `wait`, then the cooldown status Winded
     (15 minutes; "you are winded" in the menu; refused, no time, without the talent or while
     winded)); `iron_stomach` (rotten food and overeating never make you vomit, no draw for it;

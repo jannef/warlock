@@ -240,6 +240,7 @@ use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
     ActionKind, CombatStance, Content, Here, ObjectId, RaceDef, StairsDir, Stance, StatusId,
+    TalentActive,
 };
 use crate::geom::{Dir, Pos};
 use crate::hunger::Satiation;
@@ -1268,8 +1269,8 @@ impl World {
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
             Action::Temper { item } => return self.start_temper(*item),
-            Action::SecondWind => return self.second_wind(events),
-            Action::BloodMagic => return self.blood_magic(),
+            Action::UseTalent(TalentActive::SecondWind) => return self.second_wind(events),
+            Action::UseTalent(TalentActive::BloodMagic) => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
@@ -1352,6 +1353,8 @@ mod animated_tests;
 mod ascmearc_tests;
 #[cfg(test)]
 mod attacks_tests;
+#[cfg(test)]
+mod balance_probe;
 #[cfg(test)]
 mod beast_den_tests;
 #[cfg(test)]

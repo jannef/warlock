@@ -24,7 +24,8 @@ design; the keys of menus, menu lists, screens, info pages, prompts, dialogs, te
 targeting mode are fixed, and new ones are plain fixed keys in their screen or input-mode code,
 listed in its hint line, with no `KeyCommand` or `Context` entry (owner, 2026-10-26). The
 contexts below are the existing menu-context bindings, which stay as they are (not widened, not
-removed; a cleanup is a later owner call). Every key read so far is a `KeyCommand` in its
+removed; a cleanup is a later owner call); the back-style ones (`Back`, `TextBack`, `MoreSkip`,
+`PrevPage`, `PrevTarget`, all unbound) stay exactly as they are (owner, #644). Every key read so far is a `KeyCommand` in its
 `input::Context`**: `Play` (the map, direction prompts, look mode), `Aim` (`NextTarget`,
 `PrevTarget`, `Loose`), `Prompt` (the rest choices), `More` (at `--more--`: `MoreNext`, Space and
 Enter; `MoreSkip`, unbound, as Esc always skips; `ui/more.rs`), `Menu` (`MenuUp`/`Down`/`Left`/`Right`,
@@ -56,7 +57,9 @@ settings file or a keymap is read, so nothing can lock the player out; `--reset-
 an empty list and loads unbound. Rebindable commands have stable ids, unique across contexts, in
 `settings/keys.rs` (`KeyCommand::id`): **a new `KeyCommand` variant must be added there** (in
 `REBINDABLE` next to its group, its `Context` in `KeyCommand::context`, a default key in
-`Bindings::default` or an entry in `UNBOUND`), never a key read of its own.
+`Bindings::default` or an entry in `UNBOUND`), never a key read of its own. An ability's own
+command also goes in `ABILITY_KEYS`, which Controls lists last, below every context's group
+(#644); the play keys never take a vi letter by default (#644).
 
 The default keys (`Bindings::default`) are ADOM's (#350; the source is ADOM's manual, its
 "Miscellaneous commands" list): a command ADOM has takes ADOM's key in its context, one ADOM lacks
