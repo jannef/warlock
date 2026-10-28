@@ -245,6 +245,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("damage-types.md", damage::damage_types),
         ("damage-weapons.md", damage::weapon_kinds),
         ("damage-armour.md", damage::armour_kinds),
+        ("damage-elements.md", damage::elements),
         ("stances.md", combat::stances),
         ("to-hit.md", combat::to_hit),
         ("hit-chances.md", combat::hit_chances),
@@ -1126,7 +1127,7 @@ mod tests {
         assert!(text("magic-rarity.md").contains("has the creature's level as its item level"));
         // Unique items: the campaigns', exactly, never the test world's.
         let uniques = text("uniques.md");
-        assert!(uniques.contains("| Widowmaker | Stiletto | 12 | Venomous (2: adds 1d4 poison"));
+        assert!(uniques.contains("| Widowmaker | Stiletto | 12 | Venomous (4: adds 1d4 poison"));
         assert!(uniques.contains("every hit that leaves its target alive: 1 degree of Poisoned"));
         assert!(uniques.contains("| its wearer is never Frightened |"));
         assert!(

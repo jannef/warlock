@@ -94,7 +94,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     untyped: soaked and wounding as every blow was. **Added damage** (`Rider { kind, dice }`):
     a weapon, a missile weapon, or ammunition may add dice of another kind (`added = { type =
     "fire", damage = "1d4" }`: the flaming arrow is piercing plus 1d4 fire), and magic items add
-    "1dN fire damage" (the `elemental` affix effect: Flaming, Freezing); riders are rolled after
+    "1dN fire damage" (the `elemental` affix effect, one prefix per element but force, on the
+    one ladder 1d2 at item level 2 to 1d8 at 12: Flaming fire, Freezing cold, Venomous poison,
+    Shocking electricity, Corrosive acid, Withering necrotic; force stays the spells' kind,
+    #638); riders are rolled after
     the attack's own dice and extra die, each time the damage is rolled (a critical doubles them
     too), in this order: the weapon's own, its affixes' (one die per kind, sides summed like the
     plain extra die), the ammunition's own and its affixes' for a shot, then the worn ones'; they
@@ -102,7 +105,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **Resistances** (`damage::Resistances`, `Actor::resistances`): a percentage per kind, what a
     creature is (`resist = { acid = 50 }` on its type, and the player's race's `resist`: drow
     poison 25) plus what it wears and wields (each piece's
-    `resist`, and the `resistance` affix effect: of the Salamander, of Warmth) and the talents it
+    `resist`, and the `resistance` affix effect, one suffix per element: of the Salamander
+    fire, of Warmth cold, of the Adder poison, of the Storm electricity, of Glass acid, of the
+    Anvil force, of the Living necrotic; the physical kinds have none, Protection being their
+    resistance) and the talents it
     has (Elemental ward, §8 "Talents", counts as gear does), summed and capped
     at **75** (`MAX_RESISTANCE`) above and −100 below; **100 is immunity**, and only a creature's
     own 100 is immune: gear never makes anyone immune. After the soak, each kind of a blow is

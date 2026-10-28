@@ -98,7 +98,7 @@ A few rules from elsewhere carry over:
   affix of each kind of effect; *stealth* holds a family (of Stealth and of Shadows). Damage is
   several categories, so a weapon may carry more than one damage affix: *physical damage* (Sharp
   and Vicious, a flat bonus), *extra damage* (Heavy and of Wounding, an extra die), and one per
-  element (Flaming, Freezing, Venomous): a Sharp sword may be Heavy too, or Flaming, but never
+  element (Flaming, Freezing, Venomous, Shocking, Corrosive, Withering): a Sharp sword may be Heavy too, or Flaming, but never
   both Heavy and of Wounding. A prefix and a suffix of one category do the same thing (Glinting
   and of Precision both add to hit), so an item has one or the other.
 
@@ -119,8 +119,9 @@ level is never shown in the game): "Prefix Sharp: +2 damage", "Suffix of Celerit
 
 ## Prefixes
 
-Prefixes are mostly offensive, or flat Defence and life. *Flaming*, *Freezing*, and *Venomous*
-add a die of fire, cold, or poison to every hit, which no armour soaks (see [Damage types](damage-types.md)).
+Prefixes are mostly offensive, or flat Defence and life. *Flaming*, *Freezing*, *Venomous*,
+*Shocking*, *Corrosive*, and *Withering* add a die of fire, cold, poison, electricity, acid, or
+necrotic damage to every hit, which no armour soaks (see [Damage types](damage-types.md)).
 *Mage-wrought*, *Baleful*, and *Potent* serve a caster (see [Magic](magic.md)), *Tireless* raises
 your stamina (see [Resources](resources.md)), *Hobnailed* boots kick doors in more easily, and a
 *Delving* tool or pair of gloves digs faster (a magic pick-axe turns up in loot).
@@ -129,8 +130,10 @@ your stamina (see [Resources](resources.md)), *Hobnailed* boots kick doors in mo
 
 ## Suffixes
 
-Suffixes are mostly stats, speed, criticals, utility, and skills; *of the Salamander* and *of
-Warmth* resist fire and cold, in percent (see [Damage types](damage-types.md)). The casters'
+Suffixes are mostly stats, speed, criticals, utility, and skills; *of the Salamander*, *of
+Warmth*, *of the Adder*, *of the Storm*, *of Glass*, *of the Anvil*, and *of the Living* resist
+fire, cold, poison, electricity, acid, force, and necrotic damage, in percent (see [Damage
+types](damage-types.md)). The casters'
 suffixes (of the Adept, of Thrift, of the Magus, of Farcasting, of Lingering, of Siphoning, of
 Wands) are told on the [Magic](magic.md) and [Mana](mana.md) pages; of Breath, of Ease, and of the
 Hunt help stamina. *Of Fury*, *of Steadiness*, *of Stillness*, *of Guile*, and *of the Muse* raise

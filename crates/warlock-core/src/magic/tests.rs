@@ -824,3 +824,28 @@ fn every_shipped_skill_suffix_raises_a_read_benefit() {
         }
     }
 }
+
+/// Every element (a damage type that is not physical) has a typed resistance suffix, and every
+/// one but force an elemental weapon prefix (#638): force stays the spells' kind.
+#[test]
+fn every_element_has_a_resistance_and_all_but_force_a_weapon_prefix() {
+    let c = content();
+    let of = |effect: Effect, kind: crate::content::DamageTypeId| {
+        (c.affixes().all().iter())
+            .filter(|a| a.effect == effect && a.damage_type == Some(kind))
+            .count()
+    };
+    for (i, t) in c.damage_types().iter().enumerate() {
+        let kind = crate::content::DamageTypeId(i as u8);
+        if t.physical {
+            assert_eq!(
+                of(Effect::Elemental, kind) + of(Effect::Resistance, kind),
+                0
+            );
+            continue;
+        }
+        assert_eq!(of(Effect::Resistance, kind), 1, "a suffix resists {}", t.id);
+        let prefixes = if t.id == "force" { 0 } else { 1 };
+        assert_eq!(of(Effect::Elemental, kind), prefixes, "{}'s prefixes", t.id);
+    }
+}

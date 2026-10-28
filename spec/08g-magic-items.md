@@ -54,9 +54,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (gloves, rings, amulets, helmets) they are **global**: every attack. Effects on the item itself
     (Armour, Protection, Shield, Parry, `max_dex`, weight) are local (the Hardened prefix adds
     to an armour's Protection, which adds up with every other piece's). An `elemental` affix
-    (Flaming, Freezing, Venomous; §8 "Damage types") is an attack effect too: its die of its kind rides on
+    (Flaming, Freezing, Venomous, Shocking, Corrosive, Withering; §8 "Damage types") is an attack effect too: its die of its kind rides on
     every roll of the damage, after the weapon's own added damage, one die per kind (the sides
-    add up); a `resistance` affix (of the Salamander, of Warmth) is global: its percentage adds
+    add up); a `resistance` affix (of the Salamander, of Warmth, of the Adder, of the Storm, of Glass, of the
+    Anvil, of the Living) is global: its percentage adds
     to the wearer's, capped with the rest at 75. The rest are global: the six stats,
     maximum hit points, regeneration, maximum mana, mana regeneration (§8 "Mana"), Dodge (stacks), Deflection and natural armour (the best
     counts, with the creature's own), moving speed, carrying limit, stealth (quieter footsteps,
@@ -103,16 +104,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Pending hooks, added
     with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
     none roll yet) and value (#145, a base `value` times rarity and affixes).
-  - **Affixes** (`data/affixes/`, §7): 32 prefixes (mostly offensive, flat Defence, and
+  - **Affixes** (`data/affixes/`, §7): 35 prefixes (mostly offensive, flat Defence, and
     life: Sharp, Heavy, Glinting, Keen, Brutal, Guarding, Reinforced, Sturdy, Supple,
     Featherweight, Nimble, Shimmering, Oaken, Hale, Vicious, Accurate, Fleet, Hunter's, Steady,
     Radiant, Burly, Hardened, Mystic (maximum mana; on weapons too), Venomous (poison), Flaming,
-    Freezing; the systems' (#635): Mage-wrought (eased casting), Baleful (spell criticals),
-    Potent (spell damage), Tireless (stamina), Hobnailed (kicks), Delving (digging)) and 59
+    Freezing, Shocking (electricity), Corrosive (acid), Withering (necrotic; the six on one ladder,
+    1d2 at item level 2 to 1d8 at 12, #638); the systems' (#635): Mage-wrought (eased casting), Baleful (spell criticals),
+    Potent (spell damage), Tireless (stamina), Hobnailed (kicks), Delving (digging)) and 64
     suffixes (stats, speed, criticals, utility, skills: of the Bear, Lynx, Ox, Owl, Sage, Lion;
     of Celerity, Precision, Slaying, Ruin, Mending, Clarity (mana regeneration), Stealth, Light,
     the Mule, Evasion, Warding, the Wind, Reach, Durability, the Tortoise, Vitality, the
-    Salamander, Warmth; of Shadows (stealth), the Hare (tumble), the Fox (listen), the Wanderer
+    Salamander, Warmth, the Adder (poison), the Storm (electricity), Glass (acid), the Anvil
+    (force), the Living (necrotic) (the seven typed resistances, the five new on the ladder 8–10 %
+    at item level 1 to 42–45 % at 12, #638); of Shadows (stealth), the Hare (tumble), the Fox (listen), the Wanderer
     (survival), Balance (balance); the skills' (#636): of Seeking (search), the Eagle (spot), the
     Stag (athletics), the Leech (heal), the Picklock (open lock), Disarming (disable device),
     Appraisal (appraise), the Scholar (spellcraft), Letters (decipher script), the Cutpurse
