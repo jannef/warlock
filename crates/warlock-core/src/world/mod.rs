@@ -1117,9 +1117,10 @@ impl World {
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let quests = self.quest_progress();
         let spent = self.player_acts(action, &mut events);
-        // Taking off what raised them lowers the player's maximum hit points and mana.
+        // Taking off what raised them lowers the player's maximum hit points, mana, and pools.
         self.keep_hp_within_max(self.state.player);
         self.keep_mana_within_max(self.state.player);
+        self.keep_resources_within_max(self.state.player);
         self.burden_news(burden);
         self.quest_news(&quests);
         // Acting (not waiting) under a load that slows the player trains balance.
@@ -1337,6 +1338,8 @@ fn article(noun: &str) -> &'static str {
     }
 }
 
+#[cfg(test)]
+mod affix_stamina_tests;
 #[cfg(test)]
 mod ai_tests;
 #[cfg(test)]

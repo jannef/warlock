@@ -483,7 +483,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `resource_build` builds a held resource on an event beyond its own `builds`, a
     `resource_max` raises its maximum (`Actor::resource_max`), a `resource_start` what it holds
     when granted (`Actor::resource_start`, at most the maximum), and a `resource_rate` its pace
-    over time in percent (`World::resource_rate`).
+    over time in percent (`World::resource_rate`). What the holder wears does too, for the pool
+    its affix names (§8 "Magic items"; the affixes design §5): a `resource_max` affix raises
+    the maximum and a `resource_rate` affix speeds the pace, beside the talents', and an
+    `active_stamina` affix takes stamina off every weapon active (`Actor::weapon_stamina`, at
+    least 1). An affix never grants a pool: one who does not hold it (a wizard's stamina, any
+    creature's) gets nothing of it. Taking off what raised a maximum lowers what is held to the
+    new maximum at once (`World::keep_resources_within_max`, after each player action, as with
+    mana).
   - **Its status**: a resource with a `status` brings it: granted by
     `World::grant_resource_with_status` (the Rage ability, the dev action), the status begins
     (said as it begins, "You fly into a rage!"); as the resource ends, spent, decayed, or

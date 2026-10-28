@@ -18,25 +18,36 @@
 //!
 //! The maximum ([`Actor::resource_max`]), the start ([`Actor::resource_start`]), and the pace
 //! ([`World::resource_rate`]) are the one hooks for the talents and class
-//! features that move onto resources (the progression design §4.18; R1–R5). Mana is separate:
-//! nothing converts between them.
+//! features that move onto resources (the progression design §4.18; R1–R5), and the maximum and
+//! the pace the hooks for the affixes that name a pool (Tireless, of Breath, of Fury; the
+//! affixes design, `docs/design/affixes-systems.md` §5): never a grant, so one without the
+//! pool gets nothing. Taking off what raised a maximum lowers what is held at once
+//! ([`World::keep_resources_within_max`], called in `World::apply`). Mana is separate: nothing
+//! converts between them.
 
 use super::{Actor, ActorId, Spent, World};
 use crate::action::Event;
+use crate::content::Effect as ItemEffect;
 use crate::content::{Build, Content, ResourceId};
 use crate::resource::Pace;
 use crate::status::Effect;
 
 impl Actor {
     /// The most of `resource` it may hold at character `level`: its maximum by data
-    /// ([`Actor::data_resource_max`]) and what its talents add (Mighty rage's 10 more rage). The
-    /// one place that decides it; the player is shown it.
+    /// ([`Actor::data_resource_max`]), what its talents add (Mighty rage's 10 more rage), and
+    /// what it wears adds for that pool (Tireless's `resource_max`, of Fury's; spec §8 "Magic
+    /// items"), never below 0. The one place that decides it; the player is shown it. An affix
+    /// never grants the pool: one who does not hold it gets nothing of this.
     pub fn resource_max(&self, content: &Content, resource: ResourceId, level: u8) -> u16 {
-        let more: u16 = (self.talent_mods(content).resource_max.iter())
+        let talents: i32 = (self.talent_mods(content).resource_max.iter())
             .filter(|(r, _)| *r == resource)
-            .map(|(_, more)| *more)
+            .map(|(_, more)| i32::from(*more))
             .sum();
-        (self.data_resource_max(content, resource, level)).saturating_add(more)
+        let worn = self
+            .mods(content)
+            .resource(ItemEffect::ResourceMax, resource);
+        let max = i32::from(self.data_resource_max(content, resource, level)) + talents + worn;
+        u16::try_from(max.max(0)).unwrap_or(u16::MAX)
     }
 
     /// The most of `resource` it may hold at character `level` before its talents: the `max` in
@@ -88,9 +99,10 @@ impl World {
     }
 
     /// How fast `resource` changes over time for actor `id` now, in percent of its normal pace:
-    /// 100 and what its talents add (Steady hand's focus +50, Patient blade's openings -50;
-    /// never below 0), but none while the player rests for one that does not change while
-    /// resting (`resting = false`). The one place that decides it.
+    /// 100, what its talents add (Steady hand's focus +50, Patient blade's openings -50), and
+    /// what it wears adds for that pool (of Breath's `resource_rate`), never below 0; but none
+    /// while the player rests for one that does not change while resting (`resting = false`).
+    /// The one place that decides it.
     pub(crate) fn resource_rate(&self, id: ActorId, resource: ResourceId) -> u32 {
         let def = self.content.resource(resource);
         if self.resting && id == self.state.player && !def.resting {
@@ -99,14 +111,37 @@ impl World {
         let Some(actor) = self.state.actors.get(&id) else {
             return 100;
         };
-        if actor.talents.is_empty() {
+        let worn = (actor.mods(&self.content)).resource(ItemEffect::ResourceRate, resource);
+        if actor.talents.is_empty() && worn == 0 {
             return 100;
         }
-        let more: i32 = (actor.talent_mods(&self.content).resource_rate.iter())
+        let talents: i32 = (actor.talent_mods(&self.content).resource_rate.iter())
             .filter(|(r, _)| *r == resource)
             .map(|(_, more)| *more)
             .sum();
-        u32::try_from(100 + more).unwrap_or(0)
+        u32::try_from(100 + talents + worn).unwrap_or(0)
+    }
+
+    /// Keeps each resource actor `id` holds within its maximum ([`Actor::resource_max`]), which
+    /// falls when it takes off what raised it (a Tireless ring): at once, as
+    /// `World::keep_mana_within_max` does mana, rather than only when time next passes
+    /// (`resource::pass` clamps too).
+    pub(super) fn keep_resources_within_max(&mut self, id: ActorId) {
+        let level = self.holder_level(id);
+        let Some(actor) = self.state.actors.get_mut(&id) else {
+            return;
+        };
+        let maxes: Vec<(ResourceId, u16)> = (actor.resources.iter())
+            .map(|pool| {
+                let max = actor.resource_max(&self.content, pool.resource, level);
+                (pool.resource, max)
+            })
+            .collect();
+        for (resource, max) in maxes {
+            if let Some(pool) = actor.resources.get_mut(resource) {
+                pool.value = pool.value.min(max);
+            }
+        }
     }
 
     /// The pace of each resource actor `id` holds, in order: what `World::live` passes time at.
