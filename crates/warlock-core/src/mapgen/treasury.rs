@@ -15,9 +15,9 @@
 //!   plain. No draw.
 //! - [`fill`], after the floor's chests: from the level's treasure stream [`Rng::treasure`]
 //!   (`treasure/<level id>`), so the rest of the level, its other chests too, is the same with or
-//!   without a treasure room. Per room in order: the `chests` dice, then per chest its cell and
-//!   [`super::chest::lay`]'s draws (a chest of the floor's item level: lock, trap, contents, the
-//!   mimic draw); the `gold.heaps` dice, then per heap its cell and its `gold.dice`; the `gems`
+//!   without a treasure room. Per room in order: the `chests` dice, then per chest its cell
+//!   (never where something lies) and [`super::chest::lay`]'s draws (a chest of the floor's item
+//!   level: lock, trap, contents, the mimic draw); the `gold.heaps` dice, then per heap its cell and its `gold.dice`; the `gems`
 //!   dice, then per gem its cell and [`crate::gem::roll`]'s draws.
 
 use super::{Canvas, Palette, connect};
@@ -251,7 +251,10 @@ pub(super) fn fill(
             let walkable: Vec<Pos> = (room.cells().into_iter())
                 .filter(|&p| content.terrain(template.terrain[p]).walkable)
                 .collect();
+            // A chest never goes where something already lies (the level's loot): its terrain
+            // is not walkable, so the pile would lie on a wall.
             let fits: Vec<Pos> = (free.iter().copied())
+                .filter(|p| !template.objects.contains_key(p))
                 .filter(|&p| !by_door(template, content, &room, p))
                 .filter(|&p| super::special::joined(&walkable, p))
                 .collect();

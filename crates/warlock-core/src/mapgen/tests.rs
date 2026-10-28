@@ -756,3 +756,27 @@ fn vaults_are_stamped_verbatim_with_their_lights_and_creatures() {
         }
     }
 }
+
+/// A treasure room's chest never goes on loot already lying there (a gem under a chest was a
+/// pile on a wall: the proptest's seed 3114281943497575297, depth 7, once C4's mimic draw moved
+/// the treasure stream).
+#[test]
+fn a_treasure_room_s_chest_never_covers_loot() {
+    let a = level(3114281943497575297, 7);
+    let effect = CONTENT.room_effects().id("treasury").expect("treasury");
+    let room = a
+        .rooms
+        .iter()
+        .find(|r| r.effect == effect)
+        .expect("a treasure room");
+    assert!(
+        room.cells().iter().any(|p| a.chests.contains_key(p)),
+        "a chest"
+    );
+    for p in a.objects.keys() {
+        assert!(
+            CONTENT.terrain(a.terrain[*p]).walkable,
+            "objects on a wall at {p}"
+        );
+    }
+}
