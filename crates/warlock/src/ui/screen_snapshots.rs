@@ -306,6 +306,15 @@ const CASES: &[Case] = &[
         screen: Some("weapon-skills"),
         ..BASE
     },
+    // A wizard's (#571): Spell attacks and Sniper from the class, the Spells section between
+    // Shields and the styles.
+    Case {
+        name: "weapon-skills-screen-wizard",
+        character: Some("human,female,wizard"),
+        run: true,
+        screen: Some("weapon-skills"),
+        ..BASE
+    },
     Case {
         name: "abilities-menu",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
