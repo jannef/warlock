@@ -162,7 +162,10 @@ impl SaveStore {
             Err(e) => return Resume::Failed(format!("Could not read the save: {e}.")),
         };
         match save::decode(&bytes, content.clone()) {
-            Ok(world) => Resume::Loaded(Box::new(world)),
+            Ok(world) => {
+                log_retiered(&world);
+                Resume::Loaded(Box::new(world))
+            }
             Err(err) => {
                 let kept = match self.writable() {
                     Some(backend) => match backend.rename(&save_file(id), &bad_file(id)) {
@@ -226,7 +229,10 @@ impl SaveStore {
         let bytes = backend
             .read(&snapshot_file(id))
             .map_err(|e| format!("No snapshot to load ({e})."))?;
-        save::decode(&bytes, content.clone()).map_err(|e| format!("Could not load snapshot: {e}."))
+        let world = save::decode(&bytes, content.clone())
+            .map_err(|e| format!("Could not load snapshot: {e}."))?;
+        log_retiered(&world);
+        Ok(world)
     }
 
     fn write(&self, name: &str, world: &World) -> Result<(), String> {
@@ -421,6 +427,13 @@ fn save_on_exit(
 fn reload_on_exit(mut exits: MessageReader<AppExit>) {
     if exits.read().count() > 0 {
         crate::storage::web::reload();
+    }
+}
+
+/// Logs what loading re-tiered: saved affixes a regraded ladder moved (`World::retiered`).
+fn log_retiered(world: &World) {
+    for line in world.retiered() {
+        info!("save read leniently: {line}");
     }
 }
 
