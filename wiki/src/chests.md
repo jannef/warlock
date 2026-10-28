@@ -16,6 +16,34 @@ still. The old names are for old things:
 You never see what a shut chest holds, nor whether it is locked or trapped, until you try it
 (or search it).
 
+## Where chests are found
+
+About one dungeon floor in five has a chest standing somewhere out in the open: in the middle of
+a room or a cavern, never in a doorway or a corridor, never by the stairs, in a shop, or in a
+vault. Each dungeon says how often:
+
+{{#include generated/chest-places.md}}
+
+A chest found on a floor is of that floor's level. Many come locked, and the deeper the more
+often; some are trapped, with one of the traps that dungeon hides on its floors (a dungeon
+without traps has no trapped chests):
+
+{{#include generated/chest-odds.md}}
+
+## What a chest holds
+
+A chest holds a few things rolled by dice, a purse of gold coins, and now and then loose gems.
+Its items are found as loot is anywhere (some of them may turn out to be gems), at the floor's
+level or a few levels above it for the greater chests, and a share of them is sure to be magic
+or rare. Talents that make your finds richer (Treasure hunter, Hoard sense) count for what is in
+a chest too.
+
+{{#include generated/chest-loot.md}}
+
+A coffer is about a floor's worth of loot and a handful of coins; a banded chest is two floors'
+worth with a quarter of it magic. The coins and gems are what make a kick worth it: a boot
+spares them, a fireball does not (below).
+
 ## Opening a chest
 
 Walk into a shut chest, or press `o` and its direction, to lift the lid:

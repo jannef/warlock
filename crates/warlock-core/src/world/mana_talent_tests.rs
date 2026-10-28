@@ -176,7 +176,7 @@ fn blood_magic_trades_hit_points_for_mana() {
     let listed = |w: &World| {
         (w.perception().abilities().into_iter()).find(|a| a.ability == Ability::BloodMagic)
     };
-    run(&mut w, "blood_magic");
+    run(&mut w, "use:blood_magic");
     assert_eq!(last(&w), "You know no blood magic.");
     assert!(listed(&w).is_none());
 
@@ -190,21 +190,21 @@ fn blood_magic_trades_hit_points_for_mana() {
     w.player_mut().hp = 20;
     w.player_mut().mana = max - 5;
     let turn = w.state.turn;
-    run(&mut w, "blood_magic");
+    run(&mut w, "use:blood_magic");
     assert_eq!(last(&w), "You give your blood, and power wells up in you.");
     assert_eq!((w.state.player().hp, w.state.player().mana), (15, max - 2));
     assert_eq!(w.state.turn, turn + 1, "it takes a turn");
     // Never above the maximum, and not at all while full.
-    run(&mut w, "blood_magic");
+    run(&mut w, "use:blood_magic");
     assert_eq!((w.state.player().hp, w.state.player().mana), (10, max));
-    run(&mut w, "blood_magic");
+    run(&mut w, "use:blood_magic");
     assert_eq!(last(&w), "Your mana is already full.");
     assert_eq!(w.state.player().hp, 10);
     // Never the last hit point.
     w.player_mut().mana = 0;
     w.player_mut().hp = 5;
     let turn = w.state.turn;
-    run(&mut w, "blood_magic");
+    run(&mut w, "use:blood_magic");
     assert_eq!(last(&w), "You have too little blood left to give.");
     assert_eq!((w.state.player().hp, w.state.player().mana), (5, 0));
     assert_eq!(w.state.turn, turn, "refused: no time");

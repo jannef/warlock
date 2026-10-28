@@ -56,7 +56,7 @@ issue how it interacts with mana**, and hooks in at the one place below.
   - Deep well's mana by level (`max_mana_per_levels`, `TalentMods::mana_at`) is handed out like
     Hardy's hit points: `class::hand_out` at the pick, `World::level_up` as each level comes
     (no `mana_level` cap), into `mana_base` and `mana`.
-  - `World::blood_magic` (`Action::BloodMagic`, `blood_magic`; `Ability::BloodMagic`, the
+  - `World::blood_magic` (`Action::UseTalent(TalentActive::BloodMagic)`, `use:blood_magic`; `Ability::BloodMagic`, the
     talent's active): `TalentMods::blood_magic` (`hp`, `mana`) hit points straight off `hp`
     (not `hurt`: no Protection, pain, training, or death, since it refuses at `hp <= cost`) for
     mana up to the maximum, a wait's price; refused, no time, without it, low on blood, or full.

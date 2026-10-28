@@ -40,5 +40,5 @@ expression: "render(case, content.clone())"
     │                                                                                         │
     │                                                                                         │
     │                                                                                         │
-    │ ↑↓ choose   Esc close                                                                   │
+    │ ↑↓ choose   G or Esc close                                                              │
  The└─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘rols

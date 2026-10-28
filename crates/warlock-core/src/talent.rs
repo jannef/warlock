@@ -13,7 +13,6 @@
 //! [`Candidate`] is everything a prerequisite may ask of whoever would take a talent, and
 //! [`unmet`] / [`may_take`] decide a pick, for the rules and for what the player is shown alike.
 
-use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{
     Benefit, Build, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need,
@@ -2006,9 +2005,6 @@ pub struct Candidate<'a> {
     pub race: Option<&'a str>,
     pub class: Option<&'a str>,
     pub eyes: Option<&'a str>,
-    /// The alignment band (spec §8 "Alignment"); `None` without alignment rules, when no
-    /// talent that asks for one can be taken.
-    pub band: Option<Band>,
     /// The birth sign (spec §8 "Birth sign"), if any, and whether it is a lucky day's.
     pub sign: Option<&'a Sign>,
     pub lucky: bool,
@@ -2034,7 +2030,6 @@ impl<'a> Candidate<'a> {
             race: spec.map(|s| s.race.as_str()),
             class: spec.map(|s| s.class.as_str()),
             eyes: race.map(|r| r.vision.as_str()),
-            band: content.alignment().map(|_| actor.band(content)),
             sign: character.and_then(|c| c.sign.as_ref()),
             lucky: character.is_some_and(|c| c.lucky(content).is_some()),
         }
@@ -2078,7 +2073,6 @@ impl<'a> Candidate<'a> {
             Need::Animal(id) => self.sign.is_some_and(|s| s.is_animal(id)),
             Need::Element(id) => self.sign.is_some_and(|s| s.is_element(id)),
             Need::Lucky => self.lucky,
-            Need::Alignment(required) => self.band.is_some_and(|band| required.allows(band)),
             Need::Either(needs) => (needs.iter()).any(|n| self.meets(content, n, choice, chosen)),
         }
     }
