@@ -97,6 +97,9 @@ mod room_shrine;
 mod room_shrine_tests;
 #[cfg(test)]
 mod room_temperature_tests;
+mod room_treasury;
+#[cfg(test)]
+mod room_treasury_tests;
 #[cfg(test)]
 mod room_warp_tests;
 mod scenario;
@@ -232,6 +235,7 @@ pub use room_effect::{
 pub use room_haunt::{HAUNT_EVERY, Haunt};
 pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
+pub use room_treasury::{Heaps, MAX_COINS_EACH, MAX_TREASURE, SecretDoors, Treasury};
 pub use scenario::ScenarioDef;
 pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
 pub use scroll_label::ScrollLabelDef;

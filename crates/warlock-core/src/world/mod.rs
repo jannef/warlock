@@ -191,6 +191,7 @@ mod temper;
 mod train;
 mod trap;
 mod travel;
+mod treasury;
 mod two_shields;
 mod voice;
 mod volley;
@@ -801,6 +802,9 @@ impl World {
             state.messages.push(0, line.clone());
         }
         if let Some(text) = rooms::pervade_line(&state, &content) {
+            state.messages.push(0, text);
+        }
+        for text in treasury::arrive_lines(&state, &content) {
             state.messages.push(0, text);
         }
         if let Some(text) = enter_room(&mut state, &content) {
@@ -1623,6 +1627,8 @@ mod tests;
 mod time_tests;
 #[cfg(test)]
 mod trap_tests;
+#[cfg(test)]
+mod treasury_tests;
 #[cfg(test)]
 mod two_shield_tests;
 #[cfg(test)]
