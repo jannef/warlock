@@ -5,4 +5,4 @@ tree = "shadow"
 description = "Your blows and shots hurt more when they fall on a creature that has not seen you."
 needs = { skills = { stealth = 30 }, level = 9 }
 effects = [{ kind = "ambush", dice = "1d6" }]
-systems = ["stealth", "awareness"]
+systems = ["stealth", "awareness", "sneak_attack"]

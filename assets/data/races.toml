@@ -55,7 +55,11 @@
 #   skills        the skills the race trains (spec §8 "Skills"; skills.toml), by skill id: dice
 #                 (`"1d6+4"`) or a number, rolled when the character is made, every result within
 #                 0 to 100; added to the class's (a skill both train sums the two)
-#   class_skill   dice added to one of the class's skills, picked from the run seed when the
+#   optional_skills  skills a new character of the race may or may not start with, as a
+#                 class's (classes/README.toml): `{ chance = 40, dice = "2d4" }`, rolled after the
+#                 class's from the same stream (so no class's roll moves); none is one of `skills`;
+#                 a skill the class trains too sums the two (default none; the drow's Sneak attack)
+#   class_skill  dice added to one of the class's skills, picked from the run seed when the
 #                 character is made (default none; humans: one extra class skill)
 #   rolls         skill rolls each level gives beyond the class's (spec §8 "Skills"; 0 to 10,
 #                 default 0; humans 1). A level-up roll on a skill the race trains (`skills`)
@@ -269,6 +273,8 @@ light_blind = { glare = 250, sight = 10, to_hit = -1 }
 alignment = -450
 size = "medium"
 skills = { spot = "1d6+4", stealth = "1d4+2" }
+# The knife in the dark: a drow of any class may start knowing where to put it.
+optional_skills = { sneak_attack = { chance = 40, dice = "2d4" } }
 # Keen eyes, like the elves': they notice every hidden thing in passing.
 passive_search = "all"
 hunger = 80

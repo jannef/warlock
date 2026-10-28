@@ -109,7 +109,15 @@
 #   inner_light { light }         it always sheds that light preset where it stands; everyone
 #                                 sees by it
 #   ambush { dice }               its hits on a creature that has not seen it do that many dice
-#                                 more damage, after Protection ("1d6")
+#                                 more damage, after Protection ("1d6"), on top of the Sneak
+#                                 attack skill's
+#   surprise_difficulty { value } those it catches unawares make their initiative check that
+#                                 much harder (-20 to 20, not 0)
+#   sneak_reach { value }         its shots, throws, and attack spells sneak-attack that many
+#                                 cells beyond surprise.toml's missile_reach
+#   vitals_in { tags }            creature types carrying one of those tags have vitals for its
+#                                 attacks (critical hits and sneak attacks land), never the
+#                                 incorporeal ("skeleton", "construct")
 #   carry_percent { value }       carrying limit, that percent more
 #   ignore_burdened               being Burdened costs it nothing, as a dwarf's burden
 #   step_slowdown_percent { value }   the slowdown its burden and Bloated put on its steps, that

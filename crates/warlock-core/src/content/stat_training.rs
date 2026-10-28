@@ -48,6 +48,8 @@ pub enum StatUse {
     Shot,
     /// A step within earshot of a creature that could hear it (Stealth's use).
     Sneak,
+    /// A sneak attack of the player's that hits (Sneak attack's use).
+    SneakAttack,
     /// Climbing out of the water onto ice, or out of a pit.
     Climb,
     /// A blow that costs the player hit points.
@@ -105,6 +107,7 @@ impl StatUse {
             Use::Kick => Some(StatUse::Kick),
             Use::Dodge => Some(StatUse::Dodge),
             Use::Sneak => Some(StatUse::Sneak),
+            Use::SneakAttack => Some(StatUse::SneakAttack),
             Use::Spot => Some(StatUse::Spot),
             Use::Study => Some(StatUse::Study),
             _ => None,
@@ -133,6 +136,7 @@ impl StatUse {
             StatUse::Parry => "a blow on you that your Parry turned",
             StatUse::Shot => "a shot or a throw of yours that hits",
             StatUse::Sneak => "a step within earshot of a creature that could hear it",
+            StatUse::SneakAttack => "a sneak attack of yours that hits",
             StatUse::Climb => "climbing out of the water onto ice, or out of a pit",
             StatUse::Hurt => "a blow that costs you hit points",
             StatUse::BigHit => "a big hit or a critical on you",

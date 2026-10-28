@@ -157,7 +157,7 @@ pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 pub use chest::{ChestBand, ChestGold, ChestLoot, ChestRules};
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
-pub use class::{BonusTalents, CASTING, ClassActive, ClassDef, OPTIONAL_CHANCE, OptionalSkill};
+pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
 pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal, NORMAL_SPEED,
     NaturalAttack, OnEat, SPEEDS, is_proper, the, the_start,
@@ -251,7 +251,7 @@ pub use shop::{
     KEEPER, Keeper, MAX_FAVOUR, MAX_SHOPS, MOST_FAVOUR, ShopDef, ShopId, ShopPlan, Shops,
 };
 pub use size::{CARRY, MEDIUM, SizeDef};
-pub use skill::{SkillBook, SkillDef};
+pub use skill::{OPTIONAL_CHANCE, OptionalSkill, SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
@@ -4235,6 +4235,7 @@ mod tests {
                 "escape_artist",
                 "handle_animal",
                 "heal",
+                "initiative",
                 "intimidate",
                 "knowledge",
                 "listen",
@@ -4243,6 +4244,7 @@ mod tests {
                 "negotiation",
                 "open_lock",
                 "search",
+                "sneak_attack",
                 "spellcraft",
                 "spot",
                 "steal",
@@ -4272,9 +4274,11 @@ mod tests {
                 "detect_traps",
                 "disable_device",
                 "escape_artist",
+                "initiative",
                 "negotiation",
                 "open_lock",
                 "search",
+                "sneak_attack",
                 "spot",
                 "steal",
                 "stealth",
@@ -4286,6 +4290,7 @@ mod tests {
             [
                 "athletics",
                 "handle_animal",
+                "initiative",
                 "listen",
                 "spot",
                 "survival",

@@ -3,6 +3,9 @@ id = "sneak_attack"
 name = "Sneak attack"
 tree = "class"
 granted = true
-description = "Your blows, shots, and throws hurt more when they fall on a creature that has not seen you."
-effects = [{ kind = "ambush", dice = "1d6" }]
-systems = ["combat", "stealth"]
+description = "You find the telling spot in a foe that has not seen you coming (Sneak attack), and those you catch unawares are slower to gather their wits; each sneak attack that hits gives you an opening (Openings: they slip away with time)."
+effects = [
+    { kind = "grants_resource", resource = "openings" },
+    { kind = "surprise_difficulty", value = 2 },
+]
+systems = ["combat", "stealth", "awareness", "resources", "sneak_attack"]

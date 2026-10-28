@@ -945,15 +945,17 @@ mod tests {
             "{skills}"
         );
         assert!(skills.contains("| Swim | read by rules |"));
-        assert_eq!(skills.matches("\n| ").count(), 1 + 27, "{skills}");
+        assert_eq!(skills.matches("\n| ").count(), 1 + 29, "{skills}");
         let benefits = text("skill-benefits.md");
         assert!(
             benefits.contains(
                 "| Value | Appraise: identifying, each hour | Athletics: kicking doors in | Athletics: speed | \
                  Balance: Burdened / Strained | Concentration: mana back | Concentration: mana pool | \
                  Decipher script: study check | Detect traps: finding traps | Disable device: disarming traps | \
-                 Heal: treating | Listen: hears fainter by | Metalcraft: tempering | Negotiation: prices | Open lock: picking locks | Search: searching | \
-                 Search: search reaches | Spellcraft: study check | Spot: noticing | Steal: \
+                 Heal: treating | Initiative: initiative check | Initiative: surprise's extra cost | \
+                 Listen: hears fainter by | Metalcraft: tempering | Negotiation: prices | Open lock: picking locks | Search: searching | \
+                 Search: search reaches | Sneak attack: sneak attack dice | Sneak attack: their check's difficulty | \
+                 Spellcraft: study check | Spot: noticing | Steal: \
                  stealing | Stealth: noise | Survival: journeys | Survival: foraging | Tumble: \
                  Dodge |"
             ),
@@ -972,12 +974,12 @@ mod tests {
             "{foraging}"
         );
         assert!(benefits.contains(
-            "| 100 | 12% | +8 Strength | +5% | ×1.1 / ×1.2 | +40% | +5 mana | +10 | +8 | +8 | +8 | 10 | +8 | 20% better | +8 | +8 | +1 cell \
-             | +10 | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
+            "| 100 | 12% | +8 Strength | +5% | ×1.1 / ×1.2 | +40% | +5 mana | +10 | +8 | +8 | +8 | +8 | \u{2212}50% \
+             | 10 | +8 | 20% better | +8 | +8 | +1 cell | 5d6 | +8 | +10 | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 16% | +10 Strength | +7% | ×1.08 / ×1.15 | +50% | +6 mana | +15 | +10 | +10 | +10 | 15 | +10 | 25% better | +10 | +10 \
-             | +1 cell | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
+            "| 150 | 16% | +10 Strength | +7% | ×1.08 / ×1.15 | +50% | +6 mana | +15 | +10 | +10 | +10 | +10 \
+             | \u{2212}62% | 15 | +10 | 25% better | +10 | +10 | +1 cell | 6d6 | +10 | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
         ));
         // Treating oneself: the difficulty and odds of each ailment.
         let heal = text("heal-targets.md");
@@ -1027,9 +1029,12 @@ mod tests {
             "{races}"
         );
         let grants = text("skill-grants.md");
-        assert!(grants.contains("| Halfling | Listen `1d6+4`, Stealth `1d6+4` |"));
+        assert!(grants.contains("| Halfling | Listen `1d6+4`, Stealth `1d6+4` | - |"));
         assert!(
-            grants.contains("| Human | one of the class's skills `+2d4+4`, picked at random |")
+            grants.contains("| Human | one of the class's skills `+2d4+4`, picked at random | - |")
+        );
+        assert!(
+            grants.contains("| Drow | Spot `1d6+4`, Stealth `1d4+2` | Sneak attack `2d4` (40 %) |")
         );
         assert!(grants.contains(
             "| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` | Heal `2d4` (15 %), \

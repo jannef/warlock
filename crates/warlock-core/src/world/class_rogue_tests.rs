@@ -312,12 +312,21 @@ fn camouflage_and_hide_in_plain_sight_quiet_the_steps() {
 fn sneak_attacks_add_up_and_master_thief_threatens_sooner() {
     let mut w = world("thief");
     let content = w.content().clone();
+    let player = w.state.player;
+    // At level 1 the dice are the Sneak attack skill's alone (the class passive has none).
     let mods = w.state.player().talent_mods(&content);
-    assert_eq!(mods.ambush.map(|d| d.to_string()), Some("1d6".into()));
+    assert_eq!(mods.ambush, None);
+    assert_eq!(mods.surprise_difficulty, 2);
+    let skill = |w: &World| (w.state.player()).skill_effect(w.content(), Effect::SneakDice);
+    assert!(skill(&w) >= 1, "the thief is trained");
+    let dice = w.sneak_dice(player).map(|d| d.to_string());
+    assert_eq!(dice, Some(format!("{}d6", skill(&w))));
+    // Improved sneak attack's 2d6 add to the skill's.
     reach(&mut w, 32);
     let mods = w.state.player().talent_mods(&content);
-    assert_eq!(mods.ambush.map(|d| d.to_string()), Some("3d6".into()));
-    let player = w.state.player;
+    assert_eq!(mods.ambush.map(|d| d.to_string()), Some("2d6".into()));
+    let dice = w.sneak_dice(player).map(|d| d.to_string());
+    assert_eq!(dice, Some(format!("{}d6", skill(&w) + 2)));
     let profile = w.state.player().melee(&content);
     assert_eq!(w.sneak_threat(player, true, profile.clone()), profile);
     reach(&mut w, 60);
@@ -334,8 +343,9 @@ fn sneak_attacks_add_up_and_master_thief_threatens_sooner() {
     let rng = w.state.rng.clone();
     assert_eq!(w.ambushed(player, false, hit), hit);
     assert_eq!(w.state.rng, rng);
+    let n = skill(&w) + 2;
     let damage = w.ambushed(player, true, hit).damage;
-    assert!((5..=20).contains(&damage), "{damage}");
+    assert!((2 + n..=2 + 6 * n).contains(&damage), "{damage} for {n}d6");
 }
 
 #[test]

@@ -251,7 +251,11 @@ impl World {
             _ => {}
         }
         self.pay_active(id, events);
+        let vitalless = !self.has_vitals_for(player, target);
         let blow = self.player_blow_with(target, seen, profile, events);
+        if effect == WeaponDoes::SureCritical {
+            self.no_vital_spot(vitalless, blow);
+        }
         self.technique = Technique::default();
         // A blow over a pace between brings no free blows of the end of an attack: the foe
         // stands too far to riposte, and nobody beside to cleave on to.

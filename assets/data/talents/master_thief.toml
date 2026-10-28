@@ -6,4 +6,4 @@ granted = true
 description = "Your sneak attacks find the telling spot far more often, and five openings buy a blow in a direction (an ability) that finds it whenever it hits."
 effects = [{ kind = "ambush_threat", value = 2 }, { kind = "finisher" }]
 resource = { id = "openings", cost = 5 }
-systems = ["combat", "stealth", "resources"]
+systems = ["combat", "stealth", "resources", "sneak_attack"]

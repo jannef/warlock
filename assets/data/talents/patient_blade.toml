@@ -8,4 +8,4 @@ effects = [
     { kind = "resource_rate", resource = "openings", value = -50 },
     { kind = "resource_build", resource = "openings", on = "sneak_kill", amount = 1 },
 ]
-systems = ["stealth", "resources"]
+systems = ["stealth", "resources", "sneak_attack"]

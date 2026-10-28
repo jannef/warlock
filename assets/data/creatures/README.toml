@@ -146,6 +146,10 @@
 #   incorporeal  it passes through solid terrain (walls, rock, closed doors; never the level's
 #             edge) and may stand inside it (spec §8 "Incorporeal creatures"):
 #             { wall_defence = 4 }: its Defence bonus while inside (the Wall category, 0 to 20)
+#   vitals    false: it has no vitals to find, so it is immune to criticals and sneak attacks
+#             (spec §8 "Surprise and sneak attacks"); default true. The incorporeal, animated
+#             objects, and the types carrying a tag of surprise.toml's `no_vitals` have none
+#             whatever this says.
 #   summon    it calls forth creatures of its side (spec §8 "Summoning"; enemy-only):
 #             [creature.summon] with its pool, either creatures (ids, each as likely; one named twice is twice as
 #             likely: ["goblin", "goblin", "warg"]) or tag and levels (every type carrying the tag

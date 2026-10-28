@@ -768,12 +768,14 @@ impl Actor {
     }
 
     /// The side of it an attack strikes (spec §8 "Combat"): its Defence (its `burden` capping
-    /// its Dexterity), its Protection, and its resistances.
+    /// its Dexterity), its Protection, its resistances, and whether it has no vitals (immune to
+    /// criticals, `Content::has_vitals`).
     pub fn target(&self, content: &Content, burden: Burden, race: Option<&RaceDef>) -> Target {
         Target {
             defence: self.defence(content, burden, race),
             protection: self.protection(content, race),
             resistances: self.resistances(content, race),
+            no_criticals: !content.has_vitals(self.creature, &[]),
         }
     }
 

@@ -215,6 +215,23 @@ mark = [{ on = "heal", chance = 30 }]
 benefit = [{ effect = "heal", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
+id = "initiative"
+name = "Initiative"
+description = "Keeping your wits when something falls on you unseen."
+kind = "passive"
+# The initiative check (#682; spec §8 "Surprise and sneak attacks", surprise.toml): a Dexterity
+# check against 13 plus the attacker's craft, made when an attack finds you unaware or a hidden
+# trap springs under you. Marked by "surprise" (such a check made, whatever comes of it). Effect
+# "initiative": points added to the check, +8 at 100, +12 at 200 (at most 20). Effect
+# "surprise_ease": failed, your next action costs half again as much, less this percent of the
+# extra: half of it at 100, three quarters at 200 (with Cool head's, at most all of it).
+mark = [{ on = "surprise", chance = 100 }]
+benefit = [
+    { effect = "initiative", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "surprise_ease", curve = [[0, 0], [100, 50], [200, 75]] },
+]
+
+[[skill]]
 id = "intimidate"
 name = "Intimidate"
 description = "Making others back down with a look or a threat."
@@ -292,6 +309,24 @@ mark = [{ on = "search", chance = 10 }]
 benefit = [
     { effect = "search", curve = [[0, 0], [100, 8], [200, 12]] },
     { effect = "search_reach", steps = [75] },
+]
+
+[[skill]]
+id = "sneak_attack"
+name = "Sneak attack"
+description = "Finding the telling spot in a foe that has not seen you coming."
+kind = "rules"
+# Sneak attacks (#682; spec §8 "Surprise and sneak attacks", surprise.toml): a blow, or a shot, a
+# throw, or a spell that rolls to hit within `missile_reach` cells, at a foe unaware of you or
+# Surprised; never on a thing without vitals. Marked by "sneak_attack" (a sneak attack that hits).
+# Effect "sneak_dice": that many d6 added after Protection to such a hit, 1d6 trained at all, +1d6
+# at 25, 50, 75, and 100, then +1d6 every 50 (5d6 at 100, 7d6 at 200); the talents' ambush dice
+# add to them. Effect "surprise": points added to the difficulty of the initiative check of those
+# you catch unawares, +8 at 100, +12 at 200 (at most 20).
+mark = [{ on = "sneak_attack", chance = 50 }]
+benefit = [
+    { effect = "sneak_dice", steps = [1, 25, 50, 75, 100], every = 50 },
+    { effect = "surprise", curve = [[0, 0], [100, 8], [200, 12]] },
 ]
 
 [[skill]]

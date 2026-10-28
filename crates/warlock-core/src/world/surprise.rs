@@ -28,6 +28,7 @@ use crate::combat::{Category, Target};
 use crate::content::{StatusId, the, the_start};
 use crate::fov::radius2;
 use crate::sight::{self, LineOfSight};
+use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 
 /// What counts nothing toward a flat-footed target's Defence: the categories that react.
@@ -171,12 +172,18 @@ impl World {
         let talents = me.talent_mods(content);
         let modifier = me.effective_stats(content).modifier(Stat::Dexterity)
             + talents.check(Stat::Dexterity)
-            + talents.initiative_bonus;
+            + talents.initiative_bonus
+            + me.skill_effect(content, Effect::Initiative);
+        let difficulty = difficulty + by.map_or(0, |by| self.craft(by));
         let made = !helpless && check::check(&mut self.state.rng, modifier, difficulty);
         if !made {
             self.afflict(target, status, 1, by, events);
         }
         let player = self.state.player;
+        // A check made, whatever came of it, marks the player's Initiative (training stream).
+        if target == player && !helpless && self.trains(Use::Surprise) {
+            self.train(Use::Surprise);
+        }
         // Struck once, the player knows the attacker is there, seen or not: its next blows find
         // them aware until the memory lapses (`player_unaware`).
         if target == player
@@ -201,15 +208,29 @@ impl World {
         }
     }
 
+    /// Actor `id`'s craft at catching others unawares: what it adds to the difficulty of their
+    /// initiative check, its Sneak attack skill's `surprise` and its talents' (the thief's
+    /// Sneak attack).
+    fn craft(&self, id: ActorId) -> i32 {
+        (self.state.actors.get(&id)).map_or(0, |a| {
+            a.skill_effect(&self.content, Effect::Surprise)
+                + a.talent_mods(&self.content).surprise_difficulty
+        })
+    }
+
     /// The `cost` percent status `status` puts on actor `id`'s actions: its data's, but
-    /// Surprised's extra eased by the actor's talents (Cool head), at most all of it.
+    /// Surprised's extra eased by the actor's Initiative skill and talents (Cool head), together
+    /// at most all of it.
     pub(super) fn status_cost(&self, id: ActorId, status: StatusId) -> u32 {
         let cost = self.content.status(status).cost;
         if self.surprise_status() != Some(status) || cost <= 100 {
             return cost;
         }
         let ease = (self.state.actors.get(&id))
-            .map_or(0, |a| a.talent_mods(&self.content).surprise_ease)
+            .map_or(0, |a| {
+                a.talent_mods(&self.content).surprise_ease
+                    + a.skill_effect(&self.content, Effect::SurpriseEase)
+            })
             .clamp(0, 100);
         let ease = u32::try_from(ease).unwrap_or(0);
         100 + (cost - 100) * (100 - ease) / 100

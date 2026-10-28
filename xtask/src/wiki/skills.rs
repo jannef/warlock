@@ -7,7 +7,7 @@ use super::combat::percent;
 use std::fmt::Write as _;
 use warlock_core::burden::Burden;
 use warlock_core::check::{CONTEST_WAYS, contest_ways};
-use warlock_core::content::Content;
+use warlock_core::content::{Content, OptionalSkill};
 use warlock_core::dice::Dice;
 use warlock_core::skills::{Effect, SkillId};
 
@@ -92,6 +92,10 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Identify => "now and then telling something you carry for what it is",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Steal => "stealing at all, and better",
+        Effect::SneakDice => "more damage on a foe that has not seen you or is surprised",
+        Effect::Surprise => "those you catch unawares recover less often",
+        Effect::Initiative => "keeping your wits when caught unawares",
+        Effect::SurpriseEase => "less time lost when you are surprised",
         Effect::Heal => "treating your bleeding, poison, and diseases",
         Effect::Pick => "picking locks",
         Effect::Temper => "tempering at a forge's anvil",
@@ -131,6 +135,10 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Identify => "identifying, each hour",
             Effect::Kick => "kicking doors in",
             Effect::Steal => "stealing",
+            Effect::SneakDice => "sneak attack dice",
+            Effect::Surprise => "their check's difficulty",
+            Effect::Initiative => "initiative check",
+            Effect::SurpriseEase => "surprise's extra cost",
             Effect::Heal => "treating",
             Effect::Pick => "picking locks",
             Effect::Temper => "tempering",
@@ -160,7 +168,11 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Disarm
                 | Effect::Pick
                 | Effect::Temper
+                | Effect::Surprise
+                | Effect::Initiative
                 | Effect::Resist => format!("+{n}"),
+                Effect::SneakDice => format!("{n}d6"),
+                Effect::SurpriseEase => format!("\u{2212}{n}%"),
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
                 Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
@@ -233,7 +245,21 @@ pub(super) fn skill_grants(content: &Content) -> String {
             .collect();
         parts.join(", ")
     };
-    let mut out = String::from("| Race | Trains |\n|---|---|\n");
+    // The optional skills, each by its dice and chance (the class's are rolled first, then the
+    // race's).
+    let optional = |skills: &[OptionalSkill]| -> String {
+        let parts: Vec<String> = (skills.iter())
+            .map(|o| {
+                let name = skill_name(content, o.skill);
+                format!("{name} `{}` ({} %)", o.dice, o.chance)
+            })
+            .collect();
+        match parts.is_empty() {
+            true => "-".into(),
+            false => parts.join(", "),
+        }
+    };
+    let mut out = String::from("| Race | Trains | May start with |\n|---|---|---|\n");
     for r in &content.races().list {
         let mut trains = list(&r.skills);
         if !r.class_skill.is_zero() {
@@ -249,21 +275,13 @@ pub(super) fn skill_grants(content: &Content) -> String {
         if trains.is_empty() {
             trains = "-".into();
         }
-        let _ = writeln!(out, "| {} | {trains} |", r.name);
+        let may = optional(&r.optional_skills);
+        let _ = writeln!(out, "| {} | {trains} | {may} |", r.name);
     }
     out.push_str("\n| Class | Trains | May start with |\n|---|---|---|\n");
     for c in content.classes() {
-        let optional: Vec<String> = (c.optional_skills.iter())
-            .map(|o| {
-                let name = skill_name(content, o.skill);
-                format!("{name} `{}` ({} %)", o.dice, o.chance)
-            })
-            .collect();
-        let optional = match optional.is_empty() {
-            true => "-".into(),
-            false => optional.join(", "),
-        };
-        let _ = writeln!(out, "| {} | {} | {optional} |", c.name, list(&c.skills));
+        let may = optional(&c.optional_skills);
+        let _ = writeln!(out, "| {} | {} | {may} |", c.name, list(&c.skills));
     }
     out
 }

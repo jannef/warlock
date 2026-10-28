@@ -12,6 +12,7 @@
 //! (spec §8 "Diseases"), and a stomach for rotten food (spec §8 "Hunger").
 
 use super::kit::{Kit, KitLineSpec};
+use super::skill::{OptionalSkill, OptionalSpec};
 use super::weapon_skill::Ranked;
 use super::{
     ContentError, DamageTypeId, FACTORS, Hide, PassiveSearch, TalentBook, WeaponSkillId,
@@ -80,6 +81,8 @@ struct RaceSpec {
     search: i32,
     #[serde(default)]
     skills: BTreeMap<String, Dice>,
+    #[serde(default)]
+    optional_skills: BTreeMap<String, OptionalSpec>,
     #[serde(default)]
     class_skill: Dice,
     #[serde(default)]
@@ -219,6 +222,9 @@ pub struct RaceDef {
     /// The skills it trains (spec §8 "Skills"), each by dice rolled when the character is made,
     /// in skill order; added to the class's.
     pub skills: Vec<(SkillId, Dice)>,
+    /// The skills a new character of it may start with, each by a chance (spec §8 "Skills"; the
+    /// drow's Sneak attack): rolled after the class's, from the same stream, in skill order.
+    pub optional_skills: Vec<OptionalSkill>,
     /// Dice added to one of the class's skills, picked when the character is made (0: none).
     /// Humans: one extra class skill.
     pub class_skill: Dice,
@@ -330,6 +336,9 @@ impl Races {
                 .ok_or_else(|| err(format!("race `{id}`: unknown size `{size_id}`")))?;
             let skills = skills::grants(&spec.skills, &skill_id)
                 .map_err(|m| err(format!("race `{id}`: skills: {m}")))?;
+            let optional_skills =
+                super::skill::optional_skills(&spec.optional_skills, &skill_id, &skills, "race")
+                    .map_err(|m| err(format!("race `{id}`: optional_skills: {m}")))?;
             let extra = spec.class_skill;
             if !GRANTS.contains(&extra.min()) || !GRANTS.contains(&extra.max()) {
                 return Err(err(format!(
@@ -400,6 +409,7 @@ impl Races {
                 passive_search: spec.passive_search,
                 search: spec.search,
                 skills,
+                optional_skills,
                 class_skill: extra,
                 rolls: spec.rolls,
                 talents: spec.talents,
@@ -530,6 +540,39 @@ mod tests {
             "in skill order"
         );
         assert_eq!(elf.class_skill.to_string(), "1d4");
+        assert!(human.optional_skills.is_empty(), "unless named");
+        assert!(elf.optional_skills.is_empty());
+        let drow = parse(&format!(
+            "{ONE}skills = {{ spot = 3 }}\n\
+             optional_skills = {{ listen = {{ chance = 40, dice = \"2d4\" }} }}\n"
+        ))
+        .expect("valid");
+        assert_eq!(
+            drow.list[0].optional_skills,
+            [OptionalSkill {
+                skill: SkillId(0),
+                chance: 40,
+                dice: "2d4".parse().expect("dice"),
+            }]
+        );
+        for (line, why) in [
+            (
+                "optional_skills = { spot = { chance = 40, dice = 2 } }",
+                "optional_skills: `spot` is one of the race's skills",
+            ),
+            (
+                "optional_skills = { listen = { chance = 100, dice = 2 } }",
+                "chance 100 is out of range (1 to 99 percent)",
+            ),
+            (
+                "optional_skills = { juggling = { chance = 5, dice = 2 } }",
+                "optional_skills: unknown skill `juggling`",
+            ),
+        ] {
+            let text = format!("{ONE}skills = {{ spot = 3 }}\n{line}\n");
+            let err = parse(&text).expect_err(why);
+            assert!(err.message.contains(why), "{}", err.message);
+        }
         assert!(human.weapon_skills.is_empty());
         let elf = parse(&format!(
             "{ONE}weapon_skills = {{ long_blades = 1, bows = \"1d2\" }}\n"
