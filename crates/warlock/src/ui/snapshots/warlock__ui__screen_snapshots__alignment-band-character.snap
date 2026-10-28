@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You kick the shopkeeper. "You will pay for that!" shouts Grimbold. You feel you have strayed from
- the┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
+ You kick the shopkeeper. "You will pay for that!" shouts Grimbold. You feel your righteousness
+ wav┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ Garrick                                                                                 │
     │                                                                                         │

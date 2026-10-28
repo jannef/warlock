@@ -299,11 +299,11 @@ const CASES: &[Case] = &[
         ..BASE
     },
     Case {
-        name: "alignment-strayed-character",
+        // A band crossed (the `fall` line) and the Alignment row: seed 1's Basilisk-born paladin
+        // (#272) starts at 450, Good, so the kick takes him down to Kind.
+        name: "alignment-band-character",
         scenario: "courtyard",
         character: Some("human,male,paladin"),
-        // Seed 1: a Basilisk-born paladin (#272) starts at 450, Good (#317), so the kick takes
-        // him below it.
         seed: Some(1),
         actions: "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
             move:E*5 kick:N",

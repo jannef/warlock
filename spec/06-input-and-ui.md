@@ -394,9 +394,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     that needs one), its action
     cost (an `ActionKind`), who has it, and whether it can be used now and why not
     (`Unavailable`: "you hold no shield", "not usable yet", while a status lasts that blocks
-    its kind of action or is its cooldown, "you are winded", §8 "Status effects", or "you have
-    strayed": one that asks for an alignment the character has strayed from, §8 "Alignment",
-    kept but greyed out until they climb back; `ability::strayed`).
+    its kind of action or is its cooldown, "you are winded", §8 "Status effects"; alignment never makes
+    one unavailable, §8 "Alignment").
     `PerceptionView::abilities` lists the player's, in menu order, each with why it cannot be
     used now. Every ability is a normal core `Action` with replay text, so replays record it as
     that action.
@@ -418,7 +417,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     under Class, §8 "Class abilities": Rage, Veteran's wind, Whirlwind, Lay on hands, Smite,
     Holy radiance, Quivering palm, Inspire, Consecrate, Knock; Volley at a cell, aimed as a shot is), each from the level its class's table gives it, Smite,
     Quivering palm, and Knock in a direction, greyed out during their cooldowns (Rage while raging and
-    exhausted) and the paladin's while strayed; throwing one's voice (Class; #235,
+    exhausted); throwing one's voice (Class; #235,
     `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's (Throw
     your voice, level 32: a talent with the `throw_voice` effect gives it); and hooding the lantern
     (Items: the lantern; `hood`, nothing to aim, §5 "Light sources"), which the Hooded light

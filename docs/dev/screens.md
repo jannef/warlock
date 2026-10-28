@@ -234,8 +234,8 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   it makes from its aim), a line in `Ability::every` (menu order: by source, then as listed),
   who has it (`had_by`), and when it cannot be used (`unavailable` → `Unavailable` with its
   reason; `While(status)` for a status that blocks its cost's kind or is its cooldown,
-  `docs/dev/status-effects.md`; one that asks for an alignment asks `ability::strayed` first,
-  `Unavailable::Strayed`, `docs/dev/alignment.md`; `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
+  `docs/dev/status-effects.md`; alignment never makes one unavailable, `docs/dev/alignment.md`;
+  `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
   why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
   wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
@@ -255,7 +255,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Action::Gift` (`use:horns_grace`, `use:transfixing_stare:X,Y`, a cell at `STARE_RANGE`).
   `Ability::Class(ClassActive)` (`Source::Class`) are the class actives
   (`docs/dev/progression.md` "Class actives"): listed while some talent has one, had
-  by whoever's `TalentMods` has it, `Strayed` then `While(cooldown)`; their action is
+  by whoever's `TalentMods` has it, `While(cooldown)`; their action is
   `Action::Use`. No `KeyCommand` of their own (as Second wind's).
   `Ability::Sign(SignActive)` (`Source::Sign`, the menu's Birth sign group between Racial and
   Class) are a birth sign's actives (Blaze; `docs/dev/character-creation.md`): listed while some
