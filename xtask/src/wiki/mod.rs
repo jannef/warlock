@@ -1432,7 +1432,9 @@ mod tests {
         // Starting kits, items as named, with how they are kept and when they come.
         let kits = text("class-kits.md");
         assert!(
-            kits.contains("| Commoner | a club (wielded); a turnip; 3 copper coins |"),
+            kits.contains(
+                "| Commoner | a club (wielded); 2 turnips; a loaf of bread; 12 copper coins |"
+            ),
             "{kits}"
         );
         assert!(
@@ -1445,7 +1447,7 @@ mod tests {
         );
         assert!(
             text("race-kits.md")
-                .contains("| Dwarf | a pick-axe (in use); 2 strips of dried meat |")
+                .contains("| Elf | a hardwood long war bow (readied); 20 arrows (quivered); ")
         );
         // Every class is listed, in order, with its objects.
         let classes = text("item-classes.md");

@@ -283,9 +283,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     exists, what is wielded or worn fits a slot of that kind, `magic` only on base items, a
     class's `trained` only what it trains). Unfair on purpose: the aristocrat sets out rich, with
     a perhaps magic rapier and an heirloom ring (magic or rare), the merchant with goods and gems,
-    the commoner with a stick and a turnip; nobody starts Strained, and only the aristocrat and
-    the merchant may start Burdened (a test checks the weakest character of every combination,
-    every die at its least and the worst sign). **Who starts with it**: a run whose character
+    the commoner with a stick, two turnips, and bread. The martial classes set out armoured
+    (#695: the warrior in a hardened leather jerkin and an iron helm, the paladin the same with
+    gauntlets), every elven race with a bow and its ammunition of the weapon skill its race gives
+    a rank in (the elf a hardwood long bow, the half-elf a hardwood short bow, the drow a
+    crossbow and steel bolts), the halfling with a sling and stones, and the dwarf in steel (pick,
+    gauntlets, shod boots). Nobody starts Strained, not even the weakest character of a
+    combination (every die at its least and the worst sign); an ordinary one (every die at its
+    mean, no sign) starts Unburdened, but for the aristocrat's and the merchant's wealth and a
+    small race's warrior's or paladin's armour (tests check both). **Who starts with it**: a run whose character
     the player chose, that is one started from New run's character creation, or by the game or
     `warlock-cli` with `--character` or `--name`, or a replay that records the kit; the
     scenario's `carry` comes on top (§7 "Scenarios"). A run on the scenario's own character that
