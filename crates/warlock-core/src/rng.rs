@@ -110,6 +110,13 @@ impl Rng {
         Self::stream(run_seed, &format!("chests/{level}"))
     }
 
+    /// The vault chest stream of generated level `level` (spec §8 "Chests"): what the chests its
+    /// vaults stamped with nothing in them hold, drawn before its own chests (so the rest of the
+    /// level is the same with or without a vault's chests).
+    pub fn vault_chests(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("vault_chests/{level}"))
+    }
+
     /// The treasure stream of generated level `level` (spec §7 "Special rooms"): its treasure
     /// rooms' chests, heaps of gold, and gems, drawn once its chests are (so the rest of the level,
     /// its other chests too, is the same with or without a treasure room).
