@@ -119,7 +119,7 @@ affixes = ["sharp:1", "of_the_lynx:1"]
 at = [42, 19]
 object = "quarterstaff"
 name = "Rune Song"
-affixes = ["potent:3", "baleful:1", "mystic:2", "of_the_adept:2", "of_the_magus:3", "of_siphoning:2"]
+affixes = ["potent:3", "baleful:1", "mystic:3", "of_the_adept:2", "of_the_magus:3", "of_siphoning:2"]
 identified = true
 
 [[item]]

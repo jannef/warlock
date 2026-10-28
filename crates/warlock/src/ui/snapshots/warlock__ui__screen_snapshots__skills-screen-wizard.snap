@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+
+
+
+
+
+
+    ┌─ Skills ────────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ > Concentration      21  ────                                                           │
+    │   Decipher script    11  ────                                                           │
+    │   Knowledge          21  ────                                                           │
+    │   Listen              7  ────                                                           │
+    │   Spellcraft         15  ────                                                           │
+    │   Spot                8  ────                                                           │
+    │                                                                                         │
+    │ Keeping your mind on the task, whatever happens around you: your mana comes back        │
+    │ faster, and your pool runs a little deeper.                                             │
+    │                                                                                         │
+    │ ↑↓ choose   A or Esc close                                                              │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+
+
+
+
+
+
+
+ The Hub  ·  HP 10/10  ·  MP 18/18  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

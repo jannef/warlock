@@ -105,10 +105,53 @@ impl Magic {
         rolled
     }
 
+    /// Re-tiers the affixes whose value lies outside their saved tier's range, or whose tier the
+    /// affix no longer has (an item made before its ladder was regraded,
+    /// docs/design/affixes-systems.md §8): each goes to the first tier whose range holds its
+    /// value, or the nearest when none does, its value kept. A light's tier (whose value is
+    /// always 0) that is gone becomes the affix's top tier. Unknown affixes are left to
+    /// [`Magic::check`]. One line per affix moved, for the log.
+    pub fn retier(&mut self, content: &Content) -> Vec<String> {
+        let mut moved = Vec::new();
+        for affix in &mut self.affixes {
+            let Some(a) = content.affixes().get(&affix.id) else {
+                continue;
+            };
+            let holds = |t: &crate::content::Tier| (t.min..=t.max).contains(&affix.value);
+            if a.tier(affix.tier).is_some_and(holds) || a.tiers.is_empty() {
+                continue;
+            }
+            let index = if a.tiers.iter().any(|t| t.light.is_some()) {
+                a.tiers.len() - 1
+            } else {
+                let off = |t: &crate::content::Tier| {
+                    (t.min - affix.value).max(affix.value - t.max).max(0)
+                };
+                // `min_by_key` keeps the first of equals: the first tier holding the value, or
+                // the lowest of the nearest.
+                (a.tiers.iter().enumerate())
+                    .min_by_key(|(_, t)| off(t))
+                    .map_or(0, |(i, _)| i)
+            };
+            let tier = u8::try_from(index + 1).unwrap_or(1);
+            if tier == affix.tier {
+                continue; // already the nearest of a ladder that holds its value nowhere
+            }
+            moved.push(format!(
+                "`{}` re-tiered from tier {} to {} (value {})",
+                a.id, affix.tier, tier, affix.value
+            ));
+            affix.tier = tier;
+        }
+        moved
+    }
+
     /// Whether it is a valid item of `def` for `content` (a guard for saves and level files):
     /// magic or rare, with a name exactly when rare, known affixes that may roll on it (each
     /// tier one the affix has, each value within the tier's range, no two of one category),
-    /// and no more prefixes or suffixes than its rarity allows (at least one affix).
+    /// and no more prefixes or suffixes than its rarity allows (at least one affix). A save is
+    /// re-tiered ([`Magic::retier`]) before it is checked, so a regraded ladder never refuses
+    /// one.
     pub fn check(&self, def: &ObjectDef, content: &Content) -> Result<(), String> {
         let Some(kind) = def.kind else {
             return Err(format!("`{}` cannot be magic: it has no `kind`", def.id));
@@ -146,7 +189,10 @@ impl Magic {
             let tier = a
                 .tier(affix.tier)
                 .ok_or_else(|| format!("`{}` has no tier {}", a.id, affix.tier))?;
-            if !(tier.min..=tier.max).contains(&affix.value) {
+            // A value no tier holds (a ladder narrowed since it was rolled) is kept, on the
+            // nearest tier ([`Magic::retier`]); one a tier holds must be on a tier that does.
+            let held = |t: &crate::content::Tier| (t.min..=t.max).contains(&affix.value);
+            if !held(tier) && a.tiers.iter().any(held) {
                 return Err(format!(
                     "`{}` tier {} rolls {} to {}, not {}",
                     a.id, affix.tier, tier.min, tier.max, affix.value
@@ -200,5 +246,7 @@ pub fn may_roll(a: &AffixDef, kind: ItemKind, def: &ObjectDef) -> bool {
     has && a.bases.contains(&kind)
 }
 
+#[cfg(test)]
+mod shares_tests;
 #[cfg(test)]
 mod tests;

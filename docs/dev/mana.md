@@ -29,9 +29,10 @@ issue how it interacts with mana**, and hooks in at the one place below.
 - **Hooks** (`world/mana.rs`, each the one place):
   - `World::mana_rate(id)`: the pace in percent, the twin of `World::healing_rate`: min of
     `Effects::mana_regen` and `Diseases::mana_regen`, × `mana_resting` while the player rests, ×
-    the room's `mana_regen`, × (100 + `ManaRegeneration` + `TalentMods::mana_regen_percent`) /
-    100 (the talent effect `mana_regen_percent`: Tidal, the Water-born's gift, and Clear mind,
-    +25 each); resting's pace is raised by `TalentMods::mana_resting_percent` first
+    the room's `mana_regen`, × (100 + `ManaRegeneration` + `TalentMods::mana_regen_percent` +
+    Concentration's `skills::Effect::ManaRegen`) / 100 (the talent effect `mana_regen_percent`:
+    Tidal, the Water-born's gift, and Clear mind, +25 each; the skill's through `Actor::mind`,
+    below); resting's pace is raised by `TalentMods::mana_resting_percent` first
     (Meditation, +50); 0 for a Starving player.
     Burden, temperature, and stances never enter it.
   - `World::live` (`world/status.rs`) calls `mana::regain` beside `heal` (in the fast path too)
@@ -53,6 +54,17 @@ issue how it interacts with mana**, and hooks in at the one place below.
     (`ability::spell_unavailable`); abilities call it (and say why they could not); the dev `drain:N` (`Action::Drain`,
     `World::drain_dev`, through the same cut and training, saying the cost spent) is another
     caller.
+  - **Concentration** (#668, `world/concentration.rs`): `Actor::mind(content, effect)` is a
+    mana skill effect (`skills::Effect::ManaRegen`, `MaxMana`) through `Actor::skill_effect`
+    (items' and talents' skill bonuses count), but 0 unless the actor is trained in a skill
+    giving it (`Skills::trains_effect`). `Actor::max_mana` and `lasting_max_mana` end in
+    `Actor::deeper_pool` (`mana::deeper(pool, bonus)`: at most `pool / 5`), so
+    `keep_mana_within_max` cuts mana when an item or talent raising the skill comes off. Its
+    marks: `skills::Use::Cast` (`cast`, 25 % in `data/skills.toml`), reported by
+    `spend_mana` beside the Willpower mark (the dev `drain:N` too). Levels and Deep well raise `mana_base` through
+    `Actor::grow_mana_base`, which fills what the maximum grew by (Concentration's share of the
+    larger pool too); a level-up roll on the skill raises the maximum alone, like an item. Tests:
+    `world/concentration_tests.rs`, `mana.rs` (`deeper`).
   - Deep well's mana by level (`max_mana_per_levels`, `TalentMods::mana_at`) is handed out like
     Hardy's hit points: `class::hand_out` at the pick, `World::level_up` as each level comes
     (no `mana_level` cap), into `mana_base` and `mana`.

@@ -235,7 +235,7 @@ parts = [{ of = "sapphire", size = "medium", cut = "fine" }]
 at = [19, 14]
 object = "iron_helm"
 name = "Dread Visage"
-affixes = ["hale:2", "accurate:1", "radiant:2", "of_the_owl:1"]
+affixes = ["hale:3", "accurate:1", "radiant:2", "of_the_owl:1"]
 identified = true
 
 [[item]]

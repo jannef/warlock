@@ -186,8 +186,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **The maximum** (`Actor::max_mana`): `mana_base` (the race's and the class's `mana`, §7; a
     creature type's `mana`, default 0; a scenario without a character gives the player's) plus
     what magic items add (`max_mana` affixes, §8 "Magic items") plus the modifiers of the three
-    mental stats, Intelligence, Willpower, and Presence, the effective scores', at least 0. Every
-    actor starts with all of it. Each level gained up to the experience file's `mana_level` (60,
+    mental stats, Intelligence, Willpower, and Presence, the effective scores', at least 0, then
+    deepened by a trained **Concentration** (§8 "Skills"; `world/concentration.rs`): +1 at 25 to +5
+    at 100 and +8 at 200 (`data/skills.toml`), never more than a fifth of the pool without it
+    (rounded down, `mana::deeper`: a pool under 5 gains nothing), so it also follows the skill
+    down when an item or a talent raising it comes off. Every actor starts with all of it. Each level gained up to the experience file's `mana_level` (60,
     past `hp_level`, so casters keep growing after hit points stop) adds `max(0, class mana ÷ 2 +
     the better of the Intelligence and Willpower modifiers)` (`docs/design/progression.md` §3.7;
     the race and class values are its table; the stats as worn magic raises
@@ -208,7 +211,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (brain fever 25), times `[healing] mana_resting` (200) while the player rests, times the
     `mana_regen` of a special room it stands in (a sanctuary 300), times (100 + the mana
     regeneration affixes of what it wears and wields, plus its talents' percent: Tidal and Clear
-    mind +25) / 100, resting's 200 raised by Meditation's +50 % to 300;
+    mind +25, plus a trained Concentration's: +5 at 20, +40 at 100, +60 at 200) / 100, resting's 200 raised by Meditation's +50 % to 300;
     a Starving player gets none (§8 "Hunger"; Weak lowers only the stats it lowers). Burden, temperature, and combat stances do
     nothing to it. A point back is a moment of `World::live`'s loop ("Status effects" above: it
     comes with a hit point back, before the ticks), so it makes no difference how time is cut up;

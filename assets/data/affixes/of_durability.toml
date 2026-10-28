@@ -6,6 +6,15 @@ category = "durability"
 bases = ["ammo"]
 tiers = [
   { level = 1, min = 20, max = 30 },
-  { level = 4, min = 30, max = 50 },
-  { level = 7, min = 50, max = 70 },
+  { level = 2, min = 22, max = 34 },
+  { level = 3, min = 25, max = 38 },
+  { level = 4, min = 28, max = 41 },
+  { level = 5, min = 31, max = 45 },
+  { level = 6, min = 33, max = 48 },
+  { level = 7, min = 36, max = 52 },
+  { level = 8, min = 39, max = 56 },
+  { level = 9, min = 42, max = 59 },
+  { level = 10, min = 44, max = 63 },
+  { level = 11, min = 47, max = 67 },
+  { level = 12, min = 50, max = 70 },
 ]

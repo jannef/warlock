@@ -294,7 +294,7 @@ fn bad_items_are_refused() {
         (magic(&[("nonsense", 1, 1)], None), "unknown affix"),
         (magic(&[("hale", 1, 3)], None), "does not roll"),
         (magic(&[("sharp", 9, 1)], None), "no tier"),
-        (magic(&[("sharp", 1, 5)], None), "rolls 1 to 1"),
+        (magic(&[("sharp", 1, 3)], None), "rolls 1 to 1"),
         (
             magic(&[("sharp", 1, 1), ("glinting", 1, 1)], None),
             "at most 1 prefixes",
@@ -449,12 +449,13 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
             ),
         ]
     );
-    assert!(known.iter().any(|l| l.text == "Item level 1"));
+    // The item level is a hidden number: never shown.
+    assert!(!known.iter().any(|l| l.text.contains("Item level")));
     // Global effects say so; speed stays in words.
     let mut gloves = item(
         &c,
         "leather_gloves",
-        &[("vicious", 1, 1), ("of_celerity", 3, 14)],
+        &[("vicious", 1, 1), ("of_celerity", 8, 14)],
         None,
     );
     gloves.identify();
@@ -788,6 +789,10 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Heal => ("world/heal.rs", include_str!("../world/heal.rs")),
         S::Pick => ("world/lockpick.rs", include_str!("../world/lockpick.rs")),
         S::Temper => ("world/temper.rs", include_str!("../world/temper.rs")),
+        S::ManaRegen | S::MaxMana => (
+            "world/concentration.rs",
+            include_str!("../world/concentration.rs"),
+        ),
     }
 }
 
