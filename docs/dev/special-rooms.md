@@ -307,7 +307,9 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
 - **Level files** (`content/level.rs`, `check_sealed`): a `[[room]]` of a sealed effect needs
   `breach = [x, y]`, which `breach_fault` checks against the cells reached from the player's
   start (beside the breach on a level without one); no cell of the room may be reached without
-  breaking a wall. `breach` on another effect is refused.
+  breaking a wall. `breach` on another effect is refused. The showcase's `chests` scenario
+  (level `treasure_hall`, #619) has a hand-made treasure room behind a secret door and a greater
+  one with its breach beside a pick-axe (`world/chest_hall_tests.rs`).
 - **Dumps**: `rooms` adds `, breach (x, y)`; `truth` draws a standing breach `H`.
 - `band_up` (the design's chests of the band above) is not done: a chest's band follows from its
   saved level alone, so it needs a saved band offset and touches `chest::lay`; the greater

@@ -108,12 +108,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Featherweight, Nimble, Shimmering, Oaken, Hale, Vicious, Accurate, Fleet, Hunter's, Steady,
     Radiant, Burly, Hardened, Mystic (maximum mana; on weapons too), Venomous (poison), Flaming,
     Freezing; the systems' (#635): Mage-wrought (eased casting), Baleful (spell criticals),
-    Potent (spell damage), Tireless (stamina), Hobnailed (kicks), Delving (digging)) and 49
+    Potent (spell damage), Tireless (stamina), Hobnailed (kicks), Delving (digging)) and 59
     suffixes (stats, speed, criticals, utility, skills: of the Bear, Lynx, Ox, Owl, Sage, Lion;
     of Celerity, Precision, Slaying, Ruin, Mending, Clarity (mana regeneration), Stealth, Light,
     the Mule, Evasion, Warding, the Wind, Reach, Durability, the Tortoise, Vitality, the
     Salamander, Warmth; of Shadows (stealth), the Hare (tumble), the Fox (listen), the Wanderer
-    (survival), Balance (balance); of Wounding (an extra damage die); the systems' (#635): of the
+    (survival), Balance (balance); the skills' (#636): of Seeking (search), the Eagle (spot), the
+    Stag (athletics), the Leech (heal), the Picklock (open lock), Disarming (disable device),
+    Appraisal (appraise), the Scholar (spellcraft), Letters (decipher script), the Cutpurse
+    (steal), on the ladder (Spot, Open lock, Disable device, Heal, and Steal give nothing to the
+    untrained, so their suffixes help the trained only); of Wounding (an extra damage die); the systems' (#635): of the
     Adept (caster level), of Thrift (mana costs), of the Magus (spell to-hit), of Farcasting
     (spell reach), of Lingering (spell degrees), of Siphoning (mana on a kill), of Wands (wand
     level), of Breath (stamina pace), of Ease (weapon feats' stamina), of the Hunt (stamina on a

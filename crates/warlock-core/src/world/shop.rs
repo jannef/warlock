@@ -220,7 +220,7 @@ pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
 /// theirs before the cap, and may lift it (Magnate), never past [`MOST_FAVOUR`]. Never shown.
 pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
     let presence = actor.stats.modifier(Stat::Presence) * i32::from(shops.presence);
-    let bargain = actor.skills.effect(content, Effect::Bargain);
+    let bargain = actor.skill_effect(content, Effect::Bargain);
     let alignment = super::alignment::keeper_favour(content, shops, actor);
     let talents = actor.talent_mods(content);
     let cap = (MAX_FAVOUR + talents.favour_cap).clamp(0, MOST_FAVOUR);

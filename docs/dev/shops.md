@@ -55,7 +55,7 @@ new. Keepers are NPCs: `budge = "off_post"` (no swapping at the post), one-liner
 `data/dialogue.toml`, and `World::called` names them by their shop ("Grimbold says: ...").
 Prices are by the goods, never their magic (`Stack::magic` is kept on what is sold and put back, never
 priced; keys and quest letters are worth 0). Generated shops avoid locked rooms and rooms with
-something lying in them, and `hide_traps`/`place_loot` leave shop floors alone. The player's `favour` (Presence modifier × `presence` + the Appraise `Effect::Bargain` + what
+something lying in them, and `hide_traps`/`place_loot` leave shop floors alone. The player's `favour` (Presence modifier × `presence` + the Appraise `Effect::Bargain`, through `Actor::skill_effect` so of Appraisal and skill talents count, + what
 a good keeper makes of their alignment band, `world/alignment.rs::keeper_favour`, at most
 `MAX_FAVOUR`) is never shown: presentation reads only prices
 (`PerceptionView::shop_at`/`shop_here`, `price_tag`, `unpaid`, `owed_on_leaving`, `sale`,

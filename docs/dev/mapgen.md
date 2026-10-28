@@ -24,7 +24,8 @@ stream `loot/<level id>`, so adding loot never changes the terrain of a generate
 branch with a danger the initial population follows (`mapgen/population.rs`, stream
 `population/<level id>`; `docs/dev/creatures.md`: its own folk, now and then a stray from every
 hostile type of the campaign, populations or none, unless the branch's `stray_pool` says
-`"populations"`), then the floor's chests (`mapgen/chest.rs`, stream `chests/<level id>`, one
+`"populations"`), then what its vaults' empty chests hold (`chest::fill_vaults`, stream
+`vault_chests/<level id>`), then the floor's chests (`mapgen/chest.rs`, stream `chests/<level id>`, one
 floor in five by default; `docs/dev/chests.md`), then its treasure rooms' chests, gold, and
 gems (`mapgen/treasury.rs`, stream `treasure/<level id>`; `docs/dev/special-rooms.md`; a
 greater treasure room is a box with no way in but its breach, which `connect::validate` lets go

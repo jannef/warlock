@@ -157,6 +157,10 @@ fn effect_text(content: &Content, a: &AffixDef) -> String {
         };
     }
     match (a.skill, a.damage_type) {
+        (Some(id), _) if super::skills::gated(content.skill(id)) => format!(
+            "{} (a skill), for those trained in it",
+            content.skill(id).name
+        ),
         (Some(id), _) => format!("{} (a skill)", content.skill(id).name),
         (_, Some(kind)) if a.effect == ItemEffect::Elemental => {
             format!("adds a die of {} damage", content.damage_type(kind).name)

@@ -20,6 +20,9 @@
 //! [`AWAY`] from every staircase (the arrival room keeps clear), never in a vault, a shop, or a
 //! special room with a feature, sleepers, or a hoard, and nowhere anything lies, stands,
 //! shines, patrols, or is trapped. Two chests never touch.
+//!
+//! A vault's chests are stamped with it, of the floor's level, locked and trapped as its legend
+//! says; [`fill_vaults`] rolls what the empty ones hold, from a stream of their own.
 
 use super::{Palette, patrolled};
 use crate::chest::{Chest, ChestState, roll_contents};
@@ -66,6 +69,27 @@ pub(super) fn fill(
         let at = free.swap_remove(rng.index(free.len()));
         free.retain(|p| p.chebyshev(at) > 1);
         lay(template, content, &mut rng, (at, shut), (&traps, luck));
+    }
+}
+
+/// Fills the chests that generated level `template`'s vaults stamped with nothing in them: each,
+/// in position order, holds what its band's loot table rolls at its level (the floor's), the
+/// finder's `luck` reaching it, from the level's vault chest stream [`Rng::vault_chests`]. A
+/// vault's lock and trap are its legend's: nothing else is drawn, and a vault chest is never a
+/// mimic.
+pub(super) fn fill_vaults(
+    template: &mut LevelTemplate,
+    content: &Content,
+    (seed, luck): (u64, Luck),
+) {
+    if template.chests.values().all(|c| !c.holds.is_empty()) {
+        return;
+    }
+    let mut rng = Rng::vault_chests(seed, &template.id);
+    for chest in template.chests.values_mut() {
+        if chest.holds.is_empty() {
+            chest.holds = roll_contents(content, &mut rng, chest.level, luck);
+        }
     }
 }
 

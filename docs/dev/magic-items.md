@@ -91,7 +91,14 @@ Muse: dead loot on a character without the pool, by the owner's choice), Hobnail
 Sustenance, of Wariness, of Health, and of the Alchemist; Mystic gained `weapon`, Featherweight
 and of the Bear `tool`. `magic/tests.rs`, `every_shipped_affix_effect_is_read_by_its_hook`,
 names each effect's reading module (an exhaustive match) and fails on a shipped affix whose
-effect that module never reads (a dead effect). **Damage is more than one category** (owner,
+effect that module never reads (a dead effect). **The skill suffixes** (C1, #636): of Seeking,
+of the Eagle, of the Stag, of the Leech, of the Picklock, of Disarming, of Appraisal, of the
+Scholar, of Letters, of the Cutpurse, twelve tiers each (levels 1 to 12; 8–12 to 45–50 for the
+value skills, 4–6 to 28–32 for the five gated on `Skills::trains_effect`, which help the
+trained only), weight 60, category the skill's id. `every_shipped_skill_suffix_raises_a_read_benefit`
+holds each to a skill with benefits, every one read through `Actor::skill_effect` (so the
+items' bonus counts) in the module `skill_reader` names; the shops' bargain read
+`Skills::effect` past the items until C1 (`shop::favour`). **Damage is more than one category** (owner,
 #635), so a weapon may roll more than one damage affix: `physical_damage` (+damage: Sharp,
 Vicious), `extra_damage` (an extra die: Heavy and the suffix of Wounding), and one per element
 (`fire_damage`, ...); the one-per-category rule stands. **The spell hooks** (A1, #629; `world/affix_spell_tests.rs`): `mana_cost` in
