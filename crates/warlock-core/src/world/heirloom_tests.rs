@@ -106,12 +106,12 @@ fn the_heritage_talents_are_only_for_creation() {
 
 #[test]
 fn family_wealth_brings_gold_and_a_few_gems() {
-    // A warrior's 20 gold, four times over; a monk, who has none, at least 60; an aristocrat's
-    // 300 at most 150 more.
+    // A warrior's 25 gold, four times over; a monk's 5, at least 60 more; an aristocrat's
+    // 305 at most 150 more.
     for (character, before, after) in [
-        ("human,male,warrior", 20, 80),
-        ("human,male,monk", 0, 60),
-        ("human,male,aristocrat", 300, 450),
+        ("human,male,warrior", 25, 100),
+        ("human,male,monk", 5, 65),
+        ("human,male,aristocrat", 305, 455),
     ] {
         let plain = start(character, &[], 4).expect("starts");
         let rich = start(character, &["family_wealth"], 4).expect("starts");

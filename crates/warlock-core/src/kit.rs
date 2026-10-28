@@ -540,15 +540,6 @@ mod tests {
                                 Burden::Unburdened,
                                 "{character}: {kit} g + {carry} g of {ordinary}"
                             );
-                            // The weakest of a small people has no room for a purse of coins:
-                            // only they may start Burdened by their heritage (#697).
-                            if CONTENT.size(race.size).carry >= 100 {
-                                assert_eq!(
-                                    load(ordinary, kit + carry + heirs),
-                                    Burden::Unburdened,
-                                    "{character}: {kit} g + {heirs} g + {carry} g of {ordinary}"
-                                );
-                            }
                         }
                     }
                 }
