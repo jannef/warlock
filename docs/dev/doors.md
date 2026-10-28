@@ -6,7 +6,9 @@ rules it implements are in spec/08d-traps-doors-digging.md. Keep it current with
 Doors (spec §8 "Doors"; M19, #130): the rules are `warlock-core/src/door.rs` (`Lock`, `Key`,
 `kick_breaks`/`break_chance`: `1d(sturdiness) ≤ Strength`, one gameplay draw), applied in
 `world/door.rs` (`open_door` unlocks with `Actor::key_for` and costs `unlock` + `open_door`,
-`swing_open`, `close_door`, `kick`/`kick_door`; kicking a creature is `World::player_kicks`, an
+`swing_open`, `close_door`, `kick`/`kick_door`, the kick's Strength `World::kick_force`
+(effective Strength + athletics + talents' `door_kick` + worn `door_kick`, Hobnailed; a chest's
+kick reads it too); kicking a creature is `World::player_kicks`, an
 unarmed blow whatever is wielded: `Actor::kick` (bare hands with unarmed fighting's benefits and
 the stance), training unarmed fighting, priced `kick` by `attack_price` (so the stance and
 attack speed change its time), said with `Words::kick`). A kick at a door is no attack

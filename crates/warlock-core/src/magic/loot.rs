@@ -133,7 +133,7 @@ pub fn roll_with(
     let magic_only = grade != LootGrade::Any;
     let mut bases: Vec<(ObjectId, u32)> = (content.object_defs().iter().enumerate())
         .filter(|(_, o)| o.frequency > 0 && o.level <= level)
-        .filter(|(_, o)| o.kind.is_some() || !magic_only)
+        .filter(|(_, o)| !magic_only || can_be_magic(content, o, level))
         .map(|(i, o)| (ObjectId(i as u16), o.frequency))
         .collect();
     bases.sort_by(|a, b| content.object(a.0).id.cmp(&content.object(b.0).id));
@@ -281,7 +281,17 @@ fn roll_magic(
         }
         _ => {
             let [prefix, suffix, both] = affixes.magic_affixes;
-            let shapes = [((1, 0), prefix), ((0, 1), suffix), ((1, 1), both)];
+            // Only the shapes the base can take: one that rolls no suffix (a pick-axe with
+            // only prefixes) is never a suffix's. Every other base can take all three, so the
+            // draw is as it was.
+            let fits = |kind| rolls_any(content, def, level, kind);
+            let shapes: Vec<((i32, i32), u32)> =
+                [((1, 0), prefix), ((0, 1), suffix), ((1, 1), both)]
+                    .into_iter()
+                    .filter(|((p, s), _)| {
+                        (*p == 0 || fits(AffixKind::Prefix)) && (*s == 0 || fits(AffixKind::Suffix))
+                    })
+                    .collect();
             *pick_weighted(rng, &shapes).unwrap_or(&(1, 0))
         }
     };
@@ -307,6 +317,24 @@ fn roll_magic(
         carried: 0,
         unique: None,
     })
+}
+
+/// Whether some affix of `kind` may roll on base item `def` at item level `level` (what
+/// [`roll_affix`] would draw among, before what the item has already rolled).
+fn rolls_any(content: &Content, def: &ObjectDef, level: u8, kind: AffixKind) -> bool {
+    def.kind.is_some_and(|item| {
+        (content.affixes().all().iter()).any(|a| {
+            a.kind == kind && a.weight > 0 && a.tiers_at(level) > 0 && may_roll(a, item, def)
+        })
+    })
+}
+
+/// Whether `def` can be made magic at item level `level`: a base item some affix may roll on.
+/// Loot that must be magic draws only among those (a tool before any affix rolls on tools is
+/// never drawn so).
+fn can_be_magic(content: &Content, def: &ObjectDef, level: u8) -> bool {
+    rolls_any(content, def, level, AffixKind::Prefix)
+        || rolls_any(content, def, level, AffixKind::Suffix)
 }
 
 /// One affix of `kind` for `def` at `level` of a category none of `rolled` is of.
