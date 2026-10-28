@@ -30,7 +30,8 @@ screen and its choice, look mode's piles, and the `inventory` dump layer use; me
 `loot::roll` first lets a find of grade `any` be a loose gem (`gem::find`), then sets an item
 of a class with an `[[ornament]]` with a gem (`gem::ornament`), and last draws its material
 (`variant::draw`, step 8: by the materials' `rarity` at the item level; `loot::roll_from` takes
-a `variant::Source`, and creature drops pass `Source::Gear(creature level)`); its own parts are
+a `variant::Source`, and creature drops pass `Source::Gear(creature level)`, at the item level
+`world/loot.rs::drop_level` gives them, below); its own parts are
 the material first, then the gem. Creature drops try `gem::find` before the magic item
 (`docs/dev/objects.md`, "Gems" and "Materials and variants").
 `world/loot.rs` has `World::identify` (the API the scroll of identify calls from its read action,
@@ -68,9 +69,40 @@ identified; `Stack::magic` is crate-private), names only through `Stack::describ
 cannot leak; dev dumps use `describe_truth`. Tests: `world/numbers_tests.rs` (a +1 sword, an
 unidentified armour's base numbers and its affixes once identified, a shield, a launcher's
 range, ammunition, a worn thing's to-hit). A new effect is a
-variant of `Effect` (id, value range, local/global, `allowed_on`), its reader in one rule, a
-phrase in `describe.rs`, and a wiki word in `xtask/src/wiki/magic.rs`. Affixes are saved by id, so
+variant of `Effect` (id, value range, local/global, `allowed_on`; `index()` and `all()` insert
+it by group, never at the end), its reader in one rule, a
+phrase in `describe.rs`, and a wiki word and tier form in `xtask/src/wiki/magic.rs`
+(`effect_words`, `tier_value`). Affixes are saved by id, so
 adding affixes keeps saves; their values and tiers are checked on load.
+
+**The system effects** (#628, docs/design/affixes-systems.md §4–§6): `Effect` holds, by group,
+the spell ones (`mana_cost`, `spell_ease`, `spell_to_hit`, `spell_threat`, `spell_lift`,
+`spell_reach`, `spell_duration`, `mana_on_kill`, `wand_level`), the resource ones
+(`resource_max`, `resource_rate`, `active_stamina`, `resource_on_kill`), and the utility ones
+(`door_kick`, `dig_percent`, `hunger`, `trap_damage`, `disease_check`, `potion_kept`), each with
+its parse, `Mods::add` arm (a sum), `describe::phrase`, and wiki words. **No rule reads them yet**
+and no shipped affix file has them: each hook comes with its own PR (A1 spells, B1 resources, D1
+utility, E1 on a kill, E2 potions and wands), whose tests bring fixture affix files
+(`ContentFiles::insert("data/affixes/zz_fixture.toml", ...)`, as `magic/tests.rs` does).
+`spell_ease` is an item effect (local: the piece's own `spell_cost_percent`), allowed on body
+armour, helmets, and shields, and `may_roll` keeps it to objects with a `spell_cost_percent`.
+**Pooled effects** (`Effect::is_pooled`: the four resource ones) name their pool in data
+(`resource = "stamina"`, `AffixDef::resource`), refused without one or with an unknown one, and
+left out when content has no resources (as skill affixes without skills; `content::affix::Lookups`
+holds the id lookups, `None` for a table content lacks; the table is read after resources). They
+sum by (effect, resource) in `Mods::pools`, read with `Mods::resource(effect, id)`, never into
+`Mods::get`. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
+effect that names nothing else): one group per (effect, resource), so `check_category` keeps
+Tireless (stamina) and of Fury (rage) apart. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`
+item class holds the kind; rare names' second words `tool = [...]` in `data/affixes.toml`): a
+kind for digging tools, which the pick-axe takes in D1. **Tiers**: at most `MAX_TIERS` (12) per
+affix, a loader check. **The tier window** (`loot::tier_window`, `TIER_WINDOW` = 4): loot draws a
+tier evenly among those found at the item level whose level is within 3 below it, the top one
+alone once the item level is past the last tier (or when none is that close), one draw as before
+(`magic/tests.rs`, `tiers_roll_from_a_window_below_the_item_level`). **A drop's item level**
+(`world/loot.rs::drop_level`): the creature type's level, at least the floor's item level, at
+most `MAX_ITEM_LEVEL`; floor loot keeps the floor's (`world/magic_tests.rs`,
+`a_drop_rolls_at_the_creatures_level_at_least_the_floors`).
 
 ## Unique items
 

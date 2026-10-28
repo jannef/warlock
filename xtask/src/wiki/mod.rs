@@ -356,6 +356,62 @@ mod tests {
         }
     }
 
+    /// The system effects (docs/design/affixes-systems.md) have their words and tier forms in
+    /// the affix tables: fixture affixes, since no shipped file has them yet.
+    #[test]
+    fn system_affixes_have_words_in_the_tables() {
+        let affix = |kind: &str, id: &str, effect: &str, bases: &str, extra: &str| {
+            format!(
+                "[[{kind}]]\nid = \"{effect}\"\nname = \"{id}\"\neffect = \"{effect}\"\n\
+                 category = \"{effect}\"\nbases = [{bases}]\n{extra}\
+                 tiers = [{{ level = 2, min = 4, max = 5 }}, {{ level = 12, min = 14, max = 16 }}]\n"
+            )
+        };
+        let text = [
+            affix(
+                "prefix",
+                "Tireless",
+                "resource_max",
+                "\"ring\"",
+                "resource = \"stamina\"\n",
+            ),
+            affix("prefix", "Delving", "dig_percent", "\"tool\"", ""),
+            affix("prefix", "Mage-wrought", "spell_ease", "\"body\"", ""),
+            affix("suffix", "of Thrift", "mana_cost", "\"ring\"", ""),
+            affix(
+                "suffix",
+                "of Ease",
+                "active_stamina",
+                "\"gloves\"",
+                "resource = \"stamina\"\n",
+            )
+            .replace("min = 4, max = 5", "min = 1, max = 1")
+            .replace("min = 14, max = 16", "min = 2, max = 2"),
+            affix("suffix", "of Sustenance", "hunger", "\"amulet\"", ""),
+        ]
+        .concat();
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert("data/affixes/zz_fixture.toml", &text);
+        let content = Content::load(&files).expect("fixture affixes are valid");
+        let prefixes = magic::prefixes(&content);
+        let suffixes = magic::suffixes(&content);
+        for row in [
+            "| Tireless | maximum stamina | resource max | rings | 2: +4–5 · 12: +14–16 |",
+            "| Delving | digs faster | dig percent | tools | 2: 4–5% less time · 12: 14–16% less time |",
+            "| Mage-wrought | this armour's spell cost surcharge is lower, in points | \
+             spell ease | body armour | 2: 4–5 points less · 12: 14–16 points less |",
+        ] {
+            assert!(prefixes.contains(row), "{row}\nin\n{prefixes}");
+        }
+        for row in [
+            "| of Thrift | every mana cost is lower | mana cost | rings | 2: 4–5% less · 12: 14–16% less |",
+            "| of Ease | weapon feats cost less stamina | active stamina | gloves | 2: 1 less · 12: 2 less |",
+            "| of Sustenance | hunger comes slower | hunger | amulets | 2: 4–5% slower · 12: 14–16% slower |",
+        ] {
+            assert!(suffixes.contains(row), "{row}\nin\n{suffixes}");
+        }
+    }
+
     /// The numbers the game keeps to itself are stated exactly (#264): creatures, stats, speed,
     /// hearing, combat, diseases, and corpses.
     #[test]
@@ -1048,6 +1104,10 @@ mod tests {
         ));
         assert!(text("magic-suffixes.md").contains("| of the Bear | Strength | strength |"));
         assert!(text("magic-names.md").contains("| Weapons | Bite,"));
+        assert!(text("magic-names.md").contains("| Tools | Tooth, Fang, Bite, Jaw, Maw |"));
+        // The tier window and a drop's item level (docs/design/affixes-systems.md §3, §8).
+        assert!(text("magic-rarity.md").contains("at least 3 below it (an item of level 12"));
+        assert!(text("magic-rarity.md").contains("has the creature's level as its item level"));
         // Unique items: the campaigns', exactly, never the test world's.
         let uniques = text("uniques.md");
         assert!(uniques.contains("| Widowmaker | Stiletto | 12 | Venomous (2: adds 1d4 poison"));

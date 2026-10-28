@@ -1147,6 +1147,10 @@ fn actor_rows(world: &World) -> Vec<String> {
             for &(skill, value) in mods.skills() {
                 magic.push(format!("skill {} {value:+}", content.skill(skill).id));
             }
+            for &(effect, pool, value) in mods.pools() {
+                let pool = &content.resource(pool).id;
+                magic.push(format!("{} {pool} {value:+}", effect.id()));
+            }
             let equipped = if magic.is_empty() {
                 equipped
             } else {

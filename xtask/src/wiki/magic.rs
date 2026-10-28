@@ -6,8 +6,11 @@ use super::text::capital;
 use super::vision::glow_word;
 use std::fmt::Write as _;
 use warlock_core::content::Effect as ItemEffect;
-use warlock_core::content::{AffixDef, AffixKind, Content, ItemKind, Rarity};
+use warlock_core::content::{
+    AffixDef, AffixKind, Content, ItemKind, MAX_ITEM_LEVEL, MAX_TIERS, Rarity,
+};
 use warlock_core::magic::describe;
+use warlock_core::magic::loot::TIER_WINDOW;
 use warlock_core::object::format_weight;
 
 /// The prefixes table.
@@ -53,6 +56,16 @@ pub(super) fn magic_rarity(content: &Content) -> String {
             percent(*weight, counts.max(1))
         );
     }
+    let window = TIER_WINDOW - 1;
+    let _ = writeln!(
+        out,
+        "\nAn affix has at most {MAX_TIERS} tiers. Its tier is drawn evenly among the tiers whose \
+         item level is at most the item's and at least {window} below it (an item of level 12 \
+         rolls the tiers of levels 9 to 12); an item whose level is past the affix's last tier, \
+         or with no tier that close, gets the highest tier it may have. What a creature drops \
+         has the creature's level as its item level, or the floor's where that is higher (up to \
+         {MAX_ITEM_LEVEL}); what lies on the floor has the floor's."
+    );
     out
 }
 
@@ -64,7 +77,7 @@ pub(super) fn magic_bases(content: &Content) -> String {
          |---|---|---|---:|:---:|:---:|\n",
     );
     let all = order::objects(content);
-    for kind in ItemKind::ALL {
+    for &kind in ItemKind::ALL {
         let bases: Vec<_> = (all.iter())
             .map(|(_, o)| *o)
             .filter(|o| o.kind == Some(kind))
@@ -129,8 +142,19 @@ fn affix_table(content: &Content, kind: AffixKind) -> String {
     out
 }
 
-/// What affix `a` does, in words, without its value: its effect's words, or the skill it adds to.
+/// What affix `a` does, in words, without its value: its effect's words, the skill it adds to,
+/// or the resource it changes.
 fn effect_text(content: &Content, a: &AffixDef) -> String {
+    if let Some(id) = a.resource {
+        let pool = content.resource(id).name.to_lowercase();
+        return match a.effect {
+            ItemEffect::ResourceMax => format!("maximum {pool}"),
+            ItemEffect::ResourceRate => format!("{pool} comes back faster"),
+            ItemEffect::ActiveStamina => format!("weapon feats cost less {pool}"),
+            ItemEffect::ResourceOnKill => format!("{pool} on a kill within 3 cells"),
+            other => effect_words(other),
+        };
+    }
     match (a.skill, a.damage_type) {
         (Some(id), _) => format!("{} (a skill)", content.skill(id).name),
         (_, Some(kind)) if a.effect == ItemEffect::Elemental => {
@@ -168,11 +192,30 @@ fn effect_words(effect: ItemEffect) -> String {
         ItemEffect::MaxMana => "maximum mana".into(),
         ItemEffect::ManaRegeneration => "mana comes back faster".into(),
         ItemEffect::CasterLevel => "caster level".into(),
+        ItemEffect::ManaCost => "every mana cost is lower".into(),
+        ItemEffect::SpellEase => "this armour's spell cost surcharge is lower, in points".into(),
+        ItemEffect::SpellToHit => "to hit with your own spells".into(),
+        ItemEffect::SpellThreat => "your spells threaten a critical on more rolls".into(),
+        ItemEffect::SpellLift => "your spells' damage lift, in points of percent".into(),
+        ItemEffect::SpellReach => "your spells' reach, in cells".into(),
+        ItemEffect::SpellDuration => "your buffs and hexes last more degrees".into(),
+        ItemEffect::ManaOnKill => "mana on a kill within 3 cells".into(),
+        ItemEffect::WandLevel => "the caster level wands are zapped at".into(),
+        ItemEffect::ResourceMax => "a resource's maximum".into(),
+        ItemEffect::ResourceRate => "a resource comes back faster".into(),
+        ItemEffect::ActiveStamina => "weapon feats cost less of a resource".into(),
+        ItemEffect::ResourceOnKill => "a resource on a kill within 3 cells".into(),
         ItemEffect::Resistance => "resistance to a kind of damage, in percent".into(),
         ItemEffect::Stat(stat) => stat.name().into(),
         ItemEffect::MoveSpeed => "you move faster".into(),
         ItemEffect::Carry => "carrying capacity".into(),
         ItemEffect::Stealth => "quieter footsteps".into(),
+        ItemEffect::DoorKick => "Strength for kicking doors and chests in".into(),
+        ItemEffect::DigPercent => "digs faster".into(),
+        ItemEffect::Hunger => "hunger comes slower".into(),
+        ItemEffect::TrapDamage => "traps hurt less".into(),
+        ItemEffect::DiseaseCheck => "disease checks".into(),
+        ItemEffect::PotionKept => "a potion drunk is not used up".into(),
         ItemEffect::Light => "the wearer glows".into(),
         ItemEffect::Skill => "a skill".into(),
     }
@@ -197,12 +240,21 @@ fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &
         }
         ItemEffect::Resistance => range("+", "%"),
         ItemEffect::Draw => range("", " less"),
-        ItemEffect::AttackSpeed | ItemEffect::MoveSpeed => range("", "% less time"),
+        ItemEffect::AttackSpeed | ItemEffect::MoveSpeed | ItemEffect::DigPercent => {
+            range("", "% less time")
+        }
+        ItemEffect::ManaCost | ItemEffect::TrapDamage => range("", "% less"),
+        ItemEffect::SpellEase => range("", " points less"),
+        ItemEffect::ActiveStamina => range("", " less"),
+        ItemEffect::Hunger => range("", "% slower"),
+        ItemEffect::PotionKept => range("", "% kept"),
         ItemEffect::Durability
         | ItemEffect::Weight
         | ItemEffect::Stealth
         | ItemEffect::Regeneration
-        | ItemEffect::ManaRegeneration => range("", "%"),
+        | ItemEffect::ManaRegeneration
+        | ItemEffect::ResourceRate => range("", "%"),
+        ItemEffect::SpellLift => range("+", "%"),
         ItemEffect::Carry => range("+", " kg"),
         ItemEffect::Light => {
             let radius = tier.light.map_or(0, |id| content.light(id).radius);

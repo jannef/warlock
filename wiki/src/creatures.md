@@ -216,7 +216,8 @@ The exact numbers are on [Creatures in numbers](creature-numbers.md).
 ## The creatures
 
 "Drops magic" is the chance that a creature drops a magic or rare item where it dies, besides
-what it carried (see [Magic items](magic-items.md)). Their numbers are on
+what it carried (see [Magic items](magic-items.md)), at the creature's level as its item level,
+or the floor's where that is higher. Their numbers are on
 [Creatures in numbers](creature-numbers.md).
 
 Some of the dead below are known to no dungeon yet, waiting in places deeper than any found so

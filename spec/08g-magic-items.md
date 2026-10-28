@@ -7,7 +7,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Magic items** (`warlock-core/src/magic/`, `content/affix.rs`; M29, #149), after Path of
   Exile. A first pass: the lists and numbers are to be tuned after playtesting.
   - **Base items** are objects with a `kind` (§7): weapon, missile weapon (`launcher`),
-    ammunition, body armour, helmet, cloak, gloves, boots, shield, ring, amulet. Only they are
+    ammunition, body armour, helmet, cloak, gloves, boots, shield, ring, amulet, tool (a digging
+    tool in the Tool slot; no object is one yet: the pick-axe becomes one with its affixes,
+    docs/design/affixes-systems.md §6). Only they are
     magic; they and scrolls (§8 "Scrolls", never magic) are loot.
   - **Rarity**: *normal* (no affixes; 85 % of loot), *magic* (13 %: a prefix only 40 %, a
     suffix only 40 %, one of each 20 %), *rare* (2 %: three affixes 50 %, four 30 %, five 15 %,
@@ -66,9 +68,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `defence`, `melee`, `ranged`, `thrown`, `launcher_range`, `throw_range`, `skill_effect`;
     `World::cost_of` (speed); `burden::load`; `noise::noise`; `World::healing_rate`;
     `Stack::weight`. Speeds are at most 50 % off in all; an attack's weapon skill takes its
-    `speed` off after them (`World::attack_price`, §8 "Weapon skills"). Pending hooks, added
+    `speed` off after them (`World::attack_price`, §8 "Weapon skills"). **System effects** (docs/design/affixes-systems.md §4–§6): mana costs (`mana_cost`), a
+    piece's spell cost surcharge (`spell_ease`, local, on body armour, helmets, and shields that
+    hinder casting), spell to-hit, criticals, lift, reach, and duration (`spell_to_hit`,
+    `spell_threat`, `spell_lift`, `spell_reach`, `spell_duration`), mana on a kill
+    (`mana_on_kill`), the level of wands (`wand_level`), a resource's maximum, pace, weapon feat
+    costs, and gain on a kill (`resource_max`, `resource_rate`, `active_stamina`,
+    `resource_on_kill`: each names its resource in data, `resource = "stamina"`), kicking doors in
+    (`door_kick`), digging (`dig_percent`), hunger (`hunger`), trap damage (`trap_damage`),
+    disease checks (`disease_check`), and potions kept (`potion_kept`) are effects with words, but
+    no rule reads them and no affix has them yet: each comes with its hook. Pending hooks, added
     with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
-    none roll yet), hunger (#137), and value (#145, a base `value` times rarity and affixes).
+    none roll yet) and value (#145, a base `value` times rarity and affixes).
   - **Affixes** (`data/affixes.toml`, §7): 23 prefixes (mostly offensive, flat Defence, and
     life: Sharp, Heavy, Glinting, Keen, Brutal, Guarding, Reinforced, Sturdy, Supple,
     Featherweight, Nimble, Shimmering, Oaken, Hale, Vicious, Accurate, Fleet, Hunter's, Steady,
@@ -77,11 +88,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Ruin, Mending, Clarity (mana regeneration), Stealth, Light, the
     Mule, Evasion, Warding, the Wind, Reach, Durability, the Tortoise, Vitality; of Shadows
     (stealth), the Hare (tumble), the Fox (listen), the Wanderer (survival), Balance (balance)),
-    each with the kinds of item it rolls on and up to four tiers by item level.
+    each with the kinds of item it rolls on and up to four tiers by item level (an affix may
+    have up to twelve, `MAX_TIERS`).
   - **Categories** (#621, after Path of Exile's mod groups): every affix
     names a `category`, and an item never has two affixes of one category. Every affix of one
     effect (of one skill, for skill affixes; of one damage type, for elemental and resistance
-    affixes) is of one category, so an item also has at most one affix of each effect; a few
+    affixes; of one resource, for the resource effects) is of one category, so an item also has at most one affix of each effect; a few
     categories hold more than one effect of a family: `physical_damage` (Sharp and Vicious, +damage,
     and Heavy, an extra die) and `stealth` (of Stealth, quieter footsteps, and of Shadows, the
     Stealth skill). A category on both prefixes and suffixes is one effect either way
@@ -103,7 +115,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     each); each affix, prefixes first (by
     weight among those that may roll: the item's kind in its bases, something for its effect to
     change, a tier at the item level, a category not yet on the item), its tier (evenly among
-    those at the item level), and its value (evenly in the tier's range); a rare item's name (two
+    those at the item level whose level is within three below it, `TIER_WINDOW` = 4: an item of
+    level 12 rolls the tiers of levels 9 to 12; the highest it may have alone once the item level
+    is past the affix's last tier, or when none is that close), and its value (evenly in the tier's range); a rare item's name (two
     draws); for an item of a class with an `[[ornament]]`, whether it is set with a gem (one
     draw against its chance, then the gem, size, and cut, never a rough cut; `gem::ornament`);
     and for an item whose construction list lets it be made of other materials, its material (one
@@ -116,8 +130,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     least of their grade; outdoor ruins' loot cells too (local areas have no floor loot); all
     from the level's `loot/<level id>` stream once its map is valid (the map is the same as
     without loot). Creatures with `loot` drop a magic or rare item (grade magic) where they die,
-    besides what they carried, by their chance, from the stream `drop/<actor id>`, at their
-    level's item level, made of a material by the creature's level (its gear: `roll_from` with
+    besides what they carried, by their chance, from the stream `drop/<actor id>`, at the
+    creature's level as the item level, or the level's item level where that is higher (an
+    out-of-depth creature drops a deeper item), made of a material by the creature's level (its gear: `roll_from` with
     `Source::Gear`); by the gems' `chance` (one draw first) the drop is a loose gem instead.
   - **Unique items** (`content/unique.rs`, data `data/uniques/` and each campaign's
     `data/uniques/`, §7; #423, docs/design/adventurers-guild.md §9): one of a kind, like ADOM's

@@ -106,7 +106,7 @@ mod tests {
         // Every magic item kind has its class.
         for kind in ItemKind::ALL {
             assert!(
-                classes.iter().any(|c| c.kinds.contains(&kind)),
+                classes.iter().any(|c| c.kinds.contains(kind)),
                 "{}",
                 kind.id()
             );

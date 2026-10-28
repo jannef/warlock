@@ -12,11 +12,15 @@
 //! (`Actor::effective_stats`), healing (`World::healing_rate`),
 //! prices (attack and step speed),
 //! burden (carrying limit and weight), noise (stealth), and light (a glowing item's wearer
-//! carries its light).
+//! carries its light). The system effects (spells, resources, doors, digging, hunger, traps,
+//! diseases, potions; docs/design/affixes-systems.md) are summed here, the resource ones by
+//! their pool ([`Mods::resource`]), and get their readers with their hooks.
 
 use super::{Effect, Magic};
 use crate::combat::{CRITS, Profile, THREATS};
-use crate::content::{COSTS, Content, DamageTypeId, Group, LightId, MAX_SPEED, OnHit, Power};
+use crate::content::{
+    COSTS, Content, DamageTypeId, Group, LightId, MAX_SPEED, OnHit, Power, ResourceId,
+};
 use crate::damage::Rider;
 use crate::dice::Dice;
 use crate::equipment::Equipment;
@@ -37,6 +41,9 @@ pub struct Mods {
     elemental: Vec<(DamageTypeId, i32)>,
     /// What resistance affixes add, by damage type, in percent.
     resistances: Vec<(DamageTypeId, i32)>,
+    /// What pooled affixes add ([`Effect::is_pooled`]), by effect and resource, in the order
+    /// first met (spec §8 "Resources").
+    pools: Vec<(Effect, ResourceId, i32)>,
     /// What its hits cause, from a unique item's Inflict power (local: the weapon that hits).
     on_hit: Vec<OnHit>,
 }
@@ -49,6 +56,7 @@ impl Default for Mods {
             skills: Vec::new(),
             elemental: Vec::new(),
             resistances: Vec::new(),
+            pools: Vec::new(),
             on_hit: Vec::new(),
         }
     }
@@ -83,6 +91,19 @@ impl Mods {
         &self.resistances
     }
 
+    /// The sum of pooled effect `effect` ([`Effect::is_pooled`]) for resource `id`: Tireless's
+    /// `resource_max` for stamina.
+    pub fn resource(&self, effect: Effect, id: ResourceId) -> i32 {
+        (self.pools.iter())
+            .find(|&&(e, r, _)| e == effect && r == id)
+            .map_or(0, |&(_, _, sum)| sum)
+    }
+
+    /// What pooled affixes add, by effect and resource.
+    pub fn pools(&self) -> &[(Effect, ResourceId, i32)] {
+        &self.pools
+    }
+
     /// The damage elemental affixes add, one die per damage type: the sides add up, as the
     /// plain extra die's do.
     pub fn elemental(&self) -> impl Iterator<Item = Rider> + '_ {
@@ -100,17 +121,24 @@ impl Mods {
         *self == Mods::default()
     }
 
-    /// Adds `value` of `effect` (a light's `light`, a skill affix's `skill`, a typed affix's
-    /// `kind`).
-    fn add(
-        &mut self,
-        (effect, skill, kind): Group,
-        value: i32,
-        light: Option<LightId>,
-        content: &Content,
-    ) {
+    /// Adds `value` of `group` (with a light's `light`): by its skill, damage type, or resource
+    /// for an effect that names one.
+    fn add(&mut self, group: Group, value: i32, light: Option<LightId>, content: &Content) {
+        let Group {
+            effect,
+            skill,
+            damage_type: kind,
+            resource,
+        } = group;
         let slot = &mut self.values[effect.index()];
         match effect {
+            _ if effect.is_pooled() => {
+                let Some(id) = resource else { return };
+                match (self.pools.iter_mut()).find(|(e, r, _)| *e == effect && *r == id) {
+                    Some((_, _, sum)) => *sum = sum.saturating_add(value),
+                    None => self.pools.push((effect, id, value)),
+                }
+            }
             Effect::Elemental => {
                 if let Some(kind) = kind {
                     add_by_kind(&mut self.elemental, kind, value);

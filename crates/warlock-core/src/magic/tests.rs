@@ -528,3 +528,151 @@ fn spell_scrolls_drop_by_tier() {
     assert!(of(3) > 0, "{deep:?}");
     assert!(of(0) > of(3) && of(1) > of(3), "{deep:?}");
 }
+
+/// Fixture affixes for the system effects (docs/design/affixes-systems.md): no shipped file has
+/// them yet, so the tests bring their own.
+const SYSTEM_AFFIXES: &str = r#"
+[[prefix]]
+id = "fixture_tireless"
+name = "Tireless"
+effect = "resource_max"
+resource = "stamina"
+category = "stamina"
+bases = ["ring", "body"]
+tiers = [{ level = 1, min = 1, max = 5 }]
+
+[[prefix]]
+id = "fixture_mage_wrought"
+name = "Mage-wrought"
+effect = "spell_ease"
+category = "spell_armour"
+bases = ["body", "helmet", "shield"]
+tiers = [{ level = 1, min = 4, max = 20 }]
+
+[[suffix]]
+id = "fixture_of_fury"
+name = "of Fury"
+effect = "resource_max"
+resource = "rage"
+category = "rage"
+bases = ["ring"]
+tiers = [{ level = 1, min = 2, max = 8 }]
+
+[[suffix]]
+id = "fixture_of_thrift"
+name = "of Thrift"
+effect = "mana_cost"
+category = "mana_cost"
+bases = ["ring"]
+tiers = [{ level = 1, min = 4, max = 16 }]
+"#;
+
+fn system_content() -> Content {
+    let mut files = crate::content::ContentFiles::builtin();
+    files.insert("data/affixes/zz_fixture.toml", SYSTEM_AFFIXES);
+    Content::load(&files).expect("fixture affixes are valid")
+}
+
+/// The system effects sum like the rest; a pooled one by its resource, never into another
+/// pool's; Mage-wrought is the piece's own.
+#[test]
+fn system_effects_sum_and_pooled_ones_by_their_resource() {
+    let c = system_content();
+    let ring = |affixes: &[(&str, u8, i32)]| item(&c, "iron_ring", affixes, None);
+    let inventory = vec![
+        ring(&[("fixture_tireless", 1, 2), ("fixture_of_thrift", 1, 5)]),
+        ring(&[("fixture_tireless", 1, 3), ("fixture_of_fury", 1, 4)]),
+        item(&c, "chain_mail", &[("fixture_mage_wrought", 1, 7)], None),
+    ];
+    let mut worn = crate::equipment::Equipment::default();
+    for (slot, i) in [("left_ring", 0), ("right_ring", 1), ("body", 2)] {
+        worn.put(&[c.slot_id(slot).unwrap()], i);
+    }
+    let mods = Mods::worn(&inventory, &worn, &c);
+    let pool = |id: &str| c.resource_id(id).expect(id);
+    let max = |id: &str| mods.resource(Effect::ResourceMax, pool(id));
+    assert_eq!(max("stamina"), 5, "two Tireless rings add");
+    assert_eq!(max("rage"), 4);
+    assert_eq!(max("ki"), 0);
+    assert_eq!(mods.resource(Effect::ResourceRate, pool("stamina")), 0);
+    assert_eq!(mods.get(Effect::ResourceMax), 0, "only by a pool");
+    assert_eq!(mods.get(Effect::ManaCost), 5);
+    assert_eq!(mods.get(Effect::SpellEase), 0, "local: not the wearer's");
+    assert_eq!(Mods::local(&inventory[2], &c).get(Effect::SpellEase), 7);
+    // In words, once identified (docs/design/affixes-systems.md §11).
+    let mut known = inventory[1].clone();
+    known.identify();
+    let mut armour = inventory[2].clone();
+    armour.identify();
+    let words: Vec<String> = [known, armour]
+        .iter()
+        .flat_map(|s| describe::lines(s, &c))
+        .map(|l| l.text)
+        .collect();
+    for phrase in [
+        "+3 to maximum stamina",
+        "+4 to maximum rage",
+        "hinders casting 7 points less",
+    ] {
+        assert!(
+            words.iter().any(|w| w.contains(phrase)),
+            "{phrase} in {words:?}"
+        );
+    }
+    // Mage-wrought rolls only on a piece that hinders casting.
+    let a = c.affixes().get("fixture_mage_wrought").expect("fixture");
+    let body = |id: &str| c.object(object(&c, id));
+    assert!(may_roll(a, ItemKind::Body, body("chain_mail")));
+    assert!(!may_roll(a, ItemKind::Body, body("leather_jerkin")));
+}
+
+/// The tier window: evenly among the tiers within four item levels below the item's, the top
+/// one alone past the last tier (docs/design/affixes-systems.md §8).
+#[test]
+fn tiers_roll_from_a_window_below_the_item_level() {
+    use crate::content::Tier;
+    let ladder = |levels: &[u8]| AffixDef {
+        id: "x".into(),
+        name: "X".into(),
+        kind: AffixKind::Prefix,
+        effect: Effect::Damage,
+        category: "x".into(),
+        skill: None,
+        damage_type: None,
+        resource: None,
+        bases: vec![ItemKind::Weapon],
+        weight: 100,
+        tiers: (levels.iter())
+            .map(|&level| Tier {
+                level,
+                min: 1,
+                max: 1,
+                light: None,
+            })
+            .collect(),
+    };
+    let twelve = ladder(&[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    let window = |a: &AffixDef, level| loot::tier_window(a, level);
+    assert_eq!(window(&twelve, 1), 0..1, "level 1: tier 1");
+    assert_eq!(window(&twelve, 3), 0..3, "level 3: tiers 1 to 3");
+    assert_eq!(window(&twelve, 8), 4..8, "level 8: tiers 5 to 8");
+    assert_eq!(window(&twelve, 12), 8..12, "level 12: tiers 9 to 12");
+    assert_eq!(window(&twelve, 13), 11..12, "past the last: the top alone");
+    let old = ladder(&[1, 4, 7]);
+    assert_eq!(window(&old, 1), 0..1);
+    assert_eq!(window(&old, 4), 0..2);
+    assert_eq!(window(&old, 7), 1..3);
+    assert_eq!(window(&old, 12), 2..3);
+    let gap = ladder(&[3, 12]);
+    assert_eq!(window(&gap, 2), 0..0, "none found");
+    assert_eq!(window(&gap, 9), 0..1, "a gap: the top found");
+    // Loot rolls within it.
+    let c = content();
+    for stack in roll_many(&c, 600, 12, LootGrade::Rare) {
+        for r in stack.magic().expect("rare").rolled(&c) {
+            let w = loot::tier_window(r.def, 12);
+            let tier = usize::from(r.tier - 1);
+            assert!(w.contains(&tier), "{} tier {}", r.def.id, r.tier);
+        }
+    }
+}

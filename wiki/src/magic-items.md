@@ -36,9 +36,12 @@ three prefixes, a third each; five are two or three, a half each; six are always
   [Gems](gems.md#finding-gems)).
 
 The deeper you are, the better the loot: an item's **item level** is the depth it was found at
-(a dungeon's first level is item level 1, the eighth 8). It
+(a dungeon's first level is item level 1, the eighth 8). What a creature drops has the
+creature's level as its item level where that is higher, so a creature out of its depth drops
+a deeper item. The item level
 decides which base items can turn up and which **tiers** of each affix: low tiers are found from
-the start, the strongest only deep down.
+the start, the strongest only deep down, and an item rolls among the tiers close below its own
+level, so a deep find is seldom a weak one (the exact rule is under the rarity tables above).
 
 ## Unidentified items
 

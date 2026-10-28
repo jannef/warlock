@@ -185,7 +185,7 @@ pub fn worn_powers<'c>(
 
 /// Whether affix `a` may roll on `def`, an item of `kind`: its bases name the kind, and the item
 /// has what the effect changes (a range to lengthen, a bow's Strength to lower, a chance to break,
-/// a Dexterity limit, Armour, or Shield).
+/// a Dexterity limit, Armour, Shield, or a spell cost surcharge to ease).
 pub fn may_roll(a: &AffixDef, kind: ItemKind, def: &ObjectDef) -> bool {
     let has = match a.effect {
         Effect::Range => def.range.is_some(),
@@ -194,6 +194,7 @@ pub fn may_roll(a: &AffixDef, kind: ItemKind, def: &ObjectDef) -> bool {
         Effect::MaxDex => def.max_dex.is_some(),
         Effect::Armour => def.armour > 0,
         Effect::Shield => def.shield > 0,
+        Effect::SpellEase => def.spell_cost_percent > 0,
         _ => true,
     };
     has && a.bases.contains(&kind)
