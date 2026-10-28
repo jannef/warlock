@@ -107,8 +107,8 @@ pub(super) fn magic_bases(content: &Content) -> String {
 fn affix_table(content: &Content, kind: AffixKind) -> String {
     let what = kind.name();
     let mut out = format!(
-        "| {what} | Effect | Rolls on | Tiers (item level: value) | Weight |\n\
-         |---|---|---|---|:---:|\n"
+        "| {what} | Effect | Category | Rolls on | Tiers (item level: value) | Weight |\n\
+         |---|---|---|---|---|:---:|\n"
     );
     for a in order::affixes(content, kind) {
         let bases: Vec<&str> = a.bases.iter().map(|k| k.plural()).collect();
@@ -117,9 +117,10 @@ fn affix_table(content: &Content, kind: AffixKind) -> String {
             .collect();
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {} | {} | {} |",
             a.name,
             effect_text(content, a),
+            a.category.replace('_', " "),
             bases.join(", "),
             tiers.join(" · "),
             a.weight

@@ -2,6 +2,7 @@
 id = "of_the_fox"
 name = "of the Fox"
 effect = "skill"
+category = "listen"
 skill = "listen"
 bases = ["helmet", "ring", "amulet"]
 tiers = [

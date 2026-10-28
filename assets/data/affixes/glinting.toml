@@ -2,6 +2,7 @@
 id = "glinting"
 name = "Glinting"
 effect = "to_hit"
+category = "accuracy"
 bases = ["weapon", "launcher", "ammo"]
 tiers = [
   { level = 1, min = 1, max = 1 },

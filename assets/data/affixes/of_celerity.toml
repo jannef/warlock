@@ -2,6 +2,7 @@
 id = "of_celerity"
 name = "of Celerity"
 effect = "attack_speed"
+category = "attack_speed"
 bases = ["weapon", "launcher", "gloves", "ring"]
 tiers = [
   { level = 1, min = 5, max = 8 },

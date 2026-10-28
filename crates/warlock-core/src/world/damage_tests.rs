@@ -647,13 +647,13 @@ fn bad_typed_data_is_refused() {
     }
     let err = bad(
         "data/affixes/zz_burning.toml",
-        "[[prefix]]\nid = \"zz_burning\"\nname = \"Burning\"\neffect = \"elemental\"\n\
+        "[[prefix]]\nid = \"zz_burning\"\nname = \"Burning\"\neffect = \"elemental\"\ncategory = \"elemental\"\n\
          bases = [\"weapon\"]\ntiers = [{ level = 1, min = 2, max = 3 }]\n",
     );
     assert!(err.contains("names its `damage_type`"), "{err}");
     let err = bad(
         "data/affixes/zz_sharp.toml",
-        "[[prefix]]\nid = \"zz_sharp\"\nname = \"Sharper\"\neffect = \"damage\"\n\
+        "[[prefix]]\nid = \"zz_sharp\"\nname = \"Sharper\"\neffect = \"damage\"\ncategory = \"damage\"\n\
          damage_type = \"fire\"\nbases = [\"weapon\"]\ntiers = [{ level = 1, min = 1, max = 2 }]\n",
     );
     assert!(err.contains("`damage_type` is for affixes"), "{err}");

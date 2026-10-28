@@ -497,7 +497,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   3 50, 4 30, 5 15, 6 5); `[names] first` (words, none empty) and
   `[names.second]`, words for every kind of item (rare names: one of each, "Grim Bite"). Then
   `[[prefix]]`s and `[[suffix]]`es (ids unique across both): `id`, `name` ("Sharp", "of the
-  Bear"), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,
+  Bear"), `category` (lower-case words joined by `_`, `physical_damage`: an item never has
+  two affixes of one category; every affix of one effect (of one skill, of one damage type)
+  names the same category, and a category on both prefixes and suffixes is one effect; else a
+  content error), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,
   `attack_speed`, `range`, `draw`, `durability`, `parry`, `armour`, `protection`, `shield`,
   `max_dex`,
   `weight`, `dodge`, `deflection`, `natural`, `max_hp`, `regeneration`, `max_mana`,

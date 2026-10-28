@@ -2,6 +2,7 @@
 id = "hardened"
 name = "Hardened"
 effect = "protection"
+category = "protection"
 bases = ["body", "helmet", "cloak", "gloves", "boots"]
 tiers = [
   { level = 1, min = 1, max = 1 },

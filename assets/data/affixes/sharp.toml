@@ -2,6 +2,7 @@
 id = "sharp"
 name = "Sharp"
 effect = "damage"
+category = "physical_damage"
 bases = ["weapon", "ammo"]
 tiers = [
   { level = 1, min = 1, max = 1 },

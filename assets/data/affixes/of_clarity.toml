@@ -2,6 +2,7 @@
 id = "of_clarity"
 name = "of Clarity"
 effect = "mana_regeneration"
+category = "mana_regeneration"
 bases = ["helmet", "cloak", "ring", "amulet"]
 tiers = [
   { level = 1, min = 10, max = 20 },

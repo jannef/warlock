@@ -9,6 +9,11 @@
 # Every affix ([[prefix]] or [[suffix]]) defines:
 #   id      stable name: items record their affixes by it (saves, `[[item]]` in level files)
 #   name    "Sharp" (a prefix, before the item's name) or "of the Bear" (a suffix, after it)
+#   category  its group, as Path of Exile's (`physical_damage`, `life`): an item never has two
+#           affixes of one category. Every affix of one effect (of one skill, of one damage type)
+#           names the same category, and a category on both prefixes and suffixes is one effect;
+#           a category may gather a family of effects of one kind (`physical_damage`: damage and
+#           extra_damage; `stealth`: stealth and the Stealth skill)
 #   effect  what it does, one of:
 #             to_hit        + to hit
 #             damage        + to every roll of the damage dice
@@ -46,7 +51,7 @@
 #           ammunition change the attacks made with it (local); on anything else every attack
 #           (global). parry, armour, protection, shield, max_dex, and weight change the item
 #           itself; the rest change whoever wears or wields it. An item has at most one affix of
-#           each effect
+#           each category, and so of each effect
 #           (of each skill, for skill affixes; of each damage type, for elemental and
 #           resistance affixes).
 #   bases   the kinds of item that may roll it: weapon, launcher, ammo, body, helmet, cloak,

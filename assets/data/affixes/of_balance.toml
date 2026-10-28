@@ -2,6 +2,7 @@
 id = "of_balance"
 name = "of Balance"
 effect = "skill"
+category = "balance"
 skill = "balance"
 bases = ["body", "boots", "amulet"]
 weight = 60

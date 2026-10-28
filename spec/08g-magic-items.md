@@ -12,7 +12,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Rarity**: *normal* (no affixes; 85 % of loot), *magic* (13 %: a prefix only 40 %, a
     suffix only 40 %, one of each 20 %), *rare* (2 %: three affixes 50 %, four 30 %, five 15 %,
     six 5 %, at most three prefixes and three suffixes, and a two-word name: a first word and a second for its kind, "Grim Bite"); a *unique*
-    item is a rare one with a set name and a power (below). An item never has two affixes of the same effect.
+    item is a rare one with a set name and a power (below). An item never has two affixes of
+    one category (below).
   - **Instances**: a magic or rare stack records what it rolled (`magic::Magic` on
     `object::Stack`): its rarity, its **item level**, each affix by id with its tier (1 first)
     and rolled value, a rare item's name, and whether the player has identified it, for an
@@ -76,8 +77,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Ruin, Mending, Clarity (mana regeneration), Stealth, Light, the
     Mule, Evasion, Warding, the Wind, Reach, Durability, the Tortoise, Vitality; of Shadows
     (stealth), the Hare (tumble), the Fox (listen), the Wanderer (survival), Balance (balance)),
-    each with the kinds of item it rolls on and up to four tiers by item level; an item has at
-    most one affix of each effect (of each skill, for skill affixes).
+    each with the kinds of item it rolls on and up to four tiers by item level.
+  - **Categories** (#621, after Path of Exile's mod groups): every affix
+    names a `category`, and an item never has two affixes of one category. Every affix of one
+    effect (of one skill, for skill affixes; of one damage type, for elemental and resistance
+    affixes) is of one category, so an item also has at most one affix of each effect; a few
+    categories hold more than one effect of a family: `physical_damage` (Sharp and Vicious, +damage,
+    and Heavy, an extra die) and `stealth` (of Stealth, quieter footsteps, and of Shadows, the
+    Stealth skill). A category on both prefixes and suffixes is one effect either way
+    (`accuracy`: Accurate, Glinting, of Precision; `critical_chance`, `critical_multiplier`,
+    `range`, `dodge`, `deflection`, `natural_armour`, `life`, `movement_speed`, `carrying`,
+    `light`); the rest are one effect each, named for it (`fire_damage`, `fire_resistance`,
+    `strength`, `listen`, ...). The wiki's affix tables name each affix's category.
   - **Loot** (`magic::loot::roll`): the item level is the depth (a branch level's depth, a
     hand-made level's `item_level`, 1 elsewhere). One roll draws, in order: for a find of grade
     `any`, whether it is a loose gem (§7 "Gems": one draw against `chance`, then the gem by
@@ -91,7 +102,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     prefixes and suffixes are alike: four affixes are one, two, or three prefixes, a third
     each); each affix, prefixes first (by
     weight among those that may roll: the item's kind in its bases, something for its effect to
-    change, a tier at the item level, an effect not yet on the item), its tier (evenly among
+    change, a tier at the item level, a category not yet on the item), its tier (evenly among
     those at the item level), and its value (evenly in the tier's range); a rare item's name (two
     draws); for an item of a class with an `[[ornament]]`, whether it is set with a gem (one
     draw against its chance, then the gem, size, and cut, never a rough cut; `gem::ornament`);

@@ -2,6 +2,7 @@
 id = "of_stealth"
 name = "of Stealth"
 effect = "stealth"
+category = "stealth"
 bases = ["body", "cloak", "gloves", "boots", "amulet"]
 tiers = [
   { level = 1, min = 10, max = 15 },

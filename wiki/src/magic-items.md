@@ -90,7 +90,12 @@ A few rules from elsewhere carry over:
   shares of everything you wear and wield adding up, to at most half the time (twice as quick).
 - **Light**: a glowing item makes its wearer carry a faint, steady light (the brightest one
   counts); it never flickers.
-- An item has at most one affix of each kind of effect.
+- **Categories**: every affix has a category (the tables below name it), and an item never has
+  two affixes of one category. Most categories are one effect each, so an item has at most one
+  affix of each kind of effect; a few hold a family: *physical damage* (Sharp, Vicious, and
+  Heavy: a Sharp sword is never Heavy too) and *stealth* (of Stealth and of Shadows). A prefix
+  and a suffix of one category do the same thing (Glinting and of Precision both add to hit), so
+  an item has one or the other.
 
 ## Looking at an item
 

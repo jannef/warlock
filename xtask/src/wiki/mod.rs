@@ -1032,13 +1032,13 @@ mod tests {
         assert!(text("magic-bases.md").contains("| Long sword | weapons |"));
         let prefixes = text("magic-prefixes.md");
         assert!(prefixes.contains(
-            "| Sharp | damage, added to every roll | weapons, ammunition | 1: +1 · 3: +1–2"
+            "| Sharp | damage, added to every roll | physical damage | weapons, ammunition | 1: +1 · 3: +1–2"
         ));
         // Speed is exact: the share of the time it takes off.
-        assert!(
-            prefixes.contains("| Fleet | you move faster | boots | 1: 5–8% less time · 4: 8–12%")
-        );
-        assert!(text("magic-suffixes.md").contains("| of the Bear | Strength |"));
+        assert!(prefixes.contains(
+            "| Fleet | you move faster | movement speed | boots | 1: 5–8% less time · 4: 8–12%"
+        ));
+        assert!(text("magic-suffixes.md").contains("| of the Bear | Strength | strength |"));
         assert!(text("magic-names.md").contains("| Weapons | Bite,"));
         // Unique items: the campaigns', exactly, never the test world's.
         let uniques = text("uniques.md");

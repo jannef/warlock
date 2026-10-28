@@ -17,7 +17,7 @@
 //!    each, so prefixes and suffixes are alike);
 //! 5. **each affix**, prefixes first: one draw among those that may roll on the item (its kind
 //!    in the affix's `bases`, something for the effect to change, a tier at the item level, and
-//!    an effect the item has no affix of yet), weighted by their `weight`; one draw for the tier
+//!    a `category` the item has no affix of yet), weighted by their `weight`; one draw for the tier
 //!    among those found at the item level; one draw for the value in the tier's range (none when
 //!    the range is a single value). With nothing left to roll, the item has fewer affixes; with
 //!    none at all it is normal;
@@ -303,7 +303,7 @@ fn roll_magic(
     })
 }
 
-/// One affix of `kind` for `def` at `level` that does nothing `rolled` already does.
+/// One affix of `kind` for `def` at `level` of a category none of `rolled` is of.
 pub(crate) fn roll_affix(
     content: &Content,
     rng: &mut Rng,
@@ -314,8 +314,8 @@ pub(crate) fn roll_affix(
 ) -> Option<Affix> {
     let item = def.kind?;
     let affixes = content.affixes();
-    let taken: Vec<_> = (rolled.iter())
-        .filter_map(|a| affixes.get(&a.id).map(|d| d.group()))
+    let taken: Vec<&str> = (rolled.iter())
+        .filter_map(|a| affixes.get(&a.id).map(|d| d.category.as_str()))
         .collect();
     // By affix id, like the bases: not by the order the affix files load in.
     let mut candidates: Vec<(usize, u32)> = (affixes.all().iter().enumerate())
@@ -323,7 +323,7 @@ pub(crate) fn roll_affix(
             a.kind == kind
                 && a.weight > 0
                 && a.tiers_at(level) > 0
-                && !taken.contains(&a.group())
+                && !taken.contains(&a.category.as_str())
                 && may_roll(a, item, def)
         })
         .map(|(i, a)| (i, a.weight))

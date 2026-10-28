@@ -14,7 +14,7 @@ fn content() -> Arc<Content> {
     files.insert(
         "data/affixes/zz_creature_magic.toml",
         "[[prefix]]\nid = \"zz_creature_magic\"\nname = \"Testing\"\n\
-         effect = \"caster_level\"\nbases = [\"ring\"]\n\
+         effect = \"caster_level\"\ncategory = \"caster_level\"\nbases = [\"ring\"]\n\
          tiers = [{ level = 1, min = 1, max = 2 }]\n",
     );
     Arc::new(Content::load(&files).expect("content"))

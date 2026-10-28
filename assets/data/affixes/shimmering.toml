@@ -2,6 +2,7 @@
 id = "shimmering"
 name = "Shimmering"
 effect = "deflection"
+category = "deflection"
 bases = ["helmet", "cloak", "shield", "ring", "amulet"]
 tiers = [
   { level = 1, min = 1, max = 1 },

@@ -125,8 +125,8 @@ fn rare_items_have_three_to_six_affixes_at_most_three_of_each() {
         let rolled = magic.rolled(&c);
         let per = |k: AffixKind| rolled.iter().filter(|r| r.def.kind == k).count();
         assert!(per(AffixKind::Prefix) <= 3 && per(AffixKind::Suffix) <= 3);
-        let effects: BTreeSet<_> = rolled.iter().map(|r| r.def.group()).collect();
-        assert_eq!(effects.len(), rolled.len(), "no two affixes of one effect");
+        let categories: BTreeSet<_> = rolled.iter().map(|r| &r.def.category).collect();
+        assert_eq!(categories.len(), rolled.len(), "no two of one category");
         let name = magic.name.as_deref().expect("a name");
         assert_eq!(name.split(' ').count(), 2, "two words: {name}");
         counts[rolled.len()] += 1;
@@ -137,6 +137,27 @@ fn rare_items_have_three_to_six_affixes_at_most_three_of_each() {
     assert!((25..=35).contains(&share(4)), "{counts:?}");
     assert!((11..=19).contains(&share(5)), "{counts:?}");
     assert!((2..=8).contains(&share(6)), "now and then six: {counts:?}");
+}
+
+/// No item loot makes has two affixes of one category (nor, so, of one effect), at any item
+/// level, over many draws.
+#[test]
+fn no_rolled_item_repeats_an_affix_category() {
+    let c = content();
+    let mut rolled_any = 0;
+    for level in [1, 4, 8, 12] {
+        for stack in roll_many(&c, 1500, level, LootGrade::Rare) {
+            let magic = stack.magic().expect("rare");
+            magic.check(c.object(stack.object), &c).expect("valid");
+            let rolled = magic.rolled(&c);
+            let categories: BTreeSet<_> = rolled.iter().map(|r| &r.def.category).collect();
+            let groups: BTreeSet<_> = rolled.iter().map(|r| r.def.group()).collect();
+            assert_eq!(categories.len(), rolled.len(), "{:?}", magic.affixes);
+            assert_eq!(groups.len(), rolled.len(), "{:?}", magic.affixes);
+            rolled_any += rolled.len();
+        }
+    }
+    assert!(rolled_any > 6000, "{rolled_any} affixes");
 }
 
 #[test]
@@ -275,7 +296,7 @@ fn bad_items_are_refused() {
         (magic(&[("sharp", 9, 1)], None), "no tier"),
         (magic(&[("sharp", 1, 5)], None), "rolls 1 to 1"),
         (
-            magic(&[("sharp", 1, 1), ("heavy", 1, 2)], None),
+            magic(&[("sharp", 1, 1), ("glinting", 1, 1)], None),
             "at most 1 prefixes",
         ),
         (
@@ -283,7 +304,11 @@ fn bad_items_are_refused() {
                 &[("sharp", 1, 1), ("glinting", 1, 1), ("of_precision", 1, 1)],
                 Some("X"),
             ),
-            "two affixes do",
+            "two affixes of category `accuracy`",
+        ),
+        (
+            magic(&[("sharp", 1, 1), ("heavy", 1, 2)], Some("X")),
+            "two affixes of category `physical_damage`",
         ),
     ];
     for (m, needle) in bad {

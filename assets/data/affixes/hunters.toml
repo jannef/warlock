@@ -2,6 +2,7 @@
 id = "hunters"
 name = "Hunter's"
 effect = "range"
+category = "range"
 bases = ["launcher"]
 tiers = [
   { level = 1, min = 1, max = 2 },

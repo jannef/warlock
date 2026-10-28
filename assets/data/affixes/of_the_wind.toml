@@ -2,6 +2,7 @@
 id = "of_the_wind"
 name = "of the Wind"
 effect = "move_speed"
+category = "movement_speed"
 bases = ["cloak", "amulet"]
 weight = 60
 tiers = [

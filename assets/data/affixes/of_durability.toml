@@ -2,6 +2,7 @@
 id = "of_durability"
 name = "of Durability"
 effect = "durability"
+category = "durability"
 bases = ["ammo"]
 tiers = [
   { level = 1, min = 20, max = 30 },

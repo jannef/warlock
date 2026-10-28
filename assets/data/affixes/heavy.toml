@@ -2,6 +2,7 @@
 id = "heavy"
 name = "Heavy"
 effect = "extra_damage"
+category = "physical_damage"
 bases = ["weapon", "launcher"]
 tiers = [
   { level = 1, min = 2, max = 3 },

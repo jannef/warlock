@@ -3,6 +3,7 @@
 id = "of_warmth"
 name = "of Warmth"
 effect = "resistance"
+category = "cold_resistance"
 damage_type = "cold"
 bases = ["body", "cloak", "gloves", "boots", "ring", "amulet"]
 tiers = [

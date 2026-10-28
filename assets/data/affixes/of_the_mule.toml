@@ -2,6 +2,7 @@
 id = "of_the_mule"
 name = "of the Mule"
 effect = "carry"
+category = "carrying"
 bases = ["body", "cloak", "gloves", "boots", "ring", "amulet"]
 tiers = [
   { level = 1, min = 3, max = 5 },

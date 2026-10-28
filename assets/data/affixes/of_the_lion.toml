@@ -2,6 +2,7 @@
 id = "of_the_lion"
 name = "of the Lion"
 effect = "presence"
+category = "presence"
 bases = ["weapon", "launcher", "body", "helmet", "cloak", "gloves", "boots", "shield", "ring", "amulet"]
 weight = 60
 tiers = [

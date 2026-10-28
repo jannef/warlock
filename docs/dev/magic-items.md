@@ -54,7 +54,14 @@ types"): `Effect::Elemental` (an attack effect, local on what attacks: `Mods::el
 rider per kind, `sharpen` adds them to the profile) and `Effect::Resistance` (global:
 `Mods::resistances`, which `Actor::resistances` adds to what is worn and what the creature is),
 each with the affix's `damage_type` (`AffixDef::damage_type`, part of its `Group`, so an item
-may hold one of each kind). Hard
+may hold one of each kind). **Categories** (#621): `AffixDef::category` (required in data) is the
+rule loot and `Magic::check` read: an item never has two affixes of one category
+(`loot::roll_affix` leaves out the categories already rolled; `Magic::check` refuses a repeat in a
+save, a legend's `[[item]]`, or a unique). `content::affix::check_category` makes every affix of
+one `Group` name one category (so one per category is one per group, which `Mods` relies on) and
+a category on both prefixes and suffixes one group. Tests: `content/affix.rs`
+(`affix_categories_are_checked`), `magic/tests.rs` (`no_rolled_item_repeats_an_affix_category`,
+over many rare rolls at four item levels). Hard
 rule: presentation reads an item's affixes only through `Stack::known_magic` (none until
 identified; `Stack::magic` is crate-private), names only through `Stack::describe` /
 `title`, and numbers only through `magic::Numbers` (on the known stack), so unidentified affixes

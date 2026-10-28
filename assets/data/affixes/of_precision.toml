@@ -2,6 +2,7 @@
 id = "of_precision"
 name = "of Precision"
 effect = "to_hit"
+category = "accuracy"
 bases = ["weapon", "launcher", "ammo", "gloves"]
 tiers = [
   { level = 1, min = 1, max = 1 },

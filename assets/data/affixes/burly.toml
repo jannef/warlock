@@ -2,6 +2,7 @@
 id = "burly"
 name = "Burly"
 effect = "carry"
+category = "carrying"
 bases = ["body", "gloves"]
 weight = 60
 tiers = [

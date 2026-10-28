@@ -77,7 +77,7 @@ fn talents_and_magic_items_add_to_caster_level() {
     files.insert(
         "data/affixes/zz_spell_test.toml",
         "[[prefix]]\nid = \"zz_spell_test\"\nname = \"Testing\"\n\
-         effect = \"caster_level\"\nbases = [\"ring\"]\n\
+         effect = \"caster_level\"\ncategory = \"caster_level\"\nbases = [\"ring\"]\n\
          tiers = [{ level = 1, min = 1, max = 2 }]\n",
     );
     let content = Arc::new(Content::load(&files).expect("content"));

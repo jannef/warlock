@@ -2,6 +2,7 @@
 id = "hale"
 name = "Hale"
 effect = "max_hp"
+category = "life"
 bases = ["body", "helmet", "cloak", "gloves", "boots", "shield", "ring", "amulet"]
 tiers = [
   { level = 1, min = 2, max = 4 },

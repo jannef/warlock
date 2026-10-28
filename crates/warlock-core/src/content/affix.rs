@@ -434,6 +434,10 @@ pub struct AffixDef {
     pub name: String,
     pub kind: AffixKind,
     pub effect: Effect,
+    /// Its category, as Path of Exile's mod groups (`physical_damage`, `life`): an item never
+    /// has two affixes of one category. Every affix of one [`Group`] shares it, so no item has
+    /// two of one group either.
+    pub category: String,
     /// The skill a [`Effect::Skill`] affix adds to.
     pub skill: Option<SkillId>,
     /// The damage type an [`Effect::Elemental`] affix adds or an [`Effect::Resistance`] one
@@ -631,6 +635,8 @@ struct AffixSpec {
     id: String,
     name: String,
     effect: String,
+    /// Its category (lower case, `_` between words): an item never has two affixes of one.
+    category: String,
     bases: Vec<String>,
     weight: Option<u32>,
     /// The skill an affix of effect `skill` adds to (an id in `data/skills.toml`).
@@ -764,10 +770,41 @@ pub(super) fn parse<'a>(
         if let Some(first) = seen.insert(id.clone(), file) {
             return Err(super::duplicate_id("affix", &id, file, first));
         }
+        check_category(&affixes, &def).map_err(|m| ContentError::new(file, m))?;
         affixes.ids.insert(id, affixes.defs.len());
         affixes.defs.push(def);
     }
     Ok(affixes)
+}
+
+/// Refuses `def` when its category and the affixes read before it disagree: every affix of one
+/// [`Group`] names one category (so one affix per category is one per group too), and a category
+/// on both prefixes and suffixes is one group, the same effect either way.
+fn check_category(affixes: &Affixes, def: &AffixDef) -> Result<(), String> {
+    for other in affixes.all() {
+        let same_category = other.category == def.category;
+        if other.group() == def.group() && !same_category {
+            return Err(format!(
+                "{} `{}`: category `{}`, but `{}` does the same in `{}`",
+                def.kind.name().to_lowercase(),
+                def.id,
+                def.category,
+                other.id,
+                other.category
+            ));
+        }
+        if same_category && other.kind != def.kind && other.group() != def.group() {
+            return Err(format!(
+                "{} `{}`: category `{}` is on prefixes and suffixes, so both do one thing, \
+                 but `{}` does another",
+                def.kind.name().to_lowercase(),
+                def.id,
+                def.category,
+                other.id
+            ));
+        }
+    }
+    Ok(())
 }
 
 impl AffixSpec {
@@ -783,6 +820,14 @@ impl AffixSpec {
         }
         let effect = Effect::from_id(&self.effect)
             .ok_or_else(|| format!("unknown effect `{}`", self.effect))?;
+        let words = self.category.split('_');
+        if !(words.into_iter()).all(|w| !w.is_empty() && w.bytes().all(|b| b.is_ascii_lowercase()))
+        {
+            return Err(format!(
+                "`category` is lower-case words joined by `_`, not `{}`",
+                self.category
+            ));
+        }
         let skill = match (effect, &self.skill) {
             (Effect::Skill, Some(id)) => {
                 Some(skill(id).ok_or_else(|| format!("unknown skill `{id}`"))?)
@@ -872,6 +917,7 @@ impl AffixSpec {
             name: self.name,
             kind,
             effect,
+            category: self.category,
             skill,
             damage_type,
             bases,
@@ -933,7 +979,7 @@ amulet = ["Charm"]
     /// settings table in two files, no settings at all, and an id in two files are refused.
     #[test]
     fn affix_files_hold_the_settings_once_and_the_entries_in_path_order() {
-        let sharp = "[[prefix]]\nid = \"sharp\"\nname = \"Sharp\"\neffect = \"damage\"\n\
+        let sharp = "[[prefix]]\nid = \"sharp\"\nname = \"Sharp\"\neffect = \"damage\"\ncategory = \"damage\"\n\
                      bases = [\"weapon\"]\ntiers = [{ level = 1, min = 1, max = 1 }]\n";
         let keen = sharp.replace("sharp", "keen").replace("Sharp", "Keen");
         let a = parse_files([
@@ -982,6 +1028,7 @@ amulet = ["Charm"]
 id = "sharp"
 name = "Sharp"
 effect = "damage"
+category = "damage"
 bases = ["weapon", "ammo"]
 tiers = [{ level = 1, min = 1, max = 1 }, { level = 4, min = 2, max = 3 }]
 
@@ -989,6 +1036,7 @@ tiers = [{ level = 1, min = 1, max = 1 }, { level = 4, min = 2, max = 3 }]
 id = "of_light"
 name = "of Light"
 effect = "light"
+category = "light"
 bases = ["ring"]
 tiers = [{ level = 1, light = "glow" }]
 
@@ -996,6 +1044,7 @@ tiers = [{ level = 1, light = "glow" }]
 id = "of_the_bear"
 name = "of the Bear"
 effect = "strength"
+category = "strength"
 bases = ["ring"]
 weight = 50
 tiers = [{ level = 1, min = 1, max = 2 }]
@@ -1024,9 +1073,9 @@ tiers = [{ level = 1, min = 1, max = 2 }]
     #[test]
     fn bad_affixes_are_reported() {
         let bad = [
-            ("effect = \"luck\"", "unknown effect"),
+            ("effect = \"luck\"\ncategory = \"luck\"", "unknown effect"),
             (
-                "effect = \"armour\"\nbases = [\"ring\"]",
+                "effect = \"armour\"\ncategory = \"armour\"\nbases = [\"ring\"]",
                 "cannot be on rings",
             ),
         ];
@@ -1053,15 +1102,73 @@ tiers = [{ level = 1, min = 1, max = 2 }]
         ];
         for tiers in cases {
             let text = format!(
-                "[[prefix]]\nid = \"x\"\nname = \"X\"\neffect = \"damage\"\nbases = \
+                "[[prefix]]\nid = \"x\"\nname = \"X\"\neffect = \"damage\"\ncategory = \"damage\"\nbases = \
                  [\"weapon\"]\n{tiers}\n"
             );
             assert!(parse_with(&text).is_err(), "{tiers}");
         }
-        let twice = "[[prefix]]\nid = \"x\"\nname = \"X\"\neffect = \"damage\"\nbases = \
+        let twice = "[[prefix]]\nid = \"x\"\nname = \"X\"\neffect = \"damage\"\ncategory = \"damage\"\nbases = \
                      [\"weapon\"]\ntiers = [{ level = 1, min = 1, max = 1 }]\n";
         let e = parse_with(&format!("{twice}{twice}")).expect_err("duplicate");
         assert!(e.to_string().contains("duplicate"), "{e}");
+    }
+
+    /// Every affix names a category; one group is one category, and a category on both kinds is
+    /// one group.
+    #[test]
+    fn affix_categories_are_checked() {
+        let affix = |kind: &str, id: &str, effect: &str, category: &str| {
+            format!(
+                "[[{kind}]]\nid = \"{id}\"\nname = \"X\"\neffect = \"{effect}\"\n\
+                 category = \"{category}\"\nbases = [\"weapon\"]\n\
+                 tiers = [{{ level = 1, min = 1, max = 1 }}]\n"
+            )
+        };
+        let good = [
+            affix("prefix", "sharp", "damage", "physical_damage"),
+            affix("prefix", "heavy", "extra_damage", "physical_damage")
+                .replace("min = 1, max = 1", "min = 2, max = 3"),
+            affix("prefix", "glinting", "to_hit", "accuracy"),
+            affix("suffix", "of_precision", "to_hit", "accuracy"),
+        ]
+        .concat();
+        let a = parse_with(&good).expect("valid");
+        assert_eq!(
+            a.get("heavy").map(|d| d.category.as_str()),
+            Some("physical_damage")
+        );
+        let missing = "[[prefix]]\nid = \"x\"\nname = \"X\"\neffect = \"damage\"\nbases = \
+                       [\"weapon\"]\ntiers = [{ level = 1, min = 1, max = 1 }]\n";
+        let e = parse_with(missing).expect_err("no category");
+        assert!(e.to_string().contains("category"), "{e}");
+        let bad = [
+            (
+                affix("prefix", "x", "damage", "Physical damage"),
+                "lower-case words",
+            ),
+            (affix("prefix", "x", "damage", ""), "lower-case words"),
+            (
+                [
+                    affix("prefix", "sharp", "damage", "physical_damage"),
+                    affix("prefix", "vicious", "damage", "brutality"),
+                ]
+                .concat(),
+                "`sharp` does the same in `physical_damage`",
+            ),
+            (
+                [
+                    affix("prefix", "sharp", "damage", "physical_damage"),
+                    affix("suffix", "of_heft", "extra_damage", "physical_damage")
+                        .replace("min = 1, max = 1", "min = 2, max = 3"),
+                ]
+                .concat(),
+                "on prefixes and suffixes",
+            ),
+        ];
+        for (text, needle) in bad {
+            let e = parse_with(&text).expect_err(needle);
+            assert!(e.to_string().contains(needle), "{e}");
+        }
     }
 
     #[test]

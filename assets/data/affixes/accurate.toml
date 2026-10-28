@@ -2,6 +2,7 @@
 id = "accurate"
 name = "Accurate"
 effect = "to_hit"
+category = "accuracy"
 bases = ["helmet", "gloves", "ring", "amulet"]
 tiers = [
   { level = 1, min = 1, max = 1 },

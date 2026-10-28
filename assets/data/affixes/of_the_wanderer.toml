@@ -2,6 +2,7 @@
 id = "of_the_wanderer"
 name = "of the Wanderer"
 effect = "skill"
+category = "survival"
 skill = "survival"
 bases = ["cloak", "boots"]
 weight = 60

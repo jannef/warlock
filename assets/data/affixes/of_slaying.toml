@@ -2,6 +2,7 @@
 id = "of_slaying"
 name = "of Slaying"
 effect = "threat"
+category = "critical_chance"
 bases = ["gloves", "ring", "amulet"]
 weight = 60
 tiers = [
