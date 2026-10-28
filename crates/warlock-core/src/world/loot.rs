@@ -44,6 +44,16 @@ impl World {
     /// time of its own: the action that calls it (reading the scroll of identify, #150) is what
     /// takes time.
     pub(crate) fn identify(&mut self, item: usize) -> Identified {
+        let learned = self.learn_item(item);
+        if let Identified::Now(name) = &learned {
+            self.say(format!("This is {name}!"));
+        }
+        learned
+    }
+
+    /// [`World::identify`] without a word: the caller says it its own way (Appraise, spec §8
+    /// "Skills").
+    pub(crate) fn learn_item(&mut self, item: usize) -> Identified {
         let Some(object) = self.state.player().inventory.get(item).map(|s| s.object) else {
             return Identified::NoSuchItem;
         };
@@ -54,9 +64,7 @@ impl World {
         if !stack.identify() && !typed && !charges {
             return Identified::Known;
         }
-        let name = self.lore().describe(&self.state.player().inventory[item]);
-        self.say(format!("This is {name}!"));
-        Identified::Now(name)
+        Identified::Now(self.lore().describe(&self.state.player().inventory[item]))
     }
 
     /// The player identifies scroll type `object` (spec §8 "Scrolls"): from now on every scroll

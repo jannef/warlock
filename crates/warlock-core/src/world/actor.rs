@@ -521,7 +521,8 @@ impl Actor {
     pub fn max_mana(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let stats = self.stats_with(content, &mods);
-        crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana))
+        let pool = crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana));
+        self.deeper_pool(content, pool)
     }
 
     /// Its maximum mana as it will be once its penalties pass, like
@@ -530,7 +531,8 @@ impl Actor {
     pub fn lasting_max_mana(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let stats = self.raised_with(&mods);
-        crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana))
+        let pool = crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana));
+        self.deeper_pool(content, pool)
     }
 
     /// How hurt it looks, in words.

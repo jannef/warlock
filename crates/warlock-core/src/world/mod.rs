@@ -87,6 +87,7 @@ mod ai;
 mod alignment;
 mod ambush;
 mod animated;
+mod appraise;
 mod attacks;
 mod beast_friend;
 mod bleed;
@@ -100,6 +101,7 @@ mod chest;
 mod class;
 mod class_ability;
 mod collapse;
+mod concentration;
 mod consecrate;
 mod court;
 mod creation;
@@ -1371,6 +1373,8 @@ mod animated_panoply_tests;
 #[cfg(test)]
 mod animated_tests;
 #[cfg(test)]
+mod appraise_tests;
+#[cfg(test)]
 mod ascmearc_tests;
 #[cfg(test)]
 mod attacks_tests;
@@ -1418,6 +1422,8 @@ mod class_rogue_tests;
 mod class_tests;
 #[cfg(test)]
 mod collapse_tests;
+#[cfg(test)]
+mod concentration_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]

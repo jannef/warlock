@@ -119,8 +119,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     at item level 1 to 42–45 % at 12, #638); of Shadows (stealth), the Hare (tumble), the Fox (listen), the Wanderer
     (survival), Balance (balance); the skills' (#636): of Seeking (search), the Eagle (spot), the
     Stag (athletics), the Leech (heal), the Picklock (open lock), Disarming (disable device),
-    Appraisal (appraise), the Scholar (spellcraft), Letters (decipher script), the Cutpurse
-    (steal), on the ladder (Spot, Open lock, Disable device, Heal, and Steal give nothing to the
+    Appraisal (appraise), Haggling (negotiation, #666), the Scholar (spellcraft), Letters (decipher script), the Cutpurse
+    (steal), on the ladder (Spot, Open lock, Disable device, Heal, Steal, and Appraise give nothing to the
     untrained, so their suffixes help the trained only); of Wounding (an extra damage die); the systems' (#635): of the
     Adept (caster level), of Thrift (mana costs), of the Magus (spell to-hit), of Farcasting
     (spell reach), of Lingering (spell degrees), of Siphoning (mana on a kill), of Wands (wand

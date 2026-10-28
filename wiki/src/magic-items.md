@@ -146,9 +146,9 @@ undrunk.
 
 The skill suffixes raise one [skill](skills.md) each: *of Seeking* (Search), *of the Eagle*
 (Spot), *of the Stag* (Athletics), *of the Leech* (Heal), *of the Picklock* (Open lock), *of
-Disarming* (Disable device), *of Appraisal* (Appraise), *of the Scholar* (Spellcraft), *of
+Disarming* (Disable device), *of Appraisal* (Appraise), *of Haggling* (Negotiation), *of the Scholar* (Spellcraft), *of
 Letters* (Decipher script), *of the Cutpurse* (Steal), besides *of Shadows*, *of the Hare*, *of
-the Fox*, *of the Wanderer*, and *of Balance*. Spot, Open lock, Disable device, Heal, and Steal
+the Fox*, *of the Wanderer*, and *of Balance*. Spot, Open lock, Disable device, Heal, Steal, and Appraise
 give nothing to those not trained in them at all (marked **trained only** on the Skills page),
 so their suffixes help only those trained in them: an untrained wearer still cannot notice,
 pick, disarm, treat, or steal.

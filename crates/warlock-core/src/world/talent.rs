@@ -105,8 +105,7 @@ impl World {
             let player = self.player_mut();
             player.hp_base += hp;
             player.hp += hp;
-            player.mana_base += mana;
-            player.mana += mana;
+            player.grow_mana_base(&content, mana);
             self.grant_class(level, !again);
             // Hardened: every level past the hit point levels adds a level's hit points again.
             let hardened = self.state.player().talent_mods(&content).hardened;

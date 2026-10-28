@@ -323,13 +323,12 @@ mod tests {
             "Birth sign",
             "> a  Transfixing stare  at a place you see",
             "Skills",
-            "  b  Appraise           not usable yet",
-            "  c  Disarm a trap      in a direction",
-            "  d  Pick lock          in a direction",
-            "  e  Steal              in a direction",
+            "  b  Disarm a trap      in a direction",
+            "  c  Pick lock          in a direction",
+            "  d  Steal              in a direction",
             "Weapon skills",
-            "  f  Shield bash        you hold no shield",
-            "a-f or Enter use   Esc close",
+            "  e  Shield bash        you hold no shield",
+            "a-e or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
@@ -345,7 +344,7 @@ mod tests {
         let b = Bindings::default();
         let world = thief(false);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.handle(&Press::typed('f'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&Press::typed('e'), &b), ScreenAction::Stay);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("Shield bash: you hold no shield."), "{text}");
@@ -360,19 +359,19 @@ mod tests {
         let stare = Ability::Sign(warlock_core::content::SignActive::TransfixingStare);
         assert_eq!(screen.selected(), Some(stare));
         assert_eq!(
-            screen.handle(&Press::typed('d'), &b),
+            screen.handle(&Press::typed('c'), &b),
             ScreenAction::UseAbility(Ability::PickLock)
         );
         let last = Some(Ability::ShieldBash);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), last);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         assert_eq!(
-            screen.handle(&Press::typed('f'), &b),
+            screen.handle(&Press::typed('e'), &b),
             ScreenAction::UseAbility(Ability::ShieldBash)
         );
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(
-            text.contains("> f  Shield bash        in a direction"),
+            text.contains("> e  Shield bash        in a direction"),
             "{text}"
         );
         assert!(text.contains("Strike someone next to you with the shield you hold."));
@@ -381,7 +380,7 @@ mod tests {
             ScreenAction::UseAbility(Ability::ShieldBash)
         );
         assert_eq!(
-            screen.handle(&Press::typed('e'), &b),
+            screen.handle(&Press::typed('d'), &b),
             ScreenAction::UseAbility(Ability::Steal)
         );
         // `a` names the first row here (the stare), so it does not close the menu; Esc does.

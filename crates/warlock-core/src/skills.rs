@@ -75,6 +75,10 @@ pub const MAX_PICK_BONUS: i32 = 20;
 pub const MAX_FORAGE_BONUS: i32 = 30;
 /// The most a skill adds to tempering an item at an anvil (spec §7 "Special rooms": the forge).
 pub const MAX_TEMPER_BONUS: i32 = 20;
+/// The most percent a skill adds to the pace mana comes back at (spec §8 "Mana").
+pub const MAX_MANA_REGEN_BONUS: i32 = 100;
+/// The most mana points a skill adds to the maximum (spec §8 "Mana"), before the fifth's cap.
+pub const MAX_MANA_POOL_BONUS: i32 = 20;
 
 /// Index of a skill in [`Content::skills`]: in file order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -140,6 +144,10 @@ pub enum Effect {
     /// Percent better prices in shops (spec §7 "Shops"; `world/shop.rs`): less to pay and more
     /// offered, together with Presence at most half.
     Bargain,
+    /// Percent chance, each game hour, of telling one unidentified thing the actor carries or
+    /// wears for what it is (spec §8 "Skills": Appraise; `world/appraise.rs`); only a skill with
+    /// it, trained, gives it at all.
+    Identify,
     /// Points added to stealing from someone (spec §8 "Stealing"; `world/steal.rs`); a skill
     /// with it, trained, lets the actor steal at all (the abilities menu's Steal).
     Steal,
@@ -156,6 +164,13 @@ pub enum Effect {
     /// Points added to the check that leans a forge's outcome (spec §7 "Special rooms": Temper
     /// at an anvil; `world/temper.rs`). Anyone may temper; the skill only leans it.
     Temper,
+    /// Percent faster the actor regains mana (spec §8 "Mana"; `World::mana_rate`), added to its
+    /// items' and talents' percent; only a trained skill gives it ([`crate::world::Actor::mind`]).
+    ManaRegen,
+    /// Mana points added to the actor's maximum (spec §8 "Mana"; [`crate::world::Actor::max_mana`]),
+    /// never more than a fifth of the pool without them ([`crate::mana::deeper`]); only a trained
+    /// skill gives it.
+    MaxMana,
     /// Percent quicker the actor is in everything (spec §8 "Speed";
     /// [`crate::world::Actor::speed`]): its speed, added to its talents' percent, the two
     /// together at most [`crate::content::MAX_SPEED`].
@@ -167,7 +182,11 @@ impl Effect {
     pub const fn max(self) -> i32 {
         match self {
             Effect::Dodge | Effect::Hearing => MAX_VALUE as i32,
-            Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
+            Effect::Quiet
+            | Effect::Burden
+            | Effect::Travel
+            | Effect::Bargain
+            | Effect::Identify => 100,
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
@@ -177,6 +196,8 @@ impl Effect {
             Effect::Pick => MAX_PICK_BONUS,
             Effect::Forage => MAX_FORAGE_BONUS,
             Effect::Temper => MAX_TEMPER_BONUS,
+            Effect::ManaRegen => MAX_MANA_REGEN_BONUS,
+            Effect::MaxMana => MAX_MANA_POOL_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
             Effect::Speed => crate::content::MAX_SPEED,
         }
@@ -197,6 +218,8 @@ pub enum Use {
     Spot,
     /// A spell studied (spec §8 "Spells"), whatever comes of it.
     Study,
+    /// Mana spent (spec §8 "Mana"): a spell cast, an ability paid in mana, whatever it costs.
+    Cast,
     /// An attempt to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
     Disarm,
     /// An attack that missed because the actor dodged it (the Dexterity or Dodge category), or a
@@ -219,6 +242,10 @@ pub enum Use {
     /// An item worked at a forge's anvil to the end (spec §7 "Special rooms"), whatever comes of
     /// it.
     Temper,
+    /// A deal made in a shop (spec §7 "Shops"): goods paid for, or the player's own sold.
+    Deal,
+    /// A carried thing told for what it is by looking it over (spec §8 "Skills": Appraise).
+    Appraise,
 }
 
 impl Use {
@@ -230,6 +257,7 @@ impl Use {
             Use::Search => "a turn spent searching",
             Use::Spot => "noticing something hidden in passing",
             Use::Study => "studying a spell from a scroll",
+            Use::Cast => "spending mana: a spell, or an ability paid in it",
             Use::Disarm => "trying to disarm a trap",
             Use::Dodge => "dodging an attack or a known trap",
             Use::Burdened => "acting (not waiting) while your load slows you",
@@ -240,6 +268,8 @@ impl Use {
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
+            Use::Deal => "a deal made in a shop",
+            Use::Appraise => "telling something you carry for what it is",
         }
     }
 }
@@ -338,6 +368,7 @@ impl Use {
             Use::Search => "search",
             Use::Spot => "spot",
             Use::Study => "study",
+            Use::Cast => "cast",
             Use::Disarm => "disarm",
             Use::Dodge => "dodge",
             Use::Burdened => "burdened",
@@ -348,6 +379,8 @@ impl Use {
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Temper => "temper",
+            Use::Deal => "deal",
+            Use::Appraise => "appraise",
         }
     }
 }
@@ -368,11 +401,14 @@ impl Effect {
             Effect::Travel => "travel",
             Effect::Forage => "forage",
             Effect::Bargain => "bargain",
+            Effect::Identify => "identify",
             Effect::Steal => "steal",
             Effect::Heal => "heal",
             Effect::Kick => "kick",
             Effect::Pick => "pick",
             Effect::Temper => "temper",
+            Effect::ManaRegen => "mana_regen",
+            Effect::MaxMana => "max_mana",
             Effect::Speed => "speed",
         }
     }

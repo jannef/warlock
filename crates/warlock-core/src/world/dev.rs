@@ -22,10 +22,12 @@ impl World {
     }
 
     /// The dev action `skip:DURATION` ([`crate::action::Action::SkipTime`]): the clock jumps
-    /// ahead `duration`; nobody acts.
+    /// ahead `duration`; nobody acts, but Appraise looks over what the player carries each hour.
     pub(super) fn skip_time_dev(&mut self, duration: Duration) -> Spent {
         self.say(format!("Time skips ahead {} (dev).", duration.spoken()));
         self.skip_stat_check(self.state.time + duration);
+        // Appraise's hourly checks still come as the hours pass (spec §8 "Skills").
+        self.appraise_hours(self.state.time, duration.as_seconds());
         Spent::Skip(duration)
     }
 

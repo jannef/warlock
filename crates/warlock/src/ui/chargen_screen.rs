@@ -667,7 +667,10 @@ impl SummaryScreen {
                     Row::Sign => self.sign.as_str(),
                     Row::Talents => self.talents.as_str(),
                 };
-                panel.row(console, y, i == self.selected, label, value, 6);
+                // The value starts 12 cells in and is padded by two spaces on each side; a
+                // longer one is cut to stay inside the frame.
+                let value = clipped(value, inner - 14);
+                panel.row(console, y, i == self.selected, label, &value, 6);
             }
             y += 1;
         }
@@ -756,6 +759,16 @@ impl SummaryScreen {
         let footer = format!("{up_down} choose   {confirm} start or change   Esc back");
         panel.footer(console, &footer);
     }
+}
+
+/// `text` cut to `width` cells, an ellipsis marking the cut: `Weapon focus (daggers and k…`.
+fn clipped(text: &str, width: i32) -> String {
+    let width = width.max(1) as usize;
+    if text.chars().count() <= width {
+        return text.to_string();
+    }
+    let head: String = text.chars().take(width - 1).collect();
+    format!("{head}…")
 }
 
 #[cfg(test)]
