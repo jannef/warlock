@@ -34,14 +34,15 @@ pub(super) fn magic_rarity(content: &Content) -> String {
             percent(affixes.rarity_weight(rarity), total.max(1))
         );
     }
-    let both = affixes.magic_both;
+    let [prefix, suffix, both] = affixes.magic_affixes;
+    let shapes = (prefix + suffix + both).max(1);
     let _ = writeln!(
         out,
         "\n| A magic item has | How often |\n|---|---:|\n\
          | a prefix | {} |\n| a suffix | {} |\n| a prefix and a suffix | {} |",
-        percent(100 - both, 200),
-        percent(100 - both, 200),
-        percent(both, 100)
+        percent(prefix, shapes),
+        percent(suffix, shapes),
+        percent(both, shapes)
     );
     let counts: u32 = affixes.rare_counts.iter().map(|(_, w)| *w).sum();
     out.push_str("\n| A rare item has | How often |\n|---|---:|\n");

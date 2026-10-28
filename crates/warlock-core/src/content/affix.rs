@@ -510,9 +510,8 @@ pub struct Affixes {
     ids: BTreeMap<String, usize>,
     /// Weights of normal, magic, and rare loot.
     pub rarity: [u32; 3],
-    /// The chance in percent that a magic item has both a prefix and a suffix (else one of
-    /// either).
-    pub magic_both: u32,
+    /// The weights of what a magic item has: a prefix only, a suffix only, or one of each.
+    pub magic_affixes: [u32; 3],
     /// How many affixes a rare item rolls, each with its weight.
     pub rare_counts: Vec<(u8, u32)>,
     /// The first words of rare names ("Grim").
@@ -607,6 +606,8 @@ struct RaritySpec {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct MagicSpec {
+    prefix: u32,
+    suffix: u32,
     both: u32,
 }
 
@@ -687,8 +688,11 @@ pub(super) fn parse<'a>(
     }
     let (file, magic_spec) = magic_spec.get(first_file)?;
     let err = |m: String| ContentError::new(file, m);
-    if magic_spec.both > 100 {
-        return Err(err("`magic.both` is a chance in percent, 0 to 100".into()));
+    let magic_affixes = [magic_spec.prefix, magic_spec.suffix, magic_spec.both];
+    if rarity[Rarity::Magic as usize] > 0 && magic_affixes.iter().all(|w| *w == 0) {
+        return Err(err(
+            "`magic`: the weights may not all be 0 while magic items are found".into(),
+        ));
     }
     let (file, rare_spec) = rare_spec.get(first_file)?;
     let err = |m: String| ContentError::new(file, m);
@@ -737,7 +741,7 @@ pub(super) fn parse<'a>(
 
     let mut affixes = Affixes {
         rarity,
-        magic_both: magic_spec.both,
+        magic_affixes,
         rare_counts,
         first_names: names_spec.first,
         second_names,
@@ -887,7 +891,9 @@ normal = 70
 magic = 25
 rare = 5
 [magic]
-both = 25
+prefix = 40
+suffix = 40
+both = 20
 [rare]
 affixes = [[3, 40], [4, 35]]
 [names]

@@ -1027,7 +1027,8 @@ mod tests {
                 && weapons.contains("| 6 cells | Thrown weapons | - |")
         );
         // Magic items: rarity, bases, affixes with their tiers, and the words of rare names.
-        assert!(text("magic-rarity.md").contains("| Rare | 6% |"));
+        assert!(text("magic-rarity.md").contains("| Rare | 2% |"));
+        assert!(text("magic-rarity.md").contains("| a prefix and a suffix | 20% |"));
         assert!(text("magic-bases.md").contains("| Long sword | weapons |"));
         let prefixes = text("magic-prefixes.md");
         assert!(prefixes.contains(

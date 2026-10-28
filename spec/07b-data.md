@@ -490,10 +490,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Magic items** (`data/affixes.toml`, optional; without it loot is always normal; M29, #149;
   §8 "Magic items"; the settings below live in that file and the affixes themselves in the
   `data/affixes/` directory, one a file, read in path order; see Definitions): `[rarity]` the
-  weights of normal, magic, and rare loot (70, 24, 6, not all
-  0); `[magic] both`, the chance in percent that a magic item has a prefix and a suffix (25; else
-  one of either, evenly); `[rare] affixes`, `[count, weight]` pairs for how many affixes a rare
-  item rolls (1 to 6; built in: 3 40, 4 35, 5 17, 6 8); `[names] first` (words, none empty) and
+  weights of normal, magic, and rare loot (85, 13, 2, not all
+  0); `[magic] prefix`, `suffix`, `both`, the weights of a magic item with a prefix only, a
+  suffix only, or one of each (40, 40, 20; not all 0 while magic items are found); `[rare]
+  affixes`, `[count, weight]` pairs for how many affixes a rare item rolls (1 to 6; built in:
+  3 50, 4 30, 5 15, 6 5); `[names] first` (words, none empty) and
   `[names.second]`, words for every kind of item (rare names: one of each, "Grim Bite"). Then
   `[[prefix]]`s and `[[suffix]]`es (ids unique across both): `id`, `name` ("Sharp", "of the
   Bear"), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,

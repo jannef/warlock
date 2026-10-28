@@ -566,7 +566,7 @@ fn credit_lets_the_player_leave_owing_a_little() {
     assert!(!w.state.current().shops[0].unpaid.is_empty(), "still owed");
 }
 
-/// A magic long sword, unidentified.
+/// A magic long sword, unidentified, set with no gem (one the store can afford).
 fn magic_sword(content: &Content) -> Stack {
     let sword = content.object_id("long_sword").expect("sword");
     let mut rng = Rng::stream(3, "connoisseur");
@@ -581,7 +581,7 @@ fn magic_sword(content: &Content) -> Stack {
                 crate::magic::LootGrade::Magic,
             )
         })
-        .find(|s| !s.is_identified())
+        .find(|s| !s.is_identified() && s.own_parts().is_none())
         .expect("a magic sword")
 }
 

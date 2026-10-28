@@ -11,10 +11,10 @@
 //! 2. **the count**: ammunition comes in stacks of [`AMMO`] (one draw); anything else is one;
 //! 3. **the rarity**: one draw over the weights of `[rarity]` in `data/affixes.toml` (those below
 //!    the grade asked for left out); none for what is never magic (a scroll), which is normal;
-//! 4. **how many affixes**: a magic item has both a prefix and a suffix by the chance
-//!    `magic.both` (one draw), else one of either (one draw); a rare one draws its count from
-//!    `rare.affixes` (one draw) and how many of them are prefixes (one draw, at most three of
-//!    each);
+//! 4. **how many affixes**: a magic item has a prefix, a suffix, or one of each by the weights
+//!    of `[magic]` (one draw); a rare one draws its count from `rare.affixes` (one draw) and how
+//!    many of them are prefixes (one draw, evenly among the splits that keep at most three of
+//!    each, so prefixes and suffixes are alike);
 //! 5. **each affix**, prefixes first: one draw among those that may roll on the item (its kind
 //!    in the affix's `bases`, something for the effect to change, a tier at the item level, and
 //!    an effect the item has no affix of yet), weighted by their `weight`; one draw for the tier
@@ -274,13 +274,9 @@ fn roll_magic(
             (prefixes, count - prefixes)
         }
         _ => {
-            if rng.chance(affixes.magic_both) {
-                (1, 1)
-            } else if rng.chance(50) {
-                (1, 0)
-            } else {
-                (0, 1)
-            }
+            let [prefix, suffix, both] = affixes.magic_affixes;
+            let shapes = [((1, 0), prefix), ((0, 1), suffix), ((1, 1), both)];
+            *pick_weighted(rng, &shapes).unwrap_or(&(1, 0))
         }
     };
     let mut rolled: Vec<Affix> = Vec::new();

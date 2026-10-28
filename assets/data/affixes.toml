@@ -3,8 +3,9 @@
 # pass: the numbers are to be tuned after playtesting.
 #
 # Rarity: a normal item has no affixes; a magic item has a prefix, a suffix, or one of each (most
-# have one); a rare item has up to three prefixes and three suffixes (usually three or four
-# affixes in all) and a two-word name. Magic and rare items are found unidentified: their rarity
+# have one); a rare item has up to three prefixes and three suffixes (three to six affixes, most
+# often three) and a two-word name. An item never has two affixes of one `category` (as Path of
+# Exile's mod groups; affixes/README.toml). Magic and rare items are found unidentified: their rarity
 # shows, their affixes do not, but their effects apply all the same.
 #
 # Names: a magic item is its prefix and suffix around its base, "Sharp long sword of the Bear"; a
@@ -15,19 +16,21 @@
 
 # How often loot is normal, magic, or rare (weights).
 [rarity]
-normal = 70
-magic = 24
-rare = 6
+normal = 85
+magic = 13
+rare = 2
 
-# The chance in percent that a magic item has both a prefix and a suffix; else it has one of
-# either, as likely one as the other.
+# What a magic item has (weights): a prefix only, a suffix only, or one of each.
 [magic]
-both = 25
+prefix = 40
+suffix = 40
+both = 20
 
 # How many affixes a rare item rolls: [count, weight] pairs. How many of them are prefixes is then
-# drawn evenly (at most three of each).
+# drawn evenly among the splits that keep at most three of each (four affixes: one, two, or three
+# prefixes, a third each), so prefixes and suffixes are alike.
 [rare]
-affixes = [[3, 40], [4, 35], [5, 17], [6, 8]]
+affixes = [[3, 50], [4, 30], [5, 15], [6, 5]]
 
 # The words of rare names: a first word, and a second for the kind of item.
 [names]
