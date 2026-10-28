@@ -582,7 +582,7 @@ fn quest_topics(w: &World, dir: Dir) -> Vec<String> {
 }
 
 #[test]
-fn quests_ask_for_an_alignment_and_the_good_offer_no_good_to_the_evil() {
+fn quests_ask_for_an_alignment_and_the_good_offer_theirs_to_the_evil_too() {
     let mut w = yard("#####\n#P@V#\n#####\n");
     // Neutral: the priest's alms and chore, not the blessing (Kind or better); the warlock's dark
     // errand wants Callous or worse.
@@ -593,13 +593,30 @@ fn quests_ask_for_an_alignment_and_the_good_offer_no_good_to_the_evil() {
         quest_topics(&w, Dir::W),
         ["quest-alms", "quest-chore", "quest-blessing"]
     );
-    // Evil: the priest scorns them and offers nothing that would do them good; a chore still.
+    // Evil: the priest scorns them but offers his alms all the same (#692); only the blessing's
+    // `requires_alignment` still shuts it.
     set_score(&mut w, -500);
-    assert_eq!(quest_topics(&w, Dir::W), ["quest-chore"]);
+    assert_eq!(quest_topics(&w, Dir::W), ["quest-alms", "quest-chore"]);
     assert_eq!(quest_topics(&w, Dir::E), ["quest-dark"]);
     // Asking about a quest not offered is refused.
-    run(&mut w, "ask:W:quest-alms");
+    run(&mut w, "ask:W:quest-blessing");
     assert_eq!(last(&w), "The priest knows nothing about that.");
+}
+
+#[test]
+fn an_evil_character_does_a_good_givers_quest_and_is_still_greeted_coldly() {
+    let mut w = yard("#####\n#P@V#\n#####\n");
+    set_score(&mut w, -500);
+    run(&mut w, "chat:W");
+    let cold = ["Begone, foul one.", "I will pray for you. From afar."];
+    assert!(cold.iter().any(|c| last(&w).contains(c)), "{}", last(&w));
+    run(&mut w, "ask:W:quest-alms ask:W:quest-alms");
+    assert!(said(&w, "Quest complete: Alms."));
+    // Toward good, in full: the score leaned the other way.
+    assert_eq!(score(&w), -500 + 40);
+    // Scorned still: the cold greeting stays.
+    run(&mut w, "chat:W");
+    assert!(cold.iter().any(|c| last(&w).contains(c)), "{}", last(&w));
 }
 
 #[test]

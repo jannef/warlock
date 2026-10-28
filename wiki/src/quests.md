@@ -12,8 +12,8 @@ they want, and the quest is yours at once, on your [quest log](#the-quest-log). 
 accepting and no declining (this is a roguelike: a quest you do not want simply waits in the log,
 costing nothing). Some
 quests are only offered once you have done another one for the same person, and some only to
-someone of the right [alignment](alignment.md): good folk offer an Evil or Wicked character no
-quest that would do them good. Helping someone is a little good.
+someone of the right [alignment](alignment.md). Good folk who greet an Evil or Wicked character
+coldly still offer them their quests. Helping someone is a little good.
 
 Talking about quests takes no time.
 

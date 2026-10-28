@@ -342,8 +342,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **What reads it**: good creatures **scorn** an Evil or Wicked character, evil creatures a
     Good or Saintly one (`Band::scorned_by`): they answer a chat with a cold line
     (`greet_evil`, `greet_good` in `data/dialogue.toml`) instead of their greeting and
-    one-liners, and offer no quest whose `alignment` is good (topics and quests they already
-    gave stay). A quest may name the bands it is offered to (`requires_alignment`). A good
+    one-liners, but offer their quests all the same (#692: a good giver's quests to an Evil
+    character too). A quest may name the bands it is offered to (`requires_alignment`). A good
     shopkeeper's prices move with the band, by a percent in data added to the player's favour
     (§7 "Shops": Saintly 10 % better, Evil 10 % worse, Wicked 20 % worse); the prices shown
     include it. **Alignment bars nothing** (#642): no class, talent, or ability asks for a
