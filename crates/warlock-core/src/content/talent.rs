@@ -990,6 +990,38 @@ fn one_degree() -> u16 {
     1
 }
 
+/// A talent's own active (spec §8 "Talents"; the abilities menu's Talents group), used as
+/// [`crate::action::Action::UseTalent`] with the one verb every ability use has
+/// (`use:second_wind`, `use:blood_magic`; #644).
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum TalentActive {
+    /// Second wind: hit points back at once, then Winded for a while.
+    SecondWind,
+    /// Blood magic: some hit points (never the last) for some mana.
+    BloodMagic,
+}
+
+impl TalentActive {
+    /// Every one, in menu order.
+    pub const ALL: &[TalentActive] = &[TalentActive::SecondWind, TalentActive::BloodMagic];
+
+    /// Its id: its effect's kind, and its replay text (`use:second_wind`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            TalentActive::SecondWind => "second_wind",
+            TalentActive::BloodMagic => "blood_magic",
+        }
+    }
+
+    /// The one with id `id`.
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.iter().copied().find(|a| a.id() == id)
+    }
+}
+
 /// The free blows a talent may switch on ([`crate::world::FreeBlows`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]

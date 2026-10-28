@@ -260,8 +260,8 @@ pub use summon::Summon;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
-    ResourceCost, SystemDef, SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef,
-    TreeId,
+    ResourceCost, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
+    TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,

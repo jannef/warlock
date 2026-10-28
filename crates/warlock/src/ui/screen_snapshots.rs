@@ -129,6 +129,15 @@ const CASES: &[Case] = &[
         size: (120, 44),
         ..BASE
     },
+    // Up wraps to the last row: the abilities' own keys at the very bottom (#644).
+    Case {
+        name: "controls-screen-bottom",
+        actions: "wait",
+        screen: Some("controls"),
+        keys: Some("Up"),
+        size: (120, 44),
+        ..BASE
+    },
     // Character creation.
     Case {
         name: "race-screen",
@@ -575,7 +584,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-blood-magic",
         seed: Some(4),
         character: Some("elf,female,wizard"),
-        actions: "xp:200000 talent:blood_magic levelup:auto drain:20 blood_magic",
+        actions: "xp:200000 talent:blood_magic levelup:auto drain:20 use:blood_magic",
         screen: Some("abilities"),
         ..BASE
     },

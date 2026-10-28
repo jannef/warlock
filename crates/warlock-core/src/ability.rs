@@ -27,7 +27,7 @@ use crate::action::Action;
 use crate::alignment::Requirement;
 use crate::content::{
     ActionKind, ActiveAim, ClassActive, Content, Offer, ResourceCost, ResourceId, SignActive,
-    SkillDef, SpellId, StatusId, TalentEffect, WeaponAbilityId, WeaponSkillId,
+    SkillDef, SpellId, StatusId, TalentActive, TalentEffect, WeaponAbilityId, WeaponSkillId,
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
@@ -81,11 +81,11 @@ pub enum Ability {
     /// unavailable while there is nothing to treat ([`crate::heal::treatable`]). It asks which
     /// ailment when there are several ([`Aim::Ailment`]).
     Heal,
-    /// Catch a second wind (spec §8 "Talents"): [`Action::SecondWind`], the active of the
+    /// Catch a second wind (spec §8 "Talents"): [`Action::UseTalent`], the active of the
     /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
     /// unavailable while its cooldown (Winded) lasts.
     SecondWind,
-    /// Blood magic (spec §8 "Talents"): [`Action::BloodMagic`], the active of the Blood magic
+    /// Blood magic (spec §8 "Talents"): [`Action::UseTalent`], the active of the Blood magic
     /// talent (a talent with the `blood_magic` effect): hit points given for mana. Had by
     /// whoever holds it; usable whenever they have it (the rules refuse, taking no time, when
     /// it would cost their last hit point or their mana is full).
@@ -707,8 +707,8 @@ impl Ability {
             (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
             // The first thing there is to treat; the menu names one when there are several.
             (Ability::Heal, _) => Some(Action::Heal(None)),
-            (Ability::SecondWind, _) => Some(Action::SecondWind),
-            (Ability::BloodMagic, _) => Some(Action::BloodMagic),
+            (Ability::SecondWind, _) => Some(Action::UseTalent(TalentActive::SecondWind)),
+            (Ability::BloodMagic, _) => Some(Action::UseTalent(TalentActive::BloodMagic)),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::Steal, Some(dir)) => Some(Action::Steal(dir)),

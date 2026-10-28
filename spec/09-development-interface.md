@@ -76,8 +76,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   bring a creature to the current level now, whatever its cap and chance (§7 "Danger levels";
   refused at danger 0; no time); `talent:ID[:CHOICE]` takes a talent (an id in
   `data/talents/`, with its choice) when a level's pick is due (§8 "Talents"; every other
-  action is refused until it is made), `advance:SKILL` spends a level's skill roll (none until
-  #230), the dev `levelup:auto` spends every choice due with the first the player may take, and
+  action is refused until it is made), `advance:SKILL` spends one of a level's skill rolls on a
+  trained skill (§8 "Skills"), the dev `levelup:auto` spends every choice due with the first the player may take, and
   the dev `xp:N` grants N experience with the levels it brings; in scripts, `ACTION*N` repeats an
   action, e.g. `wait*10`); `hash` is the
   FNV-1a 64 hash of the

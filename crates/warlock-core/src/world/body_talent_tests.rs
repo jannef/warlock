@@ -80,7 +80,7 @@ fn fast_healer_heals_resting_half_again_as_fast() {
 #[test]
 fn second_wind_gives_hit_points_back_then_winds() {
     let mut w = world();
-    run(&mut w, "second_wind");
+    run(&mut w, "use:second_wind");
     assert_eq!(last(&w), "You have no second wind to catch.");
     assert!(!(w.perception().abilities().iter()).any(|a| a.ability == Ability::SecondWind));
 
@@ -93,7 +93,7 @@ fn second_wind_gives_hit_points_back_then_winds() {
     assert_eq!(own(&w).unavailable, None);
     w.player_mut().hp = 1;
     let turn = w.state.turn;
-    run(&mut w, "second_wind");
+    run(&mut w, "use:second_wind");
     assert!(said(&w).contains(&"You catch your second wind.".to_string()));
     assert_eq!(w.state.player().hp, 9, "1 per level, at least 8");
     assert_eq!(w.state.turn, turn + 1, "it takes a turn");
@@ -101,7 +101,7 @@ fn second_wind_gives_hit_points_back_then_winds() {
     assert!(suffers(&w, player, "winded"));
     let winded = status(&w, "winded");
     assert_eq!(own(&w).unavailable, Some(Unavailable::While(winded)));
-    run(&mut w, "second_wind");
+    run(&mut w, "use:second_wind");
     assert_eq!(last(&w), "You are still winded.");
     assert_eq!(w.state.player().hp, 9);
     assert_eq!(w.state.turn, turn + 1, "refused: no time");
