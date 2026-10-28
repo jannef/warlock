@@ -285,6 +285,24 @@ impl Effects {
             .filter(|&(_, bonus)| bonus != 0)
     }
 
+    /// What its statuses add on top of a held shield's Defence (Walled).
+    pub fn shield(&self, content: &Content) -> i32 {
+        (self.0.iter())
+            .map(|e| content.status(e.status).combat.shield)
+            .sum()
+    }
+
+    /// An attack's `price` as its statuses make it, on top of [`Effects::slow`]: each
+    /// multiplies it by its `attack_cost` percent, rounded up (Walled).
+    pub fn slow_attack(&self, content: &Content, price: i64) -> i64 {
+        (self.0.iter())
+            .map(|e| i64::from(content.status(e.status).attack_cost))
+            .filter(|&cost| cost != 100)
+            .fold(price, |price, cost| {
+                price.saturating_mul(cost).saturating_add(99) / 100
+            })
+    }
+
     /// `price` as its statuses make it: each multiplies it by its `cost` percent, rounded up.
     pub fn slow(&self, content: &Content, price: i64) -> i64 {
         (self.0.iter())

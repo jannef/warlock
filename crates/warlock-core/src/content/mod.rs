@@ -271,8 +271,8 @@ pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use wand::{MAX_WAND_CHARGES, Wand};
 pub use weapon_ability::{
-    ExtraDice, FreeBlowKind, MAX_ABILITY_RANK, On, Trigger, WeaponAbility, WeaponAbilityId,
-    WeaponDoes,
+    Active, ActiveAim, Categories, ENERGY_PERCENT, ExtraDice, FreeBlowKind, MAX_ABILITY_RANK, On,
+    STAMINA, Trigger, WeaponAbility, WeaponAbilityId, WeaponDoes,
 };
 pub use weapon_skill::{
     Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, Style, TwoWeapons, WeaponSkillDef,

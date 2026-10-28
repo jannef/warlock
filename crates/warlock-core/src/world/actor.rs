@@ -645,7 +645,7 @@ impl Actor {
                 Category::Dodge => (category, talents.stance_dodge(self.stance, bonus)),
                 _ => (category, bonus),
             });
-        Defence::from_bonuses(
+        let defence = Defence::from_bonuses(
             std::iter::once((Category::Dexterity, dexterity))
                 .chain(worn)
                 .chain(natural)
@@ -653,7 +653,14 @@ impl Actor {
                 .chain(magic.into_iter().filter(|&(_, b)| b != 0))
                 .chain(stance)
                 .chain(self.effects.defence(content)),
-        )
+        );
+        // A status that adds to the shield (Walled, Shield wall's) adds on top of it, while one
+        // is held.
+        match self.effects.shield(content) {
+            0 => defence,
+            _ if defence.bonus(Category::Shield) <= 0 => defence,
+            more => defence.plus(Category::Shield, more),
+        }
     }
 
     /// Its Protection (spec §8 "Combat"): the damage it soaks off every physical hit, the sum

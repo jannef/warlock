@@ -1,0 +1,14 @@
+[[weapon_ability]]
+id = "staff_sweep"
+name = "Staff sweep"
+description = "Sweep your staff round you, striking every foe at your side."
+skills = ["staff_fighter"]
+rank = 7
+kind = "active"
+aim = "nothing"
+stamina = 5
+energy = { action = "melee", percent = 150 }
+systems = ["weapon_abilities", "styles", "stamina"]
+[weapon_ability.effect]
+kind = "sweep"
+to_hit = -2

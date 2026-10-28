@@ -26,6 +26,8 @@
 #                 (default false: it sits at 0)
 #   ended         what the player is told when it ends ("Your rage subsides."; needs
 #                 ends_at_zero)
+#   lacking       how the abilities menu greys out an ability it pays for while too little is
+#                 held ("you are short of breath"; default: "not enough stamina")
 #   status        a status (status.toml) its holder suffers while they hold it: it begins as the
 #                 resource is granted and ends with it (and the resource with the status, if
 #                 something cures that), so it must not `eases` by itself (rage: Raging)
@@ -100,3 +102,4 @@ short = "Sta"
 max = 10
 max_from = { stat = "toughness", per_levels = 10, least = 5 }
 regenerates = 12
+lacking = "you are short of breath"

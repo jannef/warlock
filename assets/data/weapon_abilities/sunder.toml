@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "sunder"
+name = "Sunder"
+description = "A heavy blow that splits armour: hide, shell, and plate do not soften it."
+skills = ["axes", "maces", "polearms"]
+rank = 9
+kind = "active"
+aim = "direction"
+stamina = 4
+energy = { action = "melee", percent = 125 }
+systems = ["weapon_abilities", "weapon_skills", "stamina", "protection"]
+[weapon_ability.effect]
+kind = "ignore_protection"

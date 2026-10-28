@@ -1,0 +1,8 @@
+[[talent]]
+id = "practised_technique"
+name = "Practised technique"
+tree = "weaponcraft"
+description = "Your weapon feats have become second nature: they take you less time."
+needs = { any_weapon_skill = { roles = ["melee", "unarmed", "launcher", "thrown", "shield_block"], rank = 7 } }
+effects = [{ kind = "weapon_energy_percent", value = -25 }]
+systems = ["weapon_abilities", "speed"]

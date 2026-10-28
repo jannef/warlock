@@ -2,7 +2,10 @@
 id = "armour_breaker"
 name = "Armour-breaker"
 tree = "might"
-description = "Your best blows find the gaps: a critical of yours drives through hide, shell, and plate better."
+description = "Your best blows find the gaps: a critical of yours drives through hide, shell, and plate better, and sundering armour or finding its gaps costs you less breath."
 needs = { any_weapon_skill = { of = ["axes", "maces", "polearms"], rank = 7 } }
-effects = [{ kind = "critical_penetration", value = 2 }]
-systems = ["protection", "combat"]
+effects = [
+    { kind = "critical_penetration", value = 2 },
+    { kind = "weapon_stamina", value = 2, abilities = ["sunder", "gap_shot"] },
+]
+systems = ["protection", "combat", "stamina"]

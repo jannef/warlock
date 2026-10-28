@@ -26,8 +26,8 @@
 use crate::action::Action;
 use crate::alignment::Requirement;
 use crate::content::{
-    ActionKind, ClassActive, Content, Offer, ResourceCost, ResourceId, SignActive, SkillDef,
-    SpellId, StatusId, TalentEffect, WeaponAbilityId, WeaponSkillId,
+    ActionKind, ActiveAim, ClassActive, Content, Offer, ResourceCost, ResourceId, SignActive,
+    SkillDef, SpellId, StatusId, TalentEffect, WeaponAbilityId, WeaponSkillId,
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
@@ -97,7 +97,11 @@ pub enum Ability {
     /// A weapon ability (spec §8 "Weapon skills", "Fighting styles"; `data/weapon_abilities/`),
     /// listed under the weapon skill or style named first whose rank teaches it ("Long blades:
     /// Deep cut"). Had by whoever's ranks teach it ([`Actor::weapon_abilities`]); a triggered one
-    /// fires by itself and is never used ([`Unavailable::FiresByItself`]).
+    /// fires by itself and is never used ([`Unavailable::FiresByItself`]). An active one (#564)
+    /// is used as [`Action::Act`] (aimed in a direction) or [`Action::Cast`] (aimed at nothing or
+    /// a cell; the rules read a `use:ID` that names no spell as an active), for its stamina and
+    /// time; unavailable while what the actor holds is not for it ([`Unavailable::NotSoHeld`])
+    /// or its stamina is short ([`Unavailable::Short`]).
     Weapon(WeaponSkillId, WeaponAbilityId),
     /// Lower or raise the lantern's hood (spec §5 "Light sources"; #235): [`Action::HoodLantern`].
     /// Listed with what the player carries, the lantern; the Hooded light talent (design §7.5)
@@ -231,6 +235,10 @@ pub enum Unavailable {
     NothingToTreat,
     /// A triggered weapon ability: it fires by itself, never chosen.
     FiresByItself,
+    /// An active weapon ability while the actor does not hold what it is for: a weapon of its
+    /// skill, the grip of its style, a shield for shield blocking's ("your hands are not so
+    /// held").
+    NotSoHeld,
 }
 
 impl Unavailable {
@@ -248,9 +256,13 @@ impl Unavailable {
                 format!("you are {}", content.status(status).name.to_lowercase()).into()
             }
             Unavailable::Short(resource) => {
-                let name = content.resource(resource).name.to_lowercase();
-                format!("not enough {name}").into()
+                let def = content.resource(resource);
+                match &def.lacking {
+                    Some(words) => words.clone().into(),
+                    None => format!("not enough {}", def.name.to_lowercase()).into(),
+                }
             }
+            Unavailable::NotSoHeld => "your hands are not so held".into(),
         }
     }
 
@@ -264,6 +276,7 @@ impl Unavailable {
             Unavailable::NotHere => "not_here".into(),
             Unavailable::NothingToTreat => "nothing_to_treat".into(),
             Unavailable::FiresByItself => "fires_by_itself".into(),
+            Unavailable::NotSoHeld => "not_so_held".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
                 format!("short:{}", content.resource(resource).id).into()
@@ -571,6 +584,11 @@ impl Ability {
             Ability::Spell(spell) if aimed(content, spell) => Aim::Cell,
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
+            Ability::Weapon(_, id) => match content.weapon_ability(id).active.map(|a| a.aim) {
+                Some(ActiveAim::Direction) => Aim::Direction,
+                Some(ActiveAim::Cell) => Aim::Cell,
+                Some(ActiveAim::Nothing) | None => Aim::Nothing,
+            },
             Ability::Class(_)
             | Ability::Skill(_)
             | Ability::SecondWind
@@ -578,8 +596,7 @@ impl Ability {
             | Ability::HoodLantern
             | Ability::Forage
             | Ability::Pray
-            | Ability::Drink
-            | Ability::Weapon(..) => Aim::Nothing,
+            | Ability::Drink => Aim::Nothing,
             Ability::Temper => Aim::Item,
             Ability::ThrowVoice => Aim::Cell,
             Ability::Heal => Aim::Ailment,
@@ -677,7 +694,17 @@ impl Ability {
                 None
             }
             (Ability::Spell(spell), _) => Some(Action::Cast(spell_name(content, spell)?, None)),
-            (Ability::Skill(_) | Ability::ThrowVoice | Ability::Weapon(..), _) => None,
+            (Ability::Weapon(_, id), dir) => {
+                let ability = content.weapon_ability(id);
+                match (ability.active.map(|a| a.aim), dir) {
+                    (Some(ActiveAim::Direction), Some(dir)) => {
+                        Some(Action::Act(ability.id.clone(), dir))
+                    }
+                    (Some(ActiveAim::Nothing), _) => Some(Action::Cast(ability.id.clone(), None)),
+                    _ => None,
+                }
+            }
+            (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
             // The first thing there is to treat; the menu names one when there are several.
             (Ability::Heal, _) => Some(Action::Heal(None)),
             (Ability::SecondWind, _) => Some(Action::SecondWind),
@@ -720,6 +747,11 @@ impl Ability {
                 Some(Action::Cast(spell_name(content, spell)?, Some(at)))
             }
             Ability::Class(active) if active.aims_cell() => Some(Action::UseAt(active, at)),
+            Ability::Weapon(_, id) => {
+                let ability = content.weapon_ability(id);
+                (ability.active.map(|a| a.aim) == Some(ActiveAim::Cell))
+                    .then(|| Action::Cast(ability.id.clone(), Some(at)))
+            }
             Ability::Sign(_)
             | Ability::Spell(_)
             | Ability::Class(_)
@@ -732,7 +764,6 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
-            | Ability::Weapon(..)
             | Ability::HoodLantern
             | Ability::Pray
             | Ability::Temper
@@ -779,7 +810,7 @@ impl Ability {
                 .filter(|&cooldown| actor.effects.has(cooldown))
                 .map(Unavailable::While),
             Ability::Skill(_) => Some(Unavailable::NotYet),
-            Ability::Weapon(..) => Some(Unavailable::FiresByItself),
+            Ability::Weapon(_, id) => weapon_unavailable(actor, content, id),
             Ability::Heal => (crate::heal::treatable(actor, content).is_empty())
                 .then_some(Unavailable::NothingToTreat),
             Ability::ThrowVoice
@@ -831,6 +862,32 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
+}
+
+/// Why `actor` cannot use weapon ability `id` now: a triggered one fires by itself; an active
+/// one while what it holds is not for it, while its cooldown lasts (none in the catalogue),
+/// while it holds less stamina than the ability costs it, and while a status blocks the action
+/// it is.
+fn weapon_unavailable(
+    actor: &Actor,
+    content: &Content,
+    id: WeaponAbilityId,
+) -> Option<Unavailable> {
+    let Some(active) = content.weapon_ability(id).active else {
+        return Some(Unavailable::FiresByItself);
+    };
+    if !actor.holds_for(content, id) {
+        return Some(Unavailable::NotSoHeld);
+    }
+    let cooldown = active.cooldown.filter(|&s| actor.effects.has(s));
+    let stamina = content.resource_id(crate::content::STAMINA);
+    let cost = stamina.map(|resource| ResourceCost {
+        resource,
+        amount: actor.weapon_stamina(content, id),
+    });
+    (cooldown.map(Unavailable::While))
+        .or_else(|| short_of(actor, cost?))
+        .or_else(|| (actor.effects.blocking(content, active.action)).map(Unavailable::While))
 }
 
 /// Whether `spell` asks for a cell before it is cast: anything but a spell on oneself.
