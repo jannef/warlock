@@ -1183,7 +1183,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the attack's end), its Shield (`blocked`), or its Dexterity or Dodge (`dodged`);
     `both_hands_hit` (both blows of a two-weapon attack hit one living target, once an attack;
     a shield bash is no second hand); `approaches` (a hostile steps up beside the actor, the
-    player's step too). Deciding never draws: a fight with no qualifying rank keeps its draws.
+    player's step too); `spell_blocked` (a hostile's spell that rolls an attack against the
+    actor's Defence, a bolt, a ray, or a touch, a scroll's or a wand's too, missed by its
+    Shield). Deciding never draws: a fight with no qualifying rank keeps its draws.
   - **Effects** (closed): `free_blow` (switches a free blow on while the actor wields a weapon
     of the skill or fights in the style: Brace's gatekeeper, Riposte, Cleaving sweep, Great
     cleave; `World::free_blows_of` folds them in, so a riposte from the style and one from a
@@ -1192,13 +1194,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     soaked, after the blows), `free_shot` (Point-blank: a free shot with the missile weapon and
     the ammunition ready, else a throw of what is ready to throw; nothing without, no draw),
     `parry_missiles` (Measure: Parry counts against shots and throws, which it otherwise never
-    does, "Combat" §8c).
+    does, "Combat" §8c), `reflect_spell` (Spell reflection: the blocked spell is cast again
+    from the actor's cell at its caster, as the caster cast it, its caster level, lifted cap,
+    to-hit, and riders, rolling its own attack against the caster's Defence; no mana spent
+    again, nothing for the actor; at most `per_turn` (1) a turn of the actor's, and a reflected
+    spell is never reflected again. Bursts, cones, lines, and hexes roll no attack and are never
+    reflected, nor a miss by Parry or Dexterity. Creature spells are still intents, so today it
+    turns the player's spells back at them).
   - **The catalogue** (data; ranks first guesses): Deep cut (blades 5: a big hit bleeds a
     degree more), Crushing blow (axes, maces, polearms 5: a big hit staggers), Brace (spears,
     staves 5), Point-blank (bows, crossbows, slings, thrown 5), Stunning bash (shield bashing 5:
     a bash that hits staggers), Riposte (Duelist 4), Measure (Duelist 10), Rend (Twin Blades 4),
     Cleaving sweep (Great Weapon 4) and Great cleave (10), Staggering block (Sword and Board 4: a
-    parried or blocked melee attack staggers its striker), Pinning shot (Marksman 4: a critical
+    parried or blocked melee attack staggers its striker) and Spell reflection (10), Pinning shot (Marksman 4: a critical
     shot pins 1d3 actions), Stunning fist (Brawler 4: a critical staggers), Hit and run
     (Skirmisher 4: a throw that hits makes the thrower Light-footed), Trip (Staff Fighter 4: a
     critical pins an action); the caster styles' (#571), fired by a spell that rolls to hit:
@@ -1213,7 +1221,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lists each under *Weapon skills* after the skill it is listed under ("Long blades: Deep
     cut"), greyed "fires by itself", never usable (`Ability::Weapon`,
     `Unavailable::FiresByItself`); Rend says "Your blades rend the orc.", Staggering block "The
-    orc staggers from your shield.", a free blow or shot as one is. Never a rank threshold, a
+    orc staggers from your shield.", Spell reflection "Your shield turns the scorching ray back
+    at the shaman." ("The champion's shield turns your scorching ray back at you."), a free blow or shot as one is. Never a rank threshold, a
     chance, or a creature's abilities. The dev action `rank:SKILL:N` sets a rank (§6, replays).
   - **Actives** (#564; the design §4.5, §4.6; `world/weapon_active.rs`): used from the abilities
     menu (`Ability::Weapon`, `Source::WeaponSkill`; never a key of their own), aimed as `aim`

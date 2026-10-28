@@ -24,7 +24,9 @@
 #   trigger       what it fires on, one or a list: hit, critical, big_hit, kill (the actor's
 #                 blow, shot, or throw: the attack's skill and style count), struck, parried,
 #                 blocked, dodged (an attack on the actor: what it holds counts; parried,
-#                 blocked, and dodged are melee attacks), both_hands_hit (both blows of a
+#                 blocked, and dodged are melee attacks), spell_blocked (a hostile's spell
+#                 that rolls an attack on the actor, a bolt, a ray, or a touch, misses by its
+#                 Shield: what it holds counts), both_hands_hit (both blows of a
 #                 two-weapon attack hit one foe, which lives), approaches (a hostile steps up
 #                 beside the actor: its missile weapon or what it has ready to throw counts). A
 #                 switch effect (free_blow, parry_missiles) has none
@@ -47,6 +49,10 @@
 #                                 throw of what it has ready to throw, at the one who stepped
 #                                 up; nothing without
 #                 parry_missiles  Parry counts against shots and throws too
+#                 reflect_spell   (on spell_blocked) `per_turn`: the spell is cast back at its
+#                                 caster from the actor's cell, as the caster cast it (its own
+#                                 attack roll, no mana spent again), at most `per_turn` times a
+#                                 turn of the actor's; a reflected spell is never reflected again
 #                 An active's (each its blow's own message; the aim and action in brackets):
 #                 reach_blow      (direction, melee) `reach` (2 to 4): a blow at the first foe
 #                                 that far along the direction, the cells between empty and

@@ -156,6 +156,7 @@ mod quick_leave;
 mod racial;
 mod rage;
 mod read;
+mod reflect;
 mod resource;
 mod rest;
 mod reveal;
@@ -519,6 +520,8 @@ pub struct World {
     /// Statuses with `per_action` given to an actor during its own action (not saved): that
     /// action does not ease them (`weapon_ability.rs`).
     fresh: Vec<(ActorId, StatusId)>,
+    /// Spell reflection's counts a turn and the reflector chosen (not saved; `reflect.rs`).
+    reflection: reflect::Reflections,
     /// The player's weapon active under way (not saved): what its attack does beyond a plain
     /// one, read where that is resolved (`weapon_active.rs`).
     technique: weapon_active::Technique,
@@ -946,6 +949,7 @@ impl World {
             stood_on,
             acting: Some(player),
             fresh: Vec::new(),
+            reflection: Default::default(),
             technique: weapon_active::Technique::default(),
         }
     }
