@@ -263,8 +263,9 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
   branch's that fit a fixture, `roll_contents`, the mimic draw: a floor chest's draws); the
   `gold.heaps` dice, per heap a cell and `gold.dice` × `each` coins of the shops' currency (else
   `gold_coin`); the `gems` dice, per gem a cell and `gem::roll` at the item level. Free cells:
-  the room's plain floor without stairs, light, trap, lock, or chest; chests take theirs away,
-  heaps and gems share. A room too small for its chests holds what fits.
+  the room's plain floor without stairs, light, trap, lock, chest, or creature (a floor chest's
+  mimic); a chest's cell also has nothing lying on it (#661: its terrain is no floor, so a pile
+  there would lie on a wall); chests take theirs away, heaps and gems share. A room too small for its chests holds what fits.
 - The floor's population keeps out of it (`population.rs`), and `make` refuses one a patrol
   walks through, as for a den or a hoard. Floor chests (`chest::fill`) may still land inside.
 - **The hint** (`world/treasury.rs`, `arrive_lines`): in `World::travel` after the `pervade`

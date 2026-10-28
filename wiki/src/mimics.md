@@ -5,7 +5,8 @@ coffer, a hutch, or a strongbox is a **mimic**: a thing that sits in the dark lo
 chest until something touches it, and grows bigger the longer it sits. It looks exactly like a
 real chest of its kind, in sight and in memory, and look mode says the same words of it.
 
-A chest laid on a floor is a mimic by a small chance of its band. A
+A chest laid on a floor is a mimic by a small chance of its band, but never in a sanctuary,
+which creatures shun. A
 mimic is always of the floor's level, as a chest is, and is named by the same ten bands: a
 **mimicling** passes for a coffer, a **young mimic** for a chest, an **eldest mimic** for a
 gilded ark. It carries exactly what the chest would have held, and drops it all, whole, when it

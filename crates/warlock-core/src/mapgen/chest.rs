@@ -97,7 +97,10 @@ pub(super) fn lay(
     // The mimic draw (docs/design/chests-and-treasure.md §5.3): a mimic of the floor's level
     // stands in for the chest, carrying what it would have held.
     let mimic = rng.chance(u32::from(band.mimic));
-    if let Some(creature) = content.mimic_at(level).filter(|_| mimic) {
+    // Never in a room creatures shun (a sanctuary): the chest stays a chest there.
+    let shunned =
+        (template.rooms.iter()).any(|r| r.contains(at) && content.room_effect(r.effect).shunned);
+    if let Some(creature) = content.mimic_at(level).filter(|_| mimic && !shunned) {
         template.locks.remove(&at);
         template.traps.remove(&at);
         template.creatures.push(CreatureSpawn {

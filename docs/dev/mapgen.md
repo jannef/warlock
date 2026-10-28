@@ -29,7 +29,13 @@ floor in five by default; `docs/dev/chests.md`), then its treasure rooms' chests
 gems (`mapgen/treasury.rs`, stream `treasure/<level id>`; `docs/dev/special-rooms.md`; a
 greater treasure room is a box with no way in but its breach, which `connect::validate` lets go
 unreached), then every creature's gear (`gear::arm`,
-stream `gear/<level id>`). Outside generation, a rolled quest draws its target from the keyed
+stream `gear/<level id>`). Each step after the first lays things only where nothing earlier
+lies, stands, or is trapped, and nothing it lays turns a cell with something on it into
+terrain that cannot hold it (a chest, a feature, a wall): `mapgen/tests.rs`'s
+`nothing_on_a_wall` (objects and creatures on walkable terrain, one creature a cell, none in a
+room creatures shun; chests on chest terrain with nothing on them; traps and locks on ground, a
+door, or a chest), checked by `every_depth_is_valid_and_deterministic` and its own proptest
+`nothing_lies_or_stands_on_a_wall` (#661). Outside generation, a rolled quest draws its target from the keyed
 stream `quest/<quest id>` (`Rng::quest`), once, as it is given, never kept (#422,
 `docs/dev/quests.md`).
 

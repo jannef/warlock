@@ -324,7 +324,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     what its band's loot table rolls (§8 "Magic items" "Chest loot"). Draws per chest: its cell,
     the lock, the trap and its kind, the contents, and the mimic draw (`mimic` percent): a mimic
     of the floor's level stands there instead, disguised, carrying exactly the contents, its
-    lock and trap dropped and nothing more drawn (§8 "Mimics").
+    lock and trap dropped and nothing more drawn (§8 "Mimics"); never in a room creatures shun
+    (a sanctuary), where the chest stays a chest whatever the draw.
   - **Level files** place chests on the `chest` terrain: `chest = "kist"` (that band's least
     level) or `chest = 7` (a level; default the level's `item_level`), `locked = true` or `lock =
     "id"` and `lock_difficulty` as on a door, and `objects` for what it holds (food in it is made
