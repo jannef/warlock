@@ -29,7 +29,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   drow, `"stone"`, dwarves and duergar, or `"traps"`, kobolds (hidden traps only); default none;
   §8 "Searching"), `search` (points added to searching and noticing alike, −10 to 10, default
   0; elves and kobolds 2), `skills` (the skills it trains,
-  by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `class_skill` (dice added
+  by skill id: dice or a number, every result 0 to 100; §8 "Skills"), `optional_skills` (as a
+  class's, below, rolled after the class's; the drow's Sneak attack, 40 % `2d4`; #682),
+  `class_skill` (dice added
   to one of the class's skills, picked when the character is made; default none), `rolls` (skill
   rolls each level gives beyond the class's, 0 to 10, default 0; humans 1), `hunger` (how
   much the character needs to eat, in percent of a human, 10 to 1000, default 100; §8 "Hunger":
@@ -173,10 +175,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   gives starting ranks in weapon skills and fighting styles, and, with a level table, class
   abilities and bonus talents. Skills: a few it
   is known for (`2d6+10`) and a few more (`2d4+4`); the full table is in the wiki (Skills), e.g.
-  the thief open lock, steal, stealth, and tumble well, appraise, detect traps, disable device,
-  escape artist, negotiation, search, and spot a little (the thief alone of the classes starts
-  trained in detect traps, #663); the ranger spot, survival, and woodcraft well, athletics, handle
-  animal, listen, and swim a little; the wizard concentration, knowledge, and spellcraft well,
+  the thief open lock, sneak attack, steal, stealth, and tumble well, appraise, detect traps,
+  disable device, escape artist, initiative, negotiation, search, and spot a little (the thief
+  alone of the classes starts trained in detect traps, #663, and in sneak attack, #682); the
+  ranger initiative, spot, survival, and woodcraft well, athletics, handle animal, listen, and
+  swim a little (the monk initiative well too; the bard, warrior, and barbarian a little); the wizard concentration, knowledge, and spellcraft well,
   decipher script a little; the commoner athletics and handle animal a
   little. Each class also has two to five optional skills, modest ones at `2d4` (10 to 35 %;
   the thief balance, bluff, and listen; the warrior heal, metalcraft, and survival; the commoner

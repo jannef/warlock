@@ -37,9 +37,19 @@ are rolled by `character::optional_skills` from their own stream,
 nothing), so no other roll moves; the result is just the actor's `Skills`, saved and hashed as
 before, and a replay needs no new field (the roll is a function of the seed and spec). Classes
 that have them start with other skills on old seeds, so old replays' hashes change.
-`ClassDef::trains` (the level-up roll's +1) stays the guaranteed list. Tests:
-`content/class.rs` (parsing, refusals), `character.rs`
-(`optional_skills_come_by_chance_and_never_move_another_roll`). Rules read a benefit through `Actor::skill_effect`
+`ClassDef::trains` (the level-up roll's +1) stays the guaranteed list. A race's optional skills
+(#682, `RaceDef::optional_skills`: the drow's Sneak attack) share the type and the parser
+(`content/skill.rs::optional_skills`, "one of the race's skills" refused) and the stream: the
+class's are rolled first, then the race's, so no class's draws move and a race without any
+draws nothing more. Tests: `content/class.rs`, `content/race.rs` (parsing, refusals),
+`character.rs` (`optional_skills_come_by_chance_and_never_move_another_roll`,
+`a_drow_may_start_with_sneak_attack_and_no_other_characters_skills_move`).
+Sneak attack's `sneak_dice` is read in `World::sneak_dice` and `surprise` (the craft) in
+`World::startle`'s `craft`; Initiative's `initiative` in `World::startle` and `surprise_ease` in
+`World::status_cost` (`world/ambush.rs`, `world/surprise.rs`; `docs/dev/surprise.md`). Their uses:
+`sneak_attack` (in `ambushed`, where the dice land; shared with the stats as
+`StatUse::SneakAttack`, a Dexterity mark) and `surprise` (in `startle`, the player's check made,
+whatever came of it). Rules read a benefit through `Actor::skill_effect`
 (the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in

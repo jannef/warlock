@@ -29,7 +29,7 @@ rapid shot (level 12) grants it, full, and you keep it for good. A shot you loos
 hold 2 focus spends them and takes 10 % less time; a volley (level 50) costs 6. Focus comes
 back while you act, but not while you rest.
 
-The thief's **openings** are in too: a thief of level 32 (Improved sneak attack) holds them,
+The thief's **openings** are in too: every thief holds them from level 1 (Sneak attack),
 starting at 0. Every sneak attack that hits gives one, up to 5, and one slips away every 20
 base turns (2 minutes); empty, they stay with you. At level 60 Master thief's **finisher** (an
 ability, aimed in a direction) spends all 5 for a melee blow that is a critical whenever it

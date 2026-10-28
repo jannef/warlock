@@ -345,9 +345,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     draws); a free blow draws only as the blow it is, so fights without free blows switched on,
     or whose triggers do not fire, keep their draws and hashes.
 - **Surprise and sneak attacks** (`world/surprise.rs`, `data/surprise.toml`; #681, design
-  `docs/design/surprise-and-sneak-attacks.md` §3; `docs/dev/surprise.md`): being caught
-  unawares, both ways round. The Sneak attack and Initiative skills, the thief's rework, slipping
-  past, and the unaware mark come in later slices (#682–#688).
+  `docs/design/surprise-and-sneak-attacks.md` §3–§5; `docs/dev/surprise.md`): being caught
+  unawares, both ways round, and the Sneak attack and Initiative skills (#682). The thief's
+  rework, slipping past, and the unaware mark come in later slices (#683–#688).
   - **Unaware** (`World::unaware`, the one definition, asked of every attack; no draw): a
     creature is unaware of an actor when it hunts no one it has seen (`Mind::last_seen` unset)
     and its eyes do not see the actor's cell now (creature sight, `World::sees_now`); a sleeper
@@ -363,24 +363,46 @@ developer notes (CLAUDE.md, `docs/dev/`).
     springing under the one it springs on (a creature knows no trap; the player one they have
     not found; never a bystander). A sleeper or a disguised mimic is Surprised with no check;
     anyone else makes the **initiative check**: 2d12 + Dexterity modifier (+ the checks' talent
-    bonus, + Wary's `initiative_bonus`) against `difficulty` (13). Failed, it suffers
-    **Surprised** (`data/status.toml`: `per_action`, one degree, `refresh`, `cost = 150`).
+    bonus, + Wary's `initiative_bonus`, + its Initiative skill's `initiative`) against
+    `difficulty` (13) plus the attacker's **craft** (its Sneak attack skill's `surprise`, + its
+    talents' `surprise_difficulty`: the thief's Sneak attack, 2; none for a trap). Failed, it
+    suffers **Surprised** (`data/status.toml`: `per_action`, one degree, `refresh`,
+    `cost = 150`). A check the player makes marks Initiative (`surprise`, 100 %).
   - **Surprised**: flat-footed, Dexterity and Dodge count nothing toward its Defence (positive
     bonuses only, `Target::without`, the strip Feint uses); no free blow out of its turn
     (riposte, opportunist, gatekeeper, Point-blank's shot; its own attack's second blow and
-    cleave stay); its next action costs 150 %, less what Cool head eases of the extra
-    (`World::status_cost`, the one place); that action ends it ("You recover your wits."). The
-    surprising attack itself is rolled flat-footed whether the check is made or not, and an
-    attacker with ambush dice (Ambusher, the thief's Sneak attack) adds them on a target that is
-    unaware or Surprised.
+    cleave stay); its next action costs 150 %, less what its Initiative skill (`surprise_ease`:
+    half the extra at 100, three quarters at 200) and Cool head ease of the extra, together at
+    most all of it (`World::status_cost`, the one place); that action ends it ("You recover your
+    wits."). The surprising attack itself is rolled flat-footed whether the check is made or not.
+  - **Sneak attacks** (`world/ambush.rs`): an attack on a target unaware of the attacker or
+    Surprised, by an attacker with **sneak dice** (`World::sneak_dice`: the Sneak attack skill's
+    `sneak_dice` d6s, 1d6 trained at all, +1d6 at 25, 50, 75, and 100, then every 50; and its
+    talents' `ambush` dice on top, Ambusher, Improved sneak attack, `Dice::and`), adds them on a
+    hit, after Protection, never multiplied by a critical, of the blow's kind; Master thief
+    threatens such a hit 2 sooner. A blow counts at any reach; a shot, a throw, or a spell that
+    rolls to hit (`cast.rs::spell_attack`; its dice come on top of the spell's cap) only within
+    `missile_reach` (6) cells, Chebyshev, plus Long reach's `sneak_reach`. Decided before the
+    strike (no draw), the dice drawn from the gameplay stream on a hit; the player's mark Sneak
+    attack (`sneak_attack`, 50 %) and Dexterity (`sneak_attack`, 20 %) on the training stream.
+  - **Vitals** (critical immunity; `Content::has_vitals`, the one reader): an incorporeal
+    creature, an animated object, a type carrying a tag of `no_vitals` (elemental, skeleton,
+    spirit, construct), or one with `vitals = false` has no vitals: no critical is confirmed on it
+    (`combat::Target::no_criticals`, set by `World::target_of` and, with the attacker's
+    Anatomist tags, `ambush.rs::vitals`: a threat is a plain hit, no confirmation drawn, a sure
+    critical a plain hit too), no sneak dice land on it, no Master thief threat; it is surprised
+    like anyone. Vital strike or the finisher that hits one says "It has no vital spot." after
+    the blow's line. The fleshy undead have vitals. Without `data/surprise.toml` everything has
+    vitals and a missile's sneak attack has no reach limit.
   - **Told after the fact**, never before, never a roll: "You catch the kobold unawares." / "The
     kobold whirls to face you." before the player's blow's line (nothing more on a sleeper or a
     mimic); "You are taken by surprise!" / "You keep your wits about you." before a creature's
     attack line, after a trap's; look mode's "surprised"; Surprised in the status bar.
   - **Determinism**: the check is two draws of the gameplay stream, before the strike's (after a
     trap's own), only when an attack finds its target unaware or a hidden trap springs on someone
-    awake; a fight that begins in plain sight draws as before. Without `data/surprise.toml`
-    nobody is surprised and the player is never unaware.
+    awake; a fight that begins in plain sight draws as before; a threat on a thing without vitals
+    draws one fewer (no confirmation). Without `data/surprise.toml` nobody is surprised and the
+    player is never unaware.
 - **Ranged combat** (`warlock-core/src/world/shoot.rs`; M16): shots and throws.
   - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
     `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,

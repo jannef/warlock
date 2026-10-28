@@ -87,6 +87,17 @@ The passive skills help you more the higher they are:
   much). It earns marks whenever you gain discovery experience (a first kill of a kind, a new
   place that pays) and, now and then, whenever you roll to resist such a power, whatever comes
   of it. A creature's level is in its [table](creatures.md).
+- **Sneak attack** adds d6s to a hit on a foe that has not seen you, or is surprised: 1d6 once
+  you are trained at all, one more at 25, 50, 75, and 100, then one more every 50 (5d6 at 100,
+  7d6 at 200). They come after [Protection](combat.md#protection), are never doubled by a
+  critical, and add to the dice of talents such as Ambusher. A blow counts at any reach; a shot,
+  a throw, or a spell that rolls to hit only within 6 cells (Long reach: 9). Nothing that has no
+  vitals takes them (see [Criticals](combat.md#criticals)). It also makes those you catch
+  unawares slower to gather their wits: their initiative check is 8 harder at 100, 12 at 200.
+  Each sneak attack that hits trains it half the time.
+- **Initiative** helps you keep your wits when something falls on you unseen: +8 to the
+  initiative check at 100, +12 at 200, and when you are surprised all the same, your next action
+  loses less time (half the extra at 100, three quarters at 200). Every such check trains it.
 
 {{#include generated/skill-benefits.md}}
 
@@ -105,7 +116,8 @@ chance in the last column, and then its dice, once, when your character is made.
 of one class can so begin with different skills. The game shows only the skills you have, never
 the chances. Your race's skill and the human's extra class skill add to one of these as to any
 other, but a level-up roll on one of them is an ordinary roll: the class's +1 is for the skills in
-its Trains column.
+its Trains column. A race may have such a skill too: a drow may start with Sneak attack, whatever
+their class (rolled after the class's own).
 
 {{#include generated/skill-grants.md}}
 
