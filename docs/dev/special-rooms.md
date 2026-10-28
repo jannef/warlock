@@ -50,7 +50,8 @@ Treasure rooms (#617, `content/room_treasury.rs`) add `secret_doors` (`SecretDoo
 door secret), `treasure` (`content::Treasury`: `chests`, `gold = { heaps, dice, each }`, `gems`;
 each count's dice 0 to `MAX_TREASURE` 16, a heap's dice never below 0, `each` 1 to
 `MAX_COINS_EACH` 1000), and `arrive` (a line said on arrival, not empty); none of the three may
-pervade.
+pervade. Greater treasure rooms (#618) add `sealed` (`Sealed::Dig`: no door at all, a box with
+its breach; never with `secret_doors`, never pervading).
 An effect with `level_chance` must have a
 `pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors` nor `collapse`
 (`RoomEffectDef::can_pervade`; nor one with a `feature`); a level file's `effect` is held to the
@@ -79,7 +80,8 @@ altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413), ha
 `dressing` of `weapon_rack`, `swarm` with its own `population` of the three animated families and
 `danger = 4`, #487), workshop (4, mark `W`, as the armoury with `workbench` and ten household
 types, #487), treasure room (4, `treasury`, mark `$`, `min_cells = 9`, `secret_doors = "all"`,
-`treasure`, `arrive`, #617; the last effect). Draining (also `unholy`) and cursed are the ones with a `level_chance`. Fyrdelf
+`treasure`, `arrive`, #617), greater treasure room (2, `great_treasury`, mark `G`,
+`min_cells = 9`, `sealed = "dig"`, `treasure`, `arrive`, #618; the last effect). Draining (also `unholy`) and cursed are the ones with a `level_chance`. Fyrdelf
 favours the armoury at 20.
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
@@ -270,6 +272,44 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
   `entered` that the player does not stand in, the line once (effects in id order); with
   `TalentMods::treasure_bearing` (Treasure sense) `", to the <wind>."` from the arrival cell to
   the nearest such room's box middle (`Dir::toward`). Nothing saved.
+
+### Greater treasure rooms
+
+#618 (chests C6, the design's §6.2, §6.3). The `great_treasury` effect, `sealed = "dig"`:
+
+- **The box on both generators** (`treasury::stamp`, `fits_box`): the same box as a cave's
+  treasure room, but its way in must be beside a walkable cell reached from the up staircase
+  (`treasury::reached`, a flood through walkable cells and closed doors, as `validate` reaches;
+  passed to `spots`/`door_spots`), and no door is made: the drawn cell becomes
+  `SpecialRoom::breach` (saved, hashed, left out while `None`). On a rooms level
+  `rooms::special_rooms` stamps it in place of making the drawn room special (after the
+  corridors, stairs, patrols, and keys, so nothing leads to it or lies in it); on a cave level
+  `special::cave_rooms` does, as for a treasure room. Eligibility is `fits_box`, asked before the
+  draw, so no draw is wasted. `build_walls` walls the ring (stone, hardness 600).
+- **`connect::validate`**: a sealed room's cells are exempt from "every walkable cell reached",
+  provided `content::breach_fault` finds nothing wrong with its breach (a wall that breaks, on
+  the room, off the edge, 4-adjacent to a reached cell outside and to floor inside); a sealed
+  room without a breach is `Invalid::NoBreach`, a bad one `BadBreach`. Stairs, keys, and
+  creatures must still be reached, so none is ever inside.
+- **Kept out**: `hide_traps` skips its cells, `population.rs` (as any room with `treasure`),
+  the spawner (`world/spawn.rs`, as a sanctuary), floor chests (their eight neighbours must be
+  open, so never beside the breach), and `treasury::fill`'s chests (`by_door` counts the breach).
+- **The hollow wall** (`world/search.rs`): `Hidden::Hollow`, listed by `hidden_near` for each
+  room's breach in reach that still stands (`LevelState::breach_at`) and is not yet found, at
+  `search().secret_door` plus the branch's depth; ease 0; the stone sense notices it. Found:
+  `LevelState::hollows` (a `BTreeSet<Pos>`, saved, left out while empty), the wall remembered,
+  "The wall here sounds hollow.". `World::set_terrain` drops it from `hollows` as it drops a
+  secret, so a dug or blasted breach is no longer hollow. `PerceptionView::hollow` and
+  `known_hollows` read it; look mode says "a hollow stone wall"; JSON dumps `known_hollows`.
+  The map shows the wall as any wall.
+- **Level files** (`content/level.rs`, `check_sealed`): a `[[room]]` of a sealed effect needs
+  `breach = [x, y]`, which `breach_fault` checks against the cells reached from the player's
+  start (beside the breach on a level without one); no cell of the room may be reached without
+  breaking a wall. `breach` on another effect is refused.
+- **Dumps**: `rooms` adds `, breach (x, y)`; `truth` draws a standing breach `H`.
+- `band_up` (the design's chests of the band above) is not done: a chest's band follows from its
+  saved level alone, so it needs a saved band offset and touches `chest::lay`; the greater
+  room's richer dice stand in for it.
 
 ## Scriptoria
 
@@ -749,8 +789,14 @@ doorless room, no danger, the dump, saving, and a generated hoard's items with n
 whole level), `mapgen/treasury_tests.rs` (every door of a rooms level's treasure room secret and
 the level valid, no stairs or creature inside; a cave's box with one secret door; one or two
 chests, the gold and gems the dice give, and the level outside the room the same without its
-treasure), `world/treasury_tests.rs` (the data, the hint on every arrival until the room is
-entered, after a save too, once for two rooms, Treasure sense's bearing), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
+treasure; a greater treasure room walled up on both generators, its breach a wall beside a
+reached cell, nothing inside reached until it is dug, no stairs, creature, or trap inside, its
+richer contents, `validate` refusing a missing or bad breach, `fits_box` only in rock beside a
+reached cell), `world/treasury_tests.rs` (the data, the hint on every arrival until the room is
+entered, after a save too, once for two rooms, Treasure sense's bearing; the greater room's data,
+a level file's breach and its refusals, the breach found by searching, remembered and saved,
+digging it and a blast opening the room, the `rooms` dump), `ui/look.rs` ("A hollow stone
+wall."), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
 minutes as undead of the dead's level, the twitch and rising lines, not when the corpse is gone or
 carried out, not outside, never the undead, the nearest-level fallback and the campaign's own,
 Grave warden, a cursed level, a frozen level catching up, saving and the dump; Consecrate lifting a
