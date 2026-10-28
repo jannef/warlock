@@ -1,7 +1,8 @@
 # Healing
 
-Lost hit points come back by themselves, with time. There is nothing to do but let the time pass,
-and [resting](resting.md) (`b`) is the quickest way to do that.
+Lost hit points come back by themselves, with time, and [resting](resting.md) (`b`) is the
+quickest way to let the time pass. A potion of healing brings some back at once (see
+[Potions](potions.md)).
 
 ## How fast
 
