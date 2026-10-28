@@ -766,3 +766,60 @@ fn every_shipped_affix_effect_is_read_by_its_hook() {
         );
     }
 }
+
+/// The module that reads each skill benefit through `Actor::skill_effect` (so magic items' skill
+/// affixes count), and its source. An exhaustive match, so a new benefit has to name its hook.
+fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
+    use crate::skills::Effect as S;
+    const ACTOR: (&str, &str) = ("world/actor.rs", include_str!("../world/actor.rs"));
+    const SEARCH: (&str, &str) = ("world/search.rs", include_str!("../world/search.rs"));
+    const SCHEDULE: (&str, &str) = ("world/schedule.rs", include_str!("../world/schedule.rs"));
+    match effect {
+        S::Dodge | S::Hearing | S::Speed => ACTOR,
+        S::Quiet => ("noise.rs", include_str!("../noise.rs")),
+        S::Search | S::SearchReach | S::Spot => SEARCH,
+        S::Study => ("world/learn.rs", include_str!("../world/learn.rs")),
+        S::Disarm => ("world/disarm.rs", include_str!("../world/disarm.rs")),
+        S::Burden | S::Travel => SCHEDULE,
+        S::Forage => ("world/forage.rs", include_str!("../world/forage.rs")),
+        S::Bargain => ("world/shop.rs", include_str!("../world/shop.rs")),
+        S::Kick => ("world/door.rs", include_str!("../world/door.rs")),
+        S::Steal => ("world/steal.rs", include_str!("../world/steal.rs")),
+        S::Heal => ("world/heal.rs", include_str!("../world/heal.rs")),
+        S::Pick => ("world/lockpick.rs", include_str!("../world/lockpick.rs")),
+        S::Temper => ("world/temper.rs", include_str!("../world/temper.rs")),
+    }
+}
+
+/// Every shipped skill suffix raises a skill with a benefit, and every benefit of it is read
+/// through `Actor::skill_effect` (#636): a suffix of a skill nothing reads yet (Swim, Music),
+/// or a benefit read past the items' bonus (the shops' bargain once was), fails here.
+#[test]
+fn every_shipped_skill_suffix_raises_a_read_benefit() {
+    let c = content();
+    let suffixes: Vec<_> = (c.affixes().all().iter())
+        .filter(|a| a.effect == Effect::Skill)
+        .collect();
+    assert!(suffixes.len() >= 15, "the skill suffixes ship");
+    for a in suffixes {
+        let skill = c.skill(a.skill.expect("a skill affix names its skill"));
+        assert!(
+            !skill.benefits.is_empty(),
+            "{} raises {}, which gives nothing yet",
+            a.id,
+            skill.name
+        );
+        for b in &skill.benefits {
+            let (file, source) = skill_reader(b.effect);
+            let needle = format!("Effect::{:?})", b.effect);
+            let read = (source.lines()).any(|l| l.contains("skill_effect(") && l.contains(&needle));
+            assert!(
+                read,
+                "{}'s skill {} gives `{}`, not read through skill_effect in {file}",
+                a.id,
+                skill.name,
+                b.effect.id()
+            );
+        }
+    }
+}

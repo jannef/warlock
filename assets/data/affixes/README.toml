@@ -73,3 +73,7 @@
 #
 # Skill suffixes (spec §8 "Skills"): `effect = "skill"` with the `skill` (an id in skills.toml)
 # whose value it raises for what the skill gives, trained or not (untrained, from 0).
+# The skills whose benefit is gated on being trained at all (Spot, Open lock, Disable device,
+# Heal, Steal, Survival's foraging: `Skills::trains_effect`) give the untrained nothing, so their
+# suffixes (of the Eagle, of the Picklock, of Disarming, of the Leech, of the Cutpurse) help those
+# trained in them only. A skill whose benefit nothing reads gets no suffix until something does.
