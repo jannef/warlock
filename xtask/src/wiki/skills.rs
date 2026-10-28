@@ -19,10 +19,11 @@ pub(super) fn skills(content: &Content) -> String {
         "| Skill | Kind | What it is about | Gives | Trains on |\n|---|---|---|---|---|\n",
     );
     for skill in content.skills() {
-        let gives: Vec<&str> = skill
-            .benefits
-            .iter()
-            .map(|b| effect_name(b.effect))
+        let gives: Vec<String> = (skill.benefits.iter())
+            .map(|b| match gated_effect(b.effect) {
+                true => format!("{} (**trained only**)", effect_name(b.effect)),
+                false => effect_name(b.effect).to_string(),
+            })
             .collect();
         let gives = if gives.is_empty() {
             "nothing yet".to_string()
@@ -48,6 +49,27 @@ pub(super) fn skills(content: &Content) -> String {
     out
 }
 
+/// Whether `effect` is given only to those trained in its skill at all
+/// (`Skills::trains_effect`: noticing in passing, disarming, picking, stealing, treating,
+/// foraging): to the untrained, a magic item's bonus to the skill gives none of it.
+pub(super) fn gated_effect(effect: Effect) -> bool {
+    matches!(
+        effect,
+        Effect::Spot
+            | Effect::Disarm
+            | Effect::Pick
+            | Effect::Steal
+            | Effect::Heal
+            | Effect::Forage
+    )
+}
+
+/// Whether everything `skill` gives is for those trained in it only (a skill suffix of it helps
+/// them only).
+pub(super) fn gated(skill: &warlock_core::content::SkillDef) -> bool {
+    !skill.benefits.is_empty() && skill.benefits.iter().all(|b| gated_effect(b.effect))
+}
+
 /// What an effect does, in words.
 fn effect_name(effect: Effect) -> &'static str {
     match effect {
@@ -65,10 +87,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Bargain => "better prices in shops",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Steal => "stealing at all, and better",
-        Effect::Heal => {
-            "treating your bleeding, poison, and diseases (trained at all: you can try)"
-        }
-        Effect::Pick => "picking locks (trained at all: you can try)",
+        Effect::Heal => "treating your bleeding, poison, and diseases",
+        Effect::Pick => "picking locks",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Speed => "quicker in everything",
     }

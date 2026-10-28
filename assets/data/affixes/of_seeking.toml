@@ -1,0 +1,22 @@
+[[suffix]]
+id = "of_seeking"
+name = "of Seeking"
+effect = "skill"
+category = "search"
+skill = "search"
+bases = ["helmet", "ring", "amulet"]
+weight = 60
+tiers = [
+  { level = 1, min = 8, max = 12 },
+  { level = 2, min = 11, max = 15 },
+  { level = 3, min = 15, max = 19 },
+  { level = 4, min = 18, max = 22 },
+  { level = 5, min = 21, max = 26 },
+  { level = 6, min = 25, max = 29 },
+  { level = 7, min = 28, max = 33 },
+  { level = 8, min = 32, max = 36 },
+  { level = 9, min = 35, max = 40 },
+  { level = 10, min = 38, max = 43 },
+  { level = 11, min = 42, max = 47 },
+  { level = 12, min = 45, max = 50 },
+]

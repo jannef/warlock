@@ -141,6 +141,15 @@ shot, or spell, the slain within three cells. *Of Sustenance* slows hunger, *of 
 traps, *of Health* helps against disease, and *of the Alchemist* sometimes leaves a potion
 undrunk.
 
+The skill suffixes raise one [skill](skills.md) each: *of Seeking* (Search), *of the Eagle*
+(Spot), *of the Stag* (Athletics), *of the Leech* (Heal), *of the Picklock* (Open lock), *of
+Disarming* (Disable device), *of Appraisal* (Appraise), *of the Scholar* (Spellcraft), *of
+Letters* (Decipher script), *of the Cutpurse* (Steal), besides *of Shadows*, *of the Hare*, *of
+the Fox*, *of the Wanderer*, and *of Balance*. Spot, Open lock, Disable device, Heal, and Steal
+give nothing to those not trained in them at all (marked **trained only** on the Skills page),
+so their suffixes help only those trained in them: an untrained wearer still cannot notice,
+pick, disarm, treat, or steal.
+
 {{#include generated/magic-suffixes.md}}
 
 Each tier's value is rolled once, when the item is made, anywhere within its range; an item
