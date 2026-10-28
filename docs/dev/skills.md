@@ -29,7 +29,17 @@ level ...`, `roll dice athletics 1d3, ...`). `levelup:auto` spends rolls on the 
 Tests: `skills.rs` (ladder, rolls, meter), `content/skill.rs`, `content/class.rs`
 (`known_for`, `rolls`), `world/skill_roll_tests.rs` (counts, refusals, dice and affinities,
 streams, saves and replays), `world/skills_tests.rs` (marks by use). Race and class grants are dice rolled in `character.rs` after every
-other roll, so they never move a score. Rules read a benefit through `Actor::skill_effect`
+other roll, so they never move a score. A class's **optional skills** (#662,
+`ClassDef::optional_skills`, `content::OptionalSkill { skill, chance, dice }`; the loader checks
+the ids, chance 1 to 99, the dice within 0 to 100, and that none is one of the class's `skills`)
+are rolled by `character::optional_skills` from their own stream,
+`character/optional-skills/<spec>` (chance, then dice, in skill order; a class without any draws
+nothing), so no other roll moves; the result is just the actor's `Skills`, saved and hashed as
+before, and a replay needs no new field (the roll is a function of the seed and spec). Classes
+that have them start with other skills on old seeds, so old replays' hashes change.
+`ClassDef::trains` (the level-up roll's +1) stays the guaranteed list. Tests:
+`content/class.rs` (parsing, refusals), `character.rs`
+(`optional_skills_come_by_chance_and_never_move_another_roll`). Rules read a benefit through `Actor::skill_effect`
 (the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
