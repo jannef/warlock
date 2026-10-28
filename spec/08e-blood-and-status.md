@@ -553,7 +553,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     while the ranger holds 2 spends them and takes 10 % less time (the whole price, reloading
     too; with less it is an ordinary shot, `World::rapid_shot`); Volley (level 50) costs 6 and
     has no cooldown.
-  - **Openings** (the thief's; R3, #251, `world/openings.rs`): Improved sneak attack (level 32)
+  - **Openings** (the thief's; R3, #251, `world/openings.rs`): Sneak attack (level 1; #682)
     grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), one
     slips away every 120 s (20 base turns), and at 0 they stay, held. Master thief (level 60)
     spends 5 on its finisher (§8 "Class abilities").

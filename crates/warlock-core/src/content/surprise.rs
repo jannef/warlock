@@ -5,7 +5,7 @@
 //! and the status a failed check brings. The file is optional: without it nobody is surprised
 //! (fixtures).
 
-use super::{Content, ContentError, StatusId};
+use super::{Content, ContentError, CreatureId, StatusId};
 use serde::Deserialize;
 
 /// The rules of surprise that live in data.
@@ -16,12 +16,13 @@ pub struct SurpriseRules {
     pub status: StatusId,
     /// The initiative check's difficulty before the attacker's craft.
     pub difficulty: i32,
-    /// How far a shot, a throw, or an attack spell is still a sneak attack, in cells (read from
-    /// the Sneak attack skill on).
+    /// How far a shot, a throw, or an attack spell is still a sneak attack, in cells
+    /// (`World::sneaks`).
     pub missile_reach: i32,
     /// How many turns the player stays aware of a creature they have seen.
     pub memory_turns: u64,
-    /// The tags of what has no vitals to find (read from the Sneak attack skill on).
+    /// The tags of what has no vitals to find: immune to criticals and sneak attacks
+    /// ([`Content::has_vitals`]).
     pub no_vitals: Vec<String>,
 }
 
@@ -82,6 +83,28 @@ impl SurpriseRules {
             memory_turns: table.memory_turns,
             no_vitals: table.no_vitals,
         })
+    }
+}
+
+impl Content {
+    /// Whether creature type `id` has vitals to find for an attacker whose talents name
+    /// `vitals_in` (Anatomist's tags): the one reader of what has none (spec §8 "Surprise and
+    /// sneak attacks"). Without vitals it is immune to criticals and to sneak attacks: an
+    /// incorporeal type always; one that says `vitals = false`; an animated object or a type
+    /// carrying a `no_vitals` tag, unless it carries one of `vitals_in` too. Everything has
+    /// vitals without the surprise rules (fixtures).
+    pub fn has_vitals(&self, id: CreatureId, vitals_in: &[String]) -> bool {
+        let Some(rules) = self.surprise() else {
+            return true;
+        };
+        let def = self.creature(id);
+        if def.incorporeal.is_some() || !def.vitals {
+            return false;
+        }
+        if vitals_in.iter().any(|t| self.has_tag(id, t)) {
+            return true;
+        }
+        def.animated.is_none() && !rules.no_vitals.iter().any(|t| self.has_tag(id, t))
     }
 }
 

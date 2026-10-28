@@ -1,0 +1,8 @@
+[[talent]]
+id = "anatomist"
+name = "Anatomist"
+tree = "scholar"
+description = "You know how bones are strung and how made things hold together: your telling blows find a spot in walking bones and constructs too."
+needs = { stats = { intelligence = 13 }, skills = { knowledge = 20 } }
+effects = [{ kind = "vitals_in", tags = ["skeleton", "construct"] }]
+systems = ["sneak_attack", "combat"]

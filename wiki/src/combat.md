@@ -104,6 +104,16 @@ hit too, the critical is **confirmed** and the damage is rolled again and added,
 most weapons, three times for [spears](weapon-skills.md#weapon-skill-spears) and [bows](weapon-skills.md#weapon-skill-bows). The message says so: "The kobold hits you
 hard!" A confirmed critical also opens a [bleeding](status-effects.md#bleeding) wound (see [Status effects](status-effects.md)).
 
+Some things have **no vitals** to find, and so are **immune to criticals** and to
+[sneak attacks](skills.md#skill-sneak-attack): a threat on them is a plain hit, and
+[Vital strike](weapon-skills.md#weapon-ability-vital-strike) or a
+[master thief](talents.md#talent-master-thief)'s finisher only a plain blow ("It has no vital
+spot."). They are the [incorporeal](creatures.md#incorporeal-creatures) (ghosts and wraiths),
+[animated objects](animated.md), and every [creature](creatures.md) tagged elemental, skeleton,
+spirit, or construct (the mud golem; [elementals](creatures.md#elementals)). The fleshy undead
+(draugr, ghouls, the drowned, vampires, mummies) have vitals. The
+[Anatomist](talents.md#talent-anatomist) talent finds them in skeletons and constructs too.
+
 {{#include generated/threats.md}}
 
 ## Damage

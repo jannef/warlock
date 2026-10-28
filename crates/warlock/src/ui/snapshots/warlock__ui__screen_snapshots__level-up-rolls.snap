@@ -12,15 +12,15 @@ expression: "render(case, content.clone())"
 
 
 
-
             ┌─ Level 2 · Skill rolls 3 ────────────────────────────────────────────────┐
             │                                                                          │
             │ Skills                                                                   │
-            │ > a  Athletics    18  ────  1d3                                          │
+            │ > a  Athletics    26  ────  1d3                                          │
             │   b  Balance       9  ────  +2                                           │
             │   c  Heal          8  ────  +1                                           │
-            │   d  Intimidate    8  ────  +2                                           │
-            │   e  Swim         18  ────  +2                                           │
+            │   d  Initiative    8  ────  +2                                           │
+            │   e  Intimidate   11  ────  +2                                           │
+            │   f  Swim         10  ────  +2                                           │
             │                                                                          │
             │ 3 skill rolls a level: class 2, race 1                                   │
             │                                                                          │
@@ -29,7 +29,7 @@ expression: "render(case, content.clone())"
             │ to use.                                                                  │
             │                                                                          │
             │                                                                          │
-            │ a-e or Enter roll   Level 3 next                                         │
+            │ a-f or Enter roll   Level 3 next                                         │
             └──────────────────────────────────────────────────────────────────────────┘
 
 

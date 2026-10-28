@@ -1,0 +1,8 @@
+[[talent]]
+id = "long_reach"
+name = "Long reach"
+tree = "weaponcraft"
+description = "Your shots and throws find a foe that has not seen you from farther off."
+needs = { any_weapon_skill = { roles = ["launcher", "thrown"], rank = 4 } }
+effects = [{ kind = "sneak_reach", value = 3 }]
+systems = ["sneak_attack", "ranged"]

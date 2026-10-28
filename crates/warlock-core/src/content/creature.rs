@@ -222,6 +222,11 @@ pub(super) struct CreatureSpec {
     /// Whether it passes through solid terrain, and its Defence inside it (spec §8
     /// "Incorporeal creatures").
     pub incorporeal: Option<Incorporeal>,
+    /// Whether it has vitals to find (spec §8 "Surprise and sneak attacks"); `vitals = false`:
+    /// immune to criticals and sneak attacks, as the incorporeal, the animated, and the types
+    /// `surprise.toml`'s `no_vitals` tags name are by rule.
+    #[serde(default = "yes")]
+    pub vitals: bool,
     /// What it resists, in percent per damage type (spec §8 "Damage types"): `resist = { acid
     /// = 50 }`; 100 is immune, negative a vulnerability. Rules only: never shown.
     #[serde(default)]
@@ -521,6 +526,7 @@ impl CreatureSpec {
             summon_spec: self.summon,
             natural: self.natural,
             incorporeal: self.incorporeal,
+            vitals: self.vitals,
             resist: r.resist,
             corpse: self.corpse,
             on_eat: self.on_eat,
@@ -670,6 +676,10 @@ pub struct CreatureDef {
     /// there (spec §8 "Incorporeal creatures"); `None`: it does not. Rules only (the wiki
     /// states it).
     pub incorporeal: Option<Incorporeal>,
+    /// Gameplay: whether its type says it has vitals (`vitals = false` says not); whether it
+    /// has them is [`super::Content::has_vitals`], which adds the rules' kinds. Rules only (the
+    /// wiki states it).
+    pub vitals: bool,
     /// Gameplay: what it resists, in percent per damage type (spec §8 "Damage types"); 100 is
     /// immune, negative a vulnerability. Rules only: the player learns it by play.
     pub resist: Vec<(DamageTypeId, i32)>,

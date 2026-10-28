@@ -1,6 +1,7 @@
 //! The thief's Openings in the world (spec §8 "Resources" and "Class abilities"; the progression
-//! design §4.18): Improved sneak attack grants the pool, every sneak attack that hits builds it
-//! (`builds` in `data/resources.toml`, through `ambush.rs`), it decays with time, and Master
+//! design §4.18): the thief's Sneak attack grants the pool (from level 1), every sneak attack
+//! that hits builds it (`builds` in `data/resources.toml`, through `ambush.rs`), it decays with
+//! time, and Master
 //! thief's finisher spends it for a blow that is a critical if it hits, with no confirmation
 //! roll ([`crate::combat::Profile::sure_critical`]).
 //!
@@ -30,7 +31,9 @@ impl World {
         let mut profile = me.melee(&content);
         profile.sure_critical = true;
         self.say("You strike at the opening!");
+        let vitalless = !self.has_vitals_for(player, target);
         let blow = self.player_blow_with(target, seen, profile, events);
+        self.no_vital_spot(vitalless, blow);
         self.after_attack(player, target, super::free_blow::parried(blow), events);
         self.exert(ActionKind::Melee);
         Spent::Turn(price)

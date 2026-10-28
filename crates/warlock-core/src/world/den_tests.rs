@@ -226,7 +226,7 @@ fn sleepers_are_unaware_so_sneak_attacks_land() {
     w.player_mut().pos = Pos::new(6, 3);
     assert!(w.unaware(id, player));
     w.player_mut().talents.take("ambusher", None);
-    assert!(w.sneaking(player, id));
+    assert!(w.sneaking(player, id, false));
     // Awake, it sees them.
     w.wake(id);
     assert!(!w.unaware(id, player));

@@ -944,7 +944,7 @@ impl World {
         made: &mut Vec<Event>,
     ) -> Strike {
         let def = shot.def;
-        let (amount, strike) = match def.resolution {
+        let (amount, strike, sneak) = match def.resolution {
             Resolution::Attack | Resolution::Touch => {
                 let attack = Attack {
                     damage: shot.dice,
@@ -963,25 +963,35 @@ impl World {
                     .map(|a| a.benefit_of(&self.content, skills))
                     .unwrap_or_default()
                     .at_distance(here.chebyshev(to), spells);
-                // Caught unawares (`surprise.rs`): the initiative check, before the roll.
+                // Caught unawares (`surprise.rs`): the initiative check, before the roll; a
+                // sneak attack within reach (`ambush.rs`), its dice after it.
                 let unaware = self.unaware(target, by);
+                let unseen = self.sneaks(by, target, unaware, missile);
                 if unaware {
                     self.startle(target, Some(by), made);
                 }
                 let struck = self.target_against(target, missile);
-                let defence = self.flat_footed(target, unaware, struck).defence;
-                let against = combat::Target::bare(defence);
+                let struck = self.vitals(by, target, struck);
+                let struck = self.flat_footed(target, unaware, struck);
+                let against = combat::Target {
+                    no_criticals: struck.no_criticals,
+                    ..combat::Target::bare(struck.defence)
+                };
                 let profile = Profile::bare(&attack).with(&benefit);
+                let profile = self.sneak_threat(by, unseen, profile);
                 let blow = combat::strike(&profile, &against, &mut self.state.rng);
+                // The sneak dice come on top of the spell's cap, as after Protection.
+                let sneak = self.ambushed(by, unseen, blow).damage - blow.damage;
                 self.spell_practised(target, skills, blow, made);
-                (blow.damage, blow.strike)
+                (blow.damage, blow.strike, sneak)
             }
             Resolution::Auto | Resolution::Area => (
                 shot.dice.roll(&mut self.state.rng).max(0),
                 Strike::Hit { critical: false },
+                0,
             ),
         };
-        let damage = Damage::new(capped(amount, Some(shot.cap)), def.damage_type);
+        let damage = Damage::new(capped(amount, Some(shot.cap)) + sneak, def.damage_type);
         self.spell_strikes(by, target, source, (damage, strike), made);
         strike
     }

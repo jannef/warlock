@@ -420,6 +420,9 @@ pub struct Target {
     pub defence: Defence,
     pub protection: Protection,
     pub resistances: Resistances,
+    /// It has no vitals to find (spec §8 "Surprise and sneak attacks"): immune to criticals, a
+    /// threat is a plain hit, with no confirmation roll drawn.
+    pub no_criticals: bool,
 }
 
 impl Target {
@@ -434,6 +437,7 @@ impl Target {
             defence,
             protection: Protection::plain(pv),
             resistances: Resistances::default(),
+            no_criticals: false,
         }
     }
 
@@ -508,7 +512,8 @@ impl Blow {
 
 /// Resolves an attack with `profile` against `target`, drawing from `rng` in this order: the
 /// two dice of the attack roll; on an attributable miss one draw for why; on a threat the two
-/// dice of the confirmation roll (none for a [`Profile::sure_critical`]); then, for each time
+/// dice of the confirmation roll (none for a [`Profile::sure_critical`], nor against a target
+/// with [`Target::no_criticals`]); then, for each time
 /// the damage is rolled, one draw per damage die, per extra die, and per rider die (in rider
 /// order); then, on a hit against Protection (against the kind done) above the attack's
 /// penetration, one draw for the soak ([`soak`]).
@@ -542,10 +547,12 @@ pub fn strike_with(profile: &Profile, target: &Target, rng: &mut Rng, reroll_fum
         |k| target.resistances.get(Some(k)),
         |k| target.protection.against(Some(k)),
     );
-    // A sure critical (the finisher) asks no confirmation: no draw.
-    let threat = natural >= i32::from(profile.threat);
-    let critical = profile.sure_critical
-        || (threat && hits(roll_natural(rng), profile.to_hit + profile.confirm, dv));
+    // A sure critical (the finisher) asks no confirmation: no draw; nor does a threat on a
+    // target with no vitals, which is a plain hit.
+    let threat = natural >= i32::from(profile.threat) && !target.no_criticals;
+    let critical = !target.no_criticals
+        && (profile.sure_critical
+            || (threat && hits(roll_natural(rng), profile.to_hit + profile.confirm, dv)));
     let times = if critical { profile.crit.max(1) } else { 1 };
     let mut riders = Vec::new();
     let damage: i32 = (0..times)
@@ -920,6 +927,40 @@ mod tests {
     }
 
     #[test]
+    fn a_target_without_vitals_takes_no_critical_and_draws_no_confirmation() {
+        // Every hit threatens (threat 2), against Defence 0 nearly all confirm; without vitals
+        // none is a critical, sure or not, and the stream is left where a blow that never
+        // threatens leaves it.
+        let dv = Defence::from_bonuses([(Category::Dexterity, -10)]);
+        let threatens = Profile {
+            bonus: 3,
+            ..profile(0, "+0", 2, 3)
+        };
+        let sure = Profile {
+            sure_critical: true,
+            ..threatens.clone()
+        };
+        let never = Profile {
+            threat: 25,
+            ..threatens.clone()
+        };
+        let immune = Target {
+            no_criticals: true,
+            ..Target::bare(dv)
+        };
+        for attack in [&threatens, &sure] {
+            let mut one = Rng::stream(3, "combat-test");
+            let mut two = Rng::stream(3, "combat-test");
+            for _ in 0..500 {
+                let a = strike(attack, &immune, &mut one);
+                let b = strike(&never, &Target::bare(dv), &mut two);
+                assert_eq!(a, b, "a plain hit, no confirmation drawn");
+                assert_ne!(a.strike, Strike::Hit { critical: true });
+            }
+        }
+    }
+
+    #[test]
     fn a_confirmed_critical_rolls_the_damage_crit_times() {
         // Against Defence 0 everything but a natural 2 hits and confirms; a threat of 2 makes
         // every hit threaten. 1d1 is not dice, so a fixed bonus shows the multiplier.
@@ -1157,6 +1198,7 @@ mod tests {
             defence: Defence::from_bonuses([(Category::Dexterity, -10)]),
             protection: Protection::for_test(pv, against),
             resistances,
+            no_criticals: false,
         }
     }
 

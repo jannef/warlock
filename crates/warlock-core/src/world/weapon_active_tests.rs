@@ -159,6 +159,17 @@ base_hp = 1000
 natural = { defence = 0, protection = 8, name = "iron plates" }
 
 [[creature]]
+id = "wt_bones"
+name = "bone post"
+glyph = "b"
+fg = "#806040"
+weight = 60000
+faction = "vermin"
+speed = 100
+base_hp = 1000
+vitals = false
+
+[[creature]]
 id = "wt_guard"
 name = "guard"
 glyph = "g"
@@ -189,6 +200,7 @@ map = '''
 "@" = {{ terrain = "floor", spawn = "player" }}
 "p" = {{ terrain = "floor", creature = "wt_post" }}
 "P" = {{ terrain = "floor", creature = "wt_plate" }}
+"b" = {{ terrain = "floor", creature = "wt_bones" }}
 "g" = {{ terrain = "floor", creature = "wt_guard", carry = ["wt_tower"], wield = "wt_tower" }}
 "f" = {{ terrain = "floor", creature = "wt_friend" }}
 "+" = {{ terrain = "door_closed" }}
@@ -576,6 +588,28 @@ fn feint_rolls_without_parry_and_shield() {
         count(true),
         count(false)
     );
+}
+
+#[test]
+fn vital_strike_on_a_thing_without_vitals_is_a_plain_blow_and_says_so() {
+    let mut w = world("#####\n#@b.#\n#####\n");
+    give(&mut w, "wt_knife");
+    ranks(&mut w, &[("long_blades", 9)]);
+    for _ in 0..20 {
+        let outcome = use_(&mut w, "use:vital_strike:E");
+        let strike = strikes(&outcome, AttackKind::Melee)[0].expect("rolled");
+        assert_ne!(strike, Strike::Hit { critical: true });
+        if strike.is_hit() {
+            assert!(
+                said(&w).iter().any(|l| l.contains("It has no vital spot.")),
+                "{:?}",
+                said(&w)
+            );
+            return;
+        }
+        refill(&mut w);
+    }
+    panic!("no hit");
 }
 
 #[test]

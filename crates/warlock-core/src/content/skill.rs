@@ -6,8 +6,67 @@
 //! marks set ([`Ladder`], `[ladder]`) and the rolls' rules ([`RollRules`], `[rolls]`).
 
 use super::ContentError;
+use crate::dice::Dice;
 use crate::skills::{Benefit, BenefitSpec, Ladder, MarkRule, RollRules, SkillId, SkillKind};
 use serde::Deserialize;
+use std::collections::BTreeMap;
+
+/// `{ chance = 30, dice = "2d4" }`: a skill a new character may start with, by a class's or a
+/// race's `optional_skills` (one table, one parser: [`optional_skills`]).
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct OptionalSpec {
+    chance: u8,
+    dice: Dice,
+}
+
+/// The chances an optional skill may have, in percent: 100 would be a guaranteed skill.
+pub const OPTIONAL_CHANCE: std::ops::RangeInclusive<u8> = 1..=99;
+
+/// A skill a new character of a class or a race may start with (spec §8 "Skills", ADOM-like):
+/// rolled once when the character is made.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OptionalSkill {
+    pub skill: SkillId,
+    /// The chance, in percent, that a new character starts with it trained.
+    pub chance: u8,
+    /// Its starting value, rolled when it comes.
+    pub dice: Dice,
+}
+
+/// Resolves `optional_skills` as a class or a race writes them, in skill order: each a known
+/// skill, none of `trained` (the guaranteed skills of the same `owner`, "class" or "race"), its
+/// chance within [`OPTIONAL_CHANCE`] and its dice within the grants' range.
+pub(super) fn optional_skills(
+    specs: &BTreeMap<String, OptionalSpec>,
+    skill_id: impl Fn(&str) -> Option<SkillId>,
+    trained: &[(SkillId, Dice)],
+    owner: &str,
+) -> Result<Vec<OptionalSkill>, String> {
+    let mut out = Vec::with_capacity(specs.len());
+    for (name, o) in specs {
+        let grant = crate::skills::grants(&BTreeMap::from([(name.clone(), o.dice)]), &skill_id)?;
+        let skill = grant[0].0;
+        if trained.iter().any(|&(s, _)| s == skill) {
+            return Err(format!("`{name}` is one of the {owner}'s skills"));
+        }
+        if !OPTIONAL_CHANCE.contains(&o.chance) {
+            return Err(format!(
+                "{name}: chance {} is out of range ({} to {} percent)",
+                o.chance,
+                OPTIONAL_CHANCE.start(),
+                OPTIONAL_CHANCE.end()
+            ));
+        }
+        out.push(OptionalSkill {
+            skill,
+            chance: o.chance,
+            dice: o.dice,
+        });
+    }
+    out.sort_by_key(|o| o.skill);
+    Ok(out)
+}
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]

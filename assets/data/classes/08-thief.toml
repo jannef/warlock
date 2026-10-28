@@ -8,8 +8,8 @@ mana = 1
 casting = 25
 experience = 95
 alignment = -200
-skills = { open_lock = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", detect_traps = "2d4+4", negotiation = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", search = "2d4+4", spot = "2d4+4" }
-known_for = ["open_lock", "steal", "stealth", "tumble"]
+skills = { open_lock = "2d6+10", sneak_attack = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", detect_traps = "2d4+4", negotiation = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", initiative = "2d4+4", search = "2d4+4", spot = "2d4+4" }
+known_for = ["open_lock", "sneak_attack", "steal", "stealth", "tumble"]
 optional_skills = { balance = { chance = 20, dice = "2d4" }, bluff = { chance = 30, dice = "2d4" }, listen = { chance = 30, dice = "2d4" } }
 rolls = 3
 weapon_skills = { daggers = 2, thrown = 1 }
@@ -28,9 +28,9 @@ kit = [
 ]
 # Bonus talents from Shadow, Finesse, and Delver, every sixth level from 4.
 bonus_talents = { levels = [4, 10, 16, 22, 28, 34, 46, 58], trees = ["shadow", "finesse", "delver"] }
-# The level table (spec §8 "Class abilities"). Evasion is the Finesse talent, given. Improved
-# sneak attack grants the Openings pool (data/resources.toml) that sneak attacks build, and
-# Master thief's finisher spends it.
+# The level table (spec §8 "Class abilities"). Evasion is the Finesse talent, given. Sneak
+# attack, the class passive beside the skill, grants the Openings pool (data/resources.toml)
+# that sneak attacks build, and Master thief's finisher spends it.
 abilities = [
     { level = 1, talent = "sneak_attack" },
     { level = 1, talent = "trained_wind" },

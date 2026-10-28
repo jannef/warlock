@@ -67,6 +67,11 @@ pub const MAX_SEARCH_REACH: i32 = 2;
 
 /// The most a skill adds to stealing from someone (spec §8 "Stealing").
 pub const MAX_STEAL_BONUS: i32 = 20;
+/// The most d6 a skill adds to a sneak attack (spec §8 "Surprise and sneak attacks").
+pub const MAX_SNEAK_DICE: i32 = 25;
+/// The most a skill adds to the initiative check, or to its difficulty for those its holder
+/// catches unawares (spec §8 "Surprise and sneak attacks").
+pub const MAX_SURPRISE_BONUS: i32 = 20;
 /// The most a skill adds to treating bleeding, poison, or a disease (spec §8 "Skills": Heal).
 pub const MAX_HEAL_BONUS: i32 = 20;
 /// The most a skill adds to picking a lock (spec §8 "Doors").
@@ -158,6 +163,18 @@ pub enum Effect {
     /// Points added to stealing from someone (spec §8 "Stealing"; `world/steal.rs`); a skill
     /// with it, trained, lets the actor steal at all (the abilities menu's Steal).
     Steal,
+    /// How many d6 a sneak attack adds, after Protection, to a hit on a target unaware of the
+    /// actor or Surprised (spec §8 "Surprise and sneak attacks"; `World::sneak_dice`,
+    /// `world/ambush.rs`).
+    SneakDice,
+    /// Points added to the difficulty of the initiative check of those the actor catches
+    /// unawares: its craft (`World::startle`, `world/surprise.rs`).
+    Surprise,
+    /// Points added to the actor's own initiative check (`World::startle`).
+    Initiative,
+    /// Percent of the extra cost of the action the actor takes Surprised that is spared
+    /// (`World::status_cost`), with its talents' at most all of it.
+    SurpriseEase,
     /// Points added to treating oneself (spec §8 "Skills": Heal; `world/heal.rs`): bleeding,
     /// poison, a disease; a skill with it, trained, lets the actor treat at all (the Heal
     /// ability).
@@ -197,7 +214,10 @@ impl Effect {
             | Effect::Burden
             | Effect::Travel
             | Effect::Bargain
-            | Effect::Identify => 100,
+            | Effect::Identify
+            | Effect::SurpriseEase => 100,
+            Effect::SneakDice => MAX_SNEAK_DICE,
+            Effect::Surprise | Effect::Initiative => MAX_SURPRISE_BONUS,
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot | Effect::DetectTraps => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
@@ -247,6 +267,10 @@ pub enum Use {
     Forage,
     /// An attempt to steal from someone (spec §8 "Stealing"), whatever comes of it.
     Steal,
+    /// A sneak attack that hit (spec §8 "Surprise and sneak attacks"): its dice landed.
+    SneakAttack,
+    /// An initiative check made on being caught unawares, whatever comes of it.
+    Surprise,
     /// A try at treating oneself (spec §8 "Skills": Heal), whatever comes of it.
     Heal,
     /// A kick at a closed door (spec §8 "Doors").
@@ -285,6 +309,8 @@ impl Use {
             Use::Travel => "a journey on the overworld",
             Use::Forage => "foraging in the wild",
             Use::Steal => "trying to steal from someone",
+            Use::SneakAttack => "a sneak attack that hits",
+            Use::Surprise => "being caught unawares (the initiative check, whatever comes of it)",
             Use::Heal => "trying to treat bleeding, poison, or a disease",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
@@ -399,6 +425,8 @@ impl Use {
             Use::Travel => "travel",
             Use::Forage => "forage",
             Use::Steal => "steal",
+            Use::SneakAttack => "sneak_attack",
+            Use::Surprise => "surprise",
             Use::Heal => "heal",
             Use::Kick => "kick",
             Use::Pick => "pick",
@@ -430,6 +458,10 @@ impl Effect {
             Effect::Bargain => "bargain",
             Effect::Identify => "identify",
             Effect::Steal => "steal",
+            Effect::SneakDice => "sneak_dice",
+            Effect::Surprise => "surprise",
+            Effect::Initiative => "initiative",
+            Effect::SurpriseEase => "surprise_ease",
             Effect::Heal => "heal",
             Effect::Kick => "kick",
             Effect::Pick => "pick",

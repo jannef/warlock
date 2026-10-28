@@ -7,7 +7,7 @@ hp = 5
 mana = 4
 casting = 50
 experience = 120
-skills = { balance = "2d6+10", tumble = "2d6+10", athletics = "2d4+4", concentration = "2d4+4", escape_artist = "2d4+4", listen = "2d4+4" }
+skills = { balance = "2d6+10", initiative = "2d6+10", tumble = "2d6+10", athletics = "2d4+4", concentration = "2d4+4", escape_artist = "2d4+4", listen = "2d4+4" }
 known_for = ["balance", "tumble"]
 optional_skills = { heal = { chance = 25, dice = "2d4" }, stealth = { chance = 20, dice = "2d4" }, swim = { chance = 20, dice = "2d4" } }
 rolls = 2

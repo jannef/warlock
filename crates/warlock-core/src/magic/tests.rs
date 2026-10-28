@@ -791,6 +791,10 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Pick => ("world/lockpick.rs", include_str!("../world/lockpick.rs")),
         S::Temper => ("world/temper.rs", include_str!("../world/temper.rs")),
         S::Resist => ("world/knowledge.rs", include_str!("../world/knowledge.rs")),
+        S::SneakDice => ("world/ambush.rs", include_str!("../world/ambush.rs")),
+        S::Surprise | S::Initiative | S::SurpriseEase => {
+            ("world/surprise.rs", include_str!("../world/surprise.rs"))
+        }
         S::ManaRegen | S::MaxMana => (
             "world/concentration.rs",
             include_str!("../world/concentration.rs"),

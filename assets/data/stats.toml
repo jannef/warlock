@@ -17,7 +17,7 @@
 #   every other use has one. Such a use may give several marks at once (a potion's `marks`), each
 #   with the rule's chance.
 #
-# The uses (`on`): burdened, blow, critical, block, dig, kick, dodge, parry, shot, sneak, climb,
+# The uses (`on`): burdened, blow, critical, block, dig, kick, dodge, parry, shot, sneak, sneak_attack, climb,
 # hurt, big_hit, killed, resisted, plunge, found, read, identified, study, discovered, spot,
 # endured, resisted_will, hungry_fight, cast, chat, trade, quest, swapped, drank, elixir (the
 # wiki's Stats page says each in words). The chances are first guesses
@@ -82,6 +82,11 @@ chance = 20
 stat = "dexterity"
 on = "sneak"
 chance = 10
+
+[[training.use]]
+stat = "dexterity"
+on = "sneak_attack"
+chance = 20
 
 [[training.use]]
 stat = "dexterity"

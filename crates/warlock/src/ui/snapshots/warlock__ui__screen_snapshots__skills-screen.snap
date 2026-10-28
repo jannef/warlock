@@ -6,21 +6,22 @@ expression: "render(case, content.clone())"
 
 
 
-
     ┌─ Skills ────────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ > Appraise           11  ────                                                           │
     │   Detect traps        7  ────                                                           │
     │   Disable device      7  ────                                                           │
     │   Escape artist      10  ────                                                           │
+    │   Initiative          9  ────                                                           │
     │   Listen              6  ────                                                           │
-    │   Negotiation         9  ────                                                           │
-    │   Open lock          19  ────                                                           │
-    │   Search             17  ────                                                           │
+    │   Negotiation        10  ────                                                           │
+    │   Open lock          17  ────                                                           │
+    │   Search              9  ────                                                           │
+    │   Sneak attack       25  ────                                                           │
     │   Spot                9  ────                                                           │
-    │   Steal              16  ────                                                           │
-    │   Stealth            17  ────                                                           │
-    │   Tumble             12  ────                                                           │
+    │   Steal              12  ────                                                           │
+    │   Stealth            16  ────                                                           │
+    │   Tumble             15  ────                                                           │
     │                                                                                         │
     │ Judging what a thing is worth and what it is made of.                                   │
     │                                                                                         │
@@ -30,5 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
-
- The Hub  ·  HP 18/18  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:00       ? controls
