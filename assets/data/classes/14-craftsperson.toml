@@ -7,7 +7,7 @@ hp = 3
 mana = 1
 casting = 25
 experience = 90
-skills = { metalcraft = "2d6+10", woodcraft = "2d6+10", appraise = "2d4+4" }
+skills = { metalcraft = "2d6+10", woodcraft = "2d6+10", appraise = "2d4+4", negotiation = "2d4+4" }
 known_for = ["metalcraft", "woodcraft"]
 rolls = 2
 weapon_skills = { axes = 1 }

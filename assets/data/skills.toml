@@ -29,7 +29,8 @@
 #                 it), "heal" (a try at treating yourself, whatever comes of it), "kick" (a kick
 #                 at a closed door), "study" (a spell studied from a scroll,
 #                 whatever comes of it), "pick" (a try at picking a
-#                 lock). Marks gather until a level-up roll on the skill spends them ([ladder]
+#                 lock), "deal" (a deal made in a shop: goods paid for, or your own sold),
+#                 "appraise" (something you carry told for what it is: "identify" below). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
@@ -47,7 +48,9 @@
 #                 (percent less time a journey on the overworld takes), "forage" (percent added
 #                 to a forage's chance of finding food, at most 30; trained, a skill with it lets
 #                 you forage at all: forage.toml), "bargain" (percent better
-#                 prices in shops, together with Presence at most half; shops.toml), "kick"
+#                 prices in shops, together with Presence at most half; shops.toml), "identify"
+#                 (percent chance, each game hour, of telling one unidentified thing you carry or
+#                 wear for what it is; trained only), "kick"
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
 #                 40), "steal" (points added to stealing from someone, at most 20; trained, a
 #                 skill with it lets you steal at all: steal.toml), "heal" (points added to
@@ -92,9 +95,13 @@ soft_cap = 100
 id = "appraise"
 name = "Appraise"
 description = "Judging what a thing is worth and what it is made of."
-kind = "action"
-# Knowing what things are worth gets better prices in shops (shops.toml), 20 % at 100.
-benefit = [{ effect = "bargain", curve = [[0, 0], [100, 20], [200, 30]] }]
+kind = "passive"
+# Now and then an eye for things tells one unidentified thing you carry or wear for what it is
+# (spec §8 "Skills"; #666): each game hour, this percent chance (2 % at the lowest, 12 % at 100,
+# 20 % at 200). Trained only. Each thing told this way trains it. The shops' prices are
+# Negotiation's.
+mark = [{ on = "appraise", chance = 100 }]
+benefit = [{ effect = "identify", curve = [[0, 2], [100, 12], [200, 20]] }]
 
 [[skill]]
 id = "athletics"
@@ -219,6 +226,15 @@ id = "music"
 name = "Music"
 description = "Singing and playing an instrument."
 kind = "action"
+
+[[skill]]
+id = "negotiation"
+name = "Negotiation"
+description = "Haggling, striking a bargain, and knowing when to walk away."
+kind = "rules"
+mark = [{ on = "deal", chance = 25 }]
+# Haggling gets better prices in shops (shops.toml), 20 % at 100 (Appraise's until #666).
+benefit = [{ effect = "bargain", curve = [[0, 0], [100, 20], [200, 30]] }]
 
 [[skill]]
 id = "open_lock"

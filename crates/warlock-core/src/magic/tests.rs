@@ -783,6 +783,7 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
         S::Burden | S::Travel => SCHEDULE,
         S::Forage => ("world/forage.rs", include_str!("../world/forage.rs")),
         S::Bargain => ("world/shop.rs", include_str!("../world/shop.rs")),
+        S::Identify => ("world/appraise.rs", include_str!("../world/appraise.rs")),
         S::Kick => ("world/door.rs", include_str!("../world/door.rs")),
         S::Steal => ("world/steal.rs", include_str!("../world/steal.rs")),
         S::Heal => ("world/heal.rs", include_str!("../world/heal.rs")),

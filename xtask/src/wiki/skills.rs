@@ -50,12 +50,13 @@ pub(super) fn skills(content: &Content) -> String {
 }
 
 /// Whether `effect` is given only to those trained in its skill at all
-/// (`Skills::trains_effect`: noticing in passing, disarming, picking, stealing, treating,
+/// (`Skills::trains_effect`: noticing in passing, identifying, disarming, picking, stealing, treating,
 /// foraging): to the untrained, a magic item's bonus to the skill gives none of it.
 pub(super) fn gated_effect(effect: Effect) -> bool {
     matches!(
         effect,
         Effect::Spot
+            | Effect::Identify
             | Effect::Disarm
             | Effect::Pick
             | Effect::Steal
@@ -85,6 +86,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Travel => "quicker journeys on the overworld",
         Effect::Forage => "foraging at all, and finding food more often",
         Effect::Bargain => "better prices in shops",
+        Effect::Identify => "now and then telling something you carry for what it is",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Steal => "stealing at all, and better",
         Effect::Heal => "treating your bleeding, poison, and diseases",
@@ -117,6 +119,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Travel => "journeys",
             Effect::Forage => "foraging",
             Effect::Bargain => "prices",
+            Effect::Identify => "identifying, each hour",
             Effect::Kick => "kicking doors in",
             Effect::Steal => "stealing",
             Effect::Heal => "treating",
@@ -149,6 +152,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
                 Effect::Bargain => format!("{n}% better"),
                 Effect::Forage => format!("+{n}%"),
+                Effect::Identify => format!("{n}%"),
                 Effect::Speed => format!("+{n}%"),
                 Effect::Hearing => n.to_string(),
                 Effect::Burden => {
