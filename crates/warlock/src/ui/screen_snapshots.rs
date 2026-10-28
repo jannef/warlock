@@ -299,6 +299,16 @@ const CASES: &[Case] = &[
         ..BASE
     },
     Case {
+        // A barbarian's rage makes a berserker (#680): the stance in the status bar and the
+        // Stance row, the change refused while the rage holds it.
+        name: "berserker",
+        character: Some("human,male,barbarian"),
+        actions: "stance:coward use:rage stance:neutral",
+        screen: Some("character"),
+        size: (120, 36),
+        ..BASE
+    },
+    Case {
         // A band crossed (the `fall` line) and the Alignment row: seed 1's Basilisk-born paladin
         // (#272) starts at 450, Good, so the kick takes him down to Kind.
         name: "alignment-band-character",

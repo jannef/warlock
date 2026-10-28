@@ -1,9 +1,11 @@
 # Combat stances (spec §8 "Stances"): how the player holds themselves in a fight, as in ADOM.
 # The numbers are first guesses, kept here to tune after playtesting. None is shown in the game:
 # only the stance's name is. Creatures stay neutral. Exactly one entry per stance is required.
+# The berserker's is never chosen: a barbarian's rage puts them in it and holds them there, and
+# when the rage ends they are aggressive (docs/dev/creatures.md "Stances").
 #
 # Fields (all but id and name optional):
-#   id           aggressive, neutral, defensive, or coward
+#   id           aggressive, neutral, defensive, coward, or berserker
 #   name         shown in the status bar and the wiki
 #   to_hit       added to the to-hit of the player's attacks (-20 to 20)
 #   damage       added to every roll of their damage (-20 to 20; a blow still does at least 1)
@@ -20,6 +22,17 @@ name = "Aggressive"
 to_hit = 1
 damage = 2
 dodge = -3
+weapon_mark = 125
+
+# Aggressive and more, at a higher price: blows that land harder and more often, a guard all but
+# given up, and no thought of running (a step away from a foe costs half again as much).
+[[stance]]
+id = "berserker"
+name = "Berserker"
+to_hit = 2
+damage = 4
+dodge = -6
+flee_cost = 150
 weapon_mark = 125
 
 [[stance]]

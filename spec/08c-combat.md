@@ -268,8 +268,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   talents that teach quicker (`xp_percent`). The player is shown their level, XP, and the XP of the next level
   (`PerceptionView::own_experience`), and nothing else about the rules.
 - **Stances** (`content/stance.rs`, `data/stances.toml`; M22), after ADOM's combat tactics. The
-  player is in one of four **combat stances**, `CombatStance`: aggressive, neutral (the
-  default), defensive, coward. It is `Actor::stance` (saved, in the state hash; creatures stay
+  player is in one of four **combat stances** they choose (`CombatStance::CHOSEN`): aggressive,
+  neutral (the default), defensive, coward; a raging barbarian is in a fifth, **berserker**
+  (#680), below. It is `Actor::stance` (saved, in the state hash; creatures stay
   neutral for now, and the AI may pick one later). `Action::SetStance(stance)`, text
   `stance:aggressive`, takes no game time (`Spent::NoTime`) and is recorded in replays; it says
   "You take an aggressive stance." (a neutral, a defensive, a cowardly). `+` and `-` step towards aggressive and towards coward (`CombatStance::more_aggressive`, `more_defensive`; they stop at the ends).
@@ -286,7 +287,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   numbers (first guesses, tuned by playtesting; none is ever shown, only the stance's name):
   aggressive +1 to hit, +2 damage, -3 Dodge, marks ×1.25; defensive -2 to hit, -1 damage, +2
   Dodge, +1 Parry; coward -4 to hit, -3 damage, +4 Dodge, attacks ×1.25, fleeing steps ×0.85
-  and half as loud. The player perceives it (`PerceptionView::own_stance`): the status bar shows
+  and half as loud; berserker +2 to hit, +4 damage, -6 Dodge, fleeing steps ×1.5, marks ×1.25.
+  **Berserker** (`world/berserker.rs`) is never chosen: `World::set_stance` refuses it ("Only
+  rage makes a berserker.", `Spent::Nothing`), and refuses every stance while the player rages
+  ("Your rage holds you in the berserker's stance."), so `stance:berserker` and `+`/`-` (which
+  stay put on it) never change it. The one rule, `berserker::settle`: an actor suffering the
+  status its own Rage ability brings (`TalentMods::rage_status`: Raging, so a barbarian, and
+  never a creature or another class granted the resource) is in the berserker stance, and one in
+  it that is not raging so is put in the aggressive stance (not the stance before the rage). The
+  world settles it wherever a status begins (`World::afflict`) or ends (`World::ended`: the rage
+  decaying or spent to nothing, Raging cured; and the Phoenix's rising that burns every status
+  away), with a note ("You fight as a berserker.", "You fall back into an aggressive stance.")
+  after the rage's own words; `World::from_state` settles a saved state that broke the rule,
+  with a line for the log (`World::retiered`). Wild guard (Might, barbarian 6) halves its Dodge
+  penalty. The player perceives it (`PerceptionView::own_stance`): the status bar shows
   it when it is not neutral, the character screen always (§6); the wiki's Combat page has the
   generated table.
 - **Free blows** (`world/free_blow.rs`; #228, design `docs/design/progression.md` §4.1 B3): blows

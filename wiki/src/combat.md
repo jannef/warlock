@@ -179,6 +179,13 @@ always does. The game never shows what a stance adds: you feel it in the fight.
   your weapon does not already turn blows aside as well.
 - **Coward**: you hit much less often and softer, and your attacks take longer, but you dodge
   best, and stepping away from a hostile creature next to you is quicker and quieter.
+- **Berserker**: a barbarian's alone, and only while they rage. Flying into a
+  [rage](resources.md) puts you in it at once, whatever your stance was, and `+` and `-` cannot
+  take you out of it ("Your rage holds you in the berserker's stance."); no other class, talent,
+  item, or creature ever has it. You hit more often and harder than an aggressive fighter, at a
+  greater cost to your guard, and stepping away from a foe beside you takes longer. When the rage
+  ends, however it ends, you fall back into the aggressive stance, not the one you had before.
+  The barbarian's Wild guard talent halves its cost to your Dodge.
 
 A stance changes how long every attack takes: a blow, a shield bash, a kick, a shot, or a throw;
 never reloading or kicking a door. Each attack takes the time it would as you begin it: a rank of

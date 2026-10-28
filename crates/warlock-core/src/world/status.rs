@@ -132,6 +132,8 @@ impl World {
                 began: true,
             });
         }
+        // Rage makes a berserker (`berserker.rs`).
+        self.settle_stance(id);
     }
 
     /// Cures actor `id` with `cure`, a means named in the statuses' and diseases' `cured_by`

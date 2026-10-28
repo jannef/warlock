@@ -1,0 +1,8 @@
+[[talent]]
+id = "wild_guard"
+name = "Wild guard"
+tree = "might"
+description = "Even in a berserker's fury your guard keeps half of what it would give up."
+needs = { class = "barbarian", level = 6 }
+effects = [{ kind = "stance_dodge", stance = "berserker", percent = 50 }]
+systems = ["stances", "resources"]

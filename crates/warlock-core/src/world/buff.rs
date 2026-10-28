@@ -158,5 +158,7 @@ impl World {
         }
         self.end_resources_of(id, ended, events);
         self.keep_hp_within_max(id);
+        // Rage's end leaves a berserker aggressive (`berserker.rs`).
+        self.settle_stance(id);
     }
 }

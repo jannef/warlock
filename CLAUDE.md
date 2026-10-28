@@ -123,7 +123,7 @@ eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR searc
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N rank:SKILL:N
 skip:DURATION weather:KIND spawn effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
-NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`); `LETTERS` = stacks by position, as letters
+NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`; `berserker` is refused: only rage gives it); `LETTERS` = stacks by position, as letters
 for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
 e.g. `pickup:ac` (the pile on the player's cell, `a` its top) or `drop:b` (the inventory), none
 = everything; `LETTER` = one position, `b` or `27` (`equip:body:27`, `eat:floor:30`); positions
@@ -206,7 +206,8 @@ and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's name, race, gender, and class, age, birth date, and sign with a lucky day's title,
 `Sign Wood Salamander, the Racer`, then their own scores as the rules read them, then
-their caster level, `Caster level 3`, then their alignment band, `Alignment Kind`, then each guild they belong to with their rank, `Guild
+their caster level, `Caster level 3`, then their alignment band, `Alignment Kind`, then their combat stance when it is not neutral,
+`Stance Berserker`, then each guild they belong to with their rank, `Guild
 Weyfarers' Gilde, Tin`, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
@@ -249,7 +250,7 @@ against 20, 15/144`, **dev-only**),
 strong light dazzles light-blind eyes, and the
 `temperature`; JSON dumps add `hp`, `mana` (`current`, `max`), `caster_level`, `resources` (the
 ones held: `id`, `current`, `max`), `defence`, `protection`, `resistances` (by damage type id, the
-word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `guilds` (`id`, `name`, `rank`; left out before joining one), `hunger`, `dazzled`, `effects`
+word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `guilds` (`id`, `name`, `rank`; left out before joining one), `hunger`, `stance` (the combat stance's id), `dazzled`, `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `known_traps`, `known_hollows` (the hollow walls found: positions), `known_locations` (`pos`, `name`), `chests` (seen or remembered: `pos`, `band`, `state`, `locked` with Chest-wise, else null), `temperature` (°C to a tenth), `weapon_skills` (by skill id:

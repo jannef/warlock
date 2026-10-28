@@ -453,6 +453,7 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
     // The design's 28, Battle trance and Inner calm (the class resources, R5) among them,
     // stamina's Deep lungs and Second breath (#560), protection's Armour-breaker (#563), stat
     // training's Hard training (#562), Second blade's rend (#561), the chests' Deft breaker, and
-    // potions' Lasting draughts (#567), the gear's Bellows (#634), and the mimics' Slick.
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 37);
+    // potions' Lasting draughts (#567), the gear's Bellows (#634), the mimics' Slick, and the
+    // berserker's Wild guard (#680).
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 38);
 }

@@ -90,6 +90,7 @@ mod animated;
 mod appraise;
 mod attacks;
 mod beast_friend;
+mod berserker;
 mod bleed;
 mod boons;
 mod buff;
@@ -494,7 +495,8 @@ pub struct World {
     /// as notes that do not stop a rest (an alignment band crossed, `alignment.rs`).
     notes: Vec<String>,
     /// What loading re-tiered (not saved): a line per affix of a saved item moved to the tier of
-    /// a regraded ladder that holds its value (`retier.rs`), for the game's log.
+    /// a regraded ladder that holds its value (`retier.rs`), and per actor whose stance broke
+    /// the berserker's rule (`berserker.rs`), for the game's log.
     retiered: Vec<String>,
     /// While the player strikes a free blow in another's turn (not saved): what is said
     /// meanwhile, to join the news (`free_blow.rs`).
@@ -925,6 +927,21 @@ impl World {
             );
             player.boons = boons;
         }
+        let mut retiered = retiered;
+        // The berserker stance exactly while raging (`berserker.rs`): a save that broke the rule
+        // is put right.
+        for actor in state.actors.values_mut() {
+            if let Some(was) = berserker::settle(actor, &content) {
+                let why = match actor.stance {
+                    CombatStance::Berserker => "raging",
+                    _ => "not raging",
+                };
+                retiered.push(format!(
+                    "actor {} {why} in the {was} stance: now in the {} stance",
+                    actor.id, actor.stance
+                ));
+            }
+        }
         let mut world = Self::assemble(content, state);
         world.grant_class(world.player_level(), false);
         world.retiered = retiered;
@@ -1335,7 +1352,12 @@ impl World {
 
     /// The player takes combat stance `stance` (spec §8 "Stances"). Takes no time, but a wait's
     /// for those set in their ways (spec §8 "Birth sign").
+    /// The berserker's stance is refused, and so is any while rage holds the player in it
+    /// (`berserker.rs`).
     fn set_stance(&mut self, stance: CombatStance) -> Spent {
+        if let Some(refused) = self.stance_refused(stance) {
+            return refused;
+        }
         self.player_mut().stance = stance;
         self.say(format!("You take {} stance.", stance.phrase()));
         if self.state.player().talent_mods(&self.content).stance_costs {
@@ -1383,6 +1405,8 @@ mod attacks_tests;
 mod balance_probe;
 #[cfg(test)]
 mod beast_den_tests;
+#[cfg(test)]
+mod berserker_tests;
 #[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]
