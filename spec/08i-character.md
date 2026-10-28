@@ -688,8 +688,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Bloated put on steps; other actions as before); `searching` (Keen searcher: +4
     searching) with the birth signs' `search_reach` (a cell farther); `search` and `trap_damage_percent` (Trap sense: +3 to finding hidden
     traps and secret doors, searching and in passing; a trap's damage halved, rounded down, at
-    least 1); `door_kick` and `kick_noise_percent` (Lockbreaker: a door kick as if 6 stronger, half
-    as loud); `dig_percent` (Tunneler: half again the work a turn). A prerequisite may be `either`
+    least 1); `door_kick` and `kick_noise_percent` (Lockbreaker: a door or chest kick as if 6
+    stronger, half as loud); `smash_destroy_percent` (Deft breaker, Might, Strength 12: what a
+    chest kicked open holds breaks half as often, 25 % a stack; a blown-up chest is no kick) and
+    `chest_wise` (Chest-wise, Delver, Intelligence 11 or Search 15: look mode tells a locked shut
+    chest in sight from an unlocked one), the `chests` system's (§8 "Chests"), with Lockbreaker
+    and the wizard's Knock; `dig_percent` (Tunneler: half again the work a turn). A prerequisite may be `either`
     of several (Treasure hunter: "Intelligence 12 or Appraise 20"). The Scholar and Delver trees
     and the searching, digging, shops, magic items, scrolls, skills, and experience systems are
     held to the bar now; talk and gems with the racial talents (#241).
@@ -850,7 +854,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Consecrate (the priest's at
     9, the paladin's at 12: a minute's prayer, for 15 mana, that lifts an unholy special room's
     effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; Good
-    or better).
+    or better), Knock (the wizard's at 4: in a direction, for 5 mana and a cast's time, the lock
+    of the locked door or shut chest there springs open and nothing opens; refused, no time or
+    mana, where nothing locked stands; §8 "Chests").
   - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
     Shield line and Shield of faith (Shield +1; Shield of faith also +10 to Sword and Board's
     bash chance), Cleaving strike (the cleave free blow; with the Cleave talent too, great

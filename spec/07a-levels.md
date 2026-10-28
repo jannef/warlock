@@ -74,10 +74,17 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `lock = "pantry"` (a lock id: keys with that id open it, and skeleton keys) or `locked = true`
   (a lock without an id: only a skeleton key opens it), and `lock_difficulty = N` with either
   sets how hard it is to pick (1 to 50; default 14, `door::LOCK_DIFFICULTY`; §8 "Doors"). A
-  lock on anything but a closed door, an empty lock id or `*`, a `lock` with `locked = false`,
+  lock on anything but a closed door or a shut chest, an empty lock id or `*`, a `lock` with `locked = false`,
   or a `lock_difficulty` without a lock or out of range is a content error. Hand-made levels
   need not give a lock's key (a door may be meant to be kicked in, or picked); vaults must
-  (below).
+  (below). A shut chest is locked the same way.
+- **Chests in level files** (§8 "Chests"): every cell of the shut `chest` terrain (or `chest_open`,
+  `chest_smashed`) is a chest. A legend entry on a shut chest gives its level with `chest =
+  "kist"` (that band's least level, `data/chests.toml`) or `chest = 7` (1 to the item levels'
+  most; default the level's `item_level`), locks it as a door (`locked`, `lock`,
+  `lock_difficulty`), and fills it with `objects` (what it holds, not a pile). A `chest` on any
+  other terrain, an unknown band, or a trap on a chest is a content error; vaults hold no chests
+  yet.
 - **Secret doors in level files** (#140, §8 "Searching"): a legend entry on a closed door makes
   it secret with `secret = true` (difficulty `data/search.toml`'s `secret_door`) or `secret = N`
   (difficulty N, 1 to 50). The cell then shows the wall around it (of its solid neighbors north,

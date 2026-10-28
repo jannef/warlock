@@ -43,3 +43,5 @@ at). Generated levels: `Needs::key` (the branch's `key` in `dungeons.toml`) make
 must hold their own keys (`content/vault.rs`, `check_keys`). The app binds `k` (`KeyCommand::Kick`,
 a direction prompt like open/close, bash, and dig) and bursts the door terrain's `toggle` particles on
 `Event::DoorKicked`/`DoorBroken`.
+Chests (`docs/dev/chests.md`) are opened, unlocked, picked, kicked, and knocked through the
+same functions, one arm each for a shut chest's terrain.

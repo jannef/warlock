@@ -17,6 +17,7 @@ mod animated;
 mod burden;
 mod calendar;
 mod character;
+mod chests;
 mod combat;
 mod creatures;
 mod damage;
@@ -283,6 +284,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("doors.md", doors::doors),
         ("keys.md", doors::keys),
         ("lock-picking.md", doors::lock_picking),
+        ("chest-bands.md", chests::chest_bands),
+        ("chest-descriptions.md", chests::chest_descriptions),
+        ("chest-breaking.md", chests::chest_breaking),
         ("hunger-states.md", hunger::hunger_states),
         ("hunger-facts.md", hunger::hunger_facts),
         ("hunger-races.md", hunger::hunger_races),
