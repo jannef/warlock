@@ -10,15 +10,15 @@ expression: "render(case, content.clone())"
         │   Sign      Water Basilisk                                                       │
         │   Gender    Other                                                                │
         │   Class     Thief                                                                │
-        │   Talents   Weapon focus (daggers and knives), Hallowed rest, Tunneler           │
+        │   Talents   Weapon focus (daggers and knives), School focus (evocation), Tunneler
         │                                                                                  │
         │   Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                   │
         │                                                                                  │
-        │   St  Strength       9    Appraise        12   Spot             7                │
-        │   Dx  Dexterity     14    Disable device  11   Steal           19                │
-        │   To  Toughness     10    Escape artist    9   Stealth         15                │
-        │   In  Intelligence  12    Open lock       18   Tumble          18                │
-        │   Wi  Willpower     11    Search          17                                     │
+        │   St  Strength       9    Appraise        12   Search           7                │
+        │   Dx  Dexterity     14    Disable device  11   Spot            11                │
+        │   To  Toughness     10    Escape artist    9   Steal           15                │
+        │   In  Intelligence  12    Negotiation      9   Stealth         18                │
+        │   Wi  Willpower     11    Open lock       23   Tumble          18                │
         │   Pr  Presence       9                                                           │
         │                                                                                  │
         │   Kit       a dagger (wielded), a dagger (in off hand),                          │
