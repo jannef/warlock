@@ -317,7 +317,7 @@ fn resistances_add_up_across_what_one_is_and_wears_and_cap_short_of_immunity() {
         &[
             (one("fur_cloak"), "cloak"),
             (one("padded_coat"), "body"),
-            (magic("gold_amulet", "of_warmth", 3, 30, false), "neck"),
+            (magic("gold_amulet", "of_warmth", 9, 30, false), "neck"),
         ],
     );
     assert_eq!(w.resistances_of(player).get(Some(cold)), 60);
@@ -328,8 +328,11 @@ fn resistances_add_up_across_what_one_is_and_wears_and_cap_short_of_immunity() {
         &[
             (one("fur_cloak"), "cloak"),
             (one("padded_coat"), "body"),
-            (magic("gold_amulet", "of_warmth", 4, 45, false), "neck"),
-            (magic("silver_ring", "of_warmth", 4, 45, false), "left_ring"),
+            (magic("gold_amulet", "of_warmth", 12, 45, false), "neck"),
+            (
+                magic("silver_ring", "of_warmth", 12, 45, false),
+                "left_ring",
+            ),
         ],
     );
     assert_eq!(w.resistances_of(player).get(Some(cold)), MAX_RESISTANCE);
@@ -578,12 +581,12 @@ fn descriptions_say_kinds_added_damage_and_resistances() {
         flaming.contains(&"Flaming: adds 1d4 fire damage".into()),
         "{flaming:?}"
     );
-    let warm = text(&magic("gold_amulet", "of_warmth", 2, 20, true));
+    let warm = text(&magic("gold_amulet", "of_warmth", 3, 20, true));
     assert!(
         warm.contains(&"of Warmth: +20% cold resistance".into()),
         "{warm:?}"
     );
-    let hidden = text(&magic("gold_amulet", "of_warmth", 2, 20, false));
+    let hidden = text(&magic("gold_amulet", "of_warmth", 3, 20, false));
     assert!(!hidden.iter().any(|l| l.contains("cold")), "{hidden:?}");
 }
 

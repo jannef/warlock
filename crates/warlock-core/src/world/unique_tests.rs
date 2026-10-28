@@ -127,7 +127,7 @@ fn a_unique_is_made_from_its_table_rare_with_its_name_and_affixes() {
         magic.affixes,
         [
             affixes("venomous", 2),
-            affixes("of_celerity", 3),
+            affixes("of_celerity", 11),
             affixes("of_the_lynx", 2)
         ]
     );

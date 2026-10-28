@@ -8,7 +8,7 @@
 id = "widowmaker"
 name = "Widowmaker"
 object = "stiletto"
-affixes = ["venomous:2", "of_celerity:3", "of_the_lynx:2"]
+affixes = ["venomous:2", "of_celerity:11", "of_the_lynx:2"]
 level = 12
 power = { inflict = "poisoned", chance = 100, severity = 1, phrase = "Its every cut poisons." }
 lore = "Thin as a hatpin, and never quite clean."

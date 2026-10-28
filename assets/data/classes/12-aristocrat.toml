@@ -9,6 +9,7 @@ casting = 75
 experience = 90
 skills = { knowledge = "2d6+10", bluff = "2d4+4", intimidate = "2d4+4" }
 known_for = ["knowledge"]
+optional_skills = { appraise = { chance = 20, dice = "2d4" }, handle_animal = { chance = 30, dice = "2d4" }, music = { chance = 25, dice = "2d4" } }
 rolls = 2
 weapon_skills = { long_blades = 1 }
 styles = { duelist = 1 }

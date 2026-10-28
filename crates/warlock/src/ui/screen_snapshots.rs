@@ -326,6 +326,14 @@ const CASES: &[Case] = &[
         keys: Some("Down Down"),
         ..BASE
     },
+    // A wizard's (#668): Concentration first, its description saying what it gives in words.
+    Case {
+        name: "skills-screen-wizard",
+        run: true,
+        character: Some("elf,female,wizard"),
+        screen: Some("skills"),
+        ..BASE
+    },
     Case {
         name: "weapon-skills-screen",
         scenario: "arena",

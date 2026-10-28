@@ -8,6 +8,7 @@ mana = 1
 casting = 25
 experience = 80
 skills = { athletics = "2d4+4", handle_animal = "2d4+4" }
+optional_skills = { heal = { chance = 15, dice = "2d4" }, metalcraft = { chance = 10, dice = "2d4" }, survival = { chance = 30, dice = "2d4" }, swim = { chance = 20, dice = "2d4" }, woodcraft = { chance = 20, dice = "2d4" } }
 rolls = 2
 weapon_skills = { maces = 1 }
 styles = { brawler = 1 }

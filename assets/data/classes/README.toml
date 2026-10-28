@@ -44,6 +44,12 @@
 #   known_for     the skills the class is known for (its 2d6+10 ones; each one of `skills`): a
 #                 level-up roll on one throws the die one step up the skill ladder (skills.toml
 #                 `[ladder]`); a roll on one of the class's other skills adds 1 (default none)
+#   optional_skills  skills a new character may or may not start with (ADOM-like), by skill id:
+#                 `{ chance = 30, dice = "2d4" }`, the chance in percent (1 to 99) that it comes,
+#                 rolled once when the character is made (from its own stream, so no other roll
+#                 moves), then its dice (every result within 0 to 100), added to the race's. None
+#                 is one of `skills`. They are pleasant surprises, not the class's core: a level-up
+#                 roll on one adds nothing for the class (default none)
 #   rolls         the skill rolls each level gives (spec §8 "Skills"; 0 to 10, default 2): the
 #                 race's (races.toml) and Intelligence's (skills.toml `[rolls]`) are added. Most
 #                 classes 2, the thief and the ranger 3, the bard 4: learning is the bard's gift

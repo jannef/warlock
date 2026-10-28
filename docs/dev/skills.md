@@ -29,7 +29,17 @@ level ...`, `roll dice athletics 1d3, ...`). `levelup:auto` spends rolls on the 
 Tests: `skills.rs` (ladder, rolls, meter), `content/skill.rs`, `content/class.rs`
 (`known_for`, `rolls`), `world/skill_roll_tests.rs` (counts, refusals, dice and affinities,
 streams, saves and replays), `world/skills_tests.rs` (marks by use). Race and class grants are dice rolled in `character.rs` after every
-other roll, so they never move a score. Rules read a benefit through `Actor::skill_effect`
+other roll, so they never move a score. A class's **optional skills** (#662,
+`ClassDef::optional_skills`, `content::OptionalSkill { skill, chance, dice }`; the loader checks
+the ids, chance 1 to 99, the dice within 0 to 100, and that none is one of the class's `skills`)
+are rolled by `character::optional_skills` from their own stream,
+`character/optional-skills/<spec>` (chance, then dice, in skill order; a class without any draws
+nothing), so no other roll moves; the result is just the actor's `Skills`, saved and hashed as
+before, and a replay needs no new field (the roll is a function of the seed and spec). Classes
+that have them start with other skills on old seeds, so old replays' hashes change.
+`ClassDef::trains` (the level-up roll's +1) stays the guaranteed list. Tests:
+`content/class.rs` (parsing, refusals), `character.rs`
+(`optional_skills_come_by_chance_and_never_move_another_roll`). Rules read a benefit through `Actor::skill_effect`
 (the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
@@ -50,7 +60,9 @@ when a study ends, is also `StatUse::Study`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
 `disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
-`dodge`, besides `fight.rs::resolve`). Knowledge's `resist` (#667) is read
+`dodge`, besides `fight.rs::resolve`). Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
+`World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
+use reported by `World::spend_mana`. Knowledge's `resist` (#667) is read
 in `world/knowledge.rs` (`World::resisting`, `resist_bonus`) through `Actor::skill_effect_above`
 (`Skills::effect_above`: each benefit read at the value less the creature's level, nothing at or
 below it), called for the modifier of the player's check against a creature's drain

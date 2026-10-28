@@ -297,7 +297,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   lists' numbers, above, a line each: "To hit +1, damage 1d8+2, range 15", "Adds to a shot: +1d4
   fire", "Adds to every attack: +1 to hit", "Dv +2, Pv 3"), and for
   a magic or rare item either "Unidentified: what its magic does is unknown, though it works all
-  the same." or its item level and each affix, "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
+  the same." or each affix (never the item level: a hidden number), "Prefix  Sharp: +2 damage", "Suffix  of Celerity:
   attacks faster" (affix magnitudes are item properties and shown; speed only in words; global
   attack effects say "with every attack"); an identified unique item (§8 "Magic items") adds its
   power in words, "Power  Its every cut poisons.", and its lore as the last line. Never the

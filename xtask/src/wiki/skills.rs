@@ -61,6 +61,8 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
             | Effect::Steal
             | Effect::Heal
             | Effect::Forage
+            | Effect::ManaRegen
+            | Effect::MaxMana
     )
 }
 
@@ -90,6 +92,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Heal => "treating your bleeding, poison, and diseases",
         Effect::Pick => "picking locks",
         Effect::Temper => "tempering at a forge's anvil",
+        Effect::ManaRegen => "mana back faster",
+        Effect::MaxMana => "a slightly larger mana pool (at most a fifth more)",
         Effect::Speed => "quicker in everything",
         Effect::Resist => "resisting the powers of creatures it stands above",
     }
@@ -125,6 +129,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Heal => "treating",
             Effect::Pick => "picking locks",
             Effect::Temper => "tempering",
+            Effect::ManaRegen => "mana back",
+            Effect::MaxMana => "mana pool",
             Effect::Speed => "speed",
             Effect::Resist => "resisting",
         };
@@ -154,7 +160,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
                 Effect::Bargain => format!("{n}% better"),
                 Effect::Forage => format!("+{n}%"),
-                Effect::Speed => format!("+{n}%"),
+                Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
+                Effect::MaxMana => format!("+{n} mana"),
                 Effect::Hearing => n.to_string(),
                 Effect::Burden => {
                     let slowed = |b: Burden| factor(b.slow_eased(100, n));
@@ -237,9 +244,19 @@ pub(super) fn skill_grants(content: &Content) -> String {
         }
         let _ = writeln!(out, "| {} | {trains} |", r.name);
     }
-    out.push_str("\n| Class | Trains |\n|---|---|\n");
+    out.push_str("\n| Class | Trains | May start with |\n|---|---|---|\n");
     for c in content.classes() {
-        let _ = writeln!(out, "| {} | {} |", c.name, list(&c.skills));
+        let optional: Vec<String> = (c.optional_skills.iter())
+            .map(|o| {
+                let name = skill_name(content, o.skill);
+                format!("{name} `{}` ({} %)", o.dice, o.chance)
+            })
+            .collect();
+        let optional = match optional.is_empty() {
+            true => "-".into(),
+            false => optional.join(", "),
+        };
+        let _ = writeln!(out, "| {} | {} | {optional} |", c.name, list(&c.skills));
     }
     out
 }

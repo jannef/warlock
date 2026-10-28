@@ -21,7 +21,7 @@ pub enum LineKind {
     Base,
     /// A base stat: damage, Defence, range.
     Stat,
-    /// The item level, or that it is unidentified.
+    /// That its magic is unidentified (the item level is never shown: a hidden number).
     Note,
     /// An affix: its kind ("Prefix"), name, and what it does.
     Affix(AffixKind),
@@ -298,7 +298,6 @@ fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String
             "Unidentified: what its magic does is unknown, though it works all the same.",
         )),
         Some(magic) => {
-            out.push(line(LineKind::Note, format!("Item level {}", magic.level)));
             let kind = def.kind.unwrap_or(ItemKind::Ring);
             for rolled in magic.rolled(content) {
                 let text = format!("{}: {}", rolled.def.name, phrase(&rolled, kind, content));

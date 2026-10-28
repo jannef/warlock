@@ -316,6 +316,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-prefixes.md", magic::prefixes),
         ("magic-suffixes.md", magic::suffixes),
         ("magic-names.md", magic::rare_names),
+        ("magic-systems.md", magic::systems),
         ("uniques.md", uniques::uniques),
         ("scrolls.md", scrolls::scrolls),
         ("potions.md", potions::potions),
@@ -394,6 +395,34 @@ mod tests {
         ] {
             assert!(suffixes.contains(row), "{row}\nin\n{suffixes}");
         }
+    }
+
+    /// What systems have affixes (#637): every affix a row, with its system and the talents read
+    /// beside it, named as the game names them.
+    #[test]
+    fn the_systems_table_has_every_affix() {
+        let content = Content::builtin().expect("content loads");
+        let table = magic::systems(&content);
+        let rows = table.lines().filter(|l| l.starts_with("| ")).count() - 1;
+        assert_eq!(rows, content.affixes().all().len(), "{table}");
+        row_has(
+            &table,
+            "| of Thrift |",
+            &["suffix", "Mana", "Frugal caster"],
+        );
+        row_has(
+            &table,
+            "| Tireless |",
+            &["prefix", "Stamina", "Deep lungs, Bellows"],
+        );
+        row_has(&table, "| of Fury |", &["Resources", "maximum rage"]);
+        row_has(
+            &table,
+            "| of the Adept |",
+            &["Spells", "Arcane training, Attuned"],
+        );
+        row_has(&table, "| Delving |", &["Digging", "Tunneler"]);
+        row_has(&table, "| of the Eagle |", &["Skills", "Spot (a skill)"]);
     }
 
     /// The numbers the game keeps to itself are stated exactly (#264): creatures, stats, speed,
@@ -920,7 +949,8 @@ mod tests {
         assert!(
             benefits.contains(
                 "| Value | Appraise: prices | Athletics: kicking doors in | Athletics: speed | \
-                 Balance: Burdened / Strained | Decipher script: study check | Disable device: disarming traps | \
+                 Balance: Burdened / Strained | Concentration: mana back | Concentration: mana pool | \
+                 Decipher script: study check | Disable device: disarming traps | \
                  Heal: treating | Listen: hears fainter by | Metalcraft: tempering | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Spellcraft: study check | Spot: noticing | Steal: \
                  stealing | Stealth: noise | Survival: journeys | Survival: foraging | Tumble: \
@@ -941,11 +971,11 @@ mod tests {
             "{foraging}"
         );
         assert!(benefits.contains(
-            "| 100 | 20% better | +8 Strength | +5% | ×1.1 / ×1.2 | +10 | +8 | +8 | 10 | +8 | +8 | +8 | +1 cell \
+            "| 100 | 20% better | +8 Strength | +5% | ×1.1 / ×1.2 | +40% | +5 mana | +10 | +8 | +8 | 10 | +8 | +8 | +8 | +1 cell \
              | +10 | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 25% better | +10 Strength | +7% | ×1.08 / ×1.15 | +15 | +10 | +10 | 15 | +10 | +10 | +10 \
+            "| 150 | 25% better | +10 Strength | +7% | ×1.08 / ×1.15 | +50% | +6 mana | +15 | +10 | +10 | 15 | +10 | +10 | +10 \
              | +1 cell | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
         ));
         // Treating oneself: the difficulty and odds of each ailment.
@@ -993,7 +1023,11 @@ mod tests {
         assert!(
             grants.contains("| Human | one of the class's skills `+2d4+4`, picked at random |")
         );
-        assert!(grants.contains("| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` |"));
+        assert!(grants.contains(
+            "| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` | Heal `2d4` (15 %), \
+             Metalcraft `2d4` (10 %), Survival `2d4` (30 %), Swim `2d4` (20 %), \
+             Woodcraft `2d4` (20 %) |"
+        ));
         let ladder = text("skill-ladder.md");
         assert!(
             ladder.contains("| 0 | `+1` | 1.0 | `1d3` | 2.0 |"),
@@ -1084,7 +1118,7 @@ mod tests {
         ));
         // Speed is exact: the share of the time it takes off.
         assert!(prefixes.contains(
-            "| Fleet | you move faster | movement speed | boots | 1: 5–8% less time · 4: 8–12%"
+            "| Fleet | you move faster | movement speed | boots | 1: 5–8% less time · 2: 5–9%"
         ));
         assert!(text("magic-suffixes.md").contains("| of the Bear | Strength | strength |"));
         assert!(text("magic-names.md").contains("| Weapons | Bite,"));

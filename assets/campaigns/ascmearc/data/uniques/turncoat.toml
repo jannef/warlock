@@ -4,7 +4,7 @@
 id = "turncoat"
 name = "The Turncoat"
 object = "banded_mail"
-affixes = ["reinforced:3", "hardened:3", "hale:3", "of_the_ox:2"]
+affixes = ["reinforced:4", "hardened:4", "hale:7", "of_the_ox:2"]
 level = 12
 power = { ward = "frightened", message = "Fear finds no hold on you.", phrase = "Its wearer knows no fear." }
 lore = "The regiment's colours were cut from it long ago; the stitching shows where."
