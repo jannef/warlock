@@ -315,6 +315,14 @@ const CASES: &[Case] = &[
         screen: Some("weapon-skills"),
         ..BASE
     },
+    // Two Shields (#611), hidden until its first marks: here at the rank the dev action sets,
+    // listed among the styles.
+    Case {
+        name: "weapon-skills-screen-two-shields",
+        actions: "rank:two_shields:1",
+        screen: Some("weapon-skills"),
+        ..BASE
+    },
     Case {
         name: "abilities-menu",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
