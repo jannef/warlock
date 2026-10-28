@@ -330,6 +330,41 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Determinism**: deciding a free blow draws nothing (only the second blow's bash chance
     draws); a free blow draws only as the blow it is, so fights without free blows switched on,
     or whose triggers do not fire, keep their draws and hashes.
+- **Surprise and sneak attacks** (`world/surprise.rs`, `data/surprise.toml`; #681, design
+  `docs/design/surprise-and-sneak-attacks.md` §3; `docs/dev/surprise.md`): being caught
+  unawares, both ways round. The Sneak attack and Initiative skills, the thief's rework, slipping
+  past, and the unaware mark come in later slices (#682–#688).
+  - **Unaware** (`World::unaware`, the one definition, asked of every attack; no draw): a
+    creature is unaware of an actor when it hunts no one it has seen (`Mind::last_seen` unset)
+    and its eyes do not see the actor's cell now (creature sight, `World::sees_now`); a sleeper
+    and a mimic in disguise always. The player is unaware of a creature their last perception
+    did not see and that they have not seen within `memory_turns` (20) turns: `Mind::noticed`,
+    the turn the player last saw it, set as perception is computed in the turn pipeline only
+    (never when a loaded state's perception is recomputed). A creature still searching for
+    someone it lost sight of is aware.
+  - **Surprise** (`World::startle`, the one place anyone is surprised): an attack (a blow, a
+    shot, a throw, a spell that rolls to hit) that finds its target unaware, and a hidden trap
+    springing under the one it springs on (a creature knows no trap; the player one they have
+    not found; never a bystander). A sleeper or a disguised mimic is Surprised with no check;
+    anyone else makes the **initiative check**: 2d12 + Dexterity modifier (+ the checks' talent
+    bonus, + Wary's `initiative_bonus`) against `difficulty` (13). Failed, it suffers
+    **Surprised** (`data/status.toml`: `per_action`, one degree, `refresh`, `cost = 150`).
+  - **Surprised**: flat-footed, Dexterity and Dodge count nothing toward its Defence (positive
+    bonuses only, `Target::without`, the strip Feint uses); no free blow out of its turn
+    (riposte, opportunist, gatekeeper, Point-blank's shot; its own attack's second blow and
+    cleave stay); its next action costs 150 %, less what Cool head eases of the extra
+    (`World::status_cost`, the one place); that action ends it ("You recover your wits."). The
+    surprising attack itself is rolled flat-footed whether the check is made or not, and an
+    attacker with ambush dice (Ambusher, the thief's Sneak attack) adds them on a target that is
+    unaware or Surprised.
+  - **Told after the fact**, never before, never a roll: "You catch the kobold unawares." / "The
+    kobold whirls to face you." before the player's blow's line (nothing more on a sleeper or a
+    mimic); "You are taken by surprise!" / "You keep your wits about you." before a creature's
+    attack line, after a trap's; look mode's "surprised"; Surprised in the status bar.
+  - **Determinism**: the check is two draws of the gameplay stream, before the strike's (after a
+    trap's own), only when an attack finds its target unaware or a hidden trap springs on someone
+    awake; a fight that begins in plain sight draws as before. Without `data/surprise.toml`
+    nobody is surprised and the player is never unaware.
 - **Ranged combat** (`warlock-core/src/world/shoot.rs`; M16): shots and throws.
   - **Loosing**: the player fires (`Action::Fire(cell)`, `fire:X,Y`) with the missile weapon in a
     `ready` slot and the ammunition it shoots in a `ready` slot, or throws (`Action::Throw { item,

@@ -342,6 +342,7 @@ file). Topics:
 - `docs/dev/guild.md` — guilds and their ranks: the data, the derived rank, the promotion hook, the Weyfarers' Gilde
 - `docs/dev/shops.md` — shop data, keepers, prices, buying, selling, theft, the shop dialogs
 - `docs/dev/stealing.md` — the Steal ability and action, the contest, what is taken, a caught thief, the alignment hook
+- `docs/dev/surprise.md` — unaware both ways round, `Mind::noticed`, the initiative check, the Surprised status and its hooks
 - `docs/dev/doors.md` — locks and keys, kicking, breaking, what creatures open
 - `docs/dev/chests.md` — chests as cell fixtures: the bands, opening, keys, Pick lock and Knock, smashing, blasts, what perception shows
 - `docs/dev/digging.md` — digging tools, wall hardness, the dig loop, blasts

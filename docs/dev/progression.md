@@ -64,7 +64,9 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `scent` | `Perception::compute`: a creature suffering the status, in line of sight within the radius (not on the overworld), has its cell seen as darkvision would |
 | `night_sight` | `Perception::compute`: the overworld's sight radius at night (`daylight::phase`) |
 | `lantern_light` | `WorldState::carried_light` (`world/lamp.rs`, read by `LightCache::sources`): the preset of a lit (not hooded) lantern ready in the Tool slot (gameplay light: creatures see it too) |
-| `ambush` | `World::resolve` → `World::ambushed` (`world/ambush.rs`): the dice added after the strike when it hit a creature that `World::unaware` says has not seen the attacker (`Mind::last_seen` unset, and creature sight from it misses the attacker's cell); drawn only then |
+| `ambush` | `World::resolve` → `World::ambushed` (`world/ambush.rs`): the dice added after the strike when it hit a target that `World::unaware` (`world/surprise.rs`) says has not seen the attacker, or one that is Surprised; drawn only then |
+| `initiative_bonus` | `World::startle` (`world/surprise.rs`): added to the initiative check (Wary) |
+| `surprise_ease` | `World::status_cost` (`world/surprise.rs`): the percent of Surprised's extra cost spared, capped at 100 (Cool head) |
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
 | `travel_percent` | `World::step_price` on the overworld, after the survival skill |
 | `terrain_as` | `World::step_price`: the terrain stepped onto is priced as the one it names (local and overworld alike; its ids checked once the terrain loads, `TalentBook::check_terrain`) |
@@ -140,7 +142,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `inspire`, `virtuoso` | `world/class_ability.rs` (`World::inspire`: `TalentMods::inspiring`, its `instead` resource via `World::spend_resource`, else `World::spend_mana`); `Ability::unavailable` (`Unavailable::NoMana` when the resource falls short too) |
 | `volley` | `world/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
 | `favoured_prey` | `World::resolve` → `World::favoured` (`world/ambush.rs`), against `Quests::prey` |
-| `ambush` (summed), `ambush_threat` | `World::resolve` → `World::sneaking` (before the strike), `sneak_threat`, `ambushed`; `Dice::and` adds the dice of the same sides |
+| `ambush` (summed), `ambush_threat` | `World::resolve` → `World::sneaks` (before the strike), `sneak_threat`, `ambushed`; `Dice::and` adds the dice of the same sides |
 | `exact_sounds` | `Perception::compute` → `noise::perceive` (`noise::Exact::All`) |
 | `sky_footsteps_percent`, `silent_unburdened`, `attack_noise_percent` | `noise::noise` (steps onto an unroofed cell of a sky-exposed level; steps while Unburdened; attacks) |
 | `trap_ease` | `search.rs::finding` (searching and in passing; `difficulty_of`, which disarming reads, is unchanged) |

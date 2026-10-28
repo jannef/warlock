@@ -198,6 +198,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   hostile to the player: `outraged`). Who can steal is the skills' business (the `steal`
   benefit, `data/skills.toml`); a shopkeeper that catches the player is outraged by its shop's
   rules (`data/shops.toml`'s `outraged`).
+- **Surprise** (`data/surprise.toml`, optional; without it nobody is surprised; §8 "Surprise and
+  sneak attacks"): `[surprise]` `status` (the status a failed initiative check brings, `per_action`
+  with one degree: `surprised`), `difficulty` (the check's, 13), `missile_reach` (6) and
+  `no_vitals` (creature tags; both read from the Sneak attack skill on), `memory_turns` (how long
+  the player stays aware of a creature they have seen, 20).
 - **Stat training** (`data/stats.toml`, optional; without it nothing trains and no level checks
   a stat; §8 "Stats"): `[training]` `need_base` (20) and `need_per_point` (3), each 0 to 200
   and not both 0, `over_potential_divisor` (4; 1 to 20), and `[[training.use]]` rules: `stat`
