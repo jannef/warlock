@@ -97,23 +97,31 @@ pub(super) fn search_depths(content: &Content) -> String {
 }
 
 /// Who notices hidden things in passing, by race (by name): by their race, by its training in
-/// Spot, or only by their class's; and what the race adds to finding them.
+/// Spot (everything but traps) or Detect traps (traps), or only by their class's; and what the
+/// race adds to finding them.
 pub(super) fn search_races(content: &Content) -> String {
     let mut out =
         String::from("| Race | Notices in passing | Finds hidden things |\n|---|---|:---:|\n");
-    let spot = |skills: &[(SkillId, Dice)]| {
+    let trains = |skills: &[(SkillId, Dice)], effect: Effect| {
         (skills.iter())
-            .any(|(id, _)| (content.skill(*id).benefits.iter()).any(|b| b.effect == Effect::Spot))
+            .any(|(id, _)| (content.skill(*id).benefits.iter()).any(|b| b.effect == effect))
     };
     let mut races: Vec<_> = content.races().list.iter().collect();
     races.sort_by(|a, b| a.name.cmp(&b.name));
     for r in races {
+        let spot = trains(&r.skills, Effect::Spot);
+        let traps = trains(&r.skills, Effect::DetectTraps);
         let notices = match r.passive_search {
             Some(PassiveSearch::All) => "Everything",
+            Some(PassiveSearch::Stone) if traps => {
+                "What is hidden in stone, and hidden traps (trained in Detect traps)"
+            }
             Some(PassiveSearch::Stone) => "What is hidden in stone",
             Some(PassiveSearch::Traps) => "Hidden traps",
-            None if spot(&r.skills) => "Everything (trained in Spot)",
-            None => "Only if their class trains Spot",
+            None if spot && traps => "Everything (trained in Spot and Detect traps)",
+            None if spot => "Everything but traps (trained in Spot)",
+            None if traps => "Hidden traps (trained in Detect traps)",
+            None => "Only if their class trains Spot or Detect traps",
         };
         let bonus = match r.search {
             0 => "—".to_string(),
@@ -121,17 +129,22 @@ pub(super) fn search_races(content: &Content) -> String {
         };
         let _ = writeln!(out, "| {} | {notices} | {bonus} |", r.name);
     }
-    let mut classes: Vec<&str> = (content.classes().iter())
-        .filter(|c| spot(&c.skills))
-        .map(|c| c.name.as_str())
-        .collect();
-    classes.sort_unstable();
-    if !classes.is_empty() {
-        let _ = write!(
-            out,
-            "\nClasses trained in Spot, who notice everything in passing: {}.\n",
-            classes.join(", ")
-        );
+    for (effect, skill, what) in [
+        (Effect::Spot, "Spot", "everything but traps"),
+        (Effect::DetectTraps, "Detect traps", "hidden traps"),
+    ] {
+        let mut classes: Vec<&str> = (content.classes().iter())
+            .filter(|c| trains(&c.skills, effect))
+            .map(|c| c.name.as_str())
+            .collect();
+        classes.sort_unstable();
+        if !classes.is_empty() {
+            let _ = write!(
+                out,
+                "\nClasses trained in {skill}, who notice {what} in passing: {}.\n",
+                classes.join(", ")
+            );
+        }
     }
     out
 }

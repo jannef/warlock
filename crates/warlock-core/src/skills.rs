@@ -120,8 +120,12 @@ pub enum Effect {
     /// Cells farther a search reaches than the cells around the searcher.
     SearchReach,
     /// Points added to noticing hidden features in passing (spec §8 "Searching"); a skill with
-    /// it, trained, lets the actor notice them at all.
+    /// it, trained, lets the actor notice them at all; hidden traps are Detect traps' instead.
     Spot,
+    /// Points added to finding hidden traps, searching and in passing alike (spec §8
+    /// "Searching"; `world/search.rs`), in place of Search's and Spot's; a skill with it,
+    /// trained, lets the actor notice traps in passing at all.
+    DetectTraps,
     /// Points taken off the difficulty of studying a spell (spec §8 "Spells";
     /// `world/learn.rs`).
     Study,
@@ -169,7 +173,7 @@ impl Effect {
             Effect::Dodge | Effect::Hearing => MAX_VALUE as i32,
             Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
             Effect::Kick => *crate::stats::SCORES.end() as i32,
-            Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
+            Effect::Search | Effect::Spot | Effect::DetectTraps => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
             Effect::Heal => MAX_HEAL_BONUS,
@@ -193,8 +197,10 @@ pub enum Use {
     Hear,
     /// A turn spent searching (spec §8 "Searching"), whatever it finds.
     Search,
-    /// Noticing something hidden in passing (spec §8 "Searching").
+    /// Noticing something hidden in passing (spec §8 "Searching"), not a trap.
     Spot,
+    /// Finding a hidden trap (spec §8 "Searching"), searching or in passing.
+    FindTrap,
     /// A spell studied (spec §8 "Spells"), whatever comes of it.
     Study,
     /// An attempt to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
@@ -229,6 +235,7 @@ impl Use {
             Use::Hear => "hearing something new",
             Use::Search => "a turn spent searching",
             Use::Spot => "noticing something hidden in passing",
+            Use::FindTrap => "finding a hidden trap, searching or in passing",
             Use::Study => "studying a spell from a scroll",
             Use::Disarm => "trying to disarm a trap",
             Use::Dodge => "dodging an attack or a known trap",
@@ -337,6 +344,7 @@ impl Use {
             Use::Hear => "hear",
             Use::Search => "search",
             Use::Spot => "spot",
+            Use::FindTrap => "find_trap",
             Use::Study => "study",
             Use::Disarm => "disarm",
             Use::Dodge => "dodge",
@@ -362,6 +370,7 @@ impl Effect {
             Effect::Search => "search",
             Effect::SearchReach => "search_reach",
             Effect::Spot => "spot",
+            Effect::DetectTraps => "detect_traps",
             Effect::Study => "study",
             Effect::Disarm => "disarm",
             Effect::Burden => "burden",

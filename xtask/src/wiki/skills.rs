@@ -76,9 +76,10 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Dodge => "a Dodge bonus to Defence",
         Effect::Quiet => "quieter steps and doors",
         Effect::Hearing => "keener hearing",
-        Effect::Search => "finding hidden things when you search",
+        Effect::Search => "finding hidden things when you search, not traps",
         Effect::SearchReach => "searching farther around you",
-        Effect::Spot => "noticing hidden things in passing",
+        Effect::Spot => "noticing hidden things in passing, not traps",
+        Effect::DetectTraps => "finding hidden traps, searching and in passing",
         Effect::Study => "studying spells from scrolls",
         Effect::Disarm => "disarming traps",
         Effect::Burden => "less slowdown from your load",
@@ -111,6 +112,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Search => "searching",
             Effect::SearchReach => "search reaches",
             Effect::Spot => "noticing",
+            Effect::DetectTraps => "finding traps",
             Effect::Study => "study check",
             Effect::Disarm => "disarming traps",
             Effect::Burden => "Burdened / Strained",
@@ -138,6 +140,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Dodge
                 | Effect::Search
                 | Effect::Spot
+                | Effect::DetectTraps
                 | Effect::Study
                 | Effect::Steal
                 | Effect::Heal

@@ -1788,8 +1788,9 @@ mod tests {
         // Their own trained skills by skill id, with their values: no marks, nothing untrained.
         assert_eq!(
             value["skills"],
-            json!({ "appraise": 11, "disable_device": 16, "escape_artist": 7, "open_lock": 18,
-                    "search": 9, "spot": 10, "steal": 17, "stealth": 16, "tumble": 16 })
+            json!({ "appraise": 19, "detect_traps": 7, "disable_device": 7, "escape_artist": 10,
+                    "open_lock": 18, "search": 10, "spot": 9, "steal": 16, "stealth": 16,
+                    "tumble": 17 })
         );
         assert!(json(&world, &[], false).get("state").is_none());
     }
@@ -1800,15 +1801,16 @@ mod tests {
         assert_eq!(
             layer_rows(&world, Layer::Skills),
             [
-                "Appraise 11",
-                "Disable device 16",
-                "Escape artist 7",
+                "Appraise 19",
+                "Detect traps 7",
+                "Disable device 7",
+                "Escape artist 10",
                 "Open lock 18",
-                "Search 9",
-                "Spot 10",
-                "Steal 17",
+                "Search 10",
+                "Spot 9",
+                "Steal 16",
                 "Stealth 16",
-                "Tumble 16"
+                "Tumble 17"
             ]
         );
         assert_eq!(
@@ -1887,9 +1889,10 @@ mod tests {
         // Every actor's stats, then its trained skills with their marks and the ladder's die.
         assert!(
             actors[0].contains(
-                "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 11 \
-                 (0 +1), disable_device 16 (0 +1), escape_artist 7 (0 +1), open_lock 18 (0 +1), \
-                 search 9 (0 +1), spot 10 (0 +1), steal 17 (0 +1), stealth 16 (0 +1), tumble 16 (0 +1); \
+                "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 19 \
+                 (0 +1), detect_traps 7 (0 +1), disable_device 7 (0 +1), escape_artist 10 (0 +1), \
+                 open_lock 18 (0 +1), search 10 (0 +1), spot 9 (0 +1), steal 16 (0 +1), stealth 16 \
+                 (0 +1), tumble 17 (0 +1); \
                  nutrition 3600 (not_hungry)"
             ),
             "{}",

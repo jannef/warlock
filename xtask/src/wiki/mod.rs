@@ -914,12 +914,12 @@ mod tests {
             "{skills}"
         );
         assert!(skills.contains("| Swim | read by rules |"));
-        assert_eq!(skills.matches("\n| ").count(), 1 + 25, "{skills}");
+        assert_eq!(skills.matches("\n| ").count(), 1 + 26, "{skills}");
         let benefits = text("skill-benefits.md");
         assert!(
             benefits.contains(
                 "| Value | Appraise: prices | Athletics: kicking doors in | Athletics: speed | \
-                 Balance: Burdened / Strained | Decipher script: study check | Disable device: disarming traps | \
+                 Balance: Burdened / Strained | Decipher script: study check | Detect traps: finding traps | Disable device: disarming traps | \
                  Heal: treating | Listen: hears fainter by | Metalcraft: tempering | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Spellcraft: study check | Spot: noticing | Steal: \
                  stealing | Stealth: noise | Survival: journeys | Survival: foraging | Tumble: \
@@ -940,11 +940,11 @@ mod tests {
             "{foraging}"
         );
         assert!(benefits.contains(
-            "| 100 | 20% better | +8 Strength | +5% | ×1.1 / ×1.2 | +10 | +8 | +8 | 10 | +8 | +8 | +8 | +1 cell \
+            "| 100 | 20% better | +8 Strength | +5% | ×1.1 / ×1.2 | +10 | +8 | +8 | +8 | 10 | +8 | +8 | +8 | +1 cell \
              | +10 | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 25% better | +10 Strength | +7% | ×1.08 / ×1.15 | +15 | +10 | +10 | 15 | +10 | +10 | +10 \
+            "| 150 | 25% better | +10 Strength | +7% | ×1.08 / ×1.15 | +15 | +10 | +10 | +10 | 15 | +10 | +10 | +10 \
              | +1 cell | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
         ));
         // Treating oneself: the difficulty and odds of each ailment.
@@ -984,8 +984,15 @@ mod tests {
             races.contains("| Elf | Everything | more easily (+2) |"),
             "{races}"
         );
+        assert!(races.contains(
+            "trained in Spot, who notice everything but traps in passing: Ranger, Thief."
+        ));
         assert!(
-            races.contains("trained in Spot, who notice everything in passing: Ranger, Thief.")
+            races.contains("trained in Detect traps, who notice hidden traps in passing: Thief.")
+        );
+        assert!(
+            races.contains("| Kobold | Hidden traps | more easily (+2) |"),
+            "{races}"
         );
         let grants = text("skill-grants.md");
         assert!(grants.contains("| Halfling | Listen `1d6+4`, Stealth `1d6+4` |"));

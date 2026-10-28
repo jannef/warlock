@@ -2,7 +2,7 @@
 //! names; Apprentice trains its chosen skill as the rank is taken; Treasure hunter's
 //! prerequisite is either of two.
 
-use super::search::Look;
+use super::search::{Hidden, Look};
 use super::*;
 use crate::action::{Meal, parse_actions};
 use crate::burden::Burden;
@@ -285,16 +285,22 @@ fn porter_shrugs_off_burdened() {
 fn iron_will_trap_sense_and_keen_searcher_add_to_the_checks() {
     let mut w = world();
     let (active, passive) = (
-        w.search_modifier(Look::Active),
-        w.search_modifier(Look::Passive),
+        w.search_modifier(Look::Active, Hidden::Door(0)),
+        w.search_modifier(Look::Passive, Hidden::Door(0)),
     );
     give(&mut w, "iron_will");
-    assert_eq!(w.search_modifier(Look::Passive), passive + 2);
-    assert_eq!(w.search_modifier(Look::Active), active);
+    assert_eq!(
+        w.search_modifier(Look::Passive, Hidden::Door(0)),
+        passive + 2
+    );
+    assert_eq!(w.search_modifier(Look::Active, Hidden::Door(0)), active);
     give(&mut w, "trap_sense");
     give(&mut w, "keen_searcher");
-    assert_eq!(w.search_modifier(Look::Passive), passive + 5);
-    assert_eq!(w.search_modifier(Look::Active), active + 7);
+    assert_eq!(
+        w.search_modifier(Look::Passive, Hidden::Door(0)),
+        passive + 5
+    );
+    assert_eq!(w.search_modifier(Look::Active, Hidden::Door(0)), active + 7);
     assert_eq!(w.state.player().talent_mods(w.content()).search_reach, 1);
 }
 

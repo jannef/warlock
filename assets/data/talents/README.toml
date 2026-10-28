@@ -183,8 +183,8 @@
 #                                 more often (never above certain; the same draws)
 #   gem_cut { value }             loose gems it finds (on levels made from then on, dropped by
 #                                 kills) are cut that many grades finer (1 to 5)
-#   notice { value }              notices hidden things in passing as if trained in Spot, with
-#                                 that much added
+#   notice { value }              notices hidden things in passing as if trained in Spot and
+#                                 Detect traps, with that much added
 #   danger_sense { value }        senses a level's danger (spec §7 "Danger levels"): at 1, how a
 #                                 level feels on arrival, against its own level; at 2, a note
 #                                 when a creature comes to its level (ranks add up)
