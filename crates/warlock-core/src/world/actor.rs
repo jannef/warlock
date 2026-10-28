@@ -328,25 +328,27 @@ impl Actor {
     }
 
     /// The eyes it sees with (spec §5 "Vision"): `base` (its type's profile, or the player's),
-    /// with what a unique item it wears gives (Vision) where that is better: the lower
-    /// threshold, the farther darkvision, ultraviolet if either sees it. Its id and name stay
-    /// the base's.
+    /// with what a unique item it wears gives (Vision) and what its status effects lend (a
+    /// potion's Owl-eyed, spec §8 "Potions"), each where it is better: the lower threshold, the
+    /// farther darkvision, ultraviolet if any sees it. Its id and name stay the base's.
     pub fn eyes<'c>(
         &self,
         content: &'c Content,
         base: &'c VisionProfile,
     ) -> Cow<'c, VisionProfile> {
-        match self.worn_vision(content) {
-            None => Cow::Borrowed(base),
-            Some(index) => {
-                let power = &content.vision_profiles()[index];
-                let mut eye = base.clone();
-                eye.threshold = eye.threshold.min(power.threshold);
-                eye.darkvision = eye.darkvision.max(power.darkvision);
-                eye.sees_uv |= power.sees_uv;
-                Cow::Owned(eye)
-            }
+        let lent = (self.effects.iter()).filter_map(|e| content.status(e.status).vision);
+        let mut eyes = self.worn_vision(content).into_iter().chain(lent).peekable();
+        if eyes.peek().is_none() {
+            return Cow::Borrowed(base);
         }
+        let mut eye = base.clone();
+        for index in eyes {
+            let power = &content.vision_profiles()[index];
+            eye.threshold = eye.threshold.min(power.threshold);
+            eye.darkvision = eye.darkvision.max(power.darkvision);
+            eye.sees_uv |= power.sees_uv;
+        }
+        Cow::Owned(eye)
     }
 
     /// What its talents do to it (spec §8 "Talents"; [`Talents::mods`]), the one aggregation
@@ -711,7 +713,8 @@ impl Actor {
 
     /// What it resists (spec §8 "Damage types"), in percent per kind: what its creature type
     /// is and its race (`race`, the player's when the run has a character), plus what it wears
-    /// and wields (each piece's `resist`, and the resistance affixes of all of it), capped
+    /// and wields (each piece's `resist`, and the resistance affixes of all of it), its talents,
+    /// and its status effects (a potion's `resist`), capped
     /// ([`Resistances::sum`]).
     pub fn resistances(&self, content: &Content, race: Option<&RaceDef>) -> Resistances {
         let count = content.damage_types().len();
@@ -726,8 +729,11 @@ impl Actor {
         // Talents (spec §8 "Talents": Elemental ward) count as gear does.
         let talents = (self.talent_mods(content).into_owned().resist.into_iter())
             .filter_map(|(element, r)| Some((content.damage_type_id(&element)?, r)));
+        // And so do its status effects' (a potion's Warmed, spec §8 "Potions").
+        let lent = (self.effects.iter()).flat_map(|e| content.status(e.status).resist.iter());
         let gear: Vec<(DamageTypeId, i32)> = (worn.chain(magic.resistances().iter().copied()))
             .chain(talents)
+            .chain(lent.copied())
             .collect();
         Resistances::sum(count, innate, gear)
     }

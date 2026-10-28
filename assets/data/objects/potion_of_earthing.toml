@@ -1,0 +1,21 @@
+# A potion of earthing (spec §8 "Potions"): electricity resisted for half an hour, as gear resists it.
+# Resistance potions are teal.
+[[object]]
+id = "potion_of_earthing"
+name = "potion of earthing"
+plural = "potions of earthing"
+glyph = "!"
+fg = "#30a8a0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 120
+stackable = true
+level = 4
+frequency = 15
+
+[object.drink]
+kind = "resistance"
+status = "earthed"
+colour = "teal"
+marks = { toughness = 5 }

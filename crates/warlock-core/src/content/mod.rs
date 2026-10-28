@@ -1696,6 +1696,7 @@ impl Content {
             text,
             |id| self.damage_type_id(id),
             |id| self.light_id(id),
+            |id| self.vision_index(id),
         )?;
         for (i, def) in list.iter().enumerate() {
             let id = u16::try_from(i).map_err(|_| ContentError::new(path, "too many statuses"))?;

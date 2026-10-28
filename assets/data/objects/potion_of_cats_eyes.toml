@@ -1,0 +1,20 @@
+# A potion of cat's eyes (spec §8 "Potions"): low-light eyes for half an hour. Vision potions are violet.
+[[object]]
+id = "potion_of_cats_eyes"
+name = "potion of cat's eyes"
+plural = "potions of cat's eyes"
+glyph = "!"
+fg = "#8a50c0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 100
+stackable = true
+level = 3
+frequency = 15
+
+[object.drink]
+kind = "vision"
+status = "cat_eyed"
+colour = "violet"
+marks = { willpower = 5 }

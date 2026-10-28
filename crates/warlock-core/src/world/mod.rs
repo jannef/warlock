@@ -875,7 +875,7 @@ impl World {
         if let Some(actor) = state
             .actors
             .values()
-            .find(|a| !a.effects.is_valid_for(&content))
+            .find(|a| !a.effects.is_valid_for(&content, &a.talent_mods(&content)))
         {
             return Err(WorldError::InconsistentState(format!(
                 "actor {} suffers status effects this content does not have",
@@ -1483,6 +1483,8 @@ mod outlaw_tests;
 mod overworld_tests;
 #[cfg(test)]
 mod parts_tests;
+#[cfg(test)]
+mod potion_status_tests;
 #[cfg(test)]
 mod potion_tests;
 #[cfg(test)]
