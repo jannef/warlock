@@ -6,11 +6,11 @@
 name = "Drake's hoard"
 map = '''
 #################
-#LLL....$....LLL#
+#LLL..T.$....LLL#
 #L..$...r...$..L#
 #.......D.......+
 #L..$...m...$..L#
-#LLL....$....LLL#
+#LLL....$.C..LLL#
 #################
 '''
 
@@ -22,3 +22,7 @@ map = '''
 "r" = { terrain = "floor", loot = "rare" }
 "m" = { terrain = "floor", loot = "magic" }
 "$" = { terrain = "floor", objects = ["gold_coin*150"] }
+# Two strongboxes of those who came for the gold (spec §8 "Chests"): of the floor's level and
+# locked, one of them trapped; what they hold is rolled when the level is made.
+"C" = { terrain = "chest", locked = true }
+"T" = { terrain = "chest", locked = true, trap = "spear" }

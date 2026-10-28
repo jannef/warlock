@@ -10,16 +10,16 @@ expression: "render(case, content.clone())"
 
     ┌─ Skills ────────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
-    │ > Appraise           19  ────                                                           │
-    │   Detect traps        7  ────                                                           │
-    │   Disable device      7  ────                                                           │
-    │   Escape artist      10  ────                                                           │
+    │ > Appraise           11  ────                                                           │
+    │   Disable device     16  ────                                                           │
+    │   Escape artist       7  ────                                                           │
+    │   Listen              6  ────                                                           │
     │   Open lock          18  ────                                                           │
-    │   Search             10  ────                                                           │
-    │   Spot                9  ────                                                           │
-    │   Steal              16  ────                                                           │
+    │   Search              9  ────                                                           │
+    │   Spot               10  ────                                                           │
+    │   Steal              17  ────                                                           │
     │   Stealth            16  ────                                                           │
-    │   Tumble             17  ────                                                           │
+    │   Tumble             16  ────                                                           │
     │                                                                                         │
     │ Judging what a thing is worth and what it is made of.                                   │
     │                                                                                         │

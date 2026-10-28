@@ -167,13 +167,15 @@ mod tests {
         let world = showcase();
         let screen = SkillsScreen::new(Some(&world.perception()));
         let text = drawn(&screen, 80, 30).join("\n");
-        // The showcase's human thief: the class's skills, one of them raised by being human.
+        // The showcase's human thief: the class's skills, one of them raised by being human, and
+        // Listen, one the class may start with.
         for expected in [
             " Skills ",
             "> Appraise           19  ────",
             "  Detect traps        7  ────",
             "  Disable device      7  ────",
             "  Escape artist      10  ────",
+            "  Listen              6  ────",
             "  Open lock          18  ────",
             "  Search             10  ────",
             "  Spot                9  ────",
@@ -187,7 +189,7 @@ mod tests {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
         // Untrained skills are not there; neither is a number but the values.
-        for hidden in ["Listen", "Athletics", "Swim", "marks", "%", "+"] {
+        for hidden in ["Bluff", "Athletics", "Swim", "marks", "%", "+"] {
             assert!(!text.contains(hidden), "{hidden:?} in\n{text}");
         }
     }

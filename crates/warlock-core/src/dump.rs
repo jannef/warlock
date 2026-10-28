@@ -1789,7 +1789,7 @@ mod tests {
         assert_eq!(
             value["skills"],
             json!({ "appraise": 19, "detect_traps": 7, "disable_device": 7, "escape_artist": 10,
-                    "open_lock": 18, "search": 10, "spot": 9, "steal": 16, "stealth": 16,
+                    "listen": 6, "open_lock": 18, "search": 10, "spot": 9, "steal": 16, "stealth": 16,
                     "tumble": 17 })
         );
         assert!(json(&world, &[], false).get("state").is_none());
@@ -1805,6 +1805,7 @@ mod tests {
                 "Detect traps 7",
                 "Disable device 7",
                 "Escape artist 10",
+                "Listen 6",
                 "Open lock 18",
                 "Search 10",
                 "Spot 9",
@@ -1891,7 +1892,7 @@ mod tests {
             actors[0].contains(
                 "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 19 \
                  (0 +1), detect_traps 7 (0 +1), disable_device 7 (0 +1), escape_artist 10 (0 +1), \
-                 open_lock 18 (0 +1), search 10 (0 +1), spot 9 (0 +1), steal 16 (0 +1), stealth 16 \
+                 listen 6 (0 +1), open_lock 18 (0 +1), search 10 (0 +1), spot 9 (0 +1), steal 16 (0 +1), stealth 16 \
                  (0 +1), tumble 17 (0 +1); \
                  nutrition 3600 (not_hungry)"
             ),

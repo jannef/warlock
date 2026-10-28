@@ -155,7 +155,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   craftsperson, and merchant 90, commoner 80), `alignment` (as for races, added to the race's:
   paladin 550, Good under any birth animal unless the race is evil (#317); thief and witch −200, Callous; the rest 0), `skills` (as for races),
   `known_for` (the skills of `skills` it is known for, its `2d6+10` ones: a level-up roll on one
-  throws its die a step up the ladder), `rolls` (skill rolls each level gives, 0 to 10, default
+  throws its die a step up the ladder), `optional_skills` (ADOM-like: skills a new character
+  may or may not start with, each `{ chance, dice }`, the chance 1 to 99 percent; none of them
+  one of `skills`; #662), `rolls` (skill rolls each level gives, 0 to 10, default
   2: the thief and the ranger 3, the bard 4), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
   sets of such ranks, one picked at random when the character is made), and `styles` and
   `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no
@@ -176,7 +178,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   detect traps, #663); the ranger spot, survival, and woodcraft well, athletics, handle
   animal, listen, and swim a little; the wizard concentration, knowledge, and spellcraft well,
   decipher script a little; the commoner athletics and handle animal a
-  little. Weapon skills: barbarian unarmed 1 and axes 2 or great blades 2, bard short blades 1
+  little. Each class also has two to five optional skills, modest ones at `2d4` (10 to 35 %;
+  the thief balance, bluff, and listen; the warrior heal, metalcraft, and survival; the commoner
+  heal, metalcraft, survival, swim, and woodcraft; the full lists are in the wiki). Weapon skills: barbarian unarmed 1 and axes 2 or great blades 2, bard short blades 1
   and daggers `1d2`, priest maces 2 and shield blocking 1, druid staves 2 and slings 1, monk
   unarmed 2 and staves 1, paladin long blades 2, shield blocking `1d2`, and shield bashing 1,
   ranger bows 2 and short blades 1, thief daggers 2 and thrown 1, wizard staves 1, witch daggers

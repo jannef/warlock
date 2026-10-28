@@ -10,6 +10,7 @@ affinity = { restoration = 2, transmutation = 2, evocation = 1 }
 experience = 115
 skills = { handle_animal = "2d6+10", survival = "2d6+10", concentration = "2d4+4", heal = "2d4+4", listen = "2d4+4" }
 known_for = ["handle_animal", "survival"]
+optional_skills = { spot = { chance = 20, dice = "2d4" }, swim = { chance = 20, dice = "2d4" }, woodcraft = { chance = 35, dice = "2d4" } }
 rolls = 2
 weapon_skills = { staves = 2, slings = 1, spell_attack = 1 }
 styles = { staff_fighter = 1, sniper = 1 }

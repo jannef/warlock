@@ -85,6 +85,13 @@ none of their own, but they put extra work into one of their class's skills, pic
 The dice are rolled when your character is made, after your [stats](character.md#how-your-stats-add-up),
 so they never change a stat.
 
+As in ADOM, each class also has a few skills its people **may** start with: each comes with the
+chance in the last column, and then its dice, once, when your character is made. Two characters
+of one class can so begin with different skills. The game shows only the skills you have, never
+the chances. Your race's skill and the human's extra class skill add to one of these as to any
+other, but a level-up roll on one of them is an ordinary roll: the class's +1 is for the skills in
+its Trains column.
+
 {{#include generated/skill-grants.md}}
 
 Some creatures are trained in skills too: deer listen well, and the kobold shaman knows something
