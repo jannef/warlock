@@ -115,7 +115,7 @@ trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `que
 log, active first) from perception;
 `actors` (dev-only: every actor's hit points, mana, load, stats, and skills with their marks).
 
-Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern hood
+Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend use_tool
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
 eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray temper:LETTER drink second_wind blood_magic use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N rank:SKILL:N
@@ -151,7 +151,8 @@ quest topics are `quest-ID`, ids in a campaign's `data/quests/`: asking gives th
 no accepting or declining (#422); a
 service is asked for by its id the same way, `ask:E:cure`, paid in gold and taking a chat's time,
 docs/dev/npcs.md);
-`hood` lowers or raises the lantern's hood (lighting it hooded when it is out), `throw_voice:X,Y`
+`use_tool` uses the light ready in the Tool slot (a lantern: unlit, lit, hooded, unlit again; `u`
+in the game, which asks for a direction to dig instead without one), `throw_voice:X,Y`
 throws the player's voice to level cell (X, Y) (one they see, within 6; the bard's, refused without the ability);
 `talent:hardy` takes a talent (an id in `assets/data/talents/`; `talent:weapon_focus:long_blades`
 with its choice) when a level's pick is due (every third level; until it is made every other

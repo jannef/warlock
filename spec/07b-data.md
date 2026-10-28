@@ -200,8 +200,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   10 000. The ids are `step` (onto terrain of `move_cost` 100), `wait`, `open_door`,
   `close_door`, `unlock` (unlocking a door with a key, on top of opening it), `pick_lock` (2000:
   a try at picking a lock, whatever comes of it; a lock that gives opens its door on top of it,
-  `open_door`; §8 "Doors"), `kick`, `lantern`,
-  `hood` (500: lowering or raising the lantern's hood; lighting it hooded costs `lantern` too),
+  `open_door`; §8 "Doors"), `kick`, `light` (lighting or dousing a lantern ready in the Tool slot,
+  `u`, §5 "Light sources"), `hood` (500: lowering a lit lantern's hood),
   `stairs` (also entering a location or local area and walking off an
   area's edge), `pick_up`, `drop`, `melee` (a shield bash too), `shoot`, `throw`, `reload` (a
   missile weapon that `reloads`: a crossbow shot costs `shoot` plus `reload`, 2000), `cast`,
