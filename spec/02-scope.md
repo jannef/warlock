@@ -121,7 +121,9 @@ Build the engine and framework, not the game. Everything built is production qua
   Twin Blades, Great Weapon, Sword and Board, Marksman, Skirmisher, Brawler, Staff Fighter), each
   a skill with the weapon skills' ranks, marks, and per-rank passive benefits, trained by fighting
   in its configuration; fighting with a light weapon in the off hand: two blows an attack, at
-  penalties Twin Blades eases (§8 "Fighting styles")
+  penalties Twin Blades eases (§8 "Fighting styles"); and a hidden ninth, Two Shields (#611): a
+  shield in each hand, every blow a bash, with banes (to hit, slowness, failing spells) that
+  shrink with its rank
 - Hunger (M23), ADOM-like: a nutrition counter that game time burns (resting and overworld
   journeys too) by the race's need; Hungry, Weak, Fainting, and Starving, and Satiated and
   Bloated, with their effects; food to eat from the pack or the floor in meals of several turns;

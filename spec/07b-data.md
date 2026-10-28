@@ -378,7 +378,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   error), `two_handed` (default false; only with a hand slot's `slot`, and there must be two
   hand slots: it takes both), `light_weapon` (default false; only for a one-handed weapon with a
   hand slot's `slot`, not two-handed: it fits every hand slot, the off hand too, for fighting
-  with two weapons, §8 "Fighting styles"; `Content::fits`; the built-in light weapons are the
+  with two weapons, §8 "Fighting styles"; `Content::fits`; a shield, an object with `bash`,
+  fits every hand slot too, for fighting with two shields; the built-in light weapons are the
   dagger, the stiletto, the short sword, and the hand axe, as in D&D: one-handers like the
   scimitar, the rapier, and the club are not), `ammo` (the kind of ammunition it is, `ammo = "arrow"`), and
   `launches` (the kind a missile weapon shoots, `launches = "arrow"`; some object must be that
@@ -618,9 +619,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   blades ↔ daggers −2, long blades ↔ daggers −4, short blades ↔ thrown −4, daggers ↔ thrown −2,
   axes ↔ maces −2, axes ↔ polearms −3, maces ↔ staves −3, spears ↔ polearms −2, spears ↔
   staves −3, spears ↔ thrown −4, polearms ↔ great blades −4, bows ↔ crossbows −4, slings ↔
-  thrown −3, shield blocking ↔ shield bashing −3; two weapons −4 and −8; far 5; eleven styles
-  after the seventeen skills (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword
-  and Board, Marksman (bows, crossbows, slings; missile curve), Skirmisher (missile curve),
+  thrown −3, shield blocking ↔ shield bashing −3; two weapons −4 and −8; two shields −6, 50 %,
+  75 % (`[two_shields]`: `to_hit`, `slow`, `spell_failure`); far 5; twelve styles after the
+  seventeen skills (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
+  Two Shields (`hidden = true`: listed only once its owner has marks in it), Marksman (bows, crossbows, slings; missile curve), Skirmisher (missile curve),
   Brawler, Staff Fighter (staves), and the caster styles Sniper, Toucher, Battle caster
   (missile curve)), with the defaults duelist ↔ sword and board −3, duelist ↔ twin blades −3,
   great weapon ↔ staff fighter −3, marksman ↔ skirmisher −4, sniper ↔ toucher −4, toucher ↔

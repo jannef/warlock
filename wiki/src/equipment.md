@@ -74,6 +74,9 @@ same numbers as the character screen; they count everything you wear, unidentifi
 - **Light weapons** (listed below) fit either hand: one in your off hand beside a weapon in your
   main hand is fighting with two weapons (see [Fighting styles](fighting-styles.md#two-weapons)).
   Nothing else but a shield goes in the off hand.
+- **Shields** fit either hand too: a shield goes to your off hand first, and a second one to
+  your main hand is fighting with two shields (see
+  [Fighting styles](fighting-styles.md#two-shields)).
 - **Two-handed weapons**, such as the quarterstaff and the great sword, take both hands. The screen shows them in
   the main hand and the off hand, "(both hands)". Wielding one puts away whatever your hands
   held; a shield in your off hand puts a two-handed weapon away.

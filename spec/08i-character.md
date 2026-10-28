@@ -1092,8 +1092,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Configurations** (`grip`): for blows, what the hands hold (`Actor::grip`, which counts for
     Defence too): nothing (`unarmed`), one one-handed weapon and every other hand empty
     (`one_weapon`), a weapon in each of two hands (`two_weapons`), a two-handed weapon
-    (`two_handed`), a one-handed weapon and a shield (`weapon_and_shield`); any other hold (a
-    shield alone) is no style. A shot is `launcher` (whatever the hands hold), a throw `thrown`.
+    (`two_handed`), a one-handed weapon and a shield (`weapon_and_shield`), a shield in each hand
+    (`two_shields`, #611); any other hold (a shield alone) is no style. A shot is `launcher` (whatever the hands hold), a throw `thrown`.
     A kick (§8 "Doors") is made whatever the hands hold: it draws on unarmed fighting alone and
     is fought in no style, so Brawler gives it nothing and its price is a kick's (decided: a
     style is how the hands are used).
@@ -1103,11 +1103,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Actor::spell_skills`): `armoured_spell` while the caster wears anything with a
     `spell_cost_percent` (§8 "Spells"), else `touch_spell` for a touch and `ranged_spell` for a
     ray or a bolt; caster styles name no weapons. Any other spell has none.
-  - **The eleven** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
+  - **The twelve** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
     (`two_weapons`: eases both two-weapon penalties, none left from rank 9; from rank 7 to-hit too), **Great Weapon**
     (`two_handed`, any weapon but a staff: damage, from rank 8 a critical rolls its damage once
     more, at rank 10 twice more (×4), cheaper blows), **Sword and Board** (`weapon_and_shield`: Shield, from rank 3 a chance
-    of a shield bash after a blow that hits), **Marksman** (`launcher`, bows, crossbows, and
+    of a shield bash after a blow that hits), **Two Shields** (`two_shields`, hidden: see "Two
+    shields" below), **Marksman** (`launcher`, bows, crossbows, and
     slings: to-hit, cheaper shots and reloading), **Skirmisher** (`thrown`, anything thrown:
     to-hit, damage, cheaper throws; decided as throwing only: "a light weapon and light armour"
     would have overlapped Duelist and Twin Blades, and the issue's benefits are all throws'),
@@ -1158,6 +1159,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
     still stands is followed, by the style's `bash` chance (one gameplay draw, only when the
     chance is above 0), by a shield bash at it, free and silent, drawing on and training shield
     bashing and the style.
+  - **Two shields** (#611; `world/two_shields.rs`, docs/dev/weapon-skills.md): any shield fits
+    either hand (`Content::fits_properly`: an object with `bash`, like a light weapon; a shield
+    is put in its own off hand first, `equipment::free_slot`). With a shield in each hand every
+    plain melee attack (the player's move into a hostile, a creature's blow) is a shield bash with
+    the first shield in hand order, made `with` it, drawing on and training shield bashing and
+    Two Shields (`Actor::melee_skill` is shield bashing in the grip), priced as a blow with it
+    (`Actor::blow_item`); after one that hits, the style's `bash` chance brings a bash with the
+    other shield (`World::second_blow`, one draw only when the chance is above 0). Banes
+    (`[two_shields]`: −6 to hit on every bash in the grip, the Shield bash ability's too; every
+    attack 50 % dearer, after the stance; a spell the player casts paid in their own mana fails
+    75 % of the time, decided before it goes off, its mana and its time spent, "Your shields get
+    in the way, and the spell slips from your grasp.", one draw only when the chance is above 0;
+    a scroll or a wand never fails so) shrink with the style's `ease_bash`, `ease_slow`, and
+    `ease_spell` to none at rank 9 (`Actor::shield_banes`). Boons: the style's Shield, damage,
+    and the follow-up chance; Staggering block (rank 4) names it beside Sword and Board. The
+    style is `hidden` (§7): no class or race gives it, it defaults to no style, and it is not
+    listed (the weapon skills screen, the `weapon_skills` dump layer and its JSON, the Talents
+    page for a talent that asks for it, Stylist's choices) until its owner has marks in it
+    (`WeaponSkills::shows`). Talents: Loose straps (Two Shields 5: the failure chance 40 points
+    smaller), Anvil and hammer (6: the follow-up 15 points likelier), Craven's wall (8: in the
+    coward's stance both shields' Shield bonuses add up, `TalentEffect::BothShields`).
   - **Abilities**: a style's ranks teach abilities as weapon skills' do ("Weapon abilities"
     below), working only in the style's grip.
   - **What the player perceives**: their own ranks and marks (as weapon skills), and which

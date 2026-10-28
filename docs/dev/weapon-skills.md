@@ -72,6 +72,29 @@ attack `with` the off-hand weapon or the shield (`Actor::attack_skill` tells the
 `content/weapon_skill.rs` (`styles_are_checked`), `world/style_tests.rs`; wiki tables
 `styles.md`, `style-defaults.md`, `style-benefits.md` and the classes' column.
 
+Two shields (#611; `world/two_shields.rs`, its module docs the summary): `Grip::TwoShields`
+(`Actor::grip`: two held objects with `bash`), the `two_shields` style (`hidden = true`, no class
+gives it, no default reaches it), and `[two_shields]` (`TwoShields`: `to_hit`, `slow`,
+`spell_failure`) eased by `Benefit::ease_bash`/`ease_slow`/`ease_spell` (checked per grip like
+the others; `shield` and `bash` are allowed for the grip too), mirroring `[two_weapons]`. Shields
+fit every hand slot (`Content::fits_properly`, as light weapons; `equipment::free_slot` tries an
+object's own `slot` first, so spawn data and kits still put a shield in the off hand). One hook
+each: `Actor::melee_skill` (shield bashing in the grip, so `attack_skills(Melee, None)` and
+`held_skills` read it), `Actor::blow_item` (what a plain blow is priced with: `travel.rs`,
+`ai.rs`), `Actor::opening_bash` (the first blow: `fight.rs::player_blow` and `World::attack`),
+`World::other_shield` (the follow-up, from `off_hand_or_bash`), `Actor::bash_with` (the to-hit
+bane on every bash in the grip, `Actor::bash` too), `World::shields_slowed`
+(`World::attack_price`, after the stance), `World::shields_fumble` (`cast.rs::cast_spell`, own
+casts paid in mana only, before `perform`), `Actor::both_shields_bonus` (Craven's wall, in
+`Actor::defence`). Hidden: `WeaponSkills::shows` (no marks and no rank: not listed), read by the
+weapon skills screen, the `weapon_skills` dump layer and JSON, `PerceptionView::talents` (a
+talent needing a hidden skill the player has not trained), and `talent::may_take` (a hidden
+choice is a bad choice). Talents: `loose_straps` (`shield_casting`), `anvil_and_hammer`
+(`weapon { skill = "two_shields", bash }`), `cravens_wall` (`both_shields { stance }`), all
+needing a rank of the style. Tests: `world/two_shield_tests.rs`, `content/weapon_skill.rs`
+(the rank tables, the refusals), the screen's and the equipment screen's unit tests; wiki:
+the banes in `style-benefits.md` (`rank_table`'s bane columns).
+
 Caster styles (#571, combat progression family): spells that roll to hit
 (`SpellData::rolls_to_hit`: a damage spell, a ray, a bolt, or a touch, resolved by the attack
 roll) draw on the one skill of `Role::Spell` (`spell_attack`, its own `Section::Spells` on the
