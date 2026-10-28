@@ -315,6 +315,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-prefixes.md", magic::prefixes),
         ("magic-suffixes.md", magic::suffixes),
         ("magic-names.md", magic::rare_names),
+        ("magic-systems.md", magic::systems),
         ("uniques.md", uniques::uniques),
         ("scrolls.md", scrolls::scrolls),
         ("potions.md", potions::potions),
@@ -393,6 +394,34 @@ mod tests {
         ] {
             assert!(suffixes.contains(row), "{row}\nin\n{suffixes}");
         }
+    }
+
+    /// What systems have affixes (#637): every affix a row, with its system and the talents read
+    /// beside it, named as the game names them.
+    #[test]
+    fn the_systems_table_has_every_affix() {
+        let content = Content::builtin().expect("content loads");
+        let table = magic::systems(&content);
+        let rows = table.lines().filter(|l| l.starts_with("| ")).count() - 1;
+        assert_eq!(rows, content.affixes().all().len(), "{table}");
+        row_has(
+            &table,
+            "| of Thrift |",
+            &["suffix", "Mana", "Frugal caster"],
+        );
+        row_has(
+            &table,
+            "| Tireless |",
+            &["prefix", "Stamina", "Deep lungs, Bellows"],
+        );
+        row_has(&table, "| of Fury |", &["Resources", "maximum rage"]);
+        row_has(
+            &table,
+            "| of the Adept |",
+            &["Spells", "Arcane training, Attuned"],
+        );
+        row_has(&table, "| Delving |", &["Digging", "Tunneler"]);
+        row_has(&table, "| of the Eagle |", &["Skills", "Spot (a skill)"]);
     }
 
     /// The numbers the game keeps to itself are stated exactly (#264): creatures, stats, speed,
@@ -1083,7 +1112,7 @@ mod tests {
         ));
         // Speed is exact: the share of the time it takes off.
         assert!(prefixes.contains(
-            "| Fleet | you move faster | movement speed | boots | 1: 5–8% less time · 4: 8–12%"
+            "| Fleet | you move faster | movement speed | boots | 1: 5–8% less time · 2: 5–9%"
         ));
         assert!(text("magic-suffixes.md").contains("| of the Bear | Strength | strength |"));
         assert!(text("magic-names.md").contains("| Weapons | Bite,"));

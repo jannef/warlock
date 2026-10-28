@@ -6,7 +6,13 @@ category = "extra_damage"
 bases = ["weapon", "launcher"]
 tiers = [
   { level = 1, min = 2, max = 3 },
+  { level = 2, min = 2, max = 4 },
   { level = 3, min = 3, max = 4 },
-  { level = 5, min = 4, max = 6 },
-  { level = 7, min = 6, max = 8 },
+  { level = 5, min = 3, max = 5 },
+  { level = 6, min = 4, max = 5 },
+  { level = 7, min = 4, max = 6 },
+  { level = 8, min = 4, max = 7 },
+  { level = 10, min = 5, max = 7 },
+  { level = 11, min = 5, max = 8 },
+  { level = 12, min = 6, max = 8 },
 ]
