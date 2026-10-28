@@ -59,7 +59,11 @@ A base turn is 6 seconds.
 A [magic item](magic-items.md) may name a pool and change it while worn or wielded, identified
 or not: a larger **maximum** (so many points more), a faster **pace** (so many percent, added to
 what talents add; Steady breathing's 50 % and an item's 30 % make 180 %), or, for stamina, every
-weapon active **costing** so many points less (added to Drillmaster's discount, never below 1).
+weapon active **costing** so many points less (added to Drillmaster's discount, never below 1),
+or so many points more on a **kill** (*of the Hunt*; never above the maximum), under the same
+rule as mana *of Siphoning*: only your own blow, shot, or spell, the one you killed within 3
+cells of you (see [Mana on a kill](mana.md#mana-on-a-kill)). That is beside what a pool builds
+on any kill by its own rule (inspiration's point, Second breath's).
 Two items naming the same pool add up. Taking the item off lowers what you hold to the smaller
 maximum at once.
 
