@@ -443,15 +443,23 @@ fn consecrate_is_refused_elsewhere_with_no_time_and_no_mana() {
 }
 
 #[test]
-fn consecrate_asks_for_goodness_and_mana() {
+fn consecrate_asks_for_mana_and_answers_only_the_good_side() {
     let mut w = priest(false);
     let ability = Ability::Class(ClassActive::Consecrate);
     assert_eq!(ability.unavailable(w.state.player(), w.content()), None);
+    // Neutral: usable, and unanswered: a cast's time, no mana, nothing lifted.
     w.player_mut().alignment = Some(Score::new(0));
-    assert_eq!(
-        ability.unavailable(w.state.player(), w.content()),
-        Some(Unavailable::Strayed)
-    );
+    assert_eq!(ability.unavailable(w.state.player(), w.content()), None);
+    run(&mut w, "move:E*10");
+    let (turn, mana) = (w.state.turn, w.state.player().mana);
+    run(&mut w, "use:consecrate");
+    assert!(said(
+        &w,
+        "You kneel and pray, but no holy power answers you."
+    ));
+    assert_eq!((w.state.turn, w.state.player().mana), (turn + 1, mana));
+    assert_eq!(w.state.current().rooms.len(), 1, "unanswered");
+    run(&mut w, "move:W*10");
     w.player_mut().alignment = Some(Score::new(500));
     w.player_mut().mana = 10;
     assert_eq!(

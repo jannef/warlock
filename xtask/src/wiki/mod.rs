@@ -217,6 +217,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("alignment-start.md", alignment::alignment_start),
         ("alignment-deeds.md", alignment::alignment_deeds),
         ("alignment-quests.md", alignment::alignment_quests),
+        ("alignment-gifts.md", alignment::alignment_gifts),
         ("alignment-shops.md", alignment::alignment_shops),
         ("talents-creation.md", talents::creation),
         ("talents.md", talents::talents),

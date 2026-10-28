@@ -6,9 +6,15 @@
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`). The
 //! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
 //! and read through `Actor::talent_mods`. Each active refuses, taking no time, without the
-//! ability, while its cooldown (or the rage and the exhaustion after it) lasts, while the player
-//! has strayed from the alignment it asks, and (an aimed blow) with nobody hostile there, before
-//! anything is spent. Nothing here draws at random but the blows themselves.
+//! ability, while its cooldown (or the rage and the exhaustion after it) lasts, and (an aimed
+//! blow) with nobody hostile there, before anything is spent. Nothing here draws at random but
+//! the blows themselves.
+//!
+//! Alignment bars none of them (spec §8 "Alignment"). A holy gift (Lay on hands, Smite, Holy
+//! radiance, Consecrate: [`ClassActive::holy`]) whose talent names the bands it works for
+//! (`alignment = { min = "kind" }` in data) asks [`World::answered`] after its free refusals:
+//! outside those bands it is used and does nothing ([`World::unanswered`]: its line, the time of
+//! a cast, no cooldown, mana, or resource spent). Nothing remembers it; the next use asks again.
 //!
 //! [`Action::Use`]: crate::action::Action::Use
 
@@ -94,7 +100,6 @@ impl World {
         }
         if let Some(why) = ability.unavailable(me, &content) {
             self.say(match why {
-                Unavailable::Strayed => "You have strayed: your gift does not answer.".to_string(),
                 Unavailable::While(status) => {
                     format!(
                         "You are still {}.",
@@ -156,6 +161,9 @@ impl World {
         let Some(hands) = mods.lay_on_hands else {
             return Spent::Nothing;
         };
+        if !self.answered(ClassActive::LayOnHands) {
+            return self.unanswered(ClassActive::LayOnHands);
+        }
         let mut degrees = hands.degrees;
         if mods.avatar {
             let me = self.state.player();
@@ -184,7 +192,7 @@ impl World {
     }
 
     /// Holy radiance: the light on (its status begins) or off again (it ends), for the time of
-    /// a `cast`.
+    /// a `cast`. Putting it out always works.
     fn holy_radiance(&mut self, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
         let Some((status, _)) = self.state.player().talent_mods(&self.content).radiance else {
@@ -195,6 +203,9 @@ impl World {
             Some(effect) => {
                 self.player_mut().effects.remove(status);
                 self.ended(player, &[effect], events);
+            }
+            None if !self.answered(ClassActive::HolyRadiance) => {
+                return self.unanswered(ClassActive::HolyRadiance);
             }
             None => self.afflict(player, status, 1, Some(player), events),
         }
@@ -241,6 +252,9 @@ impl World {
         let Some((target, seen)) = self.hostile_toward(dir) else {
             return Spent::Nothing;
         };
+        if !self.answered(ClassActive::Smite) {
+            return self.unanswered(ClassActive::Smite);
+        }
         let me = self.state.player();
         let melee = me.attack_skills(&content, AttackKind::Melee, None);
         let with = me.weapon_item(&content);
@@ -320,6 +334,29 @@ impl World {
             return None;
         }
         Some((target, seen))
+    }
+
+    /// Whether holy gift `active` works for the player now: their alignment band is one its
+    /// talent's `alignment` allows, or it names none, or the content has no alignment rules.
+    pub(super) fn answered(&self, active: ClassActive) -> bool {
+        let content = &self.content;
+        let bands = content.class_active(active).and_then(|def| def.alignment);
+        match (bands, content.alignment()) {
+            (Some(bands), Some(_)) => bands.allows(self.state.player().band(content)),
+            _ => true,
+        }
+    }
+
+    /// Holy gift `active` used by a player outside its bands: it does nothing. Says so and takes
+    /// the time of a cast, spending nothing else.
+    pub(super) fn unanswered(&mut self, active: ClassActive) -> Spent {
+        self.say(match active {
+            ClassActive::LayOnHands => "You lay on your hands, but no warmth flows from them.",
+            ClassActive::Smite => "You call for holy wrath, but none answers.",
+            ClassActive::HolyRadiance => "You will a holy light, but none comes.",
+            _ => "You kneel and pray, but no holy power answers you.",
+        });
+        Spent::Turn(self.price_of(self.state.player, ActionKind::Cast))
     }
 
     /// The player gets `back` hit points, never past their maximum (nor fewer than they have).
