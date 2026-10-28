@@ -82,9 +82,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   `chest_smashed`) is a chest. A legend entry on a shut chest gives its level with `chest =
   "kist"` (that band's least level, `data/chests.toml`) or `chest = 7` (1 to the item levels'
   most; default the level's `item_level`), locks it as a door (`locked`, `lock`,
-  `lock_difficulty`), and fills it with `objects` (what it holds, not a pile). A `chest` on any
-  other terrain, an unknown band, or a trap on a chest is a content error; vaults hold no chests
-  yet.
+  `lock_difficulty`), traps it as a door (`trap`, `known`, `dir`; any trap but a pit), and fills
+  it with `objects` (what it holds, not a pile). A `chest` on any other terrain, an unknown band,
+  a pit on a chest, or a trap on an open or smashed chest is a content error; vaults hold no
+  chests yet.
 - **Secret doors in level files** (#140, §8 "Searching"): a legend entry on a closed door makes
   it secret with `secret = true` (difficulty `data/search.toml`'s `secret_door`) or `secret = N`
   (difficulty N, 1 to 50). The cell then shows the wall around it (of its solid neighbors north,
@@ -127,9 +128,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   id in `data/traps.toml`), hidden unless `known = true`, and for a bolt trap optionally the way
   its bolt runs, `dir = "E"` (default: along the longest clear line from it). Traps lie only on
   walkable terrain that is not stairs nor water that freezes, or on a door, closed or open (§8
-  "Trapped doors"), where any trap but a pit may lie, and never on a secret door; `known` or `dir`
-  without a `trap`, `dir` on any other trap, a pit on a door, a trapped secret door, or an unknown
-  id is a content error. Dungeon vaults place traps the same way and
+  "Trapped doors"), or on a shut chest (§8 "Chests"), where any trap but a pit may lie, and never
+  on a secret door; `known` or `dir` without a `trap`, `dir` on any other trap, a pit on a door or
+  a chest, a trap on an open or smashed chest, a trapped secret door, or an unknown id is a
+  content error. Dungeon vaults place traps the same way and
   generators stamp them with the vault; outdoor vaults have none.
 - **Traps** (`data/traps.toml`, optional; without it there are no traps; M18): `[[trap]]`s with
   `id`, `name` ("fireball trap", said in "Really step onto the fireball trap?"), `glyph` (default

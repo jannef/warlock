@@ -44,8 +44,9 @@ rests, digs, meals, and searches all get it. `reveal` turns a door into its door
 at once (`memory`, `trap_memory`), and `say`s, which stops long actions. A trap on a door (spec
 §8 "Trapped doors") is a hidden trap like any other (`hidden_near` reads `LevelState::traps`
 whatever the terrain); found, it is said without the trap's `sign`, which is the floor's ("You
-notice that the door is trapped: an arrow trap."). Doors are no `stone`, so dwarves do not
-notice a door's trap in passing.
+notice that the door is trapped: an arrow trap."); so is a shut chest's ("You notice that the
+coffer is trapped: an arrow trap.", docs/dev/chests.md). Doors and chests are no `stone`, so
+dwarves do not notice their traps in passing.
 
 **Invariants**: checks draw from the gameplay stream (`crate::check`, two draws each) only for
 hidden features in reach, so runs without any nearby keep their hashes; no memory of failed
