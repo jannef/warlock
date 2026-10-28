@@ -13,7 +13,8 @@ still. The old names are for old things:
 
 {{#include generated/chest-descriptions.md}}
 
-You never see what a shut chest holds, nor whether it is locked, until you try it.
+You never see what a shut chest holds, nor whether it is locked or trapped, until you try it
+(or search it).
 
 ## Opening a chest
 
@@ -87,7 +88,46 @@ it.
 
 You cannot dig into a chest.
 
-## Telling locked from unlocked
+## Trapped chests
+
+Some chests are **trapped**, with the same traps doors have (an arrow, spears, a fireball, frost,
+lightning, an alarm bell, a teleport; never a pit). The trap is hidden, and goes off at you:
+
+- when you **open** the chest, with a key, without one, or after picking its lock (Knock only
+  springs the lock: the trap waits for the lid);
+- when your **kick breaks it** open, as the kick lands (a kick that holds sets nothing off);
+- when you **fail badly to disarm** it.
+
+It comes out of the chest at whoever is beside it: an arrow shoots out of the box itself, spears
+strike at you, lightning runs from the chest through you, a fireball or frost bursts around the
+chest. Walking past never sets it off.
+
+A **fireball or frost trap goes off inside the box** and **blows the chest apart**, however it was
+set off: `The coffer is blown apart!` Each stack inside breaks with an even chance and **nothing is
+spared**, coins and gems included, as in a blast. The other traps leave the chest as they found
+it: open if you opened it, smashed if you kicked it.
+
+```
+You open the coffer.
+A fireball explodes!
+The fireball burns you.
+The coffer is blown apart!
+The 12 gold coins are destroyed.
+Inside you find a dagger.
+```
+
+A chest blown apart by a blast from somewhere else (a scroll of fireball, another trap) springs
+its own trap at no one: the trap is simply gone with the lid.
+
+Searching finds a chest's trap like any hidden trap (`You notice that the coffer is trapped: an
+arrow trap.`), and once you know it look mode says so: "A coffer, trapped: an arrow trap." The
+chest keeps its own look on the map. A known trap on a chest can be **disarmed** like any (see
+[Traps](traps.md#disarming-traps)): disarmed, the chest is an ordinary shut chest. **Trap sense**
+halves a chest trap's blow, as any trap's.
+
+## The Chest-wise talent
 
 With the **Chest-wise** talent (Intelligence 11 or Search 15), you tell at a glance whether a shut
-chest you see is locked: look mode calls it "a locked coffer" or "an unlocked coffer".
+chest you see is locked: look mode calls it "a locked coffer" or "an unlocked coffer". And a
+trapped chest gives itself away as soon as you see it, with no search and no chance of missing it:
+`You notice that the coffer is trapped: a fireball trap.`

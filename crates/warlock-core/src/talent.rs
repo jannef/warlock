@@ -382,7 +382,8 @@ pub struct TalentMods {
     pub spawn_every_percent: i32,
     /// It knows a special room's nature from a glimpse (Sense of place).
     pub sense_of_place: bool,
-    /// It tells a locked chest from an unlocked one at a glance (Chest-wise).
+    /// It tells a locked chest from an unlocked one at a glance, and a shut chest's trap in its
+    /// sight is known to it (Chest-wise).
     pub chest_wise: bool,
     /// A forgotten altar's lean counts double when it agrees, and not at all when it opposes
     /// (Devout).

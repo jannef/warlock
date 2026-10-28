@@ -626,7 +626,8 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             and the effect covering a whole level by name on arrival"
             .into(),
         TalentEffect::ChestWise => "sees whether a shut chest in sight is locked (look mode: \
-            \"a locked coffer\", \"an unlocked coffer\")"
+            \"a locked coffer\", \"an unlocked coffer\"), and knows the trap of every shut chest \
+            it sees, no check"
             .into(),
         TalentEffect::RoomPacePercent { value } => format!(
             "where a special room quickens healing or mana, the quickening {} (a room's 300% \

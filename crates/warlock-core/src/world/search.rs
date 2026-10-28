@@ -28,8 +28,8 @@
 //! A found secret door becomes its closed door ([`World::set_terrain`]), a found trap is known
 //! ([`World::know_trap`], as a trap seen going off is), and both are remembered at once, in the
 //! dark too: "You find a secret door!", "You notice a pressure plate: an arrow trap.", and for a
-//! door's trap "You notice that the door is trapped: an arrow trap." (a trap's `sign` is the
-//! floor's).
+//! door's trap "You notice that the door is trapped: an arrow trap.", a chest's "You notice that
+//! the coffer is trapped: an arrow trap." (a trap's `sign` is the floor's).
 
 use super::World;
 use super::rest::Ended;
@@ -281,10 +281,13 @@ impl World {
                 };
                 self.state.current_mut().trap_memory.insert(at, kind);
                 let def = self.content.trap(kind);
-                let sign = if self.state.current().is_door(&self.content, at) {
-                    "that the door is trapped"
+                let level = self.state.current();
+                let sign = if level.is_door(&self.content, at) {
+                    "that the door is trapped".to_string()
+                } else if level.is_shut_chest(&self.content, at) {
+                    format!("that the {} is trapped", self.chest_name(at))
                 } else {
-                    &def.sign
+                    def.sign.clone()
                 };
                 let text = format!("You notice {sign}: {} {}.", article(&def.name), def.name);
                 self.say(text);

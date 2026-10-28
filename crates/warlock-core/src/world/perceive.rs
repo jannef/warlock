@@ -63,6 +63,7 @@ impl World {
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
         self.glare_news(dazzled);
         self.learn_traps(events);
+        self.chest_wise_look();
         let current = self.state.current_level.clone();
         if let Some(level) = self.state.levels.get_mut(&current) {
             self.perception.remember(level);

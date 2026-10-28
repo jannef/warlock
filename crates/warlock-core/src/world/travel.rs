@@ -57,6 +57,7 @@ impl World {
         // A lock stays on a closed door or a shut chest (spec §8 "Chests").
         let (closed_door, door) = (def.is_closed_door() || def.is_shut_chest(), def.is_door());
         let was_door = self.state.current().is_door(&self.content, p);
+        let was_chest = self.state.current().is_shut_chest(&self.content, p);
         self.reshaped += 1;
         let level = self.state.current_mut();
         level.terrain.set(p, terrain);
@@ -67,6 +68,12 @@ impl World {
         // door, and is gone when the door is.
         if was_door && !door {
             level.traps.remove(&p);
+        }
+        // A chest's trap goes with its lid, opened or broken, and is forgotten with it (spec §8
+        // "Chests").
+        if was_chest && !def.is_shut_chest() {
+            level.traps.remove(&p);
+            level.trap_memory.remove(&p);
         }
         // A secret door is the wall it looks like until it is found: whatever becomes of that
         // wall (dug through, blasted, found), the secret is gone.

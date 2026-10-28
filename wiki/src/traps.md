@@ -121,6 +121,13 @@ it. Searching finds a door's trap like any hidden trap ("You notice that the doo
 arrow trap."), and once you know it, it shows as `^` in place of the door. A secret door is never
 trapped. A door's trap can be disarmed like any other (see [Disarming traps](#disarming-traps)).
 
+## Trapped chests
+
+A shut chest may be trapped too, with any trap a door may have (never a pit): there are no traps
+made only for chests. It goes off when you open the chest, kick it open, or fail badly to disarm
+it, and a **fireball or frost** trap goes off inside the box and **blows the chest apart**, taking
+much of what it held with it. See [Chests](chests.md#trapped-chests).
+
 ## Where traps are
 
 - **Generated dungeons** hide a few traps on every level, never on or next to the stairs, and

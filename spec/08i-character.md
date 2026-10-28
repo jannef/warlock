@@ -692,7 +692,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     stronger, half as loud); `smash_destroy_percent` (Deft breaker, Might, Strength 12: what a
     chest kicked open holds breaks half as often, 25 % a stack; a blown-up chest is no kick) and
     `chest_wise` (Chest-wise, Delver, Intelligence 11 or Search 15: look mode tells a locked shut
-    chest in sight from an unlocked one), the `chests` system's (§8 "Chests"), with Lockbreaker
+    chest in sight from an unlocked one, and the trap of a shut chest in sight is known at once,
+    no check), the `chests` system's (§8 "Chests"), with Lockbreaker
     and the wizard's Knock; `dig_percent` (Tunneler: half again the work a turn). A prerequisite may be `either`
     of several (Treasure hunter: "Intelligence 12 or Appraise 20"). The Scholar and Delver trees
     and the searching, digging, shops, magic items, scrolls, skills, and experience systems are

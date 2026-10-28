@@ -411,10 +411,12 @@ fn draw_map(
             let top = pile
                 .first()
                 .map(|s| (content.object(s.object).glyph, view.lore().fg(s)));
-            let trap = view.trap(p).map(|t| content.trap(t));
+            // A chest takes its band's colour, and keeps its glyph over a known trap (spec §8
+            // "Chests").
+            let chest = view.chest_at(p);
+            let band = chest.and_then(|c| content.chests().bands.get(c.band));
+            let trap = (view.trap(p).filter(|_| chest.is_none())).map(|t| content.trap(t));
             let stain = view.blood(p).filter(|_| show_blood);
-            // A chest takes its band's colour (spec §8 "Chests").
-            let band = (view.chest_at(p)).and_then(|c| content.chests().bands.get(c.band));
             let glyph = |t| {
                 let def = content.terrain(t);
                 let (ch, fg) = match (trap, top) {

@@ -107,7 +107,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     die..."). Like any message they stop a rest; a rest also perceives every turn in which a trap
     went off (a teleport moves a creature farther than its steps).
   - **Trapped doors** (#174): a level may put a trap on a door, closed or open (§7 "Traps in level
-    files"), of any kind but a pit (`TrapEffect::fits_door`): a door's trap goes off at whoever
+    files"), of any kind but a pit (`TrapEffect::fits_fixture`): a door's trap goes off at whoever
     opens the door from the next cell, and no one can fall into a pit there. It belongs to the
     door, not the floor: walking through the doorway never sets it off (`World::step_onto_trap`
     skips door cells, for the player, creatures, and whoever makes way; the interface never asks,
@@ -232,7 +232,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `key` gets a few locked rooms on its rooms levels, its key always within reach (§7
     "Generators", validated). The showcase's locked door is harmless.
 - **Chests** (`warlock-core/src/chest.rs`, the rules; `world/chest.rs`, applying them; data
-  `data/chests.toml` §7 "Chests"; docs/design/chests-and-treasure.md, slice C1): a chest is a
+  `data/chests.toml` §7 "Chests"; docs/design/chests-and-treasure.md, slices C1 and C2): a chest is a
   **fixture of a cell**, as a door is, never a carried object.
   - **What it is**: one of three terrains (`chest = "shut"`, `"open"`, `"smashed"` in
     `data/terrain.toml`: `⊟`, `⊔`, `⊠`; a shut one is not walkable and blocks nothing else, an
@@ -277,6 +277,31 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Digging** at a chest is refused ("You cannot dig through the chest.": it has no
     `hardness` of its own as terrain; the band's is read by blasts only). Creatures walk around
     a shut chest and never open or break one.
+  - **Trapped chests** (slice C2): a level may put a trap on a shut chest, any kind a door may
+    have (`TrapEffect::fits_fixture`: no pit; the same list, no chest-only kinds), never on an
+    open or smashed one. It lies in the level's `traps` at the chest's cell, hidden unless
+    `known`, and belongs to the chest: nothing steps onto it (`World::step_onto_trap` skips a
+    shut chest's cell), and it goes with the lid, opened or broken (`World::set_terrain` drops it
+    and its memory). It goes off (`World::spring_trap`) at whoever **opens** the chest (a bump,
+    `open`, with a key or without, or after Pick lock picks it), **smashes it with a kick** (as
+    the kick lands, before the smash; a kick that holds springs nothing), or **fails by 5 or more
+    to disarm it**; Knock springs the lock only. It is aimed from the chest: a shot out of the box
+    itself at the victim, a strike at them, a burst around the chest (its cell never stops it), a
+    bolt along its `dir`, else from the chest through them, an alarm, a teleport of them. A
+    **burst** goes off inside the box and **blows it apart**, however it was sprung: every stack
+    rolled at `[smash] destroyed`, nothing spared (coins and gems too), "The coffer is blown
+    apart!", whether the burst's own blast was enough for the band's hardness (a fireball in a
+    coffer) or not (a frost trap, a fireball in a kist); a shot, a strike, a bolt, an alarm, or a
+    teleport leaves the chest as it was (open if it was opened, smashed by the kick).
+    `TrapEffect::blows_fixture` is true for a burst. A chest blown apart by a blast from outside
+    springs its trap at no one (a trap needs a victim): the trap is dropped with the lid.
+    Searching and noticing in passing find it like any hidden trap ("You notice that the coffer is
+    trapped: an arrow trap."; a dwarf's stone sense does not help: a chest is no stone);
+    **Chest-wise** knows the trap of every shut chest in sight at once, no check, saying the same
+    line. **Disarm** works on a chest's known trap as on any (made: the trap is gone, the chest
+    still shut). **Trap sense** halves its blow as any trap's. Known, it shows in look mode after
+    the chest's name ("A coffer, trapped: an arrow trap."); the map and the `view` dump keep the
+    chest's glyph over it, the `traps` dump lists it.
   - **Perception** (`PerceptionView::chest_at`): on a cell seen or remembered, the chest's band
     and whether it is shut, open, or smashed (as the cell looks), and with Chest-wise, on a cell
     in sight, whether a shut one is locked. Never its level or what it holds. Look mode: "A
@@ -285,10 +310,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Level files** place chests on the `chest` terrain: `chest = "kist"` (that band's least
     level) or `chest = 7` (a level; default the level's `item_level`), `locked = true` or `lock =
     "id"` and `lock_difficulty` as on a door, and `objects` for what it holds (food in it is made
-    as the level is). Refused: a `chest` on other terrain, an unknown band, a trap on a chest
-    (trapped chests are slice C2), and chests in vaults (C7).
+    as the level is), and `trap` (with `known`, `dir`) as on a door. Refused: a `chest` on other
+    terrain, an unknown band, a pit on a chest, a trap on an open or smashed chest, and chests in
+    vaults (C7).
   - **Dumps**: `view` shows the glyph; `truth` (dev) adds a line per chest, `chest 7 (hutch) at
-    (12, 5): shut, locked, holds 3 stacks`; JSON `chests` lists those the player sees or
+    (12, 5): shut, locked, trapped (arrow), holds 3 stacks`; JSON `chests` lists those the player sees or
     remembers (`pos`, `band`, `state`, and `locked`: with Chest-wise for a shut one in sight,
     else null).
 - **Searching** (`warlock-core/src/world/search.rs`; data `data/search.toml` §7; #140): one

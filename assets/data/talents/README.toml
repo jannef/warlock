@@ -280,7 +280,8 @@
 #   kick_noise_percent { value }  its door kicks that percent louder (negative: quieter)
 #   smash_destroy_percent { value }   what a chest it kicks open holds breaks that percent more
 #                                 often (negative: less; a blown-up chest is not a kick)
-#   chest_wise                    it tells a locked chest from an unlocked one at a glance
+#   chest_wise                    it tells a locked chest from an unlocked one at a glance, and a
+#                                 shut chest's trap in its sight becomes known to it
 #   dig_percent { value }         its digging does that percent more work a turn
 #   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
 #                                 (negative: cheaper)

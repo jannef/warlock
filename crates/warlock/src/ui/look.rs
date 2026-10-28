@@ -50,13 +50,20 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
     // a named place its name: "a volcano, Fyrbeorg";
     // a wall in sight that was dug into says so: "a stone wall, partly dug".
-    // A chest goes by its band: "a coffer", "an open coffer", "a locked coffer" (Chest-wise).
+    // A chest goes by its band: "a coffer", "an open coffer", "a locked coffer" (Chest-wise);
+    // its known trap after it: "a coffer, trapped: an arrow trap".
     let chest = view.chest_at(p);
+    let chest_trap = (view.trap(p).filter(|_| chest.is_some())).map(|t| &content.trap(t).name);
     let named = |t| {
         let def = content.terrain(t);
-        let def_name = match chest {
-            Some(chest) => chest.name(content.chests(), &def.name),
-            None => def.name.clone(),
+        let def_name = match (chest, chest_trap) {
+            (Some(chest), Some(trap)) => format!(
+                "{}, trapped: {}",
+                chest.name(content.chests(), &def.name),
+                with_article(trap)
+            ),
+            (Some(chest), None) => chest.name(content.chests(), &def.name),
+            (None, _) => def.name.clone(),
         };
         let name = match view.blood(p).filter(|_| blood) {
             Some(stain) => format!("{} {def_name}", stain.word(!def.transparent)),
@@ -86,7 +93,7 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     };
     let room_here = room.as_ref().map_or(String::new(), |r| format!(", {r}"));
     // A known trap is part of the ground: "a fireball trap on stone floor".
-    let trap = view.trap(p).map(|t| content.trap(t).name.as_str());
+    let trap = (view.trap(p).filter(|_| chest.is_none())).map(|t| content.trap(t).name.as_str());
     let terrain = |t| match trap {
         Some(trap) => format!("{} on {}", with_article(trap), ground(t)),
         None => ground(t),
@@ -298,7 +305,8 @@ pub fn draw_cursor_on(
 ) {
     let content = view.content();
     let top = view.objects(p).first();
-    let trap = view.trap(p);
+    // A chest keeps its glyph over its known trap (spec §8 "Chests").
+    let trap = view.trap(p).filter(|_| view.chest_at(p).is_none());
     let ch = match (view.cell(p), view.actor_at(p), top) {
         (CellView::Visible(_), Some(actor), _) => actor.glyph(content),
         _ if view.sound_at(p).is_some() => super::sounds::MARKER,
@@ -394,7 +402,7 @@ mod tests {
              #####\n#C.K#\n#@..#\n#####\n'''\n[legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\
              \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
              \"C\" = { terrain = \"chest\", chest = \"coffer\", objects = [\"dagger\"] }\n\
-             \"K\" = { terrain = \"chest\", locked = true }\n",
+             \"K\" = { terrain = \"chest\", locked = true, trap = \"arrow\", known = true }\n",
         );
         files.insert(
             "scenarios/look_chests.toml",
@@ -409,8 +417,9 @@ mod tests {
         );
         assert_eq!(
             describe(&w.perception(), banded, true),
-            "A banded chest. A heavy chest banded with black iron, its lid studded with nails.",
-            "the level's own: 9; whether it is locked is not shown"
+            "A banded chest, trapped: an arrow trap. A heavy chest banded with black iron, its \
+             lid studded with nails.",
+            "the level's own: 9; a known trap after the name; whether it is locked is not shown"
         );
         w.apply(&Action::Open(Dir::N));
         assert_eq!(

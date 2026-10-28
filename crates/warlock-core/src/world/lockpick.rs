@@ -77,7 +77,7 @@ impl World {
         if chest {
             let name = self.chest_name(at);
             self.say(format!("You pick the lock and open the {name}."));
-            self.lift_lid(at, events);
+            self.open_lid(at, events);
             return Spent::Turn(try_price + open_price);
         }
         self.say("You pick the lock and open the door.");

@@ -31,8 +31,8 @@
 //!
 //! A trap on a level ([`Trap`]) is hidden until the player sets it off or sees a creature do it,
 //! and from then on known and remembered (spec §8 "Traps"). A level may put one on a door, of any
-//! kind but a pit ([`TrapEffect::fits_door`]): opening or kicking the door sets it off (spec §8
-//! "Trapped doors").
+//! kind but a pit ([`TrapEffect::fits_fixture`]): opening or kicking the door sets it off (spec §8
+//! "Trapped doors"); so may a shut chest, from the same list (spec §8 "Chests").
 
 use super::damage_type::TypeNames;
 use super::effect::EffectShape;
@@ -248,12 +248,19 @@ impl TrapEffect {
         }
     }
 
-    /// Whether a trap of this kind may lie on a door (spec §8 "Trapped doors"). A door's trap
-    /// goes off at whoever opens or kicks the door, from the next cell: everything that strikes
-    /// its victim where it stands or bursts out around the trap works there, but a pit needs its
-    /// victim on its own cell, to fall in and climb out.
-    pub const fn fits_door(&self) -> bool {
+    /// Whether a trap of this kind may lie on a fixture: a door (spec §8 "Trapped doors") or a
+    /// shut chest (spec §8 "Chests"). Its trap goes off at whoever opens or kicks it, from the
+    /// next cell: everything that strikes its victim where it stands or bursts out around the
+    /// trap works there, but a pit needs its victim on its own cell, to fall in and climb out.
+    pub const fn fits_fixture(&self) -> bool {
         !matches!(self, TrapEffect::Pit { .. })
+    }
+
+    /// Whether this trap, going off on a shut chest, blows the chest up (spec §8 "Chests"): a
+    /// burst goes off inside the box; a shot, a strike, a bolt, an alarm, or a teleport leaves it
+    /// as it was.
+    pub const fn blows_fixture(&self) -> bool {
+        matches!(self, TrapEffect::Burst(_))
     }
 
     /// The damage it does, if it does any.

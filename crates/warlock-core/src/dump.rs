@@ -251,7 +251,9 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         CellView::Unknown => ' ',
         CellView::Remembered(t) | CellView::Visible(t) => content.terrain(t).glyph,
     };
-    let known_glyph = |cell: CellView| match (view.trap(p), view.objects(p).first()) {
+    // A chest's known trap leaves the chest's glyph (spec §8 "Chests").
+    let trap = view.trap(p).filter(|_| view.chest_at(p).is_none());
+    let known_glyph = |cell: CellView| match (trap, view.objects(p).first()) {
         (Some(trap), _) => content.trap(trap).glyph,
         (None, Some(top)) => content.object(top.object).glyph,
         (None, None) => terrain_glyph(cell),
@@ -400,7 +402,7 @@ fn truth_rows(world: &World) -> Vec<String> {
 }
 
 /// Dev: the chests on the current level (spec §8 "Chests"; ground truth), one a line by
-/// position: `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`.
+/// position: `chest 7 (hutch) at (12, 5): shut, locked, trapped (arrow), holds 3 stacks`.
 fn chest_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (level, _) = world.ground_truth();
@@ -415,13 +417,17 @@ fn chest_rows(world: &World) -> Vec<String> {
             } else {
                 ""
             };
+            let trapped = match level.trap_at(p) {
+                Some(trap) => format!(", trapped ({})", content.trap(trap.kind).id),
+                None => String::new(),
+            };
             let holds = match chest.holds.len() {
                 0 => String::new(),
                 1 => ", holds 1 stack".to_string(),
                 n => format!(", holds {n} stacks"),
             };
             format!(
-                "chest {} ({band}) at {p}: {state}{locked}{holds}",
+                "chest {} ({band}) at {p}: {state}{locked}{trapped}{holds}",
                 chest.level
             )
         })

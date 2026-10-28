@@ -23,14 +23,16 @@ and `Use::Dodge` reported for marks; else `step_onto_trap` as before (with the L
 own check, `steps_lightly`). Tests: `world/sidestep_tests.rs`; the wiki's `trap-avoid.md` table
 (`xtask/src/wiki/traps.rs::avoiding`) reads `TrapAvoid::chance`. **Trapped doors** (spec §8 "Trapped
 doors", #174): a trap may lie on a door, closed or open (`TerrainDef::is_door`,
-`LevelState::is_door`), of any kind but a pit (`TrapEffect::fits_door`, checked by
+`LevelState::is_door`), of any kind but a pit (`TrapEffect::fits_fixture`, checked by
 `content/level.rs::parse_trap`, which also refuses a trapped secret door; `mapgen::hide_secrets`
 never hides a trapped door). `step_onto_trap` skips door cells, so the step trigger never sets one
 off; `world/door.rs` does: `swing_open` (every opening, the player's with or without a key and a
 creature's in `creature_steps`, each priced before the door swings, since the trap may kill the
 opener) and `kick_door` (as the kick lands, before the door breaks) call
 `spring_trap` with the door's cell and the opener or kicker beside it. `set_terrain` drops a trap
-whose door stops being a door (kicked in). Aimed from the door: a shot and a strike go at the
+whose door stops being a door (kicked in). **Trapped chests** (C2) share all of this: the
+same list, the shut chest's cell skipped by `step_onto_trap`, a shot out of the chest itself
+(`slit`), and a burst blowing the chest apart (`TrapEffect::blows_fixture`); docs/dev/chests.md. Aimed from the door: a shot and a strike go at the
 victim where it stands, a bolt without a `dir` runs from the door through the victim (`spring_trap`
 picks `Dir::toward` when the victim stands next to the trap), and a burst's own cell never stops it
 (`World::cast_burst`), so a shut door's blast leaves both sides. The app's step prompt

@@ -1186,8 +1186,9 @@ fn parse_shops(
 }
 
 /// The trap a legend entry places on a cell of `terrain` (`trap = "fireball"`, optionally `known
-/// = true` and, for a bolt, `dir = "E"`): only on walkable terrain that is not stairs, or on a
-/// door, closed or open (any trap but a pit: spec §8 "Trapped doors"), but never on a secret one.
+/// = true` and, for a bolt, `dir = "E"`): only on walkable terrain that is not stairs, on a
+/// door, closed or open (any trap but a pit: spec §8 "Trapped doors"), but never on a secret one,
+/// or on a shut chest (the same traps: spec §8 "Chests"), never on an open or smashed one.
 fn parse_trap(
     detail: &LegendDetail,
     terrain: TerrainId,
@@ -1202,10 +1203,11 @@ fn parse_trap(
     let kind = (content.trap_id(id)).ok_or_else(|| format!("unknown trap `{id}`"))?;
     let def = content.trap(kind);
     let ground = content.terrain(terrain);
-    if ground.is_door() {
-        if !def.effect.fits_door() {
+    if ground.is_door() || ground.is_shut_chest() {
+        if !def.effect.fits_fixture() {
+            let what = if ground.is_door() { "door" } else { "chest" };
             return Err(format!(
-                "places a {} on terrain `{}`: a door's trap goes off at whoever opens it, and no \
+                "places a {} on terrain `{}`: a {what}'s trap goes off at whoever opens it, and no \
                  one can fall into a pit there",
                 def.effect.kind(),
                 ground.id
@@ -1216,6 +1218,12 @@ fn parse_trap(
         if (detail.secret).is_some_and(|s| !matches!(s, SecretSpec::Default(false))) {
             return Err("makes a door secret and trapped: a secret door is never trapped".into());
         }
+    } else if ground.chest.is_some() {
+        // An open or smashed chest's trap went with its lid (spec §8 "Chests").
+        return Err(format!(
+            "places a trap on terrain `{}`: only a shut chest is trapped",
+            ground.id
+        ));
     } else if !ground.walkable || ground.stairs.is_some() || ground.freeze.is_some() {
         // Water that freezes is no place for a trap: ice may cover it, and a fall through the ice
         // is its own (spec §5 "Ice").
