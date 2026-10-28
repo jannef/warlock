@@ -1,0 +1,60 @@
+# The chest hall (spec §3, §8 "Chests", §8 "Mimics", §7 "Special rooms"; #619): every kind of
+# chest, and both treasure rooms, for captures and tests.
+#
+# The hall, from the west: a coffer (c) that opens on a bump, a locked chest (L) for a skeleton
+# key, Pick lock, Knock, or a kick, a trapped one (T: a hidden arrow trap, found by
+# searching or Chest-wise), and a fourth "chest" (M) that is a mimic until something touches it.
+# North-east, behind a secret door (S) in the hall's east wall, a treasure room: its hint is said
+# on arrival until it is entered. South-east, walled up with no door at all, a greater treasure
+# room: its breach is the wall (H) beside the pick-axe on the floor; search there to hear it
+# sound hollow, then ready the pick-axe and dig east.
+arrival = "Dust lies thick on the lids of old chests."
+name = "The Chest Hall"
+item_level = 3
+ambient = [110, 110, 120, 0]
+map = '''
+########################################
+#......................#$.............g#
+#..@...................#...C.....C.....#
+#......................S.....$.....$...#
+#...c...L...T...M......#$....g.........#
+#......................#..........$....#
+#......................#################
+#........................#$.....C.....$#
+#.......................pH....$....g...#
+#........................#..C.....C..$.#
+#........................#$...g....$...#
+########################################
+'''
+
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+# A coffer (the band of level 1): no lock, no trap.
+"c" = { terrain = "chest", chest = "coffer", objects = ["bread", "gold_coin*8"] }
+# A locked chest of the hall's level (3).
+"L" = { terrain = "chest", locked = true, objects = ["short_sword", "gold_coin*15"] }
+# A trapped chest: an arrow out of the box at whoever opens it.
+"T" = { terrain = "chest", trap = "arrow", objects = ["potion_of_healing", "gold_coin*12"] }
+# A mimic of the hall's level, shaped as a chest until touched, carrying what it guards.
+"M" = { terrain = "floor", chest = 3, mimic = true, objects = ["dagger", "gold_coin*20"] }
+# The treasure room's way in: a closed door that looks like the wall until found.
+"S" = { terrain = "door_closed", secret = true }
+# The greater treasure room's breach is plain wall; the pick-axe lies beside it.
+"H" = "wall"
+"p" = { terrain = "floor", objects = ["pick_axe"] }
+# What the rooms hold: chests, heaps of gold, and loose gems.
+"C" = { terrain = "chest", objects = ["gem:ruby", "gold_coin*25"] }
+"$" = { terrain = "floor", objects = ["gold_coin*18"] }
+"g" = { terrain = "floor", objects = ["gem:garnet"] }
+
+# The treasure room behind the secret door.
+[[room]]
+effect = "treasury"
+area = [24, 1, 38, 5]
+
+# The greater treasure room, walled up (its walls in the area: the breach is one of them), the
+# wall beside the pick-axe its breach.
+[[room]]
+effect = "great_treasury"
+area = [25, 6, 39, 11]
+breach = [25, 8]

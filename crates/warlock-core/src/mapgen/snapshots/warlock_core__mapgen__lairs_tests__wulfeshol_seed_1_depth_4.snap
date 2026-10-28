@@ -7,56 +7,56 @@ stairs Up at (38, 31) -> wulfeshol:3
 footpad at (91, 33) route  carrying an iron short sword (wielded)
 wystan at (87, 34) route  carrying a long war bow (rare) (readied), 40 bone arrows (quivered), a bronze short sword (wielded), a leather jerkin (being worn)
 footpad at (91, 35) route  carrying a copper short sword (wielded)
-footpad at (68, 15) route W W W W S S S S N N N N E E E E carrying an iron short sword (wielded), a hardened leather jerkin (being worn)
-giant_centipede at (19, 19) route N N N E W S S S
-giant_centipede at (73, 28) route S S S W S S N N E N N N
+footpad at (67, 15) route W W W W S S S S N N N N E E E E carrying an iron short sword (wielded), a hardened leather jerkin (being worn)
+giant_centipede at (18, 19) route N N N E W S S S
+giant_centipede at (72, 28) route S S S W S S N N E N N N
 goblin_archer at (53, 24) route N E E E E E W W W W W S carrying a horn short bow (readied), 20 arrows (quivered), a club (wielded)
 lesser_fire_elemental at (41, 8) route W N N E E E W E W W W S S E
-giant_centipede at (87, 10) route E S S S S S S N N N N N N W
-footpad_archer at (46, 31) route N N S N N N N N S S S S S N S S carrying 25 flint arrows (quivered)
-bat at (57, 11) route W W W W W W E E E W W W E E E E E E
+giant_centipede at (86, 10) route E E S S S S S N N N N N W W
+footpad_archer at (30, 31) route N N S N N N N N S S S S S N S S carrying 25 flint arrows (quivered)
+bat at (56, 11) route W W W W W W E E E W W W E E E E E E
 bat at (58, 19) route E E E E E S S N N W W W W W
-footpad at (77, 21) route E E E E W W W W carrying a copper short sword (wielded), a leather jerkin (being worn)
-barrow_spider at (51, 16) route N N N N N N N S S S S S S S
+footpad at (76, 21) route E E E E W W W W carrying a copper short sword (wielded), a leather jerkin (being worn)
+barrow_spider at (50, 16) route E E E E E E S N W W W W W W
 footpad at (97, 22) route W W W E E E W W W E E E carrying an iron short sword (wielded), a leather jerkin (being worn)
-barrow_spider at (78, 24) route N N N N N S S S S S
+barrow_spider at (77, 24) route N N N N N S S S S S
 footpad at (86, 35) route S W W W E W E E E N
 footpad_archer at (83, 34) route W W S S N N S S N N E E carrying a short bow (readied), 25 arrows (quivered), a leather jerkin (being worn)
 bat at (59, 34) route E S S W W E E W W W E E E W W E E N N W
-giant_centipede at (18, 24) route S S E E W W N N
+giant_centipede at (17, 24) route S E S S N N W N
 footpad at (70, 23) route N E E E E E W W W W W S carrying a bronze short sword (wielded), a leather jerkin (being worn)
 footpad at (60, 34) route N N S S S S N N N N S S carrying an iron short sword (wielded), a leather jerkin (being worn)
-duergar_miner at (56, 13) route N N N S W W W S S N N E E E N S S S carrying a flint pick-axe (in use)
+duergar_miner at (55, 13) route N N N S W W W S S N N E E E N S S S carrying a flint pick-axe (in use)
 footpad at (20, 5) route S S S S W W W W E E E E N N N N carrying a bronze short sword (wielded), a leather jerkin (being worn)
 goblin_archer at (14, 8) route S E E E E W W W W N carrying a hardwood short bow (readied), 12 tin arrows (quivered), a club (wielded)
 barrow_spider at (25, 25) route S S S S W E N N N N
-barrow_spider at (48, 13) route S S S S N N N N
+barrow_spider at (47, 13) route S S S S N N N N
 footpad at (51, 22) route N N N N S S S W W E W E E N N N S S S S carrying a copper short sword (wielded)
 goblin_archer at (89, 32) route W E S S W W W W E E E E N N W E carrying a hardwood short bow (readied), 12 bone arrows (quivered), a bone club (wielded)
 footpad at (39, 5) route S S N N N N W E S S S S N N carrying a leather jerkin (being worn)
-giant_centipede at (86, 14) route S S S S S S S S S N N N N N N N N N
+giant_centipede at (85, 14) route S S S S S S S S S N N N N N N N N N
 bat at (47, 11) route W W E N E E E W W W S W E E
 orc_raider at (15, 10) route S S S S S N N N N N carrying a chromium battle axe (wielded)
 footpad at (23, 14) route W W W W W W W W E E E E E E E E carrying a copper short sword (wielded), a leather jerkin (being worn)
 footpad_archer at (67, 9) route W E E S S S N S N N N W W E carrying 15 flint arrows (quivered)
-footpad at (92, 19) route S W W W W W W E E E E E E N carrying a copper short sword (wielded)
-footpad_archer at (52, 12) route E E E E E W W W W W carrying a hardwood short bow (readied), a leather jerkin (being worn)
+footpad at (91, 19) route S W W W W W W E E E E E E N carrying a copper short sword (wielded)
+footpad_archer at (51, 12) route E E E E E W W W W W carrying a hardwood short bow (readied), a leather jerkin (being worn)
 footpad at (6, 5) route N N E E N S W W S S carrying a gold short sword (wielded), a hardened leather jerkin (being worn)
 footpad at (49, 34) route S S S W W N N N S S S E E N N N carrying a hardened leather jerkin (being worn)
-bat at (17, 26) route W W E E E W W W E E
-footpad at (69, 25) route W W W W N N N N N S S S S S E E E E carrying a brass short sword (wielded), a leather jerkin (being worn)
+bat at (16, 26) route W E E E E W W W W E
+footpad at (68, 25) route W W W W N N N N N S S S S S E E E E carrying a brass short sword (wielded), a leather jerkin (being worn)
 giant_centipede at (14, 37) route N N N S N S S S
 footpad_archer at (30, 35) route W N W W W S N E E E S E carrying a short bow (readied), 25 arrows (quivered)
-barrow_spider at (16, 22) route W W N N N W N N S S E S S S E E
-giant_centipede at (62, 24) route E E E E E N N S W E N S S W W W W W
-footpad at (41, 19) route W W W W W N N E W S S E E E E E carrying a copper short sword (wielded)
+barrow_spider at (15, 22) route W N N N N W W N S E E S S S S E
+giant_centipede at (61, 24) route E E E E E N N S W E N S S W W W W W
+footpad at (40, 19) route W W W W N N E S N W S S E E E E carrying a copper short sword (wielded)
 footpad_archer at (74, 20) route N N S E E W W N S S carrying a short bow (readied), 25 horn arrows (quivered), a hardened leather jerkin (being worn)
 footpad at (67, 35) route E E E N N S S W W W carrying a brass short sword (wielded), a leather jerkin (being worn)
 footpad_archer at (38, 6) route E E E E E W E W W W W W carrying a hardwood short bow (readied), 15 flint arrows (quivered)
 footpad at (85, 23) route N S E S S S W W W N S E E E N N N W N S carrying a tin short sword (wielded), a leather jerkin (being worn)
 bat at (46, 17) route S S S E E W W N N N
 footpad at (18, 6) route E E E E E W N S E W W W W W
-barrow_spider at (95, 19) route S S S E E S S S N N N W W N N N
+barrow_spider at (94, 19) route S S S E E S S S N N N W W N N N
 giant_centipede at (70, 25) route E E E E W W W W W S N E E E E E W W W W
 footpad at (72, 35) route W E E E E E N N S S N N S S W W W W W E carrying an iron short sword (wielded)
 goblin_archer at (78, 3) route W E E S S S S W W W E E E N N N N W W E carrying an ironwood short bow (readied), 12 arrows (quivered)
@@ -66,28 +66,29 @@ giant_centipede at (58, 35) route E E E W E W W W
 bat at (7, 7) route N N N W S S S S N N N N E S S S
 giant_centipede at (73, 24) route N W W W W W N N S S N N S S E E E E E S
 barrow_spider at (93, 2) route E E S S E S N W N N W W
-giant_centipede at (78, 20) route N N N N N N E E W W S S S S S S
+giant_centipede at (77, 20) route N N N N N N E E W W S S S S S S
 giant_centipede at (5, 20) route N S S S E E E E W W W W N N N S
-giant_centipede at (26, 25) route S S S S W W W W W E E E E E N N N N
+giant_centipede at (87, 36) route W W W W W W N N N S S S E E E E E E
 footpad at (23, 5) route S N E W S S S S S N N N N N E W S N carrying a tin short sword (wielded)
 goblin_archer at (10, 13) route W W N N N N S S S S E E carrying a short bow (readied), 20 flint arrows (quivered)
 bat at (64, 15) route W S W W N S E E N E
-footpad at (67, 26) route N N N N N N S N S S S S S S carrying a bronze short sword (wielded), a leather jerkin (being worn)
-footpad at (76, 37) route N N N W W W W W W W E E E E E E E S S S carrying a tin short sword (wielded)
+footpad at (66, 26) route N N N N N N E W S S S S S S carrying a bronze short sword (wielded), a leather jerkin (being worn)
+footpad at (68, 15) route N N N W W W W E E W E W W E E E E S S S carrying a tin short sword (wielded)
 footpad at (54, 8) route N N N N N E S N W S S S S S carrying a copper short sword (wielded), a leather jerkin (being worn)
 footpad at (59, 10) route E S S E S S S S S N N N N N W N N W carrying an iron short sword (wielded), a leather jerkin (being worn)
 footpad_archer at (17, 21) route S S S S S S S S S N N N N N N N N N carrying a horn short bow (readied), 25 brass arrows (quivered), a hardened leather jerkin (being worn)
-goblin_archer at (61, 21) route E E N N S S W W carrying a short bow (readied), 20 flint arrows (quivered), a horn club (wielded)
-barrow_spider at (86, 17) route W W W W W N N N S S N N S S S E E E E E
+goblin_archer at (60, 21) route E E N N S S W W carrying a short bow (readied), 20 flint arrows (quivered), a horn club (wielded)
+barrow_spider at (85, 17) route W W W W W N N N S S N N S S S E E E E E
 footpad at (43, 23) route E E E N S W W W carrying an iron short sword (wielded), a hardened leather jerkin (being worn)
 bat at (65, 10) route N S S S N N N S
-footpad at (86, 22) route N W W S S S N N N S S S N N N E E S carrying a hardened leather jerkin (being worn)
+footpad at (85, 22) route N W W S S S N N N S S S N N N E E S carrying a hardened leather jerkin (being worn)
 barrow_spider at (76, 4) route S S S S S S N N N N N N
 footpad at (78, 16) route E E E E E E E E W W W W W W W W carrying a leather jerkin (being worn)
 bat at (95, 22) route S W S E E E S W N S E N W W W N E N
-giant_centipede at (74, 26) route E E W W W S S S W W E E N N N E E E W W
-giant_centipede at (74, 27) route N N N N N S S S S S
+giant_centipede at (73, 26) route E E E W W S S S W W E E N N N E E W W W
+giant_centipede at (73, 27) route N N N N N S S S S S
 arrow trap at (72, 13)
+arrow trap at (83, 32)
 alarm trap at (89, 35)
 12 placed lights
                                      ####
@@ -100,33 +101,33 @@ alarm trap at (89, 35)
  ##....b...................................####......................## ##....~~#####....#   #...##
  #............g.*...................####.E##  #.......@..............# ##....~~*#........#  ##..##
  #.......................#.........##  ####  ##..............###...@.# #......###..~~....#  #..##
- ##............o........###........#        ##.............@.# ##b...# #.....###....~~.c.####..##
-  #####............................#       ##..b.........b...####....# #....## #....~.....##....##
-      #.......................##..##       #........@.........##.....# #....####....~............#
-      ##..g..................######        #....s##.....h............# #^....##.....~...........##
-       ##..............@....##            ##.....##..................# #..............c.......###
-        ###.................#            ##......##.......##*...b...@# #.....................##
-          ##...............##      #### ##.........s.....####.......## #......@..............##
-           #...............#      ##..###.....b..........####....#### ##..............s.......####
+ ##............o........###........#        ##.............@.# ##b...# #.....###....~~c..####..##
+  #####............................#       ##..b........b....####....# #....## #....~.....##....##
+      #.......................##..##       #.......@..........##.....# #....####....~............#
+      ##..g..................######        #...s.##....h.............# #^....##.....~...........##
+       ##..............@....##            ##.....##..................# #.............c........###
+        ###.................#            ##......##.......##*...b..@@# #.....................##
+          ##...............##      #### ##........s......####.......## #......@..............##
+           #...............#      ##..###.....b..........####....#### ##.............s........####
    ####    #...............#      #.......................##.....#    #..........#...............##
-  ##..#### ##......c......##      ##.....@................b......#### #.........###.........@..s..#
-  #..c...## ##....###.....##  #### ####.............................####..@...c..#................#
-  #.......## #...@###....*.####..##   ##.....................g.......###.....@.............##.....#
-  ##.......# #..s..###............# ###............@..................................@.######.b.@#
+  ##..#### ##.....c.......##      ##....@.................b......#### #.........###........@..s...#
+  #..c...## ##....###.....##  #### ####.............................####..@..c...#................#
+  #.......## #...@###....*.####..##   ##....................g........###....@..............##.....#
+  ##.......# #.s...###............# ###............@.................................@..######.b.@#
    ####....####....# #............###......@..........................@..............@.##    #....#
-      ##....# ##..c# #...........###.................g........c..........c....s........#     #....#
-       #....####...###...sc.....###..................................@c................#     ##...#
-       ##....##..b..............#..................................@......c..##........#      #..##
-        #...............@.................................##........##....c.#####.....##      #.##
-        #..............".................................####.......""...c.##   ##...##       #.#
+      ##....# ##.c.# #...........###.................g.......c...........c...s.........#     #....#
+       #....####...###...s......###.................................@.c................#     ##...#
+       ##....##.b...............#.................................@......c...##........#      #..##
+        #...............@.................................##........##...c..#####.....##      #.##
+        #..............".................................####.......""..c..##   ##...##       #.#
         #..............""...........................[.....#####............#     #...#        #.#
         #.*..........................."*............###....## ##...........##    #####        #.#
-       ##.................#......?....<"......@.....# ##....## ##*..........#   ###############.#
-       #..................#.................*.......## ##....## ####........##  #$....$..g$...#.#
+       ##.................#...@.?.....<"............# ##....## ##*..........#   ###############.#
+       #..................#.................*.......## ##....## ####........##  #$.⊟..$..g$...#.#
        #........###"......................##.........#  #.....#    #.........## #..$.......@..#.#
       ##........# #......................####....@...# ##..b@.#   ##..........# #.$@.).@......+.#
       #.........# #.........*.@...###....## #...*....# #..c...#   #@....@.....# #..$..@..^.@..###
-      #.........# #.....###.......# ##....# ##......## #.....##   #...........# #$....$...$...#
-      #######.c## ##..### ###.?..##  ##...#  ##....##  #######    ##...###..@## ###############
+      #.........# #.....###.......# ##....# ##......## #.....##   #...........# #$....$c..$...#
+      #######.c## ##..### ###.?..##  ##...#  ##....##  #######    ##...###...## ###############
             ####   ####     ######    ##.##   ######               ##### #####
                                        ###

@@ -6,7 +6,7 @@
 name = "Still-room"
 map = '''
 ###############
-#,p,..a.a..,p,#
+#,p,..aCa..,p,#
 #.............#
 #....k.S.k....+
 #.............#
@@ -24,3 +24,5 @@ map = '''
 "p" = { terrain = "floor", objects = ["potion_of_healing"] }
 # ... and the roots she cuts them with.
 "a" = { terrain = "floor", objects = ["angelica_root*2"] }
+# Her chest between the jars (spec §8 "Chests"): more of her cures, and her takings.
+"C" = { terrain = "chest", objects = ["potion_of_healing*2", "angelica_root*3", "gold_coin*30"] }

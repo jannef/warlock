@@ -9,6 +9,7 @@ casting = 25
 experience = 90
 skills = { metalcraft = "2d6+10", woodcraft = "2d6+10", appraise = "2d4+4", negotiation = "2d4+4" }
 known_for = ["metalcraft", "woodcraft"]
+optional_skills = { athletics = { chance = 25, dice = "2d4" }, search = { chance = 20, dice = "2d4" } }
 rolls = 2
 weapon_skills = { axes = 1 }
 # The level table (spec §8 "Class abilities"): the tricks of a trade, one by one as the levels

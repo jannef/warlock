@@ -6,16 +6,16 @@ expression: "render(case, content.clone())"
  Y┌─ Level 2 · Skill rolls 4 ────────────────────────────────────────────────┐
   │                                                                          │
   │ Skills                                                                   │
-  │ > a  Appraise         19  ────  +2                                       │
-  │   b  Disable device    7  ────  +2                                       │
+  │ > a  Appraise         11  ────  +2                                       │
+  │   b  Disable device   16  ────  +2                                       │
   │   c  Escape artist     7  ────  +2                                       │
-  │   d  Negotiation      10  ────  +2                                       │
+  │   d  Listen            6  ────  +1                                       │
   │   e  Open lock        18  ────  1d3                                      │
-  │   f  Search           10  ━───  1d5+1                                    │
-  │   g  Spot              9  ────  +2                                       │
-  │   h  Steal            16  ────  1d3                                      │
+  │   f  Search            9  ━───  1d5+1                                    │
+  │   g  Spot             10  ────  +2                                       │
+  │   h  Steal            17  ────  1d3                                      │
   │   i  Stealth          16  ────  1d3                                      │
-  │   j  Tumble           17  ────  1d3                                      │
+  │   j  Tumble           16  ────  1d3                                      │
   │                                                                          │
   │ 4 skill rolls a level: class 3, race 1                                   │
   │                                                                          │

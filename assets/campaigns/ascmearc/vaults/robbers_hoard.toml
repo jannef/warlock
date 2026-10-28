@@ -6,7 +6,7 @@
 name = "Robbers' hoard"
 map = '''
 ###############
-#$....$...$...#
+#$.C..$...$...#
 #..$.......f..#
 #.$..r.W......+
 #..$.......f..#
@@ -22,3 +22,6 @@ map = '''
 # The hoard (spec §8 "Magic items"): a rare thing, rolled when the level is made, and the coin.
 "r" = { terrain = "floor", loot = "rare" }
 "$" = { terrain = "floor", objects = ["gold_coin*20"] }
+# The band's strongbox (spec §8 "Chests"): locked, with an arrow for whoever opens it; what it
+# holds is rolled when the level is made.
+"C" = { terrain = "chest", locked = true, trap = "arrow" }

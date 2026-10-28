@@ -1,0 +1,6 @@
+name = "Chest hall"
+description = "Chests to open, pick, kick, and blow up: a coffer, a locked chest, a trapped one, and one that is not a chest at all; a treasure room behind a secret door, and a greater one walled up beside a pick-axe."
+start_level = "treasure_hall"
+seed = 1
+# A thief come for the chests: Pick lock for the locked one, and a keen eye for the trap.
+character = { race = "human", gender = "female", class = "thief", name = "Maud" }

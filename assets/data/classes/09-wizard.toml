@@ -10,6 +10,7 @@ affinity = { evocation = 2, abjuration = 1, transmutation = 1, enchantment = 1, 
 experience = 125
 skills = { concentration = "2d6+10", knowledge = "2d6+10", spellcraft = "2d6+10", decipher_script = "2d4+4" }
 known_for = ["concentration", "knowledge", "spellcraft"]
+optional_skills = { appraise = { chance = 20, dice = "2d4" }, search = { chance = 15, dice = "2d4" } }
 rolls = 2
 weapon_skills = { staves = 1, spell_attack = 2 }
 styles = { sniper = 1 }

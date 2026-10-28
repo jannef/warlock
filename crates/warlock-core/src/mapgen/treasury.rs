@@ -344,8 +344,8 @@ pub(super) fn fill(
     }
 }
 
-/// The plain floor cells of `room` where treasure may lie: no stairs, light, trap, lock, or
-/// chest. In row order.
+/// The plain floor cells of `room` where treasure may lie: no stairs, light, trap, lock, chest,
+/// or creature (a floor chest's mimic). In row order.
 fn floor(template: &LevelTemplate, room: &SpecialRoom, pal: Palette) -> Vec<Pos> {
     (room.cells().into_iter())
         .filter(|&p| template.terrain.get(p) == Some(&pal.floor))
@@ -354,6 +354,7 @@ fn floor(template: &LevelTemplate, room: &SpecialRoom, pal: Palette) -> Vec<Pos>
         .filter(|p| !template.traps.contains_key(p))
         .filter(|p| !template.locks.contains_key(p))
         .filter(|p| !template.chests.contains_key(p))
+        .filter(|&p| !template.creatures.iter().any(|c| c.pos == p))
         .collect()
 }
 

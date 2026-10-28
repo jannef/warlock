@@ -13,6 +13,7 @@ expression: "render(case, content.clone())"
                     │ The Showcase                                             │
                     │   Showcase                                               │
                     │   Arena                                                  │
+                    │   Chest hall                                             │
                     │   Courtyard                                              │
                     │   Depths                                                 │
                     │   Forest                                                 │
@@ -31,7 +32,6 @@ expression: "render(case, content.clone())"
                     │                                                          │
                     │   Seed: [(default: 1)_]                                  │
                     │   Type a number or a word to set a seed.                 │
-                    │                                                          │
                     │                                                          │
                     │                                                          │
                     │ ↑↓ scenario   Enter next   Esc back                      │

@@ -9,6 +9,7 @@ casting = 25
 experience = 90
 skills = { athletics = "2d6+10", survival = "2d6+10", intimidate = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
 known_for = ["athletics", "survival"]
+optional_skills = { handle_animal = { chance = 20, dice = "2d4" }, spot = { chance = 30, dice = "2d4" } }
 rolls = 2
 weapon_skills = { unarmed = 1 }
 weapon_skill_choice = [{ axes = 2 }, { great_blades = 2 }]

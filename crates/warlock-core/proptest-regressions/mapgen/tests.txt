@@ -5,3 +5,4 @@
 # It is recommended to check this file in to source control so that
 # everyone who runs the test benefits from these saved cases.
 cc dbc497d9c0de94542f1b48172e99be56aeb1d06fbdff9249a894230b5c5515bf # shrinks to seed = 10769615531994670491
+cc bb45389c9fe44c2e93a4a44d1524f4336695a7eb3baec2a67141c91031592ef7 # shrinks to seed = 6128859225406577321

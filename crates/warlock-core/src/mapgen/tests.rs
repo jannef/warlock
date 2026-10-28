@@ -215,7 +215,8 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
         .count();
     prop_assert!(emitters + level.lights.len() > 0, "{} is dark", level.id);
 
-    // Patrols loop over walkable terrain.
+    // Nothing lies or stands on a wall; patrols loop over walkable terrain.
+    nothing_on_a_wall(level)?;
     for spawn in &level.creatures {
         crate::content::validate_route(level, content, spawn).map_err(TestCaseError::fail)?;
     }
@@ -783,5 +784,73 @@ fn a_treasure_room_s_chest_never_covers_loot() {
             CONTENT.terrain(a.terrain[*p]).walkable,
             "objects on a wall at {p}"
         );
+    }
+}
+
+/// A floor chest in a sanctuary stays a chest: its mimic draw never puts a creature in a room
+/// creatures shun (#661: the proptest's seed 6128859225406577321, depth 7, had a mimic standing
+/// in one).
+#[test]
+fn a_mimic_never_stands_in_a_sanctuary() {
+    let a = level(6128859225406577321, 7);
+    let effect = CONTENT.room_effects().id("sanctuary").expect("sanctuary");
+    let room = (a.rooms.iter())
+        .find(|r| r.effect == effect)
+        .expect("a sanctuary");
+    assert!(
+        room.cells().iter().any(|p| a.chests.contains_key(p)),
+        "the chest stays a chest"
+    );
+    assert!(a.creatures.iter().all(|c| !room.contains(c.pos)));
+}
+
+/// What generation lays or stands somewhere, against the terrain it ends on (#661): objects lie
+/// and creatures stand on walkable terrain (one creature to a cell, never in a room creatures
+/// shun), every chest is shut chest terrain with nothing lying or standing on it, and traps and
+/// locks are on walkable ground, a door, or a chest.
+fn nothing_on_a_wall(level: &LevelTemplate) -> Result<(), TestCaseError> {
+    let content = &**CONTENT;
+    let terrain = |p: Pos| content.terrain(level.terrain[p]);
+    for (p, pile) in &level.objects {
+        prop_assert!(terrain(*p).walkable, "objects on a wall at {}", p);
+        prop_assert!(!pile.is_empty());
+    }
+    let mut stood = std::collections::BTreeSet::new();
+    for c in &level.creatures {
+        prop_assert!(terrain(c.pos).walkable, "a creature on a wall at {}", c.pos);
+        prop_assert!(stood.insert(c.pos), "two creatures at {}", c.pos);
+        let shunned = (level.rooms.iter())
+            .any(|r| r.contains(c.pos) && content.room_effect(r.effect).shunned);
+        prop_assert!(!shunned, "a creature in a shunned room at {}", c.pos);
+    }
+    for p in level.chests.keys() {
+        prop_assert!(terrain(*p).is_shut_chest(), "a chest on {}", terrain(*p).id);
+        prop_assert!(
+            !level.objects.contains_key(p),
+            "objects under a chest at {}",
+            p
+        );
+    }
+    for p in level.traps.keys().chain(level.locks.keys()) {
+        let t = terrain(*p);
+        prop_assert!(
+            t.walkable || t.is_door() || level.chests.contains_key(p),
+            "a trap or lock on {} at {}",
+            t.id,
+            p
+        );
+    }
+    Ok(())
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(128))]
+
+    /// [`nothing_on_a_wall`] on every depth of many seeds.
+    #[test]
+    fn nothing_lies_or_stands_on_a_wall(seed: u64) {
+        for depth in 1..=8 {
+            nothing_on_a_wall(&level(seed, depth))?;
+        }
     }
 }

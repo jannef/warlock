@@ -1,8 +1,10 @@
 //! Vaults (`assets/vaults/*.toml`): hand-made map pieces in the level-file format that generators
 //! stamp into generated levels where they fit (spec §7).
 //!
-//! A vault is a rectangle copied verbatim: terrain, placed lights, objects, traps, and creatures
-//! with their patrols. Its outer edge must be solid (non-walkable terrain such as walls) except for its
+//! A vault is a rectangle copied verbatim: terrain, placed lights, objects, traps, chests, and
+//! creatures with their patrols. A dungeon vault's chests are of the floor's item level (no
+//! `chest` level or band of their own, no mimic), and one given no `objects` is filled by its
+//! band's loot table when the level is made (`mapgen/chest.rs::fill_vaults`). Its outer edge must be solid (non-walkable terrain such as walls) except for its
 //! **entrances**: doors on the edge, never on a corner. Generators join every entrance to the rest
 //! of the level. A vault has no stairs and no player start, and every walkable cell must be
 //! reachable from an entrance (doors count as passable), so stamping one never strands anything.
@@ -85,10 +87,22 @@ impl Vault {
         if !template.rooms.is_empty() {
             return Err("a vault cannot mark special rooms".into());
         }
-        // Stamping chests into generated levels comes with the chests in vaults (spec §8
-        // "Chests"; docs/design/chests-and-treasure.md, C7).
-        if let Some(at) = template.chests.keys().next() {
-            return Err(format!("a vault cannot hold chests yet (at {at})"));
+        // A vault's chests are of the floor it is stamped on (spec §8 "Chests"): no level or
+        // band of their own, and no mimic (its type is its level).
+        if let (LevelKind::Outdoor, Some(at)) = (template.kind, template.chests.keys().next()) {
+            return Err(format!("an outdoor vault cannot hold chests (at {at})"));
+        }
+        let own_level = |c: &&crate::chest::Chest| c.level != template.item_level;
+        if let Some((at, _)) = template.chests.iter().find(|(_, c)| own_level(c)) {
+            return Err(format!(
+                "a vault's chest is of the floor's level: no `chest` level or band (at {at})"
+            ));
+        }
+        if let Some(spawn) = (template.creatures.iter()).find(|c| content.is_mimic(c.creature)) {
+            return Err(format!(
+                "a vault cannot place a mimic: its level is the floor's (at {})",
+                spawn.pos
+            ));
         }
         if let (LevelKind::Outdoor, Some(at)) = (template.kind, template.traps.keys().next()) {
             return Err(format!("an outdoor vault cannot have traps (at {at})"));
@@ -252,8 +266,11 @@ fn check_keys(
             }
         }
     }
+    // A chest's lock wants no key: Pick lock, Knock, or a kick open it, and a chest is never in
+    // the way (spec §8 "Chests").
+    let chest = |p: Pos| content.terrain(terrain[p]).is_shut_chest();
     match (template.locks.iter())
-        .find(|(_, lock)| !template.has_key_for(content, lock, |q| seen[q]))
+        .find(|(p, lock)| !chest(**p) && !template.has_key_for(content, lock, |q| seen[q]))
     {
         Some((p, _)) => Err(format!(
             "no key to the lock at {p} lies or is carried within reach of an unlocked entrance \

@@ -25,7 +25,8 @@
 //!    then roll its loot from its loot stream ([`Rng::loot`]), then, on a branch with a danger,
 //!    lay its initial population down from its population stream ([`Rng::population`],
 //!    `population.rs`), then its teeming dens' sleepers and hoards from its swarm stream
-//!    ([`Rng::swarm`], `den.rs`), then its chests from its chest stream ([`Rng::chests`],
+//!    ([`Rng::swarm`], `den.rs`), then what its vaults' empty chests hold from its vault chest
+//!    stream ([`Rng::vault_chests`]), then its chests from its chest stream ([`Rng::chests`],
 //!    `chest.rs`), then its creatures' gear from its gear stream ([`Rng::gear`],
 //!    [`crate::gear::arm`]).
 //!
@@ -47,6 +48,7 @@ mod special;
 mod treasury;
 mod vault;
 
+use crate::chest::Chest;
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
     ObjectId, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom, StairsDir,
@@ -195,6 +197,8 @@ pub(crate) struct Canvas<'a> {
     pub locks: BTreeMap<Pos, Lock>,
     /// Secret doors stamped from vaults (spec §8 "Searching").
     pub secrets: BTreeMap<Pos, Secret>,
+    /// Chests stamped from vaults (spec §8 "Chests"), their level the floor's once it is known.
+    pub chests: BTreeMap<Pos, Chest>,
     pub creatures: Vec<CreatureSpawn>,
     /// Special rooms (spec §7 "Special rooms"; `special.rs`).
     pub rooms: Vec<SpecialRoom>,
@@ -239,6 +243,7 @@ impl<'a> Canvas<'a> {
             loot: Vec::new(),
             locks: BTreeMap::new(),
             secrets: BTreeMap::new(),
+            chests: BTreeMap::new(),
             creatures: Vec::new(),
             rooms: Vec::new(),
             pervading: None,
@@ -494,6 +499,18 @@ pub fn generate_for(
             });
         }
         let item_level = content.item_level(id);
+        // A vault's chests are of the floor's level (spec §8 "Chests").
+        let chests = (canvas.chests.into_iter())
+            .map(|(p, chest)| {
+                (
+                    p,
+                    Chest {
+                        level: item_level,
+                        ..chest
+                    },
+                )
+            })
+            .collect();
         let mut template = LevelTemplate {
             id: id.to_string(),
             name: def.level_name(depth),
@@ -509,7 +526,7 @@ pub fn generate_for(
             objects: canvas.objects,
             traps: canvas.traps,
             locks: canvas.locks,
-            chests: BTreeMap::new(),
+            chests,
             secrets: canvas.secrets,
             hidden: BTreeMap::new(),
             places: BTreeMap::new(),
@@ -547,6 +564,7 @@ pub fn generate_for(
                 hoard::fill(&mut template, content, seed, (pal, danger), visit);
             }
             room_loot::fill(&mut template, content, seed, pal);
+            chest::fill_vaults(&mut template, content, (seed, luck));
             chest::fill(
                 &mut template,
                 content,

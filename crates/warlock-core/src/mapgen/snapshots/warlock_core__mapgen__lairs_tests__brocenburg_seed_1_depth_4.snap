@@ -9,21 +9,21 @@ herrick at (4, 9) route  carrying an obsidian great axe (magic) (wielded in both
 goblin at (14, 10) route  carrying a club (wielded)
 footpad_archer at (44, 5) route W W E E W W W E W E E E W W E E carrying a hardwood short bow (readied), 25 bone arrows (quivered), a copper dagger (wielded), a leather jerkin (being worn)
 footpad_archer at (64, 8) route S N N S S N S N N S S N carrying a short bow (readied), 15 arrows (quivered), a leather jerkin (being worn)
-footpad at (58, 8) route S N N S S N S N N S S N carrying a bronze short sword (wielded), a hardened leather jerkin (being worn)
-bat at (35, 8) route S W N N N S S S E N
-footpad_archer at (43, 5) route S S S W W W W E E E E N N N carrying a short bow (readied), 15 flint arrows (quivered), an obsidian dagger (wielded)
+footpad at (59, 8) route W S N N S S N N S S N E carrying a bronze short sword (wielded), a hardened leather jerkin (being worn)
+bat at (36, 8) route S W W N N S S E E N
+footpad_archer at (43, 5) route S S S W W W N S E E E N N N carrying a short bow (readied), 15 flint arrows (quivered), an obsidian dagger (wielded)
 footpad at (70, 16) route N S W E W W W W W E E E E E W E N S carrying a short sword (wielded), a leather jerkin (being worn)
-footpad at (15, 7) route W W E E E S N W W W E E carrying an iron short sword (wielded), a leather jerkin (being worn)
+footpad at (16, 7) route W W E E S S N N W W E E carrying an iron short sword (wielded), a leather jerkin (being worn)
 bat at (21, 8) route S W W W E E E W W W E E E N
-bat at (13, 10) route S W W E E E E W E W W W W E E N
-goblin_chief at (62, 9) route S N S W W W E W E W E W E E E N S N carrying a club (wielded), a bronze short sword (in off hand), a leather jerkin (being worn)
+bat at (15, 10) route S W W E E E W W E E W W W E E N
+goblin_chief at (64, 9) route N N S W W W W W W E E E E E E N S S carrying a club (wielded), a bronze short sword (in off hand), a leather jerkin (being worn)
 bat at (34, 6) route N E E E E E E E W W W W W W W S
-goblin at (11, 8) route N E E E W W W S carrying a chitin club (wielded), a bronze cap (being worn)
+goblin at (12, 8) route N E E E W W W S carrying a chitin club (wielded), a bronze cap (being worn)
 lesser_air_elemental at (35, 5) route W E E E S S S N N N W W W E
-footpad_archer at (6, 7) route S E E E E N S E S N W N S W W W W N carrying a short bow (readied), 15 horn arrows (quivered)
+footpad_archer at (7, 7) route S E E E E N S E S N W N S W W W W N carrying a short bow (readied), 15 horn arrows (quivered)
 goblin_archer at (45, 9) route W W W W W W W E E E W W W E E E E E E E carrying a short bow (readied), 12 arrows (quivered), a bone club (wielded)
 goblin at (28, 16) route E E E E E E W W W W W W carrying a club (wielded)
-footpad at (45, 8) route S N N N N E W S S S S N carrying a copper short sword (wielded), a leather jerkin (being worn)
+footpad at (46, 8) route S N N N N E W S S S S N carrying a copper short sword (wielded), a leather jerkin (being worn)
 footpad_archer at (33, 16) route W W N N E E W W S S E E carrying a horn short bow (readied), 25 bone arrows (quivered), an ivory dagger (wielded), a leather jerkin (being worn)
 footpad at (15, 9) route N N E S S W W E E N N W S S carrying a bronze short sword (wielded), a leather jerkin (being worn)
 footpad at (32, 17) route W W W W W E W E E E E E carrying a bronze short sword (wielded)
@@ -32,8 +32,8 @@ footpad at (33, 14) route E E E E W W W W E E E E W W W W carrying a short sword
 footpad at (74, 14) route N N E S S N N S S N N W S S carrying an iron short sword (wielded), a hardened leather jerkin (being worn)
 footpad_archer at (39, 9) route E E E E E E E E W E W W W W W W W W carrying 25 pewter arrows (quivered), a hardened leather jerkin (being worn)
 footpad at (73, 14) route W N E E S S S W N S E N N N W W S E carrying a leather jerkin (being worn)
-spear trap at (12, 8)
-spear trap at (38, 8)
+spear trap at (13, 8)
+spear trap at (39, 8)
 spear trap at (61, 7)
 0 placed lights
 
@@ -43,10 +43,10 @@ spear trap at (61, 7)
                       #...#      ################           ###
                       #...########.E.......@@...#        ####+####
    ###############  ###...+......'b.............#        #¡.....¡#
-   #..@........@.#  #.+...########..............###    ###.#.^.#.#######
-   #.,,,,,.g^.g..####b#...#      #.b..^......@..'.#    #.+@.._..@+.....#
-   #@,,,,,.....@.+....##+###     #.....@.....g..#.#    #.#.#.*g#.#####.#
-   #.,,,,,...bg..#######...#     ##+#############.#    #.#¡.....¡#   #.#
+   #⊟..@........@#  #.+...########..............###    ###.#.^.#.#######
+   #.,,,,,..g^g..####b#...#      #..b..^......@.'.#    #.+.@._..@+.....#
+   #@,,,,,.....@.+....##+###     #.....@.....g..#.#    #.#.#.*.#g#####.#
+   #.,,,,,....gb.#######...#     ##+#############.#    #.#¡.....¡#   #.#
    #%............#     ###.#      #.#           #.#    #.#########   #.######
    ###############       #.#      #.#           #.#    #.#           #.#....#
                         ##+########+###         #.######.#           #......#

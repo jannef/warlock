@@ -30,7 +30,11 @@
 //!   after everything above (so they never change a score) in this order: the race's skills, the
 //!   class's (each in skill order), then the race's extra class skill (`class_skill`, humans):
 //!   one of the class's skills picked uniformly, then its dice. A skill both train sums the two.
-//!   Every other skill is untrained.
+//!   Every other skill is untrained, but for the class's **optional skills** (ADOM-like): each
+//!   comes with its chance, then its dice, in skill order, from their own stream,
+//!   `character/optional-skills/<race>,<gender>,<class>`, so no other roll moves; a skill the
+//!   race trains too sums the two. The race's extra class skill picks among the guaranteed ones
+//!   only.
 //! - **Eyes**: the player's vision profile is the race's.
 //! - **Weapon skills** (spec §8 "Weapon skills"): the race's starting ranks plus the class's,
 //!   and one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each
@@ -420,7 +424,8 @@ impl CharacterSpec {
             .zip(sign.as_ref())
             .map_or(0, |(h, s)| h.alignment(s));
         let potential = stats::roll(&race.potential, &mut rng);
-        let skills = starting_skills(race, class, &mut rng);
+        let mut skills = starting_skills(race, class, &mut rng);
+        optional_skills(class, &mut skills, seed, self);
         let (weapon_skills, trained) = self.weapon_skills(content, seed);
         let character = Character {
             name: random_name(content, seed, self, 0).unwrap_or_else(|| NAMELESS.into()),
@@ -502,6 +507,21 @@ fn starting_skills(race: &RaceDef, class: &ClassDef, rng: &mut Rng) -> Skills {
         out.add(skill, race.class_skill.roll(rng));
     }
     out
+}
+
+/// The class's optional skills a character of `spec` in a run with `seed` starts with, added to
+/// `skills`: each by its chance, then its dice, from the stream
+/// `character/optional-skills/<spec>` (drawing nothing for a class without any).
+fn optional_skills(class: &ClassDef, skills: &mut Skills, seed: u64, spec: &CharacterSpec) {
+    if class.optional_skills.is_empty() {
+        return;
+    }
+    let mut rng = Rng::stream(seed, &format!("character/optional-skills/{spec}"));
+    for o in &class.optional_skills {
+        if rng.chance(u32::from(o.chance)) {
+            skills.add(o.skill, o.dice.roll(&mut rng));
+        }
+    }
 }
 
 /// Starting stats from the adjustments: scores 10 plus `by`, potentials `base_potential` plus
@@ -1016,6 +1036,7 @@ mod tests {
                     !l.starts_with("skills = ")
                         && !l.starts_with("class_skill = ")
                         && !l.starts_with("known_for = ")
+                        && !l.starts_with("optional_skills = ")
                 })
                 .collect();
             kept.join("\n")
@@ -1041,9 +1062,22 @@ mod tests {
         Content::load(&files).expect("valid content")
     }
 
+    /// The built-in content with no class's optional skills.
+    fn no_optional_content() -> Content {
+        let mut files = ContentFiles::builtin();
+        files.edit_table("classes", |text| {
+            let kept: Vec<&str> = (text.lines())
+                .filter(|l| !l.starts_with("optional_skills = "))
+                .collect();
+            kept.join("\n")
+        });
+        Content::load(&files).expect("valid content")
+    }
+
     #[test]
     fn skills_are_rolled_after_everything_else_and_never_move_a_score() {
-        let content = content();
+        // The guaranteed skills: optional ones are the next test's.
+        let content = no_optional_content();
         let plain = skill_free_content();
         assert!(plain.skills().is_empty());
         for race in &content.races().list {
@@ -1097,6 +1131,69 @@ mod tests {
         let others =
             (2..12).filter(|&s| start(&content, "human,female,thief", s).skills != thief.skills);
         assert!(others.count() > 5);
+    }
+
+    #[test]
+    fn optional_skills_come_by_chance_and_never_move_another_roll() {
+        let content = content();
+        let plain = no_optional_content();
+        assert!(
+            content
+                .classes()
+                .iter()
+                .all(|c| !c.optional_skills.is_empty())
+        );
+        let mut came: BTreeMap<(String, SkillId), u32> = BTreeMap::new();
+        const SEEDS: u64 = 200;
+        for race in &content.races().list {
+            for class in content.classes() {
+                let spec = CharacterSpec::new(&race.id, Gender::Female, &class.id);
+                for seed in 0..SEEDS {
+                    let with = spec.start(&content, seed, start_date()).expect("starts");
+                    let without = spec.start(&plain, seed, start_date()).expect("starts");
+                    // Nothing but the skills moves: scores, birth, weapon skills, the kit.
+                    assert_eq!(with.stats, without.stats, "{spec} seed {seed}");
+                    assert_eq!(with.character, without.character, "{spec} seed {seed}");
+                    assert_eq!(with.weapon_skills, without.weapon_skills, "{spec}");
+                    assert_eq!(with.kit, without.kit, "{spec} seed {seed}");
+                    // Every guaranteed skill as before, plus what an optional one added.
+                    for (id, t) in with.skills.iter() {
+                        let before = i32::from(without.skills.value(id).unwrap_or(0));
+                        let added = i32::from(t.value) - before;
+                        let optional = (class.optional_skills.iter()).find(|o| o.skill == id);
+                        match optional {
+                            None => assert_eq!(added, 0, "{spec} {id}"),
+                            Some(o) if added > 0 => {
+                                assert!((o.dice.min()..=o.dice.max()).contains(&added));
+                                *came.entry((class.id.clone(), id)).or_default() += 1;
+                            }
+                            Some(_) => assert_eq!(added, 0),
+                        }
+                    }
+                    for (id, _) in without.skills.iter() {
+                        assert!(with.skills.get(id).is_some(), "{spec} lost {id}");
+                    }
+                }
+            }
+        }
+        // Each comes about as often as its chance says, for some characters and not others.
+        let rolled = content.races().list.len() as f64 * SEEDS as f64;
+        for class in content.classes() {
+            for o in &class.optional_skills {
+                let n = came.get(&(class.id.clone(), o.skill)).copied().unwrap_or(0);
+                let share = f64::from(n) / rolled * 100.0;
+                let chance = f64::from(o.chance);
+                assert!(
+                    (share - chance).abs() < 6.0,
+                    "{} {}: {share:.1}% for a {chance}% chance",
+                    class.id,
+                    o.skill
+                );
+            }
+        }
+        // The same seed and choices, the same skills.
+        let one = start(&content, "elf,male,commoner", 7);
+        assert_eq!(one.skills, start(&content, "elf,male,commoner", 7).skills);
     }
 
     #[test]

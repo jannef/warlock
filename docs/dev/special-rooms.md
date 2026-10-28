@@ -263,8 +263,9 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
   branch's that fit a fixture, `roll_contents`, the mimic draw: a floor chest's draws); the
   `gold.heaps` dice, per heap a cell and `gold.dice` × `each` coins of the shops' currency (else
   `gold_coin`); the `gems` dice, per gem a cell and `gem::roll` at the item level. Free cells:
-  the room's plain floor without stairs, light, trap, lock, or chest; chests take theirs away,
-  heaps and gems share. A room too small for its chests holds what fits.
+  the room's plain floor without stairs, light, trap, lock, chest, or creature (a floor chest's
+  mimic); a chest's cell also has nothing lying on it (#661: its terrain is no floor, so a pile
+  there would lie on a wall); chests take theirs away, heaps and gems share. A room too small for its chests holds what fits.
 - The floor's population keeps out of it (`population.rs`), and `make` refuses one a patrol
   walks through, as for a den or a hoard. Floor chests (`chest::fill`) may still land inside.
 - **The hint** (`world/treasury.rs`, `arrive_lines`): in `World::travel` after the `pervade`
@@ -306,7 +307,9 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
 - **Level files** (`content/level.rs`, `check_sealed`): a `[[room]]` of a sealed effect needs
   `breach = [x, y]`, which `breach_fault` checks against the cells reached from the player's
   start (beside the breach on a level without one); no cell of the room may be reached without
-  breaking a wall. `breach` on another effect is refused.
+  breaking a wall. `breach` on another effect is refused. The showcase's `chests` scenario
+  (level `treasure_hall`, #619) has a hand-made treasure room behind a secret door and a greater
+  one with its breach beside a pick-axe (`world/chest_hall_tests.rs`).
 - **Dumps**: `rooms` adds `, breach (x, y)`; `truth` draws a standing breach `H`.
 - `band_up` (the design's chests of the band above) is not done: a chest's band follows from its
   saved level alone, so it needs a saved band offset and touches `chest::lay`; the greater
