@@ -8,22 +8,22 @@ expression: "render(case, content.clone())"
 
 
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Skills                                                   │
-                    │   b  Appraise           not usable yet                   │
-                    │   c  Disarm a trap      in a direction                   │
-                    │   d  Pick lock          in a direction                   │
-                    │   e  Steal              in a direction                   │
+                    │   b  Disarm a trap      in a direction                   │
+                    │   c  Pick lock          in a direction                   │
+                    │   d  Steal              in a direction                   │
                     │ Weapon skills                                            │
-                    │   f  Shield bash        in a direction                   │
+                    │   e  Shield bash        in a direction                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-f or Enter use   Esc close                             │
+                    │ a-e or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

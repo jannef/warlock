@@ -400,8 +400,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
     "Treating oneself" below), a forage that ran its time, whatever it found (`forage`;
-    "Foraging" below), mana spent, a spell or an ability paid in it (`cast`; Concentration, 25 %,
-    #668). Only the player trains for now; creatures keep their type's
+    "Foraging" below), a deal made in a shop: goods paid for or the player's own sold (`deal`;
+    Negotiation), something carried told for what it is (`appraise`; "Appraise" below), mana
+    spent, a spell or an ability paid in it (`cast`; Concentration, 25 %, #668). Only the
+    player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
@@ -440,6 +442,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     world state) show every actor's skills with their marks and the ladder's die for them. The
     Skills screen's meter shows a skill's ladder step in quarters (how practised it is). Skills
     and marks are part of the world state (saved, hashed).
+  - **Appraise and Negotiation** (#666, the owner 2026-10-28): the shops' prices are
+    Negotiation's (`bargain`, 20 % at 100, 30 % at 200; §7 "Shops"), marked by deals (`deal`,
+    25 %). Appraise (passive) tells things: on every whole game hour the clock passes
+    (`world/appraise.rs`, called from the status loop's `live`, so a rest rolls each hour it
+    passes, and from the dev `skip`), a player trained in a skill with the `identify` benefit
+    who carries or wears something they do not fully know (what the scroll of identify and an
+    appraisal would tell: unidentified magic, a scroll of an unknown type, a wand's unknown
+    charges) has the benefit's chance in percent (Appraise: 2 % from value 0, 12 % at 100, 20 %
+    at 200; with what magic items and talents add to the skill) of telling one of them, picked
+    uniformly: "You realise your silver ring (magic) is a silver ring of the Mule." The draws
+    come from the stream `appraise/<hour>` (the hour counted from the calendar's start), only
+    when there is a check to make, and no state is kept, so a run without Appraise or without
+    anything unknown hashes as before. Untrained, never (a magic item's bonus alone does not
+    give it). Each thing told may mark Appraise (`appraise`, 100 %). The classes trained in
+    Appraise (bard, thief, craftsperson, merchant) have Negotiation at the same dice; the
+    merchant is known for both. Gnomes keep Appraise alone.
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal` or `heal:ID`; cost `heal`, 2500: a quarter of a

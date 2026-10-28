@@ -30,8 +30,9 @@
 //!   keeper's death leaves its goods free to take ([`ShopStatus::Abandoned`]). Unpaid goods
 //!   cannot be shot or thrown in the shop.
 //!
-//! Prices follow the player's favour ([`favour`]): their Presence and their Appraise skill, never
-//! shown but as gold.
+//! Prices follow the player's favour ([`favour`]): their Presence and their Negotiation skill,
+//! never shown but as gold. A deal made (goods paid for, the player's own sold) may train
+//! Negotiation ([`Use::Deal`]).
 
 use super::{ActorId, Deed, Spent, World};
 use crate::action::{Event, Meal, Positions};
@@ -42,7 +43,7 @@ use crate::content::{
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::object::{self, Stack};
-use crate::skills::Effect;
+use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 use serde::{Deserialize, Serialize};
 
@@ -214,7 +215,7 @@ pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
 }
 
 /// How far prices move in `actor`'s favour, in percent (spec §7 "Shops"): the shops' `presence`
-/// for each point of their Presence modifier, plus what their skills give (Appraise's
+/// for each point of their Presence modifier, plus what their skills give (Negotiation's
 /// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), at most
 /// [`MAX_FAVOUR`] either way. Talents (spec §8 "Class abilities": Haggler, Well dressed) add
 /// theirs before the cap, and may lift it (Magnate), never past [`MOST_FAVOUR`]. Never shown.
@@ -440,6 +441,7 @@ impl World {
                 self.identify(item);
             }
         }
+        self.train(Use::Deal);
         self.train_stat(StatUse::Trade);
         self.player_did(Deed::PaidDebt);
         Spent::NoTime
@@ -544,6 +546,7 @@ impl World {
             for what in learned {
                 self.say(format!("That was {what}!"));
             }
+            self.train(Use::Deal);
             self.train_stat(StatUse::Trade);
         }
         Some(spent)

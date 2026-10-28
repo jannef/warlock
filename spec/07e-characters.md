@@ -173,7 +173,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   gives starting ranks in weapon skills and fighting styles, and, with a level table, class
   abilities and bonus talents. Skills: a few it
   is known for (`2d6+10`) and a few more (`2d4+4`); the full table is in the wiki (Skills), e.g.
-  the thief open lock, steal, stealth, and tumble well, appraise, disable device, escape artist,
+  the thief open lock, steal, stealth, and tumble well, appraise, disable device, escape artist, negotiation,
   search, and spot a little; the ranger spot, survival, and woodcraft well, athletics, handle
   animal, listen, and swim a little; the wizard concentration, knowledge, and spellcraft well,
   decipher script a little; the commoner athletics and handle animal a
@@ -217,9 +217,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `intelligence_from`, `intelligence_every` (one more roll at that Intelligence and every so many
   points above; 14, 4), `spend` (percent of the marks a roll spends, 50), `soft_cap` (from this
   value on a roll adds half, 100); §8 "Skills". Adding a skill is one
-  entry (saves then change: skill ids are indices). The 25 skills: appraise, athletics,
+  entry (saves then change: skill ids are indices). The 26 skills: appraise, athletics,
   balance, bluff, concentration, decipher script, disable device, escape artist, handle animal,
-  heal, intimidate, knowledge, listen, metalcraft, music, open lock, search, spellcraft, spot,
+  heal, intimidate, knowledge, listen, metalcraft, music, negotiation, open lock, search, spellcraft, spot,
   steal, stealth, survival, swim, tumble, woodcraft.
 - **Horoscope** (`data/horoscope.toml`, optional; §8 "Character creation"): `anchor_year`, a
   year that starts a great cycle (1: the year of the Great Race, the first of the reckoning),

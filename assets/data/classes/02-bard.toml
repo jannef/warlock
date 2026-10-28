@@ -8,7 +8,7 @@ mana = 5
 casting = 75
 affinity = { enchantment = 2, divination = 1 }
 experience = 100
-skills = { bluff = "2d6+10", music = "2d6+10", appraise = "2d4+4", decipher_script = "2d4+4", knowledge = "2d4+4", tumble = "2d4+4" }
+skills = { bluff = "2d6+10", music = "2d6+10", appraise = "2d4+4", negotiation = "2d4+4", decipher_script = "2d4+4", knowledge = "2d4+4", tumble = "2d4+4" }
 known_for = ["bluff", "music"]
 optional_skills = { listen = { chance = 30, dice = "2d4" }, spot = { chance = 30, dice = "2d4" }, steal = { chance = 15, dice = "2d4" } }
 rolls = 4
