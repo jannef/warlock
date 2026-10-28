@@ -12,7 +12,8 @@
 //!   `World::healing_rate`): a point back every [`crate::mana::regen_seconds`] of Willpower at
 //!   the normal pace, as a moment of `World::live`'s loop (`world/status.rs`: [`regain`] and
 //!   [`until_regained`]), so it makes no difference how time is cut up. Burden, temperature, and
-//!   combat stances do nothing to it.
+//!   combat stances do nothing to it; a trained Concentration makes it faster
+//!   (`world/concentration.rs`).
 //! - **Spending** ([`World::spend_mana`]): the one way, refused when the actor has too little.
 //!   What an ability costs passes the actor's talents first ([`Actor::mana_cost`]: Frugal
 //!   caster), and the player's spending is a `cast` use of their stats (it trains Willpower).
@@ -26,6 +27,7 @@ use crate::content::Effect as ItemEffect;
 use crate::content::{ActionKind, Content, StatUse};
 use crate::hunger::Hunger;
 use crate::mana;
+use crate::skills::{Effect, Use};
 use crate::stats::Stat;
 
 impl World {
@@ -62,6 +64,8 @@ impl World {
             .max(0);
         // Talents (spec §8 "Birth sign": Tidal) add their percent to the affixes'.
         let faster = faster + actor.talent_mods(&self.content).mana_regen_percent;
+        // Concentration (spec §8 "Skills") adds its percent to theirs.
+        let faster = faster + actor.mind(&self.content, Effect::ManaRegen);
         rate * u32::try_from((100 + faster).max(0)).unwrap_or(0) / 100
     }
 
@@ -88,6 +92,8 @@ impl World {
         actor.mana -= cost;
         if id == self.state.player && cost > 0 {
             self.train_stat(StatUse::Cast);
+            // Concentration's marks (spec §8 "Skills").
+            self.train(Use::Cast);
         }
         true
     }
@@ -115,8 +121,7 @@ impl World {
             .count();
         let mana = i32::try_from(grown).unwrap_or(0) * self.level_mana(&content);
         if let Some(player) = self.state.actors.get_mut(&self.state.player) {
-            player.mana_base += mana;
-            player.mana += mana;
+            player.grow_mana_base(&content, mana);
         }
     }
 

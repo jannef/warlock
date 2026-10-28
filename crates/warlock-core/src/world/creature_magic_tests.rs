@@ -82,6 +82,11 @@ fn a_creature_wearing_mana_affixes_has_more_mana_sooner_and_a_higher_caster_leve
     let content = content();
     let (mut plain, id) = hall(&content);
     let (mut worn, _) = hall(&content);
+    // Its Concentration aside (it deepens the pool and quickens the pace too;
+    // `concentration_tests.rs`): the affixes alone.
+    for w in [&mut plain, &mut worn] {
+        w.state.actors.get_mut(&id).expect("the wizard").skills = Default::default();
+    }
     wear(&mut worn, id, ("gold_ring", "left_ring"), ("mystic", 5));
     wear(&mut worn, id, ("jade_amulet", "neck"), ("of_clarity", 50));
     wear(
