@@ -2,7 +2,7 @@
 id = "chest_wise"
 name = "Chest-wise"
 tree = "delver"
-description = "You tell a locked chest from an unlocked one at a glance."
+description = "You tell a locked chest from an unlocked one at a glance, and a trapped chest gives itself away as you look at it."
 needs = { either = { stats = { intelligence = 11 }, skills = { search = 15 } } }
 effects = [{ kind = "chest_wise" }]
 systems = ["chests"]

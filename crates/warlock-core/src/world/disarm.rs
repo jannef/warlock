@@ -2,14 +2,14 @@
 //! Disarm ability ([`crate::ability::Ability::Disarm`], [`crate::Action::Disarm`]).
 //!
 //! The player may try to take apart a trap they know of on a cell next to them (a door's trap
-//! too, spec §8 "Trapped doors"), if they are trained in Disable device (the skill with the
+//! too, spec §8 "Trapped doors", and a chest's, spec §8 "Chests"), if they are trained in Disable device (the skill with the
 //! disarm effect). The try is a check (spec §8 "Checks", [`crate::check::roll`]): 2d12 plus the
 //! Dexterity modifier (of the effective score, spec §8 "Stats") plus what Disable device gives,
 //! against the trap's difficulty (the one finding it takes, deeper on a branch too:
 //! [`World::difficulty_of`]). Made, the trap is gone; failed, it stays, and failed by
 //! [`SPRINGS_SHORT_BY`] or more it goes off at the player ([`World::spring_trap`]: an arrow from
 //! its slit at them, spears at them, its blast, its bolt through them, a pit's fall and climb, an
-//! alarm, a teleport of them). Every try takes the `disarm` action's time and may earn Disable
+//! alarm, a teleport of them; a burst on a chest blows the chest apart). Every try takes the `disarm` action's time and may earn Disable
 //! device a training mark (training stream), whatever comes of it; nothing remembers a failed
 //! one, so the next try may make it (no limit on trying again: the owner's rule; time and the
 //! risk are the price).
@@ -65,7 +65,8 @@ impl World {
             }
             Checked::Failed { by } if by >= SPRINGS_SHORT_BY => {
                 self.say(format!("You set off the {name}!"));
-                let climb = self.spring_trap(at, player, events);
+                // A burst on a chest blows it apart (spec §8 "Chests").
+                let (climb, _) = self.spring_chest_trap(at, player, events);
                 Spent::Turn(price + climb)
             }
             Checked::Failed { .. } => {

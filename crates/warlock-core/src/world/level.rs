@@ -363,6 +363,13 @@ impl LevelState {
             .is_some_and(|t| content.terrain(*t).is_door())
     }
 
+    /// Whether a shut chest is at `p` ([`crate::content::TerrainDef::is_shut_chest`]).
+    pub(crate) fn is_shut_chest(&self, content: &Content, p: Pos) -> bool {
+        self.terrain
+            .get(p)
+            .is_some_and(|t| content.terrain(*t).is_shut_chest())
+    }
+
     pub(crate) fn stairs_at(&self, p: Pos) -> Option<&StairsLink> {
         self.stairs.iter().find(|s| s.pos == p)
     }

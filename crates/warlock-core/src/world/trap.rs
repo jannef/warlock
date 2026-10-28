@@ -59,8 +59,8 @@ const OVERSHOOT: usize = 8;
 
 impl World {
     /// Actor `victim` has just stepped onto `at`: a trap there goes off ([`World::spring_trap`]),
-    /// unless it is on a door, which only opening or kicking the door sets off (spec §8 "Trapped
-    /// doors"). Returns the energy a pit's climb costs on top of the step. Last, an unstable
+    /// unless it is on a door or a chest, which only opening or kicking it sets off (spec §8
+    /// "Trapped doors", "Chests"). Returns the energy a pit's climb costs on top of the step. Last, an unstable
     /// room may move the stepper ([`World::warp_step`]).
     pub(super) fn step_onto_trap(
         &mut self,
@@ -68,12 +68,13 @@ impl World {
         victim: ActorId,
         events: &mut Vec<Event>,
     ) -> i64 {
-        let climb =
-            if self.state.current().is_door(&self.content, at) || self.steps_lightly(at, victim) {
-                0
-            } else {
-                self.spring_trap(at, victim, events)
-            };
+        let level = self.state.current();
+        let fixture = level.is_door(&self.content, at) || level.is_shut_chest(&self.content, at);
+        let climb = if fixture || self.steps_lightly(at, victim) {
+            0
+        } else {
+            self.spring_trap(at, victim, events)
+        };
         self.warp_step(at, victim, events);
         climb
     }
@@ -312,9 +313,13 @@ impl World {
 
     /// Where a shot trap on `at` shoots from: the nearest opaque cell in the eight directions
     /// (outside the level counts), within [`VIEW_RADIUS`]; ties go to the direction a hash of the
-    /// level and the cell picks first. With none, the cell that far in that direction.
+    /// level and the cell picks first. With none, the cell that far in that direction. A chest's
+    /// trap shoots out of the chest itself (spec §8 "Chests").
     fn slit(&self, at: Pos) -> Pos {
         let level = self.state.current();
+        if level.is_shut_chest(&self.content, at) {
+            return at;
+        }
         let mut key = level.id.as_bytes().to_vec();
         key.extend_from_slice(&at.x.to_le_bytes());
         key.extend_from_slice(&at.y.to_le_bytes());

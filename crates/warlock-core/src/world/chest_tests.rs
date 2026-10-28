@@ -138,7 +138,10 @@ fn bad_chest_legends_are_refused() {
         ),
         (r#"{ terrain = "chest", chest = "casket" }"#, "no band"),
         (r#"{ terrain = "chest", chest = 0 }"#, "level 0"),
-        (r#"{ terrain = "chest", trap = "arrow" }"#, "a trap (C2)"),
+        (
+            r#"{ terrain = "chest_open", trap = "arrow" }"#,
+            "a trap on an open chest",
+        ),
     ] {
         let mut files = files();
         let text = HALL.replace(

@@ -267,7 +267,7 @@ name = "Doors, locks, kicking"
 # Knock springs their locks.
 [[system]]
 id = "chests"
-name = "Chests: locks, kicking open, what breaks"
+name = "Chests: locks, traps, kicking open, what breaks"
 
 [[system]]
 id = "digging"

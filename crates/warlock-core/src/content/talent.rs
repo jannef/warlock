@@ -428,7 +428,8 @@ pub enum TalentEffect {
     /// named on arrival (Sense of place; [`crate::perception::PerceptionView::room`]).
     SenseOfPlace,
     /// It tells a locked chest from an unlocked one at a glance (Chest-wise;
-    /// [`crate::perception::PerceptionView::chest_at`]).
+    /// [`crate::perception::PerceptionView::chest_at`]), and a shut chest's trap in its sight
+    /// becomes known to it (`World::chest_wise_look`).
     ChestWise,
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
     /// opposed one leans as a neutral one (Devout; the prayer draw, `World::lean`).

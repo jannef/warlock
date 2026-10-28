@@ -13,12 +13,18 @@
 //!   each stack inside destroyed with `[smash] destroyed` percent (Deft breaker's cut), coins and
 //!   loose gems spared, the rest spilled on its cell.
 //! - **A blast** (`World::blast`) reaching a shut chest whose band's hardness is below it blows
-//!   it apart: every stack is rolled at the same percent, nothing spared.
+//!   it apart: every stack is rolled at the same percent, nothing spared. Its trap, if any, is
+//!   dropped with the lid and springs at no one (a trap needs a victim).
+//! - **Trapped chests**: a trap on a shut chest (any trap a door may have) goes off at whoever
+//!   opens it (with a key, without, or after Pick lock), smashes it with a kick that breaks it
+//!   (a kick that holds springs nothing), or fails badly to disarm it ([`World::spring_trap`],
+//!   aimed from the chest: a shot out of the box itself). A burst goes off inside the box and
+//!   blows it apart, nothing spared, however it was sprung; the other traps leave it as it was.
 //!
 //! A chest's entry stays on its cell once it is open or broken (empty), so it is still named by
 //! its band; nothing closes it again.
 
-use super::{Spent, World};
+use super::{ActorId, Spent, World};
 use crate::action::Event;
 use crate::chest::{Breaking, ChestState, destroyed};
 use crate::content::ActionKind;
@@ -53,7 +59,7 @@ impl World {
         let open = self.price_of(player, ActionKind::OpenChest);
         let Some(lock) = self.state.current().locks.get(&p).cloned() else {
             self.say(format!("You open the {name}."));
-            self.lift_lid(p, events);
+            self.open_lid(p, events);
             return Spent::Turn(open);
         };
         let Some(key) = self.state.player().key_for(&self.content, &lock) else {
@@ -66,8 +72,51 @@ impl World {
         self.say(format!(
             "You unlock the {name} with your {key} and open it."
         ));
-        self.lift_lid(p, events);
+        self.open_lid(p, events);
         Spent::Turn(price)
+    }
+
+    /// The player opens the shut chest at `p` (unlocked by now): its trap, if any, goes off at
+    /// them first, and a burst blows the chest apart instead of opening it; else the lid lifts
+    /// ([`World::lift_lid`]).
+    pub(super) fn open_lid(&mut self, p: Pos, events: &mut Vec<Event>) {
+        let (_, blown) = self.spring_chest_trap(p, self.state.player, events);
+        if !blown {
+            self.lift_lid(p, events);
+        }
+    }
+
+    /// The trap at `p` goes off at actor `victim` ([`World::spring_trap`]); if it lay on a shut
+    /// chest and is a burst ([`crate::content::TrapEffect::blows_fixture`]), the chest is blown
+    /// apart, nothing spared (unless the burst's own blast already did it). Returns the energy a
+    /// pit's climb costs (never on a chest) and whether a chest blew up. Nothing happens where no
+    /// trap lies.
+    pub(super) fn spring_chest_trap(
+        &mut self,
+        p: Pos,
+        victim: ActorId,
+        events: &mut Vec<Event>,
+    ) -> (i64, bool) {
+        let level = self.state.current();
+        let blows = level.is_shut_chest(&self.content, p)
+            && (level.traps.get(&p))
+                .is_some_and(|t| self.content.trap(t.kind).effect.blows_fixture());
+        if !blows {
+            return (self.spring_trap(p, victim, events), false);
+        }
+        // The blow-up is said after the burst's own report ("A fireball explodes!"), which is
+        // said as the turn is perceived: held meanwhile, it joins the news.
+        let outer = self.held.replace(Vec::new());
+        let climb = self.spring_trap(p, victim, events);
+        if self.state.current().is_shut_chest(&self.content, p) {
+            self.break_chest(p, Breaking::BlownUp, events);
+        }
+        let lines = std::mem::replace(&mut self.held, outer).unwrap_or_default();
+        match &mut self.held {
+            Some(outer) => outer.extend(lines),
+            None => self.news.extend(lines),
+        }
+        (climb, true)
     }
 
     /// The player lifts the lid of the shut chest at `p` (unlocked by now): its creak, its
@@ -85,8 +134,9 @@ impl World {
 
     /// The player kicks the shut chest at `p`: a banging noise, and with a chance of their
     /// Strength (with athletics and Lockbreaker's might) in its band's sturdiness it bursts
-    /// apart, smashed (one draw of the gameplay stream). Priced as a door kick; it trains
-    /// athletics as one does.
+    /// apart, smashed (one draw of the gameplay stream): its trap, if any, goes off at them
+    /// first, and a burst blows it apart instead. A kick that holds springs nothing. Priced as a
+    /// door kick; it trains athletics as one does.
     pub(super) fn kick_chest(&mut self, p: Pos, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
         let price = self.price_of(player, ActionKind::Kick);
@@ -107,7 +157,10 @@ impl World {
         }
         self.make_noise(player, Act::Kick(p));
         if broken {
-            self.break_chest(p, Breaking::Smashed, events);
+            let (_, blown) = self.spring_chest_trap(p, player, events);
+            if !blown {
+                self.break_chest(p, Breaking::Smashed, events);
+            }
         } else {
             events.push(Event::DoorKicked { pos: p });
             let name = self.chest_name(p);
@@ -161,6 +214,40 @@ impl World {
         }
         if !kept.is_empty() {
             self.say_found(&kept);
+        }
+    }
+
+    /// Chest-wise (spec §8 "Chests"): a shut chest's hidden trap in the player's sight gives
+    /// itself away to them, known and remembered at once and said ("You notice that the coffer
+    /// is trapped: an arrow trap."). No draw: the talent sees it.
+    pub(super) fn chest_wise_look(&mut self) {
+        let level = self.state.current();
+        if level.chests.is_empty() || self.state.player().talents.is_empty() {
+            return;
+        }
+        if !self.state.player().talent_mods(&self.content).chest_wise {
+            return;
+        }
+        let spotted: Vec<Pos> = (level.chests.keys())
+            .filter(|p| {
+                level.is_shut_chest(&self.content, **p)
+                    && self.perception.sees_actors_at(**p)
+                    && level.traps.get(p).is_some_and(|t| !t.known)
+            })
+            .copied()
+            .collect();
+        for p in spotted {
+            let Some(kind) = self.know_trap(p) else {
+                continue;
+            };
+            self.state.current_mut().trap_memory.insert(p, kind);
+            let name = self.chest_name(p);
+            let trap = &self.content.trap(kind).name;
+            let text = format!(
+                "You notice that the {name} is trapped: {} {trap}.",
+                crate::content::article(trap)
+            );
+            self.say(text);
         }
     }
 

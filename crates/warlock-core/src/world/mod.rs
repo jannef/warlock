@@ -1382,6 +1382,8 @@ mod character_tests;
 #[cfg(test)]
 mod chest_tests;
 #[cfg(test)]
+mod chest_trap_tests;
+#[cfg(test)]
 mod class_active_tests;
 #[cfg(test)]
 mod class_rogue_tests;
