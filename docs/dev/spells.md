@@ -131,7 +131,7 @@ shares.
     keeps the bare roll (docs/dev/weapon-skills.md "Caster styles"). `spell_strikes` is the one
     place a spell's blow lands: the event (a miss too), provoking, the resistance, blood, the
     hurt, the wound. `cast_single` settles the caster's side once (`reflect::Shot`: dice, cap,
-    to-hit, effect) and strikes through `spell_attack(by, target, source, shot)`, the one place a
+    to-hit, effect, spell skills) and strikes through `spell_attack(by, target, source, shot)`, the one place a
     single target's roll is made.
   - **Spell reflection** (#566, `world/reflect.rs`): an attack or touch roll whose miss
     `Defence::why_missed` put down to the target's **Shield** raises the `spell_blocked`
@@ -142,7 +142,8 @@ shares.
     reflector's cell back along the cells the spell flew through (they were empty), its own
     attack roll against the caster's Defence, the caster's dice, lifted cap, and to-hit, the
     spell's status rider on a hit (`spell_lands`, by the reflector); no mana again, nothing for
-    the reflector. The reflected flight never raises the trigger (the mark): no ping-pong. A
+    the reflector, and no one practises it (the `Shot` goes back without spell skills: no
+    benefit, marks, or triggers). The reflected flight never raises the trigger (the mark): no ping-pong. A
     death by it is put down to the spell, as a death by one's own spell is. Creature spells are
     still intents, so only the player's spells (cast, read, or zapped) are reflected today.
   - **Geometry**: `spell::cone_cells(from, toward, length, opaque)` (exported as
