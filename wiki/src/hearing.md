@@ -1,43 +1,43 @@
 # Hearing
 
-You hear things you cannot see: footsteps in the dark, a door closing behind a wall. The creatures
+You hear things you cannot see: footsteps in the dark, a door closing behind a wall. The [creatures](creatures.md)
 around you hear too.
 
 ## What makes noise
 
-- **Footsteps.** Every step makes noise, yours and the creatures'. Some creatures are heavier on
-  their feet than others, and some (bats, which fly) make no sound at all. A heavy load makes
+- **Footsteps.** Every step makes noise, yours and the creatures'. Some [creatures](creatures.md) are heavier on
+  their feet than others, and some ([bats](creatures.md#creature-bat), which fly) make no sound at all. A heavy load makes
   steps louder: a quarter louder when burdened, half again as loud when strained (see
   [Burden](burden.md)).
-- **Doors.** Opening a door makes noise, and closing one is louder still. Kicking a door is
+- **[Doors](doors.md).** Opening a door makes noise, and closing one is louder still. Kicking a door is
   louder than anything: it bangs on the door itself, heard on both sides as banging, whether the
   door holds or breaks (see [Doors](doors.md)).
 - **Stealth.** The [stealth](skills.md#what-skills-give) skill makes your footsteps and the doors
   you open and close quieter, more the higher it is; your attacks are as loud as ever.
-- **Fighting.** Attacks are noisy: you may hear fighting, a bowstring, or chanting (a spell)
-  where you cannot see it. A throw sounds like fighting, but quieter. See
+- **Fighting.** Attacks are noisy: you may hear fighting, a [bowstring](ranged.md#shooting-and-throwing), or chanting (a [spell](magic.md#the-spells))
+  where you cannot see it. A [throw](ranged.md#shooting-and-throwing) sounds like fighting, but quieter. See
   [Creatures](creatures.md).
-- **Digging.** Digging into a wall is loud, louder than fighting (see
+- **[Digging](digging.md#digging).** Digging into a wall is loud, louder than fighting (see
   [Digging and walls](digging.md)).
-- **Traps.** Some traps are loud when they go off: an alarm's bell carries farther than anything,
-  a fireball explodes, lightning cracks like thunder, and an arrow trap twangs like a bowstring
+- **[Traps](traps.md).** Some traps are loud when they go off: an [alarm](traps.md#trap-alarm)'s bell carries farther than anything,
+  a [fireball](traps.md#trap-fireball) explodes, [lightning](traps.md#trap-lightning-bolt) cracks like thunder, and an [arrow trap](traps.md#trap-arrow) twangs like a bowstring
   ("You hear an explosion to the west."). See [Traps](traps.md).
-- **Voices.** People muttering to themselves can be heard a few cells away. If you hear one you
+- **[Voices](npcs.md#muttering).** People muttering to themselves can be heard a few cells away. If you hear one you
   cannot see, you hear a voice, and its words unless it was faint: "You hear a voice to the
   north: "Weeds. Always the weeds."" See [People and talk](npcs.md#muttering).
 
-How loud a step is also depends on what you step onto. Wading through water splashes, and
-crashing through bushes or over loose rubble is loud. Grass, flowers, the forest floor, a dirt
-road, and dust soften your steps. Steps on anything not listed here, such as stone floor,
-flagstones, and stairs, sound normal (100%). A step's loudness is the walker's footsteps times
+How loud a step is also depends on what you step onto. Wading through [water](terrain.md#water) splashes, and
+crashing through [bushes](terrain.md#terrain-bush) or over loose [rubble](terrain.md#terrain-rubble) is loud. [Grass](terrain.md#terrain-grass), [flowers](terrain.md#terrain-flowers), the [forest floor](terrain.md#terrain-forest-floor), a [dirt
+road](terrain.md#terrain-dirt-road), and [dust](terrain.md#terrain-dusty-floor) soften your steps. Steps on anything not listed here, such as stone floor,
+[flagstones](terrain.md#terrain-flagstones), and [stairs](terrain.md#stairs), sound normal (100%). A step's loudness is the walker's footsteps times
 the terrain's share, rounded down:
 
 {{#include generated/footsteps.md}}
 
-Where a noise is made matters too: everything is twice as loud in an echoing hall, and much
-quieter in a hushed chamber (see [Special rooms](special-rooms.md)).
+Where a noise is made matters too: everything is twice as loud in an [echoing hall](special-rooms.md#room-echoing), and much
+quieter in a [hushed chamber](special-rooms.md#room-hushed) (see [Special rooms](special-rooms.md)).
 
-The overworld is silent: its steps are journeys, not footsteps.
+The [overworld](overworld.md#travel) is silent: its steps are journeys, not footsteps.
 
 ### How loud
 
@@ -53,7 +53,7 @@ Creatures' footsteps and hearing are on [Creatures in numbers](creature-numbers.
 ## How sound travels
 
 A sound spreads out from where it was made and grows fainter with every cell it travels. It goes
-around corners through open space, but never through walls or solid rock. A **closed door
+around corners through open space, but never through [walls](terrain.md#walls) or solid rock. A **closed [door](doors.md)
 muffles** it heavily, so through a closed door you only hear what happens close behind it. An
 open door lets sound through freely.
 
@@ -69,8 +69,8 @@ What muffles sound:
 ## What you hear
 
 You only notice sounds whose source you cannot see. If you see the creature walking, you see
-what happens, and there is nothing more to hear. So hearing tells you about creatures in the dark,
-around corners, and behind doors.
+what happens, and there is nothing more to hear. So hearing tells you about [creatures](creatures.md) in the dark,
+around corners, and behind [doors](doors.md).
 
 A sound you hear shows on the map as a faint dotted ring, `◌`, until your next turn:
 
@@ -87,7 +87,7 @@ footsteps here.", or "You hear footsteps here, where you remember a stone floor.
 
 ## Messages
 
-New sounds are written to the message line, with the direction they came from:
+New sounds are written to the [message line](controls.md#messages), with the direction they came from:
 
 ```
 You hear footsteps to the north-east.
@@ -106,23 +106,23 @@ such as footsteps you have been hearing for a few turns, does not.
 
 ## Creatures hear you
 
-Your footsteps, the doors you open and close, and your attacks carry to the creatures around
+Your footsteps, the [doors](doors.md) you open and close, and your [attacks](combat.md#hitting) carry to the creatures around
 you, through the same rules. The [listen](skills.md#what-skills-give) skill lets you, or a
 creature, hear fainter sounds. A creature with enemies that hears something it cannot see goes to
 have a look: walk softly, and mind the doors. See [Creatures](creatures.md).
 
 ## Throwing your voice
 
-You can make a voice sound somewhere else: [Throw your voice](abilities.md) in the abilities menu
+You can make a voice sound somewhere else: [Throw your voice](abilities.md) in the [abilities menu](abilities.md#the-abilities-menu)
 (`a`) aims a cursor, as a shot does. The place must be one you see, not a wall, and at most 6
 cells away (the same disc as missile ranges). The voice is made there, as loud as someone
-muttering to themselves (loudness 50; a sound loses 10 a cell, 14 diagonally), and spreads from
+[muttering](npcs.md#muttering) to themselves (loudness 50; a sound loses 10 a cell, 14 diagonally), and spreads from
 there by the rules above; nothing is heard where you stand. Every creature it reaches hears it,
 and one with enemies that cannot see that spot goes to have a look, as at any noise: throw it
 past a corner to draw a guard away from where you want to go. One that can see the spot sees
 nothing there and stays.
 
 You made it, so you do not hear it, but the map marks where it sounded with the same dotted ring
-until your next turn. It takes a normal action (6 seconds at a normal pace), and is refused,
-taking no time, on yourself, out of reach, at a place you do not see, and on the overworld, which
+until your next turn. It takes a [normal action](turns.md#what-actions-cost) (6 seconds at a normal pace), and is refused,
+taking no time, on yourself, out of reach, at a place you do not see, and on the [overworld](overworld.md#travel), which
 is silent.
