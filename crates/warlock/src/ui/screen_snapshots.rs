@@ -265,6 +265,15 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
+    // A potion's boost (#567): Fortified by name in the Status row and the status bar, the
+    // Strength score raised, no numbers.
+    Case {
+        name: "potion-boost",
+        actions: "afflict:fortified afflict:owl_eyed wait",
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
     Case {
         name: "diseased",
         actions: "infect:the_shakes rest:24h*3",

@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up 2 cloudy red potions, a milky blue potion, and a scroll labelled ULVENZIM.
- You drink the cloudy red potion. It is a potion of healing. You feel healthy.
+ You pick up 2 thin red potions, a fizzy blue potion, and a scroll labelled ULVENZIM.
+ You drink the thin red potion. It is a potion of healing. You feel healthy.
 
 
 
