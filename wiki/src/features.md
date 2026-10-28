@@ -237,7 +237,7 @@ dungeons under the barrows, the fen, and the hills.
 - **Shops** — ADOM-like general stores and specialty shops (a weaponsmith, an armourer, a
   provisioner, a fletcher), each kept by a named shopkeeper by the door: goods show their price
   in gold, what you pick up you owe until you pay (`p`, or when you leave), the keeper makes an
-  offer for what you drop, and your Presence and the Appraise skill get you better prices.
+  offer for what you drop, and your Presence and the Negotiation skill get you better prices.
   The keeper won't let you out of the door owing money; leave another way (dig through the wall)
   and the shopkeeper, tough and well armed, comes after you. Cēaptūn has four shops on its
   square, and now and then a dungeon level has one.

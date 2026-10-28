@@ -22,7 +22,7 @@ difference. This page gives the rules, with the exact numbers.
 
 Some skills work by themselves, all the time (**passive**); some will be used as **actions**
 (searching, picking a lock, binding a wound); some are **read by rules** when something calls for
-them (athletics when you kick a door). For now only the passive skills, Appraise, Athletics
+them (athletics when you kick a door). For now only the passive skills, Appraise, Negotiation, Athletics
 (quicker in everything, and kicking doors in, see [Doors](doors.md)), Search (see [Searching](searching.md)), Disable
 device (disarming traps, see [Traps](traps.md#disarming-traps)), Open lock (picking locks,
 see [Doors](doors.md#picking-locks)), Steal (see [Stealing](#stealing) below), Heal (see
@@ -60,7 +60,14 @@ The passive skills help you more the higher they are:
 - **Survival** makes your journeys on the [overworld](overworld.md) quicker (it does nothing for
   your steps in a local area or a dungeon), and lets you forage in the wild, finding food more
   often the higher it is (see [Foraging](#foraging)).
-- **Appraise** gets you better prices in [shops](shops.md): you pay less and are offered more.
+- **Negotiation** gets you better prices in [shops](shops.md): you pay less and are offered
+  more. A deal made (goods paid for, or your own sold) trains it now and then.
+- **Appraise** now and then tells you what something you carry or wear really is. On every
+  hour of game time that passes (resting too), if you carry anything you do not fully know
+  (an unidentified magic item, a scroll of a kind you have not identified, a wand whose
+  charges you do not know), you have a small chance to tell one of them, picked at random:
+  2 % an hour at 0, 12 % at 100, 20 % at 200 (the table below; items of Appraisal raise it).
+  Only those trained in Appraise get it at all. Each thing told this way trains it.
 - **Search** helps you find secret doors and hidden traps when you search (`s`, `S`), and a
   master's search reaches a cell farther (see [Searching](searching.md)).
 - **Spot** lets you notice hidden things in passing at all, and the higher it is, the more you
