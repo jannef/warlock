@@ -295,3 +295,74 @@ fn chest_loot_is_magic_as_often_as_the_table_says() {
     let share = magic * 100 / items;
     assert!((15..=50).contains(&share), "{share} % magic");
 }
+
+/// Where `vault`'s terrain appears verbatim in `level`, the first spot.
+fn stamped(level: &LevelTemplate, vault: &Vault) -> Option<Pos> {
+    let v = &vault.template.terrain;
+    let fits = |at: Pos| {
+        (v.iter()).all(|(p, t)| level.terrain.get(Pos::new(at.x + p.x, at.y + p.y)) == Some(t))
+    };
+    (0..level.terrain.height())
+        .flat_map(|y| (0..level.terrain.width()).map(move |x| Pos::new(x, y)))
+        .find(|at| fits(*at))
+}
+
+#[test]
+fn the_ascmearc_s_vaults_bring_their_chests_of_the_floor_s_level() {
+    let c = content(None);
+    // Each vault, the floor it is pinned to, and how many of its chests are locked and trapped.
+    let vaults = [
+        ("drakes_hoard", "fyrdelf:12", 2, 1),
+        ("robbers_hoard", "wulfeshol:4", 1, 1),
+        ("captains_hall", "brocenburg:4", 1, 0),
+        ("still_room", "wyrtholm:4", 0, 0),
+    ];
+    for (id, floor, locked, trapped) in vaults {
+        let vault = (c.vaults().iter()).find(|v| v.id() == id).expect(id);
+        assert!(!vault.template.chests.is_empty(), "{id} holds chests");
+        for seed in [1, 2] {
+            let level = generate(&c, ("ascmearc", seed), floor, Some("ascmearc")).expect(floor);
+            let again = generate(&c, ("ascmearc", seed), floor, Some("ascmearc")).expect(floor);
+            assert_eq!(level.chests, again.chests, "{floor} is deterministic");
+            let at = stamped(&level, vault).expect("the vault is stamped");
+            let shift = |p: Pos| Pos::new(at.x + p.x, at.y + p.y);
+            let (mut locks, mut traps) = (0, 0);
+            for (p, own) in &vault.template.chests {
+                let chest = &level.chests[&shift(*p)];
+                assert_eq!(chest.level, c.item_level(floor), "{id}: the floor's level");
+                assert!(
+                    !chest.holds.is_empty(),
+                    "{id}: a chest at {p} holds something"
+                );
+                if !own.holds.is_empty() {
+                    assert_eq!(chest.holds, own.holds, "{id}: what its legend says");
+                }
+                locks += usize::from(level.locks.contains_key(&shift(*p)));
+                traps += usize::from(level.traps.contains_key(&shift(*p)));
+            }
+            assert_eq!((locks, traps), (locked, trapped), "{id} on {floor}");
+        }
+    }
+}
+
+#[test]
+fn a_vault_s_chests_are_the_floor_s_and_never_a_mimic() {
+    let attempt = |legend: &str, kind: &str| {
+        let mut files = ContentFiles::builtin();
+        let vault = format!(
+            "name = \"V\"\n{kind}map = '''\n#+###\n#..C#\n#####\n'''\n[legend]\n\"C\" = {legend}\n"
+        );
+        files.insert("vaults/test_vault.toml", &vault);
+        Content::load(&files).map(|_| ()).map_err(|e| e.to_string())
+    };
+    let ok = "{ terrain = \"chest\", locked = true, trap = \"arrow\" }";
+    assert_eq!(attempt(ok, ""), Ok(()));
+    let err = attempt("{ terrain = \"chest\", chest = 7 }", "").unwrap_err();
+    assert!(err.contains("of the floor's level"), "{err}");
+    let err = attempt("{ terrain = \"chest\", chest = \"hutch\" }", "").unwrap_err();
+    assert!(err.contains("of the floor's level"), "{err}");
+    let err = attempt("{ terrain = \"floor\", chest = 1, mimic = true }", "").unwrap_err();
+    assert!(err.contains("cannot place a mimic"), "{err}");
+    let err = attempt("\"chest\"", "kind = \"outdoor\"\n").unwrap_err();
+    assert!(err.contains("outdoor vault cannot hold chests"), "{err}");
+}

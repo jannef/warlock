@@ -51,7 +51,7 @@ fn files() -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.insert("levels/chest_hall.toml", HALL);
     for (name, extra) in [
-        ("chests", "hp = 1000\n"),
+        ("hall", "hp = 1000\n"),
         ("strong", "hp = 1000\nstats = { strength = 18 }\n"),
         ("weak", "hp = 1000\nstats = { strength = 3 }\n"),
     ] {
@@ -113,7 +113,7 @@ fn below(w: &mut World, x: i32) {
 
 #[test]
 fn legends_place_chests_of_their_level_with_what_they_hold() {
-    let w = world("chests");
+    let w = world("hall");
     let chests = &w.state.current().chests;
     assert_eq!(chests.len(), 5, "one on every chest cell");
     assert_eq!(chests[&COFFER].level, 2, "the level's item level");
@@ -162,7 +162,7 @@ fn bad_chest_legends_are_refused() {
 
 #[test]
 fn a_coffer_opens_on_a_bump_and_spills_what_it_held() {
-    let mut w = world("chests");
+    let mut w = world("hall");
     let start = w.state.time;
     w.apply(&Action::Move(Dir::N));
     assert_eq!(w.player_pos(), Pos::new(1, 2), "the chest is in the way");
@@ -187,7 +187,7 @@ fn a_coffer_opens_on_a_bump_and_spills_what_it_held() {
 
 #[test]
 fn open_says_an_empty_chest_is_empty() {
-    let mut w = world("chests");
+    let mut w = world("hall");
     below(&mut w, 9);
     run(&mut w, "open:N");
     assert!(said(&w, "You open the coffer."));
@@ -196,7 +196,7 @@ fn open_says_an_empty_chest_is_empty() {
 
 #[test]
 fn a_locked_chest_refuses_without_a_key_and_opens_with_a_skeleton_key() {
-    let mut w = world("chests");
+    let mut w = world("hall");
     below(&mut w, 3);
     let turn = w.state.turn;
     run(&mut w, "open:N");
@@ -228,7 +228,7 @@ fn a_locked_chest_refuses_without_a_key_and_opens_with_a_skeleton_key() {
 
 #[test]
 fn pick_lock_opens_a_chest() {
-    let mut w = world("chests");
+    let mut w = world("hall");
     let open_lock = w.content().skill_id("open_lock").expect("Open lock");
     let skills = &mut w.player_mut().skills;
     let mut all: Vec<(SkillId, Trained)> = skills.iter().filter(|(s, _)| *s != open_lock).collect();
@@ -253,7 +253,7 @@ fn pick_lock_opens_a_chest() {
 
 /// A wizard who has Knock, with mana to spare.
 fn wizard() -> World {
-    let mut w = world("chests");
+    let mut w = world("hall");
     let me = w.player_mut();
     me.talents.take("knock", None);
     me.mana_base = 40;
@@ -289,7 +289,7 @@ fn knock_is_refused_where_nothing_is_locked() {
     assert_eq!(w.state.turn, turn, "no time");
     assert_eq!(w.state.player().mana, mana, "no mana");
     // Without the ability it is no ability at all.
-    let mut plain = world("chests");
+    let mut plain = world("hall");
     run(&mut plain, "use:knock:N");
     assert_eq!(last_message(&plain), "You have no such ability.");
 }
@@ -381,7 +381,7 @@ fn a_smash_destroys_about_half_and_deft_breaker_a_quarter() {
 
 #[test]
 fn a_blast_blows_a_coffer_apart_sparing_nothing_and_not_a_kist() {
-    let mut w = world("chests");
+    let mut w = world("hall");
     fill(&mut w, COFFER, 100);
     let mut events = Vec::new();
     w.blast(Pos::new(2, 2), 5, 1000, &mut events);
@@ -403,7 +403,7 @@ fn a_blast_blows_a_coffer_apart_sparing_nothing_and_not_a_kist() {
 
 #[test]
 fn a_chest_is_no_wall_to_dig() {
-    let mut w = world("chests");
+    let mut w = world("hall");
     give(&mut w, "pick_axe");
     let axe = w.state.player().inventory.len() - 1;
     run(&mut w, &format!("equip:tool:{axe}"));
@@ -416,7 +416,7 @@ fn a_chest_is_no_wall_to_dig() {
 
 #[test]
 fn the_snapshot_sees_the_band_not_the_contents() {
-    let mut w = world("chests");
+    let mut w = world("hall");
     let view = w.perception();
     assert_eq!(
         view.chest_at(COFFER),
@@ -441,7 +441,7 @@ fn the_snapshot_sees_the_band_not_the_contents() {
 
 #[test]
 fn chest_wise_tells_locked_from_unlocked() {
-    let mut w = world("chests");
+    let mut w = world("hall");
     w.player_mut().talents.take("chest_wise", None);
     w.apply(&Action::Wait);
     let view = w.perception();
@@ -463,7 +463,7 @@ fn chests_survive_a_save_and_replay_exactly() {
     let content = content();
     for (scenario, actions) in [
         ("weak", "kick:N*6 move:E*4 kick:N*3"),
-        ("chests", "move:N move:E*8 open:N"),
+        ("hall", "move:N move:E*8 open:N"),
     ] {
         let mut w = World::new(content.clone(), scenario, None).expect("world");
         let mut replay = Replay::new(&w);
@@ -479,7 +479,7 @@ fn chests_survive_a_save_and_replay_exactly() {
 
 #[test]
 fn the_dumps_show_chests() {
-    let mut w = world("chests");
+    let mut w = world("hall");
     let truth = dump::ascii(&w, &[Layer::Truth]);
     assert!(
         truth.contains("chest 2 (coffer) at (1, 1): shut, holds 2 stacks"),
