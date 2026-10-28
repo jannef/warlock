@@ -63,6 +63,7 @@ above.
 | Action cost, a normal pace | `turns.md#what-actions-cost` |
 | Speed (fast, slow) | `turns.md#speed` |
 | Calendar, months, days | `time.md#the-calendar` |
+| A month by name (Frostmere, Rainmoon, …) | `time.md#the-calendar` |
 | Dawn, dusk, day, night | `time.md#days` |
 | Resting, rest until dawn | `resting.md#how-resting-works` |
 | **Light, sight, and sound** | |
@@ -89,12 +90,14 @@ above.
 | Digging, wall hardness | `digging.md#digging`, `digging.md#what-breaks-and-what-does-not` |
 | Explosions, blasts | `digging.md#explosions` |
 | Doors; locked, kicked, broken doors | `doors.md`, `doors.md#locked-doors`, `doors.md#kicking` |
+| Creatures opening doors | `doors.md#creatures-and-doors` |
 | Keys, skeleton key | `doors.md#keys` |
 | Picking locks | `doors.md#picking-locks` |
 | Secret door | `doors.md#secret-doors` |
 | Chest, locked and trapped chests | `chests.md`, `chests.md#locked-chests`, `chests.md#trapped-chests` |
 | Dungeon, danger level, population | `dungeons.md`, `dungeons.md#who-lives-there-and-how-many` |
 | Out of depth, strays | `dungeons.md#who-lives-there-and-how-many` |
+| Lairs of the wanted | `dungeons.md#the-lairs-of-the-wanted` |
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `special-rooms.md#forgotten-altars` |
 | Forge, tempering | `special-rooms.md#forges` |
@@ -111,10 +114,13 @@ above.
 | Scroll, reading, unknown scrolls | `scrolls.md`, `scrolls.md#unknown-scrolls` |
 | Potion, elixir | `potions.md`, `potions.md#elixirs` |
 | Equipment, slots, wielding and wearing | `equipment.md#what-fits-where` |
+| The equipment screen | `equipment.md#the-equipment-screen` |
 | Magic item, rarity | `magic-items.md`, `magic-items.md#rarity` |
+| Loot, item level | `magic-items.md#finding-them` |
+| Looking at an item, its description | `magic-items.md#looking-at-an-item` |
 | Unidentified, identify | `magic-items.md#unidentified-items` |
 | Affix, prefix, suffix | `magic-items.md#prefixes`, `magic-items.md#suffixes` |
-| Item level, base item | `magic-items.md#base-items` |
+| Base item | `magic-items.md#base-items` |
 | Unique item | `magic-items.md#unique-items` |
 | Ammunition, arrows, bolts | `ammunition.md` |
 | Burden (Unburdened, Burdened, Strained, Overloaded), carrying limit | `burden.md#burden-1`, `burden.md#how-much-you-can-carry` |
@@ -132,19 +138,26 @@ above.
 | Class, class levels | `classes.md`, `classes.md#levels` (a class: its heading, `classes.md#barbarian`) |
 | Starting kit | `starting-kit.md` |
 | Horoscope, animal, element, lucky day | `horoscope.md`, `horoscope.md#animals`, `horoscope.md#elements`, `horoscope.md#lucky-days` |
+| The great cycle | `horoscope.md#the-great-cycle` |
 | Alignment, good, evil, band | `alignment.md`, `alignment.md#what-moves-you` |
 | Talent, talent ranks, prerequisites | `talents.md`, `talents.md#ranks-choices-prerequisites` (a talent: its row) |
 | Racial talents | `talents.md#racial-talents` |
+| A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
 | Stats (Strength, Dexterity, …), score | `stats.md` (a stat: its row) |
 | Modifier | `stats.md#modifiers` |
 | Potential | `stats.md#potentials` |
 | Stat training, training marks of a stat | `stats.md#training` |
+| The daily check | `stats.md#the-daily-check` |
 | Drained stats, stat damage | `stats.md#drained-stats`, `diseases.md#stat-damage` |
 | Skills, trained and untrained | `skills.md`, `skills.md#what-skills-give` (a skill: its row) |
 | Skill rolls, skill marks | `skills.md#getting-better` |
+| Stealing | `skills.md#stealing` |
+| Treating yourself, binding a wound | `skills.md#treating-yourself` |
+| Foraging | `skills.md#foraging` |
 | Abilities, the abilities menu | `abilities.md#the-abilities-menu` |
 | Experience, XP, levels | `experience.md`, `experience.md#levels` |
+| Experience for discoveries | `experience.md#discovery` |
 | A level-up, what a level gives | `experience.md#what-a-level-gives` |
 | **Fighting** | |
 | To hit, the 2d12 roll | `combat.md#hitting` |
@@ -162,7 +175,10 @@ above.
 | Blood, stains | `combat.md#blood` |
 | Ranged combat, shooting, throwing | `ranged.md#shooting-and-throwing` |
 | Missile weapon, launcher, readied missiles | `ranged.md#getting-ready` |
+| Where a missile goes, missiles in flight | `ranged.md#where-a-missile-goes` |
+| Flaming arrows | `ranged.md#flaming-arrows` |
 | Weapon skill, rank, marks | `weapon-skills.md`, `weapon-skills.md#marks-and-ranks` |
+| Related weapon skills, defaults | `weapon-skills.md#related-skills` |
 | Fighting style | `fighting-styles.md` (a style: its row) |
 | Two-weapon fighting, off hand | `fighting-styles.md#two-weapons` |
 | Damage type | `damage-types.md` (a type: its row) |
@@ -171,11 +187,13 @@ above.
 | Disease, incubation, checks | `diseases.md#how-a-disease-goes`, `diseases.md#checks` |
 | Healing, healing paces | `healing.md#how-fast` |
 | Mana, mana regeneration | `mana.md#how-much`, `mana.md#how-fast-it-comes-back` |
+| Mana on a kill | `mana.md#mana-on-a-kill` |
 | Spending mana | `mana.md#spending-it` |
 | Magic, spells, casting | `magic.md`, `magic.md#the-spells` |
 | Caster level | `magic.md#caster-level` |
 | Spell tier | `magic.md#tiers` |
 | Spell shape (bolt, burst, cone, …) | `magic.md#shapes` |
+| How a spell resolves (attack, auto, area, touch) | `magic.md#how-a-spell-finds-its-target` |
 | Mishap, damage ceiling | `magic.md#damage-and-its-cap` |
 | Studying a spell from a scroll, overreach | `magic.md#learning-spells-from-scrolls` |
 | Wand, rod, charges | `magic.md#wands`, `magic.md#rods` |
@@ -183,6 +201,7 @@ above.
 | **Creatures and people** | |
 | Creature, monster | `creatures.md` (a creature: its row) |
 | Faction, hostile, peaceful | `creatures.md#factions` |
+| Peaceful folk, the fey courts | `creatures.md#factions` |
 | Incorporeal | `creatures.md#incorporeal-creatures` |
 | Elementals | `creatures.md#elementals` |
 | A creature's numbers (stats, hit points, attacks) | `creature-numbers.md` |
@@ -191,6 +210,7 @@ above.
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
 | Services (cure, mending, identification) | `npcs.md#services` |
 | Quest, quest log | `quests.md`, `quests.md#the-quest-log` |
+| Sorts of creatures (a quest's), drawn quests | `quests.md#sorts-of-creatures`, `quests.md#drawn-quests` |
 | The Weyfarers' Gilde, bounties, ranks | `guild.md`, `guild.md#the-wanted`, `guild.md#ranks` |
 | **The game** | |
 | Controls, keys, rebinding | `controls.md`, `controls.md#rebinding-keys` |
@@ -198,5 +218,7 @@ above.
 | Aiming | `controls.md#aiming` |
 | Message line, status bar | `controls.md#the-screen`, `controls.md#messages` |
 | Character screen, info pages | `controls.md#character`, `controls.md#info-pages` |
+| The skills screen | `controls.md#skills` |
+| Main menu, pause menu | `controls.md#menus` |
 | Settings, reduced effects, palettes | `settings.md`, `settings.md#palettes` |
 | Saving, autosave | `saving.md#when-the-game-saves` |
