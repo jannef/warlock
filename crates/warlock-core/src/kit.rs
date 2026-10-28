@@ -523,7 +523,10 @@ mod tests {
             assert_eq!(player.ready_light(&CONTENT), Some(0));
         }
         let showcase = World::new(CONTENT.clone(), "showcase", None).expect("showcase");
-        assert_eq!(showcase.state().player().inventory, [Stack::one(id("lantern"))]);
+        assert_eq!(
+            showcase.state().player().inventory,
+            [Stack::one(id("lantern"))]
+        );
         // A chosen character in the showcase starts with the kit: there is no pack on top.
         let thief: CharacterSpec = "human,female,thief".parse().expect("a character");
         let kitted = World::start_run(CONTENT.clone(), "showcase", None, Some(&thief), None, true)
