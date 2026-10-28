@@ -368,7 +368,7 @@ fn a_flaming_sword_burns_for_a_panoply() {
         &mut w,
         panoply,
         vec![(
-            magic(&content, "long_sword", &[("flaming", 4, 8)]),
+            magic(&content, "long_sword", &[("flaming", 11, 8)]),
             "main_hand",
         )],
     );
@@ -486,7 +486,7 @@ fn appraisers_eye_tells_a_magic_composite() {
         vec![
             (plain(&content, "chain_mail"), "body"),
             (
-                magic(&content, "long_sword", &[("flaming", 4, 8)]),
+                magic(&content, "long_sword", &[("flaming", 11, 8)]),
                 "main_hand",
             ),
         ],

@@ -57,7 +57,9 @@ types"): `Effect::Elemental` (an attack effect, local on what attacks: `Mods::el
 rider per kind, `sharpen` adds them to the profile) and `Effect::Resistance` (global:
 `Mods::resistances`, which `Actor::resistances` adds to what is worn and what the creature is),
 each with the affix's `damage_type` (`AffixDef::damage_type`, part of its `Group`, so an item
-may hold one of each kind). **Categories** (#621): `AffixDef::category` (required in data) is the
+may hold one of each kind). Every element has a resistance suffix and all but force an
+elemental prefix (`magic/tests.rs`, #638), and each rider lands unsoaked
+(`world/damage_tests.rs`). **Categories** (#621): `AffixDef::category` (required in data) is the
 rule loot and `Magic::check` read: an item never has two affixes of one category
 (`loot::roll_affix` leaves out the categories already rolled; `Magic::check` refuses a repeat in a
 save, a legend's `[[item]]`, or a unique). `content::affix::check_category` makes every affix of
@@ -140,7 +142,8 @@ Tireless (stamina) and of Fury (rage) apart. **`ItemKind::Tool`** (`ALL` is a sl
 item class holds the kind; rare names' second words `tool = [...]` in `data/affixes.toml`): a
 kind for digging tools, which the pick-axe takes in D1. **Tiers**: at most `MAX_TIERS` (12) per
 affix, a loader check. Every shipped ladder (X1, #637, regraded the old affixes but Flaming,
-Freezing, and Venomous, which W1 does; the two light affixes keep their three glow presets, and
+Freezing, and Venomous, which W1 (#638) put on the elemental ladder, 1d2 at item level 2 to 1d8
+at 12, with Shocking, Corrosive, and Withering; the two light affixes keep their three glow presets, and
 Brutal and of Ruin their one tier) runs from its first level to item level 12, a tier every level
 or two where the values can step (a flat +1 to +3 has five tiers: 1, 1–2, 2, 2–3, 3), its first
 and last values as before. The hand-made items that name tiers (the uniques, the showcase's

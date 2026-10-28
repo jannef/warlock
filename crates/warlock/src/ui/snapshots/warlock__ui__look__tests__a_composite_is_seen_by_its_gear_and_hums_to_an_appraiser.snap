@@ -3,6 +3,6 @@ source: crates/warlock/src/ui/look.rs
 expression: "said.join(\"\\n\")"
 ---
 An animated armour (hostile, unhurt), wearing a bronze cap and a padded coat, on stone floor.
-An animated panoply (hostile, unhurt), wielding an iron stiletto (rare) and a fur small shield (magic), wearing 7 objects, on stone floor.
+An animated panoply (hostile, unhurt), wielding an iron dagger, wearing 4 objects, on stone floor.
 An animated armour (hostile, unhurt), wearing a bronze cap and a padded coat, on stone floor.
-An animated panoply (hostile, unhurt), wielding an iron stiletto (rare) and a fur small shield (magic), wearing 7 objects, on stone floor. It hums with power.
+An animated panoply (hostile, unhurt), wielding an iron dagger, wearing 4 objects, on stone floor. It hums with power.

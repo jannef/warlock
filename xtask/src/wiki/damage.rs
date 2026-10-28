@@ -4,7 +4,7 @@
 use super::order;
 use super::text::{capital, yes};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, DamageTypeId};
+use warlock_core::content::{Content, DamageTypeId, Effect};
 
 /// The damage types, in content order: whether armour (Protection) soaks the kind, whether its
 /// big hits and criticals bleed, and how a blow of it is said.
@@ -114,6 +114,49 @@ pub(super) fn armour_kinds(content: &Content) -> String {
             capital(&o.name),
             dash(against),
             dash(resists)
+        );
+    }
+    out
+}
+
+/// The elements (the kinds that are not physical), in content order, with the magic prefix that
+/// adds a die of each and the suffix that resists it, and their ladders' ends (#638).
+pub(super) fn elements(content: &Content) -> String {
+    let mut out = String::from("| Element | Prefix (adds) | Suffix (resists) |\n|---|---|---|\n");
+    let affixes = content.affixes();
+    for (i, t) in content.damage_types().iter().enumerate() {
+        if t.physical {
+            continue;
+        }
+        let kind = DamageTypeId(i as u8);
+        let of = |effect: Effect| {
+            let names: Vec<String> = (affixes.all().iter())
+                .filter(|a| a.effect == effect && a.damage_type == Some(kind))
+                .map(|a| match (a.tiers.first(), a.tiers.last()) {
+                    (Some(f), Some(l)) if effect == Effect::Elemental => {
+                        format!("{} (1d{} to 1d{})", a.name, f.min, l.max)
+                    }
+                    (Some(f), Some(l)) => {
+                        format!(
+                            "{} ({}–{} % to {}–{} %)",
+                            a.name, f.min, f.max, l.min, l.max
+                        )
+                    }
+                    _ => a.name.clone(),
+                })
+                .collect();
+            if names.is_empty() {
+                "—".to_string()
+            } else {
+                names.join(", ")
+            }
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} |",
+            capital(&t.name),
+            of(Effect::Elemental),
+            of(Effect::Resistance)
         );
     }
     out

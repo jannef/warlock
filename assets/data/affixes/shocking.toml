@@ -1,0 +1,22 @@
+# Crackling weapons: electricity added to every hit, which armour never soaks.
+[[prefix]]
+id = "shocking"
+name = "Shocking"
+effect = "elemental"
+category = "electricity_damage"
+damage_type = "electricity"
+bases = ["weapon", "launcher", "ammo"]
+weight = 50
+tiers = [
+  { level = 2, min = 2, max = 2 },
+  { level = 3, min = 2, max = 3 },
+  { level = 4, min = 3, max = 3 },
+  { level = 5, min = 3, max = 4 },
+  { level = 6, min = 4, max = 5 },
+  { level = 7, min = 5, max = 5 },
+  { level = 8, min = 5, max = 6 },
+  { level = 9, min = 6, max = 6 },
+  { level = 10, min = 6, max = 7 },
+  { level = 11, min = 7, max = 8 },
+  { level = 12, min = 8, max = 8 },
+]
