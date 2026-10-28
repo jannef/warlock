@@ -20,7 +20,7 @@ main menu without saving; no `--screen`: capture a dead replay instead), the lev
 `screens::on_level_up` whenever `World::due` is set and the game changed, over whatever is open, the
 death screen winning; its choices are `ScreenAction::Act`, which closes it, and it opens again on
 what is left; no `--screen`: a replay that ends with choices due opens it), and the Talents page
-(page 7, `KeyCommand::Talents`, unbound) — are one
+(page 7, `KeyCommand::Talents`, `G`) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
 to open, read keys for, or draw one:
 - **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, save store, and
@@ -294,7 +294,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   opens the menu when there is none.
 - **Keys**: an ability with an action of its own may have a rebindable `KeyCommand`, left unbound
   by default (`settings/keys.rs::UNBOUND`); never a default key. Shield bash is the first, Steal
-  the second; a style's rank 10 abilities (later) go there too.
+  the second; a style's rank 10 abilities (later) go there too. They stay (the owner, #644), and
+  `settings/keys.rs::ABILITY_KEYS` lists them: Controls and the `?` help show them last, below
+  every context's group, under "Ability keys" (`controls_screen::Row::AbilityKeys`; text
+  snapshot `controls-screen-bottom`).
 
 **Text snapshots** (#301): `ui/screen_snapshots.rs` (test only) checks the screens as text, in
 place of golden screenshots. Each `Case` starts a run the way a golden entry does (scenario,

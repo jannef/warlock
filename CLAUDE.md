@@ -117,7 +117,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend lantern hood
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray temper:LETTER drink second_wind blood_magic use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N rank:SKILL:N
 skip:DURATION weather:KIND spawn effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
@@ -139,7 +139,7 @@ identify); `study:c` studies scroll stack `c` to learn the spell it teaches
 (docs/dev/spells.md "Learning"); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
-something is found; `pray` prays at the forgotten altar beside the player (the Pray ability, the abilities menu's Here group: a minute, then an outcome from `data/outcomes/forgotten_altar.toml`, and perhaps the altar spent; refused, with no time, with no altar beside them; docs/dev/special-rooms.md); `drink` drinks at the healing spring beside the player (the Drink ability, Here too: ten seconds, then an outcome from `data/outcomes/spring.toml`; a spring never runs dry; refused, with no time, with no spring beside them); `temper:c` tempers inventory stack `c` at the anvil beside the player (the Temper ability, the Here group: ten minutes, then a Strength check plus Metalcraft leans an outcome from `data/outcomes/forge.toml`: improved, nothing, flawed, or ruined; refused, with no time, with no anvil beside them or a stack that is not a weapon or armour); `second_wind` uses the Second wind talent (hit points back at once, then Winded); `blood_magic` the Blood magic talent (hit points for mana, never the last); `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm, master_thief, inspire, knock (`use:knock:E`, a lock); `use:volley:12,5` one aimed at a cell; a birth sign's active the same way, `use:horns_grace`, `use:blaze`, `use:hounds_bay`, or aimed at a cell, `use:transfixing_stare:12,5`, `use:fire_breath:12,5`; a spell the player knows too, by its id in `assets/data/spells/`, paid in mana, `use:haste`, or aimed at a cell, `use:magic_missile:12,5`, or cast on inventory stack `c`, `use:identify:c` (any `use:ID` that is no class or birth sign ability is a spell); and a weapon active after those, for its stamina and time, `use:lunge:E` aimed in a direction (in upper case: a lower-case letter is a stack), `use:shield_wall`, or aimed at a cell, `use:piercing_shot:12,5`, docs/dev/weapon-abilities.md); `disarm:E` tries to disarm the trap the player knows of east of them (the
+something is found; `pray` prays at the forgotten altar beside the player (the Pray ability, the abilities menu's Here group: a minute, then an outcome from `data/outcomes/forgotten_altar.toml`, and perhaps the altar spent; refused, with no time, with no altar beside them; docs/dev/special-rooms.md); `drink` drinks at the healing spring beside the player (the Drink ability, Here too: ten seconds, then an outcome from `data/outcomes/spring.toml`; a spring never runs dry; refused, with no time, with no spring beside them); `temper:c` tempers inventory stack `c` at the anvil beside the player (the Temper ability, the Here group: ten minutes, then a Strength check plus Metalcraft leans an outcome from `data/outcomes/forge.toml`: improved, nothing, flawed, or ruined; refused, with no time, with no anvil beside them or a stack that is not a weapon or armour); `use:second_wind` uses the Second wind talent (hit points back at once, then Winded) and `use:blood_magic` the Blood magic talent (hit points for mana, never the last), a talent's own active; `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm, master_thief, inspire, knock (`use:knock:E`, a lock); `use:volley:12,5` one aimed at a cell; a birth sign's active the same way, `use:horns_grace`, `use:blaze`, `use:hounds_bay`, or aimed at a cell, `use:transfixing_stare:12,5`, `use:fire_breath:12,5`; a spell the player knows too, by its id in `assets/data/spells/`, paid in mana, `use:haste`, or aimed at a cell, `use:magic_missile:12,5`, or cast on inventory stack `c`, `use:identify:c` (any `use:ID` that is no class or birth sign ability is a spell); and a weapon active after those, for its stamina and time, `use:lunge:E` aimed in a direction (in upper case: a lower-case letter is a stack), `use:shield_wall`, or aimed at a cell, `use:piercing_shot:12,5`, docs/dev/weapon-abilities.md); `disarm:E` tries to disarm the trap the player knows of east of them (the
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `heal:bleeding` treats the player's own bleeding with the Heal skill (the
 Heal ability: a status id with a `treat` table, `heal:poisoned`, or a showing disease's id,
@@ -155,7 +155,7 @@ docs/dev/npcs.md);
 throws the player's voice to level cell (X, Y) (one they see, within 6; the bard's, refused without the ability);
 `talent:hardy` takes a talent (an id in `assets/data/talents/`; `talent:weapon_focus:long_blades`
 with its choice) when a level's pick is due (every third level; until it is made every other
-action is refused), `advance:stealth` spends a level's skill roll (none yet, #230), `levelup:auto`
+action is refused), `advance:stealth` spends one of a level's skill rolls (on a trained skill; `world/skill_roll.rs`), `levelup:auto`
 is the dev action that spends every choice due with the first the player may take, and `xp:2500`
 the dev experience grant (no time; `xp:691` brings a 100 % character to level 3); `rank:long_blades:5`
 the dev weapon rank (a weapon skill or style at that rank, 0 to 10, raising its defaults and
@@ -371,11 +371,12 @@ Hard rules:
   just won't work"). New ones are plain fixed keys in their screen or input-mode code, named in
   the screen's hint line; add no `KeyCommand` or `Context` entry for them. Existing menu-context
   bindings stay as they are for now (not widened, not removed; a cleanup is a later owner call)
-  (`docs/dev/settings.md`).
+  (`docs/dev/settings.md`); the back-style ones (`Back`, `TextBack`, `MoreSkip`, `PrevPage`,
+  `PrevTarget`, unbound) stay exactly as they are (owner, #644).
 - Abilities (racial, class, skill, weapon skill and style, item; #156) register in
   `warlock_core::ability`, the one registry, and are used from the one abilities menu (`a`):
   never a default key of their own (an ability's own `KeyCommand` stays unbound by default,
-  `settings/keys.rs::UNBOUND`). Basic commands keep their keys (`docs/dev/screens.md`).
+  `settings/keys.rs::UNBOUND`, and Controls lists it last, `ABILITY_KEYS`). Basic commands keep their keys (`docs/dev/screens.md`).
 - Every new system ships with talents: the PR that adds it adds its `[[system]]` tag in
   `assets/data/talents.toml` and at least the `[coverage]` bar of talents (and class abilities)
   carrying it; resources (mana, #225's pools) are systems too. The feature issue answers the
