@@ -36,7 +36,9 @@ animated families) with the brute's adjustments from `[family]`.
 A generated chest is a mimic by its band's `mimic` chance (`mapgen/chest.rs::lay`, after the
 chest's lock, trap, and contents are drawn: the lock and trap dropped, the contents carried, no
 draw more), on any floor, of the floor's item level (`mapgen/chest_tests.rs`'s
-`a_mimic_stands_in_for_a_chest_carrying_its_loot`).
+`a_mimic_stands_in_for_a_chest_carrying_its_loot`), but never in a `shunned` room (a
+sanctuary): there the chest stays a chest, the draw made all the same (#661,
+`mapgen/tests.rs`'s `a_mimic_never_stands_in_a_sanctuary`).
 
 Every mimic is placed **disguised** (`travel::make_creature` adds the status that `hides`,
 `Content::disguise_status`, to any type with `mimic`): a legend's, a swapped chest's, the dev

@@ -70,7 +70,8 @@ treasure rooms (C6, #618) lay their chests with `mapgen/chest.rs::lay` from thei
   trapped, one `index` among the fitting traps (made with none: a branch without traps draws
   the same), `roll_contents`, `chance(mimic)` (made: no chest, the lock and trap drawn for it
   dropped, and a `CreatureSpawn` of `Content::mimic_at(level)` carrying the contents pushed on
-  the template's creatures, nothing more drawn; `docs/dev/creatures/mimics.md`). Cells avoid the population, so a fixture comparing a floor with and
+  the template's creatures, nothing more drawn; `docs/dev/creatures/mimics.md`; never in a
+  `shunned` room, a sanctuary, where the chest stays a chest, the draw made all the same, #661). Cells avoid the population, so a fixture comparing a floor with and
   without a danger sets `chests = { chance = 0 }` (`world/spawn_tests.rs`'s barrow).
 - A vault's chests draw only from `vault_chests/<level id>`, and only for those with nothing in
   them. A vault chest is a cell that is not walkable, so stamping one moves the population's
