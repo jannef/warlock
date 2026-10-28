@@ -394,6 +394,9 @@ pub struct TalentMods {
     pub sees_mimics: i32,
     /// A mimic's grip never holds it (Slick).
     pub slick: bool,
+    /// The hint on arriving on a level with a treasure room says which way it lies (Treasure
+    /// sense).
+    pub treasure_bearing: bool,
     /// A forgotten altar's lean counts double when it agrees, and not at all when it opposes
     /// (Devout).
     pub devout: bool,
@@ -1264,6 +1267,7 @@ impl TalentMods {
             TalentEffect::ChestWise => self.chest_wise = true,
             TalentEffect::SeesMimics { value } => self.sees_mimics += value,
             TalentEffect::Slick => self.slick = true,
+            TalentEffect::TreasureSense => self.treasure_bearing = true,
             TalentEffect::Devout => self.devout = true,
             TalentEffect::Penitent => self.penitent = true,
             TalentEffect::RoomPacePercent { value } => self.room_pace_percent += value,

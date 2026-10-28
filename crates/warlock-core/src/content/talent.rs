@@ -436,6 +436,9 @@ pub enum TalentEffect {
     SeesMimics { value: i32 },
     /// A mimic's grip never holds it (Slick; `World::afflict`).
     Slick,
+    /// The hint said on arriving on a level with a treasure room tells which way it lies
+    /// (Treasure sense; `world/treasury.rs`).
+    TreasureSense,
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
     /// opposed one leans as a neutral one (Devout; the prayer draw, `World::lean`).
     Devout,
@@ -1909,6 +1912,7 @@ impl TalentEffect {
             | TalentEffect::SenseOfPlace
             | TalentEffect::ChestWise
             | TalentEffect::Slick
+            | TalentEffect::TreasureSense
             | TalentEffect::Devout
             | TalentEffect::Penitent
             | TalentEffect::CollapseProof

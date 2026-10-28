@@ -107,6 +107,16 @@
 #            walls: { terrain, per_cells, most }, one per `per_cells` floor cells, at least one
 #            and at most `most` (1 to 16), never beside a door or where it would cut the room's
 #            floor apart; a hand-made level draws its own. Never the whole level
+#   secret_doors  "all": every door of the room is a secret door, found by searching (the
+#            branch's difficulty), never counted against the branch's `secret_doors`. On a rooms
+#            level its doors are hidden; on a cave level the room is a box stamped into the rock
+#            with one secret door. Never the whole level
+#   treasure what generators lay inside a treasure room: { chests = DICE, gold = { heaps = DICE,
+#            dice = DICE, each = N }, gems = DICE }: `chests` chests (0 to 16) of the floor's item
+#            level, `heaps` heaps (0 to 16) of `dice` × `each` (1 to 1000) gold coins, and `gems`
+#            loose gems (0 to 16), each on a plain floor cell of the room. Never the whole level
+#   arrive   said on every arrival on a level holding such a room the player has not entered
+#            yet (one line for all such rooms of one effect). Never the whole level
 
 chance = 12
 per_level = 1
@@ -256,8 +266,8 @@ swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60, loot_level = 0
 
 [[effect]]
 id = "hoard"
-name = "treasure room"
-mark = "$"
+name = "tempting hoard"
+mark = "T"
 near = "Something glitters ahead."
 enter = "Treasure lies here, unguarded."
 weight = 5
@@ -399,3 +409,17 @@ min_cells = 9
 feature = "shelves"
 loot = { class = "scrolls", count = [2, 4] }
 train = { decipher_script = 200 }
+
+# A treasure room (spec §7 "Special rooms"): its doors all secret, chests, gold, and gems inside,
+# and a hint on every arrival until it is entered. Not a tempting hoard: nothing seals, nothing
+# guards it; finding it is the work.
+[[effect]]
+id = "treasury"
+name = "treasure room"
+mark = "$"
+arrive = "Something tells you there is wealth hidden on this level."
+enter = "Gold glints in the dust. No one has been here in a long time."
+weight = 4
+min_cells = 9
+secret_doors = "all"
+treasure = { chests = "1d2", gold = { heaps = "1d4+1", dice = "3d6", each = 2 }, gems = "1d3" }

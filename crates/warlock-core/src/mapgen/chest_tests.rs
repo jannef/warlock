@@ -38,9 +38,17 @@ fn one_floor_in_five_has_a_chest() {
         for id in ["depths:1", "depths:3"] {
             let level = generate(&c, ("showcase", seed), id, None).expect("level");
             floors += 1;
-            with += usize::from(!level.chests.is_empty());
-            assert!(level.chests.len() <= 1, "seed {seed} {id}: count = [1, 1]");
-            for (&at, chest) in &level.chests {
+            // A treasure room's chests are its own (`treasury.rs`), not the floor's.
+            let treasury = |p: &Pos| {
+                (level.rooms.iter())
+                    .any(|r| r.contains(*p) && c.room_effect(r.effect).treasure.is_some())
+            };
+            let floor: Vec<_> = (level.chests.iter())
+                .filter(|(p, _)| !treasury(p))
+                .collect();
+            with += usize::from(!floor.is_empty());
+            assert!(floor.len() <= 1, "seed {seed} {id}: count = [1, 1]");
+            for (&at, chest) in floor {
                 assert_eq!(level.terrain[at], shut, "seed {seed} {id}: shut");
                 assert_eq!(chest.level, level.item_level, "the floor's level");
                 assert!(stands_clear(&level, &c, at), "seed {seed} {id}: {at}");

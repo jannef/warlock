@@ -21,6 +21,7 @@
 
 use super::{ActorId, AttackSkills, Spent, World};
 use crate::action::Event;
+use crate::content::Effect as ItemEffect;
 use crate::content::{ActionKind, Role};
 use crate::door::kick_breaks;
 use crate::geom::{Dir, Pos};
@@ -155,17 +156,24 @@ impl World {
     /// "Skills"), and the kick trains it. A trap on the door goes off at them as the kick lands,
     /// before the door gives way. Kicking a door is no attack: neither the combat stance nor
     /// attack speed changes its time.
+    /// The Strength the player's kick is rolled against, a door's or a chest's: their
+    /// effective Strength, their athletics (spec §8 "Skills"), their talents' (Mighty kick,
+    /// Breaker, Lockbreaker; spec §8 "Talents"), and what they wear (Hobnailed; spec §8 "Magic
+    /// items"): as if stronger.
+    pub(super) fn kick_force(&self) -> u8 {
+        let me = self.state.player();
+        let strength = me.effective_stats(&self.content).score(Stat::Strength);
+        let athletics = me.skill_effect(&self.content, Effect::Kick);
+        let mighty = me.talent_mods(&self.content).door_kick
+            + me.mods(&self.content).get(ItemEffect::DoorKick);
+        u8::try_from((i32::from(strength) + athletics + mighty).max(0)).unwrap_or(u8::MAX)
+    }
+
     fn kick_door(&mut self, p: Pos, events: &mut Vec<Event>) -> Spent {
         let player = self.state.player;
         let price = self.price_of(player, ActionKind::Kick);
         let def = self.content.terrain(self.state.current().terrain[p]);
-        let me = self.state.player();
-        let strength = me.effective_stats(&self.content).score(Stat::Strength);
-        let athletics = me.skill_effect(&self.content, Effect::Kick);
-        // Mighty kick and Breaker (spec §8 "Talents"): as if stronger.
-        let mighty = me.talent_mods(&self.content).door_kick;
-        let force =
-            u8::try_from((i32::from(strength) + athletics + mighty).max(0)).unwrap_or(u8::MAX);
+        let force = self.kick_force();
         let broken = def.kicked_in.and_then(|(to, sturdiness)| {
             kick_breaks(force, sturdiness, &mut self.state.rng).then_some(to)
         });

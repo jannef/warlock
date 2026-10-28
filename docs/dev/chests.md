@@ -3,11 +3,13 @@
 Developer notes for chests (slices C1, #613, C2, #614, and C3, #615, of
 docs/design/chests-and-treasure.md); the rules are in spec/08d-traps-doors-digging.md "Chests",
 the loot in spec/08g-magic-items.md "Chest loot", and the data in spec/07b-data.md "Chests".
-Keep it current with the code, as CLAUDE.md says. Treasure rooms (C5, C6) come later; each
-extends this file. Mimics (C4, #616) have their own topic, `docs/dev/creatures/mimics.md`: a
-generated chest may be a mimic instead (`mapgen/chest.rs::lay`), which the perception snapshot
-shows as a shut chest (`chest_at`, `known_chests`), and touching what the player takes for a
-chest (`open_door`, the bump, `kick`, `pick_lock`, Knock) finds it out first.
+Keep it current with the code, as CLAUDE.md says. Greater treasure rooms (C6) come later and
+extend this file. Treasure rooms (C5, #617) lay their chests with `mapgen/chest.rs::lay` from
+their own stream (`docs/dev/special-rooms.md` "Treasure rooms"). Mimics (C4, #616) have their
+own topic, `docs/dev/creatures/mimics.md`: a generated chest may be a mimic instead
+(`mapgen/chest.rs::lay`), which the perception snapshot shows as a shut chest (`chest_at`,
+`known_chests`), and touching what the player takes for a chest (`open_door`, the bump, `kick`,
+`pick_lock`, Knock) finds it out first.
 
 ## Modules
 

@@ -287,6 +287,8 @@
 #                                 shut chest's trap in its sight becomes known to it
 #   sees_mimics { value }         a disguised mimic within that many cells is seen for what it is
 #   slick                         a mimic's grip never holds it
+#   treasure_sense                the hint on arriving on a level with a treasure room says which
+#                                 way the room lies (eight winds, from where it arrived)
 #   dig_percent { value }         its digging does that percent more work a turn
 #   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
 #                                 (negative: cheaper)

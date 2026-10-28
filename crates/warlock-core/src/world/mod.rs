@@ -192,6 +192,7 @@ mod temper;
 mod train;
 mod trap;
 mod travel;
+mod treasury;
 mod two_shields;
 mod voice;
 mod volley;
@@ -797,6 +798,9 @@ impl World {
         if let Some(text) = rooms::pervade_line(&state, &content) {
             state.messages.push(0, text);
         }
+        for text in treasury::arrive_lines(&state, &content) {
+            state.messages.push(0, text);
+        }
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }
@@ -1336,6 +1340,8 @@ mod affix_spell_tests;
 #[cfg(test)]
 mod affix_stamina_tests;
 #[cfg(test)]
+mod affix_utility_tests;
+#[cfg(test)]
 mod ai_tests;
 #[cfg(test)]
 mod alignment_tests;
@@ -1625,6 +1631,8 @@ mod tests;
 mod time_tests;
 #[cfg(test)]
 mod trap_tests;
+#[cfg(test)]
+mod treasury_tests;
 #[cfg(test)]
 mod two_shield_tests;
 #[cfg(test)]

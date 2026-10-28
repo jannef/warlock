@@ -503,6 +503,10 @@ fn stats(def: &ObjectDef, content: &Content, damage: i32, protection: i32) -> Ve
         (Some(range), false) => out.push(format!("Thrown up to {range} cells")),
         _ => {}
     }
+    // A digging tool's power, its base stat as damage is a weapon's (spec §8 "Digging").
+    if let Some(dig) = def.dig {
+        out.push(format!("Digs at {dig}"));
+    }
     if def.reloads {
         out.push("Reloaded after every shot".into());
     }

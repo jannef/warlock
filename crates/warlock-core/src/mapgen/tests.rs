@@ -94,12 +94,12 @@ fn caves_snapshot() {
 /// rooms"), their plain ground drawn as the effect's mark.
 #[test]
 fn special_room_snapshots() {
-    let flooded = level(30, 2);
+    let flooded = level(8, 2);
     assert_eq!(flooded.rooms.len(), 1);
-    insta::assert_snapshot!("rooms_seed_30_depth_2_flooded", describe(&flooded));
-    let shadowed = level(9, 4);
+    insta::assert_snapshot!("rooms_seed_8_depth_2_flooded", describe(&flooded));
+    let shadowed = level(19, 4);
     assert_eq!(shadowed.rooms.len(), 1);
-    insta::assert_snapshot!("caves_seed_9_depth_4_shadowed", describe(&shadowed));
+    insta::assert_snapshot!("caves_seed_19_depth_4_shadowed", describe(&shadowed));
     // Without the marks, the flooded room shows its water.
     let map = ascii(&flooded, &CONTENT);
     let water = CONTENT

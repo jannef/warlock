@@ -45,7 +45,7 @@ use crate::action::{Event, MissileEnd};
 use crate::check::check;
 use crate::combat::{self, Blow, Profile, Strike};
 use crate::content::StatUse;
-use crate::content::{ActionKind, Bolt, ObjectId, TrapEffect, TrapId, article};
+use crate::content::{ActionKind, Bolt, Effect, ObjectId, TrapEffect, TrapId, article};
 use crate::damage::Damage;
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
@@ -56,6 +56,10 @@ use std::collections::BTreeSet;
 
 /// How far past its victim a trap's missile flies on, at most, when it misses.
 const OVERSHOOT: usize = 8;
+
+/// The most a trap's damage is cut, in percent, by Trap sense and of Wariness together: a trap
+/// always hurts (spec §8 "Traps").
+pub(crate) const TRAP_DAMAGE_CUT: i32 = 75;
 
 impl World {
     /// Actor `victim` has just stepped onto `at`: a trap there goes off ([`World::spring_trap`]),
@@ -235,7 +239,8 @@ impl World {
     /// Trap `trap` deals `blow` to `target`, from `source`, the way every blow is dealt (spec
     /// §8 "Blood", "Status effects"): a big hit's blood, the damage, which may kill (a trap's
     /// kill earns no one anything), and if it lives the statuses its wound causes. The target's
-    /// talents scale the damage first (Trap sense: half, rounded down, at least 1).
+    /// talents and what it wears scale the damage first (Trap sense: half; of Wariness: its percent
+    /// less; together at most [`TRAP_DAMAGE_CUT`] off; rounded down, at least 1).
     fn trap_deals(
         &mut self,
         trap: TrapId,
@@ -247,8 +252,12 @@ impl World {
         if blow.damage <= 0 {
             return;
         }
-        let percent = (self.state.actors.get(&target))
-            .map_or(0, |a| a.talent_mods(&self.content).trap_damage_percent);
+        // Trap sense's percent and what the target wears (of Wariness: less), together never
+        // more than `TRAP_DAMAGE_CUT` off: a trap always hurts.
+        let percent = (self.state.actors.get(&target)).map_or(0, |a| {
+            let worn = a.mods(&self.content).get(Effect::TrapDamage);
+            (a.talent_mods(&self.content).trap_damage_percent - worn).max(-TRAP_DAMAGE_CUT)
+        });
         if percent != 0 {
             let scaled = TalentMods::scaled(u64::try_from(blow.damage).unwrap_or(0), percent);
             blow.damage = i32::try_from(scaled).unwrap_or(i32::MAX).max(1);
