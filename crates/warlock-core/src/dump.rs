@@ -393,6 +393,8 @@ fn truth_rows(world: &World) -> Vec<String> {
             (None, Some(trap), _) => content.trap(trap.kind).glyph,
             (None, None, Some(top)) => content.object(top.object).glyph,
             (None, None, None) if level.secret_at(p).is_some() => 'S',
+            // A sealed room's breach while it stands (spec §7 "Special rooms").
+            (None, None, None) if level.breach_at(content, p) => 'H',
             // A hidden location by its entrance's glyph (spec §7 "Hidden locations").
             (None, None, None) => (level.hidden_at(p).map(|h| h.terrain))
                 .or(level.terrain_at(p))
@@ -436,7 +438,8 @@ fn chest_rows(world: &World) -> Vec<String> {
 
 /// The level's special rooms (ground truth): the terrain with each special room's plain ground
 /// ([`crate::content::TerrainDef::is_plain_ground`]) drawn as its effect's mark, then one line
-/// per room (glimpsed, entered, a hoard's stacks lifted and whether it sealed); headed by `pervading <id>` when an effect covers the level.
+/// per room (glimpsed, entered, a hoard's stacks lifted and whether it sealed, a sealed room's
+/// breach); headed by `pervading <id>` when an effect covers the level.
 fn room_rows(world: &World) -> Vec<String> {
     let content = world.content();
     let (level, _) = world.ground_truth();
@@ -467,8 +470,9 @@ fn room_rows(world: &World) -> Vec<String> {
             n => format!(", lifted {n}"),
         };
         let sealed = if room.sealed { ", sealed" } else { "" };
+        let breach = (room.breach).map_or(String::new(), |b| format!(", breach {b}"));
         out.push(format!(
-            "{} {} at {}-{}{side}{}{glimpsed}{entered}{lifted}{sealed}",
+            "{} {} at {}-{}{side}{}{glimpsed}{entered}{lifted}{sealed}{breach}",
             effect.mark,
             effect.name,
             room.min,
@@ -1402,7 +1406,8 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 /// know it (its effect id; else null), the open shop they stand in (`shop`: its sign, keeper,
 /// and what they owe there; else null), the weather (under the open sky; else null), the
 /// temperature (°C, to a tenth), seen actors (with the status effects that show on them), heard
-/// sounds, known traps (`known_traps`: position, trap id, and whether in sight), the chests seen
+/// sounds, known traps (`known_traps`: position, trap id, and whether in sight), the hollow walls
+/// found (`known_hollows`: positions), the chests seen
 /// or remembered (`chests`: position, band id, state, and, with Chest-wise, whether a shut one
 /// in sight is locked, else null), known overworld
 /// locations (`known_locations`: position and name), the player's inventory (with what of each
@@ -1567,6 +1572,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "seen_actors": seen,
         "heard_sounds": view.sounds(),
         "known_traps": traps,
+        "known_hollows": view.known_hollows(),
         "known_locations": locations,
         "chests": chests,
         "inventory": inventory,
