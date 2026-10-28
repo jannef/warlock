@@ -5,7 +5,7 @@
 use super::actions::at_speed;
 use super::combat::threat_range;
 use super::order;
-use super::text::{capital, damage_text, glyph, signed, yes};
+use super::text::{Term, anchored, capital, damage_text, glyph, signed, yes};
 use std::fmt::Write as _;
 use warlock_core::action::AttackKind;
 use warlock_core::burden::{self, Burden};
@@ -83,7 +83,7 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {faction} | {stance} | {attacks} | {} | {} | {drops} | {} |",
-            capital(&c.name),
+            anchored(Term::Creature, &c.id, &capital(&c.name)),
             glyph(c.glyph),
             yes(c.opens_doors),
             yes(c.light.is_some()),

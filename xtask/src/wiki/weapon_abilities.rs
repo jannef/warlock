@@ -3,7 +3,7 @@
 //! skills' on the Weapon skills page and the styles' on the Fighting styles page, with the rank,
 //! the kind, the trigger, exactly what it does, and its costs (a triggered ability has none).
 
-use super::text::table_text;
+use super::text::{Term, anchored, link, table_text};
 use std::fmt::Write as _;
 use warlock_core::content::{
     ActiveAim, Content, ExtraDice, FreeBlowKind, On, WeaponAbility, WeaponDoes, WeaponSkillId,
@@ -32,10 +32,17 @@ fn table(content: &Content, styles: bool) -> String {
         "| Ability | Taught by | Rank | Kind | Fires on | What it does | Stamina | Time |\n\
          |---|---|---:|---|---|---|---:|---|\n",
     );
+    let (term, skill_term) = if styles {
+        (Term::StyleAbility, Term::Style)
+    } else {
+        (Term::WeaponAbility, Term::WeaponSkill)
+    };
     for (_, rank, a) in rows {
-        let taught: Vec<&str> = (a.skills.iter())
-            .map(|&s| skills.skill(s).name.as_str())
+        let taught: Vec<String> = (a.skills.iter())
+            .map(|&s| skills.skill(s))
+            .map(|s| link(skill_term, &s.id, &s.name))
             .collect();
+        let name = anchored(term, &a.id, &a.name);
         if let Some(active) = a.active {
             let aim = match active.aim {
                 ActiveAim::Nothing => "used (aimed at nothing)",
@@ -50,8 +57,7 @@ fn table(content: &Content, styles: bool) -> String {
             };
             let _ = writeln!(
                 out,
-                "| {} | {} | {rank} | active | {aim} | {} | {} | {}% of {action} |",
-                a.name,
+                "| {name} | {} | {rank} | active | {aim} | {} | {} | {}% of {action} |",
                 taught.join(", "),
                 table_text(&does(content, a)),
                 active.stamina,
@@ -67,8 +73,7 @@ fn table(content: &Content, styles: bool) -> String {
         };
         let _ = writeln!(
             out,
-            "| {} | {} | {rank} | triggered | {} | {} | — | none (free and instant) |",
-            a.name,
+            "| {name} | {} | {rank} | triggered | {} | {} | — | none (free and instant) |",
             taught.join(", "),
             table_text(&fires),
             table_text(&does(content, a)),

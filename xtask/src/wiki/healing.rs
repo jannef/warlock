@@ -3,7 +3,7 @@
 
 use super::combat::percent;
 use super::order;
-use super::text::{capital, signed, yes};
+use super::text::{Term, anchored, capital, signed, yes};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Affliction, Content, DiseaseDef, DiseaseId, StatusDef};
@@ -340,7 +340,7 @@ pub(super) fn status_effects(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {seen} | {} | {} | {} | {} | {stats} | {cured} | {} |",
-            def.name,
+            anchored(Term::Status, &def.id, &def.name),
             causes(content, i, def),
             capital(&costs),
             capital(&eases),
@@ -452,7 +452,7 @@ pub(super) fn diseases(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {resisted} | {} | {progresses} | {} | {shaken} | {} | {} |",
-            capital(&def.name),
+            anchored(Term::Disease, &def.id, &capital(&def.name)),
             caught_by(content, disease, def),
             capital(&days(def.incubation)),
             costs.join(", "),

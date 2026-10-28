@@ -5,7 +5,7 @@
 //! starting ranks of races and classes, as data writes them.
 
 use super::order;
-use super::text::{capital, thousands};
+use super::text::{Term, anchored, capital, thousands};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Benefit, ClassDef, Content, Grip, MAX_RANK, Role, TwoShields, TwoWeapons, WeaponSkillDef,
@@ -86,7 +86,7 @@ pub fn skills(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} |",
-            s.name,
+            anchored(Term::WeaponSkill, &s.id, &s.name),
             trained_by(s.role),
             weapons_of(content, id, s.role),
             s.curve
@@ -387,7 +387,7 @@ pub fn styles(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {weapons} | {} |",
-            s.name,
+            anchored(Term::Style, &s.id, &s.name),
             capital(grip_text(style.grip)),
             s.curve
         );

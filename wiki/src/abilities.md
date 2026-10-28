@@ -67,7 +67,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 - **Other skills used as actions** (Handle animal, ...): each is in the menu once you are trained
   in it (see [Skills](skills.md)), greyed out until its use comes to the game.
 - **Class abilities** (Rage, Veteran's wind, Whirlwind, Lay on hands, Smite, Holy radiance,
-  Quivering palm, Consecrate, Knock): your class's level table gives them (see [Classes](classes.md#what-each-level-gives)),
+  Quivering palm, Consecrate, Knock): your class's level table gives them (see [Classes](classes.md#levels)),
   each under Class from the level that brings it. Most leave you spent, winded, or drained for a
   while afterwards, greyed out until it passes; a paladin's holy gifts are never greyed out by
   alignment, but do nothing unless you are Kind or better (see [Alignment](alignment.md)). They have no key of their own

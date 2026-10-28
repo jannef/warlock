@@ -1,7 +1,7 @@
 //! Talents (spec §8 "Talents"): every tree with its talents, their prerequisites and their rules
 //! in full (the game says them in words), and the coverage matrix by system.
 
-use super::text::signed;
+use super::text::{Term, anchored, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Need, OverTime, Role, SignActive, SpellData, TalentDef, TalentEffect, TreeId,
@@ -27,7 +27,7 @@ pub(super) fn talents(content: &Content) -> String {
             let _ = writeln!(
                 out,
                 "| {} | {} | {} | {} | {} |",
-                name(def),
+                anchored(Term::Talent, &def.id, &name(def)),
                 def.rank_count(),
                 needs_text(content, def),
                 effects_text(content, def),

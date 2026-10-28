@@ -84,3 +84,86 @@ pub(super) fn damage_text(dice: Dice, bonus: i32) -> String {
         (base, n) => format!("{}{}", base.replace('-', "\u{2212}"), signed(n)),
     }
 }
+
+/// A kind of term a generated table defines, one row each: the page the table is on and the
+/// prefix of its rows' anchors (`status-staggered`, `skill-open-lock`). Prose links a row as
+/// `[Staggered](status-effects.md#status-staggered)`; the term map (`wiki/TERMS.md`) lists them.
+#[derive(Clone, Copy)]
+pub(super) enum Term {
+    Ability,
+    Creature,
+    Damage,
+    Disease,
+    ItemClass,
+    Potion,
+    Race,
+    Resource,
+    Room,
+    Scroll,
+    Skill,
+    Spell,
+    Stance,
+    Stat,
+    Status,
+    Style,
+    StyleAbility,
+    Talent,
+    Terrain,
+    Trap,
+    WeaponAbility,
+    WeaponSkill,
+}
+
+impl Term {
+    /// The page whose table defines it, and its anchors' prefix.
+    fn place(self) -> (&'static str, &'static str) {
+        match self {
+            Term::Ability => ("abilities.md", "ability"),
+            Term::Creature => ("creatures.md", "creature"),
+            Term::Damage => ("damage-types.md", "damage"),
+            Term::Disease => ("diseases.md", "disease"),
+            Term::ItemClass => ("objects.md", "class"),
+            Term::Potion => ("potions.md", "potion"),
+            Term::Race => ("races.md", "race"),
+            Term::Resource => ("resources.md", "resource"),
+            Term::Room => ("special-rooms.md", "room"),
+            Term::Scroll => ("scrolls.md", "scroll"),
+            Term::Skill => ("skills.md", "skill"),
+            Term::Spell => ("magic.md", "spell"),
+            Term::Stance => ("combat.md", "stance"),
+            Term::Stat => ("stats.md", "stat"),
+            Term::Status => ("status-effects.md", "status"),
+            Term::Style => ("fighting-styles.md", "style"),
+            Term::StyleAbility => ("fighting-styles.md", "style-ability"),
+            Term::Talent => ("talents.md", "talent"),
+            Term::Terrain => ("terrain.md", "terrain"),
+            Term::Trap => ("traps.md", "trap"),
+            Term::WeaponAbility => ("weapon-skills.md", "weapon-ability"),
+            Term::WeaponSkill => ("weapon-skills.md", "weapon-skill"),
+        }
+    }
+
+    fn anchor_id(self, id: &str) -> String {
+        let id = id.to_lowercase().replace(['_', ' '], "-");
+        let prefix = self.place().1;
+        // `potion_of_healing` is `potion-of-healing`, not `potion-potion-of-healing`.
+        if id
+            .strip_prefix(prefix)
+            .is_some_and(|rest| rest.starts_with('-'))
+        {
+            id
+        } else {
+            format!("{prefix}-{id}")
+        }
+    }
+}
+
+/// A row's name with the anchor prose links to: `<a id="status-staggered"></a>Staggered`.
+pub(super) fn anchored(term: Term, id: &str, name: &str) -> String {
+    format!("<a id=\"{}\"></a>{name}", term.anchor_id(id))
+}
+
+/// A link to the row that defines a term: `[Staggered](status-effects.md#status-staggered)`.
+pub(super) fn link(term: Term, id: &str, name: &str) -> String {
+    format!("[{name}]({}#{})", term.place().0, term.anchor_id(id))
+}
