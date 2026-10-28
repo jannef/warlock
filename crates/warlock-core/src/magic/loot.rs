@@ -18,8 +18,10 @@
 //! 5. **each affix**, prefixes first: one draw among those that may roll on the item (its kind
 //!    in the affix's `bases`, something for the effect to change, a tier at the item level, and
 //!    a `category` the item has no affix of yet), weighted by their `weight`; one draw for the tier
-//!    among those found at the item level; one draw for the value in the tier's range (none when
-//!    the range is a single value). With nothing left to roll, the item has fewer affixes; with
+//!    among those of the window at the item level ([`tier_window`]: the tiers found there whose
+//!    level is within [`TIER_WINDOW`] of it, or the top one found alone past the last tier or
+//!    when none is that close); one draw for the value in the tier's range (none when the range
+//!    is a single value). With nothing left to roll, the item has fewer affixes; with
 //!    none at all it is normal;
 //! 6. **a rare item's name**: one draw for its first word and one for its second, which goes
 //!    with the kind of item ("Bite" for weapons, "Loop" for rings);
@@ -34,16 +36,20 @@
 //! hidden).
 
 use super::{Affix, AffixKind, Magic, Rarity, may_roll};
-use crate::content::{Content, ItemClassId, ItemKind, ObjectDef, ObjectId};
+use crate::content::{AffixDef, Content, ItemClassId, ItemKind, ObjectDef, ObjectId};
 use crate::gem;
 use crate::object::Stack;
 use crate::rng::Rng;
 use crate::variant::{self, Source};
 use serde::{Deserialize, Serialize};
-use std::ops::RangeInclusive;
+use std::ops::{Range, RangeInclusive};
 
 /// How many arrows, bolts, or stones a stack of loot ammunition holds.
 pub const AMMO: RangeInclusive<i32> = 8..=20;
+
+/// How close below the item level a tier's level must be for loot to roll it: a level-12 find
+/// rolls the tiers of levels 9 to 12 (docs/design/affixes-systems.md §8), so depth tells.
+pub const TIER_WINDOW: u8 = 4;
 
 /// The least an item of loot may be: anything, magic or better, or rare (a vault's `loot`, what
 /// creatures drop).
@@ -330,14 +336,31 @@ pub(crate) fn roll_affix(
         .collect();
     candidates.sort_by(|a, b| affixes.all()[a.0].id.cmp(&affixes.all()[b.0].id));
     let a = &affixes.all()[*pick_weighted(rng, &candidates)?];
-    let tiers = a.tiers_at(level);
-    let tier = rng.index(tiers);
+    let window = tier_window(a, level);
+    let tier = window.start + rng.index(window.len());
     let t = &a.tiers[tier];
     Some(Affix {
         id: a.id.clone(),
         tier: u8::try_from(tier + 1).unwrap_or(1),
         value: rng.range(t.min, t.max),
     })
+}
+
+/// The tiers of `a` loot may roll at item level `level`, as indices into its tiers (0 the
+/// first): those found there whose level is within [`TIER_WINDOW`] below it; the top tier alone
+/// once the item level is past the last tier's, or when no tier found there is that close (a gap
+/// in the ladder). Empty when none is found there.
+pub fn tier_window(a: &AffixDef, level: u8) -> Range<usize> {
+    let found = a.tiers_at(level);
+    let Some(top) = found.checked_sub(1) else {
+        return 0..0;
+    };
+    let past = a.tiers.last().is_some_and(|t| level > t.level);
+    let close = (a.tiers[..found].iter()).position(|t| level - t.level < TIER_WINDOW);
+    match close {
+        Some(first) if !past => first..found,
+        _ => top..found,
+    }
 }
 
 /// A rare item's two-word name: a first word, and a second for its kind of item.

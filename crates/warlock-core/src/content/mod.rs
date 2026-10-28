@@ -140,7 +140,7 @@ mod yugoloth_roster_tests;
 pub use action::{ActionCosts, ActionKind, BASE_TURN, COSTS, NORMAL_COST, price};
 pub use affix::{
     AffixDef, AffixKind, Affixes, Effect, Group, ItemKind, MAX_ITEM_LEVEL, MAX_PER_KIND, MAX_SPEED,
-    Rarity, Tier,
+    MAX_TIERS, Rarity, Tier,
 };
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use anim::GlyphAnim;
@@ -821,17 +821,6 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.damage_types = damage_type::parse(path, text)?;
         }
-        // The affix table: optional, so loot without it is always normal.
-        if files.table("affixes").next().is_some() {
-            let light = |id: &str| content.light_id(id);
-            let skill = |id: &str| content.skill_id(id);
-            let has_skills = !content.skills().is_empty();
-            let damage = |id: &str| content.damage_type_id(id);
-            let has_types = !content.damage_types().is_empty();
-            let table = files.table("affixes");
-            let typed = (damage, has_types);
-            content.affixes = affix::parse(table, light, (skill, has_skills), typed)?;
-        }
         let path = "data/scroll_labels.toml";
         if let Some(text) = files.get_optional(path) {
             content.scroll_labels = Some(ScrollLabelDef::parse(path, text)?);
@@ -896,6 +885,20 @@ impl Content {
                 Some((id, content.status(id).eases.is_some()))
             };
             content.resources = resource::parse(path, text, status)?;
+        }
+        // The affix table: optional, so loot without it is always normal. After lights, skills,
+        // damage types, and resources, which its affixes name.
+        if files.table("affixes").next().is_some() {
+            let skill: &dyn Fn(&str) -> Option<SkillId> = &|id| content.skill_id(id);
+            let damage: &dyn Fn(&str) -> Option<DamageTypeId> = &|id| content.damage_type_id(id);
+            let resource: &dyn Fn(&str) -> Option<ResourceId> = &|id| content.resource_id(id);
+            let lookups = affix::Lookups {
+                light: &|id| content.light_id(id),
+                skill: (!content.skills().is_empty()).then_some(skill),
+                damage_type: (!content.damage_types().is_empty()).then_some(damage),
+                resource: (!content.resources().is_empty()).then_some(resource),
+            };
+            content.affixes = affix::parse(files.table("affixes"), &lookups)?;
         }
         content.check_follows_end()?;
         // Spells (spec §8 "Spells") after damage types and statuses, which they name.

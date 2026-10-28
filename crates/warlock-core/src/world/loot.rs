@@ -10,12 +10,14 @@
 //! it dies, besides what it carried, or now and then a loose gem instead (by the gems' `chance`,
 //! spec §7 "Gems"). The roll draws from the stream `drop/<actor id>` (spec §8 "Determinism"),
 //! never the gameplay stream, so a kill changes no later roll of a fight; its item level is the
-//! level's. What it drops is its gear: its material is drawn by the materials' `gear` at the
-//! creature's level (#193: primitive for kobolds, steel only for tougher creatures).
+//! creature's level, at least the level's item level ([`drop_level`]: an out-of-depth creature
+//! drops a deeper item). What it drops is its gear: its material is drawn by the materials'
+//! `gear` at the creature's level (#193: primitive for kobolds, steel only for tougher
+//! creatures).
 
 use super::{Actor, ActorId, Spent, World};
 use crate::action::Positions;
-use crate::content::ObjectId;
+use crate::content::{Content, MAX_ITEM_LEVEL, ObjectId};
 use crate::gem;
 use crate::magic::{LootGrade, loot};
 use crate::object::Stack;
@@ -83,15 +85,14 @@ impl World {
 
     /// What `actor`, a creature that just died, drops besides what it carried: by its type's
     /// `loot` chance, a loose gem (by the gems' chance) or else a magic or rare item at its
-    /// level's item level, of a material by the creature's level (its gear), from its own
-    /// stream.
+    /// [`drop_level`], of a material by the creature's level (its gear), from its own stream.
     pub(super) fn loot_of(&self, actor: &Actor) -> Option<Stack> {
         let chance = content_loot(self, actor)?;
         let mut rng = Rng::stream(self.state.seed, &format!("drop/{}", actor.id.0));
         if !rng.chance(u32::from(chance)) {
             return None;
         }
-        let level = self.content.item_level(&actor.level);
+        let level = drop_level(&self.content, actor);
         let gear = Source::Gear(self.content.creature(actor.creature).level);
         // Treasure hunter (spec §8 "Talents"), Hoard sense (spec §8 "Birth sign"): the player's
         // luck, whoever made the kill.
@@ -120,6 +121,15 @@ impl World {
             }
         }
     }
+}
+
+/// The item level of what `actor`, a creature, drops (docs/design/affixes-systems.md §3): its
+/// creature type's level, at least the item level of the level it dies on, at most
+/// [`MAX_ITEM_LEVEL`]. Floor loot keeps the level's own item level.
+pub(crate) fn drop_level(content: &Content, actor: &Actor) -> u8 {
+    let floor = content.item_level(&actor.level);
+    let creature = content.creature(actor.creature).level;
+    floor.max(creature).clamp(1, MAX_ITEM_LEVEL)
 }
 
 /// The chance in percent that `actor`'s creature type drops loot, if it has one above 0.

@@ -359,10 +359,33 @@ pub fn phrase(rolled: &Rolled<'_>, kind: ItemKind, content: &Content) -> String 
         Effect::MaxMana => format!("+{v} to maximum mana"),
         Effect::ManaRegeneration => format!("mana comes back {v}% faster"),
         Effect::CasterLevel => format!("+{v} to caster level"),
+        Effect::ManaCost => format!("abilities cost {v}% less mana"),
+        Effect::SpellEase => format!("hinders casting {v} {} less", points(v)),
+        Effect::SpellToHit => format!("+{v} to hit with spells"),
+        Effect::SpellThreat => format!("spells threaten a critical on {v} more {}", rolls(v)),
+        Effect::SpellLift => format!("spells do up to {v}% more"),
+        Effect::SpellReach => format!("spells reach {v} {} farther", cells(v)),
+        Effect::SpellDuration => format!("buffs and hexes last {v} {} longer", degrees(v)),
+        Effect::ManaOnKill => format!("+{v} mana on a kill close by"),
+        Effect::WandLevel => format!("+{v} to the level of wands"),
+        Effect::ResourceMax => format!("+{v} to maximum {}", pool_name(rolled, content)),
+        Effect::ResourceRate => format!("{} comes back {v}% faster", pool_name(rolled, content)),
+        Effect::ActiveStamina => {
+            format!("weapon feats cost {v} {} less", pool_name(rolled, content))
+        }
+        Effect::ResourceOnKill => {
+            format!("+{v} {} on a kill close by", pool_name(rolled, content))
+        }
         Effect::Stat(stat) => format!("+{v} to {}", stat.name()),
         Effect::MoveSpeed => format!("you move {}", faster(v)),
         Effect::Carry => format!("+{v} kg carrying capacity"),
         Effect::Stealth => format!("your footsteps are {v}% quieter"),
+        Effect::DoorKick => "your kicks break doors more easily".into(),
+        Effect::DigPercent => format!("digs {v}% faster"),
+        Effect::Hunger => format!("hunger comes {v}% slower"),
+        Effect::TrapDamage => format!("traps hurt you {v}% less"),
+        Effect::DiseaseCheck => format!("+{v} to resist disease"),
+        Effect::PotionKept => format!("a potion is not used up {v}% of the time"),
         Effect::Light => {
             let tier = rolled.def.tier(rolled.tier);
             let radius = (tier.and_then(|t| t.light)).map_or(0, |id| content.light(id).radius);
@@ -387,6 +410,15 @@ fn kind_name(rolled: &Rolled<'_>, content: &Content) -> String {
     )
 }
 
+/// The resource a pooled affix names, in lower case ("stamina"); "a pool" for one that names
+/// none.
+fn pool_name(rolled: &Rolled<'_>, content: &Content) -> String {
+    (rolled.def.resource).map_or_else(
+        || "a pool".to_string(),
+        |id| content.resource(id).name.to_lowercase(),
+    )
+}
+
 /// How much faster, in words: speed numbers stay hidden.
 fn faster(percent: i32) -> &'static str {
     match percent {
@@ -402,6 +434,14 @@ fn rolls(n: i32) -> &'static str {
 
 fn cells(n: i32) -> &'static str {
     if n == 1 { "cell" } else { "cells" }
+}
+
+fn points(n: i32) -> &'static str {
+    if n == 1 { "point" } else { "points" }
+}
+
+fn degrees(n: i32) -> &'static str {
+    if n == 1 { "degree" } else { "degrees" }
 }
 
 /// The base stats of `def` in words: how it is held or worn, its damage and criticals, how far it

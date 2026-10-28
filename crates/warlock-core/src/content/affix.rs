@@ -6,10 +6,11 @@
 //!
 //! Every object that may be found magic says what kind of item it is (`kind` in
 //! `data/objects.toml`, [`ItemKind`]): a weapon, a missile weapon, ammunition, body armour, a
-//! helmet, a cloak, gloves, boots, a shield, a ring, or an amulet. An affix names the kinds it may
-//! roll on (`bases`), the one [`Effect`] it has, and its **tiers**: from which item level each is
-//! found, and the range its value is rolled in (a light's tier names a light preset instead). An
-//! item never has two affixes with the same effect.
+//! helmet, a cloak, gloves, boots, a shield, a ring, an amulet, or a tool. An affix names the
+//! kinds it may roll on (`bases`), the one [`Effect`] it has, and its **tiers** (at most
+//! [`MAX_TIERS`]): from which item level each is found, and the range its value is rolled in (a
+//! light's tier names a light preset instead). An item never has two affixes of one [`Group`]
+//! (the effect, and the skill, damage type, or resource it names).
 //!
 //! Attack effects (to-hit, damage, criticals, attack speed, range, ...) on a weapon, a missile
 //! weapon, or ammunition are **local**: they change attacks made with that item only. Elsewhere
@@ -19,7 +20,7 @@
 //! (stats, hit points, mana, Dodge, Deflection, natural armour, regeneration, moving, carrying,
 //! stealth, light) always global. Effects apply while the item is worn or wielded.
 
-use super::{ContentError, DamageTypeId, LightId};
+use super::{ContentError, DamageTypeId, LightId, ResourceId};
 use crate::skills::SkillId;
 use crate::stats::Stat;
 use serde::{Deserialize, Serialize};
@@ -30,6 +31,9 @@ use std::ops::RangeInclusive;
 pub const MAX_ITEM_LEVEL: u8 = 99;
 /// The most prefixes, and the most suffixes, an item may have (a rare: three of each).
 pub const MAX_PER_KIND: usize = 3;
+/// The most tiers an affix may have: a ladder that steps up every item level or two
+/// (docs/design/affixes-systems.md §3).
+pub const MAX_TIERS: usize = 12;
 /// The most an item's attack speed or its wearer's moving speed may be raised, in percent off
 /// the cost.
 pub const MAX_SPEED: i32 = 50;
@@ -52,10 +56,12 @@ pub enum ItemKind {
     Shield,
     Ring,
     Amulet,
+    /// A tool worn in the Tool slot: a pick-axe.
+    Tool,
 }
 
 impl ItemKind {
-    pub const ALL: [ItemKind; 11] = [
+    pub const ALL: &'static [ItemKind] = &[
         ItemKind::Weapon,
         ItemKind::Launcher,
         ItemKind::Ammo,
@@ -67,6 +73,7 @@ impl ItemKind {
         ItemKind::Shield,
         ItemKind::Ring,
         ItemKind::Amulet,
+        ItemKind::Tool,
     ];
 
     /// Its id in data files: `body`.
@@ -83,6 +90,7 @@ impl ItemKind {
             ItemKind::Shield => "shield",
             ItemKind::Ring => "ring",
             ItemKind::Amulet => "amulet",
+            ItemKind::Tool => "tool",
         }
     }
 
@@ -100,11 +108,12 @@ impl ItemKind {
             ItemKind::Shield => "shields",
             ItemKind::Ring => "rings",
             ItemKind::Amulet => "amulets",
+            ItemKind::Tool => "tools",
         }
     }
 
     pub fn from_id(id: &str) -> Option<ItemKind> {
-        ItemKind::ALL.into_iter().find(|k| k.id() == id)
+        ItemKind::ALL.iter().copied().find(|k| k.id() == id)
     }
 
     /// Whether attacks are made with it: then its attack effects are local, changing only
@@ -199,6 +208,32 @@ pub enum Effect {
     ManaRegeneration,
     /// Caster level (spec §8 "Spells").
     CasterLevel,
+    /// Percent off every mana cost (spec §8 "Mana").
+    ManaCost,
+    /// Points off this piece's spell cost surcharge (its `spell_cost_percent`; local).
+    SpellEase,
+    /// To hit with one's own spells (spec §8 "Spells").
+    SpellToHit,
+    /// Widens one's own spells' critical threat range by this many natural rolls.
+    SpellThreat,
+    /// Points more of a spell's damage lift.
+    SpellLift,
+    /// Cells more of a spell's reach.
+    SpellReach,
+    /// Degrees more of the statuses one's spells give.
+    SpellDuration,
+    /// Mana back on a kill close by.
+    ManaOnKill,
+    /// Added to the caster level wands are zapped at.
+    WandLevel,
+    /// Added to a resource's maximum (the affix's `resource`; spec §8 "Resources").
+    ResourceMax,
+    /// Percent faster a resource comes back.
+    ResourceRate,
+    /// Points off every weapon active's cost in the affix's resource (stamina).
+    ActiveStamina,
+    /// Points of the affix's resource on a kill close by.
+    ResourceOnKill,
     /// Percent resistance to the affix's damage type (`damage_type`; spec §8 "Damage types").
     Resistance,
     /// A stat's score.
@@ -209,6 +244,18 @@ pub enum Effect {
     Carry,
     /// Percent quieter footsteps.
     Stealth,
+    /// Added to the Strength a door (or a chest) is kicked in with.
+    DoorKick,
+    /// Percent faster digging.
+    DigPercent,
+    /// Percent slower hunger.
+    Hunger,
+    /// Percent less damage from traps.
+    TrapDamage,
+    /// Added to every disease check.
+    DiseaseCheck,
+    /// Percent chance a potion drunk is not used up.
+    PotionKept,
     /// It glows: its wearer carries a light (a preset per tier, no value).
     Light,
     /// Added to a skill's value (the affix's `skill`; spec §8 "Skills") for what the skill gives.
@@ -243,6 +290,19 @@ impl Effect {
             Effect::MaxMana,
             Effect::ManaRegeneration,
             Effect::CasterLevel,
+            Effect::ManaCost,
+            Effect::SpellEase,
+            Effect::SpellToHit,
+            Effect::SpellThreat,
+            Effect::SpellLift,
+            Effect::SpellReach,
+            Effect::SpellDuration,
+            Effect::ManaOnKill,
+            Effect::WandLevel,
+            Effect::ResourceMax,
+            Effect::ResourceRate,
+            Effect::ActiveStamina,
+            Effect::ResourceOnKill,
             Effect::Resistance,
         ];
         all.extend(Stat::ALL.map(Effect::Stat));
@@ -250,6 +310,12 @@ impl Effect {
             Effect::MoveSpeed,
             Effect::Carry,
             Effect::Stealth,
+            Effect::DoorKick,
+            Effect::DigPercent,
+            Effect::Hunger,
+            Effect::TrapDamage,
+            Effect::DiseaseCheck,
+            Effect::PotionKept,
             Effect::Light,
             Effect::Skill,
         ]);
@@ -283,11 +349,30 @@ impl Effect {
             Effect::MaxMana => "max_mana",
             Effect::ManaRegeneration => "mana_regeneration",
             Effect::CasterLevel => "caster_level",
+            Effect::ManaCost => "mana_cost",
+            Effect::SpellEase => "spell_ease",
+            Effect::SpellToHit => "spell_to_hit",
+            Effect::SpellThreat => "spell_threat",
+            Effect::SpellLift => "spell_lift",
+            Effect::SpellReach => "spell_reach",
+            Effect::SpellDuration => "spell_duration",
+            Effect::ManaOnKill => "mana_on_kill",
+            Effect::WandLevel => "wand_level",
+            Effect::ResourceMax => "resource_max",
+            Effect::ResourceRate => "resource_rate",
+            Effect::ActiveStamina => "active_stamina",
+            Effect::ResourceOnKill => "resource_on_kill",
             Effect::Resistance => "resistance",
             Effect::Stat(stat) => stat.id(),
             Effect::MoveSpeed => "move_speed",
             Effect::Carry => "carry",
             Effect::Stealth => "stealth",
+            Effect::DoorKick => "door_kick",
+            Effect::DigPercent => "dig_percent",
+            Effect::Hunger => "hunger",
+            Effect::TrapDamage => "trap_damage",
+            Effect::DiseaseCheck => "disease_check",
+            Effect::PotionKept => "potion_kept",
             Effect::Light => "light",
             Effect::Skill => "skill",
         }
@@ -298,7 +383,7 @@ impl Effect {
     }
 
     /// How many effects there are.
-    pub const COUNT: usize = 30 + Stat::COUNT;
+    pub const COUNT: usize = 49 + Stat::COUNT;
 
     /// Its place in [`Effect::all`].
     pub const fn index(self) -> usize {
@@ -327,13 +412,32 @@ impl Effect {
             Effect::MaxMana => 21,
             Effect::ManaRegeneration => 22,
             Effect::CasterLevel => 23,
-            Effect::Resistance => 24,
-            Effect::Stat(stat) => 25 + stat as usize,
-            Effect::MoveSpeed => 25 + Stat::COUNT,
-            Effect::Carry => 26 + Stat::COUNT,
-            Effect::Stealth => 27 + Stat::COUNT,
-            Effect::Light => 28 + Stat::COUNT,
-            Effect::Skill => 29 + Stat::COUNT,
+            Effect::ManaCost => 24,
+            Effect::SpellEase => 25,
+            Effect::SpellToHit => 26,
+            Effect::SpellThreat => 27,
+            Effect::SpellLift => 28,
+            Effect::SpellReach => 29,
+            Effect::SpellDuration => 30,
+            Effect::ManaOnKill => 31,
+            Effect::WandLevel => 32,
+            Effect::ResourceMax => 33,
+            Effect::ResourceRate => 34,
+            Effect::ActiveStamina => 35,
+            Effect::ResourceOnKill => 36,
+            Effect::Resistance => 37,
+            Effect::Stat(stat) => 38 + stat as usize,
+            Effect::MoveSpeed => 38 + Stat::COUNT,
+            Effect::Carry => 39 + Stat::COUNT,
+            Effect::Stealth => 40 + Stat::COUNT,
+            Effect::DoorKick => 41 + Stat::COUNT,
+            Effect::DigPercent => 42 + Stat::COUNT,
+            Effect::Hunger => 43 + Stat::COUNT,
+            Effect::TrapDamage => 44 + Stat::COUNT,
+            Effect::DiseaseCheck => 45 + Stat::COUNT,
+            Effect::PotionKept => 46 + Stat::COUNT,
+            Effect::Light => 47 + Stat::COUNT,
+            Effect::Skill => 48 + Stat::COUNT,
         }
     }
 
@@ -342,15 +446,36 @@ impl Effect {
         matches!(self, Effect::Elemental | Effect::Resistance)
     }
 
+    /// Whether it names a resource (`resource` in its affix): the pool whose maximum, pace,
+    /// costs, or gains it changes (spec §8 "Resources").
+    pub const fn is_pooled(self) -> bool {
+        matches!(
+            self,
+            Effect::ResourceMax
+                | Effect::ResourceRate
+                | Effect::ActiveStamina
+                | Effect::ResourceOnKill
+        )
+    }
+
     /// The values a tier may roll (a light's tier has none).
     pub const fn values(self) -> RangeInclusive<i32> {
         match self {
             Effect::ExtraDamage | Effect::Elemental => 2..=20,
-            Effect::Threat | Effect::Crit => 1..=3,
-            Effect::AttackSpeed | Effect::MoveSpeed => 1..=MAX_SPEED,
+            Effect::Threat | Effect::Crit | Effect::SpellThreat => 1..=3,
+            Effect::AttackSpeed | Effect::MoveSpeed | Effect::DigPercent => 1..=MAX_SPEED,
+            Effect::ManaCost | Effect::SpellLift | Effect::PotionKept => 1..=50,
+            Effect::ActiveStamina => 1..=5,
+            Effect::ManaOnKill | Effect::ResourceOnKill => 1..=20,
+            Effect::Hunger | Effect::TrapDamage => 1..=75,
             Effect::Durability | Effect::Weight | Effect::Stealth => 1..=90,
-            Effect::MaxHp | Effect::MaxMana | Effect::Carry | Effect::Skill => 1..=100,
-            Effect::Regeneration | Effect::ManaRegeneration => 1..=300,
+            Effect::MaxHp
+            | Effect::MaxMana
+            | Effect::Carry
+            | Effect::Skill
+            | Effect::SpellEase
+            | Effect::ResourceMax => 1..=100,
+            Effect::Regeneration | Effect::ManaRegeneration | Effect::ResourceRate => 1..=300,
             Effect::Resistance => 1..=crate::damage::MAX_RESISTANCE,
             Effect::Light => 0..=0,
             _ => 1..=10,
@@ -375,7 +500,7 @@ impl Effect {
     }
 
     /// Whether it changes the item itself wherever it is (its Armour, Protection, Shield, Parry,
-    /// the Dexterity it allows, its weight).
+    /// the Dexterity it allows, its weight, how much it hinders casting).
     pub const fn is_item(self) -> bool {
         matches!(
             self,
@@ -385,6 +510,7 @@ impl Effect {
                 | Effect::Shield
                 | Effect::MaxDex
                 | Effect::Weight
+                | Effect::SpellEase
         )
     }
 
@@ -408,6 +534,10 @@ impl Effect {
             Effect::Protection => kind.is_armour(),
             Effect::Shield => kind == ItemKind::Shield,
             Effect::MaxDex => matches!(kind, ItemKind::Body | ItemKind::Shield),
+            // What may hinder casting (`spell_cost_percent`): body armour, a helmet, a shield.
+            Effect::SpellEase => {
+                matches!(kind, ItemKind::Body | ItemKind::Helmet | ItemKind::Shield)
+            }
             _ => true,
         }
     }
@@ -443,6 +573,8 @@ pub struct AffixDef {
     /// The damage type an [`Effect::Elemental`] affix adds or an [`Effect::Resistance`] one
     /// resists.
     pub damage_type: Option<DamageTypeId>,
+    /// The resource a pooled affix ([`Effect::is_pooled`]) changes: `stamina`, `rage`.
+    pub resource: Option<ResourceId>,
     /// What kinds of item may roll it.
     pub bases: Vec<ItemKind>,
     /// How often it rolls among those that may (default 100).
@@ -451,15 +583,41 @@ pub struct AffixDef {
     pub tiers: Vec<Tier>,
 }
 
-/// What an affix changes: its effect, the skill a skill affix raises, and the damage type an
-/// elemental or resistance affix names. An item has at most one affix of each.
-pub type Group = (Effect, Option<SkillId>, Option<DamageTypeId>);
+/// What an affix changes: its effect, the skill a skill affix raises, the damage type an
+/// elemental or resistance affix names, and the resource a pooled one changes. An item has at
+/// most one affix of each (one per category, `check_category`), and [`crate::magic::Mods`] sums
+/// by it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Group {
+    pub effect: Effect,
+    pub skill: Option<SkillId>,
+    pub damage_type: Option<DamageTypeId>,
+    pub resource: Option<ResourceId>,
+}
+
+impl Group {
+    /// The group of an effect that names nothing else.
+    pub const fn of(effect: Effect) -> Group {
+        Group {
+            effect,
+            skill: None,
+            damage_type: None,
+            resource: None,
+        }
+    }
+}
 
 impl AffixDef {
     /// What it changes, for the rule that an item has at most one affix of each: its effect, and
-    /// for a skill affix which skill, for a typed one which damage type.
+    /// for a skill affix which skill, for a typed one which damage type, for a pooled one which
+    /// resource.
     pub fn group(&self) -> Group {
-        (self.effect, self.skill, self.damage_type)
+        Group {
+            effect: self.effect,
+            skill: self.skill,
+            damage_type: self.damage_type,
+            resource: self.resource,
+        }
     }
 
     /// Its tier `tier` (1 for the first), if it has one.
@@ -520,7 +678,7 @@ pub struct Affixes {
     pub rare_counts: Vec<(u8, u32)>,
     /// The first words of rare names ("Grim").
     pub first_names: Vec<String>,
-    /// The second words of rare names, by kind of item ("Bite" for weapons).
+    /// The second words of rare names, by kind of item ("Bite" for weapons, "Tooth" for tools).
     pub second_names: BTreeMap<ItemKind, Vec<String>>,
 }
 
@@ -644,6 +802,8 @@ struct AffixSpec {
     /// The damage type an affix of effect `elemental` adds or one of effect `resistance`
     /// resists (an id in `data/damage_types.toml`).
     damage_type: Option<String>,
+    /// The resource a pooled affix changes (an id in `data/resources.toml`).
+    resource: Option<String>,
     tiers: Vec<TierSpec>,
 }
 
@@ -656,17 +816,27 @@ struct TierSpec {
     light: Option<String>,
 }
 
+/// How the affix table resolves the ids it names. A table content has none of is `None`, and the
+/// affixes that would name one of its entries are left out: skill affixes without skills, typed
+/// ones without damage types, pooled ones without resources.
+pub(super) struct Lookups<'a> {
+    /// Light preset ids (a light's tiers).
+    pub light: &'a dyn Fn(&str) -> Option<LightId>,
+    /// Skill ids (`skill`).
+    pub skill: Option<&'a dyn Fn(&str) -> Option<SkillId>>,
+    /// Damage type ids (`damage_type`).
+    pub damage_type: Option<&'a dyn Fn(&str) -> Option<DamageTypeId>>,
+    /// Resource ids (`resource`).
+    pub resource: Option<&'a dyn Fn(&str) -> Option<ResourceId>>,
+}
+
 /// Parses the affix table: `files` is `ContentFiles::table("affixes")` (`data/affixes.toml`,
 /// then `data/affixes/*.toml` in path order; at least one file), each of the settings tables set
-/// in exactly one of them, the entries numbered in the order read. `light` resolves light preset
-/// ids and `skill` skill ids (`has_skills`: whether content has any; without, skill affixes are
-/// left out), and `damage` damage type ids (`damage_type`; `has_types`: whether content has
-/// any; without, elemental and resistance affixes are left out).
+/// in exactly one of them, the entries numbered in the order read, the ids they name resolved by
+/// `lookups`.
 pub(super) fn parse<'a>(
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
-    light: impl Fn(&str) -> Option<LightId>,
-    (skill, has_skills): (impl Fn(&str) -> Option<SkillId>, bool),
-    (damage, has_types): (impl Fn(&str) -> Option<DamageTypeId>, bool),
+    lookups: &Lookups<'_>,
 ) -> Result<Affixes, ContentError> {
     let mut rarity_spec = Once::new("rarity");
     let mut magic_spec = Once::new("magic");
@@ -735,10 +905,7 @@ pub(super) fn parse<'a>(
         }
         second_names.insert(kind, words);
     }
-    if let Some(kind) = ItemKind::ALL
-        .into_iter()
-        .find(|k| !second_names.contains_key(k))
-    {
+    if let Some(kind) = (ItemKind::ALL.iter().copied()).find(|k| !second_names.contains_key(k)) {
         return Err(err(format!(
             "`names.second` has no words for `{}`",
             kind.id()
@@ -756,15 +923,17 @@ pub(super) fn parse<'a>(
     let mut seen: BTreeMap<String, &str> = BTreeMap::new();
     for (file, kind, spec) in specs {
         // Without skills (no `data/skills.toml`) skill affixes have nothing to raise: left out;
-        // so are typed affixes without damage types (nothing to add or resist).
-        if spec.effect == Effect::Skill.id() && !has_skills {
-            continue;
-        }
-        if Effect::from_id(&spec.effect).is_some_and(Effect::is_typed) && !has_types {
+        // so are typed affixes without damage types (nothing to add or resist), and pooled ones
+        // without resources (no pool to change).
+        let effect = Effect::from_id(&spec.effect);
+        if (effect == Some(Effect::Skill) && lookups.skill.is_none())
+            || (effect.is_some_and(Effect::is_typed) && lookups.damage_type.is_none())
+            || (effect.is_some_and(Effect::is_pooled) && lookups.resource.is_none())
+        {
             continue;
         }
         let id = spec.id.clone();
-        let def = spec.resolve(kind, &light, &skill, &damage).map_err(|m| {
+        let def = spec.resolve(kind, lookups).map_err(|m| {
             ContentError::new(file, format!("{} `{id}`: {m}", kind.name().to_lowercase()))
         })?;
         if let Some(first) = seen.insert(id.clone(), file) {
@@ -808,13 +977,11 @@ fn check_category(affixes: &Affixes, def: &AffixDef) -> Result<(), String> {
 }
 
 impl AffixSpec {
-    fn resolve(
-        self,
-        kind: AffixKind,
-        light: &impl Fn(&str) -> Option<LightId>,
-        skill: &impl Fn(&str) -> Option<SkillId>,
-        damage: &impl Fn(&str) -> Option<DamageTypeId>,
-    ) -> Result<AffixDef, String> {
+    fn resolve(self, kind: AffixKind, lookups: &Lookups<'_>) -> Result<AffixDef, String> {
+        let skill = |id: &str| lookups.skill.and_then(|f| f(id));
+        let damage = |id: &str| lookups.damage_type.and_then(|f| f(id));
+        let resource = |id: &str| lookups.resource.and_then(|f| f(id));
+        let light = lookups.light;
         if self.id.trim().is_empty() || self.name.trim().is_empty() {
             return Err("`id` and `name` must not be empty".into());
         }
@@ -850,6 +1017,18 @@ impl AffixSpec {
             }
             (false, None) => None,
         };
+        let resource = match (effect.is_pooled(), &self.resource) {
+            (true, Some(id)) => {
+                Some(resource(id).ok_or_else(|| format!("unknown resource `{id}`"))?)
+            }
+            (true, None) => return Err(format!("effect `{}` names its `resource`", effect.id())),
+            (false, Some(_)) => {
+                return Err("`resource` is for affixes of a resource's effects \
+                            (`resource_max`, `resource_rate`, `active_stamina`, `resource_on_kill`)"
+                    .into());
+            }
+            (false, None) => None,
+        };
         if self.bases.is_empty() {
             return Err("`bases` names no kind of item".into());
         }
@@ -870,6 +1049,12 @@ impl AffixSpec {
         }
         if self.tiers.is_empty() {
             return Err("an affix needs at least one tier".into());
+        }
+        if self.tiers.len() > MAX_TIERS {
+            return Err(format!(
+                "an affix has at most {MAX_TIERS} tiers, not {}",
+                self.tiers.len()
+            ));
         }
         let mut tiers = Vec::new();
         for (i, t) in self.tiers.into_iter().enumerate() {
@@ -920,6 +1105,7 @@ impl AffixSpec {
             category: self.category,
             skill,
             damage_type,
+            resource,
             bases,
             weight: self.weight.unwrap_or(100),
             tiers,
@@ -956,6 +1142,7 @@ boots = ["Stride"]
 shield = ["Wall"]
 ring = ["Loop"]
 amulet = ["Charm"]
+tool = ["Tooth"]
 "#;
 
     fn parse_with(affixes: &str) -> Result<Affixes, ContentError> {
@@ -963,16 +1150,26 @@ amulet = ["Charm"]
         parse_files([("data/affixes.toml", text.as_str())])
     }
 
-    /// Parses `files` as the affix table, with a light `glow` and a skill `stealth`.
+    /// Parses `files` as the affix table, with a light `glow`, a skill `stealth`, a damage type
+    /// `fire`, and resources `stamina` and `rage`.
     fn parse_files<'a>(
         files: impl IntoIterator<Item = (&'a str, &'a str)>,
     ) -> Result<Affixes, ContentError> {
-        parse(
-            files,
-            |id| (id == "glow").then_some(LightId(0)),
-            (|id: &str| (id == "stealth").then_some(SkillId(0)), true),
-            (|id: &str| (id == "fire").then_some(DamageTypeId(0)), true),
-        )
+        let light = |id: &str| (id == "glow").then_some(LightId(0));
+        let skill = |id: &str| (id == "stealth").then_some(SkillId(0));
+        let damage = |id: &str| (id == "fire").then_some(DamageTypeId(0));
+        let resource = |id: &str| match id {
+            "stamina" => Some(ResourceId(0)),
+            "rage" => Some(ResourceId(1)),
+            _ => None,
+        };
+        let lookups = Lookups {
+            light: &light,
+            skill: Some(&skill),
+            damage_type: Some(&damage),
+            resource: Some(&resource),
+        };
+        parse(files, &lookups)
     }
 
     /// The table split over files: the settings in one, an entry a file in path order; a
@@ -1171,6 +1368,203 @@ tiers = [{ level = 1, min = 1, max = 2 }]
         }
     }
 
+    /// One affix file's text: `effect` on `bases` with `extra` lines and one tier of `tier`.
+    fn one(kind: &str, id: &str, effect: &str, bases: &str, extra: &str, tier: &str) -> String {
+        format!(
+            "[[{kind}]]\nid = \"{id}\"\nname = \"X\"\neffect = \"{effect}\"\ncategory = \"{id}\"\n\
+             bases = [{bases}]\n{extra}tiers = [{tier}]\n"
+        )
+    }
+
+    /// The effects of docs/design/affixes-systems.md (§4 to §6) parse, each on a base it may be
+    /// on, the pooled ones naming their resource.
+    #[test]
+    fn the_system_effects_parse() {
+        let plain = [
+            ("mana_cost", "\"ring\""),
+            ("spell_ease", "\"body\", \"helmet\", \"shield\""),
+            ("spell_to_hit", "\"weapon\""),
+            ("spell_threat", "\"gloves\""),
+            ("spell_lift", "\"amulet\""),
+            ("spell_reach", "\"cloak\""),
+            ("spell_duration", "\"helmet\""),
+            ("mana_on_kill", "\"launcher\""),
+            ("wand_level", "\"gloves\""),
+            ("door_kick", "\"boots\""),
+            ("dig_percent", "\"tool\", \"gloves\""),
+            ("hunger", "\"cloak\""),
+            ("trap_damage", "\"boots\""),
+            ("disease_check", "\"body\""),
+            ("potion_kept", "\"ring\""),
+        ];
+        let pooled = [
+            "resource_max",
+            "resource_rate",
+            "active_stamina",
+            "resource_on_kill",
+        ];
+        let tier = "{ level = 1, min = 1, max = 2 }";
+        let mut text = String::new();
+        for (effect, bases) in plain {
+            text += &one("suffix", effect, effect, bases, "", tier);
+        }
+        for effect in pooled {
+            let extra = "resource = \"stamina\"\n";
+            text += &one("suffix", effect, effect, "\"ring\"", extra, tier);
+        }
+        let a = parse_with(&text).expect("the system effects parse");
+        for (effect, _) in plain {
+            let def = a.get(effect).expect(effect);
+            assert_eq!(def.effect.id(), effect);
+            assert_eq!(
+                def.group(),
+                Group::of(def.effect),
+                "{effect} names nothing else"
+            );
+        }
+        for effect in pooled {
+            let def = a.get(effect).expect(effect);
+            assert!(def.effect.is_pooled());
+            assert_eq!(def.resource, Some(ResourceId(0)), "{effect}: stamina");
+        }
+        let ease = a.get("spell_ease").expect("spell_ease").effect;
+        assert!(ease.is_local_on(ItemKind::Body), "a piece's own surcharge");
+        assert!(
+            !Effect::ManaCost.is_local_on(ItemKind::Weapon),
+            "no attack effect"
+        );
+        assert_eq!(
+            a.get("dig_percent").map(|d| d.bases.clone()),
+            Some(vec![ItemKind::Tool, ItemKind::Gloves])
+        );
+    }
+
+    /// A pooled effect names a known resource; nothing else names one; Mage-wrought's effect is
+    /// only on what may hinder casting.
+    #[test]
+    fn resources_and_the_spell_ease_bases_are_checked() {
+        let tier = "{ level = 1, min = 1, max = 1 }";
+        let bad = [
+            (
+                one("prefix", "x", "resource_max", "\"ring\"", "", tier),
+                "effect `resource_max` names its `resource`",
+            ),
+            (
+                one(
+                    "prefix",
+                    "x",
+                    "resource_rate",
+                    "\"ring\"",
+                    "resource = \"mana\"\n",
+                    tier,
+                ),
+                "unknown resource `mana`",
+            ),
+            (
+                one(
+                    "prefix",
+                    "x",
+                    "mana_cost",
+                    "\"ring\"",
+                    "resource = \"stamina\"\n",
+                    tier,
+                ),
+                "`resource` is for affixes of a resource's effects",
+            ),
+            (
+                one("prefix", "x", "spell_ease", "\"cloak\"", "", tier),
+                "effect `spell_ease` cannot be on cloaks",
+            ),
+        ];
+        for (text, needle) in bad {
+            let e = parse_with(&text).expect_err(needle);
+            assert!(e.to_string().contains(needle), "{e}");
+        }
+        // One group per (effect, resource): a stamina and a rage maximum are two categories, two
+        // stamina maxima one.
+        let stamina = "resource = \"stamina\"\n";
+        let rage = "resource = \"rage\"\n";
+        let two = [
+            one(
+                "prefix",
+                "tireless",
+                "resource_max",
+                "\"ring\"",
+                stamina,
+                tier,
+            ),
+            one("suffix", "of_fury", "resource_max", "\"ring\"", rage, tier),
+        ]
+        .concat();
+        let a = parse_with(&two).expect("two pools, two groups");
+        let (tireless, fury) = (a.get("tireless").unwrap(), a.get("of_fury").unwrap());
+        assert_ne!(tireless.group(), fury.group());
+        assert_eq!(tireless.group().resource, Some(ResourceId(0)));
+        let same = [
+            one(
+                "prefix",
+                "tireless",
+                "resource_max",
+                "\"ring\"",
+                stamina,
+                tier,
+            ),
+            one("prefix", "hardy", "resource_max", "\"ring\"", stamina, tier),
+        ]
+        .concat();
+        let e = parse_with(&same).expect_err("one group, two categories");
+        assert!(e.to_string().contains("does the same"), "{e}");
+        // Without resources in content, pooled affixes are left out, as skill affixes are
+        // without skills.
+        let light = |_: &str| None;
+        let lookups = Lookups {
+            light: &light,
+            skill: None,
+            damage_type: None,
+            resource: None,
+        };
+        let text = format!("{HEAD}\n{two}");
+        let a = parse([("data/affixes.toml", text.as_str())], &lookups).expect("valid");
+        assert!(a.is_empty());
+    }
+
+    /// An affix has at most twelve tiers.
+    #[test]
+    fn an_affix_has_at_most_twelve_tiers() {
+        let ladder = |n: u8| -> String {
+            let tiers: Vec<String> = (1..=n)
+                .map(|l| format!("{{ level = {l}, min = 1, max = 2 }}"))
+                .collect();
+            one("prefix", "x", "damage", "\"weapon\"", "", &tiers.join(", "))
+        };
+        let a = parse_with(&ladder(12)).expect("twelve tiers");
+        assert_eq!(a.get("x").map(|d| d.tiers.len()), Some(MAX_TIERS));
+        let e = parse_with(&ladder(13)).expect_err("thirteen");
+        assert!(e.to_string().contains("at most 12 tiers, not 13"), "{e}");
+    }
+
+    /// Tools are a kind of item: rare names have words for them, and affixes may roll on them.
+    #[test]
+    fn tools_are_a_kind_of_item() {
+        assert_eq!(ItemKind::from_id("tool"), Some(ItemKind::Tool));
+        assert_eq!(ItemKind::ALL.last(), Some(&ItemKind::Tool));
+        assert!(!ItemKind::Tool.attacks() && !ItemKind::Tool.is_armour());
+        let tier = "{ level = 1, min = 10, max = 15 }";
+        let a = parse_with(&one("prefix", "x", "weight", "\"tool\"", "", tier)).expect("valid");
+        assert_eq!(a.second_names.get(&ItemKind::Tool).map(Vec::len), Some(1));
+        assert!(
+            a.get("x").unwrap().effect.is_local_on(ItemKind::Tool),
+            "a lighter pick"
+        );
+        for effect in ["protection", "armour", "spell_ease", "range"] {
+            let text = one("prefix", "x", effect, "\"tool\"", "", tier);
+            assert!(parse_with(&text).is_err(), "{effect} on a tool");
+        }
+        let no_words = HEAD.replace("tool = [\"Tooth\"]\n", "");
+        let e = parse_files([("data/affixes.toml", no_words.as_str())]).unwrap_err();
+        assert_eq!(e.message, "`names.second` has no words for `tool`");
+    }
+
     #[test]
     fn local_and_global_effects() {
         assert!(Effect::ToHit.is_local_on(ItemKind::Weapon));
@@ -1178,7 +1572,7 @@ tiers = [{ level = 1, min = 1, max = 2 }]
         assert!(!Effect::ToHit.is_local_on(ItemKind::Gloves));
         assert!(Effect::Armour.is_local_on(ItemKind::Body));
         assert!(Effect::Protection.is_local_on(ItemKind::Boots));
-        let protected: Vec<_> = (ItemKind::ALL.into_iter())
+        let protected: Vec<_> = (ItemKind::ALL.iter().copied())
             .filter(|&k| Effect::Protection.allowed_on(k))
             .collect();
         assert_eq!(

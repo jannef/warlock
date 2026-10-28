@@ -72,6 +72,7 @@ name = "Light sources"
 [[class]]
 id = "tools"
 name = "Tools"
+kinds = ["tool"]
 
 # Household goods (#483): candlesticks, teapots, brooms; what an animated household thing is made
 # of and leaves behind.

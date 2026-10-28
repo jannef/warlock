@@ -629,6 +629,38 @@ fn creatures_drop_loot_deterministically() {
     assert!((60..140).contains(&drops), "{drops} of 399");
 }
 
+/// A drop's item level is the dropping creature's, at least the floor's
+/// (docs/design/affixes-systems.md §3): a kobold (level 1) drops at the level's 3, a deeper
+/// creature on the same floor at its own level.
+#[test]
+fn a_drop_rolls_at_the_creatures_level_at_least_the_floors() {
+    let w = world();
+    let content = w.content();
+    let kobold = (w.state().actors.values())
+        .find(|a| a.kind == ActorKind::Creature)
+        .expect("kobold")
+        .clone();
+    assert_eq!(content.item_level(&kobold.level), 3);
+    assert!(content.creature(kobold.creature).level < 3);
+    assert_eq!(super::loot::drop_level(content, &kobold), 3, "the floor's");
+    let deep = (content.creature_defs().iter())
+        .position(|d| d.level > 3 && d.loot > 0)
+        .expect("a creature above the floor's level that drops loot");
+    let mut a = kobold.clone();
+    a.creature = crate::content::CreatureId(u16::try_from(deep).unwrap());
+    let level = content.creature(a.creature).level;
+    assert_eq!(super::loot::drop_level(content, &a), level);
+    let mut seen = 0;
+    for id in 1..400 {
+        a.id = ActorId(id);
+        if let Some(magic) = w.loot_of(&a).as_ref().and_then(|s| s.magic().cloned()) {
+            assert_eq!(magic.level, level, "above the floor's 3");
+            seen += 1;
+        }
+    }
+    assert!(seen > 0);
+}
+
 #[test]
 fn generated_levels_hold_floor_and_vault_loot() {
     let content = Arc::new(Content::builtin().expect("content"));
