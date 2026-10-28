@@ -71,6 +71,14 @@ pub struct DefenceNumbers {
 impl Numbers {
     /// What `stack` gives, as the player knows it (module docs).
     pub fn of(stack: &Stack, content: &Content) -> Self {
+        // A tool (a pick-axe) neither attacks nor defends: it shows no numbers, whatever its
+        // affixes; they stay in its description.
+        if content.object(stack.object).kind == Some(ItemKind::Tool) {
+            return Self {
+                attack: None,
+                defence: None,
+            };
+        }
         let known = stack.as_known();
         Self {
             attack: attack(&known, content),

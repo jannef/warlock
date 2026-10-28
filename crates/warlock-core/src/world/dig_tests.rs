@@ -509,10 +509,13 @@ fn breaking_terrain_and_digging_tools_are_validated() {
         let err = load("data/terrain.toml", TERRAIN.replacen(replace, with, 1)).unwrap_err();
         assert!(err.contains(message), "{with}: {err}");
     }
-    let pick = "slot = \"tool\"\ndig = 10";
+    let pick = "kind = \"tool\"\nlevel = 3\nfrequency = 10\nslot = \"tool\"\ndig = 10";
     for (with, message) in [
         ("dig = 10", "a tool goes in a `slot`"),
-        ("slot = \"tool\"\ndig = 0", "power, 1 to 100"),
+        (
+            "kind = \"tool\"\nlevel = 3\nfrequency = 10\nslot = \"tool\"\ndig = 0",
+            "power, 1 to 100",
+        ),
     ] {
         assert!(PICK_AXE.contains(pick));
         let path = "data/objects/pick_axe.toml";

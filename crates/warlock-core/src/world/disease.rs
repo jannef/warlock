@@ -30,7 +30,7 @@ use super::fight::Harm;
 use super::{Actor, ActorId, Spent, World};
 use crate::action::{DiseaseNews, Event};
 use crate::check::check;
-use crate::content::{DiseaseId, TerrainId};
+use crate::content::{DiseaseId, Effect, TerrainId};
 use crate::stats::Stat;
 use crate::talent::TalentMods;
 use crate::time::{DAY, GameTime};
@@ -71,12 +71,13 @@ impl World {
     /// modifier in the stat (of the effective score, spec §8 "Stats"), its talents' bonus
     /// (Strong constitution, and what adds to every check of the stat: Stubborn, Iron will; spec §8 "Talents"), and the player's race's `disease_check`
     /// (ratfolk shrug diseases off).
-    fn disease_modifier(&self, actor: &Actor, stat: Stat) -> i32 {
+    pub(super) fn disease_modifier(&self, actor: &Actor, stat: Stat) -> i32 {
         let race = self.state.race_of(&self.content, actor);
         let modifier = actor.effective_stats(&self.content).modifier(stat);
         let talents = actor.talent_mods(&self.content);
         modifier
             .saturating_add(talents.disease_checks)
+            .saturating_add(actor.mods(&self.content).get(Effect::DiseaseCheck))
             .saturating_add(talents.check(stat))
             .saturating_add(race.map_or(0, |r| r.disease_check))
     }

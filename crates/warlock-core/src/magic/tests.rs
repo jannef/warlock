@@ -76,6 +76,12 @@ fn the_builtin_affixes_cover_every_kind_of_item() {
     }
     for o in &bases {
         let kind = o.kind.unwrap();
+        // The pick-axe is a tool before any shipped affix rolls on tools: Delving and
+        // Featherweight's tool base come with the shipped system affixes (#635). Until then loot
+        // never draws it as magic (`loot::can_be_magic`).
+        if kind == ItemKind::Tool {
+            continue;
+        }
         for k in [AffixKind::Prefix, AffixKind::Suffix] {
             let any = (affixes.all().iter())
                 .any(|a| a.kind == k && a.tiers_at(1) > 0 && may_roll(a, kind, o));

@@ -8,8 +8,8 @@
 //!   (`unlock` + `open_chest`); without one, "The coffer is locked." and no time passes. Pick
 //!   lock (`world/lockpick.rs`) and Knock (`world/knock.rs`) open the lock without a key.
 //! - **Kicking** a shut chest (`kick:DIR`, priced as a door kick, banging as one): one gameplay
-//!   draw, `1d(sturdiness) ≤ Strength` + athletics + Lockbreaker's `door_kick`, against its
-//!   band's sturdiness. It holds ("You kick the coffer. It holds.") or bursts apart: smashed,
+//!   draw, `1d(sturdiness) ≤ Strength` + athletics + Lockbreaker's `door_kick` + Hobnailed's
+//!   (`World::kick_force`), against its band's sturdiness. It holds ("You kick the coffer. It holds.") or bursts apart: smashed,
 //!   each stack inside destroyed with `[smash] destroyed` percent (Deft breaker's cut), coins and
 //!   loose gems spared, the rest spilled on its cell.
 //! - **A blast** (`World::blast`) reaching a shut chest whose band's hardness is below it blows
@@ -32,8 +32,7 @@ use crate::door::kick_breaks;
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::object::{Stack, add_to_pile, phrase};
-use crate::skills::{Effect, Use};
-use crate::stats::Stat;
+use crate::skills::Use;
 
 /// The sturdiness of a chest without a band (content without `data/chests.toml`).
 const STURDINESS: u8 = 20;
@@ -144,13 +143,8 @@ impl World {
         let sturdiness = (level.chests.get(&p))
             .and_then(|c| self.content.chests().band_of(c.level))
             .map_or(STURDINESS, |b| b.sturdiness);
-        let me = self.state.player();
-        let strength = me.effective_stats(&self.content).score(Stat::Strength);
-        let athletics = me.skill_effect(&self.content, Effect::Kick);
-        // Mighty kick, Breaker, and Lockbreaker (spec §8 "Talents"): as if stronger.
-        let mighty = me.talent_mods(&self.content).door_kick;
-        let force =
-            u8::try_from((i32::from(strength) + athletics + mighty).max(0)).unwrap_or(u8::MAX);
+        // As a door's kick ([`World::kick_force`]).
+        let force = self.kick_force();
         let broken = kick_breaks(force, sturdiness, &mut self.state.rng);
         if self.trains(Use::Kick) {
             self.train(Use::Kick);

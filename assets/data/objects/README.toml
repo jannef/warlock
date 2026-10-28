@@ -141,7 +141,8 @@
 # Base items (spec §8 "Magic items"; affixes in affixes.toml): what may be found magic or rare,
 # and lies about as loot, says what kind of item it is:
 #   kind       weapon, launcher (missile weapons), ammo, body (body armour), helmet, cloak,
-#              gloves, boots, shield, ring, or amulet: the affixes it may roll
+#              gloves, boots, shield, ring, amulet, or tool (a digging tool): the affixes it
+#              may roll
 #   level      the lowest item level (dungeon depth) loot holds it at; default 1
 #   frequency  how often loot holds it, relative to the rest; default 100, 0 never
 # Things without a kind are never magic, and never loot but for scrolls (below).
