@@ -317,6 +317,15 @@ const CASES: &[Case] = &[
         screen: Some("skills"),
         ..BASE
     },
+    // Knowledge chosen (#667): its description says in words what it does against creatures.
+    Case {
+        name: "skills-screen-knowledge",
+        character: Some("human,female,wizard"),
+        run: true,
+        screen: Some("skills"),
+        keys: Some("Down Down"),
+        ..BASE
+    },
     // A wizard's (#668): Concentration first, its description saying what it gives in words.
     Case {
         name: "skills-screen-wizard",

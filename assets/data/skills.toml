@@ -208,8 +208,17 @@ kind = "action"
 [[skill]]
 id = "knowledge"
 name = "Knowledge"
-description = "Lore of history, peoples, places, and the things that live there."
+description = "Lore of history, peoples, places, and the things that live there. Knowing your enemy helps you resist its powers."
 kind = "action"
+# Know your enemy (#667; the use and the effect are documented here, not in the header, while
+# other skills' work is in flight): marked by "discover" (discovery experience gained: a first
+# kill of a kind, an arrival that pays) and by "resist" (a check rolled to resist a creature's
+# ability: a drain, a disease its attack carries, struggling free of its hold; whatever comes of
+# it). Effect "resist": points added to that check, read at how far the value stands ABOVE THE
+# CREATURE'S LEVEL (not at the value): nothing at or below it, +1 at 5 above, +4 at 40 above and
+# past (at most 6). The player's only: creatures resisting each other get nothing.
+mark = [{ on = "discover", chance = 100 }, { on = "resist", chance = 25 }]
+benefit = [{ effect = "resist", curve = [[0, 0], [5, 1], [40, 4]] }]
 
 [[skill]]
 id = "listen"

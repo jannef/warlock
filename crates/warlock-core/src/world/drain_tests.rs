@@ -216,7 +216,7 @@ fn no_drain_goes_below_the_floor_nor_below_the_stat_damage() {
         difficulty: 40,
     };
     for _ in 0..20 {
-        w.drain(player, drain, &mut Vec::new());
+        w.drain(player, drain, None, &mut Vec::new());
     }
     let me = w.state.player();
     assert_eq!(me.stats.score(Stat::Strength), DRAIN_FLOOR);
@@ -226,7 +226,7 @@ fn no_drain_goes_below_the_floor_nor_below_the_stat_damage() {
     let mut tries = 0;
     while events.is_empty() || matches!(events[0], Event::Drained { stat: Some(_), .. }) {
         events.clear();
-        w.drain(player, drain, &mut events);
+        w.drain(player, drain, None, &mut events);
         tries += 1;
         assert!(tries < 50);
     }
@@ -239,7 +239,7 @@ fn no_drain_goes_below_the_floor_nor_below_the_stat_damage() {
         ..drain
     };
     for _ in 0..20 {
-        w.drain(player, dexterity, &mut Vec::new());
+        w.drain(player, dexterity, None, &mut Vec::new());
     }
     assert_eq!(w.state.player().stats.score(Stat::Dexterity), 7);
     assert!(World::from_state(w.content().clone(), w.state().clone()).is_ok());
@@ -258,7 +258,7 @@ fn a_toughness_drain_lowers_the_most_hit_points_and_never_kills() {
         difficulty: 40,
     };
     for _ in 0..10 {
-        w.drain(player, drain, &mut Vec::new());
+        w.drain(player, drain, None, &mut Vec::new());
     }
     let me = w.state.player();
     assert_eq!(me.stats.score(Stat::Toughness), DRAIN_FLOOR);
@@ -336,7 +336,7 @@ fn talents_raise_the_check_against_a_drain() {
             let mut expected = w.state.rng.clone();
             let resisted = check(&mut expected, modifier, drain.difficulty);
             let mut events = Vec::new();
-            w.drain(player, drain, &mut events);
+            w.drain(player, drain, None, &mut events);
             let kept = w.state.player().stats.score(Stat::Strength) == 10;
             assert_eq!(kept, resisted, "seed {seed} {talents:?}");
             held += usize::from(resisted);

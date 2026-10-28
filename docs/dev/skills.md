@@ -64,7 +64,16 @@ is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`
 `World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
 `dodge`, besides `fight.rs::resolve`). Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
 `World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
-use reported by `World::spend_mana`. Metalcraft's `temper` benefit is read in
+use reported by `World::spend_mana`. Knowledge's `resist` (#667) is read
+in `world/knowledge.rs` (`World::resisting`, `resist_bonus`) through `Actor::skill_effect_above`
+(`Skills::effect_above`: each benefit read at the value less the creature's level, nothing at or
+below it), called for the modifier of the player's check against a creature's drain
+(`World::drain`, which takes the drainer), exposure to a disease its attack carries
+(`World::expose` with a `by`), and a struggle against its hold (`World::struggle`, the effect's
+`by`); the same call marks `Use::Resist` (training stream only), and `World::discovered` marks
+`Use::Discover` beside the first-kill and arrival XP (`world/experience.rs`). The player only, and
+only against a creature: no bonus, no draw otherwise. Tests `world/knowledge_tests.rs`.
+Metalcraft's `temper` benefit is read in
 `world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
 anyone. A new

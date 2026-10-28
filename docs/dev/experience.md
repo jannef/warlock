@@ -29,7 +29,8 @@ discovered`, left out of the JSON while empty); `discover_level` from `World::tr
 arrival made the level's state (the start level, the overworld, and local areas give none);
 `grant_xp`, level-up messages queued in `World::news` and said after the attack's own, or at
 the end of `perceive` for a creature that bled to death and for an arrival. Discovery draws from
-no random stream. Creatures carry `level` and `xp` in `creatures/`, on the guideline
+no gameplay stream (a Knowledge mark, `Use::Discover`, draws from the training stream:
+`World::discovered`, `world/knowledge.rs`). Creatures carry `level` and `xp` in `creatures/`, on the guideline
 (`content::experience` tests list the deliberate outliers, and the roster tests compare the base
 `xp`), and may carry `xp_percent`, a hand-set modifier with no formula (any whole number from 0
 up, default 100): `CreatureDef::kill_xp` applies it, and `earn_kill` starts both the level

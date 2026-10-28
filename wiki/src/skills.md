@@ -78,8 +78,16 @@ The passive skills help you more the higher they are:
   (see [Stealing](#stealing)).
 - **Heal** lets you bind your bleeding and tend your poisons and diseases at all, and the higher
   it is, the more often a try works (see [Treating yourself](#treating-yourself)).
+- **Knowledge** is knowing your enemy: it adds to your check against a creature's drain, a
+  disease its attack carries, or its hold when you struggle, but only against creatures whose
+  level your Knowledge stands above, and more the farther above (the table below; it never adds
+  much). It earns marks whenever you gain discovery experience (a first kill of a kind, a new
+  place that pays) and, now and then, whenever you roll to resist such a power, whatever comes
+  of it. A creature's level is in its [table](creatures.md).
 
 {{#include generated/skill-benefits.md}}
+
+{{#include generated/skill-resist.md}}
 
 ## Who trains what
 
