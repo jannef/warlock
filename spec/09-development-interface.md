@@ -117,7 +117,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   `weapon_skills` (the player's weapon skills and fighting styles in file order with their rank
   and how far their marks are toward the next, `Long blades 2 (40%)`; at rank 10 the rank alone;
   the styles they fight in now marked, `Duelist 1 (0%), in use`), `attacks` (the player's ready
-  attacks as the character screen shows them, §6: `Main hand long sword: +4 to hit, 1d8+2
+  attacks as the character screen shows them, §6: `Main hand long sword: +4 to hit, 1d9+2
   slashing`, `Missile short bow: +3 to hit, 1d6 piercing, range 10`), `talents` (the player's
   talents in the order taken, each for its choice with its rank of how many, `Hardy 2/3`,
   `Weapon focus (long blades)`; never what a rank gives), and `quests`

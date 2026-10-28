@@ -1279,7 +1279,7 @@ mod tests {
         // Every class is listed, in order, with its objects.
         let classes = text("item-classes.md");
         assert!(
-            classes.contains("| Melee weapons | Bastard swords, battle axes, "),
+            classes.contains("| Melee weapons | Battle axes, "),
             "{classes}"
         );
         assert!(

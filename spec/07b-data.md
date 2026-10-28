@@ -473,8 +473,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   weapon's `attack_cost`). The built-in base items, folding in the test
   objects (every weapon names its weapon skill `category`, which also names it in item
   descriptions: "Long blade, for the main hand"; rocks are `thrown`): daggers and stilettos (threat
-  19, quick, 900), short swords and scimitars (threat 19), long swords (1d8, threat 20), rapiers
-  (1d6, threat 19, 900), bastard swords (1d10), great swords (2d6, both hands, 1200), hand axes
+  19, quick, 900), short swords and scimitars (threat 19), long swords (1d9, threat 20), rapiers
+  (1d6, threat 19, 900), great swords (2d6, both hands, 1200), hand axes
   (thrown 4), battle axes, great axes (1d12 ×3, both hands, 1200), spears, javelins (thrown 8),
   tridents (parry 1), clubs, maces, morning stars (2d4), war hammers (×3), mauls (2d6 ×3, both
   hands, 1200), halberds and glaives (1d10, both hands, 1100), quarterstaves and ironwood staves;

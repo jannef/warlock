@@ -439,7 +439,7 @@ fn a_variant_is_named_and_drawn_by_its_material() {
         "Bronze long sword · bronze blade, leather grip · 2 kg"
     );
     assert!(
-        text.iter().any(|t| t.starts_with("Damage 1d8-1;")),
+        text.iter().any(|t| t.starts_with("Damage 1d9-1;")),
         "{text:#?}"
     );
     let text: Vec<String> = lines(&variant(&content, "chain_mail", "tin"), &content)

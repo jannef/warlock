@@ -3,4 +3,4 @@ source: crates/warlock/src/ui/look.rs
 expression: "said.join(\"\\n\")"
 ---
 An animated blade (hostile, unhurt), wielding an iron great sword, on stone floor.
-An animated blade (hostile, unhurt), wielding a wood staff, on stone floor.
+An animated blade (hostile, unhurt), wielding a steel javelin, on stone floor.

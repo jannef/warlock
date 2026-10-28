@@ -374,9 +374,9 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
         [
             "Long sword · steel blade, leather grip · 1.8 kg",
             "Long blade, for the main hand",
-            "Damage 1d8; criticals on 20–24, ×2 damage",
+            "Damage 1d9; criticals on 20–24, ×2 damage",
             "Slashing or piercing damage",
-            "To hit +0, damage 1d8",
+            "To hit +0, damage 1d9",
         ]
     );
     let mut sword = item(
@@ -401,10 +401,10 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
             .any(|l| l.contains("Sharp") || l.contains("Celerity"))
     );
     // Its numbers are its base ones until it is identified, then its affixes count.
-    assert!(unknown.iter().any(|l| l == "To hit +0, damage 1d8"));
+    assert!(unknown.iter().any(|l| l == "To hit +0, damage 1d9"));
     sword.identify();
     let known = lines(&sword, &c);
-    assert!(known.iter().any(|l| l.text == "To hit +0, damage 1d8+2"));
+    assert!(known.iter().any(|l| l.text == "To hit +0, damage 1d9+2"));
     let affixes: Vec<(LineKind, &str)> = (known.iter())
         .filter(|l| matches!(l.kind, LineKind::Affix(_)))
         .map(|l| (l.kind, l.text.as_str()))

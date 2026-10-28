@@ -16,9 +16,9 @@ expression: "render(case, content.clone())"
                   │ Pommel: small emerald, fine cut                              │
                   │                                                              │
                   │ Long blade, for the main hand                                │
-                  │ Damage 1d8; criticals on 20–24, ×2 damage                    │
+                  │ Damage 1d9; criticals on 20–24, ×2 damage                    │
                   │ Slashing or piercing damage                                  │
-                  │ To hit +0, damage 1d8+2                                      │
+                  │ To hit +0, damage 1d9+2                                      │
                   │                                                              │
                   │ Item level 3                                                 │
                   │ Prefix  Sharp: +2 damage                                     │

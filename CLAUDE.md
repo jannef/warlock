@@ -210,7 +210,7 @@ know they have, then what they resist in words, `Resistant to cold`, `Vulnerable
 `Immune to poison`), `weapon_skills` (the player's
 ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
 marked `Duelist 1 (0%), in use`), `attacks` (the player's ready attacks as the character
-screen shows them: `Main hand long sword: +4 to hit, 1d8+2 slashing`, `Off hand dagger: ...`,
+screen shows them: `Main hand long sword: +4 to hit, 1d9+2 slashing`, `Off hand dagger: ...`,
 `Missile short bow: +3 to hit, 1d6 piercing, range 10`; unidentified magic left out), `talents` (the player's talents in the order taken, `Hardy
 2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Well dressed (class)`), `spells` (the spells the player knows with tier and cost, then the
 scrolls they could study with the chance in words: `study c, a scroll of frost: Frost, a

@@ -120,7 +120,7 @@ throw, or eat, what to put on in an equipment slot) work the same way:
 
 - stacks are grouped by [item class](#item-classes), each class under a heading (headings have
   no letter);
-- weapons and armour say what they give after their name, "a long sword (+0 hit, 1d8)", "a
+- weapons and armour say what they give after their name, "a long sword (+0 hit, 1d9)", "a
   leather jerkin (Dv +1, Pv 1)" (see [Equipment](equipment.md#numbers));
 - the list shows a page at a time, as many rows as fit your window and at most 26 stacks, and
   the frame says which page you are on (`Page 2/3`);
