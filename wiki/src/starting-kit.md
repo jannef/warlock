@@ -8,7 +8,12 @@ in hand, armour on, missiles quivered, a dwarf's pick-axe ready in the Tool slot
 
 Kits are not fair, and are not meant to be. The aristocrat sets out with a fine rapier, an
 heirloom ring, furs, a jewel, and a heavy purse; the merchant with goods to sell and gems to
-trade; the commoner with a stick and a turnip.
+trade; the commoner with a stick, two turnips, and a heel of bread. Warriors and paladins set out
+in hardened leather and an iron helm (a paladin with gauntlets besides); every elf carries a bow
+of hardwood and arrows (a long war bow for elves, a short bow for half-elves) and every drow a
+crossbow with steel-headed bolts; a halfling has a sling and stones; and a dwarf goes in good
+steel: a steel pick-axe, steel gauntlets, and steel-shod boots. Elves, half-elves, drow, and
+halflings also start trained in the weapon their race gives them (see [Races](races.md)).
 
 ## What each class starts with
 
@@ -22,7 +27,9 @@ trade; the commoner with a stick and a turnip.
 
 - **Wielded and worn**: what the kit wields or wears goes into the first free slot it fits, as if
   you had put it on yourself. A second light weapon goes to your off hand (see
-  [Fighting styles](fighting-styles.md)); what finds no free slot stays in your pack.
+  [Fighting styles](fighting-styles.md)); what finds no free slot stays in your pack. Your
+  class's things come first, so an elven ranger readies the ranger's short bow and carries the
+  elven long bow, and a dwarven paladin wears the order's gauntlets and carries the steel pair.
 - **It follows your training**: some things come only with a [weapon skill](weapon-skills.md) or
   [fighting style](fighting-styles.md) your class trained you in. A barbarian who learned axes
   carries a great axe, one who learned great blades a great sword; a thief of Twin Blades
@@ -33,9 +40,10 @@ trade; the commoner with a stick and a turnip.
   or rare"). Like anything you find, it is unidentified until you learn what it does (see
   [Magic items](magic-items.md)); you can tell its rarity at once.
 - **Food** is fresh when you set out (see [Food](food.md)).
-- **Weight**: nobody starts strained under their kit, and only wealth weighs anybody down: a weak
-  aristocrat may stagger under that purse, and a small merchant under their wares. See
-  [Burden](burden.md).
+- **Weight**: nobody starts strained under their kit, and an ordinary character starts
+  unburdened, but for wealth and armour: a weak aristocrat may stagger under that purse, a small
+  merchant under their wares, and a small warrior or paladin under their armour (drop what you
+  can spare). The weakest of any race or class may start burdened. See [Burden](burden.md).
 - **Your birth sign** gives nothing yet.
 
 ## Scenarios
