@@ -76,7 +76,11 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     content ids change the fingerprint.
 /// 32: 0.7.0: creature ids, factions, terrain, statuses, objects and talents changed widely,
 ///     so the content fingerprints differ; saves of 0.6.0 do not load.
-pub const FORMAT_VERSION: u32 = 32;
+/// 33: 0.8.0: chests, mimics, treasure rooms, combat progression (stamina, weapon abilities,
+///     potions), two shields, the affix ladder, new and split skills (Detect traps, Negotiation),
+///     optional class skills, the lantern as an item; ids and content fingerprints changed, so
+///     saves of 0.7.0 do not load.
+pub const FORMAT_VERSION: u32 = 33;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 
