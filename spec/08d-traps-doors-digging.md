@@ -356,6 +356,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       100, +12 at 200), plus the race's `search` (elves 2);
     - **passive**, noticing in passing: the Willpower modifier, plus the Spot skill's benefit
       (+8 at 100, +12 at 200), plus the race's `search`, less `passive_penalty` (4).
+    For a **hidden trap** (on the floor, a door, or a chest) the **Detect traps** skill's benefit
+    (+8 at 100, +12 at 200) takes the place of Search's and of Spot's in both checks (#663); a
+    secret door, a breach, and a disguised mimic are Search's and Spot's.
     The player never sees a difficulty, a modifier, or a roll: an average searcher (Intelligence
     10, untrained) finds a secret door of 14 with 46 % of their turns of searching.
   - **Searching** (`s`: `Action::Search(1)`, replay text `search`; `S`, searching for a while:
@@ -376,8 +379,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **elves** everything (the race's `passive_search = "all"`), **dwarves** what is on stone
     (`"stone"`: the cell's terrain is `stone`, stone walls and floors, most of a dungeon, but not
     timber, earth, or trees), **kobolds** hidden traps and never a secret door (`"traps"`),
-    drow like elves and duergar like dwarves, and anyone **trained in Spot** everything (a
-    thief, a ranger); everyone else nothing. Each thing noticed may earn Spot a mark (50 %).
+    drow like elves and duergar like dwarves, anyone **trained in Spot** everything but traps (a
+    thief, a ranger), and anyone **trained in Detect traps** hidden traps (a thief, a kobold);
+    everyone else nothing. Each thing other than a trap noticed may earn Spot a mark (50 %);
+    each trap found, searching or in passing, Detect traps (50 %).
   - **No limit on trying again** (the owner's rule): every check is rolled afresh, after every
     turn, with no memory of failed ones and no cooldown; time is the only price. Checks draw
     from the gameplay stream only when a hidden feature is in reach (two draws each), so a turn

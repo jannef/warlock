@@ -61,10 +61,13 @@ The passive skills help you more the higher they are:
   your steps in a local area or a dungeon), and lets you forage in the wild, finding food more
   often the higher it is (see [Foraging](#foraging)).
 - **Appraise** gets you better prices in [shops](shops.md): you pay less and are offered more.
-- **Search** helps you find secret doors and hidden traps when you search (`s`, `S`), and a
-  master's search reaches a cell farther (see [Searching](searching.md)).
-- **Spot** lets you notice hidden things in passing at all, and the higher it is, the more you
-  notice.
+- **Search** helps you find secret doors and other hidden things when you search (`s`, `S`),
+  and a master's search reaches a cell farther (see [Searching](searching.md)).
+- **Spot** lets you notice hidden things in passing at all, traps aside, and the higher it is,
+  the more you notice.
+- **Detect traps** is for hidden traps what Search and Spot are for the rest: it helps you find
+  them when you search, lets you notice them in passing at all, and the higher it is, the more
+  of them you find. Thieves start trained in it, and kobolds.
 - **Open lock** lets you pick locks at all (the Pick lock ability), and the higher it is, the
   more often a try works (see [Doors](doors.md#picking-locks)).
 - **Steal** lets you steal at all, and the higher it is, the likelier your hand goes unnoticed

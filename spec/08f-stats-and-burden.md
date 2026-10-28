@@ -51,7 +51,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     paid or a sale), quest (completed), swapped (a creature making way); any stat drank and
     elixir (a potion or an elixir drunk, sure marks as many as it gives; defined, reached once
     potions land). The uses skills share (burdened, kick, dodge, sneak, spot) are one report,
-    `World::train`; the rest `World::train_stat`.
+    `World::train`; the rest `World::train_stat` (a trap noticed in passing reports `spot` there,
+    beside Detect traps' `find_trap`).
     **At every level gained** (`World::level_up`, level by level), each stat in display order
     gets one check on the **levels** stream (six draws a level, always; none without the
     data): it rises by 1 with chance `marks / (marks + need)`, `need = need_base (20) +

@@ -388,7 +388,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
     closed door (`kick`; Athletics is also marked by `burdened` and `travel`, 5 % each, #548, so
     its speed grows with plain play), a turn spent searching, whatever it finds (`search`), noticing
-    something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
+    something hidden in passing, not a trap (`spot`; §8 "Searching"), finding a hidden trap,
+    searching or in passing (`find_trap`, Detect traps' use), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
     "Treating oneself" below), a forage that ran its time, whatever it found (`forage`;
     "Foraging" below). Only the player trains for now; creatures keep their type's
@@ -694,9 +695,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     least 1); `door_kick` and `kick_noise_percent` (Lockbreaker: a door or chest kick as if 6
     stronger, half as loud); `smash_destroy_percent` (Deft breaker, Might, Strength 12: what a
     chest kicked open holds breaks half as often, 25 % a stack; a blown-up chest is no kick) and
-    `chest_wise` (Chest-wise, Delver, Intelligence 11 or Search 15: look mode tells a locked shut
-    chest in sight from an unlocked one, and the trap of a shut chest in sight is known at once,
-    no check), the `chests` system's (§8 "Chests"), with Lockbreaker
+    `chest_wise` (Chest-wise, Delver, Intelligence 11 or Detect traps 15: look mode tells a
+    locked shut chest in sight from an unlocked one, and the trap of a shut chest in sight is
+    known at once, no check), the `chests` system's (§8 "Chests"), with Lockbreaker
     and the wizard's Knock; `dig_percent` (Tunneler: half again the work a turn). A prerequisite may be `either`
     of several (Treasure hunter: "Intelligence 12 or Appraise 20"). The Scholar and Delver trees
     and the searching, digging, shops, magic items, scrolls, skills, and experience systems are
