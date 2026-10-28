@@ -125,7 +125,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     focus, ki, openings, inspiration: of no use to one without the pool), of Sustenance
     (hunger), of Wariness (traps), of Health (disease checks), of the Alchemist (potions kept)),
     each with the kinds of item it rolls on and its tiers by item level (at most twelve,
-    `MAX_TIERS`; the systems' affixes on a ladder, a tier every item level or two).
+    `MAX_TIERS`; every affix on a ladder to item level 12, a tier every item level or two where
+    its value can step, #637). A save's affix whose tier no longer holds its value (a ladder
+    regraded since) is re-tiered as it loads, to the first tier that holds the value or the
+    nearest, the value kept: no save is refused for it.
   - **Categories** (#621, after Path of Exile's mod groups): every affix
     names a `category`, and an item never has two affixes of one category. Every affix of one
     effect (of one skill, for skill affixes; of one damage type, for elemental and resistance

@@ -27,8 +27,7 @@ pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, ra
     let hp = mods.hp_at(level) + actor.max_hp(content) - before;
     actor.hp_base += mods.hp_at(level);
     actor.hp += hp;
-    actor.mana_base += mods.mana_at(level);
-    actor.mana += mods.mana_at(level);
+    actor.grow_mana_base(content, mods.mana_at(level));
     focus::hold(content, actor, &mods.grants, level);
 }
 

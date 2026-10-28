@@ -101,6 +101,7 @@ mod chest;
 mod class;
 mod class_ability;
 mod collapse;
+mod concentration;
 mod consecrate;
 mod court;
 mod creation;
@@ -163,6 +164,7 @@ mod read;
 mod reflect;
 mod resource;
 mod rest;
+mod retier;
 mod reveal;
 mod rod;
 mod rooms;
@@ -490,6 +492,9 @@ pub struct World {
     /// Notes the current action earned (not saved): said after its own messages and the news,
     /// as notes that do not stop a rest (an alignment band crossed, `alignment.rs`).
     notes: Vec<String>,
+    /// What loading re-tiered (not saved): a line per affix of a saved item moved to the tier of
+    /// a regraded ladder that holds its value (`retier.rs`), for the game's log.
+    retiered: Vec<String>,
     /// While the player strikes a free blow in another's turn (not saved): what is said
     /// meanwhile, to join the news (`free_blow.rs`).
     held: Option<Vec<String>>,
@@ -828,6 +833,7 @@ impl World {
     /// (`world/stars.rs`), as the content now has them.
     pub fn from_state(content: Arc<Content>, mut state: WorldState) -> Result<Self, WorldError> {
         state.check()?;
+        let retiered = retier::retier(&mut state, &content);
         let Some(scenario) = content.scenario(&state.scenario) else {
             return Err(WorldError::UnknownScenario(state.scenario.clone()));
         };
@@ -920,6 +926,7 @@ impl World {
         }
         let mut world = Self::assemble(content, state);
         world.grant_class(world.player_level(), false);
+        world.retiered = retiered;
         Ok(world)
     }
 
@@ -942,6 +949,7 @@ impl World {
             fallen: Vec::new(),
             news: Vec::new(),
             notes: Vec::new(),
+            retiered: Vec::new(),
             held: None,
             sprung: 0,
             spawned: 0,
@@ -956,6 +964,12 @@ impl World {
             reflection: Default::default(),
             technique: weapon_active::Technique::default(),
         }
+    }
+
+    /// What loading re-tiered: a line per affix of a saved item that a regraded ladder moved
+    /// (`retier.rs`), for the log; empty for a world made new.
+    pub fn retiered(&self) -> &[String] {
+        &self.retiered
     }
 
     pub fn content(&self) -> &Arc<Content> {
@@ -1409,6 +1423,8 @@ mod class_tests;
 #[cfg(test)]
 mod collapse_tests;
 #[cfg(test)]
+mod concentration_tests;
+#[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
 mod court_tests;
@@ -1556,6 +1572,8 @@ mod read_tests;
 mod resource_talent_tests;
 #[cfg(test)]
 mod resource_tests;
+#[cfg(test)]
+mod retier_tests;
 #[cfg(test)]
 mod reveal_tests;
 #[cfg(test)]

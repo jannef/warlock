@@ -62,6 +62,8 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
             | Effect::Steal
             | Effect::Heal
             | Effect::Forage
+            | Effect::ManaRegen
+            | Effect::MaxMana
     )
 }
 
@@ -92,6 +94,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Heal => "treating your bleeding, poison, and diseases",
         Effect::Pick => "picking locks",
         Effect::Temper => "tempering at a forge's anvil",
+        Effect::ManaRegen => "mana back faster",
+        Effect::MaxMana => "a slightly larger mana pool (at most a fifth more)",
         Effect::Speed => "quicker in everything",
     }
 }
@@ -125,6 +129,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Heal => "treating",
             Effect::Pick => "picking locks",
             Effect::Temper => "tempering",
+            Effect::ManaRegen => "mana back",
+            Effect::MaxMana => "mana pool",
             Effect::Speed => "speed",
         };
         let _ = write!(out, " {name}: {what} |");
@@ -153,7 +159,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Bargain => format!("{n}% better"),
                 Effect::Forage => format!("+{n}%"),
                 Effect::Identify => format!("{n}%"),
-                Effect::Speed => format!("+{n}%"),
+                Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
+                Effect::MaxMana => format!("+{n} mana"),
                 Effect::Hearing => n.to_string(),
                 Effect::Burden => {
                     let slowed = |b: Burden| factor(b.slow_eased(100, n));

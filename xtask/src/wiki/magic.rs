@@ -269,6 +269,120 @@ fn tier_value(effect: ItemEffect, tier: &warlock_core::content::Tier, content: &
     }
 }
 
+/// What systems have affixes (docs/design/affixes-systems.md §11): every affix with the system
+/// it works in, what it changes there, and the talents read at the same place, whose terms its
+/// value joins. By system, then by name.
+pub(super) fn systems(content: &Content) -> String {
+    let mut rows: Vec<(&str, &AffixDef)> = (content.affixes().all().iter())
+        .map(|a| (system_of(content, a), a))
+        .collect();
+    rows.sort_by_cached_key(|(system, a)| (*system, a.name.to_lowercase()));
+    let mut out = String::from(
+        "| Affix | Kind | System | What it changes | Talents beside it |\n|---|---|---|---|---|\n",
+    );
+    let book = content.talents();
+    for (system, a) in rows {
+        let talents: Vec<&str> = (talents_beside(content, a).iter())
+            .map(|id| {
+                let id = (book.id(id)).unwrap_or_else(|| panic!("no talent `{id}`"));
+                book.get(id).name.as_str()
+            })
+            .collect();
+        let talents = if talents.is_empty() {
+            "-".to_string()
+        } else {
+            talents.join(", ")
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {system} | {} | {talents} |",
+            a.name,
+            a.kind.name().to_lowercase(),
+            effect_text(content, a),
+        );
+    }
+    out
+}
+
+/// The system an affix works in, as the wiki's pages name it.
+fn system_of(content: &Content, a: &AffixDef) -> &'static str {
+    use ItemEffect as E;
+    if a.resource
+        .is_some_and(|r| content.resource(r).id != "stamina")
+    {
+        return "Resources";
+    }
+    match a.effect {
+        E::ToHit | E::Damage | E::ExtraDamage | E::Threat | E::Crit | E::AttackSpeed => "Combat",
+        E::Range | E::Draw => "Ranged combat",
+        E::Elemental | E::Resistance => "Damage types",
+        E::Parry | E::Armour | E::Protection | E::Shield | E::MaxDex => "Armour and Defence",
+        E::Dodge | E::Deflection | E::Natural => "Armour and Defence",
+        E::MaxHp | E::Regeneration => "Hit points",
+        E::MaxMana | E::ManaRegeneration | E::ManaCost | E::ManaOnKill => "Mana",
+        E::CasterLevel | E::SpellEase | E::SpellToHit | E::SpellThreat | E::SpellLift => "Spells",
+        E::SpellReach | E::SpellDuration | E::WandLevel => "Spells",
+        E::ResourceMax | E::ResourceRate | E::ActiveStamina | E::ResourceOnKill => "Stamina",
+        E::Stat(_) => "Stats",
+        E::MoveSpeed => "Speed",
+        E::Weight | E::Carry => "Burden",
+        E::Durability => "Objects",
+        E::Stealth => "Stealth",
+        E::Light => "Light",
+        E::Skill => "Skills",
+        E::DoorKick => "Doors",
+        E::DigPercent => "Digging",
+        E::Hunger => "Hunger",
+        E::TrapDamage => "Traps",
+        E::DiseaseCheck => "Diseases",
+        E::PotionKept => "Potions",
+    }
+}
+
+/// The talents (ids) whose terms an affix's value joins, read at the same place.
+fn talents_beside(content: &Content, a: &AffixDef) -> &'static [&'static str] {
+    use ItemEffect as E;
+    let pool = a.resource.map(|r| content.resource(r).id.as_str());
+    match (a.effect, pool) {
+        (E::ToHit, _) => &["weapon_focus"],
+        (E::Damage, _) => &["whetstone"],
+        (E::Threat, _) => &["improved_critical", "masterwork"],
+        (E::Crit, _) => &["brutal_critical"],
+        (E::Range, _) => &["far_shot"],
+        (E::Resistance, _) => &["elemental_ward"],
+        (E::Protection, _) => &["armour_drill", "heavy_armour_mastery"],
+        (E::Shield, _) => &["shield_expert"],
+        (E::MaxDex, _) => &["armour_training"],
+        (E::Dodge, _) => &["dodge"],
+        (E::Deflection, _) => &["deflection"],
+        (E::Natural, _) => &["thick_skin"],
+        (E::MaxHp, _) => &["hardy"],
+        (E::Regeneration, _) => &["healthy"],
+        (E::MaxMana, _) => &["deep_well"],
+        (E::ManaRegeneration, _) => &["clear_mind"],
+        (E::ManaCost, _) => &["frugal_caster"],
+        (E::CasterLevel, _) => &["arcane_training", "attuned"],
+        (E::SpellLift, _) => &["keen_mind"],
+        (E::SpellReach, _) => &["school_focus"],
+        (E::WandLevel, _) => &["wand_mastery"],
+        (E::ResourceMax, Some("stamina")) => &["deep_lungs", "bellows"],
+        (E::ResourceMax, Some("ki")) => &["inner_calm"],
+        (E::ResourceRate, Some("stamina")) => &["steady_breathing"],
+        (E::ActiveStamina, _) => &["drillmaster"],
+        (E::ResourceOnKill, Some("stamina")) => &["second_breath"],
+        (E::MoveSpeed, _) => &["fleet", "fast_movement"],
+        (E::Carry, _) => &["pack_mule"],
+        (E::Stealth, _) => &["silent_feet"],
+        (E::DoorKick, _) => &["lockbreaker"],
+        (E::DigPercent, _) => &["tunneler"],
+        (E::Hunger, _) => &["lean"],
+        (E::TrapDamage, _) => &["trap_sense"],
+        (E::DiseaseCheck, _) => &["strong_constitution"],
+        (E::PotionKept, _) => &["thrifty_drinker"],
+        _ => &[],
+    }
+}
+
 /// The words rare items are named with: the first words, and the second words by kind.
 pub(super) fn rare_names(content: &Content) -> String {
     let affixes = content.affixes();

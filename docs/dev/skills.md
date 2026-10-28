@@ -62,7 +62,9 @@ is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
 `disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `World::pay` and
 `World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
-`dodge`, besides `fight.rs::resolve`). Metalcraft's `temper` benefit is read in
+`dodge`, besides `fight.rs::resolve`). Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
+`World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
+use reported by `World::spend_mana`. Metalcraft's `temper` benefit is read in
 `world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
 anyone. A new

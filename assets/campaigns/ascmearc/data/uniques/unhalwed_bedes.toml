@@ -4,7 +4,7 @@
 id = "unhalwed_bedes"
 name = "The Unhalwed Bedes"
 object = "bone_amulet"
-affixes = ["mystic:3", "of_clarity:3", "of_the_owl:2", "of_shadows:2"]
+affixes = ["mystic:7", "of_clarity:12", "of_the_owl:2", "of_shadows:7"]
 level = 12
 power = { vision = "darkvision", phrase = "Its wearer sees in the dark." }
 lore = "Each bead is a knucklebone, and none of them a saint's."
