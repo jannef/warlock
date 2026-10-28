@@ -1,7 +1,7 @@
 //! Talents (spec §8 "Talents"): every tree with its talents, their prerequisites and their rules
 //! in full (the game says them in words), and the coverage matrix by system.
 
-use super::text::{Term, anchored, signed};
+use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Need, OverTime, Role, SignActive, SpellData, TalentDef, TalentEffect, TreeId,
@@ -74,7 +74,12 @@ pub(super) fn heirlooms(content: &Content) -> String {
             for race in races {
                 match weapons.get(&race.id) {
                     Some(weapon) => {
-                        let _ = writeln!(out, "| {} | {} |", race.name, object(weapon));
+                        let _ = writeln!(
+                            out,
+                            "| {} | {} |",
+                            link(Term::Race, &race.id, &race.name),
+                            object(weapon)
+                        );
                     }
                     None => others = true,
                 }
@@ -575,18 +580,23 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             at_least,
             at_most,
         } => format!(
-            "at creation, gold coins: {percent} % of those you start with more, at least \
+            "at creation, [gold coins](shops.md#money): {percent} % of those you start with more, at least \
              {at_least} and at most {at_most}"
         ),
         TalentEffect::StartingGems { min, max, level } => {
-            format!("at creation, {min} to {max} loose gems, as found at item level {level}")
+            format!(
+                "at creation, {min} to {max} loose [gems](gems.md), as found at \
+                 [item level](magic-items.md#finding-them) {level}"
+            )
         }
         TalentEffect::Heirloom {
             min, max, level, ..
         } => format!(
             "at creation, your race's heirloom weapon (Heirlooms, below) with {min} to {max} \
-             affixes rolled at item level {level} (two: magic; more: rare), identified, readied \
-             in its own slot if that is free, else carried"
+             [affixes](magic-items.md#prefixes) rolled at [item level](magic-items.md#finding-them) \
+             {level} (two: [magic](magic-items.md); more: [rare](magic-items.md#rarity)), \
+             [identified](magic-items.md#unidentified-items), readied in its own \
+             [slot](equipment.md#what-fits-where) if that is free, else carried"
         ),
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \

@@ -76,18 +76,18 @@ asks for.
 ## Heritage: only at character creation
 
 The **Heritage** tree holds what your family gave you. Its talents are offered **only at
-character creation** (the Talents step, or a random pick there), never at a level: the Talents
+[character creation](character.md)** (the Talents step, or a random pick there), never at a level: the Talents
 page shows them with "to be a new character", which no later level meets. What they give comes
 at once, on top of your [starting kit](starting-kit.md).
 
-- **Family wealth**: three times the gold coins you start with more (your class's purse, and any
+- **[Family wealth](talents.md#talent-family-wealth)**: three times the [gold coins](shops.md#money) you start with more (your [class](classes.md)'s purse, and any
   a start of the world adds), at least 60 and at most 150 more, and two or three loose
-  [gems](gems.md), as found at item level 2. Coins weigh 10 g each, so the weakest of the small
-  peoples (halflings, gnomes, goblins, kobolds, ratfolk) may set out Burdened.
-- **Father's sword** (needs Family wealth): your people's heirloom weapon, not always a sword,
-  but always a weapon. It is [magic](magic-items.md) with 2 to 4 affixes rolled at item level 6
-  (two make it magic, more make it rare and give it a name), and you know what it does from the
-  start. It is readied in its own slot (the main hand, the missile weapon slot for a sling or a
+  [gems](gems.md), as found at [item level](magic-items.md#finding-them) 2. Coins weigh 10 g each, so the weakest of the small
+  peoples ([halflings](races.md#race-halfling), [gnomes](races.md#race-gnome), [goblins](races.md#race-goblin), [kobolds](races.md#race-kobold), [ratfolk](races.md#race-ratfolk)) may set out [Burdened](burden.md#burden-1).
+- **[Father's sword](talents.md#talent-fathers-sword)** (needs Family wealth): your people's heirloom weapon, not always a sword,
+  but always a weapon. It is [magic](magic-items.md) with 2 to 4 [affixes](magic-items.md#prefixes) rolled at item level 6
+  (two make it magic, more make it [rare](magic-items.md#rarity) and give it a name), and you [know what it does](magic-items.md#unidentified-items) from the
+  start. It is readied in its own [slot](equipment.md#what-fits-where) (the main hand, the [missile weapon](ranged.md#getting-ready) slot for a sling or a
   bow) if your kit left that free; otherwise it waits in your pack beside the kit's own weapon.
 
 {{#include generated/talents-heirlooms.md}}
