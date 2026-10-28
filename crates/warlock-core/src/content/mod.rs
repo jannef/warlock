@@ -124,6 +124,7 @@ mod steal;
 mod summon;
 #[cfg(test)]
 mod summoner_roster_tests;
+mod surprise;
 mod tag;
 mod talent;
 mod terrain;
@@ -267,6 +268,7 @@ pub use status::{
 };
 pub use steal::StealRules;
 pub use summon::Summon;
+pub use surprise::SurpriseRules;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
@@ -600,6 +602,9 @@ pub struct Content {
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
     /// "Stealing"); none without the file.
     steal: Option<StealRules>,
+    /// The numbers of being caught unawares (`data/surprise.toml`, spec §8 "Surprise and sneak
+    /// attacks"); none without the file, when nobody is surprised.
+    surprise: Option<SurpriseRules>,
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
@@ -736,6 +741,7 @@ impl Content {
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
             steal: None,
+            surprise: None,
             forage: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
@@ -1008,6 +1014,10 @@ impl Content {
         let path = "data/steal.toml";
         if let Some(text) = files.get_optional(path) {
             content.steal = Some(StealRules::parse(path, text, &content.factions)?);
+        }
+        let path = "data/surprise.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.surprise = Some(SurpriseRules::parse(path, text, &content)?);
         }
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2852,6 +2862,12 @@ impl Content {
     /// without the file, when nobody steals.
     pub fn steal(&self) -> Option<&StealRules> {
         self.steal.as_ref()
+    }
+
+    /// The rules of surprise that live in data (spec §8 "Surprise and sneak attacks";
+    /// `data/surprise.toml`); `None` without the file, when nobody is surprised.
+    pub fn surprise(&self) -> Option<&SurpriseRules> {
+        self.surprise.as_ref()
     }
 
     /// What foraging in the wild gives (spec §8 "Foraging"; `data/forage.toml`); `None` without

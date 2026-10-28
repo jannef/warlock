@@ -61,6 +61,7 @@ impl World {
         let then = std::mem::replace(&mut self.perceived_at, now);
         let dazzled = self.perception.dazzled();
         *self.perception = Perception::compute(&self.state, &self.content, &mut self.lights);
+        self.mark_noticed();
         self.glare_news(dazzled);
         self.learn_traps(events);
         self.chest_wise_look();

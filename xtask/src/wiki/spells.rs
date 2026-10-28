@@ -2,6 +2,7 @@
 //! ceiling), the shapes' and resolutions' multipliers, the classes' casting percents, the spell
 //! list, the classes' guaranteed spells, the armour that makes casting dearer, and the wands.
 
+use super::text::{Term, anchored};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellDice, SpellPurpose, TIERS,
@@ -113,7 +114,7 @@ pub(super) fn list(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
-            spell.name,
+            anchored(Term::Spell, &spell.id, &spell.name),
             spell.tier,
             spell.school.id(),
             spell.shape.id(),

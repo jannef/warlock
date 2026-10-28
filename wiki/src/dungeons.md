@@ -8,7 +8,7 @@ dangerous as you do (a puppy cave of the old games), but no place does yet.
 
 ## Who lives there, and how many
 
-Each dungeon names the creatures that live in it. Every creature's level is its danger: on a
+Each dungeon names the [creatures](creatures.md) that live in it. Every creature's level is its danger: on a
 floor of danger 6, the creatures you meet are mostly of level 5 and 6, some a little weaker, a
 few weaker still, and now and then one from deeper down. Each time a creature is chosen, every
 kind that lives there gets a weight by how far its level is below the floor's danger, and the
@@ -19,16 +19,16 @@ choice goes by weight (kinds of the same weight are equally likely):
 Some kinds are rarer than others: the more dangerous and the more rewarding (casters,
 chieftains, the strongest of a place), the fewer. A kind's weight above is multiplied by its
 rarity's share, so a rare kind at the floor's danger is chosen a quarter as often as a common
-one of the same level. Creatures placed by hand (people, shopkeepers, a place's own guardians)
+one of the same level. Creatures placed by hand ([people, shopkeepers](npcs.md), a place's own guardians)
 are never chosen this way.
 
 {{#include generated/creature-rarities.md}}
 
 A dungeon is mostly its own folk, but now and then something wanders in from elsewhere: one
 draw in twenty (unless a place says otherwise) is a **stray**, chosen the same way but from the
-**generic list**: every kind of the land that is hostile to you, whether any dungeon is its home
+**generic list**: every kind of the land that is [hostile](creatures.md#factions) to you, whether any dungeon is its home
 or not, and every kind that lives in some dungeon of the land (a creature marked "once a run" is
-never on it, nor are people, shopkeepers, and the guardians placed by hand, and animated objects
+never on it, nor are [people, shopkeepers](npcs.md), and the guardians placed by hand, and [animated objects](animated.md)
 come only where a place's folk include them). A stray may be one of the place's own kinds too.
 Some places, the outlaws' four lairs, take their strays only from the kinds that live in the
 land's dungeons (the "Strays" column of the table below). With the deeper draws below, anything the land knows
@@ -52,7 +52,7 @@ come to.
 A dungeon floor with a danger is full when you first come down to it: its population (the
 number in the tables below; by default 35 creatures for every 1000 cells you could walk on, at
 least 25 and at most 80) is chosen as above and spread over its plain floor, never within 8
-steps of a staircase, never in a shop, a sanctuary, or a teeming den. Most walk a short beat, back and forth;
+steps of a [staircase](terrain.md#stairs), never in a [shop](shops.md), a [sanctuary](special-rooms.md#room-sanctuary), or a [teeming den](special-rooms.md#teeming-dens). Most walk a short beat, back and forth;
 where there is no room for one, they wait where they stand. They come armed as their kind is
 (see the creatures' gear), on top of the few the floor's own rooms and vaults hold. A creature
 marked "once a run" that you have met already is not among them. A hand-made place with a
@@ -63,14 +63,14 @@ holds its sleepers on top of the population, and they count toward it below.
 
 While you are on a floor with a danger, the creatures that live there keep coming: every so
 often (a quarter of an hour of game time, unless a place says otherwise) one may come, with a
-chance, as long as the floor holds fewer creatures hostile to you than its population. It comes
-somewhere you cannot see, never within 8 steps of you, never on stairs, in a doorway, on a shop
-floor, or in a sanctuary. A cleared floor fills up again while you stay; a long rest below lets
+chance, as long as the floor holds fewer creatures [hostile](creatures.md#factions) to you than its population. It comes
+somewhere you cannot see, never within 8 steps of you, never on [stairs](terrain.md#stairs), in a doorway, on a shop
+floor, or in a [sanctuary](special-rooms.md#room-sanctuary). A cleared floor fills up again while you stay; a [long rest](resting.md#how-resting-works) below lets
 it refill. A floor you are not on is frozen: nothing comes while you are away, and the clock
 starts again when you come back.
 
-The talents of the Delver tree help: **Quiet delver** puts each next arrival off twice as long,
-and **Sixth sense** tells you how a place feels against your own level as you arrive (quiet,
+The talents of the [Delver](talents.md#delver) tree help: **[Quiet delver](talents.md#talent-quiet-delver)** puts each next arrival off twice as long,
+and **[Sixth sense](talents.md#talent-sixth-sense)** tells you how a place feels against your own [level](experience.md#levels) as you arrive (quiet,
 uneasy, dangerous, or deadly), and at its second rank notes it when something stirs on your
 floor.
 
@@ -78,13 +78,13 @@ floor.
 
 **Cealdhlāw**, the cold barrow, is the Ascmearc's first dungeon, its way in on the downs of
 Hlāwdūn east of Cēaptūn. Its first two floors are the barrow's passages and chambers; the four
-below are the hollows of the hill, wide caves. It is cold (8 °C), its traps are arrows, spears,
-pits, and alarms, and its dead walk: crawling hands and the bones of rats and wolves, skeletons
-(some with bows, some armed and shielded warriors), zombies (kobolds among them), ghouls, and the
-barrow wight, with goblins, kobolds, and vermin among them, and in the hollows an orc war band
-with its wargs. On its second floor, always, lies the
-**barrow chamber**: a skeleton paces a burial hall before a locked bronze door, and behind it
-the silver chalice Sister Hild wants back lies on a plinth. The skeleton carries the bronze key.
+below are the hollows of the hill, wide caves. It is [cold](temperature.md) (8 °C), its traps are [arrows](traps.md#trap-arrow), [spears](traps.md#trap-spear),
+[pits](traps.md#trap-pit), and [alarms](traps.md#trap-alarm), and its dead walk: crawling hands and the bones of rats and wolves, [skeletons](creatures.md#creature-skeleton)
+(some with bows, some armed and shielded warriors), [zombies](creatures.md#creature-zombie) ([kobolds](creatures.md#creature-kobold) among them), [ghouls](creatures.md#creature-barrow-ghoul), and the
+[barrow wight](creatures.md#creature-barrow-wight), with [goblins](creatures.md#creature-goblin), [kobolds](creatures.md#creature-kobold), and vermin among them, and in the hollows an orc war band
+with its [wargs](creatures.md#creature-warg). On its second floor, always, lies the
+**barrow chamber**: a [skeleton](creatures.md#creature-skeleton) paces a burial hall before a [locked bronze door](doors.md#locked-doors), and behind it
+the silver chalice Sister Hild wants back lies on a plinth. The [skeleton](creatures.md#creature-skeleton) carries the [bronze key](doors.md#keys).
 On the first floor you feel cold air breathing up from the mound.
 
 {{#include generated/dungeons.md}}
@@ -97,58 +97,58 @@ On the first floor you feel cold air breathing up from the mound.
 
 **Fennmynster**, the fen minster, is what is left of a minster that sank into the marsh of
 Micelfenn: eight floors of its cellars and crypts at 6 °C. No road leads there and its way in
-cannot be found by looking: Sister Hild marks it on your map as you take up her quest **The fen
+cannot be found by looking: Sister Hild marks it on your map as you take up her [quest](quests.md) **The fen
 minster**, the one after she has her chalice back. The fen seeps into its rooms: one
-room in four is out of the ordinary (most floors have one or two), flooded ankle-deep (slow and
-loud to wade), hushed, or shadowed. Its traps are pits, frost, alarms, and teleports, and the
-monks hid their stores well: more of its doors are secret than in the other dungeons. The
-marsh's leeches, frogs, crocodiles, wisps, mud golems, and trolls, and the lesser water
+room in four is out of the ordinary (most floors have one or two), [flooded](special-rooms.md#room-flooded) ankle-deep (slow and
+loud to wade), [hushed](special-rooms.md#room-hushed), or [shadowed](special-rooms.md#room-shadowed). Its traps are [pits](traps.md#trap-pit), [frost](traps.md#trap-frost), [alarms](traps.md#trap-alarm), and [teleports](traps.md#trap-teleport), and the
+monks hid their stores well: more of its [doors are secret](doors.md#secret-doors) than in the other dungeons. The
+marsh's [leeches](creatures.md#creature-giant-leech), [frogs](creatures.md#creature-giant-frog), [crocodiles](creatures.md#creature-crocodile), [wisps](creatures.md#creature-will-o-wisp), [mud golems](creatures.md#creature-mud-golem), and [trolls](creatures.md#creature-troll), and the lesser water
 elementals the rain and the fen water make, live here among the minster's
-drowned dead, its peat-dark bog bodies, and its ghasts and fen ghouls, whose claws hold fast,
-and the restless spirits that pass through its walls: corpse candles, poltergeists, ghosts, the
-shadows that drink your strength, and the wraiths that drink your life. With
-them is the cult that came to the ruin, cultists and their priests; somewhere in the dark is
-the bog hag, whom you meet once in your life. Fey of the damp haunt the cellars, pixies,
-sprites, boggles, quicklings, satyrs, and darklings;
-water and frost motes and lesser ice elementals stir in the cold water, stone haunts drift
-through the minster's walls, and pale drinkers and mummies keep its crypts. No one trades down there: Fennmynster has no shops.
+[drowned](creatures.md#creature-drowned) dead, its peat-dark [bog bodies](creatures.md#creature-bog-body), and its [ghasts](creatures.md#creature-ghast) and [fen ghouls](creatures.md#creature-fen-ghoul), whose claws hold fast,
+and the restless spirits that pass through its walls: [corpse candles](creatures.md#creature-corpse-candle), [poltergeists](creatures.md#creature-poltergeist), [ghosts](creatures.md#creature-ghost), the
+[shadows](creatures.md#creature-shadow) that drink your strength, and the [wraiths](creatures.md#creature-wraith) that drink your life. With
+them is the cult that came to the ruin, [cultists](creatures.md#creature-cultist) and their priests; somewhere in the dark is
+the [bog hag](creatures.md#creature-bog-hag), whom you meet once in your life. Fey of the damp haunt the cellars, [pixies](creatures.md#creature-pixie),
+[sprites](creatures.md#creature-sprite), [boggles](creatures.md#creature-boggle), [quicklings](creatures.md#creature-quickling), [satyrs](creatures.md#creature-satyr), and [darklings](creatures.md#creature-darkling);
+water and [frost motes](creatures.md#creature-frost-mote) and [lesser ice elementals](creatures.md#creature-lesser-ice-elemental) stir in the cold water, [stone haunts](creatures.md#creature-stone-haunt) drift
+through the minster's walls, and [pale drinkers](creatures.md#creature-pale-drinker) and [mummies](creatures.md#creature-mummy) keep its crypts. No one trades down there: Fennmynster has no [shops](shops.md).
 
-At the very bottom lies the **sunken crypt**: a nave of shallow water between the monks' tombs,
-where two of the drowned still stand guard, and at its far end a dry dais with an altar and the
+At the very bottom lies the **sunken crypt**: a nave of [shallow water](terrain.md#terrain-shallow-water) between the monks' tombs,
+where two of the [drowned](creatures.md#creature-drowned) still stand guard, and at its far end a dry dais with an altar and the
 minster reliquary on it, which Sister Hild's last quest asks for. The crypt is on the eighth
 floor and nowhere else.
 
 ### Fyrdelf
 
-**Fyrdelf**, the fire delving, is the duergar's mine under the hills of Ascdūn, below the
+**Fyrdelf**, the fire delving, is the [duergar](races.md#race-duergar)'s mine under the hills of Ascdūn, below the
 volcano. No road leads there and its way in cannot be found by looking: Factor Wulfrun marks it
-on your map as you take up her quest **The lost shaft**, which she offers once you have been four
+on your map as you take up her [quest](quests.md) **The lost shaft**, which she offers once you have been four
 floors down into Cealdhlāw for the reeve, and gives you only once you have reached level 5. Its
 first four floors are the galleries, rooms and passages at 10 °C; the eight
 below are the deep workings, wide caves that grow hotter toward the volcano's heart (16 °C,
-then 20 °C, and 24 °C at the bottom). Its traps are arrows, spears, fireballs, lightning, and
-alarms, few of its doors are hidden, and its locks are the hardest to pick of the three
-dungeons. The duergar dig here, miners, warriors, and smiths, among ember beetles, salamanders,
-magma crawlers, lesser fire elementals, cinder elementals, earth elementals that move through
-the rock, ash wraiths, basilisks, ogres, trolls, and hill trolls down from the hills above, and the dead the
-delf's fires left: ogre zombies and grave hounds, burning skulls, the charred dead, duergar
-skeletons still in their helms, rotting trolls, and the spirits of the miners, knockers and
-spectres, that pass through the rock; hell hounds, fiends at home in the fires, run its
-deep workings, and the upper galleries belong mostly to kobolds, centipedes, and bats. Hobgoblin war bands come
-down to raid the duergar: soldiers, archers, legionnaires with spear and shield, warcasters,
-and sergeants. Orc war bands raid the mine too: raiders, shamans, berserkers, veterans, bowmen,
-and their wargs, with goblin wizards who call up more of their kin. Their captains and war chiefs,
-like the duergar's priests, stay deeper than the delf goes. The motes of stone, fire, and air
-drift through the upper galleries, and spark motes, lesser earth, air, and lightning elementals,
-and water elementals through the workings. The demons' fires draw up lemures and imps; meenlocks
-lurk in the dark. The deep workings' dead are many: draugr, barghests, hands of glory, vampire
-spawn, and the gallows dead.
+then 20 °C, and 24 °C at the bottom). Its traps are [arrows](traps.md#trap-arrow), [spears](traps.md#trap-spear), [fireballs](traps.md#trap-fireball), [lightning](traps.md#trap-lightning-bolt), and
+[alarms](traps.md#trap-alarm), few of its [doors are hidden](doors.md#secret-doors), and its locks are the hardest to pick of the three
+dungeons. The [duergar](races.md#race-duergar) dig here, [miners](creatures.md#creature-duergar-miner), [warriors](creatures.md#creature-duergar-warrior), and [smiths](creatures.md#creature-duergar-smith), among [ember beetles](creatures.md#creature-ember-beetle), [salamanders](creatures.md#creature-fire-salamander),
+[magma crawlers](creatures.md#creature-magma-crawler), [lesser fire elementals](creatures.md#creature-lesser-fire-elemental), [cinder elementals](creatures.md#creature-cinder-elemental), [earth elementals](creatures.md#creature-earth-elemental) that move through
+the rock, [ash wraiths](creatures.md#creature-ash-wraith), [basilisks](creatures.md#creature-basilisk), [ogres](creatures.md#creature-ogre), [trolls](creatures.md#creature-troll), and [hill trolls](creatures.md#creature-hill-troll) down from the hills above, and the dead the
+delf's fires left: [ogre zombies](creatures.md#creature-ogre-zombie) and [grave hounds](creatures.md#creature-grave-hound), [burning skulls](creatures.md#creature-burning-skull), the [charred dead](creatures.md#creature-charred-dead), [duergar](races.md#race-duergar)
+skeletons still in their helms, [rotting trolls](creatures.md#creature-rotting-troll), and the spirits of the miners, [knockers](creatures.md#creature-knocker) and
+[spectres](creatures.md#creature-spectre), that pass through the rock; [hell hounds](creatures.md#creature-hell-hound), fiends at home in the fires, run its
+deep workings, and the upper galleries belong mostly to [kobolds](creatures.md#creature-kobold), [centipedes](creatures.md#creature-giant-centipede), and bats. [Hobgoblin](creatures.md#creature-hobgoblin) war bands come
+down to raid the [duergar](races.md#race-duergar): [soldiers](creatures.md#creature-hobgoblin), [archers](creatures.md#creature-hobgoblin-archer), [legionnaires](creatures.md#creature-hobgoblin-legionnaire) with spear and shield, [warcasters](creatures.md#creature-hobgoblin-warcaster),
+and [sergeants](creatures.md#creature-hobgoblin-sergeant). Orc war bands raid the mine too: [raiders](creatures.md#creature-orc-raider), [shamans](creatures.md#creature-orc-shaman), [berserkers](creatures.md#creature-orc-berserker), [veterans](creatures.md#creature-orc-veteran), [bowmen](creatures.md#creature-orc-bowman),
+and their [wargs](creatures.md#creature-warg), with [goblin wizards](creatures.md#creature-goblin-wizard) who call up more of their kin. Their [captains](creatures.md#creature-hobgoblin-captain) and [war chiefs](creatures.md#creature-orc-war-chief),
+like the duergar's [priests](creatures.md#creature-duergar-priest), stay deeper than the delf goes. The motes of stone, fire, and air
+drift through the upper galleries, and [spark motes](creatures.md#creature-spark-mote), lesser earth, air, and lightning elementals,
+and [water elementals](creatures.md#creature-water-elemental) through the workings. The demons' fires draw up [lemures](creatures.md#creature-lemure) and [imps](creatures.md#creature-imp); [meenlocks](creatures.md#creature-meenlock)
+lurk in the dark. The deep workings' dead are many: [draugr](creatures.md#creature-draugr), [barghests](creatures.md#creature-barghest), [hands of glory](creatures.md#creature-hand-of-glory), vampire
+spawn, and the [gallows dead](creatures.md#creature-gallows-dead).
 
 Every gallery floor holds a **foreman's cabin**: a timber-floored lodging where a duergar miner
-keeps watch, with a spare pick-axe, his lamp, and a brass key to the delf's locked rooms behind a
-plank wall. Duergar traders keep general stores in the galleries, where a room is fit for one
+keeps watch, with a spare [pick-axe](digging.md#digging), his lamp, and a [brass key](doors.md#keys) to the delf's locked rooms behind a
+plank wall. [Duergar traders](creatures.md#creature-duergar-trader) keep [general stores](shops.md) in the galleries, where a room is fit for one
 (about one gallery floor in four). At the very bottom lies the **drake's hoard**: a hall ringed
-with lava where the fire drake sleeps on its gold, with a rare treasure and a magic one. The
+with lava where the [fire drake](creatures.md#creature-fire-drake) sleeps on its gold, with a rare treasure and a magic one. The
 drake lives nowhere else.
 
 ### The lairs of the wanted

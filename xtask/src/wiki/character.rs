@@ -1,7 +1,7 @@
 //! Character creation (spec §8 "Character creation"): stats, genders, races, classes, and the
 //! horoscope, with adjustments as written in data.
 
-use super::text::{signed, table_text};
+use super::text::{Term, anchored, damage_link, signed, table_text};
 use super::weapon_skills;
 use std::fmt::Write as _;
 use warlock_core::character::Gender;
@@ -15,7 +15,8 @@ use warlock_core::{burden, combat};
 pub(super) fn stats(_content: &Content) -> String {
     let mut out = String::from("| Stat | Short |\n|---|:---:|\n");
     for stat in Stat::ALL {
-        let _ = writeln!(out, "| {} | `{}` |", stat.name(), stat.abbrev());
+        let name = anchored(Term::Stat, stat.name(), stat.name());
+        let _ = writeln!(out, "| {name} | `{}` |", stat.abbrev());
     }
     let _ = writeln!(out, "\nA score of {AVERAGE} is average.");
     out
@@ -227,7 +228,7 @@ pub(super) fn races(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} |{} {vision} | {}–{} | {} | {} |",
-            r.name,
+            anchored(Term::Race, &r.id, &r.name),
             stat_cells(&r.stats),
             r.age.start(),
             r.age.end(),
@@ -257,7 +258,7 @@ pub(super) fn race_traits(content: &Content) -> String {
             d => format!("Defence +{d}, Protection {} ({})", h.protection, h.name),
         });
         let resists: Vec<String> = (r.resist.iter())
-            .map(|&(kind, percent)| format!("{} {percent} %", content.damage_type(kind).name))
+            .map(|&(kind, percent)| format!("{} {percent} %", damage_link(content, kind)))
             .collect();
         let light = r.light_blind.map(|b| {
             format!(

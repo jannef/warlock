@@ -1118,6 +1118,9 @@ fn actor_rows(world: &World) -> Vec<String> {
         .collect::<Vec<_>>();
     let foods: Vec<String> = on_level.chain(carried).collect();
     let images = world.images();
+    // Asking a creature's eyes warms the light cache: a copy of the world asks.
+    let mut probe = world.clone();
+    let player = world.state().player;
     let rows: Vec<String> = actors
         .map(|a| {
             let w = a.weight(content);
@@ -1239,6 +1242,20 @@ fn actor_rows(world: &World) -> Vec<String> {
                 let met = if a.talk.met { ", met" } else { "" };
                 let (said, muttered) = (a.talk.said, a.talk.muttered);
                 format!("; talk said {said}, muttered {muttered}{met}")
+            };
+            // Whether it has seen the player, and when the player last saw it (`surprise.rs`).
+            let talk = if a.id == player {
+                talk
+            } else {
+                let aware = if probe.unaware(a.id, player) {
+                    "unaware of player"
+                } else {
+                    "aware"
+                };
+                match a.mind.noticed {
+                    Some(turn) => format!("{talk}; {aware}, noticed turn {turn}"),
+                    None => format!("{talk}; {aware}"),
+                }
             };
             // What it resists, in percent by kind (ground truth: never shown in play).
             let resists: Vec<String> = (world.resistances_of(a.id).iter())
@@ -1831,7 +1848,8 @@ mod tests {
         let shaman = actors.iter().find(|a| a.contains(" kobold_shaman at "));
         assert!(
             shaman.is_some_and(|s| s.ends_with(
-                "; skills concentration 20 (0 +1), spellcraft 25 (0 +1); resists fire 25"
+                "; skills concentration 20 (0 +1), spellcraft 25 (0 +1); unaware of player; \
+                 resists fire 25"
             )),
             "{actors:#?}"
         );
@@ -1903,7 +1921,8 @@ mod tests {
         );
         let kobold = actors.iter().find(|a| a.contains(" kobold at "));
         assert!(
-            kobold.is_some_and(|k| k.ends_with("St 9/9 Dx 13/13 To 10/10 In 10/10 Wi 9/9 Pr 8/8")),
+            kobold.is_some_and(|k| k
+                .ends_with("St 9/9 Dx 13/13 To 10/10 In 10/10 Wi 9/9 Pr 8/8; unaware of player")),
             "{actors:#?}"
         );
         assert!(Layer::Actors.is_dev_only() && !Layer::Stats.is_dev_only());

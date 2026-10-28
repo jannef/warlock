@@ -963,7 +963,13 @@ impl World {
                     .map(|a| a.benefit_of(&self.content, skills))
                     .unwrap_or_default()
                     .at_distance(here.chebyshev(to), spells);
-                let defence = self.target_against(target, missile).defence;
+                // Caught unawares (`surprise.rs`): the initiative check, before the roll.
+                let unaware = self.unaware(target, by);
+                if unaware {
+                    self.startle(target, Some(by), made);
+                }
+                let struck = self.target_against(target, missile);
+                let defence = self.flat_footed(target, unaware, struck).defence;
                 let against = combat::Target::bare(defence);
                 let profile = Profile::bare(&attack).with(&benefit);
                 let blow = combat::strike(&profile, &against, &mut self.state.rng);

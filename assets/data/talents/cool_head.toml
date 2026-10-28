@@ -1,0 +1,8 @@
+[[talent]]
+id = "cool_head"
+name = "Cool head"
+tree = "grit"
+description = "Taken by surprise, you lose no time over it: being surprised slows nothing you do."
+needs = { stats = { willpower = 14 }, level = 9 }
+effects = [{ kind = "surprise_ease", value = 100 }]
+systems = ["awareness", "status"]

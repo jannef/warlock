@@ -12,7 +12,8 @@ trap hall (`levels/trap_hall.toml`, scenario `traps`) has one of each. They live
 victim)` in `world/trap.rs` is the one way a trap goes off: stepping onto a cell calls it through
 `World::step_onto_trap` (the player in `player_moves`, creatures in `ai.rs::creature_steps`, one
 who makes way for the player onto their old cell in `talk.rs::swap_places`, its pit's climb taken
-off its energy), and returns the extra energy a pit costs. **Sidestepping** (spec §8 "Traps",
+off its energy), and returns the extra energy a pit costs; a hidden trap (any for a creature, an
+unknown one for the player) that sprang then `startle`s its victim alone (docs/dev/surprise.md). **Sidestepping** (spec §8 "Traps",
 #476) is `world/sidestep.rs`: `player_moves` calls `World::step_willingly` instead (not when
 `turned_back` changed the cell), which first gives a **known** trap off a door the chance
 `Content::trap_avoid()` (`content::TrapAvoid`, `[avoid]` in `data/traps.toml`: `base` +

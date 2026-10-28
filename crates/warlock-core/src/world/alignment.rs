@@ -11,8 +11,8 @@
 //!
 //! **Readers**: good folk turn cold toward an Evil or Wicked character, evil folk toward a Good
 //! or Saintly one ([`World::scorns`]): a cold greeting in place of their words
-//! ([`World::cold_greeting`]) and none of their quests that would do the player good
-//! ([`World::offers`], which also checks a quest's `requires_alignment`). A good shopkeeper's
+//! ([`World::cold_greeting`]); their quests are offered all the same (#692: [`World::offers`]
+//! checks only a quest's `requires_alignment`). A good shopkeeper's
 //! prices follow the band ([`keeper_favour`]); a holy gift works only for the bands it names
 //! ([`World::answered`]), and is never barred.
 
@@ -173,12 +173,10 @@ impl World {
         lines.get(k).cloned()
     }
 
-    /// Whether quest `def` may be offered to the player by someone who scorns them or not
-    /// (`scorned`): the player's band meets its `requires_alignment`, and someone who scorns
-    /// them offers no quest that would do them good (one whose `alignment` shift is good).
-    pub(super) fn offers(&self, def: &QuestDef, scorned: bool) -> bool {
+    /// Whether quest `def` may be offered to the player: their band meets its
+    /// `requires_alignment`. A giver who scorns them offers it all the same (#692).
+    pub(super) fn offers(&self, def: &QuestDef) -> bool {
         let band = self.state.player().band(&self.content);
-        let required = (def.requires_alignment).is_none_or(|r| r.allows(band));
-        required && !(scorned && def.alignment > 0)
+        (def.requires_alignment).is_none_or(|r| r.allows(band))
     }
 }

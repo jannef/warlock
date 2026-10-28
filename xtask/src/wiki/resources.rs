@@ -2,6 +2,7 @@
 //! the level add), its start, how it changes over time, what builds it, and whether it ends at
 //! zero.
 
+use super::text::{Term, anchored};
 use std::fmt::Write as _;
 use warlock_core::content::{Build, Content, OverTime, ResourceDef};
 
@@ -65,7 +66,7 @@ pub(super) fn resources(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {most} | {start} | {over} | {built} | {zero} |",
-            def.name
+            anchored(Term::Resource, &def.id, &def.name)
         );
     }
     out

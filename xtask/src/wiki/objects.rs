@@ -2,7 +2,7 @@
 
 use super::actions::at_normal_pace;
 use super::order;
-use super::text::{capital, glyph, yes};
+use super::text::{Term, anchored, capital, glyph, yes};
 use std::fmt::Write as _;
 use warlock_core::content::{BASE_TURN, Content, ItemClassId, ObjectDef, ObjectId, price};
 use warlock_core::object::format_weight;
@@ -96,7 +96,11 @@ pub(super) fn item_classes(content: &Content) -> String {
         } else {
             capital(&names.join(", "))
         };
-        let _ = writeln!(out, "| {} | {names} |", class.name);
+        let _ = writeln!(
+            out,
+            "| {} | {names} |",
+            anchored(Term::ItemClass, &class.id, &class.name)
+        );
     }
     out
 }

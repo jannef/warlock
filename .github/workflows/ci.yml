@@ -66,15 +66,13 @@ jobs:
       - name: Test
         run: cargo test --workspace --locked
       # The player wiki (wiki/, mdBook): its tables are generated here from the game data (they are
-      # not committed) and the book must build.
+      # not committed), the book must build, and every link in it must lead to a page and anchor.
       - name: Install mdBook
         uses: taiki-e/install-action@v2
         with:
           tool: mdbook@0.5.4
-      - name: Generate the wiki tables
-        run: cargo xtask wiki
-      - name: Build the wiki
-        run: mdbook build wiki
+      - name: Generate, build, and check the links of the wiki
+        run: cargo xtask wiki --check-links
       # --capture renders offscreen (no window), so no X server is needed; Mesa lavapipe
       # provides a software Vulkan adapter.
       - name: Screenshot smoke test (software Vulkan)

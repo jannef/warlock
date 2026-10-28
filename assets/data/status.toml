@@ -723,6 +723,21 @@ stacking = "refresh"
 cost = 50
 per_action = true
 
+# Surprised (spec §8 "Surprise and sneak attacks", surprise.toml): caught unawares and the
+# initiative check failed. Flat-footed (Dexterity and Dodge count nothing toward Defence), no free
+# blows, and the next action costs half again as much (less what Cool head eases); that action
+# ends it. A second surprise before it only keeps it (refresh).
+[[status]]
+id = "surprised"
+name = "Surprised"
+seen = "surprised"
+max = 1
+stacking = "refresh"
+per_action = true
+cost = 150
+start = "You are taken by surprise!"
+end = "You recover your wits."
+
 # Walled, Shield wall's (a weapon active, #564): the shield set and the bearer behind it, Shield
 # +3 to Defence on top of the shield's own, every attack a quarter slower; five degrees, a degree
 # a turn.

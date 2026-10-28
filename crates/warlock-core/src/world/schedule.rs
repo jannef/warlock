@@ -262,7 +262,7 @@ impl World {
         );
         // A talent's `speed_percent` (Quick, Fleet-footed) is not read here: `Actor::speed` counts
         // it, once.
-        actor.effects.slow(&self.content, price)
+        actor.effects.slow_with(price, |s| self.status_cost(id, s))
     }
 
     /// The price that leaves the player ready to act exactly at `until` (the last turn of a
@@ -311,7 +311,7 @@ impl World {
             .collect();
         schedule[0].energy = schedule[0].energy.saturating_sub(price.max(1));
         // The player's action is taken: what eases by actions eases (`weapon_ability.rs`).
-        self.spend_actions(player);
+        self.spend_actions(player, events);
         self.acting = None;
         // Holds whose holder no longer holds end (`hold.rs`): after the player's action, after
         // every creature's turn, and as the turn ends.
@@ -350,7 +350,7 @@ impl World {
             self.acting = Some(id);
             let price = self.creature_turn(id, events);
             schedule[next].energy = schedule[next].energy.saturating_sub(price.max(1));
-            self.spend_actions(id);
+            self.spend_actions(id, events);
             self.acting = None;
             self.loosen_holds(events);
             // Those who died are gone from the schedule (the player stays, first).
