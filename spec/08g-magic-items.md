@@ -77,7 +77,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `resource_on_kill`: each names its resource in data, `resource = "stamina"`), kicking doors in
     (`door_kick`), digging (`dig_percent`), hunger (`hunger`), trap damage (`trap_damage`),
     disease checks (`disease_check`), and potions kept (`potion_kept`) are effects with words, but
-    no rule reads them and no affix has them yet: each comes with its hook. Pending hooks, added
+    no affix has them yet, and each is read once its hook lands.
+    The spell ones are read (#629), each where its talent's is, unidentified too, on creatures
+    as on the player: `mana_cost` joins Frugal caster's cut (§8 "Mana", 50 % off at most),
+    `spell_ease` eases its own piece (§8 "Spells": "Cost"), `spell_to_hit` and `spell_threat`
+    aim an own cast only (never a scroll's or a wand's), `spell_lift` widens the lift with Keen
+    mind's, `spell_reach` adds to the range or length with School focus's, and `spell_duration`
+    adds degrees.
+    Pending hooks, added
     with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
     none roll yet) and value (#145, a base `value` times rarity and affixes).
   - **Affixes** (`data/affixes.toml`, §7): 23 prefixes (mostly offensive, flat Defence, and

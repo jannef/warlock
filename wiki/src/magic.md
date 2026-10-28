@@ -69,8 +69,8 @@ caster level's; with *Overreach*, a third less of that: 33.5 % a tier), times it
 (below), times its resolution's (a touch is cheaper), times what your armour adds, rounded to the
 nearest point once at the end and never below 1. Then your talents, their percents added up and
 rounded down, never below 1: *School focus* takes 10 % off the spells of its school or element,
-*Archmage* 50 %, and *Empower* 10 %; and then *Frugal caster* takes a fifth off (see
-[Mana](mana.md)).
+*Archmage* 50 %, and *Empower* 10 %; and then *Frugal caster* takes a fifth off, and magic items
+*of Thrift* their percent with it, never more than half together (see [Mana](mana.md)).
 
 A few spells have a cost of their own instead, whatever their tier: **Identify** costs 60 mana
 (before your armour and talents), so no caster can cast it in their first levels. A wizard has
@@ -78,7 +78,11 @@ the mana for it from about level 7, a priest or a druid from about level 8. Its 
 how hard it is to learn.
 
 Heavy armour and big shields hinder casting: while worn, each makes every spell dearer, and what
-you wear adds up.
+you wear adds up. A *Mage-wrought* piece hinders casting less by its own number (body armour, a
+helmet, or a shield that hinders at all): Mage-wrought plate of 15 adds 25 % instead of 40 %, and
+one eased to nothing (chain mail of 10 or more) adds none and no longer counts as armour for
+your [caster style](fighting-styles.md#caster-styles). Its ease is its own: it never eases
+another piece.
 
 {{#include generated/spell-armour.md}}
 
@@ -102,19 +106,26 @@ Your **Willpower** lets a spell reach farther: a cell more of range or length, a
 a burst's radius, for every 2 points of its modifier, but never past the spell's own limit (the
 "to" in the list). (A spell may name other stats for its reach: its "Grows with" says so; none
 does yet.) *School focus* adds a cell of range or length (not of a burst's radius) to
-the spells of its school or element, again never past the spell's limit. A burst costs by its
+the spells of its school or element, and magic items *of Farcasting* their cells to every
+spell, together, again never past the spell's limit. A burst costs by its
 own radius, however far your Willpower spreads it. Your
 **Presence** makes a blessing or a hex last longer: a degree more of it for every 2 points of its
 modifier, up to the most the status has (each degree lasts as long again). The hexes also grow
 with your **Willpower**: their degrees are half your Presence modifier plus a quarter of your
 Willpower modifier, added up and rounded to the nearest, a half down ("Grows with" in the list:
-each stat's percent of its modifier).
+each stat's percent of its modifier). Magic items *of Lingering* add their degrees to every
+blessing and hex you cast, still up to the status's most (3 for Blessed, Hexed, Weakened, and
+Sluggish).
 
 ## How a spell finds its target
 
 Each spell resolves one way. An **attack** rolls to hit like a missile (2d12 plus your Dexterity's
 modifier, or the modifiers its "Grows with" names for to-hit, against the target's Defence; a
 spell scroll or a wand always aims with Dexterity), can miss, and can be a critical hit, and does full damage.
+Like a blow, it threatens a critical on a natural 22 or more; magic items *of the Magus* add
+their number to your own spells' roll to hit, and *Baleful* ones widen their threat by theirs
+(a Baleful +2 threatens from 20), never below 2. Neither helps a spell scroll you read or a
+wand you use.
 Your ranks in [Spell attacks](weapon-skills.md#the-skills) and your
 [caster style](fighting-styles.md#caster-styles) add to its roll when you cast it yourself.
 An **auto** spell always hits, for less. An **area** spell hits everyone in its shape with no
@@ -156,7 +167,8 @@ cap rose (for a d6 spell, the lifted cap divided by 6, rounded down, less the un
 divided by 6, rounded down). Its dice still grow with your caster level as before. Criticals,
 *Empower*, and *Archmage* are held to your lifted cap as they are held to the cap. *Keen mind*
 (Spellcraft, chosen for a school or an element) raises the most lift of that school's spells by
-10 points.
+10 points, and *Potent* magic items raise the most lift of every spell by their number, added to
+it.
 
 For example, a wizard with Intelligence 18 (+4) and Willpower 14 (+2) lifts *Scorching ray*
 (tier 2, cap 18) by 4 × 10 + 2 × 5 = 50 %, to 27: 3d6 becomes 4d6. With Intelligence 22 (+6) and

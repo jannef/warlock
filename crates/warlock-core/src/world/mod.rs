@@ -1340,6 +1340,8 @@ fn article(noun: &str) -> &'static str {
 }
 
 #[cfg(test)]
+mod affix_spell_tests;
+#[cfg(test)]
 mod affix_stamina_tests;
 #[cfg(test)]
 mod ai_tests;
