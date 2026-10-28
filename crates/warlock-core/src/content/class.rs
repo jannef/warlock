@@ -547,6 +547,18 @@ impl ClassActive {
         self.aimed() && !matches!(self, ClassActive::Knock)
     }
 
+    /// Whether it is a holy gift that may be given an `alignment` in its data (spec §8
+    /// "Alignment"): used outside those bands, it does nothing (`World::unanswered`).
+    pub const fn holy(self) -> bool {
+        matches!(
+            self,
+            ClassActive::LayOnHands
+                | ClassActive::Smite
+                | ClassActive::HolyRadiance
+                | ClassActive::Consecrate
+        )
+    }
+
     /// Whether it asks for a cell before it is used (`use:volley:12,5`).
     pub const fn aims_cell(self) -> bool {
         matches!(self, ClassActive::Volley)

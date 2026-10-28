@@ -279,6 +279,11 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
     for (p, trap) in &level.traps {
         let ground = content.terrain(terrain[*p]);
         prop_assert!(!trap.known, "a known trap at {}", p);
+        // A chest's trap lies in the chest (spec §8 "Chests").
+        if ground.is_shut_chest() && level.chests.contains_key(p) {
+            prop_assert!(content.trap(trap.kind).effect.fits_fixture());
+            continue;
+        }
         prop_assert!(
             ground.walkable && ground.stairs.is_none() && ground.freeze.is_none(),
             "trap on {}",
@@ -296,6 +301,10 @@ fn check(level: &LevelTemplate, depth: u32) -> Result<(), TestCaseError> {
     // solvable without kicking a door in).
     let unlocked = player_reach_unlocked(level, level.stairs[0].pos);
     for (p, lock) in &level.locks {
+        // A chest's lock wants no key (spec §8 "Chests"): Pick lock, Knock, or a kick.
+        if content.terrain(terrain[*p]).is_shut_chest() && level.chests.contains_key(p) {
+            continue;
+        }
         prop_assert!(
             content.terrain(terrain[*p]).is_closed_door(),
             "lock at {}",
@@ -650,7 +659,9 @@ fn generated_levels_hide_a_few_traps_of_their_own() {
             let from_vaults: usize = (CONTENT.vaults().iter())
                 .map(|v| stamped_at(&level, v).len() * v.template.traps.len())
                 .sum();
-            let own = level.traps.len() - from_vaults;
+            // A chest's trap is its own (spec §8 "Chests").
+            let chests = (level.traps.keys()).filter(|p| level.chests.contains_key(p));
+            let own = level.traps.len() - from_vaults - chests.count();
             assert!(
                 (least as usize..=most as usize).contains(&own),
                 "{} traps on depths:{depth}, seed {seed}",

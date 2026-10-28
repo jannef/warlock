@@ -6,11 +6,12 @@
 //! interrupted prayer lifts nothing, its mana and time spent). Done, the room becomes a plain
 //! room for good (it leaves the level's special rooms), or the whole level's effect is gone; the
 //! risings that no longer lie under a curse are dropped, and it is a [`Deed::Consecrated`].
-//! Anywhere else it is refused with no time spent. Nothing here draws at random.
+//! Anywhere else it is refused with no time spent; a player outside the bands its `alignment`
+//! names prays unanswered (`World::unanswered`). Nothing here draws at random.
 
 use super::{Deed, Spent, World, rest::Ended};
 use crate::action::Event;
-use crate::content::ActionKind;
+use crate::content::{ActionKind, ClassActive};
 use crate::time::GameTime;
 
 /// What a consecration lifts.
@@ -46,6 +47,9 @@ impl World {
         if self.hallowable().is_none() {
             self.say("There is nothing here to consecrate.");
             return Spent::Nothing;
+        }
+        if !self.answered(ClassActive::Consecrate) {
+            return self.unanswered(ClassActive::Consecrate);
         }
         let player = self.state.player;
         if !self.spend_mana(player, consecrate.mana) {

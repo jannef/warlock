@@ -335,7 +335,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     else moves it. Only the player has a score; deeds draw nothing from any random stream.
   - **Messages**: crossing into another band says so, after the deed's own messages, as a note
     that does not stop a rest (the band's `rise` or `fall` line: "You feel righteous.", "You
-    feel you have strayed from the path of good."); smaller moves are silent.
+    feel your righteousness waver."); smaller moves are silent.
   - **What reads it**: good creatures **scorn** an Evil or Wicked character, evil creatures a
     Good or Saintly one (`Band::scorned_by`): they answer a chat with a cold line
     (`greet_evil`, `greet_good` in `data/dialogue.toml`) instead of their greeting and
@@ -343,14 +343,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     gave stay). A quest may name the bands it is offered to (`requires_alignment`). A good
     shopkeeper's prices move with the band, by a percent in data added to the player's favour
     (§7 "Shops": Saintly 10 % better, Evil 10 % worse, Wicked 20 % worse); the prices shown
-    include it. Talents and class abilities (#220, #243) may ask for an alignment
-    (`requires_alignment`, `ability::strayed`): a paladin's gifts need Good or better, and a
-    paladin below that keeps them but cannot use them (greyed out, "you have strayed") until
-    they climb back. Mana reads nothing of it, for now. Gods and prayer, holy and unholy damage
-    and items, and alignment-limited artifacts will read the same band.
-  - **Talents** (proposed for the talents PR, on hooks that exist): *Righteous fury* (Good or
+    include it. **Alignment bars nothing** (#642): no class, talent, or ability asks for a
+    band, nothing is greyed out or refused by it, and nothing remembers a drop in band. A
+    **holy gift** (Lay on hands, Smite, Holy radiance, Consecrate) may name the bands it works
+    for (`alignment = { min = "kind" }` on its talent; all four are Kind or better, the good
+    side): outside them it is still listed and used, and does nothing ("You call for holy
+    wrath, but none answers."), taking the time of a cast and spending no cooldown, mana, or
+    resource; putting Holy radiance out always works. Mana reads nothing of it, for now. Gods
+    and prayer, holy and unholy damage and items, and artifacts that work only for some bands
+    (as the holy gifts do) will read the same band.
+  - **Talents** (proposed for the talents PR, on hooks that exist): *Righteous fury* (while Good or
     better: +1 to hit and damage against evil creatures, per 10 levels; `Profile` in
-    `attack_with`, reading the target's `Actor::nature`), *Hardened heart* (Callous or worse:
+    `attack_with`, reading the target's `Actor::nature`), *Hardened heart* (while Callous or worse:
     killing peaceful creatures costs no further alignment; `shift_alignment` skipping
     `Deed::KilledPeaceful`), and *The middle way* (while Neutral: +1 Dodge and +2 on checks;
     `Actor::defence`, `check`).
@@ -553,14 +557,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     several weapon skills at a rank (`any_weapon_skill = { roles = ["melee", "unarmed"], of =
     [...], rank = 3 }`: "a melee or unarmed weapon skill 3", "Maces and clubs or Unarmed 3"), the
     chosen weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
-    eyes (the race's vision profile), and the alignment band (`requires_alignment`, as quests
-    and abilities ask it, §8 "Alignment": `{ min = "good" }`); and any one of several (`either
-    = { stats = { intelligence = 12 }, skills = { appraise = 20 } }`: "Intelligence 12 or
-    Appraise 20"). Refused in words: "You cannot
-    eyes (the race's vision profile), the birth sign's animal and element and a lucky day
-    (`animal`, `element`, `lucky`; §8 "Birth sign"), and the alignment band
-    (`requires_alignment`, as quests and abilities ask it, §8 "Alignment": `{ min = "good" }`).
-    Refused in words: "You cannot
+    eyes (the race's vision profile), and the birth sign's animal and element and a lucky day
+    (`animal`, `element`, `lucky`; §8 "Birth sign"); and any one of several (`either = { stats =
+    { intelligence = 12 }, skills = { appraise = 20 } }`: "Intelligence 12 or Appraise 20").
+    Never an alignment band (§8 "Alignment": alignment bars nothing). Refused in words: "You cannot
     take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
     one pick per choice, each with its own ranks.
   - **Effects** (`TalentEffect`, summed into `TalentMods` by `Actor::talent_mods`, one read
@@ -599,7 +599,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     class resources, came with R5, §8 "Resources"): `resting_percent` (Fast healer: resting's pace
     half again, `World::healing_rate`); `second_wind` (Second wind, the first **active** talent:
     `Ability::SecondWind` under the abilities menu's new **Talents** group (`Source::Talent`,
-    between Class and Skills), `Action::SecondWind` (`second_wind`): 1 hit point per character
+    between Class and Skills), `Action::UseTalent` (`use:second_wind`, the verb every ability use has; #644): 1 hit point per character
     level back at once, at least 8, for the time of a `wait`, then the cooldown status Winded
     (15 minutes; "you are winded" in the menu; refused, no time, without the talent or while
     winded)); `iron_stomach` (rotten food and overeating never make you vomit, no draw for it;
@@ -831,31 +831,31 @@ developer notes (CLAUDE.md, `docs/dev/`).
     talents' kinds and the class's own (the effects README of `data/talents/`); an active's
     effect (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
     `quivering_palm`) makes the talent that has it the ability's name and description in the
-    menu, and its `requires_alignment` need is what the active asks of the paladin. Monk's
+    menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Monk's
     Deflect missiles is the ordinary talent, handed out. Shared entries (`divine_health` is
     the paladin's, `purity_of_body` the monk's) are a talent each.
   - **Bonus picks**: warrior (Weaponcraft or Guard) at 4, 10, 16, 22, 28, 34, 46, 58;
     barbarian (Might or Vigour), paladin (Guard or Vigour), monk (Finesse or Vigour) at 10, 20,
     30, 45, 55; as the bullet above says.
   - **Actives** (`Ability::Class`, the abilities menu's Class group; `Action::Use`, `use:rage`,
-    `use:smite:E`; refused, no time, without the ability, while its cooldown lasts, or while
-    the player has strayed from the band it asks): Rage (the Rage resource and with it Raging:
+    `use:smite:E`; refused, no time, without the ability or while its cooldown lasts; a holy
+    gift outside its bands is used and does nothing, §8 "Alignment"): Rage (the Rage resource and with it Raging:
     St +2, To +2, In −2, no reading or casting, while the rage lasts, §8 "Resources"; then
     Exhausted 10 minutes; no rage while either lasts; a wait's time),
     Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
     blow at every hostile beside, clockwise from the north, each with the free blows the end of
     an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit
     points a level, then two degrees of Drained, 10 minutes, standing in for its mana until
-    the mana PR; a cast; Good or better), Smite (a blow in a direction with 1d6 more per 10
+    the mana PR; a cast; works for Kind or better), Smite (a blow in a direction with 1d6 more per 10
     levels, at least 1d6, a magic weapon's extra die folded into the bonus at its average; then
-    Spent, 5 minutes; Good or better), Holy radiance (on and off: Radiant, with no end of its
+    Spent, 5 minutes; works for Kind or better), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
-    glowing item's; a cast; Good or better), Quivering palm (a bare-handed blow in a direction,
+    glowing item's; a cast; works for Kind or better), Quivering palm (a bare-handed blow in a direction,
     refused with a weapon in hand before anything is spent; a hit that does damage leaves three
     degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Consecrate (the priest's at
     9, the paladin's at 12: a minute's prayer, for 15 mana, that lifts an unholy special room's
-    effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; Good
-    or better), Knock (the wizard's at 4: in a direction, for 5 mana and a cast's time, the lock
+    effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; works
+    for Kind or better), Knock (the wizard's at 4: in a direction, for 5 mana and a cast's time, the lock
     of the locked door or shut chest there springs open and nothing opens; refused, no time or
     mana, where nothing locked stands; §8 "Chests").
   - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
@@ -913,7 +913,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     11 mana),
     Ward of faith (Deflection +1; the design's "Shield of faith", renamed: that id is the
     paladin's), Purify (rotten food never sickens nor exposes; no draw), Divine health and
-    Smite (the paladin's own talents, so Smite answers only a Good priest), Miracle, Saint
+    Smite (the paladin's own talents, so Smite works only for a priest of the good side), Miracle, Saint
     (healing +100 %).
   - **Druid**: Wild empathy (`beast_friend`), Spark (tier 0, at 1: a bolt, 1d4 electricity;
     1 mana), Barkskin (tier 1, at 3: Dodge +2 a minute a degree; 3 mana), Woodland stride (the ranger's: forest floor,

@@ -20,6 +20,7 @@
 //! hidden_per_depth = 1          # hidden features this much harder to find per level down
 //! locks_per_depth = 1           # locks this much harder to pick per level down
 //! loot = [2, 4]                 # items of loot on each level's floor; default none
+//! chests = { chance = 20, count = [1, 1] } # chests a floor gets (spec §8 "Chests"); the default
 //! ambient = [0, 0, 0, 0]        # optional
 //! temperature = 9               # °C; default the dungeon default (10)
 //! key = "rusty_key"             # optional: rooms levels lock a few rooms with its lock
@@ -125,6 +126,9 @@ struct DungeonSpec {
     /// How many items of loot lie on the floor of each level, `[fewest, most]`.
     #[serde(default)]
     loot: [u8; 2],
+    /// How often its floors get chests; default one floor in five, one chest.
+    #[serde(default)]
+    chests: ChestOdds,
     /// The temperature on its levels, in °C; default the dungeon default.
     temperature: Option<i8>,
     /// The key (an object) to the rooms the generators lock; none: no locked rooms.
@@ -407,6 +411,39 @@ const MAX_SECRET_DOORS: u32 = 20;
 const MAX_HIDDEN_PER_DEPTH: u8 = 5;
 /// The most a level down may add to how hard locks are to pick.
 const MAX_LOCKS_PER_DEPTH: u8 = 5;
+/// The most chests a generated floor may get.
+pub const MAX_CHESTS_PER_LEVEL: u8 = 8;
+
+/// How often a branch's floors get chests (spec §8 "Chests"; `mapgen/chest.rs`): with `chance`
+/// percent a floor has some, between `count`'s least and most. One floor in five has one unless
+/// the branch says otherwise (docs/design/chests-and-treasure.md decision 12).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ChestOdds {
+    #[serde(default = "ChestOdds::default_chance")]
+    pub chance: u8,
+    #[serde(default = "ChestOdds::default_count")]
+    pub count: [u8; 2],
+}
+
+impl ChestOdds {
+    const fn default_chance() -> u8 {
+        20
+    }
+
+    const fn default_count() -> [u8; 2] {
+        [1, 1]
+    }
+}
+
+impl Default for ChestOdds {
+    fn default() -> Self {
+        Self {
+            chance: Self::default_chance(),
+            count: Self::default_count(),
+        }
+    }
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -464,6 +501,8 @@ pub struct DungeonDef {
     /// How many items of loot lie on the floor of each level, fewest and most (spec §8 "Magic
     /// items"; item level: the depth).
     pub loot: [u8; 2],
+    /// How often its floors get chests (spec §8 "Chests").
+    pub chests: ChestOdds,
     /// The key to the rooms the rooms generator locks (spec §8 "Doors"): it locks them with the
     /// lock this key opens and leaves one where the player can reach it. `None`: no locked rooms.
     pub key: Option<ObjectId>,
@@ -738,6 +777,13 @@ impl DungeonFile {
                     "dungeon `{id}`: `loot` is [fewest, most], at most {MAX_LOOT}"
                 )));
             }
+            let [least, most] = spec.chests.count;
+            if spec.chests.chance > 100 || least > most || most > MAX_CHESTS_PER_LEVEL {
+                return Err(err(format!(
+                    "dungeon `{id}`: `chests` is {{ chance = 0 to 100, count = [least, most] }}, \
+                     at most {MAX_CHESTS_PER_LEVEL}"
+                )));
+            }
             let key = match &spec.key {
                 Some(k) => Some(key_id(k).ok_or_else(|| {
                     err(format!(
@@ -763,6 +809,7 @@ impl DungeonFile {
                 hidden_per_depth: spec.hidden_per_depth,
                 locks_per_depth: spec.locks_per_depth,
                 loot: spec.loot,
+                chests: spec.chests,
                 key,
                 spawning: spawning.map(|(_, s)| s),
                 plans,
@@ -904,6 +951,33 @@ mod tests {
             ))
             .is_ok()
         );
+    }
+
+    #[test]
+    fn branches_say_how_often_their_floors_get_chests() {
+        let base = "[[dungeon]]\nid = \"a\"\ngenerator = \"rooms\"\ndepth = 2\nsize = [80, 21]\n";
+        let odds = |text: &str| resolve(&format!("{base}{text}")).map(|d| d[0].chests);
+        let default = ChestOdds {
+            chance: 20,
+            count: [1, 1],
+        };
+        assert_eq!(odds("").unwrap(), default, "one floor in five");
+        assert_eq!(
+            odds("chests = { chance = 50, count = [1, 3] }\n").unwrap(),
+            ChestOdds {
+                chance: 50,
+                count: [1, 3]
+            }
+        );
+        assert_eq!(odds("chests = { chance = 0 }\n").unwrap().count, [1, 1]);
+        for bad in [
+            "chests = { chance = 101 }\n",
+            "chests = { count = [2, 1] }\n",
+            "chests = { count = [1, 9] }\n",
+            "chests = { often = 3 }\n",
+        ] {
+            assert!(odds(bad).is_err(), "{bad}");
+        }
     }
 
     #[test]

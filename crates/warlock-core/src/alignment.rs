@@ -5,9 +5,10 @@
 //! `data/alignment.toml` (`content/alignment.rs`). Creatures have a fixed [`Alignment`] instead:
 //! their type's, or the one a level gave them.
 //!
-//! What reads it reads a band: dialogue and quests ([`Band::scorned_by`]), shop prices, and
-//! abilities that must be used by someone of the right alignment ([`Requirement`]). The score
-//! itself is never shown, and a creature's alignment neither.
+//! What reads it reads a band: dialogue and quests ([`Band::scorned_by`]), quests offered to
+//! some bands only and holy gifts that work for some bands only ([`Requirement`]), and shop
+//! prices. It bars nothing a character has or may take. The score itself is never shown, and a
+//! creature's alignment neither.
 
 use serde::{Deserialize, Serialize};
 
@@ -190,10 +191,10 @@ impl Band {
     }
 }
 
-/// The alignment something asks of whoever uses it (`requires_alignment` in data): a quest
-/// offered, an ability used. `min` is the worst band allowed, `max` the best, each optional:
-/// `{ min = "good" }` is Good or better (a paladin's gifts), `{ max = "callous" }` Callous or
-/// worse.
+/// A range of alignment bands: the bands a quest is offered to (its `requires_alignment`), or
+/// those a holy gift works for (its talent's `alignment`). `min` is the worst band in it, `max`
+/// the best, each optional: `{ min = "kind" }` is Kind or better (the paladin's holy gifts),
+/// `{ max = "callous" }` Callous or worse.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Requirement {
@@ -212,9 +213,9 @@ impl Requirement {
     /// Why it can never be met, if so: its `min` is better than its `max`, or it names neither.
     pub fn check(self) -> Result<(), String> {
         match (self.min, self.max) {
-            (None, None) => Err("`requires_alignment` names a `min` band, a `max`, or both".into()),
+            (None, None) => Err("an alignment range names a `min` band, a `max`, or both".into()),
             (Some(min), Some(max)) if min > max => Err(format!(
-                "`requires_alignment` asks for {} or better and {} or worse at once",
+                "an alignment range asks for {} or better and {} or worse at once",
                 min.name(),
                 max.name()
             )),

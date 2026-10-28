@@ -28,6 +28,10 @@
 #              to 5, default 0)
 #   loot       [fewest, most] items of loot on the floor of each level, rolled at the depth as
 #              item level (spec §8 "Magic items"; default none)
+#   chests     `{ chance, count }`: percent of its floors with chests (0 to 100) and how many such
+#              a floor gets, `[least, most]` (at most 8), each of the floor's level, locked,
+#              trapped, and filled by its band in data/chests.toml (spec §8 "Chests"; default
+#              `{ chance = 20, count = [1, 1] }`: one floor in five has one)
 #   ambient    [r, g, b, uv] light everywhere (default none)
 #   temperature  °C on its levels (spec §5 "Temperature"; -40 to 40, default 10, the dungeon
 #              default): water there freezes below 0

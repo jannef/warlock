@@ -133,7 +133,9 @@ triggered, `FiresByItself`; not `Actor::holds_for` (the abilities a blow's, or f
 missile weapon's, `attack_skills` teach, as `abilities_through` reads them; one shield blocking
 teaches while a shield is in a hand and the rank holds), `NotSoHeld`; its cooldown, `While`;
 short of `Actor::weapon_stamina` (its stamina less `TalentMods::weapon_stamina`, Drillmaster,
-and `ability_stamina`, Armour-breaker's Sunder and Gap shot; at least 1), `Short(stamina)`; a
+and `ability_stamina`, Armour-breaker's Sunder and Gap shot, and the worn `active_stamina` for
+stamina, of Ease's, global: whatever piece holds it, B1 #630; at least 1; the early return is
+"no talents and nothing worn"), `Short(stamina)`; a
 status blocking its action, `While`. `use_weapon` says the reason capitalized ("You are short of
 breath.") and refuses with no time.
 

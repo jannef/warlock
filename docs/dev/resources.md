@@ -81,6 +81,18 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   +50, Patient blade's −50). A talent's `resource_build { resource, on, amount }` is a build only
   its holder has (Blood frenzy's 5 rage a kill; Patient blade's opening on `sneak_kill`, which
   `World::resolve` raises after a sneak attack's blow kills, after `sneak_attack`'s).
+- **Affixes** (B1, #630; docs/design/affixes-systems.md §5): the same two hooks read what the
+  actor wears for the pool an affix names (`Mods::resource(effect, id)`, `Actor::mods`, so an
+  unidentified piece counts): `resource_max` adds to `Actor::resource_max` (Tireless for stamina,
+  of Fury for rage; never below 0), `resource_rate` to `World::resource_rate` beside the talents
+  (of Breath; its early return is now "no talents and nothing worn for that pool"). An affix
+  never grants a pool: one who does not hold it gets nothing (a wizard's Tireless ring, any
+  creature's gear, since creatures hold none). `World::keep_resources_within_max` (beside
+  `keep_mana_within_max`, one call in `World::apply`) clamps every held pool to its maximum
+  after the player's action, so taking the piece off is exact at once (`resource::pass` also
+  clamps as time moves); it leaves progress alone. Stamina's third, `active_stamina`, is read
+  in `Actor::weapon_stamina` (docs/dev/weapon-abilities.md). Tests:
+  `world/affix_stamina_tests.rs`, with fixture affix files (no shipped file yet: P1).
 - **Rage** (R1, #249; `world/rage.rs`): the talent effect `rage { resource = "rage" }`
   (`TalentMods::rage: Option<ResourceId>`, `rage_status` its resource's status) makes the Rage
   ability grant the pool with Raging (`World::rage`); the cooldown is Raging and what it `follows`

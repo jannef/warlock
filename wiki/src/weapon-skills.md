@@ -104,7 +104,7 @@ abilities menu, aim it as it asks (a direction for a blow, a place for a shot, n
 sweep or Shield wall), and it costs two things, both only once it goes ahead (a refused use, with
 nobody to strike or nothing to shoot, costs nothing):
 
-- its **stamina** (the menu shows it: "Spears: Lunge  3 stamina, in a direction"), and
+- its **stamina** (see [Combat](combat.md#stamina); the menu shows it: "Spears: Lunge  3 stamina, in a direction"), and
 - its **time**: the percent in the table of what the action it is takes you (a blow with what you
   hold, so your weapon's speed, your style, and your stance count; a shot; a wait). No active is
   instant. The game never shows this time.

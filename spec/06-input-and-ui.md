@@ -9,13 +9,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - Keyboard-first. The default keys are ADOM's (#350): every command ADOM has takes ADOM's key
   (its manual's command list); one ADOM lacks, or has only behind a prefix (`:m`, `w s`) or Ctrl
   (which bindings cannot hold), takes a key ADOM does not use. Movement is ADOM's: the numpad
-  and the arrows (4 directions); the vi keys are not bound by default, as ADOM puts kick, look,
-  and use a tool on `k`, `l`, and `u`. A settings file keeps the keys it lists (the player's own
+  and the arrows (4 directions); the vi keys are never bound in play by default (the owner,
+  #644), as ADOM puts kick, look, and use a tool on `k`, `l`, and `u`. A settings file keeps the keys it lists (the player's own
   keymap is never rewritten); a command it does not list takes its default keys but those a
   listed command of its context has (`Bindings::from_table`).
 - Symbol commands (`<`, `>`, `?`) are bound by **logical key**, so they work on non-US layouts.
 - Bindings live in the settings file. The `?` help (the controls list, read-only) is generated from
-  the binding table, so it is always accurate. Only the play-context (gameplay) commands are rebindable (below); the keys of menus, menu lists, screens, info pages, prompts, dialogs, text fields, and the targeting mode are fixed (owner decision, 2026-10-26), and new ones are not added as bindable commands. Existing menu-context bindings stay as they are until a later cleanup.
+  the binding table, so it is always accurate. Only the play-context (gameplay) commands are rebindable (below); the keys of menus, menu lists, screens, info pages, prompts, dialogs, text fields, and the targeting mode are fixed (owner decision, 2026-10-26), and new ones are not added as bindable commands. Existing menu-context bindings stay as they are until a later cleanup; the back-style commands (Back and text fields' Back, skipping the rest at `--more--`, the previous info page, the previous target), unbound because Esc and Shift do them, stay exactly as they are (the owner, #644).
 - **Screens**: the main menu, the saved characters, New run and its character creation steps, pause menu, Settings,
   Controls, help, the inventory, the equipment screen and its choice of what goes in a slot, an
   item's description, the character screen, the Skills screen, the weapon skills screen, the quest
@@ -162,7 +162,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Hints (screen footers, the prompts, the status bar's `? controls`, the welcome line's
   `Press ? for controls.`) name the keys as bound.
 - **Rebinding** (play commands only by the owner decision of 2026-10-26; menus, lists, screens, prompts, and targeting keys are fixed and no new ones are made rebindable; the existing menu-context bindings below stay for now): in Controls (the commands by context under headings, below notes on Esc and on
-  list letters), select a command and press a key; it becomes the command's primary
+  list letters, and at the very bottom, under "Ability keys", the abilities' own keys: play
+  commands, unbound by default, for a player who wants a key for an ability the abilities menu
+  has; the owner, #644), select a command and press a key; it becomes the command's primary
   key (alternates such as the numpad stay). A key another command of the same context uses is taken
   from it and bound to the new command, and the screen says so ("K moved to Wait; Kick has no
   key." or "... (was Kick)."), so the table never holds a conflict; a command left without a key
@@ -191,7 +193,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ascend/descend (ascend also leaves an outdoor area when no enemy is about, §7 "Leaving an
   outdoor area"), light/douse lantern (`*`),
   pick up (`,` or `;`), drop (`d`), equipment (`i`), inventory (`I`), character (`@`), skills
-  (`A`), weapon skills (`W`), quest log (`q`), rest (`b`), consume (`e`, food; the command that was Eat), read (`r`; a basic
+  (`A`), weapon skills (`W`), quest log (`q`), talents (`G`, a key ADOM leaves free; #644), rest (`b`), consume (`e`, food; the command that was Eat), read (`r`; a basic
   command, not an ability), study (`L`, next to read; a basic command), look (`l`), shoot or throw what
   is in the missile weapon slot
   (`t`), throw from the pack (`T`), fire (unbound by default: `t` does it), more aggressive / more
@@ -392,9 +394,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     that needs one), its action
     cost (an `ActionKind`), who has it, and whether it can be used now and why not
     (`Unavailable`: "you hold no shield", "not usable yet", while a status lasts that blocks
-    its kind of action or is its cooldown, "you are winded", §8 "Status effects", or "you have
-    strayed": one that asks for an alignment the character has strayed from, §8 "Alignment",
-    kept but greyed out until they climb back; `ability::strayed`).
+    its kind of action or is its cooldown, "you are winded", §8 "Status effects"; alignment never makes
+    one unavailable, §8 "Alignment").
     `PerceptionView::abilities` lists the player's, in menu order, each with why it cannot be
     used now. Every ability is a normal core `Action` with replay text, so replays record it as
     that action.
@@ -416,7 +417,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     under Class, §8 "Class abilities": Rage, Veteran's wind, Whirlwind, Lay on hands, Smite,
     Holy radiance, Quivering palm, Inspire, Consecrate, Knock; Volley at a cell, aimed as a shot is), each from the level its class's table gives it, Smite,
     Quivering palm, and Knock in a direction, greyed out during their cooldowns (Rage while raging and
-    exhausted) and the paladin's while strayed; throwing one's voice (Class; #235,
+    exhausted); throwing one's voice (Class; #235,
     `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's (Throw
     your voice, level 32: a talent with the `throw_voice` effect gives it); and hooding the lantern
     (Items: the lantern; `hood`, nothing to aim, §5 "Light sources"), which the Hooded light
@@ -439,7 +440,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Quick repeat**: the menu opens on the ability used last in the run (else the first that
     can be used), so `a` Enter repeats it; `X` (`KeyCommand::RepeatAbility`) uses it again at
     once, and opens the menu when none was used yet.
-  - **Keys**: an ability with an action of its own is also a rebindable key command, unbound by
+  - **Keys**: an ability with an action of its own is also a rebindable key command (they
+    stay, the owner, #644), listed at the very bottom of Controls under "Ability keys", unbound by
     default (the shield bash: "Bash with your shield", `bash`; picking a lock: "Pick a lock",
     `pick_lock`; stealing: "Steal", `steal`; "Throw your voice"; "Hood your lantern"); bound, it uses the ability as the menu
     does, and one that cannot be used now is applied at once so the rules say why, taking no
@@ -482,7 +484,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   5 Weapons · 6 Quests · 7 Talents`), so the frame and the line stay put as the pages turn; on a
   console too narrow for it every page's line goes by short names (`1 Char · 2 Inv · 3 Equip ·
   4 Skills · 5 Weapons · 6 Quests · 7 Tal`), else by keys alone.
-- **Talents** (page 7, its own command `talents`, unbound by default; #236; §8 "Talents"): the
+- **Talents** (page 7, its own command `talents`, `G`; #236, #644; §8 "Talents"): the
   player's talents ("Your talents"), by tree in tree order, each with its rank when it has
   several (`Keen ears 1/2`) and, for those not picked, where it came from (`(class)`, `(birth
   sign)`); then, dimmer, "Other talents": every other talent the player could still pick (not

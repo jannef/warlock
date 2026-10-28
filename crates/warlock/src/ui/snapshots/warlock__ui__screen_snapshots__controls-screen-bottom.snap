@@ -1,0 +1,48 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? ┌─ Controls ───────────────────────────────────────────────┐
+                              │                                                        ↑ │
+                              │   Info page 5                          5                 │
+                              │   Info page 6                          6                 │
+                              │   Info page 7                          7                 │
+                              │   Info page 8                          8                 │
+                              │   Info page 9                          9                 │
+                              │   Next info page (Shift: previous)     Tab               │
+                              │   Previous info page                   (none)            │
+                              │                                                          │
+                              │ Dialogs                                                  │
+                              │   Yes (in a dialog)                    y                 │
+                              │   No (in a dialog)                     n                 │
+                              │                                                          │
+                              │ Developer                                                │
+                              │   Reveal map (dev)                     F2                │
+                              │   Next vision profile (dev)            F3                │
+                              │   Light values (dev)                   F4                │
+                              │   Save snapshot (dev)                  F5                │
+                              │   Skip an hour (dev)                   F6                │
+                              │   Next weather (dev)                   F7                │
+                              │   Identify what you carry (dev)        F8                │
+                              │   Load snapshot (dev)                  F9                │
+                              │                                                          │
+                              │ Ability keys (all in the abilities menu too)             │
+                              │   Bash with your shield                (none)            │
+                              │   Throw your voice                     (none)            │
+                              │   Disarm a trap                        (none)            │
+                              │   Pick a lock                          (none)            │
+                              │   Steal                                (none)            │
+                              │   Hood your lantern                    (none)            │
+                              │                                                          │
+                              │   Reset all keys                                         │
+                              │   Export keys…                                           │
+                              │   Import keys…                                           │
+                              │ > Back                                                   │
+                              │                                                          │
+                              │                                                          │
+                              │                                                          │
+                              │                                                          │
+                              │                                                          │
+                              │                                                          │
+                              │ Enter rebind   Del reset   Esc back                      │
+ The Hub  ·  HP 18/18  ·  MP 2└──────────────────────────────────────────────────────────┘444  ·  10 °C      ? controls

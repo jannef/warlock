@@ -5,7 +5,7 @@
 use super::text::{capital, signed};
 use std::fmt::Write as _;
 use warlock_core::alignment::{Band, Score};
-use warlock_core::content::{AlignmentRules, Content};
+use warlock_core::content::{AlignmentRules, ClassActive, Content};
 
 /// What a deed of worth `amount` does to the score, in words: "very strongly evil", "a little
 /// good", "nothing".
@@ -142,6 +142,27 @@ pub(super) fn alignment_quests(content: &Content) -> String {
             worth(q.alignment),
             signed_or_zero(q.alignment),
         );
+    }
+    out
+}
+
+/// The holy gifts that work only for some bands (a talent's `alignment`), by name: they are had
+/// and used whatever the band, and do nothing outside it.
+pub(super) fn alignment_gifts(content: &Content) -> String {
+    let mut gifts: Vec<_> = (ClassActive::ALL.iter())
+        .filter_map(|&a| content.class_active(a))
+        .filter_map(|def| {
+            def.alignment
+                .map(|bands| (def.name.as_str(), bands.words()))
+        })
+        .collect();
+    gifts.sort();
+    if gifts.is_empty() {
+        return "Every ability works whatever your alignment.\n".into();
+    }
+    let mut out = String::from("| Ability | Works for |\n|---|---|\n");
+    for (name, bands) in gifts {
+        let _ = writeln!(out, "| {name} | {bands} |");
     }
     out
 }
