@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
-              ┌─ Choose your talents (4 of 5): 2 left ──────────────────── Page 1/2 ─┐
+              ┌─ Choose your talents (4 of 5): 2 left ──────────────────── Page 1/3 ─┐
               │                                                                      │
               │ Chance                                                               │
               │   a  Random                                                          │
@@ -18,23 +18,23 @@ expression: "render(case, content.clone())"
               │   h  Light step               You tread lightly: a trap you step on… │
               │   i  Nimble                   A load slows your feet less than most… │
               │   j  Opportunist              A foe that turns from you pays for it… │
+              │   k  Slick                    You slip out of a mimic's glue before… │
               │ Weaponcraft                                                          │
-              │   k  Far shot                 Your shots fly 2 cells farther, and w… │
-              │   l  Sworn foe                You have sworn yourself against one k… │
-              │   m  Unbinder                 You strike at the binding, not the th… │
-              │   n  Wand mastery             You draw more from a wand than its ma… │
-              │   o  Weapon focus             You have drilled with one kind of wea… │
+              │   l  Far shot                 Your shots fly 2 cells farther, and w… │
+              │   m  Sworn foe                You have sworn yourself against one k… │
+              │   n  Unbinder                 You strike at the binding, not the th… │
+              │   o  Wand mastery             You draw more from a wand than its ma… │
+              │   p  Weapon focus             You have drilled with one kind of wea… │
               │ Guard                                                                │
-              │   p  Armour training          You move freely in armour: it hampers… │
+              │   q  Armour training          You move freely in armour: it hampers… │
               │ Shadow                                                               │
-              │   q  Hush-foot                You move among sleepers as a breath o… │
-              │   r  Keen ears                You hear fainter sounds, fainter stil… │
-              │   s  Lamplighter              You tend your lantern well: it burns … │
-              │   t  Night eyes               Your eyes grow used to the dark: you … │
-              │   u  Silent feet              Your footsteps are a fifth quieter fo… │
+              │   r  Hush-foot                You move among sleepers as a breath o… │
+              │   s  Keen ears                You hear fainter sounds, fainter stil… │
+              │   t  Lamplighter              You tend your lantern well: it burns … │
+              │   u  Night eyes               Your eyes grow used to the dark: you … │
+              │   v  Silent feet              Your footsteps are a fifth quieter fo… │
               │ Wayfarer                                                             │
-              │   v  Devout                   You pray as one who means it: an alta… │
-              │   w  Long strider             Your journeys across the overworld go… │
+              │   w  Devout                   You pray as one who means it: an alta… │
               │                                                                      │
               │ Your stamina holds a good deal more.                                 │
               │                                                                      │

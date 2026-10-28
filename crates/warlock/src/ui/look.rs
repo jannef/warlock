@@ -428,6 +428,40 @@ mod tests {
         );
     }
 
+    /// A disguised mimic is a coffer in look mode, word for word; found out, it is the creature
+    /// (spec §8 "Mimics").
+    #[test]
+    fn a_disguised_mimic_looks_like_a_chest() {
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "levels/look_mimic.toml",
+            "name = \"Mimic\"\nambient = [255, 255, 255, 0]\nmap = '''\n\
+             #####\n#M.C#\n#@..#\n#####\n'''\n[legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\
+             \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+             \"M\" = { terrain = \"floor\", chest = 1, mimic = true }\n\
+             \"C\" = { terrain = \"chest\", chest = 1 }\n",
+        );
+        files.insert(
+            "scenarios/look_mimic.toml",
+            "name = \"M\"\nstart_level = \"look_mimic\"\nhp = 1000\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let mut w = World::new(content, "look_mimic", None).expect("world");
+        let (mimic, coffer) = (Pos::new(1, 1), Pos::new(3, 1));
+        assert_eq!(
+            describe(&w.perception(), mimic, true),
+            "A coffer. A small wooden box with an iron hasp."
+        );
+        assert_eq!(
+            describe(&w.perception(), mimic, true),
+            describe(&w.perception(), coffer, true)
+        );
+        // Touched, it is found out: a creature.
+        w.apply(&Action::Move(Dir::N));
+        let seen = describe(&w.perception(), mimic, true);
+        assert!(seen.starts_with("A mimicling (hostile"), "{seen}");
+    }
+
     #[test]
     fn people_are_named_with_the_services_they_sell() {
         let content = Arc::new(Content::builtin().expect("content"));
