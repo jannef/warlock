@@ -105,14 +105,16 @@ fn magic_items_have_one_or_two_affixes_and_mostly_one() {
         }
         assert!(magic.name.is_none() && !magic.identified);
     }
+    // A prefix only 40 %, a suffix only 40 %, one of each 20 % (affixes.toml).
+    let share = two * 100 / (one + two);
     assert!(
-        one > 2 * two && two > 0,
+        (15..=25).contains(&share),
         "{one} with one affix, {two} with two"
     );
 }
 
 #[test]
-fn rare_items_have_up_to_three_of_each_usually_three_or_four() {
+fn rare_items_have_three_to_six_affixes_at_most_three_of_each() {
     let c = content();
     let items = roll_many(&c, 2000, 8, LootGrade::Rare);
     let mut counts = [0usize; 7];
@@ -123,15 +125,39 @@ fn rare_items_have_up_to_three_of_each_usually_three_or_four() {
         let rolled = magic.rolled(&c);
         let per = |k: AffixKind| rolled.iter().filter(|r| r.def.kind == k).count();
         assert!(per(AffixKind::Prefix) <= 3 && per(AffixKind::Suffix) <= 3);
-        let effects: BTreeSet<_> = rolled.iter().map(|r| r.def.group()).collect();
-        assert_eq!(effects.len(), rolled.len(), "no two affixes of one effect");
+        let categories: BTreeSet<_> = rolled.iter().map(|r| &r.def.category).collect();
+        assert_eq!(categories.len(), rolled.len(), "no two of one category");
         let name = magic.name.as_deref().expect("a name");
         assert_eq!(name.split(' ').count(), 2, "two words: {name}");
         counts[rolled.len()] += 1;
     }
-    let usual = counts[3] + counts[4];
-    assert!(usual * 3 > items.len() * 2, "mostly 3 or 4: {counts:?}");
-    assert!(counts[6] > 0, "now and then six: {counts:?}");
+    // 3: 50 %, 4: 30 %, 5: 15 %, 6: 5 % (affixes.toml), a few short where nothing is left.
+    let share = |n: usize| counts[n] * 100 / items.len();
+    assert!((44..=56).contains(&share(3)), "half three: {counts:?}");
+    assert!((25..=35).contains(&share(4)), "{counts:?}");
+    assert!((11..=19).contains(&share(5)), "{counts:?}");
+    assert!((2..=8).contains(&share(6)), "now and then six: {counts:?}");
+}
+
+/// No item loot makes has two affixes of one category (nor, so, of one effect), at any item
+/// level, over many draws.
+#[test]
+fn no_rolled_item_repeats_an_affix_category() {
+    let c = content();
+    let mut rolled_any = 0;
+    for level in [1, 4, 8, 12] {
+        for stack in roll_many(&c, 1500, level, LootGrade::Rare) {
+            let magic = stack.magic().expect("rare");
+            magic.check(c.object(stack.object), &c).expect("valid");
+            let rolled = magic.rolled(&c);
+            let categories: BTreeSet<_> = rolled.iter().map(|r| &r.def.category).collect();
+            let groups: BTreeSet<_> = rolled.iter().map(|r| r.def.group()).collect();
+            assert_eq!(categories.len(), rolled.len(), "{:?}", magic.affixes);
+            assert_eq!(groups.len(), rolled.len(), "{:?}", magic.affixes);
+            rolled_any += rolled.len();
+        }
+    }
+    assert!(rolled_any > 6000, "{rolled_any} affixes");
 }
 
 #[test]
@@ -270,7 +296,7 @@ fn bad_items_are_refused() {
         (magic(&[("sharp", 9, 1)], None), "no tier"),
         (magic(&[("sharp", 1, 5)], None), "rolls 1 to 1"),
         (
-            magic(&[("sharp", 1, 1), ("heavy", 1, 2)], None),
+            magic(&[("sharp", 1, 1), ("glinting", 1, 1)], None),
             "at most 1 prefixes",
         ),
         (
@@ -278,7 +304,11 @@ fn bad_items_are_refused() {
                 &[("sharp", 1, 1), ("glinting", 1, 1), ("of_precision", 1, 1)],
                 Some("X"),
             ),
-            "two affixes do",
+            "two affixes of category `accuracy`",
+        ),
+        (
+            magic(&[("sharp", 1, 1), ("heavy", 1, 2)], Some("X")),
+            "two affixes of category `physical_damage`",
         ),
     ];
     for (m, needle) in bad {
@@ -374,9 +404,9 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
         [
             "Long sword · steel blade, leather grip · 1.8 kg",
             "Long blade, for the main hand",
-            "Damage 1d8; criticals on 20–24, ×2 damage",
+            "Damage 1d9; criticals on 20–24, ×2 damage",
             "Slashing or piercing damage",
-            "To hit +0, damage 1d8",
+            "To hit +0, damage 1d9",
         ]
     );
     let mut sword = item(
@@ -401,10 +431,10 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
             .any(|l| l.contains("Sharp") || l.contains("Celerity"))
     );
     // Its numbers are its base ones until it is identified, then its affixes count.
-    assert!(unknown.iter().any(|l| l == "To hit +0, damage 1d8"));
+    assert!(unknown.iter().any(|l| l == "To hit +0, damage 1d9"));
     sword.identify();
     let known = lines(&sword, &c);
-    assert!(known.iter().any(|l| l.text == "To hit +0, damage 1d8+2"));
+    assert!(known.iter().any(|l| l.text == "To hit +0, damage 1d9+2"));
     let affixes: Vec<(LineKind, &str)> = (known.iter())
         .filter(|l| matches!(l.kind, LineKind::Affix(_)))
         .map(|l| (l.kind, l.text.as_str()))

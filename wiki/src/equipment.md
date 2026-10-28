@@ -43,7 +43,7 @@ Every list of things you carry or could pick up (the inventory, the equipment sc
 choice, picking up, dropping, selling, throwing) writes after each item's name what it gives, and
 looking at a pile says it too:
 
-- **Weapons**: their to-hit and damage, "a long sword (+0 hit, 1d8)". The to-hit is added to
+- **Weapons**: their to-hit and damage, "a long sword (+0 hit, 1d9)". The to-hit is added to
   your 2d12 attack roll and the damage is rolled on every hit, before what your Strength, weapon
   skill, fighting style, and stance add (the [character screen](character.md) shows your attacks
   with all of that counted). Extra dice and elemental damage follow, "(+0 hit, 1d8+1d4 +1d6

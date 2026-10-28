@@ -2,6 +2,7 @@
 id = "supple"
 name = "Supple"
 effect = "max_dex"
+category = "max_dexterity"
 bases = ["body", "shield"]
 weight = 60
 tiers = [

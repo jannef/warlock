@@ -2,6 +2,7 @@
 id = "nimble"
 name = "Nimble"
 effect = "dodge"
+category = "dodge"
 bases = ["gloves", "boots"]
 tiers = [
   { level = 1, min = 1, max = 1 },

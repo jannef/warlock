@@ -2,6 +2,7 @@
 id = "of_evasion"
 name = "of Evasion"
 effect = "dodge"
+category = "dodge"
 bases = ["body", "helmet", "cloak", "amulet"]
 tiers = [
   { level = 1, min = 1, max = 1 },

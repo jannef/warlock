@@ -2,6 +2,7 @@
 id = "guarding"
 name = "Guarding"
 effect = "parry"
+category = "parry"
 bases = ["weapon"]
 weight = 60
 tiers = [

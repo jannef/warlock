@@ -2,6 +2,7 @@
 id = "brutal"
 name = "Brutal"
 effect = "crit"
+category = "critical_multiplier"
 bases = ["weapon", "launcher"]
 weight = 40
 tiers = [{ level = 4, min = 1, max = 1 }]

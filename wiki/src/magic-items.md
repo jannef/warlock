@@ -10,7 +10,7 @@ the lists and numbers below will change after playtesting.
 |---|---|---|---|
 | Normal | none | "long sword" | white |
 | Magic | a prefix, a suffix, or one of each (most have one) | "Sharp long sword of the Bear" | blue |
-| Rare | up to three prefixes and three suffixes (usually three or four in all) | "Grim Bite, long sword" | yellow |
+| Rare | three to six affixes (most often three), at most three prefixes and three suffixes | "Grim Bite, long sword" | yellow |
 
 The color is the name's, in your pack, on the equipment screen, and in an item's description; the
 item's glyph keeps its own color. [Unique items](#unique-items) are rares too.
@@ -18,6 +18,10 @@ item's glyph keeps its own color. [Unique items](#unique-items) are rares too.
 How often loot is normal, magic, or rare, and how many affixes magic and rare items have:
 
 {{#include generated/magic-rarity.md}}
+
+How many of a rare item's affixes are prefixes is drawn evenly among the splits that keep at most
+three of each: three affixes are none to three prefixes, a quarter each; four are one, two, or
+three prefixes, a third each; five are two or three, a half each; six are always three and three.
 
 ## Finding them
 
@@ -86,7 +90,12 @@ A few rules from elsewhere carry over:
   shares of everything you wear and wield adding up, to at most half the time (twice as quick).
 - **Light**: a glowing item makes its wearer carry a faint, steady light (the brightest one
   counts); it never flickers.
-- An item has at most one affix of each kind of effect.
+- **Categories**: every affix has a category (the tables below name it), and an item never has
+  two affixes of one category. Most categories are one effect each, so an item has at most one
+  affix of each kind of effect; a few hold a family: *physical damage* (Sharp, Vicious, and
+  Heavy: a Sharp sword is never Heavy too) and *stealth* (of Stealth and of Shadows). A prefix
+  and a suffix of one category do the same thing (Glinting and of Precision both add to hit), so
+  an item has one or the other.
 
 ## Looking at an item
 

@@ -2,6 +2,7 @@
 id = "of_shadows"
 name = "of Shadows"
 effect = "skill"
+category = "stealth"
 skill = "stealth"
 bases = ["cloak", "gloves", "boots", "amulet"]
 tiers = [

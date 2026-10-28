@@ -2,6 +2,7 @@
 id = "of_the_hare"
 name = "of the Hare"
 effect = "skill"
+category = "tumble"
 skill = "tumble"
 bases = ["body", "cloak", "boots", "amulet"]
 tiers = [

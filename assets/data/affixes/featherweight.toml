@@ -2,6 +2,7 @@
 id = "featherweight"
 name = "Featherweight"
 effect = "weight"
+category = "weight"
 bases = ["weapon", "launcher", "body", "helmet", "cloak", "gloves", "boots", "shield"]
 weight = 60
 tiers = [

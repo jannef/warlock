@@ -3,6 +3,7 @@
 id = "flaming"
 name = "Flaming"
 effect = "elemental"
+category = "fire_damage"
 damage_type = "fire"
 bases = ["weapon", "launcher", "ammo"]
 weight = 60

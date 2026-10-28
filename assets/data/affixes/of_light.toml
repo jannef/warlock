@@ -2,6 +2,7 @@
 id = "of_light"
 name = "of Light"
 effect = "light"
+category = "light"
 bases = ["cloak", "ring", "amulet"]
 weight = 60
 tiers = [

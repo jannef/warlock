@@ -2,6 +2,7 @@
 id = "of_mending"
 name = "of Mending"
 effect = "regeneration"
+category = "life_regeneration"
 bases = ["body", "helmet", "ring", "amulet"]
 tiers = [
   { level = 1, min = 10, max = 20 },

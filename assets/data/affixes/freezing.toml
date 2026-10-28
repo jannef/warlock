@@ -3,6 +3,7 @@
 id = "freezing"
 name = "Freezing"
 effect = "elemental"
+category = "cold_damage"
 damage_type = "cold"
 bases = ["weapon", "launcher", "ammo"]
 weight = 50

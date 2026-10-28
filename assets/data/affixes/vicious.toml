@@ -2,6 +2,7 @@
 id = "vicious"
 name = "Vicious"
 effect = "damage"
+category = "physical_damage"
 bases = ["gloves", "ring", "amulet"]
 weight = 60
 tiers = [

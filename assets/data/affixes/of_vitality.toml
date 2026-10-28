@@ -2,6 +2,7 @@
 id = "of_vitality"
 name = "of Vitality"
 effect = "max_hp"
+category = "life"
 bases = ["weapon", "launcher"]
 tiers = [
   { level = 1, min = 2, max = 4 },

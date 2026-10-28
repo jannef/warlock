@@ -2,6 +2,7 @@
 id = "of_reach"
 name = "of Reach"
 effect = "range"
+category = "range"
 bases = ["weapon"]
 tiers = [
   { level = 1, min = 1, max = 2 },

@@ -2,6 +2,7 @@
 id = "of_the_owl"
 name = "of the Owl"
 effect = "intelligence"
+category = "intelligence"
 bases = ["weapon", "launcher", "body", "helmet", "cloak", "gloves", "boots", "shield", "ring", "amulet"]
 weight = 60
 tiers = [

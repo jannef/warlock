@@ -2,6 +2,7 @@
 id = "radiant"
 name = "Radiant"
 effect = "light"
+category = "light"
 bases = ["weapon", "helmet", "shield"]
 weight = 50
 tiers = [

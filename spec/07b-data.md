@@ -488,8 +488,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   weapon's `attack_cost`). The built-in base items, folding in the test
   objects (every weapon names its weapon skill `category`, which also names it in item
   descriptions: "Long blade, for the main hand"; rocks are `thrown`): daggers and stilettos (threat
-  19, quick, 900), short swords and scimitars (threat 19), long swords (1d8, threat 20), rapiers
-  (1d6, threat 19, 900), bastard swords (1d10), great swords (2d6, both hands, 1200), hand axes
+  19, quick, 900), short swords and scimitars (threat 19), long swords (1d9, threat 20), rapiers
+  (1d6, threat 19, 900), great swords (2d6, both hands, 1200), hand axes
   (thrown 4), battle axes, great axes (1d12 ×3, both hands, 1200), spears, javelins (thrown 8),
   tridents (parry 1), clubs, maces, morning stars (2d4), war hammers (×3), mauls (2d6 ×3, both
   hands, 1200), halberds and glaives (1d10, both hands, 1100), quarterstaves and ironwood staves;
@@ -505,13 +505,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Magic items** (`data/affixes.toml`, optional; without it loot is always normal; M29, #149;
   §8 "Magic items"; the settings below live in that file and the affixes themselves in the
   `data/affixes/` directory, one a file, read in path order; see Definitions): `[rarity]` the
-  weights of normal, magic, and rare loot (70, 24, 6, not all
-  0); `[magic] both`, the chance in percent that a magic item has a prefix and a suffix (25; else
-  one of either, evenly); `[rare] affixes`, `[count, weight]` pairs for how many affixes a rare
-  item rolls (1 to 6; built in: 3 40, 4 35, 5 17, 6 8); `[names] first` (words, none empty) and
+  weights of normal, magic, and rare loot (85, 13, 2, not all
+  0); `[magic] prefix`, `suffix`, `both`, the weights of a magic item with a prefix only, a
+  suffix only, or one of each (40, 40, 20; not all 0 while magic items are found); `[rare]
+  affixes`, `[count, weight]` pairs for how many affixes a rare item rolls (1 to 6; built in:
+  3 50, 4 30, 5 15, 6 5); `[names] first` (words, none empty) and
   `[names.second]`, words for every kind of item (rare names: one of each, "Grim Bite"). Then
   `[[prefix]]`s and `[[suffix]]`es (ids unique across both): `id`, `name` ("Sharp", "of the
-  Bear"), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,
+  Bear"), `category` (lower-case words joined by `_`, `physical_damage`: an item never has
+  two affixes of one category; every affix of one effect (of one skill, of one damage type)
+  names the same category, and a category on both prefixes and suffixes is one effect; else a
+  content error), `effect` (one of `to_hit`, `damage`, `extra_damage` (adds 1dN), `threat`, `crit`,
   `attack_speed`, `range`, `draw`, `durability`, `parry`, `armour`, `protection`, `shield`,
   `max_dex`,
   `weight`, `dodge`, `deflection`, `natural`, `max_hp`, `regeneration`, `max_mana`,

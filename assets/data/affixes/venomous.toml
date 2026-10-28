@@ -4,6 +4,7 @@
 id = "venomous"
 name = "Venomous"
 effect = "elemental"
+category = "poison_damage"
 damage_type = "poison"
 bases = ["weapon", "ammo"]
 weight = 40

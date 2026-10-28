@@ -61,21 +61,21 @@ fn a_weapon_shows_its_to_hit_and_damage_with_its_known_affixes() {
     let w = world();
     assert_eq!(
         text(&w, &plain(&w, "long_sword")).as_deref(),
-        Some("+0 hit, 1d8")
+        Some("+0 hit, 1d9")
     );
     let sword = magic(&w, "long_sword", &[("accurate", 1), ("sharp", 1)], true);
-    assert_eq!(text(&w, &sword).as_deref(), Some("+1 hit, 1d8+1"));
+    assert_eq!(text(&w, &sword).as_deref(), Some("+1 hit, 1d9+1"));
     let lines = describe::lines(&sword, w.content());
     assert!(
-        lines.iter().any(|l| l.text == "To hit +1, damage 1d8+1"),
+        lines.iter().any(|l| l.text == "To hit +1, damage 1d9+1"),
         "{lines:?}"
     );
     // An elemental affix rides on the damage.
     let flaming = magic(&w, "long_sword", &[("flaming", 4)], true);
-    assert_eq!(text(&w, &flaming).as_deref(), Some("+0 hit, 1d8 +1d4 fire"));
+    assert_eq!(text(&w, &flaming).as_deref(), Some("+0 hit, 1d9 +1d4 fire"));
     // The listed name carries them after it.
     let listed = w.perception().lore().listed(&sword);
-    assert!(listed.ends_with("long sword (+1 hit, 1d8+1)"), "{listed}");
+    assert!(listed.ends_with("long sword (+1 hit, 1d9+1)"), "{listed}");
 }
 
 #[test]

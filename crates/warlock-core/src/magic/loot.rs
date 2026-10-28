@@ -11,13 +11,13 @@
 //! 2. **the count**: ammunition comes in stacks of [`AMMO`] (one draw); anything else is one;
 //! 3. **the rarity**: one draw over the weights of `[rarity]` in `data/affixes.toml` (those below
 //!    the grade asked for left out); none for what is never magic (a scroll), which is normal;
-//! 4. **how many affixes**: a magic item has both a prefix and a suffix by the chance
-//!    `magic.both` (one draw), else one of either (one draw); a rare one draws its count from
-//!    `rare.affixes` (one draw) and how many of them are prefixes (one draw, at most three of
-//!    each);
+//! 4. **how many affixes**: a magic item has a prefix, a suffix, or one of each by the weights
+//!    of `[magic]` (one draw); a rare one draws its count from `rare.affixes` (one draw) and how
+//!    many of them are prefixes (one draw, evenly among the splits that keep at most three of
+//!    each, so prefixes and suffixes are alike);
 //! 5. **each affix**, prefixes first: one draw among those that may roll on the item (its kind
 //!    in the affix's `bases`, something for the effect to change, a tier at the item level, and
-//!    an effect the item has no affix of yet), weighted by their `weight`; one draw for the tier
+//!    a `category` the item has no affix of yet), weighted by their `weight`; one draw for the tier
 //!    among those found at the item level; one draw for the value in the tier's range (none when
 //!    the range is a single value). With nothing left to roll, the item has fewer affixes; with
 //!    none at all it is normal;
@@ -274,13 +274,9 @@ fn roll_magic(
             (prefixes, count - prefixes)
         }
         _ => {
-            if rng.chance(affixes.magic_both) {
-                (1, 1)
-            } else if rng.chance(50) {
-                (1, 0)
-            } else {
-                (0, 1)
-            }
+            let [prefix, suffix, both] = affixes.magic_affixes;
+            let shapes = [((1, 0), prefix), ((0, 1), suffix), ((1, 1), both)];
+            *pick_weighted(rng, &shapes).unwrap_or(&(1, 0))
         }
     };
     let mut rolled: Vec<Affix> = Vec::new();
@@ -307,7 +303,7 @@ fn roll_magic(
     })
 }
 
-/// One affix of `kind` for `def` at `level` that does nothing `rolled` already does.
+/// One affix of `kind` for `def` at `level` of a category none of `rolled` is of.
 pub(crate) fn roll_affix(
     content: &Content,
     rng: &mut Rng,
@@ -318,8 +314,8 @@ pub(crate) fn roll_affix(
 ) -> Option<Affix> {
     let item = def.kind?;
     let affixes = content.affixes();
-    let taken: Vec<_> = (rolled.iter())
-        .filter_map(|a| affixes.get(&a.id).map(|d| d.group()))
+    let taken: Vec<&str> = (rolled.iter())
+        .filter_map(|a| affixes.get(&a.id).map(|d| d.category.as_str()))
         .collect();
     // By affix id, like the bases: not by the order the affix files load in.
     let mut candidates: Vec<(usize, u32)> = (affixes.all().iter().enumerate())
@@ -327,7 +323,7 @@ pub(crate) fn roll_affix(
             a.kind == kind
                 && a.weight > 0
                 && a.tiers_at(level) > 0
-                && !taken.contains(&a.group())
+                && !taken.contains(&a.category.as_str())
                 && may_roll(a, item, def)
         })
         .map(|(i, a)| (i, a.weight))

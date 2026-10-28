@@ -2,6 +2,7 @@
 id = "steady"
 name = "Steady"
 effect = "draw"
+category = "draw"
 bases = ["launcher"]
 weight = 60
 tiers = [

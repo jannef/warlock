@@ -107,7 +107,7 @@ impl Magic {
 
     /// Whether it is a valid item of `def` for `content` (a guard for saves and level files):
     /// magic or rare, with a name exactly when rare, known affixes that may roll on it (each
-    /// tier one the affix has, each value within the tier's range, no two with the same effect),
+    /// tier one the affix has, each value within the tier's range, no two of one category),
     /// and no more prefixes or suffixes than its rarity allows (at least one affix).
     pub fn check(&self, def: &ObjectDef, content: &Content) -> Result<(), String> {
         let Some(kind) = def.kind else {
@@ -133,7 +133,7 @@ impl Magic {
         if self.level == 0 || self.level > crate::content::MAX_ITEM_LEVEL {
             return Err(format!("item level {} is out of range", self.level));
         }
-        let mut effects = Vec::new();
+        let mut categories: Vec<&str> = Vec::new();
         let mut per_kind = [0usize; 2];
         for affix in &self.affixes {
             let a = content
@@ -152,10 +152,11 @@ impl Magic {
                     a.id, affix.tier, tier.min, tier.max, affix.value
                 ));
             }
-            if effects.contains(&a.group()) {
-                return Err(format!("two affixes do `{}`", a.effect.id()));
+            // One affix per category, which is one per effect too (`content::affix`).
+            if categories.contains(&a.category.as_str()) {
+                return Err(format!("two affixes of category `{}`", a.category));
             }
-            effects.push(a.group());
+            categories.push(&a.category);
             per_kind[a.kind as usize] += 1;
         }
         let most = self.rarity.most_per_kind();

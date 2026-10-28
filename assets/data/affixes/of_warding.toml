@@ -2,6 +2,7 @@
 id = "of_warding"
 name = "of Warding"
 effect = "deflection"
+category = "deflection"
 bases = ["body", "gloves", "boots"]
 tiers = [
   { level = 1, min = 1, max = 1 },

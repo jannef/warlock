@@ -3,6 +3,7 @@
 id = "of_the_salamander"
 name = "of the Salamander"
 effect = "resistance"
+category = "fire_resistance"
 damage_type = "fire"
 bases = ["body", "cloak", "shield", "ring", "amulet"]
 tiers = [

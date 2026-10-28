@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
     ┌─ Inventory ─────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ Melee weapons                                                                           │
-    │   a - ) a Sharp emerald-pommelled long sword of the Bear (+0 hit, 1d8+2)        1.8 kg  │
+    │   a - ) a Sharp emerald-pommelled long sword of the Bear (+0 hit, 1d9+2)        1.8 kg  │
     │ Missile weapons                                                                         │
     │   b - } a short bow (rare) (+0 hit, 1d6, range 10)                               700 g  │
     │ Helmets                                                                                 │

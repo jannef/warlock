@@ -2,6 +2,7 @@
 id = "fleet"
 name = "Fleet"
 effect = "move_speed"
+category = "movement_speed"
 bases = ["boots"]
 tiers = [
   { level = 1, min = 5, max = 8 },

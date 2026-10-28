@@ -238,8 +238,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   **Numbers** (#552; the owner's exception to hidden numbers, 2026-10-27: "player just needs to
   know how much +hit and damage, dv and pv equipment has"): each stack's name is followed by what
   it gives, in parentheses before its marks (`Lore::listed`, `magic::numbers`): a weapon its
-  to-hit and damage, "a long sword (+0 hit, 1d8)", extra dice and elemental damage as the
-  character screen writes them, "(+0 hit, 1d8+1d4 +1d6 fire)", and a launcher's or a throwing
+  to-hit and damage, "a long sword (+0 hit, 1d9)", extra dice and elemental damage as the
+  character screen writes them, "(+0 hit, 1d9+1d4 +1d6 fire)", and a launcher's or a throwing
   weapon's range, "a short bow (+0 hit, 1d6, range 10)"; ammunition what it adds to a shot, only
   when it adds something, "12 flaming arrows (+1d4 fire)"; anything else what its affixes add to
   every attack, "(+1 hit)"; armour its Defence and Protection, both even when 0, "a chain mail
@@ -284,7 +284,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   main one first, §7 "Objects and materials"), each gem in it with its size and cut ("Pommel:
   small emerald, fine cut", a loose gem's "Gem: tiny garnet, uncut"; §7 "Gems"), its base stats
   in words
-  (`magic::describe`: "Long blade, for the main hand", "Damage 1d8; criticals on 20–24, ×2
+  (`magic::describe`: "Long blade, for the main hand", "Damage 1d9; criticals on 20–24, ×2
   damage", "Shoots up to 15 cells", "Needs Strength 14 to draw", "Quick to strike", "Pierces
   armour" (never how much), "Armour +2", "Protection 3", or with per-kind adjustments
   "Protection 3 (+1 against slashing, −1 against piercing)", "Dexterity adds at most +4 to

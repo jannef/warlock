@@ -13,7 +13,7 @@ expression: "render(case, content.clone())"
            ┌─ Temper ───────────────────────────────────────────────────────────────────┐
            │                                                                            │
            │ Melee weapons                                                              │
-           │ > a - ) a long sword (+0 hit, 1d8)                                 1.8 kg  │
+           │ > a - ) a long sword (+0 hit, 1d9)                                 1.8 kg  │
            │   b - ) a dagger (+0 hit, 1d4, range 5)                             450 g  │
            │ Shields                                                                    │
            │   c - [ a small shield (Dv +1)                                     2.5 kg  │
