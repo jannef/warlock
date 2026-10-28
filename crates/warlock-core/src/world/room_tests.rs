@@ -421,7 +421,7 @@ fn the_light_of_a_room_stays_in_it() {
 /// More effects for the tests below: `gloom`, which keeps half the light, makes noise half again
 /// as loud, and may cover a whole level; `glade`, a quickening whose `near` line is said from
 /// outside.
-const MORE_EFFECTS: &str = "\n[[effect]]\nid = \"gloom\"\nname = \"gloomy room\"\nmark = \"G\"\n\
+const MORE_EFFECTS: &str = "\n[[effect]]\nid = \"gloom\"\nname = \"gloomy room\"\nmark = \"Q\"\n\
     enter = \"Gloom.\"\nlevel_chance = 5\npervade = \"A gloom lies over this level.\"\n\
     light = 50\nnoise = 150\n\
     [[effect]]\nid = \"glade\"\nname = \"glade\"\nmark = \"L\"\nenter = \"A glade.\"\n\

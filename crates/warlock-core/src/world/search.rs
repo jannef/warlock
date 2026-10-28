@@ -2,7 +2,9 @@
 //!
 //! Hidden features are **secret doors**, which look and act like the wall around them (the cell's
 //! terrain is that wall; [`crate::content::Secret`] keeps the door), and **hidden traps**, which
-//! look like the floor or the door they lie on (spec §8 "Traps", "Trapped doors"). Each has a
+//! look like the floor or the door they lie on (spec §8 "Traps", "Trapped doors"), and the
+//! **breaches** of sealed rooms (a greater treasure room's, spec §7 "Special rooms"), a wall like
+//! any other until found, at the secret doors' difficulty. Each has a
 //! **difficulty**: the trap type's, or the secret door's own, plus on a dungeon branch its
 //! `hidden_per_depth` for each level below the first. Two checks find them (spec §8 "Checks",
 //! [`crate::check`]: 2d12 plus a modifier against the difficulty):
@@ -29,7 +31,9 @@
 //! ([`World::know_trap`], as a trap seen going off is), and both are remembered at once, in the
 //! dark too: "You find a secret door!", "You notice a pressure plate: an arrow trap.", and for a
 //! door's trap "You notice that the door is trapped: an arrow trap.", a chest's "You notice that
-//! the coffer is trapped: an arrow trap." (a trap's `sign` is the floor's).
+//! the coffer is trapped: an arrow trap." (a trap's `sign` is the floor's). A found breach is a
+//! hollow wall ([`super::LevelState::hollows`], remembered as the wall it is): "The wall here
+//! sounds hollow."; digging or a blast then opens it.
 
 use super::World;
 use super::rest::Ended;
@@ -50,6 +54,9 @@ pub(super) enum Hidden {
     Door(u8),
     /// A hidden trap of this type.
     Trap(TrapId),
+    /// A sealed room's breach not yet found (spec §7 "Special rooms": a greater treasure room's),
+    /// at the branch's secret-door difficulty.
+    Hollow,
 }
 
 /// Which of the two checks.
@@ -80,7 +87,12 @@ impl World {
         let traps = (level.traps.iter())
             .filter(|(p, t)| !t.known && near(p))
             .map(|(p, t)| (*p, Hidden::Trap(t.kind)));
-        let mut hidden: Vec<(Pos, Hidden)> = doors.chain(traps).collect();
+        let content = &self.content;
+        let hollows = (level.rooms.iter())
+            .filter_map(|r| r.breach)
+            .filter(|p| near(p) && !level.hollows.contains(p) && level.breach_at(content, *p))
+            .map(|p| (p, Hidden::Hollow));
+        let mut hidden: Vec<(Pos, Hidden)> = doors.chain(traps).chain(hollows).collect();
         hidden.sort_by_key(|(p, _)| *p);
         if reach > 1 && hidden.iter().any(|(p, _)| p.chebyshev(here) > 1) {
             let radius = LineOfSight::radius_for(2 * reach * reach);
@@ -96,6 +108,7 @@ impl World {
         let own = match hidden {
             Hidden::Door(difficulty) => i32::from(difficulty),
             Hidden::Trap(kind) => i32::from(self.content.trap(kind).difficulty),
+            Hidden::Hollow => i32::from(self.content.search().secret_door),
         };
         let deeper = (self.content.branch_level(&self.state.current_level))
             .map_or(0, |(def, depth)| def.hidden_at(depth));
@@ -107,7 +120,7 @@ impl World {
     pub(super) fn finding(&self, hidden: Hidden) -> i32 {
         let ease = match hidden {
             Hidden::Trap(_) => self.state.player().talent_mods(&self.content).trap_ease,
-            Hidden::Door(_) => 0,
+            Hidden::Door(_) | Hidden::Hollow => 0,
         };
         self.difficulty_of(hidden) - ease
     }
@@ -274,6 +287,13 @@ impl World {
                 self.set_terrain(at, secret.door);
                 self.state.current_mut().memory.set(at, Some(secret.door));
                 self.say("You find a secret door!");
+            }
+            Hidden::Hollow => {
+                let level = self.state.current_mut();
+                level.hollows.insert(at);
+                let wall = level.terrain.get(at).copied();
+                level.memory.set(at, wall);
+                self.say("The wall here sounds hollow.");
             }
             Hidden::Trap(_) => {
                 let Some(kind) = self.know_trap(at) else {

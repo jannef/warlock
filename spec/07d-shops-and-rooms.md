@@ -228,7 +228,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     #617, mark `$`; only in a room of at least 9 floor cells) is hidden behind secret doors and
     holds chests, gold, and gems (below; "Gold glints in the dust. No one has been here in a long
     time." on entering, and on every arrival until then "Something tells you there is wealth
-    hidden on this level."); a *cursed room* (6, #408; only on a level with a danger; unholy, as is the
+    hidden on this level."); a *greater treasure room* (2, #618, mark `G`) is walled up in the
+    rock with no door and no corridor and holds more (below; "The air is stale and heavy with the
+    smell of old gold." on entering, and on every arrival until then "Something tells you a
+    fortune lies walled up on this level."); a *cursed room* (6, #408; only on a level with a danger; unholy, as is the
     draining room) raises the dead killed inside (below; "A cold draught smells of the grave."
     when glimpsed, "The air is cold and the dead are near." on entering) and covers a whole
     level with `level_chance` 5 ("The dead do not rest on this level."). Fennmynster favours it
@@ -374,6 +377,34 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is stored (`SpecialRoom::entered` is the record), so it comes again on every return until
     the room is entered. Treasure sense (§8 "Talents") ends it with the way to the nearest such
     room's middle from where the player arrived, in eight winds ("..., to the north-east.").
+    Never over a whole level.
+  - **A greater treasure room** (`sealed = "dig"`, `treasure = { chests = "2d2", gold = { heaps
+    = "2d4+2", dice = "4d6", each = 5 }, gems = "2d3" }`, `arrive`, #618; `mapgen/treasury.rs`,
+    `world/search.rs`; docs/design/chests-and-treasure.md §6.2, §6.3). **No door and no corridor,
+    ever** (the owner): on either generator a box stamped into the rock as a cave's treasure room
+    is (4 × 3 for 9 floor cells; on a rooms level after the corridors are dug, in the rock they
+    left, so none leads to it), drawn as any special room from the map stream, and eligible
+    only where such a box fits with one cell of its ring (not a corner, not on the level's
+    edge) 4-adjacent to a walkable cell reached from the up staircase (never only beside another
+    room's wall: one wall to break, never two). That cell, drawn from the map stream among such
+    cells, is the room's **breach** (`SpecialRoom::breach`, saved and hashed, left out while
+    none): a stone wall (hardness 600) guaranteed to open the room when broken. Every other wall
+    of the box is stone too and may be dug as well. The level's validity (§7 "Generators") has
+    one exception: a sealed room's cells need not be reached, provided its breach is a wall that
+    breaks, not on the edge, and 4-adjacent both to a cell reached from the up staircase and to
+    floor of the room (else the level is invalid: `NoBreach`, `BadBreach`). Nothing the level
+    needs is ever inside: no stairs, key, creature, or patrol, no hidden trap (the trap stream
+    skips its cells), and nothing spawns there later. Its chests, gold, and gems are laid as a
+    treasure room's (no chest beside the breach). **Finding it**: the hint says it is walled up;
+    the breach is a hidden feature (§8 "Searching"), found by the one check at the secret-door
+    difficulty ("The wall here sounds hollow.") and remembered as a **hollow wall**
+    (`LevelState::hollows`, saved, left out while empty; look mode "a hollow stone wall"; JSON
+    dumps `known_hollows`) until it is broken. A pick-axe (§8 "Digging") or a blast (a scroll of
+    fireball's 1000 beats the wall's 600) opens it; without either there is no way in, by
+    design. A level file's `[[room]]` of a sealed effect names its `breach = [x, y]` (refused
+    without one, with one that does not open the room as above, reached from the player's start,
+    or where the room is reached without breaking a wall; `breach` on any other effect is
+    refused). The `rooms` dev layer adds `, breach (x, y)`; `truth` draws a standing breach `H`.
     Never over a whole level.
   - **Shrines of a side** (`shrine = { regen = 200, status = "unwelcome", welcome, unwelcome
     }`, #413; `world/shrine.rs`, design §9.3): the room has a hidden side, drawn at generation
@@ -673,10 +704,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (inclusive, walls and doors included; inside the map; rooms never overlap; vaults mark none),
     and may name an effect covering the whole level with a top-level `effect = "..."` (one that
     can cover a level; never on the overworld). A hand-made level draws its own floor (a flooded
-    room's water). The hub's stairs nook is a sanctuary.
+    room's water); a sealed room names its `breach = [x, y]` (above). The hub's stairs nook is a
+    sanctuary.
   - **State**: each level state keeps its special rooms (`LevelState::rooms`: the effect, its
     box, a blob's cells, whether the player has seen a cell of it (`glimpsed`) and been inside
-    (`entered`)) and the effect covering it (`LevelState::pervading`); saved and hashed, each
+    (`entered`), a sealed room's `breach`; and the hollow walls found, `LevelState::hollows`)
+    and the effect covering it (`LevelState::pervading`); saved and hashed, each
     left out while empty. The rules ask one question, `World::effects_at(level, pos)` (inside the
     core the level state's `effects_at`), which gives the room's effect and the level's, folded
     the same way by every reader (percents multiply, glows add, flags hold if either does): light

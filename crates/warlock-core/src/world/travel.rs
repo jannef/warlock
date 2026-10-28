@@ -78,6 +78,8 @@ impl World {
         // A secret door is the wall it looks like until it is found: whatever becomes of that
         // wall (dug through, blasted, found), the secret is gone.
         level.secrets.remove(&p);
+        // So is a hollow wall the player found (a sealed room's breach) once it is broken.
+        level.hollows.remove(&p);
         let level = self.state.current();
         self.lights.terrain_changed(level, &self.content, p);
     }

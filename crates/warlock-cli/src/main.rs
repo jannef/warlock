@@ -290,8 +290,9 @@ fn gen_command(content: &Content, args: &GenArgs) -> Result<(), String> {
     }
     for room in &level.rooms {
         let effect = content.room_effect(room.effect);
+        let breach = (room.breach).map_or(String::new(), |b| format!(", breach {b}"));
         println!(
-            "special room {} ({}) at {}-{}",
+            "special room {} ({}) at {}-{}{breach}",
             effect.name, effect.mark, room.min, room.max
         );
     }

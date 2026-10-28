@@ -233,12 +233,19 @@ fn special_rooms(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: us
             .filter(|p| canvas.is_walkable(*p))
             .count();
         let doors: Vec<Pos> = room.doors.iter().map(|&(p, _)| p).collect();
+        // A sealed room (a greater treasure room) is a box of its own in the rock the corridors
+        // left, not this room (`treasury.rs`).
         let sealable = |e: &RoomEffectDef| {
-            e.secret_doors.is_none() || super::treasury::fits_room(canvas, (min, max), &doors)
+            (e.secret_doors.is_none() || super::treasury::fits_room(canvas, (min, max), &doors))
+                && (e.sealed.is_none() || super::treasury::fits_box(canvas, e))
         };
         let Some((effect, whole)) = special::pick(canvas, rng, floor, sealable) else {
             continue;
         };
+        if canvas.content.room_effect(effect).sealed.is_some() {
+            super::treasury::stamp(canvas, rng, effect);
+            continue;
+        }
         special::place(canvas, rng, SpecialRoom::rect(effect, min, max), whole);
     }
 }

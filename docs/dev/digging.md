@@ -28,3 +28,5 @@ app bursts the new terrain's `toggle` particles (rubble's dust) on `WallBroken`,
 Creatures do not dig. Times are in the wiki's generated `digging.md` tables.
 A blast also blows apart a shut chest whose band's hardness is below it (`World::blast`;
 `docs/dev/chests.md`); digging at a chest is refused, a chest having no `hardness` as terrain.
+A greater treasure room (#618) is reached only by breaking a wall: its breach, a found one a
+hollow wall that `set_terrain` forgets once broken (`docs/dev/special-rooms.md`).

@@ -207,6 +207,17 @@ pub(super) fn special_rooms(content: &Content) -> String {
                     .into(),
             );
         }
+        if e.sealed.is_some() {
+            does.push(
+                "It has no door and no corridor: a box walled up in the rock, on any level. One \
+                 of its walls (beside a passage you can reach) is guaranteed to open it; \
+                 searching beside it (as for a secret door, at the same difficulty) finds that \
+                 \"the wall here sounds hollow\". Dig through it or blast it open (a stone wall, \
+                 hardness 600). Nothing that the level needs is ever inside, no trap is hidden \
+                 in it, and nothing wanders in."
+                    .into(),
+            );
+        }
         if let Some(t) = e.treasure {
             does.push(format!(
                 "{} chests of the level's item level, {} heaps of {} × {} gold coins, and {} \

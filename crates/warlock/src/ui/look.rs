@@ -49,7 +49,8 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let content = view.content();
     // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
     // a named place its name: "a volcano, Fyrbeorg";
-    // a wall in sight that was dug into says so: "a stone wall, partly dug".
+    // a wall in sight that was dug into says so: "a stone wall, partly dug";
+    // a wall found to sound hollow says so: "a hollow stone wall".
     // A chest goes by its band: "a coffer", "an open coffer", "a locked coffer" (Chest-wise);
     // its known trap after it: "a coffer, trapped: an arrow trap".
     let chest = view.chest_at(p);
@@ -63,6 +64,9 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                 with_article(trap)
             ),
             (Some(chest), None) => chest.name(content.chests(), &def.name),
+            // A wall the player found sounds hollow (a sealed room's breach): "a hollow stone
+            // wall".
+            (None, _) if view.hollow(p) => format!("hollow {}", def.name),
             (None, _) => def.name.clone(),
         };
         let name = match view.blood(p).filter(|_| blood) {
@@ -796,6 +800,49 @@ map = '''
         assert_eq!(
             describe(&view, Pos::new(4, 1), true),
             "An animated rug of wool (hostile, unhurt), rippling, on stone floor."
+        );
+    }
+
+    #[test]
+    fn a_wall_found_to_sound_hollow_says_so() {
+        let hall = r##"
+name = "Hall"
+ambient = [255, 255, 255, 0]
+map = '''
+#########
+#@.#....#
+#..#....#
+#########
+'''
+[[room]]
+effect = "great_treasury"
+area = [3, 0, 8, 3]
+breach = [3, 1]
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"##;
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert("levels/hall.toml", hall);
+        files.insert(
+            "scenarios/hall.toml",
+            "name = \"Hall\"\nstart_level = \"hall\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let mut w = World::new(content, "hall", None).expect("hall");
+        let breach = Pos::new(3, 1);
+        assert_eq!(describe(&w.perception(), breach, true), "A stone wall.");
+        w.apply(&Action::Move(Dir::E));
+        for _ in 0..20 {
+            if w.perception().hollow(breach) {
+                break;
+            }
+            for action in warlock_core::action::parse_actions("search:100").unwrap() {
+                w.apply(&action);
+            }
+        }
+        assert_eq!(
+            describe(&w.perception(), breach, true),
+            "A hollow stone wall."
         );
     }
 

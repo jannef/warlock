@@ -4,7 +4,9 @@ Developer notes for working on this part of Warlock; the rules it implements are
 spec/08d-traps-doors-digging.md ("Searching"). Keep it current with the code, as CLAUDE.md says.
 
 Searching (spec §8 "Searching", #140) finds **hidden features**, secret doors and hidden traps,
-with one check for all of them.
+with one check for all of them. Sealed rooms' breaches are hidden features too
+(`Hidden::Hollow`, #618: a greater treasure room's thin wall, found as a hollow wall,
+`LevelState::hollows`; `docs/dev/special-rooms.md` "Greater treasure rooms").
 
 **Data**: `data/search.toml` (`content/search.rs`: `SearchRules { passive_penalty, turns,
 secret_door }`, `Content::search()`; optional, `SearchRules::default` without it), the Search
@@ -53,7 +55,8 @@ hidden features in reach, so runs without any nearby keep their hashes; no memor
 checks and no cooldown (the owner's rule: no anti-farming limits); presentation never sees a
 difficulty, a modifier, or a roll. The app binds `s` (`KeyCommand::Search`, `search`) and `S`
 (`KeyCommand::SearchLong`, `search:N` with `SearchRules::turns`); basic commands, not
-abilities. `dump`'s `truth` layer and `warlock-cli gen` mark secret doors `S`.
+abilities. `dump`'s `truth` layer and `warlock-cli gen` mark secret doors `S`; `truth` marks a
+standing breach `H`.
 
 **Tests**: `world/search_tests.rs` (looks, finding, draws, who notices, traps, long searches,
 rests, reach, `set_terrain`, depth, saves and replays, legend errors), `content/search.rs`,

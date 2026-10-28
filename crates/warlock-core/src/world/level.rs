@@ -22,7 +22,7 @@ use crate::object::Stack;
 use crate::temperature::{self, Temperature};
 use crate::time::GameTime;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Something burning on a cell (spec §8 "Ranged combat"): a burning object landed there (a
 /// flaming arrow), giving light until it burns out and is gone.
@@ -87,6 +87,11 @@ pub struct LevelState {
     /// its entrance and is gone from here. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) hidden: BTreeMap<Pos, HiddenLocation>,
+    /// The breaches of sealed rooms the player has found (spec §7 "Special rooms": a greater
+    /// treasure room's), by position: walls that sound hollow, which look mode names. Gone once
+    /// the wall is broken.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) hollows: BTreeSet<Pos>,
     /// Blood on cells, by position (spec §8 "Blood"). Presentation-only: no rule reads it.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) blood: BTreeMap<Pos, Stain>,
@@ -169,6 +174,7 @@ impl LevelState {
             chests: template.chests.clone(),
             secrets: template.secrets.clone(),
             hidden: template.hidden.clone(),
+            hollows: BTreeSet::new(),
             blood: BTreeMap::new(),
             blood_memory: BTreeMap::new(),
             dug: BTreeMap::new(),
@@ -259,6 +265,17 @@ impl LevelState {
     /// rules, **for developer tools only**.
     pub fn secret_at(&self, p: Pos) -> Option<&Secret> {
         self.secrets.get(&p)
+    }
+
+    /// Whether `p` is a sealed room's breach still standing (spec §7 "Special rooms"): the wall a
+    /// greater treasure room is guaranteed to open by, found or not. Ground truth.
+    pub fn breach_at(&self, content: &Content, p: Pos) -> bool {
+        self.rooms.iter().any(|r| r.breach == Some(p)) && !self.is_walkable(content, p)
+    }
+
+    /// The sealed rooms' breaches the player has found on this level, by position.
+    pub fn hollows(&self) -> &BTreeSet<Pos> {
+        &self.hollows
     }
 
     /// The hidden location at `p`, if one is there and not yet revealed (ground truth: the cell

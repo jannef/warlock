@@ -126,6 +126,17 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   seals: its only dangers are its chests' traps and the time it takes to find. On every arrival
   on its level until you have been inside, *something tells you there is wealth hidden on this
   level*.
+- **Greater treasure room.** A fortune walled up in the rock: two to four chests of the level's
+  depth, four to ten heaps of gold coins (four six-sided dice times five coins: 20 to 120 coins a
+  heap), and two to six loose gems. It has **no door and no corridor at all**: nothing leads
+  there, and the only way in is through a wall. One of its walls, beside a passage you can reach,
+  is guaranteed to be thin; search beside it (as for a secret door, at the same difficulty) and
+  *the wall here sounds hollow*. Look at it and it is a hollow stone wall. Dig through it with a
+  pick-axe or blast it open (a scroll of fireball does it); any other wall of it can be dug too,
+  if you guess well. Without a digging tool or a blast you cannot get in: come back with one.
+  Nothing the level needs is ever inside, no trap is hidden in it, and no creature wanders in.
+  On every arrival on its level until you have been inside, *something tells you a fortune lies
+  walled up on this level* (with Treasure sense, and which way it lies).
 - **Tempting hoard.** Only on a level with a danger: three items lie on its
   floor, better than the level's own (three item levels above it), and no one guards them. The
   moment you pick anything up inside, the room seals: every door of it slams shut and locks

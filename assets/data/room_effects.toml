@@ -111,6 +111,11 @@
 #            branch's difficulty), never counted against the branch's `secret_doors`. On a rooms
 #            level its doors are hidden; on a cave level the room is a box stamped into the rock
 #            with one secret door. Never the whole level
+#   sealed   "dig": no door at all and no corridor: on either generator the room is a box
+#            stamped into the rock, one of its walls (its breach, beside a cell reached from the
+#            up staircase) guaranteed to open it; found by searching (it sounds hollow), opened
+#            by digging or a blast. A level file's room names its `breach = [x, y]`. Not with
+#            `secret_doors`; never the whole level
 #   treasure what generators lay inside a treasure room: { chests = DICE, gold = { heaps = DICE,
 #            dice = DICE, each = N }, gems = DICE }: `chests` chests (0 to 16) of the floor's item
 #            level, `heaps` heaps (0 to 16) of `dice` × `each` (1 to 1000) gold coins, and `gems`
@@ -423,3 +428,17 @@ weight = 4
 min_cells = 9
 secret_doors = "all"
 treasure = { chests = "1d2", gold = { heaps = "1d4+1", dice = "3d6", each = 2 }, gems = "1d3" }
+
+# A greater treasure room (spec §7 "Special rooms"): walled up in the rock with no door and no
+# corridor, a fortune inside; the hint on every arrival until it is entered. Its one thin wall
+# sounds hollow to a searcher; a pick-axe or a blast opens it.
+[[effect]]
+id = "great_treasury"
+name = "greater treasure room"
+mark = "G"
+arrive = "Something tells you a fortune lies walled up on this level."
+enter = "The air is stale and heavy with the smell of old gold."
+weight = 2
+min_cells = 9
+sealed = "dig"
+treasure = { chests = "2d2", gold = { heaps = "2d4+2", dice = "4d6", each = 5 }, gems = "2d3" }

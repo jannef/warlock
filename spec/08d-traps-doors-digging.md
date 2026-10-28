@@ -335,7 +335,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     remembers (`pos`, `band`, `state`, and `locked`: with Chest-wise for a shut one in sight,
     else null).
 - **Searching** (`warlock-core/src/world/search.rs`; data `data/search.toml` §7; #140): one
-  check finds every hidden feature, secret doors and hidden traps alike.
+  check finds every hidden feature, secret doors, hidden traps, and the breaches of sealed rooms
+  (§7 "Special rooms": a greater treasure room's, at the secret-door difficulty) alike.
   - **Secret doors**: a closed door that looks and acts like the wall around it until it is
     found. It is per-cell ground truth beside that wall, like a lock (`LevelState::secrets`: the
     door it is and its difficulty; saved and hashed): the cell's terrain *is* the wall it looks
@@ -383,8 +384,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Found**: a secret door becomes its closed door ("You find a secret door!"); a trap becomes
     known as one seen going off does (`World::know_trap`, shared with `learn_traps`; "You notice
     a tripwire: an alarm trap.", the trap's `sign`, default "a pressure plate"; a door's trap
-    "You notice that the door is trapped: an arrow trap.", since a sign is the floor's). Either is
-    remembered at once, in the dark too, and the message stops a rest.
+    "You notice that the door is trapped: an arrow trap.", since a sign is the floor's); a breach
+    becomes a **hollow wall** ("The wall here sounds hollow."; the same wall, remembered, which
+    look mode calls "a hollow stone wall" until it is dug through or blasted). Each is
+    remembered at once, in the dark too, and the message stops a rest. A dwarf's stone sense
+    notices a breach in passing, as it is stone.
   - **Where secret doors are**: level legends (§7 "Secret doors in level files"), indoor vaults
     (stamped with them), and the rooms levels of a branch with `secret_doors` (the Depths: one
     or two a level), only where the level does without them (§7 "Generators"). The showcase hub

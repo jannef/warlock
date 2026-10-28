@@ -1,7 +1,7 @@
-//! A treasure room's fields (spec §7 "Special rooms"): `secret_doors`, `treasure`, and `arrive`
-//! parsed, their refusals, and never over a whole level.
+//! A treasure room's fields (spec §7 "Special rooms"): `secret_doors`, `sealed`, `treasure`, and
+//! `arrive` parsed, their refusals, and never over a whole level.
 
-use super::{RoomEffectId, RoomEffects, SecretDoors};
+use super::{RoomEffectId, RoomEffects, Sealed, SecretDoors};
 
 fn effect(extra: &str) -> String {
     format!(
@@ -35,6 +35,9 @@ fn the_fields_parse_and_are_none_by_default() {
     let plain = RoomEffects::parse("e.toml", &effect(""), |_| None).expect("valid");
     let p = plain.get(RoomEffectId(0));
     assert!(p.secret_doors.is_none() && p.treasure.is_none() && p.arrive.is_none());
+    assert!(p.sealed.is_none());
+    let sealed = RoomEffects::parse("e.toml", &effect("sealed = \"dig\""), |_| None).expect("ok");
+    assert_eq!(sealed.get(RoomEffectId(0)).sealed, Some(Sealed::Dig));
 }
 
 #[test]
@@ -51,6 +54,15 @@ fn bad_fields_are_refused() {
         ),
         (
             "level_chance = 5\npervade = \"P.\"\narrive = \"A.\"".to_string(),
+            "needs a `pervade` line",
+        ),
+        ("sealed = \"door\"".to_string(), "unknown variant"),
+        (
+            "sealed = \"dig\"\nsecret_doors = \"all\"".to_string(),
+            "not both",
+        ),
+        (
+            "level_chance = 5\npervade = \"P.\"\nsealed = \"dig\"".to_string(),
             "needs a `pervade` line",
         ),
     ] {
