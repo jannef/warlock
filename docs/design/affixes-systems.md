@@ -242,7 +242,7 @@ Names in the register: *attuned* is the old sense of brought into tune; *bellows
 
 ## 13. Implementation plan
 
-Each item is one issue, one branch, one PR, updating the spec, the `docs/dev/` topic at the hook, and the wiki in the same PR. **None adds saved state, an action, or a key**; the "Save" column is here because the template asks for it. Sizes: S about a day, M two to three, L a week.
+Each item is one issue, one branch, one PR, updating the spec, the `docs/dev/` topic at the hook, and the wiki in the same PR. **None adds saved state, an action, or a key**; the "Save" column is here because the template asks for it. Sizes: S about a day, M two to three, L a week. Filed 2026-10-28: F1 #628, A1 #629, B1 #630, D1 #631, E1 #632, E2 #633, T1 #634, P1 #635, C1 #636, X1 #637, W1 #638; the tracking issue holds the waves.
 
 | # | Issue title | Sections | Save | Depends on | Size |
 |---|---|---|---|---|---|
