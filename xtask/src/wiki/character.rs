@@ -1,7 +1,7 @@
 //! Character creation (spec §8 "Character creation"): stats, genders, races, classes, and the
 //! horoscope, with adjustments as written in data.
 
-use super::text::{Term, anchored, signed, table_text};
+use super::text::{Term, anchored, damage_link, signed, table_text};
 use super::weapon_skills;
 use std::fmt::Write as _;
 use warlock_core::character::Gender;
@@ -258,7 +258,7 @@ pub(super) fn race_traits(content: &Content) -> String {
             d => format!("Defence +{d}, Protection {} ({})", h.protection, h.name),
         });
         let resists: Vec<String> = (r.resist.iter())
-            .map(|&(kind, percent)| format!("{} {percent} %", content.damage_type(kind).name))
+            .map(|&(kind, percent)| format!("{} {percent} %", damage_link(content, kind)))
             .collect();
         let light = r.light_blind.map(|b| {
             format!(

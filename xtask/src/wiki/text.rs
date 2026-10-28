@@ -1,7 +1,9 @@
 //! Text helpers shared by the tables: glyphs, yes/no, capitals, table cells, articles, signs,
 //! damage.
 
+use warlock_core::content::{Content, DamageTypeId};
 use warlock_core::dice::Dice;
+use warlock_core::stats::Stat;
 
 pub(super) fn glyph(c: char) -> String {
     if c == ' ' {
@@ -166,4 +168,15 @@ pub(super) fn anchored(term: Term, id: &str, name: &str) -> String {
 /// A link to the row that defines a term: `[Staggered](status-effects.md#status-staggered)`.
 pub(super) fn link(term: Term, id: &str, name: &str) -> String {
     format!("[{name}]({}#{})", term.place().0, term.anchor_id(id))
+}
+
+/// A damage type's name linked to its row: `[fire](damage-types.md#damage-fire)`.
+pub(super) fn damage_link(content: &Content, kind: DamageTypeId) -> String {
+    let def = content.damage_type(kind);
+    link(Term::Damage, &def.id, &def.name)
+}
+
+/// A stat's name linked to its row: `[Toughness](stats.md#stat-toughness)`.
+pub(super) fn stat_link(stat: Stat) -> String {
+    link(Term::Stat, stat.name(), stat.name())
 }

@@ -5,7 +5,7 @@
 //! starting ranks of races and classes, as data writes them.
 
 use super::order;
-use super::text::{Term, anchored, capital, thousands};
+use super::text::{Term, anchored, capital, link, thousands};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Benefit, ClassDef, Content, Grip, MAX_RANK, Role, TwoShields, TwoWeapons, WeaponSkillDef,
@@ -437,7 +437,13 @@ pub fn ranks_text(content: &Content, ranks: &[(WeaponSkillId, Dice)]) -> String 
             } else {
                 super::character::adjustment(dice)
             };
-            format!("{} {rank}", table.skill(id).name)
+            let skill = table.skill(id);
+            let term = if skill.is_style() {
+                Term::Style
+            } else {
+                Term::WeaponSkill
+            };
+            format!("{} {rank}", link(term, &skill.id, &skill.name))
         })
         .collect();
     if parts.is_empty() {
