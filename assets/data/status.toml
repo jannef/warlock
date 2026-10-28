@@ -492,9 +492,9 @@ max = 3
 stacking = "refresh"
 eases = 60
 combat = { dodge = 2 }
+start = "Your skin hardens like bark."
 end = "Your skin softens again."
 
-<<<<<<< HEAD
 # Potions' statuses (spec §8 "Potions", the combat progression design §10.1): what a drink
 # lends for a while. Six boosts, a stat raised by 2 a degree (`per_degree`): ten minutes a degree,
 # a greater potion's two degrees easing to one; a new draught keeps the stronger. A boost is told
@@ -629,10 +629,10 @@ name = "Proof against poison"
 max = 1
 stacking = "refresh"
 eases = 1800
-
+resist = { poison = 50 }
 start = "Your blood feels thick and sure."
 end = "Your blood feels ordinary again."
-=======
+
 # Battle caster's Spell guard (spec §8 "Fighting styles"): a spell that lands while its caster
 # fights in armour leaves a ward about them, a Defence point, until their next action.
 [[status]]
@@ -641,9 +641,9 @@ name = "Spell ward"
 max = 1
 stacking = "refresh"
 per_action = true
+combat = { dodge = 1 }
 start = "A ward settles about you."
 end = "Your ward fades."
->>>>>>> origin/main
 
 # Hound's bay's (a Barghest's birth sign pick): a creature that heard the howl and is of a lower
 # level runs from the howler, a degree for each turn, a turn's time apiece.
