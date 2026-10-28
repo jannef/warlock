@@ -12,20 +12,23 @@
 //! - **Searching** ([`crate::Action::Search`]): each turn of it (the `search` action) checks
 //!   every hidden feature within reach, the cells around the player (farther with a high Search
 //!   skill, those of them in line of sight), with the **active** check: the Intelligence
-//!   modifier, plus what the Search skill gives, plus the race's `search`. Searching for a while
+//!   modifier, plus what the Search skill gives (for a hidden trap, the Detect traps skill in its
+//!   place), plus the race's `search`. Searching for a while
 //!   goes on turn after turn through [`World::keep_at`], so it stops like a rest, and at once when
 //!   something is found.
 //! - **Noticing in passing**: after every turn the player takes, each hidden feature on the cells
 //!   around them gets the **passive** check: the Willpower modifier, plus what the Spot skill
-//!   gives, plus the race's `search`, less the passive penalty (`data/search.toml`). Elves notice
-//!   everything so, dwarves what lies on stone (`passive_search`), anyone trained in Spot
-//!   everything; everyone else notices nothing in passing.
+//!   gives (for a hidden trap, Detect traps in its place), plus the race's `search`, less the
+//!   passive penalty (`data/search.toml`). Elves notice everything so, dwarves what lies on stone
+//!   and kobolds traps (`passive_search`), anyone trained in Spot everything but traps, anyone
+//!   trained in Detect traps traps; everyone else notices nothing in passing.
 //!
 //! Every check is rolled afresh: nothing is remembered of a failed one, so the next turn may
 //! find what this one missed (no limit on trying again: the owner's rule). Checks draw from the
 //! gameplay stream only when something hidden is in reach, so a turn with nothing hidden around
-//! draws nothing. A turn spent searching may earn the Search skill a training mark, and noticing
-//! something the Spot skill (training stream).
+//! draws nothing. A turn spent searching may earn the Search skill a training mark, noticing
+//! something the Spot skill, and finding a trap either way the Detect traps skill (training
+//! stream).
 //!
 //! A found secret door becomes its closed door ([`World::set_terrain`]), a found trap is known
 //! ([`World::know_trap`], as a trap seen going off is), and both are remembered at once, in the
@@ -64,9 +67,10 @@ pub(super) enum Hidden {
 /// Which of the two checks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Look {
-    /// Searching: Intelligence and the Search skill.
+    /// Searching: Intelligence and the Search skill (Detect traps for a trap).
     Active,
-    /// In passing: Willpower and the Spot skill, less the passive penalty.
+    /// In passing: Willpower and the Spot skill (Detect traps for a trap), less the passive
+    /// penalty.
     Passive,
 }
 
@@ -135,29 +139,35 @@ impl World {
         self.difficulty_of(hidden) - ease
     }
 
-    /// What the player adds to a check of `look`: the stat's modifier (of the effective score,
-    /// spec §8 "Stats"), the skill's benefit, and the race's bonus; less the passive penalty in
-    /// passing. Then their talents (spec §8 "Talents"): Keen searcher's to searching, Alert's in
-    /// passing, the search of Trap sense and the birth signs' (Always a way, Heedless) to both,
-    /// and what they add to checks of the stat.
-    pub(super) fn search_modifier(&self, look: Look) -> i32 {
+    /// What the player adds to a check of `look` for `hidden`: the stat's modifier (of the
+    /// effective score, spec §8 "Stats"), the skill's benefit (Search's or Spot's; for a hidden
+    /// trap Detect traps' in their place, both looks), and the race's bonus; less the passive
+    /// penalty in passing. Then their talents (spec §8 "Talents"): Keen searcher's to searching,
+    /// Alert's in passing, the search of Trap sense and the birth signs' (Always a way,
+    /// Heedless) to both, and what they add to checks of the stat.
+    pub(super) fn search_modifier(&self, look: Look, hidden: Hidden) -> i32 {
         let content = &self.content;
         let player = self.state.player();
         let stats = player.effective_stats(content);
         let race = self.player_race().map_or(0, |r| r.search);
         let talents = player.talent_mods(content);
+        // A hidden trap is Detect traps' to find, either way.
+        let trap = matches!(hidden, Hidden::Trap(_));
+        let skill = |general: i32| match trap {
+            true => player.skill_effect(content, Effect::DetectTraps),
+            false => general,
+        };
         // Talents that add to every check of a stat (spec §8 "Class abilities": Iron will).
         let own = match look {
             Look::Active => {
                 stats.modifier(Stat::Intelligence)
-                    + player.skill_effect(content, Effect::Search)
+                    + skill(player.skill_effect(content, Effect::Search))
                     + talents.searching
                     + talents.check(Stat::Intelligence)
             }
             Look::Passive => {
-                let talents = player.talent_mods(content);
                 stats.modifier(Stat::Willpower)
-                    + player.skill_effect(content, Effect::Spot)
+                    + skill(player.skill_effect(content, Effect::Spot))
                     + talents.notice.unwrap_or(0)
                     + talents.check(Stat::Willpower)
                     - content.search().passive_penalty
@@ -167,14 +177,18 @@ impl World {
     }
 
     /// Whether the player notices `hidden`, the hidden feature at `at`, in passing at all:
-    /// trained in the Spot skill, or with a talent that notices (Alert), anything; else by their
-    /// race, elves anything, dwarves what is on stone, and kobolds traps, or by a talent that
-    /// notices on stone (Stonewise); else nothing.
+    /// trained in the Spot skill (a hidden trap: in Detect traps), or with a talent that notices
+    /// (Alert), anything; else by their race, elves anything, dwarves what is on stone, and
+    /// kobolds traps, or by a talent that notices on stone (Stonewise); else nothing.
     pub(super) fn notices(&self, at: Pos, hidden: Hidden) -> bool {
         let content = &self.content;
         let player = self.state.player();
         let talents = player.talent_mods(content);
-        if player.skills.trains_effect(content, Effect::Spot) || talents.notice.is_some() {
+        let skill = match hidden {
+            Hidden::Trap(_) => Effect::DetectTraps,
+            Hidden::Door(_) | Hidden::Mimic(_) | Hidden::Hollow => Effect::Spot,
+        };
+        if player.skills.trains_effect(content, skill) || talents.notice.is_some() {
             return true;
         }
         let race = self.player_race().and_then(|r| r.passive_search);
@@ -246,14 +260,14 @@ impl World {
             + player.skill_effect(&self.content, Effect::SearchReach)
             + player.talent_mods(&self.content).search_reach;
         let hidden = self.hidden_near(reach);
-        if !hidden.is_empty() {
-            let modifier = self.search_modifier(Look::Active);
-            for (at, hidden) in hidden {
-                let difficulty = self.finding(hidden);
-                let modifier = modifier + self.stone_find(at);
-                if check(&mut self.state.rng, modifier, difficulty) {
-                    self.reveal(at, hidden);
-                    self.train_stat(StatUse::Found);
+        for (at, hidden) in hidden {
+            let difficulty = self.finding(hidden);
+            let modifier = self.search_modifier(Look::Active, hidden) + self.stone_find(at);
+            if check(&mut self.state.rng, modifier, difficulty) {
+                self.reveal(at, hidden);
+                self.train_stat(StatUse::Found);
+                if matches!(hidden, Hidden::Trap(_)) && self.trains(Use::FindTrap) {
+                    self.train(Use::FindTrap);
                 }
             }
         }
@@ -270,16 +284,21 @@ impl World {
         if hidden.is_empty() {
             return;
         }
-        let modifier = self.search_modifier(Look::Passive);
         for (at, hidden) in hidden {
             if !self.notices(at, hidden) {
                 continue;
             }
             let difficulty = self.finding(hidden);
-            let modifier = modifier + self.stone_find(at);
+            let modifier = self.search_modifier(Look::Passive, hidden) + self.stone_find(at);
             if check(&mut self.state.rng, modifier, difficulty) {
                 self.reveal(at, hidden);
-                if self.trains(Use::Spot) {
+                // A trap trains Detect traps (and the stats as any noticing does), the rest Spot.
+                if matches!(hidden, Hidden::Trap(_)) {
+                    if self.trains(Use::FindTrap) {
+                        self.train(Use::FindTrap);
+                    }
+                    self.train_stat(StatUse::Spot);
+                } else if self.trains(Use::Spot) {
                     self.train(Use::Spot);
                 }
             }

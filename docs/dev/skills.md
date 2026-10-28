@@ -49,8 +49,9 @@ since #666) in `world/shop.rs`, identify (Appraise; trained at all, below) in
 (athletics, #548: percent quicker, added to the talents' `speed_percent`, the skills never
 taking the sum past `MAX_SPEED`) in `Actor::speed`, pick
 (Open lock: picking a lock, and trained at all, the Pick lock ability) in `World::pick_lock`,
-search, search reach, and spot in `world/search.rs` (`search_modifier`, `search_turn`; Spot
-trained at all lets the player notice in passing, `Skills::trains_effect`), disarm in
+search, search reach, spot, and detect traps in `world/search.rs` (`search_modifier`,
+`search_turn`; Spot trained at all lets the player notice in passing, Detect traps the same for
+hidden traps, whose checks read it in place of Search and Spot, `Skills::trains_effect`), disarm in
 `world/disarm.rs` (`disarm_modifier`; trained at all, Disable device gives the Disarm ability,
 `Ability::had_by`), steal in `world/steal.rs` (trained at all lets the player steal,
 `docs/dev/stealing.md`), heal in `world/heal.rs` (trained at all gives the Heal ability;
@@ -59,7 +60,8 @@ the Forage ability) in `world/forage.rs`, study (Spellcraft and Decipher script:
 `world/learn.rs::study_odds` (docs/dev/spells.md "Learning"; its use `Use::Study`, reported
 when a study ends, is also `StatUse::Study`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
-`kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
+`kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, both for `find_trap` (a
+trap found), `World::disarm` for
 `disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `World::pay` and
 `World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
 `dodge`, besides `fight.rs::resolve`). Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in

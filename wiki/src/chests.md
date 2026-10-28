@@ -153,7 +153,7 @@ Inside you find a dagger.
 A chest blown apart by a blast from somewhere else (a scroll of fireball, another trap) springs
 its own trap at no one: the trap is simply gone with the lid.
 
-Searching finds a chest's trap like any hidden trap (`You notice that the coffer is trapped: an
+Searching (and your **Detect traps** skill) finds a chest's trap like any hidden trap (`You notice that the coffer is trapped: an
 arrow trap.`), and once you know it look mode says so: "A coffer, trapped: an arrow trap." The
 chest keeps its own look on the map. A known trap on a chest can be **disarmed** like any (see
 [Traps](traps.md#disarming-traps)): disarmed, the chest is an ordinary shut chest. **Trap sense**
@@ -161,7 +161,7 @@ halves a chest trap's blow, as any trap's.
 
 ## The Chest-wise talent
 
-With the **Chest-wise** talent (Intelligence 11 or Search 15), you tell at a glance whether a shut
+With the **Chest-wise** talent (Intelligence 11 or Detect traps 15), you tell at a glance whether a shut
 chest you see is locked: look mode calls it "a locked coffer" or "an unlocked coffer". And a
 trapped chest gives itself away as soon as you see it, with no search and no chance of missing it:
 `You notice that the coffer is trapped: a fireball trap.`

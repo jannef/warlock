@@ -70,7 +70,7 @@ pub enum StatUse {
     Study,
     /// The first kill of a creature type.
     Discovered,
-    /// Noticing something hidden in passing (Spot's use).
+    /// Noticing something hidden in passing (Spot's use; a trap noticed so too).
     Spot,
     /// A long action of more than one turn done to its end: a rest, a wall dug through, a
     /// search for a while, a meal.

@@ -383,14 +383,17 @@ fn each_talent_changes_the_rule_it_names() {
     assert_eq!(w.player_xp(), xp + 1050);
 
     // Alert: notices in passing, 2 better.
-    let passive = w.search_modifier(Look::Passive);
+    let passive = w.search_modifier(Look::Passive, Hidden::Door(0));
     assert!(
         !w.notices(w.player_pos(), Hidden::Door(0)),
         "a warrior is not trained in Spot"
     );
     take(&mut w, 27, "alert");
     assert!(w.notices(w.player_pos(), Hidden::Door(0)));
-    assert_eq!(w.search_modifier(Look::Passive), passive + 2);
+    assert_eq!(
+        w.search_modifier(Look::Passive, Hidden::Door(0)),
+        passive + 2
+    );
 
     // Silent feet: steps a fifth quieter per rank; at rank 2 (Stealth 25) silent doors.
     let level = w.state.current().clone();

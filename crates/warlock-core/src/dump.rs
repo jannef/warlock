@@ -1788,9 +1788,7 @@ mod tests {
         // Their own trained skills by skill id, with their values: no marks, nothing untrained.
         assert_eq!(
             value["skills"],
-            json!({ "appraise": 19, "disable_device": 7, "escape_artist": 7, "listen": 6,
-                    "negotiation": 10, "open_lock": 18, "search": 10, "spot": 9, "steal": 16,
-                    "stealth": 16, "tumble": 17 })
+            json!({ "appraise": 11, "detect_traps": 7, "disable_device": 7, "escape_artist": 10, "listen": 6, "negotiation": 9, "open_lock": 19, "search": 17, "spot": 9, "steal": 16, "stealth": 17, "tumble": 12 })
         );
         assert!(json(&world, &[], false).get("state").is_none());
     }
@@ -1801,17 +1799,18 @@ mod tests {
         assert_eq!(
             layer_rows(&world, Layer::Skills),
             [
-                "Appraise 19",
+                "Appraise 11",
+                "Detect traps 7",
                 "Disable device 7",
-                "Escape artist 7",
+                "Escape artist 10",
                 "Listen 6",
-                "Negotiation 10",
-                "Open lock 18",
-                "Search 10",
+                "Negotiation 9",
+                "Open lock 19",
+                "Search 17",
                 "Spot 9",
                 "Steal 16",
-                "Stealth 16",
-                "Tumble 17"
+                "Stealth 17",
+                "Tumble 12"
             ]
         );
         assert_eq!(
@@ -1890,10 +1889,7 @@ mod tests {
         // Every actor's stats, then its trained skills with their marks and the ladder's die.
         assert!(
             actors[0].contains(
-                "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 19 \
-                 (0 +1), disable_device 7 (0 +1), escape_artist 7 (0 +1), listen 6 (0 +1), \
-                 negotiation 10 (0 +1), open_lock 18 (0 +1), search 10 (0 +1), spot 9 (0 +1), \
-                 steal 16 (0 +1), stealth 16 (0 +1), tumble 17 (0 +1); \
+                "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 11 (0 +1), detect_traps 7 (0 +1), disable_device 7 (0 +1), escape_artist 10 (0 +1), listen 6 (0 +1), negotiation 9 (0 +1), open_lock 19 (0 +1), search 17 (0 +1), spot 9 (0 +1), steal 16 (0 +1), stealth 17 (0 +1), tumble 12 (0 +1); \
                  nutrition 3600 (not_hungry)"
             ),
             "{}",

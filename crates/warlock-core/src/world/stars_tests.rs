@@ -300,9 +300,9 @@ fn heedless_and_always_a_way_move_every_search_check() {
     let roc = born_under("roc", "fire", 5);
     let water = born_under("manticore", "water", 5);
     for look in [Look::Active, Look::Passive] {
-        let base = plain.search_modifier(look);
-        assert_eq!(roc.search_modifier(look), base - 4);
-        assert_eq!(water.search_modifier(look), base + 3);
+        let base = plain.search_modifier(look, Hidden::Door(0));
+        assert_eq!(roc.search_modifier(look, Hidden::Door(0)), base - 4);
+        assert_eq!(water.search_modifier(look, Hidden::Door(0)), base + 3);
     }
     assert_eq!(mods(&water).search_reach, 1);
 }

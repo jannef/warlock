@@ -8,10 +8,26 @@ with one check for all of them. Sealed rooms' breaches are hidden features too
 (`Hidden::Hollow`, #618: a greater treasure room's thin wall, found as a hollow wall,
 `LevelState::hollows`; `docs/dev/special-rooms.md` "Greater treasure rooms").
 
+**Which skill finds what** (#663: Detect traps split from Spot and Search). Each kind of
+`Hidden` reads one skill per look; the trap's is Detect traps either way:
+
+| Hidden feature | Searching (`Look::Active`, Intelligence) | In passing (`Look::Passive`, Willpower) | Noticed in passing at all by | Mark on finding |
+|---|---|---|---|---|
+| `Hidden::Trap` (floor, door, shut chest) | Detect traps (`Effect::DetectTraps`) | Detect traps | Detect traps trained, a `notice` talent, elves (`All`), kobolds (`Traps`), dwarves and Stonewise on stone | `Use::FindTrap` both ways (in passing also `StatUse::Spot`) |
+| `Hidden::Door` (secret door) | Search (`Effect::Search`) | Spot (`Effect::Spot`) | Spot trained, a `notice` talent, elves, dwarves and Stonewise on stone | `Use::Spot` in passing |
+| `Hidden::Hollow` (a greater treasure room's breach) | Search | Spot | as a secret door | `Use::Spot` in passing |
+| `Hidden::Mimic` (a disguised mimic) | Search | Spot | Spot trained, a `notice` talent, elves (never by stone) | `Use::Spot` in passing |
+
+A turn of searching marks `Use::Search` whatever it finds; the reach (`Effect::SearchReach`,
+Keen searcher) is Search's for every kind. Creatures and items in plain sight need no check.
+The thief is the one class that starts trained in Detect traps (its `2d4+4` beside Spot's and
+Search's), kobolds the one race (`1d4+2`, in place of their Search); others may get it only
+as #662's non-guaranteed class skills do, since level-up rolls advance trained skills only.
+
 **Data**: `data/search.toml` (`content/search.rs`: `SearchRules { passive_penalty, turns,
-secret_door }`, `Content::search()`; optional, `SearchRules::default` without it), the Search
-and Spot skills' benefits in `data/skills.toml` (`skills::Effect::Search`, `SearchReach`,
-`Spot`; marks on `Use::Search`, `Use::Spot`), races' `passive_search` (`PassiveSearch::{All,
+secret_door }`, `Content::search()`; optional, `SearchRules::default` without it), the Search,
+Spot, and Detect traps skills' benefits in `data/skills.toml` (`skills::Effect::Search`,
+`SearchReach`, `Spot`, `DetectTraps`; marks on `Use::Search`, `Use::Spot`, `Use::FindTrap`), races' `passive_search` (`PassiveSearch::{All,
 Stone, Traps}`) and `search` bonus (`RaceDef`), terrain `stone`, traps' `difficulty` and `sign`
 (`TrapDef`), branches' `secret_doors` and `hidden_per_depth` (`DungeonDef::hidden_at`).
 
@@ -33,10 +49,10 @@ where the map had `+`.
 
 **The rules** are `world/search.rs`: `hidden_near(reach)` (the hidden features within reach,
 never the player's own cell, in position order; beyond the adjacent cells only those in line of
-sight), `difficulty_of` (own difficulty + `hidden_at(depth)`), `search_modifier(Look)` (the
+sight), `difficulty_of` (own difficulty + `hidden_at(depth)`), `search_modifier(Look, Hidden)` (the
 effective Intelligence or Willpower modifier, the skill effect through `Actor::skill_effect`,
-the race's `search`, the passive penalty), `notices(at, hidden)` (Spot trained via
-`Skills::trains_effect(Effect::Spot)`, else the race's `passive_search`, `stone` read from the
+Detect traps' for a trap, the race's `search`, the passive penalty), `notices(at, hidden)` (Spot
+trained via `Skills::trains_effect(Effect::Spot)`, for a trap Detect traps, else the race's `passive_search`, `stone` read from the
 cell's terrain, `traps` only for a `Hidden::Trap`; a `Hidden::Mimic`, a disguised mimic within
 reach, is noticed in passing only by those who notice everything: `docs/dev/creatures/mimics.md`). `Action::Search(turns)` → `Spent::Search` → `World::search` runs `keep_at`
 with `search_turn` (the `search` action's price first, then the active checks, then a Search
@@ -59,7 +75,8 @@ difficulty, a modifier, or a roll. The app binds `s` (`KeyCommand::Search`, `sea
 abilities. `dump`'s `truth` layer and `warlock-cli gen` mark secret doors `S`; `truth` marks a
 standing breach `H`.
 
-**Tests**: `world/search_tests.rs` (looks, finding, draws, who notices, traps, long searches,
+**Tests**: `world/search_tests.rs` (looks, finding, draws, who notices, traps and the skill each
+look reads (`traps_are_detect_traps_to_find_and_the_rest_spot_and_search`), long searches,
 rests, reach, `set_terrain`, depth, saves and replays, legend errors), `content/search.rs`,
 `mapgen/tests.rs` (`rooms_levels_hide_a_few_doors_of_their_own`, the secret checks in
 `check`). The wiki page is `wiki/src/searching.md`, its tables `xtask/src/wiki/searching.rs`.

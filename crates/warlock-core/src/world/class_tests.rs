@@ -319,9 +319,12 @@ fn noblesse_makes_anyone_not_hostile_budge() {
 #[test]
 fn checks_of_a_stat_take_the_talents_bonus() {
     let mut w = world("warrior");
-    let passive = w.search_modifier(super::search::Look::Passive);
+    let passive = w.search_modifier(super::search::Look::Passive, super::search::Hidden::Door(0));
     give(&mut w, "iron_will");
-    assert_eq!(w.search_modifier(super::search::Look::Passive), passive + 2);
+    assert_eq!(
+        w.search_modifier(super::search::Look::Passive, super::search::Hidden::Door(0)),
+        passive + 2
+    );
     assert_eq!(mods(&w).check(Stat::Willpower), 2);
     give(&mut w, "stubborn");
     assert_eq!(mods(&w).check(Stat::Toughness), 1);

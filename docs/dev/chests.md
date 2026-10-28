@@ -82,7 +82,7 @@ treasure rooms (C6, #618) lay their chests with `mapgen/chest.rs::lay` from thei
 
 System `chests` (`data/talents.toml`, after `doors`): Deft breaker (Might, Strength 12,
 `smash_destroy_percent = -50`, read in `break_chest` on a smash only), Chest-wise (Delver,
-Intelligence 11 or Search 15, `chest_wise`, read in `chest_at` for the lock and in
+Intelligence 11 or Detect traps 15, `chest_wise`, read in `chest_at` for the lock and in
 `chest_wise_look` for the trap), Trap sense (its `trap_damage_percent` reaches a chest's trap
 through `trap_deals`, no hook of its own), Lockbreaker (its `systems`
 gained `chests`: `door_kick` is read by `kick_chest`, `kick_noise_percent` by the kick's noise),
