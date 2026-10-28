@@ -9,8 +9,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Base items** are objects with a `kind` (§7): weapon, missile weapon (`launcher`),
     ammunition, body armour, helmet, cloak, gloves, boots, shield, ring, amulet, tool (a digging
     tool in the Tool slot: the pick-axe, loot from item level 3 and rare among it (`frequency`
-    10); the pick-axes placed in levels, worn by creatures, and in starting kits are plain; a tool
-    shows no numbers in the lists, its description its digging power, "Digs at 10"). Only they are
+    10; Delving, Featherweight, and of the Bear roll on it); the pick-axes placed in levels, worn
+    by creatures, and in starting kits are plain; a tool shows no numbers in the lists, its description its digging power, "Digs at 10"). Only they are
     magic; they and scrolls (§8 "Scrolls", never magic) are loot.
   - **Rarity**: *normal* (no affixes; 85 % of loot), *magic* (13 %: a prefix only 40 %, a
     suffix only 40 %, one of each 20 %), *rare* (2 %: three affixes 50 %, four 30 %, five 15 %,
@@ -103,23 +103,34 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Pending hooks, added
     with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
     none roll yet) and value (#145, a base `value` times rarity and affixes).
-  - **Affixes** (`data/affixes.toml`, §7): 23 prefixes (mostly offensive, flat Defence, and
+  - **Affixes** (`data/affixes/`, §7): 32 prefixes (mostly offensive, flat Defence, and
     life: Sharp, Heavy, Glinting, Keen, Brutal, Guarding, Reinforced, Sturdy, Supple,
     Featherweight, Nimble, Shimmering, Oaken, Hale, Vicious, Accurate, Fleet, Hunter's, Steady,
-    Radiant, Burly, Hardened, Mystic (maximum mana), Venomous (poison)) and 27 suffixes (stats, speed, criticals,
-    utility, skills: of the Bear, Lynx, Ox, Owl, Sage, Lion; of Celerity, Precision, Slaying,
-    Ruin, Mending, Clarity (mana regeneration), Stealth, Light, the
-    Mule, Evasion, Warding, the Wind, Reach, Durability, the Tortoise, Vitality; of Shadows
-    (stealth), the Hare (tumble), the Fox (listen), the Wanderer (survival), Balance (balance)),
-    each with the kinds of item it rolls on and up to four tiers by item level (an affix may
-    have up to twelve, `MAX_TIERS`).
+    Radiant, Burly, Hardened, Mystic (maximum mana; on weapons too), Venomous (poison), Flaming,
+    Freezing; the systems' (#635): Mage-wrought (eased casting), Baleful (spell criticals),
+    Potent (spell damage), Tireless (stamina), Hobnailed (kicks), Delving (digging)) and 49
+    suffixes (stats, speed, criticals, utility, skills: of the Bear, Lynx, Ox, Owl, Sage, Lion;
+    of Celerity, Precision, Slaying, Ruin, Mending, Clarity (mana regeneration), Stealth, Light,
+    the Mule, Evasion, Warding, the Wind, Reach, Durability, the Tortoise, Vitality, the
+    Salamander, Warmth; of Shadows (stealth), the Hare (tumble), the Fox (listen), the Wanderer
+    (survival), Balance (balance); of Wounding (an extra damage die); the systems' (#635): of the
+    Adept (caster level), of Thrift (mana costs), of the Magus (spell to-hit), of Farcasting
+    (spell reach), of Lingering (spell degrees), of Siphoning (mana on a kill), of Wands (wand
+    level), of Breath (stamina pace), of Ease (weapon feats' stamina), of the Hunt (stamina on a
+    kill), of Fury, of Steadiness, of Stillness, of Guile, of the Muse (the maxima of rage,
+    focus, ki, openings, inspiration: of no use to one without the pool), of Sustenance
+    (hunger), of Wariness (traps), of Health (disease checks), of the Alchemist (potions kept)),
+    each with the kinds of item it rolls on and its tiers by item level (at most twelve,
+    `MAX_TIERS`; the systems' affixes on a ladder, a tier every item level or two).
   - **Categories** (#621, after Path of Exile's mod groups): every affix
     names a `category`, and an item never has two affixes of one category. Every affix of one
     effect (of one skill, for skill affixes; of one damage type, for elemental and resistance
     affixes; of one resource, for the resource effects) is of one category, so an item also has at most one affix of each effect; a few
-    categories hold more than one effect of a family: `physical_damage` (Sharp and Vicious, +damage,
-    and Heavy, an extra die) and `stealth` (of Stealth, quieter footsteps, and of Shadows, the
-    Stealth skill). A category on both prefixes and suffixes is one effect either way
+    categories hold more than one effect of a family: `stealth` (of Stealth, quieter footsteps,
+    and of Shadows, the Stealth skill). Damage is more than one category, so a weapon may roll
+    more than one damage affix (#635): `physical_damage` (Sharp and Vicious, +damage),
+    `extra_damage` (Heavy and of Wounding, an extra die), and one per element (`fire_damage`:
+    Flaming, ...). A category on both prefixes and suffixes is one effect either way
     (`accuracy`: Accurate, Glinting, of Precision; `critical_chance`, `critical_multiplier`,
     `range`, `dodge`, `deflection`, `natural_armour`, `life`, `movement_speed`, `carrying`,
     `light`); the rest are one effect each, named for it (`fire_damage`, `fire_resistance`,

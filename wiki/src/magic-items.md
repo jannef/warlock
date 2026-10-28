@@ -95,10 +95,12 @@ A few rules from elsewhere carry over:
   counts); it never flickers.
 - **Categories**: every affix has a category (the tables below name it), and an item never has
   two affixes of one category. Most categories are one effect each, so an item has at most one
-  affix of each kind of effect; a few hold a family: *physical damage* (Sharp, Vicious, and
-  Heavy: a Sharp sword is never Heavy too) and *stealth* (of Stealth and of Shadows). A prefix
-  and a suffix of one category do the same thing (Glinting and of Precision both add to hit), so
-  an item has one or the other.
+  affix of each kind of effect; *stealth* holds a family (of Stealth and of Shadows). Damage is
+  several categories, so a weapon may carry more than one damage affix: *physical damage* (Sharp
+  and Vicious, a flat bonus), *extra damage* (Heavy and of Wounding, an extra die), and one per
+  element (Flaming, Freezing, Venomous): a Sharp sword may be Heavy too, or Flaming, but never
+  both Heavy and of Wounding. A prefix and a suffix of one category do the same thing (Glinting
+  and of Precision both add to hit), so an item has one or the other.
 
 ## Looking at an item
 
@@ -119,13 +121,25 @@ words: "Prefix Sharp: +2 damage", "Suffix of Celerity: attacks faster". `Esc` go
 
 Prefixes are mostly offensive, or flat Defence and life. *Flaming*, *Freezing*, and *Venomous*
 add a die of fire, cold, or poison to every hit, which no armour soaks (see [Damage types](damage-types.md)).
+*Mage-wrought*, *Baleful*, and *Potent* serve a caster (see [Magic](magic.md)), *Tireless* raises
+your stamina (see [Resources](resources.md)), *Hobnailed* boots kick doors in more easily, and a
+*Delving* tool or pair of gloves digs faster (a magic pick-axe turns up in loot).
 
 {{#include generated/magic-prefixes.md}}
 
 ## Suffixes
 
 Suffixes are mostly stats, speed, criticals, utility, and skills; *of the Salamander* and *of
-Warmth* resist fire and cold, in percent (see [Damage types](damage-types.md)).
+Warmth* resist fire and cold, in percent (see [Damage types](damage-types.md)). The casters'
+suffixes (of the Adept, of Thrift, of the Magus, of Farcasting, of Lingering, of Siphoning, of
+Wands) are told on the [Magic](magic.md) and [Mana](mana.md) pages; of Breath, of Ease, and of the
+Hunt help stamina. *Of Fury*, *of Steadiness*, *of Stillness*, *of Guile*, and *of the Muse* raise
+the most rage, focus, ki, openings, or inspiration you can hold: only barbarians, rangers, monks,
+thieves, and bards hold those (see [Resources](resources.md)), so to anyone else they are of no
+use. *Of Siphoning* and *of the Hunt* give their mana or stamina only for a kill of your own blow,
+shot, or spell, the slain within three cells. *Of Sustenance* slows hunger, *of Wariness* softens
+traps, *of Health* helps against disease, and *of the Alchemist* sometimes leaves a potion
+undrunk.
 
 {{#include generated/magic-suffixes.md}}
 
