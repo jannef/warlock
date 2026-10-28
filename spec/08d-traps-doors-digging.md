@@ -329,8 +329,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level) or `chest = 7` (a level; default the level's `item_level`), `locked = true` or `lock =
     "id"` and `lock_difficulty` as on a door, and `objects` for what it holds (food in it is made
     as the level is), and `trap` (with `known`, `dir`) as on a door. Refused: a `chest` on other
-    terrain, an unknown band, a pit on a chest, a trap on an open or smashed chest, and chests in
-    vaults (C7).
+    terrain, an unknown band, a pit on a chest, and a trap on an open or smashed chest.
+  - **Vaults** (§7) hold chests the same way, stamped with them (#619): a vault's chest is of the
+    floor it is stamped on (a `chest` level or band is refused in a vault, and so is a mimic, whose
+    type is its level), locked and trapped as its legend says (its lock wants no key placed: a
+    skeleton key, Pick lock, Knock, or a kick), and one given no `objects` holds what its band's
+    loot table rolls when the level is made (the level's stream `vault_chests/<level id>`, §8
+    "Determinism"). Outdoor vaults hold none. The Ascmearc's drake's hoard, robbers' hoard,
+    captain's hall, and still-room hold chests.
   - **Dumps**: `view` shows the glyph; `truth` (dev) adds a line per chest, `chest 7 (hutch) at
     (12, 5): shut, locked, trapped (arrow), holds 3 stacks`; JSON `chests` lists those the player sees or
     remembers (`pos`, `band`, `state`, and `locked`: with Chest-wise for a shut one in sight,
