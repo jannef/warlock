@@ -77,11 +77,11 @@ fn does(content: &Content, effect: &OutcomeEffect) -> String {
         let total: u32 = effect.objects.iter().map(|o| o.2).sum();
         let each: Vec<String> = (effect.objects.iter())
             .map(|&(o, count, w)| {
-                format!(
-                    "{count} {} ({}%)",
-                    content.object(o).plural,
-                    w * 100 / total.max(1)
-                )
+                let share = w * 100 / total.max(1);
+                match (count.min(), count.max()) {
+                    (1, 1) => format!("{} ({share}%)", content.object(o).describe(1)),
+                    _ => format!("{count} {} ({share}%)", content.object(o).plural),
+                }
             })
             .collect();
         out.push(format!("at the altar's foot: {}", each.join(" or ")));

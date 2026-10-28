@@ -4,17 +4,21 @@
 //!
 //! ```toml
 //! [object.drink]
-//! kind = "heal"              # heal, cure, mana, harm
+//! kind = "heal"              # heal, cure, mana, elixir, harm
 //! dice = "2d8"               # heal: hit points back; mana: mana back; harm: degrees of sickness
 //! cures = ["bandage"]        # heal, cure: means named in the statuses' and diseases' `cured_by`
 //! diseases = true            # cure: ends every disease the drinker has
 //! status = "poisoned"        # harm: the status it gives, `dice` degrees of it
+//! stat = "strength"          # elixir: the stat it raises for good
+//! points = 1                 # elixir: by how much (a trained rise each)
+//! potential = "1d2"          # elixir: the potential's further rise, rolled once
 //! colour = "red"             # what an unknown one is called by ("a fizzy red potion")
 //! marks = { toughness = 5 }  # sure training marks it gives, by stat
 //! ```
 //!
 //! Only its kind's fields: a heal has `dice` and maybe `cures`; a cure has `cures` or
-//! `diseases`; a mana potion `dice`; a harm `dice` and `status`. The colour's hue is its
+//! `diseases`; a mana potion `dice`; an elixir `stat`, `points`, and `potential`; a harm `dice`
+//! and `status`. The colour's hue is its
 //! family's (the design's rule, kept in data as the object's `fg`): potions that share a colour
 //! name share their `fg`.
 
@@ -27,6 +31,9 @@ use std::collections::BTreeMap;
 /// The most marks a potion may give a stat.
 pub const MAX_POTION_MARKS: u16 = 100;
 
+/// The points an elixir may raise its stat by.
+pub const ELIXIR_POINTS: std::ops::RangeInclusive<u8> = 1..=3;
+
 /// What drinking a potion does (spec §8 "Potions").
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Draught {
@@ -37,6 +44,13 @@ pub enum Draught {
     Cure { cures: Vec<String>, diseases: bool },
     /// Mana back at once, never past the maximum.
     Mana { dice: Dice },
+    /// `stat` raised for good by `points` (each a trained rise: the potential lifted to the score
+    /// first if below), then its potential by a roll of `potential` (the design's §10.5).
+    Elixir {
+        stat: Stat,
+        points: u8,
+        potential: Dice,
+    },
     /// Sickness: degrees of `status` (poisoned), as rotten food gives.
     Harm { dice: Dice, status: StatusId },
 }
@@ -48,6 +62,7 @@ impl Draught {
             Draught::Heal { .. } => "heal",
             Draught::Cure { .. } => "cure",
             Draught::Mana { .. } => "mana",
+            Draught::Elixir { .. } => "elixir",
             Draught::Harm { .. } => "harm",
         }
     }
@@ -56,7 +71,7 @@ impl Draught {
     pub fn cures(&self) -> &[String] {
         match self {
             Draught::Heal { cures, .. } | Draught::Cure { cures, .. } => cures,
-            Draught::Mana { .. } | Draught::Harm { .. } => &[],
+            Draught::Mana { .. } | Draught::Elixir { .. } | Draught::Harm { .. } => &[],
         }
     }
 }
@@ -82,6 +97,9 @@ pub struct DrinkSpec {
     #[serde(default)]
     diseases: bool,
     status: Option<String>,
+    stat: Option<String>,
+    points: Option<u8>,
+    potential: Option<Dice>,
     colour: String,
     #[serde(default)]
     marks: BTreeMap<String, u16>,
@@ -98,6 +116,14 @@ impl DrinkSpec {
         let dice = |dice: Option<Dice>| {
             dice.ok_or_else(|| format!("`drink`: a {} needs `dice`", self.kind))
         };
+        // An elixir's fields belong to it alone.
+        if self.kind != "elixir" {
+            only(&[
+                ("stat", self.stat.is_some()),
+                ("points", self.points.is_some()),
+                ("potential", self.potential.is_some()),
+            ])?;
+        }
         let does = match self.kind.as_str() {
             "heal" => {
                 only(&[
@@ -132,6 +158,36 @@ impl DrinkSpec {
                     dice: dice(self.dice)?,
                 }
             }
+            "elixir" => {
+                only(&[
+                    ("dice", self.dice.is_some()),
+                    ("cures", !self.cures.is_empty()),
+                    ("diseases", self.diseases),
+                    ("status", self.status.is_some()),
+                ])?;
+                let name = (self.stat.as_deref())
+                    .ok_or_else(|| "`drink`: an elixir names its `stat`".to_string())?;
+                let stat = Stat::from_id(name)
+                    .ok_or_else(|| format!("`drink`: `stat` names no stat `{name}`"))?;
+                let points = self.points.unwrap_or(1);
+                if !ELIXIR_POINTS.contains(&points) {
+                    return Err(format!(
+                        "`drink`: an elixir's `points` are {} to {}",
+                        ELIXIR_POINTS.start(),
+                        ELIXIR_POINTS.end()
+                    ));
+                }
+                let potential = (self.potential)
+                    .ok_or_else(|| "`drink`: an elixir needs `potential` dice".to_string())?;
+                if potential.min() < 0 {
+                    return Err("`drink`: an elixir's `potential` never lowers it".into());
+                }
+                Draught::Elixir {
+                    stat,
+                    points,
+                    potential,
+                }
+            }
             "harm" => {
                 only(&[
                     ("cures", !self.cures.is_empty()),
@@ -148,7 +204,7 @@ impl DrinkSpec {
             }
             other => {
                 return Err(format!(
-                    "`drink`: unknown kind `{other}` (heal, cure, mana, harm)"
+                    "`drink`: unknown kind `{other}` (heal, cure, mana, elixir, harm)"
                 ));
             }
         };

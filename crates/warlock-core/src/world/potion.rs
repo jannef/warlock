@@ -10,11 +10,12 @@
 //!   ([`World::learn_scroll`]).
 //! - **What it does**, by its kind ([`Draught`]), each through the one path that does it: hit
 //!   points back (never past the maximum) and what it cures; cures ([`World::cure`], and every
-//!   disease for `diseases`); mana back; sickness ([`World::afflict`]). Dice are gameplay draws.
+//!   disease for `diseases`); mana back; a stat raised for good (an elixir, `world/elixir.rs`);
+//!   sickness ([`World::afflict`]). Dice are gameplay draws.
 //!   What begins and ends of statuses and diseases is told from the action's events, as
 //!   perception reports them ("You feel sick.", "The poison wears off.").
 //! - **Marks**: each stat its `marks` name gets that many sure training marks (the `drank` use,
-//!   [`World::train_stat_times`]).
+//!   [`World::train_stat_times`]; an elixir's are the `elixir` use's).
 //!
 //! Creatures do not drink. Nose for draughts tells an unknown potion's kind by its smell when it
 //! is picked up ([`World::smell_potions`]).
@@ -36,6 +37,7 @@ fn smell(does: &Draught) -> &'static str {
         Draught::Heal { .. } => "of honey and iron: healing of some kind",
         Draught::Cure { .. } => "of herbs: a cure of some kind",
         Draught::Mana { .. } => "sharp, like the air before a storm: something for the mind",
+        Draught::Elixir { .. } => "rich and strange: something that lasts",
         Draught::Harm { .. } => "foul: nothing good",
     }
 }
@@ -113,6 +115,11 @@ impl World {
                     "Your mind feels clear."
                 });
             }
+            &Draught::Elixir {
+                stat,
+                points,
+                potential,
+            } => self.drink_elixir(stat, points, potential),
             Draught::Harm { dice, status } => {
                 let degrees = dice.roll(&mut self.state.rng);
                 self.say("It tastes foul!");
@@ -122,8 +129,12 @@ impl World {
                 }
             }
         }
+        let used = match drink.does {
+            Draught::Elixir { .. } => StatUse::Elixir,
+            _ => StatUse::Drank,
+        };
         for &(stat, marks) in &drink.marks {
-            self.train_stat_times(StatUse::Drank, Some(stat), marks);
+            self.train_stat_times(used, Some(stat), marks);
         }
         if kept {
             self.say(KEPT);
