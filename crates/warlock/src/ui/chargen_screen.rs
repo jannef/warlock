@@ -1000,7 +1000,7 @@ mod tests {
             "a short sword (wielded)",
             "a pair of leather boots (being worn)",
             "3 strips of dried meat",
-            "a loaf of bread",
+            "2 loaves of bread",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }

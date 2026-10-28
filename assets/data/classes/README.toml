@@ -86,8 +86,8 @@
 #                                      rare), or "rare"; unidentified
 #                 `"a|b|c"` is one of them, picked at random when the character is made (from its
 #                 own stream, so no other roll moves). Food is as fresh as the run is new. Nobody
-#                 starts Strained; only the aristocrat and the merchant may start Burdened, by
-#                 their wealth.
+#                 starts Strained; an ordinary character starts Unburdened, but for the
+#                 aristocrat's and the merchant's wealth and a small warrior's or paladin's armour.
 #   abilities     the level table (spec §8 "Class abilities"): `{ level = 6, talent = "fencing" }`
 #                 rows, lowest level first, each a talent the class gives at that level (a talent
 #                 of the `class` tree, ../talents/, or an ordinary one it hands out: the

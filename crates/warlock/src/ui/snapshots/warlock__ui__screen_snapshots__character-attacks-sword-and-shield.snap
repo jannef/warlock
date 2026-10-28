@@ -25,13 +25,13 @@ expression: "render(case, content.clone())"
     │ XP  Experience    0 / 192                                                               │
     │     Talents       9                                                                     │
     │ HP  Hit points    22/22   MP  Mana       2/2                                            │
-    │ Dv  Defence       14      Pv  Protection  1                                             │
+    │ Dv  Defence       14      Pv  Protection  3                                             │
     │     Stance        Neutral                                                               │
     │     Stamina       10/10                                                                 │
     │     Alignment     Neutral                                                               │
     │     Resistant to  acid                                                                  │
     │                                                                                         │
-    │ Weight 79.9 kg (you 70 kg, carrying 9.9 kg)                                             │
+    │ Weight 82.8 kg (you 70 kg, carrying 12.8 kg)                                            │
     │ Burdened over 19.5 kg, strained over 39 kg, overloaded over 58.5 kg                     │
     │                                                                                         │
     │ @ or Esc close   A skills                                                               │

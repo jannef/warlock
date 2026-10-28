@@ -16,8 +16,8 @@ expression: "render(case, content.clone())"
            ┌─ Consume what? ────────────────────────────────────────────────────────────┐
            │                                                                            │
            │ Food                                                                       │
-           │ > a - % a food ration (smells fresh)                                500 g  │
-           │   b - % a loaf of bread (smells fresh)                              400 g  │
+           │ > a - % 2 food rations (smells fresh)                                1 kg  │
+           │   b - % 2 loaves of bread (smells fresh)                            800 g  │
            │                                                                            │
            │ a-b or Enter consume   Esc cancel                                          │
            └────────────────────────────────────────────────────────────────────────────┘
