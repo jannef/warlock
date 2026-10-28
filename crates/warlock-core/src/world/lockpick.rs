@@ -41,6 +41,10 @@ impl World {
             + me.skill_effect(&content, Effect::Pick)
             + me.talent_mods(&content).check(Stat::Dexterity);
         let at = self.player_pos().step(dir);
+        // What they take for a chest is a mimic (`mimic.rs`).
+        if let Some(spent) = self.touch(at, events) {
+            return spent;
+        }
         let level = self.state.current();
         let def = (level.terrain.get(at)).map(|t| content.terrain(*t));
         // A shut chest's lock is picked as a door's (spec §8 "Chests").

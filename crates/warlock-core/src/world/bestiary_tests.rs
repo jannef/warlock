@@ -153,6 +153,9 @@ const WAVES: &[(&str, Option<&str>)] = &[
     ("church_grim", None),
     ("white_lady", None),
     ("bone_colossus", None),
+    // The mimics (#616): a generated family, one a level, shared.
+    ("mimic_1", None),
+    ("mimic_60", None),
     // The undead roster, batch 5 (#388): levels 41 to 55, all shared.
     ("wraith_lord", None),
     ("barrow_king", None),

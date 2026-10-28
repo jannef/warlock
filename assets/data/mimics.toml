@@ -1,0 +1,126 @@
+# Mimics (spec §8 "Mimics"; docs/dev/creatures/mimics.md; the design:
+# docs/design/chests-and-treasure.md §5): a thing that sits shaped as a chest until something
+# touches it. One creature type a level, `mimic_<L>` for L in `levels`, generated when content
+# loads; a generated chest (data/chests.toml `mimic`, its band's chance) is a mimic of the floor's
+# item level instead, and carries what the chest would have held. A level's legend places one with
+# `chest = ..., mimic = true` (docs/dev/content.md). Nothing else brings them: no population names
+# the family.
+#
+# [family]
+#   id          the family's id: what kill quests (`target = "mimic"`) and first kills name
+#   levels      the levels of its members, least and most (one type a level)
+#   stats       what it adds to the base stats (a brute: Toughness +5)
+#   hp_factor   the factor on base_hp (2.5 × L × it; a brute's 1.6)
+#   dice_steps  steps along the dice ladder from the curve's nearest (a brute's 1)
+#   hide        its natural armour's name, given from the level the body rule's hide brings
+#               Protection: (L − 10) ÷ 8, rounded down
+# Numbers by level L (the roster's formulas, #383, as data/animated.toml gives them), rounded down
+# part by part: Strength 11 + 0.4 L, Toughness 12 + 0.4 L, Dexterity 10 + 0.25 L, Willpower
+# 16 + 0.35 L, Intelligence and Presence 2 (mindless); experience the guideline's. Its slam holds
+# with its chest band's `hold` chance (data/chests.toml) against a grip of 12 + L ÷ 5.
+#
+# [creature]  what every member is: any field of a creature file but each member's own (id, name,
+#   fg, weight, stats, base_hp, level, xp, natural); `attack` without its damage (the level's dice)
+#
+# [[band]]   the names by level, matching the chest bands one to one (the same `from`s)
+#   id, name    the band and what its members are called
+#   from        its least level: its chest band's
+#   fg          its colour once revealed: its chest band's
+#   weight      what a member weighs, in grams
+
+[family]
+id = "mimic"
+levels = [1, 60]
+stats = { toughness = 5 }
+hp_factor = 1.6
+dice_steps = 1
+hide = "woody hide"
+
+[creature]
+glyph = "m"
+faction = "vermin"
+tags = ["mimic"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 6
+hearing = 60
+speed = 800
+size = "medium"
+budge = "never"
+stray = false
+rarity = "rare"
+immune = ["poisoned", "asleep"]
+corpse = true
+on_eat = { vomit = 60, harm = "1d3" }
+blood = "#5a4010"
+attack = { damage_type = "bludgeoning", name = "pseudopod", verb = "slams" }
+
+[[band]]
+id = "mimicling"
+name = "mimicling"
+from = 1
+fg = "#9a7a48"
+weight = 20000
+
+[[band]]
+id = "young_mimic"
+name = "young mimic"
+from = 3
+fg = "#8a6a3a"
+weight = 40000
+
+[[band]]
+id = "mimic"
+name = "mimic"
+from = 5
+fg = "#7a5430"
+weight = 60000
+
+[[band]]
+id = "old_mimic"
+name = "old mimic"
+from = 8
+fg = "#6e6050"
+weight = 90000
+
+[[band]]
+id = "greater_mimic"
+name = "greater mimic"
+from = 11
+fg = "#7a7a80"
+weight = 120000
+
+[[band]]
+id = "elder_mimic"
+name = "elder mimic"
+from = 15
+fg = "#8a7a68"
+weight = 160000
+
+[[band]]
+id = "hoary_mimic"
+name = "hoary mimic"
+from = 20
+fg = "#90887a"
+weight = 220000
+
+[[band]]
+id = "ancient_mimic"
+name = "ancient mimic"
+from = 26
+fg = "#9a9aa2"
+weight = 300000
+
+[[band]]
+id = "primeval_mimic"
+name = "primeval mimic"
+from = 33
+fg = "#c8ccd4"
+weight = 420000
+
+[[band]]
+id = "eldest_mimic"
+name = "eldest mimic"
+from = 40
+fg = "#e0b84a"
+weight = 600000

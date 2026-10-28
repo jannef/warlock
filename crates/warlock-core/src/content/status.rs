@@ -466,6 +466,8 @@ struct StatusSpec {
     #[serde(default)]
     sleeps: bool,
     #[serde(default)]
+    hides: bool,
+    #[serde(default)]
     per_action: bool,
     follows: Option<String>,
     wound: Option<WoundSpec>,
@@ -552,6 +554,11 @@ pub struct StatusDef {
     /// takes no turn and is unaware of everyone until noise, a blow, or a cry wakes it, which
     /// ends the status (`world/den.rs`).
     pub sleeps: bool,
+    /// A creature suffering it hides as something else (Disguised, a mimic's; spec §8
+    /// "Mimics"): it takes no turn, is unaware of everyone, no creature sets on it, and the
+    /// perception snapshot shows a shut chest in its place, never it (`world/mimic.rs`). Nothing
+    /// ends it but being found out.
+    pub hides: bool,
     /// It eases a degree with each action its sufferer takes, instead of with time (Staggered,
     /// Pinned, Light-footed; the combat progression design §6): at one degree it is the next
     /// action's, which is priced with it. One given during an action is not eased by that
@@ -623,6 +630,7 @@ impl StatusDef {
             && self.blocks.is_empty()
             && !self.flees
             && !self.sleeps
+            && !self.hides
             && !self.per_action
             && self.follows.is_none()
             && self.wound.is_none()
@@ -850,6 +858,7 @@ fn resolve(
         blocks,
         flees: spec.flees,
         sleeps: spec.sleeps,
+        hides: spec.hides,
         per_action: spec.per_action,
         follows: None,
         wound,

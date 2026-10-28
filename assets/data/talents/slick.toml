@@ -1,0 +1,8 @@
+[[talent]]
+id = "slick"
+name = "Slick"
+tree = "finesse"
+description = "You slip out of a mimic's glue before it sets: its grip never holds you."
+needs = { stats = { dexterity = 13 } }
+effects = [{ kind = "slick" }]
+systems = ["mimics"]

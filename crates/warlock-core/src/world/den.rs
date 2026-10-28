@@ -39,8 +39,9 @@ impl World {
     /// Creature `id`'s turn if it sleeps: it forgets what it heard and waits (a stride's waits
     /// at once while the player rests, as an idle creature away from them would: a sleeper costs
     /// next to nothing in a rest). `None`: it is awake and acts as usual.
+    /// A disguised mimic (`mimic.rs`) waits the same way: it never acts until found out.
     pub(super) fn slumbers(&mut self, id: ActorId) -> Option<i64> {
-        if !self.asleep(id) {
+        if !self.asleep(id) && !self.disguised(id) {
             return None;
         }
         if let Some(actor) = self.state.actors.get_mut(&id) {

@@ -88,6 +88,10 @@ impl World {
         {
             return;
         }
+        // Slick (spec §8 "Mimics"): a mimic's grip never holds it.
+        if self.content.status(status).hold.is_some() && self.slips(id, by) {
+            return;
+        }
         // A unique item's Ward (spec §8 "Magic items"): never taken, and the player is told.
         let ward = (self.state.actors.get(&id))
             .and_then(|a| a.ward(&self.content, status))

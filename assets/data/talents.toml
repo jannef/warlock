@@ -269,6 +269,12 @@ name = "Doors, locks, kicking"
 id = "chests"
 name = "Chests: locks, traps, kicking open, what breaks"
 
+# Mimics (docs/design/chests-and-treasure.md §5, §9): the chests that are not. It ships with
+# Mimic-wise and Slick.
+[[system]]
+id = "mimics"
+name = "Mimics"
+
 [[system]]
 id = "digging"
 name = "Digging"

@@ -431,6 +431,11 @@ pub enum TalentEffect {
     /// [`crate::perception::PerceptionView::chest_at`]), and a shut chest's trap in its sight
     /// becomes known to it (`World::chest_wise_look`).
     ChestWise,
+    /// A disguised mimic within this many cells is seen for what it is (Mimic-wise;
+    /// [`crate::perception::Perception`]'s disguises).
+    SeesMimics { value: i32 },
+    /// A mimic's grip never holds it (Slick; `World::afflict`).
+    Slick,
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
     /// opposed one leans as a neutral one (Devout; the prayer draw, `World::lean`).
     Devout,
@@ -1098,6 +1103,7 @@ impl TalentEffect {
             | TalentEffect::Search { value }
             | TalentEffect::SearchReach { value }
             | TalentEffect::SeesReflections { value }
+            | TalentEffect::SeesMimics { value }
             | TalentEffect::HoardGrace { value }
             | TalentEffect::ThrowRange { value }
             | TalentEffect::MaxDex { value }
@@ -1870,6 +1876,7 @@ impl TalentEffect {
             | TalentEffect::SeesUv
             | TalentEffect::SenseOfPlace
             | TalentEffect::ChestWise
+            | TalentEffect::Slick
             | TalentEffect::Devout
             | TalentEffect::Penitent
             | TalentEffect::CollapseProof

@@ -32,6 +32,10 @@ impl World {
     /// The player opens the door at `p`; a locked one only with a key that fits, which unlocks
     /// it first. Returns what it cost.
     pub(super) fn open_door(&mut self, p: Pos, events: &mut Vec<Event>) -> Spent {
+        // What they take for a chest is a mimic (`mimic.rs`).
+        if let Some(spent) = self.touch(p, events) {
+            return spent;
+        }
         let terrain = self.state.current().terrain.get(p).copied();
         let def = terrain.map(|t| self.content.terrain(t));
         match def {
@@ -114,6 +118,10 @@ impl World {
     /// there (it may break). Kicking at anything else is refused and takes no time.
     pub(super) fn kick(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
         let at = self.player_pos().step(dir);
+        // What they take for a chest is a mimic (`mimic.rs`).
+        if let Some(spent) = self.touch(at, events) {
+            return spent;
+        }
         let player = self.state.player;
         let level = self.state.current();
         if let Some(other) = self.state.actor_at(&level.id, at) {

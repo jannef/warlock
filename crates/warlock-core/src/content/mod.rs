@@ -62,6 +62,9 @@ mod learning;
 mod level;
 mod light;
 mod material;
+pub mod mimic;
+#[cfg(test)]
+mod mimic_roster_tests;
 mod names;
 mod object;
 #[cfg(test)]
@@ -559,6 +562,9 @@ pub struct Content {
     /// Animated objects (`data/animated.toml`, `data/animated/`; spec §8 "Animated objects"):
     /// their creature types are generated into [`Content::creatures`].
     animated: Animated,
+    /// Mimics (`data/mimics.toml`; spec §8 "Mimics"): a family generated into
+    /// [`Content::creatures`] after the animated types.
+    mimics: mimic::Mimics,
     /// Damage types (`data/damage_types.toml`), in file order; none without the file.
     damage_types: Vec<DamageTypeDef>,
     materials: Vec<MaterialDef>,
@@ -706,6 +712,7 @@ impl Content {
             creatures: Vec::new(),
             creature_ids: BTreeMap::new(),
             animated: Animated::default(),
+            mimics: mimic::Mimics::default(),
             damage_types: Vec::new(),
             materials: Vec::new(),
             material_ids: BTreeMap::new(),
@@ -947,6 +954,12 @@ impl Content {
         // Objects before creatures: an animated type is generated from its body's object.
         content.load_objects(files)?;
         content.animated = Animated::parse(files, &content)?;
+        // Chests before creatures: a mimic's band is its chest's, and its hold the band's.
+        let path = "data/chests.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.chests = ChestRules::parse(path, text)?;
+        }
+        content.mimics = mimic::Mimics::parse(files, &content)?;
         content.load_creatures(files)?;
         // A den's own population (an armoury's) names creatures.
         let mut room_effects = std::mem::take(&mut content.room_effects);
@@ -974,10 +987,6 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             let (traps, ids, avoid) = trap::parse(path, text, &content)?;
             (content.traps, content.trap_ids, content.trap_avoid) = (traps, ids, avoid);
-        }
-        let path = "data/chests.toml";
-        if let Some(text) = files.get_optional(path) {
-            content.chests = ChestRules::parse(path, text)?;
         }
         // Learning spells (spec §8 "Spells"): mishaps name statuses and creatures.
         let path = "data/study.toml";
@@ -1355,6 +1364,9 @@ impl Content {
         let file = |p: &str| (files.table("animated").map(|(q, _)| q)).find(|q| *q == p);
         let generated =
             (generated.into_iter()).map(|(p, spec)| (file(&p).unwrap_or(animated::RULES), spec));
+        // Then the mimics (docs/dev/creatures/mimics.md).
+        let mimics = self.mimics.specs(self)?;
+        let generated = generated.chain(mimics.into_iter().map(|spec| (mimic::RULES, spec)));
         specs.splice(at..at, generated);
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (i, (path, mut spec)) in specs.into_iter().enumerate() {
@@ -1538,6 +1550,9 @@ impl Content {
             }
             if let Some(animated) = &mut spec.animated {
                 animated.family = CreatureId(id.0 - u16::from(animated.member));
+            }
+            if let Some(mimic) = &mut spec.mimic {
+                mimic.family = CreatureId(id.0 - u16::from(mimic.member));
             }
             let resolved = creature::Resolved {
                 blood,
@@ -3064,6 +3079,12 @@ impl Content {
         (self.status_ids()).find_map(|(id, def)| def.sleeps.then_some(id))
     }
 
+    /// The first status that hides its sufferer (`hides`: Disguised), if any: the one a mimic is
+    /// placed with (spec §8 "Mimics").
+    pub fn disguise_status(&self) -> Option<StatusId> {
+        (self.status_ids()).find_map(|(id, def)| def.hides.then_some(id))
+    }
+
     /// Every status with its id, most important first.
     pub fn status_ids(&self) -> impl Iterator<Item = (StatusId, &StatusDef)> {
         (0u16..).map(StatusId).zip(&self.statuses)
@@ -4369,7 +4390,9 @@ mod tests {
             let player = content.creature_id("player").expect("player");
             let c = content.creature_id(id).expect("id");
             let hostile = content.stance(c, player) == Stance::Hostile;
-            if hostile && !def.unique && def.animated.is_none() && campaign != Some("showcase") {
+            // The mimics come only through chests (`stray = false`).
+            let placed = def.animated.is_some() || def.mimic.is_some();
+            if hostile && !def.unique && !placed && campaign != Some("showcase") {
                 assert!(
                     def.stray,
                     "{id}: no shipped type is marked `stray = false` yet"

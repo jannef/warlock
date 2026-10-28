@@ -59,6 +59,9 @@
 #   start, end what the player is told as it begins and ends ("end" lets a rest go on)
 #   dies       what a creature you see does when it kills it ("The giant rat bleeds to death.")
 #   death      the death screen's line when it kills you
+#   hides      true: a creature suffering it hides as a shut chest (a mimic's Disguised): it takes
+#              no turn, has seen no one, no creature sets on it, and perception shows the chest in
+#              its place, never it; only being found out ends it (spec §8 "Mimics")
 #   sleeps     true: a creature suffering it sleeps: it takes no turn and has seen no one (a
 #              sneak attack lands); noise at its hearing threshold times its den's `wake`, a
 #              blow, or a cry wakes it, which ends the status (spec §7 "Special rooms")
@@ -165,6 +168,16 @@ name = "Asleep"
 seen = "asleep"
 max = 1
 sleeps = true
+
+# A mimic's disguise (data/mimics.toml; spec §8 "Mimics"): disguised, a creature takes no turn,
+# has seen no one, no creature sets on it, and the player sees a shut chest in its place, never
+# it. Never by time: touching it, a blow, Knock, or finding it out by searching ends it, and
+# nothing is said of the status itself (the reveal has its own line).
+[[status]]
+id = "disguised"
+name = "Disguised"
+max = 1
+hides = true
 
 # Silenced, a silent vault's: no spell is cast, no scroll read, and no voice thrown while it
 # lasts, creatures' spells too; ten seconds after leaving.

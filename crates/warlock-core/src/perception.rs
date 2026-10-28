@@ -455,6 +455,19 @@ pub(crate) struct Perception {
     images: Vec<Pos>,
     /// Whether strong light dazzles the player's light-blind eyes (their race's `light_blind`).
     dazzled: bool,
+    /// The disguised mimics of the level (`world/mimic.rs`), by position: each is a shut chest to
+    /// the player, never an actor, but those Mimic-wise sees through.
+    disguises: Vec<Disguise>,
+}
+
+/// A disguised mimic as the snapshot hides it: a shut chest of its level's band at its cell.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct Disguise {
+    pos: Pos,
+    /// The shut chest terrain it shows.
+    terrain: TerrainId,
+    /// Its level, which names the chest's band (the floor's, as a chest's).
+    level: u8,
 }
 
 impl Perception {
@@ -739,10 +752,29 @@ impl Perception {
             })
             .collect();
 
+        // A disguised mimic is a shut chest (`world/mimic.rs`), but to Mimic-wise within its
+        // reach where the player sees it.
+        let reach = talents.sees_mimics;
+        let shut = content.chest_terrain(crate::chest::ChestState::Shut);
+        let disguises: Vec<Disguise> = (state.actors.values())
+            .filter(|a| a.level == level.id && a.effects.hides(content))
+            .filter(|a| {
+                !(sight.get(a.pos) == Some(&Sight::Seen) && a.pos.chebyshev(viewer) <= reach)
+            })
+            .filter_map(|a| {
+                Some(Disguise {
+                    pos: a.pos,
+                    terrain: shut?,
+                    level: content.creature(a.creature).level,
+                })
+            })
+            .collect();
+        let hidden = |a: &Actor| disguises.iter().any(|d| d.pos == a.pos);
         let seen: Vec<&Actor> = state
             .actors
             .values()
             .filter(|a| a.level == level.id && sight.get(a.pos) == Some(&Sight::Seen))
+            .filter(|a| !hidden(a))
             .collect();
         let mut actors: Vec<SeenActor> = (seen.iter())
             .map(|a| SeenActor {
@@ -876,7 +908,19 @@ impl Perception {
             blood,
             images,
             dazzled: dazzled.is_some(),
+            disguises,
         }
+    }
+
+    /// The disguised mimic at `p` as the snapshot hides it, if one stands there.
+    fn disguise_at(&self, p: Pos) -> Option<&Disguise> {
+        self.disguises.iter().find(|d| d.pos == p)
+    }
+
+    /// Whether the player sees the cell `p` itself (in line of sight, not a completed wall),
+    /// whatever stands there.
+    pub(crate) fn in_sight(&self, p: Pos) -> bool {
+        self.sight.get(p) == Some(&Sight::Seen)
     }
 
     /// Whether the player sees an image of a hall of mirrors at `p` (`world/mirrors.rs`): a
@@ -911,9 +955,16 @@ impl Perception {
         self.sight.get(p) == Some(&Sight::Hidden) && p != self.viewer
     }
 
+    /// Whether actor `id` is among those the player sees (a disguised mimic is not, unless
+    /// Mimic-wise sees through it).
+    pub(crate) fn shows(&self, id: ActorId) -> bool {
+        self.actors.iter().any(|a| a.id == id)
+    }
+
     /// Whether creatures at `p` can be seen: only in line of sight, never on completed walls.
+    /// A disguised mimic's cell shows a chest, and no one in it.
     pub(crate) fn sees_actors_at(&self, p: Pos) -> bool {
-        self.sight.get(p) == Some(&Sight::Seen)
+        self.sight.get(p) == Some(&Sight::Seen) && self.disguise_at(p).is_none()
     }
 
     /// Whether the player sees the blood at `p` (module docs).
@@ -933,7 +984,8 @@ impl Perception {
             }
         }
         for &p in &self.visible_cells {
-            level.memory.set(p, Some(level.terrain[p]));
+            let terrain = self.disguise_at(p).map_or(level.terrain[p], |d| d.terrain);
+            level.memory.set(p, Some(terrain));
             if !level.blood.contains_key(&p) {
                 level.blood_memory.remove(&p);
             }
@@ -1118,7 +1170,9 @@ impl<'a> PerceptionView<'a> {
 
     pub fn cell(&self, p: Pos) -> CellView {
         if self.snapshot.is_visible(p) {
-            CellView::Visible(self.level.terrain[p])
+            // A disguised mimic shows a shut chest (`world/mimic.rs`).
+            let shown = self.snapshot.disguise_at(p).map(|d| d.terrain);
+            CellView::Visible(shown.unwrap_or(self.level.terrain[p]))
         } else {
             match self.level.memory.get(p) {
                 Some(Some(t)) => CellView::Remembered(*t),
@@ -1185,8 +1239,15 @@ impl<'a> PerceptionView<'a> {
             CellView::Unknown => return None,
         };
         let state = self.content.terrain(terrain).chest?;
-        let chest = self.level.chests.get(&p)?;
-        let band = self.content.chests().band_index(chest.level)?;
+        // A disguised mimic's chest is of its level, as the chest it stands in for would be; a
+        // chest remembered where none stands now (a mimic found out out of sight) is of the
+        // floor's.
+        let level = match (self.level.chests.get(&p), self.snapshot.disguise_at(p)) {
+            (Some(chest), _) => chest.level,
+            (None, Some(d)) => d.level,
+            (None, None) => self.content.item_level(&self.level.id),
+        };
+        let band = self.content.chests().band_index(level)?;
         let wise =
             || !self.player.talents.is_empty() && self.player.talent_mods(self.content).chest_wise;
         let locked = (state == ChestState::Shut && self.snapshot.is_visible(p) && wise())
@@ -1201,8 +1262,13 @@ impl<'a> PerceptionView<'a> {
     /// The chests the player sees or remembers on this level ([`PerceptionView::chest_at`]), by
     /// position.
     pub fn known_chests(&self) -> Vec<(Pos, ChestLook)> {
-        (self.level.chests.keys())
-            .filter_map(|&p| Some((p, self.chest_at(p)?)))
+        let mut cells: Vec<Pos> = (self.level.chests.keys().copied())
+            .chain(self.snapshot.disguises.iter().map(|d| d.pos))
+            .collect();
+        cells.sort_unstable();
+        cells.dedup();
+        (cells.into_iter())
+            .filter_map(|p| Some((p, self.chest_at(p)?)))
             .collect()
     }
 

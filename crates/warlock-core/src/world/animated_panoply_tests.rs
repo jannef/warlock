@@ -116,7 +116,8 @@ fn two_families_after_the_blades_before_every_campaigns() {
     assert_eq!(content.creature_id("animated_armour"), Some(armour));
     assert_eq!(content.creature_id("animated_panoply"), Some(panoply));
     let defs = content.creature_defs();
-    assert!(defs[usize::from(panoply.0) + 51].campaign.is_some());
+    // The mimics' family next (`content/mimic.rs`), then the campaigns'.
+    assert!(defs[usize::from(panoply.0) + 51].mimic.is_some());
 }
 
 #[test]

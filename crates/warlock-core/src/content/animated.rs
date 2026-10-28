@@ -728,15 +728,20 @@ impl Content {
     /// first of an animated tier's run of levels (`animated_blade_5` for every blade); any other
     /// type is its own.
     pub fn family(&self, creature: CreatureId) -> CreatureId {
-        self.creature(creature)
-            .animated
-            .map_or(creature, |a| a.family)
+        let def = self.creature(creature);
+        if let Some(m) = def.mimic {
+            return m.family;
+        }
+        def.animated.map_or(creature, |a| a.family)
     }
 
     /// The id first kills, kill quests, and the kill tally know creature type `creature` by:
     /// its family's (`animated_blade`), else its own.
     pub fn family_key(&self, creature: CreatureId) -> &str {
         let def = self.creature(creature);
+        if def.mimic.is_some() {
+            return &self.mimics.family;
+        }
         (self.animated.family_tier(def.animated.as_ref())).map_or(def.id.as_str(), |t| &t.family)
     }
 
@@ -744,6 +749,9 @@ impl Content {
     /// members are numbered in a row from [`Content::family`]).
     pub fn family_levels(&self, creature: CreatureId) -> Option<(u8, u8)> {
         let def = self.creature(creature);
+        if def.mimic.is_some() {
+            return Some((self.mimics.levels[0], self.mimics.levels[1]));
+        }
         (self.animated.family_tier(def.animated.as_ref())).map(|t| (t.levels[0], t.levels[1]))
     }
 
@@ -752,6 +760,7 @@ impl Content {
     pub(super) fn name_families(&mut self) -> Result<(), ContentError> {
         let named: Vec<(String, String)> = (self.animated.families())
             .map(|(f, first)| (f.to_string(), first))
+            .chain(self.mimics.first())
             .collect();
         for (family, first) in named {
             if self.creature_ids.contains_key(&family) {
@@ -784,6 +793,13 @@ pub struct Numbers {
 
 impl Numbers {
     pub fn at(level: u8, tier: &Tier) -> Self {
+        Self::of(level, &tier.stats, tier.hp_factor, tier.dice_steps)
+    }
+
+    /// The numbers at level L of a family that adds `more` to the base stats, has `hp_factor`
+    /// on `base_hp`, and moves its dice `dice_steps` along the ladder (the mimics share them,
+    /// `content/mimic.rs`).
+    pub fn of(level: u8, more: &BTreeMap<Stat, i32>, hp_factor: f64, dice_steps: i32) -> Self {
         let l = i32::from(level);
         let base = [
             (Stat::Strength, 11 + 4 * l / 10),
@@ -795,12 +811,12 @@ impl Numbers {
         ];
         let stats = (base.into_iter())
             .map(|(stat, score)| {
-                let score = score + tier.stats.get(&stat).copied().unwrap_or(0);
+                let score = score + more.get(&stat).copied().unwrap_or(0);
                 (stat, u8::try_from(score.clamp(1, 40)).unwrap_or(1))
             })
             .collect();
         // 2.5 × L × factor, the factor to a thousandth.
-        let factor = (tier.hp_factor * 1000.0).round() as i64;
+        let factor = (hp_factor * 1000.0).round() as i64;
         let base_hp = u16::try_from(25 * i64::from(level) * factor / 10_000).unwrap_or(u16::MAX);
         // The curve's target, in tenths: 2 + 0.55 L to L20, then 13 + 0.25 (L − 20).
         let target = if level <= 20 {
@@ -812,7 +828,7 @@ impl Numbers {
             .min_by_key(|&i| (i32::try_from(LADDER[i].1).unwrap_or(0) - target).abs())
             .unwrap_or(0);
         let last = i32::try_from(LADDER.len()).unwrap_or(1) - 1;
-        let at = (i32::try_from(nearest).unwrap_or(0) + tier.dice_steps).clamp(0, last);
+        let at = (i32::try_from(nearest).unwrap_or(0) + dice_steps).clamp(0, last);
         Self {
             stats,
             base_hp,
