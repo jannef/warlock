@@ -182,11 +182,15 @@ impl World {
 }
 
 impl Actor {
-    /// What an ability whose cost is `base` mana costs this actor, its talents' changes made
-    /// ([`crate::talent::TalentMods::mana_cost`]: Frugal caster). What a check of whether it
-    /// has the mana compares with, and what [`World::spend_mana`] takes.
+    /// What an ability whose cost is `base` mana costs this actor, its talents' and its magic
+    /// items' changes made ([`crate::talent::TalentMods::mana_cost`]: Frugal caster's percent
+    /// and the worn `mana_cost`, of Thrift's, summed before the one rounding, at most
+    /// [`crate::talent::MAX_MANA_CUT`] off). What a check of whether it has the mana compares
+    /// with, and what [`World::spend_mana`] takes: spells, rods, Inspire, a summoner's cost, the
+    /// dev drain.
     pub fn mana_cost(&self, content: &Content, base: i32) -> i32 {
-        self.talent_mods(content).mana_cost(base)
+        let worn = self.mods(content).get(crate::content::Effect::ManaCost);
+        self.talent_mods(content).mana_cost(base, worn)
     }
 }
 

@@ -65,10 +65,11 @@ use crate::content::{
     ActionKind, Bolt, Burst, Content, Grip, Resolution, Shape, SpellData, SpellPurpose, SpellRules,
     Stance,
 };
-use crate::content::{ObjectId, SpellId};
+use crate::content::{Effect as ItemEffect, ObjectId, SpellId};
 use crate::damage::{Damage, Kinds};
 use crate::dice::Dice;
 use crate::geom::Pos;
+use crate::magic::Mods;
 use crate::stats::Stat;
 use std::cell::Cell;
 
@@ -98,12 +99,21 @@ impl Actor {
         worn * (100 - ease) / 100
     }
 
-    /// The summed `spell_cost_percent` of what it wears, before Battle caster eases it: above 0,
-    /// its spells that roll to hit are cast in the armoured grip.
+    /// The summed `spell_cost_percent` of what it wears, before Battle caster eases it: each
+    /// piece's less its own `spell_ease` (Mage-wrought, a local affix), never below 0. Above 0,
+    /// its spells that roll to hit are cast in the armoured grip; a piece eased to 0 no longer
+    /// counts for it.
     pub fn worn_spell_cost(&self, content: &Content) -> u32 {
         (self.equipment.items().into_iter())
             .filter_map(|(_, item)| self.inventory.get(item))
-            .map(|s| u32::from(content.object(s.object).spell_cost_percent))
+            .map(|s| {
+                let cost = i32::from(content.object(s.object).spell_cost_percent);
+                if cost == 0 {
+                    return 0;
+                }
+                let ease = Mods::local(s, content).get(ItemEffect::SpellEase);
+                u32::try_from(cost - ease.max(0)).unwrap_or(0)
+            })
             .sum()
     }
 
@@ -133,7 +143,8 @@ impl Actor {
 
     /// How far `spell` reaches as it casts it: the spell's own reach grown by its `reach`
     /// scales ([`Actor::spell_reach_more`]; a cell per two points of Willpower's modifier
-    /// unless the spell names other stats) up to the spell's caps.
+    /// unless the spell names other stats), then School focus's cell and its magic items'
+    /// `spell_reach` on the range or the length, all up to the spell's caps.
     pub fn spell_reach(&self, content: &Content, spell: &SpellData) -> Reach {
         if content.spell_rules().is_none() {
             return Reach::default();
@@ -148,13 +159,15 @@ impl Actor {
                     .min(cap.max(base)),
             )
         };
-        // School focus (magic design §10): a step farther, never past the spell's own cap.
+        // School focus (magic design §10) and the worn `spell_reach` (of Farcasting): cells
+        // farther on the range or the length, never the radius, never past the spell's own cap.
         let (_, focus) = self.talent_mods(content).focus(&spell.tags(content));
+        let farther = focus + self.mods(content).get(ItemEffect::SpellReach).max(0);
         let range = match spell.shape {
             Shape::Touch => Some(1),
             Shape::Myself => None,
-            Shape::Cone | Shape::Line => grow(spell.length, spell.max_length, focus),
-            Shape::Ray | Shape::Bolt | Shape::Burst => grow(spell.range, spell.max_range, focus),
+            Shape::Cone | Shape::Line => grow(spell.length, spell.max_length, farther),
+            Shape::Ray | Shape::Bolt | Shape::Burst => grow(spell.range, spell.max_range, farther),
         };
         Reach {
             range,
@@ -892,12 +905,19 @@ impl World {
         } else {
             AttackSkills::default()
         };
+        // Baleful's wider threat (`spell_threat`): an own cast only, as the to-hit scales.
+        let threat = if own {
+            me.spell_threat(&self.content)
+        } else {
+            combat::DEFAULT_THREAT
+        };
         let shot = Shot {
             def,
             effect,
             dice,
             cap,
             to_hit,
+            threat,
             skills,
         };
         let source = (here, def.shape != Shape::Touch);
@@ -929,7 +949,7 @@ impl World {
                 let attack = Attack {
                     damage: shot.dice,
                     to_hit: shot.to_hit,
-                    threat: combat::DEFAULT_THREAT,
+                    threat: shot.threat,
                     crit: combat::DEFAULT_CRIT,
                     strength: None,
                     kinds: Kinds::NONE,

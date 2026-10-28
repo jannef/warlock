@@ -26,6 +26,11 @@ use crate::weapon_skills::WeaponSkills;
 use crate::world::{Actor, FreeBlows};
 use serde::{Deserialize, Serialize};
 
+/// The most percent off a mana cost talents and magic items give together (spec §8 "Mana"):
+/// Frugal caster's fifth and of Thrift's percents summed, held here, as speeds are held at
+/// [`crate::content::MAX_SPEED`].
+pub const MAX_MANA_CUT: i32 = 50;
+
 /// A talent an actor has taken: by id, at this rank, for this choice (a talent with a `choice`
 /// is taken once per choice, each with its own rank).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1945,14 +1950,17 @@ impl TalentMods {
         per_levels_at(&self.mana_per_levels, level)
     }
 
-    /// What an ability whose cost is `base` mana costs with these talents: `mana_cost_percent`
-    /// more (Frugal caster's −20: a fifth less), rounded to the nearest, never below 1 for a
+    /// What an ability whose cost is `base` mana costs with these talents and `worn_off` percent
+    /// less from magic items (of Thrift's `mana_cost`): `mana_cost_percent` more (Frugal
+    /// caster's −20: a fifth less) and the items' less, the two summed before the one rounding
+    /// and never more than [`MAX_MANA_CUT`] off; rounded to the nearest, never below 1 for a
     /// cost above 0.
-    pub fn mana_cost(&self, base: i32) -> i32 {
-        if base <= 0 || self.mana_cost_percent == 0 {
+    pub fn mana_cost(&self, base: i32, worn_off: i32) -> i32 {
+        let percent = (self.mana_cost_percent - worn_off.max(0)).max(-MAX_MANA_CUT);
+        if base <= 0 || percent == 0 {
             return base;
         }
-        let scaled = (base * (100 + self.mana_cost_percent).max(0) + 50) / 100;
+        let scaled = (base * (100 + percent) + 50) / 100;
         scaled.max(1)
     }
 

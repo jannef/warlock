@@ -80,9 +80,15 @@ the spell ones (`mana_cost`, `spell_ease`, `spell_to_hit`, `spell_threat`, `spel
 `spell_reach`, `spell_duration`, `mana_on_kill`, `wand_level`), the resource ones
 (`resource_max`, `resource_rate`, `active_stamina`, `resource_on_kill`), and the utility ones
 (`door_kick`, `dig_percent`, `hunger`, `trap_damage`, `disease_check`, `potion_kept`), each with
-its parse, `Mods::add` arm (a sum), `describe::phrase`, and wiki words. **No rule reads them yet**
-and no shipped affix file has them: each hook comes with its own PR (A1 spells, B1 resources, D1
-utility, E1 on a kill, E2 potions and wands), whose tests bring fixture affix files
+its parse, `Mods::add` arm (a sum), `describe::phrase`, and wiki words. No shipped affix file has
+them yet; each hook comes with its own PR (A1 spells, B1 resources, D1 utility, E1 on a kill, E2
+potions and wands). **The spell hooks** (A1, #629; `world/affix_spell_tests.rs`): `mana_cost` in
+`Actor::mana_cost` (joins Frugal caster's percent, 50 off at most), `spell_ease` in
+`Actor::worn_spell_cost` (each piece less its own, never below 0: a fully eased piece leaves the
+armoured grip), `spell_to_hit`, `spell_lift` (beside Keen mind's), and `spell_duration` in
+`world/spell_scale.rs`, `spell_reach` in `Actor::spell_reach` (beside School focus's, the range or
+length only), `spell_threat` in `Actor::spell_threat` (22 less it, never below `THREATS`' floor;
+an own cast only, `reflect::Shot::threat`). Each hook's tests bring fixture affix files
 (`ContentFiles::insert("data/affixes/zz_fixture.toml", ...)`, as `magic/tests.rs` does).
 `spell_ease` is an item effect (local: the piece's own `spell_cost_percent`), allowed on body
 armour, helmets, and shields, and `may_roll` keeps it to objects with a `spell_cost_percent`.

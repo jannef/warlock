@@ -49,7 +49,8 @@ own mana that reaches a creature, and adds to it.
   bolt, and touch is a battle caster's. It hits more often, and it makes your armour's extra
   mana cost smaller for **every** spell you cast, whatever it is. It also trains a little on
   every other spell you cast in such armour. From rank 4 a spell that lands wards you: a point
-  of Defence until your next action (*Spell guard*).
+  of Defence until your next action (*Spell guard*). A *Mage-wrought* piece eased so far that it
+  makes spells no dearer is not such armour: in it you fight as a Sniper or a Toucher.
 - **Sniper**: a ray or a bolt, out of armour. It hits more often, and better still against a
   target five cells away or more, where its critical range is wider too. From rank 4 its best
   shots pin the target where it stands (*Pinning ray*).
