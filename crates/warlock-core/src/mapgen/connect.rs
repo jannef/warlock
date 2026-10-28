@@ -163,7 +163,8 @@ pub(super) enum Invalid {
 /// every patrol stays on walkable terrain and loops; and at least one cell emits light. The one
 /// exception to reaching every cell: a sealed room (a greater treasure room, `sealed = "dig"`),
 /// whose cells are reached by breaking its breach, provided the breach opens it
-/// ([`breach_fault`]); nothing the level needs (stairs, a key, a creature) is ever inside one.
+/// ([`breach_fault`]); nothing the level needs (stairs, a key, a creature) is ever inside one; a mimic in a chest's
+/// place may be.
 pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), Invalid> {
     let terrain = &level.terrain;
     let up = level
@@ -229,7 +230,10 @@ pub(super) fn validate(level: &LevelTemplate, content: &Content) -> Result<(), I
     }
     for spawn in &level.creatures {
         validate_route(level, content, spawn).map_err(Invalid::BadPatrol)?;
-        if !reached[spawn.pos] {
+        // A mimic standing in for a sealed room's chest is found with the room (spec §8
+        // "Mimics"): the level never needs it.
+        let sealed_mimic = walled(spawn.pos) && content.is_mimic(spawn.creature);
+        if !reached[spawn.pos] && !sealed_mimic {
             return Err(Invalid::Unreachable(spawn.pos));
         }
     }

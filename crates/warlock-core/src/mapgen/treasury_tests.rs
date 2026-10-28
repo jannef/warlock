@@ -230,7 +230,7 @@ fn great_rooms(
 
 /// Checks a greater treasure room: no door or way in on its rim, its breach a stone wall beside a
 /// cell reached from the up staircase, nothing inside reached until the breach is broken, and
-/// no stairs, creature, or trap inside.
+/// no stairs, creature (but a mimic in a chest's place), or trap inside.
 fn walled_up(content: &Content, seed: u64, level: &LevelTemplate, room: &SpecialRoom) {
     let wall = content.terrain_id("wall").expect("wall");
     let floor = content.terrain_id("floor").expect("floor");
@@ -266,7 +266,9 @@ fn walled_up(content: &Content, seed: u64, level: &LevelTemplate, room: &Special
         );
     }
     assert!(!level.stairs.iter().any(|s| room.contains(s.pos)));
-    assert!(!level.creatures.iter().any(|c| room.contains(c.pos)));
+    let creature =
+        (level.creatures.iter()).any(|c| room.contains(c.pos) && !content.is_mimic(c.creature));
+    assert!(!creature, "seed {seed}: no creature but a mimic inside");
     assert!(
         !level
             .traps
