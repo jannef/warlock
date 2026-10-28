@@ -147,6 +147,10 @@ pub enum Effect {
     /// Percent better prices in shops (spec §7 "Shops"; `world/shop.rs`): less to pay and more
     /// offered, together with Presence at most half.
     Bargain,
+    /// Percent chance, each game hour, of telling one unidentified thing the actor carries or
+    /// wears for what it is (spec §8 "Skills": Appraise; `world/appraise.rs`); only a skill with
+    /// it, trained, gives it at all.
+    Identify,
     /// Points added to stealing from someone (spec §8 "Stealing"; `world/steal.rs`); a skill
     /// with it, trained, lets the actor steal at all (the abilities menu's Steal).
     Steal,
@@ -185,7 +189,11 @@ impl Effect {
     pub const fn max(self) -> i32 {
         match self {
             Effect::Dodge | Effect::Hearing => MAX_VALUE as i32,
-            Effect::Quiet | Effect::Burden | Effect::Travel | Effect::Bargain => 100,
+            Effect::Quiet
+            | Effect::Burden
+            | Effect::Travel
+            | Effect::Bargain
+            | Effect::Identify => 100,
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
@@ -242,6 +250,10 @@ pub enum Use {
     /// An item worked at a forge's anvil to the end (spec §7 "Special rooms"), whatever comes of
     /// it.
     Temper,
+    /// A deal made in a shop (spec §7 "Shops"): goods paid for, or the player's own sold.
+    Deal,
+    /// A carried thing told for what it is by looking it over (spec §8 "Skills": Appraise).
+    Appraise,
     /// Discovery experience gained (spec §8 "Experience": a first kill of a kind, an arrival
     /// that pays).
     Discover,
@@ -270,6 +282,8 @@ impl Use {
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
+            Use::Deal => "a deal made in a shop",
+            Use::Appraise => "telling something you carry for what it is",
             Use::Discover => "gaining discovery experience (a first kill of a kind, a new place)",
             Use::Resist => "resisting a creature's ability (a drain, a disease, a hold)",
         }
@@ -381,6 +395,8 @@ impl Use {
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Temper => "temper",
+            Use::Deal => "deal",
+            Use::Appraise => "appraise",
             Use::Discover => "discover",
             Use::Resist => "resist",
         }
@@ -403,6 +419,7 @@ impl Effect {
             Effect::Travel => "travel",
             Effect::Forage => "forage",
             Effect::Bargain => "bargain",
+            Effect::Identify => "identify",
             Effect::Steal => "steal",
             Effect::Heal => "heal",
             Effect::Kick => "kick",

@@ -4,7 +4,7 @@
 //!
 //! Prices are a stack's value (`Stack::value`: its object's `value`, made of its parts) times a
 //! shop's `markup` (what it asks) or `pays` (what it offers for what it buys), in percent, moved
-//! in the player's favour (or against it) by their *favour*: their Presence and their Appraise
+//! in the player's favour (or against it) by their *favour*: their Presence and their Negotiation
 //! skill ([`Shops::price`], [`Shops::offer`]; the favour itself is `world/shop.rs`'s). A shop
 //! never offers more for something than it asks for it.
 //!

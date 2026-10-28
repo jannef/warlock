@@ -40,7 +40,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     count) times the markup, less the player's **favour**, rounded up and at least 1; an offer is
     the value times `pays`, plus the favour, rounded down, never more than the shop asks for the
     same. The favour (`world::favour`) is `presence` percent for each point of the Presence
-    modifier plus the Appraise skill's `bargain` benefit (§8 "Skills": 20 % at 100), plus, at a
+    modifier plus the Negotiation skill's `bargain` benefit (§8 "Skills": 20 % at 100), plus, at a
     good shopkeeper's (every keeper is good), what their alignment band gives (`[shops] favour`
     in `data/alignment.toml`, §8 "Alignment": Saintly 10, Evil −10, Wicked −20), together at
     most 50 % either way. Only the prices are ever shown, and they include all of it.
