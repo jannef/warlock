@@ -20,11 +20,11 @@ expression: "render(case, content.clone())"
     │   f - ( a lantern (in use)                                                       400 g  │
     │ Food                                                                                    │
     │   g - % 3 strips of dried meat                                                   450 g  │
-    │   h - % a loaf of bread                                                          400 g  │
+    │   h - % 2 loaves of bread                                                        800 g  │
     │ Coins                                                                                   │
-    │   i - $ 8 gold coins                                                              80 g  │
+    │   i - $ 13 gold coins                                                            130 g  │
     │                                                                                         │
-    │ Carrying 8.4 kg   ·   Your weight 78.4 kg (you 70 kg)                                   │
+    │ Carrying 8.8 kg   ·   Your weight 78.8 kg (you 70 kg)                                   │
     │ Burdened over 16.5 kg, strained over 33 kg, overloaded over 49.5 kg                     │
     │                                                                                         │
     │ a-i look   I or Esc close                                                               │

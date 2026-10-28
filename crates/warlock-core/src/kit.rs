@@ -369,7 +369,9 @@ mod tests {
     }
 
     #[test]
-    fn every_kit_item_worn_or_wielded_finds_its_slot() {
+    fn every_kit_item_worn_or_wielded_finds_its_slot_unless_it_is_taken() {
+        // A race's bow or gauntlets may find the slot taken by the class's own (an elven ranger,
+        // a dwarven paladin): then it is carried. Otherwise it is worn or wielded.
         for race in &CONTENT.races().list {
             for class in CONTENT.classes() {
                 for gender in Gender::ALL {
@@ -377,10 +379,26 @@ mod tests {
                     let s = start(&CONTENT, &character, 1);
                     for trained in trained_sets(class) {
                         let pack = roll(&CONTENT, &s.character, &trained, 1);
-                        let kept = (lines(&CONTENT, &s).into_iter())
-                            .filter(|l| l.keep != Keep::Carry && l.applies(gender, &trained))
-                            .count();
-                        assert_eq!(pack.equipment.items().len(), kept, "{character} {pack:?}");
+                        let objects = |carry: bool| -> Vec<_> {
+                            (lines(&CONTENT, &s).into_iter())
+                                .filter(|l| (l.keep == Keep::Carry) == carry)
+                                .filter(|l| l.applies(gender, &trained))
+                                .flat_map(|l| l.one_of.iter().flatten().map(|s| s.object))
+                                .collect()
+                        };
+                        // (Only what no line carries: a half-orc craftsperson wields a hand axe
+                        // and carries the race's.)
+                        let (kept, carried) = (objects(false), objects(true));
+                        for (i, stack) in pack.items.iter().enumerate() {
+                            let only_kept =
+                                kept.contains(&stack.object) && !carried.contains(&stack.object);
+                            if only_kept && !pack.equipment.holds(i) {
+                                let free =
+                                    equipment::free_slot(&CONTENT, &pack.equipment, stack.object);
+                                assert_eq!(free, None, "{character}: {pack:?}");
+                            }
+                        }
+                        assert!(!pack.equipment.items().is_empty(), "{character}");
                     }
                 }
             }
@@ -407,6 +425,17 @@ mod tests {
         (i32::from(AVERAGE) + by).clamp(i32::from(*SCORES.start()), i32::from(*SCORES.end())) as u8
     }
 
+    /// An ordinary character's score in `stat`: every die of their race and class at its mean,
+    /// no birth sign, no gender.
+    fn ordinary_score(character: &Start, content: &Content, stat: Stat) -> u8 {
+        let spec = &character.character.spec;
+        let (race, class) = (spec.race(content).unwrap(), spec.class(content).unwrap());
+        let mean = |min: i32, max: i32| (min + max) / 2;
+        let by = mean(race.stats[stat].min(), race.stats[stat].max())
+            + mean(class.stats[stat].min(), class.stats[stat].max());
+        (i32::from(AVERAGE) + by).clamp(i32::from(*SCORES.start()), i32::from(*SCORES.end())) as u8
+    }
+
     /// The most a kit line could weigh: its heaviest alternative.
     fn heaviest(line: &KitItem) -> u64 {
         (line.one_of.iter())
@@ -416,40 +445,53 @@ mod tests {
     }
 
     #[test]
-    fn nobody_starts_strained_and_only_wealth_burdens() {
-        // The weakest character of every race, gender, and class, with the heaviest kit their
-        // class's picks allow and the heaviest pack a scenario adds on top.
+    fn nobody_starts_strained_and_only_wealth_or_armour_burdens() {
+        // Every race, gender, and class, with the heaviest kit their class's picks allow and the
+        // heaviest pack a scenario adds on top: the weakest such character is never Strained,
+        // and an ordinary one starts Unburdened, but for the jokes' wealth and the armour of a
+        // small warrior or paladin (#695: a player may toss what is too heavy).
         let carry = (CONTENT.scenarios())
             .map(|s| s.carry.iter().map(|st| st.weight(&CONTENT)).sum::<u64>())
             .max()
             .unwrap_or(0);
         let jokes = ["aristocrat", "merchant"];
+        let martial = ["paladin", "warrior"];
         for race in &CONTENT.races().list {
+            let size = CONTENT.size(race.size);
             for class in CONTENT.classes() {
+                let may_burden = jokes.contains(&class.id.as_str())
+                    || (size.id == "small" && martial.contains(&class.id.as_str()));
                 for gender in Gender::ALL {
                     let character = format!("{},{},{}", race.id, gender.id(), class.id);
                     let s = start(&CONTENT, &character, 1);
-                    let st = least_score(&s, &CONTENT, Stat::Strength);
-                    let to = least_score(&s, &CONTENT, Stat::Toughness);
-                    let limit = burden::limit(st, to, CONTENT.size(race.size).carry);
+                    let limit = |score: fn(&Start, &Content, Stat) -> u8| {
+                        let st = score(&s, &CONTENT, Stat::Strength);
+                        burden::limit(st, score(&s, &CONTENT, Stat::Toughness), size.carry)
+                    };
+                    let (weakest, ordinary) = (limit(least_score), limit(ordinary_score));
                     for trained in trained_sets(class) {
                         let kit: u64 = (lines(&CONTENT, &s).into_iter())
                             .filter(|l| l.applies(gender, &trained))
                             .map(heaviest)
                             .sum();
-                        let load = |carried| burden::Load {
-                            carried,
-                            limit,
-                            ignores_burdened: race.ignores_burdened,
-                            stout: false,
+                        let load = |limit| {
+                            let load = burden::Load {
+                                carried: kit + carry,
+                                limit,
+                                ignores_burdened: race.ignores_burdened,
+                                stout: false,
+                            };
+                            load.penalty()
                         };
-                        let worst = load(kit + carry).penalty();
-                        assert!(worst < Burden::Strained, "{character}: {kit} g of {limit}");
-                        if !jokes.contains(&class.id.as_str()) {
+                        assert!(
+                            load(weakest) < Burden::Strained,
+                            "{character}: {kit} g + {carry} g of {weakest}"
+                        );
+                        if !may_burden {
                             assert_eq!(
-                                load(kit + carry).penalty(),
+                                load(ordinary),
                                 Burden::Unburdened,
-                                "{character}: {kit} g + {carry} g of {limit}"
+                                "{character}: {kit} g + {carry} g of {ordinary}"
                             );
                         }
                     }
@@ -544,8 +586,8 @@ mod tests {
     fn genders_and_birth_signs_may_give_more() {
         let mut files = ContentFiles::builtin();
         let races = include_str!("../../../assets/data/races.toml").replace(
-            "kit = [{ wield = \"lantern\" }, \"bread\"]",
-            "kit = [{ wield = \"lantern\" }, \"bread\", { carry = \"candle\", gender = \"female\" }]",
+            "kit = [{ wield = \"lantern\" }, \"bread*2\", \"gold_coin*5\"]",
+            "kit = [{ wield = \"lantern\" }, \"bread*2\", { carry = \"candle\", gender = \"female\" }]",
         );
         files.insert("data/races.toml", &races);
         let signs = include_str!("../../../assets/data/horoscope.toml").replace(
