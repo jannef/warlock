@@ -534,8 +534,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     held. Inspire spends 3 inspiration **in place of** its 3 mana while the bard holds 3 (then
     no mana is spent, and nothing blocks it as casting), else its mana as before; Virtuoso's
     song costs neither.
-  - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives will pay
-    from (W3 spends it; nothing does yet). The granted talent **Trained wind**
+  - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives pay
+    from (§8 "Weapon abilities", #564). The granted talent **Trained wind**
     (`grants_resource`) is in the level-1 row of the warrior's, barbarian's, paladin's,
     ranger's, monk's, thief's, and bard's tables, so those hold it from creation, full; a saved
     character of those classes is granted it on load (`World::grant_class`). Its maximum is 10
@@ -544,9 +544,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     at 0. A barbarian holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
     `stamina` system): **Deep lungs** (Vigour): +4 at most; **Steady breathing**
     (Weaponcraft, a weapon skill at 5): back at 150 %; **Second breath** (Might): a kill
-    credited to the holder builds a point. The grant to anyone else on the first weapon rank that
-    unlocks an active (`World::rank_up`, the third grant place) comes with W3, which brings
-    those actives.
+    credited to the holder builds a point. Anyone else is granted it, full, on the first weapon
+    rank that teaches an active (the third grant place, #564: `fight.rs::grant_stamina`, where
+    every rank the player gains is said).
   - **Shown**: the player's own resources (`PerceptionView::own_resources`: each held, its value
     and maximum, in resource order): the status bar after `MP` (`Rage 11`, `Focus 7/10`), each
     with the hit points' priority after the mana, so they give way before it (§6); a row each on

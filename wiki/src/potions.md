@@ -1,7 +1,7 @@
 # Potions
 
 A potion (`!`) is a draught in a glass flask. Press `e` to **consume**, the same command that
-eats: the list titled "Consume what?" shows your food and your potions together, grouped by
+eats (see [Food](food.md)): the list titled "Consume what?" shows your food and your potions together, grouped by
 kind, first what lies where you stand ("lying here"), then what you carry. A letter, or `Enter`
 on the marked row, drinks it. Drinking takes one turn, uses the potion up, and works at once:
 "You drink the potion of healing. You feel your wounds close." You can drink a potion lying on
