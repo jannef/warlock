@@ -118,7 +118,15 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   beneath you!"). You fall to the level below, land somewhere open on it (never behind a locked
   door or in a shop), take 2d6 damage, which can kill you, and are Staggered. A
   quick way down, if you can take the bruises; creatures never fall through.
-- **Treasure room.** A tempting hoard, only on a level with a danger: three items lie on its
+- **Treasure room.** Wealth nobody has touched in a long time: one or two chests of the
+  level's depth (see [Chests](chests.md)), two to five heaps of gold coins (three six-sided dice
+  times two coins: 6 to 36 coins a heap), and one to three loose gems lie inside. Every
+  door of it is a **secret door**, so you must search the walls to find the way in (or dig in);
+  in a cavern it is a box cut into the rock with one hidden door. Nothing guards it and nothing
+  seals: its only dangers are its chests' traps and the time it takes to find. On every arrival
+  on its level until you have been inside, *something tells you there is wealth hidden on this
+  level*.
+- **Tempting hoard.** Only on a level with a danger: three items lie on its
   floor, better than the level's own (three item levels above it), and no one guards them. The
   moment you pick anything up inside, the room seals: every door of it slams shut and locks
   ("The doors slam shut!"; a door with something in the doorway stays open), and two to four
@@ -161,8 +169,11 @@ mind* (Scholar) keeps your power moored: Ebbing never takes you. The talent *Mir
 your step there. The talent *Light tread* (Delver) carries you over a collapsed floor as if it
 were sound rock: it never gives way under you. The talent *Grave warden* (Guard) keeps what you
 kill down: nothing you kill ever rises in a cursed room.
-The talent *Hoard-wise* (Delver) knows how a treasure room is baited: you
-can lift one thing from it before it seals; the second seals it.
+The talent *Hoard-wise* (Delver) knows how a tempting hoard is baited: you
+can lift one thing from it before it seals; the second seals it. The talent *Treasure sense*
+(Wayfarer, Spot 10) tells you which way a treasure room lies when you arrive: "Something tells
+you there is wealth hidden on this level, to the north-east." (from where you arrived to the
+middle of the nearest one, in eight directions).
 
 Only what happens inside counts: a sound made in an echoing hall is loud wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a shadowed room is as

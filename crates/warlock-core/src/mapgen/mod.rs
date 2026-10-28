@@ -44,6 +44,7 @@ mod room_loot;
 mod rooms;
 mod shop;
 mod special;
+mod treasury;
 mod vault;
 
 use crate::content::{
@@ -525,6 +526,7 @@ pub fn generate_for(
             spawning: None,
         };
         if connect::validate(&template, content).is_ok() {
+            treasury::seal(&mut template, content, pal);
             hide_traps(&mut template, content, pal, seed, def);
             hide_secrets(&mut template, content, seed, def, &canvas.stamped);
             let floor = Floor {
@@ -552,6 +554,7 @@ pub fn generate_for(
                 (pal, def),
                 &canvas.stamped,
             );
+            treasury::fill(&mut template, content, (seed, luck), (pal, def));
             crate::gear::arm(&mut template, content, seed);
             crate::animated::arm(&mut template, content, seed);
             return Ok(template);
@@ -834,3 +837,5 @@ mod shrine_tests;
 mod special_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod treasury_tests;

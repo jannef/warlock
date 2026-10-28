@@ -46,6 +46,11 @@ can never pervade) and `train` (`{ skill = percent }`, 1 to 1000, a mark's chanc
 name content loaded after the effects, so `content/room_lore.rs` keeps the names until
 `RoomEffects::resolve_lore` (after `resolve_places`) resolves them, refusing unknown ones
 (`train` is dropped when the content has no skills at all).
+Treasure rooms (#617, `content/room_treasury.rs`) add `secret_doors` (`SecretDoors::All`: every
+door secret), `treasure` (`content::Treasury`: `chests`, `gold = { heaps, dice, each }`, `gems`;
+each count's dice 0 to `MAX_TREASURE` 16, a heap's dice never below 0, `each` 1 to
+`MAX_COINS_EACH` 1000), and `arrive` (a line said on arrival, not empty); none of the three may
+pervade.
 An effect with `level_chance` must have a
 `pervade` line and be neither `shunned` nor lay a `floor` nor hold `mirrors` nor `collapse`
 (`RoomEffectDef::can_pervade`; nor one with a `feature`); a level file's `effect` is held to the
@@ -60,7 +65,7 @@ Features today: shadowed (10), echoing (8), hushed (8), sanctuary (6), flooded (
 `factions = ["wildlife", "vermin", "marsh"]` and `hoard = "corpses"`, #410), collapsed (3, "collapsed
 floor", mark `k` (`c` is the cold room's), `needs_below`, `floor = "cracked_floor"`, `collapse =
 { chance = 15, damage = "2d6" }`, #420), tempting hoard (5,
-`hoard`, "treasure room", mark `$`, `needs_danger`, `hoard = { items = 3, loot_level = 3,
+`hoard`, "tempting hoard" (named "treasure room" until #617), mark `T`, `needs_danger`, `hoard = { items = 3, loot_level = 3,
 guardians = [2, 4], danger = 1 }`, #415), cursed (6, mark
 `g`, `needs_danger`, `level_chance` 5, `rise = { faction = "undead", after = "2m" }`, `unholy`,
 #408), altar (8, "altar room",
@@ -73,7 +78,8 @@ altar's lights, `shrine = { regen = 200, status = "unwelcome", ... }`, #413), ha
 `train = { decipher_script = 200 }`, #414), armoury (4, mark `R`, `needs_danger`, `min_cells` 16,
 `dressing` of `weapon_rack`, `swarm` with its own `population` of the three animated families and
 `danger = 4`, #487), workshop (4, mark `W`, as the armoury with `workbench` and ten household
-types, #487). Draining (also `unholy`) and cursed are the ones with a `level_chance`. Fyrdelf
+types, #487), treasure room (4, `treasury`, mark `$`, `min_cells = 9`, `secret_doors = "all"`,
+`treasure`, `arrive`, #617; the last effect). Draining (also `unholy`) and cursed are the ones with a `level_chance`. Fyrdelf
 favours the armoury at 20.
 
 A dungeon's `room_effects` (on a branch or a `[[dungeon.levels]]` range; `content/dungeon.rs`,
@@ -224,6 +230,46 @@ cells the last perception does not see (`Perception::sees_actors_at`), then the 
 the inner cells; each cell taken once. Saved: `lifted` and `sealed` on `SpecialRoom`, each left
 out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, lifted N` and
 `, sealed`.
+
+## Treasure rooms
+
+#617 (chests C5, docs/design/chests-and-treasure.md §6.1, §6.3–6.6). `mapgen/treasury.rs`:
+
+- **Eligibility** (the `fits` closure `special::pick` takes, besides `eligible` and `peopled`):
+  on a rooms level, `fits_room`: the room has a door, no staircase, nothing lying in it (the
+  locked rooms' key), no locked door, and `aside`: the down staircase and every key outside a
+  vault are still reached from the up staircase without its doors, locked doors, or secret ones
+  (so sealing never breaks `connect::validate`; about one room in three qualifies). On a cave
+  level, `fits_cave`: a box fits (`spots`).
+- **The cave's box** (`stamp`, in `special::cave_rooms` in place of the chamber): its interior
+  `box_size(min_cells)` (one wider than square, at least 9 cells: 4 × 3), its interior and ring
+  all rock (`pal.void`), off the edge, not stamped, in no special room, with at least one ring
+  cell (not a corner) 4-adjacent to walkable cave floor outside it (`door_spots`). One
+  `rng.pick` among the spots and one among its door spots, from the map stream; the interior
+  becomes floor, that cell a closed door, and `special::make` keeps the room (its rect with the
+  ring). `build_walls` makes the ring walls.
+- **Sealing** (`seal`, in `generate_for` right after the first `connect::validate`, before
+  `hide_traps`): each rim cell of such a room that is walkable or a closed door becomes a closed
+  door, then a secret door (`secret_look`, `Secret { door: door_closed, difficulty:
+  search().secret_door }`), outside the branch's `secret_doors` count; `hide_secrets` then
+  never picks them (they are no longer doors). If `validate` then fails (the eligibility makes
+  it rare), the cells are put back and the room is dropped (plain). No draw.
+- **Contents** (`fill`, after `chest::fill`, before the gear): `Rng::treasure`
+  (`treasure/<level id>`), per room with `treasure` in room order: the `chests` dice, per chest
+  one `rng.pick` among the free floor cells that touch no door or secret door of the room and
+  leave its walkable cells joined (`special::joined`), then `chest::lay` (lock, trap of the
+  branch's that fit a fixture, `roll_contents`, the mimic draw: a floor chest's draws); the
+  `gold.heaps` dice, per heap a cell and `gold.dice` × `each` coins of the shops' currency (else
+  `gold_coin`); the `gems` dice, per gem a cell and `gem::roll` at the item level. Free cells:
+  the room's plain floor without stairs, light, trap, lock, or chest; chests take theirs away,
+  heaps and gems share. A room too small for its chests holds what fits.
+- The floor's population keeps out of it (`population.rs`), and `make` refuses one a patrol
+  walks through, as for a den or a hoard. Floor chests (`chest::fill`) may still land inside.
+- **The hint** (`world/treasury.rs`, `arrive_lines`): in `World::travel` after the `pervade`
+  line, and in `World::new`; per effect with an `arrive` line, if the level has a room of it not
+  `entered` that the player does not stand in, the line once (effects in id order); with
+  `TalentMods::treasure_bearing` (Treasure sense) `", to the <wind>."` from the arrival cell to
+  the nearest such room's box middle (`Dir::toward`). Nothing saved.
 
 ## Scriptoria
 
@@ -635,8 +681,9 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 `stealth`; hook `World::spread_noise`'s wake check), Mirror-wise (scholar, `sees_reflections` 2; hook
 `Perception::compute`'s images, which the glass reads too), Light tread (delver, Dexterity 12,
 `collapse_proof`; hook `World::collapse_step`, which then draws nothing), Hoard-wise (delver,
-Intelligence 11, `hoard_grace` 1; hook `World::lift_in_hoard`), and Grave warden (guard, Willpower 12,
-`grave_warden`; hook `World::curse_corpse`). The class ability Consecrate (above) carries the
+Intelligence 11, `hoard_grace` 1; hook `World::lift_in_hoard`), Grave warden (guard, Willpower 12,
+`grave_warden`; hook `World::curse_corpse`), and Treasure sense (wayfarer, Spot 10,
+`treasure_sense`; hook `world/treasury.rs::arrive_lines`, #617). The class ability Consecrate (above) carries the
 system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
 (grit, Willpower 12, `penitent`; hook `world/pray.rs::prayer_answered`). The forge
 adds no talent (the issue's "None new"): Metalcraft is its lean.
@@ -698,7 +745,12 @@ sound way between its ways in), `world/hoard_tests.rs` (the
 tempting hoard: its data and refusals, the first stack sealing it with both doors shut and locked
 and two to four hostile guardians, the guardians on the edge and out of view, nothing lifted
 outside counting, Hoard-wise, sealing once, an open door with something in it left open, a
-doorless room, no danger, the dump, saving, and a generated hoard's items with no one inside), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
+doorless room, no danger, the dump, saving, and a generated hoard's items with no one inside), `content/room_treasury_tests.rs` (the treasure room's fields parsed and refused, never over a
+whole level), `mapgen/treasury_tests.rs` (every door of a rooms level's treasure room secret and
+the level valid, no stairs or creature inside; a cave's box with one secret door; one or two
+chests, the gold and gems the dice give, and the level outside the room the same without its
+treasure), `world/treasury_tests.rs` (the data, the hint on every arrival until the room is
+entered, after a save too, once for two rooms, Treasure sense's bearing), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
 minutes as undead of the dead's level, the twitch and rising lines, not when the corpse is gone or
 carried out, not outside, never the undead, the nearest-level fallback and the campaign's own,
 Grave warden, a cursed level, a frozen level catching up, saving and the dump; Consecrate lifting a
