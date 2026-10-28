@@ -22,7 +22,7 @@ Update them together whenever behavior, commands, or architecture change.
 | Lint (CI-equivalent) | `cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings` |
 | WASM check | `cargo check -p warlock -p warlock-core --target wasm32-unknown-unknown` |
 | Dependency audit | `cargo deny check` |
-| Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`) |
+| Screenshot smoke test | `cargo xtask smoke` (writes `target/xtask/smoke.png`; captures after 60 frames, retried once after 600 if the capture is a single flat color, which still fails: #669) |
 | Web build | `cargo xtask web` (writes `target/web/`, without the test world; see "Releases, web build, logs") |
 | Release configuration | `cargo build --no-default-features -p warlock -p warlock-cli` (no `showcase` feature: the test world left out, as in a release; `cargo test --no-default-features -p warlock-core -p warlock release_content` checks it; CI's `release-config` job; docs/dev/campaign.md) |
 | Web smoke test | `cargo xtask web-smoke <chrome>` (serves `target/web`, drives headless Chromium through menu → New run (skipped: the web build lists one scenario, the Ascmearc's start, so it opens on the race) → race, the stars, gender, class (preselected) → talents (Random) → name (empty: a random one) → summary → the run on Beorggeat, checks the new character's save `warlock/saves/<id>.sav`, waits five turns, reloads, Continue, and checks the run resumed at turn 5; writes `target/xtask/web-smoke.png`; fails on logged errors; not run in CI) |
