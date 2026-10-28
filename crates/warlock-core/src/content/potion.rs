@@ -4,11 +4,13 @@
 //!
 //! ```toml
 //! [object.drink]
-//! kind = "heal"              # heal, cure, mana, elixir, harm
+//! kind = "heal"              # heal, cure, mana, elixir, harm, boost, vision, haste, resistance
 //! dice = "2d8"               # heal: hit points back; mana: mana back; harm: degrees of sickness
 //! cures = ["bandage"]        # heal, cure: means named in the statuses' and diseases' `cured_by`
 //! diseases = true            # cure: ends every disease the drinker has
-//! status = "poisoned"        # harm: the status it gives, `dice` degrees of it
+//! status = "poisoned"        # harm: the status it gives, `dice` degrees of it; boost, vision,
+//!                            # resistance: the status it gives (a raise, eyes, a `resist`)
+//! severity = 1               # boost, haste: the degrees it gives (1 to the status's `max`)
 //! stat = "strength"          # elixir: the stat it raises for good
 //! points = 1                 # elixir: by how much (a trained rise each)
 //! potential = "1d2"          # elixir: the potential's further rise, rolled once
@@ -18,7 +20,9 @@
 //!
 //! Only its kind's fields: a heal has `dice` and maybe `cures`; a cure has `cures` or
 //! `diseases`; a mana potion `dice`; an elixir `stat`, `points`, and `potential`; a harm `dice`
-//! and `status`. The colour's hue is its
+//! and `status`; a boost `status` (one that raises a stat, `penalty`) and `severity`; a vision
+//! `status` (one with `vision`); a haste `severity` (of Hasted, the Haste spell's status); a
+//! resistance `status` (one with `resist`). The colour's hue is its
 //! family's (the design's rule, kept in data as the object's `fg`): potions that share a colour
 //! name share their `fg`.
 
@@ -31,6 +35,8 @@ use std::collections::BTreeMap;
 /// The most marks a potion may give a stat.
 pub const MAX_POTION_MARKS: u16 = 100;
 
+/// The status a haste gives: the Haste spell's.
+const HASTE: &str = "hasted";
 /// The points an elixir may raise its stat by.
 pub const ELIXIR_POINTS: std::ops::RangeInclusive<u8> = 1..=3;
 
@@ -53,6 +59,14 @@ pub enum Draught {
     },
     /// Sickness: degrees of `status` (poisoned), as rotten food gives.
     Harm { dice: Dice, status: StatusId },
+    /// A stat raised for a while: `severity` degrees of `status` (Fortified), a raise.
+    Boost { status: StatusId, severity: u16 },
+    /// Eyes for the dark for a while: `status` (Owl-eyed), which lends a vision profile.
+    Vision { status: StatusId },
+    /// Quickness for a while: `severity` degrees of `status`, Hasted (the Haste spell's).
+    Haste { status: StatusId, severity: u16 },
+    /// A resistance for a while: `status` (Warmed), which resists as gear does.
+    Resistance { status: StatusId },
 }
 
 impl Draught {
@@ -64,6 +78,23 @@ impl Draught {
             Draught::Mana { .. } => "mana",
             Draught::Elixir { .. } => "elixir",
             Draught::Harm { .. } => "harm",
+            Draught::Boost { .. } => "boost",
+            Draught::Vision { .. } => "vision",
+            Draught::Haste { .. } => "haste",
+            Draught::Resistance { .. } => "resistance",
+        }
+    }
+
+    /// The status it gives the drinker for a while and the degrees of it, for the kinds that
+    /// give one (boost, vision, haste, resistance); not a harm's sickness, whose degrees are
+    /// rolled.
+    pub fn lends(&self) -> Option<(StatusId, u16)> {
+        match *self {
+            Draught::Boost { status, severity } | Draught::Haste { status, severity } => {
+                Some((status, severity))
+            }
+            Draught::Vision { status } | Draught::Resistance { status } => Some((status, 1)),
+            _ => None,
         }
     }
 
@@ -71,7 +102,7 @@ impl Draught {
     pub fn cures(&self) -> &[String] {
         match self {
             Draught::Heal { cures, .. } | Draught::Cure { cures, .. } => cures,
-            Draught::Mana { .. } | Draught::Elixir { .. } | Draught::Harm { .. } => &[],
+            _ => &[],
         }
     }
 }
@@ -97,6 +128,7 @@ pub struct DrinkSpec {
     #[serde(default)]
     diseases: bool,
     status: Option<String>,
+    severity: Option<u16>,
     stat: Option<String>,
     points: Option<u8>,
     potential: Option<Dice>,
@@ -116,6 +148,28 @@ impl DrinkSpec {
         let dice = |dice: Option<Dice>| {
             dice.ok_or_else(|| format!("`drink`: a {} needs `dice`", self.kind))
         };
+        // The kinds that lend a status have no dice, cures, or diseases.
+        let lending = [
+            ("dice", self.dice.is_some()),
+            ("cures", !self.cures.is_empty()),
+            ("diseases", self.diseases),
+        ];
+        let status = |name: Option<&str>| {
+            let name =
+                name.ok_or_else(|| format!("`drink`: a {} names its `status`", self.kind))?;
+            (content.status_id(name))
+                .ok_or_else(|| format!("`drink`: no status `{name}` in data/status.toml"))
+        };
+        let severity = |status: StatusId| {
+            let max = content.status(status).max;
+            match self.severity {
+                Some(s) if (1..=max).contains(&s) => Ok(s),
+                Some(_) => Err(format!(
+                    "`drink`: `severity` is 1 to {max} (the status's max)"
+                )),
+                None => Err(format!("`drink`: a {} needs `severity`", self.kind)),
+            }
+        };
         // An elixir's fields belong to it alone.
         if self.kind != "elixir" {
             only(&[
@@ -129,6 +183,7 @@ impl DrinkSpec {
                 only(&[
                     ("diseases", self.diseases),
                     ("status", self.status.is_some()),
+                    ("severity", self.severity.is_some()),
                 ])?;
                 Draught::Heal {
                     dice: dice(self.dice)?,
@@ -139,6 +194,7 @@ impl DrinkSpec {
                 only(&[
                     ("dice", self.dice.is_some()),
                     ("status", self.status.is_some()),
+                    ("severity", self.severity.is_some()),
                 ])?;
                 if self.cures.is_empty() && !self.diseases {
                     return Err("`drink`: a cure names `cures` or `diseases = true`".into());
@@ -153,6 +209,7 @@ impl DrinkSpec {
                     ("cures", !self.cures.is_empty()),
                     ("diseases", self.diseases),
                     ("status", self.status.is_some()),
+                    ("severity", self.severity.is_some()),
                 ])?;
                 Draught::Mana {
                     dice: dice(self.dice)?,
@@ -164,6 +221,7 @@ impl DrinkSpec {
                     ("cures", !self.cures.is_empty()),
                     ("diseases", self.diseases),
                     ("status", self.status.is_some()),
+                    ("severity", self.severity.is_some()),
                 ])?;
                 let name = (self.stat.as_deref())
                     .ok_or_else(|| "`drink`: an elixir names its `stat`".to_string())?;
@@ -192,6 +250,7 @@ impl DrinkSpec {
                 only(&[
                     ("cures", !self.cures.is_empty()),
                     ("diseases", self.diseases),
+                    ("severity", self.severity.is_some()),
                 ])?;
                 let name = (self.status.clone())
                     .ok_or_else(|| "`drink`: a harm names its `status`".to_string())?;
@@ -202,9 +261,59 @@ impl DrinkSpec {
                     status,
                 }
             }
+            "boost" => {
+                only(&lending)?;
+                let status = status(self.status.as_deref())?;
+                let def = content.status(status);
+                if def
+                    .penalty
+                    .as_ref()
+                    .is_none_or(|p| p.by.iter().all(|(_, v)| v <= 0))
+                {
+                    return Err(format!(
+                        "`drink`: a boost's status `{}` raises no stat",
+                        def.id
+                    ));
+                }
+                Draught::Boost {
+                    status,
+                    severity: severity(status)?,
+                }
+            }
+            "vision" => {
+                only(&[lending.as_slice(), &[("severity", self.severity.is_some())]].concat())?;
+                let status = status(self.status.as_deref())?;
+                if content.status(status).vision.is_none() {
+                    let id = &content.status(status).id;
+                    return Err(format!(
+                        "`drink`: a vision's status `{id}` lends no `vision`"
+                    ));
+                }
+                Draught::Vision { status }
+            }
+            "haste" => {
+                only(&[lending.as_slice(), &[("status", self.status.is_some())]].concat())?;
+                let status = status(Some(HASTE))?;
+                Draught::Haste {
+                    status,
+                    severity: severity(status)?,
+                }
+            }
+            "resistance" => {
+                only(&[lending.as_slice(), &[("severity", self.severity.is_some())]].concat())?;
+                let status = status(self.status.as_deref())?;
+                if content.status(status).resist.is_empty() {
+                    let id = &content.status(status).id;
+                    return Err(format!(
+                        "`drink`: a resistance's status `{id}` has no `resist`"
+                    ));
+                }
+                Draught::Resistance { status }
+            }
             other => {
                 return Err(format!(
-                    "`drink`: unknown kind `{other}` (heal, cure, mana, elixir, harm)"
+                    "`drink`: unknown kind `{other}` (heal, cure, mana, elixir, harm, boost, \
+                     vision, haste, resistance)"
                 ));
             }
         };

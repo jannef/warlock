@@ -271,8 +271,8 @@ pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use wand::{MAX_WAND_CHARGES, Wand};
 pub use weapon_ability::{
-    ExtraDice, FreeBlowKind, MAX_ABILITY_RANK, On, Trigger, WeaponAbility, WeaponAbilityId,
-    WeaponDoes,
+    Active, ActiveAim, Categories, ENERGY_PERCENT, ExtraDice, FreeBlowKind, MAX_ABILITY_RANK, On,
+    STAMINA, Trigger, WeaponAbility, WeaponAbilityId, WeaponDoes,
 };
 pub use weapon_skill::{
     Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, SpellAttacks, Style, TwoShields,
@@ -1696,6 +1696,7 @@ impl Content {
             text,
             |id| self.damage_type_id(id),
             |id| self.light_id(id),
+            |id| self.vision_index(id),
         )?;
         for (i, def) in list.iter().enumerate() {
             let id = u16::try_from(i).map_err(|_| ContentError::new(path, "too many statuses"))?;

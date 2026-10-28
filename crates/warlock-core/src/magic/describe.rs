@@ -196,8 +196,49 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
         Draught::Mana { .. } => "Restores mana at once".to_string(),
         Draught::Elixir { stat, .. } => format!("Makes you {} for good", stat.comparative()),
         Draught::Harm { .. } => "Sickens whoever drinks it".to_string(),
+        Draught::Boost { status, severity } => {
+            let def = content.status(*status);
+            let raised: Vec<&str> = (def.penalty.iter())
+                .flat_map(|p| p.by.iter())
+                .filter(|&(_, v)| v > 0)
+                .map(|(stat, _)| boosted(stat))
+                .collect();
+            let much = if *severity > 1 { "much " } else { "" };
+            let raised = crate::content::and_list(&raised);
+            format!("Makes you {much}{raised} for a while")
+        }
+        Draught::Vision { status } => {
+            let eyes = (content.status(*status).vision).map(|i| &content.vision_profiles()[i]);
+            match eyes {
+                Some(e) if e.sees_uv => "Opens the eyes to light beyond violet for a while",
+                Some(e) if e.darkvision > 0 => "Lets you see in the dark for a while",
+                _ => "Sharpens the eyes in the dark for a while",
+            }
+            .to_string()
+        }
+        Draught::Haste { .. } => "Quickens you for a while".to_string(),
+        Draught::Resistance { status } => {
+            let kinds: Vec<&str> = (content.status(*status).resist.iter())
+                .map(|&(kind, _)| content.damage_type(kind).name.as_str())
+                .collect();
+            let kinds = crate::content::and_list(&kinds);
+            format!("Wards you against {kinds} for a while")
+        }
     };
     vec![line(LineKind::Stat, text)]
+}
+
+/// What a boost of `stat` makes its drinker, in words: "stronger".
+fn boosted(stat: crate::stats::Stat) -> &'static str {
+    use crate::stats::Stat;
+    match stat {
+        Stat::Strength => "stronger",
+        Stat::Dexterity => "nimbler",
+        Stat::Toughness => "hardier",
+        Stat::Intelligence => "keener of mind",
+        Stat::Willpower => "firmer of will",
+        Stat::Presence => "more imposing",
+    }
 }
 
 /// The description of `stack`, as the player knows it: what it is (`Magic long sword · steel

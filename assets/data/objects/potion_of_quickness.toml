@@ -1,0 +1,21 @@
+# A potion of quickness (spec §8 "Potions"): Hasted, as the spell makes its caster, for a minute.
+# Speed is yellow.
+[[object]]
+id = "potion_of_quickness"
+name = "potion of quickness"
+plural = "potions of quickness"
+glyph = "!"
+fg = "#e0d040"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 250
+stackable = true
+level = 6
+frequency = 10
+
+[object.drink]
+kind = "haste"
+severity = 1
+colour = "yellow"
+marks = { dexterity = 5 }

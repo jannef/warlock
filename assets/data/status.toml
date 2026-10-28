@@ -28,10 +28,13 @@
 #              positive number raises the stat instead (-10 to 10)
 #   combat     what it adds to the fighting of whoever suffers it while it lasts, as a stance does
 #              (stances.toml): { to_hit = 1, damage = 2, dodge = 1, parry = 1 }, each -20 to 20,
-#              0 when left out; several add up (of Parry bonuses the highest counts)
+#              0 when left out; several add up (of Parry bonuses the highest counts); `shield`
+#              adds on top of a held shield's Defence (Walled)
 #   cost       what every action costs while it lasts, in percent of its price (50 to 1000;
 #              default 100): 150 is half again as slow. Several multiply. Below 100 it hastens,
 #              which only a spell's buff on its caster may do (Haste)
+#   attack_cost  what every attack costs while it lasts, in percent of its price, on top of
+#              `cost` (50 to 1000; default 100): 125 a quarter slower. Several multiply
 #   blocks     the actions refused while it lasts, by their ids in actions.toml: ["read"]; an
 #              ability that costs one cannot be used either; "cast" also refuses spending mana
 #   flees      true: a creature suffering it runs from the one who gave it (else the nearest foe
@@ -492,6 +495,144 @@ combat = { dodge = 2 }
 start = "Your skin hardens like bark."
 end = "Your skin softens again."
 
+# Potions' statuses (spec §8 "Potions", the combat progression design §10.1): what a drink
+# lends for a while. Six boosts, a stat raised by 2 a degree (`per_degree`): ten minutes a degree,
+# a greater potion's two degrees easing to one; a new draught keeps the stronger. A boost is told
+# by name only, never by how much.
+[[status]]
+id = "fortified"
+name = "Fortified"
+max = 2
+stacking = "highest"
+eases = 600
+penalty = { from = 1, strength = 2, per_degree = true }
+start = "You feel stronger."
+end = "Your strength ebbs back to what it was."
+
+[[status]]
+id = "nimble"
+name = "Nimble"
+max = 2
+stacking = "highest"
+eases = 600
+penalty = { from = 1, dexterity = 2, per_degree = true }
+start = "You feel nimble."
+end = "Your limbs feel ordinary again."
+
+[[status]]
+id = "hale"
+name = "Hale"
+max = 2
+stacking = "highest"
+eases = 600
+penalty = { from = 1, toughness = 2, per_degree = true }
+start = "You feel hale."
+end = "The heartiness fades from you."
+
+[[status]]
+id = "keen"
+name = "Keen"
+max = 2
+stacking = "highest"
+eases = 600
+penalty = { from = 1, intelligence = 2, per_degree = true }
+start = "Your thoughts run keen and clear."
+end = "Your thoughts slow to their old pace."
+
+[[status]]
+id = "steadfast"
+name = "Steadfast"
+max = 2
+stacking = "highest"
+eases = 600
+penalty = { from = 1, willpower = 2, per_degree = true }
+start = "Your will feels steadfast."
+end = "Your will is your own again."
+
+[[status]]
+id = "imposing"
+name = "Imposing"
+max = 2
+stacking = "highest"
+eases = 600
+penalty = { from = 1, presence = 2, per_degree = true }
+start = "You feel imposing."
+end = "You feel less imposing."
+
+# Three visions, eyes lent for half an hour (`vision`, a profile of vision.toml, bettering the
+# drinker's own part by part as a unique item's Vision power does): low light, darkvision, and the
+# ultraviolet sight of the moth.
+[[status]]
+id = "cat_eyed"
+name = "Cat-eyed"
+max = 1
+stacking = "refresh"
+eases = 1800
+vision = "low_light"
+start = "The dark is less dark to you."
+end = "The dim grows dim again."
+
+[[status]]
+id = "owl_eyed"
+name = "Owl-eyed"
+max = 1
+stacking = "refresh"
+eases = 1800
+vision = "darkvision"
+start = "Your eyes open wide to the dark."
+end = "Your eyes lose their hold on the dark."
+
+[[status]]
+id = "moth_eyed"
+name = "Moth-eyed"
+max = 1
+stacking = "refresh"
+eases = 1800
+vision = "uv_sight"
+start = "Strange colours bloom at the edge of sight."
+end = "The strange colours fade from your sight."
+
+# Four resistances for half an hour (`resist`, counted as gear's: never immunity).
+[[status]]
+id = "warmed"
+name = "Warmed"
+max = 1
+stacking = "refresh"
+eases = 1800
+resist = { fire = 50 }
+start = "A warmth settles deep in your bones."
+end = "The warmth leaves your bones."
+
+[[status]]
+id = "chill_proof"
+name = "Chill-proof"
+max = 1
+stacking = "refresh"
+eases = 1800
+resist = { cold = 50 }
+start = "A glow spreads through you against the cold."
+end = "The glow against the cold fades."
+
+[[status]]
+id = "earthed"
+name = "Earthed"
+max = 1
+stacking = "refresh"
+eases = 1800
+resist = { electricity = 50 }
+start = "You feel heavy and grounded."
+end = "You feel lighter, less grounded."
+
+[[status]]
+id = "poison_proof"
+name = "Proof against poison"
+max = 1
+stacking = "refresh"
+eases = 1800
+resist = { poison = 50 }
+start = "Your blood feels thick and sure."
+end = "Your blood feels ordinary again."
+
 # Battle caster's Spell guard (spec §8 "Fighting styles"): a spell that lands while its caster
 # fights in armour leaves a ward about them, a Defence point, until their next action.
 [[status]]
@@ -568,3 +709,18 @@ max = 1
 stacking = "refresh"
 cost = 50
 per_action = true
+
+# Walled, Shield wall's (a weapon active, #564): the shield set and the bearer behind it, Shield
+# +3 to Defence on top of the shield's own, every attack a quarter slower; five degrees, a degree
+# a turn.
+[[status]]
+id = "walled"
+name = "Walled"
+seen = "behind its shield"
+max = 5
+stacking = "refresh"
+eases = 6
+combat = { shield = 3 }
+attack_cost = 125
+start = "You set your shield and stand behind it."
+end = "You lower your shield."

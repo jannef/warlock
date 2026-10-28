@@ -265,6 +265,15 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
+    // A potion's boost (#567): Fortified by name in the Status row and the status bar, the
+    // Strength score raised, no numbers.
+    Case {
+        name: "potion-boost",
+        actions: "afflict:fortified afflict:owl_eyed wait",
+        screen: Some("character"),
+        size: (100, 36),
+        ..BASE
+    },
     Case {
         name: "diseased",
         actions: "infect:the_shakes rest:24h*3",
@@ -335,6 +344,26 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-weapon-skills",
         actions: "rank:long_blades:5 rank:sword_and_board:4 rank:shield_bash:5",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A warrior's actives (#564): Vital strike, Shield rush, and Shield wall usable with their
+    // stamina; Lunge greyed, a long sword being no spear.
+    Case {
+        name: "abilities-menu-weapon-actives",
+        character: Some("human,male,warrior"),
+        kit: true,
+        actions: "rank:long_blades:9 rank:shield_block:9 rank:sword_and_board:7 rank:spears:9",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // Two shield walls later: the pool spent, the rows greyed short of breath.
+    Case {
+        name: "abilities-menu-weapon-actives-short",
+        character: Some("human,male,warrior"),
+        kit: true,
+        actions: "rank:long_blades:9 rank:shield_block:9 rank:sword_and_board:7 rank:spears:9 \
+                  use:shield_wall use:shield_wall",
         screen: Some("abilities"),
         ..BASE
     },

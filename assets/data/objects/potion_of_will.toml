@@ -1,0 +1,21 @@
+# A potion of will (spec §8 "Potions"): Willpower raised for ten minutes. Stat boosts are orange.
+[[object]]
+id = "potion_of_will"
+name = "potion of will"
+plural = "potions of will"
+glyph = "!"
+fg = "#d89a30"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 150
+stackable = true
+level = 3
+frequency = 20
+
+[object.drink]
+kind = "boost"
+status = "steadfast"
+severity = 1
+colour = "orange"
+marks = { willpower = 5 }

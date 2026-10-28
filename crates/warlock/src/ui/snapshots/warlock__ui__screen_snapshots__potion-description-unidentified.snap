@@ -14,9 +14,9 @@ expression: "render(case, content.clone())"
 
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
-                  │ ! Syrupy red potion                                          │
+                  │ ! Thick red potion                                           │
                   │                                                              │
-                  │ 2 syrupy red potions · glass · 500 g                         │
+                  │ 2 thick red potions · glass · 500 g                          │
                   │                                                              │
                   │ You do not know what this potion does.                       │
                   │                                                              │

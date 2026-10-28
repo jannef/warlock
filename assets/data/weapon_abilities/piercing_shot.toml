@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "piercing_shot"
+name = "Piercing shot"
+description = "A shot loosed hard enough to go through the first it strikes and on to the next."
+skills = ["bows", "crossbows", "slings"]
+rank = 9
+kind = "active"
+aim = "cell"
+stamina = 4
+energy = { action = "shoot", percent = 100 }
+systems = ["weapon_abilities", "weapon_skills", "stamina", "ranged"]
+[weapon_ability.effect]
+kind = "pierce_shot"

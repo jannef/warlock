@@ -188,7 +188,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   saved; `content::creature_body_tests` checks every type. The player's answer is penetration
   (the war hammer, the stiletto, crossbow bolts) and criticals, soaked once after they multiply;
   **Armour-breaker** (Might, needs axes, maces, or polearms 7; the `protection` system): its
-  confirmed criticals ignore 2 more Protection (`critical_penetration`).
+  confirmed criticals ignore 2 more Protection (`critical_penetration`), and Sunder and Gap shot
+  cost it 2 stamina less (`weapon_stamina`, #564).
 - **Creature gear** (`warlock-core/src/gear.rs`, the rolls; `content/gear.rs`, the data; #328,
   campaign design §10.3): a creature type may have a `racial_weapon` (a weapon it must have a
   rank in: the affinity is the rank, which combat applies) and `[[creature.gear]]` lines

@@ -187,7 +187,9 @@
 #              and only its fields: `heal` (`dice` hit points back, optional `cures`), `cure`
 #              (`cures`, means of the statuses' and diseases' `cured_by`, and/or
 #              `diseases = true`: every disease), `mana` (`dice` mana back), `harm` (`dice`
-#              degrees of `status`). Every potion has `colour` (the name an unknown one is called
+#              degrees of `status`), `boost` (`severity` degrees of `status`, one that raises a
+#              stat), `vision` (`status`, one that lends a `vision`), `haste` (`severity`
+#              degrees of Hasted), `resistance` (`status`, one with a `resist`). Every potion has `colour` (the name an unknown one is called
 #              by, "a fizzy red potion"; its hue is its family's, the object's `fg` its shade,
 #              one `fg` per colour name) and `marks = { toughness = 5 }` (sure training marks).
 #              A potion may have `level` and `frequency`: it is loot, never magic.
