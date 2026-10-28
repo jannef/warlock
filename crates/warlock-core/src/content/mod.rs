@@ -163,7 +163,9 @@ pub use dialogue::{
     ServiceKind, Speaker, Topic,
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
-pub use dungeon::{DungeonDef, Generator, LevelPlan, RoomOdds, ShopOdds, parse_branch_level};
+pub use dungeon::{
+    ChestOdds, DungeonDef, Generator, LevelPlan, RoomOdds, ShopOdds, parse_branch_level,
+};
 pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
     MAX_SHAKE_PIXELS, Shake,
