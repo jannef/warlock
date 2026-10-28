@@ -35,6 +35,11 @@ Heal's as **Heal**, and Survival's, though it is a passive skill, as **Forage**.
 
 {{#include generated/skills.md}}
 
+What is marked **trained only** is given only to those trained in the skill at all: untrained,
+you cannot try, and a magic item that raises the skill (see [Magic items](magic-items.md)) does
+not change that. Everything else a skill gives, a magic item gives even to the untrained, as if
+the skill were trained at the item's bonus.
+
 ## What skills give
 
 The passive skills help you more the higher they are:
