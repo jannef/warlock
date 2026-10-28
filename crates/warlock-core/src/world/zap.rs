@@ -3,7 +3,8 @@
 //! through the one cast path ([`World::wand_cast`]):
 //!
 //! - **Caster level**: the wand's own (`[object.wand] caster_level`, by default its tier's
-//!   comfortable level), plus Wand mastery's (`TalentMods::wand_level`); never the user's, so a
+//!   comfortable level), plus Wand mastery's (`TalentMods::wand_level`) and the worn items'
+//!   (`wand_level`, of Wands, unidentified too); never the user's, so a
 //!   warrior fires a wand as well as a wizard does. Its dice grow with that level and are held
 //!   to the spell's cap as every cast's are.
 //! - **Resolution**: the spell's own: an `attack` spell rolls to hit (the user's Dexterity, as
@@ -22,7 +23,7 @@
 
 use super::{Actor, Spent, World};
 use crate::action::Event;
-use crate::content::{ActionKind, Content, Wand};
+use crate::content::{ActionKind, Content, Effect, Wand};
 use crate::geom::Pos;
 
 impl Actor {
@@ -39,10 +40,11 @@ impl Actor {
         })
     }
 
-    /// The caster level `wand` casts at in its hands: the wand's own, plus Wand mastery's
-    /// (module docs), at least 1.
+    /// The caster level `wand` casts at in its hands: the wand's own, plus Wand mastery's and
+    /// the worn items' `wand_level` (module docs), at least 1.
     pub fn wand_caster_level(&self, content: &Content, wand: &Wand) -> i32 {
-        (i32::from(wand.caster_level) + self.talent_mods(content).wand_level).max(1)
+        let worn = self.mods(content).get(Effect::WandLevel);
+        (i32::from(wand.caster_level) + self.talent_mods(content).wand_level + worn).max(1)
     }
 }
 
