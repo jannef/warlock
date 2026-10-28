@@ -103,7 +103,7 @@ impl Trigger {
     /// When it fires, in words (the wiki).
     pub const fn describe(self) -> &'static str {
         match self {
-            Trigger::Hit => "a blow, shot, or throw of yours hits",
+            Trigger::Hit => "a blow, shot, throw, or spell attack of yours hits",
             Trigger::Critical => "a critical of yours is confirmed",
             Trigger::BigHit => "a hit of yours takes a third of the target's hit points",
             Trigger::Kill => "a blow, shot, or throw of yours kills",

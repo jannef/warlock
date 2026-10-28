@@ -113,6 +113,7 @@ mod drain;
 mod drink;
 mod eat;
 mod element_gifts;
+mod elixir;
 mod equip;
 mod experience;
 mod eyes;
@@ -1350,6 +1351,8 @@ mod cast_tests;
 #[cfg(test)]
 mod caster_level_tests;
 #[cfg(test)]
+mod caster_style_tests;
+#[cfg(test)]
 mod caster_tests;
 #[cfg(test)]
 mod ceaptun_quest_tests;
@@ -1397,6 +1400,8 @@ mod drain_tests;
 mod dwell_tests;
 #[cfg(test)]
 mod element_gift_tests;
+#[cfg(test)]
+mod elixir_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]

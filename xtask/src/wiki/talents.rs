@@ -723,6 +723,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 (Some(Role::Unarmed), _) => "unarmed fighting".to_string(),
                 (Some(Role::ShieldBlock), _) => "shield blocking".to_string(),
                 (Some(Role::ShieldBash), _) => "shield bashing".to_string(),
+                (Some(Role::Spell), _) => "spell attacks".to_string(),
                 (Some(Role::Style), _) => "every fighting style".to_string(),
             };
             let mut gains = Vec::new();

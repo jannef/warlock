@@ -288,8 +288,8 @@ two prayers. Seek out the next one: about one generated floor in twenty has one.
 {{#include generated/altar-shares.md}}
 
 Rarely, an altar marks you for good. The great boons raise a stat for good, give a whole
-level at once, grant a talent for life (never one of your level's picks), or leave a relic at
-the altar's foot. The great banes lower a stat for good, take a level away (what you chose at
+level at once, grant a talent for life (never one of your level's picks), or leave a relic or
+an elixir (see [Potions](potions.md#elixirs)) at the altar's foot. The great banes lower a stat for good, take a level away (what you chose at
 that level you keep, but gaining it again gives no new choices), mark you with a flaw for life,
 or call a horde around the altar. Talents an altar gave you are marked "altar" on the Talents
 page. The talent *Penitent* (Grit) turns a great bane into nothing at all; the altar bursting

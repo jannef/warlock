@@ -73,6 +73,7 @@ for the one attacked). Where each is raised (a line that already marks the event
 | `parried` | `second_blow(Cue::Attacked { parried: true })`, before the cleave or riposte | the target's held |
 | `both_hands_hit` | `World::both_hands`, from `World::attack` and `player_attacks` after the second blow: both `Strike::Hit`, the second made with a weapon (not a shield: a bash is no second hand; not a flurry's fist), the target alive; once an attack | the attack's |
 | `approaches` | `World::approached`, from `World::step_up` (the creature's step in `ai.rs` and now the player's in `travel.rs`) | the approached's missile weapon (`Ranged`), else what it has ready to throw (`Thrown`) |
+| `hit`, `critical` (spells) | `world/cast.rs::spell_practised` → `World::resolve_triggers` with `AttackKind::Spell`, before `spell_strikes` (a spell that rolls to hit, an own cast; #571) | the spell attack skill and the caster style (`Actor::spell_skills`) |
 | `spell_blocked` | `cast.rs::cast_single` → `World::spell_blocked` (`reflect.rs`), on an attack or touch spell's miss by the target's Shield (a bolt, a ray, a touch; a scroll's or a wand's too); never for a reflected flight | the target's held |
 
 Effects (`WeaponDoes`, closed; a kind with no catalogue entry is not written): `Status` (on the

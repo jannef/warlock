@@ -1,0 +1,12 @@
+[[weapon_ability]]
+id = "staggering_touch"
+name = "Staggering touch"
+description = "Your best touches leave the foe staggered, slow to act next."
+skills = ["toucher"]
+rank = 4
+kind = "triggered"
+trigger = "critical"
+systems = ["weapon_abilities", "styles", "spells", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "staggered"

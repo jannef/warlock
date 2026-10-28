@@ -27,10 +27,18 @@ hostile to you. A shield bash is an *ability*: choose it from the abilities menu
 [Abilities](abilities.md)), then a direction. It has no key of its own by default; give it one in
 the Controls screen ("Bash with your shield") if you like.
 
+**Spell attacks** is the skill of spells that roll to hit: a ray, a bolt, or a touch that can
+miss (see [Magic](magic.md#how-a-spell-finds-its-target)). Every such spell you cast with your
+own mana that reaches a creature earns marks, more for a hit, as a blow does; its ranks add to
+the spell's to-hit, widen its critical range, and at the top make a critical roll the damage
+once more (still held to the spell's most). A spell read from a scroll or used from a wand aims
+with Dexterity alone and trains nothing; spells that never miss train nothing either. The
+[caster styles](fighting-styles.md#caster-styles) add to it.
+
 ## Seeing your skills
 
 `W` opens the **weapon skills screen**: every skill, by kind (melee, missile and thrown,
-shields), then your [fighting styles](fighting-styles.md), each with your rank and a faint bar of
+shields, spells), then your [fighting styles](fighting-styles.md), each with your rank and a faint bar of
 your marks toward the next one; a `•` marks the styles you fight in now. It takes no time.
 Skills you know stand out; untrained ones are dimmer. In a wide window the list is in two
 columns; in a small one it scrolls (↑↓). It is page 5 of the

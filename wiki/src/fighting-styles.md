@@ -38,6 +38,28 @@ Shooting and throwing are styles of their own, so a marksman with a sword at the
 both Marksman (shots) and Duelist (blows). A kick is no style: you kick whatever your hands hold,
 so it trains only [unarmed fighting](weapon-skills.md#the-skills), and Brawler does not help it.
 
+## Caster styles
+
+Spells that roll to hit have styles too: how you cast them. Each trains, as the
+[Spell attacks](weapon-skills.md#the-skills) skill does, on every such spell you cast with your
+own mana that reaches a creature, and adds to it.
+
+- **Battle caster**: a spell that rolls to hit, cast while you wear armour that makes spells
+  dearer (mail, plate, a great helm, a large shield). It comes first: in such armour every ray,
+  bolt, and touch is a battle caster's. It hits more often, and it makes your armour's extra
+  mana cost smaller for **every** spell you cast, whatever it is. It also trains a little on
+  every other spell you cast in such armour. From rank 4 a spell that lands wards you: a point
+  of Defence until your next action (*Spell guard*).
+- **Sniper**: a ray or a bolt, out of armour. It hits more often, and better still against a
+  target five cells away or more, where its critical range is wider too. From rank 4 its best
+  shots pin the target where it stands (*Pinning ray*).
+- **Toucher**: a touch, out of armour. It hits more often, its critical range is wider, and its
+  criticals roll the damage up to twice more. From rank 4 its criticals stagger (*Staggering
+  touch*); at rank 10 every touch that lands weakens the foe (*Withering touch*).
+
+The wizard and the druid start in Sniper, the witch and the priest in Toucher, the paladin in
+Battle caster; any caster may advance in any of them by casting.
+
 ## Two weapons
 
 Your off hand takes a shield, or a **light** weapon (listed below; see the

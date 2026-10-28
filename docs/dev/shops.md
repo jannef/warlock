@@ -7,6 +7,8 @@ Shops (spec §7 "Shops", M27, #145) are data: `data/shops.toml` (`content/shop.r
 the currency, the outraged faction, `presence`, the generation `chance`, keeper `names`, the
 `[keeper]` template, and the kinds, `ShopDef`: `always` (objects a generated shop lays out
 first, a stack each, before its drawn goods: the general store's scrolls of identify, #393),
+`never` (objects of a stocked class a generated shop never lays out, read in `Shops::stocks`:
+the general store's and the provisioner's elixirs, #568; none may also be in `always`),
 `stock`/`buys` by item class (`ItemClassId`, ids
 in `data/item_classes.toml`, `docs/dev/objects.md`), `items`, `markup`, `pays`; `Shops::price`/`offer` are the one place
 prices are made, from `Stack::value`, the value of what the stack is made of: its parts, a gem

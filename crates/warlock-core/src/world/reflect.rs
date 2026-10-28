@@ -28,7 +28,7 @@
 //! [`WeaponDoes::ReflectSpell`]: crate::content::WeaponDoes::ReflectSpell
 
 use super::weapon_ability::Fired;
-use super::{ActorId, World};
+use super::{ActorId, AttackSkills, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::combat::{Blow, Category};
 use crate::content::{Shape, SpellData, Trigger};
@@ -55,6 +55,9 @@ pub(super) struct Shot<'s> {
     pub(super) cap: i32,
     /// The caster's to-hit with it.
     pub(super) to_hit: i32,
+    /// The spell attack skill and caster style it is cast with (the caster's own cast of a
+    /// spell that rolls to hit; none for a scroll, a wand, or a reflected flight).
+    pub(super) skills: AttackSkills,
 }
 
 /// A spell turned back: by whom, at whom, the way back, and the spell.
@@ -147,6 +150,11 @@ impl World {
                 cells: path.clone(),
             });
         }
+        // Cast as the caster cast it, but practised by no one (no marks, no triggers).
+        let shot = Shot {
+            skills: AttackSkills::default(),
+            ..shot
+        };
         self.spell_attack(reflector, caster, (from, flies), shot, made);
     }
 
