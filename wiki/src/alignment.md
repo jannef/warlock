@@ -53,7 +53,7 @@ or +1000.
 {{#include generated/alignment-quests.md}}
 
 Nothing else moves you. When you cross into another band you feel it ("You feel righteous.",
-"You feel you have strayed from the path of good."); smaller moves you do not notice.
+"You feel your righteousness waver."); smaller moves you do not notice.
 
 ## What it changes
 
@@ -66,9 +66,13 @@ Nothing else moves you. When you cross into another band you feel it ("You feel 
 
 {{#include generated/alignment-shops.md}}
 
-- **Gifts**: some class abilities and talents ask for an alignment. A paladin's gifts need Good or
-  better: a paladin who falls below keeps them, but cannot use them ("you have strayed") until
-  they climb back.
+- **Holy gifts**: no class, talent, or ability is barred by your alignment, and nothing you have
+  is taken away when it sinks. But the holy gifts work only for the good side: used by anyone
+  else they are still used, take the time of a cast, and do nothing (no healing, no blow, no
+  light, no consecration, and no cooldown or mana spent). Putting your holy light out always
+  works.
+
+{{#include generated/alignment-gifts.md}}
 
 What creatures are, good, neutral, or evil, you cannot see: you learn it from how they behave.
 Magic (mana) does not care where you stand.

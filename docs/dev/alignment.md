@@ -11,8 +11,8 @@ Alignment is good against evil, ADOM's law and chaos turned. Three modules:
   `(MAX − |s|) / MAX`, rounded toward 0; the other way, or from 0, in full), `Band` (Wicked up to
   Saintly, ordered so `>=` is "as good or better"; `ALL` best first; `side`, `scorned_by`),
   `Alignment` (a creature's fixed good, neutral, or evil; `band` for where a band is asked),
-  `Requirement` (`{ min, max }` bands, `allows`, `check`, `words`: what data's
-  `requires_alignment` deserializes to), and `check_start` (a race's or class's part of the start).
+  `Requirement` (`{ min, max }` bands, `allows`, `check`, `words`: what a quest's
+  `requires_alignment` and a holy gift's `alignment` deserialize to), and `check_start` (a race's or class's part of the start).
 - `content/alignment.rs`: `AlignmentRules` from `data/alignment.toml` (optional;
   `Content::alignment()`): the seven `[[band]]`s with `from`, `description` (the wiki), and the
   `rise`/`fall` lines (`news(from, to)`), `[shift]` (`Shifts`, `ByAlignment` for the kills), and
@@ -52,22 +52,28 @@ rules): the character screen's `Alignment` row (after Stance), the chargen summa
 `Alignment` line (from `Start::alignment`), the `stats` dump layer (`Alignment Kind`) and the JSON
 dump's `alignment` (the band id). The dev `actors` layer shows the score (`alignment 450 (good)`)
 and every creature's nature (`alignment evil`). Never show the score or a creature's alignment in
-play. Abilities: `ability::strayed(actor, content, requirement)` gives `Unavailable::Strayed`
-("you have strayed") while the band falls short.
+play.
 
-**For the class tables (#243, I1) and talents (#220).** A class ability or talent that asks for an
-alignment carries `requires_alignment: Option<Requirement>` in its data (`{ min = "good" }` for
-the paladin's gifts; parse it with serde and `Requirement::check` it on load); its arm of
-`Ability::unavailable` returns `strayed(actor, content, def.requires_alignment)` first, then its
-own reasons. The action it makes must refuse the same way (the menu greys it out, but a replay or
-a bound key could still send it). The alignment talents proposed in the spec (Righteous fury,
-Hardened heart, The middle way) hook into `attack_with` (the target's `nature`),
-`shift_alignment` (by `cause`), and `Actor::defence`/`check`. Mana reads nothing of alignment.
+**Alignment bars nothing (#642).** No class, talent, or ability asks for a band: nothing is
+greyed out, refused, or taken away by alignment, and no state remembers a drop in band (the
+paladin's class `alignment` of 550 is only where they start).
+A holy gift (`ClassActive::holy`: Lay on hands, Smite, Holy radiance, Consecrate) may name the
+bands it works for, `alignment = { min = "kind" }` on its talent (`TalentDef::alignment`, checked
+on load: only a holy active's talent may have one). Its function in `world/class_ability.rs`
+(`consecrate.rs` for Consecrate) asks `World::answered(active)` after its free refusals (nobody
+there, nothing to consecrate); outside the bands `World::unanswered(active)` says the gift's line
+("You call for holy wrath, but none answers.") and takes the time of a cast, spending no cooldown,
+mana, or resource. Putting Holy radiance out always works. Without alignment rules every gift
+works. The alignment talents proposed in the spec (Righteous fury, Hardened heart, The middle
+way) would work the same way, by band at the moment of use, hooking into `attack_with` (the
+target's `nature`), `shift_alignment` (by `cause`), and `Actor::defence`/`check`. Mana reads
+nothing of alignment.
 
 **Tests.** `alignment.rs` (diminishing, bands, scorn, requirements, loading), `content/alignment.rs`
-(the built-in bands cover the scale, news, bad files), `ability.rs` (a test ability's
-requirement), `world/alignment_tests.rs` (starting bands, the birth animal's nudge, a paladin of a race not
+(the built-in bands cover the scale, news, bad files), `world/alignment_tests.rs` (starting bands, the birth animal's nudge, a paladin of a race not
 evil starting Good under the worst animal (#317: the class's 550 is set for it), each deed, diminishing in play, notes
 after the deed that do not count as said, cold greetings, quest gating and shifts, a good keeper's
-prices, eating kin, a paladin straying, save and replay). The wiki's tables are
+prices, eating kin, a paladin's start inside their gifts' bands under any star, save and
+replay), `class_active_tests.rs` and `curse_tests.rs` (the holy gifts unanswered outside their
+bands: their time, nothing spent, no effect; Holy radiance put out after a fall). The wiki's tables are
 `xtask/src/wiki/alignment.rs`.
