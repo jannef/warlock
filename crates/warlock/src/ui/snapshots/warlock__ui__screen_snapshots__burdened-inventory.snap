@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
     │                                                                                         │
     │ a-j look   I or Esc close                                                               │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
- The Hub  ·  HP 18/18  ·  MP 2/2  ·  Sta 10/10  ·  Burdened  ·  Lv 1  ·  08:04           ? controls
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Burdened  ·  Lv 1    ? controls
