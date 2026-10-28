@@ -9,24 +9,24 @@ expression: "render(case, content.clone())"
 
     ┌─ Skills ────────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
-    │ > Appraise           19  ────                                                           │
+    │ > Appraise           11  ────                                                           │
+    │   Detect traps        7  ────                                                           │
     │   Disable device      7  ────                                                           │
-    │   Escape artist       7  ────                                                           │
+    │   Escape artist      10  ────                                                           │
     │   Listen              6  ────                                                           │
-    │   Negotiation        10  ────                                                           │
-    │   Open lock          18  ────                                                           │
-    │   Search             10  ────                                                           │
+    │   Negotiation         9  ────                                                           │
+    │   Open lock          19  ────                                                           │
+    │   Search             17  ────                                                           │
     │   Spot                9  ────                                                           │
     │   Steal              16  ────                                                           │
-    │   Stealth            16  ────                                                           │
-    │   Tumble             17  ────                                                           │
+    │   Stealth            17  ────                                                           │
+    │   Tumble             12  ────                                                           │
     │                                                                                         │
     │ Judging what a thing is worth and what it is made of.                                   │
     │                                                                                         │
     │                                                                                         │
     │ ↑↓ choose   A or Esc close                                                              │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
-
 
 
 

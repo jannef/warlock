@@ -15,12 +15,12 @@ expression: "render(case, content.clone())"
         │                                                                                  │
         │   Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                   │
         │                                                                                  │
-        │   St  Strength       9    Appraise        19   Search          10                │
-        │   Dx  Dexterity     13    Disable device   7   Spot             9                │
-        │   To  Toughness     10    Escape artist    7   Steal           16                │
-        │   In  Intelligence  12    Listen           6   Stealth         16                │
-        │   Wi  Willpower     11    Negotiation     10   Tumble          17                │
-        │   Pr  Presence       9    Open lock       18                                     │
+        │   St  Strength       9    Appraise        11   Open lock       19                │
+        │   Dx  Dexterity     13    Detect traps     7   Search          17                │
+        │   To  Toughness     10    Disable device   7   Spot             9                │
+        │   In  Intelligence  12    Escape artist   10   Steal           16                │
+        │   Wi  Willpower     11    Listen           6   Stealth         17                │
+        │   Pr  Presence       9    Negotiation      9   Tumble          12                │
         │                                                                                  │
         │   Kit       a dagger (wielded), a stiletto, a leather jerkin (being worn),       │
         │             a wool cloak (being worn), a pair of leather gloves (being worn),    │
