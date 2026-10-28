@@ -272,8 +272,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   lantern's hood (`Ability::HoodLantern`, Items) are had by everyone until the class tables and
   the Hooded light talent narrow `had_by`.
 - **Menu**: `ui/abilities_screen.rs` (`AbilitiesScreen`, `ScreenName::Abilities`, `--screen
-  abilities`): the `PagedList<Entry, Source>`, greyed rows with their reason, the selected
-  ability's description below; the stack calls its `fit` before a press like the item lists. A
+  abilities`): the `PagedList<Entry, Source>`, greyed rows with their reason (an active weapon
+  ability's after its stamina, `PerceptionView::own_weapon_stamina`: "3 stamina, in a
+  direction", "4 stamina: you are short of breath"; never its time; snapshots
+  `abilities-menu-weapon-actives`, `-short`), the selected ability's description below; the stack calls its `fit` before a press like the item lists. A
   letter or Enter on an available row answers `ScreenAction::UseAbility(ability)`; on an
   unavailable one it shows why and stays. Its own key closes it only when it names no row.
 - **Dispatch**: `ScreenAction::UseAbility` is the one way an ability is used, from the menu, its

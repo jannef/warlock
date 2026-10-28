@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "vital_strike"
+name = "Vital strike"
+description = "A blow aimed at a vital spot: if it lands, it is a critical."
+skills = ["daggers", "short_blades", "long_blades", "great_blades"]
+rank = 9
+kind = "active"
+aim = "direction"
+stamina = 4
+energy = { action = "melee", percent = 100 }
+systems = ["weapon_abilities", "weapon_skills", "stamina", "combat"]
+[weapon_ability.effect]
+kind = "sure_critical"

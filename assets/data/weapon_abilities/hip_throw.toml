@@ -1,0 +1,15 @@
+[[weapon_ability]]
+id = "hip_throw"
+name = "Hip throw"
+description = "Catch a foe with your bare hands and throw it: if it lands, the foe is thrown back a pace and staggered."
+skills = ["brawler"]
+rank = 7
+kind = "active"
+aim = "direction"
+stamina = 4
+energy = { action = "melee", percent = 125 }
+systems = ["weapon_abilities", "styles", "stamina", "status"]
+[weapon_ability.effect]
+kind = "knockback"
+cells = 1
+status = "staggered"

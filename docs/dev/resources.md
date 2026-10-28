@@ -14,8 +14,10 @@ Openings (R3), Ki and Inspiration (R4), and the four resource talents (R5). Rage
   held keeps its value). Called from `class::hand_out` (a talent taken or given) and
   `World::grant_class` (so a restored run gets one its talents grant), the only two places so
   far. `hold` takes the character level (the maximum a pool starts at may depend on it). The
-  third, `World::rank_up` granting stamina on the first weapon rank that unlocks an active,
-  comes with W3 (#560 left it there: no rank unlocks an active before W3's data).
+  third grant place (#564): `World::ranks_news` (`fight.rs::grant_stamina`, where every rank the
+  player gains is said) holds stamina for a player without it when a rank first teaches an
+  active weapon ability, said "You learn to pace your breath." after the ability's line
+  (`weapon_active_tests::the_first_active_rank_grants_the_pool`).
 - **Focus** (R2, #250; `world/focus.rs`): Rapid shot grants it. `TalentEffect::RapidShot {
   resource, cost, saving }` (`TalentMods::rapid_shot`) is read in one place,
   `World::rapid_shot`, which `shoot.rs::fire` calls on the shot's price: with `cost` held it
@@ -112,13 +114,17 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   "toughness", per_levels = 10, least = 5 }`, `regenerates = 12`, resting too, starting full.
   The granted talent `trained_wind` (`grants_resource`) is in the level-1 row of the warrior's,
   barbarian's, paladin's, ranger's, monk's, thief's, and bard's tables (`data/classes/`), so
-  `class::grant` holds it at creation and `World::grant_class` on load. Nothing spends it yet
-  (W3's weapon actives will, through `spend_resource`). Its talents (`[[system]] id =
+  `class::grant` holds it at creation and `World::grant_class` on load. The weapon actives
+  spend it (#564, `world/weapon_active.rs::pay_active`, through `spend_resource`, after their
+  refusals); its `lacking` words ("you are short of breath") are how `Unavailable::Short` reads
+  for it. Its talents (`[[system]] id =
   "stamina"`): Trained wind, Deep lungs (`resource_max` +4), Steady breathing (`resource_rate`
   +50, a weapon skill at 5), Second breath (`resource_build` on `kill`, 1). Tests:
   `world/stamina_tests.rs`; the parse and `MaxFrom::max` in `content/resource.rs`.
-- **Abilities**: `Unavailable::Short(ResourceId)` ("not enough focus", `short:focus`), checked
-  last in the Class arm of `Ability::unavailable` (`ability.rs::short_of`).
+- **Abilities**: `Unavailable::Short(ResourceId)` ("not enough focus", `short:focus`; a
+  resource's `lacking` words instead when it has them), checked last in the Class arm of
+  `Ability::unavailable` (`ability.rs::short_of`), and in the weapon actives'
+  (`ability.rs::weapon_unavailable`, with their discounted stamina).
 - **Presentation**: `PerceptionView::own_resources() -> Vec<OwnResource>` (value clamped to the
   maximum) is all the UI gets: `ui::status_segments` (after MP, priority 1, so they give way
   before it; `show_max` picks `Focus 7/10` or `Rage 7`), the character screen's rows under the

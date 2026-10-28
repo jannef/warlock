@@ -775,6 +775,17 @@ pub enum TalentEffect {
     AbilityRanks { value: i32 },
     /// Its Rend rolls the off hand's damage dice too (Second blade's rend).
     RendOffHand,
+    /// Its weapon actives take this percent more time (negative: less; Practised technique),
+    /// never below half the action's price (#564).
+    WeaponEnergyPercent { value: i32 },
+    /// Its weapon actives cost `value` points less stamina, at least 1: those named in
+    /// `abilities` (ids in `data/weapon_abilities/`), or every one when none are named
+    /// (Drillmaster; Armour-breaker's Sunder and Gap shot).
+    WeaponStamina {
+        value: i32,
+        #[serde(default)]
+        abilities: Vec<String>,
+    },
     /// Its Brace's blow is at `to_hit` more, and a foe it hits suffers `status` (one degree;
     /// Brace of steel).
     Brace { to_hit: i32, status: String },
@@ -1640,6 +1651,7 @@ impl TalentEffect {
             | TalentEffect::RoomPacePercent { value }
             | TalentEffect::WakePercent { value }
             | TalentEffect::TwoHandedPrice { value }
+            | TalentEffect::WeaponEnergyPercent { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
             | TalentEffect::SpellManaPercent { value }
@@ -1733,6 +1745,14 @@ impl TalentEffect {
             TalentEffect::Brace { to_hit, status: id } => {
                 status(id)?;
                 bonus(*to_hit)
+            }
+            // The abilities it names are checked once they are loaded, after the talents
+            // (`content/weapon_ability.rs`).
+            TalentEffect::WeaponStamina { value, .. } => {
+                if !(1..=10).contains(value) {
+                    return Err("`weapon_stamina`: value is 1 to 10".into());
+                }
+                Ok(())
             }
             TalentEffect::NoPenalty { status: id }
             | TalentEffect::CriticalStatus { status: id }

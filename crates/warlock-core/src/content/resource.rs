@@ -127,6 +127,7 @@ struct ResourceSpec {
     #[serde(default)]
     ends_at_zero: bool,
     ended: Option<String>,
+    lacking: Option<String>,
     status: Option<String>,
     #[serde(default)]
     builds: Vec<BuildSpec>,
@@ -203,6 +204,9 @@ pub struct ResourceDef {
     pub ends_at_zero: bool,
     /// What the player is told when it ends ("Your rage subsides."), if anything.
     pub ended: Option<String>,
+    /// How the abilities menu says an ability it pays for is out of reach while too little is
+    /// held ("you are short of breath"); none: "not enough stamina".
+    pub lacking: Option<String>,
     /// The status its holder suffers while they hold it (Raging, for rage): it begins as the
     /// resource is granted and ends with it, never easing by itself.
     pub status: Option<StatusId>,
@@ -272,6 +276,9 @@ pub(super) fn parse(
         if spec.ended.is_some() && !spec.ends_at_zero {
             return Err(err("`ended` is said when it ends: it needs `ends_at_zero`"));
         }
+        if spec.lacking.as_ref().is_some_and(|t| t.trim().is_empty()) {
+            return Err(err("`lacking` must not be empty"));
+        }
         if spec.ended.as_ref().is_some_and(|t| t.trim().is_empty()) {
             return Err(err("`ended` must not be empty"));
         }
@@ -332,6 +339,7 @@ pub(super) fn parse(
             resting: spec.resting,
             ends_at_zero: spec.ends_at_zero,
             ended: spec.ended,
+            lacking: spec.lacking,
             status: tied,
             builds,
         });

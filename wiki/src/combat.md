@@ -221,7 +221,11 @@ with talents adding on top (Deep lungs: +4). Toughness 14 (modifier +2) at level
 Toughness 18 (+4) at level 60 holds 20. Damage to your Toughness lowers it, as it lowers your hit
 points. It comes back a point every 12 seconds (2 base turns), resting too, half again as fast
 with Steady breathing; Second breath gives a point back for every kill of yours. Spent, it sits
-at 0 and comes back. Creatures never hold it. The weapon feats that spend it are still to come.
+at 0 and comes back. Creatures never hold it. The active weapon abilities spend it (see
+[What a rank teaches](weapon-skills.md#what-a-rank-teaches)); anyone else is given it by the
+first rank that teaches one. Drillmaster (the warrior's, at level 25) takes a point off every
+active's cost, Armour-breaker 2 off Sunder's and Gap shot's (never below 1), and Practised
+technique a quarter off their time (never below half the action's).
 
 ## Hit points
 

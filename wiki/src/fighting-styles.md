@@ -101,7 +101,19 @@ A style's rank teaches abilities as a weapon skill's does (see
 [What a rank teaches](weapon-skills.md#what-a-rank-teaches)): told with the rank, listed in the
 [abilities menu](abilities.md) after the style's name, and firing by themselves, free and
 instant, but only while you fight in the style: a duelist's riposte needs one weapon and an empty
-hand, Staggering block a weapon and a shield.
+hand, Staggering block a weapon and a shield. The *active* ones are used from the menu for
+stamina and time, as a weapon skill's are (see
+[What a rank teaches](weapon-skills.md#what-a-rank-teaches)), and only in the style's grip:
+
+- **Feint** is one blow rolled as if the foe had no Parry and no Shield.
+- **Whirl** and **Staff sweep** strike every foe beside you, clockwise from the north, each at
+  −2 to hit and each with the free blows the end of an attack brings; with a blade in each hand,
+  the blades take turns.
+- **Mighty swing** rolls the blow's damage dice twice (its bonus and riders once; it is no
+  critical), at −2 to hit.
+- **Shield rush** (a shield bash) and **Hip throw** (an unarmed blow) drive a foe they hit a cell
+  back, if that cell is free, and stagger it; against a wall or another creature it stays where
+  it is, unstaggered, but the blow lands all the same.
 
 {{#include generated/style-abilities.md}}
 

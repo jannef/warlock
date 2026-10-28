@@ -1464,6 +1464,12 @@ impl<'a> PerceptionView<'a> {
         Some((self.player).spell_cost(self.content, def, self.own_caster_level()))
     }
 
+    /// What the player's weapon active `id` costs them in stamina now, their talents' discounts
+    /// counted (they know their own costs, as a spell's mana).
+    pub fn own_weapon_stamina(&self, id: crate::content::WeaponAbilityId) -> u16 {
+        self.player.weapon_stamina(self.content, id)
+    }
+
     /// How far the player's spell `spell` reaches now, Willpower counted: the farthest cell it
     /// may be aimed at, and a burst's radius. They know their own spells.
     pub fn own_spell_reach(&self, spell: crate::content::SpellId) -> Option<crate::world::Reach> {

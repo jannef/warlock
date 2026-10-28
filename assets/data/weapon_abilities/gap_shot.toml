@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "gap_shot"
+name = "Gap shot"
+description = "Take your time and find the gap between the plates: armour does not soften the shot."
+skills = ["marksman"]
+rank = 7
+kind = "active"
+aim = "cell"
+stamina = 4
+energy = { action = "shoot", percent = 150 }
+systems = ["weapon_abilities", "styles", "stamina", "protection", "ranged"]
+[weapon_ability.effect]
+kind = "ignore_protection"
