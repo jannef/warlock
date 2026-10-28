@@ -12,6 +12,7 @@ use warlock_core::content::{
 use warlock_core::magic::describe;
 use warlock_core::magic::loot::TIER_WINDOW;
 use warlock_core::object::format_weight;
+use warlock_core::world::SIPHON_RANGE;
 
 /// The prefixes table.
 pub(super) fn prefixes(content: &Content) -> String {
@@ -151,7 +152,7 @@ fn effect_text(content: &Content, a: &AffixDef) -> String {
             ItemEffect::ResourceMax => format!("maximum {pool}"),
             ItemEffect::ResourceRate => format!("{pool} comes back faster"),
             ItemEffect::ActiveStamina => format!("weapon feats cost less {pool}"),
-            ItemEffect::ResourceOnKill => format!("{pool} on a kill within 3 cells"),
+            ItemEffect::ResourceOnKill => format!("{pool} on a kill within {SIPHON_RANGE} cells"),
             other => effect_words(other),
         };
     }
@@ -199,12 +200,12 @@ fn effect_words(effect: ItemEffect) -> String {
         ItemEffect::SpellLift => "your spells' damage lift, in points of percent".into(),
         ItemEffect::SpellReach => "your spells' reach, in cells".into(),
         ItemEffect::SpellDuration => "your buffs and hexes last more degrees".into(),
-        ItemEffect::ManaOnKill => "mana on a kill within 3 cells".into(),
+        ItemEffect::ManaOnKill => format!("mana on a kill within {SIPHON_RANGE} cells"),
         ItemEffect::WandLevel => "the caster level wands are zapped at".into(),
         ItemEffect::ResourceMax => "a resource's maximum".into(),
         ItemEffect::ResourceRate => "a resource comes back faster".into(),
         ItemEffect::ActiveStamina => "weapon feats cost less of a resource".into(),
-        ItemEffect::ResourceOnKill => "a resource on a kill within 3 cells".into(),
+        ItemEffect::ResourceOnKill => format!("a resource on a kill within {SIPHON_RANGE} cells"),
         ItemEffect::Resistance => "resistance to a kind of damage, in percent".into(),
         ItemEffect::Stat(stat) => stat.name().into(),
         ItemEffect::MoveSpeed => "you move faster".into(),

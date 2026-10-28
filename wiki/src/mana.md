@@ -71,6 +71,17 @@ points into 3 mana at once, for the time of a wait. It never takes your last hit
 or fewer it refuses), never brings your mana above your most, and does nothing while your mana
 is full. It is not a wound: nothing soaks it, and it trains nothing.
 
+## Mana on a kill
+
+[Magic items](magic-items.md) *of Siphoning* give you so many points of mana when you kill
+something close by, never above your most. Only a kill of your own counts: your blow, your shot
+or throw, or your spell, with the one you killed standing **within 3 cells** of you (measured
+round, as every radius: 3 cells in a straight line, 3 across and 1 aside, or 2 diagonally; not
+3 across and 2 aside). A creature that
+dies of poison or bleeding you caused, one a trap kills, or one your summoned creature kills
+gives nothing, and neither does a kill farther off. Two items add up, identified or not. A
+creature wearing such an item refills its own mana the same way when it kills.
+
 ## When the most falls
 
 - Taking off a magic item that raised it lowers what you have down to your new most, if need be.

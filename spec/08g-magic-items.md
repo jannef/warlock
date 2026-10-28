@@ -77,7 +77,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `resource_on_kill`: each names its resource in data, `resource = "stamina"`), kicking doors in
     (`door_kick`), digging (`dig_percent`), hunger (`hunger`), trap damage (`trap_damage`),
     disease checks (`disease_check`), and potions kept (`potion_kept`) are effects with words, but
-    no affix has them yet, and each is read once its hook lands.
+    no affix has them yet, and each is read once its hook lands. The two on a kill
+    (`mana_on_kill`, `resource_on_kill`) count only a kill by the wearer's own blow, shot, or
+    spell, the slain within three cells (§8e "Mana", "On a kill").
     The spell ones are read (#629), each where its talent's is, unidentified too, on creatures
     as on the player: `mana_cost` joins Frugal caster's cut (§8 "Mana", 50 % off at most),
     `spell_ease` eases its own piece (§8 "Spells": "Cost"), `spell_to_hit` and `spell_threat`

@@ -256,6 +256,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wields exactly as the player's do (`max_mana`, `mana_regeneration`, and `caster_level`
     affixes through `Mods::worn`); it is made with all of its larger pool, and a summoner pays
     for its summons from it. A creature without such things is as its type makes it.
+  - **On a kill** (the affixes design §4, decision 7; #632): the `mana_on_kill` of what the
+    slayer wears and wields (of Siphoning) raises its mana by their sum, never past its
+    maximum, when its own blow, shot, throw, or spell kills, and the slain stood within
+    `SIPHON_RANGE` (3) cells (Euclidean, as a radius: `dist2` within `radius2(3)`). A death by a
+    status tick (poison, bleeding), a trap, or anything else that is not the slayer's own attack
+    gives nothing, and a summoned creature's kill is its own. Creatures' kills count the same
+    way. Read once, at the kill point of an attack (`World::siphon`, `world/siphon.rs`, called
+    from `fight.rs::resolve` and `spell.rs::spell_strikes`); no draw. The player is told
+    "close by", never the three cells.
     Mana is part of the world state (saved, covered by the state hash; an actor without any
     serializes as before).
 - **Spells** (the magic design, `docs/design/magic.md` §3 to §8; `content/spell_def.rs`,
@@ -494,7 +503,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its affix names (§8 "Magic items"; the affixes design §5): a `resource_max` affix raises
     the maximum and a `resource_rate` affix speeds the pace, beside the talents', and an
     `active_stamina` affix takes stamina off every weapon active (`Actor::weapon_stamina`, at
-    least 1). An affix never grants a pool: one who does not hold it (a wizard's stamina, any
+    least 1), and a `resource_on_kill` affix (of the Hunt) adds its sum to the pool on a kill,
+    under of Siphoning's rule ("Mana", "On a kill": the slayer's own blow, shot, or spell, the
+    slain within three cells; never past the maximum). An affix never grants a pool: one who does not hold it (a wizard's stamina, any
     creature's) gets nothing of it. Taking off what raised a maximum lowers what is held to the
     new maximum at once (`World::keep_resources_within_max`, after each player action, as with
     mana).

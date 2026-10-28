@@ -86,6 +86,17 @@ issue how it interacts with mana**, and hooks in at the one place below.
   are still announced only, so its caster level is read by nothing in play yet; the dev
   `actors` layer shows it. Creature gear never changes after it is made (stealing takes no worn
   thing), so no creature's mana needs `keep_mana_within_max`.
+- **On a kill** (E1, #632; the affixes design §4, decision 7): `World::siphon(by, (slain, at))`
+  (`world/siphon.rs`) raises the slayer's mana by its worn `mana_on_kill` (of Siphoning), never
+  past `max_mana` (never lowering it either), and adds its worn `resource_on_kill` to each pool
+  it holds (docs/dev/resources.md). The limit: it is called only at the kill point of an attack,
+  `fight.rs::resolve` (a blow, a shot, a throw, a creature's spell; beside `train_kill`) and
+  `spell.rs::spell_strikes` (the player's spells, scrolls, a breath), and counts only when the
+  slain stood within `SIPHON_RANGE` (3) of the slayer (`dist2 <= radius2(3)`, a radius as every
+  other); a self-kill never. A death by a status tick or a trap goes through `dies` alone and
+  never reaches it; a summon's kill is the summon's. Creatures count the same. No draw; nothing
+  worn, nothing changed. Tests: `world/siphon_tests.rs` (a blow, a shot at 3 and 4, a spell at
+  3 and 4, an area's, poison, a trap, the maximum, a creature's kill, no pool, nothing worn).
 - **Wiki**: `xtask/src/wiki/mana.rs` (race and class mana, regeneration by Willpower, what
   changes the pace) for `wiki/src/mana.md`; the special rooms table says the room's pace.
 - **Tests**: `mana.rs` (the formulas), `world/mana_talent_tests.rs` (the five talents, the
