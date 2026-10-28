@@ -257,7 +257,8 @@ pub struct TalentMods {
     pub night_sight: i32,
     /// Cells farther it sees on the overworld by day.
     pub day_sight: i32,
-    /// The light preset its lantern burns as, if not the lantern's own.
+    /// The light preset the lit light it has ready (a lantern) burns as, if not its own
+    /// (`WorldState::carried_light`; not while hooded).
     pub lantern_light: Option<LightId>,
     /// The light it sheds wherever it is, if any.
     pub inner_light: Option<LightId>,

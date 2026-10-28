@@ -8,23 +8,23 @@ expression: "render(case, content.clone())"
 
 
 
-
     ┌─ Inventory ─────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ Melee weapons                                                                           │
     │   a - ) a dagger (+0 hit, 1d4, range 5) (unpaid, 47 gold)                        450 g  │
     │   b - ) a short sword (+0 hit, 1d6) (unpaid, 78 gold)                           1.1 kg  │
+    │ Tools                                                                                   │
+    │   c - ( a lantern (in use)                                                       400 g  │
     │ Scrolls                                                                                 │
-    │   c - ? a scroll labelled ULVENZIM                                                50 g  │
+    │   d - ? a scroll labelled ULVENZIM                                                50 g  │
     │ Coins                                                                                   │
-    │   d - $ 60 gold coins                                                            600 g  │
+    │   e - $ 60 gold coins                                                            600 g  │
     │                                                                                         │
-    │ Carrying 2.2 kg   ·   Your weight 72.2 kg (you 70 kg)                                   │
+    │ Carrying 2.6 kg   ·   Your weight 72.6 kg (you 70 kg)                                   │
     │ Burdened over 15.5 kg, strained over 31 kg, overloaded over 46.5 kg                     │
     │                                                                                         │
-    │ a-d look   I or Esc close                                                               │
+    │ a-e look   I or Esc close                                                               │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
-
 
 
 

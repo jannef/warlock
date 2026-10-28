@@ -47,7 +47,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
   integer arithmetic; no wall-clock time.
   - **Costs** (M13): the action decides how long it takes, and the actor's speed scales
     it. Every action that takes time has a **cost** in energy, 1000 for a normal action, given in
-    `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `unlock`, `kick`, `lantern`,
+    `data/actions.toml` (`step`, `wait`, `open_door`, `close_door`, `unlock`, `kick`, `light`,
     `hood`, `stairs`, `pick_up`, `drop`, `melee`, `shoot`, `throw`, `reload`, `cast`, `wield`,
     `wear`, `body_armor`, `ready`, `eat`, `dig`, `chat`, `throw_voice`; 100 to
     10 000; an action left out, or every action without the file, costs 1000; unknown ids are
@@ -71,7 +71,7 @@ assets/           fonts, levels, scenarios, vaults, definitions, shaders
       is decided.
     - `stairs` covers taking stairs, entering a location or a local area from the overworld, and
       walking off a local area's edge: 6 s each at normal speed, on the overworld too, where
-      waiting and the lantern take 6 s as well. Bumping a closed door costs `open_door` (a locked
+      waiting and lighting a lantern take 6 s as well. Bumping a closed door costs `open_door` (a locked
       one, with its key, `unlock` as well); moving into a hostile creature, `melee`; a kick,
       `kick`.
     - A creature's action costs the same: a step onto the destination terrain, else its action's

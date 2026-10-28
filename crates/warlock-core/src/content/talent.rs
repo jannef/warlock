@@ -277,8 +277,8 @@ pub enum TalentEffect {
     NightSight { value: i32 },
     /// Its overworld sight by day reaches this many cells farther (Eyes of the heights).
     DaySight { value: i32 },
-    /// Its lantern burns as the light preset `light` (an id in `data/lights.toml`;
-    /// Lamplighter).
+    /// The lit light it has ready in the Tool slot (a lantern) burns as the light preset `light`
+    /// (an id in `data/lights.toml`; Lamplighter), not while hooded.
     LanternLight { light: String },
     /// It sheds light `light` (an id in `data/lights.toml`) wherever it is, always (Inner
     /// light): it sees by it, and so does everything else.

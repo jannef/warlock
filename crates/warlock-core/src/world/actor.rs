@@ -1140,6 +1140,16 @@ impl Actor {
         })
     }
 
+    /// The carried light it has ready (spec §5 "Light sources"): the first thing it wears or
+    /// wields, in slot order, that gives light carried (a lantern in the Tool slot), and where in
+    /// its inventory it is. Lit or not.
+    pub fn ready_light(&self, content: &Content) -> Option<usize> {
+        self.equipment.items().into_iter().find_map(|(_, item)| {
+            let stack = self.inventory.get(item)?;
+            (content.object(stack.object).carried_light).map(|_| item)
+        })
+    }
+
     /// The key it carries that opens `lock` (spec §8 "Doors"): the first one made for it, else
     /// the first skeleton key; `None` if it carries none that fits.
     pub fn key_for(&self, content: &Content, lock: &Lock) -> Option<ObjectId> {

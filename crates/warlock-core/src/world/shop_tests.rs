@@ -30,8 +30,8 @@ fn courtyard() -> World {
     World::new(content(), "courtyard", None).expect("courtyard")
 }
 
-/// The courtyard with the player in Grimbold's General Store, carrying 60 gold (a) and a scroll
-/// of light (b).
+/// The courtyard with the player in Grimbold's General Store, carrying their lantern (a), 60
+/// gold (b), and a scroll of light (c).
 fn in_shop() -> World {
     let mut w = courtyard();
     apply(&mut w, INTO_SHOP);
@@ -225,25 +225,25 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
         "it pays less than it asks"
     );
     assert_eq!(
-        w.perception().sale(&Positions::of([1])),
+        w.perception().sale(&Positions::of([2])),
         Some(Sale {
             offer,
             stacks: vec![scroll.clone()]
         })
     );
     // A drop only hears the offer: the scroll stays, and no time passes.
-    let dropped = apply(&mut w, "drop:b");
+    let dropped = apply(&mut w, "drop:c");
     assert!(!dropped.took_turn);
     assert_eq!(
         last(&w),
         format!("Grimbold offers {offer} gold for {named}.")
     );
-    assert_eq!(w.perception().inventory().len(), 2);
+    assert_eq!(w.perception().inventory().len(), 3);
     // Nobody buys the currency.
-    apply(&mut w, "drop:a");
+    apply(&mut w, "drop:b");
     assert_eq!(last(&w), "Grimbold has no use for 60 gold coins.");
-    assert_eq!(w.perception().sale(&Positions::of([0])), None);
-    let sold = apply(&mut w, "sell:b");
+    assert_eq!(w.perception().sale(&Positions::of([1])), None);
+    let sold = apply(&mut w, "sell:c");
     assert!(sold.took_turn, "selling takes a drop's time");
     assert_eq!(
         last(&w),
@@ -258,7 +258,7 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
         Some(price(&w, &scroll))
     );
     let coins = gold(&w, player);
-    apply(&mut w, "sell");
+    apply(&mut w, "sell:b");
     assert_eq!(
         last(&w),
         format!("Grimbold has no use for {coins} gold coins.")
@@ -414,7 +414,7 @@ fn unpaid_food_eaten_stays_owed_and_the_keeper_turns_the_player_back() {
         last(&w),
         format!("You pick up an angelica root (unpaid, {asked} gold).")
     );
-    apply(&mut w, "eat:c");
+    apply(&mut w, "eat:d");
     assert!(said(&w, "You eat the angelica root."));
     assert!(said(
         &w,
@@ -449,7 +449,7 @@ fn food_eaten_off_the_shop_floor_is_owed_for_and_walking_out_unpaid_is_theft() {
     apply(&mut w, "move:SE move:E*7 pickup pay");
     assert_eq!(w.player_pos(), MEAT);
     assert_eq!(last(&w), format!("You pay Grimbold {for_meat} gold."));
-    apply(&mut w, "eat:c");
+    apply(&mut w, "eat:d");
     assert!(said(&w, "You eat the strip of dried meat."));
     assert!(!said(&w, "Grimbold says"));
     assert!(shop(&w).unpaid.is_empty());
@@ -488,11 +488,11 @@ fn unpaid_missiles_are_not_shot_so_none_is_used_up() {
     let (arrows, bow) = (object(&w, "arrow"), object(&w, "short_bow"));
     let owed = shop(&w).unpaid.clone();
     assert_eq!(owed, [Stack::new(arrows.object, 20), bow]);
-    apply(&mut w, "equip:missile_weapon:d equip:missiles:c");
+    apply(&mut w, "equip:missile_weapon:e equip:missiles:d");
     let shot = apply(&mut w, "fire:58,13");
     assert!(!shot.took_turn);
     assert_eq!(last(&w), "You have not paid for 20 arrows.");
-    assert_eq!(w.perception().inventory()[2].count, 20);
+    assert_eq!(w.perception().inventory()[3].count, 20);
     assert_eq!(shop(&w).unpaid, owed);
 }
 
@@ -501,7 +501,7 @@ fn a_dead_keepers_goods_are_free_to_take() {
     let mut w = in_shop();
     let keeper = keeper(&w);
     apply(&mut w, "move:E move:NE pickup pay");
-    apply(&mut w, "throw:c:54,13");
+    apply(&mut w, "throw:d:54,13");
     assert_eq!(shop(&w).status, ShopStatus::Outraged);
     // A frail keeper and a sturdy player, so the fight ends quickly the right way.
     w.state.actors.get_mut(&keeper).expect("alive").hp = 1;
@@ -565,7 +565,7 @@ fn shops_save_replay_and_hash() {
     // Into the shop for the dagger, a scroll sold; out of the door unpaid, turned back; then
     // paid and out in one action.
     let actions =
-        format!("{INTO_SHOP} move:E move:NE pickup move:SW sell:b move:W move:W move:W pay:W");
+        format!("{INTO_SHOP} move:E move:NE pickup move:SW sell:c move:W move:W move:W pay:W");
     let mut w = courtyard();
     let mut replay = Replay::new(&w);
     for action in parse_actions(&actions).expect("actions") {

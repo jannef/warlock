@@ -1,7 +1,15 @@
 # Your lantern
 
-You carry a lantern. Press `*` to light it, and `*` again to douse it. Each is a normal action (6
-seconds), and the lantern starts unlit.
+A lantern is a tool: it gives light only while it is ready in the **Tool** slot of your
+[equipment](equipment.md), where a pick-axe would go, so you hold one or the other. Every race
+without darkvision (elves, half-elves, humans, halflings, gnomes, lizardfolk, and ratfolk) starts
+with one ready, unlit; the others see in the dark and start without one. It weighs 400 g.
+
+Press `u` (use a tool) to change what it does: from unlit to lit, from lit to hooded, and from
+hooded back to unlit. Lighting it or putting it out is a normal action (6 seconds); lowering the
+hood takes half one (3 seconds). Its name says how it is: "a lantern (lit)", "a lantern
+(hooded)". A lantern you take off or drop keeps how it was, but gives no light until it is ready
+in the Tool slot again.
 
 A lit lantern is a [light source](light.md) that moves with you: a warm light whose reach is in
 the [table of lights](light.md#light-sources). It burns calmly: it flickers a little, but less
@@ -16,11 +24,8 @@ watch creatures that carry their own light without being seen. See [Creatures](c
 
 ## The hood
 
-Your lantern has a hood. [Hood your lantern](abilities.md) in the abilities menu (`a`) lowers it,
-and again raises it. Lowering or raising the hood takes half a normal action (3 seconds); on a
-lantern that is out, hooding it lights it with the hood lowered, which takes the time of both (9
-seconds). Dousing a hooded lantern raises the hood: lit again, it burns open. The status bar says
-`Lantern hooded` while it is.
+Your lantern has a hood: `u` on a lit lantern lowers it, and `u` again puts the lantern out
+(lit again, it burns open).
 
 Hooded, the lantern gives a third of its light and reaches 2 cells instead of 5 (see the [table of
 lights](light.md#light-sources)), and the hood keeps the light off you: it lights the ground
@@ -39,5 +44,5 @@ There is no fuel yet: the lantern burns as long as you leave it lit. The **Lampl
 [talent](talents.md) makes it burn brighter, a cell farther (and so you are seen from a little
 farther too); hooded, it gives the hooded light as before.
 
-If a run has no lantern, `*` tells you so and takes no time. The lantern is part of how a scenario
-starts, and every scenario in the current game gives you one.
+With no light ready, `u` asks which way to dig if you have a digging tool ready, and otherwise
+tells you that you have none; that takes no time.

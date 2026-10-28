@@ -121,7 +121,7 @@ archer shoots and the shaman casts (its spells announced only) over them, the wo
 and the fallen drop their spears, bow, and amulet where they die (and now and then something
 magic: kobolds drop loot at the arena's item level 2, §8 "Magic items"); the rats, quicker and harder
 to hit, win within a few minutes of game time, leaving blood around the fire pit where the
-fallen died (§8 "Blood"). Lighting the lantern there gets the
+fallen died (§8 "Blood"). Lighting the lantern there (`u`) gets the
 player shot from the dark. The archer spends an arrow a shot (they lie where they fell) and,
 out of arrows, comes to fight with its fists. Beside the player's corner lie a short bow, arrows,
 and flaming arrows, to shoot into the pit from the dark. The `arena` scenario starts there.

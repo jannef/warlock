@@ -6,7 +6,7 @@ description = "The market town of the Ascmearc: its shops, the Mynster and Siste
 start_level = "ceaptun"
 seed = 2
 character = { race = "human", gender = "male", class = "warrior", name = "Wulfstan" }
-lantern = "lantern"
+wield = ["lantern"]
 start_time = "08:00"
 # No pack of its own (a heavy one would burden the weakest characters New run may choose): a
 # chosen character brings its starting kit's gold, and anyone can sell to the shops.

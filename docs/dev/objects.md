@@ -159,6 +159,17 @@ Loot, drops, and the item description are in `docs/dev/magic-items.md`. Tests:
 `world/gem_tests.rs` (data, value, names, naming order, colour, stacking, placements, loot
 frequency across seeds, drops, saves and a replay, the general store).
 
+**Carried lights** (spec §5 "Light sources", #643; `world/lamp.rs`): an object with a `light`
+and a `slot` but no `burns` is a carried light (`ObjectDef::carried_light`; the lantern,
+`objects/lantern.toml`, a tool). Its mode is the stack's `light` (`object::LightMode`: unlit,
+lit, hooded; saved, left out while unlit, and named after the item, "a lantern (lit)"), kept
+wherever the stack goes. `Actor::ready_light` finds the one in the equipment (the Tool slot);
+`World::use_tool` (`Action::UseTool`, `use_tool`, `u`) turns it to its next mode, and
+`WorldState::carried_light` is the one place its light is read (a talent's `lantern_light`
+while lit, the preset's `hooded` while hooded): the light cache's player source. In the pack or
+on the ground it gives no light. Tests: `world/lamp_tests.rs` (`with_lantern` gives fixture
+content one), the light itself in `light_tests.rs`.
+
 **Pieces and breaking** (spec §7 "Pieces and breaking", #484; `piece.rs`): `objects/piece.toml`
 (`piece::ID`) is the one object for raw material, `made_of = ["any"]`, its own material steel. A
 piece of another material is a stack with that material as its main part (`piece::make`, `None`

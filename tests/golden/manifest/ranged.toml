@@ -5,4 +5,4 @@
 [[golden]]
 name = "ranged-flight"
 scenario = "showcase"
-actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:S pickup move:W pickup equip:missile_weapon:a equip:missiles:c move:NE move:E*2 move:N*4 move:E*20 open:S move:S fire:45,17"
+actions = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:S pickup move:W pickup equip:missile_weapon:b equip:missiles:d move:NE move:E*2 move:N*4 move:E*20 open:S move:S fire:45,17"

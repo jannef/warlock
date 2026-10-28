@@ -20,4 +20,4 @@ dimming, and palettes apply as for terrain; look mode prefixes the terrain with 
 The `blood` switch hides both. Tune by capturing the arena at `wait*8` (first kills) and `wait*40`
 (after the brawl, the `arena-blood` golden), and on walls with the walk of the former
 `blood-wall` golden (#301): `move:N*3 open:N move:N*2 move:E*36 open:S move:S*3 move:SW move:W*9
-move:NW lantern kick:N*18` at `--scale 2`.
+move:NW use_tool kick:N*18` at `--scale 2`.

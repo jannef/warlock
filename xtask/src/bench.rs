@@ -39,7 +39,7 @@ population = ["bat", "beetle", "kobold", "kobold_archer", "kobold_shaman", "rat"
 room_effects = { chance = 100, per_level = 1, favoured = { teeming = 100 } }
 "#;
 const DELF_SCENARIO: &str = "name = \"Bench delf\"\nstart_level = \"bench_delf:1\"\nseed = 1\n\
-                             lantern = \"lantern\"\nhp = 900\n";
+                             wield = [\"lantern\"]\nhp = 900\n";
 
 /// The same cave floor at danger 40, all of it animated panoplies (spec §8 "Animated objects"):
 /// each wears and wields its pieces, whose magic every rule reads through `Mods::worn`, the
@@ -56,7 +56,7 @@ danger = 40
 population = ["animated_panoply"]
 "#;
 const PANOPLY_SCENARIO: &str = "name = \"Bench panoply\"\nstart_level = \"bench_panoply:1\"\n\
-                                seed = 1\nlantern = \"lantern\"\nhp = 900\n";
+                                seed = 1\nwield = [\"lantern\"]\nhp = 900\n";
 
 /// (scenario, level label, budget in ms, minutes skipped before the walk)
 const CASES: [(&str, &str, f64, u64); 11] = [

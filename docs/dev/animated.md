@@ -183,7 +183,7 @@ so there is no `Mods::worn` cache.
 
 The household objects are `data/objects/<body>.toml`, class `household` (the general store buys
 them). Populations: Cealdhlāw (candlestick, cutlery, teapot, cooking pot), Fennmynster
-(candlestick, book, lantern, rug), `animated_blade` in Cealdhlāw and Fyrdelf, and
+(candlestick, book, lantern (its object the `hanging_lantern`, not the lantern a player carries), rug), `animated_blade` in Cealdhlāw and Fyrdelf, and
 `animated_armour` in Fyrdelf; the stray list follows (animated objects stray only through the populations that name them,
 `Content::may_stray`). `animated_panoply` is in no branch's population (none reaches danger
 20): its home is the **armoury** (#487, `docs/dev/special-rooms.md` "Homes of animated

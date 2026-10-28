@@ -783,7 +783,7 @@ mod tests {
         assert!(equipment.contains(
             "| `l` | Missiles | Sling stone, arrow, crossbow bolt, flaming arrow | 6 seconds |"
         ));
-        assert!(equipment.contains("| `m` | Tool | Pick-axe, mattock | 6 seconds |"));
+        assert!(equipment.contains("| `m` | Tool | Lantern, pick-axe, mattock | 6 seconds |"));
         let digging = text("digging.md");
         assert!(
             digging.contains(

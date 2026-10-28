@@ -19,7 +19,6 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Kick (a door, to break it in, or a creature) | `k`, then a direction (see [Doors](doors.md)) |
 | Go down stairs, or enter a place on the overworld | `>` |
 | Go up stairs, or leave an outdoor area when no enemy is about | `<` |
-| Light or douse the lantern | `*` |
 | Pick up | `,` or `;` |
 | Drop | `d` |
 | Pay the shopkeeper | `p` |
@@ -46,9 +45,8 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Throw your voice (an ability: also in the abilities menu) | no key until you bind one, then aim |
 | Disarm a trap (an ability: also in the abilities menu) | no key until you bind one, then a direction |
 | Steal (an ability: also in the abilities menu) | no key until you bind one, then a direction |
-| Hood your lantern (an ability: also in the abilities menu) | no key until you bind one |
 | Next target while aiming (with Shift: the one before) | `Tab` |
-| Use a tool: dig into a wall with a pick-axe | `u`, then a direction |
+| Use a tool: light, hood, or douse a [lantern](lantern.md) ready in the Tool slot; else dig into a wall with a pick-axe | `u` (to dig, then a direction) |
 | Show or hide the controls | `?` |
 | Show the next messages at `--more--` / skip the rest | `Space` or `Enter` / `Esc` |
 | Yes / no, when a question asks | `y` / `n` |
@@ -59,7 +57,7 @@ players find them where their fingers expect them. Movement is the numpad and th
 ADOM (the arrows move in four directions only); if you prefer the vi keys (`hjklyubn`), bind them
 in Controls (`k`, `l`, and `u` are Kick, Look around, and Use a tool, as in ADOM: give those
 other keys first). Commands ADOM does not have, or has only behind a prefix or `Ctrl` (which the
-game does not bind), have keys ADOM leaves free: light the lantern `*`,
+game does not bind), have keys ADOM leaves free:
 the message history `v`, rest `b`, the talents `G`, and the quick repeat of an ability `X`. Search for a while is
 search's key in capitals, `S` (ADOM's save and quit): save and quit from the pause menu (`Esc`),
 or bind a quick key for it in Controls. Symbol keys such as
@@ -220,7 +218,7 @@ A letter, or `Enter` on the marked row, eats it. See
 ## Abilities
 
 `a` opens the abilities menu: everything you can do because of who you are (throwing your voice,
-a shield bash, disarming a trap, the other skills you use as actions, hooding your lantern, and
+a shield bash, disarming a trap, the other skills you use as actions, and
 later racial and class abilities), grouped by where each comes from and lettered like a list of
 items. Choose one by its letter, or `Enter` on the `>` row; one you cannot use now is greyed out
 with why. It then asks for what it needs, such as a direction or a place to aim at. The menu opens
@@ -256,14 +254,13 @@ Below the map, the **status bar** shows, from left to right:
   from 30 °C (see [Temperature and ice](temperature.md));
 - the turn count and your position (column, row);
 - `Light`: how brightly your own cell is lit, where 255 is full light (see [Light](light.md));
-- your vision type, your lantern (`Lantern out`, `Lantern lit`, or `Lantern hooded`), and the
-  run's seed.
+- your vision type and the run's seed.
 
 At its right end, `? controls` reminds you where the keys are. It names the key as you bound it
 (`Esc menu` when the controls have no key), and so does the welcome line a new run starts with.
 
 When the window is too narrow for everything, the status bar leaves out the least important parts
-first: the seed, your position, your lantern, your vision, the light at your feet, and the turn
+first: the seed, your position, your vision, the light at your feet, and the turn
 count; then it shortens the moon's phase to its picture, and only then drops it; then the
 temperature, the region, then the year of the date, then the date. The weather, the time, your
 burden, your hunger, your status effects (the least urgent first), your resources (the last

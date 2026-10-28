@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
  Welcome to World. Press ? for controls.
 
-
     ┌─ Inventory ─────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ Melee weapons                                                                           │
@@ -17,18 +16,19 @@ expression: "render(case, content.clone())"
     │   d - [ a leather jerkin (Dv +1, Pv 1) (being worn)                             3.5 kg  │
     │ Boots                                                                                   │
     │   e - [ a pair of leather boots (Dv +0, Pv 0) (being worn)                        1 kg  │
+    │ Tools                                                                                   │
+    │   f - ( a lantern (in use)                                                       400 g  │
     │ Food                                                                                    │
-    │   f - % 3 strips of dried meat                                                   450 g  │
-    │   g - % a loaf of bread                                                          400 g  │
+    │   g - % 3 strips of dried meat                                                   450 g  │
+    │   h - % a loaf of bread                                                          400 g  │
     │ Coins                                                                                   │
-    │   h - $ 8 gold coins                                                              80 g  │
+    │   i - $ 8 gold coins                                                              80 g  │
     │                                                                                         │
-    │ Carrying 8 kg   ·   Your weight 78 kg (you 70 kg)                                       │
+    │ Carrying 8.4 kg   ·   Your weight 78.4 kg (you 70 kg)                                   │
     │ Burdened over 16.5 kg, strained over 33 kg, overloaded over 49.5 kg                     │
     │                                                                                         │
-    │ a-h look   I or Esc close                                                               │
+    │ a-i look   I or Esc close                                                               │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
-
 
 
  The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  Clear        ? controls

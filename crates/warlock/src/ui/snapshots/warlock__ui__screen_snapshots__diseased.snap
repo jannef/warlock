@@ -31,7 +31,7 @@ expression: "render(case, content.clone())"
     │     Status        Diseased                                                              │
     │     Diseased      The shakes                                                            │
     │                                                                                         │
-    │ Weight 70 kg, carrying nothing                                                          │
+    │ Weight 70.4 kg (you 70 kg, carrying 400 g)                                              │
     │ Burdened over 13 kg, strained over 26 kg, overloaded over 39 kg                         │
     │                                                                                         │
     │ @ or Esc close   A skills                                                               │

@@ -14,8 +14,8 @@ use std::collections::BTreeMap;
 
 /// Key tag for lights carried by actors (creature lights).
 const CARRIED: u64 = 1 << 63;
-/// Extra key tag for the player's lantern.
-const LANTERN: u64 = 1 << 62;
+/// Extra key tag for the light the player has ready (a lantern in the Tool slot).
+const OWN_LIGHT: u64 = 1 << 62;
 /// Extra key tag for the light of a glowing magic item an actor wears or wields.
 const GLOW: u64 = 1 << 61;
 /// Extra key tag for the light an actor sheds by a status of its own (Holy radiance).
@@ -24,9 +24,9 @@ const RADIANCE: u64 = 1 << 60;
 const INNER: u64 = 1 << 59;
 /// Extra key tag for the light of a status that sheds one (Lit, the Light spell's).
 const LIT: u64 = 1 << 58;
-/// The sun's key: the lantern tag without the carried tag, which no other source has (static
+/// The sun's key: the own-light tag without the carried tag, which no other source has (static
 /// keys have both tags clear).
-pub(crate) const SUN_KEY: u64 = LANTERN;
+pub(crate) const SUN_KEY: u64 = OWN_LIGHT;
 
 /// The key of the moon with index `index`: the sun's tag and one more than the index.
 pub(crate) fn moon_key(index: u8) -> u64 {
@@ -232,7 +232,7 @@ impl LevelLights {
             pos,
             preset: fire.light,
         }));
-        let lantern = state.lantern_light(content);
+        let own_light = state.carried_light(content);
         for actor in state.actors.values().filter(|a| a.level == level.id) {
             let id = u64::from(actor.id.0);
             if let Some(preset) = content.creature(actor.creature).light {
@@ -243,10 +243,10 @@ impl LevelLights {
                 });
             }
             if actor.id == state.player
-                && let Some(preset) = lantern
+                && let Some(preset) = own_light
             {
                 sources.push(Source {
-                    key: CARRIED | LANTERN | id,
+                    key: CARRIED | OWN_LIGHT | id,
                     pos: actor.pos,
                     preset,
                 });
@@ -332,7 +332,7 @@ fn cell_key(level: &str, separator: u8, p: Pos) -> u64 {
         hash ^= u64::from(byte);
         hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
     }
-    hash & !(CARRIED | LANTERN)
+    hash & !(CARRIED | OWN_LIGHT)
 }
 
 #[cfg(test)]
@@ -419,15 +419,15 @@ mod tests {
         assert_eq!(a, static_key("hub", Pos::new(3, 4)));
         assert_ne!(a, static_key("hub", Pos::new(4, 3)));
         assert_ne!(a, static_key("vast", Pos::new(3, 4)));
-        assert_eq!(a & (CARRIED | LANTERN), 0, "never the sun's key either");
+        assert_eq!(a & (CARRIED | OWN_LIGHT), 0, "never the sun's key either");
         let fire = fire_key("hub", Pos::new(3, 4));
         assert_ne!(fire, a, "a fire on a lit cell is a source of its own");
-        assert_eq!(fire & (CARRIED | LANTERN), 0);
-        assert_ne!(SUN_KEY & LANTERN, 0);
+        assert_eq!(fire & (CARRIED | OWN_LIGHT), 0);
+        assert_ne!(SUN_KEY & OWN_LIGHT, 0);
         assert_eq!(SUN_KEY & CARRIED, 0);
         let moons: BTreeSet<u64> = (0..8).map(moon_key).collect();
         assert_eq!(moons.len(), 8);
         assert!(!moons.contains(&SUN_KEY));
-        assert!(moons.iter().all(|k| k & (CARRIED | LANTERN) == LANTERN));
+        assert!(moons.iter().all(|k| k & (CARRIED | OWN_LIGHT) == OWN_LIGHT));
     }
 }

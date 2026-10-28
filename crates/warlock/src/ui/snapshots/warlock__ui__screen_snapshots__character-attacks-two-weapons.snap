@@ -31,7 +31,7 @@ expression: "render(case, content.clone())"
     │     Alignment     Neutral                                                               │
     │     Resistant to  acid                                                                  │
     │                                                                                         │
-    │ Weight 82.1 kg (you 70 kg, carrying 12.1 kg)                                            │
+    │ Weight 82.5 kg (you 70 kg, carrying 12.5 kg)                                            │
     │ Burdened over 16.5 kg, strained over 33 kg, overloaded over 49.5 kg                     │
     │                                                                                         │
     │ @ or Esc close   A skills                                                               │

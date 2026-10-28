@@ -4,4 +4,4 @@ start_level = "shrine"
 seed = 1
 # A priestess come to see what still listens.
 character = { race = "human", gender = "female", class = "priest", name = "Aldgyth" }
-lantern = "lantern"
+wield = ["lantern"]

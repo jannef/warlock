@@ -12,8 +12,10 @@ seed = 1
 # replay or a command line without `--name`); another character is given one of their race's names
 # (data/names.toml).
 character = { race = "human", gender = "female", class = "thief", name = "Tamsin" }
-# The lantern the player carries (data/lights.toml; starts unlit).
-lantern = "lantern"
+# What the scenario's own character has ready, in the first free slot each fits: the lantern in
+# the Tool slot, unlit (`u` lights it). A character chosen in character creation brings their
+# starting kit instead, a lantern among it for a race without darkvision (data/races.toml).
+wield = ["lantern"]
 # The start time (hh:mm); the date is the default, 11 Darkening 1444 (data/calendar.toml).
 start_time = "08:00"
 # A character chosen in character creation (New run, --character, --name) starts with their

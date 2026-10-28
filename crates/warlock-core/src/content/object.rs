@@ -265,7 +265,8 @@ pub(super) struct ObjectSpec {
     pub lit: Option<String>,
     /// A key: the lock id it opens, or `*` for a skeleton key (every lock).
     pub key: Option<String>,
-    /// The light it gives while it burns where it lies (a light preset id); with `burns`.
+    /// The light it gives while it burns where it lies (a light preset id), with `burns`; without
+    /// `burns`, on a thing with a `slot`, the light it gives ready in the Tool slot and lit.
     pub light: Option<String>,
     /// How long it burns where it lands, in seconds of game time; then it is gone.
     pub burns: Option<u32>,
@@ -398,6 +399,10 @@ pub struct ObjectDef {
     pub lit: Option<ObjectId>,
     /// The light it gives where it lies, while it burns, and for how long it burns.
     pub burning: Option<Burning>,
+    /// A carried light (a lantern; spec §5 "Light sources"): the light preset it gives while it
+    /// is ready in the Tool slot and lit (`u`, `World::use_tool`, lights it). Read in one place,
+    /// `WorldState::carried_light`. `None`: it gives no light carried.
+    pub carried_light: Option<LightId>,
     /// A key: what locks it opens (spec §8 "Doors").
     pub key: Option<Key>,
     /// A digging tool's power (spec §8 "Digging"): a dig with it at Strength 10 does this much
@@ -530,6 +535,7 @@ impl ObjectDef {
             breaks: 0,
             lit: None,
             burning: None,
+            carried_light: None,
             dig: None,
             missile: None,
             spins: false,
@@ -796,8 +802,18 @@ impl ObjectSpec {
         if !protects.is_empty() && self.protection == 0 {
             return Err(err("`protects` is for armour with `protection`".into()));
         }
+        // Without `burns`, a light that goes in a slot is carried: it gives its light ready in the
+        // Tool slot, lit (spec §5 "Light sources").
+        let carried_light = match (&self.light, self.burns, &self.slot) {
+            (Some(id), None, Some(_)) => {
+                let light = light(id).ok_or_else(|| err(format!("unknown light preset `{id}`")))?;
+                Some(light)
+            }
+            _ => None,
+        };
         let burning = match (&self.light, self.burns) {
             (None, None) => None,
+            (Some(_), None) if carried_light.is_some() => None,
             (Some(id), Some(seconds)) => {
                 let light = light(id).ok_or_else(|| err(format!("unknown light preset `{id}`")))?;
                 Some(Burning {
@@ -805,7 +821,7 @@ impl ObjectSpec {
                     lasts: Duration::seconds(u64::from(seconds)),
                 })
             }
-            _ => return Err(err("`light` and `burns` go together".into())),
+            _ => return Err(err("`light` goes with `burns` (a thing burning where it lies) or with a `slot` (a carried light)".into())),
         };
         if !(0.0..=1.0).contains(&self.glow) {
             return Err(err("`glow` must be between 0 and 1".into()));
@@ -896,6 +912,7 @@ impl ObjectSpec {
             breaks: self.breaks,
             lit: None,
             burning,
+            carried_light,
             key,
             dig: self.dig,
             missile: self.missile,
@@ -1421,6 +1438,7 @@ mod tests {
             breaks: 0,
             lit: None,
             burning: None,
+            carried_light: None,
             key: None,
             dig: None,
             missile: None,

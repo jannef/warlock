@@ -35,7 +35,6 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Kick,
     KeyCommand::Descend,
     KeyCommand::Ascend,
-    KeyCommand::Lantern,
     KeyCommand::PickUp,
     KeyCommand::Drop,
     KeyCommand::Inventory,
@@ -67,7 +66,6 @@ pub const REBINDABLE: &[KeyCommand] = &[
     KeyCommand::Disarm,
     KeyCommand::PickLock,
     KeyCommand::Steal,
-    KeyCommand::HoodLantern,
     KeyCommand::Pay,
     KeyCommand::NextTarget,
     KeyCommand::PrevTarget,
@@ -135,12 +133,11 @@ pub const ABILITY_KEYS: &[KeyCommand] = &[
     KeyCommand::Disarm,
     KeyCommand::PickLock,
     KeyCommand::Steal,
-    KeyCommand::HoodLantern,
 ];
 
 /// Ids of commands that were removed: an old settings or keymap file may still list them, and
 /// they are dropped without a warning. Add an id here when a command is deleted.
-pub const RETIRED: &[&str] = &["fire"];
+pub const RETIRED: &[&str] = &["fire", "hood_lantern", "lantern"];
 
 /// The settings ids of [`KeyCommand::Page`] 1 to 9.
 const PAGE_IDS: [&str; 9] = [
@@ -158,7 +155,6 @@ pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::Disarm,
     KeyCommand::PickLock,
     KeyCommand::Steal,
-    KeyCommand::HoodLantern,
     KeyCommand::Quit,
     KeyCommand::PrevTarget,
     KeyCommand::MoreSkip,
@@ -234,7 +230,6 @@ impl KeyCommand {
             Kick => "kick",
             Descend => "descend",
             Ascend => "ascend",
-            Lantern => "lantern",
             PickUp => "pick_up",
             Drop => "drop",
             Inventory => "inventory",
@@ -266,7 +261,6 @@ impl KeyCommand {
             Disarm => "disarm",
             PickLock => "pick_lock",
             Steal => "steal",
-            HoodLantern => "hood_lantern",
             NextTarget => "next_target",
             PrevTarget => "prev_target",
             Loose => "loose",
