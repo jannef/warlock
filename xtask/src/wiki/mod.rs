@@ -37,6 +37,7 @@ mod learning;
 mod magic;
 mod mana;
 mod materials;
+mod mimics;
 mod moons;
 mod objects;
 mod order;
@@ -163,6 +164,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("animated-groups.md", animated::animated_groups),
         ("animated-loot.md", animated::animated_loot),
         ("animated-parts.md", animated::animated_parts),
+        ("mimic-bands.md", mimics::mimic_bands),
         ("dungeons.md", dungeons::dungeons),
         ("dungeon-floors.md", dungeons::dungeon_floors),
         ("danger-weights.md", dungeons::danger_weights),

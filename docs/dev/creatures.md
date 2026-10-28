@@ -14,6 +14,7 @@ Per-tribe notes:
 - `docs/dev/creatures/duergar.md`: the duergar (#518; the delf wave's three and the roster to level 40, formulas, Fyrdelf)
 - `docs/dev/creatures/yugoloth.md`: the yugoloths (#446; faction, tags, riders)
 - `docs/dev/creatures/hags.md`: the hags (#451; faction, tag, riders)
+- `docs/dev/creatures/mimics.md`: the mimics (#616; the generated family, the disguise in perception, revealing, Mimic-wise and Slick)
 - `docs/dev/creatures/hobgoblins.md`: the hobgoblins (#454; the goblin tribe's second tier)
 - `docs/dev/creatures/fey.md`: the fey (#452; the courts, `provoked`, the roster)
 - `docs/dev/creatures/orcs.md`: the orc tribe and its wargs (#455; faction, tags, formulas, populations)

@@ -178,7 +178,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     loose gem rolled at the same level (`gem::roll`). Like stacks join. A coffer (`1d3`, 10 %
     / 1 %, `2d6` gold, `1d4-3` gems) holds on average 2 items, 7 gold, and a gem one time in
     four; a banded chest (`2d3+1` at +1, 25 % / 3 %, `3d6` × 3, `1d2`) 5 items, 31.5 gold, and
-    1.5 gems. A mimic (C4) will carry the same stacks from the same draws.
+    1.5 gems. A mimic standing in for a chest carries the same stacks from the same draws (§8 "Mimics").
   - **Unique items** (`content/unique.rs`, data `data/uniques/` and each campaign's
     `data/uniques/`, §7; #423, docs/design/adventurers-guild.md §9): one of a kind, like ADOM's
     artifacts: a **rare** item with a set name, set affixes and parts, an item level, a

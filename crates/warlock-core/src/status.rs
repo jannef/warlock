@@ -320,6 +320,12 @@ impl Effects {
             })
     }
 
+    /// Whether one of its statuses hides its sufferer as something else (`hides`: a mimic's
+    /// Disguised; spec §8 "Mimics").
+    pub fn hides(&self, content: &Content) -> bool {
+        !self.0.is_empty() && self.0.iter().any(|e| content.status(e.status).hides)
+    }
+
     /// The first (the most important) of its statuses that refuses actions of `kind` while it
     /// lasts (`blocks`), if any.
     pub fn blocking(&self, content: &Content, kind: ActionKind) -> Option<StatusId> {

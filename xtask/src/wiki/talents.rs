@@ -666,6 +666,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         }
         TalentEffect::Searching { value } => format!("searching {}", signed(value)),
         TalentEffect::CollapseProof => "a collapsed floor never gives way under you".to_string(),
+        TalentEffect::SeesMimics { value } => format!(
+            "sees a disguised mimic within {value} cell{} for what it is: it is shown as itself, \
+             not as a chest",
+            if value == 1 { "" } else { "s" }
+        ),
+        TalentEffect::Slick => "a mimic's grip (its slam's hold) never holds it".into(),
         TalentEffect::SeesReflections { value } => format!(
             "sees a hall of mirrors' reflections within {value} cell{} for what they are: they \
              are not shown",

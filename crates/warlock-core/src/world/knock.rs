@@ -17,6 +17,17 @@ impl World {
             return Spent::Nothing;
         };
         let at = self.player_pos().step(dir);
+        let player = self.state.player;
+        // At a mimic the player takes for a chest, the spell finds it out (`mimic.rs`): the mana
+        // is spent, and no blow comes (it was no hand).
+        if let Some(mimic) = self.mimic_at(at).filter(|&m| !self.perception.shows(m)) {
+            if !self.spend_mana(player, knock.mana) {
+                self.say("You have too little mana.");
+                return Spent::Nothing;
+            }
+            self.reveal_mimic(mimic, super::mimic::Reveal::Knocked, &mut Vec::new());
+            return Spent::Turn(self.price_of(player, ActionKind::Cast));
+        }
         let level = self.state.current();
         let lockable = (level.terrain.get(at)).is_some_and(|t| {
             let def = self.content.terrain(*t);
@@ -26,7 +37,6 @@ impl World {
             self.say("There is no lock there to spring.");
             return Spent::Nothing;
         }
-        let player = self.state.player;
         if !self.spend_mana(player, knock.mana) {
             self.say("You have too little mana.");
             return Spent::Nothing;

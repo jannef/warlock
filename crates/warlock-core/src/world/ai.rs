@@ -238,6 +238,8 @@ impl World {
             .filter(|a| {
                 content.stance_of(me.faction(content), a.faction(content)) == Stance::Hostile
                     && !beast_friend::befriended(state, content, me, a)
+                    // A disguised mimic is a chest to every eye (`mimic.rs`).
+                    && !a.effects.hides(content)
             })
             .map(|a| (a.pos.dist2(me.pos), a.id, a.pos))
             .collect();

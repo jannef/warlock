@@ -145,6 +145,7 @@ mod lockpick;
 mod loot;
 mod lucky;
 mod mana;
+mod mimic;
 pub(crate) mod mirrors;
 mod openings;
 mod outcome;
@@ -1508,6 +1509,8 @@ mod magic_tests;
 mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
+#[cfg(test)]
+mod mimic_tests;
 #[cfg(test)]
 mod mirrors_tests;
 #[cfg(test)]

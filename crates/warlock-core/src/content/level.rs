@@ -9,6 +9,8 @@
 //! and `lock_difficulty = N`, how hard it is to pick (default 14); spec §8 "Doors", chests on
 //! the shut chest terrain: `chest = "kist"` (a band, its least level) or `chest = 7` (default
 //! the level's `item_level`), locked as a door, its `objects` what it holds; spec §8 "Chests",
+//! and `mimic = true` beside `chest` on the floor a mimic stands on: the chest is a mimic of its
+//! level, disguised, carrying the `objects`; spec §8 "Mimics",
 //! traps: `trap = "fireball"`, hidden unless `known = true`, a bolt trap's
 //! direction with `dir`; spec §8 "Traps", and secret doors: `secret = true` or `secret = N` (a
 //! difficulty) on a closed door, which looks like the wall around it until it is found; spec §8
@@ -320,6 +322,10 @@ pub(super) struct LegendDetail {
     /// id (`chest = "kist"`: that band's least level) or its level (`chest = 7`); default the
     /// level's `item_level`. Its `objects` are what it holds.
     chest: Option<ChestSpec>,
+    /// The chest on this cell is a mimic (spec §8 "Mimics"): with `chest` (its level) on the
+    /// walkable terrain it stands on, the family's member of the chest's level is placed there
+    /// disguised, carrying the entry's `objects`; never locked, trapped, or with a creature.
+    mimic: Option<bool>,
     /// The closed door (or shut chest) on this cell is locked (only a skeleton key opens it
     /// unless it has a `lock` id).
     locked: Option<bool>,
@@ -705,7 +711,29 @@ pub(super) fn parse_level(
                 }
                 locks.insert(pos, lock);
             }
-            if let Some(spec) = &detail.chest {
+            let mimic = detail.mimic == Some(true);
+            if mimic {
+                let at = parse_mimic(detail, terrain, content)
+                    .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
+                let pack = match &detail.objects {
+                    Some(specs) => parse_stacks(specs, content)
+                        .map_err(|m| err(format!("legend `{ch}`: objects: {m}")))?,
+                    None => Vec::new(),
+                };
+                creatures.push(CreatureSpawn {
+                    creature: at,
+                    faction: None,
+                    alignment: None,
+                    npc: None,
+                    pos,
+                    route: Vec::new(),
+                    carry: pack,
+                    equipment: Equipment::default(),
+                    rolls_gear: false,
+                    asleep: false,
+                });
+            }
+            if let Some(spec) = detail.chest.as_ref().filter(|_| !mimic) {
                 if !content.terrain(terrain).is_shut_chest() {
                     return Err(err(format!(
                         "legend `{ch}` places a chest on terrain `{}`, which is no shut chest",
@@ -748,7 +776,7 @@ pub(super) fn parse_level(
             {
                 return Err(err("more than one player start".into()));
             }
-            if let Some(specs) = &detail.objects {
+            if let Some(specs) = detail.objects.as_ref().filter(|_| !mimic) {
                 let pile = parse_stacks(specs, content)
                     .map_err(|m| err(format!("legend `{ch}`: objects: {m}")))?;
                 // A shut chest holds them (spec §8 "Chests").
@@ -1469,6 +1497,40 @@ fn parse_ice(ch: char, entry: &LegendEntry, terrain: &TerrainDef) -> Result<Opti
 /// The lock a legend entry puts on its cell: `lock = "id"` (a lock of that id) or `locked =
 /// true` (a lock only a skeleton key opens), with its `lock_difficulty` if it gives one; none for
 /// neither or `locked = false` alone.
+/// The mimic a legend entry with `mimic = true` places (spec §8 "Mimics"): the family's member of
+/// its `chest`'s level, on walkable terrain that is no chest, with no lock,
+/// trap, or creature beside it.
+fn parse_mimic(
+    detail: &LegendDetail,
+    terrain: TerrainId,
+    content: &Content,
+) -> Result<CreatureId, String> {
+    let Some(spec) = &detail.chest else {
+        return Err("`mimic` needs a `chest` (its level)".into());
+    };
+    let ground = content.terrain(terrain);
+    if !ground.walkable || ground.chest.is_some() {
+        return Err(format!(
+            "a mimic stands on walkable terrain that is no chest, not `{}`",
+            ground.id
+        ));
+    }
+    if detail.locked.is_some() || detail.lock.is_some() || detail.trap.is_some() {
+        return Err("a mimic is never locked or trapped".into());
+    }
+    if detail.creature.is_some() || detail.carry.is_some() {
+        return Err(
+            "a mimic is the creature: no `creature` or `carry` beside it (it carries its \
+             `objects`)"
+                .into(),
+        );
+    }
+    let level = spec.level(content)?;
+    content
+        .mimic_at(level)
+        .ok_or_else(|| "no mimics (data/mimics.toml)".into())
+}
+
 fn parse_lock(detail: &LegendDetail) -> Result<Option<Lock>, String> {
     let lock = match (detail.locked, &detail.lock) {
         (Some(false), Some(_)) => return Err("has a `lock` but `locked = false`".into()),

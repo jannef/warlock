@@ -322,8 +322,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with its band's `trapped` percent, of a kind drawn from the branch's `traps` that fit a
     fixture (a branch without traps traps none, though it draws the same), hidden; and holding
     what its band's loot table rolls (§8 "Magic items" "Chest loot"). Draws per chest: its cell,
-    the lock, the trap and its kind, the contents, and the mimic draw (`mimic` percent; until
-    mimics come, slice C4, every chest stays a chest).
+    the lock, the trap and its kind, the contents, and the mimic draw (`mimic` percent): a mimic
+    of the floor's level stands there instead, disguised, carrying exactly the contents, its
+    lock and trap dropped and nothing more drawn (§8 "Mimics").
   - **Level files** place chests on the `chest` terrain: `chest = "kist"` (that band's least
     level) or `chest = 7` (a level; default the level's `item_level`), `locked = true` or `lock =
     "id"` and `lock_difficulty` as on a door, and `objects` for what it holds (food in it is made

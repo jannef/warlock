@@ -35,8 +35,8 @@
 //! hollow wall ([`super::LevelState::hollows`], remembered as the wall it is): "The wall here
 //! sounds hollow."; digging or a blast then opens it.
 
-use super::World;
 use super::rest::Ended;
+use super::{ActorId, World};
 use crate::action::Event;
 use crate::check::check;
 use crate::content::StatUse;
@@ -54,6 +54,8 @@ pub(super) enum Hidden {
     Door(u8),
     /// A hidden trap of this type.
     Trap(TrapId),
+    /// A disguised mimic (spec §8 "Mimics", `mimic.rs`): its grip's difficulty, 12 + L ÷ 5.
+    Mimic(ActorId),
     /// A sealed room's breach not yet found (spec §7 "Special rooms": a greater treasure room's),
     /// at the branch's secret-door difficulty.
     Hollow,
@@ -87,12 +89,17 @@ impl World {
         let traps = (level.traps.iter())
             .filter(|(p, t)| !t.known && near(p))
             .map(|(p, t)| (*p, Hidden::Trap(t.kind)));
+        // A disguised mimic (`mimic.rs`) passes for a chest until found out.
+        let mimics = (self.state.actors.values())
+            .filter(|a| a.level == level.id && near(&a.pos) && a.effects.hides(&self.content))
+            .map(|a| (a.pos, Hidden::Mimic(a.id)));
         let content = &self.content;
         let hollows = (level.rooms.iter())
             .filter_map(|r| r.breach)
             .filter(|p| near(p) && !level.hollows.contains(p) && level.breach_at(content, *p))
             .map(|p| (p, Hidden::Hollow));
-        let mut hidden: Vec<(Pos, Hidden)> = doors.chain(traps).chain(hollows).collect();
+        let mut hidden: Vec<(Pos, Hidden)> =
+            doors.chain(traps).chain(mimics).chain(hollows).collect();
         hidden.sort_by_key(|(p, _)| *p);
         if reach > 1 && hidden.iter().any(|(p, _)| p.chebyshev(here) > 1) {
             let radius = LineOfSight::radius_for(2 * reach * reach);
@@ -108,6 +115,9 @@ impl World {
         let own = match hidden {
             Hidden::Door(difficulty) => i32::from(difficulty),
             Hidden::Trap(kind) => i32::from(self.content.trap(kind).difficulty),
+            Hidden::Mimic(id) => (self.state.actors.get(&id)).map_or(0, |a| {
+                crate::content::mimic::Mimics::grip(self.content.creature(a.creature).level)
+            }),
             Hidden::Hollow => i32::from(self.content.search().secret_door),
         };
         let deeper = (self.content.branch_level(&self.state.current_level))
@@ -120,7 +130,7 @@ impl World {
     pub(super) fn finding(&self, hidden: Hidden) -> i32 {
         let ease = match hidden {
             Hidden::Trap(_) => self.state.player().talent_mods(&self.content).trap_ease,
-            Hidden::Door(_) | Hidden::Hollow => 0,
+            Hidden::Door(_) | Hidden::Mimic(_) | Hidden::Hollow => 0,
         };
         self.difficulty_of(hidden) - ease
     }
@@ -171,7 +181,8 @@ impl World {
         let stone = talents.stone_sense.then_some(PassiveSearch::Stone);
         match race.or(stone) {
             Some(PassiveSearch::All) => true,
-            Some(PassiveSearch::Stone) => self.on_stone(at),
+            // A mimic is no stonework: only those who notice everything notice it.
+            Some(PassiveSearch::Stone) => !matches!(hidden, Hidden::Mimic(_)) && self.on_stone(at),
             Some(PassiveSearch::Traps) => matches!(hidden, Hidden::Trap(_)),
             None => false,
         }
@@ -280,6 +291,9 @@ impl World {
     fn reveal(&mut self, at: Pos, hidden: Hidden) {
         self.found += 1;
         match hidden {
+            Hidden::Mimic(id) => {
+                self.reveal_mimic(id, super::mimic::Reveal::Found, &mut Vec::new());
+            }
             Hidden::Door(_) => {
                 let Some(secret) = self.state.current().secrets.get(&at).copied() else {
                     return;

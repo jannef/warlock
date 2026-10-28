@@ -34,7 +34,8 @@ fn one_type_per_body_after_the_shared_files_before_every_campaigns() {
         assert_eq!((a.body, usize::from(a.family.0)), (Some(n), i));
     }
     assert_eq!(defs[animated[0]].id, "animated_bellows");
-    // Every shared type before them, the families after them, every campaign's after those.
+    // Every shared type before them, the families after them, the mimics' family next
+    // (`content/mimic.rs`), every campaign's after those.
     assert!(defs[..animated[0]].iter().all(|d| d.campaign.is_none()));
     let last = (0..defs.len())
         .rfind(|&i| defs[i].animated.is_some())
@@ -44,7 +45,12 @@ fn one_type_per_body_after_the_shared_files_before_every_campaigns() {
         "animated_blade_5"
     );
     let after = &defs[last + 1..];
-    assert!(!after.is_empty() && after.iter().all(|d| d.campaign.is_some()));
+    assert!(
+        !after.is_empty()
+            && after
+                .iter()
+                .all(|d| d.campaign.is_some() || d.mimic.is_some())
+    );
 }
 
 #[test]

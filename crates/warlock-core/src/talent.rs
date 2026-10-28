@@ -393,6 +393,10 @@ pub struct TalentMods {
     /// It tells a locked chest from an unlocked one at a glance, and a shut chest's trap in its
     /// sight is known to it (Chest-wise).
     pub chest_wise: bool,
+    /// Within this many cells it sees a disguised mimic for what it is (Mimic-wise; 0: none).
+    pub sees_mimics: i32,
+    /// A mimic's grip never holds it (Slick).
+    pub slick: bool,
     /// The hint on arriving on a level with a treasure room says which way it lies (Treasure
     /// sense).
     pub treasure_bearing: bool,
@@ -1286,6 +1290,8 @@ impl TalentMods {
             TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
             TalentEffect::SenseOfPlace => self.sense_of_place = true,
             TalentEffect::ChestWise => self.chest_wise = true,
+            TalentEffect::SeesMimics { value } => self.sees_mimics += value,
+            TalentEffect::Slick => self.slick = true,
             TalentEffect::TreasureSense => self.treasure_bearing = true,
             TalentEffect::Devout => self.devout = true,
             TalentEffect::Penitent => self.penitent = true,

@@ -69,16 +69,19 @@ pub(super) fn chest_breaking(content: &Content) -> String {
     )
 }
 
-/// How often each band's generated chests come locked and trapped, by levels.
+/// How often each band's generated chests come locked and trapped, and are a mimic instead, by
+/// levels.
 pub(super) fn chest_odds(content: &Content) -> String {
     let rules = content.chests();
-    let mut out = String::from("| Levels | Chest | Locked | Trapped |\n|:---:|---|:---:|:---:|\n");
+    let mut out = String::from(
+        "| Levels | Chest | Locked | Trapped | A mimic |\n|:---:|---|:---:|:---:|:---:|\n",
+    );
     for (i, band) in rules.bands.iter().enumerate() {
         let levels = levels(band.from, rules.bands.get(i + 1).map(|b| b.from));
         let _ = writeln!(
             out,
-            "| {levels} | {} | {}% | {}% |",
-            band.name, band.locked, band.trapped
+            "| {levels} | {} | {}% | {}% | {}% |",
+            band.name, band.locked, band.trapped, band.mimic
         );
     }
     out

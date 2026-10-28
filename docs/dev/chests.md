@@ -3,10 +3,13 @@
 Developer notes for chests (slices C1, #613, C2, #614, and C3, #615, of
 docs/design/chests-and-treasure.md); the rules are in spec/08d-traps-doors-digging.md "Chests",
 the loot in spec/08g-magic-items.md "Chest loot", and the data in spec/07b-data.md "Chests".
-Keep it current with the code, as CLAUDE.md says. Mimics (C4) and greater treasure rooms (C6)
-come later; each extends this file. Treasure rooms (C5, #617) and greater treasure rooms (C6,
-#618) lay their chests with `mapgen/chest.rs::lay` from their own stream
-(`docs/dev/special-rooms.md` "Treasure rooms").
+Keep it current with the code, as CLAUDE.md says. Treasure rooms (C5, #617) and greater
+treasure rooms (C6, #618) lay their chests with `mapgen/chest.rs::lay` from their own stream
+(`docs/dev/special-rooms.md` "Treasure rooms"). Mimics (C4, #616) have their own topic,
+`docs/dev/creatures/mimics.md`: a generated chest may be a mimic instead
+(`mapgen/chest.rs::lay`), which the perception snapshot shows as a shut chest (`chest_at`,
+`known_chests`), and touching what the player takes for a chest (`open_door`, the bump, `kick`,
+`pick_lock`, Knock) finds it out first.
 
 ## Modules
 
@@ -50,8 +53,9 @@ come later; each extends this file. Treasure rooms (C5, #617) and greater treasu
   with or without them (the chest's cell becomes the shut terrain, its lock and trap join the
   level's maps). Per chest, in order: the cell, `chance(locked)`, `chance(trapped)` and, if
   trapped, one `index` among the fitting traps (made with none: a branch without traps draws
-  the same), `roll_contents`, `chance(mimic)` (C4 swaps the chest for a mimic there; drawn now so
-  that changes no stream). Cells avoid the population, so a fixture comparing a floor with and
+  the same), `roll_contents`, `chance(mimic)` (made: no chest, the lock and trap drawn for it
+  dropped, and a `CreatureSpawn` of `Content::mimic_at(level)` carrying the contents pushed on
+  the template's creatures, nothing more drawn; `docs/dev/creatures/mimics.md`). Cells avoid the population, so a fixture comparing a floor with and
   without a danger sets `chests = { chance = 0 }` (`world/spawn_tests.rs`'s barrow).
 - No new action, key, or `KeyCommand`: `open`, `move`, `pick`, `kick`, and `use:knock:DIR`.
 

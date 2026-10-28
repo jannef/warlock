@@ -256,6 +256,9 @@ pub(super) struct CreatureSpec {
     /// What makes a generated type an animated one (`content/animated.rs`); never written.
     #[serde(skip)]
     pub animated: Option<AnimatedDef>,
+    /// What makes a generated type a mimic (`content/mimic.rs`); never written.
+    #[serde(skip)]
+    pub mimic: Option<super::mimic::MimicDef>,
 }
 
 /// What eating a creature's fresh corpse does (spec §8 "Hunger"), beyond feeding the eater by
@@ -525,6 +528,7 @@ impl CreatureSpec {
             immune: r.immune,
             dies: self.dies,
             animated: self.animated,
+            mimic: self.mimic,
             weapon_skills: r.weapon_skills,
             gear: Gear::default(),
             gear_spec: GearSpec {
@@ -686,6 +690,9 @@ pub struct CreatureDef {
     /// Gameplay: what makes it an animated object (spec §8 "Animated objects"), for a type
     /// generated from `data/animated/`; `None` for every other.
     pub animated: Option<AnimatedDef>,
+    /// Gameplay: what makes it a mimic (spec §8 "Mimics"), for a type generated from
+    /// `data/mimics.toml`; `None` for every other.
+    pub mimic: Option<super::mimic::MimicDef>,
     /// Gameplay: the ranks in weapon skills a creature of this type has (spec §8 "Weapon
     /// skills"), defaults included. Rules only: never shown. The player's come from their race
     /// and class.

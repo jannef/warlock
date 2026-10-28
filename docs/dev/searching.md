@@ -37,7 +37,8 @@ sight), `difficulty_of` (own difficulty + `hidden_at(depth)`), `search_modifier(
 effective Intelligence or Willpower modifier, the skill effect through `Actor::skill_effect`,
 the race's `search`, the passive penalty), `notices(at, hidden)` (Spot trained via
 `Skills::trains_effect(Effect::Spot)`, else the race's `passive_search`, `stone` read from the
-cell's terrain, `traps` only for a `Hidden::Trap`). `Action::Search(turns)` → `Spent::Search` → `World::search` runs `keep_at`
+cell's terrain, `traps` only for a `Hidden::Trap`; a `Hidden::Mimic`, a disguised mimic within
+reach, is noticed in passing only by those who notice everything: `docs/dev/creatures/mimics.md`). `Action::Search(turns)` → `Spent::Search` → `World::search` runs `keep_at`
 with `search_turn` (the `search` action's price first, then the active checks, then a Search
 mark), stopping when `World::found` (an unsaved counter) moves; `notice_hidden` is the passive
 check, called once per player turn at the start of `run_turn` (`schedule.rs`), so steps, waits,

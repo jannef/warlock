@@ -435,6 +435,11 @@ pub enum TalentEffect {
     /// [`crate::perception::PerceptionView::chest_at`]), and a shut chest's trap in its sight
     /// becomes known to it (`World::chest_wise_look`).
     ChestWise,
+    /// A disguised mimic within this many cells is seen for what it is (Mimic-wise;
+    /// [`crate::perception::Perception`]'s disguises).
+    SeesMimics { value: i32 },
+    /// A mimic's grip never holds it (Slick; `World::afflict`).
+    Slick,
     /// The hint said on arriving on a level with a treasure room tells which way it lies
     /// (Treasure sense; `world/treasury.rs`).
     TreasureSense,
@@ -1141,6 +1146,7 @@ impl TalentEffect {
             | TalentEffect::Search { value }
             | TalentEffect::SearchReach { value }
             | TalentEffect::SeesReflections { value }
+            | TalentEffect::SeesMimics { value }
             | TalentEffect::HoardGrace { value }
             | TalentEffect::ThrowRange { value }
             | TalentEffect::MaxDex { value }
@@ -1918,6 +1924,7 @@ impl TalentEffect {
             | TalentEffect::SeesUv
             | TalentEffect::SenseOfPlace
             | TalentEffect::ChestWise
+            | TalentEffect::Slick
             | TalentEffect::TreasureSense
             | TalentEffect::Devout
             | TalentEffect::Penitent

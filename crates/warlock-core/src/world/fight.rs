@@ -766,6 +766,11 @@ impl World {
         // Unbinder (spec §8 "Animated objects"): against a creature of a tag.
         let profile = profile.map(|p| self.bane(attacker, target, p));
         let unseen = profile.is_some() && self.sneaking(attacker, target);
+        // A blow at a disguised mimic finds it out (`mimic.rs`), after the sneak attack is
+        // decided: it was unaware.
+        if self.disguised(target) {
+            self.reveal_mimic(target, super::mimic::Reveal::Struck, events);
+        }
         let profile = profile.map(|p| self.sneak_threat(attacker, unseen, p));
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         let struck = self.target_against(target, missile);
@@ -979,6 +984,10 @@ impl World {
         harm: Harm,
         events: &mut Vec<Event>,
     ) -> bool {
+        // Any harm finds a disguised mimic out (`mimic.rs`).
+        if self.disguised(id) {
+            self.reveal_mimic(id, super::mimic::Reveal::Struck, events);
+        }
         // Talents (spec §8 "Talents": Immune to pain): a hit does less after the soak, never
         // below 1; what is not a hit (a status, starving) is not eased.
         let damage = match harm {

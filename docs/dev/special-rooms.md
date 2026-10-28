@@ -290,7 +290,8 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
   provided `content::breach_fault` finds nothing wrong with its breach (a wall that breaks, on
   the room, off the edge, 4-adjacent to a reached cell outside and to floor inside); a sealed
   room without a breach is `Invalid::NoBreach`, a bad one `BadBreach`. Stairs, keys, and
-  creatures must still be reached, so none is ever inside.
+  creatures must still be reached, so none is ever inside, save a mimic standing in for one of
+  its chests (`mapgen/chest.rs::lay`; `content.is_mimic`), found with the room.
 - **Kept out**: `hide_traps` skips its cells, `population.rs` (as any room with `treasure`),
   the spawner (`world/spawn.rs`, as a sanctuary), floor chests (their eight neighbours must be
   open, so never beside the breach), and `treasury::fill`'s chests (`by_door` counts the breach).

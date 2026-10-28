@@ -62,6 +62,11 @@ impl World {
             self.say("It is all of a piece.");
             return Spent::Nothing;
         }
+        // A mimic (spec §8 "Mimics"): what it carries is inside it.
+        if content.is_mimic(self.state.actors[&victim].creature) {
+            self.say("It has no pockets.");
+            return Spent::Nothing;
+        }
         if self.stance(player, victim) == Stance::Hostile {
             self.say(format!(
                 "{name} is hostile: it would never let you near enough."

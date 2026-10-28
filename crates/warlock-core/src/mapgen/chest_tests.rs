@@ -79,7 +79,12 @@ fn a_level_is_the_same_with_or_without_its_chests() {
                     assert_eq!(*t, plain.terrain[p], "seed {seed} {id}: {p}");
                 }
             }
-            assert_eq!(level.creatures, plain.creatures, "seed {seed} {id}");
+            // A mimic standing in for a chest is the one creature more (`a_mimic_stands_in_for_a_chest_carrying_its_loot`).
+            let creatures: Vec<_> = (level.creatures.iter())
+                .filter(|s| !with.is_mimic(s.creature))
+                .cloned()
+                .collect();
+            assert_eq!(creatures, plain.creatures, "seed {seed} {id}");
             assert_eq!(level.objects, plain.objects, "seed {seed} {id}");
             let off_chests = |keys: Vec<Pos>| -> Vec<Pos> {
                 keys.into_iter()
@@ -155,6 +160,72 @@ fn a_branch_without_traps_traps_nothing_but_draws_the_same() {
         trapped += usize::from(a.traps.get(&at).is_some_and(|t| t.kind == arrow));
     }
     assert!(trapped > 0, "an arrow sometimes");
+}
+
+/// Every chest a mimic (the bands' `mimic` at 100): a mimic of the floor's level stands where the
+/// chest would, disguised by its type, carrying what the chest would have held, neither locked
+/// nor trapped; the chest stream draws the same.
+#[test]
+fn a_mimic_stands_in_for_a_chest_carrying_its_loot() {
+    // The bands' `mimic` chance set to `percent`.
+    let with = |percent: u8| {
+        let mut files = ContentFiles::builtin();
+        let mimic = format!("mimic = {percent}");
+        files.edit_table("chests", |text| {
+            let mut out = String::new();
+            for line in text.lines() {
+                let line = if line.starts_with("mimic = ") {
+                    &mimic
+                } else {
+                    line
+                };
+                out.push_str(line);
+                out.push('\n');
+            }
+            out
+        });
+        Content::load(&files).expect("fixture content")
+    };
+    let (chests, mimics) = (with(0), with(100));
+    let shut = chests
+        .chest_terrain(ChestState::Shut)
+        .expect("chest terrain");
+    let level = generate(&chests, ("showcase", 3), "depths:1", None).expect("level");
+    let at = Pos::new(1, 1);
+    let arrow = chests.trap_id("arrow").expect("arrow");
+    for seed in 0..20 {
+        let (mut a, mut b) = (level.clone(), level.clone());
+        let (mut ra, mut rb) = (Rng::chests(seed, "x"), Rng::chests(seed, "x"));
+        chest::lay(
+            &mut a,
+            &chests,
+            &mut ra,
+            (at, shut),
+            (&[arrow], Luck::default()),
+        );
+        chest::lay(
+            &mut b,
+            &mimics,
+            &mut rb,
+            (at, shut),
+            (&[arrow], Luck::default()),
+        );
+        assert_eq!(ra, rb, "seed {seed}: the same draws");
+        let mimic = b.creatures.last().expect("a mimic");
+        assert_eq!(mimic.pos, at);
+        let want = format!("mimic_{}", level.item_level);
+        assert_eq!(
+            mimics.creature(mimic.creature).id,
+            want,
+            "the floor's level"
+        );
+        assert_eq!(
+            mimic.carry, a.chests[&at].holds,
+            "seed {seed}: the chest's loot"
+        );
+        assert!(!b.chests.contains_key(&at) && b.terrain[at] == level.terrain[at]);
+        assert!(!b.locks.contains_key(&at) && !b.traps.contains_key(&at));
+    }
 }
 
 #[test]

@@ -89,8 +89,10 @@ fn a_rooms_level_hides_every_door_of_its_treasure_room() {
             !level.stairs.iter().any(|s| room.contains(s.pos)),
             "seed {seed}: no stairs inside"
         );
+        // A treasure room's chest may be a mimic (the band's chance, design §5.3).
         assert!(
-            !level.creatures.iter().any(|c| room.contains(c.pos)),
+            !(level.creatures.iter())
+                .any(|c| room.contains(c.pos) && !content.is_mimic(c.creature)),
             "seed {seed}: no one inside"
         );
     });
@@ -149,10 +151,15 @@ fn treasure_rooms_hold_chests_gold_and_gems_from_their_own_stream() {
             outside(&plain.objects, room),
             "seed {seed}: objects outside"
         );
+        // A mimic stands in for a chest (design §5.3): it counts as the chest it replaced.
+        let mimics = (level.creatures.iter())
+            .filter(|c| room.contains(c.pos) && with.is_mimic(c.creature))
+            .count();
         let chests = cells
             .iter()
             .filter(|p| level.chests.contains_key(p))
             .count()
+            + mimics
             - cells
                 .iter()
                 .filter(|p| plain.chests.contains_key(p))
@@ -223,7 +230,7 @@ fn great_rooms(
 
 /// Checks a greater treasure room: no door or way in on its rim, its breach a stone wall beside a
 /// cell reached from the up staircase, nothing inside reached until the breach is broken, and
-/// no stairs, creature, or trap inside.
+/// no stairs, creature (but a mimic in a chest's place), or trap inside.
 fn walled_up(content: &Content, seed: u64, level: &LevelTemplate, room: &SpecialRoom) {
     let wall = content.terrain_id("wall").expect("wall");
     let floor = content.terrain_id("floor").expect("floor");
@@ -259,7 +266,9 @@ fn walled_up(content: &Content, seed: u64, level: &LevelTemplate, room: &Special
         );
     }
     assert!(!level.stairs.iter().any(|s| room.contains(s.pos)));
-    assert!(!level.creatures.iter().any(|c| room.contains(c.pos)));
+    let creature =
+        (level.creatures.iter()).any(|c| room.contains(c.pos) && !content.is_mimic(c.creature));
+    assert!(!creature, "seed {seed}: no creature but a mimic inside");
     assert!(
         !level
             .traps

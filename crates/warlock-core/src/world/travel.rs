@@ -133,6 +133,11 @@ impl World {
         // Someone there: the player attacks them if they are hostile (by their stance toward the
         // player, which the player knows from what they are), else swaps places with them
         // unless they will not make way. Only what the player sees of them is said.
+        // What they take for a chest is a mimic (`mimic.rs`): their hand on it finds it out.
+        if let Some(spent) = self.touch(to, events) {
+            return spent;
+        }
+        let level = self.state.current();
         let mut swap = None;
         if let Some(other) = self.state.actor_at(&level.id, to) {
             let target = other.id;
@@ -621,6 +626,12 @@ pub(super) fn make_creature(
     // A teeming den's sleeper (`den.rs`).
     if let Some(asleep) = content.sleep_status().filter(|_| spawn.asleep) {
         actor.effects.add(asleep, content.status(asleep), 1, None);
+    }
+    // A mimic is placed disguised as a chest (`mimic.rs`).
+    if let Some(disguise) = content.disguise_status().filter(|_| def.mimic.is_some()) {
+        actor
+            .effects
+            .add(disguise, content.status(disguise), 1, None);
     }
     crate::rot::made_at(&mut actor.inventory, content, state.time);
     state.actors.insert(actor_id, actor);

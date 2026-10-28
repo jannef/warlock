@@ -46,6 +46,7 @@ impl Body {
             "warty hide",
             "barbed hide",
             "ancient hide",
+            "woody hide",
             "skin",
             "fur",
             "feathers",
