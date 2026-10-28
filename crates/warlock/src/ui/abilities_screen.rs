@@ -292,7 +292,7 @@ mod tests {
         let mut world = World::new(content, "showcase", None).expect("world");
         if shield {
             let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 \
-                        move:N pickup:a equip:off_hand:a";
+                        move:N pickup:a equip:off_hand:b";
             for action in parse_actions(walk).expect("actions") {
                 world.apply(&action);
             }
@@ -329,9 +329,7 @@ mod tests {
             "  e  Steal              in a direction",
             "Weapon skills",
             "  f  Shield bash        you hold no shield",
-            "Items",
-            "  g  Hood your lantern",
-            "a-g or Enter use   Esc close",
+            "a-f or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }

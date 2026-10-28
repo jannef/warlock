@@ -8,8 +8,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Exile. A first pass: the lists and numbers are to be tuned after playtesting.
   - **Base items** are objects with a `kind` (§7): weapon, missile weapon (`launcher`),
     ammunition, body armour, helmet, cloak, gloves, boots, shield, ring, amulet, tool (a digging
-    tool in the Tool slot; no object is one yet: the pick-axe becomes one with its affixes,
-    docs/design/affixes-systems.md §6). Only they are
+    tool in the Tool slot: the pick-axe, loot from item level 3 and rare among it (`frequency`
+    10); the pick-axes placed in levels, worn by creatures, and in starting kits are plain; a tool
+    shows no numbers in the lists, its description its digging power, "Digs at 10"). Only they are
     magic; they and scrolls (§8 "Scrolls", never magic) are loot.
   - **Rarity**: *normal* (no affixes; 85 % of loot), *magic* (13 %: a prefix only 40 %, a
     suffix only 40 %, one of each 20 %), *rare* (2 %: three affixes 50 %, four 30 %, five 15 %,
@@ -83,7 +84,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `spell_ease` eases its own piece (§8 "Spells": "Cost"), `spell_to_hit` and `spell_threat`
     aim an own cast only (never a scroll's or a wand's), `spell_lift` widens the lift with Keen
     mind's, `spell_reach` adds to the range or length with School focus's, and `spell_duration`
-    adds degrees.
+    adds degrees. The utility hooks
+    are in (#631), worn by the player or a creature, identified or not: `door_kick` adds to a
+    kick's Strength as Lockbreaker's does (a door's and a chest's), `dig_percent` is that much
+    more work a turn of digging, `hunger` makes hunger come that percent slower (the pace at
+    least 1 % of a human's), `trap_damage` takes that percent off a trap's blow (with Trap sense,
+    at most 75 % in all: a trap always hurts, at least 1), and `disease_check` adds to every
+    check against a disease, catching and progression alike.
     `potion_kept` and `wand_level` are read (#633): `potion_kept` adds to Thrifty drinker's
     chance (§8 "Potions", 50 % at most unless the talent alone is above it), `wand_level` adds
     to the level a wand casts at with Wand mastery's (§8 "Magic items": "Wands").

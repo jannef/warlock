@@ -629,9 +629,11 @@ fn the_sky_lights_the_overworld_and_local_areas_by_day_only() {
     assert!(ambient(&world).is_dark());
     let next_to = world.player_pos().step(Dir::E);
     assert!(!world.perception().is_visible(next_to));
-    assert!(world.apply(&Action::ToggleLantern).took_turn);
+    assert!(world.apply(&Action::UseTool).took_turn);
     assert!(world.perception().is_visible(next_to));
-    world.apply(&Action::ToggleLantern);
+    // Hooded, then out.
+    world.apply(&Action::UseTool);
+    world.apply(&Action::UseTool);
     world.apply(&Action::SkipTime(Duration::hours(12)));
     assert_eq!(world.time().hour(), 10);
     assert!(
@@ -699,7 +701,7 @@ fn tour() -> Vec<Action> {
     // Into the area of a grassland cell from the north-west and straight back out that way,
     // then west and north-west to the Hall.
     crate::action::parse_actions(
-        "move:E move:SE descend lantern rest:1h move:NW move:W move:W move:W move:NW descend \
+        "move:E move:SE descend use_tool rest:1h move:NW move:W move:W move:W move:NW descend \
          ascend move:E rest:dusk",
     )
     .expect("actions parse")

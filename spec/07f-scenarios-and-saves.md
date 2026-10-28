@@ -4,7 +4,7 @@ Part of the specification, the source of truth for what to build; the index is
 [`specification.md`](../specification.md). Update it together with the code and the
 developer notes (CLAUDE.md, `docs/dev/`).
 
-- **Scenarios** (`assets/campaigns/<id>/scenarios/*.toml`, each of its campaign, §3): level set, start position, lantern, options, when the
+- **Scenarios** (`assets/campaigns/<id>/scenarios/*.toml`, each of its campaign, §3): level set, start position, what the scenario's own character has ready (`wield = ["lantern"]`: readied in the first free slot each fits, for a run without the starting kit), options, when the
   run starts: `start_date = [year, month, day]` (all from 1; default `[1444, 11, 11]`, 11 Darkening,
   Year 1444) and `start_time = "hh:mm"` (default `"08:00"`), an optional `arrival` line said as a
   run of it starts, after the welcome ("The pass opens on the Ascmearc. Far to the east, Fyrbeorg

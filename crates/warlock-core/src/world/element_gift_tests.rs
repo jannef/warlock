@@ -204,9 +204,9 @@ fn blaze_is_listed_under_the_birth_sign_and_dumped() {
 fn kindled_lanterns_burn_brighter() {
     for (element, light) in [("fire", "lantern_bright"), ("wood", "lantern")] {
         let mut w = born(element);
-        run(&mut w, "lantern");
+        run(&mut w, "use_tool");
         let want = w.content().light_id(light);
-        assert_eq!(w.state().lantern_light(w.content()), want, "{element}");
+        assert_eq!(w.state().carried_light(w.content()), want, "{element}");
     }
 }
 

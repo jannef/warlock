@@ -115,6 +115,19 @@ alone once the item level is past the last tier (or when none is that close), on
 most `MAX_ITEM_LEVEL`; floor loot keeps the floor's (`world/magic_tests.rs`,
 `a_drop_rolls_at_the_creatures_level_at_least_the_floors`).
 
+**The utility hooks** (D1, #631): each worn effect joins its talent's term at the one line that
+reads it, through `Actor::mods` (so unidentified gear works, and a creature's gear wherever the
+rule reads a creature): `door_kick` in `World::kick_force` (`world/door.rs`, a door's kick and a
+chest's), `dig_percent` in `dig_turn`, `hunger` in `World::hunger_percent` (subtracted: hunger
+comes slower; the pace at least 1), `trap_damage` in `trap_deals` (subtracted from Trap sense's
+percent, the sum at most `TRAP_DAMAGE_CUT` = 75 off), `disease_check` in
+`World::disease_modifier`. Tests on fixture affixes: `world/affix_utility_tests.rs`. The
+pick-axe is the one `tool` base item (`level = 3`, `frequency = 10`); `Numbers::of` shows a
+tool nothing, and `describe`'s base stats give any digging tool's power ("Digs at 10"). Until
+an affix rolls on tools (P1, #635), loot that must be magic never draws it
+(`loot::can_be_magic`), and a magic item's shape draws only among those its base can take
+(`loot::rolls_any`; every other base takes all three, so no other draw changed).
+
 ## Unique items
 
 Unique items (spec §8 "Magic items", #423, docs/design/adventurers-guild.md §9) are data in

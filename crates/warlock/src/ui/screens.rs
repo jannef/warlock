@@ -1078,6 +1078,8 @@ mod tests {
     fn on_the_pile(content: Arc<Content>) -> warlock_core::World {
         let mut world = warlock_core::World::new(content, "showcase", None).expect("run");
         for action in [
+            // The lantern put down first, so what is picked up is lettered from a.
+            Action::Drop(warlock_core::Positions::of([0])),
             Action::Move(Dir::SW),
             Action::Move(Dir::SW),
             Action::PickUp(warlock_core::Positions::of([0])),
@@ -1458,8 +1460,15 @@ mod tests {
     #[test]
     fn using_a_tool_asks_which_way_to_dig_only_with_one_ready() {
         const USE: (KeyCode, &str) = (KeyCode::KeyU, "u");
-        // Nothing to dig with: the rules say so at once, and no prompt opens.
+        // A lantern ready (the showcase's): `u` turns it at once, no prompt.
         let mut app = app(true);
+        frame(&mut app, &[USE]);
+        assert_eq!(actions(&app), [Action::UseTool]);
+        assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
+        // Nothing ready (the quarry's start): the rules say so at once, and no prompt opens.
+        let quarry = content();
+        let world = warlock_core::World::new(quarry.clone(), "quarry", None).expect("run");
+        let mut app = app_with(quarry, Some(Game::from_world(world, "bram-1".into())));
         frame(&mut app, &[USE]);
         assert_eq!(actions(&app), [Action::Dig(Dir::N)]);
         assert_eq!(app.world().resource::<InputMode>(), &InputMode::Normal);
@@ -1491,7 +1500,7 @@ mod tests {
         // In the arena, with the bow and arrows lying beside the player readied.
         let content = content();
         let mut world = warlock_core::World::new(content.clone(), "arena", None).expect("run");
-        let ready = "move:E pickup equip:missile_weapon:a equip:missiles:b wait";
+        let ready = "move:E pickup equip:missile_weapon:b equip:missiles:c wait";
         for action in warlock_core::action::parse_actions(ready).expect("actions") {
             world.apply(&action);
         }
@@ -1677,7 +1686,7 @@ mod tests {
     /// (b), and an unpaid dagger (c), on the cell inside the door (to the west).
     fn in_the_shop(content: Arc<Content>) -> warlock_core::World {
         let mut world = warlock_core::World::new(content, "courtyard", None).expect("run");
-        let walk = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 \
+        let walk = "drop:a move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 \
                     move:S*5 move:E*5 move:E move:NE pickup move:SW move:W";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
             world.apply(&action);
@@ -1802,7 +1811,7 @@ mod tests {
         let content = content();
         let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
         // Into the storeroom, to pick up the chain mail shirt and the iron helm.
-        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 \
+        let walk = "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 \
                     move:N pickup";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
             world.apply(&action);
@@ -1839,7 +1848,7 @@ mod tests {
     fn the_equipment_screen_shows_what_was_done_once_it_is_done() {
         let content = content();
         let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
-        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 \
+        let walk = "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 \
                     move:N pickup";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
             world.apply(&action);
@@ -2056,7 +2065,7 @@ mod tests {
         let content = content();
         let mut world = warlock_core::World::new(content.clone(), "showcase", None).expect("run");
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
-                    pickup:a equip:off_hand:a";
+                    pickup:a equip:off_hand:b";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
             world.apply(&action);
         }
@@ -2100,8 +2109,8 @@ mod tests {
         assert_eq!(actions(&app), [Action::Bash(Dir::E), Action::Bash(Dir::W)]);
     }
 
-    /// A run of a bard of level 32, who throws their voice (#244), with keys bound for it and
-    /// the lantern's hood (`B`, `J`: both unbound by default).
+    /// A run of a bard of level 32, who throws their voice (#244), with a key bound for it (`B`:
+    /// unbound by default).
     fn bard() -> App {
         let content = content();
         let spec: warlock_core::character::CharacterSpec =
@@ -2123,19 +2132,15 @@ mod tests {
         }
         let mut app = app_with(content, Some(Game::from_world(world, "bard-1".into())));
         let mut bindings = app.world_mut().resource_mut::<Bindings>();
-        for (key, command) in [
-            ("B", crate::input::KeyCommand::ThrowVoice),
-            ("J", crate::input::KeyCommand::HoodLantern),
-        ] {
-            assert!(bindings.keys_of(command).is_empty(), "unbound by default");
-            let key = crate::input::KeyBinding::from_text(key).expect("a key");
-            bindings.0.push((key, command));
-        }
+        let command = crate::input::KeyCommand::ThrowVoice;
+        assert!(bindings.keys_of(command).is_empty(), "unbound by default");
+        let key = crate::input::KeyBinding::from_text("B").expect("a key");
+        bindings.0.push((key, command));
         app
     }
 
     #[test]
-    fn a_thrown_voice_is_aimed_at_a_cell_and_the_hood_needs_nothing() {
+    fn a_thrown_voice_is_aimed_at_a_cell() {
         let mode = |app: &App| *app.world().resource::<InputMode>();
         // The bard's Throw your voice starts aiming, on the player (no one in view); two steps
         // east and Enter throw it there.
@@ -2153,15 +2158,15 @@ mod tests {
         assert_eq!(mode(&app), InputMode::Normal);
         let at = Pos::new(me.x + 2, me.y);
         assert_eq!(actions(&app), [Action::ThrowVoice(at)]);
-        // The lantern's hood, at once.
-        frame(&mut app, &[(KeyCode::KeyJ, "J")]);
-        assert_eq!(actions(&app), [Action::ThrowVoice(at), Action::HoodLantern]);
     }
 
     #[test]
     fn single_stacks_and_empty_hands_need_no_screen() {
         use warlock_core::Positions;
-        let mut app = app(true);
+        // The quarry's start, where the player carries nothing (no lantern either).
+        let content = content();
+        let world = warlock_core::World::new(content.clone(), "quarry", None).expect("run");
+        let mut app = app_with(content, Some(Game::from_world(world, "bram-1".into())));
         // Nothing here and nothing carried: the actions are refused by the core, no screen.
         frame(&mut app, &[(KeyCode::Comma, ","), (KeyCode::KeyD, "d")]);
         assert!(names(&app).is_empty());
@@ -2191,7 +2196,7 @@ mod tests {
         let mut world = warlock_core::World::new(content.clone(), "arena", None).expect("run");
         store.save_run("pip-1", &world).expect("saved");
         assert_eq!(saved(&store), ["pip-1", "tamsin-1"]);
-        world.apply(&Action::ToggleLantern);
+        world.apply(&Action::UseTool);
         while world.death().is_none() {
             world.apply(&Action::Wait);
         }

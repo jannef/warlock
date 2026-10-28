@@ -7,7 +7,7 @@ use super::*;
 use crate::action::Positions;
 use crate::content::{ContentFiles, SpecialRoom};
 
-/// A lit hall, its east part (x 7 on, walls included) a treasure room with one door, closed
+/// A lit hall, its east part (x 7 on, walls included) a tempting hoard with one door, closed
 /// (`+`, at (7, 3)), and an open one (`'`, at (7, 1)). Daggers lie at `a` and `b` inside. A wall
 /// at x 11, open only at its foot, hides the room's east end from the daggers.
 const HALL: &str = "\
@@ -98,7 +98,7 @@ fn the_tempting_hoard_is_data() {
             hoard.needs_danger,
             hoard.weight
         ),
-        ("treasure room", '$', 3, 3, [2, 4], 1, true, 5)
+        ("tempting hoard", 'T', 3, 3, [2, 4], 1, true, 5)
     );
     assert!(!hoard.can_pervade(), "never a whole level");
 }
@@ -272,7 +272,7 @@ fn the_rooms_dump_says_lifted_and_sealed() {
     let mut w = world();
     lift(&mut w, A);
     let text = crate::dump::ascii(&w, &[crate::dump::Layer::Rooms]);
-    assert!(text.contains("treasure room at"), "{text}");
+    assert!(text.contains("tempting hoard at"), "{text}");
     assert!(text.contains(", lifted 1, sealed"), "{text}");
 }
 

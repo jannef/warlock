@@ -178,9 +178,9 @@ fn roofs_and_walls_keep_moonlight_out() {
 .................
 ";
     let mut w = outdoors(hut, FULL, "00:00");
-    w.apply(&Action::ToggleLantern);
+    w.apply(&Action::UseTool);
     let mut cellar = sky_world(hut, "dungeon", FULL, "00:00", MOON);
-    cellar.apply(&Action::ToggleLantern);
+    cellar.apply(&Action::UseTool);
     let (view, dark) = (w.perception(), cellar.perception());
     assert!(
         moon_sources(&view).is_empty(),

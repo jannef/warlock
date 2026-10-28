@@ -68,7 +68,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to each, through the scrolls' cast code (Evasion and resistances apply, the kills are the
     player's); it melts the ice it reaches and leaves a burning missile's fire, `arrow_fire` for
     60 s, on every walkable cell of it but the player's; then the cooldown status Burnt out,
-    twelve hours, during which the menu greys it "you are burnt out"), Kindled (the lantern burns
+    twelve hours, during which the menu greys it "you are burnt out"), Kindled (a lit lantern burns
     as Lamplighter's brighter preset, a cell farther; with Lamplighter too, no farther; and fire
     resistance 25 %, #271), Forge-born (marks +50 % in every weapon skill and fighting style,
     added to Weapon drill's; in words "you learn weapons quickly"), Tidal (mana regeneration
@@ -217,7 +217,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is `to_hit` worse (`World::glared`, in `resolve`, from the same light on their cell then).
     `LightBlind::dazzled_by` is the one rule; nothing else reads it. A clear sun well above the
     horizon dazzles a drow (on the courtyard's November morning from about 07:30), an overcast
-    one does not, nor their own lantern alone (about 220); a lantern beside a brazier does. A note says when it begins ("The bright light dazzles
+    one does not, nor their own lit lantern alone (about 220); a lantern beside a brazier does. A note says when it begins ("The bright light dazzles
     you.") and ends ("Your eyes adjust to the dimmer light."), neither stopping a rest, and the
     status bar shows `Dazzled` while it lasts; never the numbers. Creatures are never
     light-blind.
@@ -262,7 +262,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the styles it defaults to.
   - **Starting kit** (`warlock-core/src/kit.rs`, data `content/kit.rs`; #257): what the character
     carries, wields, and wears at the start. The class's `kit` (`data/classes/`) comes first,
-    then the race's few racial items (`data/races.toml`), then the birth sign's animal's and
+    then the race's few racial items (`data/races.toml`: every race without darkvision, the elf,
+    half-elf, human, halfling, gnome, lizardfolk, and ratfolk, has a lantern ready in the Tool
+    slot, `{ wield = "lantern" }`, §5 "Light sources"), then the birth sign's animal's and
     element's (`data/horoscope.toml`: the hook for the horoscope; none give anything yet). A kit
     is a list of lines, each one item or a few of one, as level files place objects: a string is
     carried, a table says `carry`, `wield` (wielded or readied: hands, missile weapon, missiles,
@@ -288,7 +290,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `warlock-cli` with `--character` or `--name`, or a replay that records the kit; the
     scenario's `carry` comes on top (§7 "Scenarios"). A run on the scenario's own character that
     nobody chose (`--scenario` alone, tests, golden walks, replays from before kits) starts with
-    the scenario's pack alone, as before kits. The world state and replays record which
+    the scenario's pack alone, as before kits, with what the scenario readies (its `wield`, the
+    lantern) first. The world state and replays record which
     (`kit`). The summary of character creation (§6) lists what the run starts with, each stack
     as named ("a dagger (wielded)", "2 wool cloaks"); it never names the seed. The wiki lists
     every class's kit and race's additions.
@@ -717,7 +720,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `damage_type = "poison"`, and the Poisoned it gives meets poison resistance as every dose
     does (`World::afflict`), so no rule of its own.
   - **Shadow and Wayfarer** (#239; the design's §7.5 but for Hooded light, which waits for the
-    lantern's hood (#235); Patient blade, on the thief's openings, came with R5, §8
+    lantern's hood to need one (#235; the hood is now a lantern's mode, #643); Patient blade, on the thief's openings, came with R5, §8
     "Resources"):
     **effective eyes** (the design's B4, `WorldState::eyes`, §5 "Effective eyes"):
     `threshold_percent` (Night eyes: −50 %, eyes normal), `darkvision` (Dark adaptation: +2,
@@ -725,8 +728,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Intelligence 14, level 15); `scent` (Blood scent: a bleeding creature in line of sight
     within 9 cells, four beyond darkvision's five, is seen however dark, eyes darkvision);
     `night_sight` (Moon-eyed: overworld sight one cell longer at night, eyes low-light);
-    `lantern_light` (Lamplighter: the lit lantern burns as `lantern_bright`, a cell farther,
-    in the light cache, so creatures see it too); `ambush` (Ambusher: +1d6 after Protection on
+    `lantern_light` (Lamplighter: a lit lantern ready in the Tool slot burns as `lantern_bright`, a
+    cell farther, not while hooded, in `WorldState::carried_light`, so creatures see it too); `ambush` (Ambusher: +1d6 after Protection on
     a hit, any attack, at a creature that has not seen the attacker: it hunts no one it has seen,
     `Mind::last_seen` unset, and its own eyes do not see the attacker's cell; the die is drawn
     only then, `world/ambush.rs`); `terrain_as` (a step onto these terrains costs one onto
@@ -761,7 +764,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a collapsed floor never gives way under them (`World::collapse_step`, which then draws
     nothing);
     Hoard-wise (Delver, Intelligence 11, `hoard_grace` 1, #415): a tempting
-    hoard seals only after the second stack lifted inside it, `World::lift_in_hoard`.
+    hoard seals only after the second stack lifted inside it, `World::lift_in_hoard`;
+    Treasure sense (Wayfarer, Spot 10, `treasure_sense`, #617): the hint said on arriving on a
+    level with a treasure room says which way the nearest lies (`world/treasury.rs`).
     The `spells` system (the magic design §10, #400) came with the **Spellcraft** tree: Quick
     study (free, #396: study +2, study time −50 %), Overreach (level 6,
     `overreach_cost_percent` −33: the surcharge per tier above the caster level's tier a third

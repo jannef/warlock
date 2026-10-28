@@ -29,7 +29,7 @@ cargo xtask golden [--update | --local]                   # compare golden scree
 - Replays are JSON: `{game_version, scenario, seed, character, steps: [{action, hash}]}`, the
   character `{race, gender, class}` (left out for a run without one; a replay without it starts
   as the scenario's character, so older replays still load). Actions use a text
-  syntax (`move:E wait open:E close:W pick:E ascend descend lantern hood rest:1h rest:dawn rest:dusk
+  syntax (`move:E wait open:E close:W pick:E ascend descend use_tool rest:1h rest:dawn rest:dusk
   pickup pickup:ac drop drop:b sell:b pay pay:W equip:body:b remove:body bash:E fire:12,5
   throw:c:12,5 eat:b
   eat:floor:a dig:E search search:10 chat:E ask:E:rooms ask:E:quest-rats
@@ -45,7 +45,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   inventory stack LETTER, `eat:floor:LETTER` one of stack LETTER of the pile underfoot;
   `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks it about a topic by id (a
   quest's: `quest-ID`, which gives it, reminds, or hands it in; there is no accept or decline
-  topic, §8 "Quests"); `hood` lowers or raises the lantern's hood;
+  topic, §8 "Quests"); `use_tool` uses the light ready in the Tool slot (a lantern: unlit, lit,
+  hooded, unlit again; §5 "Light sources");
   `throw_voice:X,Y` throws the player's voice to level cell (X, Y); the dev
   action `effect:ID@X,Y[>X,Y]` shows spell effect ID (`data/effects.toml`) as the player perceives it, a
   burst around X,Y (around the second cell, flying there from the first) or a bolt from the first

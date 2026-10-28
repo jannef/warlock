@@ -71,7 +71,9 @@ Press `k` and a direction to kick. A kick takes a normal action (6 seconds).
 - **A closed door**, locked or not, may break. The chance is your Strength in the door's
   sturdiness: against a sturdiness of 30, Strength 9 breaks it three kicks in ten, Strength 15
   one in two, and Strength 30 every time. Your **Athletics** skill adds to your Strength for this
-  (see [Skills](skills.md)), and kicking doors trains it. Kicking a door takes its 6 seconds
+  (see [Skills](skills.md)), and kicking doors trains it. So do the **Lockbreaker** talent (+6,
+  see [Talents](talents.md)) and magic boots that kick harder (their number, see
+  [Magic items](magic-items.md)), for doors and chests alike. Kicking a door takes its 6 seconds
   whatever your stance. A door that holds says `WHAMM!`; one that breaks says
   `The door crashes open!` and stays a **broken door** (`,`, splinters in the doorway) for good:
   you walk and see through it, and it can never be closed or locked again.

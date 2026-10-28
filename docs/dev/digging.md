@@ -9,11 +9,13 @@ solid terrain breaks, into walkable, transparent, plain ground); `void` (solid r
 (`wall`) it turns into when a cell next to it opens, as mapgen walls open ground. Cells on a
 level's edge never break (`LevelState::on_edge`, `breaks_at`). `Action::Dig(Dir)` (`dig:DIR`,
 key `u` = `KeyCommand::UseTool`, ADOM's use-tool key, a direction prompt; `a` is the
-abilities menu, #156) needs `Actor::dig_tool`; `start_dig` refuses (no time) or returns
+abilities menu, #156; with a carried light ready in the Tool slot, a lantern, `u` turns it
+instead, `Action::UseTool`, `world/lamp.rs`, #643) needs `Actor::dig_tool`; `start_dig` refuses (no time) or returns
 `Spent::Dig(at)`, and `dig` runs `keep_at` with a `dig` action per turn
 (priced by `price_of`, so burden slows it): `dig_turn` makes `Act::Dig` noise (`DIG_NOISE` 80,
 `SoundKind::Digging`) and adds `dig_work(power, strength)` (power × (Strength score + 10), in
-`WORK_SCALE` = 20ths of a hardness point) to `LevelState::dug` (saved, by position); at hardness ×
+`WORK_SCALE` = 20ths of a hardness point; the talents' `dig_percent` (Tunneler, Breaker) plus the
+worn `dig_percent` (a Delving affix) more) to `LevelState::dug` (saved, by position); at hardness ×
 20 `break_wall` sets the `becomes` terrain through `set_terrain` (light masks), clears the
 progress, bares `face`s around, and pushes `Event::WallBroken { pos, cause: Breach::Dug }`.
 Explosions call `World::blast(center, radius, blast, events)` (a burst trap with a data `blast`,

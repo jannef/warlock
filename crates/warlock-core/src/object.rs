@@ -64,6 +64,39 @@ pub struct Stack {
     /// unknown. Ground truth: presentation reads them only through [`Stack::known_charges`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     charges: Option<Charges>,
+    /// A carried light's mode (spec §5 "Light sources": a lantern unlit, lit, or hooded), kept
+    /// with the item wherever it goes; it gives light only ready in the Tool slot
+    /// (`WorldState::carried_light`). Unlit for everything else.
+    #[serde(default, skip_serializing_if = "LightMode::is_unlit")]
+    light: LightMode,
+}
+
+/// The mode of a carried light ([`Stack`]'s `light`; spec §5 "Light sources"): what `u`, the
+/// use-tool command (`World::use_tool`), turns a lantern ready in the Tool slot through.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LightMode {
+    #[default]
+    Unlit,
+    Lit,
+    /// Lit, with its hood lowered: its light's `hooded` preset, dim and hollow (it lights the
+    /// cells around its carrier, not their own).
+    Hooded,
+}
+
+impl LightMode {
+    fn is_unlit(&self) -> bool {
+        *self == LightMode::Unlit
+    }
+
+    /// As an item's name says it, "lantern (lit)": nothing while unlit.
+    pub const fn word(self) -> Option<&'static str> {
+        match self {
+            LightMode::Unlit => None,
+            LightMode::Lit => Some("lit"),
+            LightMode::Hooded => Some("hooded"),
+        }
+    }
 }
 
 /// A wand's state ([`Stack`]'s `charges`): how many charges it has used, whether the player
@@ -100,6 +133,7 @@ impl Stack {
             parts: None,
             died: None,
             charges: None,
+            light: LightMode::Unlit,
         }
     }
 
@@ -401,7 +435,21 @@ impl Stack {
     pub fn describe(&self, content: &Content) -> String {
         let names = self.names(content);
         let known = self.is_identified();
-        name::describe(&names, self.count, self.magic(), known, content)
+        let text = name::describe(&names, self.count, self.magic(), known, content);
+        match self.light.word() {
+            Some(mode) => format!("{text} ({mode})"),
+            None => text,
+        }
+    }
+
+    /// Its mode, if it is a carried light (a lantern: unlit, lit, or hooded); unlit otherwise.
+    pub fn light_mode(&self) -> LightMode {
+        self.light
+    }
+
+    /// Sets its mode (`World::use_tool`): only a carried light has one.
+    pub(crate) fn set_light_mode(&mut self, mode: LightMode) {
+        self.light = mode;
     }
 
     /// What it is called as the player knows it, without an article or count: "long sword",
@@ -415,6 +463,9 @@ impl Stack {
     pub(crate) fn describe_truth(&self, content: &Content) -> String {
         let names = self.names(content);
         let mut text = name::describe(&names, self.count, self.magic(), true, content);
+        if let Some(mode) = self.light.word() {
+            text += &format!(" ({mode})");
+        }
         if let Some(left) = self.charges_left(content) {
             text += &format!(" ({})", charges_text(left));
         }
@@ -443,6 +494,7 @@ impl Stack {
             }
             && self.died.is_some() == def.food.is_some()
             && (self.charges).is_none_or(|c| def.wand.is_some_and(|w| c.used <= w.charges))
+            && (self.light.is_unlit() || def.carried_light.is_some())
     }
 
     /// The same goods as `other`: the same object made the same way (what a shop's bill counts

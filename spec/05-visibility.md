@@ -20,20 +20,28 @@ rate or animation.
   and `radius`): terrain that emits light, lights placed on cells by the level legend (overriding
   the terrain's own), fires (a burning object lying on a cell, such as a flaming arrow that has
   landed, until it has burned out; §8 "Ranged combat"), creatures that carry light, the
-  player's lantern (from the scenario, toggled by the player; takes a turn), and the glow of a
+  light the player has ready in the Tool slot (a lantern, below), and the glow of a
   magic item an actor wears or wields (its brightest; a steady preset, §8 "Magic items").
-- **The lantern's hood** (#235; `world/lantern.rs`): the lantern is out, lit, or hooded. A preset
-  may name the preset it burns as with its hood lowered (`hooded`, itself without a hood); the
-  scenario lantern's does (`lantern_hooded`: a third of the light, radius 2). A preset may be
+- **Carried lights** (#643; `world/lamp.rs`): the lantern is an item (`objects/lantern.toml`, a tool),
+  and an object with a `light` and a `slot` but no `burns` is a carried light: ready in the Tool
+  slot and lit it gives its preset; in the pack or on the ground it gives none. Its mode is item
+  state, saved with the stack wherever it goes (`light`, left out while unlit): unlit, lit, or
+  hooded. Using the tool (`u`, the `use_tool` action, `Action::UseTool`; no direction) turns it
+  from unlit to lit (`light`, 1000), lit to hooded (`hood`, 500), and hooded to unlit (`light`);
+  a light whose preset has no `hooded` one goes from lit back to unlit. Refused, taking no time,
+  without a light ready ("You have no light ready to use."). The scenario's own character has
+  one ready (a scenario's `wield`), and so does every race without darkvision (its starting
+  kit, §8 "Character creation"). A preset may name the preset it burns as with its hood lowered
+  (`hooded`, itself without a hood); the lantern's does (`lantern_hooded`: a third of the light,
+  radius 2). A preset may be
   `hollow`: its own cell gets none of its light, so the hooded lantern lights the cells around
   its bearer but not them. With normal eyes the player sees their 8 neighbours by it; their own
   cell gets only bounce light (at most 12.5 % of the ring's direct light, below every eye's
   threshold), so creatures whose eyes need light see them only by other light, and darkvision
-  within its radius. Hooding (`hood`, the `hood` action, 500) lowers or raises the hood; on a
-  lantern that is out it lights it hooded (`lantern` + `hood`); dousing raises it. One place
-  decides the lantern's light, `WorldState::lantern_light`, which the light cache reads for
-  perception and creature sight alike, so they agree. The state is saved (`lantern_hooded`,
-  left out while false).
+  within its radius. One place decides the player's carried light, `WorldState::carried_light`
+  (the Lamplighter's brighter preset while lit, `lantern_light`; a magic lantern's affixes
+  would modify it there), which the light cache reads for perception and creature sight alike,
+  so they agree.
   Emitters must be transparent; a source in an opaque cell
   (e.g. on a closed door) gives no light. Presets also carry visual-only stability (§4.4), never
   read by rules.

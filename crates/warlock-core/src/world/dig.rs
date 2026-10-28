@@ -22,7 +22,7 @@
 use super::{Ended, LevelState, Spent, World, article};
 use crate::action::{Breach, Event, MAX_REST};
 use crate::content::StatUse;
-use crate::content::{ActionKind, LevelKind};
+use crate::content::{ActionKind, Effect, LevelKind};
 use crate::geom::{Dir, Pos};
 use crate::noise::Act;
 use crate::sight::LineOfSight;
@@ -141,8 +141,10 @@ impl World {
             return;
         };
         let strength = player.effective_stats(&self.content).score(Stat::Strength);
-        // Breaker (spec §8 "Talents"): more work a turn.
-        let faster = player.talent_mods(&self.content).dig_percent;
+        // Breaker (spec §8 "Talents") and a Delving tool or gear (spec §8 "Magic items"): more
+        // work a turn.
+        let faster = player.talent_mods(&self.content).dig_percent
+            + player.mods(&self.content).get(Effect::DigPercent);
         let work = TalentMods::scaled(u64::from(dig_work(power, strength)), faster);
         let work = u32::try_from(work).unwrap_or(u32::MAX);
         self.make_noise(self.state.player, Act::Dig);

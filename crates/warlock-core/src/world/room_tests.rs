@@ -102,8 +102,8 @@ fn shadowed_rooms_keep_under_a_third_of_all_light() {
     let plain = teleport(&world_in(HALL, 255, "", ""), Pos::new(13, 3));
     let dark = teleport(&world_in(HALL, 255, "shadowed", ""), Pos::new(13, 3));
     let (mut plain, mut dark) = (plain, dark);
-    plain.apply(&Action::ToggleLantern);
-    dark.apply(&Action::ToggleLantern);
+    plain.apply(&Action::UseTool);
+    dark.apply(&Action::UseTool);
     let (pv, dv) = (plain.perception(), dark.perception());
     let mut inside = 0;
     for y in 0..pv.height() {
@@ -622,7 +622,7 @@ fn hallowed_rest_quickens_a_room_s_quickening_half_again() {
 #[test]
 fn a_black_chamber_keeps_no_light_at_all() {
     let mut w = teleport(&world_in(HALL, 255, "black", ""), Pos::new(13, 3));
-    w.apply(&Action::ToggleLantern);
+    w.apply(&Action::UseTool);
     let view = w.perception();
     for x in 15..24 {
         assert!(

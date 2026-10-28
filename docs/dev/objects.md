@@ -37,7 +37,9 @@ cloaks, gloves, boots, rings, amulets, light sources, tools, food, potions, scro
 miscellaneous. **Every object names its class** (`class`, required; `ObjectDef::class`); a class
 lists the magic item kinds (`ItemKind`) of its objects and each kind is of one class only, so an
 object's `kind` and `class` cannot disagree (checked on load); corpses take the class with
-`corpses = true` (`load_hunger`). Test fixtures that bring their own objects insert
+`corpses = true` (`load_hunger`). The `tools` class lists the `tool` kind: the pick-axe is a base
+item (`kind = "tool"`, loot from level 3 at `frequency` 10, so generated general stores stock it
+too; hand-placed and kit pick-axes stay plain; docs/dev/magic-items.md "The utility hooks"). Test fixtures that bring their own objects insert
 `crate::content::BUILTIN_ITEM_CLASSES` and give each object a `class`. Shops trade by class
 (`docs/dev/shops.md`). Presentation reads the class through perception:
 `PerceptionView::item_class(stack)` (the base item's, which the player knows of anything they
@@ -158,6 +160,17 @@ glyph colour every screen and the map read: a loose gem's, or a ring's gem's by 
 Loot, drops, and the item description are in `docs/dev/magic-items.md`. Tests:
 `world/gem_tests.rs` (data, value, names, naming order, colour, stacking, placements, loot
 frequency across seeds, drops, saves and a replay, the general store).
+
+**Carried lights** (spec §5 "Light sources", #643; `world/lamp.rs`): an object with a `light`
+and a `slot` but no `burns` is a carried light (`ObjectDef::carried_light`; the lantern,
+`objects/lantern.toml`, a tool). Its mode is the stack's `light` (`object::LightMode`: unlit,
+lit, hooded; saved, left out while unlit, and named after the item, "a lantern (lit)"), kept
+wherever the stack goes. `Actor::ready_light` finds the one in the equipment (the Tool slot);
+`World::use_tool` (`Action::UseTool`, `use_tool`, `u`) turns it to its next mode, and
+`WorldState::carried_light` is the one place its light is read (a talent's `lantern_light`
+while lit, the preset's `hooded` while hooded): the light cache's player source. In the pack or
+on the ground it gives no light. Tests: `world/lamp_tests.rs` (`with_lantern` gives fixture
+content one), the light itself in `light_tests.rs`.
 
 **Pieces and breaking** (spec §7 "Pieces and breaking", #484; `piece.rs`): `objects/piece.toml`
 (`piece::ID`) is the one object for raw material, `made_of = ["any"]`, its own material steel. A

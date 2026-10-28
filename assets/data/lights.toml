@@ -1,5 +1,5 @@
 # Light presets (spec §5). Referenced by terrain (`light = "..."`), level legends, creatures,
-# and scenarios (the player's lantern).
+# and objects (a lantern's `light`: what it gives ready in the Tool slot and lit).
 #
 # Fields:
 #   id
@@ -7,7 +7,7 @@
 #             Brightness for vision thresholds is luma (54r + 183g + 19b) / 256, plus UV for eyes
 #             that see UV.
 #   radius  = reach in cells; light falls off as color · (R² − d²) / R² with R² = radius² + radius.
-#   hooded  = the light this one burns as with its hood lowered (the player's lantern, spec §5): a
+#   hooded  = the light this one burns as with its hood lowered (a lantern's, spec §5): a
 #             light id here, itself without a hood. Optional: without it the light has no hood.
 #   hollow  = true: its own cell gets none of its light (a hooded lantern lights the cells around
 #             its bearer but not them). Default false.
@@ -72,7 +72,7 @@ stability.intensity = { amount = 0.12, speed = 1.4 }
 stability.hue = { degrees = 9, speed = 0.5 }
 stability.dips = { depth = 0.12, every = 5, length = 0.6 }
 
-# The player's lantern (see scenarios).
+# A lantern (objects/lantern.toml): what it gives ready in the Tool slot and lit.
 [[light]]
 id = "lantern"
 color = [250, 215, 160, 0]

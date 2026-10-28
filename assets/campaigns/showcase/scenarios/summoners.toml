@@ -3,4 +3,4 @@ description = "Three summoners behind three doors: a goblin wizard, a necromance
 start_level = "summoning_hall"
 seed = 1
 character = { race = "human", gender = "female", class = "warrior", name = "Hild" }
-lantern = "lantern"
+wield = ["lantern"]

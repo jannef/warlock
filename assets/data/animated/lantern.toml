@@ -1,7 +1,8 @@
-# A lantern that carries a dim light: it is seen coming.
+# A lantern that carries a dim light: it is seen coming. A hanging one, not a lamp to carry.
 [[body]]
 id = "lantern"
-object = "lantern"
+object = "hanging_lantern"
+name = "animated lantern"
 level = 6
 rarity = "uncommon"
 speed = 1000

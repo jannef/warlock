@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
-              ┌─ Choose your talents (4 of 5): 3 left ──────────────────── Page 1/2 ─┐
+              ┌─ Choose your talents (4 of 5): 3 left ──────────────────── Page 1/3 ─┐
               │                                                                      │
               │ Chance                                                               │
               │ > a  Random                                                          │

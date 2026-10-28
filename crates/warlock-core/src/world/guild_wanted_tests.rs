@@ -63,7 +63,7 @@ fn town(seed: Option<u64>) -> World {
         .collect();
     let json = format!(r#"{{"records": {{{}}}}}"#, records.join(", "));
     w.state.quests = serde_json::from_str(&json).expect("quests");
-    // A fighter's kit (the scenario brings no pack), put on by `hunt`.
+    // A fighter's kit (the scenario brings only the lantern), put on by `hunt`.
     let id = w.state.player;
     for object in ["long_sword", "chain_mail", "large_shield", "iron_helm"] {
         let object = CONTENT.object_id(object).expect(object);
@@ -245,7 +245,7 @@ fn wystan(world: &World) -> Option<Pos> {
 /// four floors; kill him; back up and home to Wat; hand it in. Returns every action applied.
 fn hunt(w: &mut World) -> Vec<Action> {
     let mut log = parse_actions(
-        "equip:main_hand:a equip:body:b equip:off_hand:c equip:head:d xp:3000000 levelup:auto \
+        "equip:main_hand:b equip:body:c equip:off_hand:d equip:head:e xp:3000000 levelup:auto \
          ask:S:quest-guild_wanted quest_roll:guild_wanted:wystan ascend",
     )
     .expect("actions");

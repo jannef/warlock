@@ -110,6 +110,13 @@ impl Rng {
         Self::stream(run_seed, &format!("chests/{level}"))
     }
 
+    /// The treasure stream of generated level `level` (spec §7 "Special rooms"): its treasure
+    /// rooms' chests, heaps of gold, and gems, drawn once its chests are (so the rest of the level,
+    /// its other chests too, is the same with or without a treasure room).
+    pub fn treasure(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("treasure/{level}"))
+    }
+
     /// The spawn stream of level `level` (spec §7 "Danger levels"): what comes to it over time,
     /// apart from `gameplay` and its generation streams, so a fight rolls the same with or
     /// without a spawn between two blows. The level's state keeps it.
