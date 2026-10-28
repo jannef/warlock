@@ -77,7 +77,8 @@ an **alchemist** sells potions only, always potions of healing first, and buys t
 
 ## Talents
 
-- **Thrifty drinker** (Delver): one potion in four is not used up, an elixir too.
+- **Thrifty drinker** (Delver): one potion in four is not used up, an elixir too. Items that
+  keep potions add their percent to the talent's chance, up to 50 % in all.
 - **Quick study of the body** (Scholar): a potion's or an elixir's training marks are doubled.
 - **Lasting draughts** (Vigour, needs Toughness 13): boost and vision potions last half again
   as long (15 minutes a degree for a boost, 45 minutes for a vision potion).

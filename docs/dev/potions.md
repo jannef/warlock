@@ -42,8 +42,8 @@ Cauldron-wise); #568 (Q3: `elixir`).
   (`world/eat.rs`). What is neither food nor a potion is refused with no time ("You cannot
   consume a dagger."). `world/drink.rs` is the healing spring's Drink ability, a different thing;
   the two share only the `drink` action price (`data/actions.toml`, one turn).
-- Order: priced at the start; one taken (`take_draught`: pack or floor; Thrifty drinker's keep
-  is one gameplay draw, only with the talent); "You drink the {title}." by the name the player
+- Order: priced at the start; one taken (`take_draught`: pack or floor; the keep
+  (`Actor::potion_kept`: Thrifty drinker, worn affixes) is one gameplay draw, only above 0); "You drink the {title}." by the name the player
   knew; `learn_scroll` and "It is a potion of healing." for news; in a shop `drank_goods`
   (`world/shop.rs`, `ate_goods`'s twin, naming the potion as the player knows it); the effect;
   `train_stat_times(StatUse::Drank, Some(stat), count)` per mark (sure marks, no draw); the
@@ -100,7 +100,8 @@ Cauldron-wise); #568 (Q3: `elixir`).
 ## Talents (system `potions`)
 
 - **Thrifty drinker** (`potion_kept { chance }`, `TalentMods::potion_kept`): read in
-  `take_draught`.
+  `Actor::potion_kept` with the worn `potion_kept` affixes (#633; the sum held to `MAX_KEPT`,
+  50, unless the talent alone is above it), which `take_draught` reads; one draw only above 0.
 - **Quick study of the body** (system `stat_training`, shipped with T2): doubles the `drank`
   and `elixir` counts in `train_stat_times`, so an elixir gives 40 marks.
 - **Lasting draughts** (Vigour, Toughness 13; #567): `status_lasts` (50) on the six boosts and

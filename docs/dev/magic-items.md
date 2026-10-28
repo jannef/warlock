@@ -88,7 +88,10 @@ potions and wands). **The spell hooks** (A1, #629; `world/affix_spell_tests.rs`)
 armoured grip), `spell_to_hit`, `spell_lift` (beside Keen mind's), and `spell_duration` in
 `world/spell_scale.rs`, `spell_reach` in `Actor::spell_reach` (beside School focus's, the range or
 length only), `spell_threat` in `Actor::spell_threat` (22 less it, never below `THREATS`' floor;
-an own cast only, `reflect::Shot::threat`). Each hook's tests bring fixture affix files
+an own cast only, `reflect::Shot::threat`). **The potion and wand hooks** (E2, #633;
+`world/affix_draught_tests.rs`): `potion_kept` in `Actor::potion_kept` (Thrifty drinker's chance
+plus the worn, held to `potion::MAX_KEPT` 50 unless the talent alone is above it; `take_draught`
+draws only above 0), `wand_level` in `Actor::wand_caster_level` (beside Wand mastery's). Each hook's tests bring fixture affix files
 (`ContentFiles::insert("data/affixes/zz_fixture.toml", ...)`, as `magic/tests.rs` does).
 `spell_ease` is an item effect (local: the piece's own `spell_cost_percent`), allowed on body
 armour, helmets, and shields, and `may_roll` keeps it to objects with a `spell_cost_percent`.
@@ -99,7 +102,11 @@ holds the id lookups, `None` for a table content lacks; the table is read after 
 sum by (effect, resource) in `Mods::pools`, read with `Mods::resource(effect, id)`, never into
 `Mods::get`. Their hooks (B1, #630; docs/dev/resources.md): `resource_max` in
 `Actor::resource_max`, `resource_rate` in `World::resource_rate`, `active_stamina` (keyed on
-stamina, global) in `Actor::weapon_stamina`; `resource_on_kill` waits for E1. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
+stamina, global) in `Actor::weapon_stamina`. **On a kill** (E1, #632; `world/siphon.rs`,
+`world/siphon_tests.rs`): `mana_on_kill` and `resource_on_kill` in `World::siphon`, called at
+the kill point of an attack (`fight.rs::resolve`, `spell.rs::spell_strikes`), the slain within
+`SIPHON_RANGE` (3, a radius); never from `dies`, so a status tick's or a trap's death gives
+nothing. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
 effect that names nothing else): one group per (effect, resource), so `check_category` keeps
 Tireless (stamina) and of Fury (rage) apart. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`
 item class holds the kind; rare names' second words `tool = [...]` in `data/affixes.toml`): a

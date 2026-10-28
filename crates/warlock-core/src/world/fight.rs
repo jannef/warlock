@@ -859,6 +859,8 @@ impl World {
             let died = self.hurt(target, blow.damage, Harm::Actor(attacker), events);
             if died {
                 self.train_kill((attacker, target), kind);
+                // Of Siphoning and of the Hunt: a kill of one's own close by (`siphon.rs`).
+                self.siphon(attacker, (target, to));
                 let fired = super::weapon_ability::Fired {
                     other: target,
                     kind,

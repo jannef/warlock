@@ -405,7 +405,10 @@ impl World {
             return;
         }
         self.spill(by.0, target, source, blow);
-        if !self.hurt(target, taken, Harm::Actor(by), events) {
+        if self.hurt(target, taken, Harm::Actor(by), events) {
+            // Of Siphoning and of the Hunt: a kill of one's own close by (`siphon.rs`).
+            self.siphon(by, (target, to));
+        } else {
             self.wounded(target, &blow, Some(by), events);
         }
     }

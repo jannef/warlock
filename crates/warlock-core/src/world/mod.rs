@@ -176,6 +176,7 @@ mod shop;
 mod shrine;
 mod sidestep;
 mod sign_picks;
+mod siphon;
 mod skill_roll;
 mod spawn;
 mod spell;
@@ -225,6 +226,7 @@ pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
+pub use siphon::SIPHON_RANGE;
 pub use skill_roll::{RollBonus, RollCount, SkillRoll, roll_count, skill_roll};
 pub use spell::cone_cells;
 pub(crate) use stars::{RISEN, RISEN_TWICE};
@@ -1336,6 +1338,8 @@ fn article(noun: &str) -> &'static str {
 }
 
 #[cfg(test)]
+mod affix_draught_tests;
+#[cfg(test)]
 mod affix_spell_tests;
 #[cfg(test)]
 mod affix_stamina_tests;
@@ -1577,6 +1581,8 @@ mod sidestep_tests;
 mod sign_pick_tests;
 #[cfg(test)]
 mod silent_tests;
+#[cfg(test)]
+mod siphon_tests;
 #[cfg(test)]
 mod skill_roll_tests;
 #[cfg(test)]
