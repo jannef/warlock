@@ -960,7 +960,6 @@ mod tests {
         assert_eq!(
             skills,
             [
-                "appraise",
                 "bluff",
                 "decipher_script",
                 "disarm",

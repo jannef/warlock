@@ -9,26 +9,26 @@ expression: "render(case, content.clone())"
          │ Birth sign                                                                    │
          │ > a  Transfixing stare                  at a place you see                    │
          │ Skills                                                                        │
-         │   b  Intimidate                         not usable yet                        │
+         │   b  Heal                               nothing to treat                      │
+         │   c  Intimidate                         not usable yet                        │
          │ Weapon skills                                                                 │
-         │   c  Shield bash                        in a direction                        │
-         │   d  Daggers and knives: Deep cut       fires by itself                       │
-         │   e  Long blades: Vital strike          4 stamina, in a direction             │
-         │   f  Spears: Brace                      fires by itself                       │
-         │   g  Spears: Lunge                      3 stamina: your hands are not so held │
-         │   h  Polearms: Crushing blow            fires by itself                       │
-         │   i  Thrown weapons: Point-blank        fires by itself                       │
-         │   j  Shield blocking: Shield wall       5 stamina                             │
-         │   k  Shield bashing: Stunning bash      fires by itself                       │
-         │   l  Duelist: Riposte                   fires by itself                       │
-         │   m  Sword and Board: Staggering block  fires by itself                       │
-         │   n  Sword and Board: Shield rush       4 stamina, in a direction             │
+         │   d  Shield bash                        in a direction                        │
+         │   e  Daggers and knives: Deep cut       fires by itself                       │
+         │   f  Long blades: Vital strike          4 stamina, in a direction             │
+         │   g  Spears: Brace                      fires by itself                       │
+         │   h  Spears: Lunge                      3 stamina: your hands are not so held │
+         │   i  Polearms: Crushing blow            fires by itself                       │
+         │   j  Thrown weapons: Point-blank        fires by itself                       │
+         │   k  Shield blocking: Shield wall       5 stamina                             │
+         │   l  Shield bashing: Stunning bash      fires by itself                       │
+         │   m  Duelist: Riposte                   fires by itself                       │
+         │   n  Sword and Board: Staggering block  fires by itself                       │
+         │   o  Sword and Board: Shield rush       4 stamina, in a direction             │
          │                                                                               │
          │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment;   │
          │ your eyes then rest two hours.                                                │
          │                                                                               │
-         │ a-n or Enter use   Esc close                                                  │
+         │ a-o or Enter use   Esc close                                                  │
          └───────────────────────────────────────────────────────────────────────────────┘
-
 
  The Hub  ·  HP 22/22  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls

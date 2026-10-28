@@ -413,7 +413,8 @@ pub enum TalentEffect {
     /// Loot it finds and creatures drop is a loose gem this percent more often (Hoard sense):
     /// the gems' chance, never above certain.
     GemFindPercent { value: i32 },
-    /// The actor notices hidden things in passing as if trained in Spot, with this much added.
+    /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
+    /// this much added.
     Notice { value: i32 },
     /// The actor notices hidden things on stone in passing, as a dwarf does.
     StoneSense,

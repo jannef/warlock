@@ -29,17 +29,29 @@ level ...`, `roll dice athletics 1d3, ...`). `levelup:auto` spends rolls on the 
 Tests: `skills.rs` (ladder, rolls, meter), `content/skill.rs`, `content/class.rs`
 (`known_for`, `rolls`), `world/skill_roll_tests.rs` (counts, refusals, dice and affinities,
 streams, saves and replays), `world/skills_tests.rs` (marks by use). Race and class grants are dice rolled in `character.rs` after every
-other roll, so they never move a score. Rules read a benefit through `Actor::skill_effect`
+other roll, so they never move a score. A class's **optional skills** (#662,
+`ClassDef::optional_skills`, `content::OptionalSkill { skill, chance, dice }`; the loader checks
+the ids, chance 1 to 99, the dice within 0 to 100, and that none is one of the class's `skills`)
+are rolled by `character::optional_skills` from their own stream,
+`character/optional-skills/<spec>` (chance, then dice, in skill order; a class without any draws
+nothing), so no other roll moves; the result is just the actor's `Skills`, saved and hashed as
+before, and a replay needs no new field (the roll is a function of the seed and spec). Classes
+that have them start with other skills on old seeds, so old replays' hashes change.
+`ClassDef::trains` (the level-up roll's +1) stays the guaranteed list. Tests:
+`content/class.rs` (parsing, refusals), `character.rs`
+(`optional_skills_come_by_chance_and_never_move_another_roll`). Rules read a benefit through `Actor::skill_effect`
 (the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
-`World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain in
-`world/shop.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, speed
+`World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain (Negotiation
+since #666) in `world/shop.rs`, identify (Appraise; trained at all, below) in
+`world/appraise.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, speed
 (athletics, #548: percent quicker, added to the talents' `speed_percent`, the skills never
 taking the sum past `MAX_SPEED`) in `Actor::speed`, pick
 (Open lock: picking a lock, and trained at all, the Pick lock ability) in `World::pick_lock`,
-search, search reach, and spot in `world/search.rs` (`search_modifier`, `search_turn`; Spot
-trained at all lets the player notice in passing, `Skills::trains_effect`), disarm in
+search, search reach, spot, and detect traps in `world/search.rs` (`search_modifier`,
+`search_turn`; Spot trained at all lets the player notice in passing, Detect traps the same for
+hidden traps, whose checks read it in place of Search and Spot, `Skills::trains_effect`), disarm in
 `world/disarm.rs` (`disarm_modifier`; trained at all, Disable device gives the Disarm ability,
 `Ability::had_by`), steal in `world/steal.rs` (trained at all lets the player steal,
 `docs/dev/stealing.md`), heal in `world/heal.rs` (trained at all gives the Heal ability;
@@ -48,9 +60,22 @@ the Forage ability) in `world/forage.rs`, study (Spellcraft and Decipher script:
 `world/learn.rs::study_odds` (docs/dev/spells.md "Learning"; its use `Use::Study`, reported
 when a study ends, is also `StatUse::Study`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
-`kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, `World::disarm` for
-`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
-`dodge`, besides `fight.rs::resolve`). Metalcraft's `temper` benefit is read in
+`kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, both for `find_trap` (a
+trap found), `World::disarm` for
+`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `World::pay` and
+`World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
+`dodge`, besides `fight.rs::resolve`). Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
+`World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
+use reported by `World::spend_mana`. Knowledge's `resist` (#667) is read
+in `world/knowledge.rs` (`World::resisting`, `resist_bonus`) through `Actor::skill_effect_above`
+(`Skills::effect_above`: each benefit read at the value less the creature's level, nothing at or
+below it), called for the modifier of the player's check against a creature's drain
+(`World::drain`, which takes the drainer), exposure to a disease its attack carries
+(`World::expose` with a `by`), and a struggle against its hold (`World::struggle`, the effect's
+`by`); the same call marks `Use::Resist` (training stream only), and `World::discovered` marks
+`Use::Discover` beside the first-kill and arrival XP (`world/experience.rs`). The player only, and
+only against a creature: no bonus, no draw otherwise. Tests `world/knowledge_tests.rs`.
+Metalcraft's `temper` benefit is read in
 `world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
 anyone. A new
@@ -80,5 +105,18 @@ the count's dice; the food is made then (`rot::made_at`) and joins the pack; the
 `train(Use::Forage)`. Nothing is stored, so saves change only by content (the new
 `ActionKind`, the new food objects). The wiki's table is `generated/foraging.md`
 (`xtask/src/wiki/skills.rs::foraging`).
+**Appraise** (spec §8 "Skills", #666; Negotiation took the shops' bargain): `world/appraise.rs`,
+`World::appraise_hours(start, seconds)`, called for the player from `World::live` (the status
+loop, so rests roll each hour they pass) and from `World::skip_time_dev` (`skip:`). It walks the
+whole game hours in `(start, start + seconds]`; it returns at once unless the player is trained
+in a skill with `Effect::Identify` (`Skills::trains_effect`: an affix alone never gives it) and,
+per hour, unless `World::unidentified` (the appraisal service's list) is non-empty. Each hour
+draws from its own stateless stream `Rng::stream(seed, "appraise/<hour>")`: `chance` of
+`skill_effect(Identify)` percent, then `index` for the stack. No state is saved, so how the time
+is cut never changes the outcome. `World::learn_item` (`world/loot.rs`) is `World::identify`
+without its "This is ...!" line; Appraise says "You realise your X is Y." and reports
+`Use::Appraise`. Tests: `world/appraise_tests.rs` (the split, prices, the line, untrained,
+cutting time, rest and skip, replays), `world/shop_tests.rs::deals_train_negotiation`.
+
 Pending hooks:
 athletics (climbing out of pits, #128) and escape artist (pits, #128).

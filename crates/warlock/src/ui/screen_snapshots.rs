@@ -317,6 +317,23 @@ const CASES: &[Case] = &[
         screen: Some("skills"),
         ..BASE
     },
+    // Knowledge chosen (#667): its description says in words what it does against creatures.
+    Case {
+        name: "skills-screen-knowledge",
+        character: Some("human,female,wizard"),
+        run: true,
+        screen: Some("skills"),
+        keys: Some("Down Down"),
+        ..BASE
+    },
+    // A wizard's (#668): Concentration first, its description saying what it gives in words.
+    Case {
+        name: "skills-screen-wizard",
+        run: true,
+        character: Some("elf,female,wizard"),
+        screen: Some("skills"),
+        ..BASE
+    },
     Case {
         name: "weapon-skills-screen",
         scenario: "arena",
@@ -947,8 +964,8 @@ const CASES: &[Case] = &[
     Case {
         name: "trap-disarm-prompt",
         actions: "move:N*3 open:N move:N*2 move:E*67 open:S move:S*7 move:SW descend",
-        // `a c`: Disarm a trap, after the thief's birth sign's stare (#266) and Appraise.
-        keys: Some("a c"),
+        // `a b`: Disarm a trap, after the thief's birth sign's stare (#266).
+        keys: Some("a b"),
         ..BASE
     },
     Case {

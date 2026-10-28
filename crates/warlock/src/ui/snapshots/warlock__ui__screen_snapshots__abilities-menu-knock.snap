@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You gain Knock.
- Your concentration improves. (×12) You learn Deep lungs.
+ Your appraise improves. (×12) You learn Deep lungs.
 
 
 

@@ -47,7 +47,8 @@ docs/dev/combat.md "Damage types": a shot's and a strike's `Attack::kinds` go th
 freezes (terrain with `freeze`: ice would cover them), and a teleport never lands on ice.
 Knowledge is decided as the turn is perceived
 (`World::learn_traps`: set off by the player, or on a cell they see), or as the player finds
-one (searching or in passing, `docs/dev/searching.md`): both go through `World::know_trap`. A
+one (searching or in passing, `docs/dev/searching.md`, with the Detect traps skill in place of
+Search's and Spot's, #663): both go through `World::know_trap`. A
 trap's `difficulty` and `sign` are for finding it; messages come from
 `perceive_events` (`Event::TrapSprung`, `TrapStruck`). Bursts and bolts (`TrapEffect::Burst(Burst)`, `Bolt(Bolt)`, the data types scrolls share,
 `content/spell.rs`) go through the one shared spell code, `World::cast_burst` and

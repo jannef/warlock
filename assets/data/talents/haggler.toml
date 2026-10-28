@@ -3,6 +3,6 @@ id = "haggler"
 name = "Haggler"
 tree = "delver"
 description = "You never pay the first price: shopkeepers give you better deals."
-needs = { talents = { silver_tongue = 1 }, skills = { appraise = 20 } }
+needs = { talents = { silver_tongue = 1 }, skills = { negotiation = 20 } }
 effects = [{ kind = "favour_percent", value = 15 }]
 systems = ["shops"]

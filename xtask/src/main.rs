@@ -105,25 +105,56 @@ pub(crate) fn run_game(extra: &[&str]) -> Result<(), String> {
     }
 }
 
+/// Frames the smoke capture waits before its screenshot, per attempt. The game's default (10) was
+/// too few on a loaded CI runner with software Vulkan (#669): Bevy compiles render pipelines in
+/// the background and draws nothing until they are ready, so the capture came out all clear
+/// color. The first attempt waits as long as the golden captures do (`capture_after_frames` in
+/// `tests/golden/manifest/defaults.toml`, never flat so far); a flat result is retried once with
+/// a much longer wait. A renderer that draws nothing still fails both.
+const SMOKE_CAPTURE_FRAMES: [u32; 2] = [60, 600];
+
 fn smoke() -> Result<(), String> {
     let out = target_dir()?.join("xtask/smoke.png");
-    let _ = std::fs::remove_file(&out);
     let out_str = out.to_str().ok_or("non-UTF-8 path")?;
-    run_game(&["--window", "640x360", "--scale", "1", "--capture", out_str])?;
-    let img = image::open(&out)
-        .map_err(|e| format!("cannot open {}: {e}", out.display()))?
-        .to_rgb8();
-    let first = *img.get_pixel(0, 0);
-    if img.pixels().all(|p| *p == first) {
-        return Err("smoke capture is a single flat color; nothing was rendered".into());
+    for (attempt, frames) in SMOKE_CAPTURE_FRAMES.into_iter().enumerate() {
+        let _ = std::fs::remove_file(&out);
+        let frames = frames.to_string();
+        run_game(&[
+            "--window",
+            "640x360",
+            "--scale",
+            "1",
+            "--capture-after-frames",
+            &frames,
+            "--capture",
+            out_str,
+        ])?;
+        let img = image::open(&out)
+            .map_err(|e| format!("cannot open {}: {e}", out.display()))?
+            .to_rgb8();
+        if !is_flat(&img) {
+            println!(
+                "smoke ok: {} ({}x{}, after {frames} frames)",
+                out.display(),
+                img.width(),
+                img.height()
+            );
+            return Ok(());
+        }
+        if attempt + 1 < SMOKE_CAPTURE_FRAMES.len() {
+            eprintln!(
+                "xtask: smoke capture after {frames} frames is a single flat color; \
+                 retrying with a longer wait"
+            );
+        }
     }
-    println!(
-        "smoke ok: {} ({}x{})",
-        out.display(),
-        img.width(),
-        img.height()
-    );
-    Ok(())
+    Err("smoke capture is a single flat color; nothing was rendered".into())
+}
+
+/// Whether every pixel of the image has the same color (nothing but the clear color drawn).
+fn is_flat(img: &image::RgbImage) -> bool {
+    let first = *img.get_pixel(0, 0);
+    img.pixels().all(|p| *p == first)
 }
 
 /// The `wasm-bindgen` crate version pinned in `Cargo.lock`; the CLI must match it exactly.
@@ -385,5 +416,18 @@ fn bench_turns() -> Result<(), String> {
         Ok(())
     } else {
         Err(format!("bench exited with {status}"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_flat;
+
+    #[test]
+    fn a_single_drawn_pixel_is_not_flat() {
+        let mut img = image::RgbImage::new(4, 3);
+        assert!(is_flat(&img));
+        img.put_pixel(3, 2, image::Rgb([1, 0, 0]));
+        assert!(!is_flat(&img));
     }
 }

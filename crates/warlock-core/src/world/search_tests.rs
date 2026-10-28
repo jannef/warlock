@@ -2,6 +2,7 @@
 //! hidden traps found and known, the active and the passive check, who notices in passing, what
 //! draws from the gameplay stream, searching for a while, and saves and replays.
 
+use super::search::{Hidden, Look};
 use super::*;
 use crate::action::parse_actions;
 use crate::combat;
@@ -174,6 +175,59 @@ fn who_notices_in_passing() {
             assert!(texts(&w).contains(&"You find a secret door!".to_string()));
         }
     }
+}
+
+#[test]
+fn traps_are_detect_traps_to_find_and_the_rest_spot_and_search() {
+    // A hidden alarm beside the player: Spot, however high, does not notice it in passing;
+    // Detect traps, trained at all, does; the thief starts trained in it.
+    let map = "#####\n#@a.#\n#...#\n#####\n";
+    for (character, skill, notices) in [
+        (WARRIOR, None, false),
+        (WARRIOR, Some("spot"), false),
+        (WARRIOR, Some("detect_traps"), true),
+        (THIEF, None, true),
+    ] {
+        let mut w = world(map, character);
+        if let Some(skill) = skill {
+            let id = w.content().skill_id(skill).expect(skill);
+            w.player_mut().skills.add(id, 1);
+        }
+        let before = w.state.rng.clone();
+        run(&mut w, "wait");
+        assert_eq!(w.state.rng != before, notices, "{character} with {skill:?}");
+    }
+    // The skill each check reads: Detect traps for a trap, both ways; Search and Spot for the
+    // rest.
+    let mut w = world(map, WARRIOR);
+    let trap = Hidden::Trap(w.content().trap_id("alarm").expect("alarm"));
+    let door = Hidden::Door(1);
+    let all = |w: &World| {
+        [Look::Active, Look::Passive]
+            .map(|look| (w.search_modifier(look, trap), w.search_modifier(look, door)))
+    };
+    let raise = |w: &mut World, skill: &str| {
+        let id = w.content().skill_id(skill).expect(skill);
+        w.player_mut().skills.add(id, 200);
+    };
+    let [(active_trap, active_door), (passive_trap, passive_door)] = all(&w);
+    raise(&mut w, "search");
+    raise(&mut w, "spot");
+    assert_eq!(
+        all(&w),
+        [
+            (active_trap, active_door + 12),
+            (passive_trap, passive_door + 12)
+        ]
+    );
+    raise(&mut w, "detect_traps");
+    assert_eq!(
+        all(&w),
+        [
+            (active_trap + 12, active_door + 12),
+            (passive_trap + 12, passive_door + 12)
+        ]
+    );
 }
 
 #[test]

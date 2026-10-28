@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Something misses you.
+ Something shoots you.
  You die...
 
 
@@ -15,10 +15,10 @@ expression: "render(case, content.clone())"
                         │                 ═══════════════                  │
                         │                                                  │
                         │                  Here lies Pip,                  │
-                        │                  bled to death,                  │
+                        │       killed by something you did not see,       │
                         │                  in The Arena,                   │
                         │      on 11 Darkening, Year 1444, at 08:01,       │
-                        │                 after 16 turns.                  │
+                        │                 after 17 turns.                  │
                         │             You had reached level 1.             │
                         │                                                  │
                         │       Your run is over; its save is gone.        │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Arena  ·  HP 0/17  ·  MP 1/1  ·  Sta 10/10  ·  Bleeding  ·  Lv 1  ·  08:01          ? controls
+ The Arena  ·  HP 0/17  ·  MP 1/1  ·  Sta 10/10  ·  Lv 1  ·  08:01  ·  11 Darkening      ? controls

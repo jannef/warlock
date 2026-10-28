@@ -368,7 +368,7 @@ fn a_flaming_sword_burns_for_a_panoply() {
         &mut w,
         panoply,
         vec![(
-            magic(&content, "long_sword", &[("flaming", 4, 8)]),
+            magic(&content, "long_sword", &[("flaming", 11, 8)]),
             "main_hand",
         )],
     );
@@ -398,11 +398,11 @@ fn of_the_bear_hits_harder_and_of_the_ox_holds_more_life() {
         vec![
             (plain(&content, "long_sword"), "main_hand"),
             (
-                magic(&content, "iron_ring", &[("of_the_bear", 4, 4)]),
+                magic(&content, "iron_ring", &[("of_the_bear", 5, 4)]),
                 "left_ring",
             ),
             (
-                magic(&content, "gold_amulet", &[("of_the_ox", 4, 4)]),
+                magic(&content, "gold_amulet", &[("of_the_ox", 5, 4)]),
                 "neck",
             ),
         ],
@@ -431,7 +431,7 @@ fn a_resistance_affix_takes_less_for_a_panoply() {
         &mut w,
         panoply,
         vec![(
-            magic(&content, "chain_mail", &[("of_the_salamander", 4, 40)]),
+            magic(&content, "chain_mail", &[("of_the_salamander", 10, 40)]),
             "body",
         )],
     );
@@ -486,7 +486,7 @@ fn appraisers_eye_tells_a_magic_composite() {
         vec![
             (plain(&content, "chain_mail"), "body"),
             (
-                magic(&content, "long_sword", &[("flaming", 4, 8)]),
+                magic(&content, "long_sword", &[("flaming", 11, 8)]),
                 "main_hand",
             ),
         ],

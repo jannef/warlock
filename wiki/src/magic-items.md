@@ -38,7 +38,7 @@ three prefixes, a third each; five are two or three, a half each; six are always
 The deeper you are, the better the loot: an item's **item level** is the depth it was found at
 (a dungeon's first level is item level 1, the eighth 8). What a creature drops has the
 creature's level as its item level where that is higher, so a creature out of its depth drops
-a deeper item. The item level
+a deeper item. The game never shows an item's level. The item level
 decides which base items can turn up and which **tiers** of each affix: low tiers are found from
 the start, the strongest only deep down, and an item rolls among the tiers close below its own
 level, so a deep find is seldom a weak one (the exact rule is under the rarity tables above).
@@ -98,7 +98,7 @@ A few rules from elsewhere carry over:
   affix of each kind of effect; *stealth* holds a family (of Stealth and of Shadows). Damage is
   several categories, so a weapon may carry more than one damage affix: *physical damage* (Sharp
   and Vicious, a flat bonus), *extra damage* (Heavy and of Wounding, an extra die), and one per
-  element (Flaming, Freezing, Venomous): a Sharp sword may be Heavy too, or Flaming, but never
+  element (Flaming, Freezing, Venomous, Shocking, Corrosive, Withering): a Sharp sword may be Heavy too, or Flaming, but never
   both Heavy and of Wounding. A prefix and a suffix of one category do the same thing (Glinting
   and of Precision both add to hit), so an item has one or the other.
 
@@ -110,8 +110,8 @@ slot's letter in upper case (`A` to `L`). The description names the item, says w
 1.8 kg") and whether you wear or wield it, then its base stats in words (how it is held or worn,
 its damage and criticals, how far it shoots, what it needs, whether it pierces armour, its
 Defence and Protection), what it gives in numbers ("To hit +1, damage 1d8+2", "Dv +2, Pv 3"; see
-[Equipment](equipment.md#numbers)), and, if it is identified, its item level and each affix in plain
-words: "Prefix Sharp: +2 damage", "Suffix of Celerity: attacks faster". `Esc` goes back.
+[Equipment](equipment.md#numbers)), and, if it is identified, each affix in plain words (the item
+level is never shown in the game): "Prefix Sharp: +2 damage", "Suffix of Celerity: attacks faster". `Esc` goes back.
 
 ## Base items
 
@@ -119,8 +119,9 @@ words: "Prefix Sharp: +2 damage", "Suffix of Celerity: attacks faster". `Esc` go
 
 ## Prefixes
 
-Prefixes are mostly offensive, or flat Defence and life. *Flaming*, *Freezing*, and *Venomous*
-add a die of fire, cold, or poison to every hit, which no armour soaks (see [Damage types](damage-types.md)).
+Prefixes are mostly offensive, or flat Defence and life. *Flaming*, *Freezing*, *Venomous*,
+*Shocking*, *Corrosive*, and *Withering* add a die of fire, cold, poison, electricity, acid, or
+necrotic damage to every hit, which no armour soaks (see [Damage types](damage-types.md)).
 *Mage-wrought*, *Baleful*, and *Potent* serve a caster (see [Magic](magic.md)), *Tireless* raises
 your stamina (see [Resources](resources.md)), *Hobnailed* boots kick doors in more easily, and a
 *Delving* tool or pair of gloves digs faster (a magic pick-axe turns up in loot).
@@ -129,8 +130,10 @@ your stamina (see [Resources](resources.md)), *Hobnailed* boots kick doors in mo
 
 ## Suffixes
 
-Suffixes are mostly stats, speed, criticals, utility, and skills; *of the Salamander* and *of
-Warmth* resist fire and cold, in percent (see [Damage types](damage-types.md)). The casters'
+Suffixes are mostly stats, speed, criticals, utility, and skills; *of the Salamander*, *of
+Warmth*, *of the Adder*, *of the Storm*, *of Glass*, *of the Anvil*, and *of the Living* resist
+fire, cold, poison, electricity, acid, force, and necrotic damage, in percent (see [Damage
+types](damage-types.md)). The casters'
 suffixes (of the Adept, of Thrift, of the Magus, of Farcasting, of Lingering, of Siphoning, of
 Wands) are told on the [Magic](magic.md) and [Mana](mana.md) pages; of Breath, of Ease, and of the
 Hunt help stamina. *Of Fury*, *of Steadiness*, *of Stillness*, *of Guile*, and *of the Muse* raise
@@ -143,9 +146,9 @@ undrunk.
 
 The skill suffixes raise one [skill](skills.md) each: *of Seeking* (Search), *of the Eagle*
 (Spot), *of the Stag* (Athletics), *of the Leech* (Heal), *of the Picklock* (Open lock), *of
-Disarming* (Disable device), *of Appraisal* (Appraise), *of the Scholar* (Spellcraft), *of
+Disarming* (Disable device), *of Appraisal* (Appraise), *of Haggling* (Negotiation), *of the Scholar* (Spellcraft), *of
 Letters* (Decipher script), *of the Cutpurse* (Steal), besides *of Shadows*, *of the Hare*, *of
-the Fox*, *of the Wanderer*, and *of Balance*. Spot, Open lock, Disable device, Heal, and Steal
+the Fox*, *of the Wanderer*, and *of Balance*. Spot, Open lock, Disable device, Heal, Steal, and Appraise
 give nothing to those not trained in them at all (marked **trained only** on the Skills page),
 so their suffixes help only those trained in them: an untrained wearer still cannot notice,
 pick, disarm, treat, or steal.
@@ -154,6 +157,14 @@ pick, disarm, treat, or steal.
 
 Each tier's value is rolled once, when the item is made, anywhere within its range; an item
 remembers each affix's tier and value (so enchanting can work on them later).
+
+## What systems have affixes
+
+Every affix by the part of the game it works in, and the talents that work at the same place:
+an affix's value adds to theirs (or, for Attuned and Bellows, is raised by them), so a worn item
+and a talent stack within the same limits.
+
+{{#include generated/magic-systems.md}}
 
 ## Names
 

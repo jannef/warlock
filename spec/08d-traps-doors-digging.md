@@ -324,13 +324,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     what its band's loot table rolls (§8 "Magic items" "Chest loot"). Draws per chest: its cell,
     the lock, the trap and its kind, the contents, and the mimic draw (`mimic` percent): a mimic
     of the floor's level stands there instead, disguised, carrying exactly the contents, its
-    lock and trap dropped and nothing more drawn (§8 "Mimics").
+    lock and trap dropped and nothing more drawn (§8 "Mimics"); never in a room creatures shun
+    (a sanctuary), where the chest stays a chest whatever the draw.
   - **Level files** place chests on the `chest` terrain: `chest = "kist"` (that band's least
     level) or `chest = 7` (a level; default the level's `item_level`), `locked = true` or `lock =
     "id"` and `lock_difficulty` as on a door, and `objects` for what it holds (food in it is made
     as the level is), and `trap` (with `known`, `dir`) as on a door. Refused: a `chest` on other
-    terrain, an unknown band, a pit on a chest, a trap on an open or smashed chest, and chests in
-    vaults (C7).
+    terrain, an unknown band, a pit on a chest, and a trap on an open or smashed chest.
+  - **Vaults** (§7) hold chests the same way, stamped with them (#619): a vault's chest is of the
+    floor it is stamped on (a `chest` level or band is refused in a vault, and so is a mimic, whose
+    type is its level), locked and trapped as its legend says (its lock wants no key placed: a
+    skeleton key, Pick lock, Knock, or a kick), and one given no `objects` holds what its band's
+    loot table rolls when the level is made (the level's stream `vault_chests/<level id>`, §8
+    "Determinism"). Outdoor vaults hold none. The Ascmearc's drake's hoard, robbers' hoard,
+    captain's hall, and still-room hold chests.
   - **Dumps**: `view` shows the glyph; `truth` (dev) adds a line per chest, `chest 7 (hutch) at
     (12, 5): shut, locked, trapped (arrow), holds 3 stacks`; JSON `chests` lists those the player sees or
     remembers (`pos`, `band`, `state`, and `locked`: with Chest-wise for a shut one in sight,
@@ -356,6 +363,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       100, +12 at 200), plus the race's `search` (elves 2);
     - **passive**, noticing in passing: the Willpower modifier, plus the Spot skill's benefit
       (+8 at 100, +12 at 200), plus the race's `search`, less `passive_penalty` (4).
+    For a **hidden trap** (on the floor, a door, or a chest) the **Detect traps** skill's benefit
+    (+8 at 100, +12 at 200) takes the place of Search's and of Spot's in both checks (#663); a
+    secret door, a breach, and a disguised mimic are Search's and Spot's.
     The player never sees a difficulty, a modifier, or a roll: an average searcher (Intelligence
     10, untrained) finds a secret door of 14 with 46 % of their turns of searching.
   - **Searching** (`s`: `Action::Search(1)`, replay text `search`; `S`, searching for a while:
@@ -376,8 +386,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **elves** everything (the race's `passive_search = "all"`), **dwarves** what is on stone
     (`"stone"`: the cell's terrain is `stone`, stone walls and floors, most of a dungeon, but not
     timber, earth, or trees), **kobolds** hidden traps and never a secret door (`"traps"`),
-    drow like elves and duergar like dwarves, and anyone **trained in Spot** everything (a
-    thief, a ranger); everyone else nothing. Each thing noticed may earn Spot a mark (50 %).
+    drow like elves and duergar like dwarves, anyone **trained in Spot** everything but traps (a
+    thief, a ranger), and anyone **trained in Detect traps** hidden traps (a thief, a kobold);
+    everyone else nothing. Each thing other than a trap noticed may earn Spot a mark (50 %);
+    each trap found, searching or in passing, Detect traps (50 %).
   - **No limit on trying again** (the owner's rule): every check is rolled afresh, after every
     turn, with no memory of failed ones and no cooldown; time is the only price. Checks draw
     from the gameplay stream only when a hidden feature is in reach (two draws each), so a turn

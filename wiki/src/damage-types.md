@@ -14,8 +14,8 @@ kobold."
 Each weapon does one kind, or two: a sword cuts or stabs, and against each target it does
 **whichever is better**, the kind the target resists least, then the one its armour stands least
 against. A flaming arrow stabs and burns: its fire is **added damage**, rolled after the arrow's
-own and never soaked by armour. Magic weapons can add fire or cold the same way (see
-[Magic items](magic-items.md)).
+own and never soaked by armour. Magic weapons can add any element but force the same way (see
+[Magic items](magic-items.md) and the table below).
 
 {{#include generated/damage-weapons.md}}
 
@@ -30,13 +30,21 @@ may stand better or worse against one physical kind: chain mail turns a blade we
 badly.
 
 **Resistance** takes a share off damage of a kind, in percent, after the armour has done its
-part: a fur cloak against cold, a leather jerkin a little against acid, and magic that is *of the
-Salamander* or *of Warmth*. Everything you wear adds up, capped at 75 %; nothing you can wear
+part: a fur cloak against cold, a leather jerkin a little against acid, and magic *of* the element (the table below). Everything you wear adds up, capped at 75 %; nothing you can wear
 makes you immune. The share comes off each kind on its own (a flaming arrow's point and its fire
 separately), rounded to the nearest point, so a 1-point hit at 50 % still hurts and at 75 % does
 not.
 
 {{#include generated/damage-armour.md}}
+
+## Magic of the elements
+
+Each element has a magic prefix that adds a die of it to a weapon's, a missile weapon's, or
+ammunition's every hit, and a suffix that resists it. Force has no prefix: it is the spells'
+kind (Magic missile, Arcane bolt), and only resisted. The physical kinds have neither:
+Protection is their resistance.
+
+{{#include generated/damage-elements.md}}
 
 Two [talents](talents.md) work on damage types. **Elemental ward**, taken for one element
 (fire, cold, electricity, acid, poison, force, or necrotic), resists it 25 % a rank, two ranks at most; it counts

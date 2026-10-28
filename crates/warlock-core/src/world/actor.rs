@@ -440,6 +440,13 @@ impl Actor {
     /// it wears and wields add to their values (spec §8 "Magic items"). Every rule that reads a
     /// skill's benefit reads this.
     pub fn skill_effect(&self, content: &Content, effect: Effect) -> i32 {
+        self.skill_effect_above(content, effect, 0)
+    }
+
+    /// What its skills give of `effect`, as [`Actor::skill_effect`], each read at how far its
+    /// value stands above `floor` (Knowledge against a creature of level `floor`,
+    /// [`Effect::Resist`]).
+    pub fn skill_effect_above(&self, content: &Content, effect: Effect, floor: u16) -> i32 {
         // Talents (spec §8 "Class abilities": Commanding) raise skills as magic items do.
         let talents = match self.talents.is_empty() {
             true => Vec::new(),
@@ -455,11 +462,11 @@ impl Actor {
             }
         };
         if self.equipment.is_empty() && talents.is_empty() {
-            return self.skills.effect(content, effect);
+            return (self.skills).effect_above(content, effect, &[], floor);
         }
         let mut bonus = self.mods(content).skills().to_vec();
         bonus.extend(talents);
-        (self.skills).effect_with(content, effect, &bonus)
+        (self.skills).effect_above(content, effect, &bonus, floor)
     }
 
     /// Its maximum hit points: its (effective) Toughness plus [`Actor::hp_base`] plus what it
@@ -521,7 +528,8 @@ impl Actor {
     pub fn max_mana(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let stats = self.stats_with(content, &mods);
-        crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana))
+        let pool = crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana));
+        self.deeper_pool(content, pool)
     }
 
     /// Its maximum mana as it will be once its penalties pass, like
@@ -530,7 +538,8 @@ impl Actor {
     pub fn lasting_max_mana(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let stats = self.raised_with(&mods);
-        crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana))
+        let pool = crate::mana::max_mana(&stats, self.mana_base + mods.get(ItemEffect::MaxMana));
+        self.deeper_pool(content, pool)
     }
 
     /// How hurt it looks, in words.

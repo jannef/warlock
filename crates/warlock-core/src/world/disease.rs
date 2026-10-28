@@ -59,9 +59,12 @@ impl World {
         if (self.content.disease_status()).is_some_and(|s| immune.contains(&s)) {
             return false;
         }
-        let modifier = self.disease_modifier(actor, def.check);
-        if check(&mut self.state.rng, modifier, def.difficulty) {
-            self.train_resisting(id, def.check);
+        let (stat, difficulty) = (def.check, def.difficulty);
+        let modifier = self.disease_modifier(actor, stat);
+        // Know your enemy (Knowledge, `knowledge.rs`): a disease a creature's attack carries.
+        let modifier = modifier.saturating_add(self.resisting(id, by));
+        if check(&mut self.state.rng, modifier, difficulty) {
+            self.train_resisting(id, stat);
             return false;
         }
         self.infect(id, disease, by)

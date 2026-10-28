@@ -317,7 +317,7 @@ fn resistances_add_up_across_what_one_is_and_wears_and_cap_short_of_immunity() {
         &[
             (one("fur_cloak"), "cloak"),
             (one("padded_coat"), "body"),
-            (magic("gold_amulet", "of_warmth", 3, 30, false), "neck"),
+            (magic("gold_amulet", "of_warmth", 9, 30, false), "neck"),
         ],
     );
     assert_eq!(w.resistances_of(player).get(Some(cold)), 60);
@@ -328,8 +328,11 @@ fn resistances_add_up_across_what_one_is_and_wears_and_cap_short_of_immunity() {
         &[
             (one("fur_cloak"), "cloak"),
             (one("padded_coat"), "body"),
-            (magic("gold_amulet", "of_warmth", 4, 45, false), "neck"),
-            (magic("silver_ring", "of_warmth", 4, 45, false), "left_ring"),
+            (magic("gold_amulet", "of_warmth", 12, 45, false), "neck"),
+            (
+                magic("silver_ring", "of_warmth", 12, 45, false),
+                "left_ring",
+            ),
         ],
     );
     assert_eq!(w.resistances_of(player).get(Some(cold)), MAX_RESISTANCE);
@@ -360,7 +363,7 @@ fn added_damage_rides_unsoaked_and_is_resisted_on_its_own() {
     let content = w.content().clone();
     // A Flaming dagger's blows carry a fire die after the dagger's own.
     let mut me = w.state.player().clone();
-    me.inventory = vec![magic("dagger", "flaming", 2, 4, false)];
+    me.inventory = vec![magic("dagger", "flaming", 4, 4, false)];
     me.equipment = Default::default();
     me.equipment
         .put(&[content.slot_id("main_hand").expect("main hand")], 0);
@@ -385,7 +388,7 @@ fn added_damage_rides_unsoaked_and_is_resisted_on_its_own() {
     let salamander = actor_of(&w, "salamander");
     wear(
         &mut w,
-        &[(magic("dagger", "flaming", 2, 4, false), "main_hand")],
+        &[(magic("dagger", "flaming", 4, 4, false), "main_hand")],
     );
     let mut events = Vec::new();
     for _ in 0..30 {
@@ -405,6 +408,48 @@ fn added_damage_rides_unsoaked_and_is_resisted_on_its_own() {
             ..
         }
     )));
+}
+
+/// Every shipped elemental prefix (#638: Flaming, Freezing, Venomous, Shocking, Corrosive,
+/// Withering) at its top tier rides a dagger's blow as one die of its own kind, and lands on
+/// every hit against armour that soaks the dagger's point whole: an element is never soaked.
+#[test]
+fn every_elemental_rider_lands_on_a_hit_and_is_never_soaked() {
+    let w = world();
+    let content = w.content().clone();
+    let elemental: Vec<_> = (content.affixes().all().iter())
+        .filter(|a| a.effect == crate::content::Effect::Elemental)
+        .collect();
+    assert_eq!(elemental.len(), 6, "the six elemental prefixes ship");
+    for a in elemental {
+        let top = a.tiers.len() - 1;
+        let sides = a.tiers[top].max;
+        let element = a.damage_type.expect("an elemental affix names its kind");
+        let mut me = w.state.player().clone();
+        me.inventory = vec![magic("dagger", &a.id, a.tiers.len() as u8, sides, false)];
+        me.equipment = Default::default();
+        me.equipment
+            .put(&[content.slot_id("main_hand").expect("main hand")], 0);
+        let mut blow = me.melee(&content);
+        let riders: Vec<_> = blow.riders.iter().map(|r| (r.kind, r.dice)).collect();
+        assert_eq!(
+            riders,
+            [(element, crate::dice::Dice::of(1, sides as u32))],
+            "{}",
+            a.id
+        );
+        blow.to_hit = 100;
+        let mail = crate::combat::Target::protected(crate::combat::Defence::default(), 1000);
+        let mut rng = crate::rng::Rng::stream(7, "elemental");
+        for _ in 0..50 {
+            let hit = crate::combat::strike(&blow, &mail, &mut rng);
+            assert!(
+                matches!(hit.strike, Strike::Hit { .. }) && (1..=8 * 5).contains(&hit.damage),
+                "{}: {hit:?}",
+                a.id
+            );
+        }
+    }
 }
 
 #[test]
@@ -573,17 +618,17 @@ fn descriptions_say_kinds_added_damage_and_resistances() {
     let mace = text(&one("mace"));
     assert!(mace.contains(&"Bludgeoning damage".into()), "{mace:?}");
     // Affixes, once identified.
-    let flaming = text(&magic("dagger", "flaming", 2, 4, true));
+    let flaming = text(&magic("dagger", "flaming", 4, 4, true));
     assert!(
         flaming.contains(&"Flaming: adds 1d4 fire damage".into()),
         "{flaming:?}"
     );
-    let warm = text(&magic("gold_amulet", "of_warmth", 2, 20, true));
+    let warm = text(&magic("gold_amulet", "of_warmth", 3, 20, true));
     assert!(
         warm.contains(&"of Warmth: +20% cold resistance".into()),
         "{warm:?}"
     );
-    let hidden = text(&magic("gold_amulet", "of_warmth", 2, 20, false));
+    let hidden = text(&magic("gold_amulet", "of_warmth", 3, 20, false));
     assert!(!hidden.iter().any(|l| l.contains("cold")), "{hidden:?}");
 }
 
@@ -679,7 +724,7 @@ fn fights_with_resistances_replay_exactly() {
         let mut w = world();
         wear(
             &mut w,
-            &[(magic("dagger", "flaming", 2, 4, false), "main_hand")],
+            &[(magic("dagger", "flaming", 4, 4, false), "main_hand")],
         );
         for action in crate::action::parse_actions("move:E*10 wait*4").expect("actions") {
             w.apply(&action);

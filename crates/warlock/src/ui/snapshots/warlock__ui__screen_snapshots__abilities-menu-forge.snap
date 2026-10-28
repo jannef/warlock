@@ -13,19 +13,19 @@ expression: "render(case, content.clone())"
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Skills                                                   │
-                    │   b  Appraise           not usable yet                   │
-                    │   c  Metalcraft         not usable yet                   │
-                    │   d  Woodcraft          not usable yet                   │
+                    │   b  Metalcraft         not usable yet                   │
+                    │   c  Woodcraft          not usable yet                   │
                     │ Weapon skills                                            │
-                    │   e  Shield bash        you hold no shield               │
+                    │   d  Shield bash        you hold no shield               │
                     │ Here                                                     │
-                    │   f  Temper             on something you carry           │
+                    │   e  Temper             on something you carry           │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-f or Enter use   Esc close                             │
+                    │ a-e or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

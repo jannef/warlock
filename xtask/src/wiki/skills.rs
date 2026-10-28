@@ -50,17 +50,20 @@ pub(super) fn skills(content: &Content) -> String {
 }
 
 /// Whether `effect` is given only to those trained in its skill at all
-/// (`Skills::trains_effect`: noticing in passing, disarming, picking, stealing, treating,
+/// (`Skills::trains_effect`: noticing in passing, identifying, disarming, picking, stealing, treating,
 /// foraging): to the untrained, a magic item's bonus to the skill gives none of it.
 pub(super) fn gated_effect(effect: Effect) -> bool {
     matches!(
         effect,
         Effect::Spot
+            | Effect::Identify
             | Effect::Disarm
             | Effect::Pick
             | Effect::Steal
             | Effect::Heal
             | Effect::Forage
+            | Effect::ManaRegen
+            | Effect::MaxMana
     )
 }
 
@@ -76,21 +79,26 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Dodge => "a Dodge bonus to Defence",
         Effect::Quiet => "quieter steps and doors",
         Effect::Hearing => "keener hearing",
-        Effect::Search => "finding hidden things when you search",
+        Effect::Search => "finding hidden things when you search, not traps",
         Effect::SearchReach => "searching farther around you",
-        Effect::Spot => "noticing hidden things in passing",
+        Effect::Spot => "noticing hidden things in passing, not traps",
+        Effect::DetectTraps => "finding hidden traps, searching and in passing",
         Effect::Study => "studying spells from scrolls",
         Effect::Disarm => "disarming traps",
         Effect::Burden => "less slowdown from your load",
         Effect::Travel => "quicker journeys on the overworld",
         Effect::Forage => "foraging at all, and finding food more often",
         Effect::Bargain => "better prices in shops",
+        Effect::Identify => "now and then telling something you carry for what it is",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Steal => "stealing at all, and better",
         Effect::Heal => "treating your bleeding, poison, and diseases",
         Effect::Pick => "picking locks",
         Effect::Temper => "tempering at a forge's anvil",
+        Effect::ManaRegen => "mana back faster",
+        Effect::MaxMana => "a slightly larger mana pool (at most a fifth more)",
         Effect::Speed => "quicker in everything",
+        Effect::Resist => "resisting the powers of creatures it stands above",
     }
 }
 
@@ -99,8 +107,10 @@ const BENEFIT_VALUES: [u16; 14] = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 1
 
 /// What each skill's benefits give at a range of values, one column per benefit, from the data.
 pub(super) fn skill_benefits(content: &Content) -> String {
+    // Knowledge's resist is read above a creature's level, not at the value: its own table.
     let columns: Vec<(&str, &warlock_core::skills::Benefit)> = (content.skills().iter())
         .flat_map(|s| s.benefits.iter().map(move |b| (s.name.as_str(), b)))
+        .filter(|(_, b)| b.effect != Effect::Resist)
         .collect();
     let mut out = String::from("| Value |");
     for (name, b) in &columns {
@@ -111,18 +121,23 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Search => "searching",
             Effect::SearchReach => "search reaches",
             Effect::Spot => "noticing",
+            Effect::DetectTraps => "finding traps",
             Effect::Study => "study check",
             Effect::Disarm => "disarming traps",
             Effect::Burden => "Burdened / Strained",
             Effect::Travel => "journeys",
             Effect::Forage => "foraging",
             Effect::Bargain => "prices",
+            Effect::Identify => "identifying, each hour",
             Effect::Kick => "kicking doors in",
             Effect::Steal => "stealing",
             Effect::Heal => "treating",
             Effect::Pick => "picking locks",
             Effect::Temper => "tempering",
+            Effect::ManaRegen => "mana back",
+            Effect::MaxMana => "mana pool",
             Effect::Speed => "speed",
+            Effect::Resist => "resisting",
         };
         let _ = write!(out, " {name}: {what} |");
     }
@@ -138,18 +153,22 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 Effect::Dodge
                 | Effect::Search
                 | Effect::Spot
+                | Effect::DetectTraps
                 | Effect::Study
                 | Effect::Steal
                 | Effect::Heal
                 | Effect::Disarm
                 | Effect::Pick
-                | Effect::Temper => format!("+{n}"),
+                | Effect::Temper
+                | Effect::Resist => format!("+{n}"),
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
                 Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
                 Effect::Bargain => format!("{n}% better"),
                 Effect::Forage => format!("+{n}%"),
-                Effect::Speed => format!("+{n}%"),
+                Effect::Identify => format!("{n}%"),
+                Effect::Speed | Effect::ManaRegen => format!("+{n}%"),
+                Effect::MaxMana => format!("+{n} mana"),
                 Effect::Hearing => n.to_string(),
                 Effect::Burden => {
                     let slowed = |b: Burden| factor(b.slow_eased(100, n));
@@ -159,6 +178,40 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                         slowed(Burden::Strained)
                     )
                 }
+            };
+            let _ = write!(out, " {cell} |");
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// The margins the resist table shows: how far a skill's value stands above a creature's level.
+const RESIST_MARGINS: [u16; 12] = [0, 1, 4, 5, 10, 15, 20, 25, 30, 35, 40, 60];
+
+/// What the skills with the resist benefit (Knowledge, spec §8 "Skills") add to your check
+/// against a creature's drain, a disease its attack carries, or its hold, by how far the skill's
+/// value stands above the creature's level.
+pub(super) fn skill_resist(content: &Content) -> String {
+    let columns: Vec<(&str, &warlock_core::skills::Benefit)> = (content.skills().iter())
+        .flat_map(|s| s.benefits.iter().map(move |b| (s.name.as_str(), b)))
+        .filter(|(_, b)| b.effect == Effect::Resist)
+        .collect();
+    let mut out = String::from("| Above the creature's level |");
+    for (name, _) in &columns {
+        let _ = write!(out, " {name}: resisting |");
+    }
+    out.push_str("\n|---:|");
+    out.push_str(&":---:|".repeat(columns.len()));
+    out.push('\n');
+    for margin in RESIST_MARGINS {
+        let _ = write!(out, "| {margin} |");
+        for (_, b) in &columns {
+            let n = b.at(margin);
+            let cell = if n == 0 {
+                "—".to_string()
+            } else {
+                format!("+{n}")
             };
             let _ = write!(out, " {cell} |");
         }
@@ -198,9 +251,19 @@ pub(super) fn skill_grants(content: &Content) -> String {
         }
         let _ = writeln!(out, "| {} | {trains} |", r.name);
     }
-    out.push_str("\n| Class | Trains |\n|---|---|\n");
+    out.push_str("\n| Class | Trains | May start with |\n|---|---|---|\n");
     for c in content.classes() {
-        let _ = writeln!(out, "| {} | {} |", c.name, list(&c.skills));
+        let optional: Vec<String> = (c.optional_skills.iter())
+            .map(|o| {
+                let name = skill_name(content, o.skill);
+                format!("{name} `{}` ({} %)", o.dice, o.chance)
+            })
+            .collect();
+        let optional = match optional.is_empty() {
+            true => "-".into(),
+            false => optional.join(", "),
+        };
+        let _ = writeln!(out, "| {} | {} | {optional} |", c.name, list(&c.skills));
     }
     out
 }

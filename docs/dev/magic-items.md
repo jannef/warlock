@@ -16,7 +16,8 @@ and wields, global), the one aggregation every rule reads; `loot.rs`: `roll`, it
 `name.rs`: the names around `Stack::names`, the item as it is made (its gems, #191, and its
 material, #193), so the order is [prefix] [ornament] [material] base [suffix] and a rare item's
 base shows its gem; `describe.rs`: base
-stats, gems with their size and cut, and affixes in words for the item description screen;
+stats, gems with their size and cut, and affixes in words for the item description screen
+(never the item level, a hidden number; #637);
 `numbers.rs`: `Numbers::of(stack)`, what an item gives in numbers (#552: a weapon's to-hit and
 damage with its material and local affixes through the very `Mods::sharpen` a strike uses and
 `Profile::bare`, a launcher's or thrower's range, ammunition's additions, a worn thing's global
@@ -56,7 +57,9 @@ types"): `Effect::Elemental` (an attack effect, local on what attacks: `Mods::el
 rider per kind, `sharpen` adds them to the profile) and `Effect::Resistance` (global:
 `Mods::resistances`, which `Actor::resistances` adds to what is worn and what the creature is),
 each with the affix's `damage_type` (`AffixDef::damage_type`, part of its `Group`, so an item
-may hold one of each kind). **Categories** (#621): `AffixDef::category` (required in data) is the
+may hold one of each kind). Every element has a resistance suffix and all but force an
+elemental prefix (`magic/tests.rs`, #638), and each rider lands unsoaked
+(`world/damage_tests.rs`). **Categories** (#621): `AffixDef::category` (required in data) is the
 rule loot and `Magic::check` read: an item never has two affixes of one category
 (`loot::roll_affix` leaves out the categories already rolled; `Magic::check` refuses a repeat in a
 save, a legend's `[[item]]`, or a unique). `content::affix::check_category` makes every affix of
@@ -74,7 +77,14 @@ variant of `Effect` (id, value range, local/global, `allowed_on`; `index()` and 
 it by group, never at the end), its reader in one rule, a
 phrase in `describe.rs`, and a wiki word and tier form in `xtask/src/wiki/magic.rs`
 (`effect_words`, `tier_value`). Affixes are saved by id, so
-adding affixes keeps saves; their values and tiers are checked on load.
+adding affixes keeps saves; their values and tiers are checked on load, leniently (#637): a
+ladder regraded since a save was made may move the range a saved tier holds, so
+`World::from_state` first re-tiers every magic stack (`world/retier.rs`: what actors carry, the
+levels' piles, remembered piles, and chests) with `Magic::retier`, which moves an affix whose value
+its tier no longer holds to the first tier that holds it, or the nearest when none does, the value
+kept; `Magic::check` then accepts a value no tier holds on its nearest tier. Each move is a line in
+`World::retiered`, which the game logs (`crates/warlock/src/save.rs`); nothing is refused and the
+content fingerprint (which leaves affixes out) is unchanged (`world/retier_tests.rs`).
 
 **The system effects** (#628, docs/design/affixes-systems.md §4–§6): `Effect` holds, by group,
 the spell ones (`mana_cost`, `spell_ease`, `spell_to_hit`, `spell_threat`, `spell_lift`,
@@ -92,9 +102,9 @@ Sustenance, of Wariness, of Health, and of the Alchemist; Mystic gained `weapon`
 and of the Bear `tool`. `magic/tests.rs`, `every_shipped_affix_effect_is_read_by_its_hook`,
 names each effect's reading module (an exhaustive match) and fails on a shipped affix whose
 effect that module never reads (a dead effect). **The skill suffixes** (C1, #636): of Seeking,
-of the Eagle, of the Stag, of the Leech, of the Picklock, of Disarming, of Appraisal, of the
+of the Eagle, of the Stag, of the Leech, of the Picklock, of Disarming, of Appraisal, of Haggling (#666), of the
 Scholar, of Letters, of the Cutpurse, twelve tiers each (levels 1 to 12; 8–12 to 45–50 for the
-value skills, 4–6 to 28–32 for the five gated on `Skills::trains_effect`, which help the
+value skills, 4–6 to 28–32 for the five gated on `Skills::trains_effect` (of Appraisal keeps the value ladder, though Appraise is gated since #666), which help the
 trained only), weight 60, category the skill's id. `every_shipped_skill_suffix_raises_a_read_benefit`
 holds each to a skill with benefits, every one read through `Actor::skill_effect` (so the
 items' bonus counts) in the module `skill_reader` names; the shops' bargain read
@@ -131,7 +141,17 @@ effect that names nothing else): one group per (effect, resource), so `check_cat
 Tireless (stamina) and of Fury (rage) apart. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`
 item class holds the kind; rare names' second words `tool = [...]` in `data/affixes.toml`): a
 kind for digging tools, which the pick-axe takes in D1. **Tiers**: at most `MAX_TIERS` (12) per
-affix, a loader check. **The tier window** (`loot::tier_window`, `TIER_WINDOW` = 4): loot draws a
+affix, a loader check. Every shipped ladder (X1, #637, regraded the old affixes but Flaming,
+Freezing, and Venomous, which W1 (#638) put on the elemental ladder, 1d2 at item level 2 to 1d8
+at 12, with Shocking, Corrosive, and Withering; the two light affixes keep their three glow presets, and
+Brutal and of Ruin their one tier) runs from its first level to item level 12, a tier every level
+or two where the values can step (a flat +1 to +3 has five tiers: 1, 1–2, 2, 2–3, 3), its first
+and last values as before. The hand-made items that name tiers (the uniques, the showcase's
+`[[item]]`s) were moved to the tier of the same top value. **The balance pass**
+(`magic/shares_tests.rs`): 10 000 magic items at item levels 1, 4, 8, and 12; every affix's picks
+lie within four standard deviations and a tenth of its weight's share of the picks it could have
+been (none over, none starved), and every rolled tier is in the window (`--nocapture` prints the
+shares). **The tier window** (`loot::tier_window`, `TIER_WINDOW` = 4): loot draws a
 tier evenly among those found at the item level whose level is within 3 below it, the top one
 alone once the item level is past the last tier (or when none is that close), one draw as before
 (`magic/tests.rs`, `tiers_roll_from_a_window_below_the_item_level`). **A drop's item level**

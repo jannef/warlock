@@ -188,6 +188,13 @@ impl Stack {
         self.magic.as_deref()
     }
 
+    /// Re-tiers its magic's affixes as a regraded ladder asks ([`Magic::retier`]), a line each.
+    pub(crate) fn retier(&mut self, content: &Content) -> Vec<String> {
+        self.magic
+            .as_mut()
+            .map_or_else(Vec::new, |m| m.retier(content))
+    }
+
     /// Sets what it rolled (a forge's tempering, `magic/temper.rs`): `None` makes it plain.
     pub(crate) fn set_magic(&mut self, magic: Option<Magic>) {
         self.magic = magic.map(Box::new);

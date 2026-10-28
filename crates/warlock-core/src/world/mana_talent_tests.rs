@@ -112,6 +112,8 @@ fn deep_well_asks_intelligence_or_willpower_then_levels() {
 fn clear_mind_and_meditation_quicken_the_pace() {
     let mut w = world();
     let id = w.state.player;
+    // Without Concentration, whose percent adds to Clear mind's (`concentration_tests.rs`).
+    w.player_mut().skills = Default::default();
     let awake = w.mana_rate(id);
     w.resting = true;
     let resting = w.mana_rate(id);

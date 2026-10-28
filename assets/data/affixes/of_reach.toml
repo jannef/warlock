@@ -6,5 +6,6 @@ category = "range"
 bases = ["weapon"]
 tiers = [
   { level = 1, min = 1, max = 2 },
-  { level = 5, min = 2, max = 3 },
+  { level = 7, min = 1, max = 3 },
+  { level = 12, min = 2, max = 3 },
 ]

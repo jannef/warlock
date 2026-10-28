@@ -370,10 +370,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§8 "Magic items") add to a skill's value for what it gives while worn
     (`Actor::skill_effect`, the one way rules read a benefit), an untrained skill's from 0; they
     never train it or change the value shown.
+  - **Concentration** (#668): a trained Concentration makes mana come back faster and the pool a
+    little deeper (§8 "Mana": the curves in `data/skills.toml`, the pool's at most a fifth);
+    untrained, it gives nothing, even raised by an item or a talent. The Skills screen says so
+    in its description, in words. The priest, druid, wizard, monk, paladin, and witch start
+    trained in it; every class has some mana, so any trained in it gains.
   - **From race and class** (§7): their `skills` are dice rolled when the character is made,
     after every other roll ("Character creation" above); a skill both train sums the two; the
     race's `class_skill` (humans, `2d4+4`) goes to one of the class's skills picked uniformly
-    from the same stream. A creature type's skills are fixed values. A scenario without a
+    from the same stream. The class's `optional_skills` (#662) each come with their chance, then
+    their dice, from their own stream (`character/optional-skills/<race>,<gender>,<class>`), so
+    no other roll moves; once, never re-rolled, and the chances are never shown (the wiki has
+    them). They are not the class's skills for a level-up roll's +1, and the human's extra class
+    skill never lands on one. A creature type's skills are fixed values. A scenario without a
     character gives a player trained in nothing.
   - **Values** run 0 to 999 (`MAX_VALUE`), 100 a master; there is no hard cap, but points come
     slowly past the soft cap (100). A value grows **only by level-up rolls** (below).
@@ -388,10 +397,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`burdened`; a dwarf's Burdened does not), a step on the overworld (`travel`), a kick at a
     closed door (`kick`; Athletics is also marked by `burdened` and `travel`, 5 % each, #548, so
     its speed grows with plain play), a turn spent searching, whatever it finds (`search`), noticing
-    something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
+    something hidden in passing, not a trap (`spot`; §8 "Searching"), finding a hidden trap,
+    searching or in passing (`find_trap`, Detect traps' use), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
     "Treating oneself" below), a forage that ran its time, whatever it found (`forage`;
-    "Foraging" below). Only the player trains for now; creatures keep their type's
+    "Foraging" below), a deal made in a shop: goods paid for or the player's own sold (`deal`;
+    Negotiation), something carried told for what it is (`appraise`; "Appraise" below), mana
+    spent, a spell or an ability paid in it (`cast`; Concentration, 25 %, #668), discovery
+    experience gained (`discover`: a first kill of a kind, an arrival that pays; Experience §8), a
+    check rolled to resist a creature's ability, whatever comes of it (`resist`; "Knowledge"
+    below). Only the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
@@ -417,6 +432,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rolls come from (the owner, 2026-10-27, #543; §6 "Level-up"); one function computes each for
     the rule and the screen (`world::skill_roll`, `world::roll_count`). The dev `levelup:auto`
     spends every roll on the first trained skill.
+  - **Knowledge** (#667, the owner 2026-10-28: know your enemy): the player's check to resist a
+    creature's ability (a drain, §8 "Stats"; exposure to a disease its attack carries, §8
+    "Diseases"; struggling free of its hold, §8 "Status effects") adds what the `resist` benefit
+    gives, read at how far the skill's value stands **above the creature's level** (its type's),
+    not at the value: nothing at or below it, `curve = [[0, 0], [5, 1], [40, 4]]` (+1 at 5 above,
+    +4 from 40 above), at most 6 (`MAX_RESIST_BONUS`), magic items' and talents' skill bonuses
+    counted. Creatures resisting each other get nothing; a check no creature asked for (a scroll's
+    backlash, rotten food, wading) neither. It is marked by `discover` (100 %) and `resist` (25 %).
+    Nothing is said when it helps; the Skills screen's description says it in words; the wiki
+    has the curve. One hook, `World::resisting` (`world/knowledge.rs`).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
@@ -430,6 +455,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     world state) show every actor's skills with their marks and the ladder's die for them. The
     Skills screen's meter shows a skill's ladder step in quarters (how practised it is). Skills
     and marks are part of the world state (saved, hashed).
+  - **Appraise and Negotiation** (#666, the owner 2026-10-28): the shops' prices are
+    Negotiation's (`bargain`, 20 % at 100, 30 % at 200; §7 "Shops"), marked by deals (`deal`,
+    25 %). Appraise (passive) tells things: on every whole game hour the clock passes
+    (`world/appraise.rs`, called from the status loop's `live`, so a rest rolls each hour it
+    passes, and from the dev `skip`), a player trained in a skill with the `identify` benefit
+    who carries or wears something they do not fully know (what the scroll of identify and an
+    appraisal would tell: unidentified magic, a scroll of an unknown type, a wand's unknown
+    charges) has the benefit's chance in percent (Appraise: 2 % from value 0, 12 % at 100, 20 %
+    at 200; with what magic items and talents add to the skill) of telling one of them, picked
+    uniformly: "You realise your silver ring (magic) is a silver ring of the Mule." The draws
+    come from the stream `appraise/<hour>` (the hour counted from the calendar's start), only
+    when there is a check to make, and no state is kept, so a run without Appraise or without
+    anything unknown hashes as before. Untrained, never (a magic item's bonus alone does not
+    give it). Each thing told may mark Appraise (`appraise`, 100 %). The classes trained in
+    Appraise (bard, thief, craftsperson, merchant) have Negotiation at the same dice; the
+    merchant is known for both. Gnomes keep Appraise alone.
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
   Skills; `Action::Heal`, replay text `heal` or `heal:ID`; cost `heal`, 2500: a quarter of a
@@ -694,9 +735,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     least 1); `door_kick` and `kick_noise_percent` (Lockbreaker: a door or chest kick as if 6
     stronger, half as loud); `smash_destroy_percent` (Deft breaker, Might, Strength 12: what a
     chest kicked open holds breaks half as often, 25 % a stack; a blown-up chest is no kick) and
-    `chest_wise` (Chest-wise, Delver, Intelligence 11 or Search 15: look mode tells a locked shut
-    chest in sight from an unlocked one, and the trap of a shut chest in sight is known at once,
-    no check), the `chests` system's (§8 "Chests"), with Lockbreaker
+    `chest_wise` (Chest-wise, Delver, Intelligence 11 or Detect traps 15: look mode tells a
+    locked shut chest in sight from an unlocked one, and the trap of a shut chest in sight is
+    known at once, no check), the `chests` system's (§8 "Chests"), with Lockbreaker
     and the wizard's Knock; `dig_percent` (Tunneler: half again the work a turn). A prerequisite may be `either`
     of several (Treasure hunter: "Intelligence 12 or Appraise 20"). The Scholar and Delver trees
     and the searching, digging, shops, magic items, scrolls, skills, and experience systems are

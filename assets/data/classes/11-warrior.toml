@@ -9,6 +9,7 @@ casting = 25
 experience = 100
 skills = { athletics = "2d6+10", balance = "2d4+4", intimidate = "2d4+4", swim = "2d4+4" }
 known_for = ["athletics"]
+optional_skills = { heal = { chance = 15, dice = "2d4" }, metalcraft = { chance = 15, dice = "2d4" }, survival = { chance = 30, dice = "2d4" } }
 rolls = 2
 weapon_skills = { long_blades = 2, shield_block = "1d2" }
 styles = { sword_and_board = 1 }

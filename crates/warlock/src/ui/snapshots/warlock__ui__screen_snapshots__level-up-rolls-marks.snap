@@ -2,19 +2,21 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You search for 10 minutes and find nothing. (×2)
  Y┌─ Level 2 · Skill rolls 4 ────────────────────────────────────────────────┐
-  │                                                                          │
+ Y│                                                                          │
   │ Skills                                                                   │
   │ > a  Appraise         11  ────  +2                                       │
-  │   b  Disable device   16  ────  +2                                       │
-  │   c  Escape artist     7  ────  +2                                       │
-  │   d  Open lock        18  ────  1d3                                      │
-  │   e  Search            9  ━───  1d5+1                                    │
-  │   f  Spot             10  ────  +2                                       │
-  │   g  Steal            17  ────  1d3                                      │
-  │   h  Stealth          16  ────  1d3                                      │
-  │   i  Tumble           16  ────  1d3                                      │
+  │   b  Detect traps      7  ────  +2                                       │
+  │   c  Disable device    7  ────  +2                                       │
+  │   d  Escape artist    10  ────  +2                                       │
+  │   e  Listen            6  ────  +1                                       │
+  │   f  Negotiation       9  ────  +2                                       │
+  │   g  Open lock        19  ────  1d3                                      │
+  │   h  Search           17  ━───  1d5+1                                    │
+  │   i  Spot              9  ────  +2                                       │
+  │   j  Steal            16  ────  1d3                                      │
+  │   k  Stealth          17  ────  1d3                                      │
+  │   l  Tumble           12  ────  1d3                                      │
   │                                                                          │
   │ 4 skill rolls a level: class 3, race 1                                   │
   │                                                                          │
@@ -23,7 +25,5 @@ expression: "render(case, content.clone())"
   │                                                                          │
   │                                                                          │
   │                                                                          │
-  │ a-i or Enter roll   Level 3 next                                         │
-  └──────────────────────────────────────────────────────────────────────────┘
-
- The Hub  ·  HP 22/22  ·  MP 4/4  ·  Sta 10/10  ·  Lv 3  ·  08:20    ? controls
+  │ a-l or Enter roll   Level 3 next                                         │
+ T└──────────────────────────────────────────────────────────────────────────┘s

@@ -123,6 +123,7 @@ impl World {
                 .push(format!("You learn something of {}.", def.plural));
             gain = gain.saturating_add(first);
             self.train_stat(StatUse::Discovered);
+            self.discovered();
         }
         self.grant_xp(gain);
     }
@@ -142,6 +143,7 @@ impl World {
         self.news.push(format!(
             "You gain {gain} experience for finding your way here."
         ));
+        self.discovered();
         self.grant_xp(gain);
     }
 

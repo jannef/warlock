@@ -53,7 +53,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   half-elves bluff and spot (`1d4+2`), dwarves metalcraft and search (stonecunning), halflings
   listen and stealth, gnomes appraise and listen, half-orcs intimidate, goblins stealth
   (`1d6+6`: sneaking and hiding are one skill) and listen (`1d4+2`), drow spot and stealth
-  (`1d4+2`), kobolds disable device and search (`1d4+2`), lizardfolk swim and survival
+  (`1d4+2`), kobolds disable device and detect traps (`1d4+2`), lizardfolk swim and survival
   (`1d4+2`), duergar metalcraft and stealth (`1d4+2`), ratfolk stealth and listen (`1d4+2`);
   humans none, but one extra class skill (`class_skill = "2d4+4"`).
   Weapon skills (`weapon_skills`; §8 "Weapon skills"): elf long blades 1 and bows 1, half-elf
@@ -155,7 +155,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   craftsperson, and merchant 90, commoner 80), `alignment` (as for races, added to the race's:
   paladin 550, Good under any birth animal unless the race is evil (#317); thief and witch −200, Callous; the rest 0), `skills` (as for races),
   `known_for` (the skills of `skills` it is known for, its `2d6+10` ones: a level-up roll on one
-  throws its die a step up the ladder), `rolls` (skill rolls each level gives, 0 to 10, default
+  throws its die a step up the ladder), `optional_skills` (ADOM-like: skills a new character
+  may or may not start with, each `{ chance, dice }`, the chance 1 to 99 percent; none of them
+  one of `skills`; #662), `rolls` (skill rolls each level gives, 0 to 10, default
   2: the thief and the ranger 3, the bard 4), `weapon_skills` (starting ranks as for races), `weapon_skill_choice` (two or more
   sets of such ranks, one picked at random when the character is made), and `styles` and
   `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no
@@ -171,11 +173,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   gives starting ranks in weapon skills and fighting styles, and, with a level table, class
   abilities and bonus talents. Skills: a few it
   is known for (`2d6+10`) and a few more (`2d4+4`); the full table is in the wiki (Skills), e.g.
-  the thief open lock, steal, stealth, and tumble well, appraise, disable device, escape artist,
-  search, and spot a little; the ranger spot, survival, and woodcraft well, athletics, handle
+  the thief open lock, steal, stealth, and tumble well, appraise, detect traps, disable device,
+  escape artist, negotiation, search, and spot a little (the thief alone of the classes starts
+  trained in detect traps, #663); the ranger spot, survival, and woodcraft well, athletics, handle
   animal, listen, and swim a little; the wizard concentration, knowledge, and spellcraft well,
   decipher script a little; the commoner athletics and handle animal a
-  little. Weapon skills: barbarian unarmed 1 and axes 2 or great blades 2, bard short blades 1
+  little. Each class also has two to five optional skills, modest ones at `2d4` (10 to 35 %;
+  the thief balance, bluff, and listen; the warrior heal, metalcraft, and survival; the commoner
+  heal, metalcraft, survival, swim, and woodcraft; the full lists are in the wiki). Weapon skills: barbarian unarmed 1 and axes 2 or great blades 2, bard short blades 1
   and daggers `1d2`, priest maces 2 and shield blocking 1, druid staves 2 and slings 1, monk
   unarmed 2 and staves 1, paladin long blades 2, shield blocking `1d2`, and shield bashing 1,
   ranger bows 2 and short blades 1, thief daggers 2 and thrown 1, wizard staves 1, witch daggers
@@ -213,9 +218,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `intelligence_from`, `intelligence_every` (one more roll at that Intelligence and every so many
   points above; 14, 4), `spend` (percent of the marks a roll spends, 50), `soft_cap` (from this
   value on a roll adds half, 100); §8 "Skills". Adding a skill is one
-  entry (saves then change: skill ids are indices). The 25 skills: appraise, athletics,
-  balance, bluff, concentration, decipher script, disable device, escape artist, handle animal,
-  heal, intimidate, knowledge, listen, metalcraft, music, open lock, search, spellcraft, spot,
+  entry (saves then change: skill ids are indices). The 26 skills: appraise, athletics,
+  balance, bluff, concentration, decipher script, detect traps, disable device, escape artist,
+  handle animal,
+  heal, intimidate, knowledge, listen, metalcraft, music, negotiation, open lock, search, spellcraft, spot,
   steal, stealth, survival, swim, tumble, woodcraft.
 - **Horoscope** (`data/horoscope.toml`, optional; §8 "Character creation"): `anchor_year`, a
   year that starts a great cycle (1: the year of the Great Race, the first of the reckoning),

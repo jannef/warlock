@@ -6,7 +6,8 @@
 //! `after_blow`):
 //! - **The check**: the target rolls a check of the drain's `check` stat (its effective
 //!   modifier, what its talents add to every check of that stat (Iron will), and its talents'
-//!   `drain_checks` (Unbroken soul, Divine grace)) against the drain's `difficulty`. Made, nothing
+//!   `drain_checks` (Unbroken soul, Divine grace)), and for the player against a creature's
+//!   drain what Knowledge gives (`knowledge.rs`), against the drain's `difficulty`. Made, nothing
 //!   is lost, and it trains the stat as a disease resisted does.
 //! - **The loss**: failed, the drain's `points` come off the stat's **score**
 //!   ([`crate::stats::Stats::drain`]), one of the six drawn for a `random` drain. The potential
@@ -27,8 +28,15 @@ use crate::content::Drain;
 use crate::stats::{DRAIN_FLOOR, Stat};
 
 impl World {
-    /// Actor `target` was hit by a drain (module docs).
-    pub(super) fn drain(&mut self, target: ActorId, drain: Drain, events: &mut Vec<Event>) {
+    /// Actor `target` was hit by a drain of `by`'s (a creature's touch; `None`: no creature's,
+    /// a scroll's backlash) (module docs).
+    pub(super) fn drain(
+        &mut self,
+        target: ActorId,
+        drain: Drain,
+        by: Option<ActorId>,
+        events: &mut Vec<Event>,
+    ) {
         let content = self.content.clone();
         let Some(actor) = self.state.actors.get(&target) else {
             return;
@@ -44,6 +52,8 @@ impl World {
         let modifier = (actor.effective_stats(&content).modifier(drain.check))
             .saturating_add(talents.check(drain.check))
             .saturating_add(talents.drain_checks);
+        // Know your enemy (Knowledge, `knowledge.rs`).
+        let modifier = modifier.saturating_add(self.resisting(target, by));
         if check(&mut self.state.rng, modifier, drain.difficulty) {
             self.train_resisting(target, drain.check);
             events.push(Event::Drained {

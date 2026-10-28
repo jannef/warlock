@@ -528,7 +528,26 @@ fn a_dead_keepers_goods_are_free_to_take() {
 }
 
 #[test]
-fn prices_follow_presence_and_appraise() {
+fn deals_train_negotiation() {
+    let mut w = in_shop();
+    let negotiation = w.content().skill_id("negotiation").expect("negotiation");
+    let player = w.player_id();
+    let me = w.state.actors.get_mut(&player).expect("the player");
+    me.skills = crate::skills::Skills::default();
+    me.skills.add(negotiation, 10);
+    let marks = |w: &World| (w.state.player().skills.get(negotiation)).map(|t| t.marks);
+    // Paying for a dagger, then selling it back, again and again: a mark now and then.
+    apply(&mut w, "move:E move:NE");
+    for _ in 0..12 {
+        apply(&mut w, "pickup pay");
+        let item = w.state.player().inventory.len() - 1;
+        apply(&mut w, &format!("sell:{item}"));
+    }
+    assert!(marks(&w) > Some(0), "{}", last(&w));
+}
+
+#[test]
+fn prices_follow_presence_and_negotiation() {
     let mut w = in_shop();
     let dagger = object(&w, "dagger");
     let player = w.player_id();
@@ -550,14 +569,14 @@ fn prices_follow_presence_and_appraise() {
     );
     set_presence(&mut w, 10);
     let presence_free = price(&w, &dagger);
-    let appraise = w.content().skill_id("appraise").expect("appraise");
+    let negotiation = w.content().skill_id("negotiation").expect("negotiation");
     let me = w.state.actors.get_mut(&player).expect("the player");
     me.skills = crate::skills::Skills::default();
-    me.skills.add(appraise, 100);
-    let appraising = price(&w, &dagger);
-    assert!(appraising < presence_free, "{appraising} {presence_free}");
+    me.skills.add(negotiation, 100);
+    let haggling = price(&w, &dagger);
+    assert!(haggling < presence_free, "{haggling} {presence_free}");
     // Perception asks the same.
-    assert_eq!(w.perception().price_tag(DAGGER, &dagger), Some(appraising));
+    assert_eq!(w.perception().price_tag(DAGGER, &dagger), Some(haggling));
 }
 
 #[test]

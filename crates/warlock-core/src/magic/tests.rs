@@ -294,7 +294,7 @@ fn bad_items_are_refused() {
         (magic(&[("nonsense", 1, 1)], None), "unknown affix"),
         (magic(&[("hale", 1, 3)], None), "does not roll"),
         (magic(&[("sharp", 9, 1)], None), "no tier"),
-        (magic(&[("sharp", 1, 5)], None), "rolls 1 to 1"),
+        (magic(&[("sharp", 1, 3)], None), "rolls 1 to 1"),
         (
             magic(&[("sharp", 1, 1), ("glinting", 1, 1)], None),
             "at most 1 prefixes",
@@ -449,12 +449,13 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
             ),
         ]
     );
-    assert!(known.iter().any(|l| l.text == "Item level 1"));
+    // The item level is a hidden number: never shown.
+    assert!(!known.iter().any(|l| l.text.contains("Item level")));
     // Global effects say so; speed stays in words.
     let mut gloves = item(
         &c,
         "leather_gloves",
-        &[("vicious", 1, 1), ("of_celerity", 3, 14)],
+        &[("vicious", 1, 1), ("of_celerity", 8, 14)],
         None,
     );
     gloves.identify();
@@ -777,17 +778,23 @@ fn skill_reader(effect: crate::skills::Effect) -> (&'static str, &'static str) {
     match effect {
         S::Dodge | S::Hearing | S::Speed => ACTOR,
         S::Quiet => ("noise.rs", include_str!("../noise.rs")),
-        S::Search | S::SearchReach | S::Spot => SEARCH,
+        S::Search | S::SearchReach | S::Spot | S::DetectTraps => SEARCH,
         S::Study => ("world/learn.rs", include_str!("../world/learn.rs")),
         S::Disarm => ("world/disarm.rs", include_str!("../world/disarm.rs")),
         S::Burden | S::Travel => SCHEDULE,
         S::Forage => ("world/forage.rs", include_str!("../world/forage.rs")),
         S::Bargain => ("world/shop.rs", include_str!("../world/shop.rs")),
+        S::Identify => ("world/appraise.rs", include_str!("../world/appraise.rs")),
         S::Kick => ("world/door.rs", include_str!("../world/door.rs")),
         S::Steal => ("world/steal.rs", include_str!("../world/steal.rs")),
         S::Heal => ("world/heal.rs", include_str!("../world/heal.rs")),
         S::Pick => ("world/lockpick.rs", include_str!("../world/lockpick.rs")),
         S::Temper => ("world/temper.rs", include_str!("../world/temper.rs")),
+        S::Resist => ("world/knowledge.rs", include_str!("../world/knowledge.rs")),
+        S::ManaRegen | S::MaxMana => (
+            "world/concentration.rs",
+            include_str!("../world/concentration.rs"),
+        ),
     }
 }
 
@@ -821,5 +828,30 @@ fn every_shipped_skill_suffix_raises_a_read_benefit() {
                 b.effect.id()
             );
         }
+    }
+}
+
+/// Every element (a damage type that is not physical) has a typed resistance suffix, and every
+/// one but force an elemental weapon prefix (#638): force stays the spells' kind.
+#[test]
+fn every_element_has_a_resistance_and_all_but_force_a_weapon_prefix() {
+    let c = content();
+    let of = |effect: Effect, kind: crate::content::DamageTypeId| {
+        (c.affixes().all().iter())
+            .filter(|a| a.effect == effect && a.damage_type == Some(kind))
+            .count()
+    };
+    for (i, t) in c.damage_types().iter().enumerate() {
+        let kind = crate::content::DamageTypeId(i as u8);
+        if t.physical {
+            assert_eq!(
+                of(Effect::Elemental, kind) + of(Effect::Resistance, kind),
+                0
+            );
+            continue;
+        }
+        assert_eq!(of(Effect::Resistance, kind), 1, "a suffix resists {}", t.id);
+        let prefixes = if t.id == "force" { 0 } else { 1 };
+        assert_eq!(of(Effect::Elemental, kind), prefixes, "{}'s prefixes", t.id);
     }
 }

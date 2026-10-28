@@ -206,7 +206,7 @@ impl World {
                 Affliction::Disease(disease) => {
                     self.expose(target, disease, Some(attacker));
                 }
-                Affliction::Drain(drain) => self.drain(target, drain, events),
+                Affliction::Drain(drain) => self.drain(target, drain, Some(attacker), events),
             }
         }
     }
@@ -387,6 +387,10 @@ impl World {
     /// (the player) its stats get their daily check, and the food in its pack rots away, each at the moment it happens, until the time is up or it
     /// dies.
     fn live(&mut self, id: ActorId, start: GameTime, seconds: u64, events: &mut Vec<Event>) {
+        // Appraise's hourly look at what the player carries (spec §8 "Skills").
+        if id == self.state.player {
+            self.appraise_hours(start, seconds);
+        }
         // Nothing to live through (and nothing in its pack that rots).
         if self.untouched_by(id, start, seconds) {
             return;

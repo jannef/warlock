@@ -19,8 +19,9 @@ until you dig or blast through it.
 
 Each turn of searching gives every hidden thing on the eight cells around you a fresh chance to
 be found. How likely that is depends on how hard the thing is to find, on your **Intelligence**,
-and on your **Search** skill (see [Skills](skills.md)). A master searcher also searches a cell
-farther around them, as far as they can see. A search that finds nothing tells you nothing:
+and on your **Search** skill (see [Skills](skills.md)); for a hidden **trap**, on a floor, a door,
+or a chest, your **Detect traps** skill counts instead of Search. A master searcher also searches
+a cell farther around them, as far as they can see. A search that finds nothing tells you nothing:
 there may be nothing there, or you may have missed it. Search again; every turn is a new try,
 and there is no limit to how often you may try. Only time is spent.
 
@@ -29,14 +30,16 @@ and there is no limit to how often you may try. Only time is spent.
 Some characters notice hidden things without looking for them. After every turn you take,
 walking, waiting, resting, or anything else, every hidden thing on the eight cells around you
 gets a chance to catch your eye, a smaller one than a search would have. This chance depends on
-your **Willpower** and your **Spot** skill. Who notices things in passing:
+your **Willpower** and your **Spot** skill, or for a hidden trap your **Detect traps** skill.
+Who notices things in passing:
 
 - **Elves** and **drow**: everything.
 - **Dwarves** and **duergar**: what is hidden in **stone**, a secret door in a stone wall or a
   trap in a stone floor: most of a dungeon, but not a door in a timber wall, or a trap in the
   grass.
 - **Kobolds**: hidden **traps**, anywhere, but never a secret door.
-- **Anyone trained in Spot**: everything. Some races and classes train it (below).
+- **Anyone trained in Spot**: everything but traps. Some races and classes train it (below).
+- **Anyone trained in Detect traps**: hidden **traps**. Thieves and kobolds start trained in it.
 - Everyone else notices nothing in passing, but can always search.
 
 {{#include generated/search-races.md}}

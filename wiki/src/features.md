@@ -139,7 +139,8 @@ dungeons under the barrows, the fen, and the hills.
   remembered, and stepping onto it asks first. The dungeons hide a few on every level.
 - **Searching** — secret doors look like the wall and hidden traps like the floor until you find
   them: search (`s`, or `S` for a while) with your Intelligence and Search skill, or notice them in
-  passing with your Willpower, if you are an elf, a dwarf (in stone), or trained in Spot. Every
+  passing with your Willpower, if you are an elf, a dwarf (in stone), or trained in Spot; hidden
+  traps are your Detect traps skill's, both ways (thieves start trained in it). Every
   turn is a fresh try. The dungeons hide a door or two on their levels of rooms, never one you
   need.
 - **Burden** — everything you carry weighs on you: past a third of what your Strength and
@@ -237,7 +238,7 @@ dungeons under the barrows, the fen, and the hills.
 - **Shops** — ADOM-like general stores and specialty shops (a weaponsmith, an armourer, a
   provisioner, a fletcher), each kept by a named shopkeeper by the door: goods show their price
   in gold, what you pick up you owe until you pay (`p`, or when you leave), the keeper makes an
-  offer for what you drop, and your Presence and the Appraise skill get you better prices.
+  offer for what you drop, and your Presence and the Negotiation skill get you better prices.
   The keeper won't let you out of the door owing money; leave another way (dig through the wall)
   and the shopkeeper, tough and well armed, comes after you. Cēaptūn has four shops on its
   square, and now and then a dungeon level has one.

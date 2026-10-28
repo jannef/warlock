@@ -22,7 +22,7 @@ difference. This page gives the rules, with the exact numbers.
 
 Some skills work by themselves, all the time (**passive**); some will be used as **actions**
 (searching, picking a lock, binding a wound); some are **read by rules** when something calls for
-them (athletics when you kick a door). For now only the passive skills, Appraise, Athletics
+them (athletics when you kick a door). For now only the passive skills, Appraise, Negotiation, Athletics
 (quicker in everything, and kicking doors in, see [Doors](doors.md)), Search (see [Searching](searching.md)), Disable
 device (disarming traps, see [Traps](traps.md#disarming-traps)), Open lock (picking locks,
 see [Doors](doors.md#picking-locks)), Steal (see [Stealing](#stealing) below), Heal (see
@@ -60,19 +60,37 @@ The passive skills help you more the higher they are:
 - **Survival** makes your journeys on the [overworld](overworld.md) quicker (it does nothing for
   your steps in a local area or a dungeon), and lets you forage in the wild, finding food more
   often the higher it is (see [Foraging](#foraging)).
-- **Appraise** gets you better prices in [shops](shops.md): you pay less and are offered more.
-- **Search** helps you find secret doors and hidden traps when you search (`s`, `S`), and a
-  master's search reaches a cell farther (see [Searching](searching.md)).
-- **Spot** lets you notice hidden things in passing at all, and the higher it is, the more you
-  notice.
+- **Negotiation** gets you better prices in [shops](shops.md): you pay less and are offered
+  more. A deal made (goods paid for, or your own sold) trains it now and then.
+- **Appraise** now and then tells you what something you carry or wear really is. On every
+  hour of game time that passes (resting too), if you carry anything you do not fully know
+  (an unidentified magic item, a scroll of a kind you have not identified, a wand whose
+  charges you do not know), you have a small chance to tell one of them, picked at random:
+  2 % an hour at 0, 12 % at 100, 20 % at 200 (the table below; items of Appraisal raise it).
+  Only those trained in Appraise get it at all. Each thing told this way trains it.
+- **Search** helps you find secret doors and other hidden things when you search (`s`, `S`),
+  and a master's search reaches a cell farther (see [Searching](searching.md)).
+- **Spot** lets you notice hidden things in passing at all, traps aside, and the higher it is,
+  the more you notice.
+- **Detect traps** is for hidden traps what Search and Spot are for the rest: it helps you find
+  them when you search, lets you notice them in passing at all, and the higher it is, the more
+  of them you find. Thieves start trained in it, and kobolds.
 - **Open lock** lets you pick locks at all (the Pick lock ability), and the higher it is, the
   more often a try works (see [Doors](doors.md#picking-locks)).
 - **Steal** lets you steal at all, and the higher it is, the likelier your hand goes unnoticed
   (see [Stealing](#stealing)).
 - **Heal** lets you bind your bleeding and tend your poisons and diseases at all, and the higher
   it is, the more often a try works (see [Treating yourself](#treating-yourself)).
+- **Knowledge** is knowing your enemy: it adds to your check against a creature's drain, a
+  disease its attack carries, or its hold when you struggle, but only against creatures whose
+  level your Knowledge stands above, and more the farther above (the table below; it never adds
+  much). It earns marks whenever you gain discovery experience (a first kill of a kind, a new
+  place that pays) and, now and then, whenever you roll to resist such a power, whatever comes
+  of it. A creature's level is in its [table](creatures.md).
 
 {{#include generated/skill-benefits.md}}
+
+{{#include generated/skill-resist.md}}
 
 ## Who trains what
 
@@ -81,6 +99,13 @@ rest a little (`2d4+4`). A skill your race and your class both train adds the tw
 none of their own, but they put extra work into one of their class's skills, picked at random.
 The dice are rolled when your character is made, after your [stats](character.md#how-your-stats-add-up),
 so they never change a stat.
+
+As in ADOM, each class also has a few skills its people **may** start with: each comes with the
+chance in the last column, and then its dice, once, when your character is made. Two characters
+of one class can so begin with different skills. The game shows only the skills you have, never
+the chances. Your race's skill and the human's extra class skill add to one of these as to any
+other, but a level-up roll on one of them is an ordinary roll: the class's +1 is for the skills in
+its Trains column.
 
 {{#include generated/skill-grants.md}}
 

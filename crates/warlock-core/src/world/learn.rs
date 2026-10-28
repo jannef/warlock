@@ -347,7 +347,7 @@ impl World {
                     check: Stat::Willpower,
                     difficulty,
                 };
-                self.drain(player, drain, events);
+                self.drain(player, drain, None, events);
             }
             MishapEffect::Summon { creature } => self.summon(creature),
             MishapEffect::Learn => self.learn_spell(lesson.spell),

@@ -69,7 +69,8 @@ Build the engine and framework, not the game. Everything built is production qua
 - Searching (#140): secret doors (level legends, vaults, a door or two on each Depths rooms level)
   and hidden traps, found with one check: searching (`s`, `S` for a while; Intelligence and the
   Search skill) or in passing (Willpower and Spot; elves, dwarves on stone, anyone trained in
-  Spot), rolled afresh every turn (§8 "Searching")
+  Spot), hidden traps with the Detect traps skill in place of both, rolled afresh every turn
+  (§8 "Searching")
 - Magic items (M29, #149), after Path of Exile: base items (weapons, missile weapons,
   ammunition, armour, helmets, cloaks, gloves, boots, shields, rings, amulets) roll prefixes and
   suffixes by rarity (normal, magic: one of each at most; rare: up to three of each and a name),

@@ -229,6 +229,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("foraging.md", skills::foraging),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
+        ("skill-resist.md", skills::skill_resist),
         ("skill-grants.md", skills::skill_grants),
         ("skill-ladder.md", skills::skill_ladder),
         ("skill-rolls.md", skills::skill_rolls),
@@ -245,6 +246,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("damage-types.md", damage::damage_types),
         ("damage-weapons.md", damage::weapon_kinds),
         ("damage-armour.md", damage::armour_kinds),
+        ("damage-elements.md", damage::elements),
         ("stances.md", combat::stances),
         ("to-hit.md", combat::to_hit),
         ("hit-chances.md", combat::hit_chances),
@@ -315,6 +317,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("magic-prefixes.md", magic::prefixes),
         ("magic-suffixes.md", magic::suffixes),
         ("magic-names.md", magic::rare_names),
+        ("magic-systems.md", magic::systems),
         ("uniques.md", uniques::uniques),
         ("scrolls.md", scrolls::scrolls),
         ("potions.md", potions::potions),
@@ -393,6 +396,34 @@ mod tests {
         ] {
             assert!(suffixes.contains(row), "{row}\nin\n{suffixes}");
         }
+    }
+
+    /// What systems have affixes (#637): every affix a row, with its system and the talents read
+    /// beside it, named as the game names them.
+    #[test]
+    fn the_systems_table_has_every_affix() {
+        let content = Content::builtin().expect("content loads");
+        let table = magic::systems(&content);
+        let rows = table.lines().filter(|l| l.starts_with("| ")).count() - 1;
+        assert_eq!(rows, content.affixes().all().len(), "{table}");
+        row_has(
+            &table,
+            "| of Thrift |",
+            &["suffix", "Mana", "Frugal caster"],
+        );
+        row_has(
+            &table,
+            "| Tireless |",
+            &["prefix", "Stamina", "Deep lungs, Bellows"],
+        );
+        row_has(&table, "| of Fury |", &["Resources", "maximum rage"]);
+        row_has(
+            &table,
+            "| of the Adept |",
+            &["Spells", "Arcane training, Attuned"],
+        );
+        row_has(&table, "| Delving |", &["Digging", "Tunneler"]);
+        row_has(&table, "| of the Eagle |", &["Skills", "Spot (a skill)"]);
     }
 
     /// The numbers the game keeps to itself are stated exactly (#264): creatures, stats, speed,
@@ -914,13 +945,14 @@ mod tests {
             "{skills}"
         );
         assert!(skills.contains("| Swim | read by rules |"));
-        assert_eq!(skills.matches("\n| ").count(), 1 + 25, "{skills}");
+        assert_eq!(skills.matches("\n| ").count(), 1 + 27, "{skills}");
         let benefits = text("skill-benefits.md");
         assert!(
             benefits.contains(
-                "| Value | Appraise: prices | Athletics: kicking doors in | Athletics: speed | \
-                 Balance: Burdened / Strained | Decipher script: study check | Disable device: disarming traps | \
-                 Heal: treating | Listen: hears fainter by | Metalcraft: tempering | Open lock: picking locks | Search: searching | \
+                "| Value | Appraise: identifying, each hour | Athletics: kicking doors in | Athletics: speed | \
+                 Balance: Burdened / Strained | Concentration: mana back | Concentration: mana pool | \
+                 Decipher script: study check | Detect traps: finding traps | Disable device: disarming traps | \
+                 Heal: treating | Listen: hears fainter by | Metalcraft: tempering | Negotiation: prices | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Spellcraft: study check | Spot: noticing | Steal: \
                  stealing | Stealth: noise | Survival: journeys | Survival: foraging | Tumble: \
                  Dodge |"
@@ -940,11 +972,11 @@ mod tests {
             "{foraging}"
         );
         assert!(benefits.contains(
-            "| 100 | 20% better | +8 Strength | +5% | ×1.1 / ×1.2 | +10 | +8 | +8 | 10 | +8 | +8 | +8 | +1 cell \
+            "| 100 | 12% | +8 Strength | +5% | ×1.1 / ×1.2 | +40% | +5 mana | +10 | +8 | +8 | +8 | 10 | +8 | 20% better | +8 | +8 | +1 cell \
              | +10 | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 25% better | +10 Strength | +7% | ×1.08 / ×1.15 | +15 | +10 | +10 | 15 | +10 | +10 | +10 \
+            "| 150 | 16% | +10 Strength | +7% | ×1.08 / ×1.15 | +50% | +6 mana | +15 | +10 | +10 | +10 | 15 | +10 | 25% better | +10 | +10 \
              | +1 cell | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
         ));
         // Treating oneself: the difficulty and odds of each ailment.
@@ -984,15 +1016,26 @@ mod tests {
             races.contains("| Elf | Everything | more easily (+2) |"),
             "{races}"
         );
+        assert!(races.contains(
+            "trained in Spot, who notice everything but traps in passing: Ranger, Thief."
+        ));
         assert!(
-            races.contains("trained in Spot, who notice everything in passing: Ranger, Thief.")
+            races.contains("trained in Detect traps, who notice hidden traps in passing: Thief.")
+        );
+        assert!(
+            races.contains("| Kobold | Hidden traps | more easily (+2) |"),
+            "{races}"
         );
         let grants = text("skill-grants.md");
         assert!(grants.contains("| Halfling | Listen `1d6+4`, Stealth `1d6+4` |"));
         assert!(
             grants.contains("| Human | one of the class's skills `+2d4+4`, picked at random |")
         );
-        assert!(grants.contains("| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` |"));
+        assert!(grants.contains(
+            "| Commoner | Athletics `2d4+4`, Handle animal `2d4+4` | Heal `2d4` (15 %), \
+             Metalcraft `2d4` (10 %), Survival `2d4` (30 %), Swim `2d4` (20 %), \
+             Woodcraft `2d4` (20 %) |"
+        ));
         let ladder = text("skill-ladder.md");
         assert!(
             ladder.contains("| 0 | `+1` | 1.0 | `1d3` | 2.0 |"),
@@ -1083,7 +1126,7 @@ mod tests {
         ));
         // Speed is exact: the share of the time it takes off.
         assert!(prefixes.contains(
-            "| Fleet | you move faster | movement speed | boots | 1: 5–8% less time · 4: 8–12%"
+            "| Fleet | you move faster | movement speed | boots | 1: 5–8% less time · 2: 5–9%"
         ));
         assert!(text("magic-suffixes.md").contains("| of the Bear | Strength | strength |"));
         assert!(text("magic-names.md").contains("| Weapons | Bite,"));
@@ -1093,7 +1136,7 @@ mod tests {
         assert!(text("magic-rarity.md").contains("has the creature's level as its item level"));
         // Unique items: the campaigns', exactly, never the test world's.
         let uniques = text("uniques.md");
-        assert!(uniques.contains("| Widowmaker | Stiletto | 12 | Venomous (2: adds 1d4 poison"));
+        assert!(uniques.contains("| Widowmaker | Stiletto | 12 | Venomous (4: adds 1d4 poison"));
         assert!(uniques.contains("every hit that leaves its target alive: 1 degree of Poisoned"));
         assert!(uniques.contains("| its wearer is never Frightened |"));
         assert!(
