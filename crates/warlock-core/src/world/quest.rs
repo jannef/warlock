@@ -562,11 +562,11 @@ fn quest_topic(topic: &str) -> Option<&str> {
 
 impl World {
     /// The quest topics of whoever speaks dialogue `speaker`, first among their topics: each
-    /// quest they may give (one they [`World::offers`] the player as they stand toward them,
-    /// `scorned` or not; a rolled one only while its pool holds something), each of theirs the
+    /// quest they may give (one they [`World::offers`] the player; a rolled one only while its
+    /// pool holds something), each of theirs the
     /// player has been given (for the reminder, or to hand it in), and each the player may hand
     /// in to them.
-    pub(super) fn quest_topics(&self, speaker: DialogueId, scorned: bool) -> Vec<TopicView> {
+    pub(super) fn quest_topics(&self, speaker: DialogueId) -> Vec<TopicView> {
         let quests = &self.state.quests;
         let mut topics = Vec::new();
         for def in self.content.quests() {
@@ -580,7 +580,7 @@ impl World {
             if def.giver == speaker {
                 if active
                     || (quests.available(&self.content, def)
-                        && self.offers(def, scorned)
+                        && self.offers(def)
                         && (!def.is_rolled() || !self.quest_pool(def).is_empty()))
                 {
                     topics.push(topic());
@@ -613,8 +613,7 @@ impl World {
         events: &mut Vec<Event>,
     ) -> Option<Spent> {
         let quest = quest_topic(topic)?;
-        let scorned = self.scorns(&self.state.actors[&id]);
-        let listed = (self.quest_topics(speaker, scorned).iter()).any(|t| t.id == topic);
+        let listed = (self.quest_topics(speaker).iter()).any(|t| t.id == topic);
         let Some(q) = self.content.quest_id(quest).filter(|_| listed) else {
             let who = capitalized(&self.called(&self.state.actors[&id]));
             self.say(format!("{who} knows nothing about that."));

@@ -5,7 +5,7 @@
 //! `data/alignment.toml` (`content/alignment.rs`). Creatures have a fixed [`Alignment`] instead:
 //! their type's, or the one a level gave them.
 //!
-//! What reads it reads a band: dialogue and quests ([`Band::scorned_by`]), quests offered to
+//! What reads it reads a band: dialogue ([`Band::scorned_by`]), quests offered to
 //! some bands only and holy gifts that work for some bands only ([`Requirement`]), and shop
 //! prices. It bars nothing a character has or may take. The score itself is never shown, and a
 //! creature's alignment neither.
