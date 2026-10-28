@@ -275,9 +275,7 @@ fn roll_magic(
     let (prefixes, suffixes) = match rarity {
         Rarity::Rare => {
             let count = i32::from(*pick_weighted(rng, &affixes.rare_counts).unwrap_or(&3));
-            let most = crate::content::MAX_PER_KIND as i32;
-            let prefixes = rng.range((count - most).max(0), count.min(most));
-            (prefixes, count - prefixes)
+            rare_split(rng, count)
         }
         _ => {
             let [prefix, suffix, both] = affixes.magic_affixes;
@@ -295,6 +293,27 @@ fn roll_magic(
             *pick_weighted(rng, &shapes).unwrap_or(&(1, 0))
         }
     };
+    affixed(content, rng, def, level, rarity, (prefixes, suffixes))
+}
+
+/// How many of a rare item's `count` affixes are prefixes and how many suffixes: one draw,
+/// evenly among the splits that keep at most [`crate::content::MAX_PER_KIND`] of each.
+fn rare_split(rng: &mut Rng, count: i32) -> (i32, i32) {
+    let most = crate::content::MAX_PER_KIND as i32;
+    let prefixes = rng.range((count - most).max(0), count.min(most));
+    (prefixes, count - prefixes)
+}
+
+/// The affixes of a `rarity` item of `def` at `level`, `prefixes` then `suffixes` (fewer when
+/// nothing more may roll), and a rare one's name; `None` if it rolled no affix.
+fn affixed(
+    content: &Content,
+    rng: &mut Rng,
+    def: &ObjectDef,
+    level: u8,
+    rarity: Rarity,
+    (prefixes, suffixes): (i32, i32),
+) -> Option<Magic> {
     let mut rolled: Vec<Affix> = Vec::new();
     for (kind, count) in [(AffixKind::Prefix, prefixes), (AffixKind::Suffix, suffixes)] {
         for _ in 0..count {
@@ -317,6 +336,24 @@ fn roll_magic(
         carried: 0,
         unique: None,
     })
+}
+
+/// An heirloom (spec §8 "Talents": Father's sword): `object` with `count` affixes rolled at item
+/// level `level`, from `rng`: two are a magic item's prefix and suffix, one a prefix, and more a
+/// rare item's, split as a rare item's are and named (fewer when nothing more may roll on it).
+/// Unidentified, like any loot; no ornament and no other material.
+pub fn heirloom(content: &Content, rng: &mut Rng, object: ObjectId, count: u8, level: u8) -> Stack {
+    let def = content.object(object);
+    let count = i32::from(count);
+    let (rarity, split) = match count {
+        ..=1 => (Rarity::Magic, (1, 0)),
+        2 => (Rarity::Magic, (1, 1)),
+        _ => (Rarity::Rare, rare_split(rng, count)),
+    };
+    match affixed(content, rng, def, level.max(1), rarity, split) {
+        Some(magic) => Stack::with_magic(object, 1, magic),
+        None => Stack::one(object),
+    }
 }
 
 /// Whether some affix of `kind` may roll on base item `def` at item level `level` (what

@@ -246,6 +246,7 @@ impl World {
         player.talents.take(id, choice);
         class::hand_out(&content, player, def, rank, level);
         self.train_chosen(def.effects_at(rank), choice);
+        self.hand_down(def.effects_at(rank));
         let due = &mut self.state.progress.due[at];
         if as_bonus {
             due.bonus -= 1;

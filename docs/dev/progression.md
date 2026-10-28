@@ -335,6 +335,20 @@ race's granted talents, so a human picks 3 and a human bard 4.
 start as before); `Display` stays `race,gender,class`, so the character's other streams are
 unchanged, and `same_choice` compares without the picks (`default_name`).
 
+**Heritage** (#697): a talent with `needs = { creation = true }` (`Need::Creation`, "to be a
+new character"; the wiki says "only at character creation") is met only at character level 1,
+so only the creation picks offer it (the creation step, `--talents`, Random) and a level's pick
+refuses it in words. Family wealth and Father's sword (tree `heritage`, `no_free`) are the
+first; their effects (`starting_gold`, `starting_gems`, `heirloom`) are hand-outs, not
+`TalentMods`: `World::hand_down` (`world/heirloom.rs`, one line in `learn`) gives them once, as
+the rank is taken, each from its own stream (`character/family-wealth/<spec>`,
+`character/fathers-sword/<spec>`), so the kit and every other roll stay as they were. The
+heirloom is `loot::heirloom` (2 affixes: magic, prefix and suffix; more: rare, split and named
+as a rare item's), identified, and readied in its own slot only if that is free. Its weapons
+are checked once objects load (`talent::check_heirlooms`). `kit::tests::
+nobody_starts_strained_and_only_wealth_burdens` adds the heritage at its heaviest: never
+Strained, and Burdened only for the weakest of a small race. Tests: `world/heirloom_tests.rs`.
+
 The creation step reads a drafted run (`World::draft`: `begin` with the kit, the picks left
 due), cloned per question: `creation_offers(picks)` takes `picks` on a clone and returns what is
 left and what may come next; `random_creation` runs `take_random` on a clone. Tests:

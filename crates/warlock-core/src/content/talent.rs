@@ -10,8 +10,8 @@
 
 use super::affix::Once;
 use super::{
-    Build, CombatStance, Content, ContentError, MAX_LEVEL, MAX_RANK, MAX_RESOURCE, ResourceId,
-    Role, WeaponSkillId, duplicate_id,
+    Build, CombatStance, Content, ContentError, ItemKind, MAX_ITEM_LEVEL, MAX_LEVEL, MAX_RANK,
+    MAX_RESOURCE, ResourceId, Role, WeaponSkillId, duplicate_id,
 };
 use crate::alignment::Requirement;
 use crate::dice::Dice;
@@ -413,6 +413,29 @@ pub enum TalentEffect {
     /// Loot it finds and creatures drop is a loose gem this percent more often (Hoard sense):
     /// the gems' chance, never above certain.
     GemFindPercent { value: i32 },
+    /// Handed out once, as it is taken (a talent only for character creation: Family wealth):
+    /// gold coins, `percent` of those the character carries more, at least `at_least` and at
+    /// most `at_most` (`world/heirloom.rs`).
+    StartingGold {
+        percent: u32,
+        at_least: u32,
+        at_most: u32,
+    },
+    /// Handed out once, as it is taken (Family wealth): `min` to `max` loose gems found at item
+    /// level `level`, drawn from the stream `character/family-wealth/<race>,<gender>,<class>`.
+    StartingGems { min: u8, max: u8, level: u8 },
+    /// Handed out once, as it is taken (Father's sword): the race's heirloom weapon (`weapons`,
+    /// by race id; `fallback` for a race without one), magic with `min` to `max` affixes rolled at
+    /// item level `level` and identified, from the stream
+    /// `character/fathers-sword/<race>,<gender>,<class>`; wielded in the main hand when it is
+    /// free, else carried.
+    Heirloom {
+        weapons: BTreeMap<String, String>,
+        fallback: String,
+        min: u8,
+        max: u8,
+        level: u8,
+    },
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.
     Notice { value: i32 },
@@ -1280,6 +1303,49 @@ impl TalentEffect {
                 }
                 percent(*value)
             }
+            TalentEffect::StartingGold {
+                percent,
+                at_least,
+                at_most,
+            } => {
+                if *percent > 1000 || at_least > at_most || *at_most > 10_000 {
+                    return Err(
+                        "`starting_gold`: percent up to 1000, at_least up to at_most, \
+                                at_most up to 10000"
+                            .into(),
+                    );
+                }
+                Ok(())
+            }
+            TalentEffect::StartingGems { min, max, level } => {
+                if *min > *max || *max > 10 || !(1..=MAX_ITEM_LEVEL).contains(level) {
+                    return Err(format!(
+                        "`starting_gems`: min up to max up to 10, level 1 to {MAX_ITEM_LEVEL}"
+                    ));
+                }
+                Ok(())
+            }
+            TalentEffect::Heirloom {
+                weapons,
+                fallback,
+                min,
+                max,
+                level,
+            } => {
+                if !(1..=*max).contains(min) || *max > 6 || !(1..=MAX_ITEM_LEVEL).contains(level) {
+                    return Err(format!(
+                        "`heirloom`: min 1 to max, max up to 6, level 1 to {MAX_ITEM_LEVEL}"
+                    ));
+                }
+                for race in weapons.keys() {
+                    if !content.races().list.is_empty() && content.race(race).is_none() {
+                        return Err(format!("`heirloom`: names an unknown race `{race}`"));
+                    }
+                }
+                // Its weapons are checked once the objects load (`check_heirlooms`).
+                let _ = fallback;
+                Ok(())
+            }
             TalentEffect::Credit { gold } => {
                 if !(1..=1000).contains(gold) {
                     return Err("`credit`: gold is 1 to 1000".into());
@@ -2034,6 +2100,8 @@ pub enum Need {
     Element(String),
     /// Born on a lucky day.
     Lucky,
+    /// A new character: taken only at character creation (level 1's creation picks).
+    Creation,
     /// Any one of these ("Intelligence 12 or Appraise 20").
     Either(Vec<Need>),
 }
@@ -2084,6 +2152,7 @@ impl Need {
                 format!("to be {name}-born")
             }
             Need::Lucky => "to be born on a lucky day".into(),
+            Need::Creation => "to be a new character".into(),
             Need::Either(needs) => (needs.iter())
                 .map(|n| n.words(content))
                 .collect::<Vec<_>>()
@@ -2122,6 +2191,8 @@ pub struct Needs {
     pub animal: Option<String>,
     pub element: Option<String>,
     pub lucky: bool,
+    /// Only at character creation (`creation = true`).
+    pub creation: bool,
     /// Any one of these, if set (`either`): at least two.
     pub either: Vec<Need>,
 }
@@ -2151,6 +2222,7 @@ impl Needs {
         let animal = self.animal.clone().map(Need::Animal);
         let element = self.element.clone().map(Need::Element);
         let lucky = self.lucky.then_some(Need::Lucky);
+        let creation = self.creation.then_some(Need::Creation);
         let either = (!self.either.is_empty()).then(|| Need::Either(self.either.clone()));
         talents
             .chain(stats)
@@ -2165,6 +2237,7 @@ impl Needs {
             .chain(animal)
             .chain(element)
             .chain(lucky)
+            .chain(creation)
             .chain(either)
     }
 }
@@ -2502,6 +2575,8 @@ struct NeedsSpec {
     animal: Option<String>,
     element: Option<String>,
     lucky: bool,
+    /// Only at character creation: never a level's pick.
+    creation: bool,
     /// Alternatives: any one of what it asks will do (`either = { stats = { intelligence = 12
     /// }, skills = { appraise = 20 } }`).
     either: Option<Box<NeedsSpec>>,
@@ -2716,8 +2791,35 @@ fn resolve_needs(
         animal: spec.animal,
         element: spec.element,
         lucky: spec.lucky,
+        creation: spec.creation,
         either,
     })
+}
+
+/// Every `heirloom` effect names weapons (objects load after the talents): the first that
+/// names something else, in words.
+pub(super) fn check_heirlooms(content: &Content) -> Result<(), String> {
+    for (_, def) in content.talents().iter() {
+        let effects = (def.effects.iter()).chain(def.ranks.iter().flat_map(|r| &r.effects));
+        for effect in effects {
+            let TalentEffect::Heirloom {
+                weapons, fallback, ..
+            } = effect
+            else {
+                continue;
+            };
+            for object in weapons.values().chain([fallback]) {
+                let weapon = (content.object_id(object)).and_then(|o| content.object(o).kind);
+                if !matches!(weapon, Some(ItemKind::Weapon | ItemKind::Launcher)) {
+                    return Err(format!(
+                        "talent `{}`: `heirloom`: `{object}` is not a weapon",
+                        def.id
+                    ));
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Parses the talent table: the settings (`max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`,
