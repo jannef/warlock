@@ -1,0 +1,18 @@
+[[talent]]
+id = "lasting_draughts"
+name = "Lasting draughts"
+tree = "vigour"
+description = "Your body holds on to what a draught gives it: potions that strengthen you or sharpen your eyes last half again as long."
+needs = { stats = { toughness = 13 } }
+effects = [
+    { kind = "status_lasts", status = "fortified", value = 50 },
+    { kind = "status_lasts", status = "nimble", value = 50 },
+    { kind = "status_lasts", status = "hale", value = 50 },
+    { kind = "status_lasts", status = "keen", value = 50 },
+    { kind = "status_lasts", status = "steadfast", value = 50 },
+    { kind = "status_lasts", status = "imposing", value = 50 },
+    { kind = "status_lasts", status = "cat_eyed", value = 50 },
+    { kind = "status_lasts", status = "owl_eyed", value = 50 },
+    { kind = "status_lasts", status = "moth_eyed", value = 50 },
+]
+systems = ["potions"]

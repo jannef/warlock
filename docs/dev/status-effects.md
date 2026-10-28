@@ -50,13 +50,22 @@ Buffs, hexes, and cooldowns (spec §8 "Status effects"; #227, design
 `docs/design/progression.md` §4.1 B1) are statuses too, with four more optional fields
 (`StatusDef`): `combat` (`CombatBonus { to_hit, damage, dodge, parry }`, the stances' numbers
 and ranges), `cost` (percent of every price, `COST_PERCENT` 50 to 1000: below 100 only a spell's buff on
-its caster may be, `spell_def` refusing a hex's or a damage spell's, so creatures are never
+its caster may be (and the potion of quickness's Hasted on the player), `spell_def` refusing a hex's or a damage spell's, so creatures are never
 hastened and `World::out_of_view_for` stays exact), `blocks` (`Vec<ActionKind>`, ids from `data/actions.toml`),
 and `follows` (`Option<StatusId>`, resolved after the whole file, `resolve_follows`: no chain back
 to itself; a status with it must end; nothing follows into or out of the disease status,
 checked in `Content::load_diseases`), and `light` (`Option<LightId>`, a light of
 `data/lights.toml` its bearer sheds while it lasts, the brightest of several: Lit, the Light
-spell's, #589; read by `LightCache` sources in `light/cache.rs`). `penalty` takes positive numbers too (a raise). Each field
+spell's, #589; read by `LightCache` sources in `light/cache.rs`), `vision` (`Option<usize>`, a
+profile of `data/vision.toml` lent while it lasts, read in `Actor::eyes` beside `worn_vision`,
+bettering part by part; a potion's Owl-eyed, #567), and `resist` (`Vec<(DamageTypeId, i32)>`,
+−100 to 75 and not 0, counted as gear in `Actor::resistances`; a potion's Warmed, #567).
+`penalty` takes positive numbers too (a raise), and `per_degree = true` counts it once a degree
+(`StatusDef::penalty_times`, read in `Effects::penalty_for`; a potion's boost; its value times
+`max` stays in −10 to 10). A talent's `status_lasts` lengthens a status's easing per degree
+after `status_eases` shortens it (`TalentMods::eases_every`), so a saved `wear` may exceed the
+status's own `eases`: `Effects::is_valid_for` takes the sufferer's talents and allows the
+slower pace. Each field
 has one reader: `Effects::sharpen` in `Actor::stanced` (every attack profile, after the stance),
 `Effects::defence` in `Actor::defence`, `Effects::slow` in `World::burdened` (after the burden
 and Bloated), and `Effects::blocking` in `World::refuse_blocked` (`world/buff.rs`, the first line

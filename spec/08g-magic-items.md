@@ -313,10 +313,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
   was at it, then the potential +a roll of `potential`, "1d2", one gameplay draw; hit points
   follow a Toughness rise at once, the maximum mana and the carrying limits follow the score;
   "You feel stronger.", with ", and that you could be stronger yet." when the potential rose by
-  2), `harm` (`dice` degrees of its `status`, Poisoned: sickness, as rotten food gives). Every
-  potion names its training `marks` by stat (5 for a common one, 10 for a greater, 20 for an
-  elixir; none for a harm), given as sure marks through the `drank` use (an elixir's through the
-  `elixir` use; §8 "Stats").
+  2), `harm` (`dice` degrees of its `status`, Poisoned: sickness, as rotten food gives), and,
+  for a while (#567), `boost`
+  (`severity` degrees of its `status`, one that raises a stat: Fortified, Nimble, Hale, Keen,
+  Steadfast, Imposing, +2 a degree for ten minutes a degree, the stronger of two doses kept),
+  `vision` (its `status` lends eyes for half an hour: Cat-eyed low-light, Owl-eyed darkvision,
+  Moth-eyed the ultraviolet sight), `haste` (`severity` degrees of Hasted, the Haste spell's
+  status: a minute a degree, everything a quarter quicker), and `resistance` (its `status`
+  resists as gear does for half an hour, 50 %: Warmed fire, Chill-proof cold, Earthed
+  electricity, Proof against poison). A status lent says its own line as it begins ("You feel
+  stronger.", "Your eyes open wide to the dark."); a stronger dose of one already felt says it
+  again, and one that changes nothing "Nothing more comes of it." The status bar and the
+  character screen name it as they name Blessed, the raised score shown raised, never a number
+  or a timer. Every potion names its training
+  `marks` by stat (5 for a common one, 10 for a greater, 20 for an elixir; none for a harm),
+  given as sure marks through the `drank` use (an elixir's through the `elixir` use; §8
+  "Stats").
   - **Elixirs** (#568): the elixirs of might, grace, vigour, wit, will, and presence (Strength,
     Dexterity, Toughness, Intelligence, Willpower, Presence), gold `#e8c860`, item level 8,
     frequency 2, value 2000: deep loot, the forgotten altar's great boon `elixir` (§7 "Special
@@ -338,7 +350,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **colour**, fixed in data (`colour`, its `fg` the object's; potions of one colour share
     one `fg`, checked). The colour follows one rule: each effect family has a hue, and a potion
     of several effects mixes theirs: healing red, cures green, healing and cures russet, mana
-    blue, harm brown. The colour hints at the family, never the type. The `!` shows in it,
+    blue, stat boosts orange (greater ones deep orange), vision violet, speed yellow, resistance
+    teal, harm brown. The colour hints at the family, never the type. The `!` shows in it,
     known or not. A type is known (`WorldState::known_scrolls`) once one is drunk, identified
     (the scroll of identify, an appraisal), or in the character's starting kit (the witch's
     potion). The item description says what a known one does in words ("Heals wounds at once,
@@ -348,11 +361,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     greater healing (4d8, cures bleeding; 4, 30; 120; russet), full healing (8d8, cures bleeding
     and poison; 10, 10; 300; deep russet), antidote (cure poison; 2, 40; 60; green), cure
     disease (every disease; 4, 25; 150; pale green), mana (3d8; 3, 30; 100; blue), and the
-    murky draught (harm, Poisoned 2; 1, 20; 10; brown). **Where**: loot (by `level` and
+    murky draught (harm, Poisoned 2; 1, 20; 10; brown); the potions of might, grace, vigour,
+    wit, will, and presence (boost, severity 1; 3, 20 each; 150; orange) and their greater
+    potions (severity 2; 8, 8 each; 400; deep orange; 10 marks), of cat's eyes, owl's eyes, and
+    moth's eyes (vision; 3, 15 each; 100; violet; Willpower), of quickness (haste 1; 6, 10;
+    250; yellow; Dexterity), and of warmth, frost, earthing, and proofing (resistance; 4, 15
+    each; 120; teal; Toughness). **Where**: loot (by `level` and
     `frequency`, never magic), general stores and provisioners (they stock and buy potions), the
     alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
     pile.
   - **Talents** (system `potions`): Thrifty drinker (Delver, from level 6): a potion is not used
     up one time in four (one gameplay draw a drink, none without the talent); Nose for draughts
     (Scholar, Intelligence 12): an unknown potion picked up tells its kind by its smell, never
-    its type ("The fizzy red potion smells of herbs: a cure of some kind.").
+    its type ("The fizzy red potion smells of herbs: a cure of some kind."); Lasting draughts
+    (Vigour, Toughness 13; #567): boost and vision statuses last half again
+    (`status_lasts`, each degree half again as long to ease); the witch's class ability
+    Cauldron-wise (at 12): a healing potion heals a fifth more (`potion_heals`) and the boosts
+    last a fifth longer.

@@ -310,8 +310,9 @@ name = "Magic items and identification"
 id = "scrolls"
 name = "Scrolls and casting"
 
-# Potions (#565, the combat progression design §10): drunk from the Consume list. Thrifty drinker
-# (Delver) and Nose for draughts (Scholar).
+# Potions (#565, #567, the combat progression design §10): drunk from the Consume list. Thrifty
+# drinker (Delver), Nose for draughts (Scholar), Lasting draughts (Vigour), and the witch's
+# Cauldron-wise.
 [[system]]
 id = "potions"
 name = "Potions"
