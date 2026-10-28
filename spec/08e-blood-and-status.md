@@ -230,8 +230,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`combat = { to_hit = -1 }`).
   - **Spending**: `World::spend_mana(actor, base)` is the one way to spend it, refused (nothing
     spent) when the actor has less than the cost: `base` as its talents make it
-    (`Actor::mana_cost`, `TalentMods::mana_cost`: Frugal caster's −20 %, rounded to the nearest,
-    never below 1 for a cost above 0). The player's spending of any is the `cast` use of the
+    (`Actor::mana_cost`, `TalentMods::mana_cost`: Frugal caster's −20 % and the `mana_cost`
+    of the magic items worn (of Thrift, unidentified too), summed before the one rounding and
+    never more than 50 % off together, rounded to the nearest, never below 1 for a cost above 0). The player's spending of any is the `cast` use of the
     stats (§8 "Stats": a Willpower mark, 20 %, from the training stream). The casters' spells call it (spec §8
     "Class abilities": after every check, so a refused cast spends nothing), as does the dev
     action `drain:N`, which stands in for an ability's cost ("You spend 5 mana (dev).",
@@ -344,7 +345,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **The lift** (`SpellRules::lift`, `Actor::spell_lift`, `Actor::spell_cap`): a caster's
     `damage` scales' sum (Σ weight × modifier) is the percent its cap for the spell is lifted
     by, never below 0, at most the tier's `max_lift` (`[tiers]`, tier 0 first, 40, 50, 60, 70,
-    then 80; ascending or flat, 0 to 200), plus Keen mind's 10 for its school or element; the
+    then 80; ascending or flat, 0 to 200), plus Keen mind's 10 for its school or element and
+    the `spell_lift` of the magic items worn (Potent; §8 "Magic items"); the
     caster's cap is `cap_of × (100 + lift) / 100`, rounded down. Its dice gain as many as the
     lift's room holds (`SpellDice::lifted`: `(lifted − bonus) / sides − (cap − bonus) / sides`,
     each rounded down), so the unlifted dice under the cap stay under the lifted one. Only the
@@ -356,17 +358,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
       Overreach's −33 %) × the shape's percent (a
       burst's at its own `radius`) × the resolution's `cost` percent × (100 + the summed
       `spell_cost_percent` of what is worn, `data/objects/`: chain mail 10, scale 20, banded 30,
-      plate 40, great helm and large shield 10, tower shield 20) %, rounded to the nearest once,
+      plate 40, great helm and large shield 10, tower shield 20; each piece's less its own
+      Mage-wrought `spell_ease`, never below 0, a piece eased to 0 hindering nothing, so no
+      longer armour for Battle caster's grip) %, rounded to the nearest once,
       at least 1; then School focus's −10 % for a spell of its tag, Archmage's −50 %, and
       Empower's −10 % (`spell_mana_percent`), summed, at least 1 (`Actor::spell_base`, what
-      `World::spend_mana` is given), and Frugal caster's cut there. Spent once the cast is sure
+      `World::spend_mana` is given), and Frugal caster's and of Thrift's cut there. Spent once the cast is sure
       to go off; refused, with no time and no mana, without it ("You have too little mana.").
     - **Reach**: the spell's `reach` scales add cells of range, a burst's radius, or a cone's or
       a line's length (the sum, never below 0, over 100, a half rounded down: by default a cell
       per 2 points of Willpower's positive modifier), and School focus a cell of range or length
-      per focus on one of the spell's tags (a radius never), never past the spell's caps
+      per focus on one of the spell's tags (a radius never), and the magic items worn their
+      `spell_reach` (of Farcasting) the same way, never past the spell's caps
       (`Actor::spell_reach`); its `duration` scales add degrees of a buff's or a hex's status the
-      same way (by default Presence, a degree per 2 points; the hexes Presence and Willpower,
+      same way, and the items worn their `spell_duration` (of Lingering) (by default Presence, a degree per 2 points; the hexes Presence and Willpower,
       `SpellRules::lengthened`; the status's `max` holds it: Blessed, Hexed, Weakened, and
       Sluggish go to 3, each degree its `eases` again).
     - **Dice**: the spell's at the caster level with the dice its lift holds
@@ -380,9 +385,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
       ascending actor id order, no roll to hit, Evasion halving (`World::spell_hurts`),
       resistances taking their share, no armour; `auto` (ray, bolt) strikes the first creature
       on its line, never missing; `attack` rolls 2d12 + the spell's `to_hit` scales (the sum over
-      100, a half rounded toward zero; by default the Dexterity modifier; a scroll's or a wand's
-      always Dexterity's) against
-      the target's Defence (Deflect missiles counts), threat 22 and critical ×2 as a blow's
+      100, a half rounded toward zero; by default the Dexterity modifier; plus the items worn's
+      `spell_to_hit`, of the Magus; a scroll's or a wand's always Dexterity's alone) against
+      the target's Defence (Deflect missiles counts), threat 22 (an own cast: less the items
+      worn's `spell_threat`, Baleful, never below 2, `Actor::spell_threat`; a scroll's or a
+      wand's 22) and critical ×2 as a blow's
       (`combat::strike`); `touch` the same against a creature next to the caster. Only attack
       and touch can critical. A hex falls on the hostile the caster sees at the cell aimed at.
     - **Shapes**: a burst flies and goes off as a scroll's (`burst_center`, `cast_burst`); a line

@@ -138,10 +138,10 @@ fn frugal_caster_costs_a_fifth_less_never_below_one() {
         ..TalentMods::default()
     };
     let costs: Vec<i32> = [0, 1, 2, 3, 5, 6, 10, 12]
-        .map(|c| frugal.mana_cost(c))
+        .map(|c| frugal.mana_cost(c, 0))
         .into();
     assert_eq!(costs, [0, 1, 2, 2, 4, 5, 8, 10]);
-    assert_eq!(TalentMods::default().mana_cost(6), 6);
+    assert_eq!(TalentMods::default().mana_cost(6, 0), 6);
 
     // Spending goes through it: the dev drain stands in for an ability's cost.
     let mut w = world();

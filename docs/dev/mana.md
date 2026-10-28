@@ -39,8 +39,10 @@ issue how it interacts with mana**, and hooks in at the one place below.
     the ticks' `mana_damage` sums into `Moment::drained` and `mana::drain` takes it (never below
     0, never a death).
   - `World::spend_mana(id, base) -> bool`: the one way to spend; refused when short. The cost
-    is `Actor::mana_cost(content, base)` (`TalentMods::mana_cost`: `mana_cost_percent`,
-    Frugal caster's −20, rounded to the nearest, at least 1 for a cost above 0); an ability that
+    is `Actor::mana_cost(content, base)` (`TalentMods::mana_cost(base, worn_off)`:
+    `mana_cost_percent`, Frugal caster's −20, and the worn `mana_cost` (of Thrift, #629)
+    summed before the one rounding and held to `talent::MAX_MANA_CUT`, 50 off; rounded to the
+    nearest, at least 1 for a cost above 0; a creature's gear counts for its summons); an ability that
     greys out without the mana compares that, not its base. The player's spend of any is
     `StatUse::Cast` (`train_stat`: a Willpower mark at 20 %, `data/stats.toml`). Spells (the one
     cast path, `world/cast.rs`, docs/dev/spells.md) call it after every check with

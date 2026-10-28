@@ -55,6 +55,9 @@ pub(super) struct Shot<'s> {
     pub(super) cap: i32,
     /// The caster's to-hit with it.
     pub(super) to_hit: i32,
+    /// The natural roll from which it threatens a critical: the caster's
+    /// [`super::Actor::spell_threat`] for its own cast, else [`crate::combat::DEFAULT_THREAT`].
+    pub(super) threat: u8,
     /// The spell attack skill and caster style it is cast with (the caster's own cast of a
     /// spell that rolls to hit; none for a scroll, a wand, or a reflected flight).
     pub(super) skills: AttackSkills,
