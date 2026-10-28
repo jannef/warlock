@@ -16,7 +16,7 @@ in it, its dungeon branches, quests, people (dialogue), and its own creature typ
 `assets/campaigns/<id>/` with a `campaign.toml` (name, description, the scenario a new run
 starts, and `kind`). Everything else (terrain, objects, the common creature types, rules) is
 engine data every campaign shares. The showcase is `assets/campaigns/showcase/` with
-`kind = "test"`: its levels and nine scenarios, the Depths, the four quests, and the hermit,
+`kind = "test"`: its levels and fourteen scenarios, the Depths, the four quests, and the hermit,
 gardener, and bard (their dialogue and their types). New run lists a test campaign's scenarios
 in developer builds only (§6), and the player wiki leaves it out once a campaign to play exists.
 **Test content never appears in a release** (#331): the showcase is built in only with the
@@ -140,6 +140,13 @@ Hild) starts in the middle of its dimly lit south hall. Three rooms open onto th
 doors, each holding a summoner (§8 "Summoning"): west a goblin wizard, middle a necromancer, east a
 dark wizard. Open a door and the summoner behind it sees the player and calls forth its kind; a
 first-level warrior does not live long there, which is the point.
+
+**Chest hall (40×12, #619)**: reached by no stairs; the `chests` scenario (a human thief, Maud)
+starts at the west end of its lit hall, for captures and tests of chests (§8 "Chests", "Mimics").
+A row across the hall holds a coffer, a locked chest (her Pick lock opens it), a chest with a
+hidden arrow trap, and a mimic shaped as a chest. Behind a secret door in the hall's east wall
+lies a treasure room, and south of it a greater treasure room walled up with no door, its breach
+the wall beside a pick-axe on the hall's floor (§7 "Special rooms"); both are hinted on arrival.
 
 **Level 2 — Vast (≥ 400×300)**: scrolling camera, many light sources, performance budget check.
 Introduced in M2, lit in M3. Beside its stairs up to the hub, stairs down lead into the depths and
