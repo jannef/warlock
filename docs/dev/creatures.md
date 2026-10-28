@@ -50,7 +50,8 @@ the Beast-friend talent makes `animal` factions neutral until the player attacks
 and `PerceptionView::stance`; `docs/dev/progression.md`). The AI is `world/ai.rs`
 (look → fight → search the last seen spot → look into the newest unseen noise → back to the post →
 patrol), paths `world/path.rs` (A*, fixed tie-breaks), and per-creature memory `Mind` on `Actor`
-(saved, hashed). Creature sight is `sight.rs`: the player's rules computed per creature, only for
+(saved, hashed; its `noticed` is the player's half of awareness, set by perception, not the AI:
+docs/dev/surprise.md). Creature sight is `sight.rs`: the player's rules computed per creature, only for
 cells where hostiles stand (nearest first, line of sight only out to that distance, darkvision
 before light, bounce light only when needed); it must stay equal to the player's perception —
 `light_tests::check_creature_sight` compares `sight::light` with the perceived light on every

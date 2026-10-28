@@ -77,7 +77,17 @@ impl World {
         let climb = if fixture || self.steps_lightly(at, victim) {
             0
         } else {
-            self.spring_trap(at, victim, events)
+            // A creature knows nothing of traps; the player knows those they have found.
+            let hidden = (self.state.current().traps.get(&at))
+                .is_some_and(|t| victim != self.state.player || !t.known);
+            let sprung = self.sprung;
+            let climb = self.spring_trap(at, victim, events);
+            // A hidden trap catches the one it springs on unawares, nobody beside
+            // (`surprise.rs`), after the trap's own draws.
+            if hidden && self.sprung != sprung {
+                self.startle(victim, None, events);
+            }
+            climb
         };
         self.warp_step(at, victim, events);
         climb

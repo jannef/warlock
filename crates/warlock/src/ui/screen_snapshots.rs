@@ -274,6 +274,13 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
+    // Taken by surprise (#681): the status's line in the message line, Surprised in the status
+    // bar, never a number.
+    Case {
+        name: "status-surprised",
+        actions: "afflict:surprised",
+        ..BASE
+    },
     // A potion's boost (#567): Fortified by name in the Status row and the status bar, the
     // Strength score raised, no numbers.
     Case {

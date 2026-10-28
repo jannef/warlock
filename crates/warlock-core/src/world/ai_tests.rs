@@ -746,6 +746,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
                 last_seen: Some(Pos::new(7, 2)),
                 noise: None,
                 post: Some(Pos::new(1, 1)),
+                noticed: None,
             },
             inventory: Vec::new(),
             equipment: Default::default(),

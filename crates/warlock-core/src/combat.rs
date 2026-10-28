@@ -436,6 +436,19 @@ impl Target {
             resistances: Resistances::default(),
         }
     }
+
+    /// This target with nothing of `categories` counting toward its Defence (positive bonuses
+    /// only: a penalty stays): what a Feint ignores, and a surprised target's Dexterity and
+    /// Dodge.
+    pub fn without(mut self, categories: impl IntoIterator<Item = Category>) -> Self {
+        for category in categories {
+            let bonus = self.defence.bonus(category);
+            if bonus > 0 {
+                self.defence = self.defence.plus(category, -bonus);
+            }
+        }
+        self
+    }
 }
 
 /// What came of an attack, as the event and the message say it.

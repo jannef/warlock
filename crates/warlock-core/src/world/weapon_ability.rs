@@ -438,6 +438,8 @@ impl World {
             .filter(|other| other.id != mover && other.level == me.level)
             .filter(|other| other.pos.chebyshev(me.pos) == 1 && other.pos.chebyshev(from) > 1)
             .filter(|other| !other.weapon_skills.is_empty())
+            // Surprised, it fires nothing out of its turn (`surprise.rs`).
+            .filter(|other| !self.surprised(other.id))
             .filter(|other| self.stance(mover, other.id) == Stance::Hostile)
             .map(|other| other.id)
             .collect();
@@ -555,8 +557,9 @@ impl World {
     }
 
     /// Actor `id`'s action is taken (its price paid): each of its statuses with `per_action`
-    /// eases a degree (gone at none), but those given during that action.
-    pub(super) fn spend_actions(&mut self, id: ActorId) {
+    /// eases a degree (gone at none, an [`Event::Status`] end: "You recover your wits."), but
+    /// those given during that action.
+    pub(super) fn spend_actions(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let fresh: Vec<StatusId> = (self.fresh.iter())
             .filter(|(a, _)| *a == id)
             .map(|&(_, s)| s)
@@ -578,6 +581,11 @@ impl World {
             });
             if left == 0 {
                 actor.effects.remove(status);
+                events.push(Event::Status {
+                    actor: id,
+                    status,
+                    began: false,
+                });
             }
         }
     }

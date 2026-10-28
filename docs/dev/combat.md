@@ -48,6 +48,9 @@ rules and unknown affixes stay hidden; situational changes made after the profil
 glare, class abilities' blows, free blows' flurry) are not part of it. Tests:
 `world/attacks_tests.rs`. Spells stay intents (`strike: None`). Tests: `combat.rs` (exhaustive 2d12
 enumeration for hit chances, criticals, miss attribution), `world/fight_tests.rs`.
+Surprise (`docs/dev/surprise.md`): `resolve` asks `World::unaware` of every attack, `startle`s an
+unaware target before the strike's draws, and rolls against `World::flat_footed` (Dexterity and
+Dodge stripped by `Target::without`, Feint's strip) for an unaware or Surprised target.
 
 Creatures' natural Protection follows a rule by body and level (spec §8 "Natural Protection by
 body and level", #563): data only, checked by `content/creature_body_tests.rs` (the body table by
