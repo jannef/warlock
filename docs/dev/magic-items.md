@@ -101,7 +101,11 @@ sum by (effect, resource) in `Mods::pools`, read with `Mods::resource(effect, id
 `Mods::get`. Their hooks (B1, #630; docs/dev/resources.md): `resource_max` in
 `Actor::resource_max` (the worn term lifted by Bellows: `TalentMods::geared_resource`, by pool;
 T1, #634; `world/affix_talent_tests.rs`), `resource_rate` in `World::resource_rate`, `active_stamina` (keyed on
-stamina, global) in `Actor::weapon_stamina`; `resource_on_kill` waits for E1. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
+stamina, global) in `Actor::weapon_stamina`. **On a kill** (E1, #632; `world/siphon.rs`,
+`world/siphon_tests.rs`): `mana_on_kill` and `resource_on_kill` in `World::siphon`, called at
+the kill point of an attack (`fight.rs::resolve`, `spell.rs::spell_strikes`), the slain within
+`SIPHON_RANGE` (3, a radius); never from `dies`, so a status tick's or a trap's death gives
+nothing. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
 effect that names nothing else): one group per (effect, resource), so `check_category` keeps
 Tireless (stamina) and of Fury (rage) apart. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`
 item class holds the kind; rare names' second words `tool = [...]` in `data/affixes.toml`): a
