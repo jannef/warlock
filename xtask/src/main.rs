@@ -7,7 +7,8 @@
 //! - `gen-vast [--check]`: regenerate `assets/campaigns/showcase/levels/vast.toml` (`--check` fails if it is stale).
 //! - `licenses [--check]`: regenerate `THIRD_PARTY_LICENSES.html` (needs `cargo-about`).
 //! - `golden [--update | --local]`: compare headless captures with `tests/golden/*.png`.
-//! - `wiki [--build]`: write the player wiki's generated tables (`--build`: run mdBook).
+//! - `wiki [--build | --check-links]`: write the player wiki's generated tables (`--build`: run
+//!   mdBook; `--check-links`: also check every link and anchor in the built book).
 //! - `bench-frames`: release-mode frame-time measurement of offscreen captures.
 //! - `bench-turns`: release-mode turn-time table for the hub and the vast level.
 //!
@@ -39,7 +40,7 @@ fn main() -> ExitCode {
         Some("bench-frames") => bench::frames(args.get(1).map_or("2560x1440", String::as_str)),
         _ => {
             eprintln!(
-                "usage: cargo xtask <smoke | web | web-smoke [CHROME] | gen-vast [--check] | licenses [--check] | golden [--update | --local] | wiki [--build] | bench-turns | bench-frames [WxH]>"
+                "usage: cargo xtask <smoke | web | web-smoke [CHROME] | gen-vast [--check] | licenses [--check] | golden [--update | --local] | wiki [--build | --check-links] | bench-turns | bench-frames [WxH]>"
             );
             return ExitCode::from(2);
         }

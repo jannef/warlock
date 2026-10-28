@@ -1,50 +1,50 @@
 # Magic
 
-A **spell** is cast from the abilities menu (`a`), under its own heading *Spells*, and paid in
+A **spell** is cast from the [abilities menu](abilities.md#the-abilities-menu) (`a`), under its own heading *Spells*, and paid in
 [mana](mana.md). You know a spell for good once your class gives it or once you have learned it
-from a scroll (below). Every spell is measured by the same rules below: its tier, your caster
-level, its shape, and how it finds its target.
+from a scroll (below). Every spell is measured by the same rules below: its [tier](#tiers), your [caster
+level](#caster-level), its [shape](#shapes), and how it finds its target.
 
 ## What your class gives
 
 Each casting class gives only a few spells, with its [class table](classes.md#levels): a full
-caster a cantrip at level 1 and about four in all, a bard, a paladin, or a ranger a cantrip or a
+caster a [cantrip](#tiers) at level 1 and about four in all, a bard, a paladin, or a ranger a cantrip or a
 boon, and the rest none. Every other spell is learned from scrolls, so a caster who finds few
-scrolls stays a modest one. No spell a class gives costs more when it comes than its tier's base
-(it never comes above your caster level's tier).
+scrolls stays a modest one. No spell a class gives costs more when it comes than its [tier](#tiers)'s base
+(it never comes above your [caster level](#caster-level)'s tier).
 
 {{#include generated/class-spells.md}}
 
 ## The spells
 
-What each spell does, how far it reaches (and how far your stats can take it), what it grows
-with, and its mana at its tier's comfortable caster level, without armour:
+What each spell does, how far it reaches (and how far your [stats](stats.md) can take it), what it grows
+with, and its [mana](mana.md#how-much) at its tier's comfortable [caster level](#caster-level), without armour:
 
 {{#include generated/spell-list.md}}
 
-The abilities menu shows a spell's tier and what it costs you now, with your caster level,
-talents, and armour counted. **Identify** asks which of your things to cast it on: the list of
-what you carry unidentified opens, as for the scroll of identify (see
+The abilities menu shows a spell's [tier](#tiers) and what it costs you now, with your [caster level](#caster-level),
+[talents](talents.md), and armour counted. **[Identify](#spell-identify)** asks which of your things to cast it on: the list of
+what you carry unidentified opens, as for the [scroll of identify](scrolls.md#scroll-of-identify) (see
 [Scrolls](scrolls.md#the-scroll-of-identify)).
 
-Every scroll is a spell: each one you can read casts a spell, and each teaches its spell if you
-study it, the scroll of identify Identify and the scroll of light Light.
+Every [scroll](scrolls.md) is a spell: each one you can read casts a spell, and each teaches its spell if you
+study it, the [scroll of identify](scrolls.md#scroll-of-identify) [Identify](#spell-identify) and the [scroll of light](scrolls.md#scroll-of-light) [Light](#spell-light).
 
 ## Caster level
 
-Your caster level is how strong a caster you are. It is your level times your class's **casting**
-share, rounded down, plus what talents and magic items add; anyone with any mana has at least
-caster level 1. Everyone casts a little: a level-30 warrior is a caster of level 7. A wizard's
-*Arcane training* adds a caster level for every 5 character levels, so a level-30 wizard casts at
+Your caster level is how strong a caster you are. It is your [level](experience.md#levels) times your class's **casting**
+share, rounded down, plus what [talents](talents.md) and [magic items](magic-items.md) add; anyone with any [mana](mana.md#how-much) has at least
+caster level 1. Everyone casts a little: a level-30 [warrior](classes.md#warrior) is a caster of level 7. A [wizard](classes.md#wizard)'s
+*[Arcane training](talents.md#talent-arcane-training)* adds a caster level for every 5 [character levels](experience.md#levels), so a level-30 [wizard](classes.md#wizard) casts at
 level 36.
 
 ## Spellcraft talents
 
-The Spellcraft tree is for casters (the wizard takes its bonus talents from it, beside Scholar):
-*Quick study* (learning, below), *Overreach* (a spell above your caster level's tier costs a
-third less over its price), and *School focus*, taken for a school of magic or an element (a
+The Spellcraft tree is for casters (the [wizard](classes.md#wizard) takes its bonus talents from it, beside Scholar):
+*[Quick study](talents.md#talent-quick-study)* (learning, below), *[Overreach](talents.md#talent-overreach)* (a spell above your [caster level](#caster-level)'s tier costs a
+third less over its price), and *[School focus](talents.md#talent-school-focus)*, taken for a school of magic or an element (a
 spell's tags, in the list above), once per choice: those spells cost 10 % less and reach a cell
-farther, never past their limit and never harder. *Keen mind*, taken the same way, lets your stats lift
+farther, never past their limit and never harder. *[Keen mind](talents.md#talent-keen-mind)*, taken the same way, lets your [stats](stats.md) lift
 that school's or element's spells 10 points higher than their tier's most lift (see
 [The lifted cap](#the-lifted-cap)). See [Talents](talents.md) for every talent
 that touches spells.
@@ -53,11 +53,11 @@ that touches spells.
 
 ## Tiers
 
-Every spell has a **tier**, from 0 (a *cantrip*) to 9. Each tier has a **comfortable caster
-level**: at or above it, learning a spell of the tier is certain and casting it costs its base
-mana cost. A spell above your caster level's tier costs more mana to cast, half again for each
-tier too high. Each tier also has a **damage ceiling**: the most a single-target spell of that
-tier can do in one cast at its highest roll, and a **most lift**: how far a caster's stats may
+Every spell has a **tier**, from 0 (a *cantrip*) to 9. Each tier has a **comfortable [caster
+level](#caster-level)**: at or above it, learning a spell of the tier is certain and casting it costs its base
+mana cost. A spell above your caster level's tier costs more [mana](mana.md#spending-it) to cast, half again for each
+tier too high. Each tier also has a **[damage ceiling](#damage-and-its-cap)**: the most a single-target spell of that
+tier can do in one cast at its highest roll, and a **most lift**: how far a caster's [stats](stats.md) may
 raise a spell's ceiling (see [The lifted cap](#the-lifted-cap)).
 
 {{#include generated/spell-tiers.md}}
@@ -65,21 +65,21 @@ raise a spell's ceiling (see [The lifted cap](#the-lifted-cap)).
 ## What a spell costs
 
 A spell's mana is its tier's base cost, times the overreach (half again per tier above your
-caster level's; with *Overreach*, a third less of that: 33.5 % a tier), times its shape's share
-(below), times its resolution's (a touch is cheaper), times what your armour adds, rounded to the
+[caster level](#caster-level)'s; with *[Overreach](talents.md#talent-overreach)*, a third less of that: 33.5 % a tier), times its [shape](#shapes)'s share
+(below), times its [resolution](#how-a-spell-finds-its-target)'s (a touch is cheaper), times what your [armour](objects.md#class-body-armour) adds, rounded to the
 nearest point once at the end and never below 1. Then your talents, their percents added up and
-rounded down, never below 1: *School focus* takes 10 % off the spells of its school or element,
-*Archmage* 50 %, and *Empower* 10 %; and then *Frugal caster* takes a fifth off, and magic items
+rounded down, never below 1: *[School focus](talents.md#talent-school-focus)* takes 10 % off the spells of its school or element,
+*[Archmage](talents.md#talent-archmage)* 50 %, and *[Empower](talents.md#talent-empower)* 10 %; and then *[Frugal caster](talents.md#talent-frugal-caster)* takes a fifth off, and [magic items](magic-items.md)
 *of Thrift* their percent with it, never more than half together (see [Mana](mana.md)).
 
-A few spells have a cost of their own instead, whatever their tier: **Identify** costs 60 mana
-(before your armour and talents), so no caster can cast it in their first levels. A wizard has
-the mana for it from about level 7, a priest or a druid from about level 8. Its tier (2) says only
+A few spells have a cost of their own instead, whatever their tier: **[Identify](#spell-identify)** costs 60 [mana](mana.md#spending-it)
+(before your armour and talents), so no caster can cast it in their first levels. A [wizard](classes.md#wizard) has
+the mana for it from about level 7, a [priest](classes.md#priest) or a [druid](classes.md#druid) from about level 8. Its tier (2) says only
 how hard it is to learn.
 
-Heavy armour and big shields hinder casting: while worn, each makes every spell dearer, and what
+Heavy [armour](objects.md#class-body-armour) and big [shields](objects.md#class-shields) hinder casting: while worn, each makes every spell dearer, and what
 you wear adds up. A *Mage-wrought* piece hinders casting less by its own number (body armour, a
-helmet, or a shield that hinders at all): Mage-wrought plate of 15 adds 25 % instead of 40 %, and
+[helmet](objects.md#class-helmets), or a shield that hinders at all): Mage-wrought plate of 15 adds 25 % instead of 40 %, and
 one eased to nothing (chain mail of 10 or more) adds none and no longer counts as armour for
 your [caster style](fighting-styles.md#caster-styles). Its ease is its own: it never eases
 another piece.
@@ -89,12 +89,12 @@ another piece.
 ## Shapes
 
 A spell strikes one target (a ray, a bolt, a touch, or yourself) or an area (a cone, a line, or a
-burst). Areas cost more mana: the base cost is multiplied by the shape's.
+burst). Areas cost more [mana](mana.md#spending-it): the base cost is multiplied by the shape's.
 
 {{#include generated/spell-shapes.md}}
 
 - A **ray** or a **bolt** flies along the line toward the place you aim at and strikes the first
-  creature in its way. A hex is cast the same way at a hostile you see, and falls on it.
+  creature in its way. A [hex](#spell-hex-of-weakness) is cast the same way at a hostile you see, and falls on it.
 - A **line** runs through everyone on it, as far as its length, until a wall stops it.
 - A **cone** fans out from you toward where you aim, a quarter turn wide, as far as its length.
 - A **burst** flies toward where you aim, goes off on the first creature in its way (or there),
@@ -102,37 +102,37 @@ burst). Areas cost more mana: the base cost is multiplied by the shape's.
   you too.
 - A **touch** reaches only a creature next to you.
 
-Your **Willpower** lets a spell reach farther: a cell more of range or length, and a cell more of
-a burst's radius, for every 2 points of its modifier, but never past the spell's own limit (the
+Your **[Willpower](stats.md#stat-willpower)** lets a spell reach farther: a cell more of range or length, and a cell more of
+a burst's radius, for every 2 points of its [modifier](stats.md#modifiers), but never past the spell's own limit (the
 "to" in the list). (A spell may name other stats for its reach: its "Grows with" says so; none
-does yet.) *School focus* adds a cell of range or length (not of a burst's radius) to
-the spells of its school or element, and magic items *of Farcasting* their cells to every
+does yet.) *[School focus](talents.md#talent-school-focus)* adds a cell of range or length (not of a burst's radius) to
+the spells of its school or element, and [magic items](magic-items.md) *of Farcasting* their cells to every
 spell, together, again never past the spell's limit. A burst costs by its
 own radius, however far your Willpower spreads it. Your
-**Presence** makes a blessing or a hex last longer: a degree more of it for every 2 points of its
-modifier, up to the most the status has (each degree lasts as long again). The hexes also grow
-with your **Willpower**: their degrees are half your Presence modifier plus a quarter of your
-Willpower modifier, added up and rounded to the nearest, a half down ("Grows with" in the list:
-each stat's percent of its modifier). Magic items *of Lingering* add their degrees to every
-blessing and hex you cast, still up to the status's most (3 for Blessed, Hexed, Weakened, and
-Sluggish).
+**[Presence](stats.md#stat-presence)** makes a [blessing](#spell-blessing) or a [hex](#spell-hex-of-weakness) last longer: a degree more of it for every 2 points of its
+modifier, up to the most the [status](status-effects.md#how-they-work) has (each degree lasts as long again). The [hexes](#spell-hex-of-weakness) also grow
+with your **[Willpower](stats.md#stat-willpower)**: their degrees are half your [Presence](stats.md#stat-presence) [modifier](stats.md#modifiers) plus a quarter of your
+[Willpower](stats.md#stat-willpower) modifier, added up and rounded to the nearest, a half down ("Grows with" in the list:
+each stat's percent of its modifier). [Magic items](magic-items.md) *of Lingering* add their degrees to every
+[blessing](#spell-blessing) and hex you cast, still up to the status's most (3 for [Blessed](status-effects.md#status-blessed), [Hexed](status-effects.md#status-ill-wished), [Weakened](status-effects.md#status-weakened), and
+[Sluggish](status-effects.md#status-sluggish)).
 
 ## How a spell finds its target
 
-Each spell resolves one way. An **attack** rolls to hit like a missile (2d12 plus your Dexterity's
-modifier, or the modifiers its "Grows with" names for to-hit, against the target's Defence; a
-spell scroll or a wand always aims with Dexterity), can miss, and can be a critical hit, and does full damage.
-Like a blow, it threatens a critical on a natural 22 or more; magic items *of the Magus* add
+Each spell resolves one way. An **attack** rolls [to hit](combat.md#hitting) like a [missile](ranged.md#shooting-and-throwing) (2d12 plus your [Dexterity](stats.md#stat-dexterity)'s
+modifier, or the modifiers its "Grows with" names for to-hit, against the target's [Defence](combat.md#defence); a
+spell scroll or a wand always aims with Dexterity), can miss, and can be a [critical hit](combat.md#criticals), and does full damage.
+Like a blow, it threatens a [critical](combat.md#criticals) on a natural 22 or more; [magic items](magic-items.md) *of the Magus* add
 their number to your own spells' roll to hit, and *Baleful* ones widen their threat by theirs
 (a Baleful +2 threatens from 20), never below 2. Neither helps a spell scroll you read or a
 wand you use.
 Your ranks in [Spell attacks](weapon-skills.md#the-skills) and your
 [caster style](fighting-styles.md#caster-styles) add to its roll when you cast it yourself.
 An **auto** spell always hits, for less. An **area** spell hits everyone in its shape with no
-roll, for less again per target, and *Evasion* halves what it does. A **touch** spell rolls to hit
-at arm's length and does the most, for less mana. Only attack and touch spells can be critical
-hits; a critical rolls the damage again, still held to the spell's most. Resistances take their
-share of any spell's damage, and armour none.
+roll, for less again per target, and *[Evasion](talents.md#talent-evasion)* halves what it does. A **touch** spell rolls to hit
+at arm's length and does the most, for less mana. Only attack and touch spells can be [critical
+hits](combat.md#criticals); a [critical](combat.md#criticals) rolls the damage again, still held to the spell's most. [Resistances](damage-types.md#armour-and-resistance) take their
+share of any spell's damage, and [armour](objects.md#class-body-armour) none.
 
 The most a spell may do to one target is its tier's ceiling times its resolution's share:
 
@@ -142,54 +142,54 @@ The most a spell may do to one target is its tier's ceiling times its resolution
 
 Spell damage is always rolled dice, with a small fixed bonus at most a quarter of the ceiling,
 and rarely any. A spell's dice may grow with your caster level (a die more every few levels
-above its tier's comfortable level), up to its own most. Talents add to the roll: *Scroll adept*
-adds 1 to every die, *Empower* rolls a die more, *Archmage* adds 2 to every die; they bring a
+above its [tier](#tiers)'s comfortable level), up to its own most. Talents add to the roll: *[Scroll adept](talents.md#talent-scroll-adept)*
+adds 1 to every die, *[Empower](talents.md#talent-empower)* rolls a die more, *[Archmage](talents.md#talent-archmage)* adds 2 to every die; they bring a
 spell to its most sooner, and nothing lifts it past: whatever the dice, the talents, or a
 critical, one cast never does more to one target than the "never more than" in the list. The
 same talents strengthen a spell scroll you read, held to the most of the spell it teaches (or to
-the scroll's own most, if it rolls more of itself: the scroll of lightning's 4d6). Two kinds of damage only magic does, **force**
-and **necrotic**, join the [damage types](damage-types.md).
+the scroll's own most, if it rolls more of itself: the [scroll of lightning](scrolls.md#scroll-of-lightning)'s 4d6). Two kinds of damage only magic does, **[force](damage-types.md#damage-force)**
+and **[necrotic](damage-types.md#damage-necrotic)**, join the [damage types](damage-types.md).
 
-Spells you cast are yours: what they kill earns you its experience, and a spell of your own that
+Spells you cast are yours: what they kill earns you its [experience](experience.md), and a spell of your own that
 catches you can kill you.
 
 ### The lifted cap
 
 A sharp mind and a strong will make some spells hit harder than their tier allows anyone else.
 A spell's "Grows with" names the stats that **lift its cap**, each by a percent of the cap per
-point of its modifier: the evocations (but the cantrips) by 10 % per point of your Intelligence
-modifier and 5 % per point of your Willpower's, *Cure wounds* by 15 % per point of your
+point of its modifier: the evocations (but the [cantrips](#tiers)) by 10 % per point of your Intelligence
+modifier and 5 % per point of your Willpower's, *[Cure wounds](#spell-cure-wounds)* by 15 % per point of your
 Willpower's. Your lift is those added up, never below 0 and never more than the tier's **most
 lift** (40 % at tier 0, 50 % at 1, 60 % at 2, 70 % at 3, 80 % from tier 4 on; the tier table
 above). Your cap for that spell is its own times (100 % + your lift), rounded down, and the spell
 rolls as many more dice as the lift makes room for: a die more for each whole die's worth the
 cap rose (for a d6 spell, the lifted cap divided by 6, rounded down, less the unlifted cap
-divided by 6, rounded down). Its dice still grow with your caster level as before. Criticals,
-*Empower*, and *Archmage* are held to your lifted cap as they are held to the cap. *Keen mind*
+divided by 6, rounded down). Its dice still grow with your caster level as before. [Criticals](combat.md#criticals),
+*[Empower](talents.md#talent-empower)*, and *[Archmage](talents.md#talent-archmage)* are held to your lifted cap as they are held to the cap. *[Keen mind](talents.md#talent-keen-mind)*
 (Spellcraft, chosen for a school or an element) raises the most lift of that school's spells by
 10 points, and *Potent* magic items raise the most lift of every spell by their number, added to
 it.
 
-For example, a wizard with Intelligence 18 (+4) and Willpower 14 (+2) lifts *Scorching ray*
-(tier 2, cap 18) by 4 × 10 + 2 × 5 = 50 %, to 27: 3d6 becomes 4d6. With Intelligence 22 (+6) and
-Willpower 16 (+3) *Fireball* (tier 3, cap 19) would lift 75 %, held to the tier's 70 %: 19
+For example, a [wizard](classes.md#wizard) with [Intelligence](stats.md#stat-intelligence) 18 (+4) and [Willpower](stats.md#stat-willpower) 14 (+2) lifts *[Scorching ray](#spell-scorching-ray)*
+(tier 2, cap 18) by 4 × 10 + 2 × 5 = 50 %, to 27: 3d6 becomes 4d6. With [Intelligence](stats.md#stat-intelligence) 22 (+6) and
+[Willpower](stats.md#stat-willpower) 16 (+3) *[Fireball](#spell-fireball)* (tier 3, cap 19) would lift 75 %, held to the tier's 70 %: 19
 becomes 32, and 3d6 becomes 5d6.
 
-Only your own spells are lifted: a spell scroll read and a wand used strike with the spell's own
+Only your own spells are lifted: a spell scroll read and a [wand](#wands) used strike with the spell's own
 cap. A spell with no stats for its cap ("Grows with" says nothing of the cap) is never lifted.
 
 ## Learning spells from scrolls
 
-Every spell comes on a scroll of its own (the scroll of magic missile teaches *Magic missile*);
-the scroll of fireball teaches *Fireball*, the scroll of lightning *Lightning bolt*, the scroll of
-frost *Frost*. **Reading** a scroll casts its spell once at the scroll's caster level and costs no
-mana ([Scrolls](scrolls.md#spell-scrolls)). **Studying** it (`L`, then the scroll) teaches you its
+Every spell comes on a scroll of its own (the [scroll of magic missile](scrolls.md#scroll-of-magic-missile) teaches *[Magic missile](#spell-magic-missile)*);
+the [scroll of fireball](scrolls.md#scroll-of-fireball) teaches *[Fireball](#spell-fireball)*, the [scroll of lightning](scrolls.md#scroll-of-lightning) *[Lightning bolt](#spell-lightning-bolt)*, the [scroll of
+frost](scrolls.md#scroll-of-frost) *[Frost](#spell-frost)*. **[Reading](scrolls.md)** a scroll casts its spell once at the scroll's caster level and costs no
+[mana](mana.md#spending-it) ([Scrolls](scrolls.md#spell-scrolls)). **Studying** it (`L`, then the scroll) teaches you its
 spell for good, and uses the scroll up whatever comes of it.
 
-You can study a scroll once you know what it is (you have read one like it, or identified it)
+You can study a scroll once you know what it is (you have read one like it, or [identified](magic-items.md#unidentified-items) it)
 and only if you do not know its spell yet; an unknown scroll is refused ("You do not know what
-this says."), so identify your scrolls first. A scroll of a spell you know can still be read,
-sold, or given away. You need some mana to learn at all.
+this says."), so [identify](magic-items.md#unidentified-items) your scrolls first. A scroll of a spell you know can still be read,
+sold, or given away. You need some [mana](mana.md#how-much) to learn at all.
 
 A study takes time, by the spell's tier, at a normal pace:
 
@@ -199,12 +199,12 @@ The world goes on around you. A creature coming into view, a blow, or anything e
 stop a rest stops the study: the time is lost, but you keep the scroll. Once you begin, you
 cannot stop of your own accord.
 
-A spell at or below your caster level's tier (see Tiers above) is learned for certain. Above it,
+A spell at or below your [caster level](#caster-level)'s tier (see Tiers above) is learned for certain. Above it,
 every tier too high (the **overreach**) makes it harder: a roll of 2d12 plus your bonus must reach
 the difficulty, 12 + 4 per tier of overreach, a point more for every 10 tiers of the spells you
-already know (a cantrip counting 1). Your bonus is your Intelligence modifier, a tenth of your
-*Spellcraft* and of your *Decipher script* (each at most +20), your class's affinity with the
-spell's school, and *Quick study*'s +2. A natural 24 always succeeds and a natural 2 always fails.
+already know (a cantrip counting 1). Your bonus is your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), a tenth of your
+*[Spellcraft](skills.md#skill-spellcraft)* and of your *[Decipher script](skills.md#skill-decipher-script)* (each at most +20), your class's affinity with the
+spell's school, and *[Quick study](talents.md#talent-quick-study)*'s +2. A natural 24 always succeeds and a natural 2 always fails.
 The game tells you the chance in words: *certain*, *easy*, *a struggle*, or *far beyond you*.
 
 {{#include generated/study-chances.md}}
@@ -218,19 +218,19 @@ the spell may come your way again.
 
 {{#include generated/mishaps.md}}
 
-Studying trains *Spellcraft*, *Decipher script*, and your Intelligence, whatever comes of it.
-In a scriptorium ([Special rooms](special-rooms.md)) Decipher script's mark is twice as likely,
+Studying trains *[Spellcraft](skills.md#skill-spellcraft)*, *[Decipher script](skills.md#skill-decipher-script)*, and your [Intelligence](stats.md#stat-intelligence), whatever comes of it.
+In a [scriptorium](special-rooms.md#room-scriptorium) ([Special rooms](special-rooms.md)) [Decipher script](skills.md#skill-decipher-script)'s mark is twice as likely,
 so certain.
 
 ## Wands
 
-A wand holds one spell and a number of charges. Ready it in the **missile weapon slot** (it takes
-a launcher's place, and a launcher takes its place) and use it as you would shoot: `t`, aim, and
-it casts its spell. Each cast uses a charge instead of your mana, and the spell is cast at the
+A wand holds one spell and a number of charges. Ready it in the **[missile weapon slot](equipment.md#what-fits-where)** (it takes
+a [launcher](ranged.md#getting-ready)'s place, and a launcher takes its place) and use it as you would shoot: `t`, aim, and
+it casts its spell. Each cast uses a charge instead of your [mana](mana.md#how-much), and the spell is cast at the
 **wand's own caster level**, never yours, so a warrior with no magic fires a wand as well as a
-wizard does. The spell is otherwise its own: a ray rolls to hit as any spell attack does (with
-your Dexterity), magic missile never misses, an area catches whoever is in it, and its reach
-grows with your Willpower as your own spells' does. Its damage still stops at the spell's cap.
+wizard does. The spell is otherwise its own: a ray [rolls to hit](combat.md#hitting) as any spell attack does (with
+your [Dexterity](stats.md#stat-dexterity)), magic missile never misses, an area catches whoever is in it, and its reach
+grows with your [Willpower](stats.md#stat-willpower) as your own spells' does. Its damage still stops at the spell's cap.
 A cast that cannot go off (aimed at yourself, out of reach) uses no charge and takes no time;
 one that goes off takes a cast's time.
 
@@ -239,10 +239,10 @@ to keep. Wands are **never recharged**.
 
 Wands are found unknown, each kind with a look of its own for the whole game ("an oak wand").
 Using one tells you what kind it is, and from then on every wand of that kind shows by its name;
-its **charges** stay unknown until you identify that wand (the scroll of identify, or carrying
-it long enough as a *Connoisseur*). Wands lie in the dungeon and in general stores.
+its **charges** stay unknown until you [identify](magic-items.md#unidentified-items) that wand (the [scroll of identify](scrolls.md#scroll-of-identify), or carrying
+it long enough as a *[Connoisseur](talents.md#talent-connoisseur)*). Wands lie in the dungeon and in general stores.
 
-*Wand mastery* (Weaponcraft) makes every wand you use cast at a caster level 2 higher. Items
+*[Wand mastery](talents.md#talent-wand-mastery)* (Weaponcraft) makes every wand you use cast at a caster level 2 higher. Items
 that raise the level of wands add their levels to it.
 
 {{#include generated/wands.md}}
@@ -253,12 +253,12 @@ The charges a wand is made with go by its spell's tier:
 
 ## Rods
 
-A rod holds an **effect no spell has**: digging, sleep, terror, sending a creature away. Like a
+A rod holds an **effect no spell has**: [digging](digging.md#digging), sleep, terror, sending a creature away. Like a
 wand it goes in the **missile weapon slot** and is used as you would shoot (`t`, aim), but it has
-no charges: each use costs **your own mana**, the rod's cost, and it never runs out while you
-have the mana to feed it. Without enough mana it does nothing and takes no time ("You have not
+no charges: each use costs **your own [mana](mana.md#spending-it)**, the rod's cost, and it never runs out while you
+have the [mana](mana.md#how-much) to feed it. Without enough mana it does nothing and takes no time ("You have not
 the mana to use it."), and nor can you use one while a state that stops casting holds you
-(raging). A use takes a cast's time.
+([raging](status-effects.md#status-raging)). A use takes a cast's time.
 
 What a rod does grows with **your caster level**: its reach (how far a line digs, how far a bolt
 flies, how far away a burst may land) grows by a cell per so many caster levels, up to its
@@ -266,11 +266,11 @@ limit, and sleep and terror take only creatures whose level is at most your cast
 others shrug it off. No skill makes a rod better or cheaper: what it costs and how far it
 reaches are the same in anyone's hands at the same caster level.
 
-- **Digging** breaks every wall on a straight line toward where you aim, as if dug through,
-  until a wall too hard for it (granite), a door, or the level's edge stops it.
+- **Digging** breaks every [wall](terrain.md#walls) on a straight line toward where you aim, as if dug through,
+  until a wall too hard for it (granite), a [door](doors.md), or the level's edge stops it.
 - **Teleport other** sends the first creature its bolt meets to a random free cell of the
-  level. It counts as an attack: a shopkeeper will not forgive it.
-- **Sleep** puts the creatures in its burst into a true sleep (not the Sleep spell's
+  level. It counts as an attack: a [shopkeeper](shops.md) will not forgive it.
+- **Sleep** puts the creatures in its burst into a true sleep (not the [Sleep](#spell-sleep) spell's
   drowsiness): they take no turns until a noise, a blow, or a cry wakes them.
 - **Terror** makes the creatures in its burst flee from you a few turns.
 
@@ -278,7 +278,7 @@ Rods are found unknown, each kind with a look of its own for the whole game ("a 
 using one or identifying it tells you what it is, and its cost and reach then show when you
 look at it and aim it. Rods lie in the dungeon and in general stores.
 
-*Channeler* (Spellcraft) makes every rod cost a quarter less mana (rounded to the nearest, at
-least 1); *Frugal caster* then takes its fifth off what is left.
+*[Channeler](talents.md#talent-channeler)* (Spellcraft) makes every rod cost a quarter less mana (rounded to the nearest, at
+least 1); *[Frugal caster](talents.md#talent-frugal-caster)* then takes its fifth off what is left.
 
 {{#include generated/rods.md}}

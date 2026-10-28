@@ -4,7 +4,7 @@
 use super::actions::at_normal_pace;
 use super::objects::goes_on;
 use super::order;
-use super::text::{capital, signed};
+use super::text::{Term, anchored, capital, signed};
 use std::fmt::Write as _;
 use warlock_core::combat;
 use warlock_core::content::{ActionKind, BASE_TURN, Content, price};
@@ -403,7 +403,7 @@ pub(super) fn stances(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
-            s.name,
+            anchored(Term::Stance, &s.name, &s.name),
             bonus(s.to_hit),
             bonus(s.damage),
             bonus(s.dodge),

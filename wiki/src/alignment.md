@@ -2,24 +2,24 @@
 
 Every character stands somewhere between **good** and **evil**, and what you do moves you along
 the way. Behind it is a score from −1000 (as evil as can be) to +1000 (as good), which the game
-never shows: the character screen (`@`) and the summary at character creation name your
+never shows: the [character screen](controls.md#character) (`@`) and the summary at character creation name your
 **band**, one of seven words.
 
 {{#include generated/alignment-bands.md}}
 
 ## Where you start
 
-Your class sets where you start, and your race leans you a little: paladins start Good, thieves
-and witches Callous, and everyone else Neutral. Elves and halflings lean a little toward good and
-half-orcs a little toward evil, never far enough to change a band on their own; but the evil races
-start on the evil side, goblins, kobolds, lizardfolk, and ratfolk Callous, drow and duergar Evil
-(see [Races](races.md#the-evil-races)), so a goblin thief starts Evil and a drow paladin Neutral.
-Then the stars nudge you: the animal of your birth year adds to the score (the
+Your [class](classes.md) sets where you start, and your [race](races.md) leans you a little: [paladins](classes.md#paladin) start Good, [thieves](classes.md#thief)
+and [witches](classes.md#witch) Callous, and everyone else Neutral. [Elves](races.md#race-elf) and [halflings](races.md#race-halfling) lean a little toward good and
+[half-orcs](races.md#race-half-orc) a little toward evil, never far enough to change a band on their own; but the evil races
+start on the evil side, [goblins](races.md#race-goblin), [kobolds](races.md#race-kobold), [lizardfolk](races.md#race-lizardfolk), and [ratfolk](races.md#race-ratfolk) Callous, [drow](races.md#race-drow) and [duergar](races.md#race-duergar) Evil
+(see [Races](races.md#the-evil-races)), so a goblin [thief](classes.md#thief) starts Evil and a drow [paladin](classes.md#paladin) Neutral.
+Then the [stars](horoscope.md) nudge you: the animal of your birth year adds to the score (the
 [Horoscope](horoscope.md#what-a-sign-does) page's *Alignment* column): the Unicorn +100, the
 Griffin, Phoenix, and Wyvern +50, the Kraken −50, the Basilisk and Manticore −100, the others
-nothing. It is small, but near an edge it decides the band: an elf wizard born under the
-Unicorn starts Kind (+150). A paladin starts Good under any animal unless their race is one of
-the evil ones: a half-orc paladin born under the Manticore or the Basilisk starts at +400, just
+nothing. It is small, but near an edge it decides the band: an [elf](races.md#race-elf) [wizard](classes.md#wizard) born under the
+Unicorn starts Kind (+150). A [paladin](classes.md#paladin) starts Good under any animal unless their race is one of
+the evil ones: a [half-orc](races.md#race-half-orc) paladin born under the Manticore or the Basilisk starts at +400, just
 Good.
 The summary shows the band you start in. The table below is before the stars.
 
@@ -37,17 +37,17 @@ or +1000.
 
 {{#include generated/alignment-deeds.md}}
 
-- **Killing**: it matters whether someone meant you harm. A creature is hostile to you if look
-  mode says so; one that is not, such as the peaceful folk of the hall, is someone who means you
-  no harm. Beasts that do not talk (deer, rats, bats) may be hunted without a stain. Only your
+- **Killing**: it matters whether someone meant you harm. A [creature](creatures.md) is [hostile](creatures.md#factions) to you if [look
+  mode](controls.md#look-mode) says so; one that is not, such as the peaceful folk of the hall, is someone who means you
+  no harm. Beasts that do not talk ([deer](creatures.md#creature-deer), [rats](creatures.md#creature-rat), bats) may be hunted without a stain. Only your
   own kills count, and those of a wound you dealt.
-- **Shops**: attacking a shopkeeper who trades with you, and walking out with what you have not
+- **[Shops](shops.md)**: attacking a shopkeeper who trades with you, and walking out with what you have not
   paid for, are evil; so is lifting something from anyone and getting away with it (see
   [Stealing](skills.md#stealing)); paying what you owe is a little good.
-- **Corpses**: eating a corpse of your own race, or of someone who talks and meant you no harm,
+- **Corpses**: eating a [corpse](food.md#corpses) of your own race, or of someone who talks and meant you no harm,
   is very evil, fresh or rotten.
-- **Quests** that help someone are a little good; a dark errand would be evil.
-- **Consecrating** a cursed, draining, or haunted place (the priest's and the paladin's Consecrate, see
+- **[Quests](quests.md)** that help someone are a little good; a dark errand would be evil.
+- **Consecrating** a cursed, draining, or haunted place (the [priest](classes.md#priest)'s and the [paladin](classes.md#paladin)'s [Consecrate](abilities.md#ability-consecrate), see
   [Special rooms](special-rooms.md)) is good.
 
 {{#include generated/alignment-quests.md}}
@@ -57,11 +57,11 @@ Nothing else moves you. When you cross into another band you feel it ("You feel 
 
 ## What it changes
 
-- **People**: good folk turn cold to an Evil or Wicked character: they answer with a cold word
-  instead of their greeting and their talk, though they still offer you their quests. Evil folk
+- **[People](npcs.md#chatting)**: good folk turn cold to an Evil or Wicked character: they answer with a cold word
+  instead of their greeting and their talk, though they still offer you their [quests](quests.md). Evil folk
   would do the same to a Good or Saintly one. Some quests are offered only to those of the right
   alignment.
-- **Shops**: every shopkeeper is good, and their prices follow your band (the prices you see
+- **[Shops](shops.md#prices)**: every shopkeeper is good, and their prices follow your band (the prices you see
   already include it):
 
 {{#include generated/alignment-shops.md}}
@@ -69,10 +69,10 @@ Nothing else moves you. When you cross into another band you feel it ("You feel 
 - **Holy gifts**: no class, talent, or ability is barred by your alignment, and nothing you have
   is taken away when it sinks. But the holy gifts work only for the good side: used by anyone
   else they are still used, take the time of a cast, and do nothing (no healing, no blow, no
-  light, no consecration, and no cooldown or mana spent). Putting your holy light out always
+  light, no consecration, and no cooldown or [mana](mana.md#spending-it) spent). Putting your holy light out always
   works.
 
 {{#include generated/alignment-gifts.md}}
 
-What creatures are, good, neutral, or evil, you cannot see: you learn it from how they behave.
-Magic (mana) does not care where you stand.
+What [creatures](creatures.md) are, good, neutral, or evil, you cannot see: you learn it from how they behave.
+[Magic](magic.md) ([mana](mana.md#how-much)) does not care where you stand.

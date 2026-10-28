@@ -1,6 +1,6 @@
 //! Special rooms (spec §7 "Special rooms").
 
-use super::text::{article, capital};
+use super::text::{Term, anchored, article, capital};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Hoard, Offer, StatusId};
 use warlock_core::world::rise_candidates;
@@ -304,7 +304,7 @@ pub(super) fn special_rooms(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {said} | {} | {} | {} | {whole} | {only} |",
-            capital(&e.name),
+            anchored(Term::Room, &e.id, &capital(&e.name)),
             does.join(" "),
             e.weight,
             share(u32::from(e.weight), total),
