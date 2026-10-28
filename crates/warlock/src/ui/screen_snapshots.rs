@@ -315,6 +315,15 @@ const CASES: &[Case] = &[
         screen: Some("weapon-skills"),
         ..BASE
     },
+    // A wizard's (#571): Spell attacks and Sniper from the class, the Spells section between
+    // Shields and the styles.
+    Case {
+        name: "weapon-skills-screen-wizard",
+        character: Some("human,female,wizard"),
+        run: true,
+        screen: Some("weapon-skills"),
+        ..BASE
+    },
     Case {
         name: "abilities-menu",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
@@ -327,6 +336,26 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-weapon-skills",
         actions: "rank:long_blades:5 rank:sword_and_board:4 rank:shield_bash:5",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A warrior's actives (#564): Vital strike, Shield rush, and Shield wall usable with their
+    // stamina; Lunge greyed, a long sword being no spear.
+    Case {
+        name: "abilities-menu-weapon-actives",
+        character: Some("human,male,warrior"),
+        kit: true,
+        actions: "rank:long_blades:9 rank:shield_block:9 rank:sword_and_board:7 rank:spears:9",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // Two shield walls later: the pool spent, the rows greyed short of breath.
+    Case {
+        name: "abilities-menu-weapon-actives-short",
+        character: Some("human,male,warrior"),
+        kit: true,
+        actions: "rank:long_blades:9 rank:shield_block:9 rank:sword_and_board:7 rank:spears:9 \
+                  use:shield_wall use:shield_wall",
         screen: Some("abilities"),
         ..BASE
     },

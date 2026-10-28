@@ -584,52 +584,66 @@ developer notes (CLAUDE.md, `docs/dev/`).
   for, ranks 1 to 10: ten numbers, each more than the last, at most 1 000 000), `[[skill]]`s in
   the order the weapon skills screen lists them (at most 255): `id`, `name` (`Long blades`),
   `phrase` (the message's `with long blades`), `role` (`melee`, `launcher`, `thrown`, `unarmed`,
-  `shield_block`, `shield_bash`, `style`; `unarmed` to `shield_bash` at most one skill each),
+  `shield_block`, `shield_bash`, `spell`, `style`; `unarmed` to `spell` at most one skill each),
   `curve` (a key of `curves`), and its benefits as eleven numbers, ranks 0 to 10 (0 at rank 0,
   never less at a higher rank; a list left out is all 0): `to_hit` and `damage` (0 to 20),
   `threat` (0 to 10), `crit` (added to a confirmed critical's multiplier, 0 to 3, never past ×5),
-  and `speed` (percent off the attack's cost, 0 to 60) for the roles that attack; `parry` (0 to
+  and `speed` (percent off the attack's cost, 0 to 60) for the roles that attack (no `speed` for
+  `spell` or a caster grip); `parry` (0 to
   20) for `melee`, `reload` (0 to 60) for `launcher`, `shield` (0 to 20) for `shield_block` (a
   benefit the role does not use is an error). A fighting style (`role = "style"`, §8 "Fighting
   styles") also has its `grip` (`one_weapon`, `two_weapons`, `two_handed`, `weapon_and_shield`,
-  `unarmed`, `launcher`, `thrown`) and may name `weapons` (weapon skill ids of the roles its
+  `unarmed`, `launcher`, `thrown`, and the caster grips `ranged_spell`, `touch_spell`,
+  `armoured_spell`) and may name `weapons` (weapon skill ids of the roles its
   grip fights with: `melee` for the hand grips, `launcher` for `launcher`, `melee` or `thrown`
-  for `thrown`, none for `unarmed`; each once; left out: every weapon of its grip that no other
+  for `thrown`, none for `unarmed` and the caster grips; each once; left out: every weapon of its grip that no other
   style of the grip names; within a grip at most one style leaves it out and no weapon skill is
   named twice: one configuration, one style); its benefits may also be `parry` (grips that
   wield a weapon), `shield` and `bash` (the chance in percent, 0 to 100, of a shield bash after
   a blow that hits; `weapon_and_shield`), `reload` (`launcher`), `ease_main` and `ease_off`
-  (points off the two-weapon penalties, 0 to 20; `two_weapons`); `grip` and `weapons` on a
+  (points off the two-weapon penalties, 0 to 20; `two_weapons`), `far_to_hit` (0 to 20) and
+  `far_threat` (0 to 10) (`ranged_spell`: added against a target `far` cells or more away),
+  `armour` (percent off worn armour's spell cost, 0 to 100; `armoured_spell`); `grip` and `weapons` on a
   skill that is no style are errors. `[two_weapons]` (optional; default −4 and −8): `main` and
   `off`, the to-hit penalties of the main hand's and the off hand's blows with a weapon in each
-  hand (−20 to 0). `[[default]]`s, `between = [a, b]` and `penalty` (1 to 10), each pair once,
+  hand (−20 to 0). `[spell_attacks]` (optional; default 5): `far`, the distance (1 or more, the
+  larger of the two) from which a ranged spell's far benefits apply. `[[default]]`s, `between = [a, b]` and `penalty` (1 to 10), each pair once,
   symmetric; styles default only to styles, weapon skills only to weapon skills. The built-in
   file: marks 1 an attempt, 2 more
   a hit, 20 % a level, at most 200 %; curves melee 15, 30, 60, 120, 240, 480, 960, 1920, 3840,
   7680 and missile 10, 20, … 5120; sixteen skills: daggers and knives, short blades, long
   blades, great blades, axes, maces and clubs, spears, polearms, staves (`melee`), unarmed;
   bows, crossbows, slings (`launcher`, missile curve), thrown weapons (missile curve); shield
-  blocking, shield bashing; defaults: long ↔ short blades −2, long ↔ great blades −2, short
+  blocking, shield bashing; spell attacks (`spell`, missile curve; #571); defaults: long ↔ short blades −2, long ↔ great blades −2, short
   blades ↔ daggers −2, long blades ↔ daggers −4, short blades ↔ thrown −4, daggers ↔ thrown −2,
   axes ↔ maces −2, axes ↔ polearms −3, maces ↔ staves −3, spears ↔ polearms −2, spears ↔
   staves −3, spears ↔ thrown −4, polearms ↔ great blades −4, bows ↔ crossbows −4, slings ↔
-  thrown −3, shield blocking ↔ shield bashing −3; two weapons −4 and −8; eight styles after the
-  sixteen skills (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
-  Marksman (bows, crossbows, slings; missile curve), Skirmisher (missile curve), Brawler, Staff
-  Fighter (staves)), with the defaults duelist ↔ sword and board −3, duelist ↔ twin blades −3,
-  great weapon ↔ staff fighter −3, marksman ↔ skirmisher −4. The wiki shows the skills, the
+  thrown −3, shield blocking ↔ shield bashing −3; two weapons −4 and −8; far 5; eleven styles
+  after the seventeen skills (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword
+  and Board, Marksman (bows, crossbows, slings; missile curve), Skirmisher (missile curve),
+  Brawler, Staff Fighter (staves), and the caster styles Sniper, Toucher, Battle caster
+  (missile curve)), with the defaults duelist ↔ sword and board −3, duelist ↔ twin blades −3,
+  great weapon ↔ staff fighter −3, marksman ↔ skirmisher −4, sniper ↔ toucher −4, toucher ↔
+  battle caster −3. The wiki shows the skills, the
   styles, the defaults, the marks and curves, and the benefits per rank in generated tables.
 - **Weapon abilities** (`data/weapon_abilities/`, one `[[weapon_ability]]` a file named by its id,
   each campaign's too, read in path order; optional; #561, §8 "Weapon abilities"): `id`, `name`,
   `description`, `skills` (weapon skills or styles, never both), `rank` (1 to 10), `kind`
-  (`triggered`; `active` refused until it is in the game), `trigger` (one or a list: `hit`,
+  (`triggered` or `active`), `trigger` (one or a list: `hit`,
   `critical`, `big_hit`, `kill`, `struck`, `parried`, `blocked`, `dodged`, `both_hands_hit`,
   `approaches`; none for a switch), `systems` (the talent table's system ids), and
   `[weapon_ability.effect]` with only its kind's fields: `free_blow` (`trigger`: riposte, cleave,
   great_cleave, opportunist, gatekeeper), `status` (`status`, `severity` or `turns` dice, `on`
   target or self), `extra_damage` (`dice`: main_hand, off_hand, or dice; optional `damage`
   type), `free_shot` (on `approaches`), `parry_missiles`. A triggered ability has no `aim`,
-  `stamina`, `energy`, or `cooldown`. `data/weapon_abilities/README.toml` has the format.
+  `stamina`, `energy`, or `cooldown`; an active (#564) has `aim` (`nothing`, `direction`,
+  `cell`), `stamina` (1 to 50), `energy = { action, percent }` (an `actions.toml` id and 50 to
+  300), an optional `cooldown` (a status that eases and does not tick), no `trigger`, and one of
+  the actives' effects: `reach_blow` (`reach` 2 to 4), `sure_critical`, `ignore_defence`
+  (`categories`), `ignore_protection`, `sweep` (`to_hit`), `pierce_shot`, `knockback` (`cells`
+  1, `bash`, `status`), `buff` (`status`, `severity`), `double_dice` (`to_hit`), each with the
+  aim and action it fits (a shot aims at a cell, and only a shot). Its id is no spell's, class
+  active's, or birth sign gift's. `data/weapon_abilities/README.toml` has the format.
 - **Equipment slots** (`data/slots.toml`, optional; without it nothing can be worn or wielded;
   M16): up to 26 `[[slot]]`s in the order the equipment screen lists them (lettered `a` on):
   `id` (objects name it in `slot`, replays in `equip:SLOT:LETTER`), `name`, `fits` (what objects

@@ -27,10 +27,18 @@ hostile to you. A shield bash is an *ability*: choose it from the abilities menu
 [Abilities](abilities.md)), then a direction. It has no key of its own by default; give it one in
 the Controls screen ("Bash with your shield") if you like.
 
+**Spell attacks** is the skill of spells that roll to hit: a ray, a bolt, or a touch that can
+miss (see [Magic](magic.md#how-a-spell-finds-its-target)). Every such spell you cast with your
+own mana that reaches a creature earns marks, more for a hit, as a blow does; its ranks add to
+the spell's to-hit, widen its critical range, and at the top make a critical roll the damage
+once more (still held to the spell's most). A spell read from a scroll or used from a wand aims
+with Dexterity alone and trains nothing; spells that never miss train nothing either. The
+[caster styles](fighting-styles.md#caster-styles) add to it.
+
 ## Seeing your skills
 
 `W` opens the **weapon skills screen**: every skill, by kind (melee, missile and thrown,
-shields), then your [fighting styles](fighting-styles.md), each with your rank and a faint bar of
+shields, spells), then your [fighting styles](fighting-styles.md), each with your rank and a faint bar of
 your marks toward the next one; a `•` marks the styles you fight in now. It takes no time.
 Skills you know stand out; untrained ones are dimmer. In a wide window the list is in two
 columns; in a small one it scrolls (↑↓). It is page 5 of the
@@ -90,6 +98,34 @@ time, and work whenever you fight with a weapon of the skill, so the menu shows 
 "fires by itself". An ability names its skills: Deep cut is any blade's, at rank 5 in that
 blade's skill. Creatures with the rank have them too, by the same rules: a spearman of rank 5
 braces against you as you come.
+
+**Active abilities** (marked *active* in the table) are used, not fired: you pick one from the
+abilities menu, aim it as it asks (a direction for a blow, a place for a shot, nothing for a
+sweep or Shield wall), and it costs two things, both only once it goes ahead (a refused use, with
+nobody to strike or nothing to shoot, costs nothing):
+
+- its **stamina** (the menu shows it: "Spears: Lunge  3 stamina, in a direction"), and
+- its **time**: the percent in the table of what the action it is takes you (a blow with what you
+  hold, so your weapon's speed, your style, and your stance count; a shot; a wait). No active is
+  instant. The game never shows this time.
+
+The menu greys an active out while you are short of stamina ("you are short of breath") or while
+what you hold is not for it ("your hands are not so held": Lunge needs a spear or a staff in
+hand, Shield wall a shield, a style's actives its grip). Each active is its own action: three in
+three turns cost the three together, and the empty pool is the price; with a pool of 12 that
+comes back a point every 12 seconds, a 5-point active comes at best once every ten turns. A
+character without stamina is given it, full, by the first rank that teaches an active ("You
+learn to pace your breath."). Creatures use no actives.
+
+- **Lunge** strikes the first foe within 2 cells along the direction; the cell between must be
+  empty and passable (a closed door blocks), and nothing on it is sprung. A foe struck over the
+  empty cell brings no free blows (no riposte, no cleave).
+- **Piercing shot**: a hit flies on along its line and attacks the next one there, whoever it is,
+  once.
+- **Sunder** and **Gap shot** ignore all Protection; against a foe with none they cost the same
+  and do nothing more (the game never tells you a foe's Protection).
+- **Shield wall** leaves you Walled for 5 turns: your Shield +3 on top of the shield's own, and
+  every attack you make takes a quarter longer. Walled and Hasted multiply.
 
 {{#include generated/weapon-abilities.md}}
 

@@ -38,6 +38,28 @@ Shooting and throwing are styles of their own, so a marksman with a sword at the
 both Marksman (shots) and Duelist (blows). A kick is no style: you kick whatever your hands hold,
 so it trains only [unarmed fighting](weapon-skills.md#the-skills), and Brawler does not help it.
 
+## Caster styles
+
+Spells that roll to hit have styles too: how you cast them. Each trains, as the
+[Spell attacks](weapon-skills.md#the-skills) skill does, on every such spell you cast with your
+own mana that reaches a creature, and adds to it.
+
+- **Battle caster**: a spell that rolls to hit, cast while you wear armour that makes spells
+  dearer (mail, plate, a great helm, a large shield). It comes first: in such armour every ray,
+  bolt, and touch is a battle caster's. It hits more often, and it makes your armour's extra
+  mana cost smaller for **every** spell you cast, whatever it is. It also trains a little on
+  every other spell you cast in such armour. From rank 4 a spell that lands wards you: a point
+  of Defence until your next action (*Spell guard*).
+- **Sniper**: a ray or a bolt, out of armour. It hits more often, and better still against a
+  target five cells away or more, where its critical range is wider too. From rank 4 its best
+  shots pin the target where it stands (*Pinning ray*).
+- **Toucher**: a touch, out of armour. It hits more often, its critical range is wider, and its
+  criticals roll the damage up to twice more. From rank 4 its criticals stagger (*Staggering
+  touch*); at rank 10 every touch that lands weakens the foe (*Withering touch*).
+
+The wizard and the druid start in Sniper, the witch and the priest in Toucher, the paladin in
+Battle caster; any caster may advance in any of them by casting.
+
 ## Two weapons
 
 Your off hand takes a shield, or a **light** weapon (listed below; see the
@@ -79,7 +101,19 @@ A style's rank teaches abilities as a weapon skill's does (see
 [What a rank teaches](weapon-skills.md#what-a-rank-teaches)): told with the rank, listed in the
 [abilities menu](abilities.md) after the style's name, and firing by themselves, free and
 instant, but only while you fight in the style: a duelist's riposte needs one weapon and an empty
-hand, Staggering block a weapon and a shield.
+hand, Staggering block a weapon and a shield. The *active* ones are used from the menu for
+stamina and time, as a weapon skill's are (see
+[What a rank teaches](weapon-skills.md#what-a-rank-teaches)), and only in the style's grip:
+
+- **Feint** is one blow rolled as if the foe had no Parry and no Shield.
+- **Whirl** and **Staff sweep** strike every foe beside you, clockwise from the north, each at
+  −2 to hit and each with the free blows the end of an attack brings; with a blade in each hand,
+  the blades take turns.
+- **Mighty swing** rolls the blow's damage dice twice (its bonus and riders once; it is no
+  critical), at −2 to hit.
+- **Shield rush** (a shield bash) and **Hip throw** (an unarmed blow) drive a foe they hit a cell
+  back, if that cell is free, and stagger it; against a wall or another creature it stays where
+  it is, unstaggered, but the blow lands all the same.
 
 {{#include generated/style-abilities.md}}
 

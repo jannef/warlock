@@ -647,7 +647,7 @@ impl Actor {
                 Category::Dodge => (category, talents.stance_dodge(self.stance, bonus)),
                 _ => (category, bonus),
             });
-        Defence::from_bonuses(
+        let defence = Defence::from_bonuses(
             std::iter::once((Category::Dexterity, dexterity))
                 .chain(worn)
                 .chain(natural)
@@ -655,7 +655,14 @@ impl Actor {
                 .chain(magic.into_iter().filter(|&(_, b)| b != 0))
                 .chain(stance)
                 .chain(self.effects.defence(content)),
-        )
+        );
+        // A status that adds to the shield (Walled, Shield wall's) adds on top of it, while one
+        // is held.
+        match self.effects.shield(content) {
+            0 => defence,
+            _ if defence.bonus(Category::Shield) <= 0 => defence,
+            more => defence.plus(Category::Shield, more),
+        }
     }
 
     /// Its Protection (spec §8 "Combat"): the damage it soaks off every physical hit, the sum
@@ -873,7 +880,7 @@ impl Actor {
     /// The weapon skill an attack of `kind` made `with` (a missile, a shield for a bash, the
     /// off hand's weapon for its blow, or nothing for a blow) draws on and trains: a blow's
     /// ([`Actor::melee_skill`]), a bash's shield bashing, an off-hand blow's its weapon's, a
-    /// shot's the launcher's, a throw's thrown; a spell none.
+    /// shot's the launcher's, a throw's thrown; a spell's the skill of spells that roll to hit.
     pub fn attack_skill(
         &self,
         content: &Content,
@@ -891,7 +898,25 @@ impl Actor {
                 .launcher(content)
                 .and_then(|(launcher, _)| content.object(launcher).skill),
             (AttackKind::Thrown, _) => skills.of_role(Role::Thrown),
-            (AttackKind::Spell, _) => None,
+            (AttackKind::Spell, _) => skills.of_role(Role::Spell),
+        }
+    }
+
+    /// The skill and the caster style a spell that rolls to hit draws on and trains (spec §8
+    /// "Fighting styles"): in armour that hinders casting, the armoured grip's (Battle caster);
+    /// else a `touch`'s or a ranged spell's.
+    pub fn spell_skills(&self, content: &Content, touch: bool) -> AttackSkills {
+        let table = content.weapon_skills();
+        let grip = if self.worn_spell_cost(content) > 0 {
+            Grip::ArmouredSpell
+        } else if touch {
+            Grip::TouchSpell
+        } else {
+            Grip::RangedSpell
+        };
+        AttackSkills {
+            skill: table.of_role(Role::Spell),
+            style: table.style_for(grip, &[]),
         }
     }
 

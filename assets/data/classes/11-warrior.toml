@@ -31,6 +31,7 @@ abilities = [
     { level = 12, talent = "veterans_wind" },
     { level = 18, talent = "cleaving_strike" },
     { level = 25, talent = "armour_drill" },
+    { level = 25, talent = "drillmaster" },
     { level = 32, talent = "weapon_mastery" },
     { level = 40, talent = "iron_stance" },
     { level = 50, talent = "whirlwind" },

@@ -492,6 +492,12 @@ pub struct TalentMods {
     pub ability_ranks: i32,
     /// Its Rend rolls the off hand's dice too (Second blade's rend).
     pub rend_off_hand: bool,
+    /// Percent more time its weapon actives take (Practised technique: -25).
+    pub weapon_energy_percent: i32,
+    /// Stamina points less every weapon active of its costs (Drillmaster).
+    pub weapon_stamina: i32,
+    /// Stamina points less those weapon actives cost (Armour-breaker's Sunder and Gap shot).
+    pub ability_stamina: Vec<(crate::content::WeaponAbilityId, i32)>,
     /// What its Brace's blow gains (Brace of steel): to-hit, and a status on a foe it hits.
     pub brace: Option<(i32, StatusId)>,
     /// The Protection its confirmed criticals ignore, on top of the attack's penetration.
@@ -1391,6 +1397,18 @@ impl TalentMods {
             TalentEffect::CriticalConfirm { value } => self.critical_confirm += value,
             TalentEffect::AbilityRanks { value } => self.ability_ranks += value,
             TalentEffect::RendOffHand => self.rend_off_hand = true,
+            TalentEffect::WeaponEnergyPercent { value } => self.weapon_energy_percent += value,
+            TalentEffect::WeaponStamina { value, abilities } if abilities.is_empty() => {
+                self.weapon_stamina += value;
+            }
+            TalentEffect::WeaponStamina { value, abilities } => {
+                for id in abilities
+                    .iter()
+                    .filter_map(|a| content.weapon_ability_id(a))
+                {
+                    self.ability_stamina.push((id, value));
+                }
+            }
             TalentEffect::Brace { to_hit, status } => {
                 if let Some(status) = content.status_id(&status) {
                     let had = self.brace.map_or(0, |(t, _)| t);

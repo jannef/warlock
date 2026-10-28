@@ -1,0 +1,16 @@
+[[weapon_ability]]
+id = "shield_rush"
+name = "Shield rush"
+description = "Drive your shield into a foe: if it lands, the foe is thrown back a pace and staggered."
+skills = ["sword_and_board"]
+rank = 7
+kind = "active"
+aim = "direction"
+stamina = 4
+energy = { action = "melee", percent = 125 }
+systems = ["weapon_abilities", "styles", "stamina", "status"]
+[weapon_ability.effect]
+kind = "knockback"
+cells = 1
+bash = true
+status = "staggered"

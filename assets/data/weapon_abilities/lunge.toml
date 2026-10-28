@@ -1,0 +1,14 @@
+[[weapon_ability]]
+id = "lunge"
+name = "Lunge"
+description = "A long thrust at a foe two paces off, over an empty pace between."
+skills = ["spears", "staves"]
+rank = 9
+kind = "active"
+aim = "direction"
+stamina = 3
+energy = { action = "melee", percent = 100 }
+systems = ["weapon_abilities", "weapon_skills", "stamina"]
+[weapon_ability.effect]
+kind = "reach_blow"
+reach = 2

@@ -22,13 +22,31 @@
 //! fires by itself on a combat event ([`Trigger`]), instantly and for free, so it has no
 //! `stamina`, `energy`, or `cooldown`; an effect that is a switch ([`WeaponDoes::FreeBlow`],
 //! [`WeaponDoes::ParryMissiles`]) has no `trigger` either: the switch is read where its event
-//! already is. **Active** abilities (used from the abilities menu, paid in stamina and time)
-//! come with W3: until then `kind = "active"` is refused.
+//! already is. An **active** ability (#564, W3) is used from the abilities menu, aimed as its
+//! `aim` says, and paid in two things after its own refusals ([`Active`]): its `stamina` points
+//! and its `energy`, a percent (50 to 300) of the price of the action it is, so none is instant.
+//!
+//! ```toml
+//! [[weapon_ability]]
+//! id = "lunge"
+//! ...
+//! kind = "active"
+//! aim = "direction"            # nothing | direction | cell
+//! stamina = 3
+//! energy = { action = "melee", percent = 100 }
+//! [weapon_ability.effect]
+//! kind = "reach_blow"
+//! reach = 2
+//! ```
 
-use super::{Content, ContentError, StatusId, WeaponSkillId, duplicate_id};
+use super::{ActionKind, Content, ContentError, StatusId, WeaponSkillId, duplicate_id};
+use crate::combat::Category;
 use crate::dice::Dice;
 use serde::Deserialize;
 use std::collections::BTreeMap;
+
+/// The resource (`data/resources.toml`) active abilities are paid from.
+pub const STAMINA: &str = "stamina";
 
 /// The highest rank an ability may ask for.
 pub const MAX_ABILITY_RANK: u8 = 10;
@@ -98,7 +116,7 @@ impl Trigger {
     /// When it fires, in words (the wiki).
     pub const fn describe(self) -> &'static str {
         match self {
-            Trigger::Hit => "a blow, shot, or throw of yours hits",
+            Trigger::Hit => "a blow, shot, throw, or spell attack of yours hits",
             Trigger::Critical => "a critical of yours is confirmed",
             Trigger::BigHit => "a hit of yours takes a third of the target's hit points",
             Trigger::Kill => "a blow, shot, or throw of yours kills",
@@ -181,6 +199,54 @@ pub enum ExtraDice {
     Fixed(Dice),
 }
 
+/// A set of Defence categories: what an `ignore_defence` effect rolls without.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Categories(u16);
+
+impl Categories {
+    /// These and `category`.
+    pub const fn with(self, category: Category) -> Self {
+        Self(self.0 | 1 << category as u16)
+    }
+
+    pub const fn contains(self, category: Category) -> bool {
+        self.0 & 1 << category as u16 != 0
+    }
+
+    /// Each, in category order.
+    pub fn iter(self) -> impl Iterator<Item = Category> {
+        Category::ALL.into_iter().filter(move |&c| self.contains(c))
+    }
+}
+
+/// What an active ability asks for before it is used (the menu's aim).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ActiveAim {
+    Nothing,
+    Direction,
+    Cell,
+}
+
+/// How an active ability is used and paid for (the design §4.5): its aim, its stamina, and its
+/// energy, a percent of the price of the action it is (a blow's `attack_price`, a shot's
+/// `shot_price`, a wait's for a stance-like buff).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Active {
+    pub aim: ActiveAim,
+    /// Points of the stamina pool it costs.
+    pub stamina: u16,
+    /// The action it is priced as.
+    pub action: ActionKind,
+    /// The percent of that action's price it takes (50 to 300).
+    pub percent: u32,
+    /// A status with `eases` and no tick given as it is used, while which it is unavailable:
+    /// the optional per-ability limiter (none in the catalogue).
+    pub cooldown: Option<StatusId>,
+}
+
+/// The lowest and highest energy percent of an active.
+pub const ENERGY_PERCENT: std::ops::RangeInclusive<u32> = 50..=300;
+
 /// What a weapon ability does (the design §4.4): a closed list, each on one existing mechanism.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WeaponDoes {
@@ -205,6 +271,34 @@ pub enum WeaponDoes {
     FreeShot,
     /// Switches on Parry against shots and throws for the holder.
     ParryMissiles,
+    /// (Active) a blow at the first hostile along the direction within `reach` cells, the cells
+    /// between empty of actors and passable: Lunge.
+    ReachBlow { reach: u8 },
+    /// (Active) a blow that is a critical if it hits, with no confirmation: Vital strike.
+    SureCritical,
+    /// (Active) a blow rolled against the target's Defence without `categories`: Feint.
+    IgnoreDefence { categories: Categories },
+    /// (Active) a blow, or a shot, that the target's Protection does not soak: Sunder, Gap shot.
+    IgnoreProtection,
+    /// (Active) one blow at each hostile beside the actor, clockwise from the direction aimed
+    /// (or the north), each at `to_hit`; with a weapon in each hand the blades take turns: Whirl,
+    /// Staff sweep.
+    Sweep { to_hit: i32 },
+    /// (Active) a shot that flies on past the first it hits, to the next on its line: Piercing
+    /// shot.
+    PierceShot,
+    /// (Active) a blow (a shield bash with `bash`) that drives a foe it hits `cells` back, if
+    /// the cell is free, and leaves it suffering `status` (one degree): Shield rush, Hip throw.
+    Knockback {
+        cells: u8,
+        bash: bool,
+        status: Option<StatusId>,
+    },
+    /// (Active) `status`, `severity` degrees, on the actor: Shield wall.
+    Buff { status: StatusId, severity: u16 },
+    /// (Active) a blow whose damage dice are rolled twice (its bonus and riders once; no
+    /// critical), at `to_hit`: Mighty swing.
+    DoubleDice { to_hit: i32 },
 }
 
 impl WeaponDoes {
@@ -216,7 +310,32 @@ impl WeaponDoes {
             WeaponDoes::ExtraDamage { .. } => "extra_damage",
             WeaponDoes::FreeShot => "free_shot",
             WeaponDoes::ParryMissiles => "parry_missiles",
+            WeaponDoes::ReachBlow { .. } => "reach_blow",
+            WeaponDoes::SureCritical => "sure_critical",
+            WeaponDoes::IgnoreDefence { .. } => "ignore_defence",
+            WeaponDoes::IgnoreProtection => "ignore_protection",
+            WeaponDoes::Sweep { .. } => "sweep",
+            WeaponDoes::PierceShot => "pierce_shot",
+            WeaponDoes::Knockback { .. } => "knockback",
+            WeaponDoes::Buff { .. } => "buff",
+            WeaponDoes::DoubleDice { .. } => "double_dice",
         }
+    }
+
+    /// Whether it is an active's effect (used, not fired).
+    pub const fn is_active(&self) -> bool {
+        matches!(
+            self,
+            WeaponDoes::ReachBlow { .. }
+                | WeaponDoes::SureCritical
+                | WeaponDoes::IgnoreDefence { .. }
+                | WeaponDoes::IgnoreProtection
+                | WeaponDoes::Sweep { .. }
+                | WeaponDoes::PierceShot
+                | WeaponDoes::Knockback { .. }
+                | WeaponDoes::Buff { .. }
+                | WeaponDoes::DoubleDice { .. }
+        )
     }
 
     /// Whether it is a switch, read where its own event already is: no trigger of its own.
@@ -242,6 +361,8 @@ pub struct WeaponAbility {
     /// abilities' are checked against it by a test; a test's own talent table may have others).
     pub systems: Vec<String>,
     pub effect: WeaponDoes,
+    /// How it is used and paid for, for an active (`kind = "active"`); `None`: triggered.
+    pub active: Option<Active>,
 }
 
 #[derive(Deserialize)]
@@ -268,10 +389,10 @@ struct WeaponAbilitySpec {
     rank: u8,
     kind: String,
     trigger: Option<OneOrMany>,
-    // An active's (W3): refused on a triggered ability.
+    // An active's: refused on a triggered ability.
     aim: Option<String>,
     stamina: Option<u16>,
-    energy: Option<toml::Value>,
+    energy: Option<EnergySpec>,
     cooldown: Option<String>,
     #[serde(default)]
     systems: Vec<String>,
@@ -280,8 +401,20 @@ struct WeaponAbilitySpec {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+struct EnergySpec {
+    action: String,
+    percent: u32,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct EffectSpec {
     kind: String,
+    reach: Option<u8>,
+    categories: Option<Vec<String>>,
+    to_hit: Option<i32>,
+    cells: Option<u8>,
+    bash: Option<bool>,
     trigger: Option<String>,
     status: Option<String>,
     severity: Option<u16>,
@@ -314,7 +447,38 @@ pub(super) fn parse<'a>(
             all.push(ability);
         }
     }
+    check_talents(&all, content)?;
+    if all.iter().any(|a| a.active.is_some()) && content.resource_id(STAMINA).is_none() {
+        return Err(ContentError::new(
+            "data/resources.toml",
+            format!("active weapon abilities are paid in `{STAMINA}`, which is no resource"),
+        ));
+    }
     Ok(all)
+}
+
+/// Every weapon ability a talent names (`weapon_stamina`'s `abilities`) is one of `all`, and an
+/// active, while there are any (a content without weapon abilities leaves the names unread).
+fn check_talents(all: &[WeaponAbility], content: &Content) -> Result<(), ContentError> {
+    if all.is_empty() {
+        return Ok(());
+    }
+    for (_, def) in content.talents().iter() {
+        for effect in def.effects_at(def.rank_count()) {
+            let super::TalentEffect::WeaponStamina { abilities, .. } = effect else {
+                continue;
+            };
+            for name in abilities {
+                if !all.iter().any(|a| a.id == name && a.active.is_some()) {
+                    return Err(ContentError::new(
+                        "data/talents",
+                        format!("talent `{}`: `{name}` is no active weapon ability", def.id),
+                    ));
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 fn resolve(spec: WeaponAbilitySpec, content: &Content) -> Result<WeaponAbility, String> {
@@ -352,23 +516,35 @@ fn resolve(spec: WeaponAbilitySpec, content: &Content) -> Result<WeaponAbility, 
         ("energy", spec.energy.is_some()),
         ("cooldown", spec.cooldown.is_some()),
     ];
-    match spec.kind.as_str() {
+    let effect = effect(spec.effect, content)?;
+    let active = match spec.kind.as_str() {
         "triggered" => {
             if let Some((name, _)) = costs.iter().find(|(_, set)| *set) {
                 return Err(format!(
                     "a triggered ability is free and instant: it has no `{name}`"
                 ));
             }
+            if effect.is_active() {
+                return Err(format!(
+                    "a `{}` effect is an active's: `kind = \"active\"`",
+                    effect.kind()
+                ));
+            }
+            None
         }
         "active" => {
             if spec.trigger.is_some() {
                 return Err("an active ability has no `trigger`: it is used".into());
             }
-            return Err("`kind = \"active\"` is not in the game yet (W3)".into());
+            let cooldown = spec.cooldown.as_deref();
+            Some(active(
+                (spec.aim.as_deref(), spec.stamina, spec.energy, cooldown),
+                &effect,
+                content,
+            )?)
         }
         other => return Err(format!("unknown kind `{other}` (triggered, active)")),
-    }
-    let effect = effect(spec.effect, content)?;
+    };
     let triggers = match spec.trigger {
         None => Vec::new(),
         Some(OneOrMany::One(t)) => vec![Trigger::parse(&t)?],
@@ -383,11 +559,22 @@ fn resolve(spec: WeaponAbilitySpec, content: &Content) -> Result<WeaponAbility, 
                 effect.kind()
             ));
         }
-        (false, true) => return Err("a triggered ability needs a `trigger`".into()),
+        (false, true) if active.is_none() => {
+            return Err("a triggered ability needs a `trigger`".into());
+        }
         _ => {}
     }
     if effect == WeaponDoes::FreeShot && triggers != [Trigger::Approaches] {
         return Err("a `free_shot` fires on `approaches`".into());
+    }
+    // `use:ID` names an active: never a spell's, a class active's, or a birth sign gift's id,
+    // which the action text reads first.
+    if active.is_some()
+        && (content.spell_id(&spec.id).is_some()
+            || super::ClassActive::from_id(&spec.id).is_some()
+            || super::SignActive::from_id(&spec.id).is_some())
+    {
+        return Err("an active's id is no spell's, class active's, or birth sign gift's".into());
     }
     if spec.systems.iter().any(|s| s.trim().is_empty()) {
         return Err("`systems` names systems, not blanks".into());
@@ -401,12 +588,112 @@ fn resolve(spec: WeaponAbilitySpec, content: &Content) -> Result<WeaponAbility, 
         triggers,
         systems: spec.systems,
         effect,
+        active,
+    })
+}
+
+/// Resolves an active's aim, stamina, energy, and cooldown, for `effect`.
+fn active(
+    (aim, stamina, energy, cooldown): (Option<&str>, Option<u16>, Option<EnergySpec>, Option<&str>),
+    effect: &WeaponDoes,
+    content: &Content,
+) -> Result<Active, String> {
+    if !effect.is_active() {
+        return Err(format!(
+            "a `{}` effect is a triggered ability's: `kind = \"triggered\"`",
+            effect.kind()
+        ));
+    }
+    let aim = match aim {
+        Some("nothing") => ActiveAim::Nothing,
+        Some("direction") => ActiveAim::Direction,
+        Some("cell") => ActiveAim::Cell,
+        Some(other) => {
+            return Err(format!(
+                "unknown `aim` `{other}` (nothing, direction, cell)"
+            ));
+        }
+        None => return Err("an active needs an `aim` (nothing, direction, cell)".into()),
+    };
+    let stamina = stamina.ok_or("an active needs `stamina`")?;
+    if !(1..=50).contains(&stamina) {
+        return Err("`stamina` is 1 to 50".into());
+    }
+    let energy = energy.ok_or("an active needs `energy`: no active is free of time")?;
+    let action = (ActionKind::ALL.iter().copied())
+        .find(|k| k.id() == energy.action)
+        .ok_or_else(|| format!("unknown action `{}` in `energy`", energy.action))?;
+    if !ENERGY_PERCENT.contains(&energy.percent) {
+        return Err(format!(
+            "`energy`'s `percent` is {} to {}",
+            ENERGY_PERCENT.start(),
+            ENERGY_PERCENT.end()
+        ));
+    }
+    // What each effect is: a blow aimed in a direction, a sweep or a buff aimed at nothing, a
+    // shot aimed at a cell.
+    let (aims, actions): (&[ActiveAim], &[ActionKind]) = match effect {
+        WeaponDoes::ReachBlow { .. }
+        | WeaponDoes::SureCritical
+        | WeaponDoes::IgnoreDefence { .. }
+        | WeaponDoes::Knockback { .. }
+        | WeaponDoes::DoubleDice { .. } => (&[ActiveAim::Direction], &[ActionKind::Melee]),
+        WeaponDoes::IgnoreProtection => (
+            &[ActiveAim::Direction, ActiveAim::Cell],
+            &[ActionKind::Melee, ActionKind::Shoot],
+        ),
+        WeaponDoes::Sweep { .. } => (&[ActiveAim::Nothing], &[ActionKind::Melee]),
+        WeaponDoes::PierceShot => (&[ActiveAim::Cell], &[ActionKind::Shoot]),
+        WeaponDoes::Buff { .. } => (&[ActiveAim::Nothing], &[ActionKind::Wait]),
+        _ => (&[], &[]),
+    };
+    if !aims.contains(&aim) || !actions.contains(&action) {
+        let aims: Vec<String> = aims
+            .iter()
+            .map(|a| format!("{a:?}").to_lowercase())
+            .collect();
+        let actions: Vec<&str> = actions.iter().map(|a| a.id()).collect();
+        return Err(format!(
+            "a `{}` effect aims at {} and is priced as {}",
+            effect.kind(),
+            aims.join(" or "),
+            actions.join(" or ")
+        ));
+    }
+    // A shot aims at a cell, a blow in a direction.
+    if (action == ActionKind::Shoot) != (aim == ActiveAim::Cell) {
+        return Err("a shot aims at a `cell`, and only a shot does".into());
+    }
+    let cooldown = match cooldown {
+        None => None,
+        Some(name) => {
+            let id = (content.status_id(name)).ok_or(format!("unknown status `{name}`"))?;
+            let def = content.status(id);
+            if def.eases.is_none() || def.tick.is_some() {
+                return Err(format!(
+                    "a `cooldown` is a status that eases and does not tick: `{name}` is not"
+                ));
+            }
+            Some(id)
+        }
+    };
+    Ok(Active {
+        aim,
+        stamina,
+        action,
+        percent: energy.percent,
+        cooldown,
     })
 }
 
 /// Resolves an effect: its kind, with only its own fields.
 fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
     let fields = [
+        ("reach", spec.reach.is_some()),
+        ("categories", spec.categories.is_some()),
+        ("to_hit", spec.to_hit.is_some()),
+        ("cells", spec.cells.is_some()),
+        ("bash", spec.bash.is_some()),
         ("trigger", spec.trigger.is_some()),
         ("status", spec.status.is_some()),
         ("severity", spec.severity.is_some()),
@@ -419,11 +706,19 @@ fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
         "free_blow" => &["trigger"],
         "status" => &["status", "severity", "turns", "on"],
         "extra_damage" => &["dice", "damage"],
-        "free_shot" | "parry_missiles" => &[],
+        "free_shot" | "parry_missiles" | "sure_critical" | "ignore_protection" | "pierce_shot" => {
+            &[]
+        }
+        "reach_blow" => &["reach"],
+        "ignore_defence" => &["categories"],
+        "sweep" | "double_dice" => &["to_hit"],
+        "knockback" => &["cells", "bash", "status"],
+        "buff" => &["status", "severity"],
         other => {
             return Err(format!(
                 "unknown effect kind `{other}` (free_blow, status, extra_damage, free_shot, \
-                 parry_missiles)"
+                 parry_missiles, reach_blow, sure_critical, ignore_defence, ignore_protection, \
+                 sweep, pierce_shot, knockback, buff, double_dice)"
             ));
         }
     };
@@ -493,7 +788,68 @@ fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
             WeaponDoes::ExtraDamage { dice, kind }
         }
         "free_shot" => WeaponDoes::FreeShot,
-        _ => WeaponDoes::ParryMissiles,
+        "parry_missiles" => WeaponDoes::ParryMissiles,
+        "sure_critical" => WeaponDoes::SureCritical,
+        "ignore_protection" => WeaponDoes::IgnoreProtection,
+        "pierce_shot" => WeaponDoes::PierceShot,
+        "reach_blow" => {
+            let reach = spec.reach.ok_or("a `reach_blow` effect needs a `reach`")?;
+            if !(2..=4).contains(&reach) {
+                return Err("`reach` is 2 to 4".into());
+            }
+            WeaponDoes::ReachBlow { reach }
+        }
+        "ignore_defence" => {
+            let names = (spec.categories)
+                .filter(|c| !c.is_empty())
+                .ok_or("an `ignore_defence` effect names its `categories`")?;
+            let mut categories = Categories::default();
+            for name in &names {
+                let category = (Category::ALL.into_iter())
+                    .find(|c| c.id() == name)
+                    .ok_or_else(|| format!("unknown Defence category `{name}`"))?;
+                categories = categories.with(category);
+            }
+            WeaponDoes::IgnoreDefence { categories }
+        }
+        "sweep" | "double_dice" => {
+            let to_hit = spec.to_hit.unwrap_or(0);
+            if !(-20..=20).contains(&to_hit) {
+                return Err("`to_hit` is -20 to 20".into());
+            }
+            if spec.kind == "sweep" {
+                WeaponDoes::Sweep { to_hit }
+            } else {
+                WeaponDoes::DoubleDice { to_hit }
+            }
+        }
+        "knockback" => {
+            let cells = spec.cells.unwrap_or(1);
+            if cells != 1 {
+                return Err("`cells` is 1".into());
+            }
+            let status = match spec.status {
+                None => None,
+                Some(name) => {
+                    Some((content.status_id(&name)).ok_or(format!("unknown status `{name}`"))?)
+                }
+            };
+            WeaponDoes::Knockback {
+                cells,
+                bash: spec.bash.unwrap_or(false),
+                status,
+            }
+        }
+        _ => {
+            let name = spec.status.ok_or("a `buff` effect needs a `status`")?;
+            let status = (content.status_id(&name)).ok_or(format!("unknown status `{name}`"))?;
+            let max = content.status(status).max;
+            let severity = spec.severity.unwrap_or(1);
+            if severity < 1 || severity > max {
+                return Err(format!("`severity` is 1 to the status's max, {max}"));
+            }
+            WeaponDoes::Buff { status, severity }
+        }
     })
 }
 
@@ -542,6 +898,23 @@ mod tests {
                 assert!(book.system_id(s).is_some(), "{}: system `{s}`", a.id);
             }
         }
+        // The actives: Lunge as the issue writes it, and the catalogue's twelve.
+        let lunge = (content.weapon_abilities().iter())
+            .find(|a| a.id == "lunge")
+            .expect("lunge");
+        assert_eq!(
+            lunge.active,
+            Some(Active {
+                aim: ActiveAim::Direction,
+                stamina: 3,
+                action: ActionKind::Melee,
+                percent: 100,
+                cooldown: None,
+            })
+        );
+        assert_eq!(lunge.effect, WeaponDoes::ReachBlow { reach: 2 });
+        let actives = (content.weapon_abilities().iter()).filter(|a| a.active.is_some());
+        assert_eq!(actives.count(), 12);
         // No ability is called an aimed shot (the owner's rule): every shot is aimed.
         assert!(
             (content.weapon_abilities().iter()).all(|a| !a.name.to_lowercase().contains("aimed"))
@@ -574,8 +947,50 @@ mod tests {
             ),
             (
                 "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"direction\"\n\
+                 stamina = 3\nenergy = { action = \"melee\", percent = 100 }\n\
                  [weapon_ability.effect]\nkind = \"parry_missiles\"",
-                "not in the game yet",
+                "a triggered ability's",
+            ),
+            (
+                "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"direction\"\n\
+                 stamina = 3\n[weapon_ability.effect]\nkind = \"reach_blow\"\nreach = 2",
+                "an active needs `energy`",
+            ),
+            (
+                "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"direction\"\n\
+                 stamina = 3\nenergy = { action = \"melee\", percent = 40 }\n\
+                 [weapon_ability.effect]\nkind = \"reach_blow\"\nreach = 2",
+                "`percent` is 50 to 300",
+            ),
+            (
+                "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"direction\"\n\
+                 stamina = 3\nenergy = { action = \"melee\", percent = 301 }\n\
+                 [weapon_ability.effect]\nkind = \"reach_blow\"\nreach = 2",
+                "`percent` is 50 to 300",
+            ),
+            (
+                "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"direction\"\n\
+                 stamina = 3\nenergy = { action = \"melee\", percent = 100 }\n\
+                 cooldown = \"bleeding\"\n[weapon_ability.effect]\nkind = \"reach_blow\"\n\
+                 reach = 2",
+                "a `cooldown` is a status that eases and does not tick",
+            ),
+            (
+                "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"cell\"\n\
+                 stamina = 3\nenergy = { action = \"melee\", percent = 100 }\n\
+                 [weapon_ability.effect]\nkind = \"reach_blow\"\nreach = 2",
+                "aims at direction",
+            ),
+            (
+                "skills = [\"spears\"]\nrank = 9\nkind = \"triggered\"\ntrigger = \"hit\"\n\
+                 [weapon_ability.effect]\nkind = \"sure_critical\"",
+                "an active's",
+            ),
+            (
+                "skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"nothing\"\n\
+                 stamina = 3\nenergy = { action = \"wait\", percent = 100 }\n\
+                 [weapon_ability.effect]\nkind = \"buff\"\nstatus = \"blessed\"\nreach = 2",
+                "a `buff` effect has no `reach`",
             ),
             (
                 "skills = [\"duelist\"]\nrank = 4\nkind = \"triggered\"\ntrigger = \"hit\"\n\
@@ -633,5 +1048,15 @@ mod tests {
                 .to_string();
             assert!(err.contains(want), "{body}: {err}");
         }
+        // `use:ID` reads a spell first: an active never takes a spell's id.
+        let err = load_with(
+            "[[weapon_ability]]\nid = \"blessing\"\nname = \"X\"\ndescription = \"x\"\n\
+             skills = [\"spears\"]\nrank = 9\nkind = \"active\"\naim = \"nothing\"\n\
+             stamina = 3\nenergy = { action = \"wait\", percent = 100 }\n\
+             [weapon_ability.effect]\nkind = \"buff\"\nstatus = \"blessed\"\n",
+        )
+        .expect_err("a spell's id")
+        .to_string();
+        assert!(err.contains("no spell's"), "{err}");
     }
 }

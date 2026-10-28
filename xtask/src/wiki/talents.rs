@@ -320,6 +320,7 @@ fn buff(content: &Content, id: &str) -> String {
         ("damage", c.damage),
         ("Dodge", c.dodge),
         ("Parry", c.parry),
+        ("Shield", c.shield),
     ];
     let mut said: Vec<String> = (parts.iter())
         .filter(|(_, v)| *v != 0)
@@ -726,6 +727,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 (Some(Role::Unarmed), _) => "unarmed fighting".to_string(),
                 (Some(Role::ShieldBlock), _) => "shield blocking".to_string(),
                 (Some(Role::ShieldBash), _) => "shield bashing".to_string(),
+                (Some(Role::Spell), _) => "spell attacks".to_string(),
                 (Some(Role::Style), _) => "every fighting style".to_string(),
             };
             let mut gains = Vec::new();
@@ -1264,6 +1266,25 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             signed(value)
         ),
         TalentEffect::RendOffHand => "Rend rolls the off hand's damage dice too".into(),
+        TalentEffect::WeaponEnergyPercent { value } => format!(
+            "weapon actives take {}% time (never below half the action's price)",
+            signed(value)
+        ),
+        TalentEffect::WeaponStamina { value, abilities } if abilities.is_empty() => {
+            format!("every weapon active costs {value} stamina less (at least 1)")
+        }
+        TalentEffect::WeaponStamina { value, abilities } => {
+            let names: Vec<String> = (abilities.iter())
+                .map(|a| {
+                    (content.weapon_ability_id(a))
+                        .map_or_else(|| a.clone(), |id| content.weapon_ability(id).name.clone())
+                })
+                .collect();
+            format!(
+                "{} cost {value} stamina less (at least 1)",
+                names.join(" and ")
+            )
+        }
         TalentEffect::Brace { to_hit, status: id } => format!(
             "Brace's blow {} to hit, and a foe it hits is {} (one degree)",
             signed(to_hit),

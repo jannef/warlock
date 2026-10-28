@@ -271,12 +271,12 @@ pub use vault::Vault;
 pub use vision::VisionProfile;
 pub use wand::{MAX_WAND_CHARGES, Wand};
 pub use weapon_ability::{
-    ExtraDice, FreeBlowKind, MAX_ABILITY_RANK, On, Trigger, WeaponAbility, WeaponAbilityId,
-    WeaponDoes,
+    Active, ActiveAim, Categories, ENERGY_PERCENT, ExtraDice, FreeBlowKind, MAX_ABILITY_RANK, On,
+    STAMINA, Trigger, WeaponAbility, WeaponAbilityId, WeaponDoes,
 };
 pub use weapon_skill::{
-    Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, Style, TwoWeapons, WeaponSkillDef,
-    WeaponSkillId, WeaponSkillTable,
+    Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, SpellAttacks, Style, TwoWeapons,
+    WeaponSkillDef, WeaponSkillId, WeaponSkillTable,
 };
 pub use weather::{
     Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,

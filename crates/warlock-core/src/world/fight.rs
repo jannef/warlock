@@ -755,6 +755,8 @@ impl World {
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         let struck = self.target_against(target, missile);
         let struck = self.small_target(attacker, target, struck);
+        // Feint (a weapon active, `weapon_active.rs`): rolled without the categories it ignores.
+        let struck = self.feinted(attacker, struck);
         let levels = (self.level_of(attacker), self.level_of(target));
         // A talent may roll a fumble again (a birth sign's Winner's luck).
         let lucky = (self.state.actors.get(&attacker))
@@ -862,7 +864,7 @@ impl World {
 
     /// The level of actor `id` as weapon marks weigh it (spec §8 "Weapon skills"): a
     /// creature's type's (spec §8 "Experience"), the player's own.
-    fn level_of(&self, id: ActorId) -> u32 {
+    pub(super) fn level_of(&self, id: ActorId) -> u32 {
         if id == self.state.player {
             return u32::from(self.player_level());
         }
@@ -874,7 +876,7 @@ impl World {
     /// a blow blocked) or not. It earns its marks ([`crate::content::MarkRules`]), and each skill
     /// a rank gained raised (with the skills it defaults to) waits in `news` to be said after the
     /// attack's own messages: "You feel more skilled with long blades." No numbers.
-    fn practise(&mut self, skill: WeaponSkillId, success: bool, level: u32) {
+    pub(super) fn practise(&mut self, skill: WeaponSkillId, success: bool, level: u32) {
         let content = self.content.clone();
         let table = content.weapon_skills();
         let Some(rules) = table.marks() else {
@@ -910,8 +912,15 @@ impl World {
         let mut lines: Vec<String> = (risen.iter())
             .map(|&id| format!("You feel more skilled {}.", table.skill(id).phrase))
             .collect();
+        // The first active a rank teaches grants the stamina it is paid from to one without it
+        // (the third place stamina is granted, beside the class tables and a restored run),
+        // said after that active.
+        let mut breath = self.grant_stamina(before);
         // Each with the rank's line of the skill it is listed under (else the last line).
-        for (skill, line) in self.learned(before) {
+        for (skill, mut line, active) in self.learned(before) {
+            if active && std::mem::take(&mut breath) {
+                line.push_str(" You learn to pace your breath.");
+            }
             let at = (risen.iter().position(|&s| s == skill)).or(lines.len().checked_sub(1));
             if let Some(text) = at.and_then(|i| lines.get_mut(i)) {
                 text.push(' ');
@@ -919,6 +928,28 @@ impl World {
             }
         }
         self.news.extend(lines);
+    }
+
+    /// The player, who did not know them `before`, has learned an active weapon ability: they
+    /// hold stamina from now on, full, if they did not. Returns whether it was granted.
+    fn grant_stamina(
+        &mut self,
+        before: &[(WeaponSkillId, crate::content::WeaponAbilityId)],
+    ) -> bool {
+        let content = self.content.clone();
+        let Some(stamina) = content.resource_id(crate::content::STAMINA) else {
+            return false;
+        };
+        let me = self.state.player();
+        let active = (me.weapon_abilities(&content).into_iter())
+            .filter(|(_, id)| !before.iter().any(|(_, b)| b == id))
+            .any(|(_, id)| content.weapon_ability(id).active.is_some());
+        if !active || me.resources.get(stamina).is_some() {
+            return false;
+        }
+        let level = self.player_level();
+        super::focus::hold(&content, self.player_mut(), &[stamina], level);
+        true
     }
 
     /// Actor `id` loses `damage` hit points to `harm`, the one way hit points go down (blows,
@@ -1222,7 +1253,7 @@ impl World {
     /// off hand's weapon, or not (a blow, a kick), drawing on (and training) `skills`, said in
     /// the `words` of the kind of damage it did, with its noise if `noisy` (the first blow of
     /// an attack): see [`World::player_attacks`]. Returns the blow.
-    fn player_strikes(
+    pub(super) fn player_strikes(
         &mut self,
         target: ActorId,
         seen: bool,

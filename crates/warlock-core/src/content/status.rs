@@ -154,6 +154,9 @@ pub struct CombatBonus {
     pub dodge: i32,
     /// Added to its Defence in the Parry category.
     pub parry: i32,
+    /// Added on top of its Defence in the Shield category while it holds a shield (Walled):
+    /// unlike the other categories' bonuses, it adds to the shield's own.
+    pub shield: i32,
 }
 
 impl CombatBonus {
@@ -454,6 +457,8 @@ struct StatusSpec {
     combat: CombatBonus,
     #[serde(default = "normal_cost")]
     cost: u32,
+    #[serde(default = "normal_cost")]
+    attack_cost: u32,
     #[serde(default)]
     blocks: Vec<String>,
     #[serde(default)]
@@ -533,6 +538,9 @@ pub struct StatusDef {
     /// What every action costs the actor while it lasts, in percent of its price ([`COST_PERCENT`]):
     /// 150 half again as much (Slowed), 100 as usual.
     pub cost: u32,
+    /// What every attack costs the actor while it lasts, in percent of its price, on top of
+    /// `cost` ([`COST_PERCENT`]; Walled: 125). Several multiply.
+    pub attack_cost: u32,
     /// The actions refused while it lasts, by their kind (`read`: a raging barbarian cannot
     /// read); an ability that costs one of them cannot be used.
     pub blocks: Vec<ActionKind>,
@@ -611,6 +619,7 @@ impl StatusDef {
             && self.penalty.is_none()
             && self.combat == CombatBonus::default()
             && self.cost == 100
+            && self.attack_cost == 100
             && self.blocks.is_empty()
             && !self.flees
             && !self.sleeps
@@ -730,6 +739,7 @@ fn resolve(
         ("damage", c.damage),
         ("dodge", c.dodge),
         ("parry", c.parry),
+        ("shield", c.shield),
     ] {
         if !BONUS.contains(&value) {
             return Err(format!(
@@ -742,6 +752,13 @@ fn resolve(
     if !COST_PERCENT.contains(&spec.cost) {
         return Err(format!(
             "cost must be {} to {} (percent: statuses slow, never hasten)",
+            COST_PERCENT.start(),
+            COST_PERCENT.end()
+        ));
+    }
+    if !COST_PERCENT.contains(&spec.attack_cost) {
+        return Err(format!(
+            "attack_cost must be {} to {} (percent)",
             COST_PERCENT.start(),
             COST_PERCENT.end()
         ));
@@ -829,6 +846,7 @@ fn resolve(
         penalty,
         combat: spec.combat,
         cost: spec.cost,
+        attack_cost: spec.attack_cost,
         blocks,
         flees: spec.flees,
         sleeps: spec.sleeps,
@@ -1091,7 +1109,8 @@ mod tests {
                 to_hit: 1,
                 damage: 0,
                 dodge: -2,
-                parry: 0
+                parry: 0,
+                shield: 0
             }
         );
         assert_eq!(raging.cost, 150);

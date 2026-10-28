@@ -12,7 +12,7 @@ skills = { bluff = "2d6+10", music = "2d6+10", appraise = "2d4+4", decipher_scri
 known_for = ["bluff", "music"]
 rolls = 4
 creation_talents = 1
-weapon_skills = { short_blades = 1, daggers = "1d2" }
+weapon_skills = { short_blades = 1, daggers = "1d2", spell_attack = 1 }
 styles = { duelist = 1 }
 # A blade for the road, a lute for the inn, and the night's takings.
 kit = [

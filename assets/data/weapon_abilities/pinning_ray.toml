@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "pinning_ray"
+name = "Pinning ray"
+description = "Your best rays and bolts pin a foe where it stands for a moment."
+skills = ["sniper"]
+rank = 4
+kind = "triggered"
+trigger = "critical"
+systems = ["weapon_abilities", "styles", "spells", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "pinned"
+turns = "1d2"
