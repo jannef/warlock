@@ -27,7 +27,9 @@ current with the code, as CLAUDE.md says.
   - `World::startle(target, by, events)`: the one place anyone is surprised. A sleeper or a
     disguised mimic: `afflict(surprised)` with no check and no word. Else the initiative check
     (`check::check`: Dexterity modifier + `talents.check(Dexterity)` + `initiative_bonus`
-    against `difficulty`); failed, `afflict(surprised, 1, by)`. The messages (below).
+    against `difficulty`); failed, `afflict(surprised, 1, by)`. When the player is the one
+    caught, the attacker's `noticed` becomes the turn (the second place it is set; never on
+    load). The messages (below).
   - `World::flat_footed(target, unaware, struck)`: `Target::without([Dexterity, Dodge])` when
     unaware (with the rules) or Surprised.
   - `World::surprised(id)`, and `World::status_cost(id, status)`: a status's `cost` percent as
@@ -70,8 +72,10 @@ you." (`say` for an attack, before its line; `news` for a trap, after its line).
   while `None`; `Mind::is_empty` decides the actor's `mind` is left out, `Mind::is_calm` ignores
   it). A replay whose player sees a creature hashes differently from main from that step; one
   whose first attack finds a creature unaware also draws two more.
-- The player stays unaware of an unseen attacker in the dark however often it strikes (each blow
-  surprises again): `noticed` is what they saw, not what they felt.
+- An unseen attacker surprises the player with its first blow only (integrator, #693): `startle`
+  sets the attacker's `noticed` to the turn whatever the check gave, so its next blows find them
+  aware until `memory_turns` pass. Only the player's side: a creature struck by someone it does
+  not see stays unaware of them (design §3.1), so each of an unseen thief's shots surprises it.
 
 ## Tests
 

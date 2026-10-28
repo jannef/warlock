@@ -6,7 +6,8 @@
 //!   ([`crate::sight`]), do not see the actor's cell now; asleep or disguised, whatever it sees.
 //!   The player is unaware of a creature their last perception did not see and they have not
 //!   seen within `memory_turns` turns ([`super::Mind::noticed`], set by [`World::mark_noticed`] in
-//!   the turn pipeline only). It draws nothing.
+//!   the turn pipeline, and by [`World::startle`] for an attacker that caught them unawares: its
+//!   first blow surprises, the next ones do not). It draws nothing.
 //! - [`World::startle`] is the one place anyone is surprised: by an attack that finds its target
 //!   unaware (`fight.rs::resolve`, `cast.rs::spell_attack`), or by a hidden trap springing under
 //!   its victim (`trap.rs::step_onto_trap`). A sleeper or a disguised mimic is Surprised with no
@@ -176,6 +177,13 @@ impl World {
             self.afflict(target, status, 1, by, events);
         }
         let player = self.state.player;
+        // Struck once, the player knows the attacker is there, seen or not: its next blows find
+        // them aware until the memory lapses (`player_unaware`).
+        if target == player
+            && let Some(attacker) = by.and_then(|a| self.state.actors.get_mut(&a))
+        {
+            attacker.mind.noticed = Some(self.state.turn);
+        }
         if target == player && made {
             let text = "You keep your wits about you.".to_string();
             // A trap's own line is said with the turn's reports: this one after it.

@@ -74,7 +74,7 @@ pub struct Mind {
     pub post: Option<Pos>,
     /// The turn the player last saw it (`WorldState::turn`), the player's half of being aware
     /// of it (spec §8 "Surprise and sneak attacks", `world/surprise.rs`): set by perception in
-    /// the turn pipeline only. Not part of its routine: [`Mind::is_calm`] ignores it.
+    /// the turn pipeline, and by an attack that caught the player unawares (never on load). Not part of its routine: [`Mind::is_calm`] ignores it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub noticed: Option<u64>,
 }

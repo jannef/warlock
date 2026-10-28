@@ -341,7 +341,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     did not see and that they have not seen within `memory_turns` (20) turns: `Mind::noticed`,
     the turn the player last saw it, set as perception is computed in the turn pipeline only
     (never when a loaded state's perception is recomputed). A creature still searching for
-    someone it lost sight of is aware.
+    someone it lost sight of is aware. An attack that catches the player unawares counts as
+    noticing its attacker, so an unseen attacker surprises the player with its first blow only
+    until the memory lapses (a creature struck from the dark stays unaware: each shot surprises).
   - **Surprise** (`World::startle`, the one place anyone is surprised): an attack (a blow, a
     shot, a throw, a spell that rolls to hit) that finds its target unaware, and a hidden trap
     springing under the one it springs on (a creature knows no trap; the player one they have

@@ -369,6 +369,46 @@ fn an_attack_on_the_unaware_is_rolled_flat_footed_and_surprises() {
 }
 
 #[test]
+fn an_unseen_archer_surprises_once_until_the_memory_lapses() {
+    // In the dark the player never sees the goblin (asleep: it takes no turn of its own); its
+    // shots are struck at them straight.
+    let mut w = world(0, Rules::Difficulty(40));
+    let (player, archer) = (w.state.player, goblin(&w, 2));
+    lull(&mut w, archer);
+    let surprise = surprised_status(&w);
+    let shoot = |w: &mut World| {
+        let profile = w.state.actors[&archer].melee(&w.content);
+        let kind = crate::action::AttackKind::Ranged;
+        w.attack_with(archer, player, kind, Some(profile), &mut Vec::new());
+        let surprised = w.surprised(player);
+        // Healed after each shot: the goblin hits hard enough to end the test.
+        let me = w.state.actors.get_mut(&player).expect("player");
+        me.hp = me.hp.max(10);
+        w.state
+            .actors
+            .get_mut(&player)
+            .expect("player")
+            .effects
+            .remove(surprise);
+        surprised
+    };
+    assert!(w.unaware(player, archer));
+    assert!(shoot(&mut w), "the first shot out of the dark");
+    let turn = w.state.turn;
+    assert_eq!(
+        w.state.actors[&archer].mind.noticed,
+        Some(turn),
+        "struck, they know"
+    );
+    assert!(!shoot(&mut w), "the next shot finds them aware");
+    w.state.turn = turn + 20;
+    assert!(!shoot(&mut w), "twenty turns on, still");
+    w.state.turn = turn + 21;
+    assert!(w.unaware(player, archer), "forgotten");
+    assert!(shoot(&mut w), "surprised again");
+}
+
+#[test]
 fn no_draws_while_nothing_is_unaware() {
     // A fight in plain sight, in the light: the same rolls with and without the rules.
     let actions = parse_actions("move:E*6 wait*4").expect("actions");
