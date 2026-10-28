@@ -862,7 +862,7 @@ impl World {
 
     /// The level of actor `id` as weapon marks weigh it (spec §8 "Weapon skills"): a
     /// creature's type's (spec §8 "Experience"), the player's own.
-    fn level_of(&self, id: ActorId) -> u32 {
+    pub(super) fn level_of(&self, id: ActorId) -> u32 {
         if id == self.state.player {
             return u32::from(self.player_level());
         }
@@ -874,7 +874,7 @@ impl World {
     /// a blow blocked) or not. It earns its marks ([`crate::content::MarkRules`]), and each skill
     /// a rank gained raised (with the skills it defaults to) waits in `news` to be said after the
     /// attack's own messages: "You feel more skilled with long blades." No numbers.
-    fn practise(&mut self, skill: WeaponSkillId, success: bool, level: u32) {
+    pub(super) fn practise(&mut self, skill: WeaponSkillId, success: bool, level: u32) {
         let content = self.content.clone();
         let table = content.weapon_skills();
         let Some(rules) = table.marks() else {

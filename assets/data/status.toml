@@ -492,6 +492,18 @@ combat = { dodge = 2 }
 start = "Your skin hardens like bark."
 end = "Your skin softens again."
 
+# Battle caster's Spell guard (spec §8 "Fighting styles"): a spell that lands while its caster
+# fights in armour leaves a ward about them, a Defence point, until their next action.
+[[status]]
+id = "spell_ward"
+name = "Spell ward"
+max = 1
+stacking = "refresh"
+per_action = true
+combat = { dodge = 1 }
+start = "A ward settles about you."
+end = "Your ward fades."
+
 # Hound's bay's (a Barghest's birth sign pick): a creature that heard the howl and is of a lower
 # level runs from the howler, a degree for each turn, a turn's time apiece.
 [[status]]

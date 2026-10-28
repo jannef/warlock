@@ -12,8 +12,8 @@ alignment = 550
 skills = { intimidate = "2d6+10", concentration = "2d4+4", handle_animal = "2d4+4", heal = "2d4+4" }
 known_for = ["intimidate"]
 rolls = 2
-weapon_skills = { long_blades = 2, shield_block = "1d2", shield_bash = 1 }
-styles = { sword_and_board = 1 }
+weapon_skills = { long_blades = 2, shield_block = "1d2", shield_bash = 1, spell_attack = 1 }
+styles = { sword_and_board = 1, battle_caster = 1 }
 # Sword and shield, and the order's symbol, perhaps blessed.
 kit = [
     { wield = "long_sword" },

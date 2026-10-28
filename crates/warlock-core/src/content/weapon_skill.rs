@@ -70,19 +70,23 @@ pub enum Role {
     ShieldBlock,
     /// Bashing with a held shield (the bash attack).
     ShieldBash,
+    /// Spells that roll to hit (spec §8 "Spells": a ray, a bolt, or a touch whose resolution is
+    /// an attack roll): every such cast trains it.
+    Spell,
     /// A fighting style (spec §8 "Fighting styles"): every attack made in its configuration
     /// ([`Style`]) trains it, and its benefits add to the weapon skill's.
     Style,
 }
 
 impl Role {
-    pub const ALL: [Role; 7] = [
+    pub const ALL: [Role; 8] = [
         Role::Melee,
         Role::Launcher,
         Role::Thrown,
         Role::Unarmed,
         Role::ShieldBlock,
         Role::ShieldBash,
+        Role::Spell,
         Role::Style,
     ];
 
@@ -95,6 +99,7 @@ impl Role {
             Role::Unarmed => "unarmed",
             Role::ShieldBlock => "shield_block",
             Role::ShieldBash => "shield_bash",
+            Role::Spell => "spell",
             Role::Style => "style",
         }
     }
@@ -116,6 +121,7 @@ impl Role {
             Role::Melee | Role::Unarmed => Section::Melee,
             Role::Launcher | Role::Thrown => Section::Missile,
             Role::ShieldBlock | Role::ShieldBash => Section::Shields,
+            Role::Spell => Section::Spells,
             Role::Style => Section::Styles,
         }
     }
@@ -127,14 +133,16 @@ pub enum Section {
     Melee,
     Missile,
     Shields,
+    Spells,
     Styles,
 }
 
 impl Section {
-    pub const ALL: [Section; 4] = [
+    pub const ALL: [Section; 5] = [
         Section::Melee,
         Section::Missile,
         Section::Shields,
+        Section::Spells,
         Section::Styles,
     ];
 
@@ -144,6 +152,7 @@ impl Section {
             Section::Melee => "Melee",
             Section::Missile => "Missile and thrown",
             Section::Shields => "Shields",
+            Section::Spells => "Spells",
             Section::Styles => "Fighting styles",
         }
     }
@@ -168,10 +177,17 @@ pub enum Grip {
     Launcher,
     /// Throwing.
     Thrown,
+    /// A spell that rolls to hit at range: a ray or a bolt (spec §8 "Spells").
+    RangedSpell,
+    /// A touch spell that rolls to hit.
+    TouchSpell,
+    /// A spell that rolls to hit, ray, bolt, or touch, cast in armour that hinders casting
+    /// (anything worn with a `spell_cost_percent`): it comes before the other two.
+    ArmouredSpell,
 }
 
 impl Grip {
-    pub const ALL: [Grip; 7] = [
+    pub const ALL: [Grip; 10] = [
         Grip::OneWeapon,
         Grip::TwoWeapons,
         Grip::TwoHanded,
@@ -179,6 +195,9 @@ impl Grip {
         Grip::Unarmed,
         Grip::Launcher,
         Grip::Thrown,
+        Grip::RangedSpell,
+        Grip::TouchSpell,
+        Grip::ArmouredSpell,
     ];
 
     /// Its id in the data file: `weapon_and_shield`.
@@ -191,7 +210,18 @@ impl Grip {
             Grip::Unarmed => "unarmed",
             Grip::Launcher => "launcher",
             Grip::Thrown => "thrown",
+            Grip::RangedSpell => "ranged_spell",
+            Grip::TouchSpell => "touch_spell",
+            Grip::ArmouredSpell => "armoured_spell",
         }
+    }
+
+    /// Whether it is a configuration of spells that roll to hit (a caster's style).
+    pub const fn casts(self) -> bool {
+        matches!(
+            self,
+            Grip::RangedSpell | Grip::TouchSpell | Grip::ArmouredSpell
+        )
     }
 
     /// Whether a weapon is wielded in it (a Parry benefit adds to the wielded weapon's).
@@ -206,7 +236,7 @@ impl Grip {
     /// bare hands.
     const fn weapon_roles(self) -> &'static [Role] {
         match self {
-            Grip::Unarmed => &[],
+            Grip::Unarmed | Grip::RangedSpell | Grip::TouchSpell | Grip::ArmouredSpell => &[],
             Grip::Launcher => &[Role::Launcher],
             Grip::Thrown => &[Role::Melee, Role::Thrown],
             _ => &[Role::Melee],
@@ -248,6 +278,25 @@ impl Default for TwoWeapons {
     }
 }
 
+/// Spells that roll to hit (spec §8 "Fighting styles": Sniper): how far is far.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpellAttacks {
+    /// From this many cells away (the larger of the two distances) a ranged spell's far
+    /// benefits (`far_to_hit`, `far_threat`) apply.
+    pub far: u8,
+}
+
+impl SpellAttacks {
+    pub const DEFAULT: SpellAttacks = SpellAttacks { far: 5 };
+}
+
+impl Default for SpellAttacks {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+
 /// What a rank in a skill gives (rules only, never shown). Benefits of several skills add up
 /// ([`Benefit::plus`]): a fighting style's stack on a weapon's.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -274,6 +323,12 @@ pub struct Benefit {
     pub ease_off: u8,
     /// The chance in percent of a shield bash after a blow that hits (weapon and shield).
     pub bash: u8,
+    /// Added to the to-hit of a ranged spell at a target [`SpellAttacks::far`] or more away.
+    pub far_to_hit: i32,
+    /// Added to the threat widening of a ranged spell at such a target.
+    pub far_threat: u8,
+    /// Percent off what worn armour adds to every spell's mana cost (`spell_cost_percent`).
+    pub armour: u8,
 }
 
 impl Benefit {
@@ -291,6 +346,22 @@ impl Benefit {
             ease_main: self.ease_main.saturating_add(other.ease_main),
             ease_off: self.ease_off.saturating_add(other.ease_off),
             bash: self.bash.saturating_add(other.bash).min(100),
+            far_to_hit: self.far_to_hit + other.far_to_hit,
+            far_threat: self.far_threat.saturating_add(other.far_threat),
+            armour: self.armour.saturating_add(other.armour).min(100),
+        }
+    }
+
+    /// This benefit for a spell at a target `distance` cells away: the far benefits added at
+    /// [`SpellAttacks::far`] or more.
+    pub fn at_distance(self, distance: i32, spells: SpellAttacks) -> Benefit {
+        if distance < i32::from(spells.far) {
+            return self;
+        }
+        Benefit {
+            to_hit: self.to_hit + self.far_to_hit,
+            threat: self.threat.saturating_add(self.far_threat),
+            ..self
         }
     }
 
@@ -375,6 +446,7 @@ pub struct WeaponSkillTable {
     /// The curves by name, as the file gives them.
     curves: BTreeMap<String, [u32; MAX_RANK as usize]>,
     two_weapons: TwoWeapons,
+    spell_attacks: SpellAttacks,
 }
 
 #[derive(Deserialize)]
@@ -384,6 +456,8 @@ struct SkillFile {
     curves: BTreeMap<String, Vec<u32>>,
     #[serde(default)]
     two_weapons: TwoWeapons,
+    #[serde(default)]
+    spell_attacks: SpellAttacks,
     skill: Vec<SkillSpec>,
     #[serde(default)]
     default: Vec<DefaultSpec>,
@@ -410,6 +484,9 @@ struct SkillSpec {
     ease_main: Option<Vec<i32>>,
     ease_off: Option<Vec<i32>>,
     bash: Option<Vec<i32>>,
+    far_to_hit: Option<Vec<i32>>,
+    far_threat: Option<Vec<i32>>,
+    armour: Option<Vec<i32>>,
 }
 
 #[derive(Deserialize)]
@@ -459,14 +536,23 @@ impl SkillSpec {
         let ease_main = ranks("ease_main", &self.ease_main, bonus)?;
         let ease_off = ranks("ease_off", &self.ease_off, bonus)?;
         let bash = ranks("bash", &self.bash, 100)?;
+        let far_to_hit = ranks("far_to_hit", &self.far_to_hit, bonus)?;
+        let far_threat = ranks(
+            "far_threat",
+            &self.far_threat,
+            i32::from(MAX_THREAT_WIDENING),
+        )?;
+        let armour = ranks("armour", &self.armour, 100)?;
         let (role, grip) = (self.role, self.grip);
         let is = |g: Grip| grip == Some(g);
+        // A cast's time is the spell's own: nothing speeds a spell (yet).
+        let casts = role == Role::Spell || grip.is_some_and(Grip::casts);
         let unused = [
             ("to_hit", &self.to_hit, role.attacks()),
             ("damage", &self.damage, role.attacks()),
             ("threat", &self.threat, role.attacks()),
             ("crit", &self.crit, role.attacks()),
-            ("speed", &self.speed, role.attacks()),
+            ("speed", &self.speed, role.attacks() && !casts),
             (
                 "parry",
                 &self.parry,
@@ -485,6 +571,9 @@ impl SkillSpec {
             ("ease_main", &self.ease_main, is(Grip::TwoWeapons)),
             ("ease_off", &self.ease_off, is(Grip::TwoWeapons)),
             ("bash", &self.bash, is(Grip::WeaponAndShield)),
+            ("far_to_hit", &self.far_to_hit, is(Grip::RangedSpell)),
+            ("far_threat", &self.far_threat, is(Grip::RangedSpell)),
+            ("armour", &self.armour, is(Grip::ArmouredSpell)),
         ];
         if let Some((field, ..)) = unused
             .iter()
@@ -509,6 +598,9 @@ impl SkillSpec {
             ease_main: small(ease_main[r]),
             ease_off: small(ease_off[r]),
             bash: small(bash[r]),
+            far_to_hit: far_to_hit[r],
+            far_threat: small(far_threat[r]),
+            armour: small(armour[r]),
         }))
     }
 }
@@ -615,12 +707,16 @@ impl WeaponSkillTable {
                 benefits,
             });
         }
+        if parsed.spell_attacks.far == 0 {
+            return Err(err("spell_attacks: `far` is a distance, 1 or more".into()));
+        }
         let mut table = Self {
             skills,
             defaults: BTreeMap::new(),
             marks: Some(marks),
             curves,
             two_weapons: two,
+            spell_attacks: parsed.spell_attacks,
         };
         table.resolve_styles(&weapons).map_err(err)?;
         for spec in parsed.default {
@@ -761,6 +857,11 @@ impl WeaponSkillTable {
         self.two_weapons
     }
 
+    /// How far is far for a ranged spell's far benefits.
+    pub fn spell_attacks(&self) -> SpellAttacks {
+        self.spell_attacks
+    }
+
     /// How marks are earned; `None` without skills.
     pub fn marks(&self) -> Option<&MarkRules> {
         self.marks.as_ref()
@@ -865,9 +966,9 @@ mod tests {
     fn the_builtin_table_loads() {
         let text = include_str!("../../../../assets/data/weapon_skills.toml");
         let table = parse(text).expect("valid");
-        // Sixteen weapon skills and eight fighting styles.
-        assert_eq!(table.skills().len(), 24);
-        assert_eq!(table.styles().count(), 8);
+        // Sixteen weapon skills, the spell attack skill, and eleven fighting styles.
+        assert_eq!(table.skills().len(), 28);
+        assert_eq!(table.styles().count(), 11);
         let id = |name: &str| table.id(name).expect(name);
         // The owner's example: long blades 8 → short blades 6.
         assert_eq!(
@@ -1341,6 +1442,121 @@ mod tests {
                 "each rank needs more marks",
             ),
             (MARKS.replace("most = 200", "most = 50") + &ok, "`most`"),
+        ] {
+            let e = parse(&text).unwrap_err();
+            assert!(e.contains(why), "{why}: {e}");
+        }
+    }
+
+    #[test]
+    fn the_caster_ladder_loads_and_is_checked() {
+        let text = include_str!("../../../../assets/data/weapon_skills.toml");
+        let table = parse(text).expect("valid");
+        let id = |name: &str| table.id(name).expect(name);
+        // The issue's first guess at rank 10: +6 to hit, a threat range of 18-24, crit +1.
+        let spell = id("spell_attack");
+        assert_eq!(table.of_role(Role::Spell), Some(spell));
+        assert_eq!(table.skill(spell).role.section(), Section::Spells);
+        let ten = table.benefit(spell, MAX_RANK);
+        assert_eq!((ten.to_hit, ten.threat, ten.crit), (6, 3, 1));
+        assert_eq!(table.skill(spell).curve, "missile");
+        // One configuration, one caster style.
+        let style = |grip| {
+            table
+                .style_for(grip, &[])
+                .map(|s| table.skill(s).id.as_str())
+        };
+        assert_eq!(style(Grip::RangedSpell), Some("sniper"));
+        assert_eq!(style(Grip::TouchSpell), Some("toucher"));
+        assert_eq!(style(Grip::ArmouredSpell), Some("battle_caster"));
+        // Sniper's far benefits join at `far` cells and more; Toucher's crit never passes x5.
+        let sniper = table.benefit(id("sniper"), MAX_RANK);
+        let far = table.spell_attacks();
+        assert_eq!(far.far, 5);
+        assert_eq!(sniper.at_distance(4, far), sniper);
+        let away = sniper.at_distance(5, far);
+        assert_eq!((away.to_hit, away.threat), (7, 2));
+        let toucher = table.benefit(id("toucher"), MAX_RANK);
+        assert!(*CRITS.start() + ten.crit + toucher.crit <= *CRITS.end());
+        assert_eq!(table.benefit(id("battle_caster"), MAX_RANK).armour, 50);
+        // Every caster style's benefits never fall with rank.
+        for name in ["spell_attack", "sniper", "toucher", "battle_caster"] {
+            let s = id(name);
+            for r in 1..=MAX_RANK {
+                let (a, b) = (table.benefit(s, r - 1), table.benefit(s, r));
+                assert!(b.to_hit >= a.to_hit && b.threat >= a.threat && b.crit >= a.crit);
+                assert!(
+                    b.far_to_hit >= a.far_to_hit && b.armour >= a.armour,
+                    "{name} {r}"
+                );
+            }
+        }
+        let caster = |id: &str, grip: &str, extra: &str| {
+            format!(
+                "[[skill]]\nid = \"{id}\"\nname = \"{id}\"\nphrase = \"at {id}\"\nrole = \
+                 \"style\"\ngrip = \"{grip}\"\ncurve = \"melee\"\n{extra}\n"
+            )
+        };
+        let eleven = "[0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]";
+        for (text, why) in [
+            (
+                format!(
+                    "{MARKS}{}",
+                    skill("s", "spell", &format!("speed = {eleven}"))
+                ),
+                "`speed` does nothing for a skill of role `spell`",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    caster("s", "touch_spell", &format!("speed = {eleven}"))
+                ),
+                "`speed` does nothing",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    caster("s", "touch_spell", &format!("far_to_hit = {eleven}"))
+                ),
+                "`far_to_hit` does nothing for a style of grip `touch_spell`",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    caster("s", "ranged_spell", &format!("armour = {eleven}"))
+                ),
+                "`armour` does nothing",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    caster("s", "touch_spell", &format!("parry = {eleven}"))
+                ),
+                "`parry` does nothing",
+            ),
+            (
+                format!(
+                    "{MARKS}{}{}",
+                    skill("a", "spell", ""),
+                    skill("b", "spell", "")
+                ),
+                "there is already a skill of role `spell`",
+            ),
+            (
+                format!(
+                    "{MARKS}{}{}",
+                    skill("a", "spell", ""),
+                    caster("s", "ranged_spell", "weapons = [\"a\"]")
+                ),
+                "is no weapon skill a style of grip `ranged_spell` is fought with",
+            ),
+            (
+                format!(
+                    "{MARKS}[spell_attacks]\nfar = 0\n{}",
+                    skill("a", "spell", "")
+                ),
+                "`far` is a distance",
+            ),
         ] {
             let e = parse(&text).unwrap_err();
             assert!(e.contains(why), "{why}: {e}");

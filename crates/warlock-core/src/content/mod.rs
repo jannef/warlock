@@ -275,8 +275,8 @@ pub use weapon_ability::{
     WeaponDoes,
 };
 pub use weapon_skill::{
-    Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, Style, TwoWeapons, WeaponSkillDef,
-    WeaponSkillId, WeaponSkillTable,
+    Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, SpellAttacks, Style, TwoWeapons,
+    WeaponSkillDef, WeaponSkillId, WeaponSkillTable,
 };
 pub use weather::{
     Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,

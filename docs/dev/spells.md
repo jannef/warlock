@@ -120,9 +120,15 @@ shares.
     `World::spell_strikes`); auto through `spell_strikes` with a plain hit; attack and touch roll
     `combat::strike` with `Profile::bare(Attack { damage: dice, to_hit: the spell's `to_hit`
     scales for an own cast (`Actor::spell_to_hit`), the Dexterity modifier for a scroll or a wand,
-    threat 22, crit ×2 })` against `combat::Target::bare(target_against(target, missile).defence)`
-    (no Protection; the strike's damage, crit included, is then held to the cap and resisted in
-    `spell_strikes`). `spell_strikes` is the one place a spell's blow lands: the event (a miss
+    threat 22, crit ×2 }).with(benefit)` against
+    `combat::Target::bare(target_against(target, missile).defence)` (no Protection; the strike's
+    damage, crit included, is then held to the cap and resisted in `spell_strikes`). The
+    `benefit` (#571) is the Spell attacks skill's and the caster style's (`Actor::spell_skills`:
+    Battle caster in armour that hinders casting, else Toucher for a touch, Sniper for a ray or
+    a bolt; `Benefit::at_distance` adds Sniper's far benefits from `[spell_attacks] far`), for a
+    cast paid in mana of a spell that `rolls_to_hit` only; then `World::spell_practised` earns
+    their marks and fires their triggered abilities (`resolve_triggers`). A scroll or a wand
+    keeps the bare roll (docs/dev/weapon-skills.md "Caster styles"). `spell_strikes` is the one place a spell's blow lands: the event (a miss
     too), provoking, the resistance, blood, the hurt, the wound.
   - **Geometry**: `spell::cone_cells(from, toward, length, opaque)` (exported as
     `warlock_core::world::cone_cells` for the aiming mode): cells within the rounded radius, in
@@ -138,9 +144,10 @@ shares.
     (an index, in the content fingerprint) since #397. Old replays that cast verify only if the spell's cost is the same as
     the placeholder's; the regenerated costs change the state hash of any that cast.
 - **Choices** (design §14 and the issue's open points, decided here):
-  - The attack roll's skill: there is no Missile skill (weapon skills are per weapon), so rays,
-    bolts, and touches aim with the **Dexterity** modifier, threat and critical at the blows'
-    defaults; Spellcraft does not aim spells (its benefit is the study check's, #396).
+  - The attack roll's skill: rays, bolts, and touches aim with their `to_hit` scales (Dexterity
+    by default), threat and critical at the blows' defaults, plus since #571 the Spell attacks
+    skill and a caster style (a weapon skill of role `spell` and styles of the caster grips);
+    Spellcraft does not aim spells (its benefit is the study check's, #396).
   - A critical rolls the damage again, but the result is still **held to the cap**: nothing
     passes it, criticals included (design §5's strict cap).
   - Empower and Archmage (reworked in #400): their dice and per-die bonus apply, and the roll

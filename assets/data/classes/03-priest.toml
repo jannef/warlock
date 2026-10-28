@@ -11,8 +11,8 @@ experience = 115
 skills = { heal = "2d6+10", knowledge = "2d6+10", concentration = "2d4+4", decipher_script = "2d4+4" }
 known_for = ["heal", "knowledge"]
 rolls = 2
-weapon_skills = { maces = 2, shield_block = 1 }
-styles = { sword_and_board = 1 }
+weapon_skills = { maces = 2, shield_block = 1, spell_attack = 1 }
+styles = { sword_and_board = 1, toucher = 1 }
 # Mace and buckler, the holy symbol, and candles for the rites.
 kit = [
     { wield = "mace" },

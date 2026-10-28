@@ -407,33 +407,34 @@ mod tests {
         for (cols, rows) in [(48, 15), (30, 8), (5, 3), (0, 0)] {
             assert_eq!(drawn(&screen, cols, rows).len(), rows as usize);
         }
-        // 96 by 24: two columns, the weapons on the left, shields and styles on the right, and
-        // everything fits, gaps and all.
+        // 96 by 24: two columns, the weapons on the left, shields, spells, and styles on the
+        // right, and everything fits, gaps and all.
         let text = drawn(&screen, 96, 24);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
-        for needle in ["Shield bashing", "Staff Fighter", "Slings"] {
+        for needle in ["Shield bashing", "Spell attacks", "Battle caster", "Slings"] {
             assert!(at(needle) < at("W or Esc close"), "{needle}: {text:#?}");
         }
         assert_eq!(at("Melee"), at("Shields"), "side by side");
         // A margin above the rows, a gap below them, then the footer.
         assert_eq!(at("Melee"), at(" Weapon skills ").map(|y| y + 2));
-        assert_eq!(at("W or Esc close"), at("Thrown weapons").map(|y| y + 2));
+        assert_eq!(at("W or Esc close"), at("Battle caster").map(|y| y + 2));
         assert_eq!(at("Missile and thrown"), at("Unarmed").map(|y| y + 2));
         let (melee, shields) = (&text[at("Melee").expect("melee")], "Shields");
         assert!(melee.find("Melee") < melee.find(shields));
         // One column, tall enough: everything, the styles last.
         let text = drawn(&screen, 60, 40);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
-        assert!(at("Shield bashing") < at("Fighting styles"));
-        assert!(at("Staff Fighter") < at("W or Esc close"));
+        assert!(at("Shield bashing") < at("Spells"));
+        assert!(at("Spell attacks") < at("Fighting styles"));
+        assert!(at("Battle caster") < at("W or Esc close"));
         // 64 by 32 (the default 1280×720 window at the default font): one column, the gaps and
-        // margins give way, and everything still fits: no scrolling.
+        // margins give way, and the last few caster styles scroll (#571).
         let text = drawn(&screen, 64, 32);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert_eq!(at("Missile and thrown"), at("Unarmed").map(|y| y + 1));
         assert_eq!(at("Daggers and knives"), at("Melee").map(|y| y + 1));
-        assert!(at("Staff Fighter") < at("W or Esc close"), "{text:#?}");
-        assert!(!text.iter().any(|l| l.contains("scroll")));
+        assert!(at("Spell attacks") < at("W or Esc close"), "{text:#?}");
+        assert!(text.iter().any(|l| l.contains("scroll")), "{text:#?}");
     }
 
     #[test]
@@ -444,7 +445,7 @@ mod tests {
         let mut screen = WeaponSkillsScreen::new(Some(&world.perception()));
         let text = drawn(&screen, 48, 24);
         let has = |text: &[String], needle: &str| text.iter().any(|l| l.contains(needle));
-        assert!(has(&text, "Melee") && !has(&text, "Staff Fighter"));
+        assert!(has(&text, "Melee") && !has(&text, "Battle caster"));
         assert!(has(&text, "↑↓ scroll") && has(&text, "↓") && has(&text, "Esc close"));
         // ↑ at the top stays; ↓ scrolls a row at a time, down to the last row and no further.
         assert_eq!(screen.handle(&Press::nav(Nav::Up), &b), ScreenAction::Stay);
@@ -456,10 +457,10 @@ mod tests {
         }
         let text = drawn(&screen, 48, 24);
         assert!(
-            has(&text, "Staff Fighter") && !has(&text, "Melee"),
+            has(&text, "Battle caster") && !has(&text, "Melee"),
             "{text:#?}"
         );
-        let last = text.iter().position(|l| l.contains("Staff Fighter"));
+        let last = text.iter().position(|l| l.contains("Battle caster"));
         let footer = text.iter().position(|l| l.contains("Esc close"));
         assert_eq!(
             last.map(|y| y + 1),
@@ -469,7 +470,7 @@ mod tests {
         // One ↑ shows one row more at the top.
         screen.handle(&Press::nav(Nav::Up), &b);
         let up = drawn(&screen, 48, 24);
-        assert!(!has(&up, "Staff Fighter"));
+        assert!(!has(&up, "Battle caster"));
         let at = |text: &[String]| text.iter().position(|l| l.contains("Shield bashing"));
         assert_eq!(at(&up), at(&text).map(|y| y + 1));
     }

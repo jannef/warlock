@@ -71,3 +71,29 @@ attack `with` the off-hand weapon or the shield (`Actor::attack_skill` tells the
 (the screen's `•`, the dump's `, in use`), never a benefit or penalty. Tests:
 `content/weapon_skill.rs` (`styles_are_checked`), `world/style_tests.rs`; wiki tables
 `styles.md`, `style-defaults.md`, `style-benefits.md` and the classes' column.
+
+Caster styles (#571, combat progression family): spells that roll to hit
+(`SpellData::rolls_to_hit`: a damage spell, a ray, a bolt, or a touch, resolved by the attack
+roll) draw on the one skill of `Role::Spell` (`spell_attack`, its own `Section::Spells` on the
+screen) and a style of a caster grip (`Grip::RangedSpell`, `TouchSpell`, `ArmouredSpell`;
+`Grip::casts`; their styles name no weapons). `Actor::spell_skills(content, touch)` picks them:
+armoured first (`Actor::worn_spell_cost` above 0: anything worn with a `spell_cost_percent`),
+else touch or ranged; `Actor::attack_skill(Spell, _)` is the spell skill, `Actor::style(Spell,
+_)` stays `None` (`styles_in_use` marks no caster style). The one reader is
+`world/cast.rs::cast_single` (own casts paid in mana only; a scroll or a wand keeps the bare
+roll): `benefit_of(skills).at_distance(distance, table.spell_attacks())` (`[spell_attacks] far`,
+default 5: Sniper's `far_to_hit` and `far_threat` from there) goes into `Profile::with` after the
+spell's to-hit scales; `World::spell_practised` then practises both against the target's level
+and calls `resolve_triggers` with `AttackKind::Spell` (Pinning ray, Staggering touch, Withering
+touch, Spell guard; `struck` fires for the one struck as for a blow; `kill` and `big_hit` are not raised for spells, decided). Battle
+caster's `armour` (percent off the armour's percent) is read by `Actor::armour_spell_cost`
+whatever is cast, and `World::practise_in_armour` (from `pay_cast` on `Pay::Mana`) trains it on
+every other spell cast in such armour: `attempt` marks as against the player's own level. No
+`speed` for the role or the caster grips (the loader refuses it: a cast's time is the spell's).
+New `Benefit` fields: `far_to_hit`, `far_threat`, `armour` (checked per grip like the others).
+Creatures cast no spell that rolls to hit (their spells are intents), so no creature data gives
+ranks in them yet. Classes: wizard Spell attacks 2 and Sniper 1, druid 1 and Sniper 1, witch and
+priest 1 and Toucher 1, paladin 1 and Battle caster 1, bard Spell attacks 1. Talents: none new; Stylist (a
+chosen style) may choose a caster style, raising it a rank. Tests:
+`content/weapon_skill.rs` (`the_caster_ladder_loads_and_is_checked`),
+`world/caster_style_tests.rs`.

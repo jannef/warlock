@@ -1009,8 +1009,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     role says what uses it: `melee` and `launcher` skills are named by weapons (`category`), the
     wielded weapon's for a blow, the readied missile weapon's for a shot; `thrown` is every
     throw, whatever is thrown; `unarmed` bare hands, natural attacks, and kicks, whatever is
-    wielded (§8 "Doors"); `shield_block` and `shield_bash` a held shield's blocks and bashes
-    (`Actor::attack_skill`).
+    wielded (§8 "Doors"); `shield_block` and `shield_bash` a held shield's blocks and bashes;
+    `spell` (Spell attacks, #571) every spell the caster casts that rolls to hit
+    (`Actor::attack_skill`; "Spell attacks" below).
   - **Ranks**: 0 (untrained: no benefits; marks still count) to 10, on every actor
     (`Actor::weapon_skills`, a rank and marks per skill): the player's from race and class, a
     creature's from its type (§7). Ranks are stored, not derived.
@@ -1023,7 +1024,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     opponents, fewer as the rank rises. The opponent's level is its creature type's `level`
     (§8 "Experience"; the one attacked, or for a block the attacker): a level-1 giant rat
     teaches nothing past rank 5, a level-4 kobold shaman nothing past rank 8.
-    A missile that reaches no one, and spells, earn nothing; nothing rolls for marks.
+    A missile that reaches no one earns nothing; nothing rolls for marks. Of spells, only one
+    that rolls to hit earns marks ("Spell attacks" below).
   - **Curve**: the marks to go from a rank to the next grow exponentially, by the skill's
     `curve`: melee 15, 30, 60, … 7680 (rank 10 at 15 345 in all), missile 10, 20, … 5120. Marks
     past the need count toward the next rank (one rank at a time); rank 10 earns no more.
@@ -1064,6 +1066,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
     screen's attacks show the to-hit and damage the ranks add up to, §6) or a creature's ranks (the
     `actors` dev layer shows every actor's). Ranks and marks are part of the world state
     (saved, hashed).
+  - **Spell attacks** (#571; the combat progression family; `Role::Spell`,
+    `SpellData::rolls_to_hit`, `Actor::spell_skills`, `World::spell_practised` in
+    `world/cast.rs`): a damage spell, a ray, a bolt, or a touch, resolved by the attack roll
+    (Ray of frost, Scorching ray, Cause wounds) draws on the one skill of role `spell` (Spell
+    attacks: missile curve, as casters cast fewer attacks than fighters swing; rank 10 +6 to
+    hit, a threat range of 18-24, a critical's damage rolled once more) and a caster style
+    ("Fighting styles" below). Its benefit adds to the spell's to-hit scales (§8 "Spells")
+    in the roll's `Profile` (`Profile::with`); a critical multiplies the damage the spell
+    rolled, and the result is still held to the spell's lifted cap. A cast paid in mana that
+    reaches a creature earns marks in both by the same rules as a blow (against the target's
+    level), and the skills' triggered abilities fire on its hit and critical
+    (`World::resolve_triggers`); a scroll read or a wand used aims with Dexterity alone and
+    trains nothing (decided, as the to-hit scales are the caster's own). Spells that never roll
+    to hit earn nothing here. A spell has no `speed`: a cast's time is the spell's. The
+    message of a spell that crits says so as a blow's does ("You hit the kobold hard!").
+    Creatures cast no spell that rolls to hit yet (their spells are intents), so their ranks
+    in it are left to creature magic's follow-up.
 - **Fighting styles** (#135; `content/weapon_skill.rs`: `Role::Style`, `Grip`, `Style`,
   `TwoWeapons`; `world/actor.rs`: `Actor::grip`, `style`, `styles_in_use`, `attack_skills`
   (`AttackSkills`: an attack's weapon skill and style), `attack_benefit`, `off_hand`,
@@ -1080,8 +1099,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     style is how the hands are used).
     A style may name the weapon skills it is fought with; the style of a grip that names none
     takes every other weapon (`WeaponSkillTable::style_for`), so one configuration is always at
-    most one style. A spell has none.
-  - **The eight** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
+    most one style. A spell that rolls to hit is fought in a caster grip (#571;
+    `Actor::spell_skills`): `armoured_spell` while the caster wears anything with a
+    `spell_cost_percent` (§8 "Spells"), else `touch_spell` for a touch and `ranged_spell` for a
+    ray or a bolt; caster styles name no weapons. Any other spell has none.
+  - **The eleven** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
     (`two_weapons`: eases both two-weapon penalties, none left from rank 9; from rank 7 to-hit too), **Great Weapon**
     (`two_handed`, any weapon but a staff: damage, from rank 8 a critical rolls its damage once
     more, at rank 10 twice more (×4), cheaper blows), **Sword and Board** (`weapon_and_shield`: Shield, from rank 3 a chance
@@ -1090,8 +1112,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to-hit, damage, cheaper throws; decided as throwing only: "a light weapon and light armour"
     would have overlapped Duelist and Twin Blades, and the issue's benefits are all throws'),
     **Brawler** (`unarmed`: to-hit and damage), **Staff Fighter** (`two_handed`, staves: to-hit,
-    Parry). Defaults: duelist ↔ sword and board −3, duelist ↔ twin blades −3, great weapon ↔ staff
-    fighter −3, marksman ↔ skirmisher −4; never to a weapon skill.
+    Parry); and the caster styles (#571): **Sniper** (`ranged_spell`: to-hit, and against a
+    target `far` (5) cells or more away more to-hit and a wider threat range,
+    `[spell_attacks]`; rank 4 Pinning ray), **Toucher** (`touch_spell`: to-hit, threat, a
+    critical's damage up to twice more; rank 4 Staggering touch, rank 10 Withering touch),
+    **Battle caster** (`armoured_spell`: to-hit, and `armour`, percent off what worn armour adds
+    to every spell's mana cost, read by `Actor::armour_spell_cost` whatever is cast, up to half
+    at rank 10; rank 4 Spell guard; it also trains on every other spell paid in mana cast in
+    such armour, an attempt's marks as against an opponent of the caster's own level). The
+    classes that cast start in one: the wizard Spell attacks 2 and Sniper 1, the druid Spell
+    attacks 1 and Sniper 1, the witch and the priest Spell attacks 1 and Toucher 1, the paladin
+    Spell attacks 1 and Battle caster 1, the bard Spell attacks 1; a ranger advances by casting.
+    Defaults: duelist ↔ sword and board −3, duelist ↔ twin blades −3, great weapon ↔ staff
+    fighter −3, marksman ↔ skirmisher −4, sniper ↔ toucher −4, toucher ↔ battle caster −3;
+    never to a weapon skill.
   - **Benefits** (never shown) add to the weapon skill's (`Benefit::plus`;
     `Actor::attack_benefit`): to-hit, damage, threat, and the critical multiplier (`crit`) in the
     attack's `Profile` (`Actor::melee`, `off_hand_blow`, `ranged`, `thrown`, `bash`), right after
@@ -1168,7 +1202,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     parried or blocked melee attack staggers its striker), Pinning shot (Marksman 4: a critical
     shot pins 1d3 actions), Stunning fist (Brawler 4: a critical staggers), Hit and run
     (Skirmisher 4: a throw that hits makes the thrower Light-footed), Trip (Staff Fighter 4: a
-    critical pins an action). Staggered, Pinned, and Light-footed ease by the sufferer's actions
+    critical pins an action); the caster styles' (#571), fired by a spell that rolls to hit:
+    Pinning ray (Sniper 4: a critical pins 1d2 actions), Staggering touch (Toucher 4: a critical
+    staggers), Withering touch (Toucher 10: a touch that lands weakens a degree), Spell guard
+    (Battle caster 4: a spell that lands wards its caster, Spell ward, a Dodge point until
+    their next action). Staggered, Pinned, Spell ward, and Light-footed ease by the sufferer's actions
     (§8 "Status effects": `per_action`), so a staggered foe's next action is the slowed one,
     however many blows staggered it.
   - **What the player perceives**: a rank that teaches one says so with its own line ("You feel

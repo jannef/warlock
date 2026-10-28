@@ -703,6 +703,15 @@ pub struct SpellData {
 }
 
 impl SpellData {
+    /// Whether it rolls to hit (spec §8 "Spells"): a damage spell, a ray, a bolt, or a touch,
+    /// resolved by the attack roll. Such a cast trains the spell attack skill and a caster
+    /// style (spec §8 "Weapon skills", "Fighting styles").
+    pub fn rolls_to_hit(&self) -> bool {
+        self.kind == SpellPurpose::Damage
+            && matches!(self.resolution, Resolution::Attack | Resolution::Touch)
+            && matches!(self.shape, Shape::Ray | Shape::Bolt | Shape::Touch)
+    }
+
     /// Whether it asks for a cell when cast: anything but a spell on oneself.
     pub fn aimed(&self) -> bool {
         self.shape != Shape::Myself

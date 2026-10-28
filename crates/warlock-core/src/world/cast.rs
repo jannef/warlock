@@ -51,13 +51,13 @@
 
 use super::spell::{Caster, burst_cells, capped, cone_cells};
 use super::talk::capitalized;
-use super::{Actor, ActorId, Cause, Spent, World};
+use super::{Actor, ActorId, AttackSkills, Cause, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::position_text;
 use crate::action::{AttackKind, Event, ReadTarget, SpellShape};
 use crate::combat::{self, Attack, Profile, Strike};
 use crate::content::{
-    ActionKind, Bolt, Burst, Content, Resolution, Shape, SpellData, SpellPurpose, SpellRules,
+    ActionKind, Bolt, Burst, Content, Grip, Resolution, Shape, SpellData, SpellPurpose, SpellRules,
     Stance,
 };
 use crate::content::{ObjectId, SpellId};
@@ -82,6 +82,20 @@ impl Actor {
     /// The percent more mana a spell costs it for what it wears (spec §8 "Spells"): the
     /// `spell_cost_percent` of every piece worn or held, added up.
     pub fn armour_spell_cost(&self, content: &Content) -> u32 {
+        let worn = self.worn_spell_cost(content);
+        if worn == 0 {
+            return 0;
+        }
+        // Battle caster (spec §8 "Fighting styles"): its rank eases the armour's percent.
+        let table = content.weapon_skills();
+        let style = table.style_for(Grip::ArmouredSpell, &[]);
+        let ease = u32::from(self.benefit(content, style).armour.min(100));
+        worn * (100 - ease) / 100
+    }
+
+    /// The summed `spell_cost_percent` of what it wears, before Battle caster eases it: above 0,
+    /// its spells that roll to hit are cast in the armoured grip.
+    pub fn worn_spell_cost(&self, content: &Content) -> u32 {
         (self.equipment.items().into_iter())
             .filter_map(|(_, item)| self.inventory.get(item))
             .map(|s| u32::from(content.object(s.object).spell_cost_percent))
@@ -357,6 +371,7 @@ impl World {
         match cast.pay {
             Pay::Mana(mana) => {
                 self.spend_mana(self.state.player, mana);
+                self.practise_in_armour(cast.def);
             }
             Pay::Scroll(item) => {
                 let Some((scroll, kept)) = self.use_up(item) else {
@@ -367,6 +382,22 @@ impl World {
             }
             Pay::Wand(item) => self.use_charge(item),
         }
+    }
+
+    /// Battle caster (spec §8 "Fighting styles") trains on a spell `def` paid in mana that does
+    /// not roll to hit, cast in armour that hinders casting: an attempt's marks, as against an
+    /// opponent of the player's own level. (One that rolls to hit trains it as its style, by
+    /// the roll: `cast_single`.)
+    fn practise_in_armour(&mut self, def: &SpellData) {
+        let me = self.state.player();
+        if def.rolls_to_hit() || me.worn_spell_cost(&self.content) == 0 {
+            return;
+        }
+        let Some(style) = (self.content.weapon_skills()).style_for(Grip::ArmouredSpell, &[]) else {
+            return;
+        };
+        let level = self.level_of(self.state.player);
+        self.practise(style, false, level);
     }
 
     /// The degrees of the status of the player's buff or hex `def` of `severity`, lengthened
@@ -839,9 +870,22 @@ impl World {
                     kinds: Kinds::NONE,
                 };
                 let missile = def.shape != Shape::Touch;
+                // The spell attack skill and the caster style (spec §8 "Weapon skills",
+                // "Fighting styles"): the caster's own spells only, as the to-hit scales are.
+                let skills = if own && def.rolls_to_hit() {
+                    me.spell_skills(&self.content, !missile)
+                } else {
+                    AttackSkills::default()
+                };
+                let to = self.state.actors.get(&target).map_or(here, |a| a.pos);
+                let spells = self.content.weapon_skills().spell_attacks();
+                let benefit =
+                    (me.benefit_of(&self.content, skills)).at_distance(here.chebyshev(to), spells);
                 let defence = self.target_against(target, missile).defence;
                 let against = combat::Target::bare(defence);
-                let blow = combat::strike(&Profile::bare(&attack), &against, &mut self.state.rng);
+                let profile = Profile::bare(&attack).with(&benefit);
+                let blow = combat::strike(&profile, &against, &mut self.state.rng);
+                self.spell_practised(target, skills, blow, made);
                 (blow.damage, blow.strike)
             }
             Resolution::Auto | Resolution::Area => (
@@ -851,6 +895,31 @@ impl World {
         };
         let damage = Damage::new(capped(amount, Some(cap)), def.damage_type);
         self.spell_strikes(player, target, source, (damage, strike), made);
+    }
+}
+
+impl World {
+    /// The player's spell that rolls to hit came to `blow` against `target`, made with
+    /// `skills`: they earn their marks as an attack does (the weapon skill, then the style),
+    /// and the weapon abilities of `skills` fire on a hit and a critical (spec §8 "Weapon
+    /// abilities": Pinning ray, Staggering touch, Spell guard).
+    fn spell_practised(
+        &mut self,
+        target: ActorId,
+        skills: AttackSkills,
+        blow: combat::Blow,
+        made: &mut Vec<Event>,
+    ) {
+        if skills.skill.is_none() && skills.style.is_none() {
+            return;
+        }
+        let level = self.level_of(target);
+        for skill in skills.trained() {
+            self.practise(skill, blow.strike.is_hit(), level);
+        }
+        let player = self.state.player;
+        let kind = AttackKind::Spell;
+        self.resolve_triggers((player, target), (kind, skills), Some(blow), made);
     }
 }
 

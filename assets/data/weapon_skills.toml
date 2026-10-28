@@ -32,6 +32,13 @@ missile = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120]
 main = -4
 off = -8
 
+# Spells that roll to hit (a ray, a bolt, or a touch whose resolution is an attack roll; spells/)
+# aim with the skill of role `spell` and train it, and are fought in the caster styles below. A
+# ranged spell's far benefits (Sniper's `far_to_hit`, `far_threat`) apply from `far` cells away
+# (the larger of the two distances).
+[spell_attacks]
+far = 5
+
 # Every skill defines:
 #   id      stable name: weapons name it (`category` in objects.toml), races, classes, and
 #           creatures give ranks in it, saves record ranks by its place in this file
@@ -46,8 +53,10 @@ off = -8
 #             shield_block a blow blocked by a held shield trains it (a miss credited to the
 #                          Shield category of Defence); its `shield` adds to that category
 #             shield_bash  bashing with a held shield (an ability; spec §6 "Abilities")
+#             spell        spells that roll to hit: every one the caster casts (paid in mana; a
+#                          scroll read or a wand used aims with Dexterity alone) trains it
 #             style        a fighting style (below)
-#           unarmed, thrown, shield_block, and shield_bash may have one skill each
+#           unarmed, thrown, shield_block, shield_bash, and spell may have one skill each
 #   curve   the curve above it trains along
 # and what each rank gives, as 11 numbers for ranks 0 to 10 (rank 0 gives nothing; a higher rank
 # never less; a list left out is all 0):
@@ -55,7 +64,7 @@ off = -8
 #   damage  added to every roll of their damage dice
 #   threat  how many natural rolls lower a critical threatens from (19-24 instead of 20-24)
 #   crit    added to a confirmed critical's damage multiplier (0 to 3; never past x5)
-#   speed   percent off the attack's cost (melee, shoot, throw; actions.toml)
+#   speed   percent off the attack's cost (melee, shoot, throw; actions.toml; not for spells)
 #   parry   melee: added to the wielded weapon's Parry bonus to Defence
 #   reload  launcher: percent off the cost of reloading (a crossbow)
 #   shield  shield_block: added to the held shield's Shield bonus to Defence
@@ -235,6 +244,19 @@ to_hit = [0, 1, 1, 2, 2, 2, 3, 4, 4, 5, 6]
 damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5]
 threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 
+# Spells: targeted and touch spells that roll to hit (the combat progression's caster ladder,
+# #571). Missile's quick curve: casters cast fewer attacks than fighters swing, and aim as an
+# archer does. A spell's critical rolls its damage again, still held to the spell's cap.
+[[skill]]
+id = "spell_attack"
+name = "Spell attacks"
+phrase = "at aiming spells"
+role = "spell"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
+crit = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+
 # Fighting styles (spec §8 "Fighting styles"), after AD&D 2e's Complete Fighter's Handbook: skills
 # of how weapons are held and used, with the same ranks, marks, curves, and benefits as weapon
 # skills. Every attack the player makes in a style's configuration (a blow, a bash, a shot or a
@@ -249,8 +271,13 @@ threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 #              unarmed            nothing in the hands
 #              launcher           a shot from a missile weapon
 #              thrown             a throw
+#              ranged_spell       a spell that rolls to hit at range (a ray, a bolt)
+#              touch_spell        a touch spell that rolls to hit
+#              armoured_spell     a spell that rolls to hit, cast in armour that hinders casting
+#                                 (anything worn with a spell_cost_percent): before the two above
 #   weapons  the weapon skills it is fought with (a launcher's for `launcher`, what is thrown for
-#            `thrown`); left out: every weapon of its grip that no other style of the grip names.
+#            `thrown`; none for the spell grips); left out: every weapon of its grip that no
+#            other style of the grip names.
 #            One configuration is one style: at most one style of a grip leaves it out, and none
 #            names a weapon skill another of its grip names
 # and may give, beyond the benefits above (parry only for the grips that wield a weapon, shield
@@ -259,6 +286,10 @@ threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 #   ease_off   two_weapons: points off the off hand's penalty
 #   bash       weapon_and_shield: the chance in percent of a free shield bash after a blow that
 #              hits (it draws on and trains shield bashing)
+#   far_to_hit ranged_spell: added to the to-hit at a target [spell_attacks] `far` or more away
+#   far_threat ranged_spell: added to the threat widening at such a target
+#   armour     armoured_spell: percent off what worn armour adds to every spell's mana cost,
+#              whatever is cast (spells.toml's armour percents)
 # Styles default only to styles (below). Rank 10 is where a style's later active or triggered
 # abilities will hang (a duelist's riposte, a staff fighter's trip).
 [[skill]]
@@ -348,6 +379,42 @@ curve = "melee"
 to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5]
 parry = [0, 1, 1, 2, 2, 2, 3, 4, 5, 6, 7]
 
+# Caster styles (#571): how spells that roll to hit are cast. Every class that casts starts in
+# one or may advance in one. Battle caster also trains on every other spell paid in mana that
+# its caster casts in armour that hinders casting (an attempt's marks, as against an opponent
+# of the caster's own level).
+[[skill]]
+id = "sniper"
+name = "Sniper"
+phrase = "at sniping with spells"
+role = "style"
+grip = "ranged_spell"
+curve = "missile"
+to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4]
+far_to_hit = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
+far_threat = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
+
+[[skill]]
+id = "toucher"
+name = "Toucher"
+phrase = "at laying on spells by touch"
+role = "style"
+grip = "touch_spell"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5]
+threat = [0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2]
+crit = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2]
+
+[[skill]]
+id = "battle_caster"
+name = "Battle caster"
+phrase = "at casting in armour"
+role = "style"
+grip = "armoured_spell"
+curve = "missile"
+to_hit = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+armour = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+
 # Defaults (The Riddle of Steel): skill with one weapon carries over to related ones, less a
 # penalty, both ways. When a rank is gained in A, every B with rank(A) - penalty > rank(B) rises to
 # rank(A) - penalty, and its marks start again from 0. Long blades 8 gives short blades 6.
@@ -433,3 +500,13 @@ penalty = 3
 [[default]]
 between = ["marksman", "skirmisher"]
 penalty = 4
+
+# Between the caster styles: a touch is a spell at no range, and a battle caster lays hands on
+# foes.
+[[default]]
+between = ["sniper", "toucher"]
+penalty = 4
+
+[[default]]
+between = ["toucher", "battle_caster"]
+penalty = 3
