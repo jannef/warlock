@@ -129,9 +129,16 @@ place the starting pack is put together (the kit, if any, else the scenario's `w
 `World::start_run` and the summary (`ui/chargen_screen.rs::kit_words`, names from
 `Pack::names`). `rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing,
 refusals), `kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministic choices, no
-other roll moves, every worn or wielded item finds its slot, nobody Strained and only the
-aristocrat and the merchant Burdened, worst case analytically, magic unidentified, who gets the
-kit and the scenario's pack, the gender and sign hooks, a replay with and without the flag).
+other roll moves, every worn or wielded item finds its slot unless an earlier line took it (a
+race's bow or gauntlets after the class's own: an elven ranger, a dwarven paladin), nobody
+Strained at the worst case (`least_score`) and an ordinary character (`ordinary_score`, dice at
+their mean, no sign) Unburdened but for the aristocrat's and merchant's wealth and a small
+race's warrior or paladin (#695: their armour; a player may toss it), magic unidentified, who
+gets the kit and the scenario's pack, the gender and sign hooks, a replay with and without the
+flag). Since #695 the martial classes start armoured, the elven races with a bow (the drow a
+crossbow) of the weapon skill their race gives a rank in (the half-elf's `bows` is a fixed 1),
+the halfling with a sling, and the dwarf in steel; materials are named as placements name them
+(`"long_bow:hardwood"`, `"bolt:steel*12"`).
 The wiki's tables are `xtask/src/wiki/kits.rs` (`class-kits.md`, `race-kits.md`). The screen
 snapshots' `kit: true` starts a case's run with the kit (`kit-equipment`, `kit-inventory`, and
 `kit-summary` in `crates/warlock/src/ui/screen_snapshots.rs`); the golden manifest's `kit = true`

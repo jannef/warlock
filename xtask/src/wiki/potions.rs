@@ -1,6 +1,6 @@
 //! Potions (spec §8 "Potions").
 
-use super::text::capital;
+use super::text::{Term, anchored, capital};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Draught, StatusId};
 
@@ -111,7 +111,7 @@ pub(super) fn potions(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} `{}` | {} | {what} | {} (`{}`) | {marks} | {found} | {} gold |",
-            capital(&o.name),
+            anchored(Term::Potion, &o.id, &capital(&o.name)),
             o.glyph,
             drink.does.kind(),
             drink.colour,

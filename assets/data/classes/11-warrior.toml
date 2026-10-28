@@ -13,13 +13,13 @@ optional_skills = { heal = { chance = 15, dice = "2d4" }, metalcraft = { chance 
 rolls = 2
 weapon_skills = { long_blades = 2, shield_block = "1d2" }
 styles = { sword_and_board = 1 }
-# Sword and shield, plain leathers and a cap, a ration, and a soldier's pay.
+# Sword and shield, a jerkin of hardened leather and an iron helm, rations, and a soldier's pay.
 kit = [
     { wield = "long_sword" },
     { wield = "small_shield" },
-    { wear = "leather_jerkin" },
-    { wear = "leather_cap" },
-    "ration",
+    { wear = "leather_jerkin:hardened_leather" },
+    { wear = "iron_helm" },
+    "ration*2",
     "gold_coin*20",
 ]
 # Bonus talents from Weaponcraft and Guard, every sixth level from 4.

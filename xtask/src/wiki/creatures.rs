@@ -5,7 +5,7 @@
 use super::actions::at_speed;
 use super::combat::threat_range;
 use super::order;
-use super::text::{capital, damage_text, glyph, signed, yes};
+use super::text::{Term, anchored, capital, damage_link, damage_text, glyph, link, signed, yes};
 use std::fmt::Write as _;
 use warlock_core::action::AttackKind;
 use warlock_core::burden::{self, Burden};
@@ -83,7 +83,7 @@ fn creature_table(content: &Content, campaign: Option<&str>) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {faction} | {stance} | {attacks} | {} | {} | {drops} | {} |",
-            capital(&c.name),
+            anchored(Term::Creature, &c.id, &capital(&c.name)),
             glyph(c.glyph),
             yes(c.opens_doors),
             yes(c.light.is_some()),
@@ -294,7 +294,7 @@ pub(super) fn creature_stats(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} |{scores} {potentials} | {} | {} |",
-            capital(&c.name),
+            link(Term::Creature, &c.id, &capital(&c.name)),
             c.level,
             xp_cell(c),
             content.creature_rarity(c.rarity).name,
@@ -352,7 +352,7 @@ pub(super) fn creature_defences(content: &Content) -> String {
         };
         let resists: Vec<String> = (c.resist.iter())
             .map(|&(kind, percent)| {
-                let name = &content.damage_type(kind).name;
+                let name = damage_link(content, kind);
                 match percent {
                     100 => format!("immune to {name}"),
                     p if p < 0 => format!("{name} {}% (takes more)", signed(p)),
@@ -363,7 +363,7 @@ pub(super) fn creature_defences(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {defence} | {protection} | {} |",
-            capital(&c.name),
+            link(Term::Creature, &c.id, &capital(&c.name)),
             actor.max_hp(content),
             dash(&resists)
         );
@@ -425,7 +425,7 @@ pub(super) fn creature_attacks(content: &Content) -> String {
                 out,
                 "| {} | {fight} | its weapon | its weapon's, with its Strength | its weapon's | \
                  its weapon's | {} | its weapon's |",
-                capital(&c.name),
+                link(Term::Creature, &c.id, &capital(&c.name)),
                 at_speed(blow_price(content, &actor), c.speed),
             );
             continue;
@@ -447,7 +447,7 @@ pub(super) fn creature_attacks(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {fight} | {attack} | {} | {} | {} ×{} | {} | {} |",
-            capital(&c.name),
+            link(Term::Creature, &c.id, &capital(&c.name)),
             damage.trim_end(),
             signed(profile.to_hit),
             threat_range(profile.threat),
@@ -491,7 +491,7 @@ pub(super) fn creature_throws(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} | {} ×{} | {} cells | {} | {} |",
-            capital(&c.name),
+            link(Term::Creature, &c.id, &capital(&c.name)),
             throw.attack.name,
             damage.trim_end(),
             signed(profile.to_hit),
@@ -537,7 +537,7 @@ pub(super) fn creature_summons(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} s | {} | {} cells | {} cells | {} |",
-            capital(&c.name),
+            link(Term::Creature, &c.id, &capital(&c.name)),
             pool.join(", "),
             summon.count,
             summon.cooldown,
@@ -576,7 +576,7 @@ pub(super) fn creature_senses(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} cells | {} | {hearing} | {footsteps} | {} | {} | {} |",
-            capital(&c.name),
+            link(Term::Creature, &c.id, &capital(&c.name)),
             c.speed,
             at_speed(price(NORMAL_COST, BASE_TURN), c.speed),
             c.sight,

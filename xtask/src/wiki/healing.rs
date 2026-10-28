@@ -3,7 +3,7 @@
 
 use super::combat::percent;
 use super::order;
-use super::text::{capital, signed, yes};
+use super::text::{Term, anchored, capital, signed, stat_link, yes};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Affliction, Content, DiseaseDef, DiseaseId, StatusDef};
@@ -347,7 +347,7 @@ pub(super) fn status_effects(content: &Content) -> String {
             |p| {
                 let lowered: Vec<String> = (p.by.iter())
                     .filter(|(_, by)| *by != 0)
-                    .map(|(stat, by)| format!("{} {}", stat.name(), signed(i32::from(by))))
+                    .map(|(stat, by)| format!("{} {}", stat_link(stat), signed(i32::from(by))))
                     .collect();
                 let when = if p.from > 1 { " when strong" } else { "" };
                 let per = if p.per_degree { " a degree" } else { "" };
@@ -362,7 +362,7 @@ pub(super) fn status_effects(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {seen} | {} | {} | {} | {} | {stats} | {cured} | {} |",
-            def.name,
+            anchored(Term::Status, &def.id, &def.name),
             causes(content, i, def),
             capital(&costs),
             capital(&eases),
@@ -451,7 +451,7 @@ pub(super) fn diseases(content: &Content) -> String {
     for (disease, def) in content.disease_ids() {
         let resisted = format!(
             "{}, {}",
-            def.check.name(),
+            stat_link(def.check),
             percent(check::ways(0, def.difficulty), 144)
         );
         let progresses = match def.interval {
@@ -460,7 +460,7 @@ pub(super) fn diseases(content: &Content) -> String {
         };
         let mut costs: Vec<String> = (def.damage.iter())
             .filter(|(_, d)| !d.is_zero())
-            .map(|(stat, d)| format!("{d} {}", stat.name()))
+            .map(|(stat, d)| format!("{d} {}", stat_link(stat)))
             .collect();
         if let Some(hp) = def.hp {
             costs.push(format!("{hp} hit points"));
@@ -474,7 +474,7 @@ pub(super) fn diseases(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {resisted} | {} | {progresses} | {} | {shaken} | {} | {} |",
-            capital(&def.name),
+            anchored(Term::Disease, &def.id, &capital(&def.name)),
             caught_by(content, disease, def),
             capital(&days(def.incubation)),
             costs.join(", "),

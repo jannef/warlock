@@ -26,9 +26,10 @@ abilities = [
     { level = 60, talent = "unlikely_hero" },
 ]
 bonus_talents = { levels = [10, 20, 30, 45, 55] }
-# A stick and a turnip, and three worthless coppers.
+# A stick, two turnips and a heel of bread, and a dozen worthless coppers.
 kit = [
     { wield = "club" },
-    "turnip",
-    "copper_coin*3",
+    "turnip*2",
+    "bread",
+    "copper_coin*12",
 ]

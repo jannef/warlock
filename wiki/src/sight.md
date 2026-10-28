@@ -3,8 +3,8 @@
 ## Line of sight
 
 You see in straight lines, and line of sight works both ways: if you have a clear line to a cell,
-anything standing there has a clear line to you. Walls and closed doors block sight; open doors and most floor do not. Some terrain
-blocks sight too, such as trees, boulders, and crags (see [Terrain](terrain.md)).
+anything standing there has a clear line to you. [Walls](terrain.md#walls) and closed [doors](doors.md) block sight; open doors and most floor do not. Some terrain
+blocks sight too, such as [trees](terrain.md#terrain-tree), [boulders](terrain.md#terrain-boulder), and [crags](terrain.md#terrain-crag) (see [Terrain](terrain.md)).
 
 The farthest you can see is 40 cells, and the edge of any radius is slightly rounded, so a cell
 counts as within radius `r` when its squared distance is at most `r² + r`.
@@ -13,18 +13,18 @@ counts as within radius `r` when its squared distance is at most `r² + r`.
 
 A cell is visible when it is in line of sight, within 40 cells, **and** one of these is true:
 
-- it is lit brightly enough for your eyes (your [vision type](vision.md) sets how bright), or
-- it is close enough to be seen with darkvision.
+- it is [lit](light.md#what-light-is) brightly enough for your eyes (your [vision type](vision.md) sets how bright), or
+- it is close enough to be seen with [darkvision](vision.md#the-four-types).
 
 The cell you stand on is always visible.
 
-You see a creature when you see its cell. So a creature in the dark is hidden from you unless it is
-within your darkvision, and a creature carrying a light shows up. You may still hear one you cannot
+You see a [creature](creatures.md) when you see its cell. So a creature in the dark is hidden from you unless it is
+within your [darkvision](vision.md#the-four-types), and a creature carrying a [light](light.md#light-sources) shows up. You may still hear one you cannot
 see: see [Hearing](hearing.md). Objects lying on a cell are seen the same way as creatures (see
 [Objects and your pack](objects.md)).
 
 Creatures see by these same rules, each with its own eyes, so standing in the dark hides you from
-a creature that cannot see in the dark, while a lit lantern shows you to any creature that has a
+a creature that cannot see in the dark, while a lit [lantern](lantern.md) shows you to any creature that has a
 clear line to you and is near enough. See [Creatures](creatures.md).
 
 If you see floor through a narrow gap, you also see the walls around that floor, so a lit passage
@@ -35,7 +35,7 @@ yourself.
 ## Memory
 
 The game remembers the terrain you have seen, per level, as you last saw it, and the piles of
-objects lying on it. Remembered cells are drawn dim and desaturated. A door you saw open is
+objects lying on it. Remembered cells are drawn dim and desaturated. A [door](doors.md) you saw open is
 remembered open until you see it closed. A pile is remembered as it lay when you last saw it, even
 if it changed since, and forgotten once you see it gone.
 
@@ -46,5 +46,5 @@ until your next turn.
 
 ## The overworld is different
 
-On the overworld sight follows the time of day, the moon, and the weather, not light. See
+On the overworld sight follows the [time of day](time.md#days), the [moon](sun.md#moonlight), and the [weather](weather.md), not [light](light.md#what-light-is). See
 [The overworld](overworld.md).

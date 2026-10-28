@@ -112,8 +112,14 @@ search = 2
 hunger = 80
 experience = 140
 weapon_skills = { long_blades = 1, bows = 1 }
-# Elven waybread: light, filling, and slow to go stale.
-kit = [{ wield = "lantern" }, "waybread*3"]
+# An elven long bow of hardwood and a quiver of arrows, and elven waybread: light, filling, and
+# slow to go stale.
+kit = [
+    { wield = "long_bow:hardwood" },
+    { wield = "arrow*20" },
+    { wield = "lantern" },
+    "waybread*3",
+]
 
 [[race]]
 id = "half_elf"
@@ -129,9 +135,15 @@ size = "medium"
 skills = { bluff = "1d4+2", spot = "1d4+2" }
 hunger = 90
 experience = 105
-weapon_skills = { bows = "1d2-1" }
-# A keepsake from the elven side: a silver ring, and a wafer of waybread.
-kit = [{ wear = "silver_ring" }, { wield = "lantern" }, "waybread"]
+weapon_skills = { bows = 1 }
+# From the elven side: a short bow of hardwood and arrows, a keepsake silver ring, and waybread.
+kit = [
+    { wield = "short_bow:hardwood" },
+    { wield = "arrow*20" },
+    { wear = "silver_ring" },
+    { wield = "lantern" },
+    "waybread*2",
+]
 
 # No gift and no flaw, but the most room to grow (rolled).
 [[race]]
@@ -152,8 +164,8 @@ rolls = 1
 talents = ["versatile"]
 hunger = 100
 experience = 100
-# No gift and no flaw: a loaf of bread, like anyone's.
-kit = [{ wield = "lantern" }, "bread"]
+# No gift and no flaw: bread, like anyone's, and a little money.
+kit = [{ wield = "lantern" }, "bread*2", "gold_coin*5"]
 
 [[race]]
 id = "dwarf"
@@ -173,8 +185,14 @@ ignores_burdened = true
 passive_search = "stone"
 hunger = 110
 experience = 115
-# A dwarf never goes anywhere without a pick-axe (readied in the Tool slot), and dried meat.
-kit = [{ wield = "pick_axe" }, "dried_meat*2"]
+# A dwarf never goes anywhere without a pick-axe (readied in the Tool slot), and goes in good
+# steel: the pick, gauntlets, and iron-shod boots. Dried meat.
+kit = [
+    { wield = "pick_axe:steel" },
+    { wear = "gauntlets:steel" },
+    { wear = "iron_shod_boots:steel" },
+    "dried_meat*3",
+]
 
 [[race]]
 id = "halfling"
@@ -193,8 +211,9 @@ skills = { listen = "1d6+4", stealth = "1d6+4" }
 hunger = 125
 experience = 95
 weapon_skills = { slings = 1 }
-# A pipe, and a lantern (no apples: a small character with a heavy class kit would start burdened).
-kit = [{ wield = "lantern" }, "pipe"]
+# A sling and a pouch of stones, a pipe, and a lantern (no apples: a small character with a heavy
+# class kit would start burdened).
+kit = [{ wield = "sling" }, { wield = "sling_stone*10" }, { wield = "lantern" }, "pipe"]
 
 [[race]]
 id = "gnome"
@@ -254,8 +273,8 @@ skills = { listen = "1d4+2", stealth = "1d6+6" }
 hunger = 80
 experience = 80
 weapon_skills = { short_blades = 1, slings = 1 }
-# A sneaky knife, and scraps.
-kit = ["stiletto", "dried_meat"]
+# A sneaky knife, and scraps enough for a few days.
+kit = ["stiletto", "dried_meat*2"]
 
 [[race]]
 id = "drow"
@@ -282,8 +301,13 @@ experience = 130
 weapon_skills = { short_blades = 1, crossbows = 1 }
 
 # The weakest of all, with huge families: the cheapest experience of any race.
-# Waybread from the deep, and a scroll of light for the surface.
-kit = ["waybread*2", "scroll_of_light"]
+# A crossbow and steel-headed bolts, waybread from the deep, and a scroll of light for the surface.
+kit = [
+    { wield = "crossbow" },
+    { wield = "bolt:steel*12" },
+    "waybread*2",
+    "scroll_of_light",
+]
 
 [[race]]
 id = "kobold"
@@ -306,8 +330,8 @@ experience = 75
 weapon_skills = { slings = 1, spears = 1 }
 
 # Cold-blooded: slower in the cold, once temperature has effects.
-# A candle to see by.
-kit = ["candle"]
+# Candles to see by, and a strip of dried meat.
+kit = ["candle*2", "dried_meat"]
 
 [[race]]
 id = "lizardfolk"
@@ -348,7 +372,7 @@ passive_search = "stone"
 hunger = 90
 experience = 115
 # A pick for the stone, and meat.
-kit = [{ wield = "pick_axe" }, "dried_meat"]
+kit = [{ wield = "pick_axe" }, "dried_meat*3"]
 
 [[race]]
 id = "ratfolk"
@@ -369,4 +393,4 @@ hunger = 110
 experience = 85
 weapon_skills = { daggers = 1 }
 # Whatever was lying about.
-kit = [{ wield = "lantern" }, "turnip", "apple"]
+kit = [{ wield = "lantern" }, "turnip", "apple", "dried_meat"]

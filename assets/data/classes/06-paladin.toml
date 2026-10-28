@@ -15,14 +15,17 @@ optional_skills = { athletics = { chance = 25, dice = "2d4" }, knowledge = { cha
 rolls = 2
 weapon_skills = { long_blades = 2, shield_block = "1d2", shield_bash = 1, spell_attack = 1 }
 styles = { sword_and_board = 1, battle_caster = 1 }
-# Sword and shield, and the order's symbol, perhaps blessed.
+# Sword and shield, the order's harness (a warrior's hardened leathers and iron helm, and
+# gauntlets besides), and the order's symbol, perhaps blessed.
 kit = [
     { wield = "long_sword" },
     { wield = "small_shield" },
-    { wear = "leather_jerkin" },
+    { wear = "leather_jerkin:hardened_leather" },
+    { wear = "iron_helm" },
+    { wear = "gauntlets" },
     { wear = "amber_amulet", magic = "any" },
-    "dried_meat",
-    "gold_coin*10",
+    "dried_meat*2",
+    "gold_coin*15",
 ]
 # Bonus talents from Guard and Vigour.
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }

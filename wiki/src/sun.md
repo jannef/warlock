@@ -2,9 +2,9 @@
 
 ## Which places have a sky
 
-Levels under the open sky are lit by the sun and the sky by day and by the moon at night: outdoor
-areas and the [overworld](overworld.md). Dungeons never are. Terrain with a roof (for example the
-floor under a gazebo) never receives sun, moon, or sky light even on an outdoor level.
+Levels under the open sky are lit by the sun and the sky by day and by the moon at night: [outdoor
+areas](overworld.md#local-areas) and the [overworld](overworld.md). [Dungeons](dungeons.md) never are. Terrain with a roof (for example the
+floor under a [gazebo](terrain.md#terrain-gazebo-floor)) never receives sun, moon, or sky light even on an outdoor level.
 
 Everything on this page is for a clear sky. Clouds dim the sun, the sky, and the moon, and soften
 their shadows; see [Weather](weather.md).
@@ -34,16 +34,16 @@ and from dusk until about 23 minutes after.
 ## Shadows
 
 Terrain stands a number of cells tall (see the height column in the [terrain](terrain.md) table):
-trees 2, pines 3, standing stones 3, bushes and reeds 1, and walls 1. Anything tall casts a shadow
+[trees](terrain.md#terrain-tree) 2, [pines](terrain.md#terrain-pine) 3, [standing stones](terrain.md#terrain-standing-stone) 3, [bushes](terrain.md#terrain-bush) and [reeds](terrain.md#terrain-reeds) 1, and [walls](terrain.md#walls) 1. Anything tall casts a shadow
 away from the sun, and cells in a shadow get no direct sunlight, only sky light. The shadow is long
 when the sun is low (at dawn and dusk) and short at noon, when it falls just a cell or so from a
 tree. Shadows turn as the sun moves.
 
-Creatures cast soft shadows too, but those are only for show and do not change what you can see.
+[Creatures](creatures.md) cast soft shadows too, but those are only for show and do not change what you can see.
 
 ## Night and the moon
 
-At night there is neither sun nor sky light. What light there is comes from the **moon**.
+At night there is neither sun nor sky light. What [light](light.md#what-light-is) there is comes from the **moon**.
 
 ### Phases
 
@@ -86,17 +86,17 @@ sky.
 
 What you can see by moonlight depends on your [eyes](vision.md):
 
-- **Normal eyes** can just make out open ground, dimly, under a full or nearly full moon high in
+- **[Normal eyes](vision.md#the-four-types)** can just make out open ground, dimly, under a full or nearly full moon high in
   the sky, but nothing in its shadows. Under a half moon, a low moon, or a new moon they see
   nothing without a light.
-- **Low-light eyes** see by a half moon too, and under a full moon some of the shade as well.
-- **Darkvision** sees what normal eyes see, and everything within its radius as always.
+- **[Low-light eyes](vision.md#the-four-types)** see by a half moon too, and under a full moon some of the shade as well.
+- **[Darkvision](vision.md#the-four-types)** sees what normal eyes see, and everything within its radius as always.
 
 Clouds hide the moon too: under an overcast or rainy sky even a full moon is too faint for normal
 eyes (see [Weather](weather.md)).
 
-When the moon is new or down, outdoor areas are dark unless you bring a light of your own. Light
-your [lantern](lantern.md). A few things, such as a torch-carrying creature or a glowing altar,
+When the moon is new or down, outdoor areas are dark unless you bring a [light](light.md#light-sources) of your own. Light
+your [lantern](lantern.md). A few things, such as a torch-carrying [creature](creatures.md) or a glowing [altar](terrain.md#terrain-altar),
 shine on any night.
 
 The overworld is a special case: it is drawn by a faint cold light at night, so you can tell the

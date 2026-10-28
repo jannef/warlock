@@ -1,7 +1,7 @@
 //! Traps (spec §8 "Traps").
 
 use super::combat::percent;
-use super::text::{article, capital, signed};
+use super::text::{Term, anchored, article, capital, signed};
 use std::fmt::Write as _;
 use warlock_core::check;
 use warlock_core::content::{Bolt, Burst, BurstIce, Content, TrapEffect, TrapNoise};
@@ -56,7 +56,7 @@ pub(super) fn traps(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} `{}` | {what} | {damage} | {goes_off} | {sound} |",
-            capital(&t.name),
+            anchored(Term::Trap, &t.id, &capital(&t.name)),
             t.glyph
         );
     }

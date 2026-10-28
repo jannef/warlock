@@ -4,6 +4,7 @@
 
 use super::burden::factor;
 use super::combat::percent;
+use super::text::{Term, anchored};
 use std::fmt::Write as _;
 use warlock_core::burden::Burden;
 use warlock_core::check::{CONTEST_WAYS, contest_ways};
@@ -41,7 +42,7 @@ pub(super) fn skills(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} | {} | {} | {gives} | {trains} |",
-            skill.name,
+            anchored(Term::Skill, &skill.id, &skill.name),
             skill.kind.name(),
             skill.description
         );

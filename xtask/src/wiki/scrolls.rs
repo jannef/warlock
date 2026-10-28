@@ -1,6 +1,6 @@
 //! Scrolls (spec §8 "Scrolls").
 
-use super::text::capital;
+use super::text::{Term, anchored, capital};
 use super::traps::{ice_text, sound_text};
 use std::fmt::Write as _;
 use warlock_core::content::{Cast, Content, Reading};
@@ -82,7 +82,7 @@ pub(super) fn scrolls(content: &Content) -> String {
         let _ = writeln!(
             out,
             "| {} `{}` | {what} | {damage} | {reach} | {sound} | {found} | {} gold |",
-            capital(&o.name),
+            anchored(Term::Scroll, &o.id, &capital(&o.name)),
             o.glyph,
             o.value
         );

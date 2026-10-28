@@ -1,7 +1,7 @@
 # Saving
 
 Every character has a save of its own: you can suspend a run and continue it later, keep several
-characters going side by side, but there are no manual save slots and no going back. Saves are
+[characters](character.md) going side by side, but there are no manual save slots and no going back. Saves are
 for continuing, not for retrying.
 
 **Death is final.** When you die (see [Combat](combat.md#death)), that character's save is
@@ -12,15 +12,15 @@ never saved again: there is nothing to continue.
 
 - When a run starts, so a new character is saved at once.
 - When you close the window (no question asked).
-- When you choose **Save and quit to menu** or **Quit** in the pause menu (`Esc`) and answer Yes to the question that follows. Quitting always asks first: `y` or Enter on Yes confirms; `n`, `Esc`, or Enter on the default No cancels. You can bind a quick "Save and quit" key in the Controls screen; it asks too.
-- Automatically every 50 turns.
+- When you choose **Save and quit to menu** or **Quit** in the [pause menu](controls.md#menus) (`Esc`) and answer Yes to the question that follows. Quitting always asks first: `y` or Enter on Yes confirms; `n`, `Esc`, or Enter on the default No cancels. You can bind a quick "Save and quit" key in the [Controls](controls.md#rebinding-keys) screen; it asks too.
+- Automatically every 50 [turns](time.md#what-takes-time).
 - Automatically when you change level.
 
 On the web the page is also saved when it is hidden or closed.
 
-Choose **Continue** on the main menu to resume the character you played last (it names them, and
-appears only if a character is saved). **Characters** lists every saved character: name, race
-and class, level, and for the one selected where they are and when you last played them (in UTC).
+Choose **Continue** on the [main menu](controls.md#menus) to resume the character you played last (it names them, and
+appears only if a character is saved). **Characters** lists every saved character: name, [race](races.md)
+and [class](classes.md), [level](experience.md#levels), and for the one selected where they are and when you last played them (in UTC).
 Press `Enter` to resume one, or `Delete` to delete one for good (the game asks first). **New run**
 lets you [create your character](character.md) for [the Ascmearc](ascmearc.md), and starts a fresh run with a save of its own: it never
 touches your other characters.
@@ -29,7 +29,7 @@ touches your other characters.
 
 **Desktop.** Each character's save is a file in the `saves` folder of the game's data folder,
 named after the character with a number (`brakka-1.sav`, and beside it `brakka-1.toml`, what the
-list of characters shows; a second Brakka is `brakka-2`). Your settings are `settings.toml` in the
+list of characters shows; a second Brakka is `brakka-2`). Your [settings](settings.md) are `settings.toml` in the
 configuration folder:
 
 | System | Data folder (`saves` is in it) | Settings (configuration folder) |
@@ -42,13 +42,13 @@ Logs and crash reports are in a `logs` folder: on macOS and Linux inside the dat
 in `%LOCALAPPDATA%\warlock\data\logs`.
 
 To see the exact folders for your launch, and why they are there, run `warlock --paths`, or open
-**Settings**, then **Where are my files?**, which also has an **Open folder** action for each.
+**[Settings](settings.md)**, then **Where are my files?**, which also has an **Open folder** action for each.
 
 ### Portable mode
 
 To keep everything with the game, for a USB stick or a game folder you can copy, make an empty
 folder named **`warlock-data`** next to the game (on macOS, next to `Warlock.app`, not inside it).
-The game then keeps its settings, key bindings, saves, and logs in it:
+The game then keeps its [settings](settings.md), [key bindings](controls.md#rebinding-keys), saves, and logs in it:
 
 | Inside `warlock-data` | What |
 |---|---|
@@ -68,9 +68,9 @@ reverse. Add `--dry-run` to see the plan first. Nothing is overwritten (a file a
 kept as `NAME.bak-<time>`), and it will not run while the game is running.
 
 **Browser.** The saves are kept in your browser's local storage for the page, under
-`warlock/saves/` (`warlock/saves/brakka-1.sav`), as are your settings. They survive reloads. If the browser blocks storage (some private modes), the
+`warlock/saves/` (`warlock/saves/brakka-1.sav`), as are your [settings](settings.md). They survive reloads. If the browser blocks storage (some private modes), the
 game runs but cannot save, and writes a warning to its log. If the browser runs out of room, a
-message appears on the message line.
+message appears on the [message line](controls.md#messages).
 
 ## Good to know
 
@@ -80,4 +80,4 @@ message appears on the message line.
   longer shows it. Saves made before characters had their own (a single `run.sav`) are left where
   they are and not read.
 - Saves from before version 1.0 may be rejected after updates. From 1.0 on, saves will be migrated.
-- The status bar shows the run's **seed**: give it when you report a problem with a run.
+- The [status bar](controls.md#the-screen) shows the run's **seed**: give it when you report a problem with a run.
