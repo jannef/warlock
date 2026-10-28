@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc de7960d274edbc325438ad4c413514088dd3159445b15bbb185f1b614c98db00 # shrinks to cells = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23, 56, 87, 85, 1, 52, 45, 21, 68, 65, 31, 1, 78, 70, 20, 5, 13, 7, 3, 68, 64, 10, 43, 79, 78, 79, 65, 93, 14, 95, 63, 72, 33, 91, 3, 56, 57, 15, 87, 96, 94, 55, 16, 74, 11, 96, 80, 35, 57, 85, 94, 7, 54, 14, 25, 84, 38, 1, 30, 35, 9, 73, 51, 64, 59, 39, 18, 39, 99, 62, 64, 37, 96, 11, 48, 19, 43, 6, 25, 82, 59, 85, 8, 31, 46, 4, 13, 99, 73, 78, 32, 79, 16, 9, 44, 95, 83, 68, 57, 29, 44, 55, 5, 40, 97, 59, 47, 68, 70, 18, 33, 96, 7, 21, 66, 60, 44, 73, 90, 36, 41, 45, 64, 69, 62, 96, 99, 13, 80, 27, 34, 75, 51, 94, 46, 75, 95, 85, 7, 11, 44, 49, 0, 2, 50, 82, 22, 25, 41, 12, 44, 29, 67, 81, 65, 83, 94, 98, 39, 25, 57, 11, 74, 76, 38, 68, 25, 28, 66, 26, 38, 5, 97, 40, 89], minutes = 33957, vision = "low_light"

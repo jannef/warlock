@@ -24,7 +24,7 @@ expression: "render(case, content.clone())"
         │   Kit       a dagger (wielded), a dagger (in off hand),                          │
         │             a leather jerkin (being worn), a wool cloak (being worn),            │
         │             a pair of leather gloves (being worn), 2 loaves of bread,            │
-        │             25 gold coins                                                        │
+        │             25 gold coins, a lantern (in use)                                    │
         │   Alignment Callous                                                              │
         │   Vision    Normal                                                               │
         │   Scenario  The Ascmearc, seed 1                                                 │

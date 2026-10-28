@@ -434,15 +434,16 @@ are never ticked, so their due risings rise on the first turn back. `World::risi
 level's) feeds the `actors` dev layer's `rising <from> at (x, y) as <into> at hh:mm:ss` rows.
 
 Consecrate (`world/consecrate.rs`): `ClassActive::Consecrate` (`TalentEffect::Consecrate { mana,
-time }`, `TalentMods::consecrate`; the `consecrate` talent, priest 9 and paladin 12, `needs =
-{ requires_alignment = { min = "good" } }`). `use_class` → `begin_consecrate`: `hallowable` (the
-unholy room the player stands in, else an unholy `pervading`), refused with no time when none;
-then `spend_mana` and `Spent::Consecrate(until)`; `World::consecrate` keeps at it through
+time }`, `TalentMods::consecrate`; the `consecrate` talent, priest 9 and paladin 12, `alignment =
+{ min = "kind" }`). `use_class` → `begin_consecrate`: `hallowable` (the unholy room the player
+stands in, else an unholy `pervading`), refused with no time when none; then, outside the bands
+its `alignment` names, `World::unanswered` (a cast's time, no mana, nothing lifted;
+`docs/dev/alignment.md`); then `spend_mana` and `Spent::Consecrate(until)`; `World::consecrate` keeps at it through
 `keep_at` with wait prices cut to end at `until` (as a rest); done, `consecrated` removes the room
 from `LevelState::rooms` or clears `pervading`, keeps only the risings still under a `rise`, says
 so, and `player_did(Deed::Consecrated)` (`[shift] consecrate`, 20). Interrupted: "You stop your
 prayer." (or who came into view), nothing lifted. The abilities menu greys it out without its
-mana or while strayed (`Ability::unavailable`'s class branch: Consecrate's mana with Inspire's).
+mana (`Ability::unavailable`'s class branch: Consecrate's mana with Inspire's).
 
 ## Haunted rooms
 

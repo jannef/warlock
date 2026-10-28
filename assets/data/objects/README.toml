@@ -136,7 +136,10 @@
 #              as a burning arrow)
 #   light      the light preset (lights.toml) it gives while it burns where it lies, and
 #   burns      for how many seconds of game time it burns there; then it is gone. A burning
-#              object cannot be picked up
+#              object cannot be picked up. Without `burns`, on a thing with a `slot`, `light` is a
+#              carried light (a lantern): it gives that light ready in the Tool slot and lit,
+#              and `u` (the use-tool command) turns it from unlit to lit to hooded (the preset's
+#              `hooded`) and back (spec §5 "Light sources")
 #
 # Base items (spec §8 "Magic items"; affixes in affixes.toml): what may be found magic or rare,
 # and lies about as loot, says what kind of item it is:

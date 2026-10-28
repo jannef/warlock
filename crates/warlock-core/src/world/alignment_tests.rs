@@ -5,8 +5,8 @@
 
 use super::*;
 use crate::action::{Meal, parse_actions};
-use crate::alignment::{Alignment, Band, Requirement, Score};
-use crate::content::{ContentFiles, Sign};
+use crate::alignment::{Alignment, Band, Score};
+use crate::content::{ClassActive, ContentFiles, Sign};
 use crate::object::Stack;
 use crate::replay::Replay;
 
@@ -347,9 +347,10 @@ fn characters_start_in_their_race_class_and_sign_band() {
 }
 
 #[test]
-fn a_paladin_of_a_race_not_evil_starts_good_under_any_star() {
-    // The paladin's gifts need Good (#317): no birth animal starts one strayed, whatever their
-    // race, unless the race itself starts on the evil side.
+fn a_paladin_of_a_race_not_evil_starts_where_their_gifts_work_under_any_star() {
+    // The paladin's holy gifts work for the bands their data names (Kind or better): no birth
+    // animal starts a paladin outside them, whatever their race, unless the race itself starts
+    // on the evil side. (Nothing bars the gifts below it: they just do nothing.)
     let content = builtin();
     let rules = content.alignment().expect("alignment rules");
     let paladin = content.class("paladin").expect("paladin").alignment;
@@ -362,7 +363,15 @@ fn a_paladin_of_a_race_not_evil_starts_good_under_any_star() {
         }
         let start = Score::new(race.alignment + paladin + worst);
         let band = rules.band(start);
-        assert!(band >= Band::Good, "{} paladin starts {band:?}", race.id);
+        for active in [
+            ClassActive::LayOnHands,
+            ClassActive::Smite,
+            ClassActive::HolyRadiance,
+        ] {
+            let def = content.class_active(active).expect("a paladin's gift");
+            let bands = def.alignment.expect("its bands");
+            assert!(bands.allows(band), "{} paladin starts {band:?}", race.id);
+        }
     }
 }
 
@@ -530,10 +539,7 @@ fn crossing_into_a_band_is_said_as_a_note_after_the_deed() {
     let before = quiet.said;
     kick_to_death(&mut quiet, Dir::W);
     assert_eq!(band(&quiet), Band::Kind, "400 - 150");
-    assert_eq!(
-        last(&quiet),
-        "You feel you have strayed from the path of good."
-    );
+    assert_eq!(last(&quiet), "You feel your righteousness waver.");
     assert_eq!(quiet.said - before, kicks, "the same messages but the note");
     // Small moves within a band are silent.
     let mut w = yard("#####\n#i@.#\n#####\n");
@@ -651,7 +657,7 @@ fn paying_is_a_little_good_and_theft_and_attacking_the_keeper_evil() {
     assert_eq!(score(&w), -100);
     // Attacking a keeper who trades with you.
     let mut w = in_shop();
-    run(&mut w, "move:E move:NE pickup pay throw:c:54,13");
+    run(&mut w, "move:E move:NE pickup pay throw:d:54,13");
     assert!(said(&w, "\"You will pay for that!\""));
     assert_eq!(score(&w), 5 - 100);
     // Attacking him again, outraged already, is no further deed.
@@ -726,36 +732,6 @@ fn eating_kin_is_evil() {
         -200
     );
     assert_eq!(eat("elf,male,warrior", "kobold", Some(files)), 0);
-}
-
-#[test]
-fn a_paladin_who_kills_the_peaceful_strays_from_their_gifts() {
-    // The paladin's abilities come with the class tables (#243); a test ability asks the same.
-    let content = builtin();
-    let spec: CharacterSpec = "human,male,paladin".parse().expect("spec");
-    let mut w = World::with_character(content, "showcase", None, Some(&spec)).expect("world");
-    // The paladin's own start, before the stars (the showcase's is Basilisk-born).
-    set_score(&mut w, 450);
-    let gift = Some(Requirement {
-        min: Some(Band::Good),
-        max: None,
-    });
-    let strayed = |w: &World| crate::ability::strayed(w.state.player(), w.content(), gift);
-    assert_eq!(strayed(&w), None);
-    // A peaceful good creature slain: Good falls to Kind.
-    let hermit = (w.state.actors.values())
-        .find(|a| w.content().creature(a.creature).id == "hermit")
-        .map(|a| a.id)
-        .expect("the hermit");
-    w.judge_kill(hermit);
-    w.say_news();
-    assert_eq!(score(&w), 300);
-    assert_eq!(band(&w), Band::Kind);
-    assert_eq!(last(&w), "You feel you have strayed from the path of good.");
-    assert_eq!(strayed(&w), Some(crate::ability::Unavailable::Strayed));
-    // Climbing back makes them usable again.
-    set_score(&mut w, 420);
-    assert_eq!(strayed(&w), None);
 }
 
 #[test]

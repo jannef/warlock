@@ -349,7 +349,7 @@ impl PerceivedLight {
 #[serde(rename_all = "snake_case")]
 pub enum Emitter {
     /// A light on a cell: placed by the level or emitted by terrain, carried by a creature, or the
-    /// player's lantern.
+    /// light the player has ready (a lantern).
     Point {
         /// Where the source is; it may itself be out of view (light from around a corner).
         pos: Pos,
@@ -1396,6 +1396,12 @@ impl<'a> PerceptionView<'a> {
     /// The digging tool the player has ready (spec §8 "Digging"), if any.
     pub fn ready_to_dig(&self) -> Option<ObjectId> {
         self.player.dig_tool(self.content).map(|(tool, _)| tool)
+    }
+
+    /// The carried light the player has ready (spec §5 "Light sources": a lantern in the Tool
+    /// slot), by its inventory position, lit or not: `u` uses it at once, without a direction.
+    pub fn ready_light(&self) -> Option<usize> {
+        self.player.ready_light(self.content)
     }
 
     /// Whether the wall at `p`, which the player sees, has been dug into and still stands.

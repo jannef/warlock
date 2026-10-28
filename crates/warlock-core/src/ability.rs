@@ -15,16 +15,13 @@
 //! [`Unavailable::While`] it, and so is one whose kind of action a status `blocks`; nothing
 //! counts uses.
 //!
-//! An ability that asks for an alignment (`requires_alignment` in its data, spec §8
-//! "Alignment": the paladin's gifts are Good or better) stays the character's when they stray
-//! from it, but cannot be used ([`Unavailable::Strayed`], "you have strayed") until they climb
-//! back: its arm of [`Ability::unavailable`] asks [`strayed`] first. The class tables (#243) and
-//! talents (#220) carry the requirement as an `Option<Requirement>` in their data.
+//! Alignment never makes an ability unavailable (spec §8 "Alignment"): a holy gift whose band
+//! the user is outside of is listed and used like any other, and does nothing
+//! (`World::unanswered`).
 //!
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
 use crate::action::Action;
-use crate::alignment::Requirement;
 use crate::content::{
     ActionKind, ActiveAim, ClassActive, Content, Offer, ResourceCost, ResourceId, SignActive,
     SkillDef, SpellId, StatusId, TalentActive, TalentEffect, WeaponAbilityId, WeaponSkillId,
@@ -46,7 +43,7 @@ pub enum Ability {
     Sign(SignActive),
     /// A class's active (spec §8 "Class abilities"): [`Action::Use`], had by whoever's class
     /// gives it at their level; unavailable while its cooldown lasts (Rage: while raging and
-    /// exhausted), and, for the paladin's gifts, while they have strayed from Good.
+    /// exhausted).
     Class(ClassActive),
     /// A caster's spell (spec §8 "Class abilities", "Spells"): [`Action::Cast`], had by
     /// whoever's class gives the ability that names it; unavailable without the mana it costs
@@ -103,10 +100,6 @@ pub enum Ability {
     /// time; unavailable while what the actor holds is not for it ([`Unavailable::NotSoHeld`])
     /// or its stamina is short ([`Unavailable::Short`]).
     Weapon(WeaponSkillId, WeaponAbilityId),
-    /// Lower or raise the lantern's hood (spec §5 "Light sources"; #235): [`Action::HoodLantern`].
-    /// Listed with what the player carries, the lantern; the Hooded light talent (design §7.5)
-    /// will give it, and until then everyone has it (without a lantern the rules say so).
-    HoodLantern,
     /// Pray at a forgotten altar (spec §7 "Special rooms"): [`Action::Pray`]. A place offers
     /// it ([`Ability::here`]): listed only while the player stands next to such an altar (never
     /// a spent one), absent elsewhere.
@@ -138,7 +131,7 @@ pub enum Source {
     Skill,
     /// A weapon skill or a fighting style (spec §8 "Weapon skills", "Fighting styles").
     WeaponSkill,
-    /// Something worn or carried (the lantern's hood).
+    /// Something worn or carried (none yet: a lantern is used as a tool, `u`).
     Item,
     /// The place the character stands in (spec §7 "Special rooms"): what a special room's
     /// feature offers next to it (Pray at a forgotten altar, Drink at a spring).
@@ -216,9 +209,6 @@ pub enum Unavailable {
     NoShield,
     /// A skill whose use is not in the game yet.
     NotYet,
-    /// One that asks for an alignment the character has strayed from (spec §8 "Alignment"):
-    /// they keep it, and may use it again once they climb back.
-    Strayed,
     /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
     /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
@@ -247,7 +237,6 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "you hold no shield".into(),
             Unavailable::NotYet => "not usable yet".into(),
-            Unavailable::Strayed => "you have strayed".into(),
             Unavailable::NoMana => "you have too little mana".into(),
             Unavailable::NotHere => "not usable here".into(),
             Unavailable::NothingToTreat => "nothing to treat".into(),
@@ -271,7 +260,6 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "no_shield".into(),
             Unavailable::NotYet => "not_yet".into(),
-            Unavailable::Strayed => "strayed".into(),
             Unavailable::NoMana => "no_mana".into(),
             Unavailable::NotHere => "not_here".into(),
             Unavailable::NothingToTreat => "nothing_to_treat".into(),
@@ -333,8 +321,6 @@ impl Ability {
         taught.sort();
         let weapon_skills = std::iter::once(Ability::ShieldBash)
             .chain(taught.into_iter().map(|(s, _, id)| Ability::Weapon(s, id)));
-        // Items: the lantern's hood.
-        let items = [Ability::HoodLantern];
         // Here: what some special room's feature offers.
         let offers = |offer| {
             (content.room_effects().defs().iter())
@@ -354,7 +340,6 @@ impl Ability {
             .chain(talents)
             .chain(skills)
             .chain(weapon_skills)
-            .chain(items)
             .chain(here)
             .collect();
         all.sort_by_key(|a| a.source());
@@ -414,7 +399,7 @@ impl Ability {
     /// oneself, if they are trained in a skill with the `heal` effect; foraging, if they are
     /// trained in Survival (the forage benefit's); second wind,
     /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); the
-    /// shield bash and the lantern's hood, everyone.
+    /// shield bash, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Sign(active) => actor.talent_mods(content).has_sign_active(active),
@@ -439,7 +424,7 @@ impl Ability {
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
-            Ability::ShieldBash | Ability::HoodLantern => true,
+            Ability::ShieldBash => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]).
             Ability::Pray | Ability::Temper | Ability::Drink => false,
@@ -463,7 +448,6 @@ impl Ability {
             Ability::BloodMagic => "blood_magic",
             Ability::ShieldBash => "shield_bash",
             Ability::Weapon(_, id) => &content.weapon_ability(id).id,
-            Ability::HoodLantern => "hood_lantern",
             Ability::Pray => "pray",
             Ability::Temper => "temper",
             Ability::Drink => "drink",
@@ -491,7 +475,6 @@ impl Ability {
             Ability::SecondWind => "Second wind",
             Ability::BloodMagic => "Blood magic",
             Ability::ShieldBash => "Shield bash",
-            Ability::HoodLantern => "Hood your lantern",
             Ability::Pray => "Pray",
             Ability::Temper => "Temper",
             Ability::Drink => "Drink",
@@ -535,10 +518,6 @@ impl Ability {
             }
             Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
             Ability::Weapon(_, id) => &content.weapon_ability(id).description,
-            Ability::HoodLantern => {
-                "Lower your lantern's hood, or raise it: hooded, it dimly lights the ground around \
-                 you but not you."
-            }
             Ability::Pray => {
                 "Kneel at the forgotten altar beside you and pray for a minute. Something may \
                  answer, for good or ill."
@@ -569,7 +548,6 @@ impl Ability {
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash | Ability::Weapon(..) => Source::WeaponSkill,
-            Ability::HoodLantern => Source::Item,
             Ability::Pray | Ability::Temper | Ability::Drink => Source::Place,
         }
     }
@@ -593,7 +571,6 @@ impl Ability {
             | Ability::Skill(_)
             | Ability::SecondWind
             | Ability::BloodMagic
-            | Ability::HoodLantern
             | Ability::Forage
             | Ability::Pray
             | Ability::Drink => Aim::Nothing,
@@ -622,7 +599,6 @@ impl Ability {
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
-            Ability::HoodLantern => Some(ActionKind::Hood),
             Ability::Pray => Some(ActionKind::Pray),
             Ability::Temper => Some(ActionKind::Temper),
             Ability::Drink => Some(ActionKind::Drink),
@@ -651,7 +627,6 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::ShieldBash
             | Ability::Weapon(..)
-            | Ability::HoodLantern
             | Ability::Pray
             | Ability::Temper
             | Ability::Drink => None,
@@ -716,7 +691,6 @@ impl Ability {
             (Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash, None) => {
                 None
             }
-            (Ability::HoodLantern, _) => Some(Action::HoodLantern),
             (Ability::Pray, _) => Some(Action::Pray),
             (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
@@ -764,7 +738,6 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
-            | Ability::HoodLantern
             | Ability::Pray
             | Ability::Temper
             | Ability::Drink => None,
@@ -777,9 +750,7 @@ impl Ability {
         let own = match self {
             Ability::Class(active) => {
                 let def = content.class_active(active);
-                let required = def.and_then(|a| a.needs.alignment);
-                (strayed(actor, content, required))
-                    .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
+                (class_cooldown(actor, content, active).map(Unavailable::While))
                     .or_else(|| short_of(actor, def?.resource?))
                     .or_else(|| {
                         // Inspire costs its inspiration while that is held, else mana
@@ -819,7 +790,6 @@ impl Ability {
             Ability::Heal => (crate::heal::treatable(actor, content).is_empty())
                 .then_some(Unavailable::NothingToTreat),
             Ability::ThrowVoice
-            | Ability::HoodLantern
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
@@ -934,19 +904,6 @@ fn short_of(actor: &Actor, cost: ResourceCost) -> Option<Unavailable> {
     (held.is_none_or(|v| v < cost.amount)).then_some(Unavailable::Short(cost.resource))
 }
 
-/// Why `actor` cannot use an ability that asks for alignment `required` (its data's
-/// `requires_alignment`; `None`: any): [`Unavailable::Strayed`] while their band falls short of
-/// it (spec §8 "Alignment"). Every ability that has a requirement asks this first in
-/// [`Ability::unavailable`].
-pub fn strayed(
-    actor: &Actor,
-    content: &Content,
-    required: Option<Requirement>,
-) -> Option<Unavailable> {
-    let band = actor.band(content);
-    (!required?.allows(band)).then_some(Unavailable::Strayed)
-}
-
 /// One of the player's abilities, as they know it: for the abilities menu.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OwnAbility {
@@ -1019,15 +976,10 @@ mod tests {
                 "woodcraft",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(4).rev().copied().collect();
+        let last: Vec<Ability> = every.iter().rev().take(3).rev().copied().collect();
         assert_eq!(
             last,
-            [
-                Ability::HoodLantern,
-                Ability::Pray,
-                Ability::Temper,
-                Ability::Drink
-            ],
+            [Ability::Pray, Ability::Temper, Ability::Drink],
             "then what a place offers"
         );
         // The weapon skills' group: the shield bash, then what the ranks teach, by skill in file
@@ -1082,43 +1034,6 @@ mod tests {
     }
 
     #[test]
-    fn an_ability_that_asks_for_an_alignment_is_unavailable_to_one_who_strayed() {
-        use crate::alignment::{Band, Score};
-        use crate::character::CharacterSpec;
-        let content = std::sync::Arc::new(Content::builtin().expect("content"));
-        let paladin: CharacterSpec = "human,male,paladin".parse().unwrap();
-        let world = crate::World::with_character(content.clone(), "showcase", None, Some(&paladin))
-            .expect("world");
-        // A test ability of a paladin's: Good or better.
-        let gift = Some(Requirement {
-            min: Some(Band::Good),
-            max: None,
-        });
-        let mut me = world.state().player().clone();
-        // A paladin's own start, before the stars (the showcase's is Basilisk-born).
-        me.alignment = Some(Score::new(450));
-        assert_eq!(me.band(&content), Band::Good, "a paladin starts Good");
-        assert_eq!(strayed(&me, &content, gift), None);
-        assert_eq!(strayed(&me, &content, None), None, "no requirement");
-        // Fallen to Kind: kept, but greyed out.
-        me.alignment = Some(Score::new(200));
-        assert_eq!(strayed(&me, &content, gift), Some(Unavailable::Strayed));
-        assert_eq!(Unavailable::Strayed.reason(&content), "you have strayed");
-        assert_eq!(Unavailable::Strayed.id(&content), "strayed");
-        // Climbed back: usable again.
-        me.alignment = Some(Score::new(800));
-        assert_eq!(strayed(&me, &content, gift), None);
-        // A dark gift, Callous or worse, the other way round.
-        let dark = Some(Requirement {
-            min: None,
-            max: Some(Band::Callous),
-        });
-        assert_eq!(strayed(&me, &content, dark), Some(Unavailable::Strayed));
-        me.alignment = Some(Score::new(-500));
-        assert_eq!(strayed(&me, &content, dark), None);
-    }
-
-    #[test]
     fn a_shield_bash_asks_for_a_direction_and_is_a_bash() {
         let content = Content::builtin().expect("content");
         let bash = Ability::ShieldBash;
@@ -1139,7 +1054,7 @@ mod tests {
     }
 
     #[test]
-    fn throwing_a_voice_aims_at_a_cell_and_the_hood_at_nothing() {
+    fn throwing_a_voice_aims_at_a_cell() {
         let content = Content::builtin().expect("content");
         let voice = Ability::ThrowVoice;
         assert_eq!(
@@ -1151,14 +1066,6 @@ mod tests {
         assert_eq!(voice.action(&content, None), None, "not without a cell");
         let at = Pos::new(3, 4);
         assert_eq!(voice.action_at(&content, at), Some(Action::ThrowVoice(at)));
-        let hood = Ability::HoodLantern;
-        assert_eq!(
-            (hood.aim(&content), hood.source()),
-            (Aim::Nothing, Source::Item)
-        );
-        assert_eq!(hood.cost(), Some(ActionKind::Hood));
-        assert_eq!(hood.action(&content, None), Some(Action::HoodLantern));
-        assert_eq!((hood.range(), hood.action_at(&content, at)), (None, None));
     }
 
     #[test]

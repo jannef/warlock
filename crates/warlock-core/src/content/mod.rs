@@ -1074,6 +1074,8 @@ impl Content {
             let mut scenario = ScenarioDef::parse(path, id, text)?;
             let err = |m: String| ContentError::new(path, format!("carry: {m}"));
             scenario.carry = object::parse_stacks(&scenario.carry_spec, &content).map_err(err)?;
+            let err = |m: String| ContentError::new(path, format!("wield: {m}"));
+            scenario.wield = object::parse_stacks(&scenario.wield_spec, &content).map_err(err)?;
             scenario.campaign = campaign::of_path(path).map(str::to_string);
             content.scenarios.insert(id.to_string(), scenario);
         }
@@ -2402,7 +2404,7 @@ impl Content {
     }
 
     /// Cross-file checks: at most one overworld, stair and hidden location targets, and each scenario's start level,
-    /// vision profile, lantern, and character's race and class exist. Levels of dungeon branches (`depths:3`) and local areas
+    /// vision profile, and character's race and class exist. Levels of dungeon branches (`depths:3`) and local areas
     /// of the overworld (`local:12,30`) count as existing.
     fn validate(&self) -> Result<(), ContentError> {
         // At most one overworld a campaign (and one outside every campaign).
@@ -2472,7 +2474,6 @@ impl Content {
                     .check(self)
                     .map_err(|m| ContentError::new(&file, format!("character: {m}")))?;
             }
-            self.resolve_light(&file, scenario.lantern.as_deref())?;
         }
         Ok(())
     }
@@ -4666,8 +4667,6 @@ mod tests {
         assert_eq!(kobold.light, content.light_id("torch"));
         let hub = content.level("hub").unwrap();
         assert!(!hub.lights.is_empty());
-        let showcase = content.scenario("showcase").unwrap();
-        assert_eq!(showcase.lantern.as_deref(), Some("lantern"));
     }
 
     #[test]
@@ -4756,14 +4755,10 @@ mod tests {
         let mut files = minimal_files("#@#\n", "");
         files.insert(
             "scenarios/test.toml",
-            "name = \"T\"\nstart_level = \"test\"\nlantern = \"torch\"\n",
+            "name = \"T\"\nstart_level = \"test\"\nwield = [\"torch\"]\n",
         );
         let err = Content::load(&files).unwrap_err();
-        assert!(
-            err.message.contains("unknown light `torch`"),
-            "{}",
-            err.message
-        );
+        assert!(err.message.starts_with("wield: "), "{}", err.message);
     }
 
     #[test]
@@ -5219,8 +5214,14 @@ mod tests {
                 "ammo = \"bolt\"\nlit = \"key\"",
                 "must name an object that burns",
             ),
-            ("light = \"torch\"", "`light` and `burns` go together"),
-            ("burns = 30", "`light` and `burns` go together"),
+            (
+                "light = \"torch\"",
+                "`light` goes with `burns` (a thing burning where it lies) or with a `slot` (a carried light)",
+            ),
+            (
+                "burns = 30",
+                "`light` goes with `burns` (a thing burning where it lies) or with a `slot` (a carried light)",
+            ),
             ("light = \"sun\"\nburns = 30", "unknown light preset `sun`"),
             ("glow = 2.0", "`glow` must be between 0 and 1"),
             (

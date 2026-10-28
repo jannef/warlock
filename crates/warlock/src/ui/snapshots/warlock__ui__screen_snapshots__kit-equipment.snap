@@ -20,10 +20,10 @@ expression: "render(case, content.clone())"
     │   j  Feet           [ a pair of leather boots (Dv +0, Pv 0)                       1 kg  │
     │   k  Missile weapon } a short bow (+0 hit, 1d6, range 10)                        700 g  │
     │   l  Missiles       / 24 arrows                                                  720 g  │
-    │   m  Tool             —                                                                 │
+    │   m  Tool           ( a lantern                                                  400 g  │
     │                                                                                         │
     │ Defence (Dv) 12   ·   Protection (Pv) 1                                                 │
-    │ Carrying 8 kg   ·   Your weight 78 kg (you 70 kg)                                       │
+    │ Carrying 8.4 kg   ·   Your weight 78.4 kg (you 70 kg)                                   │
     │                                                                                         │
     │ a-m choose a slot   A-M look   Esc close                                                │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘

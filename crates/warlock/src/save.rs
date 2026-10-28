@@ -587,7 +587,7 @@ mod tests {
     /// band's archer shoots them down from the dark.
     fn dead_world() -> World {
         let mut w = World::new(content(), "arena", None).expect("world");
-        w.apply(&Action::ToggleLantern);
+        w.apply(&Action::UseTool);
         for _ in 0..500 {
             if w.death().is_some() {
                 break;

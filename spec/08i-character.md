@@ -68,7 +68,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to each, through the scrolls' cast code (Evasion and resistances apply, the kills are the
     player's); it melts the ice it reaches and leaves a burning missile's fire, `arrow_fire` for
     60 s, on every walkable cell of it but the player's; then the cooldown status Burnt out,
-    twelve hours, during which the menu greys it "you are burnt out"), Kindled (the lantern burns
+    twelve hours, during which the menu greys it "you are burnt out"), Kindled (a lit lantern burns
     as Lamplighter's brighter preset, a cell farther; with Lamplighter too, no farther; and fire
     resistance 25 %, #271), Forge-born (marks +50 % in every weapon skill and fighting style,
     added to Weapon drill's; in words "you learn weapons quickly"), Tidal (mana regeneration
@@ -217,7 +217,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is `to_hit` worse (`World::glared`, in `resolve`, from the same light on their cell then).
     `LightBlind::dazzled_by` is the one rule; nothing else reads it. A clear sun well above the
     horizon dazzles a drow (on the courtyard's November morning from about 07:30), an overcast
-    one does not, nor their own lantern alone (about 220); a lantern beside a brazier does. A note says when it begins ("The bright light dazzles
+    one does not, nor their own lit lantern alone (about 220); a lantern beside a brazier does. A note says when it begins ("The bright light dazzles
     you.") and ends ("Your eyes adjust to the dimmer light."), neither stopping a rest, and the
     status bar shows `Dazzled` while it lasts; never the numbers. Creatures are never
     light-blind.
@@ -262,7 +262,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the styles it defaults to.
   - **Starting kit** (`warlock-core/src/kit.rs`, data `content/kit.rs`; #257): what the character
     carries, wields, and wears at the start. The class's `kit` (`data/classes/`) comes first,
-    then the race's few racial items (`data/races.toml`), then the birth sign's animal's and
+    then the race's few racial items (`data/races.toml`: every race without darkvision, the elf,
+    half-elf, human, halfling, gnome, lizardfolk, and ratfolk, has a lantern ready in the Tool
+    slot, `{ wield = "lantern" }`, §5 "Light sources"), then the birth sign's animal's and
     element's (`data/horoscope.toml`: the hook for the horoscope; none give anything yet). A kit
     is a list of lines, each one item or a few of one, as level files place objects: a string is
     carried, a table says `carry`, `wield` (wielded or readied: hands, missile weapon, missiles,
@@ -288,7 +290,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `warlock-cli` with `--character` or `--name`, or a replay that records the kit; the
     scenario's `carry` comes on top (§7 "Scenarios"). A run on the scenario's own character that
     nobody chose (`--scenario` alone, tests, golden walks, replays from before kits) starts with
-    the scenario's pack alone, as before kits. The world state and replays record which
+    the scenario's pack alone, as before kits, with what the scenario readies (its `wield`, the
+    lantern) first. The world state and replays record which
     (`kit`). The summary of character creation (§6) lists what the run starts with, each stack
     as named ("a dagger (wielded)", "2 wool cloaks"); it never names the seed. The wiki lists
     every class's kit and race's additions.
@@ -335,7 +338,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     else moves it. Only the player has a score; deeds draw nothing from any random stream.
   - **Messages**: crossing into another band says so, after the deed's own messages, as a note
     that does not stop a rest (the band's `rise` or `fall` line: "You feel righteous.", "You
-    feel you have strayed from the path of good."); smaller moves are silent.
+    feel your righteousness waver."); smaller moves are silent.
   - **What reads it**: good creatures **scorn** an Evil or Wicked character, evil creatures a
     Good or Saintly one (`Band::scorned_by`): they answer a chat with a cold line
     (`greet_evil`, `greet_good` in `data/dialogue.toml`) instead of their greeting and
@@ -343,14 +346,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     gave stay). A quest may name the bands it is offered to (`requires_alignment`). A good
     shopkeeper's prices move with the band, by a percent in data added to the player's favour
     (§7 "Shops": Saintly 10 % better, Evil 10 % worse, Wicked 20 % worse); the prices shown
-    include it. Talents and class abilities (#220, #243) may ask for an alignment
-    (`requires_alignment`, `ability::strayed`): a paladin's gifts need Good or better, and a
-    paladin below that keeps them but cannot use them (greyed out, "you have strayed") until
-    they climb back. Mana reads nothing of it, for now. Gods and prayer, holy and unholy damage
-    and items, and alignment-limited artifacts will read the same band.
-  - **Talents** (proposed for the talents PR, on hooks that exist): *Righteous fury* (Good or
+    include it. **Alignment bars nothing** (#642): no class, talent, or ability asks for a
+    band, nothing is greyed out or refused by it, and nothing remembers a drop in band. A
+    **holy gift** (Lay on hands, Smite, Holy radiance, Consecrate) may name the bands it works
+    for (`alignment = { min = "kind" }` on its talent; all four are Kind or better, the good
+    side): outside them it is still listed and used, and does nothing ("You call for holy
+    wrath, but none answers."), taking the time of a cast and spending no cooldown, mana, or
+    resource; putting Holy radiance out always works. Mana reads nothing of it, for now. Gods
+    and prayer, holy and unholy damage and items, and artifacts that work only for some bands
+    (as the holy gifts do) will read the same band.
+  - **Talents** (proposed for the talents PR, on hooks that exist): *Righteous fury* (while Good or
     better: +1 to hit and damage against evil creatures, per 10 levels; `Profile` in
-    `attack_with`, reading the target's `Actor::nature`), *Hardened heart* (Callous or worse:
+    `attack_with`, reading the target's `Actor::nature`), *Hardened heart* (while Callous or worse:
     killing peaceful creatures costs no further alignment; `shift_alignment` skipping
     `Deed::KilledPeaceful`), and *The middle way* (while Neutral: +1 Dodge and +2 on checks;
     `Actor::defence`, `check`).
@@ -553,14 +560,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     several weapon skills at a rank (`any_weapon_skill = { roles = ["melee", "unarmed"], of =
     [...], rank = 3 }`: "a melee or unarmed weapon skill 3", "Maces and clubs or Unarmed 3"), the
     chosen weapon skill's or style's rank (`chosen`), the character level, the race, the class, the
-    eyes (the race's vision profile), and the alignment band (`requires_alignment`, as quests
-    and abilities ask it, §8 "Alignment": `{ min = "good" }`); and any one of several (`either
-    = { stats = { intelligence = 12 }, skills = { appraise = 20 } }`: "Intelligence 12 or
-    Appraise 20"). Refused in words: "You cannot
-    eyes (the race's vision profile), the birth sign's animal and element and a lucky day
-    (`animal`, `element`, `lucky`; §8 "Birth sign"), and the alignment band
-    (`requires_alignment`, as quests and abilities ask it, §8 "Alignment": `{ min = "good" }`).
-    Refused in words: "You cannot
+    eyes (the race's vision profile), and the birth sign's animal and element and a lucky day
+    (`animal`, `element`, `lucky`; §8 "Birth sign"); and any one of several (`either = { stats =
+    { intelligence = 12 }, skills = { appraise = 20 } }`: "Intelligence 12 or Appraise 20").
+    Never an alignment band (§8 "Alignment": alignment bars nothing). Refused in words: "You cannot
     take Dodge: you need Dexterity 13." Ranks come one at a time ("You learn Hardy (2)."); a talent with a choice is
     one pick per choice, each with its own ranks.
   - **Effects** (`TalentEffect`, summed into `TalentMods` by `Actor::talent_mods`, one read
@@ -717,7 +720,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `damage_type = "poison"`, and the Poisoned it gives meets poison resistance as every dose
     does (`World::afflict`), so no rule of its own.
   - **Shadow and Wayfarer** (#239; the design's §7.5 but for Hooded light, which waits for the
-    lantern's hood (#235); Patient blade, on the thief's openings, came with R5, §8
+    lantern's hood to need one (#235; the hood is now a lantern's mode, #643); Patient blade, on the thief's openings, came with R5, §8
     "Resources"):
     **effective eyes** (the design's B4, `WorldState::eyes`, §5 "Effective eyes"):
     `threshold_percent` (Night eyes: −50 %, eyes normal), `darkvision` (Dark adaptation: +2,
@@ -725,8 +728,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Intelligence 14, level 15); `scent` (Blood scent: a bleeding creature in line of sight
     within 9 cells, four beyond darkvision's five, is seen however dark, eyes darkvision);
     `night_sight` (Moon-eyed: overworld sight one cell longer at night, eyes low-light);
-    `lantern_light` (Lamplighter: the lit lantern burns as `lantern_bright`, a cell farther,
-    in the light cache, so creatures see it too); `ambush` (Ambusher: +1d6 after Protection on
+    `lantern_light` (Lamplighter: a lit lantern ready in the Tool slot burns as `lantern_bright`, a
+    cell farther, not while hooded, in `WorldState::carried_light`, so creatures see it too); `ambush` (Ambusher: +1d6 after Protection on
     a hit, any attack, at a creature that has not seen the attacker: it hunts no one it has seen,
     `Mind::last_seen` unset, and its own eyes do not see the attacker's cell; the die is drawn
     only then, `world/ambush.rs`); `terrain_as` (a step onto these terrains costs one onto
@@ -831,31 +834,31 @@ developer notes (CLAUDE.md, `docs/dev/`).
     talents' kinds and the class's own (the effects README of `data/talents/`); an active's
     effect (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
     `quivering_palm`) makes the talent that has it the ability's name and description in the
-    menu, and its `requires_alignment` need is what the active asks of the paladin. Monk's
+    menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Monk's
     Deflect missiles is the ordinary talent, handed out. Shared entries (`divine_health` is
     the paladin's, `purity_of_body` the monk's) are a talent each.
   - **Bonus picks**: warrior (Weaponcraft or Guard) at 4, 10, 16, 22, 28, 34, 46, 58;
     barbarian (Might or Vigour), paladin (Guard or Vigour), monk (Finesse or Vigour) at 10, 20,
     30, 45, 55; as the bullet above says.
   - **Actives** (`Ability::Class`, the abilities menu's Class group; `Action::Use`, `use:rage`,
-    `use:smite:E`; refused, no time, without the ability, while its cooldown lasts, or while
-    the player has strayed from the band it asks): Rage (the Rage resource and with it Raging:
+    `use:smite:E`; refused, no time, without the ability or while its cooldown lasts; a holy
+    gift outside its bands is used and does nothing, §8 "Alignment"): Rage (the Rage resource and with it Raging:
     St +2, To +2, In −2, no reading or casting, while the rage lasts, §8 "Resources"; then
     Exhausted 10 minutes; no rage while either lasts; a wait's time),
     Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
     blow at every hostile beside, clockwise from the north, each with the free blows the end of
     an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit
     points a level, then two degrees of Drained, 10 minutes, standing in for its mana until
-    the mana PR; a cast; Good or better), Smite (a blow in a direction with 1d6 more per 10
+    the mana PR; a cast; works for Kind or better), Smite (a blow in a direction with 1d6 more per 10
     levels, at least 1d6, a magic weapon's extra die folded into the bonus at its average; then
-    Spent, 5 minutes; Good or better), Holy radiance (on and off: Radiant, with no end of its
+    Spent, 5 minutes; works for Kind or better), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
-    glowing item's; a cast; Good or better), Quivering palm (a bare-handed blow in a direction,
+    glowing item's; a cast; works for Kind or better), Quivering palm (a bare-handed blow in a direction,
     refused with a weapon in hand before anything is spent; a hit that does damage leaves three
     degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Consecrate (the priest's at
     9, the paladin's at 12: a minute's prayer, for 15 mana, that lifts an unholy special room's
-    effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; Good
-    or better), Knock (the wizard's at 4: in a direction, for 5 mana and a cast's time, the lock
+    effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; works
+    for Kind or better), Knock (the wizard's at 4: in a direction, for 5 mana and a cast's time, the lock
     of the locked door or shut chest there springs open and nothing opens; refused, no time or
     mana, where nothing locked stands; §8 "Chests").
   - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
@@ -913,7 +916,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     11 mana),
     Ward of faith (Deflection +1; the design's "Shield of faith", renamed: that id is the
     paladin's), Purify (rotten food never sickens nor exposes; no draw), Divine health and
-    Smite (the paladin's own talents, so Smite answers only a Good priest), Miracle, Saint
+    Smite (the paladin's own talents, so Smite works only for a priest of the good side), Miracle, Saint
     (healing +100 %).
   - **Druid**: Wild empathy (`beast_friend`), Spark (tier 0, at 1: a bolt, 1d4 electricity;
     1 mana), Barkskin (tier 1, at 3: Dodge +2 a minute a degree; 3 mana), Woodland stride (the ranger's: forest floor,

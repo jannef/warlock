@@ -80,24 +80,31 @@ shares.
 - **The caster's stats** (`world/spell_scale.rs`, derived at cast time from
   `Actor::effective_stats`, nothing saved): `Actor::spell_lift` (0 without `damage` scales;
   `TalentMods::focus_lift`, Keen mind, adds to the tier's most), `spell_cap`, `spell_to_hit`,
-  `spell_reach_more`, `spell_degrees_more`.
+  `spell_reach_more`, `spell_degrees_more`. What is worn joins them there (#629, global
+  effects, unidentified too; `world/affix_spell_tests.rs`): `spell_lift` (Potent) beside Keen
+  mind's in the tier's most, `spell_to_hit` (of the Magus) in `spell_to_hit`, `spell_duration`
+  (of Lingering) in `spell_degrees_more`, and `spell_threat` (Baleful) in `Actor::spell_threat`:
+  22 less it, never below `combat::THREATS`' floor.
 - **The one cast path** (`world/cast.rs`, `World::cast_spell` from `Action::Cast`; decisions the
   design left open are under "Choices" below):
   - **Cost**, the one hook `Actor::spell_cost(content, spell, caster_level)`:
     `SpellRules::mana` (the tier's `cost` × (100 + `overreach_cost` × tiers above
     `tier_of(caster_level)`) × `shape_cost(shape, its own radius)` × the resolution's `cost` ×
-    (100 + `Actor::armour_spell_cost`, the summed `spell_cost_percent` of what is worn) / 100⁴,
+    (100 + `Actor::armour_spell_cost`, the summed `spell_cost_percent` of what is worn, each
+    piece's less its own Mage-wrought `spell_ease`, never below 0: `Actor::worn_spell_cost`) / 100⁴,
     rounded to the nearest once, at least 1; `SpellRules::mana_with` scales `overreach_cost` by
     Overreach's `TalentMods::overreach_cost_percent`, −33), then `TalentMods::spell_mana_with`:
     `spell_mana_percent` (Archmage −50, Empower −10) plus School focus's cost for a spell of
     its tag (`TalentMods::focus(spell.tags)`), rounded down, at least 1 (`Actor::spell_base`,
-    what `World::spend_mana` is given), then `Actor::mana_cost` (Frugal caster) inside
+    what `World::spend_mana` is given), then `Actor::mana_cost` (Frugal caster and the worn
+    `mana_cost`, of Thrift, summed, at most 50 % off) inside
     `spend_mana`. `ability::spell_unavailable(actor, content, spell, level)` is
     `Unavailable::NoMana` against it; `Ability::unavailable` alone cannot know the caster level,
     so `PerceptionView::abilities` and the cast ask the former. Mana is spent only once the cast
     is sure to go off.
   - **Reach**: `Actor::spell_reach` → `Reach { range, radius }`: base grown by the spell's
-    `reach` scales (`Actor::spell_reach_more`, `SpellRules::grown`), then School focus's reach on the range (a cone's or
+    `reach` scales (`Actor::spell_reach_more`, `SpellRules::grown`), then School focus's reach
+    and the worn `spell_reach` (of Farcasting) on the range (a cone's or
     a line's length too, never the radius), up to the caps; a touch's range 1. A burst still
     costs by its own `radius`. The `duration` scales lengthen a buff's and a hex's severity
     (`Actor::spell_degrees_more`, `SpellRules::lengthened`; the status's `max` clamps it in `Effects::add`; Blessed, Hexed
@@ -120,7 +127,9 @@ shares.
     `World::spell_strikes`); auto through `spell_strikes` with a plain hit; attack and touch roll
     `combat::strike` with `Profile::bare(Attack { damage: dice, to_hit: the spell's `to_hit`
     scales for an own cast (`Actor::spell_to_hit`), the Dexterity modifier for a scroll or a wand,
-    threat 22, crit ×2 }).with(benefit)` against
+    threat `Actor::spell_threat` for an own cast (22 less Baleful's, carried by
+    `reflect::Shot::threat`, a reflection keeping it) and 22 for a scroll or a wand, crit ×2
+    }).with(benefit)` against
     `combat::Target::bare(target_against(target, missile).defence)` (no Protection; the strike's
     damage, crit included, is then held to the cap and resisted in `spell_strikes`). The
     `benefit` (#571) is the Spell attacks skill's and the caster style's (`Actor::spell_skills`:

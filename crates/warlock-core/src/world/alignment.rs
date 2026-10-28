@@ -13,8 +13,8 @@
 //! or Saintly one ([`World::scorns`]): a cold greeting in place of their words
 //! ([`World::cold_greeting`]) and none of their quests that would do the player good
 //! ([`World::offers`], which also checks a quest's `requires_alignment`). A good shopkeeper's
-//! prices follow the band ([`keeper_favour`]); abilities that ask for an alignment are
-//! [`crate::ability::strayed`] when the player's band falls short.
+//! prices follow the band ([`keeper_favour`]); a holy gift works only for the bands it names
+//! ([`World::answered`]), and is never barred.
 
 use super::{Actor, ActorId, World};
 use crate::alignment::Alignment;

@@ -13,7 +13,6 @@
 //! [`Candidate`] is everything a prerequisite may ask of whoever would take a talent, and
 //! [`unmet`] / [`may_take`] decide a pick, for the rules and for what the player is shown alike.
 
-use crate::alignment::Band;
 use crate::character::Character;
 use crate::content::{
     Benefit, Build, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need,
@@ -26,6 +25,11 @@ use crate::stats::{PerStat, Stat, Stats};
 use crate::weapon_skills::WeaponSkills;
 use crate::world::{Actor, FreeBlows};
 use serde::{Deserialize, Serialize};
+
+/// The most percent off a mana cost talents and magic items give together (spec §8 "Mana"):
+/// Frugal caster's fifth and of Thrift's percents summed, held here, as speeds are held at
+/// [`crate::content::MAX_SPEED`].
+pub const MAX_MANA_CUT: i32 = 50;
 
 /// A talent an actor has taken: by id, at this rank, for this choice (a talent with a `choice`
 /// is taken once per choice, each with its own rank).
@@ -253,7 +257,8 @@ pub struct TalentMods {
     pub night_sight: i32,
     /// Cells farther it sees on the overworld by day.
     pub day_sight: i32,
-    /// The light preset its lantern burns as, if not the lantern's own.
+    /// The light preset the lit light it has ready (a lantern) burns as, if not its own
+    /// (`WorldState::carried_light`; not while hooded).
     pub lantern_light: Option<LightId>,
     /// The light it sheds wherever it is, if any.
     pub inner_light: Option<LightId>,
@@ -1952,14 +1957,17 @@ impl TalentMods {
         per_levels_at(&self.mana_per_levels, level)
     }
 
-    /// What an ability whose cost is `base` mana costs with these talents: `mana_cost_percent`
-    /// more (Frugal caster's −20: a fifth less), rounded to the nearest, never below 1 for a
+    /// What an ability whose cost is `base` mana costs with these talents and `worn_off` percent
+    /// less from magic items (of Thrift's `mana_cost`): `mana_cost_percent` more (Frugal
+    /// caster's −20: a fifth less) and the items' less, the two summed before the one rounding
+    /// and never more than [`MAX_MANA_CUT`] off; rounded to the nearest, never below 1 for a
     /// cost above 0.
-    pub fn mana_cost(&self, base: i32) -> i32 {
-        if base <= 0 || self.mana_cost_percent == 0 {
+    pub fn mana_cost(&self, base: i32, worn_off: i32) -> i32 {
+        let percent = (self.mana_cost_percent - worn_off.max(0)).max(-MAX_MANA_CUT);
+        if base <= 0 || percent == 0 {
             return base;
         }
-        let scaled = (base * (100 + self.mana_cost_percent).max(0) + 50) / 100;
+        let scaled = (base * (100 + percent) + 50) / 100;
         scaled.max(1)
     }
 
@@ -2004,9 +2012,6 @@ pub struct Candidate<'a> {
     pub race: Option<&'a str>,
     pub class: Option<&'a str>,
     pub eyes: Option<&'a str>,
-    /// The alignment band (spec §8 "Alignment"); `None` without alignment rules, when no
-    /// talent that asks for one can be taken.
-    pub band: Option<Band>,
     /// The birth sign (spec §8 "Birth sign"), if any, and whether it is a lucky day's.
     pub sign: Option<&'a Sign>,
     pub lucky: bool,
@@ -2032,7 +2037,6 @@ impl<'a> Candidate<'a> {
             race: spec.map(|s| s.race.as_str()),
             class: spec.map(|s| s.class.as_str()),
             eyes: race.map(|r| r.vision.as_str()),
-            band: content.alignment().map(|_| actor.band(content)),
             sign: character.and_then(|c| c.sign.as_ref()),
             lucky: character.is_some_and(|c| c.lucky(content).is_some()),
         }
@@ -2076,7 +2080,6 @@ impl<'a> Candidate<'a> {
             Need::Animal(id) => self.sign.is_some_and(|s| s.is_animal(id)),
             Need::Element(id) => self.sign.is_some_and(|s| s.is_element(id)),
             Need::Lucky => self.lucky,
-            Need::Alignment(required) => self.band.is_some_and(|band| required.allows(band)),
             Need::Either(needs) => (needs.iter()).any(|n| self.meets(content, n, choice, chosen)),
         }
     }

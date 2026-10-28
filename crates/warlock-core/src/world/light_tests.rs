@@ -3,6 +3,7 @@
 use super::*;
 use crate::content::ContentFiles;
 use crate::light::{BOUNCE, Light, falloff};
+use crate::object::LightMode;
 use crate::perception::{CellView, Emitter, PerceptionView};
 use proptest::prelude::*;
 use std::collections::BTreeSet;
@@ -191,7 +192,7 @@ glow = [10, 0, 20, 4]
 /// A world on a single level with `map`, `ambient` light, and the fixture definitions above. The
 /// player starts with `vision` and an unlit lantern.
 fn world_with(map: &str, ambient: [u16; 4], vision: &str) -> World {
-    load(map, ambient, vision, "lantern = \"lantern\"\n")
+    load(map, ambient, vision, "wield = [\"lantern\"]\n")
 }
 
 fn load(map: &str, ambient: [u16; 4], vision: &str, scenario_extra: &str) -> World {
@@ -212,6 +213,7 @@ fn load_rooms(
     files.insert("data/lights.toml", LIGHTS);
     files.insert("data/vision.toml", VISION);
     files.insert("data/legend.toml", LEGEND);
+    super::lamp_tests::with_lantern(&mut files);
     files.insert("data/room_effects.toml", ROOM_EFFECTS);
     let [r, g, b, uv] = ambient;
     files.insert(
@@ -668,11 +670,11 @@ fn door_changes_invalidate_cached_masks_of_lights_inside_the_room() {
 fn the_lantern_takes_a_turn_and_lights_the_way() {
     let map = "##########\n#@.......#\n##########\n";
     let mut w = dark_world(map, "normal");
-    assert_eq!(w.lantern(), Some(Lantern::Out));
+    assert_eq!(super::lamp_tests::light_mode(&w), Some(LightMode::Unlit));
     assert!(!visible(&w.perception(), Pos::new(2, 1)));
-    let outcome = w.apply(&Action::ToggleLantern);
+    let outcome = w.apply(&Action::UseTool);
     assert!(outcome.took_turn);
-    assert_eq!(w.lantern(), Some(Lantern::Lit));
+    assert_eq!(super::lamp_tests::light_mode(&w), Some(LightMode::Lit));
     assert!(visible(&w.perception(), Pos::new(3, 1)));
     let source = &w.perception().light_sources()[0];
     let key = source.key;
@@ -683,7 +685,9 @@ fn the_lantern_takes_a_turn_and_lights_the_way() {
         "carried lights keep their key as they move"
     );
     assert_eq!(source.pos(), Some(Pos::new(2, 1)));
-    w.apply(&Action::ToggleLantern);
+    // Hooded, then out.
+    w.apply(&Action::UseTool);
+    w.apply(&Action::UseTool);
     assert!(w.perception().light_sources().is_empty());
 }
 
@@ -692,14 +696,14 @@ fn a_hooded_lantern_lights_around_the_player_but_not_them() {
     let map = "#########\n#.......#\n#...@...#\n#.......#\n#########\n";
     let mut w = dark_world(map, "normal");
     let me = w.player_pos();
-    w.apply(&Action::ToggleLantern);
+    w.apply(&Action::UseTool);
     assert!(
         visible(&w.perception(), Pos::new(7, 2)),
         "lit, it reaches 3 cells"
     );
-    let outcome = w.apply(&Action::HoodLantern);
+    let outcome = w.apply(&Action::UseTool);
     assert!(outcome.took_turn);
-    assert_eq!(w.lantern(), Some(Lantern::Hooded));
+    assert_eq!(super::lamp_tests::light_mode(&w), Some(LightMode::Hooded));
     let view = w.perception();
     let hood = &view.light_sources()[0];
     assert_eq!(hood.pos(), Some(me));
@@ -718,9 +722,10 @@ fn a_hooded_lantern_lights_around_the_player_but_not_them() {
     let own = view.light(me).expect("own cell").light();
     assert!(own.brightness() < 12, "{own:?}");
     check_invariants(&w).expect("hooded light keeps the invariants");
-    // Raised again, it burns open.
-    w.apply(&Action::HoodLantern);
-    assert_eq!(w.lantern(), Some(Lantern::Lit));
+    // Doused and lit again, it burns open.
+    w.apply(&Action::UseTool);
+    w.apply(&Action::UseTool);
+    assert_eq!(super::lamp_tests::light_mode(&w), Some(LightMode::Lit));
     assert!(visible(&w.perception(), Pos::new(7, 2)));
     check_invariants(&w).expect("open light keeps the invariants");
 }
@@ -743,9 +748,9 @@ fn eyes_that_need_light_do_not_see_a_hooded_bearer_whom_darkvision_sees() {
     };
     let mut w = dark_world(map, "normal");
     assert!(!sees_player(&w, "normal"), "in the dark, unseen");
-    w.apply(&Action::ToggleLantern);
+    w.apply(&Action::UseTool);
     assert!(sees_player(&w, "normal"), "a lit lantern shows the player");
-    w.apply(&Action::HoodLantern);
+    w.apply(&Action::UseTool);
     assert!(
         w.perception().actor_at(Pos::new(5, 1)).is_some(),
         "the player sees the rat"
@@ -760,19 +765,20 @@ fn eyes_that_need_light_do_not_see_a_hooded_bearer_whom_darkvision_sees() {
 }
 
 #[test]
-fn without_a_lantern_toggling_is_refused() {
-    let mut w = load("####\n#@.#\n####\n", [0; 4], "normal", "");
-    let outcome = w.apply(&Action::ToggleLantern);
-    assert!(!outcome.took_turn);
-    assert_eq!(w.lantern(), None);
+fn without_a_light_ready_using_the_tool_is_refused() {
+    let mut w = load(
+        "####\n#@.#\n####\n",
+        [0; 4],
+        "normal",
+        "carry = [\"lantern\"]\n",
+    );
+    let outcome = w.apply(&Action::UseTool);
+    assert!(!outcome.took_turn, "a lantern in the pack is not ready");
+    assert_eq!(super::lamp_tests::light_mode(&w), None);
     assert_eq!(
         w.messages().iter().last().map(|m| m.text.as_str()),
-        Some("You have no lantern.")
+        Some("You have no light ready to use.")
     );
-    // Nor is there a hood to lower.
-    let outcome = w.apply(&Action::HoodLantern);
-    assert!(!outcome.took_turn);
-    assert_eq!(w.lantern(), None);
     assert!(w.perception().light_sources().is_empty());
 }
 
@@ -820,7 +826,7 @@ fn overlapping_lights_sum_and_contributions_add_up() {
 fn same_actions_give_identical_states_and_perception() {
     let map = "############\n#@..+..T.k.#\n#...#......#\n############\n";
     let actions = [
-        Action::ToggleLantern,
+        Action::UseTool,
         Action::Move(Dir::E),
         Action::SetVision("darkvision".into()),
         Action::Move(Dir::E),
@@ -828,7 +834,7 @@ fn same_actions_give_identical_states_and_perception() {
         Action::Wait,
         Action::Close(Dir::E),
         Action::SetVision("uv_sight".into()),
-        Action::ToggleLantern,
+        Action::UseTool,
     ];
     let mut a = dark_world(map, "normal");
     let mut b = dark_world(map, "normal");
@@ -868,7 +874,7 @@ fn showcase_start_room_is_lit_and_readable() {
     let w = World::new(content, "showcase", None).expect("showcase");
     let view = w.perception();
     assert_eq!(view.vision().id, "normal");
-    assert_eq!(w.lantern(), Some(Lantern::Out));
+    assert_eq!(super::lamp_tests::light_mode(&w), Some(LightMode::Unlit));
     // The start room spans x 1..14, y 12..19; every cell and its walls are visible.
     for y in 11..=20 {
         for x in 0..=15 {
@@ -970,6 +976,7 @@ fn vast_world() -> World {
     files.insert("data/lights.toml", LIGHTS);
     files.insert("data/vision.toml", VISION);
     files.insert("data/legend.toml", LEGEND);
+    super::lamp_tests::with_lantern(&mut files);
     files.insert(
         "levels/vast.toml",
         &format!(
@@ -979,7 +986,7 @@ fn vast_world() -> World {
     );
     files.insert(
         "scenarios/vast.toml",
-        "name = \"V\"\nstart_level = \"vast\"\nlantern = \"lantern\"\n",
+        "name = \"V\"\nstart_level = \"vast\"\nwield = [\"lantern\"]\n",
     );
     let content = Arc::new(Content::load(&files).expect("vast content"));
     World::new(content, "vast", None).expect("vast world")
@@ -988,7 +995,7 @@ fn vast_world() -> World {
 /// Average and maximum `apply` time over `turns` pseudo-random moves (lantern lit).
 fn time_turns(mut world: World, turns: usize) -> (f64, f64) {
     use std::time::Instant;
-    world.apply(&Action::ToggleLantern);
+    world.apply(&Action::UseTool);
     let mut rng: u64 = 0x9e37_79b9_7f4a_7c15;
     let (mut total, mut max) = (0.0f64, 0.0f64);
     for _ in 0..turns {
@@ -1155,11 +1162,11 @@ proptest! {
         for step in steps {
             let action = match step {
                 0..=7 => Action::Move(Dir::ALL[step]),
-                8 => Action::ToggleLantern,
+                8 => Action::UseTool,
                 9 => Action::SetVision(profiles[w.turn() as usize % 4].into()),
                 10 => Action::Open(Dir::ALL[w.turn() as usize % 8]),
                 11 => Action::Close(Dir::ALL[w.turn() as usize % 8]),
-                _ => Action::HoodLantern,
+                _ => Action::UseTool,
             };
             w.apply(&action);
         }
@@ -1245,11 +1252,11 @@ proptest! {
              [[room]]\neffect = \"sanctuary\"\narea = [14, 0, 23, 10]\n"
         );
         let light = [ambient, ambient, ambient, 0];
-        let mut w = load_rooms(&map, light, vision, "lantern = \"lantern\"\n", &rooms);
+        let mut w = load_rooms(&map, light, vision, "wield = [\"lantern\"]\n", &rooms);
         for step in steps {
             let action = match step {
                 0..=7 => Action::Move(Dir::ALL[step]),
-                _ => Action::ToggleLantern,
+                _ => Action::UseTool,
             };
             w.apply(&action);
         }

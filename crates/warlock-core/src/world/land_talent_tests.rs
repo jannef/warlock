@@ -214,7 +214,7 @@ fn moon_eyed_sees_farther_on_the_overworld_at_night() {
 #[test]
 fn lamplighter_burns_the_lantern_brighter() {
     let mut w = world("showcase");
-    run(&mut w, "lantern");
+    run(&mut w, "use_tool");
     let preset = |w: &World, id: &str| {
         let light = CONTENT.light_id(id).expect("preset");
         w.perception()
@@ -227,10 +227,12 @@ fn lamplighter_burns_the_lantern_brighter() {
     assert!(preset(&w, "lantern_bright"));
     assert!(!preset(&w, "lantern"));
     // Hooded, it burns as the hooded light, talent or not.
-    w.apply(&Action::HoodLantern);
+    w.apply(&Action::UseTool);
     assert!(preset(&w, "lantern_hooded"));
     assert!(!preset(&w, "lantern_bright"));
-    w.apply(&Action::HoodLantern);
+    // Doused and lit again, it burns bright.
+    w.apply(&Action::UseTool);
+    w.apply(&Action::UseTool);
     assert!(preset(&w, "lantern_bright"));
     assert!(
         CONTENT

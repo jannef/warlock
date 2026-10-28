@@ -2,8 +2,9 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
+ You see here a dagger.
  You pick up a dagger.
- You are burdened.
+
 
 
 
@@ -17,16 +18,15 @@ expression: "render(case, content.clone())"
                     │   d  Woodcraft          not usable yet                   │
                     │ Weapon skills                                            │
                     │   e  Shield bash        you hold no shield               │
-                    │ Items                                                    │
-                    │   f  Hood your lantern                                   │
                     │ Here                                                     │
-                    │   g  Temper             on something you carry           │
+                    │   f  Temper             on something you carry           │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-g or Enter use   Esc close                             │
+                    │ a-f or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

@@ -462,8 +462,8 @@ fn rotten_food_is_worth_nothing_in_a_shop() {
         w.state.current().shops[0].unpaid.is_empty(),
         "nothing owed for it"
     );
-    assert_eq!(w.perception().sale(&Positions::of([2])), None);
-    run(&mut w, "sell:c");
+    assert_eq!(w.perception().sale(&Positions::of([3])), None);
+    run(&mut w, "sell:d");
     assert_eq!(
         said(
             &w,

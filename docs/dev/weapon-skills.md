@@ -100,7 +100,8 @@ Caster styles (#571, combat progression family): spells that roll to hit
 roll) draw on the one skill of `Role::Spell` (`spell_attack`, its own `Section::Spells` on the
 screen) and a style of a caster grip (`Grip::RangedSpell`, `TouchSpell`, `ArmouredSpell`;
 `Grip::casts`; their styles name no weapons). `Actor::spell_skills(content, touch)` picks them:
-armoured first (`Actor::worn_spell_cost` above 0: anything worn with a `spell_cost_percent`),
+armoured first (`Actor::worn_spell_cost` above 0: anything worn with a `spell_cost_percent`
+not eased to 0 by its own Mage-wrought, #629),
 else touch or ranged; `Actor::attack_skill(Spell, _)` is the spell skill, `Actor::style(Spell,
 _)` stays `None` (`styles_in_use` marks no caster style). The one reader is
 `world/cast.rs::cast_single` (own casts paid in mana only; a scroll or a wand keeps the bare

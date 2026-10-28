@@ -4,4 +4,4 @@ start_level = "forge"
 seed = 1
 # A smith come to see what the old anvil can still do.
 character = { race = "human", gender = "male", class = "craftsperson", name = "Wulfhere" }
-lantern = "lantern"
+wield = ["lantern"]

@@ -49,9 +49,9 @@ pub enum ActionKind {
     PickLock,
     /// A kick (`K`): at a door, to break it, or at a creature, an unarmed blow.
     Kick,
-    /// Lighting or dousing the lantern.
-    Lantern,
-    /// Lowering or raising the lantern's hood (spec §5 "Light sources").
+    /// Lighting or dousing a light ready in the Tool slot (a lantern; spec §5 "Light sources").
+    Light,
+    /// Lowering a lantern's hood (spec §5 "Light sources").
     Hood,
     /// Taking stairs: also entering a location or a local area from the overworld, and walking
     /// off the edge of a local area back to it.
@@ -127,7 +127,7 @@ impl ActionKind {
         ActionKind::Unlock,
         ActionKind::PickLock,
         ActionKind::Kick,
-        ActionKind::Lantern,
+        ActionKind::Light,
         ActionKind::Hood,
         ActionKind::Stairs,
         ActionKind::PickUp,
@@ -169,7 +169,7 @@ impl ActionKind {
             ActionKind::Unlock => "unlock",
             ActionKind::PickLock => "pick_lock",
             ActionKind::Kick => "kick",
-            ActionKind::Lantern => "lantern",
+            ActionKind::Light => "light",
             ActionKind::Hood => "hood",
             ActionKind::Stairs => "stairs",
             ActionKind::PickUp => "pick_up",
@@ -230,8 +230,8 @@ impl ActionKind {
             ActionKind::Unlock => "unlock doors",
             ActionKind::PickLock => "pick locks",
             ActionKind::Kick => "kick",
-            ActionKind::Lantern => "tend a lantern",
-            ActionKind::Hood => "hood a lantern",
+            ActionKind::Light => "tend a light",
+            ActionKind::Hood => "hood a light",
             ActionKind::Stairs => "travel",
             ActionKind::PickUp => "pick things up",
             ActionKind::Drop => "drop things",

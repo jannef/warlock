@@ -56,9 +56,15 @@ your combat stance.
 Whatever spends mana is refused when you have too little, and spends nothing then. Spending any
 trains your Willpower (a chance at a training mark each time; see
 [Stats](stats.md#training)). The talent *Frugal caster* makes abilities cost a fifth less mana,
-rounded to the nearest point and never below 1: 5 becomes 4, 6 becomes 5, 10 becomes 8. It
-comes last, after everything else that changes a spell's or a rod's cost (see
-[What a spell costs](magic.md#what-a-spell-costs)).
+rounded to the nearest point and never below 1: 5 becomes 4, 6 becomes 5, 10 becomes 8.
+[Magic items](magic-items.md) *of Thrift* make abilities cheaper the same way, by their percent;
+everything you wear and the talent are added up before the one rounding, and never take more
+than half off together: *Frugal caster* (20 %) and a ring of 10 % take 30 % off, so 7 becomes 5;
+three pieces of 20 % and the talent still take only 50 %, so 10 becomes 5. It works on a worn
+item you have not identified, and stops when you take it off. This cut comes last, after
+everything else that changes a spell's or a rod's cost (see
+[What a spell costs](magic.md#what-a-spell-costs)), and it is the one for every ability that
+costs mana: spells, rods, *Inspire*, a summoning.
 
 The talent *Blood magic* gives you an ability (in the abilities menu) that turns 5 of your hit
 points into 3 mana at once, for the time of a wait. It never takes your last hit point (with 5

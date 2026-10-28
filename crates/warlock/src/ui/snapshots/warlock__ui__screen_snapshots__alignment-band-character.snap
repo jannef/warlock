@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You kick the shopkeeper. "You will pay for that!" shouts Grimbold. You feel you have strayed from
- the┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
+ You kick the shopkeeper. "You will pay for that!" shouts Grimbold. You feel your righteousness
+ wav┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ Garrick                                                                                 │
     │                                                                                         │
@@ -31,7 +31,7 @@ expression: "render(case, content.clone())"
     │     Status        Bleeding                                                              │
     │     Resistant to  acid                                                                  │
     │                                                                                         │
-    │ Weight 79.2 kg (you 70 kg, carrying 9.2 kg)                                             │
+    │ Weight 79.6 kg (you 70 kg, carrying 9.6 kg)                                             │
     │ Burdened over 19 kg, strained over 38 kg, overloaded over 57 kg                         │
     │                                                                                         │
     │ @ or Esc close   A skills                                                               │

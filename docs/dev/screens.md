@@ -224,8 +224,8 @@ marked with its spell and the chance in words, a pick asking in the one dialog b
 (`KeyCommand::Pay`), `a` (`KeyCommand::Abilities`: the `Abilities` screen), `X`
 (`KeyCommand::RepeatAbility`), bash (`KeyCommand::Bash`, unbound), disarm
 (`KeyCommand::Disarm`, unbound), picking a lock (`KeyCommand::PickLock`, unbound), steal
-(`KeyCommand::Steal`, unbound), throwing one's voice, and the lantern's hood
-(`KeyCommand::ThrowVoice`, `HoodLantern`, unbound) are in `input.rs` and `settings/keys.rs`; their default keys are ADOM's (#350, `docs/dev/settings.md`).
+(`KeyCommand::Steal`, unbound), and throwing one's voice
+(`KeyCommand::ThrowVoice`, unbound) are in `input.rs` and `settings/keys.rs`; their default keys are ADOM's (#350, `docs/dev/settings.md`).
 
 **Abilities** (spec §6 "Abilities"; racial, class, skill, weapon skill and style, item; the
 owner's rule, #156) get no key of their own: they go into the one abilities menu.
@@ -234,8 +234,8 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   it makes from its aim), a line in `Ability::every` (menu order: by source, then as listed),
   who has it (`had_by`), and when it cannot be used (`unavailable` → `Unavailable` with its
   reason; `While(status)` for a status that blocks its cost's kind or is its cooldown,
-  `docs/dev/status-effects.md`; one that asks for an alignment asks `ability::strayed` first,
-  `Unavailable::Strayed`, `docs/dev/alignment.md`; `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
+  `docs/dev/status-effects.md`; alignment never makes one unavailable, `docs/dev/alignment.md`;
+  `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
   why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
   wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
@@ -255,7 +255,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Action::Gift` (`use:horns_grace`, `use:transfixing_stare:X,Y`, a cell at `STARE_RANGE`).
   `Ability::Class(ClassActive)` (`Source::Class`) are the class actives
   (`docs/dev/progression.md` "Class actives"): listed while some talent has one, had
-  by whoever's `TalentMods` has it, `Strayed` then `While(cooldown)`; their action is
+  by whoever's `TalentMods` has it, `While(cooldown)`; their action is
   `Action::Use`. No `KeyCommand` of their own (as Second wind's).
   `Ability::Sign(SignActive)` (`Source::Sign`, the menu's Birth sign group between Racial and
   Class) are a birth sign's actives (Blaze; `docs/dev/character-creation.md`): listed while some
@@ -268,9 +268,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   is aimed as a spell scroll is: `target.rs::aimed_spell` gives it the scroll's line of fire,
   and `burst_dialog` asks "Cast it anyway?" when its burst may catch the player); an item (a
   `PagedList` of the pack) joins them with the first ability that needs one, as a variant and an
-  arm in `Gameplay::use_ability`. Throwing one's voice (`Ability::ThrowVoice`, Class) and the
-  lantern's hood (`Ability::HoodLantern`, Items) are had by everyone until the class tables and
-  the Hooded light talent narrow `had_by`.
+  arm in `Gameplay::use_ability`. Throwing one's voice (`Ability::ThrowVoice`, Class) is had
+  by those a talent gives it. A lantern is no ability: `u` (`KeyCommand::UseTool`) turns a
+  light ready in the Tool slot (`PerceptionView::ready_light`) at once, `Action::UseTool`, and
+  asks for a direction to dig otherwise (#643).
 - **Menu**: `ui/abilities_screen.rs` (`AbilitiesScreen`, `ScreenName::Abilities`, `--screen
   abilities`): the `PagedList<Entry, Source>`, greyed rows with their reason (an active weapon
   ability's after its stamina, `PerceptionView::own_weapon_stamina`: "3 stamina, in a
@@ -279,7 +280,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   letter or Enter on an available row answers `ScreenAction::UseAbility(ability)`; on an
   unavailable one it shows why and stays. Its own key closes it only when it names no row.
 - **Dispatch**: `ScreenAction::UseAbility` is the one way an ability is used, from the menu, its
-  own key (`KeyCommand::Bash`, `Disarm`, `PickLock`, `ThrowVoice`, `HoodLantern` answer it from
+  own key (`KeyCommand::Bash`, `Disarm`, `PickLock`, `ThrowVoice` answer it from
   `Gameplay::press`), or the quick repeat:
   `input::route_keys` closes the top screen if any, remembers it (`ScreenStack::last_ability`,
   cleared with the stack when a run ends, like the creation picks), and calls

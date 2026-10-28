@@ -633,6 +633,8 @@ mod tests {
         // The trap hall's scrolls picked up: b fireball (range 10), c lightning (12 cells).
         let content = Arc::new(Content::builtin().expect("content"));
         let mut w = World::new(content, "traps", None).expect("trap hall");
+        // The lantern put down first, so the scrolls keep their letters.
+        w.apply(&Action::Drop(warlock_core::Positions::of([0])));
         w.apply(&Action::Move(Dir::E));
         w.apply(&Action::PickUp(warlock_core::Positions::default()));
         let view = w.perception();

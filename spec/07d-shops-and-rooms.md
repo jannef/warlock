@@ -438,8 +438,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       and loot at the altar's foot (the walkable cell beside it nearest the player, not their
       own), known traps, identifying and forgetting (`Stack::forget`), harm that spares the
       last hit point and harm that can kill (`Harm::Place`: a place's kill earns no one
-      anything; a death by it is "Struck down at a forgotten altar"), coins lost, the lantern
-      snuffed, hostile creatures drawn as the spawner draws them (by the floor's danger, plus
+      anything; a death by it is "Struck down at a forgotten altar"), coins lost, the light
+      ready in the Tool slot (a lantern) snuffed, hostile creatures drawn as the spawner draws them (by the floor's danger, plus
       `danger`; none on a level without a danger), a random disease, stat damage, experience,
       the most valuable stack gone, the teleport trap's move, the burst spell code, terrain).
       A hook that finds nothing to do says the outcome's `otherwise` line instead (Glimpse with

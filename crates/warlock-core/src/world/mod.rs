@@ -138,7 +138,7 @@ mod hurl;
 mod ice;
 mod incorporeal;
 mod knock;
-mod lantern;
+mod lamp;
 mod learn;
 mod level;
 mod lockpick;
@@ -216,7 +216,6 @@ pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
 pub use guild::GuildRank;
 pub(crate) use hash::fnv1a;
-pub use lantern::Lantern;
 pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
@@ -313,11 +312,6 @@ pub struct WorldState {
     /// spec §8 "Character creation"); replays record it. Left out of saves when false.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub(crate) kit: bool,
-    /// Whether the player's lantern (the scenario's `lantern`) is lit.
-    pub(crate) lantern_lit: bool,
-    /// Whether its hood is lowered (`lantern.rs`): only while it is lit.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub(crate) lantern_hooded: bool,
     /// The step that brought the player onto their overworld cell, if they walked there: `>`
     /// then arrives on the side of the local area they came from. Cleared on any level change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -733,8 +727,6 @@ impl World {
             vision_dev: false,
             character,
             kit: with_kit,
-            lantern_lit: false,
-            lantern_hooded: false,
             overworld_step: None,
             recent_sounds: Vec::new(),
             weather_override: None,
@@ -1119,9 +1111,10 @@ impl World {
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let quests = self.quest_progress();
         let spent = self.player_acts(action, &mut events);
-        // Taking off what raised them lowers the player's maximum hit points and mana.
+        // Taking off what raised them lowers the player's maximum hit points, mana, and pools.
         self.keep_hp_within_max(self.state.player);
         self.keep_mana_within_max(self.state.player);
+        self.keep_resources_within_max(self.state.player);
         self.burden_news(burden);
         self.quest_news(&quests);
         // Acting (not waiting) under a load that slows the player trains balance.
@@ -1237,8 +1230,7 @@ impl World {
                 ActionKind::Stairs,
             ),
             Action::Ascend => (self.take_stairs(StairsDir::Up, events), ActionKind::Stairs),
-            Action::ToggleLantern => (self.toggle_lantern(), ActionKind::Lantern),
-            Action::HoodLantern => return self.hood_lantern(),
+            Action::UseTool => return self.use_tool(),
             Action::PickUp(positions) => return self.pick_up_objects(positions),
             Action::Drop(positions) => return self.drop_objects(positions),
             Action::Sell(positions) => {
@@ -1339,6 +1331,10 @@ fn article(noun: &str) -> &'static str {
     }
 }
 
+#[cfg(test)]
+mod affix_spell_tests;
+#[cfg(test)]
+mod affix_stamina_tests;
 #[cfg(test)]
 mod ai_tests;
 #[cfg(test)]
@@ -1484,9 +1480,9 @@ mod incorporeal_tests;
 #[cfg(test)]
 mod ki_tests;
 #[cfg(test)]
-mod land_talent_tests;
+mod lamp_tests;
 #[cfg(test)]
-mod lantern_tests;
+mod land_talent_tests;
 #[cfg(test)]
 mod learn_tests;
 #[cfg(test)]
