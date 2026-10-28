@@ -53,6 +53,40 @@ pub(super) fn creation(content: &Content) -> String {
     out
 }
 
+/// The heirlooms (#697: Father's sword): each race's weapon, races by name, then the one every
+/// other race gets.
+pub(super) fn heirlooms(content: &Content) -> String {
+    let mut out = String::from("| Race | Heirloom |\n|---|---|\n");
+    let object = |id: &str| {
+        (content.object_id(id)).map_or_else(|| id.to_string(), |o| content.object(o).name.clone())
+    };
+    for (_, def) in content.talents().iter() {
+        for effect in &def.effects {
+            let TalentEffect::Heirloom {
+                weapons, fallback, ..
+            } = effect
+            else {
+                continue;
+            };
+            let mut races: Vec<_> = content.races().list.iter().collect();
+            races.sort_by(|a, b| a.name.cmp(&b.name));
+            let mut others = false;
+            for race in races {
+                match weapons.get(&race.id) {
+                    Some(weapon) => {
+                        let _ = writeln!(out, "| {} | {} |", race.name, object(weapon));
+                    }
+                    None => others = true,
+                }
+            }
+            if others || weapons.is_empty() {
+                let _ = writeln!(out, "| any other | {} |", object(fallback));
+            }
+        }
+    }
+    out
+}
+
 /// The racial talents (spec §8 "Talents", the Racial tree), race by race: those a race grants,
 /// then those that ask for it, each with what else it needs and its rule. Races and talents
 /// sort by name.
@@ -215,7 +249,10 @@ pub(super) fn needs_text(content: &Content, def: &TalentDef) -> String {
     }
     let words = |needs: &[Need]| -> String {
         (needs.iter())
-            .map(|n| n.words(content))
+            .map(|n| match n {
+                Need::Creation => "only at character creation".to_string(),
+                n => n.words(content),
+            })
             .collect::<Vec<_>>()
             .join(", ")
     };
@@ -523,6 +560,24 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::TrainSkill { dice } => format!(
             "the chosen skill trained at {dice}, or raised by {dice} if trained (rolled as the \
              rank is taken)"
+        ),
+        TalentEffect::StartingGold {
+            percent,
+            at_least,
+            at_most,
+        } => format!(
+            "at creation, gold coins: {percent} % of those you start with more, at least \
+             {at_least} and at most {at_most}"
+        ),
+        TalentEffect::StartingGems { min, max, level } => {
+            format!("at creation, {min} to {max} loose gems, as found at item level {level}")
+        }
+        TalentEffect::Heirloom {
+            min, max, level, ..
+        } => format!(
+            "at creation, your race's heirloom weapon (Heirlooms, below) with {min} to {max} \
+             affixes rolled at item level {level} (two: magic; more: rare), identified, readied \
+             in its own slot if that is free, else carried"
         ),
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \
