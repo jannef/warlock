@@ -81,6 +81,15 @@ impl World {
             Action::Heal(_) => ActionKind::Heal,
             Action::Use(active, _) | Action::UseAt(active, _) => active.cost(),
             Action::Gift(active, _) => active.cost(),
+            // A `use:ID` of a weapon active (no spell's id) is the action its energy names.
+            Action::Cast(id, _) | Action::Act(id, _)
+                if self.content.spell_id(id).is_none()
+                    && self.content.weapon_ability_id(id).is_some() =>
+            {
+                let id = self.content.weapon_ability_id(id)?;
+                self.content.weapon_ability(id).active?.action
+            }
+            Action::Act(..) => return None,
             Action::Cast(..) | Action::CastOn(..) => ActionKind::Cast,
             Action::Sell(_)
             | Action::Pay(None)

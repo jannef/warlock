@@ -1,0 +1,14 @@
+[[weapon_ability]]
+id = "feint"
+name = "Feint"
+description = "A false lead, then the true blow: the foe's blade and shield are not where they need to be."
+skills = ["duelist"]
+rank = 7
+kind = "active"
+aim = "direction"
+stamina = 2
+energy = { action = "melee", percent = 100 }
+systems = ["weapon_abilities", "styles", "stamina", "defence"]
+[weapon_ability.effect]
+kind = "ignore_defence"
+categories = ["parry", "shield"]

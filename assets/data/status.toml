@@ -28,10 +28,13 @@
 #              positive number raises the stat instead (-10 to 10)
 #   combat     what it adds to the fighting of whoever suffers it while it lasts, as a stance does
 #              (stances.toml): { to_hit = 1, damage = 2, dodge = 1, parry = 1 }, each -20 to 20,
-#              0 when left out; several add up (of Parry bonuses the highest counts)
+#              0 when left out; several add up (of Parry bonuses the highest counts); `shield`
+#              adds on top of a held shield's Defence (Walled)
 #   cost       what every action costs while it lasts, in percent of its price (50 to 1000;
 #              default 100): 150 is half again as slow. Several multiply. Below 100 it hastens,
 #              which only a spell's buff on its caster may do (Haste)
+#   attack_cost  what every attack costs while it lasts, in percent of its price, on top of
+#              `cost` (50 to 1000; default 100): 125 a quarter slower. Several multiply
 #   blocks     the actions refused while it lasts, by their ids in actions.toml: ["read"]; an
 #              ability that costs one cannot be used either; "cast" also refuses spending mana
 #   flees      true: a creature suffering it runs from the one who gave it (else the nearest foe
@@ -568,3 +571,18 @@ max = 1
 stacking = "refresh"
 cost = 50
 per_action = true
+
+# Walled, Shield wall's (a weapon active, #564): the shield set and the bearer behind it, Shield
+# +3 to Defence on top of the shield's own, every attack a quarter slower; five degrees, a degree
+# a turn.
+[[status]]
+id = "walled"
+name = "Walled"
+seen = "behind its shield"
+max = 5
+stacking = "refresh"
+eases = 6
+combat = { shield = 3 }
+attack_cost = 125
+start = "You set your shield and stand behind it."
+end = "You lower your shield."

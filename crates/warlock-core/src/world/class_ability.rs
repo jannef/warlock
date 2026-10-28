@@ -283,7 +283,7 @@ impl World {
 
     /// The hostiles beside the player, clockwise from the north, each with whether the player
     /// sees it.
-    fn hostiles_beside(&self) -> Vec<(ActorId, bool)> {
+    pub(super) fn hostiles_beside(&self) -> Vec<(ActorId, bool)> {
         let player = self.state.player;
         let here = self.player_pos();
         let level = &self.state.current().id;

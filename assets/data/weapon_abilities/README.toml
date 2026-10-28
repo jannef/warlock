@@ -10,10 +10,17 @@
 #   rank          the rank in one of them that teaches it (1 to 10); a weapon talent's ranks
 #                 (Stylist, Fencing) and Early mastery bring it sooner. A style's ability works
 #                 only while its holder fights in that style's grip
-#   kind          "triggered": it fires by itself, instantly and for free, on its `trigger`.
-#                 ("active", used from the abilities menu for stamina and time, comes later:
-#                 refused until then.) A triggered ability has no `aim`, `stamina`, `energy`, or
-#                 `cooldown`
+#   kind          "triggered": it fires by itself, instantly and for free, on its `trigger`; it
+#                 has no `aim`, `stamina`, `energy`, or `cooldown`. "active": used from the
+#                 abilities menu (`use:ID`), never a key of its own, paid with:
+#   aim           (active) what it asks: "nothing", "direction" (a blow), or "cell" (a shot)
+#   stamina       (active) the points of the stamina pool it costs (1 to 50), spent after its
+#                 own refusals (a refused use costs nothing)
+#   energy        (active) its time: { action = "melee", percent = 100 }, the percent (50 to
+#                 300) of the price of the action it is (melee: the blow's own price, weapon,
+#                 style, and stance counted; shoot: the shot's; wait), so none is instant
+#   cooldown      (active, optional) a status (no tick, eases) given as it is used, while which
+#                 it is unavailable; none in the catalogue: the stamina pool is the limiter
 #   trigger       what it fires on, one or a list: hit, critical, big_hit, kill (the actor's
 #                 blow, shot, or throw: the attack's skill and style count), struck, parried,
 #                 blocked, dodged (an attack on the actor: what it holds counts; parried,
@@ -46,3 +53,22 @@
 #                                 caster from the actor's cell, as the caster cast it (its own
 #                                 attack roll, no mana spent again), at most `per_turn` times a
 #                                 turn of the actor's; a reflected spell is never reflected again
+#                 An active's (each its blow's own message; the aim and action in brackets):
+#                 reach_blow      (direction, melee) `reach` (2 to 4): a blow at the first foe
+#                                 that far along the direction, the cells between empty and
+#                                 passable (a closed door blocks; nothing is sprung)
+#                 sure_critical   (direction, melee) the blow is a critical if it hits
+#                 ignore_defence  (direction, melee) `categories` (Defence categories: parry,
+#                                 shield, ...): the blow is rolled as if the foe had none there
+#                 ignore_protection  (direction, melee; or cell, shoot) Protection soaks none of
+#                                 the blow or shot
+#                 sweep           (nothing, melee) `to_hit`: a blow at every foe beside you,
+#                                 clockwise from the north (or the direction given), each at
+#                                 that to-hit; with a blade in each hand they take turns
+#                 pierce_shot     (cell, shoot) a hit flies on to the next on the shot's line
+#                 knockback       (direction, melee) `cells` (1), `bash` (a shield bash), and
+#                                 `status`: a foe it hits is driven back if the cell behind it is
+#                                 free (else it stays), then suffers the status
+#                 buff            (nothing, wait) `status`, `severity` degrees on yourself
+#                 double_dice     (direction, melee) `to_hit`: the blow's damage dice rolled
+#                                 twice (its bonus and riders once)

@@ -182,6 +182,7 @@ fn also(content: &Content, def: &StatusDef) -> String {
         ("damage", c.damage),
         ("Dodge", c.dodge),
         ("Parry", c.parry),
+        ("Shield (on top of a held shield's)", c.shield),
     ]
     .into_iter()
     .filter(|&(_, n)| n != 0)
@@ -192,6 +193,12 @@ fn also(content: &Content, def: &StatusDef) -> String {
     }
     if def.cost != 100 {
         parts.push(format!("every action takes {}% of the time", def.cost));
+    }
+    if def.attack_cost != 100 {
+        parts.push(format!(
+            "every attack takes {}% of the time",
+            def.attack_cost
+        ));
     }
     if !def.blocks.is_empty() {
         let doing: Vec<&str> = def.blocks.iter().map(|k| k.doing()).collect();

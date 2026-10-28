@@ -1,0 +1,8 @@
+[[talent]]
+id = "drillmaster"
+name = "Drillmaster"
+tree = "class"
+granted = true
+description = "Years of drill have made your weapon feats cheap in breath: each costs you less stamina."
+effects = [{ kind = "weapon_stamina", value = 1 }]
+systems = ["weapon_abilities", "stamina"]

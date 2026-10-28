@@ -100,7 +100,11 @@ impl Actor {
 
     /// The weapon abilities an attack drawing on `skills` brings (its weapon skill's and its
     /// style's), each once, in path order.
-    fn abilities_through(&self, content: &Content, skills: AttackSkills) -> Vec<WeaponAbilityId> {
+    pub(super) fn abilities_through(
+        &self,
+        content: &Content,
+        skills: AttackSkills,
+    ) -> Vec<WeaponAbilityId> {
         let mut found: Vec<WeaponAbilityId> = (skills.trained())
             .flat_map(|skill| {
                 let rank = self.ability_rank(content, skill);
@@ -137,10 +141,8 @@ impl World {
                     }
                 }
                 WeaponDoes::ParryMissiles => switches.parry_missiles = true,
-                WeaponDoes::Status { .. }
-                | WeaponDoes::ExtraDamage { .. }
-                | WeaponDoes::FreeShot
-                | WeaponDoes::ReflectSpell { .. } => {}
+                // Triggered effects fire, and actives are used: no switch.
+                _ => {}
             }
         }
         switches
@@ -227,7 +229,8 @@ impl World {
                 }
                 WeaponDoes::FreeShot => self.free_shot(by, fired, events),
                 WeaponDoes::ReflectSpell { per_turn } => self.reflect_ready(by, per_turn),
-                WeaponDoes::FreeBlow(_) | WeaponDoes::ParryMissiles => {}
+                // Switches are read where their events are; actives have no trigger.
+                _ => {}
             }
         }
     }
@@ -580,18 +583,20 @@ impl World {
     }
 
     /// The weapon abilities the player has learned, as a rank risen with marks says them:
-    /// "You have learned the deep cut."
-    /// "You have learned the deep cut.", each with the skill it is listed under.
+    /// "You have learned the deep cut.", each with the skill it is listed under and whether it
+    /// is an active.
     pub(super) fn learned(
         &self,
         before: &[(WeaponSkillId, WeaponAbilityId)],
-    ) -> Vec<(WeaponSkillId, String)> {
+    ) -> Vec<(WeaponSkillId, String, bool)> {
         let content = &self.content;
         (self.state.player().weapon_abilities(content).into_iter())
             .filter(|(_, id)| !before.iter().any(|(_, b)| b == id))
             .map(|(skill, id)| {
-                let name = content.weapon_ability(id).name.to_lowercase();
-                (skill, format!("You have learned the {name}."))
+                let ability = content.weapon_ability(id);
+                let name = ability.name.to_lowercase();
+                let line = format!("You have learned the {name}.");
+                (skill, line, ability.active.is_some())
             })
             .collect()
     }

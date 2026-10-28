@@ -6,7 +6,7 @@
 use super::text::table_text;
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, ExtraDice, FreeBlowKind, On, WeaponAbility, WeaponDoes, WeaponSkillId,
+    ActiveAim, Content, ExtraDice, FreeBlowKind, On, WeaponAbility, WeaponDoes, WeaponSkillId,
 };
 
 /// The weapon skills' abilities.
@@ -36,6 +36,29 @@ fn table(content: &Content, styles: bool) -> String {
         let taught: Vec<&str> = (a.skills.iter())
             .map(|&s| skills.skill(s).name.as_str())
             .collect();
+        if let Some(active) = a.active {
+            let aim = match active.aim {
+                ActiveAim::Nothing => "used (aimed at nothing)",
+                ActiveAim::Direction => "used (aimed in a direction)",
+                ActiveAim::Cell => "used (aimed at a cell)",
+            };
+            let action = match active.action.id() {
+                "melee" => "a blow",
+                "shoot" => "a shot",
+                "wait" => "a wait",
+                other => other,
+            };
+            let _ = writeln!(
+                out,
+                "| {} | {} | {rank} | active | {aim} | {} | {} | {}% of {action} |",
+                a.name,
+                taught.join(", "),
+                table_text(&does(content, a)),
+                active.stamina,
+                active.percent,
+            );
+            continue;
+        }
         let fires = if a.triggers.is_empty() {
             switch_trigger(a.effect)
         } else {
@@ -149,5 +172,56 @@ fn does(content: &Content, a: &WeaponAbility) -> String {
                  Parry or Dexterity"
             )
         }
+        WeaponDoes::ReachBlow { reach } => format!(
+            "a blow at the first foe within {reach} cells along the direction, every cell before \
+             it empty and passable (a closed door blocks; no trap is sprung); a foe beyond the \
+             first cell brings no free blows"
+        ),
+        WeaponDoes::SureCritical => {
+            "a blow that is a critical if it hits, with no confirmation roll".into()
+        }
+        WeaponDoes::IgnoreDefence { categories } => {
+            let names: Vec<&str> = categories.iter().map(|c| c.name()).collect();
+            format!(
+                "a blow rolled against the foe's Defence without its {} bonuses",
+                names.join(" and ")
+            )
+        }
+        WeaponDoes::IgnoreProtection => {
+            "Protection soaks none of it (the profile's penetration is above any Protection)".into()
+        }
+        WeaponDoes::Sweep { to_hit } => format!(
+            "a blow at every hostile beside you, clockwise from the north (or the direction \
+             given), each at {to_hit:+} to hit and with the free blows the end of an attack \
+             brings; with a weapon in each hand the main and off hand take turns"
+        ),
+        WeaponDoes::PierceShot => {
+            "a shot that, when it hits, flies on along its line to the next one there, which it \
+             attacks as a missed shot would (once)"
+                .into()
+        }
+        WeaponDoes::Knockback {
+            cells,
+            bash,
+            status,
+        } => {
+            let blow = if bash { "a shield bash" } else { "a blow" };
+            let then = status.map_or_else(String::new, |s| {
+                format!(", then {} (1 degree)", content.status(s).name)
+            });
+            format!(
+                "{blow}; a foe it hits is driven {cells} cell back if that cell is free \
+                 (walkable, no trap, no ice, nobody there){then}; into a wall or another it \
+                 stays, and the blow lands all the same"
+            )
+        }
+        WeaponDoes::Buff { status, severity } => {
+            let def = content.status(status);
+            format!("{} on you, {severity} degrees", def.name)
+        }
+        WeaponDoes::DoubleDice { to_hit } => format!(
+            "a blow at {to_hit:+} to hit whose damage dice are rolled twice (its bonus and riders \
+             once; it is no critical)"
+        ),
     }
 }

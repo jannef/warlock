@@ -330,6 +330,26 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A warrior's actives (#564): Vital strike, Shield rush, and Shield wall usable with their
+    // stamina; Lunge greyed, a long sword being no spear.
+    Case {
+        name: "abilities-menu-weapon-actives",
+        character: Some("human,male,warrior"),
+        kit: true,
+        actions: "rank:long_blades:9 rank:shield_block:9 rank:sword_and_board:7 rank:spears:9",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // Two shield walls later: the pool spent, the rows greyed short of breath.
+    Case {
+        name: "abilities-menu-weapon-actives-short",
+        character: Some("human,male,warrior"),
+        kit: true,
+        actions: "rank:long_blades:9 rank:shield_block:9 rank:sword_and_board:7 rank:spears:9 \
+                  use:shield_wall use:shield_wall",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
     Case {
         name: "abilities-menu-here",

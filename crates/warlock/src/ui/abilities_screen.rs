@@ -4,9 +4,10 @@
 //! `PerceptionView::abilities` (the one registry, `warlock_core::ability`) as the one paged list
 //! (`paged_list`), grouped by where each comes from under a header per source, lettered down each
 //! page from `a`. Each row has the ability's name and what it asks for ("in a direction"); a
-//! spell's says its tier and what it costs the player now first ("tier 2, 11 mana"). One that
-//! cannot be used now is greyed out with why ("you hold no shield"), and choosing it says so
-//! instead. The selected ability's one-line description shows below the list.
+//! spell's says its tier and what it costs the player now first ("tier 2, 11 mana"), an active
+//! weapon ability its stamina ("3 stamina, in a direction"; never its time). One that cannot be
+//! used now is greyed out with why ("you hold no shield"), and choosing it says so instead. The
+//! selected ability's one-line description shows below the list.
 //!
 //! A letter, or Enter on the `>` row, uses an ability: the menu closes and the ability asks for
 //! what it needs, as its action would (a direction in the message line), then is applied as that
@@ -81,6 +82,16 @@ impl AbilitiesScreen {
                                 Some(_) => format!("{head}: {state}").into(),
                                 None if state.is_empty() => head.into(),
                                 None => format!("{head}, aimed").into(),
+                            }
+                        }
+                        // An active weapon ability says what it costs the player in
+                        // stamina, first (never its time).
+                        Ability::Weapon(_, id) if content.weapon_ability(id).active.is_some() => {
+                            let head = format!("{} stamina", view.own_weapon_stamina(id));
+                            match own.unavailable {
+                                Some(_) => format!("{head}: {state}").into(),
+                                None if state.is_empty() => head.into(),
+                                None => format!("{head}, {state}").into(),
                             }
                         }
                         _ => state,

@@ -193,6 +193,7 @@ mod voice;
 mod volley;
 mod warp;
 mod weapon_ability;
+mod weapon_active;
 mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
@@ -521,6 +522,9 @@ pub struct World {
     fresh: Vec<(ActorId, StatusId)>,
     /// Spell reflection's counts a turn and the reflector chosen (not saved; `reflect.rs`).
     reflection: reflect::Reflections,
+    /// The player's weapon active under way (not saved): what its attack does beyond a plain
+    /// one, read where that is resolved (`weapon_active.rs`).
+    technique: weapon_active::Technique,
 }
 
 /// How much time an action took.
@@ -946,6 +950,7 @@ impl World {
             acting: Some(player),
             fresh: Vec::new(),
             reflection: Default::default(),
+            technique: weapon_active::Technique::default(),
         }
     }
 
@@ -1264,9 +1269,20 @@ impl World {
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
+            // A `use:ID` that names no spell but a weapon active is that active.
+            Action::Cast(id, at)
+                if self.content.spell_id(id).is_none()
+                    && self.content.weapon_ability_id(id).is_some() =>
+            {
+                let aim = at.map_or(weapon_active::Aimed::Nothing, weapon_active::Aimed::Cell);
+                return self.use_weapon(id, aim, events);
+            }
             Action::Cast(spell, at) => {
                 let at = at.map(crate::action::ReadTarget::Cell);
                 return self.cast_spell(spell, at, events);
+            }
+            Action::Act(id, dir) => {
+                return self.use_weapon(id, weapon_active::Aimed::Dir(*dir), events);
             }
             Action::CastOn(spell, on) => {
                 let on = Some(crate::action::ReadTarget::Item(*on));
@@ -1608,6 +1624,8 @@ mod variant_tests;
 mod voice_tests;
 #[cfg(test)]
 mod weapon_ability_tests;
+#[cfg(test)]
+mod weapon_active_tests;
 #[cfg(test)]
 mod weapon_skill_tests;
 #[cfg(test)]
