@@ -373,7 +373,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **From race and class** (§7): their `skills` are dice rolled when the character is made,
     after every other roll ("Character creation" above); a skill both train sums the two; the
     race's `class_skill` (humans, `2d4+4`) goes to one of the class's skills picked uniformly
-    from the same stream. A creature type's skills are fixed values. A scenario without a
+    from the same stream. The class's `optional_skills` (#662) each come with their chance, then
+    their dice, from their own stream (`character/optional-skills/<race>,<gender>,<class>`), so
+    no other roll moves; once, never re-rolled, and the chances are never shown (the wiki has
+    them). They are not the class's skills for a level-up roll's +1, and the human's extra class
+    skill never lands on one. A creature type's skills are fixed values. A scenario without a
     character gives a player trained in nothing.
   - **Values** run 0 to 999 (`MAX_VALUE`), 100 a master; there is no hard cap, but points come
     slowly past the soft cap (100). A value grows **only by level-up rolls** (below).

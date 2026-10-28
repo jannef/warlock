@@ -82,6 +82,8 @@ struct ClassSpec {
     skills: BTreeMap<String, Dice>,
     #[serde(default)]
     known_for: Vec<String>,
+    #[serde(default)]
+    optional_skills: BTreeMap<String, OptionalSpec>,
     #[serde(default = "two_rolls")]
     rolls: u8,
     #[serde(default)]
@@ -99,6 +101,28 @@ struct ClassSpec {
     #[serde(default)]
     abilities: Vec<AbilitySpec>,
     bonus_talents: Option<BonusSpec>,
+}
+
+/// `{ chance = 30, dice = "2d4" }`: a skill a new character of the class may start with.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct OptionalSpec {
+    chance: u8,
+    dice: Dice,
+}
+
+/// The chances an optional skill may have, in percent: 100 would be a guaranteed skill.
+pub const OPTIONAL_CHANCE: std::ops::RangeInclusive<u8> = 1..=99;
+
+/// A skill a class's new character may start with (spec §8 "Skills", ADOM-like): rolled once
+/// when the character is made.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OptionalSkill {
+    pub skill: SkillId,
+    /// The chance, in percent, that a new character starts with it trained.
+    pub chance: u8,
+    /// Its starting value, rolled when it comes.
+    pub dice: Dice,
 }
 
 /// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent.
@@ -159,6 +183,9 @@ pub struct ClassDef {
     /// The skills it is known for (spec §8 "Skills"), of [`ClassDef::skills`], in skill order:
     /// a level-up roll on one throws the die one step up the ladder.
     pub known_for: Vec<SkillId>,
+    /// The skills a new character may start with besides [`ClassDef::skills`], each by its
+    /// chance (spec §8 "Skills"), in skill order; none of them one of the class's skills.
+    pub optional_skills: Vec<OptionalSkill>,
     /// The skill rolls each level gives (spec §8 "Skills"), before the race's and
     /// Intelligence's.
     pub rolls: u8,
@@ -295,6 +322,30 @@ impl ClassDef {
             known_for.push(skill);
         }
         known_for.sort();
+        let mut optional_skills = Vec::with_capacity(spec.optional_skills.len());
+        for (name, o) in &spec.optional_skills {
+            let at = |m: String| err(format!("class `{id}`: optional_skills: {m}"));
+            let grant =
+                skills::grants(&BTreeMap::from([(name.clone(), o.dice)]), skill_id).map_err(at)?;
+            let skill = grant[0].0;
+            if skills.iter().any(|&(s, _)| s == skill) {
+                return Err(at(format!("`{name}` is one of the class's skills")));
+            }
+            if !OPTIONAL_CHANCE.contains(&o.chance) {
+                return Err(at(format!(
+                    "{name}: chance {} is out of range ({} to {} percent)",
+                    o.chance,
+                    OPTIONAL_CHANCE.start(),
+                    OPTIONAL_CHANCE.end()
+                )));
+            }
+            optional_skills.push(OptionalSkill {
+                skill,
+                chance: o.chance,
+                dice: o.dice,
+            });
+        }
+        optional_skills.sort_by_key(|o| o.skill);
         if spec.rolls > MAX_ROLLS {
             return Err(err(format!(
                 "class `{id}`: rolls {} is more than {MAX_ROLLS}",
@@ -375,6 +426,7 @@ impl ClassDef {
             alignment,
             skills,
             known_for,
+            optional_skills,
             rolls: spec.rolls,
             creation_talents: spec.creation_talents,
             weapon_skills,
@@ -653,6 +705,19 @@ mod tests {
         assert!(wizard.trains(SkillId(1)));
         let text = format!("{ONE}experience = 125\n");
         assert_eq!(parse(&text).expect("valid")[0].experience, 125);
+        assert!(classes[0].optional_skills.is_empty(), "unless named");
+        let text = format!(
+            "{ONE}skills = {{ spellcraft = \"2d6+10\" }}\n\
+             optional_skills = {{ knowledge = {{ chance = 30, dice = \"2d4\" }} }}\n"
+        );
+        assert_eq!(
+            parse(&text).expect("valid")[0].optional_skills,
+            [OptionalSkill {
+                skill: SkillId(1),
+                chance: 30,
+                dice: "2d4".parse().expect("dice"),
+            }]
+        );
         let text = format!("{ONE}skills = {{ spellcraft = \"2d6+10\" }}\n");
         let wizard = parse(&text).expect("valid");
         assert_eq!(
@@ -710,6 +775,29 @@ mod tests {
                 "`spellcraft` twice",
             ),
             (format!("{ONE}rolls = 11\n"), "rolls 11 is more than 10"),
+            (
+                format!(
+                    "{ONE}skills = {{ spellcraft = 1 }}\n\
+                     optional_skills = {{ spellcraft = {{ chance = 20, dice = \"2d4\" }} }}\n"
+                ),
+                "optional_skills: `spellcraft` is one of the class's skills",
+            ),
+            (
+                format!("{ONE}optional_skills = {{ knowledge = {{ chance = 100, dice = 3 }} }}\n"),
+                "optional_skills: knowledge: chance 100 is out of range (1 to 99 percent)",
+            ),
+            (
+                format!("{ONE}optional_skills = {{ knowledge = {{ chance = 0, dice = 3 }} }}\n"),
+                "chance 0 is out of range",
+            ),
+            (
+                format!("{ONE}optional_skills = {{ necromancy = {{ chance = 5, dice = 3 }} }}\n"),
+                "optional_skills: unknown skill `necromancy`",
+            ),
+            (
+                format!("{ONE}optional_skills = {{ knowledge = {{ chance = 5, dice = 101 }} }}\n"),
+                "optional_skills: knowledge +101 is out of range",
+            ),
             (
                 format!("{ONE}skills = {{ necromancy = 5 }}\n"),
                 "class `wizard`: skills: unknown skill `necromancy`",

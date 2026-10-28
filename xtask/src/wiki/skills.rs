@@ -198,9 +198,19 @@ pub(super) fn skill_grants(content: &Content) -> String {
         }
         let _ = writeln!(out, "| {} | {trains} |", r.name);
     }
-    out.push_str("\n| Class | Trains |\n|---|---|\n");
+    out.push_str("\n| Class | Trains | May start with |\n|---|---|---|\n");
     for c in content.classes() {
-        let _ = writeln!(out, "| {} | {} |", c.name, list(&c.skills));
+        let optional: Vec<String> = (c.optional_skills.iter())
+            .map(|o| {
+                let name = skill_name(content, o.skill);
+                format!("{name} `{}` ({} %)", o.dice, o.chance)
+            })
+            .collect();
+        let optional = match optional.is_empty() {
+            true => "-".into(),
+            false => optional.join(", "),
+        };
+        let _ = writeln!(out, "| {} | {} | {optional} |", c.name, list(&c.skills));
     }
     out
 }
