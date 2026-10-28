@@ -9,8 +9,11 @@
 //! without chests. Draws: the chance; if it comes, the count; then per chest its cell, the lock
 //! (`chance(locked)`), the trap (`chance(trapped)`, then one draw for which of the branch's
 //! traps that fit a fixture, made even when none fits, so a branch without traps draws the
-//! same), its contents, and last the mimic draw (`chance(mimic)`; a later slice swaps the chest
-//! for a mimic on it, so the stream does not move then).
+//! same), its contents, and last the mimic draw (`chance(mimic)`): a mimic of the floor's item
+//! level stands there instead (spec §8 "Mimics"; `docs/dev/creatures/mimics.md`), disguised,
+//! carrying exactly what the chest would have held; the lock and the trap drawn for it are
+//! dropped (a mimic is neither), and nothing more is drawn, so the stream is the same either
+//! way.
 //!
 //! A chest's cell is plain floor whose eight neighbours are all walkable and none a door, so a
 //! chest never stands in a doorway or a corridor and never cuts a room apart; at least
@@ -20,8 +23,9 @@
 
 use super::{Palette, patrolled};
 use crate::chest::{Chest, ChestState, roll_contents};
-use crate::content::{Content, DungeonDef, LevelTemplate, TerrainId, Trap, TrapId};
+use crate::content::{Content, CreatureSpawn, DungeonDef, LevelTemplate, TerrainId, Trap, TrapId};
 use crate::door::Lock;
+use crate::equipment::Equipment;
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::magic::loot::Luck;
@@ -90,9 +94,26 @@ pub(super) fn lay(
         }
     }
     let holds = roll_contents(content, rng, level, luck);
-    // The mimic draw (docs/design/chests-and-treasure.md §5.3): made now so the stream is the
-    // same once mimics stand in for chests (slice C4); until then every chest is one.
-    let _mimic = rng.chance(u32::from(band.mimic));
+    // The mimic draw (docs/design/chests-and-treasure.md §5.3): a mimic of the floor's level
+    // stands in for the chest, carrying what it would have held.
+    let mimic = rng.chance(u32::from(band.mimic));
+    if let Some(creature) = content.mimic_at(level).filter(|_| mimic) {
+        template.locks.remove(&at);
+        template.traps.remove(&at);
+        template.creatures.push(CreatureSpawn {
+            creature,
+            faction: None,
+            alignment: None,
+            npc: None,
+            pos: at,
+            route: Vec::new(),
+            carry: holds,
+            equipment: Equipment::default(),
+            rolls_gear: false,
+            asleep: false,
+        });
+        return;
+    }
     template.terrain.set(at, shut);
     template.chests.insert(at, Chest { level, holds });
 }

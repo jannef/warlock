@@ -26,7 +26,8 @@ vault. Each dungeon says how often:
 
 A chest found on a floor is of that floor's level. Many come locked, and the deeper the more
 often; some are trapped, with one of the traps that dungeon hides on its floors (a dungeon
-without traps has no trapped chests):
+without traps has no trapped chests); and a few are no chest at all but a
+[mimic](mimics.md), never locked or trapped:
 
 {{#include generated/chest-odds.md}}
 
