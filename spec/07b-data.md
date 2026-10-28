@@ -171,14 +171,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ark), `description` (look mode adds it), `fg` (its colour on the map, over its terrain's),
   `from` (the least level of the band: the first from 1, rising), `sturdiness` (a kick breaks it
   with a chance of Strength in this, 1 to 100: 20 to 70), `hardness` (a blast must beat it, 1 to
-  10000: 200 to 3000), and, read by the generated chests, mimics, and loot of later slices and
-  checked now, `locked`, `trapped`, `mimic` (percents of generated chests), `hold` (a mimic's
-  hold chance), and `loot = { items, loot_level, magic, rare, gold = { dice, each }, gems }`
+  10000: 200 to 3000), and, read by the generated chests and loot of later slices and checked
+  now, `locked`, `trapped`, `mimic` (percents of generated chests), `hold` (the chance a mimic of
+  the band holds on a hit: its slam's, §8 "Mimics"), and `loot = { items, loot_level, magic, rare, gold = { dice, each }, gems }`
   (dice; `rare` counts in `magic`). `[smash] destroyed` (percent of each stack destroyed when a
   chest is kicked open or blown apart: 50). The chest terrains are `data/terrain.toml`'s with a
   `chest` field (`"shut"`, `"open"`, `"smashed"`, one terrain each; a shut one not walkable,
   the others walkable; none a door, stairs, or breakable wall; a shut one may have a
   `toggle_noise`, its creak).
+- **Mimics** (`data/mimics.toml`, optional; needs `data/chests.toml`; §8 "Mimics"): `[family]`
+  (`id`, what quests and first kills name the family by; `levels = [least, most]`, one type a
+  level; `stats`, what it adds to the base stats; `hp_factor`; `dice_steps`; `hide`, the natural
+  armour's name), `[creature]` (any creature field every member shares, but each member's own:
+  `id`, `name`, `fg`, `weight`, `stats`, `base_hp`, `level`, `xp`, `natural`; `attack` without
+  its `damage`), and `[[band]]`s, one per chest band with the same `from`: `id`, `name`, `from`,
+  `fg`, `weight` (grams). A level legend's `mimic = true` beside `chest` places the member of the
+  chest's level on the entry's walkable terrain (no chest terrain), carrying its `objects`; it
+  refuses `locked`, `lock`, `trap`, `creature`, and `carry` beside it.
 - **Searching** (`data/search.toml`, optional; without it the numbers below; §8 "Searching"):
   `passive_penalty` (what noticing in passing loses against searching, 0 to 20; 4), `turns` (how
   long searching for a while lasts at most, 1 to 100; 10), and `secret_door` (a secret door's

@@ -59,6 +59,7 @@
 - [Creatures](creatures.md)
   - [Creatures in numbers](creature-numbers.md)
   - [Animated objects](animated.md)
+  - [Mimics](mimics.md)
   - [People and talk](npcs.md)
   - [Quests](quests.md)
     - [The Weyfarers' Gilde](guild.md)

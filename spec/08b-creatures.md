@@ -172,6 +172,39 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Their homes (#487) are two special rooms with populations of their own (§7 "Special rooms"):
   the **armoury** (blades, hollow armour, panoplies, among weapon racks) and the **workshop**
   (household things, among workbenches); the chromatic look of composites follows (#463).
+- **Mimics** (`warlock-core/src/content/mimic.rs`, the types; `world/mimic.rs`, the rules;
+  #616, `docs/design/chests-and-treasure.md` §5): a thing shaped as a chest. A **generated
+  family** (`data/mimics.toml`, §7 "Data"), one creature type a level, `mimic_1` to `mimic_60`,
+  numbered after the animated families and before the campaigns' types; a level's band (the last
+  whose `from` it reaches) names it, ten bands matching the chest bands one to one: mimicling,
+  young mimic, mimic, old mimic, greater mimic, elder mimic, hoary mimic, ancient mimic, primeval
+  mimic, eldest mimic. Numbers by level from the roster's formulas for a brute (Toughness +5,
+  `base_hp` 4 × L, the slam one dice step up), the hide's Protection (L − 10) ÷ 8 ("woody hide"),
+  XP by the guideline; faction **vermin**, tag `mimic` (a kill quest's `mimic` or `tag:mimic`
+  counts the family), speed 800, darkvision 6, `budge = "never"`, `stray = false` and in no
+  population, immune to poison and sleep, a corpse that makes the eater sick. Its slam
+  (bludgeoning) holds with its chest band's `hold` chance against a grip of 12 + L ÷ 5. It comes
+  **only** through a chest: a generated chest is one with its band's `mimic` chance (§8
+  "Chests"; the swap draws nothing more), of the floor's item level, carrying exactly what the
+  chest would have held (it drops it whole when it dies); a legend's `mimic = true` beside
+  `chest` (§7); the dev `spawn` as any type. Every mimic is placed **disguised**: the status
+  `disguised` (`hides`), saved as any status. Disguised, it takes no turn (as a sleeper), is
+  unaware of everyone (a sneak attack lands), no creature targets it, and the perception
+  snapshot shows a shut chest of its band in its place and never it (not among the seen actors,
+  `sees_actors_at` false there, its cell's terrain the shut chest's in view and in memory, look
+  mode the chest's words); the spawn cap counts it. It is **found out** (`World::reveal_mimic`;
+  the status removed, a line of its own when the cell is in sight, never again disguised) by a
+  **touch** (a step into it, `open`, `kick`, or `pick` at it: the action refused with no time,
+  "The coffer lurches: it is a young mimic!", and the mimic's free blow at the player at once,
+  with its hold), by **Knock** at it (the same line, the mana spent, no blow), by **a blow or
+  any harm** (an attack at it, after the sneak attack is decided; a missile stops at it; a burst
+  or a trap: "The coffer shudders: ..."), and by **searching** (`Hidden::Mimic`, difficulty
+  12 + L ÷ 5 plus the branch's `hidden_per_depth`; in passing only for those who notice
+  everything: "You notice the coffer breathing: a young mimic!"). Stealing from one: "It has no
+  pockets." Talents (system `mimics`): **Mimic-wise** (scholar; Spot 10 or Intelligence 12):
+  within two cells a disguised mimic is shown as itself (the snapshot does not hide it; the
+  rules still see it disguised); **Slick** (finesse; Dexterity 13): a mimic's grip never holds
+  them (`World::afflict`).
 - **Natural Protection by body and level** (#563, `docs/design/combat-progression.md` §8): a
   creature type's `natural.protection` is set by its **body**, which the hide's `name` decides,
   and its level L (rounded down): none (insubstantial form, rushing wind, crackling form,

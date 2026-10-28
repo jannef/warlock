@@ -158,6 +158,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rooms"). A creature suffering a status that `sleeps` takes no turn and is unaware of
     everyone; it has no easing (time never wakes it), and ends as noise loud enough, a blow, or
     a neighbour's cry wakes the sleeper. It shows on creatures ("asleep").
+  - **Disguised** (#616; `hides = true`): a mimic is placed with it (§8 "Mimics"). A creature
+    suffering a status that `hides` takes no turn, is unaware of everyone, is targeted by no
+    creature, and is a shut chest to the player's perception; nothing but being found out ends
+    it, and nothing is said of the status itself. It never shows (no `seen`).
   - **Shown**: the player's own by name (status bar, character screen, the `stats` dump layer),
     those with a `seen` word on creatures the player sees (look mode); never a severity or a
     timer. Effects are part of the world state (saved, covered by the state hash).
