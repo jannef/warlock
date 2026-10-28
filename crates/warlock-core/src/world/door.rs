@@ -36,6 +36,8 @@ impl World {
         let def = terrain.map(|t| self.content.terrain(t));
         match def {
             Some(def) if def.is_closed_door() => {}
+            // A shut chest opens as a door does (spec §8 "Chests").
+            Some(def) if def.is_shut_chest() => return self.open_chest(p, events),
             Some(def) if def.is_open_door() => {
                 self.say("That door is already open.");
                 return Spent::Nothing;
@@ -126,6 +128,7 @@ impl World {
         let def = level.terrain.get(at).map(|t| self.content.terrain(*t));
         match def {
             Some(def) if def.is_closed_door() => self.kick_door(at, events),
+            Some(def) if def.is_shut_chest() => self.kick_chest(at, events),
             Some(def) if !def.walkable => {
                 let name = def.name.clone();
                 self.say(format!("Kicking the {name} would only hurt your foot."));

@@ -226,6 +226,7 @@ fn every_caster_has_its_table_by_level_sixty() {
             "Ray of frost",
             "Arcane training",
             "Magic missile",
+            "Knock",
             "Arcane lore",
             "Spell recall",
             "Burning hands"

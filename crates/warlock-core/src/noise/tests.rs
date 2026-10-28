@@ -301,7 +301,10 @@ fn noise_fields_are_validated() {
         CREATURES,
     )
     .unwrap_err();
-    assert!(err.contains("only doors have a `toggle_noise`"), "{err}");
+    assert!(
+        err.contains("only doors and shut chests have a `toggle_noise`"),
+        "{err}"
+    );
 }
 
 #[test]

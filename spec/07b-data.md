@@ -165,6 +165,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   of its `glyph`, one per cell picked by a hash of its position (a space for none; look mode
   and dumps use `glyph`). The calendar's month names are
   `data/calendar.toml` (exactly 12; without the file months are numbered).
+- **Chests** (`data/chests.toml`, optional; without it a chest has no band and is named by its
+  terrain; §8 "Chests"): ten `[[band]]`s, least first: `id`, `name` (what look mode and messages
+  call it: coffer, chest, hutch, banded chest, strongbox, kist, ark, forcer, silvered ark, gilded
+  ark), `description` (look mode adds it), `fg` (its colour on the map, over its terrain's),
+  `from` (the least level of the band: the first from 1, rising), `sturdiness` (a kick breaks it
+  with a chance of Strength in this, 1 to 100: 20 to 70), `hardness` (a blast must beat it, 1 to
+  10000: 200 to 3000), and, read by the generated chests, mimics, and loot of later slices and
+  checked now, `locked`, `trapped`, `mimic` (percents of generated chests), `hold` (a mimic's
+  hold chance), and `loot = { items, loot_level, magic, rare, gold = { dice, each }, gems }`
+  (dice; `rare` counts in `magic`). `[smash] destroyed` (percent of each stack destroyed when a
+  chest is kicked open or blown apart: 50). The chest terrains are `data/terrain.toml`'s with a
+  `chest` field (`"shut"`, `"open"`, `"smashed"`, one terrain each; a shut one not walkable,
+  the others walkable; none a door, stairs, or breakable wall; a shut one may have a
+  `toggle_noise`, its creak).
 - **Searching** (`data/search.toml`, optional; without it the numbers below; §8 "Searching"):
   `passive_penalty` (what noticing in passing loses against searching, 0 to 20; 4), `turns` (how
   long searching for a while lasts at most, 1 to 100; 10), and `secret_door` (a secret door's

@@ -90,6 +90,9 @@ Press `k` and a direction to kick. A kick takes a normal action (6 seconds).
 Your Strength never shows as a bonus anywhere in the game: these chances follow your Strength
 score itself (see [Stats](stats.md)).
 
+Chests are kicked open the same way, and their locks are picked and opened as a door's: see
+[Chests](chests.md).
+
 ## Secret doors
 
 Some doors are **secret**: they look like the wall around them, and are that wall, until you find

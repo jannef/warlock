@@ -506,6 +506,7 @@ pub fn generate_for(
             objects: canvas.objects,
             traps: canvas.traps,
             locks: canvas.locks,
+            chests: BTreeMap::new(),
             secrets: canvas.secrets,
             hidden: BTreeMap::new(),
             places: BTreeMap::new(),

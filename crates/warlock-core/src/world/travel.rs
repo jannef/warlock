@@ -50,11 +50,12 @@ impl World {
     }
 
     /// Changes terrain on the current level and invalidates light masks it may affect. A lock
-    /// stays only on a closed door, a door's trap goes with the door (kicked in), and a secret
+    /// stays only on a closed door or a shut chest, a door's trap goes with the door (kicked in), and a secret
     /// door is gone with the wall it looked like.
     pub(super) fn set_terrain(&mut self, p: Pos, terrain: TerrainId) {
         let def = self.content.terrain(terrain);
-        let (closed_door, door) = (def.is_closed_door(), def.is_door());
+        // A lock stays on a closed door or a shut chest (spec §8 "Chests").
+        let (closed_door, door) = (def.is_closed_door() || def.is_shut_chest(), def.is_door());
         let was_door = self.state.current().is_door(&self.content, p);
         self.reshaped += 1;
         let level = self.state.current_mut();
@@ -112,7 +113,7 @@ impl World {
         {
             return self.strike_at(other.id, true, events);
         }
-        if def.is_closed_door() {
+        if def.is_closed_door() || def.is_shut_chest() {
             return self.open_door(to, events);
         }
         if !def.walkable {
@@ -502,10 +503,14 @@ pub(super) fn instantiate_level(
     let id = template.id.as_str();
     let mut level = LevelState::from_template(template, content, state.time);
     crate::rot::made_at(level.objects.values_mut().flatten(), content, state.time);
+    // What the chests hold is made now too (spec §8 "Chests").
+    let held = level.chests.values_mut().flat_map(|c| c.holds.iter_mut());
+    crate::rot::made_at(held, content, state.time);
     // Jeweller (spec §8 "Class abilities"): the loose gems of a level made now are cut finer.
     let finer = (state.actors.get(&state.player)).map_or(0, |p| p.talent_mods(content).gem_cut);
     if finer > 0 {
-        for stack in level.objects.values_mut().flatten() {
+        let held = level.chests.values_mut().flat_map(|c| c.holds.iter_mut());
+        for stack in level.objects.values_mut().flatten().chain(held) {
             crate::gem::cut_finer(content, stack, finer);
         }
     }

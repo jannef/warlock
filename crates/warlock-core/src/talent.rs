@@ -382,6 +382,8 @@ pub struct TalentMods {
     pub spawn_every_percent: i32,
     /// It knows a special room's nature from a glimpse (Sense of place).
     pub sense_of_place: bool,
+    /// It tells a locked chest from an unlocked one at a glance (Chest-wise).
+    pub chest_wise: bool,
     /// A forgotten altar's lean counts double when it agrees, and not at all when it opposes
     /// (Devout).
     pub devout: bool,
@@ -478,6 +480,9 @@ pub struct TalentMods {
     pub door_kick: i32,
     /// Percent louder its door kicks are (negative: quieter).
     pub kick_noise_percent: i32,
+    /// Percent more often what a chest it kicks open holds breaks (negative: less; Deft
+    /// breaker).
+    pub smash_destroy_percent: i32,
     /// Percent more work a turn of digging does.
     pub dig_percent: i32,
     /// Percent more its blows with a two-handed weapon cost (negative: cheaper).
@@ -675,6 +680,8 @@ pub struct TalentMods {
     pub virtuoso: Option<StatusId>,
     /// The active Consecrate, if it has it.
     pub consecrate: Option<Consecrate>,
+    /// The active Knock, if it has it.
+    pub knock: Option<Knock>,
 }
 
 /// A once-in-a-life reprieve from death (Miracle, Hag's bargain): what it is called in
@@ -725,6 +732,12 @@ pub struct HoundsBay {
 pub struct Consecrate {
     pub mana: i32,
     pub time: crate::time::Duration,
+}
+
+/// The active Knock (spec §8 "Class abilities", "Chests"): its mana.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Knock {
+    pub mana: i32,
 }
 
 /// The active Inspire (spec §8 "Class abilities"): the status it gives, its mana, and what it
@@ -981,6 +994,7 @@ impl TalentMods {
             A::MasterThief => self.finisher,
             A::Inspire => self.inspire.is_some(),
             A::Consecrate => self.consecrate.is_some(),
+            A::Knock => self.knock.is_some(),
         }
     }
 
@@ -1237,6 +1251,7 @@ impl TalentMods {
             TalentEffect::DangerSense { value } => self.danger_sense += value,
             TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
             TalentEffect::SenseOfPlace => self.sense_of_place = true,
+            TalentEffect::ChestWise => self.chest_wise = true,
             TalentEffect::Devout => self.devout = true,
             TalentEffect::Penitent => self.penitent = true,
             TalentEffect::RoomPacePercent { value } => self.room_pace_percent += value,
@@ -1390,6 +1405,7 @@ impl TalentMods {
             }
             TalentEffect::DoorKick { value } => self.door_kick += value,
             TalentEffect::KickNoisePercent { value } => self.kick_noise_percent += value,
+            TalentEffect::SmashDestroyPercent { value } => self.smash_destroy_percent += value,
             TalentEffect::DigPercent { value } => self.dig_percent += value,
             TalentEffect::TwoHandedPrice { value } => self.two_handed_price += value,
             TalentEffect::Grip { status } => {
@@ -1835,6 +1851,7 @@ impl TalentMods {
                     self.consecrate = Some(Consecrate { mana, time });
                 }
             }
+            TalentEffect::Knock { mana } => self.knock = Some(Knock { mana }),
         }
     }
 

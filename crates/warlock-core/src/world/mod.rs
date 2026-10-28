@@ -96,6 +96,7 @@ mod carry;
 mod cast;
 mod caster;
 mod caster_level;
+mod chest;
 mod class;
 mod class_ability;
 mod collapse;
@@ -136,6 +137,7 @@ mod hunger;
 mod hurl;
 mod ice;
 mod incorporeal;
+mod knock;
 mod lantern;
 mod learn;
 mod level;
@@ -1377,6 +1379,8 @@ mod ceaptun_quest_tests;
 mod ceaptun_tests;
 #[cfg(test)]
 mod character_tests;
+#[cfg(test)]
+mod chest_tests;
 #[cfg(test)]
 mod class_active_tests;
 #[cfg(test)]

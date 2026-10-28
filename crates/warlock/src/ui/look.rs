@@ -26,12 +26,19 @@ pub fn describe(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
         Some(note) => format!("{text} {note}"),
         None => text,
     };
-    // Terrain with a description of its own (a forgotten altar) adds it after.
+    // Terrain with a description of its own (a forgotten altar) adds it after; a chest its
+    // band's (spec §8 "Chests").
     let terrain = match view.cell(p) {
         CellView::Visible(t) | CellView::Remembered(t) => Some(t),
         CellView::Unknown => None,
     };
-    match terrain.and_then(|t| view.content().terrain(t).description.as_deref()) {
+    let content = view.content();
+    let band = (view.chest_at(p)).and_then(|c| content.chests().bands.get(c.band));
+    let described = match band {
+        Some(band) => Some(band.description.as_str()),
+        None => terrain.and_then(|t| content.terrain(t).description.as_deref()),
+    };
+    match described {
         Some(description) => format!("{text} {description}"),
         None => text,
     }
@@ -43,11 +50,17 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     // Stairs and locations name where they lead: "a staircase down, leading to The Depths 1";
     // a named place its name: "a volcano, Fyrbeorg";
     // a wall in sight that was dug into says so: "a stone wall, partly dug".
+    // A chest goes by its band: "a coffer", "an open coffer", "a locked coffer" (Chest-wise).
+    let chest = view.chest_at(p);
     let named = |t| {
         let def = content.terrain(t);
-        let name = match view.blood(p).filter(|_| blood) {
-            Some(stain) => format!("{} {}", stain.word(!def.transparent), def.name),
+        let def_name = match chest {
+            Some(chest) => chest.name(content.chests(), &def.name),
             None => def.name.clone(),
+        };
+        let name = match view.blood(p).filter(|_| blood) {
+            Some(stain) => format!("{} {def_name}", stain.word(!def.transparent)),
+            None => def_name,
         };
         match view.leads_to(p) {
             Some(to) => format!("{name}, leading to {to}"),
@@ -367,6 +380,42 @@ mod tests {
             "A spent altar. An altar of worn stone, cold and dark. Whatever listened here has \
              stopped.",
             "eight prayers at one altar spend it, but for one chance in 256"
+        );
+    }
+
+    /// A chest goes by its band, with the band's description; open, it is the pile's ground
+    /// (spec §8 "Chests").
+    #[test]
+    fn a_chest_goes_by_its_band() {
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert(
+            "levels/look_chests.toml",
+            "name = \"Chests\"\nambient = [255, 255, 255, 0]\nitem_level = 9\nmap = '''\n\
+             #####\n#C.K#\n#@..#\n#####\n'''\n[legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\
+             \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+             \"C\" = { terrain = \"chest\", chest = \"coffer\", objects = [\"dagger\"] }\n\
+             \"K\" = { terrain = \"chest\", locked = true }\n",
+        );
+        files.insert(
+            "scenarios/look_chests.toml",
+            "name = \"C\"\nstart_level = \"look_chests\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let mut w = World::new(content, "look_chests", None).expect("world");
+        let (coffer, banded) = (Pos::new(1, 1), Pos::new(3, 1));
+        assert_eq!(
+            describe(&w.perception(), coffer, true),
+            "A coffer. A small wooden box with an iron hasp."
+        );
+        assert_eq!(
+            describe(&w.perception(), banded, true),
+            "A banded chest. A heavy chest banded with black iron, its lid studded with nails.",
+            "the level's own: 9; whether it is locked is not shown"
+        );
+        w.apply(&Action::Open(Dir::N));
+        assert_eq!(
+            describe(&w.perception(), coffer, true),
+            "A dagger (+0 hit, 1d4, range 5), on open coffer. A small wooden box with an iron hasp."
         );
     }
 

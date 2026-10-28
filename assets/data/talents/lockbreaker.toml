@@ -2,7 +2,7 @@
 id = "lockbreaker"
 name = "Lockbreaker"
 tree = "delver"
-description = "Your door kicks are mightier, and quieter."
+description = "Your kicks at doors and chests are mightier, and quieter."
 needs = { stats = { strength = 12 } }
 effects = [{ kind = "door_kick", value = 6 }, { kind = "kick_noise_percent", value = -50 }]
-systems = ["doors"]
+systems = ["doors", "chests"]

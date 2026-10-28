@@ -413,12 +413,14 @@ fn draw_map(
                 .map(|s| (content.object(s.object).glyph, view.lore().fg(s)));
             let trap = view.trap(p).map(|t| content.trap(t));
             let stain = view.blood(p).filter(|_| show_blood);
+            // A chest takes its band's colour (spec §8 "Chests").
+            let band = (view.chest_at(p)).and_then(|c| content.chests().bands.get(c.band));
             let glyph = |t| {
                 let def = content.terrain(t);
                 let (ch, fg) = match (trap, top) {
                     (Some(trap), _) => (trap.glyph, trap.fg),
                     (None, Some(o)) => o,
-                    (None, None) => (def.glyph_at(p), def.fg),
+                    (None, None) => (def.glyph_at(p), band.map_or(def.fg, |b| b.fg)),
                 };
                 // An object or a trap lies in the blood: only the background takes it.
                 let over = top.is_some() || trap.is_some();

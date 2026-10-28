@@ -13,6 +13,7 @@ pub mod animated;
 mod animated_tests;
 mod calendar;
 mod campaign;
+mod chest;
 mod class;
 mod creature;
 #[cfg(test)]
@@ -146,6 +147,7 @@ pub use anim::GlyphAnim;
 pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Line, Numbers, Ramp, SlotLine};
 pub use calendar::Calendar;
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
+pub use chest::{ChestBand, ChestGold, ChestLoot, ChestRules};
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
 pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
@@ -574,6 +576,8 @@ pub struct Content {
     /// Equipment slots, in display order.
     slots: Vec<SlotDef>,
     /// Trap types, in file order.
+    /// The chest bands (`data/chests.toml`; none without it).
+    chests: ChestRules,
     traps: Vec<TrapDef>,
     trap_ids: BTreeMap<String, TrapId>,
     /// The chance of stepping onto a known trap unharmed (`[avoid]` in `data/traps.toml`).
@@ -712,6 +716,7 @@ impl Content {
             gems: None,
             uniques: Uniques::default(),
             slots: Vec::new(),
+            chests: ChestRules::default(),
             traps: Vec::new(),
             trap_ids: BTreeMap::new(),
             trap_avoid: TrapAvoid::default(),
@@ -967,6 +972,10 @@ impl Content {
             let (traps, ids, avoid) = trap::parse(path, text, &content)?;
             (content.traps, content.trap_ids, content.trap_avoid) = (traps, ids, avoid);
         }
+        let path = "data/chests.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.chests = ChestRules::parse(path, text)?;
+        }
         // Learning spells (spec §8 "Spells"): mishaps name statuses and creatures.
         let path = "data/study.toml";
         if let Some(text) = files.get_optional(path) {
@@ -1205,6 +1214,7 @@ impl Content {
                     (Some(to), Some(sturdiness)) => Some((to, sturdiness)),
                     _ => None,
                 },
+                chest: spec.chest,
                 stairs: spec.stairs,
                 light,
                 bounce: spec.bounce,
@@ -1260,6 +1270,7 @@ impl Content {
         for def in &defs {
             check_breaking(def, &defs).map_err(|m| err(format!("terrain `{}`: {m}", def.id)))?;
         }
+        check_chests(&defs).map_err(err)?;
         if let Some(def) = defs
             .iter()
             .find(|d| d.local.is_some_and(|l| !defs[usize::from(l.0)].walkable))
@@ -2778,6 +2789,18 @@ impl Content {
         &self.traps[usize::from(id.0)]
     }
 
+    /// The chest bands (spec §7 "Chests"; empty without `data/chests.toml`).
+    pub fn chests(&self) -> &ChestRules {
+        &self.chests
+    }
+
+    /// The terrain of a chest in `state` (the one whose `chest` field says so), if there is one.
+    pub fn chest_terrain(&self, state: crate::chest::ChestState) -> Option<TerrainId> {
+        (self.terrain.iter())
+            .position(|d| d.chest == Some(state))
+            .map(|i| TerrainId(i as u16))
+    }
+
     pub fn trap_id(&self, name: &str) -> Option<TrapId> {
         self.trap_ids.get(name).copied()
     }
@@ -3587,8 +3610,9 @@ fn check_terrain_noise(spec: &terrain::TerrainSpec) -> Result<(), String> {
             "`toggle_noise` and `muffle` must be at most {MAX_LOUDNESS}"
         ));
     }
-    if spec.toggle_noise > 0 && spec.opens_to.is_none() && spec.closes_to.is_none() {
-        return Err("only doors have a `toggle_noise`".into());
+    let shut_chest = spec.chest == Some(crate::chest::ChestState::Shut);
+    if spec.toggle_noise > 0 && spec.opens_to.is_none() && spec.closes_to.is_none() && !shut_chest {
+        return Err("only doors and shut chests have a `toggle_noise`".into());
     }
     Ok(())
 }
@@ -3661,6 +3685,39 @@ fn check_kicking(spec: &terrain::TerrainSpec) -> Result<(), String> {
         (Some(_), Some(_)) => Ok(()),
         _ => Err("`breaks_to` and `sturdiness` go together".into()),
     }
+}
+
+/// The chest terrains (spec §8 "Chests"): at most one each of shut, open, and smashed; a shut
+/// chest is not walkable, open and smashed ones are; none is a door, stairs, or breakable.
+fn check_chests(defs: &[TerrainDef]) -> Result<(), String> {
+    for state in crate::chest::ChestState::ALL {
+        let of: Vec<&TerrainDef> = defs.iter().filter(|d| d.chest == Some(*state)).collect();
+        if of.len() > 1 {
+            return Err(format!(
+                "terrain `{}` and `{}` are both a {} chest",
+                of[0].id,
+                of[1].id,
+                state.id()
+            ));
+        }
+    }
+    for def in defs.iter().filter(|d| d.chest.is_some()) {
+        let shut = def.is_shut_chest();
+        if def.walkable == shut {
+            return Err(format!(
+                "terrain `{}`: a shut chest is not walkable, an open or smashed one is",
+                def.id
+            ));
+        }
+        if def.is_door() || def.stairs.is_some() || def.breaks.is_some() || def.kicked_in.is_some()
+        {
+            return Err(format!(
+                "terrain `{}`: a chest is no door, stairs, or wall (its band says how it breaks)",
+                def.id
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// Checks how a terrain type breaks (spec §8 "Digging"): only solid terrain (neither walkable

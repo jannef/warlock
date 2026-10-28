@@ -625,6 +625,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::SenseOfPlace => "knows a special room's nature from a glimpse of it, \
             and the effect covering a whole level by name on arrival"
             .into(),
+        TalentEffect::ChestWise => "sees whether a shut chest in sight is locked (look mode: \
+            \"a locked coffer\", \"an unlocked coffer\")"
+            .into(),
         TalentEffect::RoomPacePercent { value } => format!(
             "where a special room quickens healing or mana, the quickening {} (a room's 300% \
              pace becomes {}%)",
@@ -1243,6 +1246,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::KickNoisePercent { value } => {
             format!("door kicks' noise {}", percent(value))
         }
+        TalentEffect::SmashDestroyPercent { value } => format!(
+            "the chance that each stack in a chest it kicks open breaks {} (a chest blown apart \
+             is no kick)",
+            percent(value)
+        ),
         TalentEffect::DigPercent { value } => format!("digging work a turn {}", percent(value)),
         TalentEffect::TwoHandedPrice { value } => {
             format!("blows with a two-handed weapon cost {}", percent(value))
@@ -1529,6 +1537,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              nothing): standing in a cursed or draining room, it becomes a plain room for good; \
              on a level a curse or a drain covers whole, the whole level's is lifted instead. \
              A good deed (see Alignment). Anywhere else it is refused, with no time spent"
+        ),
+        TalentEffect::Knock { mana } => format!(
+            "active (aimed in a direction, for {mana} mana, the time of a spell): the lock of \
+             the locked door or shut chest there springs open; nothing opens and no trap \
+             springs. Where nothing locked stands it is refused, with no time or mana spent"
         ),
     }
 }

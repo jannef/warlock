@@ -36,7 +36,8 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Wait => "Waiting",
             ActionKind::OpenDoor => "Opening a door",
             ActionKind::CloseDoor => "Closing a door",
-            ActionKind::Unlock => "Unlocking a door with a key (on top of opening it)",
+            ActionKind::OpenChest => "Opening a chest",
+            ActionKind::Unlock => "Unlocking a door or chest with a key (on top of opening it)",
             ActionKind::PickLock => {
                 "A try at picking a lock (once it gives, opening the door comes on top)"
             }

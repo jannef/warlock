@@ -15,6 +15,7 @@ pub mod blood;
 pub mod burden;
 pub mod character;
 pub mod check;
+pub mod chest;
 pub mod color;
 pub mod combat;
 pub mod content;

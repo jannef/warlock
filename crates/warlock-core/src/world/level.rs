@@ -7,6 +7,7 @@ use super::curse::Rising;
 use super::shop::Shop;
 use super::spawn::Spawner;
 use crate::blood::{Spatter, Stain};
+use crate::chest::Chest;
 use crate::color::Rgb;
 use crate::content::{
     Content, EdgeExit, Flow, Here, HiddenLocation, LevelKind, LevelTemplate, LightId, RoomEffectId,
@@ -73,6 +74,10 @@ pub struct LevelState {
     /// broken. Ground truth: a locked door looks like any closed door.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) locks: BTreeMap<Pos, Lock>,
+    /// Chests, by position (spec §8 "Chests"): on every chest terrain cell, shut, open, or
+    /// smashed, its level (its band follows) and, while shut, what it holds. Ground truth.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) chests: BTreeMap<Pos, Chest>,
     /// Secret doors not yet found, by position (spec §8 "Searching"): the cell's terrain is the
     /// wall each looks like; found, it becomes its door and is gone from here. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
@@ -161,6 +166,7 @@ impl LevelState {
             object_memory: BTreeMap::new(),
             fires: BTreeMap::new(),
             locks: template.locks.clone(),
+            chests: template.chests.clone(),
             secrets: template.secrets.clone(),
             hidden: template.hidden.clone(),
             blood: BTreeMap::new(),
@@ -240,6 +246,12 @@ impl LevelState {
     /// tools only**: the player learns a door is locked by trying it.
     pub fn lock_at(&self, p: Pos) -> Option<&Lock> {
         self.locks.get(&p)
+    }
+
+    /// The chests on the level, by position (ground truth: what each holds). Only reachable
+    /// through [`crate::World::ground_truth`] outside the rules, **for developer tools only**.
+    pub fn chests(&self) -> &BTreeMap<Pos, Chest> {
+        &self.chests
     }
 
     /// The secret door at `p`, if one is there and not yet found (ground truth: it looks like
@@ -368,7 +380,8 @@ impl LevelState {
         let lights = content.light_presets().len();
         let traps = content.trap_defs().len();
         let known = |t: &TerrainId| usize::from(t.0) < terrain;
-        let piles = self.objects.values().chain(self.object_memory.values());
+        let held = self.chests.values().map(|c| &c.holds);
+        let piles = (self.objects.values().chain(self.object_memory.values())).chain(held);
         let mut trap_kinds =
             (self.traps.values().map(|t| t.kind)).chain(self.trap_memory.values().copied());
         let water = |t: &TerrainId| known(t) && content.terrain(*t).freeze.is_some();
@@ -383,6 +396,7 @@ impl LevelState {
             && (self.shops.iter()).all(|s| s.is_valid_for(content, self.width(), self.height()))
             && (self.hidden.iter()).all(|(p, h)| known(&h.terrain) && self.terrain.in_bounds(*p))
             && (self.risings.iter()).all(|r| r.is_valid_for(content))
+            && (self.chests.keys()).all(|p| self.terrain.in_bounds(*p))
     }
 }
 

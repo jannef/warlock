@@ -231,6 +231,66 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its brass key carried by the kobold on guard, a skeleton key inside); a dungeon branch with a
     `key` gets a few locked rooms on its rooms levels, its key always within reach (§7
     "Generators", validated). The showcase's locked door is harmless.
+- **Chests** (`warlock-core/src/chest.rs`, the rules; `world/chest.rs`, applying them; data
+  `data/chests.toml` §7 "Chests"; docs/design/chests-and-treasure.md, slice C1): a chest is a
+  **fixture of a cell**, as a door is, never a carried object.
+  - **What it is**: one of three terrains (`chest = "shut"`, `"open"`, `"smashed"` in
+    `data/terrain.toml`: `⊟`, `⊔`, `⊠`; a shut one is not walkable and blocks nothing else, an
+    open or smashed one is walkable, a pile on it) plus a chest on the cell
+    (`LevelState::chests`, saved and hashed, left out while a level has none): its **level** and,
+    while it is shut, what it **holds** (ground truth). The level is the floor's (a branch floor's
+    depth, a hand-made level's `item_level`) unless the legend gives one; the chest's **band**
+    follows from it (the last band whose `from` the level reaches) and is never saved. The band
+    names it ("coffer", "kist"), colours it, and gives its sturdiness and hardness. Its lock lies
+    in the level's `locks`, as a door's (`World::set_terrain` keeps a lock on a closed door or a
+    shut chest only). Opened, its contents lie in the pile on its cell and its entry stays,
+    empty, so an open or smashed chest is still named by its band. Nothing closes it again.
+  - **Opening** (`o` then a direction, or walking into it; `open:DIR`, `move:DIR`; the
+    `open_chest` action, 1000, 6 s): "You open the coffer.", then "Inside you find a dagger and 12
+    gold coins." (nothing identified) or "It is empty."; a creak (the shut chest's
+    `toggle_noise`, 20, heard as a door opening). **Locked**: only a key that fits opens it
+    (`unlock` + `open_chest`, "You unlock the coffer with your skeleton key and open it."); a
+    lock without an id (`locked = true`) opens only to a skeleton key. Without one: "The coffer
+    is locked.", refused, no time. Whether a chest is locked is never shown until tried (Chest-
+    wise shows it, §8 "Talents").
+  - **Pick lock** (`pick:DIR`) works on a locked chest as on a door (the same check against the
+    same difficulty): picked, "You pick the lock and open the coffer.", `pick_lock` +
+    `open_chest`. An unlocked chest: "The coffer is not locked.", refused, no time.
+  - **Knock** (the wizard's class ability, §8 "Class abilities"; `use:knock:DIR`, 5 mana, the
+    time of a spell): the lock of the locked door or shut chest that way springs open ("The lock
+    springs open with a click."); nothing opens. Where nothing locked stands it is refused, with
+    no time or mana spent: "There is no lock there to spring."
+  - **Kicking** (`k`, `kick:DIR`; the plain `kick`, priced and heard as a door kick, and training
+    athletics as one): one draw of the gameplay stream, `1d(sturdiness) ≤ Strength` + athletics +
+    the talents' `door_kick` (Lockbreaker's 6), against the band's sturdiness (a coffer's 20).
+    Held: "You kick the coffer. It holds.", nothing else changes (try again as often as you
+    like). Broken, it is **smashed**: "The coffer bursts apart!", the lock gone, and each stack
+    inside is destroyed with `[smash] destroyed` percent (50; one gameplay draw a stack, in the
+    order held; Deft breaker halves it), **coins and loose gems spared** (never rolled); "The
+    potion of healing and 2 scrolls are destroyed.", then what is left, spilled on the cell. The
+    terrain becomes the smashed chest (splinters, `Event::ChestBroken`).
+  - **Blasts** (`World::blast`, §8 "Digging": a fireball trap's or scroll's blast of 1000): a
+    shut chest in the burst whose band's `hardness` is below the blast is **blown apart**:
+    every stack rolled at the same percent, **nothing spared** (coins and gems too), "The coffer
+    is blown apart!" if seen. A coffer (200) to a strongbox (900) blows apart in a fireball; a
+    kist (1200) and the bands above outlast it.
+  - **Digging** at a chest is refused ("You cannot dig through the chest.": it has no
+    `hardness` of its own as terrain; the band's is read by blasts only). Creatures walk around
+    a shut chest and never open or break one.
+  - **Perception** (`PerceptionView::chest_at`): on a cell seen or remembered, the chest's band
+    and whether it is shut, open, or smashed (as the cell looks), and with Chest-wise, on a cell
+    in sight, whether a shut one is locked. Never its level or what it holds. Look mode: "A
+    coffer. A small wooden box with an iron hasp.", "an open coffer", "a smashed coffer"; with
+    Chest-wise "a locked coffer", "an unlocked coffer".
+  - **Level files** place chests on the `chest` terrain: `chest = "kist"` (that band's least
+    level) or `chest = 7` (a level; default the level's `item_level`), `locked = true` or `lock =
+    "id"` and `lock_difficulty` as on a door, and `objects` for what it holds (food in it is made
+    as the level is). Refused: a `chest` on other terrain, an unknown band, a trap on a chest
+    (trapped chests are slice C2), and chests in vaults (C7).
+  - **Dumps**: `view` shows the glyph; `truth` (dev) adds a line per chest, `chest 7 (hutch) at
+    (12, 5): shut, locked, holds 3 stacks`; JSON `chests` lists those the player sees or
+    remembers (`pos`, `band`, `state`, and `locked`: with Chest-wise for a shut one in sight,
+    else null).
 - **Searching** (`warlock-core/src/world/search.rs`; data `data/search.toml` §7; #140): one
   check finds every hidden feature, secret doors and hidden traps alike.
   - **Secret doors**: a closed door that looks and acts like the wall around it until it is

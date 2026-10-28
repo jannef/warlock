@@ -58,6 +58,9 @@ Smite is the paladin's, and answers only while the priest is Good or better.
 or better: a minute's prayer, for 15 mana, that lifts a cursed, draining, or haunted room's curse for good
 (see [Special rooms](special-rooms.md#cursed-rooms)).
 
+The wizard's **Knock** (from level 4, 5 mana) springs the lock of the locked door or chest in a
+direction; nothing opens by itself (see [Chests](chests.md#locked-chests)).
+
 The ranger's **favoured prey** is the kind of creature you have killed most, counted over every
 level; when two are tied, the one that got there first stays favoured until another is killed
 more often. A **volley** looses three shots of your readied missile weapon at the place you aim

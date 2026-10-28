@@ -6,7 +6,9 @@
 # the `step` cost in actions.toml; default 100; local levels only), opens_to / closes_to (doors),
 # breaks_to and sturdiness (closed doors, spec §8 "Doors": a kick breaks the door into this
 # terrain with a chance of the kicker's Strength score in its sturdiness, 1 to 100; both or
-# neither), stairs ("up"/"down"),
+# neither), chest ("shut", "open", or "smashed": a chest's terrain, spec §8 "Chests", one terrain
+# each; a shut one is not walkable, open and smashed ones are; its band, chests.toml, names and
+# colours it), stairs ("up"/"down"),
 # light (a preset in lights.toml the terrain emits), bounce (gameplay, spec §5: the tint of the
 # light the surface bounces, "#rrggbb", default white = neutral), height (gameplay, spec §5
 # "Sunlight": how many cells tall it stands for sun shadows, 0 to 4; default 1 if opaque, else 0),
@@ -17,8 +19,9 @@
 # default false),
 # anim (presentation-only, §4.3).
 # Noise (gameplay, spec §5 "Hearing"): step_noise (how loud steps onto it are, in percent of the
-# walker's footsteps, 0 to 1000; default 100), toggle_noise (doors only: how loud opening the
-# closed door or closing the open one is, at most 300; default 0, silent), and muffle (the
+# walker's footsteps, 0 to 1000; default 100), toggle_noise (doors and shut chests only: how loud
+# opening the closed door or chest or closing the open door is, at most 300; default 0, silent),
+# and muffle (the
 # loudness a sound loses entering the cell, at most 300; default 0, but solid terrain, neither
 # walkable nor transparent, blocks sound unless it has a muffle).
 # Breaking walls (gameplay, spec §8 "Digging"): hardness (1 to 10000: the work it takes to dig
@@ -433,6 +436,52 @@ walkable = false
 glyph = "≡"
 fg = "#a08458"
 bg = "#0d0d10"
+
+# Chests (spec §8 "Chests"; chests.toml): a fixture of the cell, as a door is. The chest on the
+# cell (`LevelState::chests`) has a level, whose band names it and colours it (its `fg` wins over
+# these); what it holds spills into the pile on the cell once it opens. Shut, it is in the way;
+# open or smashed, one stands in it as in a doorway, over what it held.
+[[terrain]]
+id = "chest"
+name = "chest"
+chest = "shut"
+glyph = "⊟"
+fg = "#9a7a48"
+bg = "#0d0d10"
+walkable = false
+# The lid creaks up.
+toggle_noise = 20
+
+[[terrain]]
+id = "chest_open"
+name = "open chest"
+chest = "open"
+glyph = "⊔"
+fg = "#9a7a48"
+bg = "#0d0d10"
+
+# What is left of a chest kicked in or blown apart: splinters and bent bands.
+[[terrain]]
+id = "chest_smashed"
+name = "smashed chest"
+chest = "smashed"
+glyph = "⊠"
+fg = "#9a7a48"
+bg = "#0d0d10"
+
+# Splinters fly when it breaks.
+[[terrain.particles]]
+on = "toggle"
+glyphs = "'`,."
+colors = ["#a87a48", "#4a3018"]
+count = 5
+life = 0.5
+velocity = [0.0, -0.3]
+spread = [1.4, 0.6]
+gravity = 1.2
+area = [0.3, 0.35]
+scale = 0.7
+fade = 0.5
 
 # Light sources (spec §5). Emitting terrain must be transparent so light cannot leak through it.
 

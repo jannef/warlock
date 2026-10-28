@@ -11,6 +11,9 @@ step = 1000
 wait = 1000
 open_door = 1000
 close_door = 1000
+# Lifting the lid of a shut chest (spec §8 "Chests"); a locked one opened with its key takes
+# unlock + open_chest, a picked one pick_lock + open_chest.
+open_chest = 1000
 # Unlocking a locked door with a key, on top of opening it: opening a locked door you have the
 # key for takes unlock + open_door.
 unlock = 1000

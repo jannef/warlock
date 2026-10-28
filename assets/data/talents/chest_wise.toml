@@ -1,0 +1,8 @@
+[[talent]]
+id = "chest_wise"
+name = "Chest-wise"
+tree = "delver"
+description = "You tell a locked chest from an unlocked one at a glance."
+needs = { either = { stats = { intelligence = 11 }, skills = { search = 15 } } }
+effects = [{ kind = "chest_wise" }]
+systems = ["chests"]

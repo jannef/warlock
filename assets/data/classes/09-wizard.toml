@@ -36,6 +36,7 @@ abilities = [
     { level = 1, talent = "ray_of_frost" },
     { level = 1, talent = "arcane_training" },
     { level = 3, talent = "magic_missile" },
+    { level = 4, talent = "knock" },
     { level = 6, talent = "arcane_lore" },
     { level = 12, talent = "spell_recall" },
     { level = 12, talent = "burning_hands" },

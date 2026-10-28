@@ -71,6 +71,7 @@ use crate::action::Positions;
 use crate::blood::Stain;
 use crate::burden::{self, Load};
 use crate::character::Character;
+use crate::chest::{ChestLook, ChestState};
 use crate::color::Rgb;
 use crate::combat::Health;
 use crate::content::Shops;
@@ -1172,6 +1173,37 @@ impl<'a> PerceptionView<'a> {
         } else {
             self.level.blood_memory.get(&p)
         }
+    }
+
+    /// The chest at `p` as the player sees or remembers it (spec §8 "Chests"): its band and
+    /// whether it is shut, open, or smashed (as the cell looks to them), and, with Chest-wise,
+    /// on a cell in sight, whether a shut one is locked. Never its level or what it holds.
+    /// `None` where they know no chest (or without chest bands).
+    pub fn chest_at(&self, p: Pos) -> Option<ChestLook> {
+        let terrain = match self.cell(p) {
+            CellView::Visible(t) | CellView::Remembered(t) => t,
+            CellView::Unknown => return None,
+        };
+        let state = self.content.terrain(terrain).chest?;
+        let chest = self.level.chests.get(&p)?;
+        let band = self.content.chests().band_index(chest.level)?;
+        let wise =
+            || !self.player.talents.is_empty() && self.player.talent_mods(self.content).chest_wise;
+        let locked = (state == ChestState::Shut && self.snapshot.is_visible(p) && wise())
+            .then(|| self.level.locks.contains_key(&p));
+        Some(ChestLook {
+            band,
+            state,
+            locked,
+        })
+    }
+
+    /// The chests the player sees or remembers on this level ([`PerceptionView::chest_at`]), by
+    /// position.
+    pub fn known_chests(&self) -> Vec<(Pos, ChestLook)> {
+        (self.level.chests.keys())
+            .filter_map(|&p| Some((p, self.chest_at(p)?)))
+            .collect()
     }
 
     /// Whether the pile at `p` is in sight now (rather than remembered or unknown).

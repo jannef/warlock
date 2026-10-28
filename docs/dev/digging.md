@@ -24,3 +24,5 @@ Perception sees and remembers the rubble like any terrain; `PerceptionView::read
 `is_dug` (a visible wall with progress: look mode's "partly dug") are all presentation gets. The
 app bursts the new terrain's `toggle` particles (rubble's dust) on `WallBroken`, like a door's.
 Creatures do not dig. Times are in the wiki's generated `digging.md` tables.
+A blast also blows apart a shut chest whose band's hardness is below it (`World::blast`;
+`docs/dev/chests.md`); digging at a chest is refused, a chest having no `hardness` as terrain.

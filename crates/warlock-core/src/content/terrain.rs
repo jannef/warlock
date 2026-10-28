@@ -78,6 +78,8 @@ pub(super) struct TerrainSpec {
     /// For a closed door that can be kicked in: a kick breaks it with a chance of the kicker's
     /// Strength in this (spec §8 "Doors"); with `breaks_to`.
     pub sturdiness: Option<u8>,
+    /// A chest (spec §8 "Chests"): `"shut"`, `"open"`, or `"smashed"`; at most one terrain each.
+    pub chest: Option<crate::chest::ChestState>,
     pub stairs: Option<StairsDir>,
     /// Light preset the terrain emits (torch sconce, glowing fungus, rune). Must be transparent.
     pub light: Option<String>,
@@ -225,6 +227,9 @@ pub struct TerrainDef {
     /// ([`crate::door::kick_breaks`]). `None`: kicks never break it. (Digging and blasts break
     /// walls, `breaks`, never doors.)
     pub kicked_in: Option<(TerrainId, u8)>,
+    /// Gameplay: a chest's terrain, and in which state (spec §8 "Chests"); its band, lock, and
+    /// contents are per-cell state (`LevelState::chests`, `locks`).
+    pub chest: Option<crate::chest::ChestState>,
     pub stairs: Option<StairsDir>,
     /// Light this terrain emits, if any.
     pub light: Option<LightId>,
@@ -322,6 +327,11 @@ impl TerrainDef {
         self.closes_to.is_some()
     }
 
+    /// A shut chest (spec §8 "Chests"): opened, kicked, picked, and knocked as a closed door is.
+    pub fn is_shut_chest(&self) -> bool {
+        self.chest == Some(crate::chest::ChestState::Shut)
+    }
+
     /// A door, closed or open: what a trap on it belongs to (spec §8 "Trapped doors").
     pub fn is_door(&self) -> bool {
         self.is_closed_door() || self.is_open_door()
@@ -340,5 +350,6 @@ impl TerrainDef {
             && self.light.is_none()
             && !self.is_closed_door()
             && !self.is_open_door()
+            && self.chest.is_none()
     }
 }
