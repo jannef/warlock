@@ -445,6 +445,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "+{dice} damage, after Protection, on a hit at a creature that has not seen you \
              (it hunts no one it has seen, and does not see you now)"
         ),
+        TalentEffect::InitiativeBonus { value } => format!(
+            "{} to the initiative check when something catches you unawares (see Status effects: \
+             Surprised)",
+            signed(value)
+        ),
+        TalentEffect::SurpriseEase { value } => format!(
+            "{value}% of the extra time the action you take Surprised costs is spared (at 100%, \
+             it costs no more than any other)"
+        ),
         TalentEffect::CarryPercent { value } => format!("carrying limit {}", percent(value)),
         TalentEffect::IgnoreBurdened => "being Burdened costs you nothing (as a dwarf)".to_string(),
         TalentEffect::StepSlowdownPercent { value } => format!(

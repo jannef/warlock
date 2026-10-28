@@ -1,0 +1,8 @@
+[[talent]]
+id = "wary"
+name = "Wary"
+tree = "delver"
+description = "You expect the worst of every dark corner: what falls on you unseen catches you off guard less often."
+needs = { stats = { willpower = 12 } }
+effects = [{ kind = "initiative_bonus", value = 4 }]
+systems = ["awareness"]

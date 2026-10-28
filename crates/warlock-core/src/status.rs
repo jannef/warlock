@@ -312,8 +312,14 @@ impl Effects {
 
     /// `price` as its statuses make it: each multiplies it by its `cost` percent, rounded up.
     pub fn slow(&self, content: &Content, price: i64) -> i64 {
+        self.slow_with(price, |s| content.status(s).cost)
+    }
+
+    /// [`Effects::slow`] with each status's `cost` percent as `cost` says (Surprised's eased,
+    /// `World::status_cost`).
+    pub fn slow_with(&self, price: i64, cost: impl Fn(StatusId) -> u32) -> i64 {
         (self.0.iter())
-            .map(|e| i64::from(content.status(e.status).cost))
+            .map(|e| i64::from(cost(e.status)))
             .filter(|&cost| cost != 100)
             .fold(price, |price, cost| {
                 price.saturating_mul(cost).saturating_add(99) / 100

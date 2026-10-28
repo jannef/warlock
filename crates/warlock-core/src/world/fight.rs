@@ -765,7 +765,12 @@ impl World {
         let profile = profile.map(|p| self.favoured(attacker, target, p));
         // Unbinder (spec §8 "Animated objects"): against a creature of a tag.
         let profile = profile.map(|p| self.bane(attacker, target, p));
-        let unseen = profile.is_some() && self.sneaking(attacker, target);
+        // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
+        let unaware = profile.is_some() && self.unaware(target, attacker);
+        let unseen = profile.is_some() && self.sneaks(attacker, target, unaware);
+        if unaware {
+            self.startle(target, Some(attacker), events);
+        }
         // A blow at a disguised mimic finds it out (`mimic.rs`), after the sneak attack is
         // decided: it was unaware.
         if self.disguised(target) {
@@ -774,6 +779,7 @@ impl World {
         let profile = profile.map(|p| self.sneak_threat(attacker, unseen, p));
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         let struck = self.target_against(target, missile);
+        let struck = self.flat_footed(target, unaware, struck);
         let struck = self.small_target(attacker, target, struck);
         // Feint (a weapon active, `weapon_active.rs`): rolled without the categories it ignores.
         let struck = self.feinted(attacker, struck);

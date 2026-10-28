@@ -290,6 +290,12 @@ pub enum TalentEffect {
     /// Its blows and shots at a creature that has not seen it do `dice` more damage, after
     /// Protection (Ambusher).
     Ambush { dice: Dice },
+    /// This much added to its initiative check when it is caught unawares (Wary;
+    /// `World::startle`, `world/surprise.rs`).
+    InitiativeBonus { value: i32 },
+    /// This percent of the extra cost of the action it takes Surprised is spared (Cool head:
+    /// 100, none; `World::surprise_cost`).
+    SurpriseEase { value: i32 },
     /// The carrying limit, this percent more.
     CarryPercent { value: i32 },
     /// Being Burdened costs it nothing, as a dwarf's burden (Porter).
@@ -1142,6 +1148,7 @@ impl TalentEffect {
             | TalentEffect::WandLevel { value }
             | TalentEffect::Hearing { value }
             | TalentEffect::Notice { value }
+            | TalentEffect::InitiativeBonus { value }
             | TalentEffect::DangerSense { value }
             | TalentEffect::Threat { value }
             | TalentEffect::Search { value }
@@ -1734,6 +1741,7 @@ impl TalentEffect {
             | TalentEffect::SpawnEveryPercent { value }
             | TalentEffect::RoomPacePercent { value }
             | TalentEffect::WakePercent { value }
+            | TalentEffect::SurpriseEase { value }
             | TalentEffect::TwoHandedPrice { value }
             | TalentEffect::WeaponEnergyPercent { value }
             | TalentEffect::SpeedPercent { value }

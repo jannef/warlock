@@ -529,18 +529,12 @@ impl World {
     /// The side of a target the player's attack strikes, without the Defence categories Feint
     /// ignores (each positive bonus there taken away), which this attack takes: the one place
     /// [`Technique::ignores`] is read (`fight.rs::resolve`).
-    pub(super) fn feinted(&mut self, attacker: ActorId, mut target: Target) -> Target {
+    pub(super) fn feinted(&mut self, attacker: ActorId, target: Target) -> Target {
         if attacker != self.state.player || self.technique.ignores == Categories::default() {
             return target;
         }
         let ignores = std::mem::take(&mut self.technique.ignores);
-        for category in ignores.iter() {
-            let bonus = target.defence.bonus(category);
-            if bonus > 0 {
-                target.defence = target.defence.plus(category, -bonus);
-            }
-        }
-        target
+        target.without(ignores.iter())
     }
 
     /// Whether the shot `shooter` looses flies on past the first it hits (Piercing shot): the one

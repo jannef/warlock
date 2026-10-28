@@ -72,11 +72,21 @@ pub struct Mind {
     /// it walks back there once nothing is about, then carries on.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub post: Option<Pos>,
+    /// The turn the player last saw it (`WorldState::turn`), the player's half of being aware
+    /// of it (spec §8 "Surprise and sneak attacks", `world/surprise.rs`): set by perception in
+    /// the turn pipeline only. Not part of its routine: [`Mind::is_calm`] ignores it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub noticed: Option<u64>,
 }
 
 impl Mind {
-    /// Whether it is going about its routine.
+    /// Whether it is going about its routine (what the player knows of it aside).
     pub fn is_calm(&self) -> bool {
+        self.last_seen.is_none() && self.noise.is_none() && self.post.is_none()
+    }
+
+    /// Whether it holds nothing at all (left out of saves).
+    pub fn is_empty(&self) -> bool {
         *self == Mind::default()
     }
 }
@@ -122,7 +132,7 @@ pub struct Actor {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub heard: Vec<Heard>,
     /// What a creature has in mind (`world/ai.rs`).
-    #[serde(default, skip_serializing_if = "Mind::is_calm")]
+    #[serde(default, skip_serializing_if = "Mind::is_empty")]
     pub mind: Mind,
     /// What it carries, lettered `a` on (see [`crate::object`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
