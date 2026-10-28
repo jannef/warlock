@@ -1,0 +1,11 @@
+# Attuned (the affixes design §10, #634): the scholar's answer to of the Adept. The caster level
+# a character's magic items give counts half again, rounded up (+1 → +2, +2 → +3, +3 → +5), in
+# `Actor::caster_level`'s items term.
+[[talent]]
+id = "attuned"
+name = "Attuned"
+tree = "scholar"
+description = "You are in tune with enchanted things: the power your magic items lend your spells counts for half again as much."
+needs = { level = 6, stats = { intelligence = 12 } }
+effects = [{ kind = "attuned_percent", value = 50 }]
+systems = ["magic_items", "spells"]

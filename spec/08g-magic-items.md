@@ -86,7 +86,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `spell_ease` eases its own piece (§8 "Spells": "Cost"), `spell_to_hit` and `spell_threat`
     aim an own cast only (never a scroll's or a wand's), `spell_lift` widens the lift with Keen
     mind's, `spell_reach` adds to the range or length with School focus's, and `spell_duration`
-    adds degrees. The utility hooks
+    adds degrees. `caster_level` (of the Adept) is read in `Actor::caster_level`; **Attuned**
+    (Scholar, Intelligence 12, level 6) counts the caster level magic items give half again,
+    rounded up (+1 → +2, +3 → +5), and **Bellows** (Vigour, Toughness 12) the stamina they add
+    to the maximum twice (affixes design §10).
+    The utility hooks
     are in (#631), worn by the player or a creature, identified or not: `door_kick` adds to a
     kick's Strength as Lockbreaker's does (a door's and a chest's), `dig_percent` is that much
     more work a turn of digging, `hunger` makes hunger come that percent slower (the pace at

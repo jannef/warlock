@@ -252,6 +252,10 @@ pub enum TalentEffect {
     /// The caster level a wand casts at, this much higher (spec §8 "Magic items": "Wands"; Wand
     /// mastery), in [`crate::world::World`]'s zap.
     WandLevel { value: i32 },
+    /// The caster level its magic items give it counts this percent more, rounded up (Attuned:
+    /// half again), in [`crate::world::Actor::caster_level`]'s items term; a negative items
+    /// term (a curse) is left as it is.
+    AttunedPercent { value: i32 },
     /// The active Blood magic: give `hp` hit points (never the last) for `mana` mana.
     BloodMagic { hp: i32, mana: i32 },
     /// Footsteps this percent louder (negative: quieter).
@@ -641,6 +645,10 @@ pub enum TalentEffect {
     /// regenerates comes back sooner, one that decays wears off sooner (Steady hand, Patient
     /// blade).
     ResourceRate { resource: String, value: i32 },
+    /// What its magic items add to `resource`'s maximum counts this percent more, rounded up
+    /// (Bellows: stamina's doubled), in [`crate::world::Actor::resource_max`]'s items term; a
+    /// negative items term is left as it is.
+    GearedResourcePercent { resource: String, value: i32 },
     /// While raging: the statuses named tick nothing, and a blow that would take the last hit
     /// point leaves it for `cost` of the rage, when that much is held (Unstoppable).
     Unstoppable { statuses: Vec<String>, cost: u16 },
@@ -1466,6 +1474,10 @@ impl TalentEffect {
             TalentEffect::ResourceRate {
                 resource: id,
                 value,
+            }
+            | TalentEffect::GearedResourcePercent {
+                resource: id,
+                value,
             } => {
                 resource(id)?;
                 percent(*value)
@@ -1707,6 +1719,7 @@ impl TalentEffect {
             | TalentEffect::ManaRegenPercent { value }
             | TalentEffect::ManaRestingPercent { value }
             | TalentEffect::ManaCostPercent { value }
+            | TalentEffect::AttunedPercent { value }
             | TalentEffect::RodCostPercent { value }
             | TalentEffect::FootstepsPercent { value }
             | TalentEffect::CarryPercent { value }
