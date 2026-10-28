@@ -35,6 +35,10 @@
 //! - **Explicit costs**: a spell with its own `mana` (Identify) costs that, armour and talents
 //!   counted, whatever its tier ([`SpellRules::mana_with`]).
 //!
+//! - **Reflection**: an `attack` or `touch` roll missed by the target's Shield raises Spell
+//!   reflection's trigger, and a spell turned back is cast again at its caster with the same
+//!   dice, cap, and to-hit (`reflect.rs`).
+//!
 //! A scroll read and a wand used cast through the same path at their own caster level, paid by
 //! the scroll or a charge instead of mana ([`World::read_cast`], [`World::wand_cast`]).
 //!
@@ -49,13 +53,14 @@
 //! [`Action::Cast`]: crate::action::Action::Cast
 //! [`Action::CastOn`]: crate::action::Action::CastOn
 
+use super::reflect::{Shot, Turned};
 use super::spell::{Caster, burst_cells, capped, cone_cells};
 use super::talk::capitalized;
 use super::{Actor, ActorId, Cause, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::position_text;
 use crate::action::{AttackKind, Event, ReadTarget, SpellShape};
-use crate::combat::{self, Attack, Profile, Strike};
+use crate::combat::{self, Attack, Category, Profile, Strike};
 use crate::content::{
     ActionKind, Bolt, Burst, Content, Resolution, Shape, SpellData, SpellPurpose, SpellRules,
     Stance,
@@ -676,6 +681,7 @@ impl World {
         let here = self.player_pos();
         let effect = def.look.effect.clone().unwrap_or_default();
         let mut made = Vec::new();
+        let mut turned = None;
         match def.shape {
             Shape::Burst => {
                 let burst = Burst {
@@ -711,29 +717,16 @@ impl World {
                 self.sound_at(def.look.noise, here);
                 let own = matches!(cast.pay, Pay::Mana(_));
                 let aim = (here, at, range);
-                self.cast_single(aim, (&effect, dice, cap), (def, own), &mut made);
+                turned = self.cast_single(aim, (&effect, dice, cap), (def, own), &mut made);
             }
             Shape::Myself => {}
         }
-        let reached: Vec<ActorId> = (made.iter())
-            .filter_map(|e| match *e {
-                Event::Attacked {
-                    attacker,
-                    target,
-                    kind: AttackKind::Spell,
-                    strike: Some(strike),
-                    ..
-                } if attacker == player && strike.is_hit() => Some(target),
-                _ => None,
-            })
-            .collect();
-        self.say_spell((&def.look.noun, &def.look.verb), made, events);
-        if let Some((status, severity)) = def.effect.status {
-            for id in reached {
-                if self.state.actors.contains_key(&id) && self.state.death.is_none() {
-                    self.afflict(id, status, severity, Some(player), events);
-                }
-            }
+        self.spell_lands(player, def, made, events);
+        // Spell reflection: the spell a shield blocked goes back at its caster (`reflect.rs`).
+        if let Some(turned) = turned {
+            let mut back = Vec::new();
+            self.turn_back(&turned, &mut back);
+            self.spell_lands(turned.reflector, def, back, events);
         }
         if let Some(death) = &mut self.state.death
             && !matches!(cast.pay, Pay::Scroll(_))
@@ -742,6 +735,37 @@ impl World {
             death.cause = Some(Cause::Spell(cast.spell));
         }
         true
+    }
+
+    /// Says what `by`'s cast `def` did (`made`, its events) and gives everyone it harmed who
+    /// lives its status.
+    fn spell_lands(
+        &mut self,
+        by: ActorId,
+        def: &SpellData,
+        made: Vec<Event>,
+        events: &mut Vec<Event>,
+    ) {
+        let reached: Vec<ActorId> = (made.iter())
+            .filter_map(|e| match *e {
+                Event::Attacked {
+                    attacker,
+                    target,
+                    kind: AttackKind::Spell,
+                    strike: Some(strike),
+                    ..
+                } if attacker == by && strike.is_hit() => Some(target),
+                _ => None,
+            })
+            .collect();
+        self.say_spell((&def.look.noun, &def.look.verb), made, events);
+        if let Some((status, severity)) = def.effect.status {
+            for id in reached {
+                if self.state.actors.contains_key(&id) && self.state.death.is_none() {
+                    self.afflict(id, status, severity, Some(by), events);
+                }
+            }
+        }
     }
 
     /// A cone from `here` toward `at`, `length` cells long: its effect drawn as a burst around
@@ -786,14 +810,15 @@ impl World {
     /// way, and strikes it as its resolution says: `auto` always, `attack` and `touch` by the
     /// attack roll against its Defence, aimed with its `to_hit` scales when it is the caster's
     /// `own` spell, else (a scroll, a wand) with Dexterity. One that finds no one strikes
-    /// nothing.
-    fn cast_single(
+    /// nothing. An attack roll missed by the target's Shield may be turned back (Spell
+    /// reflection, `reflect.rs`): what to cast back, if so.
+    fn cast_single<'s>(
         &mut self,
         (here, at, reach): (Pos, Pos, i32),
-        (effect, dice, cap): (&str, Dice, i32),
-        (def, own): (&SpellData, bool),
+        (effect, dice, cap): (&'s str, Dice, i32),
+        (def, own): (&'s SpellData, bool),
         made: &mut Vec<Event>,
-    ) {
+    ) -> Option<Turned<'s>> {
         let level = self.state.current_level.clone();
         let path: Vec<Pos> = if def.shape == Shape::Touch {
             vec![at]
@@ -815,24 +840,50 @@ impl World {
                 cells: path.clone(),
             });
         }
-        let Some(target) =
-            (path.last()).and_then(|&p| self.state.actor_at(&level, p).map(|a| a.id))
-        else {
-            return;
-        };
+        let target = (path.last()).and_then(|&p| self.state.actor_at(&level, p).map(|a| a.id))?;
         let player = self.state.player;
+        let me = self.state.player();
+        let to_hit = if own {
+            me.spell_to_hit(&self.content, def)
+        } else {
+            me.effective_stats(&self.content).modifier(Stat::Dexterity)
+        };
+        let shot = Shot {
+            def,
+            effect,
+            dice,
+            cap,
+            to_hit,
+        };
         let source = (here, def.shape != Shape::Touch);
+        let strike = self.spell_attack(player, target, source, shot, made);
+        if strike
+            != (Strike::Missed {
+                by: Some(Category::Shield),
+            })
+        {
+            return None;
+        }
+        self.spell_blocked((target, player), (&path, here), shot, made)
+    }
+
+    /// `by`'s single-target spell `shot` strikes `target` from `source` as its resolution says:
+    /// `auto` always, `attack` and `touch` by the attack roll (`shot`'s to-hit) against its
+    /// Defence; the damage held to `shot`'s cap. How it struck.
+    pub(super) fn spell_attack(
+        &mut self,
+        by: ActorId,
+        target: ActorId,
+        source: (Pos, bool),
+        shot: Shot<'_>,
+        made: &mut Vec<Event>,
+    ) -> Strike {
+        let def = shot.def;
         let (amount, strike) = match def.resolution {
             Resolution::Attack | Resolution::Touch => {
-                let me = self.state.player();
-                let to_hit = if own {
-                    me.spell_to_hit(&self.content, def)
-                } else {
-                    me.effective_stats(&self.content).modifier(Stat::Dexterity)
-                };
                 let attack = Attack {
-                    damage: dice,
-                    to_hit,
+                    damage: shot.dice,
+                    to_hit: shot.to_hit,
                     threat: combat::DEFAULT_THREAT,
                     crit: combat::DEFAULT_CRIT,
                     strength: None,
@@ -845,12 +896,13 @@ impl World {
                 (blow.damage, blow.strike)
             }
             Resolution::Auto | Resolution::Area => (
-                dice.roll(&mut self.state.rng).max(0),
+                shot.dice.roll(&mut self.state.rng).max(0),
                 Strike::Hit { critical: false },
             ),
         };
-        let damage = Damage::new(capped(amount, Some(cap)), def.damage_type);
-        self.spell_strikes(player, target, source, (damage, strike), made);
+        let damage = Damage::new(capped(amount, Some(shot.cap)), def.damage_type);
+        self.spell_strikes(by, target, source, (damage, strike), made);
+        strike
     }
 }
 

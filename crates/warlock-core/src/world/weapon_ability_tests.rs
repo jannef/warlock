@@ -679,3 +679,359 @@ fn the_menu_lists_what_ranks_teach_greyed_as_firing_by_itself() {
         .count();
     assert_eq!(rows, 1);
 }
+
+// Spell reflection (#566): Sword and Board's capstone turns a spell its shield blocked back.
+
+/// The game's content with the test objects and the wizard's Arcane bolt as `bolt` says (its
+/// shape, resolution, and dice); `abilities` false leaves the weapon abilities out.
+fn spell_content(bolt: &str, abilities: bool) -> Arc<Content> {
+    let mut files = ContentFiles::builtin();
+    files.insert("data/objects/zz_wa_test.toml", OBJECTS);
+    let text = format!(
+        "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
+         tier = 2\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n{bolt}\n"
+    );
+    files.insert("data/spells/arcane_bolt.toml", &text);
+    if !abilities {
+        let paths: Vec<String> = (files.table("weapon_abilities"))
+            .map(|(p, _)| p.to_string())
+            .collect();
+        for path in paths {
+            files.insert(&path, "");
+        }
+    }
+    Arc::new(Content::load(&files).expect("test content is valid"))
+}
+
+/// An attack ray of tier 2 (cap 18), 3d6, its cap lifted by Intelligence and Willpower, aimed
+/// with Intelligence.
+const RAY: &str = "shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\n\
+                   damage = { dice = \"3d6\" }\n[spell.scales]\n\
+                   damage = { intelligence = 10, willpower = 5 }\n\
+                   to_hit = { intelligence = 100 }";
+
+/// A level-18 `class` (a wizard: Arcane bolt) with `content`, and a kobold two cells east,
+/// holding a knife and a shield, with Sword and Board at `rank`; the kobold's id. No creature
+/// acts.
+fn reflector(content: Arc<Content>, class: &str, rank: u8) -> (World, ActorId) {
+    let mut w = super::caster_tests::world_with(content, class);
+    super::caster_tests::reach(&mut w, 18);
+    let kobold = super::caster_tests::kobold(&mut w, 2, 10_000);
+    give(&mut w, kobold, "wa_knife");
+    give(&mut w, kobold, "wa_shield");
+    ranks(
+        &mut w,
+        kobold,
+        &[("long_blades", 1), ("sword_and_board", rank)],
+    );
+    (w, kobold)
+}
+
+/// Keeps every creature from acting (those come since too).
+fn freeze(w: &mut World) {
+    let player = w.player_id();
+    for actor in w.state.actors.values_mut() {
+        if actor.id != player {
+            actor.energy = -1_000_000_000;
+        }
+    }
+}
+
+/// The player, hit points and mana topped up (and plenty of both: no hit is a big one), no
+/// status on them, takes `action` aimed at the kobold's cell, no creature acting; the spell
+/// blows of it: (attacker, target, strike).
+fn cast_at_kobold(w: &mut World, kobold: ActorId, action: &str) -> Vec<(ActorId, ActorId, Strike)> {
+    w.player_mut().hp_base = 10_000;
+    w.player_mut().hp = 10_000;
+    w.player_mut().effects = Default::default();
+    w.player_mut().mana = 40;
+    w.state.actors.get_mut(&kobold).expect("kobold").hp = 10_000;
+    freeze(w);
+    let at = w.state.actors[&kobold].pos;
+    let action = format!("{action}:{},{}", at.x, at.y);
+    let actions = crate::action::parse_actions(&action).expect("an action");
+    let out = w.apply(&actions[0]);
+    (out.events.iter())
+        .filter_map(|e| match *e {
+            Event::Attacked {
+                attacker,
+                target,
+                kind: AttackKind::Spell,
+                strike: Some(strike),
+                ..
+            } => Some((attacker, target, strike)),
+            _ => None,
+        })
+        .collect()
+}
+
+const BLOCKED: Strike = Strike::Missed {
+    by: Some(Category::Shield),
+};
+
+#[test]
+fn a_blocked_spell_is_turned_back_once_a_turn_of_the_reflectors() {
+    let (mut w, kobold) = reflector(spell_content(RAY, true), "wizard", 10);
+    let player = w.player_id();
+    let (mut blocked, mut turned) = (0, 0);
+    for _ in 0..40 {
+        let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
+        assert_eq!(blows[0].0, player, "{blows:?}");
+        let back = blows.iter().filter(|b| b.0 == kobold).count();
+        // The kobold never acts: one reflection, then none until its turn.
+        if turned == 0 && blows[0].2 == BLOCKED {
+            assert_eq!(back, 1, "turned back: {blows:?}");
+            assert_eq!((blows[1].1, blows.len()), (player, 2), "at its caster");
+            assert!(
+                (said(&w).iter())
+                    .any(|m| m == "The kobold's shield turns your arcane bolt back at you."),
+                "{:#?}",
+                said(&w)
+            );
+        } else {
+            assert_eq!(back, 0, "once a turn: {blows:?}");
+        }
+        if blows[0].2 == BLOCKED {
+            blocked += 1;
+        }
+        turned += back;
+    }
+    assert!(blocked > 1 && turned == 1, "{blocked} {turned}");
+    // Its action spent, it turns the next blocked one back again.
+    w.spend_actions(kobold);
+    let mut again = 0;
+    for _ in 0..40 {
+        let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
+        again += blows.iter().filter(|b| b.0 == kobold).count();
+    }
+    assert_eq!(again, 1);
+    // A rank short: never.
+    let (mut w, kobold) = reflector(spell_content(RAY, true), "wizard", 9);
+    for _ in 0..20 {
+        let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
+        assert!(blows.iter().all(|b| b.0 != kobold));
+    }
+}
+
+#[test]
+fn a_reflected_spell_is_never_reflected_again() {
+    let (mut w, kobold) = reflector(spell_content(RAY, true), "wizard", 10);
+    let player = w.player_id();
+    // The player blocks with a shield and the same rank.
+    w.player_mut().equipment = Default::default();
+    give(&mut w, player, "wa_knife");
+    give(&mut w, player, "wa_shield");
+    ranks(
+        &mut w,
+        player,
+        &[("long_blades", 1), ("sword_and_board", 10)],
+    );
+    let mut blocked_back = 0;
+    for _ in 0..60 {
+        w.spend_actions(kobold);
+        w.spend_actions(player);
+        let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
+        assert!(blows.len() <= 2, "no third flight: {blows:?}");
+        if let [_, (by, at, strike)] = blows[..] {
+            assert_eq!((by, at), (kobold, player));
+            if strike == BLOCKED {
+                blocked_back += 1;
+            }
+        }
+    }
+    assert!(
+        blocked_back > 0,
+        "the player's shield blocked a reflected one"
+    );
+}
+
+#[test]
+fn bursts_cones_lines_and_hexes_are_never_turned_back() {
+    for shape in [
+        "shape = \"burst\"\nresolution = \"area\"\nmax_range = 6\nradius = 1\nmax_radius = 1\n\
+         damage = { dice = \"1d2\" }",
+        "shape = \"cone\"\nresolution = \"area\"\nlength = 4\nmax_length = 4\n\
+         damage = { dice = \"1d2\" }",
+        "shape = \"line\"\nresolution = \"area\"\nlength = 4\nmax_length = 4\n\
+         damage = { dice = \"1d2\" }",
+    ] {
+        let (mut w, kobold) = reflector(spell_content(shape, true), "wizard", 10);
+        for _ in 0..10 {
+            let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
+            assert!(!blows.is_empty(), "{shape}: it reached the kobold");
+            assert!(blows.iter().all(|b| b.0 != kobold), "{shape}: {blows:?}");
+        }
+    }
+    let (mut w, kobold) = reflector(spell_content(RAY, true), "witch", 10);
+    for _ in 0..5 {
+        let blows = cast_at_kobold(&mut w, kobold, "use:hex_of_weakness");
+        assert!(blows.iter().all(|b| b.0 != kobold));
+    }
+    assert!(severity(&w, kobold, "weakened") > 0, "hexed");
+    assert_eq!(severity(&w, w.player_id(), "weakened"), 0, "nothing back");
+}
+
+#[test]
+fn a_miss_by_parry_is_not_turned_back() {
+    // A touch (Parry counts against it), at a kobold with a foil and a shield.
+    let touch = "shape = \"touch\"\nresolution = \"touch\"\ndamage = { dice = \"1d6\" }";
+    let (mut w, kobold) = reflector(spell_content(touch, true), "wizard", 10);
+    let content = w.content().clone();
+    let me = w.state.actors.get_mut(&kobold).expect("kobold");
+    me.inventory.clear();
+    me.equipment = Default::default();
+    give(&mut w, kobold, "wa_foil");
+    give(&mut w, kobold, "wa_shield");
+    let here = w.player_pos();
+    w.state.actors.get_mut(&kobold).expect("kobold").pos = Pos::new(here.x + 1, here.y);
+    *w.perception = crate::perception::Perception::compute(&w.state, &content, &mut w.lights);
+    let (mut parried, mut blocked) = (0, 0);
+    for _ in 0..80 {
+        w.spend_actions(kobold);
+        let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
+        let back = blows.iter().filter(|b| b.0 == kobold).count();
+        match blows[0].2 {
+            BLOCKED => {
+                blocked += 1;
+                assert_eq!(back, 1, "{blows:?}");
+            }
+            Strike::Missed {
+                by: Some(Category::Parry),
+            } => {
+                parried += 1;
+                assert_eq!(back, 0, "{blows:?}");
+            }
+            _ => assert_eq!(back, 0, "{blows:?}"),
+        }
+    }
+    assert!(parried > 0 && blocked > 0, "{parried} {blocked}");
+}
+
+#[test]
+fn a_reflection_spends_no_more_mana_and_keeps_the_casters_lifted_cap() {
+    let (mut w, kobold) = reflector(spell_content(RAY, true), "wizard", 10);
+    let player = w.player_id();
+    let mut all = crate::stats::PerStat::splat(10);
+    all[crate::stats::Stat::Intelligence] = 18;
+    all[crate::stats::Stat::Willpower] = 14;
+    w.player_mut().stats = crate::stats::Stats::new(all, crate::stats::PerStat::splat(40));
+    let content = w.content().clone();
+    let bolt = content.spell(content.spell_id("arcane_bolt").expect("bolt"));
+    let level = w.caster_level(player);
+    let me = w.state.player();
+    let cost = me.spell_cost(&content, bolt, level);
+    assert_eq!(me.spell_cap(&content, bolt), 27, "lifted from 18");
+    let mut most = 0;
+    for _ in 0..400 {
+        w.spend_actions(kobold);
+        let blows = cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
+        // Paid once (a turn's regeneration may come back already).
+        let mana = w.state.player().mana;
+        assert!(
+            mana >= 40 - cost && mana < 40,
+            "paid once: {mana} {blows:?}"
+        );
+        if blows.iter().any(|b| b.0 == kobold) {
+            let hurt = 10_000 - w.state.player().hp;
+            assert!(hurt <= 27, "{hurt}");
+            most = most.max(hurt);
+        }
+    }
+    assert!(most > 18, "past the unlifted cap: {most}");
+}
+
+#[test]
+fn a_wands_bolt_is_turned_back() {
+    let (mut w, kobold) = reflector(spell_content(RAY, true), "wizard", 10);
+    let player = w.player_id();
+    let content = w.content().clone();
+    let wand = content.object_id("wand_of_scorching_ray").expect("a wand");
+    let mut turned = 0;
+    for _ in 0..3 {
+        let me = w.player_mut();
+        me.inventory.push(crate::object::Stack::new(wand, 1));
+        let item = me.inventory.len() - 1;
+        let equip = crate::action::parse_actions(&format!("equip:missile_weapon:{item}"));
+        w.apply(&equip.expect("equip")[0]);
+        for _ in 0..5 {
+            w.spend_actions(kobold);
+            let blows = cast_at_kobold(&mut w, kobold, "fire");
+            assert!(blows.first().is_some_and(|b| b.0 == player), "{blows:?}");
+            turned += blows.iter().filter(|b| b.0 == kobold).count();
+        }
+    }
+    assert!(turned > 0);
+    assert!(
+        (said(&w).iter()).any(|m| m == "The kobold's shield turns your scorching ray back at you."),
+        "{:#?}",
+        said(&w)
+    );
+}
+
+#[test]
+fn reflection_draws_nothing_without_a_qualifying_rank() {
+    let run = |abilities: bool| {
+        let (mut w, kobold) = reflector(spell_content(RAY, abilities), "wizard", 9);
+        let mut hashes = Vec::new();
+        for _ in 0..20 {
+            cast_at_kobold(&mut w, kobold, "use:arcane_bolt");
+            hashes.push(w.state_hash());
+        }
+        hashes
+    };
+    assert_eq!(run(true), run(false));
+}
+
+#[test]
+fn a_creature_turns_the_players_wand_back_and_the_replay_verifies() {
+    // A champion with a knife, a shield, and Sword and Board 10, who fights; the player zaps a
+    // wand of scorching ray at it.
+    let mut files = ContentFiles::builtin();
+    files.insert("data/objects/zz_wa_test.toml", OBJECTS);
+    files.insert(
+        "data/creatures/zz_wa_champion.toml",
+        "[[creature]]\nid = \"wa_champion\"\nname = \"champion\"\nglyph = \"C\"\n\
+         fg = \"#806040\"\nweight = 60000\nfaction = \"vermin\"\nspeed = 1000\nbase_hp = 1000\n\
+         weapon_skills = { long_blades = 1, sword_and_board = 10 }\n",
+    );
+    files.insert(
+        "levels/wa_range.toml",
+        "name = \"Range\"\nambient = [255, 255, 255, 0]\nmap = '''\n#######\n#@...C#\n\
+         #######\n'''\n[legend]\n\"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+         \"C\" = { terrain = \"floor\", creature = \"wa_champion\", \
+         carry = [\"wa_knife\", \"wa_shield\"], wield = [\"wa_knife\", \"wa_shield\"] }\n",
+    );
+    files.insert(
+        "scenarios/wa_range.toml",
+        "name = \"Range\"\nstart_level = \"wa_range\"\nhp = 1000\n\
+         carry = [\"wand_of_scorching_ray\"]\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    let mut w = World::new(content.clone(), "wa_range", Some(5)).expect("world");
+    let champion = at(&w, 5, 1);
+    let mut replay = crate::replay::Replay::new(&w);
+    let mut apply = |w: &mut World, text: &str| {
+        for action in crate::action::parse_actions(text).expect("actions") {
+            w.apply(&action);
+            replay.push(&action, w);
+        }
+    };
+    apply(&mut w, "equip:missile_weapon:a");
+    for _ in 0..10 {
+        let Some(at) = w.state.actors.get(&champion).map(|a| a.pos) else {
+            break;
+        };
+        apply(&mut w, &format!("fire:{},{}", at.x, at.y));
+    }
+    assert!(
+        (said(&w).iter())
+            .any(|m| m == "The champion's shield turns your scorching ray back at you."),
+        "{:#?}",
+        said(&w)
+    );
+    let verified = crate::replay::Replay::from_json(&replay.to_json())
+        .expect("json")
+        .run(content)
+        .expect("the replay verifies");
+    assert_eq!(verified.state_hash(), w.state_hash());
+}

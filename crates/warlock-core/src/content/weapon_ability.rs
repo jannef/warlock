@@ -58,6 +58,9 @@ pub enum Trigger {
     Blocked,
     /// A melee attack on the actor missed by its Dexterity or Dodge.
     Dodged,
+    /// A hostile's spell that rolls an attack against the actor's Defence (a bolt, a ray, a
+    /// touch; a wand's too) missed by its Shield.
+    SpellBlocked,
     /// Both blows of the actor's two-weapon attack hit the same target, which lives.
     BothHandsHit,
     /// A hostile steps up beside the actor.
@@ -66,7 +69,7 @@ pub enum Trigger {
 
 impl Trigger {
     /// Every trigger, in the wiki's order.
-    pub const ALL: [Trigger; 10] = [
+    pub const ALL: [Trigger; 11] = [
         Trigger::Hit,
         Trigger::Critical,
         Trigger::BigHit,
@@ -75,6 +78,7 @@ impl Trigger {
         Trigger::Parried,
         Trigger::Blocked,
         Trigger::Dodged,
+        Trigger::SpellBlocked,
         Trigger::BothHandsHit,
         Trigger::Approaches,
     ];
@@ -90,6 +94,7 @@ impl Trigger {
             Trigger::Parried => "parried",
             Trigger::Blocked => "blocked",
             Trigger::Dodged => "dodged",
+            Trigger::SpellBlocked => "spell_blocked",
             Trigger::BothHandsHit => "both_hands_hit",
             Trigger::Approaches => "approaches",
         }
@@ -106,6 +111,7 @@ impl Trigger {
             Trigger::Parried => "a melee attack on you misses by your Parry",
             Trigger::Blocked => "a melee attack on you misses by your Shield",
             Trigger::Dodged => "a melee attack on you misses by your Dexterity or Dodge",
+            Trigger::SpellBlocked => "a spell's attack on you misses by your Shield",
             Trigger::BothHandsHit => "both blows of your two-weapon attack hit, and the foe lives",
             Trigger::Approaches => "a hostile steps up beside you",
         }
@@ -120,6 +126,7 @@ impl Trigger {
                 | Trigger::Parried
                 | Trigger::Blocked
                 | Trigger::Dodged
+                | Trigger::SpellBlocked
                 | Trigger::Approaches
         )
     }
@@ -205,6 +212,10 @@ pub enum WeaponDoes {
     FreeShot,
     /// Switches on Parry against shots and throws for the holder.
     ParryMissiles,
+    /// The blocked spell is cast back at its caster from the actor's cell, as the caster cast
+    /// it, at most `per_turn` times a turn of the actor's; a reflected spell is never reflected
+    /// again (`world/reflect.rs`).
+    ReflectSpell { per_turn: u8 },
 }
 
 impl WeaponDoes {
@@ -216,6 +227,7 @@ impl WeaponDoes {
             WeaponDoes::ExtraDamage { .. } => "extra_damage",
             WeaponDoes::FreeShot => "free_shot",
             WeaponDoes::ParryMissiles => "parry_missiles",
+            WeaponDoes::ReflectSpell { .. } => "reflect_spell",
         }
     }
 
@@ -290,6 +302,7 @@ struct EffectSpec {
     dice: Option<String>,
     #[serde(rename = "damage")]
     damage_kind: Option<String>,
+    per_turn: Option<u8>,
 }
 
 /// Parses the weapon ability files, in path order; weapon skills, statuses, damage types, and
@@ -389,6 +402,9 @@ fn resolve(spec: WeaponAbilitySpec, content: &Content) -> Result<WeaponAbility, 
     if effect == WeaponDoes::FreeShot && triggers != [Trigger::Approaches] {
         return Err("a `free_shot` fires on `approaches`".into());
     }
+    if matches!(effect, WeaponDoes::ReflectSpell { .. }) && triggers != [Trigger::SpellBlocked] {
+        return Err("a `reflect_spell` fires on `spell_blocked`".into());
+    }
     if spec.systems.iter().any(|s| s.trim().is_empty()) {
         return Err("`systems` names systems, not blanks".into());
     }
@@ -414,16 +430,18 @@ fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
         ("on", spec.on.is_some()),
         ("dice", spec.dice.is_some()),
         ("damage", spec.damage_kind.is_some()),
+        ("per_turn", spec.per_turn.is_some()),
     ];
     let reads: &[&str] = match spec.kind.as_str() {
         "free_blow" => &["trigger"],
         "status" => &["status", "severity", "turns", "on"],
         "extra_damage" => &["dice", "damage"],
+        "reflect_spell" => &["per_turn"],
         "free_shot" | "parry_missiles" => &[],
         other => {
             return Err(format!(
                 "unknown effect kind `{other}` (free_blow, status, extra_damage, free_shot, \
-                 parry_missiles)"
+                 parry_missiles, reflect_spell)"
             ));
         }
     };
@@ -493,6 +511,10 @@ fn effect(spec: EffectSpec, content: &Content) -> Result<WeaponDoes, String> {
             WeaponDoes::ExtraDamage { dice, kind }
         }
         "free_shot" => WeaponDoes::FreeShot,
+        "reflect_spell" => match spec.per_turn {
+            Some(per_turn @ 1..) => WeaponDoes::ReflectSpell { per_turn },
+            _ => return Err("a `reflect_spell` effect needs `per_turn`, 1 or more".into()),
+        },
         _ => WeaponDoes::ParryMissiles,
     })
 }
@@ -531,6 +553,19 @@ mod tests {
             .find(|a| a.id == "staggering_block")
             .expect("staggering block");
         assert_eq!(block.triggers, [Trigger::Parried, Trigger::Blocked]);
+        let reflection = (content.weapon_abilities().iter())
+            .find(|a| a.id == "spell_reflection")
+            .expect("spell reflection");
+        let board = content
+            .weapon_skills()
+            .id("sword_and_board")
+            .expect("style");
+        assert_eq!(
+            (reflection.skills.as_slice(), reflection.rank),
+            (&[board][..], 10)
+        );
+        assert_eq!(reflection.triggers, [Trigger::SpellBlocked]);
+        assert_eq!(reflection.effect, WeaponDoes::ReflectSpell { per_turn: 1 });
         // Every trigger has an id the parser reads back.
         for t in Trigger::ALL {
             assert_eq!(Trigger::parse(t.id()), Ok(t));
@@ -619,6 +654,24 @@ mod tests {
                 "skills = [\"bows\"]\nrank = 4\nkind = \"triggered\"\ntrigger = \"hit\"\n\
                  [weapon_ability.effect]\nkind = \"free_shot\"",
                 "fires on `approaches`",
+            ),
+            (
+                "skills = [\"sword_and_board\"]\nrank = 10\nkind = \"triggered\"\n\
+                 trigger = \"blocked\"\n[weapon_ability.effect]\nkind = \"reflect_spell\"\n\
+                 per_turn = 1",
+                "fires on `spell_blocked`",
+            ),
+            (
+                "skills = [\"sword_and_board\"]\nrank = 10\nkind = \"triggered\"\n\
+                 trigger = \"spell_blocked\"\n[weapon_ability.effect]\nkind = \"reflect_spell\"\n\
+                 per_turn = 0",
+                "needs `per_turn`",
+            ),
+            (
+                "skills = [\"sword_and_board\"]\nrank = 10\nkind = \"triggered\"\n\
+                 trigger = \"spell_blocked\"\n[weapon_ability.effect]\nkind = \"status\"\n\
+                 status = \"staggered\"\nper_turn = 1",
+                "a `status` effect has no `per_turn`",
             ),
             (
                 "skills = [\"duelist\"]\nrank = 4\nkind = \"triggered\"\ntrigger = \"hit\"\n\

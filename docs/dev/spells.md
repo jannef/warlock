@@ -123,7 +123,21 @@ shares.
     threat 22, crit ×2 })` against `combat::Target::bare(target_against(target, missile).defence)`
     (no Protection; the strike's damage, crit included, is then held to the cap and resisted in
     `spell_strikes`). `spell_strikes` is the one place a spell's blow lands: the event (a miss
-    too), provoking, the resistance, blood, the hurt, the wound.
+    too), provoking, the resistance, blood, the hurt, the wound. `cast_single` settles the
+    caster's side once (`reflect::Shot`: dice, cap, to-hit, effect) and strikes through
+    `spell_attack(by, target, source, shot)`, the one place a single target's roll is made.
+  - **Spell reflection** (#566, `world/reflect.rs`): an attack or touch roll whose miss
+    `Defence::why_missed` put down to the target's **Shield** raises the `spell_blocked`
+    trigger for the target (`World::spell_blocked`, through `weapon_trigger`). A
+    `reflect_spell` effect (Spell reflection, Sword and Board 10) marks the reflector while its
+    `per_turn` count allows (`Reflections`, transient, cleared in `spend_actions`), and
+    `cast_damage` then casts the same `Shot` back (`World::turn_back`): said first, from the
+    reflector's cell back along the cells the spell flew through (they were empty), its own
+    attack roll against the caster's Defence, the caster's dice, lifted cap, and to-hit, the
+    spell's status rider on a hit (`spell_lands`, by the reflector); no mana again, nothing for
+    the reflector. The reflected flight never raises the trigger (the mark): no ping-pong. A
+    death by it is put down to the spell, as a death by one's own spell is. Creature spells are
+    still intents, so only the player's spells (cast, read, or zapped) are reflected today.
   - **Geometry**: `spell::cone_cells(from, toward, length, opaque)` (exported as
     `warlock_core::world::cone_cells` for the aiming mode): cells within the rounded radius, in
     line of sight from `from`, not opaque, `dot > 0` and `2·dot² ≥ |v|²·|d|²` (45° either side),
