@@ -97,6 +97,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     least 1 % of a human's), `trap_damage` takes that percent off a trap's blow (with Trap sense,
     at most 75 % in all: a trap always hurts, at least 1), and `disease_check` adds to every
     check against a disease, catching and progression alike.
+    `potion_kept` and `wand_level` are read (#633): `potion_kept` adds to Thrifty drinker's
+    chance (§8 "Potions", 50 % at most unless the talent alone is above it), `wand_level` adds
+    to the level a wand casts at with Wand mastery's (§8 "Magic items": "Wands").
     Pending hooks, added
     with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
     none roll yet) and value (#145, a base `value` times rarity and affixes).
@@ -285,7 +288,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Casting**: through the one cast path (§8 "Spells", `World::wand_cast`), with the spell's
     own resolution (an `attack` spell rolls to hit with the user's Dexterity, as every spell
     attack does; `auto` and `area` ones do not), reach (the user's Willpower), dice at the
-    **wand's caster level**, never the user's (plus Wand mastery's +2), held to the spell's cap.
+    **wand's caster level**, never the user's (plus Wand mastery's +2 and worn `wand_level`
+    affixes'), held to the spell's cap.
     A charge pays instead of mana; a cast refused (at oneself, out of reach, no one to touch)
     uses none and takes no time; one that goes off takes the `cast` action's time (times the
     spell's `casts`). Its kills are the user's; one that kills its user is the spell's
@@ -417,7 +421,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     alchemist (§7 "Shops": potions only, healing always first), quest rewards, and the hub's
     pile.
   - **Talents** (system `potions`): Thrifty drinker (Delver, from level 6): a potion is not used
-    up one time in four (one gameplay draw a drink, none without the talent); Nose for draughts
+    up one time in four (one gameplay draw a drink, none while the chance is 0); worn
+    `potion_kept` affixes add their percent to it, the sum at most 50 (a talent's own chance
+    above 50 stands); Nose for draughts
     (Scholar, Intelligence 12): an unknown potion picked up tells its kind by its smell, never
     its type ("The fizzy red potion smells of herbs: a cure of some kind."); Lasting draughts
     (Vigour, Toughness 13; #567): boost and vision statuses last half again

@@ -357,8 +357,8 @@ shares.
     `World::zap`: empty → "Nothing happens.", no time, charges then known; else
     `World::wand_cast` (the cast path, `Pay::Wand(item)`: `pay_cast` → `World::use_charge`,
     "You zap the oak wand.", and the type learned through `learn_scroll`, "It is a wand of
-    fireball.") at `Actor::wand_caster_level` (the wand's level + `TalentMods::wand_level`,
-    at least 1), the player's reach; priced as `cast` × `casts`. A death by it is
+    fireball.") at `Actor::wand_caster_level` (the wand's level + `TalentMods::wand_level` + the
+    worn `wand_level` affixes', #633, at least 1), the player's reach; priced as `cast` × `casts`. A death by it is
     `Cause::Spell`, as a mana cast's.
   - **Labels**: `scroll_label::Labels::draw` draws wand labels (`data/wand_labels.toml`,
     `Content::wand_labels`, the `ScrollLabelDef` format) after the scrolls', from the same

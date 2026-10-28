@@ -3,8 +3,9 @@
 //!
 //! - **A drink** takes the `drink` action's time (one turn) and one of the stack, from the pack
 //!   or the floor (in a shop, a potion drunk is bought, as food eaten is). With Thrifty drinker
-//!   the potion is kept by the talent's chance: one draw of the gameplay stream a drink, none
-//!   without the talent.
+//!   or worn items of the Alchemist (`potion_kept`) the potion is kept by their chance
+//!   ([`Actor::potion_kept`]): one draw of the gameplay stream a drink, none while the chance
+//!   is 0.
 //! - **What it was**: "You drink the fizzy red potion." and, for a type the player did not know,
 //!   "It is a potion of healing." Drinking identifies its type, as reading does a scroll's
 //!   ([`World::learn_scroll`]).
@@ -29,10 +30,26 @@
 //! [`Action::Eat`]: crate::action::Action::Eat
 //! [`Draught`]: crate::content::Draught
 
-use super::{Spent, World};
+use super::{Actor, Spent, World};
 use crate::action::{Event, Meal, Positions};
-use crate::content::{ActionKind, Draught, StatUse, StatusId};
+use crate::content::{ActionKind, Content, Draught, Effect, StatUse, StatusId};
 use crate::object::Stack;
+
+/// The most the worn items of the Alchemist raise the chance a potion is kept to, in percent,
+/// with Thrifty drinker's (a talent's own chance above it stands).
+pub(super) const MAX_KEPT: u8 = 50;
+
+impl Actor {
+    /// The chance in percent a potion this actor drinks is not used up: Thrifty drinker's
+    /// (`TalentMods::potion_kept`) plus the worn items' `potion_kept` (of the Alchemist,
+    /// unidentified too), the sum held to [`MAX_KEPT`] unless the talent alone is above it.
+    pub fn potion_kept(&self, content: &Content) -> u8 {
+        let talent = self.talent_mods(content).potion_kept;
+        let worn = self.mods(content).get(Effect::PotionKept).max(0);
+        let sum = (i32::from(talent) + worn).min(i32::from(MAX_KEPT.max(talent)));
+        u8::try_from(sum).unwrap_or(talent)
+    }
+}
 
 /// What the player is told when Thrifty drinker keeps a potion they drank.
 pub(super) const KEPT: &str = "There is enough left in the flask for another draught.";
@@ -183,10 +200,10 @@ impl World {
     }
 
     /// Takes one potion from where `meal` says: from the pack (the last empties its stack, and
-    /// what was worn follows its letters) or the pile underfoot. Returns it, and whether Thrifty
-    /// drinker kept it instead (a draw of the gameplay stream only with the talent).
+    /// what was worn follows its letters) or the pile underfoot. Returns it, and whether it was
+    /// kept instead ([`Actor::potion_kept`]; a draw of the gameplay stream only above 0).
     fn take_draught(&mut self, meal: Meal) -> (Stack, bool) {
-        let keep = self.state.player().talent_mods(&self.content).potion_kept;
+        let keep = self.state.player().potion_kept(&self.content);
         let kept = keep > 0 && self.state.rng.chance(u32::from(keep));
         match meal {
             Meal::Pack(i) => {
