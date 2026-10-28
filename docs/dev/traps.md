@@ -37,7 +37,8 @@ victim where it stands, a bolt without a `dir` runs from the door through the vi
 picks `Dir::toward` when the victim stands next to the trap), and a burst's own cell never stops it
 (`World::cast_burst`), so a shut door's blast leaves both sides. The app's step prompt
 (`input::trap_dialog`) skips doors. A trap's blow is dealt like any other
-(`World::trap_deals`: blood by `World::spill`, `hurt` with `Harm::Trap`, then the wound's
+(`World::trap_deals`: the target's Trap sense percent less its worn `trap_damage` (of Wariness),
+at most `TRAP_DAMAGE_CUT` = 75 % off, rounded down, at least 1; blood by `World::spill`, `hurt` with `Harm::Trap`, then the wound's
 statuses by `World::wounded`), of the trap's `damage_type` (`TrapEffect::damage_kind`;
 docs/dev/combat.md "Damage types": a shot's and a strike's `Attack::kinds` go through
 `combat::strike`, a burst's, a bolt's, and a pit's `Damage` through `World::trap_hurts` →

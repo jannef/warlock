@@ -8,8 +8,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Exile. A first pass: the lists and numbers are to be tuned after playtesting.
   - **Base items** are objects with a `kind` (§7): weapon, missile weapon (`launcher`),
     ammunition, body armour, helmet, cloak, gloves, boots, shield, ring, amulet, tool (a digging
-    tool in the Tool slot; no object is one yet: the pick-axe becomes one with its affixes,
-    docs/design/affixes-systems.md §6). Only they are
+    tool in the Tool slot: the pick-axe, loot from item level 3 and rare among it (`frequency`
+    10); the pick-axes placed in levels, worn by creatures, and in starting kits are plain; a tool
+    shows no numbers in the lists, its description its digging power, "Digs at 10"). Only they are
     magic; they and scrolls (§8 "Scrolls", never magic) are loot.
   - **Rarity**: *normal* (no affixes; 85 % of loot), *magic* (13 %: a prefix only 40 %, a
     suffix only 40 %, one of each 20 %), *rare* (2 %: three affixes 50 %, four 30 %, five 15 %,
@@ -77,7 +78,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `resource_on_kill`: each names its resource in data, `resource = "stamina"`), kicking doors in
     (`door_kick`), digging (`dig_percent`), hunger (`hunger`), trap damage (`trap_damage`),
     disease checks (`disease_check`), and potions kept (`potion_kept`) are effects with words, but
-    no rule reads them and no affix has them yet: each comes with its hook. Pending hooks, added
+    no rule reads them and no affix has them yet: each comes with its hook. The utility hooks
+    are in (#631), worn by the player or a creature, identified or not: `door_kick` adds to a
+    kick's Strength as Lockbreaker's does (a door's and a chest's), `dig_percent` is that much
+    more work a turn of digging, `hunger` makes hunger come that percent slower (the pace at
+    least 1 % of a human's), `trap_damage` takes that percent off a trap's blow (with Trap sense,
+    at most 75 % in all: a trap always hurts, at least 1), and `disease_check` adds to every
+    check against a disease, catching and progression alike. Pending hooks, added
     with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
     none roll yet) and value (#145, a base `value` times rarity and affixes).
   - **Affixes** (`data/affixes.toml`, §7): 23 prefixes (mostly offensive, flat Defence, and

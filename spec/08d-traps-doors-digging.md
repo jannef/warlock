@@ -201,7 +201,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       of the time, 10 33 %, 15 50 %, 18 60 %, 30 and up always. A door without a sturdiness never
       breaks, and no die is rolled. The kicker's athletics (§8 "Skills") adds to the Strength:
       +8 at 100 (Strength 10 then breaks the closed door 60 % of the time), and every kick at a
-      door may earn it a training mark. Kicking a door is no attack: it takes the plain `kick`,
+      door may earn it a training mark; so do the talents' `door_kick` (Lockbreaker's 6) and the
+      boots' (§8 "Magic items": the `door_kick` affix effect), `World::kick_force`. Kicking a door is no attack: it takes the plain `kick`,
       whatever the stance. A broken door becomes its `breaks_to`, the **broken door**
       (`,`, splinters in the doorway): walkable and see-through for good (it cannot be closed),
       its lock gone: "The door crashes open!" A door that holds: "WHAMM!" Either way the kick bangs
@@ -262,7 +263,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     no time or mana spent: "There is no lock there to spring."
   - **Kicking** (`k`, `kick:DIR`; the plain `kick`, priced and heard as a door kick, and training
     athletics as one): one draw of the gameplay stream, `1d(sturdiness) ≤ Strength` + athletics +
-    the talents' `door_kick` (Lockbreaker's 6), against the band's sturdiness (a coffer's 20).
+    the talents' `door_kick` (Lockbreaker's 6) + the worn `door_kick` (`World::kick_force`), against the band's sturdiness (a coffer's 20).
     Held: "You kick the coffer. It holds.", nothing else changes (try again as often as you
     like). Broken, it is **smashed**: "The coffer bursts apart!", the lock gone, and each stack
     inside is destroyed with `[smash] destroyed` percent (50; one gameplay draw a stack, in the
@@ -299,7 +300,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     trapped: an arrow trap."; a dwarf's stone sense does not help: a chest is no stone);
     **Chest-wise** knows the trap of every shut chest in sight at once, no check, saying the same
     line. **Disarm** works on a chest's known trap as on any (made: the trap is gone, the chest
-    still shut). **Trap sense** halves its blow as any trap's. Known, it shows in look mode after
+    still shut). **Trap sense** halves its blow as any trap's (and the worn
+    `trap_damage` takes its percent off too, together at most 75 %). Known, it shows in look mode after
     the chest's name ("A coffer, trapped: an arrow trap."); the map and the `view` dump keep the
     chest's glyph over it, the `traps` dump lists it.
   - **Perception** (`PerceptionView::chest_at`): on a cell seen or remembered, the chest's band
@@ -391,7 +393,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the same loop (perception batched while no creature can come into view): each turn is a `dig`
     action (1000: 6 s at normal speed, slowed by burden like every price), does work of the tool's
     power × (Strength + 10) / 20 (the score, never the modifier: a pick-axe at Strength 10 does 10,
-    at 18 14), and makes the digging noise where the digger stands (80; §5 "Hearing"). The wall
+    at 18 14), that much more by the talents' `dig_percent` (Tunneler's 50) and what is worn
+    (§8 "Magic items": a Delving pick-axe), and makes the digging noise where the digger stands (80; §5 "Hearing"). The wall
     gives way, as the player acts, once the work done on it reaches its hardness: a pick-axe at
     Strength 10 digs through packed earth in 1 minute, a stone wall in 6, granite in 30; a mattock
     in 42 s, 4, and 20 minutes. Integer math: the work is kept in twentieths. It stops, like a rest,

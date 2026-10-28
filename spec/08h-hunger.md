@@ -9,7 +9,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Nutrition**: the player has a counter of nutrition points (`Actor::satiation`; creatures
     do not hunger). Game time burns it as the scheduler moves the clock, so long actions,
     rests, and overworld journeys burn it too: a point every `burn_seconds` (60) at the race's
-    `hunger` percent (§7; a human 1440 a day, a halfling 1800), the seconds that do not make a
+    `hunger` percent (§7; a human 1440 a day, a halfling 1800; then the talents' `hunger_percent`,
+    Lean, and less the worn `hunger` affix effect's percent, §8 "Magic items"; at least 1), the seconds that do not make a
     whole point banked (`Satiation::banked`, saved). The dev time skip burns nothing (nobody
     acts). The player's exertions burn extra points at their race's percent: a blow in melee 2,
     a shot 1, a throw 1 (`[exertion]`; `World::exert`). A run starts at `start` (3600: Not
