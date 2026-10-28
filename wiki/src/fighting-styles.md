@@ -15,8 +15,7 @@ A style is trained by fighting in its configuration: every attack you make while
 weapons its way earns marks in the style as well as in the weapon's own skill, by the same rules
 (more for a hit, more against stronger opponents; see [Marks and ranks](weapon-skills.md#marks-and-ranks)).
 A dagger alone in your hand trains Duelist; the same dagger beside a sword trains Twin Blades.
-A shield alone is no style at all, and neither is a shield bash without a weapon in the other
-hand.
+A shield alone is no style at all, and neither is a shield bash with an empty other hand.
 
 - **Duelist**: one one-handed weapon and nothing in the other hand. It parries better and hits
   more often.
@@ -26,6 +25,7 @@ hand.
 - **Sword and Board**: a one-handed weapon and a shield. The shield protects better, and a blow
   that hits may be followed by a shield bash for free (it trains
   [shield bashing](weapon-skills.md#the-skills)).
+- **Two Shields**: a shield in each hand. See [Two shields](#two-shields) below.
 - **Marksman**: shooting a bow, a crossbow, or a sling, whatever your hands hold. Shots hit more
   often and take less time, and a crossbow reloads faster.
 - **Skirmisher**: throwing, anything at all. Throws hit more often and harder, and take less
@@ -76,6 +76,26 @@ Twin Blades eases both penalties, and from rank 9 neither hand has any: a full a
 From rank 7 it adds to hit as well.
 Creatures that hold two weapons fight with both too.
 
+## Two shields
+
+A shield fits either hand. With one on each arm you fight in **Two Shields**, a style nobody
+starts with: it is not listed on the weapon skills screen, nor are the talents that ask for it,
+until your first marks in it. Every attack you make up close is a **shield bash** with the first
+shield, by itself (you need not choose Shield bash from the abilities menu), drawing on and
+training [shield bashing](weapon-skills.md#the-skills) and Two Shields both. After a bash that
+hits, the other shield may follow it with a bash of its own, more often as the style rises.
+
+The style protects well (its Shield adds to your shields'), hits harder, and from rank 4 a blow
+your shields turn staggers its striker (*Staggering block*). But two shields are clumsy: every
+bash is at a penalty to hit, every attack takes longer, and a spell you cast with your own mana
+may fail, your hands full of shields: the mana and the time are spent all the same. The style
+eases all three, and from rank 9 none is left. A scroll read or a wand used never fails so.
+
+Talents for those deep in the style (see [Talents](talents.md)): *Loose straps* (Two Shields 5)
+makes a spell fail far less often, *Anvil and hammer* (Two Shields 6) brings the second shield's
+bash more often, and *Craven's wall* (Two Shields 8) makes both shields guard you at once while
+you fight in the coward's [stance](combat.md#stances).
+
 ## What a rank gives
 
 As with weapon skills, the game never tells you what a rank gives in numbers. These are the
@@ -87,7 +107,10 @@ rules, exactly. A style's benefits add to those of the weapon skill you fight wi
   of ×2, ×4 at Great Weapon 10; see [Criticals](combat.md#criticals)).
 - **Main hand** and **Off hand**: the penalty to hit of each hand's blow with two weapons.
 - **Shield bash after a hit**: the chance that a blow that hits is followed by a free bash with
-  your shield.
+  your shield (with two shields, a bash that hits by one with the other).
+- **Bash penalty**, **Slower attacks**, and **Spell failure**: with two shields, the penalty to
+  hit of every bash, how much longer every attack takes, and the chance a spell you cast with
+  your own mana fails.
 
 {{#include generated/style-benefits.md}}
 

@@ -500,6 +500,10 @@ pub struct TalentMods {
     pub ability_stamina: Vec<(crate::content::WeaponAbilityId, i32)>,
     /// What its Brace's blow gains (Brace of steel): to-hit, and a status on a foe it hits.
     pub brace: Option<(i32, StatusId)>,
+    /// Percent points off the chance a spell fails with two shields held (Loose straps).
+    pub shield_casting: u32,
+    /// The combat stances in which both of two shields count in Defence (Craven's wall).
+    pub both_shields: Vec<CombatStance>,
     /// The Protection its confirmed criticals ignore, on top of the attack's penetration.
     pub critical_penetration: i32,
     /// More penetration for blows that can do damage of a kind: `(kind, value)`.
@@ -1415,6 +1419,14 @@ impl TalentMods {
                     self.brace = Some((had + to_hit, status));
                 }
             }
+            TalentEffect::ShieldCasting { value } => {
+                self.shield_casting += u32::try_from(value).unwrap_or(0);
+            }
+            TalentEffect::BothShields { stance } => {
+                if !self.both_shields.contains(&stance) {
+                    self.both_shields.push(stance);
+                }
+            }
             TalentEffect::CriticalPenetration { value } => self.critical_penetration += value,
             TalentEffect::Penetration {
                 damage: kind,
@@ -2124,6 +2136,13 @@ pub fn may_take(
         (Some(kind), None) => return Err(Refusal::NeedsChoice(kind)),
         (None, Some(_)) => return Err(Refusal::TakesNoChoice),
         (Some(kind), Some(id)) if kind.name(content, id).is_none() => {
+            return Err(Refusal::BadChoice(kind, id.to_string()));
+        }
+        // A hidden weapon skill or style (Two Shields) is no choice until it has marks.
+        (Some(kind @ (Choice::WeaponSkill | Choice::Style)), Some(id))
+            if (content.weapon_skills().id(id))
+                .is_some_and(|w| !who.weapon_skills.shows(content.weapon_skills(), w)) =>
+        {
             return Err(Refusal::BadChoice(kind, id.to_string()));
         }
         _ => {}

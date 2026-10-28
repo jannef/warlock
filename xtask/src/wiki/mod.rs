@@ -699,7 +699,11 @@ mod tests {
              suit of scale mail, suit of banded mail, suit of plate armour | 18 seconds |"
         ));
         // Weapons by skill, then value, then name (the staves last among the melee skills).
-        assert!(equipment.contains(", quarterstaff (both hands), ironwood staff (both hands) |"));
+        // Shields fit either hand (two-shield fighting, #611), after the weapons.
+        assert!(equipment.contains(
+            ", quarterstaff (both hands), ironwood staff (both hands), buckler, small shield, \
+             large shield, tower shield |"
+        ));
         assert!(
             equipment
                 .contains("| `f` | Off hand | Stiletto, dagger, short sword, hand axe, buckler, ")
@@ -1059,7 +1063,10 @@ mod tests {
             armour.contains("| Chain mail shirt | body | +2 | Armour | 3 | +4 |"),
             "{armour}"
         );
-        assert!(armour.contains("| Small shield | off hand | +1 | Shield | - | no limit |"));
+        assert!(
+            armour
+                .contains("| Small shield | main hand or off hand | +1 | Shield | - | no limit |")
+        );
         assert!(armour.contains("| Great helm | head | - | - | 2 | no limit | - |"));
         assert!(text("piercing.md").ends_with(
             "The crossbow bolt (2), the stiletto (2), and the war hammer (2) pierce armour, each \

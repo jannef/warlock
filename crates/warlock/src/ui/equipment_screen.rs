@@ -593,13 +593,16 @@ mod tests {
             screen.handle(&Press::nav(Nav::Back), &b),
             ScreenAction::Close
         );
-        // The hands: a weapon fits the main hand, the shield the off hand.
+        // The hands: a weapon fits the main hand, the shield either hand (two-shield
+        // fighting, #611).
         let main = content.slot_id("main_hand").expect("main hand");
         let screen = ItemScreen::new(Some(&world.perception()), main);
         let names: Vec<&str> = (screen.choices.iter())
             .map(|c| c.shown.name.as_str())
             .collect();
-        assert_eq!(names, ["a quarterstaff (+0 hit, 1d6, Dv +1)"]);
+        assert_eq!(names[0], "a quarterstaff (+0 hit, 1d6, Dv +1)");
+        assert!(names[1].starts_with("a small shield"), "{names:?}");
+        assert_eq!(names.len(), 2);
         let off = content.slot_id("off_hand").expect("off hand");
         let screen = ItemScreen::new(Some(&world.perception()), off);
         let text = drawn(|c| screen.draw(c, &b));

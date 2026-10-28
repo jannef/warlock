@@ -32,6 +32,16 @@ missile = [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120]
 main = -4
 off = -8
 
+# Fighting with a shield in each hand (two-shield fighting, #611; any shield fits either hand):
+# every blow is a shield bash, at `to_hit` (-20 to 0), every attack `slow` percent dearer, and
+# every spell its bearer casts with their own mana fails by a chance of `spell_failure` percent
+# (the mana and the time are spent all the same). The Two Shields style eases each (`ease_bash`,
+# `ease_slow`, `ease_spell` below), never past nothing.
+[two_shields]
+to_hit = -6
+slow = 50
+spell_failure = 75
+
 # Spells that roll to hit (a ray, a bolt, or a touch whose resolution is an attack roll; spells/)
 # aim with the skill of role `spell` and train it, and are fought in the caster styles below. A
 # ranged spell's far benefits (Sniper's `far_to_hit`, `far_threat`) apply from `far` cells away
@@ -268,6 +278,7 @@ crit = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 #              two_weapons        a weapon in each hand (both strike; see [two_weapons])
 #              two_handed         a two-handed weapon
 #              weapon_and_shield  a one-handed weapon and a shield
+#              two_shields        a shield in each hand (every blow a bash; see [two_shields])
 #              unarmed            nothing in the hands
 #              launcher           a shot from a missile weapon
 #              thrown             a throw
@@ -281,15 +292,21 @@ crit = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 #            One configuration is one style: at most one style of a grip leaves it out, and none
 #            names a weapon skill another of its grip names
 # and may give, beyond the benefits above (parry only for the grips that wield a weapon, shield
-# only for weapon_and_shield, reload only for launcher):
+# only for weapon_and_shield and two_shields, reload only for launcher):
 #   ease_main  two_weapons: points off the main hand's penalty
 #   ease_off   two_weapons: points off the off hand's penalty
 #   bash       weapon_and_shield: the chance in percent of a free shield bash after a blow that
-#              hits (it draws on and trains shield bashing)
+#              hits (it draws on and trains shield bashing); two_shields: the same, with the
+#              other shield after a bash that hits
+#   ease_bash  two_shields: points off the to-hit penalty
+#   ease_slow  two_shields: percent points off the slowness
+#   ease_spell two_shields: percent points off the chance a spell fails
 #   far_to_hit ranged_spell: added to the to-hit at a target [spell_attacks] `far` or more away
 #   far_threat ranged_spell: added to the threat widening at such a target
 #   armour     armoured_spell: percent off what worn armour adds to every spell's mana cost,
 #              whatever is cast (spells.toml's armour percents)
+#   hidden     true: listed (the weapon skills screen, the dumps, talents that ask for it) only
+#              once its owner has marks or a rank in it; nobody starts with it
 # Styles default only to styles (below). Rank 10 is where a style's later active or triggered
 # abilities will hang (a duelist's riposte, a staff fighter's trip).
 [[skill]]
@@ -334,6 +351,24 @@ grip = "weapon_and_shield"
 curve = "melee"
 shield = [0, 1, 1, 1, 2, 2, 2, 3, 4, 5, 6]
 bash = [0, 0, 0, 5, 5, 10, 10, 15, 20, 25, 35]
+
+# A shield on each arm (#611): every blow a bash, the other shield following up. Hidden until
+# the first marks, given by no class, defaulting to no style: found by fighting so. The banes
+# ([two_shields]) are gone at rank 9: no penalty to hit, no slowness, and no spell that fails.
+[[skill]]
+id = "two_shields"
+name = "Two Shields"
+phrase = "at fighting behind two shields"
+role = "style"
+grip = "two_shields"
+curve = "melee"
+hidden = true
+damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5]
+shield = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]
+bash = [0, 0, 5, 5, 10, 10, 15, 20, 25, 30, 40]
+ease_bash = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 6]
+ease_slow = [0, 5, 10, 15, 20, 25, 30, 35, 40, 50, 50]
+ease_spell = [0, 5, 10, 15, 20, 30, 40, 50, 60, 75, 75]
 
 [[skill]]
 id = "marksman"

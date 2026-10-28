@@ -101,7 +101,7 @@ impl WeaponSkillsScreen {
         let mut columns: [Vec<Row>; 2] = [Vec::new(), Vec::new()];
         for section in Section::ALL {
             let skills: Vec<Row> = (table.ids())
-                .filter(|(_, def)| def.role.section() == section)
+                .filter(|&(id, def)| def.role.section() == section && own.shows(table, id))
                 .map(|(id, def)| Row::Skill {
                     name: def.name.clone(),
                     rank: own.rank(id),
@@ -317,8 +317,10 @@ mod tests {
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert!(at("Melee") < at("Missile and thrown") && at("Missile and thrown") < at("Shields"));
         assert!(at("Shields") < at("Fighting styles") && at("Fighting styles") < at("Duelist"));
+        // Every skill once but Two Shields, hidden until its first marks (#611).
         let skills = world.content().weapon_skills().skills().len();
-        assert_eq!(skill_rows(&screen), skills);
+        assert_eq!(skill_rows(&screen), skills - 1);
+        assert!(at("Two Shields").is_none());
     }
 
     #[test]

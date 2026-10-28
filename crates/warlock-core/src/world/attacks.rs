@@ -140,18 +140,20 @@ impl Actor {
     pub fn known_attacks(&self, content: &Content) -> Vec<OwnAttack> {
         let me = self.as_known();
         let mut attacks = Vec::new();
-        let main = match me.weapon_item(content) {
+        let main = match me.blow_item(content) {
             Some(item) => self.inventory[item].title(content),
             None => match &content.creature(me.creature).attack {
                 Some(natural) => natural.name.clone(),
                 None => "bare hands".into(),
             },
         };
+        // With a shield in each hand a blow is the first shield's bash (`two_shields.rs`).
+        let blow = (me.opening_bash(content)).map_or_else(|| me.melee(content), |(_, p)| p);
         attacks.push(OwnAttack::of(
             AttackSource::MainHand,
             AttackKind::Melee,
             main,
-            me.melee(content),
+            blow,
             None,
         ));
         if let (Some((item, _)), Some((_, profile))) =

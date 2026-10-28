@@ -2,7 +2,7 @@
 id = "staggering_block"
 name = "Staggering block"
 description = "A blow you turn with shield or blade leaves its striker staggered, slow to act next."
-skills = ["sword_and_board"]
+skills = ["sword_and_board", "two_shields"]
 rank = 4
 kind = "triggered"
 trigger = ["parried", "blocked"]

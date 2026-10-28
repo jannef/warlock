@@ -315,6 +315,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   on in the slot, taking off first what is there (a swap) and moving it if it is in another slot;
   choosing what is already there takes it off. Rings fit either ring slot, a light weapon (`light_weapon`, §7: the
   dagger, the stiletto, the short sword) either hand (the off hand too: two weapons, §8 "Fighting styles"), a
+  shield either hand (two shields), a
   two-handed weapon takes both hands (and puts away what they hold), launchers and their ammunition go in the missile weapon
   and missiles slots, digging tools in the Tool slot. That is one action (replay text
   `equip:body:b`, `remove:body`): it is done at once and takes its time, the choice closes, and the
@@ -454,7 +455,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   readied missile weapon's, throwing's while something is ready to throw) are marked with an
   accent `•` before the name, and the Fighting styles heading then has the legend `• in use`.
   Where the console is wide enough (88 columns) the sections are in two columns, Melee and
-  Missile and thrown on the left, Shields, Spells, and Fighting styles on the right; else one. Never what
+  Missile and thrown on the left, Shields, Spells, and Fighting styles on the right; else one. A
+  `hidden` style (Two Shields, #611) is left out until the player has marks in it. Never what
   a rank gives, a mark count, or a creature's ranks. Read-only; `W`, Enter, or Esc closes it; in
   a short window the gaps between sections, the margin, and the gap above the footer give way
   first (in the default 1280×720 window one column then leaves the last few caster styles to

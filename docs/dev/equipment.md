@@ -7,7 +7,8 @@ Equipment (spec §6 "Equipment", §7; M16): slots are data, `data/slots.toml`
 (`content/slot.rs`: `SlotDef` with `id`, `name`, `fits`, `action`, `mark`, `hand`; `SlotId` is an
 index in screen order, in the content fingerprint), so **a new slot is one entry there** (saves
 change). Objects say where they go (`slot` = a slot's `fits`,
-`two_handed`, `light_weapon` (any hand), `ammo`, `launches`; `Content::fits`, `Content::fires`, `Content::hand_slots`).
+`two_handed`, `light_weapon` (any hand; a shield, anything with `bash`, too: two-shield
+fighting, `docs/dev/weapon-skills.md`), `ammo`, `launches`; `Content::fits`, `Content::fires`, `Content::hand_slots`).
 `equipment.rs` holds the runtime side: `Equipment` (slot → inventory position, on
 `Actor::equipment`, saved and hashed; equipped stacks stay in the inventory and keep weighing),
 `slots_taken` (every hand for a two-handed object), `free_slot` (spawn data), `mark` ("being

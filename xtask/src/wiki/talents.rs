@@ -1290,6 +1290,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             signed(to_hit),
             status(&id)
         ),
+        TalentEffect::ShieldCasting { value } => format!(
+            "with a shield in each hand, the chance a spell fails {value} percentage points \
+             smaller"
+        ),
+        TalentEffect::BothShields { stance } => format!(
+            "in the {} stance with a shield in each hand, both shields' Shield bonuses add up \
+             in Defence",
+            stance.id()
+        ),
         TalentEffect::CriticalPenetration { value } => {
             format!("your confirmed criticals: penetration {}", signed(value))
         }

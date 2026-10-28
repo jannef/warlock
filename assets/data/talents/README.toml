@@ -291,6 +291,10 @@
 #   rend_off_hand                 its Rend rolls the off hand's damage dice too
 #   brace { to_hit, status }      its Brace's blow is at that much more to hit, and a foe it
 #                                 hits suffers that status (one degree)
+#   shield_casting { value }      with a shield in each hand, the chance a spell it casts fails
+#                                 that many percentage points smaller (1 to 100)
+#   both_shields { stance }       in that combat stance with a shield in each hand, both
+#                                 shields' Shield bonuses add up in Defence
 #   critical_penetration { value } its confirmed criticals (every attack) ignore that much more
 #                                 Protection, on top of the attack's penetration
 #   penetration { damage, value } its blows that can do damage of that kind ignore that much

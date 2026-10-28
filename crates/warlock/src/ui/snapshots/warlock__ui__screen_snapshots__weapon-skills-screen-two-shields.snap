@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+ You feel more skilled at fighting behind two shields.
+    ┌─ Weapon skills ─────────────────────────────────────────────────────────────────────────┐
+    │                                                                                         │
+    │ Melee                                       Shields                                     │
+    │   Daggers and knives       2  ──────────      Shield blocking          0  ──────────    │
+    │   Short blades             0  ──────────      Shield bashing           0  ──────────    │
+    │   Long blades              0  ──────────                                                │
+    │   Great blades             0  ──────────    Spells                                      │
+    │   Axes                     0  ──────────      Spell attacks            0  ──────────    │
+    │   Maces and clubs          0  ──────────                                                │
+    │   Spears                   0  ──────────    Fighting styles                 • in use    │
+    │   Polearms                 0  ──────────      Duelist                  1  ──────────    │
+    │   Staves                   0  ──────────      Twin Blades              0  ──────────    │
+    │   Unarmed                  0  ──────────      Great Weapon             0  ──────────    │
+    │                                               Sword and Board          0  ──────────    │
+    │ Missile and thrown                            Two Shields              1  ──────────    │
+    │   Bows                     0  ──────────      Marksman                 0  ──────────    │
+    │   Crossbows                0  ──────────      Skirmisher               0  ──────────    │
+    │   Slings                   0  ──────────    • Brawler                  0  ──────────    │
+    │   Thrown weapons           1  ──────────      Staff Fighter            0  ──────────    │
+    │                                               Sniper                   0  ──────────    │
+    │                                               Toucher                  0  ──────────    │
+    │                                               Battle caster            0  ──────────    │
+    │                                                                                         │
+    │ W or Esc close                                                                          │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+
+
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls
