@@ -361,56 +361,33 @@ mod tests {
     }
 
     /// The system effects (docs/design/affixes-systems.md) have their words and tier forms in
-    /// the affix tables: fixture affixes, since no shipped file has them yet.
+    /// the affix tables: the shipped files (#635), every tier on its ladder.
     #[test]
     fn system_affixes_have_words_in_the_tables() {
-        let affix = |kind: &str, id: &str, effect: &str, bases: &str, extra: &str| {
-            format!(
-                "[[{kind}]]\nid = \"{effect}\"\nname = \"{id}\"\neffect = \"{effect}\"\n\
-                 category = \"{effect}\"\nbases = [{bases}]\n{extra}\
-                 tiers = [{{ level = 2, min = 4, max = 5 }}, {{ level = 12, min = 14, max = 16 }}]\n"
-            )
-        };
-        let text = [
-            affix(
-                "prefix",
-                "Tireless",
-                "resource_max",
-                "\"ring\"",
-                "resource = \"stamina\"\n",
-            ),
-            affix("prefix", "Delving", "dig_percent", "\"tool\"", ""),
-            affix("prefix", "Mage-wrought", "spell_ease", "\"body\"", ""),
-            affix("suffix", "of Thrift", "mana_cost", "\"ring\"", ""),
-            affix(
-                "suffix",
-                "of Ease",
-                "active_stamina",
-                "\"gloves\"",
-                "resource = \"stamina\"\n",
-            )
-            .replace("min = 4, max = 5", "min = 1, max = 1")
-            .replace("min = 14, max = 16", "min = 2, max = 2"),
-            affix("suffix", "of Sustenance", "hunger", "\"amulet\"", ""),
-        ]
-        .concat();
-        let mut files = warlock_core::content::ContentFiles::builtin();
-        files.insert("data/affixes/zz_fixture.toml", &text);
-        let content = Content::load(&files).expect("fixture affixes are valid");
+        let content = Content::builtin().expect("content loads");
         let prefixes = magic::prefixes(&content);
         let suffixes = magic::suffixes(&content);
         for row in [
-            "| Tireless | maximum stamina | resource max | rings | 2: +4–5 · 12: +14–16 |",
-            "| Delving | digs faster | dig percent | tools | 2: 4–5% less time · 12: 14–16% less time |",
+            "| Tireless | maximum stamina | stamina | body armour, gloves, boots, rings, amulets | \
+             1: +1 · 3: +1–2 · 5: +2 · 7: +2–3 · 9: +3 · 11: +3–4 · 12: +4–5 | 60 |",
+            "| Delving | digs faster | digging | body armour, gloves, tools | 2: 10–15% less time · \
+             4: 17–22% less time · 6: 24–29% less time · 8: 31–36% less time · \
+             10: 38–43% less time · 12: 45–50% less time | 60 |",
             "| Mage-wrought | this armour's spell cost surcharge is lower, in points | \
-             spell ease | body armour | 2: 4–5 points less · 12: 14–16 points less |",
+             spell armour | body armour, helmets, shields | 2: 4 points less · 4: 7 points less · \
+             6: 10 points less · 8: 13 points less · 10: 16 points less · 12: 20 points less | 50 |",
         ] {
             assert!(prefixes.contains(row), "{row}\nin\n{prefixes}");
         }
         for row in [
-            "| of Thrift | every mana cost is lower | mana cost | rings | 2: 4–5% less · 12: 14–16% less |",
-            "| of Ease | weapon feats cost less stamina | active stamina | gloves | 2: 1 less · 12: 2 less |",
-            "| of Sustenance | hunger comes slower | hunger | amulets | 2: 4–5% slower · 12: 14–16% slower |",
+            "| of Thrift | every mana cost is lower | mana cost | helmets, cloaks, rings, amulets | \
+             2: 4–5% less · 4: 6–7% less · 6: 8–9% less · 8: 10–11% less · 10: 12–13% less · \
+             12: 14–16% less | 60 |",
+            "| of Ease | weapon feats cost less stamina | stamina cost | weapons, missile weapons, \
+             shields, gloves | 3: 1 less · 7: 1–2 less · 10: 2 less | 40 |",
+            "| of Sustenance | hunger comes slower | hunger | body armour, cloaks, rings, amulets | \
+             2: 8–10% slower · 4: 12–14% slower · 6: 16–19% slower · 8: 21–24% slower · \
+             10: 25–29% slower · 12: 30–35% slower | 60 |",
         ] {
             assert!(suffixes.contains(row), "{row}\nin\n{suffixes}");
         }

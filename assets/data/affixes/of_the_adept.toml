@@ -1,0 +1,12 @@
+[[suffix]]
+id = "of_the_adept"
+name = "of the Adept"
+effect = "caster_level"
+category = "caster_level"
+bases = ["weapon", "helmet", "ring", "amulet"]
+weight = 50
+tiers = [
+  { level = 2, min = 1, max = 1 },
+  { level = 7, min = 2, max = 2 },
+  { level = 12, min = 3, max = 3 },
+]

@@ -111,3 +111,27 @@ objects = ["rod_of_digging", "rod_of_sleep"]
 at = [38, 19]
 object = "dagger"
 affixes = ["sharp:1", "of_the_lynx:1"]
+
+# Magic items of the game's systems (#635), identified, one a cell further east past a gap: a
+# caster's staff (spells and mana), a mail coat for the pools (stamina and rage, eased for a
+# caster), and an amulet of the utility affixes (hunger, disease, potions).
+[[item]]
+at = [42, 19]
+object = "quarterstaff"
+name = "Rune Song"
+affixes = ["potent:3", "baleful:1", "mystic:2", "of_the_adept:2", "of_the_magus:3", "of_siphoning:2"]
+identified = true
+
+[[item]]
+at = [43, 19]
+object = "chain_mail"
+name = "Ash Coat"
+affixes = ["tireless:4", "mage_wrought:2", "of_breath:3", "of_fury:2"]
+identified = true
+
+[[item]]
+at = [44, 19]
+object = "gold_amulet"
+name = "Hollow Charm"
+affixes = ["of_sustenance:3", "of_health:2", "of_the_alchemist:2"]
+identified = true

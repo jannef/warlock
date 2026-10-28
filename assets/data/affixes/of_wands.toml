@@ -1,0 +1,12 @@
+[[suffix]]
+id = "of_wands"
+name = "of Wands"
+effect = "wand_level"
+category = "wand_level"
+bases = ["gloves", "ring"]
+weight = 40
+tiers = [
+  { level = 4, min = 1, max = 1 },
+  { level = 7, min = 1, max = 2 },
+  { level = 10, min = 2, max = 2 },
+]

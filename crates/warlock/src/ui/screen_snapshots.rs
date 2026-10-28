@@ -749,6 +749,29 @@ const CASES: &[Case] = &[
         screen: Some("describe"),
         ..BASE
     },
+    // The system affixes (#635), in words: the trap hall's staff (spells and mana), mail coat
+    // (stamina, rage, eased casting), and amulet (hunger, disease, potions).
+    Case {
+        name: "item-description-spell-affix",
+        scenario: "traps",
+        actions: "drop:a move:E*5 pickup",
+        screen: Some("describe"),
+        ..BASE
+    },
+    Case {
+        name: "item-description-stamina-affix",
+        scenario: "traps",
+        actions: "drop:a move:E*6 pickup",
+        screen: Some("describe"),
+        ..BASE
+    },
+    Case {
+        name: "item-description-utility-affix",
+        scenario: "traps",
+        actions: "drop:a move:E*7 pickup",
+        screen: Some("describe"),
+        ..BASE
+    },
     // Scrolls.
     Case {
         name: "scroll-read-list",

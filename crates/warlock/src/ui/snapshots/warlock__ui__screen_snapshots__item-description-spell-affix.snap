@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You see here Rune Song, a quarterstaff.
+ You pick up Rune Song, a quarterstaff.
+
+                  ┌─ Item ───────────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ ) Rune Song                                                  │
+                  │                                                              │
+                  │ Rare quarterstaff · wood · 2 kg                              │
+                  │                                                              │
+                  │ Staff, for both hands                                        │
+                  │ Damage 1d6; criticals on 22–24, ×2 damage                    │
+                  │ Bludgeoning damage                                           │
+                  │ Parry +1                                                     │
+                  │ To hit +0, damage 1d6                                        │
+                  │ Dv +1                                                        │
+                  │                                                              │
+                  │ Item level 7                                                 │
+                  │ Prefix  Potent: spells do up to 10% more                     │
+                  │ Prefix  Baleful: spells threaten a critical on 1 more roll   │
+                  │ Prefix  Mystic: +6 to maximum mana                           │
+                  │ Suffix  of the Adept: +2 to caster level                     │
+                  │ Suffix  of the Magus: +2 to hit with spells                  │
+                  │ Suffix  of Siphoning: +2 mana on a kill close by             │
+                  │                                                              │
+                  │ Esc close                                                    │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+ The Trap Hall  ·  HP 22/22  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:00                  ? controls

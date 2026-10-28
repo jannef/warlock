@@ -1,0 +1,17 @@
+[[suffix]]
+id = "of_breath"
+name = "of Breath"
+effect = "resource_rate"
+resource = "stamina"
+category = "stamina_pace"
+bases = ["body", "helmet", "cloak", "amulet"]
+weight = 60
+tiers = [
+  { level = 1, min = 10, max = 15 },
+  { level = 3, min = 17, max = 22 },
+  { level = 5, min = 24, max = 30 },
+  { level = 7, min = 31, max = 37 },
+  { level = 9, min = 38, max = 45 },
+  { level = 11, min = 45, max = 52 },
+  { level = 12, min = 50, max = 60 },
+]

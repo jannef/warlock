@@ -1,0 +1,15 @@
+[[suffix]]
+id = "of_thrift"
+name = "of Thrift"
+effect = "mana_cost"
+category = "mana_cost"
+bases = ["helmet", "cloak", "ring", "amulet"]
+weight = 60
+tiers = [
+  { level = 2, min = 4, max = 5 },
+  { level = 4, min = 6, max = 7 },
+  { level = 6, min = 8, max = 9 },
+  { level = 8, min = 10, max = 11 },
+  { level = 10, min = 12, max = 13 },
+  { level = 12, min = 14, max = 16 },
+]

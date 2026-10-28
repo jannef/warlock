@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You see here Ash Coat, a chain mail shirt.
+ You pick up Ash Coat, a chain mail shirt.
+
+
+
+                  ┌─ Item ───────────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ [ Ash Coat                                                   │
+                  │                                                              │
+                  │ Rare chain mail shirt · iron · 11 kg                         │
+                  │                                                              │
+                  │ Worn: body                                                   │
+                  │ Armour +2                                                    │
+                  │ Protection 3 (+1 against slashing, −1 against piercing)      │
+                  │ Dexterity adds at most +4 to Defence while worn              │
+                  │ Dv +2, Pv 3                                                  │
+                  │                                                              │
+                  │ Item level 7                                                 │
+                  │ Prefix  Tireless: +3 to maximum stamina                      │
+                  │ Prefix  Mage-wrought: hinders casting 7 points less          │
+                  │ Suffix  of Breath: stamina comes back 30% faster             │
+                  │ Suffix  of Fury: +3 to maximum rage                          │
+                  │                                                              │
+                  │ Esc close                                                    │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+ The Trap Hall  ·  HP 22/22  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:00                  ? controls

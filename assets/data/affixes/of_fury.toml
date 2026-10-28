@@ -1,0 +1,16 @@
+[[suffix]]
+id = "of_fury"
+name = "of Fury"
+effect = "resource_max"
+resource = "rage"
+category = "rage"
+bases = ["body", "ring", "amulet"]
+weight = 40
+tiers = [
+  { level = 2, min = 2, max = 2 },
+  { level = 4, min = 3, max = 3 },
+  { level = 6, min = 4, max = 4 },
+  { level = 8, min = 5, max = 5 },
+  { level = 10, min = 6, max = 7 },
+  { level = 12, min = 7, max = 8 },
+]

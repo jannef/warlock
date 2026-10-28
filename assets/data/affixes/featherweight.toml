@@ -3,7 +3,7 @@ id = "featherweight"
 name = "Featherweight"
 effect = "weight"
 category = "weight"
-bases = ["weapon", "launcher", "body", "helmet", "cloak", "gloves", "boots", "shield"]
+bases = ["weapon", "launcher", "body", "helmet", "cloak", "gloves", "boots", "shield", "tool"]
 weight = 60
 tiers = [
   { level = 1, min = 10, max = 20 },

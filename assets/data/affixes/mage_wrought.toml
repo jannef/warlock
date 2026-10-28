@@ -1,0 +1,15 @@
+[[prefix]]
+id = "mage_wrought"
+name = "Mage-wrought"
+effect = "spell_ease"
+category = "spell_armour"
+bases = ["body", "helmet", "shield"]
+weight = 50
+tiers = [
+  { level = 2, min = 4, max = 4 },
+  { level = 4, min = 7, max = 7 },
+  { level = 6, min = 10, max = 10 },
+  { level = 8, min = 13, max = 13 },
+  { level = 10, min = 16, max = 16 },
+  { level = 12, min = 20, max = 20 },
+]

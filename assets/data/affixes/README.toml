@@ -12,8 +12,10 @@
 #   category  its group, as Path of Exile's (`physical_damage`, `life`): an item never has two
 #           affixes of one category. Every affix of one effect (of one skill, of one damage type)
 #           names the same category, and a category on both prefixes and suffixes is one effect;
-#           a category may gather a family of effects of one kind (`physical_damage`: damage and
-#           extra_damage; `stealth`: stealth and the Stealth skill)
+#           a category may gather a family of effects of one kind (`stealth`: stealth and the
+#           Stealth skill). Damage is more than one category, so a weapon may roll more than one
+#           damage affix: `physical_damage` (+damage: Sharp, Vicious), `extra_damage` (an extra
+#           die: Heavy, of Wounding), and one per element (`fire_damage`: Flaming)
 #   effect  what it does, one of:
 #             to_hit        + to hit
 #             damage        + to every roll of the damage dice
