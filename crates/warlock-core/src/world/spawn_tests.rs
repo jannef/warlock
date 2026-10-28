@@ -71,6 +71,8 @@ population = ["kobold", "kobold_archer", "kobold_shaman"]
 # A teeming den and a cursed room need a danger, so they would move the map against the floor
 # without one.
 room_effects = { banned = ["teeming", "cursed"] }
+# Chests keep clear of where the population stands, so they would move with it too.
+chests = { chance = 0 }
 
 [[dungeon.levels]]
 from = 3

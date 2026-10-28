@@ -171,10 +171,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ark), `description` (look mode adds it), `fg` (its colour on the map, over its terrain's),
   `from` (the least level of the band: the first from 1, rising), `sturdiness` (a kick breaks it
   with a chance of Strength in this, 1 to 100: 20 to 70), `hardness` (a blast must beat it, 1 to
-  10000: 200 to 3000), and, read by the generated chests, mimics, and loot of later slices and
-  checked now, `locked`, `trapped`, `mimic` (percents of generated chests), `hold` (a mimic's
-  hold chance), and `loot = { items, loot_level, magic, rare, gold = { dice, each }, gems }`
-  (dice; `rare` counts in `magic`). `[smash] destroyed` (percent of each stack destroyed when a
+  10000: 200 to 3000), `locked`, `trapped` (percents of generated chests that come locked and
+  trapped), `mimic` (percent that are a mimic instead; read by the mimics of a later slice and
+  drawn now), `hold` (a mimic's hold chance; later), and `loot = { items, loot_level, magic,
+  rare, gold = { dice, each }, gems }` (dice; `rare` counts in `magic`; what a generated chest
+  holds, §8 "Magic items" "Chest loot"). `[smash] destroyed` (percent of each stack destroyed when a
   chest is kicked open or blown apart: 50). The chest terrains are `data/terrain.toml`'s with a
   `chest` field (`"shut"`, `"open"`, `"smashed"`, one terrain each; a shut one not walkable,
   the others walkable; none a door, stairs, or breakable wall; a shut one may have a

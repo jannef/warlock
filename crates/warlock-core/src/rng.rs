@@ -8,6 +8,7 @@
 //! | Map generation, per level | `map/<level id>` (retry *k*: `map/<level id>/<k>`) | never; derived on demand |
 //! | Hidden traps, per generated level | `traps/<level id>` | never |
 //! | A generated level's loot | `loot/<level id>` | never; derived on demand |
+//! | A generated level's chests and what they hold | `chests/<level id>` | never; derived on demand |
 //! | What a creature drops when it dies | `drop/<actor id>` | never; derived on demand |
 //! | What comes to a level with a danger (spec §7 "Danger levels") | `spawn/<level id>` | in the level's state, from its making |
 //! | A generated level's creatures' gear | `gear/<level id>` | never; derived on demand |
@@ -100,6 +101,13 @@ impl Rng {
     /// level is the same with or without a den).
     pub fn swarm(run_seed: u64, level: &str) -> Self {
         Self::stream(run_seed, &format!("swarm/{level}"))
+    }
+
+    /// The chest stream of generated level `level` (spec §8 "Chests"): whether its floor gets
+    /// chests, their cells, locks, traps, and contents, drawn once its rooms' loot is and before
+    /// its gear (so the rest of the level is the same with or without chests).
+    pub fn chests(run_seed: u64, level: &str) -> Self {
+        Self::stream(run_seed, &format!("chests/{level}"))
     }
 
     /// The spawn stream of level `level` (spec §7 "Danger levels"): what comes to it over time,
