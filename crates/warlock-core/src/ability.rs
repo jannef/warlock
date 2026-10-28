@@ -796,6 +796,11 @@ impl Ability {
                             .then(|| actor.talent_mods(content).consecrate)
                             .flatten();
                         let mana = mana + consecrate.map_or(0, |c| c.mana);
+                        // Knock costs its mana.
+                        let knock = (active == ClassActive::Knock)
+                            .then(|| actor.talent_mods(content).knock)
+                            .flatten();
+                        let mana = mana + knock.map_or(0, |k| k.mana);
                         let cost = actor.mana_cost(content, mana);
                         let blocked = (cost > 0)
                             .then(|| actor.effects.blocking(content, ActionKind::Cast))
@@ -859,6 +864,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::MasterThief
         | ClassActive::Inspire
         | ClassActive::Consecrate
+        | ClassActive::Knock
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))

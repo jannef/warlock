@@ -486,6 +486,8 @@ pub enum ClassActive {
     /// A minute's prayer that lifts an unholy room's effect for good, for mana (the priest's and
     /// the paladin's Consecrate).
     Consecrate,
+    /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
+    Knock,
 }
 
 impl ClassActive {
@@ -502,6 +504,7 @@ impl ClassActive {
         ClassActive::MasterThief,
         ClassActive::Inspire,
         ClassActive::Consecrate,
+        ClassActive::Knock,
     ];
 
     /// Its id: the id of the class ability that has it, and its replay text (`use:rage`).
@@ -518,6 +521,7 @@ impl ClassActive {
             ClassActive::MasterThief => "master_thief",
             ClassActive::Inspire => "inspire",
             ClassActive::Consecrate => "consecrate",
+            ClassActive::Knock => "knock",
         }
     }
 
@@ -530,8 +534,17 @@ impl ClassActive {
     pub const fn aimed(self) -> bool {
         matches!(
             self,
-            ClassActive::Smite | ClassActive::QuiveringPalm | ClassActive::MasterThief
+            ClassActive::Smite
+                | ClassActive::QuiveringPalm
+                | ClassActive::MasterThief
+                | ClassActive::Knock
         )
+    }
+
+    /// Whether it is a blow aimed at someone in its direction (refused with nobody hostile
+    /// there); Knock is aimed at a lock instead.
+    pub const fn strikes(self) -> bool {
+        self.aimed() && !matches!(self, ClassActive::Knock)
     }
 
     /// Whether it asks for a cell before it is used (`use:volley:12,5`).
@@ -547,9 +560,10 @@ impl ClassActive {
             | ClassActive::Smite
             | ClassActive::QuiveringPalm
             | ClassActive::MasterThief => ActionKind::Melee,
-            ClassActive::LayOnHands | ClassActive::HolyRadiance | ClassActive::Consecrate => {
-                ActionKind::Cast
-            }
+            ClassActive::LayOnHands
+            | ClassActive::HolyRadiance
+            | ClassActive::Consecrate
+            | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire => ActionKind::Chat,
         }

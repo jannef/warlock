@@ -85,6 +85,11 @@ impl Vault {
         if !template.rooms.is_empty() {
             return Err("a vault cannot mark special rooms".into());
         }
+        // Stamping chests into generated levels comes with the chests in vaults (spec §8
+        // "Chests"; docs/design/chests-and-treasure.md, C7).
+        if let Some(at) = template.chests.keys().next() {
+            return Err(format!("a vault cannot hold chests yet (at {at})"));
+        }
         if let (LevelKind::Outdoor, Some(at)) = (template.kind, template.traps.keys().next()) {
             return Err(format!("an outdoor vault cannot have traps (at {at})"));
         }

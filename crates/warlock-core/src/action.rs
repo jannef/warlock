@@ -481,6 +481,10 @@ pub enum Event {
     DoorBroken {
         pos: Pos,
     },
+    /// A chest kicked open or blown apart (spec §8 "Chests").
+    ChestBroken {
+        pos: Pos,
+    },
     LevelChanged {
         from: String,
         to: String,

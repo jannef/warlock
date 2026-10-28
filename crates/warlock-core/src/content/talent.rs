@@ -425,6 +425,9 @@ pub enum TalentEffect {
     /// A special room's nature is known from a glimpse of it, and a whole level's effect is
     /// named on arrival (Sense of place; [`crate::perception::PerceptionView::room`]).
     SenseOfPlace,
+    /// It tells a locked chest from an unlocked one at a glance (Chest-wise;
+    /// [`crate::perception::PerceptionView::chest_at`]).
+    ChestWise,
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
     /// opposed one leans as a neutral one (Devout; the prayer draw, `World::lean`).
     Devout,
@@ -758,6 +761,9 @@ pub enum TalentEffect {
     DoorKick { value: i32 },
     /// Its door kicks are this percent louder (negative: quieter; Lockbreaker).
     KickNoisePercent { value: i32 },
+    /// What a chest it kicks open holds breaks this percent more often (negative: less; Deft
+    /// breaker; spec §8 "Chests").
+    SmashDestroyPercent { value: i32 },
     /// Its digging does this percent more work a turn.
     DigPercent { value: i32 },
     /// Its blows with a two-handed weapon cost this percent more (negative: cheaper).
@@ -962,6 +968,9 @@ pub enum TalentEffect {
     /// The class active Consecrate: `time` (a duration) of prayer, for `mana` mana, lifts an
     /// unholy special room (or a whole level's unholy effect) for good (`world/consecrate.rs`).
     Consecrate { mana: i32, time: String },
+    /// The class active Knock: for `mana` mana, the lock of the locked door or chest in a
+    /// direction springs open (`world/knock.rs`; spec §8 "Chests").
+    Knock { mana: i32 },
 }
 
 /// One degree: a cooldown's default.
@@ -1012,6 +1021,7 @@ impl TalentEffect {
             TalentEffect::Finisher => A::MasterThief,
             TalentEffect::Inspire { .. } => A::Inspire,
             TalentEffect::Consecrate { .. } => A::Consecrate,
+            TalentEffect::Knock { .. } => A::Knock,
             _ => return None,
         })
     }
@@ -1186,6 +1196,12 @@ impl TalentEffect {
                 let time: crate::time::Duration = time.parse()?;
                 if !(1..=3600).contains(&time.as_seconds()) {
                     return Err("`consecrate`: time is 1s to 1h".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Knock { mana } => {
+                if !(0..=100).contains(mana) {
+                    return Err("`knock`: mana is 0 to 100".into());
                 }
                 Ok(())
             }
@@ -1668,6 +1684,7 @@ impl TalentEffect {
             | TalentEffect::ReadPercent { value }
             | TalentEffect::TrapDamagePercent { value }
             | TalentEffect::KickNoisePercent { value }
+            | TalentEffect::SmashDestroyPercent { value }
             | TalentEffect::ThresholdPercent { value }
             | TalentEffect::ClimbPercent { value }
             | TalentEffect::SunHealing { value }
@@ -1831,6 +1848,7 @@ impl TalentEffect {
             | TalentEffect::SparesSelf
             | TalentEffect::SeesUv
             | TalentEffect::SenseOfPlace
+            | TalentEffect::ChestWise
             | TalentEffect::Devout
             | TalentEffect::Penitent
             | TalentEffect::CollapseProof

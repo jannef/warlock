@@ -262,6 +262,13 @@ name = "Searching and secret doors"
 id = "doors"
 name = "Doors, locks, kicking"
 
+# Chests (docs/design/chests-and-treasure.md §9): opening, kicking open, what breaks inside. It
+# ships with Deft breaker and Chest-wise; Lockbreaker's kicks reach chests, and the wizard's
+# Knock springs their locks.
+[[system]]
+id = "chests"
+name = "Chests: locks, kicking open, what breaks"
+
 [[system]]
 id = "digging"
 name = "Digging"

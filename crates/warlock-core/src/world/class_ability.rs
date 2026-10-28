@@ -41,7 +41,7 @@ impl World {
         };
         // An aimed blow with nobody hostile there is refused before anything is spent, and so is
         // a quivering palm with a weapon in hand.
-        if dir.is_some_and(|d| active.aimed() && self.hostile_toward(d).is_none()) {
+        if dir.is_some_and(|d| active.strikes() && self.hostile_toward(d).is_none()) {
             return Spent::Nothing;
         }
         if active == ClassActive::QuiveringPalm
@@ -67,9 +67,14 @@ impl World {
             (ClassActive::Smite, Some(dir)) => self.smite(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
             (ClassActive::MasterThief, Some(dir)) => self.finisher(dir, events),
-            (ClassActive::Smite | ClassActive::QuiveringPalm | ClassActive::MasterThief, None) => {
-                Spent::Nothing
-            }
+            (ClassActive::Knock, Some(dir)) => self.knock(dir),
+            (
+                ClassActive::Smite
+                | ClassActive::QuiveringPalm
+                | ClassActive::MasterThief
+                | ClassActive::Knock,
+                None,
+            ) => Spent::Nothing,
             (ClassActive::Volley, _) => {
                 self.say("Where?");
                 Spent::Nothing

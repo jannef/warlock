@@ -6,7 +6,10 @@
 //! are placed in, and the unique character they are (`npc = "hermit"`, whose dialogue they
 //! speak), stair links, lights, the flow of running water, objects, locks on closed doors:
 //! `lock = "pantry"`, a lock its keys open, or `locked = true`, one only a skeleton key opens,
-//! and `lock_difficulty = N`, how hard it is to pick (default 14); spec §8 "Doors", traps: `trap = "fireball"`, hidden unless `known = true`, a bolt trap's
+//! and `lock_difficulty = N`, how hard it is to pick (default 14); spec §8 "Doors", chests on
+//! the shut chest terrain: `chest = "kist"` (a band, its least level) or `chest = 7` (default
+//! the level's `item_level`), locked as a door, its `objects` what it holds; spec §8 "Chests",
+//! traps: `trap = "fireball"`, hidden unless `known = true`, a bolt trap's
 //! direction with `dir`; spec §8 "Traps", and secret doors: `secret = true` or `secret = N` (a
 //! difficulty) on a closed door, which looks like the wall around it until it is found; spec §8
 //! "Searching", and on the overworld hidden locations: `hidden = { id, terrain, to, name }` on a
@@ -50,6 +53,7 @@ use super::{
     ActionKind, Content, ContentError, Cutting, DIFFICULTIES, MAX_ITEM_LEVEL, Rarity, Speaker,
 };
 use crate::alignment::Alignment;
+use crate::chest::Chest;
 use crate::door::{Lock, check_lock_id};
 use crate::equipment::{self, Equipment};
 use crate::geom::{Dir, Pos};
@@ -309,8 +313,12 @@ pub(super) struct LegendDetail {
     known: Option<bool>,
     /// The way a bolt trap's bolt runs (default: along the longest clear line from it).
     dir: Option<Dir>,
-    /// The closed door on this cell is locked (only a skeleton key opens it unless it has a
-    /// `lock` id).
+    /// The chest on this cell (spec §8 "Chests"; only on a shut chest's terrain): its band by
+    /// id (`chest = "kist"`: that band's least level) or its level (`chest = 7`); default the
+    /// level's `item_level`. Its `objects` are what it holds.
+    chest: Option<ChestSpec>,
+    /// The closed door (or shut chest) on this cell is locked (only a skeleton key opens it
+    /// unless it has a `lock` id).
     locked: Option<bool>,
     /// The closed door on this cell is locked, with this lock id: keys of that id open it.
     lock: Option<String>,
@@ -329,6 +337,30 @@ pub(super) struct LegendDetail {
     name: Option<String>,
     /// A sentence look mode adds about the named place on this cell; only with `name`.
     note: Option<String>,
+}
+
+/// A legend entry's chest: its level, or its band by id.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+pub(super) enum ChestSpec {
+    Level(u8),
+    Band(String),
+}
+
+impl ChestSpec {
+    /// The level it gives: its own, or its band's least.
+    fn level(&self, content: &Content) -> Result<u8, String> {
+        match self {
+            ChestSpec::Level(0) => Err("`chest`: a level is 1 or more".into()),
+            ChestSpec::Level(level) if *level > MAX_ITEM_LEVEL => {
+                Err(format!("`chest`: a level is 1 to {MAX_ITEM_LEVEL}"))
+            }
+            ChestSpec::Level(level) => Ok(*level),
+            ChestSpec::Band(id) => (content.chests().band(id))
+                .map(|b| b.from)
+                .ok_or_else(|| format!("`chest`: no band `{id}` in data/chests.toml")),
+        }
+    }
 }
 
 /// A legend entry's animated body: its material, if not its object's own.
@@ -475,8 +507,12 @@ pub struct LevelTemplate {
     pub objects: BTreeMap<Pos, Vec<Stack>>,
     /// Traps, by position; only on walkable terrain that is not stairs.
     pub traps: BTreeMap<Pos, Trap>,
-    /// Locks, by position: only on closed doors (spec §8 "Doors").
+    /// Locks, by position: only on closed doors (spec §8 "Doors") and shut chests (spec §8
+    /// "Chests").
     pub locks: BTreeMap<Pos, Lock>,
+    /// Chests, by position (spec §8 "Chests"): one on every chest terrain cell, its level and
+    /// what it holds.
+    pub chests: BTreeMap<Pos, Chest>,
     /// Secret doors, by position (spec §8 "Searching"): the terrain there is the wall each
     /// looks like until it is found.
     pub secrets: BTreeMap<Pos, Secret>,
@@ -589,6 +625,9 @@ pub(super) fn parse_level(
     let mut traps = BTreeMap::new();
     let mut loot = Vec::new();
     let mut locks = BTreeMap::new();
+    // Chests (spec §8 "Chests"): the level a legend gives each, and what each holds.
+    let mut chest_levels: BTreeMap<Pos, u8> = BTreeMap::new();
+    let mut chest_holds: BTreeMap<Pos, Vec<Stack>> = BTreeMap::new();
     let mut secret_doors: Vec<(Pos, TerrainId, u8)> = Vec::new();
     let mut hidden = BTreeMap::new();
     let mut places = BTreeMap::new();
@@ -654,13 +693,26 @@ pub(super) fn parse_level(
             if let Some(lock) =
                 parse_lock(detail).map_err(|m| err(format!("legend `{ch}`: {m}")))?
             {
-                if !content.terrain(terrain).is_closed_door() {
+                let def = content.terrain(terrain);
+                if !def.is_closed_door() && !def.is_shut_chest() {
                     return Err(err(format!(
-                        "legend `{ch}` locks terrain `{}`, which is no closed door",
+                        "legend `{ch}` locks terrain `{}`, which is no closed door or shut chest",
                         entry.terrain()
                     )));
                 }
                 locks.insert(pos, lock);
+            }
+            if let Some(spec) = &detail.chest {
+                if !content.terrain(terrain).is_shut_chest() {
+                    return Err(err(format!(
+                        "legend `{ch}` places a chest on terrain `{}`, which is no shut chest",
+                        entry.terrain()
+                    )));
+                }
+                let level = spec
+                    .level(content)
+                    .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
+                chest_levels.insert(pos, level);
             }
             if let Some(spec) = detail.secret {
                 let difficulty = (spec.difficulty(content.search()))
@@ -696,8 +748,13 @@ pub(super) fn parse_level(
             if let Some(specs) = &detail.objects {
                 let pile = parse_stacks(specs, content)
                     .map_err(|m| err(format!("legend `{ch}`: objects: {m}")))?;
+                // A shut chest holds them (spec §8 "Chests").
+                let into = match content.terrain(terrain).is_shut_chest() {
+                    true => &mut chest_holds,
+                    false => &mut objects,
+                };
                 if !pile.is_empty() {
-                    objects.insert(pos, pile);
+                    into.insert(pos, pile);
                 }
             }
             if let Some(trap) = parse_trap(detail, terrain, content)
@@ -902,6 +959,15 @@ pub(super) fn parse_level(
     if item_level == 0 || item_level > MAX_ITEM_LEVEL {
         return Err(err(format!("`item_level` must be 1 to {MAX_ITEM_LEVEL}")));
     }
+    // A chest on every chest cell, of the level its legend gives, else the level's own.
+    let chests: BTreeMap<Pos, Chest> = (terrain.iter())
+        .filter(|(_, t)| content.terrain(**t).chest.is_some())
+        .map(|(p, _)| {
+            let level = chest_levels.get(&p).copied().unwrap_or(item_level);
+            let holds = chest_holds.remove(&p).unwrap_or_default();
+            (p, Chest { level, holds })
+        })
+        .collect();
     if let Some(at) = objects
         .keys()
         .find(|p| !content.terrain(terrain[**p]).walkable)
@@ -969,6 +1035,7 @@ pub(super) fn parse_level(
         objects,
         traps,
         locks,
+        chests,
         secrets,
         hidden,
         places,

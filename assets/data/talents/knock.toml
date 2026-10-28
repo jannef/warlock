@@ -1,0 +1,8 @@
+[[talent]]
+id = "knock"
+name = "Knock"
+tree = "class"
+granted = true
+description = "A word of unbinding (an ability, paid in mana): the lock of the locked door or chest beside you springs open. Nothing opens of itself, and no trap is touched."
+effects = [{ kind = "knock", mana = 5 }]
+systems = ["chests", "doors", "mana"]

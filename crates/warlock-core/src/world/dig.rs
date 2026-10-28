@@ -189,8 +189,22 @@ impl World {
                 }
             }
         }
+        // A shut chest whose band's hardness is below the blast is blown apart, nothing spared
+        // (spec §8 "Chests").
+        let chests: Vec<Pos> = (level.chests.iter())
+            .filter(|(p, chest)| {
+                let shut =
+                    (level.terrain.get(**p)).is_some_and(|t| content.terrain(*t).is_shut_chest());
+                let hardness = (content.chests().band_of(chest.level)).map(|b| b.hardness);
+                shut && burst.contains(**p) && hardness.is_some_and(|h| h < blast)
+            })
+            .map(|(p, _)| *p)
+            .collect();
         for &p in &broken {
             self.break_wall(p, Breach::Blast, events);
+        }
+        for p in chests {
+            self.break_chest(p, crate::chest::Breaking::BlownUp, events);
         }
         broken
     }

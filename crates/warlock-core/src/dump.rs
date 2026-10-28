@@ -95,8 +95,8 @@ pub enum Layer {
     /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
     Quests,
     /// Ground truth: all terrain, objects, traps (hidden ones too), secret doors (`S`), hidden
-    /// locations (by their entrance's glyph), and actors on the level.
-    /// **Dev-only.**
+    /// locations (by their entrance's glyph), and actors on the level, then a line per chest
+    /// (its level, band, state, lock, and how many stacks it holds). **Dev-only.**
     Truth,
     /// Not a map: every actor on the level with its weight, what it carries (and of that wears
     /// and wields), its stats (scores and potentials), its trained skills with their marks, its
@@ -218,7 +218,7 @@ pub fn parse_layers(text: &str) -> Result<Vec<Layer>, String> {
 /// Renders one layer as rows of text with trailing spaces trimmed.
 pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
-        Layer::Truth => [spawn_header(world), truth_rows(world)].concat(),
+        Layer::Truth => [spawn_header(world), truth_rows(world), chest_rows(world)].concat(),
         Layer::Actors => [spawn_header(world), actor_rows(world), rising_rows(world)].concat(),
         Layer::Progress => progress_rows(world),
         Layer::Rooms => room_rows(world),
@@ -397,6 +397,35 @@ fn truth_rows(world: &World) -> Vec<String> {
                 .map_or(' ', |t| content.terrain(t).glyph),
         }
     })
+}
+
+/// Dev: the chests on the current level (spec §8 "Chests"; ground truth), one a line by
+/// position: `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`.
+fn chest_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    let (level, _) = world.ground_truth();
+    (level.chests().iter())
+        .map(|(&p, chest)| {
+            let band = (content.chests().band_of(chest.level)).map_or("?", |b| b.id.as_str());
+            let state = (level.terrain_at(p))
+                .and_then(|t| content.terrain(t).chest)
+                .map_or("gone", |s| s.id());
+            let locked = if level.lock_at(p).is_some() {
+                ", locked"
+            } else {
+                ""
+            };
+            let holds = match chest.holds.len() {
+                0 => String::new(),
+                1 => ", holds 1 stack".to_string(),
+                n => format!(", holds {n} stacks"),
+            };
+            format!(
+                "chest {} ({band}) at {p}: {state}{locked}{holds}",
+                chest.level
+            )
+        })
+        .collect()
 }
 
 /// The level's special rooms (ground truth): the terrain with each special room's plain ground
@@ -1361,7 +1390,9 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 /// know it (its effect id; else null), the open shop they stand in (`shop`: its sign, keeper,
 /// and what they owe there; else null), the weather (under the open sky; else null), the
 /// temperature (°C, to a tenth), seen actors (with the status effects that show on them), heard
-/// sounds, known traps (`known_traps`: position, trap id, and whether in sight), known overworld
+/// sounds, known traps (`known_traps`: position, trap id, and whether in sight), the chests seen
+/// or remembered (`chests`: position, band id, state, and, with Chest-wise, whether a shut one
+/// in sight is locked, else null), known overworld
 /// locations (`known_locations`: position and name), the player's inventory (with what of each
 /// stack is unpaid, priced), equipment (by slot id), weight, scores (by stat id), status effects
 /// (by id), the diseases they know (by id), recent messages, the requested layers as arrays of
@@ -1479,6 +1510,13 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let locations: Vec<Value> = (view.known_locations().into_iter())
         .map(|(p, name)| json!({ "pos": p, "name": name }))
         .collect();
+    // The chests the player sees or remembers (spec §8 "Chests"), as they see them.
+    let chests: Vec<Value> = (view.known_chests().into_iter())
+        .map(|(p, look)| {
+            let band = (content.chests().bands.get(look.band)).map(|b| b.id.as_str());
+            json!({ "pos": p, "band": band, "state": look.state.id(), "locked": look.locked })
+        })
+        .collect();
     let layer_map: serde_json::Map<String, Value> = layers
         .iter()
         .map(|&l| (l.name().to_string(), json!(layer_rows(world, l))))
@@ -1516,6 +1554,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "heard_sounds": view.sounds(),
         "known_traps": traps,
         "known_locations": locations,
+        "chests": chests,
         "inventory": inventory,
         "equipment": equipment,
         "weight": { "base": weight.base, "carried": weight.carried, "total": weight.total() },

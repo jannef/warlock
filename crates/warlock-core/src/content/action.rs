@@ -39,6 +39,9 @@ pub enum ActionKind {
     Wait,
     OpenDoor,
     CloseDoor,
+    /// Lifting the lid of a shut chest (spec §8 "Chests"); a locked one's key costs `unlock` on
+    /// top.
+    OpenChest,
     /// Unlocking a locked door with a key: part of opening it, so it costs this plus `open_door`.
     Unlock,
     /// A try at picking a lock without a key (spec §8 "Doors"): it takes this whatever comes of
@@ -120,6 +123,7 @@ impl ActionKind {
         ActionKind::Wait,
         ActionKind::OpenDoor,
         ActionKind::CloseDoor,
+        ActionKind::OpenChest,
         ActionKind::Unlock,
         ActionKind::PickLock,
         ActionKind::Kick,
@@ -161,6 +165,7 @@ impl ActionKind {
             ActionKind::Wait => "wait",
             ActionKind::OpenDoor => "open_door",
             ActionKind::CloseDoor => "close_door",
+            ActionKind::OpenChest => "open_chest",
             ActionKind::Unlock => "unlock",
             ActionKind::PickLock => "pick_lock",
             ActionKind::Kick => "kick",
@@ -221,6 +226,7 @@ impl ActionKind {
             ActionKind::Wait => "wait",
             ActionKind::OpenDoor => "open doors",
             ActionKind::CloseDoor => "close doors",
+            ActionKind::OpenChest => "open chests",
             ActionKind::Unlock => "unlock doors",
             ActionKind::PickLock => "pick locks",
             ActionKind::Kick => "kick",

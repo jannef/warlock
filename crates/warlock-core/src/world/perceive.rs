@@ -196,7 +196,8 @@ impl World {
             Event::DoorOpened { pos }
             | Event::DoorClosed { pos }
             | Event::DoorKicked { pos }
-            | Event::DoorBroken { pos } => perception.is_visible(pos),
+            | Event::DoorBroken { pos }
+            | Event::ChestBroken { pos } => perception.is_visible(pos),
             Event::WallBroken { pos, cause } => {
                 let seen = perception.is_visible(pos);
                 if seen && cause == Breach::Blast {

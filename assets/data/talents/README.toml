@@ -275,6 +275,9 @@
 #   kick_die { sides }            its kicks at creatures roll one die of that many sides
 #   door_kick { value }           its door kicks as if that much stronger
 #   kick_noise_percent { value }  its door kicks that percent louder (negative: quieter)
+#   smash_destroy_percent { value }   what a chest it kicks open holds breaks that percent more
+#                                 often (negative: less; a blown-up chest is not a kick)
+#   chest_wise                    it tells a locked chest from an unlocked one at a glance
 #   dig_percent { value }         its digging does that percent more work a turn
 #   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
 #                                 (negative: cheaper)
@@ -422,6 +425,10 @@
 #                                 on a level an unholy effect covers), it prays for `time` (1s
 #                                 to 1h) for that mana (0 to 100), and the room's effect (the
 #                                 level's) is lifted for good; refused, no time, elsewhere
+#   knock { mana }                the active Knock (aimed in a direction, `use:knock:E`): for
+#                                 that mana (0 to 100) the lock of the locked door or shut
+#                                 chest there springs open; refused, no time, where nothing
+#                                 locked stands
 #   A birth sign's actives (spec §8 "Birth sign"; the abilities menu's Birth sign group, the
 #   talent's id the ability's id, `use:horns_grace`):
 #   horns_grace { cures, diseases, cooldown, degrees }   the active Horn's grace: the statuses

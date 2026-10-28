@@ -15,6 +15,8 @@
 //!   **Failed**, the lock holds: "You fail to pick the lock." Nothing is remembered of a failed
 //!   try, so the next may succeed (no limit on trying again, the owner's rule: time is the
 //!   price).
+//! - A shut chest's lock is picked the same way (spec §8 "Chests"): picked, the chest opens as a
+//!   key opens it ([`World::lift_lid`]), on top of the try's time (`open_chest`).
 //! - A closed door without a lock, or anything else, is refused and takes no time: "That door is
 //!   not locked." (as `o` would find out at once), "There is no lock there."
 
@@ -40,19 +42,29 @@ impl World {
             + me.talent_mods(&content).check(Stat::Dexterity);
         let at = self.player_pos().step(dir);
         let level = self.state.current();
-        let closed = (level.terrain.get(at)).is_some_and(|t| content.terrain(*t).is_closed_door());
-        if !closed {
+        let def = (level.terrain.get(at)).map(|t| content.terrain(*t));
+        // A shut chest's lock is picked as a door's (spec §8 "Chests").
+        let chest = def.is_some_and(|d| d.is_shut_chest());
+        if !def.is_some_and(|d| d.is_closed_door()) && !chest {
             self.say("There is no lock there.");
             return Spent::Nothing;
         }
         if !level.locks.contains_key(&at) {
-            self.say("That door is not locked.");
+            match chest {
+                true => self.say(format!("The {} is not locked.", self.chest_name(at))),
+                false => self.say("That door is not locked."),
+            }
             return Spent::Nothing;
         }
         let difficulty = self.lock_difficulty(at);
         let player = self.state.player;
         let try_price = self.price_of(player, ActionKind::PickLock);
-        let open_price = self.price_of(player, ActionKind::OpenDoor);
+        let opens = if chest {
+            ActionKind::OpenChest
+        } else {
+            ActionKind::OpenDoor
+        };
+        let open_price = self.price_of(player, opens);
         let picked = check(&mut self.state.rng, modifier, difficulty);
         if self.trains(Use::Pick) {
             self.train(Use::Pick);
@@ -62,6 +74,12 @@ impl World {
             return Spent::Turn(try_price);
         }
         self.state.current_mut().locks.remove(&at);
+        if chest {
+            let name = self.chest_name(at);
+            self.say(format!("You pick the lock and open the {name}."));
+            self.lift_lid(at, events);
+            return Spent::Turn(try_price + open_price);
+        }
         self.say("You pick the lock and open the door.");
         self.swing_open(player, at, events);
         Spent::Turn(try_price + open_price)
