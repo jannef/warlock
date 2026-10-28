@@ -1,0 +1,22 @@
+# A greater potion of will (spec §8 "Potions"): Willpower raised twice as much, easing to a potion of
+# will's after ten minutes. Greater boosts are deep orange.
+[[object]]
+id = "greater_potion_of_will"
+name = "greater potion of will"
+plural = "greater potions of will"
+glyph = "!"
+fg = "#c87820"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 400
+stackable = true
+level = 8
+frequency = 8
+
+[object.drink]
+kind = "boost"
+status = "steadfast"
+severity = 2
+colour = "deep orange"
+marks = { willpower = 10 }

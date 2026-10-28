@@ -12,8 +12,14 @@
 //!   points back (never past the maximum) and what it cures; cures ([`World::cure`], and every
 //!   disease for `diseases`); mana back; a stat raised for good (an elixir, `world/elixir.rs`);
 //!   sickness ([`World::afflict`]). Dice are gameplay draws.
-//!   What begins and ends of statuses and diseases is told from the action's events, as
-//!   perception reports them ("You feel sick.", "The poison wears off.").
+//!   A boost, a vision, a haste, or a resistance gives its status for a while
+//!   ([`World::afflict`]: Fortified, Owl-eyed, Hasted, Warmed), which lasts as the status's
+//!   `eases` says and the drinker's talents lengthen (Lasting draughts, Cauldron-wise:
+//!   `status_lasts`). What begins and ends of statuses and diseases is told from the action's
+//!   events, as perception reports them ("You feel hale.", "The poison wears off."); a dose
+//!   that only strengthens one already felt says the status's own line again, and one that
+//!   changes nothing says so.
+//! - **Cauldron-wise** (the witch's): a healing potion heals a fifth more (`potion_heals`).
 //! - **Marks**: each stat its `marks` name gets that many sure training marks (the `drank` use,
 //!   [`World::train_stat_times`]; an elixir's are the `elixir` use's).
 //!
@@ -25,7 +31,7 @@
 
 use super::{Spent, World};
 use crate::action::{Event, Meal, Positions};
-use crate::content::{ActionKind, Draught, StatUse};
+use crate::content::{ActionKind, Draught, StatUse, StatusId};
 use crate::object::Stack;
 
 /// What the player is told when Thrifty drinker keeps a potion they drank.
@@ -39,6 +45,10 @@ fn smell(does: &Draught) -> &'static str {
         Draught::Mana { .. } => "sharp, like the air before a storm: something for the mind",
         Draught::Elixir { .. } => "rich and strange: something that lasts",
         Draught::Harm { .. } => "foul: nothing good",
+        Draught::Boost { .. } => "of sweat and hot iron: something for the body",
+        Draught::Vision { .. } => "of night air and moss: something for the eyes",
+        Draught::Haste { .. } => "of lightning and quicksilver: something to quicken you",
+        Draught::Resistance { .. } => "of salt and ash: a ward of some kind",
     }
 }
 
@@ -69,6 +79,9 @@ impl World {
         match &drink.does {
             Draught::Heal { dice, cures } => {
                 let points = dice.roll(&mut self.state.rng).max(0);
+                // Cauldron-wise: a fifth more.
+                let more = self.state.player().talent_mods(&content).potion_heals;
+                let points = points * (100 + more).max(0) / 100;
                 let max = self.state.player().max_hp(&content);
                 let me = self.player_mut();
                 let before = me.hp;
@@ -128,6 +141,14 @@ impl World {
                     self.afflict(player, *status, degrees, None, events);
                 }
             }
+            Draught::Boost { .. }
+            | Draught::Vision { .. }
+            | Draught::Haste { .. }
+            | Draught::Resistance { .. } => {
+                if let Some((status, severity)) = drink.does.lends() {
+                    self.lend(status, severity, events);
+                }
+            }
         }
         let used = match drink.does {
             Draught::Elixir { .. } => StatUse::Elixir,
@@ -140,6 +161,25 @@ impl World {
             self.say(KEPT);
         }
         Spent::Turn(price)
+    }
+
+    /// A potion's status for a while (a boost, a vision, a haste, a resistance): `severity`
+    /// degrees of `status` on the player. Its start line is the action's event when it begins;
+    /// when it only grows stronger the line is said here, and when nothing changes, that.
+    fn lend(&mut self, status: StatusId, severity: u16, events: &mut Vec<Event>) {
+        let player = self.state.player;
+        let before = self.state.player().effects.get(status).map(|e| e.severity);
+        self.afflict(player, status, severity, None, events);
+        let after = self.state.player().effects.get(status).map(|e| e.severity);
+        match (before, after) {
+            (Some(was), Some(now)) if now > was => {
+                if let Some(start) = self.content.status(status).start.clone() {
+                    self.say(start);
+                }
+            }
+            (Some(_), _) => self.say("Nothing more comes of it."),
+            _ => {}
+        }
     }
 
     /// Takes one potion from where `meal` says: from the pack (the last empties its stack, and

@@ -1,0 +1,21 @@
+# A potion of presence (spec §8 "Potions"): Presence raised for ten minutes. Stat boosts are orange.
+[[object]]
+id = "potion_of_presence"
+name = "potion of presence"
+plural = "potions of presence"
+glyph = "!"
+fg = "#d89a30"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 150
+stackable = true
+level = 3
+frequency = 20
+
+[object.drink]
+kind = "boost"
+status = "imposing"
+severity = 1
+colour = "orange"
+marks = { presence = 5 }

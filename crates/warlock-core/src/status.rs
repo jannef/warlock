@@ -209,8 +209,10 @@ impl Effects {
     }
 
     /// Whether these effects make sense with `content` (a save from other content, or damaged,
-    /// does not): known statuses, in order, each once, their severities and timers in range.
-    pub fn is_valid_for(&self, content: &Content) -> bool {
+    /// does not): known statuses, in order, each once, their severities and timers in range (an
+    /// easing at the slower of the status's pace and its sufferer's, whose `talents` may make
+    /// it last longer).
+    pub fn is_valid_for(&self, content: &Content, talents: &TalentMods) -> bool {
         let known = content.status_defs().len();
         let in_order = self.0.windows(2).all(|w| w[0].status < w[1].status);
         in_order
@@ -219,7 +221,9 @@ impl Effects {
                     let def = content.status(e.status);
                     (1..=def.max).contains(&e.severity)
                         && def.tick.map_or(e.tick == 0, |every| e.tick < every)
-                        && def.eases.map_or(e.wear == 0, |every| e.wear < every)
+                        && def.eases.map_or(e.wear == 0, |every| {
+                            e.wear < every.max(talents.eases_every(e.status, every))
+                        })
                 }
             })
     }
@@ -250,10 +254,13 @@ impl Effects {
     pub fn penalty_for(&self, content: &Content, talents: &TalentMods) -> Option<PerStat<i32>> {
         let mut total: Option<PerStat<i32>> = None;
         for e in &self.0 {
-            if let Some(by) = content.status(e.status).penalty_at(e.severity) {
+            let def = content.status(e.status);
+            if let Some(by) = def.penalty_at(e.severity) {
                 let sum = total.get_or_insert(PerStat::splat(0));
+                // A potion's boost counts once a degree.
+                let times = def.penalty_times(e.severity);
                 for stat in Stat::ALL {
-                    sum[stat] += talents.penalty(e.status, stat, i32::from(by[stat]));
+                    sum[stat] += talents.penalty(e.status, stat, i32::from(by[stat]) * times);
                 }
             }
         }

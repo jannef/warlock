@@ -1,0 +1,21 @@
+# A potion of warmth (spec §8 "Potions"): fire resisted for half an hour, as gear resists it.
+# Resistance potions are teal.
+[[object]]
+id = "potion_of_warmth"
+name = "potion of warmth"
+plural = "potions of warmth"
+glyph = "!"
+fg = "#30a8a0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 120
+stackable = true
+level = 4
+frequency = 15
+
+[object.drink]
+kind = "resistance"
+status = "warmed"
+colour = "teal"
+marks = { toughness = 5 }
