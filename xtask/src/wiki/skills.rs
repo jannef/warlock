@@ -91,6 +91,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Pick => "picking locks",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::Speed => "quicker in everything",
+        Effect::Resist => "resisting the powers of creatures it stands above",
     }
 }
 
@@ -99,8 +100,10 @@ const BENEFIT_VALUES: [u16; 14] = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 1
 
 /// What each skill's benefits give at a range of values, one column per benefit, from the data.
 pub(super) fn skill_benefits(content: &Content) -> String {
+    // Knowledge's resist is read above a creature's level, not at the value: its own table.
     let columns: Vec<(&str, &warlock_core::skills::Benefit)> = (content.skills().iter())
         .flat_map(|s| s.benefits.iter().map(move |b| (s.name.as_str(), b)))
+        .filter(|(_, b)| b.effect != Effect::Resist)
         .collect();
     let mut out = String::from("| Value |");
     for (name, b) in &columns {
@@ -123,6 +126,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Pick => "picking locks",
             Effect::Temper => "tempering",
             Effect::Speed => "speed",
+            Effect::Resist => "resisting",
         };
         let _ = write!(out, " {name}: {what} |");
     }
@@ -143,7 +147,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Heal
                 | Effect::Disarm
                 | Effect::Pick
-                | Effect::Temper => format!("+{n}"),
+                | Effect::Temper
+                | Effect::Resist => format!("+{n}"),
                 Effect::SearchReach => format!("+{n} cell{}", if n == 1 { "" } else { "s" }),
                 Effect::Kick => format!("+{n} Strength"),
                 Effect::Quiet | Effect::Travel => format!("\u{2212}{n}%"),
@@ -159,6 +164,40 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                         slowed(Burden::Strained)
                     )
                 }
+            };
+            let _ = write!(out, " {cell} |");
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// The margins the resist table shows: how far a skill's value stands above a creature's level.
+const RESIST_MARGINS: [u16; 12] = [0, 1, 4, 5, 10, 15, 20, 25, 30, 35, 40, 60];
+
+/// What the skills with the resist benefit (Knowledge, spec §8 "Skills") add to your check
+/// against a creature's drain, a disease its attack carries, or its hold, by how far the skill's
+/// value stands above the creature's level.
+pub(super) fn skill_resist(content: &Content) -> String {
+    let columns: Vec<(&str, &warlock_core::skills::Benefit)> = (content.skills().iter())
+        .flat_map(|s| s.benefits.iter().map(move |b| (s.name.as_str(), b)))
+        .filter(|(_, b)| b.effect == Effect::Resist)
+        .collect();
+    let mut out = String::from("| Above the creature's level |");
+    for (name, _) in &columns {
+        let _ = write!(out, " {name}: resisting |");
+    }
+    out.push_str("\n|---:|");
+    out.push_str(&":---:|".repeat(columns.len()));
+    out.push('\n');
+    for margin in RESIST_MARGINS {
+        let _ = write!(out, "| {margin} |");
+        for (_, b) in &columns {
+            let n = b.at(margin);
+            let cell = if n == 0 {
+                "—".to_string()
+            } else {
+                format!("+{n}")
             };
             let _ = write!(out, " {cell} |");
         }

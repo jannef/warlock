@@ -391,7 +391,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
     "Treating oneself" below), a forage that ran its time, whatever it found (`forage`;
-    "Foraging" below). Only the player trains for now; creatures keep their type's
+    "Foraging" below), discovery experience gained (`discover`: a first kill of a kind, an arrival
+    that pays; Experience §8), a check rolled to resist a creature's ability, whatever comes of it
+    (`resist`; "Knowledge" below). Only the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
@@ -417,6 +419,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     rolls come from (the owner, 2026-10-27, #543; §6 "Level-up"); one function computes each for
     the rule and the screen (`world::skill_roll`, `world::roll_count`). The dev `levelup:auto`
     spends every roll on the first trained skill.
+  - **Knowledge** (#667, the owner 2026-10-28: know your enemy): the player's check to resist a
+    creature's ability (a drain, §8 "Stats"; exposure to a disease its attack carries, §8
+    "Diseases"; struggling free of its hold, §8 "Status effects") adds what the `resist` benefit
+    gives, read at how far the skill's value stands **above the creature's level** (its type's),
+    not at the value: nothing at or below it, `curve = [[0, 0], [5, 1], [40, 4]]` (+1 at 5 above,
+    +4 from 40 above), at most 6 (`MAX_RESIST_BONUS`), magic items' and talents' skill bonuses
+    counted. Creatures resisting each other get nothing; a check no creature asked for (a scroll's
+    backlash, rotten food, wading) neither. It is marked by `discover` (100 %) and `resist` (25 %).
+    Nothing is said when it helps; the Skills screen's description says it in words; the wiki
+    has the curve. One hook, `World::resisting` (`world/knowledge.rs`).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
