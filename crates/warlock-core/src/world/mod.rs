@@ -113,6 +113,7 @@ mod drain;
 mod drink;
 mod eat;
 mod element_gifts;
+mod elixir;
 mod equip;
 mod experience;
 mod eyes;
@@ -1393,6 +1394,8 @@ mod drain_tests;
 mod dwell_tests;
 #[cfg(test)]
 mod element_gift_tests;
+#[cfg(test)]
+mod elixir_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]

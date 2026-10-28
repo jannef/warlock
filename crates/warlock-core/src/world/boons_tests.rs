@@ -102,7 +102,13 @@ fn the_great_outcomes_are_in_the_table_six_in_each_kind() {
     };
     assert_eq!(
         great(OutcomeKind::Boon),
-        [("gift", 2), ("exalted", 1), ("chosen", 1), ("relic", 2)]
+        [
+            ("gift", 2),
+            ("exalted", 1),
+            ("chosen", 1),
+            ("relic", 1),
+            ("elixir", 1)
+        ]
     );
     assert_eq!(
         great(OutcomeKind::Bane),

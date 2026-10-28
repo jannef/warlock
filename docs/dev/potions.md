@@ -1,7 +1,8 @@
 # Potions
 
 Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §10
-(`docs/design/combat-progression.md`); #565 (Q1: the kinds `heal`, `cure`, `mana`, `harm`).
+(`docs/design/combat-progression.md`); #565 (Q1: the kinds `heal`, `cure`, `mana`, `harm`); #568
+(Q3: `elixir`).
 
 ## Objects and data
 
@@ -12,6 +13,8 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   `frequency` make it loot, never magic (`check_base`, the `loot` flag in `resolve`).
 - `Drink { does: Draught, colour, marks }`. `Draught` is the kind with only its fields:
   `Heal { dice, cures }`, `Cure { cures, diseases }`, `Mana { dice }`,
+  `Elixir { stat, points, potential }` (`points` 1 to `ELIXIR_POINTS`' end, default 1;
+  `potential` dice, never negative; `stat`, `points`, `potential` refused on any other kind),
   `Harm { dice, status }` (status required: hunger is loaded after objects). `marks` are
   `(Stat, count)` in stat order, 1 to `MAX_POTION_MARKS` each.
 - Content checks (`content/mod.rs`): a drink's `cures` must be named in some status's or
@@ -20,7 +23,7 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   (`check_potion_labels`). Poisoned's `cured_by` has `antidote` for the antidote.
 - Files: one per potion in `assets/data/objects/` (`potion_of_healing`, `potion_of_greater_healing`,
   `potion_of_full_healing`, `potion_of_antidote`, `potion_of_cure_disease`, `potion_of_mana`,
-  `murky_draught`). The witch's old `red_potion` and `blue_potion` are now the potions of
+  `murky_draught`; the six `elixir_of_*`: might, grace, vigour, wit, will, presence). The witch's old `red_potion` and `blue_potion` are now the potions of
   healing and mana (ids renamed; saves change).
 
 ## Drinking: `world/potion.rs`
@@ -38,8 +41,14 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   KEPT line if kept. Returns `Spent::Turn`.
 - Effects: `Heal` rolls its dice on the gameplay stream, raises hp to at most the maximum, then
   `World::cure` per means; `Cure` cures per means and, with `diseases`, `end_disease` for every
-  infection; `Mana` raises mana to at most the maximum; `Harm` rolls degrees and `afflict`s
-  them. Status and disease beginnings and ends are not said here: they are the action's events,
+  infection; `Mana` raises mana to at most the maximum; `Elixir` is `World::drink_elixir`
+  (`world/elixir.rs`): the potential's roll first (one gameplay draw), then `points` ×
+  `Stats::train(stat)` (the score +1, the potential lifted with it where it was at the score),
+  then `Stats::widen(stat, roll)` (never past `SCORES`), the hit points a Toughness rise adds
+  given at once (as `stat_checks` does), and "You feel stronger[, and that you could be stronger
+  yet]." (the clause when the potential rose by 2 or more; "You feel no different." at the top
+  of the scores); its marks go through `StatUse::Elixir`, every other kind's through
+  `StatUse::Drank`; `Harm` rolls degrees and `afflict`s them. Status and disease beginnings and ends are not said here: they are the action's events,
   which perception reports ("You feel sick.", "The poison wears off.").
 - Creatures do not drink.
 
@@ -67,11 +76,17 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
   (Cēaptūn) are unchanged.
 - Quest rewards and level piles name potions by id (the Watch's reward, the hub's pile, the
   still room vault).
+- Elixirs: deep loot (level 8, frequency 2), the forgotten altar's great boon `elixir`
+  (`data/outcomes/forgotten_altar.toml`, one of the six by weight), and the alchemist's draw (by
+  frequency, so very rarely). A shop kind's `never` list (`ShopDef::never`, read in
+  `Shops::stocks`) keeps them out of general stores and provisioners.
 
 ## Talents (system `potions`)
 
 - **Thrifty drinker** (`potion_kept { chance }`, `TalentMods::potion_kept`): read in
   `take_draught`.
+- **Quick study of the body** (system `stat_training`, shipped with T2): doubles the `drank`
+  and `elixir` counts in `train_stat_times`, so an elixir gives 40 marks.
 - **Nose for draughts** (`potion_smell`, `TalentMods::potion_smell`): `World::smell_potions`,
   called by `pick_up` after "You pick up ...": one line per unknown potion type picked up, by
   its kind (`smell`), never its type.
@@ -87,5 +102,10 @@ Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §
 - `world/potion_tests.rs`: every kind through `eat:`, a floor potion, food still eaten,
   refusals with no time, words and colours, `known_scrolls`, identify, marks by count, Thrifty
   drinker (no draw without it), Nose for draughts, the witch's kit, earlier labels unchanged,
+  content refusals.
+- `world/elixir_tests.rs`: score +1 and potential +1 or +2 over seeds (both come up), the
+  potential lifted first, hit points after a Toughness elixir and maximum mana after an
+  Intelligence one, 20 marks and Quick study's 40, each elixir its own stat, the top of the
+  scores, no general store or provisioner stocks one, the altar's outcome names all six,
   content refusals.
 - `xtask/src/wiki/potions.rs` makes the wiki's potions table (`wiki/src/potions.md`).

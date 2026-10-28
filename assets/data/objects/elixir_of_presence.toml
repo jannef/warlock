@@ -1,0 +1,22 @@
+# An elixir of presence (spec §8 "Potions"): presence +1 for good, its potential +1d2. Elixirs are gold.
+[[object]]
+id = "elixir_of_presence"
+name = "elixir of presence"
+plural = "elixirs of presence"
+glyph = "!"
+fg = "#e8c860"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 2000
+stackable = true
+level = 8
+frequency = 2
+
+[object.drink]
+kind = "elixir"
+stat = "presence"
+points = 1
+potential = "1d2"
+colour = "gold"
+marks = { presence = 20 }
