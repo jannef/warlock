@@ -370,6 +370,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§8 "Magic items") add to a skill's value for what it gives while worn
     (`Actor::skill_effect`, the one way rules read a benefit), an untrained skill's from 0; they
     never train it or change the value shown.
+  - **Concentration** (#668): a trained Concentration makes mana come back faster and the pool a
+    little deeper (§8 "Mana": the curves in `data/skills.toml`, the pool's at most a fifth);
+    untrained, it gives nothing, even raised by an item or a talent. The Skills screen says so
+    in its description, in words. The priest, druid, wizard, monk, paladin, and witch start
+    trained in it; every class has some mana, so any trained in it gains.
   - **From race and class** (§7): their `skills` are dice rolled when the character is made,
     after every other roll ("Character creation" above); a skill both train sums the two; the
     race's `class_skill` (humans, `2d4+4`) goes to one of the class's skills picked uniformly
@@ -391,7 +396,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     something hidden in passing (`spot`; §8 "Searching"), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
     "Treating oneself" below), a forage that ran its time, whatever it found (`forage`;
-    "Foraging" below). Only the player trains for now; creatures keep their type's
+    "Foraging" below), mana spent, a spell or an ability paid in it (`cast`; Concentration, 25 %,
+    #668). Only the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
   - **Level-up rolls** (design `docs/design/progression.md` §5): every level gives the player
