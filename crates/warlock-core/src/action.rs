@@ -3,7 +3,7 @@
 use crate::combat::Strike;
 use crate::content::{
     ActionKind, ClassActive, CombatStance, DamageTypeId, DiseaseId, ObjectId, ResourceId,
-    SignActive, StatusId, TrapId,
+    SignActive, StatusId, TalentActive, TrapId,
 };
 use crate::geom::{Dir, Pos};
 use crate::time::{DAY, Duration};
@@ -176,14 +176,13 @@ pub enum Action {
     Temper {
         item: usize,
     },
-    /// Catch a second wind (spec §8 "Talents"; the Second wind ability): hit points back at
-    /// once, then Winded for a while. Takes the time of `wait`; refused (no time) without the
-    /// talent or while winded.
-    SecondWind,
-    /// Blood magic (spec §8 "Talents"; the Blood magic ability): give some hit points for some
-    /// mana. Takes the time of `wait`; refused (no time) without the talent, when it would cost
-    /// the last hit point, or while mana is full.
-    BloodMagic,
+    /// Use a talent's own active (spec §8 "Talents"; the abilities menu's Talents group), with
+    /// the verb every ability use has (#644). `use:second_wind` catches a second wind: hit
+    /// points back at once, then Winded for a while; refused (no time) without the talent or
+    /// while winded. `use:blood_magic` gives some hit points for some mana; refused (no time)
+    /// without the talent, when it would cost the last hit point, or while mana is full. Either
+    /// takes the time of `wait`.
+    UseTalent(TalentActive),
     /// Use a class active (spec §8 "Class abilities"; the abilities menu's Class group): rage,
     /// veteran's wind, whirlwind, lay on hands, holy radiance, and, aimed in a direction, smite
     /// and quivering palm (`use:rage`, `use:smite:E`). Takes the time of its cost's action;
@@ -225,10 +224,11 @@ pub enum Action {
         id: String,
         choice: Option<String>,
     },
-    /// Spend one of the current level's skill rolls on trained skill `skill` (spec §8
-    /// "Talents"; `World::advance_skill`, docs/dev/skills.md): throws the ladder die and adds
-    /// the result to the skill. Refused with the reason when no roll is due or the skill is not
-    /// trained. Takes no game time; recorded in replays.
+    /// Spend one of the current level's skill rolls on trained skill `skill` (spec §8 "Skills";
+    /// `world/skill_roll.rs`, `World::advance_skill`; docs/dev/skills.md): throws the skill's
+    /// ladder die and adds the result to the skill. A level brings rolls by class, race,
+    /// Intelligence, and talents (`skill_roll::roll_count`); refused with the reason when none is left to spend or the
+    /// skill is not trained. Takes no game time; recorded in replays.
     Advance(String),
     /// Dev command: switch the player's vision profile (an id in `data/vision.toml`). Takes no
     /// game time, but changes state and perception, so replays record it like any action.
@@ -777,8 +777,7 @@ impl fmt::Display for Action {
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
-            Action::SecondWind => f.write_str("second_wind"),
-            Action::BloodMagic => f.write_str("blood_magic"),
+            Action::UseTalent(active) => write!(f, "use:{}", active.id()),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
             Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
             Action::Cast(spell, None) => write!(f, "use:{spell}"),
@@ -888,17 +887,22 @@ impl FromStr for Action {
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
                 Ok(Action::Temper { item })
             }
-            "second_wind" => bare(Action::SecondWind),
-            "blood_magic" => bare(Action::BloodMagic),
             "use" => {
                 let usage = || {
-                    "`use` needs a class or birth sign ability, e.g. `use:rage`, `use:smite:E`, \
+                    "`use` needs an ability, e.g. `use:rage`, `use:smite:E`, `use:second_wind`, \
                      `use:blaze`, or `use:transfixing_stare:12,5`"
                 };
                 let (id, aim) = match arg.ok_or_else(usage)?.split_once(':') {
                     Some((id, aim)) => (id, Some(aim)),
                     None => (arg.unwrap_or_default(), None),
                 };
+                // A talent's own active asks for nothing, `use:second_wind`.
+                if let Some(active) = TalentActive::from_id(id) {
+                    return match aim {
+                        None => Ok(Action::UseTalent(active)),
+                        Some(_) => Err(format!("`use:{id}` takes no argument")),
+                    };
+                }
                 // A birth sign's gift aims at a cell, `use:transfixing_stare:12,5`.
                 if let Some(gift) = SignActive::from_id(id) {
                     let at = aim.map(parse_cell).transpose()?;
@@ -1408,8 +1412,8 @@ mod tests {
             Action::Heal(None),
             Action::Heal(Some("bleeding".into())),
             Action::Drink,
-            Action::SecondWind,
-            Action::BloodMagic,
+            Action::UseTalent(TalentActive::SecondWind),
+            Action::UseTalent(TalentActive::BloodMagic),
             Action::Use(ClassActive::Rage, None),
             Action::Use(ClassActive::Smite, Some(Dir::SW)),
             Action::UseAt(ClassActive::Volley, Pos::new(12, 5)),
@@ -1483,6 +1487,17 @@ mod tests {
             Ok(vec![Action::Disarm(Dir::NE)])
         );
         assert!(parse_actions("disarm").is_err());
+        // A talent's active is used as every ability is (#644): no bare verb, no argument.
+        assert_eq!(
+            parse_actions("use:second_wind use:blood_magic"),
+            Ok(vec![
+                Action::UseTalent(TalentActive::SecondWind),
+                Action::UseTalent(TalentActive::BloodMagic),
+            ])
+        );
+        assert!(parse_actions("second_wind").is_err());
+        assert!(parse_actions("blood_magic").is_err());
+        assert!(parse_actions("use:second_wind:E").is_err());
         assert_eq!(
             parse_actions("SEARCH search:1 search:10"),
             Ok(vec![

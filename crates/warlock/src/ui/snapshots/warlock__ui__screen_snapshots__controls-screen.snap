@@ -32,7 +32,7 @@ expression: "render(case, content.clone())"
                               │   Skills                               A                 │
                               │   Weapon skills                        W                 │
                               │   Quest log                            q                 │
-                              │   Talents                              (none)            │
+                              │   Talents                              G                 │
                               │   Message history                      v                 │
                               │   Rest                                 b                 │
                               │   Consume                              e                 │

@@ -20,7 +20,7 @@ main menu without saving; no `--screen`: capture a dead replay instead), the lev
 `screens::on_level_up` whenever `World::due` is set and the game changed, over whatever is open, the
 death screen winning; its choices are `ScreenAction::Act`, which closes it, and it opens again on
 what is left; no `--screen`: a replay that ends with choices due opens it), and the Talents page
-(page 7, `KeyCommand::Talents`, unbound) — are one
+(page 7, `KeyCommand::Talents`, `G`) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
 to open, read keys for, or draw one:
 - **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, save store, and
@@ -234,8 +234,8 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   it makes from its aim), a line in `Ability::every` (menu order: by source, then as listed),
   who has it (`had_by`), and when it cannot be used (`unavailable` → `Unavailable` with its
   reason; `While(status)` for a status that blocks its cost's kind or is its cooldown,
-  `docs/dev/status-effects.md`; one that asks for an alignment asks `ability::strayed` first,
-  `Unavailable::Strayed`, `docs/dev/alignment.md`; `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
+  `docs/dev/status-effects.md`; alignment never makes one unavailable, `docs/dev/alignment.md`;
+  `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
   why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
   wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
@@ -255,7 +255,7 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `Action::Gift` (`use:horns_grace`, `use:transfixing_stare:X,Y`, a cell at `STARE_RANGE`).
   `Ability::Class(ClassActive)` (`Source::Class`) are the class actives
   (`docs/dev/progression.md` "Class actives"): listed while some talent has one, had
-  by whoever's `TalentMods` has it, `Strayed` then `While(cooldown)`; their action is
+  by whoever's `TalentMods` has it, `While(cooldown)`; their action is
   `Action::Use`. No `KeyCommand` of their own (as Second wind's).
   `Ability::Sign(SignActive)` (`Source::Sign`, the menu's Birth sign group between Racial and
   Class) are a birth sign's actives (Blaze; `docs/dev/character-creation.md`): listed while some
@@ -295,7 +295,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   opens the menu when there is none.
 - **Keys**: an ability with an action of its own may have a rebindable `KeyCommand`, left unbound
   by default (`settings/keys.rs::UNBOUND`); never a default key. Shield bash is the first, Steal
-  the second; a style's rank 10 abilities (later) go there too.
+  the second; a style's rank 10 abilities (later) go there too. They stay (the owner, #644), and
+  `settings/keys.rs::ABILITY_KEYS` lists them: Controls and the `?` help show them last, below
+  every context's group, under "Ability keys" (`controls_screen::Row::AbilityKeys`; text
+  snapshot `controls-screen-bottom`).
 
 **Text snapshots** (#301): `ui/screen_snapshots.rs` (test only) checks the screens as text, in
 place of golden screenshots. Each `Case` starts a run the way a golden entry does (scenario,

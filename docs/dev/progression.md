@@ -9,7 +9,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 
 | Where | What |
 |---|---|
-| `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `ranks: Vec<Rank>`, `needs` for every rank plus each rank's own, `effects` per rank held plus each rank's own, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes, `requires_alignment`, an `alignment::Requirement` read against `Actor::band`, and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400), and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
+| `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `ranks: Vec<Rank>`, `needs` for every rank plus each rank's own, `effects` per rank held plus each rank's own, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400), and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
 | `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, rank, choice }>` on `Actor::talents`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content)` / `Actor::talent_mods`, a `Cow`: borrowed and shared for an actor without talents, which most creatures are, so the many reads a turn copy nothing), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words), `openings`, `offers` (the pick list, tree by tree). |
 | `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
 | `world/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/talent.rs`) is `take_talent` without its words. |
@@ -57,7 +57,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `max_mana_per_levels` | handed out, not read: `class::hand_out` adds the rank's `mana_at(level)` to `mana_base` and `mana`, `level_up` each later level's growth (Deep well; past `mana_level` too) |
 | `mana_resting_percent` | `World::mana_rate`, on resting's pace (Meditation) |
 | `mana_cost_percent` | `World::spend_mana` through `Actor::mana_cost` (`TalentMods::mana_cost`: rounded to the nearest, at least 1; Frugal caster) |
-| `blood_magic` | `world/mana.rs::blood_magic` (`Action::BloodMagic`, `Ability::BloodMagic` under `Source::Talent`): hit points for mana, no cooldown |
+| `blood_magic` | `world/mana.rs::blood_magic` (`Action::UseTalent`, `use:blood_magic`, `Ability::BloodMagic` under `Source::Talent`): hit points for mana, no cooldown |
 | `footsteps_percent`, `silent_doors` | `noise::noise` (after the stealth skill and affixes; a silent door is no noise at all) |
 | `hearing` | `Actor::hearing`, with the listen skill |
 | `threshold_percent`, `darkvision`, `sees_uv` | `WorldState::eyes` (`world/eyes.rs`, the design's B4): the base profile (`WorldState::vision`) as the talents change it; `Perception::compute` reads it, so the view's `vision()` is the effective eye (id and name the base's). Creatures keep their types' profiles |
@@ -89,7 +89,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `barbs` | `World::resolve` → `World::barbed` (`world/gifts.rs`) after a melee blow that hurt and left the target alive: `hurt(attacker, barbs, Harm::Barbs)`, no roll, no noise, a death of it earns nothing |
 | `resist` | `Actor::resistances`, as gear (`Resistances::sum` caps it); `damage` names the kind (Flame-hardened's and Kindled's fire, Of the deep's cold), else the choice |
 | `resting_percent` | `World::healing_rate`, on resting's pace (Fast healer) |
-| `second_wind` | `world/second_wind.rs` (`Action::SecondWind`, `Ability::SecondWind` under `Source::Talent`): hit points back, then its `cooldown` status |
+| `second_wind` | `world/second_wind.rs` (`Action::UseTalent`, `use:second_wind`, `Ability::SecondWind` under `Source::Talent`): hit points back, then its `cooldown` status |
 | `horns_grace`, `stare` | `world/gifts.rs` (`Action::Gift`, `Ability::Sign(SignActive)` under `Source::Sign`): the birth sign's actives, then their `cooldown` statuses (`TalentMods::sign_cooldown`) |
 | `iron_stomach` | `eat.rs`: `eat_rotten` (no vomiting, no draw for it; sickness halved) and `feed` (overeating never vomits) |
 | `status_eases` | `World::live`: the sufferer's easing pace, `TalentMods::eases_every` into `Effect::until_eases_every`/`advance_every` |
@@ -236,7 +236,8 @@ the talents' kinds and the class's own (the README of `data/talents/` lists them
 actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
 `quivering_palm`) are effects that `TalentEffect::active` maps to a `ClassActive`;
 `Content::class_active` finds the talent that has one, whose name and description the abilities
-menu shows and whose `requires_alignment` need the paladin's gifts ask. Shared entries are a
+menu shows; a holy gift's talent may name the bands it works for (`alignment`; outside them it
+is used and does nothing, `docs/dev/alignment.md`). Shared entries are a
 talent each (`divine_health`, `purity_of_body`); the monk's Deflect missiles is the ordinary
 talent, handed out. Keys: the actives have none of their own (as Second wind; the abilities menu
 and its repeat key use them).
@@ -351,7 +352,7 @@ light ids after it). A run without talents content (fixtures) never has a pick d
 ## Tests
 
 `world/class_active_tests.rs` (the adventurers' tables: abilities by level, bonus picks, every
-passive's rule, the actives and their cooldowns, strayed paladins, replays);
+passive's rule, the actives and their cooldowns, the holy gifts unanswered outside their bands, replays);
 `content/talent.rs` (loading, validation, the coverage gaps, choice chains), `talent.rs`
 (summing, ranks per choice, serialization), `world/talent_arms_tests.rs` (the Weaponcraft and Guard hooks, the role need's words), `world/damage_talent_tests.rs` (Elemental ward and Crusher, the damage-types bar), `world/land_talent_tests.rs` (the Shadow and Wayfarer hooks), `world/talent_tests.rs` (dues and refusals,
 prerequisites in words, ranks and Hardy's growth, several levels at once and `levelup:auto`,

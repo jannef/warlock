@@ -6,4 +6,4 @@ granted = true
 description = "Kneel and pray for a minute in a cursed, draining, or haunted place (an ability, paid in mana): its curse is lifted for good, the whole level's if it lies over the whole level."
 effects = [{ kind = "consecrate", mana = 15, time = "1m" }]
 systems = ["special_rooms", "mana"]
-needs = { requires_alignment = { min = "good" } }
+alignment = { min = "kind" }

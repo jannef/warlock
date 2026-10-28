@@ -16,9 +16,17 @@
 //! percent, one gameplay draw a stack, sparing coins and loose gems; **blowing up** (a blast
 //! that beats its band's hardness) rolls every stack at the same percent and spares nothing
 //! ([`destroyed`]).
+//!
+//! What a **generated** chest holds is rolled by [`roll_contents`] from its band's loot table
+//! (spec §8 "Chest loot"), on the level's chest stream (`mapgen/chest.rs`).
 
-use crate::object::Stack;
+use crate::content::{Content, GOLD, MAX_ITEM_LEVEL};
+use crate::item_parts::ItemPart;
+use crate::magic::LootGrade;
+use crate::magic::loot::{self, Luck};
+use crate::object::{Stack, add_to_pile};
 use crate::rng::Rng;
+use crate::variant::Source;
 use serde::{Deserialize, Serialize};
 
 /// A chest on a cell (ground truth).
@@ -117,4 +125,48 @@ pub fn destroyed(
         }
     }
     (kept, lost)
+}
+
+/// What a generated chest of `level` holds (spec §8 "Chest loot"), rolled from its band's loot
+/// table with the finder's `luck`, as a pile (the last rolled on top, like stacks joined). Draws, in order: the `items` dice; per item one
+/// `below(100)` for its grade (under `rare` rare, under `magic` at least magic, else any) and
+/// [`loot::roll_with`]'s own at `level + loot_level` (nothing found rolls nothing more); the
+/// purse's dice (`dice` × `each` coins of the shops' currency, else `gold_coin`; none at 0);
+/// the `gems` dice (0 or less: none) and per gem [`crate::gem::roll`]'s. A mimic standing in
+/// for the chest carries the same stacks from the same draws. Empty without bands.
+pub fn roll_contents(content: &Content, rng: &mut Rng, level: u8, luck: Luck) -> Vec<Stack> {
+    let Some(band) = content.chests().band_of(level) else {
+        return Vec::new();
+    };
+    let table = &band.loot;
+    let at = level
+        .saturating_add(table.loot_level)
+        .clamp(1, MAX_ITEM_LEVEL);
+    let mut holds = Vec::new();
+    for _ in 0..table.items.roll(rng).max(0) {
+        let grade = match rng.below(100) {
+            g if g < u32::from(table.rare) => LootGrade::Rare,
+            g if g < u32::from(table.magic) => LootGrade::Magic,
+            _ => LootGrade::Any,
+        };
+        if let Some(stack) = loot::roll_with(content, rng, at, grade, Source::Loot, luck) {
+            add_to_pile(&mut holds, &[stack], content);
+        }
+    }
+    let coins = table.gold.dice.roll(rng).max(0) as u32 * table.gold.each;
+    let currency = (content.shops().map(|s| s.currency)).or_else(|| content.object_id(GOLD));
+    if let (true, Some(currency)) = (coins > 0, currency) {
+        add_to_pile(&mut holds, &[Stack::new(currency, coins)], content);
+    }
+    for _ in 0..table.gems.roll(rng).max(0) {
+        let (Some(gems), Some((gem, cutting))) =
+            (content.gems(), crate::gem::roll(content, rng, at, false))
+        else {
+            continue;
+        };
+        let parts = vec![ItemPart::gem(content, None, gem, cutting)];
+        let gem = Stack::one(gems.object).with_parts(parts);
+        add_to_pile(&mut holds, &[gem], content);
+    }
+    holds
 }

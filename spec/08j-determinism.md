@@ -30,7 +30,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   hides (`secrets/<level id>`, after its traps, so the map is the same with or without them, §8
   "Searching"); a generated
   level's loot (`loot/<level id>`, drawn once its map is valid and its traps hidden, so the map
-  is the same with or without it); a generated level's creatures' gear (`gear/<level id>`, in
+  is the same with or without it); a generated level's chests (`chests/<level id>`, after its
+  rooms' loot and before its gear: whether a floor gets any and how many, each one's cell, lock,
+  trap and which, contents, and the mimic draw, so the rest of the level is the same with or
+  without them, §8 "Chests"); a generated level's creatures' gear (`gear/<level id>`, in
   spawn order after its loot, so the rest of the level is the same with or without it, §8
   "Creature gear"); the gear of a creature placed in play without a fixed kit (`gear/<actor
   id>`: a hand-made level's, rolled as the level is first entered); what a creature drops when

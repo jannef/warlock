@@ -28,6 +28,7 @@ The in-game `?` screen is authoritative: it is generated from your current key b
 | Skills | `A` |
 | Weapon skills | `W` |
 | Quest log | `q` |
+| Talents (yours, and every other with what it needs) | `G` |
 | Message history (see [Messages](#messages)) | `v` |
 | Info page 1 to 9 (while an info screen is open) | `1` to `9` |
 | Next / previous info page (wraps) | `Tab` / `Shift`+`Tab` |
@@ -57,7 +58,7 @@ ADOM (the arrows move in four directions only); if you prefer the vi keys (`hjkl
 in Controls (`k`, `l`, and `u` are Kick, Look around, and Use a tool, as in ADOM: give those
 other keys first). Commands ADOM does not have, or has only behind a prefix or `Ctrl` (which the
 game does not bind), have keys ADOM leaves free:
-the message history `v`, rest `b`, and the quick repeat of an ability `X`. Search for a while is
+the message history `v`, rest `b`, the talents `G`, and the quick repeat of an ability `X`. Search for a while is
 search's key in capitals, `S` (ADOM's save and quit): save and quit from the pause menu (`Esc`),
 or bind a quick key for it in Controls. Symbol keys such as
 `<`, `>`, and `?` are matched by the character they produce, so they work on other keyboard
@@ -99,7 +100,7 @@ and shows a page at a time: the letters name the rows of the page you see, start
 Keys of menus, lists, screens, and prompts are fixed; new ones are never rebindable. Where the Controls screen lists such keys, it is the current state, and a later update may fix them. You can rebind the keys of play in the Controls screen (main menu or pause menu, then
 Controls). It lists the commands in groups, by where they are used: in play, while aiming, in the
 rest prompt, at `--more--`, on menus and screens, in text fields, on the info pages, in the question windows, and (in builds
-that have them) the developer keys. Select a command, press `Enter`, then press the new key. It
+that have them) the developer keys; last come the ability keys, unbound until you give one a key. Select a command, press `Enter`, then press the new key. It
 becomes the command's main key, and its other keys (such as the numpad) stay. A key another
 command of the same group already uses moves to the new command, and the screen says what moved;
 the old command keeps its other keys, or shows `(none)` if that was its only one. The same key
@@ -173,8 +174,7 @@ Looking takes no time. Press `l` or `Esc` to leave.
 `t` shoots or throws whatever is in your Missile weapon slot: a bow, a crossbow, or a sling
 shoots its ammunition from the Missiles slot (ready both with `i`); a throwing weapon (a dagger,
 a spear, rocks) or any other weapon is thrown. `T` instead lists what you carry that can be
-thrown, to choose one. (Firing the missile weapon, which only shoots a launcher, has no key by
-default, as `t` does it; bind it in the controls screen.) Either puts a cursor on the map:
+thrown, to choose one. (There is no separate key for firing a launcher: `t` does it.) Either puts a cursor on the map:
 
 - it starts on your last target, if you still see it (or on the same spot), else on the nearest
   hostile creature you see, else on you;
@@ -223,8 +223,8 @@ later racial and class abilities), grouped by where each comes from and lettered
 items. Choose one by its letter, or `Enter` on the `>` row; one you cannot use now is greyed out
 with why. It then asks for what it needs, such as a direction or a place to aim at. The menu opens
 on the ability you used last, and `X` uses that one again at once.
-Abilities have no keys of their own unless you give them one in Controls. See
-[Abilities](abilities.md).
+Abilities have no keys of their own unless you give them one in Controls, where those few keys
+are listed last, under "Ability keys". See [Abilities](abilities.md).
 
 `i` shows what you wear and wield, slot by slot, as ADOM's `i` does (`I` is your pack). A slot's
 letter (on this screen every letter names a slot) opens a list of what you carry that fits there: its letter puts it on, swapping

@@ -38,9 +38,6 @@
 #                   any_weapon_skill = { roles = ["melee"], of = ["unarmed"], rank = 3 }
 #                                                        any one of the weapon skills of those
 #                                                        roles or named, at that rank
-#                   requires_alignment = { min = "good" }   an alignment band, as quests and
-#                                                        abilities ask it (`min` the worst
-#                                                        allowed, `max` the best)
 #                   either = { stats = { intelligence = 12 }, skills = { appraise = 20 } }
 #                                                        any one of what it asks (at least two;
 #                                                        no `either` within it)
@@ -55,6 +52,11 @@
 #   resource      `{ id = "openings", cost = 5 }`: what using its class active costs of an
 #                 alternative resource (data/resources.toml; at most its max; 0 asks only that
 #                 it is held): unavailable while short, spent when used
+#   alignment     `{ min = "kind" }`: the alignment bands (alignment.toml; `min` the worst, `max`
+#                 the best, either or both) a holy class active works for (lay_on_hands, smite,
+#                 holy_radiance, consecrate): it bars nothing (the ability is had, listed, and used
+#                 whatever the band), but outside them it does nothing: a line, the time of a
+#                 cast, no cooldown or mana spent
 #
 # Effects (each read by one rule; a new kind is a variant in content/talent.rs, a field in
 # talent.rs's TalentMods, and one read):
@@ -462,6 +464,5 @@
 #                                 howl; every hostile that hears it, of a lower level than the
 #                                 player, suffers `severity` degrees of `status` (one that
 #                                 `flees`); then the cooldown status
-#   A class active's talent may ask `requires_alignment` (the paladin's gifts): the ability is
-#   greyed out while the character has strayed.
+#   A holy class active's talent may name the bands it works for (`alignment`, above).
 # Flat bonuses are -20 to 20, percents -100 to 100, never 0.

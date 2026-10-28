@@ -69,8 +69,8 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 - **Class abilities** (Rage, Veteran's wind, Whirlwind, Lay on hands, Smite, Holy radiance,
   Quivering palm, Consecrate, Knock): your class's level table gives them (see [Classes](classes.md#what-each-level-gives)),
   each under Class from the level that brings it. Most leave you spent, winded, or drained for a
-  while afterwards, greyed out until it passes; a paladin's gifts answer only while the paladin
-  is Good or better (greyed out with `you have strayed` otherwise). They have no key of their own
+  while afterwards, greyed out until it passes; a paladin's holy gifts are never greyed out by
+  alignment, but do nothing unless you are Kind or better (see [Alignment](alignment.md)). They have no key of their own
   yet: `X` uses the one you used last again.
 - No race gives an ability yet.
 

@@ -123,9 +123,21 @@ pub const VITAL: &[KeyCommand] = &[
     KeyCommand::TextConfirm,
 ];
 
+/// The abilities' own keys: play commands that each use one ability, as the abilities menu (`a`)
+/// does, for a player who wants a key for one. Niche and unbound by default ([`UNBOUND`]), so
+/// Controls and the `?` help list them last, under a heading of their own below every other
+/// group (the owner, #644).
+pub const ABILITY_KEYS: &[KeyCommand] = &[
+    KeyCommand::Bash,
+    KeyCommand::ThrowVoice,
+    KeyCommand::Disarm,
+    KeyCommand::PickLock,
+    KeyCommand::Steal,
+];
+
 /// Ids of commands that were removed: an old settings or keymap file may still list them, and
 /// they are dropped without a warning. Add an id here when a command is deleted.
-pub const RETIRED: &[&str] = &["fire"];
+pub const RETIRED: &[&str] = &["fire", "hood_lantern", "lantern"];
 
 /// The settings ids of [`KeyCommand::Page`] 1 to 9.
 const PAGE_IDS: [&str; 9] = [
@@ -133,16 +145,16 @@ const PAGE_IDS: [&str; 9] = [
 ];
 
 /// Rebindable commands with no key by default: abilities (`warlock_core::ability`), which the
-/// abilities menu (#156) lists instead of a key each; Talents; the previous target and the previous info
-/// page, which Shift with the next one's key picks; and Back (in menus and in text fields) and skipping the rest at
-/// `--more--`, which Esc always does. The player may bind one in Controls.
+/// abilities menu (#156) lists instead of a key each; save and quit, which the pause menu does;
+/// the previous target and the previous info page, which Shift with the next one's key picks;
+/// and Back (in menus and in text fields) and skipping the rest at `--more--`, which Esc always
+/// does. The player may bind one in Controls.
 pub const UNBOUND: &[KeyCommand] = &[
     KeyCommand::Bash,
     KeyCommand::ThrowVoice,
     KeyCommand::Disarm,
     KeyCommand::PickLock,
     KeyCommand::Steal,
-    KeyCommand::Talents,
     KeyCommand::Quit,
     KeyCommand::PrevTarget,
     KeyCommand::MoreSkip,
@@ -762,7 +774,7 @@ mod tests {
         assert!(back.keys_of(KeyCommand::Kick).is_empty());
         assert_eq!(back.to_map(), b.to_map());
         // Commands unbound by default stay out of the file.
-        assert!(!b.to_map().contains_key("talents"));
+        assert!(!b.to_map().contains_key("steal"));
     }
 
     #[test]

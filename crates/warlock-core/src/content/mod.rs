@@ -163,7 +163,9 @@ pub use dialogue::{
     ServiceKind, Speaker, Topic,
 };
 pub use disease::{DIFFICULTIES, DiseaseDef, DiseaseId, SOURCES, Wading};
-pub use dungeon::{DungeonDef, Generator, LevelPlan, RoomOdds, ShopOdds, parse_branch_level};
+pub use dungeon::{
+    ChestOdds, DungeonDef, Generator, LevelPlan, RoomOdds, ShopOdds, parse_branch_level,
+};
 pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
     MAX_SHAKE_PIXELS, Shake,
@@ -260,8 +262,8 @@ pub use summon::Summon;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
-    ResourceCost, SystemDef, SystemId, TalentBook, TalentDef, TalentEffect, TalentId, TreeDef,
-    TreeId,
+    ResourceCost, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
+    TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,

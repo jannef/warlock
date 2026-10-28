@@ -10,7 +10,8 @@
 //! short of stamina, while a status blocks the action it is, without the aim it asks, and by its
 //! own refusals (nobody hostile there, no room to lunge, nothing to shoot). Then it pays both its
 //! costs ([`World::pay_active`]): its stamina through `World::spend_resource` (less Drillmaster's
-//! and Armour-breaker's discounts, [`Actor::weapon_stamina`], at least 1), and its time: the price
+//! and Armour-breaker's discounts and what of Ease takes off, [`Actor::weapon_stamina`], at least
+//! 1), and its time: the price
 //! of the action it is (`attack_price` for a blow, so weapon speed, style, stance, and statuses
 //! count; `shot_price` for a shot; `wait` for a buff), priced before it is made, times its
 //! `percent` ([`World::active_price`]: Practised technique's cut, never below half the action).
@@ -25,6 +26,7 @@ use super::{Actor, ActorId, AttackSkills, Spent, World};
 use crate::ability::Ability;
 use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Profile, Target};
+use crate::content::Effect as ItemEffect;
 use crate::content::{
     ActionKind, ActiveAim, Categories, Content, STAMINA, StatusId, WeaponAbilityId, WeaponDoes,
     percent_of,
@@ -95,13 +97,18 @@ impl Actor {
     }
 
     /// The stamina weapon active `id` costs it: its own, less its talents' discounts
-    /// (Drillmaster's for every active, Armour-breaker's for Sunder and Gap shot), at least 1.
+    /// (Drillmaster's for every active, Armour-breaker's for Sunder and Gap shot) and what it
+    /// wears takes off every active (of Ease's `active_stamina`, global: whatever piece holds
+    /// it), at least 1.
     pub(crate) fn weapon_stamina(&self, content: &Content, id: WeaponAbilityId) -> u16 {
         let own = content
             .weapon_ability(id)
             .active
             .map_or(0, |a| i32::from(a.stamina));
-        if self.talents.is_empty() {
+        let worn = content.resource_id(STAMINA).map_or(0, |stamina| {
+            (self.mods(content)).resource(ItemEffect::ActiveStamina, stamina)
+        });
+        if self.talents.is_empty() && worn == 0 {
             return u16::try_from(own).unwrap_or(0);
         }
         let talents = self.talent_mods(content);
@@ -109,7 +116,7 @@ impl Actor {
             .filter(|(a, _)| *a == id)
             .map(|(_, v)| v)
             .sum();
-        u16::try_from((own - talents.weapon_stamina - named).max(1)).unwrap_or(1)
+        u16::try_from((own - talents.weapon_stamina - named - worn).max(1)).unwrap_or(1)
     }
 }
 
