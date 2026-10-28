@@ -120,6 +120,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `flurry_cost` | `World::flurry`: the second blow spends its cost (Ki) first, else none (`TalentMods::flurry_cost`; `docs/dev/resources.md`) |
 | `hardened` | `World::level_up`, as the level comes (a level's hit points again, and `bonus` more, past `hp_level`) |
 | `resource_build` (Blood frenzy, Patient blade), `resource_max` (Mighty rage, Inner calm), `resource_start` (Battle trance), `resource_rate` (Battle trance, Inner calm, Steady hand, Patient blade) | `World::gain_resource` (beside the resource's own `builds`), `Actor::resource_max`, `Actor::resource_start` (`World::grant_resource`, `focus::hold`), `World::resource_rate` |
+| `geared_resource_percent` (Bellows: stamina, 100) | `Actor::resource_max`'s worn term for that pool (`TalentMods::geared_resource`, rounded up; a term below 0 as it is) |
 | `unstoppable` | `World::unstoppable` (`hurt`, `Harm::Actor`: `cost` of the rage via `spend_resource`), `World::live` (the numb statuses tick nothing while Raging lasts) |
 | `radiance` | `LightCache::sources` (a carried source, `RADIANCE` tag, while its status lasts) |
 | `inner_light` | `LightCache::sources` (a carried source, `INNER` tag, always: the player and the creatures see by it alike) |
@@ -127,6 +128,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `spell` (`{ kind = "spell", spell = "ID" }`, checked against `data/spells/`) | `TalentMods::spells` → `Ability::Spell`'s `had_by`; `world/cast.rs` |
 | `spell_power`, `spell_mana_percent` | `TalentMods::spell_damage` in `World::strike` and `read_spell` (a scroll held to the cap of the spell it teaches once talents change its dice); `Actor::spell_cost` (the cast and `Unavailable::NoMana`) |
 | `caster_level` (`per_levels`: Arcane training) | `Actor::caster_level` (`TalentMods::caster_level_at`, at the character level) |
+| `attuned_percent` (Attuned) | `Actor::caster_level`'s items term (`TalentMods::attuned`: the worn `caster_level` this percent more, rounded up; a term below 0 as it is) |
 | `overreach_cost_percent` | `Actor::spell_base` → `SpellRules::mana_with` (Overreach) |
 | `school_focus` (choice `school`; `cost`, `reach`, `lift`) | `Actor::spell_base` (`TalentMods::spell_mana_with`) and `Actor::spell_reach`, by `TalentMods::focus(spell.tags)`; `lift` (Keen mind) in `Actor::spell_lift`, by `TalentMods::focus_lift(spell.tags)` |
 | `study` | `World::start_study` (time), `study_odds` (bonus) |

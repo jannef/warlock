@@ -83,7 +83,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `spell_ease` eases its own piece (§8 "Spells": "Cost"), `spell_to_hit` and `spell_threat`
     aim an own cast only (never a scroll's or a wand's), `spell_lift` widens the lift with Keen
     mind's, `spell_reach` adds to the range or length with School focus's, and `spell_duration`
-    adds degrees.
+    adds degrees. `caster_level` (of the Adept) is read in `Actor::caster_level`; **Attuned**
+    (Scholar, Intelligence 12, level 6) counts the caster level magic items give half again,
+    rounded up (+1 → +2, +3 → +5), and **Bellows** (Vigour, Toughness 12) the stamina they add
+    to the maximum twice (affixes design §10).
     Pending hooks, added
     with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
     none roll yet) and value (#145, a base `value` times rarity and affixes).

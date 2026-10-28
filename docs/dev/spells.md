@@ -272,7 +272,7 @@ shares.
     of low level"): it slows rather than stops, so any creature may be caught.
 - **Caster level** (`world/caster_level.rs`): `Actor::caster_level(content, level, casting)`
   (`level × casting ÷ 100` rounded down, plus `TalentMods::caster_level` and the worn
-  `Effect::CasterLevel`, at least 0, at least 1 while `max_mana` is above 0),
+  `Effect::CasterLevel`, half again with Attuned, rounded up (`TalentMods::attuned`), at least 0, at least 1 while `max_mana` is above 0),
   `World::caster_level(id)` (the player at `player_level` and `casting_percent`: the class's,
   100 without a class; a creature at its type's level and 100, plus what it wears, #525),
   `casting_percent(content, character)`. Derived, never stored: nothing in saves or the state

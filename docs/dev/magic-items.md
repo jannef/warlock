@@ -47,7 +47,8 @@ affixes, then the combat stance. The regeneration affix goes
 through `World::healing_rate` like every other pace change, the mana affixes (Mystic,
 `max_mana`; of Clarity, `mana_regeneration`) through `Actor::max_mana` and `World::mana_rate`
 (`docs/dev/mana.md`; mana follows the maximum down with `World::keep_mana_within_max`); the
-caster level effect (`caster_level`, no built-in affix yet) through `Actor::caster_level`
+caster level effect (`caster_level`, no built-in affix yet) through `Actor::caster_level`,
+its items term lifted by Attuned (`TalentMods::attuned`: `attuned_percent`, rounded up; T1, #634)
 (`docs/dev/spells.md`); the Protection affix (Hardened, an
 item effect, local, on armour kinds: `ItemKind::is_armour`) through `Stack::protection`, which
 `Actor::protection` sums (docs/dev/combat.md); the typed effects (docs/dev/combat.md "Damage
@@ -98,7 +99,8 @@ left out when content has no resources (as skill affixes without skills; `conten
 holds the id lookups, `None` for a table content lacks; the table is read after resources). They
 sum by (effect, resource) in `Mods::pools`, read with `Mods::resource(effect, id)`, never into
 `Mods::get`. Their hooks (B1, #630; docs/dev/resources.md): `resource_max` in
-`Actor::resource_max`, `resource_rate` in `World::resource_rate`, `active_stamina` (keyed on
+`Actor::resource_max` (the worn term lifted by Bellows: `TalentMods::geared_resource`, by pool;
+T1, #634; `world/affix_talent_tests.rs`), `resource_rate` in `World::resource_rate`, `active_stamina` (keyed on
 stamina, global) in `Actor::weapon_stamina`; `resource_on_kill` waits for E1. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
 effect that names nothing else): one group per (effect, resource), so `check_category` keeps
 Tireless (stamina) and of Fury (rage) apart. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`

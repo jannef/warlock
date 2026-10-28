@@ -492,7 +492,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     when granted (`Actor::resource_start`, at most the maximum), and a `resource_rate` its pace
     over time in percent (`World::resource_rate`). What the holder wears does too, for the pool
     its affix names (§8 "Magic items"; the affixes design §5): a `resource_max` affix raises
-    the maximum and a `resource_rate` affix speeds the pace, beside the talents', and an
+    the maximum (twice over for stamina with **Bellows**, Vigour, Toughness 12) and a
+    `resource_rate` affix speeds the pace, beside the talents', and an
     `active_stamina` affix takes stamina off every weapon active (`Actor::weapon_stamina`, at
     least 1). An affix never grants a pool: one who does not hold it (a wizard's stamina, any
     creature's) gets nothing of it. Taking off what raised a maximum lowers what is held to the
@@ -556,7 +557,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     + the Toughness modifier + a point per 10 levels, at least 5 (`max_from`), so Toughness 14
     holds 12 at level 1; it comes back a point every 12 s (2 base turns), resting too, and sits
     at 0. A barbarian holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
-    `stamina` system): **Deep lungs** (Vigour): +4 at most; **Steady breathing**
+    `stamina` system): **Deep lungs** (Vigour): +4 at most; **Bellows** (Vigour, Toughness 12):
+    what magic items add to the maximum counts twice; **Steady breathing**
     (Weaponcraft, a weapon skill at 5): back at 150 %; **Second breath** (Might): a kill
     credited to the holder builds a point. Anyone else is granted it, full, on the first weapon
     rank that teaches an active (the third grant place, #564: `fight.rs::grant_stamina`, where
