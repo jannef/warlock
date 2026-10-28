@@ -1,0 +1,15 @@
+[[suffix]]
+id = "of_wounding"
+name = "of Wounding"
+effect = "extra_damage"
+category = "extra_damage"
+bases = ["weapon", "launcher"]
+weight = 40
+tiers = [
+  { level = 3, min = 2, max = 2 },
+  { level = 5, min = 2, max = 3 },
+  { level = 7, min = 3, max = 3 },
+  { level = 9, min = 3, max = 4 },
+  { level = 11, min = 4, max = 5 },
+  { level = 13, min = 5, max = 6 },
+]

@@ -81,9 +81,20 @@ the spell ones (`mana_cost`, `spell_ease`, `spell_to_hit`, `spell_threat`, `spel
 `spell_reach`, `spell_duration`, `mana_on_kill`, `wand_level`), the resource ones
 (`resource_max`, `resource_rate`, `active_stamina`, `resource_on_kill`), and the utility ones
 (`door_kick`, `dig_percent`, `hunger`, `trap_damage`, `disease_check`, `potion_kept`), each with
-its parse, `Mods::add` arm (a sum), `describe::phrase`, and wiki words. No shipped affix file has
-them yet; each hook comes with its own PR (A1 spells, B1 resources, D1 utility, E1 on a kill, E2
-potions and wands). **The spell hooks** (A1, #629; `world/affix_spell_tests.rs`): `mana_cost` in
+its parse, `Mods::add` arm (a sum), `describe::phrase`, and wiki words. The hooks came first,
+each in its own PR (A1 spells, B1 resources, D1 utility, E1 on a kill, E2 potions and wands),
+tested on fixture affixes; **the shipped files** came after (P1, #635), one under
+`data/affixes/` each, on the ladder: of the Adept, of Thrift, Mage-wrought, of the Magus,
+Baleful, Potent, of Farcasting, of Lingering, of Siphoning, of Wands, Tireless, of Breath, of
+Ease, of the Hunt, the five pool maxima (of Fury, of Steadiness, of Stillness, of Guile, of the
+Muse: dead loot on a character without the pool, by the owner's choice), Hobnailed, Delving, of
+Sustenance, of Wariness, of Health, and of the Alchemist; Mystic gained `weapon`, Featherweight
+and of the Bear `tool`. `magic/tests.rs`, `every_shipped_affix_effect_is_read_by_its_hook`,
+names each effect's reading module (an exhaustive match) and fails on a shipped affix whose
+effect that module never reads (a dead effect). **Damage is more than one category** (owner,
+#635), so a weapon may roll more than one damage affix: `physical_damage` (+damage: Sharp,
+Vicious), `extra_damage` (an extra die: Heavy and the suffix of Wounding), and one per element
+(`fire_damage`, ...); the one-per-category rule stands. **The spell hooks** (A1, #629; `world/affix_spell_tests.rs`): `mana_cost` in
 `Actor::mana_cost` (joins Frugal caster's percent, 50 off at most), `spell_ease` in
 `Actor::worn_spell_cost` (each piece less its own, never below 0: a fully eased piece leaves the
 armoured grip), `spell_to_hit`, `spell_lift` (beside Keen mind's), and `spell_duration` in
@@ -129,10 +140,10 @@ comes slower; the pace at least 1), `trap_damage` in `trap_deals` (subtracted fr
 percent, the sum at most `TRAP_DAMAGE_CUT` = 75 off), `disease_check` in
 `World::disease_modifier`. Tests on fixture affixes: `world/affix_utility_tests.rs`. The
 pick-axe is the one `tool` base item (`level = 3`, `frequency = 10`); `Numbers::of` shows a
-tool nothing, and `describe`'s base stats give any digging tool's power ("Digs at 10"). Until
-an affix rolls on tools (P1, #635), loot that must be magic never draws it
-(`loot::can_be_magic`), and a magic item's shape draws only among those its base can take
-(`loot::rolls_any`; every other base takes all three, so no other draw changed).
+tool nothing, and `describe`'s base stats give any digging tool's power ("Digs at 10"). Delving,
+Featherweight, and of the Bear roll on tools (P1, #635), so loot finds a magic pick-axe; loot
+that must be magic draws only bases some affix rolls on (`loot::can_be_magic`), and a magic
+item's shape only among those its base can take (`loot::rolls_any`).
 
 ## Unique items
 

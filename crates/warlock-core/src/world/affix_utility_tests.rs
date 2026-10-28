@@ -3,8 +3,9 @@
 //! of hunger, `trap_damage` the cut of a trap's blow (with Trap sense at most 75 % off), and
 //! `disease_check` every disease check. Each applies unidentified, stops when taken off, and
 //! works on a creature's gear where the rules read a creature at all. The affixes here are
-//! fixtures: no shipped file carries these effects yet. The pick-axe is a base item (`tool`):
-//! loot rolls it magic from item level 3, while the hand-placed ones stay normal.
+//! fixtures (in the shipped files' categories, with values of their own), beside the shipped
+//! Hobnailed, Delving, of Sustenance, of Wariness, and of Health. The pick-axe is a base item
+//! (`tool`): loot rolls it magic from item level 3, while the hand-placed ones stay normal.
 
 use super::fixture_factions::peaceful_factions;
 use super::*;
@@ -13,7 +14,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, ItemKind};
 use crate::damage::Damage;
 use crate::magic::describe;
-use crate::magic::{Affix, LootGrade, Magic, Numbers, Rarity, loot};
+use crate::magic::{Affix, LootGrade, Magic, Numbers, Rarity, loot, may_roll};
 use crate::rng::Rng;
 use crate::stats::Stat;
 
@@ -34,11 +35,12 @@ map = '''
 "k" = { terrain = "floor", creature = "kobold" }
 "##;
 
-/// One fixture affix file: `id` with `effect` on `bases`, a single tier of `value`.
-fn affix(kind: &str, id: &str, effect: &str, bases: &str, value: i32) -> String {
+/// One fixture affix file: `id` with `effect` on `bases`, a single tier of `value`, in the
+/// shipped affix's `category` (every affix of one effect names one).
+fn affix(kind: &str, id: &str, effect: &str, category: &str, bases: &str, value: i32) -> String {
     format!(
         "[[{kind}]]\nid = \"{id}\"\nname = \"{id}\"\neffect = \"{effect}\"\n\
-         category = \"{id}\"\nbases = [{bases}]\n\
+         category = \"{category}\"\nbases = [{bases}]\n\
          tiers = [{{ level = 1, min = {value}, max = {value} }}]\n"
     )
 }
@@ -47,14 +49,49 @@ fn files() -> ContentFiles {
     let mut files = ContentFiles::builtin();
     files.insert("data/factions.toml", &peaceful_factions());
     let fixtures = [
-        ("prefix", "zz_hobnailed", "door_kick", "\"boots\"", 4),
-        ("prefix", "zz_delving", "dig_percent", "\"tool\"", 50),
-        ("suffix", "zz_sustenance", "hunger", "\"ring\"", 30),
-        ("suffix", "zz_wariness", "trap_damage", "\"boots\"", 40),
-        ("suffix", "zz_health", "disease_check", "\"ring\"", 3),
+        (
+            "prefix",
+            "zz_hobnailed",
+            "door_kick",
+            "kick",
+            "\"boots\"",
+            4,
+        ),
+        (
+            "prefix",
+            "zz_delving",
+            "dig_percent",
+            "digging",
+            "\"tool\"",
+            50,
+        ),
+        (
+            "suffix",
+            "zz_sustenance",
+            "hunger",
+            "hunger",
+            "\"ring\"",
+            30,
+        ),
+        (
+            "suffix",
+            "zz_wariness",
+            "trap_damage",
+            "traps",
+            "\"boots\"",
+            40,
+        ),
+        (
+            "suffix",
+            "zz_health",
+            "disease_check",
+            "disease",
+            "\"ring\"",
+            3,
+        ),
     ];
-    for (kind, id, effect, bases, value) in fixtures {
-        let text = affix(kind, id, effect, bases, value);
+    for (kind, id, effect, category, bases, value) in fixtures {
+        let text = affix(kind, id, effect, category, bases, value);
         files.insert(&format!("data/affixes/{id}.toml"), &text);
     }
     files.insert("levels/affix_cellar.toml", CELLAR);
@@ -283,16 +320,23 @@ fn a_ring_of_health_adds_to_every_disease_check() {
 fn the_pick_axe_is_a_tool_rolled_magic_from_item_level_3() {
     let pick = CONTENT.object_id("pick_axe").expect("pick");
     assert_eq!(CONTENT.object(pick).kind, Some(ItemKind::Tool));
+    // A pick-axe that digs faster: one with a `dig_percent` affix (Delving or the fixture).
+    let digs = |s: &Stack| {
+        (s.magic().expect("magic").rolled(&CONTENT).iter())
+            .any(|r| r.def.effect == crate::content::Effect::DigPercent)
+    };
     let rolled = |level: u8| {
-        (0..2000u64).find_map(|seed| {
+        (0..4000u64).find_map(|seed| {
             let mut rng = Rng::stream(seed, "affix_utility");
-            loot::roll(&CONTENT, &mut rng, level, LootGrade::Magic).filter(|s| s.object == pick)
+            loot::roll(&CONTENT, &mut rng, level, LootGrade::Magic)
+                .filter(|s| s.object == pick && digs(s))
         })
     };
     assert!(rolled(2).is_none(), "never below its level");
-    let found = rolled(3).expect("a magic pick-axe at level 3");
+    let found = rolled(3).expect("a Delving pick-axe at level 3");
     let magic = found.magic().expect("magic");
-    assert!(magic.affixes.iter().all(|a| a.id == "zz_delving"));
+    let tool = CONTENT.object(pick);
+    assert!((magic.rolled(&CONTENT).iter()).all(|r| may_roll(r.def, ItemKind::Tool, tool)));
     // It shows no numbers; its description gives its power.
     assert!(Numbers::of(&found, &CONTENT).is_empty());
     let lines: Vec<String> = (describe::lines(&found, &CONTENT).into_iter())
@@ -329,8 +373,10 @@ fn hand_placed_and_kit_pick_axes_stay_normal() {
     assert!(kit.iter().all(|s| s.rarity() == Rarity::Normal));
 }
 
+/// The shipped tool affixes (Delving, Featherweight, of the Bear) make the pick-axe a magic
+/// find too, as plain loot finds it plain (#635).
 #[test]
-fn without_a_tool_affix_loot_finds_the_pick_axe_plain_and_never_as_magic() {
+fn loot_finds_the_pick_axe_plain_and_magic() {
     let builtin = Content::builtin().expect("content");
     let pick = builtin.object_id("pick_axe").expect("pick");
     let roll = |seed: u64, grade| {
@@ -340,7 +386,13 @@ fn without_a_tool_affix_loot_finds_the_pick_axe_plain_and_never_as_magic() {
     let found: Vec<Stack> = (0..3000).filter_map(|s| roll(s, LootGrade::Any)).collect();
     let picks: Vec<&Stack> = found.iter().filter(|s| s.object == pick).collect();
     assert!(!picks.is_empty(), "a pick-axe turns up as loot");
-    assert!(picks.iter().all(|s| s.rarity() == Rarity::Normal));
-    let mut magic = (0..3000).filter_map(|s| roll(s, LootGrade::Magic));
-    assert!(magic.all(|s| s.object != pick && s.magic().is_some()));
+    assert!(picks.iter().any(|s| s.rarity() == Rarity::Normal));
+    let magic: Vec<Stack> = (0..3000)
+        .filter_map(|s| roll(s, LootGrade::Magic))
+        .collect();
+    assert!(magic.iter().all(|s| s.magic().is_some()));
+    assert!(
+        magic.iter().any(|s| s.object == pick),
+        "a magic pick-axe turns up"
+    );
 }

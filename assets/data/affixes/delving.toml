@@ -1,0 +1,15 @@
+[[prefix]]
+id = "delving"
+name = "Delving"
+effect = "dig_percent"
+category = "digging"
+bases = ["body", "gloves", "tool"]
+weight = 60
+tiers = [
+  { level = 2, min = 10, max = 15 },
+  { level = 4, min = 17, max = 22 },
+  { level = 6, min = 24, max = 29 },
+  { level = 8, min = 31, max = 36 },
+  { level = 10, min = 38, max = 43 },
+  { level = 12, min = 45, max = 50 },
+]

@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You pick up Hollow Charm, a gold and ruby amulet. Spears spring from the floor! The spear stabs
+ the giant rat. Lightning arcs across the floor! The lightning bolt strikes the cave --more--
+
+
+
+
+
+                  ┌─ Item ───────────────────────────────────────────────────────┐
+                  │                                                              │
+                  │ " Hollow Charm                                               │
+                  │                                                              │
+                  │ Rare gold and ruby amulet · gold chain, ruby setting · 90 g  │
+                  │                                                              │
+                  │ Worn: neck                                                   │
+                  │                                                              │
+                  │ Item level 6                                                 │
+                  │ Suffix  of Sustenance: hunger comes 19% slower               │
+                  │ Suffix  of Health: +2 to resist disease                      │
+                  │ Suffix  of the Alchemist: a potion is not used up 13% of the │
+                  │         time                                                 │
+                  │                                                              │
+                  │ Esc close                                                    │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+ The Trap Hall  ·  HP 22/22  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:01                  ? controls

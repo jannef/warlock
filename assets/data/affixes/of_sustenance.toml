@@ -1,0 +1,15 @@
+[[suffix]]
+id = "of_sustenance"
+name = "of Sustenance"
+effect = "hunger"
+category = "hunger"
+bases = ["body", "cloak", "ring", "amulet"]
+weight = 60
+tiers = [
+  { level = 2, min = 8, max = 10 },
+  { level = 4, min = 12, max = 14 },
+  { level = 6, min = 16, max = 19 },
+  { level = 8, min = 21, max = 24 },
+  { level = 10, min = 25, max = 29 },
+  { level = 12, min = 30, max = 35 },
+]

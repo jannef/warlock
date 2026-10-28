@@ -1,0 +1,15 @@
+[[suffix]]
+id = "of_stillness"
+name = "of Stillness"
+effect = "resource_max"
+resource = "ki"
+category = "ki"
+bases = ["body", "ring", "amulet"]
+weight = 40
+tiers = [
+  { level = 2, min = 1, max = 1 },
+  { level = 5, min = 1, max = 2 },
+  { level = 7, min = 2, max = 2 },
+  { level = 10, min = 2, max = 3 },
+  { level = 12, min = 3, max = 3 },
+]

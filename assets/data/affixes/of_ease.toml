@@ -1,0 +1,13 @@
+[[suffix]]
+id = "of_ease"
+name = "of Ease"
+effect = "active_stamina"
+resource = "stamina"
+category = "stamina_cost"
+bases = ["weapon", "launcher", "shield", "gloves"]
+weight = 40
+tiers = [
+  { level = 3, min = 1, max = 1 },
+  { level = 7, min = 1, max = 2 },
+  { level = 10, min = 2, max = 2 },
+]

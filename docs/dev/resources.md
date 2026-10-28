@@ -92,7 +92,9 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   after the player's action, so taking the piece off is exact at once (`resource::pass` also
   clamps as time moves); it leaves progress alone. Stamina's third, `active_stamina`, is read
   in `Actor::weapon_stamina` (docs/dev/weapon-abilities.md). Tests:
-  `world/affix_stamina_tests.rs`, with fixture affix files (no shipped file yet: P1). The
+  `world/affix_stamina_tests.rs`, with fixture affix files; the shipped ones are Tireless, of
+  Breath, of Ease, of the Hunt, and the pools' of Fury, of Steadiness, of Stillness, of Guile,
+  and of the Muse (P1, #635). The
   fourth, `resource_on_kill` (of the Hunt; E1, #632), is read in `World::siphon`
   (`world/siphon.rs`) at the kill point of an attack, beside of Siphoning's mana: each pool held
   that an affix names gains its sum, up to its maximum, when the holder's own blow, shot, or

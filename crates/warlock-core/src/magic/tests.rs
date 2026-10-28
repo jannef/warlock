@@ -55,12 +55,12 @@ fn the_builtin_affixes_cover_every_kind_of_item() {
     let affixes = c.affixes();
     let count = |kind: AffixKind| affixes.all().iter().filter(|a| a.kind == kind).count();
     assert!(
-        (20..=30).contains(&count(AffixKind::Prefix)),
-        "about 20 to 30 prefixes"
+        (30..=45).contains(&count(AffixKind::Prefix)),
+        "about 30 to 45 prefixes"
     );
     assert!(
-        (20..=30).contains(&count(AffixKind::Suffix)),
-        "about 20 to 30 suffixes"
+        (45..=70).contains(&count(AffixKind::Suffix)),
+        "about 45 to 70 suffixes"
     );
     // Every affix rolls on some base item, and every base item has a prefix and a suffix to roll
     // at the first item level.
@@ -76,12 +76,6 @@ fn the_builtin_affixes_cover_every_kind_of_item() {
     }
     for o in &bases {
         let kind = o.kind.unwrap();
-        // The pick-axe is a tool before any shipped affix rolls on tools: Delving and
-        // Featherweight's tool base come with the shipped system affixes (#635). Until then loot
-        // never draws it as magic (`loot::can_be_magic`).
-        if kind == ItemKind::Tool {
-            continue;
-        }
         for k in [AffixKind::Prefix, AffixKind::Suffix] {
             let any = (affixes.all().iter())
                 .any(|a| a.kind == k && a.tiers_at(1) > 0 && may_roll(a, kind, o));
@@ -313,8 +307,8 @@ fn bad_items_are_refused() {
             "two affixes of category `accuracy`",
         ),
         (
-            magic(&[("sharp", 1, 1), ("heavy", 1, 2)], Some("X")),
-            "two affixes of category `physical_damage`",
+            magic(&[("heavy", 1, 2), ("of_wounding", 1, 2)], Some("X")),
+            "two affixes of category `extra_damage`",
         ),
     ];
     for (m, needle) in bad {
@@ -680,5 +674,95 @@ fn tiers_roll_from_a_window_below_the_item_level() {
             let tier = usize::from(r.tier - 1);
             assert!(w.contains(&tier), "{} tier {}", r.def.id, r.tier);
         }
+    }
+}
+
+/// The module that reads each effect, and its source. An exhaustive match, so a new effect has
+/// to name its hook here.
+fn reader(effect: Effect) -> (&'static str, &'static str) {
+    const MODS: (&str, &str) = ("magic/mods.rs", include_str!("mods.rs"));
+    const ACTOR: (&str, &str) = ("world/actor.rs", include_str!("../world/actor.rs"));
+    match effect {
+        Effect::ToHit
+        | Effect::Damage
+        | Effect::ExtraDamage
+        | Effect::Elemental
+        | Effect::Threat
+        | Effect::Crit
+        | Effect::Resistance
+        | Effect::Stat(_)
+        | Effect::Light
+        | Effect::Skill => MODS,
+        Effect::Range
+        | Effect::Draw
+        | Effect::Parry
+        | Effect::Armour
+        | Effect::Shield
+        | Effect::MaxDex
+        | Effect::Dodge
+        | Effect::Deflection
+        | Effect::Natural
+        | Effect::MaxHp
+        | Effect::MaxMana => ACTOR,
+        Effect::Weight | Effect::Protection => ("object.rs", include_str!("../object.rs")),
+        Effect::AttackSpeed | Effect::MoveSpeed => {
+            ("world/schedule.rs", include_str!("../world/schedule.rs"))
+        }
+        Effect::Durability => ("world/shoot.rs", include_str!("../world/shoot.rs")),
+        Effect::Regeneration => ("world/status.rs", include_str!("../world/status.rs")),
+        Effect::ManaRegeneration | Effect::ManaCost => {
+            ("world/mana.rs", include_str!("../world/mana.rs"))
+        }
+        Effect::Carry => ("burden.rs", include_str!("../burden.rs")),
+        Effect::Stealth => ("noise.rs", include_str!("../noise.rs")),
+        Effect::CasterLevel => (
+            "world/caster_level.rs",
+            include_str!("../world/caster_level.rs"),
+        ),
+        Effect::SpellEase | Effect::SpellReach => {
+            ("world/cast.rs", include_str!("../world/cast.rs"))
+        }
+        Effect::SpellToHit | Effect::SpellThreat | Effect::SpellLift | Effect::SpellDuration => (
+            "world/spell_scale.rs",
+            include_str!("../world/spell_scale.rs"),
+        ),
+        Effect::ManaOnKill | Effect::ResourceOnKill => {
+            ("world/siphon.rs", include_str!("../world/siphon.rs"))
+        }
+        Effect::WandLevel => ("world/zap.rs", include_str!("../world/zap.rs")),
+        Effect::ResourceMax | Effect::ResourceRate => {
+            ("world/resource.rs", include_str!("../world/resource.rs"))
+        }
+        Effect::ActiveStamina => (
+            "world/weapon_active.rs",
+            include_str!("../world/weapon_active.rs"),
+        ),
+        Effect::DoorKick => ("world/door.rs", include_str!("../world/door.rs")),
+        Effect::DigPercent => ("world/dig.rs", include_str!("../world/dig.rs")),
+        Effect::Hunger => ("world/hunger.rs", include_str!("../world/hunger.rs")),
+        Effect::TrapDamage => ("world/trap.rs", include_str!("../world/trap.rs")),
+        Effect::DiseaseCheck => ("world/disease.rs", include_str!("../world/disease.rs")),
+        Effect::PotionKept => ("world/potion.rs", include_str!("../world/potion.rs")),
+    }
+}
+
+/// Every shipped affix's effect is read by its hook (#635): a file whose effect nothing reads
+/// (a dead effect) fails here, naming the affix and the module that should.
+#[test]
+fn every_shipped_affix_effect_is_read_by_its_hook() {
+    let c = content();
+    for a in c.affixes().all() {
+        let (file, source) = reader(a.effect);
+        let name = match a.effect {
+            Effect::Stat(_) => "Stat".to_string(),
+            other => format!("{other:?}"),
+        };
+        let needle = format!("Effect::{name}");
+        assert!(
+            source.contains(&needle),
+            "{}'s effect `{}` is not read in {file} ({needle})",
+            a.id,
+            a.effect.id()
+        );
     }
 }
