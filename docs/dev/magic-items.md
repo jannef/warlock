@@ -88,7 +88,10 @@ potions and wands). **The spell hooks** (A1, #629; `world/affix_spell_tests.rs`)
 armoured grip), `spell_to_hit`, `spell_lift` (beside Keen mind's), and `spell_duration` in
 `world/spell_scale.rs`, `spell_reach` in `Actor::spell_reach` (beside School focus's, the range or
 length only), `spell_threat` in `Actor::spell_threat` (22 less it, never below `THREATS`' floor;
-an own cast only, `reflect::Shot::threat`). Each hook's tests bring fixture affix files
+an own cast only, `reflect::Shot::threat`). **The potion and wand hooks** (E2, #633;
+`world/affix_draught_tests.rs`): `potion_kept` in `Actor::potion_kept` (Thrifty drinker's chance
+plus the worn, held to `potion::MAX_KEPT` 50 unless the talent alone is above it; `take_draught`
+draws only above 0), `wand_level` in `Actor::wand_caster_level` (beside Wand mastery's). Each hook's tests bring fixture affix files
 (`ContentFiles::insert("data/affixes/zz_fixture.toml", ...)`, as `magic/tests.rs` does).
 `spell_ease` is an item effect (local: the piece's own `spell_cost_percent`), allowed on body
 armour, helmets, and shields, and `may_roll` keeps it to objects with a `spell_cost_percent`.

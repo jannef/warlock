@@ -242,7 +242,8 @@ Using one tells you what kind it is, and from then on every wand of that kind sh
 its **charges** stay unknown until you identify that wand (the scroll of identify, or carrying
 it long enough as a *Connoisseur*). Wands lie in the dungeon and in general stores.
 
-*Wand mastery* (Weaponcraft) makes every wand you use cast at a caster level 2 higher.
+*Wand mastery* (Weaponcraft) makes every wand you use cast at a caster level 2 higher. Items
+that raise the level of wands add their levels to it.
 
 {{#include generated/wands.md}}
 
