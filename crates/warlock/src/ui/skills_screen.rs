@@ -171,17 +171,18 @@ mod tests {
         // Listen, one the class may start with.
         for expected in [
             " Skills ",
-            "> Appraise           19  ────",
+            "> Appraise           11  ────",
             "  Detect traps        7  ────",
             "  Disable device      7  ────",
             "  Escape artist      10  ────",
             "  Listen              6  ────",
-            "  Open lock          18  ────",
-            "  Search             10  ────",
+            "  Negotiation         9  ────",
+            "  Open lock          19  ────",
+            "  Search             17  ────",
             "  Spot                9  ────",
             "  Steal              16  ────",
-            "  Stealth            16  ────",
-            "  Tumble             17  ────",
+            "  Stealth            17  ────",
+            "  Tumble             12  ────",
             "Judging what a thing is worth and what it is",
             "made of.",
             "↑↓ choose   A or Esc close",
@@ -208,7 +209,7 @@ mod tests {
         let b = Bindings::default();
         let mut screen = SkillsScreen::new(Some(&world.perception()));
         assert_eq!(screen.handle(&Press::nav(Nav::Up), &b), ScreenAction::Stay);
-        assert_eq!(screen.selected, 10, "the list wraps");
+        assert_eq!(screen.selected, 11, "the list wraps");
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("> Tumble"), "{text}");
         assert!(text.contains("Rolling, diving, and twisting out of harm's way."));
@@ -242,7 +243,7 @@ mod tests {
         }
         // In a short console the list scrolls to keep the selection in view.
         let b = Bindings::default();
-        for _ in 0..10 {
+        for _ in 0..11 {
             screen.handle(&Press::nav(Nav::Down), &b);
         }
         let text = drawn(&screen, 60, 13).join("\n");

@@ -87,6 +87,7 @@ mod ai;
 mod alignment;
 mod ambush;
 mod animated;
+mod appraise;
 mod attacks;
 mod beast_friend;
 mod bleed;
@@ -1371,6 +1372,8 @@ mod animated_blade_tests;
 mod animated_panoply_tests;
 #[cfg(test)]
 mod animated_tests;
+#[cfg(test)]
+mod appraise_tests;
 #[cfg(test)]
 mod ascmearc_tests;
 #[cfg(test)]

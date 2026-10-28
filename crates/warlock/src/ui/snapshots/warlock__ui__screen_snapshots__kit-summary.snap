@@ -17,12 +17,12 @@ expression: "render(case, content.clone())"
         │                                                                                  │
         │   Age 41 · born 2 Harvestide 1403 · year of the Earth Kraken                     │
         │                                                                                  │
-        │   St  Strength       8    Appraise       20                                      │
-        │   Dx  Dexterity     11    Bluff          17                                      │
-        │   To  Toughness     10    Handle animal   6                                      │
+        │   St  Strength       8    Appraise       20   Listen         10                  │
+        │   Dx  Dexterity     11    Bluff          17   Negotiation    20                  │
+        │   To  Toughness     10    Handle animal   6   Stealth        10                  │
         │   In  Intelligence  11    Knowledge      10                                      │
-        │   Wi  Willpower     12    Listen         10                                      │
-        │   Pr  Presence      11    Stealth        10                                      │
+        │   Wi  Willpower     12                                                           │
+        │   Pr  Presence      11                                                           │
         │                                                                                  │
         │   Kit       a dagger (wielded), a travelling cloak (being worn),                 │
         │             a pair of leather boots (being worn), 2 garnets, 120 gold coins,     │

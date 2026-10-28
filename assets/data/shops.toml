@@ -9,7 +9,7 @@
 #
 # Prices: an object's `value` (objects.toml) times the shop's `markup`, and for what it buys its
 # `pays`, both in percent; your Presence moves both in your favour or against you (`presence`
-# percent for each point of its hidden modifier) and so does the Appraise skill, if you are
+# percent for each point of its hidden modifier) and so does the Negotiation skill, if you are
 # trained in it (its `bargain` benefit, skills.toml), together at most half. A shop never pays
 # more for something than it asks for it. Only gold prices are ever shown.
 #

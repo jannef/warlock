@@ -947,10 +947,10 @@ mod tests {
         let benefits = text("skill-benefits.md");
         assert!(
             benefits.contains(
-                "| Value | Appraise: prices | Athletics: kicking doors in | Athletics: speed | \
+                "| Value | Appraise: identifying, each hour | Athletics: kicking doors in | Athletics: speed | \
                  Balance: Burdened / Strained | Concentration: mana back | Concentration: mana pool | \
                  Decipher script: study check | Detect traps: finding traps | Disable device: disarming traps | \
-                 Heal: treating | Listen: hears fainter by | Metalcraft: tempering | Open lock: picking locks | Search: searching | \
+                 Heal: treating | Listen: hears fainter by | Metalcraft: tempering | Negotiation: prices | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Spellcraft: study check | Spot: noticing | Steal: \
                  stealing | Stealth: noise | Survival: journeys | Survival: foraging | Tumble: \
                  Dodge |"
@@ -970,11 +970,11 @@ mod tests {
             "{foraging}"
         );
         assert!(benefits.contains(
-            "| 100 | 20% better | +8 Strength | +5% | ×1.1 / ×1.2 | +40% | +5 mana | +10 | +8 | +8 | +8 | 10 | +8 | +8 | +8 | +1 cell \
+            "| 100 | 12% | +8 Strength | +5% | ×1.1 / ×1.2 | +40% | +5 mana | +10 | +8 | +8 | +8 | 10 | +8 | 20% better | +8 | +8 | +1 cell \
              | +10 | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
         ));
         assert!(benefits.contains(
-            "| 150 | 25% better | +10 Strength | +7% | ×1.08 / ×1.15 | +50% | +6 mana | +15 | +10 | +10 | +10 | 15 | +10 | +10 | +10 \
+            "| 150 | 16% | +10 Strength | +7% | ×1.08 / ×1.15 | +50% | +6 mana | +15 | +10 | +10 | +10 | 15 | +10 | 25% better | +10 | +10 \
              | +1 cell | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
         ));
         // Treating oneself: the difficulty and odds of each ailment.

@@ -43,8 +43,9 @@ that have them start with other skills on old seeds, so old replays' hashes chan
 (the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
-`World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain in
-`world/shop.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, speed
+`World::burdened` (`Burden::slow_eased`), travel in `World::step_price`, bargain (Negotiation
+since #666) in `world/shop.rs`, identify (Appraise; trained at all, below) in
+`world/appraise.rs`, kick (athletics: Strength for kicking a door in) in `World::kick_door`, speed
 (athletics, #548: percent quicker, added to the talents' `speed_percent`, the skills never
 taking the sum past `MAX_SPEED`) in `Actor::speed`, pick
 (Open lock: picking a lock, and trained at all, the Pick lock ability) in `World::pick_lock`,
@@ -61,7 +62,8 @@ when a study ends, is also `StatUse::Study`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, both for `find_trap` (a
 trap found), `World::disarm` for
-`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
+`disarm`, `pick_lock` for `pick`, `World::steal` for `steal`, `World::heal` for `heal`, `World::forage_done` for `forage` (a forage that ran its time), `World::pay` and
+`World::trade` (a sale) in `world/shop.rs` for `deal`, `World::appraise` for `appraise`, `world/temper.rs::tempered` for `temper`, and `World::sidesteps` for a known trap avoided,
 `dodge`, besides `fight.rs::resolve`). Concentration's `mana_regen` and `max_mana` (trained only, `Actor::mind`) are read in
 `World::mana_rate` and `Actor::max_mana` (`world/concentration.rs`, docs/dev/mana.md), its `cast`
 use reported by `World::spend_mana`. Metalcraft's `temper` benefit is read in
@@ -94,5 +96,18 @@ the count's dice; the food is made then (`rot::made_at`) and joins the pack; the
 `train(Use::Forage)`. Nothing is stored, so saves change only by content (the new
 `ActionKind`, the new food objects). The wiki's table is `generated/foraging.md`
 (`xtask/src/wiki/skills.rs::foraging`).
+**Appraise** (spec §8 "Skills", #666; Negotiation took the shops' bargain): `world/appraise.rs`,
+`World::appraise_hours(start, seconds)`, called for the player from `World::live` (the status
+loop, so rests roll each hour they pass) and from `World::skip_time_dev` (`skip:`). It walks the
+whole game hours in `(start, start + seconds]`; it returns at once unless the player is trained
+in a skill with `Effect::Identify` (`Skills::trains_effect`: an affix alone never gives it) and,
+per hour, unless `World::unidentified` (the appraisal service's list) is non-empty. Each hour
+draws from its own stateless stream `Rng::stream(seed, "appraise/<hour>")`: `chance` of
+`skill_effect(Identify)` percent, then `index` for the stack. No state is saved, so how the time
+is cut never changes the outcome. `World::learn_item` (`world/loot.rs`) is `World::identify`
+without its "This is ...!" line; Appraise says "You realise your X is Y." and reports
+`Use::Appraise`. Tests: `world/appraise_tests.rs` (the split, prices, the line, untrained,
+cutting time, rest and skip, replays), `world/shop_tests.rs::deals_train_negotiation`.
+
 Pending hooks:
 athletics (climbing out of pits, #128) and escape artist (pits, #128).

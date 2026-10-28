@@ -174,8 +174,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   abilities and bonus talents. Skills: a few it
   is known for (`2d6+10`) and a few more (`2d4+4`); the full table is in the wiki (Skills), e.g.
   the thief open lock, steal, stealth, and tumble well, appraise, detect traps, disable device,
-  escape artist, search, and spot a little (the thief alone of the classes starts trained in
-  detect traps, #663); the ranger spot, survival, and woodcraft well, athletics, handle
+  escape artist, negotiation, search, and spot a little (the thief alone of the classes starts
+  trained in detect traps, #663); the ranger spot, survival, and woodcraft well, athletics, handle
   animal, listen, and swim a little; the wizard concentration, knowledge, and spellcraft well,
   decipher script a little; the commoner athletics and handle animal a
   little. Each class also has two to five optional skills, modest ones at `2d4` (10 to 35 %;
@@ -221,7 +221,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   entry (saves then change: skill ids are indices). The 26 skills: appraise, athletics,
   balance, bluff, concentration, decipher script, detect traps, disable device, escape artist,
   handle animal,
-  heal, intimidate, knowledge, listen, metalcraft, music, open lock, search, spellcraft, spot,
+  heal, intimidate, knowledge, listen, metalcraft, music, negotiation, open lock, search, spellcraft, spot,
   steal, stealth, survival, swim, tumble, woodcraft.
 - **Horoscope** (`data/horoscope.toml`, optional; §8 "Character creation"): `anchor_year`, a
   year that starts a great cycle (1: the year of the Great Race, the first of the reckoning),

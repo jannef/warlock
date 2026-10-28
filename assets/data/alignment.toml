@@ -37,7 +37,7 @@
 #   prayed_evil        altar's prayer moves nothing), and at an evil one
 #
 # [shops]  favour: how much better a good shopkeeper's prices are for a customer of each band,
-#          in percent (negative: worse), added to what Presence and Appraise give (shops.toml);
+#          in percent (negative: worse), added to what Presence and Negotiation give (shops.toml);
 #          a band not listed 0. The prices shown include it.
 
 [[band]]

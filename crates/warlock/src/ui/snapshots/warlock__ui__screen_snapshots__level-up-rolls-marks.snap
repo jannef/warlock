@@ -6,10 +6,10 @@ expression: "render(case, content.clone())"
  Y│                                                                          │
   │ Skills                                                                   │
   │ > a  Appraise         19  ────  +2                                       │
-  │   b  Detect traps      7  ────  +2                                       │
-  │   c  Disable device    7  ────  +2                                       │
-  │   d  Escape artist    10  ────  +2                                       │
-  │   e  Listen            6  ────  +1                                       │
+  │   b  Disable device    7  ────  +2                                       │
+  │   c  Escape artist     7  ────  +2                                       │
+  │   d  Listen            6  ────  +1                                       │
+  │   e  Negotiation      10  ────  +2                                       │
   │   f  Open lock        18  ────  1d3                                      │
   │   g  Search           10  ━───  1d5+1                                    │
   │   h  Spot              9  ────  +2                                       │

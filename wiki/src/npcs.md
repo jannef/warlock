@@ -50,7 +50,7 @@ A few people sell a **service**: a cure, a mending, or an identification, for go
 listed on their screen after their topics, with the price: `A cure for what ails you (60 gold)`. Pick one as you
 would a topic. If there is something to do and you carry the gold, you pay (the coins go into
 their purse), they do it, and it takes the time of a chat; their price is fixed (no haggling:
-neither Presence nor Appraise moves it).
+neither Presence nor Negotiation moves it).
 
 - **A cure** ends every disease you have, even one that has not broken out yet (they can tell),
   and grave rot too. Damage a disease did to your stats stays and mends a point a day as usual,

@@ -8,7 +8,7 @@ mana = 1
 casting = 25
 experience = 95
 alignment = -200
-skills = { open_lock = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", detect_traps = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", search = "2d4+4", spot = "2d4+4" }
+skills = { open_lock = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", detect_traps = "2d4+4", negotiation = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", search = "2d4+4", spot = "2d4+4" }
 known_for = ["open_lock", "steal", "stealth", "tumble"]
 optional_skills = { balance = { chance = 20, dice = "2d4" }, bluff = { chance = 30, dice = "2d4" }, listen = { chance = 30, dice = "2d4" } }
 rolls = 3
