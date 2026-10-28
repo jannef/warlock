@@ -544,6 +544,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::PotionSmell => {
             "an unknown potion you pick up tells its kind (not its type) by its smell".to_string()
         }
+        TalentEffect::PotionHeals { value } => {
+            format!("a healing potion you drink heals {value} % more")
+        }
         TalentEffect::QuestXpPercent { value } => {
             format!("experience from quests {}", percent(value))
         }
@@ -1205,6 +1208,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             .to_string(),
         TalentEffect::StatusEases { status: id, value } => {
             format!("{} eases {value} % faster", status(&id))
+        }
+        TalentEffect::StatusLasts { status: id, value } => {
+            format!("{} lasts {value} % longer", status(&id))
         }
         TalentEffect::NoPenalty { status: id } => {
             format!("{} never lowers your scores", status(&id))

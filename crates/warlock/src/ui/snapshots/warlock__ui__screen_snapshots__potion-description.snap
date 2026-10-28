@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You pick up 5 objects.
- You drink the syrupy red potion. It is a potion of healing. You feel healthy.
+ You drink the thick red potion. It is a potion of healing. You feel healthy.
 
 
 

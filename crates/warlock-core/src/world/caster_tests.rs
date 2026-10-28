@@ -199,6 +199,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Hex of weakness",
                 "Poison lore",
                 "Cause wounds",
+                "Cauldron-wise",
                 "Second sight",
                 "Curse of sloth",
                 "Blight",

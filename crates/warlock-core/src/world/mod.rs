@@ -158,6 +158,7 @@ mod quick_leave;
 mod racial;
 mod rage;
 mod read;
+mod reflect;
 mod resource;
 mod rest;
 mod reveal;
@@ -521,6 +522,8 @@ pub struct World {
     /// Statuses with `per_action` given to an actor during its own action (not saved): that
     /// action does not ease them (`weapon_ability.rs`).
     fresh: Vec<(ActorId, StatusId)>,
+    /// Spell reflection's counts a turn and the reflector chosen (not saved; `reflect.rs`).
+    reflection: reflect::Reflections,
     /// The player's weapon active under way (not saved): what its attack does beyond a plain
     /// one, read where that is resolved (`weapon_active.rs`).
     technique: weapon_active::Technique,
@@ -882,7 +885,7 @@ impl World {
         if let Some(actor) = state
             .actors
             .values()
-            .find(|a| !a.effects.is_valid_for(&content))
+            .find(|a| !a.effects.is_valid_for(&content, &a.talent_mods(&content)))
         {
             return Err(WorldError::InconsistentState(format!(
                 "actor {} suffers status effects this content does not have",
@@ -948,6 +951,7 @@ impl World {
             stood_on,
             acting: Some(player),
             fresh: Vec::new(),
+            reflection: Default::default(),
             technique: weapon_active::Technique::default(),
         }
     }
@@ -1508,6 +1512,8 @@ mod outlaw_tests;
 mod overworld_tests;
 #[cfg(test)]
 mod parts_tests;
+#[cfg(test)]
+mod potion_status_tests;
 #[cfg(test)]
 mod potion_tests;
 #[cfg(test)]

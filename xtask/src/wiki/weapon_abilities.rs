@@ -157,6 +157,21 @@ fn does(content: &Content, a: &WeaponAbility) -> String {
              blows only)"
                 .into()
         }
+        WeaponDoes::ReflectSpell { per_turn } => {
+            let times = if per_turn == 1 {
+                "once".to_string()
+            } else {
+                format!("{per_turn} times")
+            };
+            format!(
+                "the spell is cast back at its caster from your cell, as they cast it (their \
+                 caster level, cap, and to-hit), rolling its own attack against their Defence; \
+                 it costs them no more mana and you nothing; at most {times} a turn of yours, and \
+                 a spell turned back is never turned back again. Bursts, cones, lines, and hexes \
+                 roll no attack and are never turned back, nor a spell that missed you by your \
+                 Parry or Dexterity"
+            )
+        }
         WeaponDoes::ReachBlow { reach } => format!(
             "a blow at the first foe within {reach} cells along the direction, every cell before \
              it empty and passable (a closed door blocks; no trap is sprung); a foe beyond the \

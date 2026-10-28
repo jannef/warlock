@@ -321,6 +321,8 @@ pub struct TalentMods {
     pub potion_kept: u8,
     /// An unknown potion it picks up tells its kind by its smell.
     pub potion_smell: bool,
+    /// Percent more hit points a healing potion it drinks gives back.
+    pub potion_heals: i32,
     /// Its own bursts never catch it.
     pub spares_self: bool,
     /// Added to its searching, not to noticing in passing.
@@ -452,6 +454,8 @@ pub struct TalentMods {
     pub iron_stomach: bool,
     /// Statuses that ease faster, by the percent: `(status, percent)`, one entry per effect.
     pub status_eases: Vec<(StatusId, i32)>,
+    /// Statuses that last longer, by the percent: `(status, percent)`, one entry per effect.
+    pub status_lasts: Vec<(StatusId, i32)>,
     /// Statuses that never lower its scores.
     pub no_penalty: Vec<StatusId>,
     /// Wounds bleed less: none from a big hit, a degree less from a critical.
@@ -1067,17 +1071,26 @@ impl TalentMods {
     }
 
     /// How many seconds status `status` takes to ease by a degree for it, its usual `every`
-    /// eased by the percents faster its talents give (at least 1).
+    /// eased by the percents faster its talents give, then lengthened by the percents longer
+    /// they make it last (at least 1).
     pub fn eases_every(&self, status: StatusId, every: u32) -> u32 {
-        let faster: i32 = (self.status_eases.iter())
-            .filter(|(s, _)| *s == status)
-            .map(|(_, p)| p)
-            .sum();
-        if faster == 0 {
-            return every;
+        let sum = |list: &[(StatusId, i32)]| -> i32 {
+            (list.iter())
+                .filter(|(s, _)| *s == status)
+                .map(|(_, p)| p)
+                .sum()
+        };
+        let (faster, longer) = (sum(&self.status_eases), sum(&self.status_lasts));
+        let mut every = u64::from(every);
+        if faster != 0 {
+            let pace = u64::try_from((100 + faster).max(1)).unwrap_or(1);
+            every = every * 100 / pace;
         }
-        let pace = u32::try_from((100 + faster).max(1)).unwrap_or(1);
-        (every * 100 / pace).max(1)
+        if longer != 0 {
+            let lasts = u64::try_from((100 + longer).max(1)).unwrap_or(1);
+            every = every * lasts / 100;
+        }
+        u32::try_from(every).unwrap_or(u32::MAX).max(1)
     }
 
     /// The penetration its talents add to a blow that can do damage of `kinds`.
@@ -1203,6 +1216,7 @@ impl TalentMods {
             TalentEffect::ScrollKept { chance } => self.scroll_kept = self.scroll_kept.max(chance),
             TalentEffect::PotionKept { chance } => self.potion_kept = self.potion_kept.max(chance),
             TalentEffect::PotionSmell => self.potion_smell = true,
+            TalentEffect::PotionHeals { value } => self.potion_heals += value,
             TalentEffect::SparesSelf => self.spares_self = true,
             TalentEffect::Searching { value } => self.searching += value,
             TalentEffect::TrapDamagePercent { value } => self.trap_damage_percent += value,
@@ -1362,6 +1376,11 @@ impl TalentMods {
             TalentEffect::StatusEases { status, value } => {
                 if let Some(status) = content.status_id(&status) {
                     self.status_eases.push((status, value));
+                }
+            }
+            TalentEffect::StatusLasts { status, value } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.status_lasts.push((status, value));
                 }
             }
             TalentEffect::NoPenalty { status } => {

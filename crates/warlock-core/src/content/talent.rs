@@ -364,6 +364,8 @@ pub enum TalentEffect {
     /// An unknown potion it picks up tells its kind (never its type) by its smell (Nose for
     /// draughts).
     PotionSmell,
+    /// A healing potion it drinks heals this percent more (Cauldron-wise).
+    PotionHeals { value: i32 },
     /// Its own bursts never catch it (Careful reader).
     SparesSelf,
     /// Added to its searching, not to noticing in passing (Keen searcher).
@@ -728,6 +730,9 @@ pub enum TalentEffect {
     WadesFree,
     /// Status `status` eases this percent faster (100: twice as fast).
     StatusEases { status: String, value: i32 },
+    /// Status `status` lasts this percent longer: each degree takes that much more time to
+    /// ease (50: half again; Strong constitution's potions).
+    StatusLasts { status: String, value: i32 },
     /// Status `status` never lowers its scores.
     NoPenalty { status: String },
     /// A big hit makes it bleed no more, a critical one degree less (Clotting): the statuses
@@ -1260,6 +1265,7 @@ impl TalentEffect {
                 }
                 Ok(())
             }
+            TalentEffect::PotionHeals { value } => percent(*value),
             TalentEffect::GemCut { value } => {
                 if !(1..=5).contains(value) {
                     return Err("`gem_cut`: value is 1 to 5".into());
@@ -1755,7 +1761,8 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::StatusEases { status: id, value } => {
+            TalentEffect::StatusEases { status: id, value }
+            | TalentEffect::StatusLasts { status: id, value } => {
                 status(id)?;
                 percent(*value)
             }

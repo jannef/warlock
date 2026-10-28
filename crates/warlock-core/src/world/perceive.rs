@@ -226,7 +226,9 @@ impl World {
                 if attacker == player {
                     return true;
                 }
-                if let Some(me) = self.actor_or_fallen(attacker) {
+                // A spell's blow with a roll (one turned back, `reflect.rs`) was said as cast.
+                let said = kind == AttackKind::Spell && strike.is_some();
+                if let Some(me) = self.actor_or_fallen(attacker).filter(|_| !said) {
                     let guard = Guard::of(self.actor_or_fallen(target), &content, &self.state);
                     let (a, t) = (end(attacker, sees_attacker), end(target, sees_target));
                     // A creature's throw is said by what flies (`hurl.rs`).

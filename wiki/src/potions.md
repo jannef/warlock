@@ -10,7 +10,16 @@ not you are hungry, and while raging.
 
 {{#include generated/potions.md}}
 
-Hit points and mana never go past your maximum. A potion's **marks** are stat training marks,
+Hit points and mana never go past your maximum. Some potions work **for a while** instead: a
+boost raises a stat by 2 for ten minutes (a greater one by 4, easing to 2 after ten minutes,
+then gone ten minutes later), a vision potion lends you other eyes for half an hour, the potion
+of quickness hastes you for a minute as the Haste spell does, and a resistance potion makes you
+resist an element by 50 % for half an hour, counted as armour's resistance is, so together with
+what you wear it never reaches immunity (at most 75 %). Each shows on the status bar and the
+character screen by name (Fortified, Owl-eyed, Warmed, ...); see
+[Status effects](status-effects.md). A second boost of the same stat while one lasts keeps the
+stronger of the two and does not start the time over; a second vision or resistance potion of
+the same kind starts its half hour over. A potion's **marks** are stat training marks,
 given for sure as you drink it (see [Stats](stats.md)): the body remembers the draught.
 
 ## Unknown potions
@@ -27,6 +36,10 @@ several effects mixes their hues.
 | Cures (poison, disease) | green |
 | Healing and cures together | russet, red mixed with green |
 | Mana | blue |
+| Stat boosts | orange (greater ones deep orange) |
+| Vision | violet |
+| Speed | yellow |
+| Resistance | teal |
 | Elixirs (a stat for good) | gold |
 | Harm | brown |
 
@@ -66,5 +79,10 @@ an **alchemist** sells potions only, always potions of healing first, and buys t
 
 - **Thrifty drinker** (Delver): one potion in four is not used up, an elixir too.
 - **Quick study of the body** (Scholar): a potion's or an elixir's training marks are doubled.
+- **Lasting draughts** (Vigour, needs Toughness 13): boost and vision potions last half again
+  as long (15 minutes a degree for a boost, 45 minutes for a vision potion).
+- **Cauldron-wise** (the witch's, at level 12): healing potions heal a fifth more (rounded
+  down), and boosts last a fifth longer (12 minutes a degree); with Lasting draughts, 17
+  minutes a degree.
 - **Nose for draughts** (Scholar): an unknown potion you pick up tells you its family by its
   smell, never its kind: "The fizzy red potion smells of honey and iron: healing of some kind."

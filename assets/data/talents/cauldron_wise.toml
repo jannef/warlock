@@ -1,0 +1,16 @@
+[[talent]]
+id = "cauldron_wise"
+name = "Cauldron-wise"
+tree = "class"
+granted = true
+description = "You know a draught from the inside: healing potions you drink heal a fifth more, and potions that strengthen you last a fifth longer."
+effects = [
+    { kind = "potion_heals", value = 20 },
+    { kind = "status_lasts", status = "fortified", value = 20 },
+    { kind = "status_lasts", status = "nimble", value = 20 },
+    { kind = "status_lasts", status = "hale", value = 20 },
+    { kind = "status_lasts", status = "keen", value = 20 },
+    { kind = "status_lasts", status = "steadfast", value = 20 },
+    { kind = "status_lasts", status = "imposing", value = 20 },
+]
+systems = ["potions"]

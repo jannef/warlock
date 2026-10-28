@@ -127,6 +127,14 @@ column says which):
   cannot read ("You cannot read while raging."). Trying takes no time. An
   [ability](abilities.md) that would do it is greyed out: `you are raging`.
 - **What follows.** As some end, another begins: when a rage subsides, exhaustion follows.
+- **Eyes.** It may lend you other eyes: a potion of owl's eyes lets you see in the dark as
+  darkvision does, part by part where it is better than your own sight.
+- **Resistance.** It may make you resist a kind of damage, counted as armour's resistance is:
+  together with what you wear it never goes past 75%, never immunity.
+
+The [potions](potions.md) that work for a while give the boosts (Fortified, Nimble, Hale, Keen,
+Steadfast, Imposing: a stat +2 a degree), the visions (Cat-eyed, Owl-eyed, Moth-eyed), and the
+resistances (Warmed, Chill-proof, Earthed, Proof against poison).
 
 A **cooldown** is a status effect that only waits to wear off: while you are, say, winded, the
 ability that winded you cannot be used again (`you are winded`). Time is the only price; nothing

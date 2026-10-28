@@ -153,6 +153,7 @@
 #   potion_kept { chance }        a potion it drinks is not used up, by that chance in percent
 #   potion_smell                  an unknown potion it picks up tells its kind (never its type)
 #                                 by its smell
+#   potion_heals { value }        a healing potion it drinks heals that percent more
 #   spares_self                   its own bursts never catch it
 #   find { value }                added to its checks to find what is hidden, searching and in
 #                                 passing
@@ -261,6 +262,8 @@
 #   iron_stomach                 rotten food and overeating never make it vomit; rotten food
 #                                 sickens it half as much
 #   status_eases { status, value }   that status eases that percent faster
+#   status_lasts { status, value }   that status lasts that percent longer (each degree takes
+#                                 that much more time to ease)
 #   no_penalty { status }         that status never lowers its scores
 #   clotting                      a big hit wounds it no more, a critical one degree less
 #   wound_more { value }          a big hit that wounds it wounds that many degrees more (1 to 5)

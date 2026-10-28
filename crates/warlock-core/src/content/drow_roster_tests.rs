@@ -219,7 +219,7 @@ fn the_formulas_give_the_plans_numbers() {
 }
 
 #[test]
-fn the_drow_hunt_their_rivals_and_leave_the_demons_and_spiders_be() {
+fn the_drow_hunt_the_player_and_leave_their_old_rivals_be() {
     use super::Stance;
     let content = Content::builtin().expect("content");
     let stance = |a: &str, b: &str| {
@@ -228,11 +228,11 @@ fn the_drow_hunt_their_rivals_and_leave_the_demons_and_spiders_be() {
     };
     for (a, b, want) in [
         ("drow_warrior", "player", Stance::Hostile),
-        ("drow_warrior", "kobold", Stance::Hostile),
-        ("drow_crossbowman", "goblin", Stance::Hostile),
-        ("drow_captain", "hobgoblin", Stance::Hostile),
-        ("drow_blademaster", "orc_warrior", Stance::Hostile),
-        ("drow_stalker", "duergar_warrior", Stance::Hostile),
+        ("drow_warrior", "kobold", Stance::Neutral),
+        ("drow_crossbowman", "goblin", Stance::Neutral),
+        ("drow_captain", "hobgoblin", Stance::Neutral),
+        ("drow_blademaster", "orc_warrior", Stance::Neutral),
+        ("drow_stalker", "duergar_warrior", Stance::Neutral),
         ("drow_priestess", "dretch", Stance::Neutral),
         ("drow_matron", "balor", Stance::Neutral),
         ("drow_warrior", "barrow_spider", Stance::Neutral),

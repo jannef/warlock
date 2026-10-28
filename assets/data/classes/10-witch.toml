@@ -35,6 +35,7 @@ abilities = [
     { level = 3, talent = "hex_of_weakness" },
     { level = 12, talent = "poison_lore" },
     { level = 12, talent = "cause_wounds" },
+    { level = 12, talent = "cauldron_wise" },
     { level = 25, talent = "second_sight" },
     { level = 32, talent = "curse_of_sloth" },
     { level = 40, talent = "blight" },

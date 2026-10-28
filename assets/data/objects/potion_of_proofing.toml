@@ -1,0 +1,21 @@
+# A potion of proofing (spec §8 "Potions"): poison resisted for half an hour, as gear resists it.
+# Resistance potions are teal.
+[[object]]
+id = "potion_of_proofing"
+name = "potion of proofing"
+plural = "potions of proofing"
+glyph = "!"
+fg = "#30a8a0"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 120
+stackable = true
+level = 4
+frequency = 15
+
+[object.drink]
+kind = "resistance"
+status = "poison_proof"
+colour = "teal"
+marks = { toughness = 5 }

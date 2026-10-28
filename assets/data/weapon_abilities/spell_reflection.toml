@@ -1,0 +1,12 @@
+[[weapon_ability]]
+id = "spell_reflection"
+name = "Spell reflection"
+description = "A spell aimed at you that your shield turns goes back at its caster."
+skills = ["sword_and_board"]
+rank = 10
+kind = "triggered"
+trigger = "spell_blocked"
+systems = ["weapon_abilities", "styles", "spells"]
+[weapon_ability.effect]
+kind = "reflect_spell"
+per_turn = 1

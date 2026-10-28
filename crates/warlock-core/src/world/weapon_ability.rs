@@ -13,7 +13,8 @@
 //! It is called from the lines that already raise each event (`fight.rs::resolve` for hits,
 //! criticals, big hits, kills, being struck, and the blocked and dodged attributions;
 //! `second_blow`'s end of an attack for a parry; the two-weapon attack for both hands;
-//! `step_up` for a hostile approaching), reads the abilities (a lookup: no draw) and applies
+//! `step_up` for a hostile approaching; `cast.rs::cast_single` for a spell's attack blocked by
+//! a shield, `reflect.rs`), reads the abilities (a lookup: no draw) and applies
 //! each effect in path order. Deciding never draws: a fight with no qualifying rank keeps its
 //! draws, and an effect draws only as it lands (Pinning shot's turns, Rend's dice, a free shot).
 //!
@@ -227,6 +228,7 @@ impl World {
                     self.extra_damage(by, fired, (dice, kind), events);
                 }
                 WeaponDoes::FreeShot => self.free_shot(by, fired, events),
+                WeaponDoes::ReflectSpell { per_turn } => self.reflect_ready(by, per_turn),
                 // Switches are read where their events are; actives have no trigger.
                 _ => {}
             }
@@ -560,6 +562,7 @@ impl World {
             .map(|&(_, s)| s)
             .collect();
         self.fresh.retain(|(a, _)| *a != id);
+        self.reflections_spent(id);
         let content = self.content.clone();
         let Some(actor) = self.state.actors.get_mut(&id) else {
             return;

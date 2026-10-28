@@ -121,6 +121,8 @@ Two that do the same never add up: a riposte from Duelist and one from a talent 
 Staggered is never more than one slowed action, however many blows staggered the foe. A new pin
 keeps the longer of the two and never adds. Rend comes once an attack, when both blades hit and
 the foe lives; a shield bash is no second blade. Light-footed lasts for your next action only.
+Spell reflection turns at most one spell a turn of yours, and a spell turned back is never
+turned back again, so two shield-bearers cannot bat a bolt between them.
 
 ## Related styles
 

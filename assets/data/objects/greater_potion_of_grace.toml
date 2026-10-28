@@ -1,0 +1,22 @@
+# A greater potion of grace (spec §8 "Potions"): Dexterity raised twice as much, easing to a potion of
+# grace's after ten minutes. Greater boosts are deep orange.
+[[object]]
+id = "greater_potion_of_grace"
+name = "greater potion of grace"
+plural = "greater potions of grace"
+glyph = "!"
+fg = "#c87820"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 400
+stackable = true
+level = 8
+frequency = 8
+
+[object.drink]
+kind = "boost"
+status = "nimble"
+severity = 2
+colour = "deep orange"
+marks = { dexterity = 10 }

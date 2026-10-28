@@ -1,0 +1,22 @@
+# A greater potion of might (spec §8 "Potions"): Strength raised twice as much, easing to a potion of
+# might's after ten minutes. Greater boosts are deep orange.
+[[object]]
+id = "greater_potion_of_might"
+name = "greater potion of might"
+plural = "greater potions of might"
+glyph = "!"
+fg = "#c87820"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 400
+stackable = true
+level = 8
+frequency = 8
+
+[object.drink]
+kind = "boost"
+status = "fortified"
+severity = 2
+colour = "deep orange"
+marks = { strength = 10 }

@@ -84,6 +84,7 @@ for the one attacked). Where each is raised (a line that already marks the event
 | `both_hands_hit` | `World::both_hands`, from `World::attack` and `player_attacks` after the second blow: both `Strike::Hit`, the second made with a weapon (not a shield: a bash is no second hand; not a flurry's fist), the target alive; once an attack | the attack's |
 | `approaches` | `World::approached`, from `World::step_up` (the creature's step in `ai.rs` and now the player's in `travel.rs`) | the approached's missile weapon (`Ranged`), else what it has ready to throw (`Thrown`) |
 | `hit`, `critical` (spells) | `world/cast.rs::spell_practised` → `World::resolve_triggers` with `AttackKind::Spell`, before `spell_strikes` (a spell that rolls to hit, an own cast; #571) | the spell attack skill and the caster style (`Actor::spell_skills`) |
+| `spell_blocked` | `cast.rs::cast_single` → `World::spell_blocked` (`reflect.rs`), on an attack or touch spell's miss by the target's Shield (a bolt, a ray, a touch; a scroll's or a wand's too); never for a reflected flight | the target's held |
 
 Effects (`WeaponDoes`, closed; a kind with no catalogue entry is not written): `Status` (on the
 other end or the actor, `World::afflict`; `turns` dice drawn once, clamped to the status's
@@ -93,8 +94,11 @@ rend the off hand's too, rolled after the blows, of the blow's kind or the effec
 `World::resisted` but never soaked, `hurt` with `Harm::Actor`; "Your blades rend the orc.";
 "The orc's blades rend you."), `FreeShot` (Point-blank: `World::loose` with the missile weapon
 and ready ammunition, or what is ready to throw; nothing without, on the overworld, or for the
-player in a shop; the player's held as an out-of-turn free blow's messages are), and the two
-switches (nothing to do here).
+player in a shop; the player's held as an out-of-turn free blow's messages are), `ReflectSpell`
+(Spell reflection, #566: `World::reflect_ready` marks the reflector while it has made fewer
+than `per_turn` reflections this turn of its own; the count lives in the transient
+`World::reflection` and is cleared in `spend_actions`; the cast code casts the spell back,
+`docs/dev/spells.md` "Spell reflection"), and the two switches (nothing to do here).
 
 **Determinism**: deciding never draws (lookups, bits); an effect draws only as it lands
 (Pinning shot's turns, Rend's dice, a free shot's flight); fights with no qualifying rank keep
@@ -191,9 +195,9 @@ warrior's class ability Drillmaster (level 25: `weapon_stamina` 1, read in
 
 `content/weapon_ability.rs` (the shipped catalogue, its systems, no "aimed" names, every
 refusal, the actives' too), `world/weapon_ability_tests.rs` (each triggered ability on a
-hand-made fight, the abuse rules, creatures' Brace and Point-blank, no draws without a rank, the
-three talents, the menu and the news), `world/weapon_active_tests.rs` (each active, its costs
-and refusals, the greyed rows, Practised technique, Drillmaster, Armour-breaker, the pool
-granted, the action text), `ability.rs` (the menu's order), the screen snapshots
-`abilities-menu-weapon-skills`, `abilities-menu-weapon-actives`, `-short`, the wiki test
-(`xtask/src/wiki/mod.rs`).
+hand-made fight, the abuse rules, Spell reflection's cap, mark, shapes, Parry, mana, lifted cap,
+wand, and draws, creatures' Brace and Point-blank, no draws without a rank, the three talents,
+the menu and the news), `world/weapon_active_tests.rs` (each active, its costs and refusals, the
+greyed rows, Practised technique, Drillmaster, Armour-breaker, the pool granted, the action
+text), `ability.rs` (the menu's order), the screen snapshots `abilities-menu-weapon-skills`,
+`abilities-menu-weapon-actives`, `-short`, the wiki test (`xtask/src/wiki/mod.rs`).

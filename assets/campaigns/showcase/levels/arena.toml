@@ -52,7 +52,9 @@ map = '''
 "k" = { terrain = "floor", creature = "kobold", carry = ["spear"], wield = "spear" }
 "a" = { terrain = "floor", creature = "kobold_archer", carry = ["short_bow", "arrow*20"], wield = ["short_bow", "arrow"] }
 "s" = { terrain = "floor", creature = "kobold_shaman", carry = ["bone_amulet"], wear = "bone_amulet" }
-"r" = { terrain = "floor", creature = "rat" }
+# The rats are of the arena's own pack (`arena_rats`), at war with the kobolds: elsewhere
+# vermin and kobolds leave each other be.
+"r" = { terrain = "floor", creature = "rat", faction = "arena_rats" }
 # Cave bats circling the north and south of the pit, and a beetle pottering about the warren.
 "1" = { terrain = "floor", creature = "bat", route = "E28 S1 W28 N1" }
 "2" = { terrain = "floor", creature = "bat", route = "W28 S1 E28 N1" }
