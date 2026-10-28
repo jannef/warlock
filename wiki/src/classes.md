@@ -37,8 +37,9 @@ nothing in its place.
 
 {{#include generated/class-levels.md}}
 
-A paladin's abilities used from the menu answer only while the paladin is Good or better (see
-[Alignment](alignment.md)); the passives do not ask. Lay on hands drains you instead of costing
+A paladin's holy abilities used from the menu (Lay on hands, Smite, Holy radiance, Consecrate)
+work only while you are on the good side, Kind or better (see [Alignment](alignment.md)):
+otherwise you can still use them, and nothing happens. The passives do not care. Lay on hands drains you instead of costing
 mana. The barbarian's rage runs on a pool of its own, Rage, and the
 ranger's rapid shot and volley on [focus](resources.md) (see [Resources](resources.md)); the
 thief's sneak attacks build [openings](resources.md), which master thief's finisher spends; the
@@ -52,9 +53,9 @@ greyed out ("too little") while you have less; there is no other wait. A burst f
 off as a [scroll](scrolls.md)'s does, a line runs through everyone on it, its blows and kills
 yours; a hex falls on a hostile you see within its reach. Call lightning answers only under the
 open sky. A priest's
-Smite is the paladin's, and answers only while the priest is Good or better.
+Smite is the paladin's, and works only while the priest is Kind or better.
 
-**Consecrate** (the priest's at level 9, the paladin's at 12) answers only while you are Good
+**Consecrate** (the priest's at level 9, the paladin's at 12) works only while you are Kind
 or better: a minute's prayer, for 15 mana, that lifts a cursed, draining, or haunted room's curse for good
 (see [Special rooms](special-rooms.md#cursed-rooms)).
 

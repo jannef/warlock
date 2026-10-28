@@ -242,7 +242,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the mana at the pick and as each later level comes, as Hardy's hit points, past `mana_level`
     too), Clear mind (`mana_regen_percent` +25), Meditation (`mana_resting_percent` +50, on
     resting's pace), Frugal caster (`mana_cost_percent` −20), and Blood magic (`blood_magic`, an
-    active in the abilities menu, `blood_magic` in replays: 5 hit points for 3 mana, up to the
+    active in the abilities menu, `use:blood_magic` in replays: 5 hit points for 3 mana, up to the
     maximum, for the time of a wait; refused, no time, with 5 hit points or fewer ("You have too
     little blood left to give.") or full mana ("Your mana is already full."); not a blow: no
     Protection, no pain, no training, never a death).
@@ -483,7 +483,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `resource_build` builds a held resource on an event beyond its own `builds`, a
     `resource_max` raises its maximum (`Actor::resource_max`), a `resource_start` what it holds
     when granted (`Actor::resource_start`, at most the maximum), and a `resource_rate` its pace
-    over time in percent (`World::resource_rate`).
+    over time in percent (`World::resource_rate`). What the holder wears does too, for the pool
+    its affix names (§8 "Magic items"; the affixes design §5): a `resource_max` affix raises
+    the maximum and a `resource_rate` affix speeds the pace, beside the talents', and an
+    `active_stamina` affix takes stamina off every weapon active (`Actor::weapon_stamina`, at
+    least 1). An affix never grants a pool: one who does not hold it (a wizard's stamina, any
+    creature's) gets nothing of it. Taking off what raised a maximum lowers what is held to the
+    new maximum at once (`World::keep_resources_within_max`, after each player action, as with
+    mana).
   - **Its status**: a resource with a `status` brings it: granted by
     `World::grant_resource_with_status` (the Rage ability, the dev action), the status begins
     (said as it begins, "You fly into a rage!"); as the resource ends, spent, decayed, or
@@ -534,8 +541,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     held. Inspire spends 3 inspiration **in place of** its 3 mana while the bard holds 3 (then
     no mana is spent, and nothing blocks it as casting), else its mana as before; Virtuoso's
     song costs neither.
-  - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives will pay
-    from (W3 spends it; nothing does yet). The granted talent **Trained wind**
+  - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives pay
+    from (§8 "Weapon abilities", #564). The granted talent **Trained wind**
     (`grants_resource`) is in the level-1 row of the warrior's, barbarian's, paladin's,
     ranger's, monk's, thief's, and bard's tables, so those hold it from creation, full; a saved
     character of those classes is granted it on load (`World::grant_class`). Its maximum is 10
@@ -544,9 +551,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     at 0. A barbarian holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
     `stamina` system): **Deep lungs** (Vigour): +4 at most; **Steady breathing**
     (Weaponcraft, a weapon skill at 5): back at 150 %; **Second breath** (Might): a kill
-    credited to the holder builds a point. The grant to anyone else on the first weapon rank that
-    unlocks an active (`World::rank_up`, the third grant place) comes with W3, which brings
-    those actives.
+    credited to the holder builds a point. Anyone else is granted it, full, on the first weapon
+    rank that teaches an active (the third grant place, #564: `fight.rs::grant_stamina`, where
+    every rank the player gains is said).
   - **Shown**: the player's own resources (`PerceptionView::own_resources`: each held, its value
     and maximum, in resource order): the status bar after `MP` (`Rage 11`, `Focus 7/10`), each
     with the hit points' priority after the mana, so they give way before it (§6); a row each on

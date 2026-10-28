@@ -171,10 +171,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ark), `description` (look mode adds it), `fg` (its colour on the map, over its terrain's),
   `from` (the least level of the band: the first from 1, rising), `sturdiness` (a kick breaks it
   with a chance of Strength in this, 1 to 100: 20 to 70), `hardness` (a blast must beat it, 1 to
-  10000: 200 to 3000), and, read by the generated chests, mimics, and loot of later slices and
-  checked now, `locked`, `trapped`, `mimic` (percents of generated chests), `hold` (a mimic's
-  hold chance), and `loot = { items, loot_level, magic, rare, gold = { dice, each }, gems }`
-  (dice; `rare` counts in `magic`). `[smash] destroyed` (percent of each stack destroyed when a
+  10000: 200 to 3000), `locked`, `trapped` (percents of generated chests that come locked and
+  trapped), `mimic` (percent that are a mimic instead; read by the mimics of a later slice and
+  drawn now), `hold` (a mimic's hold chance; later), and `loot = { items, loot_level, magic,
+  rare, gold = { dice, each }, gems }` (dice; `rare` counts in `magic`; what a generated chest
+  holds, §8 "Magic items" "Chest loot"). `[smash] destroyed` (percent of each stack destroyed when a
   chest is kicked open or blown apart: 50). The chest terrains are `data/terrain.toml`'s with a
   `chest` field (`"shut"`, `"open"`, `"smashed"`, one terrain each; a shut one not walkable,
   the others walkable; none a door, stairs, or breakable wall; a shut one may have a
@@ -556,14 +557,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `name`, `pending`), the closed list a talent's `systems` may name. A `[[talent]]`: `id`,
   `name`, `tree`, `description`, `ranks`, `choice` (`weapon_skill`, `style`, `element`), `needs`
   (`talents = { dodge = 1 }`, `stats = { toughness = 14 }`, `skills = { stealth = 25 }`,
-  `weapon_skills = { bows = 3 }`, `chosen`, `level`, `race`, `class`, `eyes`,
-  `requires_alignment = { min = "good" }`), `effects`
+  `weapon_skills = { bows = 3 }`, `chosen`, `level`, `race`, `class`, `eyes`), `effects`
   (`{ kind = "dodge", value = 1 }`: `dodge`, `natural`, `melee_damage`, `max_hp_per_levels
   { per_levels, at_least }`, `healing_percent`, `footsteps_percent`, `silent_doors`, `hearing`,
   `carry_percent`, `travel_percent`, `hunger_percent`, `no_exertion`, `xp_percent`, `notice`,
   `free_blow { trigger }`; bonuses −20 to 20, percents −100 to 100, never 0), `[[talent.rank]]`
   (a rank's own `needs` and `effects`, as many as `ranks` or none), `systems` (at least one),
-  `granted`. Talents are saved by id (not in the content fingerprint); without skills content a
+  `granted`, `resource` (a class active's cost), `alignment` (`{ min = "kind" }`: the bands a holy
+  class active works for; it bars nothing, §8 "Alignment"). Talents are saved by id (not in the content fingerprint); without skills content a
   skill need is left out, as skill affixes are. Load fails on a coverage gap (§8 "Talents").
 - **Damage types** (`data/damage_types.toml`, optional; without it nothing is typed, nobody
   resists anything, and no data may name a kind; #151, §8 "Damage types"): an ordered list of

@@ -608,7 +608,7 @@ Two new systems join `data/talents.toml`, placed by topic (after `danger`, befor
 | `special_rooms` | **Light tread** (delver) | cracked floors never give way under you | the collapse draw | R19 |
 | `prayer` | **Devout** (wayfarer) | the lean counts double at agreeing altars, and an opposed one leans as neutral | the prayer draw's lean | R5 |
 | `prayer` | **Penitent** (grit) | a great bane becomes nothing | the prayer draw's outcome | R6 |
-| class ability (`special_rooms`) | **Consecrate** (priest 9, paladin 12; `requires_alignment = { min = "good" }`; 15 mana; one minute) | see below | `LevelState::rooms`/`pervading`; `Deed::Consecrated` +20 | R7 |
+| class ability (`special_rooms`) | **Consecrate** (priest 9, paladin 12; `alignment = { min = "kind" }`, #642: works for the good side, bars nobody; 15 mana; one minute) | see below | `LevelState::rooms`/`pervading`; `Deed::Consecrated` +20 | R7 |
 
 **Consecrate, plainly** (decision 12). A good priest or paladin spends 15 mana and a minute of prayer standing inside a cursed, draining, or haunted room. The room's curse is lifted **for good**: it becomes a plain room, so corpses no longer rise there, mana no longer drains, and nothing comes while one rests. On a level that a curse or a drain covers entirely, it lifts the whole level's effect instead. Doing it moves the character's alignment toward good (+20). Anywhere else it is refused with no time spent ("There is nothing here to consecrate."). It gives the priest a power tied to places that no other class has.
 

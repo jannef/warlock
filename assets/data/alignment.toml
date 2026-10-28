@@ -49,7 +49,7 @@ rise = "You feel a holy light within you: you have become a saint."
 [[band]]
 id = "good"
 from = 400
-description = "Righteous and steadfast, as a paladin's oath asks: the evil scorn you."
+description = "Righteous and steadfast: the evil scorn you."
 rise = "You feel righteous."
 fall = "You feel the holy light within you dim."
 
@@ -58,7 +58,7 @@ id = "kind"
 from = 150
 description = "Kind-hearted: you do more good than harm."
 rise = "You feel your heart warm toward the world."
-fall = "You feel you have strayed from the path of good."
+fall = "You feel your righteousness waver."
 
 [[band]]
 id = "neutral"

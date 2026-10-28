@@ -204,7 +204,9 @@ fn world(map: &str) -> World {
     files.insert("levels/wt_yard.toml", &level(map));
     files.insert(
         "scenarios/wt_yard.toml",
-        "name = \"Yard\"\nstart_level = \"wt_yard\"\nhp = 1000\n",
+        // Toughness 14: a pool of 12, so a refill to 12 is within the maximum (the pool is kept
+        // within it after every action, `keep_resources_within_max`).
+        "name = \"Yard\"\nstart_level = \"wt_yard\"\nhp = 1000\nstats = { toughness = 14 }\n",
     );
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     let mut w = World::new(content, "wt_yard", None).expect("world");

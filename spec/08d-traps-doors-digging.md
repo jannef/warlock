@@ -233,7 +233,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `key` gets a few locked rooms on its rooms levels, its key always within reach (§7
     "Generators", validated). The showcase's locked door is harmless.
 - **Chests** (`warlock-core/src/chest.rs`, the rules; `world/chest.rs`, applying them; data
-  `data/chests.toml` §7 "Chests"; docs/design/chests-and-treasure.md, slices C1 and C2): a chest is a
+  `data/chests.toml` §7 "Chests"; docs/design/chests-and-treasure.md, slices C1 to C3): a chest is a
   **fixture of a cell**, as a door is, never a carried object.
   - **What it is**: one of three terrains (`chest = "shut"`, `"open"`, `"smashed"` in
     `data/terrain.toml`: `⊟`, `⊔`, `⊠`; a shut one is not walkable and blocks nothing else, an
@@ -309,6 +309,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     in sight, whether a shut one is locked. Never its level or what it holds. Look mode: "A
     coffer. A small wooden box with an iron hasp.", "an open coffer", "a smashed coffer"; with
     Chest-wise "a locked coffer", "an unlocked coffer".
+  - **Generated chests** (`mapgen/chest.rs`, slice C3): with the branch's `chests.chance`
+    percent (§7 "Generation": one floor in five by default) a generated floor gets between
+    `count`'s least and most chests, from the level's own chest stream (`chests/<level id>`,
+    after its rooms' loot and before its gear, §8 "Determinism"). Each stands on a cell of plain
+    floor whose eight neighbours are all walkable and none a door (never in a doorway or a
+    corridor, and never cutting a room apart), at least 6 cells from every staircase, never in a
+    vault, a shop, or a special room with a feature, sleepers, or a hoard, where nothing lies,
+    stands, shines, patrols, or is trapped; two never touch. It is of the floor's item level;
+    locked with its band's `locked` percent (a lock only a skeleton key fits, as hard to pick as
+    a door's lock on that floor; a level's validation asks no key for a chest's lock); trapped
+    with its band's `trapped` percent, of a kind drawn from the branch's `traps` that fit a
+    fixture (a branch without traps traps none, though it draws the same), hidden; and holding
+    what its band's loot table rolls (§8 "Magic items" "Chest loot"). Draws per chest: its cell,
+    the lock, the trap and its kind, the contents, and the mimic draw (`mimic` percent; until
+    mimics come, slice C4, every chest stays a chest).
   - **Level files** place chests on the `chest` terrain: `chest = "kist"` (that band's least
     level) or `chest = 7` (a level; default the level's `item_level`), `locked = true` or `lock =
     "id"` and `lock_difficulty` as on a door, and `objects` for what it holds (food in it is made

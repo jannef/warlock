@@ -129,6 +129,15 @@ const CASES: &[Case] = &[
         size: (120, 44),
         ..BASE
     },
+    // Up wraps to the last row: the abilities' own keys at the very bottom (#644).
+    Case {
+        name: "controls-screen-bottom",
+        actions: "wait",
+        screen: Some("controls"),
+        keys: Some("Up"),
+        size: (120, 44),
+        ..BASE
+    },
     // Character creation.
     Case {
         name: "race-screen",
@@ -290,11 +299,11 @@ const CASES: &[Case] = &[
         ..BASE
     },
     Case {
-        name: "alignment-strayed-character",
+        // A band crossed (the `fall` line) and the Alignment row: seed 1's Basilisk-born paladin
+        // (#272) starts at 450, Good, so the kick takes him down to Kind.
+        name: "alignment-band-character",
         scenario: "courtyard",
         character: Some("human,male,paladin"),
-        // Seed 1: a Basilisk-born paladin (#272) starts at 450, Good (#317), so the kick takes
-        // him below it.
         seed: Some(1),
         actions: "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
             move:E*5 kick:N",
@@ -575,7 +584,7 @@ const CASES: &[Case] = &[
         name: "abilities-menu-blood-magic",
         seed: Some(4),
         character: Some("elf,female,wizard"),
-        actions: "xp:200000 talent:blood_magic levelup:auto drain:20 blood_magic",
+        actions: "xp:200000 talent:blood_magic levelup:auto drain:20 use:blood_magic",
         screen: Some("abilities"),
         ..BASE
     },

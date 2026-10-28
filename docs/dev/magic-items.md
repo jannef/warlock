@@ -91,7 +91,9 @@ armour, helmets, and shields, and `may_roll` keeps it to objects with a `spell_c
 left out when content has no resources (as skill affixes without skills; `content::affix::Lookups`
 holds the id lookups, `None` for a table content lacks; the table is read after resources). They
 sum by (effect, resource) in `Mods::pools`, read with `Mods::resource(effect, id)`, never into
-`Mods::get`. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
+`Mods::get`. Their hooks (B1, #630; docs/dev/resources.md): `resource_max` in
+`Actor::resource_max`, `resource_rate` in `World::resource_rate`, `active_stamina` (keyed on
+stamina, global) in `Actor::weapon_stamina`; `resource_on_kill` waits for E1. **`Group`** is a struct `{ effect, skill, damage_type, resource }` (`Group::of` for an
 effect that names nothing else): one group per (effect, resource), so `check_category` keeps
 Tireless (stamina) and of Fury (rage) apart. **`ItemKind::Tool`** (`ALL` is a slice; the `tools`
 item class holds the kind; rare names' second words `tool = [...]` in `data/affixes.toml`): a

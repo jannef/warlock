@@ -239,6 +239,7 @@ use crate::burden::{self, Burden, Load};
 use crate::character::{Character, CharacterSpec};
 use crate::content::{
     ActionKind, CombatStance, Content, Here, ObjectId, RaceDef, StairsDir, Stance, StatusId,
+    TalentActive,
 };
 use crate::geom::{Dir, Pos};
 use crate::hunger::Satiation;
@@ -1117,9 +1118,10 @@ impl World {
         let (burden, slowed) = (load.burden(), load.penalty() != Burden::Unburdened);
         let quests = self.quest_progress();
         let spent = self.player_acts(action, &mut events);
-        // Taking off what raised them lowers the player's maximum hit points and mana.
+        // Taking off what raised them lowers the player's maximum hit points, mana, and pools.
         self.keep_hp_within_max(self.state.player);
         self.keep_mana_within_max(self.state.player);
+        self.keep_resources_within_max(self.state.player);
         self.burden_news(burden);
         self.quest_news(&quests);
         // Acting (not waiting) under a load that slows the player trains balance.
@@ -1267,8 +1269,8 @@ impl World {
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
             Action::Temper { item } => return self.start_temper(*item),
-            Action::SecondWind => return self.second_wind(events),
-            Action::BloodMagic => return self.blood_magic(),
+            Action::UseTalent(TalentActive::SecondWind) => return self.second_wind(events),
+            Action::UseTalent(TalentActive::BloodMagic) => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
@@ -1338,6 +1340,8 @@ fn article(noun: &str) -> &'static str {
 }
 
 #[cfg(test)]
+mod affix_stamina_tests;
+#[cfg(test)]
 mod affix_utility_tests;
 #[cfg(test)]
 mod ai_tests;
@@ -1353,6 +1357,8 @@ mod animated_tests;
 mod ascmearc_tests;
 #[cfg(test)]
 mod attacks_tests;
+#[cfg(test)]
+mod balance_probe;
 #[cfg(test)]
 mod beast_den_tests;
 #[cfg(test)]

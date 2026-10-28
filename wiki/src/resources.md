@@ -54,6 +54,22 @@ by the first weapon rank that teaches an active.
 
 A base turn is 6 seconds.
 
+## Magic items on resources
+
+A [magic item](magic-items.md) may name a pool and change it while worn or wielded, identified
+or not: a larger **maximum** (so many points more), a faster **pace** (so many percent, added to
+what talents add; Steady breathing's 50 % and an item's 30 % make 180 %), or, for stamina, every
+weapon active **costing** so many points less (added to Drillmaster's discount, never below 1).
+Two items naming the same pool add up. Taking the item off lowers what you hold to the smaller
+maximum at once.
+
+Such an item never **grants** a pool: it does nothing for one who does not hold it. Who holds
+which: stamina, every warrior, barbarian, paladin, ranger, monk, thief, and bard, and anyone
+else once a weapon rank teaches an active; rage, a raging barbarian (only while the rage
+lasts); focus, a ranger from level 12; ki, a monk from level 18; inspiration, a bard from level
+18; openings, a thief from level 32. A ring of rage on a wizard is dead weight, and creatures
+never hold a pool, so their gear does nothing for them, only for whoever takes it from them.
+
 {{#include generated/resources.md}}
 
 ## Rage

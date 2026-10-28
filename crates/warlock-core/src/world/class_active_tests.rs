@@ -458,7 +458,7 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
 }
 
 #[test]
-fn lay_on_hands_smite_and_radiance_answer_only_the_good() {
+fn lay_on_hands_smite_and_radiance_work_for_the_good_side_only() {
     let mut w = world("paladin");
     let content = w.content().clone();
     w.player_mut().hp = 1;
@@ -473,15 +473,24 @@ fn lay_on_hands_smite_and_radiance_answer_only_the_good() {
     // Ten minutes later it answers again.
     run(&mut w, "wait*101");
     assert_eq!(own(&w, ClassActive::LayOnHands), Some(None));
-    // Strayed from Good: kept but greyed, and refused.
+    // Neutral: nothing bars it, and it does nothing: a cast's time, no healing, no cooldown.
     w.player_mut().alignment = Some(crate::alignment::Score::new(0));
-    assert_eq!(
-        own(&w, ClassActive::LayOnHands),
-        Some(Some(Unavailable::Strayed))
-    );
+    assert_eq!(own(&w, ClassActive::LayOnHands), Some(None), "usable");
+    w.player_mut().hp = 1;
+    let turn = w.state.turn;
     run(&mut w, "use:lay_on_hands");
-    assert_eq!(last(&w), "You have strayed: your gift does not answer.");
-    w.player_mut().alignment = Some(crate::alignment::Score::new(800));
+    assert_eq!(
+        last(&w),
+        "You lay on your hands, but no warmth flows from them."
+    );
+    assert_eq!(w.state.turn, turn + 1, "it takes its time");
+    assert_eq!(w.state.player().hp, 1, "nothing healed");
+    assert!(!suffers(&w, w.state.player, "drained"), "no cooldown");
+    // Kind is enough (`alignment = { min = "kind" }` in its data).
+    w.player_mut().alignment = Some(crate::alignment::Score::new(200));
+    run(&mut w, "use:lay_on_hands");
+    assert!(said(&w).contains(&"Warmth flows from your hands.".to_string()));
+    run(&mut w, "wait*101");
     // Smite: a blow with more dice, then spent.
     reach(&mut w, 12);
     let smite = w.state.player().talent_mods(&content).smite.expect("smite");
@@ -496,6 +505,17 @@ fn lay_on_hands_smite_and_radiance_answer_only_the_good() {
     assert!(w.state.actors.contains_key(&kobold));
     run(&mut w, "use:smite:E");
     assert_eq!(last(&w), "You are still spent.");
+    // Callous: the smite is still used, and no wrath answers it: no blow, no cooldown.
+    run(&mut w, "wait*200");
+    assert!(!suffers(&w, w.state.player, "spent"));
+    w.player_mut().alignment = Some(crate::alignment::Score::new(-200));
+    let (turn, hp) = (w.state.turn, w.state.actors[&kobold].hp);
+    run(&mut w, "use:smite:E");
+    assert!(said(&w).contains(&"You call for holy wrath, but none answers.".to_string()));
+    assert_eq!(w.state.turn, turn + 1);
+    assert_eq!(w.state.actors[&kobold].hp, hp, "no blow");
+    assert!(!suffers(&w, w.state.player, "spent"));
+    w.state.actors.remove(&kobold);
     // Holy radiance: a light of the paladin's own, on and off.
     reach(&mut w, 40);
     let lit = |w: &World| {
@@ -504,8 +524,14 @@ fn lay_on_hands_smite_and_radiance_answer_only_the_good() {
         me.effects.has(status)
     };
     run(&mut w, "use:holy_radiance");
+    assert!(!lit(&w), "no light for the callous");
+    assert!(said(&w).contains(&"You will a holy light, but none comes.".to_string()));
+    w.player_mut().alignment = Some(crate::alignment::Score::new(800));
+    run(&mut w, "use:holy_radiance");
     assert!(lit(&w));
     assert!(said(&w).contains(&"A soft light shines about you.".to_string()));
+    // Fallen to Wicked while it shines: nothing tracks it, and putting it out still works.
+    w.player_mut().alignment = Some(crate::alignment::Score::new(-900));
     run(&mut w, "use:holy_radiance");
     assert!(!lit(&w));
     assert_eq!(last(&w), "Your light fades.");

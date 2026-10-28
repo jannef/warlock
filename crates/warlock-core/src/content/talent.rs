@@ -990,6 +990,38 @@ fn one_degree() -> u16 {
     1
 }
 
+/// A talent's own active (spec §8 "Talents"; the abilities menu's Talents group), used as
+/// [`crate::action::Action::UseTalent`] with the one verb every ability use has
+/// (`use:second_wind`, `use:blood_magic`; #644).
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum TalentActive {
+    /// Second wind: hit points back at once, then Winded for a while.
+    SecondWind,
+    /// Blood magic: some hit points (never the last) for some mana.
+    BloodMagic,
+}
+
+impl TalentActive {
+    /// Every one, in menu order.
+    pub const ALL: &[TalentActive] = &[TalentActive::SecondWind, TalentActive::BloodMagic];
+
+    /// Its id: its effect's kind, and its replay text (`use:second_wind`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            TalentActive::SecondWind => "second_wind",
+            TalentActive::BloodMagic => "blood_magic",
+        }
+    }
+
+    /// The one with id `id`.
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.iter().copied().find(|a| a.id() == id)
+    }
+}
+
 /// The free blows a talent may switch on ([`crate::world::FreeBlows`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -1977,8 +2009,6 @@ pub enum Need {
     Element(String),
     /// Born on a lucky day.
     Lucky,
-    /// An alignment band (spec §8 "Alignment"): `{ min = "good" }` is Good or better.
-    Alignment(Requirement),
     /// Any one of these ("Intelligence 12 or Appraise 20").
     Either(Vec<Need>),
 }
@@ -2029,7 +2059,6 @@ impl Need {
                 format!("to be {name}-born")
             }
             Need::Lucky => "to be born on a lucky day".into(),
-            Need::Alignment(required) => format!("to be {}", required.words()),
             Need::Either(needs) => (needs.iter())
                 .map(|n| n.words(content))
                 .collect::<Vec<_>>()
@@ -2068,8 +2097,6 @@ pub struct Needs {
     pub animal: Option<String>,
     pub element: Option<String>,
     pub lucky: bool,
-    /// The alignment band asked (`requires_alignment`, as quests and abilities ask it).
-    pub alignment: Option<Requirement>,
     /// Any one of these, if set (`either`): at least two.
     pub either: Vec<Need>,
 }
@@ -2081,8 +2108,8 @@ impl Needs {
     }
 
     /// Every prerequisite, in the order they are shown: talents, stats, skills, weapon skills,
-    /// the choice, the level, the race, the eyes, the class, the sign, the alignment, then any one
-    /// of the alternatives.
+    /// the choice, the level, the race, the eyes, the class, the sign, then any one of the
+    /// alternatives.
     pub fn iter(&self) -> impl Iterator<Item = Need> + '_ {
         let talents = self.talents.iter().map(|&(t, r)| Need::Talent(t, r));
         let stats = (self.stats.iter())
@@ -2099,7 +2126,6 @@ impl Needs {
         let animal = self.animal.clone().map(Need::Animal);
         let element = self.element.clone().map(Need::Element);
         let lucky = self.lucky.then_some(Need::Lucky);
-        let alignment = self.alignment.map(Need::Alignment);
         let either = (!self.either.is_empty()).then(|| Need::Either(self.either.clone()));
         talents
             .chain(stats)
@@ -2114,7 +2140,6 @@ impl Needs {
             .chain(animal)
             .chain(element)
             .chain(lucky)
-            .chain(alignment)
             .chain(either)
     }
 }
@@ -2152,6 +2177,11 @@ pub struct TalentDef {
     /// What using its class active costs of an alternative resource (spec §8 "Resources"):
     /// `resource = { id = "focus", cost = 6 }` (0 asks only that it is held), if anything.
     pub resource: Option<ResourceCost>,
+    /// The alignment bands its class active works for (spec §8 "Alignment"; `alignment = { min
+    /// = "kind" }` in data: the paladin's holy gifts), if any. It bars nothing: the ability is
+    /// had, listed, and used whatever the band, and outside these bands it does nothing
+    /// (`World::answered`).
+    pub alignment: Option<Requirement>,
 }
 
 /// An ability's cost in an alternative resource (spec §8 "Resources"): unavailable while the
@@ -2411,6 +2441,7 @@ struct TalentSpec {
     #[serde(default)]
     flaw: bool,
     resource: Option<CostSpec>,
+    alignment: Option<Requirement>,
 }
 
 #[derive(Deserialize)]
@@ -2446,7 +2477,6 @@ struct NeedsSpec {
     animal: Option<String>,
     element: Option<String>,
     lucky: bool,
-    requires_alignment: Option<Requirement>,
     /// Alternatives: any one of what it asks will do (`either = { stats = { intelligence = 12
     /// }, skills = { appraise = 20 } }`).
     either: Option<Box<NeedsSpec>>,
@@ -2466,7 +2496,6 @@ impl NeedsSpec {
             + one(self.race.is_some())
             + one(self.eyes.is_some())
             + one(self.class.is_some())
-            + one(self.requires_alignment.is_some())
     }
 }
 
@@ -2634,9 +2663,6 @@ fn resolve_needs(
     {
         return Err(format!("needs unknown eyes `{eyes}` (a vision profile)"));
     }
-    if let Some(required) = spec.requires_alignment {
-        required.check()?;
-    }
     let either = match spec.either {
         Some(alternatives) => {
             if alternatives.either.is_some() {
@@ -2665,7 +2691,6 @@ fn resolve_needs(
         animal: spec.animal,
         element: spec.element,
         lucky: spec.lucky,
-        alignment: spec.requires_alignment,
         either,
     })
 }
@@ -2879,6 +2904,16 @@ pub(super) fn parse<'a>(
                 })
             }
         };
+        if let Some(bands) = spec.alignment {
+            if !effects.iter().any(|e| e.active().is_some_and(|a| a.holy())) {
+                return Err(err(
+                    "an `alignment` is for a holy class active (lay_on_hands, smite, \
+                     holy_radiance, consecrate)"
+                        .into(),
+                ));
+            }
+            bands.check().map_err(err)?;
+        }
         book.list.push(TalentDef {
             id: spec.id,
             name: spec.name,
@@ -2892,6 +2927,7 @@ pub(super) fn parse<'a>(
             granted: spec.granted,
             flaw: spec.flaw,
             resource,
+            alignment: spec.alignment,
         });
     }
     // A talent that needs one with a choice of its own kind is taken for the same choice: only
@@ -3048,6 +3084,16 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
             ))
         };
         assert!(bad("effects = [{ kind = \"dodge\", value = 0 }]").contains("a bonus"));
+        // Alignment bars nothing: it is neither a prerequisite nor for anything but a holy gift.
+        assert!(
+            bad("effects = [{ kind = \"dodge\", value = 1 }]\nalignment = { min = \"good\" }")
+                .contains("is for a holy class active")
+        );
+        assert!(
+            bad("effects = [{ kind = \"dodge\", value = 1 }]\n\
+                 needs = { requires_alignment = { min = \"good\" } }")
+            .contains("unknown field")
+        );
         assert!(bad("effects = [{ kind = \"xp_percent\", value = 500 }]").contains("a percent"));
         // The Spellcraft tree's (#400): School focus asks for its choice and a sane reach.
         assert!(

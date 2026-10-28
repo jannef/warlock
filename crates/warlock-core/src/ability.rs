@@ -15,19 +15,16 @@
 //! [`Unavailable::While`] it, and so is one whose kind of action a status `blocks`; nothing
 //! counts uses.
 //!
-//! An ability that asks for an alignment (`requires_alignment` in its data, spec §8
-//! "Alignment": the paladin's gifts are Good or better) stays the character's when they stray
-//! from it, but cannot be used ([`Unavailable::Strayed`], "you have strayed") until they climb
-//! back: its arm of [`Ability::unavailable`] asks [`strayed`] first. The class tables (#243) and
-//! talents (#220) carry the requirement as an `Option<Requirement>` in their data.
+//! Alignment never makes an ability unavailable (spec §8 "Alignment"): a holy gift whose band
+//! the user is outside of is listed and used like any other, and does nothing
+//! (`World::unanswered`).
 //!
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
 use crate::action::Action;
-use crate::alignment::Requirement;
 use crate::content::{
     ActionKind, ActiveAim, ClassActive, Content, Offer, ResourceCost, ResourceId, SignActive,
-    SkillDef, SpellId, StatusId, TalentEffect, WeaponAbilityId, WeaponSkillId,
+    SkillDef, SpellId, StatusId, TalentActive, TalentEffect, WeaponAbilityId, WeaponSkillId,
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
@@ -46,7 +43,7 @@ pub enum Ability {
     Sign(SignActive),
     /// A class's active (spec §8 "Class abilities"): [`Action::Use`], had by whoever's class
     /// gives it at their level; unavailable while its cooldown lasts (Rage: while raging and
-    /// exhausted), and, for the paladin's gifts, while they have strayed from Good.
+    /// exhausted).
     Class(ClassActive),
     /// A caster's spell (spec §8 "Class abilities", "Spells"): [`Action::Cast`], had by
     /// whoever's class gives the ability that names it; unavailable without the mana it costs
@@ -81,11 +78,11 @@ pub enum Ability {
     /// unavailable while there is nothing to treat ([`crate::heal::treatable`]). It asks which
     /// ailment when there are several ([`Aim::Ailment`]).
     Heal,
-    /// Catch a second wind (spec §8 "Talents"): [`Action::SecondWind`], the active of the
+    /// Catch a second wind (spec §8 "Talents"): [`Action::UseTalent`], the active of the
     /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
     /// unavailable while its cooldown (Winded) lasts.
     SecondWind,
-    /// Blood magic (spec §8 "Talents"): [`Action::BloodMagic`], the active of the Blood magic
+    /// Blood magic (spec §8 "Talents"): [`Action::UseTalent`], the active of the Blood magic
     /// talent (a talent with the `blood_magic` effect): hit points given for mana. Had by
     /// whoever holds it; usable whenever they have it (the rules refuse, taking no time, when
     /// it would cost their last hit point or their mana is full).
@@ -216,9 +213,6 @@ pub enum Unavailable {
     NoShield,
     /// A skill whose use is not in the game yet.
     NotYet,
-    /// One that asks for an alignment the character has strayed from (spec §8 "Alignment"):
-    /// they keep it, and may use it again once they climb back.
-    Strayed,
     /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
     /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
@@ -247,7 +241,6 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "you hold no shield".into(),
             Unavailable::NotYet => "not usable yet".into(),
-            Unavailable::Strayed => "you have strayed".into(),
             Unavailable::NoMana => "you have too little mana".into(),
             Unavailable::NotHere => "not usable here".into(),
             Unavailable::NothingToTreat => "nothing to treat".into(),
@@ -271,7 +264,6 @@ impl Unavailable {
         match self {
             Unavailable::NoShield => "no_shield".into(),
             Unavailable::NotYet => "not_yet".into(),
-            Unavailable::Strayed => "strayed".into(),
             Unavailable::NoMana => "no_mana".into(),
             Unavailable::NotHere => "not_here".into(),
             Unavailable::NothingToTreat => "nothing_to_treat".into(),
@@ -707,8 +699,8 @@ impl Ability {
             (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
             // The first thing there is to treat; the menu names one when there are several.
             (Ability::Heal, _) => Some(Action::Heal(None)),
-            (Ability::SecondWind, _) => Some(Action::SecondWind),
-            (Ability::BloodMagic, _) => Some(Action::BloodMagic),
+            (Ability::SecondWind, _) => Some(Action::UseTalent(TalentActive::SecondWind)),
+            (Ability::BloodMagic, _) => Some(Action::UseTalent(TalentActive::BloodMagic)),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::Steal, Some(dir)) => Some(Action::Steal(dir)),
@@ -777,9 +769,7 @@ impl Ability {
         let own = match self {
             Ability::Class(active) => {
                 let def = content.class_active(active);
-                let required = def.and_then(|a| a.needs.alignment);
-                (strayed(actor, content, required))
-                    .or_else(|| class_cooldown(actor, content, active).map(Unavailable::While))
+                (class_cooldown(actor, content, active).map(Unavailable::While))
                     .or_else(|| short_of(actor, def?.resource?))
                     .or_else(|| {
                         // Inspire costs its inspiration while that is held, else mana
@@ -934,19 +924,6 @@ fn short_of(actor: &Actor, cost: ResourceCost) -> Option<Unavailable> {
     (held.is_none_or(|v| v < cost.amount)).then_some(Unavailable::Short(cost.resource))
 }
 
-/// Why `actor` cannot use an ability that asks for alignment `required` (its data's
-/// `requires_alignment`; `None`: any): [`Unavailable::Strayed`] while their band falls short of
-/// it (spec §8 "Alignment"). Every ability that has a requirement asks this first in
-/// [`Ability::unavailable`].
-pub fn strayed(
-    actor: &Actor,
-    content: &Content,
-    required: Option<Requirement>,
-) -> Option<Unavailable> {
-    let band = actor.band(content);
-    (!required?.allows(band)).then_some(Unavailable::Strayed)
-}
-
 /// One of the player's abilities, as they know it: for the abilities menu.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct OwnAbility {
@@ -1079,43 +1056,6 @@ mod tests {
             crate::World::with_character(content, "showcase", None, Some(&spec)).expect("warrior");
         let theirs = warrior.perception().abilities();
         assert!(!theirs.iter().any(|a| a.ability == steal));
-    }
-
-    #[test]
-    fn an_ability_that_asks_for_an_alignment_is_unavailable_to_one_who_strayed() {
-        use crate::alignment::{Band, Score};
-        use crate::character::CharacterSpec;
-        let content = std::sync::Arc::new(Content::builtin().expect("content"));
-        let paladin: CharacterSpec = "human,male,paladin".parse().unwrap();
-        let world = crate::World::with_character(content.clone(), "showcase", None, Some(&paladin))
-            .expect("world");
-        // A test ability of a paladin's: Good or better.
-        let gift = Some(Requirement {
-            min: Some(Band::Good),
-            max: None,
-        });
-        let mut me = world.state().player().clone();
-        // A paladin's own start, before the stars (the showcase's is Basilisk-born).
-        me.alignment = Some(Score::new(450));
-        assert_eq!(me.band(&content), Band::Good, "a paladin starts Good");
-        assert_eq!(strayed(&me, &content, gift), None);
-        assert_eq!(strayed(&me, &content, None), None, "no requirement");
-        // Fallen to Kind: kept, but greyed out.
-        me.alignment = Some(Score::new(200));
-        assert_eq!(strayed(&me, &content, gift), Some(Unavailable::Strayed));
-        assert_eq!(Unavailable::Strayed.reason(&content), "you have strayed");
-        assert_eq!(Unavailable::Strayed.id(&content), "strayed");
-        // Climbed back: usable again.
-        me.alignment = Some(Score::new(800));
-        assert_eq!(strayed(&me, &content, gift), None);
-        // A dark gift, Callous or worse, the other way round.
-        let dark = Some(Requirement {
-            min: None,
-            max: Some(Band::Callous),
-        });
-        assert_eq!(strayed(&me, &content, dark), Some(Unavailable::Strayed));
-        me.alignment = Some(Score::new(-500));
-        assert_eq!(strayed(&me, &content, dark), None);
     }
 
     #[test]
