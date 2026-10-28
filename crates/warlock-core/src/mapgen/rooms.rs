@@ -19,7 +19,7 @@
 
 use super::connect::cheapest_path;
 use super::{Canvas, Needs, shop, special, vault};
-use crate::content::{ObjectId, SpecialRoom, StairsDir, Vault};
+use crate::content::{ObjectId, RoomEffectDef, SpecialRoom, StairsDir, Vault};
 use crate::door::{Key, Lock};
 use crate::geom::{Dir, Pos};
 use crate::object::Stack;
@@ -232,7 +232,11 @@ fn special_rooms(canvas: &mut Canvas, rng: &mut Rng, rooms: &[Room], up_room: us
             .flat_map(|x| (min.y..=max.y).map(move |y| Pos::new(x, y)))
             .filter(|p| canvas.is_walkable(*p))
             .count();
-        let Some((effect, whole)) = special::pick(canvas, rng, floor) else {
+        let doors: Vec<Pos> = room.doors.iter().map(|&(p, _)| p).collect();
+        let sealable = |e: &RoomEffectDef| {
+            e.secret_doors.is_none() || super::treasury::fits_room(canvas, (min, max), &doors)
+        };
+        let Some((effect, whole)) = special::pick(canvas, rng, floor, sealable) else {
             continue;
         };
         special::place(canvas, rng, SpecialRoom::rect(effect, min, max), whole);

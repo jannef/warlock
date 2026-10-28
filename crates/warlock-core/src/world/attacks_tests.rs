@@ -47,7 +47,7 @@ fn a_sword_and_shield_shows_the_blow_a_strike_rolls() {
 
 #[test]
 fn two_weapons_show_both_hands_at_their_penalties_and_the_bow_its_range() {
-    let w = start("human,male,ranger", "move:SW*2 pickup equip:off_hand:j");
+    let w = start("human,male,ranger", "move:SW*2 pickup equip:off_hand:k");
     let content = w.content();
     let me = w.state().player();
     let attacks = w.perception().own_attacks();
@@ -81,7 +81,7 @@ fn two_weapons_show_both_hands_at_their_penalties_and_the_bow_its_range() {
 fn a_ready_throwing_weapon_shows_its_throw() {
     let w = start(
         "human,male,ranger",
-        "move:SW*2 pickup remove:missile_weapon equip:missile_weapon:j",
+        "move:SW*2 pickup remove:missile_weapon equip:missile_weapon:k",
     );
     let content = w.content();
     let me = w.state().player();

@@ -4,4 +4,4 @@ start_level = "spring"
 seed = 1
 # A priest come to drink at the spring.
 character = { race = "human", gender = "male", class = "priest", name = "Wulfric" }
-lantern = "lantern"
+wield = ["lantern"]

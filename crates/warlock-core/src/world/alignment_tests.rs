@@ -657,7 +657,7 @@ fn paying_is_a_little_good_and_theft_and_attacking_the_keeper_evil() {
     assert_eq!(score(&w), -100);
     // Attacking a keeper who trades with you.
     let mut w = in_shop();
-    run(&mut w, "move:E move:NE pickup pay throw:c:54,13");
+    run(&mut w, "move:E move:NE pickup pay throw:d:54,13");
     assert!(said(&w, "\"You will pay for that!\""));
     assert_eq!(score(&w), 5 - 100);
     // Attacking him again, outraged already, is no further deed.

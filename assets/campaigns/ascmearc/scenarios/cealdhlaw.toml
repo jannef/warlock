@@ -6,4 +6,4 @@ description = "Straight into Cealdhlāw, the cold barrow under Hlāwdūn: six le
 start_level = "cealdhlaw:1"
 seed = 1
 character = { race = "human", gender = "female", class = "thief", name = "Eadgyth" }
-lantern = "lantern"
+wield = ["lantern"]

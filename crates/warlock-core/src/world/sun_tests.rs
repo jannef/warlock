@@ -148,6 +148,7 @@ pub(super) fn sky_world(map: &str, kind: &str, date: [u32; 3], time: &str, sky: 
     files.insert("data/creatures.toml", CREATURES);
     files.insert("data/lights.toml", LIGHTS);
     files.insert("data/vision.toml", VISION);
+    super::lamp_tests::with_lantern(&mut files);
     files.insert("data/legend.toml", LEGEND);
     files.insert(
         "levels/test.toml",
@@ -156,7 +157,7 @@ pub(super) fn sky_world(map: &str, kind: &str, date: [u32; 3], time: &str, sky: 
     files.insert(
         "scenarios/test.toml",
         &format!(
-            "name = \"T\"\nstart_level = \"test\"\nlantern = \"lantern\"\nstart_time = \"{time}\"\n\
+            "name = \"T\"\nstart_level = \"test\"\nwield = [\"lantern\"]\nstart_time = \"{time}\"\n\
              start_date = {date:?}\n"
         ),
     );
@@ -353,8 +354,8 @@ fn roofed_cells_get_neither_sun_nor_sky() {
     let map = field(31, 21, &cells);
     let mut outside = outdoors(&map, "12:00");
     let mut cellar = world(&map, "dungeon", "12:00");
-    outside.apply(&Action::ToggleLantern);
-    cellar.apply(&Action::ToggleLantern);
+    outside.apply(&Action::UseTool);
+    cellar.apply(&Action::UseTool);
     let (view, dark) = (outside.perception(), cellar.perception());
     let porch = |p: Pos| (9..22).contains(&p.x) && (4..17).contains(&p.y);
     let lit = sunlit(&view);
@@ -399,9 +400,9 @@ fn sunlight_never_reaches_into_a_closed_hut() {
 .................
 ";
     let mut w = outdoors(hut, "12:00");
-    w.apply(&Action::ToggleLantern);
+    w.apply(&Action::UseTool);
     let mut cellar = world(hut, "dungeon", "12:00");
-    cellar.apply(&Action::ToggleLantern);
+    cellar.apply(&Action::UseTool);
     let (view, dark) = (w.perception(), cellar.perception());
     assert!(
         sun_source(&view).is_none(),

@@ -1,12 +1,17 @@
-# A hanging lantern, long cold.
-# Household goods (#483): what an animated household thing (data/animated/) is made of.
+# A lantern: an iron and brass lamp with a hood (spec §5 "Light sources"). Ready in the Tool slot
+# it gives the `lantern` light while lit; `u` (the use-tool command) turns it from unlit to lit,
+# lit to hooded (lights.toml's `lantern_hooded`: dim, half the reach, the carrier's own cell
+# dark), and back to unlit. Races without darkvision start with one (races.toml). Also the
+# household good an animated lantern is (data/animated/, #483).
 [[object]]
 id = "lantern"
 name = "lantern"
 glyph = "("
 fg = "#7a7d80"
-class = "household"
+class = "tools"
 materials = ["iron"]
 made_of = ["iron", "brass"]
-weight = 1200
+weight = 400
 value = 6
+slot = "tool"
+light = "lantern"

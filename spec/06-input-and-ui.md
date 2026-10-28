@@ -191,7 +191,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   stopping when something is found or interrupts, like a rest; §8 "Searching"; basic commands,
   not abilities), open/close door, kick (`k`, then a direction; §8 "Doors"),
   ascend/descend (ascend also leaves an outdoor area when no enemy is about, §7 "Leaving an
-  outdoor area"), light/douse lantern (`*`),
+  outdoor area"),
   pick up (`,` or `;`), drop (`d`), equipment (`i`), inventory (`I`), character (`@`), skills
   (`A`), weapon skills (`W`), quest log (`q`), talents (`G`, a key ADOM leaves free; #644), rest (`b`), consume (`e`, food; the command that was Eat), read (`r`; a basic
   command, not an ability), study (`L`, next to read; a basic command), look (`l`), shoot or throw what
@@ -200,7 +200,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   defensive combat stance (`+` / `-`; §8 "Stances"), the abilities menu (`a`, below) and the
   quick repeat of the ability used last (`X`), bash with a shield (an ability, below: no key by
   default; bound in Controls, it asks for a direction, like opening a door), next target
-  (`Tab`, while aiming), use a tool (`u`, then a direction: dig), chat (`C`), pay (`p`, in a
+  (`Tab`, while aiming), use a tool (`u`: a light ready in the Tool slot, a lantern, at once, unlit to lit to hooded and back, §5 "Light sources"; else a direction: dig), chat (`C`), pay (`p`, in a
   shop; §7 "Shops"), help, save and quit
   (unbound by default: the pause menu quits). Every way to quit (the
   pause menu's Save and quit to menu and Quit, the main menu's Quit, a bound quick key) asks
@@ -419,9 +419,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Quivering palm, and Knock in a direction, greyed out during their cooldowns (Rage while raging and
     exhausted); throwing one's voice (Class; #235,
     `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's (Throw
-    your voice, level 32: a talent with the `throw_voice` effect gives it); and hooding the lantern
-    (Items: the lantern; `hood`, nothing to aim, §5 "Light sources"), which the Hooded light
-    talent will give and everyone has until then; and what a place offers, last, under **Here**
+    your voice, level 32: a talent with the `throw_voice` effect gives it); and what a place offers, last, under **Here**
     (`Source::Place`): Pray (`Ability::Pray`, `pray`, nothing to aim), listed only while the
     player stands beside a forgotten altar not yet spent, and Drink (`Ability::Drink`, `drink`,
     nothing to aim), listed only while they stand beside a healing spring (`Ability::here`, §7
@@ -443,7 +441,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Keys**: an ability with an action of its own is also a rebindable key command (they
     stay, the owner, #644), listed at the very bottom of Controls under "Ability keys", unbound by
     default (the shield bash: "Bash with your shield", `bash`; picking a lock: "Pick a lock",
-    `pick_lock`; stealing: "Steal", `steal`; "Throw your voice"; "Hood your lantern"); bound, it uses the ability as the menu
+    `pick_lock`; stealing: "Steal", `steal`; "Throw your voice"); bound, it uses the ability as the menu
     does, and one that cannot be used now is applied at once so the rules say why, taking no
     time ("You have no shield to bash with."). New abilities register in the registry and get
     no default key.
@@ -595,7 +593,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Digging") asks in the message line `Dig in which direction? (Esc to cancel)`; a direction
   digs (replay text `dig:E`), any other command cancels. With no digging tool ready nothing is
   asked: the rules say so at once ("You have no digging tool ready."). Digging goes on turn
-  after turn like a rest and stops for the same reasons.
+  after turn like a rest and stops for the same reasons. With a light ready in the Tool slot (a
+  lantern; §5 "Light sources") `u` asks nothing: it turns the light to its next mode at once
+  (replay text `use_tool`).
 - **Messages**: the message line (two rows) shows this turn's messages, those logged since the
   player last acted, running on one after another and wrapped at word boundaries (a word longer
   than a row is split where the row ends); rows they leave free show earlier messages, one a row,
@@ -722,11 +722,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Weather"), the temperature where the player is, always (`4 °C`, or `39 °F` with the setting:
   whole degrees, rounded half away from zero; tinted a subtle cool blue below freezing and warm
   from 30 °C, the number saying it all; §5 "Temperature"), turn, position, light at the player,
-  vision profile, lantern (`Lantern out`, `Lantern lit`, `Lantern hooded`), seed). The phase glyph
+  vision profile, seed). A lantern's mode shows in its name in the item lists ("a lantern (lit)"). The phase glyph
   shows the lit part of the disc, lit on the right while waxing: `○` new, `☽` waxing crescent,
   `◑` first quarter and waxing gibbous, `●` full, `◐` waning gibbous and last quarter, `☾` waning
   crescent. When the window is narrow, segments give way in priority order — seed, position,
-  lantern, vision, light, turn, then the moon's phase (first cut down to its glyph), the
+  vision, light, turn, then the moon's phase (first cut down to its glyph), the
   temperature, region, date (first cut down to day and month, `12 Rainmoon`), weather, time,
   burden, hunger, the status effects (the least important first), the resources (the last
   first), mana, and hit points, the

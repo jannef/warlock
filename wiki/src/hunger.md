@@ -30,6 +30,11 @@ Some races need more food than others:
 
 {{#include generated/hunger-races.md}}
 
+The **Lean** talent makes your hunger come slower (see [Talents](talents.md)), and so does magic
+that sustains you: its percent comes off how fast your stomach empties, on top of the race's
+and the talent's (see [Magic items](magic-items.md)). However much you wear, you still hunger a
+little.
+
 Fighting burns a little more: each blow, shot, or throw costs a few points (see the facts
 above).
 

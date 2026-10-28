@@ -3,4 +3,4 @@ description = "Traps to try and traps to watch: a row of known traps, creatures 
 start_level = "trap_hall"
 seed = 1
 character = { race = "human", gender = "male", class = "warrior", name = "Garrick" }
-lantern = "lantern"
+wield = ["lantern"]

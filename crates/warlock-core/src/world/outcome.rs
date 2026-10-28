@@ -1,7 +1,7 @@
 //! Outcomes in play (spec §7 "Special rooms"; the tables are `content/outcome.rs`): drawing one
 //! from a table, leaned by a place's side, and applying it to the player. Each field of an
 //! [`OutcomeEffect`] is one hook into a system that already exists (healing, statuses, hunger,
-//! loot, traps, identification, harm, the lantern, spawning, diseases, stat damage, experience,
+//! loot, traps, identification, harm, the player's light, spawning, diseases, stat damage, experience,
 //! the teleport trap's move, the burst spell code, terrain), applied in the order the struct
 //! lists them. Every draw is from the gameplay stream. The prayer that uses them is `pray.rs`,
 //! the drink at a spring `drink.rs`.
@@ -231,8 +231,7 @@ impl World {
             done = true;
         }
         if effect.snuff {
-            self.state.lantern_lit = false;
-            self.state.lantern_hooded = false;
+            self.snuff_light();
             done = true;
         }
         if let Some(summon) = effect.summon {

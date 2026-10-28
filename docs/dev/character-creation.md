@@ -115,10 +115,14 @@ kit)` is the full constructor; `kit` is true for a run whose character the playe
 `Game::new_run` (New run's character creation), the game and `warlock-cli` when `--character` or
 `--name` is given, and `Replay::start` when the replay says `kit`. Everything else
 (`World::new`, `with_character`, `with_character_named`, `--scenario` alone, tests, golden
-walks, old replays) starts with the scenario's pack alone, as before kits. `WorldState::kit`
+walks, old replays) starts with the scenario's pack alone, as before kits: what the scenario
+readies (`ScenarioDef::wield`, `wield = ["lantern"]`, put in the first free slot each fits),
+then its `carry`. Every race without darkvision has a lantern ready in its kit
+(`{ wield = "lantern" }`: elf, half-elf, human, halfling, gnome, lizardfolk, ratfolk; #643);
+the halfling's apples gave way to it, so the weakest halfling paladin stays Unburdened. `WorldState::kit`
 (saved, hashed, left out while false, so other runs hash as before) records it, and
 `Replay::new` copies it into the replay. `kit::starting_pack(content, scenario, kit)` is the one
-place the starting pack is put together (the kit, if any, then `carry` on top): used by
+place the starting pack is put together (the kit, if any, else the scenario's `wield`, then `carry` on top): used by
 `World::start_run` and the summary (`ui/chargen_screen.rs::kit_words`, names from
 `Pack::names`). `rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing,
 refusals), `kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministic choices, no

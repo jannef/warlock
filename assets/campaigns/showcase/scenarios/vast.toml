@@ -3,4 +3,4 @@ description = "The 420x300 cavern level: scrolling camera, river, rooms, peacefu
 start_level = "vast"
 seed = 1
 character = { race = "human", gender = "male", class = "warrior", name = "Roderick" }
-lantern = "lantern"
+wield = ["lantern"]

@@ -190,7 +190,7 @@ mod tests {
                     Some("Pip"),
                 )
                 .expect("world");
-                w.apply(&Action::ToggleLantern);
+                w.apply(&Action::UseTool);
                 while w.death().is_none() {
                     w.apply(&Action::Wait);
                 }

@@ -40,13 +40,11 @@ pub enum Action {
     Ascend,
     /// Take stairs down.
     Descend,
-    /// Light or douse the lantern the scenario gives the player. Takes a turn.
-    ToggleLantern,
-    /// Lower or raise the hood of the player's lantern (spec §5 "Light sources"): hooded, it
-    /// burns dim and hollow, lighting the cells around the player but not them. A lantern that
-    /// is out is lit with its hood lowered. Takes the time of `hood` (and of `lantern` when it
-    /// lights it); refused, no time, without a lantern with a hood.
-    HoodLantern,
+    /// Use the tool ready in the Tool slot without a direction (`u`; spec §5 "Light sources"):
+    /// a light there (a lantern) turns from unlit to lit, lit to hooded, and hooded to unlit
+    /// (`world/lamp.rs`). Takes the time of `light` (lowering a hood: `hood`); refused, no time,
+    /// without a light ready. A digging tool is used toward a direction: [`Action::Dig`].
+    UseTool,
     /// Pick up the stacks at these positions in the pile on the player's cell (0 is the top of
     /// the pile), or everything there with none. Takes a turn (its cost: `pick_up`).
     PickUp(Positions),
@@ -695,7 +693,7 @@ pub struct Outcome {
     pub events: Vec<Event>,
 }
 
-/// Text syntax for scripting: `move:E wait open:E close:W kick:N pick:E ascend descend lantern hood
+/// Text syntax for scripting: `move:E wait open:E close:W kick:N pick:E ascend descend use_tool
 /// rest:1h rest:dawn rest:dusk pickup pickup:ac drop:b sell:b pay pay:W equip:body:b remove:body
 /// bash:E fire:12,5 throw:c:12,5 dig:E search search:10 disarm:E eat:b eat:floor:a read:b
 /// read:b:12,5 read:b:c
@@ -714,8 +712,8 @@ pub struct Outcome {
 /// there; `eat:LETTER` eats one of inventory stack LETTER, `eat:floor:LETTER` one of the stack
 /// LETTER of the pile underfoot; `read:LETTER:X,Y` reads inventory stack LETTER (a scroll) at
 /// the level cell (X, Y), `read:LETTER:LETTER` on the second inventory stack; `chat:DIR` talks to the creature that way, `ask:DIR:TOPIC` asks
-/// it about a topic by id, `steal:DIR` tries to steal from it; `hood` lowers or raises the
-/// lantern's hood; `throw_voice:X,Y` throws
+/// it about a topic by id, `steal:DIR` tries to steal from it; `use_tool` uses the light ready
+/// in the Tool slot (a lantern: unlit, lit, hooded, unlit again); `throw_voice:X,Y` throws
 /// the player's voice to the level cell (X, Y); weather: `clear`, `overcast`, `rain`, `heavy`; `effect:ID@X,Y[>X,Y]`
 /// shows a spell effect at a cell, or from one cell toward another; the dev bursts
 /// `freeze:X,Y,R` and `thaw:X,Y,R` freeze the water and melt the ice within radius R, 0 to
@@ -734,8 +732,7 @@ impl fmt::Display for Action {
             Action::PickLock(d) => write!(f, "pick:{d}"),
             Action::Ascend => f.write_str("ascend"),
             Action::Descend => f.write_str("descend"),
-            Action::ToggleLantern => f.write_str("lantern"),
-            Action::HoodLantern => f.write_str("hood"),
+            Action::UseTool => f.write_str("use_tool"),
             Action::PickUp(l) if l.is_empty() => f.write_str("pickup"),
             Action::PickUp(l) => write!(f, "pickup:{l}"),
             Action::Drop(l) if l.is_empty() => f.write_str("drop"),
@@ -950,8 +947,7 @@ impl FromStr for Action {
             }
             "ascend" => bare(Action::Ascend),
             "descend" => bare(Action::Descend),
-            "lantern" => bare(Action::ToggleLantern),
-            "hood" => bare(Action::HoodLantern),
+            "use_tool" => bare(Action::UseTool),
             "pay" => match arg {
                 None => Ok(Action::Pay(None)),
                 Some(_) => dir().map(|d| Action::Pay(Some(d))),
@@ -1212,7 +1208,7 @@ impl FromStr for Action {
             }
             _ => Err(format!(
                 "unknown action `{s}` (expected move:DIR, wait, open:DIR, close:DIR, kick:DIR, \
-                 pick:DIR, ascend, descend, lantern, hood, rest:1h|dawn|dusk, pickup[:LETTERS], \
+                 pick:DIR, ascend, descend, use_tool, rest:1h|dawn|dusk, pickup[:LETTERS], \
                  drop[:LETTERS], \
                  sell[:LETTERS], pay[:DIR], equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, \
                  throw:LETTER:X,Y, dig:DIR, eat:LETTER, eat:floor:LETTER, \
@@ -1297,8 +1293,7 @@ mod tests {
             Action::Wait,
             Action::Ascend,
             Action::Descend,
-            Action::ToggleLantern,
-            Action::HoodLantern,
+            Action::UseTool,
             Action::ThrowVoice(Pos::new(12, 5)),
             Action::ThrowVoice(Pos::new(0, 40)),
             Action::SetStance(CombatStance::Aggressive),
@@ -1527,23 +1522,23 @@ mod tests {
         assert!(parse_actions("move:N*x").is_err());
         assert!(parse_actions("wait*").is_err());
         assert_eq!(
-            parse_actions("LANTERN vision:uv_sight"),
-            Ok(vec![
-                Action::ToggleLantern,
-                Action::SetVision("uv_sight".into())
-            ])
+            parse_actions("USE_TOOL vision:uv_sight"),
+            Ok(vec![Action::UseTool, Action::SetVision("uv_sight".into())])
         );
         assert!(parse_actions("vision").is_err());
         assert!(parse_actions("vision:").is_err());
-        assert!(parse_actions("lantern:E").is_err());
+        assert!(parse_actions("use_tool:E").is_err());
         assert_eq!(
-            parse_actions("HOOD throw_voice:3,-4"),
-            Ok(vec![
-                Action::HoodLantern,
-                Action::ThrowVoice(Pos::new(3, -4))
-            ])
+            parse_actions("throw_voice:3,-4"),
+            Ok(vec![Action::ThrowVoice(Pos::new(3, -4))])
         );
-        for bad in ["hood:E", "throw_voice", "throw_voice:E", "throw_voice:3"] {
+        for bad in [
+            "lantern",
+            "hood",
+            "throw_voice",
+            "throw_voice:E",
+            "throw_voice:3",
+        ] {
             assert!(parse_actions(bad).is_err(), "{bad}");
         }
         assert_eq!(

@@ -145,9 +145,17 @@ pub fn kits_of<'c>(content: &'c Content, character: &Character) -> Vec<&'c Kit> 
 }
 
 /// What a run of `scenario` starts the player with: the character's `kit`, if they start with
-/// it, then the scenario's `carry` on top (stackable things joining the kit's).
+/// it, else what the scenario's own character has ready (its `wield`: the lantern), then the
+/// scenario's `carry` on top (stackable things joining the kit's).
 pub fn starting_pack(content: &Content, scenario: &ScenarioDef, kit: Option<&Pack>) -> Pack {
-    let mut pack = kit.cloned().unwrap_or_default();
+    let mut pack = kit.cloned().unwrap_or_else(|| {
+        let mut ready = Pack::default();
+        for stack in &scenario.wield {
+            let item = ready.put(stack.clone(), content);
+            ready.equip(item, content);
+        }
+        ready
+    });
     for stack in &scenario.carry {
         pack.put(stack.clone(), content);
     }
@@ -503,17 +511,22 @@ mod tests {
             assert_eq!(stack.died, food.then_some(date), "{stack:?}");
         }
         // Nobody chose the scenario's own character: the scenario's pack alone, as tests and
-        // golden walks start. So does a chosen one without the kit (`with_character`).
+        // golden walks start, the lantern of its `wield` ready first. So does a chosen one
+        // without the kit (`with_character`).
         let packed = World::new(content.clone(), "packed", None).expect("world");
         let chosen = World::with_character(content, "packed", None, Some(&ranger)).expect("world");
         for world in [&packed, &chosen] {
             let player = world.state().player();
             assert!(!world.started_with_kit());
-            assert_eq!(player.inventory.len(), 2, "{:?}", player.inventory);
-            assert!(player.equipment.is_empty());
+            assert_eq!(player.inventory.len(), 3, "{:?}", player.inventory);
+            assert_eq!(player.inventory[0].object, id("lantern"));
+            assert_eq!(player.ready_light(&CONTENT), Some(0));
         }
         let showcase = World::new(CONTENT.clone(), "showcase", None).expect("showcase");
-        assert!(showcase.state().player().inventory.is_empty());
+        assert_eq!(
+            showcase.state().player().inventory,
+            [Stack::one(id("lantern"))]
+        );
         // A chosen character in the showcase starts with the kit: there is no pack on top.
         let thief: CharacterSpec = "human,female,thief".parse().expect("a character");
         let kitted = World::start_run(CONTENT.clone(), "showcase", None, Some(&thief), None, true)
@@ -531,8 +544,8 @@ mod tests {
     fn genders_and_birth_signs_may_give_more() {
         let mut files = ContentFiles::builtin();
         let races = include_str!("../../../assets/data/races.toml").replace(
-            "kit = [\"bread\"]",
-            "kit = [\"bread\", { carry = \"candle\", gender = \"female\" }]",
+            "kit = [{ wield = \"lantern\" }, \"bread\"]",
+            "kit = [{ wield = \"lantern\" }, \"bread\", { carry = \"candle\", gender = \"female\" }]",
         );
         files.insert("data/races.toml", &races);
         let signs = include_str!("../../../assets/data/horoscope.toml").replace(
@@ -590,6 +603,11 @@ mod tests {
         };
         assert!(!plain.to_json().contains("\"kit\""));
         let start = plain.start(CONTENT.clone()).expect("starts");
-        assert!(start.state().player().inventory.is_empty());
+        let lantern = (start.state().player().inventory.iter()).map(|s| s.object);
+        assert_eq!(
+            lantern.collect::<Vec<_>>(),
+            [id("lantern")],
+            "the world's `wield`"
+        );
     }
 }

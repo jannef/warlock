@@ -8,24 +8,24 @@ expression: "render(case, content.clone())"
 
 
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
-                    │   a  Hound's bay        you are hoarse                   │
+                    │   a  Hound's bay     you are hoarse                      │
                     │ Class                                                    │
                     │ > b  Veteran's wind                                      │
                     │ Skills                                                   │
-                    │   c  Intimidate         not usable yet                   │
+                    │   c  Intimidate      not usable yet                      │
                     │ Weapon skills                                            │
-                    │   d  Shield bash        in a direction                   │
-                    │ Items                                                    │
-                    │   e  Hood your lantern                                   │
+                    │   d  Shield bash     in a direction                      │
                     │                                                          │
                     │ An old soldier's second breath (an ability): hit points  │
                     │ back at once, then winded a quarter hour.                │
                     │                                                          │
-                    │ a-e or Enter use   Esc close                             │
+                    │ a-d or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

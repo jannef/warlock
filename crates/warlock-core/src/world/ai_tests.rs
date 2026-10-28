@@ -978,6 +978,7 @@ fn dark_world(level: &str) -> World {
         "data/lights.toml",
         "[[light]]\nid = \"lantern\"\ncolor = [250, 215, 160, 0]\nradius = 5\n",
     );
+    super::lamp_tests::with_lantern(&mut files);
     files.insert(
         "data/vision.toml",
         "[[vision]]\nid = \"normal\"\nname = \"Normal\"\nthreshold = 40\n\
@@ -986,7 +987,7 @@ fn dark_world(level: &str) -> World {
     files.insert("levels/dark.toml", level);
     files.insert(
         "scenarios/dark.toml",
-        "name = \"Dark\"\nstart_level = \"dark\"\nlantern = \"lantern\"\nhp = 500\n",
+        "name = \"Dark\"\nstart_level = \"dark\"\nwield = [\"lantern\"]\nhp = 500\n",
     );
     let content = Arc::new(Content::load(&files).expect("content"));
     World::new(content, "dark", None).expect("world")
@@ -1001,12 +1002,12 @@ fn creatures_see_by_light_and_search_where_they_last_saw_you() {
     assert_eq!(pos(&w, rat), Pos::new(1, 2));
     assert!(w.state().actors[&rat].mind.is_calm());
     // Lit, the player is seen nine cells away: it comes.
-    w.apply(&Action::ToggleLantern);
+    w.apply(&Action::UseTool);
     assert_eq!(w.state().actors[&rat].mind.last_seen, Some(Pos::new(10, 2)));
     assert_eq!(pos(&w, rat), Pos::new(2, 2));
     // Doused, and a step aside in the dark: it heads for where it saw the player, does not see
     // them there, and goes back.
-    run(&mut w, "lantern move:N");
+    run(&mut w, "use_tool move:N");
     let mut path = Vec::new();
     for _ in 0..18 {
         let out = w.apply(&Action::Wait);
@@ -1054,7 +1055,7 @@ fn creature_sight_matches_the_players_under_the_sun_and_the_moon() {
     for (scenario, actions) in [
         ("courtyard", "wait"),
         ("courtyard", "skip:5h wait"),
-        ("courtyard", "skip:14h wait lantern"),
+        ("courtyard", "skip:14h wait use_tool"),
         // The night of the full moon: moonlight and moon shadows.
         ("courtyard", "move:E*20 skip:113h skip:28m wait"),
         ("forest", "skip:113h skip:30m wait"),

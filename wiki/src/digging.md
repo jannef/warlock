@@ -17,7 +17,13 @@ walk on (a little slowly) and see across.
 Digging takes a lot of effort. Each turn of digging is a normal action (6 seconds at a normal
 pace), and it takes many of them: the harder the wall, the longer. A better tool and more
 [Strength](stats.md) get through faster, and a heavy load slows you, as it slows everything you
-do ([Burden](burden.md)).
+do ([Burden](burden.md)). The **Tunneler** talent does half again as much a turn (see
+[Talents](talents.md)), and magic that digs faster (on a pick-axe, gloves, or body armour) adds
+its percent of work a turn on top (see [Magic items](magic-items.md)).
+
+A pick-axe can itself be magic: it turns up among the loot of the deeper places (from item level
+3, rarely) and in shops. Its description gives its digging power ("Digs at 10"; a mattock digs
+at 15). The pick-axes you start with, find laid out in a level, or take from a dwarf are plain.
 
 At average Strength (10), at a normal pace:
 

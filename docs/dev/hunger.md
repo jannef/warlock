@@ -13,7 +13,8 @@ only, with `burn`/`starve`/`feed`), data `data/hunger.toml` (`content/hunger.rs`
 what eating rotten food of any kind does, `vomit` and `harm`), optional `corpses` (material,
 `Food` per size);
 `Content::hunger()`; without the file nobody hungers, food does not rot, and there are no
-corpses), races' `hunger` percent, objects' `food = { nutrition, turns, keeps, lasts }` (`Food`;
+corpses), races' `hunger` percent (`World::hunger_percent`: then the talents' signed
+`hunger_percent` (Lean) less the worn `hunger` affix effect, at least 1), objects' `food = { nutrition, turns, keeps, lasts }` (`Food`;
 the shelf life is whole hours or days, `"8h"`, `"30d"`) and `cures` (a remedy: the means it applies with
 `World::cure` as it is eaten, `World::remedy`, checked against the statuses' and diseases'
 `cured_by` at load; the angelica root cures diseases), creatures' `corpse` (default true) and `on_eat`

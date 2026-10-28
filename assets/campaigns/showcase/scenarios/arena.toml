@@ -3,4 +3,4 @@ description = "The place to fight: a kobold war band and a pack of giant rats fi
 start_level = "arena"
 seed = 1
 character = { race = "halfling", gender = "male", class = "thief", name = "Pip" }
-lantern = "lantern"
+wield = ["lantern"]

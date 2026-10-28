@@ -19,7 +19,7 @@
 //! message that stops a rest, the rest are only logged.
 
 use super::{ActorId, Cause, Death, World};
-use crate::content::ActionKind;
+use crate::content::{ActionKind, Effect};
 use crate::hunger::Hunger;
 use crate::talent::TalentMods;
 use crate::time::GameTime;
@@ -31,12 +31,11 @@ impl World {
         let race = (self.state.character.as_ref())
             .and_then(|c| c.spec.race(&self.content).ok())
             .map_or(100, |r| r.hunger);
-        // Then their talents (Lean): a signed percent of that pace, at least 1.
-        let percent = self
-            .state
-            .player()
-            .talent_mods(&self.content)
-            .hunger_percent;
+        // Then their talents (Lean) and what they wear (of Sustenance: hunger comes slower): a
+        // signed percent of that pace, at least 1.
+        let player = self.state.player();
+        let percent = player.talent_mods(&self.content).hunger_percent
+            - player.mods(&self.content).get(Effect::Hunger);
         let pace = TalentMods::scaled(u64::from(race), percent);
         u16::try_from(pace).unwrap_or(u16::MAX).max(1)
     }

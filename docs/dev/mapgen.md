@@ -25,7 +25,8 @@ branch with a danger the initial population follows (`mapgen/population.rs`, str
 `population/<level id>`; `docs/dev/creatures.md`: its own folk, now and then a stray from every
 hostile type of the campaign, populations or none, unless the branch's `stray_pool` says
 `"populations"`), then the floor's chests (`mapgen/chest.rs`, stream `chests/<level id>`, one
-floor in five by default; `docs/dev/chests.md`), then every creature's gear (`gear::arm`,
+floor in five by default; `docs/dev/chests.md`), then its treasure rooms' chests, gold, and
+gems (`mapgen/treasury.rs`, stream `treasure/<level id>`; `docs/dev/special-rooms.md`), then every creature's gear (`gear::arm`,
 stream `gear/<level id>`). Outside generation, a rolled quest draws its target from the keyed
 stream `quest/<quest id>` (`Rng::quest`), once, as it is given, never kept (#422,
 `docs/dev/quests.md`).
