@@ -75,6 +75,9 @@ pub const MAX_PICK_BONUS: i32 = 20;
 pub const MAX_FORAGE_BONUS: i32 = 30;
 /// The most a skill adds to tempering an item at an anvil (spec §7 "Special rooms": the forge).
 pub const MAX_TEMPER_BONUS: i32 = 20;
+/// The most a skill adds to resisting a creature's ability (spec §8 "Skills": Knowledge): kept
+/// small, know your enemy.
+pub const MAX_RESIST_BONUS: i32 = 6;
 
 /// Index of a skill in [`Content::skills`]: in file order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -160,6 +163,10 @@ pub enum Effect {
     /// [`crate::world::Actor::speed`]): its speed, added to its talents' percent, the two
     /// together at most [`crate::content::MAX_SPEED`].
     Speed,
+    /// Points added to the player's check resisting a creature's ability (spec §8 "Skills":
+    /// Knowledge; `world/knowledge.rs`): read at how far the skill's value stands **above the
+    /// creature's level**, not at the value itself ([`Skills::effect_above`]).
+    Resist,
 }
 
 impl Effect {
@@ -179,6 +186,7 @@ impl Effect {
             Effect::Temper => MAX_TEMPER_BONUS,
             Effect::SearchReach => MAX_SEARCH_REACH,
             Effect::Speed => crate::content::MAX_SPEED,
+            Effect::Resist => MAX_RESIST_BONUS,
         }
     }
 }
@@ -219,6 +227,12 @@ pub enum Use {
     /// An item worked at a forge's anvil to the end (spec §7 "Special rooms"), whatever comes of
     /// it.
     Temper,
+    /// Discovery experience gained (spec §8 "Experience": a first kill of a kind, an arrival
+    /// that pays).
+    Discover,
+    /// A check rolled to resist a creature's ability (spec §8 "Skills": Knowledge), whatever
+    /// comes of it.
+    Resist,
 }
 
 impl Use {
@@ -240,6 +254,8 @@ impl Use {
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
+            Use::Discover => "gaining discovery experience (a first kill of a kind, a new place)",
+            Use::Resist => "resisting a creature's ability (a drain, a disease, a hold)",
         }
     }
 }
@@ -348,6 +364,8 @@ impl Use {
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Temper => "temper",
+            Use::Discover => "discover",
+            Use::Resist => "resist",
         }
     }
 }
@@ -374,6 +392,7 @@ impl Effect {
             Effect::Pick => "pick",
             Effect::Temper => "temper",
             Effect::Speed => "speed",
+            Effect::Resist => "resist",
         }
     }
 }
@@ -628,14 +647,7 @@ impl Skills {
     /// What the trained skills give of `effect`, added up: each trained skill's benefits of
     /// that effect at its value ([`Benefit::at`]). Untrained skills give nothing.
     pub fn effect(&self, content: &Content, effect: Effect) -> i32 {
-        self.iter()
-            .map(|(id, t)| {
-                (content.skill(id).benefits.iter())
-                    .filter(|b| b.effect == effect)
-                    .map(|b| b.at(t.value))
-                    .sum::<i32>()
-            })
-            .sum()
+        self.effect_above(content, effect, &[], 0)
     }
 
     /// Whether a skill with a benefit of `effect` is trained, whatever it gives at its value
@@ -651,8 +663,30 @@ impl Skills {
     /// its value were that much higher, and so does an untrained one, from 0. Values stay
     /// within 0 to [`MAX_VALUE`].
     pub fn effect_with(&self, content: &Content, effect: Effect, bonus: &[(SkillId, i32)]) -> i32 {
+        self.effect_above(content, effect, bonus, 0)
+    }
+
+    /// What its skills give of `effect`, as [`Skills::effect_with`], each read at how far its
+    /// value (with `bonus`) stands above `floor`, nothing at or below it (Knowledge's resist
+    /// against a creature of level `floor`, [`Effect::Resist`]; `floor` 0 reads the values
+    /// themselves).
+    pub fn effect_above(
+        &self,
+        content: &Content,
+        effect: Effect,
+        bonus: &[(SkillId, i32)],
+        floor: u16,
+    ) -> i32 {
         if bonus.is_empty() {
-            return self.effect(content, effect);
+            return self
+                .iter()
+                .map(|(id, t)| {
+                    (content.skill(id).benefits.iter())
+                        .filter(|b| b.effect == effect)
+                        .map(|b| b.at(t.value.saturating_sub(floor)))
+                        .sum::<i32>()
+                })
+                .sum();
         }
         let mut ids: Vec<SkillId> = self.0.keys().copied().collect();
         ids.extend(bonus.iter().map(|&(id, _)| id));
@@ -668,7 +702,7 @@ impl Skills {
                 let value = (base + more).clamp(0, i32::from(MAX_VALUE)) as u16;
                 (content.skill(id).benefits.iter())
                     .filter(|b| b.effect == effect)
-                    .map(|b| b.at(value))
+                    .map(|b| b.at(value.saturating_sub(floor)))
                     .sum::<i32>()
             })
             .sum()

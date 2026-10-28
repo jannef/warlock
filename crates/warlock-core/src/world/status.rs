@@ -206,7 +206,7 @@ impl World {
                 Affliction::Disease(disease) => {
                     self.expose(target, disease, Some(attacker));
                 }
-                Affliction::Drain(drain) => self.drain(target, drain, events),
+                Affliction::Drain(drain) => self.drain(target, drain, Some(attacker), events),
             }
         }
     }

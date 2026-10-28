@@ -138,6 +138,7 @@ mod hurl;
 mod ice;
 mod incorporeal;
 mod knock;
+mod knowledge;
 mod lamp;
 mod learn;
 mod level;
@@ -1491,6 +1492,8 @@ mod identify_spell_tests;
 mod incorporeal_tests;
 #[cfg(test)]
 mod ki_tests;
+#[cfg(test)]
+mod knowledge_tests;
 #[cfg(test)]
 mod lamp_tests;
 #[cfg(test)]

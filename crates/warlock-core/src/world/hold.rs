@@ -13,7 +13,8 @@
 //!   `afflict:held`) has no holder to lose: only its turns and a struggle end it.
 //! - **Struggling** ([`World::struggle`]): the held player's step (not an attack: those go
 //!   ahead) is an attempt to break free, a check of the hold's `check` stat (Strength: the
-//!   effective modifier and what talents add to its checks) against the holder's grip, its
+//!   effective modifier, what talents add to its checks, and what Knowledge gives against the
+//!   holder, `knowledge.rs`) against the holder's grip, its
 //!   attack's `difficulty` (its `on_hit` entry), else the hold's own. Made, the hold ends and the
 //!   step goes ahead; failed, the turn is spent, a step's price ("You struggle, but the ghast
 //!   holds you fast."). Two draws of the gameplay stream. Creatures never struggle: one held
@@ -109,6 +110,8 @@ impl World {
         let talents = me.talent_mods(&content);
         let modifier = (me.effective_stats(&content).modifier(hold.check))
             .saturating_add(talents.check(hold.check));
+        // Know your enemy (Knowledge, `knowledge.rs`): the holder's.
+        let modifier = modifier.saturating_add(self.resisting(player, effect.by));
         if check(&mut self.state.rng, modifier, difficulty) {
             self.player_mut().effects.remove(status);
             self.say(match &name {
