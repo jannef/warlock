@@ -1,9 +1,10 @@
 //! Second wind (spec §8 "Talents"), the Vigour tree's active talent: from the abilities menu
-//! ([`crate::ability::Ability::SecondWind`]), [`Action::SecondWind`] gives the player hit points
-//! back at once (one per character level, at least the talent's floor) for the time of a `wait`,
-//! then its cooldown status (Winded), while which it cannot be used again. Nothing is drawn.
+//! ([`crate::ability::Ability::SecondWind`]), [`Action::UseTalent`] (`use:second_wind`) gives
+//! the player hit points back at once (one per character level, at least the talent's floor)
+//! for the time of a `wait`, then its cooldown status (Winded), while which it cannot be used
+//! again. Nothing is drawn.
 //!
-//! [`Action::SecondWind`]: crate::action::Action::SecondWind
+//! [`Action::UseTalent`]: crate::action::Action::UseTalent
 
 use super::{Spent, World};
 use crate::action::Event;

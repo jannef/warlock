@@ -242,7 +242,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the mana at the pick and as each later level comes, as Hardy's hit points, past `mana_level`
     too), Clear mind (`mana_regen_percent` +25), Meditation (`mana_resting_percent` +50, on
     resting's pace), Frugal caster (`mana_cost_percent` −20), and Blood magic (`blood_magic`, an
-    active in the abilities menu, `blood_magic` in replays: 5 hit points for 3 mana, up to the
+    active in the abilities menu, `use:blood_magic` in replays: 5 hit points for 3 mana, up to the
     maximum, for the time of a wait; refused, no time, with 5 hit points or fewer ("You have too
     little blood left to give.") or full mana ("Your mana is already full."); not a blow: no
     Protection, no pain, no training, never a death).
