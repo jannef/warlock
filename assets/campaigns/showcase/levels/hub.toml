@@ -275,7 +275,7 @@ objects = ["bread*2"]
 
 [[pile]]
 at = [28, 15]
-objects = ["potion_of_healing*2", "potion_of_mana", "scroll_of_light"]
+objects = ["potion_of_healing*2", "potion_of_mana", "scroll_of_light", "elixir_of_might"]
 
 # In the dark of the darkness chamber.
 [[pile]]

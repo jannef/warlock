@@ -214,9 +214,18 @@ otherwise = "Something looks you over, and finds nothing more to give."
 kind = "boon"
 tier = "great"
 id = "relic"
-weight = 2
+weight = 1
 effect = { loot = 10, rarity = "rare" }
 message = "Something gleams at the foot of the altar."
+
+# An elixir (spec §8 "Potions"): one of the six, a stat for good.
+[[outcome]]
+kind = "boon"
+tier = "great"
+id = "elixir"
+weight = 1
+effect = { objects = [{ object = "elixir_of_might", count = "1", weight = 1 }, { object = "elixir_of_grace", count = "1", weight = 1 }, { object = "elixir_of_vigour", count = "1", weight = 1 }, { object = "elixir_of_wit", count = "1", weight = 1 }, { object = "elixir_of_will", count = "1", weight = 1 }, { object = "elixir_of_presence", count = "1", weight = 1 }] }
+message = "A flask stands at the foot of the altar."
 
 # Banes: minor 60, moderate 34 with the explosion, great 6.
 

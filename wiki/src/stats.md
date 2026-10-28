@@ -64,6 +64,9 @@ to the score):
 
 {{#include generated/potentials.md}}
 
+Besides training past it, only an **elixir** raises a potential: it raises its stat by 1 and
+the potential by 1 or 2 more (see [Potions](potions.md#elixirs)).
+
 ### What changes them
 
 Stats do not change how far you see or how quietly you walk. Strong poison lowers your Strength

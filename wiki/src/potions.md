@@ -27,6 +27,7 @@ several effects mixes their hues.
 | Cures (poison, disease) | green |
 | Healing and cures together | russet, red mixed with green |
 | Mana | blue |
+| Elixirs (a stat for good) | gold |
 | Harm | brown |
 
 So a red potion heals and a green one cures something, but two potions of one family may share
@@ -37,6 +38,23 @@ by reading the scroll of identify on it, by an appraisal (see [Services](npcs.md
 because it was in your starting kit. Drinking an unknown potion is a gamble: the murky draught
 makes you sick. A shop's price for an unknown potion is its true price.
 
+## Elixirs
+
+An **elixir** is the rarest of potions: it raises one stat by 1 for good, as a stat trained up
+does, and its **potential** (the ceiling training works toward, see [Stats](stats.md)) by 1 or
+2 more at random, an even chance of each. Where your score was already at its potential, the
+potential rises with the score first, so after an elixir there is always room for at least one
+more point of training, and half the time two. Your hit points follow a Toughness elixir at
+once, your mana an Intelligence or Willpower one, your carrying limits a Strength one. "You feel
+stronger." says the score rose; "You feel stronger, and that you could be stronger yet." says
+the potential rose by 2. Each elixir also gives 20 training marks of its stat.
+
+There are six, one a stat: the elixirs of **might** (Strength), **grace** (Dexterity),
+**vigour** (Toughness), **wit** (Intelligence), **will** (Willpower), and **presence**
+(Presence), all gold. They lie only deep (item level 8 and below) and seldom, a forgotten
+altar's great boon may leave one, and an alchemist very rarely has one at 2000 gold; a general
+store or a provisioner never does.
+
 ## Where to find them
 
 Potions lie about as loot, the commoner ones (healing, antidote) more often and from the first
@@ -46,6 +64,7 @@ an **alchemist** sells potions only, always potions of healing first, and buys t
 
 ## Talents
 
-- **Thrifty drinker** (Delver): one potion in four is not used up.
+- **Thrifty drinker** (Delver): one potion in four is not used up, an elixir too.
+- **Quick study of the body** (Scholar): a potion's or an elixir's training marks are doubled.
 - **Nose for draughts** (Scholar): an unknown potion you pick up tells you its family by its
   smell, never its kind: "The fizzy red potion smells of honey and iron: healing of some kind."

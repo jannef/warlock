@@ -1,0 +1,22 @@
+# An elixir of might (spec §8 "Potions"): strength +1 for good, its potential +1d2. Elixirs are gold.
+[[object]]
+id = "elixir_of_might"
+name = "elixir of might"
+plural = "elixirs of might"
+glyph = "!"
+fg = "#e8c860"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 2000
+stackable = true
+level = 8
+frequency = 2
+
+[object.drink]
+kind = "elixir"
+stat = "strength"
+points = 1
+potential = "1d2"
+colour = "gold"
+marks = { strength = 20 }

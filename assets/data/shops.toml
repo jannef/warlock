@@ -40,6 +40,9 @@
 #             lies in a general store more often than one of a high tier)
 #   always    objects a generated shop always lays out first, a stack of each (at most `items`'
 #             least): the general store always has scrolls of identify (spec §8 "Scrolls")
+#   never     objects a generated shop never lays out, though it stocks their class: elixirs
+#             (spec §8 "Potions") are never in a general store or a provisioner's, only, rarely,
+#             in an alchemist's
 #   buys      the classes it buys from you
 #   items     [least, most]: how many stacks of goods a generated shop lays out
 #   markup    its prices, in percent of the value (100 to 1000)
@@ -73,6 +76,10 @@ stock = [
     "rods",
 ]
 always = ["scroll_of_identify"]
+never = [
+    "elixir_of_grace", "elixir_of_might", "elixir_of_presence", "elixir_of_vigour",
+    "elixir_of_will", "elixir_of_wit",
+]
 buys = [
     "melee_weapons", "missile_weapons", "missiles", "shields", "body_armour", "helmets",
     "cloaks", "gloves", "boots", "light_sources", "tools", "household", "food", "potions",
@@ -109,12 +116,17 @@ id = "provisioner"
 name = "provisioner"
 title = "{keeper}'s Provisions"
 stock = ["light_sources", "tools", "food", "potions"]
+never = [
+    "elixir_of_grace", "elixir_of_might", "elixir_of_presence", "elixir_of_vigour",
+    "elixir_of_will", "elixir_of_wit",
+]
 buys = ["light_sources", "tools", "food", "potions"]
 items = [6, 10]
 markup = 120
 pays = 30
 
-# The alchemist sells and buys potions only (spec §8 "Potions"), healing first.
+# The alchemist sells and buys potions only (spec §8 "Potions"), healing first; an elixir
+# (frequency 2 among the potions' hundreds) lies there very rarely.
 [[shop]]
 id = "alchemist"
 name = "alchemist"

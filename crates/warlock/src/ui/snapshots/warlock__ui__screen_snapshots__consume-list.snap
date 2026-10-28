@@ -11,16 +11,16 @@ expression: "render(case, content.clone())"
 
 
 
-
            ┌─ Consume what? ────────────────────────────────────────────────────────────┐
            │                                                                            │
            │ Food                                                                       │
            │ > a - % 2 loaves of bread                                           800 g  │
            │ Potions                                                                    │
-           │   b - ! 2 cloudy red potions (lying here)                           500 g  │
-           │   c - ! a milky blue potion (lying here)                            250 g  │
+           │   b - ! 2 syrupy red potions (lying here)                           500 g  │
+           │   c - ! an oily blue potion (lying here)                            250 g  │
+           │   d - ! a bubbling gold potion (lying here)                         250 g  │
            │                                                                            │
-           │ a-c or Enter consume   Esc cancel                                          │
+           │ a-d or Enter consume   Esc cancel                                          │
            └────────────────────────────────────────────────────────────────────────────┘
 
 
