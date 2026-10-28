@@ -167,12 +167,14 @@ mod tests {
         let world = showcase();
         let screen = SkillsScreen::new(Some(&world.perception()));
         let text = drawn(&screen, 80, 30).join("\n");
-        // The showcase's human thief: the class's skills, one of them raised by being human.
+        // The showcase's human thief: the class's skills, one of them raised by being human, and
+        // Listen, one the class may start with.
         for expected in [
             " Skills ",
             "> Appraise           11  ────",
             "  Disable device     16  ────",
             "  Escape artist       7  ────",
+            "  Listen              6  ────",
             "  Open lock          18  ────",
             "  Search              9  ────",
             "  Spot               10  ────",
@@ -186,7 +188,7 @@ mod tests {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
         // Untrained skills are not there; neither is a number but the values.
-        for hidden in ["Listen", "Athletics", "Swim", "marks", "%", "+"] {
+        for hidden in ["Bluff", "Athletics", "Swim", "marks", "%", "+"] {
             assert!(!text.contains(hidden), "{hidden:?} in\n{text}");
         }
     }
@@ -205,7 +207,7 @@ mod tests {
         let b = Bindings::default();
         let mut screen = SkillsScreen::new(Some(&world.perception()));
         assert_eq!(screen.handle(&Press::nav(Nav::Up), &b), ScreenAction::Stay);
-        assert_eq!(screen.selected, 8, "the list wraps");
+        assert_eq!(screen.selected, 9, "the list wraps");
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("> Tumble"), "{text}");
         assert!(text.contains("Rolling, diving, and twisting out of harm's way."));
@@ -239,7 +241,7 @@ mod tests {
         }
         // In a short console the list scrolls to keep the selection in view.
         let b = Bindings::default();
-        for _ in 0..8 {
+        for _ in 0..9 {
             screen.handle(&Press::nav(Nav::Down), &b);
         }
         let text = drawn(&screen, 60, 13).join("\n");

@@ -10,6 +10,7 @@ affinity = { restoration = 3, abjuration = 2, divination = 1, necromancy = -2 }
 experience = 115
 skills = { heal = "2d6+10", knowledge = "2d6+10", concentration = "2d4+4", decipher_script = "2d4+4" }
 known_for = ["heal", "knowledge"]
+optional_skills = { listen = { chance = 15, dice = "2d4" }, spellcraft = { chance = 25, dice = "2d4" } }
 rolls = 2
 weapon_skills = { maces = 2, shield_block = 1, spell_attack = 1 }
 styles = { sword_and_board = 1, toucher = 1 }

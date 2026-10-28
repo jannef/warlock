@@ -13,6 +13,7 @@ expression: "render(case, content.clone())"
     │ > Appraise           11  ────                                                           │
     │   Disable device     16  ────                                                           │
     │   Escape artist       7  ────                                                           │
+    │   Listen              6  ────                                                           │
     │   Open lock          18  ────                                                           │
     │   Search              9  ────                                                           │
     │   Spot               10  ────                                                           │
@@ -25,7 +26,6 @@ expression: "render(case, content.clone())"
     │                                                                                         │
     │ ↑↓ choose   A or Esc close                                                              │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
-
 
 
 

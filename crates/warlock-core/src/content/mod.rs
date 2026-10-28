@@ -156,7 +156,7 @@ pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 pub use chest::{ChestBand, ChestGold, ChestLoot, ChestRules};
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
-pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
+pub use class::{BonusTalents, CASTING, ClassActive, ClassDef, OPTIONAL_CHANCE, OptionalSkill};
 pub use creature::{
     Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal, NORMAL_SPEED,
     NaturalAttack, OnEat, SPEEDS, is_proper, the, the_start,

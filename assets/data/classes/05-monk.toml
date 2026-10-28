@@ -9,6 +9,7 @@ casting = 50
 experience = 120
 skills = { balance = "2d6+10", tumble = "2d6+10", athletics = "2d4+4", concentration = "2d4+4", escape_artist = "2d4+4", listen = "2d4+4" }
 known_for = ["balance", "tumble"]
+optional_skills = { heal = { chance = 25, dice = "2d4" }, stealth = { chance = 20, dice = "2d4" }, swim = { chance = 20, dice = "2d4" } }
 rolls = 2
 weapon_skills = { unarmed = 2, staves = 1 }
 style_choice = [{ brawler = 1 }, { staff_fighter = 1 }]
