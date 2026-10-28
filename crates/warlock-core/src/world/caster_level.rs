@@ -2,7 +2,8 @@
 //! player's is their level times their class's casting percent (`casting` in `data/classes/`;
 //! all of it without a class), a creature's its type's level; then what its talents (racial
 //! and birth-sign gifts are talents too) and what it wears and wields add (`caster_level`, a
-//! talent effect, flat or by character level, Arcane training's, and an affix effect), rounded
+//! talent effect, flat or by character level, Arcane training's, and an affix effect, which
+//! Attuned counts half again), rounded
 //! down, never below 0, and at least 1 for anyone with mana. It sets the learning check, the
 //! cost of overreach, and a spell's dice.
 
@@ -19,12 +20,13 @@ pub fn casting_percent(content: &Content, character: Option<&Character>) -> u8 {
 impl Actor {
     /// Its caster level at character `level` with `casting` percent (spec §8 "Spells"): `level`
     /// × `casting` ÷ 100 rounded down, plus its talents' (at `level`: Arcane training's grows
-    /// with it) and its magic items' `caster_level`;
+    /// with it) and its magic items' `caster_level` (half again with Attuned, rounded up);
     /// never below 0, and at least 1 while its maximum mana is above 0.
     pub fn caster_level(&self, content: &Content, level: u8, casting: u8) -> i32 {
         let base = i32::from(level) * i32::from(casting) / 100;
-        let talents = self.talent_mods(content).caster_level_at(level);
-        let items = self.mods(content).get(ItemEffect::CasterLevel);
+        let mods = self.talent_mods(content);
+        let talents = mods.caster_level_at(level);
+        let items = mods.attuned(self.mods(content).get(ItemEffect::CasterLevel));
         let level = (base + talents + items).max(0);
         if self.max_mana(content) > 0 {
             level.max(1)

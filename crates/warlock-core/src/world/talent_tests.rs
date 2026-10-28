@@ -211,8 +211,8 @@ fn several_levels_at_once_queue_their_picks_and_auto_spends_them_in_order() {
     assert_eq!(w.due(), None);
     assert_eq!(player(&w).talents.len(), 2);
     // Auto took the first talent of the first tree it may take: Vigour's, in file order,
-    // Clotting (this warrior's Toughness allows it).
-    assert_eq!(last(&w), "You learn Clotting.");
+    // Bellows (this warrior's Toughness allows it).
+    assert_eq!(last(&w), "You learn Bellows.");
 }
 
 #[test]

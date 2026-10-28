@@ -398,6 +398,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::WandLevel { value } => {
             format!("wands cast at caster level {}", signed(value))
         }
+        TalentEffect::AttunedPercent { value } => format!(
+            "the caster level your magic items give counts {value} % more (rounded up: +1 is +2, \
+             +3 is +5)"
+        ),
         TalentEffect::BloodMagic { hp, mana } => format!(
             "active (the time of a wait): give {hp} hit points (never your last) for {mana} \
              mana, up to your maximum; not while your mana is full"
@@ -940,6 +944,13 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 percent(value)
             )
         }
+        TalentEffect::GearedResourcePercent {
+            resource: id,
+            value,
+        } => format!(
+            "what your magic items add to maximum {} counts {value} % more (rounded up)",
+            resource_name(content, &id).to_lowercase()
+        ),
         TalentEffect::Unstoppable { statuses, cost } => {
             let names: Vec<String> = statuses.iter().map(|s| status(s)).collect();
             format!(
