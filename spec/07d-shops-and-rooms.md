@@ -222,9 +222,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     entering); a *collapsed floor* (3, #420; only
     on a level with another below it) has a floor of cracked stone that may give way under the
     player ("The floor ahead is cracked and sagging." when glimpsed, "The floor creaks under your
-    weight." on entering; below); a *treasure room* (5, #415; only on a level with a danger) is a
-    tempting hoard (below; "Something glitters ahead." when glimpsed, "Treasure lies here,
-    unguarded." on entering); a *cursed room* (6, #408; only on a level with a danger; unholy, as is the
+    weight." on entering; below); a *tempting hoard* (5, #415, mark `T`; only on a level with a
+    danger; named "treasure room" until #617) is a hoard that seals (below; "Something glitters
+    ahead." when glimpsed, "Treasure lies here, unguarded." on entering); a *treasure room* (4,
+    #617, mark `$`; only in a room of at least 9 floor cells) is hidden behind secret doors and
+    holds chests, gold, and gems (below; "Gold glints in the dust. No one has been here in a long
+    time." on entering, and on every arrival until then "Something tells you there is wealth
+    hidden on this level."); a *cursed room* (6, #408; only on a level with a danger; unholy, as is the
     draining room) raises the dead killed inside (below; "A cold draught smells of the grave."
     when glimpsed, "The air is cold and the dead are near." on entering) and covers a whole
     level with `level_chance` 5 ("The dead do not rest on this level."). Fennmynster favours it
@@ -324,7 +328,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is a level change like the stairs'. Light tread (§8 "Talents") never falls. It never
     covers a whole level.
   - **A tempting hoard** (`hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1
-    }`, #415; `mapgen/hoard.rs`, `world/hoard.rs`). A generated floor's treasure room gets
+    }`, #415; `mapgen/hoard.rs`, `world/hoard.rs`). A generated floor's tempting hoard gets
     `items` items (1 to 16), each rolled at the floor's item level + `loot_level` with the
     finder's luck and laid on a plain floor cell of the room drawn anew (no stairs, light, or
     trap), from the level's stream `swarm/<level id>` after its population; the floor's
@@ -344,6 +348,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
     whether it sealed are saved with the room (`SpecialRoom::lifted`, `sealed`; left out while
     nothing was lifted, so other rooms save and hash as before), and the `rooms` dev layer
     lists them (`, lifted 1, sealed`). Hoard-wise (§8 "Talents") lets one stack go first.
+    Never over a whole level.
+  - **A treasure room** (`secret_doors = "all"`, `treasure = { chests = "1d2", gold = { heaps =
+    "1d4+1", dice = "3d6", each = 2 }, gems = "1d3" }`, `arrive`, #617; `mapgen/treasury.rs`,
+    `world/treasury.rs`; docs/design/chests-and-treasure.md §6). On a rooms level it is a room
+    of the generator with a door, no staircase, nothing lying in it, and no locked door; on a
+    cave level a **box stamped into the rock** (its floor at least `min_cells`, one wider than
+    square: 4 × 3 for 9; a ring of rock that becomes wall; one closed door in the ring facing
+    cave floor), only where such a box fits; both drawn from the map stream with the other
+    special rooms, never where a patrol walks. Once the level is valid, **every door** of the
+    room (a doorway or an open door made a closed door first) becomes a secret door (§8
+    "Searching") of the branch's secret-door difficulty, not counted against the branch's
+    `secret_doors`; if the level would then be invalid (its stairs or a key reached only through
+    the room) the doors stay and the room is plain. The floor's population keeps out of it.
+    After the floor's chests, from the level's own stream `treasure/<level id>` (so the rest of
+    the level, its other chests too, is the same with or without one): `chests` chests of the
+    floor's item level, each laid as a floor's chest is (lock, trap, contents; §8 "Chests") on a
+    plain floor cell of the room that touches no door and leaves its floor joined; `gold.heaps`
+    heaps of `gold.dice` × `gold.each` coins of the shops' currency; `gems` loose gems rolled at
+    the floor's item level; each heap and gem on a plain floor cell drawn anew (no stairs,
+    light, trap, lock, or chest). A room too small for every chest holds what fits. Nothing
+    guards it and nothing seals. The **hint**: on every arrival on a level (and at the start of
+    a run), after the `pervade` line, each effect with an `arrive` line that has a room there
+    the player has not entered (nor stands in) says it, once however many such rooms; nothing
+    is stored (`SpecialRoom::entered` is the record), so it comes again on every return until
+    the room is entered. Treasure sense (§8 "Talents") ends it with the way to the nearest such
+    room's middle from where the player arrived, in eight winds ("..., to the north-east.").
     Never over a whole level.
   - **Shrines of a side** (`shrine = { regen = 200, status = "unwelcome", welcome, unwelcome
     }`, #413; `world/shrine.rs`, design §9.3): the room has a hidden side, drawn at generation

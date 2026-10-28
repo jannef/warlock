@@ -199,6 +199,27 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 h.items, h.loot_level, h.danger
             ));
         }
+        if e.secret_doors.is_some() {
+            does.push(
+                "Every door of it is a secret door, found by searching; in a cave it is a box \
+                 in the rock with one secret door. It is never counted among the level's own \
+                 secret doors."
+                    .into(),
+            );
+        }
+        if let Some(t) = e.treasure {
+            does.push(format!(
+                "{} chests of the level's item level, {} heaps of {} × {} gold coins, and {} \
+                 loose gems lie inside. Nothing guards it and nothing seals.",
+                t.chests, t.gold.heaps, t.gold.dice, t.gold.each, t.gems
+            ));
+        }
+        if let Some(line) = &e.arrive {
+            does.push(format!(
+                "On every arrival on its level until you have been inside: \"{line}\" \
+                 (Treasure sense: and which way it lies)."
+            ));
+        }
         if let Some(rise) = &e.rise {
             does.push(format!(
                 "A creature that dies in it (not one of the {}) rises from its corpse {} later \
