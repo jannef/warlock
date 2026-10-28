@@ -4,15 +4,15 @@ As in ADOM, some rooms are shops: a room full of goods, and a shopkeeper standin
 **general store** sells a bit of everything; **specialty shops** sell one kind of thing. Every
 shopkeeper has a name, and every shop a sign: "Ælfric's General Store".
 
-Cēaptūn, the market town of the Ascmearc, has four on its square: Ælfric's General Store,
+Cēaptūn, the market town of the [Ascmearc](ascmearc.md#the-places), has four on its square: Ælfric's General Store,
 Eadric's Forge (weapons and missiles), Beornwyn's Armoury, and Cyneburg's Provisions (food for
-the road, candles, rope, and tools). Dungeons have one now and then: about one level in six has one, in a room with a single
+the road, candles, rope, and tools). [Dungeons](dungeons.md) have one now and then: about one level in six has one, in a room with a single
 door (never in the caverns, never in the room you arrive in). Each dungeon has its own odds,
 kinds of shop, and keepers (the table under [Special rooms](special-rooms.md#by-dungeon)).
 
 ## Money
 
-Gold coins (`$`) are the money. Every object is worth some gold (the "Worth" column of the
+[Gold](objects.md#class-coins) coins (`$`) are the money. Every [object](objects.md#what-an-object-is) is worth some gold (the "Worth" column of the
 [objects table](objects.md#the-objects)), and a gem, or an item set with one, by what the gem is
 worth (see [Gems](gems.md)); junk such as rocks is worth nothing, and nobody buys or sells it. Prices are the only numbers a shop tells you.
 
@@ -26,13 +26,13 @@ Welcome to Ælfric's General Store!
 
 Everything lying on a shop's floor is for sale while its keeper trades with you.
 [Look mode](controls.md#look-mode) and the message as you step onto it say the price:
-"a dagger (for sale, 45 gold)". Picking something up does not buy it: it adds the price to what
-you owe ("You pick up a dagger (unpaid, 45 gold)."), and your pack marks it "(unpaid, 45 gold)".
+"a dagger (for sale, 45 gold)". [Picking something up](objects.md#picking-up) does not buy it: it adds the price to what
+you owe ("You pick up a dagger (unpaid, 45 gold)."), and your [pack](objects.md#your-pack) marks it "(unpaid, 45 gold)".
 
 Pay with `p`. Paying takes no time; it pays for everything you owe, from the gold you carry, and
 your goods are yours. If you do not have enough gold, put something back: drop it in the shop.
 
-What you use up, you have bought. Eat food you have not paid for and you still owe for it; eat
+What you use up, you have bought. [Eat](food.md#eating) food you have not paid for and you still owe for it; eat
 food lying on a shop's floor and its price goes on what you owe:
 
 ```
@@ -56,7 +56,7 @@ anything and a small window asks first:
 Being turned back takes as long as a step. If you hold a movement key, you stop at the shop's
 edge instead of being asked.
 
-A merchant's **Credit** (and an aristocrat's **Commanding**, see
+A [merchant](classes.md#merchant)'s **[Credit](talents.md#talent-credit)** (and an [aristocrat](classes.md#aristocrat)'s **[Commanding](talents.md#talent-commanding)**, see
 [Classes](classes.md#levels)) lets you walk out owing up to 100 (50) gold: the keeper nods
 ("you can pay next time"), and the debt stays on their bill until you come back and pay.
 
@@ -75,13 +75,13 @@ not buy it at any price, and what rots on a shop's floor is no longer for sale.
 ## Prices
 
 Each kind of shop asks a part of an object's worth above it, and pays a part of it for what it
-buys. Your **Presence** moves prices in your favour, or against you if it is low, and so does the
-**Negotiation** skill if you are trained in it: you pay less and are offered more. Shopkeepers are
+buys. Your **[Presence](stats.md#stat-presence)** moves prices in your favour, or against you if it is low, and so does the
+**[Negotiation](skills.md#skill-negotiation)** skill if you are trained in it: you pay less and are offered more. Shopkeepers are
 good folk, so your [alignment](alignment.md) moves their prices too: a saint pays a little less,
-an evil character more. Some class abilities do too (Well dressed, Golden tongue),
-and a merchant's Magnate and Golden tongue let prices move further than anyone else's; Insured
+an evil character more. Some [class abilities](talents.md#class-abilities) do too ([Well dressed](talents.md#talent-well-dressed), [Golden tongue](talents.md#talent-golden-tongue)),
+and a [merchant](classes.md#merchant)'s [Magnate](talents.md#talent-magnate) and [Golden tongue](talents.md#talent-golden-tongue) let prices move further than anyone else's; [Insured](talents.md#talent-insured)
 makes shops pay half again as much (never more than they ask). So do the [talents](talents.md)
-Silver tongue and Haggler. None of it is ever shown as a
+[Silver tongue](talents.md#talent-silver-tongue) and [Haggler](talents.md#talent-haggler). None of it is ever shown as a
 number; you see only the prices. Shops sell and buy by [item
 class](objects.md#item-classes):
 
@@ -90,16 +90,16 @@ class](objects.md#item-classes):
 ## Theft
 
 Walking out of the door can never steal, but leaving a shop owing anything any other way is
-theft: through a wall you have dug open, say. You are asked first (pay and leave, leave without
-paying, or stay). Leave without paying and the shopkeeper shouts "Stop, thief!", turns hostile,
+theft: through a wall you have [dug](digging.md#digging) open, say. You are asked first (pay and leave, leave without
+paying, or stay). Leave without paying and the shopkeeper shouts "Stop, thief!", turns [hostile](creatures.md#factions),
 and comes after you, and the goods you took are yours, stolen. A shopkeeper you attack turns on you
-the same way, and so does one who catches you picking their pocket with the Steal skill ("Ælfric
+the same way, and so does one who catches you picking their pocket with the [Steal](skills.md#skill-steal) skill ("Ælfric
 catches you stealing. \"Stop, thief!\""; see [Stealing](skills.md#stealing)). A purse lifted
 unnoticed leaves the shop open, though the shopkeeper cannot pay for what you sell until they
 have gold again. Shopkeepers are tough, quick, and well armed: stealing is always your choice,
 and the town stays safe unless you make it. An angry shopkeeper trades no more.
 
-While you owe for something, you cannot shoot or throw it.
+While you owe for something, you cannot [shoot or throw](ranged.md#shooting-and-throwing) it.
 
 ## A dead shopkeeper
 
