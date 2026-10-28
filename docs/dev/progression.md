@@ -406,7 +406,9 @@ at 150 %), and Patient blade (Shadow, thief 32: openings decay at 50 %, and a sn
 kills builds one more, the `sneak_kill` event); the only class-limited picks
 (`needs = { class, level }`). `world/resource_talent_tests.rs` covers each rule and the
 prerequisites. A talent of a resource the class has not been granted yet (Inner calm before
-Flurry grants ki, R4) holds the change until it is.
+Flurry grants ki, R4) holds the change until it is. Wild guard (Might, barbarian 6; #680) halves
+the berserker stance's Dodge penalty (`stance_dodge`), the stance a barbarian's rage holds them
+in (`world/berserker.rs`); `world/berserker_tests.rs` covers it.
 
 The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
 system's two, so it is no longer `pending`; `world/damage_talent_tests.rs` covers the ward
