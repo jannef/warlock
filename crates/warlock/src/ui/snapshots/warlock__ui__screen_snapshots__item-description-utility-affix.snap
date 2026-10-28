@@ -17,7 +17,6 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ Worn: neck                                                   │
                   │                                                              │
-                  │ Item level 6                                                 │
                   │ Suffix  of Sustenance: hunger comes 19% slower               │
                   │ Suffix  of Health: +2 to resist disease                      │
                   │ Suffix  of the Alchemist: a potion is not used up 13% of the │
@@ -25,6 +24,7 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
+
 
 
 

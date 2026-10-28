@@ -5,7 +5,7 @@
 id = "high_toby"
 name = "High Toby"
 object = "long_bow"
-affixes = ["hunters:3", "steady:3", "of_precision:2"]
+affixes = ["hunters:4", "steady:4", "of_precision:2"]
 level = 12
 power = { inflict = "frightened", chance = 25, severity = 1, phrase = "Its arrows put fear in what they strike." }
 lore = "Many a coach has stopped for it, and many a coachman run."

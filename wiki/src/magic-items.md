@@ -38,7 +38,7 @@ three prefixes, a third each; five are two or three, a half each; six are always
 The deeper you are, the better the loot: an item's **item level** is the depth it was found at
 (a dungeon's first level is item level 1, the eighth 8). What a creature drops has the
 creature's level as its item level where that is higher, so a creature out of its depth drops
-a deeper item. The item level
+a deeper item. The game never shows an item's level. The item level
 decides which base items can turn up and which **tiers** of each affix: low tiers are found from
 the start, the strongest only deep down, and an item rolls among the tiers close below its own
 level, so a deep find is seldom a weak one (the exact rule is under the rarity tables above).
@@ -110,8 +110,8 @@ slot's letter in upper case (`A` to `L`). The description names the item, says w
 1.8 kg") and whether you wear or wield it, then its base stats in words (how it is held or worn,
 its damage and criticals, how far it shoots, what it needs, whether it pierces armour, its
 Defence and Protection), what it gives in numbers ("To hit +1, damage 1d8+2", "Dv +2, Pv 3"; see
-[Equipment](equipment.md#numbers)), and, if it is identified, its item level and each affix in plain
-words: "Prefix Sharp: +2 damage", "Suffix of Celerity: attacks faster". `Esc` goes back.
+[Equipment](equipment.md#numbers)), and, if it is identified, each affix in plain words (the item
+level is never shown in the game): "Prefix Sharp: +2 damage", "Suffix of Celerity: attacks faster". `Esc` goes back.
 
 ## Base items
 
@@ -154,6 +154,14 @@ pick, disarm, treat, or steal.
 
 Each tier's value is rolled once, when the item is made, anywhere within its range; an item
 remembers each affix's tier and value (so enchanting can work on them later).
+
+## What systems have affixes
+
+Every affix by the part of the game it works in, and the talents that work at the same place:
+an affix's value adds to theirs (or, for Attuned and Bellows, is raised by them), so a worn item
+and a talent stack within the same limits.
+
+{{#include generated/magic-systems.md}}
 
 ## Names
 
