@@ -199,24 +199,25 @@ fn the_waves_load_where_they_belong_on_the_xp_guideline() {
 }
 
 #[test]
-fn goblins_and_the_undead_fight_the_kobolds_and_each_other() {
+fn goblins_and_the_undead_hunt_the_player_and_leave_the_kobolds_and_each_other_be() {
     let stance = |a: &str, b: &str| {
         let id = |n: &str| CONTENT.creature_id(n).expect(n);
         CONTENT.stance(id(a), id(b))
     };
     for (a, b, want) in [
         ("goblin", "player", Stance::Hostile),
-        ("goblin", "kobold", Stance::Hostile),
-        ("goblin", "rat", Stance::Hostile),
+        ("goblin", "kobold", Stance::Neutral),
+        ("goblin", "rat", Stance::Neutral),
         ("goblin", "goblin_chief", Stance::Neutral),
-        // The hobgoblins (#454) are of the goblins' faction: the kobolds' and the duergar's foes.
+        // The hobgoblins (#454) are of the goblins' faction; the kobolds and the duergar are their
+        // foes only in lore (#612).
         ("hobgoblin", "goblin", Stance::Neutral),
         ("hobgoblin_captain", "ogre", Stance::Neutral),
-        ("hobgoblin", "kobold", Stance::Hostile),
-        ("hobgoblin_legionnaire", "duergar_warrior", Stance::Hostile),
+        ("hobgoblin", "kobold", Stance::Neutral),
+        ("hobgoblin_legionnaire", "duergar_warrior", Stance::Neutral),
         ("skeleton", "player", Stance::Hostile),
-        ("zombie", "kobold", Stance::Hostile),
-        ("barrow_ghoul", "goblin", Stance::Hostile),
+        ("zombie", "kobold", Stance::Neutral),
+        ("barrow_ghoul", "goblin", Stance::Neutral),
         ("barrow_wight", "skeleton", Stance::Neutral),
         // The undead leave the vermin of their barrows alone.
         ("zombie", "grave_worm", Stance::Neutral),
@@ -448,7 +449,7 @@ fn the_roster_spirits_pass_through_walls_and_the_drainers_drain() {
 }
 
 #[test]
-fn the_cult_fights_the_marsh_and_leaves_the_dead_alone() {
+fn the_cult_and_the_marsh_hunt_the_player_and_leave_each_other_be() {
     let stance = |a: &str, b: &str| {
         let id = |n: &str| CONTENT.creature_id(n).expect(n);
         CONTENT.stance(id(a), id(b))
@@ -458,14 +459,14 @@ fn the_cult_fights_the_marsh_and_leaves_the_dead_alone() {
         ("crocodile", "player", Stance::Hostile),
         ("bog_hag", "player", Stance::Hostile),
         ("cultist", "player", Stance::Hostile),
-        ("cultist", "marsh_troll", Stance::Hostile),
-        ("cult_priest", "bog_hag", Stance::Hostile),
+        ("cultist", "marsh_troll", Stance::Neutral),
+        ("cult_priest", "bog_hag", Stance::Neutral),
         ("cultist", "cult_priest", Stance::Neutral),
         ("cultist", "drowned", Stance::Neutral),
         ("giant_frog", "bog_hag", Stance::Neutral),
         ("will_o_wisp", "mud_golem", Stance::Neutral),
-        // The fen's dead are the barrows' kin: undead, hostile to the goblins, not to the fen.
-        ("drowned", "goblin", Stance::Hostile),
+        // The fen's dead are the barrows' kin: undead, hostile to the player alone (#612).
+        ("drowned", "goblin", Stance::Neutral),
         ("ghost", "skeleton", Stance::Neutral),
         ("ghost", "crocodile", Stance::Neutral),
     ] {
@@ -474,16 +475,16 @@ fn the_cult_fights_the_marsh_and_leaves_the_dead_alone() {
 }
 
 #[test]
-fn the_duergar_fight_the_goblins_kin_and_leave_the_fire_be() {
+fn the_duergar_hunt_the_player_and_leave_the_goblins_kin_and_the_fire_be() {
     let stance = |a: &str, b: &str| {
         let id = |n: &str| CONTENT.creature_id(n).expect(n);
         CONTENT.stance(id(a), id(b))
     };
     for (a, b, want) in [
         ("duergar_miner", "player", Stance::Hostile),
-        ("duergar_warrior", "ogre", Stance::Hostile),
-        ("duergar_smith", "troll", Stance::Hostile),
-        ("duergar_warrior", "ash_wraith", Stance::Hostile),
+        ("duergar_warrior", "ogre", Stance::Neutral),
+        ("duergar_smith", "troll", Stance::Neutral),
+        ("duergar_warrior", "ash_wraith", Stance::Neutral),
         ("duergar_miner", "duergar_smith", Stance::Neutral),
         ("duergar_warrior", "fire_salamander", Stance::Neutral),
         ("duergar_miner", "kobold", Stance::Neutral),
@@ -498,7 +499,7 @@ fn the_duergar_fight_the_goblins_kin_and_leave_the_fire_be() {
 }
 
 #[test]
-fn the_trolls_keep_the_stances_they_had_with_the_goblins() {
+fn the_trolls_hunt_the_player_and_leave_every_other_faction_be() {
     let stance = |a: &str, b: &str| {
         let id = |n: &str| CONTENT.creature_id(n).expect(n);
         CONTENT.stance(id(a), id(b))
@@ -510,12 +511,12 @@ fn the_trolls_keep_the_stances_they_had_with_the_goblins() {
     }
     for (a, b, want) in [
         ("troll", "player", Stance::Hostile),
-        ("hill_troll", "kobold", Stance::Hostile),
-        ("forest_troll", "rat", Stance::Hostile),
-        ("troll", "duergar_smith", Stance::Hostile),
-        ("ice_troll", "skeleton", Stance::Hostile),
-        ("troll", "rotting_troll", Stance::Hostile),
-        // The goblins' kin, whom they ran with, they leave be; so the fen and the fire.
+        ("hill_troll", "kobold", Stance::Neutral),
+        ("forest_troll", "rat", Stance::Neutral),
+        ("troll", "duergar_smith", Stance::Neutral),
+        ("ice_troll", "skeleton", Stance::Neutral),
+        ("troll", "rotting_troll", Stance::Neutral),
+        // Every other faction they leave be (#612): the goblins' kin, the fen, and the fire too.
         ("troll", "goblin", Stance::Neutral),
         ("hill_troll", "ogre", Stance::Neutral),
         ("troll", "marsh_troll", Stance::Neutral),

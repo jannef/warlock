@@ -8,8 +8,10 @@ speed, and senses, which the game never shows, are on [Creatures in numbers](cre
 ## Factions
 
 Every creature belongs to a **faction**, and so do you. Two factions are either **hostile** to
-each other or **neutral**, both ways: kobolds hunt giant rats, and the rats fight back; wildlife
-leaves everyone alone, and everyone leaves it alone. A faction is neutral to itself.
+each other or **neutral**, both ways; a faction is neutral to itself. Every monster is your
+enemy, but monsters do not fight each other, except for the fey courts' war and the demons' war
+with the devils: a kobold and a giant rat on the same floor leave each other alone, and so do an
+orc band and the dead. Wildlife leaves everyone alone, and everyone leaves it alone.
 
 {{#include generated/factions.md}}
 
@@ -98,9 +100,9 @@ in: then it walks its rounds and never attacks you. Fighting happens in the dung
 **Shopkeepers** are **merchants**, who trade with everyone and fight no one, until you rob or
 attack one: then it joins the outraged shopkeepers and comes after you (see [Shops](shops.md)).
 
-Creatures of factions at war fight each other on sight, wherever they meet: a kobold war band
-and a pack of giant rats fight to the death, and turn on you when they see you. Light your
-lantern near them and a war band's archer will find you.
+Creatures of factions at war fight each other on sight, wherever they meet: a demon and a devil
+fight to the death, and both turn on you when they see you. Light your lantern near them and
+their archers will find you.
 
 **Trolls** are a tribe of their own (the trolls faction) from about level 13 to 42: the troll and
 the hill troll of Fyrdelf, and the forest, ice, stone, two-headed, and fire trolls, the troll

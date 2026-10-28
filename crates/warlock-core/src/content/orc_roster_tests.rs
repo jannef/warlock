@@ -165,7 +165,7 @@ fn the_orcs_keep_to_the_tribes_formulas() {
 }
 
 #[test]
-fn the_orcs_raid_the_kobolds_and_the_duergar_and_leave_the_goblins_be() {
+fn the_orcs_hunt_the_player_and_leave_the_tribes_they_raid_be() {
     use super::Stance;
     let content = Content::builtin().expect("content");
     let stance = |a: &str, b: &str| {
@@ -174,10 +174,10 @@ fn the_orcs_raid_the_kobolds_and_the_duergar_and_leave_the_goblins_be() {
     };
     for (a, b, want) in [
         ("orc_warrior", "player", Stance::Hostile),
-        ("orc_warrior", "kobold", Stance::Hostile),
-        ("orc_raider", "rat", Stance::Hostile),
-        ("orc_veteran", "duergar_warrior", Stance::Hostile),
-        ("orc_shaman", "skeleton", Stance::Hostile),
+        ("orc_warrior", "kobold", Stance::Neutral),
+        ("orc_raider", "rat", Stance::Neutral),
+        ("orc_veteran", "duergar_warrior", Stance::Neutral),
+        ("orc_shaman", "skeleton", Stance::Neutral),
         ("warg", "orc_runt", Stance::Neutral),
         ("orc_warrior", "goblin", Stance::Neutral),
         ("orc_berserker", "ogre", Stance::Neutral),

@@ -665,7 +665,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (the player's), and every creature type but the player naming a known faction. The core API
   gives the stance (`Hostile` or `Neutral`) of two factions, creature types, or actors. The
   factions are the entries of `assets/data/factions.toml`; the wiki's generated tables list them
-  and who is hostile to whom, so adding a faction never edits this spec. Two are rules: `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
+  and who is hostile to whom, so adding a faction never edits this spec. Monsters do not fight
+  each other but for two story feuds, the fey courts' war (Seelie and wrathful fey against the
+  Unseelie) and the demons' Blood War with the devils: every other monster faction lists the
+  player alone, its old raids and grudges kept as lore in the file's comments (a `rivalry`
+  chance, a skirmish now and then, is deferred). Two are rules: `merchants` (shopkeepers; hostile to no one) and `outraged` ("outraged
   shopkeepers", hostile to the player), which a robbed or attacked shopkeeper joins (§7
   "Shops"). A level
   legend entry with a `creature` may name a `faction` (a known faction id; an unknown one is a

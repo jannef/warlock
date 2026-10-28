@@ -29,7 +29,10 @@ rules it implements are in spec/08b-creatures.md. Keep it current with the code,
 
 Factions and creature behavior (spec §7 "Factions", §5 "Creature sight", §8 "Creature behavior"):
 `data/factions.toml` (`content/faction.rs`: `Factions`, symmetric hostility, `Stance`; optional,
-without it everyone is neutral, but then no creature may name a faction) and per creature type
+without it everyone is neutral, but then no creature may name a faction; monsters fight only the
+player but for the two story feuds, Seelie and wrathful fey against the Unseelie and demons
+against devils, #612, the tribes' old feuds kept as comments; a level that wants a brawl gives
+one side a faction of its own by a legend override, as the arena's rats are `arena_rats`) and per creature type
 `faction`, `vision`, `sight`, `combat` (`melee`/`ranged`/`caster`), `range`, `opens_doors`,
 `alignment` and `race` (`docs/dev/alignment.md`; read a creature's with `Actor::nature`, never the
 type's) (`content/creature.rs`, checked in `content/mod.rs`). Its `tags` (`content/tag.rs`, #441) are plain singular
