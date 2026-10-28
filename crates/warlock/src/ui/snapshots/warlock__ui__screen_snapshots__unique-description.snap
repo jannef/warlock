@@ -19,7 +19,6 @@ expression: "render(case, content.clone())"
                   │ Thrown up to 5 cells                                         │
                   │ To hit +0, damage 1d4+2, range 5                             │
                   │                                                              │
-                  │ Item level 6                                                 │
                   │ Prefix  Sharp: +2 damage                                     │
                   │ Suffix  of the Ox: +2 to Toughness                           │
                   │ Power   Its bearer sees in the gloom.                        │
@@ -28,6 +27,7 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
+
 
 
 
