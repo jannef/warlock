@@ -32,6 +32,11 @@ at level 20; a warrior with ordinary wits gains none. [Magic items](magic-items.
 by 1 for every 4 character levels and at least 2 for each of its three ranks, as you take it and
 as each level after comes (see [Talents](talents.md)).
 
+The skill *Concentration*, once you are trained in it, deepens your pool a little: +1 mana at 25,
++5 at 100, +8 at 200, but never more than a fifth of what your pool would be without it (a pool
+under 5 gains nothing). Untrained, it gives nothing, even when an item raises it (see
+[Skills](skills.md) for the table by value).
+
 ## How fast it comes back
 
 At the usual pace, a point of mana comes back every so often, faster the stronger your Willpower:
@@ -46,8 +51,10 @@ When several status effects slow it, the slowest counts; a disease that slows it
 Diseased does counts too. Resting makes up for some of it, as it does for healing, and so does a
 sanctuary (a [special room](special-rooms.md)). Magic items that speed it ("mana comes back 50%
 faster") add on top of all that, and so does being born under Water (the gift *Tidal*: mana comes
-back 25 % faster; see [Horoscope](horoscope.md)) and the talent *Clear mind* (25 % faster too),
-adding their percents to theirs. The talent *Meditation* makes resting bring it back half again
+back 25 % faster; see [Horoscope](horoscope.md)), the talent *Clear mind* (25 % faster too),
+and a trained *Concentration* (5 % faster at 20, 40 % at 100, 60 % at 200; see
+[Skills](skills.md)), adding their percents to theirs. Spending mana now and then trains
+Concentration. The talent *Meditation* makes resting bring it back half again
 as fast (resting's pace times 1.5). Nothing else changes it: not your burden, not the cold, not
 your combat stance.
 

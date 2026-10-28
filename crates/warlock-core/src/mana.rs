@@ -41,6 +41,15 @@ pub fn max_mana(stats: &Stats, base: i32) -> i32 {
     (base + mental_modifier(stats)).max(0)
 }
 
+/// How much of a pool a skill's mana (Concentration, `Effect::MaxMana`) may add to it: a fifth.
+pub const DEEPER_DIVISOR: i32 = 5;
+
+/// A pool of `pool` deepened by a skill's `bonus` points (Concentration; spec §8 "Mana"): never
+/// more than a fifth of `pool` (rounded down), so a pool of 0 to 4 gains nothing.
+pub fn deeper(pool: i32, bonus: i32) -> i32 {
+    pool + bonus.clamp(0, (pool / DEEPER_DIVISOR).max(0))
+}
+
 /// The longest a point of mana takes to come back, and the shortest...
 pub const REGEN_SLOWEST: u32 = 360;
 pub const REGEN_FASTEST: u32 = 60;
@@ -58,6 +67,16 @@ pub fn regen_seconds(willpower: u8) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_skill_deepens_a_pool_by_at_most_a_fifth() {
+        assert_eq!(deeper(0, 5), 0);
+        assert_eq!(deeper(4, 5), 4);
+        assert_eq!(deeper(12, 5), 14);
+        assert_eq!(deeper(30, 5), 35);
+        assert_eq!(deeper(30, 0), 30);
+        assert_eq!(deeper(30, -3), 30);
+    }
     use crate::stats::PerStat;
 
     fn stats(intelligence: u8, willpower: u8, presence: u8) -> Stats {

@@ -100,6 +100,7 @@ mod chest;
 mod class;
 mod class_ability;
 mod collapse;
+mod concentration;
 mod consecrate;
 mod court;
 mod creation;
@@ -1418,6 +1419,8 @@ mod class_rogue_tests;
 mod class_tests;
 #[cfg(test)]
 mod collapse_tests;
+#[cfg(test)]
+mod concentration_tests;
 #[cfg(test)]
 mod cost_tests;
 #[cfg(test)]
