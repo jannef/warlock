@@ -71,20 +71,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
     within 1 to 40); every rule reads the effective score (`Actor::effective_stats`): combat
     (to-hit, damage, Defence, hit points), burden (the limit), and healing. The player sees their
     scores lowered on the character screen. A positive number raises the score instead (Raging:
-    Strength +2), and the hit points a raised Toughness allows fall back as the status ends
+    Strength +2); `per_degree = true` counts it once a degree (a potion's boost: +2 a degree, so
+    Fortified at two degrees is Strength +4; its value times `max` stays within −10 to 10), and the hit points a raised Toughness allows fall back as the status ends
     (`World::keep_hp_within_max`: above the lasting maximum, and above the maximum other statuses
     still raise, never).
   - **Buffs, hexes, and cooldowns** (`world/buff.rs`, #227; design `docs/design/progression.md`
     §4.1 B1): a status may also, while it lasts,
-    - **fight** better or worse (`combat = { to_hit, damage, dodge, parry }`, each −20 to 20, as a
-      combat stance's, §8 "Stances"): to-hit and damage join every attack profile with the
-      stance's (`Actor::stanced`), Dodge and Parry the actor's Defence (Dodge stacks, of Parry the
-      highest counts), creatures' as well as the player's (a hex is a status on a creature);
+    - **fight** better or worse (`combat = { to_hit, damage, dodge, parry, shield }`, each −20 to
+      20, as a combat stance's, §8 "Stances"): to-hit and damage join every attack profile with
+      the stance's (`Actor::stanced`), Dodge and Parry the actor's Defence (Dodge stacks, of Parry
+      the highest counts), creatures' as well as the player's (a hex is a status on a creature);
+      `shield` adds on top of a held shield's Defence (Walled, Shield wall's, #564);
+    - **slow attacks** (`attack_cost`, 50 to 1000 percent): every attack's price
+      (`World::attack_price`) multiplied by it, on top of `cost` (Walled: 125);
     - **slow** (`cost`, 50 to 1000 percent): every action's price is multiplied by it, after the
       burden and Bloated (`World::burdened`, the one place every price passes); several multiply.
-      Only a spell's buff on its caster may hasten (Haste's Hasted, 75; #397), and Light-footed
+      Only a spell's buff on its caster may hasten (Haste's Hasted, 75; #397), the potion of
+      quickness the same Hasted on the player who drinks it (§8 "Potions"), and Light-footed
       (50, the skirmisher's Hit and run, a weapon ability: one action), so a creature's quickest
       step stays what a rest's batching counts on;
+    - **lend eyes** (`vision`, an id of `data/vision.toml`): `Actor::eyes` betters its sufferer's
+      profile by it part by part, as a unique item's Vision power (the lower threshold, the
+      farther darkvision, ultraviolet if any sees it), so what the player sees in the dark
+      changes with it (a potion's Cat-eyed, Owl-eyed, Moth-eyed; #567);
+    - **resist** (`resist = { fire = 50 }`, each −100 to 75 and not 0): counted with what its
+      sufferer wears in `Actor::resistances`, gear-like and so never immunity (a potion's Warmed,
+      Chill-proof, Earthed, Proof against poison; #567);
     - **block** actions (`blocks = ["read"]`, ids in `data/actions.toml`): the rules refuse the
       player's action of that kind before it is tried, with no time taken ("You cannot read while
       raging."; a step into a hostile creature is `melee`, into a closed door `open_door`, off a
@@ -256,7 +268,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wounds, Cure wounds, Curse of sloth, Hex of weakness, Magic missile; tier 2 Arcane bolt,
     Blight, Frost, Identify, Scorching ray, Sleep, Web; tier 3 Call lightning, Fireball (the wizard's Fire
     burst folded into it), Flame, Haste, Lightning bolt, Remove disease. A spell is cast by its
-    data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability);
+    data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
+    that is no spell either is a weapon active's, §8i "Weapon abilities");
     the abilities menu lists the spells known by tier, then path order. Sleep and Web are
     **area hexes**: a burst whose status falls on everyone it reaches but the caster, friend or
     foe (`World::cast_area_hex`). Haste is the one status that hastens (`cost` 75; statuses may

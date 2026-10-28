@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You gain 600000 experience (dev). You feel more experienced. Welcome to level
- 37. You gain Armour drill. You gain Weapon mastery.
+ 37. You gain Armour drill. You gain Drillmaster. You gain Weapon mastery.
 
 
   ┌─ Level 24 · Skill rolls 3 · Talent 1 ────────────────────────────────────┐

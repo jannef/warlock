@@ -196,8 +196,16 @@ pub enum Action {
     /// its id in `data/spells/`: on oneself, or aimed at a cell (`use:blessing`,
     /// `use:magic_missile:12,5`). Takes the time of its `cast`s and its mana; refused (no time)
     /// for an unknown spell, without the spell, without the mana, or without the cell it asks.
-    /// Any `use:ID` that is no class or birth sign ability is read as this.
+    /// Any `use:ID` that is no class or birth sign ability is read as this. An id that is no
+    /// spell's is a weapon active's (#564; `use:shield_wall`, `use:piercing_shot:12,5`): the
+    /// rules resolve it after the spells.
     Cast(String, Option<Pos>),
+    /// Use a weapon active aimed in a direction (spec §8 "Weapon skills", "Fighting styles";
+    /// #564; the abilities menu's Weapon skills group), by its id in `data/weapon_abilities/`:
+    /// `use:lunge:E` (the direction in upper case). Takes its energy's percent of the time of
+    /// the action it is and its stamina; refused (no time) without the ability, while what the
+    /// player holds is not for it, short of stamina, or with nobody it may strike there.
+    Act(String, Dir),
     /// Cast a spell the player knows on a stack they carry, by its position (Identify,
     /// `use:identify:c`). Refused as [`Action::Cast`] is, and for a spell that asks for no
     /// stack.
@@ -774,6 +782,7 @@ impl fmt::Display for Action {
             Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
             Action::Cast(spell, None) => write!(f, "use:{spell}"),
             Action::Cast(spell, Some(at)) => write!(f, "use:{spell}:{},{}", at.x, at.y),
+            Action::Act(id, dir) => write!(f, "use:{id}:{dir}"),
             Action::CastOn(spell, on) => write!(f, "use:{spell}:{}", position_text(*on)),
             Action::UseAt(active, at) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::Gift(active, None) => write!(f, "use:{}", active.id()),
@@ -899,6 +908,17 @@ impl FromStr for Action {
                 let Some(active) = ClassActive::from_id(id) else {
                     if id.is_empty() || !id.chars().all(|c| c.is_ascii_lowercase() || c == '_') {
                         return Err(format!("`{id}` is no ability that is used"));
+                    }
+                    // A weapon active aimed in a direction, `use:lunge:E`: the direction in
+                    // upper case (as typed), as a stack's letter is in lower case; NE, SE, SW,
+                    // and NW, which are no letters, in either.
+                    let typed = s.rsplit_once(':').map(|(_, a)| a);
+                    let named = |a: &str| Dir::ALL.into_iter().find(|d| d.name() == a);
+                    let dir = (typed.and_then(named))
+                        .or_else(|| aim.and_then(|a| named(&a.to_ascii_uppercase())))
+                        .filter(|d| typed.is_some_and(|t| t.len() == 2 || t == d.name()));
+                    if let Some(dir) = dir {
+                        return Ok(Action::Act(id.to_string(), dir));
                     }
                     // A spell on a stack the player carries names it by position,
                     // `use:identify:c`.
@@ -1397,6 +1417,8 @@ mod tests {
             Action::Gift(SignActive::Blaze, None),
             Action::Cast("blessing".into(), None),
             Action::Cast("arcane_bolt".into(), Some(Pos::new(12, 5))),
+            Action::Act("lunge".into(), Dir::E),
+            Action::Cast("shield_wall".into(), None),
             Action::CastOn("identify".into(), 2),
             Action::CastOn("identify".into(), 30),
             Action::LevelUpAuto,

@@ -1197,8 +1197,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (creatures' ranks come from their types). It works only through what the actor fights with:
     a triggered ability fires for the skill and style of the attack concerned (the attack's for
     the attacker, what it holds for the one attacked); a style's only in the style's grip.
-  - **Triggered** (this slice; actives, paid in stamina and time, come with W3 and are refused
-    in data until then): free and instant, with no stamina, time, or cooldown (refused in data),
+  - **Triggered**: free and instant, with no stamina, time, or cooldown (refused in data),
     each on one combat event, raised at one line that already marks it (`World::weapon_trigger`,
     the one place they fire): `hit` and `critical` (a blow, shot, or throw of the actor's that
     lands or is a confirmed critical), `big_hit` (a third of the target's hit points, the target
@@ -1238,3 +1237,45 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Unavailable::FiresByItself`); Rend says "Your blades rend the orc.", Staggering block "The
     orc staggers from your shield.", a free blow or shot as one is. Never a rank threshold, a
     chance, or a creature's abilities. The dev action `rank:SKILL:N` sets a rank (§6, replays).
+  - **Actives** (#564; the design §4.5, §4.6; `world/weapon_active.rs`): used from the abilities
+    menu (`Ability::Weapon`, `Source::WeaponSkill`; never a key of their own), aimed as `aim`
+    says (`nothing`, `direction`, `cell`, the existing `Aim`s), as `use:lunge:E`
+    (`Action::Act`; the direction in upper case, as a stack's letter is in lower case) or
+    `use:shield_wall`, `use:piercing_shot:12,5` (`Action::Cast` of an id that is no spell's:
+    resolved after the class actives, the birth sign gifts, and the spells; a loader check keeps
+    an active's id off theirs). Usable only while what the actor holds is for it
+    (`Actor::holds_for`: the abilities its blow's, or a shot's, weapon skill and style teach;
+    shield blocking's with a shield held), else greyed `Unavailable::NotSoHeld` ("your hands are
+    not so held"); short of its stamina, `Unavailable::Short` ("you are short of breath", the
+    resource's `lacking` words); a status that blocks the action it is, `While`. **Costs**, both
+    paid only after its own refusals (nobody hostile there, no room to lunge, nothing to shoot):
+    its `stamina` through `World::spend_resource`, less Drillmaster's point and Armour-breaker's
+    2 for Sunder and Gap shot (`TalentMods::weapon_stamina`, `ability_stamina`; at least 1);
+    and its `energy`, `percent` (50 to 300) of the price of the action it is, priced before it
+    is made: `attack_price` for a blow (weapon speed, style, stance, statuses: Light-footed
+    halves it, Walled adds its quarter), `shot_price` for a shot, `wait` for Shield wall;
+    Practised technique cuts a quarter (`weapon_energy_percent`, never below 50 % of the
+    action). An optional per-ability `cooldown` status exists in data; none is used. Effects:
+    `reach_blow` (Lunge: the first hostile within `reach` along the direction, the cells between
+    empty and walkable, nothing sprung; a foe beyond the first cell brings no free blows),
+    `sure_critical` (Vital strike), `ignore_defence` (Feint: rolled without the target's Parry and
+    Shield, read in `resolve` through the transient `Technique`), `ignore_protection` (Sunder,
+    Gap shot: a penetration above any Protection), `sweep` (Whirl, Staff sweep: a blow at each
+    hostile beside, clockwise from the north or the direction given, −2 each, the blades taking
+    turns with two), `pierce_shot` (Piercing shot: a hit flies on to the next on the line, once),
+    `knockback` (Shield rush, a bash; Hip throw: a foe hit is moved a cell along the blow if it
+    is free, as a teleport's check, no draw, then Staggered; into a wall it stays, unstaggered,
+    and the blow lands), `buff` (Shield wall: Walled 5 degrees on the actor, Shield +3 on top of
+    the shield's, attacks at 125 %, a degree a turn), `double_dice` (Mighty swing: the damage dice
+    twice, bonus and riders once, −2 to hit). The catalogue (data; first guesses): Vital strike
+    (blades 9; 4 stamina, a blow's time), Sunder (axes, maces, polearms 9; 4, 125 %), Lunge
+    (spears, staves 9; 3, 100 %), Piercing shot (bows, crossbows, slings 9; 4, a shot's), Shield
+    wall (shield blocking 9; 5, a wait's), Feint (Duelist 7; 2, 100 %), Whirl (Twin Blades 7; 6,
+    150 %), Mighty swing (Great Weapon 7; 5, 150 %), Shield rush (Sword and Board 7; 4, 125 %),
+    Gap shot (Marksman 7; 4, 150 % of a shot), Hip throw (Brawler 7; 4, 125 %), Staff sweep
+    (Staff Fighter 7; 5, 150 %). Each is its own action (no stacking of actives on one blow);
+    regeneration bounds loops. The first rank that teaches an active grants stamina to a
+    character without it (`World::ranks_news`: "You have learned the lunge. You learn to pace
+    your breath."). Creatures use no actives. The menu row shows the stamina cost ("3 stamina,
+    in a direction"), never the time; an active's blow says its blow's own message, a knockback
+    "The orc is driven back."

@@ -380,6 +380,8 @@ impl World {
         let mut struck = false;
         // Aimed at a reflection in a hall of mirrors (`mirrors.rs`), it flies on through it.
         let through = self.reflected(shooter, at);
+        // Piercing shot (a weapon active, `weapon_active.rs`): on past the first it hits.
+        let mut pierce = self.pierces(shooter);
         for cell in from.ray(at) {
             let level = self.state.current();
             if cell.dist2(from) > reach {
@@ -410,6 +412,9 @@ impl World {
                     let profile = flight.profile.clone();
                     let blow = self.missile_hits(shooter, target, with, profile, &mut attacks);
                     if blow.is_some_and(|b| b.strike.is_hit()) {
+                        if std::mem::take(&mut pierce) {
+                            continue;
+                        }
                         struck = true;
                         break;
                     }

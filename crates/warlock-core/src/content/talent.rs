@@ -364,6 +364,8 @@ pub enum TalentEffect {
     /// An unknown potion it picks up tells its kind (never its type) by its smell (Nose for
     /// draughts).
     PotionSmell,
+    /// A healing potion it drinks heals this percent more (Cauldron-wise).
+    PotionHeals { value: i32 },
     /// Its own bursts never catch it (Careful reader).
     SparesSelf,
     /// Added to its searching, not to noticing in passing (Keen searcher).
@@ -725,6 +727,9 @@ pub enum TalentEffect {
     WadesFree,
     /// Status `status` eases this percent faster (100: twice as fast).
     StatusEases { status: String, value: i32 },
+    /// Status `status` lasts this percent longer: each degree takes that much more time to
+    /// ease (50: half again; Strong constitution's potions).
+    StatusLasts { status: String, value: i32 },
     /// Status `status` never lowers its scores.
     NoPenalty { status: String },
     /// A big hit makes it bleed no more, a critical one degree less (Clotting): the statuses
@@ -775,6 +780,17 @@ pub enum TalentEffect {
     AbilityRanks { value: i32 },
     /// Its Rend rolls the off hand's damage dice too (Second blade's rend).
     RendOffHand,
+    /// Its weapon actives take this percent more time (negative: less; Practised technique),
+    /// never below half the action's price (#564).
+    WeaponEnergyPercent { value: i32 },
+    /// Its weapon actives cost `value` points less stamina, at least 1: those named in
+    /// `abilities` (ids in `data/weapon_abilities/`), or every one when none are named
+    /// (Drillmaster; Armour-breaker's Sunder and Gap shot).
+    WeaponStamina {
+        value: i32,
+        #[serde(default)]
+        abilities: Vec<String>,
+    },
     /// Its Brace's blow is at `to_hit` more, and a foe it hits suffers `status` (one degree;
     /// Brace of steel).
     Brace { to_hit: i32, status: String },
@@ -1239,6 +1255,7 @@ impl TalentEffect {
                 }
                 Ok(())
             }
+            TalentEffect::PotionHeals { value } => percent(*value),
             TalentEffect::GemCut { value } => {
                 if !(1..=5).contains(value) {
                     return Err("`gem_cut`: value is 1 to 5".into());
@@ -1646,6 +1663,7 @@ impl TalentEffect {
             | TalentEffect::RoomPacePercent { value }
             | TalentEffect::WakePercent { value }
             | TalentEffect::TwoHandedPrice { value }
+            | TalentEffect::WeaponEnergyPercent { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
             | TalentEffect::SpellManaPercent { value }
@@ -1732,7 +1750,8 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::StatusEases { status: id, value } => {
+            TalentEffect::StatusEases { status: id, value }
+            | TalentEffect::StatusLasts { status: id, value } => {
                 status(id)?;
                 percent(*value)
             }
@@ -1747,6 +1766,14 @@ impl TalentEffect {
                 Ok(())
             }
             TalentEffect::BothShields { .. } => Ok(()),
+            // The abilities it names are checked once they are loaded, after the talents
+            // (`content/weapon_ability.rs`).
+            TalentEffect::WeaponStamina { value, .. } => {
+                if !(1..=10).contains(value) {
+                    return Err("`weapon_stamina`: value is 1 to 10".into());
+                }
+                Ok(())
+            }
             TalentEffect::NoPenalty { status: id }
             | TalentEffect::CriticalStatus { status: id }
             | TalentEffect::Grip { status: id } => status(id),

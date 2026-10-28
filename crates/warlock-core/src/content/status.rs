@@ -9,7 +9,9 @@
 //! fighting while it lasts ([`CombatBonus`]), how much slower it makes every action (`cost`),
 //! which actions it refuses (`blocks`), the status that follows it as it ends (`follows`), what
 //! causes it (big hits and criticals, [`Wound`]; a creature's attack, [`OnHit`]), what cures it
-//! (`cured_by`), the light its bearer sheds while it lasts (`light`: Lit), and its messages. A
+//! (`cured_by`), the light its bearer sheds while it lasts (`light`: Lit), the eyes it lends
+//! (`vision`: a potion's Owl-eyed) and what it makes its sufferer resist (`resist`: a potion's
+//! Warmed), and its messages. A
 //! status with a `hold` table ([`Hold`]) is a hold: one actor
 //! holding another fast (Held). So a status may be a harm (bleeding), a buff (raging), a hex
 //! on a creature, or a cooldown (a status with `eases` and no tick, during which an ability
@@ -23,6 +25,7 @@ use super::action::ActionKind;
 use super::disease::DiseaseId;
 use super::stance::BONUS;
 use super::{ContentError, DamageTypeId, LightId};
+use crate::damage::{MAX_RESISTANCE, MIN_RESISTANCE};
 use crate::dice::Dice;
 use crate::stats::{ADJUSTMENTS, PerStat, Stat};
 use serde::{Deserialize, Serialize};
@@ -131,6 +134,9 @@ pub struct Penalty {
     pub from: u16,
     /// What it adds to each score (negative: a penalty; positive: a raise, as Raging gives).
     pub by: PerStat<i8>,
+    /// Whether `by` counts once per degree of severity (a potion's boost: +2 a degree), rather
+    /// than once whatever the severity.
+    pub per_degree: bool,
 }
 
 /// What a status adds to the fighting of an actor who suffers it, while it lasts, as a combat
@@ -148,6 +154,9 @@ pub struct CombatBonus {
     pub dodge: i32,
     /// Added to its Defence in the Parry category.
     pub parry: i32,
+    /// Added on top of its Defence in the Shield category while it holds a shield (Walled):
+    /// unlike the other categories' bonuses, it adds to the shield's own.
+    pub shield: i32,
 }
 
 impl CombatBonus {
@@ -448,6 +457,8 @@ struct StatusSpec {
     combat: CombatBonus,
     #[serde(default = "normal_cost")]
     cost: u32,
+    #[serde(default = "normal_cost")]
+    attack_cost: u32,
     #[serde(default)]
     blocks: Vec<String>,
     #[serde(default)]
@@ -470,6 +481,9 @@ struct StatusSpec {
     hold: Option<Hold>,
     treat: Option<Treat>,
     light: Option<String>,
+    vision: Option<String>,
+    #[serde(default)]
+    resist: BTreeMap<String, i32>,
 }
 
 fn normal_regen() -> u16 {
@@ -484,6 +498,8 @@ fn normal_cost() -> u32 {
 #[derive(Deserialize)]
 struct PenaltySpec {
     from: u16,
+    #[serde(default)]
+    per_degree: bool,
     #[serde(flatten)]
     stats: BTreeMap<Stat, i8>,
 }
@@ -522,6 +538,9 @@ pub struct StatusDef {
     /// What every action costs the actor while it lasts, in percent of its price ([`COST_PERCENT`]):
     /// 150 half again as much (Slowed), 100 as usual.
     pub cost: u32,
+    /// What every attack costs the actor while it lasts, in percent of its price, on top of
+    /// `cost` ([`COST_PERCENT`]; Walled: 125). Several multiply.
+    pub attack_cost: u32,
     /// The actions refused while it lasts, by their kind (`read`: a raging barbarian cannot
     /// read); an ability that costs one of them cannot be used.
     pub blocks: Vec<ActionKind>,
@@ -563,6 +582,14 @@ pub struct StatusDef {
     pub treat: Option<Treat>,
     /// The light its bearer sheds while it lasts (Lit, the Light spell's; spec §5), if any.
     pub light: Option<LightId>,
+    /// The eyes it lends while it lasts (a potion's Owl-eyed; spec §8 "Potions"): an index into
+    /// [`super::Content::vision_profiles`], bettering its sufferer's eyes part by part as a
+    /// unique item's Vision power does (`Actor::eyes`).
+    pub vision: Option<usize>,
+    /// What it makes its sufferer resist while it lasts, in percent per damage type (a potion's
+    /// Warmed: `{ fire = 50 }`), counted with what it wears (`Actor::resistances`): gear-like,
+    /// never immunity.
+    pub resist: Vec<(DamageTypeId, i32)>,
 }
 
 impl StatusDef {
@@ -574,6 +601,15 @@ impl StatusDef {
             .map(|p| &p.by)
     }
 
+    /// How many times its penalty counts at `severity`: the severity for one that counts per
+    /// degree (a potion's boost), else once.
+    pub fn penalty_times(&self, severity: u16) -> i32 {
+        match &self.penalty {
+            Some(p) if p.per_degree => i32::from(severity),
+            _ => 1,
+        }
+    }
+
     /// Whether all it does is to mana (drains it, slows its return): nothing to one with no mana,
     /// so a room's status of this kind passes such a one by (`World::dwell`).
     pub fn touches_only_mana(&self) -> bool {
@@ -583,6 +619,7 @@ impl StatusDef {
             && self.penalty.is_none()
             && self.combat == CombatBonus::default()
             && self.cost == 100
+            && self.attack_cost == 100
             && self.blocks.is_empty()
             && !self.flees
             && !self.sleeps
@@ -591,16 +628,20 @@ impl StatusDef {
             && self.wound.is_none()
             && self.hold.is_none()
             && self.light.is_none()
+            && self.vision.is_none()
+            && self.resist.is_empty()
     }
 }
 
 /// Parses `data/status.toml`: the healing rules and the statuses in file order; `damage`
-/// resolves damage type ids (`damage_type`, a wound's `from`), `light` light ids (`light`).
+/// resolves damage type ids (`damage_type`, a wound's `from`, `resist`), `light` light ids
+/// (`light`), `vision` vision profiles (`vision`, to their index).
 pub(super) fn parse(
     file: &str,
     text: &str,
     damage: impl Fn(&str) -> Option<DamageTypeId>,
     light: impl Fn(&str) -> Option<LightId>,
+    vision: impl Fn(&str) -> Option<usize>,
 ) -> Result<(Healing, Vec<StatusDef>), ContentError> {
     let err = |m: String| ContentError::new(file, m);
     let parsed: StatusFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
@@ -622,8 +663,8 @@ pub(super) fn parse(
             return Err(err(format!("duplicate status id `{id}`")));
         }
         follows.push(spec.follows.clone());
-        let def =
-            resolve(spec, (&damage, &light)).map_err(|m| err(format!("status `{id}`: {m}")))?;
+        let def = resolve(spec, (&damage, &light, &vision))
+            .map_err(|m| err(format!("status `{id}`: {m}")))?;
         list.push(def);
     }
     resolve_follows(&mut list, &follows).map_err(err)?;
@@ -663,9 +704,10 @@ fn resolve_follows(list: &mut [StatusDef], names: &[Option<String>]) -> Result<(
 
 fn resolve(
     spec: StatusSpec,
-    (damage, light): (
+    (damage, light, vision): (
         &impl Fn(&str) -> Option<DamageTypeId>,
         &impl Fn(&str) -> Option<LightId>,
+        &impl Fn(&str) -> Option<usize>,
     ),
 ) -> Result<StatusDef, String> {
     if spec.id.trim().is_empty() || spec.name.trim().is_empty() {
@@ -697,6 +739,7 @@ fn resolve(
         ("damage", c.damage),
         ("dodge", c.dodge),
         ("parry", c.parry),
+        ("shield", c.shield),
     ] {
         if !BONUS.contains(&value) {
             return Err(format!(
@@ -709,6 +752,13 @@ fn resolve(
     if !COST_PERCENT.contains(&spec.cost) {
         return Err(format!(
             "cost must be {} to {} (percent: statuses slow, never hasten)",
+            COST_PERCENT.start(),
+            COST_PERCENT.end()
+        ));
+    }
+    if !COST_PERCENT.contains(&spec.attack_cost) {
+        return Err(format!(
+            "attack_cost must be {} to {} (percent)",
             COST_PERCENT.start(),
             COST_PERCENT.end()
         ));
@@ -766,6 +816,21 @@ fn resolve(
     let light = (spec.light.as_deref())
         .map(|name| light(name).ok_or_else(|| format!("light: unknown light `{name}`")))
         .transpose()?;
+    let vision = (spec.vision.as_deref())
+        .map(|name| vision(name).ok_or_else(|| format!("vision: unknown vision profile `{name}`")))
+        .transpose()?;
+    let mut resist = Vec::new();
+    for (name, &percent) in &spec.resist {
+        let id = kind(name).map_err(|m| format!("resist: {m}"))?;
+        // Gear-like: never immunity, which only a creature's own nature gives.
+        if percent == 0 || !(MIN_RESISTANCE..=MAX_RESISTANCE).contains(&percent) {
+            return Err(format!(
+                "resist: `{name}` must be {MIN_RESISTANCE} to {MAX_RESISTANCE}, not 0"
+            ));
+        }
+        resist.push((id, percent));
+    }
+    resist.sort_by_key(|&(id, _)| id);
     Ok(StatusDef {
         id: spec.id,
         name: spec.name,
@@ -781,6 +846,7 @@ fn resolve(
         penalty,
         combat: spec.combat,
         cost: spec.cost,
+        attack_cost: spec.attack_cost,
         blocks,
         flees: spec.flees,
         sleeps: spec.sleeps,
@@ -796,6 +862,8 @@ fn resolve(
         hold: spec.hold,
         treat: spec.treat,
         light,
+        vision,
+        resist,
     })
 }
 
@@ -868,6 +936,16 @@ fn penalty(spec: PenaltySpec, max: u16) -> Result<Penalty, String> {
                 ADJUSTMENTS.end()
             ));
         }
+        // One that counts per degree stays in range at its most degrees.
+        let most = i32::from(value) * i32::from(if spec.per_degree { max } else { 1 });
+        if spec.per_degree
+            && !(i32::from(*ADJUSTMENTS.start())..=i32::from(*ADJUSTMENTS.end())).contains(&most)
+        {
+            return Err(format!(
+                "penalty: {} {value} a degree is out of range at {max} degrees",
+                stat.id()
+            ));
+        }
         by[stat] = value;
     }
     if by.iter().all(|(_, v)| v == 0) {
@@ -876,6 +954,7 @@ fn penalty(spec: PenaltySpec, max: u16) -> Result<Penalty, String> {
     Ok(Penalty {
         from: spec.from,
         by,
+        per_degree: spec.per_degree,
     })
 }
 
@@ -894,7 +973,8 @@ mod tests {
              [[status]]\nid = \"poisoned\"\nname = \"Poisoned\"\nmax = 10\nstacking = \"refresh\"\n\
              penalty = {{ from = 4, strength = -1, dexterity = -1 }}\n"
         );
-        let (healing, list) = parse("status.toml", &text, |_| None, |_| None).expect("valid");
+        let (healing, list) =
+            parse("status.toml", &text, |_| None, |_| None, |_| None).expect("valid");
         assert_eq!(healing.resting, 300);
         assert_eq!(list.len(), 2);
         let (bleeding, poison) = (&list[0], &list[1]);
@@ -921,7 +1001,8 @@ mod tests {
             (-1, -1, 0)
         );
         // Without statuses: none, and resting heals twice as fast.
-        let (healing, list) = parse("status.toml", "", |_| None, |_| None).expect("empty is valid");
+        let (healing, list) =
+            parse("status.toml", "", |_| None, |_| None, |_| None).expect("empty is valid");
         assert_eq!((healing, list.len()), (Healing::default(), 0));
         assert_eq!(Healing::default().resting, 200);
     }
@@ -998,7 +1079,7 @@ mod tests {
                 "resting must be 0 to 1000",
             ),
         ] {
-            let e = parse("status.toml", &text, |_| None, |_| None).unwrap_err();
+            let e = parse("status.toml", &text, |_| None, |_| None, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }
@@ -1014,7 +1095,7 @@ mod tests {
     fn buffs_and_cooldowns_parse() {
         // Raging follows into a status further down the file.
         let text = format!("{BLEEDING}{RAGING}{EXHAUSTED}");
-        let (_, list) = parse("status.toml", &text, |_| None, |_| None).expect("valid");
+        let (_, list) = parse("status.toml", &text, |_| None, |_| None, |_| None).expect("valid");
         let (bleeding, raging, exhausted) = (&list[0], &list[1], &list[2]);
         // Left out: nothing.
         assert!(bleeding.combat.is_none());
@@ -1028,7 +1109,8 @@ mod tests {
                 to_hit: 1,
                 damage: 0,
                 dodge: -2,
-                parry: 0
+                parry: 0,
+                shield: 0
             }
         );
         assert_eq!(raging.cost, 150);
@@ -1076,12 +1158,12 @@ mod tests {
                 "status `raging`: follows: it leads back to itself",
             ),
         ] {
-            let e = parse("status.toml", &text, |_| None, |_| None).unwrap_err();
+            let e = parse("status.toml", &text, |_| None, |_| None, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
         // One that is cured ends too, so something may follow it.
         let cured = raging("eases = 300\n", "cured_by = [\"calm\"]\n");
-        assert!(parse("status.toml", &cured, |_| None, |_| None).is_ok());
+        assert!(parse("status.toml", &cured, |_| None, |_| None, |_| None).is_ok());
     }
 
     #[test]
@@ -1196,7 +1278,8 @@ mod tests {
                  hold = {{ difficulty = 13, turns = \"3d4\" }}\n"
             )
         };
-        let (_, list) = parse("status.toml", &held(12), |_| None, |_| None).expect("valid");
+        let (_, list) =
+            parse("status.toml", &held(12), |_| None, |_| None, |_| None).expect("valid");
         let hold = list[0].hold.expect("a hold");
         assert_eq!((hold.check, hold.difficulty), (Stat::Strength, 13));
         assert_eq!((hold.turns.min(), hold.turns.max()), (3, 12));
@@ -1216,7 +1299,7 @@ mod tests {
                 "difficulty must be 1 to 40",
             ),
         ] {
-            let e = parse("status.toml", &text, |_| None, |_| None).unwrap_err();
+            let e = parse("status.toml", &text, |_| None, |_| None, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }
@@ -1289,10 +1372,12 @@ mod tests {
             "[healing]\nresting = 200\nmana_resting = 400\n{BLEEDING}mana_regen = 50\n\
              mana_damage = 2\n"
         );
-        let (healing, list) = parse("status.toml", &text, |_| None, |_| None).expect("valid");
+        let (healing, list) =
+            parse("status.toml", &text, |_| None, |_| None, |_| None).expect("valid");
         assert_eq!((healing.mana_resting, list[0].mana_regen), (400, 50));
         assert_eq!(list[0].mana_damage, 2);
-        let (healing, list) = parse("status.toml", BLEEDING, |_| None, |_| None).expect("valid");
+        let (healing, list) =
+            parse("status.toml", BLEEDING, |_| None, |_| None, |_| None).expect("valid");
         assert_eq!(healing.mana_resting, 200, "twice as fast resting");
         assert_eq!(
             (list[0].mana_regen, list[0].mana_damage),
@@ -1320,8 +1405,52 @@ mod tests {
                 "mana_resting must be 0 to 1000",
             ),
         ] {
-            let e = parse("status.toml", &text, |_| None, |_| None).unwrap_err();
+            let e = parse("status.toml", &text, |_| None, |_| None, |_| None).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
+    }
+
+    #[test]
+    fn eyes_and_resistances_name_what_exists_and_never_immunity() {
+        let damage = |id: &str| (id == "fire").then_some(DamageTypeId(3));
+        let vision = |id: &str| (id == "darkvision").then_some(2);
+        let status = |extra: &str| {
+            format!("[[status]]\nid = \"x\"\nname = \"X\"\nmax = 2\neases = 60\n{extra}\n")
+        };
+        let text = status("vision = \"darkvision\"\nresist = { fire = 50 }");
+        let (_, list) = parse("status.toml", &text, damage, |_| None, vision).expect("valid");
+        assert_eq!(list[0].vision, Some(2));
+        assert_eq!(list[0].resist, vec![(DamageTypeId(3), 50)]);
+        assert!(!list[0].touches_only_mana());
+        for (extra, why) in [
+            ("vision = \"eagle\"", "unknown vision profile `eagle`"),
+            (
+                "resist = { brimstone = 50 }",
+                "unknown damage type `brimstone`",
+            ),
+            ("resist = { fire = 100 }", "must be -100 to 75"),
+            ("resist = { fire = 0 }", "must be -100 to 75"),
+            (
+                "penalty = { from = 1, strength = 6, per_degree = true }",
+                "out of range at 2 degrees",
+            ),
+        ] {
+            let text = status(extra);
+            let e = parse("status.toml", &text, damage, |_| None, vision).unwrap_err();
+            assert!(e.message.contains(why), "{why}: {}", e.message);
+        }
+    }
+
+    #[test]
+    fn a_raise_per_degree_counts_once_a_degree() {
+        let text = "[[status]]\nid = \"fortified\"\nname = \"Fortified\"\nmax = 2\n\
+                    eases = 600\npenalty = { from = 1, strength = 2, per_degree = true }\n";
+        let (_, list) = parse("status.toml", text, |_| None, |_| None, |_| None).expect("valid");
+        assert_eq!(list[0].penalty_times(1), 1);
+        assert_eq!(list[0].penalty_times(2), 2);
+        let blessed = "[[status]]\nid = \"b\"\nname = \"B\"\nmax = 3\n\
+                       penalty = { from = 1, willpower = 1 }\n";
+        let (_, list) = parse("status.toml", blessed, |_| None, |_| None, |_| None).expect("ok");
+        assert_eq!(list[0].penalty_times(3), 1, "once whatever the severity");
     }
 }

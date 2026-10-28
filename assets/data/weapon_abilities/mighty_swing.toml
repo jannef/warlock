@@ -1,0 +1,14 @@
+[[weapon_ability]]
+id = "mighty_swing"
+name = "Mighty swing"
+description = "A great, slow swing with all your weight behind it: harder to land, and it hits twice as hard."
+skills = ["great_weapon"]
+rank = 7
+kind = "active"
+aim = "direction"
+stamina = 5
+energy = { action = "melee", percent = 150 }
+systems = ["weapon_abilities", "styles", "stamina", "combat"]
+[weapon_ability.effect]
+kind = "double_dice"
+to_hit = -2

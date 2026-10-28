@@ -1,0 +1,15 @@
+[[weapon_ability]]
+id = "shield_wall"
+name = "Shield wall"
+description = "Set your shield and stand behind it for a few moments: harder to strike, slower to strike back."
+skills = ["shield_block"]
+rank = 9
+kind = "active"
+aim = "nothing"
+stamina = 5
+energy = { action = "wait", percent = 100 }
+systems = ["weapon_abilities", "weapon_skills", "stamina", "defence", "status"]
+[weapon_ability.effect]
+kind = "buff"
+status = "walled"
+severity = 5
