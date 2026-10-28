@@ -8,6 +8,7 @@ expression: "render(case, content.clone())"
 
 
 
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -18,14 +19,13 @@ expression: "render(case, content.clone())"
                     │   d  Woodcraft          not usable yet                   │
                     │ Weapon skills                                            │
                     │   e  Shield bash        you hold no shield               │
-                    │ Items                                                    │
-                    │   f  Hood your lantern                                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-f or Enter use   Esc close                             │
+                    │ a-e or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
 

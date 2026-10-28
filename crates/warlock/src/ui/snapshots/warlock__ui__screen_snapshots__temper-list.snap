@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
+ You see here a dagger.
  You pick up a dagger.
- You are burdened.
 
 
 

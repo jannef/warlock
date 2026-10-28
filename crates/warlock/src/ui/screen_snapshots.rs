@@ -58,8 +58,8 @@ pub(super) const BASE: Case = Case {
 
 /// The showcase's storeroom, with the first stacks picked up and armour on (equipment cases).
 const ARMED: &str = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
-    pickup move:S*2 pickup move:NW move:W*2 move:N pickup move:SW pickup equip:head:f \
-    equip:body:e equip:main_hand:b equip:missile_weapon:c equip:missiles:d equip:feet:i";
+    pickup move:S*2 pickup move:NW move:W*2 move:N pickup move:SW pickup equip:head:g \
+    equip:body:f equip:main_hand:c equip:missile_weapon:d equip:missiles:e equip:feet:j";
 /// Enough stacks carried for a second page.
 const HOARD: &str = "move:SW*2 pickup move:NE*2 move:E*2 move:NE pickup move:SW move:W*2 \
     move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N pickup move:S*2 \
@@ -253,7 +253,7 @@ const CASES: &[Case] = &[
     Case {
         name: "character-attacks-two-weapons",
         character: Some("human,male,ranger"),
-        actions: "move:SW*2 pickup equip:off_hand:j",
+        actions: "move:SW*2 pickup equip:off_hand:k",
         screen: Some("character"),
         size: (100, 36),
         ..BASE
@@ -311,7 +311,7 @@ const CASES: &[Case] = &[
     Case {
         name: "weapon-skills-screen",
         scenario: "arena",
-        actions: "move:E pickup equip:missile_weapon:a equip:missiles:b fire:30,16*12",
+        actions: "move:E pickup equip:missile_weapon:b equip:missiles:c fire:30,16*12",
         screen: Some("weapon-skills"),
         ..BASE
     },
@@ -335,7 +335,7 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
-            pickup:a equip:off_hand:a",
+            pickup:a equip:off_hand:b",
         screen: Some("abilities"),
         ..BASE
     },
@@ -640,7 +640,7 @@ const CASES: &[Case] = &[
     Case {
         name: "magic-inventory",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup \
-            move:E pickup equip:head:c",
+            move:E pickup equip:head:d",
         screen: Some("inventory"),
         ..BASE
     },
@@ -692,34 +692,34 @@ const CASES: &[Case] = &[
     },
     Case {
         name: "potion-description-unidentified",
-        actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
+        actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
             open:N move:N*2 move:E pickup",
         screen: Some("describe"),
         ..BASE
     },
     Case {
         name: "potion-description",
-        actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
+        actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*3 open:S move:S*4 move:E*4 \
             open:N move:N*2 move:E pickup eat:a",
         screen: Some("describe"),
         ..BASE
     },
     Case {
         name: "item-description",
-        actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup \
+        actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup \
             equip:head:a",
         screen: Some("describe"),
         ..BASE
     },
     Case {
         name: "ornament-description",
-        actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup:b",
+        actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*4 pickup:b",
         screen: Some("describe"),
         ..BASE
     },
     Case {
         name: "variant-description",
-        actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*3 move:N \
+        actions: "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*3 move:N \
             pickup:b",
         screen: Some("describe"),
         ..BASE
@@ -759,7 +759,7 @@ const CASES: &[Case] = &[
         name: "scroll-too-close",
         scenario: "traps",
         // The fireballs identified first: an unknown scroll is read without a warning.
-        actions: "move:E pickup read:e:b",
+        actions: "drop:a move:E pickup read:e:b",
         keys: Some("r a k Enter"),
         ..BASE
     },
@@ -791,21 +791,21 @@ const CASES: &[Case] = &[
     Case {
         name: "wand-description-unidentified",
         scenario: "traps",
-        actions: "move:E move:E pickup",
+        actions: "drop:a move:E move:E pickup",
         screen: Some("describe"),
         ..BASE
     },
     Case {
         name: "wand-description",
         scenario: "traps",
-        actions: "move:E move:E pickup identify",
+        actions: "drop:a move:E move:E pickup identify",
         screen: Some("describe"),
         ..BASE
     },
     Case {
         name: "wand-aim",
         scenario: "traps",
-        actions: "move:E move:E pickup identify equip:missile_weapon:a",
+        actions: "drop:a move:E move:E pickup identify equip:missile_weapon:a",
         keys: Some("t"),
         ..BASE
     },
@@ -814,14 +814,14 @@ const CASES: &[Case] = &[
     Case {
         name: "rod-description",
         scenario: "traps",
-        actions: "move:E move:E move:E pickup identify",
+        actions: "drop:a move:E move:E move:E pickup identify",
         screen: Some("describe"),
         ..BASE
     },
     Case {
         name: "rod-aim",
         scenario: "traps",
-        actions: "move:E move:E move:E pickup identify equip:missile_weapon:a",
+        actions: "drop:a move:E move:E move:E pickup identify equip:missile_weapon:a",
         keys: Some("t"),
         ..BASE
     },
@@ -924,7 +924,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Pip's birth sign has gifts (#265): seed 4 is one where the fight still ends in his death.
         seed: Some(4),
-        actions: "lantern wait*20",
+        actions: "use_tool wait*20",
         ..BASE
     },
     Case {
@@ -932,7 +932,7 @@ const CASES: &[Case] = &[
         scenario: "arena",
         // Seed 142 gives Pip a lucky day, the Iron Scourge (#269), and the fight his death.
         seed: Some(142),
-        actions: "lantern wait*14",
+        actions: "use_tool wait*14",
         ..BASE
     },
 ];

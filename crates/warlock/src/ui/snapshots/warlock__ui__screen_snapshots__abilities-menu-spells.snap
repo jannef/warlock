@@ -4,6 +4,7 @@ expression: "render(case, content.clone())"
 ---
  You feel blessed.
  You spend 101 mana (dev).
+
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -21,14 +22,13 @@ expression: "render(case, content.clone())"
                     │   i  Knowledge          not usable yet                   │
                     │ Weapon skills                                            │
                     │   j  Shield bash        in a direction                   │
-                    │ Items                                                    │
-                    │   k  Hood your lantern                                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
+
 
 
  The Hub  ·  HP 44/44  ·  MP 1/105  ·  Blessed  ·  Lv 14  ·  08:00  ·  11 Darkening      ? controls

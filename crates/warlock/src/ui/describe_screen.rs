@@ -183,13 +183,13 @@ mod tests {
     use warlock_core::content::Content;
     use warlock_core::{Action, Positions, World};
 
-    /// The showcase, standing on the storeroom's magic arms with them picked up: a the magic ring
+    /// The showcase, the lantern put down, standing on the storeroom's magic arms with them picked up: a the magic ring
     /// (unidentified), b the rare bow (unidentified), c the rare helm, d the magic sword, its
     /// pommel an emerald.
     fn armed() -> World {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("world");
-        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup \
+        let walk = "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup \
                     move:E pickup";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
             world.apply(&action);

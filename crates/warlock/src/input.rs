@@ -54,7 +54,6 @@ pub enum KeyCommand {
     Kick,
     Descend,
     Ascend,
-    Lantern,
     /// Pick up what lies here: a single stack at once, a choice of several on a screen.
     PickUp,
     /// Choose what to drop from the inventory.
@@ -124,8 +123,6 @@ pub enum KeyCommand {
     /// Steal from someone in a direction (asked for in the message line; spec §8 "Stealing").
     /// An ability: unbound by default, as the abilities menu lists it.
     Steal,
-    /// Lower or raise the lantern's hood. An ability: unbound by default.
-    HoodLantern,
     /// While aiming: the cursor to the next creature in view (with Shift, the one before).
     NextTarget,
     /// While aiming: the cursor to the creature in view before (no default key: Shift with
@@ -138,8 +135,9 @@ pub enum KeyCommand {
     MoreAggressive,
     /// Take a more defensive combat stance (the other way).
     MoreDefensive,
-    /// Use the tool the player has ready toward a direction (ADOM's `U`): dig into a wall with a
-    /// pick-axe. An item's use, not an ability (abilities get a menu of their own).
+    /// Use the tool the player has ready (ADOM's `U`): toward a direction, dig into a wall with
+    /// a pick-axe; a light (a lantern) at once, from unlit to lit to hooded and back. An item's
+    /// use, not an ability (abilities get a menu of their own).
     UseTool,
     /// Chat with someone next to you: the one in view if there is only one, else in a
     /// direction.
@@ -313,7 +311,6 @@ impl KeyCommand {
             KeyCommand::Kick => "Kick",
             KeyCommand::Descend => "Go down stairs",
             KeyCommand::Ascend => "Go up stairs",
-            KeyCommand::Lantern => "Light / douse lantern",
             KeyCommand::PickUp => "Pick up",
             KeyCommand::Drop => "Drop",
             KeyCommand::Inventory => "Inventory",
@@ -345,11 +342,10 @@ impl KeyCommand {
             KeyCommand::Disarm => "Disarm a trap",
             KeyCommand::PickLock => "Pick a lock",
             KeyCommand::Steal => "Steal",
-            KeyCommand::HoodLantern => "Hood your lantern",
             KeyCommand::NextTarget => "Next target (Shift: previous)",
             KeyCommand::PrevTarget => "Previous target",
             KeyCommand::Loose => "Shoot or throw",
-            KeyCommand::UseTool => "Use a tool (dig)",
+            KeyCommand::UseTool => "Use a tool (dig, light)",
             KeyCommand::Chat => "Chat",
             KeyCommand::Pay => "Pay the shopkeeper",
             KeyCommand::MenuUp => "Up",
@@ -468,7 +464,6 @@ impl Default for Bindings {
             (ch("k"), Kick),
             (ch(">"), Descend),
             (ch("<"), Ascend),
-            (ch("*"), Lantern),
             (ch(","), PickUp),
             (ch(";"), PickUp),
             (ch("d"), Drop),
@@ -957,10 +952,6 @@ impl Gameplay<'_> {
                 self.actions.write(PlayerAction(Action::Ascend));
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::Lantern) => {
-                self.actions.write(PlayerAction(Action::ToggleLantern));
-                InputMode::Normal
-            }
             (InputMode::Normal, KeyCommand::PickUp) => {
                 // One stack is picked up at once; several are chosen from on a screen. With
                 // nothing here, the core says so.
@@ -1107,10 +1098,6 @@ impl Gameplay<'_> {
                 open = Some(ScreenAction::UseAbility(Ability::Steal));
                 InputMode::Normal
             }
-            (InputMode::Normal, KeyCommand::HoodLantern) => {
-                open = Some(ScreenAction::UseAbility(Ability::HoodLantern));
-                InputMode::Normal
-            }
             // The one creature in view next to the player, at once; else ask which way.
             (InputMode::Normal, KeyCommand::Chat) => match chat_partner(&game.world.perception()) {
                 Some(dir) => {
@@ -1120,7 +1107,12 @@ impl Gameplay<'_> {
                 None => InputMode::Direction(command),
             },
             (InputMode::Normal, KeyCommand::UseTool) => {
-                if game.world.perception().ready_to_dig().is_some() {
+                let view = game.world.perception();
+                if view.ready_light().is_some() {
+                    // A light ready (a lantern): its next mode, at once.
+                    self.actions.write(PlayerAction(Action::UseTool));
+                    InputMode::Normal
+                } else if view.ready_to_dig().is_some() {
                     InputMode::Direction(command)
                 } else {
                     // Nothing to dig with: the rules say so ("You have no digging tool ready.").
@@ -1483,7 +1475,6 @@ mod tests {
         assert_eq!(keys(&b, KeyCommand::Move(Dir::NE)), ["Num9"]);
         assert_eq!(keys(&b, KeyCommand::Descend), [">"]);
         assert!(keys(&b, KeyCommand::Quit).is_empty(), "the menu quits");
-        assert_eq!(keys(&b, KeyCommand::Lantern), ["*"]);
         assert_eq!(keys(&b, KeyCommand::Kick), ["k"]);
         assert_eq!(keys(&b, KeyCommand::Help), ["?"]);
         assert_eq!(keys(&b, KeyCommand::Cancel), ["Esc"]);
@@ -1678,12 +1669,12 @@ mod tests {
         );
         assert!(leaving_dialog(&view, Dir::E).is_none(), "a step inside");
         // Selling the scroll asks; putting back the dagger does not.
-        let offer = view.sale(&Positions::of([1])).expect("an offer").offer;
+        let offer = view.sale(&Positions::of([2])).expect("an offer").offer;
         // Unread, the scroll goes by its label.
-        let scroll = view.lore().describe(&view.inventory()[1]);
+        let scroll = view.lore().describe(&view.inventory()[2]);
         assert!(scroll.starts_with("a scroll labelled "), "{scroll}");
         assert_eq!(
-            sale_dialog(&view, &Positions::of([1])),
+            sale_dialog(&view, &Positions::of([2])),
             Some(
                 Dialog::new(
                     "Grimbold's General Store",
@@ -1691,12 +1682,12 @@ mod tests {
                 )
                 .accept(
                     format!("Sell for {offer} gold"),
-                    Action::Sell(Positions::of([1]))
+                    Action::Sell(Positions::of([2]))
                 )
                 .cancel("Keep it", ScreenAction::Close)
             )
         );
-        assert!(sale_dialog(&view, &Positions::of([2])).is_none());
+        assert!(sale_dialog(&view, &Positions::of([3])).is_none());
         // With the short sword too, more than the purse holds: no way to pay, only back.
         walk(
             &mut world,

@@ -346,7 +346,7 @@ mod tests {
 
     #[test]
     fn the_player_shades_the_torches_but_not_the_lantern() {
-        let world = showcase("lantern");
+        let world = showcase("use_tool");
         let view = world.perception();
         let shadows = Shadows::compute(&view);
         let player = view.viewer();

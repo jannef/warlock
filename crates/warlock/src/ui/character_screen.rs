@@ -644,15 +644,15 @@ mod tests {
             (text.iter()).any(|l| l.contains("Stance") && l.contains("Aggressive")),
             "{text:#?}"
         );
-        row("Weight 73.5 kg (you 70 kg, carrying 3.5 kg)");
+        row("Weight 73.9 kg (you 70 kg, carrying 3.9 kg)");
         // St 9 To 10: a limit of 42 kg, by thirds; the line right below the weight.
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         let thresholds = "Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg";
-        assert_eq!(at(thresholds), at("Weight 73.5 kg").map(|y| y + 1));
+        assert_eq!(at(thresholds), at("Weight 73.9 kg").map(|y| y + 1));
         row("@ or Esc close   A skills");
         let empty_handed = drawn(&showcase(), 80, 30);
         assert!(
-            (empty_handed.iter()).any(|l| l.contains("Weight 70 kg, carrying nothing")),
+            (empty_handed.iter()).any(|l| l.contains("Weight 70.4 kg (you 70 kg, carrying 400 g)")),
             "{empty_handed:#?}"
         );
     }

@@ -8,7 +8,6 @@ expression: "render(case, content.clone())"
 
 
 
-
     ┌─ Inventory ─────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ Melee weapons                                                                           │
@@ -19,13 +18,14 @@ expression: "render(case, content.clone())"
     │   c - [ Dread Visage, an iron helm (+1 hit, Dv +0, Pv 1) (being worn)           1.5 kg  │
     │ Rings                                                                                   │
     │   d - = a silver ring (magic)                                                     10 g  │
+    │ Tools                                                                                   │
+    │   e - ( a lantern (in use)                                                       400 g  │
     │                                                                                         │
-    │ Carrying 4 kg   ·   Your weight 74 kg (you 70 kg)                                       │
+    │ Carrying 4.4 kg   ·   Your weight 74.4 kg (you 70 kg)                                   │
     │ Burdened over 14 kg, strained over 28 kg, overloaded over 42 kg                         │
     │                                                                                         │
-    │ a-d look   I or Esc close                                                               │
+    │ a-e look   I or Esc close                                                               │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
-
 
 
 
