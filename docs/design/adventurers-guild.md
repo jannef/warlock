@@ -163,7 +163,7 @@ The owner's rule (decision 4) for **every quest**, the guild's and the existing 
 
 | Question | Design |
 |---|---|
-| Asking about a quest | the quest topic (`quest-ID`) **gives** the quest: the giver says the offer (then the quest's `accept` line, if it has one, as a second line of the same reply), and the record is created **active**. `World::offers` still decides whether the topic shows (`requires`, `requires_alignment`, a giver's scorn of good quests) |
+| Asking about a quest | the quest topic (`quest-ID`) **gives** the quest: the giver says the offer (then the quest's `accept` line, if it has one, as a second line of the same reply), and the record is created **active**. `World::offers` still decides whether the topic shows (`requires`, `requires_alignment`; since #692 a giver's scorn withholds nothing) |
 | The log | the quest goes on the log at once with its **first breadcrumb**: "<Giver> wants you to <objective>." ("Wat wants you to kill a goblin chief.", "Sister Hild wants you to find the barrow's heart."), then progress lines as today, then "Return to <giver>." |
 | Topics retired | `accept-ID` and `decline-ID`, and with them the `decline` text and `withdraw`. `RevealWhen::Accepted` becomes `given` (the same moment). Each existing quest's `accept` line stays, said after its offer; its `decline` line is dropped (Hild's three, Wulfrun's, Leofric's). A replay step `ask:E:accept-ID` or `ask:E:decline-ID` is refused: replays and tests that use them are rewritten in the PR |
 | When the roll is made | as the quest is given, so the offer can name the target; the record holds its `roll` from then on |

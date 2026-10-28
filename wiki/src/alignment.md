@@ -58,7 +58,7 @@ Nothing else moves you. When you cross into another band you feel it ("You feel 
 ## What it changes
 
 - **People**: good folk turn cold to an Evil or Wicked character: they answer with a cold word
-  instead of their greeting and their talk, and offer no quest that would do you good. Evil folk
+  instead of their greeting and their talk, though they still offer you their quests. Evil folk
   would do the same to a Good or Saintly one. Some quests are offered only to those of the right
   alignment.
 - **Shops**: every shopkeeper is good, and their prices follow your band (the prices you see

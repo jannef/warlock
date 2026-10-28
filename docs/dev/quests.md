@@ -20,8 +20,8 @@ rolled or a repeat), a delivery's item handed over, `reveals.when = "given"` fir
 accepting, declining, or `withdraw` any more; the `accept-ID`/`decline-ID` topics of older
 replays are no one's and refused, and an `offered` record of an older save loads as active
 (`#[serde(alias)]` on `Stage::Active`). A quest is
-offered only when `World::offers` it: the player's band meets its `requires_alignment`, and a
-giver who scorns them offers none whose `alignment` is good; `complete` makes the quest's
+offered only when `World::offers` it: the player's band meets its `requires_alignment` (a
+giver who scorns them still offers it, #692); `complete` makes the quest's
 `alignment` shift, `docs/dev/alignment.md`); `Quests` in
 `WorldState` (records by quest id: stage, completed, counted, reached, roll; the kill tally by
 level and creature id, for every type (#244: the ranger's Favoured prey reads it too), `prey`,

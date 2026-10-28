@@ -197,7 +197,7 @@ impl World {
         let Some(id) = self.dialogue_of(actor) else {
             return Vec::new();
         };
-        let mut topics = self.quest_topics(id, self.scorns(actor));
+        let mut topics = self.quest_topics(id);
         let dialogue = self.content.dialogue(id);
         topics.extend(dialogue.topics.iter().map(|t| TopicView {
             id: t.id.clone(),

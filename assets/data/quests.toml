@@ -48,8 +48,8 @@
 #              optional, with `early`): before then it is still a topic, but asked about it the
 #              giver says `early` (a reply) and gives nothing
 #   alignment  how far completing it moves your alignment (alignment.toml; -1000 to 1000,
-#              default 0): helping quests good, dark ones evil. A good giver offers no good one
-#              to an Evil or Wicked character, an evil giver none to a Good or Saintly one
+#              default 0): helping quests good, dark ones evil. A giver offers it whatever
+#              the player's alignment, scorn or not; only `requires_alignment` limits that
 #   repeatable offered again once done (default false)
 #   reveals    a hidden location of the overworld it reveals (a legend's `hidden`; optional):
 #              { location = "ID", when = "given" }, `when` "given" (the default) or "done". The
