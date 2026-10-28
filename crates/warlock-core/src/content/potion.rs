@@ -4,22 +4,25 @@
 //!
 //! ```toml
 //! [object.drink]
-//! kind = "heal"              # heal, cure, mana, harm, boost, vision, haste, resistance
+//! kind = "heal"              # heal, cure, mana, elixir, harm, boost, vision, haste, resistance
 //! dice = "2d8"               # heal: hit points back; mana: mana back; harm: degrees of sickness
 //! cures = ["bandage"]        # heal, cure: means named in the statuses' and diseases' `cured_by`
 //! diseases = true            # cure: ends every disease the drinker has
 //! status = "poisoned"        # harm: the status it gives, `dice` degrees of it; boost, vision,
 //!                            # resistance: the status it gives (a raise, eyes, a `resist`)
 //! severity = 1               # boost, haste: the degrees it gives (1 to the status's `max`)
+//! stat = "strength"          # elixir: the stat it raises for good
+//! points = 1                 # elixir: by how much (a trained rise each)
+//! potential = "1d2"          # elixir: the potential's further rise, rolled once
 //! colour = "red"             # what an unknown one is called by ("a fizzy red potion")
 //! marks = { toughness = 5 }  # sure training marks it gives, by stat
 //! ```
 //!
 //! Only its kind's fields: a heal has `dice` and maybe `cures`; a cure has `cures` or
-//! `diseases`; a mana potion `dice`; a harm `dice` and `status`; a boost `status` (one that
-//! raises a stat, `penalty`) and `severity`; a vision `status` (one with `vision`); a haste
-//! `severity` (of Hasted, the Haste spell's status); a resistance `status` (one with
-//! `resist`). The colour's hue is its
+//! `diseases`; a mana potion `dice`; an elixir `stat`, `points`, and `potential`; a harm `dice`
+//! and `status`; a boost `status` (one that raises a stat, `penalty`) and `severity`; a vision
+//! `status` (one with `vision`); a haste `severity` (of Hasted, the Haste spell's status); a
+//! resistance `status` (one with `resist`). The colour's hue is its
 //! family's (the design's rule, kept in data as the object's `fg`): potions that share a colour
 //! name share their `fg`.
 
@@ -34,6 +37,8 @@ pub const MAX_POTION_MARKS: u16 = 100;
 
 /// The status a haste gives: the Haste spell's.
 const HASTE: &str = "hasted";
+/// The points an elixir may raise its stat by.
+pub const ELIXIR_POINTS: std::ops::RangeInclusive<u8> = 1..=3;
 
 /// What drinking a potion does (spec §8 "Potions").
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -45,6 +50,13 @@ pub enum Draught {
     Cure { cures: Vec<String>, diseases: bool },
     /// Mana back at once, never past the maximum.
     Mana { dice: Dice },
+    /// `stat` raised for good by `points` (each a trained rise: the potential lifted to the score
+    /// first if below), then its potential by a roll of `potential` (the design's §10.5).
+    Elixir {
+        stat: Stat,
+        points: u8,
+        potential: Dice,
+    },
     /// Sickness: degrees of `status` (poisoned), as rotten food gives.
     Harm { dice: Dice, status: StatusId },
     /// A stat raised for a while: `severity` degrees of `status` (Fortified), a raise.
@@ -64,6 +76,7 @@ impl Draught {
             Draught::Heal { .. } => "heal",
             Draught::Cure { .. } => "cure",
             Draught::Mana { .. } => "mana",
+            Draught::Elixir { .. } => "elixir",
             Draught::Harm { .. } => "harm",
             Draught::Boost { .. } => "boost",
             Draught::Vision { .. } => "vision",
@@ -116,6 +129,9 @@ pub struct DrinkSpec {
     diseases: bool,
     status: Option<String>,
     severity: Option<u16>,
+    stat: Option<String>,
+    points: Option<u8>,
+    potential: Option<Dice>,
     colour: String,
     #[serde(default)]
     marks: BTreeMap<String, u16>,
@@ -154,6 +170,14 @@ impl DrinkSpec {
                 None => Err(format!("`drink`: a {} needs `severity`", self.kind)),
             }
         };
+        // An elixir's fields belong to it alone.
+        if self.kind != "elixir" {
+            only(&[
+                ("stat", self.stat.is_some()),
+                ("points", self.points.is_some()),
+                ("potential", self.potential.is_some()),
+            ])?;
+        }
         let does = match self.kind.as_str() {
             "heal" => {
                 only(&[
@@ -189,6 +213,37 @@ impl DrinkSpec {
                 ])?;
                 Draught::Mana {
                     dice: dice(self.dice)?,
+                }
+            }
+            "elixir" => {
+                only(&[
+                    ("dice", self.dice.is_some()),
+                    ("cures", !self.cures.is_empty()),
+                    ("diseases", self.diseases),
+                    ("status", self.status.is_some()),
+                    ("severity", self.severity.is_some()),
+                ])?;
+                let name = (self.stat.as_deref())
+                    .ok_or_else(|| "`drink`: an elixir names its `stat`".to_string())?;
+                let stat = Stat::from_id(name)
+                    .ok_or_else(|| format!("`drink`: `stat` names no stat `{name}`"))?;
+                let points = self.points.unwrap_or(1);
+                if !ELIXIR_POINTS.contains(&points) {
+                    return Err(format!(
+                        "`drink`: an elixir's `points` are {} to {}",
+                        ELIXIR_POINTS.start(),
+                        ELIXIR_POINTS.end()
+                    ));
+                }
+                let potential = (self.potential)
+                    .ok_or_else(|| "`drink`: an elixir needs `potential` dice".to_string())?;
+                if potential.min() < 0 {
+                    return Err("`drink`: an elixir's `potential` never lowers it".into());
+                }
+                Draught::Elixir {
+                    stat,
+                    points,
+                    potential,
                 }
             }
             "harm" => {
@@ -257,8 +312,8 @@ impl DrinkSpec {
             }
             other => {
                 return Err(format!(
-                    "`drink`: unknown kind `{other}` (heal, cure, mana, harm, boost, vision, \
-                     haste, resistance)"
+                    "`drink`: unknown kind `{other}` (heal, cure, mana, elixir, harm, boost, \
+                     vision, haste, resistance)"
                 ));
             }
         };

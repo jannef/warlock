@@ -40,6 +40,16 @@ pub(super) fn potions(content: &Content) -> String {
             Draught::Mana { dice } => {
                 format!("{dice} mana back at once, never past your maximum")
             }
+            Draught::Elixir {
+                stat,
+                points,
+                potential,
+            } => format!(
+                "{} +{points} for good (a trained rise: the potential lifted to the score if \
+                 below), then its potential +{} (a roll)",
+                stat.name(),
+                potential.to_string().trim_start_matches('+')
+            ),
             Draught::Harm { dice, status } => format!(
                 "{} degrees of {} (as rotten food)",
                 dice.to_string().trim_start_matches('+'),

@@ -295,8 +295,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   through the one path that does it: `heal` (`dice` hit points back at once, never past the
   maximum, and what its `cures` names cured), `cure` (`cures`, means of the statuses' and
   diseases' `cured_by`: `bandage` stops bleeding, `antidote` ends poison; `diseases = true` ends
-  every disease), `mana` (`dice` mana back, never past the maximum), `harm` (`dice` degrees of
-  its `status`, Poisoned: sickness, as rotten food gives), and, for a while (#567), `boost`
+  every disease), `mana` (`dice` mana back, never past the maximum), `elixir` (#568: its `stat`
+  +`points` (1) for good, each a trained rise that lifts the potential with the score where it
+  was at it, then the potential +a roll of `potential`, "1d2", one gameplay draw; hit points
+  follow a Toughness rise at once, the maximum mana and the carrying limits follow the score;
+  "You feel stronger.", with ", and that you could be stronger yet." when the potential rose by
+  2), `harm` (`dice` degrees of its `status`, Poisoned: sickness, as rotten food gives), and,
+  for a while (#567), `boost`
   (`severity` degrees of its `status`, one that raises a stat: Fortified, Nimble, Hale, Keen,
   Steadfast, Imposing, +2 a degree for ten minutes a degree, the stronger of two doses kept),
   `vision` (its `status` lends eyes for half an hour: Cat-eyed low-light, Owl-eyed darkvision,
@@ -308,8 +313,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   again, and one that changes nothing "Nothing more comes of it." The status bar and the
   character screen name it as they name Blessed, the raised score shown raised, never a number
   or a timer. Every potion names its training
-  `marks` by stat (5 for a common one, 10 for a greater; none for a harm), given as sure marks
-  through the `drank` use (§8 "Stats").
+  `marks` by stat (5 for a common one, 10 for a greater, 20 for an elixir; none for a harm),
+  given as sure marks through the `drank` use (an elixir's through the `elixir` use; §8
+  "Stats").
+  - **Elixirs** (#568): the elixirs of might, grace, vigour, wit, will, and presence (Strength,
+    Dexterity, Toughness, Intelligence, Willpower, Presence), gold `#e8c860`, item level 8,
+    frequency 2, value 2000: deep loot, the forgotten altar's great boon `elixir` (§7 "Special
+    rooms"), and very rarely an alchemist's stock; never a general store's or a provisioner's
+    (their `never` list, `data/shops.toml`). The description says "Makes you stronger for
+    good"; never a number, never the potential.
   - **Drinking: Consume** (§6 "Consume"): no action of its own. `Action::Eat` (`eat:b`,
     `eat:floor:a`) hands a stack with a `drink` table to `World::drink_potion` instead of
     starting a meal; it needs no hunger. It takes the `drink` action's time (one turn) and one of

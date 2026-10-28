@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here.
- You pick up 2 thin red potions, a fizzy blue potion, and a scroll labelled ULVENZIM.
+ You pick up 5 objects.
 
 
 
@@ -14,9 +14,9 @@ expression: "render(case, content.clone())"
 
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
-                  │ ! Thin red potion                                            │
+                  │ ! Syrupy red potion                                          │
                   │                                                              │
-                  │ 2 thin red potions · glass · 500 g                           │
+                  │ 2 syrupy red potions · glass · 500 g                         │
                   │                                                              │
                   │ You do not know what this potion does.                       │
                   │                                                              │

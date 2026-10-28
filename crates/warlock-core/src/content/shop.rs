@@ -79,6 +79,8 @@ struct ShopSpec {
     #[serde(default)]
     always: Vec<String>,
     #[serde(default)]
+    never: Vec<String>,
+    #[serde(default)]
     buys: Vec<String>,
     items: [u8; 2],
     markup: u16,
@@ -98,6 +100,9 @@ pub struct ShopDef {
     /// What a generated shop of this kind always lays out, one stack of each (a bundle of a
     /// stackable one) before the rest of its goods: the general store's scrolls of identify.
     pub always: Vec<ObjectId>,
+    /// What a generated shop of this kind never lays out, though its class is stocked: the
+    /// general store's elixirs.
+    pub never: Vec<ObjectId>,
     /// The item classes of what it buys.
     pub buys: Vec<ItemClassId>,
     /// How many stacks of goods a generated shop lays out, least and most.
@@ -198,13 +203,14 @@ impl Shops {
     }
 
     /// Whether a shop of kind `kind` stocks `object` when it is generated: it is worth
-    /// something as it is made, of a class the shop stocks.
+    /// something as it is made, of a class the shop stocks, and not one it never lays out.
     pub fn stocks(&self, content: &Content, kind: ShopId, object: ObjectId) -> bool {
         let def = content.object(object);
         object != self.currency
             && def.value > 0
             && def.burning.is_none()
             && self.get(kind).stock.contains(&def.class)
+            && !self.get(kind).never.contains(&object)
     }
 
     /// Whether a shop of kind `kind` buys `stack`.
@@ -355,12 +361,19 @@ impl Shops {
                     .collect()
             };
             let (stock, buys) = (classes(&spec.stock)?, classes(&spec.buys)?);
-            let always = (spec.always.iter())
-                .map(|o| {
-                    (content.object_id(o))
-                        .ok_or_else(|| bad(format!("unknown object `{o}` in `always`")))
-                })
-                .collect::<Result<Vec<_>, _>>()?;
+            let objects = |ids: &[String], field: &str| {
+                (ids.iter())
+                    .map(|o| {
+                        (content.object_id(o))
+                            .ok_or_else(|| bad(format!("unknown object `{o}` in `{field}`")))
+                    })
+                    .collect::<Result<Vec<_>, _>>()
+            };
+            let always = objects(&spec.always, "always")?;
+            let never = objects(&spec.never, "never")?;
+            if always.iter().any(|o| never.contains(o)) {
+                return Err(bad("an object in `always` may not be in `never`".into()));
+            }
             if always.len() > usize::from(least) {
                 return Err(bad("`always` may name at most `items`' least".into()));
             }
@@ -370,6 +383,7 @@ impl Shops {
                 title: spec.title,
                 stock,
                 always,
+                never,
                 buys,
                 items: (least, most),
                 markup: spec.markup,

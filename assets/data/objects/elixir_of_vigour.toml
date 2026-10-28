@@ -1,0 +1,22 @@
+# An elixir of vigour (spec §8 "Potions"): toughness +1 for good, its potential +1d2. Elixirs are gold.
+[[object]]
+id = "elixir_of_vigour"
+name = "elixir of vigour"
+plural = "elixirs of vigour"
+glyph = "!"
+fg = "#e8c860"
+class = "potions"
+materials = ["glass"]
+weight = 250
+value = 2000
+stackable = true
+level = 8
+frequency = 2
+
+[object.drink]
+kind = "elixir"
+stat = "toughness"
+points = 1
+potential = "1d2"
+colour = "gold"
+marks = { toughness = 20 }

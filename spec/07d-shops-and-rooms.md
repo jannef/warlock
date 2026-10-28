@@ -34,6 +34,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     potions only, a stack of potions of healing always first; 140 %, 40 %), and a fletcher ("{keeper}'s Fletchery": missile weapons and missiles;
     125 %, 40 %). General stores stock and buy scrolls (§8 "Scrolls"), and a generated one always lays out a
     stack of scrolls of identify first (the kind's `always`, at most its least `items`); scribes wait for more scrolls.
+    A kind's `never` lists objects of a stocked class it never lays out: general stores and
+    provisioners never have an elixir (§8 "Potions"; #568).
   - **Prices** (`Shops::price`, `Shops::offer`; integers): a stack's value (each one's times the
     count) times the markup, less the player's **favour**, rounded up and at least 1; an offer is
     the value times `pays`, plus the favour, rounded down, never more than the shop asks for the
@@ -450,7 +452,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       threshold, the level and its choices with it), *Chosen* (a talent the player may take and
       does not hold, drawn, given free at rank 1 and kept for life: `Actor::boons`, put back with
       the race's and the sign's gifts on every load, never a level's pick), *Relic* (an item at
-      item level + 10, at least rare, at the altar's foot: `loot` with `rarity = "rare"`); and
+      item level + 10, at least rare, at the altar's foot: `loot` with `rarity = "rare"`), the
+      *elixir* (#568: one of the six elixirs, §8 "Potions", at the altar's foot; weight 1 of the
+      relic's former 2); and
       *Wrath of the forgotten* (−1d3 to a random stat's potential and score, for good, never
       below 3), *Unmade* (one level lost: experience to the threshold of the level below, the
       level's hit points and mana taken back, never the last hit point, its choices still due

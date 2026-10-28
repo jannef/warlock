@@ -194,6 +194,7 @@ fn potion_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
         }
         Draught::Cure { .. } => format!("Cures {cures} at once"),
         Draught::Mana { .. } => "Restores mana at once".to_string(),
+        Draught::Elixir { stat, .. } => format!("Makes you {} for good", stat.comparative()),
         Draught::Harm { .. } => "Sickens whoever drinks it".to_string(),
         Draught::Boost { status, severity } => {
             let def = content.status(*status);

@@ -99,6 +99,18 @@ impl Stat {
         Stat::ALL.into_iter().find(|s| s.id() == id)
     }
 
+    /// What a rise in it makes you, in words: `stronger` ("You feel stronger.").
+    pub const fn comparative(self) -> &'static str {
+        match self {
+            Stat::Strength => "stronger",
+            Stat::Dexterity => "quicker",
+            Stat::Toughness => "tougher",
+            Stat::Intelligence => "sharper",
+            Stat::Willpower => "more resolute",
+            Stat::Presence => "more confident",
+        }
+    }
+
     fn index(self) -> usize {
         self as usize
     }
@@ -331,6 +343,14 @@ impl Stats {
             self.potential[stat] = self.potential[stat].max(self.score[stat]);
         }
         rises
+    }
+
+    /// Raises the potential in `stat` by up to `by`, never past [`SCORES`] (spec §8 "Potions":
+    /// an elixir); the score stays. Returns the points it rose.
+    pub fn widen(&mut self, stat: Stat, by: u8) -> u8 {
+        let before = self.potential[stat];
+        self.potential[stat] = before.saturating_add(by).min(*SCORES.end());
+        self.potential[stat] - before
     }
 
     /// Changes the score in `stat` by `by` and its potential with it, kept within [`SCORES`]: a
