@@ -6,7 +6,10 @@
 # of its creatures the player attacks joins that one, as the Seelie turn wrathful; default none:
 # it stays). Relations are symmetric: if A
 # lists B as hostile, A and B are hostile to each other. Every pair not listed is neutral (a faction and itself too).
-# Hostile creatures attack each other on sight; neutral ones leave each other alone. The player
+# Hostile creatures attack each other on sight; neutral ones leave each other alone. Monsters do
+# not fight each other but for the two story feuds (the fey courts' war, the demons' Blood War
+# with the devils; the chests design §7): every other monster faction lists the player alone, and
+# the old raids and grudges stay in the comments as lore. The player
 # learns a creature's stance toward them from its type (look mode: "a giant rat (hostile)").
 
 [[faction]]
@@ -20,32 +23,45 @@ name = "vermin"
 hostile = ["player"]
 animal = true
 
-# The kobold war band: they hunt the player and the vermin alike.
+# The arena's rat pack (the showcase's arena level gives its rats this faction by a legend's
+# `faction` override): vermin that fight the kobold war band across the pit, so the arena keeps
+# its brawl now that the vermin and the kobolds leave each other be.
+[[faction]]
+id = "arena_rats"
+name = "warren rats"
+hostile = ["player", "kobolds"]
+animal = true
+
+# The kobold war band: they hunt the player and the vermin alike. The vermin feud is lore, not
+# fought on the floor: a kobold and a rat on the same floor leave each other be.
 [[faction]]
 id = "kobolds"
 name = "kobolds"
-hostile = ["player", "vermin"]
+hostile = ["player"]
 
 # The goblin tribes of the barrows (Cealdhlāw): they raid the kobolds' warrens and eat the vermin.
+# The raids are lore, not fought on the floor.
 [[faction]]
 id = "goblins"
 name = "goblins"
-hostile = ["player", "vermin", "kobolds"]
+hostile = ["player"]
 
 # The orc tribe (#455): war bands of orcs and the wargs they keep. They raid the kobolds' warrens,
 # eat the vermin, and fight the dead and the duergar (whose mine they raid: listed on this side);
 # the goblins they bully but march beside, so the two tribes leave each other be.
+# These wars are lore, not fought on the floor.
 [[faction]]
 id = "orcs"
 name = "orcs"
-hostile = ["player", "vermin", "kobolds", "undead", "duergar"]
+hostile = ["player"]
 
 # The restless dead of the barrows: skeletons, zombies, ghouls, wights. They hate the living,
 # the player, the kobolds, the goblins, and the giants alike.
+# Only the player is fought on the floor: the rest of that hatred is lore.
 [[faction]]
 id = "undead"
 name = "undead"
-hostile = ["player", "kobolds", "goblins", "giant"]
+hostile = ["player"]
 
 # The living things of the great fen (Fennmynster): leeches, frogs, crocodiles, wisps, mud
 # golems, marsh trolls, and the bog hag they serve. Not animals as a faction (the trolls, the
@@ -57,10 +73,11 @@ hostile = ["player"]
 
 # The cult of the drowned minster (Fennmynster): cultists and their priests. They would bind the
 # fen to their rites, so the marsh things fight them; the drowned dead they leave alone.
+# The fen's feud with the cult is lore, not fought on the floor.
 [[faction]]
 id = "cult"
 name = "cultists"
-hostile = ["player", "marsh"]
+hostile = ["player"]
 
 # The outlaws (the adventurers' guild design §8, #424): footpads and the four wanted criminals
 # who hide in old places with whatever lives there. Hostile to the player only, and no faction
@@ -81,36 +98,40 @@ hostile = ["player"]
 # The grey dwarves of the deep delf (Fyrdelf): miners, warriors, smiths. They hate the living who
 # come down their shafts, the goblins' kin (the trolls of the deep among them), the giants and
 # their ogres, and the dead the fires made; the fire things they leave be.
+# The grudges are lore, not fought on the floor.
 [[faction]]
 id = "duergar"
 name = "duergar"
-hostile = ["player", "goblins", "undead", "giant"]
+hostile = ["player"]
 
 # The drow (#519): the dark elves of the deep, from the house's warriors to its matron. They
 # hunt the player, the kobolds, the goblins and their kin, the orcs, and their rivals of the
 # deep roads, the duergar; the demons their priestesses call on, the spiders sacred to their
-# goddess (the vermin), and everyone else they leave be. Not an animal faction.
+# goddess (the vermin), and everyone else they leave be. Not an animal faction. The rivalries are lore, not fought on the
+# floor.
 [[faction]]
 id = "drow"
 name = "drow"
-hostile = ["player", "kobolds", "goblins", "orcs", "duergar"]
+hostile = ["player"]
 
 # The giant tribe (#457): ogres and giants, hill, stone, frost, fire, cloud, and storm. They
 # crush the player, the vermin, and the kobolds; the goblins and their kin they leave be (the
 # ogres run with them), and they and the duergar are old enemies.
+# Only the player is fought on the floor: the rest is lore.
 [[faction]]
 id = "giant"
 name = "giants"
-hostile = ["player", "vermin", "kobolds"]
+hostile = ["player"]
 
 # The troll tribe (#456): the trolls of hill, forest, ice, stone, and fire, their shamans and
 # chieftains. They eat the vermin and the kobolds, the duergar hunt them, and they hate the dead
 # (their own rotting kin among them); the goblins and the ogres, whom they once ran with, they
 # leave be, and the orcs and hobgoblins too. The marsh troll is a marsh thing, not of the tribe.
+# Only the player is fought on the floor: the rest is lore.
 [[faction]]
 id = "troll"
 name = "trolls"
-hostile = ["player", "vermin", "kobolds", "undead", "duergar"]
+hostile = ["player"]
 
 # The fire things of the volcano's deep (Fyrdelf): ember beetles, salamanders, magma crawlers,
 # cinder elementals, the fire drake. They burn the player and leave everyone else alone.
@@ -122,11 +143,13 @@ hostile = ["player"]
 # The demons (the roster, #449): dretches and quasits up to the balor. They hunt every people
 # that would stand against them, the player, the kobolds, the goblins, the duergar, and the
 # marsh things; the dead, the fire things, and the beasts are beneath their notice, and the cult
-# that calls on them they let be. Not an animal faction.
+# that calls on them they let be. Not an animal faction. Of all this only the Blood War with the
+# devils is fought on the floor (one of the two story feuds, with the fey courts'); the rest is
+# lore.
 [[faction]]
 id = "demon"
 name = "demons"
-hostile = ["player", "kobolds", "goblins", "duergar", "marsh", "devil"]
+hostile = ["player", "devil"]
 
 # Animated objects (#483): things a will set moving and left, from household junk to hollow
 # armour. They set on the living who come near, and leave the rest be: hostile to the player only.

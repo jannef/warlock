@@ -110,7 +110,8 @@ opening the door again, and walk through the open doorway after without setting 
 **Arena (72×21, M10)**: down the stairs nook's second `>`: the place to fight; factions at war. A kobold war band
 (three torch-bearing kobolds wielding spears, an archer with a short bow and arrows ready, a slow
 shaman wearing a bone amulet; look mode shows what each wields and wears, M16) and five giant
-rats meet at a fire pit in
+rats (of the arena's own pack, `arena_rats` by the level's legend, at war with the kobolds,
+which elsewhere leave the vermin be) meet at a fire pit in
 a pit lit by wall torches, with pillars for cover; two cave bats and a cave beetle (wildlife) go
 their ways untouched. West lies the kobolds' camp behind two doors (kobolds open doors, rats do
 not), east the rat warren. The player arrives in the dark south-west corner and can watch unseen;

@@ -1299,15 +1299,11 @@ mod tests {
         );
         assert!(text("creatures.md").contains("| Deer | `d` | Wildlife | neutral | never |"));
         assert!(text("creatures.md").contains("shoots from afar"));
-        row_has(
-            text("factions.md"),
-            "| Kobolds | ",
-            &[
-                "you", "vermin", "goblins", "orcs", "undead", "giants", "trolls", "demons",
-            ],
-        );
+        // Monsters fight the player alone but for the story feuds and the arena's rats (#612).
+        row_has(text("factions.md"), "| Kobolds | ", &["you, warren rats |"]);
+        row_has(text("factions.md"), "| Demons | ", &["you, devils |"]);
         assert!(text("factions.md").contains("| Wildlife | nobody |"));
-        assert!(text("factions.md").contains("| Cultists | you, marsh things | no |"));
+        assert!(text("factions.md").contains("| Cultists | you | no |"));
         assert!(
             text("weather.md").contains("| Rainmoon | 20% | 30% | 35% | 15% |"),
             "{}",

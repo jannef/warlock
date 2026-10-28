@@ -205,7 +205,7 @@ fn the_duergar_keep_to_the_tribes_formulas() {
 }
 
 #[test]
-fn the_duergar_fight_the_goblins_kin_and_the_dead_and_leave_the_cult_be() {
+fn the_duergar_hunt_the_player_and_leave_their_old_foes_be() {
     let content = Content::builtin().expect("content");
     let stance = |a: &str, b: &str| {
         let id = |n: &str| content.creature_id(n).expect(n);
@@ -213,12 +213,12 @@ fn the_duergar_fight_the_goblins_kin_and_the_dead_and_leave_the_cult_be() {
     };
     for (a, b, want) in [
         ("duergar_slinger", "player", Stance::Hostile),
-        ("duergar_crossbowman", "goblin", Stance::Hostile),
-        ("duergar_veteran", "orc_warrior", Stance::Hostile),
-        ("duergar_priest", "skeleton", Stance::Hostile),
-        ("duergar_hulk", "hill_giant", Stance::Hostile),
-        ("duergar_spider_rider", "troll", Stance::Hostile),
-        ("duergar_thane", "dretch", Stance::Hostile),
+        ("duergar_crossbowman", "goblin", Stance::Neutral),
+        ("duergar_veteran", "orc_warrior", Stance::Neutral),
+        ("duergar_priest", "skeleton", Stance::Neutral),
+        ("duergar_hulk", "hill_giant", Stance::Neutral),
+        ("duergar_spider_rider", "troll", Stance::Neutral),
+        ("duergar_thane", "dretch", Stance::Neutral),
         ("duergar_king", "duergar_miner", Stance::Neutral),
         ("duergar_mindbreaker", "cultist", Stance::Neutral),
         ("duergar_priest", "kobold", Stance::Neutral),

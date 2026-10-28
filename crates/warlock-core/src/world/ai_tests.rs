@@ -367,14 +367,15 @@ fn builtin_factions_set_who_fights_whom() {
     let hostile = [
         ("rat", "player"),
         ("kobold", "player"),
-        ("kobold", "rat"),
-        ("kobold_archer", "rat"),
         ("kobold_shaman", "player"),
     ];
     for (a, b) in hostile {
         assert_eq!(stance(a, b), Stance::Hostile, "{a} and {b}");
         assert_eq!(stance(b, a), Stance::Hostile, "{b} and {a}");
     }
+    // Monsters leave each other be (#612): the kobolds hunt the vermin only in lore.
+    assert_eq!(stance("kobold", "rat"), Stance::Neutral);
+    assert_eq!(stance("kobold_archer", "rat"), Stance::Neutral);
     for wild in ["deer", "bat", "beetle"] {
         for other in ["player", "rat", "kobold", "deer"] {
             assert_eq!(stance(wild, other), Stance::Neutral, "{wild} and {other}");
@@ -1206,4 +1207,27 @@ fn the_showcase_is_safe_and_the_arena_is_not() {
         }
     }
     assert!(hostile("arena") > 0, "the arena is where fighting happens");
+}
+
+#[test]
+fn the_arena_rats_keep_their_war_with_the_kobolds() {
+    // Monsters leave each other be (#612), but the arena's legend gives its rats a faction of
+    // their own at war with the kobolds, so the brawl goes on.
+    let w = World::new(builtin(), "arena", None).expect("arena");
+    let of = |name: &str| {
+        let id = w.content.creature_id(name).expect(name);
+        (w.state.actors.iter())
+            .filter(|(_, a)| a.creature == id)
+            .map(|(&i, _)| i)
+            .collect::<Vec<_>>()
+    };
+    let (rats, kobolds) = (of("rat"), of("kobold"));
+    assert!(!rats.is_empty() && !kobolds.is_empty());
+    for &rat in &rats {
+        for &kobold in &kobolds {
+            assert_eq!(w.stance(rat, kobold), Stance::Hostile);
+            assert_eq!(w.stance(kobold, rat), Stance::Hostile);
+        }
+        assert_eq!(w.stance(rat, PLAYER), Stance::Hostile);
+    }
 }
