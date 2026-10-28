@@ -108,7 +108,7 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Dump a replay's end state | `... dump --replay runs/x.json [--actions "wait"] --format ascii\|json [--state]` |
 | Create a replay | `... replay --create --scenario showcase --actions "move:N wait" -o runs/x.json` |
 | Verify a replay | `... replay --verify runs/x.json` (exit 1 and first diverging step on mismatch) |
-| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door, `S` = secret door; `^` = a trap, hidden ones too; a special room's floor by its effect's letter; also local areas of a campaign's overworld, `--level local:49,23`, `--campaign showcase` the default) |
+| Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door, `S` = secret door; `^` = a trap, hidden ones too; `⊟` = a chest, locked or trapped or not; a special room's floor by its effect's letter; also local areas of a campaign's overworld, `--level local:49,23`, `--campaign showcase` the default) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
 trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `quests` (the quest
