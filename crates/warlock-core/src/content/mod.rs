@@ -275,8 +275,8 @@ pub use weapon_ability::{
     WeaponDoes,
 };
 pub use weapon_skill::{
-    Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, SpellAttacks, Style, TwoWeapons,
-    WeaponSkillDef, WeaponSkillId, WeaponSkillTable,
+    Benefit, Grip, MAX_RANK, MarkRules, RANKS, Role, Section, SpellAttacks, Style, TwoShields,
+    TwoWeapons, WeaponSkillDef, WeaponSkillId, WeaponSkillTable,
 };
 pub use weather::{
     Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,
@@ -2744,11 +2744,13 @@ impl Content {
     }
 
     /// Whether `object` goes in `slot` by its own `slot`, not as a weapon some slot takes too:
-    /// its `slot` is what the slot fits, or it is a light weapon and the slot is a hand (the off
-    /// hand: two-weapon fighting, spec §8 "Fighting styles").
+    /// its `slot` is what the slot fits, or it is a light weapon or a shield (anything it can
+    /// bash with) and the slot is a hand (two-weapon and two-shield fighting, spec §8
+    /// "Fighting styles").
     pub fn fits_properly(&self, object: ObjectId, slot: SlotId) -> bool {
         let (def, slot) = (self.object(object), self.slot(slot));
-        def.slot.as_ref() == Some(&slot.fits) || (def.light_weapon && slot.hand)
+        def.slot.as_ref() == Some(&slot.fits)
+            || ((def.light_weapon || def.bash.is_some()) && slot.hand)
     }
 
     /// The hand slots (a two-handed object takes them all), in display order.

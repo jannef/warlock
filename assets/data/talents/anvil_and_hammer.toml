@@ -1,0 +1,8 @@
+[[talent]]
+id = "anvil_and_hammer"
+name = "Anvil and hammer"
+tree = "weaponcraft"
+description = "With a shield on each arm, the second follows the first's blow more often."
+needs = { weapon_skills = { two_shields = 6 } }
+effects = [{ kind = "weapon", skill = "two_shields", bash = 15 }]
+systems = ["styles"]

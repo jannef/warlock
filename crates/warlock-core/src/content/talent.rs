@@ -778,6 +778,12 @@ pub enum TalentEffect {
     /// Its Brace's blow is at `to_hit` more, and a foe it hits suffers `status` (one degree;
     /// Brace of steel).
     Brace { to_hit: i32, status: String },
+    /// The chance a spell it casts fails with a shield in each hand, this many percent points
+    /// smaller (Loose straps; two-shield fighting, #611).
+    ShieldCasting { value: i32 },
+    /// In combat stance `stance` with a shield in each hand, both shields' Shield bonuses add
+    /// up in Defence (Craven's wall; two-shield fighting).
+    BothShields { stance: CombatStance },
     /// Its confirmed criticals ignore this much more Protection (every attack; Armour-breaker).
     CriticalPenetration { value: i32 },
     /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
@@ -1734,6 +1740,13 @@ impl TalentEffect {
                 status(id)?;
                 bonus(*to_hit)
             }
+            TalentEffect::ShieldCasting { value } => {
+                if !(1..=100).contains(value) {
+                    return Err("`shield_casting`: value is 1 to 100".into());
+                }
+                Ok(())
+            }
+            TalentEffect::BothShields { .. } => Ok(()),
             TalentEffect::NoPenalty { status: id }
             | TalentEffect::CriticalStatus { status: id }
             | TalentEffect::Grip { status: id } => status(id),

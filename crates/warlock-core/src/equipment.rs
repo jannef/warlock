@@ -108,15 +108,19 @@ pub fn slots_taken(content: &Content, object: ObjectId, slot: SlotId) -> Vec<Slo
 /// The first slot `object` fits that is free (every hand free, for a two-handed object), in
 /// display order: where it goes when nobody says which slot (creatures' spawn data).
 pub fn free_slot(content: &Content, equipment: &Equipment, object: ObjectId) -> Option<SlotId> {
-    // Only where it belongs: not the missile weapon slot that takes any weapon too.
-    content
-        .slot_ids()
-        .map(|(id, _)| id)
-        .filter(|&s| content.fits_properly(object, s))
-        .find(|&s| {
-            let taken = slots_taken(content, object, s);
-            taken.iter().all(|&t| equipment.get(t).is_none())
-        })
+    // Only where it belongs: not the missile weapon slot that takes any weapon too; its own
+    // `slot` first, so a shield goes to the off hand before the main hand it fits too.
+    let own = |s: SlotId| content.object(object).slot.as_ref() == Some(&content.slot(s).fits);
+    let free = |&s: &SlotId| {
+        let taken = slots_taken(content, object, s);
+        taken.iter().all(|&t| equipment.get(t).is_none())
+    };
+    let fitting = || {
+        (content.slot_ids())
+            .map(|(id, _)| id)
+            .filter(|&s| content.fits_properly(object, s))
+    };
+    (fitting().filter(|&s| own(s)).find(free)).or_else(|| fitting().find(free))
 }
 
 /// What the inventory says of stack `item`, without parentheses: the mark of the slot it is in

@@ -228,6 +228,12 @@ impl World {
             read: Cell::new(None),
         };
         let price = self.price_of(player, ActionKind::Cast) * i64::from(def.casts);
+        // Hands full of shields may spoil it (`two_shields.rs`): the mana and the time spent.
+        if let Pay::Mana(mana) = cast.pay
+            && self.shields_fumble(mana)
+        {
+            return Spent::Turn(price);
+        }
         if self.perform(&cast, target, events) {
             Spent::Turn(price)
         } else {

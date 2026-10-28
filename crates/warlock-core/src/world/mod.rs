@@ -188,6 +188,7 @@ mod temper;
 mod train;
 mod trap;
 mod travel;
+mod two_shields;
 mod voice;
 mod volley;
 mod warp;
@@ -1594,6 +1595,8 @@ mod tests;
 mod time_tests;
 #[cfg(test)]
 mod trap_tests;
+#[cfg(test)]
+mod two_shield_tests;
 #[cfg(test)]
 mod unique_tests;
 #[cfg(test)]

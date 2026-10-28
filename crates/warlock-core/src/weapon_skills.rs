@@ -79,6 +79,12 @@ impl WeaponSkills {
         self.get(id).rank
     }
 
+    /// Whether skill `id` of `table` is listed for its owner: always, unless it is `hidden`
+    /// (Two Shields), which shows from its first marks (or a rank).
+    pub fn shows(&self, table: &WeaponSkillTable, id: WeaponSkillId) -> bool {
+        !table.skill(id).hidden || self.get(id) != Training::default()
+    }
+
     /// Every skill with a rank or marks, in skill order.
     pub fn trained(&self) -> impl Iterator<Item = (WeaponSkillId, Training)> + '_ {
         (self.0.iter().enumerate())

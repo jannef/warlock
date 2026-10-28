@@ -135,7 +135,7 @@ impl World {
             } => self.creature_hurls(id, target, events),
             Plan::Attack { target, kind } => {
                 let skills = self.skills_of(id, kind, None);
-                let with = self.state.actors[&id].weapon_item(&self.content);
+                let with = self.state.actors[&id].blow_item(&self.content);
                 let with = with.filter(|_| kind == AttackKind::Melee);
                 let price = self.attack_price(id, kind.action(), with, skills);
                 self.attack(id, target, kind, events);

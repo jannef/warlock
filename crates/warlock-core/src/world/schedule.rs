@@ -159,6 +159,7 @@ impl World {
             _ if kind != ActionKind::Melee || !two_handed => base,
             percent => percent_of(base, u32::try_from((100 + percent).max(0)).unwrap_or(0)),
         };
+        let base = self.shields_slowed(id, base);
         self.burdened(id, base)
     }
 

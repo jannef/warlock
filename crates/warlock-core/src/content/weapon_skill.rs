@@ -10,7 +10,8 @@
 //! - **Fighting styles** are skills of role [`Role::Style`]: the same ranks, marks, curve, and
 //!   benefits, and a [`Style`]: the [`Grip`] they are fought in (what the hands hold for a blow,
 //!   or the kind of attack) and the weapon skills they are fought with. Fighting with two
-//!   weapons has its penalties here too ([`TwoWeapons`]).
+//!   weapons has its penalties here too ([`TwoWeapons`]), and so has fighting with two shields
+//!   ([`TwoShields`]).
 //! - **Marks** ([`MarkRules`]): every attempt earns some, a success more, scaled by how the
 //!   opponent's level compares with the rank. A rank is gained when its marks reach the need of
 //!   the next rank, which grows along an exponential **curve** (`curves.melee`: 15, 30, 60, ...).
@@ -171,6 +172,8 @@ pub enum Grip {
     TwoHanded,
     /// A one-handed weapon and a shield.
     WeaponAndShield,
+    /// A shield in each of two hands: every blow is a shield bash (two-shield fighting, #611).
+    TwoShields,
     /// Nothing in the hands.
     Unarmed,
     /// Shooting a missile weapon.
@@ -187,11 +190,12 @@ pub enum Grip {
 }
 
 impl Grip {
-    pub const ALL: [Grip; 10] = [
+    pub const ALL: &[Grip] = &[
         Grip::OneWeapon,
         Grip::TwoWeapons,
         Grip::TwoHanded,
         Grip::WeaponAndShield,
+        Grip::TwoShields,
         Grip::Unarmed,
         Grip::Launcher,
         Grip::Thrown,
@@ -207,6 +211,7 @@ impl Grip {
             Grip::TwoWeapons => "two_weapons",
             Grip::TwoHanded => "two_handed",
             Grip::WeaponAndShield => "weapon_and_shield",
+            Grip::TwoShields => "two_shields",
             Grip::Unarmed => "unarmed",
             Grip::Launcher => "launcher",
             Grip::Thrown => "thrown",
@@ -236,7 +241,11 @@ impl Grip {
     /// bare hands.
     const fn weapon_roles(self) -> &'static [Role] {
         match self {
-            Grip::Unarmed | Grip::RangedSpell | Grip::TouchSpell | Grip::ArmouredSpell => &[],
+            Grip::Unarmed
+            | Grip::TwoShields
+            | Grip::RangedSpell
+            | Grip::TouchSpell
+            | Grip::ArmouredSpell => &[],
             Grip::Launcher => &[Role::Launcher],
             Grip::Thrown => &[Role::Melee, Role::Thrown],
             _ => &[Role::Melee],
@@ -273,6 +282,37 @@ impl TwoWeapons {
 }
 
 impl Default for TwoWeapons {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+
+/// Fighting with a shield in each hand (spec §8 "Fighting styles", #611): every blow is a
+/// shield bash, at `to_hit` (a penalty), each attack `slow` percent dearer, and a spell cast
+/// fails by a chance of `spell_failure` percent. The style eases each (`ease_bash`,
+/// `ease_slow`, `ease_spell`), never past nothing.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TwoShields {
+    pub to_hit: i32,
+    pub slow: u8,
+    pub spell_failure: u8,
+}
+
+impl TwoShields {
+    pub const DEFAULT: TwoShields = TwoShields {
+        to_hit: -6,
+        slow: 50,
+        spell_failure: 75,
+    };
+
+    /// A percent bane (`slow`, `spell_failure`) eased by `ease` points, never below 0.
+    pub fn eased(bane: u8, ease: u32) -> u32 {
+        u32::from(bane).saturating_sub(ease)
+    }
+}
+
+impl Default for TwoShields {
     fn default() -> Self {
         Self::DEFAULT
     }
@@ -321,8 +361,15 @@ pub struct Benefit {
     pub ease_main: u8,
     /// Points off the off hand's penalty for fighting with two weapons.
     pub ease_off: u8,
-    /// The chance in percent of a shield bash after a blow that hits (weapon and shield).
+    /// The chance in percent of a shield bash after a blow that hits (weapon and shield; with
+    /// two shields, the other shield's).
     pub bash: u8,
+    /// Points off the to-hit penalty of fighting with two shields ([`TwoShields`]).
+    pub ease_bash: u8,
+    /// Percent points off the slowness of fighting with two shields.
+    pub ease_slow: u8,
+    /// Percent points off the chance a spell fails with two shields held.
+    pub ease_spell: u8,
     /// Added to the to-hit of a ranged spell at a target [`SpellAttacks::far`] or more away.
     pub far_to_hit: i32,
     /// Added to the threat widening of a ranged spell at such a target.
@@ -346,6 +393,9 @@ impl Benefit {
             ease_main: self.ease_main.saturating_add(other.ease_main),
             ease_off: self.ease_off.saturating_add(other.ease_off),
             bash: self.bash.saturating_add(other.bash).min(100),
+            ease_bash: self.ease_bash.saturating_add(other.ease_bash),
+            ease_slow: self.ease_slow.saturating_add(other.ease_slow),
+            ease_spell: self.ease_spell.saturating_add(other.ease_spell),
             far_to_hit: self.far_to_hit + other.far_to_hit,
             far_threat: self.far_threat.saturating_add(other.far_threat),
             armour: self.armour.saturating_add(other.armour).min(100),
@@ -418,6 +468,9 @@ pub struct WeaponSkillDef {
     pub need: [u32; MAX_RANK as usize],
     /// What each rank gives, 0 (nothing) to [`MAX_RANK`].
     pub benefits: [Benefit; RANKS],
+    /// Listed (the weapon skills screen, the dumps, the talents that ask for it) only once its
+    /// owner has marks or a rank in it (`hidden = true`: Two Shields, #611).
+    pub hidden: bool,
 }
 
 impl WeaponSkillDef {
@@ -446,6 +499,7 @@ pub struct WeaponSkillTable {
     /// The curves by name, as the file gives them.
     curves: BTreeMap<String, [u32; MAX_RANK as usize]>,
     two_weapons: TwoWeapons,
+    two_shields: TwoShields,
     spell_attacks: SpellAttacks,
 }
 
@@ -456,6 +510,8 @@ struct SkillFile {
     curves: BTreeMap<String, Vec<u32>>,
     #[serde(default)]
     two_weapons: TwoWeapons,
+    #[serde(default)]
+    two_shields: TwoShields,
     #[serde(default)]
     spell_attacks: SpellAttacks,
     skill: Vec<SkillSpec>,
@@ -484,9 +540,14 @@ struct SkillSpec {
     ease_main: Option<Vec<i32>>,
     ease_off: Option<Vec<i32>>,
     bash: Option<Vec<i32>>,
+    ease_bash: Option<Vec<i32>>,
+    ease_slow: Option<Vec<i32>>,
+    ease_spell: Option<Vec<i32>>,
     far_to_hit: Option<Vec<i32>>,
     far_threat: Option<Vec<i32>>,
     armour: Option<Vec<i32>>,
+    #[serde(default)]
+    hidden: bool,
 }
 
 #[derive(Deserialize)]
@@ -536,6 +597,9 @@ impl SkillSpec {
         let ease_main = ranks("ease_main", &self.ease_main, bonus)?;
         let ease_off = ranks("ease_off", &self.ease_off, bonus)?;
         let bash = ranks("bash", &self.bash, 100)?;
+        let ease_bash = ranks("ease_bash", &self.ease_bash, bonus)?;
+        let ease_slow = ranks("ease_slow", &self.ease_slow, 100)?;
+        let ease_spell = ranks("ease_spell", &self.ease_spell, 100)?;
         let far_to_hit = ranks("far_to_hit", &self.far_to_hit, bonus)?;
         let far_threat = ranks(
             "far_threat",
@@ -561,7 +625,7 @@ impl SkillSpec {
             (
                 "shield",
                 &self.shield,
-                role == Role::ShieldBlock || is(Grip::WeaponAndShield),
+                role == Role::ShieldBlock || is(Grip::WeaponAndShield) || is(Grip::TwoShields),
             ),
             (
                 "reload",
@@ -570,7 +634,14 @@ impl SkillSpec {
             ),
             ("ease_main", &self.ease_main, is(Grip::TwoWeapons)),
             ("ease_off", &self.ease_off, is(Grip::TwoWeapons)),
-            ("bash", &self.bash, is(Grip::WeaponAndShield)),
+            (
+                "bash",
+                &self.bash,
+                is(Grip::WeaponAndShield) || is(Grip::TwoShields),
+            ),
+            ("ease_bash", &self.ease_bash, is(Grip::TwoShields)),
+            ("ease_slow", &self.ease_slow, is(Grip::TwoShields)),
+            ("ease_spell", &self.ease_spell, is(Grip::TwoShields)),
             ("far_to_hit", &self.far_to_hit, is(Grip::RangedSpell)),
             ("far_threat", &self.far_threat, is(Grip::RangedSpell)),
             ("armour", &self.armour, is(Grip::ArmouredSpell)),
@@ -598,6 +669,9 @@ impl SkillSpec {
             ease_main: small(ease_main[r]),
             ease_off: small(ease_off[r]),
             bash: small(bash[r]),
+            ease_bash: small(ease_bash[r]),
+            ease_slow: small(ease_slow[r]),
+            ease_spell: small(ease_spell[r]),
             far_to_hit: far_to_hit[r],
             far_threat: small(far_threat[r]),
             armour: small(armour[r]),
@@ -628,6 +702,16 @@ impl WeaponSkillTable {
         {
             return Err(err(format!(
                 "two_weapons: `main` and `off` are penalties, -{MAX_BONUS} to 0"
+            )));
+        }
+        let shields = parsed.two_shields;
+        if !(-MAX_BONUS..=0).contains(&shields.to_hit)
+            || shields.slow > 100
+            || shields.spell_failure > 100
+        {
+            return Err(err(format!(
+                "two_shields: `to_hit` is a penalty, -{MAX_BONUS} to 0; `slow` and \
+                 `spell_failure` are percents, 0 to 100"
             )));
         }
         let mut curves = BTreeMap::new();
@@ -695,6 +779,7 @@ impl WeaponSkillTable {
                 .get(&spec.curve)
                 .ok_or_else(|| skill_err(format!("unknown curve `{}`", spec.curve)))?;
             let benefits = spec.benefits().map_err(skill_err)?;
+            let hidden = spec.hidden;
             weapons.push(spec.weapons.unwrap_or_default());
             skills.push(WeaponSkillDef {
                 id: spec.id,
@@ -705,6 +790,7 @@ impl WeaponSkillTable {
                 curve: spec.curve,
                 need,
                 benefits,
+                hidden,
             });
         }
         if parsed.spell_attacks.far == 0 {
@@ -716,6 +802,7 @@ impl WeaponSkillTable {
             marks: Some(marks),
             curves,
             two_weapons: two,
+            two_shields: shields,
             spell_attacks: parsed.spell_attacks,
         };
         table.resolve_styles(&weapons).map_err(err)?;
@@ -857,6 +944,11 @@ impl WeaponSkillTable {
         self.two_weapons
     }
 
+    /// The banes of fighting with two shields (`[two_shields]`, else [`TwoShields::DEFAULT`]).
+    pub fn two_shields(&self) -> TwoShields {
+        self.two_shields
+    }
+
     /// How far is far for a ranged spell's far benefits.
     pub fn spell_attacks(&self) -> SpellAttacks {
         self.spell_attacks
@@ -966,9 +1058,9 @@ mod tests {
     fn the_builtin_table_loads() {
         let text = include_str!("../../../../assets/data/weapon_skills.toml");
         let table = parse(text).expect("valid");
-        // Sixteen weapon skills, the spell attack skill, and eleven fighting styles.
-        assert_eq!(table.skills().len(), 28);
-        assert_eq!(table.styles().count(), 11);
+        // Sixteen weapon skills, the spell attack skill, and twelve fighting styles.
+        assert_eq!(table.skills().len(), 29);
+        assert_eq!(table.styles().count(), 12);
         let id = |name: &str| table.id(name).expect(name);
         // The owner's example: long blades 8 → short blades 6.
         assert_eq!(
@@ -1090,6 +1182,19 @@ mod tests {
         assert_eq!(*CRITS.start() + great.crit, 4);
         let board = style("sword_and_board");
         assert_eq!((board.shield, board.bash), (6, 35));
+        // Two Shields (#611): its banes are gone at rank 9, a rank before mastery.
+        let shields = style("two_shields");
+        assert_eq!((shields.shield, shields.damage, shields.bash), (7, 5, 40));
+        let nine = table.benefit(table.id("two_shields").unwrap(), MAX_RANK - 1);
+        let banes = table.two_shields();
+        assert_eq!(banes.to_hit + i32::from(nine.ease_bash), 0);
+        assert_eq!(TwoShields::eased(banes.slow, nine.ease_slow.into()), 0);
+        assert_eq!(
+            TwoShields::eased(banes.spell_failure, nine.ease_spell.into()),
+            0
+        );
+        let eight = table.benefit(table.id("two_shields").unwrap(), MAX_RANK - 2);
+        assert!(TwoShields::eased(banes.spell_failure, eight.ease_spell.into()) > 0);
         let marksman = style("marksman");
         assert_eq!(
             (marksman.to_hit, marksman.speed, marksman.reload),
@@ -1282,6 +1387,19 @@ mod tests {
             (
                 format!("{MARKS}[two_weapons]\nmain = 2\noff = -8\n{staves}"),
                 "two_weapons: `main` and `off` are penalties",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    style("a", "weapon_and_shield", &format!("ease_spell = {eleven}"))
+                ),
+                "`ease_spell` does nothing for a style of grip `weapon_and_shield`",
+            ),
+            (
+                format!(
+                    "{MARKS}[two_shields]\nto_hit = -6\nslow = 50\nspell_failure = 101\n{staves}"
+                ),
+                "two_shields: `to_hit` is a penalty",
             ),
         ] {
             let e = parse(&text).unwrap_err();

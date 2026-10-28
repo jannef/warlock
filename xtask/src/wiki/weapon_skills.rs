@@ -8,8 +8,8 @@ use super::order;
 use super::text::{capital, thousands};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Benefit, ClassDef, Content, Grip, MAX_RANK, Role, TwoWeapons, WeaponSkillDef, WeaponSkillId,
-    WeaponSkillTable,
+    Benefit, ClassDef, Content, Grip, MAX_RANK, Role, TwoShields, TwoWeapons, WeaponSkillDef,
+    WeaponSkillId, WeaponSkillTable,
 };
 use warlock_core::dice::Dice;
 
@@ -293,6 +293,29 @@ fn rank_table(table: &WeaponSkillTable, id: WeaponSkillId) -> String {
             columns.push((name, cells));
         }
     }
+    // Two shields' banes at each rank (#611).
+    let shields = table.two_shields();
+    if ranks.iter().any(|b| b.ease_bash != 0) {
+        let cells = (ranks.iter())
+            .map(|b| penalty((shields.to_hit + i32::from(b.ease_bash)).min(0)))
+            .collect();
+        columns.push(("Bash penalty", cells));
+    }
+    let banes: [(&str, u8, fn(&Benefit) -> u8); 2] = [
+        ("Slower attacks", shields.slow, |b| b.ease_slow),
+        ("Spell failure", shields.spell_failure, |b| b.ease_spell),
+    ];
+    for (name, base, ease) in banes {
+        if ranks.iter().any(|b| ease(b) != 0) {
+            let cells = (ranks.iter())
+                .map(|b| match TwoShields::eased(base, u32::from(ease(b))) {
+                    0 => "none".to_string(),
+                    v => format!("{v}%"),
+                })
+                .collect();
+            columns.push((name, cells));
+        }
+    }
     let mut out = String::from("| Rank |");
     for (name, _) in &columns {
         let _ = write!(out, " {name} |");
@@ -330,6 +353,7 @@ fn grip_text(grip: Grip) -> &'static str {
         Grip::TwoWeapons => "a weapon in each hand",
         Grip::TwoHanded => "a two-handed weapon",
         Grip::WeaponAndShield => "a one-handed weapon and a shield",
+        Grip::TwoShields => "a shield in each hand",
         Grip::Unarmed => "nothing in your hands",
         Grip::Launcher => "shooting a missile weapon",
         Grip::Thrown => "throwing",
@@ -354,6 +378,7 @@ pub fn styles(content: &Content) -> String {
             .collect();
         let weapons = match (style.grip, style.weapons.is_empty(), others.is_empty()) {
             (Grip::Unarmed, ..) => "fists".to_string(),
+            (Grip::TwoShields, ..) => "shields".to_string(),
             (g, ..) if g.casts() => "spells".to_string(),
             (_, false, _) => names(&style.weapons).join(", "),
             (_, true, true) => "any".to_string(),
@@ -380,12 +405,18 @@ pub fn style_defaults(content: &Content) -> String {
 pub fn style_benefits(content: &Content) -> String {
     let table = content.weapon_skills();
     let two = table.two_weapons();
+    let shields = table.two_shields();
     let mut out = format!(
         "With a weapon in each hand and no rank in Twin Blades, the main hand strikes at **{}** \
-         to hit and the off hand at **{}**. A ranged spell's target is far away at **{}** \
-         cells or more (the larger of the two distances).\n\n",
+         to hit and the off hand at **{}**. With a shield in each hand and no rank in Two \
+         Shields, every bash is at **{}** to hit, every attack takes **{}%** longer, and a \
+         spell you cast fails **{}%** of the time. A ranged spell's target is far away at \
+         **{}** cells or more (the larger of the two distances).\n\n",
         penalty(two.main),
         penalty(two.off),
+        penalty(shields.to_hit),
+        shields.slow,
+        shields.spell_failure,
         table.spell_attacks().far
     );
     for (id, s, _) in table.styles() {

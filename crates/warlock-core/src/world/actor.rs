@@ -645,9 +645,12 @@ impl Actor {
                 Category::Dodge => (category, talents.stance_dodge(self.stance, bonus)),
                 _ => (category, bonus),
             });
+        // Craven's wall (two-shield fighting): both shields count in its stance.
+        let both = (self.both_shields_bonus(content, block)).map(|b| (Category::Shield, b));
         Defence::from_bonuses(
             std::iter::once((Category::Dexterity, dexterity))
                 .chain(worn)
+                .chain(both)
                 .chain(natural)
                 .chain(dodge)
                 .chain(magic.into_iter().filter(|&(_, b)| b != 0))
@@ -856,8 +859,11 @@ impl Actor {
     }
 
     /// The weapon skill of its melee blows: the wielded weapon's, else unarmed (bare hands and
-    /// natural attacks alike).
+    /// natural attacks alike); with a shield in each hand shield bashing (every blow a bash).
     pub fn melee_skill(&self, content: &Content) -> Option<WeaponSkillId> {
+        if self.two_shields(content).is_some() {
+            return content.weapon_skills().of_role(Role::ShieldBash);
+        }
         match self.weapon(content) {
             Some((weapon, _)) => content.object(weapon).skill,
             None => content.weapon_skills().of_role(Role::Unarmed),
@@ -909,7 +915,7 @@ impl Actor {
 
     /// What is in its hands: each thing once (a two-handed weapon is in both), in hand order,
     /// with where in its inventory it is.
-    fn in_hands<'c>(&self, content: &'c Content) -> Vec<(usize, &'c ObjectDef)> {
+    pub(super) fn in_hands<'c>(&self, content: &'c Content) -> Vec<(usize, &'c ObjectDef)> {
         let mut held: Vec<usize> = Vec::new();
         for slot in content.hand_slots() {
             let Some(item) = self.equipment.get(slot) else {
@@ -926,8 +932,8 @@ impl Actor {
 
     /// The grip its hands are in for a blow (spec §8 "Fighting styles"), and the weapon skills
     /// of the weapons in them: nothing (unarmed), one one-handed weapon (the other hand empty),
-    /// a weapon in each hand, a two-handed weapon, or a one-handed weapon and a shield; `None`
-    /// for anything else (a shield alone).
+    /// a weapon in each hand, a two-handed weapon, a one-handed weapon and a shield, or a shield
+    /// in each hand; `None` for anything else (a shield alone).
     pub fn grip(&self, content: &Content) -> Option<(Grip, Vec<WeaponSkillId>)> {
         let held = self.in_hands(content);
         let weapon = |o: &ObjectDef| o.attack.is_some();
@@ -940,6 +946,7 @@ impl Actor {
             [(_, a), (_, b)] if (weapon(a) && b.shield > 0) || (a.shield > 0 && weapon(b)) => {
                 Grip::WeaponAndShield
             }
+            [(_, a), (_, b)] if a.bash.is_some() && b.bash.is_some() => Grip::TwoShields,
             _ => return None,
         };
         Some((grip, skills))
@@ -1326,10 +1333,21 @@ impl Actor {
     /// shield bashing and its fighting style give, the affixes of everything it wears and
     /// wields, and its combat stance.
     pub fn bash(&self, content: &Content) -> Option<(ObjectId, Profile)> {
-        let (shield, attack) = self.shield(content)?;
+        self.bash_with(content, self.shield_item(content)?)
+    }
+
+    /// What a bash with the shield at inventory position `item` does (`None` if it is no
+    /// shield to bash with), as [`Actor::bash`] says; with a shield in each hand at the
+    /// two-shield penalty to hit, eased by the style (`two_shields.rs`).
+    pub fn bash_with(&self, content: &Content, item: usize) -> Option<(ObjectId, Profile)> {
+        let shield = self.inventory.get(item)?.object;
+        let attack = content.object(shield).bash.as_ref()?;
         let benefit = self.attack_benefit(content, AttackKind::Melee, Some(shield));
         let mods = self.mods(content);
         let mut profile = Profile::melee(attack, &self.stats_with(content, &mods)).with(&benefit);
+        if let Some(banes) = self.shield_banes(content) {
+            profile.to_hit += banes.to_hit;
+        }
         mods.sharpen(&mut profile);
         profile.penetration += self.talent_mods(content).penetration_for(&profile.kinds);
         Some((shield, self.stanced(content, profile)))

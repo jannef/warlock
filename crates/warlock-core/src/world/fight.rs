@@ -506,12 +506,23 @@ impl World {
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
         let me = &self.state.actors[&attacker];
+        // With a shield in each hand a blow is a bash (`two_shields.rs`).
+        let opening = (kind == AttackKind::Melee)
+            .then(|| me.opening_bash(&self.content))
+            .flatten();
         let profile = match kind {
             AttackKind::Melee => Some(me.melee(&self.content)),
             AttackKind::Ranged => me.ranged(&self.content),
             AttackKind::Thrown | AttackKind::Spell => None,
         };
-        let blow = self.attack_with(attacker, target, kind, profile, events);
+        let blow = match opening {
+            Some((shield, profile)) => {
+                let skills = self.skills_of(attacker, kind, Some(shield));
+                let made = (kind, Some(shield), skills);
+                self.resolve(attacker, target, made, Some(profile), true, events)
+            }
+            None => self.attack_with(attacker, target, kind, profile, events),
+        };
         if kind == AttackKind::Melee {
             let mut parried = free_blow::parried(blow);
             if let Some(second) = self.second_blow(attacker, target, Cue::First(blow), events) {
@@ -595,12 +606,16 @@ impl World {
         if let Some(off) = me.off_hand_blow(&content) {
             return Some(off);
         }
-        let (Grip::WeaponAndShield, _) = me.grip(&content)? else {
+        let hit = first.is_some_and(|b| b.strike.is_hit());
+        let grip = me.grip(&content)?.0;
+        if grip == Grip::TwoShields {
+            return self.other_shield(attacker, hit);
+        }
+        if grip != Grip::WeaponAndShield {
             return None;
-        };
+        }
         let (shield, profile) = me.bash(&content)?;
         let chance = me.attack_benefit(&content, AttackKind::Melee, None).bash;
-        let hit = first.is_some_and(|b| b.strike.is_hit());
         (hit && chance > 0 && self.state.rng.chance(u32::from(chance))).then_some((shield, profile))
     }
 
@@ -1118,9 +1133,15 @@ impl World {
         events: &mut Vec<Event>,
     ) -> Option<Blow> {
         let me = self.state.player();
-        let with = more.as_ref().and_then(|b| b.with);
         let noisy = more.as_ref().is_none_or(|b| b.kind.noisy());
-        let profile = more.map_or_else(|| me.melee(&self.content), |b| b.profile);
+        // With a shield in each hand the first blow is a bash (`two_shields.rs`).
+        let (with, profile) = match more {
+            Some(b) => (b.with, b.profile),
+            None => match me.opening_bash(&self.content) {
+                Some((shield, profile)) => (Some(shield), profile),
+                None => (None, me.melee(&self.content)),
+            },
+        };
         let skills = me.attack_skills(&self.content, AttackKind::Melee, with);
         let words = |me: &Actor, content: &Content, damage| {
             Words::of(me, AttackKind::Melee, with, damage, content)

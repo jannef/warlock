@@ -1642,7 +1642,8 @@ impl<'a> PerceptionView<'a> {
     /// list): the rank the player holds, the prerequisites of the next rank with whether each
     /// holds, and the ways it may be taken now (none: not now). A birth sign's pick for another
     /// sign is left out: the stars a character was born under never change (spec §8 "Birth
-    /// sign").
+    /// sign"); so is one that asks for a hidden weapon skill or style (Two Shields) the player
+    /// has no marks in yet.
     pub fn talents(&self) -> Vec<TalentView> {
         use crate::content::Need;
         let content = self.content;
@@ -1652,8 +1653,15 @@ impl<'a> PerceptionView<'a> {
                 .filter(|n| matches!(n, Need::Animal(_) | Need::Element(_) | Need::Lucky))
                 .all(|n| who.meets(content, &n, def.choice, None))
         };
+        let table = content.weapon_skills();
+        let found = |def: &crate::content::TalentDef| {
+            (def.needs_at(1)).all(|n| match n {
+                Need::WeaponSkill(id, _) => who.weapon_skills.shows(table, id),
+                _ => true,
+            })
+        };
         (content.talents().by_tree())
-            .filter(|(_, def)| born_for(def))
+            .filter(|(_, def)| born_for(def) && found(def))
             .map(|(id, def)| {
                 let held = (self.player.talents.iter())
                     .filter(|t| t.id == def.id)

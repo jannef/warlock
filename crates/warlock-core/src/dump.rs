@@ -706,7 +706,9 @@ fn progress_percent(view: &PerceptionView<'_>, id: WeaponSkillId) -> Option<u32>
 fn weapon_skill_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let skills = view.own_weapon_skills();
     let in_use = view.own_styles_in_use();
-    (view.content().weapon_skills().ids())
+    let table = view.content().weapon_skills();
+    (table.ids())
+        .filter(|&(id, _)| skills.shows(table, id))
         .map(|(id, def)| {
             let rank = skills.rank(id);
             let row = match progress_percent(view, id) {
@@ -1461,7 +1463,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
     let diseases: Vec<&str> = (view.own_diseases())
         .map(|d| content.disease(d).id.as_str())
         .collect();
-    let weapon_skills: serde_json::Map<String, Value> = (content.weapon_skills().ids())
+    let table = content.weapon_skills();
+    let weapon_skills: serde_json::Map<String, Value> = (table.ids())
+        .filter(|&(id, _)| view.own_weapon_skills().shows(table, id))
         .map(|(id, def)| {
             let rank = view.own_weapon_skills().rank(id);
             let progress = progress_percent(&view, id);

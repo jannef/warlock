@@ -79,7 +79,7 @@ impl World {
         let player = self.state.player;
         let me = self.state.player();
         let melee = me.attack_skills(&self.content, AttackKind::Melee, None);
-        let with = me.weapon_item(&self.content);
+        let with = me.blow_item(&self.content);
         // Priced as the attack begins (every attack is), before the blows and the exertion,
         // which may burn enough to leave the player hungrier.
         let price = self.attack_price(player, ActionKind::Melee, with, melee);

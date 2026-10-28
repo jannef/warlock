@@ -1,0 +1,8 @@
+[[talent]]
+id = "cravens_wall"
+name = "Craven's wall"
+tree = "guard"
+description = "Cowering behind a shield on each arm, you make of the two one wall: in the coward's stance both shields guard you."
+needs = { weapon_skills = { two_shields = 8 } }
+effects = [{ kind = "both_shields", stance = "coward" }]
+systems = ["styles", "defence", "stances"]
