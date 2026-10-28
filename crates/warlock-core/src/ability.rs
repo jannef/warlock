@@ -103,10 +103,6 @@ pub enum Ability {
     /// time; unavailable while what the actor holds is not for it ([`Unavailable::NotSoHeld`])
     /// or its stamina is short ([`Unavailable::Short`]).
     Weapon(WeaponSkillId, WeaponAbilityId),
-    /// Lower or raise the lantern's hood (spec §5 "Light sources"; #235): [`Action::HoodLantern`].
-    /// Listed with what the player carries, the lantern; the Hooded light talent (design §7.5)
-    /// will give it, and until then everyone has it (without a lantern the rules say so).
-    HoodLantern,
     /// Pray at a forgotten altar (spec §7 "Special rooms"): [`Action::Pray`]. A place offers
     /// it ([`Ability::here`]): listed only while the player stands next to such an altar (never
     /// a spent one), absent elsewhere.
@@ -138,7 +134,7 @@ pub enum Source {
     Skill,
     /// A weapon skill or a fighting style (spec §8 "Weapon skills", "Fighting styles").
     WeaponSkill,
-    /// Something worn or carried (the lantern's hood).
+    /// Something worn or carried (none yet: a lantern is used as a tool, `u`).
     Item,
     /// The place the character stands in (spec §7 "Special rooms"): what a special room's
     /// feature offers next to it (Pray at a forgotten altar, Drink at a spring).
@@ -333,8 +329,6 @@ impl Ability {
         taught.sort();
         let weapon_skills = std::iter::once(Ability::ShieldBash)
             .chain(taught.into_iter().map(|(s, _, id)| Ability::Weapon(s, id)));
-        // Items: the lantern's hood.
-        let items = [Ability::HoodLantern];
         // Here: what some special room's feature offers.
         let offers = |offer| {
             (content.room_effects().defs().iter())
@@ -354,7 +348,6 @@ impl Ability {
             .chain(talents)
             .chain(skills)
             .chain(weapon_skills)
-            .chain(items)
             .chain(here)
             .collect();
         all.sort_by_key(|a| a.source());
@@ -414,7 +407,7 @@ impl Ability {
     /// oneself, if they are trained in a skill with the `heal` effect; foraging, if they are
     /// trained in Survival (the forage benefit's); second wind,
     /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); the
-    /// shield bash and the lantern's hood, everyone.
+    /// shield bash, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Sign(active) => actor.talent_mods(content).has_sign_active(active),
@@ -439,7 +432,7 @@ impl Ability {
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
-            Ability::ShieldBash | Ability::HoodLantern => true,
+            Ability::ShieldBash => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]).
             Ability::Pray | Ability::Temper | Ability::Drink => false,
@@ -463,7 +456,6 @@ impl Ability {
             Ability::BloodMagic => "blood_magic",
             Ability::ShieldBash => "shield_bash",
             Ability::Weapon(_, id) => &content.weapon_ability(id).id,
-            Ability::HoodLantern => "hood_lantern",
             Ability::Pray => "pray",
             Ability::Temper => "temper",
             Ability::Drink => "drink",
@@ -491,7 +483,6 @@ impl Ability {
             Ability::SecondWind => "Second wind",
             Ability::BloodMagic => "Blood magic",
             Ability::ShieldBash => "Shield bash",
-            Ability::HoodLantern => "Hood your lantern",
             Ability::Pray => "Pray",
             Ability::Temper => "Temper",
             Ability::Drink => "Drink",
@@ -535,10 +526,6 @@ impl Ability {
             }
             Ability::ShieldBash => "Strike someone next to you with the shield you hold.",
             Ability::Weapon(_, id) => &content.weapon_ability(id).description,
-            Ability::HoodLantern => {
-                "Lower your lantern's hood, or raise it: hooded, it dimly lights the ground around \
-                 you but not you."
-            }
             Ability::Pray => {
                 "Kneel at the forgotten altar beside you and pray for a minute. Something may \
                  answer, for good or ill."
@@ -569,7 +556,6 @@ impl Ability {
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash | Ability::Weapon(..) => Source::WeaponSkill,
-            Ability::HoodLantern => Source::Item,
             Ability::Pray | Ability::Temper | Ability::Drink => Source::Place,
         }
     }
@@ -593,7 +579,6 @@ impl Ability {
             | Ability::Skill(_)
             | Ability::SecondWind
             | Ability::BloodMagic
-            | Ability::HoodLantern
             | Ability::Forage
             | Ability::Pray
             | Ability::Drink => Aim::Nothing,
@@ -622,7 +607,6 @@ impl Ability {
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
             Ability::ShieldBash => Some(ActionKind::Melee),
-            Ability::HoodLantern => Some(ActionKind::Hood),
             Ability::Pray => Some(ActionKind::Pray),
             Ability::Temper => Some(ActionKind::Temper),
             Ability::Drink => Some(ActionKind::Drink),
@@ -651,7 +635,6 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::ShieldBash
             | Ability::Weapon(..)
-            | Ability::HoodLantern
             | Ability::Pray
             | Ability::Temper
             | Ability::Drink => None,
@@ -716,7 +699,6 @@ impl Ability {
             (Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash, None) => {
                 None
             }
-            (Ability::HoodLantern, _) => Some(Action::HoodLantern),
             (Ability::Pray, _) => Some(Action::Pray),
             (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
@@ -764,7 +746,6 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::ShieldBash
-            | Ability::HoodLantern
             | Ability::Pray
             | Ability::Temper
             | Ability::Drink => None,
@@ -819,7 +800,6 @@ impl Ability {
             Ability::Heal => (crate::heal::treatable(actor, content).is_empty())
                 .then_some(Unavailable::NothingToTreat),
             Ability::ThrowVoice
-            | Ability::HoodLantern
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
@@ -1019,15 +999,10 @@ mod tests {
                 "woodcraft",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(4).rev().copied().collect();
+        let last: Vec<Ability> = every.iter().rev().take(3).rev().copied().collect();
         assert_eq!(
             last,
-            [
-                Ability::HoodLantern,
-                Ability::Pray,
-                Ability::Temper,
-                Ability::Drink
-            ],
+            [Ability::Pray, Ability::Temper, Ability::Drink],
             "then what a place offers"
         );
         // The weapon skills' group: the shield bash, then what the ranks teach, by skill in file
@@ -1139,7 +1114,7 @@ mod tests {
     }
 
     #[test]
-    fn throwing_a_voice_aims_at_a_cell_and_the_hood_at_nothing() {
+    fn throwing_a_voice_aims_at_a_cell() {
         let content = Content::builtin().expect("content");
         let voice = Ability::ThrowVoice;
         assert_eq!(
@@ -1151,14 +1126,6 @@ mod tests {
         assert_eq!(voice.action(&content, None), None, "not without a cell");
         let at = Pos::new(3, 4);
         assert_eq!(voice.action_at(&content, at), Some(Action::ThrowVoice(at)));
-        let hood = Ability::HoodLantern;
-        assert_eq!(
-            (hood.aim(&content), hood.source()),
-            (Aim::Nothing, Source::Item)
-        );
-        assert_eq!(hood.cost(), Some(ActionKind::Hood));
-        assert_eq!(hood.action(&content, None), Some(Action::HoodLantern));
-        assert_eq!((hood.range(), hood.action_at(&content, at)), (None, None));
     }
 
     #[test]

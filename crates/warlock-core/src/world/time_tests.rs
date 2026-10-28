@@ -219,7 +219,10 @@ fn actions_take_six_seconds_and_steps_the_terrain_move_cost() {
 #[test]
 fn refused_and_free_actions_take_no_time() {
     let mut w = world("camp");
-    for out in run(&mut w, "move:N open:W close:W ascend lantern vision:normal") {
+    for out in run(
+        &mut w,
+        "move:N open:W close:W ascend use_tool vision:normal",
+    ) {
         assert!(!out.took_turn);
         assert_eq!(out.elapsed, Duration::ZERO);
     }

@@ -198,7 +198,7 @@ pub struct OutcomeEffect {
     pub smite: Option<Harmful>,
     /// Percent of the coins carried that vanish.
     pub lose_coins: u8,
-    /// The player's lantern goes out.
+    /// The light the player has ready (a lantern) goes out.
     pub snuff: bool,
     /// Hostile creatures come.
     pub summon: Option<OutcomeSummon>,

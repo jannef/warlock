@@ -55,8 +55,7 @@ impl World {
             Action::Kick(_) => ActionKind::Kick,
             Action::PickLock(_) => ActionKind::PickLock,
             Action::Ascend | Action::Descend => ActionKind::Stairs,
-            Action::ToggleLantern => ActionKind::Lantern,
-            Action::HoodLantern => ActionKind::Hood,
+            Action::UseTool => ActionKind::Light,
             Action::PickUp(_) => ActionKind::PickUp,
             Action::Drop(_) => ActionKind::Drop,
             Action::Equip { slot, .. } | Action::Remove(slot) => {

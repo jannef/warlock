@@ -22,10 +22,10 @@ unlock = 1000
 pick_lock = 2000
 # A kick (`K`): at a door, to break it in, or at a creature, an unarmed blow.
 kick = 1000
-# Lighting or dousing the lantern.
-lantern = 1000
-# Lowering or raising the lantern's hood: a flick of its shutter. Lighting a lantern that is out
-# with its hood lowered takes lantern + hood.
+# Lighting or dousing a light ready in the Tool slot (a lantern: `u`, the use-tool command, turns
+# it from unlit to lit to hooded and back to unlit; spec §5 "Light sources").
+light = 1000
+# Lowering a lit lantern's hood: a flick of its shutter. Dousing a hooded lantern takes `light`.
 hood = 500
 # Taking stairs, entering a location or a local area from the overworld, and walking off the
 # edge of a local area.

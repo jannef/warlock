@@ -6,4 +6,4 @@ description = "Straight into Fyrdelf, the fire delving under Ascdūn: twelve lev
 start_level = "fyrdelf:1"
 seed = 1
 character = { race = "human", gender = "female", class = "thief", name = "Eadgyth" }
-lantern = "lantern"
+wield = ["lantern"]

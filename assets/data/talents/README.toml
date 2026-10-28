@@ -102,7 +102,8 @@
 #                                 (1 to 20), however dark
 #   night_sight { value }         its overworld sight at night, that many cells farther
 #   day_sight { value }           its overworld sight by day, that many cells farther
-#   lantern_light { light }       its lantern burns as that light preset (../lights.toml)
+#   lantern_light { light }       the lit light it has ready in the Tool slot (a lantern) burns
+#                                 as that light preset (../lights.toml), not while hooded
 #   inner_light { light }         it always sheds that light preset where it stands; everyone
 #                                 sees by it
 #   ambush { dice }               its hits on a creature that has not seen it do that many dice

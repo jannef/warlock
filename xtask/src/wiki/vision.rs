@@ -50,7 +50,7 @@ pub(super) fn lights(content: &Content) -> String {
 }
 
 /// What a player calls a light: the terrain that gives it ("Wall torch"), what carries it ("Torch
-/// carried by a kobold"), their own lantern, a crystal by its color ("Light crystal (red)" for a
+/// carried by a kobold"), their own lantern (a carried light ready in the Tool slot), a crystal by its color ("Light crystal (red)" for a
 /// `crystal_red` the levels place on crystal pedestals), else its id in words ("Lamp").
 fn light_name(content: &Content, id: LightId) -> String {
     let preset = &content.light_presets()[usize::from(id.0)];
@@ -74,19 +74,20 @@ fn light_name(content: &Content, id: LightId) -> String {
             carriers.join(" or ")
         );
     }
-    if content
-        .scenarios()
-        .any(|s| s.lantern.as_deref() == Some(preset.id.as_str()))
-    {
-        return "Your lantern".into();
+    // A carried light (a lantern ready in the Tool slot), lit or hooded: by its object's name.
+    let carried = |hooded: bool| {
+        (content.object_defs().iter()).find(|o| {
+            o.carried_light.is_some_and(|l| match hooded {
+                false => l == id,
+                true => content.light(l).hooded.as_deref() == Some(preset.id.as_str()),
+            })
+        })
+    };
+    if let Some(object) = carried(false) {
+        return format!("Your {}", object.name);
     }
-    let hood_of = |s: &str| content.light_id(s).map(|l| content.light(l).hooded.clone());
-    if content
-        .scenarios()
-        .filter_map(|s| hood_of(s.lantern.as_deref()?).flatten())
-        .any(|hooded| hooded == preset.id)
-    {
-        return "Your lantern, hooded".into();
+    if let Some(object) = carried(true) {
+        return format!("Your {}, hooded", object.name);
     }
     let tended: Vec<&str> = (content.talents().iter())
         .filter(|(_, t)| {
