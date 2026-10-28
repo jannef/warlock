@@ -445,19 +445,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     time ("You have no shield to bash with."). New abilities register in the registry and get
     no default key.
 - **Weapon skills** (`W`; M22, §8 "Weapon skills", "Fighting styles"), ADOM-like: the player's
-  weapon skills and fighting styles in four sections in data order — Melee (the `melee` and
+  weapon skills and fighting styles in five sections in data order — Melee (the `melee` and
   `unarmed` skills), Missile and thrown (`launcher`, `thrown`), Shields (`shield_block`,
-  `shield_bash`), Fighting styles (`style`) — each with its name, its rank (0 to 10; untrained
+  `shield_bash`), Spells (`spell`, #571), Fighting styles (`style`) — each with its name, its rank (0 to 10; untrained
   skills dimmer, so what the player knows stands out), and a faint bar of ten cells (`━` earned,
   `─` still to earn, muted colors) of their marks toward the next rank (none at rank 10). The
   styles the player fights in now (`PerceptionView::own_styles_in_use`: their hands', their
   readied missile weapon's, throwing's while something is ready to throw) are marked with an
   accent `•` before the name, and the Fighting styles heading then has the legend `• in use`.
   Where the console is wide enough (88 columns) the sections are in two columns, Melee and
-  Missile and thrown on the left, Shields and Fighting styles on the right; else one. Never what
+  Missile and thrown on the left, Shields, Spells, and Fighting styles on the right; else one. Never what
   a rank gives, a mark count, or a creature's ranks. Read-only; `W`, Enter, or Esc closes it; in
   a short window the gaps between sections, the margin, and the gap above the footer give way
-  first (one column fits the default 1280×720 window), and a list still too long scrolls with
+  first (in the default 1280×720 window one column then leaves the last few caster styles to
+  scroll), and a list still too long scrolls with
   ↑↓ (`↑`/`↓` on the frame where rows are hidden, `↑↓ scroll` in the footer). Without weapon
   skills in content it says "You know no weapon skills."
 - **Quest log** (`q`; §8 "Quests"): the quests the player was given ("Active"), then those

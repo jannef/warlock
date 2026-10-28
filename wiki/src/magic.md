@@ -115,6 +115,8 @@ each stat's percent of its modifier).
 Each spell resolves one way. An **attack** rolls to hit like a missile (2d12 plus your Dexterity's
 modifier, or the modifiers its "Grows with" names for to-hit, against the target's Defence; a
 spell scroll or a wand always aims with Dexterity), can miss, and can be a critical hit, and does full damage.
+Your ranks in [Spell attacks](weapon-skills.md#the-skills) and your
+[caster style](fighting-styles.md#caster-styles) add to its roll when you cast it yourself.
 An **auto** spell always hits, for less. An **area** spell hits everyone in its shape with no
 roll, for less again per target, and *Evasion* halves what it does. A **touch** spell rolls to hit
 at arm's length and does the most, for less mana. Only attack and touch spells can be critical
