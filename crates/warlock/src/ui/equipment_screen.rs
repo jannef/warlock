@@ -456,10 +456,11 @@ mod tests {
     use warlock_core::content::Content;
     use warlock_core::{Dir, World};
 
-    /// The storeroom's arms and armor picked up, from the doorway: a small shield, a
+    /// The lantern put down (so the arms are lettered from a), and the storeroom's arms and armor
+    /// picked up, from the doorway: a small shield, a
     /// quarterstaff, a short bow, 24 arrows, a chain mail shirt, an iron helm, a wool cloak,
     /// gloves, and boots.
-    pub(crate) const ARMED: &str = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W \
+    pub(crate) const ARMED: &str = "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W \
          move:W*2 move:N pickup move:S*2 pickup move:NW move:W*2 move:N pickup move:SW pickup";
 
     pub(crate) fn armed() -> World {

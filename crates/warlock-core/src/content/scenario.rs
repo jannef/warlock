@@ -10,7 +10,7 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 
 /// A scenario: which level a run starts on, the player's character (or, without one, their eyes
-/// and stats), and lantern, plus defaults.
+/// and stats), and pack, plus defaults.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ScenarioDef {
@@ -49,8 +49,6 @@ pub struct ScenarioDef {
     /// `normal`).
     #[serde(default)]
     vision: Option<String>,
-    /// Light preset of the lantern the player carries (unlit at the start), if any.
-    pub lantern: Option<String>,
     /// Starting date `[year, month, day]` (all from 1); default `[1444, 11, 11]`.
     #[serde(default = "default_date")]
     start_date: [u32; 3],
@@ -88,6 +86,14 @@ pub struct ScenarioDef {
     /// The player's starting pack, from `carry`; filled in by the loader.
     #[serde(skip)]
     pub carry: Vec<crate::object::Stack>,
+    /// What the scenario's own character has ready at the start, in the first free slot each
+    /// fits (`wield = ["lantern"]`: a lantern in the Tool slot, spec §5 "Light sources"), when the
+    /// run starts without the starting kit; a chosen character brings their kit instead.
+    #[serde(default, rename = "wield")]
+    pub(super) wield_spec: Vec<String>,
+    /// What the scenario's own character has ready, from `wield`; filled in by the loader.
+    #[serde(skip)]
+    pub wield: Vec<crate::object::Stack>,
 }
 
 /// A scenario's `character` table: a race, a gender, and a class, as a [`CharacterSpec`] is

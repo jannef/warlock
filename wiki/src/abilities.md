@@ -44,10 +44,6 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   made there, not where you stand, so creatures that hear it and cannot see that spot go to have
   a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. Bards learn it at level 32
   (see [Classes](classes.md)).
-- **Hood your lantern**: lowers your lantern's hood, or raises it again; on a lantern that is out
-  it lights it with the hood lowered. Hooded, the lantern lights the ground around you but not you
-  (see [Your lantern](lantern.md#the-hood)). It is listed under Items, with the lantern; everyone
-  has it.
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is
   always in the menu, and you can use it while you hold a shield. It strikes whoever stands in
   the direction you choose, in the time of a blow.
@@ -82,7 +78,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 
 If you use an ability often, you can give it a key in the Controls screen (the shield bash is
 "Bash with your shield", disarming "Disarm a trap", picking a lock "Pick a lock", stealing
-"Steal", throwing your voice "Throw your voice", and the hood "Hood your lantern"; none has a
+"Steal", and throwing your voice "Throw your voice"; none has a
 key by default): the key uses the ability just as the menu would, asking for a direction or a
 place if it needs one. Without a shield, it says so at once and takes no time. `a` ("Abilities")
 and `X` ("Use the last ability again") can be rebound like every key.

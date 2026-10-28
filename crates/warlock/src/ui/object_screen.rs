@@ -701,6 +701,8 @@ mod tests {
     fn on_the_pile() -> World {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("world");
+        // The lantern put down first, so what is picked up is lettered from a.
+        world.apply(&Action::Drop(Positions::of([0])));
         world.apply(&Action::Move(Dir::SW));
         world.apply(&Action::Move(Dir::SW));
         world
@@ -803,6 +805,7 @@ mod tests {
     fn with_scrolls() -> World {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut world = World::new(content, "traps", None).expect("world");
+        world.apply(&Action::Drop(Positions::of([0])));
         world.apply(&Action::Move(Dir::E));
         world.apply(&Action::PickUp(Positions::default()));
         world
@@ -1307,7 +1310,7 @@ mod tests {
         // rows the margin and the gaps give way so they fit on one page.
         let content = Arc::new(Content::builtin().expect("content"));
         let mut world = World::new(content, "showcase", None).expect("world");
-        let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
+        let walk = "drop:a move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
                     pickup move:S*2 pickup move:NW move:W*2 move:N pickup move:SW pickup";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
             world.apply(&action);

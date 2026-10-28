@@ -1,0 +1,8 @@
+[[talent]]
+id = "treasure_sense"
+name = "Treasure sense"
+tree = "wayfarer"
+description = "When something tells you there is wealth hidden on a level, you also feel which way it lies."
+needs = { skills = { spot = 10 } }
+effects = [{ kind = "treasure_sense" }]
+systems = ["special_rooms"]

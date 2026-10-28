@@ -42,8 +42,9 @@ cells plus a one-cell margin, from `PerceptionView::base_light` (ambient plus ga
 steady, never shadowed by creatures) and `light_sources()` contributions, less creature shadows,
 and folds in UV (violet tint) and the darkvision fade. Gameplay light lives in
 `warlock-core/src/light/` (`mod.rs`: falloff and the wall-face rule; `cache.rs`: per-source shadow
-masks, a `hollow` preset's leaving out its own cell, and the lantern's light from
-`WorldState::lantern_light`, `world/lantern.rs`: hooded, its `hooded` preset; `bounce.rs`: one weak
+masks, a `hollow` preset's leaving out its own cell, and the player's carried light from
+`WorldState::carried_light`, `world/lamp.rs`: a lantern ready in the Tool slot, by its object's
+`light` and the stack's mode, hooded its `hooded` preset; `bounce.rs`: one weak
 bounce; `sun.rs`: sunlight; `moon.rs`: moonlight and `Sky`) and is combined in `perception.rs`;
 Σ contributions + base light == `light(p)` is a tested invariant. **Creature shadows**
 (`render/shadows.rs`, visual only): each visible creature shades every perceived source that

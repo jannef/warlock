@@ -31,7 +31,7 @@ expression: "render(case, content.clone())"
     │     Alignment     Callous                                                               │
     │     Status        Fortified, Owl-eyed                                                   │
     │                                                                                         │
-    │ Weight 70 kg, carrying nothing                                                          │
+    │ Weight 70.4 kg (you 70 kg, carrying 400 g)                                              │
     │ Burdened over 16 kg, strained over 32 kg, overloaded over 48 kg                         │
     │                                                                                         │
     │ @ or Esc close   A skills                                                               │

@@ -667,7 +667,6 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
     let pos = world.player_pos();
     let time = world.time();
     let light = view.light(pos).map_or(0, |l| l.brightness());
-    let lantern = world.lantern().map(|l| l.name().to_string());
     let content = view.content();
     // Display order; the number is the drop priority (higher drops first when space runs out;
     // of equal ones the later first). The moon phase is cut down to its glyph and the date to
@@ -723,7 +722,6 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         Some(Segment::new(10, format!("{},{}", pos.x, pos.y))),
         Some(Segment::new(7, format!("Light {light}"))),
         Some(Segment::new(8, format!("{} vision", view.vision().name))),
-        lantern.map(|l| Segment::new(9, l)),
         Some(Segment::new(11, format!("Seed {}", world.seed()))),
     ];
     (head.into_iter())

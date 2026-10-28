@@ -71,6 +71,11 @@ on hidden traps too (see [Talents](talents.md)).
 - **The same spells** come on [scrolls](scrolls.md): a scroll of fireball, lightning, or frost
   casts what the trap does, where you aim it.
 
+The **Trap sense** talent halves the damage a trap does to you (rounded down, at least 1; see
+[Talents](talents.md)), and magic that wards off traps takes its percent off as well (see
+[Magic items](magic-items.md)), a creature's too. Together they never take more than **75%**
+off: a trap always hurts.
+
 A trap's blow wounds like any other: a big one spills blood and can leave you
 [bleeding](status-effects.md#bleeding). Traps can kill, you as well as creatures. Creatures
 killed by a trap drop what they carried, as from any death, but a trap's kill earns you no

@@ -87,7 +87,15 @@ pub(crate) fn draw(
 /// The effect of a special room of `cells` floor cells on this level, drawn ([`draw`]) among
 /// those it is eligible for; and whether it covers the whole level instead (its `level_chance`,
 /// one more draw, only for an effect that has one and while no effect covers the level yet).
-pub(super) fn pick(canvas: &Canvas, rng: &mut Rng, cells: usize) -> Option<(RoomEffectId, bool)> {
+///
+/// `fits` is what the generator asks besides: an effect with `secret_doors` needs a room it can
+/// seal, or a box in a cave's rock (`treasury.rs`).
+pub(super) fn pick(
+    canvas: &Canvas,
+    rng: &mut Rng,
+    cells: usize,
+    fits: impl Fn(&RoomEffectDef) -> bool,
+) -> Option<(RoomEffectId, bool)> {
     let effects = canvas.content.room_effects();
     let (danger, below) = (canvas.danger, canvas.below);
     let peopled = |e: &RoomEffectDef| {
@@ -95,7 +103,7 @@ pub(super) fn pick(canvas: &Canvas, rng: &mut Rng, cells: usize) -> Option<(Room
             .is_none_or(|s| super::den::peopled(canvas.content, s, canvas.population, canvas.least))
     };
     let id = draw(effects, canvas.room_odds, rng, |e| {
-        e.eligible(cells, danger, below) && peopled(e)
+        e.eligible(cells, danger, below) && peopled(e) && fits(e)
     })?;
     let chance = effects.get(id).level_chance;
     let whole = chance > 0 && canvas.pervading.is_none() && rng.chance(u32::from(chance));
@@ -144,8 +152,8 @@ pub(super) fn place(
 }
 
 /// Makes `room` special, laying its effect's floor over the plain floor in it: unless it
-/// overlaps another special room, or creatures shun it (or it is a teeming den or a tempting hoard)
-/// and one patrols through it. Returns whether it did.
+/// overlaps another special room, or creatures shun it (or it is a teeming den, a tempting hoard,
+/// or a room with secret doors) and one patrols through it. Returns whether it did.
 pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
     let effect = canvas.content.room_effect(room.effect);
     let patrolled = || {
@@ -159,7 +167,11 @@ pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
         })
     };
     if canvas.rooms.iter().any(|r| r.overlaps(&room))
-        || ((effect.shunned || effect.swarm.is_some() || effect.hoard.is_some()) && patrolled())
+        || ((effect.shunned
+            || effect.swarm.is_some()
+            || effect.hoard.is_some()
+            || effect.secret_doors.is_some())
+            && patrolled())
     {
         return false;
     }
@@ -276,9 +288,17 @@ pub(super) fn cave_rooms(canvas: &mut Canvas, rng: &mut Rng, up: Pos) {
         if floor.len() < MIN_CHAMBER {
             continue;
         }
-        let Some((effect, whole)) = pick(canvas, rng, floor.len()) else {
+        // A room with secret doors is a box of its own in the rock, not the chamber
+        // (`treasury.rs`).
+        let boxed =
+            |e: &RoomEffectDef| e.secret_doors.is_none() || super::treasury::fits_cave(canvas, e);
+        let Some((effect, whole)) = pick(canvas, rng, floor.len(), boxed) else {
             continue;
         };
+        if canvas.content.room_effect(effect).secret_doors.is_some() {
+            super::treasury::stamp(canvas, rng, effect);
+            continue;
+        }
         // The rock around the floor belongs to it too, so its walls look as its floor does.
         let mut cells = floor.clone();
         for &p in &floor {

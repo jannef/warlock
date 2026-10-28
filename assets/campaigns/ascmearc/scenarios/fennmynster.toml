@@ -6,4 +6,4 @@ description = "Straight into Fennmynster, the drowned minster in the fen: eight 
 start_level = "fennmynster:1"
 seed = 1
 character = { race = "human", gender = "female", class = "thief", name = "Eadgyth" }
-lantern = "lantern"
+wield = ["lantern"]

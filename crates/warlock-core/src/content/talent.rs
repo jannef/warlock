@@ -281,8 +281,8 @@ pub enum TalentEffect {
     NightSight { value: i32 },
     /// Its overworld sight by day reaches this many cells farther (Eyes of the heights).
     DaySight { value: i32 },
-    /// Its lantern burns as the light preset `light` (an id in `data/lights.toml`;
-    /// Lamplighter).
+    /// The lit light it has ready in the Tool slot (a lantern) burns as the light preset `light`
+    /// (an id in `data/lights.toml`; Lamplighter), not while hooded.
     LanternLight { light: String },
     /// It sheds light `light` (an id in `data/lights.toml`) wherever it is, always (Inner
     /// light): it sees by it, and so does everything else.
@@ -435,6 +435,9 @@ pub enum TalentEffect {
     /// [`crate::perception::PerceptionView::chest_at`]), and a shut chest's trap in its sight
     /// becomes known to it (`World::chest_wise_look`).
     ChestWise,
+    /// The hint said on arriving on a level with a treasure room tells which way it lies
+    /// (Treasure sense; `world/treasury.rs`).
+    TreasureSense,
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
     /// opposed one leans as a neutral one (Devout; the prayer draw, `World::lean`).
     Devout,
@@ -1915,6 +1918,7 @@ impl TalentEffect {
             | TalentEffect::SeesUv
             | TalentEffect::SenseOfPlace
             | TalentEffect::ChestWise
+            | TalentEffect::TreasureSense
             | TalentEffect::Devout
             | TalentEffect::Penitent
             | TalentEffect::CollapseProof

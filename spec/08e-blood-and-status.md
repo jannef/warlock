@@ -616,7 +616,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     An actor that does not carry the disease makes a check against its difficulty; losing it, it
     catches it (`World::infect`), silently: it **incubates** for its `incubation`, rolled in days.
     The player's race's `disease_check` adds to this check and to every progression's
-    (`World::disease_modifier`; ratfolk 4, #255).
+    (`World::disease_modifier`; ratfolk 4, #255), and so do the talents' `disease_checks` and
+    the worn `disease_check` affix effect (§8 "Magic items"), a creature's gear too.
   - **Turns** (`World::disease_turn`, as the clock moves, in `World::live` like the status
     effects, so it makes no difference how time is cut up): when its incubation is over it
     **shows**: its `onset` is said, and the actor is Diseased (the status, `World::afflict`);

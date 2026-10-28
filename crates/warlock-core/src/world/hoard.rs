@@ -1,4 +1,4 @@
-//! Tempting hoards (spec §7 "Special rooms", design §9.7): a treasure room's items lie unguarded
+//! Tempting hoards (spec §7 "Special rooms", design §9.7): a tempting hoard's items lie unguarded
 //! until the player lifts one. Then the room **seals**: every door of it shuts (an open one, unless
 //! something stands in the doorway) and locks with a lock of the floor's level (no key fits it but
 //! a skeleton key; it is picked or kicked as any other, `world/lockpick.rs`, `world/door.rs`), each

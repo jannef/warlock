@@ -260,7 +260,8 @@ pub struct TalentMods {
     pub night_sight: i32,
     /// Cells farther it sees on the overworld by day.
     pub day_sight: i32,
-    /// The light preset its lantern burns as, if not the lantern's own.
+    /// The light preset the lit light it has ready (a lantern) burns as, if not its own
+    /// (`WorldState::carried_light`; not while hooded).
     pub lantern_light: Option<LightId>,
     /// The light it sheds wherever it is, if any.
     pub inner_light: Option<LightId>,
@@ -392,6 +393,9 @@ pub struct TalentMods {
     /// It tells a locked chest from an unlocked one at a glance, and a shut chest's trap in its
     /// sight is known to it (Chest-wise).
     pub chest_wise: bool,
+    /// The hint on arriving on a level with a treasure room says which way it lies (Treasure
+    /// sense).
+    pub treasure_bearing: bool,
     /// A forgotten altar's lean counts double when it agrees, and not at all when it opposes
     /// (Devout).
     pub devout: bool,
@@ -1282,6 +1286,7 @@ impl TalentMods {
             TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
             TalentEffect::SenseOfPlace => self.sense_of_place = true,
             TalentEffect::ChestWise => self.chest_wise = true,
+            TalentEffect::TreasureSense => self.treasure_bearing = true,
             TalentEffect::Devout => self.devout = true,
             TalentEffect::Penitent => self.penitent = true,
             TalentEffect::RoomPacePercent { value } => self.room_pace_percent += value,

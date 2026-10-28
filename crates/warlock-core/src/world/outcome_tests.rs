@@ -342,9 +342,17 @@ fn banes_take_coins_the_lantern_and_the_most_precious_thing() {
         !w.state.player().inventory.iter().any(|s| s.object == gold),
         "the gold was worth most"
     );
-    w.state.lantern_lit = true;
+    // A lantern readied in the Tool slot, and lit.
+    let lantern = content.object_id("lantern").expect("lantern");
+    let tool = content.slot_id("tool").expect("tool slot");
+    let me = w.player_mut();
+    me.inventory.push(crate::object::Stack::one(lantern));
+    let at = me.inventory.len() - 1;
+    me.equipment.put(&[tool], at);
+    w.apply(&Action::UseTool);
+    assert!(w.state.carried_light(w.content()).is_some(), "lit");
     befall(&mut w, "snuffed");
-    assert!(!w.state.lantern_lit);
+    assert_eq!(w.state.carried_light(w.content()), None, "snuffed");
 }
 
 #[test]

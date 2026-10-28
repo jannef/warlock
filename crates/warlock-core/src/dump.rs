@@ -1948,7 +1948,7 @@ mod tests {
     fn abilities_show_what_the_player_can_do_and_why_not() {
         // The showcase thief: the class's skills used as actions (no use yet, but Disable
         // device's, disarming a trap, Open lock's, picking a lock, and Steal's, stealing, each in
-        // a direction), the shield bash, which needs a shield in hand, and the lantern's hood;
+        // a direction), the shield bash, which needs a shield in hand;
         // first their birth sign's stare (a Basilisk).
         let mut world = showcase();
         assert_eq!(
@@ -1960,7 +1960,6 @@ mod tests {
                 "Pick lock (skill): a direction",
                 "Steal (skill): a direction",
                 "Shield bash (weapon skill): you hold no shield",
-                "Hood your lantern (item): nothing",
             ]
         );
         let value = json(&world, &[], false);
@@ -1985,7 +1984,7 @@ mod tests {
         );
         // The storeroom's small shield in hand: it can be used, in a direction.
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
-                    pickup:a equip:off_hand:a";
+                    pickup:a equip:off_hand:b";
         for action in crate::action::parse_actions(walk).expect("actions") {
             world.apply(&action);
         }

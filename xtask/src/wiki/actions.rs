@@ -42,10 +42,8 @@ pub(super) fn action_costs(content: &Content) -> String {
                 "A try at picking a lock (once it gives, opening the door comes on top)"
             }
             ActionKind::Kick => "Kicking (a door, or a creature)",
-            ActionKind::Lantern => "Lighting or dousing the lantern",
-            ActionKind::Hood => {
-                "Lowering or raising the lantern's hood (lighting it hooded: on top of lighting it)"
-            }
+            ActionKind::Light => "Lighting or dousing a lantern ready in the Tool slot (`u`)",
+            ActionKind::Hood => "Lowering a lit lantern's hood (`u`)",
             ActionKind::Stairs => {
                 "Taking stairs, entering a place from the overworld, or walking off an area's edge"
             }

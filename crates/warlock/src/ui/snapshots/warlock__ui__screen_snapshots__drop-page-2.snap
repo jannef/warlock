@@ -5,8 +5,10 @@ expression: "render(case, content.clone())"
  ┌─ Drop ────────────────────────────────────────────────────────── Page 2/2 ─┐
  │ Light sources                                                              │
  │   a - ( 2 wax candles                                               200 g  │
+ │ Tools                                                                      │
+ │ > b + ( a lantern (in use)                                          400 g  │
  │ Coins                                                                      │
- │ > b + $ 12 gold coins                                               120 g  │
+ │   c - $ 12 gold coins                                               120 g  │
  │                                                                            │
  │                                                                            │
  │                                                                            │
@@ -21,8 +23,6 @@ expression: "render(case, content.clone())"
  │                                                                            │
  │                                                                            │
  │                                                                            │
- │                                                                            │
- │                                                                            │
- │ a-b mark   , all   Enter drop   > < page   Esc cancel                      │
+ │ a-c mark   , all   Enter drop   > < page   Esc cancel                      │
  └────────────────────────────────────────────────────────────────────────────┘
  The Hub  ·  HP 18/18  ·  MP 2/2  ·  Sta 10/10  ·  Burdened          ? controls

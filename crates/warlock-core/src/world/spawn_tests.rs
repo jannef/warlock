@@ -110,7 +110,7 @@ fn files_with(haunt: &str) -> ContentFiles {
     files.insert("data/dungeons.toml", &dungeons);
     files.insert(
         "scenarios/haunt.toml",
-        "name = \"Haunt\"\nstart_level = \"haunt\"\nlantern = \"lantern\"\nhp = 900\n",
+        "name = \"Haunt\"\nstart_level = \"haunt\"\nwield = [\"lantern\"]\nhp = 900\n",
     );
     files
 }

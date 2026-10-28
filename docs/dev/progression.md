@@ -63,7 +63,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `threshold_percent`, `darkvision`, `sees_uv` | `WorldState::eyes` (`world/eyes.rs`, the design's B4): the base profile (`WorldState::vision`) as the talents change it; `Perception::compute` reads it, so the view's `vision()` is the effective eye (id and name the base's). Creatures keep their types' profiles |
 | `scent` | `Perception::compute`: a creature suffering the status, in line of sight within the radius (not on the overworld), has its cell seen as darkvision would |
 | `night_sight` | `Perception::compute`: the overworld's sight radius at night (`daylight::phase`) |
-| `lantern_light` | `LightCache::sources`: the lit lantern's preset (gameplay light: creatures see it too) |
+| `lantern_light` | `WorldState::carried_light` (`world/lamp.rs`, read by `LightCache::sources`): the preset of a lit (not hooded) lantern ready in the Tool slot (gameplay light: creatures see it too) |
 | `ambush` | `World::resolve` → `World::ambushed` (`world/ambush.rs`): the dice added after the strike when it hit a creature that `World::unaware` says has not seen the attacker (`Mind::last_seen` unset, and creature sight from it misses the attacker's cell); drawn only then |
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
 | `travel_percent` | `World::step_price` on the overworld, after the survival skill |
@@ -415,8 +415,8 @@ the bar. The witch's Blight (#245) needs no read of its own for its type: its bu
 `damage_type = "poison"`, and its Poisoned goes through `World::afflict`, which meets poison
 resistance.
 
-Shadow and Wayfarer (#239) ship whole but for Hooded light (it waits for the lantern's hood,
-#235: the talent narrows who has the hood ability) and Patient blade (the thief's openings,
+Shadow and Wayfarer (#239) ship whole but for Hooded light (it waited for the lantern's hood,
+#235; the hood is now a lantern's mode, `u`, #643, so the talent needs a new rule) and Patient blade (the thief's openings,
 #225); `land_talent_tests.rs` covers each one's rule. `data/lights.toml` has the Lamplighter's
 `lantern_bright`; `data/factions.toml` marks the vermin and the wildlife `animal`. Blood scent's
 radius is 9 (the design's "4 cells" read as four beyond darkvision's five, which it needs: at 4 it

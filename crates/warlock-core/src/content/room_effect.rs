@@ -22,7 +22,7 @@
 //! An effect may move whoever steps inside elsewhere on the level now and then
 //! ([`RoomEffectDef::warp`]: an unstable room; `World::warp_step`, the teleport trap's move).
 //!
-//! An effect may hold a tempting hoard ([`RoomEffectDef::hoard`]: a treasure room's items, which
+//! An effect may hold a tempting hoard ([`RoomEffectDef::hoard`]: its items, which
 //! seal it with locked doors and guardians once lifted; `World::lift_in_hoard`).
 //! An effect may give way under the player now and then ([`RoomEffectDef::collapse`]: a
 //! collapsed floor; `World::collapse_step`, a fall to the level below).
@@ -44,6 +44,7 @@
 
 use super::room_lore::{LootSpec, LoreNames, RoomLoot};
 use super::room_shrine::{Shrine, ShrineSpec};
+use super::room_treasury::{SecretDoors, Treasury};
 use super::{
     ContentError, ItemClassId, LightId, OutcomeTables, StatusDef, StatusId, TerrainDef, TerrainId,
 };
@@ -165,6 +166,9 @@ struct RoomEffectSpec {
     loot: Option<LootSpec>,
     #[serde(default)]
     train: BTreeMap<String, u16>,
+    secret_doors: Option<SecretDoors>,
+    treasure: Option<Treasury>,
+    arrive: Option<String>,
 }
 
 /// `dressing = { terrain = "weapon_rack", per_cells = 10, most = 4 }`.
@@ -526,6 +530,13 @@ pub struct RoomEffectDef {
     pub train: Vec<(SkillId, u16)>,
     /// `loot` and `train` as data names them, until resolved.
     lore: LoreNames,
+    /// How its doors are hidden (a treasure room's: all of them secret; `mapgen/treasury.rs`).
+    pub secret_doors: Option<SecretDoors>,
+    /// What generators lay inside a treasure room: chests, heaps of gold, gems.
+    pub treasure: Option<Treasury>,
+    /// Said on every arrival on a level with such a room the player has not entered yet (one
+    /// line per effect; `world/treasury.rs`).
+    pub arrive: Option<String>,
 }
 
 impl RoomEffectDef {
@@ -561,6 +572,9 @@ impl RoomEffectDef {
             && self.haunt.is_none()
             && self.dressing.is_none()
             && self.lore.loot.is_none()
+            && self.secret_doors.is_none()
+            && self.treasure.is_none()
+            && self.arrive.is_none()
             && self.pervade.is_some()
     }
 
@@ -932,8 +946,13 @@ impl RoomEffects {
                 return Err(bad("max_cells is below min_cells".into()));
             }
             let blank = |line: &Option<String>| line.as_ref().is_some_and(|l| l.trim().is_empty());
-            if blank(&spec.near) || blank(&spec.pervade) {
-                return Err(bad("`near` and `pervade` must not be empty".into()));
+            if blank(&spec.near) || blank(&spec.pervade) || blank(&spec.arrive) {
+                return Err(bad(
+                    "`near`, `pervade`, and `arrive` must not be empty".into()
+                ));
+            }
+            if let Some(treasure) = &spec.treasure {
+                treasure.check().map_err(bad)?;
             }
             for (what, value, range) in [
                 ("noise", spec.noise, NOISE),
@@ -1147,12 +1166,15 @@ impl RoomEffects {
                 loot: None,
                 train: Vec::new(),
                 lore,
+                secret_doors: spec.secret_doors,
+                treasure: spec.treasure,
+                arrive: spec.arrive,
             };
             if def.level_chance > 0 && !def.can_pervade() {
                 return Err(err(format!(
                     "effect `{}`: a `level_chance` needs a `pervade` line, and no effect that \
-                     creatures shun, that lays a floor, that holds mirrors, a hoard, or loot, or that has a \
-                     feature or dressing covers a whole level",
+                     creatures shun, that lays a floor, that holds mirrors, a hoard, treasure, or loot, that hides its doors or \
+                     calls on arrival, or that has a feature or dressing covers a whole level",
                     def.id
                 )));
             }

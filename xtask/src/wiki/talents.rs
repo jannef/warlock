@@ -629,6 +629,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::SenseOfPlace => "knows a special room's nature from a glimpse of it, \
             and the effect covering a whole level by name on arrival"
             .into(),
+        TalentEffect::TreasureSense => "the hint on arriving on a level with a treasure room \
+            it has not entered ends with the way to the nearest one's middle from the arrival \
+            cell, in eight winds"
+            .into(),
         TalentEffect::ChestWise => "sees whether a shut chest in sight is locked (look mode: \
             \"a locked coffer\", \"an unlocked coffer\"), and knows the trap of every shut chest \
             it sees, no check"
