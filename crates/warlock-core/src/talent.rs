@@ -235,6 +235,9 @@ pub struct TalentMods {
     pub school_focus: Vec<(String, i32, i32, i32)>,
     /// Added to the caster level of the wands it uses (spec §8 "Magic items": "Wands").
     pub wand_level: i32,
+    /// Percent more the caster level its magic items give counts (Attuned;
+    /// [`TalentMods::attuned`]).
+    pub attuned_percent: i32,
     /// The active Blood magic, if it has it.
     pub blood_magic: Option<BloodMagic>,
     /// Percent louder footsteps (negative: quieter).
@@ -575,6 +578,9 @@ pub struct TalentMods {
     pub resource_builds: Vec<(ResourceId, Build, u16)>,
     /// How much more of a resource it may hold: `(resource, more)` (Mighty rage).
     pub resource_max: Vec<(ResourceId, u16)>,
+    /// How much more what its magic items add to a resource's maximum counts, in percent:
+    /// `(resource, percent)` (Bellows; [`TalentMods::geared_resource`]).
+    pub geared_resource_percent: Vec<(ResourceId, i32)>,
     /// How much more of a resource it holds when granted: `(resource, more)` (Battle trance).
     pub resource_start: Vec<(ResourceId, u16)>,
     /// How much faster a resource changes over time, in percent: `(resource, percent)` (Steady
@@ -953,6 +959,24 @@ impl TalentMods {
         self.caster_level + grown
     }
 
+    /// The caster level its magic items give, `items`, as it counts for it: Attuned's
+    /// `attuned_percent` more, rounded up (+1 → +2, +3 → +5); a negative `items` (a curse) is
+    /// left as it is.
+    pub fn attuned(&self, items: i32) -> i32 {
+        lift_by_percent(items, self.attuned_percent)
+    }
+
+    /// What its magic items add to `resource`'s maximum, `worn`, as it counts for it: Bellows'
+    /// `geared_resource_percent` more for that pool, rounded up; a negative `worn` is left as
+    /// it is.
+    pub fn geared_resource(&self, resource: ResourceId, worn: i32) -> i32 {
+        let percent = (self.geared_resource_percent.iter())
+            .filter(|(r, _)| *r == resource)
+            .map(|(_, p)| p)
+            .sum();
+        lift_by_percent(worn, percent)
+    }
+
     /// School focus on a spell with `tags` (magic design §6): the percent more it costs and the
     /// cells farther it reaches, summed over every focus whose tag it carries.
     pub fn focus(&self, tags: &[&str]) -> (i32, i32) {
@@ -1155,6 +1179,7 @@ impl TalentMods {
                 self.caster_per_levels.push((per_levels, value));
             }
             TalentEffect::WandLevel { value } => self.wand_level += value,
+            TalentEffect::AttunedPercent { value } => self.attuned_percent += value,
             TalentEffect::BloodMagic { hp, mana } => {
                 self.blood_magic = Some(BloodMagic { hp, mana });
             }
@@ -1735,6 +1760,11 @@ impl TalentMods {
                     self.resource_rate.push((r, value));
                 }
             }
+            TalentEffect::GearedResourcePercent { resource, value } => {
+                if let Some(r) = content.resource_id(&resource) {
+                    self.geared_resource_percent.push((r, value));
+                }
+            }
             TalentEffect::Unstoppable { statuses, cost } => {
                 let ids = statuses.iter().filter_map(|s| content.status_id(s));
                 let held = self.unstoppable.get_or_insert_with(Unstoppable::default);
@@ -2204,6 +2234,18 @@ pub fn offers(content: &Content, who: &Candidate<'_>) -> Vec<(TalentId, Vec<Opti
             (!ways.is_empty()).then_some((id, ways))
         })
         .collect()
+}
+
+/// `value` raised by `percent` of itself, rounded up (never below 0); `value` itself when it is
+/// not above 0 or `percent` is 0 (Attuned's and Bellows' items terms).
+fn lift_by_percent(value: i32, percent: i32) -> i32 {
+    if value <= 0 || percent == 0 {
+        return value;
+    }
+    let n = i64::from(value) * i64::from(percent);
+    // Rounded up: toward zero for a cut, away from it for a lift.
+    let more = if n >= 0 { (n + 99) / 100 } else { n / 100 };
+    i32::try_from((i64::from(value) + more).max(0)).unwrap_or(i32::MAX)
 }
 
 #[cfg(test)]

@@ -36,16 +36,19 @@ impl Actor {
     /// The most of `resource` it may hold at character `level`: its maximum by data
     /// ([`Actor::data_resource_max`]), what its talents add (Mighty rage's 10 more rage), and
     /// what it wears adds for that pool (Tireless's `resource_max`, of Fury's; spec §8 "Magic
-    /// items"), never below 0. The one place that decides it; the player is shown it. An affix
+    /// items"; doubled for stamina with Bellows), never below 0. The one place that decides it; the player is shown it. An affix
     /// never grants the pool: one who does not hold it gets nothing of this.
     pub fn resource_max(&self, content: &Content, resource: ResourceId, level: u8) -> u16 {
-        let talents: i32 = (self.talent_mods(content).resource_max.iter())
+        let mods = self.talent_mods(content);
+        let talents: i32 = (mods.resource_max.iter())
             .filter(|(r, _)| *r == resource)
             .map(|(_, more)| i32::from(*more))
             .sum();
-        let worn = self
-            .mods(content)
-            .resource(ItemEffect::ResourceMax, resource);
+        let worn = mods.geared_resource(
+            resource,
+            self.mods(content)
+                .resource(ItemEffect::ResourceMax, resource),
+        );
         let max = i32::from(self.data_resource_max(content, resource, level)) + talents + worn;
         u16::try_from(max.max(0)).unwrap_or(u16::MAX)
     }
