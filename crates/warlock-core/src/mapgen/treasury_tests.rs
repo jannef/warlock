@@ -89,8 +89,10 @@ fn a_rooms_level_hides_every_door_of_its_treasure_room() {
             !level.stairs.iter().any(|s| room.contains(s.pos)),
             "seed {seed}: no stairs inside"
         );
+        // A treasure room's chest may be a mimic (the band's chance, design §5.3).
         assert!(
-            !level.creatures.iter().any(|c| room.contains(c.pos)),
+            !(level.creatures.iter())
+                .any(|c| room.contains(c.pos) && !content.is_mimic(c.creature)),
             "seed {seed}: no one inside"
         );
     });
@@ -149,10 +151,15 @@ fn treasure_rooms_hold_chests_gold_and_gems_from_their_own_stream() {
             outside(&plain.objects, room),
             "seed {seed}: objects outside"
         );
+        // A mimic stands in for a chest (design §5.3): it counts as the chest it replaced.
+        let mimics = (level.creatures.iter())
+            .filter(|c| room.contains(c.pos) && with.is_mimic(c.creature))
+            .count();
         let chests = cells
             .iter()
             .filter(|p| level.chests.contains_key(p))
             .count()
+            + mimics
             - cells
                 .iter()
                 .filter(|p| plain.chests.contains_key(p))
