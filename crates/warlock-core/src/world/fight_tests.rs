@@ -439,6 +439,13 @@ dodge = 4
 attack_cost = 125
 flee_cost = 80
 flee_noise = 50
+
+[[stance]]
+id = "berserker"
+name = "Berserker"
+to_hit = 2
+damage = 4
+dodge = -6
 "##;
 
 const LEGEND: &str = r##"

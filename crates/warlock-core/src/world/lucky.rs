@@ -39,6 +39,7 @@ impl World {
         }));
         let me = self.player_mut();
         me.hp = me.max_hp(&content);
+        self.settle_stance(player);
         true
     }
 

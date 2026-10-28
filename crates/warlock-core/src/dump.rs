@@ -682,6 +682,11 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
     if let Some(band) = view.own_alignment() {
         rows.push(format!("Alignment {}", band.name()));
     }
+    // The combat stance by name, when not neutral (as the status bar shows it).
+    let stance = view.own_stance();
+    if !stance.is_neutral() {
+        rows.push(format!("Stance {}", content.stance_def(stance).name));
+    }
     // The guilds they belong to and their ranks (spec §8 "Quests": "Guilds"), a title only.
     for g in view.own_guilds() {
         rows.push(format!("Guild {}, {}", g.guild.bare_name(), g.title()));
@@ -1632,6 +1637,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             .map(|(k, w)| (content.damage_type(k).id.clone(), json!(w.word())))
             .collect::<serde_json::Map<String, Value>>(),
         "hunger": view.own_hunger(),
+        "stance": view.own_stance().id(),
         "dazzled": view.dazzled(),
         "death": death,
         "messages": messages,
