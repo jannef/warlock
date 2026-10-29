@@ -17,6 +17,7 @@
 //! the order (adventurers first, then everyday folk) and a new class picks its place.
 
 use super::kit::{Kit, KitLineSpec};
+use super::skill::{OptionalSkill, OptionalSpec};
 use super::weapon_skill::Ranked;
 use super::{
     ActionKind, ContentError, FACTORS, MAX_LEVEL, TalentBook, TalentId, TreeId, WeaponSkillId,
@@ -101,28 +102,6 @@ struct ClassSpec {
     #[serde(default)]
     abilities: Vec<AbilitySpec>,
     bonus_talents: Option<BonusSpec>,
-}
-
-/// `{ chance = 30, dice = "2d4" }`: a skill a new character of the class may start with.
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct OptionalSpec {
-    chance: u8,
-    dice: Dice,
-}
-
-/// The chances an optional skill may have, in percent: 100 would be a guaranteed skill.
-pub const OPTIONAL_CHANCE: std::ops::RangeInclusive<u8> = 1..=99;
-
-/// A skill a class's new character may start with (spec §8 "Skills", ADOM-like): rolled once
-/// when the character is made.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct OptionalSkill {
-    pub skill: SkillId,
-    /// The chance, in percent, that a new character starts with it trained.
-    pub chance: u8,
-    /// Its starting value, rolled when it comes.
-    pub dice: Dice,
 }
 
 /// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent.
@@ -322,30 +301,9 @@ impl ClassDef {
             known_for.push(skill);
         }
         known_for.sort();
-        let mut optional_skills = Vec::with_capacity(spec.optional_skills.len());
-        for (name, o) in &spec.optional_skills {
-            let at = |m: String| err(format!("class `{id}`: optional_skills: {m}"));
-            let grant =
-                skills::grants(&BTreeMap::from([(name.clone(), o.dice)]), skill_id).map_err(at)?;
-            let skill = grant[0].0;
-            if skills.iter().any(|&(s, _)| s == skill) {
-                return Err(at(format!("`{name}` is one of the class's skills")));
-            }
-            if !OPTIONAL_CHANCE.contains(&o.chance) {
-                return Err(at(format!(
-                    "{name}: chance {} is out of range ({} to {} percent)",
-                    o.chance,
-                    OPTIONAL_CHANCE.start(),
-                    OPTIONAL_CHANCE.end()
-                )));
-            }
-            optional_skills.push(OptionalSkill {
-                skill,
-                chance: o.chance,
-                dice: o.dice,
-            });
-        }
-        optional_skills.sort_by_key(|o| o.skill);
+        let optional_skills =
+            super::skill::optional_skills(&spec.optional_skills, skill_id, &skills, "class")
+                .map_err(|m| err(format!("class `{id}`: optional_skills: {m}")))?;
         if spec.rolls > MAX_ROLLS {
             return Err(err(format!(
                 "class `{id}`: rolls {} is more than {MAX_ROLLS}",

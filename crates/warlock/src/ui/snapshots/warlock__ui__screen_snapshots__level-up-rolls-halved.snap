@@ -8,11 +8,12 @@ expression: "render(case, content.clone())"
   ┌─ Level 24 · Skill rolls 3 · Talent 1 ────────────────────────────────────┐
   │                                                                          │
   │ Skills                                                                   │
-  │ > a  Athletics   139  ────  (1d3)/2                                      │
+  │ > a  Athletics   144  ────  (1d3)/2                                      │
   │   b  Balance       9  ────  +2                                           │
   │   c  Heal          8  ────  +1                                           │
-  │   d  Intimidate    8  ────  +2                                           │
-  │   e  Swim         18  ────  +2                                           │
+  │   d  Initiative    8  ────  +2                                           │
+  │   e  Intimidate   11  ────  +2                                           │
+  │   f  Swim         10  ────  +2                                           │
   │                                                                          │
   │ 3 skill rolls a level: class 2, race 1                                   │
   │                                                                          │
@@ -21,9 +22,8 @@ expression: "render(case, content.clone())"
   │ Running, jumping, climbing, and kicking: strength put to use.            │
   │                                                                          │
   │                                                                          │
-  │ a-e or Enter roll   Levels 25 to 37 next                                 │
+  │ a-f or Enter roll   Levels 25 to 37 next                                 │
   └──────────────────────────────────────────────────────────────────────────┘
-
 
 
  The Hub  ·  HP 130/130  ·  MP 38/38  ·  Sta 10/13  ·  Lv 37         ? controls

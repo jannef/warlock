@@ -650,12 +650,16 @@ impl World {
         })
     }
 
-    /// The side of actor `id` a blow strikes: its Defence, Protection, and resistances.
+    /// The side of actor `id` a blow strikes: its Defence, Protection, and resistances, and
+    /// whether it is immune to criticals, having no vitals (`Content::has_vitals`; an attacker's
+    /// Anatomist may find them, `ambush.rs::vitals`).
     pub(crate) fn target_of(&self, id: ActorId) -> Target {
+        let creature = self.state.actors.get(&id).map(|a| a.creature);
         Target {
             defence: self.defence_of(id),
             protection: self.protection_of(id),
             resistances: self.resistances_of(id),
+            no_criticals: creature.is_some_and(|c| !self.content.has_vitals(c, &[])),
         }
     }
 
@@ -766,8 +770,9 @@ impl World {
         // Unbinder (spec §8 "Animated objects"): against a creature of a tag.
         let profile = profile.map(|p| self.bane(attacker, target, p));
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
+        let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         let unaware = profile.is_some() && self.unaware(target, attacker);
-        let unseen = profile.is_some() && self.sneaks(attacker, target, unaware);
+        let unseen = profile.is_some() && self.sneaks(attacker, target, unaware, missile);
         if unaware {
             self.startle(target, Some(attacker), events);
         }
@@ -777,8 +782,8 @@ impl World {
             self.reveal_mimic(target, super::mimic::Reveal::Struck, events);
         }
         let profile = profile.map(|p| self.sneak_threat(attacker, unseen, p));
-        let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         let struck = self.target_against(target, missile);
+        let struck = self.vitals(attacker, target, struck);
         let struck = self.flat_footed(target, unaware, struck);
         let struck = self.small_target(attacker, target, struck);
         // Feint (a weapon active, `weapon_active.rs`): rolled without the categories it ignores.

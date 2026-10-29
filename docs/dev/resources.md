@@ -124,7 +124,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   `World::inspire` spends the resource when held (`spend_resource`), else the mana;
   `Ability::unavailable` checks mana (and the casting block) only when the resource falls
   short. Tests: `world/ki_tests.rs`.
-- **Openings** (R3, #251; `world/openings.rs`): Improved sneak attack grants the pool
+- **Openings** (R3, #251; `world/openings.rs`): the thief's Sneak attack (level 1, #682) grants the pool
   (`grants_resource`); its build is the data's `sneak_attack`; Master thief's `finisher` effect is
   the class active `ClassActive::MasterThief` (`use:master_thief:E`, aimed, the cost `resource = {
   id = "openings", cost = 5 }` on the talent): a melee blow with `Profile::sure_critical` (every

@@ -30,11 +30,12 @@
 //!   after everything above (so they never change a score) in this order: the race's skills, the
 //!   class's (each in skill order), then the race's extra class skill (`class_skill`, humans):
 //!   one of the class's skills picked uniformly, then its dice. A skill both train sums the two.
-//!   Every other skill is untrained, but for the class's **optional skills** (ADOM-like): each
-//!   comes with its chance, then its dice, in skill order, from their own stream,
-//!   `character/optional-skills/<race>,<gender>,<class>`, so no other roll moves; a skill the
-//!   race trains too sums the two. The race's extra class skill picks among the guaranteed ones
-//!   only.
+//!   Every other skill is untrained, but for the class's and then the race's **optional skills**
+//!   (ADOM-like; the drow's Sneak attack): each comes with its chance, then its dice, in skill
+//!   order, from their own stream, `character/optional-skills/<race>,<gender>,<class>`, the
+//!   class's first, so no other roll moves (a race's draws come after every class's); a skill
+//!   the race or the class trains too sums the two. The race's extra class skill picks among
+//!   the guaranteed ones only.
 //! - **Eyes**: the player's vision profile is the race's.
 //! - **Weapon skills** (spec §8 "Weapon skills"): the race's starting ranks plus the class's,
 //!   and one set of the class's `weapon_skill_choice` if it has one, at most 10 each; each
@@ -425,7 +426,7 @@ impl CharacterSpec {
             .map_or(0, |(h, s)| h.alignment(s));
         let potential = stats::roll(&race.potential, &mut rng);
         let mut skills = starting_skills(race, class, &mut rng);
-        optional_skills(class, &mut skills, seed, self);
+        optional_skills((race, class), &mut skills, seed, self);
         let (weapon_skills, trained) = self.weapon_skills(content, seed);
         let character = Character {
             name: random_name(content, seed, self, 0).unwrap_or_else(|| NAMELESS.into()),
@@ -509,15 +510,21 @@ fn starting_skills(race: &RaceDef, class: &ClassDef, rng: &mut Rng) -> Skills {
     out
 }
 
-/// The class's optional skills a character of `spec` in a run with `seed` starts with, added to
-/// `skills`: each by its chance, then its dice, from the stream
-/// `character/optional-skills/<spec>` (drawing nothing for a class without any).
-fn optional_skills(class: &ClassDef, skills: &mut Skills, seed: u64, spec: &CharacterSpec) {
-    if class.optional_skills.is_empty() {
+/// The class's and the race's optional skills a character of `spec` in a run with `seed` starts
+/// with, added to `skills`: each by its chance, then its dice, from the stream
+/// `character/optional-skills/<spec>`, the class's first (so a race's never move a class's
+/// draws); nothing drawn when neither has any.
+fn optional_skills(
+    (race, class): (&RaceDef, &ClassDef),
+    skills: &mut Skills,
+    seed: u64,
+    spec: &CharacterSpec,
+) {
+    if class.optional_skills.is_empty() && race.optional_skills.is_empty() {
         return;
     }
     let mut rng = Rng::stream(seed, &format!("character/optional-skills/{spec}"));
-    for o in &class.optional_skills {
+    for o in class.optional_skills.iter().chain(&race.optional_skills) {
         if rng.chance(u32::from(o.chance)) {
             skills.add(o.skill, o.dice.roll(&mut rng));
         }
@@ -1062,16 +1069,23 @@ mod tests {
         Content::load(&files).expect("valid content")
     }
 
-    /// The built-in content with no class's optional skills.
-    fn no_optional_content() -> Content {
+    /// The built-in content with no class's (`classes`) and no race's (`races`) optional skills.
+    fn without_optional(tables: &[&str]) -> Content {
         let mut files = ContentFiles::builtin();
-        files.edit_table("classes", |text| {
-            let kept: Vec<&str> = (text.lines())
-                .filter(|l| !l.starts_with("optional_skills = "))
-                .collect();
-            kept.join("\n")
-        });
+        for table in tables {
+            files.edit_table(table, |text| {
+                let kept: Vec<&str> = (text.lines())
+                    .filter(|l| !l.starts_with("optional_skills = "))
+                    .collect();
+                kept.join("\n")
+            });
+        }
         Content::load(&files).expect("valid content")
+    }
+
+    /// The built-in content with no optional skills at all.
+    fn no_optional_content() -> Content {
+        without_optional(&["classes", "races"])
     }
 
     #[test]
@@ -1160,12 +1174,15 @@ mod tests {
                     for (id, t) in with.skills.iter() {
                         let before = i32::from(without.skills.value(id).unwrap_or(0));
                         let added = i32::from(t.value) - before;
-                        let optional = (class.optional_skills.iter()).find(|o| o.skill == id);
+                        let of_class = (class.optional_skills.iter()).find(|o| o.skill == id);
+                        let of_race = (race.optional_skills.iter()).find(|o| o.skill == id);
+                        let optional = of_class.map(|o| (&class.id, o));
+                        let optional = optional.or(of_race.map(|o| (&race.id, o)));
                         match optional {
                             None => assert_eq!(added, 0, "{spec} {id}"),
-                            Some(o) if added > 0 => {
+                            Some((owner, o)) if added > 0 => {
                                 assert!((o.dice.min()..=o.dice.max()).contains(&added));
-                                *came.entry((class.id.clone(), id)).or_default() += 1;
+                                *came.entry((owner.clone(), id)).or_default() += 1;
                             }
                             Some(_) => assert_eq!(added, 0),
                         }
@@ -1191,9 +1208,65 @@ mod tests {
                 );
             }
         }
+        let rolled = content.classes().len() as f64 * SEEDS as f64;
+        for race in &content.races().list {
+            for o in &race.optional_skills {
+                let n = came.get(&(race.id.clone(), o.skill)).copied().unwrap_or(0);
+                let share = f64::from(n) / rolled * 100.0;
+                let chance = f64::from(o.chance);
+                assert!(
+                    (share - chance).abs() < 6.0,
+                    "{} {}: {share:.1}% for a {chance}% chance",
+                    race.id,
+                    o.skill
+                );
+            }
+        }
         // The same seed and choices, the same skills.
         let one = start(&content, "elf,male,commoner", 7);
         assert_eq!(one.skills, start(&content, "elf,male,commoner", 7).skills);
+    }
+
+    #[test]
+    fn a_drow_may_start_with_sneak_attack_and_no_other_characters_skills_move() {
+        let content = content();
+        let classes_only = without_optional(&["races"]);
+        let drow = content.race("drow").expect("drow");
+        let sneak = content.skill_id("sneak_attack").expect("the skill");
+        assert_eq!(drow.optional_skills.len(), 1);
+        assert_eq!(drow.optional_skills[0].skill, sneak);
+        assert_eq!(drow.optional_skills[0].chance, 40);
+        let mut came = 0;
+        for race in &content.races().list {
+            for class in content.classes() {
+                let spec = CharacterSpec::new(&race.id, Gender::Male, &class.id);
+                for seed in 0..20 {
+                    let with = spec.start(&content, seed, start_date()).expect("starts");
+                    let before = spec
+                        .start(&classes_only, seed, start_date())
+                        .expect("starts");
+                    if race.id != "drow" {
+                        // A race without optional skills draws nothing more: the class's
+                        // optional rolls are where they were.
+                        assert_eq!(with.skills, before.skills, "{spec} seed {seed}");
+                        continue;
+                    }
+                    for (id, t) in with.skills.iter() {
+                        let was = before.skills.value(id).unwrap_or(0);
+                        if id != sneak {
+                            assert_eq!(t.value, was, "{spec} seed {seed} {id}");
+                        } else if t.value > was {
+                            assert!((2..=8).contains(&(t.value - was)), "{spec} seed {seed}");
+                            came += 1;
+                        }
+                    }
+                }
+            }
+        }
+        // About 40 % of the drow, whatever their class (the thief's own sums with it).
+        let drawn = content.classes().len() * 20;
+        let share = came * 100 / drawn;
+        assert!((28..=52).contains(&share), "{share}% of drow");
     }
 
     #[test]

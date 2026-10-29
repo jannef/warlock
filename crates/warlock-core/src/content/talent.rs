@@ -296,6 +296,15 @@ pub enum TalentEffect {
     /// This percent of the extra cost of the action it takes Surprised is spared (Cool head:
     /// 100, none; `World::surprise_cost`).
     SurpriseEase { value: i32 },
+    /// Those it catches unawares find their initiative check this much harder (the thief's
+    /// Sneak attack; `World::startle`'s craft).
+    SurpriseDifficulty { value: i32 },
+    /// Its shots, throws, and attack spells sneak-attack this many cells farther than the
+    /// rules' `missile_reach` (Long reach; `World::sneaks`).
+    SneakReach { value: i32 },
+    /// Creature types carrying one of `tags` have vitals for its attacks: they may be critically
+    /// hit and sneak-attacked by it (Anatomist; `Content::has_vitals`). Never the incorporeal.
+    VitalsIn { tags: Vec<String> },
     /// The carrying limit, this percent more.
     CarryPercent { value: i32 },
     /// Being Burdened costs it nothing, as a dwarf's burden (Porter).
@@ -1172,6 +1181,8 @@ impl TalentEffect {
             | TalentEffect::Hearing { value }
             | TalentEffect::Notice { value }
             | TalentEffect::InitiativeBonus { value }
+            | TalentEffect::SurpriseDifficulty { value }
+            | TalentEffect::SneakReach { value }
             | TalentEffect::DangerSense { value }
             | TalentEffect::Threat { value }
             | TalentEffect::Search { value }
@@ -1230,6 +1241,15 @@ impl TalentEffect {
                     || ![to_hit, damage].iter().all(|v| BONUSES.contains(v))
                 {
                     return Err("`bane`: to_hit and damage are -20 to 20, not both 0".into());
+                }
+                Ok(())
+            }
+            TalentEffect::VitalsIn { tags } => {
+                if tags.is_empty() {
+                    return Err("`vitals_in`: tags names at least one".into());
+                }
+                for tag in tags {
+                    super::tag::check(tag).map_err(|m| format!("`vitals_in`: {m}"))?;
                 }
                 Ok(())
             }

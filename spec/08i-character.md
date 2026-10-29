@@ -388,7 +388,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     their dice, from their own stream (`character/optional-skills/<race>,<gender>,<class>`), so
     no other roll moves; once, never re-rolled, and the chances are never shown (the wiki has
     them). They are not the class's skills for a level-up roll's +1, and the human's extra class
-    skill never lands on one. A creature type's skills are fixed values. A scenario without a
+    skill never lands on one. A race may have `optional_skills` too (#682, the same table and
+    parser, `content::OptionalSkill`): rolled after the class's from the same stream, so no
+    class's draws move; the drow's Sneak attack (40 %, `2d4`), summed with a thief's own. A creature type's skills are fixed values. A scenario without a
     character gives a player trained in nothing.
   - **Values** run 0 to 999 (`MAX_VALUE`), 100 a master; there is no hard cap, but points come
     slowly past the soft cap (100). A value grows **only by level-up rolls** (below).
@@ -448,6 +450,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     backlash, rotten food, wading) neither. It is marked by `discover` (100 %) and `resist` (25 %).
     Nothing is said when it helps; the Skills screen's description says it in words; the wiki
     has the curve. One hook, `World::resisting` (`world/knowledge.rs`).
+  - **Sneak attack** and **Initiative** (#682; §8 "Surprise and sneak attacks"): Sneak attack
+    (`kind = "rules"`, after Search) gives `sneak_dice` (`steps = [1, 25, 50, 75, 100], every =
+    50`: 1d6 trained at all, 5d6 at 100, 7d6 at 200; read by `World::sneak_dice`) and `surprise`
+    (+8 at 100, +12 at 200 on the difficulty of the initiative check of those its holder catches
+    unawares; `World::startle`), marked by `sneak_attack` (50 %; a Dexterity mark too, 20 %).
+    Initiative (`kind = "passive"`, after Heal) gives `initiative` (+8/+12 on the holder's own
+    check) and `surprise_ease` (50 % of Surprised's extra cost at 100, 75 % at 200, summed with
+    Cool head's, at most all; `World::status_cost`), marked by `surprise` (100 %: a check made,
+    whatever came of it). The thief trains Sneak attack (`2d6+10`, known for) and Initiative
+    (`2d4+4`); the ranger and the monk Initiative `2d6+10`; the bard, warrior, and barbarian
+    `2d4+4`; a drow may start with Sneak attack (an optional skill of the race).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
@@ -807,7 +820,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     class tables bring their second talent. The `awareness` system came off `pending` with
     surprise (#681, §8 "Surprise and sneak attacks"): Wary (Delver, Willpower 12,
     `initiative_bonus = 4`: added to the initiative check) and Cool head (Grit, Willpower 14,
-    level 9, `surprise_ease = 100`: Surprised slows no action), beside Ambusher. The `danger` system (#326, §7 "Danger
+    level 9, `surprise_ease = 100`: Surprised slows no action), beside Ambusher. The
+    `sneak_attack` system (#682, "Sneak attacks: dice, reach, vitals") came with Anatomist
+    (Scholar, Intelligence 13, Knowledge 20, `vitals_in = ["skeleton", "construct"]`: those count
+    as having vitals for the holder's attacks, never the incorporeal) and Long reach
+    (Weaponcraft, any launcher or thrown skill at 4, `sneak_reach = 3`: shots, throws, and attack
+    spells sneak-attack 3 cells farther), beside Ambusher and the thief's Sneak attack, Improved
+    sneak attack, Master thief, and Patient blade. The `danger` system (#326, §7 "Danger
     levels") came with its two: Quiet delver (`spawn_every_percent`) and Sixth sense
     (`danger_sense`, 2 ranks, after Alert), both Delver. The `special_rooms` system (#402, §7
     "Special rooms") came with its two: Sense of place (Wayfarer, free, `sense_of_place`: a
@@ -1057,13 +1076,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     grass; their noise stays), Swift tracker (overworld journeys −20 %), Camouflage (footsteps
     under the open sky, the level sky-exposed and the cell stepped to unroofed, −50 %, summed
     with the other footstep percents), Master hunter (bows and crossbows threat +1; Favoured
-    prey +1 and +2 more); Sneak attack (Ambusher's rule: +1d6 after Protection on a hit at a
-    creature that has not seen the thief; the unaware check is made before the strike, without
-    a draw, only for an attacker with ambush dice), Trapfinding (searching +4; hidden traps 2
+    prey +1 and +2 more); Sneak attack (#682: the class passive beside the Sneak attack skill,
+    whose dice the thief trains, `2d6+10` and known for: it grants the Openings pool from level
+    1, and those the thief catches unawares make their initiative check 2 harder,
+    `surprise_difficulty`; §8 "Surprise and sneak attacks"), Trapfinding (searching +4; hidden traps 2
     easier to find, searching and in passing, not to disarm; the Disarm ability untrained), Pick
     lock (the Pick lock ability untrained), Uncanny dodge (the burden's Dexterity cap +2),
-    Improved sneak attack (+2d6: ambush dice of the same sides add up, so 3d6 in all; and the
-    Openings pool, §8 "Resources"), Light
+    Improved sneak attack (+2d6 on top of the skill's: dice of the same sides add up), Light
     fingers (the Steal ability untrained), Hide in plain sight (no footsteps while Unburdened;
     attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
     2 lower, never below 3; and its finisher, an active aimed in a direction, `use:master_thief:E`,

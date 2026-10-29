@@ -496,6 +496,17 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "{value}% of the extra time the action you take Surprised costs is spared (at 100%, \
              it costs no more than any other)"
         ),
+        TalentEffect::SurpriseDifficulty { value } => format!(
+            "those you catch unawares make their initiative check at {} difficulty",
+            signed(value)
+        ),
+        TalentEffect::SneakReach { value } => {
+            format!("your shots, throws, and attack spells sneak-attack {value} cells farther")
+        }
+        TalentEffect::VitalsIn { tags } => format!(
+            "creatures tagged {} have vitals for you: your criticals and sneak attacks land on them",
+            tags.join(", ")
+        ),
         TalentEffect::CarryPercent { value } => format!("carrying limit {}", percent(value)),
         TalentEffect::IgnoreBurdened => "being Burdened costs you nothing (as a dwarf)".to_string(),
         TalentEffect::StepSlowdownPercent { value } => format!(

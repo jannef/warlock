@@ -11,8 +11,13 @@ current with the code, as CLAUDE.md says.
   `missile_reach`, `memory_turns`, `no_vitals`), `Content::surprise()`. Optional: without it
   nobody is surprised, no Defence is stripped, and the player is never unaware (fixtures). Load
   checks: the status exists, is `per_action` with `max = 1`; the numbers in range; each
-  `no_vitals` tag carried by some creature type. `missile_reach` and `no_vitals` are parsed and
-  not read yet (the Sneak attack skill, #682).
+  `no_vitals` tag carried by some creature type. `Content::has_vitals(creature, vitals_in)`
+  (#682) is the one reader of what has no vitals: incorporeal, `vitals = false`
+  (`CreatureDef::vitals`, default true), else an animated object or a `no_vitals` tag unless a
+  tag of `vitals_in` (Anatomist's) is carried too; everything has vitals without the file.
+- `assets/data/skills.toml`: `sneak_attack` (after Search; `sneak_dice`, `surprise`; marks on
+  `sneak_attack`) and `initiative` (after Heal; `initiative`, `surprise_ease`; marks on
+  `surprise`). The classes' lines and the drow's `optional_skills` (#682).
 - `assets/data/status.toml`: `surprised` (after Light-footed; `per_action`, `max = 1`, `refresh`,
   `cost = 150`, `seen = "surprised"`, its `start` and `end` lines).
 - `world/surprise.rs`, every rule of it:
@@ -26,15 +31,28 @@ current with the code, as CLAUDE.md says.
     perception is recomputed without writing state).
   - `World::startle(target, by, events)`: the one place anyone is surprised. A sleeper or a
     disguised mimic: `afflict(surprised)` with no check and no word. Else the initiative check
-    (`check::check`: Dexterity modifier + `talents.check(Dexterity)` + `initiative_bonus`
-    against `difficulty`); failed, `afflict(surprised, 1, by)`. When the player is the one
+    (`check::check`: Dexterity modifier + `talents.check(Dexterity)` + `initiative_bonus` + the
+    Initiative skill's `initiative` against `difficulty` + `World::craft(by)`, the attacker's
+    Sneak attack `surprise` and talents' `surprise_difficulty`); failed, `afflict(surprised, 1,
+    by)`. The player's check marks `Use::Surprise`. When the player is the one
     caught, the attacker's `noticed` becomes the turn (the second place it is set; never on
     load). The messages (below).
   - `World::flat_footed(target, unaware, struck)`: `Target::without([Dexterity, Dodge])` when
     unaware (with the rules) or Surprised.
   - `World::surprised(id)`, and `World::status_cost(id, status)`: a status's `cost` percent as
-    its sufferer pays it; Surprised's extra eased by `TalentMods::surprise_ease` (Cool head,
-    capped at all of it), every other status's as its data says.
+    its sufferer pays it; Surprised's extra eased by `TalentMods::surprise_ease` (Cool head) and
+    the Initiative skill's `surprise_ease`, together capped at all of it, every other status's
+    as its data says.
+- `world/ambush.rs`, the sneak attack (#682): `World::sneak_dice(id)` (the Sneak attack skill's
+  `sneak_dice` d6s `and` the talents' `ambush`), `World::sneaks(attacker, target, unaware,
+  missile)` (dice, unaware or Surprised, vitals for the attacker, a missile within
+  `missile_reach` + `sneak_reach`, Chebyshev; no draw), `sneak_threat` (Master thief),
+  `ambushed` (the dice on a hit, gameplay stream; `Build::SneakAttack`; the player's
+  `Use::SneakAttack`, training stream), `has_vitals_for` and `vitals` (the struck side's
+  `no_criticals` with the attacker's Anatomist tags), `no_vital_spot` (Vital strike's and the
+  finisher's "It has no vital spot.", a `news` line after the blow's).
+- `combat::Target::no_criticals`: `strike_with` makes a threat a plain hit with no confirmation
+  draw, and a sure critical a plain hit.
 - `combat::Target::without(categories)`: the strip of positive Defence bonuses, shared with
   Feint (`weapon_active.rs::feinted`).
 
@@ -42,8 +60,10 @@ current with the code, as CLAUDE.md says.
 
 | Where | What |
 |---|---|
-| `fight.rs::resolve` | `unaware` asked of every attack with a profile (no draw); `sneaks` (`ambush.rs`) decides the ambush dice on unaware **or Surprised**; `startle` before the mimic is found out and before the strike's draws; `flat_footed` after `target_against` |
-| `cast.rs::spell_attack` | a spell that rolls to hit (an own cast, a scroll's, a wand's, a reflected one): `unaware`, `startle`, `flat_footed`, before its roll |
+| `fight.rs::resolve` | `unaware` asked of every attack with a profile (no draw); `sneaks` (`ambush.rs`) decides the sneak dice on unaware **or Surprised**, a missile within reach, a target with vitals; `startle` before the mimic is found out and before the strike's draws; `vitals` and `flat_footed` after `target_against` |
+| `fight.rs::target_of`, `Actor::target` | `no_criticals` from `Content::has_vitals` |
+| `cast.rs::spell_attack` | a spell that rolls to hit (an own cast, a scroll's, a wand's, a reflected one): `unaware`, `sneaks` (a missile unless a touch), `startle`, `vitals`, `flat_footed`, `sneak_threat` before its roll; `ambushed` after, its dice on top of the spell's cap |
+| `weapon_active.rs::active_blow`, `openings.rs::finisher` | `no_vital_spot` after a sure critical's blow |
 | `trap.rs::step_onto_trap` | a hidden trap (any trap for a creature, an unknown one for the player) that sprang (`World::sprung` moved) `startle`s its victim, after the trap's own draws; nobody beside |
 | `free_blow.rs::free_blows_of` | Surprised: no riposte, opportunist, gatekeeper (its own attack's cleave, flurry, and second blow stay) |
 | `weapon_ability.rs::approached` | a Surprised keeper fires no Point-blank shot |
@@ -81,5 +101,18 @@ you." (`say` for an attack, before its line; `news` for a trap, after its line).
 
 `world/surprise_tests.rs` (both ways round, memory, the check's outcomes and draws, sleepers and
 mimics, the messages, flat-footed, free blows, the dear action and Cool head, Wary, traps and
-bystanders, the hash test, saves and replays); `content/surprise.rs` (parse and refusals,
-optional file); the screen snapshot `status-surprised`.
+bystanders, the hash test, saves and replays); `world/ambush_tests.rs` (the ladder, the sum with
+the talents, the reach and Long reach, Surprised as the second door, the marks, the spell path,
+the craft and Initiative in the check); `world/vitals_tests.rs` (what has none, no critical, no
+dice, Anatomist, still surprised); `weapon_active_tests` (Vital strike's line);
+`combat.rs` (no confirmation drawn); `content/surprise.rs` (parse and refusals, optional file);
+the screen snapshot `status-surprised`.
+
+## Hashes that move (#682)
+
+A run with a thief, ranger, monk, bard, warrior, or barbarian (their new class skills move the
+later skill rolls of creation) or a drow (its optional roll) starts with other skills; a thief
+holds Openings from level 1; a thief's surprises are 2 harder to shrug off and a trained
+character's dear action is eased; a threat on a thing without vitals draws one fewer (no
+confirmation), and a sure critical on one is a plain hit. Replays of such runs hash differently
+from the step it shows.

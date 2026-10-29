@@ -1,4 +1,4 @@
-//! The thief's Openings (spec §8 "Resources" and "Class abilities"; #251): Improved sneak attack
+//! The thief's Openings (spec §8 "Resources" and "Class abilities"; #251): Sneak attack (level 1)
 //! grants the pool, a sneak attack that hits builds it, it slips away with time, and Master
 //! thief's finisher spends five for a blow that is a critical whenever it hits.
 
@@ -116,12 +116,15 @@ fn beside(world: &mut World, creature: &str, hp: i32, dir: Dir) -> ActorId {
 }
 
 #[test]
-fn improved_sneak_attack_grants_openings_at_zero() {
+fn sneak_attack_grants_openings_at_zero_from_level_one() {
     let mut w = thief();
-    reach(&mut w, 31);
-    assert_eq!(held(&w), None, "no openings before level 32");
+    assert_eq!(held(&w), Some(0), "held from level 1, empty");
     reach(&mut w, 32);
-    assert_eq!(held(&w), Some(0), "held from level 32, empty");
+    assert_eq!(
+        held(&w),
+        Some(0),
+        "Improved sneak attack grants nothing more"
+    );
     let header = dump::ascii(&w, &[]);
     let header = header.lines().next().unwrap_or_default();
     assert!(header.contains("openings 0/5"), "{header}");

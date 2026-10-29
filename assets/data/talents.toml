@@ -224,6 +224,11 @@ name = "Burden and carrying"
 id = "stealth"
 name = "Stealth and noise"
 
+# Sneak attacks (#682): the Sneak attack skill's dice, their reach, and what has vitals.
+[[system]]
+id = "sneak_attack"
+name = "Sneak attacks: dice, reach, vitals"
+
 [[system]]
 id = "hearing"
 name = "Hearing and sounds"

@@ -1392,6 +1392,8 @@ mod ai_tests;
 #[cfg(test)]
 mod alignment_tests;
 #[cfg(test)]
+mod ambush_tests;
+#[cfg(test)]
 mod animated_blade_tests;
 #[cfg(test)]
 mod animated_panoply_tests;
@@ -1705,6 +1707,8 @@ mod unique_tests;
 mod unstable_room_tests;
 #[cfg(test)]
 mod variant_tests;
+#[cfg(test)]
+mod vitals_tests;
 #[cfg(test)]
 mod voice_tests;
 #[cfg(test)]

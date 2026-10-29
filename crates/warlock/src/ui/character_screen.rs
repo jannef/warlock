@@ -639,7 +639,8 @@ mod tests {
         }
         assert!(row("Stance").contains("Neutral"));
         world.apply(&Action::SetStance(CombatStance::Aggressive));
-        let text = drawn(&world, 80, 30);
+        // A row taller: the thief holds openings from level 1.
+        let text = drawn(&world, 80, 31);
         assert!(
             (text.iter()).any(|l| l.contains("Stance") && l.contains("Aggressive")),
             "{text:#?}"

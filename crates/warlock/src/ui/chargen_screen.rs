@@ -1058,7 +1058,7 @@ mod tests {
             "Scenario  Showcase, seed 1",
             // The starting skills beside the scores: the dwarf's and the warrior's.
             "St  Strength      15    Athletics   17",
-            "Pr  Presence       8    Swim         8",
+            "To  Toughness     16    Initiative  12   Swim         9",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }

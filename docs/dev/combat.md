@@ -51,6 +51,10 @@ enumeration for hit chances, criticals, miss attribution), `world/fight_tests.rs
 Surprise (`docs/dev/surprise.md`): `resolve` asks `World::unaware` of every attack, `startle`s an
 unaware target before the strike's draws, and rolls against `World::flat_footed` (Dexterity and
 Dodge stripped by `Target::without`, Feint's strip) for an unaware or Surprised target.
+Critical immunity (#682): `combat::Target::no_criticals`, set by `World::target_of` (and
+`Actor::target`) from `Content::has_vitals` and in `resolve` and `cast.rs::spell_attack` by
+`ambush.rs::vitals` with the attacker's Anatomist tags; `combat::strike_with` then treats a
+threat (and a sure critical) as a plain hit and draws no confirmation.
 
 Creatures' natural Protection follows a rule by body and level (spec §8 "Natural Protection by
 body and level", #563): data only, checked by `content/creature_body_tests.rs` (the body table by

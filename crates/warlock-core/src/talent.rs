@@ -271,6 +271,13 @@ pub struct TalentMods {
     pub initiative_bonus: i32,
     /// Percent of the extra cost of its action taken Surprised that is spared (Cool head).
     pub surprise_ease: i32,
+    /// Added to the initiative check's difficulty of those it catches unawares (the thief's
+    /// Sneak attack).
+    pub surprise_difficulty: i32,
+    /// Cells farther its shots, throws, and attack spells sneak-attack (Long reach).
+    pub sneak_reach: i32,
+    /// The creature tags whose types have vitals for its attacks (Anatomist).
+    pub vitals_in: Vec<String>,
     /// Percent more carrying limit.
     pub carry_percent: i32,
     /// Being Burdened costs it nothing.
@@ -689,7 +696,7 @@ pub struct TalentMods {
     /// How much higher every skill it is trained in counts (Jack of all trades).
     pub trained_skills: i32,
     /// The alternative resources its talents grant it, in the order first named (Rapid shot's
-    /// Focus, Improved sneak attack's Openings).
+    /// Focus, the thief's Sneak attack's Openings).
     pub grants: Vec<ResourceId>,
     /// Rapid shot's quicker shots on a resource, if it has it.
     pub rapid_shot: Option<RapidShot>,
@@ -1220,6 +1227,15 @@ impl TalentMods {
             }
             TalentEffect::InitiativeBonus { value } => self.initiative_bonus += value,
             TalentEffect::SurpriseEase { value } => self.surprise_ease += value,
+            TalentEffect::SurpriseDifficulty { value } => self.surprise_difficulty += value,
+            TalentEffect::SneakReach { value } => self.sneak_reach += value,
+            TalentEffect::VitalsIn { tags } => {
+                for tag in tags {
+                    if !self.vitals_in.contains(&tag) {
+                        self.vitals_in.push(tag);
+                    }
+                }
+            }
             TalentEffect::CarryPercent { value } => self.carry_percent += value,
             TalentEffect::IgnoreBurdened => self.ignore_burdened = true,
             TalentEffect::StepSlowdownPercent { value } => self.step_slowdown_percent += value,

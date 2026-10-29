@@ -5,15 +5,21 @@
 # Unaware: a creature that hunts no one and does not see the attacker now (asleep, or a mimic in
 # disguise, whatever it sees); the player, of a creature they do not see now and have not seen
 # within `memory_turns` turns. The one surprised makes an initiative check: 2d12 + its Dexterity
-# modifier (+ Wary's bonus) against `difficulty`; a sleeper or a disguised mimic gets none.
-# Failed, it suffers `status` (Surprised, status.toml): Dexterity and Dodge count nothing toward
-# its Defence, it makes no free blows, and its next action costs half again as much (Cool head
-# eases it). The surprising attack itself is rolled without its Dexterity and Dodge either way.
+# modifier (+ Wary's bonus, + its Initiative skill's) against `difficulty` plus the attacker's
+# craft (its Sneak attack skill's, + the thief's Sneak attack's 2); a sleeper or a disguised mimic
+# gets none. Failed, it suffers `status` (Surprised, status.toml): Dexterity and Dodge count
+# nothing toward its Defence, it makes no free blows, and its next action costs half again as
+# much (Initiative and Cool head ease it). The surprising attack itself is rolled without its
+# Dexterity and Dodge either way. An attacker with sneak dice (the Sneak attack skill, Ambusher,
+# Improved sneak attack) adds them to a hit on a target unaware or Surprised: a blow at any
+# reach, a shot, a throw, or an attack spell within `missile_reach` cells.
 [surprise]
 status = "surprised"      # the status an actor caught unawares suffers (status.toml)
 difficulty = 13           # the initiative check's difficulty before the attacker's craft
 missile_reach = 6         # how far a shot, a throw, or an attack spell is still a sneak attack
 memory_turns = 20         # how many turns the player stays aware of a creature they have seen
-# What has no vitals to find (the same as being immune to criticals): read once the Sneak attack
-# skill lands (#682); listed here so the data is one file.
+# What has no vitals to find (#682; the same as being immune to criticals): no critical is ever
+# confirmed on, and no sneak attack dice or lowered threat land on, an incorporeal creature, an
+# animated object, a type carrying one of these tags, or one that says `vitals = false`; it is
+# surprised like anyone. Anatomist finds them in skeletons and constructs.
 no_vitals = ["elemental", "skeleton", "spirit", "construct"]

@@ -64,9 +64,12 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `scent` | `Perception::compute`: a creature suffering the status, in line of sight within the radius (not on the overworld), has its cell seen as darkvision would |
 | `night_sight` | `Perception::compute`: the overworld's sight radius at night (`daylight::phase`) |
 | `lantern_light` | `WorldState::carried_light` (`world/lamp.rs`, read by `LightCache::sources`): the preset of a lit (not hooded) lantern ready in the Tool slot (gameplay light: creatures see it too) |
-| `ambush` | `World::resolve` → `World::ambushed` (`world/ambush.rs`): the dice added after the strike when it hit a target that `World::unaware` (`world/surprise.rs`) says has not seen the attacker, or one that is Surprised; drawn only then |
+| `ambush` | `World::sneak_dice` (`world/ambush.rs`): added to the Sneak attack skill's dice; `World::resolve` → `World::ambushed` rolls them after the strike when it hit a target that `World::unaware` (`world/surprise.rs`) says has not seen the attacker, or one that is Surprised; drawn only then |
 | `initiative_bonus` | `World::startle` (`world/surprise.rs`): added to the initiative check (Wary) |
-| `surprise_ease` | `World::status_cost` (`world/surprise.rs`): the percent of Surprised's extra cost spared, capped at 100 (Cool head) |
+| `surprise_ease` | `World::status_cost` (`world/surprise.rs`): the percent of Surprised's extra cost spared, with Initiative's capped at 100 (Cool head) |
+| `surprise_difficulty` | `World::startle`'s `craft` (`world/surprise.rs`): added to the difficulty of the check of those the holder catches unawares (the thief's Sneak attack) |
+| `sneak_reach` | `World::sneaks` (`world/ambush.rs`): cells beyond `missile_reach` a missile or attack spell still sneak-attacks (Long reach) |
+| `vitals_in` | `World::has_vitals_for` → `Content::has_vitals` (`world/ambush.rs`, `content/surprise.rs`): types with those tags have vitals for the holder's attacks, criticals and sneak dice (Anatomist) |
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
 | `travel_percent` | `World::step_price` on the overworld, after the survival skill |
 | `terrain_as` | `World::step_price`: the terrain stepped onto is priced as the one it names (local and overworld alike; its ids checked once the terrain loads, `TalentBook::check_terrain`) |

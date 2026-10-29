@@ -72,7 +72,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Noise is unchanged (its `footsteps` by the terrain's `step_noise`). When it dies inside a
   wall, what it carried falls on the nearest walkable cell (Chebyshev rings, row order).
   Populations and spawns place creatures on walkable cells only, so one never comes inside a
-  wall; a level legend may place one there. No new state: its position is a plain cell.
+  wall; a level legend may place one there. No new state: its position is a plain cell. It has
+  no vitals (§8 "Surprise and sneak attacks"): immune to criticals and sneak attacks.
+- **Vitals** (#682; `Content::has_vitals`): a creature type has vitals to find unless it is
+  incorporeal, an animated object, carries a tag of `surprise.toml`'s `no_vitals` (elemental,
+  skeleton, spirit, construct), or says `vitals = false` (default true). Without them it takes
+  no critical and no sneak attack dice (§8 "Surprise and sneak attacks"); the fleshy undead have
+  them. Rules only: the wiki says which.
   Not yet: immunity to weapons that are not magical (the hook is `World::resolve` in
   `fight.rs`); bolts and bursts stop at walls, so spells do not reach one inside. The example is
   the stone haunt (`stone_haunt`), which no level places yet.

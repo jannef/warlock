@@ -7,7 +7,7 @@ hp = 5
 mana = 2
 casting = 50
 experience = 105
-skills = { spot = "2d6+10", survival = "2d6+10", woodcraft = "2d6+10", athletics = "2d4+4", handle_animal = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
+skills = { initiative = "2d6+10", spot = "2d6+10", survival = "2d6+10", woodcraft = "2d6+10", athletics = "2d4+4", handle_animal = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
 known_for = ["spot", "survival", "woodcraft"]
 optional_skills = { heal = { chance = 15, dice = "2d4" }, search = { chance = 20, dice = "2d4" }, stealth = { chance = 30, dice = "2d4" } }
 rolls = 3
