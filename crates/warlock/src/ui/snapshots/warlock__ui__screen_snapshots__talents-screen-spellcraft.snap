@@ -2,43 +2,43 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You┌─ Talents ───────────────────────────────────────────────────────────────────────────────┐
- You│                                                                                         │
-    │ Your talents                                                                            │
-    │   Stars                                                                                 │
-    │ >   Unblinking  (birth sign)                                                            │
-    │     Transfixing stare  (birth sign)                                                     │
-    │     Trusted by none  (birth sign)                                                       │
-    │     Always a way  (birth sign)                                                          │
-    │     Tidal  (birth sign)                                                                 │
-    │   Wayfarer                                                                              │
-    │     Pilgrim                                                                             │
-    │   Scholar                                                                               │
-    │     Deep well 1/3                                                                       │
-    │     Mimic-wise                                                                          │
-    │   Spellcraft                                                                            │
-    │     School focus (evocation)                                                            │
-    │   Racial                                                                                │
-    │     Versatile  (race)                                                                   │
-    │   Class abilities                                                                       │
-    │     Scroll adept  (class)                                                               │
-    │     Ray of frost  (class)                                                               │
-    │     Arcane training  (class)                                                            │
-    │     Magic missile  (class)                                                              │
-    │ Other talents                                                                           │
-    │   Stars                                                                                 │
-    │     Petrifying gaze                                                                     │
-    │         Needs: level 12, to be born in the year of the Basilisk                         │
-    │     Undertow                                                                            │
-    │         Needs: level 6, to be Water-born                                                │
-    │   Heritage                                                                              │
-    │     Family wealth                                                                       │
-    │         Needs: to be a new character                                                    │
-    │     Father's sword                                                                      │
-    │                                                                                       ↓ │
-    │ You notice hidden things in passing, as if trained to spot them.                        │
-    │                                                                                         │
-    │                                                                                         │
-    │                                                                                         │
-    │ ↑↓ choose   G or Esc close                                                              │
- The└─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘rols
+┌─ Talents ────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ Your talents                                                                                     │
+│   Stars                                                                                          │
+│ >   Unblinking  (birth sign)                                                                     │
+│     Transfixing stare  (birth sign)                                                              │
+│     Trusted by none  (birth sign)                                                                │
+│     Always a way  (birth sign)                                                                   │
+│     Tidal  (birth sign)                                                                          │
+│   Wayfarer                                                                                       │
+│     Pilgrim                                                                                      │
+│   Scholar                                                                                        │
+│     Deep well 1/3                                                                                │
+│     Mimic-wise                                                                                   │
+│   Spellcraft                                                                                     │
+│     School focus (evocation)                                                                     │
+│   Racial                                                                                         │
+│     Versatile  (race)                                                                            │
+│   Class abilities                                                                                │
+│     Scroll adept  (class)                                                                        │
+│     Ray of frost  (class)                                                                        │
+│     Arcane training  (class)                                                                     │
+│     Magic missile  (class)                                                                       │
+│ Other talents                                                                                    │
+│   Stars                                                                                          │
+│     Petrifying gaze                                                                              │
+│         Needs: level 12, to be born in the year of the Basilisk                                  │
+│     Undertow                                                                                     │
+│         Needs: level 6, to be Water-born                                                         │
+│   Heritage                                                                                       │
+│     Family wealth                                                                                │
+│         Needs: to be a new character                                                             │
+│     Father's sword                                                                               │
+│                                                                                                ↓ │
+│ You notice hidden things in passing, as if trained to spot them.                                 │
+│                                                                                                  │
+│                                                                                                  │
+│                                                                                                  │
+│ ↑↓ choose   G or Esc close                                                                       │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘

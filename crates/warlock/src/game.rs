@@ -40,6 +40,10 @@ pub struct Game {
     pub applied: u64,
     /// The character's save id (`save::SaveStore`): every way of saving writes its files.
     pub save_id: String,
+    /// The run was made here and has not been shown yet: New run's Start, or a windowed start
+    /// that makes a run (not resumed, replayed, or captured). The app opens the story screen
+    /// over its first turn once (`ui::screens::on_run_start`); nothing of it is saved.
+    pub story_due: bool,
     /// The message log as it was when the player last acted: what was logged since is this
     /// turn's news, which the message line shows first ([`Game::unread`], `ui::more`).
     read: MessageLog,
@@ -62,9 +66,10 @@ impl Game {
     ) -> Result<Self, String> {
         let world = World::start_run(content, scenario, seed, character, name, true)
             .map_err(|e| format!("cannot start scenario `{scenario}`: {e}"))?;
-        // The run's first words (the welcome) are news.
+        // The run's first words (the welcome) are news, and its story is told.
         Ok(Self {
             read: MessageLog::default(),
+            story_due: true,
             ..Self::new_character(world, store)
         })
     }
@@ -78,6 +83,7 @@ impl Game {
             last_outcome: Outcome::default(),
             applied: 0,
             save_id,
+            story_due: false,
             recorder: None,
         }
     }
@@ -118,6 +124,8 @@ impl Game {
         }
         let mut last_outcome = Outcome::default();
         let mut read = MessageLog::default();
+        // A run made here, in a window, tells its story as it begins.
+        let mut story_due = false;
         let (world, replay) = match &args.replay {
             Some(path) => {
                 let text = std::fs::read_to_string(path)
@@ -160,6 +168,7 @@ impl Game {
                     world.notice(message);
                 }
                 let replay = args.record.is_some().then(|| Replay::new(&world));
+                story_due = args.capture.is_none();
                 (world, replay)
             }
         };
@@ -168,6 +177,7 @@ impl Game {
             last_outcome,
             read,
             recorder,
+            story_due,
             ..Self::new_character(world, &store)
         };
         game.save_recording();
@@ -380,5 +390,36 @@ mod tests {
         replay.steps.clear();
         let (_, _, outcome, _) = play_replay(&replay, content).expect("empty replay plays");
         assert_eq!(outcome, Outcome::default());
+    }
+
+    /// Only a run made here, in a window, has its story due: New run's Start, or a windowed
+    /// `--character` start; never a capture, a replay, or a resumed character.
+    #[test]
+    fn only_a_run_made_in_a_window_has_its_story_due() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let dir = std::env::temp_dir().join(format!("warlock-story-{}", std::process::id()));
+        let saves = dir.to_string_lossy().into_owned();
+        let start = |extra: &[&str]| {
+            let mut argv = vec!["warlock", "--save-dir", saves.as_str(), "--new"];
+            argv.extend(extra);
+            Game::start(&Args::parse_from(argv), content.clone()).expect("starts")
+        };
+        let windowed = start(&["--character", "dwarf,female,warrior"]);
+        assert!(windowed.story_due);
+        assert!(!windowed.world.perception().story().is_empty());
+        let captured = start(&["--character", "dwarf,female,warrior", "--capture", "x.png"]);
+        assert!(!captured.story_due);
+        let replay = dir.join("run.json");
+        std::fs::create_dir_all(&dir).expect("dir");
+        std::fs::write(&replay, Replay::new(&windowed.world).to_json()).expect("replay");
+        let replayed = start(&["--replay", &replay.to_string_lossy()]);
+        assert!(!replayed.story_due);
+        let resumed = Game::from_world(windowed.world, "dagny-1".into());
+        assert!(!resumed.story_due);
+        let store = SaveStore::from_args(&Args::parse_from(["warlock", "--save-dir", &saves]));
+        let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
+        let new = Game::new_run(content, &store, "showcase", None, Some(&spec), None);
+        assert!(new.expect("starts").story_due);
+        std::fs::remove_dir_all(&dir).ok();
     }
 }

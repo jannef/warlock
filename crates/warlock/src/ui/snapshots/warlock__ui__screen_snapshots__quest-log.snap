@@ -10,20 +10,20 @@ expression: "render(case, content.clone())"
 
 
 
-    ┌─ Quests ────────────────────────────────────────────────────────────────────────────────┐
-    │                                                                                         │
-    │ Active                                                                                  │
-    │ > Rats in the arena                                                                     │
-    │                                                                                         │
-    │ The old hermit wants you to kill 3 giant rats in the Arena.                             │
-    │ 0 / 3 killed.                                                                           │
-    │                                                                                         │
-    │ The old hermit: "Here we don't fight. Down in the arena, you may. The rats have the run │
-    │ of the pit again, and their squeaking comes up the stairs all night. Kill three of them │
-    │ for me, and I'll pay you for the quiet."                                                │
-    │                                                                                         │
-    │ ↑↓ choose   q or Esc close                                                              │
-    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+┌─ Quests ─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ Active                                                                                           │
+│ > Rats in the arena                                                                              │
+│                                                                                                  │
+│ The old hermit wants you to kill 3 giant rats in the Arena.                                      │
+│ 0 / 3 killed.                                                                                    │
+│                                                                                                  │
+│ The old hermit: "Here we don't fight. Down in the arena, you may. The rats have the run of the   │
+│ pit again, and their squeaking comes up the stairs all night. Kill three of them for me, and     │
+│ I'll pay you for the quiet."                                                                     │
+│                                                                                                  │
+│ ↑↓ choose   q or Esc close                                                                       │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
 
 
 

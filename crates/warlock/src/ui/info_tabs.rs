@@ -22,15 +22,16 @@ const PAGES: &[(ScreenName, &str, &str)] = &[
     (ScreenName::Inventory, "Inventory", "Inv"),
     (ScreenName::Equipment, "Equipment", "Equip"),
     (ScreenName::Skills, "Skills", "Skills"),
-    (ScreenName::WeaponSkills, "Weapons", "Weapons"),
+    (ScreenName::WeaponSkills, "Weapons", "Weap"),
     (ScreenName::Quests, "Quests", "Quests"),
     (ScreenName::Talents, "Talents", "Tal"),
+    (ScreenName::Story, "Story", "Story"),
 ];
 
 /// The width every page's panel has at least, so that the pages share one frame and one tab
-/// line: the whole line by name, ` 1 Character · … · 7 Talents `, in the frame and its margins.
+/// line: the whole line by name, ` 1 Character · … · 8 Story `, in the frame and its margins.
 /// A console narrower than this shortens every page's tab line the same way ([`tabs`]).
-const WIDTH: i32 = 91;
+const WIDTH: i32 = 101;
 
 /// The width of the panel of a page that would be `own` wide alone: at least [`WIDTH`].
 pub const fn panel_width(own: i32) -> i32 {
@@ -162,6 +163,7 @@ mod tests {
         assert_eq!(switch(Inventory, &top_row("2"), &b), None, "already there");
         assert_eq!(switch(Skills, &top_row("5"), &b), replace(WeaponSkills));
         assert_eq!(switch(WeaponSkills, &top_row("6"), &b), replace(Quests));
+        assert_eq!(switch(Talents, &top_row("8"), &b), replace(Story));
         assert_eq!(
             switch(Character, &top_row("9"), &b),
             None,
@@ -182,8 +184,9 @@ mod tests {
         assert_eq!(switch(Skills, &tab(false), &b), replace(WeaponSkills));
         assert_eq!(switch(WeaponSkills, &tab(false), &b), replace(Quests));
         assert_eq!(switch(Quests, &tab(false), &b), replace(Talents));
-        assert_eq!(switch(Talents, &tab(false), &b), replace(Character));
-        assert_eq!(switch(Character, &tab(true), &b), replace(Talents));
+        assert_eq!(switch(Talents, &tab(false), &b), replace(Story));
+        assert_eq!(switch(Story, &tab(false), &b), replace(Character));
+        assert_eq!(switch(Character, &tab(true), &b), replace(Story));
         // PageUp and PageDown turn the pages of an item list instead (the inventory is one).
         let up = press(KeyBinding::Code(KeyCode::PageUp), false);
         assert_eq!(switch(Inventory, &up, &b), None);
@@ -223,7 +226,7 @@ mod tests {
             (parts.iter().map(|(t, _)| t.as_str()).collect::<Vec<_>>()).join(" · ")
         };
         let full = "1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · \
-                    7 Talents";
+                    7 Talents · 8 Story";
         // The common width's line (the frame, a margin, and a space each side) names them all,
         // on every page, and the current page is the one highlighted.
         let room = (WIDTH - 6) as usize;
@@ -240,20 +243,23 @@ mod tests {
             assert_eq!(PAGES[here[0]].0, *page);
         }
         // A narrower console shortens every page's line alike.
-        let short = "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal";
+        // Short enough for an 80-column console (74 cells inside the frame and its margins).
+        let short = "1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story";
+        assert!(short.chars().count() <= 74);
         let n = short.chars().count();
         assert_eq!(line(ScreenName::Inventory, room - 1), short);
         assert_eq!(line(ScreenName::Talents, n), short);
         assert_eq!(
             line(ScreenName::Talents, n - 1),
-            "1 · 2 · 3 · 4 · 5 · 6 · 7"
+            "1 · 2 · 3 · 4 · 5 · 6 · 7 · 8"
         );
-        assert_eq!(line(ScreenName::Talents, 24), "");
+        assert_eq!(line(ScreenName::Talents, 28), "");
     }
 
     #[test]
     fn every_page_is_at_least_the_common_width() {
         assert_eq!(panel_width(52), WIDTH);
+        assert_eq!(panel_width(72), WIDTH);
         assert_eq!(panel_width(120), 120);
     }
 }

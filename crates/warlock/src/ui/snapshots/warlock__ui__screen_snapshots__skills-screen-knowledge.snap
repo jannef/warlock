@@ -10,19 +10,19 @@ expression: "render(case, content.clone())"
 
 
 
-    ┌─ Skills ────────────────────────────────────────────────────────────────────────────────┐
-    │                                                                                         │
-    │   Concentration      26  ────                                                           │
-    │   Decipher script    11  ────                                                           │
-    │ > Heal                1  ────                                                           │
-    │   Knowledge          17  ────                                                           │
-    │   Spellcraft         13  ────                                                           │
-    │                                                                                         │
-    │ Binding wounds and tending the sick.                                                    │
-    │                                                                                         │
-    │                                                                                         │
-    │ ↑↓ choose   A or Esc close                                                              │
-    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+┌─ Skills ─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│   Concentration      26  ────                                                                    │
+│   Decipher script    11  ────                                                                    │
+│ > Heal                1  ────                                                                    │
+│   Knowledge          17  ────                                                                    │
+│   Spellcraft         13  ────                                                                    │
+│                                                                                                  │
+│ Binding wounds and tending the sick.                                                             │
+│                                                                                                  │
+│                                                                                                  │
+│ ↑↓ choose   A or Esc close                                                                       │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
 
 
 

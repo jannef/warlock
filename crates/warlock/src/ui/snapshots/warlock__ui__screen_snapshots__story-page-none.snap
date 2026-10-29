@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+
+
+
+
+
+
+
+
+
+
+┌─ Tamsin's story ─────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│  Your story is not written.                                                                      │
+│                                                                                                  │
+│ Esc close                                                                                        │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:00       ? controls

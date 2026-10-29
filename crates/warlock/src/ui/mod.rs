@@ -62,6 +62,7 @@ mod sounds;
 mod spells;
 #[cfg(test)]
 mod stale_list_tests;
+mod story_screen;
 mod talents_screen;
 mod target;
 mod weapon_skills_screen;
@@ -168,6 +169,7 @@ impl Plugin for UiPlugin {
                         .run_if(resource_exists::<Game>),
                     (
                         screens::refresh,
+                        screens::on_run_start,
                         screens::converse,
                         screens::on_death,
                         screens::on_level_up,

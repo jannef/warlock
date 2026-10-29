@@ -10,20 +10,20 @@ expression: "render(case, content.clone())"
 
 
 
-    ┌─ Quests ────────────────────────────────────────────────────────────────────────────────┐
-    │                                                                                         │
-    │ Active                                                                                  │
-    │ > Words for the beds                                                                    │
-    │                                                                                         │
-    │ The gardener wants you to bring a scroll of spark.                                      │
-    │ You carry 0 / 1.                                                                        │
-    │                                                                                         │
-    │ The gardener: "My old master swore that the words of a spell, said over a bed, kept the │
-    │ slugs off. Bring me a scroll of spark, would you? I'll only read the first line.        │
-    │ Probably."                                                                              │
-    │                                                                                         │
-    │ ↑↓ choose   q or Esc close                                                              │
-    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+┌─ Quests ─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ Active                                                                                           │
+│ > Words for the beds                                                                             │
+│                                                                                                  │
+│ The gardener wants you to bring a scroll of spark.                                               │
+│ You carry 0 / 1.                                                                                 │
+│                                                                                                  │
+│ The gardener: "My old master swore that the words of a spell, said over a bed, kept the slugs    │
+│ off. Bring me a scroll of spark, would you? I'll only read the first line. Probably."            │
+│                                                                                                  │
+│ ↑↓ choose   q or Esc close                                                                       │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
+
 
 
 
