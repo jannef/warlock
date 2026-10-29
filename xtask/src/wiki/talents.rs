@@ -623,6 +623,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              [identified](magic-items.md#unidentified-items), readied in its own \
              [slot](equipment.md#what-fits-where) if that is free, else carried"
         ),
+        TalentEffect::StoryLuck { value } => format!(
+            "the odds of your [background story](background.md#how-rare)'s uncommon, rare, and \
+             fateful lines {} in every chapter (the common lines' fall to match)",
+            percent(value)
+        ),
+        TalentEffect::HardWon { marks } => format!(
+            "each [stat](stats.md) point a line of your [background story](background.md) takes is \
+             {marks} [stat training marks](stats.md#training) on that stat (the score and potential \
+             still fall)"
+        ),
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \
              and rare; what creatures drop, always magic: rare)",
@@ -659,6 +669,17 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::FavourPercent { value } => {
             format!("shop favour {} (before the cap)", percent(value))
         }
+        TalentEffect::Storyteller {
+            value,
+            rare,
+            fateful,
+        } => format!(
+            "shop favour {}, and {} more for each rare line of your \
+             [background story](background.md#how-rare), {} for each fateful one (before the cap)",
+            percent(value),
+            percent(rare),
+            percent(fateful)
+        ),
         TalentEffect::FavourCap { value } => {
             format!("the cap on shop favour {} (50 % without)", percent(value))
         }

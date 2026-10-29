@@ -1372,6 +1372,13 @@ impl<'a> PerceptionView<'a> {
         self.character
     }
 
+    /// The tiers of the player's story's lines (Storyteller's favour reads them; never shown).
+    fn story_tiers(&self) -> Vec<crate::content::StoryTier> {
+        (self.character)
+            .map(|c| crate::background::tiers(self.content, self.campaign, &c.story))
+            .unwrap_or_default()
+    }
+
     /// The player's background story (spec §8 "Background story"), which they know: its
     /// paragraphs, told again from the content with the slots filled; empty for a character
     /// without one (a scenario's own, an old save) or a run without a character.
@@ -2131,7 +2138,7 @@ impl<'a> PerceptionView<'a> {
             shop,
             shops,
             content: self.content,
-            favour: favour(self.content, shops, self.player),
+            favour: favour(self.content, shops, self.player, &self.story_tiers()),
             more: self.player.talent_mods(self.content).sell_percent,
             now: self.time,
         })

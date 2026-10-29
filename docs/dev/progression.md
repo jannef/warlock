@@ -180,6 +180,9 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `carry_kg`, `weightless_coins` | `burden::load` (with the affixes' kilograms; coins, item class `coins`, left out of the load) |
 | `quest_xp_percent`, `quest_gold_percent` | `World::complete` (`quest.rs`), before `xp_percent` |
 | `favour_percent`, `favour_cap` | `world::shop::favour` (before the cap; the cap `MAX_FAVOUR` + `favour_cap`, at most `MOST_FAVOUR`, which `Shops::price`/`offer` clamp to) |
+| `storyteller` | `world::shop::favour` (before the cap, with `favour_percent`): `Storyteller::favour(rare, fateful)`, counted from the tiers of the story's lines (`background::tiers`, passed in by `World::player_favour` and `PerceptionView::shop_at`; `&[]` for anyone else) |
+| `story_luck` | `World::tell_background`: the witness's `luck` is 100 + it, which `background::tell` scales `[tiers]`' luckier odds by (`Tiers::of`) |
+| `hard_won` | `World::story_stat` (the story's `stat` arm): each point a line took (after the floor) is that many `stat_marks` on the stat |
 | `sell_percent` | `Shops::offer_more` from `World::deal` and `ShopView::offer` |
 | `credit` | `World::on_credit` in `turned_back` and `shop_step`, and `PerceptionView::owed_on_leaving` (no dialog): owing at most that, the player leaves, the debt stays on the bill |
 | `identify_trades` | `World::pay` (what was unpaid) and `World::trade` (what is sold, "That was …!") |
@@ -362,6 +365,10 @@ nobody_starts_strained_and_only_wealth_burdens` adds the heritage at its heavies
 Strained, and Burdened only for the weakest of a small race. Tests: `world/heirloom_tests.rs`.
 The background story (docs/dev/background.md) reads the talents held after the creation picks:
 its `only` lines force Family wealth's and Father's sword's chapters, so nothing is paid twice.
+Favoured child and Hard-won (#705, the `background` system) are heritage talents too, and
+`TalentMods` (`story_luck`, `hard_won`), read once, as the story is told; the system's third,
+Storyteller (Scholar, Presence 12), is an ordinary pick that reads the story in play (the hooks
+above; `world/background_talent_tests.rs`).
 
 The creation step reads a drafted run (`World::draft`: `begin` with the kit, the picks left
 due), cloned per question: `creation_offers(picks)` takes `picks` on a clone and returns what is

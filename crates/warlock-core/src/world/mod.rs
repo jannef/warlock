@@ -1429,6 +1429,8 @@ mod ascmearc_tests;
 #[cfg(test)]
 mod attacks_tests;
 #[cfg(test)]
+mod background_talent_tests;
+#[cfg(test)]
 mod balance_probe;
 #[cfg(test)]
 mod beast_den_tests;

@@ -101,7 +101,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Character::story` keeps the ids (saves change; left out while empty, so older saves load
     with no story), and the text is told again from the content. A scenario's own character
     (`--scenario` alone) has none. The game tells it in words only, never a number or a stat's
-    name; the summary says under the kit "Fate will have its say when you set out."
+    name; the summary says under the kit "Fate will have its say when you set out." Its
+    talents (#705): Favoured child doubles the luckier tiers' odds, Hard-won turns each stat
+    point taken into three stat training marks, Storyteller's shop favour grows with the rare
+    and fateful lines (under "Heritage" and the Scholar tree).
   - **Birth sign actives** (#266): used from the abilities menu's **Birth sign** group
     (`Ability::Sign`, `Source::Sign`, between Racial and Class) as `Action::Gift` (no key of
     their own), each refused (no time) without it or while its cooldown status lasts. **Horn's
@@ -653,7 +656,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     at item level 6 (`loot::heirloom`: two a magic item's prefix and suffix, more a rare item's,
     named), identified, readied in its own slot when free, else carried, from the stream
     `character/fathers-sword/<race>,<gender>,<class>`). Each stream is its own, so no other roll
-    moves. The weakest of a small race may start Burdened with them, never Strained.
+    moves. The weakest of a small race may start Burdened with them, never Strained. Two more
+    heritage talents shape the background story (#705, the `background` system): **Favoured
+    child** (`story_luck` 100: the story's uncommon, rare, and fateful odds doubled, 24 %, 6 %,
+    1 % a chapter) and **Hard-won** (`hard_won` 3: each stat point a story line took is three
+    stat training marks on that stat, the potential where the story left it). The system's
+    third, **Storyteller** (Scholar, Presence 12), is picked in play: shop favour +5 %, +5 % more
+    per rare line of the story and +10 % per fateful one, before the cap (`world::shop::favour`,
+    the one read of the story in play).
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents at a rank (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored

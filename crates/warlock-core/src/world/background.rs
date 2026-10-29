@@ -5,7 +5,8 @@
 //! character, tells the story ([`background::tell`]), keeps the ids in `Character::story`, and
 //! applies each rolled effect once, one function per kind:
 //!
-//! - **stat**: `Stats::gift`, the score and its potential together, a score never below 1;
+//! - **stat**: `Stats::gift`, the score and its potential together, a score never below 1; with
+//!   Hard-won, each point taken is stat training marks on the stat;
 //! - **gold**: coins joining the pack, or taken from it (never below none);
 //! - **item**: the kit's way (`Pack::put`, `Pack::equip`: a free slot, else carried); a magic one
 //!   identified; a scroll or potion known, as the kit's are; food made now;
@@ -27,6 +28,7 @@ use crate::background::{self, Rolled, Witness};
 use crate::content::{Content, GOLD, Keep, Marks, WeaponSkillId};
 use crate::kit::Pack;
 use crate::object::Stack;
+use crate::stats::Stat;
 
 impl World {
     /// Tells the player's background story and applies it (see the module docs).
@@ -55,7 +57,7 @@ impl World {
             talents: &player.talents,
             trained: &trained,
             campaign: &self.state.campaign,
-            luck: 100,
+            luck: (100 + player.talent_mods(&content).story_luck).max(0) as u32,
         };
         let story = background::tell(&content, self.state.seed, &witness);
         for effect in story.effects {
@@ -72,7 +74,7 @@ impl World {
     /// Applies one rolled effect of the story to the player.
     fn apply_story(&mut self, content: &Content, effect: Rolled) {
         match effect {
-            Rolled::Stat(stat, by) => self.player_mut().stats.gift(stat, by),
+            Rolled::Stat(stat, by) => self.story_stat(content, stat, by),
             Rolled::Gold(by) => self.story_gold(content, by),
             Rolled::Item(stack, keep) => self.story_item(content, stack, keep),
             Rolled::Skill(id, by) => self.player_mut().skills.add(id, by),
@@ -96,6 +98,19 @@ impl World {
             Rolled::Talent(id, choice) => self.bestow(&id, choice.as_deref()),
             Rolled::Flaw(id) => self.bestow(&id, None),
         }
+    }
+
+    /// The score and its potential by `by` (`Stats::gift`); with Hard-won, each point it took is
+    /// stat training marks on the stat (`TalentMods::hard_won`), toward its rise at a level or a
+    /// day's check.
+    fn story_stat(&mut self, content: &Content, stat: Stat, by: i32) {
+        let marks = self.state.player().talent_mods(content).hard_won;
+        let player = self.player_mut();
+        let before = player.stats.score(stat);
+        player.stats.gift(stat, by);
+        let taken = u16::from(before.saturating_sub(player.stats.score(stat)));
+        let mark = &mut player.stat_marks[stat];
+        *mark = mark.saturating_add(taken.saturating_mul(marks));
     }
 
     /// `by` gold coins into the pack, or (negative) out of it, as many as there are.

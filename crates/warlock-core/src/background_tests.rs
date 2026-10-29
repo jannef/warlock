@@ -468,7 +468,7 @@ fn sample(character: &str, name: &str, seed: u64) -> (Vec<String>, Vec<String>) 
 /// The design's three samples (§12), one of each kind: a common story, one with a rare line,
 /// and a grim one. Their seeds were picked from `find_samples`' list.
 const SAMPLES: [(&str, &str, u64); 3] = [
-    ("human,male,commoner", "Edwin", 72),
+    ("human,male,commoner", "Edwin", 85),
     ("dwarf,female,warrior", "Brakka", 24),
     ("halfling,female,thief", "Tamsin", 21),
 ];
@@ -478,19 +478,18 @@ fn the_samples_read_as_written() {
     // Each sample's story as the player reads it, pinned: a pool edit that moves which line a
     // seed tells shows here (pick new seeds with `find_samples` and read the new stories).
     let expected: [&[&str]; 3] = [
-        // Common: eight common lines, two of them plain.
+        // Common: eight common lines, three of them plain.
         &[
             "Your parents were plain folk who worked, ate, slept, and did not talk about it. You \
              were born without sign or omen, which your family counted a mercy.",
             "You were a strong child, broad for your age, and carried what the others could not. \
              At fourteen you stood in the levy with a borrowed spear, and found you had a taste \
              for it.",
-            "You were promised once, and the promise was broken, and you have not made another. A \
-             dog followed you home one spring and stayed three years, and taught you more about \
-             patience than any person did.",
-            "You left after a quarrel with your family that neither of you has yet forgiven. You \
-             came up the drove road with the black cattle and the men who drove them, who paid \
-             you in dried beef and in songs you should not repeat.",
+            "Your family died owing, and you worked the debt off a shilling at a time, and \
+             learned what every shilling was worth. Fortune never found your door; whatever you \
+             have, you got yourself.",
+            "You grew too big for home, and home said so. You came over the Grægweall with the \
+             last cart before the snow, and paid for the ride with work.",
         ],
         // With a rare line: an heirloom, a magic weapon of the kind she trains (Fortune).
         &[

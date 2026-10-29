@@ -9,32 +9,32 @@ expression: "render(case, content.clone())"
               │ Heritage                                                             │
               │ > b *Family wealth            You were born to money: you set out w… │
               │   c  Father's sword           Your family's weapon, the one your pe… │
+              │   d  Favoured child           Fortune watched over your youth: the … │
+              │   e  Hard-won                 What your youth took from you, you me… │
               │ Vigour                                                               │
-              │   d  Deep lungs               Your stamina holds a good deal more.   │
-              │   e  Hard training            You drill every day: your stats grow … │
-              │   f  Healthy                  Your hit points come back a quarter f… │
+              │   f  Deep lungs               Your stamina holds a good deal more.   │
+              │   g  Hard training            You drill every day: your stats grow … │
+              │   h  Healthy                  Your hit points come back a quarter f… │
               │ Might                                                                │
-              │   g  Mighty kick              Your kicks land like hammers: they hu… │
-              │   h  Second breath            Every kill of yours gives you back a … │
+              │   i  Mighty kick              Your kicks land like hammers: they hu… │
+              │   j  Second breath            Every kill of yours gives you back a … │
               │ Finesse                                                              │
-              │   i  Dodge                    You slip aside from blows: Dodge +1 t… │
-              │   j  Light step               You tread lightly: a trap you step on… │
-              │   k  Nimble                   A load slows your feet less than most… │
-              │   l  Opportunist              A foe that turns from you pays for it… │
-              │   m  Slick                    You slip out of a mimic's glue before… │
+              │   k  Dodge                    You slip aside from blows: Dodge +1 t… │
+              │   l  Light step               You tread lightly: a trap you step on… │
+              │   m  Nimble                   A load slows your feet less than most… │
+              │   n  Opportunist              A foe that turns from you pays for it… │
+              │   o  Slick                    You slip out of a mimic's glue before… │
               │ Weaponcraft                                                          │
-              │   n  Far shot                 Your shots fly 2 cells farther, and w… │
-              │   o  Sworn foe                You have sworn yourself against one k… │
-              │   p  Unbinder                 You strike at the binding, not the th… │
-              │   q  Wand mastery             You draw more from a wand than its ma… │
-              │   r  Weapon focus             You have drilled with one kind of wea… │
+              │   p  Far shot                 Your shots fly 2 cells farther, and w… │
+              │   q  Sworn foe                You have sworn yourself against one k… │
+              │   r  Unbinder                 You strike at the binding, not the th… │
+              │   s  Wand mastery             You draw more from a wand than its ma… │
+              │   t  Weapon focus             You have drilled with one kind of wea… │
               │ Guard                                                                │
-              │   s  Armour training          You move freely in armour: it hampers… │
+              │   u  Armour training          You move freely in armour: it hampers… │
               │ Shadow                                                               │
-              │   t  Hush-foot                You move among sleepers as a breath o… │
-              │   u  Keen ears                You hear fainter sounds, fainter stil… │
-              │   v  Lamplighter              You tend your lantern well: it burns … │
-              │   w  Night eyes               Your eyes grow used to the dark: you … │
+              │   v  Hush-foot                You move among sleepers as a breath o… │
+              │   w  Keen ears                You hear fainter sounds, fainter stil… │
               │                                                                      │
               │ You were born to money: you set out with far more gold than most,    │
               │ and a few gems besides.                                              │
