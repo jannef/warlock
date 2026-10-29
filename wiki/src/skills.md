@@ -102,6 +102,7 @@ The passive skills help you more the higher they are:
   ([Daggers](weapon-skills.md#weapon-skill-daggers) 5) leaves the foe [bleeding](status-effects.md#bleeding), and
   [Hunter's shot](fighting-styles.md#style-ability-hunters-shot) ([Marksman](fighting-styles.md#style-marksman) 6)
   [pins](status-effects.md#status-pinned) it for one or two actions; neither fires without the dice.
+  The whole rule is under [Surprise and sneak attacks](surprise.md).
 - **[Initiative](skills.md#skill-initiative)** helps you keep your wits when something falls on
   you unseen: +8 to the initiative check at 100, +12 at 200, and when you are
   [surprised](status-effects.md#status-surprised) all the same, your next action loses less time

@@ -354,9 +354,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     or whose triggers do not fire, keep their draws and hashes.
 - **Surprise and sneak attacks** (`world/surprise.rs`, `data/surprise.toml`; #681, design
   `docs/design/surprise-and-sneak-attacks.md` §3–§5; `docs/dev/surprise.md`): being caught
-  unawares, both ways round, the Sneak attack and Initiative skills (#682), and slipping past
-  (#683), the unaware mark and Hair trigger (#687). The rest comes in later slices
-  (#684–#688).
+  unawares, both ways round, the Sneak attack and Initiative skills (#682), slipping past
+  (#683), the thief's Lurk, Low blow, and Vanishing act (#684, §8i "The ranger's, thief's, and bard's tables"), the two weapon
+  abilities on the `sneak_attack` trigger (#685, §8i "Weapon abilities"), the creatures that
+  sneak-attack, recover, spot, and lurk (#686, §8 "Creature behavior"), the unaware mark and
+  Hair trigger (#687; Hair trigger's blow under Free blows above), and the player wiki's page,
+  `wiki/src/surprise.md`, with its tables from `xtask/src/wiki/surprise.rs`, and the balance
+  probe's sneak-attack table (#688, `docs/balance.md` "Sneak attacks").
   - **Unaware** (`World::unaware`, the one definition, asked of every attack; no draw): a
     creature is unaware of an actor when it hunts no one it has seen (`Mind::last_seen` unset)
     and its eyes do not see the actor's cell now (creature sight, `World::sees_now`) or the actor
@@ -414,7 +418,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     attack (`sneak_attack`, 50 %) and Dexterity (`sneak_attack`, 20 %) on the training stream.
     A sneak attack that hits raises the `sneak_attack` weapon-ability trigger (§8i "Weapon
     abilities": Knife in the dark, Hunter's shot) with the attack's skills, after its `hit`
-    triggers (`World::sneak_trigger`); none without the dice.
+    triggers (`World::sneak_trigger`); none without the dice. The thief's actives (#684): a
+    Lurk's blow on a hostile that steps up beside them and was not hunting them counts as
+    unaware (`thief.rs::lurked`: the check, the strip, the dice); a Low blow passes as unaware
+    for the dice alone (`low_blow_taken`: no check, no strip).
   - **Vitals** (critical immunity; `Content::has_vitals`, the one reader): an incorporeal
     creature, an animated object, a type carrying a tag of `no_vitals` (elemental, skeleton,
     spirit, construct), or one with `vitals = false` has no vitals: no critical is confirmed on it
