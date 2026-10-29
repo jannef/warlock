@@ -1,0 +1,44 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+┌─ Talents ────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ Your talents                                                                                     │
+│   Stars                                                                                          │
+│ >   Grasping arms  (birth sign)                                                                  │
+│     Of the deep  (birth sign)                                                                    │
+│     Ungainly ashore  (birth sign)                                                                │
+│     Blaze  (birth sign)                                                                          │
+│     Kindled  (birth sign)                                                                        │
+│   Heritage                                                                                       │
+│     Family wealth                                                                                │
+│   Vigour                                                                                         │
+│     Hardy 1/3  (story)                                                                           │
+│   Might                                                                                          │
+│     Brawn 1/2                                                                                    │
+│   Delver                                                                                         │
+│     Salvager 1/2                                                                                 │
+│   Racial                                                                                         │
+│     Versatile  (race)                                                                            │
+│   Class abilities                                                                                │
+│     Weapon drill  (class)                                                                        │
+│     Trained wind  (class)                                                                        │
+│ Other talents                                                                                    │
+│   Stars                                                                                          │
+│     Tentacles                                                                                    │
+│         Needs: Twin Blades 3, to be born in the year of the Kraken                               │
+│     Wildfire                                                                                     │
+│         Needs: level 15, to be Fire-born                                                         │
+│   Heritage                                                                                       │
+│     Father's sword                                                                               │
+│         Needs: Family wealth, to be a new character                                              │
+│   Vigour                                                                                         │
+│     Bellows                                                                                      │
+│                                                                                                ↓ │
+│ A weapon in each hand hampers you less, and with sword and shield your free bash comes more      │
+│ often.                                                                                           │
+│                                                                                                  │
+│                                                                                                  │
+│ ↑↓ choose   G or Esc close                                                                       │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘

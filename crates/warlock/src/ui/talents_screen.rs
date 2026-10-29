@@ -87,6 +87,8 @@ impl TalentsScreen {
                     .push(Line::Tree(book.tree(talent.tree).name.clone()));
             }
             let from = match () {
+                () if talent.story && talent.flaw => Some("story, flaw"),
+                () if talent.story => Some("story"),
                 () if talent.boon => Some("altar"),
                 () if talent.class => Some("class"),
                 () if talent.race => Some("race"),
