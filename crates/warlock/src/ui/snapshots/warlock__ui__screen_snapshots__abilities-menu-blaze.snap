@@ -8,22 +8,22 @@ expression: "render(case, content.clone())"
 
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │   a  Blaze        you are burnt out                      │
                     │ Skills                                                   │
-                    │   b  Heal         nothing to treat                       │
-                    │   c  Intimidate   not usable yet                         │
-                    │   d  Metalcraft   not usable yet                         │
+                    │   b  Bluff        not usable yet                         │
+                    │   c  Heal         nothing to treat                       │
+                    │   d  Intimidate   not usable yet                         │
+                    │   e  Metalcraft   not usable yet                         │
                     │ Weapon skills                                            │
-                    │ > e  Shield bash  in a direction                         │
+                    │ > f  Shield bash  in a direction                         │
                     │                                                          │
                     │ Strike someone next to you with the shield you hold.     │
                     │                                                          │
                     │                                                          │
-                    │ a-e or Enter use   Esc close                             │
+                    │ a-f or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

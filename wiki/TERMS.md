@@ -138,6 +138,9 @@ above.
 | Class, class levels | `classes.md`, `classes.md#levels` (a class: its heading, `classes.md#barbarian`) |
 | Starting kit | `starting-kit.md` |
 | Background story, its chapters, how rare | `background.md`, `background.md#how-rare` |
+| Story, a story's sentence (line), its kind (tier: common, uncommon, rare, fateful) | `background.md#how-rare` |
+| Fateful (a story's rarest kind) | `background.md#how-rare` |
+| Every story sentence, its conditions and effects; tags and word slots | `background.md#every-sentence` |
 | The story screen, the Story page (page 8) | `background.md#when-it-is-told` |
 | Horoscope, animal, element, lucky day | `horoscope.md`, `horoscope.md#animals`, `horoscope.md#elements`, `horoscope.md#lucky-days` |
 | The great cycle | `horoscope.md#the-great-cycle` |

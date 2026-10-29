@@ -1,4 +1,5 @@
-# What was given you: purses and heirlooms. Father's sword's heir is told of the blade instead.
+# What was given you: purses and heirlooms. The plain line is heavy (fortune is uncommon by
+# nature). Father's sword's heir is told of the blade instead.
 [chapter]
 id = "fortune"
 name = "Fortune"
@@ -19,6 +20,31 @@ effects = [{ gold = "4d6" }, { alignment = -25 }]
 tags = ["found"]
 
 [[line]]
+id = "won_at_dice"
+tier = "common"
+weight = 1
+text = "You won a purse at dice from a drover who could not count, and he never forgave you."
+effects = [{ gold = "3d6" }]
+tags = ["found"]
+
+[[line]]
+id = "the_good_harvest"
+tier = "common"
+weight = 2
+text = "One year the harvest was the best anyone remembered, and {guardian} put a few coins by for you and never touched them."
+when = { tags = ["poor"] }
+effects = [{ gold = "2d6" }]
+
+[[line]]
+id = "the_dog_that_stayed"
+tier = "common"
+weight = 1
+text = "A dog followed you home one spring and stayed three years, and taught you more about patience than any person did."
+when = { not_tags = ["deep"] }
+effects = [{ skill = { handle_animal = "2d4" } }]
+tags = ["dog"]
+
+[[line]]
 id = "the_bequest"
 tier = "uncommon"
 weight = 2
@@ -36,13 +62,47 @@ effects = [{ item = { wear = "silver_ring|iron_ring", magic = "any" } }]
 tags = ["ring"]
 
 [[line]]
+id = "the_charm"
+tier = "uncommon"
+weight = 2
+text = "A wise woman hung a charm about your neck when you were small, against the evil eye, and you have never taken it off."
+effects = [{ item = { wear = "bone_amulet|jade_amulet", magic = "any" } }]
+tags = ["charm"]
+
+[[line]]
+id = "the_teachers_book"
+tier = "uncommon"
+weight = 2
+text = "Your teacher gave you, on parting, a book they said was worth more than you knew; they were right."
+when = { tags = ["lettered"] }
+effects = [{ item = "book" }, { skill = { knowledge = "2d4" } }]
+tags = ["book"]
+
+[[line]]
+id = "the_pilgrims_blessing"
+tier = "uncommon"
+weight = 2
+text = "A pilgrim you nursed through a fever blessed you on leaving, and you have felt it since, like a hand on your shoulder."
+when = { tags = ["temple"] }
+effects = [{ stat = { willpower = 1 } }, { alignment = 25 }]
+tags = ["blessed"]
+
+[[line]]
 id = "the_heirloom"
 tier = "rare"
 weight = 1
 text = "In the chest under the bed, when {guardian} died, you found what no one had spoken of: a weapon older than the house, with a name cut into it."
 when = { not_talents = ["fathers_sword"], age = { min = 14 } }
 effects = [{ item = { carry = "long_sword|battle_axe|war_hammer|spear|short_bow", magic = "magic", prefer_trained = true } }]
-tags = ["heirloom"]
+tags = ["heirloom", "orphan"]
+
+[[line]]
+id = "the_hermits_word"
+tier = "rare"
+weight = 1
+text = "The hermit of the hill told you, when you were twelve, exactly how you would die; you have forgotten it, and it has made you very hard to frighten."
+effects = [{ stat = { willpower = 2 } }]
+tags = ["fearless"]
 
 [[line]]
 id = "the_named_blade"
@@ -52,6 +112,14 @@ text = "On the night you came of age a stranger left a wrapped thing at the door
 when = { not_talents = ["fathers_sword"] }
 effects = [{ item = { carry = "long_sword|rapier|scimitar|battle_axe|war_hammer|quarterstaff", magic = "rare", prefer_trained = true } }]
 tags = ["named_blade"]
+
+[[line]]
+id = "the_hollow_tree"
+tier = "fateful"
+weight = 1
+text = "You found a dead man's hoard in a hollow oak: a purse, and beside it, wrapped in oilcloth, a ring that is warm in winter."
+effects = [{ gold = "6d6+10" }, { item = { wear = "gold_ring", magic = "magic" } }]
+tags = ["hoard"]
 
 # Father's sword's heir has the blade already: the story tells of it and gives nothing more.
 [[line]]

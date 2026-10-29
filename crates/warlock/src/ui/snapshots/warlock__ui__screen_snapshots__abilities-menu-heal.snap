@@ -7,7 +7,6 @@ expression: "render(case, content.clone())"
 
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -18,17 +17,18 @@ expression: "render(case, content.clone())"
                     │   c  Decipher script    not usable yet                   │
                     │   d  Heal               on yourself                      │
                     │   e  Knowledge          not usable yet                   │
+                    │   f  Forage             not usable here                  │
                     │ Weapon skills                                            │
-                    │   f  Shield bash        in a direction                   │
+                    │   g  Shield bash        in a direction                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-f or Enter use   Esc close                             │
+                    │ a-g or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 
 
 
 
- The Hub  ·  HP 16/16  ·  MP 15/15  ·  Bleeding  ·  Poisoned  ·  Lv 1  ·  08:00          ? controls
+ The Hub  ·  HP 18/18  ·  MP 14/14  ·  Bleeding  ·  Poisoned  ·  Lv 1  ·  08:00          ? controls

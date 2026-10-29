@@ -444,3 +444,109 @@ fn the_same_seed_tells_the_same_story_and_another_seed_another() {
     let none = crate::background::storyless();
     assert_eq!(tell(&none, 1, &w), Story::default());
 }
+
+/// The story a kitted run of `character` named `name` on Beorggeat is told with `seed`, as the
+/// player reads it (paragraphs), and its lines (`chapter/line`).
+fn sample(character: &str, name: &str, seed: u64) -> (Vec<String>, Vec<String>) {
+    static SHARED: LazyLock<std::sync::Arc<Content>> =
+        LazyLock::new(|| std::sync::Arc::new(Content::builtin().expect("built-in content")));
+    let spec: CharacterSpec = character.parse().expect("a character");
+    let world = crate::world::World::start_run(
+        SHARED.clone(),
+        "ascmearc",
+        Some(seed),
+        Some(&spec),
+        Some(name),
+        true,
+    )
+    .expect("starts");
+    let c = world.state().character.as_ref().expect("a character");
+    let ids = c.story.iter().map(Told::id).collect();
+    (retell(&CONTENT, &world.state().campaign, c), ids)
+}
+
+/// The design's three samples (§12), one of each kind: a common story, one with a rare line,
+/// and a grim one. Their seeds were picked from `find_samples`' list.
+const SAMPLES: [(&str, &str, u64); 3] = [
+    ("human,male,commoner", "Edwin", 72),
+    ("dwarf,female,warrior", "Brakka", 24),
+    ("halfling,female,thief", "Tamsin", 21),
+];
+
+#[test]
+fn the_samples_read_as_written() {
+    // Each sample's story as the player reads it, pinned: a pool edit that moves which line a
+    // seed tells shows here (pick new seeds with `find_samples` and read the new stories).
+    let expected: [&[&str]; 3] = [
+        // Common: eight common lines, two of them plain.
+        &[
+            "Your parents were plain folk who worked, ate, slept, and did not talk about it. You \
+             were born without sign or omen, which your family counted a mercy.",
+            "You were a strong child, broad for your age, and carried what the others could not. \
+             At fourteen you stood in the levy with a borrowed spear, and found you had a taste \
+             for it.",
+            "You were promised once, and the promise was broken, and you have not made another. A \
+             dog followed you home one spring and stayed three years, and taught you more about \
+             patience than any person did.",
+            "You left after a quarrel with your family that neither of you has yet forgiven. You \
+             came up the drove road with the black cattle and the men who drove them, who paid \
+             you in dried beef and in songs you should not repeat.",
+        ],
+        // With a rare line: an heirloom, a magic weapon of the kind she trains (Fortune).
+        &[
+            "Your parents were plain folk who worked, ate, slept, and did not talk about it. You \
+             came feet first, late, and bawling, and have been hard to hurt and slow to charm \
+             ever since.",
+            "You were as stubborn as a mule and twice as hard to lead. You were set to dig as \
+             soon as you could hold a pick, and learned to feel a bad tunnel before it fell.",
+            "The fever came the year you were grown, and took your family. You nursed the rest of \
+             the sick, and it did not take you. In the chest under the bed, when your family \
+             died, you found what no one had spoken of: a weapon older than the house, with a \
+             name cut into it.",
+            "You left because the stories were all somewhere else. The snow caught you on the \
+             high road and took your pack; you came down the far side of Beorggeat with what you \
+             stood in and a new respect for weather.",
+        ],
+        // Grim: a foundling, bullied, maimed, with nobody to leave.
+        &[
+            "You were a foundling, left at the minster door in a basket of rushes; the sisters \
+             raised you, and never let you forget it. You came feet first, late, and bawling, and \
+             have been hard to hurt and slow to charm ever since.",
+            "The bigger children had you for sport, and you learned to run before you learned to \
+             fight. You ran with the market children, and your fingers grew light before your \
+             conscience grew heavy.",
+            "You lost two fingers of your left hand to a mill-wheel, and learned to do without \
+             them. A dog followed you home one spring and stayed three years, and taught you more \
+             about patience than any person did.",
+            "There was nothing to hold you, and nobody to say goodbye to, and so you did not. You \
+             came over the Grægweall with the last cart before the snow, and paid for the ride \
+             with work.",
+        ],
+    ];
+    for ((character, name, seed), want) in SAMPLES.into_iter().zip(expected) {
+        let (told, ids) = sample(character, name, seed);
+        assert_eq!(told, want, "{character} {seed}: {ids:?}");
+    }
+}
+
+#[test]
+#[ignore = "a helper: prints stories to pick the samples' seeds from"]
+fn find_samples() {
+    let b = CONTENT.background().expect("stories");
+    for (character, name, _) in SAMPLES {
+        for seed in 0..300 {
+            let (_, told) = sample(character, name, seed);
+            let lines: Vec<String> = (told.iter())
+                .map(|id| {
+                    let (chapter, line) = id.split_once('/').expect("chapter/line");
+                    let l = (b.chapter("ascmearc", chapter))
+                        .and_then(|c| c.line(line))
+                        .expect("a line");
+                    let (boons, banes) = l.worth(&b.points);
+                    format!("{line}:{}:{boons}-{banes}", l.tier.id())
+                })
+                .collect();
+            println!("{character} {seed}: {}", lines.join(" "));
+        }
+    }
+}

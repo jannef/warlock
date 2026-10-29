@@ -35,7 +35,10 @@ starts, one of the campaign's own), and `kind`, `campaign` (default) or `test`.
   `dialogue::parse`, `Content::load_dungeons`); none has an order that means anything but
   quests' `requires`, which names a quest earlier in the table. `background` too: a campaign's
   chapters (`data/background/`, the Ascmearc's `road`) come after the shared ones in its runs'
-  stories, never with a shared chapter's id (docs/dev/background.md).
+  stories, never with a shared chapter's id (docs/dev/background.md). The Ascmearc's `road`
+  (seven lines) is the only chapter that names the march's places (Old English names stay out
+  of the shared chapters); the showcase's two-line `road` is the tests' (never in a release, and
+  never in the wiki, whose tables list the Ascmearc's).
 - `ContentFiles::in_dir("levels" | "scenarios" | "vaults")`: the top-level directory, then
   each campaign's.
 - Each entry remembers its campaign (`campaign::of_path`): `CreatureDef::campaign`,

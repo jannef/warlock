@@ -56,6 +56,8 @@ tiers = [{ level = 1, min = 2, max = 8 }]
 fn content() -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     files.insert("data/affixes/zz_fixture.toml", AFFIXES);
+    // No background story: its stat points and things would move the pools these tests read.
+    files.remove("data/background.toml");
     Arc::new(Content::load(&files).expect("fixture affixes are valid"))
 }
 

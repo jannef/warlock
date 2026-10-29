@@ -3,8 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You learn Hard training.
- You spend 118 mana (dev).
-
+ You spend 156 mana (dev).
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -21,14 +20,15 @@ expression: "render(case, content.clone())"
                     │   h  Heal               nothing to treat                 │
                     │   i  Knowledge          not usable yet                   │
                     │   j  Music              not usable yet                   │
+                    │   k  Pick lock          in a direction                   │
+                    │   l  Steal              in a direction                   │
                     │ Weapon skills                                            │
-                    │   k  Shield bash        you hold no shield               │
+                    │   m  Shield bash        you hold no shield               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-m or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
-
- The Hub  ·  HP 52/52  ·  MP 2/120  ·  Inspiration 0/5  ·  Sta 9/16  ·  Lv 38            ? controls
+ The Hub  ·  HP 50/50  ·  MP 2/158  ·  Inspiration 0/5  ·  Sta 9/15  ·  Lv 38            ? controls

@@ -1,4 +1,4 @@
-# How you came into the world (the sign says when).
+# How you came into the world (the sign says when): small trades, a lucky day acknowledged.
 [chapter]
 id = "birth"
 name = "Birth"
@@ -19,6 +19,45 @@ effects = [{ stat = { toughness = -1 } }, { stat = { willpower = 1 } }]
 tags = ["small"]
 
 [[line]]
+id = "on_the_road"
+tier = "common"
+weight = 2
+text = "You were born on the road, in the back of a cart between one town and the next, and have never since been easy in one place."
+when = { not_tags = ["deep"] }
+effects = [{ skill = { survival = "1d4" } }]
+tags = ["wanderer"]
+
+[[line]]
+id = "the_twin"
+tier = "common"
+weight = 1
+text = "You were born one of twins. The other did not live out the week, and {guardian} never spoke of it."
+effects = [{ stat = { willpower = 1, presence = -1 } }]
+tags = ["twin"]
+
+[[line]]
+id = "feet_first"
+tier = "common"
+weight = 2
+text = "You came feet first, late, and bawling, and have been hard to hurt and slow to charm ever since."
+effects = [{ stat = { toughness = 1, presence = -1 } }]
+
+[[line]]
+id = "named_for"
+tier = "common"
+weight = 2
+text = "You were named for a grandparent you never met, and told every year how little you resembled them."
+when = { not_tags = ["orphan"] }
+
+[[line]]
+id = "last_egg"
+tier = "common"
+weight = 3
+text = "Yours was the last egg of the clutch to crack, left longest in the warm mud, and you came out the biggest of them."
+when = { race = ["lizardfolk"] }
+effects = [{ stat = { toughness = 1 } }]
+
+[[line]]
 id = "lucky_day"
 tier = "common"
 weight = 6
@@ -27,9 +66,36 @@ when = { lucky = true }
 tags = ["marked"]
 
 [[line]]
+id = "with_the_caul"
+tier = "uncommon"
+weight = 2
+text = "The midwife swore you were born with the caul, and would never drown; she sold it, after, to a bargeman."
+when = { not_tags = ["deep"] }
+effects = [{ skill = { swim = "2d4" } }]
+tags = ["caul"]
+
+[[line]]
+id = "by_the_hearth"
+tier = "uncommon"
+weight = 2
+text = "You were born by a hearth that roared up as you came, and the midwife said the fire had known you."
+when = { element = ["fire"] }
+effects = [{ stat = { willpower = 1 } }]
+tags = ["hearth"]
+
+[[line]]
 id = "storm_born"
 tier = "rare"
 weight = 1
 text = "You were born in a night of thunder, and the old folk said the storm had come for you and been cheated."
 effects = [{ stat = { willpower = 1, toughness = 1 } }]
 tags = ["storm"]
+
+[[line]]
+id = "the_comet"
+tier = "fateful"
+weight = 1
+text = "A star with a tail hung in the sky the month you were born, and people who saw it still look at you twice."
+when = { not_tags = ["deep"] }
+effects = [{ stat = { presence = 2, willpower = 1 } }]
+tags = ["comet"]

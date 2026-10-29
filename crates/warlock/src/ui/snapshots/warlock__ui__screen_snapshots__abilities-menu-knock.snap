@@ -17,8 +17,8 @@ expression: "render(case, content.clone())"
                     │   d  Magic missile      tier 1, 3 mana, aimed            │
                     │ Skills                                                   │
                     │   e  Decipher script    not usable yet                   │
-                    │   f  Heal               nothing to treat                 │
-                    │   g  Knowledge          not usable yet                   │
+                    │   f  Knowledge          not usable yet                   │
+                    │   g  Pick lock          in a direction                   │
                     │ Weapon skills                                            │
                     │   h  Shield bash        you hold no shield               │
                     │                                                          │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 17/17  ·  MP 42/42  ·  Lv 4  ·  08:00  ·  11 Darkening, Year 1444        ? controls
+ The Hub  ·  HP 18/18  ·  MP 42/42  ·  Lv 4  ·  08:00  ·  11 Darkening, Year 1444        ? controls

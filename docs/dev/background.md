@@ -47,6 +47,76 @@ effects). Content without `data/background.toml` tells no story and checks nothi
 fixtures that strip talents, skills, races, or classes remove it; `background::storyless()` is
 the built-in content without it, for tests of what a story would add to).
 
+## The pools (B3, #704)
+
+The shared chapters (`assets/data/background/01-parents.toml` to `07-leaving.toml`) and the
+Ascmearc's `road` hold 126 lines, written by the implementers (decision 13 of the design; the
+owner reviews the texts after the wave): Parents 18, Birth 12, Childhood 17, Youth 27, The trial
+15, Fortune 15, Leaving 15, the road 7. Of them 17 are uncommon, 11 rare, and 5
+fateful (`the_comet`, `the_master`, `the_flux`, `the_named_blade`, `the_hollow_tree`). How
+they are spread:
+
+- **Parents** sets the words and the tags the rest lean on (`poor`, `wealthy`, `orphan`,
+  `smith`, `trader`, `hunter`, `deep`, `warren`, `outsider`, `herbs`; `{guardian}`, `{home}`,
+  `{trade}`). Every race has a line of its own, weighted above the shared ones (6 to 12 against
+  the plain line's 5) so most of a race's stories start in its own world: the deep halls
+  (dwarf, duergar), a low house of the under-dark (drow), the warren (kobold, goblin, ratfolk),
+  the fen-clutch (lizardfolk), the burrow (halfling, gnome), the wood's edge (elf, half-elf),
+  two peoples (half-orc, half-elf); `farm_folk` is not told to the under-dark's races.
+- **Youth** is the class chapter: nearly every class has a line of its own, weighted as the
+  plain line (the levy, the raids,
+  the minster, the cloister, the copyist, the cunning woman, the alehouses, the market children,
+  the workshop, the counting house, the idle youth, the woods), plus tag lines (`smith` and
+  `trader` apprenticeships, `hunter`, `orphan`, `poor`) and age gates (a drow's half-lifetime as
+  a page from 50, the long apprenticeship of the long-lived from 80, the old soldier and the
+  master from 16).
+- **The trial** is mostly common lines that take and keep (a stat traded, gold lost with a skill
+  kept); its rare line is a terrible thing survived. **Fortune** holds the purses and the
+  heirlooms. **Leaving** follows the tags (`orphan`, `poor`, `indebted`, `wanderer`, `warren`,
+  `strong`) and nudges the alignment.
+- **The road** (the Ascmearc's) is the one chapter naming the march's places; the showcase's
+  two-line `road` stays the tests' chapter.
+
+`when.tags` holds when **every** tag is set (and the loader refuses a tag no earlier chapter
+sets, so `not_tags` on a tag of the same chapter is refused too): a line meant for "an orphan or
+a priest" is two lines. A line that kills `{guardian}` (`the_fever`, `the_debt`, `the_heirloom`) sets `orphan`, so
+no later line has them alive (the quarrel, the parting gift). `{guardian}` may be any of the
+values the Parents lines set ("the
+sisters", "the woman who took you in", "the elders of the clutch", …), so a line using it reads
+with each; `{home}` defaults to "home", so a line using it reads after "at", "around", or "for",
+never "through".
+
+**`talent` and `flaw` effects wait for B5** (#707): `trial/the_flux` is written with its stat
+points only and a comment where B5 adds `{ talent = "hardy" }` (its worth stays within the
+fateful band either way).
+
+**The writing rules** (design §11.9): second person, past tense, the plain English of the
+march's day; Cockney and posh only inside quoted speech, by the speaker's station (the pedlar's
+"Yer'll want that"); Old English names only in a campaign's chapter; one line, one thing; grim
+allowed, cruel never; no digit, sign, stat name, or word about how a story is drawn
+(`texts_hide_the_numbers`: a stat's name anywhere in a text, even inside a longer word, fails
+it); every race's own childhood; ids never change (saves name them).
+
+**The samples** (`background::tests::the_samples_read_as_written`): three kitted runs on
+Beorggeat (`World::start_run`, so the witness is the real one, picks and all), their stories
+pinned as text: Edwin (human commoner, seed 72, eight common lines), Brakka (dwarf warrior,
+seed 24, the rare heirloom), Tamsin (halfling thief, seed 21, a grim one). A pool edit that
+moves a sample's lines fails it: pick new seeds from `find_samples` (ignored; `cargo test -p
+warlock-core find_samples -- --ignored --nocapture` prints 300 stories of each with every
+line's kind and worth) and read the new stories before pinning them.
+
+## The wiki (B3, #704)
+
+`xtask/src/wiki/background.rs`, one function a table, registered in `generate()` after the
+horoscope's: `background-tiers.md` (each kind's odds per chapter, at least one and the expected
+count in a story of the Ascmearc's eight chapters, its worth band, whether it may take),
+`background-points.md` (`[points]` in words), and `background-<chapter>.md` for the eight
+chapters of a story in the Ascmearc (never the showcase's road): every line, commonest first
+then by weight, with its kind (and `only`), weight, conditions in words, text (slots as
+written), effects exactly with the line's worth, and the tags and words it sets. The page is
+`wiki/src/background.md`. The Favoured child columns and `background-talents.md` come with the
+talents (B4, #705).
+
 ## The roll
 
 `World::tell_background` builds the `Witness` from the finished character (after `begin` and

@@ -658,6 +658,8 @@ mod tests {
         } else {
             files.remove("data/horoscope.toml");
         }
+        // The stories' lines name the builtin animals and elements too.
+        files.remove("data/background.toml");
         Content::load(&files).expect("valid content")
     }
 

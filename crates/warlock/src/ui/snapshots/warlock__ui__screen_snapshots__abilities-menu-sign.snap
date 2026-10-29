@@ -8,7 +8,6 @@ expression: "render(case, content.clone())"
 
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -17,13 +16,14 @@ expression: "render(case, content.clone())"
                     │   b  Heal          nothing to treat                      │
                     │   c  Intimidate    not usable yet                        │
                     │   d  Metalcraft    not usable yet                        │
+                    │   e  Forage        not usable here                       │
                     │ Weapon skills                                            │
-                    │ > e  Shield bash   in a direction                        │
+                    │ > f  Shield bash   in a direction                        │
                     │                                                          │
                     │ Strike someone next to you with the shield you hold.     │
                     │                                                          │
                     │                                                          │
-                    │ a-e or Enter use   Esc close                             │
+                    │ a-f or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 21/21  ·  MP 3/3  ·  Sta 10/10  ·  Graceless  ·  Lv 1  ·  08:00          ? controls
+ The Hub  ·  HP 21/21  ·  MP 2/2  ·  Sta 10/10  ·  Graceless  ·  Lv 1  ·  08:00          ? controls

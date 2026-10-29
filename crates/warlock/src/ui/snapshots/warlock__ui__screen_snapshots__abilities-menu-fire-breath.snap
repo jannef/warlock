@@ -15,20 +15,20 @@ expression: "render(case, content.clone())"
                     │ Class                                                    │
                     │ > b  Veteran's wind                                      │
                     │ Skills                                                   │
-                    │   c  Heal            nothing to treat                    │
-                    │   d  Intimidate      not usable yet                      │
+                    │   c  Intimidate      not usable yet                      │
+                    │   d  Pick lock       in a direction                      │
+                    │   e  Forage          not usable here                     │
                     │ Weapon skills                                            │
-                    │   e  Shield bash     in a direction                      │
+                    │   f  Shield bash     in a direction                      │
                     │                                                          │
                     │ An old soldier's second breath (an ability): hit points  │
                     │ back at once, then winded a quarter hour.                │
                     │                                                          │
-                    │ a-e or Enter use   Esc close                             │
+                    │ a-f or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 
 
 
 
-
- The Hub  ·  HP 88/88  ·  MP 1/1  ·  Sta 10/16  ·  Drained  ·  Lv 23  ·  08:00           ? controls
+ The Hub  ·  HP 88/88  ·  MP 2/2  ·  Sta 10/16  ·  Drained  ·  Lv 23  ·  08:00           ? controls

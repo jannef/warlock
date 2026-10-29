@@ -1,4 +1,5 @@
-# How you came over Beorggeat into the Ascmearc: the campaign's own chapter, the last.
+# How you came over Beorggeat into the Ascmearc: the campaign's own chapter, the last, and the
+# one chapter of a story that names the march's places.
 [chapter]
 id = "road"
 name = "The road"
@@ -11,8 +12,46 @@ weight = 4
 text = "You came over the Grægweall with the last cart before the snow, and paid for the ride with work."
 
 [[line]]
+id = "alone_on_foot"
+tier = "common"
+weight = 3
+text = "You came over the pass alone and on foot, with the snow a day behind you."
+effects = [{ skill = { survival = "1d4" } }]
+
+[[line]]
 id = "the_pedlar"
 tier = "common"
 weight = 2
 text = "You walked up with a pedlar who talked the whole way and sold you a knife at the top for twice its worth. 'Yer'll want that, where yer goin',' he said, and he was right."
 effects = [{ item = "dagger" }, { gold = -5 }]
+
+[[line]]
+id = "lost_to_the_snow"
+tier = "common"
+weight = 2
+text = "The snow caught you on the high road and took your pack; you came down the far side of Beorggeat with what you stood in and a new respect for weather."
+effects = [{ gold = -10 }, { stat = { toughness = 1 } }]
+
+[[line]]
+id = "the_drovers"
+tier = "common"
+weight = 2
+text = "You came up the drove road with the black cattle and the men who drove them, who paid you in dried beef and in songs you should not repeat."
+effects = [{ item = "dried_meat*2" }]
+
+[[line]]
+id = "the_fire_that_should_not_burn"
+tier = "uncommon"
+weight = 2
+text = "At the top of the pass an old woman sat by a fire that should not have burned in that wind, and told you the ash march would make you or unmake you. She gave you bread for the road."
+effects = [{ item = "waybread*2" }, { stat = { willpower = 1 } }]
+tags = ["foretold"]
+
+[[line]]
+id = "fyrbeorg_lit"
+tier = "rare"
+weight = 1
+text = "Fyrbeorg lit the whole sky the night you crossed, and you walked down into the march by its light, and have felt since that it was looking for you."
+when = { element = ["fire"] }
+effects = [{ stat = { toughness = 1, willpower = 1 } }]
+tags = ["fire_marked"]

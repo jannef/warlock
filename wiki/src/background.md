@@ -60,20 +60,72 @@ gives no other heirloom.
 
 ## How rare
 
-Each chapter is drawn in two steps: first how rare its sentence is, then a sentence of that kind
-that fits you (if none fits, a commoner one). The odds, for every chapter:
+Each chapter is drawn in two steps: first how rare its sentence is (its **kind**), then a
+sentence of that kind that fits you, by the weights below (if none fits, a sentence of the next
+commoner kind; every chapter has a plain common sentence that fits anyone). The kinds:
 
-| Kind | Per chapter | At least one in a story of eight | What it is |
-|---|---|---|---|
-| Common | 84.5 % | — | the plain sentences, the small turns, the griefs with something kept |
-| Uncommon | 12 % | 64 % | a gift, perhaps at a price |
-| Rare | 3 % | 22 % | a thing people tell; always good news |
-| Fateful | 0.5 % | 3.9 % | once in a life |
+- **Common**: the plain sentences, the small turns, the griefs with something kept;
+- **Uncommon**: a gift, perhaps at a price;
+- **Rare**: a thing people tell; always good news;
+- **Fateful**: once in a life.
 
-What a sentence gives is weighed in points: a stat point is 2, a skill or weapon marks 1, gold 1
-for every 25 coins of what it gives on average, a plain item 1, a perhaps-magic item 2, a magic
-one 3 and a rare one 5, an alignment nudge nothing. A common sentence is worth −4 to +2, an
-uncommon one +1 to +3, a rare one +3 to +5, and a fateful one +5 to +8; rare and fateful
-sentences never take anything.
+The odds of each kind, for every chapter as it is drawn (the expected counts are for a story in
+[the Ascmearc](ascmearc.md), whose road is the eighth chapter), and what a sentence of each kind
+is worth:
+
+{{#include generated/background-tiers.md}}
+
+What a sentence gives is weighed in points, and a sentence's worth (what it gives less what it
+takes) must lie in its kind's range above. Nothing adds up a whole story's points: they only keep
+each sentence true to its kind.
+
+{{#include generated/background-points.md}}
 
 Only a character you make is told a story; a run that is resumed keeps the story it had.
+
+## Every sentence
+
+Every sentence of every chapter, with what it asks for, what it gives, and what it leaves for
+the chapters after it. A sentence's **weight** is its share among the sentences of its kind that
+fit: a weight of 4 is told twice as often as a weight of 2. **Tags** are what the story
+remembers: a later sentence may ask for one ("after `orphan`") or refuse one ("never after
+`deep`"). Some sentences also choose words a later one uses: `{guardian}` (who raised you: "your
+family" until a sentence says otherwise), `{home}` ("home"), and `{trade}` ("your trade").
+
+Dice are written as the game rolls them: 2d4 is two four-sided dice added together. A skill's
+dice start the [skill](skills.md) if you were not trained in it, or raise it if you were.
+[Weapon marks](weapon-skills.md#marks-and-ranks) bring you toward your next rank, never past it.
+
+### Parents
+
+{{#include generated/background-parents.md}}
+
+### Birth
+
+{{#include generated/background-birth.md}}
+
+### Childhood
+
+{{#include generated/background-childhood.md}}
+
+### Youth
+
+{{#include generated/background-youth.md}}
+
+### The trial
+
+{{#include generated/background-trial.md}}
+
+### Fortune
+
+{{#include generated/background-fortune.md}}
+
+### Leaving
+
+{{#include generated/background-leaving.md}}
+
+### The road
+
+[The Ascmearc](ascmearc.md)'s own chapter: how you came over the pass.
+
+{{#include generated/background-road.md}}
