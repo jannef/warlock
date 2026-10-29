@@ -80,12 +80,17 @@ impl World {
             // A creature knows nothing of traps; the player knows those they have found.
             let hidden = (self.state.current().traps.get(&at))
                 .is_some_and(|t| victim != self.state.player || !t.known);
+            let known = !hidden && self.state.current().traps.contains_key(&at);
             let sprung = self.sprung;
             let climb = self.spring_trap(at, victim, events);
             // A hidden trap catches the one it springs on unawares, nobody beside
             // (`surprise.rs`), after the trap's own draws.
             if hidden && self.sprung != sprung {
                 self.startle(victim, None, events);
+            }
+            // The player walked onto a trap they knew of: it costs Intelligence marks.
+            if known && self.sprung != sprung {
+                self.stat_deed(crate::content::StatDeed::KnewBetter);
             }
             climb
         };

@@ -15,8 +15,9 @@
 #   m^odds_power / (m^odds_power + price^odds_power), and not at all while quarter × m is under
 #   the price. A rise pays the price (a pile short of it goes to zero; the surplus waits for the
 #   next check); one move per stat per check.
-# - A negative pile (from losses, a later slice) is checked the same way against the drop's
-#   price: the base price of the point lost divided by `drop_share`, never ramped.
+# - A negative pile (the deeds at the end take marks) is checked the same way against the drop's
+#   price: the base price of the point lost divided by `drop_share`, never ramped. A drop pays
+#   it back toward zero (no further), never lowers the potential, and never goes below 3.
 #
 # - A use that names its own stat (`drank`, `elixir`: the stat the potion names) has no `stat`;
 #   every other use has one. Such a use may give several marks at once (a potion's `marks`), each
@@ -206,3 +207,51 @@ chance = 100
 [[training.use]]
 on = "elixir"
 chance = 100
+
+# Deeds that cost marks (docs/design/stat-training.md §7): few, and deliberate, one lever per stat
+# for a player who wants one lower. Each `[[training.deed]]` takes from its stat, each time the
+# player does the thing `on` names, either a mark with `chance` percent (1 to 100, a draw of the
+# training stream) or `marks` at once (no draw); exactly one of the two. A pile pushed within
+# reach of a drop (a quarter of the drop's price below zero) says so in words first.
+#
+# The deeds (`on`): hungry_dawn, starved, vomited, fainted, overloaded, knew_better, caught (the
+# wiki's Stats page says each in words).
+[[training.deed]]
+stat = "strength"
+on = "hungry_dawn"
+marks = 15
+
+[[training.deed]]
+stat = "toughness"
+on = "hungry_dawn"
+marks = 15
+
+[[training.deed]]
+stat = "toughness"
+on = "starved"
+chance = 50
+
+[[training.deed]]
+stat = "toughness"
+on = "vomited"
+marks = 10
+
+[[training.deed]]
+stat = "willpower"
+on = "fainted"
+marks = 10
+
+[[training.deed]]
+stat = "dexterity"
+on = "overloaded"
+chance = 10
+
+[[training.deed]]
+stat = "intelligence"
+on = "knew_better"
+marks = 20
+
+[[training.deed]]
+stat = "presence"
+on = "caught"
+marks = 20

@@ -11,6 +11,11 @@
 //! check a pile `m` moves its stat with [`StatTraining::odds`]: nothing while `quarter × |m|` is
 //! below the price, else `|m|^p / (|m|^p + price^p)` (`p` = `odds_power`).
 //!
+//! A few deliberate deeds ([`StatDeed`]: starving, fainting, carrying too much, a known trap
+//! sprung, caught stealing) take marks: each `[[training.deed]]` rule takes from its stat a mark
+//! with its `chance`, or its `marks` at once. A pile pushed low enough drops its stat at a
+//! check, paying the drop's price back toward zero (`World::settle`).
+//!
 //! Without the file nothing trains and no level checks a stat ([`StatTraining::default`]).
 
 use super::ContentError;
@@ -174,6 +179,56 @@ impl StatUse {
     }
 }
 
+/// A deed of the player's that costs a stat marks (spec §8 "Stats"; the design's §7.1): few, and
+/// deliberate, each reported at the one hook that already knows the event.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StatDeed {
+    /// The 06:00 check made while Weak, Fainting, or Starving (before the check's draws).
+    HungryDawn,
+    /// A hit point lost to starvation.
+    Starved,
+    /// A vomit (overeating, rotten food, a corpse that disagreed).
+    Vomited,
+    /// A faint from hunger.
+    Fainted,
+    /// An action that took time, not a wait or a drop, while Overloaded.
+    Overloaded,
+    /// A trap the player knew of sprung under them.
+    KnewBetter,
+    /// Caught stealing.
+    Caught,
+}
+
+impl StatDeed {
+    /// How the wiki says it.
+    pub const fn describe(self) -> &'static str {
+        match self {
+            StatDeed::HungryDawn => "greeting the dawn (06:00) Weak, Fainting, or Starving",
+            StatDeed::Starved => "each hit point lost to starvation",
+            StatDeed::Vomited => "vomiting (overeating, rotten food, a corpse that disagreed)",
+            StatDeed::Fainted => "fainting from hunger",
+            StatDeed::Overloaded => "an action (not a wait or a drop) while Overloaded",
+            StatDeed::KnewBetter => "springing a trap you knew was there",
+            StatDeed::Caught => "being caught stealing",
+        }
+    }
+}
+
+/// What a deed takes from its stat: on each `on`, a mark with `chance` percent (1 to 100, one
+/// draw of the training stream, like a use), or `marks` at once (1 or more, no draw); exactly
+/// one of the two.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DeedRule {
+    pub stat: Stat,
+    pub on: StatDeed,
+    #[serde(default)]
+    pub chance: Option<u8>,
+    #[serde(default)]
+    pub marks: Option<u16>,
+}
+
 /// When a stat earns a training mark: on each `on`, with `chance` percent (1 to 100). `stat` is
 /// `None` exactly for a use that names its own ([`StatUse::names_stat`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
@@ -205,6 +260,9 @@ pub struct StatTraining {
     /// The mark rules, in file order (the order the training stream is drawn in).
     #[serde(default, rename = "use")]
     pub uses: Vec<StatRule>,
+    /// The deeds that take marks, in file order (the order the training stream is drawn in).
+    #[serde(default, rename = "deed")]
+    pub deeds: Vec<DeedRule>,
 }
 
 impl Default for StatTraining {
@@ -218,6 +276,7 @@ impl Default for StatTraining {
             quarter: 4,
             drop_share: 2,
             uses: Vec::new(),
+            deeds: Vec::new(),
         }
     }
 }
@@ -285,7 +344,39 @@ impl StatTraining {
                 )));
             }
         }
+        for (i, rule) in training.deeds.iter().enumerate() {
+            let what = format!("deed {} on {:?}", rule.stat.id(), rule.on);
+            match (rule.chance, rule.marks) {
+                (Some(chance), None) if !(1..=100).contains(&chance) => {
+                    return Err(err(format!(
+                        "{what}: chance {chance} is out of range (1 to 100)"
+                    )));
+                }
+                (None, Some(0)) => return Err(err(format!("{what}: marks 0"))),
+                (Some(_), None) | (None, Some(_)) => {}
+                _ => {
+                    return Err(err(format!(
+                        "{what} needs exactly one of `chance` and `marks`"
+                    )));
+                }
+            }
+            if (training.deeds[..i].iter()).any(|r| r.stat == rule.stat && r.on == rule.on) {
+                return Err(err(format!("{what} is listed twice")));
+            }
+        }
         Ok(training)
+    }
+
+    /// The deed rules for `deed`, in file order.
+    pub fn deeds(&self, deed: StatDeed) -> impl Iterator<Item = &DeedRule> {
+        self.deeds.iter().filter(move |r| r.on == deed)
+    }
+
+    /// Whether a pile of `marks` is in play at a check against `price`: not while `quarter ×
+    /// |marks|` is under it (the quarter rule), and never at zero.
+    pub fn in_play(&self, marks: i32, price: u32) -> bool {
+        let size = u64::from(marks.unsigned_abs());
+        marks != 0 && size * u64::from(self.quarter) >= u64::from(price)
     }
 
     /// Whether anything trains at all: without rules no level checks a stat either.
@@ -463,6 +554,35 @@ mod tests {
                 .to_string()
                 .contains("needs a `stat`")
         );
+    }
+
+    #[test]
+    fn deeds_are_validated() {
+        let deed = |takes: &str| {
+            format!("{HEAD}[[training.deed]]\nstat = \"toughness\"\non = \"starved\"\n{takes}\n")
+        };
+        let t = parse(&deed("chance = 50")).unwrap();
+        assert!(!t.is_active(), "deeds alone train nothing");
+        let rule = t.deeds(StatDeed::Starved).next().unwrap();
+        assert_eq!((rule.chance, rule.marks), (Some(50), None));
+        assert_eq!(t.deeds(StatDeed::Caught).count(), 0);
+        let t = parse(&deed("marks = 15")).unwrap();
+        assert_eq!(t.deeds(StatDeed::Starved).next().unwrap().marks, Some(15));
+        let err = |takes: &str| parse(&deed(takes)).unwrap_err().to_string();
+        assert!(err("chance = 0").contains("chance 0"));
+        assert!(err("chance = 101").contains("chance 101"));
+        assert!(err("marks = 0").contains("marks 0"));
+        assert!(err("").contains("exactly one"));
+        assert!(err("chance = 5\nmarks = 5").contains("exactly one"));
+        let twice = format!("{}{}", deed("marks = 5"), &deed("chance = 5")[HEAD.len()..]);
+        assert!(parse(&twice).unwrap_err().to_string().contains("twice"));
+        assert!(parse(&deed("marks = 5").replace("starved", "idle")).is_err());
+        // The quarter rule as a check reads it.
+        assert!(!t.in_play(0, 75));
+        assert!(!t.in_play(-18, 75));
+        assert!(t.in_play(-19, 75));
+        assert!(t.in_play(40, 160));
+        assert!(!t.in_play(39, 160));
     }
 
     #[test]

@@ -17,15 +17,20 @@
 //!   [`StatTraining::odds`](crate::content::StatTraining::odds) of its pile against its price.
 //!   A rise pays the price (a pile short of it goes to zero), keeps the surplus for the next
 //!   check, never lifts the potential, and says "You feel stronger.", nothing more; a
-//!   Toughness rise brings its hit point at once. A negative pile is out of play until the
-//!   losses' slice (the drop is T3's). The daily rise is said at once, so it stops a rest;
+//!   Toughness rise brings its hit point at once. A negative pile (deeds',
+//!   [`super::stat_deeds`]) drops its stat the same way against the drop's price
+//!   ([`Stats::untrain`](crate::stats::Stats::untrain): never below 3 nor the stat damage on
+//!   it plus one, the potential untouched), pays that price back toward zero (no further), cuts
+//!   hit points and mana to the new maxima (never below 1), and says "You feel weaker.". The
+//!   daily check's hungry dawn is dealt before its draws. The daily move is said at once, so it stops a rest;
 //!   `WorldState::next_stat_check` holds the moment ([`schedule`]). Content without training
 //!   rules checks nothing (and draws nothing).
 
+use super::stat_deeds::drop_news;
 use super::{ActorId, World, WorldState};
 use crate::action::AttackKind;
 use crate::combat::{Blow, Category, Strike};
-use crate::content::{Content, ODDS_SCALE, StatUse};
+use crate::content::{Content, ODDS_SCALE, StatDeed, StatUse};
 use crate::hunger::Hunger;
 use crate::rng::Rng;
 use crate::stats::Stat;
@@ -181,8 +186,8 @@ impl World {
     /// A level came: each stat in display order gets its check (module docs). Draws six times
     /// from the levels stream whatever the marks, none without training rules.
     pub(super) fn check_stats(&mut self) {
-        for stat in self.settle(Check::Level) {
-            self.news.push(rise_news(stat).into());
+        for moved in self.settle(Check::Level) {
+            self.news.push(moved.news().into());
         }
     }
 
@@ -207,8 +212,12 @@ impl World {
             return;
         }
         self.state.next_stat_check = Some(next.max(when).next_at(DAWN));
-        for stat in self.settle(Check::Daily) {
-            self.say(rise_news(stat));
+        // Greeting the dawn starved: the deed lands before the draws.
+        if self.player_hunger().is_some_and(|h| h <= Hunger::Weak) {
+            self.stat_deed(StatDeed::HungryDawn);
+        }
+        for moved in self.settle(Check::Daily) {
+            self.say(moved.news());
         }
     }
 
@@ -225,20 +234,20 @@ impl World {
     /// Settles each stat's pile in display order (module docs): `check`'s stream, six draws of
     /// [`ODDS_SCALE`] whatever the piles (a pile out of play still draws), none without
     /// training rules. A positive pile rises with its odds against the price and pays it, the
-    /// surplus kept; a negative one is not moved yet (the drop is the losses' slice). Returns
-    /// the stats that rose.
-    pub(super) fn settle(&mut self, check: Check) -> Vec<Stat> {
+    /// surplus kept; a negative one drops with its odds against the drop's price and pays that
+    /// back, no further than zero. Returns the stats that moved.
+    pub(super) fn settle(&mut self, check: Check) -> Vec<Moved> {
         let content = self.content.clone();
         let rules = content.stat_training();
-        let mut risen = Vec::new();
+        let mut moved = Vec::new();
         if !rules.is_active() {
-            return risen;
+            return moved;
         }
         let seed = self.state.seed;
         let player = self.state.player;
         for stat in Stat::ALL {
             let Some(actor) = self.state.actors.get(&player) else {
-                return risen;
+                return moved;
             };
             let (score, potential) = (actor.stats.score(stat), actor.stats.potential(stat));
             let marks = actor.stat_marks[stat];
@@ -250,10 +259,25 @@ impl World {
                     .below(ODDS_SCALE),
                 Check::Daily => self.state.training.below(ODDS_SCALE),
             };
-            let Some(price) = price.filter(|_| marks > 0 && draw < odds) else {
+            let Some(price) = price.filter(|_| draw < odds) else {
                 continue;
             };
             let actor = self.state.actors.get_mut(&player).expect("the player");
+            if marks < 0 {
+                // A score always carries the stat damage on it.
+                let floor = actor.damage.get(stat).saturating_add(1);
+                if !actor.stats.untrain(stat, floor) {
+                    continue;
+                }
+                // A drop pays its price back; a pile short of it goes to zero, no credit.
+                actor.stat_marks[stat] = (i64::from(marks) + i64::from(price)).min(0) as i32;
+                // The most hit points and mana may have fallen: never below 1, a drop never
+                // kills.
+                actor.hp = actor.hp.min(actor.max_hp(&content)).max(1);
+                actor.mana = actor.mana.min(actor.max_mana(&content));
+                moved.push(Moved::Fell(stat));
+                continue;
+            }
             let before = actor.max_hp(&content);
             if !actor.stats.train(stat) {
                 continue;
@@ -265,9 +289,26 @@ impl World {
             if grown > 0 {
                 actor.hp += grown;
             }
-            risen.push(stat);
+            moved.push(Moved::Rose(stat));
         }
-        risen
+        moved
+    }
+}
+
+/// A stat a check moved, and which way.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Moved {
+    Rose(Stat),
+    Fell(Stat),
+}
+
+impl Moved {
+    /// What the player is told of it.
+    fn news(self) -> &'static str {
+        match self {
+            Moved::Rose(stat) => rise_news(stat),
+            Moved::Fell(stat) => drop_news(stat),
+        }
     }
 }
 

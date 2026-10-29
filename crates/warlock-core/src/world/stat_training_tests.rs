@@ -246,7 +246,7 @@ fn a_pile_out_of_play_keeps_its_marks_and_several_levels_check_once_each() {
 }
 
 #[test]
-fn a_short_pile_that_rises_goes_to_zero_and_a_negative_one_is_not_moved() {
+fn a_short_pile_that_rises_goes_to_zero() {
     let mut w = world_with(BUILTIN.clone());
     set_stats(&mut w, 18);
     // Half the price: about one check in nine rises, and pays all it has.
@@ -254,11 +254,8 @@ fn a_short_pile_that_rises_goes_to_zero_and_a_negative_one_is_not_moved() {
     for _ in 0..200 {
         set_stats(&mut w, 18);
         set_marks(&mut w, Stat::Willpower, 60);
-        set_marks(&mut w, Stat::Toughness, -1000);
         w.check_stats();
         let p = w.state.player();
-        assert_eq!(p.stats.score(Stat::Toughness), 10, "no drop yet (T3)");
-        assert_eq!(p.stat_marks[Stat::Toughness], -1000);
         match p.stats.score(Stat::Willpower) {
             11 => {
                 rose += 1;

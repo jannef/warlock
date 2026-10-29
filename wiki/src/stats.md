@@ -76,8 +76,8 @@ Strength and Dexterity; see [Hunger](hunger.md)). [Diseases](diseases.md#how-a-d
 damage**), which come back a point a day once no disease shows (see [Diseases](diseases.md)).
 Eating the [corpse](food.md#corpses) of some [creatures](creatures.md) may raise one for good, as far as it can grow (see
 [Food and corpses](food.md)), and so may [training](#training) at a new level. The touch of some
-undead lowers one for good ([Drained stats](#drained-stats)). Nothing else raises or lowers them
-for good.
+undead lowers one for good ([Drained stats](#drained-stats)), and so may a check after
+[deeds that cost marks](#losing-marks). Nothing else raises or lowers them for good.
 
 ## Training
 
@@ -136,6 +136,31 @@ level's check comes on top):
 
 The **[Hard training](talents.md#talent-hard-training)** [talent](talents.md) gives every use half
 again its chance of a mark (a sure one stays sure), so every stat trains half again as fast.
+
+### Losing marks
+
+A few deeds take marks away instead, one for each stat, so that you can lower a stat on purpose
+if you want to: starve, faint, carry far too much, walk onto traps you know are there, or get
+caught stealing. Bad luck alone never costs a mark: a hidden trap, a blow, a disease, or a drain
+takes none. Each deed takes its marks at once, or a mark with the chance shown:
+
+{{#include generated/stat-losses.md}}
+
+The pile then goes below zero, and the checks read it the same way against the **drop's price**:
+half the plain price of the point lost, never more past the potential. Nothing happens while
+the pile is less than a quarter of that below zero; the first time a deed takes it that far, the
+game warns you in words ("You feel your strength wasting.", "Your hands feel less sure.", "You
+feel your health failing.", "Your mind feels dull.", "Your will feels brittle.", "You feel small
+and unregarded."), so a warning always comes before a drop. From there a check lowers the stat
+by a point with the same odds as a rise, "You feel weaker." (clumsier, frailer, duller; "Your
+resolve wavers.", "You feel less sure of yourself."), and the drop pays its price back toward
+zero, never past it. A drop never takes a stat below 3, nor below the
+[stat damage](diseases.md#how-a-disease-goes) on it plus one, and never lowers the potential: a
+point lost below the potential is won back at its plain price. Your most
+[hit points](combat.md#hit-points) and [mana](mana.md) fall with it, but a drop never kills.
+
+At 14, losing a point takes 75 marks of deeds (five dawns greeted Weak) and winning it back 150
+marks of use, so there is nothing to gain by going up and down.
 
 ## Drained stats
 

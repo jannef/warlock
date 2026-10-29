@@ -82,11 +82,15 @@ impl World {
             (self.state.actors[&victim].effective_stats(&content)).modifier(Stat::Willpower);
         if check::contest(&mut self.state.rng, modifier, against) {
             self.lift(victim);
-        } else if !self.caught_stealing(victim) {
-            if let Some(actor) = self.state.actors.get_mut(&victim) {
-                actor.faction_override = Some(rules.caught);
+        } else {
+            if !self.caught_stealing(victim) {
+                if let Some(actor) = self.state.actors.get_mut(&victim) {
+                    actor.faction_override = Some(rules.caught);
+                }
+                self.say(format!("{name} catches you stealing and turns on you!"));
             }
-            self.say(format!("{name} catches you stealing and turns on you!"));
+            // Caught, by a keeper or anyone: it costs Presence marks.
+            self.stat_deed(crate::content::StatDeed::Caught);
         }
         if self.trains(Use::Steal) {
             self.train(Use::Steal);
