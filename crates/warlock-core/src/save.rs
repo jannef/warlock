@@ -80,7 +80,10 @@ const MAGIC: &str = "WARLOCK-SAVE";
 ///     potions), two shields, the affix ladder, new and split skills (Detect traps, Negotiation),
 ///     optional class skills, the lantern as an item; ids and content fingerprints changed, so
 ///     saves of 0.7.0 do not load.
-pub const FORMAT_VERSION: u32 = 33;
+/// 34: 0.9.0: surprise and sneak attacks (Mind::noticed and ::missed, the Surprised status, two
+///     skills, the thief's rework), the background story (`Character::story`, its talents and
+///     fateful lines); ids and content fingerprints changed, so saves of 0.8.0 do not load.
+pub const FORMAT_VERSION: u32 = 34;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 
