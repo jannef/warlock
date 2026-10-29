@@ -2,8 +2,8 @@
 
 Developer notes for working on this part of Warlock; the rules it implements are in
 spec/08c-combat.md ("Surprise and sneak attacks"), the design in
-`docs/design/surprise-and-sneak-attacks.md` (its slices: #681 S1 this, then #682–#688). Keep it
-current with the code, as CLAUDE.md says.
+`docs/design/surprise-and-sneak-attacks.md` (its slices: #681 S1, then #682–#688, all landed).
+Keep it current with the code, as CLAUDE.md says.
 
 ## Modules and data
 
@@ -79,6 +79,19 @@ current with the code, as CLAUDE.md says.
   draw, and a sure critical a plain hit.
 - `combat::Target::without(categories)`: the strip of positive Defence bonuses, shared with
   Feint (`weapon_active.rs::feinted`).
+
+- `xtask/src/wiki/surprise.rs`, the player wiki's tables (#688; `wiki/src/surprise.md`, under
+  Combat): `surprise-rules.md` (`difficulty`, `missile_reach` with Long reach, `memory_turns`,
+  `slip_turns`, Surprised's `cost`, Lurking), `surprise-ladders.md` (Sneak attack's,
+  Initiative's, and Stealth's slip benefits by value through `Benefit::at`, and what the
+  Surprised action costs after the ease, as `World::status_cost` prices it),
+  `surprise-check.md` (`check::ways` by edge and craft), `surprise-vitals.md` (every type
+  `Content::has_vitals` refuses, why, and the `vitals_in` talents that find them). The page
+  also includes `slipping-past.md` (`skills.rs`) and `creature-surprise.md` (`creatures.rs`).
+- `world/balance_probe.rs`, `balance_probe/tables.rs::sneak_attacks` (#688; `docs/balance.md`
+  "Sneak attacks"): the thief's first blow on an unaware monster with vitals against its plain
+  blow, by level; Sneak attack set by `sneak_value(level)`, the dice `World::sneak_dice`, the
+  side `Side::flat` (`World::flat_footed`), Master thief's `ambush_threat`.
 
 ## The hooks (one line each)
 
@@ -158,7 +171,7 @@ dice, Anatomist, still surprised); `weapon_active_tests` (Vital strike's line);
 creature that came to look caught unawares, another hostile, the no-draw test, saves and replays,
 the unaware mark on a creature slipped past); `ui/look.rs` (`stalkers_eye_tells_a_creature_unaware_of_you`),
 `ui/glyphs.rs` (the tint at both ends of the breath and under reduced effects);
-the screen snapshot `status-surprised`.
+the screen snapshot `status-surprised`; `xtask/src/wiki/surprise.rs` (the tables read the data).
 
 ## Hashes that move (#683)
 

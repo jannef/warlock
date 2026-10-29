@@ -113,6 +113,7 @@ spot."). They are the [incorporeal](creatures.md#incorporeal-creatures) (ghosts 
 spirit, or construct (the mud golem; [elementals](creatures.md#elementals)). The fleshy undead
 (draugr, ghouls, the drowned, vampires, mummies) have vitals. The
 [Anatomist](talents.md#talent-anatomist) talent finds them in skeletons and constructs too.
+The list is under [Surprise and sneak attacks](surprise.md#no-vitals).
 
 {{#include generated/threats.md}}
 
