@@ -1,4 +1,4 @@
-# Why you left: the reason follows the life.
+# Why you left: the reason follows the life; alignment nudges, a last gift from home.
 [chapter]
 id = "leaving"
 name = "Leaving"
@@ -16,6 +16,68 @@ tier = "common"
 weight = 3
 text = "There was nothing to hold you, and nobody to say goodbye to, and so you did not."
 when = { tags = ["orphan"] }
+
+[[line]]
+id = "third_child"
+tier = "common"
+weight = 2
+text = "You were the third child of a house that could feed two, and you went so the others could stay."
+when = { tags = ["poor"], not_tags = ["orphan"] }
+effects = [{ gold = "1d6" }]
+
+[[line]]
+id = "for_the_stories"
+tier = "common"
+weight = 3
+text = "You left because the stories were all somewhere else."
+when = { class = ["warrior", "barbarian", "bard", "aristocrat", "ranger"] }
+
+[[line]]
+id = "the_quarrel"
+tier = "common"
+weight = 2
+text = "You left after a quarrel with {guardian} that neither of you has yet forgiven."
+when = { not_tags = ["orphan"] }
+effects = [{ stat = { willpower = 1, presence = -1 } }]
+tags = ["quarrel"]
+
+[[line]]
+id = "grown_too_big"
+tier = "common"
+weight = 2
+text = "You grew too big for {home}, and {home} said so."
+when = { tags = ["strong"] }
+
+[[line]]
+id = "the_debt_paid"
+tier = "common"
+weight = 2
+text = "When the debt was paid you found you had nothing left to stay for, and walked out in the clothes you stood in."
+when = { tags = ["indebted"] }
+
+[[line]]
+id = "the_road_called"
+tier = "common"
+weight = 2
+text = "The road you were born on called you back, as {guardian} always said it would."
+when = { tags = ["wanderer"] }
+effects = [{ skill = { survival = "1d4" } }]
+
+[[line]]
+id = "up_into_the_light"
+tier = "common"
+weight = 2
+text = "The warren was crowded and the elders were hungry, and a young one who went up into the light was one mouth fewer."
+when = { tags = ["warren"] }
+
+[[line]]
+id = "cast_out"
+tier = "common"
+weight = 2
+text = "Your house cast you out, or you cast it out; the under-dark tells it both ways, and you have stopped caring which."
+when = { race = ["drow"] }
+effects = [{ alignment = 25 }]
+tags = ["outcast"]
 
 [[line]]
 id = "one_step_ahead"
@@ -42,6 +104,15 @@ weight = 2
 text = "A letter came, in a hand you did not know, with a little money in it and three words: Come. There's work."
 effects = [{ gold = "2d6+10" }, { item = { wear = "travelling_cloak" } }]
 tags = ["summoned"]
+
+[[line]]
+id = "the_parting_gift"
+tier = "uncommon"
+weight = 2
+text = "On the morning you left, {guardian} pressed a parcel on you and would not let you open it till you were out of sight: bread, a knife, and a few coins knotted in a stocking."
+when = { not_tags = ["orphan"] }
+effects = [{ item = "bread" }, { item = "dagger" }, { gold = "2d6" }]
+tags = ["parting_gift"]
 
 [[line]]
 id = "the_dream"

@@ -207,6 +207,8 @@ fn a_run_without_a_sign_holds_no_gifts() {
     assert_eq!(held.len(), granted.len(), "exactly the sign's gifts");
     let mut files = ContentFiles::builtin();
     files.remove("data/horoscope.toml");
+    // The stories' lines name elements: without a horoscope, no stories either.
+    files.remove("data/background.toml");
     let fixture = Content::load(&files).expect("content without a horoscope");
     let w = World::new(Arc::new(fixture), "showcase", Some(3)).expect("world");
     assert!(self::held(&w).is_empty());

@@ -9,14 +9,14 @@ expression: "render(case, content.clone())"
   │   b  Detect traps     14  ────  1d3                                      │
   │   c  Disable device   14  ────  1d3                                      │
   │   d  Escape artist    10  ────  +2                                       │
-  │   e  Initiative        9  ────  +2                                       │
-  │   f  Listen            6  ────  +1                                       │
-  │   g  Negotiation      10  ────  +2                                       │
-  │   h  Open lock        17  ────  1d3                                      │
-  │   i  Search           10  ━───  1d5+1                                    │
-  │   j  Sneak attack     25  ────  1d3                                      │
-  │   k  Spot              9  ────  +2                                       │
-  │   l  Steal            12  ────  1d3                                      │
+  │   e  Heal              4  ────  +1                                       │
+  │   f  Initiative        9  ────  +2                                       │
+  │   g  Listen            6  ────  +1                                       │
+  │   h  Negotiation      10  ────  +2                                       │
+  │   i  Open lock        17  ────  1d3                                      │
+  │   j  Search           10  ━───  1d5+1                                    │
+  │   k  Sneak attack     25  ────  1d3                                      │
+  │   l  Spot              9  ────  +2                                       │
   │                                                                          │
   │ 4 skill rolls a level: class 3, race 1                                   │
   │                                                                          │

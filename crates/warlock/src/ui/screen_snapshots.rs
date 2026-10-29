@@ -316,12 +316,12 @@ const CASES: &[Case] = &[
         ..BASE
     },
     Case {
-        // A band crossed (the `fall` line) and the Alignment row: seed 1's Basilisk-born paladin
-        // (#272) starts at 450, Good, so the kick takes him down to Kind.
+        // A band crossed (the `fall` line) and the Alignment row: seed 9's Basilisk-born paladin
+        // (#272) starts at 475 with his story's nudge, Good, so the kick takes him down to Kind.
         name: "alignment-band-character",
         scenario: "courtyard",
         character: Some("human,male,paladin"),
-        seed: Some(1),
+        seed: Some(9),
         actions: "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
             move:E*5 kick:N",
         screen: Some("character"),
@@ -503,7 +503,7 @@ const CASES: &[Case] = &[
     Case {
         name: "abilities-menu-bard",
         character: Some("human,female,bard"),
-        actions: "xp:1000000 levelup:auto drain:118",
+        actions: "xp:1000000 levelup:auto drain:156",
         screen: Some("abilities"),
         ..BASE
     },

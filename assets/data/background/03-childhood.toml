@@ -19,6 +19,22 @@ effects = [{ stat = { strength = 1 } }]
 tags = ["strong"]
 
 [[line]]
+id = "quick_child"
+tier = "common"
+weight = 3
+text = "You were quick, and hard to catch, and oftener up a tree than at the table."
+effects = [{ stat = { dexterity = 1 } }]
+tags = ["quick"]
+
+[[line]]
+id = "watchful_child"
+tier = "common"
+weight = 3
+text = "You were a watchful, inward child, who asked why until the grown folk stopped answering."
+effects = [{ stat = { intelligence = 1 } }]
+tags = ["watchful"]
+
+[[line]]
 id = "sickly_child"
 tier = "common"
 weight = 2
@@ -28,6 +44,86 @@ effects = [{ stat = { toughness = -1 } }, { stat = { willpower = 1 } }]
 tags = ["sickly"]
 
 [[line]]
+id = "wilful_child"
+tier = "common"
+weight = 2
+text = "You were as stubborn as a mule and twice as hard to lead."
+effects = [{ stat = { willpower = 1, presence = -1 } }]
+
+[[line]]
+id = "winning_child"
+tier = "common"
+weight = 2
+text = "You were a winning child; the neighbours spoiled you, and you let them."
+when = { not_tags = ["warren", "orphan"] }
+effects = [{ stat = { presence = 1 } }]
+
+[[line]]
+id = "the_bully"
+tier = "common"
+weight = 1
+text = "You were the biggest of the children, and let them know it."
+effects = [{ stat = { strength = 1 } }, { alignment = -50 }]
+tags = ["bully"]
+
+[[line]]
+id = "the_bullied"
+tier = "common"
+weight = 1
+text = "The bigger children had you for sport, and you learned to run before you learned to fight."
+effects = [{ stat = { willpower = 1, toughness = -1 } }]
+tags = ["bullied"]
+
+[[line]]
+id = "house_games"
+tier = "common"
+weight = 3
+text = "You learned the house's games young: whom to bow to, whom to watch, and whom never to turn your back on."
+when = { race = ["drow"] }
+effects = [{ skill = { bluff = "2d4" } }]
+tags = ["schemer"]
+
+[[line]]
+id = "long_childhood"
+tier = "common"
+weight = 3
+text = "Your childhood lasted longer than most folk's lives, and you spent a good deal of it lying in the grass, learning the names of things."
+when = { race = ["elf"] }
+effects = [{ skill = { woodcraft = "2d4" } }]
+
+[[line]]
+id = "the_scraps"
+tier = "common"
+weight = 3
+text = "You learned to eat fast and sleep light, because the scraps went to whoever was awake."
+when = { race = ["kobold", "goblin", "ratfolk"] }
+effects = [{ skill = { stealth = "1d4" } }]
+
+[[line]]
+id = "the_counting"
+tier = "common"
+weight = 3
+text = "You learned to count before you could walk, by the weight of the ore in your mother's hands."
+when = { race = ["dwarf", "duergar", "gnome"] }
+effects = [{ skill = { appraise = "2d4" } }]
+
+[[line]]
+id = "the_tutor"
+tier = "uncommon"
+weight = 2
+text = "{Guardian} paid a tutor to teach you letters and sums, and you learned rather more of both than the tutor did."
+when = { tags = ["wealthy"] }
+effects = [{ stat = { intelligence = 1 } }, { skill = { decipher_script = "1d4" } }]
+tags = ["lettered"]
+
+[[line]]
+id = "the_climber"
+tier = "uncommon"
+weight = 2
+text = "You climbed everything there was to climb around {home}, and fell off most of it, and learned at last how to land."
+effects = [{ skill = { tumble = "2d4", athletics = "1d4" } }]
+
+[[line]]
 id = "wolf_in_the_yard"
 tier = "rare"
 weight = 1
@@ -35,3 +131,12 @@ text = "A winter wolf came into the yard when you were six, and you faced it wit
 when = { age = { min = 10 } }
 effects = [{ stat = { toughness = 1 } }, { stat = { willpower = 1 } }]
 tags = ["brave"]
+
+[[line]]
+id = "the_shepherds_stars"
+tier = "rare"
+weight = 1
+text = "An old shepherd took you up the hill on clear nights, and by the end of it you could tell the hour, the weather, and the way home from the sky alone."
+when = { not_tags = ["deep"] }
+effects = [{ skill = { survival = "2d4" } }, { stat = { willpower = 1 } }]
+tags = ["stargazer"]

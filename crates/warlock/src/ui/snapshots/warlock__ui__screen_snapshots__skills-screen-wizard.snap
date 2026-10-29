@@ -9,7 +9,6 @@ expression: "render(case, content.clone())"
 
 
 
-
     ┌─ Skills ────────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │ > Concentration      21  ────                                                           │
@@ -18,6 +17,7 @@ expression: "render(case, content.clone())"
     │   Listen              7  ────                                                           │
     │   Spellcraft         15  ────                                                           │
     │   Spot                8  ────                                                           │
+    │   Survival            3  ────                                                           │
     │                                                                                         │
     │ Keeping your mind on the task, whatever happens around you: your mana comes back        │
     │ faster, and your pool runs a little deeper.                                             │

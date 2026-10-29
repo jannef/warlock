@@ -14,8 +14,9 @@ expression: "render(case, content.clone())"
     │                                                                                         │
     │   Concentration      26  ────                                                           │
     │   Decipher script    11  ────                                                           │
-    │ > Heal                1  ────                                                           │
+    │ > Heal                4  ────                                                           │
     │   Knowledge          17  ────                                                           │
+    │   Open lock           1  ────                                                           │
     │   Spellcraft         13  ────                                                           │
     │                                                                                         │
     │ Binding wounds and tending the sick.                                                    │
@@ -30,5 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
-
- The Hub  ·  HP 13/13  ·  MP 16/16  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls
+ The Hub  ·  HP 12/12  ·  MP 17/17  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

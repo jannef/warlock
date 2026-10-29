@@ -25,10 +25,10 @@ expression: "render(case, content.clone())"
     │   i - $ 36 gold coins                                                            360 g  │
     │                                                                                         │
     │ Carrying 9 kg   ·   Your weight 79 kg (you 70 kg)                                       │
-    │ Burdened over 16 kg, strained over 32 kg, overloaded over 48 kg                         │
+    │ Burdened over 17.5 kg, strained over 35 kg, overloaded over 52.5 kg                     │
     │                                                                                         │
     │ a-i look   I or Esc close                                                               │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
 
- The Wildlands  ·  HP 22/22  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  Clear        ? controls
+ The Wildlands  ·  HP 23/23  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  Clear        ? controls

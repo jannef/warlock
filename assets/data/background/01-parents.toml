@@ -1,4 +1,6 @@
-# Who raised you, and how they lived: the words and tags later chapters lean on.
+# Who raised you, and how they lived: the words and tags later chapters lean on (`poor`,
+# `wealthy`, `orphan`, `smith`, `trader`, `hunter`, `deep`, `warren`, `outsider`, `herbs`). The
+# races of the deep, the warrens, the fens, the burrows, and the wood have parents of their own.
 [chapter]
 id = "parents"
 name = "Parents"
@@ -12,6 +14,15 @@ weight = 5
 text = "Your parents were plain folk who worked, ate, slept, and did not talk about it."
 
 [[line]]
+id = "farm_folk"
+tier = "common"
+weight = 4
+text = "You were born to farming folk, who had little but gave what they had."
+when = { race = ["elf", "half_elf", "human", "dwarf", "halfling", "gnome", "half_orc", "goblin", "kobold", "lizardfolk", "ratfolk"] }
+tags = ["poor"]
+set = { home = "the farm" }
+
+[[line]]
 id = "smiths_child"
 tier = "common"
 weight = 2
@@ -19,6 +30,15 @@ text = "Your father was a smith, and the ring of his hammer was the first music 
 effects = [{ weapon_marks = { maces = 3 } }]
 tags = ["smith"]
 set = { guardian = "your father", trade = "the forge" }
+
+[[line]]
+id = "market_stall"
+tier = "common"
+weight = 2
+text = "Your mother kept a stall on market days, and you learned early the price of everything."
+effects = [{ skill = { appraise = "2d4" } }]
+tags = ["trader"]
+set = { guardian = "your mother", trade = "the stall" }
 
 [[line]]
 id = "foundling"
@@ -30,13 +50,87 @@ tags = ["orphan"]
 set = { guardian = "the sisters", home = "the minster" }
 
 [[line]]
+id = "nobodys_child"
+tier = "common"
+weight = 1
+text = "Who your parents were, nobody told you, and the woman who took you in for her own reasons would not say; you stopped asking."
+tags = ["orphan", "poor"]
+set = { guardian = "the woman who took you in" }
+
+[[line]]
+id = "woods_edge"
+tier = "common"
+weight = 6
+text = "Your people kept to the wood's edge; your mother hunted, and your father cured what she brought home."
+when = { race = ["elf", "half_elf"] }
+effects = [{ weapon_marks = { bows = 3 } }]
+tags = ["hunter"]
+set = { home = "the wood's edge" }
+
+[[line]]
 id = "deep_halls"
 tier = "common"
-weight = 3
+weight = 8
 text = "You were born in the deep halls, where your father cut stone and your mother counted it."
 when = { race = ["dwarf", "duergar"] }
 tags = ["deep"]
 set = { home = "the deep halls" }
+
+[[line]]
+id = "low_house"
+tier = "common"
+weight = 12
+text = "You were born to a house of the under-dark, low in standing and lower in favour, where a child learned to listen before it learned to speak."
+when = { race = ["drow"] }
+effects = [{ skill = { listen = "2d4" } }, { alignment = -25 }]
+tags = ["deep"]
+set = { home = "the house" }
+
+[[line]]
+id = "the_warren"
+tier = "common"
+weight = 8
+text = "You were one of a litter of nine in a warren under the hill, and not the biggest."
+when = { race = ["kobold", "goblin", "ratfolk"] }
+effects = [{ stat = { dexterity = 1, strength = -1 } }]
+tags = ["warren", "poor"]
+set = { home = "the warren" }
+
+[[line]]
+id = "the_clutch"
+tier = "common"
+weight = 10
+text = "You hatched from one egg of a fen-clutch of a dozen, and the elders raised you all alike, without favour, and without a name until you earned one."
+when = { race = ["lizardfolk"] }
+effects = [{ skill = { swim = "1d4" } }]
+set = { guardian = "the elders of the clutch", home = "the fen" }
+
+[[line]]
+id = "the_burrow"
+tier = "common"
+weight = 6
+text = "You grew up in a burrow under a hill, with a round door, a full larder, and more cousins than chairs."
+when = { race = ["halfling", "gnome"] }
+set = { home = "the burrow" }
+
+[[line]]
+id = "tinkers"
+tier = "common"
+weight = 2
+text = "Your parents were tinkers who mended pots from town to town, and you could take a lock apart before you could read."
+when = { race = ["gnome", "halfling", "human"] }
+effects = [{ skill = { open_lock = "1d4" } }]
+tags = ["poor"]
+set = { trade = "the tinker's cart" }
+
+[[line]]
+id = "two_peoples"
+tier = "common"
+weight = 4
+text = "Your parents came from two peoples, and neither people let you forget it."
+when = { race = ["half_orc", "half_elf"] }
+effects = [{ stat = { willpower = 1, presence = -1 } }]
+tags = ["outsider"]
 
 [[line]]
 id = "comfortable"
@@ -47,6 +141,24 @@ when = { not_talents = ["family_wealth"] }
 effects = [{ gold = "4d6+10" }]
 tags = ["wealthy"]
 set = { home = "the house" }
+
+[[line]]
+id = "the_inn"
+tier = "uncommon"
+weight = 2
+text = "Your parents kept an inn on the high road, and you grew up on the gossip of every traveller who passed through it."
+effects = [{ skill = { negotiation = "1d4" } }, { gold = "2d6" }]
+tags = ["trader"]
+set = { home = "the inn", trade = "the inn" }
+
+[[line]]
+id = "wise_woman"
+tier = "rare"
+weight = 1
+text = "Your grandmother was the wise woman of the parish, and you grew up among her jars and bundles, learning what cures and what kills."
+effects = [{ skill = { heal = "2d4", woodcraft = "2d4" } }, { stat = { willpower = 1 } }]
+tags = ["herbs"]
+set = { guardian = "your grandmother" }
 
 # Family wealth tells its wealth here and gives nothing more: the talent gave it.
 [[line]]

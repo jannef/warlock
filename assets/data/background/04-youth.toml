@@ -1,4 +1,5 @@
-# A trade, a teacher, a levy: the chapter the class shapes most.
+# A trade, a teacher, a levy: the chapter the class shapes most (and the age: a kobold of eight
+# served no seven years' apprenticeship, an elf of two hundred did).
 [chapter]
 id = "youth"
 name = "Youth"
@@ -13,20 +14,208 @@ text = "You worked, as everyone worked, and nothing of it is worth the telling."
 [[line]]
 id = "the_levy"
 tier = "common"
-weight = 3
+weight = 5
 text = "At fourteen you stood in the levy with a borrowed spear, and found you had a taste for it."
 when = { class = ["warrior", "paladin", "barbarian", "commoner"], age = { min = 14 } }
 effects = [{ weapon_marks = { spears = 3 } }, { skill = { athletics = "1d4" } }]
 tags = ["soldier"]
 
 [[line]]
-id = "the_copyist"
+id = "the_raids"
+tier = "common"
+weight = 5
+text = "You rode on your first raid before your voice had broken, and came home with a horse that was not yours and a cut you were proud of."
+when = { class = ["barbarian"] }
+effects = [{ weapon_marks = { best = 3 } }, { skill = { intimidate = "1d4" } }, { alignment = -25 }]
+tags = ["soldier"]
+
+[[line]]
+id = "temple_years"
+tier = "common"
+weight = 5
+text = "You served your years at the minster: swept, sang, and sat with the dying."
+when = { class = ["priest", "paladin"] }
+effects = [{ skill = { heal = "2d4" } }, { alignment = 25 }]
+tags = ["temple"]
+
+[[line]]
+id = "the_sisters_work"
 tier = "common"
 weight = 3
+text = "You earned your keep at {home}, scrubbing floors and carrying water for the sick, and learned more of fevers than you wished to."
+when = { tags = ["orphan"] }
+effects = [{ skill = { heal = "1d4" } }]
+tags = ["temple"]
+
+[[line]]
+id = "the_cloister"
+tier = "common"
+weight = 5
+text = "You were given to the cloister young, and spent your youth in silence, in hard work, and in learning to fall without hurting."
+when = { class = ["monk"] }
+effects = [{ skill = { concentration = "2d4", tumble = "1d4" } }]
+tags = ["cloister"]
+
+[[line]]
+id = "the_copyist"
+tier = "common"
+weight = 5
 text = "A hedge-wizard took you as a copyist; you learned your letters off his spellbooks, and a little more besides."
 when = { class = ["wizard", "witch", "bard"], age = { min = 14 } }
 effects = [{ skill = { decipher_script = "2d4" } }, { item = "scroll_of_light" }]
 tags = ["lettered"]
+
+[[line]]
+id = "the_cunning_woman"
+tier = "common"
+weight = 5
+text = "You learned your craft from a cunning woman at the edge of the village, who was feared by day and sent for by night."
+when = { class = ["witch", "druid"] }
+effects = [{ skill = { heal = "1d4", spellcraft = "1d4" } }]
+tags = ["cunning"]
+
+[[line]]
+id = "the_alehouses"
+tier = "common"
+weight = 5
+text = "You sang for your supper in every alehouse within a day's walk, and learned that a good song can stop a fight and a bad one can start it."
+when = { class = ["bard"] }
+effects = [{ skill = { music = "2d4" } }]
+tags = ["singer"]
+
+[[line]]
+id = "light_fingers"
+tier = "common"
+weight = 5
+text = "You ran with the market children, and your fingers grew light before your conscience grew heavy."
+when = { class = ["thief", "bard"] }
+effects = [{ skill = { steal = "1d4" } }, { alignment = -25 }]
+tags = ["light_fingers"]
+
+[[line]]
+id = "bad_company"
+tier = "common"
+weight = 2
+text = "You ran errands for the wrong people, and learned which purses were worth the trouble and which lies would hold."
+when = { tags = ["poor"] }
+effects = [{ skill = { bluff = "1d4" } }, { alignment = -25 }]
+tags = ["light_fingers"]
+
+[[line]]
+id = "apprentice_smith"
+tier = "common"
+weight = 3
+text = "You were bound apprentice at {trade}, seven years, and served every one of them."
+when = { tags = ["smith"], age = { min = 16 } }
+effects = [{ skill = { metalcraft = "2d4+2" } }]
+tags = ["apprenticed"]
+
+[[line]]
+id = "apprentice_stall"
+tier = "common"
+weight = 3
+text = "You kept {trade} for {guardian} through your youth, and learned to haggle in three tongues and to lie in none."
+when = { tags = ["trader"], age = { min = 14 } }
+effects = [{ skill = { negotiation = "2d4" } }]
+tags = ["apprenticed"]
+
+[[line]]
+id = "the_workshop"
+tier = "common"
+weight = 5
+text = "You were taken on at a workshop as a sweeper, stayed on as a hand, and learned the trade by watching over shoulders."
+when = { class = ["craftsperson"] }
+effects = [{ skill = { metalcraft = "1d4", appraise = "1d4" } }]
+tags = ["apprenticed"]
+
+[[line]]
+id = "the_counting_house"
+tier = "common"
+weight = 5
+text = "You kept the books for a merchant house, and learned that every ledger tells two stories."
+when = { class = ["merchant"] }
+effects = [{ skill = { appraise = "2d4", negotiation = "1d4" } }]
+tags = ["lettered"]
+
+[[line]]
+id = "idle_youth"
+tier = "common"
+weight = 5
+text = "You spent your youth as the sons and daughters of good houses do: at the hunt, at the table, and at nothing."
+when = { class = ["aristocrat"] }
+effects = [{ skill = { handle_animal = "2d4" } }]
+tags = ["idle"]
+
+[[line]]
+id = "the_woods"
+tier = "common"
+weight = 5
+text = "You spent more of your youth in the wood than out of it, and it fed you better than the house did."
+when = { class = ["ranger", "druid"] }
+effects = [{ skill = { survival = "2d4" } }]
+tags = ["woodsman"]
+
+[[line]]
+id = "the_hunt"
+tier = "common"
+weight = 3
+text = "You followed your mother on the hunt as soon as you could keep up, and learned to move through the trees without a sound."
+when = { tags = ["hunter"] }
+effects = [{ skill = { stealth = "1d4" } }]
+tags = ["woodsman"]
+
+[[line]]
+id = "the_barges"
+tier = "common"
+weight = 2
+text = "You worked the river barges two summers, and swim better than most who were born to the water."
+when = { not_tags = ["deep"] }
+effects = [{ skill = { swim = "2d4" } }]
+tags = ["bargeman"]
+
+[[line]]
+id = "the_tunnels"
+tier = "common"
+weight = 3
+text = "You were set to dig as soon as you could hold a pick, and learned to feel a bad tunnel before it fell."
+when = { race = ["kobold", "goblin", "ratfolk", "dwarf", "duergar"] }
+effects = [{ skill = { detect_traps = "1d4" } }]
+tags = ["tunneller"]
+
+[[line]]
+id = "the_page"
+tier = "common"
+weight = 3
+text = "You served the matron of your house as a page for half a lifetime, and learned that a smile in the under-dark is a knife you have not seen yet."
+when = { race = ["drow"], age = { min = 50 } }
+effects = [{ skill = { spot = "2d4" } }]
+tags = ["page"]
+
+[[line]]
+id = "long_apprenticeship"
+tier = "common"
+weight = 3
+text = "You spent longer at your apprenticeship than most folk spend alive, and came out of it unable to do anything badly."
+when = { race = ["elf", "dwarf", "gnome", "duergar"], age = { min = 80 } }
+effects = [{ skill = { knowledge = "2d4", appraise = "1d4" } }]
+tags = ["apprenticed"]
+
+[[line]]
+id = "the_hermits_pupil"
+tier = "uncommon"
+weight = 2
+text = "A hermit in the hills took you on for a year, for no reason he would give, and taught you to sit still, to watch, and to want little."
+effects = [{ skill = { concentration = "2d4", spot = "2d4" } }, { alignment = 25 }]
+tags = ["hermit"]
+
+[[line]]
+id = "the_fencing_master"
+tier = "uncommon"
+weight = 2
+text = "{Guardian} paid for a fencing master, who swore at you in a foreign tongue and made you very hard to hit."
+when = { tags = ["wealthy"] }
+effects = [{ weapon_marks = { long_blades = 4 } }, { skill = { tumble = "1d4" } }]
+tags = ["fencer"]
 
 [[line]]
 id = "the_old_soldier"
@@ -35,4 +224,22 @@ weight = 1
 text = "An old soldier wintered at {home} the year you were sixteen, and taught you, for the price of your listening, everything he knew."
 when = { age = { min = 16 } }
 effects = [{ weapon_marks = { best = 6 } }, { stat = { dexterity = 1 } }, { skill = { intimidate = "2d4" } }]
+tags = ["taught"]
+
+[[line]]
+id = "the_dead_wizards_books"
+tier = "rare"
+weight = 1
+text = "You were given the run of a dead wizard's library for a winter, and read until your candle and your eyes gave out."
+when = { class = ["wizard", "witch", "priest", "bard"] }
+effects = [{ stat = { intelligence = 1 } }, { skill = { spellcraft = "2d4", decipher_script = "2d4" } }]
+tags = ["lettered"]
+
+[[line]]
+id = "the_master"
+tier = "fateful"
+weight = 1
+text = "The finest fighter of the age lodged a season with {guardian}, saw something in you, and stayed until you had it too."
+when = { age = { min = 16 } }
+effects = [{ weapon_marks = { best = 6 } }, { stat = { dexterity = 1, strength = 1 } }, { skill = { initiative = "2d4" } }]
 tags = ["taught"]

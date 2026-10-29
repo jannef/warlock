@@ -5,7 +5,6 @@ expression: "render(case, content.clone())"
  You learn Horn of plenty.
  Warmth flows from your hands. You feel drained.
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -20,15 +19,16 @@ expression: "render(case, content.clone())"
                     │   f  Handle animal  not usable yet                       │
                     │   g  Heal           nothing to treat                     │
                     │   h  Intimidate     not usable yet                       │
+                    │   i  Forage         not usable here                      │
                     │ Weapon skills                                            │
-                    │   i  Shield bash    in a direction                       │
+                    │   j  Shield bash    in a direction                       │
                     │                                                          │
                     │ The unicorn's grace: your bleeding and poison end, and a │
                     │ disease is shaken off; then it rests a day.              │
                     │                                                          │
-                    │ a-i or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 
 
- The Hub  ·  HP 45/45  ·  MP 19/22  ·  Sta 9/14  ·  Drained  ·  Lv 14  ·  08:00          ? controls
+ The Hub  ·  HP 59/59  ·  MP 33/33  ·  Sta 9/15  ·  Drained  ·  Lv 14  ·  08:00          ? controls

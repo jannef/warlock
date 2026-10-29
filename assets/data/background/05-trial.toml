@@ -1,4 +1,5 @@
-# What it cost you, and what you kept.
+# What it cost you, and what you kept: mostly common lines with a loss and something smaller
+# kept; the rare line is a terrible thing survived.
 [chapter]
 id = "trial"
 name = "The trial"
@@ -11,13 +12,75 @@ weight = 5
 text = "No great grief found you, and you count that luck, as you should."
 
 [[line]]
+id = "the_fever"
+tier = "common"
+weight = 2
+text = "The fever came the year you were grown, and took {guardian}. You nursed the rest of the sick, and it did not take you."
+when = { not_tags = ["orphan"] }
+effects = [{ stat = { toughness = -1 } }, { stat = { willpower = 1 } }, { skill = { heal = "1d4" } }]
+tags = ["orphan"]
+
+[[line]]
+id = "the_fire"
+tier = "common"
+weight = 2
+text = "The house burned one dry autumn with everything in it. You went into the ash for what could be saved, and came out with a ring that had been your grandmother's."
+when = { not_tags = ["deep"] }
+effects = [{ gold = -20 }, { item = { wear = "iron_ring" } }]
+tags = ["burnt_out"]
+
+[[line]]
+id = "the_flood"
+tier = "common"
+weight = 1
+text = "The river rose one spring and took the lower town, and the house you grew up in with it; you came out of the water with your life, and a fear of it you have mastered since."
+when = { not_tags = ["deep"] }
+effects = [{ gold = -15 }, { skill = { swim = "1d4" } }]
+tags = ["burnt_out"]
+
+[[line]]
+id = "the_feud"
+tier = "common"
+weight = 1
+text = "Your family had a feud, as families do, and you have a scar across the ribs from the night it was settled."
+when = { not_tags = ["temple"] }
+effects = [{ stat = { toughness = 1 } }, { alignment = -25 }]
+tags = ["blood"]
+
+[[line]]
+id = "the_war"
+tier = "common"
+weight = 2
+text = "The lord's war took you for two years and gave you back older, with a limp in wet weather and a way of waking at every sound."
+when = { tags = ["soldier"] }
+effects = [{ weapon_marks = { best = 3 } }, { stat = { presence = -1 } }, { skill = { listen = "1d4" } }]
+tags = ["veteran"]
+
+[[line]]
+id = "promise_broken"
+tier = "common"
+weight = 2
+text = "You were promised once, and the promise was broken, and you have not made another."
+effects = [{ stat = { willpower = 1, presence = -1 } }]
+tags = ["heartsore"]
+
+[[line]]
 id = "the_debt"
 tier = "common"
 weight = 2
 text = "{Guardian} died owing, and you worked the debt off a shilling at a time, and learned what every shilling was worth."
 when = { not_tags = ["wealthy"] }
 effects = [{ gold = -15 }, { skill = { negotiation = "1d4" } }]
-tags = ["indebted"]
+tags = ["indebted", "orphan"]
+
+[[line]]
+id = "the_hungry_year"
+tier = "common"
+weight = 1
+text = "There was a hungry year when the crops failed, and you learned to find food where there was none, and to give none away."
+when = { tags = ["poor"] }
+effects = [{ stat = { toughness = -1 } }, { skill = { survival = "1d4" } }, { alignment = -25 }]
+tags = ["hungry"]
 
 [[line]]
 id = "the_mill"
@@ -28,6 +91,32 @@ effects = [{ stat = { dexterity = -1 } }, { stat = { willpower = 1 } }]
 tags = ["maimed"]
 
 [[line]]
+id = "the_cave_in"
+tier = "common"
+weight = 2
+text = "The roof came down in the low workings, and you lay three days in the dark beside a friend who did not live, until they dug you out."
+when = { race = ["dwarf", "duergar", "gnome", "kobold"] }
+effects = [{ stat = { strength = -1, willpower = 1 } }, { skill = { listen = "1d4" } }]
+tags = ["buried"]
+
+[[line]]
+id = "the_night_of_knives"
+tier = "common"
+weight = 2
+text = "Your house fell in a night of knives, and you lived because you hid where nobody thought to look, and listened to everything."
+when = { race = ["drow"] }
+effects = [{ stat = { presence = -1 } }, { skill = { stealth = "2d4" } }, { alignment = -25 }]
+tags = ["fallen_house"]
+
+[[line]]
+id = "lost_on_the_moor"
+tier = "uncommon"
+weight = 2
+text = "You were lost on the moor four days in the snow, and walked out on the fifth with frostbitten hands and no fear of cold left in you."
+effects = [{ stat = { toughness = 1, dexterity = -1 } }, { skill = { survival = "2d4" } }]
+tags = ["frostbitten"]
+
+[[line]]
 id = "the_barrow"
 tier = "rare"
 weight = 1
@@ -35,3 +124,13 @@ text = "Something came out of the barrow one winter and took the sheep, and then
 when = { age = { min = 14 } }
 effects = [{ stat = { strength = 1 } }, { stat = { willpower = 1 } }]
 tags = ["barrow"]
+
+# B5 (#707) adds `{ talent = "hardy" }` here, once a line may grant a talent: "you have not been
+# sick a day since".
+[[line]]
+id = "the_flux"
+tier = "fateful"
+weight = 1
+text = "You were dying of the flux at nine, and a hedge-priest laid hands on you, and you got up the next morning. You have not been sick a day since."
+effects = [{ stat = { toughness = 2 } }, { stat = { willpower = 1 } }]
+tags = ["blessed"]
