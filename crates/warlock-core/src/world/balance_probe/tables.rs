@@ -3,10 +3,11 @@
 
 use super::{
     Gear, LEVELS, Probe, STRIKES, Side, Snap, armoured, avg, bony, dice_text, fight, fight_cell,
-    hide, hit_mean, mean, median, r,
+    hide, hit_mean, hit_pct, mean, median, r, strike_mean,
 };
 use crate::combat::{self, Category, Profile, Target};
 use crate::content::Resolution;
+use crate::dice::Dice;
 use crate::rng::Rng;
 use std::fmt::Write as _;
 
@@ -377,5 +378,94 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
             }
         }
         writeln!(out).unwrap();
+    }
+}
+
+/// The mean damage of `STRIKES` strikes of `p` against `t`, misses included, with `dice` added
+/// to each hit as a sneak attack's land (`World::ambushed`).
+fn sneak_mean(p: &Profile, t: &Target, dice: Option<Dice>, rng: &mut Rng) -> f64 {
+    let total: i64 = (0..STRIKES)
+        .map(|_| {
+            let blow = combat::strike(p, t, rng);
+            let extra = match dice {
+                Some(d) if blow.strike.is_hit() => d.roll(rng).max(0),
+                _ => 0,
+            };
+            i64::from(blow.damage + extra)
+        })
+        .sum();
+    total as f64 / f64::from(STRIKES)
+}
+
+/// The thief's first blow on a foe unaware of them against its plain blow (#688).
+pub(super) fn sneak_attacks(p: &Probe, rng: &mut Rng, out: &mut String) {
+    writeln!(out, "## Sneak attacks\n").unwrap();
+    writeln!(
+        out,
+        "The thief's main-hand blow on the monsters of their level (trained stats), aware and caught unawares. The Sneak attack value assumed, the dice it gives with the talents, and the share of the monsters within two levels with vitals (no dice and no critical on the rest, so their first blow gains only the flat-footed Defence); then each cell: P(hit) aware / unaware % · damage of a blow aware : the first blow unaware · how many times as much, the median over the monsters within two levels that have vitals.\n"
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "| L | Sneak attack | dice | with vitals | Thief plain | Thief magic |\n|---|---|---|---|---|---|"
+    )
+    .unwrap();
+    for &level in &LEVELS {
+        let w = p.window(level, -2, 2);
+        let fleshy: Vec<_> = (w.iter())
+            .filter(|m| p.content.has_vitals(m.creature, &[]))
+            .collect();
+        let share = 100.0 * fleshy.len() as f64 / w.len().max(1) as f64;
+        let mut row = String::new();
+        let mut dice = String::from("-");
+        for gear in [Gear::Plain, Gear::Magic] {
+            let snaps = p.of("thief", level, gear, true);
+            if let Some(d) = snaps.first().and_then(|s| s.sneak) {
+                dice = dice_text(d);
+            }
+            let mut rows = Vec::new();
+            for m in &fleshy {
+                let mut per = Vec::new();
+                for (s, snap) in snaps.iter().enumerate() {
+                    let them = &m.geared[s % m.geared.len()];
+                    let blow = &snap.side.blow;
+                    let has = p.content.has_vitals(m.creature, &snap.vitals_in);
+                    let flat = Target {
+                        no_criticals: !has,
+                        ..them.flat.clone()
+                    };
+                    let mut sneak = blow.clone();
+                    sneak.threat = sneak.threat.saturating_sub(snap.ambush_threat).max(3);
+                    let dice = snap.sneak.filter(|_| has);
+                    per.push((
+                        hit_pct(blow.to_hit, &them.target.defence),
+                        hit_pct(blow.to_hit, &flat.defence),
+                        strike_mean(blow, &them.target, rng),
+                        sneak_mean(&sneak, &flat, dice, rng),
+                    ));
+                }
+                rows.push(per);
+            }
+            let pick = |f: fn(&(f64, f64, f64, f64)) -> f64| {
+                median(rows.iter().map(|per| avg(per.iter().map(f))).collect())
+            };
+            let (aware, unaware) = (pick(|r| r.2), pick(|r| r.3));
+            write!(
+                row,
+                " {:.0}/{:.0} · {:.1}:{:.1} · ×{:.1} |",
+                pick(|r| r.0),
+                pick(|r| r.1),
+                aware,
+                unaware,
+                unaware / aware.max(0.01)
+            )
+            .unwrap();
+        }
+        writeln!(
+            out,
+            "| {level} | {} | {dice} | {share:.0}% |{row}",
+            super::sneak_value(level)
+        )
+        .unwrap();
     }
 }

@@ -38,9 +38,15 @@
 //!   (`SpellRules::cap_of`), the dice as `SpellDice::lifted` and the talents make them, held to
 //!   the cap; attack spells strike the monster's Defence against missiles, areas always hit.
 //!
+//! - **Sneak attacks** (#688): the thief's first blow on a foe unaware of them against its
+//!   plain blow. Its Sneak attack skill is set by level (`sneak_value`), as it rises by use and
+//!   `levelup:auto` spends the rolls elsewhere; the dice are `World::sneak_dice` (the skill and
+//!   the talents), the foe flat-footed (`World::flat_footed`), Master thief's threat
+//!   (`TalentMods::ambush_threat`), and no dice on a type without vitals (`Content::has_vitals`).
+//!
 //! Not modelled: triggered and active weapon abilities, stances, talents chosen for a build
-//! (`levelup:auto` takes the first it may), sneak attacks, potions, and resistances against
-//! spells.
+//! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
+//! blow, potions, and resistances against spells.
 
 mod tables;
 
@@ -75,6 +81,13 @@ enum Gear {
     Kit,
     Plain,
     Magic,
+}
+
+/// The Sneak attack value assumed at a character level: the thief's creation 2d6+10 and about
+/// three and a half a level from use and the level-up rolls (the design's "about 100 by level 25
+/// to 30", 200 around 50; `docs/design/surprise-and-sneak-attacks.md`, "Numbers").
+fn sneak_value(level: u8) -> u16 {
+    12 + u16::from(level) * 7 / 2
 }
 
 /// The weapon skill rank assumed at a character level (the 2026-10-27 report's).
@@ -267,6 +280,8 @@ struct Side {
     blow: Profile,
     off: Option<Profile>,
     target: Target,
+    /// Its side caught unawares: flat-footed, nothing of its Dexterity or Dodge.
+    flat: Target,
     /// Its Defence against a missile (a spell's bolt or ray).
     missile: Defence,
     /// Blows a round (a normal turn).
@@ -278,6 +293,7 @@ struct Side {
 fn side_of(w: &World, id: ActorId) -> Side {
     let content = &w.content;
     let a = &w.state.actors[&id];
+    let target = w.target_of(id);
     let with = a.weapon_item(content);
     let object = with.map(|i| a.inventory[i].object);
     let skills = a.attack_skills(content, AttackKind::Melee, object);
@@ -287,7 +303,8 @@ fn side_of(w: &World, id: ActorId) -> Side {
     Side {
         blow: a.melee(content),
         off: a.off_hand_blow(content).map(|(_, p)| p),
-        target: w.target_of(id),
+        flat: w.flat_footed(id, true, target.clone()),
+        target,
         missile: w.target_against(id, true).defence,
         blows,
         hp: a.max_hp(content),
@@ -296,6 +313,7 @@ fn side_of(w: &World, id: ActorId) -> Side {
 
 /// A creature type, bare and with each seed's gear.
 struct Monster {
+    creature: CreatureId,
     level: u8,
     bare: Side,
     geared: Vec<Side>,
@@ -340,6 +358,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
         }
         let bare = sides.remove(0);
         out.push(Monster {
+            creature: cid,
             level: def.level,
             bare,
             geared: sides,
@@ -427,6 +446,11 @@ struct Snap {
     mana: i32,
     caster_level: i32,
     casts: Vec<Cast>,
+    /// Its sneak dice (`World::sneak_dice`), Master thief's lower threat on a sneak attack, and
+    /// the tags Anatomist finds vitals in.
+    sneak: Option<Dice>,
+    ambush_threat: u8,
+    vitals_in: Vec<String>,
 }
 
 /// Applies action text `text` to `w`.
@@ -513,6 +537,13 @@ fn career(content: &Arc<Content>, build: &Build, seed: u64, trained: bool) -> Ve
                 w.player_mut().weapon_skills.raise(table, id, r);
             }
         }
+        if let Some(id) = content.skill_id("sneak_attack") {
+            let have = w.state.player().skills.value(id);
+            if let Some(have) = have.filter(|&v| v < sneak_value(level)) {
+                let by = i32::from(sneak_value(level) - have);
+                w.player_mut().skills.add(id, by);
+            }
+        }
         for gear in [Gear::Kit, Gear::Plain, Gear::Magic] {
             let mut w2 = w.clone();
             if gear != Gear::Kit {
@@ -520,6 +551,7 @@ fn career(content: &Arc<Content>, build: &Build, seed: u64, trained: bool) -> Ve
             }
             let me = w2.state.player();
             let scores = Stat::ALL.map(|s| me.stats.score(s));
+            let mods = me.talent_mods(content);
             out.push(Snap {
                 class: build.class,
                 level,
@@ -534,6 +566,9 @@ fn career(content: &Arc<Content>, build: &Build, seed: u64, trained: bool) -> Ve
                 } else {
                     Vec::new()
                 },
+                sneak: w2.sneak_dice(player),
+                ambush_threat: mods.ambush_threat,
+                vitals_in: mods.vitals_in.clone(),
             });
         }
     }
@@ -664,6 +699,7 @@ fn balance_probe() {
         }
     }
     let p = Probe {
+        content: content.clone(),
         monsters: monsters(&content),
         snaps,
     };
@@ -676,11 +712,13 @@ fn balance_probe() {
     tables::depth(&p, &mut rng, &mut out);
     tables::bodies(&p, &mut rng, &mut out);
     tables::spells(&p, &mut rng, &mut out);
+    tables::sneak_attacks(&p, &mut rng, &mut out);
     println!("{out}");
 }
 
 /// What the probe measured: every monster, and every player at every level, gear, and seed.
 struct Probe {
+    content: Arc<Content>,
     monsters: Vec<Monster>,
     snaps: Vec<Snap>,
 }
