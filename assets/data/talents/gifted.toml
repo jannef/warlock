@@ -1,0 +1,8 @@
+[[talent]]
+id = "gifted"
+name = "Gifted"
+tree = "vigour"
+choice = "stat"
+description = "One of your stats comes to you more readily than the rest: training raises it sooner."
+effects = [{ kind = "price_percent", value = -15 }]
+systems = ["stat_training"]

@@ -11,7 +11,7 @@
 use super::affix::Once;
 use super::{
     Build, CombatStance, Content, ContentError, ItemKind, MAX_ITEM_LEVEL, MAX_LEVEL, MAX_RANK,
-    MAX_RESOURCE, ResourceId, Role, WeaponSkillId, duplicate_id,
+    MAX_RESOURCE, ResourceId, Role, StatDeed, StatUse, WeaponSkillId, duplicate_id,
 };
 use crate::alignment::Requirement;
 use crate::dice::Dice;
@@ -109,6 +109,8 @@ pub enum Choice {
     /// A spell tag a talent may focus on (magic design §6): a school (`evocation`), or an
     /// element as [`Choice::Element`] offers them (`fire`).
     School,
+    /// One of the six stats (`strength`).
+    Stat,
 }
 
 impl Choice {
@@ -121,6 +123,7 @@ impl Choice {
             Choice::Element => "an element",
             Choice::Tag => "a kind of creature",
             Choice::School => "a school of magic or an element",
+            Choice::Stat => "a stat",
         }
     }
 
@@ -149,6 +152,7 @@ impl Choice {
             Choice::School => (super::School::ALL.iter().map(|s| s.id().to_string()))
                 .chain(Choice::Element.options(content))
                 .collect(),
+            Choice::Stat => Stat::ALL.iter().map(|s| s.id().to_string()).collect(),
         }
     }
 
@@ -178,6 +182,7 @@ impl Choice {
                 .map(|s| s.id())
                 .find(|s| *s == id)
                 .or_else(|| Choice::Element.name(content, id)),
+            Choice::Stat => Stat::from_id(id).map(Stat::name),
         }
     }
 }
@@ -366,6 +371,20 @@ pub enum TalentEffect {
     /// Every stat training use's chance, this percent more (a use at 100 stays sure; Hard
     /// training).
     TrainPercent { value: i32 },
+    /// The chosen stat's stat training price for a rise, this percent more (negative: less; a
+    /// drop's price is untouched): only with `choice = "stat"` (Gifted).
+    PricePercent { value: i32 },
+    /// The training price's ramp past a potential counts each point past it this many fewer
+    /// (the first beyond the potential at the plain price: Late bloomer; ranks add up).
+    RampEase { points: u8 },
+    /// A daily stat check met Hungry or worse gives Willpower this many stat training marks
+    /// (Ascetic; the most counts).
+    FastingMarks { marks: u16 },
+    /// These stat training deeds take nothing (Hard living, Discipline, Ascetic).
+    NoDeed { on: Vec<StatDeed> },
+    /// Each of these stat training uses counts this many times over (Discipline: two marks
+    /// where one came; the most counts).
+    UseMarks { on: Vec<StatUse>, times: u16 },
     /// Experience gained, this percent more.
     XpPercent { value: i32 },
     /// Skill rolls every level, this many more (Quick learner).
@@ -1403,6 +1422,37 @@ impl TalentEffect {
             TalentEffect::HardWon { marks } => {
                 if !(1..=100).contains(marks) {
                     return Err("`hard_won`: marks is 1 to 100".into());
+                }
+                Ok(())
+            }
+            TalentEffect::PricePercent { value } => match choice {
+                Some(Choice::Stat) if (-90..=100).contains(value) => Ok(()),
+                Some(Choice::Stat) => Err("`price_percent`: value is -90 to 100".into()),
+                _ => Err(
+                    "`price_percent` is for the chosen stat: it needs `choice = \"stat\"`".into(),
+                ),
+            },
+            TalentEffect::RampEase { points } => {
+                if !(1..=5).contains(points) {
+                    return Err("`ramp_ease`: points is 1 to 5".into());
+                }
+                Ok(())
+            }
+            TalentEffect::FastingMarks { marks } => {
+                if !(1..=100).contains(marks) {
+                    return Err("`fasting_marks`: marks is 1 to 100".into());
+                }
+                Ok(())
+            }
+            TalentEffect::NoDeed { on } => {
+                if on.is_empty() {
+                    return Err("`no_deed`: `on` names at least one deed".into());
+                }
+                Ok(())
+            }
+            TalentEffect::UseMarks { on, times } => {
+                if on.is_empty() || !(2..=10).contains(times) {
+                    return Err("`use_marks`: `on` names at least one use, times is 2 to 10".into());
                 }
                 Ok(())
             }
@@ -2792,7 +2842,7 @@ fn resolve_needs(
     if let Some(rank) = spec.chosen {
         match choice {
             None => return Err("`chosen` needs a `choice`".into()),
-            Some(Choice::Element | Choice::Skill | Choice::School) => {
+            Some(Choice::Element | Choice::Skill | Choice::School | Choice::Stat) => {
                 return Err("`chosen` asks a weapon skill's or style's rank".into());
             }
             Some(_) if rank == 0 || rank > MAX_RANK => {

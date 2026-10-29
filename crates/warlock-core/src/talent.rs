@@ -16,7 +16,8 @@
 use crate::character::Character;
 use crate::content::{
     Benefit, Build, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need,
-    ResourceCost, ResourceId, Role, Sign, StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
+    PriceEase, ResourceCost, ResourceId, Role, Sign, StatDeed, StatUse, StatusId, TalentDef,
+    TalentEffect, TalentId, TerrainId,
 };
 use crate::damage::Kinds;
 use crate::dice::Dice;
@@ -364,6 +365,16 @@ pub struct TalentMods {
     pub potion_marks_percent: i32,
     /// Percent more of every stat training use's chance.
     pub train_percent: i32,
+    /// Percent more of each stat's training price for a rise (Gifted, by its chosen stat).
+    pub price_percent: PerStat<i32>,
+    /// Points past a potential the training price's ramp counts as fewer (Late bloomer).
+    pub ramp_ease: u8,
+    /// Willpower marks a daily stat check met Hungry or worse gives (Ascetic; 0: none).
+    pub fasting_marks: u16,
+    /// The stat training deeds that take nothing.
+    pub no_deed: Vec<StatDeed>,
+    /// Stat training uses that count several times over, with the times (the most counts).
+    pub use_marks: Vec<(StatUse, u16)>,
     /// Percent more experience.
     pub xp_percent: i32,
     /// More skill rolls every level.
@@ -978,6 +989,30 @@ impl TalentMods {
         *self == TalentMods::default()
     }
 
+    /// What its talents do to `stat`'s stat training price for a rise (Gifted, Late bloomer;
+    /// `World::settle`, the one read).
+    pub fn price_ease(&self, stat: Stat) -> PriceEase {
+        PriceEase {
+            percent: self.price_percent[stat],
+            ramp: self.ramp_ease,
+        }
+    }
+
+    /// Whether stat training deed `deed` takes nothing (`World::stat_deed_times`, the one read).
+    pub fn spares_deed(&self, deed: StatDeed) -> bool {
+        self.no_deed.contains(&deed)
+    }
+
+    /// How many times over stat training use `used` counts (1 but for Discipline's;
+    /// `World::train_stats_of`, the one read).
+    pub fn use_times(&self, used: StatUse) -> u16 {
+        (self.use_marks.iter())
+            .filter(|(u, _)| *u == used)
+            .map(|(_, times)| *times)
+            .max()
+            .unwrap_or(1)
+    }
+
     /// Whether it has the birth sign's active `active` (spec §8 "Birth sign").
     pub fn has_sign_active(&self, active: crate::content::SignActive) -> bool {
         use crate::content::SignActive as A;
@@ -1323,6 +1358,21 @@ impl TalentMods {
             TalentEffect::CorpseStatsPercent { value } => self.corpse_stats_percent += value,
             TalentEffect::PotionMarksPercent { value } => self.potion_marks_percent += value,
             TalentEffect::TrainPercent { value } => self.train_percent += value,
+            TalentEffect::PricePercent { value } => {
+                if let Some(stat) = choice.and_then(Stat::from_id) {
+                    self.price_percent[stat] += value;
+                }
+            }
+            TalentEffect::RampEase { points } => {
+                self.ramp_ease = self.ramp_ease.saturating_add(points)
+            }
+            TalentEffect::FastingMarks { marks } => {
+                self.fasting_marks = self.fasting_marks.max(marks)
+            }
+            TalentEffect::NoDeed { on } => self.no_deed.extend(on),
+            TalentEffect::UseMarks { on, times } => {
+                self.use_marks.extend(on.into_iter().map(|u| (u, times)))
+            }
             TalentEffect::XpPercent { value } => self.xp_percent += value,
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),

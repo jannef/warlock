@@ -18,7 +18,8 @@
 #   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", "skill"
 #                 (any skill, trained or not), "element" (a damage type that is no physical
 #                 kind), "school" (a school of magic, `evocation`, or an element: a spell
-#                 tag), or "tag" (a creature tag some type carries); replays write it
+#                 tag), "tag" (a creature tag some type carries), or "stat" (one of the
+#                 six, `strength`); replays write it
 #                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
 #   needs         what taking any rank asks, all of which must hold at the pick (nothing is
 #                 checked again later):
@@ -161,6 +162,16 @@
 #                                 percent more
 #   train_percent { value }       every stat training use's chance of a mark, that percent more
 #                                 (a use at 100 stays sure)
+#   price_percent { value }       (choice stat) the chosen stat's training price for a rise,
+#                                 that percent more (negative: less; a drop's untouched)
+#   ramp_ease { points }          the training price's ramp counts each point past a potential
+#                                 that many fewer (1: the first past it at the plain price)
+#   fasting_marks { marks }       a daily stat check met Hungry or worse gives Willpower that
+#                                 many training marks (the most counts)
+#   no_deed { on }                those stat training deeds (data/stats.toml `[[training.deed]]`
+#                                 `on`) take nothing
+#   use_marks { on, times }       those stat training uses count that many times over (the
+#                                 most counts)
 #   xp_percent { value }          experience gained, that percent more
 #   skill_rolls { value }         skill rolls every level, that many more
 #   extra_pick { level }          one more talent pick at that character level (1: at creation)

@@ -1,0 +1,11 @@
+[[talent]]
+id = "ascetic"
+name = "Ascetic"
+tree = "grit"
+description = "Hunger is a discipline to you: a dawn met hungry steels your will, and greeting it starving costs your body nothing."
+needs = { stats = { willpower = 13 } }
+effects = [
+    { kind = "fasting_marks", marks = 15 },
+    { kind = "no_deed", on = ["hungry_dawn"] },
+]
+systems = ["hunger", "stat_training"]

@@ -8,7 +8,7 @@ use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Category, Strike};
-use crate::content::{ContentFiles, Factor, ODDS_SCALE, StatUse};
+use crate::content::{ContentFiles, Factor, ODDS_SCALE, PriceEase, StatUse};
 use crate::dump::{self, Layer};
 use crate::skills::Use;
 use crate::stats::{PerStat, Stat, Stats};
@@ -554,7 +554,8 @@ fn expected_daily(w: &mut World) -> Vec<Stat> {
         let actor = w.player_mut();
         let (score, potential) = (actor.stats.score(stat), actor.stats.potential(stat));
         let marks = actor.stat_marks[stat];
-        let price = rules.price_for(marks, score, potential).unwrap_or(1);
+        let price = rules.price_for(marks, score, potential, PriceEase::default());
+        let price = price.unwrap_or(1);
         let odds = rules.odds(marks.unsigned_abs(), price);
         if w.state.training.below(ODDS_SCALE) < odds && marks > 0 {
             let actor = w.player_mut();

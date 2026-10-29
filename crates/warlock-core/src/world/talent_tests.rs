@@ -234,7 +234,7 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // foe (any creature tag) and School focus (any school or element): here they are an
     // elf's, and Apprentice's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
     // mastery, Channeler, Appraiser's eye, Devout, Deep lungs, Second breath, Hard training,
-    // Quick study of the body, and Early mastery are held back the same way so the picks fit in
+    // Quick study of the body, Early mastery, Gifted (six stats), and Late bloomer are held back the same way so the picks fit in
     // the levels there are.
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {
@@ -297,6 +297,14 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
         .replace(
             "tree = \"scholar\"\ndescription = \"What you drink teaches",
             "tree = \"scholar\"\nneeds = { race = \"elf\" }\ndescription = \"What you drink teaches",
+        )
+        .replace(
+            "choice = \"stat\"\n",
+            "choice = \"stat\"\nneeds = { race = \"elf\" }\n",
+        )
+        .replace(
+            "needs = { level = 20 }\neffects = [{ kind = \"ramp_ease\"",
+            "needs = { level = 20, race = \"elf\" }\neffects = [{ kind = \"ramp_ease\"",
         )
         .replace(
             "description = \"Items, scrolls, gems, and learning.\"",
@@ -530,7 +538,11 @@ fn perception_and_dumps_show_talents_in_words_only() {
         assert!(progress.contains(free), "{progress}");
     }
     assert!(
-        progress.contains("takeable deep_lungs, hard_training, healthy, "),
+        progress.contains(
+            "takeable deep_lungs, \
+             gifted:{strength,dexterity,toughness,intelligence,willpower,presence}, \
+             hard_training, healthy, "
+        ),
         "{progress}"
     );
     let view = w.perception();

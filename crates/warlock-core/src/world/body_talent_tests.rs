@@ -454,6 +454,7 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
     // stamina's Deep lungs and Second breath (#560), protection's Armour-breaker (#563), stat
     // training's Hard training (#562), Second blade's rend (#561), the chests' Deft breaker, and
     // potions' Lasting draughts (#567), the gear's Bellows (#634), the mimics' Slick, and the
-    // berserker's Wild guard (#680), and surprise's Hair trigger (#687).
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 39);
+    // berserker's Wild guard (#680), surprise's Hair trigger (#687), and stat training's Gifted
+    // and Late bloomer (#726).
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 41);
 }

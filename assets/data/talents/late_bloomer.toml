@@ -1,0 +1,8 @@
+[[talent]]
+id = "late_bloomer"
+name = "Late bloomer"
+tree = "vigour"
+description = "You came into your own late: training carries your stats past what nature gave you more easily."
+needs = { level = 20 }
+effects = [{ kind = "ramp_ease", points = 1 }]
+systems = ["stat_training"]

@@ -268,7 +268,7 @@ pub use spell_def::{
 pub use spell_scales::{MAX_SCALE_WEIGHT, SpellScales, Weights};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{
-    DeedRule, HAUL_GRAMS, ODDS_SCALE, StatDeed, StatRule, StatTraining, StatUse,
+    DeedRule, HAUL_GRAMS, ODDS_SCALE, PriceEase, StatDeed, StatRule, StatTraining, StatUse,
 };
 pub use status::{
     Affliction, COST_PERCENT, CombatBonus, Drain, Healing, MAX_DRAIN_POINTS, MAX_REGEN,

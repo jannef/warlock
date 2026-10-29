@@ -90,6 +90,8 @@ impl World {
         }
         let content = self.content.clone();
         let talents = self.state.player().talent_mods(&content);
+        // Discipline: some uses count twice.
+        let count = count.saturating_mul(talents.use_times(used));
         // Quick study of the body: a potion's marks, more of them.
         let count = match used.names_stat() {
             true => {
@@ -281,12 +283,29 @@ impl World {
         if self.player_hunger().is_some_and(|h| h <= Hunger::Weak) {
             self.stat_deed(StatDeed::HungryDawn);
         }
+        // Ascetic: a dawn met fasting steels the will, its marks counted at this very check.
+        self.fasting_dawn();
         // A dawn below freezing hardens the body: its mark counts at this very check.
         if self.temperature() < Temperature::ZERO {
             self.train_stat(StatUse::Chilled);
         }
         for moved in self.settle(Check::Daily) {
             self.say(moved.news());
+        }
+    }
+
+    /// A daily check met Hungry or worse: Ascetic's `TalentMods::fasting_marks` on Willpower,
+    /// at once (no draw), alive only. Nothing is said.
+    fn fasting_dawn(&mut self) {
+        if self.state.death.is_some() || !self.player_hunger().is_some_and(|h| h <= Hunger::Hungry)
+        {
+            return;
+        }
+        let marks = self.state.player().talent_mods(&self.content).fasting_marks;
+        let player = self.state.player;
+        if let Some(actor) = self.state.actors.get_mut(&player) {
+            let pile = &mut actor.stat_marks[Stat::Willpower];
+            *pile = pile.saturating_add(i32::from(marks));
         }
     }
 
@@ -314,13 +333,15 @@ impl World {
         }
         let seed = self.state.seed;
         let player = self.state.player;
+        // Gifted and Late bloomer: a rise's price, eased.
+        let talents = self.state.player().talent_mods(&content);
         for stat in Stat::ALL {
             let Some(actor) = self.state.actors.get(&player) else {
                 return moved;
             };
             let (score, potential) = (actor.stats.score(stat), actor.stats.potential(stat));
             let marks = actor.stat_marks[stat];
-            let price = rules.price_for(marks, score, potential);
+            let price = rules.price_for(marks, score, potential, talents.price_ease(stat));
             let odds = price.map_or(0, |price| rules.odds(marks.unsigned_abs(), price));
             let draw = match check {
                 Check::Level => (self.state.levels_rng)

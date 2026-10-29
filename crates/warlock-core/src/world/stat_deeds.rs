@@ -62,6 +62,10 @@ impl World {
             return;
         }
         let content = self.content.clone();
+        // Hard living, Discipline, Ascetic: a deed their talents spare takes nothing.
+        if self.state.player().talent_mods(&content).spares_deed(deed) {
+            return;
+        }
         let rules = content.stat_training();
         for rule in rules.deeds(deed) {
             let taken = match (rule.marks, rule.chance) {

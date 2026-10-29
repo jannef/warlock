@@ -12,29 +12,29 @@ expression: "render(case, content.clone())"
               │   d  Hard-won                 What your youth took from you, you me… │
               │ Vigour                                                               │
               │   e  Deep lungs               Your stamina holds a good deal more.   │
-              │   f  Hard training            You drill every day: everything you d… │
-              │   g  Healthy                  Your hit points come back a quarter f… │
+              │   f  Gifted                   One of your stats comes to you more r… │
+              │   g  Hard training            You drill every day: everything you d… │
+              │   h  Healthy                  Your hit points come back a quarter f… │
               │ Might                                                                │
-              │   h  Mighty kick              Your kicks land like hammers: they hu… │
-              │   i  Second breath            Every kill of yours gives you back a … │
+              │   i  Mighty kick              Your kicks land like hammers: they hu… │
+              │   j  Second breath            Every kill of yours gives you back a … │
               │ Finesse                                                              │
-              │   j  Dodge                    You slip aside from blows: Dodge +1 t… │
-              │   k  Light step               You tread lightly: a trap you step on… │
-              │   l  Nimble                   A load slows your feet less than most… │
-              │   m  Opportunist              A foe that turns from you pays for it… │
-              │   n  Slick                    You slip out of a mimic's glue before… │
+              │   k  Dodge                    You slip aside from blows: Dodge +1 t… │
+              │   l  Light step               You tread lightly: a trap you step on… │
+              │   m  Nimble                   A load slows your feet less than most… │
+              │   n  Opportunist              A foe that turns from you pays for it… │
+              │   o  Slick                    You slip out of a mimic's glue before… │
               │ Weaponcraft                                                          │
-              │   o  Far shot                 Your shots fly 2 cells farther, and w… │
-              │   p  Sworn foe                You have sworn yourself against one k… │
-              │   q  Unbinder                 You strike at the binding, not the th… │
-              │   r  Wand mastery             You draw more from a wand than its ma… │
-              │   s  Weapon focus             You have drilled with one kind of wea… │
+              │   p  Far shot                 Your shots fly 2 cells farther, and w… │
+              │   q  Sworn foe                You have sworn yourself against one k… │
+              │   r  Unbinder                 You strike at the binding, not the th… │
+              │   s  Wand mastery             You draw more from a wand than its ma… │
+              │   t  Weapon focus             You have drilled with one kind of wea… │
               │ Guard                                                                │
-              │   t  Armour training          You move freely in armour: it hampers… │
+              │   u  Armour training          You move freely in armour: it hampers… │
               │ Shadow                                                               │
-              │   u  Hush-foot                You move among sleepers as a breath o… │
-              │   v  Keen ears                You hear fainter sounds, fainter stil… │
-              │   w  Lamplighter              You tend your lantern well: it burns … │
+              │   v  Hush-foot                You move among sleepers as a breath o… │
+              │   w  Keen ears                You hear fainter sounds, fainter stil… │
               │                                                                      │
               │ Let chance pick your talents.                                        │
               │                                                                      │

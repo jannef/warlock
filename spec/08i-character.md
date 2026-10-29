@@ -612,7 +612,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Data** (§7): `data/talents.toml` (the settings: `max_ranks`, `[coverage]`, the `[[tree]]`s
     in display order, the closed `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
     a file (`id`, `name`, `tree`, `description` in the game's words, `ranks` 1 to `max_ranks`,
-    `choice` (`weapon_skill`, `style`, `skill`, `element`), `needs`, `effects` per rank held,
+    `choice` (`weapon_skill`, `style`, `skill`, `element`, `stat`), `needs`, `effects` per rank held,
     `[[rank]]` with each rank's own `needs` and `effects`, `systems` from the list, `granted`:
     given, never picked; `flaw`: a birth sign's flaw, granted, never a prerequisite). The first
     tree, **Stars** (`no_free`), holds the birth signs' gifts (§8 "Birth sign"). Without the

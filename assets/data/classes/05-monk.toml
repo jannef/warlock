@@ -30,6 +30,7 @@ abilities = [
     { level = 1, talent = "trained_wind" },
     { level = 6, talent = "fleet" },
     { level = 12, talent = "deflect_missiles" },
+    { level = 12, talent = "discipline" },
     { level = 18, talent = "flurry" },
     { level = 25, talent = "still_mind" },
     { level = 32, talent = "purity_of_body" },
