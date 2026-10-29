@@ -5,6 +5,16 @@ tells it: a short story in four paragraphs, one sentence for each **chapter** of
 in it is chosen, and there is no way back from it: it is told after every choice you made in
 character creation, and it may change what you start with.
 
+## When it is told
+
+The story is shown once, as the run begins: right after you start the run from the summary of
+[character creation](character.md), it opens over the first turn, before you can move. Nothing
+on it can be chosen; `Enter` (or `Esc`) goes on into the run, and the arrow keys scroll it on a
+small window. Afterwards it is page 8 of the [info pages](controls.md#info-pages), "Story": open
+any info page and press `8`. A character who has no story (the start of a scenario played as its
+own character, or a character saved before stories were told) reads "Your story is not written."
+there. A run you continue is never shown it again, and nothing on the death screen repeats it.
+
 The chapters, in order:
 
 | Chapter | What it tells |

@@ -19,8 +19,9 @@ reopens it on the topic asked, also when no topics are left), and the death scre
 main menu without saving; no `--screen`: capture a dead replay instead), the level-up screen (opened by
 `screens::on_level_up` whenever `World::due` is set and the game changed, over whatever is open, the
 death screen winning; its choices are `ScreenAction::Act`, which closes it, and it opens again on
-what is left; no `--screen`: a replay that ends with choices due opens it), and the Talents page
-(page 7, `KeyCommand::Talents`, `G`) — are one
+what is left; no `--screen`: a replay that ends with choices due opens it), the Talents page
+(page 7, `KeyCommand::Talents`, `G`), and the story screen (`ScreenName::Story`,
+`ui/story_screen.rs`, below) — are one
 screen stack (`ui/screens.rs`, the `ScreenStack` resource); add a screen there, never a second way
 to open, read keys for, or draw one:
 - **Open**: `Screens::open(ScreenName)` (a `SystemParam` over the stack, content, save store, and
@@ -97,9 +98,9 @@ to open, read keys for, or draw one:
   `--screen dialog` shows the quit dialog. On wasm, quit saves then reloads the page
   (`storage::web::reload`; `AppExit` also reloads), and the main menu has no Quit.
 - **Info pages** (`ui/info_tabs.rs`): the screens about the player (Character, Inventory,
-  Equipment, Skills, Weapon skills, Quests, Talents) are an ordered group, `PAGES`, each with its name and
-  a short name for the tab line ("Inv"). Every page's panel is at least `info_tabs::panel_width`
-  wide (91 cells, sized to the tab line by every name, `1 Character · … · 7 Talents`; clamped
+  Equipment, Skills, Weapon skills, Quests, Talents, Story) are an ordered group, `PAGES`, each with its name and
+  a short name for the tab line ("Inv"; the short line fits an 80-column console). Every page's panel is at least `info_tabs::panel_width`
+  wide (101 cells, sized to the tab line by every name, `1 Character · … · 8 Story`; clamped
   to the console like any panel), so the pages share one frame and the tab line stays put as
   they turn: only its highlight moves. The tab line takes the first of these that fits, the same
   form on every page: every name; every short name; bare keys. The keys shown are the page keys
@@ -115,6 +116,22 @@ to open, read keys for, or draw one:
   per context, so Tab is `NextTarget` in play and `NextPage` here; `Bindings::owner_in` and
   `lookup` read one context). `Press::shift` carries Shift from the router. The dialogue screen
   is no page: its digits ask about topics.
+- **The story** (`ui/story_screen.rs`, `StoryScreen`, `ScreenName::Story`; spec §6 "Your story",
+  #703; `docs/dev/background.md` "Shown"): the paragraphs of `PerceptionView::story`, wrapped,
+  scrolled a line by `Nav::Up`/`Down` when the console is short (the stack calls its `fit` before
+  a press, the message history's way); Enter and Esc close it. Two looks of one screen:
+  `StoryScreen::opening` (72 wide, `Enter continue`, no tab line; `is_opening`, which the stack's
+  page switch skips, so the digits do not turn it) and `StoryScreen::page`, page 8 (the pages'
+  width and tab line; "Your story is not written." without a story). `Screens::open(Story)` (a
+  page key) opens the page; `Screens::open_story` the opening, from two places only:
+  `open_startup_screens` for `--screen story`, and `screens::on_run_start` (in the run's
+  screen chain before `converse`), which opens it when `Game` was just added
+  (`Res::is_added`), `Game::story_due` is set, the stack is empty, no death, and the story is not
+  empty. `Game::story_due` is set by `Game::new_run` (the summary's Start) and by `Game::start`'s
+  fresh-run branch without `--capture`; never by `from_world` (Continue, Resume), a replay, or a
+  resume. Nothing is saved: a run resumed on turn 0 reads it on page 8. Snapshots
+  `story-screen` (the summary's Enter: the real opening), `story-page` (110 wide: the full tab
+  line), `story-page-none`; the opening rule's tests are in `ui/screens.rs` and `game.rs`.
 - **Item lists** (`ui/paged_list.rs`, spec §6 "Item lists", #188, #189): **every lettered list
   of stacks is the one `PagedList`** (the inventory, pick up, drop, throw, eat, read, identify, the
   equip choice;

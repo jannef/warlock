@@ -97,6 +97,19 @@ and `World::from_state` adds a log line for it to `World::retiered`. The effects
 and are never applied again. Every kit run's hash changed once with B1 (the screen snapshots
 `kit-*`, `character-*`, `level-up-*`, `abilities-menu-*`, and others built on kitted runs).
 
+## Shown (B2, #703)
+
+The story is shown, never told in messages: `PerceptionView::story()` (the paragraphs of
+`retell`, from the perception's character and campaign; empty without a story) feeds the
+story screen (`crates/warlock/src/ui/story_screen.rs`), the `story` dump layer, and nothing
+else. The app opens it once as a run begins (`screens::on_run_start` on `Game::story_due`: New
+run's Start, a windowed `--character`/`--name`/`--talents`/`--new` start; never Continue, Resume,
+`--capture`, `--replay`, beneath a `--screen`, or for a run without a story), 72 wide; afterwards
+it is info page 8, "Story" ("Your story is not written." without one). No saved "seen" flag and
+no new `KeyCommand` (`Page(8)` exists). `--screen story` captures the opening screen. The
+character screen, the death screen, and the Characters screen show nothing of it (decision 6).
+Details: `docs/dev/screens.md`, "The story".
+
 ## Dumps
 
 `story` layer: the paragraphs as the story screen will tell them, a blank line between (`no
