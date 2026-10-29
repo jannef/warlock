@@ -110,6 +110,7 @@ impl World {
         };
         let side = self.altar_side(altar);
         self.player_did(Deed::Prayed(side));
+        self.train_stat(crate::content::StatUse::Prayed);
         let me = self.state.player();
         let devout = me.talent_mods(&content).devout;
         let band = me.band(&content).side();

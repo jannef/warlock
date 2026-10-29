@@ -686,7 +686,7 @@ mod tests {
         );
         has(
             "corpse-effects.md",
-            "| Cave beetle corpse | 10% Toughness +1 | \"Crunchy.\" |",
+            "| Cave beetle corpse | 60 Toughness marks | \"Crunchy.\" |",
         );
         has(
             "corpse-effects.md",

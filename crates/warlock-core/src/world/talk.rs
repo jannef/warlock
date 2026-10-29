@@ -244,6 +244,9 @@ impl World {
         }
         self.answer(id, line, None, events);
         self.train_stat(StatUse::Chat);
+        if !talk.met {
+            self.train_stat(StatUse::Greeted);
+        }
         Spent::Turn(price)
     }
 

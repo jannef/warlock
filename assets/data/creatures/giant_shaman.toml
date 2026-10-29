@@ -24,7 +24,7 @@ stats = { strength = 27, dexterity = 17, toughness = 26, intelligence = 28, will
 base_hp = 72
 natural = { defence = 2, protection = 3, name = "hide" }
 skills = { concentration = 118, spellcraft = 123 }
-on_eat = { message = "It tastes of smoke and bitter herbs.", vomit = 30, stat = { intelligence = 3 } }
+on_eat = { message = "It tastes of smoke and bitter herbs.", vomit = 30 }
 [creature.attack]
 damage = "4d6"
 damage_type = "bludgeoning"

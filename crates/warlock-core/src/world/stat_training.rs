@@ -26,15 +26,23 @@
 //!   `WorldState::next_stat_check` holds the moment ([`schedule`]). Content without training
 //!   rules checks nothing (and draws nothing).
 
+use super::ice::Footing;
 use super::stat_deeds::drop_news;
 use super::{ActorId, World, WorldState};
 use crate::action::AttackKind;
 use crate::combat::{Blow, Category, Strike};
-use crate::content::{Content, ODDS_SCALE, StatDeed, StatUse};
+use crate::content::{Content, HAUL_GRAMS, ODDS_SCALE, SpellData, StatDeed, StatUse, TerrainId};
 use crate::hunger::Hunger;
+use crate::object::Stack;
 use crate::rng::Rng;
-use crate::stats::Stat;
+use crate::stats::{PerStat, Stat};
+use crate::status::Effect;
+use crate::temperature::Temperature;
 use crate::time::{DAWN, GameTime};
+
+/// The least a step costs, in percent of a plain one, for its water to be waded through (deep
+/// water: a pool, a stream; not a flooded floor).
+const WADING_COST: u16 = 200;
 
 /// What a rise in `stat` says.
 fn rise_news(stat: Stat) -> &'static str {
@@ -66,6 +74,17 @@ impl World {
     /// 100): one draw of the training stream per mark for a rule below 100 (whatever the talent
     /// makes of it), none at 100 (as a single use). The pile saturates at `i32::MAX`.
     pub(super) fn train_stat_times(&mut self, used: StatUse, named: Option<Stat>, count: u16) {
+        self.train_stats_of(used, named, count, PerStat::splat(true));
+    }
+
+    /// [`World::train_stat_times`] for the rules of `used` whose stat is one of `only`'s.
+    fn train_stats_of(
+        &mut self,
+        used: StatUse,
+        named: Option<Stat>,
+        count: u16,
+        only: PerStat<bool>,
+    ) {
         if self.state.death.is_some() || !self.trains_stat(used) {
             return;
         }
@@ -85,7 +104,7 @@ impl World {
             false => count,
         };
         for rule in content.stat_training().rules(used) {
-            let Some(stat) = rule.stat.or(named) else {
+            let Some(stat) = rule.stat.or(named).filter(|&s| only[s]) else {
                 continue;
             };
             let won = match rule.chance {
@@ -102,6 +121,52 @@ impl World {
             if let Some(actor) = self.state.actors.get_mut(&player) {
                 let marks = &mut actor.stat_marks[stat];
                 *marks = marks.saturating_add(i32::from(won));
+            }
+        }
+    }
+
+    /// The player cast `spell`, a spell they know: the `spell` use's rules of the stats its
+    /// scales name ([`crate::content::SpellData::trained_stats`]).
+    pub(super) fn train_spell(&mut self, spell: &SpellData) {
+        self.train_stats_of(StatUse::Spell, None, 1, spell.trained_stats());
+    }
+
+    /// The player stepped onto `onto` with `footing`: a step through deep water (water that
+    /// freezes and that a step wades slowly through, at least [`WADING_COST`]) trains
+    /// Strength, unless its ice held them up.
+    pub(super) fn train_wade(&mut self, onto: TerrainId, footing: Footing) {
+        let terrain = self.content.terrain(onto);
+        let deep = terrain.freeze.is_some() && terrain.move_cost >= WADING_COST;
+        if deep && !matches!(footing, Footing::Held { .. }) {
+            self.train_stat(StatUse::Waded);
+        }
+    }
+
+    /// The player picked up `got`: one stack of [`HAUL_GRAMS`] or more trains Strength, once.
+    pub(super) fn train_haul(&mut self, got: &[Stack]) {
+        if got.iter().any(|s| s.weight(&self.content) >= HAUL_GRAMS) {
+            self.train_stat(StatUse::Hauled);
+        }
+    }
+
+    /// The player acted, not waiting: while Hungry (not yet Weak), Toughness may earn a mark.
+    pub(super) fn train_hungry_step(&mut self) {
+        if self.player_hunger() == Some(Hunger::Hungry) {
+            self.train_stat(StatUse::HungryStep);
+        }
+    }
+
+    /// Statuses wore off actor `id` by time (`ended`): each that harms as it ticks (hit points
+    /// or mana) trains the player's Toughness.
+    pub(super) fn train_shaking_off(&mut self, id: ActorId, ended: &[Effect]) {
+        if id != self.state.player {
+            return;
+        }
+        let content = self.content.clone();
+        for e in ended {
+            let def = content.status(e.status);
+            if def.damage > 0 || def.mana_damage > 0 {
+                self.train_stat(StatUse::ShookOff);
             }
         }
     }
@@ -143,7 +208,7 @@ impl World {
                     }
                 }
                 AttackKind::Ranged | AttackKind::Thrown => self.train_stat(StatUse::Shot),
-                AttackKind::Spell => {}
+                AttackKind::Spell => self.train_stat(StatUse::Aimed),
             }
             let hungry = self.player_hunger().is_some_and(|h| h <= Hunger::Hungry);
             if hungry && kind != AttackKind::Spell {
@@ -215,6 +280,10 @@ impl World {
         // Greeting the dawn starved: the deed lands before the draws.
         if self.player_hunger().is_some_and(|h| h <= Hunger::Weak) {
             self.stat_deed(StatDeed::HungryDawn);
+        }
+        // A dawn below freezing hardens the body: its mark counts at this very check.
+        if self.temperature() < Temperature::ZERO {
+            self.train_stat(StatUse::Chilled);
         }
         for moved in self.settle(Check::Daily) {
             self.say(moved.news());

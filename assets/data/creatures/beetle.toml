@@ -22,6 +22,6 @@ natural = { defence = 1, protection = 3, name = "shell" }
 # Its shell shrugs off acid and poison, more or less.
 resist = { acid = 50, poison = 25 }
 # A small chance to toughen the eater.
-on_eat = { message = "Crunchy.", stat = { toughness = 10 } }
+on_eat = { message = "Crunchy.", train = { toughness = 60 } }
 # Greenish-black ichor.
 blood = "#38461a"

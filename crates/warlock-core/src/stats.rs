@@ -323,16 +323,6 @@ impl Stats {
         modifier(i32::from(self.score(stat)))
     }
 
-    /// Raises the score in `stat` by 1 if it is below its potential (spec §8 "Hunger": a corpse
-    /// eaten may do it). Returns whether it rose.
-    pub fn raise(&mut self, stat: Stat) -> bool {
-        let rises = self.score[stat] < self.potential[stat];
-        if rises {
-            self.score[stat] += 1;
-        }
-        rises
-    }
-
     /// Raises the score in `stat` by 1 by training (spec §8 "Stats": a check), past its
     /// potential too, which stays where it is (nature: only elixirs, corpses, and gifts move
     /// it); never past [`SCORES`]. Returns whether it rose.

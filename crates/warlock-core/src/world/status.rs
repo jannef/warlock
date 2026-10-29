@@ -536,6 +536,7 @@ impl World {
             if starved > 0 && self.hurt(id, starved, Harm::Starving(when), events) {
                 return;
             }
+            self.train_shaking_off(id, &spent);
             self.ended(id, &spent, events);
             if let Some(before) = hunger {
                 self.hunger_news(before);

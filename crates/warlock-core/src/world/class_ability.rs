@@ -140,6 +140,7 @@ impl World {
             return Spent::Nothing;
         }
         self.afflict(player, inspire.status, 1, Some(player), events);
+        self.train_stat(crate::content::StatUse::Inspired);
         Spent::Turn(self.price_of(player, ActionKind::Chat))
     }
 

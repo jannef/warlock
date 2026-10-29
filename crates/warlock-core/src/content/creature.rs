@@ -270,17 +270,27 @@ pub(super) struct CreatureSpec {
 }
 
 /// What eating a creature's fresh corpse does (spec §8 "Hunger"), beyond feeding the eater by
-/// its size: `on_eat = { message = "...", stat = { toughness = 5 }, heal = "1d4", harm = "1d2",
-/// satiation = 500, vomit = 25 }`. None of it is shown before the player tries; a rotten corpse
-/// does none of it.
+/// its size: `on_eat = { message = "...", train = { toughness = 30 }, widen = { toughness = 5 },
+/// heal = "1d4", harm = "1d2", satiation = 500, vomit = 25 }`. None of it is shown before the
+/// player tries; a rotten corpse does none of it. Once content has loaded, `train` and `widen`
+/// are the resolved gifts (`Content::load_hunger`): per stat the largest its tags give
+/// (`[corpses.by_tag]`, `data/hunger.toml`), then its own over them (0 switches a tag's gift
+/// off), zeros left out.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OnEat {
     /// Said once it is eaten ("This kobold meat tastes terrible.").
     pub message: Option<String>,
-    /// The chance in percent, per stat, to raise it by 1, up to its potential.
+    /// Sure stat training marks it gives, per stat (spec §8 "Stats"), 0 to [`MAX_TRAIN`].
     #[serde(default)]
-    pub stat: BTreeMap<Stat, u8>,
+    pub train: BTreeMap<Stat, u16>,
+    /// The chance in percent, per stat, that the potential rises by 1 (never past the scores'
+    /// range), 0 to [`MAX_WIDEN`]: potential points are rare.
+    #[serde(default)]
+    pub widen: BTreeMap<Stat, u8>,
+    /// The old raise chances, only to refuse them by name ([`OnEat::check`]).
+    #[serde(default, rename = "stat")]
+    old_stat: Option<BTreeMap<String, i64>>,
     /// Hit points it gives back.
     pub heal: Option<Dice>,
     /// Hit points it costs.
@@ -293,14 +303,41 @@ pub struct OnEat {
     pub vomit: u8,
 }
 
+/// The most marks a corpse's `train` gives a stat.
+pub const MAX_TRAIN: u16 = 200;
+/// The highest chance in percent of a corpse's `widen` (decision 11 of
+/// `docs/design/stat-training.md`: potential points are rare).
+pub const MAX_WIDEN: u8 = 20;
+
 impl OnEat {
-    /// Checks chances (0 to 100), dice (rolling 0 to 1000), the extra nutrition, and the message.
+    /// Checks the chances (`vomit` 0 to 100, `widen` 0 to [`MAX_WIDEN`]), the marks (0 to
+    /// [`MAX_TRAIN`]), the dice (rolling 0 to 1000), the extra nutrition, and the message, and
+    /// refuses the old `stat`.
     pub(super) fn check(&self) -> Result<(), String> {
         if self.message.as_ref().is_some_and(|m| m.trim().is_empty()) {
             return Err("on_eat: `message` must not be empty".into());
         }
-        if self.vomit > 100 || self.stat.values().any(|&c| c > 100) {
-            return Err("on_eat: `vomit` and `stat` are chances in percent, 0 to 100".into());
+        if self.old_stat.is_some() {
+            return Err(
+                "on_eat: `stat` is gone: a corpse gives stat training marks, `train = \
+                        { toughness = 30 }`, and rarely a chance to widen a potential, `widen = \
+                        { toughness = 5 }`"
+                    .into(),
+            );
+        }
+        if self.vomit > 100 {
+            return Err("on_eat: `vomit` is a chance in percent, 0 to 100".into());
+        }
+        if self.train.values().any(|&m| m > MAX_TRAIN) {
+            return Err(format!(
+                "on_eat: `train` gives 0 to {MAX_TRAIN} marks a stat"
+            ));
+        }
+        if self.widen.values().any(|&c| c > MAX_WIDEN) {
+            return Err(format!(
+                "on_eat: `widen` is a chance in percent, 0 to {MAX_WIDEN} (potential points are \
+                 rare)"
+            ));
         }
         for (field, dice) in [("heal", self.heal), ("harm", self.harm)] {
             if dice.is_some_and(|d| d.min() < 0 || d.max() > 1000) {
@@ -312,6 +349,86 @@ impl OnEat {
             return Err(format!("on_eat: `satiation` must be within ±{max}"));
         }
         Ok(())
+    }
+
+    /// Lays its own gifts over `tags`' (the largest per stat of its tags' entries): its own
+    /// per stat win, and zeros are left out. Then a stat with a `widen` needs a `train`.
+    pub(super) fn resolve(&mut self, tags: &CorpseGifts) -> Result<(), String> {
+        let mut train = tags.train.clone();
+        train.extend(&self.train);
+        train.retain(|_, m| *m > 0);
+        let mut widen = tags.widen.clone();
+        widen.extend(&self.widen);
+        widen.retain(|_, c| *c > 0);
+        if let Some(stat) = widen.keys().find(|s| !train.contains_key(s)) {
+            return Err(format!(
+                "on_eat: `widen` {} needs a `train` of the same stat",
+                stat.id()
+            ));
+        }
+        (self.train, self.widen) = (train, widen);
+        Ok(())
+    }
+
+    /// Whether it does nothing beyond feeding.
+    pub fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
+
+/// What a corpse gives the stats by default, per creature tag (`[corpses.by_tag]`,
+/// `data/hunger.toml`): `giant = { train = { strength = 60 }, widen = { strength = 5 } }`. A
+/// creature's corpse takes the largest of its tags' per stat ([`CorpseGifts::merge`]).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CorpseGifts {
+    /// Sure marks per stat, 1 to [`MAX_TRAIN`].
+    #[serde(default)]
+    pub train: BTreeMap<Stat, u16>,
+    /// The chance in percent per stat that the potential widens by 1, 1 to [`MAX_TAG_WIDEN`].
+    #[serde(default)]
+    pub widen: BTreeMap<Stat, u8>,
+}
+
+/// The highest `widen` a tag's entry may give: 2 to 5 % (decision 11 of
+/// `docs/design/stat-training.md`).
+pub const MAX_TAG_WIDEN: u8 = 5;
+
+impl CorpseGifts {
+    /// Checks the marks (1 to [`MAX_TRAIN`]) and the chances (1 to [`MAX_TAG_WIDEN`]), and that
+    /// a stat with a `widen` has a `train`.
+    pub(super) fn check(&self) -> Result<(), String> {
+        if self.train.values().any(|&m| !(1..=MAX_TRAIN).contains(&m)) {
+            return Err(format!("`train` gives 1 to {MAX_TRAIN} marks a stat"));
+        }
+        if self
+            .widen
+            .values()
+            .any(|&c| !(1..=MAX_TAG_WIDEN).contains(&c))
+        {
+            return Err(format!(
+                "`widen` is a chance in percent, 1 to {MAX_TAG_WIDEN} for a tag"
+            ));
+        }
+        if let Some(stat) = self.widen.keys().find(|s| !self.train.contains_key(s)) {
+            return Err(format!(
+                "`widen` {} needs a `train` of the same stat",
+                stat.id()
+            ));
+        }
+        Ok(())
+    }
+
+    /// Takes the larger of its and `other`'s per stat.
+    pub fn merge(&mut self, other: &CorpseGifts) {
+        for (&stat, &m) in &other.train {
+            let e = self.train.entry(stat).or_insert(0);
+            *e = (*e).max(m);
+        }
+        for (&stat, &c) in &other.widen {
+            let e = self.widen.entry(stat).or_insert(0);
+            *e = (*e).max(c);
+        }
     }
 }
 

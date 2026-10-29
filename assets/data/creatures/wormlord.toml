@@ -27,7 +27,7 @@ base_hp = 94
 skills = { concentration = 151, spellcraft = 156 }
 natural = { defence = 3, protection = 4, name = "dead flesh" }
 resist = { poison = 100 }
-on_eat = { message = "It is all moving inside.", vomit = 90, harm = "1d6" }
+on_eat = { message = "It is all moving inside.", vomit = 90, harm = "1d6", train = { intelligence = 0, willpower = 0 } }
 blood = "#3a4020"
 [creature.attack]
 damage = "4d8"

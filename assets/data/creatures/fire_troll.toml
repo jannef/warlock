@@ -24,7 +24,7 @@ stats = { strength = 26, dexterity = 16, toughness = 29, intelligence = 10, will
 base_hp = 82
 natural = { defence = 2, protection = 9, name = "cinder hide" }
 resist = { fire = 75, cold = -50 }
-on_eat = { message = "Still warm, and it tastes of ash.", vomit = 50, stat = { toughness = 5 } }
+on_eat = { message = "Still warm, and it tastes of ash.", vomit = 50 }
 blood = "#6a2a10"
 [creature.attack]
 damage = "3d10"

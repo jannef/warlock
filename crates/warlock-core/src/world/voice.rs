@@ -36,6 +36,7 @@ impl World {
         self.make_noise(player, Act::ThrowVoice(at));
         events.push(Event::VoiceThrown { at });
         self.say("You throw your voice.");
+        self.train_stat(crate::content::StatUse::Inspired);
         Spent::Turn(price)
     }
 }

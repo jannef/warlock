@@ -23,9 +23,12 @@
 //! **Corpses**: a creature that dies leaves one on top of its pile ([`World::leave_corpse`]), its
 //! death time in the stack, from which it rots like any food. A fresh one feeds by its
 //! creature's size and does what its creature's `on_eat` says, in this order, each draw from the
-//! gameplay stream: its message, a chance to vomit, a chance per stat to raise it (up to its
-//! potential), healing, harm, and extra nutrition; a rotten one has lost all of that. The player
-//! learns what a corpse does only by eating it.
+//! gameplay stream: its message, a chance to vomit, then per stat its training marks (sure, into
+//! the pile; "Something of its strength passes into you." for 30 or more) and a chance to widen
+//! the potential by 1 ("You feel you could grow stronger yet."), healing, harm, and extra
+//! nutrition; a rotten one has lost all of that. A corpse never raises a score itself: the
+//! marks wait for the checks (`world/stat_training.rs`). The player learns what a corpse does
+//! only by eating it.
 //!
 //! **Sickness**: harm from what was eaten is degrees of the status `sickness` names
 //! (`data/hunger.toml`: poisoned, spec §8 "Status effects"), given through [`World::afflict`],
@@ -51,17 +54,22 @@ pub(super) struct Dish {
     turns: u32,
 }
 
-/// What the player feels when a corpse raises `stat`.
-fn rise_news(stat: Stat) -> &'static str {
-    match stat {
-        Stat::Strength => "You feel stronger!",
-        Stat::Dexterity => "You feel more agile!",
-        Stat::Toughness => "You feel tougher!",
-        Stat::Intelligence => "You feel smarter!",
-        Stat::Willpower => "You feel more resolute!",
-        Stat::Presence => "You feel more self-assured!",
-    }
+/// What a corpse's training marks of `stat` say, when they are many ([`LOUD_MARKS`]).
+fn gift_news(stat: Stat) -> String {
+    let what = match stat {
+        Stat::Strength => "strength",
+        Stat::Dexterity => "nimbleness",
+        Stat::Toughness => "hardiness",
+        Stat::Intelligence => "cunning",
+        Stat::Willpower => "resolve",
+        Stat::Presence => "bearing",
+    };
+    format!("Something of its {what} passes into you.")
 }
+
+/// The fewest marks of one stat a corpse gives that the player feels (design §8.4): fewer are
+/// quiet, as marks are.
+const LOUD_MARKS: u32 = 30;
 
 impl World {
     /// The player sets out to consume `meal`: a potion is drunk at once ([`World::drink_potion`],
@@ -222,8 +230,8 @@ impl World {
         on_eat: crate::content::OnEat,
         events: &mut Vec<Event>,
     ) {
-        if let Some(text) = on_eat.message {
-            self.say(text);
+        if let Some(text) = &on_eat.message {
+            self.say(text.clone());
         }
         // Herb lore, Cauldron (spec §8 "Class abilities"): a corpse's own harm never touches
         // them (no draw for it).
@@ -236,18 +244,7 @@ impl World {
             self.vomit();
             return;
         }
-        // Gourmand (spec §8 "Talents"): better chances, never above certain.
-        let more = self
-            .state
-            .player()
-            .talent_mods(&self.content)
-            .corpse_stats_percent;
-        for (&stat, &chance) in &on_eat.stat {
-            let chance = TalentMods::scaled(u64::from(chance), more).min(100) as u32;
-            if chance > 0 && self.state.rng.chance(chance) && self.player_mut().stats.raise(stat) {
-                self.say(rise_news(stat));
-            }
-        }
+        self.corpse_gifts(&on_eat);
         if let Some(heal) = on_eat.heal {
             let points = heal.roll(&mut self.state.rng);
             let max = self.state.player().max_hp(&self.content);
@@ -262,6 +259,40 @@ impl World {
             self.sicken(degrees, events);
         }
         self.feed(nutrition.saturating_add(on_eat.satiation).max(0), what);
+    }
+
+    /// A fresh corpse's gifts to the stats, per stat in display order: its `train` marks into
+    /// the pile (sure: no draw), said when they are many, then a gameplay draw with its `widen`
+    /// chance to raise the potential by 1 (never past the scores' range). Gourmand and Cauldron
+    /// (`corpse_stats_percent`) scale both, the chance never above certain.
+    fn corpse_gifts(&mut self, on_eat: &crate::content::OnEat) {
+        let more = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .corpse_stats_percent;
+        for stat in Stat::ALL {
+            let marks = on_eat.train.get(&stat).copied().unwrap_or(0);
+            let marks = TalentMods::scaled(u64::from(marks), more).min(u64::from(u32::MAX)) as u32;
+            if marks > 0 {
+                let pile = &mut self.player_mut().stat_marks[stat];
+                *pile = pile.saturating_add(i32::try_from(marks).unwrap_or(i32::MAX));
+                if marks >= LOUD_MARKS {
+                    self.say(gift_news(stat));
+                }
+            }
+            let chance = on_eat.widen.get(&stat).copied().unwrap_or(0);
+            let chance = TalentMods::scaled(u64::from(chance), more).min(100) as u32;
+            if chance > 0
+                && self.state.rng.chance(chance)
+                && self.player_mut().stats.widen(stat, 1) > 0
+            {
+                self.say(format!(
+                    "You feel you could grow {} yet.",
+                    stat.comparative()
+                ));
+            }
+        }
     }
 
     /// A rotten corpse: the player vomits (a chance), else it makes them sick, exposes them to

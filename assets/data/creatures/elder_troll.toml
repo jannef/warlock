@@ -23,7 +23,7 @@ stats = { strength = 35, dexterity = 16, toughness = 38, intelligence = 11, will
 base_hp = 168
 natural = { defence = 3, protection = 4, name = "ancient hide" }
 resist = { fire = -50 }
-on_eat = { message = "Older than you, and tougher.", vomit = 50, stat = { toughness = 5 } }
+on_eat = { message = "Older than you, and tougher.", vomit = 50 }
 blood = "#203a2a"
 [creature.attack]
 damage = "3d12"

@@ -27,7 +27,7 @@ skills = { concentration = 73, spellcraft = 78 }
 natural = { defence = 1, protection = 2, name = "hide" }
 weapon_skills = { staves = 2 }
 resist = { fire = -50 }
-on_eat = { message = "It tastes of smoke and bitter herbs.", vomit = 50, stat = { toughness = 5 } }
+on_eat = { message = "It tastes of smoke and bitter herbs.", vomit = 50 }
 blood = "#2a4a2a"
 [creature.attack]
 damage = "3d6"

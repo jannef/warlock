@@ -143,6 +143,7 @@ impl World {
         self.news.push(format!(
             "You gain {gain} experience for finding your way here."
         ));
+        self.train_stat(StatUse::Explored);
         self.discovered();
         self.grant_xp(gain);
     }

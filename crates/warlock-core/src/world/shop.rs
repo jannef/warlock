@@ -303,6 +303,21 @@ impl World {
         )
     }
 
+    /// A deal was made (goods paid for, or sold): Negotiation's mark, Presence's for the trade,
+    /// and another of Presence's when Negotiation bettered the price.
+    pub(super) fn train_deal(&mut self) {
+        self.train(Use::Deal);
+        self.train_stat(StatUse::Trade);
+        if self
+            .state
+            .player()
+            .skill_effect(&self.content, Effect::Bargain)
+            > 0
+        {
+            self.train_stat(StatUse::Bargained);
+        }
+    }
+
     /// Whether `stack` is rotten food, which is worth nothing (spec §7 "Shops").
     fn spoilt(&self, stack: &Stack) -> bool {
         self.stage(stack).is_some_and(|s| s.is_rotten())
@@ -453,8 +468,7 @@ impl World {
                 self.identify(item);
             }
         }
-        self.train(Use::Deal);
-        self.train_stat(StatUse::Trade);
+        self.train_deal();
         self.player_did(Deed::PaidDebt);
         Spent::NoTime
     }
@@ -558,8 +572,7 @@ impl World {
             for what in learned {
                 self.say(format!("That was {what}!"));
             }
-            self.train(Use::Deal);
-            self.train_stat(StatUse::Trade);
+            self.train_deal();
         }
         Some(spent)
     }
