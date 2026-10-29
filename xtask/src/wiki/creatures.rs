@@ -16,6 +16,7 @@ use warlock_core::content::{
 };
 use warlock_core::geom::Pos;
 use warlock_core::object::format_weight;
+use warlock_core::skills::Effect;
 use warlock_core::stats::Stat;
 use warlock_core::world::{Actor, ActorId, ActorKind};
 
@@ -584,6 +585,63 @@ pub(super) fn creature_senses(content: &Content) -> String {
             format_weight(u64::from(c.weight)),
             size.name,
             format_weight(limit)
+        );
+    }
+    out
+}
+
+/// The creatures with a craft for surprise (spec §8 "Surprise and sneak attacks"), by name:
+/// their Sneak attack (its dice and the points it adds to the initiative check's difficulty),
+/// their Initiative (the points it adds to their own check and the share of the dear action's
+/// extra time it spares), their Spot against slipping past, and whether they lurk; each read
+/// through the rules' own `Actor::skill_effect`.
+pub(super) fn creature_surprise(content: &Content) -> String {
+    let mut out = String::from(
+        "| Creature | Sneak attack | Dice | Harder to keep wits | Initiative | To keep wits | Extra \
+         time spared | Spot | Against slipping past | Lurks |\n\
+         |---|---:|---:|---:|---:|---:|---:|---:|---:|:---:|\n",
+    );
+    let value = |c: &CreatureDef, skill: &str| {
+        (content.skill_id(skill)).map_or(0, |s| c.skills.value(s).unwrap_or(0))
+    };
+    let points = |n: i32| match n {
+        0 => "-".to_string(),
+        n => signed(n),
+    };
+    for (id, c) in listed(content) {
+        let (sneak, initiative, spot) = (
+            value(c, "sneak_attack"),
+            value(c, "initiative"),
+            value(c, "spot"),
+        );
+        if sneak == 0 && initiative == 0 && spot == 0 && !c.lurks {
+            continue;
+        }
+        let actor = bare(content, id);
+        let effect = |e| actor.skill_effect(content, e);
+        let dice = match effect(Effect::SneakDice) {
+            0 => "-".to_string(),
+            n => format!("{n}d6"),
+        };
+        let spared = match effect(Effect::SurpriseEase) {
+            0 => "-".to_string(),
+            n => format!("{n}%"),
+        };
+        let shown = |v: u16| match v {
+            0 => "-".to_string(),
+            v => v.to_string(),
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {dice} | {} | {} | {} | {spared} | {} | {} | {} |",
+            link(Term::Creature, &c.id, &capital(&c.name)),
+            shown(sneak),
+            points(effect(Effect::Surprise)),
+            shown(initiative),
+            points(effect(Effect::Initiative)),
+            shown(spot),
+            points(effect(Effect::Spot)),
+            yes(c.lurks),
         );
     }
     out

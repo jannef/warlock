@@ -14,10 +14,15 @@ tags = ["vermin"]
 alignment = "neutral"
 vision = "darkvision"
 sight = 8
+# A lurker (spec §8 "Creature behavior"): it waits where it stands for its prey to come
+# beside it, and hunts only once hurt.
+lurks = true
 hearing = 8
 weight = 2000
 size = "small"
 stats = { strength = 8, dexterity = 16, toughness = 9, intelligence = 1, willpower = 10, presence = 3 }
+# It bites the unwary from where it lurks.
+skills = { sneak_attack = 10, initiative = 20 }
 on_eat = { message = "Bitter, and your tongue goes numb.", vomit = 30, harm = "1d3" }
 blood = "#3a4a2a"
 [creature.attack]

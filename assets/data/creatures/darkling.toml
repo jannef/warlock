@@ -21,4 +21,6 @@ weight = 10000
 size = "small"
 stats = { strength = 11, dexterity = 16, toughness = 12, intelligence = 14, willpower = 14, presence = 16 }
 base_hp = 11
+# A shadow with a knife: it strikes the unwary.
+skills = { sneak_attack = 30, initiative = 50 }
 attack = { damage = "1d10", damage_type = "piercing", name = "knife", verb = "stabs" }

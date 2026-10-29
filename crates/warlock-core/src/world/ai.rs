@@ -12,6 +12,7 @@
 //!    when the target is within its range with a clear line of fire (no opaque cell and nobody
 //!    in between), else steps toward the nearest cell that gives it one (failing that, toward
 //!    the target). Leaving its routine, it remembers where it was (its post).
+//!    An unharmed lurker waits where it stands instead of stepping toward it (`lurk.rs`).
 //! 3. **Search**: with no hostile in sight, it goes to where it last saw one.
 //! 4. **Listen**: failing that, to where it last heard a noise whose source it could not see
 //!    ([`crate::noise`]; what it heard since it last acted, the newest first). Only creatures
@@ -181,7 +182,8 @@ impl World {
                 mind.last_seen = Some(at);
                 mind.noise = None;
                 mind.post.get_or_insert(pos);
-                self.fight(id, target, at)
+                // A lurker waits for it where it stands (`lurk.rs`).
+                self.lurker_waits(id, self.fight(id, target, at))
             }
             None => {
                 if let Some(at) = self.noise_to_look_into(id, heard) {
