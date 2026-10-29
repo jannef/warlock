@@ -1,0 +1,37 @@
+# What kind of child you were: where most of a story's changes to the scores live.
+[chapter]
+id = "childhood"
+name = "Childhood"
+paragraph = 2
+
+[[line]]
+id = "ordinary_child"
+tier = "common"
+weight = 5
+text = "You were a child like any other, and nobody wrote down what you did."
+
+[[line]]
+id = "strong_child"
+tier = "common"
+weight = 3
+text = "You were a strong child, broad for your age, and carried what the others could not."
+effects = [{ stat = { strength = 1 } }]
+tags = ["strong"]
+
+[[line]]
+id = "sickly_child"
+tier = "common"
+weight = 2
+text = "You were sickly as a child, and {guardian} sat up many a night with you; you lived, and learned to wait."
+when = { not_tags = ["orphan"] }
+effects = [{ stat = { toughness = -1 } }, { stat = { willpower = 1 } }]
+tags = ["sickly"]
+
+[[line]]
+id = "wolf_in_the_yard"
+tier = "rare"
+weight = 1
+text = "A winter wolf came into the yard when you were six, and you faced it with a stick until the grown folk came. The story grew; so did you."
+when = { age = { min = 10 } }
+effects = [{ stat = { toughness = 1 } }, { stat = { willpower = 1 } }]
+tags = ["brave"]

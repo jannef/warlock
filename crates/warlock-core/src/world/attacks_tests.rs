@@ -8,8 +8,8 @@ use crate::magic::{Affix, Magic, Rarity};
 use crate::object::Stack;
 use std::sync::LazyLock;
 
-static BUILTIN: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+// Without background stories: the kit's weapons alone.
+static BUILTIN: LazyLock<Arc<Content>> = LazyLock::new(|| Arc::new(crate::background::storyless()));
 
 fn start(character: &str, actions: &str) -> World {
     let spec: CharacterSpec = character.parse().expect("a character");

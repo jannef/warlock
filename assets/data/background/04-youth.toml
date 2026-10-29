@@ -1,0 +1,38 @@
+# A trade, a teacher, a levy: the chapter the class shapes most.
+[chapter]
+id = "youth"
+name = "Youth"
+paragraph = 2
+
+[[line]]
+id = "plain_work"
+tier = "common"
+weight = 5
+text = "You worked, as everyone worked, and nothing of it is worth the telling."
+
+[[line]]
+id = "the_levy"
+tier = "common"
+weight = 3
+text = "At fourteen you stood in the levy with a borrowed spear, and found you had a taste for it."
+when = { class = ["warrior", "paladin", "barbarian", "commoner"], age = { min = 14 } }
+effects = [{ weapon_marks = { spears = 3 } }, { skill = { athletics = "1d4" } }]
+tags = ["soldier"]
+
+[[line]]
+id = "the_copyist"
+tier = "common"
+weight = 3
+text = "A hedge-wizard took you as a copyist; you learned your letters off his spellbooks, and a little more besides."
+when = { class = ["wizard", "witch", "bard"], age = { min = 14 } }
+effects = [{ skill = { decipher_script = "2d4" } }, { item = "scroll_of_light" }]
+tags = ["lettered"]
+
+[[line]]
+id = "the_old_soldier"
+tier = "rare"
+weight = 1
+text = "An old soldier wintered at {home} the year you were sixteen, and taught you, for the price of your listening, everything he knew."
+when = { age = { min = 16 } }
+effects = [{ weapon_marks = { best = 6 } }, { stat = { dexterity = 1 } }, { skill = { intimidate = "2d4" } }]
+tags = ["taught"]

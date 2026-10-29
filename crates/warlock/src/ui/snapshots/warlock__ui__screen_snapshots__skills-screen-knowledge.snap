@@ -10,16 +10,16 @@ expression: "render(case, content.clone())"
 
 
 
-
     ┌─ Skills ────────────────────────────────────────────────────────────────────────────────┐
     │                                                                                         │
     │   Concentration      26  ────                                                           │
     │   Decipher script    11  ────                                                           │
-    │ > Knowledge          17  ────                                                           │
+    │ > Heal                1  ────                                                           │
+    │   Knowledge          17  ────                                                           │
     │   Spellcraft         13  ────                                                           │
     │                                                                                         │
-    │ Lore of history, peoples, places, and the things that live there. Knowing your enemy    │
-    │ helps you resist its powers.                                                            │
+    │ Binding wounds and tending the sick.                                                    │
+    │                                                                                         │
     │                                                                                         │
     │ ↑↓ choose   A or Esc close                                                              │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘

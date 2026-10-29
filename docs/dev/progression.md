@@ -358,6 +358,8 @@ as a rare item's), identified, and readied in its own slot only if that is free.
 are checked once objects load (`talent::check_heirlooms`). `kit::tests::
 nobody_starts_strained_and_only_wealth_burdens` adds the heritage at its heaviest: never
 Strained, and Burdened only for the weakest of a small race. Tests: `world/heirloom_tests.rs`.
+The background story (docs/dev/background.md) reads the talents held after the creation picks:
+its `only` lines force Family wealth's and Father's sword's chapters, so nothing is paid twice.
 
 The creation step reads a drafted run (`World::draft`: `begin` with the kit, the picks left
 due), cloned per question: `creation_offers(picks)` takes `picks` on a clone and returns what is

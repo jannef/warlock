@@ -1,0 +1,18 @@
+# How you came over Beorggeat into the Ascmearc: the campaign's own chapter, the last.
+[chapter]
+id = "road"
+name = "The road"
+paragraph = 4
+
+[[line]]
+id = "the_last_cart"
+tier = "common"
+weight = 4
+text = "You came over the Grægweall with the last cart before the snow, and paid for the ride with work."
+
+[[line]]
+id = "the_pedlar"
+tier = "common"
+weight = 2
+text = "You walked up with a pedlar who talked the whole way and sold you a knife at the top for twice its worth. 'Yer'll want that, where yer goin',' he said, and he was right."
+effects = [{ item = "dagger" }, { gold = -5 }]

@@ -33,7 +33,9 @@ starts, one of the campaign's own), and `kind`, `campaign` (default) or `test`.
 - `ContentFiles::table(name)`: `data/<name>.toml`, `data/<name>/**`, then each campaign's
   `data/<name>/**`. `quests`, `dialogue`, and `dungeons` are tables now (`quest::parse`,
   `dialogue::parse`, `Content::load_dungeons`); none has an order that means anything but
-  quests' `requires`, which names a quest earlier in the table.
+  quests' `requires`, which names a quest earlier in the table. `background` too: a campaign's
+  chapters (`data/background/`, the Ascmearc's `road`) come after the shared ones in its runs'
+  stories, never with a shared chapter's id (docs/dev/background.md).
 - `ContentFiles::in_dir("levels" | "scenarios" | "vaults")`: the top-level directory, then
   each campaign's.
 - Each entry remembers its campaign (`campaign::of_path`): `CreatureDef::campaign`,

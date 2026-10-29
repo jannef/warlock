@@ -11,6 +11,7 @@ mod anim;
 pub mod animated;
 #[cfg(test)]
 mod animated_tests;
+mod background;
 mod calendar;
 mod campaign;
 mod chest;
@@ -152,6 +153,10 @@ pub use affix::{
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
 pub use anim::GlyphAnim;
 pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Line, Numbers, Ramp, SlotLine};
+pub use background::{
+    AgeRange, Background, Chapter, Effect as StoryEffect, Line as StoryLine, Marks, Points,
+    Tier as StoryTier, Tiers, When,
+};
 pub use calendar::Calendar;
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 pub use chest::{ChestBand, ChestGold, ChestLoot, ChestRules};
@@ -645,6 +650,8 @@ pub struct Content {
     alignment: Option<AlignmentRules>,
     experience: Experience,
     horoscope: Option<Horoscope>,
+    /// Background stories (`data/background.toml`, `data/background/`): none without the file.
+    background: Option<Background>,
     /// Spell effects, in `data/effects.toml` order: presentation only.
     effects: Vec<EffectDef>,
     hunger: Option<HungerDef>,
@@ -769,6 +776,7 @@ impl Content {
             alignment: None,
             experience: Experience::default(),
             horoscope: None,
+            background: None,
             effects: Vec::new(),
             hunger: None,
             corpses: Vec::new(),
@@ -1082,6 +1090,7 @@ impl Content {
         }
         overworld::link_edge_exits(&mut content.levels);
         content.load_kits()?;
+        content.load_background(files)?;
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("scenarios") {
             if let Some(first) = seen.insert(id.to_string(), path) {

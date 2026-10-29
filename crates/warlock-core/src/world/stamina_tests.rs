@@ -162,7 +162,11 @@ fn an_old_save_of_a_fighter_is_granted_the_pool_on_load() {
     let actor = state.actors.get_mut(&player).expect("player");
     assert!(actor.resources.remove(id));
     let restored = World::from_state(w.content.clone(), state).expect("restores");
-    assert_eq!(held(&restored), Some(max(&restored)), "granted on load");
+    // At its start: full by the data (a magic item's more, a story's ring, is not filled).
+    let level = restored.player_level();
+    let start = (restored.state.player()).resource_start(restored.content(), id, level);
+    assert_eq!(held(&restored), Some(start), "granted on load");
+    assert!(start <= max(&restored));
     let bytes = crate::save::encode(&restored);
     let loaded = crate::save::decode(&bytes, w.content.clone()).expect("loads");
     assert_eq!(loaded.state(), restored.state());

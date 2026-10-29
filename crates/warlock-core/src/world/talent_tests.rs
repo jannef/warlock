@@ -221,6 +221,7 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     let mut files = ContentFiles::builtin();
     files.remove("data/talents.toml");
     files.remove("data/talents/");
+    files.remove("data/background.toml");
     let content = Arc::new(Content::load(&files).expect("content without talents"));
     let mut w = world_with(content);
     reach(&mut w, 3);

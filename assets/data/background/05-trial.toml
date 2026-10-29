@@ -1,0 +1,37 @@
+# What it cost you, and what you kept.
+[chapter]
+id = "trial"
+name = "The trial"
+paragraph = 3
+
+[[line]]
+id = "quiet_years"
+tier = "common"
+weight = 5
+text = "No great grief found you, and you count that luck, as you should."
+
+[[line]]
+id = "the_debt"
+tier = "common"
+weight = 2
+text = "{Guardian} died owing, and you worked the debt off a shilling at a time, and learned what every shilling was worth."
+when = { not_tags = ["wealthy"] }
+effects = [{ gold = -15 }, { skill = { negotiation = "1d4" } }]
+tags = ["indebted"]
+
+[[line]]
+id = "the_mill"
+tier = "common"
+weight = 1
+text = "You lost two fingers of your left hand to a mill-wheel, and learned to do without them."
+effects = [{ stat = { dexterity = -1 } }, { stat = { willpower = 1 } }]
+tags = ["maimed"]
+
+[[line]]
+id = "the_barrow"
+tier = "rare"
+weight = 1
+text = "Something came out of the barrow one winter and took the sheep, and then a child. You went down after it with a lantern and a hayfork. You do not speak of what you found; but you came back, and the child did not."
+when = { age = { min = 14 } }
+effects = [{ stat = { strength = 1 } }, { stat = { willpower = 1 } }]
+tags = ["barrow"]

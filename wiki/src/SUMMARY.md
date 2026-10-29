@@ -38,6 +38,7 @@
   - [Classes](classes.md)
   - [Starting kit](starting-kit.md)
   - [Horoscope](horoscope.md)
+  - [Your story](background.md)
   - [Alignment](alignment.md)
   - [Talents](talents.md)
 - [Stats](stats.md)

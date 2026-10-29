@@ -1,0 +1,35 @@
+# How you came into the world (the sign says when).
+[chapter]
+id = "birth"
+name = "Birth"
+paragraph = 1
+
+[[line]]
+id = "quiet_birth"
+tier = "common"
+weight = 5
+text = "You were born without sign or omen, which {guardian} counted a mercy."
+
+[[line]]
+id = "hard_winter"
+tier = "common"
+weight = 3
+text = "You came in a hard winter, when the river froze to its bed, and you came early and small."
+effects = [{ stat = { toughness = -1 } }, { stat = { willpower = 1 } }]
+tags = ["small"]
+
+[[line]]
+id = "lucky_day"
+tier = "common"
+weight = 6
+text = "You were born on a day the stars had marked, and the midwife, who knew such things, would take no fee."
+when = { lucky = true }
+tags = ["marked"]
+
+[[line]]
+id = "storm_born"
+tier = "rare"
+weight = 1
+text = "You were born in a night of thunder, and the old folk said the storm had come for you and been cheated."
+effects = [{ stat = { willpower = 1, toughness = 1 } }]
+tags = ["storm"]

@@ -16,6 +16,10 @@ every turn (`storage::web::Pending`: encoding is milliseconds on the vast level)
 Unavailable storage means no saving plus a log warning; failed writes (quota) are messages, never
 panics. Only the `web-sys` features in `crates/warlock/Cargo.toml` are enabled (size).
 
+**The background story** (#702): `Character::story`, the ids of its lines, is saved and hashed
+with the character and left out while empty, so a save from before it loads with no story; the
+text is told again from the content (docs/dev/background.md).
+
 **One save per character** (#218; `save.rs`, `save/characters.rs`): every character has a save id,
 a slug of its name and the lowest free number (`characters::fresh_id`: `brakka-1`, then
 `brakka-2`; an id is taken while any file of it is left: its save, a kept `.sav.bad`, its summary,

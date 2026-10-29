@@ -6,8 +6,8 @@ use crate::character::CharacterSpec;
 use crate::content::{GOLD, Rarity, TalentEffect};
 use std::sync::LazyLock;
 
-static CONTENT: LazyLock<Arc<Content>> =
-    LazyLock::new(|| Arc::new(Content::builtin().expect("builtin content")));
+// Without background stories: what the heritage alone hands down.
+static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| Arc::new(crate::background::storyless()));
 
 /// A kitted run of the showcase as `character` with `talents` named first, the creation picks
 /// left filled with the first talents offered outside the Heritage tree.

@@ -1,0 +1,52 @@
+# Why you left: the reason follows the life.
+[chapter]
+id = "leaving"
+name = "Leaving"
+paragraph = 4
+
+[[line]]
+id = "plain_leaving"
+tier = "common"
+weight = 4
+text = "You left, as the young do, because staying was the one thing you could not bear."
+
+[[line]]
+id = "nothing_held_you"
+tier = "common"
+weight = 3
+text = "There was nothing to hold you, and nobody to say goodbye to, and so you did not."
+when = { tags = ["orphan"] }
+
+[[line]]
+id = "one_step_ahead"
+tier = "common"
+weight = 1
+text = "You left a step ahead of the reeve's men, and have not written home."
+when = { band = { max = "callous" } }
+effects = [{ alignment = -25 }]
+tags = ["fugitive"]
+
+[[line]]
+id = "sent"
+tier = "common"
+weight = 2
+text = "You left because you were sent: the minster had need of someone who could walk, and you could walk."
+when = { class = ["priest", "paladin"] }
+effects = [{ alignment = 25 }]
+tags = ["sent"]
+
+[[line]]
+id = "the_letter"
+tier = "uncommon"
+weight = 2
+text = "A letter came, in a hand you did not know, with a little money in it and three words: Come. There's work."
+effects = [{ gold = "2d6+10" }, { item = { wear = "travelling_cloak" } }]
+tags = ["summoned"]
+
+[[line]]
+id = "the_dream"
+tier = "rare"
+weight = 1
+text = "You dreamed, three nights running, of a door under a hill, and woke the third morning knowing the way; you have not dreamed since."
+effects = [{ skill = { search = "2d4" } }, { stat = { intelligence = 1 } }]
+tags = ["dreamer"]

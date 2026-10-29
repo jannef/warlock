@@ -223,7 +223,8 @@ order, each with its source and what it asks for or why it cannot be used now: `
 (weapon skill): a direction`, `Open lock (skill): not usable yet`), `traps` (the traps the player knows,
 one a line), `locations` (the overworld locations the player knows, `(45, 23) The Hall`, a hidden
 one only once revealed), `quests` (the quest log, active
-first: name, stage, giver, objective, and status), `truth`
+first: name, stage, giver, objective, and status), `story` (the player's background story,
+a paragraph a line as the story screen tells it, `no story` without one), `truth`
 (ground truth, hidden traps and secret doors (`S`) too, a sealed room's standing breach (`H`), a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, and hidden locations by their entrance's
 glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana (and, with any, its caster level, `cl 8`), its resources (`resources rage
@@ -260,7 +261,7 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it), `due` (the level-up choices due: `level`, `talents`,
 `rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`, `target` (what a rolled quest drew, else null),
-`objective`, `status`), each seen actor's `health` and `effects` (those that show) and a composite animated thing's `bands` (its colours, top first), `room` (the
+`objective`, `status`), `story` (the background story's lines: `chapter`, `line`, `text`; `character.story` the ids, `parents/plain_folk`), each seen actor's `health` and `effects` (those that show) and a composite animated thing's `bands` (its colours, top first), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, `magic` (affixes only once identified), and `numbers` (what it gives as the
@@ -326,6 +327,7 @@ file). Topics:
 - `docs/dev/burden.md` — load, limits, sizes, every penalty's one hook
 - `docs/dev/hunger.md` — satiation, eating, corpses and rot, starving
 - `docs/dev/character-creation.md` — `CharacterSpec`, races, classes, genders, the horoscope, starting rolls, names, starting kits
+- `docs/dev/background.md` — background stories: `data/background/` (and a campaign's chapter), the loader's checks, `background::tell` (streams, tiers, `only`, slots; no caps), `World::tell_background` and its effects, `Character::story`, the `story` dump
 - `docs/dev/alignment.md` — the good–evil score and its bands, the deeds that move it (one hook each), what reads it
 - `docs/dev/skills.md` — trained skills, effects and uses, training marks, the skills screen
 - `docs/dev/experience.md` — the level curve, kill XP, level-ups

@@ -226,6 +226,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   handle animal,
   heal, intimidate, knowledge, listen, metalcraft, music, negotiation, open lock, search, spellcraft, spot,
   steal, stealth, survival, swim, tumble, woodcraft.
+- **Background stories** (`data/background.toml`, optional; without it no story is told; §8
+  "Background story"): `[tiers]` (per mille of the uncommon, rare, and fateful tiers) and
+  `[points]` (each effect kind's worth, for the load-time tier check), then the chapters,
+  `data/background/NN-<chapter>.toml` in file-name order and a campaign's own after them
+  (`campaigns/<id>/data/background/`, never a shared chapter's id): `[chapter]` (`id`, `name`,
+  `paragraph` 1 to 4, slot `defaults`) and `[[line]]`s (`id`, `tier`, `weight`, `text` with
+  slots, `when`, `only`, `effects`, `tags`, `set`). Every field and check is in the file's
+  comments and `docs/dev/background.md`.
 - **Horoscope** (`data/horoscope.toml`, optional; §8 "Character creation"): `anchor_year`, a
   year that starts a great cycle (1: the year of the Great Race, the first of the reckoning),
   then the `[[animal]]`s in the order of the Great Race and the `[[element]]`s, each with `id`,
