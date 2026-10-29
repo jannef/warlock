@@ -6,35 +6,35 @@ expression: "render(case, content.clone())"
  Your athlet│                                                                          │
             │ Vigour                                                                   │
             │ > a  Deep lungs                       Your stamina holds a good deal mo… │
-            │   b  Hardy                       1/3  Tougher than most: more hit point… │
-            │   c  Healthy                          Your hit points come back a quart… │
+            │   b  Gifted                           One of your stats comes to you mo… │
+            │   c  Hard training                    You drill every day: everything y… │
+            │   d  Hardy                       1/3  Tougher than most: more hit point… │
+            │   e  Healthy                          Your hit points come back a quart… │
             │ Might                                                                    │
-            │   d  Brawn                       1/2  Your blows up close hit harder: 1… │
-            │   e  Deft breaker                     You know where to put your boot: … │
-            │   f  Mighty kick                      Your kicks land like hammers: the… │
-            │   g  Second breath                    Every kill of yours gives you bac… │
+            │   f  Brawn                       1/2  Your blows up close hit harder: 1… │
+            │   g  Deft breaker                     You know where to put your boot: … │
+            │   h  Mighty kick                      Your kicks land like hammers: the… │
+            │   i  Second breath                    Every kill of yours gives you bac… │
             │ Finesse                                                                  │
-            │   h  Opportunist                      A foe that turns from you pays fo… │
+            │   j  Opportunist                      A foe that turns from you pays fo… │
             │ Weaponcraft                                                              │
-            │   i  Far shot                         Your shots fly 2 cells farther, a… │
-            │   j  Sworn foe                        You have sworn yourself against o… │
-            │   k  Unbinder                         You strike at the binding, not th… │
-            │   l  Wand mastery                     You draw more from a wand than it… │
-            │   m  Weapon focus (long blades)       You have drilled with one kind of… │
+            │   k  Far shot                         Your shots fly 2 cells farther, a… │
+            │   l  Sworn foe                        You have sworn yourself against o… │
+            │   m  Unbinder                         You strike at the binding, not th… │
+            │   n  Wand mastery                     You draw more from a wand than it… │
+            │   o  Weapon focus (long blades)       You have drilled with one kind of… │
             │ Guard                                                                    │
-            │   n  Armour training             1/2  You move freely in armour: it ham… │
-            │   o  Grave warden                     What you lay low stays down: noth… │
+            │   p  Armour training             1/2  You move freely in armour: it ham… │
+            │   q  Unflinching                      Even as a coward you keep your he… │
             │ Shadow                                                                   │
-            │   p  Keen ears                   1/2  You hear fainter sounds, fainter … │
-            │   q  Lamplighter                      You tend your lantern well: it bu… │
-            │   r  Night eyes                       Your eyes grow used to the dark: … │
+            │   r  Keen ears                   1/2  You hear fainter sounds, fainter … │
+            │   s  Lamplighter                      You tend your lantern well: it bu… │
+            │   t  Night eyes                       Your eyes grow used to the dark: … │
             │ Wayfarer                                                                 │
-            │   s  Long strider                     Your journeys across the overworl… │
-            │   t  Pilgrim                          You have knelt in many temples: t… │
-            │   u  Sense of place                   You read a place at a glance: a s… │
-            │   v  Sun-blessed                      The sun mends you: under the open… │
-            │   w  Swimmer                          Water does not slow you: you wade… │
-            │   x  Weather-wise                     You read the sky: under it you kn… │
+            │   u  Long strider                     Your journeys across the overworl… │
+            │   v  Pilgrim                          You have knelt in many temples: t… │
+            │   w  Sense of place                   You read a place at a glance: a s… │
+            │   x  Sun-blessed                      The sun mends you: under the open… │
             │                                                                          │
             │ Your stamina holds a good deal more.                                     │
             │                                                                          │
