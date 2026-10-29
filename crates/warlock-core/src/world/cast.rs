@@ -970,6 +970,7 @@ impl World {
                 if unaware {
                     self.startle(target, Some(by), made);
                 }
+                self.attacked_near(by, target);
                 let struck = self.target_against(target, missile);
                 let struck = self.vitals(by, target, struck);
                 let struck = self.flat_footed(target, unaware, struck);

@@ -40,9 +40,12 @@ fn world(ambient: u8, rules: Rules) -> World {
         Rules::Shipped => {}
         Rules::Difficulty(d) => {
             let text = include_str!("../../../../assets/data/surprise.toml");
+            // Nobody slips past anyone here (`slip_tests.rs`): a creature in the dark sees.
             files.insert(
                 path,
-                &text.replacen("difficulty = 13", &format!("difficulty = {d}"), 1),
+                &text
+                    .replacen("difficulty = 13", &format!("difficulty = {d}"), 1)
+                    .replacen("enabled = true", "enabled = false", 1),
             );
         }
         Rules::Without => {

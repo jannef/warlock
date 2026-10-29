@@ -55,7 +55,8 @@
 #                 (percent chance, each game hour, of telling one unidentified thing you carry or
 #                 wear for what it is; trained only), "kick"
 #                 (points added to the Strength a kick at a closed door is rolled against, at most
-#                 40), "steal" (points added to stealing from someone, at most 20; trained, a
+#                 40), "slip" (points added to slipping past a creature that would see you by
+#                 darkvision alone, at most 20: surprise.toml [slip]), "steal" (points added to stealing from someone, at most 20; trained, a
 #                 skill with it lets you steal at all: steal.toml), "heal" (points added to
 #                 treating your bleeding, poison, or a disease, at most 20; trained, a skill with
 #                 it lets you treat them at all: the Heal ability), "pick" (points added to
@@ -363,11 +364,15 @@ benefit = [{ effect = "steal", curve = [[0, 0], [100, 8], [200, 12]] }]
 [[skill]]
 id = "stealth"
 name = "Stealth"
-description = "Moving unheard: soft steps and quiet doors."
+description = "Moving unheard and unseen: soft steps, quiet doors, and slipping past eyes that see in the dark."
 kind = "passive"
 mark = [{ on = "sneak", chance = 15 }]
-# 60% quieter at 100, 75% at 150 and beyond.
-benefit = [{ effect = "quiet", curve = [[0, 0], [100, 60], [150, 75]] }]
+# 60% quieter at 100, 75% at 150 and beyond; and slipping past a creature that would see you
+# by darkvision alone (data/surprise.toml `[slip]`): +8 at 100, +12 at 200.
+benefit = [
+  { effect = "quiet", curve = [[0, 0], [100, 60], [150, 75]] },
+  { effect = "slip", curve = [[0, 0], [100, 8], [200, 12]] },
+]
 
 [[skill]]
 id = "survival"

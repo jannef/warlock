@@ -184,6 +184,7 @@ mod sidestep;
 mod sign_picks;
 mod siphon;
 mod skill_roll;
+mod slip;
 mod spawn;
 mod spell;
 mod spell_scale;
@@ -1645,6 +1646,8 @@ mod siphon_tests;
 mod skill_roll_tests;
 #[cfg(test)]
 mod skills_tests;
+#[cfg(test)]
+mod slip_tests;
 #[cfg(test)]
 mod spawn_tests;
 #[cfg(test)]

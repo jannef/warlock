@@ -1,9 +1,11 @@
 //! Creature behavior (spec §8 "Creature behavior"): what a creature does with each action the
-//! scheduler gives it. Deterministic, no randomness; outplayable by design.
+//! scheduler gives it. Deterministic, no randomness but the player's one contest to slip past
+//! it in the dark (`slip.rs`, at the look); outplayable by design.
 //!
 //! Each action, in order:
 //! 1. **Look**: the hostile actors it sees, by the player's rules of sight with its own eyes and
-//!    radius (`sight.rs`); the nearest is its target (ties: the lower actor id).
+//!    radius (`sight.rs`); the nearest is its target (ties: the lower actor id). The player may
+//!    slip past it (`slip.rs::looks_at`), unseen by its darkvision.
 //! 2. **Fight**: a melee creature attacks a target next to it, else steps along a shortest path
 //!    toward it; one that throws (a giant's boulders, `hurl.rs`) throws on the way whenever the
 //!    target is in range with a clear line of fire. A ranged creature or caster shoots or casts
@@ -41,7 +43,7 @@ use crate::content::{ActionKind, Combat, Stance};
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
-use crate::sight::{self, LineOfSight};
+use crate::sight::{self, By, LineOfSight};
 
 /// Extra cost of a path through a cell another actor stands on, in steps: a creature walks a
 /// detour of up to this many more steps around someone in its way, else waits behind them.
@@ -169,6 +171,8 @@ impl World {
     /// Steps 1 to 5 of the module docs: what creature `id`, having `heard` what it heard since it
     /// last acted, does now. Updates its mind.
     fn decide(&mut self, id: ActorId, heard: &[Heard]) -> Plan {
+        // A slip past that has lasted its time is over (`slip.rs`).
+        self.slip_lapses(id);
         let seen = self.nearest_hostile_in_sight(id);
         let mut mind = self.state.actors[&id].mind;
         let pos = self.state.actors[&id].pos;
@@ -196,6 +200,8 @@ impl World {
     /// Step 4: where creature `id` goes to look into what it heard: the newest noise whose source
     /// it does not see (by the rules of sight), if it has enemies at all.
     fn noise_to_look_into(&mut self, id: ActorId, heard: &[Heard]) -> Option<Pos> {
+        // Slipped past (`slip.rs`), what it sees only by darkvision it does not see.
+        let slipped = self.slipped_past(id, self.state.player);
         let World {
             state,
             content,
@@ -214,9 +220,15 @@ impl World {
         let level = state.current();
         let los = LineOfSight::compute(me.pos, radius, |p| level.is_opaque(content, p));
         let eye = me.eyes(content, &content.vision_profiles()[def.vision]);
-        (heard.iter().rev())
-            .map(|h| h.at)
-            .find(|&at| !sight::sees(state, content, lights, &los, &eye, at))
+        (heard.iter().rev()).map(|h| h.at).find(|&at| {
+            match sight::sees_by(state, content, lights, &los, &eye, at) {
+                None => true,
+                Some(By::Light) => false,
+                Some(By::Darkvision) => {
+                    slipped && !sight::lit_for(state, content, lights, &eye, at)
+                }
+            }
+        })
     }
 
     /// The nearest hostile actor creature `id` sees (ties: the lower id), and where it stands.
@@ -233,6 +245,7 @@ impl World {
         let def = content.creature(me.creature);
         let radius = sight::sight_radius(state, content, def.sight);
         let reach2 = radius2(radius);
+        let from = me.pos;
         let mut hostiles: Vec<(i32, ActorId, Pos)> = (state.actors.values())
             .filter(|a| a.level == me.level && a.id != id && a.pos.dist2(me.pos) <= reach2)
             .filter(|a| {
@@ -247,18 +260,21 @@ impl World {
             return None;
         }
         hostiles.sort_unstable();
-        let level = state.current();
         let eye = me.eyes(content, &content.vision_profiles()[def.vision]);
         let mut los: Option<LineOfSight> = None;
         for (d2, other, p) in hostiles {
             let reach = LineOfSight::radius_for(d2).min(radius);
             let los = match los.take() {
                 Some(l) if l.radius() >= reach => los.insert(l),
-                _ => los.insert(LineOfSight::compute(me.pos, reach, |q| {
-                    level.is_opaque(content, q)
-                })),
+                _ => {
+                    let level = state.current();
+                    los.insert(LineOfSight::compute(from, reach, |q| {
+                        level.is_opaque(content, q)
+                    }))
+                }
             };
-            if sight::sees(state, content, lights, los, &eye, p) {
+            // The player may slip past it unseen in the dark (`slip.rs`).
+            if super::slip::looks_at(state, content, lights, los, &eye, id, other, p) {
                 return Some((other, p));
             }
         }
