@@ -1247,13 +1247,20 @@ fn actor_rows(world: &World) -> Vec<String> {
             let talk = if a.id == player {
                 talk
             } else {
-                let aware = if probe.unaware(a.id, player) {
+                // Slipped past in the dark (`slip.rs`): when, while it lasts.
+                let aware = if probe.slipped_past(a.id, player) {
+                    "slipped past"
+                } else if probe.unaware(a.id, player) {
                     "unaware of player"
                 } else {
                     "aware"
                 };
-                match a.mind.noticed {
-                    Some(turn) => format!("{talk}; {aware}, noticed turn {turn}"),
+                let aware = match a.mind.noticed {
+                    Some(turn) => format!("{aware}, noticed turn {turn}"),
+                    None => aware.to_string(),
+                };
+                match a.mind.missed {
+                    Some(turn) => format!("{talk}; {aware}, missed turn {turn}"),
                     None => format!("{talk}; {aware}"),
                 }
             };

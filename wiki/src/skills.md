@@ -47,7 +47,8 @@ The passive skills help you more the higher they are:
 - **[Tumble](skills.md#skill-tumble)** adds to your [Defence](combat.md#defence) in the **[Dodge](combat.md#defence)** kind (see [Combat](combat.md#defence)), the one
   kind whose bonuses add up.
 - **[Stealth](skills.md#skill-stealth)** makes your [footsteps](hearing.md#what-makes-noise) and the [doors](doors.md) you open and close quieter (see
-  [Hearing](hearing.md)). Your attacks are as loud as ever.
+  [Hearing](hearing.md)). Your attacks are as loud as ever. It also helps you
+  [slip past](skills.md#slipping-past) a [creature](creatures.md) that sees in the dark: +8 at 100, +12 at 200.
 - **[Listen](skills.md#skill-listen)** lets you hear fainter sounds: your [hearing](hearing.md) threshold drops by the number shown (it
   never drops below 1).
 - **[Balance](skills.md#skill-balance)** takes some of the slowdown of a heavy load away (see [Burden](burden.md)): a
@@ -182,6 +183,33 @@ How many rolls a level gives: your [class](classes.md)'s, plus your [race](races
 
 Only you train, for now; [creatures](creatures.md) keep the skills they have. Your skills and their marks are
 saved with your run.
+
+## Slipping past
+
+Most [creatures](creatures.md) see a few cells in any darkness ([darkvision](vision.md#the-four-types)), so standing
+unlit beside one is no hiding place by itself. But the first time a creature that is not hunting
+you would see you **only** by its darkvision (your cell too dark for its eyes: no
+[lantern](lantern.md), no fire, no sky lighting you), it does not notice you at once: you try to
+slip past it, once. It is a contest, the same dice on both sides: 2d12 plus your
+[Dexterity](stats.md#stat-dexterity) [modifier](stats.md#modifiers) plus what your
+[Stealth](skills.md#skill-stealth) gives (the benefits table above), against 2d12 plus the
+creature's [Willpower](stats.md#stat-willpower) modifier plus its [Spot](skills.md#skill-spot), if it has any. A
+tie is yours; a roll of 2 always fails and a roll of 24 always works. Your **edge** is the
+difference:
+
+{{#include generated/slipping-past.md}}
+
+- **Unseen**, it does not see you while you stay in the dark: it goes about its business, walks
+  past, or comes to look into the [footsteps](hearing.md#what-makes-noise) it heard and arrives beside you none the
+  wiser. It has not seen you, so your first blow at it is a
+  [sneak attack](skills.md#skill-sneak-attack). It notices you when you step into light it can
+  see by (or light your [lantern](lantern.md)), when you attack it or anything else while it can
+  see you, when it is hurt, or when the time above has passed.
+- **Seen**, it hunts you as any creature would, and you get no second try until it gives up
+  the hunt.
+
+Nothing tells you which it was: a creature that did not notice you gives no sign.
+Creatures never slip past you.
 
 ## Stealing
 

@@ -776,6 +776,7 @@ impl World {
         if unaware {
             self.startle(target, Some(attacker), events);
         }
+        self.attacked_near(attacker, target);
         // A blow at a disguised mimic finds it out (`mimic.rs`), after the sneak attack is
         // decided: it was unaware.
         if self.disguised(target) {
@@ -996,10 +997,11 @@ impl World {
         harm: Harm,
         events: &mut Vec<Event>,
     ) -> bool {
-        // Any harm finds a disguised mimic out (`mimic.rs`).
+        // Any harm finds a disguised mimic out (`mimic.rs`), and ends a slip past (`slip.rs`).
         if self.disguised(id) {
             self.reveal_mimic(id, super::mimic::Reveal::Struck, events);
         }
+        self.end_slip(id);
         // Talents (spec §8 "Talents": Immune to pain): a hit does less after the soak, never
         // below 1; what is not a hit (a status, starving) is not eased.
         let damage = match harm {

@@ -152,6 +152,7 @@ above.
 | Drained stats, stat damage | `stats.md#drained-stats`, `diseases.md#stat-damage` |
 | Skills, trained and untrained | `skills.md`, `skills.md#what-skills-give` (a skill: its row) |
 | Skill rolls, skill marks | `skills.md#getting-better` |
+| Slipping past (a creature with darkvision, unlit) | `skills.md#slipping-past` |
 | Stealing | `skills.md#stealing` |
 | Treating yourself, binding a wound | `skills.md#treating-yourself` |
 | Foraging | `skills.md#foraging` |

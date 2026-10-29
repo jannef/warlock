@@ -5,9 +5,13 @@ Part of the specification, the source of truth for what to build; the index is
 developer notes (CLAUDE.md, `docs/dev/`).
 
 - **Creature behavior** (`warlock-core/src/world/ai.rs`, inside `World::creature_turn`; M10):
-  quite deterministic, outplayable by design; no randomness. Each action, in order:
+  quite deterministic, outplayable by design; no randomness but one contest. Each action, in
+  order:
   1. **Look**: the hostile actors it sees (§5 "Creature sight"; hostile by faction, §7); the
-     nearest is its target (squared distance; ties: the lower actor id).
+     nearest is its target (squared distance; ties: the lower actor id). The player may slip
+     past it here (§8 "Surprise and sneak attacks", `world/slip.rs`): one that would first see
+     them by darkvision alone rolls a contest of their Stealth against its Spot, once, and won,
+     does not see them by darkvision (nor their noise as one it sees) until the slip ends.
   2. **Fight**: a `melee` creature attacks a target next to it (diagonals too), else steps along
      a shortest path toward a cell next to it. A `ranged` creature or `caster` shoots or casts
      when the target is within its `range` (the rounded radius, like every radius; for a shot no

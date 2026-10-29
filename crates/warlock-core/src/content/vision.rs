@@ -46,7 +46,12 @@ impl VisionProfile {
     /// Visibility of a cell in line of sight with perceived `light` at squared distance `dist2`
     /// from the eye: bright enough, or within darkvision range.
     pub fn sees(&self, light: Light, dist2: i32) -> bool {
-        self.perceive(light).brightness() >= self.threshold || self.in_darkvision(dist2)
+        self.lit_enough(light) || self.in_darkvision(dist2)
+    }
+
+    /// Whether perceived `light` is bright enough for this eye, darkvision aside.
+    pub fn lit_enough(&self, light: Light) -> bool {
+        self.perceive(light).brightness() >= self.threshold
     }
 
     /// Whether squared distance `dist2` is within darkvision range.

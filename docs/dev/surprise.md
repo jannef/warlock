@@ -43,6 +43,14 @@ current with the code, as CLAUDE.md says.
     its sufferer pays it; Surprised's extra eased by `TalentMods::surprise_ease` (Cool head) and
     the Initiative skill's `surprise_ease`, together capped at all of it, every other status's
     as its data says.
+- `world/slip.rs`, slipping past (#683): `looks_at` (the look of `ai.rs::nearest_hostile_in_sight`,
+  the one moment: the contest's four gameplay draws for a creature hunting no one that would
+  see the player by darkvision alone, `sight::sees_by` and `sight::lit_for`; a lit look ends a
+  slip), `World::slipped_past` (`Mind::missed` within `lasts_turns`), `end_slip` (clears it and,
+  if the creature's eyes reach the player, sets `last_seen`: it sees them at once, no new roll),
+  `slip_lapses`, `attacked_near`. `SurpriseRules::slip_turns` (`[slip]`; `None` when off) and
+  Stealth's `slip` benefit (`Effect::Slip`, read here only); the creature's side is its Willpower
+  and its skills' `spot`.
 - `world/ambush.rs`, the sneak attack (#682): `World::sneak_dice(id)` (the Sneak attack skill's
   `sneak_dice` d6s `and` the talents' `ambush`), `World::sneaks(attacker, target, unaware,
   missile)` (dice, unaware or Surprised, vitals for the attacker, a missile within
@@ -73,6 +81,12 @@ current with the code, as CLAUDE.md says.
 | `perceive.rs::perceive` | `mark_noticed` |
 | `dump.rs` | the `actors` layer: `unaware of player` / `aware`, `noticed turn N` |
 
+Slipping past's hooks (#683): `ai.rs::nearest_hostile_in_sight` calls `slip::looks_at` for each
+hostile; `ai.rs::decide` calls `slip_lapses` first; `ai.rs::noise_to_look_into` takes a cell seen
+by darkvision alone for unseen while slipped past; `surprise.rs::unaware` reads `slipped_past`;
+`fight.rs::resolve` and `cast.rs::spell_attack` call `attacked_near` after `startle`; `fight.rs::hurt`
+calls `end_slip`; `dump.rs` says `slipped past` and `missed turn N`.
+
 ## Messages
 
 Told after the fact, never the roll: the player's attack, check failed: "You catch the kobold
@@ -98,6 +112,10 @@ you." (`say` for an attack, before its line; `news` for a trap, after its line).
   aware until `memory_turns` pass. Only the player's side: a creature struck by someone it does
   not see stays unaware of them (design §3.1), so each of an unseen thief's shots surprises it.
 
+- One moment anyone slips past: `looks_at`, four gameplay draws only there, only when the
+  creature hunts no one, the player is in its darkvision and dark to its eyes, and no slip is
+  set. `Mind::missed` is saved and hashed (left out while `None`; `Mind::is_calm` ignores it).
+
 ## Tests
 
 `world/surprise_tests.rs` (both ways round, memory, the check's outcomes and draws, sleepers and
@@ -106,8 +124,16 @@ bystanders, the hash test, saves and replays); `world/ambush_tests.rs` (the ladd
 the talents, the reach and Long reach, Surprised as the second door, the marks, the spell path,
 the craft and Initiative in the check); `world/vitals_tests.rs` (what has none, no critical, no
 dice, Anatomist, still surprised); `weapon_active_tests` (Vital strike's line);
-`combat.rs` (no confirmation drawn); `content/surprise.rs` (parse and refusals, optional file);
+`combat.rs` (no confirmation drawn); `content/surprise.rs` (parse and refusals, optional file,
+`[slip]` off); `world/slip_tests.rs` (the moment, made and lost, no second roll, each ending, the
+creature that came to look caught unawares, another hostile, the no-draw test, saves and replays);
 the screen snapshot `status-surprised`.
+
+## Hashes that move (#683)
+
+A run whose unlit player came within darkvision of a creature hunting no one, with no light of
+its own or others' on their cell (a kobold's torch lights them: no roll), draws the contest's four
+more from that creature turn, and, won, the creature does not see them.
 
 ## Hashes that move (#682)
 
