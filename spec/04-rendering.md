@@ -28,6 +28,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
    order (a gold helm over steel plate over leather boots), each its material's own colour at the
    glyph's brightness, with soft borders that sway slowly up and down (still with glyph
    animation off; never a rainbow, never a cycle through the colours).
+   **The unaware mark** (§8 "Surprise and sneak attacks"; Stalker's eye): a creature the
+   perception snapshot says has not noticed the player (`SeenActor::unaware`, set only for a
+   player with the talent) has its colour, and each band's, mixed toward a cool slate
+   (`#8a96a8`, through the palette) by a quarter before lighting: the kobold is still red, just
+   quieter. With glyph animation on the mix breathes between 0.15 and 0.35 over 6 s on the
+   creature's own phase; off (reduced effects) it stands still at 0.25. Less than the
+   darkvision fade; no shader change (free glyphs are coloured on the CPU).
 3. **UI layer** — panels, message log, and overlays, drawn in glyphs.
 4. **Post-processing** — glow/bloom, distortion, fades (§4.8).
 

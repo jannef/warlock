@@ -33,6 +33,14 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    lit, and glows as the glyph does, and the drift is a slow sway (`band_drift`: ±0.3 band, 7 s,
    the creature's own phase), 0 without glyph animation (reduced effects). A sliding creature is
    banded too: it is always on this layer.
+   **The unaware mark** (#687, Stalker's eye; `docs/dev/surprise.md`): for a creature whose
+   `SeenActor::unaware` is set (the snapshot sets it only for a player with the talent),
+   `ui/glyphs.rs` mixes its colour, and each band's, toward `UNAWARE_TINT` (`#8a96a8`, a cool
+   slate) with `unaware_tint(fg, mix)` before the palette and the light. `unaware_mix` breathes
+   between 0.15 and 0.35 over 6 s (`anim::breathe`, CPU only, no shader mirror; the creature's
+   own phase) with glyph animation on, and stands at 0.25 without it (reduced effects): still
+   information, no motion. Tuned against the darkvision fade (less than it), with captures
+   beside an aware creature of the same type.
 3. **UI console**: the same console material over the whole window; unwritten cells are
    transparent.
 
