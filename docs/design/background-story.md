@@ -1,6 +1,6 @@
 # Warlock — Background story: a youth told in sentences, and what it left you
 
-Design document for the owner's review (2026-10-28). Written against `origin/main` at 6e7c9e6b (Berserker stance, #690), with two issues in flight that this touches: #697 (the creation-only talents Family wealth and Father's sword) and the merged #671 (optional class skills). Nothing here is implemented; §16 cuts it into issues. It builds on what is there: `CharacterSpec::start` and `World::start_run` (`docs/dev/character-creation.md`: the rolls, the kit, the names, the sign), the creation picks and granted talents (`docs/dev/progression.md`, `world/creation.rs`, `Actor::boons`), skills and their starts (`docs/dev/skills.md`), scores and potentials (`docs/dev/stats.md`, `Stats::gift`), the starting alignment (`docs/dev/alignment.md`), the screen stack and the info pages (`docs/dev/screens.md`), saves and replays (`docs/dev/saves.md`, `Replay`), and a run's campaign (`docs/dev/campaign.md`). Every number is data and hidden in the game; the wiki states it (the owner's rule: the game is vague, the wiki is accurate).
+Design document for the owner's review (2026-10-28), revised with the owner's decisions the next day (§18). Written against `origin/main` at 6e7c9e6b (Berserker stance, #690), then against 6082d382 (the heritage talents Family wealth and Father's sword, #697 merged as #700; #671's optional class skills before it). Nothing here is implemented; §16 cuts it into issues. It builds on what is there: `CharacterSpec::start` and `World::start_run` (`docs/dev/character-creation.md`: the rolls, the kit, the names, the sign), the creation picks and granted talents (`docs/dev/progression.md`, `world/creation.rs`, `Actor::boons`), skills and their starts (`docs/dev/skills.md`), scores and potentials (`docs/dev/stats.md`, `Stats::gift`), the starting alignment (`docs/dev/alignment.md`), the screen stack and the info pages (`docs/dev/screens.md`), saves and replays (`docs/dev/saves.md`, `Replay`), and a run's campaign (`docs/dev/campaign.md`). Every number is data and hidden in the game; the wiki states it (the owner's rule: the game is vague, the wiki is accurate).
 
 **The owner's request** (2026-10-28, verbatim): *"feature: add adom type of randomly generated background story. Basically we have list of different sentence pools that the story is build from. Each sentence rolled might have effect on stats, or starting gear. There should be chances to roll rare events to the background, that give more possible boons. The random sentences need to take the player choises in chracter creation into account. the story is presented after player has started teh run, and cannot go back to make choices."*
 
@@ -10,7 +10,7 @@ Design document for the owner's review (2026-10-28). Written against `origin/mai
 2. The owner's request, ADOM's background, and what exists today
 3. The shape: eight chapters, one line each, tags between them
 4. The data: `data/background/`
-5. The roll: streams, tiers, caps, determinism
+5. The roll: streams, tiers, the floor, determinism
 6. Effects: what they touch, and the order they apply
 7. Rare events and banes: the tiers and their numbers
 8. What the player sees: the story screen, page 8, dumps, what leaks
@@ -22,7 +22,8 @@ Design document for the owner's review (2026-10-28). Written against `origin/mai
 14. The wiki, the spec, and the docs
 15. Choices made along the way, and what is rejected
 16. Implementation plan
-17. Open questions, each with a recommended default
+17. Open questions, each with a recommended default (answered: §18)
+18. Decisions (owner, 2026-10-29)
 
 ## 1. Summary
 
@@ -32,21 +33,21 @@ Design document for the owner's review (2026-10-28). Written against `origin/mai
 | **A line** | an entry in a chapter's file with `text`, a `tier` (common, uncommon, rare, fateful), a `weight`, `when` (conditions on the race, gender, class, birth animal and element, a lucky day, the starting alignment band, the creation talents, the trained skills, the age, and the **tags** earlier lines set), `effects` (stat points, gold, an item as a kit line, a skill start, weapon-skill marks, an alignment nudge, a talent or a flaw), `tags` it sets, and `set` (words later lines use: `{guardian}`, `{home}`, `{trade}`). §4 |
 | **The roll** | one named stream per chapter, `background/<race>,<gender>,<class>/<chapter>`; per chapter: draw the tier, keep the lines of it that fit, draw one by weight, roll its dice. No existing creation stream moves; the same seed and spec always tell the same story; the same spec on another seed tells another. §5 |
 | **Rare events** | per chapter: **uncommon 12 %** (a boon, perhaps with a cost), **rare 3 %** (net +3 to +5 points), **fateful 0.5 %** (net +5 to +8: a talent, a magic heirloom, a second stat). Over a story of eight: about one character in four has a rare line or better, **one in twenty-five a fateful one**. Rare and fateful lines are always net-positive (checked at load); banes live in common lines and are capped. §7 |
-| **Caps** | points per effect kind in data (a stat point 2, a skill start 1, a plain item 1, a magic item 3, a talent 4 …); a story's boons at most **12**, its banes at most **5**, one stat moved at most **±2**; the roller drops from the pool what would break a cap, so the caps are exact whatever the pools say. Unbalanced is fine; this keeps "fine" from becoming "a free level". §5.3 |
+| **No caps, one floor** | nothing limits what a story gives or takes in all (decision 2): the tiers' odds are the only rarity, and a line's worth is bounded only by its tier's band. The one floor is the game's own: a score is never below 1 (`Stats::gift` keeps 1..=40). Points per effect kind (a stat point 2, a skill start 1, a magic item 3, a talent 4 …) exist only to check a line's tier at load and to show the wiki. §5.3 |
 | **Order** | the story is told **after** the kit, the class's level-1 grants, and the creation picks (Random picks included), so it can read every choice, and no pick can be met by a gift fate gives later. Its stat changes move the score and the potential together (`Stats::gift`, the class gift's rule); its items join the pack as kit lines do (`Pack::put`/`equip`); a magic heirloom is identified. §6 |
-| **#697** | Family wealth **forces** the Parents chapter to its "old money" lines, which tell the wealth and give no gold (the talent gave it); Father's sword **excludes** the heirloom lines and tells of the blade instead. The talents bias the pools; nothing is paid twice. §6.2 |
+| **The heritage talents (#700)** | Family wealth **forces** the Parents chapter to its "old money" lines, which tell the wealth and give no gold (the talent gave it); Father's sword **excludes** the heirloom lines and tells of the blade instead. The talents bias the pools; nothing is paid twice. §6.2 |
 | **#671** | a skill the class's optional roll gave is a condition a line may read (`skills = ["heal"]`: "you had the healer's hands already"); a story skill start on a skill already trained raises it (`Skills::add`), as the optional roll does. §6.3 |
 | **Presentation** | a read-only screen **"Your story"** over the run's first turn, opened by the app the moment a run begins from the summary (or `--character`/`--new` at a window), never on Continue, never under `--capture`/`--replay`; then **page 8** of the info pages (`Page(8)` exists already: no new `KeyCommand`), beside Talents; `--screen story`. Words only: never a number the game hides. §8 |
 | **Who** | every run that starts with the kit (New run, `--character`, `--name`, `--talents`, a replay with `kit`): a chosen character has a life. `--scenario` alone (the scenario's own character, tests, golden walks) has none, so those hashes hold. The web build needs nothing: all of it is core and content. §9 |
 | **Saved state** | `Character::story: Vec<Told { chapter, line }>` (ids; the text is re-told from the content), left out while empty: old saves and replays load; no new replay field; `FORMAT_VERSION` untouched. A story talent is an `Actor::boons` entry (the altar's machinery). §13 |
-| **Talents** | the `background` system with **Favoured child** (Scholar, creation-only: the luckier tiers twice as likely), **Hard-won** (Grit, creation-only: a stat your story cost you comes back sooner: three training marks per point lost), and **Storyteller** (Scholar, Presence 12: shop favour a little better, more for a tale with rare turns). No class ability (`min_class` is 0; §10 names where one would go). §10 |
-| **Slices** | five issues in three waves: B1 the data and the roll (save), then B2 the screen and B3 the pools and the wiki together, then B4 the talents (after #697) and B5 the fateful effects. One PR adds saved state; none adds an action. §16 |
+| **Talents** | the `background` system with **Favoured child** (Heritage, creation-only: the luckier tiers twice as likely), **Hard-won** (Heritage, creation-only: a stat your story cost you comes back sooner: three training marks per point lost), and **Storyteller** (Scholar, Presence 12: shop favour a little better, more for a tale with rare turns). No class ability (`min_class` is 0; §10 names where one would go). §10 |
+| **Slices** | five issues in three waves: B1 the data and the roll (save), then B2 the screen and B3 the pools and the wiki together, then B4 the talents and B5 the fateful effects. One PR adds saved state; none adds an action. The implementers write the pools (decision 13). §16 |
 
 **Key choices, and why**
 
 1. *One sentence per chapter, chapters in a fixed order, tags between them.* ADOM's stories read well because each sentence answers the one before; a bag of unordered sentences reads like a horoscope column. Tags (`orphan`, `smith`, `bully`) and three word slots (`{guardian}`, `{home}`, `{trade}`) are the whole memory; nothing else is needed for sentences to agree, and a loader check keeps the vocabulary closed.
 2. *Tiers are drawn first, then the line.* The owner asked for rare events with numbers; drawing the tier as its own step makes the rarity a number in one place (`[tiers]`), the same in every chapter, and visible in the wiki, instead of an accident of weights across pools of different sizes.
-3. *Caps are enforced by the roller, not by reading the pools.* Pools will churn (they are content); a cap that is a property of the data is unenforceable across paths. The roller counts points and drops lines that would break a cap before it draws, so the worst story is bounded whatever the files say, and the check is one unit test.
+3. *No caps on a story, and no protection from a bad one* (decisions 2 and 7). The first draft capped a story's boons and banes and bounded each stat; the owner struck the caps: a story is the sum of its lines, however they fall, and the only floor is that a score is never below 1. What stays is per line: a tier's band (a rare line is net-positive and carries no bane) is checked at load, so rarity still means good news, and a grim story is simply a grim story.
 4. *The story comes after every choice, and after the picks.* Fate speaks last. That is the owner's "take the player choices into account" and "cannot go back" in one rule: the story reads the race, the sign, the class, the talents (the Random picks too), the optional skills; and because prerequisites are checked at the pick and never again, a bane cannot un-take a talent and a boon cannot have been used to take one.
 5. *Effects reuse what exists.* Items are kit lines (`content/kit.rs`, alternatives and `magic` included), stat changes are `Stats::gift`, skill starts are `Skills::add` (#671's path), talents are boons (`Actor::boons`, the forgotten altar's), the alignment nudge is the start's fourth term beside the animal's. No new effect machinery; one application function per kind.
 6. *The text is the game's narration, in the plain English of the march's day.* The story is the game's voice, not a commoner's, so it is not Cockney; quoted speech in a line takes its speaker's register (a posh aunt, a Cockney pedlar); old places keep their Old English names, and only the campaign's own chapter names them. "Fate", never "the seed".
@@ -55,7 +56,7 @@ Design document for the owner's review (2026-10-28). Written against `origin/mai
 
 **ADOM's background** (Ancient Domains of Mystery; the "Background" shown on the character sheet, generated at creation). ADOM composes a few paragraphs of the character's youth from sentence pools, one sentence a part: the **parents** and their station, the **birth** (the star sign's month, and a circumstance), the **childhood** (what kind of child), the **youth** (a trade, a teacher, a temple), and **why they left** (ambition, a quarrel, a calling). Some sentences carry a small effect: a childhood line moves a stat a point or two ("as a child you were very weak" or "the strongest child in the village"), a youth line starts a skill (the temple years give Healing, a scholar's youth Literacy), the parents' wealth sets the starting money, and the sign sentence is the horoscope's. Players remember three things about it: that it read like a life and not a table; that a few lines mattered (the Literacy and the money) and most did not, which made the ones that did feel like luck; and that nothing in it could be chosen, only re-rolled by starting over. The community's own proposals for new backgrounds (the Chaos Knight thread on the ADOM blog, 2012) all reach for the same shape: a life in stages, each line with a stat, a purse, or a skill in brackets, and one closing line that hands the character to the road.
 
-What this design takes from it: the stages, one sentence each, in order; effects small and in words; the sign's place in the birth paragraph; "nothing chosen". What it adds, because the owner asked: **rare events with real boons** and explicit odds; sentences that **read the choices** (ADOM's did not read the class beyond the youth line); the story told **after the run starts**, so it is fate, not a reroll; and the house rules (the wiki exact, the game vague; caps so unbalanced stays sane).
+What this design takes from it: the stages, one sentence each, in order; effects small and in words; the sign's place in the birth paragraph; "nothing chosen". What it adds, because the owner asked: **rare events with real boons** and explicit odds; sentences that **read the choices** (ADOM's did not read the class beyond the youth line); the story told **after the run starts**, so it is fate, not a reroll; and the house rules (the wiki exact, the game vague; no caps and no protection: unbalanced is fine).
 
 **What exists today** (the pieces the story is built from):
 
@@ -67,6 +68,7 @@ What this design takes from it: the stages, one sentence each, in order; effects
 | Items | `content/kit.rs`: a kit line is a string or a table (`carry`/`wield`/`wear`, alternatives `"club\|quarterstaff"`, `trained`, `gender`, `magic = "any"\|"magic"\|"rare"`), checked at load; `kit::roll` draws `one_of` and `magic::loot::make` at `kit::ITEM_LEVEL`; `Pack::put` joins stackables, `Pack::equip` finds a free slot |
 | Skills | `Skills::add(id, by)`: trained at the roll if untrained, raised if trained, capped at `MAX_VALUE`; #671's optional skills use it. Weapon skills carry `marks` toward the next rank |
 | Talents given, not picked | `World::bestow_talent` (the altar's Chosen) gives a talent at rank 1 with what it hands out and records it in `Actor::boons`, which `stars::grant` puts back on every restore; `bestow_flaw` the same for a sign's `flaw` talent |
+| Creation-only talents (#700) | `needs = { creation = true }` (`Need::Creation`: offered at the creation picks, refused at a level in words); the `heritage` tree (`no_free`) holds Family wealth (`starting_gold`, `starting_gems`) and Father's sword (`heirloom`: the race's weapon, 2 to 4 affixes, identified), handed out once as they are taken (`world/heirloom.rs`) |
 | Alignment | `Start::alignment` = the race's + the class's + the animal's nudge, set on the actor in `begin`; `shift_alignment` is the one place a score changes **in play** |
 | Granted talents and the class | `class::grant` gives what the table names and the player lacks; a talent already held (a creation pick, a boon) is simply not given again |
 | Screens | one stack (`ui/screens.rs`); the info pages `PAGES` (Character … Talents, seven) switched by `KeyCommand::Page(1..9)`, which exist for all nine numbers; a read-only text screen exists in `ui/sign_screen.rs` (the reveal: a panel of wrapped paragraphs, Enter and Esc from the menu context, no rows) |
@@ -94,7 +96,7 @@ A story is eight **chapters** in a fixed order, each contributing **one line** (
 
 **Tags** are the story's memory: a line may `tags = ["orphan"]`, and a later line may ask `when = { tags = ["orphan"] }` or `not_tags = ["orphan"]`. The vocabulary is closed: the loader refuses a `when.tags` id no earlier chapter's line sets (a tag set in Youth cannot be asked in Birth). **Word slots** are the other half: a line may `set = { guardian = "the sisters", home = "the minster" }`, and a later line's text may use `{guardian}`, `{home}`, `{trade}`; the chapter settings give every slot a default (`your family`, `home`, `your trade`), so an unset slot still reads. The fixed slots are `{name}`, `{they}`, `{them}`, `{their}` (the gender's pronouns; "other" is they), `{guardian}`, `{home}`, `{trade}`; the loader refuses any other `{…}` in a text. Capitalised forms (`{They}`) for a sentence start.
 
-A chapter always yields a line: every chapter has at least one **plain line** (common, no conditions, no effects: "You worked, as everyone worked, and nothing of it is worth the telling."), checked at load, so a pool emptied by conditions and caps still tells something. The plain lines are weighted so that a common story has two or three of them: a life is mostly ordinary.
+A chapter always yields a line: every chapter has at least one **plain line** (common, no conditions, no effects: "You worked, as everyone worked, and nothing of it is worth the telling."), checked at load, so a pool emptied by conditions still tells something. The plain lines are weighted so that a common story has two or three of them: a life is mostly ordinary.
 
 ## 4. The data: `data/background/`
 
@@ -109,7 +111,8 @@ uncommon = 120
 rare = 30
 fateful = 5
 
-# What an effect is worth, in points, for the caps and the tier checks (§5.3, §7).
+# What an effect is worth, in points: only for the tier check of each line at load (§7) and
+# the wiki's tables. No story total is capped (decision 2).
 [points]
 stat = 2            # per point of score, boon or bane
 skill = 1           # a skill start or raise, whatever the dice
@@ -122,11 +125,6 @@ magic_rare = 5      # magic = "rare"
 talent = 4          # a talent granted
 flaw = 3            # a flaw granted (a bane)
 alignment = 0       # nudges are free (they are the story's opinion of you)
-
-[caps]
-boons = 12          # a story's boon points, at most
-banes = 5           # its bane points, at most
-per_stat = 2        # one stat's net change, within ±this
 ```
 
 ```toml
@@ -178,13 +176,13 @@ text = "You were a child like any other, and nobody wrote down what you did."
 | `id`, `tier`, `weight` | the id; `common`, `uncommon`, `rare`, or `fateful`; the weight among the fitting lines of its tier (1 to 20) |
 | `text` | the sentence(s), with slots; second person, past tense |
 | `when` | all must hold: `race`, `class`, `gender`, `animal`, `element` (lists of ids; any of them), `lucky = true`, `band = { min, max }` (the **starting** band, before the story's own nudges: `alignment::Requirement`), `talents` (every one held: the creation picks, Random ones included, and the class's level-1 grants), `not_talents`, `skills` (every one trained, #671's included), `tags`, `not_tags`, `age = { min, max }` (the age at the start: a kobold of seven had no seven years' apprenticeship; an elf of two hundred had), `campaign` (ids; for a shared chapter's line that names a world) |
-| `only` | `true`: when this line fits, the chapter's pool is the fitting `only` lines alone (the forcing #697 uses, §6.2). Among several, the weights decide |
+| `only` | `true`: when this line fits, the chapter's pool is the fitting `only` lines alone (the forcing the heritage talents use, §6.2). Among several, the weights decide |
 | `effects` | a list, each one of: `stat = { strength = 1 }` (−2 to 2 per stat per line); `gold = "4d6"` or `gold = -20` (dice or a number; negative takes, never below 0); `item = <kit line>` (the kit syntax exactly, alternatives and `magic` included; a `magic` item is **identified**); `skill = { heal = "2d4" }`; `weapon_marks = { spears = 3 }` (marks toward the next rank, never a rank; `best = N` for the skill held highest, ties by data order); `alignment = 25` (−100 to 100); `talent = "hardy"` (rank 1, with what it hands out; never a `granted`, class-tree, or `flaw` talent, and never one the character holds; a talent with a `choice` names it, `talent = "weapon_focus:long_blades"`); `flaw = "slight"` (a sign's flaw talent, as the altar's Forsaken) |
 | `tags`, `set` | what later lines may read |
 
 **Loader checks** (`content/background.rs`, after races, classes, skills, talents, objects, and the horoscope load): ids; every `when` id exists (a talent in `when.talents` must exist, so a line that names #697's ids waits for #697); every tag asked is set by an earlier chapter; every slot used is known; every kit line parses as kits do (`object::parse_stacks`, a free slot); stat changes within ±2 a line; a tier's net points within its band (§7) and a rare or fateful line net-positive; every chapter has a plain line; `paragraph` 1 to 4 and non-decreasing in chapter order; a campaign's chapter ids are not shared ones. Content without `background.toml` tells no story and draws nothing (fixtures).
 
-## 5. The roll: streams, tiers, caps, determinism
+## 5. The roll: streams, tiers, the floor, determinism
 
 ### 5.1 Streams
 
@@ -195,23 +193,18 @@ One stream per chapter: `Rng::stream(seed, "background/<race>,<gender>,<class>/<
 `background::tell(content, seed, &Witness) -> Story` is pure (`warlock-core/src/background.rs`, no `World`): `Witness` is what the conditions may read (the spec with its picks, the sign and the birth day, the age, the band, the trained skills, the talents held, the campaign). For each chapter in order:
 
 1. **The tier**: one draw, `rng.below(1000)` against `[tiers]` (scaled by `TalentMods::story_luck`, §10): fateful, rare, uncommon, else common.
-2. **The pool**: the chapter's lines of that tier whose `when` holds against the witness and the tags and slots so far, **and whose points fit the caps** (§5.3). If an `only` line is among them, the pool is the `only` lines. Empty: the tier below, down to common, whose plain line always fits.
+2. **The pool**: the chapter's lines of that tier whose `when` holds against the witness and the tags and slots so far. If an `only` line is among them, the pool is the `only` lines. Empty: the tier below, down to common, whose plain line always fits.
 3. **The line**: one draw, `rng.below(sum of weights)`.
 4. **Its dice**: gold dice, skill dice, `one_of` alternatives, a `magic` item's loot rolls, in effect order, from the same stream.
 5. Its tags and slots are recorded; its text is not rendered until shown.
 
 Two draws for a chapter without dice; a story is sixteen draws plus dice. The result is `Story { told: Vec<Told { chapter, line }>, effects: Vec<Rolled> }`: the ids (saved) and the rolled effects (applied once, §6, never saved: they are in the actor once applied).
 
-### 5.3 The caps
+### 5.3 No caps, one floor
 
-The roller keeps a running count of boon points, bane points, and net stat change per stat (`[points]`, `[caps]`). Before step 2 it drops any line whose effects would take the boons past `caps.boons`, the banes past `caps.banes`, or a stat past `±caps.per_stat`; a line's points are its effects' worth summed by sign (a line with a +1 and a −1 adds 2 to boons and 2 to banes). So:
+The owner's decision (§18, 2): **a story is not capped**. The roller counts nothing across chapters: every line that fits is in the pool, whatever the lines before it gave or took, and a story's total is the sum of its eight lines. So eight kind lines may give six stat points and a purse, and eight grim ones may take four and the kit's coins; both are rare by the tiers and the weights, not by a rule. The one floor is the game's own: `Stats::gift` keeps a score in 1..=40, so a stat a story lowers stops at 1 (and its potential never below the score). Gold stops at 0 (nothing is owed). Nothing else bounds a story, and nothing protects a character from a bad one (decision 7): no re-roll, no pity line, no second draw.
 
-- the richest story has at most 12 boon points: six stat points, or a talent, a magic heirloom, and two stat points, or a rare blade, two stat points, a skill, a trade's marks, and a purse; never "a free level" (a level is about ten);
-- the grimmest has at most 5 bane points: two stat points and a lost purse, or a stat point and a flaw;
-- no stat moves more than 2 either way, so a kobold's Strength 7 cannot become 5 and a dwarf's Toughness 18 cannot become 21 by fate;
-- Favoured child (§10) changes the odds, not the caps.
-
-The caps are properties of the roller, tested once (`background::tests::no_story_breaks_a_cap` over every race, gender, class, and a thousand seeds), not of the pools.
+What the first draft's `[points]` are still for: the per-line tier bands (§7), checked at load, so that a rare or fateful line is always net-positive, and the wiki's tables, which state each line's worth.
 
 ### 5.4 Determinism and "the same spec on another seed"
 
@@ -225,7 +218,7 @@ Given the content, the seed, and the witness, the story is fixed. The witness is
 
 | Effect | Applied by | Note |
 |---|---|---|
-| `stat` | `Stats::gift(stat, by)` on the player's stats | the score and the potential move together, kept in 1..=40; a bane lowers both, the potential never below the score (the altar's Wrath lowers potentials too; a story is gentler: the potential follows the score down only as far as `gift` takes it). Hit points and mana are set to their maxima afterwards (a Toughness or mental point counts at once; the run has not begun) |
+| `stat` | `Stats::gift(stat, by)` on the player's stats | **the score and the potential move together** (decision 8): a +1 raises both by 1, so the ceiling moves with the gift; a −1 lowers both by 1, the potential never below the score. Kept in 1..=40: a score a story lowers stops at **1**, the one floor (decision 2). Hit points and mana are set to their maxima afterwards (a Toughness or mental point counts at once; the run has not begun) |
 | `gold` | `Pack::put` of `gold_coin` stacks, or taking from them | never below 0: "lost everything" takes what the kit gave |
 | `item` | the kit path: `KitItem` → `Pack::put`/`Pack::equip` on the player's inventory and equipment | a `wield`/`wear` line takes the first free slot, else is carried (as kits); a `magic` item is made by `magic::loot::make` at `kit::ITEM_LEVEL` from the chapter's stream and **identified** (`Magic::identify`): you grew up with it. The known scrolls and potions (`WorldState::known_scrolls`) gain the story's, as the kit's |
 | `skill` | `Skills::add` | trained at the roll if untrained, raised if trained (#671's rule); a skill the class trains is simply higher |
@@ -240,9 +233,9 @@ Then mana and hit points to their maxima, then the perception, as today. The wel
 
 **`World::draft`** (the Talents step's drafted run) tells no story: `draft` calls `begin`, not `start_run`, and `tell_background` is `start_run`'s. The step's offers are those of a character without a story, which is right: the story has not happened.
 
-### 6.2 #697: Family wealth and Father's sword
+### 6.2 The heritage talents: Family wealth and Father's sword (#700)
 
-The two creation-only talents overlap with the Parents and Fortune chapters ("inheritance" lines). The rule: **the talents bias the pools; nothing is given twice.**
+The two creation-only talents (`family_wealth`, `fathers_sword`; the `heritage` tree, `needs = { creation = true }`) overlap with the Parents and Fortune chapters ("inheritance" lines). The rule: **the talents bias the pools; nothing is given twice.**
 
 | Talent held | Parents | Fortune |
 |---|---|---|
@@ -250,7 +243,7 @@ The two creation-only talents overlap with the Parents and Fortune chapters ("in
 | Father's sword | — | the heirloom lines (`the_heirloom`, `the_named_blade`) have `not_talents = ["fathers_sword"]`; the `only` line `fathers_blade_told` (common, no effect) tells of the blade already in the pack: "The blade you carry was your father's, and his father's; the name on the hilt is older than the house." |
 | Neither | the wealthy lines without the talent (`comfortable`, uncommon) give a modest purse (`gold = "4d6+10"`) | the heirloom lines may come (rare, §11): a magic weapon by fate for one character in thirty-odd, where the talent gives one to anyone who pays two picks |
 
-So the talent is the sure way and the story the lucky way, and a character with both the talent and luck gets the talent's wealth and a story that says so, not two purses. #697's issue is amended with one line: its talents' ids are what the background lines ask for.
+So the talent is the sure way and the story the lucky way, and a character with both the talent and luck gets the talent's wealth and a story that says so, not two purses. The heritage talents are merged, so the lines' `talents` conditions name real ids from B1 on.
 
 ### 6.3 #671, the sign, the horoscope, the class grants
 
@@ -261,7 +254,7 @@ So the talent is the sure way and the story the lucky way, and a character with 
 | The gender | `gender` conditions and the pronoun slots; the "other" stat is raised before the story (a condition could read it: not proposed) |
 | The race | `race` conditions; the age condition does the rest (an elf's Youth is long, a kobold's short) |
 | The class | `class` conditions (the Youth chapter is mostly these); the class's level-1 grants are held before the story and readable as `talents` |
-| The kit | the story's items land on the kit's pack: a second dagger stacks, a second cloak is carried. `kit::tests::nobody_starts_strained…` is widened: a story item that would Strain the weakest character of its conditions is a load error (the loader runs the burden check on each item line against the lightest race that fits it, as kits do) |
+| The kit | the story's items land on the kit's pack: a second dagger stacks, a second cloak is carried. `kit::tests::nobody_starts_strained_and_only_wealth_burdens` (which #700 widened to the heritage at its heaviest) gains the story's heaviest item lines: a content test, as the kits' is, not a rule of the roller |
 | Mana | nothing: no story line touches mana (a stat point in a mental stat moves the maximum through the existing rule). Said here as the mana policy asks |
 | Alignment | the start's fourth term (§6.1); the bands' widths (150 to a band at the middle) make a −25 nudge a quarter of a band: a story of three cold lines may drop a Neutral start to Callous, which is subtle enough to be a surprise and loud enough to matter |
 
@@ -276,7 +269,7 @@ So the talent is the sure way and the story the lucky way, and a character with 
 
 Expected lines per story: uncommon 0.96, rare 0.24, fateful 0.04; a rare line or better, 25 %. With Favoured child (the three luckier tiers doubled: 24 %, 6 %, 1 %): uncommon 87 %, rare 39 %, fateful 7.7 % (one in thirteen).
 
-**"The rarer the better"**: the net bands rise by tier and a rare or fateful line carries no bane, so a rare event is always good news (the owner's "give more possible boons"), while a common line may be grim. **Banes** are real: a common line may cost a stat point, a purse, or (once per story, the cap) a flaw, and the Trial chapter is mostly such lines; but the bane cap (5 points) and the per-stat cap (±2) bound them, and no story of eight common lines can take more than two stat points and a purse. The grimmest story (§12.3) still leaves something: that is the roller's boon floor, not a rule: the Trial's lines keep a skill or a point of Willpower from what they take, because a life that only takes is not a story.
+**"The rarer the better"**: the net bands rise by tier and a rare or fateful line carries no bane, so a rare event is always good news (the owner's "give more possible boons"), while a common line may be grim. **Banes** are real and **uncapped** (decision 2): a common line may cost a stat point, a purse, or a flaw, and the Trial chapter is mostly such lines; a story of eight such lines takes what it takes, down to the floor of 1 on a score and 0 coins. Nothing protects against it (decision 7). The Trial's lines are written to keep a skill or a point of Willpower from what they take, because a life that only takes is not a story: a writing rule (§11.9), not one of the roller.
 
 The numbers are first guesses in data; the wiki states them, and `background::tests::tier_odds_hold_over_many_seeds` pins them within a margin so a pool edit cannot quietly change the rarity.
 
@@ -305,8 +298,10 @@ The summary (before the run) gains one dim line under the kit: **"Fate will have
 │  in the family had spoken of: a blade older than the hall, with   │
 │  a name on the hilt.                                               │
 │                                                                    │
-│  You left because the stories were all somewhere else. You came   │
-│  over the pass alone and on foot, with the snow a day behind you. │
+│  You left because the stories were all somewhere else. At the     │
+│  top of the pass an old woman sat by a fire that should not have  │
+│  burned in that wind, and told you the ash march would make you   │
+│  or unmake you. She gave you bread for the road.                   │
 │                                                                    │
 │  Enter continue                                                    │
 └────────────────────────────────────────────────────────────────────┘
@@ -360,19 +355,19 @@ A saved character from before this lands has no story (`Character::story` empty)
 
 ## 10. Talents and class abilities: the `background` system
 
-A new `[[system]]` `background` ("Background story: the tiers, what a story costs you, telling it") in `data/talents.toml` (placed after `experience`, before `speed`, by topic: the character's making). Talents, one file each under `data/talents/`, one hook each. Two are **creation-only** (#697's field: a talent offered at the creation picks and never at a level): they must be, since the story is told at creation and nothing later can change it. The third is an ordinary pick that reads the story in play.
+A new `[[system]]` `background` ("Background story: the tiers, what a story costs you, telling it") in `data/talents.toml` (placed after `experience`, before `speed`, by topic: the character's making). Talents, one file each under `data/talents/`, one hook each. Two are **creation-only** (#700's `needs = { creation = true }`, in the `heritage` tree beside Family wealth and Father's sword): they must be, since the story is told at creation and nothing later can change it. The third is an ordinary pick that reads the story in play.
 
 | Talent (tree, needs) | Effect, in the game's words | The rule | Hook (one read) |
 |---|---|---|---|
-| **Favoured child** (Scholar; creation-only) | "Fortune smiled on your youth: the luckier turns of your story come oftener." | the uncommon, rare, and fateful odds doubled (`[tiers]` × 2: 24 %, 6 %, 1 %); the caps unchanged | `background::tell` reads `TalentMods::story_luck` (a percent, 200) when it scales the tier table: the one read, before the first chapter's draw |
-| **Hard-won** (Grit; creation-only) | "What your youth cost you, you win back: a score your story lowered comes back sooner." | every stat point a story line took is three **stat training marks** on that stat (`Actor::stat_marks`, the level and daily checks' reservoir: the point is likely back by level 2 or 3; the potential is where `gift` left it, so the rise is real) | `World::tell_background`'s `stat` arm, `by < 0`: `stat_marks[stat] += 3 × |by| × TalentMods::hard_won` |
+| **Favoured child** (Heritage; creation-only) | "Fortune smiled on your youth: the luckier turns of your story come oftener." | the uncommon, rare, and fateful odds doubled (`[tiers]` × 2: 24 %, 6 %, 1 %) | `background::tell` reads `TalentMods::story_luck` (a percent, 200) when it scales the tier table: the one read, before the first chapter's draw |
+| **Hard-won** (Heritage; creation-only) | "What your youth cost you, you win back: a score your story lowered comes back sooner." | every stat point a story line took is three **stat training marks** on that stat (`Actor::stat_marks`, the level and daily checks' reservoir: the point is likely back by level 2 or 3; the potential is where `gift` left it, so the rise is real) | `World::tell_background`'s `stat` arm, `by < 0`: `stat_marks[stat] += 3 × |by| × TalentMods::hard_won` |
 | **Storyteller** (Scholar; Presence 12) | "You tell your tale wherever you go, and tell it well: shopkeepers warm to you, the more for a tale worth hearing." | shop favour +5 %, and +5 % more for each rare line of your story, +10 % for a fateful one (a story with no such line: +5 %) | `world::shop::favour` reads `TalentMods::storyteller` and `Character::story`'s tiers (`Story::tiers(content)`, the only read of the story in play) |
 
-Creation-only talents are worth the two picks they cost to a player who likes a gamble (Favoured child) or a grim start (Hard-won: with it, the Trial chapter's banes become a plan); neither is a safe pick, which is the owner's taste ("garbage choices fine"). The system's bar: three talents, above `min_talents` 2. **No class ability**: `min_class` is 0 until every class has its table; if one is wanted later, the bard's table is the place (a "Ballad of yourself" at 12: Inspire's song is the bard's own story, +1 to its effect per rare line), noted for the class-tables pass and not proposed here. The wiki's by-system table gains the column by itself.
+Creation-only talents are worth the two picks they cost to a player who likes a gamble (Favoured child) or a grim start (Hard-won: with it, the Trial chapter's banes become a plan); neither is a safe pick, which is the owner's taste ("garbage choices fine"). The system's bar: three talents, above `min_talents` 2. The owner approved them as designed while finding their text weak (decision 11: "they sound kinda shit but let's implement them"): the rules stand; the implementer of B4 may polish the names and descriptions, keeping the ids, and the names here are the design's own choice (decision 10). **No class ability**: `min_class` is 0 until every class has its table; if one is wanted later, the bard's table is the place (a "Ballad of yourself" at 12: Inspire's song is the bard's own story, +1 to its effect per rare line), noted for the class-tables pass and not proposed here. The wiki's by-system table gains the column by itself.
 
 ## 11. The pools: chapters, sizes, and real lines
 
-Sizes to aim for in B3: **78 lines over eight chapters** (Parents 12, Birth 8, Childhood 10, Youth 12, Trial 10, Fortune 10, Leaving 10, The road 6), of which about 14 uncommon, 9 rare, 4 fateful; the Ascmearc's `road` chapter is the campaign's six; the showcase gets a two-line test chapter so the tests cover the campaign hook. Below, the chapter's purpose, its conditions' spread, and real lines (tier, weight, `when`, effects, tags/set). Writing rules for the rest: §11.9.
+**The implementers write the pools** (decision 13): the lines below are the register guide and a first draft, not finished data, and the counts are targets. Sizes to aim for in B3: **78 lines over eight chapters** (Parents 12, Birth 8, Childhood 10, Youth 12, Trial 10, Fortune 10, Leaving 10, The road 6), of which about 14 uncommon, 9 rare, 4 fateful, and more after; the Ascmearc's `road` chapter is the campaign's six; the showcase gets a two-line test chapter so the tests cover the campaign hook. The owner reviews and refines the texts once the whole wave is in, not line by line in the PRs. Below, the chapter's purpose, its conditions' spread, and real lines (tier, weight, `when`, effects, tags/set). Writing rules for the rest: §11.9.
 
 ### 11.1 Parents (12)
 
@@ -531,7 +526,7 @@ Each as the screen shows it, then the lines behind it. The tiers and effects are
 | Leaving | `third_child` | common | 1d6 gold (4) |
 | Road | `the_last_cart` | common | — |
 
-Boons 2 + 1 + 1 + 1 = 5 points of 12, banes 0; Neutral stays Neutral (−25 is a sixth of the band). A commoner with Strength 11 instead of 10, a swimmer, and 20 coins instead of 3: a good common story, and ordinary to read.
+Boons 2 + 1 + 1 + 1 = 5 points, banes 0; Neutral stays Neutral (−25 is a sixth of the band). A commoner with Strength 11 instead of 10, a swimmer, and 20 coins instead of 3: a good common story, and ordinary to read.
 
 ### 12.2 With a rare event: Brakka, a dwarf woman, a warrior (Metal Manticore)
 
@@ -541,14 +536,14 @@ The screen in §8.1. The lines:
 |---|---|---|---|
 | Parents | `deep_halls` | common | tag `deep`, home "the deep halls" |
 | Birth | `hard_winter` | common | Toughness −1, Willpower +1 |
-| Childhood | `wilful_child` | common | Willpower +1, Presence −1 (Willpower now at the +2 cap) |
+| Childhood | `wilful_child` | common | Willpower +1, Presence −1 |
 | Youth | `the_levy` | common | spears marks 3, Athletics 1d4 (3) |
 | Trial | `the_feud` | common | Toughness +1 (back to where it was), alignment −25 |
 | Fortune | **`the_heirloom`** | **rare** | a magic long sword (the trained alternative), identified: *a long sword of biting* (two low affixes); tag `heirloom`; `orphan` (her mother died) |
 | Leaving | `for_the_stories` | common | — |
-| Road | the tier draw said **uncommon**, but its one line, `the_fire_that_should_not_burn` (Willpower +1), was dropped by the per-stat cap (Willpower is at +2), so the pool fell to common: `alone_on_foot` | common | Survival 1d4 (2) |
+| Road | `the_fire_that_should_not_burn` | uncommon | waybread ×2, Willpower +1 |
 
-Boons: 2 + 2 + 2 + 2 + 3 + 1 = 12, the cap, reached on the last line (any further boon would have been dropped); banes: 2 + 2 = 4 of 5. Net: Willpower +2, Presence −1, Toughness 0, a magic sword, a few marks and two small skills, a sixth of a band colder. A warrior who starts with a named blade and a grudge: the rare story the owner asked for, and the caps holding on both sides.
+Boons: 2 + 2 + 2 + 2 + 3 + 3 = 14; banes: 2 + 2 = 4. Net: Willpower +3 (and its potential +3 with it), Presence −1, Toughness 0, a magic sword, bread for the road, a few marks and a small skill, a sixth of a band colder. A warrior who starts with a named blade and a grudge: the rare story the owner asked for, and a story that gives what its lines give, uncapped (decision 2).
 
 ### 12.3 Grim: Tamsin, a halfling woman, a thief (Water Basilisk)
 
@@ -571,7 +566,7 @@ Boons: 2 + 2 + 2 + 2 + 3 + 1 = 12, the cap, reached on the last line (any furthe
 | Leaving | `one_step_ahead` | common | alignment −25; `fugitive` |
 | Road | `alone_on_foot` | common | Survival 1d4 (3) |
 
-Boons 1 + 2 + 2 + 1 + 1 + 1 = 8 of 12; banes 2 + 2 + 1 = 5, the cap, reached at the Trial (the −15 gold is 1 point; had the tier draw offered `the_mill` after `the_bullied`, its Dexterity would have been dropped for banes, and after `the_debt` nothing that costs can come). Net: Willpower +2, Presence −1, Toughness −1, 15 coins gone, a thief's Neutral start 25 colder, and three small skills. Eight common lines, not one of them kind, and still a character with something: that is the floor.
+Boons 1 + 2 + 2 + 1 + 1 + 1 = 8; banes 2 + 2 + 1 = 5 (the −15 gold is 1 point). Net: Willpower +2, Presence −1, Toughness −1 (each potential moved with its score), 15 coins gone, a thief's Neutral start 25 colder, and three small skills. Eight common lines, not one of them kind; had the Trial given `the_mill` as well, two fingers would have gone with the coins, and nothing would have stopped it (decision 7). A character with something anyway, because the lines are written that way (§11.9).
 
 ## 13. Determinism, saves, replays
 
@@ -587,18 +582,20 @@ Boons 1 + 2 + 2 + 1 + 1 + 1 = 8 of 12; banes 2 + 2 + 1 = 5, the cap, reached at 
 
 ## 14. The wiki, the spec, and the docs
 
-**The wiki** (the game vague, the wiki exact): a new page **Your story** (`wiki/src/background.md`) under "Your character" after Horoscope in `SUMMARY.md`: what a story is, when it is told, that nothing in it is chosen, the caps in words and numbers, the talents; and generated by `cargo xtask wiki` (`xtask/src/wiki/background.rs`, one function a table, registered in `generate()` beside the character tables):
+**The wiki** (the game vague, the wiki exact): a new page **Your story** (`wiki/src/background.md`) under "Your character" after Horoscope in `SUMMARY.md`: what a story is, when it is told, that nothing in it is chosen, that nothing caps it and a score stops at 1, the talents; and generated by `cargo xtask wiki` (`xtask/src/wiki/background.rs`, one function a table, registered in `generate()` beside the character tables):
 
 | Table | Content |
 |---|---|
 | `background-tiers.md` | the four tiers: odds per chapter, odds per story of eight (at least one; expected count), the net-point bands, with and without Favoured child |
-| `background-points.md` | the `[points]` and `[caps]` tables in words ("a stat point is 2; a story's boons at most 8") |
+| `background-points.md` | the `[points]` table and the tier bands in words ("a stat point is 2; a rare line is worth 3 to 5 and never costs"), and the one floor |
 | `background-<chapter>.md` × 8 (the Ascmearc's road included; the showcase's never) | every line: id, tier, weight, conditions in words ("dwarves and duergar"; "with Family wealth"; "orphaned"), the text, the effects exactly ("Strength +1", "4d6 gold", "a magic long sword, identified"), the tags it sets |
 | `background-talents.md` | the three talents with their exact rules |
 
-**The spec**: `spec/08i-character.md` gains the bullet **Background story** after "What a sign gives" (the chapters, the streams, the tiers, the caps, the order of effects, who has one, the saved ids); `spec/07e-characters.md` the data bullet (`data/background.toml`, `data/background/`, a campaign's chapter); `spec/06-input-and-ui.md` the Story screen and page 8; `spec/07f-scenarios-and-saves.md` the `story` dump layer and JSON; `spec/09-development-interface.md` `--screen story`; `spec/03b-campaign.md` one line: a campaign may add a chapter. CLAUDE.md: the dump layer in the layers list and `story` among `--screen`'s names.
+**Names** (decision 10, "on names": left to the design): the talents' names (Favoured child, Hard-won, Storyteller), the chapters' and lines' ids, the screen's title "Your story", the page's name "Story", the dump layer `story`, and the field `Character::story` are the design's; none clashes with an id in the data (`story` is no talent, skill, or status). The implementers may polish the talents' names and descriptions (decision 11), keeping the ids.
 
-**The docs**: `docs/dev/background.md`, new (the modules `content/background.rs`, `background.rs`, `world/background.rs`, `ui/story_screen.rs`, `xtask/src/wiki/background.rs`; the data; the witness; the streams; the caps; the order in `start_run`; what is saved; the tests), listed in CLAUDE.md's topics after `character-creation.md`; one line each in `character-creation.md` (the order), `progression.md` (the `background` system, `Actor::boons` from a story, the creation-only talents), `skills.md` (a story's skill starts), `stats.md` (`Stats::gift` from a story), `alignment.md` (the fourth term), `screens.md` (the screen, page 8, `--screen story`), `saves.md` (the field), `campaign.md` (a campaign's chapter), `content.md` (the directory and the campaign's).
+**The spec**: `spec/08i-character.md` gains the bullet **Background story** after "What a sign gives" (the chapters, the streams, the tiers, the floor, the order of effects, who has one, the saved ids); `spec/07e-characters.md` the data bullet (`data/background.toml`, `data/background/`, a campaign's chapter); `spec/06-input-and-ui.md` the Story screen and page 8; `spec/07f-scenarios-and-saves.md` the `story` dump layer and JSON; `spec/09-development-interface.md` `--screen story`; `spec/03b-campaign.md` one line: a campaign may add a chapter. CLAUDE.md: the dump layer in the layers list and `story` among `--screen`'s names.
+
+**The docs**: `docs/dev/background.md`, new (the modules `content/background.rs`, `background.rs`, `world/background.rs`, `ui/story_screen.rs`, `xtask/src/wiki/background.rs`; the data; the witness; the streams; the floor; the order in `start_run`; what is saved; the tests), listed in CLAUDE.md's topics after `character-creation.md`; one line each in `character-creation.md` (the order), `progression.md` (the `background` system, `Actor::boons` from a story, the creation-only talents), `skills.md` (a story's skill starts), `stats.md` (`Stats::gift` from a story), `alignment.md` (the fourth term), `screens.md` (the screen, page 8, `--screen story`), `saves.md` (the field), `campaign.md` (a campaign's chapter), `content.md` (the directory and the campaign's).
 
 ## 15. Choices made along the way, and what is rejected
 
@@ -608,12 +605,12 @@ Boons 1 + 2 + 2 + 1 + 1 + 1 = 8 of 12; banes 2 + 2 + 1 = 5, the cap, reached at 
 | Where it is shown first | a screen over the first turn, opened by the app once | a message in the log (four paragraphs in the message line is unreadable); the summary (the owner: after the run starts, no going back); a modal the player must scroll (it is short) |
 | Where it is read again | page 8 of the info pages | a sub-screen of the character screen (a new key or a row to Enter on: the character screen is a page without rows); the Characters list (reads no save); the death screen (the epitaph is the death's: question 6) |
 | Rarity | a tier drawn first, per chapter, in per mille | weights alone (rarity would be an accident of pool sizes and unreadable in the wiki); one "fate" roll per story (then rare events cannot land where they fit the chapter; and eight small chances read better than one) |
-| Caps | counted by the roller, lines dropped before the draw | a cap on the data (uncheckable across paths); no cap (the owner: unbalanced is fine, but a story that is a free level is a build, not a life); re-rolling a chapter that breaks the cap (a second draw changes the stream's shape; dropping is deterministic and needs none) |
-| Banes | real, capped, in common lines; rare and fateful lines net-positive | banes in rare lines (the owner: rare events give boons); no banes (ADOM's and the owner's "sad event may cost something"); a tragic tier (a "cursed" story, 1 in 200: rejected because a player who draws it has nothing to do but start over, which the owner's "no re-roll" spirit argues against; question 7 keeps the door) |
-| Stat changes | `Stats::gift`: score and potential together | the score alone (then a bane is permanent damage with no way back: Hard-won would have nothing to win); the potential alone (invisible) |
+| Caps | **none** (decision 2): a story is the sum of its lines; the floor is a score of 1 | the first draft's caps (boons 12, banes 5, a stat ±2, counted by the roller: the owner struck them, "no caps! just a floor"); a cap on the data (uncheckable across paths); re-rolling a chapter (a second draw changes the stream's shape) |
+| Banes | real, uncapped, in common lines; rare and fateful lines net-positive; no protection (decision 7) | banes in rare lines (the owner: rare events give boons); no banes (ADOM's and the owner's "sad event may cost something"); a tragic tier (a "cursed" story, 1 in 200): not rejected on principle any more (the owner wants no protection from bad luck), only not needed: eight uncapped common lines can already be cruel |
+| Stat changes | `Stats::gift`: score and potential together (decision 8) | the score alone (then a bane is permanent damage with no way back: Hard-won would have nothing to win); the potential alone (invisible) |
 | Items | kit lines, identified when magic | a story item table of its own (the kit syntax has everything, alternatives and `magic` included); unidentified heirlooms (you grew up with it; and Father's sword is identified, #697) |
 | Talents from a story | `Actor::boons`, the altar's machinery; never `granted`, class, or flaw talents as boons (flaws through `flaw`) | a new `Taken::source`; a story tree |
-| #697's overlap | the talents bias and force pools; no double gift | the story's heirloom lines removed (then Father's sword is the only way to a named blade, and a fateful line has nothing of legend to give); the talents reading the story (they are picked before it) |
+| The heritage talents' overlap (#700) | the talents bias and force pools; no double gift | the story's heirloom lines removed (then Father's sword is the only way to a named blade, and a fateful line has nothing of legend to give); the talents reading the story (they are picked before it) |
 | Tags and slots | a closed vocabulary, checked at load | free-form text references (no agreement, no check); a parse of earlier texts |
 | The campaign's chapter | one, last, in the campaign's `data/background/` | the campaign overriding shared chapters (then the Ascmearc's and a later world's stories diverge for nothing); the pass in a shared chapter (names a world) |
 | Who | runs with the kit | every run with a character (then every test and snapshot of the scenarios' own characters changes, and a `--scenario` dev launch is slower to read); only New run (then `--character` captures and the CLI could never show a story) |
@@ -626,21 +623,23 @@ Each item is one issue, one branch, one PR, updating the spec, `docs/dev/backgro
 
 | # | Issue title | Sections | Adds | Depends on | Size |
 |---|---|---|---|---|---|
-| **B1** | Background story: the data (`background.toml`, `data/background/`, a campaign's chapter), the loader and its checks, `Rng::background`, `background::tell` (tiers, pools, caps, slots), `World::tell_background` in `start_run` with the `stat`, `gold`, `item` (plain and `magic`, identified, `prefer_trained`), `skill`, `weapon_marks`, and `alignment` effects, `Character::story`, the `story` dump layer and JSON, `--screen` not yet; a first pool of three lines a chapter (the plain line and two others each) and the Ascmearc's `road` with two; `docs/dev/background.md`; the summary's dim line; tests (§13, the caps, the odds, the streams, replays, saves, the hidden-number grep) | §3–§7, §9, §13 | **save** | — | L |
+| **B1** | Background story: the data (`background.toml`, `data/background/`, a campaign's chapter), the loader and its checks, `Rng::background`, `background::tell` (tiers, pools, slots; no caps), `World::tell_background` in `start_run` with the `stat` (score and potential together, floor 1), `gold`, `item` (plain and `magic`, identified, `prefer_trained`), `skill`, `weapon_marks`, and `alignment` effects, `Character::story`, the `story` dump layer and JSON, `--screen` not yet; a first pool of three lines a chapter (the plain line and two others each) and the Ascmearc's `road` with two; `docs/dev/background.md`; the summary's dim line; tests (§13, the floor, the odds, the streams, replays, saves, the hidden-number grep) | §3–§7, §9, §13 | **save** | — | L |
 | **B2** | The story screen: `ScreenName::Story`, `ui/story_screen.rs`, opened once at a run's start by the app (never on resume, capture, or replay), page 8 in `PAGES`, `--screen story`, text snapshots (`story-screen`, `story-page`, `story-page-none`), the web smoke's extra Enter | §8 | — | B1 | M |
-| **B3** | The pools: the 78 lines of §11 (every chapter to size), the showcase's test chapter, the three sample stories as tests (`background::tests::the_samples_read_as_written`: fixed seeds found by a helper and pinned), the wiki page and its generated tables (`xtask/src/wiki/background.rs`) | §11, §12, §14 | — | B1 | M |
-| **B4** | The `background` system and its talents: Favoured child and Hard-won (creation-only, on #697's field) and Storyteller; the `story_luck`, `hard_won`, and `storyteller` reads; the `talents` dump's "(story)" | §10 | — | B1, #697 | S–M |
+| **B3** | The pools, **written by the implementer** (decision 13): every chapter to its target size (78 lines in all, §11's lines as the register guide and first draft, more welcome), the showcase's test chapter, three sample stories as tests (`background::tests::the_samples_read_as_written`: fixed seeds found by a helper and pinned), the wiki page and its generated tables (`xtask/src/wiki/background.rs`); the owner reviews the texts after the wave, not in the PR | §11, §12, §14 | — | B1 | M |
+| **B4** | The `background` system and its talents: Favoured child and Hard-won (creation-only, `needs = { creation = true }`, the `heritage` tree) and Storyteller; the `story_luck`, `hard_won`, and `storyteller` reads; the `talents` dump's "(story)"; the wording polished at the implementer's discretion, ids kept (decision 11) | §10 | — | B1 | S–M |
 | **B5** | The fateful effects: `talent` and `flaw` lines through `Actor::boons`, the lines that use them (`the_flux`, `the_named_blade`'s `magic = "rare"`), the class table's "nothing in its place" test, the Talents page's "(story)" source | §6.1 (talent, flaw), §11.5–11.6 | — (boons are saved already) | B1, B3 | S |
 
 **Waves** (at most about three PRs at once that add actions or save state; here one):
 
 1. **B1** alone (it adds saved state and changes every kit run's hashes: the snapshot diffs are read once, in one PR).
 2. **B2** and **B3** together (B2 is `crates/warlock/src/ui/`, B3 is content and `xtask/`: no file in common but `docs/dev/background.md`, where each adds its own section).
-3. **B4** and **B5** together, B4 once #697 has merged (its `creation_only` field and the two talent ids the Parents and Fortune lines name; if #697 is still open when wave 2 ends, B3 lands its `old_money`/`fathers_blade_told` lines without the `talents` conditions and B4 adds them).
+3. **B4** and **B5** together (B4 is `data/talents/`, `data/talents.toml`, `TalentMods`, and three reads; B5 is `world/background.rs`'s two effect arms, `boons.rs`, and content lines: no file in common but `docs/dev/background.md`). The heritage talents (#700) are merged, so nothing waits on them.
 
-**Tests each item carries**: `content/background.rs` (parsing; every refusal: a bad tier, a tag no earlier chapter sets, an unknown slot, a stat change of 3, a rare line with a bane, a chapter without a plain line, a campaign chapter reusing a shared id, a kit line that would Strain); `background.rs` (the tier odds over 20 000 seeds within 10 % of the table; every cap over every race × gender × class × 1 000 seeds; the fallback to the plain line when a tier is empty; `only` lines; slots and defaults; the witness's conditions one by one; the same spec on two seeds differs, the same seed and spec never); `world/background_tests.rs` (each effect kind lands where §6.1 says: the score and potential, hit points at the new maximum, the coins, an item in a free slot or carried, a magic heirloom identified and known, a skill trained or raised, marks, the band moved; told after the picks: a pick's prerequisite is not met by a story point; no story for a `--scenario` run and the hash of one unchanged; a replay with `kit` reproduces the story; a save round-trips the ids and re-tells the text; an edited text reaches a save; a removed line is skipped); `ui/story_screen.rs` and the screen snapshots (the first-turn screen, page 8, the page without a story, the tab line's eighth name); `xtask`'s wiki tables generated; the samples pinned. **No golden**: nothing here is the GPU's; the screen is a text snapshot.
+**Tests each item carries**: `content/background.rs` (parsing; every refusal: a bad tier, a tag no earlier chapter sets, an unknown slot, a stat change of 3, a rare line with a bane, a chapter without a plain line, a campaign chapter reusing a shared id, a kit line that would Strain); `background.rs` (the tier odds over 20 000 seeds within 10 % of the table; no score below 1 and no gold below 0 over every race × gender × class × 1 000 seeds, however grim the lines; the fallback to the plain line when a tier is empty; `only` lines; slots and defaults; the witness's conditions one by one; the same spec on two seeds differs, the same seed and spec never); `world/background_tests.rs` (each effect kind lands where §6.1 says: the score and potential, hit points at the new maximum, the coins, an item in a free slot or carried, a magic heirloom identified and known, a skill trained or raised, marks, the band moved; told after the picks: a pick's prerequisite is not met by a story point; no story for a `--scenario` run and the hash of one unchanged; a replay with `kit` reproduces the story; a save round-trips the ids and re-tells the text; an edited text reaches a save; a removed line is skipped); `ui/story_screen.rs` and the screen snapshots (the first-turn screen, page 8, the page without a story, the tab line's eighth name); `xtask`'s wiki tables generated; the samples pinned. **No golden**: nothing here is the GPU's; the screen is a text snapshot.
 
-## 17. Open questions, each with a recommended default
+## 17. Open questions, each with a recommended default (answered: §18)
+
+As put to the owner; the answers are §18, and the body above is revised to them (the caps of the first draft are gone from §1, §4, §5.3, §7, §12, §15, and §16).
 
 1. **The tier odds** (12 / 3 / 0.5 % per chapter; a fateful line for one character in twenty-five). Default: as proposed; they are one table in data and the wiki shows the per-story odds, so the owner can turn the dial after reading a few stories.
 2. **The caps** (boons 12, banes 5, a stat ±2). Default: as proposed. A looser pair (16 / 7) makes a fateful story a level and a half's worth; the owner may prefer that ("unbalanced is fine"), in which case only `[caps]` changes.
@@ -652,6 +651,28 @@ Each item is one issue, one branch, one PR, updating the spec, `docs/dev/backgro
 8. **Potentials**: a story's stat point moves the potential with the score (`Stats::gift`). Default: yes. The alternative, the score only, makes a bane permanent and Hard-won pointless.
 9. **Identified heirlooms**: a story's magic item is identified. Default: yes (you grew up with it; #697's sword is). The alternative keeps the describe screen's mystery for a stranger's ring: `strangers_ring` could be the one unidentified exception; not proposed.
 10. **Named parents and places**: no names in the shared chapters; `{home}` is a kind of place, never a map cell. Default: keep; names and hometowns are a content design of their own (§15).
-11. **The three talents**: Favoured child, Hard-won, Storyteller. Default: as proposed; the first two depend on #697's creation-only field. If #697 is cut, they become ordinary talents with `needs = { level = 1 }`… which a level-2 character could still take uselessly; better to wait for the field.
+11. **The three talents**: Favoured child, Hard-won, Storyteller. Default: as proposed; the first two use #700's creation-only field (`needs = { creation = true }`).
 12. **Where `road` lives**: the campaign's data. Default: yes; a campaign without one has seven chapters, and the showcase's test chapter never ships.
 13. **Who the first wave's lines are written by**: B1 ships three lines a chapter so the machinery is testable; B3 fills the pools. Default: the implementer writes to §11's tables and §11.9's rules, and the owner reviews the texts in B3's PR, which is content only.
+
+## 18. Decisions (owner, 2026-10-29)
+
+The owner's answers to §17, verbatim, with the reading taken where an answer needed one. The body above is revised to them.
+
+| # | Question | Answer | Taken as |
+|---|---|---|---|
+| 1 | The tier odds | "sounds good" | 12 / 3 / 0.5 % per chapter as proposed (§7); the data is the dial |
+| 2 | The caps | "no caps! just a floor. ability score is always at least 1 :)" | **no caps at all**: the boon cap, the bane cap, the per-stat ±2, the roller's cap arithmetic, and the "dropped line" tuning are gone (§1, §4, §5.3, §7, §12, §15, §16); the one floor is the game's own, a score never below 1 (`Stats::gift` keeps 1..=40), with gold never below 0. The per-line tier bands stay as a content check (a rare line is net-positive); they bound a line, not a story |
+| 3 | The summary's "Fate will have its say when you set out." | "sure" | kept (§8.1) |
+| 4 | The screen opens once, as the run begins | "yes" | kept (§8.1) |
+| 5 | Scenario-only dev runs have no story | "sure, you know what's best for dev process" | kept (§9): every existing hash and snapshot holds |
+| 6 | Nothing new on the death screen | "sure" | kept (§8.2) |
+| 7 | A tragic tier | "no need to overthink about it. no need for any protection for any bad luck" | no tragic tier is added, and **no protection of any kind** against a bad story: no re-roll, no pity line, no floor on what a story takes but the score's 1 (§5.3, §7, §15). The first draft's reasons against a tragic tier (a player's only recourse would be to start over) are withdrawn; it is simply not needed |
+| 8 | A story's stat point moves the potential with the score | "sure, they also move potential" | kept and said exactly (§6.1): `Stats::gift` raises or lowers the score and the potential by the same amount, the potential never below the score |
+| 9 | A story's magic item is identified | "yes" | kept (§6.1, §11.6) |
+| 10 | Named parents and places | "on names" | read as "decide on the names yourself": no named parents or map places (§15); the design's own names stand: the three talents, the chapters' and lines' ids, "Your story", page "Story", the `story` layer, `Character::story` (§14, "Names"), none clashing with an id in the data |
+| 11 | The three talents | "sure, they sound kinda shit but let's implement them" | implemented as designed (§10, B4); the implementer may polish the names and descriptions, keeping the ids and the rules |
+| 12 | The road chapter is the campaign's | "sure" | kept (§3, §11.8) |
+| 13 | Who writes the pools | "implementers can write everything. we will review and refine later when the whole wave is done" | the implementers write every pool (B1's first lines, B3's full pools, and more); §11's lines are the register guide and a first draft, its counts targets; the owner's review of the texts comes after the wave, not line by line in the PRs (§11, §16) |
+
+Also folded in: #697 merged as #700 while the questions were out, so the heritage talents' real ids (`family_wealth`, `fathers_sword`), their field (`needs = { creation = true }`), and their tree (`heritage`) are named throughout, Favoured child and Hard-won join that tree, and nothing in §16 waits on them.
