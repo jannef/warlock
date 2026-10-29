@@ -200,11 +200,14 @@ fn a_rotten_or_vomited_corpse_gives_nothing() {
     let before = marks(&w, Stat::Toughness);
     eat(&mut w, "kobold", 0);
     assert!(said(&w, "You vomit!"));
-    assert_eq!(marks(&w, Stat::Toughness), before);
+    // The corpse gives nothing; the vomiting itself costs its deed's 10 marks (`vomited`).
+    assert_eq!(marks(&w, Stat::Toughness), before - 10);
     // Rotten: 10 hours dead, past its 8.
     eat(&mut w, "beetle", 10 * 3600);
     assert!(said(&w, "Ugh! The cave beetle corpse was rotten."));
-    assert_eq!(marks(&w, Stat::Toughness), before);
+    // Rotten food may make one vomit too (half the time), each costing the same 10 marks.
+    let vomits = w.messages().iter().filter(|m| m.text == "You vomit!").count();
+    assert_eq!(marks(&w, Stat::Toughness), before - 10 * vomits as i32);
 }
 
 #[test]
