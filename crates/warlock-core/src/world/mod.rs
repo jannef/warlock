@@ -1099,6 +1099,7 @@ impl World {
             level: self.state.current(),
             player: self.state.player(),
             character: self.state.character.as_ref(),
+            campaign: &self.state.campaign,
             time: self.state.time,
             death: self.state.death.as_ref(),
             experience: self.state.experience,
