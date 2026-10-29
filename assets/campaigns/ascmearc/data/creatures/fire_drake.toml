@@ -33,7 +33,7 @@ base_hp = 90
 skills = { concentration = 50, spellcraft = 50 }
 natural = { defence = 3, protection = 3, name = "scales" }
 resist = { fire = 100, cold = -25 }
-on_eat = { message = "The drake's flesh burns going down, and leaves you stronger.", vomit = 20, stat = { strength = 25, toughness = 25 } }
+on_eat = { message = "The drake's flesh burns going down, and leaves you stronger.", vomit = 20, train = { strength = 150, toughness = 150 } }
 blood = "#a0200a"
 [creature.attack]
 damage = "3d8"

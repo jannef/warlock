@@ -100,11 +100,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
     medium 1000 in 6). A fresh (or old) one does what
     its creature's `on_eat` says (§7), in this order, each draw from the gameplay stream and none
     for a chance of 0: its `message`; a draw with `vomit` (it comes back up: no food, no more
-    effects); per stat in display order, a draw with its chance to raise it by 1 up to its
-    potential ("You feel tougher!"; nothing at the potential; raising Toughness raises the most
-    hit points); `heal` ("You feel better." when it healed any); `harm` (degrees of sickness, as
+    effects); per stat in display order, its `train` marks into the stat's training pile (sure,
+    no draw; "Something of its strength passes into you." for 30 or more, the stat's word:
+    strength, nimbleness, hardiness, cunning, resolve, bearing; fewer are quiet, as marks are),
+    then a draw with its `widen` chance to raise the potential by 1, never past 40 ("You feel
+    you could grow stronger yet." when it rose); a corpse never raises a score itself, the marks
+    wait for the checks (§8 "Stats"); `heal` ("You feel better." when it healed any); `harm` (degrees of sickness, as
     rotten food's); then it feeds its size's nutrition plus `satiation` (at least 0), overeating as food
-    does. The effects are never shown in the game before the player tries; the wiki states them
+    does. `train` (0 to 200 marks a stat) and `widen` (0 to 20 %) default by the creature's
+    tags (`[corpses.by_tag]` in `data/hunger.toml`; 1 to 200 marks and 1 to 5 % there): per stat
+    the largest over its tags, then its own `on_eat` per stat over them (0 switches a tag's
+    gift off; a `widen` needs a `train` of the same stat), resolved at load. Giants give 60
+    Strength marks and 5 %, trolls 60 Toughness and 5 %, ogres 40 Strength (2 %) and 15
+    Toughness, hags 40 Willpower (3 %), fey 30 Presence (3 %), casters and cultists 20
+    Intelligence and 15 Willpower, devils, fiends, and yugoloths 20 Willpower, marsh things 15
+    Toughness, orcs, goblins, hobgoblins, kobolds, duergar, and drow 8 Toughness, vermin 4; the
+    undead switch theirs off. Gourmand and Cauldron (`corpse_stats_percent` +100) double the
+    marks and the chance (never above certain). The old `stat` is refused, naming `train`. The effects are never shown in the game before the player tries; the wiki states them
     exactly (the game is vague, the wiki is accurate).
   - **What the player perceives** (`PerceptionView::own_hunger`): their state, never the counter
     or any food's age or stage (the owner's decision: no "(old)" or "(rotten)" in names, look

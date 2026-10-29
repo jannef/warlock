@@ -187,6 +187,7 @@ impl World {
         let cost = self.state.player().weapon_stamina(&self.content, id);
         if let Some(stamina) = self.content.resource_id(STAMINA) {
             self.spend_resource(player, stamina, cost, events);
+            self.train_stat(crate::content::StatUse::Exerted);
         }
         if let Some(cooldown) = self
             .content

@@ -515,9 +515,9 @@ fn training_draws_from_its_own_stream_and_marks_gather() {
         .expect("trained");
     assert!((15..=45).contains(&trained.marks), "{trained:?}");
     assert_eq!(trained.value, 0);
-    // Uses no skill trains on change nothing.
+    // Uses no skill (nor stat) trains on change nothing.
     let before = w.state.clone();
-    w.train(crate::skills::Use::Travel);
+    w.train(crate::skills::Use::Hear);
     assert_eq!(w.state, before);
 }
 

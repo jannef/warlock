@@ -155,8 +155,8 @@
 #                                 rotten
 #   no_exertion                   blows, shots, and throws burn no extra nutrition
 #   no_bloating                   a meal never leaves it Bloated: what does not fit is lost
-#   corpse_stats_percent { value }   a fresh corpse's chances to raise its stats, that percent
-#                                 more (never above certain)
+#   corpse_stats_percent { value }   a fresh corpse's stat training marks and its chances to
+#                                 widen a potential, that percent more (never above certain)
 #   potion_marks_percent { value }   the training marks a potion or an elixir gives, that
 #                                 percent more
 #   train_percent { value }       every stat training use's chance of a mark, that percent more

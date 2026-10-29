@@ -56,9 +56,14 @@ rat corpse has rotted away."). A corpse does not show how old it is: remember wh
 Eating a rotten one is as bad an idea as any rotten food: "Ugh! The kobold corpse was rotten."
 
 Eating a fresh corpse may do more than feed you. Some taste terrible and may come back up, some
-make you [sick](status-effects.md#poisoned), some do you good, and a rare few may make you a little stronger in some way, as
-far as you can grow ([potential](stats.md#potentials)). In the game you find out by eating it;
-here it is, in the order it happens, each chance rolled on its own. A rotten corpse has lost all
-of that.
+make you [sick](status-effects.md#poisoned), some do you good, and many feed your body's
+[training](stats.md#training): a corpse gives **marks** toward a stat, as using it does, and a
+few, giants', trolls', hags', ogres', and the fey's, have a small chance to widen how far that
+stat can grow ([potential](stats.md#potentials)). A corpse never raises a stat at once: the marks
+wait for the next check. Many marks make themselves felt ("Something of its strength passes into
+you."), a few are quiet; a widened potential says "You feel you could grow stronger yet." What a
+corpse gives comes from what the creature is (a giant, a troll, a caster, ...) and, for some, of
+its own. In the game you find out by eating it; here it is, in the order it happens, each chance
+rolled on its own. A rotten corpse has lost all of that.
 
 {{#include generated/corpse-effects.md}}

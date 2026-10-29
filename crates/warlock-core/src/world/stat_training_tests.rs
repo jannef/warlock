@@ -378,7 +378,7 @@ fn the_raised_chances_and_the_new_uses_are_read_from_data() {
     assert_eq!(chance(StatUse::Block), [(Some(Stat::Strength), 20)]);
     assert_eq!(chance(StatUse::Dodge), [(Some(Stat::Dexterity), 30)]);
     assert_eq!(chance(StatUse::Parry), [(Some(Stat::Dexterity), 25)]);
-    assert_eq!(chance(StatUse::Hurt), [(Some(Stat::Toughness), 20)]);
+    assert_eq!(chance(StatUse::Hurt), [(Some(Stat::Toughness), 15)]);
     assert_eq!(chance(StatUse::Killed), [(Some(Stat::Toughness), 30)]);
     assert_eq!(chance(StatUse::Cast), [(Some(Stat::Willpower), 30)]);
     // A potion's and an elixir's name their stat where they are drunk: sure marks.

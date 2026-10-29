@@ -26,7 +26,7 @@ stats = { strength = 17, dexterity = 15, toughness = 20, intelligence = 17, will
 base_hp = 38
 skills = { concentration = 67, spellcraft = 72 }
 resist = { poison = 25, cold = 10 }
-on_eat = { message = "Tough and sour, and bitter as old incense.", vomit = 25, stat = { willpower = 3 } }
+on_eat = { message = "Tough and sour, and bitter as old incense.", vomit = 25, train = { willpower = 18 } }
 weapon_skills = { maces = 3 }
 racial_weapon = "mace"
 [[creature.gear]]

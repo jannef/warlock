@@ -26,7 +26,7 @@ natural = { protection = 1, name = "hide" }
 skills = { concentration = 64, spellcraft = 69 }
 resist = { cold = 25 }
 attack = { damage = "2d8", damage_type = "bludgeoning", name = "fist", verb = "pounds" }
-on_eat = { message = "It tastes of the ogre, and of something bitter.", vomit = 30, stat = { intelligence = 3 } }
+on_eat = { message = "It tastes of the ogre, and of something bitter.", vomit = 30, train = { strength = 40 }, widen = { strength = 2 } }
 [[creature.gear]]
 chance = 50
 one_of = ["bone_amulet"]

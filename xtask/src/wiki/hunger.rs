@@ -242,8 +242,9 @@ fn cures(content: &Content, means: &[String]) -> String {
 
 /// What eating each fresh corpse does beyond feeding, in the order the rules apply it (its
 /// creature's `on_eat`): the chance it comes back up (and feeds nothing), the nutrition it adds
-/// or takes, the chance per stat to raise it by 1 (up to the potential), the hit points it heals,
-/// and the degrees of sickness it gives. A rotten corpse does none of it.
+/// or takes, per stat the stat training marks it gives (its tags' and its own, resolved at load)
+/// and the chance its potential rises by 1, the hit points it heals, and the degrees of sickness
+/// it gives. A rotten corpse does none of it.
 pub(super) fn corpse_effects(content: &Content) -> String {
     let Some(def) = content.hunger() else {
         return "Nobody hungers.\n".into();
@@ -270,8 +271,13 @@ pub(super) fn corpse_effects(content: &Content) -> String {
         if eat.satiation != 0 {
             does.push(format!("{} nutrition", signed(eat.satiation)));
         }
-        for (stat, chance) in &eat.stat {
-            does.push(format!("{chance}% {} +1", stat.name()));
+        for stat in Stat::ALL {
+            if let Some(marks) = eat.train.get(&stat) {
+                does.push(format!("{marks} {} marks", stat.name()));
+            }
+            if let Some(chance) = eat.widen.get(&stat) {
+                does.push(format!("{chance}% {} potential +1", stat.name()));
+            }
         }
         if let Some(heal) = eat.heal {
             does.push(format!("heals {heal} hit points"));

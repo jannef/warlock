@@ -23,6 +23,7 @@ use super::trap::TrapNoise;
 use super::{Content, ContentError, DamageTypeId, MAX_LEVEL, MAX_SEVERITY, StatusId, duplicate_id};
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
+use crate::stats::{PerStat, Stat};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -731,6 +732,29 @@ impl SpellData {
             Shape::Cone | Shape::Line => self.length.map(i32::from),
             Shape::Ray | Shape::Bolt | Shape::Burst => self.range.map(i32::from),
         }
+    }
+
+    /// The stats a cast of it trains (spec §8 "Stats", the `spell` use): those its damage
+    /// grows with (Intelligence when it names none), those its reach grows with if it has a
+    /// reach, and those its status's duration grows with if it is a buff or a hex. Each once.
+    pub fn trained_stats(&self) -> PerStat<bool> {
+        let mut trained = PerStat::splat(false);
+        let reach = !matches!(self.shape, Shape::Touch | Shape::Myself);
+        let status = matches!(self.kind, SpellPurpose::Buff | SpellPurpose::Hex);
+        let dims = [
+            (&self.scales.damage, true),
+            (&self.scales.reach, reach),
+            (&self.scales.duration, status),
+        ];
+        for (weights, has) in dims {
+            for (stat, _) in weights.iter().filter(|_| has) {
+                trained[stat] = true;
+            }
+        }
+        if self.scales.damage.is_empty() {
+            trained[Stat::Intelligence] = true;
+        }
+        trained
     }
 
     /// Its tags (magic design §6): its school, kind, shape, and damage type, if any.

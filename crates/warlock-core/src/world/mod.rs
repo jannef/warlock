@@ -1191,6 +1191,9 @@ impl World {
         if acted && burden == Burden::Overloaded && !matches!(action, Action::Drop(_)) {
             self.stat_deed(crate::content::StatDeed::Overloaded);
         }
+        if acted {
+            self.train_hungry_step();
+        }
         // A status effect that lowers Strength during the turn may change it too, and a wound
         // the player gave may kill what a quest asks for.
         let burden = self.load_of(self.state.player).burden();
@@ -1514,6 +1517,8 @@ mod drain_tests;
 #[cfg(test)]
 mod dwell_tests;
 #[cfg(test)]
+mod eat_tests;
+#[cfg(test)]
 mod element_gift_tests;
 #[cfg(test)]
 mod elixir_tests;
@@ -1697,6 +1702,8 @@ mod stars_roc_tests;
 mod stars_tests;
 #[cfg(test)]
 mod stat_deeds_tests;
+#[cfg(test)]
+mod stat_paths_tests;
 #[cfg(test)]
 mod stat_training_tests;
 #[cfg(test)]

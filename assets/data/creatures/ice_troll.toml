@@ -22,7 +22,7 @@ stats = { strength = 28, dexterity = 12, toughness = 31, intelligence = 9, willp
 base_hp = 96
 natural = { defence = 1, protection = 2, name = "frosted hide" }
 resist = { cold = 75, fire = -50 }
-on_eat = { message = "Cold as the ice it came from.", vomit = 50, stat = { toughness = 5 } }
+on_eat = { message = "Cold as the ice it came from.", vomit = 50 }
 blood = "#2a4a5a"
 [creature.attack]
 damage = "3d10"

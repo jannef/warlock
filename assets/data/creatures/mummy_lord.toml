@@ -28,7 +28,7 @@ base_hp = 72
 skills = { concentration = 118, spellcraft = 123 }
 natural = { defence = 2, protection = 3, name = "wrappings" }
 resist = { fire = -50, poison = 100 }
-on_eat = { message = "Dust, resin, and gold leaf.", vomit = 80, harm = "1d4" }
+on_eat = { message = "Dust, resin, and gold leaf.", vomit = 80, harm = "1d4", train = { intelligence = 0, willpower = 0 } }
 blood = "#5a4a30"
 [creature.attack]
 damage = "4d6"

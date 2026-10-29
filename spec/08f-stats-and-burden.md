@@ -17,9 +17,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     for the rules (`stats::modifier`, `Stats::modifier`) and is **never shown**: not in the UI,
     messages, look mode, player-facing dumps, or the wiki.
   - **Potential** (ADOM-like): each stat's natural ceiling, the score it could grow towards.
-    Stored and saved, **hidden from the player** like the modifiers. Eating a corpse raises a
-    score (§8 "Hunger": by 1, never past the potential, `Stats::raise`), and so does training
-    at a check (below; past the potential too, dearer, and never moving the potential). Hunger lowers the **effective** scores for a while (Weak: Strength and Dexterity;
+    Stored and saved, **hidden from the player** like the modifiers. Training raises a
+    score at a check (below; past the potential too, dearer, and never moving the potential);
+    eating a corpse gives training marks and rarely widens a potential by 1 (§8 "Hunger"), never
+    a score. Hunger lowers the **effective** scores for a while (Weak: Strength and Dexterity;
     `Actor::effective_stats`, which combat and burden read; `Stats::adjusted`).
   - **What the player sees**: their own scores as they are now (effective, so lowered while
     Weak), on the character screen (§6) and in the `stats` dump layer; the perception snapshot carries those and nothing else of stats
@@ -40,19 +41,40 @@ developer notes (CLAUDE.md, `docs/dev/`).
     reported where it happens: Strength burdened (an action but waiting under a slowing load),
     blow (a melee blow of the player's that hits, kicks and bashes too), critical (a confirmed
     critical of theirs in melee), block (a blow on them their shield blocked), dig (a turn),
-    kick (a door); Dexterity dodge, parry (a blow on them their Parry turned), shot (a shot or
-    throw that hits), sneak (a step within earshot), climb (onto ice, out of a pit); Toughness
-    hurt (a blow that costs hit points), big_hit (a big hit or a critical on the player), killed
+    kick (a door or a chest), forged (a tempering at an anvil done), struggled (a struggle
+    against a hold, won or not), waded (a step into deep water, water that freezes and slows a
+    step to double, unless its ice held), hauled (a pick-up with a stack of 20 kg or more);
+    Dexterity dodge, parry (a blow on them their Parry turned), shot (a shot or
+    throw that hits), sneak (a step within earshot), climb (onto ice, out of a pit), picked (a
+    try at a lock), disarmed (a try at a trap), stole (a theft tried), kept_wits (an initiative
+    check made), aimed (an attack spell that hits); Toughness
+    hurt (a blow that costs hit points; 15 %), big_hit (a big hit or a critical on the player), killed
     (a kill of theirs in melee of a creature of their level or above), resisted (a disease check
-    won, not a Willpower one), plunge (through the ice); Intelligence found (a search that finds
-    something), read (a scroll), identified (by reading), discovered (a first kill of a type);
+    won, not a Willpower one), plunge (through the ice), marched (an overworld step),
+    hungry_step (an action but waiting while Hungry, not yet Weak), shook_off (a status that
+    costs hit points or mana as it ticks wearing off), exerted (stamina spent on a weapon
+    ability), chilled (a daily check made below 0 °C where the player stands, its mark counted at
+    that check); Intelligence found (a search that finds
+    something), read (a scroll), identified (by reading), discovered (a first kill of a type),
+    spell (below), explored (a first arrival that pays experience), appraised (a thing told by
+    Appraise), searched (a search turn that finds nothing), foraged (a forage done), disarmed;
     Willpower spot, endured (a long action of more than one turn done to its end: a rest, a
     dig, a search for a while, a meal), resisted_will (a Willpower disease check won),
-    hungry_fight (a blow landed while Hungry or worse), cast (mana spent, `World::spend_mana`);
+    hungry_fight (a blow landed while Hungry or worse), cast (mana spent, `World::spend_mana`),
+    prayed (a prayer at a forgotten altar answered), struggled, held_out (a drain check made),
+    steadied (Surprised ending with the player's next action), spell;
     Presence chat (a chat; asking a topic takes no time and trains nothing), trade (a purchase
-    paid or a sale), quest (completed), swapped (a creature making way); any stat drank and
+    paid or a sale), quest (completed), swapped (a creature making way), inspired (Inspire,
+    Throw your voice), promoted (a guild rank won), bargained (a deal while Negotiation
+    bettered the price), greeted (a first chat with someone), spell. A use may name several
+    stats, a rule each (disarmed, struggled). **spell** (a spell the player knows cast through
+    the one cast path; not a scroll, not a class or sign ability) trains only the rules of the
+    stats its `[spell.scales]` name (`SpellData::trained_stats`): its damage's (Intelligence when
+    it names none), its reach's when it has one, its duration's for a buff or a hex; any stat drank and
     elixir (a potion or an elixir drunk, sure marks as many as it gives; defined, reached once
-    potions land). The uses skills share (burdened, kick, dodge, sneak, spot) are one report,
+    potions land). The uses skills share (burdened, kick, dodge, sneak, spot, study, and Temper, Pick, Disarm,
+    Steal, Travel, Appraise, Forage as forged, picked, disarmed, stole, marched, appraised,
+    foraged; `StatUse::of_skill`) are one report,
     `World::train`; the rest `World::train_stat` (a trap noticed in passing reports `spot` there,
     beside Detect traps' `find_trap`).
     **A point's price** (`StatTraining::price`): `price_base (20) + price_per_point (10) ×

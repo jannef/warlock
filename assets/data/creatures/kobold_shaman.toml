@@ -26,7 +26,7 @@ skills = { concentration = 20, spellcraft = 25 }
 # Used to its own fire.
 resist = { fire = 25 }
 # A tiny chance to take in some of its will.
-on_eat = { message = "It tastes terrible, and of bitter herbs.", vomit = 40, stat = { willpower = 3 } }
+on_eat = { message = "It tastes terrible, and of bitter herbs.", vomit = 40, train = { willpower = 18 } }
 
 # Its gear (spec §8 "Creature gear"): a bone amulet, sometimes more than it seems, and a few coins.
 [[creature.gear]]

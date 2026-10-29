@@ -23,7 +23,7 @@ stats = { strength = 17, dexterity = 14, toughness = 16, intelligence = 3, willp
 base_hp = 28
 natural = { defence = 1, protection = 2, name = "scales" }
 resist = { fire = 100, cold = -100 }
-on_eat = { message = "It burns your tongue and warms you through.", vomit = 20, stat = { toughness = 3 } }
+on_eat = { message = "It burns your tongue and warms you through.", vomit = 20, train = { toughness = 18 } }
 blood = "#e06a10"
 [creature.attack]
 damage = "2d6"

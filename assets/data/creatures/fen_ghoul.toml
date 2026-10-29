@@ -21,7 +21,7 @@ weight = 55000
 stats = { strength = 15, dexterity = 18, toughness = 15, intelligence = 14, willpower = 20, presence = 14 }
 base_hp = 25
 resist = { poison = 100 }
-on_eat = { message = "Fen water and rot.", vomit = 80, harm = "1d4" }
+on_eat = { message = "Fen water and rot.", vomit = 80, harm = "1d4", train = { toughness = 0 } }
 blood = "#2a3a30"
 [creature.attack]
 damage = "2d6"

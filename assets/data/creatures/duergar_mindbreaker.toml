@@ -30,7 +30,7 @@ attack = { damage = "3d8", damage_type = "force", name = "mind-lash", verb = "la
     { status = "transfixed", chance = 15, severity = 1 },
 ] }
 resist = { poison = 25, cold = 10 }
-on_eat = { message = "Tough and sour, and your head aches.", vomit = 25, stat = { willpower = 3 } }
+on_eat = { message = "Tough and sour, and your head aches.", vomit = 25, train = { willpower = 18 } }
 [[creature.gear]]
 chance = 60
 one_of = ["gold_amulet"]

@@ -56,9 +56,9 @@ What reads the modifier and what reads the score, exactly:
 ### Potentials
 
 Every stat also has a **potential**, which the game never shows: how far it can grow for good.
-A [corpse](food.md#corpses) that raises a stat never raises it past its potential ([magic items](magic-items.md) raise it only while
-you wear them, potential or not); training grows dearer past it but goes on, and never moves
-the potential itself (see [Training](#training)). Yours are set at the start of a run: the potential your [race](races.md)
+[Magic items](magic-items.md) raise a stat only while you wear them, potential or not;
+training grows dearer past it but goes on, and never moves the potential itself (see
+[Training](#training)). Only elixirs and, rarely, a fresh [corpse](food.md#corpses) widen it. Yours are set at the start of a run: the potential your [race](races.md)
 gives, rolled once, and never below your starting score (a score above it raises the potential
 to the score):
 
@@ -94,6 +94,13 @@ What earns a mark, and how likely:
 
 Asking someone about a topic takes no time, so it trains nothing; a long action counts only
 when it lasts more than one turn and is not interrupted.
+
+Every stat has paths outside its obvious one. A fighter who never opens a scroll still sharpens
+Intelligence by exploring, searching, foraging, and disarming traps; a wizard grows stronger by
+wading, hauling, and struggling free of a grip. Casting a spell you know trains the stats the
+spell grows with ([its damage, reach, and duration](magic.md#the-lifted-cap)): Intelligence for most, Willpower for
+those that reach far, Presence for hexes and blessings that last. Some uses train two stats at
+once (disarming a trap, struggling against a hold).
 
 ### The price of a point
 
