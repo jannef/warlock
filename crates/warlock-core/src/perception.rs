@@ -174,6 +174,8 @@ pub struct OwnTalent {
     pub spent: bool,
     /// A forgotten altar gave it (spec §7 "Special rooms": Chosen, Forsaken).
     pub boon: bool,
+    /// The background story gave it (spec §8 "Background story"): "(story)", "(story, flaw)".
+    pub story: bool,
 }
 
 /// How fresh food smells to those who can tell (spec §8 "Birth sign": Hound's nose): a word,
@@ -1765,6 +1767,13 @@ impl<'a> PerceptionView<'a> {
             .filter_map(|taken| {
                 let id = book.id(&taken.id)?;
                 let def = book.get(id);
+                let boon = (self.player.boons.iter())
+                    .any(|b| b.id == taken.id && b.choice == taken.choice);
+                let story = boon
+                    && self.character.is_some_and(|c| {
+                        let choice = taken.choice.as_deref();
+                        crate::background::gave(self.content, self.campaign, c, &taken.id, choice)
+                    });
                 Some(OwnTalent {
                     id,
                     name: def.name_for(self.content, taken.choice.as_deref()),
@@ -1778,8 +1787,8 @@ impl<'a> PerceptionView<'a> {
                     flaw: def.flaw,
                     class: class.contains(&id),
                     spent: (def.effects_at(taken.rank)).any(|e| spent(&e)),
-                    boon: (self.player.boons.iter())
-                        .any(|b| b.id == taken.id && b.choice == taken.choice),
+                    boon: boon && !story,
+                    story,
                 })
             })
             .collect()
