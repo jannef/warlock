@@ -23,7 +23,7 @@ base_hp = 40
 natural = { defence = 1, protection = 2, name = "hide" }
 weapon_skills = { spears = 2 }
 resist = { fire = -50 }
-on_eat = { message = "Stringy, and green to the bone.", vomit = 50, stat = { toughness = 5 } }
+on_eat = { message = "Stringy, and green to the bone.", vomit = 50 }
 blood = "#2a5a20"
 [creature.attack]
 damage = "3d6"

@@ -27,7 +27,7 @@ base_hp = 40
 skills = { concentration = 70, spellcraft = 75 }
 natural = { defence = 1, protection = 1, name = "wrappings" }
 resist = { fire = -50, poison = 100 }
-on_eat = { message = "Dust and resin.", vomit = 80, harm = "1d4" }
+on_eat = { message = "Dust and resin.", vomit = 80, harm = "1d4", train = { intelligence = 0, willpower = 0 } }
 blood = "#5a4a30"
 [creature.attack]
 damage = "3d6"

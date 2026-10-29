@@ -25,7 +25,7 @@ base_hp = 92
 natural = { defence = 2, name = "hide" }
 weapon_skills = { axes = 4 }
 resist = { fire = -50 }
-on_eat = { message = "Old, tough, and full of scars.", vomit = 50, stat = { toughness = 5 } }
+on_eat = { message = "Old, tough, and full of scars.", vomit = 50 }
 blood = "#2a4a2a"
 [creature.attack]
 damage = "4d8"

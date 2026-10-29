@@ -23,7 +23,7 @@ stats = { strength = 24, dexterity = 15, toughness = 27, intelligence = 9, willp
 base_hp = 68
 natural = { defence = 1, protection = 5, name = "stony hide" }
 resist = { slashing = 25, piercing = 25, bludgeoning = -25, fire = -25 }
-on_eat = { message = "Gritty, like chewing gravel.", vomit = 50, stat = { toughness = 5 } }
+on_eat = { message = "Gritty, like chewing gravel.", vomit = 50 }
 blood = "#3a3a3a"
 [creature.attack]
 damage = "4d6"

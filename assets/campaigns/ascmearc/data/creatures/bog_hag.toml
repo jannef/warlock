@@ -32,7 +32,7 @@ skills = { concentration = 50, spellcraft = 60 }
 attack = { damage = "1d8", damage_type = "slashing", name = "claws", verb = "claws" }
 resist = { poison = 50, cold = 25 }
 weapon_skills = { staves = 2 }
-on_eat = { message = "Bitter as the fen.", vomit = 60, harm = "1d4", stat = { willpower = 5 } }
+on_eat = { message = "Bitter as the fen.", vomit = 60, harm = "1d4" }
 blood = "#3a5a2a"
 [[creature.gear]]
 chance = 80

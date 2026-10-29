@@ -796,8 +796,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     roll more every level); `train_skill` (Apprentice, the `skill` choice, any skill, three ranks
     for each: the chosen skill trained at 1d6+4, or raised by it, rolled from the `levels` stream
     as the rank is taken); `ignore_burdened` (Porter: Burdened costs nothing, as a dwarf's);
-    `corpse_stats_percent` and `no_bloating` (Gourmand: a fresh corpse's chance to raise each stat
-    doubled, at most certain; a meal stops one short of Bloated, what does not fit is lost, and
+    `corpse_stats_percent` and `no_bloating` (Gourmand: a fresh corpse's stat training marks and
+    its chances to widen a potential doubled, a chance at most certain; a meal stops one short of Bloated, what does not fit is lost, and
     nothing overeats); `step_slowdown_percent` (Sure-footed: half the slowdown the burden and
     Bloated put on steps; other actions as before); `searching` (Keen searcher: +4
     searching) with the birth signs' `search_reach` (a cell farther); `search` and `trap_damage_percent` (Trap sense: +3 to finding hidden
@@ -1078,7 +1078,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Second sight (noticing
     as Spot +2, searching +2), Curse of sloth (tier 1: Sluggish 1 min a degree: every action
     costs 150 %; 3 mana), Blight (tier 2: a burst of 2d6 poison, radius 2, and two degrees of
-    Poisoned on everyone it harms; 14 mana), Cauldron (a corpse's harm never; its stat chances doubled; a fresh one heals 1d4),
+    Poisoned on everyone it harms; 14 mana), Cauldron (a corpse's harm never; its stat marks and widening chances doubled; a fresh one heals 1d4),
     Hag's bargain.
   - **Reprieves** (`reprieve`, `World::reprieve` from `hurt`, after Rise from the ashes): once
     in a life (`Progress::once`), what would kill the player (not starving or choking) leaves

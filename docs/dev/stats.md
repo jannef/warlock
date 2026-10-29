@@ -58,9 +58,11 @@ reschedules to the first 06:00 after it). Quick study of the body
 (`TalentMods::potion_marks_percent`) scales a `names_stat` use's count in `train_stat_times`
 (potions reach it through `drank`, elixirs through `elixir`).
 
-Elixirs (#568, `world/elixir.rs`) are the one thing that raises a **potential**: the trained
+Elixirs (#568, `world/elixir.rs`) and corpses raise a **potential**: an elixir's trained
 rise, the potential lifted to the score where it was below, then `Stats::widen(stat, by)`,
-never past `SCORES` (docs/dev/potions.md).
+never past `SCORES` (docs/dev/potions.md); a corpse's `on_eat` `widen`, a gameplay draw for
+`Stats::widen(stat, 1)` (docs/dev/hunger.md). A corpse's `train` marks go straight into
+`Actor::stat_marks` (`world/eat.rs::corpse_gifts`, sure, no draw, no `StatUse`).
 
 `Actor::stat_marks` (`PerStat<i32>`, signed, saturating) is saved and hashed, left out while all
 zero (the JSON map of `u16` piles saved before #722 reads as the same numbers). Nothing shows the

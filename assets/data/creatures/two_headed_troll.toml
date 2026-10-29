@@ -22,7 +22,7 @@ stats = { strength = 30, dexterity = 13, toughness = 33, intelligence = 9, willp
 base_hp = 120
 natural = { defence = 2, protection = 2, name = "hide" }
 resist = { fire = -50 }
-on_eat = { message = "Twice the troll, and twice as tough.", vomit = 50, stat = { toughness = 5 } }
+on_eat = { message = "Twice the troll, and twice as tough.", vomit = 50 }
 blood = "#3a4a20"
 [creature.attack]
 damage = "3d10"

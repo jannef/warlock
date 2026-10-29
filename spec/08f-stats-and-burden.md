@@ -17,9 +17,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     for the rules (`stats::modifier`, `Stats::modifier`) and is **never shown**: not in the UI,
     messages, look mode, player-facing dumps, or the wiki.
   - **Potential** (ADOM-like): each stat's natural ceiling, the score it could grow towards.
-    Stored and saved, **hidden from the player** like the modifiers. Eating a corpse raises a
-    score (§8 "Hunger": by 1, never past the potential, `Stats::raise`), and so does training
-    at a check (below; past the potential too, dearer, and never moving the potential). Hunger lowers the **effective** scores for a while (Weak: Strength and Dexterity;
+    Stored and saved, **hidden from the player** like the modifiers. Training raises a
+    score at a check (below; past the potential too, dearer, and never moving the potential);
+    eating a corpse gives training marks and rarely widens a potential by 1 (§8 "Hunger"), never
+    a score. Hunger lowers the **effective** scores for a while (Weak: Strength and Dexterity;
     `Actor::effective_stats`, which combat and burden read; `Stats::adjusted`).
   - **What the player sees**: their own scores as they are now (effective, so lowered while
     Weak), on the character screen (§6) and in the `stats` dump layer; the perception snapshot carries those and nothing else of stats

@@ -23,7 +23,7 @@ stats = { strength = 24, dexterity = 13, toughness = 25, intelligence = 8, willp
 base_hp = 80
 natural = { defence = 1, protection = 1, name = "hide" }
 weapon_skills = { thrown = 1 }
-on_eat = { message = "Coarse, gamey meat, and a mountain of it.", vomit = 30, stat = { strength = 3 } }
+on_eat = { message = "Coarse, gamey meat, and a mountain of it.", vomit = 30 }
 [creature.attack]
 damage = "4d6"
 damage_type = "bludgeoning"

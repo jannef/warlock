@@ -22,7 +22,7 @@ stats = { strength = 26, dexterity = 16, toughness = 27, intelligence = 12, will
 base_hp = 96
 natural = { defence = 1, protection = 7, name = "stony hide" }
 weapon_skills = { thrown = 3 }
-on_eat = { message = "It is like chewing gravel.", vomit = 30, stat = { strength = 3 } }
+on_eat = { message = "It is like chewing gravel.", vomit = 30 }
 [creature.attack]
 damage = "3d10"
 damage_type = "bludgeoning"

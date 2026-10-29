@@ -26,7 +26,7 @@ stats = { strength = 11, dexterity = 12, toughness = 15, intelligence = 15, will
 base_hp = 16
 mana = 22
 skills = { concentration = 30, spellcraft = 34 }
-on_eat = { message = "This goblin meat is rank, and tingles on the tongue.", vomit = 40, stat = { intelligence = 3 } }
+on_eat = { message = "This goblin meat is rank, and tingles on the tongue.", vomit = 40 }
 weapon_skills = { staves = 1 }
 racial_weapon = "quarterstaff"
 [[creature.gear]]

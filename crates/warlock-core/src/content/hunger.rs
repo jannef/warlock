@@ -6,7 +6,7 @@
 //! creatures leave no corpses. The rules are in [`crate::hunger`], [`crate::rot`], and
 //! `world/hunger.rs`.
 
-use super::{ActionKind, ContentError};
+use super::{ActionKind, ContentError, CorpseGifts};
 use crate::dice::Dice;
 use crate::hunger::Hunger;
 use crate::rot::Stage;
@@ -102,6 +102,8 @@ pub struct Overeating {
 struct CorpseSpec {
     material: String,
     size: BTreeMap<String, Food>,
+    #[serde(default)]
+    by_tag: BTreeMap<String, CorpseGifts>,
 }
 
 /// What eating rotten food does (spec §8 "Hunger"), whatever the food: the chance in percent that
@@ -194,6 +196,20 @@ pub struct Corpses {
     pub material: String,
     /// What a corpse gives, by the index of its creature's size in [`super::Content::sizes`].
     pub sizes: Vec<Food>,
+    /// What a corpse gives the stats by default, by creature tag (`[corpses.by_tag]`): laid
+    /// under each creature's `on_eat` at load (`OnEat::resolve`).
+    pub by_tag: BTreeMap<String, CorpseGifts>,
+}
+
+impl Corpses {
+    /// What a creature of `tags` gives the stats by its tags alone: the largest per stat.
+    pub fn gifts_of(&self, tags: &[String]) -> CorpseGifts {
+        let mut gifts = CorpseGifts::default();
+        for gift in tags.iter().filter_map(|t| self.by_tag.get(t)) {
+            gifts.merge(gift);
+        }
+        gifts
+    }
 }
 
 /// How the player hungers: `data/hunger.toml`.
@@ -399,6 +415,9 @@ impl Corpses {
             food.check().map_err(|m| format!("size {id}: {m}"))?;
             by_size[i] = Some(food);
         }
+        for (tag, gifts) in &spec.by_tag {
+            gifts.check().map_err(|m| format!("by_tag {tag}: {m}"))?;
+        }
         let sizes = by_size
             .into_iter()
             .collect::<Option<Vec<Food>>>()
@@ -406,6 +425,7 @@ impl Corpses {
         Ok(Self {
             material: spec.material,
             sizes,
+            by_tag: spec.by_tag,
         })
     }
 }

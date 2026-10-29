@@ -22,7 +22,7 @@ weight = 250000
 stats = { strength = 30, dexterity = 16, toughness = 31, intelligence = 24, willpower = 28, presence = 24 }
 base_hp = 136
 natural = { defence = 2, protection = 9, name = "iron-hard skin" }
-on_eat = { message = "Gristle like iron wire.", vomit = 60, harm = "1d4", stat = { strength = 5 } }
+on_eat = { message = "Gristle like iron wire.", vomit = 60, harm = "1d4", train = { strength = 30 } }
 blood = "#3a2420"
 [creature.attack]
 damage = "4d8"

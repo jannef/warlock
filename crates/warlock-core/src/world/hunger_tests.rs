@@ -643,45 +643,6 @@ fn with_corpse(content: &Arc<Content>, creature: &str, spec: Option<&str>) -> Wo
 }
 
 #[test]
-fn eating_a_corpse_may_raise_a_stat_up_to_its_potential() {
-    let mut files = ContentFiles::builtin();
-    files.insert("levels/pantry.toml", PANTRY);
-    files.insert(
-        "scenarios/pantry.toml",
-        "name = \"pantry\"\nstart_level = \"pantry\"\nhp = 1000\n",
-    );
-    // A sure thing for the test: the beetle always toughens.
-    files.edit_table("creatures", |t| {
-        t.replace("stat = { toughness = 10 }", "stat = { toughness = 100 }")
-    });
-    let content = Arc::new(Content::load(&files).expect("valid"));
-    // A human's potentials are above the starting scores.
-    let mut w = with_corpse(&content, "beetle", Some("human,female,thief"));
-    let (score, potential) = {
-        let s = w.state.player().stats;
-        (s.score(Stat::Toughness), s.potential(Stat::Toughness))
-    };
-    assert!(score < potential);
-    let max_hp = w.state.player().max_hp(w.content());
-    w.apply(&Action::Eat(Meal::Floor(0)));
-    assert!(said(&w, "Crunchy."));
-    assert!(said(&w, "You feel tougher!"));
-    assert_eq!(w.state.player().stats.score(Stat::Toughness), score + 1);
-    assert_eq!(w.state.player().max_hp(w.content()), max_hp + 1);
-    // At its potential, nothing rises (and nothing says so).
-    let mut capped = with_corpse(&content, "beetle", None);
-    let stats = capped.state.player().stats;
-    assert_eq!(
-        stats.score(Stat::Toughness),
-        stats.potential(Stat::Toughness)
-    );
-    capped.apply(&Action::Eat(Meal::Floor(0)));
-    assert!(said(&capped, "You eat the cave beetle corpse."));
-    assert!(!said(&capped, "You feel tougher!"));
-    assert_eq!(capped.state.player().stats, stats);
-}
-
-#[test]
 fn corpses_heal_harm_feed_more_or_come_back_up() {
     let content = content();
     // The deer: very nourishing, and it heals.

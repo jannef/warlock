@@ -85,3 +85,30 @@ material = "flesh"
 [corpses.size]
 small = { nutrition = 400, turns = 3, keeps = "8h", lasts = "36h" }
 medium = { nutrition = 1000, turns = 6, keeps = "8h", lasts = "36h" }
+
+# What a fresh corpse gives the stats by default, by its creature's tags (creatures/README.toml):
+# `train` sure stat training marks per stat (1 to 200; stats.toml's `[training]`: the pile a
+# check reads), `widen` the chance in percent per stat that the potential rises by 1 (1 to 5
+# here, 20 at most in a creature's own `on_eat`: potential points are rare; a `widen` needs a
+# `train` of the same stat). A creature takes the largest per stat over its tags, then its own
+# `on_eat` `train` and `widen` per stat over them (0 switches a tag's gift off). A corpse never
+# raises a score itself. The wiki lists every creature's resolved gifts.
+[corpses.by_tag]
+caster = { train = { intelligence = 20, willpower = 15 } }
+cultist = { train = { intelligence = 20, willpower = 15 } }
+devil = { train = { willpower = 20 } }
+drow = { train = { toughness = 8 } }
+duergar = { train = { toughness = 8 } }
+fey = { train = { presence = 30 }, widen = { presence = 3 } }
+fiend = { train = { willpower = 20 } }
+giant = { train = { strength = 60 }, widen = { strength = 5 } }
+goblin = { train = { toughness = 8 } }
+hag = { train = { willpower = 40 }, widen = { willpower = 3 } }
+hobgoblin = { train = { toughness = 8 } }
+kobold = { train = { toughness = 8 } }
+marsh-thing = { train = { toughness = 15 } }
+ogre = { train = { strength = 40, toughness = 15 }, widen = { strength = 2 } }
+orc = { train = { toughness = 8 } }
+troll = { train = { toughness = 60 }, widen = { toughness = 5 } }
+vermin = { train = { toughness = 4 } }
+yugoloth = { train = { willpower = 20 } }

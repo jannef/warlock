@@ -1509,6 +1509,8 @@ mod drain_tests;
 #[cfg(test)]
 mod dwell_tests;
 #[cfg(test)]
+mod eat_tests;
+#[cfg(test)]
 mod element_gift_tests;
 #[cfg(test)]
 mod elixir_tests;

@@ -357,7 +357,8 @@ pub struct TalentMods {
     pub no_exertion: bool,
     /// A meal never leaves it Bloated.
     pub no_bloating: bool,
-    /// Percent more of a fresh corpse's chances to raise its stats.
+    /// Percent more of a fresh corpse's stat training marks and its chances to widen a
+    /// potential (`on_eat` `train` and `widen`).
     pub corpse_stats_percent: i32,
     /// Percent more of the marks a potion or an elixir gives.
     pub potion_marks_percent: i32,
