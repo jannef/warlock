@@ -8,8 +8,10 @@ so that the first-guess numbers in the data can be judged again after every tuni
 first kept at #569, after every slice of that design had landed: the new rank tables (W1),
 weapon abilities and stamina (W2 to W4, SP1), spell scales (S1), monster Protection by body (P1),
 stat training and the daily check (T1, T2), hit points to level 50 (H1), and potions and elixirs
-(Q1 to Q3). The tables below are its output on `main` at the time of #688 (Surprise S7), which
-added the "Sneak attacks" table; the sections after them ("Against the design's predictions" and
+(Q1 to Q3). The tables below are its output on `main` at the time of #727 (stat training T6), which
+measures trained stats through the game's training hooks and added the "Stat training"
+section (the trained players' scores, and so their side of every fight, moved with it); the
+sections after them ("Against the design's predictions" and
 "Tuning notes") were written against #569's run, and their figures are that run's.
 
 ## How to run it
@@ -18,12 +20,14 @@ added the "Sneak attacks" table; the sections after them ("Against the design's 
 cargo test --release -p warlock-core balance_probe -- --ignored --nocapture
 ```
 
-It takes a few seconds in release. It prints the Markdown tables of the sections from "Players"
-to "Sneak attacks" below, and the same content always prints the same tables (fixed seeds and streams).
+It takes two to three minutes in release (most of it the stat training's sweep, a hundred and
+seventy careers to level 60). It prints the Markdown tables of the sections from "Players" to
+"Sneak attacks" below, and those of "Stat training", and the same content always prints the same tables (fixed seeds and streams).
 After a PR that tunes combat data (weapon skills, creatures, classes, spells, stats, items), run
 it again and replace those sections, then revisit the tuning notes. The code is
 `crates/warlock-core/src/world/balance_probe.rs` (the measuring, with the method in its module
-docs) and `balance_probe/tables.rs` (the tables).
+docs), `balance_probe/training.rs` (the trained careers' days), and `balance_probe/tables.rs`
+(the tables).
 
 ## Method
 
@@ -39,11 +43,11 @@ docs) and `balance_probe/tables.rs` (the tables).
   Weapon skill ranks are set by level, because ranks come from use: rank 2 at level 1, 4 at 5, 6
   at 10, 7 at 15, 8 at 20, 9 at 30, and 10 from 40. The wizard's staff and the priest's spell
   attack are two ranks lower.
-- **Trained stats**: before each level come two game days of marks, then the daily check at each
-  day's 06:00 (`World::daily_stat_check`), then the level's own check. The marks a day follow
-  the design's per-use arithmetic (§9.1). The warrior gets St 7, Dx 3, To 4. The thief gets St 4,
-  Dx 7, To 4. The wizard gets To 2, In 3, Wi 5. The priest gets St 4, To 3, Wi 5. Every other
-  stat gets 1 a day. **Untrained** players get no marks.
+- **Trained stats** (#727; "Stat training" below has the method and the results): before each
+  level come its game days, and each day its share of the level's kills is fought blow by blow
+  through the game's training hooks, then the day's other uses, then the daily check at 06:00
+  (`World::daily_stat_check`); the level's own check follows. **Untrained** players get no
+  marks.
 - **Gear**: the kit; *plain* level-appropriate pieces (the warrior goes from chain mail to banded
   mail at 15 and plate at 30, with a small shield, then a large one from 15); or *magic*, the
   same pieces made magic from level 3 and rare from 30, with an amulet and two rings from 15.
@@ -77,29 +81,29 @@ Each cell: to-hit / damage a hit / Dv / Pv, the seeds' mean; trained stats.
 
 | L | Warrior plain | Warrior magic | Thief plain | Thief magic | Wizard plain | Priest plain | Priest magic |
 |---|---|---|---|---|---|---|---|
-| 1 | +4/8.2/16/3 | +4/8.2/16/3 | +0/2.8/13/1 | +0/2.8/13/1 | +0/3.0/12/0 | +2/5.8/12/0 | +2/5.8/12/0 |
-| 5 | +5/9.5/18/4 | +6/11.2/20/4 | +2/4.2/16/1 | +2/5.2/18/2 | +1/3.2/13/0 | +3/7.2/16/2 | +4/7.9/18/2 |
-| 10 | +6/11.2/22/5 | +8/12.6/25/6 | +4/6.0/20/1 | +6/7.7/21/2 | +2/4.8/15/0 | +5/9.0/17/4 | +7/11.2/20/5 |
-| 15 | +8/12.8/25/9 | +13/16.2/28/10 | +7/6.8/20/2 | +9/9.3/24/4 | +3/5.5/16/1 | +7/10.8/21/5 | +9/14.8/25/5 |
-| 20 | +10/14.7/28/10 | +14/20.1/33/12 | +10/8.7/22/2 | +12/10.1/26/4 | +5/7.2/18/1 | +8/12.5/24/7 | +11/15.1/29/8 |
-| 30 | +12/16.8/33/12 | +21/24.0/41/18 | +12/10.5/23/2 | +18/18.0/30/8 | +6/9.0/19/1 | +9/14.5/26/8 | +17/19.9/34/15 |
-| 40 | +14/19.5/36/12 | +22/25.7/45/16 | +14/12.2/25/2 | +23/16.8/33/5 | +7/9.7/20/1 | +11/17.2/28/8 | +20/23.1/37/12 |
-| 50 | +15/20.3/36/12 | +20/26.8/46/17 | +15/13.2/25/2 | +19/21.1/31/7 | +8/10.0/20/1 | +12/18.8/28/8 | +18/27.1/36/13 |
-| 60 | +16/23.5/36/12 | +22/29.5/44/15 | +16/15.8/25/2 | +23/20.9/32/7 | +8/12.5/20/1 | +12/20.7/28/8 | +20/25.8/37/13 |
+| 1 | +3/8.2/16/3 | +3/8.2/16/3 | +0/3.0/13/1 | +0/3.0/13/1 | +0/3.0/12/0 | +1/6.0/12/0 | +1/6.0/12/0 |
+| 5 | +4/9.2/18/4 | +5/10.9/20/4 | +2/4.3/15/1 | +2/5.3/17/2 | +0/3.0/13/0 | +2/7.2/15/2 | +3/7.9/18/2 |
+| 10 | +7/11.7/22/5 | +8/12.9/25/6 | +6/7.7/20/1 | +8/9.2/21/2 | +2/4.0/15/0 | +6/10.5/17/4 | +8/12.8/20/5 |
+| 15 | +8/13.0/25/9 | +12/16.3/28/10 | +9/8.8/21/2 | +11/11.3/24/4 | +2/4.0/16/1 | +8/12.7/21/5 | +10/16.7/25/5 |
+| 20 | +10/15.3/28/10 | +14/20.9/33/12 | +12/10.8/23/2 | +14/12.2/27/4 | +3/5.2/18/1 | +10/14.5/23/7 | +13/16.9/28/8 |
+| 30 | +13/17.7/33/12 | +21/24.7/41/18 | +14/13.0/23/2 | +20/20.5/30/8 | +3/6.5/20/1 | +11/16.8/26/8 | +19/22.6/34/15 |
+| 40 | +15/20.7/36/12 | +22/26.8/45/16 | +17/15.2/25/2 | +26/19.7/32/5 | +4/7.0/21/1 | +14/20.3/28/8 | +23/26.4/37/12 |
+| 50 | +16/21.7/36/12 | +21/28.2/46/17 | +18/16.3/25/2 | +22/24.2/31/7 | +5/7.2/22/1 | +14/21.2/28/8 | +20/29.1/36/13 |
+| 60 | +17/22.7/36/12 | +22/28.7/44/15 | +19/17.0/25/2 | +26/22.2/32/7 | +5/7.7/22/1 | +15/22.0/28/8 | +23/27.2/37/13 |
 
 Stats, hit points, and mana (plain gear; trained → untrained). Scores St/Dx/To/In/Wi/Pr, the seeds' mean.
 
 | L | Warrior | Thief | Wizard | Priest | HP W/T/Wz/P | MP Wz/P | Caster level Wz/P | Blows a round W/T |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 15/11/12/10/12/10 | 11/12/10/11/10/10 | 10/10/10/14/12/10 | 11/9/11/11/15/11 | 23→23 / 18→18 / 13→13 / 18→18 | 16/13 | 1/1 | 0.99/0.99 |
-| 5 | 16/12/13/11/12/10 | 12/14/12/12/11/10 | 10/11/10/15/14/10 | 12/9/12/12/16/11 | 39→36 / 28→26 / 18→17 / 29→26 | 52/41 | 6/5 | 0.88/0.99 |
-| 10 | 17/13/15/12/13/11 | 14/16/14/13/11/11 | 11/12/12/16/16/11 | 14/10/14/13/17/12 | 64→54 / 46→36 / 24→22 / 46→37 | 99/80 | 12/10 | 0.89/1.04 |
-| 15 | 18/14/16/13/14/12 | 15/17/16/14/12/12 | 12/12/13/17/18/12 | 15/11/15/14/18/13 | 90→72 / 69→47 / 33→28 / 67→48 | 149/122 | 18/15 | 0.91/1.10 |
-| 20 | 20/16/17/14/15/13 | 17/19/17/14/13/13 | 14/14/15/18/18/13 | 16/12/17/15/19/14 | 123→92 / 95→57 / 45→33 / 101→58 | 201/164 | 24/20 | 0.92/1.17 |
-| 30 | 22/17/19/15/17/15 | 18/21/19/16/15/15 | 16/16/17/20/20/14 | 18/14/18/16/21/16 | 207→129 / 175→79 / 94→43 / 167→79 | 312/256 | 36/30 | 0.94/1.24 |
-| 40 | 24/18/20/16/18/16 | 20/22/21/18/17/16 | 17/16/19/21/22/16 | 20/15/20/18/23/17 | 291→166 / 252→100 / 141→53 / 238→101 | 429/356 | 48/40 | 0.95/1.42 |
-| 50 | 25/20/22/18/19/17 | 21/24/22/19/18/17 | 18/18/19/22/24/17 | 21/17/21/18/24/18 | 379→202 / 332→120 / 191→63 / 313→122 | 554/463 | 60/50 | 0.95/1.49 |
-| 60 | 27/22/24/19/20/18 | 23/26/24/19/19/18 | 18/18/21/23/25/17 | 23/17/22/19/26/19 | 390→205 / 342→122 / 201→64 / 324→124 | 684/578 | 72/60 | 0.95/1.56 |
+| 1 | 15/11/12/10/12/10 | 11/12/10/11/10/10 | 10/10/10/14/12/10 | 11/9/11/11/15/11 | 22→22 / 19→19 / 13→13 / 18→18 | 16/13 | 1/1 | 0.99/0.99 |
+| 5 | 15/11/12/10/12/10 | 12/13/11/12/10/10 | 10/10/10/15/14/10 | 11/9/11/12/15/11 | 36→36 / 27→26 / 18→17 / 26→26 | 52/40 | 6/5 | 0.88/0.96 |
+| 10 | 18/12/14/11/12/10 | 16/16/15/13/10/10 | 10/12/13/17/18/10 | 16/9/14/12/17/11 | 58→53 / 48→36 / 26→22 / 45→36 | 102/78 | 12/10 | 0.89/1.04 |
+| 15 | 19/14/16/12/13/10 | 19/18/17/14/11/10 | 10/13/17/18/20/10 | 18/11/17/14/18/11 | 86→70 / 74→46 / 43→27 / 72→46 | 158/120 | 18/15 | 0.91/1.10 |
+| 20 | 21/17/18/13/13/11 | 21/20/19/14/12/11 | 10/15/19/19/21/10 | 20/13/18/14/20/11 | 118→88 / 104→56 / 63→32 / 102→55 | 215/163 | 24/20 | 0.92/1.17 |
+| 30 | 24/19/19/15/14/11 | 23/22/20/16/13/11 | 10/18/21/21/24/11 | 23/15/20/16/21/12 | 185→127 / 171→79 / 111→43 / 181→79 | 338/256 | 36/30 | 0.94/1.24 |
+| 40 | 26/21/20/16/16/12 | 25/23/22/17/15/12 | 11/20/22/23/26/12 | 26/19/22/17/22/14 | 282→168 / 264→100 / 190→53 / 272→101 | 472/353 | 48/40 | 0.95/1.42 |
+| 50 | 28/22/21/17/18/14 | 28/24/24/18/17/14 | 12/21/24/25/28/14 | 27/20/24/18/23/15 | 374→204 / 361→120 / 266→63 / 361→122 | 618/456 | 60/50 | 0.95/1.49 |
+| 60 | 30/24/22/18/19/15 | 29/25/25/19/18/15 | 13/22/26/26/30/15 | 29/21/26/18/24/16 | 385→208 / 372→122 / 277→64 / 372→124 | 773/566 | 72/60 | 0.95/1.56 |
 
 The Defence of the warrior and the thief in plain gear by category (trained → untrained), the seeds' mean.
 
@@ -110,7 +114,7 @@ The Defence of the warrior and the thief in plain gear by category (trained → 
 | warrior | 60 | 2→0 | 1→1 | 16→16 | 6→6 | 0→0 | 1→1 | 0→0 | 0→0 | 36→34 |
 | thief | 10 | 3→1 | 2→2 | 0→0 | 3→3 | 0→0 | 2→2 | 0→0 | 0→0 | 20→17 |
 | thief | 30 | 5→1 | 2→2 | 0→0 | 4→4 | 0→0 | 2→2 | 0→0 | 0→0 | 23→19 |
-| thief | 60 | 5→1 | 2→2 | 0→0 | 6→6 | 0→0 | 2→2 | 0→0 | 0→0 | 25→21 |
+| thief | 60 | 5→1 | 2→2 | 0→0 | 6→6 | 0→0 | 2→2 | 0→0 | 0→0 | 25→20 |
 
 ## Monsters
 
@@ -135,29 +139,29 @@ Each cell: P(player hits) / P(monster hits) % · damage a round player : monster
 
 | L | Warrior kit | Warrior plain | Warrior magic | Thief plain | Thief magic | Wizard plain (melee) | Priest plain | Priest magic |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 87/35 · 7.5:0.1 · 1.6 / 305 | 87/35 · 7.5:0.1 · 1.6 / 353 | 87/35 · 7.5:0.1 · 1.6 / 307 | 67/55 · 2.4:0.5 · 6.2 / 35 | 67/55 · 2.5:0.6 · 6.3 / 34 | 71/62 · 2.3:1.1 · 5.6 / 14 | 77/59 · 4.7:1.0 · 2.6 / 19 | 77/59 · 4.6:1.0 · 2.7 / 19 |
-| 5 | 89/31 · 8.9:0.7 · 2.6 / 63 | 89/25 · 7.9:0.4 · 3.0 / 92 | 91/14 · 9.7:0.2 · 2.5 / 324 | 75/43 · 4.0:1.4 · 6.9 / 21 | 76/30 · 4.8:0.9 · 5.4 / 76 | 66/59 · 2.0:2.4 · 13 / 7.9 | 80/42 · 5.1:1.2 · 4.6 / 25 | 83/28 · 5.8:0.7 · 3.8 / 63 |
-| 10 | 91/18 · 11.2:1.1 · 3.8 / 63 | 91/13 · 9.9:0.7 · 4.3 / 114 | 93/5 · 11.1:0.3 · 3.9 / >999 | 83/25 · 8.5:1.8 · 6.4 / 30 | 89/17 · 11.1:1.3 · 5.1 / 78 | 71/56 · 3.5:4.7 · 13 / 5.5 | 84/40 · 6.6:2.4 · 6.8 / 21 | 92/22 · 9.5:1.2 · 4.6 / 67 |
-| 15 | 95/8 · 13.2:0.6 · 4.7 / 193 | 95/9 · 11.7:0.4 · 5.5 / 302 | 99/4 · 16.7:0.2 · 4.1 / >999 | 92/30 · 10.1:3.2 · 7.8 / 24 | 96/14 · 14.7:1.1 · 6.3 / 95 | 75/65 · 3.5:7.6 · 17 / 4.4 | 91/27 · 8.2:2.3 · 8.0 / 32 | 94/12 · 12.2:1.0 · 5.6 / >999 |
-| 20 | 98/3 · 16.3:0.3 · 5.0 / 876 | 98/5 · 14.5:0.3 · 5.8 / 915 | 99/1 · 22.2:0.0 · 4.0 / >999 | 97/29 · 14.8:3.1 · 7.0 / 36 | 98/12 · 18.9:1.1 · 5.5 / 356 | 79/65 · 5.0:7.6 · 17 / 5.9 | 94/22 · 9.8:1.7 · 8.4 / 70 | 98/6 · 13.2:0.3 · 6.1 / >999 |
-| 30 | 98/1 · 20.2:0.2 · 7.1 / >999 | 98/2 · 17.7:0.2 · 8.3 / >999 | 99/1 · 29.2:0.1 · 5.2 / >999 | 98/44 · 19.0:9.4 · 8.2 / 22 | 99/7 · 38.5:0.9 · 3.8 / 952 | 76/72 · 4.8:15.3 · 23 / 6.2 | 92/26 · 9.9:4.3 · 13 / 42 | 99/2 · 20.7:0.2 · 7.2 / >999 |
-| 40 | 98/1 · 23.2:0.2 · 7.6 / >999 | 98/1 · 20.2:0.2 · 8.7 / >999 | 99/1 · 35.0:0.1 · 5.2 / >999 | 98/46 · 25.5:10.7 · 7.8 / 27 | 99/8 · 45.3:1.4 · 4.5 / 967 | 70/82 · 5.4:17.0 · 32 / 8.7 | 90/27 · 12.6:5.6 · 14 / 47 | 99/1 · 23.3:0.1 · 7.2 / >999 |
-| 50 | 97/4 · 24.1:0.7 · 9.9 / >999 | 97/8 · 20.9:1.3 · 11 / 742 | 99/1 · 33.9:0.1 · 7.3 / >999 | 98/67 · 27.1:18.9 · 9.7 / 19 | 99/31 · 44.5:7.7 · 5.0 / 126 | 65/92 · 4.4:24.9 · 55 / 7.7 | 88/49 · 12.6:13.1 · 18 / 25 | 97/10 · 25.4:2.2 · 9.0 / 914 |
-| 60 | 92/7 · 21.1:2.7 · 10 / 185 | 92/16 · 18.4:4.9 · 11 / 89 | 98/1 · 28.3:0.2 · 6.7 / >999 | 92/84 · 25.4:27.0 · 10 / 13 | 99/37 · 40.3:12.0 · 6.0 / 54 | 46/98 · 3.5:31.9 · 77 / 6.5 | 78/71 · 12.2:20.6 · 19 / 17 | 96/15 · 22.8:4.3 · 11 / 359 |
+| 1 | 85/35 · 7.4:0.1 · 1.6 / 306 | 85/35 · 7.4:0.1 · 1.6 / 332 | 85/35 · 7.4:0.1 · 1.6 / 306 | 67/55 · 2.6:0.5 · 6.1 / 37 | 67/55 · 2.6:0.5 · 6.0 / 36 | 71/62 · 2.3:1.1 · 5.6 / 14 | 76/59 · 4.8:1.0 · 2.7 / 19 | 76/59 · 4.7:1.0 · 2.7 / 19 |
+| 5 | 86/34 · 8.4:0.8 · 2.8 / 51 | 86/27 · 7.3:0.5 · 3.3 / 87 | 89/15 · 9.3:0.2 · 2.6 / 250 | 75/46 · 3.8:1.6 · 6.7 / 18 | 75/32 · 4.6:1.0 · 5.3 / 54 | 65/60 · 1.9:2.4 · 14 / 7.9 | 78/43 · 4.6:1.3 · 4.9 / 22 | 81/29 · 5.4:0.8 · 4.1 / 53 |
+| 10 | 92/20 · 11.6:1.3 · 3.6 / 57 | 92/15 · 10.4:0.8 · 4.1 / 95 | 94/7 · 11.5:0.3 · 3.8 / >999 | 89/25 · 11.1:2.0 · 4.7 / 31 | 93/17 · 13.9:1.3 · 3.9 / 103 | 65/56 · 2.6:4.6 · 18 / 6.0 | 89/42 · 8.3:2.6 · 5.1 / 20 | 95/25 · 11.5:1.4 · 3.7 / 81 |
+| 15 | 95/9 · 13.3:0.7 · 4.6 / 203 | 95/8 · 11.7:0.4 · 5.3 / 297 | 99/4 · 16.6:0.2 · 3.9 / >999 | 96/27 · 13.9:2.8 · 5.4 / 30 | 98/12 · 19.1:1.0 · 4.7 / 106 | 65/62 · 2.0:7.4 · 30 / 6.0 | 95/27 · 10.6:2.3 · 6.5 / 42 | 98/12 · 15.5:1.0 · 4.3 / 978 |
+| 20 | 98/3 · 17.4:0.3 · 4.8 / >999 | 98/5 · 15.2:0.2 · 5.4 / >999 | 99/1 · 23.2:0.0 · 3.6 / >999 | 99/27 · 19.7:2.7 · 5.3 / 48 | 99/10 · 24.2:0.9 · 4.4 / 481 | 66/62 · 2.7:7.6 · 31 / 8.8 | 98/26 · 12.1:1.9 · 6.6 / 71 | 99/7 · 16.2:0.4 · 5.0 / >999 |
+| 30 | 99/1 · 21.5:0.2 · 6.8 / >999 | 99/2 · 18.6:0.2 · 7.8 / >999 | 99/1 · 30.0:0.1 · 5.0 / >999 | 99/42 · 25.7:9.2 · 6.4 / 22 | 99/7 · 44.8:1.0 · 3.3 / 802 | 60/65 · 2.3:14.2 · 50 / 8.0 | 96/26 · 12.9:4.3 · 10 / 46 | 99/2 · 25.3:0.2 · 5.8 / >999 |
+| 40 | 98/1 · 25.4:0.1 · 7.1 / >999 | 98/1 · 22.1:0.1 · 8.1 / >999 | 99/1 · 37.9:0.1 · 4.8 / >999 | 99/47 · 33.7:11.1 · 6.1 / 27 | 99/8 · 54.3:1.2 · 3.7 / >999 | 51/72 · 2.4:15.2 · 69 / 13 | 97/27 · 16.4:5.4 · 11 / 55 | 99/1 · 28.8:0.1 · 5.7 / >999 |
+| 50 | 99/2 · 26.2:0.5 · 9.1 / >999 | 99/8 · 23.1:1.3 · 10 / 662 | 99/1 · 36.8:0.1 · 6.5 / >999 | 99/68 · 35.9:19.4 · 7.2 / 20 | 99/31 · 51.8:7.9 · 4.1 / 118 | 43/86 · 1.6:22.8 · 156 / 12 | 97/49 · 15.9:12.7 · 15 / 29 | 99/10 · 30.4:2.2 · 7.7 / >999 |
+| 60 | 95/5 · 20.3:1.7 · 9.8 / >999 | 95/16 · 17.8:5.1 · 12 / 80 | 99/1 · 28.1:0.2 · 7.0 / >999 | 99/84 · 30.9:27.7 · 8.0 / 14 | 99/38 · 44.2:11.2 · 5.5 / 54 | 29/94 · 1.2:30.7 · 523 / 9.3 | 91/71 · 15.4:20.1 · 16 / 20 | 99/15 · 24.9:4.3 · 10 / >999 |
 
 Out of depth (+3: the monsters one to five levels above), and untrained stats, for the warrior in plain gear.
 
 | L | Warrior plain +3 | Warrior magic +3 | Warrior plain, untrained | Warrior magic, untrained |
 |---|---|---|---|---|
-| 1 | 83/35 · 7.2:0.6 · 2.9 / 42 | 83/35 · 7.2:0.6 · 2.8 / 43 | 87/35 · 7.6:0.1 · 1.6 / 334 | 87/35 · 7.5:0.1 · 1.6 / 324 |
-| 5 | 89/31 · 7.8:1.3 · 4.5 / 31 | 91/19 · 9.7:0.7 · 3.7 / 79 | 87/28 · 7.4:0.5 · 3.2 / 86 | 90/16 · 9.4:0.2 · 2.6 / 304 |
-| 10 | 92/21 · 9.3:1.4 · 6.4 / 51 | 93/9 · 10.5:0.6 · 5.5 / 683 | 87/18 · 8.6:0.9 · 5.1 / 73 | 90/9 · 9.7:0.4 · 4.5 / >999 |
-| 15 | 93/12 · 11.5:0.7 · 6.3 / 154 | 98/5 · 16.7:0.3 · 4.6 / >999 | 90/12 · 8.7:0.6 · 7.5 / 181 | 98/5 · 13.7:0.3 · 4.9 / >999 |
-| 20 | 96/8 · 14.1:0.7 · 7.9 / 326 | 99/1 · 21.5:0.1 · 5.3 / >999 | 91/8 · 10.0:0.4 · 9.0 / 512 | 98/1 · 19.8:0.0 · 4.5 / >999 |
-| 30 | 98/3 · 16.4:0.4 · 9.2 / 906 | 99/1 · 28.1:0.1 · 5.6 / >999 | 89/5 · 11.3:0.7 · 12 / 422 | 99/1 · 25.7:0.1 · 6.1 / >999 |
-| 40 | 98/2 · 20.1:0.3 · 9.6 / >999 | 99/1 · 34.6:0.1 · 5.7 / >999 | 83/3 · 13.2:0.7 · 13 / >999 | 98/1 · 29.2:0.1 · 6.4 / >999 |
-| 50 | 95/8 · 18.4:1.8 · 12 / 519 | 99/1 · 30.3:0.1 · 7.6 / >999 | 78/14 · 11.5:2.7 · 21 / 129 | 93/1 · 25.1:0.1 · 9.8 / >999 |
-| 60 | 82/31 · 14.5:8.6 · 17 / 54 | 96/2 · 25.2:0.4 · 9.4 / >999 | 58/27 · 7.2:8.1 · 41 / 28 | 88/1 · 16.8:0.4 · 14 / >999 |
+| 1 | 81/35 · 7.1:0.6 · 2.9 / 38 | 81/35 · 7.0:0.6 · 2.9 / 40 | 85/35 · 7.5:0.1 · 1.6 / 362 | 85/35 · 7.5:0.1 · 1.6 / 335 |
+| 5 | 86/34 · 7.3:1.6 · 4.9 / 25 | 88/20 · 9.1:0.8 · 3.9 / 64 | 86/27 · 7.4:0.5 · 3.3 / 82 | 89/15 · 9.3:0.2 · 2.7 / 261 |
+| 10 | 92/23 · 9.8:1.5 · 6.1 / 42 | 94/11 · 10.9:0.8 · 5.6 / 609 | 86/17 · 8.5:0.9 · 5.3 / 70 | 89/8 · 9.4:0.4 · 4.7 / >999 |
+| 15 | 94/11 · 11.4:0.7 · 6.2 / 148 | 99/5 · 16.6:0.3 · 4.5 / >999 | 89/11 · 8.5:0.6 · 7.7 / 188 | 98/5 · 13.7:0.3 · 4.9 / >999 |
+| 20 | 97/8 · 14.9:0.7 · 7.5 / 256 | 99/1 · 22.5:0.1 · 5.1 / >999 | 90/7 · 9.6:0.3 · 9.2 / 607 | 97/1 · 19.3:0.1 · 4.8 / >999 |
+| 30 | 98/3 · 17.2:0.4 · 8.7 / >999 | 99/1 · 28.8:0.1 · 5.4 / >999 | 88/5 · 9.9:0.7 · 13 / 483 | 99/1 · 23.6:0.1 · 6.5 / >999 |
+| 40 | 99/2 · 21.8:0.3 · 8.9 / >999 | 99/1 · 38.6:0.1 · 5.2 / >999 | 81/3 · 12.4:0.7 · 14 / >999 | 97/1 · 27.9:0.1 · 6.6 / >999 |
+| 50 | 97/8 · 20.5:1.5 · 11 / 491 | 99/1 · 33.8:0.1 · 6.8 / >999 | 76/14 · 10.9:2.6 · 23 / 106 | 93/1 · 24.8:0.1 · 10 / >999 |
+| 60 | 86/31 · 14.5:8.7 · 16 / 53 | 98/2 · 24.7:0.4 · 9.5 / >999 | 55/27 · 7.0:7.1 · 43 / 31 | 87/1 · 16.4:0.3 · 15 / >999 |
 
 ## Protection by body
 
@@ -165,13 +169,13 @@ Rounds for the plain warrior (trained) to kill the monsters of their level: as s
 
 | L | as shipped | none (0) | hide | bony | armoured |
 |---|---|---|---|---|---|
-| 10 | 4.3 | 3.9 | 3.9 | 4.3 | 5.0 |
-| 15 | 5.4 | 4.7 | 4.7 | 5.1 | 6.1 |
-| 20 | 5.9 | 4.9 | 5.1 | 5.6 | 6.4 |
-| 30 | 8.3 | 6.1 | 6.7 | 7.5 | 8.8 |
-| 40 | 8.8 | 6.4 | 7.1 | 7.7 | 9.1 |
-| 50 | 11 | 9.0 | 10 | 11 | 14 |
-| 60 | 11 | 7.3 | 8.4 | 8.9 | 11 |
+| 10 | 4.1 | 3.7 | 3.7 | 4.1 | 4.8 |
+| 15 | 5.4 | 4.6 | 4.5 | 5.1 | 5.9 |
+| 20 | 5.6 | 4.7 | 4.9 | 5.3 | 5.8 |
+| 30 | 7.9 | 5.8 | 6.2 | 6.8 | 7.9 |
+| 40 | 8.0 | 5.8 | 6.4 | 7.1 | 8.2 |
+| 50 | 10 | 8.3 | 9.3 | 10 | 13 |
+| 60 | 12 | 7.8 | 8.8 | 9.4 | 11 |
 
 ## Spells
 
@@ -181,45 +185,45 @@ Each damage spell as the trained caster casts it (plain gear): the lift and the 
 
 | Spell (tier, resolution) | L | lift % | cap → lifted | dice | casts to kill | mana / pool |
 |---|---|---|---|---|---|---|
-| Ray of frost (0, Attack) | 10 | 0 | 6 → 6 | 1d6+1, 4.5 | 11 (11) | 1 / 99 |
-| Ray of frost (0, Attack) | 30 | 0 | 6 → 6 | 1d6+1, 4.5 | 30 (30) | 1 / 312 |
-| Ray of frost (0, Attack) | 60 | 0 | 6 → 6 | 2d6+6, 13.0 | 64 (61) | 1 / 684 |
-| Spark (0, Auto) | 10 | 0 | 4 → 4 | 1d4+1, 3.5 | 12 (12) | 1 / 99 |
-| Spark (0, Auto) | 30 | 0 | 4 → 4 | 1d4+1, 3.5 | 36 (36) | 1 / 312 |
-| Spark (0, Auto) | 60 | 0 | 4 → 4 | 2d4+6, 11.0 | 57 (57) | 1 / 684 |
-| Burning hands (1, Area) | 10 | 45 | 9 → 13 | 3d4+3, 10.5 | 4.1 (5.6) | 5 / 99 |
-| Burning hands (1, Area) | 30 | 50 | 9 → 13 | 3d4+3, 10.5 | 11 (17) | 5 / 312 |
-| Burning hands (1, Area) | 60 | 50 | 9 → 13 | 4d4+12, 22.0 | 18 (26) | 2 / 684 |
-| Cause wounds (1, Touch) | 10 | 0 | 14 → 14 | 2d6+2, 9.0 | 5.4 (5.5) | 2 / 99 |
-| Cause wounds (1, Touch) | 30 | 0 | 14 → 14 | 2d6+2, 9.0 | 15 (15) | 2 / 312 |
-| Cause wounds (1, Touch) | 60 | 0 | 14 → 14 | 3d6+9, 19.5 | 29 (30) | 1 / 684 |
-| Magic missile (1, Auto) | 10 | 45 | 9 → 13 | 3d4+3, 10.5 | 4.0 (5.6) | 3 / 99 |
-| Magic missile (1, Auto) | 30 | 50 | 9 → 13 | 3d4+3, 10.5 | 11 (17) | 3 / 312 |
-| Magic missile (1, Auto) | 60 | 50 | 9 → 13 | 4d4+12, 22.0 | 18 (26) | 1 / 684 |
-| Arcane bolt (2, Area) | 10 | 45 | 14 → 20 | 3d6+3, 13.5 | 2.9 (4.3) | 11 / 99 |
-| Arcane bolt (2, Area) | 30 | 60 | 14 → 22 | 3d6+3, 13.5 | 8.7 (13) | 11 / 312 |
-| Arcane bolt (2, Area) | 60 | 60 | 14 → 22 | 4d6+12, 26.0 | 11 (16) | 4 / 684 |
-| Blight (2, Area) | 10 | 0 | 14 → 14 | 2d6+2, 9.0 | 4.3 (4.3) | 14 / 99 |
-| Blight (2, Area) | 30 | 0 | 14 → 14 | 2d6+2, 9.0 | 13 (13) | 14 / 312 |
-| Blight (2, Area) | 60 | 0 | 14 → 14 | 3d6+9, 19.5 | 16 (16) | 5 / 684 |
-| Frost (2, Area) | 10 | 45 | 14 → 20 | 3d6+3, 13.5 | 2.9 (4.3) | 14 / 99 |
-| Frost (2, Area) | 30 | 60 | 14 → 22 | 3d6+3, 13.5 | 8.7 (13) | 14 / 312 |
-| Frost (2, Area) | 60 | 60 | 14 → 22 | 4d6+12, 26.0 | 11 (16) | 5 / 684 |
-| Scorching ray (2, Attack) | 10 | 45 | 18 → 26 | 3d6+3, 13.5 | 3.6 (4.9) | 6 / 99 |
-| Scorching ray (2, Attack) | 30 | 60 | 18 → 28 | 4d6+4, 18.0 | 7.1 (9.8) | 6 / 312 |
-| Scorching ray (2, Attack) | 60 | 60 | 18 → 28 | 5d6+15, 32.5 | 14 (21) | 2 / 684 |
-| Call lightning (3, Area) | 10 | 45 | 19 → 27 | 3d6+3, 13.5 | 2.8 (4.3) | 20 / 99 |
-| Call lightning (3, Area) | 30 | 70 | 19 → 32 | 5d6+5, 22.5 | 5.2 (8.7) | 20 / 312 |
-| Call lightning (3, Area) | 60 | 70 | 19 → 32 | 6d6+18, 39.0 | 7.2 (12) | 8 / 684 |
-| Fireball (3, Area) | 10 | 45 | 19 → 27 | 3d6+3, 13.5 | 2.8 (4.3) | 26 / 99 |
-| Fireball (3, Area) | 30 | 70 | 19 → 32 | 5d6+5, 22.5 | 5.2 (8.8) | 26 / 312 |
-| Fireball (3, Area) | 60 | 70 | 19 → 32 | 6d6+18, 39.0 | 7.2 (12) | 10 / 684 |
-| Flame (3, Area) | 10 | 45 | 19 → 27 | 4d6+4, 18.0 | 2.1 (2.9) | 26 / 99 |
-| Flame (3, Area) | 30 | 70 | 19 → 32 | 5d6+5, 22.5 | 5.2 (8.8) | 26 / 312 |
-| Flame (3, Area) | 60 | 70 | 19 → 32 | 6d6+18, 39.0 | 7.2 (12) | 10 / 684 |
-| Lightning bolt (3, Area) | 10 | 45 | 19 → 27 | 3d6+3, 13.5 | 2.8 (4.3) | 20 / 99 |
-| Lightning bolt (3, Area) | 30 | 70 | 19 → 32 | 5d6+5, 22.5 | 5.2 (8.7) | 20 / 312 |
-| Lightning bolt (3, Area) | 60 | 70 | 19 → 32 | 6d6+18, 39.0 | 7.2 (12) | 8 / 684 |
+| Ray of frost (0, Attack) | 10 | 0 | 6 → 6 | 1d6+1, 4.5 | 11 (10) | 1 / 102 |
+| Ray of frost (0, Attack) | 30 | 0 | 6 → 6 | 1d6+1, 4.5 | 29 (29) | 1 / 338 |
+| Ray of frost (0, Attack) | 60 | 0 | 6 → 6 | 2d6+6, 13.0 | 48 (48) | 1 / 773 |
+| Spark (0, Auto) | 10 | 0 | 4 → 4 | 1d4+1, 3.5 | 12 (12) | 1 / 102 |
+| Spark (0, Auto) | 30 | 0 | 4 → 4 | 1d4+1, 3.5 | 36 (36) | 1 / 338 |
+| Spark (0, Auto) | 60 | 0 | 4 → 4 | 2d4+6, 11.0 | 57 (57) | 1 / 773 |
+| Burning hands (1, Area) | 10 | 50 | 9 → 13 | 3d4+3, 10.5 | 3.7 (5.6) | 5 / 102 |
+| Burning hands (1, Area) | 30 | 50 | 9 → 13 | 3d4+3, 10.5 | 11 (17) | 5 / 338 |
+| Burning hands (1, Area) | 60 | 50 | 9 → 13 | 4d4+12, 22.0 | 18 (26) | 2 / 773 |
+| Cause wounds (1, Touch) | 10 | 0 | 14 → 14 | 2d6+2, 9.0 | 5.5 (5.5) | 2 / 102 |
+| Cause wounds (1, Touch) | 30 | 0 | 14 → 14 | 2d6+2, 9.0 | 14 (14) | 2 / 338 |
+| Cause wounds (1, Touch) | 60 | 0 | 14 → 14 | 3d6+9, 19.5 | 24 (25) | 1 / 773 |
+| Magic missile (1, Auto) | 10 | 50 | 9 → 13 | 3d4+3, 10.5 | 3.7 (5.6) | 3 / 102 |
+| Magic missile (1, Auto) | 30 | 50 | 9 → 13 | 3d4+3, 10.5 | 11 (17) | 3 / 338 |
+| Magic missile (1, Auto) | 60 | 50 | 9 → 13 | 4d4+12, 22.0 | 18 (26) | 1 / 773 |
+| Arcane bolt (2, Area) | 10 | 55 | 14 → 21 | 3d6+3, 13.5 | 2.9 (4.3) | 11 / 102 |
+| Arcane bolt (2, Area) | 30 | 60 | 14 → 22 | 3d6+3, 13.5 | 8.7 (13) | 11 / 338 |
+| Arcane bolt (2, Area) | 60 | 60 | 14 → 22 | 4d6+12, 26.0 | 11 (16) | 4 / 773 |
+| Blight (2, Area) | 10 | 0 | 14 → 14 | 2d6+2, 9.0 | 4.3 (4.3) | 14 / 102 |
+| Blight (2, Area) | 30 | 0 | 14 → 14 | 2d6+2, 9.0 | 13 (13) | 14 / 338 |
+| Blight (2, Area) | 60 | 0 | 14 → 14 | 3d6+9, 19.5 | 16 (16) | 5 / 773 |
+| Frost (2, Area) | 10 | 55 | 14 → 21 | 3d6+3, 13.5 | 2.9 (4.3) | 14 / 102 |
+| Frost (2, Area) | 30 | 60 | 14 → 22 | 3d6+3, 13.5 | 8.7 (13) | 14 / 338 |
+| Frost (2, Area) | 60 | 60 | 14 → 22 | 4d6+12, 26.0 | 11 (16) | 5 / 773 |
+| Scorching ray (2, Attack) | 10 | 55 | 18 → 27 | 3d6+3, 13.5 | 3.2 (4.9) | 6 / 102 |
+| Scorching ray (2, Attack) | 30 | 60 | 18 → 28 | 4d6+4, 18.0 | 6.9 (9.4) | 6 / 338 |
+| Scorching ray (2, Attack) | 60 | 60 | 18 → 28 | 5d6+15, 32.5 | 10 (16) | 2 / 773 |
+| Call lightning (3, Area) | 10 | 55 | 19 → 29 | 3d6+3, 13.5 | 2.8 (4.3) | 20 / 102 |
+| Call lightning (3, Area) | 30 | 70 | 19 → 32 | 5d6+5, 22.5 | 5.3 (8.7) | 20 / 338 |
+| Call lightning (3, Area) | 60 | 70 | 19 → 32 | 6d6+18, 39.0 | 7.2 (12) | 8 / 773 |
+| Fireball (3, Area) | 10 | 55 | 19 → 29 | 3d6+3, 13.5 | 2.8 (4.3) | 26 / 102 |
+| Fireball (3, Area) | 30 | 70 | 19 → 32 | 5d6+5, 22.5 | 5.2 (8.8) | 26 / 338 |
+| Fireball (3, Area) | 60 | 70 | 19 → 32 | 6d6+18, 39.0 | 7.2 (12) | 10 / 773 |
+| Flame (3, Area) | 10 | 55 | 19 → 29 | 4d6+4, 18.0 | 2.1 (2.9) | 26 / 102 |
+| Flame (3, Area) | 30 | 70 | 19 → 32 | 5d6+5, 22.5 | 5.2 (8.7) | 26 / 338 |
+| Flame (3, Area) | 60 | 70 | 19 → 32 | 6d6+18, 39.0 | 7.2 (12) | 10 / 773 |
+| Lightning bolt (3, Area) | 10 | 55 | 19 → 29 | 3d6+3, 13.5 | 2.8 (4.3) | 20 / 102 |
+| Lightning bolt (3, Area) | 30 | 70 | 19 → 32 | 5d6+5, 22.5 | 5.3 (8.7) | 20 / 338 |
+| Lightning bolt (3, Area) | 60 | 70 | 19 → 32 | 6d6+18, 39.0 | 7.2 (12) | 8 / 773 |
 
 **Priest**
 
@@ -233,23 +237,187 @@ The thief's main-hand blow on the monsters of their level (trained stats), aware
 
 | L | Sneak attack | dice | with vitals | Thief plain | Thief magic |
 |---|---|---|---|---|---|
-| 1 | 15 | 1d6 | 71% | 75/75 · 2.4:5.4 · ×2.3 | 75/75 · 2.4:5.5 · ×2.3 |
-| 5 | 29 | 2d6 | 55% | 75/85 · 3.5:9.9 · ×2.8 | 76/86 · 4.3:10.9 · ×2.5 |
-| 10 | 47 | 2d6 | 72% | 87/94 · 5.8:13.0 · ×2.2 | 92/97 · 8.0:15.2 · ×1.9 |
-| 15 | 64 | 3d6 | 63% | 96/99 · 7.2:18.1 · ×2.5 | 98/99 · 10.3:21.0 · ×2.0 |
-| 20 | 82 | 4d6 | 66% | 99/99 · 9.3:23.4 · ×2.5 | 99/99 · 11.7:25.5 · ×2.2 |
-| 30 | 117 | 5d6 | 62% | 99/99 · 11.1:28.5 · ×2.6 | 99/99 · 20.9:38.5 · ×1.8 |
-| 40 | 152 | 8d6 | 59% | 98/99 · 12.7:40.6 · ×3.2 | 99/99 · 19.9:47.8 · ×2.4 |
-| 50 | 187 | 8d6 | 52% | 98/99 · 12.6:40.4 · ×3.2 | 99/99 · 24.7:52.1 · ×2.1 |
-| 60 | 222 | 9d6 | 47% | 96/99 · 15.0:48.9 · ×3.3 | 99/99 · 22.8:57.2 · ×2.5 |
+| 1 | 15 | 1d6 | 71% | 75/75 · 2.6:5.6 · ×2.2 | 75/75 · 2.6:5.6 · ×2.2 |
+| 5 | 29 | 2d6 | 55% | 75/85 · 3.6:10.1 · ×2.8 | 75/85 · 4.6:11.1 · ×2.4 |
+| 10 | 47 | 2d6 | 72% | 92/98 · 8.0:15.4 · ×1.9 | 95/98 · 9.8:17.1 · ×1.7 |
+| 15 | 64 | 3d6 | 63% | 99/99 · 9.9:20.5 · ×2.1 | 99/99 · 12.8:23.5 · ×1.8 |
+| 20 | 82 | 4d6 | 66% | 99/99 · 12.1:26.0 · ×2.2 | 99/99 · 14.4:28.4 · ×2.0 |
+| 30 | 117 | 5d6 | 62% | 99/99 · 14.2:31.6 · ×2.2 | 99/99 · 24.2:41.8 · ×1.7 |
+| 40 | 152 | 8d6 | 59% | 99/99 · 16.6:44.2 · ×2.7 | 99/99 · 23.6:51.8 · ×2.2 |
+| 50 | 187 | 8d6 | 52% | 99/99 · 16.7:44.6 · ×2.7 | 99/99 · 28.8:56.7 · ×2.0 |
+| 60 | 222 | 9d6 | 47% | 99/99 · 16.9:50.6 · ×3.0 | 99/99 · 24.4:58.7 · ×2.4 |
 
-The design (§4, "Numbers") expected the dice to "roughly triple the first blow of a fight" at
-level 30. The probe measures 2.2 to 2.8 times from level 1 to 30 in plain gear and 3.2 to 3.3
-from 40 (Improved sneak attack's 2d6), less in magic gear, where the blow itself is larger. The
-flat-footed Defence adds little after level 15: the thief hits 96 % or more either way. Fewer
-than half the monsters around level 60 have vitals (skeletons, spirits, constructs, elementals,
-animated objects, the incorporeal), against about two thirds below 30: the deep is where the
-thief's dice find the least to bite on.
+## Stat training
+
+The stat training design (`docs/design/stat-training.md`, slices T1 to T6, #722 to #727) set
+its pace with a model of a career outside the game (§3.1, §6.2). Since T6 the probe measures the
+pace through the game's own code, so the model's guesses about combat are replaced by the
+fights the probe already measures.
+
+**Method** (`balance_probe/training.rs`):
+- **Days.** A level takes the design's days (§3.1): one for levels 2 to 5, two to 15, three to
+  30, four beyond, 189 days to level 60. Each day has its share of the level's kills, the
+  experience curve's kills of the player's own level (`Experience::kills_for`: 10 for level 2,
+  146 for 10, 365 for 60).
+- **Fights.** Each kill is a fight against a monster within two levels of the player, the
+  types in turn, each with one seed's gear. It is fought blow by blow with `combat::strike`
+  (the player's blows a round as above, their off hand too) until the monster's hit points are
+  gone or 40 rounds have passed. Every blow either way goes through `World::train_fight` (blow,
+  critical, block, parry, hurt, big_hit); a monster's miss by Dexterity or Dodge is a `dodge`;
+  a kill of a monster of the player's level or above is `killed`, the first of its type
+  `discovered`. The thief's first blow of a fight is a sneak attack. The wizard fights with the
+  damage spell of the most damage a cast among those costing a fifth of its pool or less: each
+  cast spends its mana through `World::spend_mana` (cast, pool refilled first), trains through
+  `World::train_spell` (spell), and an attack spell's roll goes through `train_fight` (aimed).
+  The priest spends mana on an ability once a fight (a heal, a blessing).
+- **The rest of a day** (first guesses; `training::COMMON` and each build's `extras`): 3 long
+  actions done to the end (a rest and two meals), 2 chats, 1 trade, 1 creature making way,
+  30 steps within earshot of something (the thief 100), 20 turns of searching that find
+  nothing, 10 steps over the overworld, 2 through deep water, and a few rarer uses (a find, a
+  scroll read, a level explored every three days, a lock picked, a trap disarmed, a quest every
+  other level, ...); the warrior spends stamina on a weapon ability 5 times, the thief 3, the
+  priest 2; the thief picks a lock and steals; the wizard reads a scroll; the priest prays at an
+  altar every fifth day. A load that slows the player (the dressed player's, without the kit's
+  pieces the gear replaced) trains `burdened` on every round and step; none of the four is
+  slowed in plain gear. These go through `World::train_stat_times`, each use at its own chance.
+- **Checks.** Each day ends with the daily check (`World::daily_stat_check`); each level with
+  the level's own (`levelup:auto`). Nothing else touches the piles: no potions, no elixirs, no
+  corpses, no deeds (the probe's player is never hungry), and talents only as `levelup:auto`
+  and the random creation picks give them.
+- **The knobs.** The same trained careers again with other `price_per_point` and
+  `ramp_divisor` values in `data/stats.toml` (the design's §6.2 sweep), scores at level 60.
+
+The hooks give far more marks than the design's model in a stat a build lives by: a warrior
+earns about 340 Strength marks a day at level 30 and 500 at 60 (the model: 170 and 220),
+mostly from blocks, as monsters swing at a warrior who is hard to hit (tuning note 1) for 9 to
+14 rounds a kill (the model: 8 to 11). The wizard's Willpower comes to 240 a day at 30 and 590
+at 60 (the model: 210 and 330). The stats a build does not use get 2 to 3 marks a day from the
+day's other uses, about what the model gave.
+
+The probe's tables, with the data as it is (`ramp_divisor` 2):
+
+Scores of the trained careers (plain gear; the seeds' mean), start/potential at level 1, and the gain and the points past the potential at 60.
+
+| Class | Stat | Start/potential | L10 | L20 | L30 | L40 | L60 | Gain | Past potential |
+|---|---|---|---|---|---|---|---|---|---|
+| warrior | St | 14.8/16.7 | 17.7 | 21.0 | 23.7 | 26.0 | 29.7 | +14.8 | 13.0 |
+|  | Dx | 10.8/16.3 | 11.7 | 16.7 | 19.0 | 21.0 | 24.2 | +13.3 | 7.8 |
+|  | To | 11.7/16.0 | 13.7 | 17.5 | 18.7 | 19.8 | 22.0 | +10.3 | 6.0 |
+|  | In | 9.8/17.0 | 11.3 | 13.0 | 14.8 | 16.3 | 18.3 | +8.5 | 1.3 |
+|  | Wi | 11.7/17.7 | 11.8 | 13.2 | 14.3 | 16.3 | 18.7 | +7.0 | 1.0 |
+|  | Pr | 10.0/16.2 | 10.0 | 10.7 | 11.3 | 12.0 | 14.7 | +4.7 | 0.0 |
+| | all six | | | | | | | **+58.7** | |
+| thief | St | 11.0/16.8 | 16.3 | 20.7 | 23.2 | 25.3 | 29.2 | +18.2 | 12.3 |
+|  | Dx | 12.5/16.5 | 16.3 | 19.7 | 21.7 | 23.0 | 25.2 | +12.7 | 8.7 |
+|  | To | 10.5/16.8 | 15.0 | 18.8 | 20.3 | 22.0 | 25.3 | +14.8 | 8.5 |
+|  | In | 11.3/17.2 | 12.7 | 14.2 | 15.8 | 17.2 | 18.8 | +7.5 | 1.7 |
+|  | Wi | 10.3/17.3 | 10.3 | 11.8 | 13.0 | 15.0 | 18.2 | +7.8 | 0.8 |
+|  | Pr | 9.8/16.3 | 9.8 | 10.7 | 11.3 | 12.5 | 14.8 | +5.0 | 0.0 |
+| | all six | | | | | | | **+66.0** | |
+| wizard | St | 10.0/16.7 | 10.0 | 10.2 | 10.5 | 11.3 | 12.7 | +2.7 | 0.0 |
+|  | Dx | 10.0/16.3 | 11.5 | 15.2 | 17.8 | 19.7 | 21.7 | +11.7 | 5.3 |
+|  | To | 9.5/17.3 | 13.3 | 18.8 | 20.7 | 22.2 | 25.7 | +16.2 | 8.3 |
+|  | In | 14.5/16.8 | 16.8 | 19.3 | 21.2 | 23.2 | 26.5 | +12.0 | 9.7 |
+|  | Wi | 12.5/17.7 | 18.2 | 21.3 | 23.5 | 25.8 | 30.2 | +17.7 | 12.5 |
+|  | Pr | 9.5/16.0 | 9.5 | 10.3 | 10.8 | 12.3 | 14.8 | +5.3 | 0.0 |
+| | all six | | | | | | | **+65.5** | |
+| priest | St | 10.8/16.3 | 15.8 | 19.8 | 22.8 | 25.7 | 29.2 | +18.3 | 12.8 |
+|  | Dx | 8.7/16.3 | 9.3 | 12.7 | 15.3 | 18.7 | 21.2 | +12.5 | 4.8 |
+|  | To | 10.7/16.7 | 14.3 | 18.5 | 20.5 | 22.0 | 26.2 | +15.5 | 9.5 |
+|  | In | 11.3/16.7 | 12.5 | 14.2 | 15.5 | 16.7 | 18.5 | +7.2 | 1.8 |
+|  | Wi | 15.3/18.0 | 16.8 | 19.5 | 21.0 | 22.2 | 24.5 | +9.2 | 6.5 |
+|  | Pr | 10.8/16.3 | 10.8 | 11.3 | 12.2 | 13.5 | 16.0 | +5.2 | 0.3 |
+| | all six | | | | | | | **+67.8** | |
+
+Marks a day the hooks gave in each stat over the level before (St/Dx/To/In/Wi/Pr, the seeds' mean), and the game day reached.
+
+| L | Day | Warrior | Thief | Wizard | Priest |
+|---|---|---|---|---|---|
+| 5 | 4 | 25/6/13/20/3/3 | 60/32/57/21/3/3 | 0/32/47/60/81/2 | 37/5/36/20/17/3 |
+| 10 | 14 | 76/17/30/6/3/2 | 98/75/61/5/3/2 | 1/9/51/54/114/1 | 76/10/60/5/24/2 |
+| 15 | 24 | 138/37/40/6/3/2 | 152/108/48/6/3/2 | 1/14/55/68/149/2 | 127/15/73/6/32/2 |
+| 20 | 39 | 220/30/28/3/3/1 | 145/96/46/4/3/1 | 0/16/53/59/142/1 | 126/16/43/3/26/1 |
+| 30 | 69 | 342/65/29/3/3/1 | 221/129/67/3/3/1 | 0/30/66/102/243/2 | 207/24/79/3/29/1 |
+| 40 | 109 | 494/91/38/2/3/2 | 308/124/119/3/3/2 | 1/42/89/136/336/1 | 385/28/126/2/38/2 |
+| 50 | 149 | 573/115/48/2/3/2 | 407/119/144/2/3/1 | 1/37/142/199/489/2 | 369/30/179/2/43/2 |
+| 60 | 189 | 511/140/98/2/3/2 | 508/103/239/2/3/2 | 1/33/206/239/586/2 | 402/26/331/2/45/1 |
+
+The game day of each stat's first rise (the seeds' mean of those that rose by level 60; how many of the six in brackets when not all).
+
+| Class | St | Dx | To | In | Wi | Pr |
+|---|---|---|---|---|---|---|
+| warrior | 6 | 12 | 6 | 6 | 18 | 41 |
+| thief | 4 | 5 | 4 | 6 | 22 | 31 |
+| wizard | 62 | 6 | 4 | 5 | 4 | 30 |
+| priest | 5 | 13 | 5 | 8 | 8 | 40 |
+
+The knobs (design §6.2): mean gain by level 60 with other `price_per_point` and `ramp_divisor` values (St/Dx/To/In/Wi/Pr · all six), the data's in bold.
+
+| Price | Ramp ÷ | Warrior | Thief | Wizard | Priest |
+|---|---|---|---|---|---|
+| **20 + 10s** | **2** | +14.8/+13.3/+10.3/+8.5/+7.0/+4.7 · +59 | +18.2/+12.7/+14.8/+7.5/+7.8/+5.0 · +66 | +2.7/+11.7/+16.2/+12.0/+17.7/+5.3 · +66 | +18.3/+12.5/+15.5/+7.2/+9.2/+5.2 · +68 |
+| 20 + 10s | 3 | +16.3/+14.0/+11.5/+8.3/+7.3/+4.8 · +62 | +19.5/+14.2/+15.7/+7.7/+7.7/+5.3 · +70 | +2.8/+13.0/+17.3/+13.3/+19.0/+5.3 · +71 | +19.5/+13.2/+16.5/+7.0/+9.7/+5.3 · +71 |
+| 20 + 10s | 4 | +17.5/+14.8/+12.0/+8.7/+7.3/+4.8 · +65 | +20.5/+14.8/+16.3/+8.0/+7.8/+5.0 · +72 | +3.0/+13.3/+17.8/+14.3/+20.5/+5.3 · +74 | +20.0/+13.5/+17.2/+7.3/+10.3/+5.0 · +73 |
+| 20 + 10s | 6 | +19.0/+16.2/+13.0/+8.7/+7.5/+5.2 · +70 | +21.7/+16.2/+18.0/+8.2/+7.8/+4.8 · +77 | +3.0/+14.8/+19.5/+15.5/+22.2/+5.3 · +80 | +22.2/+14.0/+18.5/+8.0/+11.2/+5.2 · +79 |
+| 20 + 15s | 2 | +14.0/+12.5/+9.7/+7.2/+5.7/+4.2 · +53 | +16.3/+12.0/+14.0/+6.5/+6.2/+3.8 · +59 | +2.2/+11.0/+15.2/+11.0/+16.2/+3.8 · +59 | +17.2/+11.8/+14.5/+6.0/+8.0/+3.5 · +61 |
+| 20 + 15s | 4 | +16.2/+14.0/+11.0/+7.3/+5.5/+3.8 · +58 | +18.7/+13.5/+15.7/+6.7/+6.2/+4.0 · +65 | +2.2/+12.3/+17.0/+12.7/+19.0/+4.0 · +67 | +19.3/+12.3/+15.8/+6.8/+9.2/+4.0 · +68 |
+| 20 + 20s | 4 | +15.0/+13.2/+10.2/+6.5/+4.8/+3.0 · +53 | +18.0/+13.0/+14.7/+6.3/+5.2/+3.3 · +60 | +1.7/+11.2/+16.2/+12.2/+17.8/+3.0 · +62 | +18.3/+11.5/+15.3/+5.7/+8.5/+3.0 · +62 |
+
+**Before and after, by class.** Gain of all six stats by level 60 (the main stat's score at 60
+in brackets). *Before*: the probe as it was until T6, two days of fixed marks a level (the
+warrior St 7, Dx 3, To 4, the rest 1; §9.1 of the combat design), on T1 to T5's rules. *Design*:
+§6.2's model. *Hooks, ÷4*: this method with the data as T1 shipped it (`ramp_divisor` 4).
+*Hooks, ÷2*: with `ramp_divisor` 2, as #727 set it.
+
+| Class (main stat) | Before | Design (§6.2) | Hooks, ÷4 | **Hooks, ÷2** |
+|---|---|---|---|---|
+| warrior (St) | +22 (20) | +51 (28.8) | +65 (32.3) | **+59 (29.7)** |
+| thief (St, Dx) | +28 (18, 19) | | +72 (31.5, 27.3) | **+66 (29.2, 25.2)** |
+| wizard (Wi) | +22 (19) | +66 (29.0) | +74 (33.0) | **+66 (30.2)** |
+| priest (St, Wi) | +24 (18, 20) | | +73 (30.8, 25.6) | **+68 (29.2, 24.5)** |
+
+The fixed table fed the rules a tenth of what play gives, so the old probe's careers ended at
++22 to +28. On the hooks with `ramp_divisor` 4, three of the four classes passed the design's
+G7 (+45 to +70 in all, a main stat +12 to +17) and every main stat gained 17 to 21. The sweep
+below puts the ramp at 2 inside G7 in all for every class (+59 to +68), main stats at +15 to
++18, 29 to 30 at level 60, and nothing near 40; `price_per_point` moves the trickle stats and
+the main ones less (15 with ÷4 lands about where 10 with ÷2 does, but leaves the main stats at
++16 to +19). So **`ramp_divisor` is 2** since #727: the first point past the potential costs
+twice the base, the second 4 ×, the third 7 ×. `price_per_point` stays 10: the early pace
+it sets is as the design meant (the first rise in a stat a build lives by on day 4 to 6, §6.3:
+"about day 5 or 6").
+
+Still above the design's targets: a stat the build does not use gains +7 to +9 in Intelligence
+and Willpower, not +2 to +5. Those marks come from the day's guessed uses, not the fights: a
+first kill of each of some 400 creature types (`discovered`, sure, 400 Intelligence marks over
+a career) and three long actions a day (`endured`, sure, 570 Willpower marks). They are the next
+dials if the unused stats should grow less; #727 left them, as the day's activity they
+rest on is a guess.
+
+**The thief and the priest live by Strength.** Both gain more Strength than anything else
+(+18), the thief more than Dexterity (+13): every melee blow that lands trains Strength
+(`blow`), a dagger's as a mace's, while Dexterity comes only from dodges, parries, sneaking, and
+picking locks. Whether a light weapon's blow should train Dexterity instead is a design question
+for its own issue.
+
+**Deeds, measured.** A faint is a draw every turn while Fainting or Starving (`[fainting]`
+5 %), some 25 faints an hour of play. At T3's 10 Willpower marks a faint, an afternoon of
+fainting took about a thousand marks: fifteen drops' worth at Willpower 12 (drop price 65), so
+one fast meant a Willpower point lost at nearly every check for two weeks after it ended. `fainted`
+is now a mark at 20 % a faint (about 5 marks an hour; measured with `warlock-cli dump`: 28
+marks over six hours of fainting and starving to the edge of death), so an afternoon of it
+warns and a day or two of it costs a point, like a few dawns met Weak (15 a dawn).
+
+**Corpses.** The resolved table (`corpse-effects.md`) has one outlier: the fire drake, 150
+Strength and 150 Toughness marks. It is the Ascmearc's unique drake at the bottom of Fyrdelf,
+eaten once a run at about level 19, where a warrior earns 200 Strength marks a day: about a
+point in each, a fitting meal for the campaign's last quest, and left as it is. Every other
+corpse gives 60 marks or less in a stat.
+
+**Creation picks.** The probe's players are random human characters, so their creation talents
+are Random's picks; Gifted (T5) is one of them now (a seed's warrior takes it for Intelligence,
+a seed's thief for Toughness), and the six seeds' starts and potentials moved with it (the
+table's first column).
 
 ## Against the design's predictions
 
@@ -312,7 +480,7 @@ shows and where the number lives.
    2 + the Toughness modifier`, paid to `hp_level` 50, so every point of trained modifier pays up
    to 50 times. With note 1, the fighter's side of the fight is now far ahead from level 20.
    The levers are `hp_level` (`experience.toml`), the Toughness uses' chances (`stats.toml`), and
-   `daily_factor`.
+   its `[training]` prices ("Stat training").
 3. **The thief in plain gear still falls behind late.** At Dv 25 and 340 hit points, the plain
    thief is hit 76 to 84 % at levels 50 to 60 and dies in 11 to 15 rounds, while killing in 9. Magic
    gear fixes it (hit 24 %). This is the report's finding 1 (gear decides), now limited to the
@@ -337,7 +505,8 @@ Every system the design added meets the coverage bar (`assets/data/talents.toml`
   technique, Drillmaster).
 - `stamina` has 6 (Trained wind, Deep lungs, Steady breathing, Second breath, Armour-breaker,
   Drillmaster).
-- `stat_training` has 2 (Hard training, Quick study of the body).
+- `stat_training` has 10 (Hard training, Quick study of the body, Hard-won, Gifted, Late bloomer,
+  Ascetic, Gourmand, Cauldron, and the class abilities Hard living and Discipline; #726).
 - `potions` has 4 (Thrifty drinker, Nose for draughts, Lasting draughts, Cauldron-wise).
 
 No follow-up is needed.

@@ -636,11 +636,11 @@ mod tests {
         // Stat training: the price by score and past the potential, the odds, the pace.
         has(
             "stat-prices.md",
-            "| 14 | 160 | 240 | 400 | 640 | 960 | 1360 | 1840 | 75 |",
+            "| 14 | 160 | 320 | 640 | 1120 | 1760 | 2560 | 3520 | 75 |",
         );
         has("stat-odds.md", "| the price | 50 % |");
         has("stat-odds.md", "| under a quarter | 0 % |");
-        has("stat-pace.md", "| 1 | 49 | 62 | 80 | 132 |");
+        has("stat-pace.md", "| 1 | 49 | 62 | 80 | 198 |");
         // The deeds that cost marks, and the drop by score.
         has(
             "stat-losses.md",

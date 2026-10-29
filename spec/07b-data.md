@@ -207,7 +207,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   type's `vitals = false` says it has none too (`data/creatures/README.toml`).
 - **Stat training** (`data/stats.toml`, optional; without it nothing trains and no level checks
   a stat; §8 "Stats"): `[training]` `price_base` (20) and `price_per_point` (10), each 0 to
-  1000 and not both 0, `ramp_divisor` (4), `quarter` (4), and `drop_share` (2), each 1 to 20,
+  1000 and not both 0, `ramp_divisor` (2), `quarter` (4), and `drop_share` (2), each 1 to 20,
   `odds_power` (3; 1 to 5), and `[[training.use]]` rules: `stat`
   (a stat id), `on` (a use: `burdened`, `blow`, `dig`, `kick`, `dodge`, `shot`, `sneak`,
   `climb`, `hurt`, `big_hit`, `resisted`, `plunge`, `found`, `read`, `identified`,

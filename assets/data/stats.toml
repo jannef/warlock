@@ -8,7 +8,8 @@
 #   Marks never decay and have no cap: the pile is the whole state.
 # - A point has a price in marks: price_base + price_per_point × the stat's score. Past the
 #   stat's potential it ramps: the `over`-th point past it (1 for the first) costs
-#   (ramp_divisor + over × (over + 1)) / ramp_divisor times that (×1.5, ×2.5, ×4, ×6, ... at 4).
+#   (ramp_divisor + over × (over + 1)) / ramp_divisor times that (×2, ×4, ×7, ×11, ... at 2;
+#   the balance probe's measured careers put 2 inside the design's pace, docs/balance.md).
 #   A trained rise never lifts the potential (elixirs do).
 # - At a check (a level's: the levels stream; the day's at 06:00: the training stream; six
 #   draws each whatever the marks), a pile of m marks moves its stat with chance
@@ -37,7 +38,7 @@
 [training]
 price_base = 20
 price_per_point = 10
-ramp_divisor = 4
+ramp_divisor = 2
 odds_power = 3
 quarter = 4
 drop_share = 2
@@ -396,10 +397,14 @@ stat = "toughness"
 on = "vomited"
 marks = 10
 
+# A faint is a draw every turn while Fainting or Starving, some 25 faints an hour: a mark at
+# 20 % is about five an hour, a warning after an afternoon of fainting and a drop after a day or
+# two of it (#727; 10 marks a faint took a thousand in an afternoon, a drop at every check for
+# weeks after).
 [[training.deed]]
 stat = "willpower"
 on = "fainted"
-marks = 10
+chance = 20
 
 [[training.deed]]
 stat = "dexterity"

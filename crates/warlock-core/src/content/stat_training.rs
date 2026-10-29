@@ -355,7 +355,7 @@ pub struct StatTraining {
     /// What each point of the score adds to its price: 10.
     pub price_per_point: u16,
     /// The ramp past the potential: the `over`-th point past it costs `(ramp_divisor + over ×
-    /// (over + 1)) / ramp_divisor` times the base: 4.
+    /// (over + 1)) / ramp_divisor` times the base: 2.
     pub ramp_divisor: u16,
     /// The power of the odds' S-curve: 3.
     pub odds_power: u8,
@@ -377,7 +377,7 @@ impl Default for StatTraining {
         Self {
             price_base: 20,
             price_per_point: 10,
-            ramp_divisor: 4,
+            ramp_divisor: 2,
             odds_power: 3,
             quarter: 4,
             drop_share: 2,

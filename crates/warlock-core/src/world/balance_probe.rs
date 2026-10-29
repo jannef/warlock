@@ -17,13 +17,13 @@
 //!   `World::attack_price`.
 //! - **Players**: a human male warrior, thief, wizard, and priest per seed, made by
 //!   `World::start_run` with the kit, levelled one level at a time with `xp:` and
-//!   `levelup:auto`. **Trained** stats: before each level, two game days of marks (each
-//!   build's `marks`, from the design's per-use arithmetic in §9.1: a fighter's 4 to 5
-//!   Strength marks a day from blows and 2 to 3 from criticals and burden, 3 to 4 Toughness
-//!   from being hit, 2 to 3 Dexterity from dodges and parries, a caster's 3 to 6 Willpower from
-//!   casting; 1 a day in a stat the class does not use) and the daily check at each day's
-//!   06:00 (`World::daily_stat_check`), then the level's own check: the game's rules on the
-//!   game's streams. **Untrained**: no marks. Weapon
+//!   `levelup:auto`. **Trained** stats (#727, `training`): before each level, its game days
+//!   (the stat training design's §3.1: one to two, three, four; 189 to level 60), each with its
+//!   share of the level's kills (`Experience::kills_for`) fought blow by blow against the
+//!   monsters of the player's level through the game's training hooks, the day's other uses
+//!   (`training::COMMON` and the build's `extras`), and the daily check at 06:00
+//!   (`World::daily_stat_check`); then the level's own check: the game's rules on the game's
+//!   streams. **Untrained**: no marks. Weapon
 //!   skill ranks are set by level (`rank`), as ranks come from use, not levels. Gear: the kit,
 //!   plain level-appropriate pieces, or the same pieces magic (rare from level 30, with an
 //!   amulet and two rings from 15), equipped with `equip:`.
@@ -49,6 +49,7 @@
 //! blow, potions, and resistances against spells.
 
 mod tables;
+mod training;
 
 use super::{ActorId, World};
 use crate::action::{AttackKind, parse_actions};
@@ -56,7 +57,7 @@ use crate::character::{CharacterSpec, Gender};
 use crate::combat::{self, Attack, Defence, Profile, Target};
 use crate::content::{
     ActionKind, BASE_TURN, Content, CreatureId, CreatureSpawn, Factor, NORMAL_SPEED, Resolution,
-    price,
+    SpellId, StatUse, price,
 };
 use crate::damage::Kinds;
 use crate::dice::Dice;
@@ -72,8 +73,6 @@ const LEVELS: [u8; 9] = [1, 5, 10, 15, 20, 30, 40, 50, 60];
 const SEEDS: u64 = 6;
 /// Strikes drawn per pairing and direction.
 const STRIKES: u32 = 300;
-/// Game days of marks before each level (the design's "a level every two days", §9.2).
-const DAYS_PER_LEVEL: u32 = 2;
 
 /// The gear a player is measured in.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -110,8 +109,10 @@ struct Build {
     class: &'static str,
     /// Weapon skills and styles, each with how many ranks below `rank` it stays.
     skills: &'static [(&'static str, u8)],
-    /// Marks a game day in each stat (`Stat::ALL` order: St, Dx, To, In, Wi, Pr; module docs).
-    marks: [u16; 6],
+    /// What the class does in a day beyond [`training::COMMON`]: a use and how many times.
+    extras: &'static [(StatUse, f64)],
+    /// Whether it spends mana on an ability (a heal, a blessing) once a fight.
+    casts_a_kill: bool,
     gear: fn(u8) -> Vec<(&'static str, &'static str)>,
 }
 
@@ -123,19 +124,28 @@ const BUILDS: [Build; 4] = [
             ("sword_and_board", 0),
             ("shield_block", 0),
         ],
-        marks: [7, 3, 4, 1, 1, 1],
+        extras: &[(StatUse::Exerted, 5.0)],
+        casts_a_kill: false,
         gear: warrior,
     },
     Build {
         class: "thief",
         skills: &[("daggers", 0), ("twin_blades", 0)],
-        marks: [4, 7, 4, 1, 1, 1],
+        extras: &[
+            (StatUse::Sneak, 70.0),
+            (StatUse::Picked, 1.0),
+            (StatUse::Disarmed, 0.5),
+            (StatUse::Stole, 0.5),
+            (StatUse::Exerted, 3.0),
+        ],
+        casts_a_kill: false,
         gear: thief,
     },
     Build {
         class: "wizard",
         skills: &[("staves", 2), ("spell_attack", 0)],
-        marks: [1, 1, 2, 3, 5, 1],
+        extras: &[(StatUse::Read, 1.0), (StatUse::Identified, 0.3)],
+        casts_a_kill: false,
         gear: wizard,
     },
     Build {
@@ -146,7 +156,8 @@ const BUILDS: [Build; 4] = [
             ("shield_block", 0),
             ("spell_attack", 2),
         ],
-        marks: [4, 1, 3, 1, 5, 1],
+        extras: &[(StatUse::Prayed, 0.2), (StatUse::Exerted, 2.0)],
+        casts_a_kill: true,
         gear: priest,
     },
 ];
@@ -369,6 +380,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
 
 /// A spell as one caster casts it.
 struct Cast {
+    spell: SpellId,
     name: String,
     tier: u8,
     resolution: Resolution,
@@ -421,6 +433,7 @@ fn casts(w: &World) -> Vec<Cast> {
             kinds: Kinds::NONE,
         };
         out.push(Cast {
+            spell,
             name: def.name.clone(),
             tier: def.tier,
             resolution: def.resolution,
@@ -443,6 +456,12 @@ struct Snap {
     trained: bool,
     side: Side,
     scores: [u8; 6],
+    potentials: [u8; 6],
+    /// The game day reached, the day each stat first rose (trained only), and the marks a day
+    /// earned in each stat over the level before this one.
+    day: u32,
+    first_rise: [Option<u32>; 6],
+    marks_a_day: [f64; 6],
     mana: i32,
     caster_level: i32,
     casts: Vec<Cast>,
@@ -489,7 +508,13 @@ fn dress(w: &mut World, build: &Build, level: u8, gear: Gear, seed: u64) {
 }
 
 /// One career of `build` from level 1 to the last of [`LEVELS`], measured at each.
-fn career(content: &Arc<Content>, build: &Build, seed: u64, trained: bool) -> Vec<Snap> {
+fn career(
+    content: &Arc<Content>,
+    build: &Build,
+    seed: u64,
+    trained: bool,
+    monsters: &[Monster],
+) -> Vec<Snap> {
     let spec = CharacterSpec {
         race: "human".into(),
         gender: Gender::Male,
@@ -508,23 +533,20 @@ fn career(content: &Arc<Content>, build: &Build, seed: u64, trained: bool) -> Ve
     let factor = Factor::of(content, Some(&spec));
     let player = w.state.player;
     let mut out = Vec::new();
+    let mut log = training::Log::default();
     for level in 1..=*LEVELS.last().expect("levels") {
         if level > 1 {
             if trained {
-                for _ in 0..DAYS_PER_LEVEL {
-                    let me = w.player_mut();
-                    for (stat, marks) in Stat::ALL.into_iter().zip(build.marks) {
-                        me.stat_marks[stat] = me.stat_marks[stat].saturating_add(i32::from(marks));
-                    }
-                    let now = w.state.time;
-                    w.state.next_stat_check = Some(now);
-                    w.daily_stat_check(player, now);
-                }
+                training::live_level(&mut w, build, level - 1, monsters, seed, &mut log);
+            } else {
+                log.day += training::days(level);
             }
             let need = content.experience().threshold_for(level, factor);
             let more = need.saturating_sub(w.player_xp());
+            let before = training::scores(&w);
             act(&mut w, &format!("xp:{more}"));
             act(&mut w, "levelup:auto levelup:auto");
+            log.rises(&w, before);
         }
         if !LEVELS.contains(&level) {
             continue;
@@ -551,6 +573,8 @@ fn career(content: &Arc<Content>, build: &Build, seed: u64, trained: bool) -> Ve
             }
             let me = w2.state.player();
             let scores = Stat::ALL.map(|s| me.stats.score(s));
+            let potentials = Stat::ALL.map(|s| me.stats.potential(s));
+            let days = f64::from(log.earned_days.max(1));
             let mods = me.talent_mods(content);
             out.push(Snap {
                 class: build.class,
@@ -559,6 +583,10 @@ fn career(content: &Arc<Content>, build: &Build, seed: u64, trained: bool) -> Ve
                 trained,
                 side: side_of(&w2, player),
                 scores,
+                potentials,
+                day: log.day,
+                first_rise: log.first_rise,
+                marks_a_day: log.earned.map(|m| m as f64 / days),
                 mana: me.max_mana(content),
                 caster_level: w2.caster_level(player),
                 casts: if gear == Gear::Plain {
@@ -690,18 +718,50 @@ fn armoured(l: u8) -> i32 {
 #[ignore = "the balance probe: run by hand, docs/balance.md"]
 fn balance_probe() {
     let content = Arc::new(Content::builtin().expect("content"));
+    let monsters = monsters(&content);
     let mut snaps = Vec::new();
     for build in &BUILDS {
         for seed in 1..=SEEDS {
             for trained in [true, false] {
-                snaps.extend(career(&content, build, seed, trained));
+                snaps.extend(career(&content, build, seed, trained, &monsters));
             }
         }
     }
+    let sweep = training::SWEEP
+        .iter()
+        .map(|&(per_point, ramp)| {
+            let text: String = (include_str!("../../../../assets/data/stats.toml").lines())
+                .map(|l| match l {
+                    l if l.starts_with("price_per_point = ") => {
+                        format!("price_per_point = {per_point}\n")
+                    }
+                    l if l.starts_with("ramp_divisor = ") => format!("ramp_divisor = {ramp}\n"),
+                    l => format!("{l}\n"),
+                })
+                .collect();
+            let mut files = crate::content::ContentFiles::builtin();
+            files.insert("data/stats.toml", &text);
+            let content = Arc::new(Content::load(&files).expect("swept content"));
+            let mut finals = Vec::new();
+            for build in &BUILDS {
+                for seed in 1..=SEEDS {
+                    let last = career(&content, build, seed, true, &monsters);
+                    let snap = last.into_iter().last().expect("level 60");
+                    finals.push((build.class, snap.scores));
+                }
+            }
+            training::Swept {
+                per_point,
+                ramp,
+                finals,
+            }
+        })
+        .collect();
     let p = Probe {
         content: content.clone(),
-        monsters: monsters(&content),
+        monsters,
         snaps,
+        sweep,
     };
     let mut rng = Rng::stream(569, "balance");
     let mut out = String::new();
@@ -713,6 +773,8 @@ fn balance_probe() {
     tables::bodies(&p, &mut rng, &mut out);
     tables::spells(&p, &mut rng, &mut out);
     tables::sneak_attacks(&p, &mut rng, &mut out);
+    tables::stats(&p, &mut out);
+    tables::stat_sweep(&p, &mut out);
     println!("{out}");
 }
 
@@ -721,6 +783,8 @@ struct Probe {
     content: Arc<Content>,
     monsters: Vec<Monster>,
     snaps: Vec<Snap>,
+    /// The trained careers' level-60 scores with other prices and ramps.
+    sweep: Vec<training::Swept>,
 }
 
 impl Probe {
