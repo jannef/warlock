@@ -14,7 +14,7 @@ expression: "render(case, content.clone())"
          │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal                       │
          │                                                                                                   │
          │ St  Strength      16   Main hand  great sword                                                     │
-         │ Dx  Dexterity     11              +6 to hit, 2d6+9 slashing                                       │
+         │ Dx  Dexterity     12              +6 to hit, 2d6+9 slashing                                       │
          │ To  Toughness     15                                                                              │
          │ In  Intelligence   8                                                                              │
          │ Wi  Willpower     12                                                                              │
@@ -24,7 +24,7 @@ expression: "render(case, content.clone())"
          │ XP  Experience    0 / 173                                                                         │
          │     Talents       9                                                                               │
          │ HP  Hit points    25/27   MP  Mana       3/3                                                      │
-         │ Dv  Defence        4      Pv  Protection  1                                                       │
+         │ Dv  Defence        5      Pv  Protection  1                                                       │
          │     Stance        Berserker                                                                       │
          │     Rage          11/20                                                                           │
          │     Stamina       11/12                                                                           │
@@ -32,7 +32,7 @@ expression: "render(case, content.clone())"
          │     Status        Raging                                                                          │
          │     Resistant to  cold                                                                            │
          │                                                                                                   │
-         │ Weight 77.8 kg (you 70 kg, carrying 7.8 kg)                                                       │
+         │ Weight 77.7 kg (you 70 kg, carrying 7.7 kg)                                                       │
          │ Burdened over 23.5 kg, strained over 47 kg, overloaded over 70.5 kg                               │
          │                                                                                                   │
          │ @ or Esc close   A skills                                                                         │

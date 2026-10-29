@@ -8,26 +8,27 @@ expression: "render(case, content.clone())"
 
 
 
-
               ┌─ Maren's story ──────────────────────────────────────────────────────┐
               │                                                                      │
-              │  Your father was a smith, and the ring of his hammer was the first   │
-              │  music you knew. You were born without sign or omen, which your      │
-              │  father counted a mercy.                                             │
+              │  Who your parents were, nobody told you, and the woman who took you  │
+              │  in for her own reasons would not say; you stopped asking. You came  │
+              │  in a hard winter, when the river froze to its bed, and you came     │
+              │  early and small.                                                    │
               │                                                                      │
-              │  You were a child like any other, and nobody wrote down what you     │
-              │  did. You worked, as everyone worked, and nothing of it is worth     │
-              │  the telling.                                                        │
+              │  You were quick, and hard to catch, and oftener up a tree than at    │
+              │  the table. You earned your keep at home, scrubbing floors and       │
+              │  carrying water for the sick, and learned more of fevers than you    │
+              │  wished to.                                                          │
               │                                                                      │
               │  No great grief found you, and you count that luck, as you should.   │
               │  Fortune never found your door; whatever you have, you got           │
               │  yourself.                                                           │
               │                                                                      │
               │  A letter came, in a hand you did not know, with a little money in   │
-              │  it and three words: Come. There's work. You walked up with a        │
-              │  pedlar who talked the whole way and sold you a knife at the top     │
-              │  for twice its worth. 'Yer'll want that, where yer goin',' he said,  │
-              │  and he was right.                                                   │
+              │  it and three words: Come. There's work. At the top of the pass an   │
+              │  old woman sat by a fire that should not have burned in that wind,   │
+              │  and told you the ash march would make you or unmake you. She gave   │
+              │  you bread for the road.                                             │
               │                                                                      │
               │ Enter continue                                                       │
               └──────────────────────────────────────────────────────────────────────┘
@@ -36,5 +37,4 @@ expression: "render(case, content.clone())"
 
 
 
-
- The Ascmearc  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1            ? controls
+ The Ascmearc  ·  HP 17/17  ·  MP 3/3  ·  Openings 0/5  ·  Sta 9/9  ·  Lv 1  ·  08:00    ? controls
