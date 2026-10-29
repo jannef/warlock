@@ -108,9 +108,9 @@ impl World {
         let player = self.player_mut();
         let before = player.stats.score(stat);
         player.stats.gift(stat, by);
-        let taken = u16::from(before.saturating_sub(player.stats.score(stat)));
+        let taken = i32::from(before.saturating_sub(player.stats.score(stat)));
         let mark = &mut player.stat_marks[stat];
-        *mark = mark.saturating_add(taken.saturating_mul(marks));
+        *mark = mark.saturating_add(taken * i32::from(marks));
     }
 
     /// `by` gold coins into the pack, or (negative) out of it, as many as there are.

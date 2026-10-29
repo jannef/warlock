@@ -52,7 +52,8 @@ Cauldron-wise); #568 (Q3: `elixir`).
   `World::cure` per means; `Cure` cures per means and, with `diseases`, `end_disease` for every
   infection; `Mana` raises mana to at most the maximum; `Elixir` is `World::drink_elixir`
   (`world/elixir.rs`): the potential's roll first (one gameplay draw), then `points` ×
-  `Stats::train(stat)` (the score +1, the potential lifted with it where it was at the score),
+  `Stats::train(stat)` (the score +1; a trained rise leaves the potential, so the elixir lifts
+  it to the score where it was below with `Stats::widen`),
   then `Stats::widen(stat, roll)` (never past `SCORES`), the hit points a Toughness rise adds
   given at once (as `stat_checks` does), and "You feel stronger[, and that you could be stronger
   yet]." (the clause when the potential rose by 2 or more; "You feel no different." at the top
@@ -103,7 +104,7 @@ Cauldron-wise); #568 (Q3: `elixir`).
   `Actor::potion_kept` with the worn `potion_kept` affixes (#633; the sum held to `MAX_KEPT`,
   50, unless the talent alone is above it), which `take_draught` reads; one draw only above 0.
 - **Quick study of the body** (system `stat_training`, shipped with T2): doubles the `drank`
-  and `elixir` counts in `train_stat_times`, so an elixir gives 40 marks.
+  and `elixir` counts in `train_stat_times`, so an elixir gives 120 marks.
 - **Lasting draughts** (Vigour, Toughness 13; #567): `status_lasts` (50) on the six boosts and
   three visions, `TalentMods::status_lasts`, read in `TalentMods::eases_every` (each degree
   takes half again as long to ease). The design called it "Strong constitution", a name a
@@ -135,7 +136,7 @@ Cauldron-wise); #568 (Q3: `elixir`).
   content refusals.
 - `world/elixir_tests.rs`: score +1 and potential +1 or +2 over seeds (both come up), the
   potential lifted first, hit points after a Toughness elixir and maximum mana after an
-  Intelligence one, 20 marks and Quick study's 40, each elixir its own stat, the top of the
+  Intelligence one, 60 marks and Quick study's 120, each elixir its own stat, the top of the
   scores, no general store or provisioner stocks one, the altar's outcome names all six,
   content refusals.
 - `xtask/src/wiki/potions.rs` makes the wiki's potions table (`wiki/src/potions.md`).

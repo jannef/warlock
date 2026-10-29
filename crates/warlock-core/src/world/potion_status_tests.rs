@@ -73,7 +73,7 @@ fn a_potion_of_might_raises_strength_for_ten_minutes_and_says_so() {
     assert_eq!(score(&w, Stat::Strength), before + 2);
     let lines = said(&w);
     assert!(lines.iter().any(|m| m == "You feel stronger."), "{lines:?}");
-    assert_eq!(w.state.player().stat_marks[Stat::Strength], 5);
+    assert_eq!(w.state.player().stat_marks[Stat::Strength], 15);
     pass(&mut w, 9);
     assert_eq!(severity(&w, "fortified"), Some(1), "still on");
     pass(&mut w, 2);
@@ -127,7 +127,7 @@ fn a_vision_potion_lends_its_eyes_in_the_dark() {
     run(&mut w, "eat:a");
     assert!(w.eyes().sees_uv, "and the moth's");
     assert!(w.eyes().darkvision > 0, "each part the better");
-    assert_eq!(w.state.player().stat_marks[Stat::Willpower], 10);
+    assert_eq!(w.state.player().stat_marks[Stat::Willpower], 30);
     pass(&mut w, 31);
     assert_eq!(w.eyes().darkvision, 0);
     assert!(!w.eyes().sees_uv);
@@ -162,7 +162,7 @@ fn a_potion_of_quickness_hastes() {
         lines.iter().any(|m| m == "The world slows around you."),
         "{lines:?}"
     );
-    assert_eq!(w.state.player().stat_marks[Stat::Dexterity], 5);
+    assert_eq!(w.state.player().stat_marks[Stat::Dexterity], 15);
     pass(&mut w, 2);
     assert_eq!(severity(&w, "hasted"), None);
 }

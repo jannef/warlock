@@ -381,8 +381,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   maximum, and what its `cures` names cured), `cure` (`cures`, means of the statuses' and
   diseases' `cured_by`: `bandage` stops bleeding, `antidote` ends poison; `diseases = true` ends
   every disease), `mana` (`dice` mana back, never past the maximum), `elixir` (#568: its `stat`
-  +`points` (1) for good, each a trained rise that lifts the potential with the score where it
-  was at it, then the potential +a roll of `potential`, "1d2", one gameplay draw; hit points
+  +`points` (1) for good, each a trained rise, the potential then lifted to the score where it
+  was below (a trained rise alone never moves it, §8 "Stats"), then the potential +a roll of `potential`, "1d2", one gameplay draw; hit points
   follow a Toughness rise at once, the maximum mana and the carrying limits follow the score;
   "You feel stronger.", with ", and that you could be stronger yet." when the potential rose by
   2), `harm` (`dice` degrees of its `status`, Poisoned: sickness, as rotten food gives), and,
@@ -398,7 +398,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   again, and one that changes nothing "Nothing more comes of it." The status bar and the
   character screen name it as they name Blessed, the raised score shown raised, never a number
   or a timer. Every potion names its training
-  `marks` by stat (5 for a common one, 10 for a greater, 20 for an elixir; none for a harm),
+  `marks` by stat (15 for a common one, 30 for a greater, 60 for an elixir; none for a harm),
   given as sure marks through the `drank` use (an elixir's through the `elixir` use; §8
   "Stats").
   - **Elixirs** (#568): the elixirs of might, grace, vigour, wit, will, and presence (Strength,
@@ -435,7 +435,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     disease (every disease; 4, 25; 150; pale green), mana (3d8; 3, 30; 100; blue), and the
     murky draught (harm, Poisoned 2; 1, 20; 10; brown); the potions of might, grace, vigour,
     wit, will, and presence (boost, severity 1; 3, 20 each; 150; orange) and their greater
-    potions (severity 2; 8, 8 each; 400; deep orange; 10 marks), of cat's eyes, owl's eyes, and
+    potions (severity 2; 8, 8 each; 400; deep orange; 30 marks), of cat's eyes, owl's eyes, and
     moth's eyes (vision; 3, 15 each; 100; violet; Willpower), of quickness (haste 1; 6, 10;
     250; yellow; Dexterity), and of warmth, frost, earthing, and proofing (resistance; 4, 15
     each; 120; teal; Toughness). **Where**: loot (by `level` and

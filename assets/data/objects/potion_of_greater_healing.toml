@@ -19,4 +19,4 @@ kind = "heal"
 dice = "4d8"
 cures = ["bandage"]
 colour = "russet"
-marks = { toughness = 10 }
+marks = { toughness = 30 }

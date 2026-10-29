@@ -333,16 +333,26 @@ impl Stats {
         rises
     }
 
-    /// Raises the score in `stat` by 1 by training (spec §8 "Stats": a level-up's check), past
-    /// its potential too, which then rises with it; never past [`SCORES`]. Returns whether it
-    /// rose.
+    /// Raises the score in `stat` by 1 by training (spec §8 "Stats": a check), past its
+    /// potential too, which stays where it is (nature: only elixirs, corpses, and gifts move
+    /// it); never past [`SCORES`]. Returns whether it rose.
     pub fn train(&mut self, stat: Stat) -> bool {
         let rises = self.score[stat] < *SCORES.end();
         if rises {
             self.score[stat] += 1;
-            self.potential[stat] = self.potential[stat].max(self.score[stat]);
         }
         rises
+    }
+
+    /// Lowers the score in `stat` by 1 by neglect (spec §8 "Stats": a drop at a check), never
+    /// below [`DRAIN_FLOOR`] nor below `floor` (the stat damage on it plus one: a score carries
+    /// its damage); the potential stays. Returns whether it fell.
+    pub fn untrain(&mut self, stat: Stat, floor: u8) -> bool {
+        let falls = self.score[stat] > floor.max(DRAIN_FLOOR);
+        if falls {
+            self.score[stat] -= 1;
+        }
+        falls
     }
 
     /// Raises the potential in `stat` by up to `by`, never past [`SCORES`] (spec §8 "Potions":
@@ -519,6 +529,30 @@ mod tests {
         bad.take(Stat::Strength, 5, 20);
         let weak = Stats::new(PerStat::splat(5), PerStat::splat(5));
         assert!(!bad.is_valid_for(&weak) && bad.is_valid_for(&stats));
+    }
+
+    #[test]
+    fn training_moves_the_score_and_never_the_potential() {
+        let mut stats = Stats::new(PerStat::splat(14), PerStat::splat(14));
+        assert!(stats.train(Stat::Strength));
+        assert_eq!(
+            (stats.score(Stat::Strength), stats.potential(Stat::Strength)),
+            (15, 14),
+            "past the potential, which stays"
+        );
+        let mut top = Stats::new(PerStat::splat(40), PerStat::splat(40));
+        assert!(!top.train(Stat::Strength));
+        // A drop: one point, never below DRAIN_FLOOR or the damage's floor; the potential stays.
+        assert!(stats.untrain(Stat::Strength, 1));
+        assert_eq!(
+            (stats.score(Stat::Strength), stats.potential(Stat::Strength)),
+            (14, 14)
+        );
+        assert!(!stats.untrain(Stat::Strength, 14), "at the damage's floor");
+        let mut low = Stats::new(PerStat::splat(4), PerStat::splat(10));
+        assert!(low.untrain(Stat::Dexterity, 0));
+        assert!(!low.untrain(Stat::Dexterity, 0), "never below DRAIN_FLOOR");
+        assert_eq!(low.score(Stat::Dexterity), DRAIN_FLOOR);
     }
 
     #[test]

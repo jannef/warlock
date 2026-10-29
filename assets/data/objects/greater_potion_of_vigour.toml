@@ -19,4 +19,4 @@ kind = "boost"
 status = "hale"
 severity = 2
 colour = "deep orange"
-marks = { toughness = 10 }
+marks = { toughness = 30 }

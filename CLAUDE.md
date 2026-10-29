@@ -241,7 +241,7 @@ talent, 1 bonus talent`, the talents the
 player may take now by id with their choices, the first kills that paid, each rolled quest's
 draw and the size of its pool now, `roll slug_charm scroll_of_lightning x1 of 4`, the named
 monsters dead, `slain fire_drake`, the stat training
-marks, `stat marks St 3, To 1`, and the exact study odds, `study c frost: overreach 2, +0
+marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`, and the exact study odds, `study c frost: overreach 2, +0
 against 20, 15/144`, **dev-only**),
 `rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,

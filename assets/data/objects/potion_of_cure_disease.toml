@@ -18,4 +18,4 @@ frequency = 25
 kind = "cure"
 diseases = true
 colour = "pale green"
-marks = { toughness = 5 }
+marks = { toughness = 15 }

@@ -1,17 +1,22 @@
-# Stat training (spec §8 "Stats"; the design is docs/design/progression.md §6): using your stats
-# earns them training marks, and at every level you gain each stat gets one check to rise by a
-# point. Nothing here is shown in the game: a rise says "You feel stronger." and nothing of why.
+# Stat training (spec §8 "Stats"; the design is docs/design/stat-training.md): using your stats
+# earns them training marks, a signed pile per stat, and at every level you gain and every day at
+# 06:00 each stat gets one check to move by a point. Nothing here is shown in the game: a rise
+# says "You feel stronger." and nothing of why.
 #
 # - Each `[[training.use]]` below gives its stat a mark with `chance` percent (1 to 100) each
 #   time you do the thing `on` names (a draw of the training stream, never the gameplay one).
-#   Marks never decay and have no cap.
-# - At a level, each stat in display order rises by 1 with chance marks / (marks + need), where
-#   need = need_base + need_per_point × the stat's score; at or above the stat's potential the
-#   chance is divided by `over_potential_divisor`, and a rise there lifts the potential with the
-#   score. A rise uses up all the stat's marks; a failed check keeps them.
-# - Once a game day, at 06:00, each stat gets the same check again with the need multiplied by
-#   `daily_factor` (a draw of the training stream, six a day whatever the marks): stats grow
-#   between levels too, slower. A rise there uses up the marks the same way.
+#   Marks never decay and have no cap: the pile is the whole state.
+# - A point has a price in marks: price_base + price_per_point × the stat's score. Past the
+#   stat's potential it ramps: the `over`-th point past it (1 for the first) costs
+#   (ramp_divisor + over × (over + 1)) / ramp_divisor times that (×1.5, ×2.5, ×4, ×6, ... at 4).
+#   A trained rise never lifts the potential (elixirs do).
+# - At a check (a level's: the levels stream; the day's at 06:00: the training stream; six
+#   draws each whatever the marks), a pile of m marks moves its stat with chance
+#   m^odds_power / (m^odds_power + price^odds_power), and not at all while quarter × m is under
+#   the price. A rise pays the price (a pile short of it goes to zero; the surplus waits for the
+#   next check); one move per stat per check.
+# - A negative pile (from losses, a later slice) is checked the same way against the drop's
+#   price: the base price of the point lost divided by `drop_share`, never ramped.
 #
 # - A use that names its own stat (`drank`, `elixir`: the stat the potion names) has no `stat`;
 #   every other use has one. Such a use may give several marks at once (a potion's `marks`), each
@@ -24,12 +29,12 @@
 # (docs/design/combat-progression.md §9.1).
 
 [training]
-need_base = 20
-need_per_point = 3
-over_potential_divisor = 4
-# The daily check's need, this many times a level's (first guess, the design §9.2: 2 doubles the
-# rises between levels, 5 halves them).
-daily_factor = 3
+price_base = 20
+price_per_point = 10
+ramp_divisor = 4
+odds_power = 3
+quarter = 4
+drop_share = 2
 
 # Strength: carrying, fighting, digging, kicking.
 [[training.use]]

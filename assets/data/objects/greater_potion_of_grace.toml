@@ -19,4 +19,4 @@ kind = "boost"
 status = "nimble"
 severity = 2
 colour = "deep orange"
-marks = { dexterity = 10 }
+marks = { dexterity = 30 }

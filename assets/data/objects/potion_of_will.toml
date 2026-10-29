@@ -18,4 +18,4 @@ kind = "boost"
 status = "steadfast"
 severity = 1
 colour = "orange"
-marks = { willpower = 5 }
+marks = { willpower = 15 }

@@ -19,4 +19,4 @@ kind = "boost"
 status = "fortified"
 severity = 2
 colour = "deep orange"
-marks = { strength = 10 }
+marks = { strength = 30 }

@@ -18,4 +18,4 @@ frequency = 15
 kind = "resistance"
 status = "chill_proof"
 colour = "teal"
-marks = { toughness = 5 }
+marks = { toughness = 15 }

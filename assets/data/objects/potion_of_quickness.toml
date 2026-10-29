@@ -18,4 +18,4 @@ frequency = 10
 kind = "haste"
 severity = 1
 colour = "yellow"
-marks = { dexterity = 5 }
+marks = { dexterity = 15 }

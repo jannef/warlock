@@ -195,7 +195,7 @@
 #              stat), `vision` (`status`, one that lends a `vision`), `haste` (`severity`
 #              degrees of Hasted), `resistance` (`status`, one with a `resist`). Every potion has `colour` (the name an unknown one is called
 #              by, "a fizzy red potion"; its hue is its family's, the object's `fg` its shade,
-#              one `fg` per colour name) and `marks = { toughness = 5 }` (sure training marks).
+#              one `fg` per colour name) and `marks = { toughness = 15 }` (sure training marks).
 #              A potion may have `level` and `frequency`: it is loot, never magic.
 #
 # Corpses are not listed here: every creature that leaves one has its own (`kobold_corpse`), made

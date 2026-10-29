@@ -30,41 +30,45 @@ before it, and the burden right after that when there is one).
 A background story's stat points (docs/dev/background.md) are `Stats::gift`s: the score and
 the potential move together, and a score never falls below 1.
 
-## Training (#231)
+## Training (#231, #722)
 
-Stats grow by use, checked at levels (spec §8 "Stats": "Training"; design §6):
+Stats grow by use: a signed pile of marks per stat, paid out at checks (spec §8 "Stats":
+"Training"; the design is `docs/design/stat-training.md`, slices T1 to T6, #728):
 
 | Where | What |
 |---|---|
-| `content/stat_training.rs` | `StatTraining` from `data/stats.toml` (`[training]` `need_base`, `need_per_point`, `over_potential_divisor`, `[[training.use]]` `stat`/`on`/`chance`; validated, a stat and use listed once, `stat` left out exactly for a use that names its own (`StatUse::names_stat`: `drank`, `elixir`, a potion's stat); without the file nothing trains), `StatUse` (the uses, `describe()` for the wiki, `of_skill` for the five uses skills share), `odds(marks, score, potential)` as a fraction. |
-| `world/stat_training.rs` | `train_stat(StatUse)` (one training-stream draw per rule below 100; the player only, alive), `train_stat_times(StatUse, named stat, count)` (a count of marks, a potion's: one draw per mark below 100, none at 100; `train_stat` is it with 1), `train_fight` (blow, critical (a melee critical of the player's), shot, hungry_fight, hurt, big_hit, block (a blow on the player missed by Shield), parry (missed by Parry): one call in `fight.rs::resolve`), `train_kill` (killed: a melee kill of the player's of a creature of their level or above; one line in `resolve` where `hurt` says it died; `earn_kill` does not know the attack's kind), `train_resisting` (disease checks won: Willpower's → `resisted_will`, else `resisted`), `check_stats` (from `World::level_up`, once per level gained: six `levels`-stream draws, always; a rise via `Stats::train`, which passes the potential and lifts it; marks to 0; Toughness's hit point at once; the message into `news`), `daily_stat_check` (the daily check, below), `schedule` (from `World::assemble`: a new run and a loaded save get `next_stat_check`), `skip_stat_check` (the dev skip passes no check). Both checks go through `stat_checks(Check)`. |
+| `content/stat_training.rs` | `StatTraining` from `data/stats.toml` (`[training]` `price_base`, `price_per_point`, `ramp_divisor`, `odds_power`, `quarter`, `drop_share`, `[[training.use]]` `stat`/`on`/`chance`; validated, a stat and use listed once, `stat` left out exactly for a use that names its own (`StatUse::names_stat`: `drank`, `elixir`, a potion's stat); without the file nothing trains), `StatUse` (the uses, `describe()` for the wiki, `of_skill` for the five uses skills share), `base_price(score)`, `price(score, potential)` (the ramp past the potential), `drop_price(score)` (half the base of the point lost, never ramped), `price_for(marks, score, potential)` (the rise's for a positive pile, the drop's for a negative one, none at 0), `odds(|marks|, price)` out of `ODDS_SCALE` (65 536): the quarter rule, then the cube, integers only (both scaled to the price, the pile capped at eight times it, `u128`; `odds_power` at most 5 keeps it in range). |
+| `world/stat_training.rs` | `train_stat(StatUse)` (one training-stream draw per rule below 100; the player only, alive), `train_stat_times(StatUse, named stat, count)` (a count of marks, a potion's: one draw per mark for a rule below 100, none at 100; Hard training's `TalentMods::train_percent` raises the chance compared, never the draws; `train_stat` is it with 1), `train_fight` (blow, critical (a melee critical of the player's), shot, hungry_fight, hurt, big_hit, block (a blow on the player missed by Shield), parry (missed by Parry): one call in `fight.rs::resolve`), `train_kill` (killed: a melee kill of the player's of a creature of their level or above; one line in `resolve` where `hurt` says it died; `earn_kill` does not know the attack's kind), `train_resisting` (disease checks won: Willpower's → `resisted_will`, else `resisted`), `settle(Check)` (the one rule of both checks: six draws of `ODDS_SCALE` always, on `levels_rng` for a level and `training` for the day; a positive pile rises with its odds, `Stats::train` (the score only: the potential stays), and pays its price, the surplus kept; a negative pile is not moved yet: the drop is T3's, #724, with `Stats::untrain`), `check_stats` (from `World::level_up`, once per level gained; the message into `news`), `daily_stat_check` (the daily check, below), `schedule` (from `World::assemble`: a new run and a loaded save get `next_stat_check`), `skip_stat_check` (the dev skip passes no check). |
+| `stats.rs` | `Stats::train` (a rise: the score +1, at most 40; the potential untouched), `Stats::untrain(stat, floor)` (a drop: the score −1, never below `DRAIN_FLOOR` nor `floor`, the stat damage plus one; the potential untouched; for T3). |
 | `world/train.rs` | `trains`/`train` also ask stats for the shared uses (`StatUse::of_skill`): one report at the hook trains both. |
-| The hooks | one line each: `dig_turn` (dig), `after_tread` (plunge, climb onto ice), the pit in `spring_trap` (climb), `expose`/`disease_turn` (resisted), `search_turn` after a find (found), `read.rs` `use_up` (read) and `read_identify` (identified), `earn_kill` before the XP (discovered), `keep_at` ending `Done` after more than one turn (endured), `talk.rs` `chat` (chat; `ask` takes no time, so it trains nothing) and `swap_places` (swapped), `shop.rs` `pay` and a sale (trade), `quest.rs` `complete` before the XP (quest), `World::spend_mana` for the player, a cost above 0 (cast). `world/potion.rs` `drink_potion` gives a potion's marks (`train_stat_times(StatUse::Drank, Some(stat), marks)`; an elixir's with `StatUse::Elixir`). |
+| The hooks | one line each: `dig_turn` (dig), `after_tread` (plunge, climb onto ice), the pit in `spring_trap` (climb), `expose`/`disease_turn` (resisted), `search_turn` after a find (found), `read.rs` `use_up` (read) and `read_identify` (identified), `earn_kill` before the XP (discovered), `keep_at` ending `Done` after more than one turn (endured), `talk.rs` `chat` (chat; `ask` takes no time, so it trains nothing) and `swap_places` (swapped), `shop.rs` `pay` and a sale (trade), `quest.rs` `complete` before the XP (quest), `World::spend_mana` for the player, a cost above 0 (cast). `world/potion.rs` `drink_potion` gives a potion's marks (`train_stat_times(StatUse::Drank, Some(stat), marks)`; an elixir's with `StatUse::Elixir`). `world/background.rs` `story_stat` gives Hard-won's marks. |
 
-**The daily check** (#562, the combat progression design §9.2): once a game day at 06:00
-(`time::DAWN`) each stat gets the level's check again with the need times `daily_factor`
-(`[training]`, 3; Hard training's `TalentMods::daily_factor`, 2, when lower), drawn from the
-**training** stream, six draws whatever the marks, so the stream's position is a function of
-the days passed and a fight's rolls never move. It is a moment of `World::live`
-(`world/status.rs`): `until_stat_check` ends a step at it and `daily_stat_check` makes it at
-the step's end, so a week's rest makes seven checks at their exact hours however time is
-batched (`a_week_makes_seven_checks_in_order_however_the_time_is_cut`). A rise is `say`d at
-once, so it stops a rest (a rest to dawn then ends "You stop resting after …"). The next check
-is `WorldState::next_stat_check: Option<GameTime>`, saved and hashed, `None` (left out of the
+**The daily check** (#562): once a game day at 06:00 (`time::DAWN`) each stat gets the level's
+check, the same rule (`settle`), drawn from the **training** stream, six draws whatever the
+piles, so the stream's position is a function of the days passed and a fight's rolls never
+move. It is a moment of `World::live` (`world/status.rs`): `until_stat_check` ends a step at it
+and `daily_stat_check` makes it at the step's end, so a week's rest makes seven checks at their
+exact hours however time is batched
+(`a_week_makes_seven_checks_in_order_however_the_time_is_cut`). A rise is `say`d at once, so
+it stops a rest (a rest to dawn then ends "You stop resting after …"). The next check is
+`WorldState::next_stat_check: Option<GameTime>`, saved and hashed, `None` (left out of the
 JSON) while the content has no training rules, so test content without `stats.toml` hashes as
 before; a save without it gets the next 06:00 on load. The dev `skip:` passes no check (it
 reschedules to the first 06:00 after it). Quick study of the body
 (`TalentMods::potion_marks_percent`) scales a `names_stat` use's count in `train_stat_times`
 (potions reach it through `drank`, elixirs through `elixir`).
 
-Elixirs (#568, `world/elixir.rs`) are the one thing that raises a **potential** past a trained
-rise: `Stats::widen(stat, by)` after `Stats::train`, never past `SCORES` (docs/dev/potions.md).
+Elixirs (#568, `world/elixir.rs`) are the one thing that raises a **potential**: the trained
+rise, the potential lifted to the score where it was below, then `Stats::widen(stat, by)`,
+never past `SCORES` (docs/dev/potions.md).
 
-`Actor::stat_marks` (`PerStat<u16>`, saturating) is saved and hashed, left out while all zero.
-Nothing shows the marks but the dev `progress` dump layer (`stat marks St 3, To 1`); the wiki
-tables are `xtask/src/wiki/stats.rs` (`stat-training.md` with the chances, `stat-checks.md`,
-`stat-daily-checks.md`).
-Tests: `world/stat_training_tests.rs`, `content/stat_training.rs`.
+`Actor::stat_marks` (`PerStat<i32>`, signed, saturating) is saved and hashed, left out while all
+zero (the JSON map of `u16` piles saved before #722 reads as the same numbers). Nothing shows the
+marks but the dev `progress` dump layer (`stat marks St 120/160, To -30/75`: each pile with its
+price in force); the wiki tables are `xtask/src/wiki/stats.rs` (`stat-training.md` with the
+chances, `stat-prices.md`, `stat-odds.md`, `stat-pace.md`: the expected days at the daily check
+alone, worked out from the odds).
+Tests: `world/stat_training_tests.rs`, `content/stat_training.rs`, `stats.rs`.
 
 ## Drain (#382)
 

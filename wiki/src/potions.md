@@ -60,7 +60,7 @@ potential rises with the score first, so after an elixir there is always room fo
 more point of training, and half the time two. Your [hit points](combat.md#hit-points) follow a [Toughness](stats.md#stat-toughness) elixir at
 once, your [mana](mana.md#how-much) an [Intelligence](stats.md#stat-intelligence) or [Willpower](stats.md#stat-willpower) one, your [carrying limits](burden.md#how-much-you-can-carry) a [Strength](stats.md#stat-strength) one. "You feel
 stronger." says the score rose; "You feel stronger, and that you could be stronger yet." says
-the potential rose by 2. Each elixir also gives 20 [training marks](stats.md#training) of its stat.
+the potential rose by 2. Each elixir also gives 60 [training marks](stats.md#training) of its stat.
 
 There are six, one a stat: the elixirs of **might** ([Strength](stats.md#stat-strength)), **grace** ([Dexterity](stats.md#stat-dexterity)),
 **vigour** ([Toughness](stats.md#stat-toughness)), **wit** ([Intelligence](stats.md#stat-intelligence)), **will** ([Willpower](stats.md#stat-willpower)), and **presence**

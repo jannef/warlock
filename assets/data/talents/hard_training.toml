@@ -2,6 +2,6 @@
 id = "hard_training"
 name = "Hard training"
 tree = "vigour"
-description = "You drill every day: your stats grow between levels more often."
-effects = [{ kind = "daily_factor", value = 2 }]
+description = "You drill every day: everything you do trains your stats more often."
+effects = [{ kind = "train_percent", value = 50 }]
 systems = ["stat_training"]
