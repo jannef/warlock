@@ -184,6 +184,8 @@ fn a_caught_thief_is_turned_on_and_cannot_steal_from_them_again() {
     assert_eq!(w.state.actors[&kobold].faction_override, Some(caught));
     assert_eq!(w.stance(w.player_id(), kobold), Stance::Hostile);
     assert!(w.state.player().inventory.is_empty(), "nothing taken");
+    // Caught: a deed that costs Presence marks (spec §8 "Stats").
+    assert_eq!(w.state.player().stat_marks[Stat::Presence], -20);
     assert_eq!(names(&w, kobold).len(), 3);
     // Now hostile, it lets no one near its pack: refused, no time.
     let turn = w.state.turn;
@@ -353,6 +355,11 @@ fn a_shopkeeper_who_catches_a_thief_is_outraged() {
     rig(&mut w, keeper, false);
     w.apply(&Action::Steal(Dir::N));
     assert!(said(&w, "Grimbold catches you stealing. \"Stop, thief!\""));
+    assert_eq!(
+        w.state.player().stat_marks[Stat::Presence],
+        -20,
+        "a keeper catches you too"
+    );
     let shop = &w.state.current().shops[0];
     assert_eq!(shop.status, ShopStatus::Outraged);
     assert!(shop.unpaid.is_empty());

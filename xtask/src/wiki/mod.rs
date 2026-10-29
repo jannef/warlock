@@ -212,6 +212,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("stat-uses.md", character::stat_uses),
         ("potentials.md", character::potentials),
         ("stat-training.md", stats::stat_training),
+        ("stat-losses.md", stats::stat_losses),
         ("stat-prices.md", stats::stat_prices),
         ("stat-odds.md", stats::stat_odds),
         ("stat-pace.md", stats::stat_pace),
@@ -640,6 +641,16 @@ mod tests {
         has("stat-odds.md", "| the price | 50 % |");
         has("stat-odds.md", "| under a quarter | 0 % |");
         has("stat-pace.md", "| 1 | 49 | 62 | 80 | 132 |");
+        // The deeds that cost marks, and the drop by score.
+        has(
+            "stat-losses.md",
+            "| Toughness | each hit point lost to starvation | a mark, 50 % of the time |",
+        );
+        has(
+            "stat-losses.md",
+            "| Presence | being caught stealing | 20 marks |",
+        );
+        has("stat-losses.md", "| 14 | 75 | −19 |");
         // Hearing: loudness where made and how far you hear it, how sound fades, what muffles.
         has(
             "noises.md",

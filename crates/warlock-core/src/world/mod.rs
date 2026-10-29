@@ -191,6 +191,7 @@ mod spawn;
 mod spell;
 mod spell_scale;
 mod stars;
+mod stat_deeds;
 mod stat_training;
 mod status;
 mod steal;
@@ -1186,6 +1187,10 @@ impl World {
         if acted && slowed && self.trains(Use::Burdened) {
             self.train(Use::Burdened);
         }
+        // Acting (not waiting or dropping) while Overloaded costs Dexterity marks.
+        if acted && burden == Burden::Overloaded && !matches!(action, Action::Drop(_)) {
+            self.stat_deed(crate::content::StatDeed::Overloaded);
+        }
         if acted {
             self.train_hungry_step();
         }
@@ -1695,6 +1700,8 @@ mod stamina_tests;
 mod stars_roc_tests;
 #[cfg(test)]
 mod stars_tests;
+#[cfg(test)]
+mod stat_deeds_tests;
 #[cfg(test)]
 mod stat_paths_tests;
 #[cfg(test)]

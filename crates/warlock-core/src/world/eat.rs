@@ -480,6 +480,7 @@ impl World {
         if let Some(fed) = self.player_mut().satiation.as_mut() {
             fed.nutrition = fed.nutrition.min(leaves);
         }
+        self.stat_deed(crate::content::StatDeed::Vomited);
     }
 
     /// `actor`, a creature that just died, leaves its corpse (if its type leaves one) on top of

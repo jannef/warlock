@@ -31,6 +31,40 @@ pub(super) fn stat_training(content: &Content) -> String {
     out
 }
 
+/// Every deed that costs a stat marks, stat by stat in display order, the deeds in file order,
+/// with what it takes; then, by score, the marks a drop pays back and the pile at which one
+/// comes within reach (and the game warns of it).
+pub(super) fn stat_losses(content: &Content) -> String {
+    let rules = content.stat_training();
+    let mut out = String::from("| Stat | Lost by | Takes |\n|---|---|---|\n");
+    for stat in Stat::ALL {
+        for rule in rules.deeds.iter().filter(|r| r.stat == stat) {
+            let takes = match (rule.marks, rule.chance) {
+                (Some(1), _) => "1 mark".to_string(),
+                (Some(marks), _) => format!("{marks} marks"),
+                (None, Some(chance)) => format!("a mark, {chance} % of the time"),
+                (None, None) => continue,
+            };
+            let _ = writeln!(
+                out,
+                "| {} | {} | {takes} |",
+                stat.name(),
+                rule.on.describe()
+            );
+        }
+    }
+    out.push_str("\n| Score | A drop pays back | Within reach (warned) at |\n|---:|---:|---:|\n");
+    for score in PRICE_SCORES {
+        let price = rules.drop_price(score);
+        // The quarter rule: in play once quarter × |marks| reaches the price.
+        let reach = (1..=price)
+            .find(|&m| rules.in_play(-(m as i32), price))
+            .unwrap_or(price);
+        let _ = writeln!(out, "| {score} | {price} | −{reach} |");
+    }
+    out
+}
+
 /// The scores [`stat_prices`] lists.
 const PRICE_SCORES: [u8; 11] = [6, 8, 10, 12, 14, 16, 18, 20, 25, 30, 35];
 /// How many points past the potential [`stat_prices`] prices.

@@ -91,9 +91,25 @@ developer notes (CLAUDE.md, `docs/dev/`).
     odds_power` (3), `|m|` counted up to `8 × P`, in integers (`StatTraining::odds`). A rise
     (at most 40) pays `P`: `m ← max(0, m − P)`, the surplus kept for the next check, one move a
     stat a check; it never lifts the potential (`Stats::train`: the score only; elixirs,
-    corpses, and gifts move potentials). A negative pile is not moved yet (the drop,
-    `Stats::untrain` with its floors, `DRAIN_FLOOR` and the stat damage plus one, comes with
-    the losses, #724's slice T3). A rise says "You feel stronger." (quicker, tougher, sharper,
+    corpses, and gifts move potentials). **A drop** (#724) pays `L`: `m ← min(0, m + L)`, the
+    score down by 1 (`Stats::untrain`: never below `DRAIN_FLOOR`, 3, nor the stat damage on it
+    plus one; the potential never moves, and it is not a drained point), hit points and mana cut
+    to the new maxima, never below 1; it says "You feel weaker." (clumsier, frailer, duller;
+    "Your resolve wavers.", "You feel less sure of yourself."). **Deeds** (`[[training.deed]]`:
+    `stat`, `on`, and exactly one of `chance` 1 to 100, a mark with one training draw, or
+    `marks`, taken at once without a draw; `StatDeed`, `world/stat_deeds.rs`) are few and
+    deliberate, one hook each, the player only: `hungry_dawn` (the 06:00 check made Weak,
+    Fainting, or Starving, dealt before its draws; Strength and Toughness 15 marks each),
+    `starved` (each hit point starvation takes; Toughness, chance 50), `vomited` (Toughness 10),
+    `fainted` (Willpower 10), `overloaded` (an action that took a single turn, not a wait or a
+    drop, while Overloaded; Dexterity, chance 10), `knew_better` (a trap the player knew of sprung
+    under them by stepping onto it; Intelligence 20), `caught` (caught stealing, by a keeper or
+    anyone; Presence 20). Bad luck alone (a hidden trap, a blow, a disease or drain check lost)
+    takes nothing. A deed that takes a pile from out of the drop's play (`quarter × |m| < L`, or
+    `m ≥ 0`) to within it warns at once in words ("You feel your strength wasting.", "Your hands
+    feel less sure.", "You feel your health failing.", "Your mind feels dull.", "Your will feels
+    brittle.", "You feel small and unregarded."), so the warning always precedes a drop. A rise
+    says "You feel stronger." (quicker, tougher, sharper,
     more resolute, more confident), after "Welcome to level N." at a level and at once at 06:00
     (it stops a rest); a Toughness rise brings its hit point at once. The daily check is a
     moment of the status loop, so however a rest is cut up the checks come at their hours in

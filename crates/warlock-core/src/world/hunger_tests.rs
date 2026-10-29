@@ -430,6 +430,8 @@ fn overeating_may_choke_vomit_or_be_lost() {
     w.apply(&Action::Eat(Meal::Floor(0)));
     assert!(said(&w, "You vomit!"));
     assert_eq!(nutrition(&w), 1000);
+    // A deed: it costs Toughness marks (spec §8 "Stats").
+    assert_eq!(w.state.player().stat_marks[Stat::Toughness], -10);
     assert_eq!(hunger(&w), Hunger::Hungry);
     // Neither: what does not fit is lost.
     let content = content_with(&[("vomit = 50", "vomit = 0")]);

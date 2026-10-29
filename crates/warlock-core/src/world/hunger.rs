@@ -88,6 +88,10 @@ impl World {
             fed.starving = 0;
             0
         };
+        // Each hit point the player starves away may cost Toughness marks.
+        if id == self.state.player && lost > 0 {
+            self.stat_deed_times(crate::content::StatDeed::Starved, lost.unsigned_abs());
+        }
         (lost, Some(before))
     }
 
@@ -125,6 +129,7 @@ impl World {
             return 0;
         }
         self.say("You faint from hunger.");
+        self.stat_deed(crate::content::StatDeed::Fainted);
         let wait = self.price_of(self.state.player, ActionKind::Wait);
         wait.saturating_mul(i64::from(def.faint.turns))
     }

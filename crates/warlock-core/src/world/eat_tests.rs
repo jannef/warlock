@@ -200,11 +200,14 @@ fn a_rotten_or_vomited_corpse_gives_nothing() {
     let before = marks(&w, Stat::Toughness);
     eat(&mut w, "kobold", 0);
     assert!(said(&w, "You vomit!"));
-    assert_eq!(marks(&w, Stat::Toughness), before);
+    // The corpse gives nothing, and vomiting is a deed: it takes Toughness marks (#724).
+    let after_vomit = before - 10;
+    assert_eq!(marks(&w, Stat::Toughness), after_vomit);
     // Rotten: 10 hours dead, past its 8.
     eat(&mut w, "beetle", 10 * 3600);
     assert!(said(&w, "Ugh! The cave beetle corpse was rotten."));
-    assert_eq!(marks(&w, Stat::Toughness), before);
+    // No gift (a rotten corpse may make one vomit again: another deed, never a gain).
+    assert!(marks(&w, Stat::Toughness) <= after_vomit);
 }
 
 #[test]
