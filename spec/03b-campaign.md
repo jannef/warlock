@@ -92,7 +92,9 @@ every new run starts in it.
   branches' first levels each have an `arrival` line: "Cold air breathes up from the mound.",
   "The water is up to the third step.", "The galleries smell of sulphur."
 - **The road** (§8 "Background story"): the Ascmearc's own last chapter of a background story,
-  `campaigns/ascmearc/data/background/08-road.toml`: how the character came over Beorggeat.
+  `campaigns/ascmearc/data/background/08-road.toml`: how the character came over Beorggeat,
+  seven lines, the one chapter of a story that names the march's places (Grægweall, Beorggeat,
+  Fyrbeorg); any campaign may add such a chapter of its own after the shared ones.
 - **The player wiki** describes the Ascmearc and never the test world: a page "The Ascmearc"
   with the names and their meanings, the regions, and the overworld map drawn from the level
   file with the hidden locations on it (the wiki tells the truth, design §11.4), plus the places
