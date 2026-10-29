@@ -38,7 +38,7 @@ fn kit_text(content: &Content, kit: &Kit) -> String {
 /// One line of a kit: its item ("a dagger", "15 gold coins") or "one of" its alternatives, then
 /// in parentheses where it is kept, how magic it may be, and when it comes: "a dagger
 /// (wielded, with Twin Blades)", "a gold ring (on left hand, magic or rare)".
-fn line_text(content: &Content, line: &KitItem) -> String {
+pub(super) fn line_text(content: &Content, line: &KitItem) -> String {
     let names: Vec<String> = (line.one_of.iter())
         .map(|stacks| named(content, stacks))
         .collect();

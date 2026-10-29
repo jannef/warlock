@@ -15,6 +15,7 @@ mod abilities;
 mod actions;
 mod alignment;
 mod animated;
+mod background;
 mod burden;
 mod calendar;
 mod character;
@@ -222,6 +223,16 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("horoscope-flavour.md", horoscope::flavour),
         ("horoscope-lucky.md", horoscope::lucky),
         ("horoscope-talents.md", horoscope::talents),
+        ("background-tiers.md", background::tiers),
+        ("background-points.md", background::points),
+        ("background-parents.md", background::parents),
+        ("background-birth.md", background::birth),
+        ("background-childhood.md", background::childhood),
+        ("background-youth.md", background::youth),
+        ("background-trial.md", background::trial),
+        ("background-fortune.md", background::fortune),
+        ("background-leaving.md", background::leaving),
+        ("background-road.md", background::road),
         ("class-kits.md", kits::class_kits),
         ("race-kits.md", kits::race_kits),
         ("alignment-bands.md", alignment::alignment_bands),
@@ -503,6 +514,34 @@ mod tests {
 
     /// The numbers the game keeps to itself are stated exactly (#264): creatures, stats, speed,
     /// hearing, combat, diseases, and corpses.
+    #[test]
+    fn the_story_tables_list_every_line() {
+        // Every line of every chapter of a story in the Ascmearc in its chapter's table, its
+        // effects exact; the tiers' odds as the data has them.
+        let content = Content::builtin().expect("content loads");
+        let files = generate(&content);
+        let text = |name: &str| {
+            let file = format!("background-{name}.md");
+            (files.iter().find(|(n, _)| *n == file))
+                .unwrap_or_else(|| panic!("{file}"))
+                .1
+                .clone()
+        };
+        let b = content.background().expect("stories");
+        for chapter in b.chapters_for("ascmearc") {
+            let table = text(&chapter.id);
+            for line in &chapter.lines {
+                assert!(table.contains(&format!("| `{}` |", line.id)), "{}", line.id);
+            }
+        }
+        assert!(text("tiers").contains("| Uncommon | 12 % | 64 % | 0.96 | +1 to +3 | yes |"));
+        assert!(text("childhood").contains("[Strength](stats.md#stat-strength) +1 (worth +2)"));
+        assert!(
+            text("parents").contains("| with [Family wealth](talents.md#talent-family-wealth) |")
+        );
+        assert!(!text("road").contains("the Hall"), "never the test world's");
+    }
+
     #[test]
     fn hidden_numbers_are_exact() {
         let content = Content::builtin().expect("content loads");
