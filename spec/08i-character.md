@@ -89,7 +89,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing twice); then the line's dice. Its effects: stat points (the score and its potential
     together, a score never below 1), gold (given, or taken down to none), items as kit lines (a
     magic one identified, a scroll or potion known), skill starts, weapon-skill marks (never a
-    rank), and the starting alignment. **No caps and no protection** (the owner, 2026-10-29):
+    rank), the starting alignment, and (#707, B5) a talent at rank 1 or a birth sign's flaw,
+    each with what it hands out and kept in `Actor::boons` as the forgotten altar's Chosen and
+    Forsaken are (`World::bestow`), so every restore puts it back; never a given, class, or flaw
+    talent as a `talent`, and never one held (the roll skips a line that would give one held or
+    given by an earlier line; a class table that names it later gives nothing in its place); the
+    Talents page and the `talents` dump mark it "(story)" or "(story, flaw)". **No caps and no protection** (the owner, 2026-10-29):
     nothing is counted across chapters; only a line's own worth is checked against its tier at
     load (rare and fateful lines never cost anything). It is told in `World::start_run` after the
     creation picks, so it reads every choice and meets no pick's prerequisite.

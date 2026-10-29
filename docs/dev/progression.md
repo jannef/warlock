@@ -471,3 +471,12 @@ by whoever grants them and never offered (`may_take` refuses them); a race's and
 together, by `stars::grant`. The birth signs' are granted
 by `world/stars.rs` at the start and on every restore (`Talents::regrant`; #265,
 `docs/dev/character-creation.md`), in the first tree, Stars (`no_free`).
+
+**`Actor::boons`** holds the talents given for life outside every pick, at rank 1 with what
+they hand out (`World::bestow`, `world/boons.rs`): a forgotten altar's Chosen and Forsaken, and
+a background story's `talent` and `flaw` lines (#707, `world/background.rs`;
+`docs/dev/background.md`). `stars::grant` puts them back on every restore beside the race's and
+the sign's grants. `OwnTalent::story` (a boon a told line names, `background::gave`) marks the
+story's "(story)" / "(story, flaw)"; `OwnTalent::boon` is the altar's (a boon the story did not
+give). A class table naming a held boon later gives nothing in its place (`class::grant`
+skips what is held).

@@ -125,12 +125,11 @@ when = { age = { min = 14 } }
 effects = [{ stat = { strength = 1 } }, { stat = { willpower = 1 } }]
 tags = ["barrow"]
 
-# B5 (#707) adds `{ talent = "hardy" }` here, once a line may grant a talent: "you have not been
-# sick a day since".
+# Hardy is "you have not been sick a day since": never told to one who holds it already.
 [[line]]
 id = "the_flux"
 tier = "fateful"
 weight = 1
 text = "You were dying of the flux at nine, and a hedge-priest laid hands on you, and you got up the next morning. You have not been sick a day since."
-effects = [{ stat = { toughness = 2 } }, { stat = { willpower = 1 } }]
+effects = [{ talent = "hardy" }, { stat = { toughness = 1 } }]
 tags = ["blessed"]

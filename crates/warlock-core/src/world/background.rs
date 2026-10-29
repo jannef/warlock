@@ -14,7 +14,10 @@
 //! - **weapon marks**: `WeaponSkills::add_marks`, never a rank (`best`: the weapon skill held
 //!   highest);
 //! - **alignment**: the starting score moved, the start's fourth term (never `shift_alignment`:
-//!   nothing has happened yet).
+//!   nothing has happened yet);
+//! - **talent** and **flaw**: `World::bestow` (`world/boons.rs`, the forgotten altar's Chosen
+//!   and Forsaken with the id fixed): rank 1 with what it hands out, kept in `Actor::boons` so
+//!   a restored run puts it back (the roll never draws a line giving what is held).
 //!
 //! Then hit points and mana to their maxima. A run that nobody chose (no kit) has no story.
 
@@ -92,6 +95,8 @@ impl World {
                     player.alignment = Some(Score::new(score.value() + by));
                 }
             }
+            Rolled::Talent(id, choice) => self.bestow(&id, choice.as_deref()),
+            Rolled::Flaw(id) => self.bestow(&id, None),
         }
     }
 

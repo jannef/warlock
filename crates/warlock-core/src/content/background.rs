@@ -272,6 +272,11 @@ pub enum Effect {
     WeaponMarks(Marks, u32),
     /// The starting alignment score moved.
     Alignment(i32),
+    /// A talent (by id, with its choice) given at rank 1 with what it hands out and kept among
+    /// the boons: never a granted, class, or flaw talent.
+    Talent(String, Option<String>),
+    /// A birth sign's flaw talent (by id), given likewise and kept among the boons.
+    Flaw(String),
 }
 
 impl Effect {
@@ -300,6 +305,8 @@ impl Effect {
             Effect::Skill(..) => (points.skill, 0),
             Effect::WeaponMarks(..) => (points.weapon_marks, 0),
             Effect::Alignment(_) => (points.alignment, 0),
+            Effect::Talent(..) => (points.talent, 0),
+            Effect::Flaw(_) => (0, points.flaw),
         }
     }
 }
@@ -718,7 +725,44 @@ impl Content {
             }
             return Ok(vec![Effect::Alignment(by)]);
         }
-        Err("`talent` and `flaw` effects are not told yet (background story B5)".into())
+        if let Some(text) = spec.talent {
+            let (id, choice) = match text.split_once(':') {
+                Some((id, choice)) => (id, Some(choice.to_string())),
+                None => (text.as_str(), None),
+            };
+            let book = self.talents();
+            let def = (book.id(id))
+                .map(|t| book.get(t))
+                .ok_or_else(|| format!("`talent`: unknown talent `{id}`"))?;
+            if def.granted || def.flaw || book.tree(def.tree).class {
+                return Err(format!(
+                    "`talent`: `{id}` is given, a flaw, or a class ability: never a story's"
+                ));
+            }
+            match (def.choice, &choice) {
+                (None, None) => {}
+                (None, Some(c)) => {
+                    return Err(format!("`talent`: `{id}` takes no choice (`{c}` given)"));
+                }
+                (Some(kind), None) => {
+                    return Err(format!("`talent`: `{id}` is chosen for {}", kind.words()));
+                }
+                (Some(kind), Some(c)) if !kind.options(self).contains(c) => {
+                    return Err(format!("`talent`: `{c}` is no choice of `{id}`"));
+                }
+                (Some(_), Some(_)) => {}
+            }
+            return Ok(vec![Effect::Talent(id.to_string(), choice)]);
+        }
+        let id = spec.flaw.expect("one kind is named");
+        let book = self.talents();
+        let def = (book.id(&id))
+            .map(|t| book.get(t))
+            .ok_or_else(|| format!("`flaw`: unknown talent `{id}`"))?;
+        if !def.flaw {
+            return Err(format!("`flaw`: `{id}` is no birth sign's flaw"));
+        }
+        Ok(vec![Effect::Flaw(id)])
     }
 }
 

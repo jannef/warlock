@@ -583,6 +583,17 @@ const CASES: &[Case] = &[
         size: (100, 40),
         ..BASE
     },
+    // A story talent (#707): the flux gave this warrior Hardy, "(story)".
+    Case {
+        name: "talents-screen-story",
+        scenario: "ascmearc",
+        seed: Some(107),
+        character: Some("human,male,warrior"),
+        run: true,
+        screen: Some("talents"),
+        size: (100, 40),
+        ..BASE
+    },
     // The background story (#703): opened by the app as the run New run's summary started
     // begins (the showcase's character, its seed), then page 8 of a kit run, and page 8 of a
     // scenario's own character, who has none.
