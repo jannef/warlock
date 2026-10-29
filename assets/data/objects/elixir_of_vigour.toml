@@ -19,4 +19,4 @@ stat = "toughness"
 points = 1
 potential = "1d2"
 colour = "gold"
-marks = { toughness = 20 }
+marks = { toughness = 60 }

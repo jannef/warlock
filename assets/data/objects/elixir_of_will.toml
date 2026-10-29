@@ -19,4 +19,4 @@ stat = "willpower"
 points = 1
 potential = "1d2"
 colour = "gold"
-marks = { willpower = 20 }
+marks = { willpower = 60 }

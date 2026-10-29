@@ -514,7 +514,7 @@ fn career(content: &Arc<Content>, build: &Build, seed: u64, trained: bool) -> Ve
                 for _ in 0..DAYS_PER_LEVEL {
                     let me = w.player_mut();
                     for (stat, marks) in Stat::ALL.into_iter().zip(build.marks) {
-                        me.stat_marks[stat] = me.stat_marks[stat].saturating_add(marks);
+                        me.stat_marks[stat] = me.stat_marks[stat].saturating_add(i32::from(marks));
                     }
                     let now = w.state.time;
                     w.state.next_stat_check = Some(now);

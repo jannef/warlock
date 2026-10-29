@@ -17,4 +17,4 @@ frequency = 40
 kind = "cure"
 cures = ["antidote"]
 colour = "green"
-marks = { toughness = 5 }
+marks = { toughness = 15 }

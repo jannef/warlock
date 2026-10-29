@@ -359,12 +359,12 @@ pub enum TalentEffect {
     NoBloating,
     /// A fresh corpse's chances to raise its stats, this percent more (Gourmand).
     CorpseStatsPercent { value: i32 },
-    /// The daily stat check (06:00) multiplies the need by this, when it is less than the
-    /// data's `daily_factor` (Hard training).
-    DailyFactor { value: u16 },
     /// The training marks a potion or an elixir gives, this percent more (Quick study of the
     /// body).
     PotionMarksPercent { value: i32 },
+    /// Every stat training use's chance, this percent more (a use at 100 stays sure; Hard
+    /// training).
+    TrainPercent { value: i32 },
     /// Experience gained, this percent more.
     XpPercent { value: i32 },
     /// Skill rolls every level, this many more (Quick learner).
@@ -1400,8 +1400,8 @@ impl TalentEffect {
                 Ok(())
             }
             TalentEffect::HardWon { marks } => {
-                if !(1..=20).contains(marks) {
-                    return Err("`hard_won`: marks is 1 to 20".into());
+                if !(1..=100).contains(marks) {
+                    return Err("`hard_won`: marks is 1 to 100".into());
                 }
                 Ok(())
             }
@@ -1429,17 +1429,6 @@ impl TalentEffect {
                     "`train_skill` is for the chosen skill: it needs `choice = \"skill\"`".into(),
                 ),
             },
-            TalentEffect::DailyFactor { value } => {
-                let factors = super::stat_training::DAILY_FACTORS;
-                if !factors.contains(value) {
-                    return Err(format!(
-                        "`daily_factor`: value is {} to {}",
-                        factors.start(),
-                        factors.end()
-                    ));
-                }
-                Ok(())
-            }
             TalentEffect::ScrollKept { chance } => {
                 if !(1..=100).contains(chance) {
                     return Err("`scroll_kept`: chance is 1 to 100".into());
@@ -1879,6 +1868,7 @@ impl TalentEffect {
             | TalentEffect::StepSlowdownPercent { value }
             | TalentEffect::CorpseStatsPercent { value }
             | TalentEffect::PotionMarksPercent { value }
+            | TalentEffect::TrainPercent { value }
             | TalentEffect::LootMagicPercent { value }
             | TalentEffect::SalvagePercent { value }
             | TalentEffect::GemFindPercent { value }

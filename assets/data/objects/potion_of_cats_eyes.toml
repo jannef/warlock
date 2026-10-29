@@ -17,4 +17,4 @@ frequency = 15
 kind = "vision"
 status = "cat_eyed"
 colour = "violet"
-marks = { willpower = 5 }
+marks = { willpower = 15 }

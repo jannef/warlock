@@ -7,23 +7,25 @@
 //!   [`World::train_stat`] for the rest; each rule for it gives its stat a mark with the rule's
 //!   chance, one draw of the **training** stream per rule below 100 (never gameplay). Only the
 //!   player trains, and only while alive. Marks are never said.
-//! - **Checks** ([`World::check_stats`], from `World::level_up`, level by level): each stat in
-//!   display order gets one draw of the **levels** stream, always (so the stream stays in step
-//!   whatever the marks), and rises by 1 with the odds of
-//!   [`StatTraining::odds`](crate::content::StatTraining::odds); a rise uses up the stat's marks
-//!   and says "You feel stronger.", nothing more. A Toughness rise brings the hit point it adds
-//!   at once, as a level's do. Content without training rules checks nothing (and draws
-//!   nothing).
-//! - **The daily check** ([`World::daily_stat_check`], #562): once a game day at 06:00, a
-//!   moment of `World::live` ([`World::until_stat_check`]), each stat gets the same check with
-//!   the need times `daily_factor` (or Hard training's), on the **training** stream, six draws
-//!   always. A rise is said at once, so it stops a rest. `WorldState::next_stat_check` holds
-//!   the moment ([`schedule`]).
+//! - **The pile**: `Actor::stat_marks`, a signed sum per stat, is the whole state: no cap, no
+//!   decay, no daily counter (the design, `docs/design/stat-training.md` §4.5).
+//! - **Checks** ([`World::settle`]): at every level gained ([`World::check_stats`], from
+//!   `World::level_up`, level by level, on the **levels** stream) and once a game day at 06:00
+//!   ([`World::daily_stat_check`], #562, a moment of `World::live`
+//!   ([`World::until_stat_check`]), on the **training** stream), each stat in display order
+//!   draws once, always (so the stream stays in step whatever the piles), and moves by 1 with
+//!   [`StatTraining::odds`](crate::content::StatTraining::odds) of its pile against its price.
+//!   A rise pays the price (a pile short of it goes to zero), keeps the surplus for the next
+//!   check, never lifts the potential, and says "You feel stronger.", nothing more; a
+//!   Toughness rise brings its hit point at once. A negative pile is out of play until the
+//!   losses' slice (the drop is T3's). The daily rise is said at once, so it stops a rest;
+//!   `WorldState::next_stat_check` holds the moment ([`schedule`]). Content without training
+//!   rules checks nothing (and draws nothing).
 
 use super::{ActorId, World, WorldState};
 use crate::action::AttackKind;
 use crate::combat::{Blow, Category, Strike};
-use crate::content::{Content, StatUse};
+use crate::content::{Content, ODDS_SCALE, StatUse};
 use crate::hunger::Hunger;
 use crate::rng::Rng;
 use crate::stats::Stat;
@@ -55,21 +57,19 @@ impl World {
 
     /// [`World::train_stat`] `count` times over (a potion's marks): each rule for `used` gives
     /// its stat, or `named` for a use that names its own (a potion's), up to `count` marks, each
-    /// with the rule's chance: one draw of the training stream per mark below 100, none at 100
-    /// (as a single use). Marks saturate at `u16::MAX`.
+    /// with the rule's chance (Hard training's `TalentMods::train_percent` more, never above
+    /// 100): one draw of the training stream per mark for a rule below 100 (whatever the talent
+    /// makes of it), none at 100 (as a single use). The pile saturates at `i32::MAX`.
     pub(super) fn train_stat_times(&mut self, used: StatUse, named: Option<Stat>, count: u16) {
         if self.state.death.is_some() || !self.trains_stat(used) {
             return;
         }
         let content = self.content.clone();
+        let talents = self.state.player().talent_mods(&content);
         // Quick study of the body: a potion's marks, more of them.
         let count = match used.names_stat() {
             true => {
-                let percent = self
-                    .state
-                    .player()
-                    .talent_mods(&content)
-                    .potion_marks_percent;
+                let percent = talents.potion_marks_percent;
                 let more = (u32::from(count) * percent.clamp(-100, 1000) as u32 / 100) as u16;
                 if percent >= 0 {
                     count.saturating_add(more)
@@ -85,14 +85,18 @@ impl World {
             };
             let won = match rule.chance {
                 100.. => count,
-                chance => (0..count)
-                    .filter(|_| self.state.training.chance(u32::from(chance)))
-                    .count() as u16,
+                chance => {
+                    let chance = i32::from(chance) * (100 + talents.train_percent.max(-100)) / 100;
+                    let chance = chance.clamp(0, 100) as u32;
+                    (0..count)
+                        .filter(|_| self.state.training.chance(chance))
+                        .count() as u16
+                }
             };
             let player = self.state.player;
             if let Some(actor) = self.state.actors.get_mut(&player) {
                 let marks = &mut actor.stat_marks[stat];
-                *marks = marks.saturating_add(won);
+                *marks = marks.saturating_add(i32::from(won));
             }
         }
     }
@@ -177,7 +181,7 @@ impl World {
     /// A level came: each stat in display order gets its check (module docs). Draws six times
     /// from the levels stream whatever the marks, none without training rules.
     pub(super) fn check_stats(&mut self) {
-        for stat in self.stat_checks(Check::Level) {
+        for stat in self.settle(Check::Level) {
             self.news.push(rise_news(stat).into());
         }
     }
@@ -203,7 +207,7 @@ impl World {
             return;
         }
         self.state.next_stat_check = Some(next.max(when).next_at(DAWN));
-        for stat in self.stat_checks(Check::Daily) {
+        for stat in self.settle(Check::Daily) {
             self.say(rise_news(stat));
         }
     }
@@ -218,9 +222,12 @@ impl World {
         }
     }
 
-    /// Checks each stat in display order (module docs): `check`'s stream, six draws whatever
-    /// the marks, none without training rules. Returns the stats that rose.
-    fn stat_checks(&mut self, check: Check) -> Vec<Stat> {
+    /// Settles each stat's pile in display order (module docs): `check`'s stream, six draws of
+    /// [`ODDS_SCALE`] whatever the piles (a pile out of play still draws), none without
+    /// training rules. A positive pile rises with its odds against the price and pays it, the
+    /// surplus kept; a negative one is not moved yet (the drop is the losses' slice). Returns
+    /// the stats that rose.
+    pub(super) fn settle(&mut self, check: Check) -> Vec<Stat> {
         let content = self.content.clone();
         let rules = content.stat_training();
         let mut risen = Vec::new();
@@ -235,30 +242,24 @@ impl World {
             };
             let (score, potential) = (actor.stats.score(stat), actor.stats.potential(stat));
             let marks = actor.stat_marks[stat];
-            let (marks, out_of) = match check {
-                Check::Level => rules.odds(marks, score, potential),
-                Check::Daily => {
-                    let talents = actor.talent_mods(&content);
-                    let factor = (talents.daily_factor)
-                        .map_or(rules.daily_factor, |f| f.min(rules.daily_factor));
-                    rules.odds_by(marks, score, potential, factor)
-                }
-            };
+            let price = rules.price_for(marks, score, potential);
+            let odds = price.map_or(0, |price| rules.odds(marks.unsigned_abs(), price));
             let draw = match check {
                 Check::Level => (self.state.levels_rng)
                     .get_or_insert_with(|| Rng::levels(seed))
-                    .below(out_of),
-                Check::Daily => self.state.training.below(out_of),
+                    .below(ODDS_SCALE),
+                Check::Daily => self.state.training.below(ODDS_SCALE),
             };
-            if draw >= marks {
+            let Some(price) = price.filter(|_| marks > 0 && draw < odds) else {
                 continue;
-            }
+            };
             let actor = self.state.actors.get_mut(&player).expect("the player");
             let before = actor.max_hp(&content);
             if !actor.stats.train(stat) {
                 continue;
             }
-            actor.stat_marks[stat] = 0;
+            // A rise pays its price; a pile short of it goes to zero, no debt.
+            actor.stat_marks[stat] = (i64::from(marks) - i64::from(price)).max(0) as i32;
             // A Toughness rise adds a hit point to the maximum: it comes at once.
             let grown = actor.max_hp(&content) - before;
             if grown > 0 {
@@ -270,10 +271,10 @@ impl World {
     }
 }
 
-/// Which check a stat gets: a level's (the levels stream, the plain need) or the daily one at
-/// 06:00 (the training stream, the need times `daily_factor`).
+/// Which check settles the piles: a level's (the levels stream) or the daily one at 06:00 (the
+/// training stream); the rule is the same.
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Check {
+pub(super) enum Check {
     Level,
     Daily,
 }

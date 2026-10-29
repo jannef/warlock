@@ -951,10 +951,15 @@ fn progress_rows(world: &World) -> Vec<String> {
     if !slain.is_empty() {
         rows.push(format!("slain {}", slain.join(", ")));
     }
-    let marks = &world.state().player().stat_marks;
-    let marked: Vec<String> = (marks.iter())
-        .filter(|&(_, n)| n > 0)
-        .map(|(stat, n)| format!("{} {n}", stat.abbrev()))
+    // Each stat's pile with the price in force: the rise's, or the drop's for a negative pile.
+    let player = world.state().player();
+    let rules = world.content().stat_training();
+    let marked: Vec<String> = (player.stat_marks.iter())
+        .filter_map(|(stat, n)| {
+            let stats = &player.stats;
+            let price = rules.price_for(n, stats.score(stat), stats.potential(stat))?;
+            Some(format!("{} {n}/{price}", stat.abbrev()))
+        })
         .collect();
     if !marked.is_empty() {
         rows.push(format!("stat marks {}", marked.join(", ")));

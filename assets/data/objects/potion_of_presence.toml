@@ -18,4 +18,4 @@ kind = "boost"
 status = "imposing"
 severity = 1
 colour = "orange"
-marks = { presence = 5 }
+marks = { presence = 15 }

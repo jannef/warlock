@@ -19,4 +19,4 @@ stat = "dexterity"
 points = 1
 potential = "1d2"
 colour = "gold"
-marks = { dexterity = 20 }
+marks = { dexterity = 60 }

@@ -19,4 +19,4 @@ stat = "presence"
 points = 1
 potential = "1d2"
 colour = "gold"
-marks = { presence = 20 }
+marks = { presence = 60 }

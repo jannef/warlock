@@ -19,4 +19,4 @@ kind = "boost"
 status = "keen"
 severity = 2
 colour = "deep orange"
-marks = { intelligence = 10 }
+marks = { intelligence = 30 }

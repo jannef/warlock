@@ -1,13 +1,14 @@
 //! Stat training in the world (spec §8 "Stats"): uses earn the player marks (through the call
 //! skills share too), long actions done to their end and blows given and taken among them, and
-//! each level checks every stat once on the levels stream: a rise uses up the marks, says so in
-//! words, may pass the potential, and brings Toughness's hit point; nothing without the data.
+//! each level checks every stat once on the levels stream: a rise pays its price and keeps the
+//! surplus, says so in words, may pass the potential (which stays), and brings Toughness's hit
+//! point; nothing without the data.
 
 use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Category, Strike};
-use crate::content::{ContentFiles, Factor, StatUse};
+use crate::content::{ContentFiles, Factor, ODDS_SCALE, StatUse};
 use crate::dump::{self, Layer};
 use crate::skills::Use;
 use crate::stats::{PerStat, Stat, Stats};
@@ -46,11 +47,11 @@ fn said(world: &World) -> Vec<String> {
     world.messages().iter().map(|m| m.display()).collect()
 }
 
-fn marks(world: &World) -> PerStat<u16> {
+fn marks(world: &World) -> PerStat<i32> {
     world.state.player().stat_marks
 }
 
-fn set_marks(world: &mut World, stat: Stat, n: u16) {
+fn set_marks(world: &mut World, stat: Stat, n: i32) {
     world.player_mut().stat_marks[stat] = n;
 }
 
@@ -171,7 +172,7 @@ fn a_long_action_done_to_its_end_trains_willpower_and_a_single_turn_does_not() {
 }
 
 #[test]
-fn a_level_checks_each_stat_and_a_rise_uses_up_its_marks_and_says_so_in_words() {
+fn a_level_checks_each_stat_and_a_rise_pays_its_price_and_says_so_in_words() {
     let mut w = world_with(BUILTIN.clone());
     set_stats(&mut w, 18);
     set_marks(&mut w, Stat::Strength, 60_000);
@@ -180,7 +181,17 @@ fn a_level_checks_each_stat_and_a_rise_uses_up_its_marks_and_says_so_in_words() 
     grant(&mut w, 2);
     let p = w.state.player();
     assert_eq!(p.stats.score(Stat::Strength), 11);
-    assert_eq!(p.stat_marks[Stat::Strength], 0, "a rise uses up the marks");
+    assert_eq!(
+        p.stat_marks[Stat::Strength],
+        60_000 - 120,
+        "a rise pays the price of 10 to 11 and the surplus waits"
+    );
+    assert_eq!(
+        p.stats.score(Stat::Intelligence),
+        10,
+        "a mark is out of play"
+    );
+    assert_eq!(p.stat_marks[Stat::Intelligence], 1);
     for stat in [
         Stat::Dexterity,
         Stat::Toughness,
@@ -203,7 +214,7 @@ fn a_level_checks_each_stat_and_a_rise_uses_up_its_marks_and_says_so_in_words() 
     // The levels stream was drawn from: six times, whatever the marks.
     let mut expected = crate::rng::Rng::levels(w.state.seed);
     for _ in 0..6 {
-        expected.below(2);
+        expected.below(ODDS_SCALE);
     }
     assert_eq!(w.state.levels_rng.as_ref(), Some(&expected));
     assert_eq!(
@@ -214,19 +225,18 @@ fn a_level_checks_each_stat_and_a_rise_uses_up_its_marks_and_says_so_in_words() 
 }
 
 #[test]
-fn a_failed_check_keeps_the_marks_and_several_levels_check_once_each() {
+fn a_pile_out_of_play_keeps_its_marks_and_several_levels_check_once_each() {
     let mut w = world_with(BUILTIN.clone());
     set_stats(&mut w, 18);
-    set_marks(&mut w, Stat::Presence, 1);
+    // 29 marks against a price of 120: under a quarter, so out of play at every level.
+    set_marks(&mut w, Stat::Presence, 29);
     grant(&mut w, 4);
     let p = w.state.player();
-    // 1 mark against a need of 50: a long shot at each of three levels.
-    if p.stats.score(Stat::Presence) == 10 {
-        assert_eq!(p.stat_marks[Stat::Presence], 1);
-    }
+    assert_eq!(p.stats.score(Stat::Presence), 10);
+    assert_eq!(p.stat_marks[Stat::Presence], 29);
     let mut expected = crate::rng::Rng::levels(w.state.seed);
     for _ in 0..18 {
-        expected.below(2);
+        expected.below(ODDS_SCALE);
     }
     assert_eq!(
         w.state.levels_rng.as_ref(),
@@ -236,28 +246,58 @@ fn a_failed_check_keeps_the_marks_and_several_levels_check_once_each() {
 }
 
 #[test]
-fn past_the_potential_the_chance_is_a_quarter_and_a_rise_lifts_the_potential() {
+fn a_short_pile_that_rises_goes_to_zero_and_a_negative_one_is_not_moved() {
+    let mut w = world_with(BUILTIN.clone());
+    set_stats(&mut w, 18);
+    // Half the price: about one check in nine rises, and pays all it has.
+    let mut rose = 0;
+    for _ in 0..200 {
+        set_stats(&mut w, 18);
+        set_marks(&mut w, Stat::Willpower, 60);
+        set_marks(&mut w, Stat::Toughness, -1000);
+        w.check_stats();
+        let p = w.state.player();
+        assert_eq!(p.stats.score(Stat::Toughness), 10, "no drop yet (T3)");
+        assert_eq!(p.stat_marks[Stat::Toughness], -1000);
+        match p.stats.score(Stat::Willpower) {
+            11 => {
+                rose += 1;
+                assert_eq!(p.stat_marks[Stat::Willpower], 0, "no debt");
+            }
+            _ => assert_eq!(p.stat_marks[Stat::Willpower], 60),
+        }
+    }
+    assert!((8..40).contains(&rose), "about 11 %: {rose}");
+}
+
+#[test]
+fn past_the_potential_the_price_ramps_and_a_rise_leaves_the_potential() {
     let mut w = world_with(BUILTIN.clone());
     let rules = w.content().stat_training();
-    assert_eq!(rules.odds(20, 14, 14), (20, 4 * (20 + 62)));
-    // With marks beyond counting, a stat below its potential rises nearly always, one at it
-    // about a quarter of the time.
+    assert_eq!(rules.price(10, 18), 120);
+    assert_eq!(
+        rules.price(10, 10),
+        180,
+        "the first point past nature: half again"
+    );
+    // 180 marks: even odds at the potential, three in four below it.
     let (mut below, mut at) = (0, 0);
     for _ in 0..400 {
         for (potential, risen) in [(18, &mut below), (10, &mut at)] {
             set_stats(&mut w, potential);
-            set_marks(&mut w, Stat::Dexterity, 60_000);
+            set_marks(&mut w, Stat::Dexterity, 180);
             w.check_stats();
             let p = w.state.player();
             if p.stats.score(Stat::Dexterity) == 11 {
                 *risen += 1;
-                assert_eq!(p.stats.potential(Stat::Dexterity), potential.max(11));
-                assert_eq!(p.stat_marks[Stat::Dexterity], 0);
+                assert_eq!(p.stats.potential(Stat::Dexterity), potential);
+                let left = if potential == 18 { 60 } else { 0 };
+                assert_eq!(p.stat_marks[Stat::Dexterity], left);
             }
         }
     }
-    assert!(below > 390, "{below}");
-    assert!((70..130).contains(&at), "{at}");
+    assert!((270..345).contains(&below), "about 77 %: {below}");
+    assert!((160..240).contains(&at), "about 50 %: {at}");
     assert!(w.news.contains(&"You feel quicker.".to_string()));
 }
 
@@ -295,6 +335,7 @@ fn without_training_data_nothing_trains_and_a_level_draws_nothing() {
 #[test]
 fn marks_are_saved_hashed_and_shown_only_in_the_dev_dump() {
     let mut w = world_with(SURE.clone());
+    set_stats(&mut w, 18);
     let plain = serde_json::to_string(&w.state).expect("json");
     assert!(!plain.contains("stat_marks"), "left out while none");
     let hash = w.state_hash();
@@ -305,7 +346,14 @@ fn marks_are_saved_hashed_and_shown_only_in_the_dev_dump() {
     let back: WorldState = serde_json::from_str(&json).expect("state");
     assert_eq!(back.player().stat_marks, marks(&w));
     let rows = dump::ascii(&w, &[Layer::Progress]);
-    assert!(rows.contains("stat marks St 1, To 1"), "{rows}");
+    assert!(rows.contains("stat marks St 1/120, To 1/120"), "{rows}");
+    // A negative pile is saved as it is, and shown against the drop's price.
+    set_marks(&mut w, Stat::Toughness, -30);
+    let json = serde_json::to_string(&w.state).expect("json");
+    let back: WorldState = serde_json::from_str(&json).expect("state");
+    assert_eq!(back.player().stat_marks[Stat::Toughness], -30);
+    let rows = dump::ascii(&w, &[Layer::Progress]);
+    assert!(rows.contains("stat marks St 1/120, To -30/55"), "{rows}");
     let stats = dump::ascii(&w, &[Layer::Stats]);
     assert!(!stats.contains("mark"), "{stats}");
 }
@@ -380,7 +428,8 @@ fn a_critical_up_close_a_shield_block_and_a_parry_train_their_stats() {
 /// The built-in content with one training rule: a kill up close of a foe of the player's level
 /// or above, a sure Toughness mark.
 static KILLS: LazyLock<Arc<Content>> = LazyLock::new(|| {
-    let text = "[training]\nneed_base = 20\nneed_per_point = 3\nover_potential_divisor = 4\ndaily_factor = 3\n\n\
+    let text = "[training]\nprice_base = 20\nprice_per_point = 10\nramp_divisor = 4\nodds_power = 3\n\
+                quarter = 4\ndrop_share = 2\n\n\
                 [[training.use]]\nstat = \"toughness\"\non = \"killed\"\nchance = 100\n";
     let mut files = ContentFiles::builtin();
     files.insert("data/stats.toml", text);
@@ -451,9 +500,9 @@ fn a_potion_gives_its_marks_at_once_in_the_stat_it_names_without_a_draw() {
     w.train_stat_times(StatUse::Drank, None, 5);
     assert_eq!(marks(&w), m);
     // Marks saturate.
-    set_marks(&mut w, Stat::Strength, u16::MAX - 2);
+    set_marks(&mut w, Stat::Strength, i32::MAX - 2);
     w.train_stat_times(StatUse::Drank, Some(Stat::Strength), 20);
-    assert_eq!(marks(&w)[Stat::Strength], u16::MAX);
+    assert_eq!(marks(&w)[Stat::Strength], i32::MAX);
 }
 
 #[test]
@@ -461,7 +510,7 @@ fn a_count_below_a_sure_chance_draws_once_a_mark() {
     let mut w = world_with(BUILTIN.clone());
     let mut expected = w.state.training.clone();
     w.train_stat_times(StatUse::Blow, None, 200);
-    let won = (0..200).filter(|_| expected.chance(15)).count() as u16;
+    let won = (0..200).filter(|_| expected.chance(15)).count() as i32;
     assert_eq!(w.state.training, expected, "a draw a mark");
     assert_eq!(marks(&w)[Stat::Strength], won);
     assert!((10..60).contains(&won), "about 15 % of 200: {won}");
@@ -470,9 +519,9 @@ fn a_count_below_a_sure_chance_draws_once_a_mark() {
 /// The built-in content with one training rule that nothing in these tests reaches: the daily
 /// checks are the only draws of the training stream.
 static DAILY: LazyLock<Arc<Content>> = LazyLock::new(|| {
-    let text = "[training]\nneed_base = 20\nneed_per_point = 3\nover_potential_divisor = 4\n\
-                daily_factor = 3\n\n[[training.use]]\nstat = \"strength\"\non = \"quest\"\n\
-                chance = 50\n";
+    let text = "[training]\nprice_base = 20\nprice_per_point = 10\nramp_divisor = 4\n\
+                odds_power = 3\nquarter = 4\ndrop_share = 2\n\n[[training.use]]\n\
+                stat = \"strength\"\non = \"quest\"\nchance = 50\n";
     let mut files = ContentFiles::builtin();
     files.insert("data/stats.toml", text);
     Arc::new(Content::load(&files).expect("content"))
@@ -500,19 +549,20 @@ fn live_for(w: &mut World, seconds: u64, piece: u64) {
 }
 
 /// What one daily check does to `w` (its training stream, then the stats and marks), worked
-/// out apart: the stats that rise. `factor` is the need's.
-fn expected_daily(w: &mut World, factor: u16) -> Vec<Stat> {
+/// out apart: the stats that rise.
+fn expected_daily(w: &mut World) -> Vec<Stat> {
     let rules = w.content.stat_training().clone();
     let mut risen = Vec::new();
     for stat in Stat::ALL {
         let actor = w.player_mut();
         let (score, potential) = (actor.stats.score(stat), actor.stats.potential(stat));
         let marks = actor.stat_marks[stat];
-        let (marks, out_of) = rules.odds_by(marks, score, potential, factor);
-        if w.state.training.below(out_of) < marks {
+        let price = rules.price_for(marks, score, potential).unwrap_or(1);
+        let odds = rules.odds(marks.unsigned_abs(), price);
+        if w.state.training.below(ODDS_SCALE) < odds && marks > 0 {
             let actor = w.player_mut();
             actor.stats.train(stat);
-            actor.stat_marks[stat] = 0;
+            actor.stat_marks[stat] = (marks - price as i32).max(0);
             risen.push(stat);
         }
     }
@@ -543,7 +593,7 @@ fn the_daily_check_comes_at_six_and_only_then() {
     let mut w = daily_world();
     set_stats(&mut w, 20);
     for stat in Stat::ALL {
-        set_marks(&mut w, stat, 200);
+        set_marks(&mut w, stat, 120);
     }
     let first = w.state.next_stat_check.expect("scheduled at the start");
     assert_eq!(first, w.state.time.next_at(DAWN));
@@ -551,9 +601,9 @@ fn the_daily_check_comes_at_six_and_only_then() {
     let training = w.state.training.clone();
     live_for(&mut w, to - 1, to);
     assert_eq!(w.state.training, training, "nothing drawn before 06:00");
-    assert_eq!(marks(&w), PerStat::splat(200));
+    assert_eq!(marks(&w), PerStat::splat(120));
     let mut expected = w.clone();
-    let risen = expected_daily(&mut expected, 3);
+    let risen = expected_daily(&mut expected);
     live_for(&mut w, 1, 1);
     assert_eq!(
         w.state.training, expected.state.training,
@@ -563,7 +613,7 @@ fn the_daily_check_comes_at_six_and_only_then() {
     assert_eq!(
         marks(&w),
         marks(&expected),
-        "a rise uses up its marks, a failure keeps them"
+        "a rise pays its price, a failure keeps the marks"
     );
     assert!(
         !risen.is_empty() && risen.len() < 6,
@@ -596,7 +646,7 @@ fn a_week_makes_seven_checks_in_order_however_the_time_is_cut() {
     live_for(&mut cut, week, 3 * 3600 + 17 * 60 + 5);
     let mut risen = 0;
     for _ in 0..7 {
-        risen += expected_daily(&mut expected, 3).len();
+        risen += expected_daily(&mut expected).len();
     }
     assert!(risen > 0);
     for w in [&whole, &cut] {
@@ -608,44 +658,47 @@ fn a_week_makes_seven_checks_in_order_however_the_time_is_cut() {
 }
 
 #[test]
-fn the_daily_factor_and_the_potential_set_the_odds_and_hard_training_lowers_it() {
-    // At the potential the chance is divided as at a level.
+fn the_daily_check_is_the_levels_rule_and_hard_training_speeds_the_marks() {
+    // At the potential the price ramps as at a level.
     let mut w = daily_world();
     set_stats(&mut w, 10);
     for stat in Stat::ALL {
-        set_marks(&mut w, stat, 600);
+        set_marks(&mut w, stat, 180);
     }
     let mut expected = w.clone();
     let to = seconds_to_check(&w);
     live_for(&mut w, to, to);
-    expected_daily(&mut expected, 3);
-    assert_eq!(w.state.player().stats, expected.state.player().stats);
-    assert_eq!(w.state.training, expected.state.training);
-    // Hard training: the need twice a level's, not three times.
-    let mut w = daily_world();
-    w.player_mut().talents.take("hard_training", None);
-    let mods = w.state.player().talent_mods(&w.content);
-    assert_eq!(mods.daily_factor, Some(2));
-    set_stats(&mut w, 20);
-    for stat in Stat::ALL {
-        set_marks(&mut w, stat, 100);
-    }
-    let mut expected = w.clone();
-    let to = seconds_to_check(&w);
-    live_for(&mut w, to, to);
-    expected_daily(&mut expected, 2);
+    expected_daily(&mut expected);
     assert_eq!(w.state.player().stats, expected.state.player().stats);
     assert_eq!(marks(&w), marks(&expected));
+    assert_eq!(w.state.training, expected.state.training);
+    // Hard training: every use's chance half again; a sure one stays sure and draws nothing.
+    let mut w = world_with(BUILTIN.clone());
+    w.player_mut().talents.take("hard_training", None);
+    let mods = w.state.player().talent_mods(&w.content);
+    assert_eq!(mods.train_percent, 50);
+    let mut expected = w.state.training.clone();
+    w.train_stat_times(StatUse::Blow, None, 200);
+    let won = (0..200).filter(|_| expected.chance(22)).count() as i32;
+    assert_eq!(
+        w.state.training, expected,
+        "a draw a mark, as without the talent"
+    );
+    assert_eq!(marks(&w)[Stat::Strength], won, "15 % half again: 22 %");
+    let training = w.state.training.clone();
+    w.train_stat(StatUse::Identified);
+    assert_eq!(w.state.training, training);
+    assert_eq!(marks(&w)[Stat::Intelligence], 1);
 }
 
 #[test]
 fn a_rise_at_six_stops_a_rest() {
     let mut w = daily_world();
     set_stats(&mut w, 20);
-    set_marks(&mut w, Stat::Strength, u16::MAX);
+    set_marks(&mut w, Stat::Strength, 60_000);
     let next = w.state.next_stat_check.expect("scheduled");
     let mut expected = w.clone();
-    let risen = expected_daily(&mut expected, 3);
+    let risen = expected_daily(&mut expected);
     assert_eq!(risen, [Stat::Strength], "near certain");
     run(&mut w, "rest:24h");
     let log = said(&w);
@@ -702,10 +755,10 @@ fn a_dev_skip_passes_no_check() {
 fn quick_study_of_the_body_doubles_a_potions_marks() {
     let mut w = world_with(BUILTIN.clone());
     w.player_mut().talents.take("quick_study_of_the_body", None);
-    w.train_stat_times(StatUse::Drank, Some(Stat::Strength), 5);
-    w.train_stat_times(StatUse::Elixir, Some(Stat::Presence), 20);
+    w.train_stat_times(StatUse::Drank, Some(Stat::Strength), 15);
+    w.train_stat_times(StatUse::Elixir, Some(Stat::Presence), 60);
     let m = marks(&w);
-    assert_eq!((m[Stat::Strength], m[Stat::Presence]), (10, 40));
+    assert_eq!((m[Stat::Strength], m[Stat::Presence]), (30, 120));
     // Other uses are not potions.
     let mut w = world_with(SURE.clone());
     w.player_mut().talents.take("quick_study_of_the_body", None);

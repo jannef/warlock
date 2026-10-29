@@ -151,11 +151,11 @@ fn a_potion_gives_its_marks_by_count() {
     let mut w = world("[\"potion_of_healing\", \"potion_of_mana\", \"potion_of_greater_healing\"]");
     run(&mut w, "eat:a");
     let marks = |w: &World| w.state.player().stat_marks;
-    assert_eq!(marks(&w)[crate::stats::Stat::Toughness], 5);
-    run(&mut w, "eat:a");
-    assert_eq!(marks(&w)[crate::stats::Stat::Willpower], 5);
-    run(&mut w, "eat:a");
     assert_eq!(marks(&w)[crate::stats::Stat::Toughness], 15);
+    run(&mut w, "eat:a");
+    assert_eq!(marks(&w)[crate::stats::Stat::Willpower], 15);
+    run(&mut w, "eat:a");
+    assert_eq!(marks(&w)[crate::stats::Stat::Toughness], 45);
 }
 
 #[test]

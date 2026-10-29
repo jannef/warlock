@@ -17,4 +17,4 @@ frequency = 30
 kind = "mana"
 dice = "3d8"
 colour = "blue"
-marks = { willpower = 5 }
+marks = { willpower = 15 }

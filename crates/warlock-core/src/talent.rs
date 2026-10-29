@@ -359,10 +359,10 @@ pub struct TalentMods {
     pub no_bloating: bool,
     /// Percent more of a fresh corpse's chances to raise its stats.
     pub corpse_stats_percent: i32,
-    /// The daily stat check's need factor, if a talent lowers it (the least counts).
-    pub daily_factor: Option<u16>,
     /// Percent more of the marks a potion or an elixir gives.
     pub potion_marks_percent: i32,
+    /// Percent more of every stat training use's chance.
+    pub train_percent: i32,
     /// Percent more experience.
     pub xp_percent: i32,
     /// More skill rolls every level.
@@ -1320,10 +1320,8 @@ impl TalentMods {
             TalentEffect::NoExertion => self.no_exertion = true,
             TalentEffect::NoBloating => self.no_bloating = true,
             TalentEffect::CorpseStatsPercent { value } => self.corpse_stats_percent += value,
-            TalentEffect::DailyFactor { value } => {
-                self.daily_factor = Some(self.daily_factor.map_or(value, |f| f.min(value)));
-            }
             TalentEffect::PotionMarksPercent { value } => self.potion_marks_percent += value,
+            TalentEffect::TrainPercent { value } => self.train_percent += value,
             TalentEffect::XpPercent { value } => self.xp_percent += value,
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
