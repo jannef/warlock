@@ -112,7 +112,9 @@ impl World {
             .saturating_add(talents.check(hold.check));
         // Know your enemy (Knowledge, `knowledge.rs`): the holder's.
         let modifier = modifier.saturating_add(self.resisting(player, effect.by));
-        if check(&mut self.state.rng, modifier, difficulty) {
+        let free = check(&mut self.state.rng, modifier, difficulty);
+        self.train_stat(crate::content::StatUse::Struggled);
+        if free {
             self.player_mut().effects.remove(status);
             self.say(match &name {
                 Some(name) => format!("You break free of {name}."),

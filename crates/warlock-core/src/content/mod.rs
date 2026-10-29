@@ -266,7 +266,7 @@ pub use spell_def::{
 };
 pub use spell_scales::{MAX_SCALE_WEIGHT, SpellScales, Weights};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
-pub use stat_training::{ODDS_SCALE, StatRule, StatTraining, StatUse};
+pub use stat_training::{HAUL_GRAMS, ODDS_SCALE, StatRule, StatTraining, StatUse};
 pub use status::{
     Affliction, COST_PERCENT, CombatBonus, Drain, Healing, MAX_DRAIN_POINTS, MAX_REGEN,
     MAX_SEVERITY, OnHit, Penalty, Stacking, StatusDef, StatusId, Wound,

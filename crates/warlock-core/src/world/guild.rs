@@ -72,6 +72,7 @@ impl World {
                     crate::content::article(title),
                     guild.name,
                 ));
+                self.train_stat(crate::content::StatUse::Promoted);
             }
         }
     }
