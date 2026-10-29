@@ -18,7 +18,14 @@ corpses), races' `hunger` percent (`World::hunger_percent`: then the talents' si
 the shelf life is whole hours or days, `"8h"`, `"30d"`) and `cures` (a remedy: the means it applies with
 `World::cure` as it is eaten, `World::remedy`, checked against the statuses' and diseases'
 `cured_by` at load; the angelica root cures diseases), creatures' `corpse` (default true) and `on_eat`
-(`OnEat`), scenarios' `carry` (a starting pack on top of the character's kit, docs/dev/character-creation.md). Corpses are objects made at load
+(`OnEat`: `message`, `vomit`, `train` and `widen` per stat, `heal`, `harm`, `satiation`; the
+old `stat` refused by name), hunger.toml's `[corpses.by_tag]` (`CorpseGifts` per creature tag:
+`train` 1 to 200 marks, `widen` 1 to `MAX_TAG_WIDEN` (5) %, a `widen` needing a `train`; a tag
+no creature carries refused), resolved into each corpse-leaving creature's `on_eat` by
+`Content::resolve_corpse_gifts` (from `load_hunger`; `OnEat::resolve`: per stat the largest of
+its tags', `Corpses::gifts_of`, then its own per stat, zeros dropped; `MAX_TRAIN` 200,
+`MAX_WIDEN` 20), so `eat.rs` and the wiki's `corpse-effects.md` read one resolved gift (the
+undead's files switch their caster, troll, and marsh-thing gifts off with zeros), scenarios' `carry` (a starting pack on top of the character's kit, docs/dev/character-creation.md). Corpses are objects made at load
 (`Content::load_hunger`, after the file's objects, id `<creature>_corpse`, `ObjectDef::corpse`
 names the creature, `Content::corpse_of`), feeding and keeping by their creature's size, and
 level files cannot place corpses. **Rot** (#195): every food stack carries `Stack::died` (when
@@ -60,7 +67,11 @@ should touch. Eating (`world/eat.rs`): `Action::Eat(Meal::Pack|Floor)` (a potion
 `World::drink_potion` instead, before any hunger check: docs/dev/potions.md) → `Spent::Meal(Dish)` →
 `dine` (turns of `eat` through `World::keep_at`, stopping like a rest; the food stays until the
 last turn) → `finish` (take one, with its age; then rotten food of any kind (`eat_rotten`:
-`[rotten]`, sickness, `expose_to(player, "rotten_food")`) / fresh corpse `on_eat` / plain food,
+`[rotten]`, sickness, `expose_to(player, "rotten_food")`) / fresh corpse `on_eat` (`eat_fresh`: message, vomit, then `corpse_gifts`: per stat in
+display order the `train` marks added to `Actor::stat_marks` (sure, no draw; "Something of its
+strength passes into you." at `LOUD_MARKS`, 30, or more) and a gameplay draw per `widen` stat
+for `Stats::widen(stat, 1)` ("You feel you could grow stronger yet." when it rose), both scaled
+by `corpse_stats_percent`; then heal, harm, feed; tests in `world/eat_tests.rs`) / plain food,
 `feed` with overeating, `vomit`, hunger and burden news). Saved and hashed (`Actor::satiation`,
 `Stack::died`, `Death::cause`).
 `creature_dies` calls `leave_corpse` (corpse on top); `perceive` calls `rot_away` (the current

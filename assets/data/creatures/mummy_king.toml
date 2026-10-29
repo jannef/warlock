@@ -28,7 +28,7 @@ base_hp = 112
 skills = { concentration = 178, spellcraft = 183 }
 natural = { defence = 4, protection = 5, name = "wrappings" }
 resist = { fire = -50, poison = 100 }
-on_eat = { message = "Dust, resin, and the gold of a vanished kingdom.", vomit = 80, harm = "1d4" }
+on_eat = { message = "Dust, resin, and the gold of a vanished kingdom.", vomit = 80, harm = "1d4", train = { intelligence = 0, willpower = 0 } }
 blood = "#5a4a30"
 [creature.attack]
 damage = "3d12"

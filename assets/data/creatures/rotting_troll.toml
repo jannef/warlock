@@ -21,7 +21,7 @@ weight = 250000
 stats = { strength = 23, dexterity = 12, toughness = 24, intelligence = 2, willpower = 22, presence = 2 }
 base_hp = 68
 resist = { fire = -50, poison = 100 }
-on_eat = { message = "Troll, and rotten through.", vomit = 90, harm = "1d6" }
+on_eat = { message = "Troll, and rotten through.", vomit = 90, harm = "1d6", train = { toughness = 0 }, widen = { toughness = 0 } }
 blood = "#3a3a20"
 [creature.attack]
 damage = "3d8"

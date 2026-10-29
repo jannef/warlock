@@ -164,8 +164,9 @@ pub use chest::{ChestBand, ChestGold, ChestLoot, ChestRules};
 pub(crate) use class::strip_tables as strip_class_tables;
 pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
 pub use creature::{
-    Budge, Combat, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal, NORMAL_SPEED,
-    NaturalAttack, OnEat, SPEEDS, is_proper, the, the_start,
+    Budge, Combat, CorpseGifts, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal,
+    MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack, OnEat, SPEEDS, is_proper,
+    the, the_start,
 };
 pub use creature_rarity::{COMMON, CreatureRarity, FACTOR};
 pub use damage_type::{DamageTypeDef, DamageTypeId, MAX_DAMAGE_TYPES};
@@ -2135,6 +2136,7 @@ impl Content {
         let size_index = |id: &str| self.size_index(id);
         let def = HungerDef::parse(path, text, self.sizes.len(), size_index)?;
         if let Some(corpses) = &def.corpses {
+            self.resolve_corpse_gifts(corpses).map_err(err)?;
             let material =
                 (self.material_ids.get(&corpses.material).copied()).ok_or_else(|| {
                     err(format!(
@@ -2191,6 +2193,29 @@ impl Content {
             _ => {}
         }
         self.hunger = Some(def);
+        Ok(())
+    }
+
+    /// Lays `[corpses.by_tag]` under every corpse-leaving creature's `on_eat` (`OnEat::resolve`),
+    /// so the rules and the wiki read one resolved gift per stat; a tag entry no creature carries
+    /// is refused (a typo).
+    fn resolve_corpse_gifts(&mut self, corpses: &hunger::Corpses) -> Result<(), String> {
+        if let Some(tag) =
+            (corpses.by_tag.keys()).find(|t| !self.creatures.iter().any(|c| c.tags.contains(t)))
+        {
+            return Err(format!("corpses: by_tag `{tag}` is no creature's tag"));
+        }
+        for creature in &mut self.creatures {
+            if creature.id == "player" || !creature.corpse {
+                continue;
+            }
+            let tags = corpses.gifts_of(&creature.tags);
+            let mut on_eat = creature.on_eat.take().unwrap_or_default();
+            on_eat
+                .resolve(&tags)
+                .map_err(|m| format!("creature `{}`: {m}", creature.id))?;
+            creature.on_eat = (!on_eat.is_empty()).then_some(on_eat);
+        }
         Ok(())
     }
 

@@ -357,7 +357,8 @@ pub enum TalentEffect {
     NoExertion,
     /// A meal never leaves it Bloated: what does not fit below Bloated is lost (Gourmand).
     NoBloating,
-    /// A fresh corpse's chances to raise its stats, this percent more (Gourmand).
+    /// A fresh corpse's stat training marks and chances to widen a potential, this percent more
+    /// (Gourmand).
     CorpseStatsPercent { value: i32 },
     /// The training marks a potion or an elixir gives, this percent more (Quick study of the
     /// body).

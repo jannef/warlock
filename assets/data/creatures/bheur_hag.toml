@@ -29,7 +29,7 @@ base_hp = 84
 skills = { concentration = 136, spellcraft = 141 }
 natural = { defence = 3, protection = 2, name = "frost-hard skin" }
 resist = { cold = 100, fire = -25 }
-on_eat = { message = "Cold as a grave in winter.", vomit = 60, harm = "1d4", stat = { willpower = 5 } }
+on_eat = { message = "Cold as a grave in winter.", vomit = 60, harm = "1d4" }
 blood = "#4a5a6a"
 [creature.attack]
 damage = "3d10"

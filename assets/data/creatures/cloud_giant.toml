@@ -23,7 +23,7 @@ stats = { strength = 32, dexterity = 18, toughness = 33, intelligence = 16, will
 base_hp = 160
 natural = { defence = 3, protection = 3, name = "hide" }
 weapon_skills = { thrown = 1 }
-on_eat = { message = "Pale, and oddly light.", vomit = 30, stat = { strength = 3 } }
+on_eat = { message = "Pale, and oddly light.", vomit = 30 }
 [creature.attack]
 damage = "3d12"
 damage_type = ["bludgeoning", "piercing"]

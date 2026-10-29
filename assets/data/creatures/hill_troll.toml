@@ -23,7 +23,7 @@ base_hp = 60
 natural = { defence = 1, protection = 2, name = "hide" }
 weapon_skills = { maces = 2 }
 resist = { fire = -50 }
-on_eat = { message = "Tough as boot leather, and it smells of peat.", vomit = 50, stat = { toughness = 5 } }
+on_eat = { message = "Tough as boot leather, and it smells of peat.", vomit = 50 }
 blood = "#2a4a20"
 [creature.attack]
 damage = "3d8"

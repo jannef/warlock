@@ -200,10 +200,13 @@
 #             color) weighing what it does, feeding by its size (hunger.toml)
 #   on_eat    what eating its fresh corpse does besides feeding, in this order: { message = "..."
 #             (said once eaten), vomit = 25 (percent chance it comes back up and feeds nothing),
-#             stat = { toughness = 5 } (percent chance per stat to raise it by 1, up to its
-#             hidden potential), heal = "1d4" (hit points), harm = "1d2" (degrees of sickness:
-#             hunger.toml's `sickness`, poison), satiation = 500 (nutrition beyond its size's;
-#             less if negative) }. A rotten corpse does none of it
+#             train = { toughness = 30 } (sure stat training marks per stat, 0 to 200),
+#             widen = { toughness = 5 } (percent chance per stat that the hidden potential rises
+#             by 1, 0 to 20: rare), heal = "1d4" (hit points), harm = "1d2" (degrees of
+#             sickness: hunger.toml's `sickness`, poison), satiation = 500 (nutrition beyond its
+#             size's; less if negative) }. `train` and `widen` lay over its tags' defaults
+#             (hunger.toml's `[corpses.by_tag]`) per stat; 0 switches a tag's gift off. A
+#             rotten corpse does none of it
 #
 # Blood (spec §8 "Blood"; presentation only, no rule reads it): blood, the colour of the stains it
 # leaves when hurt badly or killed ("#rrggbb"; default dark red, "#6e0e0c"), or "none" for a
@@ -228,7 +231,7 @@
 #
 # The undead (the roster, #383; content::undead_roster_tests checks the numbers): faction
 # "undead", tags ["undead", ...] (with "skeleton" or "spirit" where they are one), alignment "evil", vision "darkvision", resist poison 100; they do not train and have
-# no on_eat stat gains. xp = 5 × level + 10. Stats, base_hp, dice, and speed come from the level
+# no on_eat stat gifts (a tag's, caster or troll, switched off with train = { ... = 0 }). xp = 5 × level + 10. Stats, base_hp, dice, and speed come from the level
 # and a role (shambler, brute, standard, quick, spirit, caster, small; #383's tables), within
 # ±35 % of max HP and dice average. Bone types resist piercing 50 and bludgeoning −50; spirits
 # resist slashing, piercing, bludgeoning, and cold 50, have an "insubstantial form" (defence
@@ -333,6 +336,6 @@
 # base: St 13 + 0.4 L, Dx 8 + 0.25 L, To 16 + 0.4 L (4 over the undead's: a troll heals by its
 # Toughness, so it heals fast), within ±35 % of max HP and dice average. Fire hurts every troll
 # (resist fire −50, the stone troll −25) but the fire troll. A hide of Defence 1 and Protection 2
-# or more (the body rule's when higher; the chieftain, in armour, none); a corpse with on_eat vomit 50 and a 5 % chance of Toughness. Glyph T, each in a colour
+# or more (the body rule's when higher; the chieftain, in armour, none); a corpse with on_eat vomit 50 (its gifts, 60 Toughness marks and a 5 % chance of a Toughness potential point, are the troll tag's, hunger.toml). Glyph T, each in a colour
 # of its own. Only the troll and the hill troll live in a population
 # (Fyrdelf); the rest wait for deeper places.

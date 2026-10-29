@@ -22,7 +22,7 @@ stats = { strength = 25, dexterity = 11, toughness = 23, intelligence = 6, willp
 base_hp = 60
 weapon_skills = { maces = 3 }
 attack = { damage = "3d6", damage_type = "bludgeoning", name = "fist", verb = "pounds" }
-on_eat = { message = "Stringy, and it smells of the ogre.", vomit = 30, stat = { strength = 3 } }
+on_eat = { message = "Stringy, and it smells of the ogre.", vomit = 30, train = { strength = 40 }, widen = { strength = 2 } }
 racial_weapon = "maul"
 [[creature.gear]]
 chance = 90

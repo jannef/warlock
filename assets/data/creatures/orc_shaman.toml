@@ -23,7 +23,7 @@ weight = 70000
 stats = { strength = 13, dexterity = 12, toughness = 16, intelligence = 15, willpower = 17, presence = 8 }
 base_hp = 20
 skills = { concentration = 40, spellcraft = 45 }
-on_eat = { message = "It tastes rank, and of smoke and bitter herbs.", vomit = 30, stat = { willpower = 3 } }
+on_eat = { message = "It tastes rank, and of smoke and bitter herbs.", vomit = 30, train = { willpower = 18 } }
 weapon_skills = { staves = 2 }
 racial_weapon = "quarterstaff"
 

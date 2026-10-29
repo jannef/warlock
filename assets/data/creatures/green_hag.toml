@@ -26,7 +26,7 @@ stats = { strength = 15, dexterity = 14, toughness = 19, intelligence = 21, will
 base_hp = 36
 skills = { concentration = 64, spellcraft = 69 }
 resist = { poison = 25 }
-on_eat = { message = "Bitter as swamp weed.", vomit = 60, harm = "1d4", stat = { intelligence = 5 } }
+on_eat = { message = "Bitter as swamp weed.", vomit = 60, harm = "1d4", train = { intelligence = 30 } }
 blood = "#2a4a30"
 [creature.attack]
 damage = "2d8"

@@ -22,7 +22,7 @@ stats = { strength = 22, dexterity = 10, toughness = 26, intelligence = 5, willp
 base_hp = 40
 natural = { defence = 1, protection = 2, name = "hide" }
 resist = { fire = -50 }
-on_eat = { message = "It twitches as you chew.", vomit = 50, stat = { toughness = 5 } }
+on_eat = { message = "It twitches as you chew.", vomit = 50 }
 blood = "#2a5a2a"
 [creature.attack]
 damage = "2d6"
