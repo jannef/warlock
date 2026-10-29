@@ -155,6 +155,11 @@ impl World {
         let blows = (actor.free_blows)
             .either(actor.talent_mods(&self.content).free_blows)
             .either(self.ability_switches(actor).free_blows);
+        // Lurking, a hostile stepping up beside it takes its blow (`thief.rs`).
+        let blows = FreeBlows {
+            gatekeeper: blows.gatekeeper || self.lurking(actor),
+            ..blows
+        };
         // Surprised, it strikes nothing out of its turn (`surprise.rs`).
         if self.surprised(actor.id) {
             return FreeBlows {
@@ -229,7 +234,9 @@ impl World {
             .collect();
         for keeper in keepers {
             if let Some(blow) = self.second_blow(keeper, id, Cue::Approaches, events) {
+                self.lie_in_wait(keeper, id);
                 let struck = self.strike_free(blow, events);
+                self.technique.lurk = None;
                 // Brace of steel: a braced foe the blow hits staggers.
                 let hit = struck.is_some_and(|b| b.strike.is_hit());
                 if let Some((_, status)) = self.brace_of(keeper).filter(|_| hit) {

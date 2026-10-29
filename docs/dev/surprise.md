@@ -43,6 +43,14 @@ current with the code, as CLAUDE.md says.
     its sufferer pays it; Surprised's extra eased by `TalentMods::surprise_ease` (Cool head) and
     the Initiative skill's `surprise_ease`, together capped at all of it, every other status's
     as its data says.
+- `world/slip.rs`, slipping past (#683): `looks_at` (the look of `ai.rs::nearest_hostile_in_sight`,
+  the one moment: the contest's four gameplay draws for a creature hunting no one that would
+  see the player by darkvision alone, `sight::sees_by` and `sight::lit_for`; a lit look ends a
+  slip), `World::slipped_past` (`Mind::missed` within `lasts_turns`), `end_slip` (clears it and,
+  if the creature's eyes reach the player, sets `last_seen`: it sees them at once, no new roll),
+  `slip_lapses`, `attacked_near`. `SurpriseRules::slip_turns` (`[slip]`; `None` when off) and
+  Stealth's `slip` benefit (`Effect::Slip`, read here only); the creature's side is its Willpower
+  and its skills' `spot`.
 - `world/ambush.rs`, the sneak attack (#682): `World::sneak_dice(id)` (the Sneak attack skill's
   `sneak_dice` d6s `and` the talents' `ambush`), `World::sneaks(attacker, target, unaware,
   missile)` (dice, unaware or Surprised, vitals for the attacker, a missile within
@@ -51,6 +59,10 @@ current with the code, as CLAUDE.md says.
   `Use::SneakAttack`, training stream), `has_vitals_for` and `vitals` (the struck side's
   `no_criticals` with the attacker's Anatomist tags), `no_vital_spot` (Vital strike's and the
   finisher's "It has no vital spot.", a `news` line after the blow's).
+- `world/thief.rs`, the thief's actives and passive on surprise (#684): Lurk (`lurking` in
+  `status.toml`, after Surprised: `per_action`, `max = 1`, `refresh`, "You wait in ambush.",
+  no `end`), Low blow (`Technique::sneak`), Vanishing act (`sneak_kill_status`). The hooks are
+  the rows marked #684 below.
 - `combat::Target::no_criticals`: `strike_with` makes a threat a plain hit with no confirmation
   draw, and a sure critical a plain hit.
 - `combat::Target::without(categories)`: the strip of positive Defence bonuses, shared with
@@ -63,14 +75,23 @@ current with the code, as CLAUDE.md says.
 | `fight.rs::resolve` | `unaware` asked of every attack with a profile (no draw); `sneaks` (`ambush.rs`) decides the sneak dice on unaware **or Surprised**, a missile within reach, a target with vitals; `startle` before the mimic is found out and before the strike's draws; `vitals` and `flat_footed` after `target_against` |
 | `fight.rs::target_of`, `Actor::target` | `no_criticals` from `Content::has_vitals` |
 | `cast.rs::spell_attack` | a spell that rolls to hit (an own cast, a scroll's, a wand's, a reflected one): `unaware`, `sneaks` (a missile unless a touch), `startle`, `vitals`, `flat_footed`, `sneak_threat` before its roll; `ambushed` after, its dice on top of the spell's cap |
+| `fight.rs::resolve`, `cast.rs::spell_attack` | `sneak_trigger` (`ambush.rs`) after `resolve_triggers` (`spell_practised`): a sneak attack that hit (its dice landed) fires the `sneak_attack` weapon abilities of the attack's skills (#685; docs/dev/weapon-abilities.md) |
 | `weapon_active.rs::active_blow`, `openings.rs::finisher` | `no_vital_spot` after a sure critical's blow |
 | `trap.rs::step_onto_trap` | a hidden trap (any trap for a creature, an unknown one for the player) that sprang (`World::sprung` moved) `startle`s its victim, after the trap's own draws; nobody beside |
 | `free_blow.rs::free_blows_of` | Surprised: no riposte, opportunist, gatekeeper (its own attack's cleave, flurry, and second blow stay) |
 | `weapon_ability.rs::approached` | a Surprised keeper fires no Point-blank shot |
 | `schedule.rs::slowed` | `Effects::slow_with(price, status_cost)`: the dear action |
 | `weapon_ability.rs::spend_actions` | a `per_action` status that ends pushes `Event::Status { began: false }` (its `end` line: "You recover your wits.", Staggered's and Pinned's too) |
+| `fight.rs::resolve` (#684) | `lurked` (a lurk's blow on a creature not hunting the player is unaware: `startle`, flat-footed, dice) and `low_blow_taken` (a low blow passes `sneaks` as unaware: dice only); `vanishing_act` beside `Build::SneakKill` |
+| `free_blow.rs::free_blows_of`, `step_up` (#684) | Lurking switches the gatekeeper's blow on; `lie_in_wait` flags the player's blow from a lurk (`Technique::lurk`, cleared after) |
 | `perceive.rs::perceive` | `mark_noticed` |
 | `dump.rs` | the `actors` layer: `unaware of player` / `aware`, `noticed turn N` |
+
+Slipping past's hooks (#683): `ai.rs::nearest_hostile_in_sight` calls `slip::looks_at` for each
+hostile; `ai.rs::decide` calls `slip_lapses` first; `ai.rs::noise_to_look_into` takes a cell seen
+by darkvision alone for unseen while slipped past; `surprise.rs::unaware` reads `slipped_past`;
+`fight.rs::resolve` and `cast.rs::spell_attack` call `attacked_near` after `startle`; `fight.rs::hurt`
+calls `end_slip`; `dump.rs` says `slipped past` and `missed turn N`.
 
 ## Messages
 
@@ -97,6 +118,10 @@ you." (`say` for an attack, before its line; `news` for a trap, after its line).
   aware until `memory_turns` pass. Only the player's side: a creature struck by someone it does
   not see stays unaware of them (design §3.1), so each of an unseen thief's shots surprises it.
 
+- One moment anyone slips past: `looks_at`, four gameplay draws only there, only when the
+  creature hunts no one, the player is in its darkvision and dark to its eyes, and no slip is
+  set. `Mind::missed` is saved and hashed (left out while `None`; `Mind::is_calm` ignores it).
+
 ## Tests
 
 `world/surprise_tests.rs` (both ways round, memory, the check's outcomes and draws, sleepers and
@@ -105,8 +130,16 @@ bystanders, the hash test, saves and replays); `world/ambush_tests.rs` (the ladd
 the talents, the reach and Long reach, Surprised as the second door, the marks, the spell path,
 the craft and Initiative in the check); `world/vitals_tests.rs` (what has none, no critical, no
 dice, Anatomist, still surprised); `weapon_active_tests` (Vital strike's line);
-`combat.rs` (no confirmation drawn); `content/surprise.rs` (parse and refusals, optional file);
+`combat.rs` (no confirmation drawn); `content/surprise.rs` (parse and refusals, optional file,
+`[slip]` off); `world/slip_tests.rs` (the moment, made and lost, no second roll, each ending, the
+creature that came to look caught unawares, another hostile, the no-draw test, saves and replays);
 the screen snapshot `status-surprised`.
+
+## Hashes that move (#683)
+
+A run whose unlit player came within darkvision of a creature hunting no one, with no light of
+its own or others' on their cell (a kobold's torch lights them: no roll), draws the contest's four
+more from that creature turn, and, won, the creature does not see them.
 
 ## Hashes that move (#682)
 

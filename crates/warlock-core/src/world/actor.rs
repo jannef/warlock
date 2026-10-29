@@ -77,6 +77,12 @@ pub struct Mind {
     /// the turn pipeline, and by an attack that caught the player unawares (never on load). Not part of its routine: [`Mind::is_calm`] ignores it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub noticed: Option<u64>,
+    /// The turn the player slipped past it (`world/slip.rs`): won the contest when it would
+    /// first have seen them by darkvision alone. While set (and within `[slip] lasts_turns`) it
+    /// does not see them by darkvision, and is unaware of them. Not part of its routine:
+    /// [`Mind::is_calm`] ignores it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub missed: Option<u64>,
 }
 
 impl Mind {

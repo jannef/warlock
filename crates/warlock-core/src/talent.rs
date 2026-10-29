@@ -66,6 +66,18 @@ impl Talents {
         self.0.retain(|t| t.id != id);
     }
 
+    /// Lets go of every talent the content has no longer (a save from before it was taken out
+    /// of the data); their ids, in the order taken.
+    pub fn drop_unknown(&mut self, content: &Content) -> Vec<String> {
+        let book = content.talents();
+        let gone: Vec<String> = (self.0.iter())
+            .filter(|t| book.id(&t.id).is_none())
+            .map(|t| t.id.clone())
+            .collect();
+        self.0.retain(|t| book.id(&t.id).is_some());
+        gone
+    }
+
     /// The rank held of talent `id` taken for `choice` (0: not held).
     pub fn rank_of(&self, id: &str, choice: Option<&str>) -> u8 {
         (self.0.iter())
@@ -276,6 +288,8 @@ pub struct TalentMods {
     pub surprise_difficulty: i32,
     /// Cells farther its shots, throws, and attack spells sneak-attack (Long reach).
     pub sneak_reach: i32,
+    /// The status a sneak attack of its that kills leaves it (Vanishing act).
+    pub sneak_kill_status: Option<StatusId>,
     /// The creature tags whose types have vitals for its attacks (Anatomist).
     pub vitals_in: Vec<String>,
     /// Percent more carrying limit.
@@ -681,7 +695,7 @@ pub struct TalentMods {
     pub silent_unburdened: bool,
     /// Percent more loudness of its attacks.
     pub attack_noise_percent: i32,
-    /// How much easier hidden traps are for it to find (Trapfinding).
+    /// How much easier hidden traps are for it to find (no talent carries it since #684).
     pub trap_ease: i32,
     /// It has the Pick lock ability without Open lock.
     pub pick_lock: bool,
@@ -693,6 +707,10 @@ pub struct TalentMods {
     pub ambush_threat: u8,
     /// The active Master thief: its finisher, a blow that is a sure critical.
     pub finisher: bool,
+    /// The active Lurk: the status it waits in ambush under (Lurking).
+    pub lurk: Option<StatusId>,
+    /// The active Low blow: a blow that is a sneak attack whatever the foe knows.
+    pub low_blow: bool,
     /// How much higher every skill it is trained in counts (Jack of all trades).
     pub trained_skills: i32,
     /// The alternative resources its talents grant it, in the order first named (Rapid shot's
@@ -1039,6 +1057,8 @@ impl TalentMods {
             A::HolyRadiance => self.radiance.is_some(),
             A::QuiveringPalm => self.quivering_palm.is_some(),
             A::Volley => self.volley.is_some(),
+            A::Lurk => self.lurk.is_some(),
+            A::LowBlow => self.low_blow,
             A::MasterThief => self.finisher,
             A::Inspire => self.inspire.is_some(),
             A::Consecrate => self.consecrate.is_some(),
@@ -1229,6 +1249,9 @@ impl TalentMods {
             TalentEffect::SurpriseEase { value } => self.surprise_ease += value,
             TalentEffect::SurpriseDifficulty { value } => self.surprise_difficulty += value,
             TalentEffect::SneakReach { value } => self.sneak_reach += value,
+            TalentEffect::SneakKillStatus { status } => {
+                self.sneak_kill_status = content.status_id(&status).or(self.sneak_kill_status);
+            }
             TalentEffect::VitalsIn { tags } => {
                 for tag in tags {
                     if !self.vitals_in.contains(&tag) {
@@ -1865,6 +1888,10 @@ impl TalentMods {
             TalentEffect::ThrowVoice => self.throw_voice = true,
             TalentEffect::AmbushThreat { value } => self.ambush_threat += value,
             TalentEffect::Finisher => self.finisher = true,
+            TalentEffect::Lurk { status } => {
+                self.lurk = content.status_id(&status).or(self.lurk);
+            }
+            TalentEffect::LowBlow => self.low_blow = true,
             TalentEffect::TrainedSkills { value } => self.trained_skills += value,
             TalentEffect::GrantsResource { resource } => {
                 if let Some(resource) = content.resource_id(&resource)

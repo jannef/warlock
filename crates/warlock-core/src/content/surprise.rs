@@ -24,12 +24,25 @@ pub struct SurpriseRules {
     /// The tags of what has no vitals to find: immune to criticals and sneak attacks
     /// ([`Content::has_vitals`]).
     pub no_vitals: Vec<String>,
+    /// Slipping past (`[slip]`, `world/slip.rs`): how many turns a creature the player slipped
+    /// past stays blind to them; `None` when nobody slips past anyone (no table, or `enabled =
+    /// false`).
+    pub slip_turns: Option<u64>,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct SurpriseFile {
     surprise: SurpriseTable,
+    #[serde(default)]
+    slip: Option<SlipTable>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SlipTable {
+    enabled: bool,
+    lasts_turns: u64,
 }
 
 #[derive(Deserialize)]
@@ -49,7 +62,7 @@ impl SurpriseRules {
     pub(super) fn parse(file: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: SurpriseFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        let table = parsed.surprise;
+        let table = &parsed.surprise;
         let status = (content.status_id(&table.status))
             .ok_or_else(|| err(format!("unknown status `{}`", table.status)))?;
         let def = content.status(status);
@@ -76,12 +89,18 @@ impl SurpriseRules {
                 )));
             }
         }
+        if let Some(slip) = &parsed.slip
+            && !(1..=1000).contains(&slip.lasts_turns)
+        {
+            return Err(err("`slip.lasts_turns` is 1 to 1000".into()));
+        }
         Ok(Self {
             status,
             difficulty: table.difficulty,
             missile_reach: table.missile_reach,
             memory_turns: table.memory_turns,
-            no_vitals: table.no_vitals,
+            no_vitals: table.no_vitals.clone(),
+            slip_turns: (parsed.slip).filter(|s| s.enabled).map(|s| s.lasts_turns),
         })
     }
 }
@@ -123,6 +142,7 @@ mod tests {
         assert_eq!(rules.missile_reach, 6);
         assert_eq!(rules.memory_turns, 20);
         assert!(rules.no_vitals.iter().any(|t| t == "skeleton"));
+        assert_eq!(rules.slip_turns, Some(60));
     }
 
     #[test]
@@ -159,6 +179,11 @@ mod tests {
                 "no creature carries it",
             ),
             ("\"skeleton\"", "\"Skeleton\"", "lower-case words"),
+            (
+                "lasts_turns = 60",
+                "lasts_turns = 0",
+                "`slip.lasts_turns` is 1 to 1000",
+            ),
         ] {
             assert!(good.contains(from), "{from}");
             let mut files = ContentFiles::builtin();
@@ -166,6 +191,10 @@ mod tests {
             let err = Content::load(&files).expect_err(to);
             assert!(err.message.contains(why), "{to}: {}", err.message);
         }
+        let mut files = ContentFiles::builtin();
+        files.insert(PATH, &good.replacen("enabled = true", "enabled = false", 1));
+        let content = Content::load(&files).expect("slipping past switched off");
+        assert_eq!(content.surprise().expect("rules").slip_turns, None);
         let mut files = ContentFiles::builtin();
         files.remove(PATH);
         let content = Content::load(&files).expect("surprise is optional");

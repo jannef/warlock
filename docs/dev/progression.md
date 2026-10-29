@@ -149,7 +149,10 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `exact_sounds` | `Perception::compute` → `noise::perceive` (`noise::Exact::All`) |
 | `sky_footsteps_percent`, `silent_unburdened`, `attack_noise_percent` | `noise::noise` (steps onto an unroofed cell of a sky-exposed level; steps while Unburdened; attacks) |
 | `trap_ease` | `search.rs::finding` (searching and in passing; `difficulty_of`, which disarming reads, is unchanged) |
-| `pick_lock`, `steal`, `throw_voice` | `Ability::had_by` (and the actions' refusals: `lockpick.rs`, `steal.rs`, `voice.rs` ask it) |
+| `pick_lock`, `steal`, `throw_voice` | `Ability::had_by` (and the actions' refusals: `lockpick.rs`, `steal.rs`, `voice.rs` ask it); no talent carries `pick_lock`, `steal`, or `trap_ease` since #684 took the thief's Trapfinding, Pick lock, and Light fingers (the kinds stay) |
+| `lurk` | `world/thief.rs` (`World::lurk`, `use_class`; `thief_may` refuses "Too late to lurk."); the status switches the gatekeeper's free blow on in `World::free_blows_of`; `World::step_up` → `lie_in_wait` flags the blow (`Technique::lurk`), `resolve` → `lurked` makes its target unaware unless `Mind::last_seen` is set |
+| `low_blow` | `world/thief.rs` (`World::low_blow`, `use_class`; `thief_may` refuses "There is no one there to blind."); `Technique::sneak`, taken in `resolve` by `low_blow_taken`, passes `sneaks` as unaware (no `startle`, no flat-footed) |
+| `sneak_kill_status` | `World::resolve` → `World::vanishing_act` (`world/thief.rs`), beside `Build::SneakKill` |
 | `trained_skills` | `Actor::skill_effect` (a bonus for every trained skill, as `skill`'s) |
 | `missile_dodge` | `World::target_against` (from `resolve` for shots and throws, `trap_strikes` for trap missiles) |
 | `spell_damage_percent` | `World::evaded` in `spell_hurts` (bursts and bolts, before resistances) |
@@ -246,7 +249,9 @@ actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radianc
 menu shows; a holy gift's talent may name the bands it works for (`alignment`; outside them it
 is used and does nothing, `docs/dev/alignment.md`). Shared entries are a
 talent each (`divine_health`, `purity_of_body`); the monk's Deflect missiles is the ordinary
-talent, handed out. Keys: the actives have none of their own (as Second wind; the abilities menu
+talent, handed out. A save holding a talent the content no longer has (the thief's three removed
+by #684) loads without it: `Talents::drop_unknown` in `World::from_state`, each said in
+`World::retiered` (logged on load). Keys: the actives have none of their own (as Second wind; the abilities menu
 and its repeat key use them).
 
 ## Caster spells
@@ -388,8 +393,8 @@ abilities each at 1, 6, 12, 18, 25, 32, 40, 50, 60 (34 class-tree talents, plus 
 Second wind, which their tables hand out), and bonus picks at 10, 20, 30, 45, 55. The
 warrior, barbarian, paladin, and monk (I1) have theirs, in `world/class_active_tests.rs`; the
 ranger, thief, and bard (I2, #244) theirs, in `world/class_rogue_tests.rs` (the kill tally and
-Favoured prey, every passive, Volley and Inspire, the abilities the thief and bard get
-untrained); the priest, druid, wizard, and witch (I3, #245) theirs, in `world/caster_tests.rs`. The I2 tables hand out two ordinary talents (Evasion,
+Favoured prey, every passive, Volley and Inspire, the abilities the thief's skills give, Lurk,
+Low blow, and Vanishing act (#684), and a save holding a talent the content dropped); the priest, druid, wizard, and witch (I3, #245) theirs, in `world/caster_tests.rs`. The I2 tables hand out two ordinary talents (Evasion,
 Lore), so a creation pick or a bonus pick may already have taken one; the table then gives
 nothing in its place (as the monk's Deflect missiles). The showcase's and the arena's own
 characters are thieves, the forest's and the world's rangers: their runs start with Sneak attack

@@ -54,7 +54,8 @@ for the nearest one:
   (wildlife does not bother). See [Hearing](hearing.md).
 - With nothing left to chase, it walks back to where it left its routine and carries on.
 
-Creatures behave the same way every time in the same situation: there is no chance in it. They
+Creatures behave the same way every time in the same situation: there is no chance in it, but
+for whether you [slip past](skills.md#slipping-past) one in the dark. They
 see by the same rules you do (see [Sight and memory](sight.md)), each with its own eyes and under
 the same [light](light.md#what-light-is), clouds included: a creature without [darkvision](vision.md#the-four-types) does not see you standing in the
 dark, and lighting your [lantern](lantern.md) gets you noticed. Some creatures open closed [doors](doors.md#creatures-and-doors)

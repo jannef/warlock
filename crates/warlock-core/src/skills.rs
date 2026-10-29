@@ -65,6 +65,9 @@ pub const MAX_STUDY_BONUS: i32 = 20;
 /// The most cells farther a search may reach than the cells around the searcher.
 pub const MAX_SEARCH_REACH: i32 = 2;
 
+/// The most a skill adds to slipping past a creature unseen (spec §8 "Surprise and sneak
+/// attacks").
+pub const MAX_SLIP_BONUS: i32 = 20;
 /// The most a skill adds to stealing from someone (spec §8 "Stealing").
 pub const MAX_STEAL_BONUS: i32 = 20;
 /// The most d6 a skill adds to a sneak attack (spec §8 "Surprise and sneak attacks").
@@ -160,6 +163,9 @@ pub enum Effect {
     /// wears for what it is (spec §8 "Skills": Appraise; `world/appraise.rs`); only a skill with
     /// it, trained, gives it at all.
     Identify,
+    /// Points added to the player's side of slipping past a creature that would see them by
+    /// darkvision alone (spec §8 "Surprise and sneak attacks"; `world/slip.rs`).
+    Slip,
     /// Points added to stealing from someone (spec §8 "Stealing"; `world/steal.rs`); a skill
     /// with it, trained, lets the actor steal at all (the abilities menu's Steal).
     Steal,
@@ -221,6 +227,7 @@ impl Effect {
             Effect::Kick => *crate::stats::SCORES.end() as i32,
             Effect::Search | Effect::Spot | Effect::DetectTraps => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
+            Effect::Slip => MAX_SLIP_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
             Effect::Heal => MAX_HEAL_BONUS,
             Effect::Disarm => MAX_DISARM_BONUS,
@@ -457,6 +464,7 @@ impl Effect {
             Effect::Forage => "forage",
             Effect::Bargain => "bargain",
             Effect::Identify => "identify",
+            Effect::Slip => "slip",
             Effect::Steal => "steal",
             Effect::SneakDice => "sneak_dice",
             Effect::Surprise => "surprise",

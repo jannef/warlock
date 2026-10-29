@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "hunters_shot"
+name = "Hunter's shot"
+description = "A shot that finds a foe unawares pins it where it stands for a moment."
+skills = ["marksman"]
+rank = 6
+kind = "triggered"
+trigger = "sneak_attack"
+systems = ["weapon_abilities", "styles", "sneak_attack", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "pinned"
+turns = "1d2"

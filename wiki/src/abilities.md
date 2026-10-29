@@ -44,6 +44,19 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   made there, not where you stand, so [creatures](creatures.md) that hear it and cannot see that spot go to have
   a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. [Bards](classes.md#bard) learn it at level 32
   (see [Classes](classes.md)).
+- **Lurk**: the [thief](classes.md#thief)'s, from level 6. You wait in ambush, in the time of a
+  wait, and are [Lurking](status-effects.md#status-lurking) until your next action. A hostile
+  that steps up beside you meanwhile takes your blow at once, a [free blow](combat.md#free-blows),
+  and unless it was already hunting you it is caught unawares by it: the blow is a
+  [sneak attack](skills.md#skill-sneak-attack), it may be [Surprised](status-effects.md#status-surprised),
+  and it is struck without its Dexterity and Dodge. You cannot lurk with a hostile you see beside
+  you already ("Too late to lurk.", no time). It costs nothing and has no cooldown.
+- **Low blow**: the [thief](classes.md#thief)'s, from level 12, for 3
+  [openings](resources.md#resource-openings). A melee blow, in the time of one, at the hostile in
+  the direction you choose, that is a [sneak attack](skills.md#skill-sneak-attack) whatever it
+  knows: the dice land if it hits. The foe is not [Surprised](status-effects.md#status-surprised)
+  by it and keeps its whole Defence. A thing with no vitals takes the blow without the dice (see
+  [Criticals](combat.md#criticals)). With nobody hostile there it is refused, spending nothing.
 - **Shield bash**: anyone can bash with a shield (see [Weapon skills](weapon-skills.md)), so it is
   always in the menu, and you can use it while you hold a shield. It strikes whoever stands in
   the direction you choose, in the time of a blow.

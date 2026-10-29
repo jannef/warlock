@@ -23,3 +23,13 @@ memory_turns = 20         # how many turns the player stays aware of a creature 
 # animated object, a type carrying one of these tags, or one that says `vitals = false`; it is
 # surprised like anyone. Anatomist finds them in skeletons and constructs.
 no_vitals = ["elemental", "skeleton", "spirit", "construct"]
+
+# Slipping past (#683): a creature that hunts no one and would first see the player by its
+# darkvision alone (their cell too dark for its eyes) makes a contest, once a stalk: 2d12 + the
+# player's Dexterity modifier + their Stealth's `slip` against 2d12 + its Willpower modifier + its
+# Spot. The player made it: the creature does not see them while they stay in the dark, until
+# they step into light it can see by, attack it or anything it sees, it is hurt, or
+# `lasts_turns` turns pass. Lost: it sees them, and rolls no more until it gives up the hunt.
+[slip]
+enabled = true            # false: nobody slips past anyone
+lasts_turns = 60          # how long a creature slipped past stays blind to the player

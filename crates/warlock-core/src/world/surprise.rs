@@ -54,7 +54,8 @@ impl World {
         if self.asleep(id) || self.disguised(id) {
             return true;
         }
-        me.mind.last_seen.is_none() && !self.sees_now(id, other)
+        // Slipped past (`slip.rs`), it does not see the player though its darkvision would.
+        me.mind.last_seen.is_none() && (self.slipped_past(id, other) || !self.sees_now(id, other))
     }
 
     /// Whether the player has not seen creature `other`: their last perception did not see it,

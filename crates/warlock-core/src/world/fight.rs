@@ -771,11 +771,16 @@ impl World {
         let profile = profile.map(|p| self.bane(attacker, target, p));
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
-        let unaware = profile.is_some() && self.unaware(target, attacker);
-        let unseen = profile.is_some() && self.sneaks(attacker, target, unaware, missile);
+        // A lurk's blow finds a creature not hunting the player unawares; a low blow is a sneak
+        // attack whatever the target knows (`thief.rs`).
+        let unaware =
+            profile.is_some() && (self.unaware(target, attacker) || self.lurked(attacker, target));
+        let low = profile.is_some() && self.low_blow_taken(attacker);
+        let unseen = profile.is_some() && self.sneaks(attacker, target, unaware || low, missile);
         if unaware {
             self.startle(target, Some(attacker), events);
         }
+        self.attacked_near(attacker, target);
         // A blow at a disguised mimic finds it out (`mimic.rs`), after the sneak attack is
         // decided: it was unaware.
         if self.disguised(target) {
@@ -863,6 +868,7 @@ impl World {
         // Weapon abilities (`weapon_ability.rs`) fire on the same events, and on a melee
         // attack's miss by the target's Shield, Dexterity, or Dodge.
         self.resolve_triggers((attacker, target), (kind, skills), blow, events);
+        self.sneak_trigger((attacker, target), (kind, skills), (unseen, blow), events);
         if let Some(blow) = blow
             && blow.damage > 0
         {
@@ -883,6 +889,7 @@ impl World {
             // A sneak attack that kills builds more (Patient blade's openings).
             if died && unseen {
                 self.gain_resource(attacker, Build::SneakKill);
+                self.vanishing_act(attacker, events);
             }
             if !died {
                 self.big_hit_trigger((attacker, target), (kind, skills), blow, events);
@@ -995,10 +1002,11 @@ impl World {
         harm: Harm,
         events: &mut Vec<Event>,
     ) -> bool {
-        // Any harm finds a disguised mimic out (`mimic.rs`).
+        // Any harm finds a disguised mimic out (`mimic.rs`), and ends a slip past (`slip.rs`).
         if self.disguised(id) {
             self.reveal_mimic(id, super::mimic::Reveal::Struck, events);
         }
+        self.end_slip(id);
         // Talents (spec §8 "Talents": Immune to pain): a hit does less after the soak, never
         // below 1; what is not a hit (a status, starving) is not eased.
         let damage = match harm {

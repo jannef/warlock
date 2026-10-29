@@ -1,0 +1,8 @@
+[[talent]]
+id = "lurk"
+name = "Lurk"
+tree = "class"
+granted = true
+description = "Wait in ambush (an ability): a foe that steps up beside you takes your blow at once, caught unawares unless it was already hunting you."
+effects = [{ kind = "lurk", status = "lurking" }]
+systems = ["sneak_attack", "awareness"]

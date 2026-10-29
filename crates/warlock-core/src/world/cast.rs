@@ -970,6 +970,7 @@ impl World {
                 if unaware {
                     self.startle(target, Some(by), made);
                 }
+                self.attacked_near(by, target);
                 let struck = self.target_against(target, missile);
                 let struck = self.vitals(by, target, struck);
                 let struck = self.flat_footed(target, unaware, struck);
@@ -983,6 +984,8 @@ impl World {
                 // The sneak dice come on top of the spell's cap, as after Protection.
                 let sneak = self.ambushed(by, unseen, blow).damage - blow.damage;
                 self.spell_practised(target, skills, blow, made);
+                let spell = (AttackKind::Spell, skills);
+                self.sneak_trigger((by, target), spell, (unseen, Some(blow)), made);
                 (blow.damage, blow.strike, sneak)
             }
             Resolution::Auto | Resolution::Area => (

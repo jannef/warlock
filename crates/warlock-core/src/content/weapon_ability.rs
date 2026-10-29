@@ -68,6 +68,8 @@ pub enum Trigger {
     BigHit,
     /// A blow, shot, or throw of the actor's kills.
     Kill,
+    /// A sneak attack of the actor's hits: its sneak dice land (`world/ambush.rs`).
+    SneakAttack,
     /// The actor is hit.
     Struck,
     /// A melee attack on the actor missed by its Parry.
@@ -87,11 +89,12 @@ pub enum Trigger {
 
 impl Trigger {
     /// Every trigger, in the wiki's order.
-    pub const ALL: [Trigger; 11] = [
+    pub const ALL: [Trigger; 12] = [
         Trigger::Hit,
         Trigger::Critical,
         Trigger::BigHit,
         Trigger::Kill,
+        Trigger::SneakAttack,
         Trigger::Struck,
         Trigger::Parried,
         Trigger::Blocked,
@@ -108,6 +111,7 @@ impl Trigger {
             Trigger::Critical => "critical",
             Trigger::BigHit => "big_hit",
             Trigger::Kill => "kill",
+            Trigger::SneakAttack => "sneak_attack",
             Trigger::Struck => "struck",
             Trigger::Parried => "parried",
             Trigger::Blocked => "blocked",
@@ -125,6 +129,7 @@ impl Trigger {
             Trigger::Critical => "a critical of yours is confirmed",
             Trigger::BigHit => "a hit of yours takes a third of the target's hit points",
             Trigger::Kill => "a blow, shot, or throw of yours kills",
+            Trigger::SneakAttack => "a sneak attack of yours hits",
             Trigger::Struck => "you are hit",
             Trigger::Parried => "a melee attack on you misses by your Parry",
             Trigger::Blocked => "a melee attack on you misses by your Shield",
@@ -922,6 +927,46 @@ mod tests {
         );
         assert_eq!(reflection.triggers, [Trigger::SpellBlocked]);
         assert_eq!(reflection.effect, WeaponDoes::ReflectSpell { per_turn: 1 });
+        // The sneak attack's two (the surprise design §6.4).
+        let daggers = content.weapon_skills().id("daggers").expect("daggers");
+        let marksman = content.weapon_skills().id("marksman").expect("marksman");
+        let status = |id| content.status_id(id).expect("status");
+        let knife = (content.weapon_abilities().iter())
+            .find(|a| a.id == "knife_in_the_dark")
+            .expect("knife in the dark");
+        assert_eq!(
+            (
+                knife.skills.as_slice(),
+                knife.rank,
+                knife.triggers.as_slice()
+            ),
+            (&[daggers][..], 5, &[Trigger::SneakAttack][..])
+        );
+        assert_eq!(
+            knife.effect,
+            WeaponDoes::Status {
+                status: status("bleeding"),
+                severity: 1,
+                turns: None,
+                on: On::Target,
+            }
+        );
+        let hunter = (content.weapon_abilities().iter())
+            .find(|a| a.id == "hunters_shot")
+            .expect("hunter's shot");
+        assert_eq!(
+            (
+                hunter.skills.as_slice(),
+                hunter.rank,
+                hunter.triggers.as_slice()
+            ),
+            (&[marksman][..], 6, &[Trigger::SneakAttack][..])
+        );
+        assert!(matches!(
+            hunter.effect,
+            WeaponDoes::Status { status: s, turns: Some(_), on: On::Target, .. } if s == status("pinned")
+        ));
+        assert_eq!(Trigger::SneakAttack.id(), "sneak_attack");
         // Every trigger has an id the parser reads back.
         for t in Trigger::ALL {
             assert_eq!(Trigger::parse(t.id()), Ok(t));

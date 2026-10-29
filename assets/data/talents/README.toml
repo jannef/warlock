@@ -117,6 +117,8 @@
 #                                 much harder (-20 to 20, not 0)
 #   sneak_reach { value }         its shots, throws, and attack spells sneak-attack that many
 #                                 cells beyond surprise.toml's missile_reach
+#   sneak_kill_status { status }  a sneak attack of its that kills leaves it a degree of that
+#                                 status (../status.toml; Vanishing act: light_footed)
 #   vitals_in { tags }            creature types carrying one of those tags have vitals for its
 #                                 attacks (critical hits and sneak attacks land), never the
 #                                 incorporeal ("skeleton", "construct")
@@ -441,6 +443,12 @@
 #                                 (`use:master_thief:E`): a blow that is a critical whenever it
 #                                 hits, with no confirmation roll (its price the talent's
 #                                 `resource` cost: five openings)
+#   lurk { status }               the active Lurk (`use:lurk`, a wait): that status (Lurking)
+#                                 until its next action; a hostile stepping up beside it takes
+#                                 its blow at once, caught unawares unless it was hunting it
+#   low_blow                      the active Low blow, aimed in a direction
+#                                 (`use:low_blow:E`): a blow that is a sneak attack whatever the
+#                                 foe knows (its price the talent's `resource` cost: openings)
 #   trained_skills { value }      every skill it is trained in counts that much higher
 #   grants_resource { resource }  it holds that alternative resource (data/resources.toml) from
 #                                 the moment it has the talent, at its start, for good

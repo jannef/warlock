@@ -20,8 +20,8 @@ with one check for all of them. Sealed rooms' breaches are hidden features too
 
 A turn of searching marks `Use::Search` whatever it finds; the reach (`Effect::SearchReach`,
 Keen searcher) is Search's for every kind. Creatures and items in plain sight need no check.
-The thief is the one class that starts trained in Detect traps (its `2d4+4` beside Spot's and
-Search's), kobolds the one race (`1d4+2`, in place of their Search); others may get it only
+The thief is the one class that starts trained in Detect traps (its `2d6+10`, known for since
+#684 took the Trapfinding class ability, beside Spot's and Search's), kobolds the one race (`1d4+2`, in place of their Search); others may get it only
 as #662's non-guaranteed class skills do, since level-up rolls advance trained skills only.
 
 **Data**: `data/search.toml` (`content/search.rs`: `SearchRules { passive_penalty, turns,
