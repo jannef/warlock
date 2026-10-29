@@ -27,6 +27,9 @@ no other D&D concept (checks, saves) comes with them. The status bar has no stat
 full at common window sizes (it shows `HP 18/18` right after the level name, dropping only
 before it, and the burden right after that when there is one).
 
+A background story's stat points (docs/dev/background.md) are `Stats::gift`s: the score and
+the potential move together, and a score never falls below 1.
+
 ## Training (#231)
 
 Stats grow by use, checked at levels (spec §8 "Stats": "Training"; design §6):

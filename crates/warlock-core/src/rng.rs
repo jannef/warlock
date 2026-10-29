@@ -19,6 +19,7 @@
 //! | The stat gender "other" raises | `character/gender` | never; derived on demand |
 //! | A new character's age and birthday | `character/birth/<race>` | never |
 //! | A new character's dice | `character/rolls/<race>,<gender>,<class>` | never |
+//! | A chosen character's background story, per chapter | `background/<race>,<gender>,<class>/<chapter>` | never |
 //!
 //! A level's map therefore depends only on the run seed and its id, never on the order in which
 //! levels are visited or on gameplay; a new character only on the run seed and the choices
@@ -142,6 +143,18 @@ impl Rng {
     /// given, never kept; only what it drew is saved.
     pub fn quest(run_seed: u64, id: &str) -> Self {
         Self::stream(run_seed, &format!("quest/{id}"))
+    }
+
+    /// The stream of chapter `chapter` of the background story of a character of `spec` (spec §8
+    /// "Background story"): the tier, the line, and its dice, apart from every other stream, so
+    /// no roll of the character moves with or without a story. The spec's `Display` names it
+    /// (race, gender, class; never the picks).
+    pub fn background(
+        run_seed: u64,
+        spec: &crate::character::CharacterSpec,
+        chapter: &str,
+    ) -> Self {
+        Self::stream(run_seed, &format!("background/{spec}/{chapter}"))
     }
 
     /// The court stream of actor `key` (spec §7 "Factions"): the faction a creature of a type

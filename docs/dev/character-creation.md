@@ -146,6 +146,13 @@ snapshots' `kit: true` starts a case's run with the kit (`kit-equipment`, `kit-i
 `kit-summary` in `crates/warlock/src/ui/screen_snapshots.rs`); the golden manifest's `kit = true`
 does the same for an entry.
 
+**Background story** (#702; docs/dev/background.md): a run with the kit is told a story in
+`World::start_run`, after `take_creation` (so it reads the picks, Random ones too, and meets no
+pick's prerequisite) and before mana and the perception; its effects land on the finished
+character (scores and potentials by `Stats::gift`, gold, items the kit's way, skills, marks, the
+starting alignment), and `Character::story` keeps the ids. The summary says under the kit "Fate
+will have its say when you set out." `World::draft` tells none.
+
 ## Birth signs' gifts and lucky days (#265)
 
 Design: `docs/design/horoscope.md` (§3–§6, §8–§10, §12). `data/horoscope.toml`'s animals and

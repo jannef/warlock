@@ -51,7 +51,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   player last saw it and when the player slipped past it, §8 "Surprise and sneak attacks"; saves
   without it load with every creature calm), every actor's stats, scores and
   potentials (§8 "Stats"), the player's character (name, race, gender, and class,
-  the stat the gender raised, birth date, and birth sign; §8 "Character creation"), the player's
+  the stat the gender raised, birth date, birth sign, and the ids of its background story, §8
+  "Background story"; §8 "Character creation"), the player's
   alignment score and the alignment a level gave a creature, if any (§8 "Alignment"; a score off
   the scale does not load),
   what every actor wears and wields (which inventory stack is in which slot, §6

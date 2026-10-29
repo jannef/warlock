@@ -190,6 +190,11 @@ pub struct Character {
     /// The birth sign; `None` for content without a horoscope.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sign: Option<Sign>,
+    /// The background story told when the run began (spec §8 "Background story"), by ids: the
+    /// text is told again from the content (`background::retell`). Empty for a character
+    /// nobody chose and for one saved before stories.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub story: Vec<crate::background::Told>,
 }
 
 impl Character {
@@ -434,6 +439,7 @@ impl CharacterSpec {
             raised,
             born,
             sign,
+            story: Vec::new(),
         };
         Ok(Start {
             stats: starting_stats(by, potential, content.races().base_potential),
@@ -1035,6 +1041,8 @@ mod tests {
     fn skill_free_content() -> Content {
         let mut files = ContentFiles::builtin();
         files.remove("data/skills.toml");
+        // Background stories start skills.
+        files.remove("data/background.toml");
         // Skill affixes go with the skills, and the uniques that have them.
         files.remove("campaigns/ascmearc/data/uniques");
         let untrained = |text: &str| -> String {

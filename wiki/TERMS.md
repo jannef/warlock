@@ -137,6 +137,7 @@ above.
 | Evil races | `races.md#the-evil-races` |
 | Class, class levels | `classes.md`, `classes.md#levels` (a class: its heading, `classes.md#barbarian`) |
 | Starting kit | `starting-kit.md` |
+| Background story, its chapters, how rare | `background.md`, `background.md#how-rare` |
 | Horoscope, animal, element, lucky day | `horoscope.md`, `horoscope.md#animals`, `horoscope.md#elements`, `horoscope.md#lucky-days` |
 | The great cycle | `horoscope.md#the-great-cycle` |
 | Alignment, good, evil, band | `alignment.md`, `alignment.md#what-moves-you` |
@@ -202,10 +203,12 @@ above.
 | **Creatures and people** | |
 | Creature, monster | `creatures.md` (a creature: its row) |
 | Faction, hostile, peaceful | `creatures.md#factions` |
+| What creatures do, lurking | `creatures.md#what-they-do` |
 | Peaceful folk, the fey courts | `creatures.md#factions` |
 | Incorporeal | `creatures.md#incorporeal-creatures` |
 | Elementals | `creatures.md#elementals` |
 | A creature's numbers (stats, hit points, attacks) | `creature-numbers.md` |
+| A creature's craft for surprise (its sneak attack, initiative, spot) | `creature-numbers.md#surprise` |
 | Animated object | `animated.md` |
 | Mimic | `mimics.md` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |

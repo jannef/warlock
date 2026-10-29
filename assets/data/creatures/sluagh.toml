@@ -20,6 +20,8 @@ hearing = 15
 weight = 100
 stats = { strength = 26, dexterity = 24, toughness = 26, intelligence = 27, willpower = 31, presence = 27 }
 base_hp = 64
+# The host out of the night: it falls hard on the unwary.
+skills = { sneak_attack = 120, initiative = 60 }
 natural = { defence = 6, protection = 0, name = "insubstantial form" }
 incorporeal = { wall_defence = 6 }
 resist = { slashing = 50, piercing = 50, bludgeoning = 50, cold = 50, poison = 100 }

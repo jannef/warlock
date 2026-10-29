@@ -22,6 +22,9 @@ hearing = 16
 weight = 55000
 stats = { strength = 19, dexterity = 22, toughness = 18, intelligence = 18, willpower = 18, presence = 18 }
 base_hp = 43
+# A scout's craft: it opens the throat of the unwary, and its sharp eye finds those who
+# would slip past it in the dark.
+skills = { sneak_attack = 75, initiative = 60, spot = 50 }
 resist = { poison = 25 }
 on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
 [creature.attack]

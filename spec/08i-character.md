@@ -74,6 +74,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
     added to Weapon drill's; in words "you learn weapons quickly"), Tidal (mana regeneration
     +25 %, added to the affixes' percent in `World::mana_rate`).
     The rest of the design's gifts land with their rules and are listed in `grants` only then.
+  - **Background story** (#702, B1 of `docs/design/background-story.md`; `background.rs`,
+    `content/background.rs`, `world/background.rs`): a chosen character (a run that starts with
+    the kit: New run, `--character`, `--name`, `--talents`, a replay with `kit`) is told a youth
+    in **chapters** of one line each, Parents, Birth, Childhood, Youth, The trial, Fortune,
+    Leaving, and The road (the campaign's own; a campaign without one tells seven), shown as
+    four paragraphs. Each chapter draws from its own stream
+    `background/<race>,<gender>,<class>/<chapter>`, so no other roll moves: first the **tier**
+    (per mille, `data/background.toml`: uncommon 120, rare 30, fateful 5, common the rest), then
+    a line of that tier whose conditions hold (race, class, gender, birth animal and element, a
+    lucky day, the starting band, talents and skills held, the tags earlier lines set, the age,
+    the campaign), falling a tier at a time to the chapter's plain line; a fitting `only` line
+    forces the chapter (Family wealth's and Father's sword's, which tell their gift and give
+    nothing twice); then the line's dice. Its effects: stat points (the score and its potential
+    together, a score never below 1), gold (given, or taken down to none), items as kit lines (a
+    magic one identified, a scroll or potion known), skill starts, weapon-skill marks (never a
+    rank), and the starting alignment. **No caps and no protection** (the owner, 2026-10-29):
+    nothing is counted across chapters; only a line's own worth is checked against its tier at
+    load (rare and fateful lines never cost anything). It is told in `World::start_run` after the
+    creation picks, so it reads every choice and meets no pick's prerequisite.
+    `Character::story` keeps the ids (saves change; left out while empty, so older saves load
+    with no story), and the text is told again from the content. A scenario's own character
+    (`--scenario` alone) has none. The game tells it in words only, never a number or a stat's
+    name; the summary says under the kit "Fate will have its say when you set out."
   - **Birth sign actives** (#266): used from the abilities menu's **Birth sign** group
     (`Ability::Sign`, `Source::Sign`, between Racial and Class) as `Action::Gift` (no key of
     their own), each refused (no time) without it or while its cooldown status lasts. **Horn's

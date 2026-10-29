@@ -36,6 +36,9 @@
 #   range        how far a ranged or caster creature reaches, in cells (2 up to its sight; it
 #                needs a clear line of fire)
 #   opens_doors  whether it opens closed doors in its way (default false)
+#   lurks        whether it lurks (default false; spec §8 "Creature behavior"): a hostile it
+#                sees, it waits for where it stands (shooting from there if it can) until the
+#                hostile is beside it or it has been harmed, then fights as any creature
 #   budge        whether you can swap places with it when it is not hostile to you (spec §8
 #                "Displacement"): "always" (default), "off_post" (not while it keeps its post,
 #                going about its routine: a shopkeeper at its counter), or "never" (rooted)
@@ -106,7 +109,10 @@
 #
 # Skills (spec §8 "Skills"; never shown to the player): skills, the skills it is trained in, by
 # skill id (skills.toml), with fixed values (0 to 999); every other skill is untrained. The player's
-# come from their race and class, not from here. Creatures do not train (yet).
+# come from their race and class, not from here. Creatures do not train (yet). Those of surprise
+# (spec §8 "Surprise and sneak attacks") work for creatures as for the player: sneak_attack (dice
+# on a hit that finds its target unaware, and a harder initiative check for it), initiative
+# (keeping its wits when caught unawares), and spot (its side of the contest to slip past it).
 #
 # Loot (spec §8 "Magic items"): loot, the chance in percent (default 0) that it drops a magic or
 # rare item where it dies, besides what it carried; the item level is the level's.

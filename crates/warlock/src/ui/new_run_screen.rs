@@ -449,6 +449,7 @@ mod tests {
         files.remove("data/races.toml");
         files.remove("data/names.toml");
         files.remove("data/classes/");
+        files.remove("data/background.toml");
         files.remove("campaigns/ascmearc/");
         files.remove("campaigns/showcase/scenarios/");
         files.insert(

@@ -492,8 +492,15 @@ pub struct SummaryScreen {
     alignment: String,
     /// The talents picked, by name (`Healthy, Lean`); "chosen by chance" for none marked.
     talents: String,
+    /// The line under the kit that a background story will be told (spec §8 "Background
+    /// story"), with content that tells them; empty without.
+    fate: &'static str,
     selected: usize,
 }
+
+/// What the summary says of the background story to come: it changes what the run starts with,
+/// and nothing of it is known yet.
+pub const FATE: &str = "Fate will have its say when you set out.";
 
 impl SummaryScreen {
     pub fn new(content: &Content, draft: &Draft) -> Self {
@@ -551,6 +558,11 @@ impl SummaryScreen {
             eyes,
             alignment,
             talents,
+            fate: if content.background().is_some() {
+                FATE
+            } else {
+                ""
+            },
             selected: 0,
         }
     }
@@ -651,7 +663,8 @@ impl SummaryScreen {
             + birth_rows
             + below_rows
             + alignment_rows
-            + kit.len() as i32;
+            + kit.len() as i32
+            + i32::from(!self.fate.is_empty());
         let squeeze = (full - console.rows() as i32).clamp(0, 3);
         let gap = |n: i32| i32::from(squeeze < n);
         let h = full - squeeze;
@@ -728,6 +741,12 @@ impl SummaryScreen {
                     console.print(x + 2, y, "Kit", TEXT_DIM);
                 }
                 console.print(x + KIT_X, y, line, TEXT);
+            }
+            y += 1;
+        }
+        if !self.fate.is_empty() {
+            if fits(y) {
+                console.print(x + KIT_X, y, self.fate, TEXT_DIM);
             }
             y += 1;
         }

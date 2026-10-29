@@ -1,0 +1,20 @@
+# The test world's own last chapter (never shipped): so tests see a campaign's chapter, and an
+# item land from one.
+[chapter]
+id = "road"
+name = "The road"
+paragraph = 4
+
+[[line]]
+id = "the_hall"
+tier = "common"
+weight = 3
+text = "You came to the Hall by the road everyone comes by."
+
+[[line]]
+id = "the_arena"
+tier = "common"
+weight = 2
+text = "You came by the arena's back gate, where the thieves come, with a candle stub in each pocket."
+when = { class = ["thief"] }
+effects = [{ item = "candle*2" }]

@@ -650,3 +650,37 @@ fn the_delf_humanoids_wield_their_weapons() {
         assert!(held >= least, "{id}: {weapon} held {held} of 200");
     }
 }
+
+/// The creatures of surprise (spec §8 "Surprise and sneak attacks", #686): the eight that
+/// sneak-attack, with their Initiative and, for the drow, a sharp eye for those who would slip
+/// past them; and the two that lurk, the only ones.
+#[test]
+fn the_sneak_attackers_carry_their_craft_and_two_lurk() {
+    let skill = |def: &crate::content::CreatureDef, id: &str| {
+        def.skills
+            .value(CONTENT.skill_id(id).expect(id))
+            .unwrap_or(0)
+    };
+    for (id, sneak, initiative, spot, lurks) in [
+        ("drow_assassin", 160, 100, 40, false),
+        ("drow_stalker", 75, 60, 50, false),
+        ("quickling", 40, 150, 0, false),
+        ("darkling", 30, 50, 0, false),
+        ("meenlock", 30, 30, 0, true),
+        ("redcap", 40, 40, 0, false),
+        ("sluagh", 120, 60, 0, false),
+        ("barrow_spider", 10, 20, 0, true),
+    ] {
+        let def = CONTENT.creature(CONTENT.creature_id(id).expect(id));
+        assert_eq!(skill(def, "sneak_attack"), sneak, "{id}");
+        assert_eq!(skill(def, "initiative"), initiative, "{id}");
+        assert_eq!(skill(def, "spot"), spot, "{id}");
+        assert_eq!(def.lurks, lurks, "{id}");
+    }
+    let mut lurkers: Vec<&str> = (CONTENT.creature_defs().iter())
+        .filter(|c| c.lurks)
+        .map(|c| c.id.as_str())
+        .collect();
+    lurkers.sort_unstable();
+    assert_eq!(lurkers, ["barrow_spider", "meenlock"]);
+}

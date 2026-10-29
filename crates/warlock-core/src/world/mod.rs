@@ -89,6 +89,7 @@ mod ambush;
 mod animated;
 mod appraise;
 mod attacks;
+mod background;
 mod beast_friend;
 mod berserker;
 mod bleed;
@@ -149,6 +150,7 @@ mod level;
 mod lockpick;
 mod loot;
 mod lucky;
+mod lurk;
 mod mana;
 mod mimic;
 pub(crate) mod mirrors;
@@ -631,6 +633,7 @@ impl World {
         let mut world = Self::begin(content, scenario, seed, character, name, kit)?;
         if world.started_with_kit() {
             world.take_creation()?;
+            world.tell_background();
             world.player_mut().mana = world.state.player().max_mana(&world.content);
             *world.perception =
                 Perception::compute(&world.state, &world.content, &mut world.lights);
@@ -932,6 +935,13 @@ impl World {
             player.boons = boons;
         }
         let mut retiered = retiered;
+        if let Some(character) = &state.character {
+            retiered.extend(crate::background::missing(
+                &content,
+                &state.campaign,
+                character,
+            ));
+        }
         // A talent the content no longer has (the thief's Trapfinding, Pick lock, and Light
         // fingers, #684) is let go, and said in the log.
         for actor in state.actors.values_mut() {
@@ -1569,6 +1579,8 @@ mod light_tests;
 mod lockpick_tests;
 #[cfg(test)]
 mod lucky_tests;
+#[cfg(test)]
+mod lurk_tests;
 #[cfg(test)]
 mod magic_tests;
 #[cfg(test)]

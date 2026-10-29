@@ -1,0 +1,64 @@
+# What was given you: purses and heirlooms. Father's sword's heir is told of the blade instead.
+[chapter]
+id = "fortune"
+name = "Fortune"
+paragraph = 3
+
+[[line]]
+id = "nothing_given"
+tier = "common"
+weight = 6
+text = "Fortune never found your door; whatever you have, you got yourself."
+
+[[line]]
+id = "purse_on_the_road"
+tier = "common"
+weight = 2
+text = "You found a purse on the road once, and kept it, and have been half ashamed and half glad of it since."
+effects = [{ gold = "4d6" }, { alignment = -25 }]
+tags = ["found"]
+
+[[line]]
+id = "the_bequest"
+tier = "uncommon"
+weight = 2
+text = "An aunt you had met twice left you her savings, with a letter that said she had always thought you the only one worth anything."
+when = { not_talents = ["family_wealth"] }
+effects = [{ gold = "6d6+10" }]
+tags = ["bequest"]
+
+[[line]]
+id = "strangers_ring"
+tier = "uncommon"
+weight = 2
+text = "A stranger you pulled out of a ditch pressed a ring on you, and would not take it back, and was gone by morning."
+effects = [{ item = { wear = "silver_ring|iron_ring", magic = "any" } }]
+tags = ["ring"]
+
+[[line]]
+id = "the_heirloom"
+tier = "rare"
+weight = 1
+text = "In the chest under the bed, when {guardian} died, you found what no one had spoken of: a weapon older than the house, with a name cut into it."
+when = { not_talents = ["fathers_sword"], age = { min = 14 } }
+effects = [{ item = { carry = "long_sword|battle_axe|war_hammer|spear|short_bow", magic = "magic", prefer_trained = true } }]
+tags = ["heirloom"]
+
+[[line]]
+id = "the_named_blade"
+tier = "fateful"
+weight = 1
+text = "On the night you came of age a stranger left a wrapped thing at the door and no name; inside was a weapon, and on it a word you could not read, and you have never been able to put it down for long."
+when = { not_talents = ["fathers_sword"] }
+effects = [{ item = { carry = "long_sword|rapier|scimitar|battle_axe|war_hammer|quarterstaff", magic = "rare", prefer_trained = true } }]
+tags = ["named_blade"]
+
+# Father's sword's heir has the blade already: the story tells of it and gives nothing more.
+[[line]]
+id = "fathers_blade_told"
+tier = "common"
+weight = 1
+text = "The weapon you carry was your father's, and his father's; the name on it is older than the house."
+when = { talents = ["fathers_sword"] }
+only = true
+tags = ["heirloom"]

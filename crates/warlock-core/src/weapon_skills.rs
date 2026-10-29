@@ -162,6 +162,15 @@ impl WeaponSkills {
         risen
     }
 
+    /// `marks` more in skill `id`, never a rank: they stop one short of what the next rank asks
+    /// for (a background story's, spec §8 "Background story"); none at [`MAX_RANK`].
+    pub fn add_marks(&mut self, table: &WeaponSkillTable, id: WeaponSkillId, marks: u32) {
+        let now = self.get(id);
+        if let Some(need) = table.need(id, now.rank) {
+            self.entry(id).marks = now.marks.saturating_add(marks).min(need.saturating_sub(1));
+        }
+    }
+
     /// How far skill `id` is toward its next rank: the marks it has and the marks it needs;
     /// `None` at [`MAX_RANK`].
     pub fn progress(&self, table: &WeaponSkillTable, id: WeaponSkillId) -> Option<(u32, u32)> {

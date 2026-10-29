@@ -1,0 +1,60 @@
+# Who raised you, and how they lived: the words and tags later chapters lean on.
+[chapter]
+id = "parents"
+name = "Parents"
+paragraph = 1
+defaults = { guardian = "your family", home = "home", trade = "your trade" }
+
+[[line]]
+id = "plain_folk"
+tier = "common"
+weight = 5
+text = "Your parents were plain folk who worked, ate, slept, and did not talk about it."
+
+[[line]]
+id = "smiths_child"
+tier = "common"
+weight = 2
+text = "Your father was a smith, and the ring of his hammer was the first music you knew."
+effects = [{ weapon_marks = { maces = 3 } }]
+tags = ["smith"]
+set = { guardian = "your father", trade = "the forge" }
+
+[[line]]
+id = "foundling"
+tier = "common"
+weight = 1
+text = "You were a foundling, left at the minster door in a basket of rushes; the sisters raised you, and never let you forget it."
+effects = [{ skill = { heal = "1d4" } }, { alignment = 25 }]
+tags = ["orphan"]
+set = { guardian = "the sisters", home = "the minster" }
+
+[[line]]
+id = "deep_halls"
+tier = "common"
+weight = 3
+text = "You were born in the deep halls, where your father cut stone and your mother counted it."
+when = { race = ["dwarf", "duergar"] }
+tags = ["deep"]
+set = { home = "the deep halls" }
+
+[[line]]
+id = "comfortable"
+tier = "uncommon"
+weight = 2
+text = "Your parents were comfortable, as the town counted it: a house with two floors and a girl to do the fires."
+when = { not_talents = ["family_wealth"] }
+effects = [{ gold = "4d6+10" }]
+tags = ["wealthy"]
+set = { home = "the house" }
+
+# Family wealth tells its wealth here and gives nothing more: the talent gave it.
+[[line]]
+id = "old_money"
+tier = "common"
+weight = 1
+text = "You were born to money, and money was born to you: the house had a name, and the name had a seat at the reeve's table."
+when = { talents = ["family_wealth"] }
+only = true
+tags = ["wealthy"]
+set = { home = "the house" }

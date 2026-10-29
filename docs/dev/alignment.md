@@ -33,7 +33,8 @@ Alignment is good against evil, ADOM's law and chaos turned. Three modules:
 content has the rules: `Start::alignment`, the race's plus the class's `alignment` plus the birth
 animal's nudge, `Horoscope::alignment(sign)` (#272: `alignment` on an `[[animal]]` in
 `data/horoscope.toml`, checked by `check_start`; an element with one is refused on load), or 0
-without a character); `Actor::alignment_override: Option<Alignment>` is a level legend entry's `alignment`
+without a character; a background story's `alignment` effects then move it, its fourth term,
+docs/dev/background.md); `Actor::alignment_override: Option<Alignment>` is a level legend entry's `alignment`
 (`CreatureSpawn::alignment`). Read the one that counts with `Actor::nature(content)` (a score's
 band's side, else the override, else the type's `CreatureDef::alignment`) and
 `Actor::band(content)` (a score's band, else the nature's band, Neutral without rules). Both

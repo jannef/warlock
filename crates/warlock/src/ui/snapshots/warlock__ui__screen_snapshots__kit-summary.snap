@@ -4,7 +4,6 @@ expression: "render(case, content.clone())"
 ---
 
 
-
         ┌─ Your character ─────────────────────────────────────────────────────────────────┐
         │                                                                                  │
         │ > Start the run                                                                  │
@@ -29,6 +28,7 @@ expression: "render(case, content.clone())"
         │             2 wool cloaks, 10 wax candles, a coil of rope,                       │
         │             4 strips of dried meat, a scroll of identify, a sling (readied),     │
         │             10 sling stones (quivered), a lantern (in use), a long-stemmed pipe  │
+        │             Fate will have its say when you set out.                             │
         │   Alignment Neutral                                                              │
         │   Vision    Normal                                                               │
         │   Scenario  World, seed 1                                                        │

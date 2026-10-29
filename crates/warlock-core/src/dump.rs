@@ -91,6 +91,9 @@ pub enum Layer {
     /// The Hall`), from what they see and remember (a hidden location only once revealed);
     /// `no known locations` elsewhere or when there are none.
     Locations,
+    /// Not a map: the player's background story (spec §8 "Background story"), a paragraph a
+    /// line as the story screen tells it, a blank line between; `no story` without one.
+    Story,
     /// Not a map: the player's quest log, one quest a line, active first (`Rats in the arena
     /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
     Quests,
@@ -147,6 +150,7 @@ impl Layer {
         Layer::Traps,
         Layer::Locations,
         Layer::Quests,
+        Layer::Story,
         Layer::Truth,
         Layer::Actors,
         Layer::Progress,
@@ -175,6 +179,7 @@ impl Layer {
             Layer::Traps => "traps",
             Layer::Locations => "locations",
             Layer::Quests => "quests",
+            Layer::Story => "story",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
             Layer::Progress => "progress",
@@ -204,7 +209,7 @@ impl FromStr for Layer {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
                      inventory, equipment, stats, skills, weapon_skills, attacks, talents, \
-                     abilities, traps, locations, quests, truth, actors, progress, rooms, ice)"
+                     abilities, traps, locations, quests, story, truth, actors, progress, rooms, ice)"
                 )
             })
     }
@@ -235,6 +240,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Traps => trap_rows(&world.perception()),
         Layer::Locations => location_rows(&world.perception()),
         Layer::Quests => quest_rows(&world.perception()),
+        Layer::Story => story_rows(world),
         _ => {
             let view = world.perception();
             rows(view.width(), view.height(), |p| {
@@ -292,6 +298,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Traps
         | Layer::Locations
         | Layer::Quests
+        | Layer::Story
         | Layer::Truth
         | Layer::Actors
         | Layer::Progress
@@ -501,6 +508,39 @@ fn feature_state(level: &LevelState, content: &Content, room: &SpecialRoom) -> &
     } else {
         ", destroyed"
     }
+}
+
+/// The player's background story, a line an entry: `{chapter, line, text}`, the text with its
+/// slots filled; empty without a story.
+fn story_json(world: &World) -> Vec<Value> {
+    let view = world.perception();
+    let Some(c) = view.character() else {
+        return Vec::new();
+    };
+    (crate::background::lines(world.content(), world.campaign(), c).into_iter())
+        .map(|(t, _, text)| json!({ "chapter": t.chapter, "line": t.line, "text": text }))
+        .collect()
+}
+
+/// The player's background story, a paragraph a line with a blank line between, as the story
+/// screen tells it: `no story` without one. (The player knows their own story: `PerceptionView`'s
+/// character, told again from the content.)
+fn story_rows(world: &World) -> Vec<String> {
+    let view = world.perception();
+    let paragraphs = (view.character())
+        .map(|c| crate::background::retell(world.content(), world.campaign(), c))
+        .unwrap_or_default();
+    if paragraphs.is_empty() {
+        return vec!["no story".into()];
+    }
+    let mut rows = Vec::new();
+    for (i, p) in paragraphs.into_iter().enumerate() {
+        if i > 0 {
+            rows.push(String::new());
+        }
+        rows.push(p);
+    }
+    rows
 }
 
 /// The overworld locations the player knows, one a line by position: `(45, 23) The Hall`; `no
@@ -1259,10 +1299,24 @@ fn actor_rows(world: &World) -> Vec<String> {
                     Some(turn) => format!("{aware}, noticed turn {turn}"),
                     None => aware.to_string(),
                 };
+                // A lurker waits for its prey (`lurk.rs`).
+                let aware = if content.creature(a.creature).lurks {
+                    format!("{aware}, lurks")
+                } else {
+                    aware
+                };
                 match a.mind.missed {
                     Some(turn) => format!("{talk}; {aware}, missed turn {turn}"),
                     None => format!("{talk}; {aware}"),
                 }
+            };
+            // The player's background story by ids (spec §8 "Background story").
+            let talk = match world.state().character.as_ref().filter(|_| a.id == player) {
+                Some(c) if !c.story.is_empty() => {
+                    let ids: Vec<String> = c.story.iter().map(|t| t.id()).collect();
+                    format!("{talk}; story {}", ids.join(" "))
+                }
+                _ => talk,
             };
             // What it resists, in percent by kind (ground truth: never shown in play).
             let resists: Vec<String> = (world.resistances_of(a.id).iter())
@@ -1628,6 +1682,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             if let Some(title) = c.title(content) {
                 character["lucky"] = json!(title);
             }
+            // The background story's lines by id (spec §8 "Background story"), if told.
+            if !c.story.is_empty() {
+                character["story"] = c.story.iter().map(|t| t.id()).collect();
+            }
             character
         }),
         "stats": view.own_scores(),
@@ -1646,6 +1704,7 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "spells": spells_json(&view).0,
         "studies": spells_json(&view).1,
         "quests": quests_json(&view),
+        "story": story_json(world),
     });
     // A second `json!`: one macro call this long passes the recursion limit.
     let Value::Object(rest) = json!({

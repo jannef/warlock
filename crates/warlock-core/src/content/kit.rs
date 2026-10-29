@@ -15,7 +15,9 @@
 //!   axes, the thief's second dagger with Twin Blades;
 //! - `gender`: only for that gender (the hook for gender's items);
 //! - `magic`: a base item made as loot makes it, its rarity rolled (`any`: perhaps magic,
-//!   `magic`: magic or rare, `rare`), unidentified like any other.
+//!   `magic`: magic or rare, `rare`), unidentified like any other;
+//! - `prefer_trained`: among the alternatives, one of a weapon skill the character trains, if
+//!   any (a background story's heirloom, `data/background/`).
 
 use super::{Content, WeaponSkillId, object};
 use crate::character::Gender;
@@ -59,6 +61,7 @@ pub struct KitLineSpec {
     trained: Option<String>,
     gender: Option<Gender>,
     magic: Option<LootGrade>,
+    prefer_trained: bool,
 }
 
 /// A line written as a table.
@@ -71,6 +74,8 @@ struct KitTable {
     trained: Option<String>,
     gender: Option<Gender>,
     magic: Option<LootGrade>,
+    #[serde(default)]
+    prefer_trained: bool,
 }
 
 impl<'de> Deserialize<'de> for KitLineSpec {
@@ -93,6 +98,7 @@ impl<'de> Deserialize<'de> for KitLineSpec {
                     trained: None,
                     gender: None,
                     magic: None,
+                    prefer_trained: false,
                 })
             }
 
@@ -115,6 +121,7 @@ impl<'de> Deserialize<'de> for KitLineSpec {
                     trained: t.trained,
                     gender: t.gender,
                     magic: t.magic,
+                    prefer_trained: t.prefer_trained,
                 })
             }
         }
@@ -135,12 +142,45 @@ pub struct KitItem {
     pub gender: Option<Gender>,
     /// A base item made magic as loot is, at least this rare.
     pub magic: Option<LootGrade>,
+    /// Among the alternatives, one of a weapon skill in `trained` if there is any.
+    pub prefer_trained: bool,
 }
 
 impl KitItem {
     /// Whether it comes to a character of `gender` whose class trained `trained`.
     pub fn applies(&self, gender: Gender, trained: &[WeaponSkillId]) -> bool {
         self.gender.is_none_or(|g| g == gender) && self.trained.is_none_or(|t| trained.contains(&t))
+    }
+
+    /// Which alternative a character trained in `trained` gets: one draw from `rng` when there
+    /// is a choice (none for a single one). With `prefer_trained`, the choice is among the
+    /// alternatives of a weapon skill in `trained`, when there are any.
+    pub fn pick(
+        &self,
+        content: &Content,
+        rng: &mut crate::rng::Rng,
+        trained: &[WeaponSkillId],
+    ) -> usize {
+        let fits = |stacks: &Vec<Stack>| {
+            (stacks.iter()).any(|s| {
+                content
+                    .object(s.object)
+                    .skill
+                    .is_some_and(|k| trained.contains(&k))
+            })
+        };
+        let preferred: Vec<usize> = match self.prefer_trained {
+            true => (0..self.one_of.len())
+                .filter(|&i| fits(&self.one_of[i]))
+                .collect(),
+            false => Vec::new(),
+        };
+        match (preferred.len(), self.one_of.len()) {
+            (0, 0 | 1) => 0,
+            (0, n) => rng.index(n),
+            (1, _) => preferred[0],
+            (n, _) => preferred[rng.index(n)],
+        }
     }
 }
 
@@ -197,6 +237,7 @@ pub(super) fn resolve(
             trained,
             gender: spec.gender,
             magic: spec.magic,
+            prefer_trained: spec.prefer_trained,
         });
     }
     Ok(Kit(kit))

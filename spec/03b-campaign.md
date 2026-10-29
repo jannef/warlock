@@ -91,6 +91,8 @@ every new run starts in it.
   reliquary are objects of their own, worth nothing to a shop. The three
   branches' first levels each have an `arrival` line: "Cold air breathes up from the mound.",
   "The water is up to the third step.", "The galleries smell of sulphur."
+- **The road** (§8 "Background story"): the Ascmearc's own last chapter of a background story,
+  `campaigns/ascmearc/data/background/08-road.toml`: how the character came over Beorggeat.
 - **The player wiki** describes the Ascmearc and never the test world: a page "The Ascmearc"
   with the names and their meanings, the regions, and the overworld map drawn from the level
   file with the hidden locations on it (the wiki tells the truth, design §11.4), plus the places
