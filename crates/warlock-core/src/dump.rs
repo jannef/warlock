@@ -1259,6 +1259,12 @@ fn actor_rows(world: &World) -> Vec<String> {
                     Some(turn) => format!("{aware}, noticed turn {turn}"),
                     None => aware.to_string(),
                 };
+                // A lurker waits for its prey (`lurk.rs`).
+                let aware = if content.creature(a.creature).lurks {
+                    format!("{aware}, lurks")
+                } else {
+                    aware
+                };
                 match a.mind.missed {
                     Some(turn) => format!("{talk}; {aware}, missed turn {turn}"),
                     None => format!("{talk}; {aware}"),

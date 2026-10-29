@@ -149,6 +149,7 @@ mod level;
 mod lockpick;
 mod loot;
 mod lucky;
+mod lurk;
 mod mana;
 mod mimic;
 pub(crate) mod mirrors;
@@ -1569,6 +1570,8 @@ mod light_tests;
 mod lockpick_tests;
 #[cfg(test)]
 mod lucky_tests;
+#[cfg(test)]
+mod lurk_tests;
 #[cfg(test)]
 mod magic_tests;
 #[cfg(test)]
