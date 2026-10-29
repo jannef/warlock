@@ -96,7 +96,11 @@ The passive skills help you more the higher they are:
   [spell](magic.md) that rolls to hit only within 6 cells ([Long reach](talents.md#talent-long-reach): 9).
   Nothing that has no vitals takes them (see [Criticals](combat.md#criticals)). It also makes
   those you catch unawares slower to gather their wits: their initiative check is 8 harder at
-  100, 12 at 200. Each sneak attack that hits trains it half the time.
+  100, 12 at 200. Each sneak attack that hits trains it half the time. Two weapon abilities
+  fire on a sneak attack that hits: [Knife in the dark](weapon-skills.md#weapon-ability-knife-in-the-dark)
+  ([Daggers](weapon-skills.md#weapon-skill-daggers) 5) leaves the foe [bleeding](status-effects.md#bleeding), and
+  [Hunter's shot](fighting-styles.md#style-ability-hunters-shot) ([Marksman](fighting-styles.md#style-marksman) 6)
+  [pins](status-effects.md#status-pinned) it for one or two actions; neither fires without the dice.
 - **[Initiative](skills.md#skill-initiative)** helps you keep your wits when something falls on
   you unseen: +8 to the initiative check at 100, +12 at 200, and when you are
   [surprised](status-effects.md#status-surprised) all the same, your next action loses less time

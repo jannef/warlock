@@ -63,6 +63,7 @@ current with the code, as CLAUDE.md says.
 | `fight.rs::resolve` | `unaware` asked of every attack with a profile (no draw); `sneaks` (`ambush.rs`) decides the sneak dice on unaware **or Surprised**, a missile within reach, a target with vitals; `startle` before the mimic is found out and before the strike's draws; `vitals` and `flat_footed` after `target_against` |
 | `fight.rs::target_of`, `Actor::target` | `no_criticals` from `Content::has_vitals` |
 | `cast.rs::spell_attack` | a spell that rolls to hit (an own cast, a scroll's, a wand's, a reflected one): `unaware`, `sneaks` (a missile unless a touch), `startle`, `vitals`, `flat_footed`, `sneak_threat` before its roll; `ambushed` after, its dice on top of the spell's cap |
+| `fight.rs::resolve`, `cast.rs::spell_attack` | `sneak_trigger` (`ambush.rs`) after `resolve_triggers` (`spell_practised`): a sneak attack that hit (its dice landed) fires the `sneak_attack` weapon abilities of the attack's skills (#685; docs/dev/weapon-abilities.md) |
 | `weapon_active.rs::active_blow`, `openings.rs::finisher` | `no_vital_spot` after a sure critical's blow |
 | `trap.rs::step_onto_trap` | a hidden trap (any trap for a creature, an unknown one for the player) that sprang (`World::sprung` moved) `startle`s its victim, after the trap's own draws; nobody beside |
 | `free_blow.rs::free_blows_of` | Surprised: no riposte, opportunist, gatekeeper (its own attack's cleave, flurry, and second blow stay) |

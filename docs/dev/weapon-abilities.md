@@ -80,6 +80,7 @@ for the one attacked). Where each is raised (a line that already marks the event
 | `blocked`, `dodged` | the same, on a melee miss by the target's Shield, or Dexterity or Dodge (decided: melee only, a striker beside) | the target's held |
 | `big_hit` | `resolve`, before `after_blow` (the target alive), `World::big_hit_trigger` (`combat::big_hit`) | the attack's |
 | `kill` | `resolve`, beside `train_kill` (the attack is known there, not in `dies`) | the attack's |
+| `sneak_attack` | `ambush.rs::sneak_trigger`, from `resolve` after `resolve_triggers` and from `cast.rs::spell_attack` after `spell_practised` (#685): the attack was a sneak attack (`sneaks`: the attacker has sneak dice) and hit, so its dice landed in `ambushed`; before the damage, as `hit` (Knife in the dark, Hunter's shot) | the attack's |
 | `parried` | `second_blow(Cue::Attacked { parried: true })`, before the cleave or riposte | the target's held |
 | `both_hands_hit` | `World::both_hands`, from `World::attack` and `player_attacks` after the second blow: both `Strike::Hit`, the second made with a weapon (not a shield: a bash is no second hand; not a flurry's fist), the target alive; once an attack | the attack's |
 | `approaches` | `World::approached`, from `World::step_up` (the creature's step in `ai.rs` and now the player's in `travel.rs`) | the approached's missile weapon (`Ranged`), else what it has ready to throw (`Thrown`) |

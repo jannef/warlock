@@ -385,6 +385,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `missile_reach` (6) cells, Chebyshev, plus Long reach's `sneak_reach`. Decided before the
     strike (no draw), the dice drawn from the gameplay stream on a hit; the player's mark Sneak
     attack (`sneak_attack`, 50 %) and Dexterity (`sneak_attack`, 20 %) on the training stream.
+    A sneak attack that hits raises the `sneak_attack` weapon-ability trigger (§8i "Weapon
+    abilities": Knife in the dark, Hunter's shot) with the attack's skills, after its `hit`
+    triggers (`World::sneak_trigger`); none without the dice.
   - **Vitals** (critical immunity; `Content::has_vitals`, the one reader): an incorporeal
     creature, an animated object, a type carrying a tag of `no_vitals` (elemental, skeleton,
     spirit, construct), or one with `vitals = false` has no vitals: no critical is confirmed on it
