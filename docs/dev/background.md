@@ -179,7 +179,7 @@ each, and adds no saved state and no action:
 | Talent | Rule | Read |
 |---|---|---|
 | Favoured child (`heritage`, creation only) | `{ kind = "story_luck", value = 100 }`: the uncommon, rare, and fateful odds doubled (24 %, 6 %, 1 % a chapter), the common's fall to match | `World::tell_background`: the witness's `luck` = 100 + `story_luck`; `background::tell` scales `[tiers]` by it before each chapter's first draw. The streams and draws are the same, so a story without the talent is told as before |
-| Hard-won (`heritage`, creation only) | `{ kind = "hard_won", marks = 3 }`: each stat point a line took is 3 stat training marks on that stat | `World::story_stat`, the `stat` arm: the points actually taken (a score at 1 loses none) × `hard_won`, into `Actor::stat_marks`; a boon gives none |
+| Hard-won (`heritage`, creation only) | `{ kind = "hard_won", marks = 12 }`: each stat point a line took is 12 stat training marks on that stat | `World::story_stat`, the `stat` arm: the points actually taken (a score at 1 loses none) × `hard_won`, into `Actor::stat_marks`; a boon gives none |
 | Storyteller (`scholar`, Presence 12) | `{ kind = "storyteller", value = 5, rare = 5, fateful = 10 }`: shop favour +5 %, +5 % per rare line, +10 % per fateful one, before the cap | `world::shop::favour(content, shops, actor, story)`: `story` is `background::tiers(content, campaign, &character.story)` (the tier of each line the content still has), the one read of a story in play, made by `World::player_favour` and `PerceptionView::shop_at` |
 
 Creation-only through `Need::Creation`, as the heritage talents: offered at the creation picks

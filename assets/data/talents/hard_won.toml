@@ -6,5 +6,5 @@ name = "Hard-won"
 tree = "heritage"
 description = "What your youth took from you, you mean to win back: a score your story lowered rises again sooner."
 needs = { creation = true }
-effects = [{ kind = "hard_won", marks = 3 }]
+effects = [{ kind = "hard_won", marks = 12 }]
 systems = ["background", "stat_training"]

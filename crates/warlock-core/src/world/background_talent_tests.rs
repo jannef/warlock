@@ -144,8 +144,8 @@ fn hard_won_marks_every_point_a_story_took() {
     let won = start(&content, character, &["hard_won"], 3).expect("starts");
     assert_eq!(story(&won), ["trade/told"]);
     let (p, w) = (plain.state().player(), won.state().player());
-    // Three marks a point taken; none for the point given; without the talent, none at all.
-    assert_eq!(w.stat_marks[Stat::Strength], 6);
+    // Twelve marks a point taken; none for the point given; without the talent, none at all.
+    assert_eq!(w.stat_marks[Stat::Strength], 24);
     assert_eq!(w.stat_marks[Stat::Dexterity], 0);
     assert_eq!(p.stat_marks[Stat::Strength], 0);
 }
