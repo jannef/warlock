@@ -863,6 +863,7 @@ impl World {
         // Weapon abilities (`weapon_ability.rs`) fire on the same events, and on a melee
         // attack's miss by the target's Shield, Dexterity, or Dodge.
         self.resolve_triggers((attacker, target), (kind, skills), blow, events);
+        self.sneak_trigger((attacker, target), (kind, skills), (unseen, blow), events);
         if let Some(blow) = blow
             && blow.damage > 0
         {

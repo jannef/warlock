@@ -427,6 +427,111 @@ fn deep_cut_bleeds_more_on_a_big_hit_up_to_the_max() {
     assert_eq!(bled(5, 5), 5, "never past bleeding's max");
 }
 
+/// Actor `target` is Surprised (a sneak attack's second door: it need not be unaware).
+fn surprise(w: &mut World, target: ActorId) {
+    let surprised = w.content().status_id("surprised").expect("surprised");
+    w.afflict(target, surprised, 1, None, &mut Vec::new());
+}
+
+/// The player, with `sneak` in Sneak attack and `ranks`, attacks the post `ahead` by `action`
+/// (a blow or a shot), the post Surprised before each attack when `surprised`, until one hits:
+/// the post's `status` then.
+fn sneak_status(
+    (map, ahead): (&str, (i32, i32)),
+    (sneak, ranks_of): (u16, &[(&str, u8)]),
+    (action, surprised, status): (Action, bool, &str),
+) -> u16 {
+    let mut w = world(map);
+    let (player, post) = (w.player_id(), at(&w, ahead.0, ahead.1));
+    if matches!(action, Action::Fire(_)) {
+        give(&mut w, player, "short_bow");
+        let arrow = w.content().object_id("arrow").expect("arrow");
+        let me = w.player_mut();
+        me.inventory.push(crate::object::Stack::new(arrow, 40));
+        let item = me.inventory.len() - 1;
+        let content = w.content().clone();
+        let me = w.player_mut();
+        let slot = equipment::free_slot(&content, &me.equipment, arrow).expect("the quiver");
+        me.equipment
+            .put(&equipment::slots_taken(&content, arrow, slot), item);
+    } else {
+        give(&mut w, player, "dagger");
+    }
+    ranks(&mut w, player, ranks_of);
+    super::vitals_tests::train(&mut w, "sneak_attack", sneak);
+    let kind = match action {
+        Action::Fire(_) => AttackKind::Ranged,
+        _ => AttackKind::Melee,
+    };
+    for _ in 0..40 {
+        if surprised {
+            surprise(&mut w, post);
+        }
+        let outcome = w.apply(&action);
+        if hits(&outcome, player, kind) == 1 {
+            return severity(&w, post, status);
+        }
+    }
+    panic!("no hit in forty attacks");
+}
+
+#[test]
+fn knife_in_the_dark_bleeds_a_foe_a_dagger_sneak_attacks() {
+    let bled = |rank: u8, sneak: u16, surprised: bool| {
+        let fight = ("#####\n#@p.#\n#####\n", (2, 1));
+        let ranks = [("daggers", rank)];
+        sneak_status(
+            fight,
+            (sneak, &ranks),
+            (Action::Move(Dir::E), surprised, "bleeding"),
+        )
+    };
+    assert_eq!(bled(5, 10, true), bled(4, 10, true) + 1, "the vein found");
+    // Only when the dice land: not on a foe that is ready, nor without the dice.
+    assert_eq!(bled(5, 10, false), bled(4, 10, false));
+    assert_eq!(bled(5, 0, true), bled(4, 0, true));
+}
+
+#[test]
+fn hunters_shot_pins_a_foe_a_shot_sneak_attacks() {
+    let pinned = |rank: u8, sneak: u16, surprised: bool| {
+        let fight = ("#######\n#@..p.#\n#######\n", (4, 1));
+        let ranks = [("bows", 1), ("marksman", rank)];
+        sneak_status(
+            fight,
+            (sneak, &ranks),
+            (Action::Fire(Pos::new(4, 1)), surprised, "pinned"),
+        )
+    };
+    let landed = pinned(6, 10, true);
+    assert!((1..=2).contains(&landed), "pinned a turn or two: {landed}");
+    assert_eq!(pinned(5, 10, true), 0, "not below the rank");
+    assert_eq!(pinned(6, 10, false), 0, "not on a foe that is ready");
+    assert_eq!(pinned(6, 0, true), 0, "not without the dice");
+}
+
+#[test]
+fn the_sneak_attack_trigger_draws_nothing_without_the_rank() {
+    // A sneak attack with the dice but no qualifying rank: the same draws with and without
+    // the abilities' data.
+    let run = |abilities: bool| {
+        let content = content("#####\n#@p.#\n#####\n", abilities);
+        let mut w = World::new(content, "wa_yard", None).expect("world");
+        let (player, post) = (w.player_id(), at(&w, 2, 1));
+        give(&mut w, player, "dagger");
+        ranks(&mut w, player, &[("daggers", 4)]);
+        super::vitals_tests::train(&mut w, "sneak_attack", 10);
+        let mut hashes = Vec::new();
+        for _ in 0..6 {
+            surprise(&mut w, post);
+            w.apply(&Action::Move(Dir::E));
+            hashes.push(w.state_hash());
+        }
+        hashes
+    };
+    assert_eq!(run(true), run(false));
+}
+
 #[test]
 fn crushing_blow_stunning_bash_stunning_fist_and_trip_land_their_statuses() {
     // Crushing blow: a big hit with an axe.

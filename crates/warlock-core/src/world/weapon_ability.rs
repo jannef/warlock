@@ -12,6 +12,7 @@
 //! **Triggers: one hook.** [`World::weapon_trigger`] is the one place triggered abilities fire.
 //! It is called from the lines that already raise each event (`fight.rs::resolve` for hits,
 //! criticals, big hits, kills, being struck, and the blocked and dodged attributions;
+//! `ambush.rs::sneak_trigger` for a sneak attack that hits, from `resolve` and the spell attack;
 //! `second_blow`'s end of an attack for a parry; the two-weapon attack for both hands;
 //! `step_up` for a hostile approaching; `cast.rs::cast_single` for a spell's attack blocked by
 //! a shield, `reflect.rs`), reads the abilities (a lookup: no draw) and applies

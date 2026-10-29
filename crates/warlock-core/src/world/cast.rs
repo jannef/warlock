@@ -983,6 +983,8 @@ impl World {
                 // The sneak dice come on top of the spell's cap, as after Protection.
                 let sneak = self.ambushed(by, unseen, blow).damage - blow.damage;
                 self.spell_practised(target, skills, blow, made);
+                let spell = (AttackKind::Spell, skills);
+                self.sneak_trigger((by, target), spell, (unseen, Some(blow)), made);
                 (blow.damage, blow.strike, sneak)
             }
             Resolution::Auto | Resolution::Area => (
