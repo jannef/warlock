@@ -99,7 +99,7 @@ it); every race's own childhood; ids never change (saves name them).
 
 **The samples** (`background::tests::the_samples_read_as_written`): three kitted runs on
 Beorggeat (`World::start_run`, so the witness is the real one, picks and all), their stories
-pinned as text: Edwin (human commoner, seed 72, eight common lines), Brakka (dwarf warrior,
+pinned as text: Edwin (human commoner, seed 85, eight common lines; 72 until B4's talents moved his Random pick), Brakka (dwarf warrior,
 seed 24, the rare heirloom), Tamsin (halfling thief, seed 21, a grim one). A pool edit that
 moves a sample's lines fails it: pick new seeds from `find_samples` (ignored; `cargo test -p
 warlock-core find_samples -- --ignored --nocapture` prints 300 stories of each with every
@@ -114,8 +114,9 @@ count in a story of the Ascmearc's eight chapters, its worth band, whether it ma
 chapters of a story in the Ascmearc (never the showcase's road): every line, commonest first
 then by weight, with its kind (and `only`), weight, conditions in words, text (slots as
 written), effects exactly with the line's worth, and the tags and words it sets. The page is
-`wiki/src/background.md`. The Favoured child columns and `background-talents.md` come with the
-talents (B4, #705).
+`wiki/src/background.md`. With the talents (B4, #705) `background-tiers.md` gained the "With
+Favoured child" column (`Tiers::of` counted over every roll at 100 + the talent's `story_luck`)
+and `background-talents.md` lists the `background` system's talents with their rules.
 
 ## The roll
 
@@ -123,8 +124,8 @@ talents (B4, #705).
 `take_creation`): the character (spec, sign, birth date), the age at the start date, a lucky day,
 the starting band (before the story's nudges), the trained skills, the talents held (creation
 picks, Random ones too, the sign's gifts, the race's and the class's level 1 grants), the weapon
-skills with a rank (what `prefer_trained` prefers), the campaign, and `luck` (100; B4's
-Favoured child scales it). `background::tell` then, per chapter in order, from its own stream:
+skills with a rank (what `prefer_trained` prefers), the campaign, and `luck` (100 +
+`TalentMods::story_luck`: 200 with Favoured child, B4). `background::tell` then, per chapter in order, from its own stream:
 
 1. the tier: `rng.below(1000)` against `Tiers::of(roll, luck)`;
 2. the pool: if a line with `only` fits, the fitting `only` lines (they are common, so they
@@ -153,6 +154,23 @@ whatever tier was drawn, so the heritage talents always force their lines.
 
 Then hit points and mana to their maxima. `start_run` sets mana and the perception after it, as
 before.
+
+## The talents (B4, #705)
+
+The `background` system (`data/talents.toml`, after `experience`) has three talents, one read
+each, and adds no saved state and no action:
+
+| Talent | Rule | Read |
+|---|---|---|
+| Favoured child (`heritage`, creation only) | `{ kind = "story_luck", value = 100 }`: the uncommon, rare, and fateful odds doubled (24 %, 6 %, 1 % a chapter), the common's fall to match | `World::tell_background`: the witness's `luck` = 100 + `story_luck`; `background::tell` scales `[tiers]` by it before each chapter's first draw. The streams and draws are the same, so a story without the talent is told as before |
+| Hard-won (`heritage`, creation only) | `{ kind = "hard_won", marks = 3 }`: each stat point a line took is 3 stat training marks on that stat | `World::story_stat`, the `stat` arm: the points actually taken (a score at 1 loses none) × `hard_won`, into `Actor::stat_marks`; a boon gives none |
+| Storyteller (`scholar`, Presence 12) | `{ kind = "storyteller", value = 5, rare = 5, fateful = 10 }`: shop favour +5 %, +5 % per rare line, +10 % per fateful one, before the cap | `world::shop::favour(content, shops, actor, story)`: `story` is `background::tiers(content, campaign, &character.story)` (the tier of each line the content still has), the one read of a story in play, made by `World::player_favour` and `PerceptionView::shop_at` |
+
+Creation-only through `Need::Creation`, as the heritage talents: offered at the creation picks
+(and `--talents favoured_child,…`), refused at a level in words. Random creation picks draw among
+the offered talents, so adding them moved some kitted runs' picks (the screen snapshots
+`chargen-talents-*`, `kit-*`, `talents-screen*`, `level-up-*`, `abilities-menu-*`,
+`character-*`, and the Edwin sample's seed). Tests: `world/background_talent_tests.rs`.
 
 ## Who, and what is saved
 

@@ -83,6 +83,18 @@ each sentence true to its kind.
 
 Only a character you make is told a story; a run that is resumed keeps the story it had.
 
+## Talents
+
+Three [talents](talents.md) touch your story. Two are [heritage](talents.md#heritage-only-at-character-creation)
+talents, offered only at character creation, since the story is told as the run begins and
+nothing later changes it: [Favoured child](talents.md#talent-favoured-child) doubles the odds of
+the luckier kinds (the "With Favoured child" column above), and [Hard-won](talents.md#talent-hard-won)
+turns each [stat](stats.md) point a sentence takes into [stat training marks](stats.md#training).
+The third, [Storyteller](talents.md#talent-storyteller), is picked at a level like any other: your
+favour in [shop prices](shops.md#prices) rises, the more for each rare or fateful sentence in your story.
+
+{{#include generated/background-talents.md}}
+
 ## Every sentence
 
 Every sentence of every chapter, with what it asks for, what it gives, and what it leaves for

@@ -89,6 +89,15 @@ at once, on top of your [starting kit](starting-kit.md).
   (two make it magic, more make it [rare](magic-items.md#rarity) and give it a name), and you [know what it does](magic-items.md#unidentified-items) from the
   start. It is readied in its own [slot](equipment.md#what-fits-where) (the main hand, the [missile weapon](ranged.md#getting-ready) slot for a sling or a
   bow) if your kit left that free; otherwise it waits in your pack beside the kit's own weapon.
+- **[Favoured child](talents.md#talent-favoured-child)**: the luckier turns of your
+  [background story](background.md#how-rare) come twice as often: its uncommon, rare, and
+  fateful sentences at 24 %, 6 %, and 1 % a chapter instead of 12 %, 3 %, and 0.5 %. It is a
+  gamble: a commoner story may still be told, and nothing good is promised.
+- **[Hard-won](talents.md#talent-hard-won)**: each [stat](stats.md) point a sentence of your
+  [story](background.md#what-a-story-gives) takes is three [stat training marks](stats.md#training)
+  on that stat, so the point is likely back at your second or third [level](experience.md#levels). The
+  score and its [potential](stats.md#potentials) still fall with the sentence; what comes back is
+  a real rise.
 
 {{#include generated/talents-heirlooms.md}}
 

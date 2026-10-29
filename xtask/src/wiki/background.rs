@@ -5,7 +5,7 @@
 use super::kits::line_text;
 use super::text::{Term, link, signed, stat_link, table_text};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Marks, StoryEffect, StoryLine, StoryTier};
+use warlock_core::content::{Content, Marks, StoryEffect, StoryLine, StoryTier, TalentEffect};
 
 /// The campaign whose own chapter (the road) the wiki lists: the first campaign's.
 const CAMPAIGN: &str = "ascmearc";
@@ -27,19 +27,44 @@ fn percent(p: f64) -> String {
     }
 }
 
-/// The four tiers: the odds of each per chapter as drawn, and for a story of the first
-/// campaign's chapters the chance of at least one and the expected count.
+/// The luck Favoured child gives, in percent of `[tiers]` (100 + its `story_luck`; 100 without
+/// the talent).
+fn favoured_luck(content: &Content) -> u32 {
+    let book = content.talents();
+    let bonus: i32 = (book.id("favoured_child").map(|id| book.get(id)))
+        .into_iter()
+        .flat_map(|def| def.effects_at(1))
+        .map(|e| match e {
+            TalentEffect::StoryLuck { value } => value,
+            _ => 0,
+        })
+        .sum();
+    u32::try_from(100 + bonus).unwrap_or(0)
+}
+
+/// The odds of `tier` per chapter at `luck` percent of the luckier tiers' (`Tiers::of`, counted
+/// over every roll).
+fn odds(content: &Content, tier: StoryTier, luck: u32) -> f64 {
+    let b = content.background().expect("stories");
+    let hits = (0..1000).filter(|&r| b.tiers.of(r, luck) == tier).count();
+    hits as f64 / 1000.0
+}
+
+/// The four tiers: the odds of each per chapter as drawn (and with Favoured child), and for a
+/// story of the first campaign's chapters the chance of at least one and the expected count.
 pub(super) fn tiers(content: &Content) -> String {
-    let Some(b) = content.background() else {
+    if content.background().is_none() {
         return "No story is told.\n".into();
-    };
+    }
     let n = chapters(content);
+    let luck = favoured_luck(content);
     let mut out = format!(
-        "| Kind | Per chapter | At least one in a story of {n} | Expected in a story of {n} | \
-         Worth | May take |\n|---|---:|---:|---:|---|---|\n"
+        "| Kind | Per chapter | With {} | At least one in a story of {n} | \
+         Expected in a story of {n} | Worth | May take |\n|---|---:|---:|---:|---:|---|---|\n",
+        link(Term::Talent, "favoured_child", "Favoured child")
     );
     for tier in StoryTier::ALL {
-        let p = f64::from(b.tiers.per_mille(tier)) / 1000.0;
+        let p = odds(content, tier, 100);
         let (low, high, bane) = tier.band();
         let (once, expected) = match tier {
             StoryTier::Common => ("—".to_string(), format!("{:.2}", p * n as f64)),
@@ -50,12 +75,39 @@ pub(super) fn tiers(content: &Content) -> String {
         };
         let _ = writeln!(
             out,
-            "| {} | {} | {once} | {expected} | {} to {} | {} |",
+            "| {} | {} | {} | {once} | {expected} | {} to {} | {} |",
             capital_tier(tier),
             percent(p),
+            percent(odds(content, tier, luck)),
             signed_or_zero(low),
             signed_or_zero(high),
             if bane { "yes" } else { "no" }
+        );
+    }
+    out
+}
+
+/// The talents of the `background` system: each with its tree, what it needs, and its rule
+/// exactly, by name.
+pub(super) fn talents(content: &Content) -> String {
+    let book = content.talents();
+    let Some(system) = book.systems.iter().position(|s| s.id == "background") else {
+        return "No talents yet.\n".into();
+    };
+    let mut rows: Vec<_> = (book.iter())
+        .filter(|(_, d)| d.systems.iter().any(|s| usize::from(s.0) == system))
+        .map(|(_, d)| d)
+        .collect();
+    rows.sort_by(|a, b| a.name.cmp(&b.name));
+    let mut out = String::from("| Talent | Tree | Needs | Effect |\n|---|---|---|---|\n");
+    for def in rows {
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} |",
+            link(Term::Talent, &def.id, &def.name),
+            book.trees[usize::from(def.tree.0)].name,
+            super::talents::needs_text(content, def),
+            super::talents::effects_text(content, def),
         );
     }
     out
