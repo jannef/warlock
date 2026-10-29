@@ -198,6 +198,7 @@ mod surprise;
 mod talent;
 mod talk;
 mod temper;
+mod thief;
 mod train;
 mod trap;
 mod travel;
@@ -931,6 +932,16 @@ impl World {
             player.boons = boons;
         }
         let mut retiered = retiered;
+        // A talent the content no longer has (the thief's Trapfinding, Pick lock, and Light
+        // fingers, #684) is let go, and said in the log.
+        for actor in state.actors.values_mut() {
+            for id in actor.talents.drop_unknown(&content) {
+                retiered.push(format!(
+                    "actor {} held talent `{id}`, which this content does not have: dropped",
+                    actor.id
+                ));
+            }
+        }
         // The berserker stance exactly while raging (`berserker.rs`): a save that broke the rule
         // is put right.
         for actor in state.actors.values_mut() {

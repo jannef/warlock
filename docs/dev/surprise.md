@@ -59,6 +59,10 @@ current with the code, as CLAUDE.md says.
   `Use::SneakAttack`, training stream), `has_vitals_for` and `vitals` (the struck side's
   `no_criticals` with the attacker's Anatomist tags), `no_vital_spot` (Vital strike's and the
   finisher's "It has no vital spot.", a `news` line after the blow's).
+- `world/thief.rs`, the thief's actives and passive on surprise (#684): Lurk (`lurking` in
+  `status.toml`, after Surprised: `per_action`, `max = 1`, `refresh`, "You wait in ambush.",
+  no `end`), Low blow (`Technique::sneak`), Vanishing act (`sneak_kill_status`). The hooks are
+  the rows marked #684 below.
 - `combat::Target::no_criticals`: `strike_with` makes a threat a plain hit with no confirmation
   draw, and a sure critical a plain hit.
 - `combat::Target::without(categories)`: the strip of positive Defence bonuses, shared with
@@ -78,6 +82,8 @@ current with the code, as CLAUDE.md says.
 | `weapon_ability.rs::approached` | a Surprised keeper fires no Point-blank shot |
 | `schedule.rs::slowed` | `Effects::slow_with(price, status_cost)`: the dear action |
 | `weapon_ability.rs::spend_actions` | a `per_action` status that ends pushes `Event::Status { began: false }` (its `end` line: "You recover your wits.", Staggered's and Pinned's too) |
+| `fight.rs::resolve` (#684) | `lurked` (a lurk's blow on a creature not hunting the player is unaware: `startle`, flat-footed, dice) and `low_blow_taken` (a low blow passes `sneaks` as unaware: dice only); `vanishing_act` beside `Build::SneakKill` |
+| `free_blow.rs::free_blows_of`, `step_up` (#684) | Lurking switches the gatekeeper's blow on; `lie_in_wait` flags the player's blow from a lurk (`Technique::lurk`, cleared after) |
 | `perceive.rs::perceive` | `mark_noticed` |
 | `dump.rs` | the `actors` layer: `unaware of player` / `aware`, `noticed turn N` |
 

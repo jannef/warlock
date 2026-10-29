@@ -738,6 +738,17 @@ cost = 150
 start = "You are taken by surprise!"
 end = "You recover your wits."
 
+# Lurking, the thief's Lurk (#684, a class active): waiting in ambush. A hostile that steps up
+# beside the lurker takes its blow at once, caught unawares unless it was hunting them; the
+# lurker's next action ends it, silently.
+[[status]]
+id = "lurking"
+name = "Lurking"
+max = 1
+stacking = "refresh"
+per_action = true
+start = "You wait in ambush."
+
 # Walled, Shield wall's (a weapon active, #564): the shield set and the bearer behind it, Shield
 # +3 to Defence on top of the shield's own, every attack a quarter slower; five degrees, a degree
 # a turn.

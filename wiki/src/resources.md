@@ -31,7 +31,9 @@ back while you act, but not while you rest.
 
 The [thief](classes.md#thief)'s **openings** are in too: every thief holds them from level 1 ([Sneak attack](talents.md#talent-sneak-attack)),
 starting at 0. Every [sneak attack](skills.md#skill-sneak-attack) that hits gives one, up to 5, and one slips away every 20
-base turns (2 minutes); empty, they stay with you. At level 60 [Master thief](talents.md#talent-master-thief)'s **finisher** (an
+base turns (2 minutes); empty, they stay with you. At level 12 [Low blow](abilities.md#ability-low-blow) (an ability,
+aimed in a direction) spends 3 for a melee blow that is a [sneak attack](skills.md#skill-sneak-attack) whatever the foe
+knows. At level 60 [Master thief](talents.md#talent-master-thief)'s **finisher** (an
 ability, aimed in a direction) spends all 5 for a melee blow that is a [critical](combat.md#criticals) whenever it
 hits: no confirmation roll is made. A miss still spends them.
 
@@ -71,7 +73,7 @@ Such an item never **grants** a pool: it does nothing for one who does not hold 
 which: stamina, every [warrior](classes.md#warrior), [barbarian](classes.md#barbarian), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [monk](classes.md#monk), [thief](classes.md#thief), and [bard](classes.md#bard), and anyone
 else once a [weapon rank](weapon-skills.md#marks-and-ranks) teaches an active; rage, a [raging](status-effects.md#status-raging) [barbarian](classes.md#barbarian) (only while the rage
 lasts); focus, a [ranger](classes.md#ranger) from level 12; ki, a [monk](classes.md#monk) from level 18; inspiration, a [bard](classes.md#bard) from level
-18; openings, a [thief](classes.md#thief) from level 32. A ring of rage on a [wizard](classes.md#wizard) is dead weight, and [creatures](creatures.md)
+18; openings, a [thief](classes.md#thief) from level 1. A ring of rage on a [wizard](classes.md#wizard) is dead weight, and [creatures](creatures.md)
 never hold a pool, so their gear does nothing for them, only for whoever takes it from them.
 
 {{#include generated/resources.md}}

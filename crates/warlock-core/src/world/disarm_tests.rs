@@ -215,8 +215,10 @@ fn the_try_is_dexterity_and_disable_device_against_the_traps_difficulty() {
     let mut w = world("#####\n#@a.#\n#####\n", THIEF);
     let content = w.content().clone();
     let dexterity = (w.state.player().effective_stats(&content)).modifier(Stat::Dexterity);
-    // A beginner's Disable device gives nothing yet; a master's +8.
-    assert_eq!(w.disarm_modifier(), dexterity);
+    // A thief's starting Disable device (2d6+10, #684) gives a point or so; a master's +8.
+    let start = w.state.player().skill_effect(&content, Effect::Disarm);
+    assert!((0..=2).contains(&start), "{start}");
+    assert_eq!(w.disarm_modifier(), dexterity + start);
     let id = disable_device(&w);
     let value = i32::from(w.state.player().skills.value(id).expect("trained"));
     w.player_mut().skills.add(id, 100 - value);

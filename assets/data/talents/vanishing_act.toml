@@ -1,0 +1,8 @@
+[[talent]]
+id = "vanishing_act"
+name = "Vanishing act"
+tree = "class"
+granted = true
+description = "The body drops, and you are already elsewhere: a sneak attack of yours that kills leaves you light on your feet."
+effects = [{ kind = "sneak_kill_status", status = "light_footed" }]
+systems = ["sneak_attack", "speed"]
