@@ -42,3 +42,10 @@ branch), nor are the nymph, the korred, and the yeth hound (levels 22 to 31: no 
 them). Teleport, illusions, flight, charm, tree-binding, a death burst, poisoned
 missiles, oil, stone shaping, captive transformation, and a woodland place for the rest are
 follow-ups.
+
+Surprise (#686, spec §8 "Surprise and sneak attacks"): four of the Unseelie's kin sneak-attack,
+by their `skills`: the quickling `sneak_attack = 40` (2d6) with `initiative = 150` (it cuts
+before it is seen, and is nearly never caught off guard), the darkling 30 (2d6) and 50, the
+redcap 40 (2d6) and 40, the meenlock 30 (2d6) and 30. The meenlock **lurks** (`lurks = true`,
+`world/lurk.rs`): a hostile it sees, it waits for where it stands until it comes beside it or
+the meenlock is hurt. `bestiary_tests::the_sneak_attackers_carry_their_craft_and_two_lurk` checks the numbers.

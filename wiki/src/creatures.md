@@ -48,6 +48,11 @@ for the nearest one:
   nothing solid, and nobody, in between. If they have one, they attack from where they are;
   otherwise they move to the nearest place that gives them one. An archer spends an [arrow](ammunition.md) a
   shot, and with none left (or no bow) it comes to fight up close ([Ranged combat](ranged.md)).
+- A few creatures **lurk**: the [meenlock](creatures.md#creature-meenlock) and the
+  [barrow spider](creatures.md#creature-barrow-spider). One that sees its target does not come at
+  it: it waits where it stands, well aware of it, and attacks once the target comes beside it (or
+  shoots or casts from where it stands, if it can). Once it is hurt, it hunts like any other.
+  The table in [Creatures in numbers](creature-numbers.md#surprise) says which they are.
 - When it loses sight of its target, it goes to where it last saw it (or next to that spot, if
   someone it cannot see stands there). If it finds no one there, or cannot get there, it gives up.
 - When it **[hears](hearing.md#what-makes-noise)** something it cannot see, it goes to have a look, if it has enemies at all

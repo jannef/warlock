@@ -63,6 +63,13 @@ current with the code, as CLAUDE.md says.
   `status.toml`, after Surprised: `per_action`, `max = 1`, `refresh`, "You wait in ambush.",
   no `end`), Low blow (`Technique::sneak`), Vanishing act (`sneak_kill_status`). The hooks are
   the rows marked #684 below.
+- `world/lurk.rs`, lurking (#686): `World::lurker_waits` turns the step of `ai.rs::fight`'s plan
+  into a wait for a type with `lurks = true` (`CreatureDef::lurks`) while its hit points are at
+  their maximum; an attack (a blow beside it, a shot or cast from where it stands) and a summons
+  stand. No draws. The creatures that sneak-attack are data: `skills` (`sneak_attack`,
+  `initiative`, `spot`) on eight types, read through the same `Actor::skill_effect` as the
+  player's (the roster notes: `docs/dev/creatures/drow.md`, `fey.md`, `undead.md`,
+  `campaign-waves.md`).
 - `combat::Target::no_criticals`: `strike_with` makes a threat a plain hit with no confirmation
   draw, and a sure critical a plain hit.
 - `combat::Target::without(categories)`: the strip of positive Defence bonuses, shared with
@@ -86,6 +93,8 @@ current with the code, as CLAUDE.md says.
 | `free_blow.rs::free_blows_of`, `step_up` (#684) | Lurking switches the gatekeeper's blow on; `lie_in_wait` flags the player's blow from a lurk (`Technique::lurk`, cleared after) |
 | `perceive.rs::perceive` | `mark_noticed` |
 | `dump.rs` | the `actors` layer: `unaware of player` / `aware`, `noticed turn N` |
+| `ai.rs::decide` (#686) | `lurker_waits` (`lurk.rs`) on the plan `fight` returns for a hostile in sight |
+| `dump.rs` (#686) | the `actors` layer: `lurks` after the awareness of a lurking type |
 
 Slipping past's hooks (#683): `ai.rs::nearest_hostile_in_sight` calls `slip::looks_at` for each
 hostile; `ai.rs::decide` calls `slip_lapses` first; `ai.rs::noise_to_look_into` takes a cell seen
