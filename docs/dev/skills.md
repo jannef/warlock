@@ -37,7 +37,8 @@ are rolled by `character::optional_skills` from their own stream,
 nothing), so no other roll moves; the result is just the actor's `Skills`, saved and hashed as
 before, and a replay needs no new field (the roll is a function of the seed and spec). Classes
 that have them start with other skills on old seeds, so old replays' hashes change.
-`ClassDef::trains` (the level-up roll's +1) stays the guaranteed list. A race's optional skills
+`ClassDef::trains` (the level-up roll's +1) stays the guaranteed list. A background story's
+skill starts go through `Skills::add` too, after every roll (docs/dev/background.md). A race's optional skills
 (#682, `RaceDef::optional_skills`: the drow's Sneak attack) share the type and the parser
 (`content/skill.rs::optional_skills`, "one of the race's skills" refused) and the stream: the
 class's are rolled first, then the race's, so no class's draws move and a race without any

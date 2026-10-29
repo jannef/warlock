@@ -121,9 +121,10 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   attacks as the character screen shows them, §6: `Main hand long sword: +4 to hit, 1d9+2
   slashing`, `Missile short bow: +3 to hit, 1d6 piercing, range 10`), `talents` (the player's
   talents in the order taken, each for its choice with its rank of how many, `Hardy 2/3`,
-  `Weapon focus (long blades)`; never what a rank gives), and `quests`
+  `Weapon focus (long blades)`; never what a rank gives), `quests`
   (the quest log, active first: `Rats in the arena (active, from the old hermit): Kill 3 giant
-  rats in the Arena. 0 / 3 killed.`) are built from the perception snapshot only;
+  rats in the Arena. 0 / 3 killed.`), and `story` (the background story, a paragraph a line;
+  `no story`) are built from the perception snapshot only;
   `truth` (terrain, objects, traps hidden or known, secret doors as `S`, and creatures),
   `progress` (the level-up choices due, `due level 3: 1 talent`, the talents the player may
   take now by id with the choices each may be taken for, `takeable healthy,
@@ -175,7 +176,8 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   talents (`talents`, in the order taken: `{id, name, rank, ranks, choice}`) and the level-up
   choices due (`due`: `{level, talents}`, or null), the
   quest log (`quests`: `[{id, name,
-  kind, active, completed, giver, objective, status}]`), hit points (`hp: {current, max}`),
+  kind, active, completed, giver, objective, status}]`), the background story (`story`:
+  `[{chapter, line, text}]`; `character.story` the ids), hit points (`hp: {current, max}`),
   mana (`mana: {current, max}`), their caster level (`caster_level`, §8 "Spells"), the alternative resources held (`resources: [{id, current,
   max}]`, in resource order),
   Defence (`defence`, the total), hunger (`hunger`: `bloated` … `starving`, or null when nobody

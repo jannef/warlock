@@ -137,6 +137,7 @@ above.
 | Evil races | `races.md#the-evil-races` |
 | Class, class levels | `classes.md`, `classes.md#levels` (a class: its heading, `classes.md#barbarian`) |
 | Starting kit | `starting-kit.md` |
+| Background story, its chapters, how rare | `background.md`, `background.md#how-rare` |
 | Horoscope, animal, element, lucky day | `horoscope.md`, `horoscope.md#animals`, `horoscope.md#elements`, `horoscope.md#lucky-days` |
 | The great cycle | `horoscope.md#the-great-cycle` |
 | Alignment, good, evil, band | `alignment.md`, `alignment.md#what-moves-you` |
