@@ -10,7 +10,10 @@
 //! - a **riposte**: when a blow of a melee attack missed by its target's Parry, a blow back at
 //!   the attacker once the attack is over;
 //! - an **opportunist's blow**: a hostile stepping away from beside the striker is struck as it
-//!   turns to go, before it leaves its cell (it may not live to take the step).
+//!   turns to go, before it leaves its cell (it may not live to take the step);
+//! - a **startled blow** (Hair trigger): an attack that found the striker unaware, from a
+//!   hostile beside it, whose initiative check it made, is answered at once, before the attack
+//!   is rolled (the attacker may not live to make it).
 //!
 //! Each is a blow like any other (its own event, blood, wounds, kills, and marks), free (no time,
 //! no exertion), and silent but the opportunist's, an attack of its own (the others follow a blow
@@ -96,6 +99,9 @@ pub(super) enum Cue {
     Leaves,
     /// The target has just stepped up beside the striker.
     Approaches,
+    /// The target's attack found the striker unaware, and the striker made its initiative
+    /// check (`surprise.rs::startle`).
+    Startled,
 }
 
 /// What a blow more is.
@@ -111,17 +117,22 @@ pub(super) enum Free {
     Opportunist,
     /// At a hostile stepping up beside (Gatekeeper).
     Gatekeeper,
+    /// At a hostile beside whose attack did not catch the striker off guard (Hair trigger).
+    Startled,
 }
 
 impl Free {
     /// Whether it makes the noise of an attack: only the opportunist's, an attack of its own.
     pub(super) fn noisy(self) -> bool {
-        matches!(self, Free::Opportunist | Free::Gatekeeper)
+        matches!(self, Free::Opportunist | Free::Gatekeeper | Free::Startled)
     }
 
     /// Whether it is struck in another's turn (in answer to what they did).
     fn out_of_turn(self) -> bool {
-        matches!(self, Free::Riposte | Free::Opportunist | Free::Gatekeeper)
+        matches!(
+            self,
+            Free::Riposte | Free::Opportunist | Free::Gatekeeper | Free::Startled
+        )
     }
 }
 
@@ -386,6 +397,40 @@ impl World {
             with: None,
             profile: me.melee(&self.content),
         })
+    }
+
+    /// Actor `striker`'s blow at `attacker`, whose attack found it unaware and whose initiative
+    /// check it made ([`World::startle`]): a blow with what it wields, if it has Hair trigger
+    /// and `attacker` is a hostile beside it. No draw.
+    pub(super) fn startled(&self, striker: ActorId, attacker: ActorId) -> Option<FreeBlow> {
+        if !self.stands(striker) || !self.stands(attacker) {
+            return None;
+        }
+        let (me, them) = (&self.state.actors[&striker], &self.state.actors[&attacker]);
+        let beside = me.level == them.level && me.pos.chebyshev(them.pos) == 1;
+        let ready = !me.talents.is_empty() && me.talent_mods(&self.content).startled_blow;
+        (beside && ready && self.stance(striker, attacker) == Stance::Hostile).then(|| FreeBlow {
+            by: striker,
+            at: attacker,
+            kind: Free::Startled,
+            with: None,
+            profile: me.melee(&self.content),
+        })
+    }
+
+    /// Hair trigger: actor `striker`, whose initiative check against `attacker`'s attack was
+    /// made, strikes it at once ([`World::startled`]). Returns whether `attacker` still stands
+    /// to make its attack.
+    pub(super) fn hair_trigger(
+        &mut self,
+        striker: ActorId,
+        attacker: ActorId,
+        events: &mut Vec<Event>,
+    ) -> bool {
+        if let Some(blow) = self.second_blow(striker, attacker, Cue::Startled, events) {
+            self.strike_free(blow, events);
+        }
+        self.stands(attacker)
     }
 
     /// Strikes `blow`, a blow like any other (`fight.rs`). The player's is said as they strike

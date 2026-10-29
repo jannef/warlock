@@ -1,0 +1,8 @@
+[[talent]]
+id = "hair_trigger"
+name = "Hair trigger"
+tree = "finesse"
+description = "What falls on you unawares and fails to catch you off guard meets your blade first: you strike back at once."
+needs = { stats = { dexterity = 14 }, skills = { initiative = 20 }, level = 12 }
+effects = [{ kind = "startled_blow" }]
+systems = ["awareness", "free_blows"]

@@ -967,8 +967,9 @@ impl World {
                 // sneak attack within reach (`ambush.rs`), its dice after it.
                 let unaware = self.unaware(target, by);
                 let unseen = self.sneaks(by, target, unaware, missile);
-                if unaware {
-                    self.startle(target, Some(by), made);
+                // Hair trigger's blow may cut the caster down before the spell lands.
+                if unaware && !self.startle(target, Some(by), made) {
+                    return Strike::Missed { by: None };
                 }
                 self.attacked_near(by, target);
                 let struck = self.target_against(target, missile);

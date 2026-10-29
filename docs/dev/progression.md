@@ -69,6 +69,8 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `surprise_ease` | `World::status_cost` (`world/surprise.rs`): the percent of Surprised's extra cost spared, with Initiative's capped at 100 (Cool head) |
 | `surprise_difficulty` | `World::startle`'s `craft` (`world/surprise.rs`): added to the difficulty of the check of those the holder catches unawares (the thief's Sneak attack) |
 | `sneak_reach` | `World::sneaks` (`world/ambush.rs`): cells beyond `missile_reach` a missile or attack spell still sneak-attacks (Long reach) |
+| `sees_unaware` | `Perception::compute` (`perception.rs`): `SeenActor::unaware` from `surprise::creature_unaware` for each creature in view, false for all without it; read by look mode ("unaware of you") and `ui/glyphs.rs` (the unaware mark) (Stalker's eye) |
+| `startled_blow` | `World::startle` → `World::hair_trigger` (`world/free_blow.rs`): a check made against a hostile attacker beside the holder is answered by `Cue::Startled`'s free blow before the attack is rolled; `resolve` (and `cast.rs::spell_attack`) stop when it fells the attacker (Hair trigger) |
 | `vitals_in` | `World::has_vitals_for` → `Content::has_vitals` (`world/ambush.rs`, `content/surprise.rs`): types with those tags have vitals for the holder's attacks, criticals and sneak dice (Anatomist) |
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
 | `travel_percent` | `World::step_price` on the overworld, after the survival skill |
