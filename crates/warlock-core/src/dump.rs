@@ -523,13 +523,9 @@ fn story_json(world: &World) -> Vec<Value> {
 }
 
 /// The player's background story, a paragraph a line with a blank line between, as the story
-/// screen tells it: `no story` without one. (The player knows their own story: `PerceptionView`'s
-/// character, told again from the content.)
+/// screen tells it: `no story` without one ([`crate::perception::PerceptionView::story`]).
 fn story_rows(world: &World) -> Vec<String> {
-    let view = world.perception();
-    let paragraphs = (view.character())
-        .map(|c| crate::background::retell(world.content(), world.campaign(), c))
-        .unwrap_or_default();
+    let paragraphs = world.perception().story();
     if paragraphs.is_empty() {
         return vec!["no story".into()];
     }

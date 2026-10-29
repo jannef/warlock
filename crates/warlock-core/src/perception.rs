@@ -1046,6 +1046,8 @@ pub struct PerceptionView<'a> {
     pub(crate) player: &'a Actor,
     /// The player's character, which they know.
     pub(crate) character: Option<&'a Character>,
+    /// The campaign the run is of: whose chapters tell the player's story.
+    pub(crate) campaign: &'a str,
     /// The time on the clock, which the player knows.
     pub(crate) time: GameTime,
     /// How the run ended, once the player has died.
@@ -1366,6 +1368,15 @@ impl<'a> PerceptionView<'a> {
     /// scenario gave no character.
     pub fn character(&self) -> Option<&'a Character> {
         self.character
+    }
+
+    /// The player's background story (spec §8 "Background story"), which they know: its
+    /// paragraphs, told again from the content with the slots filled; empty for a character
+    /// without one (a scenario's own, an old save) or a run without a character.
+    pub fn story(&self) -> Vec<String> {
+        (self.character)
+            .map(|c| crate::background::retell(self.content, self.campaign, c))
+            .unwrap_or_default()
     }
 
     /// The time on the clock.

@@ -327,6 +327,28 @@ fn only_a_chosen_character_with_the_kit_has_a_story() {
 }
 
 #[test]
+fn the_player_perceives_their_story_as_paragraphs() {
+    let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
+    let kitted = World::start_run(
+        BUILTIN.clone(),
+        "showcase",
+        Some(3),
+        Some(&spec),
+        None,
+        true,
+    )
+    .expect("world");
+    let view = kitted.perception();
+    let c = view.character().expect("a character");
+    let told = crate::background::retell(kitted.content(), kitted.campaign(), c);
+    assert_eq!(view.story(), told);
+    assert!((1..=4).contains(&told.len()), "{told:?}");
+    assert!(told.iter().all(|p| !p.is_empty() && !p.contains('{')));
+    let plain = World::new(BUILTIN.clone(), "showcase", None).expect("world");
+    assert!(plain.perception().story().is_empty(), "a scenario's own");
+}
+
+#[test]
 fn a_replay_and_a_save_keep_the_story() {
     let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
     let mut world = World::start_run(

@@ -1,8 +1,8 @@
 // Dev tool for `cargo xtask web-smoke`: drive headless Chromium over CDP, load the web build,
-// press Enter eight times (main menu -> New run, which a release build skips: it lists one
+// press Enter nine times (main menu -> New run, which a release build skips: it lists one
 // scenario, the Ascmearc's start, so the race opens at once -> race -> the stars -> gender ->
 // class -> talents -> name -> summary -> start, the scenario's character preselected, the name
-// left empty: a random one),
+// left empty: a random one; then the story, which opens once as the run begins),
 // check the new
 // character's save is in localStorage (`warlock/saves/<id>.sav`, written as the run starts), wait
 // five turns, reload the page (its pagehide hook must write the run to that save), choose Continue
@@ -50,6 +50,8 @@ await key('Enter', 'Enter', 13);   // the talents (Random, preselected)
 await key('Enter', 'Enter', 13);   // the name (empty: a random one)
 await key('Enter', 'Enter', 13);   // start from the summary
 await sleep(4000);
+await key('Enter', 'Enter', 13);   // the story, read once as the run begins: on into the run
+await sleep(500);
 // The characters' saves: [key, length] of each `warlock/saves/*.sav`, and every key.
 const stored = async () => (await send('Runtime.evaluate', {
   expression: "JSON.stringify([Object.keys(localStorage).filter((k) => /^warlock\\/saves\\/[^/]+\\.sav$/.test(k)).map((k) => [k, localStorage.getItem(k).length]), Object.keys(localStorage)])",

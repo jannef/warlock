@@ -49,6 +49,7 @@ use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
 use super::sign_screen::SignScreen;
 use super::skills_screen::SkillsScreen;
+use super::story_screen::StoryScreen;
 use super::talents_screen::TalentsScreen;
 use super::target::AimKind;
 use super::weapon_skills_screen::WeaponSkillsScreen;
@@ -123,6 +124,9 @@ pub enum ScreenName {
     /// The player's talents, then every other with what it needs (page 7; its own command,
     /// unbound by default).
     Talents,
+    /// The player's background story (page 8): its paragraphs. Opened by the app once as a new
+    /// run begins (`on_run_start`), and by `--screen story`, as that first-turn screen.
+    Story,
     /// The message history (`M` in play): every message the log keeps, the newest at the
     /// bottom. No info page.
     Messages,
@@ -183,6 +187,7 @@ impl ScreenName {
                 | ScreenName::WeaponSkills
                 | ScreenName::Quests
                 | ScreenName::Talents
+                | ScreenName::Story
                 | ScreenName::Messages
                 | ScreenName::PickUp
                 | ScreenName::Drop
@@ -311,6 +316,7 @@ enum Screen {
     WeaponSkills(WeaponSkillsScreen),
     Quests(QuestScreen),
     Talents(TalentsScreen),
+    Story(StoryScreen),
     Messages(MessagesScreen),
     Abilities(AbilitiesScreen),
     Dialogue(DialogueScreen),
@@ -391,6 +397,7 @@ impl Screen {
             ScreenName::WeaponSkills => Screen::WeaponSkills(WeaponSkillsScreen::new(run)),
             ScreenName::Quests => Screen::Quests(QuestScreen::new(run)),
             ScreenName::Talents => Screen::Talents(TalentsScreen::new(run)),
+            ScreenName::Story => Screen::Story(StoryScreen::page(run)),
             ScreenName::Messages => Screen::Messages(MessagesScreen::new(run)),
             ScreenName::PickUp => objects(ObjectList::PickUp),
             ScreenName::Drop => objects(ObjectList::Drop),
@@ -444,6 +451,7 @@ impl Screen {
             Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
             Screen::Quests(_) => ScreenName::Quests,
             Screen::Talents(_) => ScreenName::Talents,
+            Screen::Story(_) => ScreenName::Story,
             Screen::Messages(_) => ScreenName::Messages,
             Screen::Abilities(_) => ScreenName::Abilities,
             Screen::Dialogue(_) => ScreenName::Dialogue,
@@ -634,6 +642,7 @@ impl ScreenStack {
         if !press.repeat
             && let Some(screen) = self.screens.last()
             && info_tabs::is_page(screen.name())
+            && !matches!(screen, Screen::Story(story) if story.is_opening())
             && let Some(action) = info_tabs::switch(screen.name(), press, bindings)
         {
             self.notice = None;
@@ -692,6 +701,12 @@ impl ScreenStack {
             Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
             Some(Screen::Quests(screen)) => screen.handle(press, bindings),
             Some(Screen::Talents(screen)) => screen.handle(press, bindings),
+            Some(Screen::Story(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press)
+            }
             Some(Screen::Messages(screen)) => {
                 if let Some((cols, rows)) = self.console {
                     screen.fit(cols, rows);
@@ -764,6 +779,7 @@ impl ScreenStack {
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
             Some(Screen::Quests(screen)) => screen.draw(console, bindings),
             Some(Screen::Talents(screen)) => screen.draw(console, bindings),
+            Some(Screen::Story(screen)) => screen.draw(console, bindings),
             Some(Screen::Messages(screen)) => screen.draw(console, bindings),
             Some(Screen::Abilities(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
@@ -837,6 +853,13 @@ impl Screens<'_> {
         }
     }
 
+    /// Opens the story screen as the run begins ([`StoryScreen::opening`]): not page 8.
+    fn open_story(&mut self) {
+        let view = self.game.as_ref().map(|game| game.world.perception());
+        let screen = Screen::Story(StoryScreen::opening(view.as_ref()));
+        self.stack.screens.push(screen);
+    }
+
     /// Opens the identify list for a spell cast on a stack the player carries (Identify, chosen
     /// in the abilities menu): choosing a stack casts it there.
     pub fn open_identify_spell(&mut self, spell: warlock_core::content::SpellId) {
@@ -899,7 +922,13 @@ pub(super) fn converse(
 pub(super) fn open_startup_screens(args: Res<Args>, game: Option<Res<Game>>, mut screens: Screens) {
     for name in startup_screens(args.screen, game.is_some()) {
         // A skipped New run has opened the race step already.
-        if screens.stack.top() != Some(name) {
+        if screens.stack.top() == Some(name) {
+            continue;
+        }
+        // `--screen story` is the screen as the run begins, not page 8.
+        if name == ScreenName::Story {
+            screens.open_story();
+        } else {
             screens.open(name);
         }
     }
@@ -930,6 +959,20 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
         (true, Some(Describe)) => vec![Inventory, Describe],
         (true, Some(s)) if s.needs_run() => vec![s],
         (true, _) => Vec::new(),
+    }
+}
+
+/// Opens the story screen once as a new run begins (spec §8 "Background story"): over its
+/// first turn, before any input, when the run was made here ([`Game::story_due`]: New run's
+/// Start, or a windowed start that makes a run; never Continue, Resume, `--capture`, or
+/// `--replay`), nothing else is open (`--screen` opened its own), and the character has a story.
+/// Nothing is saved of it: a run resumed reads it on page 8.
+pub(super) fn on_run_start(game: Res<Game>, mut screens: Screens) {
+    if !game.is_added() || !game.story_due || !screens.stack.is_empty() {
+        return;
+    }
+    if game.world.death().is_none() && !game.world.perception().story().is_empty() {
+        screens.open_story();
     }
 }
 
@@ -2442,6 +2485,66 @@ mod tests {
         frame(&mut app, &[YES]);
         let exits = app.world().resource::<Messages<AppExit>>();
         assert_eq!(exits.iter_current_update_messages().count(), 1);
+    }
+
+    /// An app in a run of `game` with the system that tells the story as a run begins.
+    fn story_app(game: Game) -> App {
+        let mut app = app_with(content(), Some(game));
+        app.add_systems(Update, on_run_start.after(apply_choice));
+        app
+    }
+
+    /// A kitted dwarf warrior's run, so with a story.
+    fn kitted() -> warlock_core::World {
+        let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
+        warlock_core::World::start_run(content(), "showcase", Some(3), Some(&spec), None, true)
+            .expect("run")
+    }
+
+    #[test]
+    fn the_story_opens_once_as_a_new_run_begins() {
+        let args = Args::parse_from(["warlock", "--capture", "unused.png"]);
+        let store = SaveStore::from_args(&args);
+        let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
+        let game = Game::new_run(content(), &store, "showcase", None, Some(&spec), None);
+        let mut app = story_app(game.expect("starts"));
+        frame(&mut app, &[]);
+        assert_eq!(names(&app), [ScreenName::Story]);
+        // The page keys do not turn it: it is no page yet.
+        frame(&mut app, &[(KeyCode::Digit1, "1")]);
+        assert_eq!(names(&app), [ScreenName::Story]);
+        frame(&mut app, &[ENTER]);
+        assert!(names(&app).is_empty());
+        for _ in 0..3 {
+            frame(&mut app, &[]);
+        }
+        assert!(names(&app).is_empty(), "once");
+        // Page 8 reads it again, from another page.
+        frame(&mut app, &[(KeyCode::KeyI, "i"), (KeyCode::Digit8, "8")]);
+        assert_eq!(names(&app), [ScreenName::Story]);
+        frame(&mut app, &[ESC]);
+        assert!(names(&app).is_empty());
+    }
+
+    #[test]
+    fn a_resumed_run_or_one_without_a_story_opens_nothing() {
+        let resumed = Game::from_world(kitted(), "dagny-1".into());
+        let mut app = story_app(resumed);
+        frame(&mut app, &[]);
+        assert!(names(&app).is_empty(), "never on Continue or Resume");
+        let args = Args::parse_from(["warlock", "--capture", "unused.png"]);
+        let store = SaveStore::from_args(&args);
+        // Content that tells no stories: a chosen character with the kit, and still none.
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.remove("data/background.toml");
+        let untold = Arc::new(Content::load(&files).expect("content without stories"));
+        let spec: CharacterSpec = "dwarf,female,warrior".parse().expect("a character");
+        let storyless = Game::new_run(untold, &store, "showcase", None, Some(&spec), None);
+        let storyless = storyless.expect("starts");
+        assert!(storyless.world.perception().story().is_empty());
+        let mut app = story_app(storyless);
+        frame(&mut app, &[]);
+        assert!(names(&app).is_empty(), "nothing to tell");
     }
 
     /// An app in the arena while its fight goes on (ten turns in, everything said so far read),

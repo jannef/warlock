@@ -196,7 +196,9 @@ cargo xtask golden [--update | --local]                   # compare golden scree
   look mode with the cursor on level cell (X, Y), so captures show what look mode says there;
   `--keys "KEYS"` (dev) presses keys at startup, after any replay, as if typed, so captures show
   what they open (the shop's dialogs: `--keys h`, `--keys "d b Enter"`); `--screen dialog`
-  opens the quit dialog.
+  opens the quit dialog; `--screen story` opens the background story as a run begins shows it
+  (over a `--character` run or a `--replay` with `kit`; §6 "Your story"), which the app never
+  opens by itself under `--capture` or `--replay`.
 - Dev builds add in-game commands: switch vision profile (`F3`), reveal map (`F2`, ground truth,
   hidden traps included, in view too; marked as dev-only on screen), toggle debug overlays (light values `F4`; line of sight and memory
   later), save and load named snapshots (`F5`/`F9`), skip an hour (`F6`, recorded as `skip:1h`),

@@ -1,0 +1,40 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to The Ascmearc. Press ? for controls. The pass opens on the Ascmearc. Far to the east,
+ Fyrbeorg smokes.
+
+
+
+
+
+              ┌─ Maren's story ──────────────────────────────────────────────────────┐
+              │                                                                      │
+              │  Your father was a smith, and the ring of his hammer was the first   │
+              │  music you knew. You were born without sign or omen, which your      │
+              │  father counted a mercy.                                             │
+              │                                                                      │
+              │  You were a child like any other, and nobody wrote down what you     │
+              │  did. You worked, as everyone worked, and nothing of it is worth     │
+              │  the telling.                                                        │
+              │                                                                      │
+              │  No great grief found you, and you count that luck, as you should.   │
+              │  Fortune never found your door; whatever you have, you got           │
+              │  yourself.                                                           │
+              │                                                                      │
+              │  A letter came, in a hand you did not know, with a little money in   │
+              │  it and three words: Come. There's work. You walked up with a        │
+              │  pedlar who talked the whole way and sold you a knife at the top     │
+              │  for twice its worth. 'Yer'll want that, where yer goin',' he said,  │
+              │  and he was right.                                                   │
+              │                                                                      │
+              │ Enter continue                                                       │
+              └──────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+ The Ascmearc  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1            ? controls

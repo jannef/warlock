@@ -475,13 +475,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   most six lines). Read-only: quests are not abandoned (the owner's decision). `q`, Enter, or Esc
   closes it.
   The character screen, the inventory, the equipment screen, the Skills screen, the weapon
-  skills screen, the quest log, and the Talents page are the numbered info pages 1 to 7: on one of them, a digit,
+  skills screen, the quest log, the Talents page, and the Story page are the numbered info pages 1 to 8: on one of them, a digit,
   Tab, or Shift+Tab replaces it with another, and the tab line on its bottom
   border names them, each after its key, the current one highlighted. The pages share one width,
   wide enough for the line by their names (`1 Character · 2 Inventory · 3 Equipment · 4 Skills ·
-  5 Weapons · 6 Quests · 7 Talents`), so the frame and the line stay put as the pages turn; on a
+  5 Weapons · 6 Quests · 7 Talents · 8 Story`), so the frame and the line stay put as the pages turn; on a
   console too narrow for it every page's line goes by short names (`1 Char · 2 Inv · 3 Equip ·
-  4 Skills · 5 Weapons · 6 Quests · 7 Tal`), else by keys alone.
+  4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story`), else by keys alone.
 - **Talents** (page 7, its own command `talents`, `G`; #236, #644; §8 "Talents"): the
   player's talents ("Your talents"), by tree in tree order, each with its rank when it has
   several (`Keen ears 1/2`) and, for those not picked, where it came from (`(class)`, `(birth
@@ -491,6 +491,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `Needs: nothing`). The class's coming abilities are not listed. ↑↓ choose (the list
   scrolls), the selected talent's description shows below; words only, never a rule's number.
   Read-only; its key, Enter, or Esc closes it. 72 wide.
+- **Your story** (#703; §8 "Background story"): the character's background story, a read-only
+  panel of its paragraphs titled with the name ("Brakka's story"), wrapped, scrolled with ↑↓ on a
+  short console; Enter and Esc close it, and nothing on it can be chosen. It opens by itself
+  once, as a run begins (`screens::on_run_start`): after the summary's Start, or a windowed start
+  that makes a run (`--character`, `--name`, `--talents`, `--new`), over the first turn before
+  any input, 72 wide like the sign reveal, footer `Enter continue`; never on Continue or Resume,
+  never under `--capture` or `--replay`, never beneath another screen `--screen` opened, never
+  for a run without a story; nothing is saved of it. Afterwards it is **page 8, "Story"** (the
+  info pages' width and tab line, `Page(8)`; no command of its own), which for a character
+  without a story (a scenario's own, an old save) says "Your story is not written."
 - **Level-up** (#236; §8 "Talents", "Skills"): a level's choices open the level-up screen by
   itself at the end of the turn they come in (`screens::on_level_up`; also on resuming a run
   with choices due; the death screen wins), and it cannot be left until they are made: Esc only

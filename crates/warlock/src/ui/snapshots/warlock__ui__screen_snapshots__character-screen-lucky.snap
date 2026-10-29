@@ -3,38 +3,38 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Welcome to Showcase. Press ? for controls.
-    ┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
-    │                                                                                         │
-    │ Tamsin, the Deep One                                                                    │
-    │                                                                                         │
-    │ Race    Human                                                                           │
-    │ Gender  Female                                                                          │
-    │ Class   Thief                                                                           │
-    │ Age 29 · born 11 Rainmoon 1415 · year of the Water Kraken                               │
-    │ Stars   Grasping arms, Of the deep, Ungainly ashore, Always a way, Tidal, Drowning grip │
-    │                                                                                         │
-    │ St  Strength      10   Main hand  bare hands                                            │
-    │ Dx  Dexterity     13              +0 to hit, 1d3 bludgeoning                            │
-    │ To  Toughness     10                                                                    │
-    │ In  Intelligence  11                                                                    │
-    │ Wi  Willpower     10                                                                    │
-    │ Pr  Presence      10                                                                    │
-    │                                                                                         │
-    │ Lv  Level         1                                                                     │
-    │ XP  Experience    0 / 182                                                               │
-    │     Talents       7                                                                     │
-    │ HP  Hit points    18/18   MP  Mana       2/2                                            │
-    │ Dv  Defence       11      Pv  Protection  0                                             │
-    │     Stance        Neutral                                                               │
-    │     Openings      0/5                                                                   │
-    │     Stamina       10/10                                                                 │
-    │     Alignment     Callous                                                               │
-    │     Resistant to  cold                                                                  │
-    │                                                                                         │
-    │ Weight 70.4 kg (you 70 kg, carrying 400 g)                                              │
-    │ Burdened over 15 kg, strained over 30 kg, overloaded over 45 kg                         │
-    │                                                                                         │
-    │ @ or Esc close   A skills                                                               │
-    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+┌─ Character ──────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ Tamsin, the Deep One                                                                             │
+│                                                                                                  │
+│ Race    Human                                                                                    │
+│ Gender  Female                                                                                   │
+│ Class   Thief                                                                                    │
+│ Age 29 · born 11 Rainmoon 1415 · year of the Water Kraken                                        │
+│ Stars   Grasping arms, Of the deep, Ungainly ashore, Always a way, Tidal, Drowning grip          │
+│                                                                                                  │
+│ St  Strength      10   Main hand  bare hands                                                     │
+│ Dx  Dexterity     13              +0 to hit, 1d3 bludgeoning                                     │
+│ To  Toughness     10                                                                             │
+│ In  Intelligence  11                                                                             │
+│ Wi  Willpower     10                                                                             │
+│ Pr  Presence      10                                                                             │
+│                                                                                                  │
+│ Lv  Level         1                                                                              │
+│ XP  Experience    0 / 182                                                                        │
+│     Talents       7                                                                              │
+│ HP  Hit points    18/18   MP  Mana       2/2                                                     │
+│ Dv  Defence       11      Pv  Protection  0                                                      │
+│     Stance        Neutral                                                                        │
+│     Openings      0/5                                                                            │
+│     Stamina       10/10                                                                          │
+│     Alignment     Callous                                                                        │
+│     Resistant to  cold                                                                           │
+│                                                                                                  │
+│ Weight 70.4 kg (you 70 kg, carrying 400 g)                                                       │
+│ Burdened over 15 kg, strained over 30 kg, overloaded over 45 kg                                  │
+│                                                                                                  │
+│ @ or Esc close   A skills                                                                        │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
 
  The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:00       ? controls
