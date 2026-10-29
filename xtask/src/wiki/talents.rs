@@ -1,7 +1,7 @@
 //! Talents (spec §8 "Talents"): every tree with its talents, their prerequisites and their rules
 //! in full (the game says them in words), and the coverage matrix by system.
 
-use super::text::{Term, anchored, signed};
+use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Need, OverTime, Role, SignActive, SpellData, TalentDef, TalentEffect, TreeId,
@@ -49,6 +49,45 @@ pub(super) fn creation(content: &Content) -> String {
     for class in classes {
         let n = base.saturating_add(class.creation_talents);
         let _ = writeln!(out, "| {} | {n} |", class.name);
+    }
+    out
+}
+
+/// The heirlooms (#697: Father's sword): each race's weapon, races by name, then the one every
+/// other race gets.
+pub(super) fn heirlooms(content: &Content) -> String {
+    let mut out = String::from("| Race | Heirloom |\n|---|---|\n");
+    let object = |id: &str| {
+        (content.object_id(id)).map_or_else(|| id.to_string(), |o| content.object(o).name.clone())
+    };
+    for (_, def) in content.talents().iter() {
+        for effect in &def.effects {
+            let TalentEffect::Heirloom {
+                weapons, fallback, ..
+            } = effect
+            else {
+                continue;
+            };
+            let mut races: Vec<_> = content.races().list.iter().collect();
+            races.sort_by(|a, b| a.name.cmp(&b.name));
+            let mut others = false;
+            for race in races {
+                match weapons.get(&race.id) {
+                    Some(weapon) => {
+                        let _ = writeln!(
+                            out,
+                            "| {} | {} |",
+                            link(Term::Race, &race.id, &race.name),
+                            object(weapon)
+                        );
+                    }
+                    None => others = true,
+                }
+            }
+            if others || weapons.is_empty() {
+                let _ = writeln!(out, "| any other | {} |", object(fallback));
+            }
+        }
     }
     out
 }
@@ -215,7 +254,10 @@ pub(super) fn needs_text(content: &Content, def: &TalentDef) -> String {
     }
     let words = |needs: &[Need]| -> String {
         (needs.iter())
-            .map(|n| n.words(content))
+            .map(|n| match n {
+                Need::Creation => "only at character creation".to_string(),
+                n => n.words(content),
+            })
             .collect::<Vec<_>>()
             .join(", ")
     };
@@ -543,6 +585,29 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::TrainSkill { dice } => format!(
             "the chosen skill trained at {dice}, or raised by {dice} if trained (rolled as the \
              rank is taken)"
+        ),
+        TalentEffect::StartingGold {
+            percent,
+            at_least,
+            at_most,
+        } => format!(
+            "at creation, [gold coins](shops.md#money): {percent} % of those you start with more, at least \
+             {at_least} and at most {at_most}"
+        ),
+        TalentEffect::StartingGems { min, max, level } => {
+            format!(
+                "at creation, {min} to {max} loose [gems](gems.md), as found at \
+                 [item level](magic-items.md#finding-them) {level}"
+            )
+        }
+        TalentEffect::Heirloom {
+            min, max, level, ..
+        } => format!(
+            "at creation, your race's heirloom weapon (Heirlooms, below) with {min} to {max} \
+             [affixes](magic-items.md#prefixes) rolled at [item level](magic-items.md#finding-them) \
+             {level} (two: [magic](magic-items.md); more: [rare](magic-items.md#rarity)), \
+             [identified](magic-items.md#unidentified-items), readied in its own \
+             [slot](equipment.md#what-fits-where) if that is free, else carried"
         ),
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \

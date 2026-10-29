@@ -1,0 +1,12 @@
+# Only at character creation (#697): handed out once, as it is taken (world/heirloom.rs).
+[[talent]]
+id = "family_wealth"
+name = "Family wealth"
+tree = "heritage"
+description = "You were born to money: you set out with far more gold than most, and a few gems besides."
+needs = { creation = true }
+effects = [
+  { kind = "starting_gold", percent = 300, at_least = 60, at_most = 150 },
+  { kind = "starting_gems", min = 2, max = 3, level = 2 },
+]
+systems = ["gems", "shops"]

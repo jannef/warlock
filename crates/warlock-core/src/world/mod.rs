@@ -134,6 +134,7 @@ mod hash;
 mod haunt;
 mod heal;
 mod hearing;
+mod heirloom;
 mod hoard;
 mod hold;
 mod hunger;
@@ -1522,6 +1523,8 @@ mod heal_tests;
 mod hearing_tests;
 #[cfg(test)]
 mod heavy_hall_tests;
+#[cfg(test)]
+mod heirloom_tests;
 #[cfg(test)]
 mod hoard_tests;
 #[cfg(test)]

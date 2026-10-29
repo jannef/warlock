@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
     │     Stone hide  (birth sign)                                                            │
     │     Stonewise  (birth sign)                                                             │
     │   Vigour                                                                                │
-    │     Hardy 1/3                                                                           │
+    │     Hard training                                                                       │
     │   Wayfarer                                                                              │
     │     Weather-wise                                                                        │
     │   Class abilities                                                                       │
@@ -24,17 +24,17 @@ expression: "render(case, content.clone())"
     │         Needs: level 12, to be Earth-born                                               │
     │     Tentacles                                                                           │
     │         Needs: Twin Blades 3, to be born in the year of the Kraken                      │
+    │   Heritage                                                                              │
+    │     Family wealth                                                                       │
+    │         Needs: to be a new character                                                    │
+    │     Father's sword                                                                      │
+    │         Needs: Family wealth, to be a new character                                     │
     │   Vigour                                                                                │
     │     Bellows                                                                             │
     │         Needs: Toughness 12                                                             │
     │     Clotting                                                                            │
     │         Needs: Toughness 12                                                             │
     │     Deep lungs                                                                          │
-    │         Needs: nothing                                                                  │
-    │     Fast healer                                                                         │
-    │         Needs: Healthy, Toughness 13                                                    │
-    │     Fever-proof                                                                         │
-    │         Needs: Strong constitution, level 15                                            │
     │                                                                                       ↓ │
     │ A weapon in each hand hampers you less, and with sword and shield your free bash comes  │
     │ more often.                                                                             │

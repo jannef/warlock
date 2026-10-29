@@ -167,7 +167,7 @@ mod tests {
     use super::*;
     use crate::burden::{self, Burden};
     use crate::character::{CharacterSpec, Gender, Start};
-    use crate::content::{ClassDef, ContentFiles, KitItem, Rarity};
+    use crate::content::{ClassDef, ContentFiles, KitItem, Rarity, TalentEffect};
     use crate::replay::Replay;
     use crate::stats::{AVERAGE, SCORES, Stat};
     use crate::world::World;
@@ -444,6 +444,40 @@ mod tests {
             .unwrap_or(0)
     }
 
+    /// The most the heritage talents (#697) could add for `race` carrying `gold` coins: Family
+    /// wealth's gold and most gems, and Father's sword's heirloom.
+    fn heritage(race: &str, gold: u64) -> u64 {
+        let mut most = 0;
+        for (_, def) in CONTENT.talents().iter() {
+            for effect in &def.effects {
+                most += match effect {
+                    TalentEffect::StartingGold {
+                        percent,
+                        at_least,
+                        at_most,
+                    } => {
+                        let more = (gold * u64::from(*percent) / 100)
+                            .clamp(u64::from(*at_least), u64::from(*at_most));
+                        let coin = CONTENT.object_id(crate::content::GOLD).expect("gold");
+                        more * Stack::one(coin).weight(&CONTENT)
+                    }
+                    TalentEffect::StartingGems { max, .. } => {
+                        let gem = CONTENT.gems().expect("gems").object;
+                        u64::from(*max) * Stack::one(gem).weight(&CONTENT)
+                    }
+                    TalentEffect::Heirloom {
+                        weapons, fallback, ..
+                    } => {
+                        let weapon = weapons.get(race).unwrap_or(fallback);
+                        Stack::one(id(weapon)).weight(&CONTENT)
+                    }
+                    _ => 0,
+                };
+            }
+        }
+        most
+    }
+
     #[test]
     fn nobody_starts_strained_and_only_wealth_or_armour_burdens() {
         // Every race, gender, and class, with the heaviest kit their class's picks allow and the
@@ -452,6 +486,17 @@ mod tests {
         // small warrior or paladin (#695: a player may toss what is too heavy).
         let carry = (CONTENT.scenarios())
             .map(|s| s.carry.iter().map(|st| st.weight(&CONTENT)).sum::<u64>())
+            .max()
+            .unwrap_or(0);
+        let coin = CONTENT.object_id(crate::content::GOLD).expect("gold");
+        let coins = |stacks: &[Stack]| -> u64 {
+            (stacks.iter())
+                .filter(|st| st.object == coin)
+                .map(|st| u64::from(st.count))
+                .sum()
+        };
+        let carried_gold = (CONTENT.scenarios())
+            .map(|s| coins(&s.carry))
             .max()
             .unwrap_or(0);
         let jokes = ["aristocrat", "merchant"];
@@ -474,9 +519,11 @@ mod tests {
                             .filter(|l| l.applies(gender, &trained))
                             .map(heaviest)
                             .sum();
-                        let load = |limit| {
+                        // The heritage talents' gold, gems, and heirloom on top.
+                        let heirs = heritage(&race.id, coins(&s.kit.items) + carried_gold);
+                        let load = |limit, carried| {
                             let load = burden::Load {
-                                carried: kit + carry,
+                                carried,
                                 limit,
                                 ignores_burdened: race.ignores_burdened,
                                 stout: false,
@@ -484,12 +531,12 @@ mod tests {
                             load.penalty()
                         };
                         assert!(
-                            load(weakest) < Burden::Strained,
-                            "{character}: {kit} g + {carry} g of {weakest}"
+                            load(weakest, kit + carry + heirs) < Burden::Strained,
+                            "{character}: {kit} g + {heirs} g + {carry} g of {weakest}"
                         );
                         if !may_burden {
                             assert_eq!(
-                                load(ordinary),
+                                load(ordinary, kit + carry),
                                 Burden::Unburdened,
                                 "{character}: {kit} g + {carry} g of {ordinary}"
                             );

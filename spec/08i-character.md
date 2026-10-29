@@ -613,6 +613,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Healthy, then Fast healer). Character creation's Talents step (§6 "New run") reads the run
     drafted (`World::draft`, `creation_offers`, `random_creation`). The humans' extra pick is
     their racial Versatile's (#241): a human picks 3, a human bard 4.
+  - **Heritage** (`world/heirloom.rs`; #697): talents offered only at creation (`needs = {
+    creation = true }`, `Need::Creation`: "to be a new character", met at character level 1
+    only, so never a level's pick), in the `heritage` tree (`no_free`). What they give is handed
+    out once, as they are taken (`World::hand_down`, from `World::learn`), on top of the kit:
+    **Family wealth** (`starting_gold`: 300 % of the gold coins carried more, at least 60 and at
+    most 150; `starting_gems`: 2 to 3 loose gems at item level 2, from the stream
+    `character/family-wealth/<race>,<gender>,<class>`) and **Father's sword** (needs Family
+    wealth; `heirloom`: the race's weapon from its table, else the fallback, with 2 to 4 affixes
+    at item level 6 (`loot::heirloom`: two a magic item's prefix and suffix, more a rare item's,
+    named), identified, readied in its own slot when free, else carried, from the stream
+    `character/fathers-sword/<race>,<gender>,<class>`). Each stream is its own, so no other roll
+    moves. The weakest of a small race may start Burdened with them, never Strained.
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents at a rank (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored

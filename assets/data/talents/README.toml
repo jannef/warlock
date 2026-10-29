@@ -35,6 +35,8 @@
 #                   eyes = "darkvision"                  the race's vision profile
 #                   animal = "roc", element = "fire"     the birth sign's (horoscope.toml)
 #                   lucky = true                         born on a lucky day
+#                   creation = true                      only at character creation (the
+#                                                        creation picks), never a level's
 #                   any_weapon_skill = { roles = ["melee"], of = ["unarmed"], rank = 3 }
 #                                                        any one of the weapon skills of those
 #                                                        roles or named, at that rank
@@ -157,6 +159,16 @@
 #   extra_pick { level }          one more talent pick at that character level (1: at creation)
 #   train_skill { dice }          the chosen skill (choice skill) trained at those dice, or
 #                                 raised by them, as the rank is taken (the levels stream)
+#   starting_gold { percent, at_least, at_most }   handed out once, as it is taken (with
+#                                 `creation = true`): gold coins, that percent of those carried
+#                                 (kit and scenario), at least at_least, at most at_most
+#   starting_gems { min, max, level }   handed out once: min to max loose gems at that item
+#                                 level (the stream character/family-wealth/<character>)
+#   heirloom { weapons, fallback, min, max, level }   handed out once: the race's weapon
+#                                 (`weapons = { dwarf = "battle_axe" }`, else `fallback`) with min
+#                                 to max affixes (2: magic; more: rare) at that item level,
+#                                 identified, wielded in a free main hand, else carried (the
+#                                 stream character/fathers-sword/<character>)
 #   loot_magic_percent { value }  loot it finds and creatures drop: the weights of the rarities
 #                                 better than the least the find may be, that percent more
 #   read_percent { value }        reading a scroll takes that percent more time (negative: less)

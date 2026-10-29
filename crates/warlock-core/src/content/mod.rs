@@ -995,6 +995,7 @@ impl Content {
             content.effects = effect::parse(path, text)?;
         }
         scroll::check_spells(&content).map_err(|m| ContentError::new("data/objects", m))?;
+        talent::check_heirlooms(&content).map_err(|m| ContentError::new("data/talents", m))?;
         spell_def::check_effects(&content).map_err(|m| ContentError::new("data/spells", m))?;
         let path = "data/traps.toml";
         if let Some(text) = files.get_optional(path) {

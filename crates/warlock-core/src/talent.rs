@@ -1270,7 +1270,10 @@ impl TalentMods {
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
             // Handed out as the rank is taken (`World::take_talent`), never read after.
-            TalentEffect::TrainSkill { .. } => {}
+            TalentEffect::TrainSkill { .. }
+            | TalentEffect::StartingGold { .. }
+            | TalentEffect::StartingGems { .. }
+            | TalentEffect::Heirloom { .. } => {}
             TalentEffect::LootMagicPercent { value } => self.loot_magic_percent += value,
             TalentEffect::ReadPercent { value } => self.read_percent += value,
             TalentEffect::Study { bonus, percent } => {
@@ -2136,6 +2139,8 @@ impl<'a> Candidate<'a> {
             Need::Animal(id) => self.sign.is_some_and(|s| s.is_animal(id)),
             Need::Element(id) => self.sign.is_some_and(|s| s.is_element(id)),
             Need::Lucky => self.lucky,
+            // Creation picks are level 1's; every later pick is a later level's.
+            Need::Creation => self.level <= 1,
             Need::Either(needs) => (needs.iter()).any(|n| self.meets(content, n, choice, chosen)),
         }
     }

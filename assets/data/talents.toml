@@ -31,6 +31,14 @@ name = "Stars"
 description = "What you were born under."
 no_free = true
 
+# What a family hands down (#697): talents only for character creation (`needs = { creation =
+# true }`), never a level's pick (`no_free`: nothing later picks from it).
+[[tree]]
+id = "heritage"
+name = "Heritage"
+description = "What your family gave you: only at character creation."
+no_free = true
+
 [[tree]]
 id = "vigour"
 name = "Vigour"
