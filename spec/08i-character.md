@@ -844,7 +844,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     class tables bring their second talent. The `awareness` system came off `pending` with
     surprise (#681, §8 "Surprise and sneak attacks"): Wary (Delver, Willpower 12,
     `initiative_bonus = 4`: added to the initiative check) and Cool head (Grit, Willpower 14,
-    level 9, `surprise_ease = 100`: Surprised slows no action), beside Ambusher. The
+    level 9, `surprise_ease = 100`: Surprised slows no action), beside Ambusher; #687 added
+    Stalker's eye (Shadow, Stealth 20, Spot 10, `sees_unaware`: the perception snapshot tells
+    which creatures in view have not noticed the player, `SeenActor::unaware`, read by look
+    mode's "unaware of you" and the unaware mark, §4; also `sneak_attack`) and Hair trigger
+    (Finesse, Dexterity 14, Initiative 20, level 12, `startled_blow`: an initiative check made
+    against a hostile attacker beside the holder is answered at once by a free blow, before the
+    attack is rolled, `Cue::Startled`; also `free_blows`). The
     `sneak_attack` system (#682, "Sneak attacks: dice, reach, vitals") came with Anatomist
     (Scholar, Intelligence 13, Knowledge 20, `vitals_in = ["skeleton", "construct"]`: those count
     as having vitals for the holder's attacks, never the incorporeal) and Long reach

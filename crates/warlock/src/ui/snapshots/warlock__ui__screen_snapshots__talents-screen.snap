@@ -2,43 +2,43 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Wel┌─ Talents ───────────────────────────────────────────────────────────────────────────────┐
-    │                                                                                         │
-    │ Your talents                                                                            │
-    │   Stars                                                                                 │
-    │ >   Grasping arms  (birth sign)                                                         │
-    │     Of the deep  (birth sign)                                                           │
-    │     Ungainly ashore  (birth sign)                                                       │
-    │     Stone hide  (birth sign)                                                            │
-    │     Stonewise  (birth sign)                                                             │
-    │   Vigour                                                                                │
-    │     Hard training                                                                       │
-    │   Wayfarer                                                                              │
-    │     Weather-wise                                                                        │
-    │   Class abilities                                                                       │
-    │     Weapon drill  (class)                                                               │
-    │     Trained wind  (class)                                                               │
-    │ Other talents                                                                           │
-    │   Stars                                                                                 │
-    │     Bedrock                                                                             │
-    │         Needs: level 12, to be Earth-born                                               │
-    │     Tentacles                                                                           │
-    │         Needs: Twin Blades 3, to be born in the year of the Kraken                      │
-    │   Heritage                                                                              │
-    │     Family wealth                                                                       │
-    │         Needs: to be a new character                                                    │
-    │     Father's sword                                                                      │
-    │         Needs: Family wealth, to be a new character                                     │
-    │   Vigour                                                                                │
-    │     Bellows                                                                             │
-    │         Needs: Toughness 12                                                             │
-    │     Clotting                                                                            │
-    │         Needs: Toughness 12                                                             │
-    │     Deep lungs                                                                          │
-    │                                                                                       ↓ │
-    │ A weapon in each hand hampers you less, and with sword and shield your free bash comes  │
-    │ more often.                                                                             │
-    │                                                                                         │
-    │                                                                                         │
-    │ ↑↓ choose   G or Esc close                                                              │
- The└─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘rols
+┌─ Talents ────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ Your talents                                                                                     │
+│   Stars                                                                                          │
+│ >   Grasping arms  (birth sign)                                                                  │
+│     Of the deep  (birth sign)                                                                    │
+│     Ungainly ashore  (birth sign)                                                                │
+│     Stone hide  (birth sign)                                                                     │
+│     Stonewise  (birth sign)                                                                      │
+│   Vigour                                                                                         │
+│     Hard training                                                                                │
+│   Wayfarer                                                                                       │
+│     Weather-wise                                                                                 │
+│   Class abilities                                                                                │
+│     Weapon drill  (class)                                                                        │
+│     Trained wind  (class)                                                                        │
+│ Other talents                                                                                    │
+│   Stars                                                                                          │
+│     Bedrock                                                                                      │
+│         Needs: level 12, to be Earth-born                                                        │
+│     Tentacles                                                                                    │
+│         Needs: Twin Blades 3, to be born in the year of the Kraken                               │
+│   Heritage                                                                                       │
+│     Family wealth                                                                                │
+│         Needs: to be a new character                                                             │
+│     Father's sword                                                                               │
+│         Needs: Family wealth, to be a new character                                              │
+│   Vigour                                                                                         │
+│     Bellows                                                                                      │
+│         Needs: Toughness 12                                                                      │
+│     Clotting                                                                                     │
+│         Needs: Toughness 12                                                                      │
+│     Deep lungs                                                                                   │
+│                                                                                                ↓ │
+│ A weapon in each hand hampers you less, and with sword and shield your free bash comes more      │
+│ often.                                                                                           │
+│                                                                                                  │
+│                                                                                                  │
+│ ↑↓ choose   G or Esc close                                                                       │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘

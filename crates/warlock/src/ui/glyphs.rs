@@ -4,6 +4,11 @@
 //! Each glyph is lit by sampling the visual light at its center (`VisualLight::sample`), the
 //! same interpolated light the grid shader uses there, so a sliding creature's light changes
 //! smoothly and flickers with the torches around it.
+//!
+//! The unaware mark (spec §4.2; Stalker's eye): a creature the snapshot says has not noticed
+//! the player (`SeenActor::unaware`) is drawn a shade cooler, its colour mixed toward
+//! [`UNAWARE_TINT`] before lighting, the mix breathing slowly with glyph animation on and
+//! standing still without it.
 
 use super::motion::Motion;
 use crate::game::Game;
@@ -57,7 +62,16 @@ pub(super) fn emit(
         let home = Vec2::new(actor.pos.x as f32, actor.pos.y as f32);
         let colours = actor.shape.as_ref().map_or(&[][..], |s| s.bands());
         let fg = colours.first().copied().unwrap_or(actor.fg(content));
-        let mut g = glyph(&grid, at, actor.glyph(content), palette(fg), frame);
+        // The unaware mark, before the palette and the light, on the glyph and every band.
+        let mix = unaware_mix(actor.id, time, effects.glyph_animation);
+        let colour = |c: Rgb| {
+            palette(if actor.unaware {
+                unaware_tint(c, mix)
+            } else {
+                c
+            })
+        };
+        let mut g = glyph(&grid, at, actor.glyph(content), colour(fg), frame);
         // Each band is lit and glows as the glyph does: they share its light.
         let finish = |color| {
             let color = lit(color, &light, at, home, ACTOR_FLOOR);
@@ -74,11 +88,44 @@ pub(super) fn emit(
             ..Bands::NONE
         };
         for (band, &c) in bands.more.iter_mut().zip(&colours[1..]) {
-            *band = finish(glyph(&grid, at, ' ', palette(c), frame).color);
+            *band = finish(glyph(&grid, at, ' ', colour(c), frame).color);
         }
         g.color = finish(g.color);
         free.push_banded(g, bands);
     }
+}
+
+/// The cool slate an unaware creature's colour is mixed toward (the unaware mark): a near-grey,
+/// so the creature keeps its hue, just quieter. It goes through the palette with the glyph.
+pub(super) const UNAWARE_TINT: Rgb = Rgb::new(0x8a, 0x96, 0xa8);
+
+/// How much of [`UNAWARE_TINT`] an unaware creature's colour takes, still (reduced effects).
+const UNAWARE_MIX: f32 = 0.25;
+
+/// How far the mix breathes either side of [`UNAWARE_MIX`] with glyph animation on.
+const UNAWARE_BREATH: f32 = 0.1;
+
+/// Seconds for one breath of the unaware mark.
+const UNAWARE_PERIOD: f32 = 6.0;
+
+/// How much of [`UNAWARE_TINT`] creature `id`'s colour takes at `time`: breathing between
+/// 0.15 and 0.35 on its own phase, or a still 0.25 without glyph animation.
+fn unaware_mix(id: ActorId, time: f32, animate: bool) -> f32 {
+    if !animate {
+        return UNAWARE_MIX;
+    }
+    let breath = anim::breathe(time, UNAWARE_PERIOD, creature_phase(id));
+    UNAWARE_MIX - UNAWARE_BREATH + 2.0 * UNAWARE_BREATH * breath
+}
+
+/// `fg` mixed toward [`UNAWARE_TINT`] by `mix` (0 none, 1 all): the unaware mark's colour.
+pub(super) fn unaware_tint(fg: Rgb, mix: f32) -> Rgb {
+    let channel = |from: u8, to: u8| {
+        let (from, to) = (f32::from(from), f32::from(to));
+        (from + (to - from) * mix.clamp(0.0, 1.0)).round() as u8
+    };
+    let t = UNAWARE_TINT;
+    Rgb::new(channel(fg.r, t.r), channel(fg.g, t.g), channel(fg.b, t.b))
 }
 
 /// How far, in band heights, the borders between a composite's colour bands have drifted at
@@ -256,6 +303,40 @@ mod tests {
         assert!(drifts.iter().all(|d| d.abs() <= 0.3 + 1e-6), "{drifts:?}");
         assert!(drifts.iter().any(|&d| d > 0.2) && drifts.iter().any(|&d| d < -0.2));
         assert_eq!(band_drift(ActorId(3), 12.3, false), 0.0);
+    }
+
+    #[test]
+    fn the_unaware_mark_mixes_a_quarter_toward_slate() {
+        let red = Rgb::new(0xc0, 0x30, 0x30);
+        assert_eq!(unaware_tint(red, 0.0), red);
+        assert_eq!(unaware_tint(red, 1.0), UNAWARE_TINT);
+        // A quarter of the way: still red, a shade cooler.
+        let marked = unaware_tint(red, 0.25);
+        assert_eq!(marked, Rgb::new(0xb3, 0x4a, 0x4e));
+        assert!(marked.r > marked.g && marked.r > marked.b);
+    }
+
+    #[test]
+    fn the_unaware_mark_breathes_and_stands_still_without_animation() {
+        let id = ActorId(5);
+        let mixes: Vec<f32> = (0..60)
+            .map(|i| unaware_mix(id, i as f32 * 0.1, true))
+            .collect();
+        assert!(
+            mixes
+                .iter()
+                .all(|m| (0.15 - 1e-5..=0.35 + 1e-5).contains(m)),
+            "{mixes:?}"
+        );
+        // Both ends of the breath within one period.
+        assert!(mixes.iter().any(|&m| m < 0.16) && mixes.iter().any(|&m| m > 0.34));
+        // A breath takes six seconds.
+        let at = |t| unaware_mix(id, t, true);
+        assert!((at(1.3) - at(7.3)).abs() < 1e-4);
+        // Reduced effects: still at a quarter, whatever the time.
+        for t in [0.0, 1.5, 3.0, 4.5] {
+            assert_eq!(unaware_mix(id, t, false), 0.25);
+        }
     }
 
     #[test]

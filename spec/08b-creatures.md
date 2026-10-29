@@ -22,7 +22,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
      as a `melee` one. A creature with a throw (§8 "Ranged combat": "Creatures' throws", the
      giants' boulders) that is not next to its target throws first whenever the target is within
      the throw's range with a clear line of fire. A summoner ("Summoning" below) summons before
-     all of this whenever it may.
+     all of this whenever it may. A **lurker** (a type with `lurks = true`: the meenlock, the
+     barrow spider; `world/lurk.rs`) never steps toward the target it sees: it waits where it
+     stands, aware of it, attacking once the target is beside it (or shooting or casting when it
+     can from where it stands), until it has been harmed (hit points below its maximum), when it
+     fights as any creature. No draws; with no hostile in sight it searches and listens as usual.
      Leaving its routine it remembers where it was (its post) and where it saw the target.
   3. **Search**: with no hostile in sight, it goes to where it last saw one (next to the spot if
      someone it cannot see stands there, or no one can stand there: a door shut or kicked at).

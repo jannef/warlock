@@ -101,6 +101,7 @@ use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
 use crate::weather::{self, Weather};
 use crate::world::mirrors::image_id;
+use crate::world::surprise::creature_unaware;
 use crate::world::{
     self, Actor, ActorId, ActorKind, Death, Due, LevelState, RollCount, Shop, SkillRoll,
     WorldState, count_of, favour, part_of, unpaid_parts,
@@ -262,6 +263,11 @@ pub struct SeenActor {
     /// player has Appraiser's eye to tell it (spec §8 "Animated objects").
     #[serde(skip)]
     pub hums: bool,
+    /// It has not noticed the player (`World::unaware`: asleep, disguised, slipped past, or
+    /// hunting no one and not seeing them), told only to a player with Stalker's eye; false
+    /// for everyone otherwise (spec §8 "Surprise and sneak attacks": the unaware mark).
+    #[serde(skip)]
+    pub unaware: bool,
 }
 
 /// How a creature looks by what it is made of (spec §8 "Animated objects"): an animated
@@ -787,8 +793,16 @@ impl Perception {
                 health: a.health(content),
                 shape: shape(a, content),
                 hums: talents.appraise_animated && hums(a, content),
+                unaware: false,
             })
             .collect();
+        // Stalker's eye: which of them have not noticed the player.
+        if talents.sees_unaware {
+            for seen in &mut actors {
+                seen.unaware = (seen.kind == ActorKind::Creature)
+                    && creature_unaware(state, content, lights, seen.id, state.player);
+            }
+        }
         // A hall of mirrors' images of those seen (`world/mirrors.rs`), where the player sees
         // their cells, each shown as what it reflects under an id of its own; Mirror-wise sees
         // those near for what they are.
@@ -1032,6 +1046,8 @@ pub struct PerceptionView<'a> {
     pub(crate) player: &'a Actor,
     /// The player's character, which they know.
     pub(crate) character: Option<&'a Character>,
+    /// The campaign the run is of: whose chapters tell the player's story.
+    pub(crate) campaign: &'a str,
     /// The time on the clock, which the player knows.
     pub(crate) time: GameTime,
     /// How the run ended, once the player has died.
@@ -1352,6 +1368,15 @@ impl<'a> PerceptionView<'a> {
     /// scenario gave no character.
     pub fn character(&self) -> Option<&'a Character> {
         self.character
+    }
+
+    /// The player's background story (spec §8 "Background story"), which they know: its
+    /// paragraphs, told again from the content with the slots filled; empty for a character
+    /// without one (a scenario's own, an old save) or a run without a character.
+    pub fn story(&self) -> Vec<String> {
+        (self.character)
+            .map(|c| crate::background::retell(self.content, self.campaign, c))
+            .unwrap_or_default()
     }
 
     /// The time on the clock.

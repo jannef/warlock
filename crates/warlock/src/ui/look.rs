@@ -164,6 +164,12 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                     .filter_map(|s| content.status(s).seen.as_deref())
                     .map(|word| format!(", {word}"))
                     .collect();
+                // Stalker's eye: it has not noticed the player (never said without it).
+                let effects = if actor.unaware {
+                    format!("{effects}, unaware of you")
+                } else {
+                    effects
+                };
                 let gear = format!("{}{}", made_of(content, actor).1, gear(view, actor.id));
                 // Appraiser's eye: something an animated thing is made of is magic.
                 let hums = if actor.hums {
@@ -915,6 +921,48 @@ map = '''
             said.extend([Pos::new(2, 1), Pos::new(4, 1)].map(|p| describe(&view, p, true)));
         }
         insta::assert_snapshot!(said.join("\n"));
+    }
+
+    #[test]
+    fn stalkers_eye_tells_a_creature_unaware_of_you() {
+        // A dark hall: the dwarf sees the deer by darkvision; the deer's eyes miss them.
+        let hall = r##"
+name = "Hall"
+ambient = [0, 0, 0, 0]
+map = '''
+#######
+#@..d.#
+#######
+'''
+[legend]
+"@" = { terrain = "floor", spawn = "player" }
+"d" = { terrain = "floor", creature = "deer" }
+"##;
+        let mut files = warlock_core::content::ContentFiles::builtin();
+        files.insert("levels/hall.toml", hall);
+        files.insert(
+            "scenarios/hall.toml",
+            "name = \"Hall\"\nstart_level = \"hall\"\n",
+        );
+        let content = Arc::new(Content::load(&files).expect("content"));
+        let spec = "dwarf,male,thief".parse::<warlock_core::character::CharacterSpec>();
+        // The talent needs Stealth 20 and Spot 10: the first fate that rolls them.
+        let start = |picks: [&str; 2]| {
+            let talents = picks.map(String::from).to_vec();
+            let spec = spec.clone().expect("a character").with_talents(talents);
+            (1..100)
+                .find_map(|seed| {
+                    World::start_run(content.clone(), "hall", Some(seed), Some(&spec), None, true)
+                        .ok()
+                })
+                .expect("a thief sharp enough")
+        };
+        let said: Vec<String> = [["healthy", "lean"], ["stalkers_eye", "healthy"]]
+            .into_iter()
+            .map(|picks| describe(&start(picks).perception(), Pos::new(4, 1), true))
+            .collect();
+        assert_eq!(said[0], "A deer (unhurt), on stone floor.");
+        assert_eq!(said[1], "A deer (unhurt, unaware of you), on stone floor.");
     }
 
     #[test]

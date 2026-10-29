@@ -5,30 +5,30 @@ expression: "render(case, content.clone())"
  Welcome to Showcase. Press ? for controls.
 
 
-    ┌─ Weapon skills ─────────────────────────────────────────────────────────────────────────┐
-    │                                                                                         │
-    │ Melee                                       Shields                                     │
-    │   Daggers and knives       0  ──────────      Shield blocking          0  ──────────    │
-    │   Short blades             0  ──────────      Shield bashing           0  ──────────    │
-    │   Long blades              0  ──────────                                                │
-    │   Great blades             0  ──────────    Spells                                      │
-    │   Axes                     0  ──────────      Spell attacks            2  ──────────    │
-    │   Maces and clubs          0  ──────────                                                │
-    │   Spears                   0  ──────────    Fighting styles                 • in use    │
-    │   Polearms                 0  ──────────      Duelist                  0  ──────────    │
-    │   Staves                   1  ──────────      Twin Blades              0  ──────────    │
-    │   Unarmed                  0  ──────────      Great Weapon             0  ──────────    │
-    │                                               Sword and Board          0  ──────────    │
-    │ Missile and thrown                            Marksman                 0  ──────────    │
-    │   Bows                     0  ──────────      Skirmisher               0  ──────────    │
-    │   Crossbows                0  ──────────      Brawler                  0  ──────────    │
-    │   Slings                   0  ──────────    • Staff Fighter            0  ──────────    │
-    │   Thrown weapons           0  ──────────      Sniper                   1  ──────────    │
-    │                                               Toucher                  0  ──────────    │
-    │                                               Battle caster            0  ──────────    │
-    │                                                                                         │
-    │ W or Esc close                                                                          │
-    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+┌─ Weapon skills ──────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ Melee                                       Shields                                              │
+│   Daggers and knives       0  ──────────      Shield blocking          0  ──────────             │
+│   Short blades             0  ──────────      Shield bashing           0  ──────────             │
+│   Long blades              0  ──────────                                                         │
+│   Great blades             0  ──────────    Spells                                               │
+│   Axes                     0  ──────────      Spell attacks            2  ──────────             │
+│   Maces and clubs          0  ──────────                                                         │
+│   Spears                   0  ──────────    Fighting styles                 • in use             │
+│   Polearms                 0  ──────────      Duelist                  0  ──────────             │
+│   Staves                   1  ──────────      Twin Blades              0  ──────────             │
+│   Unarmed                  0  ──────────      Great Weapon             0  ──────────             │
+│                                               Sword and Board          0  ──────────             │
+│ Missile and thrown                            Marksman                 0  ──────────             │
+│   Bows                     0  ──────────      Skirmisher               0  ──────────             │
+│   Crossbows                0  ──────────      Brawler                  0  ──────────             │
+│   Slings                   0  ──────────    • Staff Fighter            0  ──────────             │
+│   Thrown weapons           0  ──────────      Sniper                   1  ──────────             │
+│                                               Toucher                  0  ──────────             │
+│                                               Battle caster            0  ──────────             │
+│                                                                                                  │
+│ W or Esc close                                                                                   │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
 
 
  The Hub  ·  HP 12/12  ·  MP 17/17  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

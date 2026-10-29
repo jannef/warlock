@@ -4,37 +4,37 @@ expression: "render(case, content.clone())"
 ---
  You pick up a leather jerkin, a dagger, and 2 wax candles.
  You wield a dagger.
-    ┌─ Character ─────────────────────────────────────────────────────────────────────────────┐
-    │                                                                                         │
-    │ Garrick                                                                                 │
-    │                                                                                         │
-    │ Race    Human                                                                           │
-    │ Gender  Male                                                                            │
-    │ Class   Ranger                                                                          │
-    │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                            │
-    │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal             │
-    │                                                                                         │
-    │ St  Strength      12   Main hand  short sword                                           │
-    │ Dx  Dexterity     12              -2 to hit, 1d6+1 slashing or piercing                 │
-    │ To  Toughness     11   Off hand   dagger                                                │
-    │ In  Intelligence  11              -7 to hit, 1d4+1 piercing                             │
-    │ Wi  Willpower     14   Missile    short bow                                             │
-    │ Pr  Presence       8              +3 to hit, 1d6 piercing, range 10                     │
-    │                                                                                         │
-    │ Lv  Level         1                                                                     │
-    │ XP  Experience    0 / 202                                                               │
-    │     Talents       9                                                                     │
-    │ HP  Hit points    23/23   MP  Mana       4/4                                            │
-    │ Dv  Defence       12      Pv  Protection  1                                             │
-    │     Stance        Neutral                                                               │
-    │     Stamina       10/10                                                                 │
-    │     Alignment     Neutral                                                               │
-    │     Resistant to  acid                                                                  │
-    │                                                                                         │
-    │ Weight 83.2 kg (you 70 kg, carrying 13.2 kg)                                            │
-    │ Burdened over 17.5 kg, strained over 35 kg, overloaded over 52.5 kg                     │
-    │                                                                                         │
-    │ @ or Esc close   A skills                                                               │
-    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+┌─ Character ──────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ Garrick                                                                                          │
+│                                                                                                  │
+│ Race    Human                                                                                    │
+│ Gender  Male                                                                                     │
+│ Class   Ranger                                                                                   │
+│ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                                     │
+│ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal                      │
+│                                                                                                  │
+│ St  Strength      11   Main hand  short sword                                                    │
+│ Dx  Dexterity     12              -3 to hit, 1d6 slashing or piercing                            │
+│ To  Toughness     10   Off hand   dagger                                                         │
+│ In  Intelligence  11              -8 to hit, 1d4 piercing                                        │
+│ Wi  Willpower     15   Missile    short bow                                                      │
+│ Pr  Presence       8              +3 to hit, 1d6 piercing, range 10                              │
+│                                                                                                  │
+│ Lv  Level         1                                                                              │
+│ XP  Experience    0 / 202                                                                        │
+│     Talents       9                                                                              │
+│ HP  Hit points    22/22   MP  Mana       4/4                                                     │
+│ Dv  Defence       12      Pv  Protection  1                                                      │
+│     Stance        Neutral                                                                        │
+│     Stamina       10/10                                                                          │
+│     Alignment     Neutral                                                                        │
+│     Resistant to  acid                                                                           │
+│                                                                                                  │
+│ Weight 83.2 kg (you 70 kg, carrying 13.2 kg)                                                     │
+│ Burdened over 16 kg, strained over 32 kg, overloaded over 48 kg                                  │
+│                                                                                                  │
+│ @ or Esc close   A skills                                                                        │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
 
- The Hub  ·  HP 23/23  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls
+ The Hub  ·  HP 22/22  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls

@@ -305,6 +305,12 @@ pub enum TalentEffect {
     /// A sneak attack of its that kills leaves it a degree of `status` (Vanishing act:
     /// Light-footed; read where `Build::SneakKill` is raised, `world/thief.rs`).
     SneakKillStatus { status: String },
+    /// The perception snapshot tells which creatures in view have not noticed it, and they are
+    /// drawn with the unaware mark (Stalker's eye; `SeenActor::unaware`).
+    SeesUnaware,
+    /// An initiative check it makes against a hostile attacker beside it is answered with a
+    /// free blow at once (Hair trigger; `Cue::Startled`, `world/free_blow.rs`).
+    StartledBlow,
     /// Creature types carrying one of `tags` have vitals for its attacks: they may be critically
     /// hit and sneak-attacked by it (Anatomist; `Content::has_vitals`). Never the incorporeal.
     VitalsIn { tags: Vec<String> },
@@ -2059,6 +2065,8 @@ impl TalentEffect {
             | TalentEffect::ItemWorth
             | TalentEffect::GemWorth
             | TalentEffect::AppraiseAnimated
+            | TalentEffect::SeesUnaware
+            | TalentEffect::StartledBlow
             | TalentEffect::MakeWay
             | TalentEffect::Distrusted
             | TalentEffect::ExactSounds

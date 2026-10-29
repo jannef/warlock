@@ -305,12 +305,12 @@ time; press `A` or `Esc` to close it.
 ## Info pages
 
 The [character screen](#character), the [inventory](objects.md#your-pack), the [equipment screen](equipment.md#the-equipment-screen), the [skills screen](#skills), the [weapon skills](weapon-skills.md)
-screen, the [quest log](quests.md#the-quest-log), and the [talents](talents.md) page are numbered pages of one set, shown on the bottom
+screen, the [quest log](quests.md#the-quest-log), the [talents](talents.md) page, and [your story](background.md#when-it-is-told) are numbered pages of one set, shown on the bottom
 edge of each as
-`1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents`, the one
+`1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents · 8 Story`, the one
 you are on highlighted. All pages are the same width, so the frame stays put as you turn them.
 On a window too small for that, every page goes by short names
-(`1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weapons · 6 Quests · 7 Tal`), and on the narrowest
+(`1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story`), and on the narrowest
 by their numbers alone. While one of them is open, `1` to `9` switch to the page with that number (the row
 of number keys above the letters; the numpad still moves), and `Tab` / `Shift`+`Tab` go to the
 next or previous page, wrapping around. The page replaces the one you were on, so `Esc` closes it

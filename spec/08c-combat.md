@@ -331,6 +331,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     up beside the actor from a cell out of its reach is struck as it comes, after its step
     (`World::step_up`, from `creature_steps`); each gatekeeper it was not beside strikes, in
     actor order. Like the opportunist's, an attack of its own: it makes the fight's noise.
+  - **Startled blow** (Hair trigger's `startled_blow`, a talent switch, not in `FreeBlows`;
+    #687): an attack that finds the actor unaware, made by a hostile beside it, whose initiative
+    check the actor makes (`World::startle`, §8 "Surprise and sneak attacks"), is answered at
+    once with a blow with what it wields (`Cue::Startled`, `World::hair_trigger`), before the
+    attack is rolled: an attacker it fells makes no attack (`resolve` and
+    `cast.rs::spell_attack` stop). One per surprise (the attacker is noticed by the check, so
+    its next blows find the actor aware); never for a trap or an attacker not beside; an attack
+    of its own (noisy), struck in another's turn and so held as the riposte is.
   - Each is a blow like any other: its own `Event::Attacked`, blood, wounds, kills (and their
     experience), and weapon marks; free (no time, no exertion); silent but the opportunist's,
     an attack of its own (the others follow a blow that made the noise of the fight). **A free
@@ -347,7 +355,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Surprise and sneak attacks** (`world/surprise.rs`, `data/surprise.toml`; #681, design
   `docs/design/surprise-and-sneak-attacks.md` §3–§5; `docs/dev/surprise.md`): being caught
   unawares, both ways round, the Sneak attack and Initiative skills (#682), and slipping past
-  (#683). The thief's rework and the unaware mark come in later slices (#684–#688).
+  (#683), the unaware mark and Hair trigger (#687). The rest comes in later slices
+  (#684–#688).
   - **Unaware** (`World::unaware`, the one definition, asked of every attack; no draw): a
     creature is unaware of an actor when it hunts no one it has seen (`Mind::last_seen` unset)
     and its eyes do not see the actor's cell now (creature sight, `World::sees_now`) or the actor
@@ -419,6 +428,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     kobold whirls to face you." before the player's blow's line (nothing more on a sleeper or a
     mimic); "You are taken by surprise!" / "You keep your wits about you." before a creature's
     attack line, after a trap's; look mode's "surprised"; Surprised in the status bar.
+  - **Stalker's eye** (#687): the perception snapshot carries `SeenActor::unaware` for each
+    creature in view (`surprise::creature_unaware`, the creature half of `World::unaware`, a
+    function of state: a sleeper, a mimic Mimic-wise sees, one slipped past, one hunting no one
+    whose eyes miss the player), computed in `Perception::compute` only for a player with the
+    talent and false for everyone otherwise, so nothing leaks: look mode says "(hostile,
+    unhurt, unaware of you)" and the creature is drawn with the unaware mark (§4.2). A dump's
+    JSON gives `unaware: true` on such a seen actor.
   - **Determinism**: the check is two draws of the gameplay stream, before the strike's (after a
     trap's own), only when an attack finds its target unaware or a hidden trap springs on someone
     awake; a fight that begins in plain sight draws as before; a threat on a thing without vitals

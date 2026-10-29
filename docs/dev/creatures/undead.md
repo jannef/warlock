@@ -68,6 +68,10 @@ toughness); the spirits' wall Defence is 2 + level ÷ 10 (6 to 7). The ghoul kin
 20, the archlich's 20 % at 22. Plurals: `archlich` and `sluagh` in `plurals.toml`; the washer's
 and the hound's are written in their files.
 
+The sluagh sneak-attacks (#686, spec §8 "Surprise and sneak attacks"): `sneak_attack = 120`
+(5d6), `initiative = 60`, the host falling out of the night on the unwary. It has no vitals
+(incorporeal), so nothing sneak-attacks it back. `bestiary_tests::the_sneak_attackers_carry_their_craft_and_two_lurk` checks the numbers.
+
 ## Batch 6 (#389, levels 56–70)
 
 All fifteen ship in no population (strays only). Each is one file in `assets/data/creatures/`; the table is

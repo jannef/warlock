@@ -150,6 +150,7 @@ mod level;
 mod lockpick;
 mod loot;
 mod lucky;
+mod lurk;
 mod mana;
 mod mimic;
 pub(crate) mod mirrors;
@@ -195,7 +196,7 @@ mod status;
 mod steal;
 mod stride;
 mod summon;
-mod surprise;
+pub(crate) mod surprise;
 mod talent;
 mod talk;
 mod temper;
@@ -1099,6 +1100,7 @@ impl World {
             level: self.state.current(),
             player: self.state.player(),
             character: self.state.character.as_ref(),
+            campaign: &self.state.campaign,
             time: self.state.time,
             death: self.state.death.as_ref(),
             experience: self.state.experience,
@@ -1578,6 +1580,8 @@ mod light_tests;
 mod lockpick_tests;
 #[cfg(test)]
 mod lucky_tests;
+#[cfg(test)]
+mod lurk_tests;
 #[cfg(test)]
 mod magic_tests;
 #[cfg(test)]

@@ -66,6 +66,16 @@ The weaker priestess waits 45 s between callings; nothing she calls is above her
 `drow_roster_tests` checks the tag, the table, and mana go with `priest`, and
 `a_priestess_calls_forth_demons_that_stand_with_the_drow` the summoning and the faction.
 
+## Surprise (#686)
+
+The stalker and the assassin sneak-attack (spec §8 "Surprise and sneak attacks"; their
+`skills`): the stalker `sneak_attack = 75` (4d6), `initiative = 60`, `spot = 50`; the assassin
+`sneak_attack = 160` (6d6), `initiative = 100`, `spot = 40`. Spot is their side of the contest
+to slip past them in the dark (both see by darkvision and carry no light, so the contest comes up
+against them as against few others: the kobolds' torches light the player up); the stalker, the
+scout, has the sharper eye. The rest of the house has none: the check at Dexterity alone.
+`bestiary_tests::the_sneak_attackers_carry_their_craft_and_two_lurk` checks the numbers.
+
 ## Populations
 
 None: their levels overlap only Fyrdelf's (danger 5–16) at the bottom, and a duergar delf is no

@@ -240,6 +240,24 @@ fn slipped() -> (World, ActorId) {
 }
 
 #[test]
+fn stalkers_eye_marks_a_creature_slipped_past() {
+    let (mut w, k) = slipped();
+    w.player_mut().talents.take("stalkers_eye", None);
+    // Darkvision of the player's own, to see it in the dark.
+    w.apply(&Action::SetVision("darkvision".to_string()));
+    let seen = |w: &World| {
+        (w.perception().actors().iter())
+            .find(|a| a.id == k)
+            .map(|a| a.unaware)
+    };
+    assert_eq!(seen(&w), Some(true), "seen, and it has not noticed them");
+    // Its eyes would see them by darkvision: only the slip keeps it unaware.
+    w.state.actors.get_mut(&k).expect("kobold").mind.missed = None;
+    *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
+    assert_eq!(seen(&w), Some(false));
+}
+
+#[test]
 fn light_its_eyes_see_by_ends_it() {
     let mut w = world(120, Slip::Shipped);
     let (player, k) = (w.state.player, kobold(&w));

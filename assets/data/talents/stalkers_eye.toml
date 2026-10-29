@@ -1,0 +1,8 @@
+[[talent]]
+id = "stalkers_eye"
+name = "Stalker's eye"
+tree = "shadow"
+description = "You read a creature's bearing at a glance: you can tell which of those you see have not noticed you."
+needs = { skills = { stealth = 20, spot = 10 } }
+effects = [{ kind = "sees_unaware" }]
+systems = ["awareness", "sneak_attack"]

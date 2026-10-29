@@ -6,27 +6,27 @@ expression: "render(case, content.clone())"
  You put on a pair of leather boots.
 
 
-    ┌─ Equipment ─────────────────────────────────────────────────────────────────────────────┐
-    │                                                                                         │
-    │ > a  Head           [ an iron helm (Dv +0, Pv 1)                                1.5 kg  │
-    │   b  Neck             —                                                                 │
-    │   c  Body           [ a chain mail shirt (Dv +2, Pv 3)                           11 kg  │
-    │   d  Cloak            —                                                                 │
-    │   e  Main hand      ) a quarterstaff (+0 hit, 1d6, Dv +1) (both hands)            2 kg  │
-    │   f  Off hand       ) a quarterstaff (+0 hit, 1d6, Dv +1) (both hands)                  │
-    │   g  Hands            —                                                                 │
-    │   h  Left ring        —                                                                 │
-    │   i  Right ring       —                                                                 │
-    │   j  Feet           [ a pair of leather boots (Dv +0, Pv 0)                       1 kg  │
-    │   k  Missile weapon } a short bow (+0 hit, 1d6, range 10)                        700 g  │
-    │   l  Missiles       / 24 arrows                                                  720 g  │
-    │   m  Tool           ( a lantern                                                  400 g  │
-    │                                                                                         │
-    │ Defence (Dv) 14   ·   Protection (Pv) 4                                                 │
-    │ Carrying 21.3 kg   ·   Your weight 91.3 kg (you 70 kg)                                  │
-    │                                                                                         │
-    │ a-m choose a slot   A-M look   Esc close                                                │
-    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
+┌─ Equipment ──────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                  │
+│ > a  Head           [ an iron helm (Dv +0, Pv 1)                                         1.5 kg  │
+│   b  Neck             —                                                                          │
+│   c  Body           [ a chain mail shirt (Dv +2, Pv 3)                                    11 kg  │
+│   d  Cloak            —                                                                          │
+│   e  Main hand      ) a quarterstaff (+0 hit, 1d6, Dv +1) (both hands)                     2 kg  │
+│   f  Off hand       ) a quarterstaff (+0 hit, 1d6, Dv +1) (both hands)                           │
+│   g  Hands            —                                                                          │
+│   h  Left ring        —                                                                          │
+│   i  Right ring       —                                                                          │
+│   j  Feet           [ a pair of leather boots (Dv +0, Pv 0)                                1 kg  │
+│   k  Missile weapon } a short bow (+0 hit, 1d6, range 10)                                 700 g  │
+│   l  Missiles       / 24 arrows                                                           720 g  │
+│   m  Tool           ( a lantern                                                           400 g  │
+│                                                                                                  │
+│ Defence (Dv) 14   ·   Protection (Pv) 4                                                          │
+│ Carrying 21.3 kg   ·   Your weight 91.3 kg (you 70 kg)                                           │
+│                                                                                                  │
+│ a-m choose a slot   A-M look   Esc close                                                         │
+└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
 
 
 

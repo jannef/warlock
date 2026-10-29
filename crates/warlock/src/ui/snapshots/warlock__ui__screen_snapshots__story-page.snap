@@ -1,0 +1,40 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+
+
+
+
+
+
+
+    ┌─ Thora's story ───────────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                                   │
+    │  Your parents were plain folk who worked, ate, slept, and did not talk about it. You came in a    │
+    │  hard winter, when the river froze to its bed, and you came early and small.                      │
+    │                                                                                                   │
+    │  A winter wolf came into the yard when you were six, and you faced it with a stick until the      │
+    │  grown folk came. The story grew; so did you. You worked, as everyone worked, and nothing of it   │
+    │  is worth the telling.                                                                            │
+    │                                                                                                   │
+    │  Your family died owing, and you worked the debt off a shilling at a time, and learned what       │
+    │  every shilling was worth. Fortune never found your door; whatever you have, you got yourself.    │
+    │                                                                                                   │
+    │  You left, as the young do, because staying was the one thing you could not bear. You came to     │
+    │  the Hall by the road everyone comes by.                                                          │
+    │                                                                                                   │
+    │ Esc close                                                                                         │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents · 8 Story ─┘
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 29/29  ·  MP 1/1  ·  Sta 13/13  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444      ? controls

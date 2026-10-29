@@ -583,6 +583,32 @@ const CASES: &[Case] = &[
         size: (100, 40),
         ..BASE
     },
+    // The background story (#703): opened by the app as the run New run's summary started
+    // begins (the showcase's character, its seed), then page 8 of a kit run, and page 8 of a
+    // scenario's own character, who has none.
+    Case {
+        name: "story-screen",
+        screen: Some("summary"),
+        keys: Some("Enter"),
+        size: (100, 36),
+        ..BASE
+    },
+    Case {
+        name: "story-page",
+        character: Some("dwarf,female,warrior"),
+        run: true,
+        screen: Some("character"),
+        keys: Some("8"),
+        size: (110, 36),
+        ..BASE
+    },
+    Case {
+        name: "story-page-none",
+        run: true,
+        screen: Some("character"),
+        keys: Some("8"),
+        ..BASE
+    },
     // A Unicorn (seed 12) after Horn's grace: the Birth sign group, the grace greyed out while
     // Graceless (#266).
     Case {
@@ -1117,6 +1143,7 @@ pub(super) fn start(case: &Case, content: Arc<Content>) -> App {
                 apply_actions.run_if(resource_exists::<Game>),
                 (
                     screens::refresh,
+                    screens::on_run_start,
                     screens::converse,
                     screens::on_death,
                     screens::on_level_up,

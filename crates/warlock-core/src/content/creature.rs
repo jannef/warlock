@@ -159,6 +159,9 @@ pub(super) struct CreatureSpec {
     /// Whether it opens closed doors in its way.
     #[serde(default)]
     pub opens_doors: bool,
+    /// Whether it lurks: waits where it stands for a hostile it sees to come beside it.
+    #[serde(default)]
+    pub lurks: bool,
     /// Whether it lets the player swap places with it.
     #[serde(default)]
     pub budge: Budge,
@@ -504,6 +507,7 @@ impl CreatureSpec {
             combat: self.combat,
             range: self.range.unwrap_or(1),
             opens_doors: self.opens_doors,
+            lurks: self.lurks,
             budge: self.budge,
             attack_cost: self.attack_cost,
             light: r.light,
@@ -611,6 +615,9 @@ pub struct CreatureDef {
     pub range: i32,
     /// Whether it opens closed doors in its way.
     pub opens_doors: bool,
+    /// Whether it lurks (spec §8 "Creature behavior"; `ai.rs::fight`): a hostile it sees, it
+    /// waits for where it stands until the hostile is beside it or it has been harmed. Rules only.
+    pub lurks: bool,
     /// Gameplay: whether the player may swap places with it when it is not hostile (spec §8
     /// "Displacement").
     pub budge: Budge,

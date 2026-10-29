@@ -22,6 +22,9 @@ hearing = 16
 weight = 55000
 stats = { strength = 24, dexterity = 25, toughness = 23, intelligence = 23, willpower = 23, presence = 23 }
 base_hp = 72
+# The knife in the dark: it strikes the unwary hard, is rarely caught off guard, and its
+# eye finds those who would slip past it in the dark.
+skills = { sneak_attack = 160, initiative = 100, spot = 40 }
 resist = { poison = 25 }
 on_eat = { message = "Lean and bitter, with an aftertaste of old poisons.", vomit = 40 }
 [creature.attack]

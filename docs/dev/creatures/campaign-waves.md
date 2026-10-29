@@ -31,3 +31,9 @@ XP, an outlier of the XP guideline like the shopkeeper).
 Fennmynster (#338) is where the fen wave lives: all eleven are its branch's `population`, the bog
 hag too (unique, so the population and spawns bring her once a run); the sunken crypt at its
 bottom adds two drowned standing guard in its water.
+
+The barrow spider sneak-attacks and lurks (#686, spec §8 "Surprise and sneak attacks"):
+`sneak_attack = 10` (1d6), `initiative = 20`, and `lurks = true` (`world/lurk.rs`): one that
+sees the player waits in its passage until they come beside it or it is hurt, so Cealdhlāw's
+dark holds a thing that waits rather than one that comes.
+`bestiary_tests::the_sneak_attackers_carry_their_craft_and_two_lurk` checks the numbers.

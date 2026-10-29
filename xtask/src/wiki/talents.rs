@@ -507,6 +507,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a sneak attack of yours that kills leaves you {} (1 degree)",
             status(&id)
         ),
+        TalentEffect::SeesUnaware => "you see which creatures in view have not noticed you: \
+                                      look mode says \"unaware of you\", and their glyphs are \
+                                      drawn a shade cooler, breathing slowly (standing still \
+                                      with reduced effects)"
+            .to_string(),
+        TalentEffect::StartledBlow => "when something beside you attacks you unawares and you \
+                                       make the initiative check, you strike it at once with \
+                                       what you wield, before its attack lands (a free blow, \
+                                       once per surprise; it brings no free blows of its own)"
+            .to_string(),
         TalentEffect::VitalsIn { tags } => format!(
             "creatures tagged {} have vitals for you: your criticals and sneak attacks land on them",
             tags.join(", ")

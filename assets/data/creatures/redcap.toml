@@ -22,6 +22,8 @@ weight = 20000
 size = "small"
 stats = { strength = 21, dexterity = 11, toughness = 22, intelligence = 15, willpower = 15, presence = 17 }
 base_hp = 48
+# A murderer's craft: it strikes the unwary.
+skills = { sneak_attack = 40, initiative = 40 }
 attack = { damage = "3d6", damage_type = "bludgeoning", name = "stamp", verb = "stamps on" }
 # Its gear (spec §8 "Creature gear"): the iron-shod boots it is named for.
 [[creature.gear]]

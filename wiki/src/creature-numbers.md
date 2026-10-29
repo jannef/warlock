@@ -69,6 +69,21 @@ summoner that cannot cast ([silenced](status-effects.md#status-silenced)) cannot
 
 {{#include generated/creature-summons.md}}
 
+## Surprise
+
+The creatures with a craft for [surprise](status-effects.md#status-surprised). Their
+**[sneak attack](skills.md#skill-sneak-attack)** adds the dice to a hit that finds you unaware or
+surprised, and makes it harder to keep your wits (the difficulty column: 13 plus this, against your
+[Dexterity](stats.md#stat-dexterity) and your own [initiative](skills.md#skill-initiative)). Their
+**initiative** helps them keep their wits when you catch them unawares, and the time it saves if
+they do not. Their **[spot](skills.md#skill-spot)** counts against you when you
+[slip past](skills.md#slipping-past) them in the dark. A creature that **lurks** waits where it
+stands for you to come beside it, until it is hurt (see [Creatures](creatures.md#what-they-do)).
+Every other creature has none of this: its initiative check is its Dexterity alone, and it
+strikes the unwary with no extra dice.
+
+{{#include generated/creature-surprise.md}}
+
 ## Pace, senses, and size
 
 A creature's **[speed](turns.md#speed)** says how much time its actions take: 1000 is yours, and twice that does
