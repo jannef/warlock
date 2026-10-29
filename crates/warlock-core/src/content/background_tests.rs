@@ -82,6 +82,9 @@ fn the_built_in_stories_load_with_every_effect_kind_and_tier() {
         Effect::WeaponMarks(Marks::Skill(_), _)
     )));
     assert!(has(|e| matches!(e, Effect::Alignment(_))));
+    assert!(has(
+        |e| matches!(e, Effect::Talent(id, None) if id == "hardy")
+    ));
     // The heritage talents force their chapters (design §6.2).
     let forced: Vec<&str> = (lines.iter())
         .filter(|l| l.only)
@@ -197,8 +200,41 @@ fn bad_lines_are_refused() {
             "names a `min` band",
         ),
         (
-            "tier = \"common\"\neffects = [{ talent = \"hardy\" }]",
-            "not told yet",
+            "tier = \"common\"\neffects = [{ talent = \"no_such\" }]",
+            "unknown talent `no_such`",
+        ),
+        (
+            "tier = \"common\"\neffects = [{ talent = \"blaze\" }]",
+            "`blaze` is given, a flaw, or a class ability",
+        ),
+        (
+            "tier = \"common\"\neffects = [{ talent = \"bulwark\" }]",
+            "`bulwark` is given, a flaw, or a class ability",
+        ),
+        (
+            "tier = \"common\"\neffects = [{ talent = \"slight\" }]",
+            "`slight` is given, a flaw, or a class ability",
+        ),
+        (
+            "tier = \"common\"\neffects = [{ talent = \"weapon_focus\" }]",
+            "is chosen for a weapon skill",
+        ),
+        (
+            "tier = \"common\"\neffects = [{ talent = \"weapon_focus:lances\" }]",
+            "`lances` is no choice",
+        ),
+        (
+            "tier = \"common\"\neffects = [{ talent = \"hardy:axes\" }]",
+            "takes no choice",
+        ),
+        (
+            "tier = \"common\"\neffects = [{ flaw = \"hardy\" }]",
+            "`hardy` is no birth sign's flaw",
+        ),
+        (
+            "tier = \"rare\"\neffects = [{ talent = \"hardy\" }, { talent = \"lean\" }, \
+             { flaw = \"slight\" }]",
+            "never costs anything",
         ),
         (
             "tier = \"common\"\neffects = [{ gold = 5, alignment = 5 }]",

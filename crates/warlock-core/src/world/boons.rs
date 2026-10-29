@@ -169,8 +169,8 @@ impl World {
     }
 
     /// Talent `id` for `choice` is given to the player at rank 1, with what it hands out, and
-    /// kept among their boons.
-    fn bestow(&mut self, id: &str, choice: Option<&str>) {
+    /// kept among their boons (a story's talent and flaw too, `world/background.rs`).
+    pub(super) fn bestow(&mut self, id: &str, choice: Option<&str>) {
         let content = self.content.clone();
         let Some(talent) = content.talents().id(id) else {
             return;
