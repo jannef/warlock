@@ -103,7 +103,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`--scenario` alone) has none. The game tells it in words only, never a number or a stat's
     name; the summary says under the kit "Fate will have its say when you set out." Its
     talents (#705): Favoured child doubles the luckier tiers' odds, Hard-won turns each stat
-    point taken into twelve stat training marks, Storyteller's shop favour grows with the rare
+    point taken into sixty stat training marks, Storyteller's shop favour grows with the rare
     and fateful lines (under "Heritage" and the Scholar tree).
   - **Birth sign actives** (#266): used from the abilities menu's **Birth sign** group
     (`Ability::Sign`, `Source::Sign`, between Racial and Class) as `Action::Gift` (no key of
@@ -659,7 +659,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     moves. The weakest of a small race may start Burdened with them, never Strained. Two more
     heritage talents shape the background story (#705, the `background` system): **Favoured
     child** (`story_luck` 100: the story's uncommon, rare, and fateful odds doubled, 24 %, 6 %,
-    1 % a chapter) and **Hard-won** (`hard_won` 12: each stat point a story line took is twelve
+    1 % a chapter) and **Hard-won** (`hard_won` 60: each stat point a story line took is sixty
     stat training marks on that stat, the potential where the story left it). The system's
     third, **Storyteller** (Scholar, Presence 12), is picked in play: shop favour +5 %, +5 % more
     per rare line of the story and +10 % per fateful one, before the cap (`world::shop::favour`,

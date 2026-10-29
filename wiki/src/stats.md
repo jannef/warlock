@@ -57,15 +57,15 @@ What reads the modifier and what reads the score, exactly:
 
 Every stat also has a **potential**, which the game never shows: how far it can grow for good.
 A [corpse](food.md#corpses) that raises a stat never raises it past its potential ([magic items](magic-items.md) raise it only while
-you wear them, potential or not); training slows down there but goes on (see
-[Training](#training)). Yours are set at the start of a run: the potential your [race](races.md)
+you wear them, potential or not); training grows dearer past it but goes on, and never moves
+the potential itself (see [Training](#training)). Yours are set at the start of a run: the potential your [race](races.md)
 gives, rolled once, and never below your starting score (a score above it raises the potential
 to the score):
 
 {{#include generated/potentials.md}}
 
-Besides training past it, only an **elixir** raises a potential: it raises its stat by 1 and
-the potential by 1 or 2 more (see [Potions](potions.md#elixirs)).
+Training never raises a potential; an **elixir** does: it raises its stat by 1 and the
+potential by 1 or 2 more (see [Potions](potions.md#elixirs)).
 
 ### What changes them
 
@@ -85,13 +85,8 @@ You never pick a stat to raise. Instead your stats grow with what you do: fighti
 landing [criticals](combat.md#criticals), and blocking with a shield train [Strength](stats.md#stat-strength), dodging, parrying, and shooting
 [Dexterity](stats.md#stat-dexterity), being hurt and felling worthy foes [Toughness](stats.md#stat-toughness), reading and [searching](searching.md#searching-1) [Intelligence](stats.md#stat-intelligence),
 enduring, noticing, and casting [Willpower](stats.md#stat-willpower), talking and trading [Presence](stats.md#stat-presence). Each such use may
-earn the stat a **training mark** (marks never fade and have no limit), and every time you gain
-an [experience level](experience.md), each stat in turn gets one chance to rise by a point; so
-it does once a day, at 06:00, between levels too (see [The daily check](#the-daily-check)). The
-more marks it holds, the likelier; a rise uses up all its marks, a stat that did not rise keeps
-them for the next check. A stat rises by at most one point a level, and one a day. The game says
-only "You feel stronger." (quicker, tougher, sharper, more resolute, more confident); the new
-score shows on the character screen. A rise in [Toughness](stats.md#stat-toughness) brings its [hit point](combat.md#hit-points) at once.
+earn the stat a **training mark**. A stat's marks are one running sum, its pile: marks never
+fade, have no limit, and count the same however many come in a day.
 
 What earns a mark, and how likely:
 
@@ -100,29 +95,47 @@ What earns a mark, and how likely:
 Asking someone about a topic takes no time, so it trains nothing; a long action counts only
 when it lasts more than one turn and is not interrupted.
 
-At a level, a stat rises with chance **marks / (marks + need)**, where need is 20 + 3 × the
-stat's score. At or above the stat's [potential](stats.md#potentials) the chance is divided by 4, and a rise there
-lifts the potential with the score: a long career outgrows its nature slowly, never all at once.
-Below the [potential](stats.md#potentials):
+### The price of a point
 
-{{#include generated/stat-checks.md}}
+Each stat's next point has a **price** in marks: **20 + 10 × the stat's score** up to its
+[potential](stats.md#potentials). Past the potential the price climbs quickly: the first point
+beyond it costs half again, the second 2½ ×, the third 4 ×, then 6 ×, 8½ ×, 11½ × (with `n` the
+point past the potential, (4 + n × (n + 1)) / 4 times the plain price). Training alone never
+raises the potential itself, so a stat you live by ends a long career some ten points past its
+nature and never reaches the top by use alone; an [elixir](potions.md#elixirs) or a rare
+[corpse](food.md#corpses) that raises the potential makes every later point cheaper.
 
-### The daily check
+{{#include generated/stat-prices.md}}
 
-Every game day at **06:00** (the hour a [rest](resting.md#how-resting-works) until dawn ends), each stat gets the same check
-again, with a stiffer need: the chance is **marks / (marks + 3 × need)**, divided by 4 at or
-above the [potential](stats.md#potentials) as at a level. Nothing else changes: a rise uses up the marks and says the
-same words, a failure keeps them, and the level's check still comes at every level. A rise at
-06:00 stops a [rest](resting.md#how-resting-works). The check comes whether you are awake or [resting](resting.md#how-resting-works), once a day, at that hour
-and no other; nothing decays and nothing is capped, so the only limit is the clock. The
-**[Hard training](talents.md#talent-hard-training)** [talent](talents.md) makes the need 2 × instead of 3 ×. Below the [potential](stats.md#potentials):
+(A drop, the last column, is the price a stat's pile pays back if it ever falls by a point:
+half the plain price of the point lost, never more past the potential.)
 
-{{#include generated/stat-daily-checks.md}}
+### The checks
 
-With 8 to 15 marks a day in a stat you use, [Strength](stats.md#stat-strength) 14 against a [potential](stats.md#potentials) of 17, and a level
-every two days, the daily check adds about 4 to 8 rises to the levels' over a career of 120
-game days, most of them before the potential; past it a stat rises between levels about once
-in 25 days.
+Every time you gain an [experience level](experience.md), and once a day at **06:00** (the hour
+a [rest](resting.md#how-resting-works) until dawn ends), each stat in turn gets one **check**,
+the same rule at both. A pile under a quarter of the price is out of play: nothing happens. From
+a quarter up the stat rises by a point with chance **marks³ / (marks³ + price³)**: even odds at
+the price, about one in nine at half of it, near certain at twice it.
+
+{{#include generated/stat-odds.md}}
+
+A rise **pays the price** out of the pile; whatever is left over waits for the next check, so
+nothing is ever wasted. A lucky rise from a short pile spends what there was and no more. A
+stat rises at most one point a check, so a great pile becomes a point a day and one a level. The
+game says only "You feel stronger." (quicker, tougher, sharper, more resolute, more confident);
+the new score shows on the character screen. A rise in [Toughness](stats.md#stat-toughness) brings its
+[hit point](combat.md#hit-points) at once, and a rise at 06:00 stops a [rest](resting.md#how-resting-works). The check comes whether
+you are awake or resting, once a day, at that hour and no other; nothing decays and nothing is
+capped, so the only limit is the clock.
+
+How many days the next point takes, by the marks a stat earns a day (the daily check alone; a
+level's check comes on top):
+
+{{#include generated/stat-pace.md}}
+
+The **[Hard training](talents.md#talent-hard-training)** [talent](talents.md) gives every use half
+again its chance of a mark (a sure one stays sure), so every stat trains half again as fast.
 
 ## Drained stats
 

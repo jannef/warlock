@@ -19,20 +19,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Potential** (ADOM-like): each stat's natural ceiling, the score it could grow towards.
     Stored and saved, **hidden from the player** like the modifiers. Eating a corpse raises a
     score (§8 "Hunger": by 1, never past the potential, `Stats::raise`), and so does training
-    at a level (below; past the potential too, slowly). Hunger lowers the **effective** scores for a while (Weak: Strength and Dexterity;
+    at a check (below; past the potential too, dearer, and never moving the potential). Hunger lowers the **effective** scores for a while (Weak: Strength and Dexterity;
     `Actor::effective_stats`, which combat and burden read; `Stats::adjusted`).
   - **What the player sees**: their own scores as they are now (effective, so lowered while
     Weak), on the character screen (§6) and in the `stats` dump layer; the perception snapshot carries those and nothing else of stats
     (`PerceptionView::own_scores`). A creature's stats are never shown; ground-truth dev dumps
     (`actors`, the world state) show every actor's scores and potentials.
   - **Training** (`data/stats.toml`, `content/stat_training.rs`, `world/stat_training.rs`;
-    #231, the design's §6): the player's uses of their stats earn **training marks**
-    (`Actor::stat_marks`, per stat, saved and hashed, left out of the JSON while none; creatures
-    earn none). Each `[[training.use]]` rule (`stat`, `on`, `chance` 1 to 100) gives its stat
+    #231, #722, `docs/design/stat-training.md`): the player's uses of their stats earn
+    **training marks** into a signed pile per stat (`Actor::stat_marks`, `PerStat<i32>`, saved
+    and hashed, left out of the JSON while all zero; creatures earn none). The pile is the
+    whole state: no daily counter, no decay, no cap. Each `[[training.use]]` rule (`stat`, `on`, `chance` 1 to 100) gives its stat
     a mark on its use, one draw of the **training** stream per rule below 100, never gameplay;
-    marks never decay and have no cap (a `u16`, saturating). A use may give several marks at
+    marks never decay and have no cap (saturating at `i32::MAX`). A use may give several marks at
     once (`World::train_stat_times`, a potion's `marks`): one draw per mark below 100, none at
-    100. A use that names its own stat (`drank`, `elixir`: the potion's) has rules without a
+    100; Hard training's `train_percent` (+50) raises every chance below 100 (the draws stay
+    as they are). A use that names its own stat (`drank`, `elixir`: the potion's) has rules without a
     `stat`; every other use's rules have one. The chances are plentiful (combat progression
     design §9.1: 8 to 15 marks a game day in a trained stat). The uses (`StatUse`), each
     reported where it happens: Strength burdened (an action but waiting under a slowing load),
@@ -53,22 +55,30 @@ developer notes (CLAUDE.md, `docs/dev/`).
     potions land). The uses skills share (burdened, kick, dodge, sneak, spot) are one report,
     `World::train`; the rest `World::train_stat` (a trap noticed in passing reports `spot` there,
     beside Detect traps' `find_trap`).
-    **At every level gained** (`World::level_up`, level by level), each stat in display order
-    gets one check on the **levels** stream (six draws a level, always; none without the
-    data): it rises by 1 with chance `marks / (marks + need)`, `need = need_base (20) +
-    need_per_point (3) × score` (the stored score), divided by `over_potential_divisor` (4) at
-    or above the potential, where a rise lifts the potential with the score; at most 40. A rise
-    uses up the stat's marks (a failed check keeps them) and says "You feel stronger."
-    (quicker, tougher, sharper, more resolute, more confident) after "Welcome to level N."; a
-    Toughness rise brings its hit point at once. **Once a game day at 06:00** (#562) each stat
-    gets the same check again between levels, on the **training** stream (six draws a day,
-    always; none without the data), with the need times `daily_factor` (3; the Hard training
-    talent's 2); a rise says the same at once and stops a rest. It is a moment of the status
-    loop, so however a rest is cut up the checks come at their hours in order;
-    `WorldState::next_stat_check` is saved (left out without the data; scheduled on load for a
-    save without it). The dev skip passes no check. No choice, and nothing numeric is shown: no
-    marks, chance, or potential (the dev `progress` dump layer lists the marks; the wiki states
-    the rules exactly).
+    **A point's price** (`StatTraining::price`): `price_base (20) + price_per_point (10) ×
+    score` (the stored score) up to the potential; past it, with `over = score + 1 −
+    potential`, that times `(ramp_divisor (4) + over × (over + 1)) / ramp_divisor` (×1.5, ×2.5,
+    ×4, ...); the point reaching the potential costs the base. **A drop's price**
+    (`StatTraining::drop_price`): the base price of the point lost (at `score − 1`) divided by
+    `drop_share` (2), never ramped. **The checks** (`World::settle`, one rule for both):
+    **at every level gained** (`World::level_up`, level by level) on the **levels** stream, and
+    **once a game day at 06:00** (#562) on the **training** stream, each stat in display order
+    draws once of 65 536, always (six draws a check; none without the data). A pile `m` checked
+    against its price `P` (the rise's for `m > 0`, the drop's for `m < 0`) is out of play while
+    `quarter (4) × |m| < P`; else the stat moves with chance `|m|^p / (|m|^p + P^p)`, `p =
+    odds_power` (3), `|m|` counted up to `8 × P`, in integers (`StatTraining::odds`). A rise
+    (at most 40) pays `P`: `m ← max(0, m − P)`, the surplus kept for the next check, one move a
+    stat a check; it never lifts the potential (`Stats::train`: the score only; elixirs,
+    corpses, and gifts move potentials). A negative pile is not moved yet (the drop,
+    `Stats::untrain` with its floors, `DRAIN_FLOOR` and the stat damage plus one, comes with
+    the losses, #724's slice T3). A rise says "You feel stronger." (quicker, tougher, sharper,
+    more resolute, more confident), after "Welcome to level N." at a level and at once at 06:00
+    (it stops a rest); a Toughness rise brings its hit point at once. The daily check is a
+    moment of the status loop, so however a rest is cut up the checks come at their hours in
+    order; `WorldState::next_stat_check` is saved (left out without the data; scheduled on load
+    for a save without it). The dev skip passes no check. No choice, and nothing numeric is
+    shown: no marks, price, chance, or potential (the dev `progress` dump layer lists each pile
+    with its price, `stat marks St 120/160, To -30/75`; the wiki states the rules exactly).
   - **Stat damage** (`StatDamage`, `Actor::damage`; saved, hashed): points a disease's failed
     checks take off the scores for a while; the rules read the scores less them, never below 1,
     and they mend a point a day each once no disease shows ("Diseases" below). The player sees

@@ -212,8 +212,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("stat-uses.md", character::stat_uses),
         ("potentials.md", character::potentials),
         ("stat-training.md", stats::stat_training),
-        ("stat-checks.md", stats::stat_checks),
-        ("stat-daily-checks.md", stats::stat_daily_checks),
+        ("stat-prices.md", stats::stat_prices),
+        ("stat-odds.md", stats::stat_odds),
+        ("stat-pace.md", stats::stat_pace),
         ("drain-attacks.md", stats::drain_attacks),
         ("genders.md", character::genders),
         ("races.md", character::races),
@@ -631,6 +632,14 @@ mod tests {
             "| Presence | shop prices: 3% in your favour for each point",
         );
         has("stat-uses.md", "checks against brain fever");
+        // Stat training: the price by score and past the potential, the odds, the pace.
+        has(
+            "stat-prices.md",
+            "| 14 | 160 | 240 | 400 | 640 | 960 | 1360 | 1840 | 75 |",
+        );
+        has("stat-odds.md", "| the price | 50 % |");
+        has("stat-odds.md", "| under a quarter | 0 % |");
+        has("stat-pace.md", "| 1 | 49 | 62 | 80 | 132 |");
         // Hearing: loudness where made and how far you hear it, how sound fades, what muffles.
         has(
             "noises.md",
@@ -715,7 +724,7 @@ mod tests {
         assert!(
             potions.contains(
                 "| Potion of healing `!` | heal | 2d8 hit points back at once, never past your \
-                 maximum | red (`#c83c3c`) | 5 Toughness | item level 1, frequency 60 | 40 gold |"
+                 maximum | red (`#c83c3c`) | 15 Toughness | item level 1, frequency 60 | 40 gold |"
             ),
             "{potions}"
         );
