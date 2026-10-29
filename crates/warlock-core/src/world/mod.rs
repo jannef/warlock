@@ -89,6 +89,7 @@ mod ambush;
 mod animated;
 mod appraise;
 mod attacks;
+mod background;
 mod beast_friend;
 mod berserker;
 mod bleed;
@@ -629,6 +630,7 @@ impl World {
         let mut world = Self::begin(content, scenario, seed, character, name, kit)?;
         if world.started_with_kit() {
             world.take_creation()?;
+            world.tell_background();
             world.player_mut().mana = world.state.player().max_mana(&world.content);
             *world.perception =
                 Perception::compute(&world.state, &world.content, &mut world.lights);
@@ -930,6 +932,13 @@ impl World {
             player.boons = boons;
         }
         let mut retiered = retiered;
+        if let Some(character) = &state.character {
+            retiered.extend(crate::background::missing(
+                &content,
+                &state.campaign,
+                character,
+            ));
+        }
         // The berserker stance exactly while raging (`berserker.rs`): a save that broke the rule
         // is put right.
         for actor in state.actors.values_mut() {

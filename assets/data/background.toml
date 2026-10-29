@@ -1,0 +1,53 @@
+# Background stories (spec §8 "Background story"; docs/dev/background.md): a chosen character's
+# youth, told when the run begins in eight chapters of one line each, with what it left them.
+# The chapters are `background/NN-<chapter>.toml`, told in file-name order, then a campaign's own
+# (`campaigns/<id>/data/background/`, after these; never a shared chapter's id).
+#
+# A chapter file holds `[chapter]` (`id`; `name`; `paragraph`, 1 to 4, never less than an earlier
+# chapter's; `defaults`, the words `{guardian}`, `{home}`, `{trade}` read while no line has set
+# them) and its `[[line]]`s:
+#   id        unique in the chapter; saves name it (`chapter/line`), so it never changes
+#   tier      common, uncommon, rare, or fateful (the odds below, drawn first)
+#   weight    1 to 20, among the fitting lines of its tier
+#   text      the sentence, second person, past tense; slots `{name}`, `{they}`, `{them}`,
+#             `{their}` (the gender's pronouns), `{guardian}`, `{home}`, `{trade}`, and the same
+#             capitalised for a sentence start (`{Guardian}`); never a number, a stat's name, or
+#             a word about chance's workings
+#   when      all must hold: race, class, gender, animal, element (lists: any of them); lucky
+#             (born on a lucky day, or not); band = { min, max } (the starting alignment band);
+#             talents and skills (every one held; not_talents none); tags and not_tags (what
+#             earlier chapters' lines set); age = { min, max } (at the start); campaign (ids)
+#   only      true: when it fits, the chapter is told from the fitting `only` lines alone
+#             (common lines only: the heritage talents force their chapters so)
+#   effects   a list, each one kind: stat = { strength = 1 } (1 or 2 either way a stat, the score
+#             and its potential together, a score never below 1); gold = "4d6" or -20 (taken
+#             when negative, never below none); item = a kit line (classes/README.toml's syntax,
+#             `magic` too, made identified; `prefer_trained = true` prefers an alternative of a
+#             weapon skill the character has a rank in); skill = { heal = "2d4" }; weapon_marks
+#             = { spears = 3 } (marks, never a rank; `best` the weapon skill held highest);
+#             alignment = 25 (the starting score)
+#   tags, set what later lines may read: tags, and words for the slots (`set = { home = "the
+#             minster" }`, read from the next line on)
+# Every chapter has a plain line: common, no `when`, no effects.
+
+# The tiers, per mille, drawn first for every chapter; common takes what is left.
+[tiers]
+uncommon = 120
+rare = 30
+fateful = 5
+
+# What an effect is worth, in points: only for the check of each line's tier at load (common -4
+# to 2, uncommon 1 to 3, rare 3 to 5 and fateful 5 to 8, those two never costing anything) and
+# the wiki. No story's total is capped.
+[points]
+stat = 2
+skill = 1
+weapon_marks = 1
+gold_per = 25
+item = 1
+magic_any = 2
+magic = 3
+magic_rare = 5
+talent = 4
+flaw = 3
+alignment = 0

@@ -3130,6 +3130,8 @@ mod tests {
         let mut files = ContentFiles::builtin();
         files.remove("data/talents.toml");
         files.remove("data/talents/");
+        // Background stories name talents of the built-in set.
+        files.remove("data/background.toml");
         files.insert("data/talents.toml", settings);
         for (name, text) in talents {
             files.insert(&format!("data/talents/{name}.toml"), text);

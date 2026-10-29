@@ -107,10 +107,7 @@ pub fn roll(
             if !line.applies(spec.gender, trained) {
                 continue;
             }
-            let picked = match line.one_of.len() {
-                0 | 1 => 0,
-                n => rng.index(n),
-            };
+            let picked = line.pick(content, &mut rng, trained);
             for stack in &line.one_of[picked] {
                 let stack = match line.magic {
                     Some(grade) => {
@@ -478,6 +475,29 @@ mod tests {
         most
     }
 
+    /// The heaviest line of the background stories: its items (their heaviest alternatives)
+    /// and its gold (a story is a line a chapter, and most are plain).
+    fn heaviest_story_line() -> u64 {
+        use crate::content::StoryEffect;
+        let Some(b) = CONTENT.background() else {
+            return 0;
+        };
+        let coin = Stack::one(CONTENT.object_id(crate::content::GOLD).expect("gold"));
+        let line_weight = |line: &crate::content::StoryLine| -> u64 {
+            (line.effects.iter())
+                .map(|e| match e {
+                    StoryEffect::Item(item) => heaviest(item),
+                    StoryEffect::Gold(dice) => dice.max().max(0) as u64 * coin.weight(&CONTENT),
+                    _ => 0,
+                })
+                .sum()
+        };
+        (b.chapters.iter().flat_map(|c| &c.lines))
+            .map(line_weight)
+            .max()
+            .unwrap_or(0)
+    }
+
     #[test]
     fn nobody_starts_strained_and_only_wealth_or_armour_burdens() {
         // Every race, gender, and class, with the heaviest kit their class's picks allow and the
@@ -499,6 +519,8 @@ mod tests {
             .map(|s| coins(&s.carry))
             .max()
             .unwrap_or(0);
+        let story = heaviest_story_line();
+        assert!(story > 0, "the stories give things");
         let jokes = ["aristocrat", "merchant"];
         let martial = ["paladin", "warrior"];
         for race in &CONTENT.races().list {
@@ -519,8 +541,15 @@ mod tests {
                             .filter(|l| l.applies(gender, &trained))
                             .map(heaviest)
                             .sum();
-                        // The heritage talents' gold, gems, and heirloom on top.
-                        let heirs = heritage(&race.id, coins(&s.kit.items) + carried_gold);
+                        // The heritage talents' gold, gems, and heirloom on top, and the
+                        // heaviest line of a background story (but for the jokes: their
+                        // wealth and a weapon by fate may strain the weakest of them).
+                        let told = if jokes.contains(&class.id.as_str()) {
+                            0
+                        } else {
+                            story
+                        };
+                        let heirs = heritage(&race.id, coins(&s.kit.items) + carried_gold) + told;
                         let load = |limit, carried| {
                             let load = burden::Load {
                                 carried,
@@ -568,7 +597,10 @@ mod tests {
     #[test]
     fn the_scenarios_pack_comes_on_top_or_alone() {
         // The world's ranger with a scenario's food on top.
+        // Without background stories: the kit and the pack alone (a story's things come on top,
+        // `world/background_tests.rs`).
         let mut files = ContentFiles::builtin();
+        files.remove("data/background.toml");
         let world = include_str!("../../../assets/campaigns/showcase/scenarios/world.toml");
         files.insert(
             "scenarios/packed.toml",
@@ -603,7 +635,8 @@ mod tests {
         // golden walks start, the lantern of its `wield` ready first. So does a chosen one
         // without the kit (`with_character`).
         let packed = World::new(content.clone(), "packed", None).expect("world");
-        let chosen = World::with_character(content, "packed", None, Some(&ranger)).expect("world");
+        let chosen =
+            World::with_character(content.clone(), "packed", None, Some(&ranger)).expect("world");
         for world in [&packed, &chosen] {
             let player = world.state().player();
             assert!(!world.started_with_kit());
@@ -618,7 +651,7 @@ mod tests {
         );
         // A chosen character in the showcase starts with the kit: there is no pack on top.
         let thief: CharacterSpec = "human,female,thief".parse().expect("a character");
-        let kitted = World::start_run(CONTENT.clone(), "showcase", None, Some(&thief), None, true)
+        let kitted = World::start_run(content, "showcase", None, Some(&thief), None, true)
             .expect("showcase");
         let kit = start(&CONTENT, "human,female,thief", 1).kit;
         // (The same stacks; the food now knows when it was made.)
