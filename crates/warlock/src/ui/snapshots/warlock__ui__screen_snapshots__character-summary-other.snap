@@ -13,7 +13,6 @@ expression: "render(case, content.clone())"
         │   Talents   Wand mastery, School focus (evocation), Tunneler                     │
         │                                                                                  │
         │   Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                   │
-        │                                                                                  │
         │   St  Strength       9    Appraise        12   Negotiation      7                │
         │   Dx  Dexterity     14    Balance          5   Open lock       19                │
         │   To  Toughness     10    Bluff            5   Search           8                │
@@ -26,6 +25,7 @@ expression: "render(case, content.clone())"
         │             a leather jerkin (being worn), a wool cloak (being worn),            │
         │             a pair of leather gloves (being worn), 3 loaves of bread,            │
         │             30 gold coins, a lantern (in use)                                    │
+        │             Fate will have its say when you set out.                             │
         │   Alignment Callous                                                              │
         │   Vision    Normal                                                               │
         │   Scenario  The Ascmearc, seed 1                                                 │

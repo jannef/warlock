@@ -16,25 +16,25 @@ expression: "render(case, content.clone())"
     │                                                                                         │
     │ St  Strength      14   Main hand  long sword                                            │
     │ Dx  Dexterity     11              +3 to hit, 1d9+3 slashing or piercing                 │
-    │ To  Toughness     11                                                                    │
+    │ To  Toughness      9                                                                    │
     │ In  Intelligence  10                                                                    │
-    │ Wi  Willpower     12                                                                    │
+    │ Wi  Willpower     14                                                                    │
     │ Pr  Presence       9                                                                    │
     │                                                                                         │
     │ Lv  Level         1                                                                     │
     │ XP  Experience    0 / 192                                                               │
     │     Talents       9                                                                     │
-    │ HP  Hit points    22/22   MP  Mana       2/2                                            │
+    │ HP  Hit points    20/20   MP  Mana       3/3                                            │
     │ Dv  Defence       14      Pv  Protection  3                                             │
     │     Stance        Neutral                                                               │
-    │     Stamina       10/10                                                                 │
+    │     Stamina       9/9                                                                   │
     │     Alignment     Neutral                                                               │
     │     Resistant to  acid                                                                  │
     │                                                                                         │
-    │ Weight 82.8 kg (you 70 kg, carrying 12.8 kg)                                            │
-    │ Burdened over 19.5 kg, strained over 39 kg, overloaded over 58.5 kg                     │
+    │ Weight 82.9 kg (you 70 kg, carrying 12.9 kg)                                            │
+    │ Burdened over 18.5 kg, strained over 37 kg, overloaded over 55.5 kg                     │
     │                                                                                         │
     │ @ or Esc close   A skills                                                               │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents ─┘
 
- The Hub  ·  HP 22/22  ·  MP 2/2  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls
+ The Hub  ·  HP 20/20  ·  MP 3/3  ·  Sta 9/9  ·  Lv 1  ·  08:00  ·  11 Darkening         ? controls

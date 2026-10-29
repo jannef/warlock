@@ -18,17 +18,17 @@ expression: "render(case, content.clone())"
                     │ Skills                                                   │
                     │   f  Bluff              not usable yet                   │
                     │   g  Decipher script    not usable yet                   │
-                    │   h  Knowledge          not usable yet                   │
-                    │   i  Music              not usable yet                   │
+                    │   h  Heal               nothing to treat                 │
+                    │   i  Knowledge          not usable yet                   │
+                    │   j  Music              not usable yet                   │
                     │ Weapon skills                                            │
-                    │   j  Shield bash        you hold no shield               │
+                    │   k  Shield bash        you hold no shield               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-k or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
  The Hub  ·  HP 52/52  ·  MP 2/120  ·  Inspiration 0/5  ·  Sta 9/16  ·  Lv 38            ? controls

@@ -7,28 +7,28 @@ expression: "render(case, content.clone())"
             │ Vigour                                                                   │
             │ > a  Deep lungs                       Your stamina holds a good deal mo… │
             │   b  Hard training                    You drill every day: your stats g… │
-            │   c  Hardy                       1/3  Tougher than most: more hit point… │
             │ Might                                                                    │
-            │   d  Brawn                       1/2  Your blows up close hit harder: 1… │
-            │   e  Deft breaker                     You know where to put your boot: … │
-            │   f  Mighty kick                      Your kicks land like hammers: the… │
-            │   g  Second breath                    Every kill of yours gives you bac… │
+            │   c  Brawn                       1/2  Your blows up close hit harder: 1… │
+            │   d  Deft breaker                     You know where to put your boot: … │
+            │   e  Mighty kick                      Your kicks land like hammers: the… │
+            │   f  Second breath                    Every kill of yours gives you bac… │
             │ Finesse                                                                  │
-            │   h  Opportunist                      A foe that turns from you pays fo… │
+            │   g  Opportunist                      A foe that turns from you pays fo… │
             │ Weaponcraft                                                              │
-            │   i  Far shot                         Your shots fly 2 cells farther, a… │
-            │   j  Sworn foe                        You have sworn yourself against o… │
-            │   k  Unbinder                         You strike at the binding, not th… │
-            │   l  Wand mastery                     You draw more from a wand than it… │
-            │   m  Weapon focus (long blades)       You have drilled with one kind of… │
+            │   h  Far shot                         Your shots fly 2 cells farther, a… │
+            │   i  Sworn foe                        You have sworn yourself against o… │
+            │   j  Unbinder                         You strike at the binding, not th… │
+            │   k  Wand mastery                     You draw more from a wand than it… │
+            │   l  Weapon focus (long blades)       You have drilled with one kind of… │
             │ Guard                                                                    │
-            │   n  Armour training             1/2  You move freely in armour: it ham… │
-            │   o  Grave warden                     What you lay low stays down: noth… │
-            │   p  Unflinching                      Even as a coward you keep your he… │
+            │   m  Armour training             1/2  You move freely in armour: it ham… │
+            │   n  Grave warden                     What you lay low stays down: noth… │
+            │   o  Unflinching                      Even as a coward you keep your he… │
             │ Shadow                                                                   │
-            │   q  Lamplighter                      You tend your lantern well: it bu… │
-            │   r  Night eyes                       Your eyes grow used to the dark: … │
+            │   p  Lamplighter                      You tend your lantern well: it bu… │
+            │   q  Night eyes                       Your eyes grow used to the dark: … │
             │ Wayfarer                                                                 │
+            │   r  Beast-friend                     Animals leave you be, rats and de… │
             │   s  Devout                           You pray as one who means it: an … │
             │   t  Pilgrim                          You have knelt in many temples: t… │
             │   u  Sense of place                   You read a place at a glance: a s… │
