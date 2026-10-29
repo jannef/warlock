@@ -1186,6 +1186,9 @@ impl World {
         if acted && slowed && self.trains(Use::Burdened) {
             self.train(Use::Burdened);
         }
+        if acted {
+            self.train_hungry_step();
+        }
         // A status effect that lowers Strength during the turn may change it too, and a wound
         // the player gave may kill what a quest asks for.
         let burden = self.load_of(self.state.player).burden();
@@ -1690,6 +1693,8 @@ mod stamina_tests;
 mod stars_roc_tests;
 #[cfg(test)]
 mod stars_tests;
+#[cfg(test)]
+mod stat_paths_tests;
 #[cfg(test)]
 mod stat_training_tests;
 #[cfg(test)]

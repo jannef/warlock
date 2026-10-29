@@ -535,6 +535,11 @@ fn deals_train_negotiation() {
     let me = w.state.actors.get_mut(&player).expect("the player");
     me.skills = crate::skills::Skills::default();
     me.skills.add(negotiation, 10);
+    // A purse for every dagger bought below.
+    let coins = Stack::new(shops(&w).currency, 1000);
+    let content = w.content.clone();
+    let me = w.state.actors.get_mut(&player).expect("the player");
+    crate::object::add_to_inventory(&mut me.inventory, coins, &content);
     let marks = |w: &World| (w.state.player().skills.get(negotiation)).map(|t| t.marks);
     // Paying for a dagger, then selling it back, again and again: a mark now and then.
     apply(&mut w, "move:E move:NE");

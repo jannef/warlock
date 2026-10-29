@@ -253,6 +253,7 @@ impl World {
             return Spent::Turn(price);
         }
         if self.perform(&cast, target, events) {
+            self.train_spell(def);
             Spent::Turn(price)
         } else {
             Spent::Nothing

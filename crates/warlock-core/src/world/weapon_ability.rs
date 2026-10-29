@@ -575,6 +575,8 @@ impl World {
             .map(|e| e.status)
             .filter(|&s| content.status(s).per_action && !fresh.contains(&s))
             .collect();
+        let surprise = content.surprise().map(|s| s.status);
+        let mut steadied = false;
         for status in spent {
             let left = (actor.effects.get_mut(status)).map_or(0, |e| {
                 e.severity = e.severity.saturating_sub(1);
@@ -582,12 +584,17 @@ impl World {
             });
             if left == 0 {
                 actor.effects.remove(status);
+                steadied |= Some(status) == surprise;
                 events.push(Event::Status {
                     actor: id,
                     status,
                     began: false,
                 });
             }
+        }
+        // Recovering one's wits after a surprise trains Willpower.
+        if steadied && id == self.state.player {
+            self.train_stat(crate::content::StatUse::Steadied);
         }
     }
 

@@ -56,6 +56,9 @@ impl World {
         let modifier = modifier.saturating_add(self.resisting(target, by));
         if check(&mut self.state.rng, modifier, drain.difficulty) {
             self.train_resisting(target, drain.check);
+            if target == self.state.player {
+                self.train_stat(crate::content::StatUse::HeldOut);
+            }
             events.push(Event::Drained {
                 actor: target,
                 stat: None,

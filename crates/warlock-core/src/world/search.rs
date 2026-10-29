@@ -260,11 +260,13 @@ impl World {
             + player.skill_effect(&self.content, Effect::SearchReach)
             + player.talent_mods(&self.content).search_reach;
         let hidden = self.hidden_near(reach);
+        let mut found = false;
         for (at, hidden) in hidden {
             let difficulty = self.finding(hidden);
             let modifier = self.search_modifier(Look::Active, hidden) + self.stone_find(at);
             if check(&mut self.state.rng, modifier, difficulty) {
                 self.reveal(at, hidden);
+                found = true;
                 self.train_stat(StatUse::Found);
                 if matches!(hidden, Hidden::Trap(_)) && self.trains(Use::FindTrap) {
                     self.train(Use::FindTrap);
@@ -273,6 +275,9 @@ impl World {
         }
         if self.trains(Use::Search) {
             self.train(Use::Search);
+        }
+        if !found {
+            self.train_stat(StatUse::Searched);
         }
     }
 

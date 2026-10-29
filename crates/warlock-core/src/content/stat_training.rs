@@ -30,6 +30,8 @@ pub const ODDS_SCALE: u32 = 65_536;
 /// The pile is counted up to this many times the price (99.8 % at the cube); above it the
 /// chance is the same.
 const PILE_CAP: u64 = 8;
+/// The least a stack picked up weighs to train [`StatUse::Hauled`], in grams: 20 kg.
+pub const HAUL_GRAMS: u64 = 20_000;
 
 /// A use of the player's stats that may earn a training mark (spec §8 "Stats"), reported at
 /// the one place the thing happens.
@@ -46,8 +48,16 @@ pub enum StatUse {
     Block,
     /// A turn of digging.
     Dig,
-    /// A kick at a closed door (Athletics' use).
+    /// A kick at a closed door or a chest (Athletics' use).
     Kick,
+    /// A tempering done at an anvil to its end, whatever came of it (Metalcraft's use).
+    Forged,
+    /// A struggle against a hold, won or not (Strength's and Willpower's both).
+    Struggled,
+    /// A step through deep water (not over its ice).
+    Waded,
+    /// A pick-up that lifts a stack of [`HAUL_GRAMS`] or more (a corpse, a load of ore).
+    Hauled,
     /// An attack on the player that missed because of their Dexterity or Dodge (Tumble's use).
     Dodge,
     /// A blow on the player that their Parry turned.
@@ -60,6 +70,17 @@ pub enum StatUse {
     SneakAttack,
     /// Climbing out of the water onto ice, or out of a pit.
     Climb,
+    /// A try at picking a lock, whatever came of it (Open lock's use).
+    Picked,
+    /// A try at disarming a trap, whatever came of it (Disable device's use; Dexterity's and
+    /// Intelligence's both).
+    Disarmed,
+    /// A theft attempted, whatever came of it (Pick pocket's use).
+    Stole,
+    /// An initiative check of the player's made: not surprised.
+    KeptWits,
+    /// An attack spell of the player's that hits (a ray, a bolt, a touch).
+    Aimed,
     /// A blow that costs the player hit points.
     Hurt,
     /// A big hit or a confirmed critical on the player.
@@ -70,6 +91,16 @@ pub enum StatUse {
     Resisted,
     /// Falling through the ice.
     Plunge,
+    /// A step on the overworld (Survival's use).
+    Marched,
+    /// An action other than waiting while Hungry (not yet Weak).
+    HungryStep,
+    /// A status that harms as it ticks (bleeding, poison, ebbing mana) wearing off by time.
+    ShookOff,
+    /// Stamina spent on a weapon ability.
+    Exerted,
+    /// A daily stat check made while the player stands below freezing (0 °C).
+    Chilled,
     /// A search that finds something (a secret door, a trap).
     Found,
     /// A scroll read.
@@ -80,6 +111,18 @@ pub enum StatUse {
     Study,
     /// The first kill of a creature type.
     Discovered,
+    /// A spell the player knows cast (not a scroll's, not a class or sign ability): trains the
+    /// stats its `[spell.scales]` name (damage's, else Intelligence; reach's when it has a
+    /// reach; duration's when it has a status), the rules of the stats among them.
+    Spell,
+    /// The first arrival on a level that pays arrival experience.
+    Explored,
+    /// A carried thing told for what it is by looking it over (Appraise's use).
+    Appraised,
+    /// A turn of searching that found nothing.
+    Searched,
+    /// A forage that ran its time, whatever it found (Survival's use).
+    Foraged,
     /// Noticing something hidden in passing (Spot's use; a trap noticed so too).
     Spot,
     /// A long action of more than one turn done to its end: a rest, a wall dug through, a
@@ -91,6 +134,12 @@ pub enum StatUse {
     HungryFight,
     /// Mana spent on an ability (`World::spend_mana`).
     Cast,
+    /// A prayer done at a forgotten altar.
+    Prayed,
+    /// A check against a drain of the player's stats made.
+    HeldOut,
+    /// Recovering one's wits after a surprise: Surprised ending with the player's next action.
+    Steadied,
     /// A chat (asking about a topic takes no time, so it trains nothing).
     Chat,
     /// A purchase paid for or a sale made.
@@ -99,6 +148,14 @@ pub enum StatUse {
     Quest,
     /// A creature making way for the player.
     Swapped,
+    /// Inspire or Throw your voice: a class active that works on others' minds (or one's own).
+    Inspired,
+    /// A guild rank won.
+    Promoted,
+    /// A deal made in a shop while Negotiation bettered the price.
+    Bargained,
+    /// The first chat with someone.
+    Greeted,
     /// A potion drunk: names its stat (the potion's), and gives the potion's marks at once.
     Drank,
     /// An elixir drunk: names its stat, and gives the elixir's marks at once.
@@ -113,6 +170,13 @@ impl StatUse {
         match used {
             Use::Burdened => Some(StatUse::Burdened),
             Use::Kick => Some(StatUse::Kick),
+            Use::Temper => Some(StatUse::Forged),
+            Use::Pick => Some(StatUse::Picked),
+            Use::Disarm => Some(StatUse::Disarmed),
+            Use::Steal => Some(StatUse::Stole),
+            Use::Travel => Some(StatUse::Marched),
+            Use::Appraise => Some(StatUse::Appraised),
+            Use::Forage => Some(StatUse::Foraged),
             Use::Dodge => Some(StatUse::Dodge),
             Use::Sneak => Some(StatUse::Sneak),
             Use::SneakAttack => Some(StatUse::SneakAttack),
@@ -136,7 +200,11 @@ impl StatUse {
             StatUse::Critical => "a critical of yours up close",
             StatUse::Block => "a blow on you that your shield blocked",
             StatUse::Dig => "a turn of digging",
-            StatUse::Kick => "kicking at a closed door",
+            StatUse::Kick => "kicking at a closed door or a chest",
+            StatUse::Forged => "tempering a weapon or armour at an anvil, whatever comes of it",
+            StatUse::Struggled => "struggling against a hold, won or not",
+            StatUse::Waded => "a step through deep water",
+            StatUse::Hauled => "picking up something of 20 kg or more (a corpse, a heavy load)",
             StatUse::Dodge => {
                 "an attack on you that your Dexterity or Dodge made miss, or a known trap you \
                  stepped past"
@@ -146,16 +214,37 @@ impl StatUse {
             StatUse::Sneak => "a step within earshot of a creature that could hear it",
             StatUse::SneakAttack => "a sneak attack of yours that hits",
             StatUse::Climb => "climbing out of the water onto ice, or out of a pit",
+            StatUse::Picked => "a try at picking a lock",
+            StatUse::Disarmed => "a try at disarming a trap",
+            StatUse::Stole => "a theft attempted",
+            StatUse::KeptWits => "keeping your wits when something tries to take you by surprise",
+            StatUse::Aimed => "an attack spell of yours that hits (a ray, a bolt, a touch)",
             StatUse::Hurt => "a blow that costs you hit points",
             StatUse::BigHit => "a big hit or a critical on you",
             StatUse::Killed => "a kill of yours up close, of a foe of your level or above",
             StatUse::Resisted => "fighting off a disease (a check won, other than a Willpower one)",
             StatUse::Plunge => "falling through the ice",
+            StatUse::Marched => "a step on the overworld",
+            StatUse::HungryStep => "acting (not waiting) while Hungry, not yet Weak",
+            StatUse::ShookOff => {
+                "shaking off bleeding, poison, or anything else that harms as it lasts (it wears \
+                 off)"
+            }
+            StatUse::Exerted => "spending stamina on a weapon ability",
+            StatUse::Chilled => "dawn (06:00) finding you below freezing",
             StatUse::Found => "finding something hidden by searching",
             StatUse::Read => "reading a scroll",
             StatUse::Identified => "identifying an item",
             StatUse::Study => "studying a spell from a scroll",
             StatUse::Discovered => "your first kill of a kind of creature",
+            StatUse::Spell => {
+                "casting a spell you know whose damage, reach, or duration grows with this stat \
+                 (Intelligence too for one whose damage grows with none)"
+            }
+            StatUse::Explored => "your first arrival on a level that pays experience",
+            StatUse::Appraised => "telling a thing you carry for what it is by looking it over",
+            StatUse::Searched => "a turn of searching that finds nothing",
+            StatUse::Foraged => "foraging, whatever you find",
             StatUse::Spot => "noticing something hidden in passing",
             StatUse::Endured => {
                 "a long action of more than one turn done to its end (a rest, a wall dug \
@@ -164,10 +253,17 @@ impl StatUse {
             StatUse::ResistedWill => "fighting off a disease with Willpower (brain fever)",
             StatUse::HungryFight => "a blow of yours that lands while you are Hungry or worse",
             StatUse::Cast => "spending mana on an ability",
+            StatUse::Prayed => "praying at a forgotten altar",
+            StatUse::HeldOut => "holding out against something that drains your stats",
+            StatUse::Steadied => "recovering your wits after a surprise",
             StatUse::Chat => "chatting with someone",
             StatUse::Trade => "paying for goods, or selling",
             StatUse::Quest => "completing a quest",
             StatUse::Swapped => "a creature making way for you",
+            StatUse::Inspired => "inspiring with song, or throwing your voice",
+            StatUse::Promoted => "winning a guild rank",
+            StatUse::Bargained => "a deal in a shop where your Negotiation bettered the price",
+            StatUse::Greeted => "your first chat with someone",
             StatUse::Drank => "a potion drunk: each of its marks, in the stat it names",
             StatUse::Elixir => "an elixir drunk: each of its marks, in the stat it names",
         }

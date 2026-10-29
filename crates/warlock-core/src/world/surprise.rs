@@ -231,6 +231,7 @@ impl World {
             attacker.mind.noticed = Some(self.state.turn);
         }
         if target == player && made {
+            self.train_stat(crate::content::StatUse::KeptWits);
             let text = "You keep your wits about you.".to_string();
             // A trap's own line is said with the turn's reports: this one after it.
             match by {
