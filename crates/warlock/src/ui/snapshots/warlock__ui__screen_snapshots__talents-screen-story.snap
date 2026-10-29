@@ -14,11 +14,10 @@ expression: "render(case, content.clone())"
 │   Heritage                                                                                       │
 │     Family wealth                                                                                │
 │   Vigour                                                                                         │
+│     Strong constitution                                                                          │
 │     Hardy 1/3  (story)                                                                           │
-│   Might                                                                                          │
-│     Brawn 1/2                                                                                    │
 │   Delver                                                                                         │
-│     Salvager 1/2                                                                                 │
+│     Quiet delver                                                                                 │
 │   Racial                                                                                         │
 │     Versatile  (race)                                                                            │
 │   Class abilities                                                                                │
@@ -33,8 +32,9 @@ expression: "render(case, content.clone())"
 │   Heritage                                                                                       │
 │     Father's sword                                                                               │
 │         Needs: Family wealth, to be a new character                                              │
-│   Vigour                                                                                         │
-│     Bellows                                                                                      │
+│     Favoured child                                                                               │
+│         Needs: to be a new character                                                             │
+│     Hard-won                                                                                     │
 │                                                                                                ↓ │
 │ A weapon in each hand hampers you less, and with sword and shield your free bash comes more      │
 │ often.                                                                                           │
