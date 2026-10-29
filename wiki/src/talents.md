@@ -94,8 +94,8 @@ at once, on top of your [starting kit](starting-kit.md).
   fateful sentences at 24 %, 6 %, and 1 % a chapter instead of 12 %, 3 %, and 0.5 %. It is a
   gamble: a commoner story may still be told, and nothing good is promised.
 - **[Hard-won](talents.md#talent-hard-won)**: each [stat](stats.md) point a sentence of your
-  [story](background.md#what-a-story-gives) takes is three [stat training marks](stats.md#training)
-  on that stat, so the point is likely back at your second or third [level](experience.md#levels). The
+  [story](background.md#what-a-story-gives) takes is twelve [stat training marks](stats.md#training)
+  on that stat, which gives the point a fair chance of coming back at your first few [levels](experience.md#levels). The
   score and its [potential](stats.md#potentials) still fall with the sentence; what comes back is
   a real rise.
 
