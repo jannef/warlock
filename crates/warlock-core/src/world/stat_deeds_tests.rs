@@ -149,8 +149,13 @@ fn a_faint_costs_willpower_marks() {
             fainted += 1;
         }
     }
-    assert!(fainted > 0);
-    assert_eq!(marks(&w, Stat::Willpower), -10 * fainted);
+    // A mark at 20 % a faint.
+    let lost = -marks(&w, Stat::Willpower);
+    assert!(fainted > 20, "{fainted}");
+    assert!(
+        lost * 10 > fainted && lost * 3 < fainted,
+        "{lost} of {fainted}"
+    );
 }
 
 #[test]

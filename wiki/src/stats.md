@@ -106,10 +106,11 @@ once (disarming a trap, struggling against a hold).
 
 Each stat's next point has a **price** in marks: **20 + 10 × the stat's score** up to its
 [potential](stats.md#potentials). Past the potential the price climbs quickly: the first point
-beyond it costs half again, the second 2½ ×, the third 4 ×, then 6 ×, 8½ ×, 11½ × (with `n` the
-point past the potential, (4 + n × (n + 1)) / 4 times the plain price). Training alone never
-raises the potential itself, so a stat you live by ends a long career some ten points past its
-nature and never reaches the top by use alone; an [elixir](potions.md#elixirs) or a rare
+beyond it costs twice the plain price, the second 4 ×, the third 7 ×, then 11 ×, 16 ×, 22 ×
+(with `n` the point past the potential, (2 + n × (n + 1)) / 2 times the plain price). Training
+alone never raises the potential itself, so a stat you live by ends a long career of sixty
+levels some twelve or thirteen points past its nature, at about 30, and never reaches the top by
+use alone; an [elixir](potions.md#elixirs) or a rare
 [corpse](food.md#corpses) that raises the potential makes every later point cheaper.
 
 {{#include generated/stat-prices.md}}

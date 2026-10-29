@@ -274,26 +274,26 @@ fn past_the_potential_the_price_ramps_and_a_rise_leaves_the_potential() {
     assert_eq!(rules.price(10, 18), 120);
     assert_eq!(
         rules.price(10, 10),
-        180,
-        "the first point past nature: half again"
+        240,
+        "the first point past nature: twice the base"
     );
-    // 180 marks: even odds at the potential, three in four below it.
+    // 240 marks: even odds at the potential, nine in ten below it.
     let (mut below, mut at) = (0, 0);
     for _ in 0..400 {
         for (potential, risen) in [(18, &mut below), (10, &mut at)] {
             set_stats(&mut w, potential);
-            set_marks(&mut w, Stat::Dexterity, 180);
+            set_marks(&mut w, Stat::Dexterity, 240);
             w.check_stats();
             let p = w.state.player();
             if p.stats.score(Stat::Dexterity) == 11 {
                 *risen += 1;
                 assert_eq!(p.stats.potential(Stat::Dexterity), potential);
-                let left = if potential == 18 { 60 } else { 0 };
+                let left = if potential == 18 { 120 } else { 0 };
                 assert_eq!(p.stat_marks[Stat::Dexterity], left);
             }
         }
     }
-    assert!((270..345).contains(&below), "about 77 %: {below}");
+    assert!((330..385).contains(&below), "about 89 %: {below}");
     assert!((160..240).contains(&at), "about 50 %: {at}");
     assert!(w.news.contains(&"You feel quicker.".to_string()));
 }

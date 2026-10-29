@@ -387,7 +387,7 @@ The wizard gains more than the warrior because it lives by two stats (the `spell
 | 20 + 15s | 4 | +13.4 | +10.6 | +7.9 | +3.4 | +4.1 | +4.9 | +44 | +14.6 | +12.9 | +11.1 | +60 |
 | 20 + 20s | 4 | +12.4 | +9.8 | +7.1 | +2.8 | +3.3 | +4.1 | +40 | +13.6 | +12.0 | +10.4 | +55 |
 
-The ramp sets the main stats' tail (two points of Strength per step of the divisor); the price per point sets the trickle stats (the unused ones lose a point per 5 of it) and the first rise's day. ÷4 at 10 a point is the pick (decision 2: moderately liberal; the writer's call): the warrior's Strength at 29 and the wizard's Willpower at 29 by level 60, nothing at 40, the unused stats +3 to +6. The probe (§13, T6) re-measures with the real hooks; both knobs are data.
+The ramp sets the main stats' tail (two points of Strength per step of the divisor); the price per point sets the trickle stats (the unused ones lose a point per 5 of it) and the first rise's day. ÷4 at 10 a point is the pick (decision 2: moderately liberal; the writer's call): the warrior's Strength at 29 and the wizard's Willpower at 29 by level 60, nothing at 40, the unused stats +3 to +6. The probe (§13, T6) re-measures with the real hooks; both knobs are data. **T6 (#727) measured it**: on the hooks the stats a build lives by earn two to three times the model's marks (blocks above all), and ÷4 gave +65 to +74 in all with main stats at 31 to 33; the sweep put **÷2** inside G7 for every class (+59 to +68, main stats at 29 to 30 by level 60), and `ramp_divisor` is 2 since (`docs/balance.md` "Stat training").
 
 ### 6.3 Early game
 

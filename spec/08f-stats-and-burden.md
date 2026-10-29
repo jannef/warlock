@@ -36,8 +36,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     once (`World::train_stat_times`, a potion's `marks`): one draw per mark below 100, none at
     100; Hard training's `train_percent` (+50) raises every chance below 100 (the draws stay
     as they are). A use that names its own stat (`drank`, `elixir`: the potion's) has rules without a
-    `stat`; every other use's rules have one. The chances are plentiful (combat progression
-    design §9.1: 8 to 15 marks a game day in a trained stat). The uses (`StatUse`), each
+    `stat`; every other use's rules have one. The chances are plentiful (the balance probe, #727,
+    `docs/balance.md` "Stat training": 70 to 600 marks a game day in a stat a build lives by
+    from level 10, 2 to 3 in one it does not use). The uses (`StatUse`), each
     reported where it happens: Strength burdened (an action but waiting under a slowing load),
     blow (a melee blow of the player's that hits, kicks and bashes too), critical (a confirmed
     critical of theirs in melee), block (a blow on them their shield blocked), dig (a turn),
@@ -79,8 +80,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     beside Detect traps' `find_trap`).
     **A point's price** (`StatTraining::price`): `price_base (20) + price_per_point (10) ×
     score` (the stored score) up to the potential; past it, with `over = score + 1 −
-    potential`, that times `(ramp_divisor (4) + over × (over + 1)) / ramp_divisor` (×1.5, ×2.5,
-    ×4, ...); the point reaching the potential costs the base. **A drop's price**
+    potential`, that times `(ramp_divisor (2) + over × (over + 1)) / ramp_divisor` (×2, ×4, ×7,
+    ×11, ...; 2 from the balance probe's measured careers, #727, `docs/balance.md`); the point reaching the potential costs the base. **A drop's price**
     (`StatTraining::drop_price`): the base price of the point lost (at `score − 1`) divided by
     `drop_share` (2), never ramped. **The checks** (`World::settle`, one rule for both):
     **at every level gained** (`World::level_up`, level by level) on the **levels** stream, and
@@ -101,7 +102,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     deliberate, one hook each, the player only: `hungry_dawn` (the 06:00 check made Weak,
     Fainting, or Starving, dealt before its draws; Strength and Toughness 15 marks each),
     `starved` (each hit point starvation takes; Toughness, chance 50), `vomited` (Toughness 10),
-    `fainted` (Willpower 10), `overloaded` (an action that took a single turn, not a wait or a
+    `fainted` (each faint; Willpower, chance 20), `overloaded` (an action that took a single turn, not a wait or a
     drop, while Overloaded; Dexterity, chance 10), `knew_better` (a trap the player knew of sprung
     under them by stepping onto it; Intelligence 20), `caught` (caught stealing, by a keeper or
     anyone; Presence 20). Bad luck alone (a hidden trap, a blow, a disease or drain check lost)

@@ -146,14 +146,11 @@ fn late_bloomer_starts_the_ramp_a_point_later() {
     let rules = w.content().stat_training();
     // The point reaching the potential: the base either way.
     assert_eq!(rules.eased_price(17, 18, ease), rules.base_price(17));
-    // The first past it: ×1.5 by nature, the base for a late bloomer.
-    assert_eq!(rules.price(18, 18), rules.base_price(18) * 3 / 2);
+    // The first past it: ×2 by nature, the base for a late bloomer.
+    assert_eq!(rules.price(18, 18), rules.base_price(18) * 2);
     assert_eq!(rules.eased_price(18, 18, ease), rules.base_price(18));
-    // The second past it: ×2.5, ×1.5 for a late bloomer.
-    assert_eq!(
-        rules.eased_price(19, 18, ease),
-        rules.base_price(19) * 3 / 2
-    );
+    // The second past it: ×4, ×2 for a late bloomer.
+    assert_eq!(rules.eased_price(19, 18, ease), rules.base_price(19) * 2);
     // Gifted on top: the whole, 15 % less.
     let both = PriceEase {
         percent: -15,
@@ -161,7 +158,7 @@ fn late_bloomer_starts_the_ramp_a_point_later() {
     };
     assert_eq!(
         rules.eased_price(19, 18, both),
-        rules.base_price(19) * 3 / 2 * 85 / 100
+        rules.base_price(19) * 2 * 85 / 100
     );
 }
 
@@ -187,8 +184,8 @@ fn ascetic_turns_a_hungry_dawn_into_willpower() {
     dawn(&mut w);
     assert_eq!(marks(&w, Stat::Willpower), 0);
     // Other deeds still take their marks.
-    w.stat_deed(StatDeed::Fainted);
-    assert_eq!(marks(&w, Stat::Willpower), -10);
+    w.stat_deed(StatDeed::KnewBetter);
+    assert_eq!(marks(&w, Stat::Intelligence), -20);
     // Without the talent a hungry dawn gives no will.
     let mut w = world("warrior");
     set_stats(&mut w, 18);

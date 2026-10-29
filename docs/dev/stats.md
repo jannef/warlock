@@ -74,6 +74,10 @@ chances, `stat-losses.md` with the deeds and the drop's price and warning point 
 `stat-prices.md`, `stat-odds.md`, `stat-pace.md`: the expected days at the daily check
 alone, worked out from the odds).
 Tests: `world/stat_training_tests.rs`, `world/stat_paths_tests.rs` (a test per T2 hook), `content/stat_training.rs`, `stats.rs`.
+The pace is measured by the balance probe (#727, `world/balance_probe/training.rs`;
+`docs/balance.md` "Stat training"): careers to level 60 whose fights go blow by blow through
+`train_fight` and the other hooks, with a sweep of `price_per_point` and `ramp_divisor`; run it
+after changing a chance or a `[training]` key.
 
 ## Drain (#382)
 
