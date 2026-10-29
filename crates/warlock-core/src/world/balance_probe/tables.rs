@@ -9,6 +9,7 @@ use crate::combat::{self, Category, Profile, Target};
 use crate::content::Resolution;
 use crate::dice::Dice;
 use crate::rng::Rng;
+use crate::stats::Stat;
 use std::fmt::Write as _;
 
 /// The players: to-hit, damage, Defence, Protection; stats, hit points, mana.
@@ -467,5 +468,146 @@ pub(super) fn sneak_attacks(p: &Probe, rng: &mut Rng, out: &mut String) {
             super::sneak_value(level)
         )
         .unwrap();
+    }
+}
+
+const CLASSES: [&str; 4] = ["warrior", "thief", "wizard", "priest"];
+
+/// Stat training (#727): the trained careers' scores by level, the marks a day the hooks gave,
+/// the first rises, against the start and the potential.
+pub(super) fn stats(p: &Probe, out: &mut String) {
+    writeln!(out, "\n## Stat training\n").unwrap();
+    writeln!(
+        out,
+        "Scores of the trained careers (plain gear; the seeds' mean), start/potential at level 1, and the gain and the points past the potential at 60.\n"
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "| Class | Stat | Start/potential | L10 | L20 | L30 | L40 | L60 | Gain | Past potential |"
+    )
+    .unwrap();
+    writeln!(out, "|---|---|---|---|---|---|---|---|---|---|").unwrap();
+    for class in CLASSES {
+        let at = |level| p.of(class, level, Gear::Plain, true);
+        let mean = |level, i: usize| avg(at(level).iter().map(|s| f64::from(s.scores[i])));
+        let mut all = 0.0;
+        for (i, stat) in Stat::ALL.into_iter().enumerate() {
+            let start = mean(1, i);
+            let pot = avg(at(1).iter().map(|s| f64::from(s.potentials[i])));
+            let end = mean(60, i);
+            let past = avg(at(60)
+                .iter()
+                .map(|s| f64::from(s.scores[i].saturating_sub(s.potentials[i]))));
+            all += end - start;
+            writeln!(
+                out,
+                "| {} | {} | {start:.1}/{pot:.1} | {:.1} | {:.1} | {:.1} | {:.1} | {end:.1} | {:+.1} | {past:.1} |",
+                if i == 0 { class } else { "" },
+                stat.abbrev(),
+                mean(10, i),
+                mean(20, i),
+                mean(30, i),
+                mean(40, i),
+                end - start,
+            )
+            .unwrap();
+        }
+        writeln!(out, "| | all six | | | | | | | **{all:+.1}** | |").unwrap();
+    }
+
+    writeln!(
+        out,
+        "\nMarks a day the hooks gave in each stat over the level before (St/Dx/To/In/Wi/Pr, the seeds' mean), and the game day reached.\n"
+    )
+    .unwrap();
+    writeln!(out, "| L | Day | Warrior | Thief | Wizard | Priest |").unwrap();
+    writeln!(out, "|---|---|---|---|---|---|").unwrap();
+    for &level in LEVELS.iter().skip(1) {
+        let day = avg(p
+            .of("warrior", level, Gear::Plain, true)
+            .iter()
+            .map(|s| f64::from(s.day)));
+        let mut row = format!("| {level} | {day:.0} |");
+        for class in CLASSES {
+            let s = p.of(class, level, Gear::Plain, true);
+            let marks: Vec<String> = (0..6)
+                .map(|i| format!("{:.0}", avg(s.iter().map(|s| s.marks_a_day[i]))))
+                .collect();
+            write!(row, " {} |", marks.join("/")).unwrap();
+        }
+        writeln!(out, "{row}").unwrap();
+    }
+
+    writeln!(
+        out,
+        "\nThe game day of each stat's first rise (the seeds' mean of those that rose by level 60; how many of the six in brackets when not all).\n"
+    )
+    .unwrap();
+    writeln!(out, "| Class | St | Dx | To | In | Wi | Pr |").unwrap();
+    writeln!(out, "|---|---|---|---|---|---|---|").unwrap();
+    for class in CLASSES {
+        let s = p.of(class, 60, Gear::Plain, true);
+        let mut row = format!("| {class} |");
+        for i in 0..6 {
+            let days: Vec<f64> = s
+                .iter()
+                .filter_map(|s| s.first_rise[i].map(f64::from))
+                .collect();
+            let cell = match days.len() {
+                0 => "never".to_string(),
+                n if n == s.len() => format!("{:.0}", avg(days)),
+                n => format!("{:.0} ({n})", avg(days)),
+            };
+            write!(row, " {cell} |").unwrap();
+        }
+        writeln!(out, "{row}").unwrap();
+    }
+}
+
+/// The sweep of `price_per_point` and `ramp_divisor` (design §6.2): each class's mean gain by
+/// level 60 per stat, and in all.
+pub(super) fn stat_sweep(p: &Probe, out: &mut String) {
+    writeln!(
+        out,
+        "\nThe knobs (design §6.2): mean gain by level 60 with other `price_per_point` and `ramp_divisor` values (St/Dx/To/In/Wi/Pr · all six), the data's in bold.\n"
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "| Price | Ramp ÷ | Warrior | Thief | Wizard | Priest |"
+    )
+    .unwrap();
+    writeln!(out, "|---|---|---|---|---|---|").unwrap();
+    let data = p.content.stat_training();
+    for swept in &p.sweep {
+        let bold = swept.per_point == data.price_per_point && swept.ramp == data.ramp_divisor;
+        let mut row = match bold {
+            true => format!(
+                "| **{} + {}s** | **{}** |",
+                data.price_base, swept.per_point, swept.ramp
+            ),
+            false => format!(
+                "| {} + {}s | {} |",
+                data.price_base, swept.per_point, swept.ramp
+            ),
+        };
+        for class in CLASSES {
+            let start = p.of(class, 1, Gear::Plain, true);
+            let finals: Vec<&[u8; 6]> = (swept.finals.iter())
+                .filter(|(c, _)| *c == class)
+                .map(|(_, s)| s)
+                .collect();
+            let gains: Vec<f64> = (0..6)
+                .map(|i| {
+                    avg(finals.iter().map(|s| f64::from(s[i])))
+                        - avg(start.iter().map(|s| f64::from(s.scores[i])))
+                })
+                .collect();
+            let all: f64 = gains.iter().sum();
+            let each: Vec<String> = gains.iter().map(|g| format!("{g:+.1}")).collect();
+            write!(row, " {} · {all:+.0} |", each.join("/")).unwrap();
+        }
+        writeln!(out, "{row}").unwrap();
     }
 }
