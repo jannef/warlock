@@ -408,3 +408,186 @@ fn a_replay_and_a_save_keep_the_story() {
     let log = format!("story line `{}` is not in the content: skipped", first.id());
     assert!(loaded.retiered().contains(&log), "{:?}", loaded.retiered());
 }
+
+#[test]
+fn the_fateful_lines_at_pinned_seeds() {
+    // Found by a search over seeds (a human warrior on Beorggeat, the Random picks): a pool edit
+    // that moves them fails this, as the samples.
+    let spec: CharacterSpec = "human,male,warrior".parse().expect("a character");
+    let run = |seed| {
+        World::start_run(
+            BUILTIN.clone(),
+            "ascmearc",
+            Some(seed),
+            Some(&spec),
+            None,
+            true,
+        )
+        .expect("starts")
+    };
+    // The flux: Hardy, kept among the boons, and the page says the story gave it.
+    let w = run(107);
+    assert!(
+        story(&w).contains(&"trial/the_flux".to_string()),
+        "{:?}",
+        story(&w)
+    );
+    let me = w.state().player();
+    assert_eq!(me.talents.rank_of("hardy", None), 1);
+    assert!(me.boons.iter().any(|b| b.id == "hardy"));
+    assert!(talent_rows(&w).contains(&"Hardy 1/3 (story)".to_string()));
+    // The named blade: a rare weapon, identified.
+    let w = run(398);
+    assert!(
+        story(&w).contains(&"fortune/the_named_blade".to_string()),
+        "{:?}",
+        story(&w)
+    );
+    let me = w.state().player();
+    let weapons = [
+        "long_sword",
+        "rapier",
+        "scimitar",
+        "battle_axe",
+        "war_hammer",
+        "quarterstaff",
+    ];
+    let blade = (me.inventory.iter())
+        .find(|s| {
+            s.rarity() == Rarity::Rare && weapons.contains(&BUILTIN.object(s.object).id.as_str())
+        })
+        .expect("a rare weapon");
+    assert!(blade.is_identified(), "{blade:?}");
+}
+
+/// Creation picks no test of a story talent reads (a human's three).
+const PICKS: [&str; 3] = ["keen_ears", "lean", "healthy"];
+
+fn talent_rows(w: &World) -> Vec<String> {
+    crate::dump::layer_rows(w, crate::dump::Layer::Talents)
+}
+
+#[test]
+fn a_story_talent_is_given_at_rank_one_and_kept() {
+    let content = only_chapters(&[(
+        "01-blessed.toml",
+        &forced(
+            "blessed",
+            1,
+            "effects = [{ talent = \"hardy\" }, { stat = { presence = -1 } }]",
+        ),
+    )]);
+    let character = "human,male,warrior";
+    let before = kitted(&STORYLESS, character, &PICKS).expect("starts");
+    let w = kitted(&content, character, &PICKS).expect("starts");
+    assert_eq!(story(&w), ["blessed/told"]);
+    let me = w.state().player();
+    assert_eq!(me.talents.rank_of("hardy", None), 1);
+    let boons: Vec<&str> = me.boons.iter().map(|b| b.id.as_str()).collect();
+    assert_eq!(boons, ["hardy"]);
+    // What its rank hands out (Hardy's hit points at level 1), and the pool full.
+    let was = before.state().player().max_hp(&STORYLESS);
+    assert!(me.max_hp(&content) > was, "{} > {was}", me.max_hp(&content));
+    assert_eq!(me.hp, me.max_hp(&content));
+    assert!(talent_rows(&w).contains(&"Hardy 1/3 (story)".to_string()));
+    let own = w.perception().own_talents();
+    let hardy = own.iter().find(|t| t.name == "Hardy").expect("held");
+    assert!(hardy.story && !hardy.boon && !hardy.granted);
+    // A save and a restore keep it.
+    let loaded = crate::save::decode(&crate::save::encode(&w), content.clone()).expect("loads");
+    assert_eq!(loaded.state(), w.state());
+    let again = loaded.state().player();
+    assert_eq!(again.talents.rank_of("hardy", None), 1);
+    assert_eq!(again.max_hp(&content), me.max_hp(&content));
+    assert!(talent_rows(&loaded).contains(&"Hardy 1/3 (story)".to_string()));
+}
+
+#[test]
+fn a_held_talent_is_never_given_by_a_story() {
+    let content = only_chapters(&[
+        (
+            "01-first.toml",
+            &forced(
+                "first",
+                1,
+                "effects = [{ talent = \"lean\" }, { stat = { presence = -1 } }]",
+            ),
+        ),
+        (
+            "02-again.toml",
+            &forced(
+                "again",
+                1,
+                "effects = [{ talent = \"lean\" }, { stat = { presence = -1 } }]",
+            ),
+        ),
+    ]);
+    let character = "human,male,warrior";
+    // Given once: the second line, giving it again, does not fit, and its chapter is plain.
+    let w = kitted(
+        &content,
+        character,
+        &["keen_ears", "healthy", "long_strider"],
+    )
+    .expect("starts");
+    assert_eq!(story(&w), ["first/told", "again/plain"]);
+    assert_eq!(w.state().player().boons.len(), 1);
+    // Picked at creation: neither line is told.
+    let picked = kitted(&content, character, &PICKS).expect("starts");
+    assert_eq!(story(&picked), ["first/plain", "again/plain"]);
+    assert!(picked.state().player().boons.is_empty());
+    assert_eq!(picked.state().player().talents.rank_of("lean", None), 1);
+}
+
+#[test]
+fn a_class_table_naming_a_story_talent_later_gives_nothing_in_its_place() {
+    let content = only_chapters(&[(
+        "01-nimble.toml",
+        &forced(
+            "nimble",
+            1,
+            "effects = [{ talent = \"evasion\" }, { stat = { presence = -1 } }]",
+        ),
+    )]);
+    let mut w = kitted(&content, "human,male,thief", &PICKS).expect("starts");
+    assert_eq!(story(&w), ["nimble/told"]);
+    let held = |w: &World| {
+        (w.state().player().talents.iter())
+            .filter(|t| t.id == "evasion")
+            .count()
+    };
+    assert_eq!(held(&w), 1);
+    // The thief's table gives Evasion at level 18: held already, it gives nothing.
+    let spec = w.state().character.as_ref().map(|c| &c.spec);
+    let factor = crate::content::Factor::of(w.content(), spec);
+    let need = w.content().experience().threshold_for(18, factor);
+    let more = need - w.player_xp();
+    for action in crate::action::parse_actions(&format!("xp:{more}")).expect("actions") {
+        w.apply(&action);
+    }
+    assert_eq!(w.player_level(), 18);
+    assert_eq!(held(&w), 1);
+    let me = w.state().player();
+    assert_eq!(me.talents.rank_of("evasion", None), 1);
+    assert_eq!(me.boons.len(), 1);
+    assert!(talent_rows(&w).contains(&"Evasion (story)".to_string()));
+}
+
+#[test]
+fn a_story_flaw_is_a_sign_flaw_marked_as_the_storys() {
+    let content = only_chapters(&[(
+        "01-sickly.toml",
+        &forced("sickly", 1, "effects = [{ flaw = \"thin_skinned\" }]"),
+    )]);
+    let w = kitted(&content, "human,female,warrior", &PICKS).expect("starts");
+    assert_eq!(story(&w), ["sickly/told"]);
+    let me = w.state().player();
+    assert_eq!(me.talents.rank_of("thin_skinned", None), 1);
+    assert_eq!(me.boons.len(), 1);
+    let own = w.perception().own_talents();
+    let frail = own.iter().find(|t| t.name == "Thin-skinned").expect("held");
+    assert!(frail.story && frail.flaw && !frail.boon);
+    assert!(talent_rows(&w).contains(&"Thin-skinned (story, flaw)".to_string()));
+    let loaded = crate::save::decode(&crate::save::encode(&w), content.clone()).expect("loads");
+    assert_eq!(loaded.state(), w.state());
+}

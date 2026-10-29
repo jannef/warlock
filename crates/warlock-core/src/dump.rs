@@ -835,7 +835,7 @@ fn attacks_json(view: &PerceptionView<'_>) -> Value {
 /// The player's talents in the order taken, one a line: its name for its choice and, for a
 /// ranked talent, the rank held of how many (`Hardy 2/3`); a race's and a birth sign's gifts
 /// first, marked `(race)` and `(sign)`, the sign's flaw `(sign, flaw)`; a forgotten altar's
-/// `(altar)` and `(altar, flaw)`.
+/// `(altar)` and `(altar, flaw)`; the background story's `(story)` and `(story, flaw)`.
 fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
     (view.own_talents().iter())
         .map(|t| {
@@ -845,6 +845,8 @@ fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
                 t.name.clone()
             };
             match (t.granted, t.flaw, t.class) {
+                _ if t.story && t.flaw => format!("{name} (story, flaw)"),
+                _ if t.story => format!("{name} (story)"),
                 _ if t.boon && t.flaw => format!("{name} (altar, flaw)"),
                 _ if t.boon => format!("{name} (altar)"),
                 (_, true, _) => format!("{name} (sign, flaw)"),

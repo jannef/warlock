@@ -57,6 +57,7 @@ mod sight;
 mod skills;
 mod spells;
 mod stats;
+mod surprise;
 mod talents;
 mod temperature;
 mod terrain;
@@ -275,6 +276,10 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("to-hit.md", combat::to_hit),
         ("hit-chances.md", combat::hit_chances),
         ("threats.md", combat::threats),
+        ("surprise-rules.md", surprise::surprise_rules),
+        ("surprise-ladders.md", surprise::surprise_ladders),
+        ("surprise-check.md", surprise::initiative_odds),
+        ("surprise-vitals.md", surprise::no_vitals),
         ("hit-points.md", combat::hit_points),
         ("health.md", combat::health),
         ("regeneration.md", combat::regeneration),

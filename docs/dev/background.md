@@ -40,7 +40,9 @@ one kind; kit lines resolve as kits do (`content::kit::resolve`: objects, altern
 on base items, a free slot for `wear`/`wield`; `prefer_trained` is the one addition to the kit
 syntax, honoured by kits too, `KitItem::pick`); a stat 1 or 2 either way, at most 2 a stat a
 line; gold always given or always taken; skill dice at least 1; marks at least 1; alignment
-1 to 100 either way; `talent` and `flaw` effects are refused until B5; a line's net worth within
+1 to 100 either way; a `talent` a known one, never `granted`, `flaw`, or of a class tree, its
+choice (`"id:choice"`) given exactly when it takes one and one of `Choice::options`; a `flaw` a
+known `flaw` talent (B5); a line's net worth within
 its tier's band (`Tier::band`: common −4 to 2, uncommon 1 to 3, rare 3 to 5, fateful 5 to 8;
 rare and fateful never cost anything); every chapter has a plain line (common, no `when`, no
 effects). Content without `data/background.toml` tells no story and checks nothing (test
@@ -86,9 +88,9 @@ sisters", "the woman who took you in", "the elders of the clutch", …), so a li
 with each; `{home}` defaults to "home", so a line using it reads after "at", "around", or "for",
 never "through".
 
-**`talent` and `flaw` effects wait for B5** (#707): `trial/the_flux` is written with its stat
-points only and a comment where B5 adds `{ talent = "hardy" }` (its worth stays within the
-fateful band either way).
+`trial/the_flux` gives `{ talent = "hardy" }` and Toughness +1 (B5, #707; worth 6), and
+`fortune/the_named_blade` a `magic = "rare"` weapon, identified (B1's item path). No pool line
+gives a flaw yet: a flaw is a bane, so only a common or uncommon line may carry one.
 
 **The writing rules** (design §11.9): second person, past tense, the plain English of the
 march's day; Cockney and posh only inside quoted speech, by the speaker's station (the pedlar's
@@ -151,6 +153,20 @@ whatever tier was drawn, so the heritage talents always force their lines.
 | skill | `Skills::add` (trained at the roll, or raised) |
 | weapon marks | `WeaponSkills::add_marks` (never a rank: stops one short of the next); `best` is the weapon skill (not a style) at the highest rank, ties by data order, none without a rank |
 | alignment | `Score::new(score + by)`: the start's fourth term, never `shift_alignment` |
+| talent, flaw | `World::bestow(id, choice)` (`world/boons.rs`, the body of the altar's Chosen and Forsaken with the id fixed, now `pub(super)`): `Talents::take`, `class::hand_out` at rank 1 (Hardy's hit points), `Actor::boons`, `stars::grant`'s order, `train_chosen`; no message (the story is shown, never told) |
+
+## Talents and flaws (B5, #707)
+
+A line that gives a talent or a flaw is never drawn for one who holds it (any rank; a talent
+with a choice for that choice) or whose earlier line gave it: `tell` filters the pool by
+`gifts_of(line)` against `Witness::talents` and the gifts drawn so far, beside `Witness::fits`,
+so a line's `when` need not say `not_talents`. A boon is saved already (`Actor::boons`), so
+nothing new is saved and every restore puts it back (`stars::grant`); a class table that names
+it later skips it (`class::grant`: held). `background::gave(content, campaign, character, id,
+choice)` says whether a told line gave it: `OwnTalent::story`, so the Talents page shows
+"(story)" / "(story, flaw)" (`ui/talents_screen.rs`), the `talents` dump the same, and the
+character screen's sign list leaves a story flaw out. A story boon is not `OwnTalent::boon`
+(the altar's). The wiki's chapter tables name it, "the talent [Hardy](…)", "the flaw […]".
 
 Then hit points and mana to their maxima. `start_run` sets mana and the perception after it, as
 before.
@@ -215,6 +231,12 @@ class on a thousand stories, the fall to the plain line, the heritage talents' f
 defaults, pronouns, a missing line, each condition, determinism. `world/background_tests.rs`:
 each effect lands (fixture chapters of one forced line), gold down to none, the story after the
 picks (Hardy's Toughness), who has one (and unchanged hashes), a replay and a save keep it, an
-edited text reaches a save, a lost line is skipped and logged. `kit::tests::
+edited text reaches a save, a lost line is skipped and logged; B5's: a story talent at rank 1
+with its hit points, through a save and a restore, "(story)"; a held talent (picked, or given
+by an earlier line) never given again; Evasion from a story and the thief's table at 18
+(nothing in its place); a flaw "(story, flaw)" (a sign's own flaw is skipped: the warrior of
+seed 7 was born Frail); `the_fateful_lines_at_pinned_seeds` (a human warrior on Beorggeat:
+seed 107 the flux, 398 the named blade). The screen snapshot `talents-screen-story` is seed
+107's Talents page. `kit::tests::
 nobody_starts_strained_and_only_wealth_or_armour_burdens` adds the heaviest story line (items and
 gold) for every class but the aristocrat's and merchant's.

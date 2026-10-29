@@ -109,6 +109,10 @@ pub enum Rolled {
     WeaponMarks(Marks, u32),
     /// The starting alignment score moved.
     Alignment(i32),
+    /// A talent at rank 1 (by id, with its choice), kept among the boons.
+    Talent(String, Option<String>),
+    /// A birth sign's flaw (by id), kept among the boons.
+    Flaw(String),
 }
 
 /// A story told: the lines (saved), and their effects rolled (applied once, never saved).
@@ -126,10 +130,18 @@ pub fn tell(content: &Content, seed: u64, witness: &Witness) -> Story {
         return story;
     };
     let mut tags: BTreeSet<String> = BTreeSet::new();
+    // The talents and flaws earlier lines gave: a line never gives one again.
+    let mut given: Vec<(String, Option<String>)> = Vec::new();
     for chapter in background.chapters_for(witness.campaign) {
         let mut rng = Rng::background(seed, &witness.character.spec, &chapter.id);
         let mut tier = Some(background.tiers.of(rng.below(1000), witness.luck));
-        let fits = |l: &&StoryLine| witness.fits(l, &tags);
+        let fits = |l: &&StoryLine| {
+            witness.fits(l, &tags)
+                && !gifts_of(l).any(|(id, choice)| {
+                    witness.talents.rank_of(id, choice) > 0
+                        || given.iter().any(|(i, c)| i == id && c.as_deref() == choice)
+                })
+        };
         let mut pool: Vec<&StoryLine> = (chapter.lines.iter())
             .filter(|l| l.only)
             .filter(fits)
@@ -163,6 +175,7 @@ pub fn tell(content: &Content, seed: u64, witness: &Witness) -> Story {
                 .extend(roll(content, &mut rng, effect, witness));
         }
         tags.extend(line.tags.iter().cloned());
+        given.extend(gifts_of(line).map(|(id, c)| (id.to_string(), c.map(str::to_string))));
         story.told.push(Told {
             chapter: chapter.id.clone(),
             line: line.id.clone(),
@@ -179,6 +192,8 @@ fn roll(content: &Content, rng: &mut Rng, effect: &StoryEffect, witness: &Witnes
         StoryEffect::Skill(id, dice) => vec![Rolled::Skill(*id, dice.roll(rng))],
         StoryEffect::WeaponMarks(to, count) => vec![Rolled::WeaponMarks(*to, *count)],
         StoryEffect::Alignment(by) => vec![Rolled::Alignment(*by)],
+        StoryEffect::Talent(id, choice) => vec![Rolled::Talent(id.clone(), choice.clone())],
+        StoryEffect::Flaw(id) => vec![Rolled::Flaw(id.clone())],
         StoryEffect::Item(item) => {
             let picked = item.pick(content, rng, witness.trained);
             (item.one_of[picked].iter())
@@ -259,6 +274,32 @@ pub fn tiers(content: &Content, campaign: &str, story: &[Told]) -> Vec<StoryTier
         .filter_map(|t| background.chapter(campaign, &t.chapter)?.line(&t.line))
         .map(|l| l.tier)
         .collect()
+}
+
+/// The talents and flaws `line` gives, by id and choice.
+fn gifts_of(line: &StoryLine) -> impl Iterator<Item = (&str, Option<&str>)> {
+    line.effects.iter().filter_map(|e| match e {
+        StoryEffect::Talent(id, choice) => Some((id.as_str(), choice.as_deref())),
+        StoryEffect::Flaw(id) => Some((id.as_str(), None)),
+        _ => None,
+    })
+}
+
+/// Whether `character`'s story (in a run of `campaign`) gave talent `id` for `choice`: the
+/// Talents page's "(story)".
+pub fn gave(
+    content: &Content,
+    campaign: &str,
+    character: &Character,
+    id: &str,
+    choice: Option<&str>,
+) -> bool {
+    let Some(background) = content.background() else {
+        return false;
+    };
+    (character.story.iter())
+        .filter_map(|t| background.chapter(campaign, &t.chapter)?.line(&t.line))
+        .any(|line| gifts_of(line).any(|(i, c)| i == id && c == choice))
 }
 
 /// The lines of `character`'s story the content (in a run of `campaign`) no longer has, as log
