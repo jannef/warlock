@@ -292,6 +292,10 @@ fn effects_text(content: &Content, line: &StoryLine) -> String {
                 format!("{n} marks in the weapon skill of your highest rank (none without one)")
             }
             StoryEffect::Alignment(by) => format!("alignment {}", signed(*by)),
+            StoryEffect::Talent(id, choice) => {
+                format!("the talent {}", talent_link(content, id, choice.as_deref()))
+            }
+            StoryEffect::Flaw(id) => format!("the flaw {}", talent_link(content, id, None)),
         })
         .collect();
     if parts.is_empty() {
@@ -303,6 +307,17 @@ fn effects_text(content: &Content, line: &StoryLine) -> String {
         table_text(&parts.join("; ")),
         signed_or_zero(boons - banes)
     )
+}
+
+/// Talent `id`, by its name for `choice`, linked to its row.
+fn talent_link(content: &Content, id: &str, choice: Option<&str>) -> String {
+    match content.talents().id(id) {
+        Some(t) => {
+            let name = content.talents().get(t).name_for(content, choice);
+            link(Term::Talent, id, &name)
+        }
+        None => id.to_string(),
+    }
 }
 
 pub(super) fn parents(content: &Content) -> String {

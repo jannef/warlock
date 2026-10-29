@@ -25,7 +25,10 @@
 #             `magic` too, made identified; `prefer_trained = true` prefers an alternative of a
 #             weapon skill the character has a rank in); skill = { heal = "2d4" }; weapon_marks
 #             = { spears = 3 } (marks, never a rank; `best` the weapon skill held highest);
-#             alignment = 25 (the starting score)
+#             alignment = 25 (the starting score); talent = "hardy" (rank 1 with what it hands
+#             out, kept for life; `"weapon_focus:long_blades"` names a choice; never a given,
+#             class, or flaw talent, and the line is never told to one who holds it); flaw =
+#             "slight" (a birth sign's flaw talent, likewise)
 #   tags, set what later lines may read: tags, and words for the slots (`set = { home = "the
 #             minster" }`, read from the next line on)
 # Every chapter has a plain line: common, no `when`, no effects.
