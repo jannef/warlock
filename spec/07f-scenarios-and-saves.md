@@ -47,7 +47,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   overworld step (saves without the step load with none), what each actor heard and has not yet
   acted on, the sounds the player perceived lately (§5 "Hearing"; saves without them load with
   none), what every actor carries, and what each creature has in mind (where it last saw a
-  hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; saves
+  hostile or heard a noise to look into, and the post it left; §8 "Creature behavior"; when the
+  player last saw it and when the player slipped past it, §8 "Surprise and sneak attacks"; saves
   without it load with every creature calm), every actor's stats, scores and
   potentials (§8 "Stats"), the player's character (name, race, gender, and class,
   the stat the gender raised, birth date, and birth sign; §8 "Character creation"), the player's
