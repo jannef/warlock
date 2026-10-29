@@ -287,19 +287,19 @@ fn class_levels_replay_exactly() {
 fn shop_favour_and_its_cap_follow_the_talents() {
     let mut w = world("warrior");
     let shops = BUILTIN.shops().expect("shops");
-    let base = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
+    let base = crate::world::shop::favour(&BUILTIN, shops, w.state.player(), &[]);
     give(&mut w, "haggler");
-    let haggler = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
+    let haggler = crate::world::shop::favour(&BUILTIN, shops, w.state.player(), &[]);
     assert_eq!(haggler, (base + 15).clamp(-MAX_FAVOUR, MAX_FAVOUR));
     // Presence of 40 is far past the cap: Magnate lifts it by 10, Golden tongue by 10 more.
     w.player_mut().stats.gift(Stat::Presence, 30);
-    let capped = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
+    let capped = crate::world::shop::favour(&BUILTIN, shops, w.state.player(), &[]);
     assert_eq!(capped, MAX_FAVOUR);
     give(&mut w, "magnate");
-    let magnate = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
+    let magnate = crate::world::shop::favour(&BUILTIN, shops, w.state.player(), &[]);
     assert_eq!(magnate, MAX_FAVOUR + 10);
     give(&mut w, "golden_tongue");
-    let tongue = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
+    let tongue = crate::world::shop::favour(&BUILTIN, shops, w.state.player(), &[]);
     assert_eq!(tongue, MAX_FAVOUR + 20);
 }
 

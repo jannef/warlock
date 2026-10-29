@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
 │     Stone hide  (birth sign)                                                                     │
 │     Stonewise  (birth sign)                                                                      │
 │   Vigour                                                                                         │
-│     Hard training                                                                                │
+│     Clotting                                                                                     │
 │   Wayfarer                                                                                       │
-│     Weather-wise                                                                                 │
+│     Swimmer                                                                                      │
 │   Class abilities                                                                                │
 │     Weapon drill  (class)                                                                        │
 │     Trained wind  (class)                                                                        │
@@ -29,12 +29,12 @@ expression: "render(case, content.clone())"
 │         Needs: to be a new character                                                             │
 │     Father's sword                                                                               │
 │         Needs: Family wealth, to be a new character                                              │
+│     Favoured child                                                                               │
+│         Needs: to be a new character                                                             │
+│     Hard-won                                                                                     │
+│         Needs: to be a new character                                                             │
 │   Vigour                                                                                         │
 │     Bellows                                                                                      │
-│         Needs: Toughness 12                                                                      │
-│     Clotting                                                                                     │
-│         Needs: Toughness 12                                                                      │
-│     Deep lungs                                                                                   │
 │                                                                                                ↓ │
 │ A weapon in each hand hampers you less, and with sword and shield your free bash comes more      │
 │ often.                                                                                           │

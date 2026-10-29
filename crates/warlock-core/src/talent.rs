@@ -188,6 +188,26 @@ impl GiftReach {
     }
 }
 
+/// Storyteller's favour in shops, summed (`world::shop::favour`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Storyteller {
+    /// Percent more favour, with or without a story worth telling.
+    pub value: i32,
+    /// Percent more for each rare line of the background story.
+    pub rare: i32,
+    /// Percent more for each fateful line.
+    pub fateful: i32,
+}
+
+impl Storyteller {
+    /// The favour it gives a story with `rare` rare and `fateful` fateful lines (none without
+    /// the talent).
+    pub fn favour(&self, rare: u32, fateful: u32) -> i32 {
+        let n = |c: u32| i32::try_from(c).unwrap_or(i32::MAX);
+        self.value + self.rare.saturating_mul(n(rare)) + self.fateful.saturating_mul(n(fateful))
+    }
+}
+
 /// What an actor's talents do, summed: one field per effect kind, read by one rule each.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct TalentMods {
@@ -379,6 +399,14 @@ pub struct TalentMods {
     pub favour_percent: i32,
     /// How much higher the cap on its favour is, in percent.
     pub favour_cap: i32,
+    /// Storyteller's favour: percent more, and more per rare and per fateful line of its
+    /// background story (`world::shop::favour`).
+    pub storyteller: Storyteller,
+    /// Percent more of a background story's luckier odds (Favoured child; `background::tell`).
+    pub story_luck: i32,
+    /// Stat training marks per stat point its background story took (Hard-won; the most
+    /// counts; `World::tell_background`).
+    pub hard_won: u16,
     /// Percent more shops pay for what they buy from it.
     pub sell_percent: i32,
     /// The gold keepers let it leave owing (the most counts).
@@ -1321,6 +1349,17 @@ impl TalentMods {
             TalentEffect::QuestGoldPercent { value } => self.quest_gold_percent += value,
             TalentEffect::FavourPercent { value } => self.favour_percent += value,
             TalentEffect::FavourCap { value } => self.favour_cap += value,
+            TalentEffect::Storyteller {
+                value,
+                rare,
+                fateful,
+            } => {
+                self.storyteller.value += value;
+                self.storyteller.rare += rare;
+                self.storyteller.fateful += fateful;
+            }
+            TalentEffect::StoryLuck { value } => self.story_luck += value,
+            TalentEffect::HardWon { marks } => self.hard_won = self.hard_won.max(marks),
             TalentEffect::SellPercent { value } => self.sell_percent += value,
             TalentEffect::Credit { gold } => self.credit = self.credit.max(gold),
             TalentEffect::IdentifyTrades => self.identify_trades = true,

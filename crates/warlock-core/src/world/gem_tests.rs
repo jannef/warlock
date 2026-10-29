@@ -710,7 +710,7 @@ fn the_general_store_buys_gems_and_sells_them_back_by_their_gem() {
     let pack = &mut w.state.actors.get_mut(&player).expect("player").inventory;
     pack.push(fine.clone());
     pack.push(rough.clone());
-    let f = super::shop::favour(&content, shops, w.state.player());
+    let f = super::shop::favour(&content, shops, w.state.player(), &[]);
     let offer = shops.offer(&content, kind, &fine, f);
     // The store pays its share of the gem's worth, not of a "gem".
     assert!(offer >= 100, "{offer}");

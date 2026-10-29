@@ -1,0 +1,10 @@
+# Only at character creation (#705): each stat point the story takes is stat training marks on
+# that stat (world/background.rs reads TalentMods::hard_won).
+[[talent]]
+id = "hard_won"
+name = "Hard-won"
+tree = "heritage"
+description = "What your youth took from you, you mean to win back: a score your story lowered rises again sooner."
+needs = { creation = true }
+effects = [{ kind = "hard_won", marks = 3 }]
+systems = ["background", "stat_training"]

@@ -38,7 +38,7 @@ use super::{ActorId, Deed, Spent, World};
 use crate::action::{Event, Meal, Positions};
 use crate::content::StatUse;
 use crate::content::{
-    ActionKind, Content, MAX_FAVOUR, MOST_FAVOUR, ShopId, ShopPlan, Shops, TerrainId,
+    ActionKind, Content, MAX_FAVOUR, MOST_FAVOUR, ShopId, ShopPlan, Shops, StoryTier, TerrainId,
 };
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
@@ -218,14 +218,18 @@ pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
 /// for each point of their Presence modifier, plus what their skills give (Negotiation's
 /// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), at most
 /// [`MAX_FAVOUR`] either way. Talents (spec §8 "Class abilities": Haggler, Well dressed) add
-/// theirs before the cap, and may lift it (Magnate), never past [`MOST_FAVOUR`]. Never shown.
-pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
+/// theirs before the cap, and may lift it (Magnate), never past [`MOST_FAVOUR`]; Storyteller's
+/// grows with the rare and fateful lines among `story`, the tiers of the actor's background
+/// story (`background::tiers`; none for a creature or a run without one). Never shown.
+pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor, story: &[StoryTier]) -> i32 {
     let presence = actor.stats.modifier(Stat::Presence) * i32::from(shops.presence);
     let bargain = actor.skill_effect(content, Effect::Bargain);
     let alignment = super::alignment::keeper_favour(content, shops, actor);
     let talents = actor.talent_mods(content);
+    let count = |tier: StoryTier| story.iter().filter(|&&t| t == tier).count() as u32;
+    let told = (talents.storyteller).favour(count(StoryTier::Rare), count(StoryTier::Fateful));
     let cap = (MAX_FAVOUR + talents.favour_cap).clamp(0, MOST_FAVOUR);
-    (presence + bargain + alignment + talents.favour_percent).clamp(-MAX_FAVOUR, cap)
+    (presence + bargain + alignment + talents.favour_percent + told).clamp(-MAX_FAVOUR, cap)
 }
 
 /// How many of `object` `stacks` hold.
@@ -287,8 +291,16 @@ impl World {
     }
 
     /// The player's favour in prices now.
-    fn player_favour(&self) -> i32 {
-        favour(&self.content, self.shop_kinds(), self.state.player())
+    pub(super) fn player_favour(&self) -> i32 {
+        let story = (self.state.character.as_ref())
+            .map(|c| crate::background::tiers(&self.content, &self.state.campaign, &c.story))
+            .unwrap_or_default();
+        favour(
+            &self.content,
+            self.shop_kinds(),
+            self.state.player(),
+            &story,
+        )
     }
 
     /// Whether `stack` is rotten food, which is worth nothing (spec §7 "Shops").

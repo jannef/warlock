@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Hard training.
+ You learn Healthy.
  You spend 156 mana (dev).
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │

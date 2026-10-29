@@ -377,7 +377,7 @@ fn lockbreaker_kicks_harder_and_quieter_and_tunneler_digs_faster() {
 fn silver_tongue_and_haggler_move_prices_in_the_players_favour() {
     let mut w = world();
     let shops = w.content().shops().expect("shops").clone();
-    let favour = |w: &World| super::shop::favour(w.content(), &shops, w.state.player());
+    let favour = |w: &World| super::shop::favour(w.content(), &shops, w.state.player(), &[]);
     let plain = favour(&w);
     give(&mut w, "silver_tongue");
     assert_eq!(favour(&w), plain + 10);

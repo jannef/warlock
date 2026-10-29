@@ -408,6 +408,9 @@ pub enum TalentEffect {
     FavourPercent { value: i32 },
     /// The cap on its favour, this many percent higher.
     FavourCap { value: i32 },
+    /// Favour this many percent more, and `rare` more for each rare line of its background story,
+    /// `fateful` for each fateful one (Storyteller; `world::shop::favour`).
+    Storyteller { value: i32, rare: i32, fateful: i32 },
     /// Shops pay this percent more for what they buy from it, never more than they would ask.
     SellPercent { value: i32 },
     /// Keepers let it leave owing up to this much gold: the debt stays on their bill.
@@ -460,6 +463,12 @@ pub enum TalentEffect {
         max: u8,
         level: u8,
     },
+    /// A background story's uncommon, rare, and fateful odds, this percent more (a talent only
+    /// for character creation: Favoured child; `background::tell`).
+    StoryLuck { value: i32 },
+    /// Every stat point a background story's line took is this many stat training marks on that
+    /// stat (a talent only for character creation: Hard-won; `World::tell_background`).
+    HardWon { marks: u16 },
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.
     Notice { value: i32 },
@@ -1390,6 +1399,17 @@ impl TalentEffect {
                 let _ = fallback;
                 Ok(())
             }
+            TalentEffect::HardWon { marks } => {
+                if !(1..=20).contains(marks) {
+                    return Err("`hard_won`: marks is 1 to 20".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Storyteller {
+                value,
+                rare,
+                fateful,
+            } => percent(*value).and(percent(*rare)).and(percent(*fateful)),
             TalentEffect::Credit { gold } => {
                 if !(1..=1000).contains(gold) {
                     return Err("`credit`: gold is 1 to 1000".into());
@@ -1874,6 +1894,7 @@ impl TalentEffect {
             | TalentEffect::QuestGoldPercent { value }
             | TalentEffect::FavourPercent { value }
             | TalentEffect::FavourCap { value }
+            | TalentEffect::StoryLuck { value }
             | TalentEffect::SellPercent { value }
             | TalentEffect::MissileBreaks { value }
             | TalentEffect::BurdenEase { value } => percent(*value),

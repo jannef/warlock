@@ -355,6 +355,12 @@ name = "Skills and training"
 id = "experience"
 name = "Experience"
 
+# Background stories (#705): the tiers, what a story costs, telling it. Two talents only for
+# character creation (the story is told then), one picked in play.
+[[system]]
+id = "background"
+name = "Background story"
+
 [[system]]
 id = "speed"
 name = "Speed"
