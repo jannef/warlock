@@ -393,9 +393,9 @@ impl Ability {
     /// Whether `actor` has it (whether or not they can use it now): a skill, if they are trained
     /// in it; disarming, if they are trained in Disable device (the skill with the disarm
     /// effect) or a talent lets them (the craftsperson's Tinker); picking locks, if they are
-    /// trained in Open lock (the pick effect's) or a talent lets them (the thief's Pick lock);
+    /// trained in Open lock (the pick effect's) or a talent lets them (the `pick_lock` effect);
     /// stealing, if they are trained in a skill with the `steal` benefit or a talent lets them
-    /// (the thief's Light fingers; it is listed only when stealing is in the game); treating
+    /// (the `steal` effect; it is listed only when stealing is in the game); treating
     /// oneself, if they are trained in a skill with the `heal` effect; foraging, if they are
     /// trained in Survival (the forage benefit's); second wind,
     /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); the
@@ -410,7 +410,7 @@ impl Ability {
                 actor.skills.trains_effect(content, Effect::Disarm)
                     || actor.talent_mods(content).disarm
             }
-            // The thief's Pick lock and Light fingers give them without the skills.
+            // A talent with the `pick_lock` or `steal` effect gives them without the skills.
             Ability::PickLock => {
                 actor.skills.trains_effect(content, Effect::Pick)
                     || actor.talent_mods(content).pick_lock
@@ -826,11 +826,13 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         ClassActive::VeteransWind => mods.veterans_wind.map(|w| w.cooldown).into_iter().collect(),
         ClassActive::LayOnHands => mods.lay_on_hands.map(|h| h.cooldown).into_iter().collect(),
         ClassActive::Smite => mods.smite.map(|s| s.cooldown).into_iter().collect(),
-        // Volley costs Focus, Master thief Openings, and Quivering palm Ki instead (their
-        // talents' `resource`, [`short_of`]).
+        // Volley costs Focus, Low blow and Master thief Openings, and Quivering palm Ki instead
+        // (their talents' `resource`, [`short_of`]); Lurk only its time.
         ClassActive::Whirlwind
         | ClassActive::HolyRadiance
         | ClassActive::QuiveringPalm
+        | ClassActive::Lurk
+        | ClassActive::LowBlow
         | ClassActive::MasterThief
         | ClassActive::Inspire
         | ClassActive::Consecrate

@@ -51,6 +51,12 @@ pub(super) struct Technique {
     /// The next shot the player looses flies on past the first it hits (Piercing shot): taken
     /// by that shot.
     pub(super) pierce: bool,
+    /// The next blow the player strikes is a sneak attack whatever its target knows (the
+    /// thief's Low blow, `thief.rs`): taken by that blow.
+    pub(super) sneak: bool,
+    /// The free blow the player is about to strike from a lurk, at this creature stepping up
+    /// beside them (`thief.rs`): taken by that blow.
+    pub(super) lurk: Option<ActorId>,
 }
 
 /// What a weapon active was aimed at, as the action text gives it.

@@ -130,7 +130,7 @@ impl World {
     }
 
     /// What finding `hidden` takes the player: its difficulty, a hidden trap less the
-    /// Trapfinding talent's ease (spec §8 "Class abilities"; disarming is not eased).
+    /// talents' `trap_ease` (spec §8 "Class abilities"; disarming is not eased).
     pub(super) fn finding(&self, hidden: Hidden) -> i32 {
         let ease = match hidden {
             Hidden::Trap(_) => self.state.player().talent_mods(&self.content).trap_ease,

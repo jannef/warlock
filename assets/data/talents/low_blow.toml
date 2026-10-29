@@ -1,0 +1,9 @@
+[[talent]]
+id = "low_blow"
+name = "Low blow"
+tree = "class"
+granted = true
+description = "Sand in the eyes and the knife where it hurts: three openings buy a blow in a direction (an ability) that is a sneak attack whatever the foe knows."
+effects = [{ kind = "low_blow" }]
+resource = { id = "openings", cost = 3 }
+systems = ["sneak_attack", "resources"]

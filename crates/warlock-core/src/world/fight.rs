@@ -771,8 +771,12 @@ impl World {
         let profile = profile.map(|p| self.bane(attacker, target, p));
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
-        let unaware = profile.is_some() && self.unaware(target, attacker);
-        let unseen = profile.is_some() && self.sneaks(attacker, target, unaware, missile);
+        // A lurk's blow finds a creature not hunting the player unawares; a low blow is a sneak
+        // attack whatever the target knows (`thief.rs`).
+        let unaware =
+            profile.is_some() && (self.unaware(target, attacker) || self.lurked(attacker, target));
+        let low = profile.is_some() && self.low_blow_taken(attacker);
+        let unseen = profile.is_some() && self.sneaks(attacker, target, unaware || low, missile);
         if unaware {
             self.startle(target, Some(attacker), events);
         }
@@ -883,6 +887,7 @@ impl World {
             // A sneak attack that kills builds more (Patient blade's openings).
             if died && unseen {
                 self.gain_resource(attacker, Build::SneakKill);
+                self.vanishing_act(attacker, events);
             }
             if !died {
                 self.big_hit_trigger((attacker, target), (kind, skills), blow, events);

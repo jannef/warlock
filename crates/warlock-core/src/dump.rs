@@ -1811,7 +1811,7 @@ mod tests {
         // Their own trained skills by skill id, with their values: no marks, nothing untrained.
         assert_eq!(
             value["skills"],
-            json!({ "appraise": 11, "detect_traps": 7, "disable_device": 7, "escape_artist": 10, "initiative": 9, "listen": 6, "negotiation": 10, "open_lock": 17, "search": 9, "sneak_attack": 25, "spot": 9, "steal": 12, "stealth": 16, "tumble": 15 })
+            json!({ "appraise": 11, "detect_traps": 14, "disable_device": 14, "escape_artist": 10, "initiative": 9, "listen": 6, "negotiation": 10, "open_lock": 17, "search": 10, "sneak_attack": 25, "spot": 9, "steal": 12, "stealth": 16, "tumble": 15 })
         );
         assert!(json(&world, &[], false).get("state").is_none());
     }
@@ -1823,14 +1823,14 @@ mod tests {
             layer_rows(&world, Layer::Skills),
             [
                 "Appraise 11",
-                "Detect traps 7",
-                "Disable device 7",
+                "Detect traps 14",
+                "Disable device 14",
                 "Escape artist 10",
                 "Initiative 9",
                 "Listen 6",
                 "Negotiation 10",
                 "Open lock 17",
-                "Search 9",
+                "Search 10",
                 "Sneak attack 25",
                 "Spot 9",
                 "Steal 12",
@@ -1915,7 +1915,7 @@ mod tests {
         // Every actor's stats, then its trained skills with their marks and the ladder's die.
         assert!(
             actors[0].contains(
-                "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 11 (0 +1), detect_traps 7 (0 +1), disable_device 7 (0 +1), escape_artist 10 (0 +1), initiative 9 (0 +1), listen 6 (0 +1), negotiation 10 (0 +1), open_lock 17 (0 +1), search 9 (0 +1), sneak_attack 25 (0 +1), spot 9 (0 +1), steal 12 (0 +1), stealth 16 (0 +1), tumble 15 (0 +1); \
+                "stats St 9/16 Dx 13/16 To 10/16 In 12/16 Wi 11/16 Pr 9/16; skills appraise 11 (0 +1), detect_traps 14 (0 +1), disable_device 14 (0 +1), escape_artist 10 (0 +1), initiative 9 (0 +1), listen 6 (0 +1), negotiation 10 (0 +1), open_lock 17 (0 +1), search 10 (0 +1), sneak_attack 25 (0 +1), spot 9 (0 +1), steal 12 (0 +1), stealth 16 (0 +1), tumble 15 (0 +1); \
                  nutrition 3600 (not_hungry)"
             ),
             "{}",
