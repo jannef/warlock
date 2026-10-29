@@ -119,6 +119,11 @@
 #                                 cells beyond surprise.toml's missile_reach
 #   sneak_kill_status { status }  a sneak attack of its that kills leaves it a degree of that
 #                                 status (../status.toml; Vanishing act: light_footed)
+#   sees_unaware                  it sees which creatures in view have not noticed it: look
+#                                 mode says "unaware of you", and their glyphs carry the
+#                                 unaware mark (Stalker's eye)
+#   startled_blow                 an initiative check it makes against a hostile attacker
+#                                 beside it is answered with a free blow at once (Hair trigger)
 #   vitals_in { tags }            creature types carrying one of those tags have vitals for its
 #                                 attacks (critical hits and sneak attacks land), never the
 #                                 incorporeal ("skeleton", "construct")

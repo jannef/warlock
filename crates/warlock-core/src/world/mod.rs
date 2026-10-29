@@ -196,7 +196,7 @@ mod status;
 mod steal;
 mod stride;
 mod summon;
-mod surprise;
+pub(crate) mod surprise;
 mod talent;
 mod talk;
 mod temper;

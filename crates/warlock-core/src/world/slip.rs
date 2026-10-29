@@ -87,17 +87,23 @@ fn slip_turns(content: &Content) -> Option<u64> {
     content.surprise().and_then(|r| r.slip_turns)
 }
 
+/// [`World::slipped_past`] of a state: `Mind::missed` on creature `id` within the rules'
+/// turns, when `other` is the player.
+pub(super) fn slipped(state: &WorldState, content: &Content, id: ActorId, other: ActorId) -> bool {
+    let Some(lasts) = slip_turns(content) else {
+        return false;
+    };
+    other == state.player
+        && (state.actors.get(&id))
+            .and_then(|a| a.mind.missed)
+            .is_some_and(|turn| state.turn.saturating_sub(turn) <= lasts)
+}
+
 impl World {
     /// Whether the player has slipped past creature `id` (and it has not lapsed): it does not
     /// see them by darkvision and is unaware of them.
     pub(crate) fn slipped_past(&self, id: ActorId, other: ActorId) -> bool {
-        let Some(lasts) = slip_turns(&self.content) else {
-            return false;
-        };
-        other == self.state.player
-            && (self.state.actors.get(&id))
-                .and_then(|a| a.mind.missed)
-                .is_some_and(|turn| self.state.turn.saturating_sub(turn) <= lasts)
+        slipped(&self.state, &self.content, id, other)
     }
 
     /// The player's slip past creature `id` is over: it sees them as anyone would, at once if

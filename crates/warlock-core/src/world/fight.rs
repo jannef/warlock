@@ -543,7 +543,8 @@ impl World {
     /// - [`Cue::Attacked`]: its end: a cleave if it killed `target`, else `target`'s riposte;
     /// - [`Cue::Cleaved`]: another cleave, with great cleave, after one that killed `target`;
     /// - [`Cue::Leaves`]: `target` steps away from beside `striker`: the opportunist's blow;
-    /// - [`Cue::Approaches`]: `target` stepped up beside `striker`: the gatekeeper's blow.
+    /// - [`Cue::Approaches`]: `target` stepped up beside `striker`: the gatekeeper's blow;
+    /// - [`Cue::Startled`]: `target`'s attack did not catch `striker` off guard: Hair trigger's.
     ///
     /// Only the second blow may draw while deciding, and only the flurry spends (its ki); the
     /// free blows do neither.
@@ -584,6 +585,7 @@ impl World {
             Cue::Cleaved => self.cleave(striker, target, true),
             Cue::Leaves => self.opportunist(striker, target),
             Cue::Approaches => self.gatekeeper(striker, target),
+            Cue::Startled => self.startled(striker, target),
         }
     }
 
@@ -777,8 +779,9 @@ impl World {
             profile.is_some() && (self.unaware(target, attacker) || self.lurked(attacker, target));
         let low = profile.is_some() && self.low_blow_taken(attacker);
         let unseen = profile.is_some() && self.sneaks(attacker, target, unaware || low, missile);
-        if unaware {
-            self.startle(target, Some(attacker), events);
+        // Hair trigger's blow may cut the attacker down before it strikes (`free_blow.rs`).
+        if unaware && !self.startle(target, Some(attacker), events) {
+            return None;
         }
         self.attacked_near(attacker, target);
         // A blow at a disguised mimic finds it out (`mimic.rs`), after the sneak attack is

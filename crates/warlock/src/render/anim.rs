@@ -98,6 +98,13 @@ pub fn shimmer_mix(time: f32, speed: f32, phase: f32) -> f32 {
     0.5 - 0.5 * (TAU * (time * speed + phase)).cos()
 }
 
+/// A slow breath at `time`, in `[0, 1]`: 0 at the start of each `period` seconds (shifted by
+/// `phase`, in periods), 1 halfway through. CPU only (the unaware mark, `ui/glyphs.rs`): no
+/// shader mirrors it.
+pub fn breathe(time: f32, period: f32, phase: f32) -> f32 {
+    0.5 - 0.5 * (TAU * (time / period + phase)).cos()
+}
+
 /// The frame a `cycle` of `frames` frames shows at `time`.
 pub fn cycle_frame(time: f32, fps: f32, phase: f32, frames: usize) -> usize {
     if frames == 0 {

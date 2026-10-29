@@ -1488,7 +1488,8 @@ pub fn ascii(world: &World, layers: &[Layer]) -> String {
 /// Structured dump: turn, game time, level, viewer, the special room the player stands in if they
 /// know it (its effect id; else null), the open shop they stand in (`shop`: its sign, keeper,
 /// and what they owe there; else null), the weather (under the open sky; else null), the
-/// temperature (°C, to a tenth), seen actors (with the status effects that show on them), heard
+/// temperature (°C, to a tenth), seen actors (with the status effects that show on them, and
+/// `unaware` with Stalker's eye), heard
 /// sounds, known traps (`known_traps`: position, trap id, and whether in sight), the hollow walls
 /// found (`known_hollows`: positions), the chests seen
 /// or remembered (`chests`: position, band id, state, and, with Chest-wise, whether a shut one
@@ -1518,6 +1519,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             if !bands.is_empty() {
                 let bands: Vec<String> = bands.iter().map(ToString::to_string).collect();
                 seen["bands"] = json!(bands);
+            }
+            // Stalker's eye: it has not noticed the player (never told without the talent).
+            if a.unaware {
+                seen["unaware"] = json!(true);
             }
             seen
         })

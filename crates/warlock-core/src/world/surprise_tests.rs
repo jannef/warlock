@@ -1,8 +1,8 @@
 //! Surprise (spec §8 "Surprise and sneak attacks"; `world/surprise.rs`): unaware both ways round,
 //! the initiative check's two outcomes and its two draws, the Surprised status (flat-footed, no
 //! free blows out of turn, the dear action and Cool head's ease), hidden traps and their
-//! bystanders, sleepers and mimics without a check, the messages, saves and replays, and no
-//! draw while nobody is unaware.
+//! bystanders, sleepers and mimics without a check, the messages, saves and replays, no draw
+//! while nobody is unaware, Hair trigger's blow, and Stalker's eye's word in the snapshot.
 
 use super::*;
 use crate::action::parse_actions;
@@ -451,4 +451,144 @@ fn what_the_player_noticed_survives_saves_and_replays() {
     assert_eq!(loaded.state(), w.state());
     let replayed = replay.run(w.content.clone()).expect("the replay verifies");
     assert_eq!(replayed.state_hash(), w.state_hash());
+}
+
+/// The attackers of the `Attacked` events in `events`, in order (the player's own blows at
+/// what they do not see are not among them).
+fn attackers(events: &[Event]) -> Vec<ActorId> {
+    (events.iter())
+        .filter_map(|e| match e {
+            Event::Attacked { attacker, .. } => Some(*attacker),
+            _ => None,
+        })
+        .collect()
+}
+
+/// The player's blows at something unseen said so far in another's turn: held for the news.
+fn answers(w: &World) -> usize {
+    (w.news.iter())
+        .filter(|t| t.starts_with("You ") && t.contains("something"))
+        .count()
+}
+
+/// In the dark (the player sees nothing), the goblin beside them attacks once in melee, the
+/// player holding Hair trigger if `hair_trigger`: the attackers of the events.
+fn struck_in_the_dark(w: &mut World, hair_trigger: bool) -> Vec<ActorId> {
+    let (player, id) = (w.state.player, goblin(w, 2));
+    if hair_trigger {
+        w.player_mut().talents.take("hair_trigger", None);
+    }
+    w.state.actors.get_mut(&id).expect("goblin").hp = 1000;
+    assert!(w.unaware(player, id));
+    let profile = w.state.actors[&id].melee(&w.content);
+    let mut events = Vec::new();
+    let kind = crate::action::AttackKind::Melee;
+    w.attack_with(id, player, kind, Some(profile), &mut events);
+    attackers(&events)
+}
+
+#[test]
+fn hair_trigger_answers_a_made_check_with_a_blow() {
+    let mut w = world(0, Rules::Difficulty(1));
+    let (player, id) = (w.state.player, goblin(&w, 2));
+    assert_eq!(struck_in_the_dark(&mut w, true), [id], "its attack goes on");
+    assert!(!w.surprised(player), "the check was made");
+    assert_eq!(answers(&w), 1, "{:?}", w.news);
+    assert!(
+        texts(&w)
+            .iter()
+            .any(|t| t == "You keep your wits about you."),
+        "{:?}",
+        texts(&w)
+    );
+    // One per surprise: struck, the player knows the goblin is there; its next attack finds
+    // them aware, and nothing answers it.
+    let profile = w.state.actors[&id].melee(&w.content);
+    let mut events = Vec::new();
+    let kind = crate::action::AttackKind::Melee;
+    w.attack_with(id, player, kind, Some(profile), &mut events);
+    assert_eq!(attackers(&events), [id]);
+    assert_eq!(answers(&w), 1);
+}
+
+#[test]
+fn no_blow_without_the_talent_a_made_check_or_an_attacker_beside() {
+    // Without Hair trigger.
+    let mut w = world(0, Rules::Difficulty(1));
+    let id = goblin(&w, 2);
+    assert_eq!(struck_in_the_dark(&mut w, false), [id]);
+    assert_eq!(answers(&w), 0);
+    // The check failed: the player is Surprised and strikes nothing.
+    let mut w = world(0, Rules::Difficulty(40));
+    assert_eq!(struck_in_the_dark(&mut w, true), [id]);
+    assert!(w.surprised(w.state.player));
+    assert_eq!(answers(&w), 0);
+    // An archer behind the wall: not beside.
+    let mut w = world(0, Rules::Difficulty(1));
+    let (player, far) = (w.state.player, goblin(&w, 8));
+    w.player_mut().talents.take("hair_trigger", None);
+    let profile = w.state.actors[&far].melee(&w.content);
+    let mut events = Vec::new();
+    let kind = crate::action::AttackKind::Ranged;
+    w.attack_with(far, player, kind, Some(profile), &mut events);
+    assert_eq!(attackers(&events), [far]);
+    assert_eq!(answers(&w), 0);
+    // A hidden trap: nobody to strike, nothing drawn beyond the check.
+    let mut w = world(120, Rules::Difficulty(1));
+    w.player_mut().talents.take("hair_trigger", None);
+    let player = w.state.player;
+    let rng = after_a_check(&w);
+    assert!(w.startle(player, None, &mut Vec::new()));
+    assert_eq!(w.state.rng, rng);
+}
+
+#[test]
+fn hair_trigger_may_cut_the_attacker_down_before_it_strikes() {
+    // Some fate fells the goblin with the answering blow: its own attack is never rolled.
+    let felled = (0..200).find_map(|seed| {
+        let mut w = world(0, Rules::Difficulty(1));
+        w.state.rng = crate::rng::Rng::gameplay(seed);
+        let (player, id) = (w.state.player, goblin(&w, 2));
+        w.player_mut().talents.take("hair_trigger", None);
+        let profile = w.state.actors[&id].melee(&w.content);
+        w.state.actors.get_mut(&id).expect("goblin").hp = 1;
+        let mut events = Vec::new();
+        let kind = crate::action::AttackKind::Melee;
+        let blow = w.attack_with(id, player, kind, Some(profile), &mut events);
+        (!w.state.actors.contains_key(&id)).then_some((blow, attackers(&events)))
+    });
+    let (blow, attackers) = felled.expect("some seed fells it");
+    assert_eq!(blow, None, "nothing rolled");
+    assert_eq!(attackers, [], "no attack of its");
+}
+
+#[test]
+fn stalkers_eye_tells_who_is_unaware_and_nothing_leaks_without_it() {
+    let unaware = |w: &mut World, id: ActorId| {
+        *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
+        (w.perception().actors().iter())
+            .find(|a| a.id == id)
+            .expect("the goblin in view")
+            .unaware
+    };
+    let mut w = world(120, Rules::Shipped);
+    let id = goblin(&w, 2);
+    // Beside the player in the light, it sees them.
+    w.player_mut().talents.take("stalkers_eye", None);
+    assert!(!unaware(&mut w, id));
+    // Asleep, it has noticed no one.
+    lull(&mut w, id);
+    assert!(unaware(&mut w, id), "a sleeper is unaware");
+    // Awake again and hunting the player, it is aware.
+    let asleep = w.content.sleep_status().expect("asleep");
+    let me = w.state.actors.get_mut(&id).expect("goblin");
+    me.effects.remove(asleep);
+    me.mind.last_seen = Some(Pos::new(1, 2));
+    assert!(!unaware(&mut w, id));
+    // Without the talent the snapshot never says.
+    let mut plain = world(120, Rules::Shipped);
+    lull(&mut plain, id);
+    assert!(plain.unaware(id, plain.state.player));
+    assert!(!unaware(&mut plain, id));
+    assert!(plain.perception().actors().iter().all(|a| !a.unaware));
 }

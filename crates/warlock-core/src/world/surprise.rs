@@ -21,12 +21,13 @@
 //! Without `data/surprise.toml` nobody is surprised: no check, no status, no strip, and the
 //! player is never unaware (a creature's half still decides the ambush dice, `ambush.rs`).
 
-use super::{ActorId, ActorKind, World};
+use super::{ActorId, ActorKind, World, WorldState};
 use crate::action::Event;
 use crate::check;
 use crate::combat::{Category, Target};
-use crate::content::{StatusId, the, the_start};
+use crate::content::{Content, StatusId, the, the_start};
 use crate::fov::radius2;
+use crate::light::LightCache;
 use crate::sight::{self, LineOfSight};
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
@@ -34,28 +35,80 @@ use crate::stats::Stat;
 /// What counts nothing toward a flat-footed target's Defence: the categories that react.
 const FLAT_FOOTED: [Category; 2] = [Category::Dexterity, Category::Dodge];
 
+/// Creature `id`'s half of [`World::unaware`], of actor `other`: asleep or disguised, whatever
+/// it sees; else it hunts no one it has seen and has been slipped past, or its eyes do not see
+/// `other`'s cell now. False for anyone not a creature. A function of state (and the light
+/// masks), so the perception snapshot asks it too (Stalker's eye, `SeenActor::unaware`).
+pub(crate) fn creature_unaware(
+    state: &WorldState,
+    content: &Content,
+    lights: &mut LightCache,
+    id: ActorId,
+    other: ActorId,
+) -> bool {
+    let Some(me) = state.actors.get(&id) else {
+        return false;
+    };
+    if me.kind != ActorKind::Creature || !state.actors.contains_key(&other) {
+        return false;
+    }
+    // Asleep, it has seen no one (`den.rs`); nor has a disguised mimic (`mimic.rs`).
+    let asleep =
+        !me.effects.is_empty() && me.effects.iter().any(|e| content.status(e.status).sleeps);
+    if asleep || me.effects.hides(content) {
+        return true;
+    }
+    // Slipped past (`slip.rs`), it does not see the player though its darkvision would.
+    me.mind.last_seen.is_none()
+        && (super::slip::slipped(state, content, id, other)
+            || !sees_now(state, content, lights, id, other))
+}
+
+/// Whether creature `id`'s eyes see actor `other`'s cell now ([`World::sees_now`]).
+fn sees_now(
+    state: &WorldState,
+    content: &Content,
+    lights: &mut LightCache,
+    id: ActorId,
+    other: ActorId,
+) -> bool {
+    let (Some(me), Some(them)) = (state.actors.get(&id), state.actors.get(&other)) else {
+        return false;
+    };
+    if me.kind != ActorKind::Creature {
+        return false;
+    }
+    let at = them.pos;
+    let def = content.creature(me.creature);
+    let radius = sight::sight_radius(state, content, def.sight);
+    let d2 = me.pos.dist2(at);
+    if d2 > radius2(radius) {
+        return false;
+    }
+    let level = state.current();
+    let reach = LineOfSight::radius_for(d2).min(radius);
+    let los = LineOfSight::compute(me.pos, reach, |p| level.is_opaque(content, p));
+    let eye = me.eyes(content, &content.vision_profiles()[def.vision]);
+    sight::sees(state, content, lights, &los, &eye, at)
+}
+
 impl World {
     /// Whether actor `id` has not seen actor `other` (module docs): a creature by its own eyes
     /// and mind, the player by what they perceived and remember.
     pub(crate) fn unaware(&mut self, id: ActorId, other: ActorId) -> bool {
-        let Some(me) = self.state.actors.get(&id) else {
-            return false;
-        };
-        if !self.state.actors.contains_key(&other) {
+        if !self.state.actors.contains_key(&id) || !self.state.actors.contains_key(&other) {
             return false;
         }
         if id == self.state.player {
             return self.player_unaware(other);
         }
-        if me.kind != ActorKind::Creature {
-            return false;
-        }
-        // Asleep, it has seen no one (`den.rs`); nor has a disguised mimic (`mimic.rs`).
-        if self.asleep(id) || self.disguised(id) {
-            return true;
-        }
-        // Slipped past (`slip.rs`), it does not see the player though its darkvision would.
-        me.mind.last_seen.is_none() && (self.slipped_past(id, other) || !self.sees_now(id, other))
+        let World {
+            state,
+            content,
+            lights,
+            ..
+        } = self;
+        creature_unaware(state, content, lights, id, other)
     }
 
     /// Whether the player has not seen creature `other`: their last perception did not see it,
@@ -86,24 +139,7 @@ impl World {
             lights,
             ..
         } = self;
-        let (Some(me), Some(them)) = (state.actors.get(&id), state.actors.get(&other)) else {
-            return false;
-        };
-        if me.kind != ActorKind::Creature {
-            return false;
-        }
-        let at = them.pos;
-        let def = content.creature(me.creature);
-        let radius = sight::sight_radius(state, content, def.sight);
-        let d2 = me.pos.dist2(at);
-        if d2 > radius2(radius) {
-            return false;
-        }
-        let level = state.current();
-        let reach = LineOfSight::radius_for(d2).min(radius);
-        let los = LineOfSight::compute(me.pos, reach, |p| level.is_opaque(content, p));
-        let eye = me.eyes(content, &content.vision_profiles()[def.vision]);
-        sight::sees(state, content, lights, &los, &eye, at)
+        sees_now(state, content, lights, id, other)
     }
 
     /// The player has just perceived the world: every creature they see now is one they have
@@ -149,22 +185,24 @@ impl World {
     /// springing under it: a sleeper or a disguised mimic is Surprised with no check; anyone
     /// else makes the initiative check (two gameplay draws: its Dexterity modifier, its checks'
     /// talent bonus, and Wary's against the rules' difficulty) and is Surprised if it fails.
-    /// The player is told what came of it (after the fact, never the roll).
+    /// The player is told what came of it (after the fact, never the roll). A check made
+    /// against an attacker beside it may be answered with Hair trigger's blow at once
+    /// (`free_blow.rs`); returns whether `by` still stands to make its attack (true for a trap).
     pub(super) fn startle(
         &mut self,
         target: ActorId,
         by: Option<ActorId>,
         events: &mut Vec<Event>,
-    ) {
+    ) -> bool {
         let Some(rules) = self.content.surprise() else {
-            return;
+            return true;
         };
         let (status, difficulty) = (rules.status, rules.difficulty);
         let Some(me) = self.state.actors.get(&target) else {
-            return;
+            return true;
         };
         if self.state.death.is_some() {
-            return;
+            return true;
         }
         let content = &self.content;
         let (pos, name) = (me.pos, content.creature(me.creature).name.clone());
@@ -206,6 +244,11 @@ impl World {
             } else if self.surprised(target) {
                 self.say(format!("You catch {} unawares.", the(&name)));
             }
+        }
+        // Hair trigger: one blow per surprise, after the check's word.
+        match by {
+            Some(attacker) if made => self.hair_trigger(target, attacker, events),
+            _ => true,
         }
     }
 
