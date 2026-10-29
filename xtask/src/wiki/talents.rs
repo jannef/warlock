@@ -593,6 +593,33 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "every stat training use's chance of a mark {} (at most 100 %)",
             percent(value)
         ),
+        TalentEffect::PricePercent { value } => format!(
+            "the chosen stat's [training price](stats.md#training) for a rise {} (rounded down; \
+             a drop's price unchanged)",
+            percent(value)
+        ),
+        TalentEffect::RampEase { points } => format!(
+            "the [training price](stats.md#training)'s ramp past a potential counts each point \
+             past it {points} fewer (the first point past the potential at the plain price)"
+        ),
+        TalentEffect::FastingMarks { marks } => format!(
+            "a daily stat check (06:00) met Hungry or worse gives Willpower {marks} \
+             [training marks](stats.md#training)"
+        ),
+        TalentEffect::NoDeed { on } => {
+            let deeds: Vec<&str> = on.iter().map(|d| d.describe()).collect();
+            format!(
+                "no [training marks](stats.md#training) are lost for {}",
+                deeds.join("; ")
+            )
+        }
+        TalentEffect::UseMarks { on, times } => {
+            let uses: Vec<&str> = on.iter().map(|u| u.describe()).collect();
+            format!(
+                "{times} times the [training marks](stats.md#training) for {}",
+                uses.join("; ")
+            )
+        }
         TalentEffect::XpPercent { value } => format!("experience gained {}", percent(value)),
         TalentEffect::SkillRolls { value } => format!("skill rolls every level {}", signed(value)),
         TalentEffect::ExtraPick { level: 1 } => "one more talent at creation".to_string(),

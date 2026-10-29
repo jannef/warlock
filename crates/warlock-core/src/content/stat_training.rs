@@ -25,6 +25,16 @@ use std::ops::RangeInclusive;
 
 /// What `price_base` and `price_per_point` may be.
 pub const PRICES: RangeInclusive<u16> = 0..=1000;
+/// What a character's talents do to a stat's training price for a rise
+/// ([`StatTraining::eased_price`]; `TalentMods::price_ease`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PriceEase {
+    /// Percent more of the whole price (negative: less; Gifted).
+    pub percent: i32,
+    /// Points past the potential the ramp counts as fewer (Late bloomer).
+    pub ramp: u8,
+}
+
 /// What `ramp_divisor`, `quarter`, and `drop_share` may be.
 pub const DIVISORS: RangeInclusive<u16> = 1..=20;
 /// What `odds_power` may be (the odds' integer arithmetic holds up to 5).
@@ -496,13 +506,21 @@ impl StatTraining {
     /// past it), `base × (ramp_divisor + over × (over + 1)) / ramp_divisor`; the point reaching
     /// the potential costs the base.
     pub fn price(&self, score: u8, potential: u8) -> u32 {
+        self.eased_price(score, potential, PriceEase::default())
+    }
+
+    /// [`StatTraining::price`] as talents ease it (`ease`): the ramp counts `ease.ramp` points
+    /// fewer past the potential (Late bloomer: the first past it at the base), then the whole
+    /// is `ease.percent` more (Gifted: −15), rounded down, at least 1.
+    pub fn eased_price(&self, score: u8, potential: u8, ease: PriceEase) -> u32 {
         let base = self.base_price(score);
-        let over = (u32::from(score) + 1).saturating_sub(u32::from(potential));
-        if over == 0 {
-            return base;
-        }
+        let over = (u32::from(score) + 1)
+            .saturating_sub(u32::from(potential))
+            .saturating_sub(u32::from(ease.ramp));
         let ramp = u32::from(self.ramp_divisor);
-        (u64::from(base) * u64::from(ramp + over * (over + 1)) / u64::from(ramp)) as u32
+        let price = u64::from(base) * u64::from(ramp + over * (over + 1)) / u64::from(ramp);
+        let percent = u64::from((100 + ease.percent).max(0).unsigned_abs());
+        (price * percent / 100).clamp(1, u64::from(u32::MAX)) as u32
     }
 
     /// The marks a drop from `score` pays back: the base price of the point lost divided by
@@ -513,10 +531,11 @@ impl StatTraining {
 
     /// The price a pile of `marks` is checked against: the rise's for a positive pile, the
     /// drop's for a negative one, none for zero.
-    pub fn price_for(&self, marks: i32, score: u8, potential: u8) -> Option<u32> {
+    /// A rise's price is eased by `ease` ([`StatTraining::eased_price`]); a drop's never.
+    pub fn price_for(&self, marks: i32, score: u8, potential: u8, ease: PriceEase) -> Option<u32> {
         match marks {
             0 => None,
-            1.. => Some(self.price(score, potential)),
+            1.. => Some(self.eased_price(score, potential, ease)),
             _ => Some(self.drop_price(score)),
         }
     }
@@ -577,9 +596,9 @@ mod tests {
         assert_eq!(t.drop_price(14), 75);
         assert_eq!(t.drop_price(6), 35);
         assert_eq!(t.drop_price(35), 180);
-        assert_eq!(t.price_for(0, 14, 16), None);
-        assert_eq!(t.price_for(5, 14, 14), Some(240));
-        assert_eq!(t.price_for(-5, 14, 14), Some(75));
+        assert_eq!(t.price_for(0, 14, 16, PriceEase::default()), None);
+        assert_eq!(t.price_for(5, 14, 14, PriceEase::default()), Some(240));
+        assert_eq!(t.price_for(-5, 14, 14, PriceEase::default()), Some(75));
     }
 
     #[test]
