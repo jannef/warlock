@@ -10,7 +10,8 @@ is the Steal skill's use: `Action::Steal(Dir)` (replay text `steal:DIR`, cost `s
 
 - **Who**: anyone trained in a skill with the `steal` benefit (`skills::Effect::Steal`, read
   through `Actor::skill_effect`; `Skills::trains_effect` for "trained at all", as Spot is), or
-  holding a talent with the `steal` effect (the thief's Light fingers, #244; `Ability::had_by`), while
+  holding a talent with the `steal` effect (none since #684 took the thief's Light fingers;
+  `Ability::had_by`), while
   the content has `data/steal.toml` (`content/steal.rs`, `StealRules`, `Content::steal`;
   optional: without it nobody steals). The thief's class trains Steal.
 - **The ability**: `Ability::Steal` in `warlock_core::ability` (`Source::Skill`, `Aim::Direction`,
