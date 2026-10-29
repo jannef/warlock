@@ -23,8 +23,8 @@ off a trap on the door at whoever opened or kicked it (`World::spring_trap`); `s
 the trap with a door kicked in. **Picking locks** (#233) is `world/lockpick.rs`
 (`World::pick_lock`, dispatched from `player_acts` for `Action::PickLock(dir)`, replay text
 `pick:DIR`, cost `pick_lock`): only for an actor trained in a skill with the `pick` effect
-(`Skills::trains_effect`: Open lock) or holding a talent with the `pick_lock` effect (the thief's
-Pick lock, #244; `Ability::had_by`), a `crate::check` of the Dexterity modifier plus
+(`Skills::trains_effect`: Open lock) or holding a talent with the `pick_lock` effect (none since
+#684 took the thief's Pick lock: the thief trains Open lock; `Ability::had_by`), a `crate::check` of the Dexterity modifier plus
 `skill_effect(Effect::Pick)` against `World::lock_difficulty` (the lock's own
 `Lock::difficulty`, `door::LOCK_DIFFICULTY` 14 unless a legend's `lock_difficulty` gives one,
 plus the branch's `DungeonDef::locks_at`, from `locks_per_depth` in `dungeons.toml`); both prices

@@ -479,6 +479,16 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A thief of level 12 (#684): Lurk ready, Low blow greyed out short of openings; Disarm,
+    // Pick lock, and Steal from the class's skills.
+    Case {
+        name: "abilities-menu-thief",
+        character: Some("human,female,thief"),
+        kit: true,
+        actions: "xp:100000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A priest blessed and drained to their last mana: the spells in their Spells group with
     // tier and cost, those that cost more than is left greyed out ("you have too little mana").
     Case {

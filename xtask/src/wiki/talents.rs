@@ -503,6 +503,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::SneakReach { value } => {
             format!("your shots, throws, and attack spells sneak-attack {value} cells farther")
         }
+        TalentEffect::SneakKillStatus { status: id } => format!(
+            "a sneak attack of yours that kills leaves you {} (1 degree)",
+            status(&id)
+        ),
         TalentEffect::VitalsIn { tags } => format!(
             "creatures tagged {} have vitals for you: your criticals and sneak attacks land on them",
             tags.join(", ")
@@ -1592,6 +1596,17 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         ),
         TalentEffect::Finisher => "active (the time of a melee attack), in a direction: a blow \
                                    that is a critical whenever it hits, with no confirmation roll"
+            .to_string(),
+        TalentEffect::Lurk { status: id } => format!(
+            "active (the time of a wait): you are {} until your next action; a hostile that steps \
+             up beside you meanwhile takes your blow at once (a free blow), caught unawares \
+             unless it was already hunting you; refused with a hostile you see beside you",
+            status(&id)
+        ),
+        TalentEffect::LowBlow => "active (the time of a melee attack), in a direction: a blow \
+                                  that is a sneak attack whatever the foe knows (the sneak \
+                                  attack dice on a hit; the foe is not surprised and keeps its \
+                                  Defence; no dice on a thing without vitals)"
             .to_string(),
         TalentEffect::TrainedSkills { value } => {
             format!("every trained skill counts {}", signed(value))

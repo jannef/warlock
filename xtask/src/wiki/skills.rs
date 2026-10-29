@@ -92,6 +92,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Bargain => "better prices in shops",
         Effect::Identify => "now and then telling something you carry for what it is",
         Effect::Kick => "more Strength for kicking doors in",
+        Effect::Slip => "slipping past eyes that see in the dark",
         Effect::Steal => "stealing at all, and better",
         Effect::SneakDice => "more damage on a foe that has not seen you or is surprised",
         Effect::Surprise => "those you catch unawares recover less often",
@@ -135,6 +136,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Bargain => "prices",
             Effect::Identify => "identifying, each hour",
             Effect::Kick => "kicking doors in",
+            Effect::Slip => "slipping past",
             Effect::Steal => "stealing",
             Effect::SneakDice => "sneak attack dice",
             Effect::Surprise => "their check's difficulty",
@@ -164,6 +166,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Spot
                 | Effect::DetectTraps
                 | Effect::Study
+                | Effect::Slip
                 | Effect::Steal
                 | Effect::Heal
                 | Effect::Disarm
@@ -292,6 +295,32 @@ pub(super) fn skill_grants(content: &Content) -> String {
 /// contest's dice are the same on both sides, so only the difference counts.
 pub(super) fn stealing(_content: &Content) -> String {
     let mut out = String::from("| Your edge | Unnoticed | Caught |\n|:---:|:---:|:---:|\n");
+    for edge in -6..=10 {
+        let won = contest_ways(edge, 0);
+        let sign = if edge < 0 { "\u{2212}" } else { "+" };
+        let _ = writeln!(
+            out,
+            "| {sign}{} | {} | {} |",
+            edge.abs(),
+            percent(won, CONTEST_WAYS),
+            percent(CONTEST_WAYS - won, CONTEST_WAYS)
+        );
+    }
+    out
+}
+
+/// How often the player slips past a creature that would see them by darkvision alone (spec §8
+/// "Surprise and sneak attacks"; `data/surprise.toml` `[slip]`), by their edge: their Dexterity
+/// modifier plus Stealth's `slip`, less the creature's Willpower modifier and Spot. The same
+/// contest as a theft's: only the difference counts.
+pub(super) fn slipping_past(content: &Content) -> String {
+    let Some(turns) = content.surprise().and_then(|r| r.slip_turns) else {
+        return "Nobody slips past anyone.\n".into();
+    };
+    let mut out = format!(
+        "A creature you slipped past stays blind to you for {turns} turns at most.\n\n\
+         | Your edge | Unseen | Seen |\n|:---:|:---:|:---:|\n"
+    );
     for edge in -6..=10 {
         let won = contest_ways(edge, 0);
         let sign = if edge < 0 { "\u{2212}" } else { "+" };

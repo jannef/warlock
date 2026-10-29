@@ -243,6 +243,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skill-grants.md", skills::skill_grants),
         ("skill-ladder.md", skills::skill_ladder),
         ("skill-rolls.md", skills::skill_rolls),
+        ("slipping-past.md", skills::slipping_past),
         ("stealing.md", skills::stealing),
         ("heal-targets.md", skills::heal_targets),
         ("abilities.md", abilities::abilities),
@@ -1030,7 +1031,7 @@ mod tests {
                  Listen: hears fainter by | Metalcraft: tempering | Negotiation: prices | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Sneak attack: sneak attack dice | Sneak attack: their check's difficulty | \
                  Spellcraft: study check | Spot: noticing | Steal: \
-                 stealing | Stealth: noise | Survival: journeys | Survival: foraging | Tumble: \
+                 stealing | Stealth: noise | Stealth: slipping past | Survival: journeys | Survival: foraging | Tumble: \
                  Dodge |"
             ),
             "{benefits}"
@@ -1049,11 +1050,11 @@ mod tests {
         );
         assert!(benefits.contains(
             "| 100 | 12% | +8 Strength | +5% | ×1.1 / ×1.2 | +40% | +5 mana | +10 | +8 | +8 | +8 | +8 | \u{2212}50% \
-             | 10 | +8 | 20% better | +8 | +8 | +1 cell | 5d6 | +8 | +10 | +8 | +8 | \u{2212}60% | \u{2212}20% | +15% | +5 |"
+             | 10 | +8 | 20% better | +8 | +8 | +1 cell | 5d6 | +8 | +10 | +8 | +8 | \u{2212}60% | +8 | \u{2212}20% | +15% | +5 |"
         ));
         assert!(benefits.contains(
             "| 150 | 16% | +10 Strength | +7% | ×1.08 / ×1.15 | +50% | +6 mana | +15 | +10 | +10 | +10 | +10 \
-             | \u{2212}62% | 15 | +10 | 25% better | +10 | +10 | +1 cell | 6d6 | +10 | +15 | +10 | +10 | \u{2212}75% | \u{2212}20% | +22% | +7 |"
+             | \u{2212}62% | 15 | +10 | 25% better | +10 | +10 | +1 cell | 6d6 | +10 | +15 | +10 | +10 | \u{2212}75% | +10 | \u{2212}20% | +22% | +7 |"
         ));
         // Treating oneself: the difficulty and odds of each ailment.
         let heal = text("heal-targets.md");
@@ -1063,6 +1064,9 @@ mod tests {
         );
         assert!(heal.contains("| Grave rot | 15 |"), "{heal}");
         // Stealing: the odds by the thief's edge, a contest of even dice.
+        let slipping = text("slipping-past.md");
+        assert!(slipping.contains("for 60 turns at most"), "{slipping}");
+        assert!(slipping.contains("| +0 | 53% | 47% |"), "{slipping}");
         let stealing = text("stealing.md");
         assert!(stealing.contains("| +0 | 53% | 47% |"), "{stealing}");
         assert!(stealing.contains("| \u{2212}6 | 22% | 78% |"), "{stealing}");

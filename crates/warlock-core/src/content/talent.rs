@@ -302,6 +302,9 @@ pub enum TalentEffect {
     /// Its shots, throws, and attack spells sneak-attack this many cells farther than the
     /// rules' `missile_reach` (Long reach; `World::sneaks`).
     SneakReach { value: i32 },
+    /// A sneak attack of its that kills leaves it a degree of `status` (Vanishing act:
+    /// Light-footed; read where `Build::SneakKill` is raised, `world/thief.rs`).
+    SneakKillStatus { status: String },
     /// Creature types carrying one of `tags` have vitals for its attacks: they may be critically
     /// hit and sneak-attacked by it (Anatomist; `Content::has_vitals`). Never the incorporeal.
     VitalsIn { tags: Vec<String> },
@@ -988,7 +991,7 @@ pub enum TalentEffect {
     SilentUnburdened,
     /// Its attacks are this percent louder (negative: quieter).
     AttackNoisePercent { value: i32 },
-    /// Hidden traps are this much easier for it to find (Trapfinding).
+    /// Hidden traps are this much easier for it to find (none carries it since #684).
     TrapEase { value: i32 },
     /// It can pick locks (the Pick lock ability) without Open lock.
     PickLock,
@@ -1002,6 +1005,12 @@ pub enum TalentEffect {
     /// The class active Master thief: its finisher, a melee blow in a direction that is a
     /// critical if it hits, with no confirmation roll (its cost is the talent's `resource`).
     Finisher,
+    /// The class active Lurk: a wait in ambush, a degree of `status` on it (Lurking: a hostile
+    /// stepping up beside it takes its blow at once; `world/thief.rs`).
+    Lurk { status: String },
+    /// The class active Low blow: a melee blow in a direction that is a sneak attack whatever
+    /// the foe knows (its cost is the talent's `resource`: Openings; `world/thief.rs`).
+    LowBlow,
     /// Every skill it is trained in counts this much higher (Jack of all trades).
     TrainedSkills { value: i32 },
     /// It holds alternative resource `resource` (spec §8 "Resources") from the moment it has the
@@ -1117,6 +1126,8 @@ impl TalentEffect {
             TalentEffect::Radiance { .. } => A::HolyRadiance,
             TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
             TalentEffect::Volley { .. } => A::Volley,
+            TalentEffect::Lurk { .. } => A::Lurk,
+            TalentEffect::LowBlow => A::LowBlow,
             TalentEffect::Finisher => A::MasterThief,
             TalentEffect::Inspire { .. } => A::Inspire,
             TalentEffect::Consecrate { .. } => A::Consecrate,
@@ -1493,6 +1504,9 @@ impl TalentEffect {
                         .into());
                 }
                 status(cooldown)
+            }
+            TalentEffect::Lurk { status: id } | TalentEffect::SneakKillStatus { status: id } => {
+                status(id)
             }
             TalentEffect::QuiveringPalm {
                 status: id,
@@ -2054,6 +2068,7 @@ impl TalentEffect {
             | TalentEffect::Steal
             | TalentEffect::ThrowVoice
             | TalentEffect::Finisher
+            | TalentEffect::LowBlow
             | TalentEffect::GraveWarden
             | TalentEffect::Disarm
             | TalentEffect::Purify

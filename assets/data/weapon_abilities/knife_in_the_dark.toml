@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "knife_in_the_dark"
+name = "Knife in the dark"
+description = "A dagger that finds a foe unawares finds the vein: it bleeds."
+skills = ["daggers"]
+rank = 5
+kind = "triggered"
+trigger = "sneak_attack"
+systems = ["weapon_abilities", "weapon_skills", "sneak_attack", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "bleeding"
+severity = 1

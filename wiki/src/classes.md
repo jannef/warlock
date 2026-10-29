@@ -42,7 +42,7 @@ work only while you are on the good side, Kind or better (see [Alignment](alignm
 otherwise you can still use them, and nothing happens. The passives do not care. [Lay on hands](abilities.md#ability-lay-on-hands) drains you instead of costing
 [mana](mana.md#how-much). The [barbarian](classes.md#barbarian)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
 [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
-[thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [master thief](abilities.md#ability-master-thief)'s finisher spends; the
+[thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend; the
 [monk](classes.md#monk)'s [flurry](talents.md#talent-flurry) and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
 [inspiration](resources.md#resource-inspiration) when the bard has enough.
 

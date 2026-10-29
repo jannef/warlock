@@ -99,27 +99,63 @@ pub(crate) fn sees(
     eye: &VisionProfile,
     p: Pos,
 ) -> bool {
+    sees_by(state, content, lights, los, eye, p).is_some()
+}
+
+/// What settled that a viewer sees a cell ([`sees_by`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum By {
+    /// Its own cell, the overworld's line of sight, or light enough for its eyes.
+    Light,
+    /// Its darkvision, before the light was looked at: the cell may be lit enough too
+    /// ([`lit_for`] says).
+    Darkvision,
+}
+
+/// [`sees`], and what settled it: darkvision is asked first, and within it the light is not
+/// computed (slipping past, `world/slip.rs`, asks [`lit_for`] when it matters).
+pub(crate) fn sees_by(
+    state: &WorldState,
+    content: &Content,
+    lights: &mut LightCache,
+    los: &LineOfSight,
+    eye: &VisionProfile,
+    p: Pos,
+) -> Option<By> {
     if p == los.origin {
-        return true;
+        return Some(By::Light);
     }
     if !los.contains(p) {
-        return false;
+        return None;
     }
     let level = state.current();
     if level.kind == LevelKind::Overworld {
-        return true;
+        return Some(By::Light);
     }
     // Darkvision first: within it the light does not matter (and need not be computed).
     let dist2 = p.dist2(los.origin);
     if eye.in_darkvision(dist2) {
-        return true;
+        return Some(By::Darkvision);
     }
-    if level.is_opaque(content, p) {
+    lit_for(state, content, lights, eye, p).then_some(By::Light)
+}
+
+/// Whether cell `p` of the current level is lit enough for `eye` to see actors on it by light
+/// alone, whatever its darkvision: a transparent cell whose perceived light reaches the eye's
+/// threshold.
+pub(crate) fn lit_for(
+    state: &WorldState,
+    content: &Content,
+    lights: &mut LightCache,
+    eye: &VisionProfile,
+    p: Pos,
+) -> bool {
+    if state.current().is_opaque(content, p) {
         return false;
     }
     // Bounce light only adds: if the light without it is enough, so is all of it.
-    eye.sees(light(state, content, lights, p, eye, false), dist2)
-        || eye.sees(light(state, content, lights, p, eye, true), dist2)
+    eye.lit_enough(light(state, content, lights, p, eye, false))
+        || eye.lit_enough(light(state, content, lights, p, eye, true))
 }
 
 /// The light `eye` perceives on transparent cell `p` of the current level: exactly the light the

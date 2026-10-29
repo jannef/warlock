@@ -15,8 +15,8 @@ expression: "render(case, content.clone())"
         │   Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                   │
         │                                                                                  │
         │   St  Strength       9    Appraise        11   Open lock       17                │
-        │   Dx  Dexterity     13    Detect traps     7   Search           9                │
-        │   To  Toughness     10    Disable device   7   Sneak attack    25                │
+        │   Dx  Dexterity     13    Detect traps    14   Search          10                │
+        │   To  Toughness     10    Disable device  14   Sneak attack    25                │
         │   In  Intelligence  12    Escape artist   10   Spot             9                │
         │   Wi  Willpower     11    Initiative       9   Steal           12                │
         │   Pr  Presence       9    Listen           6   Stealth         16                │

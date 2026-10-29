@@ -482,7 +482,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     check) and `surprise_ease` (50 % of Surprised's extra cost at 100, 75 % at 200, summed with
     Cool head's, at most all; `World::status_cost`), marked by `surprise` (100 %: a check made,
     whatever came of it). The thief trains Sneak attack (`2d6+10`, known for) and Initiative
-    (`2d4+4`); the ranger and the monk Initiative `2d6+10`; the bard, warrior, and barbarian
+    (`2d4+4`), and Detect traps and Disable device at `2d6+10`, known for, and Search at
+    `2d6+4` (#684: in place of the Trapfinding class ability); the ranger and the monk Initiative `2d6+10`; the bard, warrior, and barbarian
     `2d4+4`; a drow may start with Sneak attack (an optional skill of the race).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
@@ -1090,7 +1091,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     cooldown, the cost is the price: greyed out "you have too little mana",
     `Unavailable::NoMana`, while the player has neither). Throw your voice (the bard's, 32) is no
     longer everyone's: the ability is had by a talent with the `throw_voice` effect (the
-    action is refused, "You do not know how to throw your voice.", without it).
+    action is refused, "You do not know how to throw your voice.", without it). The thief's
+    Lurk (6, #684: `use:lurk`, the time of a wait, no cost and no cooldown: the thief suffers
+    Lurking, "You wait in ambush.", until their next action; a hostile that steps up beside them
+    meanwhile takes their blow at once, the gatekeeper's free blow, and is caught unawares by it
+    unless it was already hunting them, so the blow is resolved as on an unaware target: the
+    initiative check, the sneak attack dice, flat-footed; refused with no time, "Too late to
+    lurk.", with a hostile they see beside them) and Low blow (12, #684: `use:low_blow:E`, 3
+    openings, the time of a melee attack: a blow at the hostile that way that is a sneak attack
+    whatever it knows, its dice on a hit, the foe not Surprised and keeping its Defence; none on
+    a thing without vitals, "It has no vital spot."; greyed out "not enough openings" while
+    short; refused with no time, "There is no one there to blind.", without a hostile there).
+    Trapfinding, Pick lock, and Light fingers, which only gave what the class's skills give,
+    are gone from the table (#684); a save holding one loads without it (said in the log).
   - **Passives**, each one read: Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
     attack, in `World::resolve`), Tracker (hears 3 fainter; every sound it hears placed at its
     own cell, `noise::Exact::All`), Rapid shot (grants Focus, §8 "Resources"; a shot loosed
@@ -1102,11 +1115,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     prey +1 and +2 more); Sneak attack (#682: the class passive beside the Sneak attack skill,
     whose dice the thief trains, `2d6+10` and known for: it grants the Openings pool from level
     1, and those the thief catches unawares make their initiative check 2 harder,
-    `surprise_difficulty`; §8 "Surprise and sneak attacks"), Trapfinding (searching +4; hidden traps 2
-    easier to find, searching and in passing, not to disarm; the Disarm ability untrained), Pick
-    lock (the Pick lock ability untrained), Uncanny dodge (the burden's Dexterity cap +2),
-    Improved sneak attack (+2d6 on top of the skill's: dice of the same sides add up), Light
-    fingers (the Steal ability untrained), Hide in plain sight (no footsteps while Unburdened;
+    `surprise_difficulty`; §8 "Surprise and sneak attacks"), Uncanny dodge (the burden's
+    Dexterity cap +2), Improved sneak attack (+2d6 on top of the skill's: dice of the same sides
+    add up), Vanishing act (40, #684: a sneak attack of the thief's that kills leaves them
+    Light-footed, a degree, `sneak_kill_status`, read where `Build::SneakKill` is raised in
+    `World::resolve`; `world/thief.rs`), Hide in plain sight (no footsteps while Unburdened;
     attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
     2 lower, never below 3; and its finisher, an active aimed in a direction, `use:master_thief:E`,
     for 5 openings: a melee blow that is a critical whenever it hits, with no confirmation roll,
@@ -1317,7 +1330,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     each on one combat event, raised at one line that already marks it (`World::weapon_trigger`,
     the one place they fire): `hit` and `critical` (a blow, shot, or throw of the actor's that
     lands or is a confirmed critical), `big_hit` (a third of the target's hit points, the target
-    alive), `kill`, `struck`; a melee attack on the actor missed by its Parry (`parried`, at
+    alive), `kill`, `sneak_attack` (a sneak attack of the actor's that hits, its sneak dice
+    landing: "Surprise and sneak attacks"), `struck`; a melee attack on the actor missed by its Parry (`parried`, at
     the attack's end), its Shield (`blocked`), or its Dexterity or Dodge (`dodged`);
     `both_hands_hit` (both blows of a two-weapon attack hit one living target, once an attack;
     a shield bash is no second hand); `approaches` (a hostile steps up beside the actor, the
@@ -1347,7 +1361,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     parried or blocked melee attack staggers its striker) and Spell reflection (10), Pinning shot (Marksman 4: a critical
     shot pins 1d3 actions), Stunning fist (Brawler 4: a critical staggers), Hit and run
     (Skirmisher 4: a throw that hits makes the thrower Light-footed), Trip (Staff Fighter 4: a
-    critical pins an action); the caster styles' (#571), fired by a spell that rolls to hit:
+    critical pins an action), Knife in the dark (Daggers 5: a sneak attack that hits with a
+    dagger leaves the foe bleeding a degree) and Hunter's shot (Marksman 6: a sneak attack that
+    hits with a shot pins the foe 1d2 actions); the caster styles' (#571), fired by a spell that rolls to hit:
     Pinning ray (Sniper 4: a critical pins 1d2 actions), Staggering touch (Toucher 4: a critical
     staggers), Withering touch (Toucher 10: a touch that lands weakens a degree), Spell guard
     (Battle caster 4: a spell that lands wards its caster, Spell ward, a Dodge point until

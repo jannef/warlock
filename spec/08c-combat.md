@@ -346,18 +346,36 @@ developer notes (CLAUDE.md, `docs/dev/`).
     or whose triggers do not fire, keep their draws and hashes.
 - **Surprise and sneak attacks** (`world/surprise.rs`, `data/surprise.toml`; #681, design
   `docs/design/surprise-and-sneak-attacks.md` §3–§5; `docs/dev/surprise.md`): being caught
-  unawares, both ways round, and the Sneak attack and Initiative skills (#682). The thief's
-  rework, slipping past, and the unaware mark come in later slices (#683–#688).
+  unawares, both ways round, the Sneak attack and Initiative skills (#682), and slipping past
+  (#683). The thief's rework and the unaware mark come in later slices (#684–#688).
   - **Unaware** (`World::unaware`, the one definition, asked of every attack; no draw): a
     creature is unaware of an actor when it hunts no one it has seen (`Mind::last_seen` unset)
-    and its eyes do not see the actor's cell now (creature sight, `World::sees_now`); a sleeper
-    and a mimic in disguise always. The player is unaware of a creature their last perception
+    and its eyes do not see the actor's cell now (creature sight, `World::sees_now`) or the actor
+    is the player and has slipped past it (below); a sleeper and a mimic in disguise always. The player is unaware of a creature their last perception
     did not see and that they have not seen within `memory_turns` (20) turns: `Mind::noticed`,
     the turn the player last saw it, set as perception is computed in the turn pipeline only
     (never when a loaded state's perception is recomputed). A creature still searching for
     someone it lost sight of is aware. An attack that catches the player unawares counts as
     noticing its attacker, so an unseen attacker surprises the player with its first blow only
     until the memory lapses (a creature struck from the dark stays unaware: each shot surprises).
+  - **Slipping past** (`world/slip.rs`, `[slip]` in `data/surprise.toml`; #683): the one moment,
+    in the creature's look (§8 "Creature behavior"): a creature hunting no one (`Mind::last_seen`
+    unset) that would see the **player** by its darkvision alone (their cell in its darkvision but
+    too dark for its eyes' threshold: `sight::sees_by` says darkvision settled it, `sight::lit_for`
+    that the light would not) and has not been slipped past makes a **contest**
+    (`check::contest`, four gameplay draws): 2d12 + the player's Dexterity modifier + their
+    skills' `slip` (Stealth: +8 at 100, +12 at 200) against 2d12 + its Willpower modifier + its
+    skills' `spot`. Made, `Mind::missed` is the turn (saved, hashed, left out while `None`): it
+    does not see the player by darkvision, takes their noise for one it cannot see (it comes to
+    look), and is unaware of them. Lost, it sees them and hunts; no other roll while
+    `last_seen` stays set. It ends (`World::end_slip`: `missed` cleared, and the creature's
+    `last_seen` the player's cell if its eyes reach them, so it sees them at once and rolls no
+    more) when the player's cell is lit enough for its eyes at a look, the player attacks it or
+    anything while it sees them or the target (`fight.rs::resolve`, `cast.rs::spell_attack`), it is
+    hurt (`World::hurt`), or `lasts_turns` (60) turns pass (checked at its turn). No draw
+    otherwise: a lit player, a creature hunting, one seeing by light, one without darkvision,
+    another hostile, a stalk decided. Nothing is said. Creatures slip past nobody. Without the
+    file or with `enabled = false`, nobody slips past anyone.
   - **Surprise** (`World::startle`, the one place anyone is surprised): an attack (a blow, a
     shot, a throw, a spell that rolls to hit) that finds its target unaware, and a hidden trap
     springing under the one it springs on (a creature knows no trap; the player one they have
@@ -385,6 +403,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `missile_reach` (6) cells, Chebyshev, plus Long reach's `sneak_reach`. Decided before the
     strike (no draw), the dice drawn from the gameplay stream on a hit; the player's mark Sneak
     attack (`sneak_attack`, 50 %) and Dexterity (`sneak_attack`, 20 %) on the training stream.
+    A sneak attack that hits raises the `sneak_attack` weapon-ability trigger (§8i "Weapon
+    abilities": Knife in the dark, Hunter's shot) with the attack's skills, after its `hit`
+    triggers (`World::sneak_trigger`); none without the dice.
   - **Vitals** (critical immunity; `Content::has_vitals`, the one reader): an incorporeal
     creature, an animated object, a type carrying a tag of `no_vitals` (elemental, skeleton,
     spirit, construct), or one with `vitals = false` has no vitals: no critical is confirmed on it

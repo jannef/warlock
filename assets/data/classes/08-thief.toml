@@ -8,8 +8,10 @@ mana = 1
 casting = 25
 experience = 95
 alignment = -200
-skills = { open_lock = "2d6+10", sneak_attack = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", detect_traps = "2d4+4", negotiation = "2d4+4", disable_device = "2d4+4", escape_artist = "2d4+4", initiative = "2d4+4", search = "2d4+4", spot = "2d4+4" }
-known_for = ["open_lock", "sneak_attack", "steal", "stealth", "tumble"]
+# Detect traps and Disable device are known for, and Search is raised, in place of the
+# Trapfinding class ability that only replicated them (#684).
+skills = { open_lock = "2d6+10", sneak_attack = "2d6+10", steal = "2d6+10", stealth = "2d6+10", tumble = "2d6+10", appraise = "2d4+4", detect_traps = "2d6+10", negotiation = "2d4+4", disable_device = "2d6+10", escape_artist = "2d4+4", initiative = "2d4+4", search = "2d6+4", spot = "2d4+4" }
+known_for = ["detect_traps", "disable_device", "open_lock", "sneak_attack", "steal", "stealth", "tumble"]
 optional_skills = { balance = { chance = 20, dice = "2d4" }, bluff = { chance = 30, dice = "2d4" }, listen = { chance = 30, dice = "2d4" } }
 rolls = 3
 weapon_skills = { daggers = 2, thrown = 1 }
@@ -30,16 +32,18 @@ kit = [
 bonus_talents = { levels = [4, 10, 16, 22, 28, 34, 46, 58], trees = ["shadow", "finesse", "delver"] }
 # The level table (spec §8 "Class abilities"). Evasion is the Finesse talent, given. Sneak
 # attack, the class passive beside the skill, grants the Openings pool (data/resources.toml)
-# that sneak attacks build, and Master thief's finisher spends it.
+# that sneak attacks build, and Low blow and Master thief's finisher spend it. Lurk, Low blow,
+# and Vanishing act hold the slots of Trapfinding, Pick lock, and Light fingers, which only
+# gave what the class's skills give (#684).
 abilities = [
     { level = 1, talent = "sneak_attack" },
     { level = 1, talent = "trained_wind" },
-    { level = 6, talent = "trapfinding" },
-    { level = 12, talent = "pick_lock" },
+    { level = 6, talent = "lurk" },
+    { level = 12, talent = "low_blow" },
     { level = 18, talent = "evasion" },
     { level = 25, talent = "uncanny_dodge" },
     { level = 32, talent = "improved_sneak_attack" },
-    { level = 40, talent = "light_fingers" },
+    { level = 40, talent = "vanishing_act" },
     { level = 50, talent = "hide_in_plain_sight" },
     { level = 60, talent = "master_thief" },
 ]

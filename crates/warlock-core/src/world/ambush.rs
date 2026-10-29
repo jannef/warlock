@@ -13,9 +13,11 @@
 //! The ranger's Favoured prey is here too: against the creature type the player has killed most
 //! ([`super::Quests::prey`]), its attacks hit likelier and do more damage.
 
-use super::{ActorId, World};
+use super::weapon_ability::Fired;
+use super::{ActorId, AttackSkills, World};
+use crate::action::{AttackKind, Event};
 use crate::combat::{Blow, Profile, Target};
-use crate::content::Build;
+use crate::content::{Build, Trigger};
 use crate::dice::Dice;
 use crate::skills::{Effect, Use};
 
@@ -140,6 +142,30 @@ impl World {
             damage: blow.damage + extra,
             ..blow
         }
+    }
+
+    /// The `sneak_attack` weapon-ability trigger (Knife in the dark, Hunter's shot): `blow`, an
+    /// attack of `kind` by `attacker` on `target` made with `skills`, was `unseen` (it is
+    /// [`World::sneaks`]: the attacker has sneak dice) and hit, so its dice landed in
+    /// [`World::ambushed`]. Raised after the attack's own line and its `hit` triggers, before
+    /// the damage is dealt, as they are.
+    pub(super) fn sneak_trigger(
+        &mut self,
+        (attacker, target): (ActorId, ActorId),
+        (kind, skills): (AttackKind, AttackSkills),
+        (unseen, blow): (bool, Option<Blow>),
+        events: &mut Vec<Event>,
+    ) {
+        if !unseen || !blow.is_some_and(|b| b.strike.is_hit()) {
+            return;
+        }
+        let fired = Fired {
+            other: target,
+            kind,
+            skills,
+            blow,
+        };
+        self.weapon_trigger(attacker, Trigger::SneakAttack, fired, events);
     }
 
     /// `profile` of an attack by `attacker` at `target`, with Favoured prey's to-hit and damage

@@ -21,8 +21,9 @@
 #                 style, and stance counted; shoot: the shot's; wait), so none is instant
 #   cooldown      (active, optional) a status (no tick, eases) given as it is used, while which
 #                 it is unavailable; none in the catalogue: the stamina pool is the limiter
-#   trigger       what it fires on, one or a list: hit, critical, big_hit, kill (the actor's
-#                 blow, shot, or throw: the attack's skill and style count), struck, parried,
+#   trigger       what it fires on, one or a list: hit, critical, big_hit, kill, sneak_attack
+#                 (the actor's blow, shot, or throw; sneak_attack: one that hits with the
+#                 sneak dice landing; the attack's skill and style count), struck, parried,
 #                 blocked, dodged (an attack on the actor: what it holds counts; parried,
 #                 blocked, and dodged are melee attacks), spell_blocked (a hostile's spell
 #                 that rolls an attack on the actor, a bolt, a ray, or a touch, misses by its
