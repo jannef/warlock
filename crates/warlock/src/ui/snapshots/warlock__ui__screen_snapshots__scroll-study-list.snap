@@ -17,8 +17,8 @@ expression: "render(case, content.clone())"
           │ Scrolls                                                                      │
           │ > a - ? 2 scrolls of fireball (Fireball: far beyond you)              100 g  │
           │   b - ? 2 scrolls of lightning (Lightning bolt: far beyond you)       100 g  │
-          │   c - ? 2 scrolls of frost (Frost: far beyond you)                    100 g  │
-          │   d - ? 3 scrolls of identify (Identify: far beyond you)              150 g  │
+          │   c - ? 2 scrolls of frost (Frost: a struggle)                        100 g  │
+          │   d - ? 3 scrolls of identify (Identify: a struggle)                  150 g  │
           │                                                                              │
           │ a-d or Enter study   Esc cancel                                              │
           └──────────────────────────────────────────────────────────────────────────────┘

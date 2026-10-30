@@ -13,8 +13,8 @@ expression: "render(case, content.clone())"
                     │ Class                                                    │
                     │   b  Knock              in a direction                   │
                     │ Spells                                                   │
-                    │   c  Ray of frost       tier 0, 1 mana, aimed            │
-                    │   d  Magic missile      tier 1, 3 mana, aimed            │
+                    │   c  Ray of frost       level 1, 1 mana, aimed           │
+                    │   d  Magic missile      level 3, 3 mana, aimed           │
                     │ Skills                                                   │
                     │   e  Decipher script    not usable yet                   │
                     │   f  Knowledge          not usable yet                   │

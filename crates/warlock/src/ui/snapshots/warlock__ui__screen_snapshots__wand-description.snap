@@ -17,13 +17,13 @@ expression: "render(case, content.clone())"
                   │ Wand of magic missile · wood · 200 g                         │
                   │                                                              │
                   │ Readied: missile weapon                                      │
-                  │ Holds Magic missile (tier 1): A dart of force toward a place │
-                  │ you aim at: it never misses the first creature in its way.   │
+                  │ Holds Magic missile (level 3): A dart of force toward a      │
+                  │ place you aim at: it never misses the first creature in its  │
+                  │ way.                                                         │
                   │ 12 charges left                                              │
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
-
 
 
 
