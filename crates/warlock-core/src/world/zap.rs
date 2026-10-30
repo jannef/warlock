@@ -2,11 +2,11 @@
 //! weapon slot is used as a missile weapon is (`t`, `fire:X,Y`), and casts the spell it holds
 //! through the one cast path ([`World::wand_cast`]):
 //!
-//! - **Caster level**: the wand's own (`[object.wand] caster_level`, by default its tier's
-//!   comfortable level), plus Wand mastery's (`TalentMods::wand_level`) and the worn items'
+//! - **Caster level**: the wand's own (`[object.wand] caster_level`, by default its spell's
+//!   level, at least 1), plus Wand mastery's (`TalentMods::wand_level`) and the worn items'
 //!   (`wand_level`, of Wands, unidentified too); never the user's, so a
-//!   warrior fires a wand as well as a wizard does. Its dice grow with that level and are held
-//!   to the spell's cap as every cast's are.
+//!   warrior fires a wand as well as a wizard does. Its dice grow with that level as every
+//!   cast's do.
 //! - **Resolution**: the spell's own: an `attack` spell rolls to hit (the user's Dexterity, as
 //!   every spell's attack roll), `auto` and `area` ones do not. Reach is the user's (Willpower
 //!   counted), as a scroll read is.

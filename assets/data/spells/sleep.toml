@@ -4,7 +4,7 @@
 id = "sleep"
 name = "Sleep"
 description = "A breath of slumber where you aim it: everyone it reaches grows drowsy, slow in all they do, a while."
-tier = 2
+level = 6
 school = "enchantment"
 kind = "hex"
 shape = "burst"

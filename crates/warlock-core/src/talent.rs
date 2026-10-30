@@ -261,8 +261,6 @@ pub struct TalentMods {
     /// Caster level by character level, one entry per rank held: `(per_levels, value)`
     /// ([`TalentMods::caster_level_at`]; Arcane training).
     pub caster_per_levels: Vec<(u8, i32)>,
-    /// Percent more the overreach of its spells costs (negative: less; Overreach).
-    pub overreach_cost_percent: i32,
     /// School focus and Keen mind: `(tag, cost percent, reach, lift)` per choice and rank held
     /// ([`TalentMods::focus`], [`TalentMods::focus_lift`]).
     pub school_focus: Vec<(String, i32, i32, i32)>,
@@ -401,6 +399,8 @@ pub struct TalentMods {
     /// less; Quick study, spec §8 "Spells").
     pub study_bonus: i32,
     pub study_percent: i32,
+    /// Percent more a study's overreach counts in its check (negative: less; Overreach).
+    pub study_overreach_percent: i32,
     /// Percent more damage traps do it (negative: less).
     pub trap_damage_percent: i32,
     /// Percent more experience from quests.
@@ -1091,9 +1091,9 @@ impl TalentMods {
             .fold((0, 0), |(c, r), (_, cost, reach, _)| (c + cost, r + reach))
     }
 
-    /// The points more a spell with `tags` may have its cap lifted by, past its tier's
-    /// `max_lift` (Keen mind; the combat progression design §7): summed over every focus whose
-    /// tag it carries.
+    /// The points more a spell with `tags` is lifted by (Keen mind; the combat progression
+    /// design §7, until the ladders replace the lift): summed over every focus whose tag it
+    /// carries.
     pub fn focus_lift(&self, tags: &[&str]) -> i32 {
         (self.school_focus.iter())
             .filter(|(tag, ..)| tags.contains(&tag.as_str()))
@@ -1383,9 +1383,14 @@ impl TalentMods {
             | TalentEffect::Heirloom { .. } => {}
             TalentEffect::LootMagicPercent { value } => self.loot_magic_percent += value,
             TalentEffect::ReadPercent { value } => self.read_percent += value,
-            TalentEffect::Study { bonus, percent } => {
+            TalentEffect::Study {
+                bonus,
+                percent,
+                overreach_percent,
+            } => {
                 self.study_bonus += bonus;
                 self.study_percent += percent;
+                self.study_overreach_percent += overreach_percent;
             }
             TalentEffect::ScrollKept { chance } => self.scroll_kept = self.scroll_kept.max(chance),
             TalentEffect::PotionKept { chance } => self.potion_kept = self.potion_kept.max(chance),
@@ -1657,7 +1662,6 @@ impl TalentMods {
                 self.spell_dice += dice;
             }
             TalentEffect::SpellManaPercent { value } => self.spell_mana_percent += value,
-            TalentEffect::OverreachCostPercent { value } => self.overreach_cost_percent += value,
             TalentEffect::SchoolFocus { cost, reach, lift } => {
                 let tag = choice.unwrap_or_default().to_string();
                 self.school_focus.push((tag, cost, reach, lift));
@@ -1719,7 +1723,6 @@ impl TalentMods {
                         kind: content.damage_type_id(&damage_type),
                         blast: 0,
                         ice: Some(crate::content::BurstIce::Melts),
-                        cap: None,
                     };
                     self.rise = Some(Rise {
                         hp_percent,
@@ -1754,7 +1757,6 @@ impl TalentMods {
                         length,
                         damage,
                         kind: content.damage_type_id(&damage_type),
-                        cap: None,
                     };
                     self.fire_breath = Some(FireBreath {
                         bolt,

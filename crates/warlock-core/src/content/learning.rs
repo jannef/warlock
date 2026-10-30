@@ -1,15 +1,17 @@
-//! Learning spells as data (spec §8 "Spells", the magic design §4): the study check and its
+//! Learning spells as data (spec §8 "Spells", the magic design §4, the spell scaling design
+//! §5.4): the study check and its
 //! time (`data/study.toml`, [`StudyRules`]) and the mishaps a failed study draws
 //! (`data/mishaps/`, one `[[mishap]]` file each, [`Mishap`]). The rules are `world/learn.rs`.
 //!
 //! ```toml
 //! # data/study.toml
 //! base = 12             # the difficulty at overreach 0, before what is known and the bonuses
-//! per_overreach = 4     # harder per tier of overreach
-//! known_per_point = 10  # tiers known (a cantrip counts 1) per point harder
-//! turns_per_tier = 100  # turns of the `study` action per tier + 1 (10 minutes each at tier 0)
-//! bad_from = 2          # the overreach a failure's mishap is bad from (slight below)
-//! terrible_from = 4     # and terrible from
+//! per_overreach = 1     # harder per spell level of overreach
+//! known_per_point = 20  # the sum of the levels of the spells known, per point harder
+//! turns_base = 100      # turns of the `study` action for any spell (10 minutes)
+//! turns_per_level = 20  # and more per spell level (2 minutes each)
+//! bad_from = 6          # the overreach a failure's mishap is bad from (slight below)
+//! terrible_from = 15    # and terrible from
 //! easy = 96             # ways of 144 at least this many: "easy"
 //! struggle = 36         # at least this many: "a struggle"; fewer: "far beyond you"
 //! ```
@@ -45,11 +47,13 @@ pub const MAX_DRAIN: u8 = 3;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct StudyRules {
     pub base: i32,
+    /// Harder per spell level of overreach.
     pub per_overreach: i32,
-    /// Tiers known per point harder (at least 1).
+    /// Levels of the spells known per point harder (at least 1).
     pub known_per_point: i32,
-    /// Turns of the `study` action per tier + 1.
-    pub turns_per_tier: u32,
+    /// Turns of the `study` action for any spell, and more per spell level.
+    pub turns_base: u32,
+    pub turns_per_level: u32,
     /// The overreach a failure's mishap is bad from, and terrible from.
     pub bad_from: i32,
     pub terrible_from: i32,
@@ -64,7 +68,8 @@ struct StudyFile {
     base: i32,
     per_overreach: i32,
     known_per_point: i32,
-    turns_per_tier: u32,
+    turns_base: u32,
+    turns_per_level: u32,
     bad_from: i32,
     terrible_from: i32,
     easy: u32,
@@ -82,12 +87,15 @@ impl StudyRules {
         if !(1..=100).contains(&f.known_per_point) {
             return Err(err("`known_per_point` is 1 to 100"));
         }
-        if !(1..=1000).contains(&f.turns_per_tier) {
-            return Err(err("`turns_per_tier` is 1 to 1000"));
-        }
-        if !(1..f.terrible_from).contains(&f.bad_from) || f.terrible_from > 9 {
+        if !(1..=1000).contains(&f.turns_base) || f.turns_per_level > 1000 {
             return Err(err(
-                "`bad_from` is at least 1 and below `terrible_from`, at most 9",
+                "`turns_base` is 1 to 1000 and `turns_per_level` 0 to 1000",
+            ));
+        }
+        let most = i32::from(super::MAX_SPELL_LEVEL);
+        if !(1..f.terrible_from).contains(&f.bad_from) || f.terrible_from > most {
+            return Err(err(
+                "`bad_from` is at least 1 and below `terrible_from`, at most 70",
             ));
         }
         if f.struggle == 0 || f.struggle >= f.easy || f.easy > 144 {
@@ -97,7 +105,8 @@ impl StudyRules {
             base: f.base,
             per_overreach: f.per_overreach,
             known_per_point: f.known_per_point,
-            turns_per_tier: f.turns_per_tier,
+            turns_base: f.turns_base,
+            turns_per_level: f.turns_per_level,
             bad_from: f.bad_from,
             terrible_from: f.terrible_from,
             easy: f.easy,
@@ -105,14 +114,15 @@ impl StudyRules {
         })
     }
 
-    /// The study check's difficulty at `overreach` with `known` tiers known (a cantrip
-    /// counting 1), before the bonuses: `base + per_overreach × overreach + known ÷
-    /// known_per_point`.
+    /// The study check's difficulty at `overreach` spell levels (after Overreach's cut) with
+    /// spells of `known` levels in all known, before the bonuses: `base + per_overreach ×
+    /// overreach + known ÷ known_per_point`.
     pub fn difficulty(&self, overreach: i32, known: i32) -> i32 {
         self.base + self.per_overreach * overreach + known / self.known_per_point
     }
 
     /// The band of a failure at `overreach` (1 or more).
+    /// (Spell levels.)
     pub fn band(&self, overreach: i32) -> Band {
         if overreach >= self.terrible_from {
             Band::Terrible
@@ -387,17 +397,19 @@ pub fn drawn_among(mishaps: &[Mishap], band: Band) -> impl Iterator<Item = &Mish
 mod tests {
     use super::*;
 
-    const RULES: &str = "base = 12\nper_overreach = 4\nknown_per_point = 10\n\
-        turns_per_tier = 100\nbad_from = 2\nterrible_from = 4\neasy = 96\nstruggle = 36\n";
+    const RULES: &str = "base = 12\nper_overreach = 1\nknown_per_point = 20\n\
+        turns_base = 100\nturns_per_level = 20\nbad_from = 6\nterrible_from = 15\neasy = 96\n\
+        struggle = 36\n";
 
     #[test]
     fn the_rules_parse_and_say_the_difficulty_band_and_words() {
         let r = StudyRules::parse("study.toml", RULES).expect("valid");
-        assert_eq!(r.difficulty(1, 0), 16);
-        assert_eq!(r.difficulty(2, 25), 22, "25 tiers known: 2 points harder");
-        assert_eq!(r.band(1), Band::Slight);
-        assert_eq!(r.band(3), Band::Bad);
-        assert_eq!(r.band(4), Band::Terrible);
+        assert_eq!(r.difficulty(1, 0), 13);
+        assert_eq!(r.difficulty(2, 45), 16, "45 levels known: 2 points harder");
+        assert_eq!(r.band(5), Band::Slight);
+        assert_eq!(r.band(6), Band::Bad);
+        assert_eq!(r.band(14), Band::Bad);
+        assert_eq!(r.band(15), Band::Terrible);
         assert_eq!(r.words(144), "certain");
         assert_eq!(r.words(96), "easy");
         assert_eq!(r.words(40), "a struggle");
@@ -407,10 +419,11 @@ mod tests {
     #[test]
     fn bad_rules_are_refused() {
         for bad in [
-            RULES.replace("bad_from = 2", "bad_from = 4"),
+            RULES.replace("bad_from = 6", "bad_from = 15"),
             RULES.replace("struggle = 36", "struggle = 100"),
-            RULES.replace("known_per_point = 10", "known_per_point = 0"),
-            RULES.replace("turns_per_tier = 100", "turns_per_tier = 0"),
+            RULES.replace("known_per_point = 20", "known_per_point = 0"),
+            RULES.replace("turns_base = 100", "turns_base = 0"),
+            RULES.replace("terrible_from = 15", "terrible_from = 71"),
         ] {
             assert!(StudyRules::parse("study.toml", &bad).is_err(), "{bad}");
         }

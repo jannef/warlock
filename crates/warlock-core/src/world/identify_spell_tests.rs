@@ -66,17 +66,15 @@ fn spell(w: &World) -> SpellId {
 }
 
 #[test]
-fn identify_costs_its_own_large_mana_whatever_its_tier() {
+fn identify_costs_its_own_large_mana_whatever_its_level() {
     let w = world(100);
     let content = &w.content;
-    let rules = content.spell_rules().expect("tiers");
+    let rules = content.spell_rules().expect("the cost table");
     let def = content.spell(spell(&w));
-    assert_eq!((def.tier, def.mana), (2, Some(60)));
-    // Neither caster level (no overreach) nor the shape changes it; armour adds its share.
-    for level in [1, 6, 30] {
-        assert_eq!(rules.mana(def, level, 0), 60, "caster level {level}");
-    }
-    assert_eq!(rules.mana(def, 1, 10), 66);
+    assert_eq!((def.level, def.mana), (6, Some(60)));
+    // Neither its level nor the shape changes it; armour adds its share.
+    assert_eq!(rules.mana(def, 0), 60);
+    assert_eq!(rules.mana(def, 10), 66);
     assert!(def.aims_item() && !def.aimed());
 }
 
@@ -145,7 +143,7 @@ fn casting_identify_names_a_stack_and_spends_its_mana() {
 #[test]
 fn the_scroll_of_identify_teaches_identify() {
     let mut w = world(100);
-    // Comfortable at tier 2's caster level, so the lesson is certain.
+    // At the spell's level (6) or above, so the lesson is certain.
     while w.player_level() < 8 {
         run(&mut w, "xp:5000 levelup:auto");
     }

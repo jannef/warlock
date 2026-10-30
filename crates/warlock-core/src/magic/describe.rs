@@ -111,8 +111,8 @@ fn wand_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
         out.push(line(
             LineKind::Stat,
             format!(
-                "Holds {} (tier {}): {}",
-                spell.name, spell.tier, spell.description
+                "Holds {} (level {}): {}",
+                spell.name, spell.level, spell.description
             ),
         ));
     } else {

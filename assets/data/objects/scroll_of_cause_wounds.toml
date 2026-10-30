@@ -1,6 +1,6 @@
 # A scroll of cause wounds (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Cause wounds, a
-# tier-1 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
-# good. Level and frequency by its tier: the lower the tier, the commoner the scroll.
+# level-4 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_cause_wounds"
 name = "scroll of cause wounds"

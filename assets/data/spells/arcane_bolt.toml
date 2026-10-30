@@ -3,7 +3,7 @@
 id = "arcane_bolt"
 name = "Arcane bolt"
 description = "A bolt of raw force from your hand toward a place you aim at, through everyone on its line."
-tier = 2
+level = 6
 school = "evocation"
 kind = "damage"
 shape = "line"

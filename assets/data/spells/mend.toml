@@ -4,7 +4,7 @@
 id = "mend"
 name = "Mend"
 description = "A touch that closes a scratch: a few hit points back, yours or another's beside you."
-tier = 0
+level = 1
 school = "restoration"
 kind = "heal"
 shape = "touch"

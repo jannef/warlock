@@ -1,7 +1,7 @@
 //! The first spell list (spec §8 "Spells", "Scrolls"; #397): a scroll of a spell casts it
 //! through the one cast path at its own caster level, free of mana; the area hexes (Sleep, Web)
 //! and Haste; the list's content checks (one scroll a spell, the classes' guaranteed spells
-//! within their tier, mana for everyone).
+//! within their caster level, mana for everyone).
 
 use super::*;
 use crate::action::parse_actions;
@@ -90,7 +90,7 @@ fn a_spell_scroll_casts_its_spell_free_of_mana_and_teaches_it() {
     assert!(out.took_turn);
     assert_eq!(count(&w, "scroll_of_magic_missile"), 1, "used up");
     assert_eq!(w.state.player().mana, mana, "free of mana");
-    // Magic missile never misses: 1d4 force at the scroll's level (3, the tier's own).
+    // Magic missile never misses: 1d4 force at the scroll's level (3, the spell's own).
     let lost = 1000 - w.state.actors[&target].hp;
     assert!((1..=4).contains(&lost), "{lost}");
     let said = said(&w);
@@ -191,29 +191,32 @@ fn every_spell_comes_on_one_scroll_and_every_scroll_names_a_spell() {
             "{}",
             spell.id
         );
-        // Loot by tier: the lower the tier, the sooner and the commoner.
+        // Loot by spell level: the lower the level, the sooner and the commoner.
         assert!(scroll.frequency > 0, "{} is loot", scroll.id);
     }
-    // The scroll of identify keeps its own loot (the commonest scroll, #592), whatever its tier.
-    let by_tier = |tier: u8| {
-        (content.object_defs().iter())
-            .filter(|o| o.id != "scroll_of_identify")
-            .filter_map(|o| Some((o, content.spell(o.read.as_ref()?.teaches()?))))
-            .filter(|(_, s)| s.tier == tier)
-            .map(|(o, _)| (o.level, o.frequency))
-            .collect::<Vec<_>>()
-    };
-    for tier in 0..3 {
-        for (lower, higher) in by_tier(tier).iter().zip(by_tier(tier + 1).iter()) {
-            assert!(lower.0 < higher.0 && lower.1 > higher.1, "tier {tier}");
+    // The scroll of identify keeps its own loot (the commonest scroll, #592), whatever its level.
+    let scrolls: Vec<(u8, u8, u32, &str)> = (content.object_defs().iter())
+        .filter(|o| o.id != "scroll_of_identify")
+        .filter_map(|o| Some((o, content.spell(o.read.as_ref()?.teaches()?))))
+        .map(|(o, s)| (s.level, o.level, o.frequency, o.id.as_str()))
+        .collect();
+    for lower in &scrolls {
+        for higher in scrolls.iter().filter(|h| h.0 > lower.0) {
+            assert!(
+                lower.1 <= higher.1 && lower.2 >= higher.2,
+                "{} before {}",
+                lower.3,
+                higher.3
+            );
         }
     }
+    let first = |l: u8| scrolls.iter().find(|s| s.0 == l).map(|s| s.1);
+    assert!(first(1) < first(3) && first(3) < first(6) && first(6) < first(11));
 }
 
 #[test]
-fn every_class_has_mana_and_its_guaranteed_spells_within_its_tier() {
+fn every_class_has_mana_and_its_guaranteed_spells_within_its_caster_level() {
     let content = Content::builtin().expect("content");
-    let rules = content.spell_rules().expect("the tier table");
     let book = content.talents();
     for class in content.classes() {
         assert!(class.mana >= 1, "{} has mana", class.id);
@@ -225,17 +228,22 @@ fn every_class_has_mana_and_its_guaranteed_spells_within_its_tier() {
                     continue;
                 };
                 let s = content.spell(content.spell_id(spell).expect("a spell"));
-                // Given at its level, a spell never costs overreach.
-                let caster = i32::from(*level) * i32::from(class.casting) / 100;
-                let tier = rules.tier_of(caster.max(1));
-                assert!(s.tier <= tier, "{}'s {} at {level}", class.id, s.id);
-                spells.push((*level, s.tier, s.kind));
+                // Given at its level, a spell is within the caster level it comes at (the
+                // spell scaling design §5.6).
+                let caster = (i32::from(*level) * i32::from(class.casting) / 100).max(1);
+                assert!(
+                    i32::from(s.level) <= caster,
+                    "{}'s {} at {level}",
+                    class.id,
+                    s.id
+                );
+                spells.push((*level, s.level, s.kind));
             }
         }
         // A full caster: a cantrip at level 1 and about four spells in all.
         if class.casting == 100 {
             assert!(
-                spells.iter().any(|&(l, t, _)| l == 1 && t == 0),
+                spells.iter().any(|&(l, t, _)| l == 1 && t <= 1),
                 "{}'s cantrip",
                 class.id
             );
@@ -245,7 +253,7 @@ fn every_class_has_mana_and_its_guaranteed_spells_within_its_tier() {
         if class.casting < 100 {
             assert!(spells.len() <= 2, "{}: {spells:?}", class.id);
             assert!(
-                (spells.iter()).all(|&(_, t, k)| t <= 1 && k != SpellPurpose::Damage),
+                (spells.iter()).all(|&(_, t, k)| t <= 5 && k != SpellPurpose::Damage),
                 "{}: {spells:?}",
                 class.id
             );

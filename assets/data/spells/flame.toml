@@ -3,7 +3,7 @@
 id = "flame"
 name = "Flame"
 description = "A ball of flame that bursts where you aim it: it breaks walls and melts ice."
-tier = 3
+level = 12
 school = "evocation"
 kind = "damage"
 shape = "burst"

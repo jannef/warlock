@@ -1,10 +1,10 @@
 # Scorching ray (spec §8 "Spells", the first spell list): a ray of fire that must hit; its die
-# grows with caster level to three, the tier's ceiling.
+# grows with caster level to three.
 [[spell]]
 id = "scorching_ray"
 name = "Scorching ray"
 description = "A ray of fire toward a place you aim at: it strikes the first creature in its way, if it hits, hotter as your power grows."
-tier = 2
+level = 7
 school = "evocation"
 kind = "damage"
 shape = "ray"

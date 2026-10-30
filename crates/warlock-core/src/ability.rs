@@ -47,7 +47,7 @@ pub enum Ability {
     Class(ClassActive),
     /// A caster's spell (spec §8 "Class abilities", "Spells"): [`Action::Cast`], had by
     /// whoever's class gives the ability that names it; unavailable without the mana it costs
-    /// (that check needs the caster level: [`spell_unavailable`]).
+    /// (that check is [`spell_unavailable`]'s).
     Spell(SpellId),
     /// A skill used as an action (`kind = "action"` in `data/skills.toml`) that the actor is
     /// trained in, whose use is not in the game yet: listed, never available (spec §8
@@ -307,7 +307,7 @@ impl Ability {
             .filter(|&&a| content.class_active(a).is_some())
             .map(|&a| Ability::Class(a));
         // Every spell, by tier, then in path order: any may be learned.
-        let spells = content.spells_by_tier().into_iter().map(Ability::Spell);
+        let spells = content.spells_by_level().into_iter().map(Ability::Spell);
         // Weapon skills and fighting styles: the shield bash, then what their ranks teach, by
         // skill in file order, then rank, then path order.
         let mut taught: Vec<(WeaponSkillId, u8, WeaponAbilityId)> = (content.weapon_abilities())
@@ -780,7 +780,7 @@ impl Ability {
                             .or((actor.mana < cost).then_some(Unavailable::NoMana))
                     })
             }
-            // Its mana is asked with the caster level ([`spell_unavailable`]).
+            // Its mana is asked by [`spell_unavailable`].
             Ability::Spell(_) => None,
             Ability::Sign(active) => (actor.talent_mods(content).sign_cooldown(active))
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -883,19 +883,13 @@ fn spell_name(content: &Content, spell: SpellId) -> Option<String> {
     content.spell_of(spell).map(|s| s.id.clone())
 }
 
-/// Why `actor`, of caster level `caster_level`, cannot cast `spell` now: what
-/// [`Ability::unavailable`] says, else [`Unavailable::NoMana`] while it has less mana than the
-/// spell costs it ([`Actor::spell_cost`]).
-pub fn spell_unavailable(
-    actor: &Actor,
-    content: &Content,
-    spell: SpellId,
-    caster_level: i32,
-) -> Option<Unavailable> {
+/// Why `actor` cannot cast `spell` now: what [`Ability::unavailable`] says, else
+/// [`Unavailable::NoMana`] while it has less mana than the spell costs it ([`Actor::spell_cost`]).
+pub fn spell_unavailable(actor: &Actor, content: &Content, spell: SpellId) -> Option<Unavailable> {
     let ability = Ability::Spell(spell);
     ability.unavailable(actor, content).or_else(|| {
         let def = content.spell_of(spell)?;
-        (actor.mana < actor.spell_cost(content, def, caster_level)).then_some(Unavailable::NoMana)
+        (actor.mana < actor.spell_cost(content, def)).then_some(Unavailable::NoMana)
     })
 }
 

@@ -262,8 +262,8 @@ pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
-    MAX_CASTS, MAX_CONE, MAX_DICE, MAX_PER_LEVELS, MAX_REACH, Ratio, Resolution, School, Shape,
-    SpellData, SpellDice, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules, TIERS,
+    MAX_CASTS, MAX_CONE, MAX_DICE, MAX_PER_LEVELS, MAX_REACH, MAX_SPELL_LEVEL, Ratio, Resolution,
+    School, Shape, SpellData, SpellDice, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules,
 };
 pub use spell_scales::{MAX_SCALE_WEIGHT, SpellScales, Weights};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
@@ -664,7 +664,7 @@ pub struct Content {
     /// What weapon skill and style ranks teach (`data/weapon_abilities/`, the combat
     /// progression design §4), in path order.
     weapon_abilities: Vec<WeaponAbility>,
-    /// The spells' tier table (`data/spells.toml`, spec §8 "Spells"); none without the file.
+    /// The spells' cost table (`data/spells.toml`, spec §8 "Spells"); none without the file.
     spell_rules: Option<SpellRules>,
     /// The study check and its time (`data/study.toml`, spec §8 "Spells"); none without it.
     study: Option<StudyRules>,
@@ -3389,7 +3389,7 @@ impl Content {
         (0u8..).zip(&self.skills.list).map(|(i, s)| (SkillId(i), s))
     }
 
-    /// The spells' tier table (`data/spells.toml`, spec §8 "Spells"): none without the file.
+    /// The spells' cost table (`data/spells.toml`, spec §8 "Spells"): none without the file.
     pub fn spell_rules(&self) -> Option<&SpellRules> {
         self.spell_rules.as_ref()
     }
@@ -3473,12 +3473,13 @@ impl Content {
         &self.spells[usize::from(id.0)]
     }
 
-    /// Every spell, lowest tier first, each tier in path order (the abilities menu's order).
-    pub fn spells_by_tier(&self) -> Vec<SpellId> {
+    /// Every spell, lowest spell level first, each level in path order (the abilities menu's
+    /// order).
+    pub fn spells_by_level(&self) -> Vec<SpellId> {
         let mut ids: Vec<SpellId> = (0..self.spells.len())
             .filter_map(|i| u16::try_from(i).ok().map(SpellId))
             .collect();
-        ids.sort_by_key(|&id| (self.spell(id).tier, id));
+        ids.sort_by_key(|&id| (self.spell(id).level, id));
         ids
     }
 
@@ -3945,7 +3946,7 @@ mod tests {
         let mut files = ContentFiles::builtin();
         files.insert(
             "data/spells/zzz_zap.toml",
-            "[[spell]]\nid = \"zap\"\nname = \"Zap\"\ndescription = \"x\"\ntier = 0\n\
+            "[[spell]]\nid = \"zap\"\nname = \"Zap\"\ndescription = \"x\"\nlevel = 0\n\
              school = \"evocation\"\nkind = \"damage\"\nshape = \"bolt\"\nresolution = \"auto\"\n\
              damage_type = \"electricity\"\nmax_range = 5\ndamage = { dice = \"1d4\" }\n",
         );

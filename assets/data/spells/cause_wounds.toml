@@ -4,7 +4,7 @@
 id = "cause_wounds"
 name = "Cause wounds"
 description = "A touch that opens wounds in a creature beside you, if it lands."
-tier = 1
+level = 4
 school = "necromancy"
 kind = "damage"
 shape = "touch"

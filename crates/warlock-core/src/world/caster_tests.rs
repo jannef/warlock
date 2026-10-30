@@ -1,6 +1,6 @@
 //! The casters' class tables in the world (spec §8 "Class abilities"; #245): the priest's,
 //! druid's, wizard's, and witch's level tables, their spells (migrated onto the one cast path,
-//! #395: paid in mana by the tier table), and the passives with rules of their own.
+//! #395: paid in mana by the spell level), and the passives with rules of their own.
 
 use super::*;
 use crate::ability::{Ability, Unavailable};
@@ -236,7 +236,7 @@ fn every_caster_has_its_table_by_level_sixty() {
 }
 
 #[test]
-fn the_spells_are_abilities_by_tier() {
+fn the_spells_are_abilities_by_level() {
     let content = BUILTIN.clone();
     let every = Ability::every(&content);
     let spells: Vec<String> = (every.iter())
@@ -246,36 +246,40 @@ fn the_spells_are_abilities_by_tier() {
     assert_eq!(
         spells,
         [
-            // Tier 0.
+            // Level 0.
             "Evil eye",
             "Light",
+            // Level 1.
             "Mend",
             "Ray of frost",
             "Spark",
-            // Tier 1.
+            // Level 3.
             "Barkskin",
             "Blessing",
-            "Burning hands",
-            "Cause wounds",
             "Cure wounds",
             "Curse of sloth",
             "Hex of weakness",
             "Magic missile",
-            // Tier 2.
+            // Level 4.
+            "Burning hands",
+            "Cause wounds",
+            // Level 6.
             "Arcane bolt",
-            "Blight",
             "Frost",
             "Identify",
-            "Scorching ray",
             "Sleep",
+            // Level 7.
+            "Blight",
+            "Scorching ray",
             "Web",
-            // Tier 3.
+            // Level 11.
             "Call lightning",
             "Fireball",
-            "Flame",
             "Haste",
             "Lightning bolt",
-            "Remove disease"
+            "Remove disease",
+            // Level 12.
+            "Flame"
         ]
     );
     let bolt = Ability::Spell(sp("arcane_bolt"));
@@ -311,7 +315,7 @@ fn blessing_costs_mana_and_wants_more_than_there_is() {
     assert_eq!(own(&w, sp("blessing")), Some(None));
     let time = w.time();
     run(&mut w, "use:blessing");
-    assert_eq!(w.state.player().mana, 37, "tier 1's 3");
+    assert_eq!(w.state.player().mana, 37, "level 3's 3");
     assert!(suffers(&w, player, "blessed"));
     assert!(said(&w).contains(&"You feel blessed.".to_string()));
     assert!(w.time() > time, "it took time");
@@ -354,7 +358,7 @@ fn cure_wounds_heals_by_touch_in_two_casts() {
     run(&mut w, &on_me);
     assert_eq!(last(&w), "Your wounds close.");
     let back = w.state.player().hp - 1;
-    // 2d6 (tier 1, a touch: 3 × 0.7 mana).
+    // 2d6 (level 3, a touch: 3 × 0.7 mana).
     assert!((2..=12).contains(&back), "{back}");
     assert_eq!(w.state.player().mana, 38);
     let cure = w.time().seconds() - time.seconds();
@@ -377,7 +381,7 @@ fn remove_disease_ends_diseases_and_poison() {
     let me = w.state.player();
     assert!(me.diseases.is_empty());
     assert!(!suffers(&w, w.state.player, "poisoned"));
-    assert_eq!(w.state.player().mana, 29, "tier 3's 11");
+    assert_eq!(w.state.player().mana, 29, "level 11's 11");
     assert!(said(&w).contains(&"A cleansing warmth runs through you.".to_string()));
 }
 
@@ -406,12 +410,12 @@ fn hexes_fall_on_a_foe_the_witch_sees_within_reach() {
     cast(&mut w, "evil_eye", cell(3));
     assert_eq!(last(&w), "The kobold is hexed.");
     assert!(suffers(&w, near, "ill_wished"));
-    assert_eq!(w.state.player().mana, 39, "tier 0's 1");
+    assert_eq!(w.state.player().mana, 39, "level 0 or 1: 1");
     cast(&mut w, "hex_of_weakness", cell(3));
     assert!(suffers(&w, near, "weakened"), "{:?}", said(&w));
     cast(&mut w, "curse_of_sloth", cell(3));
     assert!(suffers(&w, near, "sluggish"));
-    assert_eq!(w.state.player().mana, 33, "tier 1's 3 each");
+    assert_eq!(w.state.player().mana, 33, "level 3's 3 each");
     // Presence 14 (+2): one degree more of each hex, so it lasts twice as long.
     let sluggish = status(&w, "sluggish");
     assert_eq!(
@@ -440,7 +444,7 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     w.apply(&Action::Cast("arcane_bolt".into(), Some(at)));
     let hurt = 500 - w.state.actors[&target].hp;
     assert!((2..=12).contains(&hurt), "2d6: {hurt}");
-    assert_eq!(w.state.player().mana, 29, "tier 2's 6 × 1.8 for a line");
+    assert_eq!(w.state.player().mana, 29, "level 6 × 1.8 for a line");
     assert!(
         said(&w).iter().any(|m| m.contains("arcane bolt")),
         "{:?}",
@@ -453,16 +457,8 @@ fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     let before = w.state.actors[&target].hp;
     w.apply(&Action::Cast("fireball".into(), Some(far)));
     assert!(w.state.actors[&target].hp < before);
-    // Tier 3's 11 × 2.4 for a burst of radius 2, less Empower's tenth (23); its third die, the
-    // lift's (Intelligence and Willpower +2: 30 %, 19 → 24), and Empower's one more, held to
-    // the lifted cap.
+    // Level 11 × 2.4 for a burst of radius 2, less Empower's tenth (23).
     assert_eq!(w.state.player().mana, 17);
-    let cap = w
-        .state
-        .player()
-        .spell_cap(w.content(), BUILTIN.spell(sp("fireball")));
-    assert_eq!(cap, 24);
-    assert!(before - w.state.actors[&target].hp <= cap);
 }
 
 #[test]
@@ -482,7 +478,7 @@ fn call_lightning_wants_the_open_sky() {
     w.apply(&Action::Cast("call_lightning".into(), Some(at)));
     let hurt = 500 - w.state.actors[&target].hp;
     assert!(hurt >= 1, "2d6, less what it resists: {hurt}");
-    assert_eq!(w.state.player().mana, 20, "tier 3's 11 × 1.8");
+    assert_eq!(w.state.player().mana, 20, "level 11 × 1.8");
 }
 
 #[test]
@@ -496,7 +492,7 @@ fn blight_poisons_everyone_it_reaches() {
         Some(Pos::new(here.x + 3, here.y)),
     ));
     assert!(suffers(&w, target, "poisoned"));
-    assert_eq!(w.state.player().mana, 26, "tier 2's 6 × 2.4");
+    assert_eq!(w.state.player().mana, 23, "level 7 × 2.4");
 }
 
 #[test]
@@ -533,9 +529,8 @@ fn a_spell_is_paid_through_the_talents_mana_cost() {
     let cleanse = content
         .class_spell(sp("remove_disease"))
         .expect("remove disease");
-    let level = w.caster_level(w.state.player);
     assert_eq!(
-        w.state.player().spell_cost(&content, cleanse, level),
+        w.state.player().spell_cost(&content, cleanse),
         9,
         "11, a fifth less"
     );

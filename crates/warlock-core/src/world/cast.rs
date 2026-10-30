@@ -1,29 +1,29 @@
 //! The one cast path (spec §8 "Spells", the magic design §5): a spell of `data/spells/` cast by
 //! the player ([`Action::Cast`], `use:arcane_bolt:12,5`), from its cost to what it does.
 //!
-//! - **Cost** ([`Actor::spell_cost`], the one hook): the tier table's price
-//!   ([`SpellRules::mana`]: base by tier × overreach × shape × resolution × the armour worn's
-//!   `spell_cost_percent`, rounded once), then Archmage's `spell_mana_percent`
+//! - **Cost** ([`Actor::spell_cost`], the one hook): the cost table's price
+//!   ([`SpellRules::mana`]: the spell's level, at least 1, × shape × resolution × the armour
+//!   worn's `spell_cost_percent`, rounded once; no caster level), then Archmage's
+//!   `spell_mana_percent`
 //!   ([`Actor::spell_base`], what [`World::spend_mana`] is given), then the talents' cut there
 //!   (Frugal caster). Spent only once the cast is sure to go off.
 //! - **Reach**: the stats its `reach` scales name (Willpower unless it says otherwise) grow a
 //!   spell's range, a burst's radius, and a cone's or a line's length up to the spell's own caps
 //!   ([`Actor::spell_reach`]); its `duration` scales (Presence unless it says otherwise)
 //!   lengthen a buff's or a hex's status ([`SpellRules::lengthened`]; `world/spell_scale.rs`).
-//! - **Dice**: the spell's at the caster's level (one die more per `per_levels` above the tier's
-//!   comfortable level, never past `max_dice`), as many more as the lift of its cap holds
-//!   ([`crate::content::SpellDice::lifted`]), then the talents' (Empower's die, Archmage's per
-//!   die), and the roll is held to the caster's cap: the spell's cap ([`SpellRules::cap_of`])
-//!   lifted by the stats its `damage` scales name, at most its tier's `max_lift`
-//!   ([`Actor::spell_cap`]). Nothing passes the lifted cap. A scroll read or a wand used casts
-//!   with the unlifted cap.
+//! - **Dice**: the spell's at the caster's level (one die more per `per_levels` above its own
+//!   level, [`SpellData::grows_from`], never past `max_dice`), as many more as the lift of the
+//!   stats its `damage` scales name gives ([`crate::content::SpellDice::lifted`],
+//!   [`Actor::spell_lift`]), then the talents' (Empower's die, Archmage's per die). Nothing
+//!   holds the roll (the spell scaling design, decision 16). A scroll read or a wand used casts
+//!   with no lift. (Until the ladders replace the dice, S2.)
 //! - **Resolution**: `area` (a burst, a cone, a line) strikes everyone in it with one roll, no
 //!   roll to hit, Evasion halving it ([`World::spell_hurts`]) and resistances taking their
 //!   share; `auto` (a ray or a bolt) strikes the first creature on its way, never missing;
 //!   `attack` makes the 2d12 attack roll against Defence (the caster's `to_hit` scales to hit,
 //!   Dexterity unless the spell names other stats, as a missile is aimed; a scroll or a wand
 //!   always Dexterity; Deflect missiles counts), threat and critical as a blow's (a critical
-//!   rolls the damage again, still held to the cap); `touch` the same roll against one creature
+//!   rolls the damage again); `touch` the same roll against one creature
 //!   next to the caster. `auto` and `area` never critical.
 //! - **Shapes**: a burst flies and goes off as a scroll's does ([`World::burst_center`],
 //!   [`World::cast_burst`]); a line runs as a scroll's bolt, through everyone on it
@@ -33,11 +33,11 @@
 //!   at the cell aimed at; self is the caster. A spell that identifies (Identify) asks for a
 //!   stack the caster carries instead of a cell (`use:identify:c`, [`Action::CastOn`]).
 //! - **Explicit costs**: a spell with its own `mana` (Identify) costs that, armour and talents
-//!   counted, whatever its tier ([`SpellRules::mana_with`]).
+//!   counted, whatever its level ([`SpellRules::mana`]).
 //!
 //! - **Reflection**: an `attack` or `touch` roll missed by the target's Shield raises Spell
 //!   reflection's trigger, and a spell turned back is cast again at its caster with the same
-//!   dice, cap, and to-hit (`reflect.rs`).
+//!   dice and to-hit (`reflect.rs`).
 //!
 //! A scroll read and a wand used cast through the same path at their own caster level, paid by
 //! the scroll or a charge instead of mana ([`World::read_cast`], [`World::wand_cast`]).
@@ -54,7 +54,7 @@
 //! [`Action::CastOn`]: crate::action::Action::CastOn
 
 use super::reflect::{Shot, Turned};
-use super::spell::{Caster, burst_cells, capped, cone_cells};
+use super::spell::{Caster, burst_cells, cone_cells};
 use super::talk::capitalized;
 use super::{Actor, ActorId, AttackSkills, Cause, Spent, World};
 use crate::ability::{Ability, Unavailable};
@@ -117,28 +117,27 @@ impl Actor {
             .sum()
     }
 
-    /// What `spell` asks of it at `caster_level` before its talents cut the price: the tier
-    /// table's price ([`SpellRules::mana_with`], with its armour and Overreach's cut of the
-    /// overreach), then School focus's and Archmage's and Empower's percents
-    /// (`spell_mana_percent`), at least 1. What a cast gives [`World::spend_mana`], which takes
-    /// [`Actor::mana_cost`] (Frugal caster) off it.
-    pub fn spell_base(&self, content: &Content, spell: &SpellData, caster_level: i32) -> i32 {
+    /// What `spell` asks of it before its talents cut the price: the cost table's price
+    /// ([`SpellRules::mana`], with its armour), then School focus's and Archmage's and Empower's
+    /// percents (`spell_mana_percent`), at least 1. What a cast gives [`World::spend_mana`],
+    /// which takes [`Actor::mana_cost`] (Frugal caster) off it. No caster level counts.
+    pub fn spell_base(&self, content: &Content, spell: &SpellData) -> i32 {
         let Some(rules) = content.spell_rules() else {
             return 1;
         };
         let mods = self.talent_mods(content);
         let armour = self.armour_spell_cost(content);
-        let price = rules.mana_with(spell, caster_level, armour, mods.overreach_cost_percent);
+        let price = rules.mana(spell, armour);
         let price = u16::try_from(price).unwrap_or(u16::MAX);
         let (focus, _) = mods.focus(&spell.tags(content));
         mods.spell_mana_with(price, focus)
     }
 
-    /// What `spell` costs it at `caster_level` (the one hook, spec §8 "Spells"):
-    /// [`Actor::spell_base`] through [`Actor::mana_cost`], what a cast spends and what the
-    /// abilities menu's "too little mana" compares with.
-    pub fn spell_cost(&self, content: &Content, spell: &SpellData, caster_level: i32) -> i32 {
-        self.mana_cost(content, self.spell_base(content, spell, caster_level))
+    /// What `spell` costs it (the one hook, spec §8 "Spells"): [`Actor::spell_base`] through
+    /// [`Actor::mana_cost`], what a cast spends and what the abilities menu's "too little mana"
+    /// compares with.
+    pub fn spell_cost(&self, content: &Content, spell: &SpellData) -> i32 {
+        self.mana_cost(content, self.spell_base(content, spell))
     }
 
     /// How far `spell` reaches as it casts it: the spell's own reach grown by its `reach`
@@ -177,17 +176,14 @@ impl Actor {
 }
 
 /// A spell's damage dice as a caster at `caster_level` with talents `mods` rolls them: the
-/// spell's at that level with the dice its lifted cap holds (`cap`: the cap and the caster's
-/// lifted cap), then Empower's and Archmage's. The roll is held to the lifted cap after.
+/// spell's at that level with the dice its `lift` gives, then Empower's and Archmage's.
 fn damage_dice(
-    rules: &SpellRules,
     spell: &SpellData,
     caster_level: i32,
-    cap: (i32, i32),
+    lift: i32,
     mods: &crate::talent::TalentMods,
 ) -> Option<Dice> {
-    let comfortable = rules.comfortable[usize::from(spell.tier)];
-    let dice = spell.damage?.lifted(caster_level, comfortable, cap);
+    let dice = spell.damage?.lifted(caster_level, spell.grows_from(), lift);
     Some(mods.spell_damage(dice))
 }
 
@@ -205,7 +201,7 @@ impl World {
         let player = self.state.player;
         let me = self.state.player();
         let spell = content.spell_id(name);
-        let (Some(spell), Some(rules)) = (spell, content.spell_rules()) else {
+        let (Some(spell), Some(_)) = (spell, content.spell_rules()) else {
             self.say("You have no such ability.");
             return Spent::Nothing;
         };
@@ -227,7 +223,7 @@ impl World {
         }
         let level = self.caster_level(player);
         let me = self.state.player();
-        if me.mana < me.spell_cost(&content, def, level) {
+        if me.mana < me.spell_cost(&content, def) {
             self.say("You have too little mana.");
             return Spent::Nothing;
         }
@@ -238,11 +234,10 @@ impl World {
         let cast = Cast {
             spell,
             def,
-            rules,
             level,
-            pay: Pay::Mana(me.spell_base(&content, def, level)),
+            pay: Pay::Mana(me.spell_base(&content, def)),
             reach: me.spell_reach(&content, def),
-            cap: (rules.cap_of(def), me.spell_cap(&content, def)),
+            lift: me.spell_lift(&content, def),
             read: Cell::new(None),
         };
         let price = self.price_of(player, ActionKind::Cast) * i64::from(def.casts);
@@ -298,7 +293,7 @@ impl World {
         events: &mut Vec<Event>,
     ) -> bool {
         let content = self.content.clone();
-        let (def, Some(rules)) = (content.spell(spell), content.spell_rules()) else {
+        let (def, Some(_)) = (content.spell(spell), content.spell_rules()) else {
             self.say("Nothing happens.");
             return false;
         };
@@ -309,11 +304,10 @@ impl World {
         let cast = Cast {
             spell,
             def,
-            rules,
             level: i32::from(level),
             pay: Pay::Scroll(item),
             reach: self.state.player().spell_reach(&content, def),
-            cap: (rules.cap_of(def), rules.cap_of(def)),
+            lift: 0,
             read: Cell::new(None),
         };
         self.perform(&cast, target, events)
@@ -331,18 +325,17 @@ impl World {
         events: &mut Vec<Event>,
     ) -> bool {
         let content = self.content.clone();
-        let (def, Some(rules)) = (content.spell(spell), content.spell_rules()) else {
+        let (def, Some(_)) = (content.spell(spell), content.spell_rules()) else {
             self.say("Nothing happens.");
             return false;
         };
         let cast = Cast {
             spell,
             def,
-            rules,
             level,
             pay: Pay::Wand(item),
             reach: self.state.player().spell_reach(&content, def),
-            cap: (rules.cap_of(def), rules.cap_of(def)),
+            lift: 0,
             read: Cell::new(None),
         };
         self.perform(&cast, Some(ReadTarget::Cell(at)), events)
@@ -477,7 +470,7 @@ impl World {
         true
     }
 
-    /// A heal: its dice, held to its cap, back to the caster (self), or to the one it touches
+    /// A heal: its dice back to the caster (self), or to the one it touches
     /// (a touch: the cell next to the caster, or their own).
     fn cast_heal(&mut self, cast: &Cast<'_>, at: Option<Pos>) -> bool {
         let player = self.state.player;
@@ -513,13 +506,11 @@ impl World {
         let Some(heal) = cast.def.effect.heal else {
             return false;
         };
-        let comfortable = cast.rules.comfortable[usize::from(cast.def.tier)];
         self.pay_cast(cast);
-        let rolled = heal
-            .lifted(cast.level, comfortable, cast.cap)
+        let back = heal
+            .lifted(cast.level, cast.def.grows_from(), cast.lift)
             .roll(&mut self.state.rng)
             .max(0);
-        let back = rolled.min(cast.cap.1);
         if target == player {
             self.heal_player(back);
             self.say("Your wounds close.");
@@ -723,9 +714,7 @@ impl World {
         let player = self.state.player;
         self.pay_cast(cast);
         let mods = self.state.player().talent_mods(&self.content).into_owned();
-        let dice =
-            damage_dice(cast.rules, def, cast.level, cast.cap, &mods).unwrap_or(Dice::of(0, 1));
-        let cap = cast.cap.1;
+        let dice = damage_dice(def, cast.level, cast.lift, &mods).unwrap_or(Dice::of(0, 1));
         if let Some(text) = &def.look.message {
             self.say(text.clone());
         }
@@ -742,7 +731,6 @@ impl World {
                     kind: def.damage_type,
                     blast: def.look.blast,
                     ice: def.look.ice,
-                    cap: Some(cap),
                 };
                 let center = self.burst_center(here, at, range);
                 self.sound_at(def.look.noise, center);
@@ -754,7 +742,6 @@ impl World {
                     length: range,
                     damage: dice,
                     kind: def.damage_type,
-                    cap: Some(cap),
                 };
                 let path = self.bolt_line(here, at, range);
                 self.sound_at(def.look.noise, here);
@@ -762,13 +749,13 @@ impl World {
             }
             Shape::Cone => {
                 self.sound_at(def.look.noise, here);
-                self.cast_cone((here, at, range), (&effect, dice, cap), def, &mut made);
+                self.cast_cone((here, at, range), (&effect, dice), def, &mut made);
             }
             Shape::Ray | Shape::Bolt | Shape::Touch => {
                 self.sound_at(def.look.noise, here);
                 let own = matches!(cast.pay, Pay::Mana(_));
                 let aim = (here, at, range);
-                turned = self.cast_single(aim, (&effect, dice, cap), (def, own), &mut made);
+                turned = self.cast_single(aim, (&effect, dice), (def, own), &mut made);
             }
             Shape::Myself => {}
         }
@@ -820,12 +807,12 @@ impl World {
     }
 
     /// A cone from `here` toward `at`, `length` cells long: its effect drawn as a burst around
-    /// the caster over its cells, then one roll of `dice` (held to `cap`) for everyone in it, in
+    /// the caster over its cells, then one roll of `dice` for everyone in it, in
     /// ascending actor id order, as an area's (Evasion halves it).
     fn cast_cone(
         &mut self,
         (here, at, length): (Pos, Pos, i32),
-        (effect, dice, cap): (&str, Dice, i32),
+        (effect, dice): (&str, Dice),
         def: &SpellData,
         made: &mut Vec<Event>,
     ) {
@@ -843,7 +830,7 @@ impl World {
                 cells: cells.clone(),
             });
         }
-        let roll = capped(dice.roll(&mut self.state.rng), Some(cap));
+        let roll = dice.roll(&mut self.state.rng);
         let level = self.state.current_level.clone();
         let caught: Vec<ActorId> = (self.state.actors.values())
             .filter(|a| a.level == level && cells.contains(&a.pos))
@@ -866,7 +853,7 @@ impl World {
     fn cast_single<'s>(
         &mut self,
         (here, at, reach): (Pos, Pos, i32),
-        (effect, dice, cap): (&'s str, Dice, i32),
+        (effect, dice): (&'s str, Dice),
         (def, own): (&'s SpellData, bool),
         made: &mut Vec<Event>,
     ) -> Option<Turned<'s>> {
@@ -916,7 +903,6 @@ impl World {
             def,
             effect,
             dice,
-            cap,
             to_hit,
             threat,
             skills,
@@ -935,7 +921,7 @@ impl World {
 
     /// `by`'s single-target spell `shot` strikes `target` from `source` as its resolution says:
     /// `auto` always, `attack` and `touch` by the attack roll (`shot`'s to-hit) against its
-    /// Defence; the damage held to `shot`'s cap. How it struck.
+    /// Defence. How it struck.
     pub(super) fn spell_attack(
         &mut self,
         by: ActorId,
@@ -983,7 +969,7 @@ impl World {
                 let profile = Profile::bare(&attack).with(&benefit);
                 let profile = self.sneak_threat(by, unseen, profile);
                 let blow = combat::strike(&profile, &against, &mut self.state.rng);
-                // The sneak dice come on top of the spell's cap, as after Protection.
+                // The sneak dice come on top, as after Protection.
                 let sneak = self.ambushed(by, unseen, blow).damage - blow.damage;
                 self.spell_practised(target, skills, blow, made);
                 let spell = (AttackKind::Spell, skills);
@@ -996,7 +982,7 @@ impl World {
                 0,
             ),
         };
-        let damage = Damage::new(capped(amount, Some(shot.cap)) + sneak, def.damage_type);
+        let damage = Damage::new(amount + sneak, def.damage_type);
         self.spell_strikes(by, target, source, (damage, strike), made);
         strike
     }
@@ -1042,14 +1028,13 @@ enum Pay {
 struct Cast<'c> {
     spell: SpellId,
     def: &'c SpellData,
-    rules: &'c SpellRules,
     /// The caster's caster level (a scroll's own, read; a wand's own, used).
     level: i32,
     pay: Pay,
     reach: Reach,
-    /// The spell's cap, and the caster's lifted cap ([`Actor::spell_cap`]; a scroll's or a
-    /// wand's is the spell's own): the most it does to one target.
-    cap: (i32, i32),
+    /// The percent the caster's stats lift its dice by ([`Actor::spell_lift`]; a scroll's or a
+    /// wand's 0).
+    lift: i32,
     /// A scroll read, once paid: its object, and whether Spell recall kept it.
     read: Cell<Option<(ObjectId, bool)>>,
 }

@@ -3,7 +3,7 @@
 id = "curse_of_sloth"
 name = "Curse of sloth"
 description = "Curse a foe you see nearby: sluggish a while, all it does takes half again as long."
-tier = 1
+level = 3
 school = "transmutation"
 kind = "hex"
 shape = "ray"

@@ -12,7 +12,7 @@
 //!   abilities fire, only marks the reflector ([`World::reflect_ready`]) while its `per_turn` cap
 //!   allows; the cast code then casts the spell again ([`World::turn_back`]): from the reflector's
 //!   cell back along the way it came (cells it flew through empty) at its caster, with the
-//!   caster's dice, lifted cap, to-hit, and riders, rolling its own attack against the caster's
+//!   caster's dice, to-hit, and riders, rolling its own attack against the caster's
 //!   Defence. No mana is spent again, and the reflector pays nothing (no time, no stamina).
 //! - **Caps**: `per_turn` reflections a turn of the reflector's, counted here and cleared as its
 //!   action is spent ([`World::reflections_spent`], from `spend_actions`); and the reflected
@@ -51,8 +51,6 @@ pub(super) struct Shot<'s> {
     /// Its effect's id (drawn along its way), or empty.
     pub(super) effect: &'s str,
     pub(super) dice: Dice,
-    /// The caster's cap (lifted, for its own spell): the most it does.
-    pub(super) cap: i32,
     /// The caster's to-hit with it.
     pub(super) to_hit: i32,
     /// The natural roll from which it threatens a critical: the caster's

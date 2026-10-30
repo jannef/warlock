@@ -4,8 +4,9 @@
 //! and birth-sign gifts are talents too) and what it wears and wields add (`caster_level`, a
 //! talent effect, flat or by character level, Arcane training's, and an affix effect, which
 //! Attuned counts half again), rounded
-//! down, never below 0, and at least 1 for anyone with mana. It sets the learning check, the
-//! cost of overreach, and a spell's dice.
+//! down, never below 0, and at least 1 for anyone with mana. It sets the learning check (a
+//! spell of a level at most it is learned for certain, the spell scaling design §4.4) and,
+//! until the ladders replace them (S2), a spell's dice; never its mana.
 
 use super::{Actor, ActorId, World};
 use crate::character::Character;

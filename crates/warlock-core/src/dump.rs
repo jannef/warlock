@@ -990,14 +990,14 @@ fn progress_rows(world: &World) -> Vec<String> {
     rows
 }
 
-/// The spells the player knows, one a line with its tier and cost, then the scrolls they could
+/// The spells the player knows, one a line with its spell level and cost, then the scrolls they could
 /// study with the chance in words.
 fn spell_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let known = (view.own_spells().into_iter()).filter_map(|spell| {
         let def = content.spell_of(spell)?;
         let cost = view.own_spell_cost(spell)?;
-        Some(format!("{}: tier {}, {cost} mana", def.name, def.tier))
+        Some(format!("{} (level {}, {cost} mana)", def.name, def.level))
     });
     let studies = (view.studies().into_iter()).filter_map(|s| {
         let def = content.spell_of(s.spell)?;
@@ -1018,7 +1018,7 @@ fn spell_rows(view: &PerceptionView<'_>) -> Vec<String> {
     }
 }
 
-/// The spells the player knows (`[{"id", "tier", "cost"}]`) and the scrolls they could study
+/// The spells the player knows (`[{"id", "level", "cost"}]`) and the scrolls they could study
 /// (`[{"letter", "spell", "chance"}]`).
 fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
     let content = view.content();
@@ -1027,7 +1027,7 @@ fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
             let def = content.spell_of(spell)?;
             Some(json!({
                 "id": def.id,
-                "tier": def.tier,
+                "level": def.level,
                 "cost": view.own_spell_cost(spell),
             }))
         })

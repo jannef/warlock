@@ -1,12 +1,12 @@
 //! What a spell grows with (`[spell.scales]`; the combat progression design
-//! `docs/design/combat-progression.md` §7, #556): per spell, which stats lift its damage cap, aim
+//! `docs/design/combat-progression.md` §7, #556): per spell, which stats lift its dice, aim
 //! it, widen its reach, and lengthen its status. Derived at cast time from the caster's stats;
 //! nothing is saved.
 //!
 //! - Every weight is a **percent of a stat's modifier** ([`crate::stats::Stats::modifier`]),
 //!   summed over the stats a dimension names.
-//! - **damage**: the sum is the percent the spell's cap is lifted by, never below 0 and never
-//!   past its tier's `max_lift` ([`super::SpellRules::lift`]).
+//! - **damage**: the sum is the percent the spell's dice are lifted by, never below 0 and
+//!   unbounded ([`super::SpellRules::lift`]; until the ladders replace it).
 //! - **to_hit**: an `attack` or `touch` spell's bonus to the attack roll; the sum divided by 100,
 //!   a half rounded toward zero (it may be negative, as Dexterity's is).
 //! - **reach**, **duration**: cells more of reach, degrees more of a buff's or a hex's status;

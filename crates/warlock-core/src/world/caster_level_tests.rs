@@ -142,7 +142,7 @@ fn mana_of_level(w: &mut World, level: u8) -> i32 {
 
 #[test]
 fn mana_grows_with_every_level_to_60() {
-    // `mana_level` is 60 (tier 9's comfortable caster level), so a wizard's levels 31 and 60
+    // `mana_level` is 60, the last level, so a wizard's levels 31 and 60
     // add mana as level 2 does.
     let mut w = world_on(&BUILTIN, "wizard");
     let early = mana_of_level(&mut w, 2);

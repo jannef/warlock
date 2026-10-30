@@ -285,13 +285,13 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
     writeln!(out, "\n## Spells\n").unwrap();
     writeln!(
         out,
-        "Each damage spell as the trained caster casts it (plain gear): the lift and the cap it lifts, the dice, and the expected casts to kill the median monster of their level (an attack spell's miss chance included; per target), lifted (unlifted in brackets); mana per cast of the pool.\n"
+        "Each damage spell as the trained caster casts it (plain gear): the lift, the dice, and the expected casts to kill the median monster of their level (an attack spell's miss chance included; per target), lifted (unlifted in brackets); mana per cast of the pool.\n"
     )
     .unwrap();
     for class in ["wizard", "priest"] {
         writeln!(
             out,
-            "**{}**\n\n| Spell (tier, resolution) | L | lift % | cap → lifted | dice | casts to kill | mana / pool |\n|---|---|---|---|---|---|---|",
+            "**{}**\n\n| Spell (level, resolution) | L | lift % | dice | casts to kill | mana / pool |\n|---|---|---|---|---|---|",
             if class == "wizard" { "Wizard" } else { "Priest" }
         )
         .unwrap();
@@ -306,7 +306,7 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
         if names.is_empty() {
             writeln!(
                 out,
-                "| none: no damage spell it knows or of a school it has an affinity with |||||||"
+                "| none: no damage spell it knows or of a school it has an affinity with ||||||"
             )
             .unwrap();
         }
@@ -330,10 +330,8 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
                     for (k, snap) in s.iter().enumerate() {
                         let cast = snap.casts.iter().find(|c| &c.name == name).expect("cast");
                         let them = &m.geared[k % m.geared.len()];
-                        for (dice, cap, into) in [
-                            (cast.dice.0, cast.lifted, &mut lifted),
-                            (cast.dice.1, cast.cap, &mut plain),
-                        ] {
+                        for (dice, into) in [(cast.dice.0, &mut lifted), (cast.dice.1, &mut plain)]
+                        {
                             let total: i64 = (0..STRIKES)
                                 .map(|_| {
                                     let amount = match cast.resolution {
@@ -349,7 +347,7 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
                                             dice.roll(rng).max(0)
                                         }
                                     };
-                                    i64::from(crate::world::spell::capped(amount, Some(cap)))
+                                    i64::from(amount)
                                 })
                                 .sum();
                             let dmg = total as f64 / f64::from(STRIKES);
@@ -362,12 +360,10 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
                 let mana = avg(s.iter().map(|s| f64::from(s.mana)));
                 writeln!(
                     out,
-                    "| {name} ({}, {:?}) | {level} | {} | {} → {} | {}, {:.1} | {} ({}) | {} / {:.0} |",
-                    c.tier,
+                    "| {name} ({}, {:?}) | {level} | {} | {}, {:.1} | {} ({}) | {} / {:.0} |",
+                    c.level,
                     c.resolution,
                     c.lift,
-                    c.cap,
-                    c.lifted,
                     dice_text(c.dice.0),
                     mean(c.dice.0),
                     r(median(per_lifted)),

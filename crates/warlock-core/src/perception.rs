@@ -1541,7 +1541,6 @@ impl<'a> PerceptionView<'a> {
     /// why it cannot be used now, if it cannot: what the abilities menu (#156) lists. They know
     /// what they can do and what they hold.
     pub fn abilities(&self) -> Vec<OwnAbility> {
-        let level = self.own_caster_level();
         let here = Ability::here(self.level, self.content, self.player.pos);
         (Ability::of(self.player, self.content).into_iter())
             .chain(here)
@@ -1549,7 +1548,7 @@ impl<'a> PerceptionView<'a> {
                 ability,
                 unavailable: match ability {
                     Ability::Spell(spell) => {
-                        crate::ability::spell_unavailable(self.player, self.content, spell, level)
+                        crate::ability::spell_unavailable(self.player, self.content, spell)
                     }
                     // Foraging asks for the wild underfoot (spec §8 "Foraging").
                     Ability::Forage
@@ -1611,7 +1610,7 @@ impl<'a> PerceptionView<'a> {
     /// what their own spells cost); `None` for a spell they cannot cast.
     pub fn own_spell_cost(&self, spell: crate::content::SpellId) -> Option<i32> {
         let def = self.content.spell_of(spell)?;
-        Some((self.player).spell_cost(self.content, def, self.own_caster_level()))
+        Some((self.player).spell_cost(self.content, def))
     }
 
     /// What the player's weapon active `id` costs them in stamina now, their talents' discounts

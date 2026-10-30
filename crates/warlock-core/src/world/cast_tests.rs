@@ -1,5 +1,5 @@
-//! The one cast path (spec §8 "Spells", #395): resolution, the cap, the shapes, the cost's
-//! armour and Willpower's reach, and the draws a cast makes. Spells the casters do not have are
+//! The one cast path (spec §8 "Spells", #395): resolution, no cap (decision 16), the shapes,
+//! the cost's armour and Willpower's reach, and the draws a cast makes. Spells the casters do not have are
 //! tried as the wizard's Arcane bolt, its file replaced (the ability's id is the spell's).
 
 use super::caster_tests::{kobold, kobold_at, last, reach, run, sp, world_with};
@@ -9,13 +9,13 @@ use crate::combat::Strike;
 use crate::content::ContentFiles;
 use crate::stats::{PerStat, Stat, Stats};
 
-/// The built-in content with the wizard's Arcane bolt (tier 2) as `body` says: its shape,
+/// The built-in content with the wizard's Arcane bolt (level 6) as `body` says: its shape,
 /// resolution, and dice.
 fn content_with_bolt(body: &str) -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     let text = format!(
         "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
-         tier = 2\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n{body}\n"
+         level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n{body}\n"
     );
     files.insert("data/spells/arcane_bolt.toml", &text);
     Arc::new(Content::load(&files).expect("the spell loads"))
@@ -60,7 +60,7 @@ pub(super) fn cast_at(
 }
 
 #[test]
-fn an_attack_spell_can_miss_and_critical_and_never_passes_its_cap() {
+fn an_attack_spell_can_miss_and_critical_and_nothing_holds_its_roll() {
     let content = content_with_bolt(
         "shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\ndamage = { dice = \"3d6\" }",
     );
@@ -88,20 +88,18 @@ fn an_attack_spell_can_miss_and_critical_and_never_passes_its_cap() {
         missed > 0 && critical > 0,
         "{missed} missed, {critical} criticals"
     );
-    // Tier 2's cap for an attack is its ceiling, 18: a critical's doubled roll is held to it.
-    assert_eq!(most, 18);
+    // 3d6 rolls 18 at most; a critical rolls it again, and nothing holds it (decision 16).
+    assert!(most > 18 && most <= 36, "{most}");
 }
 
 #[test]
 fn auto_and_area_spells_never_miss_nor_critical() {
-    // Scroll adept's +1 a die: 2d6+2, held to tier 2's cap (13 for auto, 14 for an area).
-    for (body, cap) in [
-        ("shape = \"bolt\"\nresolution = \"auto\"\nmax_range = 6", 13),
-        (
-            "shape = \"line\"\nresolution = \"area\"\nmax_length = 6",
-            14,
-        ),
+    // Scroll adept's +1 a die: 2d6+2, 14 at most, nothing holding it.
+    for body in [
+        "shape = \"bolt\"\nresolution = \"auto\"\nmax_range = 6",
+        "shape = \"line\"\nresolution = \"area\"\nmax_length = 6",
     ] {
+        let cap = 14;
         let body = format!("{body}\ndamage = {{ dice = \"2d6\" }}");
         let mut w = wizard(content_with_bolt(&body));
         let target = kobold(&mut w, 2, 10_000);
@@ -117,11 +115,11 @@ fn auto_and_area_spells_never_miss_nor_critical() {
 }
 
 #[test]
-fn empower_reaches_the_cap_sooner_and_never_passes_it() {
-    // The shipped Arcane bolt: a line of 2d6, tier 2's area cap 14; Empower makes it 3d6.
+fn empower_adds_a_die_and_nothing_holds_it() {
+    // The shipped Arcane bolt: a line of 2d6; Empower makes it 3d6, 18 at most.
     let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
     reach(&mut w, 32);
-    // No modifier, so no lift: the spell's own cap.
+    // No modifier, so no lift.
     scores(&mut w, &[]);
     assert_eq!(
         w.state.player().talent_mods(w.content()).spell_dice,
@@ -132,10 +130,9 @@ fn empower_reaches_the_cap_sooner_and_never_passes_it() {
     let mut most = 0;
     for _ in 0..200 {
         let (_, hurt) = cast_at(&mut w, (2, 0), (target, (2, 0)));
-        assert!(hurt <= 14, "{hurt}");
         most = most.max(hurt);
     }
-    assert_eq!(most, 14, "3d6 reaches the cap");
+    assert!(most > 14, "3d6 passes the old cap of 14: {most}");
 }
 
 #[test]
@@ -211,7 +208,7 @@ fn a_cone_fans_out_toward_its_aim() {
     ));
     assert!(w.state.actors[&ahead].hp < 100, "in the cone");
     assert_eq!(w.state.actors[&aside].hp, 100, "beside it");
-    // Tier 2's 6 × 1.6 = 9.6: 10 mana.
+    // Level 6 × 1.6 = 9.6: 10 mana.
     assert_eq!(mana - w.state.player().mana, 10);
     // Drawn as a burst around the caster over the cone's cells.
     let drawn = out.events.iter().any(|e| {
@@ -238,11 +235,11 @@ fn a_touch_reaches_only_the_next_cell() {
         let (strikes, hurt) = cast_at(&mut w, (1, 0), (target, (1, 0)));
         assert_eq!(strikes.len(), 1);
         hits += i32::from(strikes[0].is_hit());
-        // Tier 2's touch cap: 18 × 120 % = 21.
-        assert!(hurt <= 21);
+        // 3d6, a critical's twice: nothing holds it.
+        assert!(hurt <= 36);
     }
     assert!(hits > 0);
-    // Tier 2's 6 × 0.7: 4 mana.
+    // Level 6 × 0.7: 4 mana.
     let spent = 40 - w.state.player().mana;
     assert_eq!(spent, 4);
 }
@@ -253,8 +250,7 @@ fn armour_makes_spells_dearer() {
     reach(&mut w, 18);
     let content = w.content().clone();
     let bolt = content.class_spell(sp("arcane_bolt")).expect("the bolt");
-    let level = w.caster_level(w.state.player);
-    assert_eq!(w.state.player().spell_cost(&content, bolt, level), 11);
+    assert_eq!(w.state.player().spell_cost(&content, bolt), 11);
     let plate = content.object_id("plate_armour").expect("plate");
     let me = w.player_mut();
     me.inventory.push(crate::object::Stack::new(plate, 1));
@@ -262,7 +258,7 @@ fn armour_makes_spells_dearer() {
     run(&mut w, &format!("equip:body:{item}"));
     assert_eq!(w.state.player().armour_spell_cost(&content), 40);
     // 6 × 1.8 × 1.4 = 15.12.
-    assert_eq!(w.state.player().spell_cost(&content, bolt, level), 15);
+    assert_eq!(w.state.player().spell_cost(&content, bolt), 15);
     assert_eq!(w.perception().own_spell_cost(sp("arcane_bolt")), Some(15));
 }
 
@@ -306,59 +302,58 @@ pub(super) fn scores(w: &mut World, scores: &[(Stat, u8)]) {
     w.player_mut().stats = Stats::new(all, PerStat::splat(40));
 }
 
-/// An attack ray of tier 2 (cap 18), 3d6, its cap lifted by Intelligence 10 % and Willpower 5 %
-/// a point, aimed with Intelligence.
+/// An attack ray of level 6, 3d6, its dice lifted by Intelligence 10 % and Willpower 5 % a
+/// point, aimed with Intelligence.
 const SCALED_RAY: &str = "shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\n\
                           damage = { dice = \"3d6\" }\n[spell.scales]\n\
                           damage = { intelligence = 10, willpower = 5 }\n\
                           to_hit = { intelligence = 100 }";
 
 #[test]
-fn the_stats_a_spell_names_lift_its_cap_up_to_the_tiers_most() {
+fn the_stats_a_spell_names_lift_its_dice_with_no_most() {
     let mut w = wizard(content_with_bolt(SCALED_RAY));
     let content = w.content().clone();
     let bolt = content.spell(sp("arcane_bolt"));
-    let at = |w: &World| {
-        let me = w.state.player();
-        (me.spell_lift(&content, bolt), me.spell_cap(&content, bolt))
-    };
+    let at = |w: &World| w.state.player().spell_lift(&content, bolt);
     scores(&mut w, &[]);
-    assert_eq!(at(&w), (0, 18), "no modifier: no lift");
-    // The design's level-10 wizard: Intelligence +4, Willpower +2: 50 %, 18 → 27.
+    assert_eq!(at(&w), 0, "no modifier: no lift");
+    // The design's level-10 wizard: Intelligence +4, Willpower +2: 50 %.
     scores(&mut w, &[(Stat::Intelligence, 18), (Stat::Willpower, 14)]);
-    assert_eq!(at(&w), (50, 27));
-    // Low stats never lower the cap.
+    assert_eq!(at(&w), 50);
+    // Low stats never lower the dice.
     scores(&mut w, &[(Stat::Intelligence, 4), (Stat::Willpower, 4)]);
-    assert_eq!(at(&w), (0, 18));
-    // Intelligence +10, Willpower +10: 150 %, held to tier 2's most, 60 %: 18 → 28.
+    assert_eq!(at(&w), 0);
+    // Intelligence +10, Willpower +10: 150 %, nothing holding it (decision 16).
     scores(&mut w, &[(Stat::Intelligence, 30), (Stat::Willpower, 30)]);
-    assert_eq!(at(&w), (60, 28));
+    assert_eq!(at(&w), 150);
     // Keen mind for evocation: 10 points more of lift, only for its school.
     let before = w.state.player().talents.clone();
     w.player_mut().talents.take("keen_mind", Some("evocation"));
-    assert_eq!(at(&w), (70, 30));
+    assert_eq!(at(&w), 160);
     w.player_mut().talents = before;
     w.player_mut().talents.take("keen_mind", Some("necromancy"));
-    assert_eq!(at(&w), (60, 28), "another school's mind");
+    assert_eq!(at(&w), 150, "another school's mind");
 }
 
 #[test]
-fn a_lifted_spell_rolls_more_and_its_criticals_stop_at_the_lifted_cap() {
+fn a_lifted_spell_rolls_more_and_its_criticals_more_again() {
     let mut w = wizard(content_with_bolt(SCALED_RAY));
     scores(&mut w, &[(Stat::Intelligence, 18), (Stat::Willpower, 14)]);
     let target = kobold(&mut w, 1, 10_000);
-    let (mut critical, mut most) = (0, 0);
+    let (mut critical, mut most, mut plain) = (0, 0, 0);
     for _ in 0..400 {
         let (strikes, hurt) = cast_at(&mut w, (3, 0), (target, (1, 0)));
         if strikes == [Strike::Hit { critical: true }] {
             critical += 1;
+        } else {
+            plain = plain.max(hurt);
         }
-        assert!(hurt <= 27, "{hurt}");
         most = most.max(hurt);
     }
-    // 4d6 now (a die more for the lift's room), a critical's roll held to 27, not 18.
+    // 4d6 now (the lift's 50 % of three dice, a die more), past 3d6's 18; a critical more.
     assert!(critical > 0);
-    assert_eq!(most, 27);
+    assert!(plain > 18, "{plain}");
+    assert!(most > plain, "{most} against {plain}");
 }
 
 #[test]
@@ -370,10 +365,6 @@ fn a_spell_without_scales_keeps_the_old_rules() {
     scores(&mut w, &[(Stat::Intelligence, 30), (Stat::Willpower, 30)]);
     let me = w.state.player();
     assert_eq!(me.spell_lift(&content, spark), 0);
-    assert_eq!(
-        me.spell_cap(&content, spark),
-        content.spell_rules().expect("rules").cap_of(spark)
-    );
     // Its to-hit and reach are the old Dexterity's and Willpower's.
     scores(&mut w, &[(Stat::Dexterity, 16), (Stat::Willpower, 15)]);
     let me = w.state.player();

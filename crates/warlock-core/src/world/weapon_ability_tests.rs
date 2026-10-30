@@ -794,7 +794,7 @@ fn spell_content(bolt: &str, abilities: bool) -> Arc<Content> {
     files.insert("data/objects/zz_wa_test.toml", OBJECTS);
     let text = format!(
         "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
-         tier = 2\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n{bolt}\n"
+         level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n{bolt}\n"
     );
     files.insert("data/spells/arcane_bolt.toml", &text);
     if !abilities {
@@ -1013,19 +1013,17 @@ fn a_miss_by_parry_is_not_turned_back() {
 }
 
 #[test]
-fn a_reflection_spends_no_more_mana_and_keeps_the_casters_lifted_cap() {
+fn a_reflection_spends_no_more_mana_and_keeps_the_casters_lifted_dice() {
     let (mut w, kobold) = reflector(spell_content(RAY, true), "wizard", 10);
-    let player = w.player_id();
     let mut all = crate::stats::PerStat::splat(10);
     all[crate::stats::Stat::Intelligence] = 18;
     all[crate::stats::Stat::Willpower] = 14;
     w.player_mut().stats = crate::stats::Stats::new(all, crate::stats::PerStat::splat(40));
     let content = w.content().clone();
     let bolt = content.spell(content.spell_id("arcane_bolt").expect("bolt"));
-    let level = w.caster_level(player);
     let me = w.state.player();
-    let cost = me.spell_cost(&content, bolt, level);
-    assert_eq!(me.spell_cap(&content, bolt), 27, "lifted from 18");
+    let cost = me.spell_cost(&content, bolt);
+    assert_eq!(me.spell_lift(&content, bolt), 50, "a die more on 3d6");
     let mut most = 0;
     for _ in 0..400 {
         w.spend_actions(kobold, &mut Vec::new());
@@ -1038,11 +1036,10 @@ fn a_reflection_spends_no_more_mana_and_keeps_the_casters_lifted_cap() {
         );
         if blows.iter().any(|b| b.0 == kobold) {
             let hurt = 10_000 - w.state.player().hp;
-            assert!(hurt <= 27, "{hurt}");
             most = most.max(hurt);
         }
     }
-    assert!(most > 18, "past the unlifted cap: {most}");
+    assert!(most > 18, "past the unlifted dice: {most}");
 }
 
 #[test]

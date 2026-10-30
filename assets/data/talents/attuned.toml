@@ -5,7 +5,7 @@
 id = "attuned"
 name = "Attuned"
 tree = "scholar"
-description = "You are in tune with enchanted things: the power your magic items lend your spells counts for half again as much."
+description = "You are in tune with enchanted things: the learning your magic items lend you counts for half again as much."
 needs = { level = 6, stats = { intelligence = 12 } }
 effects = [{ kind = "attuned_percent", value = 50 }]
 systems = ["magic_items", "spells"]

@@ -1,4 +1,4 @@
-//! Learning spells (spec §8 "Spells"): refusals, the check by overreach and known tiers, the
+//! Learning spells (spec §8 "Spells"): refusals, the check by overreach and known levels, the
 //! time, interruption, the scroll used up, mishaps by band, saves and replays.
 
 use super::caster_tests::sp;
@@ -8,8 +8,8 @@ use crate::action::parse_actions;
 use crate::content::{Band, ContentFiles, drawn_among};
 use crate::replay::Replay;
 
-/// The pack: a, two scrolls of fireball (Fireball, tier 3); b, one of lightning (Lightning
-/// bolt, tier 3); c, two of frost (Frost, tier 2); d, one of identify; e, a dagger.
+/// The pack: a, two scrolls of fireball (Fireball, level 11); b, one of lightning (Lightning
+/// bolt, level 11); c, two of frost (Frost, level 6); d, one of identify; e, a dagger.
 const PACK: &str = "carry = [\"scroll_of_fireball*2\", \"scroll_of_lightning\", \
      \"scroll_of_frost*2\", \"scroll_of_identify\", \"dagger\"]";
 
@@ -103,7 +103,7 @@ fn refusals_take_no_time_and_keep_the_scroll() {
 }
 
 #[test]
-fn the_check_grows_with_overreach_and_the_tiers_known() {
+fn the_check_grows_with_overreach_and_the_levels_known() {
     let w = world();
     let content = w.content.clone();
     let me = w.state.player().clone();
@@ -112,16 +112,18 @@ fn the_check_grows_with_overreach_and_the_tiers_known() {
     let int = me
         .effective_stats(&content)
         .modifier(crate::stats::Stat::Intelligence);
-    // (caster level, spell): overreach and difficulty, nothing known.
+    // (caster level, spell): overreach in spell levels and difficulty (12 and a point a
+    // level over), nothing known.
     let table = [
-        (1, sp("evil_eye"), 0, None),
+        (1, sp("evil_eye"), -1, None),
+        (1, sp("spark"), 0, None),
         (6, sp("frost"), 0, None),
-        (12, sp("frost"), -1, None),
-        (1, sp("blessing"), 1, Some(16)),
-        (1, sp("frost"), 2, Some(20)),
-        (1, sp("fireball"), 3, Some(24)),
-        (3, sp("lightning_bolt"), 2, Some(20)),
-        (2, sp("haste"), 3, Some(24)),
+        (12, sp("frost"), -6, None),
+        (1, sp("blessing"), 2, Some(14)),
+        (1, sp("frost"), 5, Some(17)),
+        (1, sp("fireball"), 10, Some(22)),
+        (3, sp("lightning_bolt"), 8, Some(20)),
+        (2, sp("haste"), 9, Some(21)),
     ];
     for (level, spell, overreach, difficulty) in table {
         let o = odds(&me, level, spell);
@@ -133,7 +135,7 @@ fn the_check_grows_with_overreach_and_the_tiers_known() {
             assert_eq!(o.ways(), 144, "certain");
         }
     }
-    // Ten tiers known make it a point harder; harder is less likely.
+    // Twenty levels known make it a point harder; harder is less likely.
     let mut learned = me.clone();
     learned
         .spells
@@ -145,8 +147,8 @@ fn the_check_grows_with_overreach_and_the_tiers_known() {
     );
     assert_eq!(
         after.check.map(|c| c.1),
-        Some(17),
-        "3 + 3 + 2 + 1 + 1 (a cantrip) = 10 tiers"
+        Some(15),
+        "11 + 11 + 6 + 3 + 1 = 32 levels: a point"
     );
     assert!(after.ways() < before.ways());
     // Quick study's bonus and Spellcraft's tenth count.
@@ -166,8 +168,8 @@ fn a_spell_within_reach_is_learned_for_certain_in_its_time() {
     let hash = w.state_hash();
     let out = run(&mut w, "study:c").remove(0);
     assert_ne!(w.state_hash(), hash);
-    // Frost is tier 2: three hundred turns, half an hour.
-    assert_eq!(out.elapsed, crate::time::Duration::minutes(30));
+    // Frost is level 6: 100 + 6 × 20 = 220 turns, 22 minutes.
+    assert_eq!(out.elapsed, crate::time::Duration::minutes(22));
     assert!(w.state.player().spells.contains(&sp("frost")));
     assert_eq!(count(&w, "scroll_of_frost"), 1, "one used up");
     let said: Vec<String> = w.messages().iter().map(|m| m.display()).collect();
@@ -197,7 +199,7 @@ fn quick_study_halves_the_time() {
     raise_to(&mut w, 6);
     w.player_mut().talents.take("quick_study", None);
     let out = run(&mut w, "study:c").remove(0);
-    assert_eq!(out.elapsed, crate::time::Duration::minutes(15));
+    assert_eq!(out.elapsed, crate::time::Duration::minutes(11));
 }
 
 #[test]
@@ -207,7 +209,7 @@ fn a_blow_interrupts_the_study_which_keeps_the_scroll() {
     raise_to(&mut w, 6);
     let out = run(&mut w, "study:c").remove(0);
     assert!(out.took_turn);
-    assert!(out.elapsed < crate::time::Duration::minutes(30));
+    assert!(out.elapsed < crate::time::Duration::minutes(22));
     assert_eq!(last(&w), "You stop studying.");
     assert_eq!(count(&w, "scroll_of_frost"), 2, "kept");
     assert!(!w.state.player().spells.contains(&sp("frost")));
@@ -215,7 +217,7 @@ fn a_blow_interrupts_the_study_which_keeps_the_scroll() {
 
 #[test]
 fn far_beyond_the_reader_a_study_fails_into_a_mishap() {
-    // Lightning bolt at caster level 1 (overreach 3) against 24: a natural 24 alone makes it.
+    // Lightning bolt at caster level 1 (overreach 10, a bad mishap's band) against 22.
     let mut failed = 0;
     for seed in 0..8 {
         let mut w = identified(seeded(HALL, 10, Some(seed)));
@@ -328,12 +330,7 @@ fn each_mishap_does_what_it_says() {
     let fire = lesson(&w, "scroll_of_fireball", sp("fireball"));
     w.mishap(&mishap(&w, "eruption"), fire, &mut events);
     let lost = hp - w.state.player().hp;
-    let def = w.content.spell_of(sp("fireball")).expect("spell");
-    let cap = w.content.spell_rules().expect("rules").cap_of(def);
-    assert!(
-        lost > 0 && lost <= cap,
-        "burnt, never past the cap: {lost} of {cap}"
-    );
+    assert!(lost > 0, "burnt");
 }
 
 #[test]
@@ -376,8 +373,8 @@ fn the_dumps_say_the_spells_known_and_the_chances_in_words() {
     w = identified(w);
     w.player_mut().spells.insert(sp("blessing"));
     let rows = layer_rows(&w, spells);
-    assert!(rows[0].starts_with("Blessing: tier 1, "), "{rows:?}");
-    let frost = "study c, a scroll of frost: Frost, far beyond you".to_string();
+    assert!(rows[0].starts_with("Blessing (level 3, "), "{rows:?}");
+    let frost = "study c, a scroll of frost: Frost, a struggle".to_string();
     assert!(rows.contains(&frost), "{rows:?}");
     assert!(
         rows.iter()
@@ -390,9 +387,10 @@ fn the_dumps_say_the_spells_known_and_the_chances_in_words() {
     );
     // The exact odds only in the dev layer.
     let dev = layer_rows(&w, progress);
-    let exact = |r: &String| r.starts_with("study c frost: overreach 2, ") && r.ends_with("/144");
+    let exact = |r: &String| r.starts_with("study c frost: overreach 5, ") && r.ends_with("/144");
     assert!(dev.iter().any(exact), "{dev:?}");
     let value = json(&w, &[spells], false);
     assert_eq!(value["spells"][0]["id"], "blessing");
-    assert_eq!(value["studies"][2]["chance"], "far beyond you");
+    assert_eq!(value["studies"][2]["chance"], "a struggle");
+    assert_eq!(value["spells"][0]["level"], 3);
 }

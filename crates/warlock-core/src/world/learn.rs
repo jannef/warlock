@@ -1,4 +1,5 @@
-//! Learning spells (spec §8 "Spells", the magic design §4): [`Action::Study`](crate::Action::Study).
+//! Learning spells (spec §8 "Spells", the magic design §4, the spell scaling design §5.4):
+//! [`Action::Study`](crate::Action::Study).
 //!
 //! A character knows a set of spells for good: their class abilities' (talents) and those
 //! learned by study ([`Actor::spells`], saved). A spell scroll whose `read` table `teaches` a
@@ -10,15 +11,16 @@
 //!   a spell known ("You know this spell already."), no mana at all ("You have no gift for
 //!   magic."), and whatever a status blocks (Raging blocks `study`).
 //! - **Time**: turn after turn of the `study` action ([`World::keep_at`], like a meal),
-//!   `(tier + 1) × turns_per_tier` of them (`data/study.toml`), Quick study's `percent` less. It stops
+//!   `turns_base + turns_per_level × level` of them (`data/study.toml`), Quick study's `percent`
+//!   less. It stops
 //!   early as a rest does (a creature that disturbs a rest comes into view, a message is said:
 //!   a blow, a status); then the time is lost and the scroll kept (design §14 q1's default).
 //! - **The check** at the end, on the scroll used up (Spell recall never keeps it: §14 q7):
-//!   overreach is the spell's tier less the tier the caster level has reached
-//!   ([`crate::content::SpellRules::tier_of`]). At 0 or less the spell is learned, no draw. Above,
-//!   a 2d12 check ([`check::check`]) with the bonuses (Intelligence's modifier, the skills'
-//!   `study` benefit (Spellcraft, Decipher script), the class's affinity with the school, Quick
-//!   study) against [`StudyRules::difficulty`] (overreach and the tiers known). Made: learned.
+//!   overreach is the spell's level less the caster level. At 0 or less the spell is learned, no
+//!   draw. Above, a 2d12 check ([`check::check`]) with the bonuses (Intelligence's modifier, the
+//!   skills' `study` benefit (Spellcraft, Decipher script), the class's affinity with the
+//!   school, Quick study) against [`StudyRules::difficulty`] (the overreach, Overreach's third
+//!   off, and the levels of the spells known). Made: learned.
 //! - **Failure**: a mishap (`data/mishaps/`), one draw by weight among the band's and the lucky
 //!   ones ([`crate::content::Band`], by the overreach), then its effect, through the code the
 //!   game has: a status ([`World::afflict`]), the scroll's own spell going off on the reader
@@ -55,11 +57,12 @@ pub(super) struct Lesson {
     pub(super) turns: u32,
 }
 
-/// How a study of a spell would go: its overreach, and the check above the caster's tier
+/// How a study of a spell would go: its overreach, and the check above the caster level
 /// (`None`: certain).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Odds {
-    /// The spell's tier less the tier the caster level has reached.
+    /// The spell's level less the caster level (before Overreach's cut, which only the check's
+    /// difficulty reads).
     pub overreach: i32,
     /// The check's bonus and difficulty, at overreach 1 or more.
     pub check: Option<(i32, i32)>,
@@ -81,19 +84,20 @@ impl Actor {
         self.spells.contains(&spell) || self.talent_mods(content).has_spell(spell)
     }
 
-    /// The spells it knows that the content has, in menu order (by tier, then path order).
+    /// The spells it knows that the content has, in menu order (by spell level, then path
+    /// order).
     pub fn known_spells(&self, content: &Content) -> Vec<SpellId> {
-        (content.spells_by_tier().into_iter())
+        (content.spells_by_level().into_iter())
             .filter(|&s| self.knows_spell(content, s))
             .collect()
     }
 
-    /// The tiers of the spells it knows, added up, a cantrip counting 1 (the study check's
-    /// small cumulative penalty).
-    fn known_tiers(&self, content: &Content) -> i32 {
+    /// The levels of the spells it knows, added up (the study check's small cumulative
+    /// penalty).
+    fn known_levels(&self, content: &Content) -> i32 {
         (self.known_spells(content).into_iter())
             .filter_map(|s| content.spell_of(s))
-            .map(|d| i32::from(d.tier.max(1)))
+            .map(|d| i32::from(d.level))
             .sum()
     }
 }
@@ -118,32 +122,32 @@ pub fn study_odds(
     caster_level: i32,
     spell: SpellId,
 ) -> Option<Odds> {
-    let (study, rules, def) = (
-        content.study_rules()?,
-        content.spell_rules()?,
-        content.spell_of(spell)?,
-    );
-    let overreach = i32::from(def.tier) - i32::from(rules.tier_of(caster_level));
+    let (study, def) = (content.study_rules()?, content.spell_of(spell)?);
+    let overreach = i32::from(def.level) - caster_level;
     if overreach <= 0 {
         return Some(Odds {
             overreach,
             check: None,
         });
     }
+    let mods = actor.talent_mods(content);
     let bonus = (actor.effective_stats(content).modifier(Stat::Intelligence))
         + actor.skill_effect(content, Effect::Study)
         + affinity(content, character, spell)
-        + actor.talent_mods(content).study_bonus;
-    let difficulty = study.difficulty(overreach, actor.known_tiers(content));
+        + mods.study_bonus;
+    // Overreach's third off, rounded down (the spell scaling design §7.2).
+    let counted = overreach * (100 + mods.study_overreach_percent).max(0) / 100;
+    let difficulty = study.difficulty(counted, actor.known_levels(content));
     Some(Odds {
         overreach,
         check: Some((bonus, difficulty)),
     })
 }
 
-/// How many turns studying a spell of `tier` takes with Quick study's `percent`, at least 1.
-pub fn study_turns(rules: &StudyRules, tier: u8, percent: i32) -> u32 {
-    let turns = u64::from(rules.turns_per_tier) * (u64::from(tier) + 1);
+/// How many turns studying a spell of `level` takes with Quick study's `percent`, at least 1:
+/// `turns_base + turns_per_level × level`, scaled.
+pub fn study_turns(rules: &StudyRules, level: u8, percent: i32) -> u32 {
+    let turns = u64::from(rules.turns_base) + u64::from(rules.turns_per_level) * u64::from(level);
     let scaled = turns * u64::try_from((100 + percent).max(0)).unwrap_or(0) / 100;
     u32::try_from(scaled).unwrap_or(u32::MAX).max(1)
 }
@@ -192,7 +196,7 @@ impl World {
             return Spent::Nothing;
         };
         let percent = me.talent_mods(&content).study_percent;
-        let turns = study_turns(rules, def.tier, percent);
+        let turns = study_turns(rules, def.level, percent);
         let title = self.lore().title(&stack.single());
         self.say(format!("You begin to study the {title}."));
         Spent::Study(Lesson {
@@ -355,8 +359,7 @@ impl World {
     }
 
     /// The spell of the scroll studied goes off on its reader: a burst around them, a bolt
-    /// through their own cell, its roll held to the cap of the spell it teaches. A death by it
-    /// is the scroll's.
+    /// through their own cell. A death by it is the scroll's.
     fn backfire(&mut self, lesson: Lesson, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let object = lesson.object;
@@ -365,27 +368,16 @@ impl World {
             Some(Reading::Cast(scroll)) => return self.backfire_spell(*scroll, object, events),
             _ => return,
         };
-        let cap = (content.spell_rules())
-            .zip(content.spell_of(lesson.spell))
-            .map(|(rules, def)| rules.cap_of(def));
         let player = self.state.player;
         let here = self.player_pos();
         let mut made = Vec::new();
         self.sound_at(spell.noise, here);
         match &spell.cast {
             Cast::Burst(burst) => {
-                let burst = crate::content::Burst {
-                    cap,
-                    ..burst.clone()
-                };
-                self.cast_burst(Caster::Actor(player), (here, here), &burst, &mut made);
+                self.cast_burst(Caster::Actor(player), (here, here), burst, &mut made);
             }
             Cast::Bolt(bolt) => {
-                let bolt = crate::content::Bolt {
-                    cap,
-                    ..bolt.clone()
-                };
-                self.cast_bolt(Caster::Actor(player), here, &[here], &bolt, &mut made);
+                self.cast_bolt(Caster::Actor(player), here, &[here], bolt, &mut made);
             }
         }
         self.say_spell((&spell.noun, &spell.verb), made, events);
@@ -396,8 +388,8 @@ impl World {
     }
 
     /// A scroll of a spell of `data/spells/` backfires: a damage spell goes off as a burst
-    /// around the reader (its own radius, else 1) at the scroll's caster level, held to its
-    /// cap; a spell of any other kind only fizzles (the mishap's message is all).
+    /// around the reader (its own radius, else 1) at the scroll's caster level; a spell of any
+    /// other kind only fizzles (the mishap's message is all).
     fn backfire_spell(
         &mut self,
         scroll: crate::content::SpellScroll,
@@ -405,21 +397,17 @@ impl World {
         events: &mut Vec<Event>,
     ) {
         let content = self.content.clone();
-        let (def, Some(rules)) = (content.spell(scroll.spell), content.spell_rules()) else {
-            return;
-        };
+        let def = content.spell(scroll.spell);
         let Some(damage) = def.damage else {
             return;
         };
-        let comfortable = rules.comfortable[usize::from(def.tier)];
         let burst = crate::content::Burst {
             spell: def.look.effect.clone().unwrap_or_default(),
             radius: def.radius.map_or(1, i32::from),
-            damage: damage.at(i32::from(scroll.level), comfortable),
+            damage: damage.at(i32::from(scroll.level), def.grows_from()),
             kind: def.damage_type,
             blast: 0,
             ice: None,
-            cap: Some(rules.cap_of(def)),
         };
         let player = self.state.player;
         let here = self.player_pos();

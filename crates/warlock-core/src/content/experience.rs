@@ -758,8 +758,7 @@ mod tests {
 
     #[test]
     fn mana_comes_with_levels_up_to_mana_level() {
-        // Mana grows to the last level, 60, for tier 9's comfortable caster level (spec §8
-        // "Spells").
+        // Mana grows to the last level, 60 (spec §8 "Spells").
         assert_eq!(
             Experience::parse("x", SHIPPED).expect("valid").mana_level(),
             60

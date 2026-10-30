@@ -1,25 +1,27 @@
-# Studying a spell from a scroll (spec §8 "Spells", the magic design §4; `study:b`). All first
-# guesses, to be tuned by play.
+# Studying a spell from a scroll (spec §8 "Spells", the magic design §4, the spell scaling design
+# §5.4; `study:b`). All first guesses, to be tuned by play.
 #
-# A study takes turns_per_tier turns of the `study` action (actions.toml) for each tier of the
-# spell and one more: 100 turns are 10 minutes, so a tier-3 spell takes 40 minutes (Quick study:
-# half). At the end the scroll is used up. A spell at or below the tier the caster level has
-# reached (spells.toml's comfortable levels) is learned for certain. Above it, by `overreach`
-# tiers, a 2d12 check decides:
+# A study takes turns_base turns of the `study` action (actions.toml) and turns_per_level more
+# for each level of the spell: 100 turns are 10 minutes, so a level-11 spell takes 320 turns, 32
+# minutes (Quick study: half). At the end the scroll is used up. A spell of a level at most the
+# caster level is learned for certain. Above it, by `overreach` levels (the spell's level less
+# the caster level; Overreach counts a third fewer, rounded down), a 2d12 check decides:
 #
-#   difficulty = base + per_overreach × overreach + (tiers known, a cantrip counting 1) ÷
+#   difficulty = base + per_overreach × overreach + (the levels of the spells known, added up) ÷
 #                known_per_point (rounded down)
 #
 # against which the roll adds the Intelligence modifier, the skills' `study` benefit (Spellcraft
 # and Decipher script, each its value ÷ 10), the class's affinity with the spell's school
-# (classes/), and Quick study's bonus. A failure draws a mishap (mishaps/): slight below
-# bad_from, bad below terrible_from, terrible from there, lucky ones beside any.
+# (classes/), and Quick study's bonus. A failure draws a mishap (mishaps/) by the overreach:
+# slight below bad_from levels, bad below terrible_from, terrible from there, lucky ones beside
+# any.
 base = 12
-per_overreach = 4
-known_per_point = 10
-turns_per_tier = 100
-bad_from = 2
-terrible_from = 4
+per_overreach = 1
+known_per_point = 20
+turns_base = 100
+turns_per_level = 20
+bad_from = 6
+terrible_from = 15
 
 # How the game tells the chance (the player never sees the number): "easy" from `easy` ways of
 # the 144 the dice can fall, "a struggle" from `struggle`, "far beyond you" below; "certain" when

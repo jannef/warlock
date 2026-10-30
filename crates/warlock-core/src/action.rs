@@ -123,8 +123,8 @@ pub enum Action {
     },
     /// Study one of inventory stack `item`, a scroll whose type the player knows, to learn the
     /// spell it teaches for good (spec §8 "Spells"): turn after turn of the `study` action (by
-    /// the spell's tier), stopping early like a rest (the scroll kept); at the end the scroll is
-    /// used up, and above the player's tier a check decides whether they learn it or a mishap
+    /// the spell's level), stopping early like a rest (the scroll kept); at the end the scroll is
+    /// used up, and above the player's caster level a check decides whether they learn it or a mishap
     /// befalls them. Refused (no time) for a scroll that is not known or teaches nothing, or a
     /// spell already known.
     Study {

@@ -83,7 +83,7 @@ pub enum ActionKind {
     /// Reading a scroll (spec §8 "Scrolls"): casting its spell, or identifying an item.
     Read,
     /// A turn of studying a spell from a scroll (spec §8 "Spells"): a study takes many of them,
-    /// by the spell's tier (`data/study.toml`).
+    /// by the spell's level (`data/study.toml`).
     Study,
     /// A turn of digging into a wall with a digging tool (spec §8 "Digging"): a dig takes many
     /// of them.

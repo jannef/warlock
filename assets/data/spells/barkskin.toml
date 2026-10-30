@@ -3,7 +3,7 @@
 id = "barkskin"
 name = "Barkskin"
 description = "Your skin hardens like bark a while: blows land on you less often."
-tier = 1
+level = 3
 school = "transmutation"
 kind = "buff"
 shape = "self"

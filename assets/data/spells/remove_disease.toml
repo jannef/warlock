@@ -3,7 +3,7 @@
 id = "remove_disease"
 name = "Remove disease"
 description = "A rite of cleansing: every disease you carry and any poison in you are gone."
-tier = 3
+level = 11
 school = "restoration"
 kind = "cleanse"
 shape = "self"

@@ -1,6 +1,6 @@
 # A scroll of evil eye (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Evil eye, a
 # cantrip, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
-# good. Level and frequency by its tier: the lower the tier, the commoner the scroll.
+# good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_evil_eye"
 name = "scroll of evil eye"

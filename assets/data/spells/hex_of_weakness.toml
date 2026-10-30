@@ -3,7 +3,7 @@
 id = "hex_of_weakness"
 name = "Hex of weakness"
 description = "Hex a foe you see nearby: weakened a while, weaker and clumsier."
-tier = 1
+level = 3
 school = "necromancy"
 kind = "hex"
 shape = "ray"

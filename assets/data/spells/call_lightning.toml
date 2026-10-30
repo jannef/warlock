@@ -3,7 +3,7 @@
 id = "call_lightning"
 name = "Call lightning"
 description = "Call the sky's fire down: under the open sky, lightning through everyone on its line toward a place you aim at."
-tier = 3
+level = 11
 school = "evocation"
 kind = "damage"
 shape = "line"

@@ -95,8 +95,8 @@ pub enum Reading {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SpellScroll {
     pub spell: SpellId,
-    /// The caster level a read casts it at: the spell's `[spell.scroll] level`, else its tier's
-    /// comfortable level.
+    /// The caster level a read casts it at: the spell's `[spell.scroll] level`, else its spell
+    /// level, at least 1.
     pub level: u8,
     /// How far the reader may aim it before Willpower (its data's reach); `None` for a spell on
     /// oneself, read without aiming.
@@ -279,12 +279,9 @@ impl ReadSpec {
         let spell = (content.spell_id(&id))
             .ok_or_else(|| format!("`read`: no spell `{id}` in data/spells/"))?;
         let def = content.spell(spell);
-        let comfortable = content
-            .spell_rules()
-            .map_or(1, |r| r.comfortable[usize::from(def.tier)]);
         Ok(Reading::Cast(SpellScroll {
             spell,
-            level: def.scroll_level.unwrap_or(comfortable),
+            level: def.scroll_level.unwrap_or(def.grows_from()),
             reach: def.base_reach(),
             on_item: def.aims_item(),
         }))
