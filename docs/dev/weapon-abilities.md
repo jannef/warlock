@@ -198,7 +198,7 @@ warrior's class ability Drillmaster (level 25: `weapon_stamina` 1, read in
 
 `content/weapon_ability.rs` (the shipped catalogue, its systems, no "aimed" names, every
 refusal, the actives' too), `world/weapon_ability_tests.rs` (each triggered ability on a
-hand-made fight, the abuse rules, Spell reflection's cap, mark, shapes, Parry, mana, lifted cap,
+hand-made fight, the abuse rules, Spell reflection's cap, mark, shapes, Parry, mana, lifted dice,
 wand, and draws, creatures' Brace and Point-blank, no draws without a rank, the three talents,
 the menu and the news), `world/weapon_active_tests.rs` (each active, its costs and refusals, the
 greyed rows, Practised technique, Drillmaster, Armour-breaker, the pool granted, the action

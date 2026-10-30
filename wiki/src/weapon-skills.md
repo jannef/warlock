@@ -31,7 +31,7 @@ the [Controls screen](controls.md#rebinding-keys) ("Bash with your shield") if y
 miss (see [Magic](magic.md#how-a-spell-finds-its-target)). Every such spell you cast with your
 own [mana](mana.md#how-much) that reaches a creature earns marks, more for a hit, as a blow does; its ranks add to
 the spell's to-hit, widen its [critical range](combat.md#criticals), and at the top make a [critical](combat.md#criticals) roll the damage
-once more (still held to the spell's most). A spell read from a [scroll](scrolls.md) or used from a [wand](magic.md#wands) aims
+once more. A spell read from a [scroll](scrolls.md) or used from a [wand](magic.md#wands) aims
 with [Dexterity](stats.md#stat-dexterity) alone and trains nothing; spells that never miss train nothing either. The
 [caster styles](fighting-styles.md#caster-styles) add to it.
 

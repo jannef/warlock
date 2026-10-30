@@ -79,10 +79,11 @@ Build the engine and framework, not the game. Everything built is production qua
   hit points, regeneration, stats, attack and moving speed, carrying, stealth, light). Loot on
   generated levels' floors, in vaults, and dropped by creatures; found unidentified (rarity
   known, affixes not, effects applying); an item description screen (§8 "Magic items")
-- Magic (the magic design, `docs/design/magic.md`, #393–#401): spells of tiers 0 (cantrips) to
-  9, cast for mana at a caster level from the class's casting share, by a few kinds of shape
-  and resolution under strict damage caps; a few guaranteed by the casting classes, the rest
-  learned by studying identified scrolls, at a risk of mishaps above one's tier; unidentified
+- Magic (the magic design, `docs/design/magic.md`, #393–#401; the spell scaling design,
+  `docs/design/spell-scaling.md`): spells of levels 0 (cantrips at 0 and 1) to 70, cast for
+  their level's mana by a few kinds of shape and resolution, with no cap on what they do; a few
+  guaranteed by the casting classes, the rest learned by studying identified scrolls, certain
+  at or below one's caster level (the class's casting share) and at a risk of mishaps above it; unidentified
   scrolls, wands (charges, a set caster level), and rods (effects no spell has, the user's mana);
   Spellcraft talents (§8 "Spells", "Scrolls", "Wands", "Rods")
 - Damage types (#151): every blow, burst, bolt, fall, and plunge is slashing, piercing,

@@ -670,11 +670,25 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Study {
             bonus,
             percent: time,
-        } => format!(
-            "study check {}, study time {}",
-            signed(bonus),
-            percent(time)
-        ),
+            overreach_percent,
+        } => {
+            let mut parts = Vec::new();
+            if bonus != 0 {
+                parts.push(format!("study check {}", signed(bonus)));
+            }
+            if time != 0 {
+                parts.push(format!("study time {}", percent(time)));
+            }
+            if overreach_percent != 0 {
+                parts.push(format!(
+                    "the levels a spell is above your caster level count {} in the study \
+                     check, rounded down (a spell beyond your learning is that much less beyond \
+                     you)",
+                    percent(overreach_percent)
+                ));
+            }
+            parts.join(", ")
+        }
         TalentEffect::ScrollKept { chance } => {
             format!("a {chance} % chance a scroll you read is not used up")
         }
@@ -1529,18 +1543,13 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 parts.push(format!("{} on every die", signed(per_die)));
             }
             format!(
-                "your spells' and spell scrolls' damage, toward their cap and never past it: {}",
+                "your spells' and spell scrolls' damage: {}",
                 parts.join(", and ")
             )
         }
         TalentEffect::SpellManaPercent { value } => {
             format!("your spells' mana {} (at least 1)", percent(value))
         }
-        TalentEffect::OverreachCostPercent { value } => format!(
-            "the overreach surcharge of a spell above your caster level's tier {} (the tier \
-             table's percent per tier over)",
-            percent(value)
-        ),
         TalentEffect::SchoolFocus { cost, reach, lift } => {
             let mut parts = Vec::new();
             if cost != 0 {
@@ -1553,10 +1562,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 ));
             }
             if lift != 0 {
-                parts.push(format!(
-                    "the tier's maximum lift of its damage cap {} points",
-                    signed(lift)
-                ));
+                parts.push(format!("the lift of its dice {} points", signed(lift)));
             }
             format!(
                 "spells of the chosen school or element: {}",
@@ -1727,19 +1733,18 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
     }
 }
 
-/// A caster's spell, as the class tables say it: what it does, its tier and mana, and its time.
+/// A caster's spell, as the class tables say it: what it does, its spell level and mana, and its
+/// time.
 fn spell_text(content: &Content, def: &SpellData) -> String {
     let casts = match def.casts {
         1 => "a cast".to_string(),
         n => format!("{n} casts"),
     };
-    let mana = content.spell_rules().map_or(0, |r| {
-        r.mana(def, i32::from(r.comfortable[usize::from(def.tier)]), 0)
-    });
+    let mana = content.spell_rules().map_or(0, |r| r.mana(def, 0));
     format!(
-        "spell `use:{}` (tier {}, {casts}, {mana} mana): {}: {}",
+        "spell `use:{}` (level {}, {casts}, {mana} mana): {}: {}",
         def.id,
-        def.tier,
+        def.level,
         def.name,
         super::spells::does(content, def)
     )

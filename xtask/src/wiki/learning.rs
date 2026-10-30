@@ -1,16 +1,20 @@
 //! Learning spells (spec §8 "Spells"): the study check's chances by overreach and bonus, how
-//! long a study takes by tier, the classes' affinities with the schools, and the mishaps.
+//! long a study takes by spell level, the classes' affinities with the schools, and the mishaps.
 
 use std::fmt::Write as _;
 use warlock_core::check;
-use warlock_core::content::{Band, Content, MishapEffect, TIERS};
+use warlock_core::content::{Band, Content, MishapEffect};
 use warlock_core::time::Duration;
 
 /// The bonuses the chance table shows a column for.
 const BONUSES: [i32; 7] = [-2, 0, 2, 4, 6, 8, 10];
 
-/// The study check's difficulty by overreach, and the chance of learning at each bonus, with
-/// nothing known; then what the tiers known add.
+/// The spell levels the tables sample, one row each (the spell scaling design §5.9): where the
+/// spells and their successors sit.
+const LEVELS: [u8; 10] = [0, 3, 6, 11, 16, 22, 29, 37, 46, 56];
+
+/// The study check's difficulty by overreach in spell levels, and the chance of learning at each
+/// bonus, with nothing known; then what the levels known add, and the mishaps' bands.
 pub(super) fn chances(content: &Content) -> String {
     let Some(rules) = content.study_rules() else {
         return String::new();
@@ -27,7 +31,7 @@ pub(super) fn chances(content: &Content) -> String {
         out.push_str(" certain |");
     }
     out.push('\n');
-    for overreach in 1..TIERS as i32 {
+    for overreach in LEVELS.iter().filter(|&&l| l > 0).map(|&l| i32::from(l)) {
         let difficulty = rules.difficulty(overreach, 0);
         let _ = write!(out, "| {overreach} | {difficulty} |");
         for b in BONUSES {
@@ -39,13 +43,14 @@ pub(super) fn chances(content: &Content) -> String {
     }
     let _ = writeln!(
         out,
-        "\nEvery {} tiers of the spells you know (a cantrip counting 1) make it a point harder.",
-        rules.known_per_point
+        "\nEvery {} levels of the spells you know, added up, make it a point harder. A failure's \
+         mishap is slight below {} levels of overreach, bad from {}, and terrible from {}.",
+        rules.known_per_point, rules.bad_from, rules.bad_from, rules.terrible_from
     );
     out
 }
 
-/// How long studying a spell takes by its tier, and with Quick study's time.
+/// How long studying a spell takes by its spell level, and with Quick study's time.
 pub(super) fn times(content: &Content) -> String {
     let Some(rules) = content.study_rules() else {
         return String::new();
@@ -58,16 +63,17 @@ pub(super) fn times(content: &Content) -> String {
                 _ => None,
             })
         });
-    let mut out =
-        String::from("| Tier | Turns | Takes | With Quick study |\n|:---:|:---:|:---:|:---:|\n");
+    let mut out = String::from(
+        "| Spell level | Turns | Takes | With Quick study |\n|:---:|:---:|:---:|:---:|\n",
+    );
     let took = |turns: u32| Duration::seconds(u64::from(turns) * 6).spoken();
-    for tier in 0..TIERS as u8 {
-        let turns = warlock_core::world::study_turns(rules, tier, 0);
+    for level in LEVELS {
+        let turns = warlock_core::world::study_turns(rules, level, 0);
         let quick = quick.map_or_else(
             || "—".to_string(),
-            |p| took(warlock_core::world::study_turns(rules, tier, p)),
+            |p| took(warlock_core::world::study_turns(rules, level, p)),
         );
-        let _ = writeln!(out, "| {tier} | {turns} | {} | {quick} |", took(turns));
+        let _ = writeln!(out, "| {level} | {turns} | {} | {quick} |", took(turns));
     }
     out
 }

@@ -127,7 +127,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     door (the way in stays free), a lamp hangs over the middle of the room, and the floor is laid
     with `items` stacks (as many as there are free cells, one a cell), each drawn from what the
     kind stocks (traded, not burning) by its loot `frequency` (100 for an object that is never
-    loot; #397: a spell scroll of a low tier lies there more often than one of a high tier), a
+    loot; #397: a spell scroll of a low spell level lies there more often than one of a high level), a
     stackable one a `bundle`. All from the level's
     map stream, so a level without a shop is the map it would be without them. Caverns get none.
     Hidden traps and floor loot (§8 "Traps", "Magic items") never lie on a shop's floor.

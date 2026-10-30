@@ -60,7 +60,7 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Eat => "A turn of eating (a meal takes several: see Food and corpses)",
             ActionKind::Read => "Reading a scroll",
             ActionKind::Study => {
-                "A turn of studying a spell from a scroll (a study takes many, by the spell's tier)"
+                "A turn of studying a spell from a scroll (a study takes many, by the spell's level)"
             }
             ActionKind::Dig => "A turn of digging (digging through a wall takes many)",
             ActionKind::Search => "A turn of searching (searching for a while takes several)",

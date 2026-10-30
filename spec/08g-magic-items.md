@@ -85,7 +85,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     The spell ones are read (#629), each where its talent's is, unidentified too, on creatures
     as on the player: `mana_cost` joins Frugal caster's cut (§8 "Mana", 50 % off at most),
     `spell_ease` eases its own piece (§8 "Spells": "Cost"), `spell_to_hit` and `spell_threat`
-    aim an own cast only (never a scroll's or a wand's), `spell_lift` widens the lift with Keen
+    aim an own cast only (never a scroll's or a wand's), `spell_lift` adds to the lift with Keen
     mind's, `spell_reach` adds to the range or length with School focus's, and `spell_duration`
     adds degrees. `caster_level` (of the Adept) is read in `Actor::caster_level`; **Attuned**
     (Scholar, Intelligence 12, level 6) counts the caster level magic items give half again,
@@ -300,9 +300,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
 
 - **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
   the magic design §9; #398): objects (`-`, the wands class, one at a time) whose `[object.wand]`
-  holds a spell of `data/spells/` (an aimed one), its `charges` (default its tier's
-  `wand_charges` in `data/spells.toml`: 15, 12, 9, 7, 5, 4, 3, 3, 2, 2 for tiers 0 to 9), and the
-  `caster_level` it casts at (default its tier's comfortable level). A wand goes in the
+  holds a spell of `data/spells/` (an aimed one), its `charges` (its own, required, 1 to 99:
+  the wand's, not its spell's), and the `caster_level` it casts at (default its spell's level,
+  at least 1; the seven shipped wands give theirs). A wand goes in the
   **missile weapon slot** (`slot = "missile_weapon"`), so a wand and a launcher compete for it
   (the swap is the `ready` action, as for any missile weapon), and is used as a missile weapon
   is: `t` aims it (`AimKind::Zap`, the spell's own aiming by its shape and the player's reach
@@ -311,7 +311,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     own resolution (an `attack` spell rolls to hit with the user's Dexterity, as every spell
     attack does; `auto` and `area` ones do not), reach (the user's Willpower), dice at the
     **wand's caster level**, never the user's (plus Wand mastery's +2 and worn `wand_level`
-    affixes'), held to the spell's cap.
+    affixes'), nothing holding the roll.
     A charge pays instead of mana; a cast refused (at oneself, out of reach, no one to touch)
     uses none and takes no time; one that goes off takes the `cast` action's time (times the
     spell's `casts`). Its kills are the user's; one that kills its user is the spell's
