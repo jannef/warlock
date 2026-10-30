@@ -570,7 +570,7 @@ impl NaturalAttackSpec {
             .collect::<Result<Vec<_>, _>>()?;
         Ok(NaturalAttack {
             attack: Attack {
-                damage: self.damage,
+                damage: self.damage.into(),
                 to_hit: self.to_hit,
                 threat,
                 crit,

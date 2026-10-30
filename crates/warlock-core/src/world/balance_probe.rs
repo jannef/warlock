@@ -268,7 +268,7 @@ fn mean(dice: Dice) -> f64 {
 
 /// The mean damage of a hit of `p` before soak and criticals.
 fn hit_mean(p: &Profile) -> f64 {
-    let base = mean(p.damage) + f64::from(p.bonus) + p.extra.map_or(0.0, mean);
+    let base = f64::from(p.damage.mean_x2()) / 2.0 + f64::from(p.bonus) + p.extra.map_or(0.0, mean);
     base.max(1.0) + p.riders.iter().map(|r| mean(r.dice)).sum::<f64>()
 }
 
@@ -425,7 +425,7 @@ fn casts(w: &World) -> Vec<Cast> {
             .benefit_of(content, skills)
             .at_distance(3, content.weapon_skills().spell_attacks());
         let attack = Attack {
-            damage: Dice::of(1, 2),
+            damage: Dice::of(1, 2).into(),
             to_hit: me.spell_to_hit(content, def),
             threat: combat::DEFAULT_THREAT,
             crit: combat::DEFAULT_CRIT,

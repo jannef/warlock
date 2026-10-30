@@ -31,7 +31,7 @@ use crate::content::{
     ActionKind, ActiveAim, Categories, Content, STAMINA, StatusId, WeaponAbilityId, WeaponDoes,
     percent_of,
 };
-use crate::dice::Dice;
+use crate::dice::{Dice, Roll};
 use crate::geom::{Dir, Pos};
 
 /// The penetration an `ignore_protection` blow or shot has: more than any Protection, so none
@@ -556,8 +556,8 @@ impl World {
 }
 
 /// `dice` rolled twice: twice the dice, the bonus once (Mighty swing).
-fn twice(dice: Dice) -> Dice {
-    Dice::of(dice.count() * 2, dice.sides()).plus(dice.bonus())
+fn twice(dice: Roll) -> Roll {
+    dice.more(dice.groups().first().map_or(0, Dice::count))
 }
 
 /// `text` with its first letter in upper case.

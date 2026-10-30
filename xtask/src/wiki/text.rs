@@ -2,7 +2,7 @@
 //! damage.
 
 use warlock_core::content::{Content, DamageTypeId};
-use warlock_core::dice::Dice;
+use warlock_core::dice::Roll;
 use warlock_core::stats::Stat;
 
 pub(super) fn glyph(c: char) -> String {
@@ -69,21 +69,18 @@ pub(super) fn signed(n: i32) -> String {
 
 /// Damage dice with `bonus` added to every roll, its own fixed bonus included, with a real minus
 /// sign: `1d4`, `1d3−1`, `1d8+3` (a `1d8+2` bow and +1).
-pub(super) fn damage_text(dice: Dice, bonus: i32) -> String {
-    let text = dice.to_string();
-    // The text is `NdS`, `NdS+B`, or `NdS-B` (or a fixed number, which has no `d`).
-    let (base, own) = match text.find('d') {
-        Some(d) => match text[d..].find(['+', '-']) {
-            Some(at) => (&text[..d + at], text[d + at..].parse().unwrap_or(0)),
-            None => (text.as_str(), 0),
-        },
-        None => ("", text.parse().unwrap_or(0)),
-    };
-    let total: i32 = own + bonus;
-    match (base, total) {
-        ("", n) => n.max(0).to_string(),
-        (base, 0) => base.replace('-', "\u{2212}"),
-        (base, n) => format!("{}{}", base.replace('-', "\u{2212}"), signed(n)),
+pub(super) fn damage_text(dice: Roll, bonus: i32) -> String {
+    let total = dice.bonus() + bonus;
+    if dice.is_fixed() {
+        return total.max(0).to_string();
+    }
+    let base = dice
+        .plus(-dice.bonus())
+        .to_string()
+        .replace('-', "\u{2212}");
+    match total {
+        0 => base,
+        n => format!("{base}{}", signed(n)),
     }
 }
 

@@ -9,7 +9,10 @@ Natural, Dodge, Deflection, Wall: one entry each in its `categories!` list; Wall
 incorporeal creature's inside solid terrain, added by `World::defence_of`, `docs/dev/creatures.md`) and `Defence` (highest per
 category, Dodge stacks; `why_missed` weighs a miss by the positive bonuses); `Attack` (what data
 gives: dice, to-hit, threat, crit, a bow's Strength) and `Profile` (an attack with the attacker's
-modifiers: `melee`, `ranged`, `thrown`); `strike` resolves one with a fixed order of draws from
+modifiers: `melee`, `ranged`, `thrown`); both hold their damage as a `dice::Roll`
+(`dice/roll.rs`: `Dice` groups of more than one size plus one bonus, `3d6+1d10`; a weapon's,
+natural attack's, or trap's `Dice` converts with `From<Dice>` where its `Attack` is built and
+rolls the very draws it would, `roll(rng, 0)`); `strike` resolves one with a fixed order of draws from
 the gameplay stream; `max_hp`, `regen_seconds`, `Health` words). `world/fight.rs` applies them:
 `World::attack` (picks the profile: melee weapon / natural attack / bare hands, the readied
 launcher for a shot, none for a spell) → `attack_with(attacker, target, kind, Option<Profile>)`

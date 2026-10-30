@@ -36,7 +36,7 @@ use crate::content::{
     WeaponDoes, WeaponSkillId,
 };
 use crate::damage::Damage;
-use crate::dice::Dice;
+use crate::dice::{Dice, Roll};
 use crate::geom::Pos;
 use crate::talent::TalentMods;
 
@@ -285,7 +285,10 @@ impl World {
         else {
             return;
         };
-        let bare = |d: Dice| Dice::of(d.count(), d.sides());
+        // The weapon's own dice, without their bonus: its first (a weapon's one) group.
+        let bare = |r: Roll| {
+            (r.groups().first()).map_or(Dice::of(0, 0), |g| Dice::of(g.count(), g.sides()))
+        };
         let main = me.weapon(&content).map(|(_, a)| bare(a.damage));
         let off = me.off_hand(&content).map(|(_, a)| bare(a.damage));
         let mut rolls: Vec<Dice> = match dice {

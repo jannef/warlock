@@ -168,7 +168,7 @@ fn damage_reads_dice_bonus_kinds_and_riders() {
         kind: AttackKind::Melee,
         name: "long sword".into(),
         to_hit: 4,
-        damage: crate::dice::Dice::of(1, 8).plus(2),
+        damage: crate::dice::Dice::of(1, 8).plus(2).into(),
         extra: None,
         kinds: crate::damage::Kinds::of(&[slashing, piercing]).expect("two"),
         riders: Vec::new(),

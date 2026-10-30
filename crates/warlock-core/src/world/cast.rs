@@ -915,7 +915,7 @@ impl World {
         let shot = Shot {
             def,
             effect,
-            dice,
+            dice: dice.into(),
             cap,
             to_hit,
             threat,
@@ -991,7 +991,7 @@ impl World {
                 (blow.damage, blow.strike, sneak)
             }
             Resolution::Auto | Resolution::Area => (
-                shot.dice.roll(&mut self.state.rng).max(0),
+                shot.dice.roll(&mut self.state.rng, 0).max(0),
                 Strike::Hit { critical: false },
                 0,
             ),

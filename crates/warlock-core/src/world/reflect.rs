@@ -32,7 +32,7 @@ use super::{ActorId, AttackSkills, World};
 use crate::action::{AttackKind, Event, SpellShape};
 use crate::combat::{Blow, Category};
 use crate::content::{Shape, SpellData, Trigger};
-use crate::dice::Dice;
+use crate::dice::Roll;
 use crate::geom::Pos;
 
 /// The reflections' transient state (never saved).
@@ -50,7 +50,7 @@ pub(super) struct Shot<'s> {
     pub(super) def: &'s SpellData,
     /// Its effect's id (drawn along its way), or empty.
     pub(super) effect: &'s str,
-    pub(super) dice: Dice,
+    pub(super) dice: Roll,
     /// The caster's cap (lifted, for its own spell): the most it does.
     pub(super) cap: i32,
     /// The caster's to-hit with it.
