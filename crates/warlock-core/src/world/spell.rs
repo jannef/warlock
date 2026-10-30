@@ -246,7 +246,7 @@ impl World {
                 cells: cells.clone(),
             });
         }
-        let roll = burst.damage.roll(&mut self.state.rng);
+        let roll = burst.damage.roll(&mut self.state.rng, burst.reroll);
         let inner = radius2(radius - 1);
         let level = self.state.current_level.clone();
         let reached: BTreeSet<Pos> = cells.into_iter().collect();
@@ -300,7 +300,7 @@ impl World {
                 cells: path.to_vec(),
             });
         }
-        let roll = bolt.damage.roll(&mut self.state.rng);
+        let roll = bolt.damage.roll(&mut self.state.rng, bolt.reroll);
         let level = self.state.current_level.clone();
         let mut caught = Vec::new();
         for p in path {

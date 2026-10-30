@@ -1,5 +1,5 @@
 # Fireball (spec §8 "Spells", the first spell list; the wizard's Fire burst of #395 folded into it):
-# a burst of fire, a die more every four caster levels, never more than three.
+# a burst of fire; its ladder of Intelligence ([spell.grows]) adds dice.
 [[spell]]
 id = "fireball"
 name = "Fireball"
@@ -11,9 +11,8 @@ shape = "burst"
 resolution = "area"
 damage_type = "fire"
 range = 10
-max_range = 12
-max_radius = 2
-damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
+radius = 2
+damage = "2d6"
 
 [spell.cast]
 effect = "fireball"
@@ -24,5 +23,6 @@ blast = 1000
 heat = true
 noise = { sound = "explosion", loudness = 150 }
 
-[spell.scales]
-damage = { intelligence = 10, willpower = 5 }
+[spell.grows]
+damage = "intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"
+range = "willpower 14 11, 18 12"

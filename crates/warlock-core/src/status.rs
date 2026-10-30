@@ -481,6 +481,7 @@ mod tests {
             to_hit: 3,
             damage: "1d3".parse().expect("dice"),
             bonus: 1,
+            reroll: 0,
             threat: 24,
             crit: 2,
             confirm: 0,

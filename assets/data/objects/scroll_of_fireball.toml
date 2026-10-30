@@ -1,5 +1,7 @@
-# A scroll of fireball (spec §8 "Scrolls"): read it (`r`) and aim, and a fireball flies to the
-# cell aimed at, or the first creature in its way, and explodes as a fireball trap does.
+# A scroll of fireball (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts
+# Fireball, free of mana, a rung up its ladder (3d6; the spell scaling design §7.4): a fireball
+# flies to the cell aimed at, or the first creature in its way, and explodes. Study it (`L`), and
+# you may learn the spell for good.
 [[object]]
 id = "scroll_of_fireball"
 name = "scroll of fireball"
@@ -15,18 +17,6 @@ level = 6
 frequency = 20
 
 [object.read]
-kind = "burst"
+kind = "spell"
 spell = "fireball"
-noun = "fireball"
-verb = "burns"
-message = "A fireball streaks from the scroll and explodes!"
-radius = 2
-damage = "3d6"
-damage_type = "fire"
-range = 10
-# Blows stone walls and packed earth apart; granite holds. Melts ice.
-blast = 1000
-heat = true
-noise = { sound = "explosion", loudness = 150 }
-# Studying it (spec §8 "Spells", `study:b`) teaches Fireball.
-teaches = "fireball"
+rungs = 1

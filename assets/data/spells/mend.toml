@@ -9,4 +9,7 @@ school = "restoration"
 kind = "heal"
 shape = "touch"
 resolution = "touch"
-effect = { heal = { dice = "1d3" } }
+effect = { heal = "1d3" }
+
+[spell.grows]
+heal = "willpower 16 1d4, 22 1d6"

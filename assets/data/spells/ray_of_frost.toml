@@ -11,10 +11,13 @@ shape = "ray"
 resolution = "attack"
 damage_type = "cold"
 range = 6
-max_range = 8
-damage = { dice = "1d6" }
+damage = "1d6"
 
 [spell.cast]
 effect = "frost_ray"
 noun = "ray of frost"
 noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+damage = "intelligence 16 1d8"
+range = "willpower 14 7, 18 8"

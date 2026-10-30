@@ -1,8 +1,8 @@
 [[suffix]]
 id = "of_wands"
 name = "of Wands"
-effect = "wand_level"
-category = "wand_level"
+effect = "wand_rungs"
+category = "wand_rungs"
 bases = ["gloves", "ring"]
 weight = 40
 tiers = [

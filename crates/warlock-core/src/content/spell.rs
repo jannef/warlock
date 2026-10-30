@@ -1,6 +1,7 @@
-//! Spells in data (spec §8 "Traps", "Scrolls"): the bursts and bolts that traps
-//! (`data/traps.toml`) and scrolls (`read` in `data/objects/`) cast, with one set of rules and
-//! checks for both. Who casts one decides only who deals its harm (`world/spell.rs`).
+//! Spells in data (spec §8 "Traps", "Spells"): the bursts and bolts that traps
+//! (`data/traps.toml`) cast, with the rules and checks the spells of `data/spells/` share (their
+//! bursts and lines go off through the same code). Who casts one decides only who deals its harm
+//! (`world/spell.rs`).
 //!
 //! - A **burst** (`Burst`, a fireball): everyone on the cells within its `radius` that a
 //!   shadowcast from its center reaches takes one roll of its `damage`, half of it (at least 1)
@@ -18,7 +19,7 @@
 use super::effect::EffectShape;
 use super::terrain::MAX_HARDNESS;
 use super::{Content, DamageTypeId};
-use crate::dice::Dice;
+use crate::dice::{Dice, Roll};
 use crate::ice;
 use crate::perception::VIEW_RADIUS;
 use std::ops::RangeInclusive;
@@ -44,7 +45,10 @@ pub struct Burst {
     /// The effect presentation shows (`data/effects.toml`).
     pub spell: String,
     pub radius: i32,
-    pub damage: Dice,
+    pub damage: Roll,
+    /// A die of its roll showing this or less is drawn once more (a caster's roll hook; a
+    /// trap's 0).
+    pub reroll: u32,
     /// The kind of damage it does (spec §8 "Damage types"); `None` without damage types.
     pub kind: Option<DamageTypeId>,
     /// What it does to walls (spec §8 "Digging"): it breaks those in the blast whose hardness is
@@ -60,7 +64,10 @@ pub struct Bolt {
     /// The effect presentation shows (`data/effects.toml`).
     pub spell: String,
     pub length: i32,
-    pub damage: Dice,
+    pub damage: Roll,
+    /// A die of its roll showing this or less is drawn once more (a caster's roll hook; a
+    /// trap's 0).
+    pub reroll: u32,
     /// The kind of damage it does (spec §8 "Damage types"); `None` without damage types.
     pub kind: Option<DamageTypeId>,
 }
@@ -122,7 +129,8 @@ impl Burst {
         Ok(Self {
             spell: fields.spell()?,
             radius,
-            damage: fields.damage()?,
+            damage: fields.damage()?.into(),
+            reroll: 0,
             kind: fields.kind,
             blast,
             ice,
@@ -144,7 +152,8 @@ impl Bolt {
         Ok(Self {
             spell: fields.spell()?,
             length,
-            damage: fields.damage()?,
+            damage: fields.damage()?.into(),
+            reroll: 0,
             kind: fields.kind,
         })
     }

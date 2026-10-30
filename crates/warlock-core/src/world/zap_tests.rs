@@ -210,16 +210,29 @@ fn an_attack_wand_rolls_to_hit_and_an_auto_wand_never_misses() {
 }
 
 #[test]
-fn a_wand_casts_at_its_own_level_and_wand_mastery_raises_it() {
+fn a_wand_casts_at_its_lowest_rung_and_wand_mastery_raises_it() {
     let mut w = world();
     let content = w.content.clone();
     let fireball = content.object_id("wand_of_fireball").expect("a wand");
     let wand = content.object(fireball).wand.expect("a wand");
-    assert_eq!(wand.caster_level, 12, "its own, given in its file");
+    assert_eq!(
+        (wand.min_rung, wand.max_rung),
+        (0, 2),
+        "its own, given in its file"
+    );
     assert_eq!(wand.charges, 7);
-    assert_eq!(w.state.player().wand_caster_level(&content, &wand), 12);
+    let def = content.spell(wand.spell);
+    let roll = |w: &World| {
+        let by = super::CastBy::Wand(wand.min_rung);
+        let r = w.state.player().spell_roll(&content, def, by);
+        r.map(|r| r.to_string()).unwrap_or_default()
+    };
+    // Until each wand draws its own rung (S5): the range's lowest, the base, whatever the
+    // user's Intelligence.
+    super::cast_tests::scores(&mut w, &[(crate::stats::Stat::Intelligence, 25)]);
+    assert_eq!(roll(&w), "2d6");
     w.player_mut().talents.take("wand_mastery", None);
-    assert_eq!(w.state.player().wand_caster_level(&content, &wand), 14);
+    assert_eq!(roll(&w), "3d6", "a rung higher");
 }
 
 #[test]
@@ -290,13 +303,23 @@ fn wand_data_is_checked() {
         Content::load(&files).map(|_| ()).map_err(|e| e.to_string())
     };
     assert_eq!(load("spell = \"fireball\"\ncharges = 7"), Ok(()));
+    assert_eq!(
+        load("spell = \"fireball\"\ncharges = 7\nrungs = { min = 1, max = 4 }"),
+        Ok(())
+    );
+    let e = load("spell = \"fireball\"\ncharges = 7\ncaster_level = 12").unwrap_err();
+    assert!(e.contains("`caster_level` is gone"), "{e}");
     let refused = [
         "spell = \"haste\"\ncharges = 7",
         "spell = \"nothing\"\ncharges = 7",
         "spell = \"fireball\"",
         "spell = \"fireball\"\ncharges = 0",
         "spell = \"fireball\"\ncharges = 100",
-        "spell = \"fireball\"\ncharges = 7\ncaster_level = 0",
+        // `caster_level` is gone (the spell scaling design §7.4); `rungs` within the ladder.
+        "spell = \"fireball\"\ncharges = 7\ncaster_level = 12",
+        "spell = \"fireball\"\ncharges = 7\nrungs = { min = 0, max = 5 }",
+        "spell = \"fireball\"\ncharges = 7\nrungs = { min = 3, max = 2 }",
+        "spell = \"web\"\ncharges = 7\nrungs = { min = 0, max = 1 }",
     ];
     for wand in refused {
         assert!(load(wand).is_err(), "{wand}");

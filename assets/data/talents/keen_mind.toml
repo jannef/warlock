@@ -1,11 +1,10 @@
-# Keen mind (the combat progression design §7, §11; #556): the Spellcraft tree, chosen for a school
-# of magic or an element (a spell tag). Those spells' dice are lifted 10 points more than the
-# caster's stats lift them (spells/README.toml, `[spell.scales]`).
+# Keen mind (the spell scaling design §7.2): the Spellcraft tree, chosen for a school of magic
+# or an element (a spell tag). Those spells roll every die a size bigger (the dice hook, `sides`).
 [[talent]]
 id = "keen_mind"
 name = "Keen mind"
 tree = "spellcraft"
 choice = "school"
-description = "One school of magic, or one element, answers your wits more than most: a sharp mind drives its spells harder than it could any other's."
-effects = [{ kind = "school_focus", lift = 10 }]
+description = "One school of magic, or one element, answers your wits more than most: its spells roll dice a size bigger for you, a d6 a d7, a d8 a d9."
+effects = [{ kind = "spell_mod", sides = 1 }]
 systems = ["spells"]

@@ -9,8 +9,8 @@ kind = "hex"
 shape = "ray"
 resolution = "auto"
 range = 6
-max_range = 8
 effect = { status = "sluggish" }
 
-[spell.scales]
-duration = { presence = 50, willpower = 25 }
+[spell.grows]
+range = "willpower 14 7, 18 8"
+degrees = "presence 14 2, 18 3"

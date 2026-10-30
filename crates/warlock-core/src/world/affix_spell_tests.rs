@@ -1,10 +1,10 @@
 //! The spellcasting affixes' hooks (docs/design/affixes-systems.md §4, #629), each read where
 //! the matching talent's is: of Thrift's `mana_cost` in [`Actor::mana_cost`], Mage-wrought's
-//! `spell_ease` in [`Actor::worn_spell_cost`], of the Magus's `spell_to_hit`, Potent's
-//! `spell_lift`, of Lingering's `spell_duration` (`world/spell_scale.rs`), of Farcasting's
-//! `spell_reach` in [`Actor::spell_reach`], and Baleful's `spell_threat` in
-//! [`Actor::spell_threat`]. No shipped affix has these effects yet, so the tests bring fixture
-//! affixes, as `world/unique_tests.rs` brings its own unique.
+//! `spell_ease` in [`Actor::worn_spell_cost`], of the Magus's `spell_to_hit`
+//! ([`Actor::spell_to_hit`]), Potent's `spell_bonus`, of Lingering's `spell_duration`, and of
+//! Farcasting's `spell_reach` through the spell hooks ([`Actor::spell_mods`]), and Baleful's
+//! `spell_threat` in [`Actor::spell_threat`]. The tests bring fixture affixes with ranges of
+//! their own, as `world/unique_tests.rs` brings its own unique.
 
 use super::cast_tests::{cast_at, scores};
 use super::caster_tests::{kobold, reach, run, sp, world_with};
@@ -35,10 +35,10 @@ tiers = [{ level = 1, min = 1, max = 3 }]
 [[prefix]]
 id = "fixture_potent"
 name = "Potent"
-effect = "spell_lift"
+effect = "spell_bonus"
 category = "spell_power"
 bases = ["ring", "amulet"]
-tiers = [{ level = 1, min = 1, max = 50 }]
+tiers = [{ level = 1, min = 1, max = 10 }]
 
 [[suffix]]
 id = "fixture_of_thrift"
@@ -73,13 +73,13 @@ bases = ["ring", "amulet"]
 tiers = [{ level = 1, min = 1, max = 5 }]
 "#;
 
-/// An attack ray of level 6, 3d6, its dice lifted by Intelligence 10 % and Willpower 5 %
-/// a point: the wizard's Arcane bolt, its file replaced.
+/// An attack ray of level 6, 3d6, a die more at Intelligence 13 and two at 16: the wizard's
+/// Arcane bolt, its file replaced.
 const RAY: &str = "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
                    level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
-                   shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\n\
-                   damage = { dice = \"3d6\" }\n[spell.scales]\n\
-                   damage = { intelligence = 10, willpower = 5 }\n";
+                   shape = \"ray\"\nresolution = \"attack\"\nrange = 6\n\
+                   damage = \"3d6\"\n[spell.grows]\n\
+                   damage = \"intelligence 13 4d6, 16 5d6\"\n";
 
 /// The built-in content with the fixture affixes, and Arcane bolt as [`RAY`] when `ray`.
 fn content(ray: bool) -> Arc<Content> {
@@ -231,7 +231,7 @@ fn mage_wrought_eases_its_own_piece_and_a_fully_eased_one_leaves_the_armoured_gr
 }
 
 #[test]
-fn the_magus_potent_and_lingering_join_the_scales() {
+fn the_magus_potent_and_lingering_join_the_hooks() {
     let mut w = wizard(content(true));
     let content = w.content().clone();
     let bolt = content.spell(sp("arcane_bolt"));
@@ -239,42 +239,78 @@ fn the_magus_potent_and_lingering_join_the_scales() {
     scores(&mut w, &[(Stat::Dexterity, 16)]);
     let read = |w: &World| {
         let me = w.state.player();
+        let roll = me.spell_roll(&content, bolt, CastBy::Own).expect("a roll");
         (
             me.spell_to_hit(&content, bolt),
-            me.spell_lift(&content, bolt),
-            me.spell_degrees_more(&content, evil_eye),
+            roll.to_string(),
+            me.spell_degrees(&content, evil_eye),
         )
     };
-    assert_eq!(read(&w), (3, 0, 0));
+    assert_eq!(read(&w), (3, "3d6".into(), Some(1)));
     ring(&mut w, "fixture_of_the_magus", 2);
     let player = w.player_id();
     let amulet = item(&w, "jade_amulet", "fixture_of_lingering", 2);
     wear(&mut w, player, "neck", amulet);
-    assert_eq!(read(&w), (5, 0, 2), "the lift needs stats to lift by");
-    // Intelligence +10, Willpower +10: 10 × 10 + 5 × 10, nothing holding it (decision 16);
-    // Potent adds its 10.
-    scores(
-        &mut w,
-        &[
-            (Stat::Intelligence, 30),
-            (Stat::Willpower, 30),
-            (Stat::Dexterity, 16),
-        ],
+    assert_eq!(
+        read(&w),
+        (5, "3d6".into(), Some(3)),
+        "unidentified as they are"
     );
-    assert_eq!(read(&w).1, 150);
-    let potent = item(&w, "iron_ring", "fixture_potent", 10);
+    // Potent's +2 on the roll after the ladder's rung: Intelligence 16 reaches 5d6.
+    let potent = item(&w, "iron_ring", "fixture_potent", 2);
     wear(&mut w, player, "right_ring", potent);
-    assert_eq!(read(&w).1, 160);
-    // Keen mind's ten adds to it.
+    assert_eq!(read(&w).1, "3d6+2");
+    scores(&mut w, &[(Stat::Intelligence, 16), (Stat::Dexterity, 16)]);
+    assert_eq!(read(&w).1, "5d6+2");
+    // Keen mind's bigger dice on top, for its school only.
     w.player_mut().talents.take("keen_mind", Some("evocation"));
-    assert_eq!(read(&w).1, 170);
+    assert_eq!(read(&w).1, "5d7+2");
     run(&mut w, "remove:left_ring remove:right_ring remove:neck");
     scores(&mut w, &[(Stat::Dexterity, 16)]);
-    assert_eq!(read(&w), (3, 10, 0), "taken off: Keen mind's ten stays");
+    assert_eq!(
+        read(&w),
+        (3, "3d7".into(), Some(1)),
+        "taken off: Keen mind's size stays"
+    );
+}
+
+/// A save from before the spell scaling design (§7.3) holds a Potent of 4 to 15 at its old
+/// tiers; the lenient read puts it in the tier that holds it or the nearest and holds its value
+/// there: an old 13 is a +3.
+#[test]
+fn an_old_potent_reads_as_the_top_tiers_bonus() {
+    let w = wizard(Arc::new(Content::builtin().expect("content")));
+    let content = w.content().clone();
+    let object = content.object_id("iron_ring").expect("ring");
+    for (tier, value, now) in [
+        (6, 13, (3, 3)),
+        (1, 4, (3, 3)),
+        (1, 1, (1, 1)),
+        (2, 2, (2, 2)),
+    ] {
+        let mut magic = Magic {
+            rarity: Rarity::Magic,
+            level: 3,
+            affixes: vec![Affix {
+                id: "potent".into(),
+                tier,
+                value,
+            }],
+            name: None,
+            identified: false,
+            carried: 0,
+            unique: None,
+        };
+        magic.retier(&content);
+        let a = &magic.affixes[0];
+        assert_eq!((a.tier, a.value), now, "tier {tier} value {value}");
+        let stack = Stack::with_magic(object, 1, magic);
+        assert!(stack.is_valid_for(&content), "tier {tier} value {value}");
+    }
 }
 
 #[test]
-fn of_farcasting_reaches_farther_on_the_range_never_the_radius_nor_past_the_cap() {
+fn of_farcasting_reaches_farther_on_the_range_never_the_radius() {
     let mut w = wizard(content(false));
     let content = w.content().clone();
     scores(&mut w, &[]);
@@ -283,7 +319,7 @@ fn of_farcasting_reaches_farther_on_the_range_never_the_radius_nor_past_the_cap(
             .player()
             .spell_reach(&content, content.spell(sp(id)))
     };
-    // The shipped Arcane bolt: length 6, at most 8.
+    // The shipped Arcane bolt: length 6 at Willpower 10.
     let bolt = reach(&w, "arcane_bolt").range;
     let blight = reach(&w, "blight");
     assert_eq!(bolt, Some(6));
@@ -296,8 +332,8 @@ fn of_farcasting_reaches_farther_on_the_range_never_the_radius_nor_past_the_cap(
     ring(&mut w, "fixture_of_farcasting", 5);
     assert_eq!(
         reach(&w, "arcane_bolt").range,
-        Some(8),
-        "never past the cap"
+        Some(11),
+        "past the ladder's last rung: only the engine's reach holds it"
     );
 }
 

@@ -3,7 +3,7 @@
 
 use super::{
     Gear, LEVELS, Probe, STRIKES, Side, Snap, armoured, avg, bony, dice_text, fight, fight_cell,
-    hide, hit_mean, hit_pct, mean, median, r, strike_mean,
+    hide, hit_mean, hit_pct, median, r, roll_mean, strike_mean,
 };
 use crate::combat::{self, Category, Profile, Target};
 use crate::content::Resolution;
@@ -285,13 +285,13 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
     writeln!(out, "\n## Spells\n").unwrap();
     writeln!(
         out,
-        "Each damage spell as the trained caster casts it (plain gear): the lift, the dice, and the expected casts to kill the median monster of their level (an attack spell's miss chance included; per target), lifted (unlifted in brackets); mana per cast of the pool.\n"
+        "Each damage spell as the trained caster casts it (plain gear): the rung its stats and talents reach, the roll there, and the expected casts to kill the median monster of their level (an attack spell's miss chance included; per target), at that rung (at the base in brackets); mana per cast of the pool.\n"
     )
     .unwrap();
     for class in ["wizard", "priest"] {
         writeln!(
             out,
-            "**{}**\n\n| Spell (level, resolution) | L | lift % | dice | casts to kill | mana / pool |\n|---|---|---|---|---|---|",
+            "**{}**\n\n| Spell (level, resolution) | L | rung | roll | casts to kill | mana / pool |\n|---|---|---|---|---|---|",
             if class == "wizard" { "Wizard" } else { "Priest" }
         )
         .unwrap();
@@ -337,14 +337,14 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
                                     let amount = match cast.resolution {
                                         Resolution::Attack | Resolution::Touch => {
                                             let p = Profile {
-                                                damage: dice.into(),
+                                                damage: dice,
                                                 ..cast.aim.clone()
                                             };
                                             let t = Target::bare(them.missile);
                                             combat::strike(&p, &t, rng).damage
                                         }
                                         Resolution::Auto | Resolution::Area => {
-                                            dice.roll(rng).max(0)
+                                            dice.roll(rng, 0).max(0)
                                         }
                                     };
                                     i64::from(amount)
@@ -363,9 +363,9 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
                     "| {name} ({}, {:?}) | {level} | {} | {}, {:.1} | {} ({}) | {} / {:.0} |",
                     c.level,
                     c.resolution,
-                    c.lift,
-                    dice_text(c.dice.0),
-                    mean(c.dice.0),
+                    c.rung,
+                    c.dice.0,
+                    roll_mean(c.dice.0),
                     r(median(per_lifted)),
                     r(median(per_plain)),
                     c.cost,

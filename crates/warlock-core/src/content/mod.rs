@@ -117,7 +117,8 @@ mod sky;
 mod slot;
 mod spell;
 mod spell_def;
-mod spell_scales;
+mod spell_ladder;
+mod spell_mod;
 mod stance;
 mod stat_training;
 mod status;
@@ -248,7 +249,7 @@ pub use room_shrine::{Regard, Shrine};
 pub(crate) use room_treasury::breach_fault;
 pub use room_treasury::{Heaps, MAX_COINS_EACH, MAX_TREASURE, Sealed, SecretDoors, Treasury};
 pub use scenario::ScenarioDef;
-pub use scroll::{Cast, Reading, ScrollSpell, SpellScroll};
+pub use scroll::{Reading, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
 pub use search::{
     PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,
@@ -262,10 +263,13 @@ pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
-    MAX_CASTS, MAX_CONE, MAX_DICE, MAX_PER_LEVELS, MAX_REACH, MAX_SPELL_LEVEL, Ratio, Resolution,
-    School, Shape, SpellData, SpellDice, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules,
+    Grows, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL, Ratio, Resolution, School, Shape,
+    SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules,
 };
-pub use spell_scales::{MAX_SCALE_WEIGHT, SpellScales, Weights};
+pub use spell_ladder::{
+    Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,
+};
+pub use spell_mod::{SpellMod, SpellModSpec, SpellMods, merge_rider};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{
     DeedRule, HAUL_GRAMS, ODDS_SCALE, PriceEase, StatDeed, StatRule, StatTraining, StatUse,
@@ -3948,7 +3952,7 @@ mod tests {
             "data/spells/zzz_zap.toml",
             "[[spell]]\nid = \"zap\"\nname = \"Zap\"\ndescription = \"x\"\nlevel = 0\n\
              school = \"evocation\"\nkind = \"damage\"\nshape = \"bolt\"\nresolution = \"auto\"\n\
-             damage_type = \"electricity\"\nmax_range = 5\ndamage = { dice = \"1d4\" }\n",
+             damage_type = \"electricity\"\nrange = 5\ndamage = \"1d4\"\n",
         );
         let with_spell = Content::load(&files).expect("loads");
         let last = SpellId(u16::try_from(with_spell.spells().len() - 1).expect("few"));

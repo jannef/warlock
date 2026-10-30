@@ -133,10 +133,10 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `inner_light` | `LightCache::sources` (a carried source, `INNER` tag, always: the player and the creatures see by it alike) |
 | the actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `avatar`, `smite`, `quivering_palm`) | `world/class_ability.rs` (Rage: `world/rage.rs`; `rage { resource }`, `TalentMods::rage_status`); `Ability::Class` in `ability.rs` (`class_cooldown`: Rage's status and what it `follows`) |
 | `spell` (`{ kind = "spell", spell = "ID" }`, checked against `data/spells/`) | `TalentMods::spells` → `Ability::Spell`'s `had_by`; `world/cast.rs` |
-| `spell_power`, `spell_mana_percent` | `TalentMods::spell_damage` in `World::strike` and `read_spell` (nothing holds the roll, decision 16); `Actor::spell_cost` (the cast and `Unavailable::NoMana`) |
+| `spell_mod` (`SpellModSpec`: `rungs`, `scroll_rungs`, `wand_rungs`, `reach_rungs`, `degree_rungs`, `sides`, `dice`, `bonus`, `reroll`, `rider`, `cells`, `radius_cells`, `degrees`, `cost`, `when`; a talent chosen for a school or an element keys on the choice) | `TalentMods::spell` → `Actor::spell_mods` (`world/spell_mods.rs`), read by `world/spell_rung.rs` and the cast path (the spell scaling design §7.1: Empower, Archmage, Keen mind, School focus, Scroll adept, Wand mastery, Sure hand, Brimming, Numbing cold); `cost` in `Actor::spell_base` |
+| `spell_mana_percent` | `Actor::spell_cost` (the cast and `Unavailable::NoMana`) |
 | `caster_level` (`per_levels`: Arcane training) | `Actor::caster_level` (`TalentMods::caster_level_at`, at the character level) |
 | `attuned_percent` (Attuned) | `Actor::caster_level`'s items term (`TalentMods::attuned`: the worn `caster_level` this percent more, rounded up; a term below 0 as it is) |
-| `school_focus` (choice `school`; `cost`, `reach`, `lift`) | `Actor::spell_base` (`TalentMods::spell_mana_with`) and `Actor::spell_reach`, by `TalentMods::focus(spell.tags)`; `lift` (Keen mind) in `Actor::spell_lift`, by `TalentMods::focus_lift(spell.tags)` |
 | `study` | `World::start_study` (time), `study_odds` (bonus; `overreach_percent`: Overreach's third off the overreach the check counts) |
 | `deflection_unarmoured` | `Actor::defence` (Deflection, no body armour: Mage armour) |
 | `purify`, `corpse_harmless`, `meal_heals` | `eat.rs`: `eat_rotten` (no sickness, no exposure, no draw), `eat_fresh` (no `on_eat` harm or vomiting, no draw), `meal_heals` from `finish` (an object, or a fresh corpse) |

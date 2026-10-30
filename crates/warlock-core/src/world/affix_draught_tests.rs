@@ -1,8 +1,8 @@
 //! The potion and wand affixes' hooks (docs/design/affixes-systems.md §4 and §6, #633), each
 //! read where the matching talent's is: of the Alchemist's `potion_kept` in
 //! [`Actor::potion_kept`] (beside Thrifty drinker's, which `take_draught` reads), of Wands'
-//! `wand_level` in [`Actor::wand_caster_level`] (beside Wand mastery's). No shipped affix has
-//! these effects yet, so the tests bring fixture affixes, as `world/affix_spell_tests.rs` does.
+//! `wand_rungs` in [`Actor::spell_mods`] (beside Wand mastery's). The tests bring fixture
+//! affixes with ranges of their own, as `world/affix_spell_tests.rs` does.
 
 use super::potion::{KEPT, MAX_KEPT};
 use super::*;
@@ -23,8 +23,8 @@ tiers = [{ level = 1, min = 1, max = 50 }]
 [[suffix]]
 id = "fixture_of_wands"
 name = "of Wands"
-effect = "wand_level"
-category = "wand_level"
+effect = "wand_rungs"
+category = "wand_rungs"
 bases = ["gloves", "ring"]
 tiers = [{ level = 1, min = 1, max = 5 }]
 "#;
@@ -175,19 +175,30 @@ fn a_talent_above_the_cap_keeps_its_own_chance() {
 }
 
 #[test]
-fn of_wands_raises_a_wands_level_beside_wand_mastery() {
+fn of_wands_raises_a_wands_rung_beside_wand_mastery() {
     let mut w = world(false);
     let content = w.content().clone();
     let fireball = content.object_id("wand_of_fireball").expect("a wand");
     let wand = content.object(fireball).wand.expect("a wand");
-    let level = |w: &World| w.state.player().wand_caster_level(&content, &wand);
-    assert_eq!(level(&w), 12, "the wand's own");
+    let def = content.spell(wand.spell);
+    let rung = |w: &World| {
+        let me = w.state.player();
+        let by = super::CastBy::Wand(wand.min_rung);
+        me.spell_rung(&content, def, by, &me.spell_mods(&content, def))
+    };
+    assert_eq!(rung(&w), 0, "the wand's own");
     wear(&mut w, "left_ring", "iron_ring", "fixture_of_wands", 2);
-    assert_eq!(level(&w), 14, "unidentified as it is");
+    assert_eq!(rung(&w), 2, "unidentified as it is");
     wear(&mut w, "hands", "leather_gloves", "fixture_of_wands", 1);
-    assert_eq!(level(&w), 15, "two pieces add");
+    assert_eq!(rung(&w), 3, "two pieces add");
     w.player_mut().talents.take("wand_mastery", None);
-    assert_eq!(level(&w), 17, "and Wand mastery's 2 with them");
-    run(&mut w, "remove:left_ring");
-    assert_eq!(level(&w), 15, "taken off, its levels are gone");
+    assert_eq!(
+        rung(&w),
+        4,
+        "and Wand mastery's rung with them, the ladder's last"
+    );
+    wear(&mut w, "right_ring", "iron_ring", "fixture_of_wands", 2);
+    assert_eq!(rung(&w), 4, "never past the ladder's last rung");
+    run(&mut w, "remove:left_ring remove:right_ring");
+    assert_eq!(rung(&w), 2, "taken off, their rungs are gone");
 }

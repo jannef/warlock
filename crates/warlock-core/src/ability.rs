@@ -634,11 +634,11 @@ impl Ability {
     }
 
     /// How far a cell it aims at may be, in cells, with what `content` says of it: a spell's
-    /// is its data's before Willpower ([`crate::content::SpellData::base_reach`]; a caster's
-    /// own is [`Actor::spell_reach`]); every other ability's is [`Ability::range`].
+    /// is its data's base ([`crate::content::SpellData::base_range`]; a caster's own is
+    /// [`Actor::spell_reach`]); every other ability's is [`Ability::range`].
     pub fn reach(self, content: &Content) -> Option<i32> {
         match self {
-            Ability::Spell(spell) => content.spell_of(spell).and_then(|s| s.base_reach()),
+            Ability::Spell(spell) => content.spell_of(spell).and_then(|s| s.base_range()),
             other => other.range(),
         }
     }

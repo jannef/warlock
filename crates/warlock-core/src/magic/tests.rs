@@ -727,17 +727,25 @@ fn reader(effect: Effect) -> (&'static str, &'static str) {
             "world/caster_level.rs",
             include_str!("../world/caster_level.rs"),
         ),
-        Effect::SpellEase | Effect::SpellReach => {
-            ("world/cast.rs", include_str!("../world/cast.rs"))
-        }
-        Effect::SpellToHit | Effect::SpellThreat | Effect::SpellLift | Effect::SpellDuration => (
-            "world/spell_scale.rs",
-            include_str!("../world/spell_scale.rs"),
+        Effect::SpellEase => ("world/cast.rs", include_str!("../world/cast.rs")),
+        Effect::SpellToHit | Effect::SpellThreat => (
+            "world/spell_rung.rs",
+            include_str!("../world/spell_rung.rs"),
+        ),
+        Effect::SpellRungs
+        | Effect::SpellBonus
+        | Effect::SpellSides
+        | Effect::SpellDice
+        | Effect::SpellReroll
+        | Effect::SpellReach
+        | Effect::SpellDuration
+        | Effect::WandRungs => (
+            "world/spell_mods.rs",
+            include_str!("../world/spell_mods.rs"),
         ),
         Effect::ManaOnKill | Effect::ResourceOnKill => {
             ("world/siphon.rs", include_str!("../world/siphon.rs"))
         }
-        Effect::WandLevel => ("world/zap.rs", include_str!("../world/zap.rs")),
         Effect::ResourceMax | Effect::ResourceRate => {
             ("world/resource.rs", include_str!("../world/resource.rs"))
         }

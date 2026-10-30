@@ -149,7 +149,7 @@ fn weapon_spell(w: &World) -> Option<super::Cast> {
     let (cheap, dear): (Vec<_>, Vec<_>) = (casts(w).into_iter())
         .filter(|c| c.cost > 0)
         .partition(|c| c.cost * 5 <= pool);
-    let mean = |c: &super::Cast| super::mean(c.dice.0);
+    let mean = |c: &super::Cast| super::roll_mean(c.dice.0);
     match cheap.is_empty() {
         false => cheap.into_iter().max_by(|a, b| mean(a).total_cmp(&mean(b))),
         true => dear.into_iter().min_by_key(|c| c.cost),
@@ -277,14 +277,14 @@ fn fight(
             let amount = match c.resolution {
                 Resolution::Attack | Resolution::Touch => {
                     let p = Profile {
-                        damage: c.dice.0.into(),
+                        damage: c.dice.0,
                         ..c.aim.clone()
                     };
                     let blow = combat::strike(&p, &Target::bare(them.missile), rng);
                     w.train_fight((player, foe), AttackKind::Spell, &blow);
                     blow.damage
                 }
-                Resolution::Auto | Resolution::Area => c.dice.0.roll(rng).max(0),
+                Resolution::Auto | Resolution::Area => c.dice.0.roll(rng, 0).max(0),
             };
             hp -= amount;
         } else {

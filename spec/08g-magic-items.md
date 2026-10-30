@@ -72,9 +72,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Stack::weight`. Speeds are at most 50 % off in all; an attack's weapon skill takes its
     `speed` off after them (`World::attack_price`, §8 "Weapon skills"). **System effects** (docs/design/affixes-systems.md §4–§6): mana costs (`mana_cost`), a
     piece's spell cost surcharge (`spell_ease`, local, on body armour, helmets, and shields that
-    hinder casting), spell to-hit, criticals, lift, reach, and duration (`spell_to_hit`,
-    `spell_threat`, `spell_lift`, `spell_reach`, `spell_duration`), mana on a kill
-    (`mana_on_kill`), the level of wands (`wand_level`), a resource's maximum, pace, weapon feat
+    hinder casting), spell to-hit, criticals, rungs, roll bonus, dice size, dice, rerolls, reach,
+    and duration (`spell_to_hit`, `spell_threat`, `spell_rungs`, `spell_bonus`, `spell_sides`,
+    `spell_dice`, `spell_reroll`, `spell_reach`, `spell_duration`), mana on a kill
+    (`mana_on_kill`), the rungs of wands (`wand_rungs`), a resource's maximum, pace, weapon feat
     costs, and gain on a kill (`resource_max`, `resource_rate`, `active_stamina`,
     `resource_on_kill`: each names its resource in data, `resource = "stamina"`), kicking doors in
     (`door_kick`), digging (`dig_percent`), hunger (`hunger`), trap damage (`trap_damage`),
@@ -85,9 +86,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     The spell ones are read (#629), each where its talent's is, unidentified too, on creatures
     as on the player: `mana_cost` joins Frugal caster's cut (§8 "Mana", 50 % off at most),
     `spell_ease` eases its own piece (§8 "Spells": "Cost"), `spell_to_hit` and `spell_threat`
-    aim an own cast only (never a scroll's or a wand's), `spell_lift` adds to the lift with Keen
-    mind's, `spell_reach` adds to the range or length with School focus's, and `spell_duration`
-    adds degrees. `caster_level` (of the Adept) is read in `Actor::caster_level`; **Attuned**
+    aim an own cast only (never a scroll's or a wand's), and the others join the spell hooks
+    beside the talents' (§8 "Spells": "Hooks", `Actor::spell_mods`; no tag filter on an item:
+    each acts on every spell): `spell_rungs` rungs, `spell_bonus` (Potent: +1, +2, +3 at item
+    levels 3, 7, 11) on the roll, `spell_sides`, `spell_dice`, `spell_reroll`, `spell_reach`
+    cells of range or length with School focus's, `spell_duration` degrees. An old Potent
+    (stored 4 to 15 before the spell scaling design) is read into the tier that holds it or the
+    nearest, its value held to that tier's range (an old 13 is +3: save compatibility for a
+    stored number, not a limit on spells; `Magic::retier`). `caster_level` (of the Adept) is read in `Actor::caster_level`; **Attuned**
     (Scholar, Intelligence 12, level 6) counts the caster level magic items give half again,
     rounded up (+1 → +2, +3 → +5), and **Bellows** (Vigour, Toughness 12) the stamina they add
     to the maximum twice (affixes design §10).
@@ -98,9 +104,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     least 1 % of a human's), `trap_damage` takes that percent off a trap's blow (with Trap sense,
     at most 75 % in all: a trap always hurts, at least 1), and `disease_check` adds to every
     check against a disease, catching and progression alike.
-    `potion_kept` and `wand_level` are read (#633): `potion_kept` adds to Thrifty drinker's
-    chance (§8 "Potions", 50 % at most unless the talent alone is above it), `wand_level` adds
-    to the level a wand casts at with Wand mastery's (§8 "Magic items": "Wands").
+    `potion_kept` and `wand_rungs` are read (#633): `potion_kept` adds to Thrifty drinker's
+    chance (§8 "Potions", 50 % at most unless the talent alone is above it), `wand_rungs` (of
+    Wands) adds to the rung a wand casts at with Wand mastery's (§8 "Magic items": "Wands").
     Pending hooks, added
     with the systems they need: affixes that raise a weapon skill's rank (#134's ranks exist;
     none roll yet) and value (#145, a base `value` times rarity and affixes).
@@ -309,9 +315,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   once the wand's type is known, a plain line before), `fire:X,Y` in replay text.
   - **Casting**: through the one cast path (§8 "Spells", `World::wand_cast`), with the spell's
     own resolution (an `attack` spell rolls to hit with the user's Dexterity, as every spell
-    attack does; `auto` and `area` ones do not), reach (the user's Willpower), dice at the
-    **wand's caster level**, never the user's (plus Wand mastery's +2 and worn `wand_level`
-    affixes'), nothing holding the roll.
+    attack does; `auto` and `area` ones do not), reach and degrees (the user's), the roll at the
+    **wand's own rung** of the spell's damage ladder (`[object.wand] rungs = { min, max }`,
+    default 0 to the ladder's length; until each wand draws its own rung in the range, the
+    spell scaling design's S5, a zap casts at `min`), never the user's stats, plus Wand
+    mastery's rung and the worn `wand_rungs` (of Wands), the user's other hooks applying,
+    nothing holding the roll. `caster_level` on a wand is refused, naming `rungs`.
     A charge pays instead of mana; a cast refused (at oneself, out of reach, no one to touch)
     uses none and takes no time; one that goes off takes the `cast` action's time (times the
     spell's `casts`). Its kills are the user's; one that kills its user is the spell's
@@ -333,7 +342,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lightning bolt (tier 3, level 8, frequency 5, 600 gold). **Where**: loot (by `level` and
     `frequency`, never magic), general stores (they sell and buy the wands class), and the trap
     hall's pile beside its arrival (a wand of magic missile and one of fireball).
-  - **Talents**: Wand mastery (Weaponcraft, system `spells`): wands cast at caster level +2.
+  - **Talents**: Wand mastery (Weaponcraft, system `spells`): wands cast a rung higher
+    (`spell_mod { wand_rungs = 1 }`).
 - **Rods** (`warlock-core/src/world/rod.rs`, data `rod` in `data/objects/` §7 and
   `data/rod_effects/`, `content/rod.rs`; the magic design §9; #399): objects (`-`, the rods
   class, one at a time) whose `[object.rod]` holds an **effect no spell has** (`effect`, an id of

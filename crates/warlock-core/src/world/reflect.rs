@@ -51,6 +51,8 @@ pub(super) struct Shot<'s> {
     /// Its effect's id (drawn along its way), or empty.
     pub(super) effect: &'s str,
     pub(super) dice: Roll,
+    /// The caster's roll hook: a die showing this or less is drawn once more.
+    pub(super) reroll: u32,
     /// The caster's to-hit with it.
     pub(super) to_hit: i32,
     /// The natural roll from which it threatens a critical: the caster's

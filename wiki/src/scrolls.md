@@ -34,16 +34,17 @@ no label and is known on sight. A [shop](shops.md#prices)'s price for an unknown
 
 Every [spell](magic.md#the-spells) comes on a scroll of its own: a scroll of [magic missile](magic.md#spell-magic-missile), of
 [haste](magic.md#spell-haste), of [web](magic.md#spell-web). Reading one casts its spell once, as if you cast it yourself (its [shape](magic.md#shapes), its
-resolution, its [damage](combat.md#damage)), but at the scroll's own [caster level](magic.md#caster-level) (its spell's [level](magic.md#spell-levels), at least 1) and
+resolution, its [damage](combat.md#damage)), but at the scroll's own rung of the spell's ladder (the base for most;
+the table's "Casts at"; [Scroll adept](talents.md#talent-scroll-adept) a rung higher, whatever your stats) and
 **free of [mana](mana.md#spending-it)**: anyone can read one, a [warrior](classes.md#warrior) too. A spell on yourself ([Haste](magic.md#spell-haste), [Barkskin](magic.md#spell-barkskin),
 [Blessing](magic.md#spell-blessing)) is read at once; any other is aimed first, as below; [Mend](magic.md#spell-mend) and [Cure wounds](magic.md#spell-cure-wounds) are aimed at
 the creature beside you to heal, or at yourself. Scrolls of lower [spell levels](magic.md#spell-levels) are found sooner and
 more often: cantrips from the first floors, spells of level 11 and 12 from [item level](magic-items.md#base-items) 6 (the table
 above), and [general stores](shops.md) lay out low levels more often than high ones.
 
-The scrolls of [fireball](magic.md#spell-fireball), [lightning](magic.md#spell-lightning-bolt), and [frost](magic.md#spell-frost) cast the same spells as the
-[fireball, lightning, and frost traps](traps.md), with the same rules and damage, but **you
-aim them**. After choosing the scroll a cursor appears on the map, as for a [shot](ranged.md#shooting-and-throwing) (see
+The scrolls of [fireball](magic.md#spell-fireball) (a rung up: 3d6), [lightning](magic.md#spell-lightning-bolt) (two rungs up: 4d6), and
+[frost](magic.md#spell-frost) (its base: 2d6) cast their spells as any spell scroll does, reaching as far as you cast the
+spell. An aimed scroll is aimed: after choosing the scroll a cursor appears on the map, as for a [shot](ranged.md#shooting-and-throwing) (see
 [Controls](controls.md#aiming)): it starts on your last target if it is still there, else on the
 nearest [hostile](creatures.md#factions) [creature](creatures.md) you see, else on you; `Tab` moves it from creature to creature, the
 movement keys move it anywhere. `Enter` (or `r` again) reads the scroll at the cursor, `Esc`
@@ -63,7 +64,7 @@ puts it away unread. A cell out of reach is marked "Out of range.", and the scro
   it, until a wall or the end of its reach. It never strikes you.
 
 These three never roll [to hit](combat.md#hitting): they hurt everyone they reach (a spell scroll of a ray, such
-as [ray of frost](magic.md#spell-ray-of-frost), rolls to hit as the spell does). Unlike a trap's, a spell you read is
+as [ray of frost](magic.md#spell-ray-of-frost), rolls to hit as the spell does, with your Dexterity). Unlike a trap's, a spell you read is
 **yours**: what it kills earns you [experience](experience.md) and counts for your
 [quests](quests.md), and a [shopkeeper](shops.md#theft) it hurts turns on you. A scroll that kills you is named on
 the [death](combat.md#death) screen ("Killed by their own scroll of fireball"). The explosion and the thunder are

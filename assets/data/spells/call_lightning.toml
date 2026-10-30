@@ -10,9 +10,8 @@ shape = "line"
 resolution = "area"
 damage_type = "electricity"
 length = 8
-max_length = 10
 open_sky = true
-damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
+damage = "2d6"
 
 [spell.cast]
 effect = "lightning_bolt"
@@ -21,5 +20,6 @@ verb = "strikes"
 message = "Lightning answers your call!"
 noise = { sound = "thunder", loudness = 140 }
 
-[spell.scales]
-damage = { intelligence = 10, willpower = 5 }
+[spell.grows]
+damage = "willpower 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"
+length = "willpower 14 9, 18 10"

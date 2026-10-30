@@ -10,3 +10,6 @@ kind = "buff"
 shape = "self"
 resolution = "auto"
 effect = { status = "lit" }
+
+[spell.grows]
+degrees = "presence 14 2, 18 3"

@@ -1,0 +1,10 @@
+# Numbing cold (the spell scaling design §7.2): the Spellcraft tree's user of the rider hook: what
+# a cold spell harms is a degree Sluggish besides.
+[[talent]]
+id = "numbing_cold"
+name = "Numbing cold"
+tree = "spellcraft"
+description = "Your cold bites deep: what your cold spells harm is left sluggish a while."
+needs = { level = 12 }
+effects = [{ kind = "spell_mod", rider = { status = "sluggish", severity = 1 }, when = ["cold"] }]
+systems = ["spells"]

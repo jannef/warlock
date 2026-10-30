@@ -10,9 +10,8 @@ shape = "burst"
 resolution = "area"
 damage_type = "poison"
 range = 8
-max_range = 10
-max_radius = 2
-damage = { dice = "2d6" }
+radius = 2
+damage = "2d6"
 effect = { status = "poisoned", severity = 2 }
 
 [spell.cast]
@@ -21,3 +20,7 @@ noun = "blight"
 verb = "withers"
 message = "A sickly cloud bursts from your hands!"
 noise = { sound = "explosion", loudness = 60 }
+
+[spell.grows]
+damage = "willpower 16 3d6, 22 3d6+3"
+range = "willpower 14 9, 18 10"

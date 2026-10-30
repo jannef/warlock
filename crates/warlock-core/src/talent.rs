@@ -261,11 +261,10 @@ pub struct TalentMods {
     /// Caster level by character level, one entry per rank held: `(per_levels, value)`
     /// ([`TalentMods::caster_level_at`]; Arcane training).
     pub caster_per_levels: Vec<(u8, i32)>,
-    /// School focus and Keen mind: `(tag, cost percent, reach, lift)` per choice and rank held
-    /// ([`TalentMods::focus`], [`TalentMods::focus_lift`]).
-    pub school_focus: Vec<(String, i32, i32, i32)>,
-    /// Added to the caster level of the wands it uses (spec §8 "Magic items": "Wands").
-    pub wand_level: i32,
+    /// What it does to its spells through the six hooks (spec §8 "Spells": "Hooks"), one entry
+    /// per `spell_mod` effect and rank held, each with its tag filter
+    /// ([`TalentMods::spell_mods`]).
+    pub spell: Vec<crate::content::SpellMod>,
     /// Percent more the caster level its magic items give counts (Attuned;
     /// [`TalentMods::attuned`]).
     pub attuned_percent: i32,
@@ -685,10 +684,6 @@ pub struct TalentMods {
     pub reborn_whole: bool,
     /// The caster's spells it has (design §4.1 B2), in the order taken.
     pub spells: Vec<crate::content::SpellId>,
-    /// Added to every die of its spells and spell scrolls.
-    pub spell_per_die: i32,
-    /// Dice more its spells and spell scrolls roll.
-    pub spell_dice: u32,
     /// Percent more mana its spells cost (negative: less).
     pub spell_mana_percent: i32,
     /// Deflection while it wears no body armour.
@@ -1047,15 +1042,6 @@ impl TalentMods {
         self.spells.contains(&spell)
     }
 
-    /// `dice` of one of its spells (or spell scrolls), as its talents make them: `spell_dice`
-    /// dice more of the same sides, and `spell_per_die` added to every die.
-    pub fn spell_damage(&self, dice: Dice) -> Dice {
-        if self.spell_dice == 0 && self.spell_per_die == 0 {
-            return dice;
-        }
-        dice.empowered(self.spell_dice, self.spell_per_die)
-    }
-
     /// What its talents add to its caster level at character `level`: the flat `caster_level`,
     /// and `value` per `per_levels` levels of each `caster_per_levels` (Arcane training).
     pub fn caster_level_at(&self, level: u8) -> i32 {
@@ -1083,22 +1069,14 @@ impl TalentMods {
         lift_by_percent(worn, percent)
     }
 
-    /// School focus on a spell with `tags` (magic design §6): the percent more it costs and the
-    /// cells farther it reaches, summed over every focus whose tag it carries.
-    pub fn focus(&self, tags: &[&str]) -> (i32, i32) {
-        (self.school_focus.iter())
-            .filter(|(tag, ..)| tags.contains(&tag.as_str()))
-            .fold((0, 0), |(c, r), (_, cost, reach, _)| (c + cost, r + reach))
-    }
-
-    /// The points more a spell with `tags` is lifted by (Keen mind; the combat progression
-    /// design §7, until the ladders replace the lift): summed over every focus whose tag it
-    /// carries.
-    pub fn focus_lift(&self, tags: &[&str]) -> i32 {
-        (self.school_focus.iter())
-            .filter(|(tag, ..)| tags.contains(&tag.as_str()))
-            .map(|(.., lift)| lift)
-            .sum()
+    /// What its talents do to a spell with `tags` (spec §8 "Spells": "Hooks"): every
+    /// `spell_mod` whose filter the spell fits, summed.
+    pub fn spell_mods(&self, tags: &[&str]) -> crate::content::SpellMods {
+        let mut sum = crate::content::SpellMods::default();
+        for one in self.spell.iter().filter(|m| m.fits(tags)) {
+            sum.add(&one.mods);
+        }
+        sum
     }
 
     /// The mana one of its spells that costs `mana` costs it: scaled by `spell_mana_percent`,
@@ -1286,7 +1264,6 @@ impl TalentMods {
             TalentEffect::CasterLevel { value, per_levels } => {
                 self.caster_per_levels.push((per_levels, value));
             }
-            TalentEffect::WandLevel { value } => self.wand_level += value,
             TalentEffect::AttunedPercent { value } => self.attuned_percent += value,
             TalentEffect::BloodMagic { hp, mana } => {
                 self.blood_magic = Some(BloodMagic { hp, mana });
@@ -1657,15 +1634,8 @@ impl TalentMods {
                     self.spells.push(spell);
                 }
             }
-            TalentEffect::SpellPower { per_die, dice } => {
-                self.spell_per_die += per_die;
-                self.spell_dice += dice;
-            }
+            TalentEffect::SpellMod(spec) => self.spell.push(spec.resolve(content, choice)),
             TalentEffect::SpellManaPercent { value } => self.spell_mana_percent += value,
-            TalentEffect::SchoolFocus { cost, reach, lift } => {
-                let tag = choice.unwrap_or_default().to_string();
-                self.school_focus.push((tag, cost, reach, lift));
-            }
             TalentEffect::DeflectionUnarmoured { value } => self.deflection_unarmoured += value,
             TalentEffect::Purify => self.purify = true,
             TalentEffect::CorpseHarmless => self.corpse_harmless = true,
@@ -1719,7 +1689,8 @@ impl TalentMods {
                     let burst = crate::content::Burst {
                         spell,
                         radius,
-                        damage,
+                        damage: damage.into(),
+                        reroll: 0,
                         kind: content.damage_type_id(&damage_type),
                         blast: 0,
                         ice: Some(crate::content::BurstIce::Melts),
@@ -1755,7 +1726,8 @@ impl TalentMods {
                     let bolt = crate::content::Bolt {
                         spell,
                         length,
-                        damage,
+                        damage: damage.into(),
+                        reroll: 0,
                         kind: content.damage_type_id(&damage_type),
                     };
                     self.fire_breath = Some(FireBreath {

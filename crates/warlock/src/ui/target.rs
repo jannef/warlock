@@ -34,7 +34,7 @@ use bevy::prelude::*;
 use warlock_core::ability::Ability;
 use warlock_core::color::Rgb;
 use warlock_core::content::{
-    Cast, ClassActive, Reading, ScrollSpell, Shape, SpellData, SpellId, SpellPurpose, Stance,
+    ClassActive, Reading, Shape, SpellData, SpellId, SpellPurpose, Stance,
 };
 use warlock_core::fov::radius2;
 use warlock_core::perception::{CellView, PerceptionView};
@@ -169,11 +169,10 @@ impl Aim {
         match self.kind {
             AimKind::Fire => view.ready_to_fire().map(|(_, _, range)| range),
             AimKind::Throw(item) => view.throw_range(item),
-            AimKind::Read(item) => match spell_of(view, self.kind) {
-                // A scroll of a spell reaches as far as the player casts it.
-                Some(spell) => view.own_spell_reach(spell).and_then(|r| r.range),
-                None => scroll_spell(view, item).map(|s| s.range),
-            },
+            // A scroll of a spell reaches as far as the player casts it.
+            AimKind::Read(_) => view
+                .own_spell_reach(spell_of(view, self.kind)?)
+                .and_then(|r| r.range),
             // A volley flies as far as a shot.
             AimKind::Ability(VOLLEY) => view.ready_to_fire().map(|(_, _, range)| range),
             // A wand's spell reaches as far as the player casts it, once they know what it is.
@@ -204,22 +203,19 @@ impl Aim {
         })
     }
 
-    /// The line of fire to the cursor, as the player knows it: a bolt read from a scroll runs
-    /// through creatures, so only what is solid blocks it. An ability flies nowhere: no line,
-    /// only whether the player sees the cursor's cell and it is within reach.
+    /// The line of fire to the cursor, as the player knows it: a spell's by its shape (a scroll
+    /// read casts one too). An ability flies nowhere: no line, only whether the player sees the
+    /// cursor's cell and it is within reach.
     pub fn line(&self, view: &PerceptionView<'_>) -> Line {
         if let Some(spell) = cast_spell(view, self.kind) {
             return self.spell_line(view, spell);
         }
-        let bolt = match (self.kind, aimed_spell(view, self.kind)) {
-            (AimKind::Ability(VOLLEY), _) => false,
-            (AimKind::Read(_), Some(s)) => matches!(s.cast, Cast::Bolt(_)),
-            (AimKind::Ability(ability), _) => {
-                return sight_line(view, self.at, ability.reach_at(view.content(), view.time()));
-            }
-            _ => false,
-        };
-        line_of(view, view.viewer(), self.at, self.range(view), !bolt)
+        if let AimKind::Ability(ability) = self.kind
+            && ability != VOLLEY
+        {
+            return sight_line(view, self.at, ability.reach_at(view.content(), view.time()));
+        }
+        line_of(view, view.viewer(), self.at, self.range(view), true)
     }
 
     /// The line of a spell the player casts, by its shape (module docs).
@@ -260,15 +256,9 @@ impl Aim {
         if view.bursts_spare_me() {
             return None;
         }
-        // A scroll's burst, or a burst the player casts at their own reach.
-        let (radius, range, noun) = match (aimed_spell(view, self.kind), self.kind) {
-            (Some(spell), _) => {
-                let Cast::Burst(burst) = &spell.cast else {
-                    return None;
-                };
-                (burst.radius, spell.range, spell.noun.clone())
-            }
-            (None, AimKind::Ability(_) | AimKind::Read(_) | AimKind::Zap(_)) => {
+        // A burst the player casts at their own reach, read from a scroll or not.
+        let (radius, range, noun) = match self.kind {
+            AimKind::Ability(_) | AimKind::Read(_) | AimKind::Zap(_) => {
                 let id = spell_of(view, self.kind)?;
                 let spell = cast_spell(view, self.kind).filter(|s| s.shape == Shape::Burst)?;
                 let reach = view.own_spell_reach(id)?;
@@ -350,16 +340,6 @@ pub struct Line {
     pub unseen: bool,
 }
 
-/// The spell the scroll in inventory stack `item` casts, if it is one (scroll types are known on
-/// sight, spec §8 "Scrolls").
-/// The burst or bolt `kind` casts when it is a spell scroll read.
-fn aimed_spell<'v>(view: &PerceptionView<'v>, kind: AimKind) -> Option<&'v ScrollSpell> {
-    match kind {
-        AimKind::Read(item) => scroll_spell(view, item),
-        _ => None,
-    }
-}
-
 /// The spell of `data/spells/` `kind` casts: one of the player's spells, a scroll of one read
 /// (spec §8 "Spells"), or a wand of one used, if the player knows what the wand is.
 fn spell_of(view: &PerceptionView<'_>, kind: AimKind) -> Option<SpellId> {
@@ -375,7 +355,6 @@ fn spell_of(view: &PerceptionView<'_>, kind: AimKind) -> Option<SpellId> {
             let stack = view.inventory().get(item)?;
             match view.content().object(stack.object).read.as_ref()? {
                 Reading::Cast(scroll) => Some(scroll.spell),
-                _ => None,
             }
         }
         _ => None,
@@ -385,12 +364,6 @@ fn spell_of(view: &PerceptionView<'_>, kind: AimKind) -> Option<SpellId> {
 /// The spell `kind` casts when it is one of the player's spells or a scroll of one.
 fn cast_spell<'v>(view: &PerceptionView<'v>, kind: AimKind) -> Option<&'v SpellData> {
     view.content().spell_of(spell_of(view, kind)?)
-}
-
-fn scroll_spell<'v>(view: &PerceptionView<'v>, item: usize) -> Option<&'v ScrollSpell> {
-    let stack = view.inventory().get(item)?;
-    let content = view.content();
-    content.object(stack.object).read.as_ref()?.spell()
 }
 
 /// The line of fire from `from` to `to` for a missile that flies `range` cells (`None`: nothing
@@ -658,12 +631,13 @@ mod tests {
             ..fireball
         };
         assert_eq!(far.catches_reader(&view), None);
-        // A bolt never comes back at its reader; it reaches its length.
+        // A bolt never comes back at its reader; it reaches the length the reader casts
+        // Lightning bolt at (its base, 8, at the reader's Willpower).
         let bolt = Aim {
             kind: AimKind::Read(2),
             ..fireball
         };
-        assert_eq!(bolt.range(&view), Some(12));
+        assert_eq!(bolt.range(&view), Some(8));
         assert_eq!(bolt.catches_reader(&view), None);
         let text = bolt.prompt("a scroll of lightning", ("Enter", "r", "Tab"));
         assert!(text.starts_with("Read a scroll of lightning:"), "{text}");
@@ -718,7 +692,7 @@ mod tests {
             "data/spells/arcane_bolt.toml",
             "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
              level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
-             shape = \"cone\"\nresolution = \"area\"\nmax_length = 3\ndamage = { dice = \"2d6\" }\n",
+             shape = \"cone\"\nresolution = \"area\"\nlength = 3\ndamage = \"2d6\"\n",
         );
         let w = caster(Arc::new(Content::load(&files).expect("loads")), "wizard");
         let view = w.perception();

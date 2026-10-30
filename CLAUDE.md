@@ -216,7 +216,7 @@ ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, 
 marked `Duelist 1 (0%), in use`), `attacks` (the player's ready attacks as the character
 screen shows them: `Main hand long sword: +4 to hit, 1d9+2 slashing`, `Off hand dagger: ...`,
 `Missile short bow: +3 to hit, 1d6 piercing, range 10`; unidentified magic left out), `talents` (the player's talents in the order taken, `Hardy
-2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Well dressed (class)`), `spells` (the spells the player knows with spell level and cost, `Fireball (level 11, 26 mana)`, then the
+2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Well dressed (class)`), `spells` (the spells the player knows with spell level and cost and what each does now, its roll and reach as they would cast it, `Fireball (level 11, 26 mana): 4d6 fire, range 11, radius 2`, then the
 scrolls they could study with the chance in words: `study c, a scroll of frost: Frost, a
 struggle`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
@@ -241,7 +241,7 @@ talent, 1 bonus talent`, the talents the
 player may take now by id with their choices, the first kills that paid, each rolled quest's
 draw and the size of its pool now, `roll slug_charm scroll_of_lightning x1 of 4`, the named
 monsters dead, `slain fire_drake`, the stat training
-marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`, and the exact study odds, `study c frost: overreach 5, +0
+marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`, each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball rung 2/4 (In 16; +1 Empower)`, and the exact study odds, `study c frost: overreach 5, +0
 against 17, 36/144` (the overreach in spell levels), **dev-only**),
 `rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,

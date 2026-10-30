@@ -970,6 +970,30 @@ fn progress_rows(world: &World) -> Vec<String> {
     if !marked.is_empty() {
         rows.push(format!("stat marks {}", marked.join(", ")));
     }
+    // The rung each known spell's roll is cast at (the spell scaling design §11): of its
+    // ladder's length, with the score that reached it and the rungs from outside the stats.
+    let content = world.content();
+    for spell in view.own_spells() {
+        let Some(def) = content.spell_of(spell) else {
+            continue;
+        };
+        let Some(ladder) = def.grows.roll() else {
+            continue;
+        };
+        let mods = player.spell_mods(content, def);
+        let rung = player.spell_rung(content, def, crate::world::CastBy::Own, &mods);
+        let score = player.effective_stats(content).score(ladder.stat);
+        let mut why = vec![format!("{} {score}", ladder.stat.abbrev())];
+        for (name, rungs) in player.spell_rung_sources(content, def) {
+            why.push(format!("+{rungs} {name}"));
+        }
+        rows.push(format!(
+            "{} rung {rung}/{} ({})",
+            def.id,
+            ladder.len(),
+            why.join("; ")
+        ));
+    }
     // The study check's exact odds (spec §8 "Spells"), for each scroll the player could study.
     for study in view.studies() {
         if let Some(odds) = world.player_study_odds(study.spell) {
@@ -990,14 +1014,24 @@ fn progress_rows(world: &World) -> Vec<String> {
     rows
 }
 
-/// The spells the player knows, one a line with its spell level and cost, then the scrolls they could
-/// study with the chance in words.
+/// The spells the player knows, one a line with its spell level and cost, then what it does now
+/// as the abilities menu will show it (`Fireball (level 11, 26 mana): 4d6 fire, range 11,
+/// radius 2`), then the scrolls they could study with the chance in words.
 fn spell_rows(view: &PerceptionView<'_>) -> Vec<String> {
     let content = view.content();
     let known = (view.own_spells().into_iter()).filter_map(|spell| {
         let def = content.spell_of(spell)?;
         let cost = view.own_spell_cost(spell)?;
-        Some(format!("{} (level {}, {cost} mana)", def.name, def.level))
+        let does = spell_does(view, spell);
+        let does = if does.is_empty() {
+            String::new()
+        } else {
+            format!(": {}", does.join(", "))
+        };
+        Some(format!(
+            "{} (level {}, {cost} mana){does}",
+            def.name, def.level
+        ))
     });
     let studies = (view.studies().into_iter()).filter_map(|s| {
         let def = content.spell_of(s.spell)?;
@@ -1016,6 +1050,35 @@ fn spell_rows(view: &PerceptionView<'_>) -> Vec<String> {
     } else {
         rows
     }
+}
+
+/// What the player's spell `spell` does now, in parts: its roll with its damage type or
+/// "healed", then its reach (`range 11`, `length 9`, `radius 2`).
+fn spell_does(view: &PerceptionView<'_>, spell: crate::content::SpellId) -> Vec<String> {
+    let content = view.content();
+    let Some(def) = content.spell_of(spell) else {
+        return Vec::new();
+    };
+    let mut parts = Vec::new();
+    if let Some(roll) = view.own_spell_roll(spell) {
+        let what = match def.damage_type {
+            Some(kind) => content.damage_type(kind).id.clone(),
+            None => "healed".into(),
+        };
+        parts.push(format!("{roll} {what}"));
+    }
+    if let Some(reach) = view.own_spell_reach(spell) {
+        use crate::content::Shape;
+        match (def.shape, reach.range) {
+            (Shape::Cone | Shape::Line, Some(n)) => parts.push(format!("length {n}")),
+            (Shape::Ray | Shape::Bolt | Shape::Burst, Some(n)) => parts.push(format!("range {n}")),
+            _ => {}
+        }
+        if let Some(r) = reach.radius {
+            parts.push(format!("radius {r}"));
+        }
+    }
+    parts
 }
 
 /// The spells the player knows (`[{"id", "level", "cost"}]`) and the scrolls they could study

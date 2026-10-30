@@ -1,8 +1,9 @@
 //! The Spellcraft talents and the casters' reworked ones (#400; the magic design §10, the spell
 //! scaling design §7.2): Overreach on the study check, School focus on its tag's cost and
-//! reach, Arcane training on the wizard's caster level, and every talent combination casting
-//! with nothing holding its roll (decision 16), spell scrolls read by Empower and Archmage
-//! included.
+//! reach, Arcane training on the wizard's caster level, every talent combination casting with
+//! nothing holding its roll (decision 16), and the six spell hooks by their shipped users:
+//! Empower's and Archmage's rungs, Keen mind's dice, Sure hand's reroll, Brimming's die and
+//! cost, Numbing cold's rider, Scroll adept's scroll rung.
 
 use super::caster_tests::{kobold, reach, sp, world_with};
 use super::*;
@@ -62,17 +63,17 @@ fn school_focus_cheapens_and_lengthens_only_its_own_spells() {
     assert_eq!(cost_and_range(&w, "magic_missile"), missile);
     assert_eq!(cold.1, frost.1.map(|r| r + 1), "a step farther");
     assert_eq!(cold.0, frost.0, "a 1-mana cantrip stays at 1");
-    // Evocation: Magic missile too, never past its own cap (range 10).
+    // Evocation: Magic missile too, a cell past its ladder (only the engine's reach holds it).
     w.player_mut()
         .talents
         .take("school_focus", Some("evocation"));
     let (cost, range) = cost_and_range(&w, "magic_missile");
     assert!(cost < missile.0, "{cost} against {}", missile.0);
-    assert_eq!(range, missile.1.map(|r| (r + 1).min(10)));
+    assert_eq!(range, missile.1.map(|r| r + 1));
     assert_eq!(
         cost_and_range(&w, "ray_of_frost").1,
-        frost.1.map(|r| (r + 2).min(8)),
-        "two foci on one spell add up, to its cap"
+        frost.1.map(|r| r + 2),
+        "two foci on one spell add up"
     );
     assert_eq!(cost_and_range(&w, "mend"), mend, "restoration is untouched");
 }
@@ -155,13 +156,117 @@ fn every_talent_combination_casts_with_nothing_holding_it() {
     }
 }
 
-#[test]
-fn empowered_scrolls_roll_the_readers_talents_with_nothing_holding_them() {
-    // The scroll of lightning rolls 4d6 of itself (24 at most); an archmage's more a die lifts
-    // it past that (decision 16).
+/// The player's own roll of `spell` now, as text.
+fn roll(w: &World, spell: &str) -> String {
+    let def = BUILTIN.spell(sp(spell));
+    let roll = w.state.player().spell_roll(&BUILTIN, def, CastBy::Own);
+    roll.map(|r| r.to_string()).unwrap_or_default()
+}
+
+/// A wizard of level 1 with every score 10 (no rung by stats), holding `talents`.
+fn plain_wizard(talents: &[(&str, Option<&str>)]) -> World {
     let mut w = world_with(BUILTIN.clone(), "wizard");
-    reach(&mut w, 60);
-    assert!(w.state.player().talent_mods(w.content()).spell_per_die > 0);
+    super::cast_tests::scores(&mut w, &[]);
+    for (id, choice) in talents {
+        w.player_mut().talents.take(id, *choice);
+    }
+    w
+}
+
+#[test]
+fn empower_and_archmage_climb_rungs_to_the_ladders_last_then_the_other_hooks_apply() {
+    let base = plain_wizard(&[]);
+    assert_eq!(
+        roll(&base, "fireball"),
+        "2d6",
+        "the base at Intelligence 10"
+    );
+    let empowered = plain_wizard(&[("empower", None)]);
+    assert_eq!(roll(&empowered, "fireball"), "3d6", "a rung up");
+    assert_eq!(
+        roll(&empowered, "ray_of_frost"),
+        "1d8",
+        "a cantrip's one rung"
+    );
+    let both = plain_wizard(&[("empower", None), ("archmage", None)]);
+    assert_eq!(roll(&both, "fireball"), "5d6", "three rungs");
+    assert_eq!(
+        roll(&both, "ray_of_frost"),
+        "1d8",
+        "never past the last rung"
+    );
+    // Past the last rung, the other hooks still apply: Keen mind's bigger dice.
+    let keen = plain_wizard(&[
+        ("empower", None),
+        ("archmage", None),
+        ("keen_mind", Some("cold")),
+    ]);
+    assert_eq!(roll(&keen, "ray_of_frost"), "1d9");
+    // And the mana: Archmage half, Empower a tenth off.
+    let def = BUILTIN.spell(sp("fireball"));
+    assert_eq!(base.state.player().spell_cost(&BUILTIN, def), 26);
+    assert_eq!(both.state.player().spell_cost(&BUILTIN, def), 10);
+}
+
+#[test]
+fn keen_mind_grows_its_schools_dice_only() {
+    let w = plain_wizard(&[("keen_mind", Some("evocation"))]);
+    assert_eq!(roll(&w, "fireball"), "2d7");
+    assert_eq!(roll(&w, "magic_missile"), "1d5");
+    assert_eq!(roll(&w, "mend"), "1d3", "restoration is untouched");
+    let w = plain_wizard(&[("keen_mind", Some("fire"))]);
+    assert_eq!(roll(&w, "fireball"), "2d7", "an element: fire");
+    assert_eq!(
+        roll(&w, "lightning_bolt"),
+        "2d6",
+        "electricity is untouched"
+    );
+}
+
+#[test]
+fn brimming_rolls_a_die_more_and_costs_a_tenth_more() {
+    let base = plain_wizard(&[]);
+    let w = plain_wizard(&[("brimming", None)]);
+    assert_eq!(roll(&w, "fireball"), "3d6");
+    assert_eq!(roll(&w, "cure_wounds"), "3d6", "healing too");
+    assert_eq!(roll(&w, "scorching_ray"), "2d6");
+    let def = BUILTIN.spell(sp("fireball"));
+    let (before, after) = (
+        base.state.player().spell_cost(&BUILTIN, def),
+        w.state.player().spell_cost(&BUILTIN, def),
+    );
+    assert_eq!((before, after), (26, 28), "a tenth more, rounded down");
+}
+
+#[test]
+fn sure_hand_and_numbing_cold_set_their_hooks() {
+    let w = plain_wizard(&[("sure_hand", None), ("numbing_cold", None)]);
+    let me = w.state.player();
+    let frost = me.spell_mods(&BUILTIN, BUILTIN.spell(sp("ray_of_frost")));
+    let fire = me.spell_mods(&BUILTIN, BUILTIN.spell(sp("fireball")));
+    let sluggish = BUILTIN.status_id("sluggish").expect("sluggish");
+    assert_eq!((frost.reroll, fire.reroll), (1, 1), "every spell's 1s");
+    assert_eq!(frost.riders, [(sluggish, 1)], "a cold spell's rider");
+    assert!(fire.riders.is_empty(), "fire carries none");
+}
+
+#[test]
+fn scroll_adept_reads_a_spell_scroll_a_rung_higher() {
+    // The scroll of lightning casts at rung 2 (4d6, 24 at most); Scroll adept, the wizard's at
+    // level 1, takes it a rung higher (5d6), whatever the reader's Intelligence.
+    let mut w = world_with(BUILTIN.clone(), "wizard");
+    super::cast_tests::scores(&mut w, &[]);
+    let def = BUILTIN.spell(sp("lightning_bolt"));
+    let at = |w: &World| {
+        let me = w.state.player();
+        let by = CastBy::Scroll(2);
+        me.spell_roll(&BUILTIN, def, by).map(|r| r.to_string())
+    };
+    assert_eq!(at(&w).as_deref(), Some("5d6"));
+    w.player_mut().talents.forget("scroll_adept");
+    assert_eq!(at(&w).as_deref(), Some("4d6"), "the scroll's own rung");
+    w.player_mut().talents.take("scroll_adept", None);
+    // Read for real: past the scroll's own 24.
     let target = kobold(&mut w, 2, 10_000);
     let scroll = BUILTIN
         .object_id("scroll_of_lightning")
@@ -187,5 +292,5 @@ fn empowered_scrolls_roll_the_readers_talents_with_nothing_holding_them() {
         let hurt = 10_000 - w.state.actors[&target].hp;
         most = most.max(hurt);
     }
-    assert!(most > 24, "past the scroll's own most: {most}");
+    assert!(most > 24, "past the scroll's own rung: {most}");
 }

@@ -11,10 +11,13 @@ shape = "bolt"
 resolution = "auto"
 damage_type = "electricity"
 range = 5
-max_range = 6
-damage = { dice = "1d4" }
+damage = "1d4"
 
 [spell.cast]
 effect = "spark"
 noun = "spark"
 noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+damage = "intelligence 16 1d6"
+range = "willpower 14 6"

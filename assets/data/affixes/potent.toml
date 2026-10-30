@@ -1,15 +1,12 @@
 [[prefix]]
 id = "potent"
 name = "Potent"
-effect = "spell_lift"
+effect = "spell_bonus"
 category = "spell_power"
 bases = ["weapon", "ring", "amulet"]
 weight = 50
 tiers = [
-  { level = 3, min = 4, max = 6 },
-  { level = 5, min = 6, max = 8 },
-  { level = 7, min = 8, max = 10 },
-  { level = 9, min = 9, max = 11 },
-  { level = 11, min = 11, max = 13 },
-  { level = 13, min = 13, max = 15 },
+  { level = 3, min = 1, max = 1 },
+  { level = 7, min = 2, max = 2 },
+  { level = 11, min = 3, max = 3 },
 ]

@@ -43,7 +43,8 @@ fn a_stack_made_under_the_old_ladder_loads_re_tiered() {
     let mut w = World::new(c.clone(), "showcase", None).expect("world");
     // The old ladder's tops: Sharp's tier 4 rolled 3 to 4, now 2 to 3; Hardened's tier 3 was
     // 3, which its ladder now first holds at tier 4; Accurate's tier 9 never was, and 9 is past
-    // every tier it has (the nearest, of two as near, the first).
+    // every tier it has (the nearest, of two as near, the first, its value held to that tier's
+    // range: the spell scaling design §7.3's read of an old Potent).
     let sword = old_item(&c, "long_sword", &[("sharp", 4, 4), ("of_the_bear", 2, 2)]);
     let helm = old_item(&c, "iron_helm", &[("hardened", 3, 3), ("accurate", 9, 9)]);
     assert!(
@@ -82,11 +83,16 @@ fn a_stack_made_under_the_old_ladder_loads_re_tiered() {
         .expect("the helm");
     assert_eq!(
         tiers(helm),
-        [("hardened".into(), 4, 3), ("accurate".into(), 4, 9)]
+        [("hardened".into(), 4, 3), ("accurate".into(), 4, 3)]
     );
     assert!(sword.is_valid_for(&c) && helm.is_valid_for(&c));
     assert_eq!(back.retiered().len(), 3, "{:?}", back.retiered());
     assert!(back.retiered()[0].contains("`sharp` re-tiered from tier 4 to 5 (value 4)"));
+    assert!(
+        back.retiered()[2].contains("`accurate` re-tiered from tier 9 to 4 (value 9, held to 3)"),
+        "{:?}",
+        back.retiered()
+    );
     // Saved again, it reads as it is: nothing more to move.
     let again = crate::save::decode(&crate::save::encode(&back), c).expect("loads");
     assert!(again.retiered().is_empty());

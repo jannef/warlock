@@ -10,9 +10,8 @@ shape = "burst"
 resolution = "area"
 damage_type = "cold"
 range = 10
-max_range = 12
-max_radius = 2
-damage = { dice = "2d6" }
+radius = 2
+damage = "2d6"
 
 [spell.cast]
 effect = "frost_burst"
@@ -21,5 +20,6 @@ verb = "bites"
 message = "Bitter cold bursts from your hands!"
 frost = 100
 
-[spell.scales]
-damage = { intelligence = 10, willpower = 5 }
+[spell.grows]
+damage = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4"
+range = "willpower 14 11, 18 12"

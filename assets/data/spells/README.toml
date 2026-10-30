@@ -1,5 +1,5 @@
 # Spells (spec §8 "Spells", the magic design docs/design/magic.md §3, §5, §6, the spell scaling
-# design docs/design/spell-scaling.md §5): one file per spell holding one `[[spell]]`, its mana
+# design docs/design/spell-scaling.md §4 to §6): one file per spell holding one `[[spell]]`, its mana
 # priced by the cost table in ../spells.toml. Spells are numbered
 # in path order (saves will name them by index), so a new spell is a new file. This file holds
 # only the notes below: a file of comments defines nothing. The casters' spell abilities name
@@ -20,33 +20,27 @@
 #   resolution    how it finds its targets (../spells.toml [resolution]): `area` for the area
 #                 shapes and only them; `touch` only with the touch shape; `attack` with a ray
 #                 or a bolt; `auto` with any single target
-#   The caps of its reach (Willpower grows a spell's reach and area only up to these):
-#   max_range     ray, bolt, burst: the farthest cell it reaches or is centred on (1 to 20)
-#   max_radius    burst: its largest radius (1 to the length of ../spells.toml's `burst`)
-#   max_length    cone (1 to 5) and line (1 to 20): how far it reaches from the caster
-#                 (touch and self have none of these)
-#   range, radius, length   its reach before Willpower, each where its cap is, 1 to the cap
-#                 (default the cap); the caster's `reach` scales add cells (below; Willpower's
-#                 a cell per two modifier points) up to the cap. A burst costs by its `radius`
+#   range, radius, length   its base reach, what anyone who casts it reaches: `range` for a ray,
+#                 a bolt, and a burst (1 to 20: the farthest cell it reaches or is centred on),
+#                 `radius` for a burst (1 to the length of ../spells.toml's `burst`), `length`
+#                 for a cone (1 to 5) and a line (1 to 20); each exactly where its shape has it
+#                 (touch and self have none). A burst costs by its `radius`. (`max_range`,
+#                 `max_radius`, and `max_length` are refused: the ladders replaced them)
 #   casts         its time, in `cast` actions (1 to 10; default 1)
 #   open_sky      true: it is cast only under the open sky (default false)
 #   mana          its base mana cost given outright (1 to 500), in place of its level's: the
 #                 shape and resolution do not count; the armour worn and the talents still do.
 #                 For a spell whose price is not its difficulty (Identify)
-#   [spell.damage]  a `damage` spell's damage, rolled:
-#     dice        what it rolls at the caster level of its spell level (at least 1): dice only,
-#                 `1d6`
-#     per_levels  one die more per this many caster levels above that (0: never more;
-#                 default 0)
-#     max_dice    never more dice than this by caster level (at least dice's own; default
-#                 dice's)
-#     bonus       a static `+n`, rare (default 0)
+#   damage        a `damage` spell's base roll: a roll, `"2d6"`, `"3d6+1d10"`, `"5d6+2"` (dice
+#                 of 2 to 20 sides, a d7 or a d9 like any other; the old table form is refused)
+#   aim           an `attack` or `touch` damage spell's: the stat whose modifier is added to
+#                 its attack roll, as a blow adds Dexterity's (default `dexterity`). A scroll's
+#                 or a wand's always aims with Dexterity
 #   [spell.effect]  what a spell of another kind does:
-#     heal        a `heal` spell's hit points: a table as [spell.damage]
+#     heal        a `heal` spell's base hit points: a roll, as `damage`
 #     status, severity  a `buff`'s status on the caster, a `hex`'s on its target, a `damage`
 #                 spell's on everyone it harms (a status of ../status.toml; severity 1 to 10,
-#                 default 1; a buff's and a hex's grow by the caster's `duration` scales
-#                 (below; Presence's a degree per two modifier points), up to the status's `max`)
+#                 default 1: a buff's or a hex's base degrees; the status's `max` holds them)
 #     cures, diseases   a `cleanse` ends these statuses, and with `diseases = true` every
 #                 disease
 #     identify    true: a `utility` spell on `self` that identifies one stack the caster carries
@@ -60,21 +54,39 @@
 #     noise       { sound, loudness } where it goes off (a burst's centre, else the caster)
 #     blast, heat, frost  a burst's, as a scroll's: walls it breaks, ice it melts, water it
 #                 freezes
-#   [spell.scales]  what it grows with (the combat progression design §7): each dimension a
-#                 table of stats (`intelligence`, `willpower`, ...) to weights, 1 to 200, each a
-#                 percent of the stat's modifier, summed. All optional; a dimension left out
-#                 keeps its default, `{}` names no stat:
-#     damage      percent its dice are lifted by, never below 0: max_dice × the lift ÷ 100
-#                 dice more, rounded down (Keen mind and Potent add points); a damage or a heal
-#                 spell's. Default {}: no lift
-#     to_hit      percent of each modifier added to a damage spell's `attack` or `touch` roll,
-#                 a half rounded toward zero. Default { dexterity = 100 }
-#     reach       percent of a cell of range, length, or a burst's radius per modifier point,
-#                 never below 0, a half rounded down. Default { willpower = 50 }
-#     duration    percent of a degree more of a buff's or a hex's status per modifier point,
-#                 as reach. Default { presence = 50 }
-#   [spell.scroll]  how it comes on a scroll: `level`, the caster level a read casts it at
-#                 (default its spell level, at least 1)
+#   [spell.grows]  its ladders (the spell scaling design §4, §6): what it does as the caster's
+#                 stats rise. Every key optional; a dimension left out never grows by stats.
+#     damage      a `damage` spell's roll        heal      a `heal` spell's roll
+#     range       a ray's, bolt's, or burst's    length    a cone's or a line's
+#     radius      a burst's                      degrees   a buff's or a hex's status's degrees
+#                 A ladder is one string: the stat's id, then rungs separated by commas, each
+#                 `AT VALUE` with one space: `"intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"`.
+#                 `AT` is a score, 1 to 40, strictly ascending; at most 8 rungs. `VALUE` is a
+#                 roll for `damage` and `heal` (each rung's lowest and highest at least the one
+#                 before's, and not the same roll), whole cells or degrees for the rest (each
+#                 more than the one before, the first more than the base; a range to 20, a cone
+#                 to 5, a line to 20, a radius to the burst table's length, degrees to the
+#                 status's `max`). A caster whose effective score reaches a rung's `AT` casts
+#                 that rung; below the first, the base. Talents and items may add rungs and
+#                 change the roll (the six hooks, ../talents/README.toml `spell_mod`).
+#   (`[spell.scales]` and `[spell.scroll] level` are refused: the ladders replaced the first,
+#   a scroll's own `rungs` the second)
+#
+# Authoring conventions (templates, not checks; the spell scaling design §6.4):
+#   [A] cells or degrees, one more a rung: Willpower for reach at 14, 18, 22, 26
+#       (`range = "willpower 14 11, 18 12"`); Presence for degrees at 14, 18
+#       (`degrees = "presence 14 2, 18 3"`). Every aimed spell, every buff and hex.
+#   [B] a die more a rung, the spell's stat at 13, 16, 19, 22, 25
+#       (`damage = "intelligence 13 3d6, 16 4d6, 19 5d6"`): the body of a damage ladder.
+#   [C] a bigger die a rung (`"intelligence 16 1d8"`, `"willpower 19 2d8"`): cantrips; a d7 or
+#       a d9 where a die more is too much and a bonus too flat.
+#   [D] a static bonus at the top (`25 5d6+2`), where a small step fits better than a die.
+#   Mixed dice (`25 3d6+1d10`) sparingly, where the spell's fiction wants them.
+#   The stat by school, unless the spell says otherwise: evocation, transmutation, divination
+#   Intelligence; necromancy, abjuration, restoration Willpower; enchantment Presence (Call
+#   lightning, the druid's, names Willpower). Reach Willpower, degrees Presence. A new spell
+#   takes the level of its mana; how much its top rung does is its author's call.
 #
 # Nothing checks or holds how much a spell does (the spell scaling design, decision 16): a spell
-# rolls what its author writes, and the talents, the stats, and a critical add to it.
+# rolls what its author writes, and the stats' rungs, the talents, the items, and a critical add
+# to it.

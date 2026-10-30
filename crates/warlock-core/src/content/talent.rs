@@ -254,9 +254,6 @@ pub enum TalentEffect {
         #[serde(default)]
         per_levels: u8,
     },
-    /// The caster level a wand casts at, this much higher (spec §8 "Magic items": "Wands"; Wand
-    /// mastery), in [`crate::world::World`]'s zap.
-    WandLevel { value: i32 },
     /// The caster level its magic items give it counts this percent more, rounded up (Attuned:
     /// half again), in [`crate::world::Actor::caster_level`]'s items term; a negative items
     /// term (a curse) is left as it is.
@@ -953,29 +950,14 @@ pub enum TalentEffect {
     /// A caster's spell (design §4.1 B2, spec §8 "Spells"): its holder has the spell ability
     /// `spell`, the spell of that id in `data/spells/` (a class ability's; each given once).
     Spell { spell: String },
-    /// Its spells and spell scrolls roll `dice` dice more and add `per_die` to every die
-    /// (Scroll adept, Empower, Archmage).
-    SpellPower {
-        #[serde(default)]
-        per_die: i32,
-        #[serde(default)]
-        dice: u32,
-    },
+    /// What it does to its spells through the six hooks (spec §8 "Spells": "Hooks";
+    /// `content/spell_mod.rs`): rungs, dice, rerolls, riders, reach, degrees, and a cost
+    /// percent, for every spell or those of its `when` tags (a talent chosen for a school or an
+    /// element: those of the choice). Empower, Archmage, Keen mind, School focus, Scroll
+    /// adept, Wand mastery, Sure hand, Brimming, Numbing cold.
+    SpellMod(super::SpellModSpec),
     /// Its spells cost this percent more mana (negative: less; Archmage, Empower), at least 1.
     SpellManaPercent { value: i32 },
-    /// Its spells that carry the chosen tag (the talent takes a `school` choice: a school or an
-    /// element) cost `cost` percent more mana (negative: less), reach `reach` cells farther,
-    /// never past the spell's own caps (School focus; magic design §6, §10), and have their
-    /// dice lifted `lift` points more (Keen mind; the combat progression design §7). Each
-    /// defaults to 0.
-    SchoolFocus {
-        #[serde(default)]
-        cost: i32,
-        #[serde(default)]
-        reach: i32,
-        #[serde(default)]
-        lift: i32,
-    },
     /// Defence in the Deflection category, only while it wears no body armour (Mage armour).
     DeflectionUnarmoured { value: i32 },
     /// Rotten food neither sickens it nor exposes it to a disease (Purify).
@@ -1228,7 +1210,6 @@ impl TalentEffect {
             | TalentEffect::NaturalUnarmoured { value }
             | TalentEffect::Hardened { bonus: value }
             | TalentEffect::MeleeDamage { value }
-            | TalentEffect::WandLevel { value }
             | TalentEffect::Hearing { value }
             | TalentEffect::Notice { value }
             | TalentEffect::InitiativeBonus { value }
@@ -1846,27 +1827,7 @@ impl TalentEffect {
                 }
                 bonus(*value)
             }
-            TalentEffect::SchoolFocus { cost, reach, lift } => {
-                if choice != Some(Choice::School) {
-                    return Err(
-                        "`school_focus` is for the chosen school or element: it needs \
-                                `choice = \"school\"`"
-                            .into(),
-                    );
-                }
-                if !(0..=5).contains(reach)
-                    || !PERCENTS.contains(cost)
-                    || !(0..=100).contains(lift)
-                    || (*cost == 0 && *reach == 0 && *lift == 0)
-                {
-                    return Err(
-                        "`school_focus`: cost is a percent, reach 0 to 5, lift 0 to \
-                                100, not all 0"
-                            .into(),
-                    );
-                }
-                Ok(())
-            }
+            TalentEffect::SpellMod(spec) => spec.check(content, choice == Some(Choice::School)),
             TalentEffect::Study {
                 bonus: b,
                 percent: p,
@@ -2166,12 +2127,6 @@ impl TalentEffect {
                 } else {
                     Err(format!("`spell`: no spell `{spell}` in data/spells/"))
                 }
-            }
-            TalentEffect::SpellPower { per_die, dice } => {
-                if !(0..=5).contains(per_die) || *dice > 5 || (*per_die == 0 && *dice == 0) {
-                    return Err("`spell_power`: per_die is 0 to 5, dice 0 to 5, not both 0".into());
-                }
-                Ok(())
             }
             TalentEffect::MealHeals { dice, .. } => {
                 if dice.max() < 1 || dice.min() < 0 {
@@ -3351,14 +3306,21 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
             .contains("unknown field")
         );
         assert!(bad("effects = [{ kind = \"xp_percent\", value = 500 }]").contains("a percent"));
-        // The Spellcraft tree's (#400): School focus asks for its choice and a sane reach.
+        // The spell hooks (the spell scaling design §7.1): something to do, a filter by the
+        // choice or by known tags, a cost that is a percent.
+        assert!(bad("effects = [{ kind = \"spell_mod\" }]").contains("does nothing"));
         assert!(
-            bad("effects = [{ kind = \"school_focus\", cost = -10, reach = 1 }]")
-                .contains("is for the chosen school")
+            bad("choice = \"school\"\neffects = [{ kind = \"spell_mod\", sides = 1, when = [\"fire\"] }]")
+                .contains("keys on the choice")
         );
         assert!(
-            bad("choice = \"school\"\neffects = [{ kind = \"school_focus\", cost = -10, reach = 9 }]")
-                .contains("reach 0 to 5")
+            bad("effects = [{ kind = \"spell_mod\", rungs = 1, when = [\"sneezing\"] }]")
+                .contains("no school, kind, shape, or damage type")
+        );
+        assert!(bad("effects = [{ kind = \"spell_mod\", cost = -200 }]").contains("a percent"));
+        assert!(
+            bad("effects = [{ kind = \"spell_mod\", rungs = 1, lift = 10 }]")
+                .contains("unknown field")
         );
         assert!(
             bad("effects = [{ kind = \"caster_level\", value = 1, per_levels = 50 }]")

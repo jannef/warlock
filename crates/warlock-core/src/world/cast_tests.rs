@@ -1,5 +1,6 @@
-//! The one cast path (spec §8 "Spells", #395): resolution, no cap (decision 16), the shapes,
-//! the cost's armour and Willpower's reach, and the draws a cast makes. Spells the casters do not have are
+//! The one cast path (spec §8 "Spells", #395, the spell scaling design §13): resolution, no cap
+//! (decision 16), the shapes, the cost's armour, the ladders' rungs, the roll and rider hooks,
+//! and the draws a cast makes. Spells the casters do not have are
 //! tried as the wizard's Arcane bolt, its file replaced (the ability's id is the spell's).
 
 use super::caster_tests::{kobold, kobold_at, last, reach, run, sp, world_with};
@@ -61,9 +62,8 @@ pub(super) fn cast_at(
 
 #[test]
 fn an_attack_spell_can_miss_and_critical_and_nothing_holds_its_roll() {
-    let content = content_with_bolt(
-        "shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\ndamage = { dice = \"3d6\" }",
-    );
+    let content =
+        content_with_bolt("shape = \"ray\"\nresolution = \"attack\"\nrange = 6\ndamage = \"3d6\"");
     let mut w = wizard(content);
     let target = kobold(&mut w, 1, 10_000);
     let (mut missed, mut critical, mut most) = (0, 0, 0);
@@ -88,42 +88,45 @@ fn an_attack_spell_can_miss_and_critical_and_nothing_holds_its_roll() {
         missed > 0 && critical > 0,
         "{missed} missed, {critical} criticals"
     );
-    // 3d6 rolls 18 at most; a critical rolls it again, and nothing holds it (decision 16).
+    // 3d6 rolls 18 at most; a critical rolls it again, and nothing holds it (decisions 4, 16).
     assert!(most > 18 && most <= 36, "{most}");
 }
 
 #[test]
 fn auto_and_area_spells_never_miss_nor_critical() {
-    // Scroll adept's +1 a die: 2d6+2, 14 at most, nothing holding it.
+    // 2d6, 12 at most: Scroll adept's rung is the spell scrolls' only (decision 12).
     for body in [
-        "shape = \"bolt\"\nresolution = \"auto\"\nmax_range = 6",
-        "shape = \"line\"\nresolution = \"area\"\nmax_length = 6",
+        "shape = \"bolt\"\nresolution = \"auto\"\nrange = 6",
+        "shape = \"line\"\nresolution = \"area\"\nlength = 6",
     ] {
-        let cap = 14;
-        let body = format!("{body}\ndamage = {{ dice = \"2d6\" }}");
+        let most_of = 12;
+        let body = format!("{body}\ndamage = \"2d6\"");
         let mut w = wizard(content_with_bolt(&body));
         let target = kobold(&mut w, 2, 10_000);
         let mut most = 0;
         for _ in 0..100 {
             let (strikes, hurt) = cast_at(&mut w, (2, 0), (target, (2, 0)));
             assert_eq!(strikes, [Strike::Hit { critical: false }], "{body}");
-            assert!((4..=cap).contains(&hurt), "{body}: {hurt}");
+            assert!((2..=most_of).contains(&hurt), "{body}: {hurt}");
             most = most.max(hurt);
         }
-        assert_eq!(most, cap, "{body}");
+        assert_eq!(most, most_of, "{body}");
     }
 }
 
 #[test]
-fn empower_adds_a_die_and_nothing_holds_it() {
-    // The shipped Arcane bolt: a line of 2d6; Empower makes it 3d6, 18 at most.
+fn empower_climbs_a_rung_and_nothing_holds_it() {
+    // The shipped Arcane bolt: a line of 2d6, then 3d6 at Intelligence 13; Empower's rung
+    // reaches 3d6 at Intelligence 10, 18 at most.
     let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
     reach(&mut w, 32);
-    // No modifier, so no lift.
     scores(&mut w, &[]);
+    let content = w.content().clone();
+    let bolt = content.spell(sp("arcane_bolt"));
+    let roll = w.state.player().spell_roll(&content, bolt, CastBy::Own);
     assert_eq!(
-        w.state.player().talent_mods(w.content()).spell_dice,
-        1,
+        roll.map(|r| r.to_string()).as_deref(),
+        Some("3d6"),
         "Empower"
     );
     let target = kobold(&mut w, 2, 10_000);
@@ -132,22 +135,16 @@ fn empower_adds_a_die_and_nothing_holds_it() {
         let (_, hurt) = cast_at(&mut w, (2, 0), (target, (2, 0)));
         most = most.max(hurt);
     }
-    assert!(most > 14, "3d6 passes the old cap of 14: {most}");
+    assert!(most > 12, "3d6 passes the base's 12: {most}");
 }
 
 #[test]
 fn evasion_halves_an_area_but_not_a_bolt() {
     for (body, halved) in [
-        (
-            "shape = \"line\"\nresolution = \"area\"\nmax_length = 6",
-            true,
-        ),
-        (
-            "shape = \"bolt\"\nresolution = \"auto\"\nmax_range = 6",
-            false,
-        ),
+        ("shape = \"line\"\nresolution = \"area\"\nlength = 6", true),
+        ("shape = \"bolt\"\nresolution = \"auto\"\nrange = 6", false),
     ] {
-        let content = content_with_bolt(&format!("{body}\ndamage = {{ dice = \"2d6\" }}"));
+        let content = content_with_bolt(&format!("{body}\ndamage = \"2d6\""));
         // The same cast against the same roll, the kobold with Evasion and without.
         let hurt = |evades: bool| {
             let mut w = wizard(content.clone());
@@ -159,7 +156,7 @@ fn evasion_halves_an_area_but_not_a_bolt() {
             cast_at(&mut w, (2, 0), (target, (2, 0))).1
         };
         let (full, evaded) = (hurt(false), hurt(true));
-        assert!(full >= 4, "{body}: {full}");
+        assert!(full >= 2, "{body}: {full}");
         let expected = if halved { full / 2 } else { full };
         assert_eq!(evaded, expected, "{body}");
     }
@@ -168,18 +165,10 @@ fn evasion_halves_an_area_but_not_a_bolt() {
 #[test]
 fn a_line_strikes_everyone_on_it_and_a_bolt_the_first() {
     for (body, both) in [
-        (
-            "shape = \"line\"\nresolution = \"area\"\nmax_length = 6",
-            true,
-        ),
-        (
-            "shape = \"bolt\"\nresolution = \"auto\"\nmax_range = 6",
-            false,
-        ),
+        ("shape = \"line\"\nresolution = \"area\"\nlength = 6", true),
+        ("shape = \"bolt\"\nresolution = \"auto\"\nrange = 6", false),
     ] {
-        let mut w = wizard(content_with_bolt(&format!(
-            "{body}\ndamage = {{ dice = \"2d6\" }}"
-        )));
+        let mut w = wizard(content_with_bolt(&format!("{body}\ndamage = \"2d6\"")));
         let near = kobold(&mut w, 2, 100);
         let far = kobold(&mut w, 4, 100);
         w.apply(&Action::Cast(
@@ -195,7 +184,7 @@ fn a_line_strikes_everyone_on_it_and_a_bolt_the_first() {
 #[test]
 fn a_cone_fans_out_toward_its_aim() {
     let mut w = wizard(content_with_bolt(
-        "shape = \"cone\"\nresolution = \"area\"\nmax_length = 3\ndamage = { dice = \"2d6\" }\n\
+        "shape = \"cone\"\nresolution = \"area\"\nlength = 3\ndamage = \"2d6\"\n\
          cast = { effect = \"fireball\" }",
     ));
     let ahead = kobold_at(&mut w, (2, 1), 100);
@@ -222,7 +211,7 @@ fn a_cone_fans_out_toward_its_aim() {
 #[test]
 fn a_touch_reaches_only_the_next_cell() {
     let mut w = wizard(content_with_bolt(
-        "shape = \"touch\"\nresolution = \"touch\"\ndamage = { dice = \"3d6\" }",
+        "shape = \"touch\"\nresolution = \"touch\"\ndamage = \"3d6\"",
     ));
     let target = kobold(&mut w, 2, 10_000);
     let turn = w.state.turn;
@@ -263,10 +252,10 @@ fn armour_makes_spells_dearer() {
 }
 
 #[test]
-fn willpower_reaches_farther_up_to_the_spells_cap() {
+fn willpower_climbs_the_reach_ladder_to_its_last_rung() {
     let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
     reach(&mut w, 18);
-    // The shipped Arcane bolt: length 6, at most 8; a cell per two points of the modifier.
+    // The shipped Arcane bolt: length 6; `willpower 14 7, 18 8`, the old rounding's values.
     let mut reach_at = |score: u8| {
         let mut scores = PerStat::splat(14);
         scores[Stat::Willpower] = score;
@@ -276,8 +265,15 @@ fn willpower_reaches_farther_up_to_the_spells_cap() {
             .and_then(|r| r.range)
     };
     assert_eq!(
-        [reach_at(10), reach_at(14), reach_at(18), reach_at(30)],
-        [Some(6), Some(7), Some(8), Some(8)]
+        [
+            reach_at(10),
+            reach_at(13),
+            reach_at(14),
+            reach_at(17),
+            reach_at(18),
+            reach_at(30)
+        ],
+        [Some(6), Some(6), Some(7), Some(7), Some(8), Some(8)]
     );
 }
 
@@ -302,87 +298,174 @@ pub(super) fn scores(w: &mut World, scores: &[(Stat, u8)]) {
     w.player_mut().stats = Stats::new(all, PerStat::splat(40));
 }
 
-/// An attack ray of level 6, 3d6, its dice lifted by Intelligence 10 % and Willpower 5 % a
-/// point, aimed with Intelligence.
-const SCALED_RAY: &str = "shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\n\
-                          damage = { dice = \"3d6\" }\n[spell.scales]\n\
-                          damage = { intelligence = 10, willpower = 5 }\n\
-                          to_hit = { intelligence = 100 }";
+/// An auto bolt of level 6 that never misses: 2d6, a die more at Intelligence 13, a bigger
+/// die at 16, a hotter core at 19.
+const LADDER_BOLT: &str = "shape = \"bolt\"\nresolution = \"auto\"\nrange = 6\ndamage = \"2d6\"\n\
+                           [spell.grows]\n\
+                           damage = \"intelligence 13 3d6, 16 3d8, 19 3d8+1d10\"";
 
-#[test]
-fn the_stats_a_spell_names_lift_its_dice_with_no_most() {
-    let mut w = wizard(content_with_bolt(SCALED_RAY));
+/// The player's own roll for Arcane bolt now, as text.
+fn own_roll(w: &World) -> String {
     let content = w.content().clone();
     let bolt = content.spell(sp("arcane_bolt"));
-    let at = |w: &World| w.state.player().spell_lift(&content, bolt);
-    scores(&mut w, &[]);
-    assert_eq!(at(&w), 0, "no modifier: no lift");
-    // The design's level-10 wizard: Intelligence +4, Willpower +2: 50 %.
-    scores(&mut w, &[(Stat::Intelligence, 18), (Stat::Willpower, 14)]);
-    assert_eq!(at(&w), 50);
-    // Low stats never lower the dice.
-    scores(&mut w, &[(Stat::Intelligence, 4), (Stat::Willpower, 4)]);
-    assert_eq!(at(&w), 0);
-    // Intelligence +10, Willpower +10: 150 %, nothing holding it (decision 16).
-    scores(&mut w, &[(Stat::Intelligence, 30), (Stat::Willpower, 30)]);
-    assert_eq!(at(&w), 150);
-    // Keen mind for evocation: 10 points more of lift, only for its school.
-    let before = w.state.player().talents.clone();
-    w.player_mut().talents.take("keen_mind", Some("evocation"));
-    assert_eq!(at(&w), 160);
-    w.player_mut().talents = before;
-    w.player_mut().talents.take("keen_mind", Some("necromancy"));
-    assert_eq!(at(&w), 150, "another school's mind");
+    let roll = w.state.player().spell_roll(&content, bolt, CastBy::Own);
+    roll.map(|r| r.to_string()).unwrap_or_default()
 }
 
 #[test]
-fn a_lifted_spell_rolls_more_and_its_criticals_more_again() {
-    let mut w = wizard(content_with_bolt(SCALED_RAY));
-    scores(&mut w, &[(Stat::Intelligence, 18), (Stat::Willpower, 14)]);
-    let target = kobold(&mut w, 1, 10_000);
-    let (mut critical, mut most, mut plain) = (0, 0, 0);
-    for _ in 0..400 {
-        let (strikes, hurt) = cast_at(&mut w, (3, 0), (target, (1, 0)));
-        if strikes == [Strike::Hit { critical: true }] {
-            critical += 1;
-        } else {
-            plain = plain.max(hurt);
-        }
-        most = most.max(hurt);
+fn the_rung_is_the_count_of_rungs_the_score_reaches() {
+    let mut w = wizard(content_with_bolt(LADDER_BOLT));
+    for (score, roll) in [
+        (3, "2d6"),
+        (12, "2d6"),
+        (13, "3d6"),
+        (15, "3d6"),
+        (16, "3d8"),
+        (19, "3d8+1d10"),
+        (40, "3d8+1d10"),
+    ] {
+        scores(&mut w, &[(Stat::Intelligence, score)]);
+        assert_eq!(own_roll(&w), roll, "Intelligence {score}");
     }
-    // 4d6 now (the lift's 50 % of three dice, a die more), past 3d6's 18; a critical more.
-    assert!(critical > 0);
-    assert!(plain > 18, "{plain}");
-    assert!(most > plain, "{most} against {plain}");
+    // What a drain or a worn item does to the score counts: the effective score climbs.
+    scores(&mut w, &[(Stat::Intelligence, 15)]);
+    w.player_mut().damage.take(Stat::Intelligence, 3, 15);
+    assert_eq!(own_roll(&w), "2d6", "15 drained to 12");
 }
 
+/// A cast at each rung draws exactly the dice of that rung, one draw a die in group order, and
+/// nothing before them (an auto bolt has no attack roll): the damage is that roll on the same
+/// stream.
 #[test]
-fn a_spell_without_scales_keeps_the_old_rules() {
-    // The shipped Spark, a cantrip with no `damage` scales: no lift whatever the stats.
-    let mut w = world_with(Arc::new(Content::builtin().expect("content")), "wizard");
+fn a_cast_at_every_rung_draws_the_dice_of_that_rung() {
+    let mut w = wizard(content_with_bolt(LADDER_BOLT));
+    let target = kobold(&mut w, 2, 10_000);
+    for score in [10, 13, 16, 19] {
+        scores(&mut w, &[(Stat::Intelligence, score)]);
+        let roll: crate::dice::Roll = own_roll(&w).parse().expect("a roll");
+        for _ in 0..20 {
+            let mut rng = w.state.rng.clone();
+            let (_, hurt) = cast_at(&mut w, (2, 0), (target, (2, 0)));
+            // Less a hit point the kobold may have mended as the turn passed.
+            let rolled = roll.roll(&mut rng, 0);
+            assert!(
+                (rolled - 1..=rolled).contains(&hurt),
+                "Intelligence {score}: {hurt}"
+            );
+            assert_eq!(
+                w.state.rng, rng,
+                "nothing more drawn at Intelligence {score}"
+            );
+        }
+    }
+}
+
+/// The boundary of a rung (Intelligence 15 → 16) changes the roll and nothing else: the reach,
+/// the cost, the to-hit stay.
+#[test]
+fn a_rungs_boundary_changes_the_roll_and_nothing_else() {
+    let mut w = wizard(Arc::new(Content::builtin().expect("content")));
     let content = w.content().clone();
-    let spark = content.spell(sp("spark"));
-    scores(&mut w, &[(Stat::Intelligence, 30), (Stat::Willpower, 30)]);
-    let me = w.state.player();
-    assert_eq!(me.spell_lift(&content, spark), 0);
-    // Its to-hit and reach are the old Dexterity's and Willpower's.
-    scores(&mut w, &[(Stat::Dexterity, 16), (Stat::Willpower, 15)]);
-    let me = w.state.player();
-    assert_eq!(me.spell_to_hit(&content, spark), 3);
-    assert_eq!(me.spell_reach_more(&content, spark), 1);
-    // Evil eye's degrees: Presence +2 at 50 %, Willpower +4 at 25 %: two more.
-    let evil_eye = content.spell(sp("evil_eye"));
-    scores(&mut w, &[(Stat::Presence, 14), (Stat::Willpower, 18)]);
-    let me = w.state.player();
-    assert_eq!(me.spell_degrees_more(&content, evil_eye), 2);
-    // Blessing names nothing: Presence alone, a degree per two points.
-    let blessing = content.spell(sp("blessing"));
-    assert_eq!(me.spell_degrees_more(&content, blessing), 1);
+    let fireball = content.spell(sp("fireball"));
+    let read = |w: &World| {
+        let me = w.state.player();
+        (
+            me.spell_roll(&content, fireball, CastBy::Own)
+                .map(|r| r.to_string()),
+            me.spell_reach(&content, fireball),
+            me.spell_cost(&content, fireball),
+            me.spell_to_hit(&content, fireball),
+        )
+    };
+    scores(&mut w, &[(Stat::Intelligence, 15)]);
+    let before = read(&w);
+    scores(&mut w, &[(Stat::Intelligence, 16)]);
+    let after = read(&w);
+    assert_eq!(before.0.as_deref(), Some("3d6"));
+    assert_eq!(after.0.as_deref(), Some("4d6"));
+    assert_eq!((before.1, before.2, before.3), (after.1, after.2, after.3));
+}
+
+/// Sure hand's reroll (the roll hook): a die showing 1 is drawn once more, and that draw stands;
+/// the cast's damage is the roll with that reroll on the same stream, and no die is sent back
+/// twice.
+#[test]
+fn a_reroll_draws_once_more_per_die_it_sends_back_and_never_twice() {
+    let mut w = wizard(content_with_bolt(LADDER_BOLT));
+    w.player_mut().talents.take("sure_hand", None);
+    scores(&mut w, &[(Stat::Intelligence, 13)]);
+    let target = kobold(&mut w, 2, 10_000);
+    let roll: crate::dice::Roll = own_roll(&w).parse().expect("a roll");
+    let (mut ones, mut low) = (0, 0);
+    for _ in 0..300 {
+        let mut rng = w.state.rng.clone();
+        let mut plain = rng.clone();
+        let (_, hurt) = cast_at(&mut w, (2, 0), (target, (2, 0)));
+        let rolled = roll.roll(&mut rng, 1);
+        assert!(
+            (rolled - 1..=rolled).contains(&hurt),
+            "Sure hand rerolls the 1s: {hurt}"
+        );
+        assert_eq!(w.state.rng, rng, "nothing more drawn");
+        // The same stream without the reroll: three draws, of which any 1 is sent back.
+        let dice: Vec<i32> = (0..3).map(|_| plain.range(1, 6)).collect();
+        ones += dice.iter().filter(|&&d| d == 1).count();
+        low += i32::from(rolled == 3);
+    }
+    assert!(ones > 0, "some 1s were sent back");
+    assert!(
+        low < 3,
+        "three 1s that stand are rare with the reroll: {low}"
+    );
+}
+
+/// Numbing cold's rider (the rider hook): every target a cold spell harms is Sluggish besides,
+/// none it misses, and no other spell's.
+#[test]
+fn a_rider_lands_on_every_target_harmed_and_on_none_missed() {
+    let mut files = ContentFiles::builtin();
+    let text = "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
+                level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"cold\"\n\
+                shape = \"ray\"\nresolution = \"attack\"\nrange = 6\ndamage = \"1d6\"\n";
+    files.insert("data/spells/arcane_bolt.toml", text);
+    let mut w = wizard(Arc::new(Content::load(&files).expect("the spell loads")));
+    w.player_mut().talents.take("numbing_cold", None);
+    let content = w.content().clone();
+    let sluggish = content.status_id("sluggish").expect("sluggish");
+    let target = kobold(&mut w, 1, 10_000);
+    let (mut hit, mut missed) = (0, 0);
+    for _ in 0..200 {
+        w.state.actors.get_mut(&target).expect("there").effects = Default::default();
+        let (strikes, _) = cast_at(&mut w, (3, 0), (target, (1, 0)));
+        let slowed = w.state.actors[&target].effects.has(sluggish);
+        if strikes[0].is_hit() {
+            hit += 1;
+            assert!(slowed, "harmed: Sluggish");
+        } else {
+            missed += 1;
+            assert!(!slowed, "missed: nothing");
+        }
+    }
+    assert!(hit > 0 && missed > 0, "{hit} hit, {missed} missed");
+    // A line of force harms everyone on it; the rider is a cold spell's only.
+    let mut w = wizard(content_with_bolt(
+        "shape = \"line\"\nresolution = \"area\"\nlength = 6\ndamage = \"2d6\"",
+    ));
+    w.player_mut().talents.take("numbing_cold", None);
+    let near = kobold(&mut w, 2, 100);
+    cast_at(&mut w, (4, 0), (near, (2, 0)));
+    assert!(
+        !w.state.actors[&near].effects.has(sluggish),
+        "force is not cold"
+    );
 }
 
 #[test]
 fn an_intelligent_caster_aims_a_spell_that_names_intelligence() {
-    let mut w = wizard(content_with_bolt(SCALED_RAY));
+    let mut w = wizard(content_with_bolt(
+        "shape = \"ray\"\nresolution = \"attack\"\nrange = 6\ndamage = \"3d6\"\n\
+         aim = \"intelligence\"",
+    ));
     let content = w.content().clone();
     let bolt = content.spell(sp("arcane_bolt"));
     scores(&mut w, &[(Stat::Intelligence, 18), (Stat::Dexterity, 4)]);
@@ -403,7 +486,7 @@ fn an_intelligent_caster_aims_a_spell_that_names_intelligence() {
     let by_wits = hits(&mut w);
     // The same ray aimed by Dexterity (-3).
     let mut d = wizard(content_with_bolt(
-        "shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\ndamage = { dice = \"3d6\" }",
+        "shape = \"ray\"\nresolution = \"attack\"\nrange = 6\ndamage = \"3d6\"",
     ));
     scores(&mut d, &[(Stat::Intelligence, 18), (Stat::Dexterity, 4)]);
     let by_hand = hits(&mut d);

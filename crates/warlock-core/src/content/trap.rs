@@ -267,9 +267,10 @@ impl TrapEffect {
     pub fn damage(&self) -> Option<Roll> {
         match self {
             TrapEffect::Shot { attack, .. } | TrapEffect::Strike { attack } => Some(attack.damage),
-            TrapEffect::Burst(Burst { damage, .. })
-            | TrapEffect::Bolt(Bolt { damage, .. })
-            | TrapEffect::Pit { damage, .. } => Some((*damage).into()),
+            TrapEffect::Burst(Burst { damage, .. }) | TrapEffect::Bolt(Bolt { damage, .. }) => {
+                Some(*damage)
+            }
+            TrapEffect::Pit { damage, .. } => Some((*damage).into()),
             TrapEffect::Alarm | TrapEffect::Teleport => None,
         }
     }

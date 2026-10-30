@@ -216,16 +216,24 @@ pub enum Effect {
     SpellToHit,
     /// Widens one's own spells' critical threat range by this many natural rolls.
     SpellThreat,
-    /// Points more of a spell's damage lift.
-    SpellLift,
+    /// Rungs higher on one's own spells' damage and heal ladders (spec §8 "Spells": "Hooks").
+    SpellRungs,
+    /// Added to one's spells' rolls, harm or healing (Potent).
+    SpellBonus,
+    /// Sides more on every die of one's spells' rolls.
+    SpellSides,
+    /// Dice more on one's spells' rolls.
+    SpellDice,
+    /// One's spells' dice that show this or less are drawn once more.
+    SpellReroll,
     /// Cells more of a spell's reach.
     SpellReach,
     /// Degrees more of the statuses one's spells give.
     SpellDuration,
     /// Mana back on a kill close by.
     ManaOnKill,
-    /// Added to the caster level wands are zapped at.
-    WandLevel,
+    /// Rungs higher for the wands one uses (of Wands).
+    WandRungs,
     /// Added to a resource's maximum (the affix's `resource`; spec §8 "Resources").
     ResourceMax,
     /// Percent faster a resource comes back.
@@ -294,11 +302,15 @@ impl Effect {
             Effect::SpellEase,
             Effect::SpellToHit,
             Effect::SpellThreat,
-            Effect::SpellLift,
+            Effect::SpellRungs,
+            Effect::SpellBonus,
+            Effect::SpellSides,
+            Effect::SpellDice,
+            Effect::SpellReroll,
             Effect::SpellReach,
             Effect::SpellDuration,
             Effect::ManaOnKill,
-            Effect::WandLevel,
+            Effect::WandRungs,
             Effect::ResourceMax,
             Effect::ResourceRate,
             Effect::ActiveStamina,
@@ -353,11 +365,15 @@ impl Effect {
             Effect::SpellEase => "spell_ease",
             Effect::SpellToHit => "spell_to_hit",
             Effect::SpellThreat => "spell_threat",
-            Effect::SpellLift => "spell_lift",
+            Effect::SpellRungs => "spell_rungs",
+            Effect::SpellBonus => "spell_bonus",
+            Effect::SpellSides => "spell_sides",
+            Effect::SpellDice => "spell_dice",
+            Effect::SpellReroll => "spell_reroll",
             Effect::SpellReach => "spell_reach",
             Effect::SpellDuration => "spell_duration",
             Effect::ManaOnKill => "mana_on_kill",
-            Effect::WandLevel => "wand_level",
+            Effect::WandRungs => "wand_rungs",
             Effect::ResourceMax => "resource_max",
             Effect::ResourceRate => "resource_rate",
             Effect::ActiveStamina => "active_stamina",
@@ -383,7 +399,7 @@ impl Effect {
     }
 
     /// How many effects there are.
-    pub const COUNT: usize = 49 + Stat::COUNT;
+    pub const COUNT: usize = 53 + Stat::COUNT;
 
     /// Its place in [`Effect::all`].
     pub const fn index(self) -> usize {
@@ -416,28 +432,32 @@ impl Effect {
             Effect::SpellEase => 25,
             Effect::SpellToHit => 26,
             Effect::SpellThreat => 27,
-            Effect::SpellLift => 28,
-            Effect::SpellReach => 29,
-            Effect::SpellDuration => 30,
-            Effect::ManaOnKill => 31,
-            Effect::WandLevel => 32,
-            Effect::ResourceMax => 33,
-            Effect::ResourceRate => 34,
-            Effect::ActiveStamina => 35,
-            Effect::ResourceOnKill => 36,
-            Effect::Resistance => 37,
-            Effect::Stat(stat) => 38 + stat as usize,
-            Effect::MoveSpeed => 38 + Stat::COUNT,
-            Effect::Carry => 39 + Stat::COUNT,
-            Effect::Stealth => 40 + Stat::COUNT,
-            Effect::DoorKick => 41 + Stat::COUNT,
-            Effect::DigPercent => 42 + Stat::COUNT,
-            Effect::Hunger => 43 + Stat::COUNT,
-            Effect::TrapDamage => 44 + Stat::COUNT,
-            Effect::DiseaseCheck => 45 + Stat::COUNT,
-            Effect::PotionKept => 46 + Stat::COUNT,
-            Effect::Light => 47 + Stat::COUNT,
-            Effect::Skill => 48 + Stat::COUNT,
+            Effect::SpellRungs => 28,
+            Effect::SpellBonus => 29,
+            Effect::SpellSides => 30,
+            Effect::SpellDice => 31,
+            Effect::SpellReroll => 32,
+            Effect::SpellReach => 33,
+            Effect::SpellDuration => 34,
+            Effect::ManaOnKill => 35,
+            Effect::WandRungs => 36,
+            Effect::ResourceMax => 37,
+            Effect::ResourceRate => 38,
+            Effect::ActiveStamina => 39,
+            Effect::ResourceOnKill => 40,
+            Effect::Resistance => 41,
+            Effect::Stat(stat) => 42 + stat as usize,
+            Effect::MoveSpeed => 42 + Stat::COUNT,
+            Effect::Carry => 43 + Stat::COUNT,
+            Effect::Stealth => 44 + Stat::COUNT,
+            Effect::DoorKick => 45 + Stat::COUNT,
+            Effect::DigPercent => 46 + Stat::COUNT,
+            Effect::Hunger => 47 + Stat::COUNT,
+            Effect::TrapDamage => 48 + Stat::COUNT,
+            Effect::DiseaseCheck => 49 + Stat::COUNT,
+            Effect::PotionKept => 50 + Stat::COUNT,
+            Effect::Light => 51 + Stat::COUNT,
+            Effect::Skill => 52 + Stat::COUNT,
         }
     }
 
@@ -464,7 +484,7 @@ impl Effect {
             Effect::ExtraDamage | Effect::Elemental => 2..=20,
             Effect::Threat | Effect::Crit | Effect::SpellThreat => 1..=3,
             Effect::AttackSpeed | Effect::MoveSpeed | Effect::DigPercent => 1..=MAX_SPEED,
-            Effect::ManaCost | Effect::SpellLift | Effect::PotionKept => 1..=50,
+            Effect::ManaCost | Effect::PotionKept => 1..=50,
             Effect::ActiveStamina => 1..=5,
             Effect::ManaOnKill | Effect::ResourceOnKill => 1..=20,
             Effect::Hunger | Effect::TrapDamage => 1..=75,
@@ -1385,11 +1405,15 @@ tiers = [{ level = 1, min = 1, max = 2 }]
             ("spell_ease", "\"body\", \"helmet\", \"shield\""),
             ("spell_to_hit", "\"weapon\""),
             ("spell_threat", "\"gloves\""),
-            ("spell_lift", "\"amulet\""),
+            ("spell_rungs", "\"amulet\""),
+            ("spell_bonus", "\"ring\""),
+            ("spell_sides", "\"amulet\""),
+            ("spell_dice", "\"amulet\""),
+            ("spell_reroll", "\"ring\""),
             ("spell_reach", "\"cloak\""),
             ("spell_duration", "\"helmet\""),
             ("mana_on_kill", "\"launcher\""),
-            ("wand_level", "\"gloves\""),
+            ("wand_rungs", "\"gloves\""),
             ("door_kick", "\"boots\""),
             ("dig_percent", "\"tool\", \"gloves\""),
             ("hunger", "\"cloak\""),
