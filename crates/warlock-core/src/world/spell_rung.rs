@@ -61,7 +61,13 @@ fn number_at(ladder: Option<&Ladder>, rung: usize, base: i32) -> i32 {
 impl Actor {
     /// The rung of `spell`'s roll ladder it casts at as `by` (module docs) with `mods`; 0 for a
     /// spell with no such ladder.
-    pub fn spell_rung(&self, content: &Content, spell: &SpellData, by: CastBy, mods: &SpellMods) -> usize {
+    pub fn spell_rung(
+        &self,
+        content: &Content,
+        spell: &SpellData,
+        by: CastBy,
+        mods: &SpellMods,
+    ) -> usize {
         let Some(ladder) = spell.grows.roll() else {
             return 0;
         };
@@ -143,7 +149,8 @@ impl Actor {
     /// spell's `aim` stat's modifier (Dexterity unless it names another), and its magic items'
     /// `spell_to_hit` (of the Magus). A scroll's or a wand's aim is Dexterity's alone.
     pub fn spell_to_hit(&self, content: &Content, spell: &SpellData) -> i32 {
-        self.effective_stats(content).modifier(spell.aim) + self.mods(content).get(ItemEffect::SpellToHit)
+        self.effective_stats(content).modifier(spell.aim)
+            + self.mods(content).get(ItemEffect::SpellToHit)
     }
 
     /// The to-hit of a scroll read or a wand used: Dexterity's modifier.

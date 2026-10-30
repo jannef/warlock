@@ -705,6 +705,7 @@ mod tests {
             to_hit,
             damage: dice(damage).into(),
             bonus: 0,
+            reroll: 0,
             threat,
             crit,
             confirm: 0,

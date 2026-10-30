@@ -7,7 +7,6 @@ use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{Factor, LevelKind, SpellId, StatusId};
-use crate::dice::Dice;
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
@@ -496,7 +495,7 @@ fn blight_poisons_everyone_it_reaches() {
 }
 
 #[test]
-fn spell_power_and_archmage_mana() {
+fn the_rung_talents_and_archmage_mana() {
     let content = BUILTIN.clone();
     let book = content.talents();
     let mods = |ids: &[&str]| {
@@ -506,15 +505,18 @@ fn spell_power_and_archmage_mana() {
         });
         crate::talent::TalentMods::of(&content, effects)
     };
-    let three = Dice::of(3, 6);
-    assert_eq!(mods(&[]).spell_damage(three), three);
+    let every = |ids: &[&str]| mods(ids).spell_mods(&["evocation", "damage", "burst", "fire"]);
+    assert_eq!(every(&[]), crate::content::SpellMods::default());
     assert_eq!(
-        mods(&["scroll_adept"]).spell_damage(three).to_string(),
-        "3d6+3"
+        (
+            every(&["scroll_adept"]).scroll_rungs,
+            every(&["scroll_adept"]).rungs
+        ),
+        (1, 0)
     );
-    assert_eq!(mods(&["empower"]).spell_damage(three).to_string(), "4d6");
+    assert_eq!(every(&["empower"]).rungs, 1);
+    assert_eq!(every(&["scroll_adept", "empower", "archmage"]).rungs, 3);
     let all = mods(&["scroll_adept", "empower", "archmage"]);
-    assert_eq!(all.spell_damage(three).to_string(), "4d6+12");
     // Archmage's half and Empower's tenth off.
     assert_eq!((all.spell_mana(10), all.spell_mana(1)), (4, 1));
     assert_eq!(mods(&[]).spell_mana(9), 9);

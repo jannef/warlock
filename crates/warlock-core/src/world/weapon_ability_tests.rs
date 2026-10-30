@@ -808,12 +808,10 @@ fn spell_content(bolt: &str, abilities: bool) -> Arc<Content> {
     Arc::new(Content::load(&files).expect("test content is valid"))
 }
 
-/// An attack ray of tier 2 (cap 18), 3d6, its cap lifted by Intelligence and Willpower, aimed
-/// with Intelligence.
-const RAY: &str = "shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\n\
-                   damage = { dice = \"3d6\" }\n[spell.scales]\n\
-                   damage = { intelligence = 10, willpower = 5 }\n\
-                   to_hit = { intelligence = 100 }";
+/// An attack ray, 3d6, a die more at Intelligence 16, aimed with Intelligence.
+const RAY: &str = "shape = \"ray\"\nresolution = \"attack\"\nrange = 6\n\
+                   damage = \"3d6\"\naim = \"intelligence\"\n[spell.grows]\n\
+                   damage = \"intelligence 16 4d6\"";
 
 /// A level-18 `class` (a wizard: Arcane bolt) with `content`, and a kobold two cells east,
 /// holding a knife and a shield, with Sword and Board at `rank`; the kobold's id. No creature
@@ -953,12 +951,12 @@ fn a_reflected_spell_is_never_reflected_again() {
 #[test]
 fn bursts_cones_lines_and_hexes_are_never_turned_back() {
     for shape in [
-        "shape = \"burst\"\nresolution = \"area\"\nmax_range = 6\nradius = 1\nmax_radius = 1\n\
-         damage = { dice = \"1d2\" }",
-        "shape = \"cone\"\nresolution = \"area\"\nlength = 4\nmax_length = 4\n\
-         damage = { dice = \"1d2\" }",
-        "shape = \"line\"\nresolution = \"area\"\nlength = 4\nmax_length = 4\n\
-         damage = { dice = \"1d2\" }",
+        "shape = \"burst\"\nresolution = \"area\"\nrange = 6\nradius = 1\n\
+         damage = \"1d2\"",
+        "shape = \"cone\"\nresolution = \"area\"\nlength = 4\n\
+         damage = \"1d2\"",
+        "shape = \"line\"\nresolution = \"area\"\nlength = 4\n\
+         damage = \"1d2\"",
     ] {
         let (mut w, kobold) = reflector(spell_content(shape, true), "wizard", 10);
         for _ in 0..10 {
@@ -979,7 +977,7 @@ fn bursts_cones_lines_and_hexes_are_never_turned_back() {
 #[test]
 fn a_miss_by_parry_is_not_turned_back() {
     // A touch (Parry counts against it), at a kobold with a foil and a shield.
-    let touch = "shape = \"touch\"\nresolution = \"touch\"\ndamage = { dice = \"1d6\" }";
+    let touch = "shape = \"touch\"\nresolution = \"touch\"\ndamage = \"1d6\"";
     let (mut w, kobold) = reflector(spell_content(touch, true), "wizard", 10);
     let content = w.content().clone();
     let me = w.state.actors.get_mut(&kobold).expect("kobold");
@@ -1013,7 +1011,7 @@ fn a_miss_by_parry_is_not_turned_back() {
 }
 
 #[test]
-fn a_reflection_spends_no_more_mana_and_keeps_the_casters_lifted_dice() {
+fn a_reflection_spends_no_more_mana_and_keeps_the_casters_climbed_dice() {
     let (mut w, kobold) = reflector(spell_content(RAY, true), "wizard", 10);
     let mut all = crate::stats::PerStat::splat(10);
     all[crate::stats::Stat::Intelligence] = 18;
@@ -1023,7 +1021,12 @@ fn a_reflection_spends_no_more_mana_and_keeps_the_casters_lifted_dice() {
     let bolt = content.spell(content.spell_id("arcane_bolt").expect("bolt"));
     let me = w.state.player();
     let cost = me.spell_cost(&content, bolt);
-    assert_eq!(me.spell_lift(&content, bolt), 50, "a die more on 3d6");
+    let roll = me.spell_roll(&content, bolt, super::CastBy::Own);
+    assert_eq!(
+        roll.map(|r| r.to_string()).as_deref(),
+        Some("4d6"),
+        "a rung up from 3d6"
+    );
     let mut most = 0;
     for _ in 0..400 {
         w.spend_actions(kobold, &mut Vec::new());

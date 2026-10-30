@@ -150,12 +150,11 @@ fn the_built_in_content_types_every_source_of_damage() {
         if let Some(bash) = &o.bash {
             assert_eq!(bash.kinds.main(), c.unarmed_damage(), "{}", o.id);
         }
-        if let Some(spell) = o.read.as_ref().and_then(|r| r.spell()) {
-            let kind = match &spell.cast {
-                crate::content::Cast::Burst(b) => b.kind,
-                crate::content::Cast::Bolt(b) => b.kind,
-            };
-            assert!(kind.is_some(), "{} casts untyped damage", o.id);
+        if let Some(read) = &o.read {
+            let spell = c.spell(read.scroll().spell);
+            if spell.kind == crate::content::SpellPurpose::Damage {
+                assert!(spell.damage_type.is_some(), "{} casts untyped damage", o.id);
+            }
         }
     }
     for creature in c.creature_defs() {

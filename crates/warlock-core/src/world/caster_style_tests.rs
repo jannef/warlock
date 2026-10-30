@@ -24,9 +24,8 @@ fn content_with_bolt(body: &str) -> Arc<Content> {
 
 /// A level-18 wizard whose Arcane bolt is a ray (an attack roll, 3d6, up to 8 cells).
 fn ray_wizard() -> World {
-    let content = content_with_bolt(
-        "shape = \"ray\"\nresolution = \"attack\"\nmax_range = 8\ndamage = { dice = \"3d6\" }",
-    );
+    let content =
+        content_with_bolt("shape = \"ray\"\nresolution = \"attack\"\nrange = 8\ndamage = \"3d6\"");
     let mut w = world_with(content, "wizard");
     reach(&mut w, 18);
     w
@@ -34,8 +33,7 @@ fn ray_wizard() -> World {
 
 /// A level-18 wizard whose Arcane bolt is a touch (an attack roll beside the caster, 3d6).
 fn touch_wizard() -> World {
-    let content =
-        content_with_bolt("shape = \"touch\"\nresolution = \"touch\"\ndamage = { dice = \"3d6\" }");
+    let content = content_with_bolt("shape = \"touch\"\nresolution = \"touch\"\ndamage = \"3d6\"");
     let mut w = world_with(content, "wizard");
     reach(&mut w, 18);
     w

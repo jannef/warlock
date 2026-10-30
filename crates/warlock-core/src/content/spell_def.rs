@@ -578,7 +578,11 @@ impl SpellData {
             return Some(base);
         };
         let rung = rung.min(ladder.len());
-        Some((ladder.value(rung)).and_then(RungValue::roll).unwrap_or(base))
+        Some(
+            (ladder.value(rung))
+                .and_then(RungValue::roll)
+                .unwrap_or(base),
+        )
     }
 
     /// How far a cell it is aimed at may be at its base: a ray's, bolt's, or burst's range, a
@@ -663,7 +667,9 @@ fn base_roll(name: &str, value: &toml::Value) -> Result<Roll, String> {
     };
     let roll: Roll = text.parse()?;
     if roll.min() < 0 || roll.max() < 1 {
-        return Err(format!("`{name}` must be a roll that can do something, not `{roll}`"));
+        return Err(format!(
+            "`{name}` must be a roll that can do something, not `{roll}`"
+        ));
     }
     Ok(roll)
 }
@@ -687,15 +693,19 @@ fn retired(spec: &SpellSpec) -> Result<(), String> {
         ));
     }
     if spec.scales.is_some() {
-        return Err("`[spell.scales]` is gone: write ladders in `[spell.grows]` (`damage`, \
+        return Err(
+            "`[spell.scales]` is gone: write ladders in `[spell.grows]` (`damage`, \
                     `heal`, `range`, `length`, `radius`, `degrees`), and `aim` for the stat \
                     that aims an attack (docs/design/spell-scaling.md §6.1)"
-            .into());
+                .into(),
+        );
     }
     if spec.scroll.is_some() {
-        return Err("`[spell.scroll] level` is gone: a spell scroll casts at its own `rungs`, on \
+        return Err(
+            "`[spell.scroll] level` is gone: a spell scroll casts at its own `rungs`, on \
                     the scroll's `read` table (docs/design/spell-scaling.md §7.4)"
-            .into());
+                .into(),
+        );
     }
     Ok(())
 }
@@ -792,9 +802,11 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
     let aim = match &spec.aim {
         None => Stat::Dexterity,
         Some(_) if !attack => {
-            return Err("`aim` is an `attack` or `touch` damage spell's: nothing else rolls to \
+            return Err(
+                "`aim` is an `attack` or `touch` damage spell's: nothing else rolls to \
                         hit"
-            .into());
+                .into(),
+            );
         }
         Some(id) => Stat::from_id(id).ok_or_else(|| format!("`aim`: unknown stat `{id}`"))?,
     };
@@ -920,10 +932,16 @@ fn grows(spec: GrowsSpec, bases: &Bases, content: &Content) -> Result<Grows, Str
     } else {
         MAX_REACH
     };
-    let degrees_most = (bases.degrees)
-        .map_or(MAX_SEVERITY, |(s, _)| content.status(s).max.min(MAX_SEVERITY));
+    let degrees_most = (bases.degrees).map_or(MAX_SEVERITY, |(s, _)| {
+        content.status(s).max.min(MAX_SEVERITY)
+    });
     Ok(Grows {
-        damage: rolls("damage", spec.damage, bases.damage, "a `damage` spell's roll")?,
+        damage: rolls(
+            "damage",
+            spec.damage,
+            bases.damage,
+            "a `damage` spell's roll",
+        )?,
         heal: rolls("heal", spec.heal, bases.heal, "a `heal` spell's roll")?,
         range: numbers(
             "range",
@@ -1142,9 +1160,8 @@ kind = "damage"
 shape = "ray"
 resolution = "attack"
 damage_type = "cold"
-max_range = 6
-damage = { dice = "1d4", per_levels = 3, max_dice = 1 }
-scroll = {}
+range = 6
+damage = "1d4"
 
 [[spell]]
 id = "spark"
@@ -1156,8 +1173,8 @@ kind = "damage"
 shape = "bolt"
 resolution = "auto"
 damage_type = "electricity"
-max_range = 5
-damage = { dice = "1d4" }
+range = 5
+damage = "1d4"
 
 [[spell]]
 id = "mend"
@@ -1168,7 +1185,7 @@ school = "restoration"
 kind = "heal"
 shape = "touch"
 resolution = "touch"
-effect = { heal = { dice = "1d3" } }
+effect = { heal = "1d3" }
 
 [[spell]]
 id = "magic_missile"
@@ -1180,8 +1197,8 @@ kind = "damage"
 shape = "bolt"
 resolution = "auto"
 damage_type = "force"
-max_range = 8
-damage = { dice = "1d4", per_levels = 3, max_dice = 2 }
+range = 8
+damage = "1d4"
 
 [[spell]]
 id = "burning_hands"
@@ -1193,8 +1210,8 @@ kind = "damage"
 shape = "cone"
 resolution = "area"
 damage_type = "fire"
-max_length = 3
-damage = { dice = "1d4", per_levels = 3, max_dice = 2 }
+length = 3
+damage = "1d4"
 
 [[spell]]
 id = "cause_wounds"
@@ -1206,7 +1223,7 @@ kind = "damage"
 shape = "touch"
 resolution = "touch"
 damage_type = "necrotic"
-damage = { dice = "1d6", per_levels = 4, max_dice = 2 }
+damage = "1d6"
 
 [[spell]]
 id = "cure_wounds"
@@ -1217,7 +1234,7 @@ school = "restoration"
 kind = "heal"
 shape = "touch"
 resolution = "touch"
-effect = { heal = { dice = "2d6" } }
+effect = { heal = "2d6" }
 
 [[spell]]
 id = "bless"
@@ -1240,8 +1257,8 @@ kind = "damage"
 shape = "ray"
 resolution = "attack"
 damage_type = "fire"
-max_range = 8
-damage = { dice = "1d6", per_levels = 6, max_dice = 3 }
+range = 8
+damage = "1d6"
 
 [[spell]]
 id = "fireball"
@@ -1253,9 +1270,13 @@ kind = "damage"
 shape = "burst"
 resolution = "area"
 damage_type = "fire"
-max_range = 8
-max_radius = 2
-damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
+range = 8
+radius = 2
+damage = "2d6"
+
+[spell.grows]
+damage = "intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"
+range = "willpower 14 9, 18 10"
 
 [[spell]]
 id = "lightning_bolt"
@@ -1267,8 +1288,8 @@ kind = "damage"
 shape = "line"
 resolution = "area"
 damage_type = "electricity"
-max_length = 12
-damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
+length = 12
+damage = "2d6"
 "#;
 
     #[test]
@@ -1362,42 +1383,58 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             ["evocation", "damage", "burst", "fire"]
         );
         assert_eq!(fireball.level, 11);
-        assert_eq!(fireball.damage.expect("damage").max(), 18);
+        assert_eq!(fireball.damage.expect("damage").max(), 12);
+        let ladder = fireball.grows.damage.as_ref().expect("a damage ladder");
         assert_eq!(
-            list[0].scroll_level,
-            Some(1),
-            "the spell's level, at least 1"
+            (ladder.stat, ladder.len()),
+            (Stat::Intelligence, 4),
+            "{ladder}"
         );
-        assert_eq!(list[1].scroll_level, None, "no scroll block");
+        assert_eq!(
+            fireball.roll_at(0).map(|r| r.to_string()).as_deref(),
+            Some("2d6")
+        );
+        assert_eq!(
+            fireball.roll_at(2).map(|r| r.to_string()).as_deref(),
+            Some("4d6")
+        );
+        assert_eq!(
+            fireball.roll_at(9).map(|r| r.to_string()).as_deref(),
+            Some("5d6+2")
+        );
+        assert_eq!(fireball.aim, Stat::Dexterity, "the default aim");
         let bless = list.iter().find(|s| s.id == "bless").expect("bless");
         assert_eq!(
             bless.effect.status,
             Some((content.status_id("blessed").expect("blessed"), 1))
         );
+        assert_eq!(
+            bless.grows,
+            Grows::default(),
+            "no ladder: it never grows by stats"
+        );
     }
 
-    /// Decision 16: nothing holds how much a spell does. Dice, a bonus, and a heal of any size
-    /// load at any level; the author writes the strength they intend.
+    /// Decision 16: nothing holds how much a spell does. A roll, a bonus, a heal, and a rung of
+    /// any size load at any level; the author writes the strength they intend.
     #[test]
     fn no_check_holds_how_much_a_spell_does() {
-        let fireball = "max_dice = 3 }\n\n[[spell]]\nid = \"lightning_bolt\"";
-        for more in ["20 }", "3, bonus = 40 }"] {
-            let strong = FIRST_LIST.replace(fireball, &fireball.replace("3 }", more));
-            assert_ne!(strong, FIRST_LIST);
-            assert!(spells(&strong).is_ok(), "{more}");
+        for (from, to) in [
+            (
+                "length = 12\ndamage = \"2d6\"",
+                "length = 12\ndamage = \"20d20\"",
+            ),
+            ("25 5d6+2", "25 40d20+900"),
+            ("heal = \"2d6\"", "heal = \"20d6+100\""),
+            (
+                "range = 5\ndamage = \"1d4\"",
+                "range = 5\ndamage = \"10d12+50\"",
+            ),
+        ] {
+            let strong = FIRST_LIST.replace(from, to);
+            assert_ne!(strong, FIRST_LIST, "{from}");
+            assert!(spells(&strong).is_ok(), "{to}");
         }
-        let strong = FIRST_LIST.replace("heal = { dice = \"2d6\" }", "heal = { dice = \"20d6\" }");
-        assert_ne!(strong, FIRST_LIST);
-        assert!(spells(&strong).is_ok());
-        let cantrip = FIRST_LIST.replace(
-            "damage = { dice = \"1d4\" }\n",
-            "damage = { dice = \"10d12\", bonus = 50 }\n",
-        );
-        assert_ne!(cantrip, FIRST_LIST);
-        assert!(
-            spells(&cantrip).is_ok(),
-            "a cantrip as strong as its author writes it"
-        );
     }
 
     #[test]
@@ -1409,7 +1446,7 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             )
         };
         let good = "level = 11\nshape = \"burst\"\nresolution = \"area\"\ndamage_type = \"fire\"\n\
-                    max_range = 8\nmax_radius = 2\ndamage = { dice = \"2d6\" }";
+                    range = 8\nradius = 2\ndamage = \"2d6\"";
         assert!(spells(&fireball(good)).is_ok());
         for (from, to, why) in [
             (
@@ -1417,25 +1454,19 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
                 "resolution = \"attack\"",
                 "cannot resolve as",
             ),
-            ("max_radius = 2", "max_radius = 4", "`max_radius` is 1 to 3"),
-            ("max_range = 8\n", "", "needs `max_range`"),
-            (
-                "max_radius = 2",
-                "max_radius = 2\nmax_length = 3",
-                "has no `max_length`",
-            ),
+            ("radius = 2", "radius = 4", "`radius` is 1 to 3"),
+            ("range = 8\n", "", "needs `range`"),
+            ("radius = 2", "radius = 2\nlength = 3", "has no `length`"),
+            ("range = 8", "range = 21", "`range` is 1 to 20"),
             ("damage_type = \"fire\"\n", "", "needs a `damage_type`"),
             (
                 "damage_type = \"fire\"",
                 "damage_type = \"holy\"",
                 "unknown damage type",
             ),
-            ("\"2d6\"", "\"2d6+1\"", "dice only"),
-            (
-                "{ dice = \"2d6\" }",
-                "{ dice = \"2d6\", max_dice = 1 }",
-                "`max_dice` is 2",
-            ),
+            ("\"2d6\"", "\"2x6\"", "bad roll"),
+            ("\"2d6\"", "\"-3\"", "a roll that can do something"),
+            ("damage = \"2d6\"", "", "needs `damage`"),
             ("level = 11", "level = 71", "`level` is 0 to 70"),
             ("level = 11\n", "", "a spell needs a `level`, 0 to 70"),
             (
@@ -1448,37 +1479,69 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
                 "level = 11\ntier = 3",
                 "`tier` is gone: use `level`",
             ),
+            // The retired fields, each naming what replaced it (the spell scaling design §6.1).
+            (
+                "damage = \"2d6\"",
+                "damage = { dice = \"2d6\", per_levels = 4, max_dice = 3 }",
+                "`damage` is a roll now, `damage = \"2d6\"`",
+            ),
+            (
+                "range = 8",
+                "range = 8\nmax_range = 10",
+                "`max_range` is gone",
+            ),
+            (
+                "radius = 2",
+                "radius = 2\nmax_radius = 2",
+                "`max_radius` is gone",
+            ),
+            (
+                "range = 8",
+                "range = 8\nmax_length = 3",
+                "`max_length` is gone",
+            ),
+            (
+                "damage = \"2d6\"",
+                "damage = \"2d6\"\nscales = { damage = { intelligence = 10 } }",
+                "`[spell.scales]` is gone",
+            ),
+            (
+                "damage = \"2d6\"",
+                "damage = \"2d6\"\nscroll = { level = 12 }",
+                "`[spell.scroll] level` is gone",
+            ),
             // Only a buff on its caster may hasten (creatures never step quicker).
             (
-                "damage = { dice = \"2d6\" }",
-                "damage = { dice = \"2d6\" }\neffect = { status = \"hasted\" }",
+                "damage = \"2d6\"",
+                "damage = \"2d6\"\neffect = { status = \"hasted\" }",
                 "status `hasted` hastens: only a buff's may",
             ),
             (
-                "damage = { dice = \"2d6\" }",
-                "damage = { dice = \"2d6\" }\neffect = { diseases = true }",
+                "damage = \"2d6\"",
+                "damage = \"2d6\"\neffect = { diseases = true }",
                 "a `damage` spell has no `diseases`",
             ),
             (
-                "max_range = 8",
-                "max_range = 8\nrange = 9",
-                "`range` is 1 to its cap, 8",
-            ),
-            (
-                "max_radius = 2",
-                "max_radius = 2\nlength = 2",
+                "radius = 2",
+                "radius = 2\nlength = 2",
                 "a `burst` has no `length`",
             ),
             ("level = 11", "level = 11\ncasts = 0", "`casts` is 1 to 10"),
             (
-                "damage = { dice = \"2d6\" }",
-                "damage = { dice = \"2d6\" }\ncast = { effect = \"fireball\", frost = 10, heat = true }",
+                "damage = \"2d6\"",
+                "damage = \"2d6\"\ncast = { effect = \"fireball\", frost = 10, heat = true }",
                 "`heat` or `frost`, not both",
             ),
             (
-                "damage = { dice = \"2d6\" }",
-                "damage = { dice = \"2d6\" }\ncast = { effect = \"fireball\", noun = \" \" }",
+                "damage = \"2d6\"",
+                "damage = \"2d6\"\ncast = { effect = \"fireball\", noun = \" \" }",
                 "must not be empty",
+            ),
+            // An area aims at nothing: no attack roll for `aim` to add to.
+            (
+                "damage = \"2d6\"",
+                "damage = \"2d6\"\naim = \"intelligence\"",
+                "`aim` is an `attack` or `touch` damage spell's",
             ),
         ] {
             let body = good.replace(from, to);
@@ -1498,134 +1561,118 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
         assert!(e.message.contains("need data/spells.toml"), "{}", e.message);
     }
 
+    /// The spell scaling design §6.3: a ladder only for a dimension the spell has, its stat
+    /// known, its rungs never below the base nor the one before, and within the engine's limits
+    /// of reach and degrees. Nothing reads how much a rung does (decision 16).
     #[test]
-    fn dice_grow_with_caster_level_from_the_spells_level_up_to_max_dice() {
-        let d = SpellDice {
-            count: 2,
-            sides: 6,
-            per_levels: 4,
-            max_dice: 3,
-            bonus: 0,
-        };
-        // Fireball, level 11: 2d6 up to caster level 14, 3d6 from 15 on, never more.
-        let at = |level| d.at(level, 11).to_string();
-        assert_eq!(
-            [at(1), at(11), at(14), at(15), at(60)],
-            ["2d6", "2d6", "2d6", "3d6", "3d6"]
-        );
-        let fixed = SpellDice { per_levels: 0, ..d };
-        assert_eq!(fixed.at(60, 11).to_string(), "2d6");
-    }
-
-    #[test]
-    fn a_lift_adds_its_percent_of_max_dice_and_no_lift_changes_nothing() {
-        let d = SpellDice {
-            count: 2,
-            sides: 6,
-            per_levels: 4,
-            max_dice: 3,
-            bonus: 0,
-        };
-        // Fireball (three dice at most by level): lifted 50 % a die more, 70 % two.
-        let lifted = |level, lift| d.lifted(level, 11, lift).to_string();
-        assert_eq!(
-            [
-                lifted(11, 0),
-                lifted(11, 50),
-                lifted(15, 50),
-                lifted(60, 70)
-            ],
-            ["2d6", "3d6", "4d6", "5d6"]
-        );
-        for level in [1, 11, 15, 60] {
-            assert_eq!(d.lifted(level, 11, 0), d.at(level, 11), "no lift");
-            assert_eq!(d.lifted(level, 11, -40), d.at(level, 11), "never below");
-        }
-        // Nothing bounds it: a lift of 400 % is twelve dice more.
-        assert_eq!(lifted(15, 400), "15d6");
-        let b = SpellDice {
-            count: 1,
-            sides: 6,
-            per_levels: 0,
-            max_dice: 1,
-            bonus: 4,
-        };
-        assert_eq!(b.lifted(1, 1, 99).to_string(), "1d6+4");
-        assert_eq!(b.lifted(1, 1, 100).to_string(), "2d6+4");
-    }
-
-    #[test]
-    fn the_lift_is_never_below_0_and_has_no_most() {
-        assert_eq!(
-            [
-                SpellRules::lift(-20, 0),
-                SpellRules::lift(50, 0),
-                SpellRules::lift(110, 0)
-            ],
-            [0, 50, 110]
-        );
-        assert_eq!(SpellRules::lift(110, 10), 120, "Keen mind's 10 points more");
-        assert_eq!(SpellRules::lift(-20, 10), 10);
-    }
-
-    #[test]
-    fn scales_default_to_the_old_steps_and_are_checked() {
-        let list = spells(FIRST_LIST).expect("valid");
-        assert_eq!(
-            list[0].scales,
-            SpellScales::default(),
-            "silent: the defaults"
-        );
-        // The defaults are the retired steps: a cell or a degree per two points of a positive
-        // modifier, to-hit by Dexterity, no lift.
-        let d = SpellScales::default();
-        for score in 1..=40u8 {
-            let mut scores = crate::stats::PerStat::splat(10);
-            scores[crate::stats::Stat::Willpower] = score;
-            scores[crate::stats::Stat::Presence] = score;
-            scores[crate::stats::Stat::Dexterity] = score;
-            let stats = crate::stats::Stats::new(scores, crate::stats::PerStat::splat(40));
-            let m = crate::stats::modifier(i32::from(score));
-            assert_eq!(d.reach.steps(&stats), m.max(0) / 2, "reach at {score}");
-            assert_eq!(d.duration.steps(&stats), m.max(0) / 2, "degrees at {score}");
-            assert_eq!(d.to_hit.signed(&stats), m, "to-hit at {score}");
-            assert_eq!(d.damage.sum(&stats), 0);
-        }
-        let ray = |scales: &str| {
+    fn ladders_are_checked_against_the_base_and_the_engine() {
+        let spell = |body: &str, grows: &str| {
             format!(
-                "[[spell]]\nid = \"ray\"\nname = \"Ray\"\ndescription = \"x\"\nlevel = 6\n\
-                 school = \"evocation\"\nkind = \"damage\"\nshape = \"ray\"\n\
-                 resolution = \"attack\"\ndamage_type = \"fire\"\nmax_range = 8\n\
-                 damage = {{ dice = \"3d6\" }}\n[spell.scales]\n{scales}\n"
+                "[[spell]]\nid = \"s\"\nname = \"S\"\ndescription = \"x\"\nlevel = 3\n\
+                 school = \"evocation\"\n{body}\n\n[spell.grows]\n{grows}\n"
             )
         };
-        let ok = spells(&ray(
-            "damage = { intelligence = 10, willpower = 5 }\nto_hit = {}",
-        ))
-        .expect("valid");
-        let stats: Vec<_> = ok[0].scales.damage.iter().collect();
-        use crate::stats::Stat;
-        assert_eq!(stats, [(Stat::Intelligence, 10), (Stat::Willpower, 5)]);
-        assert!(ok[0].scales.to_hit.is_empty(), "`{{}}`: no stat aims it");
-        assert_eq!(ok[0].scales.reach, SpellScales::default().reach, "left out");
-        for (scales, why) in [
-            ("damage = { wits = 10 }", "unknown stat `wits`"),
-            ("damage = { intelligence = 0 }", "weights are 1 to 200"),
-            ("reach = { willpower = 201 }", "weights are 1 to 200"),
-            ("duration = { presence = 50 }", "no `duration`"),
-            ("speed = { presence = 50 }", "unknown field `speed`"),
+        let burst = "kind = \"damage\"\nshape = \"burst\"\nresolution = \"area\"\n\
+                     damage_type = \"fire\"\nrange = 8\nradius = 1\ndamage = \"2d6\"";
+        let ray = "kind = \"damage\"\nshape = \"ray\"\nresolution = \"attack\"\n\
+                   damage_type = \"fire\"\nrange = 8\ndamage = \"1d6\"";
+        let hex = "kind = \"hex\"\nshape = \"ray\"\nresolution = \"auto\"\nrange = 6\n\
+                   effect = { status = \"sluggish\" }";
+        let heal = "kind = \"heal\"\nshape = \"touch\"\nresolution = \"touch\"\n\
+                    effect = { heal = \"2d6\" }";
+        for (body, grows) in [
+            (
+                burst,
+                "damage = \"intelligence 13 3d6, 16 3d6+1d10\"\nrange = \"willpower 14 9\"",
+            ),
+            (burst, "radius = \"willpower 14 2, 18 3\""),
+            (
+                ray,
+                "damage = \"intelligence 16 1d8\"\nrange = \"willpower 14 20\"",
+            ),
+            (hex, "degrees = \"presence 14 2, 18 3\""),
+            (heal, "heal = \"willpower 16 3d6, 22 3d6+3\""),
         ] {
-            let e = spells(&ray(scales)).unwrap_err();
-            assert!(e.message.contains(why), "{scales}: {}", e.message);
+            assert!(spells(&spell(body, grows)).is_ok(), "{grows}");
         }
-        // An auto spell has no attack roll to aim; a touch has no reach to grow.
-        let spark = FIRST_LIST.replace(
-            "damage = { dice = \"1d4\" }\n",
-            "damage = { dice = \"1d4\" }\nscales = { to_hit = { intelligence = 100 } }\n",
-        );
-        assert_ne!(spark, FIRST_LIST);
-        let e = spells(&spark).unwrap_err();
-        assert!(e.message.contains("no `to_hit`"), "{}", e.message);
+        let ok = spells(&spell(
+            &format!("{ray}\naim = \"intelligence\""),
+            "range = \"willpower 14 9\"",
+        ))
+        .expect("an attack may aim with any stat");
+        assert_eq!(ok[0].aim, Stat::Intelligence);
+        let nine: Vec<String> = (1..=9).map(|i| format!("{} {}d6", 10 + i, 2 + i)).collect();
+        let nine = format!("damage = \"intelligence {}\"", nine.join(", "));
+        for (body, grows, why) in [
+            (
+                burst,
+                "damage = \"intelligence 13 1d6\"",
+                "below the one before it (`2d6`)",
+            ),
+            (
+                burst,
+                "damage = \"intelligence 13 4d6, 16 3d6\"",
+                "below the one before it (`4d6`)",
+            ),
+            (
+                burst,
+                "damage = \"intelligence 13 2d6\"",
+                "each differs from the last",
+            ),
+            (
+                burst,
+                "heal = \"willpower 13 3d6\"",
+                "`heal` is for a `heal` spell's roll",
+            ),
+            (
+                burst,
+                "length = \"willpower 14 3\"",
+                "`length` is for a cone's or a line's",
+            ),
+            (
+                burst,
+                "degrees = \"presence 14 2\"",
+                "`degrees` is for a buff's or a hex's",
+            ),
+            (
+                burst,
+                "damage = \"cunning 13 3d6\"",
+                "unknown stat `cunning`",
+            ),
+            (burst, "radius = \"willpower 14 4\"", "to at most 3; not 4"),
+            (
+                burst,
+                "range = \"willpower 14 21\"",
+                "to at most 20; not 21",
+            ),
+            (
+                burst,
+                "range = \"willpower 14 8\"",
+                "rise strictly from its base, 8",
+            ),
+            (burst, "range = \"willpower 18 10, 14 9\"", "rise strictly"),
+            (burst, &nine, "at most 8 rungs"),
+            (
+                ray,
+                "radius = \"willpower 14 2\"",
+                "`radius` is for a burst's radius",
+            ),
+            (
+                hex,
+                "degrees = \"presence 14 2, 18 4\"",
+                "to at most 3; not 4",
+            ),
+            (
+                hex,
+                "damage = \"presence 14 1d6\"",
+                "`damage` is for a `damage` spell's roll",
+            ),
+            (heal, "range = \"willpower 14 2\"", "`range` is for a ray's"),
+            (burst, "speed = \"willpower 14 2\"", "unknown field `speed`"),
+        ] {
+            let e = spells(&spell(body, grows)).unwrap_err();
+            assert!(e.message.contains(why), "{grows}: {}", e.message);
+        }
     }
 
     #[test]
@@ -1661,32 +1708,11 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
     }
 
     #[test]
-    fn reach_grows_to_the_cap_and_degrees_add_up() {
-        // A range of 6 capped at 8, grown by the cells the scales give.
-        let grown: Vec<i32> = [-1, 0, 1, 2, 4]
-            .iter()
-            .map(|&more| SpellRules::grown(6, 8, more))
-            .collect();
-        assert_eq!(grown, [6, 6, 7, 8, 8]);
-        assert_eq!(
-            SpellRules::grown(3, 3, 4),
-            3,
-            "no cap above the base: no growth"
-        );
-        let degrees: Vec<u16> = [-1, 0, 1, 2]
-            .iter()
-            .map(|&more| SpellRules::lengthened(1, more))
-            .collect();
-        assert_eq!(degrees, [1, 1, 2, 3]);
-    }
-
-    #[test]
     fn the_shipped_spells_are_at_the_designs_levels_and_costs() {
         let content = Content::builtin().expect("content");
         let r = content.spell_rules().expect("the cost table");
-        // (spell, level, its dice at the caster level of its level, mana, whether a class
-        // ability gives it; every other is learned from scrolls only): the spell scaling design
-        // §5.8.
+        // (spell, level, its base roll, mana, whether a class ability gives it; every other is
+        // learned from scrolls only): the spell scaling design §5.8, §12.1.
         let table = [
             ("arcane_bolt", 6, Some("2d6"), 11, true),
             ("barkskin", 3, None, 3, true),
@@ -1695,7 +1721,7 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             ("burning_hands", 4, Some("1d4"), 6, true),
             ("call_lightning", 11, Some("2d6"), 20, true),
             ("cause_wounds", 4, Some("1d6"), 3, true),
-            ("cure_wounds", 3, None, 2, true),
+            ("cure_wounds", 3, Some("2d6"), 2, true),
             ("curse_of_sloth", 3, None, 3, true),
             ("evil_eye", 0, None, 1, true),
             ("fireball", 11, Some("2d6"), 26, false),
@@ -1706,7 +1732,7 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             ("light", 0, None, 1, false),
             ("lightning_bolt", 11, Some("2d6"), 20, false),
             ("magic_missile", 3, Some("1d4"), 3, true),
-            ("mend", 1, None, 1, true),
+            ("mend", 1, Some("1d3"), 1, true),
             ("ray_of_frost", 1, Some("1d6"), 1, true),
             ("identify", 6, None, 60, false),
             ("remove_disease", 11, None, 11, true),
@@ -1715,16 +1741,13 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             ("spark", 1, Some("1d4"), 1, true),
             ("web", 7, None, 13, false),
         ];
-        for (id, level, dice, mana, given) in table {
+        for (id, level, roll, mana, given) in table {
             let at = content.spell_id(id).expect("shipped");
             let spell = content.spell(at);
             assert_eq!(spell.level, level, "{id}");
             assert_eq!(r.mana(spell, 0), mana, "{id}");
-            let from = spell.grows_from();
-            let rolled = spell
-                .damage
-                .map(|d| d.at(i32::from(from), from).to_string());
-            assert_eq!(rolled.as_deref(), dice, "{id}");
+            let rolled = spell.roll().map(|d| d.to_string());
+            assert_eq!(rolled.as_deref(), roll, "{id}");
             assert_eq!(
                 content.class_spell(at).is_some(),
                 given,
@@ -1732,5 +1755,111 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             );
         }
         assert_eq!(content.spells().len(), table.len());
+    }
+
+    /// The spell scaling design §12.1 and §12.2: every shipped ladder as written. The reach and
+    /// degrees ladders are today's values at the scores where the old rounding changed them.
+    #[test]
+    fn the_shipped_ladders_are_the_designs() {
+        let content = Content::builtin().expect("content");
+        let w78 = "willpower 14 7, 18 8";
+        let w910 = "willpower 14 9, 18 10";
+        let w1112 = "willpower 14 11, 18 12";
+        let p23 = "presence 14 2, 18 3";
+        let mm = "intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2";
+        let bolt = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4";
+        let table: [(&str, &[(&str, &str)]); 26] = [
+            ("arcane_bolt", &[("damage", bolt), ("length", w78)]),
+            ("barkskin", &[("degrees", p23)]),
+            ("blessing", &[("degrees", p23)]),
+            (
+                "blight",
+                &[("damage", "willpower 16 3d6, 22 3d6+3"), ("range", w910)],
+            ),
+            (
+                "burning_hands",
+                &[("damage", "intelligence 13 2d4, 16 3d4, 22 3d4+2")],
+            ),
+            (
+                "call_lightning",
+                &[
+                    ("damage", "willpower 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"),
+                    ("length", w910),
+                ],
+            ),
+            (
+                "cause_wounds",
+                &[("damage", "willpower 13 2d6, 19 2d8, 25 2d8+2")],
+            ),
+            ("cure_wounds", &[("heal", "willpower 16 3d6, 22 3d6+3")]),
+            ("curse_of_sloth", &[("range", w78), ("degrees", p23)]),
+            ("evil_eye", &[("range", w78), ("degrees", p23)]),
+            ("fireball", &[("damage", mm), ("range", w1112)]),
+            (
+                "flame",
+                &[
+                    ("damage", "intelligence 16 4d6, 19 5d6, 25 5d6+2"),
+                    ("range", w1112),
+                ],
+            ),
+            ("frost", &[("damage", bolt), ("range", w1112)]),
+            ("haste", &[("degrees", p23)]),
+            ("hex_of_weakness", &[("range", w78), ("degrees", p23)]),
+            ("identify", &[]),
+            ("light", &[("degrees", p23)]),
+            (
+                "lightning_bolt",
+                &[
+                    ("damage", mm),
+                    ("length", "willpower 14 9, 18 10, 22 11, 26 12"),
+                ],
+            ),
+            (
+                "magic_missile",
+                &[
+                    ("damage", "intelligence 13 2d4, 16 3d4, 22 3d4+1"),
+                    ("range", w910),
+                ],
+            ),
+            ("mend", &[("heal", "willpower 16 1d4, 22 1d6")]),
+            (
+                "ray_of_frost",
+                &[("damage", "intelligence 16 1d8"), ("range", w78)],
+            ),
+            ("remove_disease", &[]),
+            (
+                "scorching_ray",
+                &[
+                    ("damage", "intelligence 13 2d6, 16 3d6, 19 4d6, 25 3d6+1d10"),
+                    ("range", w910),
+                ],
+            ),
+            ("sleep", &[("range", w910), ("degrees", "presence 14 3")]),
+            (
+                "spark",
+                &[
+                    ("damage", "intelligence 16 1d6"),
+                    ("range", "willpower 14 6"),
+                ],
+            ),
+            (
+                "web",
+                &[("range", w910), ("degrees", "presence 14 4, 18 5, 22 6")],
+            ),
+        ];
+        for (id, ladders) in table {
+            let spell = content.spell(content.spell_id(id).expect("shipped"));
+            let got: Vec<(&str, String)> = (spell.grows.named().into_iter())
+                .map(|(dim, l)| (dim, l.to_string()))
+                .collect();
+            let want: Vec<(&str, String)> =
+                ladders.iter().map(|(d, l)| (*d, l.to_string())).collect();
+            assert_eq!(got, want, "{id}");
+            assert_eq!(
+                spell.aim,
+                Stat::Dexterity,
+                "{id}: every spell aims with Dexterity"
+            );
+        }
     }
 }

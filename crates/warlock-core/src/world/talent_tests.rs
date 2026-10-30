@@ -234,7 +234,8 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // foe (any creature tag) and School focus (any school or element): here they are an
     // elf's, and Apprentice's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
     // mastery, Channeler, Appraiser's eye, Devout, Deep lungs, Second breath, Hard training,
-    // Quick study of the body, Early mastery, Gifted (six stats), and Late bloomer are held back the same way so the picks fit in
+    // Quick study of the body, Early mastery, Gifted (six stats), Late bloomer, Sure hand,
+    // Numbing cold, and Brimming are held back the same way so the picks fit in
     // the levels there are.
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {
@@ -301,6 +302,14 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
         .replace(
             "choice = \"stat\"\n",
             "choice = \"stat\"\nneeds = { race = \"elf\" }\n",
+        )
+        .replace(
+            "needs = { level = 12 }\neffects = [{ kind = \"spell_mod\"",
+            "needs = { level = 12, race = \"elf\" }\neffects = [{ kind = \"spell_mod\"",
+        )
+        .replace(
+            "needs = { level = 25 }\neffects = [\n    { kind = \"spell_mod\"",
+            "needs = { level = 25, race = \"elf\" }\neffects = [\n    { kind = \"spell_mod\"",
         )
         .replace(
             "needs = { level = 20 }\neffects = [{ kind = \"ramp_ease\"",

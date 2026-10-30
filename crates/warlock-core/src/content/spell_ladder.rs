@@ -194,7 +194,10 @@ mod tests {
             "Intelligence 13: 3d6, 16: 4d6, 19: 5d6, 25: 5d6+2"
         );
         let cells = Ladder::parse("willpower 14 11, 18 12", Unit::Cells).expect("cells");
-        assert_eq!(cells.rungs, vec![(14, RungValue::Cells(11)), (18, RungValue::Cells(12))]);
+        assert_eq!(
+            cells.rungs,
+            vec![(14, RungValue::Cells(11)), (18, RungValue::Cells(12))]
+        );
     }
 
     #[test]

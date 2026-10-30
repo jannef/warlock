@@ -3317,9 +3317,7 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
             bad("effects = [{ kind = \"spell_mod\", rungs = 1, when = [\"sneezing\"] }]")
                 .contains("no school, kind, shape, or damage type")
         );
-        assert!(
-            bad("effects = [{ kind = \"spell_mod\", cost = -200 }]").contains("a percent")
-        );
+        assert!(bad("effects = [{ kind = \"spell_mod\", cost = -200 }]").contains("a percent"));
         assert!(
             bad("effects = [{ kind = \"spell_mod\", rungs = 1, lift = 10 }]")
                 .contains("unknown field")

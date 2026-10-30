@@ -33,10 +33,10 @@
 //!   Rounds to kill are the monster's hit points over the player's damage a round, rounds to
 //!   die the player's hit points over the monster's. Each cell is the median over the monsters
 //!   within two levels of the player's (`+3`: one to five levels above).
-//! - **Spells**: the wizard's and the priest's own casts of every damage spell, at their
-//!   caster level, with their trained stats' lift (`Actor::spell_lift`) and without, the dice
-//!   as `SpellDice::lifted` and the talents make them, nothing holding the roll; attack spells
-//!   strike the monster's Defence against missiles, areas always hit.
+//! - **Spells**: the wizard's and the priest's own casts of every damage spell, at the rung their
+//!   trained stats reach (`Actor::spell_roll`, the talents' and items' hooks applied) and at the
+//!   spell's base, nothing holding the roll; attack spells strike the monster's Defence against
+//!   missiles, areas always hit. (The spell scaling design's S7 re-runs this with the schools.)
 //!
 //! - **Sneak attacks** (#688): the thief's first blow on a foe unaware of them against its
 //!   plain blow. Its Sneak attack skill is set by level (`sneak_value`), as it rises by use and
@@ -51,7 +51,7 @@
 mod tables;
 mod training;
 
-use super::{ActorId, World};
+use super::{ActorId, CastBy, World};
 use crate::action::{AttackKind, parse_actions};
 use crate::character::{CharacterSpec, Gender};
 use crate::combat::{self, Attack, Defence, Profile, Target};
@@ -60,7 +60,7 @@ use crate::content::{
     SpellId, StatUse, price,
 };
 use crate::damage::Kinds;
-use crate::dice::Dice;
+use crate::dice::{Dice, Roll};
 use crate::magic::{LootGrade, loot};
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -266,6 +266,11 @@ fn mean(dice: Dice) -> f64 {
     f64::from(dice.min() + dice.max()) / 2.0
 }
 
+/// The mean of `roll`.
+fn roll_mean(roll: Roll) -> f64 {
+    f64::from(roll.mean_x2()) / 2.0
+}
+
 /// The mean damage of a hit of `p` before soak and criticals.
 fn hit_mean(p: &Profile) -> f64 {
     let base = f64::from(p.damage.mean_x2()) / 2.0 + f64::from(p.bonus) + p.extra.map_or(0.0, mean);
@@ -385,9 +390,10 @@ struct Cast {
     /// Its spell level.
     level: u8,
     resolution: Resolution,
-    lift: i32,
-    /// The dice with the lift, and without.
-    dice: (Dice, Dice),
+    /// The rung of its damage ladder the caster's stats and talents reach.
+    rung: usize,
+    /// The roll at that rung, and the spell's base.
+    dice: (Roll, Roll),
     /// The attack roll's profile (to-hit and the spell skill's benefit), for attack and touch.
     aim: Profile,
     cost: i32,
@@ -402,8 +408,6 @@ fn casts(w: &World) -> Vec<Cast> {
     }
     let me = w.state.player();
     let class = (w.state.character.as_ref()).and_then(|c| c.spec.class(content).ok());
-    let level = w.caster_level(w.state.player);
-    let mods = me.talent_mods(content);
     let mut out = Vec::new();
     for spell in content.spells_by_level() {
         let def = content.spell(spell);
@@ -414,8 +418,9 @@ fn casts(w: &World) -> Vec<Cast> {
         if !me.knows_spell(content, spell) && affinity.unwrap_or(0) <= 0 {
             continue;
         }
-        let lift = me.spell_lift(content, def);
-        let dice = |l: i32| mods.spell_damage(damage.lifted(level, def.grows_from(), l));
+        let mods = me.spell_mods(content, def);
+        let rung = me.spell_rung(content, def, CastBy::Own, &mods);
+        let rolled = (me.spell_roll(content, def, CastBy::Own)).unwrap_or(damage);
         let skills = me.spell_skills(content, def.shape == crate::content::Shape::Touch);
         let benefit = me
             .benefit_of(content, skills)
@@ -433,8 +438,8 @@ fn casts(w: &World) -> Vec<Cast> {
             name: def.name.clone(),
             level: def.level,
             resolution: def.resolution,
-            lift,
-            dice: (dice(lift), dice(0)),
+            rung,
+            dice: (rolled, damage),
             aim: Profile::bare(&attack).with(&benefit),
             cost: me.spell_cost(content, def),
         });

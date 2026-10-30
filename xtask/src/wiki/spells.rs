@@ -190,7 +190,10 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
             format!("{rolled}{kind} damage")
         }
         SpellPurpose::Heal => {
-            let healed = spell.effect.heal.map_or_else(String::new, |r| r.to_string());
+            let healed = spell
+                .effect
+                .heal
+                .map_or_else(String::new, |r| r.to_string());
             format!("{healed} hit points back")
         }
         SpellPurpose::Buff | SpellPurpose::Hex => match spell.effect.status {

@@ -174,25 +174,29 @@ fn the_skills_uses_that_are_stat_uses_too_train_both_from_one_report() {
 }
 
 #[test]
-fn a_spell_cast_trains_the_stats_its_scales_name() {
+fn a_spell_cast_trains_the_stats_its_ladders_name() {
     let content = SURE.clone();
     let spell = |id: &str| content.spell(content.spell_id(id).expect(id));
     let trained = |id: &str| -> Vec<Stat> {
         let t = spell(id).trained_stats();
         Stat::ALL.into_iter().filter(|&s| t[s]).collect()
     };
-    // Magic missile: damage by Intelligence and Willpower, a reach by Willpower.
+    // Magic missile: damage by Intelligence, a reach by Willpower.
     let missile = spell("magic_missile");
-    assert!(!missile.scales.damage.is_empty());
+    assert!(missile.grows.damage.is_some());
     assert_eq!(
         trained("magic_missile"),
         [Stat::Intelligence, Stat::Willpower]
     );
-    // A spell whose damage names no stat trains Intelligence; a hex its duration's stats.
+    // A spell whose roll has no ladder trains Intelligence; every ladder's stat is trained.
     for def in content.spells().iter() {
         let t = def.trained_stats();
-        assert!(def.scales.damage.iter().all(|(s, _)| t[s]), "{}", def.id);
-        if def.scales.damage.is_empty() {
+        assert!(
+            def.grows.named().iter().all(|(_, l)| t[l.stat]),
+            "{}",
+            def.id
+        );
+        if def.grows.roll().is_none() {
             assert!(t[Stat::Intelligence], "{}", def.id);
         }
     }

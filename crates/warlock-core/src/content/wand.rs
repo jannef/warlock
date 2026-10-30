@@ -58,9 +58,11 @@ impl WandSpec {
     /// `rungs` within the spell's damage or heal ladder (`min` at most `max`).
     pub(super) fn resolve(self, content: &Content) -> Result<Wand, String> {
         if self.caster_level.is_some() {
-            return Err("`wand`: `caster_level` is gone: a wand casts at its `rungs` on its spell's \
+            return Err(
+                "`wand`: `caster_level` is gone: a wand casts at its `rungs` on its spell's \
                         ladder, `rungs = { min = 0, max = 2 }` (docs/design/spell-scaling.md §7.4)"
-                .into());
+                    .into(),
+            );
         }
         let spell = (content.spell_id(&self.spell))
             .ok_or_else(|| format!("`wand`: no spell `{}` in data/spells/", self.spell))?;

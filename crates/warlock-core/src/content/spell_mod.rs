@@ -169,13 +169,17 @@ impl SpellModSpec {
                 return Err(format!("`spell_mod`: unknown status `{}`", rider.status));
             }
             if !(1..=MAX_SEVERITY).contains(&rider.severity) {
-                return Err(format!("`spell_mod`: a rider's severity is 1 to {MAX_SEVERITY}"));
+                return Err(format!(
+                    "`spell_mod`: a rider's severity is 1 to {MAX_SEVERITY}"
+                ));
             }
         }
         if chosen && !self.when.is_empty() {
-            return Err("`spell_mod`: a talent chosen for a school or an element keys on the \
+            return Err(
+                "`spell_mod`: a talent chosen for a school or an element keys on the \
                         choice; leave `when` out"
-                .into());
+                    .into(),
+            );
         }
         if let Some(bad) = self.when.iter().find(|t| !is_tag(content, t)) {
             return Err(format!(

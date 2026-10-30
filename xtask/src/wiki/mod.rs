@@ -711,7 +711,7 @@ mod tests {
         assert!(traps.contains("| Pit `^` |") && !traps.contains("to_hit"));
         let scrolls = text("scrolls.md");
         assert!(
-            scrolls.contains("| Scroll of fireball `?` | Flies at the cell you aim at"),
+            scrolls.contains("| Scroll of fireball `?` | Casts Fireball a rung up its ladder"),
             "{scrolls}"
         );
         assert!(
@@ -721,12 +721,21 @@ mod tests {
             "{scrolls}"
         );
         assert!(
-            scrolls.contains("| Scroll of identify `?` | Casts Identify at caster level 6"),
+            scrolls
+                .contains("| Scroll of lightning `?` | Casts Lightning bolt 2 rungs up its ladder"),
+            "{scrolls}"
+        );
+        assert!(
+            scrolls.contains("| 4d6 electricity | 8 cells |"),
+            "{scrolls}"
+        );
+        assert!(
+            scrolls.contains("| Scroll of identify `?` | Casts Identify at its base"),
             "{scrolls}"
         );
         assert!(scrolls.contains("| an item you carry |"), "{scrolls}");
         assert!(
-            scrolls.contains("| Scroll of light `?` | Casts Light at caster level 1"),
+            scrolls.contains("| Scroll of light `?` | Casts Light at its base"),
             "{scrolls}"
         );
         let potions = text("potions.md");
@@ -1336,7 +1345,18 @@ mod tests {
         assert!(text("mana-paces.md").contains("| In a sanctuary | three times as fast |"));
         assert!(text("spell-shapes.md").contains("| cone | yes | ×1.6 |"));
         assert!(text("spell-shapes.md").contains("| burst, radius 3 | yes | ×3 |"));
-        assert!(text("spell-resolutions.md").contains("| touch | ×0.7 |"));
+        assert!(
+            text("spell-resolutions.md")
+                .contains("next to you; may critical, the damage rolled again | ×0.7 |")
+        );
+        let list = text("spell-list.md");
+        assert!(
+            list.contains(
+                "| burst, area | range 10, radius 2 | 2d6 fire damage; it melts the ice it reaches, and whoever stands on it falls in; it breaks walls | Intelligence 13: 3d6, 16: 4d6, 19: 5d6, 25: 5d6+2; range Willpower 14: 11, 18: 12 | 26 | 1 |"
+            ),
+            "{list}"
+        );
+        assert!(text("wands.md").contains("| wand of fireball | Fireball | 11 | 7 | 2d6 |"));
         assert!(text("spell-casting.md").contains("| Wizard | 100 % |"));
         let resources = text("resources.md");
         assert!(

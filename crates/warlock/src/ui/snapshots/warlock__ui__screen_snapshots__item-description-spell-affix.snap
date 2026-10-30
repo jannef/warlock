@@ -19,7 +19,7 @@ expression: "render(case, content.clone())"
                   │ To hit +0, damage 1d6                                        │
                   │ Dv +1                                                        │
                   │                                                              │
-                  │ Prefix  Potent: spells do up to 10% more                     │
+                  │ Prefix  Potent: +3 on every spell's roll, harm or healing    │
                   │ Prefix  Baleful: spells threaten a critical on 1 more roll   │
                   │ Prefix  Mystic: +6 to maximum mana                           │
                   │ Suffix  of the Adept: +2 to caster level                     │

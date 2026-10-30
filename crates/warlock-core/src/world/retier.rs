@@ -1,8 +1,9 @@
 //! The lenient read of a saved item's affix tiers (docs/design/affixes-systems.md §8,
 //! "Regrading"): a ladder regraded since a save was made may have moved the range a saved tier
 //! holds, so every magic stack in the state is re-tiered ([`crate::magic::Magic::retier`])
-//! before the state is checked. No save is refused for it and no value changes; each move is a
-//! line for the log.
+//! before the state is checked. No save is refused for it; a value no tier holds is held to the
+//! nearest tier's range (an old Potent, the spell scaling design §7.3); each move is a line for
+//! the log.
 
 use super::WorldState;
 use crate::content::Content;

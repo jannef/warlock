@@ -342,10 +342,16 @@ fn spell_mod_text(content: &Content, spec: &SpellModSpec, chosen: bool) -> Strin
         }
     }
     if spec.sides > 0 {
-        parts.push(format!("every die {} bigger", n(spec.sides as i32, "side", "sides")));
+        parts.push(format!(
+            "every die {} bigger",
+            n(spec.sides as i32, "side", "sides")
+        ));
     }
     if spec.dice > 0 {
-        parts.push(format!("{} on the roll", n(spec.dice as i32, "die", "dice")));
+        parts.push(format!(
+            "{} on the roll",
+            n(spec.dice as i32, "die", "dice")
+        ));
     }
     if spec.bonus != 0 {
         parts.push(format!("{} on the roll", signed(spec.bonus)));
@@ -365,13 +371,22 @@ fn spell_mod_text(content: &Content, spec: &SpellModSpec, chosen: bool) -> Strin
         ));
     }
     if spec.cells != 0 {
-        parts.push(format!("range or length {}", n(spec.cells, "cell", "cells")));
+        parts.push(format!(
+            "range or length {}",
+            n(spec.cells, "cell", "cells")
+        ));
     }
     if spec.radius_cells != 0 {
-        parts.push(format!("a burst's radius {}", n(spec.radius_cells, "cell", "cells")));
+        parts.push(format!(
+            "a burst's radius {}",
+            n(spec.radius_cells, "cell", "cells")
+        ));
     }
     if spec.degrees != 0 {
-        parts.push(format!("their status {}", n(spec.degrees, "degree", "degrees")));
+        parts.push(format!(
+            "their status {}",
+            n(spec.degrees, "degree", "degrees")
+        ));
     }
     if spec.cost != 0 {
         parts.push(format!("mana {} %", signed(spec.cost)));

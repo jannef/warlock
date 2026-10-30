@@ -155,7 +155,7 @@ fn a_spell_that_rolls_to_hit_sneak_attacks_within_reach() {
         "data/spells/arcane_bolt.toml",
         "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
          level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
-         shape = \"ray\"\nresolution = \"attack\"\nmax_range = 10\ndamage = { dice = \"3d6\" }\n",
+         shape = \"ray\"\nresolution = \"attack\"\nrange = 10\ndamage = \"3d6\"\n",
     );
     let content = Arc::new(Content::load(&files).expect("the spell loads"));
     let mut w = world_with(content, "wizard");

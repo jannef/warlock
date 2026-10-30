@@ -1028,7 +1028,10 @@ fn spell_rows(view: &PerceptionView<'_>) -> Vec<String> {
         } else {
             format!(": {}", does.join(", "))
         };
-        Some(format!("{} (level {}, {cost} mana){does}", def.name, def.level))
+        Some(format!(
+            "{} (level {}, {cost} mana){does}",
+            def.name, def.level
+        ))
     });
     let studies = (view.studies().into_iter()).filter_map(|s| {
         let def = content.spell_of(s.spell)?;

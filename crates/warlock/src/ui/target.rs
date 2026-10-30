@@ -170,9 +170,9 @@ impl Aim {
             AimKind::Fire => view.ready_to_fire().map(|(_, _, range)| range),
             AimKind::Throw(item) => view.throw_range(item),
             // A scroll of a spell reaches as far as the player casts it.
-            AimKind::Read(_) => {
-                view.own_spell_reach(spell_of(view, self.kind)?).and_then(|r| r.range)
-            }
+            AimKind::Read(_) => view
+                .own_spell_reach(spell_of(view, self.kind)?)
+                .and_then(|r| r.range),
             // A volley flies as far as a shot.
             AimKind::Ability(VOLLEY) => view.ready_to_fire().map(|(_, _, range)| range),
             // A wand's spell reaches as far as the player casts it, once they know what it is.
@@ -631,12 +631,13 @@ mod tests {
             ..fireball
         };
         assert_eq!(far.catches_reader(&view), None);
-        // A bolt never comes back at its reader; it reaches its length.
+        // A bolt never comes back at its reader; it reaches the length the reader casts
+        // Lightning bolt at (its base, 8, at the reader's Willpower).
         let bolt = Aim {
             kind: AimKind::Read(2),
             ..fireball
         };
-        assert_eq!(bolt.range(&view), Some(12));
+        assert_eq!(bolt.range(&view), Some(8));
         assert_eq!(bolt.catches_reader(&view), None);
         let text = bolt.prompt("a scroll of lightning", ("Enter", "r", "Tab"));
         assert!(text.starts_with("Read a scroll of lightning:"), "{text}");
@@ -691,7 +692,7 @@ mod tests {
             "data/spells/arcane_bolt.toml",
             "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
              level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
-             shape = \"cone\"\nresolution = \"area\"\nmax_length = 3\ndamage = { dice = \"2d6\" }\n",
+             shape = \"cone\"\nresolution = \"area\"\nlength = 3\ndamage = \"2d6\"\n",
         );
         let w = caster(Arc::new(Content::load(&files).expect("loads")), "wizard");
         let view = w.perception();

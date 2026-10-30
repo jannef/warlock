@@ -138,7 +138,6 @@ impl Actor {
     pub fn spell_cost(&self, content: &Content, spell: &SpellData) -> i32 {
         self.mana_cost(content, self.spell_base(content, spell))
     }
-
 }
 
 impl World {
@@ -185,7 +184,12 @@ impl World {
             return Spent::Nothing;
         };
         let me = self.state.player();
-        let cast = Cast::settle(me, &content, (spell, def), Pay::Mana(me.spell_base(&content, def)));
+        let cast = Cast::settle(
+            me,
+            &content,
+            (spell, def),
+            Pay::Mana(me.spell_base(&content, def)),
+        );
         let price = self.price_of(player, ActionKind::Cast) * i64::from(def.casts);
         // Hands full of shields may spoil it (`two_shields.rs`): the mana and the time spent.
         if let Pay::Mana(mana) = cast.pay
@@ -979,7 +983,12 @@ impl<'c> Cast<'c> {
     /// `caster`'s cast of `def`, paid by `pay`: its hooks summed once ([`Actor::spell_mods`]),
     /// the roll at the rung of who casts it (its own, a scroll's, a wand's), the reach and the
     /// degrees the caster's own.
-    fn settle(caster: &Actor, content: &Content, (spell, def): (SpellId, &'c SpellData), pay: Pay) -> Self {
+    fn settle(
+        caster: &Actor,
+        content: &Content,
+        (spell, def): (SpellId, &'c SpellData),
+        pay: Pay,
+    ) -> Self {
         let mods = caster.spell_mods(content, def);
         let by = match pay {
             Pay::Mana(_) => CastBy::Own,

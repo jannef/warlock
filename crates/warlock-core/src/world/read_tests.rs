@@ -5,7 +5,7 @@
 use super::fixture_factions::peaceful_factions;
 use super::*;
 use crate::action::{ReadTarget, SpellShape, parse_actions};
-use crate::content::{Cast, ContentFiles, Reading, SpellPurpose, TrapEffect};
+use crate::content::{ContentFiles, Reading, SpellPurpose};
 use crate::magic::{Affix, LootGrade, Magic, Rarity};
 use crate::replay::Replay;
 
@@ -95,44 +95,39 @@ fn spell(out: &Outcome) -> (&str, Pos, &SpellShape) {
         .expect("a spell")
 }
 
+/// The three older scrolls are spell scrolls at a rung of their spells' ladders (the spell
+/// scaling design §7.4): fireball 1 (3d6), lightning 2 (4d6), frost 0 (2d6, the base).
 #[test]
-fn builtin_scrolls_cast_what_the_traps_do() {
+fn builtin_scrolls_cast_their_spells_at_their_rungs() {
     let content = Content::builtin().expect("builtin content");
     let reading = |id: &str| {
         let o = content.object_id(id).expect("scroll");
         content.object(o).read.clone().expect("readable")
     };
-    let trap = |id: &str| {
-        content
-            .trap(content.trap_id(id).expect("trap"))
-            .effect
-            .clone()
-    };
-    let cast = |id: &str| reading(id).spell().expect("a spell").cast.clone();
-    match (cast("scroll_of_fireball"), trap("fireball")) {
-        (Cast::Burst(scroll), TrapEffect::Burst(trap)) => assert_eq!(scroll, trap),
-        other => panic!("{other:?}"),
-    }
-    match (cast("scroll_of_frost"), trap("frost")) {
-        (Cast::Burst(scroll), TrapEffect::Burst(trap)) => assert_eq!(scroll, trap),
-        other => panic!("{other:?}"),
-    }
-    match (cast("scroll_of_lightning"), trap("lightning_bolt")) {
-        (Cast::Bolt(scroll), TrapEffect::Bolt(trap)) => assert_eq!(scroll, trap),
-        other => panic!("{other:?}"),
+    for (scroll, spell, rungs, roll) in [
+        ("scroll_of_fireball", "fireball", 1, "3d6"),
+        ("scroll_of_lightning", "lightning_bolt", 2, "4d6"),
+        ("scroll_of_frost", "frost", 0, "2d6"),
+    ] {
+        let Reading::Cast(cast) = reading(scroll);
+        let def = content.spell(cast.spell);
+        assert_eq!((def.id.as_str(), cast.rungs), (spell, rungs), "{scroll}");
+        let at = def.roll_at(usize::from(cast.rungs)).expect("a roll");
+        assert_eq!(at.to_string(), roll, "{scroll}");
+        assert_eq!(
+            reading(scroll).teaches(),
+            Some(cast.spell),
+            "{scroll} teaches its spell"
+        );
     }
     // The scroll of identify casts Identify on a stack the reader carries (#592).
-    match reading("scroll_of_identify") {
-        Reading::Cast(scroll) => assert_eq!(content.spell(scroll.spell).id, "identify"),
-        other => panic!("{other:?}"),
-    }
+    let Reading::Cast(scroll) = reading("scroll_of_identify");
+    assert_eq!(content.spell(scroll.spell).id, "identify");
     assert!(reading("scroll_of_identify").on_item());
     assert!(!reading("scroll_of_light").on_item());
     // The scroll of light casts the Light spell (#589: it had no reading at all).
-    match reading("scroll_of_light") {
-        Reading::Cast(scroll) => assert_eq!(content.spell(scroll.spell).id, "light"),
-        other => panic!("{other:?}"),
-    }
+    let Reading::Cast(scroll) = reading("scroll_of_light");
+    assert_eq!(content.spell(scroll.spell).id, "light");
 }
 
 /// Every scroll of the content (#589): an object of the scrolls class named `scroll_of_*` has a
@@ -172,7 +167,6 @@ fn every_builtin_scroll_can_be_read() {
                     _ => None,
                 }
             }
-            _ => None,
         };
         let mut w = base.clone();
         let item = w.state.player().inventory.len();
@@ -260,23 +254,22 @@ fn bad_readings_are_reported() {
         );
         Content::load(&files).expect_err("refused").to_string()
     };
-    let burst = "kind = \"burst\"\nspell = \"fireball\"\nnoun = \"fire\"\ndamage = \"1d6\"\n\
-                 radius = 2";
-    assert!(bad(burst).contains("`range`"), "{}", bad(burst));
+    // The old burst and bolt readings are gone (the spell scaling design §7.4), refused naming
+    // what replaced them.
+    let err = bad("kind = \"burst\"\nspell = \"fireball\"");
+    assert!(
+        err.contains("`burst` and `bolt` readings are gone"),
+        "{err}"
+    );
     let err = bad("kind = \"identify\"");
     assert!(err.contains("unknown variant `identify`"), "{err}");
     let err = bad("kind = \"spell\"\nspell = \"identify\"\nnoun = \"x\"");
-    assert!(err.contains("names only its `spell`"), "{err}");
-    let err = bad(&format!(
-        "kind = \"bolt\"\n{}",
-        &burst["kind = \"burst\"\n".len()..]
-    ));
-    assert!(err.contains("`radius` is not for"), "{err}");
-    let err =
-        bad("kind = \"bolt\"\nspell = \"fireball\"\nnoun = \"fire\"\ndamage = \"1d6\"\nlength = 5");
-    assert!(err.contains("bolt effect"), "{err}");
-    let err = bad(&format!("{burst}\nrange = 5\nheat = true\nfrost = 10"));
-    assert!(err.contains("not both"), "{err}");
+    assert!(err.contains("unknown field `noun`"), "{err}");
+    let err = bad("kind = \"spell\"");
+    assert!(err.contains("needs its `spell`"), "{err}");
+    // A scroll's rungs within its spell's ladder: Fireball's has four, Identify none.
+    assert!(bad("kind = \"spell\"\nspell = \"fireball\"\nrungs = 5").contains("`rungs` is 0 to 4"));
+    assert!(bad("kind = \"spell\"\nspell = \"identify\"\nrungs = 1").contains("`rungs` is 0 to 0"));
 }
 
 #[test]
@@ -360,11 +353,11 @@ fn a_fireball_aimed_close_catches_its_reader_and_may_kill_them() {
 
 #[test]
 fn lightning_runs_through_everyone_on_its_line_but_the_reader() {
-    let mut w = world("###############\n#@.D.D......D.#\n###############\n");
+    let mut w = world("###############\n#@.D.D...D....#\n###############\n");
     let (a, b, far) = (
         at(&w, Pos::new(3, 1)),
         at(&w, Pos::new(5, 1)),
-        at(&w, Pos::new(12, 1)),
+        at(&w, Pos::new(9, 1)),
     );
     let out = run(&mut w, "read:b:3,1");
     let (effect, origin, shape) = spell(&out[0]);
@@ -372,9 +365,10 @@ fn lightning_runs_through_everyone_on_its_line_but_the_reader() {
     let SpellShape::Bolt { path } = shape else {
         panic!("{shape:?}")
     };
-    // On past the cell aimed at, 12 cells, to (13, 1) before the wall.
+    // On past the cell aimed at, as far as the reader casts Lightning bolt: its base length,
+    // 8, to (9, 1).
     assert_eq!(path.first(), Some(&Pos::new(2, 1)));
-    assert_eq!(path.last(), Some(&Pos::new(13, 1)));
+    assert_eq!(path.last(), Some(&Pos::new(9, 1)));
     let roll = lost(&w, a);
     assert!((4..=24).contains(&roll));
     assert_eq!((lost(&w, b), lost(&w, far)), (roll, roll));
@@ -414,8 +408,8 @@ fn refused_readings_take_no_time_and_keep_the_scroll() {
     let fire = w.content.object_id("scroll_of_fireball").expect("fireball");
     w.state.known_scrolls.insert(fire);
     let refusals = [
-        ("read:a", "Read it at what?"),
-        ("read:a:1,1", "You cannot aim at yourself."),
+        ("read:a", "Cast it where?"),
+        ("read:a:1,1", "You cannot cast at yourself."),
         ("read:a:30,1", "That is out of range."),
         ("read:d", "Read it on what?"),
         ("read:d:a", "You already know what"),
