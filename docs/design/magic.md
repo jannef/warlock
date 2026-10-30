@@ -185,7 +185,7 @@ bonus = 0             # static; rare
 |---|---|---|---|---|---|---|---|---|---|---|
 | Single-target ceiling (max roll) | 6 | 12 | 18 | 24 | 32 | 40 | 50 | 62 | 76 | 90 |
 
-and an `area` spell's per-target maximum is its ratio of that (a tier-3 burst of radius 2: at most 18). The data check refuses a spell whose `max_dice × sides + bonus` passes its tier's ceiling, so **no spell can be written over its cap**. Nothing adds over it: talents, items, and stats that "add dice" or "add percent" **raise the spell toward** its cap, or make it come earlier, never past it. (A talent that lifts the cap itself is not written; this answers "10d6 fireballs".) Cantrips never pass 6 total, so a wizard's cantrip is a poor weapon beside a crossbow's 1d10+1, which is the intent.
+and an `area` spell's per-target maximum is its ratio of that (a tier-3 burst of radius 2: at most 18). The data check refuses a spell whose `max_dice × sides + bonus` passes its tier's ceiling, so **no spell can be written over its cap**. Nothing adds over it: talents, items, and stats that "add dice" or "add percent" **raise the spell toward** its cap, or make it come earlier, never past it. (A talent that lifts the cap itself is not written.) Cantrips never pass 6 total, so a wizard's cantrip is a poor weapon beside a crossbow's 1d10+1, which is the intent.
 
 **Reach and area** grow with Willpower (§3) only to the spell's own `max_range` and `max_radius`, set by the shape; a ball never grows past radius 3.
 
