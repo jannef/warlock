@@ -60,7 +60,7 @@ pub struct OwnAttack {
     /// Added to the 2d12 attack roll.
     pub to_hit: i32,
     /// The damage dice with every flat bonus folded in.
-    pub damage: Dice,
+    pub damage: crate::dice::Roll,
     /// More dice rolled with them (a magic weapon's "adds 1d4 damage").
     pub extra: Option<Dice>,
     /// The kinds its own dice do (a blow does the better of two).

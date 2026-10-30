@@ -14,7 +14,7 @@ use super::{Effect, Mods};
 use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT, Profile};
 use crate::content::{Content, ItemKind};
 use crate::damage::{Kinds, Rider};
-use crate::dice::Dice;
+use crate::dice::{Dice, Roll};
 use crate::object::Stack;
 
 /// What an item gives, as the player knows it.
@@ -47,7 +47,7 @@ pub struct AttackNumbers {
     pub to_hit: i32,
     /// Its damage dice with every flat bonus folded in; for what only adds (ammunition, a worn
     /// thing), which has no dice of its own, only the flat bonus it adds.
-    pub damage: Dice,
+    pub damage: Roll,
     /// What it is of.
     pub role: Role,
     /// More dice rolled with its own (an affix's "adds 1d4 damage").
@@ -216,14 +216,17 @@ impl DefenceNumbers {
 /// Damage dice as written: the dice (and any extra dice) with the flat bonus last, `1d8+2`,
 /// `1d6+1d4+1`; fixed damage as its number (at least 1). The character sheet's attacks
 /// (`OwnAttack::damage_text`) write theirs the same way.
-pub fn dice_text(damage: Dice, extra: Option<Dice>) -> String {
-    let dice = |d: Dice| d.plus(-d.bonus());
+pub fn dice_text(damage: Roll, extra: Option<Dice>) -> String {
     match (damage.is_fixed(), extra) {
         (true, None) => damage.bonus().max(1).to_string(),
         (_, None) => damage.to_string(),
         (_, Some(extra)) => {
             let bonus = damage.bonus() + extra.bonus();
-            let mut text = format!("{}+{}", dice(damage), dice(extra));
+            let mut text = format!(
+                "{}+{}",
+                damage.plus(-damage.bonus()),
+                extra.plus(-extra.bonus())
+            );
             if bonus != 0 {
                 text.push_str(&format!("{bonus:+}"));
             }
@@ -271,7 +274,7 @@ fn attack(stack: &Stack, content: &Content) -> Option<AttackNumbers> {
 /// An attack of no dice: what ammunition or a worn thing adds to.
 fn nothing() -> Attack {
     Attack {
-        damage: Dice::fixed(0),
+        damage: Roll::fixed(0),
         to_hit: 0,
         threat: DEFAULT_THREAT,
         crit: DEFAULT_CRIT,

@@ -102,7 +102,7 @@ fn within(actual: f64, expected: f64) -> bool {
     ((actual - expected) / expected * 100.0).abs() <= TOLERANCE
 }
 
-fn average(damage: crate::dice::Dice) -> f64 {
+fn average(damage: crate::dice::Roll) -> f64 {
     f64::from(damage.min() + damage.max()) / 2.0
 }
 
