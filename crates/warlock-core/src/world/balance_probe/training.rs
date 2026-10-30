@@ -277,7 +277,7 @@ fn fight(
             let amount = match c.resolution {
                 Resolution::Attack | Resolution::Touch => {
                     let p = Profile {
-                        damage: c.dice.0,
+                        damage: c.dice.0.into(),
                         ..c.aim.clone()
                     };
                     let blow = combat::strike(&p, &Target::bare(them.missile), rng);

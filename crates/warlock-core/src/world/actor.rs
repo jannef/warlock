@@ -1211,7 +1211,7 @@ impl Actor {
         let unarmed = || {
             let mut fists = Attack::unarmed(content.unarmed_damage());
             if let Some(sides) = talents.unarmed_die {
-                fists.damage = crate::dice::Dice::of(1, u32::from(sides));
+                fists.damage = crate::dice::Dice::of(1, u32::from(sides)).into();
             }
             fists
         };
@@ -1415,7 +1415,7 @@ impl Actor {
         let mut fists = Attack::unarmed(content.unarmed_damage());
         // Mighty kick's die, or Martial arts' (spec §8 "Class abilities"), the bigger.
         if let Some(sides) = talents.kick_die.max(talents.unarmed_die) {
-            fists.damage = crate::dice::Dice::of(1, u32::from(sides));
+            fists.damage = crate::dice::Dice::of(1, u32::from(sides)).into();
         }
         let mut profile = Profile::melee(&fists, &self.stats_with(content, &mods))
             .with(&self.benefit(content, skill));

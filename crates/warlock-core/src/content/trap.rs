@@ -41,7 +41,7 @@ use super::spell::{self, Bolt, Burst, SpellFields, check_effect, default_verb, o
 use super::{Content, ContentError, DamageTypeId};
 use crate::color::Rgb;
 use crate::combat::{Attack, DEFAULT_CRIT, DEFAULT_THREAT};
-use crate::dice::Dice;
+use crate::dice::{Dice, Roll};
 use crate::geom::Dir;
 use crate::noise::{MAX_LOUDNESS, SoundKind};
 use serde::{Deserialize, Serialize};
@@ -264,12 +264,12 @@ impl TrapEffect {
     }
 
     /// The damage it does, if it does any.
-    pub fn damage(&self) -> Option<Dice> {
+    pub fn damage(&self) -> Option<Roll> {
         match self {
             TrapEffect::Shot { attack, .. } | TrapEffect::Strike { attack } => Some(attack.damage),
             TrapEffect::Burst(Burst { damage, .. })
             | TrapEffect::Bolt(Bolt { damage, .. })
-            | TrapEffect::Pit { damage, .. } => Some(*damage),
+            | TrapEffect::Pit { damage, .. } => Some((*damage).into()),
             TrapEffect::Alarm | TrapEffect::Teleport => None,
         }
     }
@@ -393,7 +393,7 @@ impl TrapSpec {
                 .ok_or_else(|| err("needs `damage` dice that can do harm, e.g. \"1d6\"".into()))
         };
         let attack = |damage: Dice| Attack {
-            damage,
+            damage: damage.into(),
             to_hit: self.to_hit,
             threat: DEFAULT_THREAT,
             crit: DEFAULT_CRIT,

@@ -763,7 +763,7 @@ impl ObjectSpec {
         let bash = match (self.bash, self.shield) {
             (None, _) => None,
             (Some(damage), shield) if shield > 0 => Some(Attack {
-                damage,
+                damage: damage.into(),
                 kinds: if kinds.is_empty() {
                     Attack::unarmed(content.unarmed_damage()).kinds
                 } else {
@@ -1182,7 +1182,7 @@ impl ObjectSpec {
             return Err("`strength` is a Strength score, 1 to 40".into());
         }
         Ok(Some(Attack {
-            damage,
+            damage: damage.into(),
             to_hit: self.to_hit,
             threat,
             crit,

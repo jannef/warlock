@@ -1,7 +1,8 @@
 //! Dice (spec §8 "Dice"): a roll such as `2d3+1`, or a fixed number such as `+2`.
 //!
-//! One type for every roll the rules make: the stat adjustments of character creation (races,
-//! classes, the horoscope) today, weapon damage later. The text form is
+//! One group of dice of one size: the stat adjustments of character creation (races, classes,
+//! the horoscope), weapon and natural attack damage, and every other roll in data. The text form
+//! is
 //!
 //! - a fixed number: `+2`, `-1`, `3`, `0`;
 //! - dice: `NdS`, `N` dice with `S` sides each (`2d3`), optionally negated (`-1d2`, subtracted)
@@ -11,6 +12,13 @@
 //! ±[`MAX_BONUS`]. No spaces, lower-case `d`. In TOML a fixed number may also be written as an
 //! integer (`strength = 2`). Rolling draws one number per die from a deterministic stream
 //! ([`Rng`]); a fixed number draws nothing.
+//!
+//! A [`Roll`] (`dice/roll.rs`) is a sum of such groups, of more than one size (`3d6+1d10`): what
+//! an attack rolls for its damage.
+
+mod roll;
+
+pub use roll::Roll;
 
 use crate::rng::Rng;
 use serde::de::{self, Visitor};
