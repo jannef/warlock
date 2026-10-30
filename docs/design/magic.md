@@ -45,7 +45,7 @@ Design document for the owner's review (2026-10-26). Written against `origin/mai
 
 1. *Scrolls teach, so nothing is depleted.* A learned spell is permanent; the limit is mana and the lottery of finding it, not use. A duplicate scroll is a one-shot cast, a sale, or a gift, so no scroll is dead loot.
 2. *Risk is the player's choice.* The study check is shown in words ("this is far beyond you"), the scroll can be identified first, and a ruined scroll costs one optional spell, never a path to victory (owner, 2026-10-26: "sucks to suck").
-3. *Caps, not curves.* A 10d6 fireball at level 20 is fine in D&D; at 60 levels it breaks a roguelike. Every spell has a cap; a tier has a ceiling; area is paid for in mana (§5).
+3. *Caps, not curves.* Every spell has a cap; a tier has a ceiling; area is paid for in mana (§5).
 4. *Schools are tags* so every system that already reads tags or damage types (affixes, talents, resistances) gets magic for free.
 5. *One abilities menu.* Known spells are entries in the abilities menu (Source `Spell`), keys unbound by default and rebindable; no spell book screen (CLAUDE.md "Hard rules").
 
@@ -62,7 +62,7 @@ Sources checked in this session: the ADOM wiki clone at ancardia.fandom.com ("Sp
 | Brogue | staffs hold charges equal to their enchantment and refill over about 500 turns; no mana | charges and time | wands without recharge: the player's own owner decision (§9) |
 | Caves of Qud | mental mutations on cooldowns scaled by Willpower and Ego | time | rods scale with the user, wands do not (§9) |
 | ToME (from memory) | several resources by flavour | each resource | already covered by #225's resources, not repeated |
-| D&D 3.5 | spell levels 0 to 9; `damage = Nd6 per caster level` up to a cap (fireball 10d6, magic missile 5 missiles); scrolls cast once or are **copied into a spellbook**; wands with charges and a set caster level; staffs and rods | slots per day | tiers, caps by dice, per-spell attack rolls (ray of frost rolls, magic missile does not), wands with a set level; **not** its slots, and not 5e's fixed damage (owner: "no deterministic die rules") |
+| D&D 3.5 | spell levels 0 to 9; `damage = Nd6 per caster level` up to a cap (magic missile 5 missiles); scrolls cast once or are **copied into a spellbook**; wands with charges and a set caster level; staffs and rods | slots per day | tiers, caps by dice, per-spell attack rolls (ray of frost rolls, magic missile does not), wands with a set level; **not** its slots, and not 5e's fixed damage (owner: "no deterministic die rules") |
 
 ## 3. The model: spells, tiers, caster level
 
