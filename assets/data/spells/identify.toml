@@ -1,12 +1,12 @@
 # Identify (spec §8 "Spells"): the truth of one thing the caster carries, as the scroll of
-# identify tells it. Its cost is given outright (`mana`), not by its tier: a large one, so a
-# caster of the first levels cannot cast it at all (see docs/dev/spells.md "Identify"). Its tier
-# is how hard it is to learn. The scroll of identify casts it.
+# identify tells it. Its cost is given outright (`mana`), not by its level: a large one, so a
+# caster of the first levels cannot cast it at all (see docs/dev/spells.md "Identify"). Its
+# level is how hard it is to learn. The scroll of identify casts it.
 [[spell]]
 id = "identify"
 name = "Identify"
 description = "Learn the truth of one thing you carry: what it is, and what magic it holds."
-tier = 2
+level = 6
 school = "divination"
 kind = "utility"
 shape = "self"

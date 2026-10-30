@@ -173,9 +173,9 @@ name = "Hit points, healing, regeneration"
 id = "mana"
 name = "Mana"
 
-# Spells (the magic design, docs/design/magic.md): tiers, caster level, learning, casting. The
-# Spellcraft tree (Quick study, Overreach, School focus), the casters' Empower, Archmage, and
-# Arcane training, and every class's spells (#400).
+# Spells (the magic design, docs/design/magic.md; the spell scaling design): spell levels, caster
+# level, learning, casting. The Spellcraft tree (Quick study, Overreach, School focus), the casters'
+# Empower, Archmage, and Arcane training, and every class's spells (#400).
 [[system]]
 id = "spells"
 name = "Spells and caster level"

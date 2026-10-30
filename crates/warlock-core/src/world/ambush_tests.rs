@@ -149,12 +149,12 @@ fn a_sneak_attack_that_hits_marks_sneak_attack_and_dexterity() {
 }
 
 #[test]
-fn a_spell_that_rolls_to_hit_sneak_attacks_within_reach_past_its_cap() {
+fn a_spell_that_rolls_to_hit_sneak_attacks_within_reach() {
     let mut files = ContentFiles::builtin();
     files.insert(
         "data/spells/arcane_bolt.toml",
         "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
-         tier = 2\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
+         level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
          shape = \"ray\"\nresolution = \"attack\"\nmax_range = 10\ndamage = { dice = \"3d6\" }\n",
     );
     let content = Arc::new(Content::load(&files).expect("the spell loads"));
@@ -162,8 +162,8 @@ fn a_spell_that_rolls_to_hit_sneak_attacks_within_reach_past_its_cap() {
     reach(&mut w, 18);
     train(&mut w, "sneak_attack", 200);
     let target = kobold(&mut w, 3, 10_000);
-    // Asleep three cells off, the bolt's dice are held to its cap (18) but the 7d6 come on
-    // top; seven cells off, beyond the reach, never.
+    // Asleep three cells off, the 7d6 come on top of the bolt's 3d6 (a critical's twice);
+    // seven cells off, beyond the reach, never.
     let most = |w: &mut World, dx: i32| {
         (0..40)
             .map(|_| {
@@ -173,8 +173,9 @@ fn a_spell_that_rolls_to_hit_sneak_attacks_within_reach_past_its_cap() {
             .max()
             .unwrap_or(0)
     };
-    assert!(most(&mut w, 3) > 18, "the dice past the cap");
-    assert!(most(&mut w, 7) <= 18, "too far for a sneak attack");
+    let (near, far) = (most(&mut w, 3), most(&mut w, 7));
+    assert!(near > 36, "the sneak dice on top: {near}");
+    assert!(far <= 36, "too far for a sneak attack: {far}");
 }
 
 #[test]

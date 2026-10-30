@@ -509,25 +509,32 @@ fn descriptions_say_base_stats_and_known_affixes_in_words() {
 }
 
 #[test]
-fn spell_scrolls_drop_by_tier() {
+fn spell_scrolls_drop_by_level() {
     let c = content();
-    // The tier of the spell a stack's scroll teaches, if it is one.
-    let tier = |s: &Stack| {
+    // The spell level of the spell a stack's scroll teaches, if it is one.
+    let level = |s: &Stack| {
         let reading = c.object(s.object).read.as_ref()?;
-        Some(c.spell(reading.teaches()?).tier)
+        Some(c.spell(reading.teaches()?).level)
     };
-    // Shallow: no tier-3 scroll (item level 6) yet, but cantrips.
+    // Shallow: no level-11 scroll (item level 6) yet, but cantrips.
     let shallow: Vec<u8> = (roll_many(&c, 4000, 3, LootGrade::Any).iter())
-        .filter_map(tier)
+        .filter_map(level)
         .collect();
-    assert!(shallow.contains(&0) && !shallow.contains(&3), "{shallow:?}");
-    // Deep: every tier, the low ones commoner.
+    assert!(
+        shallow.iter().any(|&l| l <= 1) && !shallow.iter().any(|&l| l >= 11),
+        "{shallow:?}"
+    );
+    // Deep: every level, the low ones commoner.
     let deep: Vec<u8> = (roll_many(&c, 8000, 8, LootGrade::Any).iter())
-        .filter_map(tier)
+        .filter_map(level)
         .collect();
-    let of = |t: u8| deep.iter().filter(|&&d| d == t).count();
-    assert!(of(3) > 0, "{deep:?}");
-    assert!(of(0) > of(3) && of(1) > of(3), "{deep:?}");
+    let of =
+        |levels: std::ops::RangeInclusive<u8>| deep.iter().filter(|d| levels.contains(d)).count();
+    assert!(of(11..=12) > 0, "{deep:?}");
+    assert!(
+        of(0..=1) > of(11..=12) && of(3..=4) > of(11..=12),
+        "{deep:?}"
+    );
 }
 
 /// Fixture affixes for the system effects (docs/design/affixes-systems.md): no shipped file has

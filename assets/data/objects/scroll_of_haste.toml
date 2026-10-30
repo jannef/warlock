@@ -1,6 +1,6 @@
 # A scroll of haste (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Haste, a
-# tier-3 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
-# good. Level and frequency by its tier: the lower the tier, the commoner the scroll.
+# level-11 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_haste"
 name = "scroll of haste"

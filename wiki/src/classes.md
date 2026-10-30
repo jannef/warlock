@@ -48,7 +48,7 @@ otherwise you can still use them, and nothing happens. The passives do not care.
 
 The spells a class gives (the [priest](classes.md#priest)'s, [druid](classes.md#druid)'s, [wizard](classes.md#wizard)'s, and [witch](classes.md#witch)'s few, a [bard](classes.md#bard)'s, a
 [paladin](classes.md#paladin)'s, or a [ranger](classes.md#ranger)'s one or two; see [What your class gives](magic.md#what-your-class-gives))
-are used from the menu as **spells** ([Magic](magic.md)): each costs [mana](mana.md#spending-it) by its [tier](magic.md#tiers), your [caster level](magic.md#caster-level), and your armour, and is
+are used from the menu as **spells** ([Magic](magic.md)): each costs [mana](mana.md#spending-it) by its [spell level](magic.md#spell-levels) and your armour, and is
 greyed out ("too little") while you have less; there is no other wait. A [burst](magic.md#shapes) flies and goes
 off as a [scroll](scrolls.md)'s does, a [line](magic.md#shapes) runs through everyone on it, its blows and kills
 yours; a [hex](magic.md#shapes) falls on a [hostile](creatures.md#factions) you see within its reach. [Call lightning](abilities.md#ability-call-lightning) answers only under the

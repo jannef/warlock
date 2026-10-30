@@ -3,7 +3,7 @@
 id = "haste"
 name = "Haste"
 description = "The world slows around you a while: all you do takes a quarter less time."
-tier = 3
+level = 11
 school = "transmutation"
 kind = "buff"
 shape = "self"

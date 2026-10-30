@@ -1,6 +1,6 @@
 # Keen mind (the combat progression design §7, §11; #556): the Spellcraft tree, chosen for a school
-# of magic or an element (a spell tag). A caster's stats may lift those spells' damage cap 10
-# points further than their tier's `max_lift` (../spells.toml); the stats still have to be there.
+# of magic or an element (a spell tag). Those spells' dice are lifted 10 points more than the
+# caster's stats lift them (spells/README.toml, `[spell.scales]`).
 [[talent]]
 id = "keen_mind"
 name = "Keen mind"

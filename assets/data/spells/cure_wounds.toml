@@ -3,7 +3,7 @@
 id = "cure_wounds"
 name = "Cure wounds"
 description = "A prayer and a touch that close wounds: hit points back, yours or another's beside you; it takes a while to say."
-tier = 1
+level = 3
 school = "restoration"
 kind = "heal"
 shape = "touch"

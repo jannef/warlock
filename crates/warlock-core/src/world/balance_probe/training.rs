@@ -149,7 +149,7 @@ fn weapon_spell(w: &World) -> Option<super::Cast> {
     let (cheap, dear): (Vec<_>, Vec<_>) = (casts(w).into_iter())
         .filter(|c| c.cost > 0)
         .partition(|c| c.cost * 5 <= pool);
-    let mean = |c: &super::Cast| super::mean(c.dice.0).min(f64::from(c.lifted));
+    let mean = |c: &super::Cast| super::mean(c.dice.0);
     match cheap.is_empty() {
         false => cheap.into_iter().max_by(|a, b| mean(a).total_cmp(&mean(b))),
         true => dear.into_iter().min_by_key(|c| c.cost),
@@ -286,7 +286,7 @@ fn fight(
                 }
                 Resolution::Auto | Resolution::Area => c.dice.0.roll(rng).max(0),
             };
-            hp -= crate::world::spell::capped(amount, Some(c.lifted));
+            hp -= amount;
         } else {
             mine += me.blows;
             while mine >= 1.0 && hp > 0 {

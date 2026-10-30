@@ -25,11 +25,10 @@ pub(super) fn scrolls(content: &Content) -> String {
                      teaches it if studied",
                     def.name, scroll.level
                 );
-                let damage = (content.spell_rules()).zip(def.damage).map_or_else(
+                let damage = def.damage.map_or_else(
                     || "—".to_string(),
-                    |(rules, dice)| {
-                        let comfortable = rules.comfortable[usize::from(def.tier)];
-                        let dice = dice.at(i32::from(scroll.level), comfortable);
+                    |dice| {
+                        let dice = dice.at(i32::from(scroll.level), def.grows_from());
                         super::damage::typed_dice(content, dice, def.damage_type)
                     },
                 );

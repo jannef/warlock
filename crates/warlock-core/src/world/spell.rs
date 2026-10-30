@@ -69,11 +69,6 @@ pub(crate) fn burst_cells(center: Pos, radius: i32, opaque: impl Fn(Pos) -> bool
     cells
 }
 
-/// A roll held to `cap`, if there is one (a spell's, spec §8 "Spells").
-pub(super) fn capped(roll: i32, cap: Option<i32>) -> i32 {
-    cap.map_or(roll, |cap| roll.min(cap))
-}
-
 /// The cells a cone from `from` toward `toward` reaches, `length` cells long (spec §8
 /// "Spells"): within that distance (rounded, like every radius), in line of sight from `from`,
 /// not opaque, and within 45° either side of the way to `toward` (a quarter turn in all, by
@@ -251,7 +246,7 @@ impl World {
                 cells: cells.clone(),
             });
         }
-        let roll = capped(burst.damage.roll(&mut self.state.rng), burst.cap);
+        let roll = burst.damage.roll(&mut self.state.rng);
         let inner = radius2(radius - 1);
         let level = self.state.current_level.clone();
         let reached: BTreeSet<Pos> = cells.into_iter().collect();
@@ -305,7 +300,7 @@ impl World {
                 cells: path.to_vec(),
             });
         }
-        let roll = capped(bolt.damage.roll(&mut self.state.rng), bolt.cap);
+        let roll = bolt.damage.roll(&mut self.state.rng);
         let level = self.state.current_level.clone();
         let mut caught = Vec::new();
         for p in path {

@@ -1,59 +1,35 @@
-# Spells (spec §8 "Spells", the magic design docs/design/magic.md §3 and §5): the tier table
-# every spell is measured by. The spells themselves are in spells/, one file each.
+# Spells (spec §8 "Spells", the magic design docs/design/magic.md §3 and §5, the spell scaling
+# design docs/design/spell-scaling.md §5): the cost table every spell's mana is measured by. The
+# spells themselves are in spells/, one file each.
 #
-# A spell has a tier, 0 (a cantrip) to 9. Each tier has, in the arrays of [tiers], one value per
-# tier, tier 0 first:
-#   comfortable  the caster level at which learning a spell of the tier is certain and casting it
-#                costs its base cost; ascending, the first 1. A caster level's tier is the
-#                highest tier whose comfortable level it has reached (a caster level 2 is at
-#                tier 0); a spell above it is overreach
-#   cost         the tier's base mana cost, for a single-target spell; ascending, at least 1
-#   ceiling      the greatest damage a single-target spell of the tier may do in one cast at its
-#                highest roll; ascending. The load-time check (spells/README.toml) holds every
-#                spell under its tier's ceiling times its resolution's `damage` percent
-#   max_lift     the most a caster's stats may lift a spell's damage cap (the combat progression
-#                design §7): a percent of the cap, 0 to 200, ascending or flat. A spell's
-#                `[spell.scales]` `damage` weights (spells/README.toml) sum to the lift; the
-#                caster's cap is the spell's × (100 + lift) / 100, rounded down, and its dice
-#                follow it up. Keen mind lifts it 10 points higher for its school or element
-#   wand_charges the charges a wand of a spell of the tier is made with (spec §8 "Magic items":
-#                "Wands"; a wand's own `charges` may say otherwise): 1 to 99, never more than
-#                the tier below's. Wands are never recharged
+# A spell has a level, 0 to 70 (spells/README.toml). It is one number with two meanings: the
+# spell's base mana (its level, at least 1: a cantrip of level 0 or 1 costs 1), and the caster
+# level at which a scroll of it teaches for certain (study.toml). Nothing says how much a spell
+# of a level may do: its own data does.
 #
-# overreach_cost  percent more mana per tier a spell is above the caster's level's tier (50: one
-#                 tier over costs half again, two tiers double)
+# A cast's mana (the one cost, magic design §5): the spell's base mana, × its shape's percent (a
+# burst's at its radius), × its resolution's `cost` percent, × (100 + the `spell_cost_percent` of
+# the armour worn) %, rounded to the nearest and at least 1; then the talents (Archmage, Empower,
+# School focus, Frugal caster) and the items (of Thrift). A spell's own `mana` (Identify's)
+# stands in for its level, shape, and resolution. The caster level never counts: a known spell
+# costs the same whoever casts it, and the mana pool is the gate.
 #
 # What the stats do to reach, duration, and to-hit is each spell's own `[spell.scales]`
 # (spells/README.toml); without it, Willpower grows reach and Presence a status's degrees (a step
 # per two points of the modifier), and an attack aims with Dexterity.
 #
-# A cast's mana (the one cost, magic design §5): the tier's `cost`, × (1 + overreach_cost % per
-# tier above the caster level's tier), × its shape's percent (a burst's at its radius), × its
-# resolution's `cost` percent, × (100 + the `spell_cost_percent` of the armour worn) %, rounded
-# to the nearest and at least 1; then the talents (Archmage, Frugal caster).
-#
 # [shapes]: what a shape multiplies the base cost by, in percent. Single targets (ray, bolt,
 # touch, self) and the areas (cone, line, burst): area is expensive. `burst` is a list by radius,
 # radius 1 first: its length is the largest radius a burst may have.
 #
-# [resolution]: how a spell finds its targets, and what that does to its damage cap and cost,
-# both in percent: `damage` of the tier's ceiling is the most it may do to one target, `cost`
-# multiplies the base cost (an area spell's cost is its shape's).
-#   attack  the 2d12 attack roll against Defence; full damage, can critical
-#   auto    no roll, always hits; less damage
-#   area    everyone in the shape, no roll (Evasion halves); less damage per target
-#   touch   an attack roll at adjacency only; more damage, cheaper
+# [resolution]: how a spell finds its targets, and what that does to its cost, in percent
+# (`cost` multiplies the base cost; an area spell's cost is its shape's).
+#   attack  the 2d12 attack roll against Defence; can critical
+#   auto    no roll, always hits
+#   area    everyone in the shape, no roll (Evasion halves)
+#   touch   an attack roll at adjacency only; cheaper
 #
 # First guesses, to be tuned by play (the magic design §12).
-
-overreach_cost = 50
-
-[tiers]
-comfortable = [1, 3, 6, 12, 18, 25, 32, 40, 50, 60]
-cost = [1, 3, 6, 11, 16, 22, 29, 37, 46, 56]
-ceiling = [6, 12, 18, 24, 32, 40, 50, 62, 76, 90]
-max_lift = [40, 50, 60, 70, 80, 80, 80, 80, 80, 80]
-wand_charges = [15, 12, 9, 7, 5, 4, 3, 3, 2, 2]
 
 [shapes]
 ray = 100
@@ -65,7 +41,7 @@ line = 180
 burst = [180, 240, 300]
 
 [resolution]
-attack = { damage = 100, cost = 100 }
-auto = { damage = 75, cost = 100 }
-area = { damage = 80, cost = 100 }
-touch = { damage = 120, cost = 70 }
+attack = { cost = 100 }
+auto = { cost = 100 }
+area = { cost = 100 }
+touch = { cost = 70 }

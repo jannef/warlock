@@ -280,14 +280,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   abilities") are spells of `data/spells/` cast by it, and so are the spells learned from
   scrolls and the spells scrolls cast. `docs/dev/spells.md` has the details.
   - **The first list** (#397, design §7; names left for the world-language review, #378):
-    tier 0 Evil eye, Light (#589: the scroll of light's; Lit, its status, sheds a light about the
-    caster, `light` on a status), Mend, Ray of frost, Spark; tier 1 Barkskin, Blessing, Burning hands, Cause
-    wounds, Cure wounds, Curse of sloth, Hex of weakness, Magic missile; tier 2 Arcane bolt,
-    Blight, Frost, Identify, Scorching ray, Sleep, Web; tier 3 Call lightning, Fireball (the wizard's Fire
-    burst folded into it), Flame, Haste, Lightning bolt, Remove disease. A spell is cast by its
+    by spell level (the spell scaling design §5.8): 0 Evil eye, Light (#589: the scroll of
+    light's; Lit, its status, sheds a light about the caster, `light` on a status); 1 Mend, Ray
+    of frost, Spark; 3 Barkskin, Blessing, Cure wounds, Curse of sloth, Hex of weakness, Magic
+    missile; 4 Burning hands, Cause wounds; 6 Arcane bolt, Frost, Identify, Sleep; 7 Blight,
+    Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst folded into it),
+    Haste, Lightning bolt, Remove disease; 12 Flame. A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
-    the abilities menu lists the spells known by tier, then path order. Sleep and Web are
+    the abilities menu lists the spells known by spell level, then path order. Sleep and Web are
     **area hexes**: a burst whose status falls on everyone it reaches but the caster, friend or
     foe (`World::cast_area_hex`). Haste is the one status that hastens (`cost` 75; statuses may
     cost 50 to 1000 percent, and only a buff, on its caster, may hasten: a hex's or a damage
@@ -296,13 +297,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     stack the caster carries, as the scroll of identify does (§8 "Magic items"): cast as
     `use:identify:c` (an aim that is no cell names a stack by position, `Action::CastOn`), from
     the abilities menu through the identify list. Its cost is given outright, `mana = 60`, not
-    by its tier (a spell's `mana` replaces the tier table's price: no tier cost, overreach,
-    shape, or resolution; armour and the talents still count), so a caster of the first levels
-    cannot cast it at all; its tier, 2, is how hard it is to learn. Refused, no time and no mana,
+    by its level (a spell's `mana` replaces its level's price: no shape or resolution; armour
+    and the talents still count), so a caster of the first levels cannot cast it at all; its
+    level, 6, is how hard it is to learn. Refused, no time and no mana,
     without the mana, without a stack, or on one already known.
   - **Guaranteed spells** (design §8): a class's level table (`abilities`, §8 "Class
     abilities") gives its spells as class abilities with a `spell` effect, at the level each
-    comes at, never above the tier the class's caster level has then reached. Wizard: Ray of
+    comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
+    least 1; the content test). Wizard: Ray of
     frost (1), Magic missile (3), Burning hands (12), Arcane bolt (18). Priest: Mend (1),
     Blessing (3), Cure wounds (3), Remove disease (12). Druid: Spark (1), Barkskin (3), Call
     lightning (12), Flame and frost (50). Witch: Evil eye (1), Hex of weakness (3), Cause wounds
@@ -311,40 +313,42 @@ developer notes (CLAUDE.md, `docs/dev/`).
     barbarian and the warrior 1); a race adds none unless its data says so.
   - **Spell scrolls** (§8 "Scrolls"): every spell comes on one scroll (`scroll_of_ID`, a
     `read` table of kind `spell`), which casts it through the cast path at the spell's
-    `[spell.scroll] level` (default its tier's comfortable level), free of mana and never
+    `[spell.scroll] level` (default its spell level, at least 1), free of mana and never
     refused for what the reader knows (Spell recall may keep it; a death by it is the
     scroll's), and teaches it to whoever studies it. The scrolls of fireball, frost, and
     lightning keep their burst and bolt readings and teach Fireball, Frost, and Lightning bolt.
-    By tier (item `level`, loot `frequency`, value): tier 0 (1, 60, 40), 1 (2, 45, 80), 2 (4,
-    30, 130), 3 (6, 20, 200); a shop's goods are drawn by loot frequency (100 for what is never
-    loot), so a general store lays out low tiers more often (§7 "Shops").
-  - **Tiers** (`data/spells.toml`): a spell has a tier, 0 (a *cantrip*) to 9. Each tier has a
-    **comfortable caster level** (1, 3, 6, 12, 18, 25, 32, 40, 50, 60), a **base mana cost** (1,
-    3, 6, 11, 16, 22, 29, 37, 46, 56), and a **damage ceiling** (6, 12, 18, 24, 32, 40, 50, 62,
-    76, 90: the most a single-target spell of the tier may do in one cast at its highest roll),
-    each ascending (checked at load). A caster level's tier is the highest whose comfortable
-    level it has reached; a spell above it is **overreach**, `overreach_cost` (50) percent more
-    mana per tier. The **shapes** multiply the base cost (ray, bolt, touch, self ×1; cone ×1.6;
-    line ×1.8; a burst ×1.8, ×2.4, ×3 by radius 1 to 3, its largest), and each **resolution**
-    caps damage at a percent of the ceiling and multiplies the cost (`attack` 100 %, `auto` 75 %,
-    `area` 80 % at its shape's cost, `touch` 120 % at ×0.7). First guesses, in data.
+    Each scroll's item `level`, loot `frequency`, and value are its own; by convention (the
+    objects' README) about half its spell's level, rounded up, at least 1 (spell levels 0–1:
+    (1, 60, 40); 3–4: (2, 45, 80); 6–7: (4, 30, 130); 11–12: (6, 20, 200)); a shop's goods are
+    drawn by loot frequency (100 for what is never loot), so a general store lays out low
+    levels more often (§7 "Shops").
+  - **Levels** (the spell scaling design §5, decisions 1, 9, 10, 16): a spell has a **level**,
+    0 to 70 (`MAX_SPELL_LEVEL`), one number with two meanings: its **base mana** (the level, at
+    least 1) and the **caster level at which a scroll of it teaches for certain**. A spell of
+    level 0 or 1 is a *cantrip* (1 mana; anyone with mana learns it for certain). There is no
+    table of levels, no ceiling, and no check on how much a spell of a level may do: its own
+    data says it (decision 16). A `tier` key is refused, saying to use `level`.
+  - **Cost table** (`data/spells.toml`): the **shapes** multiply the base mana (ray, bolt,
+    touch, self ×1; cone ×1.6; line ×1.8; a burst ×1.8, ×2.4, ×3 by radius 1 to 3, its
+    largest), and each **resolution** multiplies it (`attack`, `auto` ×1, `area` at its shape's
+    cost, `touch` ×0.7). First guesses, in data.
   - **Spells** (`data/spells/`, one `[[spell]]` file each, numbered in path order: `SpellId` an
-    index, in the content fingerprint): id, name, description, tier, the **tags** school
+    index, in the content fingerprint): id, name, description, level, the **tags** school
     (evocation, necromancy, abjuration, restoration, transmutation, enchantment, divination),
     kind (damage, heal, buff, hex, cleanse, utility), shape, and damage type (a `damage` spell's,
     needed); a resolution that fits the shape (`area` exactly for cone, line, and burst, `touch`
     only for touch, `attack` for a ray or a bolt, `auto` for any single target); the caps of its
     reach (`max_range` for a ray, bolt, or burst, `max_radius` for a burst, `max_length` for a
-    cone or a line: each shape exactly its own); `[spell.damage]` (`dice` at the comfortable
-    level, one die more per `per_levels` caster levels above it, never more than `max_dice`, a
-    rare static `bonus`); `[spell.effect]` for the other kinds (a heal's dice as damage's, a buff's
+    cone or a line: each shape exactly its own); `[spell.damage]` (`dice` at the caster level of
+    its spell level (at least 1), one die more per `per_levels` caster levels above it, never
+    more than `max_dice` by caster level, a static `bonus`; until the ladders replace them); `[spell.effect]` for the other kinds (a heal's dice as damage's, a buff's
     or hex's `status` and `severity`, a cleanse's `cures` and `diseases`, a damage spell's
     `status` suffered by everyone it harms); its reach before Willpower (`range`, `radius`,
     `length`, each at most its cap, default the cap); `casts` (its time in `cast` actions, 1 to
-    10); `open_sky`; `mana`, a cost given outright in place of the tier table's (Identify);
+    10); `open_sky`; `mana`, a cost given outright in place of its level's (Identify);
     `[spell.effect] identify` (a `utility` spell on `self` that asks for a stack); `[spell.cast]` (the `effect` drawn, `noun`, `verb`, `message`, `noise`, and a
     burst's `blast`, `heat`, `frost`, as a scroll's); `[spell.scroll]` with the caster level a
-    read casts at (default the tier's comfortable level); `[spell.scales]` (the combat
+    read casts at (default its spell level, at least 1); `[spell.scales]` (the combat
     progression design §7, #556), what it grows with: `damage`, `to_hit`, `reach`, `duration`,
     each a table of stats to weights (1 to 200, a percent of the stat's modifier, summed), each
     optional, defaulting to the old rule (`reach = { willpower = 50 }`, `duration = { presence
@@ -354,24 +358,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     authoring pass: the evocation damage spells but the cantrips `damage = { intelligence = 10,
     willpower = 5 }`, the hexes `duration = { presence = 50, willpower = 25 }`, Cure wounds
     `damage = { willpower = 15 }`.
-  - **The cap** (checked when the content loads, a `ContentError`): a spell whose most in one
-    cast (`max_dice` × the dice's sides + `bonus`), harm or healing, passes its tier's ceiling
-    times its resolution's percent is refused, and so is a static bonus above a quarter of the
-    ceiling. Only the caster's stats lift it (below), and every roll is held to the lifted cap.
-  - **The lift** (`SpellRules::lift`, `Actor::spell_lift`, `Actor::spell_cap`): a caster's
-    `damage` scales' sum (Σ weight × modifier) is the percent its cap for the spell is lifted
-    by, never below 0, at most the tier's `max_lift` (`[tiers]`, tier 0 first, 40, 50, 60, 70,
-    then 80; ascending or flat, 0 to 200), plus Keen mind's 10 for its school or element and
-    the `spell_lift` of the magic items worn (Potent; §8 "Magic items"); the
-    caster's cap is `cap_of × (100 + lift) / 100`, rounded down. Its dice gain as many as the
-    lift's room holds (`SpellDice::lifted`: `(lifted − bonus) / sides − (cap − bonus) / sides`,
-    each rounded down), so the unlifted dice under the cap stay under the lifted one. Only the
-    caster's own casts (paid in mana) are lifted: a scroll read and a wand used cast with the
-    unlifted cap. Derived at cast time; nothing saved.
+  - **No cap** (decision 16): nothing checks a spell's strength when the content loads, and
+    nothing holds a roll when it is cast: the talents, the lift, and a critical add what they
+    add.
+  - **The lift** (`SpellRules::lift`, `Actor::spell_lift`; until the ladders replace it, the
+    spell scaling design S2): a caster's `damage` scales' sum (Σ weight × modifier), never below
+    0, plus Keen mind's 10 for its school or element and the `spell_lift` of the magic items
+    worn (Potent; §8 "Magic items"), is the percent its dice are lifted by, unbounded; the dice
+    gain `max_dice × lift / 100`, rounded down (`SpellDice::lifted`). Only the caster's own
+    casts (paid in mana) are lifted: a scroll read and a wand used cast with none. Derived at
+    cast time; nothing saved.
   - **Casting** (`World::cast_spell`, `world/cast.rs`; `Action::Cast`, `use:arcane_bolt:12,5`):
-    - **Cost** (the one hook, `Actor::spell_cost`): `SpellRules::mana_with`: the tier's base
-      cost × (1 + `overreach_cost` % per tier above the caster level's tier, that percent cut by
-      Overreach's −33 %) × the shape's percent (a
+    - **Cost** (the one hook, `Actor::spell_cost`): `SpellRules::mana`: the spell's level, at
+      least 1 (no caster level anywhere in it: a known spell is cast at its level's mana, and
+      the pool is the gate) × the shape's percent (a
       burst's at its own `radius`) × the resolution's `cost` percent × (100 + the summed
       `spell_cost_percent` of what is worn, `data/objects/`: chain mail 10, scale 20, banded 30,
       plate 40, great helm and large shield 10, tower shield 20; each piece's less its own
@@ -390,13 +390,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
       same way, and the items worn their `spell_duration` (of Lingering) (by default Presence, a degree per 2 points; the hexes Presence and Willpower,
       `SpellRules::lengthened`; the status's `max` holds it: Blessed, Hexed, Weakened, and
       Sluggish go to 3, each degree its `eases` again).
-    - **Dice**: the spell's at the caster level with the dice its lift holds
-      (`SpellDice::lifted`), then the talents' (Scroll adept's and Archmage's per die, Empower's
-      die), and every roll held to the caster's lifted cap (`Actor::spell_cap`; a critical's
-      too). A spell scroll read with those talents
-      (`read_spell`) is held the same way, to the cap of the spell it teaches, or to its own
-      most if the scroll rolls more of itself (the scroll of lightning's 4d6): the talents lift
-      a roll toward a cap, never past it.
+    - **Dice**: the spell's at the caster level (grown from its own level) with the dice its
+      lift gives (`SpellDice::lifted`), then the talents' (Scroll adept's and Archmage's per
+      die, Empower's die); nothing holds the roll. A spell scroll read with those talents
+      (`read_spell`) rolls them the same way.
     - **Resolution**: `area` (burst, cone, line) strikes everyone in it with one roll, in
       ascending actor id order, no roll to hit, Evasion halving (`World::spell_hurts`),
       resistances taking their share, no armour; `auto` (ray, bolt) strikes the first creature
@@ -422,7 +419,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the `caster_level` talent effect (racial and birth-sign gifts are talents; flat, or `value`
     per `per_levels` character levels: the wizard's Arcane training, +1 per 5) and affix effect;
     never below 0, and at least 1 for anyone whose maximum mana is
-    above 0. It sets learning, the cost of overreach, and a spell's dice. The player knows
+    above 0. It sets learning (and, until the ladders replace them, a spell's dice); never a
+    spell's mana (decisions 1 and 10). The player knows
     it: the dump `stats` layer's `Caster level N` (after the scores), JSON dumps' `caster_level`
     (`PerceptionView::own_caster_level`).
   - **Learning** (`world/learn.rs`, `content/learning.rs`; #396): a character knows a set of
@@ -440,26 +438,29 @@ developer notes (CLAUDE.md, `docs/dev/`).
       `study`). Identification and learning are separate: any identified scroll whose spell the
       player does not know may be studied, read or not. A scroll of a known spell still reads,
       sells, and gives as any other.
-    - **Time**: `(tier + 1) × turns_per_tier` (100: ten minutes at tier 0) turns of the `study`
-      action (`data/actions.toml`, 1000), passed like a meal (`World::keep_at`); Quick study takes
+    - **Time**: `turns_base + turns_per_level × level` (100 and 20: ten minutes and two a spell
+      level; Fireball, level 11, 32 minutes) turns of the `study` action (`data/actions.toml`,
+      1000), passed like a meal (`World::keep_at`); Quick study takes
       half. It stops as a rest does (a creature that disturbs a rest comes into view, a message
       is said: a blow lands, a status begins); an interrupted study loses the time and keeps the
       scroll (design §14 q1). Once begun, the player cannot stop it themselves.
     - **The check**, as the last turn ends, on the scroll used up (Spell recall never keeps a
-      studied scroll, design §14 q7): overreach is the spell's tier less the tier the caster
-      level has reached. At 0 or less the spell is learned, no draw. Above, a 2d12 check with
+      studied scroll, design §14 q7): overreach is the spell's level less the caster level. At
+      0 or less the spell is learned, no draw. Above, a 2d12 check with
       the Intelligence modifier + the skills' `study` benefit (Spellcraft and Decipher script,
       each value ÷ 10, at most 20) + the class's `affinity` with the spell's school
       (`data/classes/`, −10 to 10) + Quick study's bonus (2), against `base` (12) +
-      `per_overreach` (4) × overreach + the tiers known (a cantrip counting 1) ÷
-      `known_per_point` (10) (`data/study.toml`). Made: "…you have learned Frost."
+      `per_overreach` (1) × overreach′ + the sum of the levels of the spells known ÷
+      `known_per_point` (20) (`data/study.toml`), overreach′ being the overreach with
+      Overreach's third off, rounded down (`study { overreach_percent = -33 }`). Made: "…you
+      have learned Frost."
     - **Failure**: "The words twist away from you, and the scroll crumbles to dust.", then a
       **mishap** (`data/mishaps/`, one file each): one draw by weight among those of the band
-      (slight at overreach 1, bad from `bad_from` (2), terrible from `terrible_from` (4)) and
+      (slight below `bad_from` (6) levels of overreach, bad from it, terrible from
+      `terrible_from` (15)) and
       the lucky ones, its message, then its effect: nothing; a status (Sluggish, Weakened,
       Hexed; Blessed for a lucky one); the scroll's own spell going off on the reader (its
-      burst around them, its bolt through their cell, held to the taught spell's cap; a death by
-      it is the scroll's); a share of
+      burst around them, its bolt through their cell; a death by it is the scroll's); a share of
       the mana lost; a teleport on the level (the teleport trap's); a stat training mark lost;
       a drain (`World::drain`: a Willpower check or points off a stat for good); a hostile
       summoned next to the reader (a dretch); or, lucky, a training mark of Intelligence or the
@@ -472,7 +473,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     - **Shown**: the chance in words only (`StudyRules::words`: "certain", "easy" from 96 of 144
       ways, "a struggle" from 36, "far beyond you"); the study list
       (`PerceptionView::studies`) and its dialog; the dump `spells` layer (known spells with
-      tier and cost, then the scrolls one could study with the chance in words) and JSON's
+      spell level and cost, `Fireball (level 11, 26 mana)`, then the scrolls one could study
+      with the chance in words) and JSON's
       `spells` and `studies`; the exact odds only in the dev `progress` layer.
 - **Resources** (`warlock-core/src/resource.rs`, the pools and time's rules;
   `content/resource.rs`, the data; `world/resource.rs`, applying them; #225): alternative

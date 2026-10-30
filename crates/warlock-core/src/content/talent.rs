@@ -400,9 +400,18 @@ pub enum TalentEffect {
     LootMagicPercent { value: i32 },
     /// Reading a scroll takes this percent more time (negative: less; Scroll savant).
     ReadPercent { value: i32 },
-    /// Studying a spell (spec §8 "Spells"): `bonus` points off the check's difficulty, and it
-    /// takes `percent` more time (negative: less; Quick study).
-    Study { bonus: i32, percent: i32 },
+    /// Studying a spell (spec §8 "Spells"): `bonus` points off the check's difficulty, it
+    /// takes `percent` more time (negative: less; Quick study), and its overreach counts
+    /// `overreach_percent` more in the check (negative: less, rounded down; Overreach, the
+    /// spell scaling design §7.2). Each defaults to 0.
+    Study {
+        #[serde(default)]
+        bonus: i32,
+        #[serde(default)]
+        percent: i32,
+        #[serde(default)]
+        overreach_percent: i32,
+    },
     /// A scroll it reads is not used up, by this chance in percent (one gameplay draw a read;
     /// Spell recall).
     ScrollKept { chance: u8 },
@@ -954,15 +963,11 @@ pub enum TalentEffect {
     },
     /// Its spells cost this percent more mana (negative: less; Archmage, Empower), at least 1.
     SpellManaPercent { value: i32 },
-    /// The mana a spell above its caster level's tier costs over its price, this percent more
-    /// (negative: less; Overreach), on the tier table's `overreach_cost`
-    /// ([`crate::content::SpellRules::mana_with`]).
-    OverreachCostPercent { value: i32 },
     /// Its spells that carry the chosen tag (the talent takes a `school` choice: a school or an
     /// element) cost `cost` percent more mana (negative: less), reach `reach` cells farther,
-    /// never past the spell's own caps (School focus; magic design §6, §10), and may have their
-    /// cap lifted `lift` points more than their tier's `max_lift` (Keen mind; the combat
-    /// progression design §7). Each defaults to 0.
+    /// never past the spell's own caps (School focus; magic design §6, §10), and have their
+    /// dice lifted `lift` points more (Keen mind; the combat progression design §7). Each
+    /// defaults to 0.
     SchoolFocus {
         #[serde(default)]
         cost: i32,
@@ -1865,9 +1870,19 @@ impl TalentEffect {
             TalentEffect::Study {
                 bonus: b,
                 percent: p,
+                overreach_percent: o,
             } => {
-                bonus(*b)?;
-                percent(*p)
+                // Each may be 0, not all three.
+                if (*b, *p, *o) == (0, 0, 0) {
+                    return Err("`study`: bonus, percent, and overreach_percent not all 0".into());
+                }
+                if *b != 0 {
+                    bonus(*b)?;
+                }
+                for v in [*p, *o].into_iter().filter(|v| *v != 0) {
+                    percent(v)?;
+                }
+                Ok(())
             }
             TalentEffect::LauncherRange { value, skill } => {
                 let table = content.weapon_skills();
@@ -1913,7 +1928,6 @@ impl TalentEffect {
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
             | TalentEffect::SpellManaPercent { value }
-            | TalentEffect::OverreachCostPercent { value }
             | TalentEffect::SkyFootstepsPercent { value }
             | TalentEffect::AttackNoisePercent { value }
             | TalentEffect::StepSlowdownPercent { value }
@@ -3351,8 +3365,7 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
                 .contains("per_levels is 0 to 20")
         );
         assert!(
-            bad("effects = [{ kind = \"overreach_cost_percent\", value = -200 }]")
-                .contains("a percent")
+            bad("effects = [{ kind = \"study\", overreach_percent = -200 }]").contains("a percent")
         );
         assert!(bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { stats = { toughness = 50 } }").contains("scores are"));
         assert!(

@@ -717,7 +717,7 @@ mod tests {
         files.insert(
             "data/spells/arcane_bolt.toml",
             "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
-             tier = 2\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
+             level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
              shape = \"cone\"\nresolution = \"area\"\nmax_length = 3\ndamage = { dice = \"2d6\" }\n",
         );
         let w = caster(Arc::new(Content::load(&files).expect("loads")), "wizard");

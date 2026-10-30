@@ -4,7 +4,7 @@
 id = "web"
 name = "Web"
 description = "Sticky strands burst where you aim them: everyone they reach is held where they stand a few turns."
-tier = 2
+level = 7
 school = "transmutation"
 kind = "hex"
 shape = "burst"

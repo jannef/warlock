@@ -292,7 +292,6 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("mana.md", mana::races_and_classes),
         ("mana-regeneration.md", mana::regeneration),
         ("mana-paces.md", mana::paces),
-        ("spell-tiers.md", spells::tiers),
         ("spell-shapes.md", spells::shapes),
         ("spell-resolutions.md", spells::resolutions),
         ("spell-casting.md", spells::casting),
@@ -300,7 +299,6 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("class-spells.md", spells::class_spells),
         ("spell-armour.md", spells::armour),
         ("wands.md", spells::wands),
-        ("wand-charges.md", spells::wand_charges),
         ("rods.md", spells::rods),
         ("study-chances.md", learning::chances),
         ("study-times.md", learning::times),
@@ -1336,11 +1334,9 @@ mod tests {
         assert!(text("mana-regeneration.md").contains("| 10 | 4 minutes |"));
         assert!(text("mana.md").contains("| Wizard | 12 |"));
         assert!(text("mana-paces.md").contains("| In a sanctuary | three times as fast |"));
-        assert!(text("spell-tiers.md").contains("| 0 (cantrip) | 1 | 1 | 6 |"));
-        assert!(text("spell-tiers.md").contains("| 9 | 60 | 56 | 90 |"));
         assert!(text("spell-shapes.md").contains("| cone | yes | ×1.6 |"));
         assert!(text("spell-shapes.md").contains("| burst, radius 3 | yes | ×3 |"));
-        assert!(text("spell-resolutions.md").contains("| touch | 120 % | ×0.7 |"));
+        assert!(text("spell-resolutions.md").contains("| touch | ×0.7 |"));
         assert!(text("spell-casting.md").contains("| Wizard | 100 % |"));
         let resources = text("resources.md");
         assert!(

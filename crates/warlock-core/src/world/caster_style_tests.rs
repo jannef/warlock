@@ -10,13 +10,13 @@ use crate::combat::Strike;
 use crate::content::{ContentFiles, WeaponSkillId};
 use crate::weapon_skills::WeaponSkills;
 
-/// The built-in content with the wizard's Arcane bolt (tier 2) as `body` says: its shape,
+/// The built-in content with the wizard's Arcane bolt (level 6) as `body` says: its shape,
 /// resolution, and dice (as `cast_tests` tries the spells the casters do not have).
 fn content_with_bolt(body: &str) -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     let text = format!(
         "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
-         tier = 2\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n{body}\n"
+         level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n{body}\n"
     );
     files.insert("data/spells/arcane_bolt.toml", &text);
     Arc::new(Content::load(&files).expect("the spell loads"))
@@ -246,11 +246,9 @@ fn a_touch_critical_is_said_staggers_and_never_passes_the_cap() {
         }
     }
     assert!(seen_critical && seen_staggered);
-    // Tier 2's cap for a touch: a critical (x5 at these ranks) is held to it.
-    let content = w.content().clone();
-    let bolt = content.spell(content.spell_id("arcane_bolt").expect("bolt"));
-    let cap = content.spell_rules().expect("rules").cap_of(bolt);
-    assert_eq!(most, cap);
+    // A critical (x5 at these ranks) is held by nothing (decision 16): past the old touch
+    // cap of 21.
+    assert!(most > 21, "{most}");
 }
 
 #[test]

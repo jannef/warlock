@@ -4,7 +4,7 @@
 id = "magic_missile"
 name = "Magic missile"
 description = "A dart of force toward a place you aim at: it never misses the first creature in its way."
-tier = 1
+level = 3
 school = "evocation"
 kind = "damage"
 shape = "bolt"

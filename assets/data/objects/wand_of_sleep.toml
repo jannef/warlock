@@ -1,7 +1,7 @@
 # A wand of sleep (spec §8 "Magic items": "Wands"): ready it in the missile weapon slot and
-# use it as a missile weapon (`t`), and it casts Sleep, a tier-2 spell, at its own caster
-# level, a charge a cast instead of mana. Its charges are its tier's (data/spells.toml); it is
-# never recharged. Level and frequency by its tier: the lower the tier, the commoner the wand.
+# use it as a missile weapon (`t`), and it casts Sleep, a level-6 spell, at its own caster
+# level, a charge a cast instead of mana. Its charges are its own; it is never recharged. Level
+# and frequency by its spell's level (objects/README.toml): the lower, the commoner the wand.
 [[object]]
 id = "wand_of_sleep"
 name = "wand of sleep"
@@ -18,3 +18,5 @@ frequency = 7
 
 [object.wand]
 spell = "sleep"
+charges = 9
+caster_level = 6

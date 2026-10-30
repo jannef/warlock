@@ -4,7 +4,7 @@
 id = "ray_of_frost"
 name = "Ray of frost"
 description = "A thin ray of cold toward a place you aim at: it strikes the first creature in its way, if it hits."
-tier = 0
+level = 1
 school = "evocation"
 kind = "damage"
 shape = "ray"

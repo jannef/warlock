@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Spells                                                   │
-                    │   b  Mend               tier 0, 1 mana, aimed            │
+                    │   b  Mend               level 1, 1 mana, aimed           │
                     │ Skills                                                   │
                     │   c  Decipher script    not usable yet                   │
                     │   d  Heal               on yourself                      │

@@ -1,7 +1,8 @@
-//! The Spellcraft talents and the casters' reworked ones (#400; the magic design §10):
-//! Overreach on the overreach surcharge, School focus on its tag's cost and reach, Arcane
-//! training on the wizard's caster level, and the cap that holds whatever talents a caster
-//! has, spell scrolls read by Empower and Archmage included.
+//! The Spellcraft talents and the casters' reworked ones (#400; the magic design §10, the spell
+//! scaling design §7.2): Overreach on the study check, School focus on its tag's cost and
+//! reach, Arcane training on the wizard's caster level, and every talent combination casting
+//! with nothing holding its roll (decision 16), spell scrolls read by Empower and Archmage
+//! included.
 
 use super::caster_tests::{kobold, reach, sp, world_with};
 use super::*;
@@ -15,41 +16,35 @@ static BUILTIN: LazyLock<Arc<Content>> =
 fn cost_and_range(w: &World, spell: &str) -> (i32, Option<i32>) {
     let content = w.content().clone();
     let def = content.spell(sp(spell));
-    let level = w.caster_level(w.state.player);
     let me = w.state.player();
     (
-        me.spell_cost(&content, def, level),
+        me.spell_cost(&content, def),
         me.spell_reach(&content, def).range,
     )
 }
 
 #[test]
-fn overreach_cuts_only_the_surcharge() {
+fn overreach_counts_a_third_less_in_the_study_and_never_touches_mana() {
     let mut w = world_with(BUILTIN.clone(), "wizard");
-    let rules = BUILTIN.spell_rules().expect("the tier table");
     let level = w.caster_level(w.state.player);
-    assert_eq!(rules.tier_of(level), 0, "a level-1 wizard is at tier 0");
-    let (fireball, frost) = (
-        cost_and_range(&w, "fireball").0,
-        cost_and_range(&w, "ray_of_frost").0,
-    );
+    assert_eq!(level, 1, "a level-1 wizard");
+    let odds = |w: &World| {
+        let character = w.state.character.as_ref();
+        study_odds(w.state.player(), &BUILTIN, character, level, sp("fireball")).expect("odds")
+    };
+    let (fireball, before) = (cost_and_range(&w, "fireball").0, odds(&w));
     w.player_mut().talents.take("overreach", None);
-    let (cut, same) = (
-        cost_and_range(&w, "fireball").0,
-        cost_and_range(&w, "ray_of_frost").0,
+    let (cost, after) = (cost_and_range(&w, "fireball").0, odds(&w));
+    // A known spell costs its level's mana whoever casts it: no surcharge to cut.
+    assert_eq!((fireball, cost), (26, 26));
+    // Fireball, level 11, ten levels over: ten points harder, six with a third off (rounded
+    // down); the overreach itself (the mishap's band) stays ten.
+    assert_eq!((before.overreach, after.overreach), (10, 10));
+    let (difficulty, cut) = (
+        before.check.expect("a check").1,
+        after.check.expect("a check").1,
     );
-    assert_eq!(
-        same, frost,
-        "a spell at the caster's tier costs what it did"
-    );
-    let def = BUILTIN.spell(sp("fireball"));
-    // Three tiers over: × (1 + 3 × 0.5) before, × (1 + 3 × 0.335) with a third off.
-    assert_eq!(fireball, rules.mana(def, level, 0));
-    assert_eq!(cut, rules.mana_with(def, level, 0, -33));
-    assert!(
-        cut < fireball && cut > rules.mana(def, 60, 0),
-        "{cut} against {fireball}"
-    );
+    assert_eq!(difficulty - cut, 4, "{difficulty} against {cut}");
 }
 
 #[test]
@@ -127,7 +122,7 @@ fn cast_hurt(w: &mut World, spell: &str, target: ActorId, dx: i32) -> i32 {
 }
 
 #[test]
-fn the_cap_holds_with_every_talent_combination() {
+fn every_talent_combination_casts_with_nothing_holding_it() {
     let mut w = world_with(BUILTIN.clone(), "wizard");
     reach(&mut w, 60);
     w.player_mut().mana_base = 500;
@@ -135,7 +130,6 @@ fn the_cap_holds_with_every_talent_combination() {
         w.player_mut().spells.insert(sp(spell));
     }
     let target = kobold(&mut w, 3, 10_000);
-    let rules = BUILTIN.spell_rules().expect("the tier table");
     let optional: [(&str, Option<&str>); 5] = [
         ("empower", None),
         ("archmage", None),
@@ -151,16 +145,9 @@ fn the_cap_holds_with_every_talent_combination() {
             }
         }
         for spell in ["fireball", "magic_missile", "ray_of_frost"] {
-            // The caster's cap: the spell's, lifted by the stats its scales name.
-            let cap = w
-                .state
-                .player()
-                .spell_cap(&BUILTIN, BUILTIN.spell(sp(spell)));
-            assert!(cap >= rules.cap_of(BUILTIN.spell(sp(spell))));
             let mut most = 0;
             for _ in 0..12 {
                 let hurt = cast_hurt(&mut w, spell, target, 3);
-                assert!(hurt <= cap, "{spell} with {mask:05b}: {hurt} over {cap}");
                 most = most.max(hurt);
             }
             assert!(most > 0, "{spell} with {mask:05b} was cast");
@@ -169,9 +156,9 @@ fn the_cap_holds_with_every_talent_combination() {
 }
 
 #[test]
-fn empowered_scrolls_stop_at_the_cap_of_the_spell_they_teach() {
-    // The scroll of lightning rolls 4d6 of itself (24 at most, over Lightning bolt's 19): its
-    // own roll stays, but an archmage's +2 a die lifts it no farther.
+fn empowered_scrolls_roll_the_readers_talents_with_nothing_holding_them() {
+    // The scroll of lightning rolls 4d6 of itself (24 at most); an archmage's more a die lifts
+    // it past that (decision 16).
     let mut w = world_with(BUILTIN.clone(), "wizard");
     reach(&mut w, 60);
     assert!(w.state.player().talent_mods(w.content()).spell_per_die > 0);
@@ -198,8 +185,7 @@ fn empowered_scrolls_stop_at_the_cap_of_the_spell_they_teach() {
             target: Some(crate::action::ReadTarget::Cell(at)),
         });
         let hurt = 10_000 - w.state.actors[&target].hp;
-        assert!(hurt <= 24, "{hurt}");
         most = most.max(hurt);
     }
-    assert_eq!(most, 24, "the scroll's own most");
+    assert!(most > 24, "past the scroll's own most: {most}");
 }

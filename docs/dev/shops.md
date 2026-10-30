@@ -22,7 +22,7 @@ them). Every object has a `value` (required; test fixtures with their own object
 rooms, rooms levels only, from the map stream, by the branch's `ShopOdds`: its own `shops` table
 or the shared odds, docs/dev/mapgen.md; each stack after `always` drawn from what the kind
 stocks by its loot `frequency`, 100 for what is never loot, `magic::loot::pick_weighted`, one
-draw, so spell scrolls come by tier, #397) whose keeper is spawned at its post; at
+draw, so spell scrolls come by spell level, #397) whose keeper is spawned at its post; at
 instantiation it becomes a `world::Shop` in `LevelState::shops` (saved, hashed; format 30): the
 keeper's actor id, its `exits` (the cells around the floor that could be walked onto or were
 doors when the level was made: the door), `unpaid` (what the player owes, counted by goods: an

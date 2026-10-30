@@ -895,8 +895,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     level with a treasure room says which way the nearest lies (`world/treasury.rs`).
     The `spells` system (the magic design §10, #400) came with the **Spellcraft** tree: Quick
     study (free, #396: study +2, study time −50 %), Overreach (level 6,
-    `overreach_cost_percent` −33: the surcharge per tier above the caster level's tier a third
-    smaller, `SpellRules::mana_with`), and School focus (free, `choice = "school"`: a school or
+    `study { overreach_percent = -33 }`, the spell scaling design §7.2: a spell's levels over
+    the caster level count a third fewer, rounded down, in the study check;
+    `TalentMods::study_overreach_percent`), and School focus (free, `choice = "school"`: a school or
     an element, the spell tags of §8 "Spells"; `school_focus` cost −10 %, reach +1: a spell
     carrying the tag costs a tenth less and reaches a cell farther, range or length, never past
     its cap, `TalentMods::focus`); the casters' Empower, Archmage, Scroll adept, Frugal caster,
@@ -1026,59 +1027,58 @@ developer notes (CLAUDE.md, `docs/dev/`).
     migrated by #395; the guaranteed lists of #397): a class ability's talent effect
     `{ kind = "spell", spell = "ID" }` gives the spell of that id in `data/spells/` (each
     given by one talent, which several classes may share: Blessing, Mend, Barkskin), cast by
-    the one cast path: tier, cost, reach, dice, and resolution are the spell's. A full caster
+    the one cast path: level, cost, reach, dice, and resolution are the spell's. A full caster
     has a cantrip at level 1 and about four spells in all; the bard, the paladin, and the
     ranger a cantrip or a boon (§8 "Spells", "Guaranteed spells").
     `Ability::Spell` in the menu's own **Spells** group (`Source::Spell`, after Class) with its
-    tier and what it costs the player now ("tier 2, 11 mana"; short of mana "tier 2, 11 mana:
-    too little", `ability::spell_unavailable`, which needs the caster level), `Action::Cast`
+    spell level and what it costs the player now ("level 6, 11 mana"; short of mana "level 6,
+    11 mana: too little", `ability::spell_unavailable`), `Action::Cast`
     (`use:blessing`, `use:arcane_bolt:12,5`, the replay text unchanged). They **cost mana
     instead of a cooldown** (spec §8 "Mana"); refused, no time and no mana, without the spell,
     without the cell, out of range, with no hostile seen there to hex, nothing to cure, not
     hurt, or (Call lightning) under a roof or below ground. Their kills are the caster's, and
     one that kills its caster is `Cause::Spell` ("Killed by their own fireball"). Too close a
     burst asks first, as a scroll's does ("Cast it anyway?").
-  - **Priest**: Mend (tier 0, at 1: a touch, 1d3 back; 1 mana), Blessing (tier 1, at 3:
-    Blessed 10 min a degree: +1 to hit, Willpower +1; 3 mana), Cure wounds (tier 1, at 3: a
-    touch, 2d6; 2 casts; 2 mana), Remove disease (tier 3, at 12: every disease and Poisoned;
+  - **Priest**: Mend (level 1, at 1: a touch, 1d3 back; 1 mana), Blessing (level 3, at 3:
+    Blessed 10 min a degree: +1 to hit, Willpower +1; 3 mana), Cure wounds (level 3, at 3: a
+    touch, 2d6; 2 casts; 2 mana), Remove disease (level 11, at 12: every disease and Poisoned;
     11 mana),
     Ward of faith (Deflection +1; the design's "Shield of faith", renamed: that id is the
     paladin's), Purify (rotten food never sickens nor exposes; no draw), Divine health and
     Smite (the paladin's own talents, so Smite works only for a priest of the good side), Miracle, Saint
     (healing +100 %).
-  - **Druid**: Wild empathy (`beast_friend`), Spark (tier 0, at 1: a bolt, 1d4 electricity;
-    1 mana), Barkskin (tier 1, at 3: Dodge +2 a minute a degree; 3 mana), Woodland stride (the ranger's: forest floor,
+  - **Druid**: Wild empathy (`beast_friend`), Spark (level 1, at 1: a bolt, 1d4 electricity;
+    1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Woodland stride (the ranger's: forest floor,
     bush, reeds, tall grass, marsh as grass), Weather sense (a 3-hour forecast), Nature's ward
     (wading never sickens; poison eases twice as fast), Winter's friend (ice holds the body's
-    weight alone, plunges never hurt, climbing out is free), Call lightning (at 12; tier 3: a line of
+    weight alone, plunges never hurt, climbing out is free), Call lightning (at 12; level 11: a line of
     8 cells, to 10, 2d6 electricity, a die more per 4 caster levels to 3d6, a thunderclap; open
     sky only; 20 mana), Sun and moon (sun
-    healing +50 %, night sight +1), Flame and frost (two spells, Flame: tier 3, the fireball's
-    burst, 3d6 fire, radius 2, blast, 26 mana; Frost: tier 2, 2d6 cold, freezes water, 14
+    healing +50 %, night sight +1), Flame and frost (two spells, Flame: level 12, the fireball's
+    burst, 3d6 fire, radius 2, blast, 29 mana; Frost: level 6, 2d6 cold, freezes water, 14
     mana), Timeless body (hunger −50 %; a
     failed disease check does nothing, so a disease never progresses).
   - **Wizard**: Scroll adept (reading −50 %; +1 on every die of spells and spell scrolls),
-    Ray of frost (tier 0, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Arcane training
+    Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Arcane training
     (at 1: caster level +1 per 5 character levels, `caster_level` with `per_levels`), Magic missile
-    (tier 1, at 3: never misses, 1d4 force, to 2d4; 3 mana), Arcane lore (a magic item carried
-    an hour is identified), Spell recall (the Scholar talent, handed out), Burning hands (tier
-    1, at 12: a cone of 3 cells, 1d4 fire, to 2d4; 5 mana), Arcane bolt (tier 2, at 18: a line
+    (level 3, at 3: never misses, 1d4 force, to 2d4; 3 mana), Arcane lore (a magic item carried
+    an hour is identified), Spell recall (the Scholar talent, handed out), Burning hands (level
+    4, at 12: a cone of 3 cells, 1d4 fire, to 2d4; 6 mana), Arcane bolt (level 6, at 18: a line
     of 6 cells, to 8, 2d6 force; 11 mana), Mage armour (Deflection +2 in no body armour),
     Empower (spells and spell scrolls a die more; spells' mana −10 %), Arcane mastery (mana
     +100 %), Archmage (+2 on every die; spells' mana −50 %, at least 1). `spell_power` reads in
-    `TalentMods::spell_damage` for spells and `read_spell` alike; a spell's roll is then held to
-    its cap, and a scroll's to the cap of the spell it teaches (Empower and Archmage bring it to
-    the cap sooner and lower costs; they never lift a cap, #400). The wizard's bonus talents
+    `TalentMods::spell_damage` for spells and `read_spell` alike; nothing holds the roll
+    after (the spell scaling design, decision 16). The wizard's bonus talents
     come from the Scholar and Spellcraft trees.
   - **Witch**: Herb lore (rotten food −50 %, a corpse's `on_eat` harm and vomiting never, the
-    angelica root heals 1d6), Evil eye (tier 0, at 1: Hexed 1 min a degree: −2 to hit; 1 mana),
-    Hex of weakness (tier 1, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Poison lore
+    angelica root heals 1d6), Evil eye (level 0, at 1: Hexed 1 min a degree: −2 to hit; 1 mana),
+    Hex of weakness (level 3, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Poison lore
     (poison eases twice as fast; +2 damage on hits at a Poisoned creature, `World::lore_blow`),
-    Cause wounds (tier 1, at 12: a touch that rolls to hit, 1d6 necrotic, to 2d6; 2 mana),
+    Cause wounds (level 4, at 12: a touch that rolls to hit, 1d6 necrotic, to 2d6; 3 mana),
     Second sight (noticing
-    as Spot +2, searching +2), Curse of sloth (tier 1: Sluggish 1 min a degree: every action
-    costs 150 %; 3 mana), Blight (tier 2: a burst of 2d6 poison, radius 2, and two degrees of
-    Poisoned on everyone it harms; 14 mana), Cauldron (a corpse's harm never; its stat marks and widening chances doubled; a fresh one heals 1d4),
+    as Spot +2, searching +2), Curse of sloth (level 3: Sluggish 1 min a degree: every action
+    costs 150 %; 3 mana), Blight (level 7: a burst of 2d6 poison, radius 2, and two degrees of
+    Poisoned on everyone it harms; 17 mana), Cauldron (a corpse's harm never; its stat marks and widening chances doubled; a fresh one heals 1d4),
     Hag's bargain.
   - **Reprieves** (`reprieve`, `World::reprieve` from `hurt`, after Rise from the ashes): once
     in a life (`Progress::once`), what would kill the player (not starving or choking) leaves
@@ -1224,7 +1224,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     hit, a threat range of 18-24, a critical's damage rolled once more) and a caster style
     ("Fighting styles" below). Its benefit adds to the spell's to-hit scales (§8 "Spells")
     in the roll's `Profile` (`Profile::with`); a critical multiplies the damage the spell
-    rolled, and the result is still held to the spell's lifted cap. A cast paid in mana that
+    rolled, and nothing holds the result (decision 16). A cast paid in mana that
     reaches a creature earns marks in both by the same rules as a blow (against the target's
     level), and the skills' triggered abilities fire on its hit and critical
     (`World::resolve_triggers`); a scroll read or a wand used aims with Dexterity alone and
@@ -1368,7 +1368,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the ammunition ready, else a throw of what is ready to throw; nothing without, no draw),
     `parry_missiles` (Measure: Parry counts against shots and throws, which it otherwise never
     does, "Combat" §8c), `reflect_spell` (Spell reflection: the blocked spell is cast again
-    from the actor's cell at its caster, as the caster cast it, its caster level, lifted cap,
+    from the actor's cell at its caster, as the caster cast it, its caster level, dice,
     to-hit, and riders, rolling its own attack against the caster's Defence; no mana spent
     again, nothing for the actor; at most `per_turn` (1) a turn of the actor's, and a reflected
     spell is never reflected again. Bursts, cones, lines, and hexes roll no attack and are never

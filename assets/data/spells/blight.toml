@@ -3,7 +3,7 @@
 id = "blight"
 name = "Blight"
 description = "A burst of blight where you aim it: it withers flesh and poisons everyone it reaches."
-tier = 2
+level = 7
 school = "necromancy"
 kind = "damage"
 shape = "burst"

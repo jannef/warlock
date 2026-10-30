@@ -216,7 +216,7 @@ ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, 
 marked `Duelist 1 (0%), in use`), `attacks` (the player's ready attacks as the character
 screen shows them: `Main hand long sword: +4 to hit, 1d9+2 slashing`, `Off hand dagger: ...`,
 `Missile short bow: +3 to hit, 1d6 piercing, range 10`; unidentified magic left out), `talents` (the player's talents in the order taken, `Hardy
-2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Well dressed (class)`), `spells` (the spells the player knows with tier and cost, then the
+2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Well dressed (class)`), `spells` (the spells the player knows with spell level and cost, `Fireball (level 11, 26 mana)`, then the
 scrolls they could study with the chance in words: `study c, a scroll of frost: Frost, a
 struggle`), `abilities` (the player's abilities in the abilities menu's
 order, each with its source and what it asks for or why it cannot be used now: `Shield bash
@@ -241,8 +241,8 @@ talent, 1 bonus talent`, the talents the
 player may take now by id with their choices, the first kills that paid, each rolled quest's
 draw and the size of its pool now, `roll slug_charm scroll_of_lightning x1 of 4`, the named
 monsters dead, `slain fire_drake`, the stat training
-marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`, and the exact study odds, `study c frost: overreach 2, +0
-against 20, 15/144`, **dev-only**),
+marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`, and the exact study odds, `study c frost: overreach 5, +0
+against 17, 36/144` (the overreach in spell levels), **dev-only**),
 `rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
@@ -334,7 +334,7 @@ file). Topics:
 - `docs/dev/progression.md` — talents (data, `TalentMods`, the hooks), the picks a level brings and their refusal, the `levels` stream, the coverage policy
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage
 - `docs/dev/mana.md` — the second pool: its maximum, regeneration in the status loop, every modifier's one hook, spending, the dev drain
-- `docs/dev/spells.md` — the spell data: the tier table, the `[[spell]]` files and their load-time cap check, tags, caster level
+- `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, caster level
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)

@@ -4,7 +4,7 @@
 id = "fireball"
 name = "Fireball"
 description = "A ball of fire that bursts where you aim it: it breaks walls and melts ice."
-tier = 3
+level = 11
 school = "evocation"
 kind = "damage"
 shape = "burst"

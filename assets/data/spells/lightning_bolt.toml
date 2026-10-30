@@ -4,7 +4,7 @@
 id = "lightning_bolt"
 name = "Lightning bolt"
 description = "A bolt of lightning from you toward a place you aim at and on: everyone on its line is struck."
-tier = 3
+level = 11
 school = "evocation"
 kind = "damage"
 shape = "line"

@@ -408,23 +408,22 @@
 #                                 that leaves the status
 #   The casters' (spec §8 "Class abilities"; the priest's, druid's, wizard's, witch's):
 #   spell_power { per_die, dice }   its spells and spell scrolls add per_die to every die (0 to
-#                                 5) and roll dice dice more (0 to 5); a spell's damage never
-#                                 past its cap (../spells.toml)
+#                                 5) and roll dice dice more (0 to 5)
 #   spell_mana_percent { value }  its spells cost that percent more mana (negative: less; at
 #                                 least 1)
 #   The Spellcraft tree's (the magic design §10, docs/dev/spells.md):
 #   caster_level { value, per_levels }   caster level that much higher (-20 to 20); with
 #                                 per_levels (1 to 20), value per that many character levels
-#   overreach_cost_percent { value }   what a spell above its caster level's tier costs over its
-#                                 price, that percent more (negative: less)
 #   school_focus { cost, reach, lift }   (choice school) its spells of the chosen school or
 #                                 element cost that percent more mana (negative: less), reach
 #                                 that many cells farther (0 to 5), never past the spell's own
-#                                 caps, and may have their damage cap lifted that many points
-#                                 past their tier's `max_lift` (0 to 100; Keen mind); each
-#                                 default 0, not all 0
-#   study { bonus, percent }      studying a spell: bonus points off the check's difficulty, and
-#                                 that percent more time (negative: less)
+#                                 caps, and have their dice lifted that many points more (0 to
+#                                 100; Keen mind); each default 0, not all 0
+#   study { bonus, percent, overreach_percent }   studying a spell: bonus points off the check's
+#                                 difficulty, that percent more time (negative: less), and the
+#                                 spell levels of overreach counted that percent more in the
+#                                 check, rounded down (negative: less; Overreach); each default
+#                                 0, not all 0
 #   deflection_unarmoured { value }   Deflection, only while nothing is worn in a body armour slot
 #   purify                        rotten food neither sickens it nor exposes it to a disease
 #   corpse_harmless               a fresh corpse's own harm (on_eat sickness, vomiting) never

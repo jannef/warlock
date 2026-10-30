@@ -7,8 +7,8 @@
 //! ```toml
 //! [object.wand]
 //! spell = "fireball"   # an aimed spell of data/spells/
-//! charges = 7          # default: the tier's `wand_charges` in data/spells.toml
-//! caster_level = 12    # default: the tier's comfortable caster level
+//! charges = 7          # required: the wand's own, 1 to 99
+//! caster_level = 12    # default: the spell's level, at least 1
 //! ```
 
 use super::{Content, MAX_LEVEL, SpellId};
@@ -22,7 +22,7 @@ pub const MAX_WAND_CHARGES: u8 = 99;
 #[serde(deny_unknown_fields)]
 pub struct WandSpec {
     spell: String,
-    charges: Option<u8>,
+    charges: u8,
     caster_level: Option<u8>,
 }
 
@@ -39,10 +39,10 @@ pub struct Wand {
 
 impl WandSpec {
     /// Resolves it against the spells (loaded before objects): an aimed spell (a wand is
-    /// aimed as a missile weapon is), charges 1 to [`MAX_WAND_CHARGES`] (default the tier's), a
-    /// caster level 1 to [`MAX_LEVEL`] (default the tier's comfortable one).
+    /// aimed as a missile weapon is), charges 1 to [`MAX_WAND_CHARGES`] (its own, required), a
+    /// caster level 1 to [`MAX_LEVEL`] (default the spell's level, at least 1:
+    /// [`super::SpellData::grows_from`]).
     pub(super) fn resolve(self, content: &Content) -> Result<Wand, String> {
-        let rules = (content.spell_rules()).ok_or("`wand`: wands need data/spells.toml")?;
         let spell = (content.spell_id(&self.spell))
             .ok_or_else(|| format!("`wand`: no spell `{}` in data/spells/", self.spell))?;
         let def = content.spell(spell);
@@ -52,12 +52,11 @@ impl WandSpec {
                 self.spell
             ));
         }
-        let tier = usize::from(def.tier);
-        let charges = self.charges.unwrap_or(rules.wand_charges[tier]);
+        let charges = self.charges;
         if !(1..=MAX_WAND_CHARGES).contains(&charges) {
             return Err(format!("`wand`: `charges` is 1 to {MAX_WAND_CHARGES}"));
         }
-        let caster_level = self.caster_level.unwrap_or(rules.comfortable[tier]);
+        let caster_level = self.caster_level.unwrap_or(def.grows_from());
         if !(1..=MAX_LEVEL).contains(&caster_level) {
             return Err(format!("`wand`: `caster_level` is 1 to {MAX_LEVEL}"));
         }

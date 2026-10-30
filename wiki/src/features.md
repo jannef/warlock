@@ -76,10 +76,10 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   aim it (a [fireball](magic.md#spell-fireball) read too close asks first), and what it kills is yours; [studied](magic.md#learning-spells-from-scrolls) with `L`, a
   scroll teaches you its spell for good; a [scroll of identify](scrolls.md#scroll-of-identify) tells you what an unidentified item
   is. They lie in the [dungeons](dungeons.md) and sell in general [stores](shops.md).
-- **[Magic](magic.md)** — [spells](magic.md#the-spells) of [tiers](magic.md#tiers) 0 ([cantrips](magic.md#tiers)) to 9, cast from the [abilities menu](abilities.md#the-abilities-menu) for [mana](mana.md#how-much) at your
-  [caster level](magic.md#caster-level): a few come with a casting [class](classes.md), the rest are learned from scrolls, and one far
-  above your tier is hard to learn and can go badly wrong. Rays and bolts, cones, lines, and
-  bursts; every spell's damage is held to its tier's [ceiling](magic.md#damage-and-its-cap). [Wands](magic.md#wands) cast their spell from their
+- **[Magic](magic.md)** — [spells](magic.md#the-spells) of [levels](magic.md#spell-levels) 0 to 70 ([cantrips](magic.md#spell-levels) at 0 and 1), cast from the [abilities menu](abilities.md#the-abilities-menu) for
+  [mana](mana.md#how-much) by its level: a few come with a casting [class](classes.md), the rest are learned from scrolls, and one far
+  above your [caster level](magic.md#caster-level) is hard to learn and can go badly wrong. Rays and bolts, cones, lines,
+  and bursts, each with dice of its own. [Wands](magic.md#wands) cast their spell from their
   charges at their own caster level, for anyone; [rods](magic.md#rods) do what no spell does (digging, sleep,
   terror, teleport other) for your own mana (see [Magic](magic.md)).
 - **[People and talk](npcs.md)** — [Cēaptūn](ascmearc.md#the-places) has folk to talk to: townsfolk on the square, Sister Hild in the

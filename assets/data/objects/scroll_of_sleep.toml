@@ -1,6 +1,6 @@
 # A scroll of sleep (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Sleep, a
-# tier-2 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
-# good. Level and frequency by its tier: the lower the tier, the commoner the scroll.
+# level-6 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_sleep"
 name = "scroll of sleep"

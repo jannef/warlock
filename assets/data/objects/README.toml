@@ -229,7 +229,12 @@
 #
 # Potions
 #
-# Scrolls
+# Scrolls. A spell's scroll (`kind = "spell"`, teaching a spell of spells/) takes its loot
+# numbers by convention (the spell scaling design §5.7; a template, not a rule): an item level
+# about half its spell's level, rounded up, at least 1 (1 at spell levels 0 and 1, 2 at 3 and 4,
+# 4 at 6 and 7, 6 at 11 and 12); a frequency of 60 at item level 1 falling to 20 at 6; a value
+# of 40 to 200 the same way. A wand's (`[object.wand]`): an item level about 3 + half its
+# spell's level (Fireball's 8), a frequency of 10 falling to 5, a value of 250 to 600.
 #
 # Food: a ration feeds a human for about a day.
 #

@@ -36,8 +36,8 @@
 #   name      what it is, without an article ("general store"), for the wiki
 #   title     its sign, with the keeper's name for `{keeper}` ("{keeper}'s General Store")
 #   stock     the classes generated shops stock (each item drawn from those objects by its loot
-#             `frequency`, objects.toml, 100 for what is never loot: a spell scroll of a low tier
-#             lies in a general store more often than one of a high tier)
+#             `frequency`, objects.toml, 100 for what is never loot: a spell scroll of a low spell
+#             level lies in a general store more often than one of a high level)
 #   always    objects a generated shop always lays out first, a stack of each (at most `items`'
 #             least): the general store always has scrolls of identify (spec §8 "Scrolls")
 #   never     objects a generated shop never lays out, though it stocks their class: elixirs

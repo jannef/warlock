@@ -4,7 +4,7 @@
 id = "light"
 name = "Light"
 description = "A pale, steady light gathers about you a while and goes where you go."
-tier = 0
+level = 0
 school = "evocation"
 kind = "buff"
 shape = "self"

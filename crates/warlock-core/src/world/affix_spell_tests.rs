@@ -73,10 +73,10 @@ bases = ["ring", "amulet"]
 tiers = [{ level = 1, min = 1, max = 5 }]
 "#;
 
-/// An attack ray of tier 2 (cap 18), 3d6, its cap lifted by Intelligence 10 % and Willpower 5 %
+/// An attack ray of level 6, 3d6, its dice lifted by Intelligence 10 % and Willpower 5 %
 /// a point: the wizard's Arcane bolt, its file replaced.
 const RAY: &str = "[[spell]]\nid = \"arcane_bolt\"\nname = \"Arcane bolt\"\ndescription = \"x\"\n\
-                   tier = 2\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
+                   level = 6\nschool = \"evocation\"\nkind = \"damage\"\ndamage_type = \"force\"\n\
                    shape = \"ray\"\nresolution = \"attack\"\nmax_range = 6\n\
                    damage = { dice = \"3d6\" }\n[spell.scales]\n\
                    damage = { intelligence = 10, willpower = 5 }\n";
@@ -145,16 +145,15 @@ fn of_thrift_cuts_every_mana_cost_until_taken_off() {
     let mut w = wizard(content(false));
     let content = w.content().clone();
     let bolt = content.class_spell(sp("arcane_bolt")).expect("the bolt");
-    let level = w.caster_level(w.state.player);
     assert_eq!((cost(&w, 10), cost(&w, 1), cost(&w, 0)), (10, 1, 0));
-    assert_eq!(w.state.player().spell_cost(&content, bolt, level), 11);
+    assert_eq!(w.state.player().spell_cost(&content, bolt), 11);
     ring(&mut w, "fixture_of_thrift", 20);
     assert!(!w.state.player().inventory.last().unwrap().is_identified());
     assert_eq!(cost(&w, 10), 8, "a fifth less, unidentified as it is");
     assert_eq!(cost(&w, 1), 1, "never below 1");
     assert_eq!(cost(&w, 0), 0);
     // 11 × 0.8 = 8.8: the spell's price, the menu's too.
-    assert_eq!(w.state.player().spell_cost(&content, bolt, level), 9);
+    assert_eq!(w.state.player().spell_cost(&content, bolt), 9);
     assert_eq!(w.perception().own_spell_cost(sp("arcane_bolt")), Some(9));
     // The dev drain spends through the same hook.
     w.player_mut().mana = 40;
@@ -252,7 +251,8 @@ fn the_magus_potent_and_lingering_join_the_scales() {
     let amulet = item(&w, "jade_amulet", "fixture_of_lingering", 2);
     wear(&mut w, player, "neck", amulet);
     assert_eq!(read(&w), (5, 0, 2), "the lift needs stats to lift by");
-    // Intelligence +10, Willpower +10: held to tier 2's 60, which Potent widens by 10 more.
+    // Intelligence +10, Willpower +10: 10 × 10 + 5 × 10, nothing holding it (decision 16);
+    // Potent adds its 10.
     scores(
         &mut w,
         &[
@@ -261,17 +261,16 @@ fn the_magus_potent_and_lingering_join_the_scales() {
             (Stat::Dexterity, 16),
         ],
     );
-    assert_eq!(read(&w).1, 60);
+    assert_eq!(read(&w).1, 150);
     let potent = item(&w, "iron_ring", "fixture_potent", 10);
     wear(&mut w, player, "right_ring", potent);
-    assert_eq!(read(&w).1, 70);
-    assert_eq!(w.state.player().spell_cap(&content, bolt), 30);
+    assert_eq!(read(&w).1, 160);
     // Keen mind's ten adds to it.
     w.player_mut().talents.take("keen_mind", Some("evocation"));
-    assert_eq!(read(&w).1, 80);
+    assert_eq!(read(&w).1, 170);
     run(&mut w, "remove:left_ring remove:right_ring remove:neck");
     scores(&mut w, &[(Stat::Dexterity, 16)]);
-    assert_eq!(read(&w), (3, 0, 0), "taken off");
+    assert_eq!(read(&w), (3, 10, 0), "taken off: Keen mind's ten stays");
 }
 
 #[test]

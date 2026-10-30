@@ -3,7 +3,7 @@
 id = "frost"
 name = "Frost"
 description = "A burst of bitter cold where you aim it: the water it reaches freezes."
-tier = 2
+level = 6
 school = "evocation"
 kind = "damage"
 shape = "burst"

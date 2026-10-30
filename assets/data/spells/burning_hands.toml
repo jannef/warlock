@@ -4,7 +4,7 @@
 id = "burning_hands"
 name = "Burning hands"
 description = "A fan of flame from your hands toward a place you aim at: everyone in it is burnt."
-tier = 1
+level = 4
 school = "evocation"
 kind = "damage"
 shape = "cone"

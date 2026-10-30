@@ -4,10 +4,10 @@
 //! `PerceptionView::abilities` (the one registry, `warlock_core::ability`) as the one paged list
 //! (`paged_list`), grouped by where each comes from under a header per source, lettered down each
 //! page from `a`. Each row has the ability's name and what it asks for ("in a direction"); a
-//! spell's says its tier and what it costs the player now first ("tier 2, 11 mana"), an active
-//! weapon ability its stamina ("3 stamina, in a direction"; never its time). One that cannot be
-//! used now is greyed out with why ("you hold no shield"), and choosing it says so instead. The
-//! selected ability's one-line description shows below the list.
+//! spell's says its spell level and what it costs the player now first ("level 6, 11 mana"),
+//! an active weapon ability its stamina ("3 stamina, in a direction"; never its time). One that
+//! cannot be used now is greyed out with why ("you hold no shield"), and choosing it says so
+//! instead. The selected ability's one-line description shows below the list.
 //!
 //! A letter, or Enter on the `>` row, uses an ability: the menu closes and the ability asks for
 //! what it needs, as its action would (a direction in the message line), then is applied as that
@@ -69,14 +69,14 @@ impl AbilitiesScreen {
                         Some(why) => why.reason(content),
                         None => needs(a.aim(content)).into(),
                     };
-                    // A spell says its tier and what it costs the player now, first; short of
-                    // mana, that it is too little; one cast at a place, that it is aimed (the
-                    // row has no room for more).
+                    // A spell says its spell level and what it costs the player now, first;
+                    // short of mana, that it is too little; one cast at a place, that it is
+                    // aimed (the row has no room for more).
                     let state = match a {
                         Ability::Spell(spell) => {
-                            let tier = content.spell_of(spell).map_or(0, |s| s.tier);
+                            let level = content.spell_of(spell).map_or(0, |s| s.level);
                             let cost = view.own_spell_cost(spell).unwrap_or(0);
-                            let head = format!("tier {tier}, {cost} mana");
+                            let head = format!("level {level}, {cost} mana");
                             match own.unavailable {
                                 Some(Unavailable::NoMana) => format!("{head}: too little").into(),
                                 Some(_) => format!("{head}: {state}").into(),

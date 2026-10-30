@@ -155,7 +155,7 @@ fn identifying_a_wand_tells_its_spell_and_charges() {
     assert!(
         lines
             .iter()
-            .any(|l| l.starts_with("Holds Magic missile (tier 1)")),
+            .any(|l| l.starts_with("Holds Magic missile (level 3)")),
         "{lines:?}"
     );
     assert!(lines.iter().any(|l| l == "12 charges left"), "{lines:?}");
@@ -215,7 +215,7 @@ fn a_wand_casts_at_its_own_level_and_wand_mastery_raises_it() {
     let content = w.content.clone();
     let fireball = content.object_id("wand_of_fireball").expect("a wand");
     let wand = content.object(fireball).wand.expect("a wand");
-    assert_eq!(wand.caster_level, 12, "tier 3's comfortable level");
+    assert_eq!(wand.caster_level, 12, "its own, given in its file");
     assert_eq!(wand.charges, 7);
     assert_eq!(w.state.player().wand_caster_level(&content, &wand), 12);
     w.player_mut().talents.take("wand_mastery", None);
@@ -289,12 +289,14 @@ fn wand_data_is_checked() {
         );
         Content::load(&files).map(|_| ()).map_err(|e| e.to_string())
     };
-    assert_eq!(load("spell = \"fireball\""), Ok(()));
+    assert_eq!(load("spell = \"fireball\"\ncharges = 7"), Ok(()));
     let refused = [
-        "spell = \"haste\"",
-        "spell = \"nothing\"",
+        "spell = \"haste\"\ncharges = 7",
+        "spell = \"nothing\"\ncharges = 7",
+        "spell = \"fireball\"",
         "spell = \"fireball\"\ncharges = 0",
-        "spell = \"fireball\"\ncaster_level = 0",
+        "spell = \"fireball\"\ncharges = 100",
+        "spell = \"fireball\"\ncharges = 7\ncaster_level = 0",
     ];
     for wand in refused {
         assert!(load(wand).is_err(), "{wand}");

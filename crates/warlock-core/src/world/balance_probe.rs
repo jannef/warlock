@@ -34,9 +34,9 @@
 //!   die the player's hit points over the monster's. Each cell is the median over the monsters
 //!   within two levels of the player's (`+3`: one to five levels above).
 //! - **Spells**: the wizard's and the priest's own casts of every damage spell, at their
-//!   caster level, with their trained stats' lift (`Actor::spell_cap`) and without
-//!   (`SpellRules::cap_of`), the dice as `SpellDice::lifted` and the talents make them, held to
-//!   the cap; attack spells strike the monster's Defence against missiles, areas always hit.
+//!   caster level, with their trained stats' lift (`Actor::spell_lift`) and without, the dice
+//!   as `SpellDice::lifted` and the talents make them, nothing holding the roll; attack spells
+//!   strike the monster's Defence against missiles, areas always hit.
 //!
 //! - **Sneak attacks** (#688): the thief's first blow on a foe unaware of them against its
 //!   plain blow. Its Sneak attack skill is set by level (`sneak_value`), as it rises by use and
@@ -382,11 +382,10 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
 struct Cast {
     spell: SpellId,
     name: String,
-    tier: u8,
+    /// Its spell level.
+    level: u8,
     resolution: Resolution,
     lift: i32,
-    cap: i32,
-    lifted: i32,
     /// The dice with the lift, and without.
     dice: (Dice, Dice),
     /// The attack roll's profile (to-hit and the spell skill's benefit), for attack and touch.
@@ -398,15 +397,15 @@ struct Cast {
 /// of the schools their class has an affinity with.
 fn casts(w: &World) -> Vec<Cast> {
     let content = &w.content;
-    let Some(rules) = content.spell_rules() else {
+    if content.spell_rules().is_none() {
         return Vec::new();
-    };
+    }
     let me = w.state.player();
     let class = (w.state.character.as_ref()).and_then(|c| c.spec.class(content).ok());
     let level = w.caster_level(w.state.player);
     let mods = me.talent_mods(content);
     let mut out = Vec::new();
-    for spell in content.spells_by_tier() {
+    for spell in content.spells_by_level() {
         let def = content.spell(spell);
         let Some(damage) = def.damage else {
             continue;
@@ -415,11 +414,8 @@ fn casts(w: &World) -> Vec<Cast> {
         if !me.knows_spell(content, spell) && affinity.unwrap_or(0) <= 0 {
             continue;
         }
-        let comfortable = rules.comfortable[usize::from(def.tier)];
-        let cap = rules.cap_of(def);
-        let lifted = me.spell_cap(content, def);
         let lift = me.spell_lift(content, def);
-        let dice = |c: (i32, i32)| mods.spell_damage(damage.lifted(level, comfortable, c));
+        let dice = |l: i32| mods.spell_damage(damage.lifted(level, def.grows_from(), l));
         let skills = me.spell_skills(content, def.shape == crate::content::Shape::Touch);
         let benefit = me
             .benefit_of(content, skills)
@@ -435,14 +431,12 @@ fn casts(w: &World) -> Vec<Cast> {
         out.push(Cast {
             spell,
             name: def.name.clone(),
-            tier: def.tier,
+            level: def.level,
             resolution: def.resolution,
             lift,
-            cap,
-            lifted,
-            dice: (dice((cap, lifted)), dice((cap, cap))),
+            dice: (dice(lift), dice(0)),
             aim: Profile::bare(&attack).with(&benefit),
-            cost: me.spell_cost(content, def, level),
+            cost: me.spell_cost(content, def),
         });
     }
     out

@@ -1,20 +1,17 @@
-//! Spells as data (spec §8 "Spells", the magic design `docs/design/magic.md` §3, §5, §6): the
-//! tier table (`data/spells.toml`, [`SpellRules`]) and the spells (`data/spells/`, one
-//! `[[spell]]` file each, [`SpellData`]), cast by the one cast path (`world/cast.rs`). Not the
-//! bursts and bolts scrolls and traps cast (`content/spell.rs`), whose code the cast path shares.
+//! Spells as data (spec §8 "Spells", the magic design `docs/design/magic.md` §3, §5, §6, the
+//! spell scaling design `docs/design/spell-scaling.md` §5): the cost table
+//! (`data/spells.toml`, [`SpellRules`]) and the spells (`data/spells/`, one `[[spell]]` file
+//! each, [`SpellData`]), cast by the one cast path (`world/cast.rs`). Not the bursts and bolts
+//! scrolls and traps cast (`content/spell.rs`), whose code the cast path shares.
 //!
-//! - **Tiers**: a spell has a tier, 0 (a cantrip) to 9; each tier has a comfortable caster level,
-//!   a base mana cost, and a damage ceiling, all ascending (checked).
+//! - **Spell levels**: a spell has a level, 0 to [`MAX_SPELL_LEVEL`]: its base mana (at least
+//!   one) and the caster level at which a scroll of it teaches for certain. A spell of level 0
+//!   or 1 is a cantrip. Nothing says how much a spell of a level may do (decision 16).
 //! - **Tags**: a spell's school, kind, shape, and damage type ([`SpellData::tags`]); talents,
 //!   abilities, and items will key on them.
-//! - **The cap** ([`SpellRules::cap`]): no spell may roll more in one cast than its tier's
-//!   ceiling times its resolution's `damage` percent, harm or healing, nor carry a static bonus
-//!   above a quarter of the ceiling. A spell over it is refused when the content loads, so no
-//!   spell can be written past its cap.
-//! - **The lift** ([`SpellRules::lift`], [`SpellRules::lifted_cap`]; the combat progression
-//!   design §7): the stats a spell's `[spell.scales]` names for `damage` lift a caster's cap by
-//!   a percent, at most its tier's `max_lift`, and its dice follow ([`SpellDice::lifted`]); the
-//!   lifted cap is never passed.
+//! - **The lift** ([`SpellRules::lift`]; the combat progression design §7, until the ladders
+//!   replace it): the stats a spell's `[spell.scales]` names for `damage` lift its dice by a
+//!   percent of its most ([`SpellDice::lifted`]).
 
 use super::effect::EffectShape;
 use super::spell::{Burst, BurstIce, SpellFields, check_effect, default_verb};
@@ -27,8 +24,8 @@ use crate::stats::{PerStat, Stat};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// How many tiers there are: 0 (cantrips) to 9.
-pub const TIERS: usize = 10;
+/// The highest level a spell may have (the spell scaling design §5.1): 0 (a cantrip) to 70.
+pub const MAX_SPELL_LEVEL: u8 = 70;
 /// The farthest a ray, bolt, or burst may reach and a line may run, in cells.
 pub const MAX_REACH: u8 = 20;
 /// The longest a cone may be, in cells.
@@ -41,8 +38,6 @@ pub const MAX_PER_LEVELS: u8 = 20;
 pub const MAX_CASTS: u8 = 10;
 /// The most mana a spell's explicit `mana` may ask.
 pub const MAX_SPELL_MANA: u16 = 500;
-/// The largest `max_lift` a tier may have, in percent of its cap.
-pub const MAX_LIFT: u16 = 200;
 /// The percents a shape's or a resolution's multiplier may be.
 const PERCENTS: std::ops::RangeInclusive<u16> = 1..=1000;
 
@@ -206,12 +201,10 @@ impl Resolution {
     }
 }
 
-/// What a resolution does to a spell's cap and cost, in percent.
+/// What a resolution does to a spell's cost, in percent.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Ratio {
-    /// The most it may do to one target, of the tier's ceiling.
-    pub damage: u16,
     /// What it multiplies the base cost by (an area spell's cost is its shape's).
     pub cost: u16,
 }
@@ -219,20 +212,8 @@ pub struct Ratio {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RulesFile {
-    overreach_cost: u16,
-    tiers: TiersSpec,
     shapes: ShapesSpec,
     resolution: ResolutionSpec,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct TiersSpec {
-    comfortable: Vec<u8>,
-    cost: Vec<u16>,
-    ceiling: Vec<u16>,
-    max_lift: Vec<u16>,
-    wand_charges: Vec<u8>,
 }
 
 #[derive(Deserialize)]
@@ -257,29 +238,15 @@ struct ResolutionSpec {
     touch: Ratio,
 }
 
-/// The tier table (`data/spells.toml`): what every spell is measured by.
+/// The cost table (`data/spells.toml`): what a spell's shape and resolution do to its mana.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SpellRules {
-    /// Percent more mana per tier of overreach.
-    pub overreach_cost: u16,
-    /// Each tier's comfortable caster level, tier 0 first: ascending, the first 1.
-    pub comfortable: [u8; TIERS],
-    /// Each tier's base mana cost: ascending.
-    pub cost: [u16; TIERS],
-    /// Each tier's damage ceiling for a single-target spell at its highest roll: ascending.
-    pub ceiling: [u16; TIERS],
-    /// The most each tier's cap may be lifted by a caster's stats, in percent of it (the combat
-    /// progression design §7): ascending or flat, 0 to [`MAX_LIFT`].
-    pub max_lift: [u16; TIERS],
-    /// The charges a wand of each tier's spell is made with (spec §8 "Magic items": "Wands"):
-    /// 1 to [`super::MAX_WAND_CHARGES`], never more than the tier below's.
-    pub wand_charges: [u8; TIERS],
     /// The single targets' and the areas' cost multipliers, in percent, by [`Shape::ALL`]
     /// order; a burst's is [`SpellRules::burst`]'s.
     shapes: [u16; 6],
     /// A burst's cost multiplier by radius, radius 1 first.
     pub burst: Vec<u16>,
-    /// Each resolution's cap and cost, by [`Resolution::ALL`] order.
+    /// Each resolution's cost, by [`Resolution::ALL`] order.
     resolutions: [Ratio; 4],
 }
 
@@ -287,47 +254,7 @@ impl SpellRules {
     pub(super) fn parse(path: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(path, m);
         let file: RulesFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        let ten = |name: &str, n: usize| {
-            (n == TIERS)
-                .then_some(())
-                .ok_or_else(|| err(format!("tiers: `{name}` has one value per tier, {TIERS}")))
-        };
-        let t = &file.tiers;
-        ten("comfortable", t.comfortable.len())?;
-        ten("cost", t.cost.len())?;
-        ten("ceiling", t.ceiling.len())?;
         let ascending = |v: &[u16]| v.windows(2).all(|w| w[0] < w[1]);
-        let levels: Vec<u16> = t.comfortable.iter().map(|&l| u16::from(l)).collect();
-        if levels[0] != 1 || !ascending(&levels) || levels[TIERS - 1] > u16::from(MAX_LEVEL) {
-            return Err(err(format!(
-                "tiers: `comfortable` levels ascend from 1, at most {MAX_LEVEL}"
-            )));
-        }
-        if t.cost[0] < 1 || !ascending(&t.cost) {
-            return Err(err("tiers: `cost` ascends from at least 1".into()));
-        }
-        if t.ceiling[0] < 1 || !ascending(&t.ceiling) {
-            return Err(err("tiers: `ceiling` ascends from at least 1".into()));
-        }
-        ten("wand_charges", t.wand_charges.len())?;
-        let charges = &t.wand_charges;
-        if !(charges.iter()).all(|c| (1..=super::MAX_WAND_CHARGES).contains(c))
-            || charges.windows(2).any(|w| w[0] < w[1])
-        {
-            return Err(err(format!(
-                "tiers: `wand_charges` are 1 to {}, never more than the tier below's",
-                super::MAX_WAND_CHARGES
-            )));
-        }
-        if !PERCENTS.contains(&file.overreach_cost) {
-            return Err(err("overreach_cost is 1 to 1000 percent".into()));
-        }
-        ten("max_lift", t.max_lift.len())?;
-        if t.max_lift.iter().any(|l| *l > MAX_LIFT) || t.max_lift.windows(2).any(|w| w[0] > w[1]) {
-            return Err(err(format!(
-                "tiers: `max_lift` is 0 to {MAX_LIFT} percent, ascending or flat"
-            )));
-        }
         let s = &file.shapes;
         let shapes = [s.ray, s.bolt, s.touch, s.myself, s.cone, s.line];
         let burst_ok = (1..=crate::content::BURST_RADII.end().unsigned_abs() as usize)
@@ -344,33 +271,14 @@ impl SpellRules {
         }
         let r = &file.resolution;
         let resolutions = [r.attack, r.auto, r.area, r.touch];
-        if !(resolutions.iter()).all(|x| PERCENTS.contains(&x.damage) && PERCENTS.contains(&x.cost))
-        {
-            return Err(err(
-                "resolution: `damage` and `cost` are 1 to 1000 percent".into()
-            ));
+        if !(resolutions.iter()).all(|x| PERCENTS.contains(&x.cost)) {
+            return Err(err("resolution: `cost` is 1 to 1000 percent".into()));
         }
-        let array = |v: &[u16]| -> [u16; TIERS] { v.try_into().expect("checked length") };
         Ok(SpellRules {
-            overreach_cost: file.overreach_cost,
-            comfortable: t.comfortable.clone().try_into().expect("checked length"),
-            cost: array(&t.cost),
-            ceiling: array(&t.ceiling),
-            max_lift: array(&t.max_lift),
-            wand_charges: t.wand_charges.clone().try_into().expect("checked length"),
             shapes,
             burst: s.burst.clone(),
             resolutions,
         })
-    }
-
-    /// The tier a caster level is at: the highest whose comfortable level it has reached (tier
-    /// 0 below the first). A spell above it is overreach.
-    pub fn tier_of(&self, caster_level: i32) -> u8 {
-        let reached = (self.comfortable.iter())
-            .take_while(|&&l| i32::from(l) <= caster_level)
-            .count();
-        u8::try_from(reached.saturating_sub(1)).unwrap_or(0)
     }
 
     /// What `shape` multiplies the base cost by, in percent; a burst's at `radius` (its largest
@@ -393,61 +301,32 @@ impl SpellRules {
         u8::try_from(self.burst.len()).unwrap_or(u8::MAX)
     }
 
-    /// What `resolution` does to a spell's cap and cost.
+    /// What `resolution` does to a spell's cost.
     pub fn ratio(&self, resolution: Resolution) -> Ratio {
         let i = (Resolution::ALL.iter()).position(|&r| r == resolution);
         self.resolutions[i.unwrap_or(0)]
     }
 
-    /// The most a spell of `tier` that resolves as `resolution` may roll in one cast against
-    /// one target: the tier's ceiling times the resolution's `damage` percent, rounded down.
-    pub fn cap(&self, tier: u8, resolution: Resolution) -> i32 {
-        let ceiling = i32::from(self.ceiling[usize::from(tier).min(TIERS - 1)]);
-        ceiling * i32::from(self.ratio(resolution).damage) / 100
-    }
-
-    /// The largest static bonus a spell of `tier` may carry: a quarter of its ceiling.
-    pub fn max_bonus(&self, tier: u8) -> i32 {
-        i32::from(self.ceiling[usize::from(tier).min(TIERS - 1)]) / 4
-    }
-
-    /// What `spell` costs a caster at `caster_level` wearing armour that adds `armour` percent
-    /// (magic design §5), before its talents: the tier's base cost × overreach (1 +
-    /// `overreach_cost` % per tier above the caster level's) × its shape's percent (a burst's
-    /// at its own `radius`) × its resolution's `cost` percent × (100 + `armour`) %, rounded to
-    /// the nearest once at the end, at least 1.
-    pub fn mana(&self, spell: &SpellData, caster_level: i32, armour: u32) -> i32 {
-        self.mana_with(spell, caster_level, armour, 0)
-    }
-
-    /// [`SpellRules::mana`] for a caster whose talents make overreach cost `overreach_percent`
-    /// percent more (negative: less; Overreach): the `overreach_cost` per tier scaled by it,
-    /// never below 0.
-    pub fn mana_with(
-        &self,
-        spell: &SpellData,
-        caster_level: i32,
-        armour: u32,
-        overreach_percent: i32,
-    ) -> i32 {
-        let tier = usize::from(spell.tier).min(TIERS - 1);
-        // An explicit cost (Identify's) stands in for the tier's, overreach, shape, and
-        // resolution: only the armour is added.
+    /// What `spell` costs a caster wearing armour that adds `armour` percent (the spell scaling
+    /// design §5.3), before its talents: its base mana (its level, at least 1, unless it names
+    /// `mana`) × its shape's percent (a burst's at its own `radius`) × its resolution's `cost`
+    /// percent × (100 + `armour`) %, rounded to the nearest once at the end, at least 1. No
+    /// caster level counts: a known spell costs the same whoever casts it.
+    pub fn mana(&self, spell: &SpellData, armour: u32) -> i32 {
+        // An explicit cost (Identify's) stands in for the level's, the shape's, and the
+        // resolution's: only the armour is added.
         if let Some(mana) = spell.mana {
             let num = u64::from(mana) * (100 + u64::from(armour));
             return i32::try_from((num + 50) / 100).unwrap_or(i32::MAX).max(1);
         }
-        let over = u64::from(spell.tier.saturating_sub(self.tier_of(caster_level)));
         let radius = spell.radius.unwrap_or(1);
-        let per_tier = i64::from(self.overreach_cost) * i64::from(100 + overreach_percent).max(0);
         let factors = [
-            10_000 + u64::try_from(per_tier).unwrap_or(0) * over,
             u64::from(self.shape_cost(spell.shape, radius)),
             u64::from(self.ratio(spell.resolution).cost),
             100 + u64::from(armour),
         ];
-        let num = factors.iter().product::<u64>() * u64::from(self.cost[tier]);
-        let den = 100u64.pow(5);
+        let num = factors.iter().product::<u64>() * u64::from(spell.level.max(1));
+        let den = 100u64.pow(3);
         i32::try_from((num + den / 2) / den)
             .unwrap_or(i32::MAX)
             .max(1)
@@ -466,24 +345,12 @@ impl SpellRules {
         severity.saturating_add(more).min(MAX_SEVERITY)
     }
 
-    /// The percent a caster's stats lift the cap of a spell of `tier` by: `raised` (its
-    /// `damage` scales' sum, [`super::Weights::sum`]) never below 0, never past the tier's
-    /// `max_lift` plus `more` (Keen mind's, for its school).
-    pub fn lift(&self, tier: u8, raised: i32, more: i32) -> i32 {
-        let most = i32::from(self.max_lift[usize::from(tier).min(TIERS - 1)]) + more.max(0);
-        raised.clamp(0, most)
-    }
-
-    /// `spell`'s cap lifted by `lift` percent ([`SpellRules::lift`]): `cap_of × (100 + lift) /
-    /// 100`, rounded down. The most a cast of it by that caster does to one target.
-    pub fn lifted_cap(&self, spell: &SpellData, lift: i32) -> i32 {
-        self.cap_of(spell) * (100 + lift.max(0)) / 100
-    }
-
-    /// The most `spell` may do to one target in one cast: its tier's cap for its resolution.
-    /// Whatever rolls it (caster level, talents, a critical), nothing does more.
-    pub fn cap_of(&self, spell: &SpellData) -> i32 {
-        self.cap(spell.tier, spell.resolution)
+    /// The percent a caster's stats lift a spell's dice by: `raised` (its `damage` scales'
+    /// sum, [`super::Weights::sum`]) never below 0, and `more` (Keen mind's for its school or
+    /// element, Potent's) on top. Nothing bounds it (the spell scaling design, decision 16);
+    /// the ladders replace it (S2).
+    pub fn lift(raised: i32, more: i32) -> i32 {
+        raised.max(0) + more.max(0)
     }
 }
 
@@ -500,7 +367,10 @@ struct SpellSpec {
     id: String,
     name: String,
     description: String,
-    tier: u8,
+    /// 0 to [`MAX_SPELL_LEVEL`]; an `Option` so a file without it is told what it lacks.
+    level: Option<u8>,
+    /// Refused: the spell scaling design replaced tiers with levels (§5).
+    tier: Option<toml::Value>,
     school: School,
     kind: SpellPurpose,
     shape: Shape,
@@ -568,48 +438,48 @@ struct ScrollSpec {
     level: Option<u8>,
 }
 
-/// What a spell rolls, harm or healing: dice that grow with caster level up to a cap.
+/// What a spell rolls, harm or healing: dice that grow with caster level up to `max_dice`
+/// (until the ladders replace them, the spell scaling design S2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SpellDice {
-    /// Dice at the tier's comfortable caster level.
+    /// Dice at the caster level of the spell's level ([`SpellData::grows_from`]).
     pub count: u8,
     /// Their sides.
     pub sides: u8,
-    /// One die more per this many caster levels above the comfortable one (0: never more).
+    /// One die more per this many caster levels above that one (0: never more).
     pub per_levels: u8,
-    /// The cap: never more dice than this.
+    /// Never more dice than this by caster level.
     pub max_dice: u8,
     /// A static bonus, rare.
     pub bonus: u8,
 }
 
 impl SpellDice {
-    /// The most it can roll: every die of the cap at its highest, plus the bonus.
+    /// The most its dice can roll by caster level: every die of `max_dice` at its highest,
+    /// plus the bonus.
     pub const fn max(&self) -> i32 {
         self.max_dice as i32 * self.sides as i32 + self.bonus as i32
     }
 
-    /// What it rolls at `caster_level` for a spell whose tier is comfortable at `comfortable`:
-    /// its dice, one more per `per_levels` levels above that, never more than `max_dice`.
-    pub fn at(&self, caster_level: i32, comfortable: u8) -> Dice {
-        self.of(self.count_at(caster_level, comfortable))
+    /// What it rolls at `caster_level` for a spell whose dice grow from caster level `from`
+    /// ([`SpellData::grows_from`]): its dice, one more per `per_levels` levels above that,
+    /// never more than `max_dice`.
+    pub fn at(&self, caster_level: i32, from: u8) -> Dice {
+        self.of(self.count_at(caster_level, from))
     }
 
-    /// [`SpellDice::at`] for a caster whose stats lift the spell's `cap` to `lifted`
-    /// ([`SpellRules::lifted_cap`]): as many dice more as the lift's room holds, `(lifted −
-    /// bonus) / sides − (cap − bonus) / sides`, each rounded down. Its most never passes
-    /// `lifted` (the unlifted dice never pass `cap`, checked on load); no lift, no change.
-    pub fn lifted(&self, caster_level: i32, comfortable: u8, (cap, lifted): (i32, i32)) -> Dice {
-        let (bonus, sides) = (i32::from(self.bonus), i32::from(self.sides.max(1)));
-        let room = |c: i32| (c - bonus).max(0) / sides;
-        let more = (room(lifted) - room(cap)).max(0);
-        self.of(self.count_at(caster_level, comfortable) + more)
+    /// [`SpellDice::at`] for a caster whose stats lift the spell by `lift` percent
+    /// ([`SpellRules::lift`]): `max_dice × lift / 100` dice more, rounded down; no lift, no
+    /// change.
+    pub fn lifted(&self, caster_level: i32, from: u8, lift: i32) -> Dice {
+        let more = i32::from(self.max_dice) * lift.max(0) / 100;
+        self.of(self.count_at(caster_level, from) + more)
     }
 
-    /// Its dice at `caster_level`: one more per `per_levels` above `comfortable`, never more
-    /// than `max_dice`.
-    fn count_at(&self, caster_level: i32, comfortable: u8) -> i32 {
-        let above = (caster_level - i32::from(comfortable)).max(0);
+    /// Its dice at `caster_level`: one more per `per_levels` above `from`, never more than
+    /// `max_dice`.
+    fn count_at(&self, caster_level: i32, from: u8) -> i32 {
+        let above = (caster_level - i32::from(from)).max(0);
         let more = match self.per_levels {
             0 => 0,
             n => above / i32::from(n),
@@ -664,8 +534,9 @@ pub struct SpellData {
     pub name: String,
     /// One line.
     pub description: String,
-    /// 0 (a cantrip) to 9.
-    pub tier: u8,
+    /// Its spell level, 0 to [`MAX_SPELL_LEVEL`] (0 and 1: a cantrip): its base mana, and the
+    /// caster level at which a scroll of it teaches for certain.
+    pub level: u8,
     pub school: School,
     pub kind: SpellPurpose,
     pub shape: Shape,
@@ -687,8 +558,8 @@ pub struct SpellData {
     pub casts: u8,
     /// It is cast only under the open sky (call lightning).
     pub open_sky: bool,
-    /// Its base mana cost given outright (Identify), in place of the tier table's: no tier,
-    /// overreach, shape, or resolution counts; armour and the talents still do.
+    /// Its base mana cost given outright (Identify), in place of its level's: no shape or
+    /// resolution counts; armour and the talents still do.
     pub mana: Option<u16>,
     /// How it shows and sounds.
     pub look: SpellLook,
@@ -704,6 +575,12 @@ pub struct SpellData {
 }
 
 impl SpellData {
+    /// The caster level its dice grow from, and a scroll or a wand of it casts at by default:
+    /// its level, at least 1 (until the ladders replace both, the spell scaling design S2).
+    pub fn grows_from(&self) -> u8 {
+        self.level.max(1)
+    }
+
     /// Whether it rolls to hit (spec §8 "Spells"): a damage spell, a ray, a bolt, or a touch,
     /// resolved by the attack roll. Such a cast trains the spell attack skill and a caster
     /// style (spec §8 "Weapon skills", "Fighting styles").
@@ -767,9 +644,8 @@ impl SpellData {
     }
 }
 
-/// Reads `data/spells.toml` and the spells of `data/spells/` (`files`, the table in path order,
-/// the tier table's own file left out), checking each spell against the tier table: none
-/// without the tier table, and a spell without it is an error.
+/// Reads `data/spells.toml` and the spells of `data/spells/` (`files`, in path order, the cost
+/// table's own file left out): none without the cost table, and a spell without it is an error.
 pub(super) fn parse<'a>(
     rules: Option<(&str, &str)>,
     files: impl IntoIterator<Item = (&'a str, &'a str)>,
@@ -803,13 +679,8 @@ pub(super) fn parse<'a>(
     Ok((rules, list))
 }
 
-/// Checks a dice table of a spell of `tier` resolving as `resolution` against the cap.
-fn dice(
-    spec: &DiceSpec,
-    tier: u8,
-    resolution: Resolution,
-    rules: &SpellRules,
-) -> Result<SpellDice, String> {
+/// Checks a dice table's own shape. Nothing checks how much it rolls (decision 16).
+fn dice(spec: &DiceSpec) -> Result<SpellDice, String> {
     let d = spec.dice;
     if d.is_fixed() || d.is_negative() || d.bonus() != 0 {
         return Err(format!("`dice` is dice only (`1d6`), not `{d}`"));
@@ -826,39 +697,27 @@ fn dice(
     if spec.per_levels > MAX_PER_LEVELS {
         return Err(format!("`per_levels` is 0 to {MAX_PER_LEVELS}"));
     }
-    let rolled = SpellDice {
+    Ok(SpellDice {
         count,
         sides,
         per_levels: spec.per_levels,
         max_dice,
         bonus: spec.bonus,
-    };
-    let most_bonus = rules.max_bonus(tier);
-    if i32::from(spec.bonus) > most_bonus {
-        return Err(format!(
-            "a bonus of {} is more than a quarter of tier {tier}'s ceiling ({most_bonus})",
-            spec.bonus
-        ));
-    }
-    let cap = rules.cap(tier, resolution);
-    if rolled.max() > cap {
-        return Err(format!(
-            "it may roll {} in one cast, over tier {tier}'s cap of {cap} for `{}` (the \
-             ceiling {} × {} %)",
-            rolled.max(),
-            resolution.id(),
-            rules.ceiling[usize::from(tier)],
-            rules.ratio(resolution).damage
-        ));
-    }
-    Ok(rolled)
+    })
 }
 
 /// One spell, checked.
 fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<SpellData, String> {
-    let tier = spec.tier;
-    if usize::from(tier) >= TIERS {
-        return Err(format!("tier is 0 to {}", TIERS - 1));
+    if spec.tier.is_some() {
+        return Err(format!(
+            "`tier` is gone: use `level`, 0 to {MAX_SPELL_LEVEL} (docs/design/spell-scaling.md §5)"
+        ));
+    }
+    let level = spec
+        .level
+        .ok_or_else(|| format!("a spell needs a `level`, 0 to {MAX_SPELL_LEVEL}"))?;
+    if level > MAX_SPELL_LEVEL {
+        return Err(format!("`level` is 0 to {MAX_SPELL_LEVEL}"));
     }
     if !spec.resolution.fits(spec.shape) {
         return Err(format!(
@@ -916,7 +775,7 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         ),
     };
     let damage = match (&spec.damage, spec.kind) {
-        (Some(d), SpellPurpose::Damage) => Some(dice(d, tier, spec.resolution, rules)?),
+        (Some(d), SpellPurpose::Damage) => Some(dice(d)?),
         (None, SpellPurpose::Damage) => return Err("a `damage` spell needs [spell.damage]".into()),
         (Some(_), _) => return Err("only a `damage` spell has [spell.damage]".into()),
         (None, _) => None,
@@ -925,7 +784,7 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         return Err("a `damage` spell needs a `damage_type`".into());
     }
     let effect = match spec.effect {
-        Some(e) => effect(e, tier, (spec.kind, spec.resolution), rules, content)?,
+        Some(e) => effect(e, spec.kind, content)?,
         None => SpellEffect::default(),
     };
     let needs = match spec.kind {
@@ -951,11 +810,11 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
     let scroll_level = match spec.scroll {
         None => None,
         Some(s) => {
-            let level = s.level.unwrap_or(rules.comfortable[usize::from(tier)]);
-            if !(1..=MAX_LEVEL).contains(&level) {
+            let at = s.level.unwrap_or(level.max(1));
+            if !(1..=MAX_LEVEL).contains(&at) {
                 return Err(format!("scroll: `level` is 1 to {MAX_LEVEL}"));
             }
-            Some(level)
+            Some(at)
         }
     };
     let has = Has {
@@ -975,7 +834,7 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         id: spec.id,
         name: spec.name,
         description: spec.description,
-        tier,
+        level,
         school: spec.school,
         kind: spec.kind,
         shape,
@@ -1095,13 +954,7 @@ pub(super) fn check_effects(content: &Content) -> Result<(), String> {
 }
 
 /// A spell's `[spell.effect]`, checked: only what its kind uses, and a heal under the cap.
-fn effect(
-    e: EffectSpec,
-    tier: u8,
-    (kind, resolution): (SpellPurpose, Resolution),
-    rules: &SpellRules,
-    content: &Content,
-) -> Result<SpellEffect, String> {
+fn effect(e: EffectSpec, kind: SpellPurpose, content: &Content) -> Result<SpellEffect, String> {
     let only = |field: &str, present: bool, kinds: &[SpellPurpose]| {
         if present && !kinds.contains(&kind) {
             Err(format!("a `{}` spell has no `{field}`", kind.id()))
@@ -1123,7 +976,7 @@ fn effect(
             .ok_or_else(|| format!("unknown status `{name}`"))
     };
     let heal = match &e.heal {
-        Some(h) => Some(dice(h, tier, resolution, rules)?),
+        Some(h) => Some(dice(h)?),
         None => None,
     };
     let marked = match &e.status {
@@ -1167,20 +1020,20 @@ mod tests {
         SpellRules::parse("data/spells.toml", SHIPPED).expect("valid")
     }
 
-    /// Parses spell files `text` against the shipped tier table and the built-in content.
+    /// Parses spell files `text` against the shipped cost table and the built-in content.
     fn spells(text: &str) -> Result<Vec<SpellData>, ContentError> {
         let content = Content::builtin().expect("content");
         let (_, list) = parse(Some(("data/spells.toml", SHIPPED)), [("s", text)], &content)?;
         Ok(list)
     }
 
-    /// The magic design's first spell list (§7), as data: every one passes the cap check.
+    /// The magic design's first spell list (§7), as data, at the spell scaling design's levels.
     const FIRST_LIST: &str = r#"
 [[spell]]
 id = "ray_of_frost"
 name = "Ray of frost"
 description = "A thin beam of cold."
-tier = 0
+level = 1
 school = "evocation"
 kind = "damage"
 shape = "ray"
@@ -1194,7 +1047,7 @@ scroll = {}
 id = "spark"
 name = "Spark"
 description = "A snap of lightning."
-tier = 0
+level = 1
 school = "evocation"
 kind = "damage"
 shape = "bolt"
@@ -1207,7 +1060,7 @@ damage = { dice = "1d4" }
 id = "mend"
 name = "Mend"
 description = "Closes a scratch."
-tier = 0
+level = 1
 school = "restoration"
 kind = "heal"
 shape = "touch"
@@ -1218,7 +1071,7 @@ effect = { heal = { dice = "1d3" } }
 id = "magic_missile"
 name = "Magic missile"
 description = "A dart of force that never misses."
-tier = 1
+level = 3
 school = "evocation"
 kind = "damage"
 shape = "bolt"
@@ -1231,7 +1084,7 @@ damage = { dice = "1d4", per_levels = 3, max_dice = 2 }
 id = "burning_hands"
 name = "Burning hands"
 description = "A fan of flame."
-tier = 1
+level = 4
 school = "evocation"
 kind = "damage"
 shape = "cone"
@@ -1244,7 +1097,7 @@ damage = { dice = "1d4", per_levels = 3, max_dice = 2 }
 id = "cause_wounds"
 name = "Cause wounds"
 description = "A touch that opens wounds."
-tier = 1
+level = 4
 school = "necromancy"
 kind = "damage"
 shape = "touch"
@@ -1256,7 +1109,7 @@ damage = { dice = "1d6", per_levels = 4, max_dice = 2 }
 id = "cure_wounds"
 name = "Cure wounds"
 description = "Heals."
-tier = 1
+level = 3
 school = "restoration"
 kind = "heal"
 shape = "touch"
@@ -1267,7 +1120,7 @@ effect = { heal = { dice = "2d6" } }
 id = "bless"
 name = "Bless"
 description = "A boon."
-tier = 1
+level = 3
 school = "abjuration"
 kind = "buff"
 shape = "self"
@@ -1278,7 +1131,7 @@ effect = { status = "blessed" }
 id = "scorching_ray"
 name = "Scorching ray"
 description = "Rays of fire."
-tier = 2
+level = 7
 school = "evocation"
 kind = "damage"
 shape = "ray"
@@ -1291,7 +1144,7 @@ damage = { dice = "1d6", per_levels = 6, max_dice = 3 }
 id = "fireball"
 name = "Fireball"
 description = "A ball of fire."
-tier = 3
+level = 11
 school = "evocation"
 kind = "damage"
 shape = "burst"
@@ -1305,7 +1158,7 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
 id = "lightning_bolt"
 name = "Lightning bolt"
 description = "A stroke of lightning."
-tier = 3
+level = 11
 school = "evocation"
 kind = "damage"
 shape = "line"
@@ -1316,12 +1169,8 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
 "#;
 
     #[test]
-    fn the_shipped_tier_table_reads_as_the_design_has_it() {
+    fn the_shipped_cost_table_reads_as_the_design_has_it() {
         let r = rules();
-        assert_eq!(r.comfortable, [1, 3, 6, 12, 18, 25, 32, 40, 50, 60]);
-        assert_eq!(r.cost, [1, 3, 6, 11, 16, 22, 29, 37, 46, 56]);
-        assert_eq!(r.ceiling, [6, 12, 18, 24, 32, 40, 50, 62, 76, 90]);
-        assert_eq!(r.overreach_cost, 50);
         assert_eq!(
             (r.shape_cost(Shape::Bolt, 0), r.shape_cost(Shape::Cone, 0)),
             (100, 160)
@@ -1334,23 +1183,13 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             "the largest beyond the table"
         );
         assert_eq!(r.max_radius(), 3);
-        assert_eq!(
-            r.ratio(Resolution::Touch),
-            Ratio {
-                damage: 120,
-                cost: 70
-            }
-        );
-        // A tier-3 burst may do at most 19 (24 × 80 %), a tier-1 auto 9 (12 × 75 %).
-        assert_eq!(r.cap(3, Resolution::Area), 19);
-        assert_eq!(r.cap(1, Resolution::Auto), 9);
-        assert_eq!(r.max_bonus(9), 22);
+        assert_eq!(r.ratio(Resolution::Touch), Ratio { cost: 70 });
     }
 
-    /// The magic design's §12 check 5 (#401): an area is dearer than a single target and does
-    /// less to each, an auto spell less than an attack, a touch more for less mana.
+    /// The magic design's §12 check 5 (#401), its cost half: an area is dearer than a single
+    /// target, a touch cheaper. Nothing says how much any of them may do (decision 16).
     #[test]
-    fn the_shipped_table_makes_areas_dearer_and_weaker_than_single_targets() {
+    fn the_shipped_table_makes_areas_dearer_and_touches_cheaper() {
         let r = rules();
         let single = r.ratio(Resolution::Attack);
         for &shape in Shape::ALL {
@@ -1368,76 +1207,38 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
                 }
             }
         }
-        for (weaker, why) in [
-            (Resolution::Area, "an area"),
-            (Resolution::Auto, "an auto spell"),
-        ] {
-            assert!(r.ratio(weaker).damage < single.damage, "{why}");
-        }
-        let touch = r.ratio(Resolution::Touch);
-        assert!(touch.damage > single.damage && touch.cost < single.cost);
-        for tier in 0..10 {
-            assert!(r.cap(tier, Resolution::Area) < r.cap(tier, Resolution::Attack));
-        }
+        assert!(r.ratio(Resolution::Touch).cost < single.cost);
     }
 
     #[test]
-    fn a_caster_level_is_at_the_highest_tier_it_has_reached() {
-        let r = rules();
-        let tiers: Vec<u8> = [0, 1, 2, 3, 5, 6, 12, 59, 60, 99]
-            .iter()
-            .map(|&l| r.tier_of(l))
-            .collect();
-        assert_eq!(tiers, [0, 0, 0, 1, 1, 2, 3, 8, 9, 9]);
-    }
-
-    #[test]
-    fn the_tier_table_is_refused_unless_it_ascends() {
+    fn the_cost_table_is_refused_when_malformed() {
         for (from, to, why) in [
-            (
-                "ceiling = [6, 12, 18, 24, 32, 40, 50, 62, 76, 90]",
-                "ceiling = [6, 12, 18, 24, 32, 30, 50, 62, 76, 90]",
-                "`ceiling` ascends",
-            ),
-            (
-                "cost = [1, 3, 6, 11, 16, 22, 29, 37, 46, 56]",
-                "cost = [1, 3, 6, 11, 16, 22, 29, 37, 46]",
-                "one value per tier",
-            ),
-            (
-                "comfortable = [1, 3, 6, 12, 18, 25, 32, 40, 50, 60]",
-                "comfortable = [2, 3, 6, 12, 18, 25, 32, 40, 50, 60]",
-                "ascend from 1",
-            ),
             (
                 "burst = [180, 240, 300]",
                 "burst = [180, 300, 240]",
                 "one ascending value per radius",
             ),
             (
-                "overreach_cost = 50",
-                "overreach_cost = 0",
-                "overreach_cost",
-            ),
-            (
-                "touch = { damage = 120, cost = 70 }",
-                "touch = { damage = 120, cost = 0 }",
+                "touch = { cost = 70 }",
+                "touch = { cost = 0 }",
                 "resolution",
             ),
+            // The resolutions' damage column went with the cap (decision 16).
             (
-                "max_lift = [40, 50, 60, 70, 80, 80, 80, 80, 80, 80]",
-                "max_lift = [40, 50, 60, 70, 80, 70, 80, 80, 80, 80]",
-                "`max_lift` is 0 to 200 percent, ascending or flat",
+                "touch = { cost = 70 }",
+                "touch = { damage = 120, cost = 70 }",
+                "unknown field `damage`",
+            ),
+            // The tier table and the overreach surcharge are gone (the spell scaling design §5).
+            (
+                "\n[shapes]\n",
+                "\noverreach_cost = 50\n\n[shapes]\n",
+                "unknown field `overreach_cost`",
             ),
             (
-                "max_lift = [40, 50, 60, 70, 80, 80, 80, 80, 80, 80]",
-                "max_lift = [40, 50, 60, 70, 80, 80, 80, 80, 80, 201]",
-                "`max_lift` is 0 to 200 percent",
-            ),
-            (
-                "overreach_cost = 50",
-                "overreach_cost = 50\nreach_step = 2",
-                "unknown field `reach_step`",
+                "\n[shapes]\n",
+                "\n[tiers]\ncost = [1]\n\n[shapes]\n",
+                "unknown field `tiers`",
             ),
         ] {
             let text = SHIPPED.replace(from, to);
@@ -1448,8 +1249,8 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
     }
 
     #[test]
-    fn the_designs_first_spell_list_passes_the_cap_check() {
-        let list = spells(FIRST_LIST).expect("every spell under its cap");
+    fn the_designs_first_spell_list_parses() {
+        let list = spells(FIRST_LIST).expect("every spell");
         assert_eq!(list.len(), 11);
         let content = Content::builtin().expect("content");
         let fireball = list.iter().find(|s| s.id == "fireball").expect("fireball");
@@ -1457,11 +1258,12 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             fireball.tags(&content),
             ["evocation", "damage", "burst", "fire"]
         );
+        assert_eq!(fireball.level, 11);
         assert_eq!(fireball.damage.expect("damage").max(), 18);
         assert_eq!(
             list[0].scroll_level,
             Some(1),
-            "the tier's comfortable level"
+            "the spell's level, at least 1"
         );
         assert_eq!(list[1].scroll_level, None, "no scroll block");
         let bless = list.iter().find(|s| s.id == "bless").expect("bless");
@@ -1471,47 +1273,27 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
         );
     }
 
+    /// Decision 16: nothing holds how much a spell does. Dice, a bonus, and a heal of any size
+    /// load at any level; the author writes the strength they intend.
     #[test]
-    fn a_spell_over_its_cap_is_refused() {
+    fn no_check_holds_how_much_a_spell_does() {
         let fireball = "max_dice = 3 }\n\n[[spell]]\nid = \"lightning_bolt\"";
-        // A tier-3 fireball of 4d6 could roll 24, over the area cap of 19.
-        let over = FIRST_LIST.replace(fireball, &fireball.replace("3 }", "4 }"));
-        assert_ne!(over, FIRST_LIST);
-        let e = spells(&over).unwrap_err();
-        assert!(
-            e.message
-                .contains("spell `fireball`: it may roll 24 in one cast, over tier 3's cap of 19"),
-            "{}",
-            e.message
+        for more in ["20 }", "3, bonus = 40 }"] {
+            let strong = FIRST_LIST.replace(fireball, &fireball.replace("3 }", more));
+            assert_ne!(strong, FIRST_LIST);
+            assert!(spells(&strong).is_ok(), "{more}");
+        }
+        let strong = FIRST_LIST.replace("heal = { dice = \"2d6\" }", "heal = { dice = \"20d6\" }");
+        assert_ne!(strong, FIRST_LIST);
+        assert!(spells(&strong).is_ok());
+        let cantrip = FIRST_LIST.replace(
+            "damage = { dice = \"1d4\" }\n",
+            "damage = { dice = \"10d12\", bonus = 50 }\n",
         );
-        // The same 3d6 with a bonus of 2 is 20: over, though the bonus itself is small.
-        let over = FIRST_LIST.replace(fireball, &fireball.replace("3 }", "3, bonus = 2 }"));
-        let e = spells(&over).unwrap_err();
-        assert!(e.message.contains("may roll 20"), "{}", e.message);
-        // Healing obeys the cap too: 3d6 is over a tier-1 touch's 14.
-        let over = FIRST_LIST.replace("heal = { dice = \"2d6\" }", "heal = { dice = \"3d6\" }");
-        let e = spells(&over).unwrap_err();
-        assert!(e.message.contains("spell `cure_wounds`"), "{}", e.message);
-    }
-
-    #[test]
-    fn a_static_bonus_above_a_quarter_of_the_ceiling_is_refused() {
-        // Tier 9: ceiling 90, so a bonus of 22 is allowed and 23 is not, whatever the dice.
-        let spell = |bonus: u8| {
-            format!(
-                "[[spell]]\nid = \"doom\"\nname = \"Doom\"\ndescription = \"x\"\ntier = 9\n\
-                 school = \"evocation\"\nkind = \"damage\"\nshape = \"ray\"\n\
-                 resolution = \"attack\"\ndamage_type = \"fire\"\nmax_range = 8\n\
-                 damage = {{ dice = \"1d4\", bonus = {bonus} }}\n"
-            )
-        };
-        assert!(spells(&spell(22)).is_ok());
-        let e = spells(&spell(23)).unwrap_err();
+        assert_ne!(cantrip, FIRST_LIST);
         assert!(
-            e.message
-                .contains("a bonus of 23 is more than a quarter of tier 9's ceiling (22)"),
-            "{}",
-            e.message
+            spells(&cantrip).is_ok(),
+            "a cantrip as strong as its author writes it"
         );
     }
 
@@ -1523,7 +1305,7 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
                  school = \"evocation\"\nkind = \"damage\"\n{body}\n"
             )
         };
-        let good = "tier = 3\nshape = \"burst\"\nresolution = \"area\"\ndamage_type = \"fire\"\n\
+        let good = "level = 11\nshape = \"burst\"\nresolution = \"area\"\ndamage_type = \"fire\"\n\
                     max_range = 8\nmax_radius = 2\ndamage = { dice = \"2d6\" }";
         assert!(spells(&fireball(good)).is_ok());
         for (from, to, why) in [
@@ -1551,7 +1333,18 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
                 "{ dice = \"2d6\", max_dice = 1 }",
                 "`max_dice` is 2",
             ),
-            ("tier = 3", "tier = 10", "tier is 0 to 9"),
+            ("level = 11", "level = 71", "`level` is 0 to 70"),
+            ("level = 11\n", "", "a spell needs a `level`, 0 to 70"),
+            (
+                "level = 11",
+                "tier = 3",
+                "`tier` is gone: use `level`, 0 to 70",
+            ),
+            (
+                "level = 11",
+                "level = 11\ntier = 3",
+                "`tier` is gone: use `level`",
+            ),
             // Only a buff on its caster may hasten (creatures never step quicker).
             (
                 "damage = { dice = \"2d6\" }",
@@ -1573,7 +1366,7 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
                 "max_radius = 2\nlength = 2",
                 "a `burst` has no `length`",
             ),
-            ("tier = 3", "tier = 3\ncasts = 0", "`casts` is 1 to 10"),
+            ("level = 11", "level = 11\ncasts = 0", "`casts` is 1 to 10"),
             (
                 "damage = { dice = \"2d6\" }",
                 "damage = { dice = \"2d6\" }\ncast = { effect = \"fireball\", frost = 10, heat = true }",
@@ -1590,6 +1383,7 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             let e = spells(&fireball(&body)).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
+        assert!(spells(&fireball(&good.replace("level = 11", "level = 70"))).is_ok());
         let e = spells(&format!("{}{}", fireball(good), fireball(good))).unwrap_err();
         assert!(
             e.message.contains("duplicate spell id `fireball`"),
@@ -1602,7 +1396,7 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
     }
 
     #[test]
-    fn dice_grow_with_caster_level_and_stop_at_the_cap() {
+    fn dice_grow_with_caster_level_from_the_spells_level_up_to_max_dice() {
         let d = SpellDice {
             count: 2,
             sides: 6,
@@ -1610,18 +1404,18 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             max_dice: 3,
             bonus: 0,
         };
-        // Fireball, comfortable at 12: 2d6 up to 15, 3d6 from 16 on, never more.
-        let at = |level| d.at(level, 12).to_string();
+        // Fireball, level 11: 2d6 up to caster level 14, 3d6 from 15 on, never more.
+        let at = |level| d.at(level, 11).to_string();
         assert_eq!(
-            [at(1), at(12), at(15), at(16), at(60)],
+            [at(1), at(11), at(14), at(15), at(60)],
             ["2d6", "2d6", "2d6", "3d6", "3d6"]
         );
         let fixed = SpellDice { per_levels: 0, ..d };
-        assert_eq!(fixed.at(60, 12).to_string(), "2d6");
+        assert_eq!(fixed.at(60, 11).to_string(), "2d6");
     }
 
     #[test]
-    fn a_lift_adds_the_dice_its_room_holds_and_no_lift_changes_nothing() {
+    fn a_lift_adds_its_percent_of_max_dice_and_no_lift_changes_nothing() {
         let d = SpellDice {
             count: 2,
             sides: 6,
@@ -1629,26 +1423,23 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             max_dice: 3,
             bonus: 0,
         };
-        // Fireball (cap 19): lifted 50 % to 28 a die more, 70 % to 32 two (the design's §7.3).
-        let lifted = |level, to| d.lifted(level, 12, (19, to)).to_string();
+        // Fireball (three dice at most by level): lifted 50 % a die more, 70 % two.
+        let lifted = |level, lift| d.lifted(level, 11, lift).to_string();
         assert_eq!(
             [
-                lifted(12, 19),
-                lifted(12, 28),
-                lifted(16, 28),
-                lifted(60, 32)
+                lifted(11, 0),
+                lifted(11, 50),
+                lifted(15, 50),
+                lifted(60, 70)
             ],
             ["2d6", "3d6", "4d6", "5d6"]
         );
-        for level in [1, 12, 16, 60] {
-            assert_eq!(d.lifted(level, 12, (19, 19)), d.at(level, 12), "no lift");
-            assert!(
-                d.lifted(level, 12, (19, 32)).max() <= 32,
-                "within the lifted cap"
-            );
+        for level in [1, 11, 15, 60] {
+            assert_eq!(d.lifted(level, 11, 0), d.at(level, 11), "no lift");
+            assert_eq!(d.lifted(level, 11, -40), d.at(level, 11), "never below");
         }
-        // A bonus takes its room: 1d6+4 under a cap of 10 lifted to 15 holds no die more, to 16
-        // one.
+        // Nothing bounds it: a lift of 400 % is twelve dice more.
+        assert_eq!(lifted(15, 400), "15d6");
         let b = SpellDice {
             count: 1,
             sides: 6,
@@ -1656,25 +1447,22 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
             max_dice: 1,
             bonus: 4,
         };
-        assert_eq!(b.lifted(1, 1, (10, 15)).to_string(), "1d6+4");
-        assert_eq!(b.lifted(1, 1, (10, 16)).to_string(), "2d6+4");
+        assert_eq!(b.lifted(1, 1, 99).to_string(), "1d6+4");
+        assert_eq!(b.lifted(1, 1, 100).to_string(), "2d6+4");
     }
 
     #[test]
-    fn the_lift_is_never_below_0_nor_past_the_tiers_most() {
-        let r = rules();
-        assert_eq!(r.max_lift, [40, 50, 60, 70, 80, 80, 80, 80, 80, 80]);
+    fn the_lift_is_never_below_0_and_has_no_most() {
         assert_eq!(
-            [r.lift(3, -20, 0), r.lift(3, 50, 0), r.lift(3, 110, 0)],
-            [0, 50, 70]
+            [
+                SpellRules::lift(-20, 0),
+                SpellRules::lift(50, 0),
+                SpellRules::lift(110, 0)
+            ],
+            [0, 50, 110]
         );
-        assert_eq!(r.lift(3, 110, 10), 80, "Keen mind's 10 points more");
-        let list = spells(FIRST_LIST).expect("valid");
-        let fireball = list.iter().find(|s| s.id == "fireball").expect("fireball");
-        assert_eq!(
-            [r.lifted_cap(fireball, 0), r.lifted_cap(fireball, 70)],
-            [19, 32]
-        );
+        assert_eq!(SpellRules::lift(110, 10), 120, "Keen mind's 10 points more");
+        assert_eq!(SpellRules::lift(-20, 10), 10);
     }
 
     #[test]
@@ -1702,7 +1490,7 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
         }
         let ray = |scales: &str| {
             format!(
-                "[[spell]]\nid = \"ray\"\nname = \"Ray\"\ndescription = \"x\"\ntier = 2\n\
+                "[[spell]]\nid = \"ray\"\nname = \"Ray\"\ndescription = \"x\"\nlevel = 6\n\
                  school = \"evocation\"\nkind = \"damage\"\nshape = \"ray\"\n\
                  resolution = \"attack\"\ndamage_type = \"fire\"\nmax_range = 8\n\
                  damage = {{ dice = \"3d6\" }}\n[spell.scales]\n{scales}\n"
@@ -1735,45 +1523,38 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
         assert_ne!(spark, FIRST_LIST);
         let e = spells(&spark).unwrap_err();
         assert!(e.message.contains("no `to_hit`"), "{}", e.message);
-        // The cap check stays the unlifted one: a lift in the file lets nothing more be written.
-        let over = ray("damage = { intelligence = 10 }").replace("3d6", "4d6");
-        let e = spells(&over).unwrap_err();
-        assert!(
-            e.message.contains("over tier 2's cap of 18"),
-            "{}",
-            e.message
-        );
     }
 
     #[test]
-    fn a_cast_costs_by_tier_overreach_shape_resolution_and_armour() {
+    fn a_cast_costs_by_level_shape_resolution_and_armour() {
         let r = rules();
         let list = spells(FIRST_LIST).expect("the first list");
         let spell = |id: &str| list.iter().find(|s| s.id == id).expect("a spell").clone();
-        let at = |id: &str, level: i32, armour: u32| r.mana(&spell(id), level, armour);
-        // (spell, caster level, armour %, mana): the design's §5 and §7.
+        let at = |id: &str, armour: u32| r.mana(&spell(id), armour);
+        // (spell, armour %, mana): the spell scaling design §5.3 and §5.8.
         let table = [
-            ("spark", 1, 0, 1),            // tier 0, single target
-            ("magic_missile", 3, 0, 3),    // tier 1 at its comfortable level
-            ("magic_missile", 1, 0, 5),    // one tier over: 3 × 1.5 = 4.5, rounded up
-            ("scorching_ray", 1, 0, 12),   // two tiers over: 6 × 2
-            ("scorching_ray", 30, 0, 6),   // far above it: never cheaper than the base
-            ("burning_hands", 3, 0, 5),    // a cone: 3 × 1.6 = 4.8
-            ("cause_wounds", 3, 0, 2),     // touch: 3 × 0.7 = 2.1
-            ("fireball", 12, 0, 26),       // a burst of radius 2: 11 × 2.4 = 26.4
-            ("lightning_bolt", 12, 0, 20), // a line: 11 × 1.8 = 19.8
-            ("fireball", 6, 0, 40),        // one tier over, then the burst: 11 × 1.5 × 2.4
-            ("magic_missile", 3, 40, 4),   // plate: 3 × 1.4 = 4.2
-            ("fireball", 12, 30, 34),      // banded mail: 26.4 × 1.3 = 34.32
+            ("spark", 0, 1),           // level 1, single target
+            ("magic_missile", 0, 3),   // level 3
+            ("scorching_ray", 0, 7),   // level 7
+            ("burning_hands", 0, 6),   // a cone: 4 × 1.6 = 6.4
+            ("cause_wounds", 0, 3),    // touch: 4 × 0.7 = 2.8
+            ("fireball", 0, 26),       // a burst of radius 2: 11 × 2.4 = 26.4
+            ("lightning_bolt", 0, 20), // a line: 11 × 1.8 = 19.8
+            ("magic_missile", 40, 4),  // plate: 3 × 1.4 = 4.2
+            ("fireball", 30, 34),      // banded mail: 26.4 × 1.3 = 34.32
         ];
-        for (id, level, armour, mana) in table {
-            assert_eq!(at(id, level, armour), mana, "{id} at {level} in {armour} %");
+        for (id, armour, mana) in table {
+            assert_eq!(at(id, armour), mana, "{id} in {armour} %");
         }
-        // Area is dearer than the tier's single target, and weaker per target (§12.5).
-        let (ball, ray) = (spell("fireball"), spell("magic_missile"));
-        assert!(r.mana(&ball, 12, 0) > i32::from(r.cost[3]));
-        assert!(r.cap(3, Resolution::Area) < r.cap(3, Resolution::Attack));
-        assert!(r.mana(&ray, 3, 0) == i32::from(r.cost[1]));
+        // Area is dearer than a single target of its level.
+        let ball = spell("fireball");
+        assert!(r.mana(&ball, 0) > i32::from(ball.level));
+        // A level-0 spell still costs 1.
+        let light = SpellData {
+            level: 0,
+            ..spell("spark")
+        };
+        assert_eq!(r.mana(&light, 0), 1);
     }
 
     #[test]
@@ -1797,52 +1578,50 @@ damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
     }
 
     #[test]
-    fn the_shipped_spells_are_the_first_list_within_their_tiers() {
+    fn the_shipped_spells_are_at_the_designs_levels_and_costs() {
         let content = Content::builtin().expect("content");
-        let r = content.spell_rules().expect("the tier table");
-        // (spell, tier, its dice at the tier's comfortable level, mana there, whether a class
-        // ability gives it; every other is learned from scrolls only).
+        let r = content.spell_rules().expect("the cost table");
+        // (spell, level, its dice at the caster level of its level, mana, whether a class
+        // ability gives it; every other is learned from scrolls only): the spell scaling design
+        // §5.8.
         let table = [
-            ("arcane_bolt", 2, Some("2d6"), 11, true),
-            ("barkskin", 1, None, 3, true),
-            ("blessing", 1, None, 3, true),
-            ("blight", 2, Some("2d6"), 14, true),
-            ("burning_hands", 1, Some("1d4"), 5, true),
-            ("call_lightning", 3, Some("2d6"), 20, true),
-            ("cause_wounds", 1, Some("1d6"), 2, true),
-            ("cure_wounds", 1, None, 2, true),
-            ("curse_of_sloth", 1, None, 3, true),
+            ("arcane_bolt", 6, Some("2d6"), 11, true),
+            ("barkskin", 3, None, 3, true),
+            ("blessing", 3, None, 3, true),
+            ("blight", 7, Some("2d6"), 17, true),
+            ("burning_hands", 4, Some("1d4"), 6, true),
+            ("call_lightning", 11, Some("2d6"), 20, true),
+            ("cause_wounds", 4, Some("1d6"), 3, true),
+            ("cure_wounds", 3, None, 2, true),
+            ("curse_of_sloth", 3, None, 3, true),
             ("evil_eye", 0, None, 1, true),
-            ("fireball", 3, Some("2d6"), 26, false),
-            ("flame", 3, Some("3d6"), 26, true),
-            ("frost", 2, Some("2d6"), 14, true),
-            ("haste", 3, None, 11, false),
-            ("hex_of_weakness", 1, None, 3, true),
+            ("fireball", 11, Some("2d6"), 26, false),
+            ("flame", 12, Some("3d6"), 29, true),
+            ("frost", 6, Some("2d6"), 14, true),
+            ("haste", 11, None, 11, false),
+            ("hex_of_weakness", 3, None, 3, true),
             ("light", 0, None, 1, false),
-            ("lightning_bolt", 3, Some("2d6"), 20, false),
-            ("magic_missile", 1, Some("1d4"), 3, true),
-            ("mend", 0, None, 1, true),
-            ("ray_of_frost", 0, Some("1d6"), 1, true),
-            ("identify", 2, None, 60, false),
-            ("remove_disease", 3, None, 11, true),
-            ("scorching_ray", 2, Some("1d6"), 6, false),
-            ("sleep", 2, None, 11, false),
-            ("spark", 0, Some("1d4"), 1, true),
-            ("web", 2, None, 11, false),
+            ("lightning_bolt", 11, Some("2d6"), 20, false),
+            ("magic_missile", 3, Some("1d4"), 3, true),
+            ("mend", 1, None, 1, true),
+            ("ray_of_frost", 1, Some("1d6"), 1, true),
+            ("identify", 6, None, 60, false),
+            ("remove_disease", 11, None, 11, true),
+            ("scorching_ray", 7, Some("1d6"), 7, false),
+            ("sleep", 6, None, 11, false),
+            ("spark", 1, Some("1d4"), 1, true),
+            ("web", 7, None, 13, false),
         ];
-        for (id, tier, dice, mana, given) in table {
+        for (id, level, dice, mana, given) in table {
             let at = content.spell_id(id).expect("shipped");
             let spell = content.spell(at);
-            assert_eq!(spell.tier, tier, "{id}");
-            let level = r.comfortable[usize::from(tier)];
-            assert_eq!(r.mana(spell, i32::from(level), 0), mana, "{id}");
+            assert_eq!(spell.level, level, "{id}");
+            assert_eq!(r.mana(spell, 0), mana, "{id}");
+            let from = spell.grows_from();
             let rolled = spell
                 .damage
-                .map(|d| d.at(i32::from(level), level).to_string());
+                .map(|d| d.at(i32::from(from), from).to_string());
             assert_eq!(rolled.as_deref(), dice, "{id}");
-            if let Some(d) = spell.damage.or(spell.effect.heal) {
-                assert!(d.max() <= r.cap_of(spell), "{id} under its cap");
-            }
             assert_eq!(
                 content.class_spell(at).is_some(),
                 given,

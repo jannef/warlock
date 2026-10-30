@@ -1,5 +1,6 @@
-# Spells (spec §8 "Spells", the magic design docs/design/magic.md §3, §5, §6): one file per
-# spell holding one `[[spell]]`, measured by the tier table in ../spells.toml. Spells are numbered
+# Spells (spec §8 "Spells", the magic design docs/design/magic.md §3, §5, §6, the spell scaling
+# design docs/design/spell-scaling.md §5): one file per spell holding one `[[spell]]`, its mana
+# priced by the cost table in ../spells.toml. Spells are numbered
 # in path order (saves will name them by index), so a new spell is a new file. This file holds
 # only the notes below: a file of comments defines nothing. The casters' spell abilities name
 # their spells here by id (a talent's `spell` effect); the one cast path casts them (#395).
@@ -7,7 +8,9 @@
 # Fields:
 #   id, name      the spell's id and its name
 #   description   one line
-#   tier          0 (a cantrip) to 9 (../spells.toml)
+#   level         its spell level, 0 to 70: its base mana (the level, at least 1) and the
+#                 caster level at which a scroll of it teaches for certain (../study.toml). 0 and
+#                 1 are cantrips. (`tier` is refused: the levels replaced the tiers)
 #   The tags (talents, abilities, items, and the wiki key on them; magic design §6):
 #   school        evocation, necromancy, abjuration, restoration, transmutation, enchantment,
 #                 or divination
@@ -27,14 +30,16 @@
 #                 a cell per two modifier points) up to the cap. A burst costs by its `radius`
 #   casts         its time, in `cast` actions (1 to 10; default 1)
 #   open_sky      true: it is cast only under the open sky (default false)
-#   mana          its base mana cost given outright (1 to 500), in place of the tier table's:
-#                 tier, overreach, shape, and resolution do not count; the armour worn and the
-#                 talents still do. For a spell whose price is not its difficulty (Identify)
+#   mana          its base mana cost given outright (1 to 500), in place of its level's: the
+#                 shape and resolution do not count; the armour worn and the talents still do.
+#                 For a spell whose price is not its difficulty (Identify)
 #   [spell.damage]  a `damage` spell's damage, rolled:
-#     dice        what it rolls at the tier's comfortable caster level: dice only, `1d6`
+#     dice        what it rolls at the caster level of its spell level (at least 1): dice only,
+#                 `1d6`
 #     per_levels  one die more per this many caster levels above that (0: never more;
 #                 default 0)
-#     max_dice    the cap: never more dice than this (at least dice's own; default dice's)
+#     max_dice    never more dice than this by caster level (at least dice's own; default
+#                 dice's)
 #     bonus       a static `+n`, rare (default 0)
 #   [spell.effect]  what a spell of another kind does:
 #     heal        a `heal` spell's hit points: a table as [spell.damage]
@@ -59,8 +64,9 @@
 #                 table of stats (`intelligence`, `willpower`, ...) to weights, 1 to 200, each a
 #                 percent of the stat's modifier, summed. All optional; a dimension left out
 #                 keeps its default, `{}` names no stat:
-#     damage      percent its cap is lifted by, never below 0, at most its tier's `max_lift`
-#                 (../spells.toml); a damage or a heal spell's. Default {}: no lift
+#     damage      percent its dice are lifted by, never below 0: max_dice × the lift ÷ 100
+#                 dice more, rounded down (Keen mind and Potent add points); a damage or a heal
+#                 spell's. Default {}: no lift
 #     to_hit      percent of each modifier added to a damage spell's `attack` or `touch` roll,
 #                 a half rounded toward zero. Default { dexterity = 100 }
 #     reach       percent of a cell of range, length, or a burst's radius per modifier point,
@@ -68,11 +74,7 @@
 #     duration    percent of a degree more of a buff's or a hex's status per modifier point,
 #                 as reach. Default { presence = 50 }
 #   [spell.scroll]  how it comes on a scroll: `level`, the caster level a read casts it at
-#                 (default the tier's comfortable level)
+#                 (default its spell level, at least 1)
 #
-# The cap, checked when the content loads: no spell may roll more than its tier's ceiling times
-# its resolution's `damage` percent (../spells.toml) in one cast, harm or healing: max_dice times
-# the dice's sides plus the bonus. A bonus is at most a quarter of the tier's ceiling. A spell over
-# it is refused rather than clamped. Only a caster's stats lift the cap (`[spell.scales]`
-# `damage`, at most the tier's `max_lift`), and the dice follow: as many more as the lift's room
-# holds. Nothing passes the lifted cap.
+# Nothing checks or holds how much a spell does (the spell scaling design, decision 16): a spell
+# rolls what its author writes, and the talents, the stats, and a critical add to it.

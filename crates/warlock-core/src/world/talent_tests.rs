@@ -275,8 +275,8 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
             "choice = \"school\"\nneeds = { race = \"elf\" }\n",
         )
         .replace(
-            "needs = { level = 6 }\neffects = [{ kind = \"overreach_cost_percent\"",
-            "needs = { race = \"elf\" }\neffects = [{ kind = \"overreach_cost_percent\"",
+            "needs = { level = 6 }\neffects = [{ kind = \"study\", overreach_percent",
+            "needs = { race = \"elf\" }\neffects = [{ kind = \"study\", overreach_percent",
         )
         .replace(
             "tree = \"vigour\"\ndescription = \"Your stamina holds",

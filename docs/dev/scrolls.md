@@ -107,7 +107,7 @@ draws `Event::Spell`; a burst's origin is the reader, so it flies there first).
 (`Reading::Cast(SpellScroll { spell, level, reach, on_item })`, resolved as objects load, spells loading
 first; only `spell` may be given). Reading one is `World::read_cast` (`world/cast.rs`): the one
 cast path with `Pay::Scroll(item)` instead of mana, at `level` (the spell's `[spell.scroll]
-level`, else its tier's comfortable level), never asking whether the reader knows the spell or
+level`, else its spell level, at least 1), never asking whether the reader knows the spell or
 has the mana; the scroll is used up (`use_up`, Spell recall's chance) and said read
 (`say_read`, which identifies its type) only once the cast is sure to go off, so a refusal
 keeps it and takes no time. An aimed spell needs its cell (`read:b:12,5`), a spell on a stack
@@ -129,16 +129,16 @@ Spells (the one cast path, `world/cast.rs`, docs/dev/spells.md) share this code:
 goes through `burst_center` and `cast_burst`, a line through `bolt_line` and `cast_bolt`, and
 both are said with `say_spell`, as `read_spell` does (`Cause::Spell` for a caster killed by their
 own). Both apply the caster's `TalentMods::spell_damage` (Scroll adept, Empower, Archmage) to the
-dice first; a spell's roll is then held to its cap (`Burst::cap`, `Bolt::cap`), a scroll's is
-not (`None`). `spell_def::check_effects` checks spells' effects the way `check_spells` checks
+dice first; nothing holds the roll after (S1 retired `Burst::cap` and `Bolt::cap`, decision
+16). `spell_def::check_effects` checks spells' effects the way `check_spells` checks
 scrolls'.
 
 Content and places: the trap hall (`levels/trap_hall.toml`) has a pile of scrolls (two each of
 fireball, lightning, and frost, three of identify) and an unidentified dagger beside the arrival; general stores stock and
 buy the `scrolls` class, and a generated one always lays out scrolls of identify (`always` in
 `data/shops.toml`; Cēaptūn's has three by hand). The scroll of identify's `frequency` is 300,
-the spell scrolls' 20 to 60 by tier (level, frequency, and value by tier, the older three
-too: docs/dev/spells.md "The first list"). The
+the spell scrolls' 20 to 60 by spell level (level, frequency, and value each the object's own,
+by the objects' README convention, the older three too: docs/dev/spells.md "The first list"). The
 wiki's table is `xtask/src/wiki/scrolls.rs` (`scrolls.md`), sharing `ice_text`/`sound_text`
 with the traps' table. Tests: `world/read_tests.rs` (the shared casts match the traps', bursts
 and bolts, kills and experience, refusals, identify, death, saves and replays, loot), the read
