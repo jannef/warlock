@@ -81,14 +81,17 @@ adding affixes keeps saves; their values and tiers are checked on load, lenientl
 ladder regraded since a save was made may move the range a saved tier holds, so
 `World::from_state` first re-tiers every magic stack (`world/retier.rs`: what actors carry, the
 levels' piles, remembered piles, and chests) with `Magic::retier`, which moves an affix whose value
-its tier no longer holds to the first tier that holds it, or the nearest when none does, the value
-kept; `Magic::check` then accepts a value no tier holds on its nearest tier. Each move is a line in
+its tier no longer holds to the first tier that holds it, the value kept, or the nearest when
+none does, the value then held to that tier's range (S2, the spell scaling design §7.3: an old
+Potent of 4 to 15 becomes the top tier's +3; save compatibility for a stored number, not a limit
+on spells; before S2 the value was kept and `Magic::check` accepted it on its nearest tier). Each move is a line in
 `World::retiered`, which the game logs (`crates/warlock/src/save.rs`); nothing is refused and the
 content fingerprint (which leaves affixes out) is unchanged (`world/retier_tests.rs`).
 
 **The system effects** (#628, docs/design/affixes-systems.md §4–§6): `Effect` holds, by group,
-the spell ones (`mana_cost`, `spell_ease`, `spell_to_hit`, `spell_threat`, `spell_lift`,
-`spell_reach`, `spell_duration`, `mana_on_kill`, `wand_level`), the resource ones
+the spell ones (`mana_cost`, `spell_ease`, `spell_to_hit`, `spell_threat`, `spell_rungs`,
+`spell_bonus`, `spell_sides`, `spell_dice`, `spell_reroll`, `spell_reach`, `spell_duration`,
+`mana_on_kill`, `wand_rungs`; S2 replaced `spell_lift` and `wand_level`), the resource ones
 (`resource_max`, `resource_rate`, `active_stamina`, `resource_on_kill`), and the utility ones
 (`door_kick`, `dig_percent`, `hunger`, `trap_damage`, `disease_check`, `potion_kept`), each with
 its parse, `Mods::add` arm (a sum), `describe::phrase`, and wiki words. The hooks came first,
@@ -114,13 +117,15 @@ Vicious), `extra_damage` (an extra die: Heavy and the suffix of Wounding), and o
 (`fire_damage`, ...); the one-per-category rule stands. **The spell hooks** (A1, #629; `world/affix_spell_tests.rs`): `mana_cost` in
 `Actor::mana_cost` (joins Frugal caster's percent, 50 off at most), `spell_ease` in
 `Actor::worn_spell_cost` (each piece less its own, never below 0: a fully eased piece leaves the
-armoured grip), `spell_to_hit`, `spell_lift` (beside Keen mind's), and `spell_duration` in
-`world/spell_scale.rs`, `spell_reach` in `Actor::spell_reach` (beside School focus's, the range or
-length only), `spell_threat` in `Actor::spell_threat` (22 less it, never below `THREATS`' floor;
+armoured grip), `spell_to_hit` in `Actor::spell_to_hit` (`world/spell_rung.rs`), the spell
+hooks' items in `Actor::spell_mods` (`world/spell_mods.rs`, beside the talents': `spell_rungs`,
+`spell_bonus` (Potent, +1 / +2 / +3 at item levels 3 / 7 / 11), `spell_sides`, `spell_dice`,
+`spell_reroll`, `wand_rungs`, `spell_reach` as cells of range or length beside School focus's,
+`spell_duration` as degrees; no tag filter on an item yet), `spell_threat` in `Actor::spell_threat` (22 less it, never below `THREATS`' floor;
 an own cast only, `reflect::Shot::threat`). **The potion and wand hooks** (E2, #633;
 `world/affix_draught_tests.rs`): `potion_kept` in `Actor::potion_kept` (Thrifty drinker's chance
 plus the worn, held to `potion::MAX_KEPT` 50 unless the talent alone is above it; `take_draught`
-draws only above 0), `wand_level` in `Actor::wand_caster_level` (beside Wand mastery's). Each hook's tests bring fixture affix files
+draws only above 0), `wand_rungs` (of Wands) in `Actor::spell_mods` (beside Wand mastery's). Each hook's tests bring fixture affix files
 (`ContentFiles::insert("data/affixes/zz_fixture.toml", ...)`, as `magic/tests.rs` does).
 `spell_ease` is an item effect (local: the piece's own `spell_cost_percent`), allowed on body
 armour, helmets, and shields, and `may_roll` keeps it to objects with a `spell_cost_percent`.

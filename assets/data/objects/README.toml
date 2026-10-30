@@ -175,16 +175,13 @@
 #              ends every disease at once, shown or not (spec §8 "Diseases")
 # Scrolls (spec §8 "Scrolls"; read with `r`):
 #   [object.read]  what reading it does (never on things worn, wielded, eaten, shot, or thrown);
-#              reading takes the `read` action (actions.toml) and uses one up. `kind`:
-#     burst    a trap's burst (traps.toml has the fields: `spell`, `noun`, `verb`, `damage`,
-#              `radius`, `blast`, `heat` or `frost`, `noise`), aimed: it flies from the reader
-#              toward the cell aimed at, as far as its `range` (cells), and goes off on the first
-#              creature in its way, before a wall, or there; it may catch the reader
-#     bolt     a trap's bolt (`spell`, `noun`, `verb`, `damage`, `length`, `noise`), aimed: it
-#              runs from the reader through the cell aimed at and on, `length` cells or to a wall
-#     identify identifies one unidentified item the reader carries
-#   `message` (burst, bolt) is said as it is read. A scroll may have `level` and `frequency`, as
-#   base items do: it is loot, never magic.
+#              reading takes the `read` action (actions.toml) and uses one up. `kind = "spell"`
+#              (the only kind; `burst` and `bolt` are refused since the spell scaling design
+#              §7.4): `spell`, a spell of spells/ it casts free of mana through the one cast
+#              path and teaches when studied, and `rungs` (default 0, the base; at most the
+#              length of the spell's damage or heal ladder), the rung it casts at, before the
+#              reader's Scroll adept. A scroll may have `level` and `frequency`, as base items
+#              do: it is loot, never magic.
 # Potions (spec §8 "Potions"; drunk from the Consume list, `e`):
 #   [object.drink]  what drinking it does (stackable, and nothing else: no slot, weapon, food,
 #              scroll, wand, or rod); a drink takes the `drink` action and uses one up. `kind`

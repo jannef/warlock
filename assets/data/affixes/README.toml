@@ -42,6 +42,15 @@
 #                           everything else worn)
 #             max_mana      + maximum mana
 #             mana_regeneration  mana comes back N% faster
+#             the spell hooks (the spell scaling design §7.1, docs/dev/spells.md "The hooks";
+#                           on every spell of the wearer's, no tag filter): spell_rungs (rungs
+#                           higher on its own casts' damage and heal ladders), spell_bonus (+ on
+#                           every spell's roll, harm or healing: Potent), spell_sides (every
+#                           spell die N sides bigger), spell_dice (N dice more), spell_reroll (a
+#                           spell die showing N or less rolled again, once), wand_rungs (the
+#                           wands it uses N rungs higher: of Wands), spell_reach (N cells of
+#                           range or length: of Farcasting), spell_duration (N degrees of a
+#                           buff's or a hex's status: of Lingering)
 #             strength, dexterity, toughness, intelligence, willpower, presence   + to the score
 #             move_speed    steps N% faster (at most 50 in all)
 #             carry         + N kg carrying limit

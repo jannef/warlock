@@ -898,10 +898,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `study { overreach_percent = -33 }`, the spell scaling design §7.2: a spell's levels over
     the caster level count a third fewer, rounded down, in the study check;
     `TalentMods::study_overreach_percent`), and School focus (free, `choice = "school"`: a school or
-    an element, the spell tags of §8 "Spells"; `school_focus` cost −10 %, reach +1: a spell
-    carrying the tag costs a tenth less and reaches a cell farther, range or length, never past
-    its cap, `TalentMods::focus`); the casters' Empower, Archmage, Scroll adept, Frugal caster,
-    the wizard's Arcane training, and every class spell name it too. Wand mastery comes with
+    an element, the spell tags of §8 "Spells"; `spell_mod { cost = -10, cells = 1 }`: a spell
+    carrying the tag costs a tenth less and reaches a cell farther, range or length); Keen mind
+    (free, the same choice: `spell_mod { sides = 1 }`, its spells' dice a size bigger); Sure
+    hand (level 12: `spell_mod { reroll = 1 }`, a spell die showing 1 rolled again, once);
+    Numbing cold (level 12: `spell_mod { rider = { status = "sluggish", severity = 1 }, when =
+    ["cold"] }`, what a cold spell harms a degree Sluggish); Brimming (level 25: `spell_mod {
+    dice = 1 }` and `spell_mana_percent` +10, systems `spells` and `mana`) (the spell scaling
+    design §7.2: every spell hook ships with a user); the casters' Empower, Archmage, Scroll
+    adept, Frugal caster, the wizard's Arcane training, and every class spell name it too. Wand mastery comes with
     wands (#398) and Channeler with rods (#399), whose hooks they need.
     Grave warden (Guard, Willpower 12, `grave_warden`, #408): nothing the player kills rises in
     a cursed room (`World::curse_corpse`, the rise line of `fight.rs::creature_dies`).
@@ -1052,23 +1057,25 @@ developer notes (CLAUDE.md, `docs/dev/`).
     bush, reeds, tall grass, marsh as grass), Weather sense (a 3-hour forecast), Nature's ward
     (wading never sickens; poison eases twice as fast), Winter's friend (ice holds the body's
     weight alone, plunges never hurt, climbing out is free), Call lightning (at 12; level 11: a line of
-    8 cells, to 10, 2d6 electricity, a die more per 4 caster levels to 3d6, a thunderclap; open
+    8 cells, 2d6 electricity, its ladder Willpower 13: 3d6 to 25: 5d6+2, a thunderclap; open
     sky only; 20 mana), Sun and moon (sun
     healing +50 %, night sight +1), Flame and frost (two spells, Flame: level 12, the fireball's
     burst, 3d6 fire, radius 2, blast, 29 mana; Frost: level 6, 2d6 cold, freezes water, 14
     mana), Timeless body (hunger −50 %; a
     failed disease check does nothing, so a disease never progresses).
-  - **Wizard**: Scroll adept (reading −50 %; +1 on every die of spells and spell scrolls),
+  - **Wizard**: Scroll adept (reading −50 %; the spell scrolls read a rung higher, scrolls only:
+    the spell scaling design, decision 12),
     Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Arcane training
     (at 1: caster level +1 per 5 character levels, `caster_level` with `per_levels`), Magic missile
-    (level 3, at 3: never misses, 1d4 force, to 2d4; 3 mana), Arcane lore (a magic item carried
+    (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
+    mana), Arcane lore (a magic item carried
     an hour is identified), Spell recall (the Scholar talent, handed out), Burning hands (level
-    4, at 12: a cone of 3 cells, 1d4 fire, to 2d4; 6 mana), Arcane bolt (level 6, at 18: a line
-    of 6 cells, to 8, 2d6 force; 11 mana), Mage armour (Deflection +2 in no body armour),
-    Empower (spells and spell scrolls a die more; spells' mana −10 %), Arcane mastery (mana
-    +100 %), Archmage (+2 on every die; spells' mana −50 %, at least 1). `spell_power` reads in
-    `TalentMods::spell_damage` for spells and `read_spell` alike; nothing holds the roll
-    after (the spell scaling design, decision 16). The wizard's bonus talents
+    4, at 12: a cone of 3 cells, 1d4 fire, its ladder to 3d4+2; 6 mana), Arcane bolt (level 6, at
+    18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Mage armour (Deflection +2 in no body armour),
+    Empower (`spell_mod { rungs = 1 }`: its spells a rung higher on their ladders; spells' mana
+    −10 %), Arcane mastery (mana +100 %), Archmage (two rungs; spells' mana −50 %, at least 1).
+    The rungs never pass a ladder's last; nothing holds the roll after (the spell scaling
+    design, decisions 5 and 16). The wizard's bonus talents
     come from the Scholar and Spellcraft trees.
   - **Witch**: Herb lore (rotten food −50 %, a corpse's `on_eat` harm and vomiting never, the
     angelica root heals 1d6), Evil eye (level 0, at 1: Hexed 1 min a degree: −2 to hit; 1 mana),
@@ -1368,7 +1375,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the ammunition ready, else a throw of what is ready to throw; nothing without, no draw),
     `parry_missiles` (Measure: Parry counts against shots and throws, which it otherwise never
     does, "Combat" §8c), `reflect_spell` (Spell reflection: the blocked spell is cast again
-    from the actor's cell at its caster, as the caster cast it, its caster level, dice,
+    from the actor's cell at its caster, as the caster cast it, its roll, rerolls,
     to-hit, and riders, rolling its own attack against the caster's Defence; no mana spent
     again, nothing for the actor; at most `per_turn` (1) a turn of the actor's, and a reflected
     spell is never reflected again. Bursts, cones, lines, and hexes roll no attack and are never

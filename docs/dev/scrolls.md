@@ -5,34 +5,33 @@ spec/08g-magic-items.md ("Scrolls") and spec/06-input-and-ui.md. Keep it current
 as CLAUDE.md says.
 
 Scrolls (spec §8 "Scrolls") are objects with a `read` table (`content/scroll.rs`: `ReadSpec` →
-`Reading::{Spell(ScrollSpell), Cast(SpellScroll)}`; `ScrollSpell { cast:
-Cast::{Burst, Bolt}, range, noun, verb, message, noise, teaches }`), one file each in
+`Reading::Cast(SpellScroll { spell, rungs, reach, on_item })`), one file each in
 `data/objects/`: a scroll of every spell of `data/spells/` (`scroll_of_ID`, kind `spell`,
-`Reading::Cast`, "Scrolls of spells" below), the three older ones whose readings are the traps'
-bursts and bolts (`scroll_of_fireball`, `scroll_of_lightning`, `scroll_of_frost`,
-`Reading::Spell`). **Every scroll is a real spell** (#592): each teaches a spell of
-`data/spells/` (`read_tests.rs::every_builtin_scroll_can_be_read` holds every `scroll_of_*` to
-it); the `identify` reading kind is gone, and `scroll_of_identify` is a `spell` scroll of
-Identify (below). `scroll_of_light` casts the cantrip Light (#589:
-until then it had no `read` and could not be read at all): a buff whose status, Lit, has a
-`light` (`StatusDef::light`), which the light cache sheds about its bearer while it lasts
-(`light/cache.rs`, the brightest of several, as Holy radiance's). `read_tests.rs`
-`every_builtin_scroll_can_be_read` reads every `scroll_of_*` in the content, so a scroll left
-without a reading fails it. The older
-three's spells are the traps' own data types (`content/spell.rs`: `Burst`, `Bolt`,
-`BurstIce`, `SpellFields`, with `Burst::new`/`Bolt::new` the one place their fields are
-checked, and `check_effect`, the effect-shape check, run for scrolls once `data/effects.toml`
-is loaded, `scroll::check_spells`); `TrapEffect::Burst(Burst)`/`Bolt(Bolt)` hold the same
-structs. A scroll's `level` and `frequency` make it loot (`ObjectDef::frequency` > 0 for base
-items and scrolls; `magic::loot::roll` draws among both, leaves objects without a `kind` out of
-loot that must be magic, and draws no rarity for them).
+"Scrolls of spells" below). Since S2 (the spell scaling design §7.4) the three older ones
+(`scroll_of_fireball`, `scroll_of_lightning`, `scroll_of_frost`) are spell scrolls too, at a
+rung of their spells' ladders (1, 2, and 0: 3d6, 4d6, 2d6, as they rolled); their `burst` and
+`bolt` readings are gone (a `read` of either kind is refused, naming the `spell` kind and
+`rungs`). **Every scroll is a real spell** (#592): each teaches its spell
+(`read_tests.rs::every_builtin_scroll_can_be_read` holds every `scroll_of_*` to it); the
+`identify` reading kind is gone, and `scroll_of_identify` is a `spell` scroll of Identify
+(below). `scroll_of_light` casts the cantrip Light (#589: until then it had no `read` and could
+not be read at all): a buff whose status, Lit, has a `light` (`StatusDef::light`), which the
+light cache sheds about its bearer while it lasts (`light/cache.rs`, the brightest of several, as
+Holy radiance's). `read_tests.rs` `every_builtin_scroll_can_be_read` reads every `scroll_of_*`
+in the content, so a scroll left without a reading fails it. The traps' bursts and bolts
+(`content/spell.rs`: `Burst`, `Bolt`, `BurstIce`, `SpellFields`, `Burst::new`/`Bolt::new`) are
+no scroll's any more; the cast path shares their structs for its bursts and lines. A scroll's
+`level` and `frequency` make it loot (`ObjectDef::frequency` > 0 for base items and scrolls;
+`magic::loot::roll` draws among both, leaves objects without a `kind` out of loot that must be
+magic, and draws no rarity for them).
 
 The rules are `world/read.rs`: `Action::Read { item, target: Option<ReadTarget> }` (`read:b`,
 `read:b:12,5` a cell, `read:b:c` a stack; `ReadTarget::{Cell, Item}`), one arm in
 `player_acts`, priced `ActionKind::Read` (`read` in `data/actions.toml`) before the scroll is
 used up (`use_up`, which follows the equipment's letters). Refusals take no time and keep the
-scroll. A spell checks `can_loose_here` and `within_reach` (`shoot.rs`, shared with missiles),
-then casts through **the one shared spell code** in `world/spell.rs`: `World::cast_burst(caster,
+scroll. A read is a cast (`World::read_cast`, below): a damage spell checks `can_loose_here`
+and `within_reach` (`shoot.rs`, shared with missiles), then casts its shape through **the one
+shared spell code** in `world/spell.rs`: `World::cast_burst(caster,
 (origin, center), burst)` and `World::cast_bolt(caster, origin, path, bolt)` (the effect's
 `Event::Spell`, one damage roll for everyone reached in actor-id order, typed by the burst's or
 bolt's `kind` (`damage_type` in data) and resisted by each target through `World::resisted`
@@ -42,9 +41,10 @@ bolt's `kind` (`damage_type` in data) and resisted by each target through `World
 `Caster::Actor(ActorId)` (blows are `Event::Attacked` of `AttackKind::Spell` with a hit, blood
 by `spill`, `hurt` with `Harm::Actor`, so `dies` → `earn_kill` and `tally_kill`, then
 `wounded`; a shopkeeper it reaches is `provoke`d). `World::sound_at` makes a trap's or a spell's
-noise (no maker). A burst read flies along `Pos::ray` to the cell aimed at and goes off on the
-first actor, before the first opaque cell, or there (`burst_center`); a bolt runs `length` cells
-along the ray after the reader (`bolt_line`). `say_spell` says the reader's blows at once, as
+noise (no maker). A burst flies along `Pos::ray` to the cell aimed at and goes off on the first
+actor, before the first opaque cell, or there (`burst_center`); a line runs its length (the
+reader's, the spell's reach ladder climbed) along the ray after the reader (`bolt_line`).
+`say_spell` says the reader's blows at once, as
 `player_looses` does for shots (`End::Trap(noun)`: "The fireball burns the kobold."), keeps the
 seen ones' events, and leaves the reader's own death to `perceive_events`; a reader killed by
 their own scroll gets `Death::cause = Cause::Scroll(object)` ("Killed by their own scroll of
@@ -104,10 +104,13 @@ same list (`IdentifyBy::Spell`, `Screens::open_identify_spell`), which acts
 draws `Event::Spell`; a burst's origin is the reader, so it flies there first).
 
 **Scrolls of spells** (#397): a `read` table of kind `spell` names a spell of `data/spells/`
-(`Reading::Cast(SpellScroll { spell, level, reach, on_item })`, resolved as objects load, spells loading
-first; only `spell` may be given). Reading one is `World::read_cast` (`world/cast.rs`): the one
-cast path with `Pay::Scroll(item)` instead of mana, at `level` (the spell's `[spell.scroll]
-level`, else its spell level, at least 1), never asking whether the reader knows the spell or
+(`Reading::Cast(SpellScroll { spell, rungs, reach, on_item })`, resolved as objects load, spells
+loading first; only `spell` and `rungs` may be given, `rungs` 0 to the spell's roll ladder's
+length, default 0). Reading one is `World::read_cast` (`world/cast.rs`): the one cast path with
+`Pay::Scroll(item, rungs)` instead of mana, its roll at the scroll's `rungs` plus the reader's
+`scroll_rungs` (Scroll adept; `CastBy::Scroll`, no stats), the reader's other hooks (a reroll,
+a rider, a die more) applying, and the reader's reach and degrees, never asking whether the
+reader knows the spell or
 has the mana; the scroll is used up (`use_up`, Spell recall's chance) and said read
 (`say_read`, which identifies its type) only once the cast is sure to go off, so a refusal
 keeps it and takes no time. An aimed spell needs its cell (`read:b:12,5`), a spell on a stack
@@ -116,22 +119,17 @@ is read with none (`read:b`; the read list acts at once, `ObjectScreen`'s `ident
 telling it from the scroll of identify). A death by it is `Cause::Scroll`. The aiming mode
 aims it as the spell (`ui/target.rs::spell_of`, the player's own reach).
 
-**Study** (#396, docs/dev/spells.md "Learning"): a scroll teaches what `Reading::teaches` says:
-a `spell` reading its own spell; a burst's or bolt's the spell its `teaches` names
-(`ScrollSpell::teaches`: fireball Fireball, lightning Lightning bolt, frost Frost). Every scroll
-teaches one (#592). `Action::Study` uses the scroll
-up its own way (`World::use_scroll` in `world/learn.rs`: no Spell recall, no Read training), and
-a mishap's backfire casts the scroll's own `Cast` on its reader with `say_spell` (a `spell`
-reading's damage spell as a burst around the reader, its own radius or 1, at the scroll's
-level, held to its cap; any other kind fizzles).
+**Study** (#396, docs/dev/spells.md "Learning"): a scroll teaches what `Reading::teaches` says,
+its own spell (fireball Fireball, lightning Lightning bolt, frost Frost). `Action::Study` uses
+the scroll up its own way (`World::use_scroll` in `world/learn.rs`: no Spell recall, no Read
+training), and a mishap's backfire casts the scroll's damage spell as a burst around the reader
+(its own radius or 1) at the spell's base, no rung and no hooks; any other kind fizzles.
 
 Spells (the one cast path, `world/cast.rs`, docs/dev/spells.md) share this code: a burst spell
 goes through `burst_center` and `cast_burst`, a line through `bolt_line` and `cast_bolt`, and
-both are said with `say_spell`, as `read_spell` does (`Cause::Spell` for a caster killed by their
-own). Both apply the caster's `TalentMods::spell_damage` (Scroll adept, Empower, Archmage) to the
-dice first; nothing holds the roll after (S1 retired `Burst::cap` and `Bolt::cap`, decision
-16). `spell_def::check_effects` checks spells' effects the way `check_spells` checks
-scrolls'.
+both are said with `say_spell` (`Cause::Spell` for a caster killed by their own, `Cause::Scroll`
+for a reader). Their roll is the cast's (`Burst::damage`, a `Roll`, with `Burst::reroll`, a
+trap's 0), nothing holding it (decision 16). `spell_def::check_effects` checks spells' effects.
 
 Content and places: the trap hall (`levels/trap_hall.toml`) has a pile of scrolls (two each of
 fireball, lightning, and frost, three of identify) and an unidentified dagger beside the arrival; general stores stock and
@@ -140,6 +138,8 @@ buy the `scrolls` class, and a generated one always lays out scrolls of identify
 the spell scrolls' 20 to 60 by spell level (level, frequency, and value each the object's own,
 by the objects' README convention, the older three too: docs/dev/spells.md "The first list"). The
 wiki's table is `xtask/src/wiki/scrolls.rs` (`scrolls.md`), sharing `ice_text`/`sound_text`
-with the traps' table. Tests: `world/read_tests.rs` (the shared casts match the traps', bursts
-and bolts, kills and experience, refusals, identify, death, saves and replays, loot), the read
+with the traps' table; its "Casts at" column is the roll at the scroll's rung
+(`SpellData::roll_at`). Tests: `world/read_tests.rs` (the three older scrolls at their rungs,
+bursts and bolts, kills and experience, refusals, identify, death, saves and replays, loot,
+the old readings refused), `world/spell_talent_tests.rs` (Scroll adept's rung), the read
 and identify lists in `ui/object_screen.rs`, aiming in `ui/target.rs`.

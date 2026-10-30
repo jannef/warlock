@@ -84,7 +84,7 @@ Build the engine and framework, not the game. Everything built is production qua
   their level's mana by a few kinds of shape and resolution, with no cap on what they do; a few
   guaranteed by the casting classes, the rest learned by studying identified scrolls, certain
   at or below one's caster level (the class's casting share) and at a risk of mishaps above it; unidentified
-  scrolls, wands (charges, a set caster level), and rods (effects no spell has, the user's mana);
+  scrolls, wands (charges, a rung of their own), and rods (effects no spell has, the user's mana);
   Spellcraft talents (§8 "Spells", "Scrolls", "Wands", "Rods")
 - Damage types (#151): every blow, burst, bolt, fall, and plunge is slashing, piercing,
   bludgeoning, fire, cold, electricity, acid, or poison (a data list); Protection soaks the

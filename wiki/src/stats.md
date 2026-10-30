@@ -98,7 +98,7 @@ when it lasts more than one turn and is not interrupted.
 Every stat has paths outside its obvious one. A fighter who never opens a scroll still sharpens
 Intelligence by exploring, searching, foraging, and disarming traps; a wizard grows stronger by
 wading, hauling, and struggling free of a grip. Casting a spell you know trains the stats the
-spell grows with ([its damage, reach, and duration](magic.md#the-lift)): Intelligence for most, Willpower for
+spell grows with ([its ladders](magic.md#how-a-spell-grows)): Intelligence for most, Willpower for
 those that reach far, Presence for hexes and blessings that last. Some uses train two stats at
 once (disarming a trap, struggling against a hold).
 
