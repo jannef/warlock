@@ -10,13 +10,12 @@ kind = "hex"
 shape = "burst"
 resolution = "area"
 range = 8
-max_range = 10
 radius = 1
-max_radius = 1
 effect = { status = "drowsy", severity = 2 }
 
 [spell.cast]
 noise = { sound = "chanting", loudness = 20 }
 
-[spell.scales]
-duration = { presence = 50, willpower = 25 }
+[spell.grows]
+range = "willpower 14 9, 18 10"
+degrees = "presence 14 3"

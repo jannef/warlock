@@ -5,8 +5,7 @@
 use super::text::{Term, anchored};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellDice, SpellPurpose,
-    TalentEffect, Weights,
+    Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellPurpose, TalentEffect,
 };
 
 /// What each shape multiplies the base cost by; a burst by radius.
@@ -34,12 +33,12 @@ pub(super) fn shapes(content: &Content) -> String {
     out
 }
 
-/// Each resolution's cost.
+/// Each resolution's roll and cost.
 pub(super) fn resolutions(content: &Content) -> String {
     let Some(rules) = content.spell_rules() else {
         return String::new();
     };
-    let mut out = String::from("| Resolution | Cost |\n|---|:---:|\n");
+    let mut out = String::from("| Resolution | Roll | Cost |\n|---|---|:---:|\n");
     for &resolution in Resolution::ALL {
         let ratio = rules.ratio(resolution);
         let cost = if resolution == Resolution::Area {
@@ -47,7 +46,21 @@ pub(super) fn resolutions(content: &Content) -> String {
         } else {
             format!("×{}", times(ratio.cost))
         };
-        let _ = writeln!(out, "| {} | {cost} |", resolution.id());
+        let roll = match resolution {
+            Resolution::Attack => {
+                "2d12 plus the aim stat's modifier against Defence; may critical, the damage \
+                 rolled again"
+            }
+            Resolution::Touch => {
+                "as attack, against one creature next to you; may critical, the damage rolled \
+                 again"
+            }
+            Resolution::Auto => "none: it always hits, never a critical",
+            Resolution::Area => {
+                "none: one roll for everyone in it, half beyond its radius − 1; Evasion halves it"
+            }
+        };
+        let _ = writeln!(out, "| {} | {roll} | {cost} |", resolution.id());
     }
     out
 }
@@ -65,8 +78,8 @@ pub(super) fn casting(content: &Content) -> String {
     out
 }
 
-/// Every spell, by spell level and then name: its school, shape and resolution, reach (as cast,
-/// and how far its stats take it), what it does, what it grows with, its mana (no armour, no
+/// Every spell, by spell level and then name: its school, shape and resolution, its base reach,
+/// what its base does, its ladders in words (what it grows with), its mana (no armour, no
 /// talents; whoever casts it), and its time in casts.
 pub(super) fn list(content: &Content) -> String {
     let Some(rules) = content.spell_rules() else {
@@ -75,13 +88,13 @@ pub(super) fn list(content: &Content) -> String {
     let mut spells: Vec<&SpellData> = content.spells().iter().collect();
     spells.sort_by(|a, b| a.level.cmp(&b.level).then(a.name.cmp(&b.name)));
     let mut out = String::from(
-        "| Spell | Level | School | Shape | Resolves | Reach | What it does | Grows with | Mana | Casts \
-         |\n|---|:---:|---|---|---|---|---|---|:---:|:---:|\n",
+        "| Spell | Level | School | Shape and resolution | Reach | What it does | Grows with | Mana \
+         | Casts |\n|---|:---:|---|---|---|---|---|:---:|:---:|\n",
     );
     for spell in spells {
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            "| {} | {} | {} | {}, {} | {} | {} | {} | {} | {} |",
             anchored(Term::Spell, &spell.id, &spell.name),
             spell.level,
             spell.school.id(),
@@ -135,36 +148,14 @@ pub(super) fn class_spells(content: &Content) -> String {
     out
 }
 
-/// What `spell` grows with, from its `[spell.scales]`: each dimension the stats change, its
-/// stats with their weights in percent of the modifier ("dice: Intelligence 10 %, Willpower 5 %
-/// of its most dice a point"), the dimensions it cannot have left out.
-fn grows_with(spell: &SpellData) -> String {
-    let named = |w: &Weights, unit: &str| {
-        if w.is_empty() {
-            return None;
-        }
-        let stats: Vec<String> = (w.iter())
-            .map(|(stat, weight)| format!("{} {weight} %", stat.name()))
-            .collect();
-        Some(format!("{} {unit}", stats.join(", ")))
-    };
-    let sc = &spell.scales;
-    let rolls = spell.damage.is_some() || spell.effect.heal.is_some();
-    let attack = spell.kind == SpellPurpose::Damage
-        && matches!(spell.resolution, Resolution::Attack | Resolution::Touch);
-    let reaches = !matches!(spell.shape, Shape::Touch | Shape::Myself);
-    let lasts = matches!(spell.kind, SpellPurpose::Buff | SpellPurpose::Hex);
-    let parts = [
-        (rolls, "dice", named(&sc.damage, "of its most dice a point")),
-        (attack, "to-hit", named(&sc.to_hit, "of the modifier")),
-        (reaches, "reach", named(&sc.reach, "of a cell a point")),
-        (lasts, "degrees", named(&sc.duration, "of a degree a point")),
-    ];
-    let text: Vec<String> = (parts.into_iter())
-        .filter_map(|(has, what, by)| {
-            has.then_some(by)
-                .flatten()
-                .map(|by| format!("{what}: {by}"))
+/// What `spell` grows with: each of its ladders as written, in words ("Intelligence 13: 3d6,
+/// 16: 4d6; range Willpower 14: 11, 18: 12"), the roll's first and unnamed, the others by their
+/// dimension; "—" without any.
+pub(super) fn grows_with(spell: &SpellData) -> String {
+    let text: Vec<String> = (spell.grows.named().into_iter())
+        .map(|(dim, ladder)| match dim {
+            "damage" | "heal" => ladder.words(),
+            other => format!("{other} {}", ladder.words()),
         })
         .collect();
     if text.is_empty() {
@@ -174,52 +165,32 @@ fn grows_with(spell: &SpellData) -> String {
     }
 }
 
-/// How far `spell` reaches, and how far its stats may take it: "6 (to 8)", a burst's "range 10,
-/// radius 2", "—" on oneself.
+/// How far `spell` reaches at its base: "6", a burst's "range 10, radius 2", "next to you" for
+/// a touch, "—" on oneself.
 fn reach(spell: &SpellData) -> String {
-    let grows = |base: Option<u8>, cap: Option<u8>| match (base, cap) {
-        (Some(b), Some(c)) if c > b => format!("{b} (to {c})"),
-        (Some(b), _) => b.to_string(),
-        _ => String::new(),
-    };
+    let n = |v: Option<u8>| v.map_or_else(String::new, |v| v.to_string());
     match spell.shape {
         Shape::Myself => "—".into(),
         Shape::Touch => "next to you".into(),
-        Shape::Burst => format!(
-            "range {}, radius {}",
-            grows(spell.range, spell.max_range),
-            grows(spell.radius, spell.max_radius)
-        ),
-        Shape::Cone | Shape::Line => grows(spell.length, spell.max_length),
-        Shape::Ray | Shape::Bolt => grows(spell.range, spell.max_range),
+        Shape::Burst => format!("range {}, radius {}", n(spell.range), n(spell.radius)),
+        Shape::Cone | Shape::Line => n(spell.length),
+        Shape::Ray | Shape::Bolt => n(spell.range),
     }
 }
 
-/// What `spell` does, as its data says: its dice at the caster level of its spell level (and
-/// what more caster levels bring), the status it leaves, what it does to ice and walls.
+/// What `spell` does at its base, as its data says: its roll, the status it leaves (at its base
+/// degrees), what it does to ice and walls.
 pub(super) fn does(content: &Content, spell: &SpellData) -> String {
     let status = |s| content.status(s).name.clone();
-    let at = spell.grows_from();
-    let dice = |d: SpellDice| {
-        let now = d.at(i32::from(at), at);
-        if d.max_dice > d.count && d.per_levels > 0 {
-            format!(
-                "{now}, a die more per {} caster levels above {at}, to {}d{}",
-                d.per_levels, d.max_dice, d.sides
-            )
-        } else {
-            now.to_string()
-        }
-    };
     let mut text = match spell.kind {
         SpellPurpose::Damage => {
-            let rolled = spell.damage.map_or_else(String::new, dice);
+            let rolled = spell.damage.map_or_else(String::new, |r| r.to_string());
             let kind = (spell.damage_type)
                 .map_or_else(String::new, |k| format!(" {}", content.damage_type(k).name));
             format!("{rolled}{kind} damage")
         }
         SpellPurpose::Heal => {
-            let healed = spell.effect.heal.map_or_else(String::new, dice);
+            let healed = spell.effect.heal.map_or_else(String::new, |r| r.to_string());
             format!("{healed} hit points back")
         }
         SpellPurpose::Buff | SpellPurpose::Hex => match spell.effect.status {
@@ -274,7 +245,8 @@ pub(super) fn armour(content: &Content) -> String {
 }
 
 /// The wands (spec §8 "Magic items": "Wands"): each one's spell, its spell level, charges, the
-/// caster level it casts at, and where loot finds it; by spell level, then name.
+/// roll it casts at (its lowest rung, before the user's wand rungs), and where loot finds it; by
+/// spell level, then name.
 pub(super) fn wands(content: &Content) -> String {
     let mut wands: Vec<_> = (content.object_defs().iter())
         .filter_map(|o| Some((o, o.wand?)))
@@ -284,11 +256,13 @@ pub(super) fn wands(content: &Content) -> String {
         level(x).cmp(&level(y)).then(a.name.cmp(&b.name))
     });
     let mut out = String::from(
-        "| Wand | Spell | Spell level | Charges | Caster level | Item level | Frequency | Value |\n\
+        "| Wand | Spell | Spell level | Charges | Casts at | Item level | Frequency | Value |\n\
          |---|---|:---:|:---:|:---:|:---:|:---:|:---:|\n",
     );
     for (object, wand) in wands {
         let spell = content.spell(wand.spell);
+        let casts = (spell.roll_at(usize::from(wand.min_rung)))
+            .map_or_else(|| "—".to_string(), |r| r.to_string());
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} | {} | {} | {} | {} gold |",
@@ -296,7 +270,7 @@ pub(super) fn wands(content: &Content) -> String {
             spell.name,
             spell.level,
             wand.charges,
-            wand.caster_level,
+            casts,
             object.level,
             object.frequency,
             object.value

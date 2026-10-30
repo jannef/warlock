@@ -1,5 +1,7 @@
-# A scroll of lightning (spec §8 "Scrolls"): read it (`r`) and aim, and a lightning bolt runs
-# from you through the cell aimed at and on, striking everyone on its line, as a lightning trap's.
+# A scroll of lightning (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts
+# Lightning bolt, free of mana, two rungs up its ladder (4d6; the spell scaling design §7.4): a
+# bolt runs from you through the cell aimed at and on, striking everyone on its line. Study it
+# (`L`), and you may learn the spell for good.
 [[object]]
 id = "scroll_of_lightning"
 name = "scroll of lightning"
@@ -15,14 +17,6 @@ level = 6
 frequency = 20
 
 [object.read]
-kind = "bolt"
+kind = "spell"
 spell = "lightning_bolt"
-noun = "lightning bolt"
-verb = "strikes"
-message = "Lightning leaps from the scroll!"
-length = 12
-damage = "4d6"
-damage_type = "electricity"
-noise = { sound = "thunder", loudness = 120 }
-# Studying it (spec §8 "Spells") teaches Lightning bolt.
-teaches = "lightning_bolt"
+rungs = 2

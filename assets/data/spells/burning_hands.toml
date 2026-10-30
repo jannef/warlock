@@ -11,8 +11,7 @@ shape = "cone"
 resolution = "area"
 damage_type = "fire"
 length = 3
-max_length = 3
-damage = { dice = "1d4", per_levels = 3, max_dice = 2 }
+damage = "1d4"
 
 [spell.cast]
 effect = "blaze"
@@ -20,5 +19,5 @@ noun = "flames"
 message = "Flames fan out from your hands!"
 noise = { sound = "explosion", loudness = 40 }
 
-[spell.scales]
-damage = { intelligence = 10, willpower = 5 }
+[spell.grows]
+damage = "intelligence 13 2d4, 16 3d4, 22 3d4+2"

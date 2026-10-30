@@ -1,5 +1,5 @@
-# Scorching ray (spec §8 "Spells", the first spell list): a ray of fire that must hit; its die
-# grows with caster level to three.
+# Scorching ray (spec §8 "Spells", the first spell list): a ray of fire that must hit; its
+# Intelligence ladder ([spell.grows]) adds dice, and a hotter core at the top.
 [[spell]]
 id = "scorching_ray"
 name = "Scorching ray"
@@ -11,13 +11,13 @@ shape = "ray"
 resolution = "attack"
 damage_type = "fire"
 range = 8
-max_range = 10
-damage = { dice = "1d6", per_levels = 6, max_dice = 3 }
+damage = "1d6"
 
 [spell.cast]
 effect = "fire_breath"
 noun = "scorching ray"
 noise = { sound = "chanting", loudness = 30 }
 
-[spell.scales]
-damage = { intelligence = 10, willpower = 5 }
+[spell.grows]
+damage = "intelligence 13 2d6, 16 3d6, 19 4d6, 25 3d6+1d10"
+range = "willpower 14 9, 18 10"

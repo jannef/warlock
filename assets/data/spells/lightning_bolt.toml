@@ -1,5 +1,5 @@
 # Lightning bolt (spec §8 "Spells", the first spell list): a line of lightning through everyone in
-# it, a die more every four caster levels, never more than three.
+# it; its ladder of Intelligence ([spell.grows]) adds dice.
 [[spell]]
 id = "lightning_bolt"
 name = "Lightning bolt"
@@ -11,8 +11,7 @@ shape = "line"
 resolution = "area"
 damage_type = "electricity"
 length = 8
-max_length = 12
-damage = { dice = "2d6", per_levels = 4, max_dice = 3 }
+damage = "2d6"
 
 [spell.cast]
 effect = "lightning_bolt"
@@ -21,5 +20,6 @@ verb = "strikes"
 message = "Lightning leaps from your hands!"
 noise = { sound = "thunder", loudness = 120 }
 
-[spell.scales]
-damage = { intelligence = 10, willpower = 5 }
+[spell.grows]
+damage = "intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"
+length = "willpower 14 9, 18 10, 22 11, 26 12"

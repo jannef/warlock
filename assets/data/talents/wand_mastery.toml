@@ -2,6 +2,6 @@
 id = "wand_mastery"
 name = "Wand mastery"
 tree = "weaponcraft"
-description = "You draw more from a wand than its maker put in: the spells your wands cast are stronger, as if a more practised hand had cast them."
-effects = [{ kind = "wand_level", value = 2 }]
+description = "You draw more from a wand than its maker put in: the wands you use cast a rung higher."
+effects = [{ kind = "spell_mod", wand_rungs = 1 }]
 systems = ["spells"]

@@ -9,7 +9,7 @@ kind = "heal"
 shape = "touch"
 resolution = "touch"
 casts = 2
-effect = { heal = { dice = "2d6" } }
+effect = { heal = "2d6" }
 
-[spell.scales]
-damage = { willpower = 15 }
+[spell.grows]
+heal = "willpower 16 3d6, 22 3d6+3"

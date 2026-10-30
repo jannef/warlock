@@ -4,7 +4,8 @@
 use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Need, OverTime, Role, SignActive, SpellData, TalentDef, TalentEffect, TreeId,
+    Content, Need, OverTime, Role, SignActive, SpellData, SpellModSpec, TalentDef, TalentEffect,
+    TreeId,
 };
 
 /// Every tree in display order: a heading, its description, and its talents (name, ranks, what
@@ -292,9 +293,14 @@ pub(super) fn needs_text(content: &Content, def: &TalentDef) -> String {
 /// ranks), then any rank's own.
 pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
     let ranked = def.rank_count() > 1;
+    let chosen = def.choice.is_some();
+    let text_of = |e: &TalentEffect| match e {
+        TalentEffect::SpellMod(spec) => spell_mod_text(content, spec, chosen),
+        other => effect_text(content, other),
+    };
     let mut parts: Vec<String> = (def.effects.iter())
         .map(|e| {
-            let text = effect_text(content, e);
+            let text = text_of(e);
             if ranked {
                 format!("{text} per rank")
             } else {
@@ -304,7 +310,7 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
         .collect();
     for (i, rank) in def.ranks.iter().enumerate() {
         for effect in &rank.effects {
-            parts.push(format!("rank {}: {}", i + 1, effect_text(content, effect)));
+            parts.push(format!("rank {}: {}", i + 1, text_of(effect)));
         }
     }
     if let Some(cost) = def.resource {
@@ -312,6 +318,72 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
         parts.push(format!("costs {} {name}", cost.amount));
     }
     parts.join("; ")
+}
+
+/// A `spell_mod` effect as the rule (the spell scaling design §7.1): each hook it uses, in the
+/// cast's order, and the spells it acts on (`chosen`: a talent chosen for a school or an
+/// element, whose choice is its filter).
+fn spell_mod_text(content: &Content, spec: &SpellModSpec, chosen: bool) -> String {
+    let n = |v: i32, one: &str, many: &str| {
+        let word = if v.abs() == 1 { one } else { many };
+        format!("{} {word}", signed(v))
+    };
+    let mut parts = Vec::new();
+    let rungs = [
+        (spec.rungs, "on their damage and healing ladders"),
+        (spec.scroll_rungs, "for the spell scrolls you read"),
+        (spec.wand_rungs, "for the wands you use"),
+        (spec.reach_rungs, "on their reach ladders"),
+        (spec.degree_rungs, "on their degrees ladders"),
+    ];
+    for (v, what) in rungs {
+        if v != 0 {
+            parts.push(format!("{} {what}", n(v, "rung", "rungs")));
+        }
+    }
+    if spec.sides > 0 {
+        parts.push(format!("every die {} bigger", n(spec.sides as i32, "side", "sides")));
+    }
+    if spec.dice > 0 {
+        parts.push(format!("{} on the roll", n(spec.dice as i32, "die", "dice")));
+    }
+    if spec.bonus != 0 {
+        parts.push(format!("{} on the roll", signed(spec.bonus)));
+    }
+    if spec.reroll > 0 {
+        parts.push(format!(
+            "a die showing {} or less is rolled again, once",
+            spec.reroll
+        ));
+    }
+    if let Some(rider) = &spec.rider {
+        let name = (content.status_id(&rider.status))
+            .map_or_else(|| rider.status.clone(), |s| content.status(s).name.clone());
+        parts.push(format!(
+            "what they harm is {name} ({}) besides",
+            rider.severity
+        ));
+    }
+    if spec.cells != 0 {
+        parts.push(format!("range or length {}", n(spec.cells, "cell", "cells")));
+    }
+    if spec.radius_cells != 0 {
+        parts.push(format!("a burst's radius {}", n(spec.radius_cells, "cell", "cells")));
+    }
+    if spec.degrees != 0 {
+        parts.push(format!("their status {}", n(spec.degrees, "degree", "degrees")));
+    }
+    if spec.cost != 0 {
+        parts.push(format!("mana {} %", signed(spec.cost)));
+    }
+    let whose = if chosen {
+        "spells of the chosen school or element".to_string()
+    } else if spec.when.is_empty() {
+        "your spells".to_string()
+    } else {
+        format!("your {} spells", spec.when.join(" or "))
+    };
+    format!("{whose}: {}", parts.join(", "))
 }
 
 /// One effect as the rule (talents' and class abilities').
@@ -436,9 +508,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 "caster level {} per {per_levels} character levels",
                 signed(value)
             )
-        }
-        TalentEffect::WandLevel { value } => {
-            format!("wands cast at caster level {}", signed(value))
         }
         TalentEffect::AttunedPercent { value } => format!(
             "the caster level your magic items give counts {value} % more (rounded up: +1 is +2, \
@@ -1534,40 +1603,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Spell { spell } => (content.spell_id(&spell))
             .map(|id| content.spell(id))
             .map_or_else(|| spell.clone(), |def| spell_text(content, def)),
-        TalentEffect::SpellPower { per_die, dice } => {
-            let mut parts = Vec::new();
-            if dice > 0 {
-                parts.push(format!("{dice} more of their dice"));
-            }
-            if per_die != 0 {
-                parts.push(format!("{} on every die", signed(per_die)));
-            }
-            format!(
-                "your spells' and spell scrolls' damage: {}",
-                parts.join(", and ")
-            )
-        }
+        TalentEffect::SpellMod(spec) => spell_mod_text(content, &spec, false),
         TalentEffect::SpellManaPercent { value } => {
             format!("your spells' mana {} (at least 1)", percent(value))
-        }
-        TalentEffect::SchoolFocus { cost, reach, lift } => {
-            let mut parts = Vec::new();
-            if cost != 0 {
-                parts.push(format!("mana {}", percent(cost)));
-            }
-            if reach != 0 {
-                parts.push(format!(
-                    "reach (range or length) {} cells, never past the spell's own cap",
-                    signed(reach)
-                ));
-            }
-            if lift != 0 {
-                parts.push(format!("the lift of its dice {} points", signed(lift)));
-            }
-            format!(
-                "spells of the chosen school or element: {}",
-                parts.join("; ")
-            )
         }
         TalentEffect::DeflectionUnarmoured { value } => {
             format!("Deflection {} while you wear no body armour", signed(value))

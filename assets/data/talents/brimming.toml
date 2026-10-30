@@ -1,0 +1,13 @@
+# Brimming (the spell scaling design §7.2): the Spellcraft tree's user of the dice hook's `dice`:
+# a die more on every damage and healing roll, for a tenth more mana.
+[[talent]]
+id = "brimming"
+name = "Brimming"
+tree = "spellcraft"
+description = "You pour more into every spell than it asks: your damage and healing spells roll a die more, and cost a tenth more."
+needs = { level = 25 }
+effects = [
+    { kind = "spell_mod", dice = 1 },
+    { kind = "spell_mana_percent", value = 10 },
+]
+systems = ["spells", "mana"]

@@ -39,7 +39,7 @@ use crate::action::{Event, Positions};
 use crate::character::Character;
 use crate::check;
 use crate::content::{
-    ActionKind, Band, Cast, Content, CreatureSpawn, Drain, Mishap, MishapEffect, ObjectId, Reading,
+    ActionKind, Band, Content, CreatureSpawn, Drain, Mishap, MishapEffect, ObjectId, Reading,
     SpellId, StudyRules,
 };
 use crate::geom::Dir;
@@ -358,38 +358,20 @@ impl World {
         }
     }
 
-    /// The spell of the scroll studied goes off on its reader: a burst around them, a bolt
-    /// through their own cell. A death by it is the scroll's.
+    /// The spell of the scroll studied goes off on its reader (`backfire_spell`). A death by it
+    /// is the scroll's.
     fn backfire(&mut self, lesson: Lesson, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let object = lesson.object;
-        let spell = match &content.object(object).read {
-            Some(Reading::Spell(spell)) => spell,
-            Some(Reading::Cast(scroll)) => return self.backfire_spell(*scroll, object, events),
-            _ => return,
-        };
-        let player = self.state.player;
-        let here = self.player_pos();
-        let mut made = Vec::new();
-        self.sound_at(spell.noise, here);
-        match &spell.cast {
-            Cast::Burst(burst) => {
-                self.cast_burst(Caster::Actor(player), (here, here), burst, &mut made);
-            }
-            Cast::Bolt(bolt) => {
-                self.cast_bolt(Caster::Actor(player), here, &[here], bolt, &mut made);
-            }
-        }
-        self.say_spell((&spell.noun, &spell.verb), made, events);
-        if let Some(death) = &mut self.state.death {
-            death.by = None;
-            death.cause = Some(Cause::Scroll(object));
+        if let Some(Reading::Cast(scroll)) = &content.object(object).read {
+            self.backfire_spell(*scroll, object, events);
         }
     }
 
     /// A scroll of a spell of `data/spells/` backfires: a damage spell goes off as a burst
-    /// around the reader (its own radius, else 1) at the scroll's caster level; a spell of any
-    /// other kind only fizzles (the mishap's message is all).
+    /// around the reader (its own radius, else 1) at the spell's base, no rung and no hooks (the
+    /// spell scaling design §7.5); a spell of any other kind only fizzles (the mishap's message
+    /// is all).
     fn backfire_spell(
         &mut self,
         scroll: crate::content::SpellScroll,
@@ -404,7 +386,8 @@ impl World {
         let burst = crate::content::Burst {
             spell: def.look.effect.clone().unwrap_or_default(),
             radius: def.radius.map_or(1, i32::from),
-            damage: damage.at(i32::from(scroll.level), def.grows_from()),
+            damage,
+            reroll: 0,
             kind: def.damage_type,
             blast: 0,
             ice: None,

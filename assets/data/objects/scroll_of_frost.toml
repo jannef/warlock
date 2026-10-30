@@ -1,6 +1,7 @@
-# A scroll of frost (spec §8 "Scrolls"): read it (`r`) and aim, and a burst of bitter cold goes
-# off where it is aimed, as a frost trap's: a little cold damage, and the water it reaches
-# freezes hard enough to walk on.
+# A scroll of frost (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Frost, free
+# of mana, at its base (2d6; the spell scaling design §7.4): a burst of bitter cold goes off where
+# it is aimed, and the water it reaches freezes hard enough to walk on. Study it (`L`), and you
+# may learn the spell for good.
 [[object]]
 id = "scroll_of_frost"
 name = "scroll of frost"
@@ -16,15 +17,5 @@ level = 4
 frequency = 30
 
 [object.read]
-kind = "burst"
-spell = "frost_burst"
-noun = "frost"
-verb = "bites"
-message = "Bitter cold bursts from the scroll!"
-radius = 2
-damage = "2d6"
-damage_type = "cold"
-range = 10
-frost = 100
-# Studying it (spec §8 "Spells") teaches Frost.
-teaches = "frost"
+kind = "spell"
+spell = "frost"

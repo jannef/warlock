@@ -1619,8 +1619,17 @@ impl<'a> PerceptionView<'a> {
         self.player.weapon_stamina(self.content, id)
     }
 
-    /// How far the player's spell `spell` reaches now, Willpower counted: the farthest cell it
-    /// may be aimed at, and a burst's radius. They know their own spells.
+    /// The roll the player's spell `spell` makes now, harm or healing, as they would cast it:
+    /// the rung their scores reach on its ladder, their talents' and items' hooks applied
+    /// ([`crate::world::Actor::spell_roll`]). They know their own spells (the owner's exception,
+    /// the spell scaling design decision 11); `None` for one that rolls nothing.
+    pub fn own_spell_roll(&self, spell: crate::content::SpellId) -> Option<crate::dice::Roll> {
+        let def = self.content.spell_of(spell)?;
+        (self.player).spell_roll(self.content, def, crate::world::CastBy::Own)
+    }
+
+    /// How far the player's spell `spell` reaches now, its reach ladders climbed: the farthest
+    /// cell it may be aimed at, and a burst's radius. They know their own spells.
     pub fn own_spell_reach(&self, spell: crate::content::SpellId) -> Option<crate::world::Reach> {
         let def = self.content.spell_of(spell)?;
         Some(self.player.spell_reach(self.content, def))

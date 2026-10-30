@@ -362,11 +362,15 @@ pub fn phrase(rolled: &Rolled<'_>, kind: ItemKind, content: &Content) -> String 
         Effect::SpellEase => format!("hinders casting {v} {} less", points(v)),
         Effect::SpellToHit => format!("+{v} to hit with spells"),
         Effect::SpellThreat => format!("spells threaten a critical on {v} more {}", rolls(v)),
-        Effect::SpellLift => format!("spells do up to {v}% more"),
+        Effect::SpellRungs => format!("spells stand {v} {} higher on their ladders", rungs(v)),
+        Effect::SpellBonus => format!("+{v} on every spell's roll, harm or healing"),
+        Effect::SpellSides => format!("spell dice {v} {} bigger", sides(v)),
+        Effect::SpellDice => format!("spells roll {v} {} more", dice(v)),
+        Effect::SpellReroll => format!("spell dice showing {v} or less are rolled again, once"),
         Effect::SpellReach => format!("spells reach {v} {} farther", cells(v)),
         Effect::SpellDuration => format!("buffs and hexes last {v} {} longer", degrees(v)),
         Effect::ManaOnKill => format!("+{v} mana on a kill close by"),
-        Effect::WandLevel => format!("+{v} to the level of wands"),
+        Effect::WandRungs => format!("wands cast {v} {} higher", rungs(v)),
         Effect::ResourceMax => format!("+{v} to maximum {}", pool_name(rolled, content)),
         Effect::ResourceRate => format!("{} comes back {v}% faster", pool_name(rolled, content)),
         Effect::ActiveStamina => {
@@ -441,6 +445,18 @@ fn points(n: i32) -> &'static str {
 
 fn degrees(n: i32) -> &'static str {
     if n == 1 { "degree" } else { "degrees" }
+}
+
+fn rungs(n: i32) -> &'static str {
+    if n == 1 { "rung" } else { "rungs" }
+}
+
+fn sides(n: i32) -> &'static str {
+    if n == 1 { "side" } else { "sides" }
+}
+
+fn dice(n: i32) -> &'static str {
+    if n == 1 { "die" } else { "dice" }
 }
 
 /// The base stats of `def` in words: how it is held or worn, its damage and criticals, how far it

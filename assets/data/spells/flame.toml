@@ -10,9 +10,8 @@ shape = "burst"
 resolution = "area"
 damage_type = "fire"
 range = 10
-max_range = 12
-max_radius = 2
-damage = { dice = "3d6" }
+radius = 2
+damage = "3d6"
 
 [spell.cast]
 effect = "fireball"
@@ -23,5 +22,6 @@ blast = 1000
 heat = true
 noise = { sound = "explosion", loudness = 150 }
 
-[spell.scales]
-damage = { intelligence = 10, willpower = 5 }
+[spell.grows]
+damage = "intelligence 16 4d6, 19 5d6, 25 5d6+2"
+range = "willpower 14 11, 18 12"

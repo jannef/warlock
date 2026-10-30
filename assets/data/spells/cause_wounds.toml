@@ -10,8 +10,11 @@ kind = "damage"
 shape = "touch"
 resolution = "touch"
 damage_type = "necrotic"
-damage = { dice = "1d6", per_levels = 4, max_dice = 2 }
+damage = "1d6"
 
 [spell.cast]
 noun = "touch"
 verb = "wounds"
+
+[spell.grows]
+damage = "willpower 13 2d6, 19 2d8, 25 2d8+2"

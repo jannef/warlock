@@ -1,5 +1,5 @@
 # Magic missile (spec §8 "Spells", the first spell list): a dart of force that never misses, a
-# die more every three caster levels, never more than two.
+# die more a rung of its Intelligence ladder ([spell.grows]).
 [[spell]]
 id = "magic_missile"
 name = "Magic missile"
@@ -11,8 +11,7 @@ shape = "bolt"
 resolution = "auto"
 damage_type = "force"
 range = 8
-max_range = 10
-damage = { dice = "1d4", per_levels = 3, max_dice = 2 }
+damage = "1d4"
 
 [spell.cast]
 effect = "arcane_bolt"
@@ -20,5 +19,6 @@ noun = "magic missile"
 verb = "strikes"
 noise = { sound = "chanting", loudness = 30 }
 
-[spell.scales]
-damage = { intelligence = 10, willpower = 5 }
+[spell.grows]
+damage = "intelligence 13 2d4, 16 3d4, 22 3d4+1"
+range = "willpower 14 9, 18 10"

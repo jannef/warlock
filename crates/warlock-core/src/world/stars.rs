@@ -95,7 +95,7 @@ impl World {
             },
             cells: cells.clone(),
         });
-        let roll = burst.damage.roll(&mut self.state.rng);
+        let roll = burst.damage.roll(&mut self.state.rng, burst.reroll);
         let here = self.state.current_level.clone();
         let caught: Vec<ActorId> = (self.state.actors.values())
             .filter(|a| a.id != player && a.level == here && cells.contains(&a.pos))

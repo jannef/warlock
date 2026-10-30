@@ -19,4 +19,4 @@ frequency = 5
 [object.wand]
 spell = "lightning_bolt"
 charges = 7
-caster_level = 12
+rungs = { min = 0, max = 2 }

@@ -1,24 +1,24 @@
 //! Spells as data (spec §8 "Spells", the magic design `docs/design/magic.md` §3, §5, §6, the
-//! spell scaling design `docs/design/spell-scaling.md` §5): the cost table
+//! spell scaling design `docs/design/spell-scaling.md` §4 to §6): the cost table
 //! (`data/spells.toml`, [`SpellRules`]) and the spells (`data/spells/`, one `[[spell]]` file
 //! each, [`SpellData`]), cast by the one cast path (`world/cast.rs`). Not the bursts and bolts
-//! scrolls and traps cast (`content/spell.rs`), whose code the cast path shares.
+//! traps cast (`content/spell.rs`), whose code the cast path shares.
 //!
 //! - **Spell levels**: a spell has a level, 0 to [`MAX_SPELL_LEVEL`]: its base mana (at least
 //!   one) and the caster level at which a scroll of it teaches for certain. A spell of level 0
 //!   or 1 is a cantrip. Nothing says how much a spell of a level may do (decision 16).
+//! - **The base and the ladders**: a spell's own roll and reach are its **base**, what anyone
+//!   who casts it does; `[spell.grows]` may give each dimension a ladder of the caster's
+//!   scores (`content/spell_ladder.rs`, [`Grows`]). No check reads how much a rung does.
 //! - **Tags**: a spell's school, kind, shape, and damage type ([`SpellData::tags`]); talents,
-//!   abilities, and items will key on them.
-//! - **The lift** ([`SpellRules::lift`]; the combat progression design §7, until the ladders
-//!   replace it): the stats a spell's `[spell.scales]` names for `damage` lift its dice by a
-//!   percent of its most ([`SpellDice::lifted`]).
+//!   abilities, and items key on them.
 
 use super::effect::EffectShape;
 use super::spell::{Burst, BurstIce, SpellFields, check_effect, default_verb};
-use super::spell_scales::{self as scales, Has, ScalesSpec, SpellScales};
+use super::spell_ladder::{Ladder, RungValue, Unit};
 use super::trap::TrapNoise;
-use super::{Content, ContentError, DamageTypeId, MAX_LEVEL, MAX_SEVERITY, StatusId, duplicate_id};
-use crate::dice::Dice;
+use super::{Content, ContentError, DamageTypeId, MAX_SEVERITY, StatusId, duplicate_id};
+use crate::dice::Roll;
 use crate::noise::MAX_LOUDNESS;
 use crate::stats::{PerStat, Stat};
 use serde::{Deserialize, Serialize};
@@ -30,10 +30,6 @@ pub const MAX_SPELL_LEVEL: u8 = 70;
 pub const MAX_REACH: u8 = 20;
 /// The longest a cone may be, in cells.
 pub const MAX_CONE: u8 = 5;
-/// The most dice a spell may roll.
-pub const MAX_DICE: u8 = 20;
-/// The most caster levels a spell's `per_levels` may ask for one die more.
-pub const MAX_PER_LEVELS: u8 = 20;
 /// The most `casts` a spell may take.
 pub const MAX_CASTS: u8 = 10;
 /// The most mana a spell's explicit `mana` may ask.
@@ -97,6 +93,16 @@ pub enum SpellPurpose {
 }
 
 impl SpellPurpose {
+    /// Every kind, in the order the design lists them (§6).
+    pub const ALL: [SpellPurpose; 6] = [
+        SpellPurpose::Damage,
+        SpellPurpose::Heal,
+        SpellPurpose::Buff,
+        SpellPurpose::Hex,
+        SpellPurpose::Cleanse,
+        SpellPurpose::Utility,
+    ];
+
     /// Its id in data files and as a tag.
     pub const fn id(self) -> &'static str {
         match self {
@@ -331,27 +337,6 @@ impl SpellRules {
             .unwrap_or(i32::MAX)
             .max(1)
     }
-
-    /// A reach of `base` cells grown by `more` (its `reach` scales' cells; magic design §3),
-    /// never past `cap`.
-    pub fn grown(base: i32, cap: i32, more: i32) -> i32 {
-        (base + more.max(0)).min(cap.max(base))
-    }
-
-    /// The degrees of a buff's or a hex's status, `severity` lengthened by `more` (its
-    /// `duration` scales' degrees; the status's own `max` holds it when it is given).
-    pub fn lengthened(severity: u16, more: i32) -> u16 {
-        let more = u16::try_from(more.max(0)).unwrap_or(u16::MAX);
-        severity.saturating_add(more).min(MAX_SEVERITY)
-    }
-
-    /// The percent a caster's stats lift a spell's dice by: `raised` (its `damage` scales'
-    /// sum, [`super::Weights::sum`]) never below 0, and `more` (Keen mind's for its school or
-    /// element, Potent's) on top. Nothing bounds it (the spell scaling design, decision 16);
-    /// the ladders replace it (S2).
-    pub fn lift(raised: i32, more: i32) -> i32 {
-        raised.max(0) + more.max(0)
-    }
 }
 
 #[derive(Deserialize)]
@@ -376,9 +361,12 @@ struct SpellSpec {
     shape: Shape,
     resolution: Resolution,
     damage_type: Option<String>,
-    max_range: Option<u8>,
-    max_radius: Option<u8>,
-    max_length: Option<u8>,
+    /// Refused, each naming its replacement (the spell scaling design §6.1).
+    max_range: Option<toml::Value>,
+    max_radius: Option<toml::Value>,
+    max_length: Option<toml::Value>,
+    scales: Option<toml::Value>,
+    scroll: Option<toml::Value>,
     range: Option<u8>,
     radius: Option<u8>,
     length: Option<u8>,
@@ -386,11 +374,12 @@ struct SpellSpec {
     #[serde(default)]
     open_sky: bool,
     mana: Option<u16>,
-    damage: Option<DiceSpec>,
+    /// A roll (`"2d6"`); the old table form is refused naming it.
+    damage: Option<toml::Value>,
+    aim: Option<String>,
     effect: Option<EffectSpec>,
     cast: Option<CastSpec>,
-    scroll: Option<ScrollSpec>,
-    scales: Option<ScalesSpec>,
+    grows: Option<GrowsSpec>,
 }
 
 #[derive(Deserialize)]
@@ -409,19 +398,9 @@ struct CastSpec {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct DiceSpec {
-    dice: Dice,
-    #[serde(default)]
-    per_levels: u8,
-    max_dice: Option<u8>,
-    #[serde(default)]
-    bonus: u8,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
 struct EffectSpec {
-    heal: Option<DiceSpec>,
+    /// A roll (`"2d6"`); the old table form is refused naming it.
+    heal: Option<toml::Value>,
     status: Option<String>,
     severity: Option<u16>,
     #[serde(default)]
@@ -432,73 +411,70 @@ struct EffectSpec {
     identify: bool,
 }
 
+/// `[spell.grows]` as written: one ladder string a dimension, each optional.
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct ScrollSpec {
-    level: Option<u8>,
+struct GrowsSpec {
+    damage: Option<String>,
+    heal: Option<String>,
+    range: Option<String>,
+    length: Option<String>,
+    radius: Option<String>,
+    degrees: Option<String>,
 }
 
-/// What a spell rolls, harm or healing: dice that grow with caster level up to `max_dice`
-/// (until the ladders replace them, the spell scaling design S2).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SpellDice {
-    /// Dice at the caster level of the spell's level ([`SpellData::grows_from`]).
-    pub count: u8,
-    /// Their sides.
-    pub sides: u8,
-    /// One die more per this many caster levels above that one (0: never more).
-    pub per_levels: u8,
-    /// Never more dice than this by caster level.
-    pub max_dice: u8,
-    /// A static bonus, rare.
-    pub bonus: u8,
+/// What a spell's dimensions grow with (`[spell.grows]`): a ladder each, or none (it never
+/// grows by stats). Checked against the spell's base and the engine's limits as it loads.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Grows {
+    /// A `damage` spell's roll.
+    pub damage: Option<Ladder>,
+    /// A `heal` spell's roll.
+    pub heal: Option<Ladder>,
+    /// A ray's, bolt's, or burst's range.
+    pub range: Option<Ladder>,
+    /// A cone's or a line's length.
+    pub length: Option<Ladder>,
+    /// A burst's radius.
+    pub radius: Option<Ladder>,
+    /// A buff's or a hex's degrees of its status.
+    pub degrees: Option<Ladder>,
 }
 
-impl SpellDice {
-    /// The most its dice can roll by caster level: every die of `max_dice` at its highest,
-    /// plus the bonus.
-    pub const fn max(&self) -> i32 {
-        self.max_dice as i32 * self.sides as i32 + self.bonus as i32
+impl Grows {
+    /// The ladder of its roll, harm or healing.
+    pub fn roll(&self) -> Option<&Ladder> {
+        self.damage.as_ref().or(self.heal.as_ref())
     }
 
-    /// What it rolls at `caster_level` for a spell whose dice grow from caster level `from`
-    /// ([`SpellData::grows_from`]): its dice, one more per `per_levels` levels above that,
-    /// never more than `max_dice`.
-    pub fn at(&self, caster_level: i32, from: u8) -> Dice {
-        self.of(self.count_at(caster_level, from))
+    /// The ladder of its reach: the range's, else the length's.
+    pub fn reach(&self) -> Option<&Ladder> {
+        self.range.as_ref().or(self.length.as_ref())
     }
 
-    /// [`SpellDice::at`] for a caster whose stats lift the spell by `lift` percent
-    /// ([`SpellRules::lift`]): `max_dice × lift / 100` dice more, rounded down; no lift, no
-    /// change.
-    pub fn lifted(&self, caster_level: i32, from: u8, lift: i32) -> Dice {
-        let more = i32::from(self.max_dice) * lift.max(0) / 100;
-        self.of(self.count_at(caster_level, from) + more)
-    }
-
-    /// Its dice at `caster_level`: one more per `per_levels` above `from`, never more than
-    /// `max_dice`.
-    fn count_at(&self, caster_level: i32, from: u8) -> i32 {
-        let above = (caster_level - i32::from(from)).max(0);
-        let more = match self.per_levels {
-            0 => 0,
-            n => above / i32::from(n),
-        };
-        (i32::from(self.count) + more).min(i32::from(self.max_dice))
-    }
-
-    /// `count` of its dice, with its bonus.
-    fn of(&self, count: i32) -> Dice {
-        Dice::of(count.unsigned_abs(), u32::from(self.sides)).plus(i32::from(self.bonus))
+    /// Every ladder it has, by dimension name, in the order the wiki prints them.
+    pub fn named(&self) -> Vec<(&'static str, &Ladder)> {
+        let all = [
+            ("damage", &self.damage),
+            ("heal", &self.heal),
+            ("range", &self.range),
+            ("length", &self.length),
+            ("radius", &self.radius),
+            ("degrees", &self.degrees),
+        ];
+        (all.into_iter())
+            .filter_map(|(name, l)| l.as_ref().map(|l| (name, l)))
+            .collect()
     }
 }
 
 /// What a spell of a kind other than `damage` does (`[spell.effect]`).
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SpellEffect {
-    /// A `heal`'s hit points.
-    pub heal: Option<SpellDice>,
-    /// A `buff`'s status on the caster, a `hex`'s on its target, with its severity.
+    /// A `heal`'s hit points: its base roll.
+    pub heal: Option<Roll>,
+    /// A `buff`'s status on the caster, a `hex`'s on its target, with its severity (its base
+    /// degrees).
     pub status: Option<(StatusId, u16)>,
     /// The statuses a `cleanse` ends.
     pub cures: Vec<StatusId>,
@@ -543,14 +519,8 @@ pub struct SpellData {
     pub resolution: Resolution,
     /// The kind of harm a `damage` spell does (a tag too).
     pub damage_type: Option<DamageTypeId>,
-    /// The farthest a ray, bolt, or burst reaches (a burst: its centre).
-    pub max_range: Option<u8>,
-    /// A burst's largest radius.
-    pub max_radius: Option<u8>,
-    /// How far a cone or a line reaches from the caster.
-    pub max_length: Option<u8>,
-    /// Its reach before Willpower (magic design §3): a ray's, bolt's, or burst's range, a
-    /// burst's radius, a cone's or a line's length; each at most its cap above (default it).
+    /// Its base reach: a ray's, bolt's, or burst's range, a burst's radius, a cone's or a
+    /// line's length (each exactly where its shape has it); its ladders grow them.
     pub range: Option<u8>,
     pub radius: Option<u8>,
     pub length: Option<u8>,
@@ -563,24 +533,19 @@ pub struct SpellData {
     pub mana: Option<u16>,
     /// How it shows and sounds.
     pub look: SpellLook,
-    /// A `damage` spell's damage.
-    pub damage: Option<SpellDice>,
+    /// A `damage` spell's base roll.
+    pub damage: Option<Roll>,
     /// What a spell of another kind does; a `damage` spell's `status` is suffered by everyone
     /// it harms.
     pub effect: SpellEffect,
-    /// The caster level a read of its scroll casts it at, if it comes on a scroll.
-    pub scroll_level: Option<u8>,
-    /// What it grows with (`[spell.scales]`; the defaults where it is silent).
-    pub scales: SpellScales,
+    /// Its ladders (`[spell.grows]`).
+    pub grows: Grows,
+    /// The stat whose modifier aims an `attack` or `touch` spell of its caster's own (default
+    /// Dexterity; a scroll's or a wand's always Dexterity).
+    pub aim: Stat,
 }
 
 impl SpellData {
-    /// The caster level its dice grow from, and a scroll or a wand of it casts at by default:
-    /// its level, at least 1 (until the ladders replace both, the spell scaling design S2).
-    pub fn grows_from(&self) -> u8 {
-        self.level.max(1)
-    }
-
     /// Whether it rolls to hit (spec §8 "Spells"): a damage spell, a ray, a bolt, or a touch,
     /// resolved by the attack roll. Such a cast trains the spell attack skill and a caster
     /// style (spec §8 "Weapon skills", "Fighting styles").
@@ -600,9 +565,25 @@ impl SpellData {
         self.effect.identify
     }
 
-    /// How far a cell it is aimed at may be, before Willpower: a ray's, bolt's, or burst's
-    /// range, a cone's or a line's length, a touch's 1; `None` on oneself.
-    pub fn base_reach(&self) -> Option<i32> {
+    /// Its base roll, harm or healing.
+    pub fn roll(&self) -> Option<Roll> {
+        self.damage.or(self.effect.heal)
+    }
+
+    /// Its roll at rung `rung` of its damage or heal ladder, before any hook: the rung's value,
+    /// the base at rung 0 (or without a ladder), the last rung's past it.
+    pub fn roll_at(&self, rung: usize) -> Option<Roll> {
+        let base = self.roll()?;
+        let Some(ladder) = self.grows.roll() else {
+            return Some(base);
+        };
+        let rung = rung.min(ladder.len());
+        Some((ladder.value(rung)).and_then(RungValue::roll).unwrap_or(base))
+    }
+
+    /// How far a cell it is aimed at may be at its base: a ray's, bolt's, or burst's range, a
+    /// cone's or a line's length, a touch's 1; `None` on oneself.
+    pub fn base_range(&self) -> Option<i32> {
         match self.shape {
             Shape::Touch => Some(1),
             Shape::Myself => None,
@@ -611,24 +592,14 @@ impl SpellData {
         }
     }
 
-    /// The stats a cast of it trains (spec §8 "Stats", the `spell` use): those its damage
-    /// grows with (Intelligence when it names none), those its reach grows with if it has a
-    /// reach, and those its status's duration grows with if it is a buff or a hex. Each once.
+    /// The stats a cast of it trains (spec §8 "Stats", the `spell` use): its ladders' stats
+    /// (Intelligence when its roll has none), each once.
     pub fn trained_stats(&self) -> PerStat<bool> {
         let mut trained = PerStat::splat(false);
-        let reach = !matches!(self.shape, Shape::Touch | Shape::Myself);
-        let status = matches!(self.kind, SpellPurpose::Buff | SpellPurpose::Hex);
-        let dims = [
-            (&self.scales.damage, true),
-            (&self.scales.reach, reach),
-            (&self.scales.duration, status),
-        ];
-        for (weights, has) in dims {
-            for (stat, _) in weights.iter().filter(|_| has) {
-                trained[stat] = true;
-            }
+        for (_, ladder) in self.grows.named() {
+            trained[ladder.stat] = true;
         }
-        if self.scales.damage.is_empty() {
+        if self.grows.roll().is_none() {
             trained[Stat::Intelligence] = true;
         }
         trained
@@ -679,40 +650,59 @@ pub(super) fn parse<'a>(
     Ok((rules, list))
 }
 
-/// Checks a dice table's own shape. Nothing checks how much it rolls (decision 16).
-fn dice(spec: &DiceSpec) -> Result<SpellDice, String> {
-    let d = spec.dice;
-    if d.is_fixed() || d.is_negative() || d.bonus() != 0 {
-        return Err(format!("`dice` is dice only (`1d6`), not `{d}`"));
-    }
-    let count = u8::try_from(d.count()).ok().filter(|c| *c <= MAX_DICE);
-    let sides = u8::try_from(d.sides()).ok();
-    let (Some(count), Some(sides)) = (count, sides) else {
-        return Err(format!("at most {MAX_DICE} dice of at most 255 sides"));
+/// A base roll (`damage`, `heal`) as written: a [`Roll`] that can do harm (at least 0, at most
+/// 1 or more). Nothing checks how much it rolls (decision 16). The old table form is refused,
+/// naming the new one.
+fn base_roll(name: &str, value: &toml::Value) -> Result<Roll, String> {
+    let Some(text) = value.as_str() else {
+        return Err(format!(
+            "`{name}` is a roll now, `{name} = \"2d6\"`: `dice`, `per_levels`, `max_dice`, and \
+             `bonus` are gone; a `[spell.grows] {name}` ladder grows it (docs/design/spell-scaling.md \
+             §6.1)"
+        ));
     };
-    let max_dice = spec.max_dice.unwrap_or(count);
-    if !(count..=MAX_DICE).contains(&max_dice) {
-        return Err(format!("`max_dice` is {count} (its dice) to {MAX_DICE}"));
+    let roll: Roll = text.parse()?;
+    if roll.min() < 0 || roll.max() < 1 {
+        return Err(format!("`{name}` must be a roll that can do something, not `{roll}`"));
     }
-    if spec.per_levels > MAX_PER_LEVELS {
-        return Err(format!("`per_levels` is 0 to {MAX_PER_LEVELS}"));
-    }
-    Ok(SpellDice {
-        count,
-        sides,
-        per_levels: spec.per_levels,
-        max_dice,
-        bonus: spec.bonus,
-    })
+    Ok(roll)
 }
 
-/// One spell, checked.
-fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<SpellData, String> {
+/// The retired fields, each refused naming its replacement (the spell scaling design §6.1).
+fn retired(spec: &SpellSpec) -> Result<(), String> {
     if spec.tier.is_some() {
         return Err(format!(
             "`tier` is gone: use `level`, 0 to {MAX_SPELL_LEVEL} (docs/design/spell-scaling.md §5)"
         ));
     }
+    let caps = [
+        ("max_range", spec.max_range.is_some(), "range"),
+        ("max_length", spec.max_length.is_some(), "length"),
+        ("max_radius", spec.max_radius.is_some(), "radius"),
+    ];
+    if let Some((old, _, new)) = caps.iter().find(|(_, given, _)| *given) {
+        return Err(format!(
+            "`{old}` is gone: the base `{new}` is what anyone casts, and a `[spell.grows] {new}` \
+             ladder grows it (docs/design/spell-scaling.md §6.1)"
+        ));
+    }
+    if spec.scales.is_some() {
+        return Err("`[spell.scales]` is gone: write ladders in `[spell.grows]` (`damage`, \
+                    `heal`, `range`, `length`, `radius`, `degrees`), and `aim` for the stat \
+                    that aims an attack (docs/design/spell-scaling.md §6.1)"
+            .into());
+    }
+    if spec.scroll.is_some() {
+        return Err("`[spell.scroll] level` is gone: a spell scroll casts at its own `rungs`, on \
+                    the scroll's `read` table (docs/design/spell-scaling.md §7.4)"
+            .into());
+    }
+    Ok(())
+}
+
+/// One spell, checked.
+fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<SpellData, String> {
+    retired(&spec)?;
     let level = spec
         .level
         .ok_or_else(|| format!("a spell needs a `level`, 0 to {MAX_SPELL_LEVEL}"))?;
@@ -726,36 +716,26 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             spec.resolution.id()
         ));
     }
-    // The caps of its reach: each shape has exactly its own.
-    let reach = |name: &str, value: Option<u8>, wanted: bool, most: u8| match (value, wanted) {
-        (Some(v), true) if (1..=most).contains(&v) => Ok(()),
-        (Some(_), true) => Err(format!("`{name}` is 1 to {most}")),
-        (None, true) => Err(format!("a `{}` needs `{name}`", spec.shape.id())),
-        (Some(_), false) => Err(format!("a `{}` has no `{name}`", spec.shape.id())),
-        (None, false) => Ok(()),
-    };
+    // Its base reach: each shape has exactly its own, within the engine's limits.
     let shape = spec.shape;
+    let reach = |name: &str, value: Option<u8>, wanted: bool, most: u8| match (value, wanted) {
+        (Some(v), true) if (1..=most).contains(&v) => Ok(Some(v)),
+        (Some(_), true) => Err(format!("`{name}` is 1 to {most}")),
+        (None, true) => Err(format!("a `{}` needs `{name}`", shape.id())),
+        (Some(_), false) => Err(format!("a `{}` has no `{name}`", shape.id())),
+        (None, false) => Ok(None),
+    };
     let ranged = matches!(shape, Shape::Ray | Shape::Bolt | Shape::Burst);
-    reach("max_range", spec.max_range, ranged, MAX_REACH)?;
+    let range = reach("range", spec.range, ranged, MAX_REACH)?;
     let burst = shape == Shape::Burst;
-    reach("max_radius", spec.max_radius, burst, rules.max_radius())?;
+    let radius = reach("radius", spec.radius, burst, rules.max_radius())?;
     let long = matches!(shape, Shape::Cone | Shape::Line);
-    let most = if shape == Shape::Cone {
+    let longest = if shape == Shape::Cone {
         MAX_CONE
     } else {
         MAX_REACH
     };
-    reach("max_length", spec.max_length, long, most)?;
-    // Its reach before Willpower: only where it has the cap, at most the cap, default it.
-    let base = |name: &str, value: Option<u8>, cap: Option<u8>| match (value, cap) {
-        (None, cap) => Ok(cap),
-        (Some(_), None) => Err(format!("a `{}` has no `{name}`", spec.shape.id())),
-        (Some(v), Some(cap)) if (1..=cap).contains(&v) => Ok(Some(v)),
-        (Some(_), Some(cap)) => Err(format!("`{name}` is 1 to its cap, {cap}")),
-    };
-    let range = base("range", spec.range, spec.max_range)?;
-    let radius = base("radius", spec.radius, spec.max_radius)?;
-    let length = base("length", spec.length, spec.max_length)?;
+    let length = reach("length", spec.length, long, longest)?;
     let casts = spec.casts.unwrap_or(1);
     if !(1..=MAX_CASTS).contains(&casts) {
         return Err(format!("`casts` is 1 to {MAX_CASTS}"));
@@ -775,9 +755,9 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         ),
     };
     let damage = match (&spec.damage, spec.kind) {
-        (Some(d), SpellPurpose::Damage) => Some(dice(d)?),
-        (None, SpellPurpose::Damage) => return Err("a `damage` spell needs [spell.damage]".into()),
-        (Some(_), _) => return Err("only a `damage` spell has [spell.damage]".into()),
+        (Some(d), SpellPurpose::Damage) => Some(base_roll("damage", d)?),
+        (None, SpellPurpose::Damage) => return Err("a `damage` spell needs `damage`".into()),
+        (Some(_), _) => return Err("only a `damage` spell has `damage`".into()),
         (None, _) => None,
     };
     if spec.kind == SpellPurpose::Damage && damage_type.is_none() {
@@ -807,24 +787,33 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             spec.kind.id()
         ));
     }
-    let scroll_level = match spec.scroll {
-        None => None,
-        Some(s) => {
-            let at = s.level.unwrap_or(level.max(1));
-            if !(1..=MAX_LEVEL).contains(&at) {
-                return Err(format!("scroll: `level` is 1 to {MAX_LEVEL}"));
-            }
-            Some(at)
+    let attack = spec.kind == SpellPurpose::Damage
+        && matches!(spec.resolution, Resolution::Attack | Resolution::Touch);
+    let aim = match &spec.aim {
+        None => Stat::Dexterity,
+        Some(_) if !attack => {
+            return Err("`aim` is an `attack` or `touch` damage spell's: nothing else rolls to \
+                        hit"
+            .into());
         }
+        Some(id) => Stat::from_id(id).ok_or_else(|| format!("`aim`: unknown stat `{id}`"))?,
     };
-    let has = Has {
-        roll: damage.is_some() || effect.heal.is_some(),
-        attack: spec.kind == SpellPurpose::Damage
-            && matches!(spec.resolution, Resolution::Attack | Resolution::Touch),
-        reach: !matches!(shape, Shape::Touch | Shape::Myself),
-        status: matches!(spec.kind, SpellPurpose::Buff | SpellPurpose::Hex),
+    let bases = Bases {
+        damage,
+        heal: effect.heal,
+        range,
+        length,
+        radius,
+        degrees: matches!(spec.kind, SpellPurpose::Buff | SpellPurpose::Hex)
+            .then_some(effect.status)
+            .flatten(),
+        shape,
+        burst_most: rules.max_radius(),
     };
-    let scales = scales::resolve(spec.scales, &has)?;
+    let grows = match spec.grows {
+        Some(g) => grows(g, &bases, content)?,
+        None => Grows::default(),
+    };
     let look = look(spec.cast, shape, radius, damage_type, content)?;
     let look = SpellLook {
         noun: look.noun.unwrap_or_else(|| spec.name.to_lowercase()),
@@ -840,9 +829,6 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         shape,
         resolution: spec.resolution,
         damage_type,
-        max_range: spec.max_range,
-        max_radius: spec.max_radius,
-        max_length: spec.max_length,
         range,
         radius,
         length,
@@ -852,8 +838,125 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         look,
         damage,
         effect,
-        scroll_level,
-        scales,
+        grows,
+        aim,
+    })
+}
+
+/// A spell's base values, what its ladders are checked against.
+struct Bases {
+    damage: Option<Roll>,
+    heal: Option<Roll>,
+    range: Option<u8>,
+    length: Option<u8>,
+    radius: Option<u8>,
+    /// A buff's or a hex's status and base degrees.
+    degrees: Option<(StatusId, u16)>,
+    shape: Shape,
+    /// The largest radius a burst may have (the burst table's length).
+    burst_most: u8,
+}
+
+/// `[spell.grows]` checked against the spell's `bases` (the spell scaling design §6.3): a
+/// ladder only for a dimension the spell has; rolls that can do harm and never weaken (`min`
+/// and `max` non-decreasing from the base, each rung different from the one before); cells and
+/// degrees strictly ascending from the base, within the engine's limits (a range to
+/// [`MAX_REACH`], a cone to [`MAX_CONE`], a line to [`MAX_REACH`], a radius to the burst
+/// table's length, degrees to the status's `max` and [`MAX_SEVERITY`]). Nothing reads how much
+/// a rung does (decision 16).
+fn grows(spec: GrowsSpec, bases: &Bases, content: &Content) -> Result<Grows, String> {
+    let lacks = |name: &str, why: &str| Err(format!("grows: `{name}` is for {why}"));
+    let rolls = |name: &str, text: Option<String>, base: Option<Roll>, why: &str| {
+        let Some(text) = text else {
+            return Ok(None);
+        };
+        let Some(base) = base else {
+            return lacks(name, why);
+        };
+        let ladder = Ladder::parse(&text, Unit::Roll).map_err(|e| format!("grows: {e}"))?;
+        let mut before = base;
+        for value in ladder.values() {
+            let RungValue::Roll(roll) = *value else {
+                continue;
+            };
+            if roll.min() < 0 || roll.max() < 1 {
+                return Err(format!("grows: `{name}`'s rung `{roll}` can do nothing"));
+            }
+            if roll.max() < before.max() || roll.min() < before.min() || roll == before {
+                return Err(format!(
+                    "grows: `{name}`'s rung `{roll}` is below the one before it (`{before}`): a \
+                     rung never weakens a spell, and each differs from the last"
+                ));
+            }
+            before = roll;
+        }
+        Ok(Some(ladder))
+    };
+    let numbers =
+        |name: &str, text: Option<String>, base: Option<u16>, most: u16, unit: Unit, why: &str| {
+            let Some(text) = text else {
+                return Ok(None);
+            };
+            let Some(base) = base else {
+                return lacks(name, why);
+            };
+            let ladder = Ladder::parse(&text, unit).map_err(|e| format!("grows: {e}"))?;
+            let mut before = i32::from(base);
+            for value in ladder.values() {
+                let n = value.number().unwrap_or(0);
+                if n <= before || n > i32::from(most) {
+                    return Err(format!(
+                        "grows: `{name}`'s rungs rise strictly from its base, {base}, to at most \
+                         {most}; not {n}"
+                    ));
+                }
+                before = n;
+            }
+            Ok(Some(ladder))
+        };
+    let shape = bases.shape;
+    let length_most = if shape == Shape::Cone {
+        MAX_CONE
+    } else {
+        MAX_REACH
+    };
+    let degrees_most = (bases.degrees)
+        .map_or(MAX_SEVERITY, |(s, _)| content.status(s).max.min(MAX_SEVERITY));
+    Ok(Grows {
+        damage: rolls("damage", spec.damage, bases.damage, "a `damage` spell's roll")?,
+        heal: rolls("heal", spec.heal, bases.heal, "a `heal` spell's roll")?,
+        range: numbers(
+            "range",
+            spec.range,
+            bases.range.map(u16::from),
+            u16::from(MAX_REACH),
+            Unit::Cells,
+            "a ray's, a bolt's, or a burst's range",
+        )?,
+        length: numbers(
+            "length",
+            spec.length,
+            bases.length.map(u16::from),
+            u16::from(length_most),
+            Unit::Cells,
+            "a cone's or a line's length",
+        )?,
+        radius: numbers(
+            "radius",
+            spec.radius,
+            bases.radius.map(u16::from),
+            u16::from(bases.burst_most),
+            Unit::Cells,
+            "a burst's radius",
+        )?,
+        degrees: numbers(
+            "degrees",
+            spec.degrees,
+            bases.degrees.map(|(_, d)| d),
+            degrees_most,
+            Unit::Degrees,
+            "a buff's or a hex's status",
+        )?,
     })
 }
 
@@ -953,7 +1056,7 @@ pub(super) fn check_effects(content: &Content) -> Result<(), String> {
     Ok(())
 }
 
-/// A spell's `[spell.effect]`, checked: only what its kind uses, and a heal under the cap.
+/// A spell's `[spell.effect]`, checked: only what its kind uses.
 fn effect(e: EffectSpec, kind: SpellPurpose, content: &Content) -> Result<SpellEffect, String> {
     let only = |field: &str, present: bool, kinds: &[SpellPurpose]| {
         if present && !kinds.contains(&kind) {
@@ -976,7 +1079,7 @@ fn effect(e: EffectSpec, kind: SpellPurpose, content: &Content) -> Result<SpellE
             .ok_or_else(|| format!("unknown status `{name}`"))
     };
     let heal = match &e.heal {
-        Some(h) => Some(dice(h)?),
+        Some(h) => Some(base_roll("heal", h)?),
         None => None,
     };
     let marked = match &e.status {

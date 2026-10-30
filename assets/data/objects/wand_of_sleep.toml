@@ -19,4 +19,3 @@ frequency = 7
 [object.wand]
 spell = "sleep"
 charges = 9
-caster_level = 6

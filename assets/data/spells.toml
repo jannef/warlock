@@ -10,13 +10,13 @@
 # A cast's mana (the one cost, magic design §5): the spell's base mana, × its shape's percent (a
 # burst's at its radius), × its resolution's `cost` percent, × (100 + the `spell_cost_percent` of
 # the armour worn) %, rounded to the nearest and at least 1; then the talents (Archmage, Empower,
-# School focus, Frugal caster) and the items (of Thrift). A spell's own `mana` (Identify's)
+# Brimming, School focus, Frugal caster) and the items (of Thrift). A spell's own `mana` (Identify's)
 # stands in for its level, shape, and resolution. The caster level never counts: a known spell
 # costs the same whoever casts it, and the mana pool is the gate.
 #
-# What the stats do to reach, duration, and to-hit is each spell's own `[spell.scales]`
-# (spells/README.toml); without it, Willpower grows reach and Presence a status's degrees (a step
-# per two points of the modifier), and an attack aims with Dexterity.
+# What the stats do to a spell's roll, reach, and duration is each spell's own ladders,
+# `[spell.grows]` (spells/README.toml): a score reached, a rung cast. An attack aims with its
+# `aim` stat (Dexterity unless it names another).
 #
 # [shapes]: what a shape multiplies the base cost by, in percent. Single targets (ray, bolt,
 # touch, self) and the areas (cone, line, burst): area is expensive. `burst` is a list by radius,

@@ -247,6 +247,9 @@ pub struct Profile {
     pub damage: Roll,
     /// Added to every roll of the damage dice.
     pub bonus: i32,
+    /// A die of the damage dice showing this or less is drawn once more (a spell's roll hook,
+    /// spec §8 "Spells": "Hooks"; 0 for every blow).
+    pub reroll: u32,
     /// The lowest natural roll that threatens a critical.
     pub threat: u8,
     /// How many times a confirmed critical rolls the damage.
@@ -381,6 +384,7 @@ impl Profile {
             to_hit,
             damage: attack.damage,
             bonus,
+            reroll: 0,
             threat: attack.threat,
             crit: attack.crit,
             confirm: 0,
@@ -403,7 +407,7 @@ impl Profile {
     /// 1; a blow's total is at least 1); then one roll of each rider, in order, added to
     /// `riders` by kind.
     fn roll_damage(&self, rng: &mut Rng, riders: &mut Vec<(DamageTypeId, i32)>) -> i32 {
-        let dice = self.damage.roll(rng, 0);
+        let dice = self.damage.roll(rng, self.reroll);
         let extra = self.extra.map_or(0, |d| d.roll(rng));
         for rider in &self.riders {
             let rolled = rider.dice.roll(rng).max(0);

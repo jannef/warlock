@@ -10,8 +10,7 @@ shape = "line"
 resolution = "area"
 damage_type = "force"
 length = 6
-max_length = 8
-damage = { dice = "2d6" }
+damage = "2d6"
 
 [spell.cast]
 effect = "arcane_bolt"
@@ -19,5 +18,6 @@ noun = "arcane bolt"
 verb = "strikes"
 noise = { sound = "explosion", loudness = 40 }
 
-[spell.scales]
-damage = { intelligence = 10, willpower = 5 }
+[spell.grows]
+damage = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4"
+length = "willpower 14 7, 18 8"

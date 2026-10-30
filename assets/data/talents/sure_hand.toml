@@ -1,0 +1,10 @@
+# Sure hand (the spell scaling design §7.2): the Spellcraft tree's user of the roll hook: a spell
+# die showing a 1 is drawn once more, and that draw stands.
+[[talent]]
+id = "sure_hand"
+name = "Sure hand"
+tree = "spellcraft"
+description = "Your spells do not falter: a spell die of yours that shows a 1 is rolled again, once."
+needs = { level = 12 }
+effects = [{ kind = "spell_mod", reroll = 1 }]
+systems = ["spells"]

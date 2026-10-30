@@ -6,25 +6,11 @@
 //! cell to aim at (or the player's own, or one out of range, or on the overworld), identify with
 //! no stack to read it on or one there is nothing to learn about.
 //!
-//! **Spell scrolls** cast with the traps' rules ([`World::cast_burst`], [`World::cast_bolt`]),
-//! aimed by the reader:
-//!
-//! - a **burst** (fireball, frost) flies from the reader along the line through the cell aimed
-//!   at (the line a missile flies, [`Pos::ray`]) and goes off on the first cell someone stands
-//!   on, before the first opaque cell (on the reader's own cell when that is the next), or on the
-//!   cell aimed at: it may catch the reader (the interface asks first, spec §6);
-//! - a **bolt** (lightning) runs from the reader along that line and on, through everyone on it,
-//!   as far as its length or the first opaque cell; the reader's own cell is not on it.
-//!
-//! The reader casts it ([`Caster::Actor`]): its blows are theirs, so its kills earn them their
-//! experience and count for their quests, unlike a trap's; a scroll that kills its reader is
-//! what killed them ([`Cause::Scroll`]). The spell's noise is made where it goes off (a burst's
-//! center, the reader for a bolt), heard by everyone in earshot. Messages are said at once, by
-//! what the player sees: "You read the scroll of fireball.", the scroll's message ("The fireball
-//! explodes!"), then what it did to whom ("The fireball burns the kobold.", "The kobold dies.").
-//!
 //! **Scrolls of spells** cast a spell of `data/spells/` through the one cast path
-//! ([`World::read_cast`]), the scrolls of light and identify too: the scroll of identify casts
+//! ([`World::read_cast`]) at the scroll's own rungs plus the reader's Scroll adept, free of mana:
+//! a fireball flies and bursts, a lightning bolt runs through everyone on its line, as the spell's
+//! shape says; its blows are the reader's, and a scroll that kills its reader is what killed them
+//! ([`Cause::Scroll`]). The scrolls of light and identify too: the scroll of identify casts
 //! Identify on one unidentified stack the player carries ([`World::identify`]): "This is a
 //! Sharp long sword of the Bear!", or the type of a scroll still under its label.
 //!
@@ -33,11 +19,10 @@
 //! scroll of fireball."), the scroll of identify's own too.
 
 use super::fight::{End, Guard, Words, attack_message, death_message};
-use super::spell::Caster;
-use super::{Cause, Spent, World};
+use super::{Spent, World};
 use crate::action::{AttackKind, Event, Positions, ReadTarget};
 use crate::content::StatUse;
-use crate::content::{ActionKind, Cast, Reading, ScrollSpell, percent_of};
+use crate::content::{ActionKind, Reading, percent_of};
 use crate::geom::Pos;
 use crate::object::Stack;
 
@@ -64,13 +49,6 @@ impl World {
             return Spent::Nothing;
         };
         match (reading, target) {
-            (Reading::Spell(spell), Some(ReadTarget::Cell(at))) => {
-                self.read_spell(item, spell, at, events)
-            }
-            (Reading::Spell(_), _) => {
-                self.say("Read it at what? Name a cell to aim at: `read:a:12,5`.");
-                Spent::Nothing
-            }
             (Reading::Cast(scroll), Some(ReadTarget::Cell(_)) | None) if scroll.on_item => {
                 self.say("Read it on what? Name a stack you carry: `read:a:b`.");
                 Spent::Nothing
@@ -82,7 +60,7 @@ impl World {
             (Reading::Cast(scroll), target) => {
                 // Priced as the reading begins, with the scroll still in the pack.
                 let price = self.read_price();
-                let cast = (scroll.spell, scroll.level);
+                let cast = (scroll.spell, scroll.rungs);
                 if self.read_cast(item, cast, target, events) {
                     Spent::Turn(price)
                 } else {
@@ -90,61 +68,6 @@ impl World {
                 }
             }
         }
-    }
-
-    /// Reads the spell scroll in inventory stack `item`, `spell`, at cell `at`.
-    fn read_spell(
-        &mut self,
-        item: usize,
-        spell: &ScrollSpell,
-        at: Pos,
-        events: &mut Vec<Event>,
-    ) -> Spent {
-        if !self.can_loose_here() || !self.within_reach(at, spell.range, "aim") {
-            return Spent::Nothing;
-        }
-        let content = self.content.clone();
-        let player = self.state.player;
-        let here = self.player_pos();
-        // Priced as the reading begins, with the scroll still in the pack.
-        let price = self.read_price();
-        let (scroll, kept) = self.use_up(item).expect("the scroll is there");
-        self.say_read(&scroll);
-        if let Some(text) = &spell.message {
-            self.say(text.clone());
-        }
-        let mut made = Vec::new();
-        // Scroll adept, Empower, Archmage (spec §8 "Class abilities"): the reader's talents on
-        // its dice; nothing holds the roll (the spell scaling design, decision 16).
-        let mods = self.state.player().talent_mods(&content);
-        match &spell.cast {
-            Cast::Burst(burst) => {
-                let center = self.burst_center(here, at, spell.range);
-                self.sound_at(spell.noise, center);
-                let caster = Caster::Actor(player);
-                let mut burst = burst.clone();
-                burst.damage = mods.spell_damage(burst.damage);
-                self.cast_burst(caster, (here, center), &burst, &mut made);
-            }
-            Cast::Bolt(bolt) => {
-                let path = self.bolt_line(here, at, bolt.length);
-                self.sound_at(spell.noise, here);
-                let mut bolt = bolt.clone();
-                bolt.damage = mods.spell_damage(bolt.damage);
-                self.cast_bolt(Caster::Actor(player), here, &path, &bolt, &mut made);
-            }
-        }
-        self.say_spell((&spell.noun, &spell.verb), made, events);
-        if kept && self.state.death.is_none() {
-            self.say(KEPT);
-        }
-        // Killed by their own spell (no action is taken after death, so it was this one): the
-        // scroll is what killed them, not "a you".
-        if let Some(death) = &mut self.state.death {
-            death.by = None;
-            death.cause = Some(Cause::Scroll(scroll.object));
-        }
-        Spent::Turn(price)
     }
 
     /// Says that the player reads `scroll`, by what they knew it as ("You read the scroll

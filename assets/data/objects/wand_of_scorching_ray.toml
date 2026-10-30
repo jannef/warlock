@@ -19,4 +19,4 @@ frequency = 7
 [object.wand]
 spell = "scorching_ray"
 charges = 9
-caster_level = 6
+rungs = { min = 0, max = 2 }

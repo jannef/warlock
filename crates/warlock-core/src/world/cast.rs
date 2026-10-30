@@ -2,26 +2,25 @@
 //! the player ([`Action::Cast`], `use:arcane_bolt:12,5`), from its cost to what it does.
 //!
 //! - **Cost** ([`Actor::spell_cost`], the one hook): the cost table's price
-//!   ([`SpellRules::mana`]: the spell's level, at least 1, × shape × resolution × the armour
+//!   ([`crate::content::SpellRules::mana`]: the spell's level, at least 1, × shape × resolution × the armour
 //!   worn's `spell_cost_percent`, rounded once; no caster level), then Archmage's
 //!   `spell_mana_percent`
 //!   ([`Actor::spell_base`], what [`World::spend_mana`] is given), then the talents' cut there
 //!   (Frugal caster). Spent only once the cast is sure to go off.
-//! - **Reach**: the stats its `reach` scales name (Willpower unless it says otherwise) grow a
-//!   spell's range, a burst's radius, and a cone's or a line's length up to the spell's own caps
-//!   ([`Actor::spell_reach`]); its `duration` scales (Presence unless it says otherwise)
-//!   lengthen a buff's or a hex's status ([`SpellRules::lengthened`]; `world/spell_scale.rs`).
-//! - **Dice**: the spell's at the caster's level (one die more per `per_levels` above its own
-//!   level, [`SpellData::grows_from`], never past `max_dice`), as many more as the lift of the
-//!   stats its `damage` scales name gives ([`crate::content::SpellDice::lifted`],
-//!   [`Actor::spell_lift`]), then the talents' (Empower's die, Archmage's per die). Nothing
-//!   holds the roll (the spell scaling design, decision 16). A scroll read or a wand used casts
-//!   with no lift. (Until the ladders replace the dice, S2.)
+//! - **Reach**: the spell's base range, radius, or length, climbed on its reach ladders by the
+//!   caster's scores, then the reach hook's cells (School focus, of Farcasting), held only by the
+//!   engine's limits ([`Actor::spell_reach`], `world/spell_rung.rs`); a buff's or a hex's degrees
+//!   the same way on its degrees ladder ([`Actor::spell_degrees`]).
+//! - **Dice**: the roll at the rung the caster reaches on the spell's damage or heal ladder (a
+//!   scroll's or a wand's own rungs plus the reader's scroll or wand rungs), then the dice hook
+//!   ([`Actor::spell_roll`]); drawn with the roll hook's rerolls, and the rider hook's statuses
+//!   laid on every target harmed (`world/spell_mods.rs`). Nothing holds the roll (the spell
+//!   scaling design, decision 16).
 //! - **Resolution**: `area` (a burst, a cone, a line) strikes everyone in it with one roll, no
 //!   roll to hit, Evasion halving it ([`World::spell_hurts`]) and resistances taking their
 //!   share; `auto` (a ray or a bolt) strikes the first creature on its way, never missing;
-//!   `attack` makes the 2d12 attack roll against Defence (the caster's `to_hit` scales to hit,
-//!   Dexterity unless the spell names other stats, as a missile is aimed; a scroll or a wand
+//!   `attack` makes the 2d12 attack roll against Defence (the modifier of the spell's `aim` stat
+//!   to hit, Dexterity unless it names another, as a missile is aimed; a scroll or a wand
 //!   always Dexterity; Deflect missiles counts), threat and critical as a blow's (a critical
 //!   rolls the damage again); `touch` the same roll against one creature
 //!   next to the caster. `auto` and `area` never critical.
@@ -33,14 +32,14 @@
 //!   at the cell aimed at; self is the caster. A spell that identifies (Identify) asks for a
 //!   stack the caster carries instead of a cell (`use:identify:c`, [`Action::CastOn`]).
 //! - **Explicit costs**: a spell with its own `mana` (Identify) costs that, armour and talents
-//!   counted, whatever its level ([`SpellRules::mana`]).
+//!   counted, whatever its level ([`crate::content::SpellRules::mana`]).
 //!
 //! - **Reflection**: an `attack` or `touch` roll missed by the target's Shield raises Spell
 //!   reflection's trigger, and a spell turned back is cast again at its caster with the same
-//!   dice and to-hit (`reflect.rs`).
+//!   roll, rerolls, to-hit, and riders (`reflect.rs`).
 //!
-//! A scroll read and a wand used cast through the same path at their own caster level, paid by
-//! the scroll or a charge instead of mana ([`World::read_cast`], [`World::wand_cast`]).
+//! A scroll read and a wand used cast through the same path at their own rungs, paid by the
+//! scroll or a charge instead of mana ([`World::read_cast`], [`World::wand_cast`]).
 //!
 //! A cast is refused, taking no time and no mana, without the spell, without the mana, without
 //! the cell it asks, and where it cannot go (out of range, no one there to hex or touch, a
@@ -55,6 +54,7 @@
 
 use super::reflect::{Shot, Turned};
 use super::spell::{Caster, burst_cells, cone_cells};
+use super::spell_rung::CastBy;
 use super::talk::capitalized;
 use super::{Actor, ActorId, AttackSkills, Cause, Spent, World};
 use crate::ability::{Ability, Unavailable};
@@ -62,19 +62,18 @@ use crate::action::position_text;
 use crate::action::{AttackKind, Event, ReadTarget, SpellShape};
 use crate::combat::{self, Attack, Category, Profile, Strike};
 use crate::content::{
-    ActionKind, Bolt, Burst, Content, Grip, Resolution, Shape, SpellData, SpellPurpose, SpellRules,
-    Stance,
+    ActionKind, Bolt, Burst, Content, Grip, Resolution, Shape, SpellData, SpellPurpose, Stance,
+    StatusId, merge_rider,
 };
 use crate::content::{Effect as ItemEffect, ObjectId, SpellId};
 use crate::damage::{Damage, Kinds};
-use crate::dice::Dice;
+use crate::dice::Roll;
 use crate::geom::Pos;
 use crate::magic::Mods;
-use crate::stats::Stat;
 use std::cell::Cell;
 
-/// How far a spell reaches as one actor casts it, Willpower counted (each `None` where the
-/// spell has no such reach).
+/// How far a spell reaches as one actor casts it, its reach ladders climbed (each `None` where
+/// the spell has no such reach).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Reach {
     /// The farthest cell it may be aimed at: a ray's, bolt's, or burst's range, a cone's or a
@@ -118,8 +117,9 @@ impl Actor {
     }
 
     /// What `spell` asks of it before its talents cut the price: the cost table's price
-    /// ([`SpellRules::mana`], with its armour), then School focus's and Archmage's and Empower's
-    /// percents (`spell_mana_percent`), at least 1. What a cast gives [`World::spend_mana`],
+    /// ([`crate::content::SpellRules::mana`], with its armour), then the cost hook's percent
+    /// (School focus's, [`Actor::spell_mods`]) and Archmage's, Empower's, and Brimming's
+    /// (`spell_mana_percent`), at least 1. What a cast gives [`World::spend_mana`],
     /// which takes [`Actor::mana_cost`] (Frugal caster) off it. No caster level counts.
     pub fn spell_base(&self, content: &Content, spell: &SpellData) -> i32 {
         let Some(rules) = content.spell_rules() else {
@@ -129,8 +129,7 @@ impl Actor {
         let armour = self.armour_spell_cost(content);
         let price = rules.mana(spell, armour);
         let price = u16::try_from(price).unwrap_or(u16::MAX);
-        let (focus, _) = mods.focus(&spell.tags(content));
-        mods.spell_mana_with(price, focus)
+        mods.spell_mana_with(price, self.spell_mods(content, spell).cost)
     }
 
     /// What `spell` costs it (the one hook, spec §8 "Spells"): [`Actor::spell_base`] through
@@ -140,54 +139,10 @@ impl Actor {
         self.mana_cost(content, self.spell_base(content, spell))
     }
 
-    /// How far `spell` reaches as it casts it: the spell's own reach grown by its `reach`
-    /// scales ([`Actor::spell_reach_more`]; a cell per two points of Willpower's modifier
-    /// unless the spell names other stats), then School focus's cell and its magic items'
-    /// `spell_reach` on the range or the length, all up to the spell's caps.
-    pub fn spell_reach(&self, content: &Content, spell: &SpellData) -> Reach {
-        if content.spell_rules().is_none() {
-            return Reach::default();
-        }
-        let stats = self.spell_reach_more(content, spell);
-        let grow = |base: Option<u8>, cap: Option<u8>, more: i32| {
-            let base = i32::from(base?);
-            let cap = cap.map_or(base, i32::from);
-            Some(
-                SpellRules::grown(base, cap, stats)
-                    .saturating_add(more)
-                    .min(cap.max(base)),
-            )
-        };
-        // School focus (magic design §10) and the worn `spell_reach` (of Farcasting): cells
-        // farther on the range or the length, never the radius, never past the spell's own cap.
-        let (_, focus) = self.talent_mods(content).focus(&spell.tags(content));
-        let farther = focus + self.mods(content).get(ItemEffect::SpellReach).max(0);
-        let range = match spell.shape {
-            Shape::Touch => Some(1),
-            Shape::Myself => None,
-            Shape::Cone | Shape::Line => grow(spell.length, spell.max_length, farther),
-            Shape::Ray | Shape::Bolt | Shape::Burst => grow(spell.range, spell.max_range, farther),
-        };
-        Reach {
-            range,
-            radius: grow(spell.radius, spell.max_radius, 0),
-        }
-    }
-}
-
-/// A spell's damage dice as a caster at `caster_level` with talents `mods` rolls them: the
-/// spell's at that level with the dice its `lift` gives, then Empower's and Archmage's.
-fn damage_dice(
-    spell: &SpellData,
-    caster_level: i32,
-    lift: i32,
-    mods: &crate::talent::TalentMods,
-) -> Option<Dice> {
-    let dice = spell.damage?.lifted(caster_level, spell.grows_from(), lift);
-    Some(mods.spell_damage(dice))
 }
 
 impl World {
+    /// `use:ID[:X,Y]`impl World {
     /// `use:ID[:X,Y]` ([`crate::action::Action::Cast`]) and `use:ID:c`
     /// ([`crate::action::Action::CastOn`]): the player casts the spell of id `name`, at the cell
     /// or on the stack `target` if it asks for one (module docs).
@@ -221,7 +176,6 @@ impl World {
             });
             return Spent::Nothing;
         }
-        let level = self.caster_level(player);
         let me = self.state.player();
         if me.mana < me.spell_cost(&content, def) {
             self.say("You have too little mana.");
@@ -231,15 +185,7 @@ impl World {
             return Spent::Nothing;
         };
         let me = self.state.player();
-        let cast = Cast {
-            spell,
-            def,
-            level,
-            pay: Pay::Mana(me.spell_base(&content, def)),
-            reach: me.spell_reach(&content, def),
-            lift: me.spell_lift(&content, def),
-            read: Cell::new(None),
-        };
+        let cast = Cast::settle(me, &content, (spell, def), Pay::Mana(me.spell_base(&content, def)));
         let price = self.price_of(player, ActionKind::Cast) * i64::from(def.casts);
         // Hands full of shields may spoil it (`two_shields.rs`): the mana and the time spent.
         if let Pay::Mana(mana) = cast.pay
@@ -281,14 +227,14 @@ impl World {
         }
     }
 
-    /// The player reads the scroll in inventory stack `item`, which casts `spell` at caster
-    /// level `level` (spec §8 "Scrolls"): the cast path's, but paid by the scroll, not mana,
+    /// The player reads the scroll in inventory stack `item`, which casts `spell` at its own
+    /// `rungs` (spec §8 "Scrolls"): the cast path's, but paid by the scroll, not mana,
     /// and never refused for what the player knows or holds. Whether it went off (`false`: the
     /// scroll is kept, no time).
     pub(super) fn read_cast(
         &mut self,
         item: usize,
-        (spell, level): (SpellId, u8),
+        (spell, rungs): (SpellId, u8),
         target: Option<ReadTarget>,
         events: &mut Vec<Event>,
     ) -> bool {
@@ -301,26 +247,19 @@ impl World {
         let Some(target) = self.cast_aim(def, target, &usage) else {
             return false;
         };
-        let cast = Cast {
-            spell,
-            def,
-            level: i32::from(level),
-            pay: Pay::Scroll(item),
-            reach: self.state.player().spell_reach(&content, def),
-            lift: 0,
-            read: Cell::new(None),
-        };
+        let pay = Pay::Scroll(item, rungs);
+        let cast = Cast::settle(self.state.player(), &content, (spell, def), pay);
         self.perform(&cast, target, events)
     }
 
-    /// The player uses the wand in inventory stack `item`, which casts `spell` at caster level
-    /// `level` at cell `at` (spec §8 "Magic items": "Wands"): the cast path's, paid by a
+    /// The player uses the wand in inventory stack `item`, which casts `spell` at its own
+    /// `rungs` at cell `at` (spec §8 "Magic items": "Wands"): the cast path's, paid by a
     /// charge, not mana, and never refused for what the player knows or holds. Whether it went
     /// off (`false`: no charge used, no time).
     pub(super) fn wand_cast(
         &mut self,
         item: usize,
-        (spell, level): (SpellId, i32),
+        (spell, rungs): (SpellId, u8),
         at: Pos,
         events: &mut Vec<Event>,
     ) -> bool {
@@ -329,15 +268,8 @@ impl World {
             self.say("Nothing happens.");
             return false;
         };
-        let cast = Cast {
-            spell,
-            def,
-            level,
-            pay: Pay::Wand(item),
-            reach: self.state.player().spell_reach(&content, def),
-            lift: 0,
-            read: Cell::new(None),
-        };
+        let pay = Pay::Wand(item, rungs);
+        let cast = Cast::settle(self.state.player(), &content, (spell, def), pay);
         self.perform(&cast, Some(ReadTarget::Cell(at)), events)
     }
 
@@ -391,14 +323,14 @@ impl World {
                 self.spend_mana(self.state.player, mana);
                 self.practise_in_armour(cast.def);
             }
-            Pay::Scroll(item) => {
+            Pay::Scroll(item, _) => {
                 let Some((scroll, kept)) = self.use_up(item) else {
                     return;
                 };
                 self.say_read(&scroll);
                 cast.read.set(Some((scroll.object, kept)));
             }
-            Pay::Wand(item) => self.use_charge(item),
+            Pay::Wand(item, _) => self.use_charge(item),
         }
     }
 
@@ -418,20 +350,12 @@ impl World {
         self.practise(style, false, level);
     }
 
-    /// The degrees of the status of the player's buff or hex `def` of `severity`, lengthened
-    /// by its `duration` scales (Presence unless it names other stats).
-    fn lengthened(&self, def: &SpellData, severity: u16) -> u16 {
-        let more = (self.state.player()).spell_degrees_more(&self.content, def);
-        SpellRules::lengthened(severity, more)
-    }
-
-    /// A buff: its status on the caster, lengthened by Presence.
+    /// A buff: its status on the caster, at the degrees its ladder and hooks give.
     fn cast_buff(&mut self, cast: &Cast<'_>, events: &mut Vec<Event>) -> bool {
-        let Some((status, severity)) = cast.def.effect.status else {
+        let (Some((status, _)), Some(severity)) = (cast.def.effect.status, cast.degrees) else {
             return false;
         };
         let player = self.state.player;
-        let severity = self.lengthened(cast.def, severity);
         self.pay_cast(cast);
         self.afflict(player, status, severity, Some(player), events);
         true
@@ -458,8 +382,8 @@ impl World {
         self.pay_cast(cast);
         // A scroll used up moves the stacks after it a place up.
         let on = match cast.pay {
-            Pay::Scroll(item) if on == item => return true,
-            Pay::Scroll(item) if on > item && self.state.player().inventory.len() < before => {
+            Pay::Scroll(item, _) if on == item => return true,
+            Pay::Scroll(item, _) if on > item && self.state.player().inventory.len() < before => {
                 on - 1
             }
             _ => on,
@@ -503,14 +427,11 @@ impl World {
             });
             return false;
         }
-        let Some(heal) = cast.def.effect.heal else {
+        let Some(heal) = cast.roll else {
             return false;
         };
         self.pay_cast(cast);
-        let back = heal
-            .lifted(cast.level, cast.def.grows_from(), cast.lift)
-            .roll(&mut self.state.rng)
-            .max(0);
+        let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
         if target == player {
             self.heal_player(back);
             self.say("Your wounds close.");
@@ -575,10 +496,12 @@ impl World {
         true
     }
 
-    /// A hex: its status, lengthened by Presence, on the creature the player sees at `at`
-    /// within reach, that means them harm.
+    /// A hex: its status, at the degrees its ladder and hooks give, on the creature the player
+    /// sees at `at` within reach, that means them harm.
     fn cast_hex(&mut self, cast: &Cast<'_>, at: Option<Pos>, events: &mut Vec<Event>) -> bool {
-        let (Some(at), Some((status, severity))) = (at, cast.def.effect.status) else {
+        let (Some(at), Some((status, _)), Some(severity)) =
+            (at, cast.def.effect.status, cast.degrees)
+        else {
             return false;
         };
         if cast.def.shape == Shape::Burst {
@@ -588,7 +511,6 @@ impl World {
             return false;
         };
         let player = self.state.player;
-        let severity = self.lengthened(cast.def, severity);
         self.pay_cast(cast);
         self.afflict(target, status, severity, Some(player), events);
         let who = capitalized(&self.called(&self.state.actors[&target]));
@@ -599,8 +521,8 @@ impl World {
     }
 
     /// A hex over an area (Sleep, Web): it flies as a burst does and goes off around the
-    /// first creature in its way or the cell aimed at, and its status, lengthened by Presence,
-    /// falls on everyone it reaches but the caster, friend or foe; each the player sees is
+    /// first creature in its way or the cell aimed at, and its status, at its degrees, falls on
+    /// everyone it reaches but the caster, friend or foe; each the player sees is
     /// named. It goes off whether or not it finds anyone.
     fn cast_area_hex(
         &mut self,
@@ -615,7 +537,6 @@ impl World {
         }
         let player = self.state.player;
         let here = self.player_pos();
-        let severity = self.lengthened(cast.def, severity);
         self.pay_cast(cast);
         if let Some(text) = &cast.def.look.message {
             self.say(text.clone());
@@ -713,8 +634,8 @@ impl World {
         }
         let player = self.state.player;
         self.pay_cast(cast);
-        let mods = self.state.player().talent_mods(&self.content).into_owned();
-        let dice = damage_dice(def, cast.level, cast.lift, &mods).unwrap_or(Dice::of(0, 1));
+        let roll = cast.roll.unwrap_or_default();
+        let reroll = cast.reroll;
         if let Some(text) = &def.look.message {
             self.say(text.clone());
         }
@@ -727,7 +648,8 @@ impl World {
                 let burst = Burst {
                     spell: effect,
                     radius: cast.reach.radius.unwrap_or(1),
-                    damage: dice,
+                    damage: roll,
+                    reroll,
                     kind: def.damage_type,
                     blast: def.look.blast,
                     ice: def.look.ice,
@@ -740,7 +662,8 @@ impl World {
                 let bolt = Bolt {
                     spell: effect,
                     length: range,
-                    damage: dice,
+                    damage: roll,
+                    reroll,
                     kind: def.damage_type,
                 };
                 let path = self.bolt_line(here, at, range);
@@ -749,25 +672,26 @@ impl World {
             }
             Shape::Cone => {
                 self.sound_at(def.look.noise, here);
-                self.cast_cone((here, at, range), (&effect, dice), def, &mut made);
+                self.cast_cone((here, at, range), (&effect, roll, reroll), def, &mut made);
             }
             Shape::Ray | Shape::Bolt | Shape::Touch => {
                 self.sound_at(def.look.noise, here);
                 let own = matches!(cast.pay, Pay::Mana(_));
                 let aim = (here, at, range);
-                turned = self.cast_single(aim, (&effect, dice), (def, own), &mut made);
+                turned = self.cast_single(aim, (&effect, roll, reroll), (def, own), &mut made);
             }
             Shape::Myself => {}
         }
-        self.spell_lands(player, def, made, events);
-        // Spell reflection: the spell a shield blocked goes back at its caster (`reflect.rs`).
+        self.spell_lands(player, (def, &cast.riders), made, events);
+        // Spell reflection: the spell a shield blocked goes back at its caster (`reflect.rs`),
+        // its riders the caster's.
         if let Some(turned) = turned {
             let mut back = Vec::new();
             self.turn_back(&turned, &mut back);
-            self.spell_lands(turned.reflector, def, back, events);
+            self.spell_lands(turned.reflector, (def, &cast.riders), back, events);
         }
         if let Some(death) = &mut self.state.death
-            && !matches!(cast.pay, Pay::Scroll(_))
+            && !matches!(cast.pay, Pay::Scroll(..))
         {
             death.by = None;
             death.cause = Some(Cause::Spell(cast.spell));
@@ -776,11 +700,11 @@ impl World {
     }
 
     /// Says what `by`'s cast `def` did (`made`, its events) and gives everyone it harmed who
-    /// lives its status.
+    /// lives its status and the cast's `riders` (the rider hook; a status of both merged).
     fn spell_lands(
         &mut self,
         by: ActorId,
-        def: &SpellData,
+        (def, riders): (&SpellData, &[(StatusId, u16)]),
         made: Vec<Event>,
         events: &mut Vec<Event>,
     ) {
@@ -797,8 +721,12 @@ impl World {
             })
             .collect();
         self.say_spell((&def.look.noun, &def.look.verb), made, events);
-        if let Some((status, severity)) = def.effect.status {
-            for id in reached {
+        let mut laid: Vec<(StatusId, u16)> = def.effect.status.into_iter().collect();
+        for &(status, severity) in riders {
+            merge_rider(&mut laid, status, severity);
+        }
+        for id in reached {
+            for &(status, severity) in &laid {
                 if self.state.actors.contains_key(&id) && self.state.death.is_none() {
                     self.afflict(id, status, severity, Some(by), events);
                 }
@@ -807,12 +735,12 @@ impl World {
     }
 
     /// A cone from `here` toward `at`, `length` cells long: its effect drawn as a burst around
-    /// the caster over its cells, then one roll of `dice` for everyone in it, in
-    /// ascending actor id order, as an area's (Evasion halves it).
+    /// the caster over its cells, then one roll of `roll` (with `reroll`) for everyone in it,
+    /// in ascending actor id order, as an area's (Evasion halves it).
     fn cast_cone(
         &mut self,
         (here, at, length): (Pos, Pos, i32),
-        (effect, dice): (&str, Dice),
+        (effect, roll, reroll): (&str, Roll, u32),
         def: &SpellData,
         made: &mut Vec<Event>,
     ) {
@@ -830,7 +758,7 @@ impl World {
                 cells: cells.clone(),
             });
         }
-        let roll = dice.roll(&mut self.state.rng);
+        let roll = roll.roll(&mut self.state.rng, reroll);
         let level = self.state.current_level.clone();
         let caught: Vec<ActorId> = (self.state.actors.values())
             .filter(|a| a.level == level && cells.contains(&a.pos))
@@ -846,14 +774,14 @@ impl World {
     /// A ray, a bolt, or a touch from `here` toward `at` (`reach` cells at most): it flies to
     /// the first creature on its line (a touch: the one at `at`), its effect drawn along the
     /// way, and strikes it as its resolution says: `auto` always, `attack` and `touch` by the
-    /// attack roll against its Defence, aimed with its `to_hit` scales when it is the caster's
-    /// `own` spell, else (a scroll, a wand) with Dexterity. One that finds no one strikes
+    /// attack roll against its Defence, aimed with its `aim` stat when it is the caster's `own`
+    /// spell, else (a scroll, a wand) with Dexterity. One that finds no one strikes
     /// nothing. An attack roll missed by the target's Shield may be turned back (Spell
     /// reflection, `reflect.rs`): what to cast back, if so.
     fn cast_single<'s>(
         &mut self,
         (here, at, reach): (Pos, Pos, i32),
-        (effect, dice): (&'s str, Dice),
+        (effect, roll, reroll): (&'s str, Roll, u32),
         (def, own): (&'s SpellData, bool),
         made: &mut Vec<Event>,
     ) -> Option<Turned<'s>> {
@@ -884,16 +812,16 @@ impl World {
         let to_hit = if own {
             me.spell_to_hit(&self.content, def)
         } else {
-            me.effective_stats(&self.content).modifier(Stat::Dexterity)
+            me.item_spell_to_hit(&self.content)
         };
         // The spell attack skill and the caster style (spec §8 "Weapon skills", "Fighting
-        // styles"): the caster's own spells only, as the to-hit scales are.
+        // styles"): the caster's own spells only, as its aim is.
         let skills = if own && def.rolls_to_hit() {
             me.spell_skills(&self.content, def.shape == Shape::Touch)
         } else {
             AttackSkills::default()
         };
-        // Baleful's wider threat (`spell_threat`): an own cast only, as the to-hit scales.
+        // Baleful's wider threat (`spell_threat`): an own cast only, as its aim.
         let threat = if own {
             me.spell_threat(&self.content)
         } else {
@@ -902,7 +830,8 @@ impl World {
         let shot = Shot {
             def,
             effect,
-            dice: dice.into(),
+            dice: roll,
+            reroll,
             to_hit,
             threat,
             skills,
@@ -966,7 +895,10 @@ impl World {
                     no_criticals: struck.no_criticals,
                     ..combat::Target::bare(struck.defence)
                 };
-                let profile = Profile::bare(&attack).with(&benefit);
+                let profile = Profile {
+                    reroll: shot.reroll,
+                    ..Profile::bare(&attack).with(&benefit)
+                };
                 let profile = self.sneak_threat(by, unseen, profile);
                 let blow = combat::strike(&profile, &against, &mut self.state.rng);
                 // The sneak dice come on top, as after Protection.
@@ -977,7 +909,7 @@ impl World {
                 (blow.damage, blow.strike, sneak)
             }
             Resolution::Auto | Resolution::Area => (
-                shot.dice.roll(&mut self.state.rng, 0).max(0),
+                shot.dice.roll(&mut self.state.rng, shot.reroll).max(0),
                 Strike::Hit { critical: false },
                 0,
             ),
@@ -1018,23 +950,52 @@ impl World {
 enum Pay {
     /// The caster's mana: what it gives [`World::spend_mana`].
     Mana(i32),
-    /// The scroll read from this inventory stack.
-    Scroll(usize),
-    /// A charge of the wand in this inventory stack.
-    Wand(usize),
+    /// The scroll read from this inventory stack, which casts at these rungs.
+    Scroll(usize, u8),
+    /// A charge of the wand in this inventory stack, which casts at these rungs.
+    Wand(usize, u8),
 }
 
 /// One cast's settled facts, handed to each kind's code.
 struct Cast<'c> {
     spell: SpellId,
     def: &'c SpellData,
-    /// The caster's caster level (a scroll's own, read; a wand's own, used).
-    level: i32,
     pay: Pay,
     reach: Reach,
-    /// The percent the caster's stats lift its dice by ([`Actor::spell_lift`]; a scroll's or a
-    /// wand's 0).
-    lift: i32,
+    /// Its roll, harm or healing, at the rung reached with the dice hook applied
+    /// ([`Actor::spell_roll`]); `None` for a spell that rolls nothing.
+    roll: Option<Roll>,
+    /// The roll hook: a die showing this or less is drawn once more.
+    reroll: u32,
+    /// The rider hook: statuses laid on everyone its harm reaches.
+    riders: Vec<(StatusId, u16)>,
+    /// A buff's or a hex's degrees ([`Actor::spell_degrees`]).
+    degrees: Option<u16>,
     /// A scroll read, once paid: its object, and whether Spell recall kept it.
     read: Cell<Option<(ObjectId, bool)>>,
+}
+
+impl<'c> Cast<'c> {
+    /// `caster`'s cast of `def`, paid by `pay`: its hooks summed once ([`Actor::spell_mods`]),
+    /// the roll at the rung of who casts it (its own, a scroll's, a wand's), the reach and the
+    /// degrees the caster's own.
+    fn settle(caster: &Actor, content: &Content, (spell, def): (SpellId, &'c SpellData), pay: Pay) -> Self {
+        let mods = caster.spell_mods(content, def);
+        let by = match pay {
+            Pay::Mana(_) => CastBy::Own,
+            Pay::Scroll(_, rungs) => CastBy::Scroll(rungs),
+            Pay::Wand(_, rungs) => CastBy::Wand(rungs),
+        };
+        Cast {
+            spell,
+            def,
+            pay,
+            reach: caster.spell_reach(content, def),
+            roll: caster.spell_roll_with(content, def, by, &mods),
+            reroll: mods.reroll,
+            riders: mods.riders,
+            degrees: caster.spell_degrees(content, def),
+            read: Cell::new(None),
+        }
+    }
 }

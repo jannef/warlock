@@ -9,3 +9,6 @@ kind = "buff"
 shape = "self"
 resolution = "auto"
 effect = { status = "barkskin" }
+
+[spell.grows]
+degrees = "presence 14 2, 18 3"
