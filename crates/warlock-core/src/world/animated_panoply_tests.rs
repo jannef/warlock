@@ -152,9 +152,9 @@ fn the_numbers_follow_the_hollow_and_standard_roles() {
     );
     // Hollow armour slams with its gauntlets by the curve; a panoply has no blow of its own.
     let slam = low.attack.as_ref().expect("gauntlets");
-    assert_eq!(slam.attack.damage, crate::dice::Dice::of(2, 8));
+    assert_eq!(slam.attack.damage, crate::dice::Dice::of(2, 8).into());
     let slam = high.attack.as_ref().expect("gauntlets");
-    assert_eq!(slam.attack.damage, crate::dice::Dice::of(3, 10));
+    assert_eq!(slam.attack.damage, crate::dice::Dice::of(3, 10).into());
     assert!(def("animated_panoply_40").attack.is_none());
     // Both open doors, step loudly, are shown as `A`, and are medium; piercing passes through
     // the hollow.

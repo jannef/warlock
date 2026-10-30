@@ -337,7 +337,7 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
                                     let amount = match cast.resolution {
                                         Resolution::Attack | Resolution::Touch => {
                                             let p = Profile {
-                                                damage: dice,
+                                                damage: dice.into(),
                                                 ..cast.aim.clone()
                                             };
                                             let t = Target::bare(them.missile);

@@ -34,7 +34,7 @@
 
 use crate::content::{Benefit, DamageTypeId};
 use crate::damage::{self, Kinds, Protection, Resistances, Rider};
-use crate::dice::Dice;
+use crate::dice::{Dice, Roll};
 use crate::rng::Rng;
 use crate::stats::{Stat, Stats};
 use serde::{Deserialize, Serialize};
@@ -243,7 +243,8 @@ impl Defence {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Profile {
     pub to_hit: i32,
-    pub damage: Dice,
+    /// Its damage dice ([`Roll`]: groups of more than one size, a spell's `3d6+1d10`).
+    pub damage: Roll,
     /// Added to every roll of the damage dice.
     pub bonus: i32,
     /// The lowest natural roll that threatens a critical.
@@ -280,8 +281,10 @@ pub struct Profile {
 /// natural attack (`data/creatures.toml`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Attack {
-    /// Its damage dice, which may carry a fixed bonus (`1d8+2`: a bow's draw weight).
-    pub damage: Dice,
+    /// Its damage dice, which may carry a fixed bonus (`1d8+2`: a bow's draw weight): a
+    /// [`Roll`], a weapon's or a natural attack's one [`Dice`] group converted where it is
+    /// built, a spell's of more than one size.
+    pub damage: Roll,
     pub to_hit: i32,
     pub threat: u8,
     pub crit: u8,
@@ -297,7 +300,7 @@ impl Attack {
     /// type, bludgeoning; `None`: untyped).
     pub fn unarmed(unarmed: Option<DamageTypeId>) -> Self {
         Self {
-            damage: unarmed_dice(),
+            damage: unarmed_dice().into(),
             to_hit: 0,
             threat: DEFAULT_THREAT,
             crit: DEFAULT_CRIT,
@@ -400,7 +403,7 @@ impl Profile {
     /// 1; a blow's total is at least 1); then one roll of each rider, in order, added to
     /// `riders` by kind.
     fn roll_damage(&self, rng: &mut Rng, riders: &mut Vec<(DamageTypeId, i32)>) -> i32 {
-        let dice = self.damage.roll(rng);
+        let dice = self.damage.roll(rng, 0);
         let extra = self.extra.map_or(0, |d| d.roll(rng));
         for rider in &self.riders {
             let rolled = rider.dice.roll(rng).max(0);
@@ -696,7 +699,7 @@ mod tests {
     fn profile(to_hit: i32, damage: &str, threat: u8, crit: u8) -> Profile {
         Profile {
             to_hit,
-            damage: dice(damage),
+            damage: dice(damage).into(),
             bonus: 0,
             threat,
             crit,
@@ -1336,7 +1339,7 @@ mod tests {
             Stats::from_data(&scores, &BTreeMap::new()).expect("stats")
         };
         let sword = Attack {
-            damage: dice("1d8"),
+            damage: dice("1d8").into(),
             to_hit: 1,
             threat: 20,
             crit: 2,
@@ -1351,7 +1354,7 @@ mod tests {
         assert_eq!((thrown.to_hit, thrown.bonus), (5, 3));
         // Ranged: Dexterity to hit, no modifier to damage; the bow's draw weight is its dice's.
         let bow = Attack {
-            damage: dice("1d8+2"),
+            damage: dice("1d8+2").into(),
             to_hit: 0,
             threat: 22,
             crit: 3,
@@ -1367,7 +1370,7 @@ mod tests {
         let fists = Profile::melee(&Attack::unarmed(None), &stats(8, 10));
         assert_eq!(
             (fists.damage, fists.to_hit, fists.bonus),
-            (dice("1d3"), -1, -1)
+            (dice("1d3").into(), -1, -1)
         );
     }
 
