@@ -34,9 +34,10 @@ no label and is known on sight. A [shop](shops.md#prices)'s price for an unknown
 
 Every [spell](magic.md#the-spells) comes on a scroll of its own: a scroll of [magic missile](magic.md#spell-magic-missile), of
 [haste](magic.md#spell-haste), of [web](magic.md#spell-web). Reading one casts its spell once, as if you cast it yourself (its [shape](magic.md#shapes), its
-resolution, its [damage](combat.md#damage)), but at the scroll's own rung of the spell's ladder (the base for most;
-the table's "Casts at"; [Scroll adept](talents.md#talent-scroll-adept) a rung higher, whatever your stats) and
-**free of [mana](mana.md#spending-it)**: anyone can read one, a [warrior](classes.md#warrior) too. A spell on yourself ([Haste](magic.md#spell-haste), [Barkskin](magic.md#spell-barkskin),
+resolution, its [damage](combat.md#damage)), as written in the [spell's row](magic.md#the-spells), at the rung the scroll's row says
+(the table's "Casts at"; the base for most): your stats do not grow a scroll's damage or
+healing (its reach and how long it lasts are yours, as for your own casts);
+[Scroll adept](talents.md#talent-scroll-adept) takes it a rung up. It is **free of [mana](mana.md#spending-it)**: anyone can read one, a [warrior](classes.md#warrior) too. A spell on yourself ([Haste](magic.md#spell-haste), [Barkskin](magic.md#spell-barkskin),
 [Blessing](magic.md#spell-blessing)) is read at once; any other is aimed first, as below; [Mend](magic.md#spell-mend) and [Cure wounds](magic.md#spell-cure-wounds) are aimed at
 the creature beside you to heal, or at yourself. Scrolls of lower [spell levels](magic.md#spell-levels) are found sooner and
 more often: cantrips from the first floors, spells of level 11 and 12 from [item level](magic-items.md#base-items) 6 (the table
