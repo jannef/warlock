@@ -252,6 +252,7 @@ fn percent(v: i32) -> String {
 fn rerolled(v: i32) -> String {
     match v {
         1 => "1s".to_string(),
+        2 => "1s and 2s".to_string(),
         v => format!("1s to {v}s"),
     }
 }

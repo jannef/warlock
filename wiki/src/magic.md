@@ -22,6 +22,9 @@ What each spell does at its base, how far it reaches there, what it grows with (
 
 {{#include generated/spell-list.md}}
 
+Every spell belongs to one of seven [schools of magic](schools.md), and each school is a skill
+you train by casting its spells: your rank in it rolls them stronger, cheaper, or quicker.
+
 The abilities menu shows a spell's [spell level](#spell-levels) and what it costs you now, with your
 [talents](talents.md) and armour counted. **[Identify](#spell-identify)** asks which of your things to cast it on: the list of
 what you carry unidentified opens, as for the [scroll of identify](scrolls.md#scroll-of-identify) (see
