@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You, on stone floor.
- Zap a wand of magic missile: Tab or direction keys aim, Enter or t zaps, Esc cancels.
+ Zap a wand of magic missile (2d4 force): Tab or direction keys aim, Enter or t zaps, Esc cancels.
 
 
 
