@@ -335,8 +335,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     every wand of it then shows by its name. Its **charges** (`Stack`'s `charges`: the charges
     used, saved, left out of the save while the wand is as made) stay unknown until the wand
     itself is identified, by the scroll of identify or by Connoisseur's carrying ("a wand of
-    fireball (7 charges)", "(empty)"). The item description says the spell in words ("Holds
-    Fireball (tier 3): ...") once the type is known, and the charges left once identified.
+    fireball (7 charges)", "(empty)"). The item description says the spell with the dice it casts
+    in its user's hand and its radius ("Holds Fireball: 4d6 fire, radius 2": the wand's rung and
+    the user's wand rungs, as the abilities menu shows a spell's; a spell with neither says what
+    it does) once the type is known, and the charges left once identified.
   - **The wands**: magic missile and burning hands (tier 1, item level 3, frequency 10, 250
     gold), scorching ray, sleep, and web (tier 2, level 5, frequency 7, 400 gold), fireball and
     lightning bolt (tier 3, level 8, frequency 5, 600 gold). **Where**: loot (by `level` and

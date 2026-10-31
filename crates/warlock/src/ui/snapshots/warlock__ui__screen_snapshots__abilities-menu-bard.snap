@@ -3,8 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  You learn Gifted (dexterity).
- You spend 156 mana (dev).
-                    ┌─ Abilities ──────────────────────────────────────────────┐
+ You spend 156 mana ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
@@ -12,8 +11,8 @@ expression: "render(case, content.clone())"
                     │   b  Throw your voice   at a place you see               │
                     │   c  Inspire            you have too little mana         │
                     │ Spells                                                   │
-                    │   d  Mend               level 1, 1 mana, aimed           │
-                    │   e  Blessing           level 3, 3 mana: too little      │
+                    │   d  Mend               1d3 healed, 1 mana, aimed        │
+                    │   e  Blessing           3 mana: you have 2               │
                     │ Skills                                                   │
                     │   f  Bluff              not usable yet                   │
                     │   g  Decipher script    not usable yet                   │
@@ -27,6 +26,7 @@ expression: "render(case, content.clone())"
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
+                    │                                                          │
                     │                                                          │
                     │ a-m or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘

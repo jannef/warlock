@@ -320,12 +320,23 @@ cast path shares.
   hash changes. The dev `actors` layer shows each actor's with mana as `cl N`.
 - **Presentation**: `PerceptionView::own_caster_level()`; the dump `stats` layer's
   `Caster level N` after the scores, JSON dumps' `caster_level`; `own_spell_cost(spell)` and
-  `own_spell_reach(spell)` (the menu's "level 6, 11 mana", the aiming mode's reach), and since
-  S2 `own_spell_roll(spell)` (`Actor::spell_roll` for an own cast: the dump `spells` layer's
-  `Fireball (level 11, 26 mana): 4d6 fire, range 11, radius 2` now, the menu's row in S4). The
-  character screen does not show caster level yet.
-- **UI**: the abilities menu's **Spells** group (`Source::Spell`) with spell level and cost
-  (`ui/abilities_screen.rs`, snapshot `abilities-menu-spells`); the aiming mode by shape
+  `own_spell_reach(spell)` (the menu's mana and the description's reach, the aiming mode's
+  reach), `own_spell_roll(spell)` (a `SpellRoll`, `world/spell_words.rs`: `Actor::spell_roll`
+  for an own cast, its damage type or "healed", and the text, `4d6 fire`; the menu's row and the
+  dump `spells` layer's `Fireball (level 11, 26 mana): 4d6 fire, range 11, radius 2`; a test
+  holds it to `Actor::spell_roll`), and `own_spell_reroll(spell)` (Sure hand's faces, the
+  description's "Your 1s are rolled again."). `spell_words.rs` also says a reach
+  (`reach_words`: `range 11`, `length 3`, `radius 2`) and a reroll (`reroll_words`) for the
+  menu, the wand's description, and the dump. The character screen does not show caster level
+  yet, nor spells (its attacks column holds three).
+- **UI**: the abilities menu's **Spells** group (`Source::Spell`) with the roll now, its type,
+  and the mana (`4d6 fire, 26 mana, aimed`; the spell scaling design decision 11, the owner's
+  exception to hidden numbers; `ui/abilities_screen.rs`, snapshots `abilities-menu-spells` and
+  `abilities-menu-spells-grown`); a wand's description, once its type is known, its dice at the
+  wand's rung and the user's wand rungs and its radius (`Holds Fireball: 4d6 fire, radius 2`,
+  `describe::appraised_by` through `PerceptionView::describe`; snapshot `wand-description`);
+  no "your spell grows" line anywhere: the menu shows the new dice when it next opens; the
+  aiming mode by shape
   (`ui/target.rs`: `cast_spell`, `Aim::spell_line`; a cone's dots are its cells).
 - **Learning** (#396; `world/learn.rs`, `content/learning.rs`, tests `world/learn_tests.rs`
   and `content/learning.rs`):
@@ -421,8 +432,9 @@ cast path shares.
     types as well.
   - **Presentation**: `PerceptionView::ready_wand`; the aiming mode's `AimKind::Zap(item)`
     (`t` with a wand ready; the spell's line and reach once the type is known, a plain line
-    before; sends `Action::Fire`); `describe::appraised`'s wand lines (the spell in words once
-    the type is known, the charges once identified). Snapshot `wand-description`.
+    before; sends `Action::Fire`); `describe::appraised_by`'s wand lines (the spell with its dice
+    and radius in the user's hand once the type is known, `PerceptionView::describe` passing the
+    player; the charges once identified). Snapshot `wand-description`.
   - **Choices** (design §14 and the issue): the attack roll aims with Dexterity, as every
     spell's (there is no Missile skill); only aimed spells may be wands; a wand type is
     identified by use (as a scroll by reading), its charges only by identification; an empty

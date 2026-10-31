@@ -22,8 +22,10 @@ What each spell does at its base, how far it reaches there, what it grows with (
 
 {{#include generated/spell-list.md}}
 
-The abilities menu shows a spell's [spell level](#spell-levels) and what it costs you now, with your
-[talents](talents.md) and armour counted. **[Identify](#spell-identify)** asks which of your things to cast it on: the list of
+The abilities menu shows a spell's roll as you would cast it now, with its damage type, as the
+[character screen](character.md) shows a weapon's (`4d6 fire, 26 mana, aimed`), and what it costs
+you now, with your [talents](talents.md) and armour counted; the line below it says how far it
+reaches now and which dice you roll again. **[Identify](#spell-identify)** asks which of your things to cast it on: the list of
 what you carry unidentified opens, as for the [scroll of identify](scrolls.md#scroll-of-identify) (see
 [Scrolls](scrolls.md#the-scroll-of-identify)).
 
@@ -228,7 +230,9 @@ An empty wand does nothing ("Nothing happens.") and takes no time; it stays a wa
 to keep. Wands are **never recharged**.
 
 Wands are found unknown, each kind with a look of its own for the whole game ("an oak wand").
-Using one tells you what kind it is, and from then on every wand of that kind shows by its name;
+Using one tells you what kind it is, and from then on every wand of that kind shows by its name,
+and its description says the dice it casts in your hand and its radius ("Holds Fireball: 2d6 fire,
+radius 2");
 its **charges** stay unknown until you [identify](magic-items.md#unidentified-items) that wand (the [scroll of identify](scrolls.md#scroll-of-identify), or carrying
 it long enough as a *[Connoisseur](talents.md#talent-connoisseur)*). Wands lie in the dungeon and in general stores.
 

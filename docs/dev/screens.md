@@ -293,7 +293,11 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   abilities`): the `PagedList<Entry, Source>`, greyed rows with their reason (an active weapon
   ability's after its stamina, `PerceptionView::own_weapon_stamina`: "3 stamina, in a
   direction", "4 stamina: you are short of breath"; never its time; snapshots
-  `abilities-menu-weapon-actives`, `-short`), the selected ability's description below; the stack calls its `fit` before a press like the item lists. A
+  `abilities-menu-weapon-actives`, `-short`; a spell's detail column is its roll now with its
+  type, its mana, and "aimed", `4d6 fire, 26 mana, aimed`, short of mana `: you have 14`,
+  `PerceptionView::own_spell_roll`, snapshots `abilities-menu-spells`, `-grown`), the selected
+  ability's description below (three lines; a spell's adds its reach and a reroll, "Range 11,
+  radius 2. Your 1s are rolled again."); the stack calls its `fit` before a press like the item lists. A
   letter or Enter on an available row answers `ScreenAction::UseAbility(ability)`; on an
   unavailable one it shows why and stays. Its own key closes it only when it names no row.
 - **Dispatch**: `ScreenAction::UseAbility` is the one way an ability is used, from the menu, its
