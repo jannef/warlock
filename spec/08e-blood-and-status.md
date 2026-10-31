@@ -274,9 +274,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     "close by", never the three cells.
     Mana is part of the world state (saved, covered by the state hash; an actor without any
     serializes as before).
-- **Spells** (the magic design, `docs/design/magic.md` §3 to §8; `content/spell_def.rs`,
-  `world/caster_level.rs`, `world/cast.rs`, `world/learn.rs`; #394, #395, #396, #397): the spell
-  data, the one cast path, learning, and the first spell list. The casters' spells (§8 "Class
+- **Spells** (the magic design, `docs/design/magic.md` §3 to §8, as the spell scaling design,
+  `docs/design/spell-scaling.md`, revised it: levels for tiers, ladders and hooks for the cap
+  and the lift, caster level for learning only; `content/spell_def.rs`,
+  `world/caster_level.rs`, `world/cast.rs`, `world/learn.rs`; #394, #395, #396, #397, #759): the
+  spell data, the one cast path, learning, and the first spell list. A spell's growth is
+  written in its own file as ladders on the caster's stats and printed in the wiki as written;
+  talents and items act on it through the hooks. The casters' spells (§8 "Class
   abilities") are spells of `data/spells/` cast by it, and so are the spells learned from
   scrolls and the spells scrolls cast. `docs/dev/spells.md` has the details.
   - **The first list** (#397, design §7; names left for the world-language review, #378):

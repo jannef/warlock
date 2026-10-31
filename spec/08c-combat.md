@@ -412,7 +412,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     talents' `ambush` dice on top, Ambusher, Improved sneak attack, `Dice::and`), adds them on a
     hit, after Protection, never multiplied by a critical, of the blow's kind; Master thief
     threatens such a hit 2 sooner. A blow counts at any reach; a shot, a throw, or a spell that
-    rolls to hit (`cast.rs::spell_attack`; its dice come on top of the spell's cap) only within
+    rolls to hit (`cast.rs::spell_attack`; its dice come on top of the spell's roll) only within
     `missile_reach` (6) cells, Chebyshev, plus Long reach's `sneak_reach`. Decided before the
     strike (no draw), the dice drawn from the gameplay stream on a hit; the player's mark Sneak
     attack (`sneak_attack`, 50 %) and Dexterity (`sneak_attack`, 20 %) on the training stream.
