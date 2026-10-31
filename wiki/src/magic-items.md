@@ -122,7 +122,8 @@ level is never shown in the game): "Prefix Sharp: +2 damage", "Suffix of Celerit
 Prefixes are mostly offensive, or flat [Defence](combat.md#defence) and life. *Flaming*, *Freezing*, *Venomous*,
 *Shocking*, *Corrosive*, and *Withering* add a die of [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold), [poison](damage-types.md#damage-poison), [electricity](damage-types.md#damage-electricity), [acid](damage-types.md#damage-acid), or
 [necrotic](damage-types.md#damage-necrotic) damage to every hit, which no armour soaks (see [Damage types](damage-types.md)).
-*Mage-wrought*, *Baleful*, and *Potent* serve a caster (see [Magic](magic.md)), *Tireless* raises
+*Mage-wrought*, *Baleful*, and *Potent* serve a caster (see [Magic](magic.md)): *Potent* adds 1 to 3
+more on every [spell](magic.md#how-a-spell-grows)'s roll, harm or healing. *Tireless* raises
 your [stamina](resources.md#resource-stamina) (see [Resources](resources.md)), *Hobnailed* [boots](objects.md#class-boots) [kick doors](doors.md#kicking) in more easily, and a
 *Delving* tool or pair of gloves [digs](digging.md#digging) faster (a magic pick-axe turns up in loot).
 
@@ -135,7 +136,9 @@ Warmth*, *of the Adder*, *of the Storm*, *of Glass*, *of the Anvil*, and *of the
 [fire](damage-types.md#damage-fire), [cold](damage-types.md#damage-cold), [poison](damage-types.md#damage-poison), [electricity](damage-types.md#damage-electricity), [acid](damage-types.md#damage-acid), [force](damage-types.md#damage-force), and [necrotic](damage-types.md#damage-necrotic) damage, in percent (see [Damage
 types](damage-types.md)). The casters'
 suffixes (of the Adept, of Thrift, of the Magus, of Farcasting, of Lingering, of Siphoning, of
-Wands) are told on the [Magic](magic.md) and [Mana](mana.md) pages; of Breath, of Ease, and of the
+Wands) are told on the [Magic](magic.md) and [Mana](mana.md) pages: *of Wands* makes the [wands](magic.md#wands) you use cast a
+rung or two higher, and *of the Adept* raises your [caster level](magic.md#caster-level), which is how far your learning
+reaches (it never changes what a spell does or costs); of Breath, of Ease, and of the
 Hunt help [stamina](resources.md#resource-stamina). *Of Fury*, *of Steadiness*, *of Stillness*, *of Guile*, and *of the Muse* raise
 the most [rage](resources.md#rage), [focus](resources.md#resource-focus), [ki](resources.md#resource-ki), [openings](resources.md#resource-openings), or [inspiration](resources.md#resource-inspiration) you can hold: only [barbarians](classes.md#barbarian), [rangers](classes.md#ranger), [monks](classes.md#monk),
 [thieves](classes.md#thief), and [bards](classes.md#bard) hold those (see [Resources](resources.md)), so to anyone else they are of no

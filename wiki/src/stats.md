@@ -35,12 +35,14 @@ In a fight (see [Combat](combat.md)), under a load (see [Burden](burden.md)), at
   under a heavy load or heavy armour).
 - **[Toughness](stats.md#stat-toughness)** gives you [hit points](combat.md#hit-points), and makes them come back sooner. It counts toward how much
   you can [carry](burden.md#how-much-you-can-carry), and fights off most [diseases](diseases.md).
-- **[Intelligence](stats.md#stat-intelligence)** helps you find hidden things when you search ([Searching](searching.md)), and
-  adds to your [mana](mana.md).
+- **[Intelligence](stats.md#stat-intelligence)** helps you find hidden things when you search ([Searching](searching.md)), adds
+  to your [mana](mana.md), and grows the spells whose [ladders](magic.md#the-spells) name it (most spells' damage).
 - **[Willpower](stats.md#stat-willpower)** helps you [notice hidden things in passing](searching.md#noticing-in-passing), adds to your [mana](mana.md) and makes
-  it come back sooner, and fights off a few [diseases](diseases.md#how-a-disease-goes) (brain fever).
-- **[Presence](stats.md#stat-presence)** moves [shop](shops.md) prices in your favour, or against you if it is low, and adds
-  to your [mana](mana.md#how-much).
+  it come back sooner, fights off a few [diseases](diseases.md#how-a-disease-goes) (brain fever), and grows the spells whose
+  [ladders](magic.md#the-spells) name it (most spells' reach, and some spells' damage or healing).
+- **[Presence](stats.md#stat-presence)** moves [shop](shops.md) prices in your favour, or against you if it is low, adds
+  to your [mana](mana.md#how-much), and grows the spells whose [ladders](magic.md#the-spells) name it (how long a blessing or a hex
+  lasts).
 
 ### Modifiers
 

@@ -17,8 +17,19 @@ it comes.
 
 ## The spells
 
-What each spell does at its base, how far it reaches there, what it grows with (its ladders, see
-[How a spell grows](#how-a-spell-grows)), and its [mana](mana.md#how-much), without armour or talents (whoever casts it):
+Every spell has a **[level](#spell-levels)**, 0 to 70: what it costs in [mana](mana.md#spending-it), and how learned a caster must
+be to take it from a scroll for certain. Every spell has a **base**, what it does for anyone who
+casts it, and may have **ladders**: for its damage (or healing), its reach, and how long its
+effect lasts. A ladder names one [stat](stats.md) and lists scores with what the spell does at each:
+*[Fireball](#spell-fireball): 2d6 fire; Intelligence 13: 3d6, 16: 4d6, 19: 5d6, 25: 5d6+2*. When your score
+reaches a number, you cast that rung. **The last rung is as far as your stats take it.** Your
+[talents](talents.md) and [magic items](magic-items.md) may add to that in their own ways, each said in its own row: a rung
+up, a die more, bigger dice, a bonus, a die rolled again (see [How a spell grows](#how-a-spell-grows)). A
+[scroll](scrolls.md#spell-scrolls) read and a [wand](#wands) used cast at a rung of their own.
+
+The list below gives each spell's level, its base (what it does and how far it reaches), its
+ladders ("Grows with": a stat alone is the damage or healing ladder; "range", "length",
+"radius", and "degrees" name the others), and its [mana](mana.md#how-much) without armour or talents:
 
 {{#include generated/spell-list.md}}
 
@@ -34,33 +45,21 @@ study it, the [scroll of identify](scrolls.md#scroll-of-identify) [Identify](#sp
 
 Every spell has a level, 0 to 70. It is the spell's base [mana](mana.md#spending-it) cost, and the [caster level](#caster-level) at which you
 learn it from a scroll for certain. A spell of level 0 or 1 is a *cantrip*: it costs 1 mana, and
-anyone with mana learns it for certain. Nothing says how much a spell of a level may do: each
-spell's own roll and ladders do (the list above).
+anyone with mana learns it for certain. What a spell does is its own roll and ladders (the list
+above), whatever its level.
 
 ## Caster level
 
-Your caster level is how much you can learn. It is your [level](experience.md#levels) times your class's **casting**
-share, rounded down, plus what [talents](talents.md) and [magic items](magic-items.md) add; anyone with any [mana](mana.md#how-much) has at least
-caster level 1. A scroll of a spell whose level is at most your caster level teaches it for
-certain; one above it is a reach (see [Learning](#learning-spells-from-scrolls)). It never changes what a spell you know costs.
-Everyone casts a little: a level-30 [warrior](classes.md#warrior) is a caster of level 7. A [wizard](classes.md#wizard)'s
-*[Arcane training](talents.md#talent-arcane-training)* adds a caster level for every 5 [character levels](experience.md#levels), so a level-30 [wizard](classes.md#wizard) learns
-spells of level 36 for certain; *[Attuned](talents.md#talent-attuned)* counts the caster level your magic items give (*of the
-Adept*) half again. Your caster level grows no spell: your [stats](stats.md) do (see
-[How a spell grows](#how-a-spell-grows)).
+Your caster level is how far your learning reaches: a scroll of a spell at or below it teaches
+you for certain; above it, the study is a check (see [Learning](#learning-spells-from-scrolls)). It never changes what a
+spell does or costs: your [stats](stats.md) grow a spell (see [How a spell grows](#how-a-spell-grows)), and your
+[mana](mana.md#how-much) is what holds you back.
 
-## Spellcraft talents
-
-The Spellcraft tree is for casters (the [wizard](classes.md#wizard) takes its bonus talents from it, beside Scholar):
-*[Quick study](talents.md#talent-quick-study)* (learning, below), *[Overreach](talents.md#talent-overreach)* (a spell beyond your learning is a third less
-beyond you: its levels over your [caster level](#caster-level) count a third fewer, rounded down, in the study's
-difficulty), and *[School focus](talents.md#talent-school-focus)*, taken for a school of magic or an element (a
-spell's tags, in the list above), once per choice: those spells cost 10 % less and reach a cell
-farther. *[Keen mind](talents.md#talent-keen-mind)*, taken the same way, makes that school's or element's spells roll
-every die a size bigger (a d6 is a d7). *[Sure hand](talents.md#talent-sure-hand)* rolls a spell die that shows a 1 again, once;
-*[Numbing cold](talents.md#talent-numbing-cold)* leaves what your cold spells harm a degree
-[Sluggish](status-effects.md#status-sluggish); *[Brimming](talents.md#talent-brimming)* rolls a die more on your damage and healing spells, for a
-tenth more mana. See [Talents](talents.md) for every talent that touches spells.
+It is your [level](experience.md#levels) times your class's **casting** share, rounded down, plus what [talents](talents.md) and
+[magic items](magic-items.md) (*of the Adept*) add; anyone with any [mana](mana.md#how-much) has at least caster level 1. Everyone
+learns a little: a level-30 [warrior](classes.md#warrior) is a caster of level 7. A [wizard](classes.md#wizard)'s *[Arcane
+training](talents.md#talent-arcane-training)* adds a caster level for every 5 [character levels](experience.md#levels), so a level-30 [wizard](classes.md#wizard) learns spells
+of level 36 for certain; *[Attuned](talents.md#talent-attuned)* counts the caster level your magic items give half again.
 
 {{#include generated/spell-casting.md}}
 
@@ -104,13 +103,9 @@ burst). Areas cost more [mana](mana.md#spending-it): the base cost is multiplied
   you too.
 - A **touch** reaches only a creature next to you.
 
-How far a spell reaches as you cast it is its own ladder's: most aimed spells reach a cell
-farther at **[Willpower](stats.md#stat-willpower)** 14 and another at 18 ("Grows with" in the list says which, and where).
-How long a [blessing](#spell-blessing) or a [hex](#spell-hex-of-weakness) lasts is the same: a degree more at **[Presence](stats.md#stat-presence)** 14 and 18 on
-most, up to the most the [status](status-effects.md#how-they-work) has (each degree lasts as long again). *[School focus](talents.md#talent-school-focus)* adds a
-cell of range or length (not of a burst's radius) to the spells of its school or element, and
-[magic items](magic-items.md) *of Farcasting* their cells to every spell; *of Lingering* their degrees to every
-blessing and hex. A burst costs by its own radius.
+How far a spell reaches is in its row, and so is how far your **[Willpower](stats.md#stat-willpower)** takes it. A
+[hex](#spell-hex-of-weakness)'s or a [blessing](#spell-blessing)'s row says how long your **[Presence](stats.md#stat-presence)** makes it last (each degree lasts
+as long again, up to the most its [status](status-effects.md#how-they-work) has). A burst costs by its base radius.
 
 ## How a spell finds its target
 
@@ -135,34 +130,41 @@ What each resolution does to a spell's cost:
 
 ## How a spell grows
 
-Every spell has a **base**, what it does for anyone who casts it, and may have **ladders**: for its
-damage (or healing), its reach, and how long its effect lasts. A ladder names one stat and lists
-scores with what the spell does at each: *[Fireball](#spell-fireball): 2d6 fire; Intelligence 13: 3d6, 16: 4d6, 19:
-5d6, 25: 5d6+2*. When your score reaches a number, you cast that rung. **The last rung is as far
-as your stats take it.** The score is the one your character screen shows, with what your
-[status effects](status-effects.md), [stat damage](status-effects.md), and [magic items](magic-items.md) do to it; a low score never shrinks a spell below
-its base. The ladders are the "Grows with" column of the list above.
+Each spell's row lists its ladders: a stat and the scores at which the spell changes. Your score
+reaches the number, you cast that rung. The score is the one your character screen shows, with
+what your [status effects](status-effects.md), [stat damage](status-effects.md), and [magic items](magic-items.md) do to it; a low score never shrinks a
+spell below its base. Spell damage is rolled dice, as written in the spell's row; what grows it is
+its ladder, and your talents and items.
 
-Your [talents](talents.md) and [magic items](magic-items.md) may add to that in their own ways, each said in its own row:
+Your [talents](talents.md) and [magic items](magic-items.md) may add to that, each in its own way, said in its own row:
 
-- **a rung up**: *[Empower](talents.md#talent-empower)* (a wizard's at 32) a rung, *[Archmage](talents.md#talent-archmage)* (at 60) two, on every damage
-  and healing ladder, never past its last rung;
-- **bigger dice, a die more, a bonus**: *[Keen mind](talents.md#talent-keen-mind)* rolls its school's dice a size bigger,
-  *[Brimming](talents.md#talent-brimming)* a die more of the roll's first kind, and *Potent* magic items add their number to
-  every spell's roll, harm or healing (a Potent +2 ring makes 4d6 into 4d6+2);
-- **a die rolled again**: *[Sure hand](talents.md#talent-sure-hand)* rolls a die showing 1 once more, and that roll stands;
-- **a rider**: *[Numbing cold](talents.md#talent-numbing-cold)* leaves everyone your cold spells harm a degree
-  [Sluggish](status-effects.md#status-sluggish) besides; nothing on a miss;
-- **reach and degrees**: *[School focus](talents.md#talent-school-focus)* and *of Farcasting* a cell farther, *of Lingering* a degree
-  longer (see [Shapes](#shapes)).
+- **A rung**: *[Empower](talents.md#talent-empower)* (a [wizard](classes.md#wizard)'s at 32) takes your spells a rung up their damage and
+  healing ladders, *[Archmage](talents.md#talent-archmage)* (at 60) two; on the last rung they stay there.
+- **Bigger dice**: *[Keen mind](talents.md#talent-keen-mind)*, taken for a school of magic or an element, makes those spells roll
+  dice a size bigger for you: a d6 is a d7, a d8 a d9.
+- **A die more**: *[Brimming](talents.md#talent-brimming)* rolls a die more on your damage and healing spells, and they cost a
+  tenth more [mana](mana.md#spending-it).
+- **A bonus**: *Potent* [magic items](magic-items.md#prefixes) add 1 to 3 to every spell's roll, harm or healing (a Potent +2 ring
+  makes 4d6 into 4d6+2).
+- **A die rolled again**: *[Sure hand](talents.md#talent-sure-hand)* rolls a spell die that shows a 1 once more, and that roll stands.
+- **A rider**: *[Numbing cold](talents.md#talent-numbing-cold)* leaves everyone your cold spells harm a degree [Sluggish](status-effects.md#status-sluggish) besides;
+  nothing on a miss.
+- **Reach and degrees**: *[School focus](talents.md#talent-school-focus)*, taken for a school or an element, makes those spells reach
+  a cell farther (range or length, not a burst's radius) and cost 10 % less; [magic items](magic-items.md#suffixes) *of
+  Farcasting* add their cells to every spell's reach, *of Lingering* their degrees to every
+  blessing and hex.
 
-These come in that order: the rung, then the dice, then the roll (and its rerolls; a [critical](combat.md#criticals)
-rolls it all again), then the harm, then the riders. Nothing holds a spell back from what they
-add. A **[spell scroll](scrolls.md#spell-scrolls)** you read casts at a rung of its own (the [scroll of fireball](scrolls.md#scroll-of-fireball)'s
-is 1: 3d6) plus *[Scroll adept](talents.md#talent-scroll-adept)*'s, whatever your stats; a **[wand](#wands)** at its own plus *[Wand
-mastery](talents.md#talent-wand-mastery)*'s and *of Wands*'. Your other talents and items work on them as on your own casts,
-and their reach and degrees are yours. Two kinds of damage only magic does, **[force](damage-types.md#damage-force)** and
-**[necrotic](damage-types.md#damage-necrotic)**, join the [damage types](damage-types.md).
+They apply in that order: the rung, then the dice, then the roll (with its rerolls), then the
+harm, then the riders. A [critical](combat.md#criticals) rolls the dice twice, as a blow's does. A **[spell scroll](scrolls.md#spell-scrolls)**
+you read casts at the rung the scroll's row says (the [scroll of fireball](scrolls.md#scroll-of-fireball)'s is 1: 3d6), a rung higher
+with *[Scroll adept](talents.md#talent-scroll-adept)*, whatever your stats; a **[wand](#wands)** at a rung of its own, a rung higher with
+*[Wand mastery](talents.md#talent-wand-mastery)* and higher again by *of Wands*. Your other talents and items work on them as on
+your own casts, and their reach and degrees are yours. Most of these talents are Spellcraft's,
+the tree a [wizard](classes.md#wizard) takes bonus talents from beside Scholar; see [Talents](talents.md) for every talent that
+touches spells.
+
+Two kinds of damage only magic does, **[force](damage-types.md#damage-force)** and **[necrotic](damage-types.md#damage-necrotic)**, join the
+[damage types](damage-types.md).
 
 Spells you cast are yours: what they kill earns you its [experience](experience.md), and a spell of your own that
 catches you can kill you.
@@ -216,11 +218,12 @@ so certain.
 
 A wand holds one spell and a number of charges. Ready it in the **[missile weapon slot](equipment.md#what-fits-where)** (it takes
 a [launcher](ranged.md#getting-ready)'s place, and a launcher takes its place) and use it as you would shoot: `t`, aim, and
-it casts its spell. Each cast uses a charge instead of your [mana](mana.md#how-much), and the spell is cast at the
-**wand's own rung** of its ladder (for now the lowest of its kind's, the table's "Casts at"), never
-by your stats, so a warrior with no magic fires a wand as well as a wizard does. The spell is otherwise its own: a ray [rolls to hit](combat.md#hitting) as any spell attack does (with
-your [Dexterity](stats.md#stat-dexterity)), magic missile never misses, an area catches whoever is in it, and its reach
-grows with your [Willpower](stats.md#stat-willpower) as your own spells' does.
+it casts its spell. Each cast uses a charge instead of your [mana](mana.md#how-much). A wand casts its spell at a
+**rung of its own** (for now the lowest of its kind's, the table's "Casts at"), never by your
+stats, so a warrior with no magic fires a wand as well as a wizard does; *[Wand mastery](talents.md#talent-wand-mastery)* takes it
+a rung up (below). The spell is otherwise its own: a ray [rolls to hit](combat.md#hitting) as any spell attack does (with
+your [Dexterity](stats.md#stat-dexterity)), magic missile never misses, an area catches whoever is in it, and how far it
+reaches is in the spell's row, with your [Willpower](stats.md#stat-willpower), as for your own casts.
 A cast that cannot go off (aimed at yourself, out of reach) uses no charge and takes no time;
 one that goes off takes a cast's time.
 
@@ -232,8 +235,8 @@ Using one tells you what kind it is, and from then on every wand of that kind sh
 its **charges** stay unknown until you [identify](magic-items.md#unidentified-items) that wand (the [scroll of identify](scrolls.md#scroll-of-identify), or carrying
 it long enough as a *[Connoisseur](talents.md#talent-connoisseur)*). Wands lie in the dungeon and in general stores.
 
-*[Wand mastery](talents.md#talent-wand-mastery)* (Weaponcraft) makes every wand you use cast a rung higher, and magic items
-*of Wands* their rungs with it, never past the ladder's last rung.
+*[Wand mastery](talents.md#talent-wand-mastery)* (Weaponcraft) makes every wand you use cast a rung higher, and [magic items](magic-items.md#suffixes)
+*of Wands* their rungs with it; on the ladder's last rung it stays there.
 
 {{#include generated/wands.md}}
 
