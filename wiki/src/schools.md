@@ -25,8 +25,8 @@ Each rank is a leg up on every spell of its school, said in one sentence a row o
 table below: a die that shows 1 is rolled again; every die a size bigger; a die more; a point on
 every roll; a cell more of reach; a degree longer; a little less mana; a quicker cast; and for the
 school's spells that roll to hit, a better aim and a wider [critical
-range](combat.md#criticals). These work as the [Spellcraft talents](magic.md#spellcraft-talents)
-do and add to them: a die rolled again by your school and by *[Sure
+range](combat.md#criticals). These work as the spellcraft [talents](talents.md) do
+and add to them: a die rolled again by your school and by *[Sure
 hand](talents.md#talent-sure-hand)* counts both, and what a hex or a buff gains in degrees is
 still held by its [status](status-effects.md)'s most. The game shows your ranks and a bar of your
 marks (the `schools` list); what a rank gives is here, exactly, and not in the game.
