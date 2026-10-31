@@ -438,11 +438,16 @@ cast path shares.
     `[[rod_effect]]` a file, its `README.toml` the format; `Content::rod_effects`, an index is
     the id, `rod_effect_index`), loaded after spells (they name statuses) and before objects.
     `shape` (`RodShape`: line, bolt, burst; each kind fixes its shape), `range` 1 to
-    `MAX_ROD_REACH` (20), `max_range` from it to 20, `per_levels` 0 to 20, `radius` 1 to
-    `MAX_ROD_RADIUS` (3) for a burst only, optional `noise`, and `kind` with only its fields
-    (`RodDoes`): `dig` (`power` 1 to `MAX_ROD_POWER`), `teleport`, `status` (`status`,
-    `severity` 1 to its max, `up_to_caster_level`). `RodEffect::reach(caster_level)` = `range` +
-    caster level / `per_levels`, at most `max_range`. No visual effect yet (no `Event::Spell`).
+    `MAX_ROD_REACH` (20), `grows.range` (`RodEffect::grows: Option<Ladder>`, S2's
+    `content/spell_ladder.rs` in `Unit::Cells`, rungs rising strictly from `range` to at most
+    20; the spell scaling design §7.5), `radius` 1 to `MAX_ROD_RADIUS` (3) for a burst only,
+    optional `noise`, and `kind` with only its fields (`RodDoes`): `dig` (`power` 1 to
+    `MAX_ROD_POWER`), `teleport`, `status` (`status`, `severity` 1 to its max, `up_to_level`, a
+    creature level of 1 or more). The retired `max_range`, `per_levels`, and
+    `up_to_caster_level` are refused naming their replacements. `RodEffect::reach(stats)` = the
+    ladder's value at the rung the score in its stat reaches, `range` below the first;
+    `Actor::rod_reach` reads it at `effective_stats`. No caster level is read anywhere in rods
+    (decision 10). No visual effect yet (no `Event::Spell`).
   - **Rods**: `[object.rod]` (`RodSpec` → `Rod { effect, mana }` on `ObjectDef::rod`): `mana` 1
     to `MAX_ROD_MANA` (100); a rod has a `slot`, is not `stackable`, and has no attack,
     `launches`, range, food, `read`, `wand`, or `kind`; it may have `level` and `frequency`
@@ -455,13 +460,13 @@ cast path shares.
     percent, rounded, at least 1; `spend_mana` applies Frugal caster and trains Willpower;
     `Actor::rod_cost` is both, what is shown), "You zap the pewter rod." and the type learned
     through `learn_scroll` ("It is a rod of digging."), then the effect at the user's
-    `World::caster_level`: `rod_dig` (`from.ray(at)` for the reach: `break_wall(p, Breach::Dug)`
+    `Actor::rod_reach`: `rod_dig` (`from.ray(at)` for the reach: `break_wall(p, Breach::Dug)`
     where the terrain breaks below `power` and `breaks_at`; stops at anything else opaque or off
     the map), `rod_teleport` (`bolt_line`, the first actor; `World::teleport`, the teleport
     trap's hash; then `provoke`, `provoke_court`, `break_empathy`; "The bolt strikes nothing."
     when empty, still paid), `rod_status` (`burst_center` and `burst_cells` as an area hex;
-    `afflict` with the user as the giver; a creature above the caster level with
-    `up_to_caster_level` "shrugs it off"). Priced as one `cast`. No draws.
+    `afflict` with the user as the giver; a creature above the effect's `up_to_level` "shrugs
+    it off"). Priced as one `cast`. No draws.
   - **Labels**: `data/rod_labels.toml` (`Content::rod_labels`), drawn in `Labels::draw` after the
     wands' from the same stream; `Lore::label_def` picks a rod's. Nothing is saved on a rod's
     stack (no charges); a known rod type is in `WorldState::known_scrolls`, as a wand's.
@@ -472,9 +477,9 @@ cast path shares.
     Snapshots `rod-description`, `rod-aim`.
   - **Choices** (design §14 has none for rods; the issue's open points): four effects (dig,
     teleport other, sleep, terror) on the dig, teleport, and status hooks; summoning is left out
-    (there are no allies to summon, and a hostile summon is a curse, not a rod); the user's caster
-    level sets reach and, for sleep and terror, which creatures are taken; the cost is fixed per
-    rod, not by caster level; a rod type is identified by use or identification, as a wand's;
+    (there are no allies to summon, and a hostile summon is a curse, not a rod); the user's
+    Willpower sets reach (a ladder, S3), and sleep and terror take creatures to their own
+    `up_to_level` (20), never by caster level; the cost is fixed per rod; a rod type is identified by use or identification, as a wand's;
     an unknown rod still costs its mana when used; teleport other provokes as a blow does, the
     status bursts do not (as an area hex); a use takes the `cast` action's time.
 - **Talents** (#400; design §10; the spell scaling design §7.2; tests

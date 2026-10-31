@@ -282,8 +282,8 @@ pub(super) fn wands(content: &Content) -> String {
     out
 }
 
-/// The rods (spec §8 "Magic items": "Rods"): each one's effect, its shape and reach by the
-/// user's caster level, what it does exactly, its mana cost, and where loot finds it; by item
+/// The rods (spec §8 "Magic items": "Rods"): each one's effect, its shape and reach (with its
+/// ladder, as a spell's), what it does exactly, its mana cost, and where loot finds it; by item
 /// level, then name.
 pub(super) fn rods(content: &Content) -> String {
     let mut rods: Vec<_> = (content.object_defs().iter())
@@ -300,12 +300,9 @@ pub(super) fn rods(content: &Content) -> String {
             RodShape::Burst => format!("burst, radius {}", effect.radius),
             other => other.id().to_string(),
         };
-        let reach = match effect.per_levels {
-            0 => format!("{}", effect.range),
-            per => format!(
-                "{} + 1 per {per} caster levels, at most {}",
-                effect.range, effect.max_range
-            ),
+        let reach = match &effect.grows {
+            None => effect.range.to_string(),
+            Some(ladder) => format!("{}; {}", effect.range, ladder.words()),
         };
         let does = match effect.does {
             RodDoes::Dig { power } => {
@@ -317,14 +314,13 @@ pub(super) fn rods(content: &Content) -> String {
             RodDoes::Status {
                 status,
                 severity,
-                up_to_caster_level,
+                up_to_level,
             } => {
-                let who = if up_to_caster_level {
-                    "every creature of a level up to the user's caster level"
-                } else {
-                    "everyone"
-                };
-                format!("{} {severity} on {who} in it", content.status(status).name)
+                let name = &content.status(status).name;
+                let takes = up_to_level.map_or_else(String::new, |l| {
+                    format!(". Takes creatures to level {l}; one above it shrugs it off")
+                });
+                format!("{name} {severity} on everyone in it{takes}")
             }
         };
         let _ = writeln!(

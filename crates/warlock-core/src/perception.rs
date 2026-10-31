@@ -1436,7 +1436,7 @@ impl<'a> PerceptionView<'a> {
         let rod = self.content.object(stack.object).rod?;
         let effect = self.content.rod_effect(rod.effect);
         let cost = self.player.rod_cost(self.content, &rod);
-        Some((cost, effect.reach(self.own_caster_level())))
+        Some((cost, self.player.rod_reach(self.content, effect)))
     }
 
     /// The digging tool the player has ready (spec §8 "Digging"), if any.

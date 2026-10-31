@@ -1,15 +1,14 @@
-# Terror: a burst of dread; creatures of a level up to the user's caster level flee from them a
+# Terror: a burst of dread; creatures of a level up to 20 flee from them a
 # few turns (status.toml's Frightened).
 [[rod_effect]]
 id = "terror"
 name = "Terror"
-description = "A burst of dread where you aim: creatures in it no stronger than your magic flee from you a while."
+description = "A burst of dread where you aim: creatures in it, unless they are too mighty, flee from you a while."
 shape = "burst"
 range = 5
-max_range = 10
-per_levels = 5
+grows.range = "willpower 14 6, 18 7, 22 8"
 radius = 1
 kind = "status"
 status = "frightened"
 severity = 3
-up_to_caster_level = true
+up_to_level = 20
