@@ -1,0 +1,10 @@
+# Magister (the spell scaling design §8.6): the wizard's class ability at level 45. Every school
+# of magic held reads a rank higher (the `weapon` effect's every-skill-of-a-role arm).
+[[talent]]
+id = "magister"
+name = "Magister"
+tree = "class"
+granted = true
+description = "Every school of magic answers you as one a rank more practised."
+effects = [{ kind = "weapon", role = "school", ranks = 1 }]
+systems = ["schools", "spells"]

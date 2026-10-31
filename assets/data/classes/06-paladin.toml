@@ -13,7 +13,7 @@ skills = { intimidate = "2d6+10", concentration = "2d4+4", handle_animal = "2d4+
 known_for = ["intimidate"]
 optional_skills = { athletics = { chance = 25, dice = "2d4" }, knowledge = { chance = 25, dice = "2d4" } }
 rolls = 2
-weapon_skills = { long_blades = 2, shield_block = "1d2", shield_bash = 1, spell_attack = 1 }
+weapon_skills = { long_blades = 2, shield_block = "1d2", shield_bash = 1, abjuration = 1 }
 styles = { sword_and_board = 1, battle_caster = 1 }
 # Sword and shield, the order's harness (a warrior's hardened leathers and iron helm, and
 # gauntlets besides), and the order's symbol, perhaps blessed.

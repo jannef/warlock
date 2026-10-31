@@ -235,7 +235,7 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // elf's, and Apprentice's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
     // mastery, Channeler, Appraiser's eye, Devout, Deep lungs, Second breath, Hard training,
     // Quick study of the body, Early mastery, Gifted (six stats), Late bloomer, Sure hand,
-    // Numbing cold, and Brimming are held back the same way so the picks fit in
+    // Numbing cold, Brimming, and Devotee are held back the same way so the picks fit in
     // the levels there are.
     let mut files = ContentFiles::builtin();
     files.edit_table("talents", |text| {
@@ -286,6 +286,10 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
         .replace(
             "tree = \"might\"\ndescription = \"Every kill of yours gives you back",
             "tree = \"might\"\nneeds = { race = \"elf\" }\ndescription = \"Every kill of yours gives you back",
+        )
+        .replace(
+            "needs = { level = 9 }\neffects = [{ kind = \"school_marks_percent\"",
+            "needs = { level = 9, race = \"elf\" }\neffects = [{ kind = \"school_marks_percent\"",
         )
         .replace(
             "needs = { level = 9 }\neffects = [{ kind = \"ability_ranks\"",

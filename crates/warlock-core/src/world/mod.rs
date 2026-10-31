@@ -1659,6 +1659,8 @@ mod rot_tests;
 #[cfg(test)]
 mod rumour_tests;
 #[cfg(test)]
+mod school_skill_tests;
+#[cfg(test)]
 mod scriptorium_tests;
 #[cfg(test)]
 mod scroll_label_tests;

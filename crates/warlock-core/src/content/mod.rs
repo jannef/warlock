@@ -941,6 +941,21 @@ impl Content {
         let rules = files.get_optional(path).map(|text| (path, text));
         let table = files.table("spells").filter(|(p, _)| *p != path);
         (content.spell_rules, content.spells) = spell_def::parse(rules, table, &content)?;
+        // A school of magic cannot be forgotten: every spell's school has its skill's row
+        // (spec §8 "Weapon skills": "Schools of magic"), once there are weapon skills at all.
+        if !content.weapon_skills.is_empty()
+            && let Some(spell) = (content.spells.iter())
+                .find(|s| content.weapon_skills.of_school(s.school).is_none())
+        {
+            return Err(ContentError::new(
+                "data/weapon_skills.toml",
+                format!(
+                    "spell `{}` is of school `{}`, which has no skill (`role = \"school\"`)",
+                    spell.id,
+                    spell.school.id()
+                ),
+            ));
+        }
         // Rod effects (spec §8 "Magic items": "Rods") name statuses; rods (objects) name them.
         content.rod_effects = rod::parse(files.table("rod_effects"), &content)?;
         // The talent table (spec §8 "Talents"): optional, so no level asks for a pick without it.

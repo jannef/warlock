@@ -12,7 +12,7 @@ skills = { heal = "2d6+10", knowledge = "2d6+10", concentration = "2d4+4", decip
 known_for = ["heal", "knowledge"]
 optional_skills = { listen = { chance = 15, dice = "2d4" }, spellcraft = { chance = 25, dice = "2d4" } }
 rolls = 2
-weapon_skills = { maces = 2, shield_block = 1, spell_attack = 1 }
+weapon_skills = { maces = 2, shield_block = 1, restoration = 1 }
 styles = { sword_and_board = 1, toucher = 1 }
 # Mace and buckler, the holy symbol, and candles for the rites.
 kit = [
