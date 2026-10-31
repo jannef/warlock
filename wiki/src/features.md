@@ -79,8 +79,8 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
 - **[Magic](magic.md)** — [spells](magic.md#the-spells) of [levels](magic.md#spell-levels) 0 to 70 ([cantrips](magic.md#spell-levels) at 0 and 1), cast from the [abilities menu](abilities.md#the-abilities-menu) for
   [mana](mana.md#how-much) by its level: a few come with a casting [class](classes.md), the rest are learned from scrolls, and one far
   above your [caster level](magic.md#caster-level) is hard to learn and can go badly wrong. Rays and bolts, cones, lines,
-  and bursts, each with dice of its own. [Wands](magic.md#wands) cast their spell from their
-  charges at their own caster level, for anyone; [rods](magic.md#rods) do what no spell does (digging, sleep,
+  and bursts, each with dice of its own and [ladders](magic.md#the-spells) your stats climb. [Wands](magic.md#wands) cast
+  their spell from their charges at a rung of their own, for anyone; [rods](magic.md#rods) do what no spell does (digging, sleep,
   terror, teleport other) for your own mana (see [Magic](magic.md)).
 - **[People and talk](npcs.md)** — [Cēaptūn](ascmearc.md#the-places) has folk to talk to: townsfolk on the square, Sister Hild in the
   Mynster, Godgifu at the inn, the reeve and the mine-factor. [Chat](npcs.md#chatting) with `C`: most say a
