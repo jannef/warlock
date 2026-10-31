@@ -1,7 +1,8 @@
 //! Wands (spec §8 "Magic items": "Wands"; #398): a wand in the missile weapon slot casts its
-//! spell through the one cast path at its own caster level, a charge a cast; an empty wand does
-//! nothing; a wand type is unknown until used or identified, its charges until identified; a
-//! wand and a launcher compete for the slot; charges are saved.
+//! spell through the one cast path at its own rung, drawn as it was made (the spell scaling
+//! design §7.4), a charge a cast; an empty wand does nothing; a wand type is unknown until used
+//! or identified, its charges until identified, its rung with its type; a wand and a launcher
+//! compete for the slot; charges and rungs are saved.
 
 use super::*;
 use crate::action::{AttackKind, parse_actions};
@@ -209,8 +210,19 @@ fn an_attack_wand_rolls_to_hit_and_an_auto_wand_never_misses() {
     assert!(rays.iter().any(|s| s.is_hit()), "{rays:?}");
 }
 
+/// `stack` with its wand rung set to `rung` (`None` leaves it out), as a save writes it.
+fn with_rung(stack: &Stack, rung: Option<u8>) -> Stack {
+    let mut json = serde_json::to_value(stack).expect("json");
+    let map = json.as_object_mut().expect("a stack is an object");
+    match rung {
+        Some(r) => map.insert("wand_rung".into(), r.into()),
+        None => map.remove("wand_rung"),
+    };
+    serde_json::from_value(json).expect("a stack")
+}
+
 #[test]
-fn a_wand_casts_at_its_lowest_rung_and_wand_mastery_raises_it() {
+fn a_wand_casts_at_its_own_rung_and_wand_mastery_raises_it() {
     let mut w = world();
     let content = w.content.clone();
     let fireball = content.object_id("wand_of_fireball").expect("a wand");
@@ -223,16 +235,144 @@ fn a_wand_casts_at_its_lowest_rung_and_wand_mastery_raises_it() {
     assert_eq!(wand.charges, 7);
     let def = content.spell(wand.spell);
     let roll = |w: &World| {
-        let by = super::CastBy::Wand(wand.min_rung);
+        let stack = &w.state.player().inventory[4];
+        let by = super::CastBy::Wand(stack.wand_rung(&content).expect("a wand"));
         let r = w.state.player().spell_roll(&content, def, by);
         r.map(|r| r.to_string()).unwrap_or_default()
     };
-    // Until each wand draws its own rung (S5): the range's lowest, the base, whatever the
-    // user's Intelligence.
+    // The wand's own rung, whatever the user's Intelligence: rung 1 is 3d6.
     super::cast_tests::scores(&mut w, &[(crate::stats::Stat::Intelligence, 25)]);
-    assert_eq!(roll(&w), "2d6");
+    let one = with_rung(&w.state.player().inventory[4], Some(1));
+    w.player_mut().inventory[4] = one;
+    assert_eq!(roll(&w), "3d6");
     w.player_mut().talents.take("wand_mastery", None);
-    assert_eq!(roll(&w), "3d6", "a rung higher");
+    assert_eq!(roll(&w), "4d6", "a rung higher");
+}
+
+#[test]
+fn the_zap_casts_at_the_stacks_rung() {
+    // Magic missile: 1d4 at rung 0, 3d4 at rung 2 (it never misses).
+    let most = |rung: u8| {
+        let mut w = world();
+        let target = rat(&mut w);
+        let wand = with_rung(&w.state.player().inventory[0], Some(rung));
+        w.player_mut().inventory[0] = wand;
+        run(&mut w, "equip:missile_weapon:a");
+        let mut most = 0;
+        for _ in 0..12 {
+            let before = w.state.actors[&target].hp;
+            assert!(fire_at_rat(&mut w, target).took_turn);
+            most = most.max(before - w.state.actors[&target].hp);
+        }
+        most
+    };
+    assert!(most(0) <= 4, "1d4 at rung 0");
+    assert!(most(2) > 4, "3d4 at rung 2");
+}
+
+#[test]
+fn a_wand_draws_its_rung_evenly_once_as_it_is_made() {
+    let content = Content::builtin().expect("content");
+    let fireball = content.object_id("wand_of_fireball").expect("a wand");
+    let mut counts = [0u32; 3];
+    for seed in 0..3000 {
+        let mut stack = Stack::one(fireball);
+        let mut rng = crate::rng::Rng::stream(seed, "wand-test");
+        stack.draw_wand_rung(&content, &mut rng);
+        let rung = stack.wand_rung(&content).expect("a wand");
+        counts[usize::from(rung)] += 1;
+        // Drawn once: a second draw leaves it.
+        let again = stack.clone();
+        stack.draw_wand_rung(&content, &mut rng);
+        assert_eq!(stack, again);
+    }
+    for n in counts {
+        assert!((900..=1100).contains(&n), "{counts:?}");
+    }
+    // The same seed, the same rungs (the scenario's pack draws them).
+    let rungs = |w: &World| -> Vec<Option<u8>> {
+        (w.state.player().inventory.iter())
+            .map(|s| s.wand_rung(&w.content))
+            .collect()
+    };
+    assert_eq!(rungs(&world()), rungs(&world()));
+    assert_eq!(rungs(&world()).iter().flatten().count(), 3, "three wands");
+    let drawn = |w: &World| serde_json::to_string(&w.state.player().inventory[4]).expect("json");
+    assert!(drawn(&world()).contains("wand_rung"), "{}", drawn(&world()));
+}
+
+#[test]
+fn a_non_wand_draws_nothing_and_saves_as_before() {
+    let content = Content::builtin().expect("content");
+    let dagger = content.object_id("dagger").expect("a dagger");
+    let mut stack = Stack::one(dagger);
+    let before = serde_json::to_string(&stack).expect("json");
+    let mut rng = crate::rng::Rng::stream(1, "wand-test");
+    stack.draw_wand_rung(&content, &mut rng);
+    assert_eq!(serde_json::to_string(&stack).expect("json"), before);
+    assert_eq!(before, format!("{{\"object\":{},\"count\":1}}", dagger.0));
+    assert_eq!(
+        rng.next_u32(),
+        crate::rng::Rng::stream(1, "wand-test").next_u32(),
+        "no draw"
+    );
+    assert_eq!(stack.wand_rung(&content), None);
+}
+
+#[test]
+fn a_wand_saved_without_a_rung_casts_at_rung_0_and_a_rung_is_saved() {
+    let mut w = world();
+    let content = w.content.clone();
+    // A wand of a save made before rungs were drawn: no `wand_rung`, read as 0.
+    let old = with_rung(&w.state.player().inventory[4], None);
+    assert!(
+        !serde_json::to_string(&old)
+            .expect("json")
+            .contains("wand_rung")
+    );
+    assert_eq!(old.wand_rung(&content), Some(0));
+    w.player_mut().inventory[4] = with_rung(&old, Some(2));
+    let before = w.state_hash();
+    w.player_mut().inventory[4] = with_rung(&old, Some(1));
+    assert_ne!(w.state_hash(), before, "hashed");
+    let loaded = crate::save::decode(&crate::save::encode(&w), content.clone()).expect("decodes");
+    let rung = |w: &World| w.state.player().inventory[4].wand_rung(&content);
+    assert_eq!(rung(&loaded), Some(1));
+    w.player_mut().inventory[4] = old;
+    let loaded = crate::save::decode(&crate::save::encode(&w), content.clone()).expect("decodes");
+    assert_eq!(rung(&loaded), Some(0));
+}
+
+#[test]
+fn the_rung_shows_with_the_type_and_not_before() {
+    let mut w = world();
+    // The wand of fireball: the last stack, before and after the scroll is read.
+    let rung_of = |w: &World| (w.state.player().inventory.last()?).known_wand_rung(w.lore());
+    let rows = |w: &World| crate::dump::layer_rows(w, crate::dump::Layer::Inventory).join("\n");
+    assert_eq!(rung_of(&w), None, "its type unknown");
+    assert!(
+        w.perception()
+            .wand_does(&w.state.player().inventory[4])
+            .is_none()
+    );
+    assert!(!rows(&w).contains("(rung"), "{}", rows(&w));
+    let one = with_rung(&w.state.player().inventory[4], Some(1));
+    w.player_mut().inventory[4] = one;
+    run(&mut w, "read:d:e");
+    assert_eq!(rung_of(&w), Some(1));
+    assert!(rows(&w).contains("(rung 1)"), "{}", rows(&w));
+    let view = w.perception();
+    let stack = w.state.player().inventory.last().expect("the wand");
+    assert_eq!(view.wand_does(stack).as_deref(), Some("3d6 fire, radius 2"));
+    let lines: Vec<String> = (view.describe_item(stack).into_iter())
+        .map(|l| l.text)
+        .collect();
+    assert!(
+        lines
+            .iter()
+            .any(|l| l == "Holds Fireball: 3d6 fire, radius 2"),
+        "{lines:?}"
+    );
 }
 
 #[test]

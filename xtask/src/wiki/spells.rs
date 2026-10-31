@@ -259,13 +259,19 @@ pub(super) fn wands(content: &Content) -> String {
         level(x).cmp(&level(y)).then(a.name.cmp(&b.name))
     });
     let mut out = String::from(
-        "| Wand | Spell | Spell level | Charges | Casts at | Item level | Frequency | Value |\n\
+        "| Wand | Spell | Spell level | Charges | Strength | Item level | Frequency | Value |\n\
          |---|---|:---:|:---:|:---:|:---:|:---:|:---:|\n",
     );
     for (object, wand) in wands {
         let spell = content.spell(wand.spell);
-        let casts = (spell.roll_at(usize::from(wand.min_rung)))
-            .map_or_else(|| "—".to_string(), |r| r.to_string());
+        // Its strength: the rolls at its kind's lowest and highest rung, one of which (or one
+        // between) each wand draws as it is made.
+        let at = |rung: u8| spell.roll_at(usize::from(rung)).map(|r| r.to_string());
+        let casts = match (at(wand.min_rung), at(wand.max_rung)) {
+            (Some(lo), Some(hi)) if lo != hi => format!("{lo} to {hi}"),
+            (Some(lo), _) => lo,
+            _ => "—".to_string(),
+        };
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} | {} | {} | {} | {} gold |",

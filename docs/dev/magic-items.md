@@ -34,7 +34,9 @@ of a class with an `[[ornament]]` with a gem (`gem::ornament`), and last draws i
 a `variant::Source`, and creature drops pass `Source::Gear(creature level)`, at the item level
 `world/loot.rs::drop_level` gives them, below); its own parts are
 the material first, then the gem. Creature drops try `gem::find` before the magic item
-(`docs/dev/objects.md`, "Gems" and "Materials and variants").
+(`docs/dev/objects.md`, "Gems" and "Materials and variants"). A wand made by `make_from` draws
+its rung last (`Stack::draw_wand_rung`, `Stack::wand_rung`, S5 #752: one draw, a wand's only;
+the other makers of wands and the fallback streams are docs/dev/spells.md "Wands").
 `world/loot.rs` has `World::identify` (the API the scroll of identify calls from its read action,
 `docs/dev/scrolls.md`; it identifies a labelled scroll's or wand's type too, `World::learn_scroll`,
 and a wand's charges, `Stack::identify_charges`; wands and rods are docs/dev/spells.md "Wands" and "Rods"),

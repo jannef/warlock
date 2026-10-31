@@ -418,8 +418,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       then the degrees hook (the worn `spell_duration`, of Lingering), at least 1; the status's
       `max` holds it (Blessed, Hexed, Weakened, and Sluggish go to 3, each degree its `eases`
       again; `Actor::spell_degrees`).
-    - **Dice**: the roll at the rung reached (a scroll's or a wand's own rungs plus the reader's
-      scroll or wand rungs in place of the stats') with the dice hook applied
+    - **Dice**: the roll at the rung reached (a scroll's own rungs, or the rung a wand drew as
+      it was made, §8 "Magic items": "Wands", plus the reader's scroll or wand rungs in place of
+      the stats') with the dice hook applied
       (`Actor::spell_roll`, what the abilities menu will show), drawn with the roll hook's
       rerolls; nothing holds the roll. The mishap backfire casts the spell's base, no hooks.
     - **Resolution**: `area` (burst, cone, line) strikes everyone in it with one roll, in

@@ -228,11 +228,14 @@ fn make_from(
     // with.
     let material = source.and_then(|source| variant::draw(content, rng, def, source, level));
     let own: Vec<_> = material.into_iter().chain(ornament).collect();
-    if own.is_empty() {
+    let mut stack = if own.is_empty() {
         stack
     } else {
         stack.with_parts(own)
-    }
+    };
+    // A wand's rung last (the spell scaling design §7.4): one draw, a wand's only.
+    stack.draw_wand_rung(content, rng);
+    stack
 }
 
 /// A rarity by the weights in content, leaving out those below `grade`; the weights of those

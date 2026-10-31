@@ -682,7 +682,12 @@ impl World {
         };
         // The character's kit, if they start with it, then the scenario's pack on top.
         let kit = start.as_ref().filter(|_| kit).map(|s| &s.kit);
-        let pack = crate::kit::starting_pack(&content, def, kit);
+        let mut pack = crate::kit::starting_pack(&content, def, kit);
+        // A wand of the scenario's own pack draws its rung (a kit's has one already).
+        let mut rng = crate::rng::Rng::objects(seed, "pack");
+        for stack in &mut pack.items {
+            stack.draw_wand_rung(&content, &mut rng);
+        }
         let with_kit = kit.is_some();
         // A character knows the scrolls and potions of their own kit (spec §8 "Scrolls",
         // "Potions").

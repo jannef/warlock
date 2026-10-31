@@ -521,6 +521,13 @@ pub(super) fn instantiate_level(
     let id = template.id.as_str();
     let mut level = LevelState::from_template(template, content, state.time);
     crate::rot::made_at(level.objects.values_mut().flatten(), content, state.time);
+    // The wands lying there and in its chests that have no rung yet (a level file's, a
+    // vault's) draw theirs now, from the level's objects stream, pile by pile in cell order.
+    let mut rng = crate::rng::Rng::objects(state.seed, id);
+    let held = level.chests.values_mut().flat_map(|c| c.holds.iter_mut());
+    for stack in level.objects.values_mut().flatten().chain(held) {
+        stack.draw_wand_rung(content, &mut rng);
+    }
     // What the chests hold is made now too (spec §8 "Chests").
     let held = level.chests.values_mut().flat_map(|c| c.holds.iter_mut());
     crate::rot::made_at(held, content, state.time);
@@ -635,6 +642,11 @@ pub(super) fn make_creature(
             .add(disguise, content.status(disguise), 1, None);
     }
     crate::rot::made_at(&mut actor.inventory, content, state.time);
+    // A wand in a fixed kit draws its rung now (one rolled with its gear has one already).
+    let mut rng = crate::rng::Rng::objects(state.seed, &format!("actor/{}", actor_id.0));
+    for stack in &mut actor.inventory {
+        stack.draw_wand_rung(content, &mut rng);
+    }
     state.actors.insert(actor_id, actor);
     actor_id
 }

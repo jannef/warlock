@@ -2,8 +2,9 @@
 //! weapon slot is used as a missile weapon is (`t`, `fire:X,Y`), and casts the spell it holds
 //! through the one cast path ([`World::wand_cast`]):
 //!
-//! - **Rung**: the wand's own on its spell's damage ladder (`[object.wand] rungs`; until each
-//!   wand draws its own in the range, S5, the range's `min`), plus the user's `wand_rungs` (Wand
+//! - **Rung**: the wand's own on its spell's damage ladder, drawn evenly in its kind's
+//!   `[object.wand] rungs` as the stack was made (`Stack::wand_rung`; 0 for a wand of an older
+//!   save, which has none), plus the user's `wand_rungs` (Wand
 //!   mastery, of Wands, unidentified too); never the user's stats, so a warrior fires a wand as
 //!   well as a wizard does. The user's other hooks apply (a reroll, a die more), as to any cast
 //!   of theirs (the spell scaling design §7.1).
@@ -61,7 +62,8 @@ impl World {
         }
         let casts = i64::from(content.spell(wand.spell).casts);
         let price = self.price_of(self.state.player, ActionKind::Cast) * casts;
-        if self.wand_cast(item, (wand.spell, wand.min_rung), at, events) {
+        let rung = stack.wand_rung(&content).unwrap_or(0);
+        if self.wand_cast(item, (wand.spell, rung), at, events) {
             Spent::Turn(price)
         } else {
             Spent::Nothing

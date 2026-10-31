@@ -64,8 +64,21 @@ pub fn roll(content: &Content, rng: &mut Rng, creature: CreatureId, item_level: 
 }
 
 /// One piece of gear as `stack` places it: made magic at `item_level`, or plain with a material
-/// drawn as `source` has it unless the placement names one.
+/// drawn as `source` has it unless the placement names one; a wand's rung drawn last.
 fn make(
+    content: &Content,
+    rng: &mut Rng,
+    stack: &Stack,
+    magic: bool,
+    placed: (u8, Source),
+) -> Stack {
+    let mut made = make_piece(content, rng, stack, magic, placed);
+    made.draw_wand_rung(content, rng);
+    made
+}
+
+/// [`make`] but for a wand's rung.
+fn make_piece(
     content: &Content,
     rng: &mut Rng,
     stack: &Stack,

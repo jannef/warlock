@@ -643,7 +643,11 @@ fn inventory_rows(view: &PerceptionView<'_>) -> Vec<String> {
             class = Some(here);
             rows.push(format!("{}:", content.item_class(here).name));
         }
-        let name = view.lore().listed(s);
+        let mut name = view.lore().listed(s);
+        // A wand's rung once its type is known (the spell scaling design §7.4).
+        if let Some(rung) = s.known_wand_rung(view.lore()) {
+            name += &format!(" (rung {rung})");
+        }
         let weight = format_weight(s.weight(content));
         let mark = equipment::mark(content, view.equipment(), i)
             .map_or(String::new(), |m| format!(" ({m})"));
@@ -1627,6 +1631,9 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             });
             if let Some(price) = unpaid.get(i).copied().flatten() {
                 entry["unpaid"] = json!(price);
+            }
+            if let Some(rung) = s.known_wand_rung(view.lore()) {
+                entry["wand_rung"] = json!(rung);
             }
             entry
         })
