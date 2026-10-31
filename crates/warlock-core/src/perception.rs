@@ -1345,6 +1345,14 @@ impl<'a> PerceptionView<'a> {
         }
     }
 
+    /// What `stack` is, in words, as the item description shows it to the player
+    /// ([`crate::magic::describe::appraised_by`]): with their eye for worth, and a wand's dice as
+    /// they would use it.
+    pub fn describe(&self, stack: &Stack) -> Vec<crate::magic::describe::Line> {
+        let lore = self.lore();
+        crate::magic::describe::appraised_by(stack, lore, self.appraisal(), Some(self.player))
+    }
+
     /// The item class `stack` shows as (spec §7 "Objects and materials"): its base item's, which
     /// the player knows of anything they see, identified or not.
     pub fn item_class(&self, stack: &Stack) -> ItemClassId {
@@ -1621,11 +1629,27 @@ impl<'a> PerceptionView<'a> {
 
     /// The roll the player's spell `spell` makes now, harm or healing, as they would cast it:
     /// the rung their scores reach on its ladder, their talents' and items' hooks applied
-    /// ([`crate::world::Actor::spell_roll`]). They know their own spells (the owner's exception,
+    /// ([`crate::world::Actor::spell_roll`]), with its damage type or "healed" and the text the
+    /// abilities menu shows (`4d6 fire`). They know their own spells (the owner's exception,
     /// the spell scaling design decision 11); `None` for one that rolls nothing.
-    pub fn own_spell_roll(&self, spell: crate::content::SpellId) -> Option<crate::dice::Roll> {
+    pub fn own_spell_roll(
+        &self,
+        spell: crate::content::SpellId,
+    ) -> Option<crate::world::SpellRoll> {
         let def = self.content.spell_of(spell)?;
-        (self.player).spell_roll(self.content, def, crate::world::CastBy::Own)
+        (self.player).spell_roll_words(self.content, def, crate::world::CastBy::Own)
+    }
+
+    /// The faces of the player's spell `spell`'s dice that are rolled again (Sure hand: 1, so
+    /// "Your 1s are rolled again."); 0 for none, and for a spell that rolls nothing.
+    pub fn own_spell_reroll(&self, spell: crate::content::SpellId) -> u32 {
+        let Some(def) = self.content.spell_of(spell) else {
+            return 0;
+        };
+        if def.roll().is_none() {
+            return 0;
+        }
+        self.player.spell_mods(self.content, def).reroll
     }
 
     /// How far the player's spell `spell` reaches now, its reach ladders climbed: the farthest

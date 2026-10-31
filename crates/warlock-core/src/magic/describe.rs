@@ -13,6 +13,7 @@ use crate::combat::SURE_HIT;
 use crate::content::{ActionKind, Content, Draught, ItemKind, ObjectDef, Rarity, weapon_noun};
 use crate::object::{Stack, format_weight};
 use crate::scroll_label::Lore;
+use crate::world::{Actor, CastBy, roll_words};
 
 /// What a line of a description is, for how it is shown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -61,9 +62,21 @@ pub struct Appraisal {
 /// its line (`Pommel: small emerald, fine cut (worth 40 gold)`), as `appraisal` shows.
 /// An unidentified scroll is called by its label (spec §8 "Scrolls"), as `lore` names it.
 pub fn appraised(stack: &Stack, lore: Lore<'_>, appraisal: Appraisal) -> Vec<Line> {
+    appraised_by(stack, lore, appraisal, None)
+}
+
+/// [`appraised`] for `user`, who would use it: a wand's dice and reach are theirs (their wand
+/// rungs, their dice hooks, their reach), as the abilities menu shows a spell's; without one,
+/// the wand's own.
+pub fn appraised_by(
+    stack: &Stack,
+    lore: Lore<'_>,
+    appraisal: Appraisal,
+    user: Option<&Actor>,
+) -> Vec<Line> {
     let content = lore.content;
     let mut out = lines_named(stack, content, lore.names(stack));
-    out.extend(wand_lines(stack, lore));
+    out.extend(wand_lines(stack, lore, user));
     out.extend(rod_lines(stack, lore));
     out.extend(potion_lines(stack, lore));
     // The first line says what it is; a line for each gem in it follows.
@@ -97,10 +110,12 @@ pub fn appraised(stack: &Stack, lore: Lore<'_>, appraisal: Appraisal) -> Vec<Lin
 }
 
 /// What a wand holds, as the player knows it (spec §8 "Magic items": "Wands"): its spell in
-/// words once its type is known (`Holds Fireball (tier 3): ...`), else that it is unknown; its
-/// charges once it is identified (`7 charges left`), else that they are unknown. Nothing for
-/// anything else.
-fn wand_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
+/// words once its type is known, its dice at the wand's rung and `user`'s wand rungs and its
+/// radius, as the abilities menu shows a spell's (the spell scaling design §7.4: `Holds
+/// Fireball: 4d6 fire, radius 2`; a spell with neither says what it does), else that it is
+/// unknown; its charges once it is identified (`7 charges left`), else that they are unknown.
+/// Nothing for anything else.
+fn wand_lines(stack: &Stack, lore: Lore<'_>, user: Option<&Actor>) -> Vec<Line> {
     let content = lore.content;
     let Some(wand) = content.object(stack.object).wand else {
         return Vec::new();
@@ -108,12 +123,27 @@ fn wand_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
     let mut out = Vec::new();
     if lore.is_identified(stack.object) {
         let spell = content.spell(wand.spell);
+        // Its rung is its kind's lowest until a wand draws its own (the design's S5).
+        let by = CastBy::Wand(wand.min_rung);
+        let (roll, radius) = match user {
+            Some(user) => (
+                user.spell_roll_words(content, spell, by),
+                user.spell_reach(content, spell).radius,
+            ),
+            None => (
+                (spell.roll_at(usize::from(wand.min_rung))).map(|r| roll_words(content, spell, r)),
+                spell.radius.map(i32::from),
+            ),
+        };
+        let mut parts: Vec<String> = roll.map(|r| r.text).into_iter().collect();
+        parts.extend(radius.map(|r| format!("radius {r}")));
+        let does = match parts.is_empty() {
+            true => spell.description.clone(),
+            false => parts.join(", "),
+        };
         out.push(line(
             LineKind::Stat,
-            format!(
-                "Holds {} (level {}): {}",
-                spell.name, spell.level, spell.description
-            ),
+            format!("Holds {}: {does}", spell.name),
         ));
     } else {
         out.push(line(
