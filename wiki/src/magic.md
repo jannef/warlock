@@ -121,7 +121,7 @@ Like a blow, it threatens a [critical](combat.md#criticals) on a natural 22 or m
 their number to your own spells' roll to hit, and *Baleful* ones widen their threat by theirs
 (a Baleful +2 threatens from 20), never below 2. Neither helps a spell scroll you read or a
 wand you use.
-Your ranks in [Spell attacks](weapon-skills.md#the-skills) and your
+Your rank in the spell's [school](schools.md) and your
 [caster style](fighting-styles.md#caster-styles) add to its roll when you cast it yourself.
 An **auto** spell always hits, for less. An **area** spell hits everyone in its shape with no
 roll, for less again per target, and *[Evasion](talents.md#talent-evasion)* halves what it does. A **touch** spell rolls to hit

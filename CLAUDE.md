@@ -113,7 +113,8 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door, `S` = secret door; `^` = a trap, hidden ones too; `⊟` = a chest, locked or trapped or not; a special room's floor by its effect's letter; also local areas of a campaign's overworld, `--level local:49,23`, `--campaign showcase` the default) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
-trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `quests` (the quest
+trained skills, `Stealth 17`), `schools` (the schools of magic, every one, then the caster
+styles, `Evocation 5 (40%)`, `Sniper 2 (10%)`; JSON `schools` and `caster_styles`), `abilities` (the abilities menu's list), and `quests` (the quest
 log, active first) from perception;
 `actors` (dev-only: every actor's hit points, mana, load, stats, and skills with their marks).
 
@@ -241,7 +242,8 @@ talent, 1 bonus talent`, the talents the
 player may take now by id with their choices, the first kills that paid, each rolled quest's
 draw and the size of its pool now, `roll slug_charm scroll_of_lightning x1 of 4`, the named
 monsters dead, `slain fire_drake`, the stat training
-marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`, each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball rung 2/4 (In 16; +1 Empower)`, and the exact study odds, `study c frost: overreach 5, +0
+marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`,
+each school of magic's marks of the next rank's need, `evocation marks 312/630`, each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball rung 2/4 (In 16; +1 Empower)`, and the exact study odds, `study c frost: overreach 5, +0
 against 17, 36/144` (the overreach in spell levels), **dev-only**),
 `rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
@@ -334,6 +336,7 @@ file). Topics:
 - `docs/dev/progression.md` — talents (data, `TalentMods`, the hooks), the picks a level brings and their refusal, the `levels` stream, the coverage policy
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage
 - `docs/dev/mana.md` — the second pool: its maximum, regeneration in the status loop, every modifier's one hook, spending, the dev drain
+- `docs/dev/magic-skills.md` — the schools of magic as skills: the `school` rows, `Benefit::spell_mods`, `practise_cast` and the `Outcome`, the `schools` talents and dump layer
 - `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, caster level
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn

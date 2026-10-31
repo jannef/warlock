@@ -105,8 +105,8 @@ cast path shares.
   (`TalentMods::spell_mods(tags)` sums them). Items: `Effect::{SpellRungs, SpellBonus,
   SpellSides, SpellDice, SpellReroll, WandRungs}` and `SpellReach` (cells), `SpellDuration`
   (degrees), worn, unidentified too, with no tag filter (no shipped affix needs one; one is a
-  field on the affix when it does). `Actor::spell_mods(content, spell)` is the one sum; S8 adds
-  the school's rank as a third source there. `cost` is the one field beside the six: School
+  field on the affix when it does). `Actor::spell_mods(content, spell)` is the one sum, with
+  the school's rank as its third source (`Benefit::spell_mods`, docs/dev/magic-skills.md). `cost` is the one field beside the six: School
   focus's percent, summed into `spell_mana_percent` in `Actor::spell_base` (the decision of this
   slice: the design's §7.2 writes School focus as a `spell_mod` with a cost, so the struct
   carries it rather than a seventh effect kind).
@@ -169,11 +169,12 @@ cast path shares.
     }).with(benefit)` against
     `combat::Target::bare(target_against(target, missile).defence)` (no Protection; the strike's
     damage, crit included, is then resisted in `spell_strikes`, nothing holding it). The
-    `benefit` (#571) is the Spell attacks skill's and the caster style's (`Actor::spell_skills`:
-    Battle caster in armour that hinders casting, else Toucher for a touch, Sniper for a ray or
-    a bolt; `Benefit::at_distance` adds Sniper's far benefits from `[spell_attacks] far`), for a
-    cast paid in mana of a spell that `rolls_to_hit` only; then `World::spell_practised` earns
-    their marks and fires their triggered abilities (`resolve_triggers`). A scroll or a wand
+    `benefit` (#571) is the spell's school's and the caster style's (`Actor::spell_skills`:
+    the school's skill, docs/dev/magic-skills.md; Battle caster in armour that hinders casting,
+    else Toucher for a touch, Sniper for a ray or a bolt; `Benefit::at_distance` adds Sniper's
+    far benefits from `[spell_attacks] far`), for a cast paid in mana of a spell that
+    `rolls_to_hit` only; then `World::spell_practised` fires their triggered abilities
+    (`resolve_triggers`); the marks are the cast's, once, at its end (`World::practise_cast`). A scroll or a wand
     keeps the bare roll (docs/dev/weapon-skills.md "Caster styles"). `spell_strikes` is the one
     place a spell's blow lands: the event (a miss too), provoking, the resistance, blood, the
     hurt, the wound. `cast_single` settles the caster's side once (`reflect::Shot`: dice,
@@ -209,7 +210,8 @@ cast path shares.
 - **Choices** (design §14 and the issue's open points, decided here):
   - The attack roll's skill: rays, bolts, and touches aim with their `aim` stat (Dexterity unless
     the spell names another; none does), threat and critical at the blows' defaults, plus since
-    #571 the Spell attacks skill and a caster style; Spellcraft does not aim spells (its
+    #571 the school's skill (Spell attacks until the schools of magic) and a caster style;
+    Spellcraft does not aim spells (its
     benefit is the study check's, #396).
   - A critical rolls the damage again, and nothing holds it (decision 4).
   - S2's decisions (the issue's open points): **School focus's cost** is a `cost` field on the
