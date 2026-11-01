@@ -12,8 +12,9 @@
 //!                               # spell's damage or heal ladder's length; at most that length)
 //! ```
 //!
-//! Until each wand draws its own rung in its range (S5), a wand casts at `min`, plus the user's
-//! wand rungs (Wand mastery, of Wands).
+//! Each wand draws its own rung evenly in its kind's range as it is made (`Stack::wand_rung`,
+//! `Stack::draw_wand_rung`), and casts at it plus the user's wand rungs (Wand mastery, of
+//! Wands).
 
 use super::{Content, SpellId};
 use serde::Deserialize;

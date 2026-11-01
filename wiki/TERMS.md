@@ -37,6 +37,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A stat | `stats.md#stat-NAME` | `stats.md#stat-toughness` |
 | A race | `races.md#race-ID` | `races.md#race-half-elf` |
 | A weapon skill | `weapon-skills.md#weapon-skill-ID` | `weapon-skills.md#weapon-skill-long-blades` |
+| A school of magic (Evocation, Restoration, …) | `schools.md#school-ID` | `schools.md#school-evocation` |
 | A weapon skill's ability (Lunge, Sunder, …) | `weapon-skills.md#weapon-ability-ID` | `weapon-skills.md#weapon-ability-lunge` |
 | A fighting style | `fighting-styles.md#style-ID` | `fighting-styles.md#style-sword-and-board` |
 | A fighting style's ability (Riposte, Feint, …) | `fighting-styles.md#style-ability-ID` | `fighting-styles.md#style-ability-riposte` |
@@ -197,10 +198,12 @@ above.
 | Spending mana | `mana.md#spending-it` |
 | Magic, spells, casting | `magic.md`, `magic.md#the-spells` |
 | Caster level | `magic.md#caster-level` |
-| Spell tier | `magic.md#tiers` |
+| Spell level, cantrip | `magic.md#spell-levels` |
+| Ladder, rung, base | `magic.md#the-spells`, `magic.md#how-a-spell-grows` |
+| What talents and items do to a spell (a rung, bigger dice, a bonus, a reroll, a rider) | `magic.md#how-a-spell-grows` |
 | Spell shape (bolt, burst, cone, …) | `magic.md#shapes` |
 | How a spell resolves (attack, auto, area, touch) | `magic.md#how-a-spell-finds-its-target` |
-| Mishap, damage ceiling | `magic.md#damage-and-its-cap` |
+| Mishap | `magic.md#learning-spells-from-scrolls` |
 | Studying a spell from a scroll, overreach | `magic.md#learning-spells-from-scrolls` |
 | Wand, rod, charges | `magic.md#wands`, `magic.md#rods` |
 | Resource (Rage, Ki, Focus, …) | `resources.md` (a resource: its row; Rage: `resources.md#rage`) |

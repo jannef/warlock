@@ -50,6 +50,7 @@ mod potions;
 mod resources;
 mod rooms;
 mod scenarios;
+mod schools;
 mod scrolls;
 mod searching;
 mod services;
@@ -300,6 +301,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("spell-armour.md", spells::armour),
         ("wands.md", spells::wands),
         ("rods.md", spells::rods),
+        ("school-skills.md", schools::skills),
+        ("school-benefits.md", schools::benefits),
         ("study-chances.md", learning::chances),
         ("study-times.md", learning::times),
         ("study-affinities.md", learning::affinities),
@@ -1356,7 +1359,7 @@ mod tests {
             ),
             "{list}"
         );
-        assert!(text("wands.md").contains("| wand of fireball | Fireball | 11 | 7 | 2d6 |"));
+        assert!(text("wands.md").contains("| wand of fireball | Fireball | 11 | 7 | 2d6 to 4d6 |"));
         assert!(text("spell-casting.md").contains("| Wizard | 100 % |"));
         let resources = text("resources.md");
         assert!(

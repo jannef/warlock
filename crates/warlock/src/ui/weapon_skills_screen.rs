@@ -101,7 +101,7 @@ impl WeaponSkillsScreen {
         let mut columns: [Vec<Row>; 2] = [Vec::new(), Vec::new()];
         for section in Section::ALL {
             let skills: Vec<Row> = (table.ids())
-                .filter(|&(id, def)| def.role.section() == section && own.shows(table, id))
+                .filter(|&(id, def)| def.role.section() == Some(section) && own.shows(table, id))
                 .map(|(id, def)| Row::Skill {
                     name: def.name.clone(),
                     rank: own.rank(id),
@@ -317,9 +317,11 @@ mod tests {
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert!(at("Melee") < at("Missile and thrown") && at("Missile and thrown") < at("Shields"));
         assert!(at("Shields") < at("Fighting styles") && at("Fighting styles") < at("Duelist"));
-        // Every skill once but Two Shields, hidden until its first marks (#611).
+        // Every skill once but Two Shields, hidden until its first marks (#611), and the seven
+        // schools of magic, which are magic's, not the weapons'.
         let skills = world.content().weapon_skills().skills().len();
-        assert_eq!(skill_rows(&screen), skills - 1);
+        assert_eq!(skill_rows(&screen), skills - 1 - 7);
+        assert!(at("Evocation").is_none());
         assert!(at("Two Shields").is_none());
     }
 
@@ -409,25 +411,24 @@ mod tests {
         for (cols, rows) in [(48, 15), (30, 8), (5, 3), (0, 0)] {
             assert_eq!(drawn(&screen, cols, rows).len(), rows as usize);
         }
-        // 96 by 24: two columns, the weapons on the left, shields, spells, and styles on the
-        // right, and everything fits, gaps and all.
+        // 96 by 24: two columns, the weapons on the left, shields and styles on the right, and
+        // everything fits, gaps and all.
         let text = drawn(&screen, 96, 24);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
-        for needle in ["Shield bashing", "Spell attacks", "Battle caster", "Slings"] {
+        for needle in ["Shield bashing", "Battle caster", "Slings"] {
             assert!(at(needle) < at("W or Esc close"), "{needle}: {text:#?}");
         }
         assert_eq!(at("Melee"), at("Shields"), "side by side");
         // A margin above the rows, a gap below them, then the footer.
         assert_eq!(at("Melee"), at(" Weapon skills ").map(|y| y + 2));
-        assert_eq!(at("W or Esc close"), at("Battle caster").map(|y| y + 2));
+        assert_eq!(at("W or Esc close"), at("Thrown weapons").map(|y| y + 2));
         assert_eq!(at("Missile and thrown"), at("Unarmed").map(|y| y + 2));
         let (melee, shields) = (&text[at("Melee").expect("melee")], "Shields");
         assert!(melee.find("Melee") < melee.find(shields));
         // One column, tall enough: everything, the styles last.
         let text = drawn(&screen, 60, 40);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
-        assert!(at("Shield bashing") < at("Spells"));
-        assert!(at("Spell attacks") < at("Fighting styles"));
+        assert!(at("Shield bashing") < at("Fighting styles"));
         assert!(at("Battle caster") < at("W or Esc close"));
         // 64 by 32 (the default 1280×720 window at the default font): one column, the gaps and
         // margins give way, and the last few caster styles scroll (#571).
@@ -435,7 +436,7 @@ mod tests {
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert_eq!(at("Missile and thrown"), at("Unarmed").map(|y| y + 1));
         assert_eq!(at("Daggers and knives"), at("Melee").map(|y| y + 1));
-        assert!(at("Spell attacks") < at("W or Esc close"), "{text:#?}");
+        assert!(at("Shield bashing") < at("W or Esc close"), "{text:#?}");
         assert!(text.iter().any(|l| l.contains("scroll")), "{text:#?}");
     }
 

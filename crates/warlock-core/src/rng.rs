@@ -90,6 +90,14 @@ impl Rng {
         Self::stream(run_seed, &format!("loot/{level}"))
     }
 
+    /// The objects stream of `key` (the spell scaling design §7.4): a level's id, for the wands
+    /// its own piles and chests hold as it is first made (a level file's, a vault's), or
+    /// `actor/<id>` for those a creature placed with a fixed kit carries, or `pack` for a
+    /// scenario's pack. It draws a wand's rung only, so nothing else moves with it.
+    pub fn objects(run_seed: u64, key: &str) -> Self {
+        Self::stream(run_seed, &format!("objects/{key}"))
+    }
+
     /// The population stream of generated level `level` (spec §7 "Danger levels"): its initial
     /// creatures, their cells and routes, drawn once its loot is (so the map, traps, secrets, and
     /// loot are the same with any population).

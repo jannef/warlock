@@ -465,7 +465,10 @@ impl World {
         };
         let n = u32::try_from(count.roll(&mut self.state.rng).max(1)).unwrap_or(1);
         let at = self.foot_of(feature);
-        self.lay(at, Stack::new(object, n));
+        let mut stack = Stack::new(object, n);
+        let content = self.content.clone();
+        stack.draw_wand_rung(&content, &mut self.state.rng);
+        self.lay(at, stack);
     }
 
     /// An item of loot at the floor's item level plus `bonus`, at least of `grade` (a relic's

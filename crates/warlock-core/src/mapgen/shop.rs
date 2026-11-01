@@ -113,7 +113,9 @@ pub(super) fn place(canvas: &mut Canvas, rng: &mut Rng, candidates: &[Candidate]
         } else {
             1
         };
-        canvas.objects.insert(p, vec![Stack::new(object, count)]);
+        let mut stack = Stack::new(object, count);
+        stack.draw_wand_rung(content, rng);
+        canvas.objects.insert(p, vec![stack]);
     }
     let mut spawn = shops.keeper_spawn(post);
     spawn.creature = odds.keeper;

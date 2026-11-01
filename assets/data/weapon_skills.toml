@@ -43,8 +43,8 @@ slow = 50
 spell_failure = 75
 
 # Spells that roll to hit (a ray, a bolt, or a touch whose resolution is an attack roll; spells/)
-# aim with the skill of role `spell` and train it, and are fought in the caster styles below. A
-# ranged spell's far benefits (Sniper's `far_to_hit`, `far_threat`) apply from `far` cells away
+# aim with their school's skill (role `school`, below) and are fought in the caster styles below.
+# A ranged spell's far benefits (Sniper's `far_to_hit`, `far_threat`) apply from `far` cells away
 # (the larger of the two distances).
 [spell_attacks]
 far = 5
@@ -63,10 +63,12 @@ far = 5
 #             shield_block a blow blocked by a held shield trains it (a miss credited to the
 #                          Shield category of Defence); its `shield` adds to that category
 #             shield_bash  bashing with a held shield (an ability; spec §6 "Abilities")
-#             spell        spells that roll to hit: every one the caster casts (paid in mana; a
-#                          scroll read or a wand used aims with Dexterity alone) trains it
+#             school       a school of magic (below): every spell of its school the caster
+#                          casts with their own mana trains it (a scroll read or a wand used
+#                          trains nothing), and its ranks lift that school's spells
 #             style        a fighting style (below)
-#           unarmed, thrown, shield_block, shield_bash, and spell may have one skill each
+#           unarmed, thrown, shield_block, and shield_bash may have one skill each, and every
+#           school of magic one skill (`school`: its id, as the spells' `school` names it)
 #   curve   the curve above it trains along
 # and what each rank gives, as 11 numbers for ranks 0 to 10 (rank 0 gives nothing; a higher rank
 # never less; a list left out is all 0):
@@ -74,10 +76,21 @@ far = 5
 #   damage  added to every roll of their damage dice
 #   threat  how many natural rolls lower a critical threatens from (19-24 instead of 20-24)
 #   crit    added to a confirmed critical's damage multiplier (0 to 3; never past x5)
-#   speed   percent off the attack's cost (melee, shoot, throw; actions.toml; not for spells)
+#   speed   percent off the attack's cost (melee, shoot, throw; actions.toml); a school's: off
+#           the cast's (never a caster style's)
 #   parry   melee: added to the wielded weapon's Parry bonus to Defence
 #   reload  launcher: percent off the cost of reloading (a crossbow)
 #   shield  shield_block: added to the held shield's Shield bonus to Defence
+# and a school (never `damage`, `crit`, `parry`, `reload`, or `shield`), on its own spells,
+#   reroll  a die showing this or less is rolled again, once (0 to 3)
+#   sides   every die this many sizes bigger, a d6 a d7 (0 to 3)
+#   dice    this many dice more (0 to 3)
+#   bonus   added to every roll, harm or healing (0 to 6)
+#   cells   cells farther: a range, a length (0 to 3)
+#   degrees degrees longer: a buff's or a hex's status (0 to 3)
+#   mana    percent off the spell's mana (0 to 50; never below 1 mana)
+# (each range the table's own, not a bound on what a spell does), and its `to_hit` and `threat`
+# count for its spells that roll to hit.
 # Rank 10 is where later active or triggered abilities will hang.
 
 # Melee
@@ -254,18 +267,111 @@ to_hit = [0, 1, 1, 2, 2, 2, 3, 4, 4, 5, 6]
 damage = [0, 0, 1, 1, 1, 2, 2, 3, 3, 4, 5]
 threat = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 
-# Spells: targeted and touch spells that roll to hit (the combat progression's caster ladder,
-# #571). Missile's quick curve: casters cast fewer attacks than fighters swing, and aim as an
-# archer does. A spell's critical rolls its damage again, still held to the spell's cap.
+# Schools of magic (spec §8 "Weapon skills": "Schools of magic"; the spell scaling design §8): a
+# skill of ten ranks per school, trained as a weapon skill is: every spell of its school cast with
+# one's own mana earns marks (an attempt, more when it lands: a harm, a hex taken, a heal, a buff
+# or a cure done), weighed by the strongest creature it struck at (else the caster's own level).
+# A rank lifts every spell of the school through the spell hooks. The missile curve, as Spell
+# attacks', which these replace (its to-hit and threat rows are every school's). The harm schools
+# grow their dice, the mending school its heals and its pace, the lasting schools their degrees
+# and reach, divination its price and pace. First guesses, measured by the balance probe.
 [[skill]]
-id = "spell_attack"
-name = "Spell attacks"
-phrase = "at aiming spells"
-role = "spell"
+id = "evocation"
+name = "Evocation"
+phrase = "at evocation"
+role = "school"
+school = "evocation"
 curve = "missile"
 to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
 threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
-crit = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+reroll = [0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2]
+sides = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2]
+dice = [0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2]
+mana = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
+
+[[skill]]
+id = "necromancy"
+name = "Necromancy"
+phrase = "at necromancy"
+role = "school"
+school = "necromancy"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
+bonus = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4]
+reroll = [0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2]
+dice = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
+degrees = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3]
+mana = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
+
+[[skill]]
+id = "abjuration"
+name = "Abjuration"
+phrase = "at abjuration"
+role = "school"
+school = "abjuration"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
+degrees = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
+speed = [0, 0, 0, 5, 5, 10, 10, 15, 15, 20, 20]
+mana = [0, 0, 5, 5, 10, 10, 15, 15, 20, 20, 25]
+
+[[skill]]
+id = "restoration"
+name = "Restoration"
+phrase = "at restoration"
+role = "school"
+school = "restoration"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
+bonus = [0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3]
+reroll = [0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2]
+sides = [0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2]
+dice = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
+speed = [0, 0, 0, 10, 10, 20, 20, 25, 25, 33, 33]
+mana = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
+
+[[skill]]
+id = "transmutation"
+name = "Transmutation"
+phrase = "at transmutation"
+role = "school"
+school = "transmutation"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
+degrees = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
+cells = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
+speed = [0, 0, 0, 0, 5, 5, 10, 10, 15, 15, 20]
+mana = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
+
+[[skill]]
+id = "enchantment"
+name = "Enchantment"
+phrase = "at enchantment"
+role = "school"
+school = "enchantment"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
+degrees = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
+cells = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3]
+mana = [0, 0, 0, 0, 5, 5, 5, 10, 10, 10, 15]
+
+[[skill]]
+id = "divination"
+name = "Divination"
+phrase = "at divination"
+role = "school"
+school = "divination"
+curve = "missile"
+to_hit = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 6]
+threat = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
+mana = [0, 0, 5, 10, 10, 15, 20, 20, 25, 30, 40]
+speed = [0, 0, 0, 10, 10, 20, 20, 30, 30, 40, 50]
+cells = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
 
 # Fighting styles (spec §8 "Fighting styles"), after AD&D 2e's Complete Fighter's Handbook: skills
 # of how weapons are held and used, with the same ranks, marks, curves, and benefits as weapon
@@ -517,6 +623,21 @@ penalty = 3
 [[default]]
 between = ["shield_block", "shield_bash"]
 penalty = 3
+
+# Between the schools of magic: a blast and a change both remake the stuff of the world; the
+# arts of death and of mending know the same flesh; a ward and a charm are both bindings.
+# Divination stands alone.
+[[default]]
+between = ["evocation", "transmutation"]
+penalty = 4
+
+[[default]]
+between = ["necromancy", "restoration"]
+penalty = 4
+
+[[default]]
+between = ["abjuration", "enchantment"]
+penalty = 4
 
 # Between fighting styles: a duelist is no beginner with a shield on the other arm, or a second
 # blade in the other hand; a staff is a great weapon; a marksman has an eye for a throw.

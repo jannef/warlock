@@ -307,8 +307,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
   the magic design §9; #398): objects (`-`, the wands class, one at a time) whose `[object.wand]`
   holds a spell of `data/spells/` (an aimed one), its `charges` (its own, required, 1 to 99:
-  the wand's, not its spell's), and the `caster_level` it casts at (default its spell's level,
-  at least 1; the seven shipped wands give theirs). A wand goes in the
+  the wand's, not its spell's), and the `rungs = { min, max }` a wand of the kind casts at
+  (default 0 to its spell's damage ladder's length; the seven shipped wands give 0 to 2, or
+  0 to 0 for Sleep and Web, which roll nothing). A wand goes in the
   **missile weapon slot** (`slot = "missile_weapon"`), so a wand and a launcher compete for it
   (the swap is the `ready` action, as for any missile weapon), and is used as a missile weapon
   is: `t` aims it (`AimKind::Zap`, the spell's own aiming by its shape and the player's reach
@@ -317,14 +318,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     own resolution (an `attack` spell rolls to hit with the user's Dexterity, as every spell
     attack does; `auto` and `area` ones do not), reach and degrees (the user's), the roll at the
     **wand's own rung** of the spell's damage ladder (`[object.wand] rungs = { min, max }`,
-    default 0 to the ladder's length; until each wand draws its own rung in the range, the
-    spell scaling design's S5, a zap casts at `min`), never the user's stats, plus Wand
+    default 0 to the ladder's length), never the user's stats, plus Wand
     mastery's rung and the worn `wand_rungs` (of Wands), the user's other hooks applying,
     nothing holding the roll. `caster_level` on a wand is refused, naming `rungs`.
     A charge pays instead of mana; a cast refused (at oneself, out of reach, no one to touch)
     uses none and takes no time; one that goes off takes the `cast` action's time (times the
     spell's `casts`). Its kills are the user's; one that kills its user is the spell's
     (`Cause::Spell`). "You zap the oak wand.", then the spell's own words.
+  - **Its rung** (the spell scaling design §7.4, decision 13): drawn **once, as the stack is
+    made**, evenly in its kind's range (`Stack::draw_wand_rung`, one draw, none for a range of
+    one rung and none for anything but a wand), from the stream its maker already draws from:
+    loot's (`magic::loot::make_from`, so drops, chests, and hoards), a starting kit's (`character/kit/...`), a
+    generated shop's stock (the shop's), a creature's gear (`gear/...`), an outcome's objects
+    (`gameplay`), and, for the wands a level gives as it is first made (a level
+    file's pile or chest, a vault's), a fixed creature kit's, and a scenario's pack, the
+    `objects/<level id>`, `objects/actor/<id>`, and `objects/pack` streams. It is kept on the
+    stack (`Stack`'s `wand_rung`: saved and hashed, left out of the save for everything but a
+    wand), so a wand keeps its strength wherever it goes; a wand saved before rungs were drawn
+    has none and casts at rung 0.
   - **Empty**: a wand with no charges left does nothing ("Nothing happens.", no time) and stays
     an item (to sell, or keep); the player then knows it is empty. Wands are **never
     recharged** (the owner); there is no Use magic device skill and there are no magic staffs.
@@ -335,10 +346,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     every wand of it then shows by its name. Its **charges** (`Stack`'s `charges`: the charges
     used, saved, left out of the save while the wand is as made) stay unknown until the wand
     itself is identified, by the scroll of identify or by Connoisseur's carrying ("a wand of
-    fireball (7 charges)", "(empty)"). The item description says the spell with the dice it casts
-    in its user's hand and its radius ("Holds Fireball: 4d6 fire, radius 2": the wand's rung and
-    the user's wand rungs, as the abilities menu shows a spell's; a spell with neither says what
-    it does) once the type is known, and the charges left once identified.
+    fireball (7 charges)", "(empty)"). Its **rung** comes with its type: once the type is known
+    the item description says what it does in the user's hands, the roll at its rung plus their
+    wand rungs with their other hooks, its damage type, and a burst's radius ("Holds Fireball:
+    4d6 fire, radius 2"; a wand that rolls nothing says its spell in words), and so does the
+    aiming prompt ("Zap a wand of fireball (4d6 fire, radius 2): ..."); its name stays "a wand of
+    fireball". Before the type is known nothing of the rung shows. The charges left show once
+    the wand is identified.
   - **The wands**: magic missile and burning hands (tier 1, item level 3, frequency 10, 250
     gold), scorching ray, sleep, and web (tier 2, level 5, frequency 7, 400 gold), fireball and
     lightning bolt (tier 3, level 8, frequency 5, 600 gold). **Where**: loot (by `level` and
@@ -357,10 +371,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a Willpower training mark). Without it the rod does nothing ("You have not the mana to use
     it.", no time), nor while a status blocks casting (Raging: "You cannot use a rod while
     raging."). A rod never runs out and has nothing of its own to save.
-  - **Caster level**: the **user's** (§8 "Spells"), never the rod's: an effect's reach is its
-    `range` plus a cell per `per_levels` caster levels, at most its `max_range`; a status
-    effect with `up_to_caster_level` takes only creatures whose level is at most it ("The ogre
-    shrugs it off."). No skill applies: there is no Use magic device skill (the owner).
+  - **Reach, by Willpower**: an effect's reach is its `range`, then the rung of its
+    `grows.range` ladder (§8 "Spells": "Ladders", the same grammar and parser,
+    `willpower 14 4, 18 5`) the user's effective score in the ladder's stat reaches, as a
+    spell's reach is read. **No caster level is read** (the spell scaling design §7.5,
+    decision 10: caster level is learning only): a status effect's `up_to_level` takes only
+    creatures whose level is at most it, the same in anyone's hands ("The ogre shrugs it
+    off."). No skill applies: there is no Use magic device skill (the owner).
   - **Effects** (`data/rod_effects/`, one `[[rod_effect]]` a file: `shape` line, bolt, or burst,
     its reach, and a `kind` on existing code): `dig` (a line toward the cell aimed at: every wall
     of hardness below its `power` breaks as if dug through, `World::break_wall`; the first that
@@ -368,9 +385,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is moved as by a teleport trap, an attack on it as a blow is: a shopkeeper is provoked),
     `status` (a burst at the cell aimed at, within reach: its status on everyone in it but the
     user, as an area hex's). The first four: **Digging** (line, power 1000: stone and packed
-    earth, never granite), **Teleport other** (bolt), **Sleep** (burst radius 1, Asleep, up to
-    the caster level: a true sleep that a noise or a blow ends, unlike the Sleep spell's
-    drowsiness), **Terror** (burst radius 1, Frightened 3, up to the caster level).
+    earth, never granite; reach 3, `willpower 14 4, 18 5, 22 6, 26 7`), **Teleport other**
+    (bolt; 4, `willpower 14 5, 18 6, 22 7, 26 8`), **Sleep** (burst radius 1, Asleep, creatures
+    to level 20: a true sleep that a noise or a blow ends, unlike the Sleep spell's drowsiness;
+    5, `willpower 14 6, 18 7, 22 8`), **Terror** (burst radius 1, Frightened 3, creatures to
+    level 20; reach as Sleep's).
   - **Use**: refused, taking no time and no mana, at oneself, a burst out of reach, without the
     mana; otherwise "You zap the pewter rod.", the effect, and the `cast` action's time. A bolt
     that meets no one still costs its mana and time ("The bolt strikes nothing.").

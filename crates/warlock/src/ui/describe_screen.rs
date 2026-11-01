@@ -66,7 +66,7 @@ impl DescribeScreen {
             title: capitalized(&view.lore().title(stack)),
             rarity: stack.rarity(),
             mark: equipment::mark(content, view.equipment(), item),
-            lines: view.describe(stack),
+            lines: view.describe_item(stack),
         }
     }
 

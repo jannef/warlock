@@ -546,8 +546,17 @@ fn draw_messages(
         let content = view.content();
         let ready = match aim.kind {
             AimKind::Ability(ability) => ability.name(content).to_string(),
-            _ => (missile.and_then(|i| view.inventory().get(i)))
-                .map_or_else(String::new, |s| view.lore().describe_object(s.object, 1)),
+            _ => (missile.and_then(|i| view.inventory().get(i))).map_or_else(String::new, |s| {
+                let named = view.lore().describe_object(s.object, 1);
+                // A wand the player knows says what it does in their hands (its rung).
+                match view
+                    .wand_does(s)
+                    .filter(|_| matches!(aim.kind, AimKind::Zap(_)))
+                {
+                    Some(does) => format!("{named} ({does})"),
+                    None => named,
+                }
+            }),
         };
         let next = key(KeyCommand::NextTarget);
         let prompt = aim.prompt(&ready, (&key(KeyCommand::Loose), &key(confirm), &next));

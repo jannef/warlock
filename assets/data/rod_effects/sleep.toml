@@ -1,15 +1,14 @@
 # Sleep: a cloud of true sleep, not the Sleep spell's drowsiness: those it takes sleep until a
 # noise, a blow, or a cry wakes them (status.toml's Asleep), but only creatures of a level up to
-# the user's caster level.
+# 20, the same in anyone's hands.
 [[rod_effect]]
 id = "sleep"
 name = "Sleep"
-description = "A cloud of slumber where you aim: creatures in it no stronger than your magic fall asleep until a noise or a blow wakes them."
+description = "A cloud of slumber where you aim: creatures in it, unless they are too mighty, fall asleep until a noise or a blow wakes them."
 shape = "burst"
 range = 5
-max_range = 10
-per_levels = 5
+grows.range = "willpower 14 6, 18 7, 22 8"
 radius = 1
 kind = "status"
 status = "asleep"
-up_to_caster_level = true
+up_to_level = 20

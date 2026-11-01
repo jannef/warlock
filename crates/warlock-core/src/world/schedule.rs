@@ -69,6 +69,20 @@ impl World {
         self.burdened(id, base)
     }
 
+    /// The energy price of actor `id`'s cast of `spell`: the `cast` action for each of the
+    /// spell's `casts`, less the percent its rank in the spell's school takes off (`speed`;
+    /// spec §8 "Weapon skills": "Schools of magic"), as a weapon skill's comes off a blow,
+    /// slowed by its burden. Priced as the cast begins: a rank it raises quickens the next.
+    pub(super) fn cast_price(&self, id: ActorId, spell: &crate::content::SpellData) -> i64 {
+        let actor = &self.state.actors[&id];
+        let saving = actor.school_benefit(&self.content, spell).speed;
+        let cost = match (self.cost_of(id, ActionKind::Cast), saving) {
+            (cost, 0) => cost,
+            (cost, saving) => Benefit::saving(cost, saving),
+        };
+        self.burdened(id, price(cost, BASE_TURN)) * i64::from(spell.casts)
+    }
+
     /// What action `kind` costs actor `id`: its creature type's cost of it (spec §8 "Time"); a
     /// step is faster by the moving speed of what it wears (spec §8 "Magic items"). Attacks
     /// cost what [`World::attack_cost`] says.

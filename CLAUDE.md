@@ -113,7 +113,8 @@ Headless dev loop (`warlock-cli`, no window; `--content-dir` works here too):
 | Preview a generated level | `... gen --level depths:3 --seed warlock` (ground truth; `*` = light placed on floor, `&` = locked door, `S` = secret door; `^` = a trap, hidden ones too; `⊟` = a chest, locked or trapped or not; a special room's floor by its effect's letter; also local areas of a campaign's overworld, `--level local:49,23`, `--campaign showcase` the default) |
 
 Dump layers beyond the map ones: `inventory`, `equipment`, `stats`, `skills` (the player's
-trained skills, `Stealth 17`), `abilities` (the abilities menu's list), and `quests` (the quest
+trained skills, `Stealth 17`), `schools` (the schools of magic, every one, then the caster
+styles, `Evocation 5 (40%)`, `Sniper 2 (10%)`; JSON `schools` and `caster_styles`), `abilities` (the abilities menu's list), and `quests` (the quest
 log, active first) from perception;
 `actors` (dev-only: every actor's hit points, mana, load, stats, and skills with their marks).
 
@@ -201,7 +202,7 @@ player sees or remembers as a digit over the view, `1` a few drops to `9` soaked
 (what the player
 carries, grouped by item class under `Class:` header lines as the screens group it, each stack by
 its position as action text names it with its numbers as the lists show them, `a long sword (+0
-hit, 1d8)`, and weighs, worn and wielded things marked, their burden
+hit, 1d8)`, a wand whose type is known with its rung, `(rung 2)`, and weighs, worn and wielded things marked, their burden
 and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's name, race, gender, and class, age, birth date, and sign with a lucky day's title,
@@ -230,7 +231,7 @@ glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana (and, with any, its caster level, `cl 8`), its resources (`resources rage
 11/20 (0)`, with progress), and
 Defence and Protection, its alignment (`alignment evil`; the player's score and band), its court (`court seelie`, a fey's), its weight, what it carries and of that wears and wields (magic items as they truly
-are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
+are, "(unidentified)" marked, a wand's rung `(rung 2)`), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
 turn), stat damage, and drained points (`drained St 2`), the player's nutrition, its npc id and talk counts, if any, and what it resists in percent (`resists fire 25`); then
@@ -241,7 +242,8 @@ talent, 1 bonus talent`, the talents the
 player may take now by id with their choices, the first kills that paid, each rolled quest's
 draw and the size of its pool now, `roll slug_charm scroll_of_lightning x1 of 4`, the named
 monsters dead, `slain fire_drake`, the stat training
-marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`, each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball rung 2/4 (In 16; +1 Empower)`, and the exact study odds, `study c frost: overreach 5, +0
+marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`,
+each school of magic's marks of the next rank's need, `evocation marks 312/630`, each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball rung 2/4 (In 16; +1 Empower)`, and the exact study odds, `study c frost: overreach 5, +0
 against 17, 36/144` (the overreach in spell levels), **dev-only**),
 `rooms`
 (the level's special rooms: their plain ground as the effect's `mark`, then a line per room,
@@ -266,7 +268,7 @@ special room the player stands in, if they know it), and per inventory stack (in
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, `magic` (affixes only once identified), and `numbers` (what it gives as the
 player knows it: `to_hit`, `damage`, `range`, `dv`, `pv`, each null where it has none; null for
-nothing). Replay
+nothing), and a wand's `wand_rung` once its type is known. Replay
 files are JSON
 `{game_version, scenario, seed, character, name, kit, steps:[{action, hash}]}` (`character` =
 `{race, gender, class, talents}`, `talents` the creation picks (left out while none), left out for a run without one; a replay without it starts as the
@@ -334,6 +336,7 @@ file). Topics:
 - `docs/dev/progression.md` — talents (data, `TalentMods`, the hooks), the picks a level brings and their refusal, the `levels` stream, the coverage policy
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage
 - `docs/dev/mana.md` — the second pool: its maximum, regeneration in the status loop, every modifier's one hook, spending, the dev drain
+- `docs/dev/magic-skills.md` — the schools of magic as skills: the `school` rows, `Benefit::spell_mods`, `practise_cast` and the `Outcome`, the `schools` talents and dump layer
 - `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, caster level
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn

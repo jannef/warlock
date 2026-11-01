@@ -27,31 +27,21 @@ fn trained_by(role: Role) -> &'static str {
         Role::Unarmed => "blows with bare hands",
         Role::ShieldBlock => "blows your shield blocks",
         Role::ShieldBash => "bashing with a shield",
-        Role::Spell => "every spell you cast that rolls to hit",
+        Role::School => "every spell of its school you cast with your own mana",
         Role::Style => "every attack in its configuration",
     }
 }
 
-/// The weapon skills, in file order, without the fighting styles.
+/// The weapon skills, in file order, without the fighting styles and the schools of magic.
 fn weapons(table: &WeaponSkillTable) -> impl Iterator<Item = (WeaponSkillId, &WeaponSkillDef)> {
-    table.ids().filter(|(_, s)| !s.is_style())
+    table
+        .ids()
+        .filter(|(_, s)| !s.is_style() && s.role != Role::School)
 }
 
 /// The objects that draw on skill `id`: the weapons that name it, or for the shield skills the
-/// shields; for the spell attack skill the spells that roll to hit.
+/// shields.
 fn weapons_of(content: &Content, id: WeaponSkillId, role: Role) -> String {
-    if role == Role::Spell {
-        let mut names: Vec<String> = (content.spells().iter())
-            .filter(|s| s.rolls_to_hit())
-            .map(|s| s.name.clone())
-            .collect();
-        names.sort();
-        return if names.is_empty() {
-            "-".into()
-        } else {
-            names.join(", ")
-        };
-    }
     let names: Vec<String> = (order::objects(content).into_iter())
         .map(|(_, o)| o)
         .filter(|o| match role {
@@ -99,7 +89,7 @@ pub fn skills(content: &Content) -> String {
 /// as a matrix (rows and columns numbered alike).
 pub fn defaults(content: &Content) -> String {
     let table = content.weapon_skills();
-    let mut out = default_list(table, false);
+    let mut out = default_list(table, Kind::Weapons);
     let n = weapons(table).count();
     out.push_str("\n| |");
     for i in 1..=n {
@@ -123,13 +113,36 @@ pub fn defaults(content: &Content) -> String {
     out
 }
 
-/// For each weapon skill (`styles`: each fighting style) the skills it raises, with the penalty.
-fn default_list(table: &WeaponSkillTable, styles: bool) -> String {
+/// The skills of a kind of the table, as [`default_list`] lists them.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum Kind {
+    Weapons,
+    Styles,
+    Schools,
+}
+
+impl Kind {
+    fn of(s: &WeaponSkillDef) -> Kind {
+        match s.role {
+            Role::Style => Kind::Styles,
+            Role::School => Kind::Schools,
+            _ => Kind::Weapons,
+        }
+    }
+}
+
+/// For each skill of `kind` (a weapon skill, a fighting style, a school of magic) the skills it
+/// raises, with the penalty.
+pub(super) fn default_list(table: &WeaponSkillTable, kind: Kind) -> String {
     let mut out = format!(
         "| {} | Defaults to |\n|---|---|\n",
-        if styles { "Style" } else { "Skill" }
+        match kind {
+            Kind::Weapons => "Skill",
+            Kind::Styles => "Style",
+            Kind::Schools => "School",
+        }
     );
-    for (id, s) in table.ids().filter(|(_, s)| s.is_style() == styles) {
+    for (id, s) in table.ids().filter(|(_, s)| Kind::of(s) == kind) {
         let to: Vec<String> = (table.defaults_of(id).into_iter())
             .map(|(other, p)| format!("{} {}", table.skill(other).name, minus(p)))
             .collect();
@@ -236,7 +249,31 @@ fn percent(v: i32) -> String {
     format!("{v}%")
 }
 
-const COLUMNS: [Column; 12] = [
+fn rerolled(v: i32) -> String {
+    match v {
+        1 => "1s".to_string(),
+        2 => "1s and 2s".to_string(),
+        v => format!("1s to {v}s"),
+    }
+}
+
+fn sizes(v: i32) -> String {
+    format!("+{v} {}", if v == 1 { "size" } else { "sizes" })
+}
+
+fn more_dice(v: i32) -> String {
+    format!("+{v} {}", if v == 1 { "die" } else { "dice" })
+}
+
+fn cells(v: i32) -> String {
+    format!("+{v} {}", if v == 1 { "cell" } else { "cells" })
+}
+
+fn degrees(v: i32) -> String {
+    format!("+{v} {}", if v == 1 { "degree" } else { "degrees" })
+}
+
+const COLUMNS: [Column; 19] = [
     ("To hit", |b| b.to_hit, plus),
     ("Damage", |b| b.damage, plus),
     ("Critical range", |b| i32::from(b.threat), wider),
@@ -253,6 +290,14 @@ const COLUMNS: [Column; 12] = [
         wider,
     ),
     ("Armour's extra mana cost", |b| i32::from(b.armour), faster),
+    // A school of magic's, on its own spells.
+    ("Rolled again", |b| i32::from(b.reroll), rerolled),
+    ("Dice size", |b| i32::from(b.sides), sizes),
+    ("Dice", |b| i32::from(b.dice), more_dice),
+    ("Every roll", |b| b.bonus, plus),
+    ("Reach", |b| b.cells, cells),
+    ("Lasts", |b| b.degrees, degrees),
+    ("Mana", |b| i32::from(b.mana), faster),
 ];
 
 /// A two-weapon penalty as it reads: `−4`, or `none`.
@@ -266,7 +311,7 @@ fn penalty(p: i32) -> String {
 
 /// A table of ranks 1 to 10 of skill `id`: the [`COLUMNS`] it has, and for a style that eases
 /// the two-weapon penalties the penalty of each hand at each rank.
-fn rank_table(table: &WeaponSkillTable, id: WeaponSkillId) -> String {
+pub(super) fn rank_table(table: &WeaponSkillTable, id: WeaponSkillId) -> String {
     let ranks: Vec<Benefit> = (1..=MAX_RANK).map(|r| table.benefit(id, r)).collect();
     let mut columns: Vec<(&str, Vec<String>)> = (COLUMNS.iter())
         .filter(|(_, get, _)| ranks.iter().any(|b| get(b) != 0))
@@ -397,7 +442,7 @@ pub fn styles(content: &Content) -> String {
 
 /// The defaults between fighting styles.
 pub fn style_defaults(content: &Content) -> String {
-    default_list(content.weapon_skills(), true)
+    default_list(content.weapon_skills(), Kind::Styles)
 }
 
 /// What each rank of each fighting style gives, a table per style; Twin Blades' shows the
@@ -438,10 +483,10 @@ pub fn ranks_text(content: &Content, ranks: &[(WeaponSkillId, Dice)]) -> String 
                 super::character::adjustment(dice)
             };
             let skill = table.skill(id);
-            let term = if skill.is_style() {
-                Term::Style
-            } else {
-                Term::WeaponSkill
+            let term = match skill.role {
+                Role::Style => Term::Style,
+                Role::School => Term::School,
+                _ => Term::WeaponSkill,
             };
             format!("{} {rank}", link(term, &skill.id, &skill.name))
         })

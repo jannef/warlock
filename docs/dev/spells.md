@@ -105,8 +105,8 @@ cast path shares.
   (`TalentMods::spell_mods(tags)` sums them). Items: `Effect::{SpellRungs, SpellBonus,
   SpellSides, SpellDice, SpellReroll, WandRungs}` and `SpellReach` (cells), `SpellDuration`
   (degrees), worn, unidentified too, with no tag filter (no shipped affix needs one; one is a
-  field on the affix when it does). `Actor::spell_mods(content, spell)` is the one sum; S8 adds
-  the school's rank as a third source there. `cost` is the one field beside the six: School
+  field on the affix when it does). `Actor::spell_mods(content, spell)` is the one sum, with
+  the school's rank as its third source (`Benefit::spell_mods`, docs/dev/magic-skills.md). `cost` is the one field beside the six: School
   focus's percent, summed into `spell_mana_percent` in `Actor::spell_base` (the decision of this
   slice: the design's §7.2 writes School focus as a `spell_mod` with a cost, so the struct
   carries it rather than a seventh effect kind).
@@ -169,11 +169,12 @@ cast path shares.
     }).with(benefit)` against
     `combat::Target::bare(target_against(target, missile).defence)` (no Protection; the strike's
     damage, crit included, is then resisted in `spell_strikes`, nothing holding it). The
-    `benefit` (#571) is the Spell attacks skill's and the caster style's (`Actor::spell_skills`:
-    Battle caster in armour that hinders casting, else Toucher for a touch, Sniper for a ray or
-    a bolt; `Benefit::at_distance` adds Sniper's far benefits from `[spell_attacks] far`), for a
-    cast paid in mana of a spell that `rolls_to_hit` only; then `World::spell_practised` earns
-    their marks and fires their triggered abilities (`resolve_triggers`). A scroll or a wand
+    `benefit` (#571) is the spell's school's and the caster style's (`Actor::spell_skills`:
+    the school's skill, docs/dev/magic-skills.md; Battle caster in armour that hinders casting,
+    else Toucher for a touch, Sniper for a ray or a bolt; `Benefit::at_distance` adds Sniper's
+    far benefits from `[spell_attacks] far`), for a cast paid in mana of a spell that
+    `rolls_to_hit` only; then `World::spell_practised` fires their triggered abilities
+    (`resolve_triggers`); the marks are the cast's, once, at its end (`World::practise_cast`). A scroll or a wand
     keeps the bare roll (docs/dev/weapon-skills.md "Caster styles"). `spell_strikes` is the one
     place a spell's blow lands: the event (a miss too), provoking, the resistance, blood, the
     hurt, the wound. `cast_single` settles the caster's side once (`reflect::Shot`: dice,
@@ -209,7 +210,8 @@ cast path shares.
 - **Choices** (design §14 and the issue's open points, decided here):
   - The attack roll's skill: rays, bolts, and touches aim with their `aim` stat (Dexterity unless
     the spell names another; none does), threat and critical at the blows' defaults, plus since
-    #571 the Spell attacks skill and a caster style; Spellcraft does not aim spells (its
+    #571 the school's skill (Spell attacks until the schools of magic) and a caster style;
+    Spellcraft does not aim spells (its
     benefit is the study check's, #396).
   - A critical rolls the damage again, and nothing holds it (decision 4).
   - S2's decisions (the issue's open points): **School focus's cost** is a `cost` field on the
@@ -416,12 +418,27 @@ cast path shares.
     before; saves change). `charges_left` (rules, dev), `known_charges` / `charges_known`
     (presentation), `use_charge`, `identify_charges`; `carry_for` (Connoisseur) counts a
     wand's unknown charges too; `is_valid_for` holds `used` within the wand's charges.
+    `Stack::wand_rung` (S5, #752; private `Option<u8>`, `None` for everything but a wand;
+    saved and hashed, left out while `None`; saves change): drawn by
+    `Stack::draw_wand_rung(content, rng)` evenly in `min_rung..=max_rung` (one `Rng::range`,
+    no draw for a one-rung range or a non-wand, nothing drawn twice) wherever a wand is made,
+    from the maker's own stream: `magic::loot::make_from` (last, after the ornament and
+    material: loot, drops, chests, hoards, room loot, kits' and gear's magic lines), `kit::roll`'s
+    plain lines, `gear::make`, `mapgen/shop.rs`'s stock, `World::leave_objects` (outcomes,
+    `gameplay`), and as a fallback for wands that come from content without one: a level's piles
+    and chests in `instantiate_level` (`Rng::objects(seed, level id)`, piles in cell order,
+    then chests), a creature's inventory in `make_creature` (`objects/actor/<id>`), and the
+    scenario's pack in `World::begin` (`objects/pack`). `wand_rung(content)` (rules, dev; a
+    wand without one reads 0, as a save from before S5 does), `known_wand_rung(lore)`
+    (presentation: with the type, `Lore::is_identified`); `is_valid_for` refuses a rung on
+    anything but a wand. `describe_truth` adds `(rung N)` (the `actors` layer), the
+    `inventory` layer and JSON (`wand_rung`) only once the type is known.
   - **Use**: `World::fire` hands a wand in a `ready` slot (`Actor::wand_item`) to
     `World::zap`: empty → "Nothing happens.", no time, charges then known; else
     `World::wand_cast` (the cast path, `Pay::Wand(item)`: `pay_cast` → `World::use_charge`,
     "You zap the oak wand.", and the type learned through `learn_scroll`, "It is a wand of
-    fireball.") at `CastBy::Wand(min_rung)` (until S5 draws a rung per wand: the range's `min`,
-    plus the user's `wand_rungs`, Wand mastery and of Wands), the user's reach, degrees, and
+    fireball.") at `CastBy::Wand(stack.wand_rung)` (plus the user's `wand_rungs`, Wand mastery
+    and of Wands, in `Actor::spell_rung`), the user's reach, degrees, and
     other hooks; priced as `cast` × `casts`. A death by it is `Cause::Spell`, as a mana
     cast's.
   - **Labels**: `scroll_label::Labels::draw` draws wand labels (`data/wand_labels.toml`,
@@ -432,29 +449,39 @@ cast path shares.
     types as well.
   - **Presentation**: `PerceptionView::ready_wand`; the aiming mode's `AimKind::Zap(item)`
     (`t` with a wand ready; the spell's line and reach once the type is known, a plain line
-    before; sends `Action::Fire`); `describe::appraised_by`'s wand lines (the spell with its dice
-    and radius in the user's hand once the type is known, `PerceptionView::describe` passing the
-    player; the charges once identified). Snapshot `wand-description`.
+    before; sends `Action::Fire`; the prompt names what the wand does once its type is known,
+    "Zap a wand of fireball (4d6 fire, radius 2)", `PerceptionView::wand_does`);
+    `describe::appraised_for`'s wand lines through `PerceptionView::describe_item` (once the
+    type is known, `describe::wand_does`: the player's `spell_roll` at `CastBy::Wand(rung)`,
+    the damage type's name or "healed", their burst radius, "Holds Fireball: 4d6 fire, radius
+    2"; the spell in words for a wand that rolls nothing, or with no user, as plain
+    `describe::appraised` gives it; the charges once identified). Snapshots
+    `wand-description`, `wand-aim`.
   - **Choices** (design §14 and the issue): the attack roll aims with Dexterity, as every
     spell's (there is no Missile skill); only aimed spells may be wands; a wand type is
     identified by use (as a scroll by reading), its charges only by identification; an empty
     wand's emptiness is learned by trying it; the zap takes the `cast` action's time; reach is
     the user's (Willpower), as a scroll's; Wand mastery is in Weaponcraft (system `spells`).
   - **Talents**: Wand mastery (`wand_mastery`, `spell_mod { wand_rungs = 1 }`).
-  - **Wiki**: `xtask/src/wiki/spells.rs` `wands.md` (wand, spell, spell level, charges, the roll
-    it casts at, `roll_at(min_rung)`, item level, frequency, value) on `wiki/src/magic.md`'s
-    "Wands".
+  - **Wiki**: `xtask/src/wiki/spells.rs` `wands.md` (wand, spell, spell level, charges, its
+    strength, the rolls at the range's ends, `roll_at(min_rung)` to `roll_at(max_rung)`, item
+    level, frequency, value) on `wiki/src/magic.md`'s "Wands".
 - **Rods** (#399; design §9; `content/rod.rs`, `world/rod.rs`, tests `world/rod_tests.rs` and
   `content/rod.rs`):
   - **Effects** (the registry, distinct from spells): `data/rod_effects/` (`RodEffect`, one
     `[[rod_effect]]` a file, its `README.toml` the format; `Content::rod_effects`, an index is
     the id, `rod_effect_index`), loaded after spells (they name statuses) and before objects.
     `shape` (`RodShape`: line, bolt, burst; each kind fixes its shape), `range` 1 to
-    `MAX_ROD_REACH` (20), `max_range` from it to 20, `per_levels` 0 to 20, `radius` 1 to
-    `MAX_ROD_RADIUS` (3) for a burst only, optional `noise`, and `kind` with only its fields
-    (`RodDoes`): `dig` (`power` 1 to `MAX_ROD_POWER`), `teleport`, `status` (`status`,
-    `severity` 1 to its max, `up_to_caster_level`). `RodEffect::reach(caster_level)` = `range` +
-    caster level / `per_levels`, at most `max_range`. No visual effect yet (no `Event::Spell`).
+    `MAX_ROD_REACH` (20), `grows.range` (`RodEffect::grows: Option<Ladder>`, S2's
+    `content/spell_ladder.rs` in `Unit::Cells`, rungs rising strictly from `range` to at most
+    20; the spell scaling design §7.5), `radius` 1 to `MAX_ROD_RADIUS` (3) for a burst only,
+    optional `noise`, and `kind` with only its fields (`RodDoes`): `dig` (`power` 1 to
+    `MAX_ROD_POWER`), `teleport`, `status` (`status`, `severity` 1 to its max, `up_to_level`, a
+    creature level of 1 or more). The retired `max_range`, `per_levels`, and
+    `up_to_caster_level` are refused naming their replacements. `RodEffect::reach(stats)` = the
+    ladder's value at the rung the score in its stat reaches, `range` below the first;
+    `Actor::rod_reach` reads it at `effective_stats`. No caster level is read anywhere in rods
+    (decision 10). No visual effect yet (no `Event::Spell`).
   - **Rods**: `[object.rod]` (`RodSpec` → `Rod { effect, mana }` on `ObjectDef::rod`): `mana` 1
     to `MAX_ROD_MANA` (100); a rod has a `slot`, is not `stackable`, and has no attack,
     `launches`, range, food, `read`, `wand`, or `kind`; it may have `level` and `frequency`
@@ -467,13 +494,13 @@ cast path shares.
     percent, rounded, at least 1; `spend_mana` applies Frugal caster and trains Willpower;
     `Actor::rod_cost` is both, what is shown), "You zap the pewter rod." and the type learned
     through `learn_scroll` ("It is a rod of digging."), then the effect at the user's
-    `World::caster_level`: `rod_dig` (`from.ray(at)` for the reach: `break_wall(p, Breach::Dug)`
+    `Actor::rod_reach`: `rod_dig` (`from.ray(at)` for the reach: `break_wall(p, Breach::Dug)`
     where the terrain breaks below `power` and `breaks_at`; stops at anything else opaque or off
     the map), `rod_teleport` (`bolt_line`, the first actor; `World::teleport`, the teleport
     trap's hash; then `provoke`, `provoke_court`, `break_empathy`; "The bolt strikes nothing."
     when empty, still paid), `rod_status` (`burst_center` and `burst_cells` as an area hex;
-    `afflict` with the user as the giver; a creature above the caster level with
-    `up_to_caster_level` "shrugs it off"). Priced as one `cast`. No draws.
+    `afflict` with the user as the giver; a creature above the effect's `up_to_level` "shrugs
+    it off"). Priced as one `cast`. No draws.
   - **Labels**: `data/rod_labels.toml` (`Content::rod_labels`), drawn in `Labels::draw` after the
     wands' from the same stream; `Lore::label_def` picks a rod's. Nothing is saved on a rod's
     stack (no charges); a known rod type is in `WorldState::known_scrolls`, as a wand's.
@@ -484,9 +511,9 @@ cast path shares.
     Snapshots `rod-description`, `rod-aim`.
   - **Choices** (design §14 has none for rods; the issue's open points): four effects (dig,
     teleport other, sleep, terror) on the dig, teleport, and status hooks; summoning is left out
-    (there are no allies to summon, and a hostile summon is a curse, not a rod); the user's caster
-    level sets reach and, for sleep and terror, which creatures are taken; the cost is fixed per
-    rod, not by caster level; a rod type is identified by use or identification, as a wand's;
+    (there are no allies to summon, and a hostile summon is a curse, not a rod); the user's
+    Willpower sets reach (a ladder, S3), and sleep and terror take creatures to their own
+    `up_to_level` (20), never by caster level; the cost is fixed per rod; a rod type is identified by use or identification, as a wand's;
     an unknown rod still costs its mana when used; teleport other provokes as a blow does, the
     status bursts do not (as an area hex); a use takes the `cast` action's time.
 - **Talents** (#400; design §10; the spell scaling design §7.2; tests
@@ -557,8 +584,10 @@ cast path shares.
   levels, costs, and base rolls, and every shipped ladder as §12 writes it),
   `content/spell_ladder.rs` (the grammar, `rung_at`, the refusals), `content/learning.rs` (the
   study rules in levels, the bands at 6 and 15), `world/zap_tests.rs` (a wand without `charges`,
-  with `caster_level`, or with `rungs` past its ladder refused; a zap at its `min` rung, Wand
-  mastery a rung more), `content/class.rs` (`casting`), `content/mod.rs` (spells in the
+  with `caster_level`, or with `rungs` past its ladder refused; a zap at the stack's own rung,
+  Wand mastery a rung more; the draw even over the range, once, the same for the same seed; a
+  non-wand drawing nothing and saving as before; a wand saved without a rung read as 0; the
+  rung shown with the type and not before), `content/class.rs` (`casting`), `content/mod.rs` (spells in the
   fingerprint), `content/experience.rs` (`mana_level` 60), `world/caster_level_tests.rs` (by
   class and level, no mana, talents and a ring, a creature, the dumps, mana to level 60),
   `world/cast_tests.rs` (an attack can miss and critical with nothing holding it, auto and area

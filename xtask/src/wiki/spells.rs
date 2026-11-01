@@ -259,13 +259,19 @@ pub(super) fn wands(content: &Content) -> String {
         level(x).cmp(&level(y)).then(a.name.cmp(&b.name))
     });
     let mut out = String::from(
-        "| Wand | Spell | Spell level | Charges | Casts at | Item level | Frequency | Value |\n\
+        "| Wand | Spell | Spell level | Charges | Strength | Item level | Frequency | Value |\n\
          |---|---|:---:|:---:|:---:|:---:|:---:|:---:|\n",
     );
     for (object, wand) in wands {
         let spell = content.spell(wand.spell);
-        let casts = (spell.roll_at(usize::from(wand.min_rung)))
-            .map_or_else(|| "—".to_string(), |r| r.to_string());
+        // Its strength: the rolls at its kind's lowest and highest rung, one of which (or one
+        // between) each wand draws as it is made.
+        let at = |rung: u8| spell.roll_at(usize::from(rung)).map(|r| r.to_string());
+        let casts = match (at(wand.min_rung), at(wand.max_rung)) {
+            (Some(lo), Some(hi)) if lo != hi => format!("{lo} to {hi}"),
+            (Some(lo), _) => lo,
+            _ => "—".to_string(),
+        };
         let _ = writeln!(
             out,
             "| {} | {} | {} | {} | {} | {} | {} | {} gold |",
@@ -282,8 +288,8 @@ pub(super) fn wands(content: &Content) -> String {
     out
 }
 
-/// The rods (spec §8 "Magic items": "Rods"): each one's effect, its shape and reach by the
-/// user's caster level, what it does exactly, its mana cost, and where loot finds it; by item
+/// The rods (spec §8 "Magic items": "Rods"): each one's effect, its shape and reach (with its
+/// ladder, as a spell's), what it does exactly, its mana cost, and where loot finds it; by item
 /// level, then name.
 pub(super) fn rods(content: &Content) -> String {
     let mut rods: Vec<_> = (content.object_defs().iter())
@@ -300,12 +306,9 @@ pub(super) fn rods(content: &Content) -> String {
             RodShape::Burst => format!("burst, radius {}", effect.radius),
             other => other.id().to_string(),
         };
-        let reach = match effect.per_levels {
-            0 => format!("{}", effect.range),
-            per => format!(
-                "{} + 1 per {per} caster levels, at most {}",
-                effect.range, effect.max_range
-            ),
+        let reach = match &effect.grows {
+            None => effect.range.to_string(),
+            Some(ladder) => format!("{}; {}", effect.range, ladder.words()),
         };
         let does = match effect.does {
             RodDoes::Dig { power } => {
@@ -317,14 +320,13 @@ pub(super) fn rods(content: &Content) -> String {
             RodDoes::Status {
                 status,
                 severity,
-                up_to_caster_level,
+                up_to_level,
             } => {
-                let who = if up_to_caster_level {
-                    "every creature of a level up to the user's caster level"
-                } else {
-                    "everyone"
-                };
-                format!("{} {severity} on {who} in it", content.status(status).name)
+                let name = &content.status(status).name;
+                let takes = up_to_level.map_or_else(String::new, |l| {
+                    format!(". Takes creatures to level {l}; one above it shrugs it off")
+                });
+                format!("{name} {severity} on everyone in it{takes}")
             }
         };
         let _ = writeln!(

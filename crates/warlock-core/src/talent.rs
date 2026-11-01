@@ -625,6 +625,8 @@ pub struct TalentMods {
     /// Percent more marks its attacks earn in a role's weapon skills, by role (`None`: every
     /// weapon skill and style).
     pub weapon_marks: Vec<(Option<Role>, i32)>,
+    /// Percent more marks in every school of magic (Devotee).
+    pub school_marks_percent: i32,
     /// Added to a confirmed critical's multiplier with a two-handed weapon.
     pub two_handed_crit: u8,
     /// The sides of the one die its blows with nothing in hand and its kicks roll, if any.
@@ -1180,12 +1182,15 @@ impl TalentMods {
     }
 
     /// `marks` weapon skill marks earned in a skill of `role`, more by its talents' (Weapon
-    /// drill's for its role, Forge-born's for every one).
+    /// drill's for its role, Forge-born's for every one but a school of magic, Devotee's for a
+    /// school).
     pub fn marks(&self, role: Role, marks: u32) -> u32 {
+        let school = role == Role::School;
         let percent: i32 = (self.weapon_marks.iter())
-            .filter(|(r, _)| r.is_none_or(|r| r == role))
+            .filter(|(r, _)| r.map_or(!school, |r| r == role))
             .map(|(_, p)| p)
-            .sum();
+            .sum::<i32>()
+            + if school { self.school_marks_percent } else { 0 };
         u32::try_from(TalentMods::scaled(u64::from(marks), percent)).unwrap_or(u32::MAX)
     }
 
@@ -1670,6 +1675,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::WeaponMarks { role, value } => self.weapon_marks.push((role, value)),
+            TalentEffect::SchoolMarksPercent { value } => self.school_marks_percent += value,
             TalentEffect::TwoHandedCrit { value } => {
                 self.two_handed_crit = self.two_handed_crit.saturating_add(value);
             }
@@ -2222,7 +2228,7 @@ impl<'a> Candidate<'a> {
                 (any.skills.iter()).any(|id| self.weapon_skills.rank(*id) >= any.rank)
             }
             Need::Chosen(rank) => match (choice, chosen) {
-                (Some(Choice::WeaponSkill | Choice::Style), Some(id)) => {
+                (Some(kind), Some(id)) if kind.is_weapon_skill() => {
                     (content.weapon_skills().id(id))
                         .is_some_and(|w| self.weapon_skills.rank(w) >= *rank)
                 }
@@ -2323,9 +2329,10 @@ pub fn may_take(
             return Err(Refusal::BadChoice(kind, id.to_string()));
         }
         // A hidden weapon skill or style (Two Shields) is no choice until it has marks.
-        (Some(kind @ (Choice::WeaponSkill | Choice::Style)), Some(id))
-            if (content.weapon_skills().id(id))
-                .is_some_and(|w| !who.weapon_skills.shows(content.weapon_skills(), w)) =>
+        (Some(kind), Some(id))
+            if kind.is_weapon_skill()
+                && (content.weapon_skills().id(id))
+                    .is_some_and(|w| !who.weapon_skills.shows(content.weapon_skills(), w)) =>
         {
             return Err(Refusal::BadChoice(kind, id.to_string()));
         }

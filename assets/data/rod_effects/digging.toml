@@ -1,13 +1,12 @@
-# Digging: a line of rock gives way, as far as the user's caster level carries it. Stone walls
+# Digging: a line of rock gives way, as far as the user's Willpower carries it. Stone walls
 # (hardness 600) and packed earth crumble; granite (3000) holds.
 [[rod_effect]]
 id = "digging"
 name = "Digging"
-description = "Rock crumbles away in a straight line before you, farther the greater your caster level; granite and doors stop it."
+description = "Rock crumbles away in a straight line before you, farther the stronger your will; granite and doors stop it."
 shape = "line"
 range = 3
-max_range = 12
-per_levels = 3
+grows.range = "willpower 14 4, 18 5, 22 6, 26 7"
 noise = { sound = "digging", loudness = 60 }
 kind = "dig"
 power = 1000

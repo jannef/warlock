@@ -20,6 +20,11 @@ panics. Only the `web-sys` features in `crates/warlock/Cargo.toml` are enabled (
 with the character and left out while empty, so a save from before it loads with no story; the
 text is told again from the content (docs/dev/background.md).
 
+**A wand's rung** (#752, the spell scaling design §7.4): `Stack::wand_rung`, drawn as the wand is
+made, is saved and hashed with the stack and left out for everything but a wand, so every other
+stack saves byte for byte as before; a wand in a save from before it has none and reads as rung 0
+(the base), never refused (docs/dev/spells.md "Wands").
+
 **One save per character** (#218; `save.rs`, `save/characters.rs`): every character has a save id,
 a slug of its name and the lowest free number (`characters::fresh_id`: `brakka-1`, then
 `brakka-2`; an id is taken while any file of it is left: its save, a kept `.sav.bad`, its summary,

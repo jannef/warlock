@@ -1,0 +1,9 @@
+# Devotee (the spell scaling design §8.6): every school of magic's marks half again.
+[[talent]]
+id = "devotee"
+name = "Devotee"
+tree = "spellcraft"
+description = "Your schools of magic learn from every cast half again as much."
+needs = { level = 9 }
+effects = [{ kind = "school_marks_percent", value = 50 }]
+systems = ["schools", "spells"]

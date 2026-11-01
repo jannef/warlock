@@ -9,10 +9,12 @@
 #                 bolt   toward the cell aimed at, to its reach, stopping at the first creature
 #                        or wall
 #                 burst  `radius` (1 to 3) around the cell aimed at, which must be within reach
-#   range         its reach at caster level 0, in cells (1 to 20)
-#   max_range     the farthest it ever reaches (from `range` to 20; default `range`)
-#   per_levels    a cell more of reach per this many of the user's caster levels (0 to 20; 0,
-#                 the default: it never grows)
+#   range         its reach for anyone, in cells (1 to 20): the base
+#   grows.range   its reach's ladder, as a spell's (data/spells/README.toml, `[spell.grows]`):
+#                 a stat, then `AT CELLS` rungs, `"willpower 14 4, 18 5"`; the user whose
+#                 effective score reaches a rung reaches its cells. Rungs rise strictly from
+#                 `range` to at most 20. Left out, the reach never grows. No caster level is
+#                 read (`max_range`, `per_levels`, `up_to_caster_level` are gone, refused)
 #   noise         { sound, loudness }: the noise it makes (a burst's centre, else the user)
 #   kind          what it does, each on existing code, with only its own fields:
 #                 dig       (a line) every wall on it whose hardness (terrain.toml) is below
@@ -22,5 +24,5 @@
 #                           as by a teleport trap; an attack on it, as a blow is
 #                 status    (a burst) everyone in it but the user suffers `status` (an id of
 #                           status.toml) at `severity` (1 to its max; default 1); with
-#                           `up_to_caster_level = true` only creatures whose level is at most the
-#                           user's caster level, the others shrug it off
+#                           `up_to_level = N` (1 or more) only creatures whose level is at most
+#                           N, the others shrug it off

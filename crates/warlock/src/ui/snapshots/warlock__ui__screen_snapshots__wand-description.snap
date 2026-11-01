@@ -18,7 +18,7 @@ expression: "render(case, content.clone())"
                   │ Wand of magic missile · wood · 200 g                         │
                   │                                                              │
                   │ Readied: missile weapon                                      │
-                  │ Holds Magic missile: 1d4 force                               │
+                  │ Holds Magic missile: 2d4 force                               │
                   │ 12 charges left                                              │
                   │                                                              │
                   │ Esc close                                                    │

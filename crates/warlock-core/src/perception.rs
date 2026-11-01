@@ -1345,12 +1345,18 @@ impl<'a> PerceptionView<'a> {
         }
     }
 
-    /// What `stack` is, in words, as the item description shows it to the player
-    /// ([`crate::magic::describe::appraised_by`]): with their eye for worth, and a wand's dice as
-    /// they would use it.
-    pub fn describe(&self, stack: &Stack) -> Vec<crate::magic::describe::Line> {
-        let lore = self.lore();
-        crate::magic::describe::appraised_by(stack, lore, self.appraisal(), Some(self.player))
+    /// `stack`'s description as the player knows it (spec §6 "Item description"):
+    /// [`crate::magic::describe::appraised`] with their eye for worth, a wand whose type they
+    /// know saying what it does in their hands ([`PerceptionView::wand_does`]).
+    pub fn describe_item(&self, stack: &Stack) -> Vec<crate::magic::describe::Line> {
+        crate::magic::describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player))
+    }
+
+    /// What the wand `stack` does in the player's hands once they know its type (its rung comes
+    /// with the type, the spell scaling design §7.4): `4d6 fire, radius 2`; `None` before, for
+    /// anything else, and for a wand whose spell rolls nothing.
+    pub fn wand_does(&self, stack: &Stack) -> Option<String> {
+        crate::magic::describe::wand_does(stack, self.lore, self.player)
     }
 
     /// The item class `stack` shows as (spec §7 "Objects and materials"): its base item's, which
@@ -1444,7 +1450,7 @@ impl<'a> PerceptionView<'a> {
         let rod = self.content.object(stack.object).rod?;
         let effect = self.content.rod_effect(rod.effect);
         let cost = self.player.rod_cost(self.content, &rod);
-        Some((cost, effect.reach(self.own_caster_level())))
+        Some((cost, self.player.rod_reach(self.content, effect)))
     }
 
     /// The digging tool the player has ready (spec §8 "Digging"), if any.

@@ -41,8 +41,8 @@ so it trains only [unarmed fighting](weapon-skills.md#the-skills), and [Brawler]
 ## Caster styles
 
 [Spells that roll to hit](magic.md#how-a-spell-finds-its-target) have styles too: how you cast them. Each trains, as the
-[Spell attacks](weapon-skills.md#the-skills) skill does, on every such spell you cast with your
-own [mana](mana.md#how-much) that reaches a creature, and adds to it.
+spell's [school](schools.md) does, on every such spell you cast with your own
+[mana](mana.md#how-much), and adds to its aim.
 
 - **[Battle caster](fighting-styles.md#style-battle-caster)**: a spell that rolls to hit, cast while you wear armour that makes spells
   dearer (mail, plate, a great helm, a large shield). It comes first: in such armour every ray,

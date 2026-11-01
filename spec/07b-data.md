@@ -651,13 +651,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   7680 and missile 10, 20, … 5120; sixteen skills: daggers and knives, short blades, long
   blades, great blades, axes, maces and clubs, spears, polearms, staves (`melee`), unarmed;
   bows, crossbows, slings (`launcher`, missile curve), thrown weapons (missile curve); shield
-  blocking, shield bashing; spell attacks (`spell`, missile curve; #571); defaults: long ↔ short blades −2, long ↔ great blades −2, short
+  blocking, shield bashing; the seven schools of magic (`school`, missile curve, the spell scaling
+  design §8: evocation, necromancy, abjuration, restoration, transmutation, enchantment,
+  divination; defaults evocation ↔ transmutation, necromancy ↔ restoration, abjuration ↔
+  enchantment −4); defaults: long ↔ short blades −2, long ↔ great blades −2, short
   blades ↔ daggers −2, long blades ↔ daggers −4, short blades ↔ thrown −4, daggers ↔ thrown −2,
   axes ↔ maces −2, axes ↔ polearms −3, maces ↔ staves −3, spears ↔ polearms −2, spears ↔
   staves −3, spears ↔ thrown −4, polearms ↔ great blades −4, bows ↔ crossbows −4, slings ↔
   thrown −3, shield blocking ↔ shield bashing −3; two weapons −4 and −8; two shields −6, 50 %,
   75 % (`[two_shields]`: `to_hit`, `slow`, `spell_failure`); far 5; twelve styles after the
-  seventeen skills (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
+  sixteen skills and seven schools (§8 "Fighting styles": Duelist, Twin Blades, Great Weapon, Sword and Board,
   Two Shields (`hidden = true`: listed only once its owner has marks in it), Marksman (bows, crossbows, slings; missile curve), Skirmisher (missile curve),
   Brawler, Staff Fighter (staves), and the caster styles Sniper, Toucher, Battle caster
   (missile curve)), with the defaults duelist ↔ sword and board −3, duelist ↔ twin blades −3,
