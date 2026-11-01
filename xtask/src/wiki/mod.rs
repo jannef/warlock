@@ -756,7 +756,17 @@ mod tests {
             potions.contains("| Murky draught `!` | harm | 2 degrees of Poisoned"),
             "{potions}"
         );
-        assert!(text("lights.md").contains("| You, while Lit | 6 cells | visible |"));
+        assert!(
+            text("lights.md")
+                .contains("| You, while Lit | 6 cells | visible | 235, 235, 250, 0 | 236 |")
+        );
+        assert!(text("lights.md").contains(
+            "| Spell circle, abjuration (anyone blessed) | 1 cell | visible and UV | 32, 48, 68, 90 | 46 |"
+        ));
+        assert!(
+            text("status-effects.md")
+                .contains("To hit +1; you shed light on your cell and the cells beside you")
+        );
         assert!(text("status-effects.md").contains("You shed light 6 cells around you"));
         assert!(
             text("moons.md").contains(
