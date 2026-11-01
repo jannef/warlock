@@ -57,13 +57,17 @@ weapon skill's marks go through), then the caster style.
 
 - **The `Outcome`** (`Cast::outcome`, a `Cell`): `landed` and `level` (the strongest creature
   struck at, `None`: nobody, so the player's own level). Every kind reports through one
-  function, `World::spell_landed(cast, other, landed)`: a buff, a cleanse, and Identify land on
+  function, `World::spell_landed(cast, other, landed, events)`: a buff, a cleanse, and Identify land on
   the player; a heal on whom it healed (landed when it rolled a point or more); a hex on each
   creature it fell on (landed when the status is on them after `afflict`); a damage spell on
   each creature its events say it struck at (`spell_lands`, `Event::Attacked` by the caster:
-  a hit lands, a miss is an attempt weighed by the one missed). An area is one practise,
-  weighed by the strongest struck. A reflected spell reports nothing (`spell_lands`' `cast` is
-  `None` for it). S11's `spell_lands` trigger is to be raised from `spell_landed`.
+  a hit lands, a miss is an attempt weighed by the one missed; reported after the spell's
+  messages and riders, in the order struck). An area is one practise, weighed by the strongest
+  struck. A reflected spell reports nothing (`spell_lands`' `cast` is `None` for it).
+- **The school abilities' trigger** (S11): `spell_landed` also raises `Trigger::SpellLands`
+  through `World::weapon_trigger` for every landing of a `Pay::Mana` cast on a creature that
+  lives, with `Actor::spell_skills` (the school and the caster style); see
+  `docs/dev/weapon-abilities.md` "School abilities" (Thunderstruck, Wasting, Aegis, Lulling).
 - **The style until S10**: on a spell that rolls to hit, the style `spell_skills` picks, by
   the same outcome, when it struck at someone (as before: a ray at nothing trained no style); on any other cast, Battle caster when the armour worn hinders casting, an
   attempt against the player's own level (what `practise_in_armour` did; it is gone, and
@@ -108,5 +112,6 @@ the seven schools, `the_caster_ladder_loads_and_is_checked`: the rows, `spell_mo
 defaults, the refusals), `world/school_skill_tests.rs` (marks per kind of cast, a miss, an area,
 scrolls and wands, a rank's roll, mana, and time, the defaults, Schooled, Devotee, Magister, the
 dumps and `rank:evocation:5`, a school forgotten), `world/caster_style_tests.rs` (the styles
-with the schools). Wiki: `xtask/src/wiki/schools.rs` (`school-skills.md`, `school-benefits.md`)
+with the schools), `world/school_ability_tests.rs` (the school abilities). Wiki:
+`xtask/src/wiki/schools.rs` (`school-skills.md`, `school-benefits.md`, `school-abilities.md`)
 for `wiki/src/schools.md`.

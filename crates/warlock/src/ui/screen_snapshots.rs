@@ -390,6 +390,16 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A school ability (the spell scaling design §8.5): a wizard at evocation 10 has
+    // Thunderstruck, greyed under the school's name as firing by itself.
+    Case {
+        name: "abilities-menu-school-ability",
+        character: Some("human,male,wizard"),
+        kit: true,
+        actions: "rank:evocation:10",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A warrior's actives (#564): Vital strike, Shield rush, and Shield wall usable with their
     // stamina; Lunge greyed, a long sword being no spear.
     Case {
