@@ -2,7 +2,8 @@
 //! generated level of the depths, the sunlit courtyard at dawn, the overworld, a generated
 //! forest area of the overworld at dawn, the courtyard and the forest area at midnight under the
 //! full moon, the arena, where a dozen creatures fight, a generated 120×60 cave floor at
-//! full population, 80 creatures of danger 8, and the same of animated panoplies at danger 40,
+//! full population, 80 creatures of danger 8, the same with its bats and rats shedding a spell
+//! circle's light, and the same of animated panoplies at danger 40,
 //! each wearing and wielding up to ten things (the vast level's budget; spec §10 budgets; a generated 80×21
 //! level, the courtyard, the 100×50 overworld, an 80×40 local area, and the 72×21 arena get the
 //! hub's), and the time a night's rest takes on each (dusk to dawn: 7200 turns of six seconds,
@@ -41,6 +42,27 @@ room_effects = { chance = 100, per_level = 1, favoured = { teeming = 100 } }
 const DELF_SCENARIO: &str = "name = \"Bench delf\"\nstart_level = \"bench_delf:1\"\nseed = 1\n\
                              wield = [\"lantern\"]\nhp = 900\n";
 
+/// The same cave floor with its bats and rats circled (spec §4.8 "Spell circles"): each sheds a
+/// spell circle's light, radius 1, as a hexed creature does (bench copies, `bench_hexed_bat` and
+/// `bench_hexed_rat`, carrying the light as a creature's own: the same one source per actor, keyed
+/// by the actor, its mask recomputed when it moves). The design's "delf floor of twenty hexed
+/// creatures" (docs/design/buff-circles.md §8.3); the budget is the vast level's.
+const HEXED_BRANCH: &str = r#"
+[[dungeon]]
+id = "bench_hexed"
+name = "Bench hexed"
+generator = "caves"
+depth = 1
+size = [120, 60]
+danger = 8
+population = ["bench_hexed_bat", "beetle", "kobold", "kobold_archer", "kobold_shaman", "bench_hexed_rat"]
+room_effects = { chance = 100, per_level = 1, favoured = { teeming = 100 } }
+"#;
+const HEXED_SCENARIO: &str = "name = \"Bench hexed\"\nstart_level = \"bench_hexed:1\"\nseed = 1\n\
+                              wield = [\"lantern\"]\nhp = 900\n";
+/// The circle's light the bench's hexed creatures shed.
+const HEXED_LIGHT: &str = "circle_enchantment";
+
 /// The same cave floor at danger 40, all of it animated panoplies (spec §8 "Animated objects"):
 /// each wears and wields its pieces, whose magic every rule reads through `Mods::worn`, the
 /// design's open performance risk (docs/design/animated-objects.md §12); the budget is the
@@ -59,7 +81,7 @@ const PANOPLY_SCENARIO: &str = "name = \"Bench panoply\"\nstart_level = \"bench_
                                 seed = 1\nwield = [\"lantern\"]\nhp = 900\n";
 
 /// (scenario, level label, budget in ms, minutes skipped before the walk)
-const CASES: [(&str, &str, f64, u64); 11] = [
+const CASES: [(&str, &str, f64, u64); 12] = [
     ("showcase", "hub", 5.0, 0),
     ("vast", "vast", 16.0, 0),
     ("depths", "depths", 5.0, 0),
@@ -76,6 +98,8 @@ const CASES: [(&str, &str, f64, u64); 11] = [
     ("arena", "arena", 5.0, 0),
     // A generated 120×60 cave floor at full population (`DELF_BRANCH`).
     ("bench_delf", "delf", 16.0, 0),
+    // The same with its bats and rats circled (`HEXED_BRANCH`).
+    ("bench_hexed", "d-hex", 16.0, 0),
     // The same at danger 40, of panoplies (`PANOPLY_BRANCH`).
     ("bench_panoply", "panop", 16.0, 0),
 ];
@@ -84,12 +108,24 @@ const CASES: [(&str, &str, f64, u64); 11] = [
 fn content() -> Result<Content, String> {
     let mut files = ContentFiles::builtin();
     let dungeons = format!(
-        "{}{DELF_BRANCH}{PANOPLY_BRANCH}",
+        "{}{DELF_BRANCH}{HEXED_BRANCH}{PANOPLY_BRANCH}",
         include_str!("../../assets/data/dungeons.toml")
     );
     files.insert("data/dungeons.toml", &dungeons);
     files.insert("scenarios/bench_delf.toml", DELF_SCENARIO);
     files.insert("scenarios/bench_panoply.toml", PANOPLY_SCENARIO);
+    files.insert("scenarios/bench_hexed.toml", HEXED_SCENARIO);
+    for (id, text) in [
+        ("bat", include_str!("../../assets/data/creatures/bat.toml")),
+        ("rat", include_str!("../../assets/data/creatures/rat.toml")),
+    ] {
+        let line = format!("id = \"{id}\"\n");
+        let hexed = text.replace(
+            &line,
+            &format!("id = \"bench_hexed_{id}\"\nlight = \"{HEXED_LIGHT}\"\n"),
+        );
+        files.insert(&format!("data/creatures/bench_hexed_{id}.toml"), &hexed);
+    }
     Content::load(&files).map_err(|e| e.to_string())
 }
 
@@ -121,6 +157,15 @@ fn measure(content: &Arc<Content>, scenario: &str, skip: u64) -> Result<Stats, S
     };
     let mut world = fresh()?;
     let level = world.perception().level_id().to_string();
+    if scenario == "bench_hexed" {
+        // How many are circled: every bat and rat there is a hexed copy (the dev `actors` layer).
+        let layer = warlock_core::dump::parse_layers("actors")?;
+        let rows = warlock_core::dump::layer_rows(&world, layer[0]);
+        let circled = (rows.iter())
+            .filter(|r| r.contains(" cave bat at ") || r.contains(" giant rat at "))
+            .count();
+        eprintln!("{scenario}: {circled} creatures shed a circle's light");
+    }
     let mut rng = 1u64;
     let mut heading = Dir::E;
     let mut times = Vec::with_capacity(TURNS);
