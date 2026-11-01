@@ -92,7 +92,7 @@ Points off a stat **for good** (spec §8 "Stats": "Drain"), unlike stat damage, 
 
 The potential stays, so drained points come back slowly by training and corpses too (those
 leave `drained` as it is: a mending later restores what drains took on top of the growth).
-Talents: the `drain` system (`data/talents.toml`): Unbroken soul (`drain_checks`), Iron will
+Talents: the `diseases` system (`data/talents.toml`; the `drain` tag folded into it, #773): Unbroken soul (`drain_checks`), Iron will
 (Willpower checks), Divine grace (paladin, `drain_checks`). Not yet: life (level) drain, a
 scroll or potion of restoration, a sustaining affix. The wiki table is `drain-attacks.md`
 (`xtask/src/wiki/stats.rs`). Tests: `world/drain_tests.rs`, `content/status.rs`, `stats.rs`.

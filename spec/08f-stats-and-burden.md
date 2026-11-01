@@ -144,7 +144,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     when it holds), never the points; their score shows lowered. Life (level) drains, a scroll
     of restoration, and a sustaining affix are not in the game yet. The pale drinker is the
     first drainer (not yet in any dungeon's population). Talents: Unbroken soul, Iron will,
-    and the paladin's Divine grace (the `drain` system).
+    and the paladin's Divine grace (the `diseases` system, which holds drains since #773).
   - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
     shots and in Defence, Toughness in hit points and regeneration; "Combat" above) and burden
     (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below), and

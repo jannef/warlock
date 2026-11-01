@@ -5,7 +5,7 @@ tree = "delver"
 ranks = 2
 description = "You know how a bound thing comes apart: more of what an animated thing is made of survives its end, more again at the second rank."
 effects = [{ kind = "salvage_percent", value = 15 }]
-systems = ["animated", "creature_gear"]
+systems = ["creature_gear"]
 
 [[talent.rank]]
 

@@ -5,4 +5,4 @@ tree = "finesse"
 description = "You throw yourself clear of fire and lightning: bursts and bolts, from traps and scrolls alike, do you half the harm."
 needs = { stats = { dexterity = 15 }, level = 15 }
 effects = [{ kind = "spell_damage_percent", value = -50 }]
-systems = ["traps", "scrolls"]
+systems = ["traps", "spells"]

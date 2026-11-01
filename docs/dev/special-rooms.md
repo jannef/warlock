@@ -386,7 +386,7 @@ seen creature's line, `Harm::Place`), and `becomes` (the placed light removed, `
 Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrain is the record
 of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
 (`dump.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
-altar side by side. Talent: Devout (system `prayer`, `TalentMods::devout`; hook
+altar side by side. Talent: Devout (system `special_rooms`, which holds prayer since #773; `TalentMods::devout`; hook
 `leaned_kinds`).
 
 The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
@@ -728,7 +728,7 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 Intelligence 11, `hoard_grace` 1; hook `World::lift_in_hoard`), Grave warden (guard, Willpower 12,
 `grave_warden`; hook `World::curse_corpse`), and Treasure sense (wayfarer, Spot 10,
 `treasure_sense`; hook `world/treasury.rs::arrive_lines`, #617). The class ability Consecrate (above) carries the
-system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
+system too. Prayer is part of the system (the `prayer` tag folded into it, #773): Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
 (grit, Willpower 12, `penitent`; hook `world/pray.rs::prayer_answered`). The forge
 adds no talent (the issue's "None new"): Metalcraft is its lean.
 

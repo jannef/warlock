@@ -7,4 +7,4 @@ tree = "stars"
 description = "The barghest's howl: lesser foes who hear it flee from you a few moments; then your throat is raw an hour."
 needs = { animal = "barghest", level = 12 }
 effects = [{ kind = "hounds_bay", status = "frightened", severity = 3, cooldown = "hoarse" }]
-systems = ["status", "stealth"]
+systems = ["status", "hearing"]

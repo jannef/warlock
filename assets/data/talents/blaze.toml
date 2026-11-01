@@ -5,4 +5,4 @@ tree = "stars"
 granted = true
 description = "Flames burst from you and burn all who stand beside you; then you are burnt out for a long while."
 effects = [{ kind = "blaze", radius = 1, damage = "2d6", damage_type = "fire", spell = "blaze", fire = "arrow_fire", burns = 60, cooldown = "burnt_out" }]
-systems = ["scrolls", "ice"]
+systems = ["combat", "ice"]

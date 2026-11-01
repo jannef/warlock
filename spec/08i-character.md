@@ -946,15 +946,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its table), or a tree not `pending`, `no_free`, nor a class tree without `free_per_tree`
     prerequisite-free talents, is a content error. A wave that ships a system's talents removes
     its `pending`; a new system of the game joins the list in the PR that ships its talents.
-    **Policy for new systems** (design §8.2): every new system of the game ships with talents,
-    at least `min_talents` (and `min_class` class abilities), tagged with its new `[[system]]`
-    in the same PR, and its feature issue says which in the template's "Talents and class
-    abilities" section (§13), or why none (presentation only, or an extension of a system
-    already listed). Resources are systems too: mana and the pools of #225 join the list with
-    talents on their maximum, refill, and costs, and abilities that spend them carry their tag;
-    a cost in a resource stands instead of a cooldown status, never beside one. The bar is
-    data and may rise as the list grows. Developer notes: `docs/dev/progression.md` "Coverage
-    policy".
+    **Policy for new systems** (design §8.2; #773): systems are broad (combat, stealth, magic,
+    light, hunger, ...); a room effect, a creature family's gimmick, a chest kind, or an info
+    readout extends its parent system and is no system of its own. Every new system ships with
+    at least `min_talents` talents (one) and `min_class` class abilities, tagged with its new
+    `[[system]]` in the same PR, and its feature issue says which in the template's "Talents
+    and class abilities" section (§13), or why none (presentation only, or an extension of a
+    system already listed). **A talent earns its place**: a real choice at its tier that changes
+    how a build plays or what it can do; never information only, a small percentage on a niche
+    mechanic, an effect another talent, class ability, or skill rank already gives, or one that
+    matters only in a rare room or against one rare creature. A talent names a system only if
+    its effect reads that system. Resources are systems too: mana and the pools of #225 join the
+    list with talents on their maximum, refill, and costs, and abilities that spend them carry
+    their tag; a cost in a resource stands instead of a cooldown status, never beside one.
+    Developer notes: `docs/dev/progression.md` "Coverage policy".
   - **Determinism and saves**: picks are replayed actions; nothing here draws from the gameplay
     stream; the `levels` stream (`WorldState::levels_rng`, for the skill rolls and stat checks
     to come) is made on its first draw. `Actor::talents` (by id, like affixes: adding talents

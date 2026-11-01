@@ -135,7 +135,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   is made of** (§7 "Pieces and breaking": loose gems, pieces of its grouped materials by
   `[drops] pieces`, nothing of paper; its magic lost), with a line if the player sees it ("The
   silver candlestick breaks apart.", after the death line). Nothing can be
-  stolen from one ("It is all of a piece.", no time). Talents (system `animated`): Salvager,
+  stolen from one ("It is all of a piece.", no time). Talents (no system of their own: `creature_gear` and `combat`, #773): Salvager,
   Unbinder (+1 to hit, +2 damage against a creature tagged `animated`).
   **Blades** (#485) are a **family**: a tier with `levels` and no bodies generates one type
   per level, `animated_blade_5` … `animated_blade_20`, all named "animated blade", numbered in a
@@ -215,7 +215,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   or a trap: "The coffer shudders: ..."), and by **searching** (`Hidden::Mimic`, difficulty
   12 + L ÷ 5 plus the branch's `hidden_per_depth`; in passing only for those who notice
   everything: "You notice the coffer breathing: a young mimic!"). Stealing from one: "It has no
-  pockets." Talents (system `mimics`): **Mimic-wise** (scholar; Spot 10 or Intelligence 12):
+  pockets." Talents (system `chests`, which holds mimics since #773): **Mimic-wise** (scholar; Spot 10 or Intelligence 12):
   within two cells a disguised mimic is shown as itself (the snapshot does not hide it; the
   rules still see it disguised); **Slick** (finesse; Dexterity 13): a mimic's grip never holds
   them (`World::afflict`).

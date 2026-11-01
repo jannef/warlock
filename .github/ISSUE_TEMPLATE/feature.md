@@ -25,13 +25,17 @@ abilities menu), dumps. -->
 ## Talents and class abilities
 
 <!-- The coverage policy (spec §8 "Talents", docs/dev/progression.md "Coverage policy"): a new
-system of the game ships with its talents.
-Which talents and class abilities does this system ship with (at least two talents, naming
-their trees; at least one class ability once the class tables have landed), and which system
-tag do they carry (a new [[system]] in assets/data/talents.toml)? If it is a resource (mana, a
-pool like Rage or Focus), which talents change its maximum, its refill, or its costs?
-Or why none: it is presentation only (no rule reads it, as blood stains), or it extends a
-system already in the list (name the tag and the talents that already touch it). -->
+broad system of the game (combat, stealth, magic, light, hunger, ...) ships with at least one
+talent, under a new [[system]] tag in assets/data/talents.toml (and a class ability once the
+class tables have landed). Which talents and trees, which tag? If it is a resource (mana, a pool
+like Rage or Focus), which talent changes its maximum, its refill, or its costs?
+A talent must earn its place: a real choice at its tier that changes how a build plays or what
+it can do. Not information only; not a small percentage on a niche mechanic; not an effect
+another talent, class ability, or skill rank already gives (extend that one instead); not
+something that matters only in a rare room or against one rare creature.
+Or none: a sub-feature (a room effect, a creature family's gimmick, a chest kind, an info
+readout) extends its parent system: name the tag and the talents that already touch it. Or it is
+presentation only (no rule reads it, as blood stains). -->
 
 ## Tests
 

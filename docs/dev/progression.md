@@ -281,11 +281,11 @@ Tests: `world/caster_tests.rs`.
 
 ## Coverage policy
 
-`data/talents.toml` holds the closed `[[system]]` list and `[coverage]` (`min_talents = 2`,
-`min_class = 0` until every class has its table, `free_per_tree = 1`); class abilities are
-counted by `Content::check_class_tables`. A `[[system]]` may set its own `min_talents` in place
-of the bar's (`SystemDef::min_talents`): `creature_gear` ships with one, Scavenger (#328), and
-`services` one, Pilgrim (#329). `spells` (#394, docs/dev/spells.md) joined pending, with the
+`data/talents.toml` holds the closed `[[system]]` list and `[coverage]` (`min_talents = 1`
+since #773, `min_class = 0` until every class has its table, `free_per_tree = 1`); class
+abilities are counted by `Content::check_class_tables`. A `[[system]]` may still set its own
+`min_talents` in place of the bar's (`SystemDef::min_talents`); none does since the bar is one.
+`spells` (#394, docs/dev/spells.md) joined pending, with the
 `caster_level` talent effect and nothing taking it; #396 added the Spellcraft tree with its
 first talent, Quick study (`TalentEffect::Study`), and #400 the rest (Overreach, School focus
 with the `school` choice: a school or an element), the wizard's Arcane training, Empower and
@@ -301,25 +301,55 @@ not counted as talents, nor asked for a free one; the class abilities a system h
 talents the class tables give that name it (each once). `min_class` stays 0 until every class
 has its table (I1–I3).
 
-**Every new system ships with talents** (the owner, 2026-10-20; design §8.2), so no system is
-left with nothing that cares about it:
+**Every new system ships with a talent** (the owner, 2026-10-20; design §8.2), so no system is
+left with nothing that cares about it. The bar was two talents a system until #773: that
+produced talent creep (every room effect, monster gimmick, chest variant, or info readout minted
+a talent or two of its own, most of them filler; the 2026-11-01 audit found about 40, and #774
+cut them). The owner: "Modify the talent rule to prevent this type of talent creep." So:
+
+- **Systems are broad.** A `[[system]]` names a system of the game (combat, stealth, magic,
+  light, hunger, ...), not a sub-feature. A single special room effect, a monster family's
+  gimmick, a chest kind, or an info readout is never a system of its own: it extends its parent
+  system, whose talents may cover it. #773 folded the narrow tags into their parents: `mimics`
+  into `chests`, `prayer` into `special_rooms`, `bounties` and `services` into `talk`, `drain`
+  into `diseases`, and `animated` dropped (its talents were cut; animated objects are creatures,
+  their remains `creature_gear`).
+- **The bar is one talent.** `min_talents = 1`, and a feature issue may answer "none: it extends
+  X, whose talents already touch it".
+- **A talent must earn its place.** It is a real choice at its tier: it changes how a build plays
+  or what it can do. It may not be
+  - information only (a readout, a worth shown, a direction told);
+  - a small percentage on a niche mechanic;
+  - an effect another talent, a class ability, or a skill rank already gives (extend that one or
+    add a rank to it instead; #774 kept one of each duplicate group);
+  - something that only matters in a rare room or against one rare creature.
+- **Tags match hooks.** A talent names a system in its `systems` only if its effect reads that
+  system's rules. A general bonus is tagged by the system it is for, not by every rule that
+  happens to read it (Iron will's +2 to Willpower checks is `diseases`, not also `searching` for
+  the passive search that rolls Willpower); the code an effect borrows is no system (a birth
+  sign's Blaze uses the scrolls' spell code but is `combat`, not `scrolls`). There is no load
+  check tying effect kinds to tags (about 150 kinds, many reading several systems): the reviewer
+  checks it against the effect's one read in the hook table above.
+
+The steps:
 
 1. **The issue** says which (`.github/ISSUE_TEMPLATE/feature.md`, "Talents and class
-   abilities"): at least `min_talents` talents and their trees, at least `min_class` class
-   abilities, the system tag; or why none.
+   abilities"): at least `min_talents` talents and their trees, each meeting the bar above, at
+   least `min_class` class abilities, the system tag; or why none.
 2. **The PR** that adds the system adds, in the same PR: its `[[system]]` entry in
    `data/talents.toml` (placed by topic beside its neighbours, never at the end; no `pending`),
    its talents under `data/talents/` with the tag in their `systems`, the `TalentEffect`
    variants and their one read each (above), and the wiki rows (the by-system table updates by
    itself). Adding a tag without its talents fails the load; adding a system without a tag
    passes, so the reviewer checks the template's answer.
-3. **What counts as a system**: a rule a talent could change (a check, a price, a pace, a
-   limit, a new action). Not one: presentation state no rule reads (blood stains), and channels
-   of existing systems. (Stat training was such a channel, what the level-up reads, until its
+3. **What counts as a system**: a broad rule set a talent could change (a check, a price, a
+   pace, a limit, a new action). Not one: presentation state no rule reads (blood stains),
+   channels of existing systems, and sub-features of one (a room effect, a creature family, a
+   chest kind). (Stat training was such a channel, what the level-up reads, until its
    daily check made it a rule a talent can change: `stat_training` since #562, with Hard
    training and Quick study of the body.) Extending a
-   system already in the list (a new trap kind) needs no new tag, only its talents' `systems`
-   kept honest.
+   system already in the list (a new trap kind, a new room effect) needs no new tag and no new
+   talent, only its talents' `systems` kept honest.
 4. **Resources** (mana, the mana PR; the pools of #225: Rage, Focus, Openings, Ki,
    Inspiration) are systems like any other: each joins the list with talents on its own hooks
    (its maximum, its refill or decay, what it costs), and every ability that spends it carries
@@ -328,8 +358,8 @@ left with nothing that cares about it:
    timer. Mana and Resources are already named in the design's matrix (§8.1) with their first
    talents (`deep_well`, … for mana; `battle_trance`, … for #225) and join the list when those
    PRs land.
-5. **The bar is data** (`[coverage]`): raise `min_talents` or `min_class` as the list grows,
-   in its own PR, with the talents that meet it.
+5. **The bar is data** (`[coverage]`): `min_class` rises to 1 with the class tables, in its
+   own PR. `min_talents` stays at one: a count is never a reason to add a talent.
 
 ## Creation picks
 

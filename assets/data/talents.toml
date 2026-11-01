@@ -9,13 +9,15 @@
 # The most ranks a talent may have ("Hardy 2/3").
 max_ranks = 3
 
-# The coverage bar (spec §8 "Talents"): the game refuses to load when a system below that is not
-# `pending` has fewer than min_talents talents or min_class class abilities, or a tree that is
-# not `pending` (nor `no_free`) has fewer than free_per_tree talents without prerequisites. So a
-# system is in the list the moment it ships with its talents, and a pick from a tree is never
-# impossible. A [[system]] may set its own min_talents (a young system shipped with one). min_class is 0 until every class has its table (#243–#246), then 1.
+# The coverage bar (spec §8 "Talents"; docs/dev/progression.md "Coverage policy", #773): the
+# game refuses to load when a system below that is not `pending` has fewer than min_talents
+# talents or min_class class abilities, or a tree that is not `pending` (nor `no_free`) has fewer
+# than free_per_tree talents without prerequisites. The bar is one talent: a system is something
+# a build can lean on, and one talent that changes how it plays is enough; more talents are
+# added only when each earns its place (the policy's bar), never to fill a count. min_class is 0
+# until every class has its table (#243–#246), then 1.
 [coverage]
-min_talents = 2
+min_talents = 1
 min_class = 0
 free_per_tree = 1
 
@@ -116,10 +118,14 @@ description = "What a class teaches as its levels come."
 class = true
 
 # The closed list of systems a talent may name in its `systems` (the coverage matrix of the
-# design, docs/design/progression.md §8). A system is `pending` until its talents land; the PR
-# that brings them removes the flag, and the bar holds from then on. A new system of the game
-# joins the list in the PR that ships its talents, never before. A small system may ask for
-# fewer talents than the bar with a `min_talents` of its own.
+# design, docs/design/progression.md §8). Systems are broad: a system of the game (combat,
+# stealth, magic, light, hunger, ...), never a sub-feature. A single special room effect, a
+# monster family's gimmick, a chest kind, or an info readout extends its parent system and is
+# no tag of its own (#773 folded Mimics into chests, Prayer into special rooms, Bounties and
+# Services into talk, Drains into diseases, and dropped Animated objects). A talent names a
+# system only when its effect reads that system's rules (docs/dev/progression.md "Coverage
+# policy"). A system is `pending` until its talents land; the PR that brings them removes the
+# flag. A new system of the game joins the list in the PR that ships its talent, never before.
 
 [[system]]
 id = "combat"
@@ -185,7 +191,6 @@ name = "Spells and caster level"
 [[system]]
 id = "schools"
 name = "Schools of magic: ranks and marks"
-min_talents = 2
 
 # Alternative resources (#225): pools beside hit points and mana (Rage, Focus, Openings, Ki,
 # Inspiration); their talents are Battle trance, Inner calm, Steady hand, and Patient blade.
@@ -194,8 +199,7 @@ id = "resources"
 name = "Resources"
 
 # Stamina (#560, the combat progression design §4.5): the pool weapon actives pay from; the
-# fighting classes' Trained wind grants it, and Deep lungs, Steady breathing, and Second breath
-# change it.
+# fighting classes' Trained wind grants it, and Deep lungs and Steady breathing change it.
 [[system]]
 id = "stamina"
 name = "Stamina"
@@ -204,14 +208,11 @@ name = "Stamina"
 id = "status"
 name = "Status effects"
 
+# Diseases and drains (#382: the touch of some undead takes points off a stat for good, unless
+# a check holds), and the checks that hold them off.
 [[system]]
 id = "diseases"
-name = "Diseases and checks"
-
-# Drains (#382): the touch of some undead takes points off a stat for good, unless a check holds.
-[[system]]
-id = "drain"
-name = "Drains: stats lost for good"
+name = "Diseases, drains, and checks"
 
 # Stat training (#562, the combat progression design §9.2): the marks uses earn, the checks at a
 # level and once a day at 06:00. A system since the daily check (a rule a talent can change).
@@ -243,7 +244,6 @@ name = "Hearing and sounds"
 [[system]]
 id = "light"
 name = "Carried light"
-pending = true
 
 [[system]]
 id = "vision"
@@ -259,16 +259,11 @@ name = "Creature sight and awareness"
 id = "danger"
 name = "Danger levels and creatures that come"
 
-# Special rooms (#402): rooms, and rarely whole levels, that change the rules inside them.
+# Special rooms (#402): rooms, and rarely whole levels, that change the rules inside them; the
+# forgotten altars' prayer (#406) among them.
 [[system]]
 id = "special_rooms"
-name = "Special rooms"
-
-# Prayer (#406): praying at forgotten altars, the gamble of their outcome tables.
-[[system]]
-id = "prayer"
-name = "Prayer at forgotten altars"
-min_talents = 1
+name = "Special rooms and prayer"
 
 [[system]]
 id = "traps"
@@ -282,18 +277,12 @@ name = "Searching and secret doors"
 id = "doors"
 name = "Doors, locks, kicking"
 
-# Chests (docs/design/chests-and-treasure.md §9): opening, kicking open, what breaks inside. It
-# ships with Deft breaker and Chest-wise; Lockbreaker's kicks reach chests, and the wizard's
-# Knock springs their locks.
+# Chests (docs/design/chests-and-treasure.md §5, §9): opening, kicking open, what breaks inside,
+# and the mimics that are not chests at all. Deft breaker and Chest-wise; Mimic-wise and Slick;
+# Lockbreaker's kicks reach chests, and the wizard's Knock springs their locks.
 [[system]]
 id = "chests"
-name = "Chests: locks, traps, kicking open, what breaks"
-
-# Mimics (docs/design/chests-and-treasure.md §5, §9): the chests that are not. It ships with
-# Mimic-wise and Slick.
-[[system]]
-id = "mimics"
-name = "Mimics"
+name = "Chests and mimics"
 
 [[system]]
 id = "digging"
@@ -319,21 +308,11 @@ name = "Weather, sun, moon"
 id = "shops"
 name = "Shops and favour"
 
+# People: talk, quests (bounties, the rolled quests, #422), and the paid services (cures and
+# mendings, campaign design §6.1).
 [[system]]
 id = "talk"
-name = "Quests, talk, people"
-
-# Bounties (#422, the guild design §11): rolled quests and the creature tags kill quests count.
-# Its talents are Quarry sense and Sworn foe.
-[[system]]
-id = "bounties"
-name = "Bounties: rolled quests and kinds of creature"
-
-# Services (campaign design §6.1): cures and mendings for gold, asked for like dialogue topics.
-[[system]]
-id = "services"
-name = "Services: paid cures and mendings"
-min_talents = 1
+name = "Quests, talk, people, services"
 
 [[system]]
 id = "magic_items"
@@ -373,22 +352,14 @@ id = "speed"
 name = "Speed"
 
 # Creature gear (#328): what creatures spawn carrying, wielding, and wearing, and drop where they
-# die; it ships with one talent, Scavenger (a second, Disarming blow, waits for a disarm action).
+# die (animated objects' remains too); Scavenger.
 [[system]]
 id = "creature_gear"
 name = "The gear creatures carry and drop"
-min_talents = 1
-
-# Animated objects (#483): what they are made of and what they leave. It ships with Salvager and
-# Unbinder; Appraiser's eye came with the composites (#486).
-[[system]]
-id = "animated"
-name = "Animated objects: what they are made of and what they leave"
 
 [[system]]
 id = "factions"
 name = "Factions and creatures' stance toward you"
-pending = true
 
 [[system]]
 id = "damage_types"

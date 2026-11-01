@@ -7,4 +7,4 @@ tree = "stars"
 description = "Your blaze burns hotter and reaches farther."
 needs = { element = "fire", level = 15 }
 effects = [{ kind = "wildfire", radius = 2, damage = "3d6" }]
-systems = ["scrolls", "ice"]
+systems = ["combat", "ice"]

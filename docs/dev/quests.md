@@ -64,7 +64,7 @@ not offered. Test content: the showcase gardener's `slug_charm` (a pick of scrol
 snapshots `quest-offer-rolled`, `quest-log-rolled`), and `world/quest_roll_tests.rs`'s
 fixtures in Cēaptūn (Godgifu gives a creature pick, a tag pick, and two variants revealing
 Fennmynster and Fyrdelf) and the arena (a kobold made the demilich, a shared unique).
-**The bounties system** (`[[system]] bounties` in `data/talents.toml`): Quarry sense (delver,
+**Bounties' talents** (the `talk` system; the `bounties` tag folded into it, #773): Quarry sense (delver,
 `quarry_sense`: `World::sense_quarry` on arrival, beside Sixth sense, "Your quarry is here."
 when a living creature on the level counts for an active, unmet kill quest as given) and Sworn
 foe (weaponcraft, `choice = "tag"`, a new `talent::Choice::Tag` over `Content::tags`;
