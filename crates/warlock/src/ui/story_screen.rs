@@ -6,7 +6,7 @@
 //! It is seen two ways. **As the run begins** ([`StoryScreen::opening`]): 72 wide like the sign
 //! reveal, with the footer `Enter continue`, opened by the app once over a new run's first turn
 //! (`screens::on_run_start`; never on Continue or Resume, never under `--capture` or `--replay`,
-//! never for a run without a story) and by `--screen story`. **As page 8, "Story"**
+//! never for a run without a story) and by `--screen story`. **As page 9, "Story"**
 //! ([`StoryScreen::page`]): the info pages' width and tab line; for a character without a story
 //! it says "Your story is not written."
 //!
@@ -23,11 +23,11 @@ use warlock_core::perception::PerceptionView;
 
 /// The panel's width as the run begins, as the sign reveal's.
 const OPENING_WIDTH: i32 = 72;
-/// The panel's width as page 8: every info page's.
+/// The panel's width as page 9: every info page's.
 const PAGE_WIDTH: i32 = super::info_tabs::panel_width(OPENING_WIDTH);
 /// Rows of the panel besides the text: frame, margin, a gap and the footer, frame.
 const EXTRA: i32 = 5;
-/// What page 8 says for a character without a story.
+/// What page 9 says for a character without a story.
 const UNWRITTEN: &str = "Your story is not written.";
 
 #[derive(Debug)]
@@ -36,7 +36,7 @@ pub struct StoryScreen {
     title: String,
     /// The paragraphs; empty without a story.
     paragraphs: Vec<String>,
-    /// As the run begins (`true`), or page 8.
+    /// As the run begins (`true`), or page 9.
     opening: bool,
     /// Lines scrolled down from the top.
     first: usize,
@@ -70,7 +70,7 @@ impl StoryScreen {
         }
     }
 
-    /// Whether this is the screen opened as the run begins, not page 8: the page keys do not
+    /// Whether this is the screen opened as the run begins, not page 9: the page keys do not
     /// turn it.
     pub fn is_opening(&self) -> bool {
         self.opening
@@ -290,7 +290,7 @@ mod tests {
         let text = shown(&page, 100, 30).join("\n");
         assert!(text.contains(UNWRITTEN), "{text}");
         assert!(text.contains("Esc close"), "{text}");
-        assert!(text.contains("8 Story"), "the tab line: {text}");
+        assert!(text.contains("9 Story"), "the tab line: {text}");
         assert!(!page.is_opening());
     }
 }

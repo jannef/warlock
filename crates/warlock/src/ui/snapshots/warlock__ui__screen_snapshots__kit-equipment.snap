@@ -26,7 +26,7 @@ expression: "render(case, content.clone())"
 │ Carrying 9 kg   ·   Your weight 79 kg (you 70 kg)                                                │
 │                                                                                                  │
 │ a-m choose a slot   A-M look   Esc close                                                         │
-└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
+└─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘
 
 
 

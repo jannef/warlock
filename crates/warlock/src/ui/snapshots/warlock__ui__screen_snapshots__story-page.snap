@@ -11,23 +11,23 @@ expression: "render(case, content.clone())"
 
 
 
-    ┌─ Thora's story ───────────────────────────────────────────────────────────────────────────────────┐
-    │                                                                                                   │
-    │  You were born to farming folk, who had little but gave what they had. You were named for a       │
-    │  grandparent you never met, and told every year how little you resembled them.                    │
-    │                                                                                                   │
-    │  A winter wolf came into the yard when you were six, and you faced it with a stick until the      │
-    │  grown folk came. The story grew; so did you. At fourteen you stood in the levy with a borrowed   │
-    │  spear, and found you had a taste for it.                                                         │
-    │                                                                                                   │
-    │  You were promised once, and the promise was broken, and you have not made another. Fortune       │
-    │  never found your door; whatever you have, you got yourself.                                      │
-    │                                                                                                   │
-    │  You left, as the young do, because staying was the one thing you could not bear. You came to     │
-    │  the Hall by the road everyone comes by.                                                          │
-    │                                                                                                   │
-    │ Esc close                                                                                         │
-    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents · 8 Story ─┘
+┌─ Thora's story ─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                             │
+│  You were born to farming folk, who had little but gave what they had. You were named for a grandparent     │
+│  you never met, and told every year how little you resembled them.                                          │
+│                                                                                                             │
+│  A winter wolf came into the yard when you were six, and you faced it with a stick until the grown folk     │
+│  came. The story grew; so did you. At fourteen you stood in the levy with a borrowed spear, and found you   │
+│  had a taste for it.                                                                                        │
+│                                                                                                             │
+│  You were promised once, and the promise was broken, and you have not made another. Fortune never found     │
+│  your door; whatever you have, you got yourself.                                                            │
+│                                                                                                             │
+│  You left, as the young do, because staying was the one thing you could not bear. You came to the Hall by   │
+│  the road everyone comes by.                                                                                │
+│                                                                                                             │
+│ Esc close                                                                                                   │
+└─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story ─┘
 
 
 
@@ -37,4 +37,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Hub  ·  HP 30/30  ·  MP 0/0  ·  Sta 13/13  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444      ? controls
+ The Hub  ·  HP 30/30  ·  MP 0/0  ·  Sta 13/13  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

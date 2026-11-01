@@ -26,6 +26,7 @@ use super::{ACCENT, TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::ability::{Ability, Aim, Source, Unavailable};
+use warlock_core::content::SpellId;
 use warlock_core::perception::PerceptionView;
 use warlock_core::world::{reach_words, reroll_words};
 
@@ -81,11 +82,7 @@ impl AbilitiesScreen {
                     // place, that it is aimed (the row has no room for more).
                     let state = match a {
                         Ability::Spell(spell) => {
-                            let cost = view.own_spell_cost(spell).unwrap_or(0);
-                            let head = match view.own_spell_roll(spell) {
-                                Some(roll) => format!("{}, {cost} mana", roll.text),
-                                None => format!("{cost} mana"),
-                            };
+                            let head = spell_head(view, spell);
                             match own.unavailable {
                                 Some(Unavailable::NoMana) => {
                                     format!("{head}: you have {}", view.own_mana().0).into()
@@ -300,8 +297,19 @@ fn describe(view: &PerceptionView<'_>, ability: Ability) -> String {
     text
 }
 
+/// What a spell's row says first, here and on the Magic page: the roll the player would make
+/// now with its type, and what it costs them ("4d6 fire, 26 mana"; "3 mana" for one that rolls
+/// nothing).
+pub(super) fn spell_head(view: &PerceptionView<'_>, spell: SpellId) -> String {
+    let cost = view.own_spell_cost(spell).unwrap_or(0);
+    match view.own_spell_roll(spell) {
+        Some(roll) => format!("{}, {cost} mana", roll.text),
+        None => format!("{cost} mana"),
+    }
+}
+
 /// What an ability that can be used now asks for, as its row says it.
-fn needs(aim: Aim) -> &'static str {
+pub(super) fn needs(aim: Aim) -> &'static str {
     match aim {
         Aim::Nothing => "",
         Aim::Direction => "in a direction",

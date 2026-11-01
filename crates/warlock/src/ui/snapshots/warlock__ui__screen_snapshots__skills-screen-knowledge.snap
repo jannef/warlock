@@ -23,7 +23,7 @@ expression: "render(case, content.clone())"
 │                                                                                                  │
 │                                                                                                  │
 │ ↑↓ choose   A or Esc close                                                                       │
-└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
+└─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘
 
 
 

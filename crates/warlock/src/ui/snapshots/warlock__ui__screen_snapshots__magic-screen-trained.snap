@@ -1,0 +1,44 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You feel more skilled at transmutation.
+ You feel more skilled at restoration.
+
+
+
+
+
+┌─ Magic ─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                             │
+│ Mana 153/158                                                                                                │
+│                                                                                                             │
+│ Schools                                                                                                     │
+│   Evocation                5  ──────────                                                                    │
+│   Necromancy               0  ──────────                                                                    │
+│   Abjuration               0  ──────────                                                                    │
+│   Restoration              3  ──────────                                                                    │
+│   Transmutation            1  ──────────                                                                    │
+│   Enchantment              0  ──────────                                                                    │
+│   Divination               0  ──────────                                                                    │
+│                                                                                                             │
+│ Caster styles                                                                                               │
+│   Sniper                   1  ──────────                                                                    │
+│   Toucher                  0  ──────────                                                                    │
+│   Battle caster            0  ──────────                                                                    │
+│                                                                                                             │
+│ Spells                                                                                                      │
+│   Ray of frost            1d7 cold, 1 mana, aimed                                                           │
+│   Magic missile           2d5 force, 2 mana, aimed                                                          │
+│   Burning hands           2d5 fire, 5 mana, aimed                                                           │
+│   Arcane bolt             3d7 force, 10 mana, aimed                                                         │
+│                                                                                                             │
+│ Esc close                                                                                                   │
+└─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story ─┘
+
+
+
+
+
+
+ The Hub  ·  HP 29/29  ·  MP 153/158  ·  Lv 18  ·  08:00  ·  11 Darkening, Year 1444  ·  10 °C       ? controls
