@@ -307,8 +307,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Wands** (`warlock-core/src/world/zap.rs`, data `wand` in `data/objects/` §7, `content/wand.rs`;
   the magic design §9; #398): objects (`-`, the wands class, one at a time) whose `[object.wand]`
   holds a spell of `data/spells/` (an aimed one), its `charges` (its own, required, 1 to 99:
-  the wand's, not its spell's), and the `caster_level` it casts at (default its spell's level,
-  at least 1; the seven shipped wands give theirs). A wand goes in the
+  the wand's, not its spell's), and the `rungs = { min, max }` a wand of the kind casts at
+  (default 0 to its spell's damage ladder's length; the seven shipped wands give 0 to 2, or
+  0 to 0 for Sleep and Web, which roll nothing). A wand goes in the
   **missile weapon slot** (`slot = "missile_weapon"`), so a wand and a launcher compete for it
   (the swap is the `ready` action, as for any missile weapon), and is used as a missile weapon
   is: `t` aims it (`AimKind::Zap`, the spell's own aiming by its shape and the player's reach
@@ -317,14 +318,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
     own resolution (an `attack` spell rolls to hit with the user's Dexterity, as every spell
     attack does; `auto` and `area` ones do not), reach and degrees (the user's), the roll at the
     **wand's own rung** of the spell's damage ladder (`[object.wand] rungs = { min, max }`,
-    default 0 to the ladder's length; until each wand draws its own rung in the range, the
-    spell scaling design's S5, a zap casts at `min`), never the user's stats, plus Wand
+    default 0 to the ladder's length), never the user's stats, plus Wand
     mastery's rung and the worn `wand_rungs` (of Wands), the user's other hooks applying,
     nothing holding the roll. `caster_level` on a wand is refused, naming `rungs`.
     A charge pays instead of mana; a cast refused (at oneself, out of reach, no one to touch)
     uses none and takes no time; one that goes off takes the `cast` action's time (times the
     spell's `casts`). Its kills are the user's; one that kills its user is the spell's
     (`Cause::Spell`). "You zap the oak wand.", then the spell's own words.
+  - **Its rung** (the spell scaling design §7.4, decision 13): drawn **once, as the stack is
+    made**, evenly in its kind's range (`Stack::draw_wand_rung`, one draw, none for a range of
+    one rung and none for anything but a wand), from the stream its maker already draws from:
+    loot's (`magic::loot::make_from`, so drops, chests, and hoards), a starting kit's (`character/kit/...`), a
+    generated shop's stock (the shop's), a creature's gear (`gear/...`), an outcome's objects
+    (`gameplay`), and, for the wands a level gives as it is first made (a level
+    file's pile or chest, a vault's), a fixed creature kit's, and a scenario's pack, the
+    `objects/<level id>`, `objects/actor/<id>`, and `objects/pack` streams. It is kept on the
+    stack (`Stack`'s `wand_rung`: saved and hashed, left out of the save for everything but a
+    wand), so a wand keeps its strength wherever it goes; a wand saved before rungs were drawn
+    has none and casts at rung 0.
   - **Empty**: a wand with no charges left does nothing ("Nothing happens.", no time) and stays
     an item (to sell, or keep); the player then knows it is empty. Wands are **never
     recharged** (the owner); there is no Use magic device skill and there are no magic staffs.
@@ -335,8 +346,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     every wand of it then shows by its name. Its **charges** (`Stack`'s `charges`: the charges
     used, saved, left out of the save while the wand is as made) stay unknown until the wand
     itself is identified, by the scroll of identify or by Connoisseur's carrying ("a wand of
-    fireball (7 charges)", "(empty)"). The item description says the spell in words ("Holds
-    Fireball (tier 3): ...") once the type is known, and the charges left once identified.
+    fireball (7 charges)", "(empty)"). Its **rung** comes with its type: once the type is known
+    the item description says what it does in the user's hands, the roll at its rung plus their
+    wand rungs with their other hooks, its damage type, and a burst's radius ("Holds Fireball:
+    4d6 fire, radius 2"; a wand that rolls nothing says its spell in words), and so does the
+    aiming prompt ("Zap a wand of fireball (4d6 fire, radius 2): ..."); its name stays "a wand of
+    fireball". Before the type is known nothing of the rung shows. The charges left show once
+    the wand is identified.
   - **The wands**: magic missile and burning hands (tier 1, item level 3, frequency 10, 250
     gold), scorching ray, sleep, and web (tier 2, level 5, frequency 7, 400 gold), fireball and
     lightning bolt (tier 3, level 8, frequency 5, 600 gold). **Where**: loot (by `level` and

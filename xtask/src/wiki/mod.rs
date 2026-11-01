@@ -1359,7 +1359,7 @@ mod tests {
             ),
             "{list}"
         );
-        assert!(text("wands.md").contains("| wand of fireball | Fireball | 11 | 7 | 2d6 |"));
+        assert!(text("wands.md").contains("| wand of fireball | Fireball | 11 | 7 | 2d6 to 4d6 |"));
         assert!(text("spell-casting.md").contains("| Wizard | 100 % |"));
         let resources = text("resources.md");
         assert!(

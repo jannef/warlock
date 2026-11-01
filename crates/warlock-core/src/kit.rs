@@ -114,7 +114,11 @@ pub fn roll(
                         let (object, count) = (stack.object, stack.count);
                         loot::make(content, &mut rng, object, count, ITEM_LEVEL, grade)
                     }
-                    None => stack.clone(),
+                    None => {
+                        let mut plain = stack.clone();
+                        plain.draw_wand_rung(content, &mut rng);
+                        plain
+                    }
                 };
                 let at = pack.put(stack, content);
                 if line.keep != Keep::Carry {

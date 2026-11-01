@@ -31,6 +31,7 @@ use crate::color::Rgb;
 use crate::content::{Content, Cutting, DamageTypeId, MaterialId, ObjectId, Part, Rarity, part};
 use crate::item_parts::{self, ItemPart};
 use crate::magic::{Effect, Magic, Mods, name};
+use crate::rng::Rng;
 use crate::scroll_label::Lore;
 use crate::time::GameTime;
 use crate::variant;
@@ -64,6 +65,13 @@ pub struct Stack {
     /// unknown. Ground truth: presentation reads them only through [`Stack::known_charges`].
     #[serde(default, skip_serializing_if = "Option::is_none")]
     charges: Option<Charges>,
+    /// A wand's rung on its spell's damage ladder (spec §8 "Magic items": "Wands"; the spell
+    /// scaling design §7.4), drawn evenly in its kind's `rungs` as it is made
+    /// ([`Stack::draw_wand_rung`]); `None` for everything else. A wand without one (made before
+    /// rungs were drawn: an older save) casts at rung 0. Ground truth: presentation reads it
+    /// only through [`Stack::known_wand_rung`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    wand_rung: Option<u8>,
     /// A carried light's mode (spec §5 "Light sources": a lantern unlit, lit, or hooded), kept
     /// with the item wherever it goes; it gives light only ready in the Tool slot
     /// (`WorldState::carried_light`). Unlit for everything else.
@@ -133,6 +141,7 @@ impl Stack {
             parts: None,
             died: None,
             charges: None,
+            wand_rung: None,
             light: LightMode::Unlit,
         }
     }
@@ -254,6 +263,34 @@ impl Stack {
     pub fn known_charges(&self, content: &Content) -> Option<u8> {
         (self.charges.is_some_and(|c| c.known))
             .then(|| self.charges_left(content))
+            .flatten()
+    }
+
+    /// Draws its rung if it is a wand without one (as it is made: loot, a shop's stock, a level's
+    /// pile, a kit, each from the stream it already draws from): evenly in its kind's `rungs`,
+    /// one draw of `rng` (none when the range is one rung). Anything else draws nothing.
+    pub(crate) fn draw_wand_rung(&mut self, content: &Content, rng: &mut Rng) {
+        if self.wand_rung.is_some() {
+            return;
+        }
+        if let Some(wand) = content.object(self.object).wand {
+            let (lo, hi) = (i32::from(wand.min_rung), i32::from(wand.max_rung));
+            self.wand_rung = Some(u8::try_from(rng.range(lo, hi)).unwrap_or(wand.min_rung));
+        }
+    }
+
+    /// The rung it casts at on its spell's damage ladder, if it is a wand (0 for one made
+    /// before rungs were drawn): ground truth, for the rules and dev tools.
+    pub(crate) fn wand_rung(&self, content: &Content) -> Option<u8> {
+        content.object(self.object).wand?;
+        Some(self.wand_rung.unwrap_or(0))
+    }
+
+    /// Its rung, if it is a wand whose type the player knows (the rung comes with the type):
+    /// all presentation may know of it.
+    pub fn known_wand_rung(&self, lore: Lore<'_>) -> Option<u8> {
+        (lore.is_identified(self.object))
+            .then(|| self.wand_rung(lore.content))
             .flatten()
     }
 
@@ -476,6 +513,9 @@ impl Stack {
         if let Some(left) = self.charges_left(content) {
             text += &format!(" ({})", charges_text(left));
         }
+        if let Some(rung) = self.wand_rung(content) {
+            text += &format!(" (rung {rung})");
+        }
         match self.magic() {
             Some(m) if !m.identified => format!("{text} (unidentified)"),
             _ if !self.charges_known(content) => format!("{text} (unidentified)"),
@@ -501,6 +541,7 @@ impl Stack {
             }
             && self.died.is_some() == def.food.is_some()
             && (self.charges).is_none_or(|c| def.wand.is_some_and(|w| c.used <= w.charges))
+            && (self.wand_rung.is_none() || def.wand.is_some())
             && (self.light.is_unlit() || def.carried_light.is_some())
     }
 

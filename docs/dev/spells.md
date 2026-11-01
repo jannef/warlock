@@ -407,12 +407,27 @@ cast path shares.
     before; saves change). `charges_left` (rules, dev), `known_charges` / `charges_known`
     (presentation), `use_charge`, `identify_charges`; `carry_for` (Connoisseur) counts a
     wand's unknown charges too; `is_valid_for` holds `used` within the wand's charges.
+    `Stack::wand_rung` (S5, #752; private `Option<u8>`, `None` for everything but a wand;
+    saved and hashed, left out while `None`; saves change): drawn by
+    `Stack::draw_wand_rung(content, rng)` evenly in `min_rung..=max_rung` (one `Rng::range`,
+    no draw for a one-rung range or a non-wand, nothing drawn twice) wherever a wand is made,
+    from the maker's own stream: `magic::loot::make_from` (last, after the ornament and
+    material: loot, drops, chests, hoards, room loot, kits' and gear's magic lines), `kit::roll`'s
+    plain lines, `gear::make`, `mapgen/shop.rs`'s stock, `World::leave_objects` (outcomes,
+    `gameplay`), and as a fallback for wands that come from content without one: a level's piles
+    and chests in `instantiate_level` (`Rng::objects(seed, level id)`, piles in cell order,
+    then chests), a creature's inventory in `make_creature` (`objects/actor/<id>`), and the
+    scenario's pack in `World::begin` (`objects/pack`). `wand_rung(content)` (rules, dev; a
+    wand without one reads 0, as a save from before S5 does), `known_wand_rung(lore)`
+    (presentation: with the type, `Lore::is_identified`); `is_valid_for` refuses a rung on
+    anything but a wand. `describe_truth` adds `(rung N)` (the `actors` layer), the
+    `inventory` layer and JSON (`wand_rung`) only once the type is known.
   - **Use**: `World::fire` hands a wand in a `ready` slot (`Actor::wand_item`) to
     `World::zap`: empty → "Nothing happens.", no time, charges then known; else
     `World::wand_cast` (the cast path, `Pay::Wand(item)`: `pay_cast` → `World::use_charge`,
     "You zap the oak wand.", and the type learned through `learn_scroll`, "It is a wand of
-    fireball.") at `CastBy::Wand(min_rung)` (until S5 draws a rung per wand: the range's `min`,
-    plus the user's `wand_rungs`, Wand mastery and of Wands), the user's reach, degrees, and
+    fireball.") at `CastBy::Wand(stack.wand_rung)` (plus the user's `wand_rungs`, Wand mastery
+    and of Wands, in `Actor::spell_rung`), the user's reach, degrees, and
     other hooks; priced as `cast` × `casts`. A death by it is `Cause::Spell`, as a mana
     cast's.
   - **Labels**: `scroll_label::Labels::draw` draws wand labels (`data/wand_labels.toml`,
@@ -423,17 +438,23 @@ cast path shares.
     types as well.
   - **Presentation**: `PerceptionView::ready_wand`; the aiming mode's `AimKind::Zap(item)`
     (`t` with a wand ready; the spell's line and reach once the type is known, a plain line
-    before; sends `Action::Fire`); `describe::appraised`'s wand lines (the spell in words once
-    the type is known, the charges once identified). Snapshot `wand-description`.
+    before; sends `Action::Fire`; the prompt names what the wand does once its type is known,
+    "Zap a wand of fireball (4d6 fire, radius 2)", `PerceptionView::wand_does`);
+    `describe::appraised_for`'s wand lines through `PerceptionView::describe_item` (once the
+    type is known, `describe::wand_does`: the player's `spell_roll` at `CastBy::Wand(rung)`,
+    the damage type's name or "healed", their burst radius, "Holds Fireball: 4d6 fire, radius
+    2"; the spell in words for a wand that rolls nothing, or with no user, as plain
+    `describe::appraised` gives it; the charges once identified). Snapshots
+    `wand-description`, `wand-aim`.
   - **Choices** (design §14 and the issue): the attack roll aims with Dexterity, as every
     spell's (there is no Missile skill); only aimed spells may be wands; a wand type is
     identified by use (as a scroll by reading), its charges only by identification; an empty
     wand's emptiness is learned by trying it; the zap takes the `cast` action's time; reach is
     the user's (Willpower), as a scroll's; Wand mastery is in Weaponcraft (system `spells`).
   - **Talents**: Wand mastery (`wand_mastery`, `spell_mod { wand_rungs = 1 }`).
-  - **Wiki**: `xtask/src/wiki/spells.rs` `wands.md` (wand, spell, spell level, charges, the roll
-    it casts at, `roll_at(min_rung)`, item level, frequency, value) on `wiki/src/magic.md`'s
-    "Wands".
+  - **Wiki**: `xtask/src/wiki/spells.rs` `wands.md` (wand, spell, spell level, charges, its
+    strength, the rolls at the range's ends, `roll_at(min_rung)` to `roll_at(max_rung)`, item
+    level, frequency, value) on `wiki/src/magic.md`'s "Wands".
 - **Rods** (#399; design §9; `content/rod.rs`, `world/rod.rs`, tests `world/rod_tests.rs` and
   `content/rod.rs`):
   - **Effects** (the registry, distinct from spells): `data/rod_effects/` (`RodEffect`, one
@@ -552,8 +573,10 @@ cast path shares.
   levels, costs, and base rolls, and every shipped ladder as §12 writes it),
   `content/spell_ladder.rs` (the grammar, `rung_at`, the refusals), `content/learning.rs` (the
   study rules in levels, the bands at 6 and 15), `world/zap_tests.rs` (a wand without `charges`,
-  with `caster_level`, or with `rungs` past its ladder refused; a zap at its `min` rung, Wand
-  mastery a rung more), `content/class.rs` (`casting`), `content/mod.rs` (spells in the
+  with `caster_level`, or with `rungs` past its ladder refused; a zap at the stack's own rung,
+  Wand mastery a rung more; the draw even over the range, once, the same for the same seed; a
+  non-wand drawing nothing and saving as before; a wand saved without a rung read as 0; the
+  rung shown with the type and not before), `content/class.rs` (`casting`), `content/mod.rs` (spells in the
   fingerprint), `content/experience.rs` (`mana_level` 60), `world/caster_level_tests.rs` (by
   class and level, no mana, talents and a ring, a creature, the dumps, mana to level 60),
   `world/cast_tests.rs` (an attack can miss and critical with nothing holding it, auto and area

@@ -22,7 +22,7 @@ use crate::render::console::Console;
 use warlock_core::color::Rgb;
 use warlock_core::content::Rarity;
 use warlock_core::equipment;
-use warlock_core::magic::describe::{self, Line, LineKind};
+use warlock_core::magic::describe::{Line, LineKind};
 use warlock_core::perception::PerceptionView;
 
 /// Panel width: the description's lines wrap within it.
@@ -66,7 +66,7 @@ impl DescribeScreen {
             title: capitalized(&view.lore().title(stack)),
             rarity: stack.rarity(),
             mark: equipment::mark(content, view.equipment(), item),
-            lines: describe::appraised(stack, view.lore(), view.appraisal()),
+            lines: view.describe_item(stack),
         }
     }
 

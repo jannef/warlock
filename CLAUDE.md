@@ -202,7 +202,7 @@ player sees or remembers as a digit over the view, `1` a few drops to `9` soaked
 (what the player
 carries, grouped by item class under `Class:` header lines as the screens group it, each stack by
 its position as action text names it with its numbers as the lists show them, `a long sword (+0
-hit, 1d8)`, and weighs, worn and wielded things marked, their burden
+hit, 1d8)`, a wand whose type is known with its rung, `(rung 2)`, and weighs, worn and wielded things marked, their burden
 and its thresholds),
 `equipment` (the player's slots), `stats`
 (the player's name, race, gender, and class, age, birth date, and sign with a lucky day's title,
@@ -231,7 +231,7 @@ glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana (and, with any, its caster level, `cl 8`), its resources (`resources rage
 11/20 (0)`, with progress), and
 Defence and Protection, its alignment (`alignment evil`; the player's score and band), its court (`court seelie`, a fey's), its weight, what it carries and of that wears and wields (magic items as they truly
-are, "(unidentified)" marked), what its magic items do to it (`magic strength +1`), its burden
+are, "(unidentified)" marked, a wand's rung `(rung 2)`), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
 turn), stat damage, and drained points (`drained St 2`), the player's nutrition, its npc id and talk counts, if any, and what it resists in percent (`resists fire 25`); then
@@ -268,7 +268,7 @@ special room the player stands in, if they know it), and per inventory stack (in
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, `magic` (affixes only once identified), and `numbers` (what it gives as the
 player knows it: `to_hit`, `damage`, `range`, `dv`, `pv`, each null where it has none; null for
-nothing). Replay
+nothing), and a wand's `wand_rung` once its type is known. Replay
 files are JSON
 `{game_version, scenario, seed, character, name, kit, steps:[{action, hash}]}` (`character` =
 `{race, gender, class, talents}`, `talents` the creation picks (left out while none), left out for a run without one; a replay without it starts as the

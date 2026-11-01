@@ -13,6 +13,7 @@ use crate::combat::SURE_HIT;
 use crate::content::{ActionKind, Content, Draught, ItemKind, ObjectDef, Rarity, weapon_noun};
 use crate::object::{Stack, format_weight};
 use crate::scroll_label::Lore;
+use crate::world::{Actor, CastBy};
 
 /// What a line of a description is, for how it is shown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -61,9 +62,20 @@ pub struct Appraisal {
 /// its line (`Pommel: small emerald, fine cut (worth 40 gold)`), as `appraisal` shows.
 /// An unidentified scroll is called by its label (spec §8 "Scrolls"), as `lore` names it.
 pub fn appraised(stack: &Stack, lore: Lore<'_>, appraisal: Appraisal) -> Vec<Line> {
+    appraised_for(stack, lore, appraisal, None)
+}
+
+/// [`appraised`] as `user` would use it: a wand whose type is known says what it does in their
+/// hands ([`wand_does`]).
+pub(crate) fn appraised_for(
+    stack: &Stack,
+    lore: Lore<'_>,
+    appraisal: Appraisal,
+    user: Option<&Actor>,
+) -> Vec<Line> {
     let content = lore.content;
     let mut out = lines_named(stack, content, lore.names(stack));
-    out.extend(wand_lines(stack, lore));
+    out.extend(wand_lines(stack, lore, user));
     out.extend(rod_lines(stack, lore));
     out.extend(potion_lines(stack, lore));
     // The first line says what it is; a line for each gem in it follows.
@@ -96,11 +108,12 @@ pub fn appraised(stack: &Stack, lore: Lore<'_>, appraisal: Appraisal) -> Vec<Lin
     out
 }
 
-/// What a wand holds, as the player knows it (spec §8 "Magic items": "Wands"): its spell in
-/// words once its type is known (`Holds Fireball (tier 3): ...`), else that it is unknown; its
-/// charges once it is identified (`7 charges left`), else that they are unknown. Nothing for
-/// anything else.
-fn wand_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
+/// What a wand holds, as the player knows it (spec §8 "Magic items": "Wands"): once its type is
+/// known, its spell and what it does in `user`'s hands at the wand's rung (`Holds Fireball: 4d6
+/// fire, radius 2`, [`wand_does`]), or the spell in words where it rolls nothing or nobody holds
+/// it (`Holds Sleep (level 7): ...`), else that it is unknown; its charges once it is identified
+/// (`7 charges left`), else that they are unknown. Nothing for anything else.
+fn wand_lines(stack: &Stack, lore: Lore<'_>, user: Option<&Actor>) -> Vec<Line> {
     let content = lore.content;
     let Some(wand) = content.object(stack.object).wand else {
         return Vec::new();
@@ -108,13 +121,14 @@ fn wand_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
     let mut out = Vec::new();
     if lore.is_identified(stack.object) {
         let spell = content.spell(wand.spell);
-        out.push(line(
-            LineKind::Stat,
-            format!(
+        let text = match user.and_then(|u| wand_does(stack, lore, u)) {
+            Some(does) => format!("Holds {}: {does}", spell.name),
+            None => format!(
                 "Holds {} (level {}): {}",
                 spell.name, spell.level, spell.description
             ),
-        ));
+        };
+        out.push(line(LineKind::Stat, text));
     } else {
         out.push(line(
             LineKind::Note,
@@ -131,6 +145,28 @@ fn wand_lines(stack: &Stack, lore: Lore<'_>) -> Vec<Line> {
         ),
     });
     out
+}
+
+/// What the wand `stack` does in `user`'s hands, once its type is known (the spell scaling design
+/// §7.4: its rung comes with its type): its roll at its rung plus their wand rungs, their other
+/// hooks applied, with the damage type or "healed", then a burst's radius as they cast it
+/// (`4d6 fire, radius 2`), as the abilities menu shows a spell's. `None` before its type is
+/// known, for anything else, and for a wand whose spell rolls nothing.
+pub(crate) fn wand_does(stack: &Stack, lore: Lore<'_>, user: &Actor) -> Option<String> {
+    let content = lore.content;
+    let wand = content.object(stack.object).wand?;
+    let rung = stack.known_wand_rung(lore)?;
+    let spell = content.spell(wand.spell);
+    let roll = user.spell_roll(content, spell, CastBy::Wand(rung))?;
+    let what = match spell.damage_type {
+        Some(kind) => content.damage_type(kind).name.clone(),
+        None => "healed".into(),
+    };
+    let mut text = format!("{roll} {what}");
+    if let Some(radius) = user.spell_reach(content, spell).radius {
+        text += &format!(", radius {radius}");
+    }
+    Some(text)
 }
 
 /// What a rod holds, as the player knows it (spec §8 "Magic items": "Rods"): its effect in words

@@ -1345,6 +1345,20 @@ impl<'a> PerceptionView<'a> {
         }
     }
 
+    /// `stack`'s description as the player knows it (spec §6 "Item description"):
+    /// [`crate::magic::describe::appraised`] with their eye for worth, a wand whose type they
+    /// know saying what it does in their hands ([`PerceptionView::wand_does`]).
+    pub fn describe_item(&self, stack: &Stack) -> Vec<crate::magic::describe::Line> {
+        crate::magic::describe::appraised_for(stack, self.lore, self.appraisal(), Some(self.player))
+    }
+
+    /// What the wand `stack` does in the player's hands once they know its type (its rung comes
+    /// with the type, the spell scaling design §7.4): `4d6 fire, radius 2`; `None` before, for
+    /// anything else, and for a wand whose spell rolls nothing.
+    pub fn wand_does(&self, stack: &Stack) -> Option<String> {
+        crate::magic::describe::wand_does(stack, self.lore, self.player)
+    }
+
     /// The item class `stack` shows as (spec §7 "Objects and materials"): its base item's, which
     /// the player knows of anything they see, identified or not.
     pub fn item_class(&self, stack: &Stack) -> ItemClassId {

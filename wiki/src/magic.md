@@ -221,10 +221,11 @@ so certain.
 
 A wand holds one spell and a number of charges. Ready it in the **[missile weapon slot](equipment.md#what-fits-where)** (it takes
 a [launcher](ranged.md#getting-ready)'s place, and a launcher takes its place) and use it as you would shoot: `t`, aim, and
-it casts its spell. Each cast uses a charge instead of your [mana](mana.md#how-much). A wand casts its spell at a
-**rung of its own** (for now the lowest of its kind's, the table's "Casts at"), never by your
-stats, so a warrior with no magic fires a wand as well as a wizard does; *[Wand mastery](talents.md#talent-wand-mastery)* takes it
-a rung up (below). The spell is otherwise its own: a ray [rolls to hit](combat.md#hitting) as any spell attack does (with
+it casts its spell. Each cast uses a charge instead of your [mana](mana.md#how-much), and the spell is cast at the
+**wand's own rung** of its ladder: a wand casts its spell at a rung of its own, rolled when it was
+made and shown once you know the wand (the table's "Strength" gives the rolls at the lowest and
+the highest rung a wand of the kind may have; each rung between is as likely). Your stats never
+change it, so a warrior with no magic fires a wand as well as a wizard does. The spell is otherwise its own: a ray [rolls to hit](combat.md#hitting) as any spell attack does (with
 your [Dexterity](stats.md#stat-dexterity)), magic missile never misses, an area catches whoever is in it, and how far it
 reaches is in the spell's row, with your [Willpower](stats.md#stat-willpower), as for your own casts.
 A cast that cannot go off (aimed at yourself, out of reach) uses no charge and takes no time;
@@ -238,8 +239,10 @@ Using one tells you what kind it is, and from then on every wand of that kind sh
 its **charges** stay unknown until you [identify](magic-items.md#unidentified-items) that wand (the [scroll of identify](scrolls.md#scroll-of-identify), or carrying
 it long enough as a *[Connoisseur](talents.md#talent-connoisseur)*). Wands lie in the dungeon and in general stores.
 
-*[Wand mastery](talents.md#talent-wand-mastery)* (Weaponcraft) makes every wand you use cast a rung higher, and [magic items](magic-items.md#suffixes)
-*of Wands* their rungs with it; on the ladder's last rung it stays there.
+*[Wand mastery](talents.md#talent-wand-mastery)* (Weaponcraft) takes every wand you use a rung up, and [magic items](magic-items.md#suffixes)
+*of Wands* their rungs with it, never past the ladder's last rung. Once you know a wand, its
+description and the aiming line say what it does in your hands ("Holds Fireball: 4d6 fire,
+radius 2"), your talents and items counted.
 
 {{#include generated/wands.md}}
 
