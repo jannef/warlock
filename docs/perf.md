@@ -103,6 +103,14 @@ difference of two best-of-five runs, whose noise is of the budget's size).
 The circles' CPU part is an `O(circles)` loop a frame plus one mesh of a quad each; the GPU part
 is one draw of fifty small quads. Within the budget at both sizes.
 
+After #786 (the per-cell masks, crowding, backdrop, halo, tidal lock, and pulse; 2026-11-01,
+same machine, runs alternated with main's): fifty circles cost 0.080 and 0.081 ms at 2560x1440
+against main's 0.056 and 0.053 (budget 0.2 ms). A single pair can mislead: one run of main
+printed -0.115 ms. The runes' masks and crowding are worked out on the CPU (`O(circles²)`, with
+far pairs skipped at once), so the shader reads one byte a rune. A first cut that masked every
+rune in the shader (twenty texel loads a pixel) and changed the material's uniform every frame
+cost 0.30 ms.
+
 Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
 submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the
 sleep granularity, not by rendering. All budgets are met with a large margin. Before lighting and
