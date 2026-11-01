@@ -663,7 +663,8 @@ pub struct Content {
     background: Option<Background>,
     /// Spell effects, in `data/effects.toml` order: presentation only.
     effects: Vec<EffectDef>,
-    /// Spell circles' runes (`data/runes.toml`): presentation only, not fingerprinted.
+    /// Spell circles' runes (`data/runes.toml`): a runed status sheds its school's light, so the
+    /// rows' statuses and schools are fingerprinted.
     runes: Runes,
     hunger: Option<HungerDef>,
     /// The corpse object of each creature type, by creature id (`None`: it leaves none).
@@ -1033,6 +1034,7 @@ impl Content {
         let path = "data/runes.toml";
         if let Some(text) = files.get_optional(path) {
             content.runes = runes::parse(path, text, &content)?;
+            runes::shed_lights(&mut content);
         }
         scroll::check_spells(&content).map_err(|m| ContentError::new("data/objects", m))?;
         talent::check_heirlooms(&content).map_err(|m| ContentError::new("data/talents", m))?;
@@ -2630,6 +2632,10 @@ impl Content {
                 .map(|a| a.id.as_str())
                 .collect(),
             self.statuses.iter().map(|s| s.id.as_str()).collect(),
+            // A runed status sheds its school's light (`data/runes.toml`).
+            (self.runes.rows().iter())
+                .flat_map(|r| [self.status(r.status).id.as_str(), r.school.id()])
+                .collect(),
             self.diseases.iter().map(|d| d.id.as_str()).collect(),
             self.traps.iter().map(|t| t.id.as_str()).collect(),
             self.damage_types.iter().map(|t| t.id.as_str()).collect(),
@@ -3589,8 +3595,8 @@ impl Content {
         &self.effects
     }
 
-    /// The spell circles' runes of `data/runes.toml` (none without the file). Presentation
-    /// only: no rule reads them.
+    /// The spell circles' runes of `data/runes.toml` (none without the file). The renderer draws
+    /// them; the one rule they make, a runed status's light, is in its `StatusDef::light`.
     pub fn runes(&self) -> &Runes {
         &self.runes
     }

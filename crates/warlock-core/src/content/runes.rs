@@ -1,17 +1,22 @@
 //! Spell circles' runes (`assets/data/runes.toml`, spec §4.8 "Spell circles"): the rune and the
 //! school of every buff's and hex's status, and each school's colour.
 //!
-//! **Presentation only**, like spell effects: the core loads and checks the file so all content
-//! lives in one place, but no rule reads it, and it is not in the content fingerprint. The
-//! renderer draws a circle about every actor the player sees with a runed status
+//! The renderer draws a circle about every actor the player sees with a runed status
 //! (`crates/warlock/src/ui/circles.rs`). Without the file there are no runes and no circles.
+//!
+//! **One rule** (spec §8 "Status effects", docs/design/buff-circles.md §8): a runed status sheds
+//! its school's light, `circle_<school>` in `data/lights.toml`, through the status light
+//! (`StatusDef::light`, filled by [`shed_lights`] for every runed status without a light of its
+//! own: `lit` keeps the Light spell's). So the school of a row decides a light, and the rows'
+//! statuses and schools are in the content fingerprint.
 //!
 //! Load-time checks: every row's status exists and has `seen` (a circle shows only what look mode
 //! may say); its rune is exactly one character, used by no other row; its school is one of the
-//! seven and has a colour; the status is a buff or hex spell's (which says whether its circle is
-//! a buff's or a hex's), and every buff or hex spell's status has a row.
+//! seven and has a colour and a `circle_<school>` light; the status is a buff or hex spell's
+//! (which says whether its circle is a buff's or a hex's), and every buff or hex spell's status
+//! has a row.
 
-use super::{Content, ContentError, School, SpellPurpose, StatusId};
+use super::{Content, ContentError, LightId, School, SpellPurpose, StatusId};
 use crate::color::Rgb;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -26,6 +31,8 @@ pub struct RuneDef {
     pub school: School,
     /// A hex's (a broken circle, outside a buff's), else a buff's.
     pub hex: bool,
+    /// The light its school sheds (`circle_<school>`).
+    pub light: LightId,
 }
 
 /// Every runed status and the schools' colours.
@@ -94,12 +101,20 @@ pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Runes, 
     let err = |m: String| ContentError::new(path, m);
     let file: File = toml::from_str(text).map_err(|e| err(e.to_string()))?;
     let mut colors: [Option<Rgb>; 7] = [None; 7];
+    let mut lights: [Option<LightId>; 7] = [None; 7];
     for row in &file.school {
         let slot = &mut colors[school_index(row.id)];
         if slot.is_some() {
             return Err(err(format!("school `{}` is listed twice", row.id.id())));
         }
         *slot = Some(row.color);
+        let light = format!("circle_{}", row.id.id());
+        lights[school_index(row.id)] = Some(content.light_id(&light).ok_or_else(|| {
+            err(format!(
+                "school `{}` has no light `{light}` (data/lights.toml)",
+                row.id.id()
+            ))
+        })?);
     }
     // Which statuses buff and hex spells lay, and of which kind.
     let mut spell_kind: BTreeMap<StatusId, (bool, &str)> = BTreeMap::new();
@@ -137,12 +152,12 @@ pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Runes, 
                 "status `{name}`: rune `{rune}` is already `{first}`'s"
             )));
         }
-        if colors[school_index(row.school)].is_none() {
+        let Some(light) = lights[school_index(row.school)] else {
             return Err(err(format!(
                 "status `{name}`: school `{}` has no colour (`[[school]]`)",
                 row.school.id()
             )));
-        }
+        };
         let &(hex, _) = spell_kind.get(&status).ok_or_else(|| {
             err(format!(
                 "status `{name}` has a rune but no buff or hex spell lays it: a circle is a \
@@ -157,6 +172,7 @@ pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Runes, 
             rune,
             school: row.school,
             hex,
+            light,
         });
     }
     if let Some((status, (_, spell))) =
@@ -171,6 +187,16 @@ pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Runes, 
         runes.colors[i] = color.unwrap_or(Rgb::WHITE);
     }
     Ok(runes)
+}
+
+/// The one rule of the runes: every runed status without a light of its own sheds its school's
+/// (`lit` keeps the Light spell's, brighter in every way). Constant whatever the severity, so a
+/// source's shadow mask stays cached while its bearer stands.
+pub(super) fn shed_lights(content: &mut Content) {
+    for row in content.runes.rows.clone() {
+        let def = &mut content.statuses[usize::from(row.status.0)];
+        def.light.get_or_insert(row.light);
+    }
 }
 
 #[cfg(test)]
@@ -252,6 +278,48 @@ mod tests {
             let err = load_with(&text).unwrap_err();
             assert!(err.message.contains(why), "{why}: {}", err.message);
         }
+    }
+
+    #[test]
+    fn a_runed_status_sheds_its_schools_light() {
+        let content = Content::builtin().unwrap();
+        let light = |s: &str| {
+            let id = content.status(content.status_id(s).unwrap()).light;
+            id.map(|l| content.light(l).id.as_str())
+        };
+        assert_eq!(light("blessed"), Some("circle_abjuration"));
+        assert_eq!(light("hasted"), Some("circle_transmutation"));
+        assert_eq!(light("drowsy"), Some("circle_enchantment"));
+        assert_eq!(light("weakened"), Some("circle_necromancy"));
+        assert_eq!(light("lit"), Some("spell_light"), "Light keeps its own");
+        assert_eq!(light("fortified"), None, "no rune, no light");
+        for row in content.runes().rows() {
+            let def = content.light(content.status(row.status).light.unwrap());
+            assert!(def.stability.is_stable(), "{}: steady", def.id);
+        }
+        // A school without its light is refused.
+        let mut files = ContentFiles::builtin();
+        let lights = files.get("data/lights.toml").unwrap().to_string();
+        files.insert(
+            "data/lights.toml",
+            &lights.replace("id = \"circle_necromancy\"", "id = \"circle_bones\""),
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert!(
+            err.message
+                .contains("school `necromancy` has no light `circle_necromancy`"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn a_rows_school_is_in_the_fingerprint() {
+        // A school decides a light, which decides what creatures see.
+        let a = Content::builtin().unwrap().fingerprint_for("showcase");
+        let blessed = "status = \"blessed\"\nrune = \"シ\"\nschool = \"abjuration\"";
+        let text = shipped().replace(blessed, &blessed.replace("abjuration", "restoration"));
+        assert_ne!(a, load_with(&text).unwrap().fingerprint_for("showcase"));
     }
 
     #[test]

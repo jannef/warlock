@@ -171,6 +171,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lurking are no buffs and never show. A buff's or hex's status carries a spell circle
     (§4.8), which a check at load keeps to statuses that show. Effects are part of the world
     state (saved, covered by the state hash).
+  - **The circle's light**: a runed status (`data/runes.toml`) without a `light` of its own sheds
+    its school's, `circle_<school>` (radius 1, steady, a strong UV share: just over normal eyes'
+    threshold on the bearer's cell, under it a cell away, bright to UV eyes; Lit keeps the Light
+    spell's brighter one). One light per actor, the widest status light, the first in status
+    order on a tie; never scaled by severity or time left; it ends with the status. Creature
+    sight reads it as the player's does (a buffed sneak lights their own cell, a hexed foe is
+    marked in the dark), and it adds to a light-blind player's glare. A disguised mimic sheds
+    no status light.
   - **Dev**: the action `afflict:ID` gives the player one more degree of a status (no game
     time; recorded in replays), for trying statuses out and for captures.
 - **Healing** (`world/status.rs`): a hurt actor's progress toward its next hit point back
