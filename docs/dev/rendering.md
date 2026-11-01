@@ -62,8 +62,11 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    has the `pyftsubset` command, and `every_rune_is_in_the_rune_font` checks it is current) into
    2× square slots with an empty one-texel border, one `R8Unorm` texture sampled linearly,
    rebuilt when the cell height changes. The `circles` switch turns the drawing off; reduced
-   effects leaves it on and only stills it (as `motion` off does). Slice 1 has no fades or glides
-   (a cut) and no light; check with `--scenario circles` captures (the golden `circles`).
+   effects leaves it on and only stills it (as `motion` off does). With `glow` on the school
+   colours are `post::emissive` by `ui/circles.rs::CIRCLE_GLOW` (0.15). The light about a circled
+   actor is core's (the status's `light`, docs/dev/status-effects.md), drawn by the lighting pass
+   like any carried light, its UV tint only for UV eyes; the circle switch never hides it. No
+   fades or glides yet (a cut); check with `--scenario circles` captures (the golden `circles`).
 3. **UI console**: the same console material over the whole window; unwritten cells are
    transparent.
 

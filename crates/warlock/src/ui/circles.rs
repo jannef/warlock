@@ -13,12 +13,16 @@ use crate::game::Game;
 use crate::render::circles::{self, CircleInstance, Circles, Rune, SchoolColors};
 use crate::render::grid::MapGrid;
 use crate::render::lighting::VisualLight;
+use crate::render::post::emissive;
 use crate::render::{Effects, VisualTime};
 use crate::settings::{Role, Settings};
 use bevy::prelude::*;
 use warlock_core::Pos;
 use warlock_core::content::{School, school_index};
 use warlock_core::world::{ActorId, ActorKind};
+
+/// How emissive a circle's ink is with glow on (`post::emissive`: × 1.15), the design's §8.4.
+const CIRCLE_GLOW: f32 = 0.15;
 
 /// The circled actors of the current turn: who, where they stand, and their circle; and
 /// whether the list is current (it is not after a frame with circles off).
@@ -45,12 +49,15 @@ pub(super) fn emit(
     out.cell_height = grid.cell.y;
     let view = game.world.perception();
     let content = view.content();
-    if settings.is_changed() || colors.0 == [Vec4::ZERO; 8] {
+    if settings.is_changed() || effects.is_changed() || colors.0 == [Vec4::ZERO; 8] {
         let runes = content.runes();
         let mut table = [Vec4::ONE; 8];
+        // The circle sheds its school's light (core: the status's `light`); with glow on its
+        // ink is a little emissive too.
+        let glow = if effects.glow { CIRCLE_GLOW } else { 0.0 };
         for school in School::ALL {
             let c = settings.palette.apply(runes.color(school), Role::Fg);
-            let linear = Color::srgb_u8(c.r, c.g, c.b).to_linear();
+            let linear = emissive(Color::srgb_u8(c.r, c.g, c.b).to_linear(), glow);
             table[school_index(school)] = Vec4::new(linear.red, linear.green, linear.blue, 1.0);
         }
         colors.set_if_neq(SchoolColors(table));
