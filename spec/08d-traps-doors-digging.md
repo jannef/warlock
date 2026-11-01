@@ -149,8 +149,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     owner's rule): time and the risk are the price. Refused, with no time and no draw: without
     the skill ("You do not know how to disarm traps."), and where the player knows of no trap
     ("You know of no trap there.": a hidden trap is refused as an empty cell is, so trying
-    gives nothing away). Creatures do not disarm. The Tinker talent (the craftsperson's level
-    32) and Tinkerer (the gnomes') give it to those not trained in the skill; the thief is
+    gives nothing away). Creatures do not disarm. Tinkerer (the gnomes' talent) gives it to
+    those not trained in the skill; the thief is
     trained in Disable device from level 1 (`2d6+10`, known for; #684 took the Trapfinding
     class ability that gave it).
 - **Doors** (`warlock-core/src/door.rs`, the rules; `world/door.rs`, applying them; M19, #130):

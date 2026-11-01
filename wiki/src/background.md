@@ -89,15 +89,6 @@ each sentence true to its kind.
 
 Only a character you make is told a story; a run that is resumed keeps the story it had.
 
-## Talents
-
-One [talent](talents.md) touches your story: [Favoured child](talents.md#talent-favoured-child), a
-[heritage](talents.md#heritage-only-at-character-creation) talent, offered only at character
-creation, since the story is told as the run begins and nothing later changes it. It doubles the
-odds of the luckier kinds (the "With Favoured child" column above).
-
-{{#include generated/background-talents.md}}
-
 ## Every sentence
 
 Every sentence of every chapter, with what it asks for, what it gives, and what it leaves for

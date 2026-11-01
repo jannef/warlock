@@ -108,10 +108,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     anyone; Presence 20). Bad luck alone (a hidden trap, a blow, a disease or drain check lost)
     takes nothing. **Talents** (#726; one `TalentMods` field each, one read): Late bloomer (level
     20, `ramp_ease` 1: `over` counted one fewer, the first point past the potential at the base)
-    through `StatTraining::eased_price` in `settle`;
-    the barbarian's Hard living
-    (level 18: `no_deed` hungry_dawn, starved, vomited, fainted) and the monk's Discipline
-    (level 12: `use_marks` endured and prayed ×2, `no_deed` fainted). A deed that takes a pile from out of the drop's play (`quarter × |m| < L`, or
+    through `StatTraining::eased_price` in `settle` (#787 cut the barbarian's Hard living and
+    the monk's Discipline, `no_deed` and `use_marks` with them). A deed that takes a pile from out of the drop's play (`quarter × |m| < L`, or
     `m ≥ 0`) to within it warns at once in words ("You feel your strength wasting.", "Your hands
     feel less sure.", "You feel your health failing.", "Your mind feels dull.", "Your will feels
     brittle.", "You feel small and unregarded."), so the warning always precedes a drop. A rise

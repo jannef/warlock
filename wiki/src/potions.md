@@ -79,11 +79,5 @@ an **alchemist** sells potions only, always potions of healing first, and buys t
 
 - **[Thrifty drinker](talents.md#talent-thrifty-drinker)** (Delver): one potion in four is not used up, an elixir too. Items that
   keep potions add their percent to the talent's chance, up to 50 % in all.
-- **[Quick study of the body](talents.md#talent-quick-study-of-the-body)** (Scholar): a potion's or an elixir's training marks are doubled.
 - **[Lasting draughts](talents.md#talent-lasting-draughts)** (Vigour, needs [Toughness](stats.md#stat-toughness) 13): boost and vision potions last half again
   as long (15 minutes a degree for a boost, 45 minutes for a vision potion).
-- **[Cauldron-wise](talents.md#talent-cauldron-wise)** (the [witch](classes.md#witch)'s, at [level](experience.md#levels) 12): healing potions heal a fifth more (rounded
-  down), and boosts last a fifth longer (12 minutes a degree); with Lasting draughts, 17
-  minutes a degree.
-- **[Nose for draughts](talents.md#talent-nose-for-draughts)** (Scholar): an unknown potion you pick up tells you its family by its
-  smell, never its kind: "The fizzy red potion smells of honey and iron: healing of some kind."

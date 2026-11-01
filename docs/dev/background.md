@@ -116,9 +116,7 @@ count in a story of the Ascmearc's eight chapters, its worth band, whether it ma
 chapters of a story in the Ascmearc (never the showcase's road): every line, commonest first
 then by weight, with its kind (and `only`), weight, conditions in words, text (slots as
 written), effects exactly with the line's worth, and the tags and words it sets. The page is
-`wiki/src/background.md`. With the talents (B4, #705) `background-tiers.md` gained the "With
-Favoured child" column (`Tiers::of` counted over every roll at 100 + the talent's `story_luck`)
-and `background-talents.md` lists the `background` system's talents with their rules.
+`wiki/src/background.md`.
 
 ## The roll
 
@@ -126,10 +124,9 @@ and `background-talents.md` lists the `background` system's talents with their r
 `take_creation`): the character (spec, sign, birth date), the age at the start date, a lucky day,
 the starting band (before the story's nudges), the trained skills, the talents held (creation
 picks, Random ones too, the sign's gifts, the race's and the class's level 1 grants), the weapon
-skills with a rank (what `prefer_trained` prefers), the campaign, and `luck` (100 +
-`TalentMods::story_luck`: 200 with Favoured child, B4). `background::tell` then, per chapter in order, from its own stream:
+skills with a rank (what `prefer_trained` prefers), and the campaign. `background::tell` then, per chapter in order, from its own stream:
 
-1. the tier: `rng.below(1000)` against `Tiers::of(roll, luck)`;
+1. the tier: `rng.below(1000)` against `Tiers::of(roll)`;
 2. the pool: if a line with `only` fits, the fitting `only` lines (they are common, so they
    force the chapter whatever the tier: Family wealth's `old_money`, Father's sword's
    `fathers_blade_told`); else the lines of the tier drawn that fit, falling a tier at a time to
@@ -171,20 +168,11 @@ character screen's sign list leaves a story flaw out. A story boon is not `OwnTa
 Then hit points and mana to their maxima. `start_run` sets mana and the perception after it, as
 before.
 
-## The talents (B4, #705)
+## Talents
 
-The `background` system (`data/talents.toml`, after `experience`) has one talent, one read,
-and adds no saved state and no action (Hard-won and Storyteller were cut in #774):
-
-| Talent | Rule | Read |
-|---|---|---|
-| Favoured child (`heritage`, creation only) | `{ kind = "story_luck", value = 100 }`: the uncommon, rare, and fateful odds doubled (24 %, 6 %, 1 % a chapter), the common's fall to match | `World::tell_background`: the witness's `luck` = 100 + `story_luck`; `background::tell` scales `[tiers]` by it before each chapter's first draw. The streams and draws are the same, so a story without the talent is told as before |
-
-Creation-only through `Need::Creation`, as the heritage talents: offered at the creation picks
-(and `--talents favoured_child,…`), refused at a level in words. Random creation picks draw among
-the offered talents, so adding them moved some kitted runs' picks (the screen snapshots
-`chargen-talents-*`, `kit-*`, `talents-screen*`, `level-up-*`, `abilities-menu-*`,
-`character-*`, and the Edwin sample's seed). Tests: `world/background_talent_tests.rs`.
+None. The `background` system (B4, #705) had Favoured child, a heritage talent that doubled the
+luckier tiers' odds (`story_luck`); #787 cut it and dropped the system (Hard-won and Storyteller
+had gone in #774). A save naming it loads without it (`Talents::drop_unknown`).
 
 ## Who, and what is saved
 

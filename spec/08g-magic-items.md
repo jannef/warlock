@@ -476,10 +476,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Talents** (system `potions`): Thrifty drinker (Delver, from level 6): a potion is not used
     up one time in four (one gameplay draw a drink, none while the chance is 0); worn
     `potion_kept` affixes add their percent to it, the sum at most 50 (a talent's own chance
-    above 50 stands); Nose for draughts
-    (Scholar, Intelligence 12): an unknown potion picked up tells its kind by its smell, never
-    its type ("The fizzy red potion smells of herbs: a cure of some kind."); Lasting draughts
-    (Vigour, Toughness 13; #567): boost and vision statuses last half again
-    (`status_lasts`, each degree half again as long to ease); the witch's class ability
-    Cauldron-wise (at 12): a healing potion heals a fifth more (`potion_heals`) and the boosts
-    last a fifth longer.
+    above 50 stands); Lasting draughts (Vigour, Toughness 13; #567): boost and vision statuses
+    last half again (`status_lasts`, each degree half again as long to ease). #787 cut Nose for
+    draughts and the witch's Cauldron-wise.
