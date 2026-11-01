@@ -569,7 +569,7 @@ fn vanishing_act_a_sneak_attack_that_kills_leaves_the_thief_light_footed() {
 }
 
 #[test]
-fn uncanny_dodge_song_of_rest_and_jack_of_all_trades() {
+fn uncanny_dodge_fast_healer_and_jack_of_all_trades() {
     let mut t = world("thief");
     let content = t.content().clone();
     // The bonus picks of Finesse may have raised it too.
@@ -581,15 +581,16 @@ fn uncanny_dodge_song_of_rest_and_jack_of_all_trades() {
         before + 2
     );
     let mut b = world("bard");
-    // Song of rest: resting's pace half again (`healing_rate` reads it, as Fast healer's).
+    // Fast healer, the Vigour talent the table gives (Song of rest before #790): resting's pace
+    // half again (`healing_rate` reads it).
     reach(&mut b, 12);
     let after = b.state.player().talent_mods(&content).resting_percent;
     // Measured against a twin without it (the level's own pick may move the pace too).
     let mut twin = b.state().clone();
     let player = twin.player;
-    (twin.actors.get_mut(&player).expect("player").talents).forget("song_of_rest");
+    (twin.actors.get_mut(&player).expect("player").talents).forget("fast_healer");
     let before = (twin.actors[&player].talent_mods(&content)).resting_percent;
-    assert_eq!(after, before + 50, "Song of rest");
+    assert_eq!(after, before + 50, "Fast healer");
     // Jack of all trades: every trained skill's benefits read 5 higher.
     let id = content.skill_id("tumble").expect("tumble");
     let effect = content

@@ -91,7 +91,7 @@ fn protection(w: &World) -> i32 {
 }
 
 #[test]
-fn weapon_focus_and_its_kind_sharpen_only_the_chosen_skill() {
+fn weapon_focus_and_its_kind_sharpen_only_the_chosen_skill_rank_by_rank() {
     let mut w = world();
     arm(&mut w, &["long_sword"]);
     let content = w.content().clone();
@@ -100,7 +100,7 @@ fn weapon_focus_and_its_kind_sharpen_only_the_chosen_skill() {
     give(&mut w, "weapon_focus", Some("axes"));
     assert_eq!(melee(&w).to_hit, plain.to_hit, "another skill's focus");
     give(&mut w, "weapon_focus", Some("long_blades"));
-    give(&mut w, "weapon_specialization", Some("long_blades"));
+    give(&mut w, "weapon_focus", Some("long_blades"));
     give(&mut w, "improved_critical", Some("long_blades"));
     let sharp = melee(&w);
     assert_eq!(sharp.to_hit, plain.to_hit + 1);
@@ -303,14 +303,17 @@ fn prerequisites_of_the_trees_are_said_in_words() {
         last(&w),
         "You cannot take Deadly aim: you need Dexterity 13 and a missile weapon skill 3."
     );
-    run(&mut w, "talent:weapon_specialization:long_blades");
-    assert!(
-        last(&w).starts_with(
-            "You cannot take Weapon specialization (long blades): you need Weapon focus"
-        ),
-        "{}",
-        last(&w)
+    // Weapon focus's second rank (Weapon specialization before #790) asks for more of the
+    // chosen skill than its first.
+    w.player_mut()
+        .talents
+        .take("weapon_focus", Some("long_blades"));
+    run(&mut w, "talent:weapon_focus:long_blades");
+    assert_eq!(
+        last(&w),
+        "You cannot take Weapon focus (long blades): you need the chosen one at 5.",
     );
+    w.player_mut().talents.forget("weapon_focus");
     // A launcher at 3 meets "a missile weapon skill 3".
     w.player_mut().stats = Stats::new(PerStat::splat(13), PerStat::splat(13));
     set_rank(&mut w, "slings", 3);

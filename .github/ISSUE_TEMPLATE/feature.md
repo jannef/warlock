@@ -37,6 +37,10 @@ Capstones are not economy, quests, or XP: from class level 40 on, a class abilit
 the character can do in a fight or a dungeon (not gold, favour, quest rewards, or XP alone, nor
 only outside the dungeon); no XP or quest-reward effect at or above level 30; a quest-reward
 effect is judged by its total over the campaign's fixed pool, not by its percent.
+A class table names the pickable's id, never a clone of it (two talents with the same effects
+fail the load), and a talent whose one talent prerequisite shares an effect kind with it is
+that talent's next rank, not a talent of its own (also a load check; deliberate pairs are
+listed in `alike`, assets/data/talents.toml).
 Or none: a sub-feature (a room effect, a creature family's gimmick, a chest kind, an info
 readout) extends its parent system: name the tag and the talents that already touch it. Or it is
 presentation only (no rule reads it, as blood stains). -->

@@ -50,7 +50,7 @@ A sentence may give or take:
 - **a talent**, at its first [rank](talents.md#ranks-choices-prerequisites), for life, whatever
   it would ask of you (the flux's [Hardy](talents.md#talent-hardy)): never one you hold already,
   so a sentence that would give it is not told to you; a class whose table names it later gives
-  nothing in its place. The Talents page marks it "(story)";
+  you a [talent pick](talents.md) in its place at that level. The Talents page marks it "(story)";
 - **a flaw**: one of the [birth signs'](horoscope.md#what-a-sign-does) flaws, for life, likewise; marked
   "(story, flaw)".
 

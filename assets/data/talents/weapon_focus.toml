@@ -1,9 +1,18 @@
+# Weapon specialization is its second rank (#790: a chain of one effect kind is one talent's
+# ranks). Each rank is held for the weapon skill it was taken for.
 [[talent]]
 id = "weapon_focus"
 name = "Weapon focus"
 tree = "weaponcraft"
 choice = "weapon_skill"
-description = "You have drilled with one kind of weapon until it finds its mark more often."
+ranks = 2
+description = "You have drilled with one kind of weapon until it finds its mark more often. At the second rank it strikes harder in your hands: 2 more damage with it."
+systems = ["combat", "weapon_skills"]
+
+[[talent.rank]]
 needs = { chosen = 2 }
 effects = [{ kind = "weapon", to_hit = 1 }]
-systems = ["combat", "weapon_skills"]
+
+[[talent.rank]]
+needs = { chosen = 5 }
+effects = [{ kind = "weapon", damage = 2 }]

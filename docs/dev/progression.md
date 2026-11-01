@@ -10,6 +10,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | Where | What |
 |---|---|
 | `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `ranks: Vec<Rank>`, `needs` for every rank plus each rank's own, `effects` per rank held plus each rank's own, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400), and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
+| `content/talent_alike.rs` | The identical-effects check (#790, "Coverage policy"): no two talents alike at every rank the shorter has, no talent chained to one sharing an effect kind, but for `alike`'s pairs in `data/talents.toml`. |
 | `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, rank, choice }>` on `Actor::talents`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content)` / `Actor::talent_mods`, a `Cow`: borrowed and shared for an actor without talents, which most creatures are, so the many reads a turn copy nothing), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words), `openings`, `offers` (the pick list, tree by tree). |
 | `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
 | `world/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/talent.rs`) is `take_talent` without its words. |
@@ -237,10 +238,11 @@ actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radianc
 `quivering_palm`) are effects that `TalentEffect::active` maps to a `ClassActive`;
 `Content::class_active` finds the talent that has one, whose name and description the abilities
 menu shows; a holy gift's talent may name the bands it works for (`alignment`; outside them it
-is used and does nothing, `docs/dev/alignment.md`). Shared entries are a
-talent each (`divine_health`, `purity_of_body`); the monk's Deflect missiles is the ordinary
-talent, handed out. A save holding a talent the content no longer has (the thief's three removed
-by #684, the 27 cut by #774, the weak ones #787 cut and the three #788 merged into Pious) loads
+is used and does nothing, `docs/dev/alignment.md`). A shared entry is one talent the tables
+name alike (`purity_of_body`, the paladin's, the priest's, and the monk's: #790 cut its copy
+`divine_health`); the monk's Deflect missiles is the ordinary talent, handed out. A save holding
+a talent the content no longer has (the thief's three removed by #684, the 27 cut by #774, the
+weak ones #787 cut and the three #788 merged into Pious, #790's clones and chains) loads
 without it: `Talents::drop_unknown` in `World::from_state`,
 each said in `World::retiered` (logged on load; `talent_tests.rs`
 `a_save_naming_a_cut_talent_loads_without_it`). Keys: the actives have none of their own (as Second wind; the abilities menu
@@ -259,7 +261,7 @@ itself is `data/spells/ID.toml`, cast by the one cast path
 listed there). They cost mana (`Actor::spell_cost`, `World::spend_mana`) and never a cooldown;
 `Unavailable::NoMana` greys them out. A refusal (no cell, out of range, no hostile seen to
 hex, no sky, nothing to cure, not hurt) spends neither time nor mana. Shared entries: the
-priest names the paladin's `smite` (so it asks Good) and `divine_health`, the druid the
+priest names the paladin's `smite` (so it asks Good) and `purity_of_body`, the druid the
 ranger's `woodland_stride` (#244 writes the same file). The wizard's level 12 handed out the
 Scholar `spell_recall` until #775 merged it into Scroll savant's second rank, which a wizard
 picks from the Scholar tree.
@@ -324,6 +326,27 @@ cut them). The owner: "Modify the talent rule to prevent this type of talent cre
   (the Ascmearc's 12 stages pay about 2,200 gold and 3,700 XP, none repeatable): a
   `quest_*_percent` effect is judged by its total over a campaign (+25 % is about 550 gold),
   never by its percent, and a talent whose total is negligible is removed.
+- **No clones** (#776's rule 3, #790). A class table names the pickable's id, never a talent
+  that does the same under another name: the bard's Fast healer (Song of rest until #790), the
+  druid's Beast-friend (Wild empathy), and one Purity of body for the paladin, priest, and monk
+  (Divine health was its copy). A pickable a table gives that the character already holds
+  brings a talent pick in its place at that level (above, "Class tables").
+- **One effect, two ids, chained, is a rank** (#776's rule 4, #790). A talent whose one talent
+  prerequisite shares an effect kind with it is that talent's next rank: Weapon focus's second
+  rank was Weapon specialization, Cleave's Great cleave, Mighty kick's Breaker.
+- **Both are load checks** (`content/talent_alike.rs`, run at the end of `talent::parse`): two
+  talents that do the same at every rank the shorter has (effects compared as sets per rank,
+  `effects_at`; the same choice kind; a talent without effects never matches), or a talent
+  needing exactly one other talent with an effect kind (`TalentEffect`'s variant) in common,
+  fail the load, but for the pairs `alike` lists in `data/talents.toml`; a listed pair that is
+  neither is an error too, so the list stays honest. The list: Cleave and Cleaving strike (the
+  warrior's; two cleave sources make a great cleave, `TalentMods::add`), Dark adaptation and Owl
+  eyes (the same two cells of darkvision for darkvision eyes and, from level 9, for low-light
+  eyes: no one can take both, and one talent would need a prerequisite of either eyes, which
+  `Needs` cannot say), and the birth signs' gifts that match a pickable or each other (Alert and
+  Unblinking, Clear mind and Tidal, Quick's first rank and Fleet-footed, Orcish hide and Stone
+  hide, the flaws Grim company and Little loved): the horoscope is kept whole (the owner,
+  #776). Tests: `talent_alike::tests`.
 - **Tags match hooks.** A talent names a system in its `systems` only if its effect reads that
   system's rules. A general bonus is tagged by the system it is for, not by every rule that
   happens to read it (Iron will's +2 to Willpower checks is `diseases`, not also `searching` for
@@ -387,6 +410,24 @@ ground too), and no class ability carries an XP or quest effect. The two talents
 below 30: the half-elf's Diplomat (`quest_gold_percent` 25, about 550 gold over the Ascmearc,
 mostly paid at low levels where it buys a chain mail or two, beside favour +10 %: kept), and the
 Sphinx sign's Riddler's mind (`xp_percent` 10, the horoscope, which the owner keeps whole).
+
+**The rules 3-4 audit** (#790) compared every talent's effects, rank by rank, with every
+other's (the clones), and every talent needing one talent with what that one does (the chains),
+then read the near misses (the same effect kinds at other values). Clones: Song of rest (bard
+12) = Fast healer, Wild empathy (druid 1) = Beast-friend, both cut and the tables naming the
+pickables; Divine health (paladin 18, priest 32) = Purity of body (monk 32), both class
+abilities, so one id stays and the three tables name it. Chains: Weapon specialization → Weapon
+focus, Great cleave → Cleave, Breaker → Mighty kick, each now the second rank (with the old
+rank's needs and effects; Mighty kick's rank 1 stays the Might tree's free talent). No
+class-table level was emptied. Kept: the stronger class versions of a pickable's effect
+(Improved sneak attack's 2d6 beside Ambusher's 1d6, Arcane lore's hourly identification beside
+Lore's daily, Arcane mastery's +100 % mana regeneration beside Clear mind's +25 %, Diamond
+soul's Deflection +2 beside Deflection's +1, Saint's healing +100 % beside Healthy's +25 %,
+Uncanny dodge's burden Dexterity 2 beside Nimble's 1, Bulwark's plain Protection +2), Fast
+movement and Fleet (their conditions differ: unburdened, no shield), Miracle and Hag's bargain
+(the bargain costs Presence), Schooled and Stylist (one `weapon` effect for a school and for a
+style), and the pairs `alike` lists (above). The chains left (Fast healer after Healthy, Porter
+after Pack mule, Meditation after Clear mind, and the others) add an effect of another kind.
 
 ## Creation picks
 
@@ -459,8 +500,12 @@ warrior, barbarian, paladin, and monk (I1) have theirs, in `world/class_active_t
 ranger, thief, and bard (I2, #244) theirs, in `world/class_rogue_tests.rs` (the kill tally and
 Favoured prey, every passive, Volley and Inspire, the abilities the thief's skills give, Lurk,
 Low blow, and Vanishing act (#684), and a save holding a talent the content dropped); the priest, druid, wizard, and witch (I3, #245) theirs, in `world/caster_tests.rs`. The I2 tables hand out two ordinary talents (Evasion,
-Lore), so a creation pick or a bonus pick may already have taken one; the table then gives
-nothing in its place (as the monk's Deflect missiles). The showcase's and the arena's own
+Lore; and since #790 the bard's Fast healer and the druid's Beast-friend), so a creation pick
+or a bonus pick may already have taken one; the table then gives a talent pick in its place at
+that level instead (as for the monk's Deflect missiles; `class::held_already`, counted into the
+level's `Due` by `level_up`, with the news "You know Second wind already: choose a talent in its
+place."; not on a restore, where a grown table only gives what is missing).
+`class_tests.rs::a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place`. The showcase's and the arena's own
 characters are thieves, the forest's and the world's rangers: their runs start with Sneak attack
 or Favoured prey. `world/class_tests.rs` covers the grants, bonus picks,
 restores, replays, and every hook; `content::class::tests` the table checks.
@@ -533,5 +578,5 @@ a background story's `talent` and `flaw` lines (#707, `world/background.rs`;
 `docs/dev/background.md`). `stars::grant` puts them back on every restore beside the race's and
 the sign's grants. `OwnTalent::story` (a boon a told line names, `background::gave`) marks the
 story's "(story)" / "(story, flaw)"; `OwnTalent::boon` is the altar's (a boon the story did not
-give). A class table naming a held boon later gives nothing in its place (`class::grant`
-skips what is held).
+give). A class table naming a held boon later gives a talent pick in its place
+(`class::grant` skips what is held, `class::held_already` counts it into the level's `Due`).

@@ -9,6 +9,26 @@
 # The most ranks a talent may have ("Hardy 2/3").
 max_ranks = 3
 
+# The identical-effects check (#790; docs/dev/progression.md "Coverage policy", the #776
+# review's rules 3 and 4): the game refuses to load when two talents do the same at every rank
+# the shorter has (a class table names the pickable's id, never a clone), or when a talent's one
+# talent prerequisite shares an effect kind with it (that is a rank of it, not a talent of its
+# own). The pairs here are kept on purpose; a pair that is no longer alike is an error too.
+alike = [
+    # Two cleave sources together cleave on and on (`TalentMods`: the warrior's Cleaving strike
+    # beside the pickable Cleave is a great cleave).
+    ["cleave", "cleaving_strike"],
+    # The same two cells of darkvision for two kinds of eyes, each gated its own way: one is
+    # for darkvision eyes, the other gives low-light eyes some from level 9. No one can take both.
+    ["dark_adaptation", "owl_eyes"],
+    # The birth signs' gifts and flaws: the horoscope is kept whole (the owner, #776).
+    ["alert", "unblinking"],
+    ["clear_mind", "tidal"],
+    ["fleet_footed", "quick"],
+    ["grim_company", "little_loved"],
+    ["orcish_hide", "stone_hide"],
+]
+
 # The coverage bar (spec §8 "Talents"; docs/dev/progression.md "Coverage policy", #773): the
 # game refuses to load when a system below that is not `pending` has fewer than min_talents
 # talents or min_class class abilities, or a tree that is not `pending` (nor `no_free`) has fewer

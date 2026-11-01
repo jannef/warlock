@@ -224,7 +224,19 @@ fn a_save_naming_a_cut_talent_loads_without_it() {
     w.player_mut().talents.take("gifted", Some("strength"));
     w.player_mut().talents.take("bellows", None);
     // #787 and #788's: one cut, one merged into Pious, one from creation; #789's capstone.
-    for id in ["silver_tongue", "penitent", "favoured_child", "insured"] {
+    // #790's: three chains, now ranks, and three clones, now the pickables' ids.
+    let merged = [
+        "great_cleave",
+        "weapon_specialization",
+        "breaker",
+        "song_of_rest",
+        "wild_empathy",
+        "divine_health",
+    ];
+    for id in ["silver_tongue", "penitent", "favoured_child", "insured"]
+        .into_iter()
+        .chain(merged)
+    {
         w.player_mut().talents.take(id, None);
     }
     let back = World::from_state(w.content().clone(), w.state().clone()).expect("it loads");
@@ -243,7 +255,10 @@ fn a_save_naming_a_cut_talent_loads_without_it() {
         "penitent",
         "favoured_child",
         "insured",
-    ] {
+    ]
+    .into_iter()
+    .chain(merged)
+    {
         assert!(
             back.retiered()
                 .iter()
@@ -487,7 +502,7 @@ id = "test_cleave"
 name = "Test cleave"
 tree = "might"
 description = "A blow that kills gives you another."
-effects = [{ kind = "free_blow", trigger = "cleave" }]
+effects = [{ kind = "free_blow", trigger = "cleave" }, { kind = "healing_percent", value = 1 }]
 systems = ["free_blows"]
 "#,
     );

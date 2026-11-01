@@ -43,7 +43,7 @@ from those you don't, so you can plan a build there.
 
 **Class abilities** are talents too, of their own tree: your [class](classes.md) gives them as its levels
 come (see [Classes](classes.md#levels)), you never pick them, and one your class gives that you
-already learned is not given again. Some are talents anyone may pick (the [aristocrat](classes.md#aristocrat)'s
+already learned is not given again: that level gives you a talent pick in its place. Some are talents anyone may pick (the [aristocrat](classes.md#aristocrat)'s
 [Riposte](talents.md#talent-riposte), the [commoner](classes.md#commoner)'s [Second wind](talents.md#talent-second-wind)).
 
 ## Ranks, choices, prerequisites

@@ -28,9 +28,10 @@ kit = [
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["wayfarer", "vigour"] }
 # The level table (spec §8 "Class abilities").
 # Call lightning and Flame and frost are spells paid in mana (the placeholders until the
-# spell system); Woodland stride is the ranger's too.
+# spell system); Woodland stride is the ranger's too. Beast-friend is the Wayfarer talent,
+# given (#790: a table names the pickable, never a clone).
 abilities = [
-    { level = 1, talent = "wild_empathy" },
+    { level = 1, talent = "beast_friend" },
     { level = 1, talent = "spark" },
     { level = 3, talent = "barkskin" },
     { level = 6, talent = "woodland_stride" },

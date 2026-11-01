@@ -220,7 +220,7 @@ picks (Hardy's Toughness), who has one (and unchanged hashes), a replay and a sa
 edited text reaches a save, a lost line is skipped and logged; B5's: a story talent at rank 1
 with its hit points, through a save and a restore, "(story)"; a held talent (picked, or given
 by an earlier line) never given again; Evasion from a story and the thief's table at 18
-(nothing in its place); a flaw "(story, flaw)" (a sign's own flaw is skipped: the warrior of
+(a talent pick in its place, #790); a flaw "(story, flaw)" (a sign's own flaw is skipped: the warrior of
 seed 7 was born Frail); `the_fateful_lines_at_pinned_seeds` (a human warrior on Beorggeat:
 seed 107 the flux, 398 the named blade). The screen snapshot `talents-screen-story` is seed
 107's Talents page. `kit::tests::

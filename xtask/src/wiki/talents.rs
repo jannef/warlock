@@ -837,7 +837,7 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             match trigger {
                 T::Cleave => {
                     "free blow: a melee blow that kills gives one at another hostile beside you \
-                     (Cleave and Cleaving strike together: on and on, as Great cleave)"
+                     (Cleave and Cleaving strike together: on and on, as Cleave's second rank)"
                 }
                 T::GreatCleave => {
                     "free blow: cleaving goes on while the blows kill (once at each hostile beside \

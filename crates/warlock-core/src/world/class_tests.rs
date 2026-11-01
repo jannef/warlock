@@ -112,13 +112,39 @@ fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
 }
 
 #[test]
-fn a_talent_already_picked_is_not_given_again() {
+fn a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place() {
     let mut w = world("commoner");
     give(&mut w, "second_wind");
-    reach(&mut w, 32);
+    // Level 32 brings no pick of its own (picks come every third level and at the bonus
+    // levels): only the one in Second wind's place (#790).
+    arrive(&mut w, 32);
     assert_eq!(w.state.player().talents.rank_of("second_wind", None), 1);
     assert!(!said(&w).contains(&"You gain Second wind.".to_string()));
+    assert!(
+        said(&w).contains(&"You know Second wind already: choose a talent in its place.".into()),
+        "{:?}",
+        said(&w)
+    );
+    assert_eq!(w.due().map(|d| (d.level, d.talents)), Some((32, 1)));
     assert!(holds(&w, "big_hands"), "the others still come");
+    // Without the pick made early, the level brings nothing to choose.
+    let mut w = world("commoner");
+    arrive(&mut w, 32);
+    assert!(holds(&w, "second_wind"));
+    assert_eq!(w.due().map(|d| d.level), None);
+}
+
+/// A save from before a table named the pickable (#790: the druid's Wild empathy, now
+/// Beast-friend) loads with the clone dropped and the pickable given in its place.
+#[test]
+fn a_save_holding_a_cut_clone_is_given_the_pickable() {
+    let mut w = world("druid");
+    assert!(holds(&w, "beast_friend"));
+    w.player_mut().talents.forget("beast_friend");
+    give(&mut w, "wild_empathy");
+    let back = World::from_state(w.content().clone(), w.state().clone()).expect("it loads");
+    assert!(holds(&back, "beast_friend") && !holds(&back, "wild_empathy"));
+    assert!(mods(&back).beast_friend);
 }
 
 #[test]

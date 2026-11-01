@@ -157,7 +157,7 @@ down to its onset, then each progression; known by name once `progressions > 0`)
 `take` says when it would not have; `mend` seconds) is read by `Actor::effective_stats` with the
 status penalties, so every rule (and max HP through Toughness) sees it. `world/disease.rs`:
 `World::expose(actor, disease, by)` (**the one way to expose**: a check, then `infect`; never
-for Divine health nor for a type whose `immune` holds the diseases' status, nothing rolled),
+for Purity of body nor for a type whose `immune` holds the diseases' status, nothing rolled),
 `World::infect` (rolls the incubation; the dev `infect:ID`), `World::expose_to(actor, source)`
 (eating a rotten corpse calls `expose_to(player, "rotten_food")`, `world/eat.rs`),
 `World::wade` (called from `player_moves` with the step's seconds: one draw out of 360 000

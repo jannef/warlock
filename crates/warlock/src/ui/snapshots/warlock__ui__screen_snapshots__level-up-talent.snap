@@ -10,14 +10,14 @@ expression: "render(case, content.clone())"
             │   c  Healthy                          Your hit points come back a quart… │
             │ Might                                                                    │
             │   d  Brawn                       1/2  Your blows up close hit harder: 1… │
-            │   e  Mighty kick                      Your kicks land like hammers: the… │
+            │   e  Mighty kick                 1/2  Your kicks land like hammers: the… │
             │ Finesse                                                                  │
             │   f  Opportunist                      A foe that turns from you pays fo… │
             │ Weaponcraft                                                              │
             │   g  Far shot                         Your shots fly 2 cells farther, a… │
             │   h  Sworn foe                        You have sworn yourself against o… │
             │   i  Wand mastery                     You draw more from a wand than it… │
-            │   j  Weapon focus (long blades)       You have drilled with one kind of… │
+            │   j  Weapon focus (long blades)  1/2  You have drilled with one kind of… │
             │ Guard                                                                    │
             │   k  Armour training             2/2  You move freely in armour: it ham… │
             │   l  Stalwart                         Standing on the defensive costs y… │

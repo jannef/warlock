@@ -1,8 +1,0 @@
-[[talent]]
-id = "divine_health"
-name = "Divine health"
-tree = "class"
-granted = true
-description = "No disease can take hold of you any more."
-effects = [{ kind = "disease_immune" }]
-systems = ["diseases"]
