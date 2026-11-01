@@ -30,7 +30,10 @@ pub(super) fn vision(content: &Content) -> String {
 }
 
 pub(super) fn lights(content: &Content) -> String {
-    let mut out = String::from("| Light | Reaches | Kind |\n|---|---:|---|\n");
+    let mut out = String::from(
+        "| Light | Reaches | Kind | Colour (red, green, blue, UV) | Brightness |\n\
+         |---|---:|---|---|---:|\n",
+    );
     for (i, l) in content.light_presets().iter().enumerate() {
         let kind = if l.color.rgb == [0, 0, 0] {
             "UV only: invisible without UV sight"
@@ -41,9 +44,15 @@ pub(super) fn lights(content: &Content) -> String {
         };
         let _ = writeln!(
             out,
-            "| {} | {} cells | {kind} |",
+            "| {} | {} {} | {kind} | {}, {}, {}, {} | {} |",
             light_name(content, LightId(i as u16)),
-            l.radius
+            l.radius,
+            if l.radius == 1 { "cell" } else { "cells" },
+            l.color.rgb[0],
+            l.color.rgb[1],
+            l.color.rgb[2],
+            l.color.uv,
+            l.color.luma(),
         );
     }
     out
@@ -103,6 +112,20 @@ fn light_name(content: &Content, id: LightId) -> String {
         .collect();
     if !tended.is_empty() {
         return format!("Your lantern ({})", tended.join(", "));
+    }
+    // A spell circle's (spec §4.8): every runed status of a school sheds it, on anyone.
+    let circled: Vec<&str> = (content.runes().rows().iter())
+        .filter(|r| content.status(r.status).light == Some(id))
+        .map(|r| content.status(r.status).name.as_str())
+        .collect();
+    if let Some(school) = preset.id.strip_prefix("circle_") {
+        return match circled.is_empty() {
+            true => format!("Spell circle, {school} (no status sheds it yet)"),
+            false => format!(
+                "Spell circle, {school} (anyone {})",
+                circled.join(", ").to_lowercase()
+            ),
+        };
     }
     let statuses: Vec<&str> = (content.status_defs().iter())
         .filter(|s| s.light == Some(id))

@@ -24,8 +24,10 @@ a [sanctuary](special-rooms.md#room-sanctuary) adds a faint warm glow of its own
 ## Light sources
 
 Light comes from [wall torches](terrain.md#terrain-sconce), [braziers](terrain.md#terrain-brazier), lamps, magical [crystals](terrain.md#terrain-crystal), glowing [fungus](terrain.md#terrain-fungus), [runes](terrain.md#terrain-uv-rune), [lava](terrain.md#terrain-lava), the
-[altar](terrain.md#terrain-altar), [creatures](creatures.md) that carry a torch, and your own [lantern](lantern.md). Each source has a color
-and a reach in cells:
+[altar](terrain.md#terrain-altar), [creatures](creatures.md) that carry a torch, your own [lantern](lantern.md), and the faint
+[light of a spell circle](magic.md#the-circles-light) about anyone with a buff or a hex on them.
+Each source has a color (its red, green, blue, and UV at the source), a brightness there (as normal
+eyes see it: see [vision](vision.md#the-four-types)), and a reach in cells:
 
 {{#include generated/lights.md}}
 

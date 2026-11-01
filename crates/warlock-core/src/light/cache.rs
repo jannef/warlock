@@ -286,11 +286,14 @@ impl LevelLights {
                     });
                 }
             }
-            // The light of a status that sheds one (Lit, spec §8 "Scrolls"): the brightest.
+            // The light of a status that sheds one (Lit, spec §8 "Scrolls"; a spell circle's,
+            // §4.8): the widest, the first in status order on a tie. A disguised mimic sheds
+            // none: its disguise would glow.
             let radius = |id: LightId| content.light(id).radius;
             let lit = (actor.effects.iter())
                 .filter_map(|e| content.status(e.status).light)
-                .reduce(|best, id| if radius(id) > radius(best) { id } else { best });
+                .reduce(|best, id| if radius(id) > radius(best) { id } else { best })
+                .filter(|_| !actor.effects.hides(content));
             if let Some(preset) = lit {
                 sources.push(Source {
                     key: CARRIED | LIT | id,

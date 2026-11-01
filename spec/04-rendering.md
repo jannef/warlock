@@ -317,6 +317,9 @@ glow, barely perceptible distortion, short fades.
     turns the drawing off; the statuses and what look mode says of them stay. With frozen visual
     time it shows the frozen moment's angle. The runes come from a subset of Noto Sans JP
     (§4.1's font has no kana): `assets/fonts/NotoSansJP-Runes.ttf`.
+  - **The light** is a rule (§8 "Status effects"): a runed status sheds its school's faint light,
+    lit in the lighting pass as any light (its UV share tints only for eyes that see UV), and the
+    switch never hides it. With `glow` on the circle's ink is a little emissive (× 1.15).
 - With frozen visual time (`--freeze-time`) fades complete instantly and bursts show a fixed
   moment early in their life, so captures are reproducible; spell effects show the frozen moment
   after they began.

@@ -226,3 +226,42 @@ radius = 4
 id = "spell_light"
 color = [235, 235, 250, 0]
 radius = 6
+
+# Spell circles (spec §4.8, §8 "Status effects"; runes.toml): a buffed or hexed actor sheds its
+# rune's school's light, `circle_<school>`, one a school. Faint and steady (magic): just over
+# normal eyes' threshold (40) on the actor's own cell and under it a cell away, bright to eyes that
+# see UV.
+[[light]]
+id = "circle_evocation"
+color = [70, 38, 16, 90]
+radius = 1
+
+[[light]]
+id = "circle_necromancy"
+color = [48, 36, 64, 90]
+radius = 1
+
+[[light]]
+id = "circle_abjuration"
+color = [32, 48, 68, 90]
+radius = 1
+
+[[light]]
+id = "circle_restoration"
+color = [66, 52, 20, 90]
+radius = 1
+
+[[light]]
+id = "circle_transmutation"
+color = [30, 56, 30, 90]
+radius = 1
+
+[[light]]
+id = "circle_enchantment"
+color = [62, 34, 54, 90]
+radius = 1
+
+[[light]]
+id = "circle_divination"
+color = [46, 46, 54, 90]
+radius = 1

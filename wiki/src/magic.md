@@ -306,7 +306,32 @@ do: which buffs and hexes, never how strong or for how long.
 
 Every buff shows on a creature, whatever gave it: look mode names a hasted creature "quickened",
 a bark-skinned one "bark-skinned", one that drank a [potion of might](potions.md#potion-of-might) "fortified" (see
-[Status effects](status-effects.md)). The circles are only for show (the **Spell circles**
-switch in [Settings](settings.md) hides them; Reduced effects only stills them).
+[Status effects](status-effects.md)). The drawn circles are only for show (the **Spell circles**
+switch in [Settings](settings.md) hides them; Reduced effects only stills them), but the light
+they shed is not.
 
 {{#include generated/spell-runes.md}}
+
+### The circle's light
+
+A runed status sheds a faint, steady [light](light.md) of its rune's school, whatever gave the
+status (the potion of quickness's Hasted too) and whoever has it, you or a creature: the
+`circle_<school>` lights of the [lights table](light.md#light-sources), each reaching one cell,
+with a strong [ultraviolet](vision.md#the-four-types) share. Its strength never changes with the status's
+[severity](status-effects.md#how-they-work) or the time left, and it goes the turn the status ends. Someone with several runed
+statuses sheds one such light, the first in status order's. The Light spell's own light is
+brighter and wins over it.
+
+- **Normal eyes** (a [brightness](vision.md#the-four-types) of 40) see the circled one's own cell, and so the
+  circled one, at any distance in line of sight, even in the dark (40 to 52 there, plus the
+  cell's other light), but not the four cells beside it (half as bright: 20 to 26; the diagonal ones get none).
+- **Low-light eyes** (12) see the four cells beside it too.
+- **Eyes that see UV** see it plainly (130 to 142 on its cell) and the four cells beside it as well (65
+  to 71), where the UV shows as a violet tint.
+- **A buff lights your cell.** Creatures see by the same rule, so a hasted, blessed, or
+  bark-skinned sneak is seen by any normal-eyed creature with them in line of sight, as Inner
+  light is. A hex marks its target the same way: a webbed or sleeping creature glows for as long
+  as it lasts.
+- **[Light-blind](vision.md#the-four-types) eyes** add it to the cell's light: a drow in daylight just under their glare (250)
+  can be dazzled by their own [Blessing](#spell-blessing).
+- A disguised [mimic](mimics.md) sheds none: its disguise would glow.

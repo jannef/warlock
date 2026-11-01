@@ -253,8 +253,12 @@ fn also(content: &Content, def: &StatusDef) -> String {
         ));
     }
     if let Some(light) = def.light {
-        let radius = content.light(light).radius;
-        parts.push(format!("you shed light {radius} cells around you"));
+        let preset = content.light(light);
+        let reach = match preset.radius {
+            1 => "on your cell and the cells beside you".to_string(),
+            r => format!("{r} cells around you"),
+        };
+        parts.push(format!("you shed light {reach}"));
     }
     if let Some(vision) = def.vision {
         let eyes = &content.vision_profiles()[vision];

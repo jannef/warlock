@@ -1,11 +1,13 @@
 # Spell circles (spec §4.8 "Spell circles", docs/design/buff-circles.md): the rune and the school
-# of every buff's and hex's status. Presentation only: the renderer draws a circle about every
-# actor the player sees with a runed status, its runes in their school's colour; no rule reads
-# this file, and it is not in the content fingerprint.
+# of every buff's and hex's status. The renderer draws a circle about every actor the player sees
+# with a runed status, its runes in their school's colour. One rule reads it (spec §8 "Status
+# effects"): a runed status without a light of its own sheds its school's, `circle_<school>` in
+# lights.toml, so the rows' statuses and schools are in the content fingerprint.
 #
 # [[school]]   one row per school of magic (data/spells: `school`)
 #   id         the school
-#   color      its colour, "#rrggbb", through the palette as every content colour is
+#   color      its colour, "#rrggbb", through the palette as every content colour is; the school
+#              must have a light `circle_<id>` in lights.toml
 #
 # [[rune]]     one row per runed status; every `kind = "buff"` or `"hex"` spell's status has one
 #   status     an id in data/status.toml; it must have `seen` (others see it on a creature)
