@@ -1,13 +1,15 @@
-//! The caster's ladder (spec §8 "Weapon skills", "Fighting styles"; #571): the school of magic
-//! and the caster styles a spell that rolls to hit draws on and trains, what their ranks do to
-//! the roll, the critical held by nothing, the caster styles' abilities, Battle caster's armour,
-//! and the classes' starting ranks (the schools' own marks: `school_skill_tests.rs`).
+//! The caster's ladder (spec §8 "Weapon skills", "Fighting styles"; #571; the spell scaling
+//! design §10.2): the caster style of where a spell is cast from (afar, beside, in armour, on
+//! oneself) and the marks every spell paid in mana earns in it, Sniper's cells and Toucher's
+//! bonus, what the ranks do to a rolling spell's roll, the critical held by nothing, the caster
+//! styles' abilities, Battle caster's armour, the style marked in use, and the classes' starting
+//! ranks (the schools' own marks: `school_skill_tests.rs`).
 
-use super::caster_tests::{kobold, reach, run, said, world_with};
+use super::caster_tests::{kobold, reach, run, said, sp, world_with};
 use super::*;
 use crate::action::Event;
 use crate::combat::Strike;
-use crate::content::{ContentFiles, WeaponSkillId};
+use crate::content::{ContentFiles, Role, WeaponSkillId};
 use crate::weapon_skills::WeaponSkills;
 
 /// The built-in content with the wizard's Arcane bolt (level 6) as `body` says: its shape,
@@ -139,38 +141,214 @@ fn the_classes_that_cast_start_on_the_ladder_and_warriors_do_not() {
     }
 }
 
-#[test]
-fn a_spell_that_rolls_to_hit_trains_its_style_and_one_that_does_not_only_its_school() {
-    let mut w = ray_wizard();
-    ranks(&mut w, &[("evocation", 1), ("sniper", 1)]);
-    let target = kobold(&mut w, 3, 10_000);
-    let (spell, sniper) = (skill(&w, "evocation"), skill(&w, "sniper"));
-    let table = w.content().weapon_skills().clone();
-    let marks = |w: &World, id| (w.state.player().weapon_skills.progress(&table, id)).map(|p| p.0);
-    let (strikes, _) = casts(&mut w, target, (3, 0), 1);
-    assert_eq!(strikes.len(), 1);
-    // `casts` puts the ranks back before each cast, not after the last.
-    assert!(marks(&w, spell) > Some(0), "the school trained");
-    assert!(marks(&w, sniper) > Some(0), "the style trained");
-    for other in ["toucher", "battle_caster", "staves", "duelist"] {
-        let id = skill(&w, other);
-        assert_eq!(w.state.player().weapon_skills.rank(id), 0, "{other}");
-        assert_eq!(marks(&w, id), Some(0), "{other}");
-    }
-    // Magic missile never misses: no roll, so no style's marks; its school's all the same.
-    ranks(&mut w, &[("evocation", 1), ("sniper", 1)]);
-    let missile = w.content().spell_id("magic_missile").expect("a spell");
+/// The marks the player holds in `name` toward its next rank.
+fn marks(w: &World, name: &str) -> u32 {
+    let table = w.content().weapon_skills();
+    (w.state
+        .player()
+        .weapon_skills
+        .progress(table, skill(w, name)))
+    .map_or(0, |(m, _)| m)
+}
+
+/// The marks a cast earns in a caster style at `rank`: a `success` or an attempt, against
+/// `level`, with the player's talents.
+fn style_earned(w: &World, success: bool, level: u32, rank: u8) -> u32 {
+    let rules = w.content().weapon_skills().marks().expect("marks");
+    let talents = w.state.player().talent_mods(w.content());
+    talents.marks(Role::Style, rules.earned(success, level, rank))
+}
+
+fn level_of(w: &World, id: ActorId) -> u32 {
+    let creature = w.state.actors[&id].creature;
+    u32::from(w.content().creature(creature).level)
+}
+
+/// The player casts `name` (learnt now if need be) at the cell `(dx, dy)` from them (`None`: on
+/// themselves), mana topped up; what the cast's events were.
+fn cast(w: &mut World, name: &str, at: Option<(i32, i32)>) -> Vec<Event> {
+    let spell = w.content().spell_id(name).expect(name);
+    w.player_mut().spells.insert(spell);
+    w.player_mut().mana = 60;
     let here = w.player_pos();
-    w.player_mut().mana = 40;
-    let out = w.apply(&Action::Cast(
-        w.content().spell(missile).id.clone(),
-        Some(Pos::new(here.x + 3, here.y)),
-    ));
+    *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
+    let at = at.map(|(dx, dy)| Pos::new(here.x + dx, here.y + dy));
+    let out = w.apply(&Action::Cast(name.into(), at));
+    assert!(out.took_turn, "{name} went off: {:?}", said(w).last());
+    out.events
+}
+
+/// The player in plate (armour that hinders casting).
+fn in_plate(w: &mut World) {
+    let plate = w.content().object_id("plate_armour").expect("plate");
+    let me = w.player_mut();
+    me.inventory.push(crate::object::Stack::new(plate, 1));
+    let item = me.inventory.len() - 1;
+    run(w, &format!("equip:body:{item}"));
+    assert!(w.state.player().worn_spell_cost(w.content()) > 0);
+}
+
+/// The caster styles that hold marks.
+fn trained_styles(w: &World) -> Vec<&'static str> {
+    (["sniper", "toucher", "battle_caster"].into_iter())
+        .filter(|s| marks(w, s) > 0)
+        .collect()
+}
+
+#[test]
+fn a_fireball_from_afar_trains_sniper_as_its_school_landed() {
+    let mut w = ray_wizard();
+    let target = kobold(&mut w, 5, 10_000);
+    ranks(&mut w, &[("evocation", 1), ("sniper", 1)]);
+    cast(&mut w, "fireball", Some((5, 0)));
+    assert_eq!(trained_styles(&w), ["sniper"]);
+    let level = level_of(&w, target);
+    assert_eq!(marks(&w, "sniper"), style_earned(&w, true, level, 1));
+    // A bolt at an empty cell beside the caster is from afar too (no creature beside it), and
+    // at nothing it is an attempt against one's own level.
+    w.state.actors.remove(&target);
+    ranks(&mut w, &[("evocation", 1), ("sniper", 1)]);
+    cast(&mut w, "magic_missile", Some((1, 0)));
+    let own = u32::from(w.player_level());
+    assert_eq!(trained_styles(&w), ["sniper"]);
+    assert_eq!(marks(&w, "sniper"), style_earned(&w, false, own, 1));
+}
+
+#[test]
+fn a_spell_on_oneself_out_of_armour_trains_no_style() {
+    let mut w = ray_wizard();
+    ranks(&mut w, &[("abjuration", 1), ("sniper", 1), ("toucher", 1)]);
+    cast(&mut w, "blessing", None);
+    assert!(marks(&w, "abjuration") > 0, "its school trains");
+    assert!(trained_styles(&w).is_empty());
+    // A heal laid on oneself is on oneself, a touch or not.
+    w.player_mut().hp = 1;
+    cast(&mut w, "mend", Some((0, 0)));
+    assert!(marks(&w, "restoration") > 0, "its school trains");
+    assert!(trained_styles(&w).is_empty());
+}
+
+#[test]
+fn a_heal_and_a_ray_at_the_creature_beside_train_toucher() {
+    let mut w = ray_wizard();
+    let target = kobold(&mut w, 1, 10_000);
+    w.state.actors.get_mut(&target).expect("there").hp = 1;
+    ranks(&mut w, &[("restoration", 1)]);
+    cast(&mut w, "cure_wounds", Some((1, 0)));
+    assert_eq!(trained_styles(&w), ["toucher"]);
+    let level = level_of(&w, target);
+    assert_eq!(marks(&w, "toucher"), style_earned(&w, true, level, 0));
+    // The ray (no touch) at the kobold next to the caster: a Toucher's too.
+    ranks(&mut w, &[("evocation", 1)]);
+    let (strikes, _) = casts(&mut w, target, (1, 0), 1);
+    assert_eq!(strikes.len(), 1);
+    assert_eq!(trained_styles(&w), ["toucher"]);
+    let content = w.content().clone();
+    let me = w.state.player();
+    let ray = content.spell(sp("ray_of_frost"));
+    let beside = me.spell_skills(&content, ray, SpellAim::Beside);
+    assert_eq!(beside.style, Some(skill(&w, "toucher")));
+    assert_eq!(beside.skill, Some(skill(&w, "evocation")));
+}
+
+#[test]
+fn in_hindering_armour_every_spell_trains_battle_caster_with_full_marks() {
+    let mut w = ray_wizard();
+    in_plate(&mut w);
+    let own = u32::from(w.player_level());
+    // A buff on oneself: a success against one's own level, as its school's.
+    ranks(&mut w, &[("battle_caster", 1)]);
+    cast(&mut w, "blessing", None);
+    assert_eq!(trained_styles(&w), ["battle_caster"]);
+    assert_eq!(marks(&w, "battle_caster"), style_earned(&w, true, own, 1));
+    // A spell that never rolls to hit, from afar: a success against the one it struck.
+    let target = kobold(&mut w, 3, 10_000);
+    ranks(&mut w, &[("battle_caster", 1)]);
+    cast(&mut w, "magic_missile", Some((3, 0)));
+    assert_eq!(trained_styles(&w), ["battle_caster"]);
+    let level = level_of(&w, target);
+    assert_eq!(marks(&w, "battle_caster"), style_earned(&w, true, level, 1));
+    // And at the one beside: Battle caster still, wherever it is aimed.
+    ranks(&mut w, &[("battle_caster", 1)]);
+    let here = w.player_pos();
+    w.state.actors.get_mut(&target).expect("there").pos = Pos::new(here.x + 1, here.y);
+    cast(&mut w, "magic_missile", Some((1, 0)));
+    assert_eq!(trained_styles(&w), ["battle_caster"]);
+}
+
+#[test]
+fn snipers_reach_a_cell_farther_from_rank_five() {
+    let mut w = ray_wizard();
+    let content = w.content().clone();
+    let missile = content.spell(sp("magic_missile"));
+    let range = |w: &mut World, rank: u8| {
+        ranks(w, &[("sniper", rank)]);
+        (w.state.player().spell_reach(&content, missile).range).expect("a range")
+    };
+    let base = range(&mut w, 0);
+    assert_eq!(range(&mut w, 4), base);
+    assert_eq!(range(&mut w, 5), base + 1);
+    assert_eq!(range(&mut w, 9), base + 2);
+    // The cast reaches it: a cell one past the base range is refused at rank 4 and goes off at
+    // rank 5 (an open row of floor east of the showcase's start).
+    let at = Some(Pos::new(w.player_pos().x + base + 1, w.player_pos().y));
+    w.player_mut().spells.insert(sp("magic_missile"));
+    w.player_mut().mana = 60;
+    ranks(&mut w, &[("sniper", 4)]);
+    assert!(!w.apply(&Action::Cast("magic_missile".into(), at)).took_turn);
+    ranks(&mut w, &[("sniper", 5)]);
     assert!(
-        (out.events.iter()).any(|e| matches!(e, Event::Attacked { target: t, .. } if *t == target))
+        w.apply(&Action::Cast("magic_missile".into(), at)).took_turn,
+        "{:?}",
+        said(&w).last()
     );
-    assert!(marks(&w, spell) > Some(0));
-    assert_eq!(marks(&w, sniper), Some(0));
+    // In armour that hinders casting a spell is a Battle caster's: no Sniper's cell.
+    in_plate(&mut w);
+    assert_eq!(range(&mut w, 10), base);
+}
+
+#[test]
+fn touchers_bonus_reaches_the_roll_from_rank_four_up_close_only() {
+    let content =
+        content_with_bolt("shape = \"bolt\"\nresolution = \"auto\"\nrange = 8\ndamage = \"+6\"");
+    let mut w = world_with(content, "wizard");
+    reach(&mut w, 18);
+    let target = kobold(&mut w, 1, 10_000);
+    // What one cast at the kobold `dx` cells east does with Toucher at `rank`.
+    let harm = |w: &mut World, dx: i32, rank: u8| {
+        ranks(w, &[("toucher", rank)]);
+        casts(w, target, (dx, 0), 1).1
+    };
+    let bare = harm(&mut w, 1, 3);
+    assert!(bare > 0);
+    assert_eq!(harm(&mut w, 1, 0), bare);
+    assert_eq!(harm(&mut w, 1, 4), bare + 1);
+    assert_eq!(harm(&mut w, 1, 10), bare + 3);
+    // From afar it is a Sniper's cast: no Toucher's bonus.
+    assert_eq!(harm(&mut w, 3, 10), bare);
+    // A touch spell's roll as the menu shows it counts it (a touch is cast beside).
+    let cure = w.content().clone();
+    let cure = cure.spell(sp("cure_wounds"));
+    let shown = |w: &mut World, rank: u8| {
+        ranks(w, &[("toucher", rank)]);
+        let roll = w.state.player().spell_roll(w.content(), cure, CastBy::Own);
+        roll.expect("a heal").to_string()
+    };
+    let (three, four) = (shown(&mut w, 3), shown(&mut w, 4));
+    assert_ne!(three, four);
+}
+
+#[test]
+fn battle_caster_is_marked_in_use_in_hindering_armour_only() {
+    let mut w = ray_wizard();
+    let battle = skill(&w, "battle_caster");
+    let casters = [skill(&w, "sniper"), skill(&w, "toucher")];
+    let in_use = |w: &World| w.perception().own_styles_in_use();
+    assert!(!in_use(&w).contains(&battle));
+    assert!(casters.iter().all(|s| !in_use(&w).contains(s)));
+    in_plate(&mut w);
+    assert!(in_use(&w).contains(&battle));
+    assert!(casters.iter().all(|s| !in_use(&w).contains(s)));
 }
 
 #[test]
@@ -273,45 +451,30 @@ fn in_armour_battle_caster_is_the_style_and_eases_the_armours_cost() {
     let me = w.state.player();
     let spell = |id: &str| content.spell(content.spell_id(id).expect(id));
     let (ray, touch) = (spell("ray_of_frost"), spell("cause_wounds"));
-    let free = me.spell_skills(&content, ray);
+    let standing =
+        |me: &Actor, spell| me.spell_skills(&content, spell, me.standing_aim(&content, spell));
+    let free = standing(me, ray);
     assert_eq!(free.style, Some(skill(&w, "sniper")));
-    assert_eq!(
-        me.spell_skills(&content, touch).style,
-        Some(skill(&w, "toucher"))
-    );
+    assert_eq!(standing(me, touch).style, Some(skill(&w, "toucher")));
     assert_eq!(free.skill, Some(skill(&w, "evocation")));
-    assert_eq!(
-        me.spell_skills(&content, touch).skill,
-        Some(skill(&w, "necromancy"))
-    );
+    assert_eq!(standing(me, touch).skill, Some(skill(&w, "necromancy")));
+    let blessing = spell("blessing");
+    assert_eq!(standing(me, blessing).style, None, "on oneself: no style");
     let plate = content.object_id("plate_armour").expect("plate");
     let me = w.player_mut();
     me.inventory.push(crate::object::Stack::new(plate, 1));
     let item = me.inventory.len() - 1;
     run(&mut w, &format!("equip:body:{item}"));
     let me = w.state.player();
+    assert_eq!(standing(me, ray).style, Some(skill(&w, "battle_caster")));
     assert_eq!(
-        me.spell_skills(&content, ray).style,
+        standing(me, blessing).style,
         Some(skill(&w, "battle_caster"))
     );
     assert_eq!(me.armour_spell_cost(&content), 40);
     ranks(&mut w, &[("battle_caster", 10)]);
     assert_eq!(w.state.player().worn_spell_cost(&content), 40);
     assert_eq!(w.state.player().armour_spell_cost(&content), 20, "half off");
-    // A spell that never rolls to hit, cast in armour, trains Battle caster and its school.
-    let table = content.weapon_skills();
-    let battle = skill(&w, "battle_caster");
-    ranks(&mut w, &[("battle_caster", 1), ("evocation", 1)]);
-    let here = w.player_pos();
-    w.player_mut().mana = 40;
-    w.apply(&Action::Cast(
-        "magic_missile".into(),
-        Some(Pos::new(here.x + 3, here.y)),
-    ));
-    let progress = |w: &World, id| w.state.player().weapon_skills.progress(table, id);
-    assert!(progress(&w, battle).is_some_and(|p| p.0 > 0));
-    assert!(progress(&w, skill(&w, "evocation")).is_some_and(|p| p.0 > 0));
-    assert_eq!(progress(&w, skill(&w, "sniper")).map(|p| p.0), Some(0));
 }
 
 #[test]

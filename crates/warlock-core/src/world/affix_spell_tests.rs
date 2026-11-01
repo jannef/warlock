@@ -194,7 +194,10 @@ fn mage_wrought_eases_its_own_piece_and_a_fully_eased_one_leaves_the_armoured_gr
     let player = w.player_id();
     let grip = |w: &World| {
         let ray = content.spell(content.spell_id("ray_of_frost").expect("ray of frost"));
-        let style = w.state.player().spell_skills(&content, ray).style;
+        let me = w.state.player();
+        let style = me
+            .spell_skills(&content, ray, me.standing_aim(&content, ray))
+            .style;
         let table = content.weapon_skills();
         if style == table.style_for(Grip::ArmouredSpell, &[]) {
             "armoured"

@@ -243,7 +243,8 @@ impl Grip {
         }
     }
 
-    /// Whether it is a configuration of spells that roll to hit (a caster's style).
+    /// Whether it is where a spell is cast from (a caster's style; the spell scaling design
+    /// §10.2): from afar, up close, or in armour that hinders casting.
     pub const fn casts(self) -> bool {
         matches!(
             self,
@@ -404,9 +405,11 @@ pub struct Benefit {
     pub sides: u8,
     /// A school's spells: this many dice more (the dice hook).
     pub dice: u8,
-    /// A school's spells: added to every roll (the dice hook).
+    /// A school's spells, and a Toucher's (a spell cast up close): added to every roll (the
+    /// dice hook).
     pub bonus: i32,
-    /// A school's spells: cells farther (the reach hook).
+    /// A school's spells, and a Sniper's (a spell cast from afar): cells farther (the reach
+    /// hook).
     pub cells: i32,
     /// A school's spells: degrees longer (the degrees hook).
     pub degrees: i32,
@@ -727,8 +730,9 @@ impl SkillSpec {
             ("reroll", &self.reroll, school),
             ("sides", &self.sides, school),
             ("dice", &self.dice, school),
-            ("bonus", &self.bonus, school),
-            ("cells", &self.cells, school),
+            // Where one casts from (the caster styles): from afar a reach, up close a roll.
+            ("bonus", &self.bonus, school || is(Grip::TouchSpell)),
+            ("cells", &self.cells, school || is(Grip::RangedSpell)),
             ("degrees", &self.degrees, school),
             ("mana", &self.mana, school),
         ];
@@ -1912,6 +1916,43 @@ mod tests {
                     caster("s", "ranged_spell", &format!("armour = {eleven}"))
                 ),
                 "`armour` does nothing",
+            ),
+            // A style's reach and roll (the spell scaling design §10.2): from afar and up close
+            // only, never another grip's.
+            (
+                format!(
+                    "{MARKS}{}",
+                    caster("s", "touch_spell", &format!("cells = {three}"))
+                ),
+                "`cells` does nothing for a style of grip `touch_spell`",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    caster("s", "ranged_spell", &format!("bonus = {three}"))
+                ),
+                "`bonus` does nothing for a style of grip `ranged_spell`",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    caster("s", "armoured_spell", &format!("cells = {three}"))
+                ),
+                "`cells` does nothing for a style of grip `armoured_spell`",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    caster("s", "one_weapon", &format!("bonus = {three}"))
+                ),
+                "`bonus` does nothing for a style of grip `one_weapon`",
+            ),
+            (
+                format!(
+                    "{MARKS}{}",
+                    caster("s", "launcher", &format!("cells = {three}"))
+                ),
+                "`cells` does nothing for a style of grip `launcher`",
             ),
             (
                 format!(

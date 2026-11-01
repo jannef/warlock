@@ -8,7 +8,7 @@ use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
     ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip, Hide,
-    MAX_SPEED, ObjectDef, ObjectId, RaceDef, Role, Shape, SpellData, SpellId, StatusId, TwoWeapons,
+    MAX_SPEED, ObjectDef, ObjectId, RaceDef, Role, SpellData, SpellId, StatusId, TwoWeapons,
     VisionProfile, WeaponSkillId,
 };
 use crate::damage::{Protection, Resistances};
@@ -936,26 +936,6 @@ impl Actor {
         }
     }
 
-    /// The skill and the caster style a cast of `spell` draws on and trains (spec §8 "Weapon
-    /// skills": "Schools of magic", "Fighting styles"): its school's skill, and in armour that
-    /// hinders casting the armoured grip's style (Battle caster), else a touch's (Toucher) or a
-    /// ranged spell's (Sniper). (Where one casts from, the spell scaling design §10.2, is a
-    /// later slice's: until then the style is the spell's shape's, as Spell attacks' was.)
-    pub fn spell_skills(&self, content: &Content, spell: &SpellData) -> AttackSkills {
-        let table = content.weapon_skills();
-        let grip = if self.worn_spell_cost(content) > 0 {
-            Grip::ArmouredSpell
-        } else if spell.shape == Shape::Touch {
-            Grip::TouchSpell
-        } else {
-            Grip::RangedSpell
-        };
-        AttackSkills {
-            skill: table.of_school(spell.school),
-            style: table.style_for(grip, &[]),
-        }
-    }
-
     /// What its rank in `spell`'s school gives (spec §8 "Weapon skills": "Schools of magic"),
     /// read as every weapon skill's is ([`Actor::benefit`]: Schooled's and Magister's ranks
     /// count): the spell hooks' part through [`Benefit::spell_mods`], the cast's `speed`, and
@@ -1034,7 +1014,8 @@ impl Actor {
     }
 
     /// The fighting styles it fights in now, in id order: its hands' (blows and Defence), its
-    /// readied missile weapon's, and throwing's while it has something ready to throw.
+    /// readied missile weapon's, throwing's while it has something ready to throw, and Battle
+    /// caster's while what it wears hinders casting.
     pub fn styles_in_use(&self, content: &Content) -> Vec<WeaponSkillId> {
         let thrown = self
             .ready_to_throw(content)
@@ -1044,6 +1025,11 @@ impl Actor {
             self.launcher(content)
                 .and_then(|_| self.style(content, AttackKind::Ranged, None)),
             thrown.and_then(|t| self.style(content, AttackKind::Thrown, Some(t))),
+            // Battle caster while what it wears hinders casting (a standing fact, as a grip
+            // is); never Sniper or Toucher, which each cast's aim decides (`spell_aim.rs`).
+            (self.worn_spell_cost(content) > 0)
+                .then(|| content.weapon_skills().style_for(Grip::ArmouredSpell, &[]))
+                .flatten(),
         ]
         .into_iter()
         .flatten()

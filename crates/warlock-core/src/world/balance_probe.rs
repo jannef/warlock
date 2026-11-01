@@ -418,10 +418,10 @@ fn casts(w: &World) -> Vec<Cast> {
         if !me.knows_spell(content, spell) && affinity.unwrap_or(0) <= 0 {
             continue;
         }
-        let mods = me.spell_mods(content, def);
+        let mods = me.standing_spell_mods(content, def);
         let rung = me.spell_rung(content, def, CastBy::Own, &mods);
         let rolled = (me.spell_roll(content, def, CastBy::Own)).unwrap_or(damage);
-        let skills = me.spell_skills(content, def);
+        let skills = me.spell_skills(content, def, me.standing_aim(content, def));
         let benefit = me
             .benefit_of(content, skills)
             .at_distance(3, content.weapon_skills().spell_attacks());

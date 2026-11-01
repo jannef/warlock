@@ -78,10 +78,21 @@ impl Actor {
         }
     }
 
-    /// The roll `spell` makes as it casts it as `by` (module docs), harm or healing; `None` for
-    /// a spell that rolls nothing.
+    /// The roll `spell` makes as it casts it as `by` (module docs), harm or healing, from where
+    /// it stands ([`Actor::standing_aim`]); `None` for a spell that rolls nothing.
     pub fn spell_roll(&self, content: &Content, spell: &SpellData, by: CastBy) -> Option<Roll> {
-        self.spell_roll_with(content, spell, by, &self.spell_mods(content, spell))
+        self.spell_roll_with(
+            content,
+            spell,
+            by,
+            &self.standing_spell_mods(content, spell),
+        )
+    }
+
+    /// Its hooks for `spell` from where it stands ([`Actor::spell_mods_from`] at
+    /// [`Actor::standing_aim`]): what the menu, the dumps, and the aiming mode show.
+    pub fn standing_spell_mods(&self, content: &Content, spell: &SpellData) -> SpellMods {
+        self.spell_mods_from(content, spell, self.standing_aim(content, spell))
     }
 
     /// [`Actor::spell_roll`] with its `mods` already summed.
@@ -97,13 +108,23 @@ impl Actor {
         Some(roll.grow(mods.sides).more(mods.dice).plus(mods.bonus))
     }
 
-    /// How far `spell` reaches as it casts it (module docs): the farthest cell it may be aimed
-    /// at (a touch's 1), and a burst's radius; each `None` where the spell has no such reach.
+    /// How far `spell` reaches as it casts it from where it stands (module docs;
+    /// [`Actor::standing_aim`]): the farthest cell it may be aimed at (a touch's 1), and a
+    /// burst's radius; each `None` where the spell has no such reach.
     pub fn spell_reach(&self, content: &Content, spell: &SpellData) -> Reach {
+        self.spell_reach_with(content, spell, &self.standing_spell_mods(content, spell))
+    }
+
+    /// [`Actor::spell_reach`] with its `mods` already summed.
+    pub(super) fn spell_reach_with(
+        &self,
+        content: &Content,
+        spell: &SpellData,
+        mods: &SpellMods,
+    ) -> Reach {
         let Some(rules) = content.spell_rules() else {
             return Reach::default();
         };
-        let mods = self.spell_mods(content, spell);
         let stats = self.effective_stats(content);
         let grown = |base: Option<u8>, ladder: Option<&Ladder>, more: i32, most: u8| {
             let base = i32::from(base?);
@@ -136,8 +157,17 @@ impl Actor {
     /// degrees ladder's value, then `degrees`; at least 1. `None` for a spell with no such
     /// status.
     pub fn spell_degrees(&self, content: &Content, spell: &SpellData) -> Option<u16> {
+        self.spell_degrees_with(content, spell, &self.standing_spell_mods(content, spell))
+    }
+
+    /// [`Actor::spell_degrees`] with its `mods` already summed.
+    pub(super) fn spell_degrees_with(
+        &self,
+        content: &Content,
+        spell: &SpellData,
+        mods: &SpellMods,
+    ) -> Option<u16> {
         let (_, base) = spell.effect.status?;
-        let mods = self.spell_mods(content, spell);
         let ladder = spell.grows.degrees.as_ref();
         let stats = self.effective_stats(content);
         let rung = ladder.map_or(0, |l| climb(l, &stats, mods.degree_rungs));

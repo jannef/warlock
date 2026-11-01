@@ -43,9 +43,9 @@ slow = 50
 spell_failure = 75
 
 # Spells that roll to hit (a ray, a bolt, or a touch whose resolution is an attack roll; spells/)
-# aim with their school's skill (role `school`, below) and are fought in the caster styles below.
-# A ranged spell's far benefits (Sniper's `far_to_hit`, `far_threat`) apply from `far` cells away
-# (the larger of the two distances).
+# aim with their school's skill (role `school`, below); every spell is cast in the caster style
+# of where it is cast from (the caster styles below). A spell cast from afar is at a Sniper's best
+# (`far_to_hit`, `far_threat`) from `far` cells away (the larger of the two distances).
 [spell_attacks]
 far = 5
 
@@ -388,10 +388,16 @@ cells = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
 #              unarmed            nothing in the hands
 #              launcher           a shot from a missile weapon
 #              thrown             a throw
-#              ranged_spell       a spell that rolls to hit at range (a ray, a bolt)
-#              touch_spell        a touch spell that rolls to hit
-#              armoured_spell     a spell that rolls to hit, cast in armour that hinders casting
-#                                 (anything worn with a spell_cost_percent): before the two above
+#              ranged_spell       a spell aimed farther than beside its caster: at a creature
+#                                 or a cell two or more cells away, or at an empty cell (a ray,
+#                                 a bolt, a burst, a cone, a line alike)
+#              touch_spell        a spell aimed at a creature beside its caster (a touch, or a
+#                                 ray, a hex, a heal at the one next to them)
+#              armoured_spell     any spell cast in armour that hinders casting (anything worn
+#                                 with a spell_cost_percent), wherever it is aimed: before the
+#                                 two above
+#                                 A spell on oneself out of such armour is cast in no style.
+#                                 Every spell paid in mana trains the style it was cast in.
 #   weapons  the weapon skills it is fought with (a launcher's for `launcher`, what is thrown for
 #            `thrown`; none for the spell grips); left out: every weapon of its grip that no
 #            other style of the grip names.
@@ -409,6 +415,8 @@ cells = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
 #   ease_spell two_shields: percent points off the chance a spell fails
 #   far_to_hit ranged_spell: added to the to-hit at a target [spell_attacks] `far` or more away
 #   far_threat ranged_spell: added to the threat widening at such a target
+#   cells      ranged_spell: cells farther (a range, a length), after the school's (0 to 3)
+#   bonus      touch_spell: added to the roll, harm or healing, after the school's (0 to 6)
 #   armour     armoured_spell: percent off what worn armour adds to every spell's mana cost,
 #              whatever is cast (spells.toml's armour percents)
 #   hidden     true: listed (the weapon skills screen, the dumps, talents that ask for it) only
@@ -520,31 +528,34 @@ curve = "melee"
 to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5]
 parry = [0, 1, 1, 2, 2, 2, 3, 4, 5, 6, 7]
 
-# Caster styles (#571): how spells that roll to hit are cast. Every class that casts starts in
-# one or may advance in one. Battle caster also trains on every other spell paid in mana that
-# its caster casts in armour that hinders casting (an attempt's marks, as against an opponent
-# of the caster's own level).
+# Caster styles (#571; the spell scaling design §10.2): where a spell is cast from. Aimed at a
+# creature beside the caster, it is a Toucher's; aimed farther, a Sniper's; in armour that
+# hinders casting, a Battle caster's wherever it is aimed; on oneself out of such armour, no
+# style's. Every spell paid in mana trains the style it was cast in, an attempt and a success as
+# it landed, as its school does. Every class that casts starts in one or may advance in one.
 [[skill]]
 id = "sniper"
 name = "Sniper"
-phrase = "at sniping with spells"
+phrase = "at casting from afar"
 role = "style"
 grip = "ranged_spell"
 curve = "missile"
 to_hit = [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4]
 far_to_hit = [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3]
 far_threat = [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2]
+cells = [0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2]
 
 [[skill]]
 id = "toucher"
 name = "Toucher"
-phrase = "at laying on spells by touch"
+phrase = "at casting up close"
 role = "style"
 grip = "touch_spell"
 curve = "missile"
 to_hit = [0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5]
 threat = [0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2]
 crit = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2]
+bonus = [0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3]
 
 [[skill]]
 id = "battle_caster"
