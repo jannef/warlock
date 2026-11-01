@@ -305,19 +305,20 @@ time; press `A` or `Esc` to close it.
 ## Info pages
 
 The [character screen](#character), the [inventory](objects.md#your-pack), the [equipment screen](equipment.md#the-equipment-screen), the [skills screen](#skills), the [weapon skills](weapon-skills.md)
-screen, the [quest log](quests.md#the-quest-log), the [talents](talents.md) page, and [your story](background.md#when-it-is-told) are numbered pages of one set, shown on the bottom
+screen, the [Magic page](schools.md#the-magic-page), the [quest log](quests.md#the-quest-log), the [talents](talents.md) page, and [your story](background.md#when-it-is-told) are numbered pages of one set, shown on the bottom
 edge of each as
-`1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Quests · 7 Talents · 8 Story`, the one
+`1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story`, the one
 you are on highlighted. All pages are the same width, so the frame stays put as you turn them.
 On a window too small for that, every page goes by short names
-(`1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story`), and on the narrowest
+(`1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story`), and on the narrowest
 by their numbers alone. While one of them is open, `1` to `9` switch to the page with that number (the row
 of number keys above the letters; the numpad still moves), and `Tab` / `Shift`+`Tab` go to the
 next or previous page, wrapping around. The page replaces the one you were on, so `Esc` closes it
 and takes you back to where you opened the first one, as if you had only ever opened that one.
 The number keys do nothing during play, and they keep their own meaning on a screen that is a
-step of a page, such as choosing what goes in a slot. Each page also keeps its own key (`@`,
-`I`, `i`, `A`) to open it and to close it. All of these keys can be rebound in the Controls screen, as
+step of a page, such as choosing what goes in a slot. Each page but the Magic page also keeps
+its own key (`@`, `I`, `i`, `A`) to open it and to close it; the Magic page is reached by its
+number from another page. All of these keys can be rebound in the Controls screen, as
 "Info page 1" to "Info page 9", "Next info page", and "Previous info page"; they are separate
 from the play keys, so `Tab` can be both "next target" while aiming and "next info page" on an
 info screen.

@@ -37,7 +37,7 @@ only the talents you may take now, by tree. A talent with a choice ([Weapon focu
 asks for it next. The screen can't be closed until everything is chosen. Two levels at once are
 one sequence, the lower level's choices first.
 
-The **Talents page** (`G`, or page 7 of the [information pages](controls.md#info-pages)) lists your talents, then every other
+The **Talents page** (`G`, or page 8 of the [information pages](controls.md#info-pages)) lists your talents, then every other
 talent you could still pick, by tree, with what it needs; the parts you already meet stand out
 from those you don't, so you can plan a build there.
 

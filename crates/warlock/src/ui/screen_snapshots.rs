@@ -375,6 +375,55 @@ const CASES: &[Case] = &[
         screen: Some("weapon-skills"),
         ..BASE
     },
+    // The Magic page (the spell scaling design §11): the showcase wizard's mana, the schools
+    // (evocation from the class), the caster styles (Sniper), and the spells with their rolls.
+    Case {
+        name: "magic-screen",
+        character: Some("human,female,wizard"),
+        run: true,
+        screen: Some("magic"),
+        size: (112, 40),
+        ..BASE
+    },
+    // A wizard of level 18 with ranks set as risen ones are: more spells, climbed bars, a
+    // bigger die in evocation's rows.
+    Case {
+        name: "magic-screen-trained",
+        character: Some("human,female,wizard"),
+        actions: "xp:200000 levelup:auto rank:evocation:5 rank:restoration:3",
+        screen: Some("magic"),
+        size: (112, 40),
+        ..BASE
+    },
+    // A paladin in the forge's chain mail, which hinders casting: Battle caster marked.
+    Case {
+        name: "magic-screen-armoured",
+        scenario: "forge",
+        character: Some("human,male,paladin"),
+        actions: "move:SW move:S pickup equip:body:l",
+        screen: Some("magic"),
+        size: (112, 40),
+        ..BASE
+    },
+    // A warrior: the schools at rank 0, no caster styles, no spells.
+    Case {
+        name: "magic-screen-none",
+        character: Some("human,male,warrior"),
+        run: true,
+        screen: Some("magic"),
+        size: (112, 40),
+        ..BASE
+    },
+    // An 80 by 20 console: the short tab line, and the page of a wizard of level 18 scrolls,
+    // its gaps given way (at 80 by 24 it fits so).
+    Case {
+        name: "magic-screen-short",
+        character: Some("human,female,wizard"),
+        actions: "xp:200000 levelup:auto",
+        screen: Some("magic"),
+        size: (80, 20),
+        ..BASE
+    },
     Case {
         name: "abilities-menu",
         actions: "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*2 move:N \
@@ -617,7 +666,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // The background story (#703): opened by the app as the run New run's summary started
-    // begins (the showcase's character, its seed), then page 8 of a kit run, and page 8 of a
+    // begins (the showcase's character, its seed), then page 9 of a kit run, and page 9 of a
     // scenario's own character, who has none.
     Case {
         name: "story-screen",
@@ -631,15 +680,15 @@ const CASES: &[Case] = &[
         character: Some("dwarf,female,warrior"),
         run: true,
         screen: Some("character"),
-        keys: Some("8"),
-        size: (110, 36),
+        keys: Some("9"),
+        size: (112, 36),
         ..BASE
     },
     Case {
         name: "story-page-none",
         run: true,
         screen: Some("character"),
-        keys: Some("8"),
+        keys: Some("9"),
         ..BASE
     },
     // A Unicorn (seed 12) after Horn's grace: the Birth sign group, the grace greyed out while

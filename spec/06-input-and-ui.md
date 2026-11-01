@@ -446,23 +446,34 @@ developer notes (CLAUDE.md, `docs/dev/`).
     time ("You have no shield to bash with."). New abilities register in the registry and get
     no default key.
 - **Weapon skills** (`W`; M22, §8 "Weapon skills", "Fighting styles"), ADOM-like: the player's
-  weapon skills and fighting styles in five sections in data order — Melee (the `melee` and
+  weapon skills and fighting styles in four sections in data order — Melee (the `melee` and
   `unarmed` skills), Missile and thrown (`launcher`, `thrown`), Shields (`shield_block`,
-  `shield_bash`), Spells (`spell`, #571), Fighting styles (`style`) — each with its name, its rank (0 to 10; untrained
+  `shield_bash`), Fighting styles (`style`, but the caster styles) — each with its name, its rank (0 to 10; untrained
   skills dimmer, so what the player knows stands out), and a faint bar of ten cells (`━` earned,
   `─` still to earn, muted colors) of their marks toward the next rank (none at rank 10). The
   styles the player fights in now (`PerceptionView::own_styles_in_use`: their hands', their
   readied missile weapon's, throwing's while something is ready to throw) are marked with an
   accent `•` before the name, and the Fighting styles heading then has the legend `• in use`.
-  Where the console is wide enough (88 columns) the sections are in two columns, Melee and
-  Missile and thrown on the left, Shields, Spells, and Fighting styles on the right; else one. A
+  The schools of magic and the caster styles are the Magic page's, and the footer names it
+  (`6 Magic`). Where the console is wide enough (88 columns) the sections are in two columns, Melee and
+  Missile and thrown on the left, Shields and Fighting styles on the right; else one. A
   `hidden` style (Two Shields, #611) is left out until the player has marks in it. Never what
   a rank gives, a mark count, or a creature's ranks. Read-only; `W`, Enter, or Esc closes it; in
   a short window the gaps between sections, the margin, and the gap above the footer give way
-  first (in the default 1280×720 window one column then leaves the last few caster styles to
-  scroll), and a list still too long scrolls with
+  first, and a list still too long scrolls with
   ↑↓ (`↑`/`↓` on the frame where rows are hidden, `↑↓ scroll` in the footer). Without weapon
   skills in content it says "You know no weapon skills."
+- **Magic** (page 6; no command of its own; the spell scaling design §11; §8 "Weapon skills",
+  "Fighting styles", "Spells"): one column, scrolled with ↑↓ when it does not fit (the gaps
+  giving way first, as on the weapon skills screen), in order: `Mana 47/106` (`own_mana`, as the
+  status bar); Schools, the seven `school` skills in data order, each with its rank and marks bar
+  as the weapon skills screen draws a skill; Caster styles (Sniper, Toucher, Battle caster), the
+  same, Battle caster marked `•` while what is worn hinders casting (`own_styles_in_use`) with
+  the heading's legend `• the style you cast in now`, listed only for a player who knows a spell
+  or has a rank or marks in a caster style; Spells, every spell known in the abilities menu's
+  order (by level, then name), each with the menu's words (`Magic missile   2d4 force, 3 mana,
+  aimed`), or "You know no spells.". No cursor and no description: spells are cast from the
+  abilities menu. Never what a rank gives. Enter or Esc closes it.
 - **Quest log** (`q`; §8 "Quests"): the quests the player was given ("Active"), then those
   they have done ("Done"), by name, each in the order of `data/quests.toml` ("You have taken
   up no quests." when there are none). ↑↓ choose one; below the list it shows what it asks, as
@@ -475,14 +486,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   most six lines). Read-only: quests are not abandoned (the owner's decision). `q`, Enter, or Esc
   closes it.
   The character screen, the inventory, the equipment screen, the Skills screen, the weapon
-  skills screen, the quest log, the Talents page, and the Story page are the numbered info pages 1 to 8: on one of them, a digit,
+  skills screen, the Magic page, the quest log, the Talents page, and the Story page are the numbered info pages 1 to 9: on one of them, a digit,
   Tab, or Shift+Tab replaces it with another, and the tab line on its bottom
   border names them, each after its key, the current one highlighted. The pages share one width,
   wide enough for the line by their names (`1 Character · 2 Inventory · 3 Equipment · 4 Skills ·
-  5 Weapons · 6 Quests · 7 Talents · 8 Story`), so the frame and the line stay put as the pages turn; on a
-  console too narrow for it every page's line goes by short names (`1 Char · 2 Inv · 3 Equip ·
-  4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story`), else by keys alone.
-- **Talents** (page 7, its own command `talents`, `G`; #236, #644; §8 "Talents"): the
+  5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story`), so the frame and the line stay put as the pages turn; on a
+  console too narrow for it every page's line goes by short names (`1 Char · 2 Inv · 3 Eqp ·
+  4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story`), else by keys alone.
+- **Talents** (page 8, its own command `talents`, `G`; #236, #644; §8 "Talents"): the
   player's talents ("Your talents"), by tree in tree order, each with its rank when it has
   several (`Keen ears 1/2`) and, for those not picked, where it came from (`(class)`, `(birth
   sign)`); then, dimmer, "Other talents": every other talent the player could still pick (not
@@ -498,8 +509,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   that makes a run (`--character`, `--name`, `--talents`, `--new`), over the first turn before
   any input, 72 wide like the sign reveal, footer `Enter continue`; never on Continue or Resume,
   never under `--capture` or `--replay`, never beneath another screen `--screen` opened, never
-  for a run without a story; nothing is saved of it. Afterwards it is **page 8, "Story"** (the
-  info pages' width and tab line, `Page(8)`; no command of its own), which for a character
+  for a run without a story; nothing is saved of it. Afterwards it is **page 9, "Story"** (the
+  info pages' width and tab line, `Page(9)`; no command of its own), which for a character
   without a story (a scenario's own, an old save) says "Your story is not written."
 - **Level-up** (#236; §8 "Talents", "Skills"): a level's choices open the level-up screen by
   itself at the end of the turn they come in (`screens::on_level_up`; also on resuming a run

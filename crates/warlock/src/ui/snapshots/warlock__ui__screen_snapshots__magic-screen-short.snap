@@ -1,0 +1,24 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+┌─ Magic ──────────────────────────────────────────────────────────────────────┐
+│ Mana 153/158                                                                 │
+│ Schools                                                                      │
+│   Evocation                2  ──────────                                     │
+│   Necromancy               0  ──────────                                     │
+│   Abjuration               0  ──────────                                     │
+│   Restoration              0  ──────────                                     │
+│   Transmutation            0  ──────────                                     │
+│   Enchantment              0  ──────────                                     │
+│   Divination               0  ──────────                                     │
+│ Caster styles                                                                │
+│   Sniper                   1  ──────────                                     │
+│   Toucher                  0  ──────────                                     │
+│   Battle caster            0  ──────────                                     │
+│ Spells                                                                       │
+│   Ray of frost            1d6 cold, 1 mana, aimed                            │
+│   Magic missile           2d4 force, 3 mana, aimed                           │
+│   Burning hands           2d4 fire, 6 mana, aimed                            ↓
+│ ↑↓ scroll   Esc close                                                        │
+└─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──┘

@@ -39,6 +39,7 @@ use super::equipment_screen::{EquipmentScreen, ItemScreen};
 use super::files_screen::FilesScreen;
 use super::info_tabs;
 use super::level_up_screen::LevelUpScreen;
+use super::magic_screen::MagicScreen;
 use super::menu::{MainMenu, Press, quit_dialog};
 use super::messages_screen::MessagesScreen;
 use super::motion::Motion;
@@ -119,12 +120,15 @@ pub enum ScreenName {
     Skills,
     /// The player's weapon skills: ranks and marks (`W` in play).
     WeaponSkills,
+    /// The player's magic (page 6): the schools of magic and the caster styles with their
+    /// ranks and marks, and the spells known with their rolls. No key of its own in play.
+    Magic,
     /// The player's quests, active and done (`q` in play).
     Quests,
-    /// The player's talents, then every other with what it needs (page 7; its own command,
+    /// The player's talents, then every other with what it needs (page 8; its own command,
     /// unbound by default).
     Talents,
-    /// The player's background story (page 8): its paragraphs. Opened by the app once as a new
+    /// The player's background story (page 9): its paragraphs. Opened by the app once as a new
     /// run begins (`on_run_start`), and by `--screen story`, as that first-turn screen.
     Story,
     /// The message history (`M` in play): every message the log keeps, the newest at the
@@ -185,6 +189,7 @@ impl ScreenName {
                 | ScreenName::Character
                 | ScreenName::Skills
                 | ScreenName::WeaponSkills
+                | ScreenName::Magic
                 | ScreenName::Quests
                 | ScreenName::Talents
                 | ScreenName::Story
@@ -314,6 +319,7 @@ enum Screen {
     Character(CharacterScreen),
     Skills(SkillsScreen),
     WeaponSkills(WeaponSkillsScreen),
+    Magic(MagicScreen),
     Quests(QuestScreen),
     Talents(TalentsScreen),
     Story(StoryScreen),
@@ -395,6 +401,7 @@ impl Screen {
             ScreenName::Character => Screen::Character(CharacterScreen::new(run)),
             ScreenName::Skills => Screen::Skills(SkillsScreen::new(run)),
             ScreenName::WeaponSkills => Screen::WeaponSkills(WeaponSkillsScreen::new(run)),
+            ScreenName::Magic => Screen::Magic(MagicScreen::new(run)),
             ScreenName::Quests => Screen::Quests(QuestScreen::new(run)),
             ScreenName::Talents => Screen::Talents(TalentsScreen::new(run)),
             ScreenName::Story => Screen::Story(StoryScreen::page(run)),
@@ -449,6 +456,7 @@ impl Screen {
             Screen::Character(_) => ScreenName::Character,
             Screen::Skills(_) => ScreenName::Skills,
             Screen::WeaponSkills(_) => ScreenName::WeaponSkills,
+            Screen::Magic(_) => ScreenName::Magic,
             Screen::Quests(_) => ScreenName::Quests,
             Screen::Talents(_) => ScreenName::Talents,
             Screen::Story(_) => ScreenName::Story,
@@ -699,6 +707,7 @@ impl ScreenStack {
             Some(Screen::Character(screen)) => screen.handle(press, bindings),
             Some(Screen::Skills(screen)) => screen.handle(press, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.handle(press, bindings),
+            Some(Screen::Magic(screen)) => screen.handle(press),
             Some(Screen::Quests(screen)) => screen.handle(press, bindings),
             Some(Screen::Talents(screen)) => screen.handle(press, bindings),
             Some(Screen::Story(screen)) => {
@@ -777,6 +786,7 @@ impl ScreenStack {
             Some(Screen::Character(screen)) => screen.draw(console, bindings),
             Some(Screen::Skills(screen)) => screen.draw(console, bindings),
             Some(Screen::WeaponSkills(screen)) => screen.draw(console, bindings),
+            Some(Screen::Magic(screen)) => screen.draw(console, bindings),
             Some(Screen::Quests(screen)) => screen.draw(console, bindings),
             Some(Screen::Talents(screen)) => screen.draw(console, bindings),
             Some(Screen::Story(screen)) => screen.draw(console, bindings),
@@ -853,7 +863,7 @@ impl Screens<'_> {
         }
     }
 
-    /// Opens the story screen as the run begins ([`StoryScreen::opening`]): not page 8.
+    /// Opens the story screen as the run begins ([`StoryScreen::opening`]): not page 9.
     fn open_story(&mut self) {
         let view = self.game.as_ref().map(|game| game.world.perception());
         let screen = Screen::Story(StoryScreen::opening(view.as_ref()));
@@ -925,7 +935,7 @@ pub(super) fn open_startup_screens(args: Res<Args>, game: Option<Res<Game>>, mut
         if screens.stack.top() == Some(name) {
             continue;
         }
-        // `--screen story` is the screen as the run begins, not page 8.
+        // `--screen story` is the screen as the run begins, not page 9.
         if name == ScreenName::Story {
             screens.open_story();
         } else {
@@ -966,7 +976,7 @@ fn startup_screens(screen: Option<ScreenName>, in_run: bool) -> Vec<ScreenName> 
 /// first turn, before any input, when the run was made here ([`Game::story_due`]: New run's
 /// Start, or a windowed start that makes a run; never Continue, Resume, `--capture`, or
 /// `--replay`), nothing else is open (`--screen` opened its own), and the character has a story.
-/// Nothing is saved of it: a run resumed reads it on page 8.
+/// Nothing is saved of it: a run resumed reads it on page 9.
 pub(super) fn on_run_start(game: Res<Game>, mut screens: Screens) {
     if !game.is_added() || !game.story_due || !screens.stack.is_empty() {
         return;
@@ -1972,7 +1982,7 @@ mod tests {
         // Its own page, a page that does not exist, and the numpad change nothing.
         frame(
             &mut app,
-            &[digit(3), (KeyCode::Digit9, "9"), (KeyCode::Numpad1, "1")],
+            &[digit(3), (KeyCode::Digit0, "0"), (KeyCode::Numpad1, "1")],
         );
         assert_eq!(names(&app), [ScreenName::Equipment]);
         // A sub-step is not a page: its digits are its own.
@@ -2519,8 +2529,8 @@ mod tests {
             frame(&mut app, &[]);
         }
         assert!(names(&app).is_empty(), "once");
-        // Page 8 reads it again, from another page.
-        frame(&mut app, &[(KeyCode::KeyI, "i"), (KeyCode::Digit8, "8")]);
+        // Page 9 reads it again, from another page.
+        frame(&mut app, &[(KeyCode::KeyI, "i"), (KeyCode::Digit9, "9")]);
         assert_eq!(names(&app), [ScreenName::Story]);
         frame(&mut app, &[ESC]);
         assert!(names(&app).is_empty());

@@ -21,13 +21,13 @@ expression: "render(case, content.clone())"
 │   Unarmed                  0  ──────────      Skirmisher               0  ──────────             │
 │                                               Brawler                  0  ──────────             │
 │ Missile and thrown                          • Staff Fighter            0  ──────────             │
-│   Bows                     0  ──────────      Sniper                   1  ──────────             │
-│   Crossbows                0  ──────────      Toucher                  0  ──────────             │
-│   Slings                   0  ──────────      Battle caster            0  ──────────             │
+│   Bows                     0  ──────────                                                         │
+│   Crossbows                0  ──────────                                                         │
+│   Slings                   0  ──────────                                                         │
 │   Thrown weapons           0  ──────────                                                         │
 │                                                                                                  │
-│ W or Esc close                                                                                   │
-└─ 1 Char · 2 Inv · 3 Equip · 4 Skills · 5 Weap · 6 Quests · 7 Tal · 8 Story ──────────────────────┘
+│ 6 Magic   W or Esc close                                                                         │
+└─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘
 
 
 

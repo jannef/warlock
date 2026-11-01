@@ -1,0 +1,44 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You are burdened.
+ You take off a hardened leather jerkin. You put on a chain mail shirt.
+
+
+
+
+
+
+┌─ Magic ─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                             │
+│ Mana 6/6                                                                                                    │
+│                                                                                                             │
+│ Schools                                                                                                     │
+│   Evocation                0  ──────────                                                                    │
+│   Necromancy               0  ──────────                                                                    │
+│   Abjuration               1  ──────────                                                                    │
+│   Restoration              0  ──────────                                                                    │
+│   Transmutation            0  ──────────                                                                    │
+│   Enchantment              0  ──────────                                                                    │
+│   Divination               0  ──────────                                                                    │
+│                                                                                                             │
+│ Caster styles                      • the style you cast in now                                              │
+│   Sniper                   0  ──────────                                                                    │
+│   Toucher                  0  ──────────                                                                    │
+│ • Battle caster            1  ──────────                                                                    │
+│                                                                                                             │
+│ Spells                                                                                                      │
+│   You know no spells.                                                                                       │
+│                                                                                                             │
+│ Esc close                                                                                                   │
+└─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story ─┘
+
+
+
+
+
+
+
+
+ The Forge  ·  HP 20/20  ·  MP 6/6  ·  Sta 10/10  ·  Burdened  ·  Lv 1  ·  08:01  ·  11 Darkening    ? controls

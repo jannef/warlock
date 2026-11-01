@@ -1,0 +1,44 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+
+
+
+
+
+
+
+
+
+┌─ Magic ─────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                                             │
+│ Mana 3/3                                                                                                    │
+│                                                                                                             │
+│ Schools                                                                                                     │
+│   Evocation                0  ──────────                                                                    │
+│   Necromancy               0  ──────────                                                                    │
+│   Abjuration               0  ──────────                                                                    │
+│   Restoration              0  ──────────                                                                    │
+│   Transmutation            0  ──────────                                                                    │
+│   Enchantment              0  ──────────                                                                    │
+│   Divination               0  ──────────                                                                    │
+│                                                                                                             │
+│ Spells                                                                                                      │
+│   You know no spells.                                                                                       │
+│                                                                                                             │
+│ Esc close                                                                                                   │
+└─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story ─┘
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 22/22  ·  MP 3/3  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

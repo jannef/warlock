@@ -2,7 +2,8 @@
 //! skills") and fighting styles (spec §8 "Fighting styles"), ADOM-like: by section (melee,
 //! missile and thrown, shields, fighting styles), each with its rank, 0 to 10, and a faint bar of
 //! their marks toward the next rank; the styles the player fights in now are marked. Never what a
-//! rank gives: perception has none of it, and the wiki documents the rules.
+//! rank gives: perception has none of it, and the wiki documents the rules. The schools of magic
+//! and the caster styles are on the Magic page (`magic_screen`), which the hint line names.
 //!
 //! Two columns where the console is wide enough (the weapons on the left, shields and styles on
 //! the right), else one. In a console too short for every row the gaps and margins give way,
@@ -17,7 +18,7 @@ use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use warlock_core::color::Rgb;
-use warlock_core::content::{Section, WeaponSkillId, WeaponSkillTable};
+use warlock_core::content::{Section, WeaponSkillDef, WeaponSkillId, WeaponSkillTable};
 use warlock_core::perception::PerceptionView;
 use warlock_core::weapon_skills::WeaponSkills;
 
@@ -100,8 +101,12 @@ impl WeaponSkillsScreen {
     fn of(table: &WeaponSkillTable, own: &WeaponSkills, in_use: &[WeaponSkillId]) -> Self {
         let mut columns: [Vec<Row>; 2] = [Vec::new(), Vec::new()];
         for section in Section::ALL {
+            // The caster styles are where a spell is cast from: the Magic page's.
+            let casts = |def: &WeaponSkillDef| def.style.as_ref().is_some_and(|s| s.grip.casts());
             let skills: Vec<Row> = (table.ids())
-                .filter(|&(id, def)| def.role.section() == Some(section) && own.shows(table, id))
+                .filter(|&(id, def)| {
+                    def.role.section() == Some(section) && !casts(def) && own.shows(table, id)
+                })
                 .map(|(id, def)| Row::Skill {
                     name: def.name.clone(),
                     rank: own.rank(id),
@@ -193,10 +198,14 @@ impl WeaponSkillsScreen {
         if first < most && room > 0 {
             console.print(edge, top + room - 1, "↓", TEXT_DIM);
         }
-        let close = match bindings.keys_of(KeyCommand::WeaponSkills).first() {
+        let mut close = match bindings.keys_of(KeyCommand::WeaponSkills).first() {
             Some(key) => format!("{} or Esc close", key.display()),
             None => "Esc close".to_string(),
         };
+        // The spells' skills and the caster styles are on the Magic page.
+        if let Some(magic) = super::info_tabs::hint(super::ScreenName::Magic, bindings) {
+            close = format!("{magic}   {close}");
+        }
         let footer = if most > 0 {
             format!("{} scroll   {close}", Hints::of(bindings).up_down())
         } else {
@@ -239,8 +248,8 @@ fn draw_row(console: &mut Console, x: i32, y: i32, row: &Row) {
     }
 }
 
-/// The marks bar at (`x`, `y`): `filled` of [`BAR`] cells earned.
-fn draw_bar(console: &mut Console, x: i32, y: i32, filled: u32) {
+/// The marks bar at (`x`, `y`): `filled` of [`BAR`] cells earned (the Magic page's too).
+pub(super) fn draw_bar(console: &mut Console, x: i32, y: i32, filled: u32) {
     for i in 0..BAR {
         let (glyph, fg) = if i < filled {
             (BAR_DONE, BAR_DONE_FG)
@@ -318,11 +327,13 @@ mod tests {
         assert!(at("Melee") < at("Missile and thrown") && at("Missile and thrown") < at("Shields"));
         assert!(at("Shields") < at("Fighting styles") && at("Fighting styles") < at("Duelist"));
         // Every skill once but Two Shields, hidden until its first marks (#611), and the seven
-        // schools of magic, which are magic's, not the weapons'.
+        // schools of magic and the three caster styles, which are the Magic page's.
         let skills = world.content().weapon_skills().skills().len();
-        assert_eq!(skill_rows(&screen), skills - 1 - 7);
+        assert_eq!(skill_rows(&screen), skills - 1 - 7 - 3);
         assert!(at("Evocation").is_none());
         assert!(at("Two Shields").is_none());
+        assert!(at("Battle caster").is_none() && at("Sniper").is_none());
+        row("6 Magic");
     }
 
     #[test]
@@ -415,7 +426,7 @@ mod tests {
         // everything fits, gaps and all.
         let text = drawn(&screen, 96, 24);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
-        for needle in ["Shield bashing", "Battle caster", "Slings"] {
+        for needle in ["Shield bashing", "Staff Fighter", "Slings"] {
             assert!(at(needle) < at("W or Esc close"), "{needle}: {text:#?}");
         }
         assert_eq!(at("Melee"), at("Shields"), "side by side");
@@ -429,15 +440,15 @@ mod tests {
         let text = drawn(&screen, 60, 40);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert!(at("Shield bashing") < at("Fighting styles"));
-        assert!(at("Battle caster") < at("W or Esc close"));
+        assert!(at("Staff Fighter") < at("W or Esc close"));
         // 64 by 32 (the default 1280×720 window at the default font): one column, the gaps and
-        // margins give way, and the last few caster styles scroll (#571).
+        // margins give way (#571), and with the caster styles on the Magic page every row fits.
         let text = drawn(&screen, 64, 32);
         let at = |needle: &str| text.iter().position(|l| l.contains(needle));
         assert_eq!(at("Missile and thrown"), at("Unarmed").map(|y| y + 1));
         assert_eq!(at("Daggers and knives"), at("Melee").map(|y| y + 1));
-        assert!(at("Shield bashing") < at("W or Esc close"), "{text:#?}");
-        assert!(text.iter().any(|l| l.contains("scroll")), "{text:#?}");
+        assert!(at("Staff Fighter") < at("W or Esc close"), "{text:#?}");
+        assert!(!text.iter().any(|l| l.contains("scroll")), "{text:#?}");
     }
 
     #[test]
@@ -448,7 +459,7 @@ mod tests {
         let mut screen = WeaponSkillsScreen::new(Some(&world.perception()));
         let text = drawn(&screen, 48, 24);
         let has = |text: &[String], needle: &str| text.iter().any(|l| l.contains(needle));
-        assert!(has(&text, "Melee") && !has(&text, "Battle caster"));
+        assert!(has(&text, "Melee") && !has(&text, "Staff Fighter"));
         assert!(has(&text, "↑↓ scroll") && has(&text, "↓") && has(&text, "Esc close"));
         // ↑ at the top stays; ↓ scrolls a row at a time, down to the last row and no further.
         assert_eq!(screen.handle(&Press::nav(Nav::Up), &b), ScreenAction::Stay);
@@ -460,10 +471,10 @@ mod tests {
         }
         let text = drawn(&screen, 48, 24);
         assert!(
-            has(&text, "Battle caster") && !has(&text, "Melee"),
+            has(&text, "Staff Fighter") && !has(&text, "Melee"),
             "{text:#?}"
         );
-        let last = text.iter().position(|l| l.contains("Battle caster"));
+        let last = text.iter().position(|l| l.contains("Staff Fighter"));
         let footer = text.iter().position(|l| l.contains("Esc close"));
         assert_eq!(
             last.map(|y| y + 1),
@@ -473,7 +484,7 @@ mod tests {
         // One ↑ shows one row more at the top.
         screen.handle(&Press::nav(Nav::Up), &b);
         let up = drawn(&screen, 48, 24);
-        assert!(!has(&up, "Battle caster"));
+        assert!(!has(&up, "Staff Fighter"));
         let at = |text: &[String]| text.iter().position(|l| l.contains("Shield bashing"));
         assert_eq!(at(&up), at(&text).map(|y| y + 1));
     }

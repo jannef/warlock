@@ -41,6 +41,7 @@ mod glyphs;
 mod info_tabs;
 mod level_up_screen;
 mod look;
+mod magic_screen;
 mod menu;
 mod messages_screen;
 mod missiles;
