@@ -97,7 +97,6 @@ use warlock_core::hunger::Hunger;
 use warlock_core::light::MoonPhase;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::time::GameTime;
-use warlock_core::weather::Weather;
 
 const MESSAGE_ROWS: i32 = 2;
 const STATUS_ROWS: i32 = 1;
@@ -729,8 +728,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         Some(Segment::new(3, calendar.full_date(time)).or_short(calendar.date(time))),
         moon_status(content.moons(), time)
             .map(|(text, glyphs)| Segment::new(5, text).or_short(glyphs)),
-        view.weather()
-            .map(|w| Segment::new(2, weather_text(w, view.forecast()))),
+        view.weather().map(|w| Segment::new(2, w.name())),
         Some(Segment::new(4, unit.show(view.temperature()))),
         Some(Segment::new(6, format!("Turn {}", world.turn()))),
         Some(Segment::new(10, format!("{},{}", pos.x, pos.y))),
@@ -743,15 +741,6 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         .chain(effects)
         .chain(rest.into_iter().flatten())
         .collect()
-}
-
-/// The weather for the status bar: its name, and the weather coming for a Weather-wise player
-/// (`Clear, then rain`).
-fn weather_text(now: Weather, coming: Option<Weather>) -> String {
-    match coming {
-        Some(next) => format!("{}, then {}", now.name(), next.name().to_lowercase()),
-        None => now.name().to_string(),
-    }
 }
 
 /// The moons' phases for the status bar, and just their glyphs for a narrow window: the glyph
@@ -1248,15 +1237,6 @@ mod tests {
         assert!(
             line.contains("Heavy rain") && line.contains("11 Darkening"),
             "{line}"
-        );
-    }
-
-    #[test]
-    fn a_weather_wise_player_sees_the_weather_coming() {
-        assert_eq!(weather_text(Weather::Clear, None), "Clear");
-        assert_eq!(
-            weather_text(Weather::Clear, Some(Weather::HeavyRain)),
-            "Clear, then heavy rain"
         );
     }
 

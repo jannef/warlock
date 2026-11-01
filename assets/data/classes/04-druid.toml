@@ -34,7 +34,6 @@ abilities = [
     { level = 1, talent = "spark" },
     { level = 3, talent = "barkskin" },
     { level = 6, talent = "woodland_stride" },
-    { level = 12, talent = "weather_sense" },
     { level = 12, talent = "call_lightning" },
     { level = 18, talent = "natures_ward" },
     { level = 25, talent = "winters_friend" },

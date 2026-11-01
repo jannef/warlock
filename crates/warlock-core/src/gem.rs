@@ -113,25 +113,6 @@ pub fn find_with(content: &Content, rng: &mut Rng, level: u8, more: i32) -> Opti
     Some(Stack::one(gems.object).with_parts(vec![ItemPart::gem(content, None, gem, cutting)]))
 }
 
-/// `stack`, if it is a loose gem, cut `by` grades finer, at most the finest cut (spec §8 "Class
-/// abilities": the craftsperson's Jeweller); anything else stays as it is. No draws.
-pub fn cut_finer(content: &Content, stack: &mut Stack, by: u8) {
-    if by == 0 {
-        return;
-    }
-    let (Some((gem, cutting)), Some(gems)) = (stack.gem(content), content.gems()) else {
-        return;
-    };
-    let finest = gems.cuts().len().saturating_sub(1);
-    let cut = (usize::from(cutting.cut.0) + usize::from(by)).min(finest);
-    let cutting = Cutting {
-        cut: crate::content::CutId(cut as u8),
-        ..cutting
-    };
-    let parts = vec![ItemPart::gem(content, None, gem, cutting)];
-    *stack = Stack::new(gems.object, stack.count).with_parts(parts);
-}
-
 /// Whether loot sets an item of `def` at item level `level` with a gem, by its class's
 /// ornament `chance` (one draw, none for a class never set), and if so the part it becomes.
 pub fn ornament(content: &Content, rng: &mut Rng, def: &ObjectDef, level: u8) -> Option<ItemPart> {

@@ -7,7 +7,6 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, StoryTier};
 use crate::replay::Replay;
 use crate::rng::Rng;
-use crate::stats::{PerStat, Stat, Stats};
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
@@ -130,67 +129,12 @@ fn favoured_child_doubles_the_luckier_odds() {
 }
 
 #[test]
-fn hard_won_marks_every_point_a_story_took() {
-    let trade = "[chapter]\nid = \"trade\"\nname = \"Trade\"\nparagraph = 1\n\n\
-        [[line]]\nid = \"plain\"\ntier = \"common\"\nweight = 1\ntext = \"Nothing.\"\n\n\
-        [[line]]\nid = \"told\"\ntier = \"common\"\nweight = 1\ntext = \"A trade.\"\nonly = true\n\
-        effects = [{ stat = { strength = -2, dexterity = 1 } }]\n";
-    let content = stories(
-        "uncommon = 120\nrare = 30\nfateful = 5",
-        &[("01-trade.toml", trade)],
-    );
-    let character = "human,male,warrior";
-    let plain = start(&content, character, &[], 3).expect("starts");
-    let won = start(&content, character, &["hard_won"], 3).expect("starts");
-    assert_eq!(story(&won), ["trade/told"]);
-    let (p, w) = (plain.state().player(), won.state().player());
-    // Sixty marks a point taken; none for the point given; without the talent, none at all.
-    assert_eq!(w.stat_marks[Stat::Strength], 120);
-    assert_eq!(w.stat_marks[Stat::Dexterity], 0);
-    assert_eq!(p.stat_marks[Stat::Strength], 0);
-}
-
-#[test]
-fn storyteller_favours_a_tale_worth_hearing() {
-    let spec: CharacterSpec = "human,male,warrior".parse().expect("a character");
-    let mut w =
-        World::with_character(BUILTIN.clone(), "showcase", Some(7), Some(&spec)).expect("world");
-    w.player_mut().stats = Stats::new(PerStat::splat(12), PerStat::splat(40));
-    let shops = w.content().shops().expect("shops").clone();
-    let tale = [
-        StoryTier::Common,
-        StoryTier::Rare,
-        StoryTier::Uncommon,
-        StoryTier::Rare,
-        StoryTier::Fateful,
-    ];
-    let favour = |w: &World, story: &[StoryTier]| {
-        super::shop::favour(w.content(), &shops, w.state.player(), story)
-    };
-    let (none, told) = (favour(&w, &[]), favour(&w, &tale));
-    assert_eq!(none, told, "a story alone moves nothing");
-    w.player_mut().talents.take("storyteller", None);
-    assert_eq!(favour(&w, &[]), none + 5);
-    assert_eq!(
-        favour(&w, &[StoryTier::Common, StoryTier::Uncommon]),
-        none + 5
-    );
-    // Two rare lines and a fateful one: 5 + 2 × 5 + 10.
-    assert_eq!(favour(&w, &tale), none + 25);
-    // The world reads the player's own story: with none, the plain +5.
-    assert_eq!(w.player_favour(), none + 5);
-}
-
-#[test]
 fn the_story_talents_of_creation_are_refused_at_a_level() {
     let mut world = start(&BUILTIN, "human,male,warrior", &[], 1).expect("starts");
     for action in crate::action::parse_actions("xp:2431").expect("actions") {
         world.apply(&action);
     }
-    for (id, name) in [
-        ("favoured_child", "Favoured child"),
-        ("hard_won", "Hard-won"),
-    ] {
+    for (id, name) in [("favoured_child", "Favoured child")] {
         for action in crate::action::parse_actions(&format!("talent:{id}")).expect("actions") {
             world.apply(&action);
         }

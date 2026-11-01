@@ -29,8 +29,6 @@ pub const PRICES: RangeInclusive<u16> = 0..=1000;
 /// ([`StatTraining::eased_price`]; `TalentMods::price_ease`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PriceEase {
-    /// Percent more of the whole price (negative: less; Gifted).
-    pub percent: i32,
     /// Points past the potential the ramp counts as fewer (Late bloomer).
     pub ramp: u8,
 }
@@ -510,8 +508,7 @@ impl StatTraining {
     }
 
     /// [`StatTraining::price`] as talents ease it (`ease`): the ramp counts `ease.ramp` points
-    /// fewer past the potential (Late bloomer: the first past it at the base), then the whole
-    /// is `ease.percent` more (Gifted: −15), rounded down, at least 1.
+    /// fewer past the potential (Late bloomer: the first past it at the base), at least 1.
     pub fn eased_price(&self, score: u8, potential: u8, ease: PriceEase) -> u32 {
         let base = self.base_price(score);
         let over = (u32::from(score) + 1)
@@ -519,8 +516,7 @@ impl StatTraining {
             .saturating_sub(u32::from(ease.ramp));
         let ramp = u32::from(self.ramp_divisor);
         let price = u64::from(base) * u64::from(ramp + over * (over + 1)) / u64::from(ramp);
-        let percent = u64::from((100 + ease.percent).max(0).unsigned_abs());
-        (price * percent / 100).clamp(1, u64::from(u32::MAX)) as u32
+        price.clamp(1, u64::from(u32::MAX)) as u32
     }
 
     /// The marks a drop from `score` pays back: the base price of the point lost divided by

@@ -137,8 +137,7 @@ left out when content has no resources (as skill affixes without skills; `conten
 holds the id lookups, `None` for a table content lacks; the table is read after resources). They
 sum by (effect, resource) in `Mods::pools`, read with `Mods::resource(effect, id)`, never into
 `Mods::get`. Their hooks (B1, #630; docs/dev/resources.md): `resource_max` in
-`Actor::resource_max` (the worn term lifted by Bellows: `TalentMods::geared_resource`, by pool;
-T1, #634; `world/affix_talent_tests.rs`), `resource_rate` in `World::resource_rate`, `active_stamina` (keyed on
+`Actor::resource_max` (the worn term, by pool), `resource_rate` in `World::resource_rate`, `active_stamina` (keyed on
 stamina, global) in `Actor::weapon_stamina`. **On a kill** (E1, #632; `world/siphon.rs`,
 `world/siphon_tests.rs`): `mana_on_kill` and `resource_on_kill` in `World::siphon`, called at
 the kill point of an attack (`fight.rs::resolve`, `spell.rs::spell_strikes`), the slain within

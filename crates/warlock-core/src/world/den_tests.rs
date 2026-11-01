@@ -257,18 +257,6 @@ fn sleepers_count_toward_the_spawn_cap() {
 }
 
 #[test]
-fn sixth_sense_feels_the_sleepers() {
-    let mut w = world("danger = 3\npopulation = [\"kobold\"]\n");
-    w.player_mut().talents.take("sixth_sense", None);
-    w.sense_danger("test_den");
-    assert!(
-        w.messages()
-            .iter()
-            .any(|m| m.text == "Something sleeps on this level.")
-    );
-}
-
-#[test]
 fn a_plain_step_beside_a_sleeper_wakes_it_a_hush_footed_one_does_not() {
     let step = |hush: bool| {
         let mut w = world("");

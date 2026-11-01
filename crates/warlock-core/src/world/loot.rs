@@ -106,11 +106,7 @@ impl World {
         // luck, whoever made the kill.
         let talents = self.state.player().talent_mods(&self.content);
         let luck = loot::Luck::of(&talents);
-        // Jeweller (spec §8 "Class abilities"): a gem a kill drops is cut finer.
-        let gem = gem::find_with(&self.content, &mut rng, level, luck.gems).map(|mut stack| {
-            gem::cut_finer(&self.content, &mut stack, talents.gem_cut);
-            stack
-        });
+        let gem = gem::find_with(&self.content, &mut rng, level, luck.gems);
         gem.or_else(|| {
             loot::roll_with(&self.content, &mut rng, level, LootGrade::Magic, gear, luck)
         })

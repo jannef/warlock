@@ -1,7 +1,0 @@
-[[talent]]
-id = "second_breath"
-name = "Second breath"
-tree = "might"
-description = "Every kill of yours gives you back a little stamina."
-effects = [{ kind = "resource_build", resource = "stamina", on = "kill", amount = 1 }]
-systems = ["stamina"]

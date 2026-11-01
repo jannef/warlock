@@ -19,8 +19,8 @@
 #                 (any skill, trained or not), "element" (a damage type that is no physical
 #                 kind), "school" (a school of magic, `evocation`, or an element: a spell
 #                 tag), "school_skill" (a school of magic as a skill: a row of
-#                 ../weapon_skills.toml of role `school`, `evocation`), "tag" (a creature tag
-#                 some type carries), or "stat" (one of the six, `strength`); replays write it
+#                 ../weapon_skills.toml of role `school`, `evocation`), or "tag" (a creature
+#                 tag some type carries); replays write it
 #                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
 #   needs         what taking any rank asks, all of which must hold at the pick (nothing is
 #                 checked again later):
@@ -103,7 +103,6 @@
 #   threshold_percent { value }   its eyes need that percent more light (negative: less)
 #   darkvision { value }          its darkvision reaches that many cells farther (from none:
 #                                 that far)
-#   sees_uv                       its eyes see ultraviolet light
 #   scent { status, radius }      it sees creatures suffering that status (an id in
 #                                 ../status.toml) in its line of sight within radius cells
 #                                 (1 to 20), however dark
@@ -148,8 +147,6 @@
 #   wading_proof                  wading never gives it a disease
 #   beast_friend                  creatures of animal factions (../factions.toml) are neutral
 #                                 to it until it attacks one of that type
-#   forecast { hours }            it knows the weather coming within that many hours (1 to 24)
-#                                 under the open sky
 #   sun_healing { value }         hit points come back that percent faster under the open sun
 #   hunger_percent { value }      hunger burns that percent faster (negative: slower)
 #   rot_harm_percent { value }    the sickness rotten food gives, that percent more (rounded
@@ -164,8 +161,6 @@
 #                                 percent more
 #   train_percent { value }       every stat training use's chance of a mark, that percent more
 #                                 (a use at 100 stays sure)
-#   price_percent { value }       (choice stat) the chosen stat's training price for a rise,
-#                                 that percent more (negative: less; a drop's untouched)
 #   ramp_ease { points }          the training price's ramp counts each point past a potential
 #                                 that many fewer (1: the first past it at the plain price)
 #   fasting_marks { marks }       a daily stat check met Hungry or worse gives Willpower that
@@ -221,13 +216,8 @@
 #                                 has the effect is identified
 #   gem_find_percent { value }    loot it finds and creatures drop is a loose gem that percent
 #                                 more often (never above certain; the same draws)
-#   gem_cut { value }             loose gems it finds (on levels made from then on, dropped by
-#                                 kills) are cut that many grades finer (1 to 5)
 #   notice { value }              notices hidden things in passing as if trained in Spot and
 #                                 Detect traps, with that much added
-#   danger_sense { value }        senses a level's danger (spec §7 "Danger levels"): at 1, how a
-#                                 level feels on arrival, against its own level; at 2, a note
-#                                 when a creature comes to its level (ranks add up)
 #   spawn_every_percent { value } the time between attempts to bring creatures to its level
 #                                 that percent longer
 #   room_status_immune { status } a special room's (or a whole level's) status never takes it
@@ -270,7 +260,6 @@
 #                                 for every piece of armour worn (if per_piece = true, alone)
 #   stance_to_hit { stance, percent }   that combat stance's to-hit penalty, that percent
 #                                 smaller (100: none)
-#   flee_percent { value }        fleeing steps cost that percent more (negative: cheaper)
 #   slip_percent { value }        a step out of reach of every hostile beside it costs that
 #                                 percent more (negative: cheaper), whatever its stance
 #   pain { value }                every hit (a blow, a shot, a throw, a trap) does that much
@@ -342,10 +331,6 @@
 #   rend_off_hand                 its Rend rolls the off hand's damage dice too
 #   brace { to_hit, status }      its Brace's blow is at that much more to hit, and a foe it
 #                                 hits suffers that status (one degree)
-#   shield_casting { value }      with a shield in each hand, the chance a spell it casts fails
-#                                 that many percentage points smaller (1 to 100)
-#   both_shields { stance }       in that combat stance with a shield in each hand, both
-#                                 shields' Shield bonuses add up in Defence
 #   critical_penetration { value } its confirmed criticals (every attack) ignore that much more
 #                                 Protection, on top of the attack's penetration
 #   penetration { damage, value } its blows that can do damage of that kind ignore that much
@@ -457,8 +442,6 @@
 #                                 first to get there), its attacks gain that to-hit and damage
 #   sworn_foe { to_hit, damage }  against creature types carrying the tag it was taken for (a
 #                                 talent with `choice = "tag"`), that to-hit and damage
-#   quarry_sense                  arriving on a level that holds a living creature an active
-#                                 kill quest of its still asks for, it is told so
 #   exact_sounds                  every sound it hears is placed where it was made
 #   sky_footsteps_percent { value }   its footsteps under the open sky (no roof over the cell
 #                                 stepped to) that percent louder (negative: quieter)

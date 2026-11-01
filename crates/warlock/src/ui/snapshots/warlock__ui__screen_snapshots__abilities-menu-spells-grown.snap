@@ -5,7 +5,6 @@ expression: "render(case, content.clone())"
  You learn Dragon's hoard.
  Your thoughts run keen and clear.
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Class                                                    │
@@ -16,17 +15,18 @@ expression: "render(case, content.clone())"
                     │   d  Burning hands    3d4+2 fire, 5 mana, aimed          │
                     │   e  Arcane bolt      3d6+4 force, 9 mana, aimed         │
                     │ Skills                                                   │
-                    │   f  Decipher script  not usable yet                     │
-                    │   g  Heal             nothing to treat                   │
-                    │   h  Knowledge        not usable yet                     │
+                    │   f  Bluff            not usable yet                     │
+                    │   g  Decipher script  not usable yet                     │
+                    │   h  Heal             nothing to treat                   │
+                    │   i  Knowledge        not usable yet                     │
                     │ Weapon skills                                            │
-                    │   i  Shield bash      you hold no shield                 │
+                    │   j  Shield bash      you hold no shield                 │
                     │                                                          │
                     │ A dart of force toward a place you aim at: it never      │
                     │ misses the first creature in its way. Range 8.           │
                     │                                                          │
                     │                                                          │
-                    │ a-i or Enter use   Esc close                             │
+                    │ a-j or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

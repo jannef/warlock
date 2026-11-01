@@ -14,7 +14,7 @@
 //! run's overworld that leads into it is not revealed. A roll that is never drawn again can so
 //! never point at a place the player cannot go; a rolled quest whose pool is empty is not given.
 
-use super::{ActorKind, Spent, World};
+use super::{Spent, World};
 use crate::content::{Candidate, QuestDef, Roll, Rolled};
 use crate::rng::Rng;
 
@@ -111,31 +111,6 @@ impl World {
                 Some((def.id.clone(), roll, self.quest_pool(def).len()))
             })
             .collect()
-    }
-
-    /// Quarry sense (the bounties system, design §11): arriving on level `level`, a note when a
-    /// living creature there is one an active kill quest of the player's still asks for (a
-    /// type, a tag's member, a named monster).
-    pub(super) fn sense_quarry(&mut self, level: &str) {
-        if !self.state.player().talent_mods(&self.content).quarry_sense {
-            return;
-        }
-        let content = self.content.clone();
-        let wanted: Vec<QuestDef> = (content.quests().iter())
-            .filter(|def| self.state.quests.is_active(def) && !self.ready(def))
-            .map(|def| self.state.quests.given(&content, def).into_owned())
-            .filter(|def| def.kill_target().is_some())
-            .collect();
-        let here = (self.state.actors.values()).any(|a| {
-            a.kind == ActorKind::Creature
-                && a.level == level
-                && wanted
-                    .iter()
-                    .any(|def| def.counts_kill(&content, a.creature, level))
-        });
-        if here {
-            self.note("Your quarry is here.");
-        }
     }
 }
 

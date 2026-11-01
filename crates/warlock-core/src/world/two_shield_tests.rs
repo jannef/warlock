@@ -6,8 +6,7 @@
 use super::caster_tests::{kobold, reach, said, world_with};
 use super::*;
 use crate::action::{AttackKind, Event};
-use crate::combat::Category;
-use crate::content::{CombatStance, Grip, ObjectId};
+use crate::content::{Grip, ObjectId};
 use crate::dump::{self, Layer};
 use crate::equipment::{self, Equipment};
 use crate::weapon_skills::WeaponSkills;
@@ -183,12 +182,9 @@ fn the_slowness_makes_every_attack_dearer_until_the_rank_eases_it() {
 
 #[test]
 fn spells_fail_by_the_banes_chance_costing_mana_and_time_until_rank_nine() {
-    let count = |rank: u8, talent: bool| {
+    let count = |rank: u8| {
         let mut w = priest();
         ranks(&mut w, &[("two_shields", rank)]);
-        if talent {
-            w.player_mut().talents.take("loose_straps", None);
-        }
         let mut failed = 0;
         for _ in 0..200 {
             w.player_mut().mana = 40;
@@ -213,11 +209,9 @@ fn spells_fail_by_the_banes_chance_costing_mana_and_time_until_rank_nine() {
         }
         failed
     };
-    let untrained = count(0, false);
+    let untrained = count(0);
     assert!((110..=190).contains(&untrained), "about 75 %: {untrained}");
-    let straps = count(0, true);
-    assert!(straps < untrained - 40, "Loose straps eases it: {straps}");
-    assert_eq!(count(9, false), 0, "never from rank 9");
+    assert_eq!(count(9), 0, "never from rank 9");
 }
 
 #[test]
@@ -231,22 +225,9 @@ fn a_spell_without_two_shields_draws_nothing_more() {
 }
 
 #[test]
-fn cravens_wall_counts_both_shields_in_the_cowards_stance() {
-    let mut w = priest();
-    ranks(&mut w, &[("two_shields", 8)]);
-    let shield_bonus = |w: &World| w.defence_of(w.player_id()).bonus(Category::Shield);
-    let one = shield_bonus(&w);
-    w.player_mut().talents.take("cravens_wall", None);
-    assert_eq!(shield_bonus(&w), one, "not out of the coward's stance");
-    w.player_mut().stance = CombatStance::Coward;
-    let block = one - 1; // a small shield's own 1, and what the ranks add
-    assert_eq!(shield_bonus(&w), one + 1 + block, "both shields count");
-}
-
-#[test]
 fn the_styles_talents_and_the_stylists_choice_wait_for_its_first_marks() {
     let mut w = priest();
-    let ours = ["loose_straps", "anvil_and_hammer", "cravens_wall"];
+    let ours = ["anvil_and_hammer"];
     let listed = |w: &World| {
         let book = w.content().talents();
         (w.perception().talents().into_iter())
@@ -276,7 +257,7 @@ fn the_styles_talents_and_the_stylists_choice_wait_for_its_first_marks() {
         .weapon_skills
         .train(content.weapon_skills(), id, 1);
     *w.perception = crate::perception::Perception::compute(&w.state, &w.content, &mut w.lights);
-    assert_eq!(listed(&w), vec![0, 0, 0], "listed, not yet takeable");
+    assert_eq!(listed(&w), vec![0], "listed, not yet takeable");
     assert!(!matches!(
         stylist(&w),
         Err(crate::talent::Refusal::BadChoice(..))

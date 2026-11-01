@@ -161,10 +161,7 @@ fn the_three_tables_come_with_the_levels() {
         "the Scholar's Lore, given"
     );
     reach(&mut b, 6);
-    assert_eq!(
-        class_rows(&b),
-        ["Lore", "Mend", "Trained wind", "Wide learning", "Blessing"]
-    );
+    assert_eq!(class_rows(&b), ["Lore", "Mend", "Trained wind", "Blessing"]);
     let restored = World::from_state(b.content().clone(), b.state().clone()).expect("restored");
     assert_eq!(class_rows(&restored), class_rows(&b));
 }
@@ -573,7 +570,7 @@ fn vanishing_act_a_sneak_attack_that_kills_leaves_the_thief_light_footed() {
 }
 
 #[test]
-fn uncanny_dodge_wide_learning_song_of_rest_and_jack_of_all_trades() {
+fn uncanny_dodge_song_of_rest_and_jack_of_all_trades() {
     let mut t = world("thief");
     let content = t.content().clone();
     // The bonus picks of Finesse may have raised it too.
@@ -585,9 +582,6 @@ fn uncanny_dodge_wide_learning_song_of_rest_and_jack_of_all_trades() {
         before + 2
     );
     let mut b = world("bard");
-    let rolls = b.level_rolls();
-    reach(&mut b, 6);
-    assert_eq!(b.level_rolls(), rolls + 1, "Wide learning");
     // Song of rest: resting's pace half again (`healing_rate` reads it, as Fast healer's).
     reach(&mut b, 12);
     let after = b.state.player().talent_mods(&content).resting_percent;

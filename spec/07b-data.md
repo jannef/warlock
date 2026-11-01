@@ -572,7 +572,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `max_ranks` (3), `[coverage]` (`min_talents`, `min_class`, `free_per_tree`), `[[tree]]`s
   (`id`, `name`, `description`, `pending`, `no_free`) in display order, and `[[system]]`s (`id`,
   `name`, `pending`), the closed list a talent's `systems` may name. A `[[talent]]`: `id`,
-  `name`, `tree`, `description`, `ranks`, `choice` (`weapon_skill`, `style`, `element`, `stat`), `needs`
+  `name`, `tree`, `description`, `ranks`, `choice` (`weapon_skill`, `style`, `skill`, `element`, `school`, `school_skill`, `tag`), `needs`
   (`talents = { dodge = 1 }`, `stats = { toughness = 14 }`, `skills = { stealth = 25 }`,
   `weapon_skills = { bows = 3 }`, `chosen`, `level`, `race`, `class`, `eyes`), `effects`
   (`{ kind = "dodge", value = 1 }`: `dodge`, `natural`, `melee_damage`, `max_hp_per_levels

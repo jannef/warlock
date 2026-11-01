@@ -956,7 +956,7 @@ impl World {
             ));
         }
         // A talent the content no longer has (the thief's Trapfinding, Pick lock, and Light
-        // fingers, #684) is let go, and said in the log.
+        // fingers, #684; the cull's filler and duplicates, #774) is let go, and said in the log.
         for actor in state.actors.values_mut() {
             for id in actor.talents.drop_unknown(&content) {
                 retiered.push(format!(

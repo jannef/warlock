@@ -1,4 +1,4 @@
-//! The birth signs' picks (spec §8 "Birth sign"; #270): the seventeen sign-limited talents of
+//! The birth signs' picks (spec §8 "Birth sign"; #270): the fifteen sign-limited talents of
 //! the `stars` tree are offered only to those born under their sign (and with their other
 //! prerequisites), and each changes the one rule it names, the two new actives (Fire breath and
 //! Hound's bay) with their cooldowns in the abilities menu.
@@ -18,9 +18,8 @@ use std::sync::LazyLock;
 static BUILTIN: LazyLock<Arc<Content>> =
     LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
-/// The seventeen picks with the sign each asks for (`(animal, element)`, one of them set).
-const PICKS: [(&str, Option<&str>, Option<&str>); 17] = [
-    ("hare_footed", Some("salamander"), None),
+/// The fifteen picks with the sign each asks for (`(animal, element)`, one of them set).
+const PICKS: [(&str, Option<&str>, Option<&str>); 15] = [
     ("another_head", Some("hydra"), None),
     ("relentless_fury", Some("manticore"), None),
     ("horn_of_plenty", Some("unicorn"), None),
@@ -28,7 +27,6 @@ const PICKS: [(&str, Option<&str>, Option<&str>); 17] = [
     ("petrifying_gaze", Some("basilisk"), None),
     ("rocs_grip", Some("roc"), None),
     ("dragon_hoard", Some("griffin"), None),
-    ("riddle_of_the_sphinx", Some("sphinx"), None),
     ("second_rising", Some("phoenix"), None),
     ("tentacles", Some("kraken"), None),
     ("hounds_bay", Some("barghest"), None),
@@ -206,15 +204,6 @@ fn every_pick_is_offered_only_under_its_sign() {
 }
 
 #[test]
-fn hare_footed_is_quicker_still() {
-    let fleet = born("salamander", "fire");
-    let hare = with("salamander", "fire", "hare_footed");
-    let base = born("hydra", "fire").state.player().speed(&BUILTIN);
-    assert_eq!(fleet.state.player().speed(&BUILTIN), base * 105 / 100);
-    assert_eq!(hare.state.player().speed(&BUILTIN), base * 110 / 100);
-}
-
-#[test]
 fn another_head_heals_while_starving_and_twice_as_fast_resting() {
     let mut plain = born("hydra", "fire");
     let mut heads = with("hydra", "fire", "another_head");
@@ -358,7 +347,7 @@ fn rocs_grip_carries_more_and_shrugs_off_burdened() {
 }
 
 #[test]
-fn the_hoard_and_the_riddle_add_to_their_gifts() {
+fn the_hoard_adds_to_its_gift() {
     let griffin = mods(&born("griffin", "fire"));
     let hoard = mods(&with("griffin", "fire", "dragon_hoard"));
     assert_eq!(
@@ -370,9 +359,6 @@ fn the_hoard_and_the_riddle_add_to_their_gifts() {
         "Hoard sense's odds half again"
     );
     assert_eq!(hoard.favour_percent, griffin.favour_percent + 10);
-    let sphinx = mods(&born("sphinx", "fire"));
-    let riddle = mods(&with("sphinx", "fire", "riddle_of_the_sphinx"));
-    assert_eq!(riddle.skill_rolls, sphinx.skill_rolls + 1);
 }
 
 #[test]

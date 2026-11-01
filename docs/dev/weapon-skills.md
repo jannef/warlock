@@ -85,13 +85,12 @@ each: `Actor::melee_skill` (shield bashing in the grip, so `attack_skills(Melee,
 `World::other_shield` (the follow-up, from `off_hand_or_bash`), `Actor::bash_with` (the to-hit
 bane on every bash in the grip, `Actor::bash` too), `World::shields_slowed`
 (`World::attack_price`, after the stance), `World::shields_fumble` (`cast.rs::cast_spell`, own
-casts paid in mana only, before `perform`), `Actor::both_shields_bonus` (Craven's wall, in
-`Actor::defence`). Hidden: `WeaponSkills::shows` (no marks and no rank: not listed), read by the
+casts paid in mana only, before `perform`). Hidden: `WeaponSkills::shows` (no marks and no rank: not listed), read by the
 weapon skills screen, the `weapon_skills` dump layer and JSON, `PerceptionView::talents` (a
 talent needing a hidden skill the player has not trained), and `talent::may_take` (a hidden
-choice is a bad choice). Talents: `loose_straps` (`shield_casting`), `anvil_and_hammer`
-(`weapon { skill = "two_shields", bash }`), `cravens_wall` (`both_shields { stance }`), all
-needing a rank of the style. Tests: `world/two_shield_tests.rs`, `content/weapon_skill.rs`
+choice is a bad choice). Talent: `anvil_and_hammer`
+(`weapon { skill = "two_shields", bash }`), needing a rank of the style (Loose straps and
+Craven's wall were cut in #774). Tests: `world/two_shield_tests.rs`, `content/weapon_skill.rs`
 (the rank tables, the refusals), the screen's and the equipment screen's unit tests; wiki:
 the banes in `style-benefits.md` (`rank_table`'s bane columns).
 

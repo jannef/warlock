@@ -514,11 +514,7 @@ mod tests {
             "| of Thrift |",
             &["suffix", "Mana", "Frugal caster"],
         );
-        row_has(
-            &table,
-            "| Tireless |",
-            &["prefix", "Stamina", "Deep lungs, Bellows"],
-        );
+        row_has(&table, "| Tireless |", &["prefix", "Stamina", "Deep lungs"]);
         row_has(&table, "| of Fury |", &["Resources", "maximum rage"]);
         row_has(
             &table,
@@ -1525,8 +1521,7 @@ mod tests {
         let picks = text("horoscope-talents.md");
         assert!(
             picks.contains(
-                "| Salamander | Hare-footed | level 12, to be born in the year of the \
-                            Salamander | speed +5 % |"
+                "| Hydra | Another head | level 9, to be born in the year of the Hydra |"
             ),
             "{picks}"
         );

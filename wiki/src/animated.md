@@ -48,7 +48,7 @@ When one is destroyed, what it was made of falls **whole** half the time, as the
 (a silver candlestick you can [sell](shops.md#selling)). Otherwise it **breaks into the parts it was made of**: a
 [gem](gems.md) set in it falls loose, every other part falls as [pieces](objects.md#pieces) of its material (a silver
 candlestick as pieces of silver, still worth something), and paper and wax are lost. Whatever
-magic it had is gone with it. The **[Salvager](talents.md#talent-salvager)** talent raises the share that falls whole. They
+magic it had is gone with it. They
 leave no [corpse](food.md#corpses) and never [bleed](status-effects.md#bleeding).
 
 ## What they are
@@ -59,10 +59,6 @@ can still be [frightened](status-effects.md#status-frightened) (rarely: their wi
 What they are made of decides what hurts them most: wood and cloth [burn](damage-types.md#damage-fire), metal takes [lightning](damage-types.md#damage-electricity)
 badly, and glass, stone, and bone shatter under heavy blows. Nothing can be [stolen](abilities.md#ability-steal) from them:
 what they carry is what they are.
-
-The **[Unbinder](talents.md#talent-unbinder)** talent strikes at the binding, not the thing: your blows against animated
-things are surer and harder. **[Appraiser's eye](talents.md#talent-appraisers-eye)** tells a bound thing's worth at a glance: look
-mode adds "It hums with power." when anything it wears or wields is [magic or rare](magic-items.md).
 
 ## What their magic does for them
 

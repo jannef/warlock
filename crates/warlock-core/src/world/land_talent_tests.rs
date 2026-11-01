@@ -1,14 +1,12 @@
 //! The Shadow and Wayfarer talents (spec §8 "Talents"; #239): effective eyes (Night eyes, Dark
-//! adaptation, Owl eyes, Rune sight), Blood scent, Moon-eyed, Lamplighter, Ambusher, and the
-//! land's: Pathfinder, Swimmer, Winter-born, Marsh walker, Beast-friend, Weather-wise,
-//! Sun-blessed. Each changes the one rule it names.
+//! adaptation, Owl eyes), Blood scent, Lamplighter, Ambusher, and the land's: Pathfinder,
+//! Swimmer, Winter-born, Marsh walker, Beast-friend, Sun-blessed. Each changes the one rule it names.
 
 use super::ice::Footing;
 use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Blow, Strike};
 use crate::content::{ContentFiles, Stance};
-use crate::daylight;
 use crate::light::Light;
 use std::sync::LazyLock;
 
@@ -117,9 +115,6 @@ fn the_eyes_are_the_profile_as_the_talents_change_it() {
         "normal",
         "named as the base profile"
     );
-    assert!(!w.eyes().sees_uv);
-    give(&mut w, "rune_sight");
-    assert!(w.eyes().sees_uv);
     // Owl eyes give low-light eyes darkvision of their own.
     let mut w = world("den");
     w.state.vision = "low_light".into();
@@ -185,30 +180,6 @@ fn a_full_moon_lets_hounds_nose_smell_blood_two_cells_farther() {
     if reach < 7 {
         assert!(!sees(&w, rat), "Blood scent's {reach} cells");
     }
-}
-
-#[test]
-fn moon_eyed_sees_farther_on_the_overworld_at_night() {
-    let mut w = world("world");
-    run(&mut w, "rest:dusk skip:3h");
-    assert_eq!(daylight::phase(w.time()), daylight::DayPhase::Night);
-    let count = |w: &World| {
-        let level = w.state.current();
-        let (width, height) = (level.width(), level.height());
-        let view = w.perception();
-        (0..height)
-            .flat_map(|y| (0..width).map(move |x| Pos::new(x, y)))
-            .filter(|&p| view.is_visible(p))
-            .count()
-    };
-    let before = count(&w);
-    give(&mut w, "moon_eyed");
-    assert!(count(&w) > before, "{before} -> {}", count(&w));
-    // By day it changes nothing.
-    let mut day = world("world");
-    let before = count(&day);
-    give(&mut day, "moon_eyed");
-    assert_eq!(count(&day), before);
 }
 
 #[test]
@@ -443,31 +414,6 @@ fn a_beast_friend_sees_animals_as_neutral() {
     for seen in rats {
         assert_eq!(view.stance(seen), Stance::Neutral);
     }
-}
-
-#[test]
-fn weather_wise_knows_the_weather_coming() {
-    let mut w = world("courtyard");
-    assert_eq!(w.perception().forecast(), None, "without the talent");
-    // A moment the weather changes within three hours, and one it does not.
-    let climate = CONTENT.climate();
-    let seed = w.seed();
-    let changes = |t: GameTime| crate::weather::forecast(seed, t, climate, None, 3);
-    let soon = (0..200u64)
-        .map(|h| w.time() + Duration::hours(h))
-        .find(|&t| changes(t).is_some())
-        .expect("the weather changes within 200 hours");
-    let next = changes(soon).expect("a change");
-    assert_ne!(next, crate::weather::weather_at(seed, soon, climate, None));
-    give(&mut w, "weather_wise");
-    assert_eq!(w.perception().forecast(), changes(w.time()));
-    w.state.time = soon;
-    look(&mut w);
-    assert_eq!(w.perception().forecast(), Some(next));
-    // Underground, the sky is not there to read.
-    let mut hub = world("showcase");
-    give(&mut hub, "weather_wise");
-    assert_eq!(hub.perception().forecast(), None);
 }
 
 #[test]

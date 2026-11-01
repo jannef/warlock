@@ -69,7 +69,7 @@ neither [Presence](stats.md#stat-presence) nor [Negotiation](skills.md#skill-neg
   are told "You cannot pay." Neither takes any time.
 - The **[Pilgrim](talents.md#talent-pilgrim)** talent ([Wayfarer](talents.md#wayfarer)) halves a temple's price, a cure's or a mending's (rounded
   up), and its cures also mend a point of each damaged [stat](stats.md#drained-stats) (see [Talents](talents.md)). Nothing
-  moves the price of an identification, [Lore](talents.md#talent-lore) and [Connoisseur](talents.md#talent-connoisseur) included.
+  moves the price of an identification, [Lore](talents.md#talent-lore) included.
 
 {{#include generated/services.md}}
 

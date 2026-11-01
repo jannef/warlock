@@ -81,7 +81,7 @@ fn every_racial_talent_asks_for_its_race_and_only_that_race_is_offered_it() {
     assert_eq!(racial("dwarf"), ["dwarven_resilience", "stone_sense"]);
     assert_eq!(racial("gnome"), ["gem_lore", "tinkerer"]);
     assert_eq!(racial("half_orc"), ["ferocity", "orcish_hide"]);
-    assert_eq!(racial("half_elf"), ["diplomat", "dual_heritage"]);
+    assert_eq!(racial("half_elf"), ["diplomat"]);
     assert_eq!(racial("halfling"), ["lucky", "small_target"]);
     // An elf needs a level and a bow skill first; a human has none to pick (Versatile is given).
     assert!(racial("elf").is_empty());
@@ -165,11 +165,8 @@ fn elven_accuracy_threatens_more_with_bows_and_ageless_slows_hunger_and_disease(
 }
 
 #[test]
-fn half_elves_learn_more_and_bargain_better() {
+fn half_elves_bargain_better() {
     let mut w = world("half_elf,female,bard");
-    let rolls = w.level_rolls();
-    give(&mut w, "dual_heritage");
-    assert_eq!(w.level_rolls(), rolls + 1);
     give(&mut w, "diplomat");
     let m = mods(&w);
     assert_eq!((m.favour_percent, m.quest_gold_percent), (10, 25));

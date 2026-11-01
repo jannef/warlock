@@ -104,11 +104,11 @@ fn negotiation_moves_prices_and_appraise_no_longer_does() {
     let mut w = world("warrior");
     let content = BUILTIN.clone();
     let shops = content.shops().expect("shops");
-    let base = shop::favour(&content, shops, w.state.player(), &[]);
+    let base = shop::favour(&content, shops, w.state.player());
     w.player_mut().skills.add(skill("appraise"), 100);
-    assert_eq!(shop::favour(&content, shops, w.state.player(), &[]), base);
+    assert_eq!(shop::favour(&content, shops, w.state.player()), base);
     w.player_mut().skills.add(skill("negotiation"), 100);
-    assert!(shop::favour(&content, shops, w.state.player(), &[]) > base);
+    assert!(shop::favour(&content, shops, w.state.player()) > base);
 }
 
 #[test]

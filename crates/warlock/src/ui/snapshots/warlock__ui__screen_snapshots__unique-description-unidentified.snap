@@ -13,7 +13,6 @@ expression: "render(case, content.clone())"
                   │ ) Dagger                                                     │
                   │                                                              │
                   │ Rare dagger · steel · 450 g                                  │
-                  │ Worth 30 gold                                                │
                   │                                                              │
                   │ Dagger, for the main hand                                    │
                   │ Damage 1d4; criticals on 20–24, ×2 damage                    │
@@ -26,6 +25,7 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ Esc close                                                    │
                   └──────────────────────────────────────────────────────────────┘
+
 
 
 

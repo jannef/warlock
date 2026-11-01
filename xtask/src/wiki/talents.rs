@@ -542,7 +542,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("the light your eyes need {}", percent(value))
         }
         TalentEffect::Darkvision { value } => format!("darkvision {} cells", signed(value)),
-        TalentEffect::SeesUv => "your eyes see ultraviolet light".to_string(),
         TalentEffect::Scent { status: id, radius } => format!(
             "sees creatures that are {} in line of sight within {radius} cells, however dark",
             status(&id).to_lowercase()
@@ -642,10 +641,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::BeastFriend => "creatures of animal factions are neutral to you until you \
                                       attack one of that type"
             .to_string(),
-        TalentEffect::Forecast { hours } => format!(
-            "under the open sky you know the first change of weather within {hours} hours \
-             (the status bar's weather)"
-        ),
         TalentEffect::SunHealing { value } => format!(
             "healing pace {} under the open sun (sun up, no roof, whatever the clouds)",
             percent(value)
@@ -675,11 +670,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         ),
         TalentEffect::TrainPercent { value } => format!(
             "every stat training use's chance of a mark {} (at most 100 %)",
-            percent(value)
-        ),
-        TalentEffect::PricePercent { value } => format!(
-            "the chosen stat's [training price](stats.md#training) for a rise {} (rounded down; \
-             a drop's price unchanged)",
             percent(value)
         ),
         TalentEffect::RampEase { points } => format!(
@@ -740,11 +730,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              fateful lines {} in every chapter (the common lines' fall to match)",
             percent(value)
         ),
-        TalentEffect::HardWon { marks } => format!(
-            "each [stat](stats.md) point a line of your [background story](background.md) takes is \
-             {marks} [stat training marks](stats.md#training) on that stat (the score and potential \
-             still fall)"
-        ),
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \
              and rare; what creatures drop, always magic: rare)",
@@ -795,17 +780,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::FavourPercent { value } => {
             format!("shop favour {} (before the cap)", percent(value))
         }
-        TalentEffect::Storyteller {
-            value,
-            rare,
-            fateful,
-        } => format!(
-            "shop favour {}, and {} more for each rare line of your \
-             [background story](background.md#how-rare), {} for each fateful one (before the cap)",
-            percent(value),
-            percent(rare),
-            percent(fateful)
-        ),
         TalentEffect::FavourCap { value } => {
             format!("the cap on shop favour {} (50 % without)", percent(value))
         }
@@ -825,15 +799,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Scavenger => {
             "what a creature you kill drops is identified as it lands".to_string()
         }
-        TalentEffect::SalvagePercent { value } => format!(
-            "what an animated thing is made of falls whole {} percentage points more often \
-             (whoever made the kill)",
-            signed(value)
-        ),
-        TalentEffect::AppraiseAnimated => "look mode says \"It hums with power.\" of an \
-                                           animated thing when anything it wears or wields is \
-                                           magic or rare"
-            .to_string(),
         TalentEffect::ItemWorth => "item descriptions show what things are worth".to_string(),
         TalentEffect::GemWorth => "item descriptions show what each gem is worth".to_string(),
         TalentEffect::IdentifyCarried { hours } => format!(
@@ -844,21 +809,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "the chance a find is a loose gem {} (anything found, and what creatures drop)",
             percent(value)
         ),
-        TalentEffect::GemCut { value } => format!(
-            "loose gems you find are cut {value} grade finer, at most the finest (those on \
-             levels made from then on, and those kills drop)"
-        ),
         TalentEffect::Notice { value } => {
             format!(
                 "notices hidden things in passing, {} to the check",
                 signed(value)
             )
         }
-        TalentEffect::DangerSense { value } => format!(
-            "danger sense +{value} (at 1: how a level feels as you arrive: quiet at a danger 4 or \
-             more below your level, uneasy up to your level, dangerous up to 3 above it, else \
-             deadly; at 2 also a note when a creature comes to your level)"
-        ),
         TalentEffect::SpawnEveryPercent { value } => format!(
             "the time between attempts to bring a creature to your level {}",
             percent(value)
@@ -1199,13 +1155,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 percent(value)
             )
         }
-        TalentEffect::GearedResourcePercent {
-            resource: id,
-            value,
-        } => format!(
-            "what your magic items add to maximum {} counts {value} % more (rounded up)",
-            resource_name(content, &id).to_lowercase()
-        ),
         TalentEffect::Unstoppable { statuses, cost } => {
             let names: Vec<String> = statuses.iter().map(|s| status(s)).collect();
             format!(
@@ -1296,7 +1245,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 stance.id()
             )
         }
-        TalentEffect::FleePercent { value } => format!("fleeing steps' cost {}", percent(value)),
         TalentEffect::Pain { value } => {
             format!(
                 "every hit on you {} damage after the soak, never below 1",
@@ -1569,15 +1517,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             signed(to_hit),
             status(&id)
         ),
-        TalentEffect::ShieldCasting { value } => format!(
-            "with a shield in each hand, the chance a spell fails {value} percentage points \
-             smaller"
-        ),
-        TalentEffect::BothShields { stance } => format!(
-            "in the {} stance with a shield in each hand, both shields' Shield bonuses add up \
-             in Defence",
-            stance.id()
-        ),
         TalentEffect::CriticalPenetration { value } => {
             format!("your confirmed criticals: penetration {}", signed(value))
         }
@@ -1669,15 +1608,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 status(&id)
             )
         }
-        TalentEffect::Bane {
-            tag,
-            to_hit,
-            damage,
-        } => format!(
-            "against creatures tagged `{tag}`, to hit {} and damage {}",
-            signed(to_hit),
-            signed(damage)
-        ),
         TalentEffect::FavouredPrey { to_hit, damage } => format!(
             "against the creature type you have killed most (ties: the first to get there), \
              to hit {} and damage {}",
@@ -1690,10 +1620,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             signed(to_hit),
             signed(damage)
         ),
-        TalentEffect::QuarrySense => "arriving on a level that holds a living creature an active \
-             kill quest of yours still asks for (a type, a tag's member, a named monster), you \
-             are told \"Your quarry is here.\""
-            .to_string(),
         TalentEffect::ExactSounds => {
             "every sound you hear is placed at the cell it came from, not roughly".to_string()
         }

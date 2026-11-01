@@ -20,7 +20,6 @@ abilities = [
     { level = 12, talent = "eye_for_quality" },
     { level = 18, talent = "trade_routes" },
     { level = 25, talent = "credit" },
-    { level = 32, talent = "appraiser" },
     { level = 40, talent = "insured" },
     { level = 50, talent = "magnate" },
     { level = 60, talent = "golden_tongue" },

@@ -112,8 +112,6 @@ pub enum Choice {
     /// A school of magic as a skill: a weapon skill of role `school` (`evocation`), the one
     /// whose ranks the talent lifts (Schooled).
     SchoolSkill,
-    /// One of the six stats (`strength`).
-    Stat,
 }
 
 impl Choice {
@@ -127,7 +125,6 @@ impl Choice {
             Choice::Tag => "a kind of creature",
             Choice::School => "a school of magic or an element",
             Choice::SchoolSkill => "a school of magic",
-            Choice::Stat => "a stat",
         }
     }
 
@@ -170,7 +167,6 @@ impl Choice {
             Choice::School => (super::School::ALL.iter().map(|s| s.id().to_string()))
                 .chain(Choice::Element.options(content))
                 .collect(),
-            Choice::Stat => Stat::ALL.iter().map(|s| s.id().to_string()).collect(),
         }
     }
 
@@ -201,7 +197,6 @@ impl Choice {
                 .map(|s| s.id())
                 .find(|s| *s == id)
                 .or_else(|| Choice::Element.name(content, id)),
-            Choice::Stat => Stat::from_id(id).map(Stat::name),
         }
     }
 }
@@ -293,8 +288,6 @@ pub enum TalentEffect {
     ThresholdPercent { value: i32 },
     /// Its darkvision reaches this many cells farther (from none: this far).
     Darkvision { value: i32 },
-    /// Its eyes see ultraviolet light.
-    SeesUv,
     /// It sees creatures suffering `status` (an id in `data/status.toml`) in its line of sight
     /// within `radius` cells however dark it is (Blood scent).
     Scent { status: String, radius: i32 },
@@ -364,8 +357,6 @@ pub enum TalentEffect {
     /// Creatures of animal factions are neutral to it until it attacks one of that type
     /// (Beast-friend).
     BeastFriend,
-    /// It knows the weather of the next `hours` hours under the open sky (Weather-wise).
-    Forecast { hours: u8 },
     /// Hit points come back this percent faster under the open sun (Sun-blessed).
     SunHealing { value: i32 },
     /// Hunger burns this percent faster (negative: slower).
@@ -387,9 +378,6 @@ pub enum TalentEffect {
     /// Every stat training use's chance, this percent more (a use at 100 stays sure; Hard
     /// training).
     TrainPercent { value: i32 },
-    /// The chosen stat's stat training price for a rise, this percent more (negative: less; a
-    /// drop's price is untouched): only with `choice = "stat"` (Gifted).
-    PricePercent { value: i32 },
     /// The training price's ramp past a potential counts each point past it this many fewer
     /// (the first beyond the potential at the plain price: Late bloomer; ranks add up).
     RampEase { points: u8 },
@@ -453,9 +441,6 @@ pub enum TalentEffect {
     FavourPercent { value: i32 },
     /// The cap on its favour, this many percent higher.
     FavourCap { value: i32 },
-    /// Favour this many percent more, and `rare` more for each rare line of its background story,
-    /// `fateful` for each fateful one (Storyteller; `world::shop::favour`).
-    Storyteller { value: i32, rare: i32, fateful: i32 },
     /// Shops pay this percent more for what they buy from it, never more than they would ask.
     SellPercent { value: i32 },
     /// Keepers let it leave owing up to this much gold: the debt stays on their bill.
@@ -467,21 +452,12 @@ pub enum TalentEffect {
     Pilgrim,
     /// What a creature it kills drops is identified as it lands (spec §8 "Creature gear").
     Scavenger,
-    /// What an animated thing is made of falls whole this percent more often when it dies, whoever
-    /// made the kill (Salvager; spec §8 "Animated objects").
-    SalvagePercent { value: i32 },
-    /// Look mode tells when anything an animated thing is made of is magic: "It hums with
-    /// power." (Appraiser's eye; spec §8 "Animated objects").
-    AppraiseAnimated,
     /// Item descriptions show what its things are worth.
     ItemWorth,
     /// Item descriptions show what each gem in a thing is worth.
     GemWorth,
     /// A magic item it has carried this many hours since it held the effect is identified.
     IdentifyCarried { hours: u32 },
-    /// Loose gems it finds (on a level made after it held the effect, or dropped by a kill) are
-    /// cut this many grades finer, at most the finest.
-    GemCut { value: u8 },
     /// Loot it finds and creatures drop is a loose gem this percent more often (Hoard sense):
     /// the gems' chance, never above certain.
     GemFindPercent { value: i32 },
@@ -511,9 +487,6 @@ pub enum TalentEffect {
     /// A background story's uncommon, rare, and fateful odds, this percent more (a talent only
     /// for character creation: Favoured child; `background::tell`).
     StoryLuck { value: i32 },
-    /// Every stat point a background story's line took is this many stat training marks on that
-    /// stat (a talent only for character creation: Hard-won; `World::tell_background`).
-    HardWon { marks: u16 },
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.
     Notice { value: i32 },
@@ -524,9 +497,6 @@ pub enum TalentEffect {
     StoneFind { value: i32 },
     /// Added to every check to find hidden things, searching and in passing.
     Search { value: i32 },
-    /// Senses the danger of a level (spec §7 "Danger levels"): from 1, how a level feels on
-    /// arrival; from 2, a note when something comes to the level (Sixth sense, one per rank).
-    DangerSense { value: i32 },
     /// The creatures that come to a level the actor is on come this percent less often (the
     /// time between attempts this percent longer; Quiet delver).
     SpawnEveryPercent { value: i32 },
@@ -667,8 +637,6 @@ pub enum TalentEffect {
     /// Changing its combat stance costs an action, as a wait does (Set in its ways), not
     /// nothing.
     StanceCosts,
-    /// Fleeing steps (spec §8 "Stances") cost this percent more (negative: cheaper).
-    FleePercent { value: i32 },
     /// A step that takes it out of reach of every hostile beside it costs this percent more
     /// (negative: cheaper; Slip away), whatever its stance.
     SlipPercent { value: i32 },
@@ -750,10 +718,6 @@ pub enum TalentEffect {
     /// regenerates comes back sooner, one that decays wears off sooner (Steady hand, Patient
     /// blade).
     ResourceRate { resource: String, value: i32 },
-    /// What its magic items add to `resource`'s maximum counts this percent more, rounded up
-    /// (Bellows: stamina's doubled), in [`crate::world::Actor::resource_max`]'s items term; a
-    /// negative items term is left as it is.
-    GearedResourcePercent { resource: String, value: i32 },
     /// While raging: the statuses named tick nothing, and a blow that would take the last hit
     /// point leaves it for `cost` of the rage, when that much is held (Unstoppable).
     Unstoppable { statuses: Vec<String>, cost: u16 },
@@ -922,12 +886,6 @@ pub enum TalentEffect {
     /// Its Brace's blow is at `to_hit` more, and a foe it hits suffers `status` (one degree;
     /// Brace of steel).
     Brace { to_hit: i32, status: String },
-    /// The chance a spell it casts fails with a shield in each hand, this many percent points
-    /// smaller (Loose straps; two-shield fighting, #611).
-    ShieldCasting { value: i32 },
-    /// In combat stance `stance` with a shield in each hand, both shields' Shield bonuses add
-    /// up in Defence (Craven's wall; two-shield fighting).
-    BothShields { stance: CombatStance },
     /// Its confirmed criticals ignore this much more Protection (every attack; Armour-breaker).
     CriticalPenetration { value: i32 },
     /// Its blows that can do damage of kind `damage` (an id in `data/damage_types.toml`) ignore this
@@ -1013,19 +971,9 @@ pub enum TalentEffect {
     /// Against the creature type it has killed most (ties: the first to get there), its attacks
     /// are this much likelier to hit and do this much more damage (Favoured prey).
     FavouredPrey { to_hit: i32, damage: i32 },
-    /// Against a creature whose type carries `tag`, its attacks are this much likelier to hit and
-    /// do this much more damage (Unbinder: `animated`).
-    Bane {
-        tag: String,
-        to_hit: i32,
-        damage: i32,
-    },
     /// Against creature types that carry the tag it was taken for (a `choice = "tag"`), its
     /// attacks are this much likelier to hit and do this much more damage (Sworn foe).
     SwornFoe { to_hit: i32, damage: i32 },
-    /// Arriving on a level that holds a living creature an active kill quest of its still asks
-    /// for, it is told so (Quarry sense).
-    QuarrySense,
     /// It places every sound it hears where it was made (Tracker).
     ExactSounds,
     /// Its footsteps under the open sky (no roof over the cell stepped to) are this percent
@@ -1237,7 +1185,6 @@ impl TalentEffect {
             | TalentEffect::InitiativeBonus { value }
             | TalentEffect::SurpriseDifficulty { value }
             | TalentEffect::SneakReach { value }
-            | TalentEffect::DangerSense { value }
             | TalentEffect::Threat { value }
             | TalentEffect::Search { value }
             | TalentEffect::SearchReach { value }
@@ -1282,19 +1229,6 @@ impl TalentEffect {
                         "`favoured_prey`, `sworn_foe`: to_hit and damage are -20 to 20, not both 0"
                             .into(),
                     );
-                }
-                Ok(())
-            }
-            TalentEffect::Bane {
-                tag,
-                to_hit,
-                damage,
-            } => {
-                super::tag::check(tag).map_err(|m| format!("`bane`: {m}"))?;
-                if [to_hit, damage].iter().all(|&&v| v == 0)
-                    || ![to_hit, damage].iter().all(|v| BONUSES.contains(v))
-                {
-                    return Err("`bane`: to_hit and damage are -20 to 20, not both 0".into());
                 }
                 Ok(())
             }
@@ -1427,19 +1361,6 @@ impl TalentEffect {
                 let _ = fallback;
                 Ok(())
             }
-            TalentEffect::HardWon { marks } => {
-                if !(1..=100).contains(marks) {
-                    return Err("`hard_won`: marks is 1 to 100".into());
-                }
-                Ok(())
-            }
-            TalentEffect::PricePercent { value } => match choice {
-                Some(Choice::Stat) if (-90..=100).contains(value) => Ok(()),
-                Some(Choice::Stat) => Err("`price_percent`: value is -90 to 100".into()),
-                _ => Err(
-                    "`price_percent` is for the chosen stat: it needs `choice = \"stat\"`".into(),
-                ),
-            },
             TalentEffect::RampEase { points } => {
                 if !(1..=5).contains(points) {
                     return Err("`ramp_ease`: points is 1 to 5".into());
@@ -1464,11 +1385,6 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::Storyteller {
-                value,
-                rare,
-                fateful,
-            } => percent(*value).and(percent(*rare)).and(percent(*fateful)),
             TalentEffect::Credit { gold } => {
                 if !(1..=1000).contains(gold) {
                     return Err("`credit`: gold is 1 to 1000".into());
@@ -1501,12 +1417,6 @@ impl TalentEffect {
                 Ok(())
             }
             TalentEffect::PotionHeals { value } => percent(*value),
-            TalentEffect::GemCut { value } => {
-                if !(1..=5).contains(value) {
-                    return Err("`gem_cut`: value is 1 to 5".into());
-                }
-                Ok(())
-            }
             TalentEffect::Protection {
                 value,
                 body_armour,
@@ -1529,7 +1439,6 @@ impl TalentEffect {
             | TalentEffect::WeaponMarks { value, .. }
             | TalentEffect::SchoolMarksPercent { value }
             | TalentEffect::StepPercent { value, .. }
-            | TalentEffect::FleePercent { value }
             | TalentEffect::SlipPercent { value } => percent(*value),
             TalentEffect::RaisePercent { status: id, value } => {
                 status(id)?;
@@ -1655,10 +1564,6 @@ impl TalentEffect {
                 Ok(())
             }
             TalentEffect::ResourceRate {
-                resource: id,
-                value,
-            }
-            | TalentEffect::GearedResourcePercent {
                 resource: id,
                 value,
             } => {
@@ -1917,7 +1822,6 @@ impl TalentEffect {
             | TalentEffect::PotionMarksPercent { value }
             | TalentEffect::TrainPercent { value }
             | TalentEffect::LootMagicPercent { value }
-            | TalentEffect::SalvagePercent { value }
             | TalentEffect::GemFindPercent { value }
             | TalentEffect::MaxHpPercent { value }
             | TalentEffect::ReadPercent { value }
@@ -1989,12 +1893,6 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::Forecast { hours } => {
-                if !(1..=24).contains(hours) {
-                    return Err("`forecast`: hours is 1 to 24".into());
-                }
-                Ok(())
-            }
             TalentEffect::StatusEases { status: id, value }
             | TalentEffect::StatusLasts { status: id, value } => {
                 status(id)?;
@@ -2004,13 +1902,6 @@ impl TalentEffect {
                 status(id)?;
                 bonus(*to_hit)
             }
-            TalentEffect::ShieldCasting { value } => {
-                if !(1..=100).contains(value) {
-                    return Err("`shield_casting`: value is 1 to 100".into());
-                }
-                Ok(())
-            }
-            TalentEffect::BothShields { .. } => Ok(()),
             // The abilities it names are checked once they are loaded, after the talents
             // (`content/weapon_ability.rs`).
             TalentEffect::WeaponStamina { value, .. } => {
@@ -2094,7 +1985,6 @@ impl TalentEffect {
             | TalentEffect::IgnoreBurdened
             | TalentEffect::NoBloating
             | TalentEffect::SparesSelf
-            | TalentEffect::SeesUv
             | TalentEffect::SenseOfPlace
             | TalentEffect::ChestWise
             | TalentEffect::Slick
@@ -2122,13 +2012,11 @@ impl TalentEffect {
             | TalentEffect::Scavenger
             | TalentEffect::ItemWorth
             | TalentEffect::GemWorth
-            | TalentEffect::AppraiseAnimated
             | TalentEffect::SeesUnaware
             | TalentEffect::StartledBlow
             | TalentEffect::MakeWay
             | TalentEffect::Distrusted
             | TalentEffect::ExactSounds
-            | TalentEffect::QuarrySense
             | TalentEffect::SilentUnburdened
             | TalentEffect::PickLock
             | TalentEffect::Steal
@@ -2832,7 +2720,7 @@ fn resolve_needs(
     if let Some(rank) = spec.chosen {
         match choice {
             None => return Err("`chosen` needs a `choice`".into()),
-            Some(Choice::Element | Choice::Skill | Choice::School | Choice::Stat) => {
+            Some(Choice::Element | Choice::Skill | Choice::School) => {
                 return Err("`chosen` asks a weapon skill's or style's rank".into());
             }
             Some(_) if rank == 0 || rank > MAX_RANK => {
@@ -3419,7 +3307,6 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
             bad("effects = [{ kind = \"scent\", status = \"sniffles\", radius = 4 }]")
                 .contains("unknown status")
         );
-        assert!(bad("effects = [{ kind = \"forecast\", hours = 0 }]").contains("1 to 24"));
         assert!(bad("effects = [{ kind = \"ambush\", dice = \"0\" }]").contains("not 0"));
         let no_system = "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\ndescription = \"d\"\n\
                          effects = [{ kind = \"dodge\", value = 1 }]\nsystems = [\"nope\"]\n";

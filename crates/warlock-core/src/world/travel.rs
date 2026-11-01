@@ -409,11 +409,9 @@ impl World {
         if new {
             self.discover_level(to);
         }
-        // Floors the player was not on stay frozen: what comes, comes from now on; and Sixth
-        // sense says how the place feels (spec §7 "Danger levels").
+        // Floors the player was not on stay frozen: what comes, comes from now on (spec §7
+        // "Danger levels").
         self.arrive_spawner(to);
-        self.sense_danger(to);
-        self.sense_quarry(to);
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.arrival(to) {
@@ -531,14 +529,6 @@ pub(super) fn instantiate_level(
     // What the chests hold is made now too (spec §8 "Chests").
     let held = level.chests.values_mut().flat_map(|c| c.holds.iter_mut());
     crate::rot::made_at(held, content, state.time);
-    // Jeweller (spec §8 "Class abilities"): the loose gems of a level made now are cut finer.
-    let finer = (state.actors.get(&state.player)).map_or(0, |p| p.talent_mods(content).gem_cut);
-    if finer > 0 {
-        let held = level.chests.values_mut().flat_map(|c| c.holds.iter_mut());
-        for stack in level.objects.values_mut().flatten().chain(held) {
-            crate::gem::cut_finer(content, stack, finer);
-        }
-    }
     let first = state.next_actor_id;
     for plan in &template.shops {
         let spawned = (template.creatures.iter()).position(|c| c.pos == plan.post);
