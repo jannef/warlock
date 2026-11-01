@@ -1721,8 +1721,6 @@ mod stat_deeds_tests;
 #[cfg(test)]
 mod stat_paths_tests;
 #[cfg(test)]
-mod stat_talent_tests;
-#[cfg(test)]
 mod stat_training_tests;
 #[cfg(test)]
 mod stats_tests;

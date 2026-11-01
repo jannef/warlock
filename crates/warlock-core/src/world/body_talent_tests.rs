@@ -457,7 +457,8 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
     // Lasting draughts (#567), the mimics' Slick, and the berserker's Wild guard (#680),
     // surprise's Hair trigger (#687), and stat training's Late bloomer (#726); less the cull's
     // Second breath, Bellows, and Gifted (#774), and Deft breaker and Slick, merged into
-    // Lockbreaker and Chest-wise of the delver tree (#775), and Great cleave and Breaker, now
-    // Cleave's and Mighty kick's second ranks (#790).
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 34);
+    // Lockbreaker and Chest-wise of the delver tree (#775), Great cleave and Breaker, now
+    // Cleave's and Mighty kick's second ranks (#790), and Hard training and Late bloomer, whose
+    // marks no one sees (#791).
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 32);
 }

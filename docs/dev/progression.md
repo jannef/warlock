@@ -261,8 +261,8 @@ itself is `data/spells/ID.toml`, cast by the one cast path
 listed there). They cost mana (`Actor::spell_cost`, `World::spend_mana`) and never a cooldown;
 `Unavailable::NoMana` greys them out. A refusal (no cell, out of range, no hostile seen to
 hex, no sky, nothing to cure, not hurt) spends neither time nor mana. Shared entries: the
-priest names the paladin's `smite` (so it asks Good) and `purity_of_body`, the druid the
-ranger's `woodland_stride` (#244 writes the same file). The wizard's level 12 handed out the
+priest names the paladin's `smite` (so it asks Good) and `purity_of_body` (the druid named the
+ranger's `woodland_stride` until #791 cut it). The wizard's level 12 handed out the
 Scholar `spell_recall` until #775 merged it into Scroll savant's second rank, which a wizard
 picks from the Scholar tree.
 New statuses: Blessed, Hexed (`ill_wished`), Weakened, Sluggish (`sluggish`, cost
@@ -347,6 +347,28 @@ cut them). The owner: "Modify the talent rule to prevent this type of talent cre
   Unblinking, Clear mind and Tidal, Quick's first rank and Fleet-footed, Orcish hide and Stone
   hide, the flaws Grim company and Little loved): the horoscope is kept whole (the owner,
   #776). Tests: `talent_alike::tests`.
+- **Flaws bite in a dungeon** (#776's rule 5, #791). A flaw's cost shows up on an ordinary
+  dungeon floor (a fight, a step, a search, a status), never only in a town, a shop, or on the
+  overworld, and no two sources share one. The horoscope's flaws are kept as they are (the
+  owner): the rule holds for every flaw added from now on, a birth sign's or any other.
+- **Outdoors only, or one season only, is niche** (#776's rule 6, #791), like "only in a rare
+  room": a talent whose every effect works only on the overworld, in its local areas, under
+  the open sky, or in one season (ice, which underground only a frost trap, a frost spell, or a
+  cold room makes for a while) is not taken in, unless it also does something underground.
+- **Hidden marks are large or visible** (#776's rule 7, #791). Stat training's marks are never
+  shown, so an effect on them is at least twice a common source's marks (Gourmand's and
+  Cauldron's corpses), or the talent carries a visible effect beside it (Gourmand never
+  bloats); one that is neither is cut, or only its hidden half where the rest is good.
+- **Information is a garnish, never a talent** (#776's rule 8, #791): beside the policy's
+  "information only", the half of an otherwise good talent that only tells (Gem lore's worth,
+  Tracker's exact sounds) may stay, a whole talent that only tells may not. Identification
+  (Lore, Arcane lore, Eye for quality, Scavenger) is the item game's own rule, not a readout:
+  it decides which unknown potion, scroll, or wand is used, and the scroll and spell of
+  identify do the same.
+- **Shop favour is not over-supplied** (#776's rule 9, #791). The merchant's Haggler is the one
+  class ability on shop favour (`favour_percent`); no new source of shop favour joins the
+  pickable talents or the class tables. The half-elf's Diplomat and the horoscope's Dragon's
+  hoard stay.
 - **Tags match hooks.** A talent names a system in its `systems` only if its effect reads that
   system's rules. A general bonus is tagged by the system it is for, not by every rule that
   happens to read it (Iron will's +2 to Willpower checks is `diseases`, not also `searching` for
@@ -429,6 +451,27 @@ movement and Fleet (their conditions differ: unburdened, no shield), Miracle and
 style), and the pairs `alike` lists (above). The chains left (Fast healer after Healthy, Porter
 after Pack mule, Meditation after Clear mind, and the others) add an effect of another kind.
 
+**The rules 5-9 audit** (#791) read every pickable, class table entry, racial pick, and heritage
+talent (not the horoscope) with its hook. Rule 5: no flaw outside the horoscope (the races grant
+none, and no background line uses its `flaw` effect), so the rule is policy for flaws to come.
+Rule 6: Woodland stride (druid 6, ranger 18: forest floor, bushes, reeds, tall grass, and marsh
+priced as grass, terrain only the overworld, its local areas, and towns have), Marsh walker
+(Wayfarer: marsh and reeds as floor, and wading never sickens, but only marsh ague is caught
+wading, in marsh and swamp), and Winter's friend (druid 25: ice only, which no dungeon of the
+Ascmearc is cold enough to keep) cut; druid 6 and 25 and ranger 18 are left empty. Kept: Swimmer
+(water underground too), Nature's ward (its poison half), and the effect kinds they share
+(`terrain_as`, `wading_proof`, `plunge_proof`; Of the deep keeps `light_on_ice` and
+`climb_percent`). Rule 7: Late bloomer (`ramp_ease`, hidden) and Hard training (`train_percent`
++50 %, every use's chance half again: under ×2, and hidden) cut with their effect kinds,
+`TalentMods` fields, and `PriceEase` (`StatTraining::eased_price` folded back into `price`);
+Gourmand and Cauldron pass (corpses' marks ×2, beside never bloating, or harmless corpses and a
+meal's healing). Weapon-skill and school marks are shown (their progress), so Weapon drill and
+Devotee are no hidden marks. Rule 8: no whole talent is information only. Kept: Stalker's eye (the
+owner's, #788), Keen ears and Tracker (hearing stops a rest and is heard further: Tracker's exact
+sounds are the garnish), Blood scent (a sense, which #791 names among the kept), Chest-wise (its Slick),
+Gem lore (its finds), and identification (above). Rule 9: the shop favour sources are Haggler
+(merchant 1), Diplomat, and the horoscope's Dragon's hoard (and its two flaws): nothing to cut.
+
 ## Creation picks
 
 A run that starts with the character's kit (`WorldState::kit`: New run, `--character`,
@@ -475,7 +518,7 @@ left and what may come next; `random_creation` runs `take_random` on a clone. Te
 
 Picks are replayed actions; prerequisites read stored scores. Talents draw from the gameplay
 stream only where their condition arises (Light step's check, Ambusher's die on a hit at an
-unaware creature), and some draw less (Swimmer's plunge, Marsh walker's wading, Iron stomach),
+unaware creature), and some draw less (Swimmer's plunge, Nature's ward's wading, Iron stomach),
 so a run without them draws as before. The hash covers `Actor::talents`, `Progress::due`,
 `Progress::empathy_broken`, and `levels_rng`, each left out of the JSON while unused, so runs
 without talents hash as before this change. Saves change (`Actor::talents`, `Progress::due`,

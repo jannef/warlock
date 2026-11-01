@@ -199,7 +199,7 @@ impl World {
         let talents = actor.talent_mods(&self.content);
         let step = self.cost_of(id, ActionKind::Step);
         let level = self.state.current();
-        // Its talents may price the terrain as another (Pathfinder, Swimmer, Marsh walker).
+        // Its talents may price the terrain as another (Swimmer, Trailblazer).
         let to = match self.content.terrain_id(&to.id) {
             Some(t) => (talents.terrain_as.iter())
                 .find(|(from, _)| *from == t)

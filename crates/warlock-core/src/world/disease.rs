@@ -112,12 +112,12 @@ impl World {
     /// The player stepped onto `terrain`, a step of `seconds`: for every disease caught there
     /// that they do not carry, one draw for its chance (`per_hour` percent an hour, by the
     /// step's length; none when it is sure), then exposure. Creatures do not catch diseases
-    /// from the land, nor does a Marsh walker (no draw).
+    /// from the land, nor does one with Nature's ward (no draw).
     pub(super) fn wade(&mut self, terrain: TerrainId, seconds: u64) {
         let player = self.state.player;
         let content = self.content.clone();
         // A strong swimmer (spec §8 "Birth sign") never catches anything wading, nor does a
-        // Marsh walker.
+        // druid with Nature's ward.
         let mods = self.state.player().talent_mods(&content);
         if mods.swimmer || mods.wading_proof {
             return;

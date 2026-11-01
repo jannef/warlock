@@ -144,11 +144,8 @@ level's check comes on top):
 
 {{#include generated/stat-pace.md}}
 
-The **[Hard training](talents.md#talent-hard-training)** [talent](talents.md) gives every use half
-again its chance of a mark (a sure one stays sure), so every stat trains half again as fast.
-**[Late
-bloomer](talents.md#talent-late-bloomer)** (level 20) counts every point past the potential as
-one fewer, so the first point beyond it costs the plain price.
+The **[Gourmand](talents.md#talent-gourmand)** [talent](talents.md) doubles the marks a fresh
+corpse gives.
 
 ### Losing marks
 

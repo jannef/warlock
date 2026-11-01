@@ -35,7 +35,6 @@ abilities = [
     { level = 6, talent = "tracker" },
     { level = 6, talent = "barkskin" },
     { level = 12, talent = "rapid_shot" },
-    { level = 18, talent = "woodland_stride" },
     { level = 32, talent = "evasion" },
     { level = 50, talent = "volley" },
     { level = 60, talent = "master_hunter" },

@@ -6,39 +6,39 @@ expression: "render(case, content.clone())"
  Your athlet│                                                                          │
             │ Vigour                                                                   │
             │ > a  Deep lungs                       Your stamina holds a good deal mo… │
-            │   b  Hard training                    You drill every day: everything y… │
-            │   c  Healthy                          Your hit points come back a quart… │
+            │   b  Healthy                          Your hit points come back a quart… │
             │ Might                                                                    │
-            │   d  Brawn                       1/2  Your blows up close hit harder: 1… │
-            │   e  Mighty kick                 1/2  Your kicks land like hammers: the… │
+            │   c  Brawn                       1/2  Your blows up close hit harder: 1… │
+            │   d  Mighty kick                 1/2  Your kicks land like hammers: the… │
             │ Finesse                                                                  │
-            │   f  Opportunist                      A foe that turns from you pays fo… │
+            │   e  Opportunist                      A foe that turns from you pays fo… │
             │ Weaponcraft                                                              │
-            │   g  Far shot                         Your shots fly 2 cells farther, a… │
-            │   h  Sworn foe                        You have sworn yourself against o… │
-            │   i  Wand mastery                     You draw more from a wand than it… │
-            │   j  Weapon focus (long blades)  1/2  You have drilled with one kind of… │
+            │   f  Far shot                         Your shots fly 2 cells farther, a… │
+            │   g  Sworn foe                        You have sworn yourself against o… │
+            │   h  Wand mastery                     You draw more from a wand than it… │
+            │   i  Weapon focus (long blades)  1/2  You have drilled with one kind of… │
             │ Guard                                                                    │
-            │   k  Armour training             2/2  You move freely in armour: it ham… │
-            │   l  Stalwart                         Standing on the defensive costs y… │
+            │   j  Armour training             1/2  You move freely in armour: it ham… │
             │ Shadow                                                                   │
-            │   m  Keen ears                   1/2  You hear fainter sounds, fainter … │
-            │   n  Lamplighter                      You tend your lantern well: it bu… │
+            │   k  Lamplighter                      You tend your lantern well: it bu… │
             │ Wayfarer                                                                 │
-            │   o  Pious                       1/2  You keep the old observances: an … │
-            │   p  Swimmer                          Water does not slow you: you wade… │
+            │   l  Pious                       1/2  You keep the old observances: an … │
+            │   m  Swimmer                          Water does not slow you: you wade… │
             │ Scholar                                                                  │
-            │   q  Apprentice                  1/3  You take up a skill you lack, or … │
-            │   r  Clear mind                       A mind at peace gathers its stren… │
-            │   s  Deep well                   1/3  Your power runs deep: more mana f… │
+            │   n  Apprentice                  1/3  You take up a skill you lack, or … │
+            │   o  Clear mind                       A mind at peace gathers its stren… │
+            │   p  Deep well                   1/3  Your power runs deep: more mana f… │
             │ Spellcraft                                                               │
-            │   t  Keen mind                        One school of magic, or one eleme… │
-            │   u  Quick study                      Spells come easily to you: you le… │
-            │   v  School focus                     You have made one school of magic… │
+            │   q  Keen mind                        One school of magic, or one eleme… │
+            │   r  Quick study                      Spells come easily to you: you le… │
+            │   s  School focus                     You have made one school of magic… │
+            │ Grit                                                                     │
+            │   t  Lean                             You go hungry more slowly, and ex… │
+            │   u  Pack mule                   1/2  You can carry a tenth more for ea… │
             │                                                                          │
             │ Your stamina holds a good deal more.                                     │
             │                                                                          │
             │                                                                          │
             │                                                                          │
-            │ a-v or Enter choose   > < page                                           │
+            │ a-u or Enter choose   > < page                                           │
  The Hub  · └──────────────────────────────────────────────────────────────────────────┘ ? controls

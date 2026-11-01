@@ -662,14 +662,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a fresh corpse's chance to raise each stat {} (at most 100 %)",
             percent(value)
         ),
-        TalentEffect::TrainPercent { value } => format!(
-            "every stat training use's chance of a mark {} (at most 100 %)",
-            percent(value)
-        ),
-        TalentEffect::RampEase { points } => format!(
-            "the [training price](stats.md#training)'s ramp past a potential counts each point \
-             past it {points} fewer (the first point past the potential at the plain price)"
-        ),
         TalentEffect::XpPercent { value } => format!("experience gained {}", percent(value)),
         TalentEffect::SkillRolls { value } => format!("skill rolls every level {}", signed(value)),
         TalentEffect::ExtraPick { level: 1 } => "one more talent at creation".to_string(),

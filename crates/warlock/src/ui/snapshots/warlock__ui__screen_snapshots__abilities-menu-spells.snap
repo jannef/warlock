@@ -9,7 +9,7 @@ expression: "render(case, content.clone())"
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Class                                                    │
-                    │   b  Consecrate                                          │
+                    │   b  Consecrate         you have too little mana         │
                     │ Spells                                                   │
                     │   c  Mend               1d4 healed, 1 mana, aimed        │
                     │   d  Blessing           3 mana                           │
@@ -20,15 +20,15 @@ expression: "render(case, content.clone())"
                     │   h  Heal               nothing to treat                 │
                     │   i  Knowledge          not usable yet                   │
                     │   j  Forage             not usable here                  │
+                    │   k  Woodcraft          not usable yet                   │
                     │ Weapon skills                                            │
-                    │   k  Shield bash        in a direction                   │
+                    │   l  Shield bash        in a direction                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-l or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
-
- The Hub  ·  HP 44/44  ·  MP 15/123  ·  Blessed  ·  Lv 14  ·  08:00  ·  11 Darkening     ? controls
+ The Hub  ·  HP 44/44  ·  MP 14/122  ·  Blessed  ·  Lv 14  ·  08:00  ·  11 Darkening     ? controls

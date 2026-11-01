@@ -341,7 +341,7 @@ pub enum TalentEffect {
     /// Wading (water, marsh) costs a plain step, and never gives a disease.
     Swimmer,
     /// A step onto any of `terrains` costs what a step onto `like` does (ids in
-    /// `data/terrain.toml`; Pathfinder, Swimmer, Marsh walker).
+    /// `data/terrain.toml`; Swimmer, Trailblazer).
     TerrainAs { terrains: Vec<String>, like: String },
     /// A plunge through ice into the water never hurts it (Swimmer).
     PlungeProof,
@@ -349,7 +349,7 @@ pub enum TalentEffect {
     LightOnIce,
     /// Climbing out of the water onto ice costs this percent more (negative: less).
     ClimbPercent { value: i32 },
-    /// Wading never gives it a disease (Marsh walker).
+    /// Wading never gives it a disease (Nature's ward).
     WadingProof,
     /// Creatures of animal factions are neutral to it until it attacks one of that type
     /// (Beast-friend).
@@ -371,12 +371,6 @@ pub enum TalentEffect {
     /// A fresh corpse's stat training marks and chances to widen a potential, this percent more
     /// (Gourmand).
     CorpseStatsPercent { value: i32 },
-    /// Every stat training use's chance, this percent more (a use at 100 stays sure; Hard
-    /// training).
-    TrainPercent { value: i32 },
-    /// The training price's ramp past a potential counts each point past it this many fewer
-    /// (the first beyond the potential at the plain price: Late bloomer; ranks add up).
-    RampEase { points: u8 },
     /// Experience gained, this percent more.
     XpPercent { value: i32 },
     /// Skill rolls every level, this many more (Quick learner).
@@ -1298,12 +1292,6 @@ impl TalentEffect {
                 let _ = fallback;
                 Ok(())
             }
-            TalentEffect::RampEase { points } => {
-                if !(1..=5).contains(points) {
-                    return Err("`ramp_ease`: points is 1 to 5".into());
-                }
-                Ok(())
-            }
             TalentEffect::IdentifyCarried { hours } => {
                 if !(1..=240).contains(hours) {
                     return Err("`identify_carried`: hours is 1 to 240".into());
@@ -1729,7 +1717,6 @@ impl TalentEffect {
             | TalentEffect::AttackNoisePercent { value }
             | TalentEffect::StepSlowdownPercent { value }
             | TalentEffect::CorpseStatsPercent { value }
-            | TalentEffect::TrainPercent { value }
             | TalentEffect::LootMagicPercent { value }
             | TalentEffect::GemFindPercent { value }
             | TalentEffect::MaxHpPercent { value }

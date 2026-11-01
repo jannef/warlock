@@ -632,7 +632,7 @@ const CASES: &[Case] = &[
         character: Some("human,male,warrior"),
         actions: "xp:691 advance:athletics*6",
         // Apprentice's letter on the talent list.
-        keys: Some("q"),
+        keys: Some("n"),
         size: (100, 40),
         ..BASE
     },

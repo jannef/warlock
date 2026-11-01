@@ -41,6 +41,12 @@ A class table names the pickable's id, never a clone of it (two talents with the
 fail the load), and a talent whose one talent prerequisite shares an effect kind with it is
 that talent's next rank, not a talent of its own (also a load check; deliberate pairs are
 listed in `alike`, assets/data/talents.toml).
+A flaw's cost shows up on an ordinary dungeon floor, and no two sources share one. A talent
+that works only outdoors (the overworld, its local areas, the open sky) or in one season counts
+as niche unless it also does something underground. An effect on stat-training marks (never
+shown) is at least twice a common source's, or the talent has a visible effect beside it. An
+information half may garnish a good talent; a whole talent of information may not. No new
+source of shop favour among the pickable talents or the class tables (Haggler is the one).
 Or none: a sub-feature (a room effect, a creature family's gimmick, a chest kind, an info
 readout) extends its parent system: name the tag and the talents that already touch it. Or it is
 presentation only (no rule reads it, as blood stains). -->
