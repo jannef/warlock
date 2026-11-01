@@ -185,7 +185,6 @@ fn a_restore_gives_what_a_grown_table_gives_and_nothing_else_changes() {
     for id in ["haggler", "deep_pockets", "eye_for_quality"] {
         assert!(holds(&back, id), "{id}");
     }
-    assert!(!holds(&back, "insured"), "not before its level");
     let _ = hash;
 }
 
@@ -455,11 +454,11 @@ fn lore_identifies_a_magic_item_carried_a_day() {
 #[test]
 fn trade_talents_sum_into_the_mods() {
     let mut w = world("warrior");
-    for id in ["haggler", "insured"] {
+    for id in ["haggler", "eye_for_quality"] {
         give(&mut w, id);
     }
     let m = mods(&w);
-    assert_eq!((m.favour_percent, m.sell_percent), (15, 50));
+    assert_eq!((m.favour_percent, m.identify_trades), (15, true));
 }
 
 /// A magic long sword, unidentified, set with no gem (one the store can afford).
@@ -482,7 +481,7 @@ fn magic_sword(content: &Content) -> Stack {
 }
 
 #[test]
-fn a_merchant_knows_what_they_sell_and_is_paid_more_for_it() {
+fn a_merchant_knows_what_they_sell() {
     let into = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
                 move:E*5";
     let sale = |talents: &[&str]| {
@@ -499,8 +498,8 @@ fn a_merchant_knows_what_they_sell_and_is_paid_more_for_it() {
     };
     let (plain, offer) = sale(&[]);
     assert!(!said(&plain).iter().any(|m| m.starts_with("That was")));
-    let (w, more) = sale(&["eye_for_quality", "insured"]);
-    assert!(more > offer, "{offer} → {more}");
+    let (w, known) = sale(&["eye_for_quality"]);
+    assert_eq!(known, offer, "knowing it is no better price");
     assert!(
         said(&w).iter().any(|m| m.starts_with("That was ")),
         "{:?}",

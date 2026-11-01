@@ -238,26 +238,12 @@ impl Shops {
     /// value times what the shop pays, plus the favour, rounded down; never more than it would
     /// ask for it, and 0 for anything it does not buy.
     pub fn offer(&self, content: &Content, kind: ShopId, stack: &Stack, favour: i32) -> u32 {
-        self.offer_more(content, kind, stack, favour, 0)
-    }
-
-    /// [`Shops::offer`] to a seller shops pay `more` percent more (spec §8 "Class abilities":
-    /// Insured), still never more than it would ask.
-    pub fn offer_more(
-        &self,
-        content: &Content,
-        kind: ShopId,
-        stack: &Stack,
-        favour: i32,
-        more: i32,
-    ) -> u32 {
         if !self.buys(content, kind, stack) {
             return 0;
         }
         let base = self.base(content, stack) * u64::from(self.get(kind).pays);
         let percent = u64::from((100 + favour.clamp(-MOST_FAVOUR, MOST_FAVOUR)).unsigned_abs());
-        let more = u64::from((100 + more).max(0).unsigned_abs());
-        let offer = u32::try_from(base * percent * more / 1_000_000).unwrap_or(u32::MAX);
+        let offer = u32::try_from(base * percent / 10_000).unwrap_or(u32::MAX);
         offer.min(self.price(content, kind, stack, favour))
     }
 
@@ -507,19 +493,11 @@ mod tests {
         // A dagger is worth 30: the store asks 150 % and pays 30 %.
         assert_eq!(shops.price(&c, store, &dagger, 0), 45);
         assert_eq!(shops.offer(&c, store, &dagger, 0), 9);
-        // Insured: half again, never more than the price.
-        assert_eq!(shops.offer_more(&c, store, &dagger, 0, 50), 13);
-        assert_eq!(shops.offer_more(&c, store, &dagger, 0, 0), 9);
-        assert_eq!(
-            shops.offer_more(&c, store, &dagger, MOST_FAVOUR, 100),
-            shops.price(&c, store, &dagger, MOST_FAVOUR)
-        );
         // In the buyer's favour: less to pay, more offered; against them, the other way.
         assert_eq!(shops.price(&c, store, &dagger, 10), 41);
         assert_eq!(shops.offer(&c, store, &dagger, 10), 9);
         assert_eq!(shops.price(&c, store, &dagger, -10), 50);
-        // The favour is at most MOST_FAVOUR either way (`world::favour` caps it at half unless
-        // talents lift the cap).
+        // The favour is at most MOST_FAVOUR either way (`world::favour` caps it at MAX_FAVOUR).
         assert_eq!(
             shops.price(&c, store, &dagger, 120),
             shops.price(&c, store, &dagger, MOST_FAVOUR)

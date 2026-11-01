@@ -2044,8 +2044,6 @@ pub struct ShopView<'a> {
     content: &'a Content,
     /// The player's favour (`world::favour`), hidden: only prices come of it.
     favour: i32,
-    /// Percent more it pays the player for what it buys (spec §8 "Class abilities": Insured).
-    more: i32,
     /// The moment it is: rotten food is worth nothing (spec §8 "Hunger"), which only the
     /// prices tell.
     now: GameTime,
@@ -2099,8 +2097,7 @@ impl<'a> ShopView<'a> {
         if self.spoilt(stack) {
             return None;
         }
-        let offer =
-            (self.shops).offer_more(self.content, self.shop.kind, stack, self.favour, self.more);
+        let offer = (self.shops).offer(self.content, self.shop.kind, stack, self.favour);
         (offer > 0).then_some(offer)
     }
 
@@ -2132,7 +2129,6 @@ impl<'a> PerceptionView<'a> {
             shops,
             content: self.content,
             favour: favour(self.content, shops, self.player),
-            more: self.player.talent_mods(self.content).sell_percent,
             now: self.time,
         })
     }

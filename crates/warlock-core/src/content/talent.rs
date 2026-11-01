@@ -420,8 +420,6 @@ pub enum TalentEffect {
     QuestGoldPercent { value: i32 },
     /// Prices move this many percent more in its favour (spec §7 "Shops"), before the cap.
     FavourPercent { value: i32 },
-    /// Shops pay this percent more for what they buy from it, never more than they would ask.
-    SellPercent { value: i32 },
     /// What it buys or sells in a shop is identified.
     IdentifyTrades,
     /// Temple services cost it half, and a cure also mends a point of each damaged stat
@@ -1743,7 +1741,6 @@ impl TalentEffect {
             | TalentEffect::ClimbPercent { value }
             | TalentEffect::QuestGoldPercent { value }
             | TalentEffect::FavourPercent { value }
-            | TalentEffect::SellPercent { value }
             | TalentEffect::BurdenEase { value } => percent(*value),
             TalentEffect::Scent { status: id, radius } => {
                 if !(1..=20).contains(radius) {

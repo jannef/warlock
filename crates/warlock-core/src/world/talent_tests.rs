@@ -223,8 +223,8 @@ fn a_save_naming_a_cut_talent_loads_without_it() {
     w.player_mut().talents.take("healthy", None);
     w.player_mut().talents.take("gifted", Some("strength"));
     w.player_mut().talents.take("bellows", None);
-    // #787 and #788's: one cut, one merged into Pious, one from creation.
-    for id in ["silver_tongue", "penitent", "favoured_child"] {
+    // #787 and #788's: one cut, one merged into Pious, one from creation; #789's capstone.
+    for id in ["silver_tongue", "penitent", "favoured_child", "insured"] {
         w.player_mut().talents.take(id, None);
     }
     let back = World::from_state(w.content().clone(), w.state().clone()).expect("it loads");
@@ -242,6 +242,7 @@ fn a_save_naming_a_cut_talent_loads_without_it() {
         "silver_tongue",
         "penitent",
         "favoured_child",
+        "insured",
     ] {
         assert!(
             back.retiered()

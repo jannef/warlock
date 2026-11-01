@@ -18,7 +18,6 @@ abilities = [
     { level = 1, talent = "haggler" },
     { level = 6, talent = "deep_pockets" },
     { level = 12, talent = "eye_for_quality" },
-    { level = 40, talent = "insured" },
 ]
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["delver", "scholar"] }
 # Goods and gems: a purse, two stones to trade, and a pack of wares (cloaks, candles, rope,

@@ -744,10 +744,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::FavourPercent { value } => {
             format!("shop favour {} (before the cap)", percent(value))
         }
-        TalentEffect::SellPercent { value } => format!(
-            "shops pay {} for what they buy from you (never more than they would ask)",
-            percent(value)
-        ),
         TalentEffect::IdentifyTrades => "what you buy or sell in a shop is identified".to_string(),
         TalentEffect::Pilgrim => {
             "temple services cost half (rounded up), and a cure also mends one point of each \
