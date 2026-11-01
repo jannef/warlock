@@ -170,8 +170,9 @@ cast path shares.
     `combat::Target::bare(target_against(target, missile).defence)` (no Protection; the strike's
     damage, crit included, is then resisted in `spell_strikes`, nothing holding it). The
     `benefit` (#571) is the spell's school's and the caster style's (`Actor::spell_skills`:
-    the school's skill, docs/dev/magic-skills.md; Battle caster in armour that hinders casting,
-    else Toucher for a touch, Sniper for a ray or a bolt; `Benefit::at_distance` adds Sniper's
+    the school's skill, docs/dev/magic-skills.md; the style of where it is cast from, decided
+    once a cast, `world/spell_aim.rs`: Battle caster in armour that hinders casting, else
+    Toucher at a creature beside, Sniper farther; `Benefit::at_distance` adds Sniper's
     far benefits from `[spell_attacks] far`), for a cast paid in mana of a spell that
     `rolls_to_hit` only; then `World::spell_practised` fires their triggered abilities
     (`resolve_triggers`); the marks are the cast's, once, at its end (`World::practise_cast`). A scroll or a wand

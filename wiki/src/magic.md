@@ -85,7 +85,7 @@ Heavy [armour](objects.md#class-body-armour) and big [shields](objects.md#class-
 you wear adds up. A *Mage-wrought* piece hinders casting less by its own number (body armour, a
 [helmet](objects.md#class-helmets), or a shield that hinders at all): Mage-wrought plate of 15 adds 25 % instead of 40 %, and
 one eased to nothing (chain mail of 10 or more) adds none and no longer counts as armour for
-your [caster style](fighting-styles.md#caster-styles). Its ease is its own: it never eases
+your [caster style](schools.md#caster-styles). Its ease is its own: it never eases
 another piece.
 
 {{#include generated/spell-armour.md}}
@@ -120,7 +120,7 @@ their number to your own spells' roll to hit, and *Baleful* ones widen their thr
 (a Baleful +2 threatens from 20), never below 2. Neither helps a spell scroll you read or a
 wand you use.
 Your rank in the spell's [school](schools.md) and your
-[caster style](fighting-styles.md#caster-styles) add to its roll when you cast it yourself.
+[caster style](schools.md#caster-styles) add to its roll when you cast it yourself.
 An **auto** spell always hits, for less. An **area** spell hits everyone in its shape with no
 roll, for less again per target, and *[Evasion](talents.md#talent-evasion)* halves what it does. A **touch** spell rolls to hit
 at arm's length and does the most, for less mana. Only attack and touch spells can be [critical

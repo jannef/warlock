@@ -54,6 +54,7 @@
 
 use super::reflect::{Shot, Turned};
 use super::spell::{Caster, burst_cells, cone_cells};
+use super::spell_aim::SpellAim;
 use super::spell_rung::CastBy;
 use super::talk::capitalized;
 use super::weapon_ability::Fired;
@@ -190,6 +191,7 @@ impl World {
             &content,
             (spell, def),
             Pay::Mana(me.spell_base(&content, def)),
+            self.spell_aim(target),
         );
         let price = self.cast_price(player, def);
         // Hands full of shields may spoil it (`two_shields.rs`): the mana and the time spent.
@@ -253,8 +255,8 @@ impl World {
         let Some(target) = self.cast_aim(def, target, &usage) else {
             return false;
         };
-        let pay = Pay::Scroll(item, rungs);
-        let cast = Cast::settle(self.state.player(), &content, (spell, def), pay);
+        let pay = (Pay::Scroll(item, rungs), self.spell_aim(target));
+        let cast = Cast::settle(self.state.player(), &content, (spell, def), pay.0, pay.1);
         self.perform(&cast, target, events)
     }
 
@@ -274,9 +276,10 @@ impl World {
             self.say("Nothing happens.");
             return false;
         };
-        let pay = Pay::Wand(item, rungs);
-        let cast = Cast::settle(self.state.player(), &content, (spell, def), pay);
-        self.perform(&cast, Some(ReadTarget::Cell(at)), events)
+        let target = Some(ReadTarget::Cell(at));
+        let pay = (Pay::Wand(item, rungs), self.spell_aim(target));
+        let cast = Cast::settle(self.state.player(), &content, (spell, def), pay.0, pay.1);
+        self.perform(&cast, target, events)
     }
 
     /// Casts `cast` at `at` by its kind (module docs); whether it went off. A scroll read is
@@ -339,41 +342,22 @@ impl World {
         }
     }
 
-    /// The player's cast `cast` went off (spec §8 "Weapon skills": "Schools of magic"; the
-    /// spell scaling design §8.4): one paid in mana practises its school once, as a blow
-    /// practises its weapon skill, by the [`Outcome`] its kind filled (an attempt, and a
-    /// success when it landed, weighed by the strongest creature it struck at, else the
-    /// player's own level), then its caster style. Until where one casts from is the style's
-    /// (a later slice), a style trains as it did: on a spell that rolls to hit by the same
-    /// outcome when it struck at someone, and Battle caster on any other cast in armour that
-    /// hinders casting, an attempt against the player's own level. A scroll read or a wand used
-    /// trains nothing.
+    /// The player's cast `cast` went off (spec §8 "Weapon skills": "Schools of magic",
+    /// "Fighting styles"; the spell scaling design §8.4, §10.2): one paid in mana practises its
+    /// school once, as a blow practises its weapon skill, by the [`Outcome`] its kind filled (an
+    /// attempt, and a success when it landed, weighed by the strongest creature it struck at,
+    /// else the player's own level), then the caster style it was cast in (`spell_aim.rs`) by
+    /// the same outcome, lands or not, as a blow's style. A spell on oneself out of armour that
+    /// hinders casting trains no style. A scroll read or a wand used trains nothing.
     fn practise_cast(&mut self, cast: &Cast<'_>) {
         if !matches!(cast.pay, Pay::Mana(_)) || self.state.death.is_some() {
             return;
         }
         let player = self.state.player;
         let outcome = cast.outcome.get();
-        let own = self.level_of(player);
-        let level = outcome.level.unwrap_or(own);
-        let skills = self.state.player().spell_skills(&self.content, cast.def);
-        if let Some(school) = skills.skill {
-            self.practise(school, outcome.landed, level);
-        }
-        let Some(style) = skills.style else {
-            return;
-        };
-        let armoured = self
-            .content
-            .weapon_skills()
-            .style_for(Grip::ArmouredSpell, &[]);
-        if cast.def.rolls_to_hit() {
-            // As a blow's: only at someone it struck at.
-            if outcome.level.is_some() {
-                self.practise(style, outcome.landed, level);
-            }
-        } else if Some(style) == armoured {
-            self.practise(style, false, own);
+        let level = outcome.level.unwrap_or_else(|| self.level_of(player));
+        for skill in [cast.skills.skill, cast.skills.style].into_iter().flatten() {
+            self.practise(skill, outcome.landed, level);
         }
     }
 
@@ -404,7 +388,7 @@ impl World {
             return;
         }
         let player = self.state.player;
-        let skills = self.state.player().spell_skills(&self.content, cast.def);
+        let skills = cast.skills;
         let fired = Fired {
             other,
             kind: AttackKind::Spell,
@@ -758,7 +742,8 @@ impl World {
                 self.sound_at(def.look.noise, here);
                 let own = matches!(cast.pay, Pay::Mana(_));
                 let aim = (here, at, range);
-                turned = self.cast_single(aim, (&effect, roll, reroll), (def, own), &mut made);
+                let by = (def, own.then_some(cast.skills));
+                turned = self.cast_single(aim, (&effect, roll, reroll), by, &mut made);
             }
             Shape::Myself => {}
         }
@@ -866,15 +851,16 @@ impl World {
     /// A ray, a bolt, or a touch from `here` toward `at` (`reach` cells at most): it flies to
     /// the first creature on its line (a touch: the one at `at`), its effect drawn along the
     /// way, and strikes it as its resolution says: `auto` always, `attack` and `touch` by the
-    /// attack roll against its Defence, aimed with its `aim` stat when it is the caster's `own`
-    /// spell, else (a scroll, a wand) with Dexterity. One that finds no one strikes
+    /// attack roll against its Defence, aimed with its `aim` stat when it is the caster's own
+    /// spell (`own`: the school and the style it is cast in), else (a scroll, a wand) with
+    /// Dexterity. One that finds no one strikes
     /// nothing. An attack roll missed by the target's Shield may be turned back (Spell
     /// reflection, `reflect.rs`): what to cast back, if so.
     fn cast_single<'s>(
         &mut self,
         (here, at, reach): (Pos, Pos, i32),
         (effect, roll, reroll): (&'s str, Roll, u32),
-        (def, own): (&'s SpellData, bool),
+        (def, own): (&'s SpellData, Option<AttackSkills>),
         made: &mut Vec<Event>,
     ) -> Option<Turned<'s>> {
         let level = self.state.current_level.clone();
@@ -901,20 +887,16 @@ impl World {
         let target = (path.last()).and_then(|&p| self.state.actor_at(&level, p).map(|a| a.id))?;
         let player = self.state.player;
         let me = self.state.player();
-        let to_hit = if own {
+        let to_hit = if own.is_some() {
             me.spell_to_hit(&self.content, def)
         } else {
             me.item_spell_to_hit(&self.content)
         };
-        // The spell's school and the caster style (spec §8 "Weapon skills", "Fighting
-        // styles"): the caster's own spells only, as its aim is.
-        let skills = if own && def.rolls_to_hit() {
-            me.spell_skills(&self.content, def)
-        } else {
-            AttackSkills::default()
-        };
+        // The spell's school and the caster style it is cast in (spec §8 "Weapon skills",
+        // "Fighting styles"): the caster's own spells that roll to hit only, as its aim is.
+        let skills = (own.filter(|_| def.rolls_to_hit())).unwrap_or_default();
         // Baleful's wider threat (`spell_threat`): an own cast only, as its aim.
-        let threat = if own {
+        let threat = if own.is_some() {
             me.spell_threat(&self.content)
         } else {
             combat::DEFAULT_THREAT
@@ -1050,6 +1032,9 @@ struct Cast<'c> {
     def: &'c SpellData,
     pay: Pay,
     reach: Reach,
+    /// The school and the caster style it is cast in (`spell_aim.rs`), decided once before its
+    /// kind runs: its marks, a rolling spell's attack and triggers.
+    skills: AttackSkills,
     /// Its roll, harm or healing, at the rung reached with the dice hook applied
     /// ([`Actor::spell_roll`]); `None` for a spell that rolls nothing.
     roll: Option<Roll>,
@@ -1075,16 +1060,17 @@ struct Outcome {
 }
 
 impl<'c> Cast<'c> {
-    /// `caster`'s cast of `def`, paid by `pay`: its hooks summed once ([`Actor::spell_mods`]),
-    /// the roll at the rung of who casts it (its own, a scroll's, a wand's), the reach and the
-    /// degrees the caster's own.
+    /// `caster`'s cast of `def`, paid by `pay`, from `aim`: its hooks summed once with the
+    /// caster style's ([`Actor::spell_mods_from`]), the roll at the rung of who casts it (its
+    /// own, a scroll's, a wand's), the reach and the degrees the caster's own.
     fn settle(
         caster: &Actor,
         content: &Content,
         (spell, def): (SpellId, &'c SpellData),
         pay: Pay,
+        aim: SpellAim,
     ) -> Self {
-        let mods = caster.spell_mods(content, def);
+        let mods = caster.spell_mods_from(content, def, aim);
         let by = match pay {
             Pay::Mana(_) => CastBy::Own,
             Pay::Scroll(_, rungs) => CastBy::Scroll(rungs),
@@ -1094,11 +1080,12 @@ impl<'c> Cast<'c> {
             spell,
             def,
             pay,
-            reach: caster.spell_reach(content, def),
+            skills: caster.spell_skills(content, def, aim),
+            reach: caster.spell_reach_with(content, def, &mods),
             roll: caster.spell_roll_with(content, def, by, &mods),
             reroll: mods.reroll,
+            degrees: caster.spell_degrees_with(content, def, &mods),
             riders: mods.riders,
-            degrees: caster.spell_degrees(content, def),
             read: Cell::new(None),
             outcome: Cell::new(Outcome::default()),
         }

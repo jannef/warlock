@@ -304,6 +304,11 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("school-skills.md", schools::skills),
         ("school-benefits.md", schools::benefits),
         ("school-abilities.md", schools::abilities),
+        ("caster-style-benefits.md", schools::caster_style_benefits),
+        (
+            "caster-style-abilities.md",
+            weapon_abilities::caster_style_abilities,
+        ),
         ("study-chances.md", learning::chances),
         ("study-times.md", learning::times),
         ("study-affinities.md", learning::affinities),
@@ -892,6 +897,19 @@ mod tests {
         );
         assert!(style.contains("| Pinned on the one you struck, 1d3 degrees (one roll) |"));
         assert!(style.contains("Staggered on your attacker, 1 degree"));
+        // The caster styles are the schools page's (where a spell is cast from).
+        assert!(!style.contains("Pinning ray") && !styles.contains("Sniper"));
+        let casters = text("caster-style-benefits.md");
+        assert!(
+            casters.contains("| 5 | +2 | +2 | 1 wider | +1 cell |")
+                && casters.contains("| 4 | +2 | - | - | +1 |"),
+            "{casters}"
+        );
+        let caster_abilities = text("caster-style-abilities.md");
+        assert!(
+            caster_abilities.contains("| Pinning ray | Sniper | 4 | triggered |"),
+            "{caster_abilities}"
+        );
         assert!(
             !text("weapon-skills.md").contains("Duelist"),
             "styles have their own tables"
