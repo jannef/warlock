@@ -303,6 +303,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("rods.md", spells::rods),
         ("school-skills.md", schools::skills),
         ("school-benefits.md", schools::benefits),
+        ("school-abilities.md", schools::abilities),
         ("caster-style-benefits.md", schools::caster_style_benefits),
         (
             "caster-style-abilities.md",

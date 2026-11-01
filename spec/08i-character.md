@@ -1386,9 +1386,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Never a benefit, a penalty, a chance, or a creature's ranks.
 - **Weapon abilities** (#561; the combat progression design §4, §6;
   `content/weapon_ability.rs`, `world/weapon_ability.rs`, docs/dev/weapon-abilities.md): what a
-  rank in a weapon skill or a style teaches, one `[[weapon_ability]]` a file in
-  `data/weapon_abilities/` (§7; a campaign's may add more), naming its skills (weapon skills or
-  styles, never both) and the rank (1 to 10, per file, so each group and style sets its own).
+  rank in a weapon skill, a style, or a school of magic teaches (a school's are its **school
+  abilities**, the spell scaling design §8.5), one `[[weapon_ability]]` a file in
+  `data/weapon_abilities/` (§7; a campaign's may add more), naming its skills (weapon skills,
+  styles, or schools, never two of the kinds) and the rank (1 to 10, per file, so each group and style sets its own).
   - **Who has one**: an actor whose rank in one of its skills, as abilities read it
     (`Actor::ability_rank`: a weapon talent's ranks, Stylist and Fencing, count, and Early
     mastery's one more), reaches it: the player and every creature with the rank alike
@@ -1406,7 +1407,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a shield bash is no second hand); `approaches` (a hostile steps up beside the actor, the
     player's step too); `spell_blocked` (a hostile's spell that rolls an attack against the
     actor's Defence, a bolt, a ray, or a touch, a scroll's or a wand's too, missed by its
-    Shield). Deciding never draws: a fight with no qualifying rank keeps its draws.
+    Shield); `spell_lands` (a spell the actor casts with its own mana lands on a creature: harms
+    it, takes on it as a hex, or heals it; a buff, a cure, or Identify lands on the caster; once
+    per creature, an area's in ascending actor id, which `hit` never covered, an area having no
+    roll; never a miss, a scroll, a wand, or a reflected spell; the cast's school and caster
+    style count; raised from `World::spell_landed`, the one place the kinds report a landing,
+    which also weighs the cast's marks; a `status` meant for the other end is never laid on the
+    caster). Deciding never draws: a fight with no qualifying rank keeps its draws.
   - **Effects** (closed): `free_blow` (switches a free blow on while the actor wields a weapon
     of the skill or fights in the style: Brace's gatekeeper, Riposte, Cleaving sweep, Great
     cleave; `World::free_blows_of` folds them in, so a riposte from the style and one from a
@@ -1436,15 +1443,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Pinning ray (Sniper 4: a critical pins 1d2 actions), Staggering touch (Toucher 4: a critical
     staggers), Withering touch (Toucher 10: a spell cast up close that hits weakens a degree), Spell guard
     (Battle caster 4: a spell that lands wards its caster, Spell ward, a Dodge point until
-    their next action). Staggered, Pinned, Spell ward, and Light-footed ease by the sufferer's actions
+    their next action); the schools' (`spell_lands`, the spell scaling design §8.5):
+    Thunderstruck (evocation 10: what it harms is staggered), Wasting (necromancy 10: weakened
+    a degree), Aegis (abjuration 7: a buff wards its caster, Spell ward), Lulling (enchantment
+    10: a creature a hex takes on is sluggish a degree too); restoration, transmutation, and
+    divination teach none yet. Staggered, Pinned, Spell ward, and Light-footed ease by the sufferer's actions
     (§8 "Status effects": `per_action`), so a staggered foe's next action is the slowed one,
     however many blows staggered it.
   - **What the player perceives**: a rank that teaches one says so with its own line ("You feel
     more skilled with long blades. You have learned the deep cut."); the abilities menu (§6)
     lists each under *Weapon skills* after the skill it is listed under ("Long blades: Deep
-    cut"), greyed "fires by itself", never usable (`Ability::Weapon`,
+    cut", "Evocation: Thunderstruck"; a school's news names it, "You have learned
+    Thunderstruck."), greyed "fires by itself", never usable (`Ability::Weapon`,
     `Unavailable::FiresByItself`); Rend says "Your blades rend the orc.", Staggering block "The
-    orc staggers from your shield.", Spell reflection "Your shield turns the scorching ray back
+    orc staggers from your shield.", a school ability on what its spell landed on "The orc
+    staggers." ("The orc is sluggish."), Spell reflection "Your shield turns the scorching ray back
     at the shaman." ("The champion's shield turns your scorching ray back at you."), a free blow or shot as one is. Never a rank threshold, a
     chance, or a creature's abilities. The dev action `rank:SKILL:N` sets a rank (§6, replays).
   - **Actives** (#564; the design §4.5, §4.6; `world/weapon_active.rs`): used from the abilities

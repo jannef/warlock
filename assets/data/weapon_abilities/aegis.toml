@@ -1,0 +1,13 @@
+[[weapon_ability]]
+id = "aegis"
+name = "Aegis"
+description = "A buff you cast wards you until you act again: you are harder to hit."
+skills = ["abjuration"]
+rank = 7
+kind = "triggered"
+trigger = "spell_lands"
+systems = ["weapon_abilities", "schools", "spells", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "spell_ward"
+on = "self"

@@ -1,0 +1,12 @@
+[[weapon_ability]]
+id = "lulling"
+name = "Lulling"
+description = "A creature your enchantment takes is also slow a while."
+skills = ["enchantment"]
+rank = 10
+kind = "triggered"
+trigger = "spell_lands"
+systems = ["weapon_abilities", "schools", "spells", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "sluggish"

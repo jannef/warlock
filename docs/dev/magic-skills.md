@@ -87,13 +87,17 @@ weapon skill's marks go through), then the caster style.
 
 - **The `Outcome`** (`Cast::outcome`, a `Cell`): `landed` and `level` (the strongest creature
   struck at, `None`: nobody, so the player's own level). Every kind reports through one
-  function, `World::spell_landed(cast, other, landed)`: a buff, a cleanse, and Identify land on
+  function, `World::spell_landed(cast, other, landed, events)`: a buff, a cleanse, and Identify land on
   the player; a heal on whom it healed (landed when it rolled a point or more); a hex on each
   creature it fell on (landed when the status is on them after `afflict`); a damage spell on
   each creature its events say it struck at (`spell_lands`, `Event::Attacked` by the caster:
-  a hit lands, a miss is an attempt weighed by the one missed). An area is one practise,
-  weighed by the strongest struck. A reflected spell reports nothing (`spell_lands`' `cast` is
-  `None` for it). S11's `spell_lands` trigger is to be raised from `spell_landed`.
+  a hit lands, a miss is an attempt weighed by the one missed; reported after the spell's
+  messages and riders, in the order struck). An area is one practise, weighed by the strongest
+  struck. A reflected spell reports nothing (`spell_lands`' `cast` is `None` for it).
+- **The school abilities' trigger** (S11): `spell_landed` also raises `Trigger::SpellLands`
+  through `World::weapon_trigger` for every landing of a `Pay::Mana` cast on a creature that
+  lives, with the cast's `skills` (the school and the caster style, by where it was cast from); see
+  `docs/dev/weapon-abilities.md` "School abilities" (Thunderstruck, Wasting, Aegis, Lulling).
 - **The style**: the cast's `skills.style` (where it was cast from, above), practised after the
   school by the same outcome and level, lands or not, as a blow's style; none for a spell on
   oneself out of hindering armour. Battle caster earns full marks (an attempt and a success
@@ -142,8 +146,9 @@ by where one casts from: a Fireball from afar trains Sniper, a Blessing on onese
 and a ray at the creature beside Toucher, every spell in hindering armour Battle caster with full
 marks; Sniper's cells and Toucher's bonus in the reach and the roll; Battle caster in use in
 such armour only; the abilities, the armour's cost), `content/weapon_skill.rs`'s refusals of
-`cells` and `bonus` on other grips. Wiki: `xtask/src/wiki/schools.rs` (`school-skills.md`,
-`school-benefits.md`, `caster-style-benefits.md`) and `weapon_abilities.rs`
+`cells` and `bonus` on other grips, `world/school_ability_tests.rs` (the school abilities).
+Wiki: `xtask/src/wiki/schools.rs` (`school-skills.md`, `school-benefits.md`,
+`school-abilities.md`, `caster-style-benefits.md`) and `weapon_abilities.rs`
 (`caster-style-abilities.md`) for `wiki/src/schools.md`, whose "Caster styles" section the
 fighting styles page points to (`Term::CasterStyle`, `Term::CasterStyleAbility`: the caster
 styles' anchors are `schools.md#style-ID`).

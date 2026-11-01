@@ -84,6 +84,25 @@ What each rank brings, in a sentence:
   quicker; 6 a fifth off; 7 three tenths quicker; 8 a quarter off, two cells farther; 9 three
   tenths off, two fifths quicker; 10 two fifths off, half the time.
 
+## School abilities
+
+As a weapon skill's ranks teach [weapon abilities](weapon-skills.md#what-a-rank-teaches), a school's
+teach **school abilities**. Each fires by itself, free and instant, when a spell of the school
+that you cast with your own [mana](mana.md) **lands**: once for every creature it harms, every
+creature a hex takes on, every creature it heals, and, for a buff, on you. A
+[Fireball](magic.md#spell-fireball) that burns three kobolds fires three times, one for each in
+turn. A spell that misses, finds nobody, or is read from a [scroll](scrolls.md) or loosed from a
+wand fires none, and an ability meant for the one the spell lands on is never laid on you
+(Thunderstruck does nothing to the caster of [Light](magic.md#spell-light)). They are listed in
+the [abilities menu](abilities.md) under their school, as firing by themselves, and *[Early
+mastery](talents.md#talent-early-mastery)* teaches them a rank sooner, as it does a weapon's.
+Restoration, transmutation, and divination teach none yet.
+
+{{#include generated/school-abilities.md}}
+
+A school ability and a talent that lays a status on what a spell harms (*[Numbing
+cold](talents.md#talent-numbing-cold)*) both work: one is the talent's, the other the rank's.
+
 ## Talents
 
 *[Schooled](talents.md#talent-schooled)* (chosen for a school you hold at rank 2) casts that

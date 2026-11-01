@@ -1,7 +1,8 @@
 //! The schools of magic tables (spec §8 "Weapon skills": "Schools of magic"; the spell scaling
 //! design §8), from `data/weapon_skills.toml`'s rows of role `school`: each school with its
-//! spells, its defaults, and the classes that start ranked in it; and what each rank gives. The
-//! caster styles' ranks too (`grip` a caster's: where a spell is cast from), on the same page.
+//! spells, its defaults, and the classes that start ranked in it; what each rank gives; and the
+//! school abilities a rank teaches (the design §8.5, `data/weapon_abilities/`). The caster
+//! styles' ranks too (`grip` a caster's: where a spell is cast from), on the same page.
 
 use super::text::{Term, anchored, link};
 use super::weapon_skills::{Kind, default_list, grip_text, rank_table};
@@ -92,4 +93,9 @@ pub fn caster_style_benefits(content: &Content) -> String {
         out.push('\n');
     }
     out
+}
+
+/// The school abilities: what a school's rank teaches, as the weapon abilities tables say them.
+pub fn abilities(content: &Content) -> String {
+    super::weapon_abilities::table(content, super::weapon_abilities::Taught::Schools)
 }

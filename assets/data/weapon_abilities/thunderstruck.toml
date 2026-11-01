@@ -1,0 +1,12 @@
+[[weapon_ability]]
+id = "thunderstruck"
+name = "Thunderstruck"
+description = "What your evocations harm is staggered, slow to act next."
+skills = ["evocation"]
+rank = 10
+kind = "triggered"
+trigger = "spell_lands"
+systems = ["weapon_abilities", "schools", "spells", "status"]
+[weapon_ability.effect]
+kind = "status"
+status = "staggered"
