@@ -302,13 +302,20 @@ do: which buffs and hexes, never how strong or for how long.
   sides) **and turn the other way**, a turn in 45 seconds. Someone with both has the buffs' circle
   inside and the hexes' around it.
 - The runes go in the order the status bar lists the statuses, so the same buffs always make the
-  same figure.
+  same figure. Each rune faces the middle of its circle (its foot toward the centre, so the one
+  at the bottom stands on its head), has a soft dark patch under it and a faint glow of its
+  colour, and slowly swells and fades a little, each on its own beat (every 3.6 seconds).
+- **A circle keeps to what you see**: its runes and rings show only over floor you can see now,
+  never over walls, darkness, or anything else drawn on the map (a creature, an item, a torch on
+  the wall); they fade out softly where they reach one. Where two circles crowd, the later one's
+  runes and rings give way to the earlier's (yours first).
 - **A circle fades in** over half a second when the first buff or hex begins, and out as long
   when the last ends. When one begins or ends while others go on, the figure changes over 0.4
   seconds: the runes glide round the ring to their new corners, and the old figure and rings fade
   into the new. A hexes' circle moves outward when a buff's circle comes inside it, and back in
-  once that one is gone. With Reduced effects or Slides, camera off, none of this moves: a circle
-  appears, changes, and goes at once.
+  once that one is gone. With Reduced effects or Slides, camera off, none of this moves (nor do
+  the runes swell): a circle appears, changes, and goes at once. Reduced effects also takes the
+  runes' glow away ([Settings](settings.md)).
 
 Every buff shows on a creature, whatever gave it: look mode names a hasted creature "quickened",
 a bark-skinned one "bark-skinned", one that drank a [potion of might](potions.md#potion-of-might) "fortified" (see

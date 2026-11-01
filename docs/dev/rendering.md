@@ -57,7 +57,7 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    and rings, and nine bits a rune, slot and school; per kind the old figure's head and runes,
    and `[angle, fade, blend, place]`), with `CircleMaterial` (`circles.wesl`: rings and the
    polygon as signed distances one pixel wide at 18 px (`h / 18`, × `LINE_WEIGHT`), dashes along
-   arc and side for a hex, an upright rune square per slot; the sizes are mirrored constants,
+   arc and side for a hex, a rune square per slot turned to face the centre; the sizes are mirrored constants,
    change both together; alphas `LINE_ALPHA` 0.2 and `RUNE_ALPHA` 0.7; the school colours a
    uniform, palette-mapped in `ui/circles.rs`).
 
@@ -79,8 +79,49 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    from `render/rune_atlas.rs`: every rune of `runes.toml` rasterised from
    `assets/fonts/NotoSansJP-Runes.ttf` (a subset of Noto Sans JP Medium; `assets/fonts/README.md`
    has the `pyftsubset` command, and `every_rune_is_in_the_rune_font` checks it is current) into
-   2× square slots with an empty one-texel border, one `R8Unorm` texture sampled linearly,
-   rebuilt when the cell height changes. The `circles` switch turns the drawing off; reduced
+   2× square slots padded for the blur (`pad`, three of `BACKDROP_SIGMA`) with an empty
+   one-texel border, one `Rgba8Unorm` texture sampled linearly: red the coverage, green the halo
+   (the coverage blurred by `HALO_SIGMA`, 0.12 rune squares, × 1.5), blue the backdrop (blurred
+   by `BACKDROP_SIGMA`, 0.25, × 3), rebuilt when the cell height changes.
+
+   **Where a circle shows** (#786, the owner's review: "cringe when glyphs overlap other
+   glyphs"): the circle material binds the map's `light_flags` (`lighting.rs::cell_flags`: `LIT`,
+   `OPAQUE`, and `OCCUPIED`, a visible cell with a glyph of its own: an actor, an object or
+   chest, a known trap, or terrain not walkable such as a wall torch) and finds a pixel's cell
+   from the framebuffer position and the grid's origin and cell size (`Circles::grid_origin`,
+   `cell`, as `console.wesl` does). `show_at` is 1 over clear seen floor, 0 over unseen,
+   remembered, opaque, or occupied cells (`OCCUPIED_SHOW`; the actor's own cell, an instance
+   attribute, never counts), eased across a cell edge over `SOFT` (0.22 cells) either side. A
+   line pixel is masked where it is, in the shader. A rune is masked whole on the CPU
+   (`circles.rs::rune_show`, the same `show_at` over `VisualLight::console_flags`, tested
+   against it): the least of it at the rune's centre and `FOOTPRINT` (0.3 rune squares) out
+   along each axis, so it is never cut in two; with `crowding`, which fades a rune within
+   `CROWD_NEAR`..`CROWD_FAR` (0.8 to 1.3 rune squares) of an earlier instance's rune (the order
+   `emit` pushes them: the snapshot's actors, the player first), packed a byte a rune
+   (`ATTRIBUTE_CROWD`; the mesh is rebuilt when the map's flags change). `under` gives each circle the
+   nearest earlier one whose rings reach it (`ATTRIBUTE_UNDER`): its lines are left out inside
+   that circle's outermost ring. The lines also stop `GLYPH_GAP` (a pixel at the default font)
+   short of the actor's glyph's ink box (`ATTRIBUTE_INK`).
+
+   **Centring**: `emit` centres a circle on its actor's glyph's ink (`atlas::ink_box`: the
+   glyph's outline box placed as `rasterize` places it, on the baseline at `ascent.round()`), not
+   on the cell's middle: the font's cell holds the descent below the baseline, so a `k` sits a
+   little above the middle and an `@` (which hangs below the baseline) a little below it; the
+   old centre was 3 px off an `@` at scale 2.
+
+   **Backdrop, halo, lock, pulse** (#786): per pixel, bottom up, the backdrop darkens
+   (`BACKDROP_ALPHA` 0.8 × the blue channel), the halo glows in the rune's school colour
+   (`HALO_ALPHA` 0.3 × green; `Circles::halo`, off with reduced effects, separate from the
+   `glow` switch's bloom), then the lines, then the rune. Each rune is turned by `rune_turn(a) =
+   a + π/2` (its foot to the centre) and pulses by `pulse(time, phase)`, a sine of
+   `PULSE_PERIOD` 3.6 s on `pulse_phase(k, hex)` (golden-ratio steps by slot, a hex's half a
+   period on), `PULSE_ALPHA` 0.12 of its opacity and `PULSE_SIZE` 0.04 of its square, only with
+   `motion` on (`Circles::pulse`; the frozen moment under `--freeze-time`; the time and the
+   switch ride in `ATTRIBUTE_INK`, not the uniform, so the material is never re-prepared a
+   frame; a first cut that masked runes in the shader and put the time in the uniform cost
+   0.30 ms on the fifty-circle bench, this one 0.08 ms). The quad reaches
+   `quad_margin()` past the ink for the blur and the pulse. The Rust functions are the shader's
+   mirrors, tested in `circles.rs`. The `circles` switch turns the drawing off; reduced
    effects leaves it on and only stills it (as `motion` off does). With `glow` on the school
    colours are `post::emissive` by `ui/circles.rs::CIRCLE_GLOW` (0.1). The light about a circled
    actor is core's (the status's `light`, docs/dev/status-effects.md), drawn by the lighting pass
@@ -122,7 +163,8 @@ light); its intensity `gain` becomes the per-cell brightness gain (drawn-light-w
 base light = 1) applied after shading. Tune with captures at several `--freeze-time` values;
 the crystals, fungus, runes, and altar must stay constant. Two textures on the map material:
 `light` (`Rgba32Float`: rgb light, 1.0 = fully lit, and saturation) and `light_flags`
-(`Rgba8Uint`: lit/opaque flags, intensity gain byte). The shader
+(`Rgba8Uint`: lit/opaque/occupied flags, intensity gain byte; the spell circles read the flags
+too). The shader
 interpolates light per pixel between cell centers, never across opaque, unseen, or remembered
 cells (walls are lit flat by their wall-face light); then exposure (readability floor, soft
 overbright knee plus a faint glow in the light's hue), desaturation, gain. Unlit cells (remembered

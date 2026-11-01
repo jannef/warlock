@@ -516,3 +516,14 @@ The first draft's open questions, answered by the owner where quoted and otherwi
 9. **A test scenario, `--scenario circles`** (owner), with two loader additions (a scenario's `spells`, a spawn's `status`) so the scenario itself is the fixture: every buff and hex spell known, 300 mana and potions of mana, kobolds already buffed, hexed, both, and many, and one in the dark for the glow. §13.
 10. **Slices reordered: the visible proof of concept first** (owner), then the core light, then the polish. §14.
 11. **No talents, no `[[system]]` tag** (owner, the first draft). §8.5.
+
+**The owner's review of the first build (2026-11-01, #786)**, which overrides the above where
+they differ: "it looks like shit … it looks cringe when glyphs overlap other glyphs, just a
+mess." Runes hung over the void outside the view and sat on walls and on other glyphs, and the
+circle did not look centred on its actor. Since #786: a rune or line shows only over seen floor
+with no other glyph on it (softly at cell edges; a rune whole or faded, never cut), crowded runes
+give way to an earlier circle's and a later circle's lines pass under an earlier one's rings;
+the circle is centred on its actor's glyph's ink; each rune has a dark backdrop and a faint halo
+in its school's colour, is **tidally locked** (turned so its foot faces the centre, replacing
+the upright runes of §3), and pulses gently on its own phase with `motion` on. Spec §4.8 and
+`docs/dev/rendering.md` have the details.

@@ -10,7 +10,9 @@
 
 use super::circle_tracks::Tracks;
 use super::motion::Motion;
+use crate::cli::Args;
 use crate::game::Game;
+use crate::render::atlas::{self, Font, GlyphAtlas};
 use crate::render::circles::{self, CircleInstance, Circles, Rune, SchoolColors};
 use crate::render::grid::MapGrid;
 use crate::render::lighting::VisualLight;
@@ -43,12 +45,20 @@ pub(super) fn emit(
     effects: Res<Effects>,
     settings: Res<Settings>,
     light: Res<VisualLight>,
+    (font, atlas, args): (Res<Font>, Res<GlyphAtlas>, Res<Args>),
     mut out: ResMut<Circles>,
     mut colors: ResMut<SchoolColors>,
     mut circled: Local<Circled>,
 ) {
     out.clip = grid.clip;
     out.cell_height = grid.cell.y;
+    out.grid_origin = grid.origin;
+    out.cell = grid.cell;
+    out.time = visual.seconds;
+    // The runes pulse with motion on (at the frozen moment under `--freeze-time`), and glow but
+    // with reduced effects (which also stills them, as `motion` off does).
+    out.pulse = effects.motion;
+    out.halo = !(settings.reduced_effects || args.reduced_effects);
     let view = game.world.perception();
     let content = view.content();
     if settings.is_changed() || effects.is_changed() || colors.0 == [Vec4::ZERO; 8] {
@@ -102,10 +112,23 @@ pub(super) fn emit(
     for &(id, pos) in &circled.list {
         let kinds = circled.tracks.shown(id, time, animate, effects.motion);
         let at = motion.actor_pos(id, pos, time);
+        // Centred on the actor's glyph's ink, not its cell: a glyph sits on the baseline, its
+        // ink above the cell's middle or below it (`@` reaches under the baseline).
+        let glyph = view.actor_at(pos).map_or('@', |a| a.glyph(content));
+        let ink = ink(&font.0, atlas.px, glyph, grid.cell);
         out.push(CircleInstance {
-            center: grid.to_screen(at) + grid.cell * 0.5,
+            center: grid.to_screen(at) + ink.center(),
             kinds,
             keep: light.keep(),
+            cell: grid.to_console(pos),
+            ink: ink.half_size(),
         });
     }
+}
+
+/// Where the ink of `glyph` is in its cell, in pixels from the cell's top-left: its outline's
+/// box as the atlas rasterises it at `px` (`atlas::ink_box`), the whole cell for a glyph with
+/// no ink.
+fn ink(font: &fontdue::Font, px: f32, glyph: char, cell: Vec2) -> Rect {
+    atlas::ink_box(font, px, glyph).unwrap_or(Rect::from_corners(Vec2::ZERO, cell))
 }
