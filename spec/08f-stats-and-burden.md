@@ -109,8 +109,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     takes nothing. **Talents** (#726; one `TalentMods` field each, one read): Late bloomer (level
     20, `ramp_ease` 1: `over` counted one fewer, the first point past the potential at the base)
     through `StatTraining::eased_price` in `settle`;
-    Ascetic (Grit, Willpower 13: `fasting_marks` 15, Willpower marks at once at a daily check met
-    Hungry or worse, before the draws, and `no_deed` hungry_dawn); the barbarian's Hard living
+    the barbarian's Hard living
     (level 18: `no_deed` hungry_dawn, starved, vomited, fainted) and the monk's Discipline
     (level 12: `use_marks` endured and prayed ×2, `no_deed` fainted). A deed that takes a pile from out of the drop's play (`quarter × |m| < L`, or
     `m ≥ 0`) to within it warns at once in words ("You feel your strength wasting.", "Your hands

@@ -88,7 +88,7 @@ after you leave, you are **Ebbing** ("Your power ebbs away."): a point of [mana]
 20 seconds, and none comes back. It never takes you below nothing and never harms you otherwise.
 Out of the room it passes: "Your power stops ebbing." Creatures with [mana](mana.md#how-much) ebb in the room just as
 you do, and you can see it on them ("ebbing"); those without mana are left alone. The talent
-*[Anchored mind](talents.md#talent-anchored-mind)* keeps it from ever taking you.
+*[Old delver](talents.md#talent-old-delver)* keeps it from ever taking you.
 
 ## Asleep
 

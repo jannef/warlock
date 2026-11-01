@@ -27,7 +27,9 @@ magic, and draws no rarity for them).
 
 The rules are `world/read.rs`: `Action::Read { item, target: Option<ReadTarget> }` (`read:b`,
 `read:b:12,5` a cell, `read:b:c` a stack; `ReadTarget::{Cell, Item}`), one arm in
-`player_acts`, priced `ActionKind::Read` (`read` in `data/actions.toml`) before the scroll is
+`player_acts`, priced `ActionKind::Read` (`read` in `data/actions.toml`; `read_price` scales it
+by `TalentMods::read_percent`, Scroll savant's and Scroll adept's halves, never below
+`READ_FLOOR`, a quarter) before the scroll is
 used up (`use_up`, which follows the equipment's letters). Refusals take no time and keep the
 scroll. A read is a cast (`World::read_cast`, below): a damage spell checks `can_loose_here`
 and `within_reach` (`shoot.rs`, shared with missiles), then casts its shape through **the one
@@ -111,7 +113,7 @@ length, default 0). Reading one is `World::read_cast` (`world/cast.rs`): the one
 `scroll_rungs` (Scroll adept; `CastBy::Scroll`, no stats), the reader's other hooks (a reroll,
 a rider, a die more) applying, and the reader's reach and degrees, never asking whether the
 reader knows the spell or
-has the mana; the scroll is used up (`use_up`, Spell recall's chance) and said read
+has the mana; the scroll is used up (`use_up`, Scroll savant's second rank's chance) and said read
 (`say_read`, which identifies its type) only once the cast is sure to go off, so a refusal
 keeps it and takes no time. An aimed spell needs its cell (`read:b:12,5`), a spell on a stack
 (Identify, `SpellScroll::on_item`) its stack (`read:b:c`); a spell on oneself
@@ -121,7 +123,7 @@ aims it as the spell (`ui/target.rs::spell_of`, the player's own reach).
 
 **Study** (#396, docs/dev/spells.md "Learning"): a scroll teaches what `Reading::teaches` says,
 its own spell (fireball Fireball, lightning Lightning bolt, frost Frost). `Action::Study` uses
-the scroll up its own way (`World::use_scroll` in `world/learn.rs`: no Spell recall, no Read
+the scroll up its own way (`World::use_scroll` in `world/learn.rs`: no Scroll savant keeping it, no Read
 training), and a mishap's backfire casts the scroll's damage spell as a burst around the reader
 (its own radius or 1) at the spell's base, no rung and no hooks; any other kind fizzles.
 

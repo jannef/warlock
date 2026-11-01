@@ -221,7 +221,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     held by everyone with mana inside the room, it drains a point every 20 seconds and stops
     mana coming back (`mana_regen` 0); one degree, renewed while one stays, eased half a minute
     after leaving ("Your power ebbs away.", "Your power stops ebbing."; on creatures "ebbing").
-    Anchored mind (§8 "Talents") spares the one who has it.
+    Old delver (§8 "Talents") spares the one who has it.
   - **Silenced** (#409): a silent vault's status (§7 "Special rooms"), held by everyone inside,
     creatures too: one degree, renewed while one stays, eased ten seconds after leaving ("The
     silence closes around you.", "Sound returns."; on creatures "silenced"). It `blocks` `cast`,
@@ -320,7 +320,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `rungs` of the spell's damage or heal ladder (default 0, the base; at most the ladder's
     length) plus the reader's `scroll_rungs` (Scroll adept), the reader's other hooks applying
     and their reach and degrees, free of mana and never refused for what the reader knows
-    (Spell recall may keep it; a death by it is the scroll's), and teaches it to whoever
+    (Scroll savant may keep it; a death by it is the scroll's), and teaches it to whoever
     studies it. The scrolls of fireball (`rungs = 1`, 3d6), lightning (`rungs = 2`, 4d6), and
     frost (0, 2d6) are spell scrolls like the rest (the spell scaling design §7.4: their burst
     and bolt readings went; a `read` of kind `burst` or `bolt` is refused naming the
@@ -476,7 +476,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       half. It stops as a rest does (a creature that disturbs a rest comes into view, a message
       is said: a blow lands, a status begins); an interrupted study loses the time and keeps the
       scroll (design §14 q1). Once begun, the player cannot stop it themselves.
-    - **The check**, as the last turn ends, on the scroll used up (Spell recall never keeps a
+    - **The check**, as the last turn ends, on the scroll used up (Scroll savant never keeps a
       studied scroll, design §14 q7): overreach is the spell's level less the caster level. At
       0 or less the spell is learned, no draw. Above, a 2d12 check with
       the Intelligence modifier + the skills' `study` benefit (Spellcraft and Decipher script,

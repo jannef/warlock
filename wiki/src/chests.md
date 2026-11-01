@@ -99,7 +99,7 @@ chest breaks with a chance of your [Strength](stats.md#stat-strength) in its **s
 
 A chest that breaks is **smashed**: `The coffer bursts apart!` Its lock is gone, and **each [stack](objects.md#piles)
 inside breaks with an even chance**, one after another; the rest lies in the splinters. **Coins
-and loose [gems](gems.md) never break** under a boot. The **[Deft breaker](talents.md#talent-deft-breaker)** talent (Strength 12) halves the
+and loose [gems](gems.md) never break** under a boot. The **[Lockbreaker](talents.md#talent-lockbreaker)** talent (Strength 12) halves the
 chance.
 
 ```

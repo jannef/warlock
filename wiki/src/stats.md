@@ -148,9 +148,7 @@ The **[Hard training](talents.md#talent-hard-training)** [talent](talents.md) gi
 again its chance of a mark (a sure one stays sure), so every stat trains half again as fast.
 **[Late
 bloomer](talents.md#talent-late-bloomer)** (level 20) counts every point past the potential as
-one fewer, so the first point beyond it costs the plain price. **[Ascetic](talents.md#talent-ascetic)**
-(Willpower 13) gives Willpower 15 marks at every daily check you meet Hungry or worse, and a
-hungry dawn takes nothing from you. The [barbarian](classes.md#barbarian)'s **[Hard
+one fewer, so the first point beyond it costs the plain price. The [barbarian](classes.md#barbarian)'s **[Hard
 living](talents.md#talent-hard-living)** (level 18) spares every deed of hunger below (a hungry
 dawn, starving, vomiting, fainting), and the [monk](classes.md#monk)'s
 **[Discipline](talents.md#talent-discipline)** (level 12) gives two marks where enduring and
