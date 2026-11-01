@@ -13,7 +13,7 @@ known_for = ["bluff", "music"]
 optional_skills = { listen = { chance = 30, dice = "2d4" }, spot = { chance = 30, dice = "2d4" }, steal = { chance = 15, dice = "2d4" } }
 rolls = 4
 creation_talents = 1
-weapon_skills = { short_blades = 1, daggers = "1d2", spell_attack = 1 }
+weapon_skills = { short_blades = 1, daggers = "1d2", restoration = 1 }
 styles = { duelist = 1 }
 # A blade for the road, a lute for the inn, and the night's takings.
 kit = [

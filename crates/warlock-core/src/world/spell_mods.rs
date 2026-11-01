@@ -1,6 +1,6 @@
 //! What a caster's talents and worn items do to one of its spells (spec §8 "Spells": "Hooks";
 //! the spell scaling design §7.1): the six hooks' [`SpellMods`] (`content/spell_mod.rs`), summed
-//! once a cast from two sources, each filtered by the spell's tags:
+//! once a cast from three sources, the first two filtered by the spell's tags:
 //!
 //! - its **talents**' `spell_mod` effects ([`crate::talent::TalentMods::spell_mods`]: Empower,
 //!   Archmage, Keen mind, School focus, Scroll adept, Wand mastery, Sure hand, Brimming,
@@ -10,8 +10,12 @@
 //!   `spell_reach` (of Farcasting) as cells and `spell_duration` (of Lingering) as degrees.
 //!   Items carry no tag filter yet: each acts on every spell.
 //!
-//! Derived at cast time; nothing is saved. A third source, a school's rank, joins here in a later
-//! slice (S8). Nothing is clamped (decision 16).
+//! - its rank in the spell's **school of magic** ([`Actor::school_benefit`]'s
+//!   [`crate::content::Benefit::spell_mods`]: `reroll`, `sides`, `dice`, `bonus`, `cells`,
+//!   `degrees`, and its `mana` as the cost hook's percent less), for its own spells by
+//!   construction, so unfiltered.
+//!
+//! Derived at cast time; nothing is saved. Nothing is clamped (decision 16).
 
 use super::Actor;
 use crate::content::{Content, Effect as ItemEffect, SpellData, SpellMods};
@@ -22,6 +26,7 @@ impl Actor {
         let tags = spell.tags(content);
         let mut mods = self.talent_mods(content).spell_mods(&tags);
         mods.add(&self.worn_spell_mods(content));
+        mods.add(&self.school_benefit(content, spell).spell_mods());
         mods
     }
 

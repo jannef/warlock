@@ -18,8 +18,9 @@
 #   choice        what it is chosen for, if it takes a choice: "weapon_skill", "style", "skill"
 #                 (any skill, trained or not), "element" (a damage type that is no physical
 #                 kind), "school" (a school of magic, `evocation`, or an element: a spell
-#                 tag), "tag" (a creature tag some type carries), or "stat" (one of the
-#                 six, `strength`); replays write it
+#                 tag), "school_skill" (a school of magic as a skill: a row of
+#                 ../weapon_skills.toml of role `school`, `evocation`), "tag" (a creature tag
+#                 some type carries), or "stat" (one of the six, `strength`); replays write it
 #                 `talent:weapon_focus:long_blades`, and each choice is a pick of its own
 #   needs         what taking any rank asks, all of which must hold at the pick (nothing is
 #                 checked again later):
@@ -29,8 +30,9 @@
 #                   stats = { toughness = 14 }           the stored score, never the effective
 #                   skills = { stealth = 25 }            trained, at that value at least
 #                   weapon_skills = { bows = 3 }         a weapon skill or style at that rank
-#                   chosen = 2                           the chosen weapon skill or style at that
-#                                                        rank (talents with a choice)
+#                   chosen = 2                           the chosen weapon skill, style, or
+#                                                        school skill at that rank (talents with
+#                                                        such a choice)
 #                   level = 9                            the character level
 #                   race = "dwarf", class = "warrior"    the character's
 #                   eyes = "darkvision"                  the race's vision profile
@@ -249,7 +251,7 @@
 #   weapon { role, skill, to_hit, damage, threat, ranks, speed, reload, ease, bash, shield, crit, at_rank }
 #                                 what attacks with some weapon skills gain, as their ranks give
 #                                 it (data/weapon_skills.toml): the weapon skill or style `skill`
-#                                 names, else without `role` the chosen weapon skill or style's
+#                                 names, else without `role` the chosen weapon skill, style, or school skill's
 #                                 (a talent with that choice), else every skill of the role's; `ranks` reads its benefits that many ranks
 #                                 higher (a rank held, never past 10), `ease` eases both
 #                                 two-weapon penalties, `bash` adds to a free bash's chance only
@@ -364,6 +366,9 @@
 #   natural_unarmoured { value }  natural armour, only while nothing is worn in a body armour slot
 #   weapon_marks { role, value }  the marks its attacks earn in that role's weapon skills, that
 #                                 percent more; without `role`, in every weapon skill and style
+#                                 (never a school of magic: those are `school_marks_percent`'s)
+#   school_marks_percent { value }   the marks its casts earn in every school of magic, that
+#                                 percent more (Devotee)
 #   two_handed_crit { value }     a confirmed critical's multiplier with a two-handed weapon, that
 #                                 much more (1 to 3, at most x5)
 #   unarmed_die { sides }         blows with nothing in hand and kicks roll one die of that many

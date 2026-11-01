@@ -97,27 +97,37 @@ the banes in `style-benefits.md` (`rank_table`'s bane columns).
 
 Caster styles (#571, combat progression family): spells that roll to hit
 (`SpellData::rolls_to_hit`: a damage spell, a ray, a bolt, or a touch, resolved by the attack
-roll) draw on the one skill of `Role::Spell` (`spell_attack`, its own `Section::Spells` on the
-screen) and a style of a caster grip (`Grip::RangedSpell`, `TouchSpell`, `ArmouredSpell`;
-`Grip::casts`; their styles name no weapons). `Actor::spell_skills(content, touch)` picks them:
-armoured first (`Actor::worn_spell_cost` above 0: anything worn with a `spell_cost_percent`
-not eased to 0 by its own Mage-wrought, #629),
-else touch or ranged; `Actor::attack_skill(Spell, _)` is the spell skill, `Actor::style(Spell,
-_)` stays `None` (`styles_in_use` marks no caster style). The one reader is
+roll) draw on their school's skill (`Role::School`, docs/dev/magic-skills.md; Spell attacks,
+`Role::Spell`, is retired into the schools) and a style of a caster grip (`Grip::RangedSpell`,
+`TouchSpell`, `ArmouredSpell`; `Grip::casts`; their styles name no weapons).
+`Actor::spell_skills(content, spell)` picks them: the spell's school, and armoured first
+(`Actor::worn_spell_cost` above 0: anything worn with a `spell_cost_percent` not eased to 0 by
+its own Mage-wrought, #629), else touch or ranged by the spell's shape;
+`Actor::attack_skill(Spell, _)` is `None`, `Actor::style(Spell, _)` stays `None`
+(`styles_in_use` marks no caster style). The one reader of the roll's benefit is
 `world/cast.rs::cast_single` (own casts paid in mana only; a scroll or a wand keeps the bare
 roll): `benefit_of(skills).at_distance(distance, table.spell_attacks())` (`[spell_attacks] far`,
 default 5: Sniper's `far_to_hit` and `far_threat` from there) goes into `Profile::with` after the
-spell's to-hit scales; `World::spell_practised` then practises both against the target's level
-and calls `resolve_triggers` with `AttackKind::Spell` (Pinning ray, Staggering touch, Withering
-touch, Spell guard; `struck` fires for the one struck as for a blow; `kill` and `big_hit` are not raised for spells, decided). Battle
-caster's `armour` (percent off the armour's percent) is read by `Actor::armour_spell_cost`
-whatever is cast, and `World::practise_in_armour` (from `pay_cast` on `Pay::Mana`) trains it on
-every other spell cast in such armour: `attempt` marks as against the player's own level. No
-`speed` for the role or the caster grips (the loader refuses it: a cast's time is the spell's).
-New `Benefit` fields: `far_to_hit`, `far_threat`, `armour` (checked per grip like the others).
-Creatures cast no spell that rolls to hit (their spells are intents), so no creature data gives
-ranks in them yet. Classes: wizard Spell attacks 2 and Sniper 1, druid 1 and Sniper 1, witch and
-priest 1 and Toucher 1, paladin 1 and Battle caster 1, bard Spell attacks 1. Talents: none new; Stylist (a
-chosen style) may choose a caster style, raising it a rank. Tests:
+spell's to-hit scales; `World::spell_practised` calls `resolve_triggers` with `AttackKind::Spell`
+(Pinning ray, Staggering touch, Withering touch, Spell guard; `struck` fires for the one struck
+as for a blow; `kill` and `big_hit` are not raised for spells, decided). The marks are the whole
+cast's, once, at its end (`World::practise_cast`): the school, then the style, which until the
+caster styles' rework (S10) trains as before: by the cast's outcome on a spell that rolls to hit
+and struck at someone,
+and Battle caster an attempt as against the player's own level on any other cast in armour that
+hinders casting (`practise_in_armour` is gone). Battle caster's `armour` (percent off the
+armour's percent) is read by `Actor::armour_spell_cost` whatever is cast. No `speed` for the
+caster grips (the loader refuses it: where one casts from never quickens a cast; a school's
+`speed` may). `Benefit` fields of theirs: `far_to_hit`, `far_threat`, `armour` (checked per grip
+like the others). Creatures cast no spell that rolls to hit (their spells are intents), so no
+creature data gives ranks in them yet. Classes: wizard and druid Sniper 1, witch and priest
+Toucher 1, paladin Battle caster 1 (their schools: docs/dev/magic-skills.md). Talents: none new;
+Stylist (a chosen style) may choose a caster style, raising it a rank. Tests:
 `content/weapon_skill.rs` (`the_caster_ladder_loads_and_is_checked`),
 `world/caster_style_tests.rs`.
+
+Schools of magic (the spell scaling design §8): the seven rows of `Role::School`, one a school,
+are weapon skills in everything but what a rank gives; their rows, `Benefit::spell_mods`,
+`World::practise_cast`, and the `Outcome` are docs/dev/magic-skills.md's. No section of the
+weapon skills screen lists them (`Role::section` is `None`; the Magic page, S9, will), and the
+`weapon_skills` dump layer leaves them out (the `schools` layer has them).

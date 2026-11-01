@@ -2,7 +2,7 @@
 id = "early_mastery"
 name = "Early mastery"
 tree = "weaponcraft"
-description = "What your weapon skills and fighting styles teach comes to you a rank sooner."
+description = "What your weapon skills, fighting styles, and schools of magic teach comes to you a rank sooner."
 needs = { level = 9 }
 effects = [{ kind = "ability_ranks", value = 1 }]
 systems = ["weapon_abilities"]

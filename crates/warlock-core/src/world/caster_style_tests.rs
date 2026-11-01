@@ -1,7 +1,7 @@
-//! The caster's ladder (spec §8 "Weapon skills", "Fighting styles"; #571): the spell attack
-//! skill and the caster styles a spell that rolls to hit draws on and trains, what their ranks
-//! do to the roll, the critical held to the cap, the caster styles' abilities, Battle caster's
-//! armour, and the classes' starting ranks.
+//! The caster's ladder (spec §8 "Weapon skills", "Fighting styles"; #571): the school of magic
+//! and the caster styles a spell that rolls to hit draws on and trains, what their ranks do to
+//! the roll, the critical held by nothing, the caster styles' abilities, Battle caster's armour,
+//! and the classes' starting ranks (the schools' own marks: `school_skill_tests.rs`).
 
 use super::caster_tests::{kobold, reach, run, said, world_with};
 use super::*;
@@ -118,13 +118,14 @@ fn the_classes_that_cast_start_on_the_ladder_and_warriors_do_not() {
         .expect("world")
     };
     for (class, expect) in [
-        ("wizard", [("spell_attack", 2), ("sniper", 1)]),
-        ("witch", [("spell_attack", 1), ("toucher", 1)]),
-        ("priest", [("spell_attack", 1), ("toucher", 1)]),
-        ("druid", [("spell_attack", 1), ("sniper", 1)]),
-        ("paladin", [("spell_attack", 1), ("battle_caster", 1)]),
-        ("bard", [("spell_attack", 1), ("sniper", 0)]),
-        ("warrior", [("spell_attack", 0), ("battle_caster", 0)]),
+        ("wizard", [("evocation", 2), ("sniper", 1)]),
+        ("witch", [("necromancy", 1), ("toucher", 1)]),
+        ("priest", [("restoration", 1), ("toucher", 1)]),
+        ("druid", [("evocation", 1), ("sniper", 1)]),
+        ("paladin", [("abjuration", 1), ("battle_caster", 1)]),
+        ("bard", [("restoration", 1), ("sniper", 0)]),
+        ("ranger", [("evocation", 0), ("sniper", 0)]),
+        ("warrior", [("evocation", 0), ("battle_caster", 0)]),
     ] {
         let w = start(class);
         for (name, rank) in expect {
@@ -139,25 +140,25 @@ fn the_classes_that_cast_start_on_the_ladder_and_warriors_do_not() {
 }
 
 #[test]
-fn a_spell_that_rolls_to_hit_earns_marks_and_one_that_does_not_earns_none() {
+fn a_spell_that_rolls_to_hit_trains_its_style_and_one_that_does_not_only_its_school() {
     let mut w = ray_wizard();
-    ranks(&mut w, &[("spell_attack", 1), ("sniper", 1)]);
+    ranks(&mut w, &[("evocation", 1), ("sniper", 1)]);
     let target = kobold(&mut w, 3, 10_000);
-    let (spell, sniper) = (skill(&w, "spell_attack"), skill(&w, "sniper"));
+    let (spell, sniper) = (skill(&w, "evocation"), skill(&w, "sniper"));
     let table = w.content().weapon_skills().clone();
     let marks = |w: &World, id| (w.state.player().weapon_skills.progress(&table, id)).map(|p| p.0);
     let (strikes, _) = casts(&mut w, target, (3, 0), 1);
     assert_eq!(strikes.len(), 1);
     // `casts` puts the ranks back before each cast, not after the last.
-    assert!(marks(&w, spell) > Some(0), "the spell attack skill trained");
+    assert!(marks(&w, spell) > Some(0), "the school trained");
     assert!(marks(&w, sniper) > Some(0), "the style trained");
     for other in ["toucher", "battle_caster", "staves", "duelist"] {
         let id = skill(&w, other);
         assert_eq!(w.state.player().weapon_skills.rank(id), 0, "{other}");
         assert_eq!(marks(&w, id), Some(0), "{other}");
     }
-    // Magic missile never misses: no roll, no marks.
-    ranks(&mut w, &[("spell_attack", 1), ("sniper", 1)]);
+    // Magic missile never misses: no roll, so no style's marks; its school's all the same.
+    ranks(&mut w, &[("evocation", 1), ("sniper", 1)]);
     let missile = w.content().spell_id("magic_missile").expect("a spell");
     let here = w.player_pos();
     w.player_mut().mana = 40;
@@ -168,12 +169,12 @@ fn a_spell_that_rolls_to_hit_earns_marks_and_one_that_does_not_earns_none() {
     assert!(
         (out.events.iter()).any(|e| matches!(e, Event::Attacked { target: t, .. } if *t == target))
     );
-    assert_eq!(marks(&w, spell), Some(0));
+    assert!(marks(&w, spell) > Some(0));
     assert_eq!(marks(&w, sniper), Some(0));
 }
 
 #[test]
-fn ranks_in_the_skill_raise_the_hit_chance_and_the_critical_range() {
+fn ranks_in_the_school_raise_the_hit_chance_and_the_critical_range() {
     let mut w = ray_wizard();
     let target = kobold(&mut w, 3, 10_000);
     // A hard target, so the to-hit shows.
@@ -183,7 +184,7 @@ fn ranks_in_the_skill_raise_the_hit_chance_and_the_critical_range() {
     );
     ranks(&mut w, &[]);
     let (untrained, _) = casts(&mut w, target, (3, 0), 400);
-    ranks(&mut w, &[("spell_attack", 10)]);
+    ranks(&mut w, &[("evocation", 10)]);
     let (trained, _) = casts(&mut w, target, (3, 0), 400);
     assert_eq!((untrained.len(), trained.len()), (400, 400));
     // +6 to hit: about a quarter of the 2d12 range more of the rolls land.
@@ -223,7 +224,7 @@ fn sniper_aims_better_at_range_five_and_more() {
 fn a_touch_critical_is_said_staggers_and_never_passes_the_cap() {
     let mut w = touch_wizard();
     let target = kobold(&mut w, 1, 10_000);
-    ranks(&mut w, &[("spell_attack", 10), ("toucher", 9)]);
+    ranks(&mut w, &[("evocation", 10), ("toucher", 9)]);
     let staggered = w.content().status_id("staggered").expect("a status");
     let (mut seen_critical, mut seen_staggered) = (false, false);
     let mut most = 0;
@@ -255,7 +256,7 @@ fn withering_touch_weakens_at_toucher_ten() {
     let target = kobold(&mut w, 1, 10_000);
     let weakened = w.content().status_id("weakened").expect("a status");
     let weakens = |w: &mut World, rank: u8| {
-        ranks(w, &[("spell_attack", 10), ("toucher", rank)]);
+        ranks(w, &[("evocation", 10), ("toucher", rank)]);
         (0..30).any(|_| {
             let (strikes, _) = casts(w, target, (1, 0), 1);
             hits(&strikes) == 1 && w.state.actors[&target].effects.has(weakened)
@@ -270,13 +271,19 @@ fn in_armour_battle_caster_is_the_style_and_eases_the_armours_cost() {
     let mut w = ray_wizard();
     let content = w.content().clone();
     let me = w.state.player();
-    let free = me.spell_skills(&content, false);
+    let spell = |id: &str| content.spell(content.spell_id(id).expect(id));
+    let (ray, touch) = (spell("ray_of_frost"), spell("cause_wounds"));
+    let free = me.spell_skills(&content, ray);
     assert_eq!(free.style, Some(skill(&w, "sniper")));
     assert_eq!(
-        me.spell_skills(&content, true).style,
+        me.spell_skills(&content, touch).style,
         Some(skill(&w, "toucher"))
     );
-    assert_eq!(free.skill, Some(skill(&w, "spell_attack")));
+    assert_eq!(free.skill, Some(skill(&w, "evocation")));
+    assert_eq!(
+        me.spell_skills(&content, touch).skill,
+        Some(skill(&w, "necromancy"))
+    );
     let plate = content.object_id("plate_armour").expect("plate");
     let me = w.player_mut();
     me.inventory.push(crate::object::Stack::new(plate, 1));
@@ -284,17 +291,17 @@ fn in_armour_battle_caster_is_the_style_and_eases_the_armours_cost() {
     run(&mut w, &format!("equip:body:{item}"));
     let me = w.state.player();
     assert_eq!(
-        me.spell_skills(&content, false).style,
+        me.spell_skills(&content, ray).style,
         Some(skill(&w, "battle_caster"))
     );
     assert_eq!(me.armour_spell_cost(&content), 40);
     ranks(&mut w, &[("battle_caster", 10)]);
     assert_eq!(w.state.player().worn_spell_cost(&content), 40);
     assert_eq!(w.state.player().armour_spell_cost(&content), 20, "half off");
-    // A spell that never rolls to hit, cast in armour, trains Battle caster alone.
+    // A spell that never rolls to hit, cast in armour, trains Battle caster and its school.
     let table = content.weapon_skills();
     let battle = skill(&w, "battle_caster");
-    ranks(&mut w, &[("battle_caster", 1), ("spell_attack", 1)]);
+    ranks(&mut w, &[("battle_caster", 1), ("evocation", 1)]);
     let here = w.player_pos();
     w.player_mut().mana = 40;
     w.apply(&Action::Cast(
@@ -303,10 +310,8 @@ fn in_armour_battle_caster_is_the_style_and_eases_the_armours_cost() {
     ));
     let progress = |w: &World, id| w.state.player().weapon_skills.progress(table, id);
     assert!(progress(&w, battle).is_some_and(|p| p.0 > 0));
-    assert_eq!(
-        progress(&w, skill(&w, "spell_attack")).map(|p| p.0),
-        Some(0)
-    );
+    assert!(progress(&w, skill(&w, "evocation")).is_some_and(|p| p.0 > 0));
+    assert_eq!(progress(&w, skill(&w, "sniper")).map(|p| p.0), Some(0));
 }
 
 #[test]
@@ -321,7 +326,7 @@ fn spell_guard_wards_a_battle_caster_whose_spell_lands() {
     let target = kobold(&mut w, 3, 10_000);
     let ward = content.status_id("spell_ward").expect("a status");
     let defence = |w: &World| w.defence_of(w.state.player).total();
-    ranks(&mut w, &[("spell_attack", 10), ("battle_caster", 4)]);
+    ranks(&mut w, &[("evocation", 10), ("battle_caster", 4)]);
     let bare = defence(&w);
     let warded = (0..20).any(|_| {
         let (strikes, _) = casts(&mut w, target, (3, 0), 1);
@@ -345,11 +350,5 @@ fn a_cast_sequence_replays_exactly() {
     run(&mut w, &script);
     run(&mut again, &script);
     assert_eq!(w.state_hash(), again.state_hash());
-    assert!(
-        w.state
-            .player()
-            .weapon_skills
-            .rank(skill(&w, "spell_attack"))
-            >= 1
-    );
+    assert!(w.state.player().weapon_skills.rank(skill(&w, "evocation")) >= 1);
 }

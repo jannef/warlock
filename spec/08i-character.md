@@ -908,6 +908,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     design §7.2: every spell hook ships with a user); the casters' Empower, Archmage, Scroll
     adept, Frugal caster, the wizard's Arcane training, and every class spell name it too. Wand mastery comes with
     wands (#398) and Channeler with rods (#399), whose hooks they need.
+    The `schools` system (the schools of magic, the spell scaling design §8.6; §8 "Weapon
+    skills": "Schools of magic"): **Schooled** (Spellcraft, `choice = "school_skill"`, one of
+    the seven schools' skills, `needs = { chosen = 2 }`: `weapon { ranks = 1 }`, the chosen
+    school's benefits read a rank higher), **Devotee** (Spellcraft, level 9:
+    `school_marks_percent = 50`, every school's marks half again; Forge-born's marks in every
+    skill leave the schools out), and the wizard's class ability **Magister** (level 45:
+    `weapon { role = "school", ranks = 1 }`, every school a rank higher); Early mastery's
+    description names the schools too (their abilities, a later slice).
     Grave warden (Guard, Willpower 12, `grave_warden`, #408): nothing the player kills rises in
     a cursed room (`World::curse_corpse`, the rise line of `fight.rs::creature_dies`).
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
@@ -1167,8 +1175,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wielded weapon's for a blow, the readied missile weapon's for a shot; `thrown` is every
     throw, whatever is thrown; `unarmed` bare hands, natural attacks, and kicks, whatever is
     wielded (§8 "Doors"); `shield_block` and `shield_bash` a held shield's blocks and bashes;
-    `spell` (Spell attacks, #571) every spell the caster casts that rolls to hit
-    (`Actor::attack_skill`; "Spell attacks" below).
+    `school` (a school of magic, one skill each of the seven) every spell of its school the
+    caster casts with their own mana ("Schools of magic" below).
   - **Ranks**: 0 (untrained: no benefits; marks still count) to 10, on every actor
     (`Actor::weapon_skills`, a rank and marks per skill): the player's from race and class, a
     creature's from its type (§7). Ranks are stored, not derived.
@@ -1181,8 +1189,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     opponents, fewer as the rank rises. The opponent's level is its creature type's `level`
     (§8 "Experience"; the one attacked, or for a block the attacker): a level-1 giant rat
     teaches nothing past rank 5, a level-4 kobold shaman nothing past rank 8.
-    A missile that reaches no one earns nothing; nothing rolls for marks. Of spells, only one
-    that rolls to hit earns marks ("Spell attacks" below).
+    A missile that reaches no one earns nothing; nothing rolls for marks. A spell earns marks
+    in its school, whatever it does ("Schools of magic" below).
   - **Curve**: the marks to go from a rank to the next grow exponentially, by the skill's
     `curve`: melee 15, 30, 60, … 7680 (rank 10 at 15 345 in all), missile 10, 20, … 5120. Marks
     past the need count toward the next rank (one rank at a time); rank 10 earns no more.
@@ -1219,27 +1227,45 @@ developer notes (CLAUDE.md, `docs/dev/`).
     skilled with long blades." No numbers.
   - **What the player perceives**: their own ranks and marks
     (`PerceptionView::own_weapon_skills`), shown as ranks and a bar on the weapon skills screen
-    (§6) and in the `weapon_skills` dump layer; never a benefit as such (the character
+    (§6) and in the `weapon_skills` dump layer (the schools of magic, which no section of that
+    screen lists, in the `schools` layer, with the caster styles; JSON `schools` and
+    `caster_styles`; the dev `progress` layer adds `evocation marks 312/630`); never a benefit
+    as such (the character
     screen's attacks show the to-hit and damage the ranks add up to, §6) or a creature's ranks (the
     `actors` dev layer shows every actor's). Ranks and marks are part of the world state
     (saved, hashed).
-  - **Spell attacks** (#571; the combat progression family; `Role::Spell`,
-    `SpellData::rolls_to_hit`, `Actor::spell_skills`, `World::spell_practised` in
-    `world/cast.rs`): a damage spell, a ray, a bolt, or a touch, resolved by the attack roll
-    (Ray of frost, Scorching ray, Cause wounds) draws on the one skill of role `spell` (Spell
-    attacks: missile curve, as casters cast fewer attacks than fighters swing; rank 10 +6 to
-    hit, a threat range of 18-24, a critical's damage rolled once more) and a caster style
-    ("Fighting styles" below). Its benefit adds to the spell's to-hit scales (§8 "Spells")
-    in the roll's `Profile` (`Profile::with`); a critical multiplies the damage the spell
-    rolled, and nothing holds the result (decision 16). A cast paid in mana that
-    reaches a creature earns marks in both by the same rules as a blow (against the target's
-    level), and the skills' triggered abilities fire on its hit and critical
-    (`World::resolve_triggers`); a scroll read or a wand used aims with Dexterity alone and
-    trains nothing (decided, as the to-hit scales are the caster's own). Spells that never roll
-    to hit earn nothing here. A spell has no `speed`: a cast's time is the spell's. The
-    message of a spell that crits says so as a blow's does ("You hit the kobold hard!").
-    Creatures cast no spell that rolls to hit yet (their spells are intents), so their ranks
-    in it are left to creature magic's follow-up.
+  - **Schools of magic** (the spell scaling design §8, decision 17; `Role::School`,
+    `WeaponSkillDef::school`, `Benefit::spell_mods`, `Actor::spell_skills`,
+    `Actor::school_benefit`, `World::practise_cast` in `world/cast.rs`;
+    docs/dev/magic-skills.md): the seven schools (evocation, necromancy, abjuration,
+    restoration, transmutation, enchantment, divination) are rows of role `school`, one each,
+    weapon skills in everything but what a rank gives (ranks, the missile curve, `[marks]`, the
+    defaults, `rank:evocation:5`). A spell whose school has no row is refused at load. A rank
+    lifts every spell of its school through the spell hooks (§8 "Spells": "Hooks"): `reroll`,
+    `sides`, `dice`, `bonus`, `cells`, `degrees` into `SpellMods` (`Actor::spell_mods`, beside
+    the talents' and items'), `mana` percent off the spell's mana (the floor of 1 holds),
+    `speed` percent off the cast's time (`World::cast_price`), and `to_hit` and `threat` (every
+    school's, Spell attacks' rows) for its spells that roll to hit, in the roll's `Profile`
+    with the caster style's (`benefit_of`). The harm schools grow their dice, restoration its
+    heals and pace, the lasting schools their degrees and reach, divination its price and pace
+    (the wiki has every number). **Marks**: a cast paid in the caster's own mana practises its
+    school once (`practise_cast`, at the end of the cast, by the `Outcome` its kind filled
+    through `World::spell_landed`): an attempt, and a success when it landed (a harm on
+    someone, a hex that took, a heal of a point or more, a buff, a cure, or an identify done),
+    weighed by the strongest creature it struck at (harmed, missed, hexed, or healed), else the
+    caster's own level. A miss is an attempt; an area is one practise, weighed by the strongest
+    struck; a cast at nothing an attempt against one's own level. A scroll read or a wand used
+    trains nothing. Then the caster style ("Fighting styles" below): for now as before, by the
+    same outcome on a spell that rolls to hit and struck at someone, and Battle caster an attempt on any other cast
+    in armour that hinders casting. No daily band, no limit: time and mana are the price.
+    **Defaults**: evocation ↔ transmutation −4, necromancy ↔ restoration −4, abjuration ↔
+    enchantment −4; divination stands alone; schools default only to schools. **Starting
+    ranks**: wizard evocation 2, druid evocation 1, priest and bard restoration 1, witch
+    necromancy 1, paladin abjuration 1; the ranger none; no race and no creature. A rank says
+    "You feel more skilled at evocation."; nothing says what it gives. Spell attacks (#571's
+    one skill of role `spell`, which trained on three spells) is retired into the schools: a
+    `role = "spell"` row is refused naming `school`, `[spell_attacks] far` stays (Sniper's),
+    and a save's Spell attacks training is dropped, not converted (saves change).
 - **Fighting styles** (#135; `content/weapon_skill.rs`: `Role::Style`, `Grip`, `Style`,
   `TwoWeapons`; `world/actor.rs`: `Actor::grip`, `style`, `styles_in_use`, `attack_skills`
   (`AttackSkills`: an attack's weapon skill and style), `attack_benefit`, `off_hand`,
@@ -1278,9 +1304,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to every spell's mana cost, read by `Actor::armour_spell_cost` whatever is cast, up to half
     at rank 10; rank 4 Spell guard; it also trains on every other spell paid in mana cast in
     such armour, an attempt's marks as against an opponent of the caster's own level). The
-    classes that cast start in one: the wizard Spell attacks 2 and Sniper 1, the druid Spell
-    attacks 1 and Sniper 1, the witch and the priest Spell attacks 1 and Toucher 1, the paladin
-    Spell attacks 1 and Battle caster 1, the bard Spell attacks 1; a ranger advances by casting.
+    classes that cast start in one: the wizard and the druid Sniper 1, the witch and the priest
+    Toucher 1, the paladin Battle caster 1 (with their schools, "Schools of magic" above); a
+    ranger advances by casting.
     Defaults: duelist ↔ sword and board −3, duelist ↔ twin blades −3, great weapon ↔ staff
     fighter −3, marksman ↔ skirmisher −4, sniper ↔ toucher −4, toucher ↔ battle caster −3;
     never to a weapon skill.

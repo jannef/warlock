@@ -8,8 +8,8 @@ use crate::combat::{self, Attack, Category, Defence, Health, Profile, Target};
 use crate::content::Effect as ItemEffect;
 use crate::content::{
     ActionKind, Benefit, CombatStance, Content, CreatureId, DamageTypeId, FactionId, Grip, Hide,
-    MAX_SPEED, ObjectDef, ObjectId, RaceDef, Role, SpellId, StatusId, TwoWeapons, VisionProfile,
-    WeaponSkillId,
+    MAX_SPEED, ObjectDef, ObjectId, RaceDef, Role, Shape, SpellData, SpellId, StatusId, TwoWeapons,
+    VisionProfile, WeaponSkillId,
 };
 use crate::damage::{Protection, Resistances};
 use crate::disease::Diseases;
@@ -913,7 +913,8 @@ impl Actor {
     /// The weapon skill an attack of `kind` made `with` (a missile, a shield for a bash, the
     /// off hand's weapon for its blow, or nothing for a blow) draws on and trains: a blow's
     /// ([`Actor::melee_skill`]), a bash's shield bashing, an off-hand blow's its weapon's, a
-    /// shot's the launcher's, a throw's thrown; a spell's the skill of spells that roll to hit.
+    /// shot's the launcher's, a throw's thrown; a spell's none here (its school's, through
+    /// [`Actor::spell_skills`]).
     pub fn attack_skill(
         &self,
         content: &Content,
@@ -931,26 +932,36 @@ impl Actor {
                 .launcher(content)
                 .and_then(|(launcher, _)| content.object(launcher).skill),
             (AttackKind::Thrown, _) => skills.of_role(Role::Thrown),
-            (AttackKind::Spell, _) => skills.of_role(Role::Spell),
+            (AttackKind::Spell, _) => None,
         }
     }
 
-    /// The skill and the caster style a spell that rolls to hit draws on and trains (spec §8
-    /// "Fighting styles"): in armour that hinders casting, the armoured grip's (Battle caster);
-    /// else a `touch`'s or a ranged spell's.
-    pub fn spell_skills(&self, content: &Content, touch: bool) -> AttackSkills {
+    /// The skill and the caster style a cast of `spell` draws on and trains (spec §8 "Weapon
+    /// skills": "Schools of magic", "Fighting styles"): its school's skill, and in armour that
+    /// hinders casting the armoured grip's style (Battle caster), else a touch's (Toucher) or a
+    /// ranged spell's (Sniper). (Where one casts from, the spell scaling design §10.2, is a
+    /// later slice's: until then the style is the spell's shape's, as Spell attacks' was.)
+    pub fn spell_skills(&self, content: &Content, spell: &SpellData) -> AttackSkills {
         let table = content.weapon_skills();
         let grip = if self.worn_spell_cost(content) > 0 {
             Grip::ArmouredSpell
-        } else if touch {
+        } else if spell.shape == Shape::Touch {
             Grip::TouchSpell
         } else {
             Grip::RangedSpell
         };
         AttackSkills {
-            skill: table.of_role(Role::Spell),
+            skill: table.of_school(spell.school),
             style: table.style_for(grip, &[]),
         }
+    }
+
+    /// What its rank in `spell`'s school gives (spec §8 "Weapon skills": "Schools of magic"),
+    /// read as every weapon skill's is ([`Actor::benefit`]: Schooled's and Magister's ranks
+    /// count): the spell hooks' part through [`Benefit::spell_mods`], the cast's `speed`, and
+    /// the `to_hit` and `threat` of a spell that rolls to hit.
+    pub fn school_benefit(&self, content: &Content, spell: &SpellData) -> Benefit {
+        self.benefit(content, content.weapon_skills().of_school(spell.school))
     }
 
     /// What is in its hands: each thing once (a two-handed weapon is in both), in hand order,

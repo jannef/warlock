@@ -1,0 +1,11 @@
+# Schooled (the spell scaling design §8.6): Weapon focus's pattern for a school of magic. The
+# chosen school's benefits read a rank higher (a school rank held), as Stylist's do a style's.
+[[talent]]
+id = "schooled"
+name = "Schooled"
+tree = "spellcraft"
+choice = "school_skill"
+description = "You cast the spells of your chosen school as one a rank more practised."
+needs = { chosen = 2 }
+effects = [{ kind = "weapon", ranks = 1 }]
+systems = ["schools", "spells"]

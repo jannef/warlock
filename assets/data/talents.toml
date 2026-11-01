@@ -180,6 +180,13 @@ name = "Mana"
 id = "spells"
 name = "Spells and caster level"
 
+# Schools of magic (the spell scaling design §8): the seven schools' skills of ten ranks, their
+# marks by casting; Schooled, Devotee, and the wizard's Magister.
+[[system]]
+id = "schools"
+name = "Schools of magic: ranks and marks"
+min_talents = 2
+
 # Alternative resources (#225): pools beside hit points and mana (Rage, Focus, Openings, Ki,
 # Inspiration); their talents are Battle trance, Inner calm, Steady hand, and Patient blade.
 [[system]]

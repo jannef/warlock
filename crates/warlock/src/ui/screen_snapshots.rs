@@ -358,8 +358,8 @@ const CASES: &[Case] = &[
         screen: Some("weapon-skills"),
         ..BASE
     },
-    // A wizard's (#571): Spell attacks and Sniper from the class, the Spells section between
-    // Shields and the styles.
+    // A wizard's (#571): Sniper from the class among the styles; evocation, a school of magic,
+    // is not listed here (the spell scaling design §11).
     Case {
         name: "weapon-skills-screen-wizard",
         character: Some("human,female,wizard"),

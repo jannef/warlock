@@ -41,6 +41,8 @@ pub(super) fn cast_at(
     let max = w.state.player().max_hp(w.content());
     w.player_mut().hp = max;
     w.player_mut().mana = 40;
+    // Untrained in every school, so no rank its marks raise grows the dice between casts.
+    w.player_mut().weapon_skills = Default::default();
     let kobold = w.state.actors.get_mut(&target).expect("the kobold");
     kobold.pos = Pos::new(here.x + tx, here.y + ty);
     kobold.hp = 10_000;
@@ -77,7 +79,8 @@ fn an_attack_spell_can_miss_and_critical_and_nothing_holds_its_roll() {
         match strikes[0] {
             Strike::Missed { .. } => {
                 missed += 1;
-                assert_eq!(hurt, 0);
+                // Less a hit point the kobold may have mended as the turn passed.
+                assert!((-1..=0).contains(&hurt), "{hurt}");
             }
             Strike::Hit { critical: true } => critical += 1,
             _ => {}

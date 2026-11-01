@@ -143,7 +143,7 @@ const BUILDS: [Build; 4] = [
     },
     Build {
         class: "wizard",
-        skills: &[("staves", 2), ("spell_attack", 0)],
+        skills: &[("staves", 2), ("evocation", 0)],
         extras: &[(StatUse::Read, 1.0), (StatUse::Identified, 0.3)],
         casts_a_kill: false,
         gear: wizard,
@@ -154,7 +154,7 @@ const BUILDS: [Build; 4] = [
             ("maces", 0),
             ("sword_and_board", 0),
             ("shield_block", 0),
-            ("spell_attack", 2),
+            ("restoration", 2),
         ],
         extras: &[(StatUse::Prayed, 0.2), (StatUse::Exerted, 2.0)],
         casts_a_kill: true,
@@ -421,7 +421,7 @@ fn casts(w: &World) -> Vec<Cast> {
         let mods = me.spell_mods(content, def);
         let rung = me.spell_rung(content, def, CastBy::Own, &mods);
         let rolled = (me.spell_roll(content, def, CastBy::Own)).unwrap_or(damage);
-        let skills = me.spell_skills(content, def.shape == crate::content::Shape::Touch);
+        let skills = me.spell_skills(content, def);
         let benefit = me
             .benefit_of(content, skills)
             .at_distance(3, content.weapon_skills().spell_attacks());

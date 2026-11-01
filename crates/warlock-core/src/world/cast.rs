@@ -62,8 +62,8 @@ use crate::action::position_text;
 use crate::action::{AttackKind, Event, ReadTarget, SpellShape};
 use crate::combat::{self, Attack, Category, Profile, Strike};
 use crate::content::{
-    ActionKind, Bolt, Burst, Content, Grip, Resolution, Shape, SpellData, SpellPurpose, Stance,
-    StatusId, merge_rider,
+    Bolt, Burst, Content, Grip, Resolution, Shape, SpellData, SpellPurpose, Stance, StatusId,
+    merge_rider,
 };
 use crate::content::{Effect as ItemEffect, ObjectId, SpellId};
 use crate::damage::{Damage, Kinds};
@@ -190,7 +190,7 @@ impl World {
             (spell, def),
             Pay::Mana(me.spell_base(&content, def)),
         );
-        let price = self.price_of(player, ActionKind::Cast) * i64::from(def.casts);
+        let price = self.cast_price(player, def);
         // Hands full of shields may spoil it (`two_shields.rs`): the mana and the time spent.
         if let Pay::Mana(mana) = cast.pay
             && self.shields_fumble(mana)
@@ -199,6 +199,7 @@ impl World {
         }
         if self.perform(&cast, target, events) {
             self.train_spell(def);
+            self.practise_cast(&cast);
             Spent::Turn(price)
         } else {
             Spent::Nothing
@@ -325,7 +326,6 @@ impl World {
         match cast.pay {
             Pay::Mana(mana) => {
                 self.spend_mana(self.state.player, mana);
-                self.practise_in_armour(cast.def);
             }
             Pay::Scroll(item, _) => {
                 let Some((scroll, kept)) = self.use_up(item) else {
@@ -338,20 +338,54 @@ impl World {
         }
     }
 
-    /// Battle caster (spec §8 "Fighting styles") trains on a spell `def` paid in mana that does
-    /// not roll to hit, cast in armour that hinders casting: an attempt's marks, as against an
-    /// opponent of the player's own level. (One that rolls to hit trains it as its style, by
-    /// the roll: `cast_single`.)
-    fn practise_in_armour(&mut self, def: &SpellData) {
-        let me = self.state.player();
-        if def.rolls_to_hit() || me.worn_spell_cost(&self.content) == 0 {
+    /// The player's cast `cast` went off (spec §8 "Weapon skills": "Schools of magic"; the
+    /// spell scaling design §8.4): one paid in mana practises its school once, as a blow
+    /// practises its weapon skill, by the [`Outcome`] its kind filled (an attempt, and a
+    /// success when it landed, weighed by the strongest creature it struck at, else the
+    /// player's own level), then its caster style. Until where one casts from is the style's
+    /// (a later slice), a style trains as it did: on a spell that rolls to hit by the same
+    /// outcome when it struck at someone, and Battle caster on any other cast in armour that
+    /// hinders casting, an attempt against the player's own level. A scroll read or a wand used
+    /// trains nothing.
+    fn practise_cast(&mut self, cast: &Cast<'_>) {
+        if !matches!(cast.pay, Pay::Mana(_)) || self.state.death.is_some() {
             return;
         }
-        let Some(style) = (self.content.weapon_skills()).style_for(Grip::ArmouredSpell, &[]) else {
+        let player = self.state.player;
+        let outcome = cast.outcome.get();
+        let own = self.level_of(player);
+        let level = outcome.level.unwrap_or(own);
+        let skills = self.state.player().spell_skills(&self.content, cast.def);
+        if let Some(school) = skills.skill {
+            self.practise(school, outcome.landed, level);
+        }
+        let Some(style) = skills.style else {
             return;
         };
-        let level = self.level_of(self.state.player);
-        self.practise(style, false, level);
+        let armoured = self
+            .content
+            .weapon_skills()
+            .style_for(Grip::ArmouredSpell, &[]);
+        if cast.def.rolls_to_hit() {
+            // As a blow's: only at someone it struck at.
+            if outcome.level.is_some() {
+                self.practise(style, outcome.landed, level);
+            }
+        } else if Some(style) == armoured {
+            self.practise(style, false, own);
+        }
+    }
+
+    /// `cast` reached creature `other` (spec §8 "Weapon skills": "Schools of magic"): its
+    /// [`Outcome`] weighs the strongest creature struck at, and `landed` (a harm done, a hex
+    /// taken, a heal given, a buff or a cure or a utility's work done) makes it a success. The
+    /// one place every kind reports a landing.
+    fn spell_landed(&self, cast: &Cast<'_>, other: ActorId, landed: bool) {
+        let mut outcome = cast.outcome.get();
+        let level = self.level_of(other);
+        outcome.level = Some(outcome.level.map_or(level, |l| l.max(level)));
+        outcome.landed |= landed;
+        cast.outcome.set(outcome);
     }
 
     /// A buff: its status on the caster, at the degrees its ladder and hooks give.
@@ -362,6 +396,7 @@ impl World {
         let player = self.state.player;
         self.pay_cast(cast);
         self.afflict(player, status, severity, Some(player), events);
+        self.spell_landed(cast, player, true);
         true
     }
 
@@ -395,6 +430,7 @@ impl World {
         if matches!(self.identify(on), super::Identified::Now(_)) {
             self.train_stat(crate::content::StatUse::Identified);
         }
+        self.spell_landed(cast, self.state.player, true);
         true
     }
 
@@ -436,6 +472,7 @@ impl World {
         };
         self.pay_cast(cast);
         let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
+        self.spell_landed(cast, target, back > 0);
         if target == player {
             self.heal_player(back);
             self.say("Your wounds close.");
@@ -469,6 +506,7 @@ impl World {
             return false;
         }
         self.pay_cast(cast);
+        self.spell_landed(cast, player, true);
         self.say("A cleansing warmth runs through you.");
         let from = events.len();
         for e in &ended {
@@ -517,6 +555,7 @@ impl World {
         let player = self.state.player;
         self.pay_cast(cast);
         self.afflict(target, status, severity, Some(player), events);
+        self.spell_landed(cast, target, self.suffers(target, status));
         let who = capitalized(&self.called(&self.state.actors[&target]));
         let content = self.content.clone();
         let word = (content.status(status).seen.clone()).unwrap_or_else(|| "hexed".into());
@@ -570,6 +609,7 @@ impl World {
         let word = (content.status(status).seen.clone()).unwrap_or_else(|| "hexed".into());
         for id in caught {
             self.afflict(id, status, severity, Some(player), events);
+            self.spell_landed(cast, id, self.suffers(id, status));
             let pos = self.state.actors[&id].pos;
             if self.perception.sees_actors_at(pos) {
                 let who = capitalized(&self.called(&self.state.actors[&id]));
@@ -577,6 +617,11 @@ impl World {
             }
         }
         true
+    }
+
+    /// Whether actor `id` suffers status `status` now (a hex that took on it).
+    fn suffers(&self, id: ActorId, status: StatusId) -> bool {
+        (self.state.actors.get(&id)).is_some_and(|a| a.effects.get(status).is_some())
     }
 
     /// The creature a hex at `at` within `range` falls on: one the player sees there, that is
@@ -686,13 +731,13 @@ impl World {
             }
             Shape::Myself => {}
         }
-        self.spell_lands(player, (def, &cast.riders), made, events);
+        self.spell_lands(player, (def, &cast.riders), made, Some(cast), events);
         // Spell reflection: the spell a shield blocked goes back at its caster (`reflect.rs`),
         // its riders the caster's.
         if let Some(turned) = turned {
             let mut back = Vec::new();
             self.turn_back(&turned, &mut back);
-            self.spell_lands(turned.reflector, (def, &cast.riders), back, events);
+            self.spell_lands(turned.reflector, (def, &cast.riders), back, None, events);
         }
         if let Some(death) = &mut self.state.death
             && !matches!(cast.pay, Pay::Scroll(..))
@@ -704,14 +749,32 @@ impl World {
     }
 
     /// Says what `by`'s cast `def` did (`made`, its events) and gives everyone it harmed who
-    /// lives its status and the cast's `riders` (the rider hook; a status of both merged).
+    /// lives its status and the cast's `riders` (the rider hook; a status of both merged). The
+    /// player's own `cast` hears of each creature it struck at, harmed or missed
+    /// ([`World::spell_landed`]).
     fn spell_lands(
         &mut self,
         by: ActorId,
         (def, riders): (&SpellData, &[(StatusId, u16)]),
         made: Vec<Event>,
+        cast: Option<&Cast<'_>>,
         events: &mut Vec<Event>,
     ) {
+        if let Some(cast) = cast {
+            for e in &made {
+                if let Event::Attacked {
+                    attacker,
+                    target,
+                    kind: AttackKind::Spell,
+                    strike: Some(strike),
+                    ..
+                } = *e
+                    && attacker == by
+                {
+                    self.spell_landed(cast, target, strike.is_hit());
+                }
+            }
+        }
         let reached: Vec<ActorId> = (made.iter())
             .filter_map(|e| match *e {
                 Event::Attacked {
@@ -818,10 +881,10 @@ impl World {
         } else {
             me.item_spell_to_hit(&self.content)
         };
-        // The spell attack skill and the caster style (spec §8 "Weapon skills", "Fighting
+        // The spell's school and the caster style (spec §8 "Weapon skills", "Fighting
         // styles"): the caster's own spells only, as its aim is.
         let skills = if own && def.rolls_to_hit() {
-            me.spell_skills(&self.content, def.shape == Shape::Touch)
+            me.spell_skills(&self.content, def)
         } else {
             AttackSkills::default()
         };
@@ -926,9 +989,9 @@ impl World {
 
 impl World {
     /// The player's spell that rolls to hit came to `blow` against `target`, made with
-    /// `skills`: they earn their marks as an attack does (the weapon skill, then the style),
-    /// and the weapon abilities of `skills` fire on a hit and a critical (spec §8 "Weapon
-    /// abilities": Pinning ray, Staggering touch, Spell guard).
+    /// `skills`: the weapon abilities of `skills` fire on a hit and a critical (spec §8 "Weapon
+    /// abilities": Pinning ray, Staggering touch, Spell guard). Its marks are the whole cast's
+    /// ([`World::practise_cast`]).
     fn spell_practised(
         &mut self,
         target: ActorId,
@@ -938,10 +1001,6 @@ impl World {
     ) {
         if skills.skill.is_none() && skills.style.is_none() {
             return;
-        }
-        let level = self.level_of(target);
-        for skill in skills.trained() {
-            self.practise(skill, blow.strike.is_hit(), level);
         }
         let player = self.state.player;
         let kind = AttackKind::Spell;
@@ -977,6 +1036,17 @@ struct Cast<'c> {
     degrees: Option<u16>,
     /// A scroll read, once paid: its object, and whether Spell recall kept it.
     read: Cell<Option<(ObjectId, bool)>>,
+    /// What it came to, as its kind fills it ([`World::spell_landed`]), for its marks.
+    outcome: Cell<Outcome>,
+}
+
+/// What a cast came to, for its school's marks ([`World::practise_cast`]): whether it landed on
+/// anyone (a harm, a hex taken, a heal, a buff, a cure, an identify), and the level of the
+/// strongest creature it struck at (`None`: no one, so the caster's own).
+#[derive(Clone, Copy, Debug, Default)]
+struct Outcome {
+    landed: bool,
+    level: Option<u32>,
 }
 
 impl<'c> Cast<'c> {
@@ -1005,6 +1075,7 @@ impl<'c> Cast<'c> {
             riders: mods.riders,
             degrees: caster.spell_degrees(content, def),
             read: Cell::new(None),
+            outcome: Cell::new(Outcome::default()),
         }
     }
 }

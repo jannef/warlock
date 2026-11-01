@@ -37,6 +37,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A stat | `stats.md#stat-NAME` | `stats.md#stat-toughness` |
 | A race | `races.md#race-ID` | `races.md#race-half-elf` |
 | A weapon skill | `weapon-skills.md#weapon-skill-ID` | `weapon-skills.md#weapon-skill-long-blades` |
+| A school of magic (Evocation, Restoration, …) | `schools.md#school-ID` | `schools.md#school-evocation` |
 | A weapon skill's ability (Lunge, Sunder, …) | `weapon-skills.md#weapon-ability-ID` | `weapon-skills.md#weapon-ability-lunge` |
 | A fighting style | `fighting-styles.md#style-ID` | `fighting-styles.md#style-sword-and-board` |
 | A fighting style's ability (Riposte, Feint, …) | `fighting-styles.md#style-ability-ID` | `fighting-styles.md#style-ability-riposte` |

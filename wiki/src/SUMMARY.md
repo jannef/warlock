@@ -57,6 +57,7 @@
   - [Healing](healing.md)
   - [Mana](mana.md)
   - [Magic](magic.md)
+    - [Schools and caster styles](schools.md)
   - [Resources](resources.md)
 - [Creatures](creatures.md)
   - [Creatures in numbers](creature-numbers.md)

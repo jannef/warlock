@@ -50,6 +50,7 @@ mod potions;
 mod resources;
 mod rooms;
 mod scenarios;
+mod schools;
 mod scrolls;
 mod searching;
 mod services;
@@ -300,6 +301,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("spell-armour.md", spells::armour),
         ("wands.md", spells::wands),
         ("rods.md", spells::rods),
+        ("school-skills.md", schools::skills),
+        ("school-benefits.md", schools::benefits),
         ("study-chances.md", learning::chances),
         ("study-times.md", learning::times),
         ("study-affinities.md", learning::affinities),
