@@ -297,7 +297,8 @@ glow, barely perceptible distortion, short fades.
     `n × ⌈3 / n⌉` slots: one effect is a triangle of its rune thrice (never a lone rune), two a
     square `A B A B`, three a triangle `A B C`, then a square, a pentagon, a hexagon; a regular
     polygon inscribed in the innermost ring has its corners at the slots, and a rune (one kana
-    or low-stroke kanji per status, upright) sits outside each corner. One thin ring per effect,
+    or low-stroke kanji per status) sits outside each corner, tidally locked: turned with its
+    slot so its foot faces the centre (the top rune upright, the bottom one on its head). One thin ring per effect,
     three at most (the distinct runes give the count beyond); six effects show, a seventh has no
     rune.
   - **Buffs and hexes**: buffs are whole (solid rings and sides) and turn clockwise, a revolution
@@ -310,7 +311,22 @@ glow, barely perceptible distortion, short fades.
     1.0 h out (extent 1.3 h: 2.6 rows by 5.2 columns); the outer circle's rings from 1.35 h and
     runes at 1.88 h (extent 2.15 h). Lines one pixel at the default font and scale 1; rings and
     sides 0.2 opaque, runes 0.7; not lit by the scene, but darkened with free glyphs while a
-    spell effect darkens the view.
+    spell effect darkens the view. A circle is centred on the ink of its actor's glyph (not on
+    its cell, whose middle a glyph sitting on the baseline misses), and its lines stop a pixel
+    short of that ink.
+  - **Only over clear, seen floor** (the owner's review, #786): a rune shows only where the
+    cells under it are seen now, are not walls, and hold no other glyph (a creature, an object
+    or chest, a known trap, terrain in the way such as a wall torch; the actor's own cell
+    excepted); a line the same, pixel by pixel. Each fades softly across a cell's edge, never
+    cut; a rune as a whole, by the least clear of the cells under it. Where circles crowd, a
+    rune near an earlier circle's rune fades out (the player's circle first, then the
+    creatures' in order), and a circle's lines pass under an earlier circle's rings, so runes
+    never lie over runes and rings never tangle.
+  - **Legible and alive**: each rune has a soft dark backdrop under it (its own outline
+    blurred), lifting it off floor dots and lit floor, and a faint halo of its school's colour
+    (not the bloom of the `glow` switch: its own, off with reduced effects). With `motion` on
+    each rune pulses gently, a little in opacity and size, on its own phase (3.6 s); still
+    without motion, and at the frozen moment under `--freeze-time`.
   - **Motion**: a circle fades in over half a second when its first effect begins and out as
     long when its last ends; when an effect begins or ends on a circled actor, the figure changes
     over 0.4 s: every rune glides along the ring from its old slot to its new one (a slot that is
@@ -318,8 +334,8 @@ glow, barely perceptible distortion, short fades.
     rune changes cross-fades it on the way), the old polygon fades out as the new one fades in,
     and so does a ring that comes or goes. A hexes' circle moves out to the outer radii as a
     buffs' circle comes inside it, and back in once that one has gone. An actor the player stops
-    seeing loses its circle at once. With `motion` off or reduced effects there is none of this:
-    the circle stands still (the inner at its first angle, the outer half a turn round), appears
+    seeing loses its circle at once. With `motion` off or reduced effects there is none of this
+    (nor the pulse): the circle stands still (the inner at its first angle, the outer half a turn round), appears
     and goes at once, and a change is a cut: still information, not off. A **Spell circles**
     switch (on by default, outside the preset) turns the drawing off; the statuses and what look
     mode says of them stay. With frozen visual time it shows the frozen moment's angle, its fades
