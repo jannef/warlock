@@ -491,6 +491,7 @@ end = "You tear free of the web."
 [[status]]
 id = "hasted"
 name = "Hasted"
+seen = "quickened"
 max = 3
 stacking = "refresh"
 eases = 60
@@ -501,6 +502,7 @@ end = "The world quickens again."
 [[status]]
 id = "barkskin"
 name = "Barkskin"
+seen = "bark-skinned"
 max = 3
 stacking = "refresh"
 eases = 60
@@ -515,6 +517,7 @@ end = "Your skin softens again."
 [[status]]
 id = "fortified"
 name = "Fortified"
+seen = "fortified"
 max = 2
 stacking = "highest"
 eases = 600
@@ -525,6 +528,7 @@ end = "Your strength ebbs back to what it was."
 [[status]]
 id = "nimble"
 name = "Nimble"
+seen = "nimble"
 max = 2
 stacking = "highest"
 eases = 600
@@ -535,6 +539,7 @@ end = "Your limbs feel ordinary again."
 [[status]]
 id = "hale"
 name = "Hale"
+seen = "hale"
 max = 2
 stacking = "highest"
 eases = 600
@@ -545,6 +550,7 @@ end = "The heartiness fades from you."
 [[status]]
 id = "keen"
 name = "Keen"
+seen = "keen"
 max = 2
 stacking = "highest"
 eases = 600
@@ -555,6 +561,7 @@ end = "Your thoughts slow to their old pace."
 [[status]]
 id = "steadfast"
 name = "Steadfast"
+seen = "steadfast"
 max = 2
 stacking = "highest"
 eases = 600
@@ -565,6 +572,7 @@ end = "Your will is your own again."
 [[status]]
 id = "imposing"
 name = "Imposing"
+seen = "imposing"
 max = 2
 stacking = "highest"
 eases = 600
@@ -578,6 +586,7 @@ end = "You feel less imposing."
 [[status]]
 id = "cat_eyed"
 name = "Cat-eyed"
+seen = "cat-eyed"
 max = 1
 stacking = "refresh"
 eases = 1800
@@ -588,6 +597,7 @@ end = "The dim grows dim again."
 [[status]]
 id = "owl_eyed"
 name = "Owl-eyed"
+seen = "owl-eyed"
 max = 1
 stacking = "refresh"
 eases = 1800
@@ -598,6 +608,7 @@ end = "Your eyes lose their hold on the dark."
 [[status]]
 id = "moth_eyed"
 name = "Moth-eyed"
+seen = "moth-eyed"
 max = 1
 stacking = "refresh"
 eases = 1800
@@ -609,6 +620,7 @@ end = "The strange colours fade from your sight."
 [[status]]
 id = "warmed"
 name = "Warmed"
+seen = "warmed"
 max = 1
 stacking = "refresh"
 eases = 1800
@@ -619,6 +631,7 @@ end = "The warmth leaves your bones."
 [[status]]
 id = "chill_proof"
 name = "Chill-proof"
+seen = "chill-proof"
 max = 1
 stacking = "refresh"
 eases = 1800
@@ -629,6 +642,7 @@ end = "The glow against the cold fades."
 [[status]]
 id = "earthed"
 name = "Earthed"
+seen = "earthed"
 max = 1
 stacking = "refresh"
 eases = 1800
@@ -639,6 +653,7 @@ end = "You feel lighter, less grounded."
 [[status]]
 id = "poison_proof"
 name = "Proof against poison"
+seen = "proof against poison"
 max = 1
 stacking = "refresh"
 eases = 1800
@@ -651,6 +666,7 @@ end = "Your blood feels ordinary again."
 [[status]]
 id = "spell_ward"
 name = "Spell ward"
+seen = "warded"
 max = 1
 stacking = "refresh"
 per_action = true
@@ -718,6 +734,7 @@ end = "You can move again."
 [[status]]
 id = "light_footed"
 name = "Light-footed"
+seen = "light-footed"
 max = 1
 stacking = "refresh"
 cost = 50

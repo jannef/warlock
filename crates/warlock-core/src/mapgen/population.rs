@@ -106,6 +106,7 @@ pub(super) fn populate(
             equipment: Default::default(),
             rolls_gear: true,
             asleep: false,
+            status: Vec::new(),
         });
     }
     template.creatures.extend(placed);

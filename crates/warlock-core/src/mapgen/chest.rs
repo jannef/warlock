@@ -138,6 +138,7 @@ pub(super) fn lay(
             equipment: Equipment::default(),
             rolls_gear: false,
             asleep: false,
+            status: Vec::new(),
         });
         return;
     }

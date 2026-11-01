@@ -635,6 +635,12 @@ pub(super) fn make_creature(
     if let Some(asleep) = content.sleep_status().filter(|_| spawn.asleep) {
         actor.effects.add(asleep, content.status(asleep), 1, None);
     }
+    // The statuses its legend places it with (a test world's buffed and hexed kobolds).
+    for &(status, degrees) in &spawn.status {
+        actor
+            .effects
+            .add(status, content.status(status), degrees, None);
+    }
     // A mimic is placed disguised as a chest (`mimic.rs`).
     if let Some(disguise) = content.disguise_status().filter(|_| def.mimic.is_some()) {
         actor

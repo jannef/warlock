@@ -190,6 +190,7 @@ impl World {
             equipment: Default::default(),
             rolls_gear: false,
             asleep: false,
+            status: Vec::new(),
         };
         let risen = travel::make_creature(&mut self.state, &content, &id, &spawn);
         // A newcomer: a rest looks up at once.

@@ -413,6 +413,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
                 equipment,
                 rolls_gear: false,
                 asleep: false,
+                status: Vec::new(),
             };
             let id = super::travel::make_creature(&mut w.state, content, &level, &spawn);
             sides.push(side_of(&w, id));

@@ -100,6 +100,7 @@ pub(super) fn fill(
                 equipment: Default::default(),
                 rolls_gear: true,
                 asleep: true,
+                status: Vec::new(),
             });
             placed += 1;
         }

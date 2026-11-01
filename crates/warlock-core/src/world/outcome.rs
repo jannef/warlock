@@ -641,6 +641,7 @@ impl World {
                 equipment: Default::default(),
                 rolls_gear: true,
                 asleep: false,
+                status: Vec::new(),
             };
             make_creature(&mut self.state, &self.content, &id, &spawn);
             self.spawned += 1;

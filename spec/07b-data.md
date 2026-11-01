@@ -825,6 +825,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (§4.8; `rate` per cell and second): `drops` (on every visible cell under the sky), `splash` (on
   open ground: walkable, transparent, not running water), and `ripples` (on still water, terrain
   with a `wave` animation). §5 "Weather".
+- **Spell circles' runes** (`data/runes.toml`, optional; presentation only, no rule reads it, and
+  it is not in the content fingerprint; §4.8 "Spell circles"): `[[school]]` rows (`id`, a school
+  of magic, and `color`, `"#rrggbb"`) and `[[rune]]` rows (`status`, `rune`, exactly one
+  character, and `school`). Checked at load: a known status that has `seen`, laid by a buff or
+  hex spell (which says whether its circle is a buff's or a hex's); every buff and hex spell's
+  status has a row; no two rows share a rune; every school named has a colour. A new rune's
+  character goes into the rune font's subset (`assets/fonts/README.md`).
 - **Spell effects** (`data/effects.toml`, optional; presentation only, no rule reads it, and it is
   not in the content fingerprint): `[[effect]]` with a unique `id` (no `:`, `@`, `>`, or spaces),
   `shape` (`burst` or `bolt`), `radius` (bursts: the dev action's radius, 0 to 8, default 1),

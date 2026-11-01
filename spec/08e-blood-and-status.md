@@ -164,7 +164,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     it, and nothing is said of the status itself. It never shows (no `seen`).
   - **Shown**: the player's own by name (status bar, character screen, the `stats` dump layer),
     those with a `seen` word on creatures the player sees (look mode); never a severity or a
-    timer. Effects are part of the world state (saved, covered by the state hash).
+    timer. **Every buff shows**, whatever its source (a spell, a potion, an altar, a talent, a
+    class ability, a style): a status that lends something (a stat, a combat bonus, a quicker
+    pace, eyes, a resistance, light) has a `seen` word ("quickened", "bark-skinned",
+    "fortified", "cat-eyed", "warded"), as every hex has; a mimic's disguise and the thief's
+    lurking are no buffs and never show. A buff's or hex's status carries a spell circle
+    (§4.8), which a check at load keeps to statuses that show. Effects are part of the world
+    state (saved, covered by the state hash).
   - **Dev**: the action `afflict:ID` gives the player one more degree of a status (no game
     time; recorded in replays), for trying statuses out and for captures.
 - **Healing** (`world/status.rs`): a hurt actor's progress toward its next hit point back

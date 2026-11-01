@@ -146,6 +146,7 @@ impl World {
                 equipment: Default::default(),
                 rolls_gear: true,
                 asleep: false,
+                status: Vec::new(),
             };
             came.push(travel::make_creature(
                 &mut self.state,
