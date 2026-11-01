@@ -276,7 +276,7 @@ fn the_story_comes_after_the_picks() {
     assert_eq!(story(&w), ["hardy/told"]);
     assert!(picks(&w).contains(&"hardy".to_string()));
     assert!(tough(&w) >= 12, "11 and the story's point");
-    let plain = run(&content, &["lean", "keen_ears", "long_strider"]).expect("starts");
+    let plain = run(&content, &["lean", "keen_ears", "pious"]).expect("starts");
     assert_eq!(story(&plain), ["hardy/plain"]);
 }
 
@@ -524,12 +524,7 @@ fn a_held_talent_is_never_given_by_a_story() {
     ]);
     let character = "human,male,warrior";
     // Given once: the second line, giving it again, does not fit, and its chapter is plain.
-    let w = kitted(
-        &content,
-        character,
-        &["keen_ears", "healthy", "long_strider"],
-    )
-    .expect("starts");
+    let w = kitted(&content, character, &["keen_ears", "healthy", "pious"]).expect("starts");
     assert_eq!(story(&w), ["first/told", "again/plain"]);
     assert_eq!(w.state().player().boons.len(), 1);
     // Picked at creation: neither line is told.

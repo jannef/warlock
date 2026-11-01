@@ -37,7 +37,5 @@ abilities = [
     { level = 12, talent = "call_lightning" },
     { level = 18, talent = "natures_ward" },
     { level = 25, talent = "winters_friend" },
-    { level = 40, talent = "sun_and_moon" },
     { level = 50, talent = "flame_and_frost" },
-    { level = 60, talent = "timeless_body" },
 ]

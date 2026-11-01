@@ -1088,18 +1088,13 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The special room at `p` (spec §7 "Special rooms"), if the player knows it: they have been
-    /// inside it (or, with Sense of place, seen a cell of it), and `p` is a cell they see or
-    /// remember.
+    /// inside it, and `p` is a cell they see or remember.
     pub fn room(&self, p: Pos) -> Option<&'a RoomEffectDef> {
         if matches!(self.cell(p), CellView::Unknown) {
             return None;
         }
         let room = self.level.room_at(p)?;
-        // Sense of place knows a room's nature from a glimpse (spec §8 "Talents").
-        let senses = || {
-            !self.player.talents.is_empty() && self.player.talent_mods(self.content).sense_of_place
-        };
-        (room.entered || (room.glimpsed && senses())).then(|| self.content.room_effect(room.effect))
+        room.entered.then(|| self.content.room_effect(room.effect))
     }
 
     /// The percent of all light a special room keeps at a visible cell (a shadowed room's
@@ -1309,12 +1304,11 @@ impl<'a> PerceptionView<'a> {
         &self.player.inventory
     }
 
-    /// What item descriptions show the player of worth (spec §8 "Class abilities": Keen
-    /// appraisal, Connoisseur, Appraiser), by their own abilities.
+    /// What item descriptions show the player of worth (spec §8 "Talents": Gem lore), by their
+    /// own abilities.
     pub fn appraisal(&self) -> crate::magic::describe::Appraisal {
         let talents = self.player.talent_mods(self.content);
         crate::magic::describe::Appraisal {
-            worth: talents.item_worth,
             gems: talents.gem_worth,
         }
     }
@@ -2172,8 +2166,7 @@ impl<'a> PerceptionView<'a> {
 
     /// What the player owes, and to whom, if a step onto `to` leaves the open shop they stand in
     /// (onto ground they know is walkable): by a way out ([`ShopView::is_exit`]) the keeper turns
-    /// them back, any other way is theft, so presentation asks first. Nothing when the keeper
-    /// lets them leave owing it (spec §8 "Class abilities": Credit).
+    /// them back, any other way is theft, so presentation asks first.
     pub fn owed_on_leaving(&self, to: Pos) -> Option<(ShopView<'a>, u32)> {
         let view = self.shop_here()?;
         let walkable = match self.cell(to) {
@@ -2181,9 +2174,7 @@ impl<'a> PerceptionView<'a> {
             CellView::Unknown => false,
         };
         let owed = view.owed();
-        let credit = self.player.talent_mods(self.content).credit;
-        let on_credit = credit > 0 && owed <= credit;
-        (!view.contains(to) && walkable && owed > 0 && !on_credit).then_some((view, owed))
+        (!view.contains(to) && walkable && owed > 0).then_some((view, owed))
     }
 
     /// What the shop the player stands in offers for their own things among the inventory stacks

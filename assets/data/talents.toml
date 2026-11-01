@@ -122,7 +122,8 @@ class = true
 # stealth, magic, light, hunger, ...), never a sub-feature. A single special room effect, a
 # monster family's gimmick, a chest kind, or an info readout extends its parent system and is
 # no tag of its own (#773 folded Mimics into chests, Prayer into special rooms, Bounties and
-# Services into talk, Drains into diseases, and dropped Animated objects). A talent names a
+# Services into talk, Drains into diseases, and dropped Animated objects; #787 folded Weather
+# into travel, the outdoors, and dropped Background stories). A talent names a
 # system only when its effect reads that system's rules (docs/dev/progression.md "Coverage
 # policy"). A system is `pending` until its talents land; the PR that brings them removes the
 # flag. A new system of the game joins the list in the PR that ships its talent, never before.
@@ -297,13 +298,11 @@ name = "Ice and cold water"
 id = "wading"
 name = "Wading and water"
 
+# The outdoors: the overworld, its local areas, and the sky over them (weather, sun, and moon:
+# folded in by #787).
 [[system]]
 id = "travel"
-name = "Overworld travel and local areas"
-
-[[system]]
-id = "weather"
-name = "Weather, sun, moon"
+name = "Overworld travel, local areas, and weather"
 
 [[system]]
 id = "shops"
@@ -324,8 +323,7 @@ id = "scrolls"
 name = "Scrolls and casting"
 
 # Potions (#565, #567, the combat progression design §10): drunk from the Consume list. Thrifty
-# drinker (Delver), Nose for draughts (Scholar), Lasting draughts (Vigour), and the witch's
-# Cauldron-wise.
+# drinker (Delver) and Lasting draughts (Vigour).
 [[system]]
 id = "potions"
 name = "Potions"
@@ -341,12 +339,6 @@ name = "Skills and training"
 [[system]]
 id = "experience"
 name = "Experience"
-
-# Background stories (#705): the tiers, what a story costs, telling it. Favoured child, only for
-# character creation (the story is told then).
-[[system]]
-id = "background"
-name = "Background story"
 
 [[system]]
 id = "speed"

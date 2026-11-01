@@ -11,7 +11,7 @@
 use super::affix::Once;
 use super::{
     Build, CombatStance, Content, ContentError, ItemKind, MAX_ITEM_LEVEL, MAX_LEVEL, MAX_RANK,
-    MAX_RESOURCE, ResourceId, Role, StatDeed, StatUse, WeaponSkillId, duplicate_id,
+    MAX_RESOURCE, ResourceId, Role, WeaponSkillId, duplicate_id,
 };
 use crate::alignment::Requirement;
 use crate::dice::Dice;
@@ -325,9 +325,6 @@ pub enum TalentEffect {
     /// An initiative check it makes against a hostile attacker beside it is answered with a
     /// free blow at once (Hair trigger; `Cue::Startled`, `world/free_blow.rs`).
     StartledBlow,
-    /// Creature types carrying one of `tags` have vitals for its attacks: they may be critically
-    /// hit and sneak-attacked by it (Anatomist; `Content::has_vitals`). Never the incorporeal.
-    VitalsIn { tags: Vec<String> },
     /// The carrying limit, this percent more.
     CarryPercent { value: i32 },
     /// Being Burdened costs it nothing, as a dwarf's burden (Porter).
@@ -357,8 +354,6 @@ pub enum TalentEffect {
     /// Creatures of animal factions are neutral to it until it attacks one of that type
     /// (Beast-friend).
     BeastFriend,
-    /// Hit points come back this percent faster under the open sun (Sun-blessed).
-    SunHealing { value: i32 },
     /// Hunger burns this percent faster (negative: slower).
     HungerPercent { value: i32 },
     /// The sickness rotten food gives, this percent more (negative: less), rounded down.
@@ -376,20 +371,12 @@ pub enum TalentEffect {
     /// A fresh corpse's stat training marks and chances to widen a potential, this percent more
     /// (Gourmand).
     CorpseStatsPercent { value: i32 },
-    /// The training marks a potion or an elixir gives, this percent more (Quick study of the
-    /// body).
-    PotionMarksPercent { value: i32 },
     /// Every stat training use's chance, this percent more (a use at 100 stays sure; Hard
     /// training).
     TrainPercent { value: i32 },
     /// The training price's ramp past a potential counts each point past it this many fewer
     /// (the first beyond the potential at the plain price: Late bloomer; ranks add up).
     RampEase { points: u8 },
-    /// These stat training deeds take nothing (Hard living, Discipline).
-    NoDeed { on: Vec<StatDeed> },
-    /// Each of these stat training uses counts this many times over (Discipline: two marks
-    /// where one came; the most counts).
-    UseMarks { on: Vec<StatUse>, times: u16 },
     /// Experience gained, this percent more.
     XpPercent { value: i32 },
     /// Skill rolls every level, this many more (Quick learner).
@@ -423,38 +410,25 @@ pub enum TalentEffect {
     /// A potion it drinks is not used up, by this chance in percent (one gameplay draw a drink;
     /// Thrifty drinker).
     PotionKept { chance: u8 },
-    /// An unknown potion it picks up tells its kind (never its type) by its smell (Nose for
-    /// draughts).
-    PotionSmell,
-    /// A healing potion it drinks heals this percent more (Cauldron-wise).
-    PotionHeals { value: i32 },
     /// Its own bursts never catch it (Scroll savant).
     SparesSelf,
     /// Added to its searching, not to noticing in passing (Keen searcher).
     Searching { value: i32 },
     /// The damage traps do it, this percent more (negative: less; Trap sense).
     TrapDamagePercent { value: i32 },
-    /// The experience a quest gives, this percent more (before `xp_percent`).
-    QuestXpPercent { value: i32 },
     /// The gold a quest gives, this percent more.
     QuestGoldPercent { value: i32 },
     /// Prices move this many percent more in its favour (spec §7 "Shops"), before the cap.
     FavourPercent { value: i32 },
-    /// The cap on its favour, this many percent higher.
-    FavourCap { value: i32 },
     /// Shops pay this percent more for what they buy from it, never more than they would ask.
     SellPercent { value: i32 },
-    /// Keepers let it leave owing up to this much gold: the debt stays on their bill.
-    Credit { gold: u32 },
     /// What it buys or sells in a shop is identified.
     IdentifyTrades,
     /// Temple services cost it half, and a cure also mends a point of each damaged stat
-    /// (Pilgrim; `world/service.rs`).
+    /// (Pious; `world/service.rs`).
     Pilgrim,
     /// What a creature it kills drops is identified as it lands (spec §8 "Creature gear").
     Scavenger,
-    /// Item descriptions show what its things are worth.
-    ItemWorth,
     /// Item descriptions show what each gem in a thing is worth.
     GemWorth,
     /// A magic item it has carried this many hours since it held the effect is identified.
@@ -485,9 +459,6 @@ pub enum TalentEffect {
         max: u8,
         level: u8,
     },
-    /// A background story's uncommon, rare, and fateful odds, this percent more (a talent only
-    /// for character creation: Favoured child; `background::tell`).
-    StoryLuck { value: i32 },
     /// The actor notices hidden things in passing as if trained in Spot and Detect traps, with
     /// this much added.
     Notice { value: i32 },
@@ -501,9 +472,6 @@ pub enum TalentEffect {
     /// The creatures that come to a level the actor is on come this percent less often (the
     /// time between attempts this percent longer; Quiet delver).
     SpawnEveryPercent { value: i32 },
-    /// A special room's nature is known from a glimpse of it, and a whole level's effect is
-    /// named on arrival (Sense of place; [`crate::perception::PerceptionView::room`]).
-    SenseOfPlace,
     /// It tells a locked chest from an unlocked one at a glance (Chest-wise;
     /// [`crate::perception::PerceptionView::chest_at`]), and a shut chest's trap in its sight
     /// becomes known to it (`World::chest_wise_look`).
@@ -514,9 +482,9 @@ pub enum TalentEffect {
     /// A mimic's grip never holds it (Chest-wise; `World::afflict`).
     Slick,
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
-    /// opposed one leans as a neutral one (Devout; the prayer draw, `World::lean`).
+    /// opposed one leans as a neutral one (Pious; the prayer draw, `World::lean`).
     Devout,
-    /// At a forgotten altar a great bane drawn becomes nothing (Penitent; the prayer draw,
+    /// At a forgotten altar a great bane drawn becomes nothing (Pious; the prayer draw,
     /// `world/pray.rs`).
     Penitent,
     /// Where a special room quickens healing or mana, the quickening is this percent more
@@ -530,17 +498,12 @@ pub enum TalentEffect {
     /// A tempting hoard seals only after this many stacks more are lifted inside it (Old delver;
     /// `World::lift_in_hoard`, `world/hoard.rs`).
     HoardGrace { value: i32 },
-    /// Sleepers need this percent more noise to wake from what it does (Hush-foot; the wake
-    /// check in `World::spread_noise`, `world/den.rs`).
-    WakePercent { value: i32 },
     /// What it kills never rises in a cursed room (Old delver; `World::curse_corpse`).
     GraveWarden,
     /// Searching reaches this many cells farther.
     SearchReach { value: i32 },
     /// A skill counts this much higher wherever its value is read (an untrained one from 0).
     Skill { skill: String, value: i32 },
-    /// Anyone not hostile makes way for it (spec §8 "Displacement"), those keeping a post too.
-    MakeWay,
     /// No one makes way for it (Trusted by none), whatever else would have them.
     Distrusted,
     /// A free blow the actor is given (spec §8 "Free blows").
@@ -605,8 +568,6 @@ pub enum TalentEffect {
     },
     /// Throws reach this many cells farther.
     ThrowRange { value: i32 },
-    /// Its missiles break this percent more often when they hit (negative: less often).
-    MissileBreaks { value: i32 },
     /// Worn armour's cap on Dexterity in Defence (`max_dex`), this much higher.
     MaxDex { value: i32 },
     /// Defence in the Deflection category, on top of what magic items give.
@@ -912,8 +873,6 @@ pub enum TalentEffect {
         #[serde(default)]
         no_shield: bool,
     },
-    /// Burdened costs it nothing, as a dwarf (Steadfast).
-    Steadfast,
     /// Strained costs it what Burdened costs others (Stout).
     Stout,
     /// Dodge added against shots, throws, and trap missiles.
@@ -947,8 +906,6 @@ pub enum TalentEffect {
         object: Option<String>,
         dice: Dice,
     },
-    /// Its diseases never progress: they still show until shaken off or cured (Timeless body).
-    DiseaseStill,
     /// Its blows that hit a creature suffering `status` do `value` more damage (Poison lore).
     StatusDamage { status: String, value: i32 },
     /// Once in its life (`once` names it), what would kill it does not (not starving or
@@ -971,9 +928,6 @@ pub enum TalentEffect {
     SwornFoe { to_hit: i32, damage: i32 },
     /// It places every sound it hears where it was made (Tracker).
     ExactSounds,
-    /// Its footsteps under the open sky (no roof over the cell stepped to) are this percent
-    /// louder (negative: quieter; Camouflage).
-    SkyFootstepsPercent { value: i32 },
     /// Its steps make no sound while it is Unburdened (Hide in plain sight).
     SilentUnburdened,
     /// Its attacks are this percent louder (negative: quieter).
@@ -1226,15 +1180,6 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::VitalsIn { tags } => {
-                if tags.is_empty() {
-                    return Err("`vitals_in`: tags names at least one".into());
-                }
-                for tag in tags {
-                    super::tag::check(tag).map_err(|m| format!("`vitals_in`: {m}"))?;
-                }
-                Ok(())
-            }
             TalentEffect::AmbushThreat { value } => {
                 if !(1..=5).contains(value) {
                     return Err("`ambush_threat`: value is 1 to 5".into());
@@ -1361,24 +1306,6 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::NoDeed { on } => {
-                if on.is_empty() {
-                    return Err("`no_deed`: `on` names at least one deed".into());
-                }
-                Ok(())
-            }
-            TalentEffect::UseMarks { on, times } => {
-                if on.is_empty() || !(2..=10).contains(times) {
-                    return Err("`use_marks`: `on` names at least one use, times is 2 to 10".into());
-                }
-                Ok(())
-            }
-            TalentEffect::Credit { gold } => {
-                if !(1..=1000).contains(gold) {
-                    return Err("`credit`: gold is 1 to 1000".into());
-                }
-                Ok(())
-            }
             TalentEffect::IdentifyCarried { hours } => {
                 if !(1..=240).contains(hours) {
                     return Err("`identify_carried`: hours is 1 to 240".into());
@@ -1404,7 +1331,6 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::PotionHeals { value } => percent(*value),
             TalentEffect::Protection {
                 value,
                 body_armour,
@@ -1796,18 +1722,15 @@ impl TalentEffect {
             | TalentEffect::DigPercent { value }
             | TalentEffect::SpawnEveryPercent { value }
             | TalentEffect::RoomPacePercent { value }
-            | TalentEffect::WakePercent { value }
             | TalentEffect::SurpriseEase { value }
             | TalentEffect::TwoHandedPrice { value }
             | TalentEffect::WeaponEnergyPercent { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
             | TalentEffect::SpellManaPercent { value }
-            | TalentEffect::SkyFootstepsPercent { value }
             | TalentEffect::AttackNoisePercent { value }
             | TalentEffect::StepSlowdownPercent { value }
             | TalentEffect::CorpseStatsPercent { value }
-            | TalentEffect::PotionMarksPercent { value }
             | TalentEffect::TrainPercent { value }
             | TalentEffect::LootMagicPercent { value }
             | TalentEffect::GemFindPercent { value }
@@ -1818,14 +1741,9 @@ impl TalentEffect {
             | TalentEffect::SmashDestroyPercent { value }
             | TalentEffect::ThresholdPercent { value }
             | TalentEffect::ClimbPercent { value }
-            | TalentEffect::SunHealing { value }
-            | TalentEffect::QuestXpPercent { value }
             | TalentEffect::QuestGoldPercent { value }
             | TalentEffect::FavourPercent { value }
-            | TalentEffect::FavourCap { value }
-            | TalentEffect::StoryLuck { value }
             | TalentEffect::SellPercent { value }
-            | TalentEffect::MissileBreaks { value }
             | TalentEffect::BurdenEase { value } => percent(*value),
             TalentEffect::Scent { status: id, radius } => {
                 if !(1..=20).contains(radius) {
@@ -1974,7 +1892,6 @@ impl TalentEffect {
             | TalentEffect::NoBloating
             | TalentEffect::NoHungerWeakness
             | TalentEffect::SparesSelf
-            | TalentEffect::SenseOfPlace
             | TalentEffect::ChestWise
             | TalentEffect::Slick
             | TalentEffect::Devout
@@ -1982,13 +1899,11 @@ impl TalentEffect {
             | TalentEffect::CollapseProof
             | TalentEffect::ExactFootsteps
             | TalentEffect::SmellRot
-            | TalentEffect::PotionSmell
             | TalentEffect::StanceCosts
             | TalentEffect::PlungeProof
             | TalentEffect::LightOnIce
             | TalentEffect::WadingProof
             | TalentEffect::BeastFriend
-            | TalentEffect::Steadfast
             | TalentEffect::Stout
             | TalentEffect::DiseaseImmune
             | TalentEffect::NoPenaltyTo { .. }
@@ -1998,11 +1913,9 @@ impl TalentEffect {
             | TalentEffect::IdentifyTrades
             | TalentEffect::Pilgrim
             | TalentEffect::Scavenger
-            | TalentEffect::ItemWorth
             | TalentEffect::GemWorth
             | TalentEffect::SeesUnaware
             | TalentEffect::StartledBlow
-            | TalentEffect::MakeWay
             | TalentEffect::Distrusted
             | TalentEffect::ExactSounds
             | TalentEffect::SilentUnburdened
@@ -2014,8 +1927,7 @@ impl TalentEffect {
             | TalentEffect::GraveWarden
             | TalentEffect::Disarm
             | TalentEffect::Purify
-            | TalentEffect::CorpseHarmless
-            | TalentEffect::DiseaseStill => Ok(()),
+            | TalentEffect::CorpseHarmless => Ok(()),
             // A spell ability names a spell of data/spells/ of its id, aimed as the ability is
             // (content without spells has nothing to check it by).
             TalentEffect::Spell { spell } => {

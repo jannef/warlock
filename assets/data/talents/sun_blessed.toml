@@ -1,7 +1,0 @@
-[[talent]]
-id = "sun_blessed"
-name = "Sun-blessed"
-tree = "wayfarer"
-description = "The sun mends you: under the open sun your wounds heal half again as fast."
-effects = [{ kind = "sun_healing", value = 50 }]
-systems = ["weather", "hit_points"]

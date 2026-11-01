@@ -748,18 +748,3 @@ fn a_dev_skip_passes_no_check() {
     assert_eq!(w.state.next_stat_check, Some(w.state.time.next_at(DAWN)));
     assert!(w.state.next_stat_check > Some(next));
 }
-
-#[test]
-fn quick_study_of_the_body_doubles_a_potions_marks() {
-    let mut w = world_with(BUILTIN.clone());
-    w.player_mut().talents.take("quick_study_of_the_body", None);
-    w.train_stat_times(StatUse::Drank, Some(Stat::Strength), 15);
-    w.train_stat_times(StatUse::Elixir, Some(Stat::Presence), 60);
-    let m = marks(&w);
-    assert_eq!((m[Stat::Strength], m[Stat::Presence]), (30, 120));
-    // Other uses are not potions.
-    let mut w = world_with(SURE.clone());
-    w.player_mut().talents.take("quick_study_of_the_body", None);
-    w.train_stat_times(StatUse::Blow, None, 3);
-    assert_eq!(marks(&w)[Stat::Strength], 3);
-}

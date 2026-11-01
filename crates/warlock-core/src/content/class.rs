@@ -859,9 +859,9 @@ mod tests {
                 .map(|t| book.get(t).id.as_str())
                 .collect()
         };
-        assert_eq!(at(1), ["well_dressed"]);
-        assert_eq!(at(17), ["well_dressed", "fencing", "noblesse"]);
-        assert_eq!(at(60).len(), 8);
+        assert!(at(5).is_empty());
+        assert_eq!(at(18), ["fencing", "riposte"]);
+        assert_eq!(at(60).len(), 4);
         assert_eq!((aristocrat.bonus_at(10), aristocrat.bonus_at(11)), (1, 0));
         let trees = aristocrat.bonus_trees(book).expect("named trees");
         let names: Vec<&str> = trees.iter().map(|&t| book.tree(t).id.as_str()).collect();
@@ -875,13 +875,13 @@ mod tests {
             ),
             (("\"delver\"]", "\"class\"]"), "`class` is the class tree"),
             (("\"delver\"]", "\"nonesuch\"]"), "unknown tree `nonesuch`"),
-            (("level = 1,", "level = 0,"), "level 0 is not 1 to"),
+            (("level = 6,", "level = 0,"), "level 0 is not 1 to"),
             (
-                ("level = 12,", "level = 2,"),
+                ("level = 32,", "level = 2,"),
                 "listed by level, lowest first",
             ),
             (
-                ("talent = \"noblesse\"", "talent = \"fencing\""),
+                ("talent = \"riposte\"", "talent = \"fencing\""),
                 "`fencing` twice",
             ),
             (("[10, 20, 30, 45, 55]", "[20, 10]"), "ascending"),

@@ -11,8 +11,8 @@
 //!   spent.
 //! - **The answer**: the deed first ([`Deed::Prayed`], by the altar's side), then one outcome
 //!   drawn from the table, leaned by the altar's side against the player's band
-//!   ([`super::outcome::leaned_kinds`]; Devout), and its hooks (`outcome.rs`; the great ones
-//!   `boons.rs`); for one with Penitent a great bane drawn becomes one of the table's nothing
+//!   ([`super::outcome::leaned_kinds`]; Pious), and its hooks (`outcome.rs`; the great ones
+//!   `boons.rs`); for one with Pious's second rank a great bane drawn becomes one of the table's nothing
 //!   outcomes, drawn in its place (the explosion is moderate: it stays). Then, unless the
 //!   altar is gone (it blew apart), one draw of the table's `exhaust`: the altar is spent, its
 //!   cell the table's `spent` terrain and its own light gone ("The altar's glow gutters and
@@ -117,7 +117,7 @@ impl World {
         let penitent = me.talent_mods(&content).penitent;
         let kinds = leaned_kinds(table, side, band, devout);
         let mut drawn = self.draw_outcome(table, kinds);
-        // Penitent: a great bane becomes nothing, one of the table's nothing lines.
+        // Pious's second rank: a great bane becomes nothing, one of the table's nothing lines.
         if penitent
             && drawn.is_some_and(|o| o.kind == OutcomeKind::Bane && o.tier == OutcomeTier::Great)
         {

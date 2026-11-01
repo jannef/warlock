@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
 │     Stone hide  (birth sign)                                                                     │
 │     Stonewise  (birth sign)                                                                      │
 │   Vigour                                                                                         │
-│     Deep lungs                                                                                   │
+│     Hard training                                                                                │
 │   Wayfarer                                                                                       │
 │     Swimmer                                                                                      │
 │   Class abilities                                                                                │
@@ -29,11 +29,11 @@ expression: "render(case, content.clone())"
 │         Needs: to be a new character                                                             │
 │     Father's sword                                                                               │
 │         Needs: Family wealth, to be a new character                                              │
-│     Favoured child                                                                               │
-│         Needs: to be a new character                                                             │
 │   Vigour                                                                                         │
 │     Clotting                                                                                     │
 │         Needs: Toughness 12                                                                      │
+│     Deep lungs                                                                                   │
+│         Needs: nothing                                                                           │
 │     Fast healer                                                                                  │
 │                                                                                                ↓ │
 │ A weapon in each hand hampers you less, and with sword and shield your free bash comes more      │

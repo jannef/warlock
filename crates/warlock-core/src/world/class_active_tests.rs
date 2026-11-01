@@ -23,11 +23,7 @@ static BUILTIN: LazyLock<Arc<Content>> =
 pub(super) fn world(class: &str) -> World {
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
     // Creation picks that no test here reads (a human's three: Versatile adds one).
-    let spec = spec.with_talents(vec![
-        "keen_ears".into(),
-        "lean".into(),
-        "long_strider".into(),
-    ]);
+    let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into(), "pious".into()]);
     let w = World::start_run(
         BUILTIN.clone(),
         "showcase",
@@ -538,7 +534,7 @@ fn lay_on_hands_smite_and_radiance_work_for_the_good_side_only() {
 }
 
 #[test]
-fn divine_health_steadfast_and_avatar() {
+fn divine_health_and_avatar() {
     let mut w = world("paladin");
     let content = w.content().clone();
     let player = w.state.player;
@@ -547,12 +543,6 @@ fn divine_health_steadfast_and_avatar() {
     for _ in 0..20 {
         assert!(!w.expose(player, fever, None), "never caught");
     }
-    assert!(!w.state.load(&content, w.state.player()).ignores_burdened);
-    reach(&mut w, 32);
-    assert!(
-        w.state.load(&content, w.state.player()).ignores_burdened,
-        "Steadfast"
-    );
     // Avatar: lay on hands heals fully and cures what ticks.
     reach(&mut w, 60);
     w.player_mut().hp = 1;

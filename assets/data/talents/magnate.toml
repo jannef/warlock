@@ -1,8 +1,0 @@
-[[talent]]
-id = "magnate"
-name = "Magnate"
-tree = "class"
-granted = true
-description = "Your fortune speaks for you: quests give you twice the gold, and shopkeepers will go further for you than for anyone."
-effects = [{ kind = "quest_gold_percent", value = 100 }, { kind = "favour_cap", value = 10 }]
-systems = ["shops", "talk"]

@@ -198,12 +198,6 @@ impl World {
             return true;
         }
         infection.streak = 0;
-        // Timeless body (spec §8 "Class abilities"): a failed check does no harm, and the
-        // disease grows no worse; it still shows until it is shaken off or cured.
-        if talents.disease_still {
-            infection.progressions = n.saturating_sub(1);
-            return true;
-        }
         // The damage of a failed check, stat by stat in display order, then hit points.
         let mut no_toughness = false;
         for stat in Stat::ALL {

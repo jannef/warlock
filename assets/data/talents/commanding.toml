@@ -1,8 +1,0 @@
-[[talent]]
-id = "commanding"
-name = "Commanding"
-tree = "class"
-granted = true
-description = "People do as you say: you are better at intimidating them, and shopkeepers let you leave owing them up to 50 gold, to pay next time."
-effects = [{ kind = "skill", skill = "intimidate", value = 20 }, { kind = "credit", gold = 50 }]
-systems = ["skills", "shops"]

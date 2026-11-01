@@ -16,8 +16,8 @@
 use crate::character::Character;
 use crate::content::{
     Benefit, Build, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need,
-    PriceEase, ResourceCost, ResourceId, Role, Sign, StatDeed, StatUse, StatusId, TalentDef,
-    TalentEffect, TalentId, TerrainId,
+    PriceEase, ResourceCost, ResourceId, Role, Sign, StatusId, TalentDef, TalentEffect, TalentId,
+    TerrainId,
 };
 use crate::damage::Kinds;
 use crate::dice::Dice;
@@ -291,8 +291,6 @@ pub struct TalentMods {
     /// An initiative check it makes against a hostile attacker beside it strikes back (Hair
     /// trigger).
     pub startled_blow: bool,
-    /// The creature tags whose types have vitals for its attacks (Anatomist).
-    pub vitals_in: Vec<String>,
     /// Percent more carrying limit.
     pub carry_percent: i32,
     /// Being Burdened costs it nothing.
@@ -319,8 +317,6 @@ pub struct TalentMods {
     pub wading_proof: bool,
     /// Creatures of animal factions are neutral to it until it attacks one of their type.
     pub beast_friend: bool,
-    /// Percent faster hit points come back under the open sun.
-    pub sun_healing: i32,
     /// Percent faster hunger burns (negative: slower).
     pub hunger_percent: i32,
     /// Percent more sickness from rotten food (negative: less).
@@ -337,16 +333,10 @@ pub struct TalentMods {
     /// Percent more of a fresh corpse's stat training marks and its chances to widen a
     /// potential (`on_eat` `train` and `widen`).
     pub corpse_stats_percent: i32,
-    /// Percent more of the marks a potion or an elixir gives.
-    pub potion_marks_percent: i32,
     /// Percent more of every stat training use's chance.
     pub train_percent: i32,
     /// Points past a potential the training price's ramp counts as fewer (Late bloomer).
     pub ramp_ease: u8,
-    /// The stat training deeds that take nothing.
-    pub no_deed: Vec<StatDeed>,
-    /// Stat training uses that count several times over, with the times (the most counts).
-    pub use_marks: Vec<(StatUse, u16)>,
     /// Percent more experience.
     pub xp_percent: i32,
     /// More skill rolls every level.
@@ -361,10 +351,6 @@ pub struct TalentMods {
     pub scroll_kept: u8,
     /// The chance in percent a potion it drinks is not used up (the most counts).
     pub potion_kept: u8,
-    /// An unknown potion it picks up tells its kind by its smell.
-    pub potion_smell: bool,
-    /// Percent more hit points a healing potion it drinks gives back.
-    pub potion_heals: i32,
     /// Its own bursts never catch it.
     pub spares_self: bool,
     /// Added to its searching, not to noticing in passing.
@@ -377,29 +363,19 @@ pub struct TalentMods {
     pub study_overreach_percent: i32,
     /// Percent more damage traps do it (negative: less).
     pub trap_damage_percent: i32,
-    /// Percent more experience from quests.
-    pub quest_xp_percent: i32,
     /// Percent more gold from quests.
     pub quest_gold_percent: i32,
     /// Percent more favour in shops, before the cap.
     pub favour_percent: i32,
-    /// How much higher the cap on its favour is, in percent.
-    pub favour_cap: i32,
-    /// Percent more of a background story's luckier odds (Favoured child; `background::tell`).
-    pub story_luck: i32,
     /// Percent more shops pay for what they buy from it.
     pub sell_percent: i32,
-    /// The gold keepers let it leave owing (the most counts).
-    pub credit: u32,
     /// What it buys or sells is identified.
     pub identify_trades: bool,
     /// Temple services cost it half, and a cure also mends a point of each damaged stat
-    /// (Pilgrim).
+    /// (Pious).
     pub services: bool,
     /// What a creature it kills drops is identified as it lands (Scavenger).
     pub scavenger: bool,
-    /// Item descriptions show its things' worth.
-    pub item_worth: bool,
     /// Item descriptions show its gems' worth.
     pub gem_worth: bool,
     /// The hours a magic item must be carried to be identified, if it has the effect (the
@@ -418,8 +394,6 @@ pub struct TalentMods {
     pub search: i32,
     /// Percent longer between the attempts to bring creatures to its level (Quiet delver).
     pub spawn_every_percent: i32,
-    /// It knows a special room's nature from a glimpse (Sense of place).
-    pub sense_of_place: bool,
     /// It tells a locked chest from an unlocked one at a glance, and a shut chest's trap in its
     /// sight is known to it (Chest-wise).
     pub chest_wise: bool,
@@ -428,9 +402,9 @@ pub struct TalentMods {
     /// A mimic's grip never holds it (Chest-wise).
     pub slick: bool,
     /// A forgotten altar's lean counts double when it agrees, and not at all when it opposes
-    /// (Devout).
+    /// (Pious).
     pub devout: bool,
-    /// A forgotten altar's great bane becomes nothing (Penitent).
+    /// A forgotten altar's great bane becomes nothing (Pious's second rank).
     pub penitent: bool,
     /// Percent more a special room's quickening of healing and mana (Old delver).
     pub room_pace_percent: i32,
@@ -440,16 +414,12 @@ pub struct TalentMods {
     pub room_status_immune: Vec<StatusId>,
     /// How many stacks more it may lift in a tempting hoard before it seals (Old delver).
     pub hoard_grace: i32,
-    /// Percent more noise sleepers need to wake from what it does (Hush-foot).
-    pub wake_percent: i32,
     /// What it kills never rises in a cursed room (Old delver).
     pub grave_warden: bool,
     /// Cells more its searching reaches.
     pub search_reach: i32,
     /// How much higher some skills count, by skill.
     pub skills: Vec<(SkillId, i32)>,
-    /// Anyone not hostile makes way for it.
-    pub make_way: bool,
     /// No one makes way for it.
     pub distrusted: bool,
     /// The free blows its talents switch on.
@@ -462,8 +432,6 @@ pub struct TalentMods {
     pub launcher_range_of: Vec<(String, i32)>,
     /// Cells farther throws reach.
     pub throw_range: i32,
-    /// Percent more often its missiles break (negative: less).
-    pub missile_breaks: i32,
     /// Added to worn armour's cap on Dexterity in Defence.
     pub max_dex: i32,
     /// Defence in the Deflection category.
@@ -561,8 +529,6 @@ pub struct TalentMods {
     pub speed_percent: i32,
     /// Percents more its steps cost, each while what it asks holds.
     pub step_percent: Vec<StepBonus>,
-    /// Burdened costs it nothing.
-    pub steadfast: bool,
     /// Strained costs it what Burdened costs others.
     pub stout: bool,
     /// Dodge added against shots, throws, and trap missiles.
@@ -642,8 +608,6 @@ pub struct TalentMods {
     pub corpse_harmless: bool,
     /// Hit points a meal heals besides: `(object, dice)`, `None` for a fresh corpse.
     pub meal_heals: Vec<(Option<crate::content::ObjectId>, Dice)>,
-    /// Its diseases never progress.
-    pub disease_still: bool,
     /// Damage more against a creature suffering a status: `(status, value)`.
     pub status_damage: Vec<(StatusId, i32)>,
     /// Its once-in-a-life reprieve from death, if it has one.
@@ -673,8 +637,6 @@ pub struct TalentMods {
     pub sworn_foe: Vec<(String, i32, i32)>,
     /// It places every sound it hears exactly (Tracker).
     pub exact_sounds: bool,
-    /// Percent more loudness of its footsteps under the open sky (Camouflage).
-    pub sky_footsteps_percent: i32,
     /// Its steps are silent while it is Unburdened (Hide in plain sight).
     pub silent_unburdened: bool,
     /// Percent more loudness of its attacks.
@@ -934,21 +896,6 @@ impl TalentMods {
         PriceEase {
             ramp: self.ramp_ease,
         }
-    }
-
-    /// Whether stat training deed `deed` takes nothing (`World::stat_deed_times`, the one read).
-    pub fn spares_deed(&self, deed: StatDeed) -> bool {
-        self.no_deed.contains(&deed)
-    }
-
-    /// How many times over stat training use `used` counts (1 but for Discipline's;
-    /// `World::train_stats_of`, the one read).
-    pub fn use_times(&self, used: StatUse) -> u16 {
-        (self.use_marks.iter())
-            .filter(|(u, _)| *u == used)
-            .map(|(_, times)| *times)
-            .max()
-            .unwrap_or(1)
     }
 
     /// Whether it has the birth sign's active `active` (spec §8 "Birth sign").
@@ -1234,13 +1181,6 @@ impl TalentMods {
             TalentEffect::SneakKillStatus { status } => {
                 self.sneak_kill_status = content.status_id(&status).or(self.sneak_kill_status);
             }
-            TalentEffect::VitalsIn { tags } => {
-                for tag in tags {
-                    if !self.vitals_in.contains(&tag) {
-                        self.vitals_in.push(tag);
-                    }
-                }
-            }
             TalentEffect::CarryPercent { value } => self.carry_percent += value,
             TalentEffect::IgnoreBurdened => self.ignore_burdened = true,
             TalentEffect::StepSlowdownPercent { value } => self.step_slowdown_percent += value,
@@ -1259,7 +1199,6 @@ impl TalentMods {
             TalentEffect::ClimbPercent { value } => self.climb_percent += value,
             TalentEffect::WadingProof => self.wading_proof = true,
             TalentEffect::BeastFriend => self.beast_friend = true,
-            TalentEffect::SunHealing { value } => self.sun_healing += value,
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
             TalentEffect::RotHarmPercent { value } => self.rot_harm_percent += value,
             TalentEffect::SmellRot => self.smell_rot = true,
@@ -1267,14 +1206,9 @@ impl TalentMods {
             TalentEffect::NoBloating => self.no_bloating = true,
             TalentEffect::NoHungerWeakness => self.no_hunger_weakness = true,
             TalentEffect::CorpseStatsPercent { value } => self.corpse_stats_percent += value,
-            TalentEffect::PotionMarksPercent { value } => self.potion_marks_percent += value,
             TalentEffect::TrainPercent { value } => self.train_percent += value,
             TalentEffect::RampEase { points } => {
                 self.ramp_ease = self.ramp_ease.saturating_add(points)
-            }
-            TalentEffect::NoDeed { on } => self.no_deed.extend(on),
-            TalentEffect::UseMarks { on, times } => {
-                self.use_marks.extend(on.into_iter().map(|u| (u, times)))
             }
             TalentEffect::XpPercent { value } => self.xp_percent += value,
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
@@ -1297,22 +1231,15 @@ impl TalentMods {
             }
             TalentEffect::ScrollKept { chance } => self.scroll_kept = self.scroll_kept.max(chance),
             TalentEffect::PotionKept { chance } => self.potion_kept = self.potion_kept.max(chance),
-            TalentEffect::PotionSmell => self.potion_smell = true,
-            TalentEffect::PotionHeals { value } => self.potion_heals += value,
             TalentEffect::SparesSelf => self.spares_self = true,
             TalentEffect::Searching { value } => self.searching += value,
             TalentEffect::TrapDamagePercent { value } => self.trap_damage_percent += value,
-            TalentEffect::QuestXpPercent { value } => self.quest_xp_percent += value,
             TalentEffect::QuestGoldPercent { value } => self.quest_gold_percent += value,
             TalentEffect::FavourPercent { value } => self.favour_percent += value,
-            TalentEffect::FavourCap { value } => self.favour_cap += value,
-            TalentEffect::StoryLuck { value } => self.story_luck += value,
             TalentEffect::SellPercent { value } => self.sell_percent += value,
-            TalentEffect::Credit { gold } => self.credit = self.credit.max(gold),
             TalentEffect::IdentifyTrades => self.identify_trades = true,
             TalentEffect::Pilgrim => self.services = true,
             TalentEffect::Scavenger => self.scavenger = true,
-            TalentEffect::ItemWorth => self.item_worth = true,
             TalentEffect::GemWorth => self.gem_worth = true,
             TalentEffect::IdentifyCarried { hours } => {
                 self.identify_carried = Some(self.identify_carried.map_or(hours, |h| h.min(hours)));
@@ -1325,7 +1252,6 @@ impl TalentMods {
             TalentEffect::StoneFind { value } => self.stone_find += value,
             TalentEffect::Search { value } => self.search += value,
             TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
-            TalentEffect::SenseOfPlace => self.sense_of_place = true,
             TalentEffect::ChestWise => self.chest_wise = true,
             TalentEffect::SeesMimics { value } => self.sees_mimics += value,
             TalentEffect::Slick => self.slick = true,
@@ -1339,7 +1265,6 @@ impl TalentMods {
             }
             TalentEffect::HoardGrace { value } => self.hoard_grace += value,
             TalentEffect::CollapseProof => self.collapse_proof = true,
-            TalentEffect::WakePercent { value } => self.wake_percent += value,
             TalentEffect::GraveWarden => self.grave_warden = true,
             TalentEffect::SearchReach { value } => self.search_reach += value,
             TalentEffect::Skill { skill, value } => {
@@ -1350,7 +1275,6 @@ impl TalentMods {
                     }
                 }
             }
-            TalentEffect::MakeWay => self.make_way = true,
             TalentEffect::Distrusted => self.distrusted = true,
             TalentEffect::FreeBlow { trigger } => {
                 use crate::content::FreeBlowTrigger as T;
@@ -1407,7 +1331,6 @@ impl TalentMods {
                 skill: Some(skill),
             } => self.launcher_range_of.push((skill, value)),
             TalentEffect::ThrowRange { value } => self.throw_range += value,
-            TalentEffect::MissileBreaks { value } => self.missile_breaks += value,
             TalentEffect::MaxDex { value } => self.max_dex += value,
             TalentEffect::Deflection { value } => self.deflection += value,
             TalentEffect::Protection {
@@ -1548,7 +1471,6 @@ impl TalentMods {
                     }
                 }
             },
-            TalentEffect::DiseaseStill => self.disease_still = true,
             TalentEffect::StatusDamage { status, value } => {
                 if let Some(status) = content.status_id(&status) {
                     self.status_damage.push((status, value));
@@ -1671,7 +1593,6 @@ impl TalentMods {
                 unburdened,
                 no_shield,
             }),
-            TalentEffect::Steadfast => self.steadfast = true,
             TalentEffect::Stout => self.stout = true,
             TalentEffect::DiseaseImmune => self.disease_immune = true,
             TalentEffect::NoPenaltyTo { stat } => self.no_penalty_to.push(stat),
@@ -1836,7 +1757,6 @@ impl TalentMods {
                 self.sworn_foe.push((tag, to_hit, damage));
             }
             TalentEffect::ExactSounds => self.exact_sounds = true,
-            TalentEffect::SkyFootstepsPercent { value } => self.sky_footsteps_percent += value,
             TalentEffect::SilentUnburdened => self.silent_unburdened = true,
             TalentEffect::AttackNoisePercent { value } => self.attack_noise_percent += value,
             TalentEffect::TrapEase { value } => self.trap_ease += value,

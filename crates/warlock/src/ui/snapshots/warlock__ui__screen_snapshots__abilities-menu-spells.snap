@@ -9,7 +9,7 @@ expression: "render(case, content.clone())"
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Class                                                    │
-                    │   b  Consecrate         you have too little mana         │
+                    │   b  Consecrate                                          │
                     │ Spells                                                   │
                     │   c  Mend               1d4 healed, 1 mana, aimed        │
                     │   d  Blessing           3 mana                           │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
                     └──────────────────────────────────────────────────────────┘
 
 
- The Hub  ·  HP 44/44  ·  MP 14/122  ·  Blessed  ·  Lv 14  ·  08:00  ·  11 Darkening     ? controls
+ The Hub  ·  HP 44/44  ·  MP 15/123  ·  Blessed  ·  Lv 14  ·  08:00  ·  11 Darkening     ? controls

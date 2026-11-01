@@ -7,33 +7,33 @@ expression: "render(case, content.clone())"
               │ Chance                                                               │
               │   a  Random                                                          │
               │ Heritage                                                             │
-              │ > b *Family wealth            You were born to money: you set out w… │
-              │   c  Father's sword           Your family's weapon, the one your pe… │
-              │   d  Favoured child           Fortune watched over your youth: the … │
+              │ > b *Family wealth    You were born to money: you set out with far … │
+              │   c  Father's sword   Your family's weapon, the one your people fav… │
               │ Vigour                                                               │
-              │   e  Deep lungs               Your stamina holds a good deal more.   │
-              │   f  Hard training            You drill every day: everything you d… │
-              │   g  Healthy                  Your hit points come back a quarter f… │
+              │   d  Deep lungs       Your stamina holds a good deal more.           │
+              │   e  Hard training    You drill every day: everything you do trains… │
+              │   f  Healthy          Your hit points come back a quarter faster.    │
               │ Might                                                                │
-              │   h  Mighty kick              Your kicks land like hammers: they hu… │
+              │   g  Mighty kick      Your kicks land like hammers: they hurt creat… │
               │ Finesse                                                              │
-              │   i  Dodge                    You slip aside from blows: Dodge +1 t… │
-              │   j  Light step               You tread lightly: a trap you step on… │
-              │   k  Nimble                   A load slows your feet less than most… │
-              │   l  Opportunist              A foe that turns from you pays for it… │
+              │   h  Dodge            You slip aside from blows: Dodge +1 to your D… │
+              │   i  Light step       You tread lightly: a trap you step onto may n… │
+              │   j  Nimble           A load slows your feet less than most: your b… │
+              │   k  Opportunist      A foe that turns from you pays for it: one th… │
               │ Weaponcraft                                                          │
-              │   m  Far shot                 Your shots fly 2 cells farther, and w… │
-              │   n  Sworn foe                You have sworn yourself against one k… │
-              │   o  Wand mastery             You draw more from a wand than its ma… │
-              │   p  Weapon focus             You have drilled with one kind of wea… │
+              │   l  Far shot         Your shots fly 2 cells farther, and what you … │
+              │   m  Sworn foe        You have sworn yourself against one kind of c… │
+              │   n  Wand mastery     You draw more from a wand than its maker put … │
+              │   o  Weapon focus     You have drilled with one kind of weapon unti… │
               │ Guard                                                                │
-              │   q  Armour training          You move freely in armour: it hampers… │
+              │   p  Armour training  You move freely in armour: it hampers your De… │
               │ Shadow                                                               │
-              │   r  Hush-foot                You move among sleepers as a breath o… │
-              │   s  Keen ears                You hear fainter sounds, fainter stil… │
-              │   t  Lamplighter              You tend your lantern well: it burns … │
-              │   u  Night eyes               Your eyes grow used to the dark: you … │
-              │   v  Silent feet              Your footsteps are a fifth quieter fo… │
+              │   q  Keen ears        You hear fainter sounds, fainter still at the… │
+              │   r  Lamplighter      You tend your lantern well: it burns brighter… │
+              │   s  Night eyes       Your eyes grow used to the dark: you see by h… │
+              │   t  Silent feet      Your footsteps are a fifth quieter for each r… │
+              │ Wayfarer                                                             │
+              │   u  Pious            You keep the old observances: an altar of you… │
               │                                                                      │
               │ You were born to money: you set out with far more gold than most,    │
               │ and a few gems besides.                                              │

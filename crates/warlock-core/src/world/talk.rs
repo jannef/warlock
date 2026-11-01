@@ -401,19 +401,17 @@ impl World {
 
     /// Why creature `id` would not make way for the player, if it would not (spec §8
     /// "Displacement"): it keeps its post or never gives way (its type's `budge`), it cannot
-    /// move (overloaded), or it is two sizes or more larger than the player. For a player with
-    /// Noblesse (spec §8 "Class abilities") everyone budges; for one Trusted by none (spec §8
-    /// "Birth sign") no one does, Noblesse or not.
+    /// move (overloaded), or it is two sizes or more larger than the player. For one Trusted by
+    /// none (spec §8 "Birth sign") no one budges.
     pub fn refusal(&self, id: ActorId) -> Option<Refusal> {
         let actor = self.state.actors.get(&id)?;
         let mods = self.state.player().talent_mods(&self.content);
         let budges = !mods.distrusted
-            && (mods.make_way
-                || match self.content.creature(actor.creature).budge {
-                    Budge::Always => true,
-                    Budge::OffPost => !actor.mind.is_calm(),
-                    Budge::Never => false,
-                });
+            && match self.content.creature(actor.creature).budge {
+                Budge::Always => true,
+                Budge::OffPost => !actor.mind.is_calm(),
+                Budge::Never => false,
+            };
         if !budges || !self.load_of(id).penalty().can_move() {
             return Some(Refusal::Budge);
         }

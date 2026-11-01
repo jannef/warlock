@@ -40,8 +40,6 @@ abilities = [
     { level = 12, talent = "smite" },
     { level = 12, talent = "consecrate" },
     { level = 18, talent = "divine_health" },
-    { level = 25, talent = "shield_of_faith" },
-    { level = 32, talent = "steadfast" },
     { level = 40, talent = "holy_radiance" },
     { level = 50, talent = "bulwark" },
     { level = 60, talent = "avatar" },

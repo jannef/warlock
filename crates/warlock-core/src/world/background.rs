@@ -56,7 +56,6 @@ impl World {
             talents: &player.talents,
             trained: &trained,
             campaign: &self.state.campaign,
-            luck: (100 + player.talent_mods(&content).story_luck).max(0) as u32,
         };
         let story = background::tell(&content, self.state.seed, &witness);
         for effect in story.effects {

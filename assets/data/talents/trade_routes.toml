@@ -1,8 +1,0 @@
-[[talent]]
-id = "trade_routes"
-name = "Trade routes"
-tree = "class"
-granted = true
-description = "You know the roads: journeys over the land take you a fifth less time."
-effects = [{ kind = "travel_percent", value = -20 }]
-systems = ["travel"]

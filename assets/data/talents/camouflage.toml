@@ -1,8 +1,0 @@
-[[talent]]
-id = "camouflage"
-name = "Camouflage"
-tree = "class"
-granted = true
-description = "Under the open sky you move like a shadow among leaves: your footsteps are much quieter."
-effects = [{ kind = "sky_footsteps_percent", value = -50 }]
-systems = ["stealth"]

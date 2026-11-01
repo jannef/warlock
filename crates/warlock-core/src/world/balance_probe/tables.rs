@@ -454,7 +454,7 @@ pub(super) fn sneak_attacks(p: &Probe, rng: &mut Rng, out: &mut String) {
     for &level in &LEVELS {
         let w = p.window(level, -2, 2);
         let fleshy: Vec<_> = (w.iter())
-            .filter(|m| p.content.has_vitals(m.creature, &[]))
+            .filter(|m| p.content.has_vitals(m.creature))
             .collect();
         let share = 100.0 * fleshy.len() as f64 / w.len().max(1) as f64;
         let mut row = String::new();
@@ -470,14 +470,10 @@ pub(super) fn sneak_attacks(p: &Probe, rng: &mut Rng, out: &mut String) {
                 for (s, snap) in snaps.iter().enumerate() {
                     let them = &m.geared[s % m.geared.len()];
                     let blow = &snap.side.blow;
-                    let has = p.content.has_vitals(m.creature, &snap.vitals_in);
-                    let flat = Target {
-                        no_criticals: !has,
-                        ..them.flat.clone()
-                    };
+                    let flat = them.flat.clone();
                     let mut sneak = blow.clone();
                     sneak.threat = sneak.threat.saturating_sub(snap.ambush_threat).max(3);
-                    let dice = snap.sneak.filter(|_| has);
+                    let dice = snap.sneak;
                     per.push((
                         hit_pct(blow.to_hit, &them.target.defence),
                         hit_pct(blow.to_hit, &flat.defence),

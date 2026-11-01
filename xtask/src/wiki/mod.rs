@@ -230,7 +230,6 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("horoscope-talents.md", horoscope::talents),
         ("background-tiers.md", background::tiers),
         ("background-points.md", background::points),
-        ("background-talents.md", background::talents),
         ("background-parents.md", background::parents),
         ("background-birth.md", background::birth),
         ("background-childhood.md", background::childhood),
@@ -547,9 +546,7 @@ mod tests {
                 assert!(table.contains(&format!("| `{}` |", line.id)), "{}", line.id);
             }
         }
-        assert!(
-            text("tiers").contains("| Uncommon | 12 % | 24 % | 64 % | 0.96 | +1 to +3 | yes |")
-        );
+        assert!(text("tiers").contains("| Uncommon | 12 % | 64 % | 0.96 | +1 to +3 | yes |"));
         assert!(text("childhood").contains("[Strength](stats.md#stat-strength) +1 (worth +2)"));
         assert!(
             text("parents").contains("| with [Family wealth](talents.md#talent-family-wealth) |")

@@ -1,8 +1,0 @@
-[[talent]]
-id = "hard_living"
-name = "Hard living"
-tree = "class"
-granted = true
-description = "Lean seasons are nothing new to you: starving, fainting, and a heaving stomach never wear your body or your will down."
-effects = [{ kind = "no_deed", on = ["hungry_dawn", "starved", "vomited", "fainted"] }]
-systems = ["hunger", "stat_training"]

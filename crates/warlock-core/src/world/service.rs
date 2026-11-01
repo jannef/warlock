@@ -21,8 +21,8 @@
 //!   such stack (not per piece), so the total is the data's price times their count.
 //!
 //! Then the speaker says the service's `reply`, and it takes the time of `chat`. The price is
-//! the data's, never moved by favour (a temple does not haggle): Pilgrim halves a temple's
-//! (a cure's or a mending's, rounded up), and with Pilgrim a cure also mends a point of each
+//! the data's, never moved by favour (a temple does not haggle): Pious halves a temple's
+//! (a cure's or a mending's, rounded up), and with Pious a cure also mends a point of each
 //! damaged stat ([`TalentMods::services`], the one hook). Lore and Connoisseur do not move an
 //! identification's price. No stream is drawn, and nothing new is saved: a service changes only what is
 //! saved already (the pack, the diseases, the stat damage, the scores and drained points).
@@ -43,7 +43,7 @@ const CURE_FIRST: &str = "Be cured first.";
 
 impl World {
     /// What `service` costs the player now, per stack for an identification: a temple's (a cure
-    /// or a mending) half, rounded up, with Pilgrim.
+    /// or a mending) half, rounded up, with Pious.
     pub fn service_price(&self, service: &Service) -> u32 {
         let temple = service.does != ServiceKind::Identify;
         if temple && self.state.player().talent_mods(&self.content).services {

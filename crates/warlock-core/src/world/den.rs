@@ -4,8 +4,7 @@
 //! (`ambush.rs`: a sneak attack lands). Nothing wakes it with time; it wakes when
 //!
 //! - **a noise** reaches it ([`World::spread_noise`], where every noise is heard): at least its hearing
-//!   threshold × its den's `wake` percent (100 % outside a den) where it lies; a noise the
-//!   player makes needs Hush-foot's percent more (`TalentMods::wake_percent`);
+//!   threshold × its den's `wake` percent (100 % outside a den) where it lies;
 //! - **a blow** or any other harm leaves it alive (`fight.rs::hurt`);
 //! - a neighbour's **cry**: a sleeper that wakes cries out at once (a voice of its den's `cry`
 //!   loudness where it lies, through [`World::make_noise_at`]; none outside a den), which may
@@ -69,7 +68,7 @@ impl World {
                     loudness,
                 });
             }
-            if self.wakes_to(id, noise, loudness) {
+            if self.wakes_to(id, loudness) {
                 woken.push(id);
             }
         }
@@ -78,10 +77,9 @@ impl World {
         }
     }
 
-    /// Whether sleeper `id` wakes to `noise`, `loudness` loud where it lies: at least its
-    /// hearing threshold × its den's `wake` percent, more for a noise of the player's with
-    /// Hush-foot.
-    fn wakes_to(&self, id: ActorId, noise: Noise, loudness: u16) -> bool {
+    /// Whether sleeper `id` wakes to a noise `loudness` loud where it lies: at least its
+    /// hearing threshold × its den's `wake` percent.
+    fn wakes_to(&self, id: ActorId, loudness: u16) -> bool {
         if !self.asleep(id) {
             return false;
         }
@@ -93,12 +91,7 @@ impl World {
         };
         let level = self.state.current();
         let here = level.effects_at(&self.content, actor.pos);
-        let mut percent = u64::from(here.swarm().map_or(100, |s| s.wake));
-        let player = self.state.player;
-        if noise.maker == Some(player) {
-            let more = self.state.player().talent_mods(&self.content).wake_percent;
-            percent = percent * u64::try_from((100 + more).max(0)).unwrap_or(0) / 100;
-        }
+        let percent = u64::from(here.swarm().map_or(100, |s| s.wake));
         u64::from(loudness) * 100 >= u64::from(threshold) * percent
     }
 

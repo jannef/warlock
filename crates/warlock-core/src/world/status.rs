@@ -44,7 +44,7 @@
 //!   buffs, hexes, and cooldowns are `world/buff.rs`).
 
 use super::fight::Harm;
-use super::{Actor, ActorId, Spent, World, disease, mana, resource, rot};
+use super::{ActorId, Spent, World, disease, mana, resource, rot};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Strike};
 use crate::content::Effect as ItemEffect;
@@ -307,33 +307,12 @@ impl World {
         });
         let room = room * self.shrine_pace(actor) / 100;
         let rate = rate * self.room_pace(actor, room) / 100;
-        // Then the regeneration of what it wears and wields, and its talents' (Healthy;
-        // Sun-blessed's under the open sun).
+        // Then the regeneration of what it wears and wields, and its talents' (Healthy).
         let talents = actor.talent_mods(&self.content);
-        let sun = if talents.sun_healing != 0 && self.under_open_sun(actor) {
-            talents.sun_healing
-        } else {
-            0
-        };
         let faster =
-            actor.mods(&self.content).get(ItemEffect::Regeneration) + talents.healing_percent + sun;
+            actor.mods(&self.content).get(ItemEffect::Regeneration) + talents.healing_percent;
         let percent = u32::try_from((100 + faster).max(0)).unwrap_or(0);
         rate * percent / 100 * self.birthday_healing(id, now) / 100
-    }
-
-    /// Whether `actor` stands under the open sun: on the current level, under the open sky, the
-    /// sun up, and no roof over its cell (whatever the clouds).
-    fn under_open_sun(&self, actor: &Actor) -> bool {
-        let level = self.state.current();
-        actor.level == level.id
-            && level
-                .terrain
-                .get(actor.pos)
-                .is_some_and(|t| !self.content.terrain(*t).roofed)
-            && self
-                .state
-                .sky(&self.content)
-                .is_some_and(|sky| sky.sun.is_up())
     }
 
     /// `seconds` of game time from `start` pass for actors `ids` (on the current level, in

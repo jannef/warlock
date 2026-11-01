@@ -1,7 +1,0 @@
-[[talent]]
-id = "long_strider"
-name = "Long strider"
-tree = "wayfarer"
-description = "Your journeys across the overworld go quicker."
-effects = [{ kind = "travel_percent", value = -15 }]
-systems = ["travel"]
