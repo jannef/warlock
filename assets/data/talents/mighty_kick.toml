@@ -1,7 +1,16 @@
+# Breaker is its second rank (#790: a chain of one effect kind is one talent's ranks).
 [[talent]]
 id = "mighty_kick"
 name = "Mighty kick"
 tree = "might"
-description = "Your kicks land like hammers: they hurt creatures more, and doors give way sooner."
+ranks = 2
+description = "Your kicks land like hammers: they hurt creatures more, and doors give way sooner. At the second rank walls and doors yield to you: your door kicks are mightier still, and you dig faster."
+systems = ["kicks", "doors", "digging"]
+
+# Rank 1 needs nothing: the Might tree's free talent.
+[[talent.rank]]
 effects = [{ kind = "kick_die", sides = 6 }, { kind = "door_kick", value = 4 }]
-systems = ["kicks", "doors"]
+
+[[talent.rank]]
+needs = { stats = { strength = 14 } }
+effects = [{ kind = "door_kick", value = 4 }, { kind = "dig_percent", value = 25 }]

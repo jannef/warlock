@@ -161,7 +161,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Consecrate",
                 "Remove disease",
                 "Purify",
-                "Divine health",
+                "Purity of body",
                 "Smite",
                 "Miracle",
                 "Saint",
@@ -171,7 +171,7 @@ fn every_caster_has_its_table_by_level_sixty() {
             "druid",
             2,
             vec![
-                "Wild empathy",
+                "Beast-friend",
                 "Spark",
                 "Barkskin",
                 "Woodland stride",

@@ -2373,6 +2373,8 @@ impl TalentBook {
 struct TalentFile {
     max_ranks: Option<u8>,
     coverage: Option<Coverage>,
+    /// The pairs the identical-effects check lets be (`talent_alike.rs`).
+    alike: Option<Vec<[String; 2]>>,
     #[serde(default)]
     tree: Vec<TreeSpec>,
     #[serde(default)]
@@ -2719,6 +2721,7 @@ pub(super) fn parse<'a>(
 ) -> Result<TalentBook, ContentError> {
     let mut max_ranks = Once::new("max_ranks");
     let mut coverage = Once::new("coverage");
+    let mut alike = Once::new("alike");
     let mut first_file = None;
     let mut trees: Vec<(&str, TreeSpec)> = Vec::new();
     let mut systems: Vec<(&str, SystemSpec)> = Vec::new();
@@ -2729,6 +2732,7 @@ pub(super) fn parse<'a>(
             toml::from_str(text).map_err(|e| ContentError::new(file, e.to_string()))?;
         max_ranks.take(file, parsed.max_ranks)?;
         coverage.take(file, parsed.coverage)?;
+        alike.take(file, parsed.alike.map(|pairs| (file, pairs)))?;
         trees.extend(parsed.tree.into_iter().map(|t| (file, t)));
         systems.extend(parsed.system.into_iter().map(|s| (file, s)));
         pending.extend(parsed.talent.into_iter().map(|spec| Pending { file, spec }));
@@ -2977,6 +2981,8 @@ pub(super) fn parse<'a>(
             }
         }
     }
+    let (alike_file, alike) = alike.get_or((first_file, Vec::new()));
+    super::talent_alike::check(&book, &alike, alike_file)?;
     Ok(book)
 }
 
@@ -3267,7 +3273,7 @@ name = "Specialization"
 tree = "vigour"
 description = "d"
 needs = { talents = { weapon_focus = 1 } }
-effects = [{ kind = "melee_damage", value = 2 }]
+effects = [{ kind = "healing_percent", value = 10 }]
 systems = ["hit_points"]
 "#;
         let e = err(load(

@@ -130,6 +130,7 @@ mod summoner_roster_tests;
 mod surprise;
 mod tag;
 mod talent;
+mod talent_alike;
 mod terrain;
 mod throw;
 mod trap;

@@ -1,9 +1,0 @@
-[[talent]]
-id = "weapon_specialization"
-name = "Weapon specialization"
-tree = "weaponcraft"
-choice = "weapon_skill"
-description = "Your chosen weapon strikes harder in your hands: 2 more damage with it."
-needs = { talents = { weapon_focus = 1 }, chosen = 5 }
-effects = [{ kind = "weapon", damage = 2 }]
-systems = ["combat", "weapon_skills"]

@@ -50,7 +50,7 @@ impl World {
         if actor.diseases.has(disease) {
             return false;
         }
-        // Divine health (spec §8 "Class abilities"): never caught, nothing rolled.
+        // Purity of body (spec §8 "Class abilities"): never caught, nothing rolled.
         if actor.talent_mods(&self.content).disease_immune {
             return false;
         }

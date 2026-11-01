@@ -534,7 +534,7 @@ fn lay_on_hands_smite_and_radiance_work_for_the_good_side_only() {
 }
 
 #[test]
-fn divine_health_and_avatar() {
+fn purity_of_body_and_avatar() {
     let mut w = world("paladin");
     let content = w.content().clone();
     let player = w.state.player;
