@@ -94,6 +94,56 @@ trained.
 
 ## Caster styles
 
-Where and how you cast is a [fighting style](fighting-styles.md#caster-styles) of its own
-(Sniper, Toucher, Battle caster), trained beside the school by the same cast and added to its
-aim.
+**Where you cast from is your style**, a [fighting style](fighting-styles.md) of its own beside
+the school. A spell you aim at a creature **beside you**, a touch or anything else, is cast as a
+**[Toucher](schools.md#style-toucher)**. A spell you aim **farther** than that, at a creature or
+a cell, a ray or a burst alike, is cast as a **[Sniper](schools.md#style-sniper)**; from five
+cells away a Sniper is at their best. A spell cast in **armour that hinders casting** is a
+**[Battle caster](schools.md#style-battle-caster)**'s, wherever it is aimed. A spell on yourself
+out of such armour is cast in no style. Every spell you cast with your own
+[mana](mana.md#how-much) trains the style it was cast in, lands or not, as every blow trains its
+style: the same marks its school earns, weighed the same way. A spell read from a scroll or used
+from a wand trains no style.
+
+- **[Sniper](schools.md#style-sniper)**: a spell aimed farther than beside you, out of such
+  armour: a ray, a bolt, a burst, a cone, a line, a hex on a foe across the room, or a cell with
+  nobody in it. Its spells that [roll to hit](magic.md#how-a-spell-finds-its-target) hit more
+  often, and better still against a target five cells away or more, where its [critical
+  range](combat.md#criticals) is wider too. From rank 5 every spell cast so reaches a cell
+  farther, from rank 9 two. From rank 4 its best shots pin the target where it stands
+  (*[Pinning ray](schools.md#style-ability-pinning-ray)*).
+- **[Toucher](schools.md#style-toucher)**: a spell aimed at a creature beside you, out of such
+  armour: a touch, a heal laid on the one next to you, or a ray or a hex at them. Its spells
+  that roll to hit hit more often, its critical range is wider, and its criticals roll the
+  damage up to twice more. From rank 4 every spell cast so does a point more, harm or healing,
+  pressed home; from rank 7 two, at rank 10 three. From rank 4 its criticals
+  [stagger](status-effects.md#status-staggered) (*[Staggering
+  touch](schools.md#style-ability-staggering-touch)*); at rank 10 every spell cast so that
+  rolls to hit and hits [weakens](status-effects.md#status-weakened) the foe (*[Withering
+  touch](schools.md#style-ability-withering-touch)*).
+- **[Battle caster](schools.md#style-battle-caster)**: any spell cast while you wear armour that
+  makes spells dearer (mail, plate, a great helm, a large shield), a buff on yourself as much as
+  a bolt at a foe. Its spells that roll to hit hit more often, and it makes your armour's extra
+  mana cost smaller for **every** spell you cast. From rank 4 a spell that lands wards you: a
+  point of [Defence](combat.md#defence) until your next action (*[Spell
+  guard](schools.md#style-ability-spell-guard)*). A *Mage-wrought* piece eased so far that it
+  makes spells no dearer is not such armour: in it you cast as a Sniper or a Toucher.
+
+The [wizard](classes.md#wizard) and the [druid](classes.md#druid) start in Sniper, the
+[witch](classes.md#witch) and the [priest](classes.md#priest) in Toucher, the
+[paladin](classes.md#paladin) in Battle caster; any caster may advance in any of them by casting
+from there. Sniper and Toucher default to each other at 4 ranks less, Toucher and Battle caster
+at 3 ([Related styles](fighting-styles.md#related-styles)). The game marks Battle caster as the
+style you cast in while you wear such armour; Sniper and Toucher are decided by each cast's
+target, so it never marks them.
+
+What each rank gives, exactly: *To hit far away* and *Critical range far away* count from five
+cells, *Reach* is cells farther (a range, a length) after the school's, *Every roll* a point on
+every roll after the school's, and *Armour's extra mana cost* percent off what your armour adds.
+
+{{#include generated/caster-style-benefits.md}}
+
+What a rank teaches, as a weapon style's does ([What a rank
+teaches](fighting-styles.md#what-a-rank-teaches)):
+
+{{#include generated/caster-style-abilities.md}}

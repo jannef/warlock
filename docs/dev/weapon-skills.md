@@ -100,26 +100,28 @@ Caster styles (#571, combat progression family): spells that roll to hit
 roll) draw on their school's skill (`Role::School`, docs/dev/magic-skills.md; Spell attacks,
 `Role::Spell`, is retired into the schools) and a style of a caster grip (`Grip::RangedSpell`,
 `TouchSpell`, `ArmouredSpell`; `Grip::casts`; their styles name no weapons).
-`Actor::spell_skills(content, spell)` picks them: the spell's school, and armoured first
-(`Actor::worn_spell_cost` above 0: anything worn with a `spell_cost_percent` not eased to 0 by
-its own Mage-wrought, #629), else touch or ranged by the spell's shape;
+`Actor::spell_skills(content, spell, aim)` picks them: the spell's school, and the style of
+where the spell is cast from (`world/spell_aim.rs`'s `SpellAim`, docs/dev/magic-skills.md
+"Where one casts from"): armoured first (`Actor::worn_spell_cost` above 0: anything worn with a
+`spell_cost_percent` not eased to 0 by its own Mage-wrought, #629), else beside (a creature next
+to the caster: Toucher) or afar (Sniper), none on oneself;
 `Actor::attack_skill(Spell, _)` is `None`, `Actor::style(Spell, _)` stays `None`
-(`styles_in_use` marks no caster style). The one reader of the roll's benefit is
+(`styles_in_use` marks Battle caster in such armour, never Sniper or Toucher). The one reader
+of the roll's benefit is
 `world/cast.rs::cast_single` (own casts paid in mana only; a scroll or a wand keeps the bare
 roll): `benefit_of(skills).at_distance(distance, table.spell_attacks())` (`[spell_attacks] far`,
 default 5: Sniper's `far_to_hit` and `far_threat` from there) goes into `Profile::with` after the
 spell's to-hit scales; `World::spell_practised` calls `resolve_triggers` with `AttackKind::Spell`
 (Pinning ray, Staggering touch, Withering touch, Spell guard; `struck` fires for the one struck
 as for a blow; `kill` and `big_hit` are not raised for spells, decided). The marks are the whole
-cast's, once, at its end (`World::practise_cast`): the school, then the style, which until the
-caster styles' rework (S10) trains as before: by the cast's outcome on a spell that rolls to hit
-and struck at someone,
-and Battle caster an attempt as against the player's own level on any other cast in armour that
-hinders casting (`practise_in_armour` is gone). Battle caster's `armour` (percent off the
+cast's, once, at its end (`World::practise_cast`): the school, then the style it was cast
+in, on every spell paid in mana, by the same outcome, lands or not. Battle caster's `armour`
+(percent off the
 armour's percent) is read by `Actor::armour_spell_cost` whatever is cast. No `speed` for the
 caster grips (the loader refuses it: where one casts from never quickens a cast; a school's
-`speed` may). `Benefit` fields of theirs: `far_to_hit`, `far_threat`, `armour` (checked per grip
-like the others). Creatures cast no spell that rolls to hit (their spells are intents), so no
+`speed` may). `Benefit` fields of theirs: `far_to_hit`, `far_threat`, `cells` (Sniper's
+reach), `bonus` (Toucher's roll), `armour` (checked per grip like the others; `cells` and
+`bonus` join the cast's hooks after the school's, `Actor::spell_mods_from`). Creatures cast no spell that rolls to hit (their spells are intents), so no
 creature data gives ranks in them yet. Classes: wizard and druid Sniper 1, witch and priest
 Toucher 1, paladin Battle caster 1 (their schools: docs/dev/magic-skills.md). Talents: none new;
 Stylist (a chosen style) may choose a caster style, raising it a rank. Tests:

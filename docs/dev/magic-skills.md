@@ -40,13 +40,43 @@ Read in one place each:
 | `reroll`, `sides`, `dice`, `bonus`, `cells`, `degrees` | `Benefit::spell_mods`, added in `Actor::spell_mods` (`world/spell_mods.rs`) after the talents' and items', unfiltered (a school's rank is for its own spells) |
 | `mana` | the same `SpellMods`, as `cost = -mana` (the cost hook's percent, beside School focus's and `spell_mana_percent`; the floor of 1 holds) |
 | `speed` | `World::cast_price` (`world/schedule.rs`): `Benefit::saving` off the `cast` action, times the spell's `casts`, then the burden |
-| `to_hit`, `threat` | `Actor::spell_skills(content, spell)` → `AttackSkills { skill: the school's, style }`, `benefit_of` in `cast.rs::spell_attack` (a spell that rolls to hit, an own cast) |
+| `to_hit`, `threat` | `Actor::spell_skills(content, spell, aim)` → `AttackSkills { skill: the school's, style }`, `benefit_of` in `cast.rs::spell_attack` (a spell that rolls to hit, an own cast) |
 
 The rank is read as every weapon skill's (`Actor::benefit`, through `Actor::school_benefit`):
 Schooled's and Magister's `ranks` raise a trained school's benefits; an untrained school stays
 at 0. Since the hooks are `Cast::settle`'s for every cast, a scroll read or a wand used by a
 ranked caster rolls with the rank's dice too (the design's §8.7, unfiltered); they train
 nothing.
+
+## Where one casts from: the caster styles
+
+`world/spell_aim.rs` (S10, #757; the design's §10.2). `SpellAim` is `Armoured` (the player's
+`worn_spell_cost` above 0: Battle caster, wherever the spell is aimed), `Beside` (a cell next to
+the player with a creature on it: Toucher), `Afar` (any other cell but their own: Sniper; an
+empty cell next to them too, and every area spell, which is aimed at a cell), or `Myself` (their
+own cell, a stack, no target: no style). `World::spell_aim(target)` decides it once, in
+`cast_spell`, `read_cast`, and `wand_cast`, before `Cast::settle`; the `Cast` keeps
+`skills: AttackSkills` (`Actor::spell_skills(content, spell, aim)`: the school's skill and
+`style_for(aim.grip())`) for the whole cast: its marks, a rolling spell's to-hit and its `hit`
+and `critical` triggers (`cast_single` takes it for an own cast), S11's `spell_lands`.
+
+- **The style's benefit**: `Actor::spell_mods_from(content, spell, aim)` is `spell_mods` (the
+  talents', the items', the school's) plus the style's `Benefit::spell_mods()` (read through
+  `Actor::benefit`, so Stylist's ranks count). Sniper's `cells` (rank 5 one, rank 9 two) and
+  Toucher's `bonus` (rank 4 one, 7 two, 10 three) are its only spell fields; the loader allows
+  `cells` for `ranged_spell` and `bonus` for `touch_spell` (beside a school), refuses either on
+  any other grip, and `speed` on every caster grip. `Cast::settle` sums the mods once with the
+  aim and hands them to `spell_reach_with`, `spell_roll_with`, and `spell_degrees_with`.
+- **What is shown** (the menu, `PerceptionView::own_spell_reach`, the dumps, the aiming mode's
+  reach): the standing aim, `Actor::standing_aim` (armoured in such armour, a touch `Beside`,
+  any other aimed spell `Afar`, else `Myself`), through `Actor::standing_spell_mods`;
+  `spell_roll`, `spell_reach`, and `spell_degrees` read it. So a Sniper's reach is in the
+  aiming mode's range, and a touch heal's roll shows the Toucher's point (cast on oneself it
+  has none).
+- **In use**: `Actor::styles_in_use` (`own_styles_in_use`) marks Battle caster while the armour
+  worn hinders casting, never Sniper or Toucher (each cast's target decides them).
+- The grips keep their ids, so no row moved and no save changed (the content fingerprint did:
+  the two arrays).
 
 ## Marks
 
@@ -64,10 +94,10 @@ weapon skill's marks go through), then the caster style.
   a hit lands, a miss is an attempt weighed by the one missed). An area is one practise,
   weighed by the strongest struck. A reflected spell reports nothing (`spell_lands`' `cast` is
   `None` for it). S11's `spell_lands` trigger is to be raised from `spell_landed`.
-- **The style until S10**: on a spell that rolls to hit, the style `spell_skills` picks, by
-  the same outcome, when it struck at someone (as before: a ray at nothing trained no style); on any other cast, Battle caster when the armour worn hinders casting, an
-  attempt against the player's own level (what `practise_in_armour` did; it is gone, and
-  `spell_practised` keeps only `resolve_triggers`).
+- **The style**: the cast's `skills.style` (where it was cast from, above), practised after the
+  school by the same outcome and level, lands or not, as a blow's style; none for a spell on
+  oneself out of hindering armour. Battle caster earns full marks (an attempt and a success
+  as the cast landed) like the others. `spell_practised` keeps only `resolve_triggers`.
 - **Talents**: `TalentMods::marks(Role::School, n)` adds `school_marks_percent` (Devotee) and
   leaves a role-less `weapon_marks` (Forge-born) out of the schools.
 - No daily band, no limit, no draw: marks are counts.
@@ -108,5 +138,12 @@ the seven schools, `the_caster_ladder_loads_and_is_checked`: the rows, `spell_mo
 defaults, the refusals), `world/school_skill_tests.rs` (marks per kind of cast, a miss, an area,
 scrolls and wands, a rank's roll, mana, and time, the defaults, Schooled, Devotee, Magister, the
 dumps and `rank:evocation:5`, a school forgotten), `world/caster_style_tests.rs` (the styles
-with the schools). Wiki: `xtask/src/wiki/schools.rs` (`school-skills.md`, `school-benefits.md`)
-for `wiki/src/schools.md`.
+by where one casts from: a Fireball from afar trains Sniper, a Blessing on oneself none, a heal
+and a ray at the creature beside Toucher, every spell in hindering armour Battle caster with full
+marks; Sniper's cells and Toucher's bonus in the reach and the roll; Battle caster in use in
+such armour only; the abilities, the armour's cost), `content/weapon_skill.rs`'s refusals of
+`cells` and `bonus` on other grips. Wiki: `xtask/src/wiki/schools.rs` (`school-skills.md`,
+`school-benefits.md`, `caster-style-benefits.md`) and `weapon_abilities.rs`
+(`caster-style-abilities.md`) for `wiki/src/schools.md`, whose "Caster styles" section the
+fighting styles page points to (`Term::CasterStyle`, `Term::CasterStyleAbility`: the caster
+styles' anchors are `schools.md#style-ID`).

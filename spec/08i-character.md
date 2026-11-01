@@ -1255,9 +1255,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     weighed by the strongest creature it struck at (harmed, missed, hexed, or healed), else the
     caster's own level. A miss is an attempt; an area is one practise, weighed by the strongest
     struck; a cast at nothing an attempt against one's own level. A scroll read or a wand used
-    trains nothing. Then the caster style ("Fighting styles" below): for now as before, by the
-    same outcome on a spell that rolls to hit and struck at someone, and Battle caster an attempt on any other cast
-    in armour that hinders casting. No daily band, no limit: time and mana are the price.
+    trains nothing. Then the caster style it was cast in ("Fighting styles" below), by the same
+    outcome, lands or not; none for a spell on oneself out of hindering armour. No daily band,
+    no limit: time and mana are the price.
     **Defaults**: evocation ↔ transmutation −4, necromancy ↔ restoration −4, abjuration ↔
     enchantment −4; divination stands alone; schools default only to schools. **Starting
     ranks**: wizard evocation 2, druid evocation 1, priest and bard restoration 1, witch
@@ -1282,10 +1282,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     style is how the hands are used).
     A style may name the weapon skills it is fought with; the style of a grip that names none
     takes every other weapon (`WeaponSkillTable::style_for`), so one configuration is always at
-    most one style. A spell that rolls to hit is fought in a caster grip (#571;
-    `Actor::spell_skills`): `armoured_spell` while the caster wears anything with a
-    `spell_cost_percent` (§8 "Spells"), else `touch_spell` for a touch and `ranged_spell` for a
-    ray or a bolt; caster styles name no weapons. Any other spell has none.
+    most one style. **Where you cast from is your style** (#571; the spell scaling design
+    §10.2; `world/spell_aim.rs`): a spell aimed at a creature **beside** its caster, a touch or
+    anything else, is cast as a Toucher (`touch_spell`); one aimed **farther**, at a creature or
+    a cell, a ray or a burst alike (an empty cell next to one too), as a Sniper
+    (`ranged_spell`); any spell cast in **armour that hinders casting** (anything worn with a
+    `spell_cost_percent`, §8 "Spells") as a Battle caster (`armoured_spell`), wherever it is
+    aimed; a spell on oneself (one's own cell, a stack, no target) out of such armour in no
+    style. `SpellAim` is decided once in `cast_spell` (and a scroll's or a wand's cast) before
+    its kind runs, so the school and the style are one `AttackSkills` for the whole cast: its
+    hooks (the style's benefit after the school's, `Actor::spell_mods_from`), a rolling spell's
+    to-hit and triggers, and its marks. Every spell paid in mana trains the style it was cast
+    in, lands or not, as every blow trains its style (by the school's outcome: an attempt, a
+    success as it landed). Caster styles name no weapons. What the menu and the aiming mode
+    show is the standing aim (`Actor::standing_aim`: armoured in such armour, a touch beside,
+    any other aimed spell afar).
   - **The twelve** (data): **Duelist** (`one_weapon`: to-hit, Parry), **Twin Blades**
     (`two_weapons`: eases both two-weapon penalties, none left from rank 9; from rank 7 to-hit too), **Great Weapon**
     (`two_handed`, any weapon but a staff: damage, from rank 8 a critical rolls its damage once
@@ -1298,12 +1309,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **Brawler** (`unarmed`: to-hit and damage), **Staff Fighter** (`two_handed`, staves: to-hit,
     Parry); and the caster styles (#571): **Sniper** (`ranged_spell`: to-hit, and against a
     target `far` (5) cells or more away more to-hit and a wider threat range,
-    `[spell_attacks]`; rank 4 Pinning ray), **Toucher** (`touch_spell`: to-hit, threat, a
-    critical's damage up to twice more; rank 4 Staggering touch, rank 10 Withering touch),
+    `[spell_attacks]`; `cells`, a cell farther from rank 5 and two from rank 9, after the
+    school's; rank 4 Pinning ray), **Toucher** (`touch_spell`: to-hit, threat, a critical's
+    damage up to twice more; `bonus`, a point on the roll of every spell cast so, harm or
+    healing, from rank 4, up to 3 at rank 10; rank 4 Staggering touch, rank 10 Withering touch),
     **Battle caster** (`armoured_spell`: to-hit, and `armour`, percent off what worn armour adds
     to every spell's mana cost, read by `Actor::armour_spell_cost` whatever is cast, up to half
-    at rank 10; rank 4 Spell guard; it also trains on every other spell paid in mana cast in
-    such armour, an attempt's marks as against an opponent of the caster's own level). The
+    at rank 10; rank 4 Spell guard; full marks on every spell cast in such armour). `cells` is
+    allowed for `ranged_spell` only and `bonus` for `touch_spell` only among the styles, `speed`
+    for no caster grip. `own_styles_in_use` marks Battle caster while the armour worn hinders
+    casting (a standing fact), never Sniper or Toucher (decided cast by cast). The
     classes that cast start in one: the wizard and the druid Sniper 1, the witch and the priest
     Toucher 1, the paladin Battle caster 1 (with their schools, "Schools of magic" above); a
     ranger advances by casting.
@@ -1419,7 +1434,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     dagger leaves the foe bleeding a degree) and Hunter's shot (Marksman 6: a sneak attack that
     hits with a shot pins the foe 1d2 actions); the caster styles' (#571), fired by a spell that rolls to hit:
     Pinning ray (Sniper 4: a critical pins 1d2 actions), Staggering touch (Toucher 4: a critical
-    staggers), Withering touch (Toucher 10: a touch that lands weakens a degree), Spell guard
+    staggers), Withering touch (Toucher 10: a spell cast up close that hits weakens a degree), Spell guard
     (Battle caster 4: a spell that lands wards its caster, Spell ward, a Dodge point until
     their next action). Staggered, Pinned, Spell ward, and Light-footed ease by the sufferer's actions
     (§8 "Status effects": `per_action`), so a staggered foe's next action is the slowed one,

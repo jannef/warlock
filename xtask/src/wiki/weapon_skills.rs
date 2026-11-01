@@ -392,7 +392,7 @@ pub fn benefits(content: &Content) -> String {
 }
 
 /// A grip in words: `a one-handed weapon and a shield`.
-fn grip_text(grip: Grip) -> &'static str {
+pub(super) fn grip_text(grip: Grip) -> &'static str {
     match grip {
         Grip::OneWeapon => "a one-handed weapon, the other hand empty",
         Grip::TwoWeapons => "a weapon in each hand",
@@ -402,18 +402,19 @@ fn grip_text(grip: Grip) -> &'static str {
         Grip::Unarmed => "nothing in your hands",
         Grip::Launcher => "shooting a missile weapon",
         Grip::Thrown => "throwing",
-        Grip::RangedSpell => "a ray or a bolt that rolls to hit",
-        Grip::TouchSpell => "a touch that rolls to hit",
-        Grip::ArmouredSpell => "a spell that rolls to hit, cast in armour that hinders casting",
+        Grip::RangedSpell => "a spell aimed farther than beside you, out of hindering armour",
+        Grip::TouchSpell => "a spell aimed at a creature beside you, out of hindering armour",
+        Grip::ArmouredSpell => "any spell cast in armour that hinders casting",
     }
 }
 
-/// The fighting styles in file order: the configuration each is fought in, the weapon skills it
+/// The fighting styles in file order but the caster styles (the schools page's,
+/// `schools::caster_style_benefits`): the configuration each is fought in, the weapon skills it
 /// is fought with, the curve it trains along, and the styles it defaults to.
 pub fn styles(content: &Content) -> String {
     let table = content.weapon_skills();
     let mut out = String::from("| Style | Fought with | Weapons | Marks |\n|---|---|---|---|\n");
-    for (_, s, style) in table.styles() {
+    for (_, s, style) in table.styles().filter(|(_, _, s)| !s.grip.casts()) {
         let names = |ids: &[WeaponSkillId]| -> Vec<String> {
             ids.iter().map(|&w| table.skill(w).name.clone()).collect()
         };
@@ -424,7 +425,6 @@ pub fn styles(content: &Content) -> String {
         let weapons = match (style.grip, style.weapons.is_empty(), others.is_empty()) {
             (Grip::Unarmed, ..) => "fists".to_string(),
             (Grip::TwoShields, ..) => "shields".to_string(),
-            (g, ..) if g.casts() => "spells".to_string(),
             (_, false, _) => names(&style.weapons).join(", "),
             (_, true, true) => "any".to_string(),
             (_, true, false) => format!("any but {}", others.join(", ").to_lowercase()),
@@ -445,8 +445,8 @@ pub fn style_defaults(content: &Content) -> String {
     default_list(content.weapon_skills(), Kind::Styles)
 }
 
-/// What each rank of each fighting style gives, a table per style; Twin Blades' shows the
-/// two-weapon penalty of each hand at each rank.
+/// What each rank of each fighting style but the caster styles gives, a table per style; Twin
+/// Blades' shows the two-weapon penalty of each hand at each rank.
 pub fn style_benefits(content: &Content) -> String {
     let table = content.weapon_skills();
     let two = table.two_weapons();
@@ -455,21 +455,24 @@ pub fn style_benefits(content: &Content) -> String {
         "With a weapon in each hand and no rank in Twin Blades, the main hand strikes at **{}** \
          to hit and the off hand at **{}**. With a shield in each hand and no rank in Two \
          Shields, every bash is at **{}** to hit, every attack takes **{}%** longer, and a \
-         spell you cast fails **{}%** of the time. A ranged spell's target is far away at \
-         **{}** cells or more (the larger of the two distances).\n\n",
+         spell you cast fails **{}%** of the time.\n\n",
         penalty(two.main),
         penalty(two.off),
         penalty(shields.to_hit),
         shields.slow,
         shields.spell_failure,
-        table.spell_attacks().far
     );
-    for (id, s, _) in table.styles() {
+    for (id, s, _) in table.styles().filter(|(_, _, s)| !s.grip.casts()) {
         let _ = writeln!(out, "**{}**\n", s.name);
         out.push_str(&rank_table(table, id));
         out.push('\n');
     }
     out
+}
+
+/// Whether style `id` is a caster style (where a spell is cast from: the schools page's).
+pub(super) fn is_caster_style(table: &WeaponSkillTable, id: WeaponSkillId) -> bool {
+    (table.styles()).any(|(s, _, style)| s == id && style.grip.casts())
 }
 
 /// Starting ranks as data gives them: `Long blades 1, Bows 1d2`; `-` for none.
@@ -484,6 +487,7 @@ pub fn ranks_text(content: &Content, ranks: &[(WeaponSkillId, Dice)]) -> String 
             };
             let skill = table.skill(id);
             let term = match skill.role {
+                Role::Style if is_caster_style(table, id) => Term::CasterStyle,
                 Role::Style => Term::Style,
                 Role::School => Term::School,
                 _ => Term::WeaponSkill,

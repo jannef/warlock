@@ -40,26 +40,8 @@ so it trains only [unarmed fighting](weapon-skills.md#the-skills), and [Brawler]
 
 ## Caster styles
 
-[Spells that roll to hit](magic.md#how-a-spell-finds-its-target) have styles too: how you cast them. Each trains, as the
-spell's [school](schools.md) does, on every such spell you cast with your own
-[mana](mana.md#how-much), and adds to its aim.
-
-- **[Battle caster](fighting-styles.md#style-battle-caster)**: a spell that rolls to hit, cast while you wear armour that makes spells
-  dearer (mail, plate, a great helm, a large shield). It comes first: in such armour every ray,
-  bolt, and touch is a battle caster's. It hits more often, and it makes your armour's extra
-  mana cost smaller for **every** spell you cast, whatever it is. It also trains a little on
-  every other spell you cast in such armour. From rank 4 a spell that lands wards you: a point
-  of [Defence](combat.md#defence) until your next action (*[Spell guard](fighting-styles.md#style-ability-spell-guard)*). A *Mage-wrought* piece eased so far that it
-  makes spells no dearer is not such armour: in it you fight as a [Sniper](fighting-styles.md#style-sniper) or a [Toucher](fighting-styles.md#style-toucher).
-- **[Sniper](fighting-styles.md#style-sniper)**: a ray or a bolt, out of armour. It hits more often, and better still against a
-  target five cells away or more, where its [critical range](combat.md#criticals) is wider too. From rank 4 its best
-  shots pin the target where it stands (*[Pinning ray](fighting-styles.md#style-ability-pinning-ray)*).
-- **[Toucher](fighting-styles.md#style-toucher)**: a touch, out of armour. It hits more often, its [critical range](combat.md#criticals) is wider, and its
-  criticals roll the damage up to twice more. From rank 4 its criticals [stagger](status-effects.md#status-staggered) (*[Staggering
-  touch](fighting-styles.md#style-ability-staggering-touch)*); at rank 10 every touch that lands [weakens](status-effects.md#status-weakened) the foe (*[Withering touch](fighting-styles.md#style-ability-withering-touch)*).
-
-The [wizard](classes.md#wizard) and the [druid](classes.md#druid) start in [Sniper](fighting-styles.md#style-sniper), the [witch](classes.md#witch) and the [priest](classes.md#priest) in [Toucher](fighting-styles.md#style-toucher), the [paladin](classes.md#paladin) in
-[Battle caster](fighting-styles.md#style-battle-caster); any caster may advance in any of them by casting.
+Spells have styles too, decided by where you cast from: Sniper, Toucher, and Battle caster. They
+are on the [Schools of magic](schools.md#caster-styles) page, with their tables.
 
 ## Two weapons
 

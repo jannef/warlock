@@ -1,9 +1,10 @@
 //! The schools of magic tables (spec §8 "Weapon skills": "Schools of magic"; the spell scaling
 //! design §8), from `data/weapon_skills.toml`'s rows of role `school`: each school with its
-//! spells, its defaults, and the classes that start ranked in it; and what each rank gives.
+//! spells, its defaults, and the classes that start ranked in it; and what each rank gives. The
+//! caster styles' ranks too (`grip` a caster's: where a spell is cast from), on the same page.
 
 use super::text::{Term, anchored, link};
-use super::weapon_skills::{Kind, default_list, rank_table};
+use super::weapon_skills::{Kind, default_list, grip_text, rank_table};
 use std::fmt::Write as _;
 use warlock_core::content::{Content, Role, WeaponSkillId};
 
@@ -63,6 +64,30 @@ pub fn benefits(content: &Content) -> String {
     let mut out = String::new();
     for (id, s) in schools(content) {
         let _ = writeln!(out, "**{}**\n", link(Term::School, &s.id, &s.name));
+        out.push_str(&rank_table(table, id));
+        out.push('\n');
+    }
+    out
+}
+
+/// The caster styles (where a spell is cast from; the spell scaling design §10.2), in file
+/// order: each by name with where it is cast from and the curve it trains along, and what each
+/// rank gives, a table per style.
+pub fn caster_style_benefits(content: &Content) -> String {
+    let table = content.weapon_skills();
+    let mut out = format!(
+        "A spell cast from afar is far away at **{}** cells or more (the larger of the two \
+         distances).\n\n",
+        table.spell_attacks().far
+    );
+    for (id, s, style) in table.styles().filter(|(_, _, s)| s.grip.casts()) {
+        let _ = writeln!(
+            out,
+            "**{}**: {}; marks on the {} curve.\n",
+            anchored(Term::CasterStyle, &s.id, &s.name),
+            grip_text(style.grip),
+            s.curve
+        );
         out.push_str(&rank_table(table, id));
         out.push('\n');
     }

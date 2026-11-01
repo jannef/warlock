@@ -90,6 +90,10 @@ pub(super) fn damage_text(dice: Roll, bonus: i32) -> String {
 #[derive(Clone, Copy)]
 pub(super) enum Term {
     Ability,
+    /// A caster style (Sniper, Toucher, Battle caster) and its abilities: on the schools page,
+    /// not the fighting styles'.
+    CasterStyle,
+    CasterStyleAbility,
     Creature,
     Damage,
     Disease,
@@ -119,6 +123,8 @@ impl Term {
     fn place(self) -> (&'static str, &'static str) {
         match self {
             Term::Ability => ("abilities.md", "ability"),
+            Term::CasterStyle => ("schools.md", "style"),
+            Term::CasterStyleAbility => ("schools.md", "style-ability"),
             Term::Creature => ("creatures.md", "creature"),
             Term::Damage => ("damage-types.md", "damage"),
             Term::Disease => ("diseases.md", "disease"),
