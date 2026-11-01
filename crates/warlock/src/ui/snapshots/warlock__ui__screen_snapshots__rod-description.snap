@@ -18,8 +18,8 @@ expression: "render(case, content.clone())"
                   │                                                              │
                   │ Readied: missile weapon                                      │
                   │ Holds Digging: Rock crumbles away in a straight line before  │
-                  │ you, farther the greater your caster level; granite and      │
-                  │ doors stop it.                                               │
+                  │ you, farther the stronger your will; granite and doors stop  │
+                  │ it.                                                          │
                   │ Costs 6 mana a use, before your talents; it never runs out   │
                   │                                                              │
                   │ Esc close                                                    │

@@ -1,11 +1,13 @@
 //! Rods (spec §8 "Magic items": "Rods"; #399): a rod in the missile weapon slot does its effect
-//! for the user's mana (Channeler and Frugal caster cut it), reaching by the user's caster level;
-//! no mana, no use; a rod type is unknown until used or identified; the effects dig, teleport,
+//! for the user's mana (Channeler and Frugal caster cut it), reaching by the user's Willpower
+//! (a ladder, as a spell's; no caster level read: the spell scaling design §7.5); sleep and
+//! terror take creatures up to the rod's own level; no mana, no use; a rod type is unknown until used or identified; the effects dig, teleport,
 //! and put to sleep or to flight; rod labels leave the scrolls' and wands' as they were.
 
 use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
+use crate::stats::{PerStat, Stat, Stats};
 use crate::talent::TalentMods;
 
 /// The pack: a, a rod of digging; b, a rod of sleep; c, a rod of teleport other; d, a rod of
@@ -19,15 +21,23 @@ const HALL: &str = "###############\n#.............#\n#..@##G##.....#\n#........
                     #.......r.....#\n#.......o.....#\n###############\n";
 
 fn world() -> World {
+    world_of("rat", "ogre", &[])
+}
+
+/// The hall with creatures `south` at `r` and `farther` at `o`, and more content `extra`.
+fn world_of(south: &str, farther: &str, extra: &[(&str, String)]) -> World {
     let mut files = ContentFiles::builtin();
+    for (path, text) in extra {
+        files.insert(path, text);
+    }
     files.insert(
         "levels/hall.toml",
         &format!(
             "name = \"Hall\"\nambient = [255, 255, 255, 0]\nmap = '''\n{HALL}'''\n[legend]\n\
              \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n\
              \"G\" = \"granite\"\n\
-             \"r\" = {{ terrain = \"floor\", creature = \"rat\" }}\n\
-             \"o\" = {{ terrain = \"floor\", creature = \"ogre\" }}\n"
+             \"r\" = {{ terrain = \"floor\", creature = \"{south}\" }}\n\
+             \"o\" = {{ terrain = \"floor\", creature = \"{farther}\" }}\n"
         ),
     );
     files.insert(
@@ -82,7 +92,7 @@ fn a_rod_of_digging_breaks_a_line_for_mana_and_names_itself() {
     let out = run(&mut w, "fire:12,2").remove(0);
     assert!(out.took_turn);
     assert_eq!(w.state.player().mana, mana - 6, "the rod's cost, no charge");
-    // Reach 3 at caster level 1: the two stone walls give way, the granite stops the line, and
+    // Reach 3 at average Willpower: the two stone walls give way, the granite stops the line, and
     // the wall beyond it stands.
     assert_eq!(terrain_at(&w, 4, 2), "rubble");
     assert_eq!(terrain_at(&w, 5, 2), "rubble");
@@ -120,8 +130,15 @@ fn without_the_mana_a_rod_does_nothing_and_takes_no_time() {
     assert!(!w.lore().is_identified(w.state.player().inventory[0].object));
 }
 
+/// Gives the player `willpower`, every other score 14.
+fn set_willpower(w: &mut World, willpower: u8) {
+    let mut scores = PerStat::splat(14);
+    scores[Stat::Willpower] = willpower;
+    w.player_mut().stats = Stats::new(scores, PerStat::splat(40));
+}
+
 #[test]
-fn reach_grows_with_the_users_caster_level() {
+fn reach_climbs_the_willpower_ladder_and_reads_no_caster_level() {
     let mut w = world();
     run(&mut w, "equip:missile_weapon:a");
     assert_eq!(
@@ -130,33 +147,91 @@ fn reach_grows_with_the_users_caster_level() {
         "unknown: neither cost nor reach"
     );
     run(&mut w, "identify:a");
-    assert_eq!(w.perception().own_rod(0), Some((6, 3)));
-    // Level 3, caster level 3: a cell more for digging (one per 3 levels).
-    run(&mut w, "xp:691");
-    assert_eq!(w.caster_level(w.state.player), 3);
-    assert_eq!(w.perception().own_rod(0), Some((6, 4)));
+    // Digging: `range = 3`, `willpower 14 4, 18 5, 22 6, 26 7`.
+    let mut reach_at = |willpower: u8| {
+        set_willpower(&mut w, willpower);
+        w.perception().own_rod(0).map(|(_, reach)| reach)
+    };
+    let reaches = [10, 13, 14, 17, 18, 22, 25, 26, 40].map(&mut reach_at);
+    assert_eq!(
+        reaches,
+        [3, 3, 4, 4, 5, 6, 6, 7, 7].map(Some),
+        "the base below the first rung, the top rung's 7 past it"
+    );
+    // Two users of the same Willpower and different caster levels reach the same.
+    set_willpower(&mut w, 18);
+    let level_one = w.caster_level(w.state.player);
+    let before = w.perception().own_rod(0);
+    run(&mut w, "xp:100000");
+    assert!(w.caster_level(w.state.player) > level_one + 5);
+    set_willpower(&mut w, 18);
+    assert_eq!(w.perception().own_rod(0), before);
+    assert_eq!(before, Some((6, 5)));
     let digging = w
         .content
         .rod_effect(w.content.rod_effect_index("digging").expect("digging"));
-    assert_eq!(digging.reach(30), 12, "never past its max_range");
+    assert_eq!(w.state.player().rod_reach(&w.content, digging), 5);
+}
+
+/// A plain creature of `id` at `level`, as a content file.
+fn leveled(id: &str, level: u8) -> (&'static str, String) {
+    let path = if level == 20 {
+        "data/creatures/zz_twenty.toml"
+    } else {
+        "data/creatures/zz_twenty_one.toml"
+    };
+    let text = format!(
+        "[[creature]]\nid = \"{id}\"\nname = \"{id}\"\nglyph = \"b\"\nfg = \"#ffffff\"\n\
+         level = {level}\nweight = 30000\nfaction = \"vermin\"\n"
+    );
+    (path, text)
 }
 
 #[test]
-fn a_rod_of_sleep_takes_creatures_up_to_the_users_caster_level() {
-    let mut w = world();
-    let (rat, ogre) = (creature(&w, "rat"), creature(&w, "ogre"));
-    place(&mut w, rat, 6, 4);
-    place(&mut w, ogre, 6, 5);
+fn rods_of_sleep_and_terror_take_creatures_up_to_their_own_level() {
+    let extra = [leveled("brute_twenty", 20), leveled("brute_twenty_one", 21)];
+    let mut w = world_of("brute_twenty", "brute_twenty_one", &extra);
+    let twenty = creature(&w, "brute_twenty");
+    let twenty_one = creature(&w, "brute_twenty_one");
+    place(&mut w, twenty, 6, 4);
+    place(&mut w, twenty_one, 6, 5);
+    assert_eq!(w.caster_level(w.state.player), 1, "no caster level read");
     run(&mut w, "equip:missile_weapon:b");
     let out = run(&mut w, "fire:6,4").remove(0);
     assert!(out.took_turn);
-    assert!(!w.asleep(ogre), "an ogre is level 12");
+    assert!(w.asleep(twenty), "level 20: {}", said(&w));
+    assert!(!w.asleep(twenty_one), "level 21");
     let text = said(&w);
-    assert!(text.contains("The giant rat is asleep."), "level 1: {text}");
-    assert!(text.contains("The ogre shrugs it off."), "{text}");
-    // Alone (the ogre's blows woke it), the sleeper takes no turns until it is woken.
-    w.state.actors.remove(&ogre);
+    assert!(text.contains("The brute_twenty is asleep."), "{text}");
+    assert!(
+        text.contains("The brute_twenty_one shrugs it off."),
+        "{text}"
+    );
+    // Terror the same: the level-20 one is frightened, the level-21 one is not.
+    run(&mut w, "remove:missile_weapon equip:missile_weapon:d");
     run(&mut w, "fire:6,4");
+    let frightened = w.content.status_id("frightened").expect("a status");
+    let afraid = |w: &World, id: ActorId| {
+        (w.state.actors[&id].effects.iter()).any(|e| e.status == frightened)
+    };
+    assert!(afraid(&w, twenty), "{}", said(&w));
+    assert!(!afraid(&w, twenty_one), "{}", said(&w));
+}
+
+#[test]
+fn a_sleeper_takes_no_turns_until_it_is_woken() {
+    let mut w = world();
+    let (rat, ogre) = (creature(&w, "rat"), creature(&w, "ogre"));
+    w.state.actors.remove(&ogre);
+    place(&mut w, rat, 6, 4);
+    run(&mut w, "equip:missile_weapon:b");
+    let out = run(&mut w, "fire:6,4").remove(0);
+    assert!(out.took_turn);
+    assert!(
+        said(&w).contains("The giant rat is asleep."),
+        "{}",
+        said(&w)
+    );
     assert!(w.asleep(rat));
     let at = w.state.actors[&rat].pos;
     run(&mut w, "wait*3");

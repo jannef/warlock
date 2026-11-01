@@ -251,11 +251,13 @@ have the [mana](mana.md#how-much) to feed it. Without enough mana it does nothin
 the mana to use it."), and nor can you use one while a state that stops casting holds you
 ([raging](status-effects.md#status-raging)). A use takes a cast's time.
 
-A rod's row (the table below) says how far it reaches (how far a line digs, how far a bolt flies,
-how far away a burst may land) and how far your [caster level](#caster-level) takes it, and the strongest
-creature its sleep or terror takes: one whose level is at most your caster level; the others
-shrug it off. No skill makes a rod better or cheaper: what it costs and how far it reaches are
-the same in anyone's hands at the same caster level.
+A rod's row says how far it reaches and how far your [Willpower](stats.md#stat-willpower) takes it, and the
+strongest creature its sleep or terror takes. Its reach (how far a line digs, how far a bolt
+flies, how far away a burst may land) is read as a [spell's](#how-a-spell-grows) is: the first number is
+what anyone reaches, and each rung after it is the reach of a user whose Willpower is at least
+the rung's score. Sleep and terror take only creatures of a level up to the rod's own (20); the
+others shrug it off. Your caster level plays no part: no skill makes a rod better or cheaper,
+and what it costs and how far it reaches are the same in anyone's hands of the same Willpower.
 
 - **Digging** breaks every [wall](terrain.md#walls) on a straight line toward where you aim, as if dug through,
   until a wall too hard for it (granite), a [door](doors.md), or the level's edge stops it.

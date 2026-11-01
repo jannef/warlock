@@ -7,9 +7,11 @@
 //!   [`World::spend_mana`] (Frugal caster's cut, a Willpower training mark), so the rod never
 //!   runs out but its user does. Refused, taking no time, without the mana or while a status
 //!   blocks casting (Raging).
-//! - **Caster level**: the user's ([`World::caster_level`]): the effect reaches a cell further
-//!   per its `per_levels` levels, up to its `max_range`, and a status effect that says
-//!   `up_to_caster_level` takes only creatures whose level is at most it.
+//! - **Reach**: the effect's `range`, then the rung of its `grows.range` ladder the user's
+//!   effective score in the ladder's stat (Willpower) reaches ([`Actor::rod_reach`]), as a
+//!   spell's reach is read. No caster level is read anywhere (the spell scaling design,
+//!   decision 10): a status effect with an `up_to_level` takes only creatures whose level is at
+//!   most it, the same in anyone's hands.
 //! - **Effects**, each on existing code: `dig` breaks the walls on its line
 //!   ([`World::break_wall`], as dug through) until one too hard for its `power`, a door, or the
 //!   level's edge stops it; `teleport` moves the first creature on its bolt to a free cell of the
@@ -21,7 +23,7 @@
 //! - **Time**: the `cast` action's.
 //!
 //! No skill applies (the owner: there is no Use magic device skill): a rod costs its own mana and
-//! reaches by its user's caster level, whoever holds it.
+//! reaches by its user's Willpower, whoever holds it.
 //!
 //! Determinism: nothing here draws; a teleport's landing cell is the teleport trap's hash.
 
@@ -52,6 +54,11 @@ impl Actor {
         self.talent_mods(content).rod_cost(i32::from(rod.mana))
     }
 
+    /// How far `effect` reaches in its hands: [`RodEffect::reach`] by its effective stats.
+    pub fn rod_reach(&self, content: &Content, effect: &RodEffect) -> i32 {
+        effect.reach(&self.effective_stats(content))
+    }
+
     /// What a use of `rod` costs it in all: [`Actor::rod_base`], then Frugal caster's cut
     /// ([`Actor::mana_cost`]).
     pub fn rod_cost(&self, content: &Content, rod: &Rod) -> i32 {
@@ -80,8 +87,7 @@ impl World {
             return Spent::Nothing;
         }
         let effect = content.rod_effect(rod.effect);
-        let level = self.caster_level(player);
-        let reach = effect.reach(level);
+        let reach = self.state.player().rod_reach(&content, effect);
         if effect.shape == RodShape::Burst && !self.within_reach(at, reach, "zap") {
             return Spent::Nothing;
         }
@@ -103,9 +109,9 @@ impl World {
             RodDoes::Status {
                 status,
                 severity,
-                up_to_caster_level,
+                up_to_level,
             } => {
-                let limit = up_to_caster_level.then_some(level);
+                let limit = up_to_level.map(i32::from);
                 let center = self.burst_center(here, at, reach);
                 self.rod_status(effect, center, (status, severity), limit, events);
             }

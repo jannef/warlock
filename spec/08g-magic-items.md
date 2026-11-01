@@ -355,10 +355,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a Willpower training mark). Without it the rod does nothing ("You have not the mana to use
     it.", no time), nor while a status blocks casting (Raging: "You cannot use a rod while
     raging."). A rod never runs out and has nothing of its own to save.
-  - **Caster level**: the **user's** (§8 "Spells"), never the rod's: an effect's reach is its
-    `range` plus a cell per `per_levels` caster levels, at most its `max_range`; a status
-    effect with `up_to_caster_level` takes only creatures whose level is at most it ("The ogre
-    shrugs it off."). No skill applies: there is no Use magic device skill (the owner).
+  - **Reach, by Willpower**: an effect's reach is its `range`, then the rung of its
+    `grows.range` ladder (§8 "Spells": "Ladders", the same grammar and parser,
+    `willpower 14 4, 18 5`) the user's effective score in the ladder's stat reaches, as a
+    spell's reach is read. **No caster level is read** (the spell scaling design §7.5,
+    decision 10: caster level is learning only): a status effect's `up_to_level` takes only
+    creatures whose level is at most it, the same in anyone's hands ("The ogre shrugs it
+    off."). No skill applies: there is no Use magic device skill (the owner).
   - **Effects** (`data/rod_effects/`, one `[[rod_effect]]` a file: `shape` line, bolt, or burst,
     its reach, and a `kind` on existing code): `dig` (a line toward the cell aimed at: every wall
     of hardness below its `power` breaks as if dug through, `World::break_wall`; the first that
@@ -366,9 +369,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     is moved as by a teleport trap, an attack on it as a blow is: a shopkeeper is provoked),
     `status` (a burst at the cell aimed at, within reach: its status on everyone in it but the
     user, as an area hex's). The first four: **Digging** (line, power 1000: stone and packed
-    earth, never granite), **Teleport other** (bolt), **Sleep** (burst radius 1, Asleep, up to
-    the caster level: a true sleep that a noise or a blow ends, unlike the Sleep spell's
-    drowsiness), **Terror** (burst radius 1, Frightened 3, up to the caster level).
+    earth, never granite; reach 3, `willpower 14 4, 18 5, 22 6, 26 7`), **Teleport other**
+    (bolt; 4, `willpower 14 5, 18 6, 22 7, 26 8`), **Sleep** (burst radius 1, Asleep, creatures
+    to level 20: a true sleep that a noise or a blow ends, unlike the Sleep spell's drowsiness;
+    5, `willpower 14 6, 18 7, 22 8`), **Terror** (burst radius 1, Frightened 3, creatures to
+    level 20; reach as Sleep's).
   - **Use**: refused, taking no time and no mana, at oneself, a burst out of reach, without the
     mana; otherwise "You zap the pewter rod.", the effect, and the `cast` action's time. A bolt
     that meets no one still costs its mana and time ("The bolt strikes nothing.").

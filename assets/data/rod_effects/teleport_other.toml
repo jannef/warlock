@@ -6,6 +6,5 @@ name = "Teleport other"
 description = "A bolt that sends the first creature it meets somewhere else on this level."
 shape = "bolt"
 range = 4
-max_range = 12
-per_levels = 3
+grows.range = "willpower 14 5, 18 6, 22 7, 26 8"
 kind = "teleport"
