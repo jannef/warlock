@@ -33,10 +33,13 @@
 //!   Rounds to kill are the monster's hit points over the player's damage a round, rounds to
 //!   die the player's hit points over the monster's. Each cell is the median over the monsters
 //!   within two levels of the player's (`+3`: one to five levels above).
-//! - **Spells**: the wizard's and the priest's own casts of every damage spell, at the rung their
-//!   trained stats reach (`Actor::spell_roll`, the talents' and items' hooks applied) and at the
-//!   spell's base, nothing holding the roll; attack spells strike the monster's Defence against
-//!   missiles, areas always hit. (The spell scaling design's S7 re-runs this with the schools.)
+//! - **Spells** (the spell scaling design §12.4, S7): the wizard's, the witch's, and the
+//!   priest's own casts of every spell that rolls (harm or healing) of the schools they know or
+//!   have an affinity with, as `Actor::spell_roll` makes it: the rung their trained stats reach,
+//!   their school's and caster style's ranks, the talents' and items' hooks, nothing holding the
+//!   roll; beside it the same roll at rank 0 (the ladder alone). The ranks are not set by level:
+//!   each level's days are cast through `World::practise`, a pool a day (`schools`), so the pace
+//!   is the real curve's. No casts to kill: the probe prints the roll and the pool.
 //!
 //! - **Sneak attacks** (#688): the thief's first blow on a foe unaware of them against its
 //!   plain blow. Its Sneak attack skill is set by level (`sneak_value`), as it rises by use and
@@ -48,6 +51,7 @@
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
 //! blow, potions, and resistances against spells.
 
+mod schools;
 mod tables;
 mod training;
 
@@ -57,7 +61,7 @@ use crate::character::{CharacterSpec, Gender};
 use crate::combat::{self, Attack, Defence, Profile, Target};
 use crate::content::{
     ActionKind, BASE_TURN, Content, CreatureId, CreatureSpawn, Factor, NORMAL_SPEED, Resolution,
-    SpellId, StatUse, price,
+    SpellId, SpellPurpose, StatUse, price,
 };
 use crate::damage::Kinds;
 use crate::dice::{Dice, Roll};
@@ -111,12 +115,17 @@ struct Build {
     skills: &'static [(&'static str, u8)],
     /// What the class does in a day beyond [`training::COMMON`]: a use and how many times.
     extras: &'static [(StatUse, f64)],
-    /// Whether it spends mana on an ability (a heal, a blessing) once a fight.
+    /// Whether it spends mana on an ability (a heal, a blessing) once a fight; with a `school`,
+    /// its pace spell is a heal.
     casts_a_kill: bool,
+    /// The school it casts in (`schools`: its rank comes of the pool a day), if it casts.
+    school: Option<&'static str>,
+    /// Whether it fights with its pace spell instead of blows (`training`).
+    fights_with_spells: bool,
     gear: fn(u8) -> Vec<(&'static str, &'static str)>,
 }
 
-const BUILDS: [Build; 4] = [
+const BUILDS: [Build; 5] = [
     Build {
         class: "warrior",
         skills: &[
@@ -126,6 +135,8 @@ const BUILDS: [Build; 4] = [
         ],
         extras: &[(StatUse::Exerted, 5.0)],
         casts_a_kill: false,
+        school: None,
+        fights_with_spells: false,
         gear: warrior,
     },
     Build {
@@ -139,28 +150,42 @@ const BUILDS: [Build; 4] = [
             (StatUse::Exerted, 3.0),
         ],
         casts_a_kill: false,
+        school: None,
+        fights_with_spells: false,
         gear: thief,
     },
     Build {
         class: "wizard",
-        skills: &[("staves", 2), ("evocation", 0)],
+        skills: &[("staves", 2)],
         extras: &[(StatUse::Read, 1.0), (StatUse::Identified, 0.3)],
         casts_a_kill: false,
+        school: Some("evocation"),
+        fights_with_spells: true,
         gear: wizard,
     },
     Build {
         class: "priest",
-        skills: &[
-            ("maces", 0),
-            ("sword_and_board", 0),
-            ("shield_block", 0),
-            ("restoration", 2),
-        ],
+        skills: &[("maces", 0), ("sword_and_board", 0), ("shield_block", 0)],
         extras: &[(StatUse::Prayed, 0.2), (StatUse::Exerted, 2.0)],
         casts_a_kill: true,
+        school: Some("restoration"),
+        fights_with_spells: false,
         gear: priest,
     },
+    Build {
+        class: "witch",
+        skills: &[("daggers", 2)],
+        extras: &[(StatUse::Read, 0.5), (StatUse::Foraged, 1.0)],
+        casts_a_kill: false,
+        school: Some("necromancy"),
+        fights_with_spells: true,
+        gear: witch,
+    },
 ];
+
+/// The builds the stat training's sweep and the tables before "Spells" measure (the witch is
+/// measured for necromancy alone).
+const MELEE_TABLES: usize = 4;
 
 fn warrior(l: u8) -> Vec<(&'static str, &'static str)> {
     let mut g = vec![("main_hand", "long_sword")];
@@ -233,6 +258,17 @@ fn wizard(l: u8) -> Vec<(&'static str, &'static str)> {
     g
 }
 
+fn witch(l: u8) -> Vec<(&'static str, &'static str)> {
+    let mut g = vec![("main_hand", "dagger")];
+    if l >= 5 {
+        g.push(("body", "padded_coat"));
+        g.push(("head", "leather_cap"));
+        g.push(("feet", "leather_boots"));
+        g.push(("cloak", "wool_cloak"));
+    }
+    g
+}
+
 fn priest(l: u8) -> Vec<(&'static str, &'static str)> {
     let mut g = vec![("main_hand", "mace")];
     if l >= 5 {
@@ -266,9 +302,19 @@ fn mean(dice: Dice) -> f64 {
     f64::from(dice.min() + dice.max()) / 2.0
 }
 
-/// The mean of `roll`.
-fn roll_mean(roll: Roll) -> f64 {
-    f64::from(roll.mean_x2()) / 2.0
+/// The mean of `roll` with every die showing `reroll` or less drawn once more (`Roll::roll`):
+/// a die of `S` sides averages `(r (S + 1) / 2 + (r + 1) + ... + S) / S` for `r` below `S`.
+fn roll_mean(roll: Roll, reroll: u32) -> f64 {
+    let die = |sides: u32| {
+        let s = f64::from(sides.max(1));
+        let r = f64::from(reroll.min(sides));
+        let high = (s * (s + 1.0) - r * (r + 1.0)) / 2.0;
+        (r * (s + 1.0) / 2.0 + high) / s
+    };
+    let dice: f64 = (roll.groups().iter())
+        .map(|d| f64::from(d.count()) * die(d.sides()) + f64::from(d.bonus()))
+        .sum();
+    dice + f64::from(roll.bonus())
 }
 
 /// The mean damage of a hit of `p` before soak and criticals.
@@ -390,17 +436,29 @@ struct Cast {
     /// Its spell level.
     level: u8,
     resolution: Resolution,
-    /// The rung of its damage ladder the caster's stats and talents reach.
+    /// A heal (else harm).
+    heals: bool,
+    /// The rung of its ladder the caster's stats and talents reach.
     rung: usize,
-    /// The roll at that rung, and the spell's base.
-    dice: (Roll, Roll),
-    /// The attack roll's profile (to-hit and the spell skill's benefit), for attack and touch.
+    /// Its school's rank and the caster style's it is cast in from where the caster stands.
+    school_rank: u8,
+    style: Option<(String, u8)>,
+    /// The roll (`Actor::spell_roll`) and the face it draws again at or under (the hooks'
+    /// `reroll`), and the same at school and style rank 0.
+    dice: Roll,
+    reroll: u32,
+    bare: Roll,
+    bare_reroll: u32,
+    /// The attack roll's profile (to-hit and the school's benefit), for attack and touch.
     aim: Profile,
+    /// What a cast costs (`Actor::spell_cost`), and its cost table's price with no school rank
+    /// (the ranks' mana off) and no talent.
     cost: i32,
+    base_cost: i32,
 }
 
-/// The damage spells `w`'s player would cast at their caster level: those they know, and those
-/// of the schools their class has an affinity with.
+/// The spells that roll (harm or healing) `w`'s player would cast at their caster level: those
+/// they know, and those of the schools their class has an affinity with.
 fn casts(w: &World) -> Vec<Cast> {
     let content = &w.content;
     if content.spell_rules().is_none() {
@@ -409,9 +467,11 @@ fn casts(w: &World) -> Vec<Cast> {
     let me = w.state.player();
     let class = (w.state.character.as_ref()).and_then(|c| c.spec.class(content).ok());
     let mut out = Vec::new();
+    let table = content.weapon_skills();
+    let rules = content.spell_rules().expect("spell rules");
     for spell in content.spells_by_level() {
         let def = content.spell(spell);
-        let Some(damage) = def.damage else {
+        let Some(rolled) = me.spell_roll(content, def, CastBy::Own) else {
             continue;
         };
         let affinity = class.and_then(|c| c.affinity.get(&def.school).copied());
@@ -420,8 +480,16 @@ fn casts(w: &World) -> Vec<Cast> {
         }
         let mods = me.standing_spell_mods(content, def);
         let rung = me.spell_rung(content, def, CastBy::Own, &mods);
-        let rolled = (me.spell_roll(content, def, CastBy::Own)).unwrap_or(damage);
         let skills = me.spell_skills(content, def, me.standing_aim(content, def));
+        let mut bare = me.clone();
+        for id in [skills.skill, skills.style].into_iter().flatten() {
+            bare.weapon_skills.raise(table, id, 0);
+        }
+        let bare_reroll = bare.standing_spell_mods(content, def).reroll;
+        let bare = (bare.spell_roll(content, def, CastBy::Own)).unwrap_or(rolled);
+        let style = skills
+            .style
+            .map(|id| (table.skill(id).name.clone(), me.weapon_skills.rank(id)));
         let benefit = me
             .benefit_of(content, skills)
             .at_distance(3, content.weapon_skills().spell_attacks());
@@ -438,10 +506,17 @@ fn casts(w: &World) -> Vec<Cast> {
             name: def.name.clone(),
             level: def.level,
             resolution: def.resolution,
+            heals: def.kind == SpellPurpose::Heal,
             rung,
-            dice: (rolled, damage),
+            school_rank: skills.skill.map_or(0, |id| me.weapon_skills.rank(id)),
+            style,
+            dice: rolled,
+            reroll: mods.reroll,
+            bare,
+            bare_reroll,
             aim: Profile::bare(&attack).with(&benefit),
             cost: me.spell_cost(content, def),
+            base_cost: rules.mana(def, 0),
         });
     }
     out
@@ -464,6 +539,13 @@ struct Snap {
     mana: i32,
     caster_level: i32,
     casts: Vec<Cast>,
+    /// The level before this one's casting (`schools`) and its spell casts in the fights
+    /// (`training`; a healer's one a kill), a day.
+    paced: schools::Paced,
+    fought_a_day: f64,
+    /// Its weapon skills and styles, and the rank of the caster style it was paced in.
+    ranks: crate::weapon_skills::WeaponSkills,
+    style_rank: Option<u8>,
     /// Its sneak dice (`World::sneak_dice`), Master thief's lower threat on a sneak attack, and
     /// the tags Anatomist finds vitals in.
     sneak: Option<Dice>,
@@ -533,6 +615,7 @@ fn career(
     let player = w.state.player;
     let mut out = Vec::new();
     let mut log = training::Log::default();
+    let mut paced = schools::Paced::default();
     for level in 1..=*LEVELS.last().expect("levels") {
         if level > 1 {
             if trained {
@@ -540,6 +623,7 @@ fn career(
             } else {
                 log.day += training::days(level);
             }
+            paced = schools::cast_level(&mut w, build, level - 1, seed);
             let need = content.experience().threshold_for(level, factor);
             let more = need.saturating_sub(w.player_xp());
             let before = training::scores(&w);
@@ -593,6 +677,10 @@ fn career(
                 } else {
                     Vec::new()
                 },
+                ranks: me.weapon_skills.clone(),
+                style_rank: paced.style_id.map(|id| me.weapon_skills.rank(id)),
+                paced: paced.clone(),
+                fought_a_day: f64::from(log.fought_casts) / days,
                 sneak: w2.sneak_dice(player),
                 ambush_threat: mods.ambush_threat,
                 vitals_in: mods.vitals_in.clone(),
@@ -742,7 +830,7 @@ fn balance_probe() {
             files.insert("data/stats.toml", &text);
             let content = Arc::new(Content::load(&files).expect("swept content"));
             let mut finals = Vec::new();
-            for build in &BUILDS {
+            for build in &BUILDS[..MELEE_TABLES] {
                 for seed in 1..=SEEDS {
                     let last = career(&content, build, seed, true, &monsters);
                     let snap = last.into_iter().last().expect("level 60");
@@ -770,7 +858,8 @@ fn balance_probe() {
     tables::fights(&p, &mut rng, &mut out);
     tables::depth(&p, &mut rng, &mut out);
     tables::bodies(&p, &mut rng, &mut out);
-    tables::spells(&p, &mut rng, &mut out);
+    tables::spells(&p, &mut out);
+    tables::school_pace(&p, &mut out);
     tables::sneak_attacks(&p, &mut rng, &mut out);
     tables::stats(&p, &mut out);
     tables::stat_sweep(&p, &mut out);

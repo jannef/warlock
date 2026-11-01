@@ -558,7 +558,18 @@ cast path shares.
      Scorching ray (2d6 at caster level 14, at most 12) for 6 mana, about 17 casts from the
      pool, and an area (Fireball, 26 mana) four. Passes: spells cost real mana. No spell
      above tier 3 exists yet, so a caster past caster level 18 reaches no higher ceiling.
-  5. **Tests**: since S1 `the_shipped_cost_table_reads_as_the_design_has_it` and
+  5. **The probe** (the spell scaling design §12.4, S7, #754; `docs/balance.md` "Spells" and
+     "School pace"; `world/balance_probe.rs`, `balance_probe/schools.rs`): the trained
+     wizard's, priest's, and witch's roll of every spell that rolls, `Actor::spell_roll` in
+     plain gear (`| Spell (level, res) | L | rung | school rank | roll | mana / pool |`, the roll
+     beside its rank-0 roll, a reroll's mean exact), at the school and caster-style ranks their
+     casting reaches: each day of a level, one pool on the school's pace spell, every cast
+     through `World::practise` as `practise_cast` does. The pool check by level: the pool over a
+     single-target spell of the caster's own level (base mana = the level, the ranks' mana
+     off), 10 to 13 for the wizard from level 5 to 60, 8 to 9 the priest, 8.5 to 12 the witch.
+     Measured pace (the wizard): evocation 5 at level 10, 7 at 20, 8 at 30, 10 from 50, §8.4's
+     estimate; the schools stay on the missile curve (no row tuned). No casts-to-kill column.
+  6. **Tests**: since S1 `the_shipped_cost_table_reads_as_the_design_has_it` and
      `the_shipped_table_makes_areas_dearer_and_touches_cheaper` (the cap check at load and the
      tier table's went with the table, and nothing replaces them: decision 16).
   - **Data changed**: the scrolls of fireball and lightning are worth 200 gold (were 150) and
