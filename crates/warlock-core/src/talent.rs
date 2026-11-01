@@ -189,26 +189,6 @@ impl GiftReach {
     }
 }
 
-/// Storyteller's favour in shops, summed (`world::shop::favour`).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct Storyteller {
-    /// Percent more favour, with or without a story worth telling.
-    pub value: i32,
-    /// Percent more for each rare line of the background story.
-    pub rare: i32,
-    /// Percent more for each fateful line.
-    pub fateful: i32,
-}
-
-impl Storyteller {
-    /// The favour it gives a story with `rare` rare and `fateful` fateful lines (none without
-    /// the talent).
-    pub fn favour(&self, rare: u32, fateful: u32) -> i32 {
-        let n = |c: u32| i32::try_from(c).unwrap_or(i32::MAX);
-        self.value + self.rare.saturating_mul(n(rare)) + self.fateful.saturating_mul(n(fateful))
-    }
-}
-
 /// What an actor's talents do, summed: one field per effect kind, read by one rule each.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct TalentMods {
@@ -282,8 +262,6 @@ pub struct TalentMods {
     pub threshold_percent: i32,
     /// Cells farther its darkvision reaches.
     pub darkvision: i32,
-    /// Its eyes see ultraviolet light.
-    pub sees_uv: bool,
     /// Statuses whose sufferers it sees in the dark, each within a radius: `(status, radius)`.
     pub scent: Vec<(StatusId, i32)>,
     /// Cells farther it sees on the overworld at night.
@@ -341,8 +319,6 @@ pub struct TalentMods {
     pub wading_proof: bool,
     /// Creatures of animal factions are neutral to it until it attacks one of their type.
     pub beast_friend: bool,
-    /// The hours ahead whose weather it knows (0: none).
-    pub forecast: u8,
     /// Percent faster hit points come back under the open sun.
     pub sun_healing: i32,
     /// Percent faster hunger burns (negative: slower).
@@ -362,8 +338,6 @@ pub struct TalentMods {
     pub potion_marks_percent: i32,
     /// Percent more of every stat training use's chance.
     pub train_percent: i32,
-    /// Percent more of each stat's training price for a rise (Gifted, by its chosen stat).
-    pub price_percent: PerStat<i32>,
     /// Points past a potential the training price's ramp counts as fewer (Late bloomer).
     pub ramp_ease: u8,
     /// Willpower marks a daily stat check met Hungry or worse gives (Ascetic; 0: none).
@@ -410,14 +384,8 @@ pub struct TalentMods {
     pub favour_percent: i32,
     /// How much higher the cap on its favour is, in percent.
     pub favour_cap: i32,
-    /// Storyteller's favour: percent more, and more per rare and per fateful line of its
-    /// background story (`world::shop::favour`).
-    pub storyteller: Storyteller,
     /// Percent more of a background story's luckier odds (Favoured child; `background::tell`).
     pub story_luck: i32,
-    /// Stat training marks per stat point its background story took (Hard-won; the most
-    /// counts; `World::tell_background`).
-    pub hard_won: u16,
     /// Percent more shops pay for what they buy from it.
     pub sell_percent: i32,
     /// The gold keepers let it leave owing (the most counts).
@@ -429,10 +397,6 @@ pub struct TalentMods {
     pub services: bool,
     /// What a creature it kills drops is identified as it lands (Scavenger).
     pub scavenger: bool,
-    /// Percent more often what an animated thing is made of falls whole (Salvager).
-    pub salvage_percent: i32,
-    /// Look mode tells a magic animated thing (Appraiser's eye).
-    pub appraise_animated: bool,
     /// Item descriptions show its things' worth.
     pub item_worth: bool,
     /// Item descriptions show its gems' worth.
@@ -440,8 +404,6 @@ pub struct TalentMods {
     /// The hours a magic item must be carried to be identified, if it has the effect (the
     /// fewest counts).
     pub identify_carried: Option<u32>,
-    /// Grades finer the loose gems it finds are cut.
-    pub gem_cut: u8,
     /// Percent more often its finds are loose gems.
     pub gem_find_percent: i32,
     /// It notices hidden things in passing, with this much added; `None`: only as its skills
@@ -453,8 +415,6 @@ pub struct TalentMods {
     pub stone_find: i32,
     /// Added to every check to find hidden things.
     pub search: i32,
-    /// How well it senses a level's danger (Sixth sense's ranks; `world/spawn.rs`).
-    pub danger_sense: i32,
     /// Percent longer between the attempts to bring creatures to its level (Quiet delver).
     pub spawn_every_percent: i32,
     /// It knows a special room's nature from a glimpse (Sense of place).
@@ -517,8 +477,6 @@ pub struct TalentMods {
     pub protection: Vec<Guard>,
     /// Percent less of a stance's to-hit penalty, by stance.
     pub stance_to_hit: Vec<(CombatStance, i32)>,
-    /// Percent more a fleeing step costs (negative: cheaper).
-    pub flee_percent: i32,
     /// Percent more a step out of reach of every hostile beside it costs (negative: cheaper).
     pub slip_percent: i32,
     /// Taken off every hit after the soak, never below 1.
@@ -590,10 +548,6 @@ pub struct TalentMods {
     pub ability_stamina: Vec<(crate::content::WeaponAbilityId, i32)>,
     /// What its Brace's blow gains (Brace of steel): to-hit, and a status on a foe it hits.
     pub brace: Option<(i32, StatusId)>,
-    /// Percent points off the chance a spell fails with two shields held (Loose straps).
-    pub shield_casting: u32,
-    /// The combat stances in which both of two shields count in Defence (Craven's wall).
-    pub both_shields: Vec<CombatStance>,
     /// The Protection its confirmed criticals ignore, on top of the attack's penetration.
     pub critical_penetration: i32,
     /// More penetration for blows that can do damage of a kind: `(kind, value)`.
@@ -657,9 +611,6 @@ pub struct TalentMods {
     pub resource_builds: Vec<(ResourceId, Build, u16)>,
     /// How much more of a resource it may hold: `(resource, more)` (Mighty rage).
     pub resource_max: Vec<(ResourceId, u16)>,
-    /// How much more what its magic items add to a resource's maximum counts, in percent:
-    /// `(resource, percent)` (Bellows; [`TalentMods::geared_resource`]).
-    pub geared_resource_percent: Vec<(ResourceId, i32)>,
     /// How much more of a resource it holds when granted: `(resource, more)` (Battle trance).
     pub resource_start: Vec<(ResourceId, u16)>,
     /// How much faster a resource changes over time, in percent: `(resource, percent)` (Steady
@@ -723,12 +674,8 @@ pub struct TalentMods {
     pub hounds_bay: Option<HoundsBay>,
     /// To hit and damage against its favoured prey (Favoured prey, Master hunter).
     pub favoured_prey: (i32, i32),
-    /// To hit and damage against creatures of a tag, by tag in the order taken (Unbinder).
-    pub banes: Vec<(String, i32, i32)>,
     /// To hit and damage against the creature types carrying each tag, by tag (Sworn foe).
     pub sworn_foe: Vec<(String, i32, i32)>,
-    /// It is told when its quarry is on a level it arrives on (Quarry sense).
-    pub quarry_sense: bool,
     /// It places every sound it hears exactly (Tracker).
     pub exact_sounds: bool,
     /// Percent more loudness of its footsteps under the open sky (Camouflage).
@@ -986,11 +933,10 @@ impl TalentMods {
         *self == TalentMods::default()
     }
 
-    /// What its talents do to `stat`'s stat training price for a rise (Gifted, Late bloomer;
+    /// What its talents do to `stat`'s stat training price for a rise (Late bloomer;
     /// `World::settle`, the one read).
-    pub fn price_ease(&self, stat: Stat) -> PriceEase {
+    pub fn price_ease(&self) -> PriceEase {
         PriceEase {
-            percent: self.price_percent[stat],
             ramp: self.ramp_ease,
         }
     }
@@ -1058,17 +1004,6 @@ impl TalentMods {
     /// left as it is.
     pub fn attuned(&self, items: i32) -> i32 {
         lift_by_percent(items, self.attuned_percent)
-    }
-
-    /// What its magic items add to `resource`'s maximum, `worn`, as it counts for it: Bellows'
-    /// `geared_resource_percent` more for that pool, rounded up; a negative `worn` is left as
-    /// it is.
-    pub fn geared_resource(&self, resource: ResourceId, worn: i32) -> i32 {
-        let percent = (self.geared_resource_percent.iter())
-            .filter(|(r, _)| *r == resource)
-            .map(|(_, p)| p)
-            .sum();
-        lift_by_percent(worn, percent)
     }
 
     /// What its talents do to a spell with `tags` (spec §8 "Spells": "Hooks"): every
@@ -1279,7 +1214,6 @@ impl TalentMods {
             TalentEffect::ExactFootsteps => self.exact_footsteps = true,
             TalentEffect::ThresholdPercent { value } => self.threshold_percent += value,
             TalentEffect::Darkvision { value } => self.darkvision += value,
-            TalentEffect::SeesUv => self.sees_uv = true,
             TalentEffect::Scent { status, radius } => {
                 if let Some(status) = content.status_id(&status) {
                     self.scent.push((status, radius));
@@ -1330,7 +1264,6 @@ impl TalentMods {
             TalentEffect::ClimbPercent { value } => self.climb_percent += value,
             TalentEffect::WadingProof => self.wading_proof = true,
             TalentEffect::BeastFriend => self.beast_friend = true,
-            TalentEffect::Forecast { hours } => self.forecast = self.forecast.max(hours),
             TalentEffect::SunHealing { value } => self.sun_healing += value,
             TalentEffect::HungerPercent { value } => self.hunger_percent += value,
             TalentEffect::RotHarmPercent { value } => self.rot_harm_percent += value,
@@ -1340,11 +1273,6 @@ impl TalentMods {
             TalentEffect::CorpseStatsPercent { value } => self.corpse_stats_percent += value,
             TalentEffect::PotionMarksPercent { value } => self.potion_marks_percent += value,
             TalentEffect::TrainPercent { value } => self.train_percent += value,
-            TalentEffect::PricePercent { value } => {
-                if let Some(stat) = choice.and_then(Stat::from_id) {
-                    self.price_percent[stat] += value;
-                }
-            }
             TalentEffect::RampEase { points } => {
                 self.ramp_ease = self.ramp_ease.saturating_add(points)
             }
@@ -1385,30 +1313,17 @@ impl TalentMods {
             TalentEffect::QuestGoldPercent { value } => self.quest_gold_percent += value,
             TalentEffect::FavourPercent { value } => self.favour_percent += value,
             TalentEffect::FavourCap { value } => self.favour_cap += value,
-            TalentEffect::Storyteller {
-                value,
-                rare,
-                fateful,
-            } => {
-                self.storyteller.value += value;
-                self.storyteller.rare += rare;
-                self.storyteller.fateful += fateful;
-            }
             TalentEffect::StoryLuck { value } => self.story_luck += value,
-            TalentEffect::HardWon { marks } => self.hard_won = self.hard_won.max(marks),
             TalentEffect::SellPercent { value } => self.sell_percent += value,
             TalentEffect::Credit { gold } => self.credit = self.credit.max(gold),
             TalentEffect::IdentifyTrades => self.identify_trades = true,
             TalentEffect::Pilgrim => self.services = true,
             TalentEffect::Scavenger => self.scavenger = true,
-            TalentEffect::SalvagePercent { value } => self.salvage_percent += value,
-            TalentEffect::AppraiseAnimated => self.appraise_animated = true,
             TalentEffect::ItemWorth => self.item_worth = true,
             TalentEffect::GemWorth => self.gem_worth = true,
             TalentEffect::IdentifyCarried { hours } => {
                 self.identify_carried = Some(self.identify_carried.map_or(hours, |h| h.min(hours)));
             }
-            TalentEffect::GemCut { value } => self.gem_cut = self.gem_cut.saturating_add(value),
             TalentEffect::GemFindPercent { value } => self.gem_find_percent += value,
             TalentEffect::Notice { value } => {
                 self.notice = Some(self.notice.unwrap_or(0) + value);
@@ -1416,7 +1331,6 @@ impl TalentMods {
             TalentEffect::StoneSense => self.stone_sense = true,
             TalentEffect::StoneFind { value } => self.stone_find += value,
             TalentEffect::Search { value } => self.search += value,
-            TalentEffect::DangerSense { value } => self.danger_sense += value,
             TalentEffect::SpawnEveryPercent { value } => self.spawn_every_percent += value,
             TalentEffect::SenseOfPlace => self.sense_of_place = true,
             TalentEffect::ChestWise => self.chest_wise = true,
@@ -1522,7 +1436,6 @@ impl TalentMods {
                     None => self.stance_to_hit.push((stance, percent)),
                 }
             }
-            TalentEffect::FleePercent { value } => self.flee_percent += value,
             TalentEffect::SlipPercent { value } => self.slip_percent += value,
             TalentEffect::Pain { value } => self.pain += value,
             TalentEffect::Barbs { damage } => self.barbs += damage,
@@ -1604,14 +1517,6 @@ impl TalentMods {
                 if let Some(status) = content.status_id(&status) {
                     let had = self.brace.map_or(0, |(t, _)| t);
                     self.brace = Some((had + to_hit, status));
-                }
-            }
-            TalentEffect::ShieldCasting { value } => {
-                self.shield_casting += u32::try_from(value).unwrap_or(0);
-            }
-            TalentEffect::BothShields { stance } => {
-                if !self.both_shields.contains(&stance) {
-                    self.both_shields.push(stance);
                 }
             }
             TalentEffect::CriticalPenetration { value } => self.critical_penetration += value,
@@ -1894,11 +1799,6 @@ impl TalentMods {
                     self.resource_rate.push((r, value));
                 }
             }
-            TalentEffect::GearedResourcePercent { resource, value } => {
-                if let Some(r) = content.resource_id(&resource) {
-                    self.geared_resource_percent.push((r, value));
-                }
-            }
             TalentEffect::Unstoppable { statuses, cost } => {
                 let ids = statuses.iter().filter_map(|s| content.status_id(s));
                 let held = self.unstoppable.get_or_insert_with(Unstoppable::default);
@@ -1940,19 +1840,10 @@ impl TalentMods {
                 self.favoured_prey.0 += to_hit;
                 self.favoured_prey.1 += damage;
             }
-            TalentEffect::Bane {
-                tag,
-                to_hit,
-                damage,
-            } => match self.banes.iter_mut().find(|(t, ..)| *t == tag) {
-                Some((_, hit, more)) => (*hit, *more) = (*hit + to_hit, *more + damage),
-                None => self.banes.push((tag, to_hit, damage)),
-            },
             TalentEffect::SwornFoe { to_hit, damage } => {
                 let tag = choice.unwrap_or_default().to_string();
                 self.sworn_foe.push((tag, to_hit, damage));
             }
-            TalentEffect::QuarrySense => self.quarry_sense = true,
             TalentEffect::ExactSounds => self.exact_sounds = true,
             TalentEffect::SkyFootstepsPercent { value } => self.sky_footsteps_percent += value,
             TalentEffect::SilentUnburdened => self.silent_unburdened = true,

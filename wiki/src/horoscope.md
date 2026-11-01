@@ -91,7 +91,7 @@ Every animal and every element also has **one talent of the Stars tree that only
 under it may pick**, at a [level-up](experience.md#what-a-level-gives) or at character creation, like any other [talent](talents.md#ranks-choices-prerequisites) whose
 prerequisites hold: most ask a [level](experience.md#levels) as well, a few a [stat](stats.md) or a [weapon skill](weapon-skills.md). The Talents page
 (and the [level-up](experience.md#what-a-level-gives) screen) shows only your own sign's. Most make one of your gifts stronger (the
-Salamander's *[Hare-footed](talents.md#talent-hare-footed)* is quicker still, the Phoenix's *[Second rising](talents.md#talent-second-rising)* rises from the ashes
+Hydra's *[Another head](talents.md#talent-another-head)* heals even while you starve, the Phoenix's *[Second rising](talents.md#talent-second-rising)* rises from the ashes
 once more); two are things you do, used from the [abilities menu](abilities.md#the-abilities-menu) under *Birth sign*: the Wyvern's
 **[Fire breath](abilities.md#ability-fire-breath)** and the Barghest's **[Hound's bay](abilities.md#ability-hounds-bay)**, each resting a while after.
 

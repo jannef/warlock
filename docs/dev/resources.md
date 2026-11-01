@@ -141,7 +141,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   refusals); its `lacking` words ("you are short of breath") are how `Unavailable::Short` reads
   for it. Its talents (`[[system]] id =
   "stamina"`): Trained wind, Deep lungs (`resource_max` +4), Steady breathing (`resource_rate`
-  +50, a weapon skill at 5), Second breath (`resource_build` on `kill`, 1). Tests:
+  +50, a weapon skill at 5). Tests:
   `world/stamina_tests.rs`; the parse and `MaxFrom::max` in `content/resource.rs`.
 - **Abilities**: `Unavailable::Short(ResourceId)` ("not enough focus", `short:focus`; a
   resource's `lacking` words instead when it has them), checked last in the Class arm of

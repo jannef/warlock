@@ -13,8 +13,7 @@
 //! - **Spells**: a spell the player casts with their own mana fails by the spell-failure bane's
 //!   chance ([`World::shields_fumble`], before the cast goes off): the mana and the time are
 //!   spent, said in words, never the chance.
-//! - **Defence**: the style's `shield` adds to the shields' Shield bonus (`Actor::defence`), and
-//!   Craven's wall makes both shields count in its stance ([`Actor::both_shields_bonus`]).
+//! - **Defence**: the style's `shield` adds to the shields' Shield bonus (`Actor::defence`).
 //!
 //! Decisions draw nothing; the second bash and the fumble each draw once from the gameplay
 //! stream, only when their chance is above 0, so fights and casts without two shields keep
@@ -70,31 +69,11 @@ impl Actor {
         let table = content.weapon_skills();
         let base = table.two_shields();
         let eased = self.benefit(content, table.style_for(Grip::TwoShields, &[]));
-        let talents = self.talent_mods(content);
         Some(ShieldBanes {
             to_hit: (base.to_hit + i32::from(eased.ease_bash)).min(0),
             slow: TwoShields::eased(base.slow, u32::from(eased.ease_slow)),
-            spell_failure: TwoShields::eased(
-                base.spell_failure,
-                u32::from(eased.ease_spell) + talents.shield_casting,
-            ),
+            spell_failure: TwoShields::eased(base.spell_failure, u32::from(eased.ease_spell)),
         })
-    }
-
-    /// Craven's wall: in a stance its talents name, with a shield in each hand, both shields'
-    /// Shield bonuses together (with `block`, what shield blocking and the style add to each);
-    /// `None` otherwise.
-    pub(super) fn both_shields_bonus(&self, content: &Content, block: i32) -> Option<i32> {
-        if !(self.talent_mods(content).both_shields).contains(&self.stance) {
-            return None;
-        }
-        let (a, b) = self.two_shields(content)?;
-        let bonus = |item: usize| {
-            let stack = &self.inventory[item];
-            let mods = crate::magic::Mods::local(stack, content);
-            content.object(stack.object).shield + mods.get(crate::content::Effect::Shield) + block
-        };
-        Some(bonus(a) + bonus(b))
     }
 }
 

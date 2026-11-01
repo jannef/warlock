@@ -106,10 +106,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     drop, while Overloaded; Dexterity, chance 10), `knew_better` (a trap the player knew of sprung
     under them by stepping onto it; Intelligence 20), `caught` (caught stealing, by a keeper or
     anyone; Presence 20). Bad luck alone (a hidden trap, a blow, a disease or drain check lost)
-    takes nothing. **Talents** (#726; one `TalentMods` field each, one read): Gifted (`choice =
-    "stat"`, `price_percent` −15: that stat's rise price 15 % lower, rounded down, a drop's
-    untouched) and Late bloomer (level 20, `ramp_ease` 1: `over` counted one fewer, the first
-    point past the potential at the base) through `StatTraining::eased_price` in `settle`;
+    takes nothing. **Talents** (#726; one `TalentMods` field each, one read): Late bloomer (level
+    20, `ramp_ease` 1: `over` counted one fewer, the first point past the potential at the base)
+    through `StatTraining::eased_price` in `settle`;
     Ascetic (Grit, Willpower 13: `fasting_marks` 15, Willpower marks at once at a daily check met
     Hungry or worse, before the draws, and `no_deed` hungry_dawn); the barbarian's Hard living
     (level 18: `no_deed` hungry_dawn, starved, vomited, fainted) and the monk's Discipline
@@ -144,7 +143,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     when it holds), never the points; their score shows lowered. Life (level) drains, a scroll
     of restoration, and a sustaining affix are not in the game yet. The pale drinker is the
     first drainer (not yet in any dungeon's population). Talents: Unbroken soul, Iron will,
-    and the paladin's Divine grace (the `drain` system).
+    and the paladin's Divine grace (the `diseases` system, which holds drains since #773).
   - **What uses them**: combat (Strength to hit and to damage in melee, Dexterity to hit with
     shots and in Defence, Toughness in hit points and regeneration; "Combat" above) and burden
     (Strength and Toughness scores, never modifiers, in the carrying limit; "Burden" below), and

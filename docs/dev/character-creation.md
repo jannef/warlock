@@ -223,8 +223,8 @@ Its look is `blaze` in `data/effects.toml`. Tests: `world/element_gift_tests.rs`
 the burst and its cooldown, refusals, the dump row and action text, Kindled, Forge-born, Tidal,
 a replay and a save), the `abilities-menu-blaze` text snapshot.
 
-The sign-limited picks (#270): seventeen non-granted talents of the `stars` tree, one per animal
-and per element, each with an `animal` or `element` need (and most a level), offered by
+The sign-limited picks (#270): fifteen non-granted talents of the `stars` tree, one per animal
+and per element (but the Salamander's and the Sphinx's, cut in #774), each with an `animal` or `element` need (and most a level), offered by
 `talent::offers` like any talent (the level-up screen, the creation Talents step); the Talents
 page (`PerceptionView::talents`) leaves out those of other signs. Their rules are one read each
 at the hooks in `docs/dev/progression.md` ("Sign-limited picks"), and `world/sign_picks.rs` holds

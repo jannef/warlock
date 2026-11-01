@@ -1,8 +1,0 @@
-[[talent]]
-id = "loose_straps"
-name = "Loose straps"
-tree = "weaponcraft"
-description = "You hang your shields on looser straps: with one on each arm, your fingers find room to weave a spell more often."
-needs = { weapon_skills = { two_shields = 5 } }
-effects = [{ kind = "shield_casting", value = 40 }]
-systems = ["styles", "spells"]

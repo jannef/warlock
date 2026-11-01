@@ -28,10 +28,9 @@ all: they do not see it, and it does not light anything for them.
 Your vision type comes from your race: the table on [Races](races.md) lists each race's eyes.
 [Talents](talents.md) of the Shadow tree change them: **[Night eyes](talents.md#talent-night-eyes)** (normal eyes) halves the light
 a cell needs, **[Dark adaptation](talents.md#talent-dark-adaptation)** (darkvision) reaches 2 cells farther, **[Owl eyes](talents.md#talent-owl-eyes)** (low-light)
-gives darkvision of 2 cells, and **[Rune sight](talents.md#talent-rune-sight)** sees UV light. Your eyes keep their type's name; the
+gives darkvision of 2 cells. Your eyes keep their type's name; the
 talents only change what it does. **[Blood scent](talents.md#talent-blood-scent)** (darkvision) sees a [bleeding](status-effects.md#bleeding) [creature](creatures.md) in your
-line of sight within 9 cells however dark it is, and **[Moon-eyed](talents.md#talent-moon-eyed)** (low-light) sees a cell farther
-across the [overworld](overworld.md#sight-by-daylight-and-moonlight) at night.
+line of sight within 9 cells however dark it is.
 
 [Drow](races.md#race-drow) eyes are also **light-blind**: in strong light (a perceived brightness of 250 or more on your
 own cell: the [sun](sun.md#the-suns-path) well up under a clear sky, a bright fire close by) you are dazzled and see

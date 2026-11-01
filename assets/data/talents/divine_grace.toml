@@ -9,4 +9,4 @@ effects = [
     { kind = "status_eases", status = "poisoned", value = 100 },
     { kind = "drain_checks", value = 2 },
 ]
-systems = ["diseases", "drain", "status"]
+systems = ["diseases", "status"]

@@ -342,7 +342,7 @@ fn floors_the_player_left_stay_frozen() {
 }
 
 #[test]
-fn quiet_delver_puts_attempts_off_and_sixth_sense_feels_them() {
+fn quiet_delver_puts_attempts_off() {
     let mut w = haunt(4);
     w.player_mut().talents.take("quiet_delver", None);
     // The first attempt was due when the hall was made; from then on, every 20 minutes.
@@ -352,24 +352,6 @@ fn quiet_delver_puts_attempts_off_and_sixth_sense_feels_them() {
     assert_eq!(others(&w).len(), 1, "every 20 minutes now, not 10");
     run(&mut w, "wait*60");
     assert_eq!(others(&w).len(), 2);
-    // Sixth sense: on arrival, how the place feels; at the second rank, what stirs.
-    let mut w = haunt(4);
-    w.player_mut().talents.take("alert", None);
-    w.player_mut().talents.take("sixth_sense", None);
-    w.player_mut().pos = Pos::new(70, 18);
-    run(&mut w, "descend");
-    assert!(
-        said(&w).iter().any(|m| m == "This place feels dangerous."),
-        "{:?}",
-        said(&w)
-    );
-    run(&mut w, "ascend");
-    assert!(said(&w).iter().any(|m| m == "This place feels dangerous."));
-    run(&mut w, "spawn");
-    assert!(!said(&w).iter().any(|m| m == spawn::STIRS));
-    w.player_mut().talents.take("sixth_sense", None);
-    run(&mut w, "spawn");
-    assert!(said(&w).iter().any(|m| m == spawn::STIRS));
 }
 
 #[test]

@@ -5,4 +5,4 @@ tree = "grit"
 description = "Your self holds fast: the touch of the dead that drinks strength and wits from the living finds far less to take from you."
 needs = { stats = { willpower = 12 } }
 effects = [{ kind = "drain_checks", value = 4 }]
-systems = ["drain"]
+systems = ["diseases"]

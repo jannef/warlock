@@ -1,8 +1,0 @@
-[[talent]]
-id = "weather_wise"
-name = "Weather-wise"
-tree = "wayfarer"
-description = "You read the sky: under it you know what weather the next three hours bring."
-needs = { stats = { willpower = 12 } }
-effects = [{ kind = "forecast", hours = 3 }]
-systems = ["weather"]

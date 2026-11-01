@@ -164,8 +164,6 @@ Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` 
   cell, and cries: `make_noise_at(id, Act::Mutter, cry × 100 / VOICE_NOISE)` (a voice of `cry`,
   scaled by the room like any noise), which recurses into `spread_noise`. Each sleeper wakes once,
   so the cascade ends; it is deterministic (hearers in actor order, no draws).
-- Sixth sense: `sense_danger` (`spawn.rs`) ends with `sense_sleepers`, "Something sleeps on this
-  level." when any actor on the level sleeps.
 
 Sleepers are ordinary hostile actors otherwise: `hostiles_here` counts them toward the spawn cap,
 a kill is `kill_hostile`, the status is saved and hashed with the actor. The `bench-turns` `delf`
@@ -386,13 +384,13 @@ seen creature's line, `Harm::Place`), and `becomes` (the placed light removed, `
 Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrain is the record
 of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
 (`dump.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
-altar side by side. Talent: Devout (system `prayer`, `TalentMods::devout`; hook
+altar side by side. Talent: Devout (system `special_rooms`, which holds prayer since #773; `TalentMods::devout`; hook
 `leaned_kinds`).
 
 The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
 applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stats::lessen`,
 floor `DRAIN_FLOOR`, then stat damage clamped and `keep_hp_within_max`), `levels` (positive:
-`gain_level`, `add_xp` to the next threshold exactly, unscaled by Good learner; negative:
+`gain_level`, `add_xp` to the next threshold exactly, unscaled by `xp_percent`; negative:
 `World::lose_level`), `talent` (Chosen: `talent::offers` flattened to the ways not held, one
 drawn, `bestow`: `Talents::take`, `class::hand_out`, `train_chosen`, and pushed to
 `Actor::boons`), and `flaw` (Forsaken: the `flaw` talents not held, by id, one drawn, given
@@ -728,7 +726,7 @@ System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_o
 Intelligence 11, `hoard_grace` 1; hook `World::lift_in_hoard`), Grave warden (guard, Willpower 12,
 `grave_warden`; hook `World::curse_corpse`), and Treasure sense (wayfarer, Spot 10,
 `treasure_sense`; hook `world/treasury.rs::arrive_lines`, #617). The class ability Consecrate (above) carries the
-system too. System `prayer`: Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
+system too. Prayer is part of the system (the `prayer` tag folded into it, #773): Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
 (grit, Willpower 12, `penitent`; hook `world/pray.rs::prayer_answered`). The forge
 adds no talent (the issue's "None new"): Metalcraft is its lean.
 

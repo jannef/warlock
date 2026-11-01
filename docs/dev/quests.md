@@ -59,15 +59,13 @@ location of the run's overworld leads into the branch), `quest_pool`, `roll_ques
 `Rng::quest(seed, id)` = `quest/<id>`, used once at the giving, weights summed then one
 `below`), `quest_roll_dev` (the dev `quest_roll:ID:TARGET`: active, no progress, target in the
 full pool or a variant id; resets `counted`, fires a variant's reveal), `quest_rolls` (the
-`progress` dump's `roll ...` rows), and Quarry sense. A rolled quest whose pool is empty now is
+`progress` dump's `roll ...` rows). A rolled quest whose pool is empty now is
 not offered. Test content: the showcase gardener's `slug_charm` (a pick of scrolls; text
 snapshots `quest-offer-rolled`, `quest-log-rolled`), and `world/quest_roll_tests.rs`'s
 fixtures in Cēaptūn (Godgifu gives a creature pick, a tag pick, and two variants revealing
 Fennmynster and Fyrdelf) and the arena (a kobold made the demilich, a shared unique).
-**The bounties system** (`[[system]] bounties` in `data/talents.toml`): Quarry sense (delver,
-`quarry_sense`: `World::sense_quarry` on arrival, beside Sixth sense, "Your quarry is here."
-when a living creature on the level counts for an active, unmet kill quest as given) and Sworn
-foe (weaponcraft, `choice = "tag"`, a new `talent::Choice::Tag` over `Content::tags`;
+**Bounties' talent** (the `bounties` tag folded into `talk` and `combat`, #773; Quarry sense was
+cut in #774): Sworn foe (weaponcraft, `choice = "tag"`, a new `talent::Choice::Tag` over `Content::tags`;
 `sworn_foe { to_hit, damage }`, read in `World::favoured` beside Favoured prey). Tests:
 `world/quest_roll_tests.rs`.
 **Creature tags** (#421, #441): a creature file's `tags = ["goblin", "archer"]` (plain

@@ -69,10 +69,7 @@ floor, or in a [sanctuary](special-rooms.md#room-sanctuary). A cleared floor fil
 it refill. A floor you are not on is frozen: nothing comes while you are away, and the clock
 starts again when you come back.
 
-The talents of the [Delver](talents.md#delver) tree help: **[Quiet delver](talents.md#talent-quiet-delver)** puts each next arrival off twice as long,
-and **[Sixth sense](talents.md#talent-sixth-sense)** tells you how a place feels against your own [level](experience.md#levels) as you arrive (quiet,
-uneasy, dangerous, or deadly), and at its second rank notes it when something stirs on your
-floor.
+The [Delver](talents.md#delver) tree's **[Quiet delver](talents.md#talent-quiet-delver)** puts each next arrival off twice as long.
 
 ## The dungeons
 

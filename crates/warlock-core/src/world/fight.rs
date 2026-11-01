@@ -769,8 +769,6 @@ impl World {
         let profile = profile.map(|p| self.relentless(attacker, target, kind, p));
         // Favoured prey and a sneak attack (spec §8 "Class abilities").
         let profile = profile.map(|p| self.favoured(attacker, target, p));
-        // Unbinder (spec §8 "Animated objects"): against a creature of a tag.
-        let profile = profile.map(|p| self.bane(attacker, target, p));
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         // A lurk's blow finds a creature not hunting the player unawares; a low blow is a sneak

@@ -238,11 +238,6 @@ impl World {
         }
         if fleeing {
             price = percent_of(price, self.content.stance_def(actor.stance).flee_cost);
-            // Then its talents (Unflinching): a signed percent of the fleeing step.
-            let percent = talents.flee_percent;
-            if percent != 0 {
-                price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
-            }
         }
         // Sure-footed (spec §8 "Talents"): less of the burden's and Bloated's slowdown on steps.
         let slowdown = actor.talent_mods(&self.content).step_slowdown_percent;

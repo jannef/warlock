@@ -19,7 +19,7 @@
 
 use crate::alignment::Band;
 use crate::character::{Character, Gender};
-use crate::content::{Content, Keep, Marks, StoryEffect, StoryLine, StoryTier, WeaponSkillId};
+use crate::content::{Content, Keep, Marks, StoryEffect, StoryLine, WeaponSkillId};
 use crate::magic::loot;
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -262,18 +262,6 @@ pub fn lines<'c>(
         set.extend(line.set.clone());
     }
     out
-}
-
-/// The tier of each line of `story` the content (in a run of `campaign`) has, in order: what
-/// Storyteller's favour counts (`world::shop::favour`, the one read of a story in play).
-pub fn tiers(content: &Content, campaign: &str, story: &[Told]) -> Vec<StoryTier> {
-    let Some(background) = content.background() else {
-        return Vec::new();
-    };
-    (story.iter())
-        .filter_map(|t| background.chapter(campaign, &t.chapter)?.line(&t.line))
-        .map(|l| l.tier)
-        .collect()
 }
 
 /// The talents and flaws `line` gives, by id and choice.

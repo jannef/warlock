@@ -65,7 +65,7 @@ weapon active **costing** so many points less (added to [Drillmaster](talents.md
 or so many points more on a **kill** (*of the Hunt*; never above the maximum), under the same
 rule as [mana](mana.md#how-much) *of Siphoning*: only your own blow, shot, or [spell](magic.md#the-spells), the one you killed within 3
 cells of you (see [Mana on a kill](mana.md#mana-on-a-kill)). That is beside what a pool builds
-on any kill by its own rule (inspiration's point, [Second breath](talents.md#talent-second-breath)'s).
+on any kill by its own rule (inspiration's point).
 Two items naming the same pool add up. Taking the item off lowers what you hold to the smaller
 maximum at once.
 

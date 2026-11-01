@@ -73,7 +73,7 @@ fn keeper(w: &World) -> ActorId {
 
 /// What the store asks the player for `stack` now.
 fn price(w: &World, stack: &Stack) -> u32 {
-    let f = favour(w.content(), shops(w), w.state.player(), &[]);
+    let f = favour(w.content(), shops(w), w.state.player());
     shops(w).price(w.content(), shop(w).kind, stack, f)
 }
 
@@ -218,7 +218,7 @@ fn dropping_ones_own_gets_an_offer_and_selling_takes_it() {
     // Not yet read, so known by its label (spec §8 "Scrolls").
     let named = w.lore().describe(&scroll);
     assert!(named.starts_with("a scroll labelled "), "{named}");
-    let f = favour(w.content(), shops(&w), w.state.player(), &[]);
+    let f = favour(w.content(), shops(&w), w.state.player());
     let offer = shops(&w).offer(w.content(), shop(&w).kind, &scroll, f);
     assert!(
         offer > 0 && offer < price(&w, &scroll),

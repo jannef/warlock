@@ -191,7 +191,6 @@ fn a_full_moon_lengthens_the_gifts_reaches() {
     );
     let mut plain = crate::talent::Talents::default();
     plain.take("blood_scent", None);
-    plain.take("moon_eyed", None);
     assert_eq!(plain.mods(content).gift_reach, Default::default());
     // Inner light burns as its full-moon preset.
     let flavour = content.flavour().expect("the table");

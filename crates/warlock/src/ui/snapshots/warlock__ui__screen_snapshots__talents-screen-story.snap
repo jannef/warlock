@@ -14,7 +14,7 @@ expression: "render(case, content.clone())"
 │   Heritage                                                                                       │
 │     Family wealth                                                                                │
 │   Vigour                                                                                         │
-│     Lasting draughts                                                                             │
+│     Strong constitution                                                                          │
 │     Hardy 1/3  (story)                                                                           │
 │   Delver                                                                                         │
 │     Quiet delver                                                                                 │
@@ -34,7 +34,7 @@ expression: "render(case, content.clone())"
 │         Needs: Family wealth, to be a new character                                              │
 │     Favoured child                                                                               │
 │         Needs: to be a new character                                                             │
-│     Hard-won                                                                                     │
+│   Vigour                                                                                         │
 │                                                                                                ↓ │
 │ A weapon in each hand hampers you less, and with sword and shield your free bash comes more      │
 │ often.                                                                                           │

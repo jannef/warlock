@@ -341,7 +341,7 @@ impl World {
             };
             let (score, potential) = (actor.stats.score(stat), actor.stats.potential(stat));
             let marks = actor.stat_marks[stat];
-            let price = rules.price_for(marks, score, potential, talents.price_ease(stat));
+            let price = rules.price_for(marks, score, potential, talents.price_ease());
             let odds = price.map_or(0, |price| rules.odds(marks.unsigned_abs(), price));
             let draw = match check {
                 Check::Level => (self.state.levels_rng)

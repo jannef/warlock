@@ -672,12 +672,9 @@ impl Actor {
                 Category::Dodge => (category, talents.stance_dodge(self.stance, bonus)),
                 _ => (category, bonus),
             });
-        // Craven's wall (two-shield fighting): both shields count in its stance.
-        let both = (self.both_shields_bonus(content, block)).map(|b| (Category::Shield, b));
         let defence = Defence::from_bonuses(
             std::iter::once((Category::Dexterity, dexterity))
                 .chain(worn)
-                .chain(both)
                 .chain(natural)
                 .chain(dodge)
                 .chain(magic.into_iter().filter(|&(_, b)| b != 0))

@@ -451,10 +451,10 @@ fn every_talent_of_the_three_trees_loads_with_its_effects() {
     }
     let count = |tree: &str| book.of_tree(book.tree_id(tree).expect("tree")).count();
     // The design's 28, Battle trance and Inner calm (the class resources, R5) among them,
-    // stamina's Deep lungs and Second breath (#560), protection's Armour-breaker (#563), stat
-    // training's Hard training (#562), Second blade's rend (#561), the chests' Deft breaker, and
-    // potions' Lasting draughts (#567), the gear's Bellows (#634), the mimics' Slick, and the
-    // berserker's Wild guard (#680), surprise's Hair trigger (#687), and stat training's Gifted
-    // and Late bloomer (#726).
-    assert_eq!(count("vigour") + count("might") + count("finesse"), 41);
+    // stamina's Deep lungs (#560), protection's Armour-breaker (#563), stat training's Hard
+    // training (#562), Second blade's rend (#561), the chests' Deft breaker, and potions'
+    // Lasting draughts (#567), the mimics' Slick, and the berserker's Wild guard (#680),
+    // surprise's Hair trigger (#687), and stat training's Late bloomer (#726); less the cull's
+    // Second breath, Bellows, and Gifted (#774).
+    assert_eq!(count("vigour") + count("might") + count("finesse"), 38);
 }

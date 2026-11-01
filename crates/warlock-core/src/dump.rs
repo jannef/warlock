@@ -994,7 +994,7 @@ fn progress_rows(world: &World) -> Vec<String> {
                 n,
                 stats.score(stat),
                 stats.potential(stat),
-                talents.price_ease(stat),
+                talents.price_ease(),
             )?;
             Some(format!("{} {n}/{price}", stat.abbrev()))
         })
@@ -1554,11 +1554,6 @@ fn summary(world: &World) -> String {
         .and_then(spelled)
         .map(|w| format!(" weather {w}"))
         .unwrap_or_default();
-    // And the weather coming, for a Weather-wise player.
-    let forecast = (view.forecast())
-        .and_then(spelled)
-        .map(|w| format!(" then {w}"))
-        .unwrap_or_default();
     let temperature = view.temperature();
     let (hp, max) = view.own_hp();
     let (mp, max_mp) = view.own_mana();
@@ -1576,7 +1571,7 @@ fn summary(world: &World) -> String {
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     let dazzled = if view.dazzled() { " dazzled" } else { "" };
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{weather}{forecast} \
+        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{weather} \
          temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
@@ -1882,10 +1877,6 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         out["guilds"] = (guilds.iter())
             .map(|g| json!({ "id": g.guild.id, "name": g.guild.name, "rank": g.title() }))
             .collect();
-    }
-    // The weather coming, which a Weather-wise player knows (left out otherwise).
-    if let Some(coming) = view.forecast() {
-        out["forecast"] = json!(coming);
     }
     if include_state {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");

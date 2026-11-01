@@ -30,7 +30,7 @@ treasure rooms (C6, #618) lay their chests with `mapgen/chest.rs::lay` from thei
 | `mapgen/chest.rs` | `fill` (C3): the chance and count, the cells (`cells`: plain floor with eight walkable non-door neighbours, `AWAY` 6 from the stairs, no vault, shop, kept special room, object, light, trap, lock, or patrol; two chests never touch), and per chest `lay`: lock, trap (of the branch's that fit a fixture), contents, the mimic draw, the shut terrain and the `Chest`. Run in `generate_for` after `room_loot::fill`, before `gear::arm` |
 | `mapgen/connect.rs` | `validate` accepts a lock on a shut chest and asks no key for it |
 | `world/knock.rs` | Knock (`ClassActive::Knock`, `TalentEffect::Knock { mana }`, `TalentMods::knock`): springs the lock in a direction; refused, no time or mana, where nothing locked stands. `ClassActive::strikes` keeps the "nobody hostile there" refusal to the aimed blows |
-| `world/travel.rs` | `instantiate_level` makes the food chests hold now (`rot::made_at`) and cuts their gems for Jeweller, as a level's piles |
+| `world/travel.rs` | `instantiate_level` makes the food chests hold now (`rot::made_at`), as a level's piles |
 | `perception.rs` | `PerceptionView::chest_at(p)` (cells seen or remembered; `locked` only with Chest-wise on a shut chest in sight), `known_chests()` |
 | `dump.rs` | `truth`'s chest lines (`chest_rows`: `trapped (arrow)`), JSON `chests`; `view` and `memory` keep a chest's glyph over its known trap |
 | `warlock/src/ui/mod.rs`, `ui/look.rs`, `ui/effects.rs` | the band's colour on the map, the chest's glyph over its known trap; look mode's band name, its known trap after it ("A coffer, trapped: an arrow trap."), and the description; `ChestBroken` bursts the smashed chest's splinters |

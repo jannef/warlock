@@ -1,8 +1,0 @@
-[[talent]]
-id = "connoisseur"
-name = "Connoisseur"
-tree = "class"
-granted = true
-description = "You know fine things: item descriptions say what things are worth, and a magic item you carry for a day gives up its secrets."
-effects = [{ kind = "item_worth" }, { kind = "identify_carried", hours = 24 }]
-systems = ["magic_items", "shops"]

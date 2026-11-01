@@ -16,8 +16,7 @@
 //! door, shop floor, sanctuary, or sealed room; up to [`TRIES`] draws, else nothing comes), and a short route
 //! where one fits, else a post. The newcomer is an ordinary creature from then on.
 //!
-//! Danger is hidden in the game: the Sixth sense talent says it in words, relative to the
-//! player; dev dumps and the wiki state it.
+//! Danger is hidden in the game; dev dumps and the wiki state it.
 
 use super::{ActorId, World, travel};
 use crate::content::danger::{self, Spawning};
@@ -32,8 +31,6 @@ use serde::{Deserialize, Serialize};
 pub const AWAY: i32 = 8;
 /// How many cells an attempt tries before it gives up.
 const TRIES: u32 = 32;
-/// What Sixth sense notes when something comes.
-pub const STIRS: &str = "Something stirs in the dark.";
 
 /// What comes to a level over time: when the next attempt is due and the level's own stream.
 /// Kept in the level's state (saved, hashed) only on a level with a danger rule, so every other
@@ -53,20 +50,6 @@ impl Spawner {
             at: now + every,
             rng: Rng::spawn(seed, id),
         }
-    }
-}
-
-/// How the danger of a level feels against the player's level (Sixth sense), in words.
-pub fn feeling(danger: u8, player_level: u8) -> &'static str {
-    let (d, l) = (i32::from(danger), i32::from(player_level));
-    if d <= l - 4 {
-        "quiet"
-    } else if d <= l {
-        "uneasy"
-    } else if d <= l + 3 {
-        "dangerous"
-    } else {
-        "deadly"
     }
 }
 
@@ -186,9 +169,6 @@ impl World {
         };
         let actor = travel::make_creature(&mut self.state, &self.content, &id, &spawn);
         self.spawned += 1;
-        if self.state.player().talent_mods(&self.content).danger_sense >= 2 {
-            self.note(STIRS);
-        }
         Some(actor)
     }
 
@@ -258,38 +238,5 @@ impl World {
             None => self.say("Nothing could come: no cell out of sight (dev)."),
         }
         super::Spent::NoTime
-    }
-
-    /// Sixth sense on arrival: how the level's danger feels against the player's level, a note.
-    pub(super) fn sense_danger(&mut self, id: &str) {
-        if self.content.spawning(id).is_none()
-            || self.state.player().talent_mods(&self.content).danger_sense < 1
-        {
-            return;
-        }
-        let feels = feeling(self.danger(id), self.player_level());
-        self.note(format!("This place feels {feels}."));
-        self.sense_sleepers();
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn the_feeling_goes_by_the_danger_against_the_player() {
-        let at = |d| feeling(d, 10);
-        assert_eq!(
-            [at(6), at(7), at(10), at(11), at(13), at(14)],
-            [
-                "quiet",
-                "uneasy",
-                "uneasy",
-                "dangerous",
-                "dangerous",
-                "deadly"
-            ]
-        );
     }
 }

@@ -238,7 +238,7 @@ holds it from [level](experience.md#levels) 1. Its most is
 with [talents](talents.md) adding on top ([Deep lungs](talents.md#talent-deep-lungs): +4). [Toughness](stats.md#stat-toughness) 14 (modifier +2) at level 1 holds 12;
 Toughness 18 (+4) at level 60 holds 20. [Damage to your Toughness](stats.md#drained-stats) lowers it, as it lowers your [hit
 points](combat.md#hit-points). It comes back a point every 12 seconds (2 base [turns](time.md#what-takes-time)), [resting](resting.md#how-resting-works) too, half again as fast
-with [Steady breathing](talents.md#talent-steady-breathing); [Second breath](talents.md#talent-second-breath) gives a point back for every kill of yours. Spent, it sits
+with [Steady breathing](talents.md#talent-steady-breathing). Spent, it sits
 at 0 and comes back. Creatures never hold it. The active weapon abilities spend it (see
 [What a rank teaches](weapon-skills.md#what-a-rank-teaches)); anyone else is given it by the
 first rank that teaches one. [Drillmaster](talents.md#talent-drillmaster) (the warrior's, at level 25) takes a point off every

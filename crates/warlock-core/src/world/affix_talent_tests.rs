@@ -1,12 +1,11 @@
-//! The two talents that care about the system affixes (the affixes design,
+//! The talent that cares about the system affixes (the affixes design,
 //! `docs/design/affixes-systems.md` §10; #634): Attuned counts the caster level a character's
-//! magic items give half again, rounded up, in [`Actor::caster_level`]'s items term; Bellows
-//! doubles the stamina its gear adds to its maximum, in [`Actor::resource_max`]'s items term. No
-//! shipped affix file has these effects yet, so the tests bring fixture affixes.
+//! magic items give half again, rounded up, in [`Actor::caster_level`]'s items term. No shipped
+//! affix file has the effect yet, so the tests bring a fixture affix.
 
 use super::caster_tests::{reach, world_with};
 use super::*;
-use crate::content::{ContentFiles, ResourceId};
+use crate::content::ContentFiles;
 use crate::magic::{Affix, Magic, Rarity};
 use crate::stats::{PerStat, Stats};
 
@@ -18,24 +17,6 @@ effect = "caster_level"
 category = "caster_level"
 bases = ["ring"]
 tiers = [{ level = 1, min = 1, max = 3 }]
-
-[[prefix]]
-id = "fixture_tireless"
-name = "Tireless"
-effect = "resource_max"
-resource = "stamina"
-category = "stamina"
-bases = ["ring"]
-tiers = [{ level = 1, min = 1, max = 5 }]
-
-[[suffix]]
-id = "fixture_of_fury"
-name = "of Fury"
-effect = "resource_max"
-resource = "rage"
-category = "rage"
-bases = ["ring"]
-tiers = [{ level = 1, min = 2, max = 8 }]
 "#;
 
 fn content() -> Arc<Content> {
@@ -46,15 +27,13 @@ fn content() -> Arc<Content> {
 
 /// A human of `class` at character level 6 (Attuned's), every score 14. The levels are reached
 /// with every score 10, so the picks they bring (spent with the first talent the player may
-/// take) are neither Attuned nor Bellows.
+/// take) are not Attuned.
 fn world(class: &str) -> World {
     let mut w = world_with(content(), class);
     w.player_mut().stats = Stats::new(PerStat::splat(10), PerStat::splat(40));
     reach(&mut w, 6);
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(40));
-    for id in ["attuned", "bellows"] {
-        assert_eq!(w.state.player().talents.rank_of(id, None), 0, "{id}");
-    }
+    assert_eq!(w.state.player().talents.rank_of("attuned", None), 0);
     w
 }
 
@@ -88,15 +67,6 @@ fn give(w: &mut World, id: &str) {
 
 fn caster_level(w: &World) -> i32 {
     w.caster_level(w.state.player)
-}
-
-fn pool(w: &World, id: &str) -> ResourceId {
-    w.content().resource_id(id).expect(id)
-}
-
-fn max(w: &World, id: &str) -> u16 {
-    let level = w.player_level();
-    (w.state.player()).resource_max(w.content(), pool(w, id), level)
 }
 
 #[test]
@@ -147,24 +117,4 @@ fn attuned_on_one_without_mana_still_counts_and_nothing_breaks() {
     assert_eq!(caster_level(&w), base);
     ring(&mut w, "left_ring", "fixture_of_the_adept", 1);
     assert_eq!(caster_level(&w), base + 2);
-}
-
-#[test]
-fn bellows_doubles_the_stamina_gear_gives_and_nothing_else() {
-    let mut w = world("warrior");
-    let before = max(&w, "stamina");
-    give(&mut w, "bellows");
-    assert_eq!(max(&w, "stamina"), before, "nothing worn: nothing more");
-    ring(&mut w, "left_ring", "fixture_tireless", 3);
-    assert_eq!(max(&w, "stamina"), before + 6);
-    // Without the talent the ring gives what it says.
-    let mut w = world("warrior");
-    ring(&mut w, "left_ring", "fixture_tireless", 3);
-    assert_eq!(max(&w, "stamina"), before + 3);
-    // Another pool's gear is not doubled.
-    let mut w = world("barbarian");
-    let rage = max(&w, "rage");
-    give(&mut w, "bellows");
-    ring(&mut w, "left_ring", "fixture_of_fury", 4);
-    assert_eq!(max(&w, "rage"), rage + 4);
 }

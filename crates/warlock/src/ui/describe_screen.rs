@@ -217,15 +217,18 @@ mod tests {
 
     #[test]
     fn an_eye_for_worth_shows_what_things_and_gems_are_worth() {
-        // A merchant at level 32 (Appraiser) picks up the same arms.
+        // A merchant who took Keen appraiser picks up the same arms.
         let content = Arc::new(Content::builtin().expect("content"));
-        let spec = "human,male,merchant".parse().expect("a character");
+        let spec = "human,male,merchant"
+            .parse::<warlock_core::character::CharacterSpec>()
+            .expect("a character")
+            .with_talents(
+                ["keen_appraiser", "healthy", "lean"]
+                    .map(String::from)
+                    .to_vec(),
+            );
         let mut world =
-            World::with_character(content, "showcase", None, Some(&spec)).expect("world");
-        world.apply(&Action::GrantXp(2_000_000));
-        while world.due().is_some() {
-            world.apply(&Action::LevelUpAuto);
-        }
+            World::start_run(content, "showcase", None, Some(&spec), None, true).expect("world");
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup \
                     move:E pickup";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {

@@ -20,7 +20,6 @@ abilities = [
     { level = 6, talent = "fencing" },
     { level = 12, talent = "noblesse" },
     { level = 18, talent = "riposte" },
-    { level = 25, talent = "connoisseur" },
     { level = 32, talent = "iron_will" },
     { level = 40, talent = "commanding" },
     { level = 50, talent = "peerless" },

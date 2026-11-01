@@ -471,36 +471,6 @@ fn a_glowing_ring_lights_a_panoply() {
 }
 
 #[test]
-fn appraisers_eye_tells_a_magic_composite() {
-    let mut w = hall();
-    let content = w.content().clone();
-    let (plain_one, magic_one) = (at(&w, Pos::new(2, 2)), at(&w, Pos::new(4, 2)));
-    outfit(
-        &mut w,
-        plain_one,
-        vec![(plain(&content, "chain_mail"), "body")],
-    );
-    outfit(
-        &mut w,
-        magic_one,
-        vec![
-            (plain(&content, "chain_mail"), "body"),
-            (
-                magic(&content, "long_sword", &[("flaming", 11, 8)]),
-                "main_hand",
-            ),
-        ],
-    );
-    let hums = |w: &World, p: i32| (w.perception().actor_at(Pos::new(p, 2))).map(|a| a.hums);
-    w.perceive(&mut Vec::new());
-    // Without the talent nothing tells; with it, the magic one hums and the plain one does not.
-    assert_eq!((hums(&w, 2), hums(&w, 4)), (Some(false), Some(false)));
-    w.player_mut().talents.take("appraisers_eye", None);
-    w.perceive(&mut Vec::new());
-    assert_eq!((hums(&w, 2), hums(&w, 4)), (Some(false), Some(true)));
-}
-
-#[test]
 fn hollow_armour_is_in_fyrdelf_and_a_panoply_nowhere_yet() {
     let content = Content::builtin().expect("content");
     let armour = id(&content, "animated_armour");

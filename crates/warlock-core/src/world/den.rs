@@ -124,19 +124,4 @@ impl World {
             self.make_noise_at(id, Act::Mutter, percent);
         }
     }
-
-    /// Sixth sense on arrival (with the danger's feeling): a note when something sleeps on the
-    /// level.
-    pub(super) fn sense_sleepers(&mut self) {
-        let (player, level) = (self.state.player, self.state.current_level.clone());
-        let sleepers = (self.state.actors.values())
-            .filter(|a| a.level == level && a.id != player)
-            .any(|a| {
-                !a.effects.is_empty()
-                    && (a.effects.iter()).any(|e| self.content.status(e.status).sleeps)
-            });
-        if sleepers {
-            self.note("Something sleeps on this level.");
-        }
-    }
 }

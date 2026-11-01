@@ -106,8 +106,7 @@ its branch's at the depth; `None`: danger 0). The rules are `world/spawn.rs`: `W
 (computed, never stored), `LevelState::spawner` (the next attempt's time and the stream
 `spawn/<level id>`, `Rng::spawn`; made with a level that has a danger rule, else absent so other
 levels hash as before), `spawn_tick` (one call at the end of `run_turn`: every attempt due on the
-current level), `arrive_spawner` and `sense_danger` (one line each in `travel`: frozen floors,
-Sixth sense's arrival note), `attempt` (the cap by `World::stance`, the chance, the draw, the
+current level), `arrive_spawner` (one line in `travel`: frozen floors), `attempt` (the cap by `World::stance`, the chance, the draw, the
 cell out of a freshly computed `Perception`'s sight and `AWAY` cells off, the route by
 `mapgen::out_and_back`, then `travel::make_creature`, the one way a creature is made from a
 `CreatureSpawn`), and the dev `spawn` action. A spawn bumps `World::spawned`, so a rest perceives

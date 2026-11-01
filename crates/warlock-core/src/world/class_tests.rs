@@ -276,7 +276,7 @@ fn class_levels_replay_exactly() {
         w.apply(action);
         replay.push(action, &w);
     }
-    assert!(holds(&w, "keen_appraisal") && holds(&w, "whetstone"));
+    assert!(holds(&w, "whetstone") && holds(&w, "fletching"));
     let back = replay.run(BUILTIN.clone()).expect("replays");
     assert_eq!(back.state_hash(), w.state_hash());
 }
@@ -287,19 +287,19 @@ fn class_levels_replay_exactly() {
 fn shop_favour_and_its_cap_follow_the_talents() {
     let mut w = world("warrior");
     let shops = BUILTIN.shops().expect("shops");
-    let base = crate::world::shop::favour(&BUILTIN, shops, w.state.player(), &[]);
+    let base = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
     give(&mut w, "haggler");
-    let haggler = crate::world::shop::favour(&BUILTIN, shops, w.state.player(), &[]);
+    let haggler = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
     assert_eq!(haggler, (base + 15).clamp(-MAX_FAVOUR, MAX_FAVOUR));
     // Presence of 40 is far past the cap: Magnate lifts it by 10, Golden tongue by 10 more.
     w.player_mut().stats.gift(Stat::Presence, 30);
-    let capped = crate::world::shop::favour(&BUILTIN, shops, w.state.player(), &[]);
+    let capped = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
     assert_eq!(capped, MAX_FAVOUR);
     give(&mut w, "magnate");
-    let magnate = crate::world::shop::favour(&BUILTIN, shops, w.state.player(), &[]);
+    let magnate = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
     assert_eq!(magnate, MAX_FAVOUR + 10);
     give(&mut w, "golden_tongue");
-    let tongue = crate::world::shop::favour(&BUILTIN, shops, w.state.player(), &[]);
+    let tongue = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
     assert_eq!(tongue, MAX_FAVOUR + 20);
 }
 
@@ -455,39 +455,14 @@ fn tinker_lets_the_untrained_disarm() {
 }
 
 #[test]
-fn jeweller_cuts_loose_gems_finer_and_nothing_else() {
-    let content = &BUILTIN;
-    let gems = content.gems().expect("gems");
-    let ruby = content.material_id("ruby").expect("ruby");
-    let cutting = crate::content::Cutting {
-        size: crate::content::GemSizeId(0),
-        cut: crate::content::CutId(0),
-    };
-    let part = crate::item_parts::ItemPart::gem(content, None, ruby, cutting);
-    let mut stack = Stack::one(gems.object).with_parts(vec![part]);
-    crate::gem::cut_finer(content, &mut stack, 1);
-    assert_eq!(stack.gem(content).map(|(_, c)| c.cut.0), Some(1));
-    crate::gem::cut_finer(content, &mut stack, 200);
-    let finest = gems.cuts().len() - 1;
-    assert_eq!(
-        stack.gem(content).map(|(_, c)| usize::from(c.cut.0)),
-        Some(finest)
-    );
-    let mut sword = Stack::one(content.object_id("long_sword").expect("sword"));
-    let before = sword.clone();
-    crate::gem::cut_finer(content, &mut sword, 1);
-    assert_eq!(sword, before);
-}
-
-#[test]
-fn connoisseur_identifies_a_magic_item_carried_a_day() {
+fn lore_identifies_a_magic_item_carried_a_day() {
     let mut w = world("warrior");
     w.player_mut().inventory.push(magic_sword(&BUILTIN));
     let item = w.state.player().inventory.len() - 1;
     // Without the ability a day of carrying teaches nothing.
     run(&mut w, "rest:24h");
     assert!(!w.state.player().inventory[item].is_identified());
-    give(&mut w, "connoisseur");
+    give(&mut w, "lore");
     // An hour of rest counts (the time passing for the player), then the rest of the day.
     run(&mut w, "rest:1h");
     w.appraise_carried(22 * crate::time::HOUR);
@@ -508,7 +483,7 @@ fn connoisseur_identifies_a_magic_item_carried_a_day() {
 fn worth_shows_only_to_an_eye_for_it() {
     let mut w = world("warrior");
     assert_eq!(w.perception().appraisal(), Default::default());
-    give(&mut w, "appraiser");
+    give(&mut w, "keen_appraiser");
     let appraisal = w.perception().appraisal();
     assert!(appraisal.worth && appraisal.gems);
     let dagger = Stack::new(w.content().object_id("dagger").expect("dagger"), 3);

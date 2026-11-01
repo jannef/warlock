@@ -171,12 +171,6 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                     effects
                 };
                 let gear = format!("{}{}", made_of(content, actor).1, gear(view, actor.id));
-                // Appraiser's eye: something an animated thing is made of is magic.
-                let hums = if actor.hums {
-                    " It hums with power."
-                } else {
-                    ""
-                };
                 // A unique character the player knows by name: "Sister Hild (unhurt), who
                 // cures and mends for gold, on plank floor."; or a named monster by its type's
                 // proper name: "Black Wystan (hostile, unhurt), ...".
@@ -185,12 +179,12 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                     .or_else(|| warlock_core::content::is_proper(name).then_some(name.as_str()));
                 match proper {
                     Some(proper) => format!(
-                        "{proper} ({stance}{health}{effects}){}{gear}, on {}{here}.{hums}",
+                        "{proper} ({stance}{health}{effects}){}{gear}, on {}{here}.",
                         services(content, actor),
                         terrain(t)
                     ),
                     None => format!(
-                        "{} {name}{} ({stance}{health}{effects}){gear}, on {}{here}.{hums}",
+                        "{} {name}{} ({stance}{health}{effects}){gear}, on {}{here}.",
                         article(name),
                         made_of(content, actor).0,
                         terrain(t)
@@ -887,7 +881,7 @@ breach = [3, 1]
     }
 
     #[test]
-    fn a_composite_is_seen_by_its_gear_and_hums_to_an_appraiser() {
+    fn a_composite_is_seen_by_its_gear() {
         let hall = r##"
 name = "Hall"
 ambient = [255, 255, 255, 0]
@@ -910,16 +904,13 @@ map = '''
         let content = Arc::new(Content::load(&files).expect("content"));
         let spec = "dwarf,male,warrior".parse::<warlock_core::character::CharacterSpec>();
         let mut said = Vec::new();
-        for picks in [["healthy", "lean"], ["appraisers_eye", "healthy"]] {
-            let talents = picks.map(String::from).to_vec();
-            let spec = spec.clone().expect("a character").with_talents(talents);
-            let w = World::start_run(content.clone(), "hall", Some(1), Some(&spec), None, true)
-                .expect("hall");
-            let view = w.perception();
-            // The gear line names what it wears and wields, unidentified; with Appraiser's eye a
-            // thing of which anything is magic hums with power.
-            said.extend([Pos::new(2, 1), Pos::new(4, 1)].map(|p| describe(&view, p, true)));
-        }
+        let talents = ["healthy", "lean"].map(String::from).to_vec();
+        let spec = spec.expect("a character").with_talents(talents);
+        let w = World::start_run(content.clone(), "hall", Some(1), Some(&spec), None, true)
+            .expect("hall");
+        let view = w.perception();
+        // The gear line names what it wears and wields, unidentified.
+        said.extend([Pos::new(2, 1), Pos::new(4, 1)].map(|p| describe(&view, p, true)));
         insta::assert_snapshot!(said.join("\n"));
     }
 

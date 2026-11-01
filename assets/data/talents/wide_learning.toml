@@ -1,8 +1,0 @@
-[[talent]]
-id = "wide_learning"
-name = "Wide learning"
-tree = "class"
-granted = true
-description = "You pick up a little of everything: one more skill roll every level."
-effects = [{ kind = "skill_rolls", value = 1 }]
-systems = ["skills"]

@@ -861,7 +861,7 @@ mod tests {
         };
         assert_eq!(at(1), ["well_dressed"]);
         assert_eq!(at(17), ["well_dressed", "fencing", "noblesse"]);
-        assert_eq!(at(60).len(), 9);
+        assert_eq!(at(60).len(), 8);
         assert_eq!((aristocrat.bonus_at(10), aristocrat.bonus_at(11)), (1, 0));
         let trees = aristocrat.bonus_trees(book).expect("named trees");
         let names: Vec<&str> = trees.iter().map(|&t| book.tree(t).id.as_str()).collect();
