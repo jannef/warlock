@@ -188,8 +188,6 @@
 #                                 least 1)
 #   quest_gold_percent { value }  the gold a quest gives, that percent more
 #   favour_percent { value }      shop favour, that many percent more (before the cap)
-#   sell_percent { value }        shops pay that percent more for what they buy from it (never
-#                                 more than they ask)
 #   identify_trades               what it buys or sells in a shop is identified
 #   pilgrim                       temple services cost half (rounded up), and a cure also mends
 #                                 a point of each damaged stat (Pious)

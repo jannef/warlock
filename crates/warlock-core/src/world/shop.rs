@@ -568,7 +568,6 @@ impl World {
         let content = self.content.clone();
         let shops = content.shops().expect("a shop is here");
         let favour = self.player_favour();
-        let more = self.state.player().talent_mods(&content).sell_percent;
         let parts = unpaid_parts(inventory, &shop.unpaid);
         let mut deal = Deal {
             leaving: vec![0; inventory.len()],
@@ -585,7 +584,7 @@ impl World {
             if own.count == 0 {
                 continue;
             }
-            let offer = shops.offer_more(&content, shop.kind, &own, favour, more);
+            let offer = shops.offer(&content, shop.kind, &own, favour);
             if offer == 0 {
                 deal.refused.push(own);
             } else if self.spoilt(&own) {

@@ -367,8 +367,6 @@ pub struct TalentMods {
     pub quest_gold_percent: i32,
     /// Percent more favour in shops, before the cap.
     pub favour_percent: i32,
-    /// Percent more shops pay for what they buy from it.
-    pub sell_percent: i32,
     /// What it buys or sells is identified.
     pub identify_trades: bool,
     /// Temple services cost it half, and a cure also mends a point of each damaged stat
@@ -1236,7 +1234,6 @@ impl TalentMods {
             TalentEffect::TrapDamagePercent { value } => self.trap_damage_percent += value,
             TalentEffect::QuestGoldPercent { value } => self.quest_gold_percent += value,
             TalentEffect::FavourPercent { value } => self.favour_percent += value,
-            TalentEffect::SellPercent { value } => self.sell_percent += value,
             TalentEffect::IdentifyTrades => self.identify_trades = true,
             TalentEffect::Pilgrim => self.services = true,
             TalentEffect::Scavenger => self.scavenger = true,

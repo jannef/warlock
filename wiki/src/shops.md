@@ -75,8 +75,7 @@ buys. Your **[Presence](stats.md#stat-presence)** moves prices in your favour, o
 **[Negotiation](skills.md#skill-negotiation)** skill if you are trained in it: you pay less and are offered more. Shopkeepers are
 good folk, so your [alignment](alignment.md) moves their prices too: a saint pays a little less,
 an evil character more. So does a [merchant](classes.md#merchant)'s [Haggler](talents.md#talent-haggler), the one
-[class ability](talents.md#class-abilities) on prices, and their [Insured](talents.md#talent-insured)
-makes shops pay half again as much (never more than they ask). None of it is ever shown as a
+[class ability](talents.md#class-abilities) on prices. None of it is ever shown as a
 number; you see only the prices. Shops sell and buy by [item
 class](objects.md#item-classes):
 
