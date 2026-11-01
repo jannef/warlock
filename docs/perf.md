@@ -103,6 +103,34 @@ difference of two best-of-five runs, whose noise is of the budget's size).
 The circles' CPU part is an `O(circles)` loop a frame plus one mesh of a quad each; the GPU part
 is one draw of fifty small quads. Within the budget at both sizes.
 
+The steady light cache (#785, 2026-11-01, same machine, under load from other builds: load
+average 10 to 45): `lighting::update` keeps the steady part of the visual light composite between
+frames and redoes only the cells unsteady sources (torches, lava) light (docs/dev/rendering.md,
+"The steady cache"). `bench-frames` has one more row, `steady`, the hub with the Flicker switch
+off: the same torch-lit start room with all of its light steady. Timed alone (a temporary
+`Instant` around the composite, mean of 2000 frames, not committed):
+
+| `lighting::update` per frame | hub | vast | courtyard | depths |
+|---|---|---|---|---|
+| Before, 2560x1440 (15275 cells) | 0.053 ms | 0.061 ms | 0.058 ms | 0.051 ms |
+| After, 2560x1440 | 0.0035 ms | 0.0061 ms | 0.0032 ms | 0.0021 ms |
+| Before, 1280x720 (3808 cells) | 0.018 ms | 0.019 ms | 0.024 ms | 0.017 ms |
+| After, 1280x720 | 0.0029 ms | 0.0053 ms | 0.0013 ms | 0.0016 ms |
+
+With flicker on, all four scenes have a flickering source in view, so the light is still uploaded
+every frame (0.016 ms at 2560x1440, unchanged); one frame in 2000 rebuilt the cache. In the
+`steady` row 1999 of 2000 frames skip the composite and the upload (0.0002 ms). Whole frames,
+the two builds alternated run by run (best of five each):
+
+| Frame time | hub before | hub after | steady before | steady after | vast before | vast after |
+|---|---|---|---|---|---|---|
+| 2560x1440 | 1.008 ms | 1.003 ms | 1.037 ms | 1.006 ms | 1.014 ms | 1.002 ms |
+| 1280x720 | 0.866 ms | 0.884 ms | 0.808 ms | 0.824 ms | 0.879 ms | 0.868 ms |
+
+The composite was about 5 % of a frame at 2560x1440 and is now under 1 %, but the frame times
+move by less than their noise (0.02 to 0.03 ms between runs): on this machine the gain is not
+measurable in whole frames. The web build (single-threaded wasm) was not measured.
+
 Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
 submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the
 sleep granularity, not by rendering. All budgets are met with a large margin. Before lighting and

@@ -40,6 +40,8 @@
 //! Free glyphs are lit on the CPU by [`VisualLight::sample`] and [`shade`], which mirror the
 //! shader: change both together.
 
+mod cache;
+
 use super::grid::MapGrid;
 use super::modulation::{Modulation, modulation};
 use super::shadows::Shadows;
@@ -140,6 +142,13 @@ pub struct Transients {
     pub held: Vec<(Pos, LightId)>,
 }
 
+impl Transients {
+    /// No light moving and none held back.
+    pub fn is_empty(&self) -> bool {
+        self.lights.is_empty() && self.held.is_empty()
+    }
+}
+
 /// A spell effect's light this frame: a point light of any color. Visual only.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SpellLight {
@@ -173,9 +182,15 @@ impl SpellLights {
     pub fn keep(&self) -> f32 {
         (1.0 - self.dim.clamp(0.0, MAX_DARKEN)).powf(DIM_GAMMA)
     }
+
+    /// No spell light and no darkening: the composite is as without them.
+    pub fn is_quiet(&self) -> bool {
+        self.lights.is_empty() && self.keep() == 1.0
+    }
 }
 
-/// Visual light for the map grid, recomposited every frame.
+/// Visual light for the map grid, recomposited every frame, from a cache of its steady part
+/// while no transient or spell light is live ([`VisualLight::composite_cached`]).
 #[derive(Resource, Debug)]
 pub struct VisualLight {
     /// Level position of the first cell: [`MARGIN`] cells up and left of the map grid's (0, 0).
@@ -189,6 +204,8 @@ pub struct VisualLight {
     keep: f32,
     /// Set when the light changed and needs uploading.
     dirty: bool,
+    /// The steady part of the composite, kept between frames ([`cache`]).
+    cache: cache::SteadyCache,
 }
 
 impl Default for VisualLight {
@@ -200,6 +217,7 @@ impl Default for VisualLight {
             flags: Vec::new(),
             keep: 1.0,
             dirty: false,
+            cache: cache::SteadyCache::default(),
         }
     }
 }
@@ -234,39 +252,20 @@ impl VisualLight {
         size: UVec2,
         time: Option<f32>,
     ) {
+        // A full composite leaves the light out of step with the cache.
+        self.cache.invalidate();
         let content = view.content();
         let n = (size.x * size.y) as usize;
         let index = |p: Pos| cell_index(origin, size, IVec2::new(p.x, p.y));
-        let at = |i: usize| {
-            let i = i as u32;
-            Pos::new(
-                origin.x + (i % size.x) as i32,
-                origin.y + (i / size.x) as i32,
-            )
-        };
 
         // Base light on every visible cell, then each source. `sums` is the perceived light,
         // which darkvision measures; `drawn` is what is drawn: modulated in hue, less what
         // creature shadows take away (darkvision's glow would otherwise brighten shadows).
         // `gains` sums each source's intensity weighted by how much light it draws (x), and
         // those weights (y); the base light is steady.
-        let mut flags = vec![0; n];
-        let mut sums = vec![Vec4::ZERO; n];
-        let mut drawn = vec![Vec4::ZERO; n];
-        let mut gains = vec![Vec2::ZERO; n];
-        for (i, flag) in flags.iter_mut().enumerate() {
-            if let CellView::Visible(t) = view.cell(at(i)) {
-                *flag = if content.terrain(t).transparent {
-                    LIT
-                } else {
-                    LIT | OPAQUE
-                };
-                let base = light_vec(view.base_light(at(i)).unwrap_or_default());
-                sums[i] = base;
-                drawn[i] = base;
-                gains[i] = Vec2::splat(base.element_sum());
-            }
-        }
+        let (flags, mut sums) = bases(view, origin, size);
+        let mut drawn = sums.clone();
+        let mut gains: Vec<Vec2> = sums.iter().map(|b| Vec2::splat(b.element_sum())).collect();
         for source in view.light_sources() {
             if let (Some(pos), Some(preset)) = (source.pos(), source.preset())
                 && transients.held.contains(&(pos, preset))
@@ -331,57 +330,36 @@ impl VisualLight {
         }
         let keep = spells.keep();
 
-        let vision = view.vision();
-        let reach2 = radius2(vision.darkvision).max(1) as f32;
-        let threshold = f32::from(vision.threshold);
+        let finish = Finish::new(view, keep);
         let cells: Vec<_> = (0..n)
             .map(|i| {
                 if flags[i] & LIT == 0 {
                     return CellLight::DARK;
                 }
-                let sum = sums[i];
-                let rgb = drawn[i].truncate() + UV_TINT * drawn[i].w;
-                // Darkened light weighs less; a spell's light counts as steady.
-                let weight = gains[i] * keep + Vec2::splat(bright[i].element_sum());
-                let gain = if weight.y > 0.0 {
-                    weight.x / weight.y
-                } else {
-                    1.0
-                };
-                let light = match view.light(at(i)).filter(|l| l.darkvision) {
-                    Some(seen) => {
-                        // Brightness relative to the eye's threshold, as gameplay measures it.
-                        let lit = (sum.truncate().dot(Vec3::new(54.0, 183.0, 19.0) / 256.0)
-                            + sum.w)
-                            * 255.0
-                            / threshold.max(1.0);
-                        let far = (seen.dist2 as f32 / reach2).sqrt();
-                        darkvision(rgb, lit, far)
-                    }
-                    None => CellLight {
-                        rgb,
-                        ..CellLight::DARK
-                    },
-                };
-                CellLight {
-                    rgb: light.rgb * keep + bright[i],
-                    gain,
-                    ..light
-                }
+                let p = cell_pos(origin, size, i);
+                finish.cell(view, p, sums[i], drawn[i], gains[i], bright[i])
             })
             .collect();
-        self.keep = keep;
+        self.set(origin, size, cells, flags, keep);
+    }
 
+    /// Takes a composite's light, marking it for upload if it differs from what is there.
+    fn set(
+        &mut self,
+        origin: IVec2,
+        size: UVec2,
+        cells: Vec<CellLight>,
+        flags: Vec<u8>,
+        keep: f32,
+    ) {
+        self.keep = keep;
         if (origin, size) != (self.origin, self.size) || cells != self.cells || flags != self.flags
         {
-            *self = VisualLight {
-                origin,
-                size,
-                cells,
-                flags,
-                keep,
-                dirty: true,
-            };
+            self.origin = origin;
+            self.size = size;
+            self.cells = cells;
+            self.flags = flags;
+            self.dirty = true;
         }
     }
 
@@ -464,6 +442,96 @@ fn transient_cells(
         }
     }
     cells
+}
+
+/// The flags of the `size` cells from `origin` on, [`LIT`] on visible ones and [`OPAQUE`] on
+/// walls among them, and their base light (zero on cells not lit).
+fn bases(view: &PerceptionView<'_>, origin: IVec2, size: UVec2) -> (Vec<u8>, Vec<Vec4>) {
+    let content = view.content();
+    let n = (size.x * size.y) as usize;
+    let mut flags = vec![0; n];
+    let mut base = vec![Vec4::ZERO; n];
+    for i in 0..n {
+        let p = cell_pos(origin, size, i);
+        if let CellView::Visible(t) = view.cell(p) {
+            flags[i] = if content.terrain(t).transparent {
+                LIT
+            } else {
+                LIT | OPAQUE
+            };
+            base[i] = light_vec(view.base_light(p).unwrap_or_default());
+        }
+    }
+    (flags, base)
+}
+
+/// The last step of the composite, per lit cell: UV, darkvision, the gain, and spell effects'
+/// darkening (`keep`) and light.
+struct Finish {
+    keep: f32,
+    reach2: f32,
+    threshold: f32,
+}
+
+impl Finish {
+    fn new(view: &PerceptionView<'_>, keep: f32) -> Self {
+        let vision = view.vision();
+        Finish {
+            keep,
+            reach2: radius2(vision.darkvision).max(1) as f32,
+            threshold: f32::from(vision.threshold),
+        }
+    }
+
+    /// The light of lit cell `p` from its perceived light `sum`, its `drawn` light, its gain
+    /// weights `gains`, and the spell effects' light on it, `bright`.
+    fn cell(
+        &self,
+        view: &PerceptionView<'_>,
+        p: Pos,
+        sum: Vec4,
+        drawn: Vec4,
+        gains: Vec2,
+        bright: Vec3,
+    ) -> CellLight {
+        let keep = self.keep;
+        let rgb = drawn.truncate() + UV_TINT * drawn.w;
+        // Darkened light weighs less; a spell's light counts as steady.
+        let weight = gains * keep + Vec2::splat(bright.element_sum());
+        let gain = if weight.y > 0.0 {
+            weight.x / weight.y
+        } else {
+            1.0
+        };
+        let light = match view.light(p).filter(|l| l.darkvision) {
+            Some(seen) => {
+                // Brightness relative to the eye's threshold, as gameplay measures it.
+                let lit = (sum.truncate().dot(Vec3::new(54.0, 183.0, 19.0) / 256.0) + sum.w)
+                    * 255.0
+                    / self.threshold.max(1.0);
+                let far = (seen.dist2 as f32 / self.reach2).sqrt();
+                darkvision(rgb, lit, far)
+            }
+            None => CellLight {
+                rgb,
+                ..CellLight::DARK
+            },
+        };
+        CellLight {
+            rgb: light.rgb * keep + bright,
+            gain,
+            ..light
+        }
+    }
+}
+
+/// The level position of cell `i` of the `size` cells from `origin` on (row-major).
+fn cell_pos(origin: IVec2, size: UVec2, i: usize) -> Pos {
+    let i = i as u32;
+    Pos::new(
+        origin.x + (i % size.x) as i32,
+        origin.y + (i / size.x) as i32,
+    )
 }
 
 fn cell_index(origin: IVec2, size: UVec2, p: IVec2) -> Option<usize> {
@@ -566,7 +634,9 @@ pub fn shade(color: Vec3, light: CellLight, floor: f32) -> Vec3 {
 }
 
 /// Composites this frame's visual light for the map grid. Runs after the map grid is placed and
-/// before free glyphs are lit.
+/// before free glyphs are lit. From the cache while no transient or spell light is live: rebuilt
+/// on a new snapshot or new shadows (and when the grid moves or flicker is switched), otherwise
+/// redoing only the cells unsteady sources light.
 pub fn update(
     game: Res<Game>,
     grid: Res<MapGrid>,
@@ -581,8 +651,13 @@ pub fn update(
     let size = UVec2::new(grid.console.cols(), grid.console.rows()) + 2 * MARGIN as u32;
     let time = effects.flicker.then_some(visual.seconds);
     let origin = grid.level_origin - MARGIN;
-    let extra = (&*transients, &*spells);
-    light.composite_with(&view, &shadows, extra, origin, size, time);
+    if transients.is_empty() && spells.is_quiet() {
+        let changed = game.is_changed() || shadows.is_changed();
+        light.composite_cached(&view, &shadows, origin, size, time, changed);
+    } else {
+        let extra = (&*transients, &*spells);
+        light.composite_with(&view, &shadows, extra, origin, size, time);
+    }
 }
 
 /// Writes the visual light into the map material's light textures when it changed.
@@ -1046,5 +1121,192 @@ mod tests {
             darker += usize::from(a.element_sum() < b.element_sum() - 1e-6);
         }
         assert!(darker > 0);
+    }
+
+    /// The full composite of `view` (the reference the cache must match).
+    fn reference(
+        view: &PerceptionView<'_>,
+        shadows: &Shadows,
+        extra: (&Transients, &SpellLights),
+        (origin, size): (IVec2, UVec2),
+        time: Option<f32>,
+    ) -> VisualLight {
+        let mut light = VisualLight::default();
+        light.composite_with(view, shadows, extra, origin, size, time);
+        light
+    }
+
+    /// Exactly the same light, bit for bit.
+    fn assert_same(cached: &VisualLight, full: &VisualLight, what: &str) {
+        assert_eq!(
+            (cached.origin, cached.size),
+            (full.origin, full.size),
+            "{what}"
+        );
+        assert_eq!(cached.flags, full.flags, "{what}");
+        assert_eq!(cached.keep.to_bits(), full.keep.to_bits(), "{what}");
+        assert_eq!(cached.cells.len(), full.cells.len(), "{what}");
+        for (i, (a, b)) in cached.cells.iter().zip(&full.cells).enumerate() {
+            let bits = |c: &CellLight| {
+                (
+                    c.rgb.to_array().map(f32::to_bits),
+                    c.saturation.to_bits(),
+                    c.gain.to_bits(),
+                )
+            };
+            assert_eq!(bits(a), bits(b), "{what}: cell {i}: {a:?} against {b:?}");
+        }
+    }
+
+    const TIMES: [Option<f32>; 7] = [
+        Some(0.0),
+        Some(0.3),
+        Some(0.3),
+        Some(1.1),
+        Some(2.4),
+        Some(3.7),
+        Some(17.25),
+    ];
+
+    #[test]
+    fn the_cache_composites_exactly_as_in_full() {
+        let magic_hall = format!(
+            "{} open:N move:N move:N {} open:N move:N move:N",
+            "move:N ".repeat(3),
+            "move:E ".repeat(6)
+        );
+        let magic_hall = warlock_core::action::parse_actions(&magic_hall).expect("actions parse");
+        let fixtures = [
+            ("start room", showcase(&[])),
+            ("light hall", showcase(&magic_hall)),
+            ("darkness chamber", darkness_chamber()),
+        ];
+        let none = (&Transients::default(), &SpellLights::default());
+        for (name, world) in &fixtures {
+            let view = world.perception();
+            let level = UVec2::new(view.width() as u32, view.height() as u32);
+            let player = view.viewer();
+            // The whole level, a window around the player, and one half off the level's corner.
+            let grids = [
+                (IVec2::ZERO, level),
+                (IVec2::new(player.x - 20, player.y - 9), UVec2::new(41, 19)),
+                (IVec2::new(-7, -5), UVec2::new(30, 16)),
+            ];
+            let shadows = [Shadows::compute(&view), Shadows::default()];
+            let mut cached = VisualLight::default();
+            let mut flickered = 0;
+            for (s, shadows) in shadows.iter().enumerate() {
+                for grid in grids {
+                    for (t, time) in [None, None].into_iter().chain(TIMES).enumerate() {
+                        // A new snapshot or new shadows rebuild; so does a moved grid, or the
+                        // flicker switched, on their own.
+                        let changed = t == 0 && s == 1;
+                        let pass =
+                            cached.composite_cached(&view, shadows, grid.0, grid.1, time, changed);
+                        flickered += usize::from(pass == cache::Pass::Flickered);
+                        let full = reference(&view, shadows, none, grid, time);
+                        assert_same(&cached, &full, &format!("{name}, {grid:?}, {time:?}"));
+                    }
+                }
+            }
+            if *name != "darkness chamber" {
+                assert!(flickered > 0, "{name}: torches or lamps flicker");
+            }
+        }
+    }
+
+    #[test]
+    fn the_cache_follows_turns_and_transient_lights() {
+        // A turn's new snapshot, then a burning missile's light (composited in full, as `update`
+        // does while one is live), then none again: the cache is rebuilt each time and matches.
+        let mut world = showcase(&[]);
+        let none = (&Transients::default(), &SpellLights::default());
+        let mut cached = VisualLight::default();
+        for step in 0..3 {
+            if step > 0 {
+                world.apply(&warlock_core::Action::Wait);
+            }
+            let view = world.perception();
+            let shadows = Shadows::compute(&view);
+            let grid = (
+                IVec2::ZERO,
+                UVec2::new(view.width() as u32, view.height() as u32),
+            );
+            let preset = (view.light_sources().iter())
+                .find_map(|s| s.preset())
+                .expect("a lamp");
+            let missile = Transients {
+                lights: vec![TransientLight {
+                    at: center(view.viewer()) + Vec2::new(1.3, 0.4),
+                    preset,
+                    key: 7,
+                }],
+                held: Vec::new(),
+            };
+            for (t, time) in TIMES.into_iter().enumerate() {
+                let what = format!("step {step}, {time:?}");
+                if t == 2 {
+                    let extra = (&missile, &SpellLights::default());
+                    cached.composite_with(&view, &shadows, extra, grid.0, grid.1, time);
+                    assert_same(
+                        &cached,
+                        &reference(&view, &shadows, extra, grid, time),
+                        &what,
+                    );
+                    continue;
+                }
+                let pass = cached.composite_cached(&view, &shadows, grid.0, grid.1, time, t == 0);
+                if t == 0 || t == 3 {
+                    assert_eq!(pass, cache::Pass::Rebuilt, "{what}");
+                }
+                assert_same(
+                    &cached,
+                    &reference(&view, &shadows, none, grid, time),
+                    &what,
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn a_frame_with_nothing_to_redo_does_no_work() {
+        let world = showcase(&[]);
+        let view = world.perception();
+        let shadows = Shadows::compute(&view);
+        let (origin, size) = (
+            IVec2::ZERO,
+            UVec2::new(view.width() as u32, view.height() as u32),
+        );
+        let mut light = VisualLight::default();
+        // Flicker off: the first frame builds, the rest do nothing and upload nothing.
+        let pass = light.composite_cached(&view, &shadows, origin, size, None, true);
+        assert_eq!(pass, cache::Pass::Rebuilt);
+        assert!(light.dirty);
+        light.dirty = false;
+        for _ in 0..3 {
+            let pass = light.composite_cached(&view, &shadows, origin, size, None, false);
+            assert_eq!(pass, cache::Pass::Skipped);
+            assert!(!light.dirty);
+        }
+        // Flicker on: the torches are redone as time goes, but not at a frozen moment.
+        let pass = light.composite_cached(&view, &shadows, origin, size, Some(1.0), false);
+        assert_eq!(pass, cache::Pass::Rebuilt, "the switch changed");
+        light.dirty = false;
+        let pass = light.composite_cached(&view, &shadows, origin, size, Some(1.5), false);
+        assert_eq!(pass, cache::Pass::Flickered);
+        assert!(light.dirty, "the torches moved");
+        light.dirty = false;
+        let pass = light.composite_cached(&view, &shadows, origin, size, Some(1.5), false);
+        assert_eq!(pass, cache::Pass::Skipped);
+        assert!(!light.dirty);
+        // Out of every unsteady source's reach (a window off the level's corner, where nothing
+        // is seen), even moving time does nothing.
+        let (corner, small) = (IVec2::new(-10, -10), UVec2::new(4, 4));
+        let pass = light.composite_cached(&view, &shadows, corner, small, Some(2.0), false);
+        assert_eq!(pass, cache::Pass::Rebuilt, "the grid moved");
+        light.dirty = false;
+        let pass = light.composite_cached(&view, &shadows, corner, small, Some(2.5), false);
+        assert_eq!(pass, cache::Pass::Skipped);
+        assert!(!light.dirty);
     }
 }

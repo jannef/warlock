@@ -95,7 +95,8 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    transparent.
 
 **Visual lighting** (spec §4.4, `render/lighting.rs` + `lighting.wesl`, imported by
-`console.wesl`): every frame `lighting::update` composites the perceived light for the map grid's
+`console.wesl`): every frame `lighting::update` composites (from a cache of its steady part, see
+"The steady cache" below) the perceived light for the map grid's
 cells plus a one-cell margin, from `PerceptionView::base_light` (ambient plus gameplay bounce light,
 steady, never shadowed by creatures) and `light_sources()` contributions, less creature shadows,
 and folds in UV (violet tint) and the darkvision fade. Gameplay light lives in
@@ -128,6 +129,25 @@ cells (walls are lit flat by their wall-face light); then exposure (readability 
 overbright knee plus a faint glow in the light's hue), desaturation, gain. Unlit cells (remembered
 terrain, the UI console's 1×1 textures) are drawn as they are. Free glyphs are lit on the CPU by
 `VisualLight::sample` + `lighting::shade`, which mirror the shader — change both together.
+
+**The steady cache** (`render/lighting/cache.rs`, #785): between turns only the visual time
+changes, and it reaches the light only through the unsteady sources' modulation. So
+`VisualLight::composite_cached` keeps, per cell, the flags, the perceived light, and the drawn
+light and gain weights summed up to the cell's first unsteady contribution, plus every
+contribution after that one (`Step`: a steady source's drawn light, or an unsteady source's light
+and shadow keep), in the full composite's order. A frame replays those steps for those cells
+alone, so the floating-point sums are added in the same order and come out bit for bit as
+`composite_with`'s, which stays the reference. Its inputs, each a rebuild: `Game` or `Shadows`
+changed (Bevy change detection in `lighting::update`), the grid's origin or size, and whether
+light flickers at all (`time` given). While a transient light (`Transients`, moving or held) or a
+spell light or darkening (`SpellLights`) is live, `update` composites in full instead, which
+invalidates the cache. A frame with no unsteady source in the grid, or at the last frame's visual
+time (`--freeze-time`), does nothing: no composite, `dirty` stays false, no upload. **A new input
+of the composite must be a rebuild condition here too**, or the cache shows stale light; the
+tests in `lighting.rs` (`the_cache_composites_exactly_as_in_full`,
+`the_cache_follows_turns_and_transient_lights`) compare the cached light with the reference bit
+for bit across fixtures, grids, shadows, times, a turn, and a missile's light, and catch such a
+miss only if a fixture varies the new input, so extend them with it.
 
 Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
 `screen_fades`, `screen_shake`, `weather`) and all off with reduced effects (but `blood` and
