@@ -290,9 +290,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     shows the images of the actors the player sees, on cells the player sees, as those actors
     (kind, type, faction, how hurt, what they wear and wield, the statuses that show) under ids
     of their own, above every real actor's: nothing on the screen tells them from the real one,
-    the player's own reflections too (look mode calls those "Your reflection"). Mirror-wise
-    (§8 "Talents") sees those within 2 cells of the player for what they are: they are not
-    shown. A step or a blow into an image the player sees meets only glass ("Your blow meets
+    the player's own reflections too (look mode calls those "Your reflection"). A step or a blow into an image the player sees meets only glass ("Your blow meets
     only glass.", a melee blow's time, no step); a missile the player aims at an image they see
     (a creature at any image) flies on through its cell instead of coming down there; bolts
     always fly to the first real creature. A creature outside the hall shooting or throwing at
@@ -328,7 +326,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the last hit point is not spared): the death is put down to the fall ("Fell through a
     collapsed floor" on the death screen, the dumps' `cause`). A survivor is Staggered. The cracked floor
     stays as it was. Creatures never fall (no draw for them). Nothing new is saved: the fall
-    is a level change like the stairs'. Light tread (§8 "Talents") never falls. It never
+    is a level change like the stairs'. Old delver (§8 "Talents") never falls. It never
     covers a whole level.
   - **A tempting hoard** (`hoard = { items = 3, loot_level = 3, guardians = [2, 4], danger = 1
     }`, #415; `mapgen/hoard.rs`, `world/hoard.rs`). A generated floor's tempting hoard gets
@@ -350,7 +348,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     chamber has no doors: only the guardians come. A room seals once; the stacks lifted and
     whether it sealed are saved with the room (`SpecialRoom::lifted`, `sealed`; left out while
     nothing was lifted, so other rooms save and hash as before), and the `rooms` dev layer
-    lists them (`, lifted 1, sealed`). Hoard-wise (§8 "Talents") lets one stack go first.
+    lists them (`, lifted 1, sealed`). Old delver's second rank (§8 "Talents") lets one stack go first.
     Never over a whole level.
   - **A treasure room** (`secret_doors = "all"`, `treasure = { chests = "1d2", gold = { heaps =
     "1d4+1", dice = "3d6", each = 2 }, gems = "1d3" }`, `arrive`, #617; `mapgen/treasury.rs`,
@@ -375,9 +373,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a run), after the `pervade` line, each effect with an `arrive` line that has a room there
     the player has not entered (nor stands in) says it, once however many such rooms; nothing
     is stored (`SpecialRoom::entered` is the record), so it comes again on every return until
-    the room is entered. Treasure sense (§8 "Talents") ends it with the way to the nearest such
-    room's middle from where the player arrived, in eight winds ("..., to the north-east.").
-    Never over a whole level.
+    the room is entered. Never over a whole level.
   - **A greater treasure room** (`sealed = "dig"`, `treasure = { chests = "2d2", gold = { heaps
     = "2d4+2", dice = "4d6", each = 5 }, gems = "2d3" }`, `arrive`, #618; `mapgen/treasury.rs`,
     `world/search.rs`; docs/design/chests-and-treasure.md §6.2, §6.3). **No door and no corridor,
@@ -415,7 +411,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     everyone inside, the player and creatures alike, by their own side (`Actor::nature`: the
     player's band's side, a creature's type's or its level's): one of its side heals at `regen`
     percent of the pace (200: twice as fast; one fold in `World::healing_rate`, before the room's
-    pace, so Hallowed rest quickens it too); one of the other side holds `status`, **Unwelcome**
+    pace, so Old delver's second rank quickens it too); one of the other side holds `status`, **Unwelcome**
     (§8 "Status effects": half the healing, −1 to hit), given as a room's `status` is (at the start
     of every stretch of time, and on arrival; it eases half a minute after leaving); a neutral one
     neither. The first entry's line says which: `welcome`, `unwelcome`, or the effect's `enter`.
@@ -439,7 +435,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     due while they were away rises on their first turn back. The player is told "The goblin's
     corpse twitches." at a death they see and "The goblin's corpse rises as a zombie!" at a
     rising they see (it stops a rest, as any newcomer does); unseen, the risen groans (a voice
-    at its cell). Grave warden (§8 "Talents"): what the player kills never rises. The `actors`
+    at its cell). Old delver (§8 "Talents"): what the player kills never rises. The `actors`
     dev layer lists the pending risings (`rising rat at (11, 2) as skeleton at 08:15:00`).
   - **Haunted rooms** (`haunt = { faction = "undead", every = "1h" }`, #417; `world/haunt.rs`):
     while the player rests (only a rest, not digging, eating, or praying) inside a room whose
@@ -606,7 +602,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wizard's does. Not one immune to the status's kind of damage (the usual rule of
     `World::afflict`), not one with no mana when the status only touches mana (drains it or
     slows its return, `StatusDef::touches_only_mana`), and not one whose talents spare them
-    (Anchored mind). The player is told as it begins and ends (the status's `start` and
+    (Old delver). The player is told as it begins and ends (the status's `start` and
     `end`), and it shows on the status bar; look mode shows it on creatures by its `seen`
     word.
   - **Teeming dens** (`swarm = { per_cells = 4, min = 4, max = 16, wake = 200, cry = 60,
@@ -723,11 +719,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     never names the whole level's effect (`PerceptionView::pervading`, JSON dumps' `pervading`).
     The light it changes is seen like any light, before and after.
   - **Talents** (system `special_rooms`, §8 "Talents"): Sense of place (a room known from a
-    glimpse; a whole level's effect named on arrival), Hallowed rest (a room's quickening of
-    healing and mana half again more), Anchored mind (a room's or a level's Ebbing
-    never takes them; #403), Hush-foot (shadow; sleepers need twice the noise to wake from
-    anything the player does; #405), Mirror-wise (a hall of mirrors' images within 2 cells
-    seen for what they are; #419), Light tread (a collapsed floor never gives way under
-    them; #420), and Grave warden (guard; nothing the player kills rises; #408). The class ability Consecrate (above) lifts an unholy room or level. System `prayer`: Devout (wayfarer; an altar of the player's
+    glimpse; a whole level's effect named on arrival), Hush-foot (shadow; sleepers need twice
+    the noise to wake from anything the player does; #405), and Old delver (delver, two ranks,
+    #775: a collapsed floor never gives way under them, a room's or a level's Ebbing never
+    takes them, and nothing they kill rises; at the second rank a room's quickening of healing
+    and mana half again more, and one stack lifted from a tempting hoard before it seals). It
+    merged #775's one-room talents (Light tread, Anchored mind, Grave warden, Hallowed rest,
+    Hoard-wise; Mirror-wise and Treasure sense, information only, were dropped). The class ability Consecrate (above) lifts an unholy room or level. System `prayer`: Devout (wayfarer; an altar of the player's
     side leans twice as far, an opposed one not at all; #406) and Penitent (grit, Willpower 12;
     a great bane becomes nothing; #407).

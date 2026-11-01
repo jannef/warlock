@@ -1,6 +1,6 @@
 //! Tempting hoards (spec §7 "Special rooms", design §9.7; `world/hoard.rs`, `mapgen/hoard.rs`):
 //! the first stack lifted inside seals the room (its doors shut and lock, guardians come at its
-//! edges, out of view where they can be), Hoard-wise lets one go first, a room seals once, a cave
+//! edges, out of view where they can be), Old delver lets one go first, a room seals once, a cave
 //! blob gets only guardians, the dumps, saving, and a generated hoard's items.
 
 use super::*;
@@ -209,9 +209,15 @@ fn nothing_lifted_outside_counts() {
 }
 
 #[test]
-fn hoard_wise_lifts_one_stack_before_it_seals() {
+fn old_delver_lifts_one_stack_before_it_seals_at_its_second_rank() {
+    // At the first rank the first stack seals it, as for anyone.
     let mut w = world();
-    w.player_mut().talents.take("hoard_wise", None);
+    w.player_mut().talents.take("old_delver", None);
+    lift(&mut w, A);
+    assert!(room(&w).sealed, "the first rank gives no grace");
+    let mut w = world();
+    w.player_mut().talents.take("old_delver", None);
+    w.player_mut().talents.take("old_delver", None);
     lift(&mut w, A);
     let first = room(&w);
     assert!(!first.sealed && first.lifted == 1, "one is free");

@@ -2,7 +2,7 @@
 //! cell of a collapsed floor (a room whose effect has a `collapse`, `Here::collapse`; its cracked
 //! floor terrain, where the room lays one) has the effect's chance, doubled while they are
 //! Burdened or worse, to give way: one draw of the gameplay stream, made only on such a cell, and
-//! only while the level has a way down that leads somewhere. Light tread
+//! only while the level has a way down that leads somewhere. Old delver
 //! (`TalentMods::collapse_proof`) skips the draw. The player falls to the level the way down leads
 //! to (generated as usual on a first visit, [`World::travel`]), landing on a random cell of it
 //! (another gameplay draw, [`landing`]), takes the effect's damage (`Harm::Fall`: it can kill,

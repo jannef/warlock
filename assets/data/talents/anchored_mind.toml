@@ -1,8 +1,0 @@
-[[talent]]
-id = "anchored_mind"
-name = "Anchored mind"
-tree = "scholar"
-description = "Your power is moored fast: no place can draw it out of you, and a draining room drinks at everyone's mana but yours."
-needs = { stats = { willpower = 12 } }
-effects = [{ kind = "room_status_immune", status = "ebbing" }]
-systems = ["special_rooms", "mana"]

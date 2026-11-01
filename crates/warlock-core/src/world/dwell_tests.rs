@@ -1,6 +1,6 @@
 //! Statuses a special room gives everyone inside (spec §7 "Special rooms"; `World::dwell`): the
 //! draining room's Ebbing, on the player and on creatures, in a rest, over a whole level, eased
-//! after leaving, and Anchored mind.
+//! after leaving, and Old delver.
 
 use super::*;
 use crate::action::Rest;
@@ -168,9 +168,9 @@ fn a_drained_level_ebbs_everywhere() {
 }
 
 #[test]
-fn anchored_mind_is_never_taken_by_ebbing() {
+fn old_delver_is_never_taken_by_ebbing() {
     let mut w = world(true, "");
-    w.player_mut().talents.take("anchored_mind", None);
+    w.player_mut().talents.take("old_delver", None);
     w.player_mut().pos = Pos::new(16, 3);
     let full = w.state.player().mana;
     wait(&mut w, 30);

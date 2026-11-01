@@ -212,7 +212,6 @@ fn every_caster_has_its_table_by_level_sixty() {
         reach(&mut w, 60);
         assert_eq!(class_rows(&w), rows, "{class} at 60");
     }
-    // The wizard's Spell recall is the Scholar talent, handed out (not of the class tree).
     let mut w = world("wizard");
     let first = ["Scroll adept", "Ray of frost", "Arcane training"];
     assert_eq!(class_rows(&w), first);
@@ -226,11 +225,9 @@ fn every_caster_has_its_table_by_level_sixty() {
             "Magic missile",
             "Knock",
             "Arcane lore",
-            "Spell recall",
             "Burning hands"
         ]
     );
-    assert!(said(&w).contains(&"You gain Spell recall.".to_string()));
 }
 
 #[test]

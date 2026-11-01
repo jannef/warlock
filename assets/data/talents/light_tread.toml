@@ -1,8 +1,0 @@
-[[talent]]
-id = "light_tread"
-name = "Light tread"
-tree = "delver"
-description = "You cross a sagging floor as if it were sound rock: a cracked floor never gives way under you."
-needs = { stats = { dexterity = 12 } }
-effects = [{ kind = "collapse_proof" }]
-systems = ["special_rooms"]

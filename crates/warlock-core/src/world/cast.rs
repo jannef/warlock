@@ -283,7 +283,7 @@ impl World {
     }
 
     /// Casts `cast` at `at` by its kind (module docs); whether it went off. A scroll read is
-    /// said kept by Spell recall afterwards, and a death by it is put down to the scroll.
+    /// said kept by Scroll savant afterwards, and a death by it is put down to the scroll.
     fn perform(
         &mut self,
         cast: &Cast<'_>,
@@ -325,7 +325,7 @@ impl World {
     }
 
     /// Pays for `cast` as it is sure to go off: the caster's mana, or the scroll read (used
-    /// up, unless Spell recall keeps it, and said as read).
+    /// up, unless Scroll savant keeps it, and said as read).
     fn pay_cast(&mut self, cast: &Cast<'_>) {
         match cast.pay {
             Pay::Mana(mana) => {
@@ -1044,7 +1044,7 @@ struct Cast<'c> {
     riders: Vec<(StatusId, u16)>,
     /// A buff's or a hex's degrees ([`Actor::spell_degrees`]).
     degrees: Option<u16>,
-    /// A scroll read, once paid: its object, and whether Spell recall kept it.
+    /// A scroll read, once paid: its object, and whether Scroll savant kept it.
     read: Cell<Option<(ObjectId, bool)>>,
     /// What it came to, as its kind fills it ([`World::spell_landed`]), for its marks.
     outcome: Cell<Outcome>,

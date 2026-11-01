@@ -287,6 +287,26 @@ fn fainting_costs_turns_and_is_deterministic() {
 }
 
 #[test]
+fn ascetic_is_never_weakened_by_hunger_nor_faints() {
+    let content = content_with(&[("chance = 5", "chance = 100")]);
+    let mut w = world_in(&content, "pantry");
+    let fed = w.perception().own_scores();
+    w.player_mut().talents.take("ascetic", None);
+    set_nutrition(&mut w, 500);
+    assert_eq!(hunger(&w), Hunger::Weak);
+    assert_eq!(w.perception().own_scores(), fed, "Weak takes nothing off");
+    set_nutrition(&mut w, 100);
+    assert_eq!(hunger(&w), Hunger::Fainting);
+    assert_eq!(w.perception().own_scores(), fed);
+    // A faint certain for anyone else: none comes, and nothing is drawn.
+    let rng = w.state.rng.clone();
+    let outs = run(&mut w, "wait*5");
+    assert!(!said(&w, "You faint from hunger."));
+    assert!(outs.iter().all(|o| o.elapsed == Duration::seconds(6)));
+    assert_eq!(w.state.rng, rng);
+}
+
+#[test]
 fn starving_takes_hit_points_until_the_player_starves_to_death() {
     let content = content_with(&[("chance = 5", "chance = 0")]);
     let mut w = world_in(&content, "pantry");

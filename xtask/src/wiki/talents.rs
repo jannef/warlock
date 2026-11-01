@@ -660,6 +660,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::NoBloating => "a meal never leaves you Bloated: what does not fit below \
              Bloated is lost, and you never overeat"
             .to_string(),
+        TalentEffect::NoHungerWeakness => {
+            "being [Weak, Fainting, or Starving](hunger.md#how-hungry-you-are) \
+             takes nothing off your Strength and Dexterity, and you never faint from hunger; \
+             Starving still stops your healing and costs hit points"
+                .to_string()
+        }
         TalentEffect::CorpseStatsPercent { value } => format!(
             "a fresh corpse's chance to raise each stat {} (at most 100 %)",
             percent(value)
@@ -675,10 +681,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::RampEase { points } => format!(
             "the [training price](stats.md#training)'s ramp past a potential counts each point \
              past it {points} fewer (the first point past the potential at the plain price)"
-        ),
-        TalentEffect::FastingMarks { marks } => format!(
-            "a daily stat check (06:00) met Hungry or worse gives Willpower {marks} \
-             [training marks](stats.md#training)"
         ),
         TalentEffect::NoDeed { on } => {
             let deeds: Vec<&str> = on.iter().map(|d| d.describe()).collect();
@@ -761,7 +763,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::ScrollKept { chance } => {
             format!("a {chance} % chance a scroll you read is not used up")
         }
-        TalentEffect::SparesSelf => "the bursts of scrolls you read never catch you".to_string(),
+        TalentEffect::SparesSelf => {
+            "your own bursts, a scroll's or a spell's, never catch you".to_string()
+        }
         TalentEffect::PotionKept { chance } => {
             format!("a {chance} % chance a potion you drink is not used up")
         }
@@ -831,10 +835,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::SenseOfPlace => "knows a special room's nature from a glimpse of it, \
             and the effect covering a whole level by name on arrival"
             .into(),
-        TalentEffect::TreasureSense => "the hint on arriving on a level with a treasure room \
-            it has not entered ends with the way to the nearest one's middle from the arrival \
-            cell, in eight winds"
-            .into(),
         TalentEffect::ChestWise => "sees whether a shut chest in sight is locked (look mode: \
             \"a locked coffer\", \"an unlocked coffer\"), and knows the trap of every shut chest \
             it sees, no check"
@@ -874,11 +874,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             if value == 1 { "" } else { "s" }
         ),
         TalentEffect::Slick => "a mimic's grip (its slam's hold) never holds it".into(),
-        TalentEffect::SeesReflections { value } => format!(
-            "sees a hall of mirrors' reflections within {value} cell{} for what they are: they \
-             are not shown",
-            if value == 1 { "" } else { "s" }
-        ),
         TalentEffect::HoardGrace { value } => format!(
             "a tempting hoard seals only once you have lifted {} stack{} inside it",
             1 + value,

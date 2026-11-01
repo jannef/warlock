@@ -268,7 +268,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`read` of kind `spell`), which casts it through the one cast path (§8 "Spells") at its
     scroll level, free of mana: aimed as the spell is (`read:b:12,5`), or at once for a spell on
     oneself (`read:b`; refused, no time, for an aimed one without its cell). Its blows are the
-    reader's; one that kills them is the scroll's (`Cause::Scroll`); Spell recall may keep it.
+    reader's; one that kills them is the scroll's (`Cause::Scroll`); Scroll savant's second rank may keep it.
   - **The three older spell scrolls** (fireball, frost, lightning; M29) cast a trap's spell
     (§8 "Traps") rather than their spell's, with the same rules, data, and code
     (`World::cast_burst`, `World::cast_bolt`), aimed by the reader (§6 "Targeting"): the scroll

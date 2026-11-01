@@ -331,6 +331,9 @@ pub struct TalentMods {
     pub no_exertion: bool,
     /// A meal never leaves it Bloated.
     pub no_bloating: bool,
+    /// Hunger never weakens it: Weak or worse takes nothing off its stats, and it never faints
+    /// (Ascetic).
+    pub no_hunger_weakness: bool,
     /// Percent more of a fresh corpse's stat training marks and its chances to widen a
     /// potential (`on_eat` `train` and `widen`).
     pub corpse_stats_percent: i32,
@@ -340,8 +343,6 @@ pub struct TalentMods {
     pub train_percent: i32,
     /// Points past a potential the training price's ramp counts as fewer (Late bloomer).
     pub ramp_ease: u8,
-    /// Willpower marks a daily stat check met Hungry or worse gives (Ascetic; 0: none).
-    pub fasting_marks: u16,
     /// The stat training deeds that take nothing.
     pub no_deed: Vec<StatDeed>,
     /// Stat training uses that count several times over, with the times (the most counts).
@@ -422,32 +423,26 @@ pub struct TalentMods {
     /// It tells a locked chest from an unlocked one at a glance, and a shut chest's trap in its
     /// sight is known to it (Chest-wise).
     pub chest_wise: bool,
-    /// Within this many cells it sees a disguised mimic for what it is (Mimic-wise; 0: none).
+    /// Within this many cells it sees a disguised mimic for what it is (Chest-wise; 0: none).
     pub sees_mimics: i32,
-    /// A mimic's grip never holds it (Slick).
+    /// A mimic's grip never holds it (Chest-wise).
     pub slick: bool,
-    /// The hint on arriving on a level with a treasure room says which way it lies (Treasure
-    /// sense).
-    pub treasure_bearing: bool,
     /// A forgotten altar's lean counts double when it agrees, and not at all when it opposes
     /// (Devout).
     pub devout: bool,
     /// A forgotten altar's great bane becomes nothing (Penitent).
     pub penitent: bool,
-    /// Percent more a special room's quickening of healing and mana (Hallowed rest).
+    /// Percent more a special room's quickening of healing and mana (Old delver).
     pub room_pace_percent: i32,
-    /// A collapsed floor never gives way under it (Light tread).
+    /// A collapsed floor never gives way under it (Old delver).
     pub collapse_proof: bool,
-    /// The statuses of special rooms that never take it (Anchored mind).
+    /// The statuses of special rooms that never take it (Old delver).
     pub room_status_immune: Vec<StatusId>,
-    /// Within this many cells it sees a hall of mirrors' reflections for what they are
-    /// (Mirror-wise; 0: none).
-    pub sees_reflections: i32,
-    /// How many stacks more it may lift in a tempting hoard before it seals (Hoard-wise).
+    /// How many stacks more it may lift in a tempting hoard before it seals (Old delver).
     pub hoard_grace: i32,
     /// Percent more noise sleepers need to wake from what it does (Hush-foot).
     pub wake_percent: i32,
-    /// What it kills never rises in a cursed room (Grave warden).
+    /// What it kills never rises in a cursed room (Old delver).
     pub grave_warden: bool,
     /// Cells more its searching reaches.
     pub search_reach: i32,
@@ -1270,14 +1265,12 @@ impl TalentMods {
             TalentEffect::SmellRot => self.smell_rot = true,
             TalentEffect::NoExertion => self.no_exertion = true,
             TalentEffect::NoBloating => self.no_bloating = true,
+            TalentEffect::NoHungerWeakness => self.no_hunger_weakness = true,
             TalentEffect::CorpseStatsPercent { value } => self.corpse_stats_percent += value,
             TalentEffect::PotionMarksPercent { value } => self.potion_marks_percent += value,
             TalentEffect::TrainPercent { value } => self.train_percent += value,
             TalentEffect::RampEase { points } => {
                 self.ramp_ease = self.ramp_ease.saturating_add(points)
-            }
-            TalentEffect::FastingMarks { marks } => {
-                self.fasting_marks = self.fasting_marks.max(marks)
             }
             TalentEffect::NoDeed { on } => self.no_deed.extend(on),
             TalentEffect::UseMarks { on, times } => {
@@ -1336,7 +1329,6 @@ impl TalentMods {
             TalentEffect::ChestWise => self.chest_wise = true,
             TalentEffect::SeesMimics { value } => self.sees_mimics += value,
             TalentEffect::Slick => self.slick = true,
-            TalentEffect::TreasureSense => self.treasure_bearing = true,
             TalentEffect::Devout => self.devout = true,
             TalentEffect::Penitent => self.penitent = true,
             TalentEffect::RoomPacePercent { value } => self.room_pace_percent += value,
@@ -1345,7 +1337,6 @@ impl TalentMods {
                     self.room_status_immune.push(status);
                 }
             }
-            TalentEffect::SeesReflections { value } => self.sees_reflections += value,
             TalentEffect::HoardGrace { value } => self.hoard_grace += value,
             TalentEffect::CollapseProof => self.collapse_proof = true,
             TalentEffect::WakePercent { value } => self.wake_percent += value,

@@ -33,10 +33,9 @@ ordinary [hostile](creatures.md#factions) creature of the vermin and never disgu
 
 ## Talents
 
-- **[Mimic-wise](talents.md#talent-mimic-wise)** (scholar; [Spot](skills.md#skill-spot) 10 or [Intelligence](stats.md#stat-intelligence) 12): within two cells you see a mimic for
-  what it is: it shows as itself, not as a chest. It is still disguised: it waits, unaware,
-  until something finds it out.
-- **[Slick](talents.md#talent-slick)** (finesse; [Dexterity](stats.md#stat-dexterity) 13): a mimic's grip never holds you.
+- **[Chest-wise](talents.md#talent-chest-wise)** (delver; [Intelligence](stats.md#stat-intelligence) 11 or [Detect traps](skills.md#skill-detect-traps) 15): within two cells
+  you see a mimic for what it is: it shows as itself, not as a chest. It is still disguised: it
+  waits, unaware, until something finds it out. And a mimic's grip never holds you.
 
 ## The bands
 

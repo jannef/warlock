@@ -3,8 +3,7 @@
 //! room. Where they stand is no draw: a hash of the level, the turn, the actor, and the image's
 //! index ([`WorldState::images`]), so the rules and perception compute the same images and the
 //! random streams never move. Perception shows the images of the actors the player sees as those
-//! actors, under ids of their own ([`image_id`]), with nothing that tells them apart; Mirror-wise
-//! leaves out those near the player.
+//! actors, under ids of their own ([`image_id`]), with nothing that tells them apart.
 //!
 //! What the images do in the rules: a step or a blow into an image the player sees meets only
 //! glass ([`World::meets_glass`], the blow's time); a missile aimed at an image's cell flies on

@@ -21,20 +21,19 @@ expression: "render(case, content.clone())"
               │   j  Light step               You tread lightly: a trap you step on… │
               │   k  Nimble                   A load slows your feet less than most… │
               │   l  Opportunist              A foe that turns from you pays for it… │
-              │   m  Slick                    You slip out of a mimic's glue before… │
               │ Weaponcraft                                                          │
-              │   n  Far shot                 Your shots fly 2 cells farther, and w… │
-              │   o  Sworn foe                You have sworn yourself against one k… │
-              │   p  Wand mastery             You draw more from a wand than its ma… │
-              │   q  Weapon focus             You have drilled with one kind of wea… │
+              │   m  Far shot                 Your shots fly 2 cells farther, and w… │
+              │   n  Sworn foe                You have sworn yourself against one k… │
+              │   o  Wand mastery             You draw more from a wand than its ma… │
+              │   p  Weapon focus             You have drilled with one kind of wea… │
               │ Guard                                                                │
-              │   r  Armour training          You move freely in armour: it hampers… │
+              │   q  Armour training          You move freely in armour: it hampers… │
               │ Shadow                                                               │
-              │   s  Hush-foot                You move among sleepers as a breath o… │
-              │   t  Keen ears                You hear fainter sounds, fainter stil… │
-              │   u  Lamplighter              You tend your lantern well: it burns … │
-              │   v  Night eyes               Your eyes grow used to the dark: you … │
-              │   w  Silent feet              Your footsteps are a fifth quieter fo… │
+              │   r  Hush-foot                You move among sleepers as a breath o… │
+              │   s  Keen ears                You hear fainter sounds, fainter stil… │
+              │   t  Lamplighter              You tend your lantern well: it burns … │
+              │   u  Night eyes               Your eyes grow used to the dark: you … │
+              │   v  Silent feet              Your footsteps are a fifth quieter fo… │
               │                                                                      │
               │ You were born to money: you set out with far more gold than most,    │
               │ and a few gems besides.                                              │

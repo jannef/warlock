@@ -1,7 +1,7 @@
 //! Mimics (spec §8 "Mimics", docs/design/chests-and-treasure.md §5, §9; `world/mimic.rs`): a
 //! disguised mimic is a chest in every snapshot; a touch reveals it with a free blow and no
 //! time; Knock reveals it without one; a blow reveals it; a search and the passive Spot find it;
-//! Mimic-wise sees it; Slick slips its grip; it takes no turn and no creature sets on it; it
+//! Chest-wise sees it; Chest-wise slips its grip; it takes no turn and no creature sets on it; it
 //! counts toward the cap; it carries the chest's loot and drops it; a sneak attack lands on an
 //! unaware one; it survives a save and a replay.
 
@@ -283,9 +283,9 @@ fn searching_and_spot_find_it_out() {
 }
 
 #[test]
-fn mimic_wise_sees_it_close_by_and_it_stays_disguised() {
+fn chest_wise_sees_a_mimic_it_close_by_and_it_stays_disguised() {
     let mut w = world("mimics");
-    w.player_mut().talents.take("mimic_wise", None);
+    w.player_mut().talents.take("chest_wise", None);
     below(&mut w, 6);
     assert!(w.perception().actor_at(MIMIC).is_none(), "too far");
     run(&mut w, "move:W");
@@ -295,11 +295,11 @@ fn mimic_wise_sees_it_close_by_and_it_stays_disguised() {
 }
 
 #[test]
-fn slick_slips_its_grip() {
+fn chest_wise_slips_its_grip() {
     let held = |slick: bool| {
         let mut w = world("mimics");
         if slick {
-            w.player_mut().talents.take("slick", None);
+            w.player_mut().talents.take("chest_wise", None);
         }
         let id = mimic(&w);
         let player = w.state.player;

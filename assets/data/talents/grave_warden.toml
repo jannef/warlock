@@ -1,8 +1,0 @@
-[[talent]]
-id = "grave_warden"
-name = "Grave warden"
-tree = "guard"
-description = "What you lay low stays down: nothing you kill ever rises in a cursed place."
-needs = { stats = { willpower = 12 } }
-effects = [{ kind = "grave_warden" }]
-systems = ["special_rooms"]

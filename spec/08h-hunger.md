@@ -27,6 +27,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     begins (`World::run_turn`), one draw of the gameplay stream with `[fainting] chance` (5 %;
     none drawn otherwise): "You faint from hunger." and the player loses `turns` (5) turns, a
     wait's price each added to their action's, while the others act (`World::faint`).
+    Ascetic (§8 "Talents"; Grit, Willpower 13, `no_hunger_weakness`, reworked in #775) takes
+    neither: Weak or worse leaves its scores as they are (`Actor::penalty`), and it never faints
+    (no draw). Starving still costs it hit points.
     **Starving**: no hit points come back (`World::healing_rate`, "Healing" above), nor mana
     (`World::mana_rate`, §8 "Mana"), and
     `[starving] damage` (1) are lost every `seconds` (600) of game time (banked,

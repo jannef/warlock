@@ -1,7 +1,7 @@
 //! Chests (spec §8 "Chests", docs/design/chests-and-treasure.md §3, §9; `world/chest.rs`): a
 //! coffer opens on a bump and on `open`; a locked one refuses without a key and opens with a
 //! skeleton key, Pick lock, or Knock then Open; Knock is refused with no time where nothing is
-//! locked; kicks smash it (half the stacks, never coins or gems; Deft breaker's quarter; a kick
+//! locked; kicks smash it (half the stacks, never coins or gems; Lockbreaker's quarter; a kick
 //! that holds changes nothing); a blast blows a coffer apart, coins and gems too, and not a
 //! kist; what a shut chest holds is not in the snapshot; Chest-wise sees locks; legends place
 //! chests with their objects and levels; chests survive a save and replay exactly; the dumps.
@@ -354,12 +354,11 @@ fn fill(w: &mut World, p: Pos, n: usize) {
 }
 
 #[test]
-fn a_smash_destroys_about_half_and_deft_breaker_a_quarter() {
+fn a_smash_destroys_about_half_and_lockbreaker_a_quarter() {
     for (deft, range) in [(false, 70..=130), (true, 25..=75)] {
         let mut w = world("strong");
-        w.player_mut().talents.take("lockbreaker", None);
         if deft {
-            w.player_mut().talents.take("deft_breaker", None);
+            w.player_mut().talents.take("lockbreaker", None);
         }
         fill(&mut w, COFFER, 200);
         w.apply(&Action::Kick(Dir::N));
