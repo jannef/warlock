@@ -13,8 +13,9 @@
 //! textures aligned with the map grid:
 //! - `light` (`Rgba32Float`): red, green, and blue light (1.0 = fully lit, more = overbright)
 //!   and color saturation;
-//! - `light_flags` (`Rgba8Uint`): [`LIT`] on visible cells and [`OPAQUE`] on walls (red), and
-//!   the intensity gain (green, see [`gain_byte`]).
+//! - `light_flags` (`Rgba8Uint`): [`LIT`] on visible cells, [`OPAQUE`] on walls, and
+//!   [`OCCUPIED`] on cells with a glyph of their own (red, [`cell_flags`]; the spell circles'
+//!   shader reads it too), and the intensity gain (green, see [`gain_byte`]).
 //!
 //! Transient lights ([`Transients`], visual only too) add light that is in no snapshot: a burning
 //! missile lights its surroundings as it flies (point light falloff from its fractional
@@ -63,6 +64,28 @@ pub const LIT: u8 = 1;
 /// Cell flag: opaque. Walls show their own (wall-face) light and never take or give
 /// interpolated light.
 pub const OPAQUE: u8 = 2;
+/// Cell flag: a visible cell drawn with a glyph of its own over the floor: a creature, an object
+/// or a chest, a known trap, or terrain that stands in the way (a wall torch). Lighting ignores
+/// it; spell circles fade over it (`circles.wesl`), so their runes never cover another glyph.
+pub const OCCUPIED: u8 = 4;
+
+/// The flags of level cell `p` as the player perceives it: [`LIT`] if visible, with [`OPAQUE`]
+/// for a wall and [`OCCUPIED`] for another glyph on it; nothing if unseen or remembered.
+pub fn cell_flags(view: &PerceptionView<'_>, p: Pos) -> u8 {
+    let CellView::Visible(t) = view.cell(p) else {
+        return 0;
+    };
+    let terrain = view.content().terrain(t);
+    if !terrain.transparent {
+        return LIT | OPAQUE;
+    }
+    let occupied = !terrain.walkable
+        || view.actor_at(p).is_some()
+        || !view.objects(p).is_empty()
+        || view.chest_at(p).is_some()
+        || view.trap(p).is_some();
+    if occupied { LIT | OCCUPIED } else { LIT }
+}
 
 /// Lowest exposure (linear) of visible terrain, so dim cells stay readable and a little brighter
 /// than remembered terrain. Mirrored in `lighting.wesl`.
@@ -255,12 +278,8 @@ impl VisualLight {
         let mut drawn = vec![Vec4::ZERO; n];
         let mut gains = vec![Vec2::ZERO; n];
         for (i, flag) in flags.iter_mut().enumerate() {
-            if let CellView::Visible(t) = view.cell(at(i)) {
-                *flag = if content.terrain(t).transparent {
-                    LIT
-                } else {
-                    LIT | OPAQUE
-                };
+            *flag = cell_flags(view, at(i));
+            if *flag & LIT != 0 {
                 let base = light_vec(view.base_light(at(i)).unwrap_or_default());
                 sums[i] = base;
                 drawn[i] = base;
@@ -390,6 +409,17 @@ impl VisualLight {
     /// shader does.
     pub fn keep(&self) -> f32 {
         self.keep
+    }
+
+    /// Every cell's flags, row-major (what `light_flags` uploads).
+    pub fn flags(&self) -> &[u8] {
+        &self.flags
+    }
+
+    /// The flags of map grid cell `cell` (console coordinates; the margin is outside), as the
+    /// shaders read them from `light_flags`; 0 beyond.
+    pub fn console_flags(&self, cell: IVec2) -> u8 {
+        self.flags_at(cell + MARGIN)
     }
 
     fn flags_at(&self, cell: IVec2) -> u8 {
@@ -988,6 +1018,38 @@ mod tests {
         assert_eq!(light.sample(Vec2::new(1.01, 15.5)), Some(floor));
         assert!(!view.is_visible(Pos::new(5, 10)));
         assert_eq!(light.sample(Vec2::new(5.5, 10.5)), None);
+    }
+
+    // The per-cell mask the spell circles' shader reads (#786): visible, opaque, occupied.
+    #[test]
+    fn cells_are_flagged_visible_opaque_and_occupied() {
+        let content = Arc::new(Content::builtin().expect("builtin content"));
+        let world = World::new(content, "circles", None).expect("world");
+        let view = world.perception();
+        let light = composite_level(&view, &Shadows::default(), None);
+        let cases = [
+            ((16, 6), LIT, "plain floor in view"),
+            ((17, 6), LIT | OCCUPIED, "the player"),
+            ((11, 4), LIT | OCCUPIED, "a kobold"),
+            ((13, 4), LIT | OCCUPIED, "a wall torch"),
+            ((17, 0), LIT | OPAQUE, "a wall"),
+            (
+                (3, 6),
+                LIT | OCCUPIED,
+                "the alcove's kobold, seen by its glow",
+            ),
+            ((5, 6), 0, "the dark corridor to it"),
+            ((2, 2), 0, "the room behind the wall"),
+        ];
+        for ((x, y), flags, what) in cases {
+            let p = Pos::new(x, y);
+            assert_eq!(cell_flags(&view, p), flags, "{what}");
+            assert_eq!(
+                light.flags_at(IVec2::new(x, y)),
+                flags,
+                "{what}, composited"
+            );
+        }
     }
 
     /// In the darkness chamber with darkvision and no lantern, at (37, 7).
