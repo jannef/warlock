@@ -360,9 +360,18 @@ pub fn frames(window: &str) -> Result<(), String> {
         }
         args
     };
+    // The hub with the Flicker switch off: the same torch-lit start room, all of its light
+    // steady, so the visual light composite has nothing to redo between turns.
+    let steady = target.join("xtask/bench-frames/steady");
+    std::fs::create_dir_all(&steady).map_err(|e| e.to_string())?;
+    std::fs::write(steady.join("settings.toml"), "[effects]\nflicker = false\n")
+        .map_err(|e| e.to_string())?;
     let scenario = |id: &str| vec!["--scenario".into(), id.into()];
-    let rows: [(&str, Vec<std::ffi::OsString>); 4] = [
+    let mut steady_hub = scenario("showcase");
+    steady_hub.extend(["--config-dir".into(), steady.into_os_string()]);
+    let rows: [(&str, Vec<std::ffi::OsString>); 5] = [
         ("hub", scenario("showcase")),
+        ("steady", steady_hub),
         ("vast", scenario("vast")),
         ("circle", circles(None)),
         ("c-off", circles(Some(&off))),
@@ -406,7 +415,7 @@ pub fn frames(window: &str) -> Result<(), String> {
     println!(
         "fifty circles cost {:.3} ms a frame at {window} (circle - c-off; design budget \
          {CIRCLES_BUDGET} ms at 2560x1440)",
-        times[2] - times[3]
+        times[3] - times[4]
     );
     if failed {
         Err("frame time over budget".into())
