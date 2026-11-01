@@ -27,6 +27,8 @@ the Gæsthūs, the inn, where Godgifu has news of the march, and the Gildhalle o
 area, walk off its edge to return to its cell on the [overworld](overworld.md), or press `<` when no enemy is
 about ([Leaving an area](overworld.md#leaving-an-area)).
 
+A little cave, **[Lytelscræf](dungeons.md#the-dungeons)**, opens two cells from the pass where you come in: three
+short floors of rats, bats, and kobolds, the easiest dungeon there is, with a chest at the bottom.
 Three dungeons lie nearest the town, deeper and more dangerous one after another (see
 [Dungeons and danger](dungeons.md)): **[Cealdhlāw](dungeons.md#the-dungeons)**, the cold barrow in the downs, which you can
 see from the road; **[Fennmynster](dungeons.md#fennmynster)**, the cellars of a minster drowned in the great fen; and
@@ -55,6 +57,7 @@ have names of the same kind. Creatures keep their plain English names.
 | Cēaptūn | *cēap* "trade, market" + *tūn* "enclosure, town" | the market town | the town |
 | Cēapdenu | *cēap* + *denu* "valley" | the market vale | the town's country |
 | Hlāwdūn | *hlāw* "burial mound" + *dūn* "hill, down" | the barrow downs | the hills east of the town |
+| Lytelscræf | *lȳtel* "little" + *scræf* "cave, hollow" | the little cave | the starter dungeon, by the pass |
 | Cealdhlāw | *ceald* "cold" + *hlāw* | the cold barrow | the first dungeon |
 | Holegnwudu | *holegn* "holly" + *wudu* "wood" | the holly wood | the northern forest |
 | Dēopholt | *dēop* "deep" + *holt* "wood, thicket" | the deep holt | its heart |

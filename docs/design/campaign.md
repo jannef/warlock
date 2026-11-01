@@ -258,6 +258,8 @@ Every name is in §5.8 with its source words and meaning.
 
 A reserved site is a plain cell today (its local area generates as its terrain says); the map keeps its spacing so a later level drops in without moving anything.
 
+Added later (#792, the owner 2026-11-01): **Lytelscræf**, a starter dungeon in the foot of Grægweall at (14, 27), two cells from the pass and in sight from the start (the one place closer than six cells to another, on purpose): three short cave floors (60×30) at danger 1 to 3, a thin population of the campaign's weakest (giant rats, cave bats, cave beetles, grave worms, kobolds; no strays, nothing out of depth), and the kobolds' cache on its third floor with a chest for certain.
+
 ### 5.6 The travel budget (at normal speed, by day; nights double it since the player rests)
 
 | Journey | Cells | Time | Days (12 h of travel) |
@@ -295,6 +297,7 @@ Food: a human burns a ration a day (`data/hunger.toml`); the trips are why the p
 | **Cēaptūn** | *cēap* "trade, market" + *tūn* "enclosure, town" | the market town | the first town |
 | **Cēapdenu** | *cēap* + *denu* "valley" | the market vale | the town's region |
 | **Hlāwdūn** | *hlāw* "burial mound, barrow" + *dūn* "hill, down" | the barrow downs | the hills east of the town |
+| **Lytelscræf** | *lȳtel* "little" (written *lytel*) + *scræf* "cave, hollow" | the little cave | the starter dungeon beside the pass (#792) |
 | **Cealdhlāw** | *ceald* "cold" + *hlāw* | the cold barrow | dungeon 1 |
 | **Holegnwudu** | *holegn* "holly" + *wudu* "wood" | the holly wood | the northern forest (the first revision's "Hollin" was holly already) |
 | **Dēopholt** | *dēop* "deep" + *holt* "wood, thicket" | the deep holt | its heart |

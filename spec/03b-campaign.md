@@ -36,8 +36,9 @@ every new run starts in it.
   English, in spellings the glyph atlas draws (æ for ǣ, y for ȳ; no wynn or yogh); ids are ASCII
   slugs without the marks (`ceaptun`, `cealdhlaw`). People are named in the same register
   (Hild, Leofric, Godgifu, Wulfrun); creature names stay plain English.
-- **Locations**: the pass, the town (§3 "Cēaptūn"), and three dungeon branches of rising
-  danger: **Cealdhlāw** (the cold barrow, visible from the start, in the downs east of the
+- **Locations**: the pass, the town (§3 "Cēaptūn"), **Lytelscræf** (the little cave, a starter
+  dungeon of three easy floors two cells from the pass, in sight from the start, #792), and three
+  dungeon branches of rising danger: **Cealdhlāw** (the cold barrow, visible from the start, in the downs east of the
   town), **Fennmynster** (the fen minster, hidden in Micelfenn), and **Fyrdelf** (the fire
   diggings, hidden in Ascdūn, §7 "Fyrdelf"). A hidden one is its plain terrain until a quest
   reveals it (§7 "Hidden locations"). The rest of the design's forty sites are reserved: plain

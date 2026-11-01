@@ -16,6 +16,8 @@ const LEVEL: &str = include_str!("../../../../assets/campaigns/ascmearc/levels/a
 const PASS: Pos = Pos::new(12, 28);
 const TOWN: Pos = Pos::new(18, 28);
 const BARROW: Pos = Pos::new(34, 25);
+/// Lytelscræf, the starter cave (#792): two cells from the pass, in sight of the start.
+const CAVE: Pos = Pos::new(14, 27);
 const FENNMYNSTER: Pos = Pos::new(70, 48);
 const FYRDELF: Pos = Pos::new(97, 21);
 /// The four lairs of the wanted (the guild design §8), hidden on reserved sites.
@@ -160,6 +162,9 @@ fn a_run_starts_on_beorggeat_with_its_arrival_line() {
         place.note.as_deref(),
         Some("The way you came; snow has closed it behind you.")
     );
+    // The starter cave is in sight from the first turn (#792).
+    assert!(w.perception().is_visible(CAVE));
+    assert_eq!(w.perception().leads_to(CAVE).as_deref(), Some("Lytelscræf"));
 }
 
 #[test]
@@ -214,6 +219,7 @@ fn the_locations_are_named_and_six_cells_apart() {
     assert_eq!(
         named,
         BTreeMap::from([
+            (CAVE, ("cave_mouth", "Lytelscræf")),
             (BARROW, ("barrow", "Cealdhlāw")),
             (TOWN, ("town", "Cēaptūn"))
         ])
@@ -244,6 +250,12 @@ fn the_locations_are_named_and_six_cells_apart() {
         for b in &all[i + 1..] {
             assert!(a.chebyshev(*b) >= 6, "{a} and {b} are too close");
         }
+    }
+    // The starter cave is the one put close on purpose: two cells from the pass, so the player
+    // sees it on their first look round, and clear of every other place.
+    assert_eq!(PASS.chebyshev(CAVE), 2);
+    for at in &all[1..] {
+        assert!(at.chebyshev(CAVE) >= 4, "{at} is too close to the cave");
     }
     // No road leads to a hidden dungeon.
     for hidden in [FENNMYNSTER, FYRDELF]
