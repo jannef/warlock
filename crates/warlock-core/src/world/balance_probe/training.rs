@@ -10,7 +10,7 @@
 //! uses' own chances. Each day ends with `World::daily_stat_check`; the level's check is
 //! `levelup:auto`'s.
 
-use super::{Build, Gear, Monster, Side, casts, dress, side_of};
+use super::{Build, Gear, Monster, Side, dress, schools, side_of};
 use crate::action::AttackKind;
 use crate::burden::Burden;
 use crate::combat::{self, Category, Profile, Strike, Target};
@@ -102,6 +102,8 @@ pub(super) struct Log {
     /// Marks earned in each stat over the last level, and its days.
     pub earned: [i64; 6],
     pub earned_days: u32,
+    /// Spells cast in the last level's fights (a healer's one a kill).
+    pub fought_casts: u32,
     /// The creature types killed (the `discovered` use's first kills).
     killed: BTreeSet<CreatureId>,
 }
@@ -142,20 +144,6 @@ fn foes(monsters: &[Monster], level: u8) -> Vec<&Monster> {
     out
 }
 
-/// The spell `w`'s player fights with, if their build casts: the damage spell of the most mean
-/// damage a cast among those costing at most a fifth of the pool (else the cheapest).
-fn weapon_spell(w: &World) -> Option<super::Cast> {
-    let pool = w.state.player().max_mana(&w.content);
-    let (cheap, dear): (Vec<_>, Vec<_>) = (casts(w).into_iter())
-        .filter(|c| c.cost > 0)
-        .partition(|c| c.cost * 5 <= pool);
-    let mean = |c: &super::Cast| super::roll_mean(c.dice.0);
-    match cheap.is_empty() {
-        false => cheap.into_iter().max_by(|a, b| mean(a).total_cmp(&mean(b))),
-        true => dear.into_iter().min_by_key(|c| c.cost),
-    }
-}
-
 /// Lives the days that bring `w`'s player (of `build`, at level `level`) to the next level:
 /// each day's share of the level's kills, fought through the hooks, its other uses, and the
 /// daily check.
@@ -182,8 +170,8 @@ pub(super) fn live_level(
         }
     }
     let slowed = load.penalty() != Burden::Unburdened;
-    let spell = (build.class == "wizard")
-        .then(|| weapon_spell(&dressed))
+    let spell = (build.fights_with_spells)
+        .then(|| schools::pace_spell(&dressed, build))
         .flatten();
     let foes = foes(monsters, level);
     let kills = content.experience().kills_for(level + 1);
@@ -192,6 +180,7 @@ pub(super) fn live_level(
     let foe = ActorId(u32::MAX);
     log.earned = [0; 6];
     log.earned_days = days;
+    log.fought_casts = 0;
     let mut fought = 0u32;
     for d in 0..days {
         let start = piles(w);
@@ -203,7 +192,11 @@ pub(super) fn live_level(
             };
             let them = &m.geared[(fought as usize + seed as usize) % m.geared.len()];
             fought += 1;
-            rounds += fight(w, &me, them, spell.as_ref(), build, &mut rng, foe);
+            let took = fight(w, &me, them, spell.as_ref(), build, &mut rng, foe);
+            rounds += took;
+            if spell.is_some() {
+                log.fought_casts += took;
+            }
             if m.level >= level {
                 w.train_stat(StatUse::Killed);
             }
@@ -212,6 +205,7 @@ pub(super) fn live_level(
             }
             if build.casts_a_kill {
                 cast(w, None);
+                log.fought_casts += 1;
             }
         }
         let day = log.day;
@@ -277,14 +271,15 @@ fn fight(
             let amount = match c.resolution {
                 Resolution::Attack | Resolution::Touch => {
                     let p = Profile {
-                        damage: c.dice.0,
+                        damage: c.dice,
+                        reroll: c.reroll,
                         ..c.aim.clone()
                     };
                     let blow = combat::strike(&p, &Target::bare(them.missile), rng);
                     w.train_fight((player, foe), AttackKind::Spell, &blow);
                     blow.damage
                 }
-                Resolution::Auto | Resolution::Area => c.dice.0.roll(rng, 0).max(0),
+                Resolution::Auto | Resolution::Area => c.dice.roll(rng, c.reroll).max(0),
             };
             hp -= amount;
         } else {

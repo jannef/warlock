@@ -2,11 +2,10 @@
 //! `docs/balance.md` as Markdown.
 
 use super::{
-    Gear, LEVELS, Probe, STRIKES, Side, Snap, armoured, avg, bony, dice_text, fight, fight_cell,
-    hide, hit_mean, hit_pct, median, r, roll_mean, strike_mean,
+    Cast, Gear, LEVELS, Probe, STRIKES, Side, Snap, armoured, avg, bony, dice_text, fight,
+    fight_cell, hide, hit_mean, hit_pct, median, r, roll_mean, strike_mean,
 };
 use crate::combat::{self, Category, Profile, Target};
-use crate::content::Resolution;
 use crate::dice::Dice;
 use crate::rng::Rng;
 use crate::stats::Stat;
@@ -280,19 +279,48 @@ pub(super) fn bodies(p: &Probe, rng: &mut Rng, out: &mut String) {
     }
 }
 
-/// The casters' damage spells.
-pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
+/// The casters, by class name and title, and the school each casts in.
+const CASTERS: [(&str, &str, &str); 3] = [
+    ("wizard", "Wizard", "evocation"),
+    ("priest", "Priest", "restoration"),
+    ("witch", "Witch", "necromancy"),
+];
+
+/// The levels the spell table prints (the design's §12.3).
+const SPELL_LEVELS: [u8; 4] = [10, 20, 30, 60];
+
+/// The one value of `v`, or `lo–hi` when the seeds differ.
+fn span<T: Ord + Copy + std::fmt::Display>(v: impl IntoIterator<Item = T>) -> String {
+    let v: Vec<T> = v.into_iter().collect();
+    match (v.iter().min(), v.iter().max()) {
+        (Some(lo), Some(hi)) if lo == hi => format!("{lo}"),
+        (Some(lo), Some(hi)) => format!("{lo}–{hi}"),
+        _ => "–".into(),
+    }
+}
+
+/// A reroll in words, after the dice: ` 1s again`, ` 1s and 2s again`.
+fn again(reroll: u32) -> String {
+    match reroll {
+        0 => String::new(),
+        1 => " 1s again".into(),
+        2 => " 1s and 2s again".into(),
+        r => format!(" 1s to {r}s again"),
+    }
+}
+
+/// The casters' spells that roll: the roll with the school's rank, and at rank 0.
+pub(super) fn spells(p: &Probe, out: &mut String) {
     writeln!(out, "\n## Spells\n").unwrap();
     writeln!(
         out,
-        "Each damage spell as the trained caster casts it (plain gear): the rung its stats and talents reach, the roll there, and the expected casts to kill the median monster of their level (an attack spell's miss chance included; per target), at that rung (at the base in brackets); mana per cast of the pool.\n"
+        "Each spell that rolls (harm or healing) of the schools the trained caster knows or has an affinity with, as `Actor::spell_roll` makes it in plain gear, per cast on one target: the rung of its ladder the stats reach (the seeds' range), the school's rank the pace below reached (and the rank of the caster style it is cast in from where the caster stands), the roll (seed 1's dice, the seeds' mean) and the same roll at rank 0 (the ladder alone), and its mana (the cost table's price with no rank's cut in brackets) over the pool.\n"
     )
     .unwrap();
-    for class in ["wizard", "priest"] {
+    for (class, title, _) in CASTERS {
         writeln!(
             out,
-            "**{}**\n\n| Spell (level, resolution) | L | rung | roll | casts to kill | mana / pool |\n|---|---|---|---|---|---|",
-            if class == "wizard" { "Wizard" } else { "Priest" }
+            "**{title}**\n\n| Spell (level, res) | L | rung | school rank | roll | mana / pool |\n|---|---|---|---|---|---|"
         )
         .unwrap();
         let mut names: Vec<String> = Vec::new();
@@ -306,73 +334,89 @@ pub(super) fn spells(p: &Probe, rng: &mut Rng, out: &mut String) {
         if names.is_empty() {
             writeln!(
                 out,
-                "| none: no damage spell it knows or of a school it has an affinity with ||||||"
+                "| none: no spell that rolls it knows or has an affinity with ||||||"
             )
             .unwrap();
         }
         for name in &names {
-            for level in [10u8, 30, 60] {
-                let s: Vec<&Snap> = p
-                    .of(class, level, Gear::Plain, true)
-                    .into_iter()
-                    .filter(|s| s.casts.iter().any(|c| &c.name == name))
+            for level in SPELL_LEVELS {
+                let s: Vec<&Snap> = p.of(class, level, Gear::Plain, true);
+                let c: Vec<&Cast> = (s.iter())
+                    .filter_map(|s| s.casts.iter().find(|c| &c.name == name))
                     .collect();
-                let Some(first) = s.first() else {
+                let Some(first) = c.first() else {
                     continue;
                 };
-                let w = p.window(level, -2, 2);
-                let c = first.casts.iter().find(|c| &c.name == name).expect("cast");
-                let mut per_lifted = Vec::new();
-                let mut per_plain = Vec::new();
-                for m in &w {
-                    let mut lifted = Vec::new();
-                    let mut plain = Vec::new();
-                    for (k, snap) in s.iter().enumerate() {
-                        let cast = snap.casts.iter().find(|c| &c.name == name).expect("cast");
-                        let them = &m.geared[k % m.geared.len()];
-                        for (dice, into) in [(cast.dice.0, &mut lifted), (cast.dice.1, &mut plain)]
-                        {
-                            let total: i64 = (0..STRIKES)
-                                .map(|_| {
-                                    let amount = match cast.resolution {
-                                        Resolution::Attack | Resolution::Touch => {
-                                            let p = Profile {
-                                                damage: dice,
-                                                ..cast.aim.clone()
-                                            };
-                                            let t = Target::bare(them.missile);
-                                            combat::strike(&p, &t, rng).damage
-                                        }
-                                        Resolution::Auto | Resolution::Area => {
-                                            dice.roll(rng, 0).max(0)
-                                        }
-                                    };
-                                    i64::from(amount)
-                                })
-                                .sum();
-                            let dmg = total as f64 / f64::from(STRIKES);
-                            into.push(f64::from(them.hp) / dmg.max(0.01));
-                        }
-                    }
-                    per_lifted.push(avg(lifted));
-                    per_plain.push(avg(plain));
+                let mut rank = span(c.iter().map(|c| c.school_rank));
+                if let Some((style, _)) = &first.style {
+                    let ranks = span(c.iter().filter_map(|c| c.style.as_ref().map(|s| s.1)));
+                    rank = format!("{rank} ({style} {ranks})");
                 }
                 let mana = avg(s.iter().map(|s| f64::from(s.mana)));
                 writeln!(
                     out,
-                    "| {name} ({}, {:?}) | {level} | {} | {}, {:.1} | {} ({}) | {} / {:.0} |",
-                    c.level,
-                    c.resolution,
-                    c.rung,
-                    c.dice.0,
-                    roll_mean(c.dice.0),
-                    r(median(per_lifted)),
-                    r(median(per_plain)),
-                    c.cost,
-                    mana,
+                    "| {name} ({}, {}) | {level} | {} | {rank} | {}{}, {:.1} (rank 0: {}{}, {:.1}) | {} ({}) / {mana:.0} |",
+                    first.level,
+                    format!("{:?}", first.resolution).to_lowercase(),
+                    span(c.iter().map(|c| c.rung)),
+                    first.dice,
+                    again(first.reroll),
+                    avg(c.iter().map(|c| roll_mean(c.dice, c.reroll))),
+                    first.bare,
+                    again(first.bare_reroll),
+                    avg(c.iter().map(|c| roll_mean(c.bare, c.bare_reroll))),
+                    first.cost,
+                    first.base_cost,
                 )
                 .unwrap();
             }
+        }
+        writeln!(out).unwrap();
+    }
+}
+
+/// The schools' pace: the ranks a pool a day reaches by level, and the pool check.
+pub(super) fn school_pace(p: &Probe, out: &mut String) {
+    writeln!(out, "\n## School pace\n").unwrap();
+    writeln!(
+        out,
+        "The trained caster's school and caster style as their casting trained them (`balance_probe/schools.rs`): each day of each level, one pool spent on the pace spell (of the school's spells, the most a cast among those costing at most a fifth of the pool, never one cast only under the open sky; for the priest a heal, at most one a kill), every cast landing on a monster of the caster's level through `World::practise`. Each row: the pace spell over the level before and its cost (seed 1's); casts a day from the pool, and the spell casts a day the same level's fights took (the stat training's careers, which refill the pool before every cast; the priest's one a kill); the school's rank and the caster style's at the level (the seeds' range); and the pool check, the pool over a single-target spell of the caster's own level (its base mana: the level; no rank's cut, no talent).\n"
+    )
+    .unwrap();
+    let table = p.content.weapon_skills();
+    for (class, title, school) in CASTERS {
+        writeln!(
+            out,
+            "**{title}** ({school})\n\n| L | pace spell (mana) | casts a day: pool / fights | school rank | style rank | pool / level-L casts |\n|---|---|---|---|---|---|"
+        )
+        .unwrap();
+        let id = table.id(school).expect("school");
+        for level in LEVELS {
+            let s = p.of(class, level, Gear::Plain, true);
+            let Some(first) = s.first() else {
+                continue;
+            };
+            let spell = match &first.paced.spell {
+                Some((name, cost)) => format!("{name} ({cost})"),
+                None => "–".into(),
+            };
+            let style = match &first.paced.style {
+                Some(name) => {
+                    let ranks = (s.iter()).filter_map(|s| s.style_rank);
+                    format!("{name} {}", span(ranks))
+                }
+                None => "–".into(),
+            };
+            let mana = avg(s.iter().map(|s| f64::from(s.mana)));
+            writeln!(
+                out,
+                "| {level} | {spell} | {:.1} / {:.1} | {} | {style} | {mana:.0} / {level} = {:.1} |",
+                avg(s.iter().map(|s| s.paced.casts_a_day)),
+                avg(s.iter().map(|s| s.fought_a_day)),
+                span(s.iter().map(|s| s.ranks.rank(id))),
+                mana / f64::from(level.max(1)),
+            )
+            .unwrap();
         }
         writeln!(out).unwrap();
     }

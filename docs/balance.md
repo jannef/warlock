@@ -8,11 +8,14 @@ so that the first-guess numbers in the data can be judged again after every tuni
 first kept at #569, after every slice of that design had landed: the new rank tables (W1),
 weapon abilities and stamina (W2 to W4, SP1), spell scales (S1), monster Protection by body (P1),
 stat training and the daily check (T1, T2), hit points to level 50 (H1), and potions and elixirs
-(Q1 to Q3). The tables below are its output on `main` at the time of #727 (stat training T6), which
-measures trained stats through the game's training hooks and added the "Stat training"
-section (the trained players' scores, and so their side of every fight, moved with it); the
-sections after them ("Against the design's predictions" and
-"Tuning notes") were written against #569's run, and their figures are that run's.
+(Q1 to Q3). #727 (stat training T6) made it measure trained stats through the game's training
+hooks and added the "Stat training" section. The tables below are its output on `main` at the
+time of #754 (the spell scaling design's S7, after every other slice of that design but the
+Magic page, a screen): the ladders, the school skills, the caster styles, and the school
+abilities, with the casters' school ranks trained by their casting ("School pace") instead of
+set by level. The sections after them ("Against the design's predictions" and "Tuning notes")
+were written against #569's run, and their figures are that run's, except the spell paragraph,
+which is #754's.
 
 ## How to run it
 
@@ -20,14 +23,14 @@ sections after them ("Against the design's predictions" and
 cargo test --release -p warlock-core balance_probe -- --ignored --nocapture
 ```
 
-It takes two to three minutes in release (most of it the stat training's sweep, a hundred and
+It takes about three minutes in release (most of it the stat training's sweep, a hundred and
 seventy careers to level 60). It prints the Markdown tables of the sections from "Players" to
 "Sneak attacks" below, and those of "Stat training", and the same content always prints the same tables (fixed seeds and streams).
 After a PR that tunes combat data (weapon skills, creatures, classes, spells, stats, items), run
 it again and replace those sections, then revisit the tuning notes. The code is
 `crates/warlock-core/src/world/balance_probe.rs` (the measuring, with the method in its module
-docs), `balance_probe/training.rs` (the trained careers' days), and `balance_probe/tables.rs`
-(the tables).
+docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/schools.rs`
+(the casters' school pace), and `balance_probe/tables.rs` (the tables).
 
 ## Method
 
@@ -37,12 +40,14 @@ docs), `balance_probe/training.rs` (the trained careers' days), and `balance_pro
   resistances), its blow is `Actor::melee`, and its blows a round are its speed over its
   `World::attack_price`.
 - **Players**: a human male warrior (long sword, sword and board, shield block), thief (dagger,
-  twin blades), wizard (staff, spell attack), and priest (mace, sword and board, shield block),
-  six seeds each. Each is made by `World::start_run` with the kit and levelled one level at a time
-  with `xp:` and `levelup:auto`, which takes the first talent it may, not one chosen for a build.
+  twin blades), wizard (staff; evocation), and priest (mace, sword and board, shield block;
+  restoration), six seeds each, and a witch (dagger; necromancy) measured for the spell tables
+  alone. Each is made by `World::start_run` with the kit and levelled one level at a time with
+  `xp:` and `levelup:auto`, which takes the first talent it may, not one chosen for a build.
   Weapon skill ranks are set by level, because ranks come from use: rank 2 at level 1, 4 at 5, 6
-  at 10, 7 at 15, 8 at 20, 9 at 30, and 10 from 40. The wizard's staff and the priest's spell
-  attack are two ranks lower.
+  at 10, 7 at 15, 8 at 20, 9 at 30, and 10 from 40. The wizard's staff and the witch's dagger
+  are two ranks lower. A school and a caster style are not set by level: they are trained by
+  casting ("School pace").
 - **Trained stats** (#727; "Stat training" below has the method and the results): before each
   level come its game days, and each day its share of the level's kills is fought blow by blow
   through the game's training hooks, then the day's other uses, then the daily check at 06:00
@@ -58,10 +63,20 @@ docs), `balance_probe/training.rs` (the trained careers' days), and `balance_pro
   player's damage a round; rounds to die are the player's hit points over the monster's damage a
   round. Each cell is the median over the monsters within two levels of the player, and each
   player seed is paired with one gear roll of each monster.
-- **Spells**: the trained caster's own casts at their caster level, with the stats' lift
-  (`Actor::spell_lift`) and without it. The dice are those of `SpellDice::lifted` and the
-  talents; nothing holds the roll (the spell scaling design S1, decision 16). Attack spells
-  strike the monster's Defence against missiles, and areas always hit.
+- **Spells** (the spell scaling design §12.4, S7): the trained caster's own roll of every spell
+  that rolls (harm or healing) of the schools they know or have an affinity with,
+  `Actor::spell_roll` in plain gear from where they stand: the rung of its ladder their stats
+  reach, their school's and caster style's ranks, the talents' and items' hooks; nothing holds
+  the roll (decision 16). Beside it the same roll with the school and the style at rank 0 (the
+  ladder alone), and the mean of a roll counts its rerolls exactly. No casts to kill: what a
+  spell is worth against a monster is the content's question; the probe's is the roll and the
+  pool.
+- **School pace**: before each level, each of its days the caster spends one pool on the
+  spell of their school they cast most (of the most mean roll among those costing at most a
+  fifth of the pool; none cast only under the open sky; the priest's a heal, at most one a
+  kill), and every cast lands on a monster of their level through `World::practise` (the
+  school, then the caster style it is cast in): the real `[marks]` and curve. The ranks it
+  reaches are the ones the spell tables and the trained careers' fights cast at.
 - **Sneak attacks** (#688): the thief's main-hand blow on a monster that has not seen them,
   against the same blow on one that has. The foe is flat-footed (`World::flat_footed`: nothing
   of its Dexterity or Dodge), the dice are `World::sneak_dice` (the Sneak attack skill and the
@@ -84,26 +99,26 @@ Each cell: to-hit / damage a hit / Dv / Pv, the seeds' mean; trained stats.
 | 1 | +3/8.2/16/3 | +3/8.2/16/3 | +0/3.0/13/1 | +0/3.0/13/1 | +0/3.0/12/0 | +1/6.0/12/0 | +1/6.0/12/0 |
 | 5 | +4/9.2/18/4 | +5/10.9/20/4 | +2/4.3/15/1 | +2/5.3/17/2 | +0/3.0/13/0 | +2/7.2/15/2 | +3/7.9/18/2 |
 | 10 | +7/11.7/22/5 | +8/12.9/25/6 | +6/7.7/20/1 | +8/9.2/21/2 | +2/4.0/16/0 | +6/10.5/17/4 | +8/12.8/20/5 |
-| 15 | +8/13.0/25/9 | +12/16.3/28/10 | +9/8.8/21/2 | +11/11.3/24/4 | +2/4.0/17/1 | +8/12.7/21/5 | +10/16.7/25/5 |
+| 15 | +8/13.0/25/9 | +12/16.3/28/10 | +9/8.8/21/2 | +11/11.3/24/4 | +2/4.0/16/1 | +8/12.7/21/5 | +10/16.7/25/5 |
 | 20 | +10/15.3/28/10 | +14/20.9/33/12 | +12/10.8/23/2 | +14/12.2/27/4 | +2/5.0/18/1 | +10/14.5/23/7 | +13/16.9/28/8 |
-| 30 | +13/17.7/33/12 | +21/24.7/41/18 | +14/13.0/23/2 | +20/20.5/30/8 | +3/6.8/20/1 | +11/16.8/26/8 | +19/22.6/34/15 |
-| 40 | +15/20.7/36/12 | +22/26.8/45/16 | +17/15.2/25/2 | +26/19.7/32/5 | +4/7.0/21/1 | +14/20.3/28/8 | +23/26.4/37/12 |
-| 50 | +16/21.7/36/12 | +21/28.2/46/17 | +18/16.3/25/2 | +22/24.2/31/7 | +4/7.0/22/1 | +14/21.2/28/8 | +20/29.1/36/13 |
-| 60 | +17/22.7/36/12 | +22/28.7/44/15 | +19/17.0/25/2 | +26/22.2/32/7 | +6/8.0/22/1 | +15/22.0/28/8 | +23/27.2/37/13 |
+| 30 | +13/17.7/33/12 | +21/24.6/41/18 | +14/13.0/23/2 | +20/20.5/30/8 | +4/7.0/20/1 | +11/16.8/26/8 | +19/22.6/33/15 |
+| 40 | +15/20.7/36/12 | +22/27.2/45/16 | +17/15.0/25/2 | +26/19.5/32/5 | +4/7.0/21/1 | +14/20.2/28/8 | +22/26.6/37/12 |
+| 50 | +16/22.2/36/12 | +21/27.9/46/17 | +18/16.2/25/2 | +23/22.8/31/7 | +5/7.2/22/1 | +14/21.2/28/8 | +20/29.2/36/13 |
+| 60 | +17/23.0/36/12 | +23/29.0/44/15 | +19/17.2/25/2 | +26/22.2/32/7 | +6/8.0/22/1 | +15/22.0/28/8 | +23/27.3/37/13 |
 
 Stats, hit points, and mana (plain gear; trained → untrained). Scores St/Dx/To/In/Wi/Pr, the seeds' mean.
 
 | L | Warrior | Thief | Wizard | Priest | HP W/T/Wz/P | MP Wz/P | Caster level Wz/P | Blows a round W/T |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 15/11/12/10/12/10 | 11/12/10/11/10/10 | 10/10/10/14/12/10 | 11/9/11/11/15/11 | 22→22 / 19→19 / 13→13 / 18→18 | 16/13 | 1/1 | 0.99/0.99 |
-| 5 | 15/11/12/10/12/10 | 12/13/11/12/10/10 | 10/11/10/15/13/10 | 11/9/11/12/15/11 | 36→36 / 27→26 / 18→17 / 26→26 | 52/40 | 6/5 | 0.88/0.96 |
-| 10 | 18/12/14/11/12/10 | 16/16/15/13/10/10 | 10/13/14/17/18/10 | 16/9/14/12/17/11 | 58→53 / 48→36 / 27→22 / 45→36 | 104/78 | 12/10 | 0.89/1.04 |
-| 15 | 19/14/16/12/13/10 | 19/18/17/14/11/10 | 10/15/18/19/20/10 | 18/11/17/14/18/11 | 86→70 / 74→46 / 44→27 / 72→46 | 159/120 | 18/15 | 0.91/1.10 |
-| 20 | 21/17/18/13/13/11 | 21/20/19/14/12/11 | 10/16/19/20/22/10 | 20/13/18/14/20/11 | 118→88 / 104→56 / 66→32 / 102→55 | 217/163 | 24/20 | 0.92/1.17 |
-| 30 | 24/19/19/15/14/11 | 23/22/20/16/13/11 | 11/18/21/21/24/11 | 23/15/20/16/21/12 | 185→127 / 171→79 / 114→43 / 181→79 | 341/256 | 36/30 | 0.94/1.24 |
-| 40 | 26/21/20/16/16/12 | 25/23/22/17/15/12 | 11/20/22/23/26/12 | 26/19/22/17/22/14 | 282→168 / 264→100 / 195→53 / 272→101 | 476/353 | 48/40 | 0.95/1.42 |
-| 50 | 28/22/21/17/18/14 | 28/24/24/18/17/14 | 12/21/24/24/28/14 | 27/20/24/18/23/15 | 374→204 / 361→120 / 271→63 / 361→122 | 622/456 | 60/50 | 0.95/1.49 |
-| 60 | 30/24/22/18/19/15 | 29/25/25/19/18/15 | 13/22/26/26/30/15 | 29/21/26/18/24/16 | 385→208 / 372→122 / 282→64 / 372→124 | 779/566 | 72/60 | 0.95/1.56 |
+| 5 | 15/11/12/10/12/10 | 12/13/11/12/10/10 | 10/10/10/15/13/10 | 11/9/11/12/15/11 | 36→36 / 27→26 / 18→17 / 26→26 | 52/40 | 6/5 | 0.88/0.96 |
+| 10 | 18/12/14/11/12/10 | 16/16/15/13/10/10 | 10/12/13/17/18/10 | 16/9/14/12/17/11 | 58→53 / 48→36 / 26→22 / 45→36 | 102/78 | 12/10 | 0.89/1.04 |
+| 15 | 19/14/16/12/13/10 | 19/18/17/14/11/10 | 10/14/17/18/20/10 | 18/11/17/14/18/11 | 86→70 / 74→46 / 41→27 / 72→46 | 158/120 | 18/15 | 0.91/1.10 |
+| 20 | 21/17/18/13/13/11 | 21/20/19/14/12/11 | 10/15/19/20/21/10 | 20/13/18/14/20/11 | 118→88 / 104→56 / 62→32 / 102→55 | 216/163 | 24/20 | 0.92/1.17 |
+| 30 | 24/19/19/15/14/11 | 23/22/20/16/13/11 | 11/18/21/21/23/11 | 23/15/20/16/21/12 | 185→127 / 171→79 / 110→43 / 181→79 | 336/256 | 36/30 | 0.94/1.24 |
+| 40 | 26/21/20/16/16/13 | 25/23/22/17/15/12 | 11/20/22/23/26/12 | 26/18/22/17/22/14 | 281→168 / 264→100 / 187→53 / 272→101 | 469/354 | 48/40 | 0.95/1.42 |
+| 50 | 28/22/21/17/18/14 | 27/25/24/18/17/14 | 12/21/23/24/27/14 | 28/20/24/18/23/14 | 374→204 / 362→120 / 262→63 / 363→122 | 613/456 | 60/50 | 0.95/1.49 |
+| 60 | 30/24/22/18/19/15 | 29/26/26/19/18/15 | 13/22/25/26/29/15 | 29/21/26/18/24/16 | 384→208 / 373→122 / 272→64 / 374→124 | 764/566 | 72/60 | 0.95/1.56 |
 
 The Defence of the warrior and the thief in plain gear by category (trained → untrained), the seeds' mean.
 
@@ -129,9 +144,9 @@ Within two levels: the median (range) bare → the mean with gear. Damage is a h
 | 20 | 47 | 73 | 5 (2–10) → 5.7 | 16 (4–22) → 14.4 | 13 (11–19) → 14.1 | 1 (0–9) → 1.6 | 1.00 |
 | 30 | 34 | 116 | 8 (6–13) → 8.8 | 22 (10–28) → 21.0 | 15 (12–21) → 15.6 | 2 (0–11) → 2.8 | 1.02 |
 | 40 | 27 | 143 | 11 (8–16) → 11.3 | 26 (11–32) → 23.1 | 17 (14–24) → 17.6 | 3 (0–11) → 3.4 | 1.07 |
-| 50 | 23 | 228 | 14 (10–18) → 14.3 | 32 (16–40) → 29.4 | 19 (12–25) → 19.3 | 4 (0–13) → 4.5 | 1.05 |
+| 50 | 23 | 228 | 14 (10–18) → 14.2 | 32 (16–40) → 29.5 | 19 (12–25) → 19.3 | 4 (0–13) → 4.5 | 1.05 |
 | 60 | 17 | 225 | 17 (12–21) → 16.9 | 34 (18–41) → 30.9 | 21 (15–27) → 22.0 | 6 (0–16) → 6.0 | 1.15 |
-| 70 | 7 | 197 | 20 (19–23) → 20.1 | 32 (20–40) → 32.1 | 26 (12–29) → 25.0 | 5 (0–12) → 4.9 | 1.35 |
+| 70 | 7 | 197 | 20 (19–23) → 20.1 | 32 (20–40) → 32.1 | 25 (12–29) → 25.0 | 5 (0–12) → 4.9 | 1.35 |
 
 ## Fights
 
@@ -140,28 +155,28 @@ Each cell: P(player hits) / P(monster hits) % · damage a round player : monster
 | L | Warrior kit | Warrior plain | Warrior magic | Thief plain | Thief magic | Wizard plain (melee) | Priest plain | Priest magic |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 85/35 · 7.4:0.1 · 1.6 / 306 | 85/35 · 7.4:0.1 · 1.6 / 332 | 85/35 · 7.4:0.1 · 1.6 / 306 | 67/55 · 2.6:0.5 · 6.1 / 37 | 67/55 · 2.6:0.5 · 6.0 / 36 | 71/62 · 2.3:1.1 · 5.6 / 14 | 76/59 · 4.8:1.0 · 2.7 / 19 | 76/59 · 4.7:1.0 · 2.7 / 19 |
-| 5 | 86/34 · 8.4:0.8 · 2.8 / 51 | 86/27 · 7.3:0.5 · 3.3 / 87 | 89/15 · 9.3:0.2 · 2.6 / 250 | 75/46 · 3.8:1.6 · 6.7 / 18 | 75/32 · 4.6:1.0 · 5.3 / 54 | 65/59 · 1.8:2.3 · 15 / 8.2 | 78/43 · 4.6:1.2 · 4.9 / 22 | 81/29 · 5.4:0.8 · 4.1 / 52 |
-| 10 | 92/20 · 11.6:1.3 · 3.6 / 57 | 92/15 · 10.4:0.8 · 4.1 / 95 | 94/7 · 11.5:0.3 · 3.8 / >999 | 89/25 · 11.1:2.0 · 4.7 / 31 | 93/17 · 13.9:1.3 · 3.9 / 103 | 65/50 · 2.6:4.1 · 18 / 6.8 | 89/42 · 8.4:2.6 · 5.1 / 20 | 95/25 · 11.4:1.4 · 3.7 / 77 |
-| 15 | 95/9 · 13.4:0.7 · 4.6 / 213 | 95/8 · 11.7:0.4 · 5.4 / 309 | 99/4 · 16.9:0.2 · 4.0 / >999 | 96/27 · 13.9:2.8 · 5.4 / 30 | 98/12 · 19.4:1.1 · 4.7 / 121 | 65/56 · 2.0:6.5 · 30 / 7.3 | 95/27 · 10.6:2.3 · 6.5 / 43 | 98/12 · 15.5:1.0 · 4.4 / 987 |
-| 20 | 98/3 · 17.2:0.3 · 4.8 / >999 | 98/5 · 15.2:0.2 · 5.5 / >999 | 99/1 · 23.0:0.0 · 3.7 / >999 | 99/27 · 19.8:2.8 · 5.3 / 49 | 99/10 · 24.1:1.0 · 4.3 / 516 | 65/59 · 2.5:6.8 · 34 / 9.9 | 98/26 · 12.0:2.0 · 6.6 / 71 | 99/7 · 16.3:0.4 · 5.0 / >999 |
-| 30 | 99/1 · 21.2:0.2 · 6.8 / >999 | 99/2 · 18.4:0.2 · 7.8 / >999 | 99/1 · 30.3:0.1 · 5.0 / >999 | 99/42 · 25.4:9.3 · 6.4 / 21 | 99/7 · 45.3:1.0 · 3.3 / 540 | 62/64 · 2.7:13.3 · 45 / 8.8 | 96/26 · 12.9:4.3 · 10 / 46 | 99/2 · 25.5:0.2 · 5.8 / >999 |
-| 40 | 98/1 · 25.8:0.1 · 7.0 / >999 | 98/1 · 21.7:0.1 · 8.1 / >999 | 99/1 · 38.7:0.1 · 4.9 / >999 | 99/47 · 33.8:11.1 · 6.0 / 26 | 99/8 · 53.7:1.3 · 3.8 / >999 | 51/72 · 2.4:15.2 · 70 / 13 | 97/27 · 16.2:5.7 · 11 / 55 | 99/1 · 28.6:0.1 · 5.6 / >999 |
-| 50 | 99/2 · 26.3:0.5 · 9.1 / >999 | 99/8 · 23.1:1.3 · 10 / 640 | 99/1 · 36.6:0.1 · 6.6 / >999 | 99/68 · 35.9:19.5 · 7.2 / 19 | 99/31 · 51.8:8.0 · 4.1 / 115 | 42/85 · 1.6:22.6 · 165 / 12 | 97/49 · 15.8:12.6 · 15 / 30 | 99/10 · 30.8:2.2 · 7.7 / >999 |
-| 60 | 95/5 · 20.7:1.7 · 9.9 / 847 | 95/16 · 17.8:4.4 · 11 / 108 | 99/1 · 28.6:0.2 · 6.9 / >999 | 99/84 · 31.1:27.7 · 7.9 / 14 | 99/38 · 44.0:12.1 · 5.5 / 54 | 30/95 · 1.4:31.0 · 351 / 9.4 | 91/71 · 15.2:21.0 · 15 / 19 | 99/15 · 24.8:4.2 · 10 / 421 |
+| 5 | 86/34 · 8.4:0.8 · 2.8 / 51 | 86/27 · 7.3:0.5 · 3.3 / 87 | 89/15 · 9.3:0.2 · 2.6 / 250 | 75/46 · 3.8:1.6 · 6.7 / 18 | 75/32 · 4.6:1.0 · 5.3 / 54 | 65/60 · 1.9:2.4 · 14 / 7.6 | 78/43 · 4.6:1.3 · 4.9 / 21 | 81/29 · 5.4:0.8 · 4.1 / 53 |
+| 10 | 92/20 · 11.6:1.3 · 3.6 / 57 | 92/15 · 10.4:0.8 · 4.1 / 95 | 94/7 · 11.5:0.3 · 3.8 / >999 | 89/25 · 11.1:2.0 · 4.7 / 31 | 93/17 · 13.9:1.3 · 3.9 / 103 | 65/54 · 2.6:4.4 · 18 / 6.2 | 89/42 · 8.4:2.4 · 5.1 / 21 | 95/25 · 11.5:1.4 · 3.7 / 79 |
+| 15 | 95/9 · 13.3:0.7 · 4.6 / 211 | 95/8 · 11.7:0.4 · 5.4 / 299 | 99/4 · 16.8:0.2 · 4.0 / >999 | 96/27 · 13.9:2.7 · 5.4 / 30 | 98/12 · 19.2:1.1 · 4.8 / 115 | 65/59 · 2.1:6.9 · 30 / 6.3 | 95/27 · 10.5:2.3 · 6.5 / 40 | 98/12 · 15.5:1.0 · 4.4 / >999 |
+| 20 | 98/3 · 17.5:0.3 · 4.8 / >999 | 98/5 · 15.4:0.2 · 5.4 / >999 | 99/1 · 23.5:0.0 · 3.6 / >999 | 99/27 · 19.7:2.8 · 5.2 / 47 | 99/10 · 24.7:0.9 · 4.3 / 481 | 65/61 · 2.6:7.2 · 33 / 8.9 | 98/26 · 12.1:1.9 · 6.7 / 71 | 99/7 · 16.4:0.5 · 5.0 / >999 |
+| 30 | 99/1 · 21.3:0.2 · 6.8 / >999 | 99/2 · 18.4:0.2 · 7.8 / >999 | 99/1 · 30.1:0.1 · 5.0 / >999 | 99/42 · 25.5:9.1 · 6.4 / 22 | 99/8 · 44.8:1.0 · 3.3 / 386 | 64/63 · 2.7:13.8 · 40 / 8.1 | 96/26 · 12.8:4.4 · 10 / 45 | 99/4 · 25.4:0.5 · 5.7 / >999 |
+| 40 | 98/1 · 25.1:0.2 · 7.1 / >999 | 98/1 · 22.2:0.2 · 8.1 / >999 | 99/1 · 38.0:0.1 · 4.8 / >999 | 99/47 · 33.3:10.8 · 6.2 / 27 | 99/8 · 54.8:1.3 · 3.8 / >999 | 51/72 · 2.5:15.0 · 68 / 13 | 97/27 · 16.2:5.6 · 11 / 55 | 99/1 · 28.9:0.1 · 5.7 / >999 |
+| 50 | 99/2 · 27.1:0.7 · 8.8 / >999 | 99/8 · 23.9:1.2 · 10 / 640 | 99/1 · 36.2:0.1 · 6.6 / >999 | 99/68 · 35.6:19.4 · 7.3 / 20 | 99/30 · 49.9:7.5 · 4.7 / 453 | 43/86 · 1.6:23.0 · 154 / 11 | 97/49 · 15.8:12.9 · 15 / 30 | 99/10 · 30.8:2.3 · 7.6 / >999 |
+| 60 | 96/5 · 21.1:1.7 · 9.7 / 554 | 96/16 · 18.3:5.1 · 11 / 86 | 99/1 · 28.6:0.2 · 6.7 / >999 | 99/84 · 31.8:26.8 · 7.8 / 14 | 99/38 · 43.9:11.0 · 5.5 / 55 | 30/94 · 1.3:30.7 · 388 / 9.2 | 91/71 · 15.3:19.9 · 16 / 20 | 99/15 · 25.2:3.9 · 10 / 606 |
 
 Out of depth (+3: the monsters one to five levels above), and untrained stats, for the warrior in plain gear.
 
 | L | Warrior plain +3 | Warrior magic +3 | Warrior plain, untrained | Warrior magic, untrained |
 |---|---|---|---|---|
-| 1 | 81/35 · 7.0:0.6 · 2.9 / 40 | 81/35 · 6.9:0.6 · 2.9 / 37 | 85/35 · 7.5:0.1 · 1.6 / 333 | 85/35 · 7.4:0.1 · 1.6 / 306 |
-| 5 | 86/34 · 7.3:1.5 · 4.9 / 26 | 88/20 · 9.1:0.8 · 3.9 / 65 | 86/27 · 7.4:0.5 · 3.3 / 84 | 89/15 · 9.3:0.2 · 2.6 / 275 |
-| 10 | 92/23 · 10.0:1.5 · 6.1 / 45 | 94/11 · 10.9:0.7 · 5.5 / 525 | 86/17 · 8.5:0.9 · 5.2 / 74 | 89/8 · 9.6:0.4 · 4.5 / >999 |
-| 15 | 94/11 · 11.6:0.7 · 6.2 / 150 | 99/5 · 16.4:0.3 · 4.5 / >999 | 89/11 · 8.5:0.6 · 7.6 / 171 | 98/5 · 13.7:0.3 · 4.9 / >999 |
-| 20 | 97/8 · 14.9:0.6 · 7.5 / 318 | 99/1 · 22.4:0.1 · 5.0 / >999 | 90/7 · 9.5:0.4 · 9.3 / 578 | 97/1 · 19.3:0.0 · 4.7 / >999 |
-| 30 | 98/3 · 17.0:0.4 · 8.7 / 964 | 99/1 · 29.7:0.1 · 5.4 / >999 | 88/5 · 9.8:0.6 · 13 / 629 | 99/1 · 23.7:0.1 · 6.5 / >999 |
-| 40 | 99/2 · 21.9:0.4 · 8.9 / >999 | 99/1 · 38.2:0.1 · 5.3 / >999 | 81/3 · 12.5:0.6 · 14 / >999 | 97/1 · 27.9:0.1 · 6.7 / >999 |
-| 50 | 97/8 · 20.3:1.5 · 11 / 487 | 99/1 · 33.6:0.2 · 6.8 / >999 | 76/14 · 10.9:2.7 · 23 / 131 | 93/1 · 24.6:0.1 · 10 / >999 |
-| 60 | 86/31 · 14.6:8.8 · 16 / 53 | 98/2 · 24.7:0.4 · 9.4 / >999 | 55/27 · 6.8:8.2 · 43 / 28 | 87/1 · 16.7:0.3 · 14 / >999 |
+| 1 | 81/35 · 7.1:0.6 · 2.9 / 38 | 81/35 · 7.0:0.6 · 2.9 / 41 | 85/35 · 7.4:0.1 · 1.6 / 329 | 85/35 · 7.5:0.1 · 1.6 / 301 |
+| 5 | 86/34 · 7.2:1.4 · 4.9 / 28 | 88/20 · 9.1:0.7 · 3.9 / 70 | 86/27 · 7.4:0.5 · 3.3 / 87 | 89/15 · 9.3:0.3 · 2.6 / 236 |
+| 10 | 92/23 · 9.9:1.6 · 6.1 / 40 | 94/11 · 10.8:0.7 · 5.6 / 473 | 86/17 · 8.5:0.9 · 5.4 / 74 | 89/8 · 9.7:0.4 · 4.5 / >999 |
+| 15 | 94/11 · 11.6:0.7 · 6.2 / 155 | 99/5 · 16.8:0.3 · 4.5 / >999 | 89/11 · 8.5:0.6 · 7.7 / 191 | 98/5 · 13.6:0.2 · 4.9 / >999 |
+| 20 | 97/8 · 15.0:0.7 · 7.5 / 304 | 99/1 · 22.9:0.1 · 4.9 / >999 | 90/7 · 9.5:0.4 · 9.2 / 512 | 97/1 · 19.5:0.1 · 4.6 / >999 |
+| 30 | 98/3 · 17.0:0.4 · 8.7 / >999 | 99/1 · 29.0:0.1 · 5.4 / >999 | 88/5 · 10.0:0.6 · 13 / 515 | 99/1 · 23.7:0.1 · 6.6 / >999 |
+| 40 | 99/2 · 22.0:0.4 · 8.9 / >999 | 99/1 · 39.0:0.1 · 5.2 / >999 | 81/3 · 12.1:0.6 · 14 / >999 | 97/1 · 27.7:0.1 · 6.5 / >999 |
+| 50 | 98/8 · 21.0:1.7 · 10 / 532 | 99/1 · 33.8:0.1 · 6.8 / >999 | 76/14 · 10.7:2.8 · 23 / 111 | 92/1 · 24.0:0.2 · 10 / >999 |
+| 60 | 87/30 · 15.2:8.7 · 16 / 52 | 98/2 · 25.1:0.4 · 9.3 / >999 | 55/27 · 7.1:8.0 · 43 / 29 | 87/1 · 16.6:0.3 · 15 / >999 |
 
 ## Protection by body
 
@@ -169,67 +184,146 @@ Rounds for the plain warrior (trained) to kill the monsters of their level: as s
 
 | L | as shipped | none (0) | hide | bony | armoured |
 |---|---|---|---|---|---|
-| 10 | 4.1 | 3.7 | 3.7 | 4.2 | 4.7 |
-| 15 | 5.3 | 4.6 | 4.5 | 5.0 | 6.0 |
-| 20 | 5.5 | 4.6 | 4.9 | 5.3 | 5.8 |
-| 30 | 7.8 | 5.8 | 6.1 | 6.9 | 7.9 |
-| 40 | 8.1 | 5.9 | 6.5 | 6.9 | 8.0 |
-| 50 | 10 | 8.3 | 9.4 | 11 | 13 |
-| 60 | 11 | 7.6 | 8.7 | 9.5 | 11 |
+| 10 | 4.0 | 3.8 | 3.7 | 4.2 | 4.7 |
+| 15 | 5.4 | 4.5 | 4.6 | 5.0 | 6.0 |
+| 20 | 5.4 | 4.6 | 4.9 | 5.4 | 5.8 |
+| 30 | 7.7 | 5.7 | 6.2 | 6.8 | 7.8 |
+| 40 | 8.1 | 5.8 | 6.5 | 7.0 | 8.2 |
+| 50 | 10 | 8.2 | 9.1 | 10 | 12 |
+| 60 | 11 | 7.5 | 8.4 | 9.4 | 11 |
 
 ## Spells
 
-Each damage spell as the trained caster casts it (plain gear): the lift, the dice, and the expected casts to kill the median monster of their level (an attack spell's miss chance included; per target), lifted (unlifted in brackets); mana per cast of the pool.
+Each spell that rolls (harm or healing) of the schools the trained caster knows or has an affinity with, as `Actor::spell_roll` makes it in plain gear, per cast on one target: the rung of its ladder the stats reach (the seeds' range), the school's rank the pace below reached (and the rank of the caster style it is cast in from where the caster stands), the roll (seed 1's dice, the seeds' mean) and the same roll at rank 0 (the ladder alone), and its mana (the cost table's price with no rank's cut in brackets) over the pool.
 
 **Wizard**
 
-| Spell (level, resolution) | L | lift % | dice | casts to kill | mana / pool |
+| Spell (level, res) | L | rung | school rank | roll | mana / pool |
 |---|---|---|---|---|---|
-| Ray of frost (1, Attack) | 10 | 0 | 1d6+1, 4.5 | 9.1 (9.2) | 1 / 104 |
-| Ray of frost (1, Attack) | 30 | 0 | 1d6+1, 4.5 | 24 (24) | 1 / 341 |
-| Ray of frost (1, Attack) | 60 | 0 | 2d6+6, 13.0 | 18 (18) | 1 / 779 |
-| Spark (1, Auto) | 10 | 0 | 1d4+1, 3.5 | 11 (11) | 1 / 104 |
-| Spark (1, Auto) | 30 | 0 | 1d4+1, 3.5 | 34 (34) | 1 / 341 |
-| Spark (1, Auto) | 60 | 0 | 2d4+6, 11.0 | 21 (21) | 1 / 779 |
-| Magic missile (3, Auto) | 10 | 65 | 3d4+3, 10.5 | 4.3 (5.6) | 3 / 104 |
-| Magic missile (3, Auto) | 30 | 85 | 3d4+3, 10.5 | 11 (17) | 3 / 341 |
-| Magic missile (3, Auto) | 60 | 135 | 5d4+15, 27.5 | 8.3 (14) | 1 / 779 |
-| Burning hands (4, Area) | 10 | 65 | 3d4+3, 10.5 | 4.3 (5.5) | 6 / 104 |
-| Burning hands (4, Area) | 30 | 85 | 3d4+3, 10.5 | 11 (17) | 6 / 341 |
-| Burning hands (4, Area) | 60 | 135 | 5d4+15, 27.5 | 8.3 (14) | 2 / 779 |
-| Cause wounds (4, Touch) | 10 | 0 | 2d6+2, 9.0 | 5.0 (4.9) | 3 / 104 |
-| Cause wounds (4, Touch) | 30 | 0 | 2d6+2, 9.0 | 13 (12) | 3 / 341 |
-| Cause wounds (4, Touch) | 60 | 0 | 3d6+9, 19.5 | 14 (14) | 1 / 779 |
-| Arcane bolt (6, Area) | 10 | 65 | 3d6+3, 13.5 | 3.3 (4.3) | 11 / 104 |
-| Arcane bolt (6, Area) | 30 | 85 | 3d6+3, 13.5 | 8.7 (13) | 11 / 341 |
-| Arcane bolt (6, Area) | 60 | 135 | 5d6+15, 32.5 | 7.1 (12) | 4 / 779 |
-| Frost (6, Area) | 10 | 65 | 3d6+3, 13.5 | 3.3 (4.3) | 14 / 104 |
-| Frost (6, Area) | 30 | 85 | 3d6+3, 13.5 | 8.7 (13) | 14 / 341 |
-| Frost (6, Area) | 60 | 135 | 5d6+15, 32.5 | 7.1 (12) | 5 / 779 |
-| Blight (7, Area) | 10 | 0 | 2d6+2, 9.0 | 4.3 (4.3) | 17 / 104 |
-| Blight (7, Area) | 30 | 0 | 2d6+2, 9.0 | 13 (13) | 17 / 341 |
-| Blight (7, Area) | 60 | 0 | 3d6+9, 19.5 | 12 (12) | 6 / 779 |
-| Scorching ray (7, Attack) | 10 | 65 | 2d6+2, 9.0 | 4.6 (9.2) | 7 / 104 |
-| Scorching ray (7, Attack) | 30 | 85 | 5d6+5, 22.5 | 4.8 (7.9) | 7 / 341 |
-| Scorching ray (7, Attack) | 60 | 135 | 8d6+24, 52.0 | 4.9 (9.0) | 2 / 779 |
-| Call lightning (11, Area) | 10 | 65 | 3d6+3, 13.5 | 2.9 (4.3) | 20 / 104 |
-| Call lightning (11, Area) | 30 | 85 | 5d6+5, 22.5 | 5.2 (8.7) | 20 / 341 |
-| Call lightning (11, Area) | 60 | 135 | 8d6+24, 52.0 | 4.9 (8.8) | 8 / 779 |
-| Fireball (11, Area) | 10 | 65 | 3d6+3, 13.5 | 2.9 (4.3) | 26 / 104 |
-| Fireball (11, Area) | 30 | 85 | 5d6+5, 22.5 | 5.2 (8.7) | 26 / 341 |
-| Fireball (11, Area) | 60 | 135 | 8d6+24, 52.0 | 4.9 (8.8) | 10 / 779 |
-| Lightning bolt (11, Area) | 10 | 65 | 3d6+3, 13.5 | 2.9 (4.3) | 20 / 104 |
-| Lightning bolt (11, Area) | 30 | 85 | 5d6+5, 22.5 | 5.2 (8.7) | 20 / 341 |
-| Lightning bolt (11, Area) | 60 | 135 | 8d6+24, 52.0 | 4.9 (8.8) | 8 / 779 |
-| Flame (12, Area) | 10 | 65 | 4d6+4, 18.0 | 2.1 (2.9) | 29 / 104 |
-| Flame (12, Area) | 30 | 85 | 5d6+5, 22.5 | 5.2 (8.8) | 29 / 341 |
-| Flame (12, Area) | 60 | 135 | 8d6+24, 52.0 | 4.9 (8.9) | 11 / 779 |
+| Ray of frost (1, attack) | 10 | 1 | 5 (Sniper 5–6) | 1d9 1s again, 6.4 (rank 0: 1d8, 4.5) | 1 (1) / 102 |
+| Ray of frost (1, attack) | 20 | 1 | 7 (Sniper 7) | 2d9 1s again, 11.0 (rank 0: 1d8, 4.5) | 1 (1) / 216 |
+| Ray of frost (1, attack) | 30 | 1 | 8 (Sniper 8–9) | 2d9 1s and 2s again, 12.5 (rank 0: 1d8, 4.5) | 1 (1) / 336 |
+| Ray of frost (1, attack) | 60 | 1 | 10 (Sniper 10) | 3d10 1s and 2s again, 18.9 (rank 0: 1d8, 4.5) | 1 (1) / 764 |
+| Spark (1, auto) | 10 | 1 | 5 (Sniper 5–6) | 1d7 1s again, 5.2 (rank 0: 1d6, 3.5) | 1 (1) / 102 |
+| Spark (1, auto) | 20 | 1 | 7 (Sniper 7) | 2d7 1s again, 9.0 (rank 0: 1d6, 3.5) | 1 (1) / 216 |
+| Spark (1, auto) | 30 | 1 | 8 (Sniper 8–9) | 2d7 1s and 2s again, 10.2 (rank 0: 1d6, 3.5) | 1 (1) / 336 |
+| Spark (1, auto) | 60 | 1 | 10 (Sniper 10) | 3d8 1s and 2s again, 15.8 (rank 0: 1d6, 3.5) | 1 (1) / 764 |
+| Magic missile (3, auto) | 10 | 2 | 5 (Sniper 5–6) | 3d5 1s again, 10.8 (rank 0: 3d4, 7.5) | 2 (3) / 102 |
+| Magic missile (3, auto) | 20 | 2 | 7 (Sniper 7) | 4d5 1s again, 13.7 (rank 0: 3d4, 7.5) | 2 (3) / 216 |
+| Magic missile (3, auto) | 30 | 2–3 | 8 (Sniper 8–9) | 4d5 1s and 2s again, 15.3 (rank 0: 3d4, 7.8) | 2 (3) / 336 |
+| Magic missile (3, auto) | 60 | 3 | 10 (Sniper 10) | 5d6+1 1s and 2s again, 21.8 (rank 0: 3d4+1, 8.5) | 1 (3) / 764 |
+| Burning hands (4, area) | 10 | 2 | 5 (Sniper 5–6) | 3d5 1s again, 10.8 (rank 0: 3d4, 7.5) | 5 (6) / 102 |
+| Burning hands (4, area) | 20 | 2 | 7 (Sniper 7) | 4d5 1s again, 13.7 (rank 0: 3d4, 7.5) | 5 (6) / 216 |
+| Burning hands (4, area) | 30 | 2–3 | 8 (Sniper 8–9) | 4d5 1s and 2s again, 15.7 (rank 0: 3d4, 8.2) | 5 (6) / 336 |
+| Burning hands (4, area) | 60 | 3 | 10 (Sniper 10) | 5d6+2 1s and 2s again, 22.8 (rank 0: 3d4+2, 9.5) | 1 (6) / 764 |
+| Cause wounds (4, touch) | 10 | 1–2 | 0 (Toucher 1–2) | 2d8, 7.7 (rank 0: 2d8, 7.7) | 3 (3) / 102 |
+| Cause wounds (4, touch) | 20 | 2 | 0 (Toucher 3) | 2d8, 9.0 (rank 0: 2d8, 9.0) | 3 (3) / 216 |
+| Cause wounds (4, touch) | 30 | 2 | 0 (Toucher 4–5) | 2d8+1, 10.0 (rank 0: 2d8, 9.0) | 3 (3) / 336 |
+| Cause wounds (4, touch) | 60 | 3 | 0 (Toucher 6) | 2d8+3, 12.0 (rank 0: 2d8+2, 11.0) | 1 (3) / 764 |
+| Arcane bolt (6, area) | 10 | 1 | 5 (Sniper 5–6) | 3d7 1s again, 14.0 (rank 0: 3d6, 10.5) | 10 (11) / 102 |
+| Arcane bolt (6, area) | 20 | 2 | 7 (Sniper 7) | 4d7+2 1s again, 19.9 (rank 0: 3d6+2, 12.5) | 9 (11) / 216 |
+| Arcane bolt (6, area) | 30 | 2 | 8 (Sniper 8–9) | 4d7+2 1s and 2s again, 21.6 (rank 0: 3d6+2, 12.5) | 9 (11) / 336 |
+| Arcane bolt (6, area) | 60 | 3 | 10 (Sniper 10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | 2 (11) / 764 |
+| Frost (6, area) | 10 | 1 | 5 (Sniper 5–6) | 3d7 1s again, 14.0 (rank 0: 3d6, 10.5) | 13 (14) / 102 |
+| Frost (6, area) | 20 | 2 | 7 (Sniper 7) | 4d7+2 1s again, 19.9 (rank 0: 3d6+2, 12.5) | 12 (14) / 216 |
+| Frost (6, area) | 30 | 2 | 8 (Sniper 8–9) | 4d7+2 1s and 2s again, 21.6 (rank 0: 3d6+2, 12.5) | 12 (14) / 336 |
+| Frost (6, area) | 60 | 3 | 10 (Sniper 10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | 3 (14) / 764 |
+| Blight (7, area) | 10 | 1 | 0 (Sniper 5–6) | 3d6, 10.5 (rank 0: 3d6, 10.5) | 17 (17) / 102 |
+| Blight (7, area) | 20 | 1–2 | 0 (Sniper 7) | 3d6+3, 12.0 (rank 0: 3d6+3, 12.0) | 17 (17) / 216 |
+| Blight (7, area) | 30 | 1–2 | 0 (Sniper 8–9) | 3d6+3, 13.0 (rank 0: 3d6+3, 13.0) | 17 (17) / 336 |
+| Blight (7, area) | 60 | 2 | 0 (Sniper 10) | 3d6+3, 13.5 (rank 0: 3d6+3, 13.5) | 6 (17) / 764 |
+| Scorching ray (7, attack) | 10 | 2 | 5 (Sniper 5–6) | 3d7 1s again, 14.0 (rank 0: 3d6, 10.5) | 6 (7) / 102 |
+| Scorching ray (7, attack) | 20 | 3 | 7 (Sniper 7) | 5d7 1s again, 22.4 (rank 0: 4d6, 14.0) | 6 (7) / 216 |
+| Scorching ray (7, attack) | 30 | 3 | 8 (Sniper 8–9) | 5d7 1s and 2s again, 24.4 (rank 0: 4d6, 14.0) | 6 (7) / 336 |
+| Scorching ray (7, attack) | 60 | 4 | 10 (Sniper 10) | 5d8+1d12 1s and 2s again, 33.6 (rank 0: 3d6+1d10, 16.0) | 1 (7) / 764 |
+| Call lightning (11, area) | 10 | 2–3 | 5 (Sniper 5–6) | 5d7 1s again, 19.9 (rank 0: 5d6, 15.2) | 19 (20) / 102 |
+| Call lightning (11, area) | 20 | 3 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | 18 (20) / 216 |
+| Call lightning (11, area) | 30 | 3 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | 18 (20) / 336 |
+| Call lightning (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | 5 (20) / 764 |
+| Fireball (11, area) | 10 | 2 | 5 (Sniper 5–6) | 4d7 1s again, 18.5 (rank 0: 4d6, 14.0) | 24 (26) / 102 |
+| Fireball (11, area) | 20 | 3 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | 23 (26) / 216 |
+| Fireball (11, area) | 30 | 3 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | 23 (26) / 336 |
+| Fireball (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | 6 (26) / 764 |
+| Lightning bolt (11, area) | 10 | 2 | 5 (Sniper 5–6) | 4d7 1s again, 18.5 (rank 0: 4d6, 14.0) | 19 (20) / 102 |
+| Lightning bolt (11, area) | 20 | 3 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | 18 (20) / 216 |
+| Lightning bolt (11, area) | 30 | 3 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | 18 (20) / 336 |
+| Lightning bolt (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | 5 (20) / 764 |
+| Flame (12, area) | 10 | 1 | 5 (Sniper 5–6) | 4d7 1s again, 18.5 (rank 0: 4d6, 14.0) | 27 (29) / 102 |
+| Flame (12, area) | 20 | 2 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | 26 (29) / 216 |
+| Flame (12, area) | 30 | 2 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | 26 (29) / 336 |
+| Flame (12, area) | 60 | 3 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | 7 (29) / 764 |
 
 **Priest**
 
-| Spell (level, resolution) | L | lift % | dice | casts to kill | mana / pool |
+| Spell (level, res) | L | rung | school rank | roll | mana / pool |
 |---|---|---|---|---|---|
-| none: no damage spell it knows or of a school it has an affinity with ||||||
+| Mend (1, touch) | 10 | 0–1 | 7 (Battle caster 4–5) | 2d5+2 1s again, 8.6 (rank 0: 1d4, 2.4) | 1 (1) / 78 |
+| Mend (1, touch) | 20 | 1 | 10 (Battle caster 10) | 2d6+3 1s and 2s again, 11.3 (rank 0: 1d4, 2.5) | 1 (1) / 163 |
+| Mend (1, touch) | 30 | 1–2 | 10 (Battle caster 10) | 2d6+3 1s and 2s again, 12.1 (rank 0: 1d4, 2.8) | 1 (1) / 256 |
+| Mend (1, touch) | 60 | 2 | 10 (Battle caster 10) | 2d8+3 1s and 2s again, 13.5 (rank 0: 1d6, 3.5) | 1 (1) / 566 |
+| Cure wounds (3, touch) | 10 | 0–1 | 7 (Battle caster 4–5) | 4d7+2 1s again, 19.0 (rank 0: 3d6, 9.9) | 1 (2) / 78 |
+| Cure wounds (3, touch) | 20 | 1 | 10 (Battle caster 10) | 4d8+3 1s and 2s again, 24.0 (rank 0: 3d6, 10.5) | 2 (2) / 163 |
+| Cure wounds (3, touch) | 30 | 1–2 | 10 (Battle caster 10) | 4d8+3 1s and 2s again, 25.0 (rank 0: 3d6, 11.5) | 2 (2) / 256 |
+| Cure wounds (3, touch) | 60 | 2 | 10 (Battle caster 10) | 4d8+6 1s and 2s again, 27.0 (rank 0: 3d6+3, 13.5) | 2 (2) / 566 |
+
+**Witch**
+
+| Spell (level, res) | L | rung | school rank | roll | mana / pool |
+|---|---|---|---|---|---|
+| Cause wounds (4, touch) | 10 | 1–2 | 6 (Toucher 6–7) | 2d8+3 1s again, 12.4 (rank 0: 2d8, 8.3) | 2 (3) / 88 |
+| Cause wounds (4, touch) | 20 | 2 | 7–9 (Toucher 6–9) | 2d8+3 1s again, 16.6 (rank 0: 2d8, 9.0) | 2 (3) / 194 |
+| Cause wounds (4, touch) | 30 | 2–3 | 9–10 (Toucher 6–10) | 3d8+4 1s and 2s again, 21.2 (rank 0: 2d8, 9.7) | 2 (3) / 308 |
+| Cause wounds (4, touch) | 60 | 3 | 10 (Toucher 6–10) | 3d8+7 1s and 2s again, 23.8 (rank 0: 2d8+2, 11.0) | 2 (3) / 718 |
+| Blight (7, area) | 10 | 1 | 6 (Sniper 2–4) | 3d6+2 1s again, 13.8 (rank 0: 3d6, 10.5) | 16 (17) / 88 |
+| Blight (7, area) | 20 | 1–2 | 7–9 (Sniper 5–7) | 3d6+5 1s again, 18.7 (rank 0: 3d6+3, 12.5) | 15 (17) / 194 |
+| Blight (7, area) | 30 | 2 | 9–10 (Sniper 7–9) | 4d6+6 1s and 2s again, 22.8 (rank 0: 3d6+3, 13.5) | 15 (17) / 308 |
+| Blight (7, area) | 60 | 2 | 10 (Sniper 9–10) | 4d6+7 1s and 2s again, 23.7 (rank 0: 3d6+3, 13.5) | 14 (17) / 718 |
+
+## School pace
+
+The trained caster's school and caster style as their casting trained them (`balance_probe/schools.rs`): each day of each level, one pool spent on the pace spell (of the school's spells, the most a cast among those costing at most a fifth of the pool, never one cast only under the open sky; for the priest a heal, at most one a kill), every cast landing on a monster of the caster's level through `World::practise`. Each row: the pace spell over the level before and its cost (seed 1's); casts a day from the pool, and the spell casts a day the same level's fights took (the stat training's careers, which refill the pool before every cast; the priest's one a kill); the school's rank and the caster style's at the level (the seeds' range); and the pool check, the pool over a single-target spell of the caster's own level (its base mana: the level; no rank's cut, no talent).
+
+**Wizard** (evocation)
+
+| L | pace spell (mana) | casts a day: pool / fights | school rank | style rank | pool / level-L casts |
+|---|---|---|---|---|---|
+| 1 | – | 0.0 / 0.0 | 2 | – | 16 / 1 = 16.5 |
+| 5 | Scorching ray (7) | 6.0 / 141.8 | 3 | Sniper 3 | 52 / 5 = 10.4 |
+| 10 | Scorching ray (6) | 10.0 / 220.1 | 5 | Sniper 5–6 | 102 / 10 = 10.2 |
+| 15 | Flame (27) | 5.2 / 274.2 | 6 | Sniper 6–7 | 158 / 15 = 10.5 |
+| 20 | Flame (26) | 7.5 / 241.9 | 7 | Sniper 7 | 216 / 20 = 10.8 |
+| 30 | Flame (26) | 12.3 / 385.9 | 8 | Sniper 8–9 | 336 / 30 = 11.2 |
+| 40 | Flame (23) | 20.0 / 342.8 | 9 | Sniper 9–10 | 469 / 40 = 11.7 |
+| 50 | Flame (21) | 28.8 / 460.7 | 10 | Sniper 10 | 613 / 50 = 12.3 |
+| 60 | Flame (21) | 36.3 / 552.0 | 10 | Sniper 10 | 764 / 60 = 12.7 |
+
+**Priest** (restoration)
+
+| L | pace spell (mana) | casts a day: pool / fights | school rank | style rank | pool / level-L casts |
+|---|---|---|---|---|---|
+| 1 | – | 0.0 / 0.0 | 1 | – | 13 / 1 = 13.3 |
+| 5 | Cure wounds (2) | 16.3 / 42.0 | 3–4 | Toucher 3–4 | 40 / 5 = 7.9 |
+| 10 | Cure wounds (1) | 68.5 / 73.0 | 7 | Toucher 7–8 | 78 / 10 = 7.8 |
+| 15 | Cure wounds (1) | 97.9 / 98.5 | 9 | Battle caster 8–9 | 120 / 15 = 8.0 |
+| 20 | Cure wounds (1) | 74.3 / 74.3 | 10 | Battle caster 10 | 163 / 20 = 8.1 |
+| 30 | Cure wounds (2) | 88.0 / 88.0 | 10 | Battle caster 10 | 256 / 30 = 8.5 |
+| 40 | Cure wounds (2) | 75.0 / 75.0 | 10 | Battle caster 10 | 354 / 40 = 8.8 |
+| 50 | Cure wounds (2) | 83.2 / 83.2 | 10 | Battle caster 10 | 456 / 50 = 9.1 |
+| 60 | Cure wounds (2) | 91.2 / 91.2 | 10 | Battle caster 10 | 566 / 60 = 9.4 |
+
+**Witch** (necromancy)
+
+| L | pace spell (mana) | casts a day: pool / fights | school rank | style rank | pool / level-L casts |
+|---|---|---|---|---|---|
+| 1 | – | 0.0 / 0.0 | 1 | – | 13 / 1 = 13.0 |
+| 5 | Cause wounds (2) | 12.2 / 126.7 | 3–4 | Toucher 3–4 | 42 / 5 = 8.5 |
+| 10 | Blight (16) | 14.8 / 236.9 | 6 | Sniper 3–6 | 88 / 10 = 8.8 |
+| 15 | Blight (15) | 25.8 / 392.9 | 7–8 | Sniper 5–9 | 140 / 15 = 9.3 |
+| 20 | Blight (15) | 23.5 / 338.9 | 7–9 | Sniper 6–9 | 194 / 20 = 9.7 |
+| 30 | Blight (15) | 19.5 / 474.2 | 9–10 | Sniper 7–9 | 308 / 30 = 10.3 |
+| 40 | Blight (14) | 116.5 / 409.9 | 10 | Sniper 9–10 | 435 / 40 = 10.9 |
+| 50 | Blight (14) | 154.3 / 592.8 | 10 | Sniper 10 | 572 / 50 = 11.4 |
+| 60 | Blight (14) | 194.5 / 715.5 | 10 | Sniper 10 | 718 / 60 = 12.0 |
 
 ## Sneak attacks
 
@@ -238,14 +332,14 @@ The thief's main-hand blow on the monsters of their level (trained stats), aware
 | L | Sneak attack | dice | with vitals | Thief plain | Thief magic |
 |---|---|---|---|---|---|
 | 1 | 15 | 1d6 | 71% | 75/75 · 2.6:5.6 · ×2.2 | 75/75 · 2.6:5.6 · ×2.2 |
-| 5 | 29 | 2d6 | 55% | 75/85 · 3.7:10.1 · ×2.7 | 75/85 · 4.6:11.0 · ×2.4 |
+| 5 | 29 | 2d6 | 55% | 75/85 · 3.7:10.0 · ×2.7 | 75/85 · 4.5:11.1 · ×2.4 |
 | 10 | 47 | 2d6 | 72% | 92/98 · 8.0:15.4 · ×1.9 | 95/98 · 9.9:17.1 · ×1.7 |
-| 15 | 64 | 3d6 | 63% | 99/99 · 9.8:20.6 · ×2.1 | 99/99 · 13.0:23.3 · ×1.8 |
-| 20 | 82 | 4d6 | 66% | 99/99 · 12.1:26.0 · ×2.1 | 99/99 · 14.4:28.3 · ×2.0 |
-| 30 | 117 | 5d6 | 62% | 99/99 · 14.2:31.5 · ×2.2 | 99/99 · 24.2:41.6 · ×1.7 |
-| 40 | 152 | 8d6 | 59% | 99/99 · 16.4:44.5 · ×2.7 | 99/99 · 24.0:51.5 · ×2.1 |
-| 50 | 187 | 8d6 | 52% | 99/99 · 16.8:44.5 · ×2.7 | 99/99 · 28.9:56.7 · ×2.0 |
-| 60 | 222 | 9d6 | 47% | 99/99 · 16.9:50.4 · ×3.0 | 99/99 · 24.6:59.0 · ×2.4 |
+| 15 | 64 | 3d6 | 63% | 99/99 · 9.9:20.5 · ×2.1 | 99/99 · 13.1:23.5 · ×1.8 |
+| 20 | 82 | 4d6 | 66% | 99/99 · 12.0:26.0 · ×2.2 | 99/99 · 14.7:28.6 · ×1.9 |
+| 30 | 117 | 5d6 | 62% | 99/99 · 14.2:31.7 · ×2.2 | 99/99 · 24.2:41.5 · ×1.7 |
+| 40 | 152 | 8d6 | 59% | 99/99 · 16.4:44.2 · ×2.7 | 99/99 · 23.3:51.1 · ×2.2 |
+| 50 | 187 | 8d6 | 52% | 99/99 · 16.4:44.3 · ×2.7 | 99/99 · 27.4:54.7 · ×2.0 |
+| 60 | 222 | 9d6 | 47% | 99/99 · 17.3:50.7 · ×2.9 | 99/99 · 24.5:59.0 · ×2.4 |
 
 ## Stat training
 
@@ -265,8 +359,9 @@ fights the probe already measures.
   gone or 40 rounds have passed. Every blow either way goes through `World::train_fight` (blow,
   critical, block, parry, hurt, big_hit); a monster's miss by Dexterity or Dodge is a `dodge`;
   a kill of a monster of the player's level or above is `killed`, the first of its type
-  `discovered`. The thief's first blow of a fight is a sneak attack. The wizard fights with the
-  damage spell of the most damage a cast among those costing a fifth of its pool or less: each
+  `discovered`. The thief's first blow of a fight is a sneak attack. The wizard fights with its
+  pace spell ("School pace": of evocation's damage spells, the most damage a cast among those
+  costing a fifth of its pool or less, none cast only under the open sky): each
   cast spends its mana through `World::spend_mana` (cast, pool refilled first), trains through
   `World::train_spell` (spell), and an attack spell's roll goes through `train_fight` (aimed).
   The priest spends mana on an ability once a fight (a heal, a blessing).
@@ -300,47 +395,47 @@ Scores of the trained careers (plain gear; the seeds' mean), start/potential at 
 
 | Class | Stat | Start/potential | L10 | L20 | L30 | L40 | L60 | Gain | Past potential |
 |---|---|---|---|---|---|---|---|---|---|
-| warrior | St | 14.8/16.7 | 17.7 | 21.0 | 23.7 | 26.0 | 29.7 | +14.8 | 13.0 |
-|  | Dx | 10.8/16.3 | 11.7 | 16.7 | 19.0 | 21.0 | 24.2 | +13.3 | 7.8 |
-|  | To | 11.7/16.0 | 13.7 | 17.5 | 18.7 | 19.8 | 22.0 | +10.3 | 6.0 |
-|  | In | 9.8/17.0 | 11.3 | 13.0 | 14.8 | 16.3 | 18.3 | +8.5 | 1.3 |
-|  | Wi | 11.7/17.7 | 11.8 | 13.2 | 14.3 | 16.3 | 18.7 | +7.0 | 1.0 |
-|  | Pr | 10.0/16.2 | 10.0 | 10.7 | 11.3 | 12.0 | 14.7 | +4.7 | 0.0 |
-| | all six | | | | | | | **+58.7** | |
-| thief | St | 11.0/16.8 | 16.3 | 20.7 | 23.2 | 25.3 | 29.2 | +18.2 | 12.3 |
-|  | Dx | 12.5/16.5 | 16.3 | 19.7 | 21.7 | 23.0 | 25.2 | +12.7 | 8.7 |
-|  | To | 10.5/16.8 | 15.0 | 18.8 | 20.3 | 22.0 | 25.3 | +14.8 | 8.5 |
-|  | In | 11.3/17.2 | 12.7 | 14.2 | 15.8 | 17.2 | 18.8 | +7.5 | 1.7 |
-|  | Wi | 10.3/17.3 | 10.3 | 11.8 | 13.0 | 15.0 | 18.2 | +7.8 | 0.8 |
-|  | Pr | 9.8/16.3 | 9.8 | 10.7 | 11.3 | 12.5 | 14.8 | +5.0 | 0.0 |
-| | all six | | | | | | | **+66.0** | |
-| wizard | St | 10.0/16.7 | 10.0 | 10.0 | 10.8 | 11.0 | 13.0 | +3.0 | 0.0 |
-|  | Dx | 10.0/16.3 | 12.8 | 16.2 | 18.2 | 20.0 | 21.8 | +11.8 | 5.5 |
-|  | To | 9.5/17.3 | 13.8 | 19.2 | 20.8 | 22.5 | 25.7 | +16.2 | 8.3 |
-|  | In | 14.5/16.8 | 17.2 | 19.7 | 21.3 | 23.2 | 26.0 | +11.5 | 9.2 |
-|  | Wi | 12.5/17.7 | 18.3 | 21.7 | 24.0 | 26.3 | 30.2 | +17.7 | 12.5 |
-|  | Pr | 9.5/16.0 | 9.5 | 10.3 | 11.0 | 12.5 | 14.8 | +5.3 | 0.0 |
-| | all six | | | | | | | **+65.5** | |
-| priest | St | 10.8/16.3 | 15.8 | 19.8 | 22.8 | 25.7 | 29.2 | +18.3 | 12.8 |
-|  | Dx | 8.7/16.3 | 9.3 | 12.7 | 15.3 | 18.7 | 21.2 | +12.5 | 4.8 |
-|  | To | 10.7/16.7 | 14.3 | 18.5 | 20.5 | 22.0 | 26.2 | +15.5 | 9.5 |
+| warrior | St | 14.8/16.7 | 17.7 | 21.0 | 23.7 | 26.0 | 30.2 | +15.3 | 13.5 |
+|  | Dx | 10.8/16.3 | 11.7 | 16.7 | 19.0 | 21.2 | 24.3 | +13.5 | 8.0 |
+|  | To | 11.7/16.0 | 13.7 | 17.5 | 18.7 | 19.8 | 22.2 | +10.5 | 6.2 |
+|  | In | 9.8/17.0 | 11.3 | 13.0 | 14.8 | 16.5 | 18.5 | +8.7 | 1.5 |
+|  | Wi | 11.7/17.7 | 11.8 | 13.2 | 14.3 | 16.0 | 18.8 | +7.2 | 1.2 |
+|  | Pr | 10.0/16.2 | 10.0 | 10.7 | 11.3 | 12.7 | 14.8 | +4.8 | 0.0 |
+| | all six | | | | | | | **+60.0** | |
+| thief | St | 11.0/16.8 | 16.3 | 20.7 | 23.2 | 25.2 | 29.3 | +18.3 | 12.5 |
+|  | Dx | 12.5/16.5 | 16.3 | 19.7 | 21.7 | 23.3 | 25.7 | +13.2 | 9.2 |
+|  | To | 10.5/16.8 | 15.0 | 18.8 | 20.3 | 22.3 | 25.7 | +15.2 | 8.8 |
+|  | In | 11.3/17.2 | 12.7 | 14.2 | 15.8 | 17.2 | 18.7 | +7.3 | 1.5 |
+|  | Wi | 10.3/17.3 | 10.3 | 11.8 | 13.0 | 15.2 | 18.0 | +7.7 | 0.7 |
+|  | Pr | 9.8/16.3 | 9.8 | 10.7 | 11.3 | 12.5 | 15.0 | +5.2 | 0.0 |
+| | all six | | | | | | | **+66.8** | |
+| wizard | St | 10.0/16.7 | 10.0 | 10.0 | 11.0 | 11.2 | 13.0 | +3.0 | 0.0 |
+|  | Dx | 10.0/16.3 | 12.3 | 15.2 | 18.0 | 19.7 | 21.7 | +11.7 | 5.3 |
+|  | To | 9.5/17.3 | 13.2 | 18.8 | 20.7 | 22.0 | 25.0 | +15.5 | 7.7 |
+|  | In | 14.5/16.8 | 17.0 | 19.5 | 21.2 | 22.8 | 25.7 | +11.2 | 8.8 |
+|  | Wi | 12.5/17.7 | 17.8 | 21.2 | 23.2 | 25.7 | 29.2 | +16.7 | 11.5 |
+|  | Pr | 9.5/16.0 | 9.5 | 10.2 | 10.8 | 12.3 | 14.7 | +5.2 | 0.0 |
+| | all six | | | | | | | **+63.2** | |
+| priest | St | 10.8/16.3 | 15.8 | 19.8 | 22.8 | 25.5 | 29.2 | +18.3 | 12.8 |
+|  | Dx | 8.7/16.3 | 9.3 | 12.7 | 15.3 | 18.5 | 21.2 | +12.5 | 4.8 |
+|  | To | 10.7/16.7 | 14.3 | 18.5 | 20.5 | 22.3 | 25.8 | +15.2 | 9.2 |
 |  | In | 11.3/16.7 | 12.5 | 14.2 | 15.5 | 16.7 | 18.5 | +7.2 | 1.8 |
-|  | Wi | 15.3/18.0 | 16.8 | 19.5 | 21.0 | 22.2 | 24.5 | +9.2 | 6.5 |
-|  | Pr | 10.8/16.3 | 10.8 | 11.3 | 12.2 | 13.5 | 16.0 | +5.2 | 0.3 |
-| | all six | | | | | | | **+67.8** | |
+|  | Wi | 15.3/18.0 | 16.8 | 19.5 | 21.0 | 22.3 | 24.3 | +9.0 | 6.3 |
+|  | Pr | 10.8/16.3 | 10.8 | 11.3 | 12.2 | 13.7 | 15.7 | +4.8 | 0.2 |
+| | all six | | | | | | | **+67.0** | |
 
 Marks a day the hooks gave in each stat over the level before (St/Dx/To/In/Wi/Pr, the seeds' mean), and the game day reached.
 
 | L | Day | Warrior | Thief | Wizard | Priest |
 |---|---|---|---|---|---|
-| 5 | 4 | 25/6/13/20/3/3 | 60/32/57/21/3/3 | 1/34/46/61/98/2 | 37/5/36/20/17/3 |
-| 10 | 14 | 76/17/30/6/3/2 | 98/75/61/5/3/2 | 0/30/58/62/142/2 | 76/10/60/5/24/2 |
-| 15 | 24 | 138/37/40/6/3/2 | 152/108/48/6/3/2 | 0/19/56/76/168/2 | 127/15/73/6/32/2 |
-| 20 | 39 | 220/30/28/3/3/1 | 145/96/46/4/3/1 | 1/20/51/69/155/1 | 126/16/43/3/26/1 |
-| 30 | 69 | 342/65/29/3/3/1 | 221/129/67/3/3/1 | 1/30/64/98/245/1 | 207/24/79/3/29/1 |
-| 40 | 109 | 494/91/38/2/3/2 | 308/124/119/3/3/2 | 1/37/80/125/305/2 | 385/28/126/2/38/2 |
-| 50 | 149 | 573/115/48/2/3/2 | 407/119/144/2/3/1 | 1/33/123/173/420/2 | 369/30/179/2/43/2 |
-| 60 | 189 | 511/140/98/2/3/2 | 508/103/239/2/3/2 | 1/26/172/204/506/2 | 402/26/331/2/45/1 |
+| 5 | 4 | 25/6/13/20/3/3 | 60/32/57/21/3/3 | 1/26/32/50/76/3 | 37/5/36/20/17/3 |
+| 10 | 14 | 76/17/30/6/3/2 | 98/75/61/5/3/2 | 1/27/46/49/110/1 | 76/10/60/5/24/2 |
+| 15 | 24 | 138/37/40/6/3/2 | 152/108/48/6/3/2 | 1/14/50/60/133/2 | 127/15/73/6/32/2 |
+| 20 | 39 | 220/30/28/3/3/1 | 145/96/46/4/3/1 | 1/14/44/55/124/1 | 126/16/43/3/26/1 |
+| 30 | 69 | 342/65/29/3/3/1 | 221/129/67/3/3/1 | 0/24/53/81/197/1 | 207/24/79/3/29/1 |
+| 40 | 109 | 493/89/39/2/3/2 | 309/126/121/2/3/2 | 1/30/71/106/264/1 | 394/31/124/2/38/2 |
+| 50 | 149 | 521/114/48/2/3/2 | 415/121/147/2/3/2 | 1/27/102/141/352/1 | 375/30/177/2/42/2 |
+| 60 | 189 | 507/148/101/2/3/2 | 491/99/223/2/3/2 | 1/22/143/168/412/2 | 396/26/322/2/46/2 |
 
 The game day of each stat's first rise (the seeds' mean of those that rose by level 60; how many of the six in brackets when not all).
 
@@ -348,20 +443,20 @@ The game day of each stat's first rise (the seeds' mean of those that rose by le
 |---|---|---|---|---|---|---|
 | warrior | 6 | 12 | 6 | 6 | 18 | 41 |
 | thief | 4 | 5 | 4 | 6 | 22 | 31 |
-| wizard | 64 | 4 | 4 | 5 | 4 | 36 |
+| wizard | 60 | 7 | 6 | 5 | 4 | 36 |
 | priest | 5 | 13 | 5 | 8 | 8 | 40 |
 
 The knobs (design §6.2): mean gain by level 60 with other `price_per_point` and `ramp_divisor` values (St/Dx/To/In/Wi/Pr · all six), the data's in bold.
 
 | Price | Ramp ÷ | Warrior | Thief | Wizard | Priest |
 |---|---|---|---|---|---|
-| **20 + 10s** | **2** | +14.8/+13.3/+10.3/+8.5/+7.0/+4.7 · +59 | +18.2/+12.7/+14.8/+7.5/+7.8/+5.0 · +66 | +3.0/+11.8/+16.2/+11.5/+17.7/+5.3 · +66 | +18.3/+12.5/+15.5/+7.2/+9.2/+5.2 · +68 |
-| 20 + 10s | 3 | +16.3/+14.0/+11.5/+8.3/+7.3/+4.8 · +62 | +19.5/+14.2/+15.7/+7.7/+7.7/+5.3 · +70 | +2.3/+12.7/+17.0/+12.8/+19.0/+5.3 · +69 | +19.5/+13.2/+16.5/+7.0/+9.7/+5.3 · +71 |
-| 20 + 10s | 4 | +17.5/+14.8/+12.0/+8.7/+7.3/+4.8 · +65 | +20.5/+14.8/+16.3/+8.0/+7.8/+5.0 · +72 | +2.8/+13.3/+17.5/+13.7/+20.2/+5.5 · +73 | +20.0/+13.5/+17.2/+7.3/+10.3/+5.0 · +73 |
-| 20 + 10s | 6 | +19.0/+16.2/+13.0/+8.7/+7.5/+5.2 · +70 | +21.7/+16.2/+18.0/+8.2/+7.8/+4.8 · +77 | +2.8/+14.3/+18.8/+15.0/+21.3/+5.2 · +78 | +22.2/+14.0/+18.5/+8.0/+11.2/+5.2 · +79 |
-| 20 + 15s | 2 | +14.0/+12.5/+9.7/+7.2/+5.7/+4.2 · +53 | +16.3/+12.0/+14.0/+6.5/+6.2/+3.8 · +59 | +2.0/+11.0/+15.3/+10.8/+16.0/+4.3 · +60 | +17.2/+11.8/+14.5/+6.0/+8.0/+3.5 · +61 |
-| 20 + 15s | 4 | +16.2/+14.0/+11.0/+7.3/+5.5/+3.8 · +58 | +18.7/+13.5/+15.7/+6.7/+6.2/+4.0 · +65 | +1.8/+12.2/+17.0/+12.7/+18.3/+4.3 · +66 | +19.3/+12.3/+15.8/+6.8/+9.2/+4.0 · +68 |
-| 20 + 20s | 4 | +15.0/+13.2/+10.2/+6.5/+4.8/+3.0 · +53 | +18.0/+13.0/+14.7/+6.3/+5.2/+3.3 · +60 | +1.5/+11.7/+15.8/+11.7/+17.5/+3.7 · +62 | +18.3/+11.5/+15.3/+5.7/+8.5/+3.0 · +62 |
+| **20 + 10s** | **2** | +15.3/+13.5/+10.5/+8.7/+7.2/+4.8 · +60 | +18.3/+13.2/+15.2/+7.3/+7.7/+5.2 · +67 | +3.0/+11.7/+15.5/+11.2/+16.7/+5.2 · +63 | +18.3/+12.5/+15.2/+7.2/+9.0/+4.8 · +67 |
+| 20 + 10s | 3 | +16.5/+14.3/+11.2/+8.5/+7.0/+5.2 · +63 | +19.3/+14.2/+16.0/+8.0/+7.7/+5.3 · +70 | +2.7/+12.3/+16.7/+12.2/+18.2/+5.0 · +67 | +19.7/+13.5/+16.3/+7.5/+9.7/+5.3 · +72 |
+| 20 + 10s | 4 | +17.3/+14.7/+11.7/+8.8/+7.3/+5.3 · +65 | +20.3/+14.7/+16.8/+8.0/+8.0/+5.3 · +73 | +2.7/+13.0/+17.2/+13.0/+19.3/+5.5 · +71 | +20.3/+13.5/+17.3/+7.2/+10.2/+5.2 · +74 |
+| 20 + 10s | 6 | +18.7/+16.0/+12.8/+9.2/+7.5/+5.0 · +69 | +21.7/+16.2/+17.7/+8.3/+8.0/+4.8 · +77 | +2.7/+14.2/+18.3/+14.0/+21.0/+5.0 · +75 | +21.8/+14.2/+18.2/+7.7/+11.0/+4.8 · +78 |
+| 20 + 15s | 2 | +13.8/+12.2/+9.8/+7.5/+5.5/+4.2 · +53 | +16.7/+12.0/+13.8/+6.7/+6.0/+4.2 · +59 | +2.0/+10.5/+14.3/+10.2/+15.5/+4.5 · +57 | +17.3/+11.8/+14.8/+6.3/+8.0/+3.8 · +62 |
+| 20 + 15s | 4 | +16.2/+13.8/+10.7/+6.8/+6.0/+4.0 · +58 | +19.2/+13.3/+15.7/+6.8/+6.5/+4.2 · +66 | +2.0/+11.8/+16.0/+12.0/+17.7/+4.3 · +64 | +19.5/+12.8/+16.2/+6.7/+9.2/+3.8 · +68 |
+| 20 + 20s | 4 | +15.0/+12.8/+9.8/+6.3/+5.0/+3.0 · +52 | +18.0/+13.0/+14.5/+6.5/+5.2/+3.5 · +61 | +1.5/+10.7/+15.3/+11.5/+16.3/+3.0 · +58 | +18.3/+11.7/+15.7/+5.7/+8.7/+3.2 · +63 |
 
 **Before and after, by class.** Gain of all six stats by level 60 (the main stat's score at 60
 in brackets). *Before*: the probe as it was until T6, two days of fixed marks a level (the
@@ -421,8 +516,8 @@ table's first column).
 
 ## Against the design's predictions
 
-(The spell findings below predate the spell scaling design's S1, #748, which removed the tiers,
-their ceilings, and the run-time cap: the spell tables above are S1's, the prose the cap's.)
+(The spell paragraph is #754's, against the spell scaling design's §12.3 and §8.4; the others
+are #569's, against the combat progression design.)
 
 **§3 (the new ranks, with training).** The design predicted that a warrior with a long sword in
 plain gear and trained Strength would have +6 / 10.5 at level 10 (93 %, 4 rounds to kill), +11 /
@@ -445,14 +540,45 @@ line (7.6 at 30, 9.5 at 60), and the armoured body adds about a quarter to a thi
 not a wall. The prediction was higher because the measured damage is higher (23 a hit at 60,
 not 20.5).
 
-**§7.3 (spell scaling).** The design predicted, at level 10, Scorching ray at 4d6 (2.7 casts,
-3.6 today) and Fireball at 4d6 (2.7). The probe measures 3d6+3 (3.6 casts with misses, 4.7
-unlifted) and 3d6+3 (2.8 casts, 4.2). At 30 the design predicted Fireball at 5d6 (6.4 casts,
-10.7); the probe measures 5d6+5 held to 31 (5.3, 8.5). At 60 it predicted 12.6 casts (21.0); the
-probe measures 6.9 (12). The lift does what the design meant: about a third fewer casts. The
-level-60 wizard does better than predicted for two reasons: the median monster of their level
-has 217 hit points, not 221, and Archmage's three points a die push every roll of a tier-3 spell
-to the cap.
+**Spell scaling §12.3 and §8.4 (#754, S7).** The design's numbers came from a script over the
+rules as written, for a trained wizard of Intelligence 16 / 20 / 23 at levels 10 / 30 / 60 and
+the ranks §8.4 estimated (5 / 8 / 10); the probe measures them on the game's code, with the
+ranks the casting really reaches.
+- **The pace** ("School pace"): the wizard's evocation is rank 3 at level 5, 5 at 10, 6 at 15,
+  7 at 20, 8 at 30, 9 at 40, and 10 from 50. §8.4 estimated rank 5 at about 8 to 10, 7 by 20, 8
+  by 30, and 10 toward 60: the missile curve lands where the design put it, rank 10 a little
+  early. A pool buys 5 to 12 casts of the wizard's pace spell a day to level 30 (Scorching ray,
+  then Flame at 26 mana) and 20 to 36 from 40 (the ranks' mana cut and a growing pool), and
+  every landed cast against a monster of the caster's level earns the most marks (`most`, 200 %)
+  until the rank nears the level. The witch is quicker (necromancy 6 at 10, 7 to 9 at 20, 9 to
+  10 at 30, 10 from 40): Blight is cheaper than Flame, so a pool buys 15 to 26 casts. The
+  priest's restoration is the quickest (7 at 10, 10 from 20) and measures the model more than
+  the curve: one heal a kill, and the experience curve's kills (73 to 98 a day) are fewer than
+  the pool allows at Cure wounds' 1 to 2 mana; a priest heals only what is wounded. **No school
+  row or curve is tuned**: the schools stay on the missile curve (the design's open question
+  (b), the owner's default), as the wizard's measured pace is the estimate's.
+- **Rank 0** (the ladder alone): within a die of §12.3 everywhere. Ray of frost 1d8 (4.5) and
+  Magic missile 3d4 to 3d4+1 (7.1 to 8.5) as predicted; Fireball 4d6 (14.0) at 10 and 5d6 (17.5)
+  at 30 as predicted, 5d6 already at 20 (the design: one die lower there; trained Intelligence
+  now averages 19.5 at level 20, against the design's 18) and 5d6+2 (19.5) at 60 (the design
+  5d6: Intelligence averages 25.7 at 60, not 23, and reaches the next rung); Scorching ray 3d6 / 4d6 at 10 / 30 as predicted and 3d6+1d10 (16.0) at 60.
+- **With the ranks**: Fireball 17.7 / 29.1 / 38.8 at levels 10 / 30 / 60 (§12.3: 17.7 / 28.3 /
+  36.8; the extra is the rung the trained Intelligence reaches); Ray of frost 6.4 / 12.5 / 18.9
+  (5.4 / 11.6 / 18.9), Magic missile 10.2 / 15.5 / 21.8 (10.2 / 14.4 / 21.8), Scorching ray
+  13.3 / 24.4 / 33.6 (13.3 / 23.6 / 31.5), Arcane bolt and Frost 14.0 / 21.6 / 30.2 (13.3 /
+  20.9 / 28.2), Call lightning 20.7 / 29.1 / 38.8 (17.7 / 28.3 / 38.8). The witch's and the
+  priest's are higher at 10 and 30 than §12.3, as their ranks run ahead of §8.4's: Cause wounds
+  12.4 / 21.2 / 23.8 (9.8 / 18.8 / 21.8), Blight 13.8 / 22.8 / 23.7 (13.8 / 19.7 / 23.7), Cure
+  wounds 19.0 / 25.0 / 27.0 (14.3 / 20.9 / 27), Mend 8.6 / 12.1 / 13.5 (4.4 / 9.2 / 13.5); all
+  meet the design at 60, where every school is rank 10. A rank-10 school still about doubles a
+  spell over its ladder (Fireball 38.8 against 19.5).
+- **The pool** (§12.4: about ten casts of a spell of the caster's own level, the ranks' mana
+  off): the wizard's pool is 10.2 to 12.7 casts of a level-L spell at every level from 5 to 60
+  (102 at 10, 336 at 30, 764 at 60); the priest's 7.8 to 9.4, the witch's 8.5 to 12.0. Passes.
+- **Casting in the stat training's fights**: those careers fight every kill with the pace spell
+  and refill the pool before every cast, so they cast 125 to 700 spells a day where the pool
+  buys 5 to 36: the Intelligence and Willpower marks of a caster's fights ("Stat training") are
+  a ceiling. The school pace does not use them.
 
 **§2 (the report's findings), revisited.**
 - Monster to-hit still grows faster than the player's unaided to-hit, but the player's now grows
@@ -462,8 +588,9 @@ to the cap.
   to kill them.
 - Hit points grow to level 50 (above).
 - Monster Protection now matters: the median goes from 0 at level 15 to 6 at 60, not 0 to 2.
-- The wizard's spells keep up to level 60 per target (7 casts of a tier-3 burst), but only
-  because Archmage binds the cap on every roll. There is still no spell above tier 3 (§14).
+- The wizard's spells keep growing to level 60 (#754 above): a rank-10 school doubles a spell
+  over its ladder, and there is no cap. There is still no spell above level 12 (higher-level
+  spells are the content's to add).
 
 ## Tuning notes
 
@@ -488,15 +615,15 @@ shows and where the number lives.
    thief is hit 76 to 84 % at levels 50 to 60 and dies in 11 to 15 rounds, while killing in 9. Magic
    gear fixes it (hit 24 %). This is the report's finding 1 (gear decides), now limited to the
    light-armoured classes.
-4. **Archmage is wasted against the cap** (before S1, which retired the cap: Archmage's points
-   now all count). At level 60, Fireball rolls 6d6+18 (mean 39) and is
-   held to 32 on nearly every cast, so the per-die bonus does almost nothing for tier 0 to 3
-   spells. This is by design ("caps, not curves"), but it means the tier 4 to 9 spells (§14) are
-   the missing content, not more lift. Cantrips (Ray of frost, Spark) have no `[spell.scales]`
-   and do not grow with stats (data: `spells/*.toml`).
+4. **The highest spell is level 12** (#754; the cap and the lift are gone since the spell
+   scaling design's S1 and S2). A level-60 wizard's best burst is a level-11 or 12 spell at its
+   top rung and evocation 10 (38.8 a cast); what grows a spell past that is higher-level
+   content (`spells/*.toml`), not a lever in the schools. The cantrips now grow by the school
+   (Ray of frost 4.5 at rank 0, 18.9 at evocation 10).
 5. **The priest has no damage spell of its own.** Its schools (restoration, abjuration,
    divination) have no damage spell. Smite and its class actives are its offence, and the probe
-   does not model them.
+   does not model them. Its restoration is measured on heals, one a kill (#754's "School pace"),
+   which overstates its pace: rank 10 by level 20.
 6. **Monster blows can drop with gear.** As in the report, some types deal less damage with the
    weapon they roll than with their natural attack. The geared mean of damage a blow is below the
    bare median from level 15 up (`gear.toml`, the creature files).
