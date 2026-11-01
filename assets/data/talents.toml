@@ -278,8 +278,9 @@ id = "doors"
 name = "Doors, locks, kicking"
 
 # Chests (docs/design/chests-and-treasure.md §5, §9): opening, kicking open, what breaks inside,
-# and the mimics that are not chests at all. Deft breaker and Chest-wise; Mimic-wise and Slick;
-# Lockbreaker's kicks reach chests, and the wizard's Knock springs their locks.
+# and the mimics that are not chests at all. Chest-wise (a chest's lock and trap, a mimic seen
+# and its glue slipped); Lockbreaker's kicks reach chests and break less inside, and the
+# wizard's Knock springs their locks.
 [[system]]
 id = "chests"
 name = "Chests and mimics"

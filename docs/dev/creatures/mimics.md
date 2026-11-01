@@ -49,13 +49,13 @@ Every mimic is placed **disguised** (`travel::make_creature` adds the status tha
 | No turn | `den.rs::slumbers` waits for a sleeper or a disguised actor |
 | Unaware (sneak attacks land) | `ambush.rs::unaware` |
 | No creature targets it | `ai.rs::nearest_hostile_in_sight` leaves out an actor whose effects `hides` |
-| The snapshot | `Perception::compute` lists the level's disguised actors (`Disguise { pos, terrain, level }`) but those Mimic-wise sees within `TalentMods::sees_mimics`; they are not in `actors`, `gear`, or `effects`; `sees_actors_at` is false on their cells; `PerceptionView::cell` shows the shut chest terrain there; `remember` writes it into memory; `chest_at` gives the band of the disguise's level (a remembered shut chest with no chest entry and no disguise: the floor's item level); `known_chests` lists them |
+| The snapshot | `Perception::compute` lists the level's disguised actors (`Disguise { pos, terrain, level }`) but those Chest-wise sees within `TalentMods::sees_mimics`; they are not in `actors`, `gear`, or `effects`; `sees_actors_at` is false on their cells; `PerceptionView::cell` shows the shut chest terrain there; `remember` writes it into memory; `chest_at` gives the band of the disguise's level (a remembered shut chest with no chest entry and no disguise: the floor's item level); `known_chests` lists them |
 | Touch | `World::touch(p)` from `player_moves` (the bump), `open_door`, `kick`, and `pick_lock`: a disguised mimic there that the player does not see as one (`Perception::shows`) is revealed (`Reveal::Touch`: the lurch line and `World::attack` by the mimic at the player, its hold included) and the action is `Spent::NoTime` |
 | Knock | `knock.rs`: the mana spent, `Reveal::Knocked` (the lurch line, no blow), a cast's price |
 | A blow or harm | `fight.rs::resolve` (after `sneaking` is decided) and the top of `hurt`: `Reveal::Struck` |
 | Searching | `search.rs`: `Hidden::Mimic(id)` within reach, difficulty `Mimics::grip` + `hidden_at(depth)`; in passing only for those who notice everything (Spot, `passive_search = "all"`, Alert): never by Stone sense or a kobold's traps; `Reveal::Found` |
 | Stealing | `steal.rs`: "It has no pockets." (a disguised one is not seen: "You see no one there") |
-| Slick | `status.rs::afflict`: a status with a `hold` given by an actor with the `mimic` tag to one with `TalentMods::slick` is refused (`World::slips`) |
+| Chest-wise's glue | `status.rs::afflict`: a status with a `hold` given by an actor with the `mimic` tag to one with `TalentMods::slick` is refused (`World::slips`) |
 
 `World::reveal_mimic` removes the status directly (not through `ended`: nothing is said of a
 status the player never saw), says the line when the cell is in sight (`Perception::in_sight`;
@@ -66,8 +66,9 @@ checks too. A run that never meets a mimic is unchanged.
 
 ## Talents
 
-System `mimics` (`data/talents.toml`, after `chests`): **Mimic-wise** (`sees_mimics`, value 2;
-scholar, Spot 10 or Intelligence 12) and **Slick** (`slick`; finesse, Dexterity 13).
+System `chests` (the `mimics` tag folded into it, #773): **Chest-wise** (delver, Intelligence 11
+or Detect traps 15) carries `sees_mimics` (value 2) and `slick` beside `chest_wise` (#775 merged
+Mimic-wise and Slick into it).
 
 ## Dumps
 
@@ -78,6 +79,6 @@ JSON `seen_actors` and `chests` show the chest the player sees.
 
 `content/mimic_roster_tests.rs` (one type a level on the brute formulas, the bands and names, no
 population), `world/mimic_tests.rs` (the legend, the snapshot equal to a real chest's, touch,
-Knock, a blow, searching and Spot, Mimic-wise, Slick, no turn and no foe, the drop, unaware, a
+Knock, a blow, searching and Spot, Chest-wise seeing it and slipping its grip, no turn and no foe, the drop, unaware, a
 save and a replay, the dumps), `content/creature_body_tests.rs` (woody hide), and
 `warlock/src/ui/look.rs` (`a_disguised_mimic_looks_like_a_chest`).

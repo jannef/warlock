@@ -309,7 +309,7 @@ cast path shares.
     most two boons of level 5 or less. Every class has `mana`
     at least 1 (the barbarian and the warrior gained theirs); races keep their own.
   - **Choices** (design §14, the defaults): q1, q2, q3, q5, q7 as above (interrupted study
-    keeps the scroll; Dexterity aims; no talent lifts a cap (since S1 there is none); `force` and `necrotic` stay; Spell recall
+    keeps the scroll; Dexterity aims; no talent lifts a cap (since S1 there is none); `force` and `necrotic` stay; Scroll savant
     never keeps a studied scroll); q4: the casting percents as §3 and the guaranteed lists as
     §8, the paladin's and ranger's boons Blessing and Barkskin at 6, the bard's Mend and
     Blessing; q6: the mishap table unchanged. Sleep has no level limit (the design's "creatures
@@ -369,7 +369,7 @@ cast path shares.
     `TalentMods::study_percent`); interrupted (`Ended::Came`/`Said`): "…you stop studying.",
     time lost, scroll kept (design §14 q1, the default). Done: the scroll is found again by
     object (positions may shift), the `study` use is trained, the odds are taken now, the
-    scroll used up (`use_scroll`, never Spell recall: §14 q7, decided no), then the check.
+    scroll used up (`use_scroll`, never Scroll savant's keeping: §14 q7, decided no), then the check.
   - **Odds** (`study_odds(actor, content, character, caster_level, spell) -> Odds`, pure;
     `World::player_study_odds`): `Odds::overreach` = the spell's level − the caster level; at 0
     or less `check: None` (certain, no draw); else `(bonus, difficulty)`: Intelligence
@@ -531,8 +531,8 @@ cast path shares.
   5 levels: learning only), Empower (at 32, `spell_mod { rungs = 1 }`, mana −10 %), Archmage
   (at 60, `spell_mod { rungs = 2 }`, mana −50 %); its bonus talents from Scholar and
   Spellcraft. Empower, Archmage, and Frugal caster name `spells` beside `mana` (Empower and
-  Archmage no longer touch scrolls, so no longer `scrolls`); Spell recall, Scroll savant,
-  Careful reader stay `scrolls` only. Wand mastery is in #398's wands; Channeler
+  Archmage no longer touch scrolls, so no longer `scrolls`); Scroll savant (which took in
+  Careful reader and Spell recall in #775) stays `scrolls` only. Wand mastery is in #398's wands; Channeler
   (`rod_cost_percent`, level 5) is in #399's rods.
 - **Balance** (#401; design §12, run against the data on 2026-10-27; `warlock-cli dump
   --character human,male,CLASS --actions "xp:N levelup:auto" --format json`, N the human

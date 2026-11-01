@@ -22,7 +22,7 @@ treasure rooms (C6, #618) lay their chests with `mapgen/chest.rs::lay` from thei
 | `content/vault.rs`, `mapgen/vault.rs` | vaults hold chests (C7, #619): `Vault::new` refuses a chest with a level of its own (`chest = N` or a band: its level is the floor's), a mimic, and chests in an outdoor vault; `check_keys` asks no key for a shut chest's lock (as `connect::validate`); `stamp` copies the chests onto `Canvas::chests`, and `generate_for` gives them the floor's item level |
 | `mapgen/chest.rs` (`fill_vaults`) | what the vault chests stamped with no `objects` hold: `roll_contents` at the floor's level, in position order, from `vault_chests/<level id>` (`Rng::vault_chests`); run before `fill`. Their lock and trap are the legend's; nothing else is drawn, and none becomes a mimic |
 | `world/level.rs` | `LevelState::chests` (saved, hashed, `skip_serializing_if` empty: levels without chests hash as before); `chests()` for dev tools; `ids_valid_for` checks what chests hold |
-| `world/chest.rs` | `chest_name`, `open_chest` (key or not), `open_lid` (the trap first, then `lift_lid` unless it blew the chest up), `spring_chest_trap` (`spring_trap`, then a burst on a shut chest blows it up: `TrapEffect::blows_fixture`, unless the burst's blast already did), `lift_lid` (the creak, `Act::OpenDoor`, spill, `chest_open`, "Inside you find ..."), `kick_chest` (broken: the trap, then smashed unless blown up), `break_chest` (smashed or blown up: `destroyed`, Deft breaker's cut on a smash, spill, `chest_smashed`, `Event::ChestBroken`, the lines), `chest_wise_look` (Chest-wise: hidden traps of shut chests in sight known, remembered, and said; called in `perceive` after `learn_traps`) |
+| `world/chest.rs` | `chest_name`, `open_chest` (key or not), `open_lid` (the trap first, then `lift_lid` unless it blew the chest up), `spring_chest_trap` (`spring_trap`, then a burst on a shut chest blows it up: `TrapEffect::blows_fixture`, unless the burst's blast already did), `lift_lid` (the creak, `Act::OpenDoor`, spill, `chest_open`, "Inside you find ..."), `kick_chest` (broken: the trap, then smashed unless blown up), `break_chest` (smashed or blown up: `destroyed`, Lockbreaker's cut on a smash, spill, `chest_smashed`, `Event::ChestBroken`, the lines), `chest_wise_look` (Chest-wise: hidden traps of shut chests in sight known, remembered, and said; called in `perceive` after `learn_traps`) |
 | `world/door.rs`, `world/travel.rs`, `world/lockpick.rs`, `world/dig.rs` | one arm each: `open_door` and the bump hand a shut chest to `open_chest`, `kick` to `kick_chest`, `pick_lock` picks a chest's lock and calls `open_lid`, `blast` blows apart shut chests whose band's `hardness` is below it (their traps dropped, sprung at no one); `set_terrain` keeps a lock on a closed door or a shut chest, and drops a chest's trap and its memory when the chest stops being shut |
 | `world/trap.rs`, `world/disarm.rs`, `world/search.rs` | trapped chests (C2): `step_onto_trap` skips a shut chest's cell; `slit` is the chest's own cell (a shot out of the box); a disarm failed badly springs through `spring_chest_trap` (a burst blows the chest up); `reveal` says "that the coffer is trapped" |
 | `chest.rs` (`roll_contents`) | what a generated chest holds (C3): the band's `loot` table rolled at the floor's level + `loot_level` with the finder's luck: the items (a grade draw each, then `loot::roll_with`), the purse (the shops' currency), the gems (`gem::roll`); like stacks joined |
@@ -80,19 +80,23 @@ treasure rooms (C6, #618) lay their chests with `mapgen/chest.rs::lay` from thei
 
 ## Talents
 
-System `chests` (`data/talents.toml`, after `doors`): Deft breaker (Might, Strength 12,
-`smash_destroy_percent = -50`, read in `break_chest` on a smash only), Chest-wise (Delver,
-Intelligence 11 or Detect traps 15, `chest_wise`, read in `chest_at` for the lock and in
-`chest_wise_look` for the trap), Trap sense (its `trap_damage_percent` reaches a chest's trap
-through `trap_deals`, no hook of its own), Lockbreaker (its `systems`
-gained `chests`: `door_kick` is read by `kick_chest`, `kick_noise_percent` by the kick's noise),
-and the wizard's Knock (level 4, 5 mana).
+System `chests` (`data/talents.toml`, after `doors`; it holds the mimics since #773):
+Chest-wise (Delver, Intelligence 11 or Detect traps 15: `chest_wise`, read in `chest_at` for the
+lock and in `chest_wise_look` for the trap; `sees_mimics` 2 and `slick`, docs/dev/creatures/mimics.md),
+Lockbreaker (Delver, Strength 12; its `systems` gained `chests`: `door_kick` is read by
+`kick_chest`, `kick_noise_percent` by the kick's noise, `smash_destroy_percent = -50` in
+`break_chest` on a smash only), Trap sense (its `trap_damage_percent` reaches a chest's trap
+through `trap_deals`, no hook of its own), and the wizard's Knock (level 4, 5 mana). #775
+merged Deft breaker into Lockbreaker and Mimic-wise and Slick into Chest-wise, rather than a
+new Chest delver: Chest-wise alone was information only, which the coverage policy no longer
+allows, and knowing a mimic and slipping its glue are knowing a chest's tricks; Deft breaker's
+softer kick is Lockbreaker's kick.
 
 ## Tests
 
 `content/chest.rs` (the shipped bands parse and rise, `band_of`, refusals), `world/chest_tests.rs`
 (legends, a bump and `open`, keys, Pick lock, Knock and its refusals, the wizard's table, kicks
-that hold and that smash, coins and gems spared, the smash's half and Deft breaker's quarter, a
+that hold and that smash, coins and gems spared, the smash's half and Lockbreaker's quarter, a
 blast sparing nothing and not reaching a kist, digging refused, the snapshot, Chest-wise, a
 save and replays, the dumps), `world/chest_trap_tests.rs` (C2: legends, an arrow out of the box
 on a bump, a fireball blowing a coffer apart and a frost trap a kist, a kick that holds springing

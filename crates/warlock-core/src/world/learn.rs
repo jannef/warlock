@@ -15,7 +15,7 @@
 //!   less. It stops
 //!   early as a rest does (a creature that disturbs a rest comes into view, a message is said:
 //!   a blow, a status); then the time is lost and the scroll kept (design §14 q1's default).
-//! - **The check** at the end, on the scroll used up (Spell recall never keeps it: §14 q7):
+//! - **The check** at the end, on the scroll used up (Scroll savant never keeps it: §14 q7):
 //!   overreach is the spell's level less the caster level. At 0 or less the spell is learned, no
 //!   draw. Above, a 2d12 check ([`check::check`]) with the bonuses (Intelligence's modifier, the
 //!   skills' `study` benefit (Spellcraft, Decipher script), the class's affinity with the

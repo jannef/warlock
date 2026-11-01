@@ -599,11 +599,14 @@ fn sense_of_place_names_a_glimpsed_room() {
 }
 
 #[test]
-fn hallowed_rest_quickens_a_room_s_quickening_half_again() {
+fn old_delver_quickens_a_room_s_quickening_half_again_at_its_second_rank() {
     let mut w = hall("sanctuary");
     let player = w.state.player().clone();
     assert_eq!(w.room_pace(&player, 300), 300);
-    w.player_mut().talents.take("hallowed_rest", None);
+    w.player_mut().talents.take("old_delver", None);
+    let player = w.state.player().clone();
+    assert_eq!(w.room_pace(&player, 300), 300, "not at the first rank");
+    w.player_mut().talents.take("old_delver", None);
     let player = w.state.player().clone();
     assert_eq!(
         w.room_pace(&player, 300),

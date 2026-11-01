@@ -10,7 +10,7 @@
 //! - **Kicking** a shut chest (`kick:DIR`, priced as a door kick, banging as one): one gameplay
 //!   draw, `1d(sturdiness) ≤ Strength` + athletics + Lockbreaker's `door_kick` + Hobnailed's
 //!   (`World::kick_force`), against its band's sturdiness. It holds ("You kick the coffer. It holds.") or bursts apart: smashed,
-//!   each stack inside destroyed with `[smash] destroyed` percent (Deft breaker's cut), coins and
+//!   each stack inside destroyed with `[smash] destroyed` percent (Lockbreaker's cut), coins and
 //!   loose gems spared, the rest spilled on its cell.
 //! - **A blast** (`World::blast`) reaching a shut chest whose band's hardness is below it blows
 //!   it apart: every stack is rolled at the same percent, nothing spared. Its trap, if any, is
@@ -164,7 +164,7 @@ impl World {
     }
 
     /// The shut chest at `p` breaks open `how`: each stack it holds is destroyed with `[smash]
-    /// destroyed` percent (a smash spares coins and loose gems, and Deft breaker cuts the
+    /// destroyed` percent (a smash spares coins and loose gems, and Lockbreaker cuts the
     /// chance; a blast spares nothing), the rest spills on its cell, and the terrain becomes the
     /// smashed chest. It is said (a kicked chest always, a blast's if the player sees it), then
     /// what broke and what is left.

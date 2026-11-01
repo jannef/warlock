@@ -437,7 +437,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     attack line, after a trap's; look mode's "surprised"; Surprised in the status bar.
   - **Stalker's eye** (#687): the perception snapshot carries `SeenActor::unaware` for each
     creature in view (`surprise::creature_unaware`, the creature half of `World::unaware`, a
-    function of state: a sleeper, a mimic Mimic-wise sees, one slipped past, one hunting no one
+    function of state: a sleeper, a mimic Chest-wise sees, one slipped past, one hunting no one
     whose eyes miss the player), computed in `Perception::compute` only for a player with the
     talent and false for everyone otherwise, so nothing leaks: look mode says "(hostile,
     unhurt, unaware of you)" and the creature is drawn with the unaware mark (§4.2). A dump's

@@ -456,7 +456,7 @@ pub(crate) struct Perception {
     /// Whether strong light dazzles the player's light-blind eyes (their race's `light_blind`).
     dazzled: bool,
     /// The disguised mimics of the level (`world/mimic.rs`), by position: each is a shut chest to
-    /// the player, never an actor, but those Mimic-wise sees through.
+    /// the player, never an actor, but those Chest-wise sees through.
     disguises: Vec<Disguise>,
 }
 
@@ -752,7 +752,7 @@ impl Perception {
             })
             .collect();
 
-        // A disguised mimic is a shut chest (`world/mimic.rs`), but to Mimic-wise within its
+        // A disguised mimic is a shut chest (`world/mimic.rs`), but to Chest-wise within its
         // reach where the player sees it.
         let reach = talents.sees_mimics;
         let shut = content.chest_terrain(crate::chest::ChestState::Shut);
@@ -797,12 +797,9 @@ impl Perception {
             }
         }
         // A hall of mirrors' images of those seen (`world/mirrors.rs`), where the player sees
-        // their cells, each shown as what it reflects under an id of its own; Mirror-wise sees
-        // those near for what they are.
-        let near = talents.sees_reflections;
+        // their cells, each shown as what it reflects under an id of its own.
         let images: Vec<(ActorId, ActorId, Pos)> = (state.images(content, level).into_iter())
             .filter(|i| sight.get(i.pos) == Some(&Sight::Seen))
-            .filter(|i| near <= 0 || i.pos.chebyshev(viewer) > near)
             .filter(|i| seen.iter().any(|a| a.id == i.of))
             .map(|i| (i.of, image_id(i.of, i.index, state.turn), i.pos))
             .collect();
@@ -949,7 +946,7 @@ impl Perception {
     }
 
     /// Whether actor `id` is among those the player sees (a disguised mimic is not, unless
-    /// Mimic-wise sees through it).
+    /// Chest-wise sees through it).
     pub(crate) fn shows(&self, id: ActorId) -> bool {
         self.actors.iter().any(|a| a.id == id)
     }
@@ -1747,7 +1744,7 @@ impl<'a> PerceptionView<'a> {
         class.and_then(|c| c.bonus_trees(self.content.talents()))
     }
 
-    /// Whether the player's own bursts spare them (spec §8 "Talents": Careful reader), so a
+    /// Whether the player's own bursts spare them (spec §8 "Talents": Scroll savant), so a
     /// scroll read close needs no warning.
     pub fn bursts_spare_me(&self) -> bool {
         self.player.talent_mods(self.content).spares_self

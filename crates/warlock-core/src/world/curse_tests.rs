@@ -1,6 +1,6 @@
 //! Cursed rooms (spec §7 "Special rooms", design §5; `world/curse.rs`) and Consecrate
 //! (`world/consecrate.rs`): the dead killed inside rise two minutes later as undead of their
-//! level (the nearest level when none has theirs), unless their corpse is gone; Grave warden;
+//! level (the nearest level when none has theirs), unless their corpse is gone; Old delver;
 //! a whole cursed level; frozen floors catching up; Consecrate lifting a room or a level.
 
 use super::*;
@@ -311,15 +311,15 @@ fn the_nearest_level_stands_in_when_none_has_the_dead_s() {
 }
 
 #[test]
-fn grave_warden_keeps_the_player_s_kills_down() {
+fn old_delver_keeps_the_player_s_kills_down() {
     let mut w = world(false);
-    w.player_mut().talents.take("grave_warden", None);
+    w.player_mut().talents.take("old_delver", None);
     let player = w.state.player;
     kill(&mut w, INSIDE, Some(player));
     assert!(w.risings().is_empty());
     // A death the player did not cause still rises.
     let mut w = world(false);
-    w.player_mut().talents.take("grave_warden", None);
+    w.player_mut().talents.take("old_delver", None);
     kill(&mut w, INSIDE, None);
     assert_eq!(w.risings().len(), 1);
 }

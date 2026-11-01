@@ -1,5 +1,5 @@
-//! The stat training talents and class abilities (spec §8 "Stats"; the design's §9): Late bloomer (the ramp a point shorter), Ascetic (a
-//! hungry dawn steels the will and starves nothing), Hard living (the barbarian's: no hunger
+//! The stat training talents and class abilities (spec §8 "Stats"; the design's §9): Late bloomer (the ramp a point
+//! shorter), Hard living (the barbarian's: no hunger
 //! deed), and Discipline (the monk's: enduring and praying twice over, a faint free), each read
 //! at its one hook.
 
@@ -85,38 +85,6 @@ fn late_bloomer_starts_the_ramp_a_point_later() {
     assert_eq!(rules.eased_price(18, 18, ease), rules.base_price(18));
     // The second past it: ×4, ×2 for a late bloomer.
     assert_eq!(rules.eased_price(19, 18, ease), rules.base_price(19) * 2);
-}
-
-#[test]
-fn ascetic_turns_a_hungry_dawn_into_willpower() {
-    let mut w = world("warrior");
-    give(&mut w, "ascetic", None);
-    // Weak at dawn: the deed takes nothing, the will gains 15.
-    set_stats(&mut w, 18);
-    set_nutrition(&mut w, 300);
-    dawn(&mut w);
-    assert_eq!(marks(&w, Stat::Strength), 0);
-    assert_eq!(marks(&w, Stat::Toughness), 0);
-    assert_eq!(marks(&w, Stat::Willpower), 15);
-    // Only Hungry: the will gains 15 too (no deed there for anyone).
-    set_stats(&mut w, 18);
-    set_nutrition(&mut w, 1000);
-    dawn(&mut w);
-    assert_eq!(marks(&w, Stat::Willpower), 15);
-    // Fed: nothing.
-    set_stats(&mut w, 18);
-    set_nutrition(&mut w, 3000);
-    dawn(&mut w);
-    assert_eq!(marks(&w, Stat::Willpower), 0);
-    // Other deeds still take their marks.
-    w.stat_deed(StatDeed::KnewBetter);
-    assert_eq!(marks(&w, Stat::Intelligence), -20);
-    // Without the talent a hungry dawn gives no will.
-    let mut w = world("warrior");
-    set_stats(&mut w, 18);
-    set_nutrition(&mut w, 1000);
-    dawn(&mut w);
-    assert_eq!(marks(&w, Stat::Willpower), 0);
 }
 
 #[test]

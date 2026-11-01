@@ -1,6 +1,6 @@
 //! Halls of mirrors (spec §7 "Special rooms"; `world/mirrors.rs`): the images of everyone inside,
 //! where they stand, what the player sees of them, the glass a blow meets, a missile flying on
-//! through one, the creatures' aim from outside, Mirror-wise, and the `actors` dump.
+//! through one, the creatures' aim from outside, and the `actors` dump.
 
 use super::*;
 use crate::action::{Event, parse_actions};
@@ -279,32 +279,6 @@ fn creatures_outside_aim_at_the_player_or_an_image() {
         let at = w.state.actors[&k].pos;
         assert_eq!(w.aim_at(j, k, at), at);
     }
-}
-
-#[test]
-fn mirror_wise_sees_near_reflections_for_what_they_are() {
-    let mut w = world();
-    w.player_mut().talents.take("mirror_wise", None);
-    put_player(&mut w, Pos::new(18, 3));
-    let mut near_truth = 0;
-    for _ in 0..30 {
-        let me = w.player_pos();
-        near_truth += (w.images().iter())
-            .filter(|i| i.pos.chebyshev(me) <= 2)
-            .count();
-        let view = w.perception();
-        let shown: Vec<Pos> = (view.actors().iter())
-            .filter(|a| !w.state.actors.contains_key(&a.id))
-            .map(|a| a.pos)
-            .collect();
-        assert!(shown.iter().all(|p| p.chebyshev(me) > 2), "{shown:?}");
-        let far = (w.images().iter())
-            .filter(|i| i.pos.chebyshev(me) > 2)
-            .count();
-        assert_eq!(shown.len(), far, "those farther are shown");
-        w.apply(&Action::Wait);
-    }
-    assert!(near_truth > 0, "images did come near");
 }
 
 #[test]

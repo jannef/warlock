@@ -26,7 +26,10 @@ use crate::content::{ActionKind, Reading, percent_of};
 use crate::geom::Pos;
 use crate::object::Stack;
 
-/// What the player is told when Spell recall keeps a scroll they read.
+/// The least of a read's price that talents leave, in percent.
+const READ_FLOOR: i32 = 25;
+
+/// What the player is told when Scroll savant keeps a scroll they read.
 pub(super) const KEPT: &str = "The writing does not fade from the scroll.";
 
 impl World {
@@ -166,17 +169,21 @@ impl World {
     }
 
     /// What reading a scroll costs the player: the `read` action's price, scaled by their
-    /// talents (Scroll savant: half), at least 1.
+    /// talents (Scroll savant: half; the wizard's Scroll adept: half), never below a quarter
+    /// ([`READ_FLOOR`]: both together), at least 1.
     fn read_price(&self) -> i64 {
         let price = self.price_of(self.state.player, ActionKind::Read);
         match self.state.player().talent_mods(&self.content).read_percent {
             0 => price,
-            more => percent_of(price, u32::try_from((100 + more).max(0)).unwrap_or(0)).max(1),
+            more => {
+                let percent = u32::try_from((100 + more).max(READ_FLOOR)).unwrap_or(0);
+                percent_of(price, percent).max(1)
+            }
         }
     }
 
     /// Takes one of inventory stack `item` from the pack (the last empties it, and what was worn
-    /// follows its letters); returns it, and whether it was kept instead: with Spell recall
+    /// follows its letters); returns it, and whether it was kept instead: with Scroll savant
     /// (spec §8 "Talents") a read keeps its scroll by the talent's chance, one draw of the
     /// gameplay stream a read (none without it).
     pub(super) fn use_up(&mut self, item: usize) -> Option<(Stack, bool)> {

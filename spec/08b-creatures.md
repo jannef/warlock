@@ -214,10 +214,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   or a trap: "The coffer shudders: ..."), and by **searching** (`Hidden::Mimic`, difficulty
   12 + L ÷ 5 plus the branch's `hidden_per_depth`; in passing only for those who notice
   everything: "You notice the coffer breathing: a young mimic!"). Stealing from one: "It has no
-  pockets." Talents (system `chests`, which holds mimics since #773): **Mimic-wise** (scholar; Spot 10 or Intelligence 12):
-  within two cells a disguised mimic is shown as itself (the snapshot does not hide it; the
-  rules still see it disguised); **Slick** (finesse; Dexterity 13): a mimic's grip never holds
-  them (`World::afflict`).
+  pockets." Talents (system `chests`, which holds mimics since #773): **Chest-wise** (delver;
+  Intelligence 11 or Detect traps 15; #775 merged Mimic-wise and Slick into it): within two
+  cells a disguised mimic is shown as itself (the snapshot does not hide it; the rules still
+  see it disguised), and a mimic's grip never holds them (`World::afflict`).
 - **Natural Protection by body and level** (#563, `docs/design/combat-progression.md` §8): a
   creature type's `natural.protection` is set by its **body**, which the hide's `name` decides,
   and its level L (rounded down): none (insubstantial form, rushing wind, crackling form,

@@ -268,7 +268,9 @@ listed there). They cost mana (`Actor::spell_cost`, `World::spend_mana`) and nev
 `Unavailable::NoMana` greys them out. A refusal (no cell, out of range, no hostile seen to
 hex, no sky, nothing to cure, not hurt) spends neither time nor mana. Shared entries: the
 priest names the paladin's `smite` (so it asks Good) and `divine_health`, the druid the
-ranger's `woodland_stride` (#244 writes the same file), the wizard the Scholar `spell_recall`.
+ranger's `woodland_stride` (#244 writes the same file). The wizard's level 12 handed out the
+Scholar `spell_recall` until #775 merged it into Scroll savant's second rank, which a wizard
+picks from the Scholar tree.
 The design's priest "Shield of faith" is `ward_of_faith` (Deflection +1): the id is the
 paladin's. New statuses: Blessed, Hexed (`ill_wished`), Weakened, Sluggish (`sluggish`, cost
 150), Worn thin (the reprieves'); new effects `arcane_bolt` and `blight` in `data/effects.toml`.

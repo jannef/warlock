@@ -4,7 +4,7 @@
 //! - **While disguised** it takes no turn (`creature_turn`, beside the sleepers), it is unaware of
 //!   everyone (`ambush.rs`: a sneak attack lands), no creature sets on it (`ai.rs`), and the
 //!   perception snapshot shows a shut chest of its band in its place and never it
-//!   (`perception.rs`; Mimic-wise sees through it within the talent's reach). Nothing it hears
+//!   (`perception.rs`; Chest-wise sees through it within the talent's reach). Nothing it hears
 //!   or sees, and no time, ends the disguise.
 //! - **Revealing** ([`World::reveal_mimic`]) ends it, said as a line of its own when the player
 //!   sees the cell (nothing is said of the status). It comes of a **touch** (opening, picking,
@@ -13,7 +13,7 @@
 //!   hold), **Knock** at it (no blow), **a blow** or any harm (an attack at it, a missile, a
 //!   burst, a trap), and **being found** (`search.rs`: `Hidden::Mimic`). A revealed mimic
 //!   never hides again.
-//! - **Slick** (a talent): a mimic's grip never holds the player (`status.rs::afflict`).
+//! - **Chest-wise** (a talent): a mimic's grip never holds the player (`status.rs::afflict`).
 //!
 //! Nothing here draws but the free blow's own rolls (the gameplay stream), so a run that never
 //! touches a mimic is unchanged.
@@ -41,7 +41,7 @@ impl World {
         (self.state.actors.get(&id)).is_some_and(|a| a.effects.hides(&self.content))
     }
 
-    /// Whether actor `id` slips a hold by `by` (Slick: `by` is a mimic).
+    /// Whether actor `id` slips a hold by `by` (Chest-wise: `by` is a mimic).
     pub(super) fn slips(&self, id: ActorId, by: Option<ActorId>) -> bool {
         let mimic = (by.and_then(|b| self.state.actors.get(&b)))
             .is_some_and(|b| self.content.has_tag(b.creature, "mimic"));
@@ -60,7 +60,7 @@ impl World {
     /// The player's hand on what they take for a chest at `p` (opening, picking, disarming,
     /// kicking, a step into it): a disguised mimic there is revealed and strikes them, and the
     /// action is refused with no time (`Some(Spent::NoTime)`); `None` where no mimic hides.
-    /// A mimic the player sees for what it is (Mimic-wise) is no chest to them: `None`.
+    /// A mimic the player sees for what it is (Chest-wise) is no chest to them: `None`.
     pub(super) fn touch(&mut self, p: Pos, events: &mut Vec<Event>) -> Option<Spent> {
         let mimic = self.mimic_at(p).filter(|&m| !self.perception.shows(m))?;
         self.reveal_mimic(mimic, Reveal::Touch, events);

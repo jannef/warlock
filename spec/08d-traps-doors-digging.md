@@ -268,7 +268,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Held: "You kick the coffer. It holds.", nothing else changes (try again as often as you
     like). Broken, it is **smashed**: "The coffer bursts apart!", the lock gone, and each stack
     inside is destroyed with `[smash] destroyed` percent (50; one gameplay draw a stack, in the
-    order held; Deft breaker halves it), **coins and loose gems spared** (never rolled); "The
+    order held; Lockbreaker halves it), **coins and loose gems spared** (never rolled); "The
     potion of healing and 2 scrolls are destroyed.", then what is left, spilled on the cell. The
     terrain becomes the smashed chest (splinters, `Event::ChestBroken`).
   - **Blasts** (`World::blast`, §8 "Digging": a fireball trap's or scroll's blast of 1000): a

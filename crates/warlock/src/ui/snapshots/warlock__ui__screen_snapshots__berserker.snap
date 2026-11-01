@@ -23,7 +23,7 @@ expression: "render(case, content.clone())"
     │ Lv  Level         1                                                                                         │
     │ XP  Experience    0 / 173                                                                                   │
     │     Talents       9                                                                                         │
-    │ HP  Hit points    25/27   MP  Mana       3/3                                                                │
+    │ HP  Hit points    25/27   MP  Mana       1/1                                                                │
     │ Dv  Defence        5      Pv  Protection  1                                                                 │
     │     Stance        Berserker                                                                                 │
     │     Rage          11/20                                                                                     │
@@ -37,4 +37,4 @@ expression: "render(case, content.clone())"
     │                                                                                                             │
     │ @ or Esc close   A skills                                                                                   │
     └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story ─┘
- The Hub  ·  HP 25/27  ·  MP 3/3  ·  Rage 11  ·  Sta 11/12  ·  Raging  ·  Lv 1  ·  Berserker  ·  08:00       ? controls
+ The Hub  ·  HP 25/27  ·  MP 1/1  ·  Rage 11  ·  Sta 11/12  ·  Raging  ·  Lv 1  ·  Berserker  ·  08:00       ? controls

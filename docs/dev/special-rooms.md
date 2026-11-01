@@ -213,7 +213,7 @@ generator patrol walks, as for a den: it lies unguarded.
 Sealing (`world/hoard.rs`): `World::lift_in_hoard(at, stacks)` is the one line in
 `carry.rs::pick_up`, after the pick-up is said. Inside a room with a `hoard` that has not sealed,
 `SpecialRoom::lifted` grows by the stacks lifted; once it passes the player's
-`TalentMods::hoard_grace` (Hoard-wise: 1) the room is `sealed` and `seal` runs: every cell of the
+`TalentMods::hoard_grace` (Old delver's second rank: 1) the room is `sealed` and `seal` runs: every cell of the
 room (`cells()`: a rooms level's rectangle holds its walls and doors) that is an open door with
 nothing in the doorway is shut (`set_terrain` to its `closes_to`), every closed door there then
 gets `Lock::new(None)` unless it is locked already (only a skeleton key fits; `lock_difficulty`
@@ -268,9 +268,8 @@ out while 0/false, so other rooms hash as before. The `rooms` dev layer adds `, 
   walks through, as for a den or a hoard. Floor chests (`chest::fill`) may still land inside.
 - **The hint** (`world/treasury.rs`, `arrive_lines`): in `World::travel` after the `pervade`
   line, and in `World::new`; per effect with an `arrive` line, if the level has a room of it not
-  `entered` that the player does not stand in, the line once (effects in id order); with
-  `TalentMods::treasure_bearing` (Treasure sense) `", to the <wind>."` from the arrival cell to
-  the nearest such room's box middle (`Dir::toward`). Nothing saved.
+  `entered` that the player does not stand in, the line once (effects in id order). Nothing
+  saved.
 
 ### Greater treasure rooms
 
@@ -423,7 +422,7 @@ side) and `Shrine::regard(side, Actor::nature)` (`Welcome`, `Unwelcome`, `Ignore
 hooks, one line each: `World::dwell` ends with `dwell_shrine` (the status through `afflict`, as
 a room's `status`; `World::dwelling_here` counts a level with a shrine, so `pass_time` and
 `settle_in` call it); `World::healing_rate_at` multiplies the room's pace by `shrine_pace`
-(`regen` for one welcomed, else 100) before `room_pace`, so Hallowed rest adds to it; and
+(`regen` for one welcomed, else 100) before `room_pace`, so Old delver adds to it; and
 `travel.rs::enter_room` says `shrine::enter_line` (`welcome`, `unwelcome`, or the effect's
 `enter` for a neutral one). Nothing new is saved: the side is `SpecialRoom::side`, and the
 status is saved with the actor. The showcase's `shrine` scenario has a good and an evil shrine
@@ -496,7 +495,7 @@ glows add, flags OR. Readers: perception light and creature sight together (`roo
 part of a cell's light, `room_glow` in the base light; change `perception.rs` and `sight.rs`
 together, `special_rooms_keep_the_light_invariants` and `light_tests::check_invariants` check they
 agree), noise (`noise::noise`, `World::sound_at`), `World::healing_rate` and `World::mana_rate`
-(the room's pace through `World::room_pace`, where Hallowed rest adds half again to a quickening),
+(the room's pace through `World::room_pace`, where Old delver's second rank adds half again to a quickening),
 and `World::shuns` (`ai.rs`, by the room only: no pervading effect is shunned). A flooded room's
 slower, louder steps come from its floor terrain. `PerceptionView::light_kept` lets the renderer
 dim its own transient light.
@@ -507,7 +506,7 @@ dim its own transient light.
 line in `fight.rs::creature_dies` right after `leave_corpse` (so at the corpse's cell, after an
 incorporeal creature's landing): with `Here::rise` at the cell (the room's, else the level's), a
 dead type not of the rise's faction, with `corpse` and a corpse object, and not the player's kill
-under Grave warden (`TalentMods::grave_warden`), `rises_as` draws the type from the gameplay
+under Old delver (`TalentMods::grave_warden`), `rises_as` draws the type from the gameplay
 stream (`rise_candidates`: the faction's non-unique types, shared or the run's campaign's, of the
 nearest level to the dead's, the lower on a tie, in id order; one `below(n)` draw, none for a
 single candidate) and pushes a `Rising { at, pos, from, into }` on the dead's level
@@ -554,7 +553,7 @@ is said otherwise. Consecrate lifts it (`unholy`).
 `World::dwell(id)` (`world/rooms.rs`): every status `Here::statuses` gives at the actor's cell (the
 room's, then the level's) is given at one degree through `World::afflict` (so `refresh` stacking
 renews its easing; immunity to its `damage_type` refuses it). Skipped for an actor whose
-`TalentMods::room_status_immune` lists it (Anchored mind) and, for a status that only touches mana
+`TalentMods::room_status_immune` lists it (Old delver) and, for a status that only touches mana
 (`StatusDef::touches_only_mana`), for one whose `max_mana` is 0 (no rat shows "ebbing", and a
 quiet creature stays quiet in `untouched_by`). The one call is in `World::pass_time`, before each
 actor lives through a stretch of time, when `World::dwelling_here` says the current level has an
@@ -626,8 +625,7 @@ asking twice, or in perception and the rules alike, gives the same images; they 
 `WorldState::turn`.
 
 Perception (`Perception::compute`) adds an image of each actor it sees, on a cell it sees
-(`Sight::Seen`), unless Mirror-wise (`TalentMods::sees_reflections`) puts it within that many
-cells (Chebyshev) of the player: a copy of the real `SeenActor` but for `id` (`image_id`: from
+(`Sight::Seen`): a copy of the real `SeenActor` but for `id` (`image_id`: from
 2^31, by actor, turn parity, and index, so never a real id and new each turn) and `pos`, with the
 real one's gear and showing statuses under the image's id too; `actors` stays sorted by id.
 `Perception::shows_image_at` (private `images` cells) is what the rules read of it. Anything that
@@ -673,7 +671,7 @@ only the player's moves, so creatures never fall and draw nothing. It returns at
 nothing, unless `Here::collapse` (the room's only, never a pervading effect) holds at `at`, the
 player still stands there, the cell is the room's laid `floor` (cracked floor; a room's other
 cells never give way), the level has a down staircase whose `to` is set (`level_below`), and
-the player lacks Light tread (`TalentMods::collapse_proof`). Then one gameplay draw at
+the player lacks Old delver (`TalentMods::collapse_proof`). Then one gameplay draw at
 `chance`, doubled while `load_of(player).penalty() >= Burdened` (capped at 100). On a fall:
 `World::visit` makes the level below (as stairs would, with the visit's luck and level),
 `landing` lists its cells (a flood fill from `start`, else the first staircase, through
@@ -717,15 +715,16 @@ not name it. The `rooms` dev layer marks each room's plain ground, lists each ro
 ## Talents
 
 System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_of_place`; hook
-`PerceptionView::room` and `pervade_line`), Hallowed rest (grit, `room_pace_percent` 50; hook
-`World::room_pace`), Anchored mind (scholar, `room_status_immune` `ebbing`, also system
-`mana`; hook `World::dwell`), Hush-foot (shadow, Stealth 10, `wake_percent` 100, also system
-`stealth`; hook `World::spread_noise`'s wake check), Mirror-wise (scholar, `sees_reflections` 2; hook
-`Perception::compute`'s images, which the glass reads too), Light tread (delver, Dexterity 12,
-`collapse_proof`; hook `World::collapse_step`, which then draws nothing), Hoard-wise (delver,
-Intelligence 11, `hoard_grace` 1; hook `World::lift_in_hoard`), Grave warden (guard, Willpower 12,
-`grave_warden`; hook `World::curse_corpse`), and Treasure sense (wayfarer, Spot 10,
-`treasure_sense`; hook `world/treasury.rs::arrive_lines`, #617). The class ability Consecrate (above) carries the
+`PerceptionView::room` and `pervade_line`), Hush-foot (shadow, Stealth 10, `wake_percent` 100,
+also system `stealth`; hook `World::spread_noise`'s wake check), and Old delver (delver, two
+ranks, #775). Its first rank (Willpower 11 or Dexterity 12): `collapse_proof` (hook
+`World::collapse_step`, which then draws nothing), `room_status_immune` `ebbing` (hook
+`World::dwell`), and `grave_warden` (hook `World::curse_corpse`); its second (level 10):
+`room_pace_percent` 50 (hook `World::room_pace`) and `hoard_grace` 1 (hook
+`World::lift_in_hoard`). It replaced the one-room talents Light tread, Anchored mind, Grave
+warden, Hallowed rest, and Hoard-wise; Mirror-wise (`sees_reflections`) and Treasure sense
+(`treasure_bearing`, the hint's bearing), information only, were dropped with their hooks.
+The class ability Consecrate (above) carries the
 system too. Prayer is part of the system (the `prayer` tag folded into it, #773): Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
 (grit, Willpower 12, `penitent`; hook `world/pray.rs::prayer_answered`). The forge
 adds no talent (the issue's "None new"): Metalcraft is its lean.
@@ -738,7 +737,7 @@ adds no talent (the issue's "None new"): Metalcraft is its lean.
 `mapgen/fennmynster_tests.rs`, `world/room_tests.rs` (each effect in play, messages, pervading
 levels, the talents, saving), `world/dwell_tests.rs` (a room's status: Ebbing on the player and on
 creatures, not on one without mana, through a rest, over a drained level, eased after leaving,
-Anchored mind, saving), `world/den_tests.rs` (the den's data and refusals, sleepers take no
+Old delver, saving), `world/den_tests.rs` (the den's data and refusals, sleepers take no
 turn and never wake by time, quiet and loud noises and the cry cascade, a kicked door, a step,
 Hush-foot, a blow, sneak attacks, the waking line and look mode's word, the spawn cap, Sixth
 sense, saving, and a generated den's sleepers and hoard over a fixture branch),
@@ -761,7 +760,7 @@ a year's catch-up), `content/room_burden_tests.rs` (the `burden` field, its rang
 player and creatures, the messages in and out, perception agreeing, the step refused into
 Overloaded but always allowed out), `content/room_mirrors_tests.rs` (`mirrors` parses, its range, never over a whole level), `world/mirrors_tests.rs` (images on free floor, the same however asked
 and moving with the turns, none outside, the player's own, the glass, a missile flying on, the
-creatures' aim, Mirror-wise, the dumps, a rest among reflections), `content/room_warp_tests.rs` (the `warp` field, its range,
+creatures' aim, the dumps, a rest among reflections), `content/room_warp_tests.rs` (the `warp` field, its range,
 `Here::warp`), `content/outcome_tests.rs` (the altar's table, `offer_at`, defaults, the lean,
 refusals), `mapgen/altar_tests.rs` (one altar a room, never by a door, its side's light, the
 level still joined, the sides one to two to one), `world/outcome_tests.rs` (Pray only beside an
@@ -780,13 +779,13 @@ warps the player and a creature, never outside, no draw outside, the messages, a
 cell, saving), `content/room_collapse_tests.rs` (the `collapse` field, its refusals, never
 over a whole level, `Here::collapse`), `world/collapse_tests.rs` (the collapsed floor: its data,
 about 15 % of steps on cracked floor fall and none on sound floor or outside, twice as often
-Burdened, Light tread and the other no-draw cases, creatures never fall, the landing, hurt and
+Burdened, Old delver and the other no-draw cases, creatures never fall, the landing, hurt and
 Staggered, a fall that kills and its `Cause::Fall`, the messages, a walk through `World::apply`,
 and over a fixture branch of rooms and caves every generated collapsed floor's sound rim and a
 sound way between its ways in), `world/hoard_tests.rs` (the
 tempting hoard: its data and refusals, the first stack sealing it with both doors shut and locked
 and two to four hostile guardians, the guardians on the edge and out of view, nothing lifted
-outside counting, Hoard-wise, sealing once, an open door with something in it left open, a
+outside counting, Old delver's second rank, sealing once, an open door with something in it left open, a
 doorless room, no danger, the dump, saving, and a generated hoard's items with no one inside), `content/room_treasury_tests.rs` (the treasure room's fields parsed and refused, never over a
 whole level), `mapgen/treasury_tests.rs` (every door of a rooms level's treasure room secret and
 the level valid, no stairs or creature inside; a cave's box with one secret door; one or two
@@ -795,13 +794,13 @@ treasure; a greater treasure room walled up on both generators, its breach a wal
 reached cell, nothing inside reached until it is dug, no stairs, creature, or trap inside, its
 richer contents, `validate` refusing a missing or bad breach, `fits_box` only in rock beside a
 reached cell), `world/treasury_tests.rs` (the data, the hint on every arrival until the room is
-entered, after a save too, once for two rooms, Treasure sense's bearing; the greater room's data,
+entered, after a save too, once for two rooms; the greater room's data,
 a level file's breach and its refusals, the breach found by searching, remembered and saved,
 digging it and a blast opening the room, the `rooms` dump), `ui/look.rs` ("A hollow stone
 wall."), `world/curse_tests.rs` (the cursed room's data and refusals, rising after two
 minutes as undead of the dead's level, the twitch and rising lines, not when the corpse is gone or
 carried out, not outside, never the undead, the nearest-level fallback and the campaign's own,
-Grave warden, a cursed level, a frozen level catching up, saving and the dump; Consecrate lifting a
+Old delver, a cursed level, a frozen level catching up, saving and the dump; Consecrate lifting a
 room and a level, refused elsewhere with no time, asking goodness and mana, an interrupted
 prayer), `content/room_haunt_tests.rs` (the `haunt` field, its refusals, never over a whole
 level, `Here::haunt`), `world/haunt_tests.rs` (the haunted room's data, a rest haunted on the hour

@@ -2,43 +2,43 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
-┌─ Talents ────────────────────────────────────────────────────────────────────────────────────────┐
-│                                                                                                  │
-│ Your talents                                                                                     │
-│   Stars                                                                                          │
-│ >   Unblinking  (birth sign)                                                                     │
-│     Transfixing stare  (birth sign)                                                              │
-│     Trusted by none  (birth sign)                                                                │
-│     Always a way  (birth sign)                                                                   │
-│     Tidal  (birth sign)                                                                          │
-│   Wayfarer                                                                                       │
-│     Sense of place                                                                               │
-│   Scholar                                                                                        │
-│     Mimic-wise                                                                                   │
-│     Nose for draughts                                                                            │
-│   Spellcraft                                                                                     │
-│     School focus (evocation)                                                                     │
-│   Racial                                                                                         │
-│     Versatile  (race)                                                                            │
-│   Class abilities                                                                                │
-│     Scroll adept  (class)                                                                        │
-│     Ray of frost  (class)                                                                        │
-│     Arcane training  (class)                                                                     │
-│     Magic missile  (class)                                                                       │
-│ Other talents                                                                                    │
-│   Stars                                                                                          │
-│     Petrifying gaze                                                                              │
-│         Needs: level 12, to be born in the year of the Basilisk                                  │
-│     Undertow                                                                                     │
-│         Needs: level 6, to be Water-born                                                         │
-│   Heritage                                                                                       │
-│     Family wealth                                                                                │
-│         Needs: to be a new character                                                             │
-│     Father's sword                                                                               │
-│                                                                                                ↓ │
-│ You notice hidden things in passing, as if trained to spot them.                                 │
-│                                                                                                  │
-│                                                                                                  │
-│                                                                                                  │
-│ ↑↓ choose   G or Esc close                                                                       │
-└─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘
+ You learn School focus (evocation).
+ Your spellcraft improves. (×8)
+
+
+
+
+
+
+
+
+            ┌─ Level 3 · Skill rolls 2 ────────────────────────────────────────────────┐
+            │                                                                          │
+            │ Skills                                                                   │
+            │ > a  Appraise           4  ────  +1                                      │
+            │   b  Concentration     19  ────  1d3                                     │
+            │   c  Decipher script   21  ────  +2                                      │
+            │   d  Knowledge         16  ────  1d3                                     │
+            │   e  Open lock          3  ────  +1                                      │
+            │   f  Spellcraft        36  ────  1d3                                     │
+            │   g  Swim               4  ────  +1                                      │
+            │                                                                          │
+            │ 5 skill rolls a level: class 2, race 1, Intelligence 1, talents 1        │
+            │                                                                          │
+            │ Rolls +1: practice (no marks) gives +1. Judging what a thing is worth    │
+            │ and what it is made of.                                                  │
+            │                                                                          │
+            │                                                                          │
+            │                                                                          │
+            │ a-g or Enter roll                                                        │
+            └──────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 17/17  ·  MP 32/32  ·  Lv 3  ·  08:00  ·  11 Darkening, Year 1444        ? controls
