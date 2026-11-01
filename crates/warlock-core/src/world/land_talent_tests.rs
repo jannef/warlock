@@ -280,7 +280,7 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
 }
 
 #[test]
-fn swimmer_and_marsh_walker_wade_as_they_walk() {
+fn a_swimmer_wades_as_they_walk() {
     let mut w = world("fen");
     let player = w.player_id();
     let price = |w: &World, id: &str| w.step_price(player, terrain(w, id), false);
@@ -293,8 +293,6 @@ fn swimmer_and_marsh_walker_wade_as_they_walk() {
         assert_eq!(price(&w, id), floor, "{id}");
     }
     assert!(price(&w, "marsh") > floor);
-    give(&mut w, "marsh_walker");
-    assert_eq!((price(&w, "marsh"), price(&w, "reeds")), (floor, floor));
     // Through the turn: the wade east takes a plain step.
     let out = run(&mut w, "move:E");
     assert_eq!(out[0].elapsed, Duration::seconds(6));
@@ -319,10 +317,10 @@ fn a_swimmer_takes_no_harm_from_a_plunge() {
 }
 
 #[test]
-fn a_marsh_walker_never_catches_a_disease_wading() {
+fn natures_ward_never_catches_a_disease_wading() {
     let mut w = world("fen");
     let marsh = CONTENT.terrain_id("marsh").expect("marsh");
-    give(&mut w, "marsh_walker");
+    give(&mut w, "natures_ward");
     let rng = w.state.rng.clone();
     // A hundred hours in the marsh: a sure catch for anyone else.
     w.wade(marsh, 360_000);

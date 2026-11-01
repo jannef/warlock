@@ -143,7 +143,6 @@ fn the_three_tables_come_with_the_levels() {
             "Tracker",
             "Barkskin",
             "Rapid shot",
-            "Woodland stride",
             "Evasion",
             "Volley",
             "Master hunter"
@@ -262,23 +261,15 @@ fn a_ranger_gains_stalkers_eye_at_level_two() {
 }
 
 #[test]
-fn rapid_shot_and_woodland_stride() {
+fn rapid_shot_grants_focus() {
     let mut w = world("ranger");
     let content = w.content().clone();
-    let player = w.state.player;
-    let terrain = |id: &str| content.terrain(content.terrain_id(id).expect("terrain"));
     let focus = content.resource_id("focus").expect("focus");
     assert!(w.state.player().resources.get(focus).is_none());
     reach(&mut w, 12);
     // Rapid shot grants Focus (its quicker shots are `focus_tests.rs`'s).
     let held = w.state.player().resources.get(focus).map(|p| p.value);
     assert_eq!(held, Some(10), "Rapid shot: Focus, full");
-    let grass = w.step_price(player, terrain("grass"), false);
-    assert!(w.step_price(player, terrain("bush"), false) > grass);
-    reach(&mut w, 18);
-    for id in ["forest_floor", "bush", "reeds", "tall_grass", "marsh"] {
-        assert_eq!(w.step_price(player, terrain(id), false), grass, "{id}");
-    }
 }
 
 #[test]

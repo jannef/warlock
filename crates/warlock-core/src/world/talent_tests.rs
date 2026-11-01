@@ -232,6 +232,12 @@ fn a_save_naming_a_cut_talent_loads_without_it() {
         "song_of_rest",
         "wild_empathy",
         "divine_health",
+        // #791's: outdoors only, and marks no one sees.
+        "marsh_walker",
+        "woodland_stride",
+        "winters_friend",
+        "hard_training",
+        "late_bloomer",
     ];
     for id in ["silver_tongue", "penitent", "favoured_child", "insured"]
         .into_iter()
@@ -287,8 +293,8 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // (any skill, three ranks each) would keep a pick open to the last level, and so would Sworn
     // foe (any creature tag) and School focus (any school or element): here they are an
     // elf's, and Apprentice's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
-    // mastery, Channeler, Appraiser's eye, Deep lungs, Second breath, Hard training,
-    // Quick study of the body, Early mastery, Gifted (six stats), Late bloomer, Sure hand,
+    // mastery, Channeler, Appraiser's eye, Deep lungs, Second breath,
+    // Quick study of the body, Early mastery, Gifted (six stats), Sure hand,
     // Numbing cold, Brimming, and Devotee are held back the same way so the picks fit in
     // the levels there are.
     let mut files = ContentFiles::builtin();
@@ -346,10 +352,6 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
             "needs = { level = 9, race = \"elf\" }\neffects = [{ kind = \"ability_ranks\"",
         )
         .replace(
-            "tree = \"vigour\"\ndescription = \"You drill every day",
-            "tree = \"vigour\"\nneeds = { race = \"elf\" }\ndescription = \"You drill every day",
-        )
-        .replace(
             "tree = \"scholar\"\ndescription = \"What you drink teaches",
             "tree = \"scholar\"\nneeds = { race = \"elf\" }\ndescription = \"What you drink teaches",
         )
@@ -360,10 +362,6 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
         .replace(
             "needs = { level = 25 }\neffects = [\n    { kind = \"spell_mod\"",
             "needs = { level = 25, race = \"elf\" }\neffects = [\n    { kind = \"spell_mod\"",
-        )
-        .replace(
-            "needs = { level = 20 }\neffects = [{ kind = \"ramp_ease\"",
-            "needs = { level = 20, race = \"elf\" }\neffects = [{ kind = \"ramp_ease\"",
         )
         .replace(
             "description = \"Items, scrolls, gems, and learning.\"",
@@ -577,7 +575,7 @@ fn perception_and_dumps_show_talents_in_words_only() {
     assert!(
         progress.contains(
             "takeable deep_lungs, \
-             hard_training, healthy, "
+             healthy, "
         ),
         "{progress}"
     );

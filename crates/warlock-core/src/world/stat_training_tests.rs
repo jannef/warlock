@@ -8,7 +8,7 @@ use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Category, Strike};
-use crate::content::{ContentFiles, Factor, ODDS_SCALE, PriceEase, StatUse};
+use crate::content::{ContentFiles, Factor, ODDS_SCALE, StatUse};
 use crate::dump::{self, Layer};
 use crate::skills::Use;
 use crate::stats::{PerStat, Stat, Stats};
@@ -554,7 +554,7 @@ fn expected_daily(w: &mut World) -> Vec<Stat> {
         let actor = w.player_mut();
         let (score, potential) = (actor.stats.score(stat), actor.stats.potential(stat));
         let marks = actor.stat_marks[stat];
-        let price = rules.price_for(marks, score, potential, PriceEase::default());
+        let price = rules.price_for(marks, score, potential);
         let price = price.unwrap_or(1);
         let odds = rules.odds(marks.unsigned_abs(), price);
         if w.state.training.below(ODDS_SCALE) < odds && marks > 0 {
@@ -656,7 +656,7 @@ fn a_week_makes_seven_checks_in_order_however_the_time_is_cut() {
 }
 
 #[test]
-fn the_daily_check_is_the_levels_rule_and_hard_training_speeds_the_marks() {
+fn the_daily_check_is_the_levels_rule_and_a_use_draws_once_a_mark() {
     // At the potential the price ramps as at a level.
     let mut w = daily_world();
     set_stats(&mut w, 10);
@@ -670,19 +670,13 @@ fn the_daily_check_is_the_levels_rule_and_hard_training_speeds_the_marks() {
     assert_eq!(w.state.player().stats, expected.state.player().stats);
     assert_eq!(marks(&w), marks(&expected));
     assert_eq!(w.state.training, expected.state.training);
-    // Hard training: every use's chance half again; a sure one stays sure and draws nothing.
+    // A use's chance is drawn once a mark; a sure one draws nothing.
     let mut w = world_with(BUILTIN.clone());
-    w.player_mut().talents.take("hard_training", None);
-    let mods = w.state.player().talent_mods(&w.content);
-    assert_eq!(mods.train_percent, 50);
     let mut expected = w.state.training.clone();
     w.train_stat_times(StatUse::Blow, None, 200);
-    let won = (0..200).filter(|_| expected.chance(22)).count() as i32;
-    assert_eq!(
-        w.state.training, expected,
-        "a draw a mark, as without the talent"
-    );
-    assert_eq!(marks(&w)[Stat::Strength], won, "15 % half again: 22 %");
+    let won = (0..200).filter(|_| expected.chance(15)).count() as i32;
+    assert_eq!(w.state.training, expected, "a draw a mark");
+    assert_eq!(marks(&w)[Stat::Strength], won, "15 %");
     let training = w.state.training.clone();
     w.train_stat(StatUse::Identified);
     assert_eq!(w.state.training, training);

@@ -70,9 +70,8 @@ impl World {
 
     /// [`World::train_stat`] `count` times over (a potion's marks): each rule for `used` gives
     /// its stat, or `named` for a use that names its own (a potion's), up to `count` marks, each
-    /// with the rule's chance (Hard training's `TalentMods::train_percent` more, never above
-    /// 100): one draw of the training stream per mark for a rule below 100 (whatever the talent
-    /// makes of it), none at 100 (as a single use). The pile saturates at `i32::MAX`.
+    /// with the rule's chance: one draw of the training stream per mark for a rule below 100,
+    /// none at 100 (as a single use). The pile saturates at `i32::MAX`.
     pub(super) fn train_stat_times(&mut self, used: StatUse, named: Option<Stat>, count: u16) {
         self.train_stats_of(used, named, count, PerStat::splat(true));
     }
@@ -89,7 +88,6 @@ impl World {
             return;
         }
         let content = self.content.clone();
-        let talents = self.state.player().talent_mods(&content);
         for rule in content.stat_training().rules(used) {
             let Some(stat) = rule.stat.or(named).filter(|&s| only[s]) else {
                 continue;
@@ -97,8 +95,7 @@ impl World {
             let won = match rule.chance {
                 100.. => count,
                 chance => {
-                    let chance = i32::from(chance) * (100 + talents.train_percent.max(-100)) / 100;
-                    let chance = chance.clamp(0, 100) as u32;
+                    let chance = u32::from(chance);
                     (0..count)
                         .filter(|_| self.state.training.chance(chance))
                         .count() as u16
@@ -301,15 +298,13 @@ impl World {
         }
         let seed = self.state.seed;
         let player = self.state.player;
-        // Gifted and Late bloomer: a rise's price, eased.
-        let talents = self.state.player().talent_mods(&content);
         for stat in Stat::ALL {
             let Some(actor) = self.state.actors.get(&player) else {
                 return moved;
             };
             let (score, potential) = (actor.stats.score(stat), actor.stats.potential(stat));
             let marks = actor.stat_marks[stat];
-            let price = rules.price_for(marks, score, potential, talents.price_ease());
+            let price = rules.price_for(marks, score, potential);
             let odds = price.map_or(0, |price| rules.odds(marks.unsigned_abs(), price));
             let draw = match check {
                 Check::Level => (self.state.levels_rng)

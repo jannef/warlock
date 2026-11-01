@@ -155,10 +155,6 @@
 #                                 (Starving still costs hit points)
 #   corpse_stats_percent { value }   a fresh corpse's stat training marks and its chances to
 #                                 widen a potential, that percent more (never above certain)
-#   train_percent { value }       every stat training use's chance of a mark, that percent more
-#                                 (a use at 100 stays sure)
-#   ramp_ease { points }          the training price's ramp counts each point past a potential
-#                                 that many fewer (1: the first past it at the plain price)
 #   xp_percent { value }          experience gained, that percent more
 #   skill_rolls { value }         skill rolls every level, that many more
 #   extra_pick { level }          one more talent pick at that character level (1: at creation)

@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Your appraise improves. (×56) You learn Light step (1). You learn Light step (2). You learn
- Nimble. You learn Opportunist. You learn Quick (1). You learn Petrifying gaze. You learn Undertow.
+ Your appraise improves. (×56) You learn Dodge. You learn Light step (2). You learn Nimble. You
+ learn Opportunist. You learn Quick (1). You learn Petrifying gaze. You learn Undertow.
 
 
                     ┌─ Abilities ──────────────────────────────────────────────┐

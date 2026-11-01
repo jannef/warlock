@@ -16,8 +16,7 @@
 use crate::character::Character;
 use crate::content::{
     Benefit, Build, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need,
-    PriceEase, ResourceCost, ResourceId, Role, Sign, StatusId, TalentDef, TalentEffect, TalentId,
-    TerrainId,
+    ResourceCost, ResourceId, Role, Sign, StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
 };
 use crate::damage::Kinds;
 use crate::dice::Dice;
@@ -333,10 +332,6 @@ pub struct TalentMods {
     /// Percent more of a fresh corpse's stat training marks and its chances to widen a
     /// potential (`on_eat` `train` and `widen`).
     pub corpse_stats_percent: i32,
-    /// Percent more of every stat training use's chance.
-    pub train_percent: i32,
-    /// Points past a potential the training price's ramp counts as fewer (Late bloomer).
-    pub ramp_ease: u8,
     /// Percent more experience.
     pub xp_percent: i32,
     /// More skill rolls every level.
@@ -888,14 +883,6 @@ impl TalentMods {
         *self == TalentMods::default()
     }
 
-    /// What its talents do to `stat`'s stat training price for a rise (Late bloomer;
-    /// `World::settle`, the one read).
-    pub fn price_ease(&self) -> PriceEase {
-        PriceEase {
-            ramp: self.ramp_ease,
-        }
-    }
-
     /// Whether it has the birth sign's active `active` (spec §8 "Birth sign").
     pub fn has_sign_active(&self, active: crate::content::SignActive) -> bool {
         use crate::content::SignActive as A;
@@ -1204,10 +1191,6 @@ impl TalentMods {
             TalentEffect::NoBloating => self.no_bloating = true,
             TalentEffect::NoHungerWeakness => self.no_hunger_weakness = true,
             TalentEffect::CorpseStatsPercent { value } => self.corpse_stats_percent += value,
-            TalentEffect::TrainPercent { value } => self.train_percent += value,
-            TalentEffect::RampEase { points } => {
-                self.ramp_ease = self.ramp_ease.saturating_add(points)
-            }
             TalentEffect::XpPercent { value } => self.xp_percent += value,
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
