@@ -1,0 +1,17 @@
+name = "Circles"
+description = "Spell circles: a hall of peaceful kobolds to buff and hex, one already blessed, one hexed, one both, one bark-skinned in the dark. You know every buff and hex spell and have the mana to cast them again and again."
+start_level = "circles"
+seed = 1
+# No character table (docs/dev/character-creation.md): the scenario gives the eyes, stats, hit
+# points, and mana itself, so every spell below is cast from the start without a class's level
+# table, and 300 mana casts the nine of them five times over. A rest refills it (`rest:1h`). No
+# potions of mana: a scenario's pack rides on top of every character's heaviest kit (kit.rs's
+# burden test), and five of them would strain the weakest.
+vision = "normal"
+stats = { intelligence = 24, willpower = 24, presence = 24 }
+hp = 30
+mana = 300
+# Every buff and hex spell (assets/data/spells/, kind = "buff" or "hex"), known from the start
+# (spec §4.8 "Spell circles", docs/design/buff-circles.md §13).
+spells = ["light", "haste", "barkskin", "blessing", "evil_eye", "hex_of_weakness", "curse_of_sloth", "sleep", "web"]
+wield = ["lantern"]
