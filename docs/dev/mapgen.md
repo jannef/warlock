@@ -86,4 +86,10 @@ The Ascmearc's branches (campaign design §7): Cealdhlāw (`cealdhlaw`, #337;
 about 70 in the caves), and its vault the barrow chamber (`campaigns/ascmearc/vaults/`, named by
 floor 2's `vaults`: a skeleton guardian with the bronze key, a locked inner room, the silver
 chalice of Sister Hild's quest on an altar). Its tests and first-level snapshot: `mapgen/cealdhlaw_tests.rs`
-(`describe_in` from `mapgen/tests.rs`).
+(`describe_in` from `mapgen/tests.rs`). Lytelscræf (`lytelscraef`, #792;
+`campaigns/ascmearc/data/dungeons/lytelscraef.toml`), the starter cave beside Beorggeat: three
+caves floors of 60×30 at danger 1 to 3, 8 to 16 creatures of five level-1 and level-2 types with
+`stray = 0` and `out_of_depth = 0`, no shop or special room, and the kobolds' cache named by
+floor 3's `vaults` (two kobolds and one shut chest, neither locked nor trapped, filled by
+`chest::fill_vaults` at the floor's item level). Tests: `mapgen/lytelscraef_tests.rs` (the cache
+on floor 3 over ten seeds, the folk, the way in and back as a replay).

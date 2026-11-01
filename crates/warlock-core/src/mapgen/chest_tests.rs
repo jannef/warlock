@@ -316,6 +316,7 @@ fn the_ascmearc_s_vaults_bring_their_chests_of_the_floor_s_level() {
         ("robbers_hoard", "wulfeshol:4", 1, 1),
         ("captains_hall", "brocenburg:4", 1, 0),
         ("still_room", "wyrtholm:4", 0, 0),
+        ("kobolds_cache", "lytelscraef:3", 0, 0),
     ];
     for (id, floor, locked, trapped) in vaults {
         let vault = (c.vaults().iter()).find(|v| v.id() == id).expect(id);

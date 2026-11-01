@@ -37,6 +37,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   by its second floor (`[[dungeon.levels]] vaults`), so it is there for certain and nowhere else,
   with the silver chalice of Sister Hild's quest on its plinth (§8 "Quests"). Its `arrival`:
   "Cold air breathes up from the mound." Its dev scenario `cealdhlaw` starts on the first floor.
+  Easier still is **Lytelscræf** (`lytelscraef`, #792), the little cave in the foot of Grægweall
+  two cells from Beorggeat, in sight from the start: three short cave floors (60×30), danger 1 to
+  3, a thin population (`population_count = { per_1000 = 15, least = 8, most = 16 }`) of the
+  campaign's weakest (giant rats, cave bats, cave beetles, grave worms, kobolds), with `stray = 0`
+  and `out_of_depth = 0` so nothing tougher comes, pit and arrow traps, no shop and no special
+  room. Its third floor names the kobolds' cache (a vault), so a chest neither locked nor trapped,
+  filled at the floor's item level, is there for certain. Its `arrival`: "The cave smells of wet
+  stone and rats."
 - **Danger levels** (#326; `content/danger.rs`, `world/spawn.rs`; the design is
   `docs/design/campaign.md` §9): every level has a danger, computed when asked
   (`World::danger`), never stored. A branch's `danger = 4` (or `{ base, per_depth, player }`;

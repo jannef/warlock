@@ -1,0 +1,21 @@
+# Vault of the Ascmearc (#792): the kobolds' cache at the bottom of Lytelscræf. A dry nook where
+# the cave's kobolds keep what they pick up off the road below Beorggeat: an old chest, a few
+# coins dropped beside it, and two of them on their heap. Lytelscræf names it for its third
+# floor (`vaults` in its `[[dungeon.levels]]`), so it is stamped there for certain and nowhere
+# else.
+name = "Kobolds' cache"
+map = '''
+#########
+#$.k.C.$#
+#.......#
+#$..k...+
+#########
+'''
+
+[legend]
+# The cache's keepers: they wake to what they see or hear.
+"k" = { terrain = "floor", creature = "kobold" }
+"$" = { terrain = "floor", objects = ["copper_coin*6"] }
+# Their chest (spec §8 "Chests"): neither locked nor trapped; what it holds is rolled at the
+# floor's level when the level is made.
+"C" = { terrain = "chest" }
