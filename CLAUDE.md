@@ -82,7 +82,7 @@ Game flags (`cargo run -p warlock -- --help`):
   sign's reveal), `gender`, `class`, `chargen-talents` (the creation picks), `name`, and
   `summary` over New run and the steps before
   them (each on its preselection: the first scenario's character, the Ascmearc's, an empty name);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `quests`, `talents` (the Talents page), `story` (the background story as it opens when a run begins; over a `--character` run or a `--replay` with `kit`; page 8 is reached with `--keys 8` from another page), `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `study` (the scrolls one could study), `identify` (for the first stack's scroll), `temper` (the weapons and armour carried, as the Temper ability asks), and `abilities` (the abilities menu) over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `magic` (the Magic page, page 6), `quests`, `talents` (the Talents page), `story` (the background story as it opens when a run begins; over a `--character` run or a `--replay` with `kit`; page 9 is reached with `--keys 9` from another page), `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `study` (the scrolls one could study), `identify` (for the first stack's scroll), `temper` (the weapons and armour carried, as the Temper ability asks), and `abilities` (the abilities menu) over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
   `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings`,
@@ -336,7 +336,7 @@ file). Topics:
 - `docs/dev/progression.md` — talents (data, `TalentMods`, the hooks), the picks a level brings and their refusal, the `levels` stream, the coverage policy
 - `docs/dev/status-effects.md` — statuses and severities, healing paces, checks, diseases and stat damage
 - `docs/dev/mana.md` — the second pool: its maximum, regeneration in the status loop, every modifier's one hook, spending, the dev drain
-- `docs/dev/magic-skills.md` — the schools of magic as skills: the `school` rows, `Benefit::spell_mods`, `practise_cast` and the `Outcome`, the `schools` talents and dump layer
+- `docs/dev/magic-skills.md` — the schools of magic as skills: the `school` rows, `Benefit::spell_mods`, `practise_cast` and the `Outcome`, the `schools` talents and dump layer, the Magic page
 - `docs/dev/spells.md` — the spell data: spell levels (0 to 70), the cost table, the `[[spell]]` files and their checks (none on strength), tags, caster level
 - `docs/dev/resources.md` — alternative resources: the data, `Actor::resources`, grant, gain, spend, and end, time in the status loop, ability costs, the dev grant
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn

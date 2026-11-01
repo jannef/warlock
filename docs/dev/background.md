@@ -2,7 +2,7 @@
 
 Developer notes for a chosen character's background story (spec §8 "Background story"; the
 design is `docs/design/background-story.md`, tracked in #708). B1 (#702) is the data, the roll,
-the effects, and the saved ids; the story screen and page 8 are B2 (#703), the full pools and
+the effects, and the saved ids; the story screen and its page (now 9) are B2 (#703), the full pools and
 the wiki's tables B3 (#704), the `background` system's talents B4 (#705), and talent and flaw
 effects B5 (#707). Keep it current with the code, as CLAUDE.md says.
 
@@ -209,8 +209,8 @@ story screen (`crates/warlock/src/ui/story_screen.rs`), the `story` dump layer, 
 else. The app opens it once as a run begins (`screens::on_run_start` on `Game::story_due`: New
 run's Start, a windowed `--character`/`--name`/`--talents`/`--new` start; never Continue, Resume,
 `--capture`, `--replay`, beneath a `--screen`, or for a run without a story), 72 wide; afterwards
-it is info page 8, "Story" ("Your story is not written." without one). No saved "seen" flag and
-no new `KeyCommand` (`Page(8)` exists). `--screen story` captures the opening screen. The
+it is info page 9, "Story" ("Your story is not written." without one). No saved "seen" flag and
+no new `KeyCommand` (`Page(9)` exists). `--screen story` captures the opening screen. The
 character screen, the death screen, and the Characters screen show nothing of it (decision 6).
 Details: `docs/dev/screens.md`, "The story".
 

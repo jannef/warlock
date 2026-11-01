@@ -29,7 +29,23 @@ range](combat.md#criticals). These work as the spellcraft [talents](talents.md) 
 and add to them: a die rolled again by your school and by *[Sure
 hand](talents.md#talent-sure-hand)* counts both, and what a hex or a buff gains in degrees is
 still held by its [status](status-effects.md)'s most. The game shows your ranks and a bar of your
-marks (the `schools` list); what a rank gives is here, exactly, and not in the game.
+marks on the [Magic page](#the-magic-page); what a rank gives is here, exactly, and not in the
+game.
+
+## The Magic page
+
+The **Magic page** is page `6` of the [info pages](controls.md#info-pages), between the
+[weapon skills](weapon-skills.md#seeing-your-skills) and the [quest log](quests.md#the-quest-log):
+open any info page and press `6`, or `Tab` to it. It has no key of its own in play. It is one
+column that scrolls (↑↓) when the window is too small for it, and shows, from the top: your
+[mana](mana.md#how-much), as the status bar does; the seven schools, each with your rank and a
+faint bar of your marks toward the next (schools you have trained stand out, the rest are
+dimmer); the [caster styles](#caster-styles), a `•` on Battle caster while your armour hinders
+casting ("• the style you cast in now"), shown to anyone who knows a spell or has trained a caster
+style; and every spell you know, by level then name, with the roll it makes now and its mana, as
+the [abilities menu](abilities.md) says them ("Magic missile   2d4 force, 3 mana, aimed"). It is
+read only: spells are cast from the abilities menu. It takes no time. A character who knows no
+spells reads "You know no spells." under the schools.
 
 ## The schools
 
@@ -152,7 +168,7 @@ The [wizard](classes.md#wizard) and the [druid](classes.md#druid) start in Snipe
 [witch](classes.md#witch) and the [priest](classes.md#priest) in Toucher, the
 [paladin](classes.md#paladin) in Battle caster; any caster may advance in any of them by casting
 from there. Sniper and Toucher default to each other at 4 ranks less, Toucher and Battle caster
-at 3 ([Related styles](fighting-styles.md#related-styles)). The game marks Battle caster as the
+at 3 ([Related styles](fighting-styles.md#related-styles)). The [Magic page](#the-magic-page) marks Battle caster as the
 style you cast in while you wear such armour; Sniper and Toucher are decided by each cast's
 target, so it never marks them.
 

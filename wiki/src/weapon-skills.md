@@ -28,7 +28,8 @@ every blow), in the time of a blow. You need a shield to bash with, and you bash
 the [Controls screen](controls.md#rebinding-keys) ("Bash with your shield") if you like.
 
 Spells have a page of their own: each [school of magic](schools.md) is a skill trained as these
-are, by casting, and a spell that rolls to hit aims with its school's rank.
+are, by casting, and a spell that rolls to hit aims with its school's rank. The schools and the
+caster styles are on the [Magic page](schools.md#the-magic-page), page 6.
 
 ## Seeing your skills
 
@@ -37,7 +38,9 @@ shields), then your [fighting styles](fighting-styles.md), each with your rank a
 your marks toward the next one; a `•` marks the styles you fight in now. It takes no time.
 Skills you know stand out; untrained ones are dimmer. In a wide window the list is in two
 columns; in a small one it scrolls (↑↓). It is page 5 of the
-[info pages](controls.md#info-pages), right after your [skills](skills.md).
+[info pages](controls.md#info-pages), right after your [skills](skills.md) and before the
+[Magic page](schools.md#the-magic-page) (`6`, named on its bottom line), where the
+[caster styles](schools.md#caster-styles) are listed.
 
 The game never tells you what a rank gives you, in numbers: you see your ranks, and you feel the
 difference in a fight. The tables below are the rules, exactly.

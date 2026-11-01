@@ -21,8 +21,10 @@ CLAUDE.md says.
   Defaults: evocation ↔ transmutation, necromancy ↔ restoration, abjuration ↔ enchantment, 4
   each; divination none. Schools default only to schools (the loader's family check: styles,
   schools, weapon skills).
-- `Role::section` is `None` for a school: the weapon skills screen lists none (the Magic page,
-  S9, will). `Choice::attacks` leaves schools out of `choice = "weapon_skill"`.
+- `Role::section` is `None` for a school: the weapon skills screen lists none, nor the caster
+  styles; the Magic page (`ui/magic_screen.rs`, page 6 of the info pages, `docs/dev/screens.md`)
+  lists the schools, the caster styles (Battle caster marked from `own_styles_in_use`), and the
+  spells known with their rolls. `Choice::attacks` leaves schools out of `choice = "weapon_skill"`.
 
 ## What a rank gives
 

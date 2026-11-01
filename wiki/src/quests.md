@@ -89,9 +89,10 @@ your [pack](objects.md#your-pack) is put at your feet. A few quests can be done 
 `q` opens the **quest log**: the quests you were given, then the ones you have done. Choose
 one with the arrows to see what it asks, first in the giver's name ("Reeve Leofric wants you to
 kill 5 giant rats in Cealdhlāw."), how far you have got ("2 / 5 killed.", "Return to
-Reeve Leofric."), and who gave it, in their words. It is page 6 of the [info screens](controls.md#info-pages): `1` to `6`,
+Reeve Leofric."), and who gave it, in their words. It is page 7 of the [info screens](controls.md#info-pages): `1` to `9`,
 `Tab`, and `Shift`+`Tab` switch between it and the [character screen](controls.md#character), the [inventory](objects.md#your-pack), the
-[equipment](equipment.md), your [skills](skills.md), and your [weapon skills](weapon-skills.md).
+[equipment](equipment.md), your [skills](skills.md), your [weapon skills](weapon-skills.md), the
+[Magic page](schools.md#the-magic-page), your [talents](talents.md), and [your story](background.md#when-it-is-told).
 
 A quest you are given stays in the log until you have done it: quests cannot be given up. There is
 no limit on how many you may be on at once. Opening the log takes no time.
