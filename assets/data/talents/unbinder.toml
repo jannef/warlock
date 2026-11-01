@@ -1,7 +1,0 @@
-[[talent]]
-id = "unbinder"
-name = "Unbinder"
-tree = "weaponcraft"
-description = "You strike at the binding, not the thing: your blows against animated things are surer and harder."
-effects = [{ kind = "bane", tag = "animated", to_hit = 1, damage = 2 }]
-systems = ["combat"]

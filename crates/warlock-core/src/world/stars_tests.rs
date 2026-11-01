@@ -313,14 +313,10 @@ fn heedless_and_always_a_way_move_every_search_check() {
 fn the_unloved_get_worse_prices() {
     let shops = BUILTIN.shops().expect("shops");
     let plain = born_under("hydra", "fire", 5);
-    let base = favour(&BUILTIN, shops, player(&plain), &[]);
+    let base = favour(&BUILTIN, shops, player(&plain));
     for animal in ["manticore", "barghest"] {
         let w = born_under(animal, "fire", 5);
-        assert_eq!(
-            favour(&BUILTIN, shops, player(&w), &[]),
-            base - 10,
-            "{animal}"
-        );
+        assert_eq!(favour(&BUILTIN, shops, player(&w)), base - 10, "{animal}");
     }
 }
 

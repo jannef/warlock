@@ -130,13 +130,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `animated/<level id>` on a generated level (spawn order, after gear) and `animated/<actor id>`
   for every other spawn; a legend may give the material (`animated = { material = "silver" }`).
   It is seen by its body (the object's glyph in its material's colour; look mode adds "of
-  silver" and how it moves). When it dies its body falls **whole** by `[drops] intact` (50 %,
-  plus the player's Salvager), drawn from `drop/<actor id>`, else it **breaks into the parts it
+  silver" and how it moves). When it dies its body falls **whole** by `[drops] intact` (50 %),
+  drawn from `drop/<actor id>`, else it **breaks into the parts it
   is made of** (§7 "Pieces and breaking": loose gems, pieces of its grouped materials by
   `[drops] pieces`, nothing of paper; its magic lost), with a line if the player sees it ("The
   silver candlestick breaks apart.", after the death line). Nothing can be
-  stolen from one ("It is all of a piece.", no time). Talents (no system of their own: `creature_gear` and `combat`, #773): Salvager,
-  Unbinder (+1 to hit, +2 damage against a creature tagged `animated`).
+  stolen from one ("It is all of a piece.", no time). No talents of their own (Salvager,
+  Unbinder, and Appraiser's eye were cut in #774).
   **Blades** (#485) are a **family**: a tier with `levels` and no bodies generates one type
   per level, `animated_blade_5` … `animated_blade_20`, all named "animated blade", numbered in a
   row after the household types; the family's id `animated_blade` names its first member. Its
@@ -181,8 +181,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   level for a creature that casts or summons; a panoply does neither yet). Fyrdelf
   lists `animated_armour`; no branch population lists `animated_panoply` yet (none reaches
   danger 20): it stands in armouries (§7 "Special rooms", #487), whose sleepers are drawn four
-  dangers deeper, so on Fyrdelf's bottom floor, and comes by a legend or the dev `spawn`. Talent **Appraiser's eye** (scholar): look mode adds "It hums with power." when
-  anything an animated creature carries is magic or rare (perception's `SeenActor::hums`).
+  dangers deeper, so on Fyrdelf's bottom floor, and comes by a legend or the dev `spawn`.
   Their homes (#487) are two special rooms with populations of their own (§7 "Special rooms"):
   the **armoury** (blades, hollow armour, panoplies, among weapon racks) and the **workshop**
   (household things, among workbenches); the chromatic look of composites follows (#463).
@@ -318,7 +317,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     identify, asks first in the one dialog with the total (`Pay 300 gold` or `Not now`; without
     the gold only `Go back`). All or nothing: refused with the `nothing` line when everything is
     known and with "You cannot pay." short of the total, neither taking time. Pilgrim does not
-    halve it (a temple's talent), nor do Lore or Connoisseur.
+    halve it (a temple's talent), nor does Lore.
   - **Muttering**: after each of its actions, a creature whose dialogue has a `mutter`, that goes
     about its routine (its mind calm) within 5 cells of the player (as far as a voice carries), mutters
     with its `chance` (a hash of the run seed, the actor, and the moment: the gameplay stream is

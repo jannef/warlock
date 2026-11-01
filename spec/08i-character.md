@@ -102,9 +102,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with no story), and the text is told again from the content. A scenario's own character
     (`--scenario` alone) has none. The game tells it in words only, never a number or a stat's
     name; the summary says under the kit "Fate will have its say when you set out." Its
-    talents (#705): Favoured child doubles the luckier tiers' odds, Hard-won turns each stat
-    point taken into sixty stat training marks, Storyteller's shop favour grows with the rare
-    and fateful lines (under "Heritage" and the Scholar tree).
+    talent (#705): Favoured child doubles the luckier tiers' odds (under "Heritage").
   - **Birth sign actives** (#266): used from the abilities menu's **Birth sign** group
     (`Ability::Sign`, `Source::Sign`, between Racial and Class) as `Action::Gift` (no key of
     their own), each refused (no time) without it or while its cooldown status lasts. **Horn's
@@ -149,8 +147,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creation Talents step like any talent whose prerequisites hold, the sign among them
     (`needs = { animal = "wyvern", level = 15 }`, said "to be born in the year of the Wyvern",
     "to be Wood-born"). The Talents page leaves out the picks of other signs (the stars never
-    change); the wiki lists them all. Hare-footed (Salamander, level 12: speed +5 % more),
-    Another head (Hydra, 9: hit points come back while Starving, resting heals +100 %), Relentless
+    change); the wiki lists them all. Another head (Hydra, 9: hit points come back while Starving, resting heals +100 %), Relentless
     fury (Manticore, 9: the streak runs to +5, and every two blows before it +1 damage), Horn of
     plenty (Unicorn, 9: Horn's grace also gives back a hit point per level, never past the
     maximum, so a wound alone is cause enough, and leaves one degree of Graceless, eight hours),
@@ -161,8 +158,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Petrifying gaze (Basilisk, 12: the stare leaves 4 degrees of Transfixed and one of
     Spent-eyed, an hour), Roc's grip (Roc, Strength 14: carrying +25 % more, Burdened costs
     nothing), Dragon's hoard (Griffin, 12: Hoard sense's odds half again, loot +25 % and gems
-    +50 %, shop favour +10 %), Riddle of the Sphinx (Sphinx, Intelligence 14: a skill roll more
-    every level), Second rising (Phoenix, 18), Tentacles (Kraken, Twin Blades 3: off-hand blows
+    +50 %, shop favour +10 %), Second rising (Phoenix, 18), Tentacles (Kraken, Twin Blades 3: off-hand blows
     +2 damage), **Hound's bay** (Barghest, 12: an active, `use:hounds_bay`, the time of a wait,
     refused on the overworld: a howl, `Act::Howl`, loudness 150, heard as "a howl" (`h` in the
     sound layer); every hostile that hears it by the hearing rules and whose creature level is
@@ -216,7 +212,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Content::full_moon_reach`, the one read): Hound's nose's scent (6 to 8), the Transfixing
     stare (6 to 8; `Ability::reach_at`, which the targeting mode reads too), and Eyes of the
     heights at night (+1 to +3); only the gifts' (`TalentMods::gift_reach` marks the `scent`
-    and `night_sight` of `stars` talents: Blood scent and Moon-eyed are not lengthened). Inner
+    and `night_sight` of `stars` talents: Blood scent is not lengthened). Inner
     light burns as `full_moon_light` (`ember_full`, radius 2) instead of its `ember`. Nothing
     new is shown: the status bar shows the moon's phase already, the cooldown its status, and
     the wiki the numbers. The design's element seasons stay deferred.
@@ -656,14 +652,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     at item level 6 (`loot::heirloom`: two a magic item's prefix and suffix, more a rare item's,
     named), identified, readied in its own slot when free, else carried, from the stream
     `character/fathers-sword/<race>,<gender>,<class>`). Each stream is its own, so no other roll
-    moves. The weakest of a small race may start Burdened with them, never Strained. Two more
-    heritage talents shape the background story (#705, the `background` system): **Favoured
+    moves. The weakest of a small race may start Burdened with them, never Strained. One more
+    heritage talent shapes the background story (#705, the `background` system): **Favoured
     child** (`story_luck` 100: the story's uncommon, rare, and fateful odds doubled, 24 %, 6 %,
-    1 % a chapter) and **Hard-won** (`hard_won` 60: each stat point a story line took is sixty
-    stat training marks on that stat, the potential where the story left it). The system's
-    third, **Storyteller** (Scholar, Presence 12), is picked in play: shop favour +5 %, +5 % more
-    per rare line of the story and +10 % per fateful one, before the cap (`world::shop::favour`,
-    the one read of the story in play).
+    1 % a chapter).
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
     lowered later keeps the talent): other talents at a rank (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored
@@ -687,8 +679,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`burden::load`), `travel_percent` (overworld steps), `hunger_percent` and `no_exertion`,
     `xp_percent` (every gain), `notice` (noticing in passing as if trained in Spot, with a
     bonus), `free_blow` (a switch of `World::free_blows_of`). The first twelve: Healthy, Hardy,
-    Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider, Lean, Good learner, Alert,
-    Thick skin.
+    Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider, Lean, Good learner (cut in
+    #774), Alert, Thick skin.
   - **Weaponcraft and Guard** (#238): `weapon` adds to the benefits of the chosen weapon skill
     or style (no `role`) or of every skill of a role, read in `Actor::benefit`, so every
     attack, Defence, and price that reads a skill's benefits reads it: Weapon focus (+1 to hit),
@@ -700,9 +692,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `launcher_range` and `throw_range` (Far shot: +2 and +1 cells); `max_dex` (Armour
     training: worn armour's Dexterity cap +1 a rank); `deflection` (Deflection +1);
     `protection` (Heavy armour mastery: +1 while the armour piece worn with the most
-    Protection has 3 or more; Shield wall: +1 while holding a shield); `stance_to_hit` and
-    `flee_percent` (Stalwart: the defensive stance's to-hit penalty gone; Unflinching: the
-    coward's halved, rounded toward 0, and fleeing steps 10 % cheaper again); `pain` (Immune
+    Protection has 3 or more; Shield wall: +1 while holding a shield); `stance_to_hit`
+    (Stalwart: the defensive stance's to-hit penalty gone); `pain` (Immune
     to pain: a hit, a blow, shot, throw, or trap, does 1 less after the soak, never below 1;
     a status's or starving's harm is no hit); `resist` (Elemental ward: 25 % a rank against
     the chosen element, any damage type that is no physical kind, summed and capped with the
@@ -757,26 +748,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
     like any other. The everyday folk have theirs (bonus picks at 10, 20, 30, 45, 55):
     aristocrat (Weaponcraft, Delver) Well dressed (favour +10 %, quest gold +25 %), Fencing
     (Duelist one rank higher), Noblesse (anyone not hostile budges, keepers at their posts too),
-    Riposte, Connoisseur (descriptions show worth; a magic item carried 24 hours, counted from
-    then, is identified), Iron will (+2 on Willpower checks, Presence +1), Commanding
+    Riposte, Iron will (+2 on Willpower checks, Presence +1), Commanding
     (Intimidate +20, credit 50 gold), Peerless (+2 on the confirmation roll), Legacy (XP +10 %,
     Presence +1); commoner (any tree) Hard work (60 % off the burden's slowdown on top of
-    Balance), Hearty (hunger −10 %), Stubborn (+1 on Toughness checks, poison never lowers
+    Balance), Stubborn (+1 on Toughness checks, poison never lowers
     scores), Big hands (+1 damage with maces and unarmed), Thick skull (Protection +1), Second
     wind, Salt of the earth (healing and resting +25 %), Folk hero (quest XP and gold +50 %),
-    Unlikely hero (every stat +1); craftsperson (Weaponcraft, Guard, Delver) Keen appraisal
-    (descriptions show worth), Whetstone (+1 damage with melee weapons), Fletching (missiles
+    Unlikely hero (every stat +1); craftsperson (Weaponcraft, Guard, Delver) Whetstone (+1 damage with melee weapons), Fletching (missiles
     break half as often), Sturdy work (Protection +1 in body armour), Mining (digging +50 %),
-    Tinker (the Disarm ability untrained), Jeweller (loose gems found, on levels made from then
-    on and in drops, a cut finer), Masterwork (melee threat +1), Artisan (Protection +1 per armour
+    Tinker (the Disarm ability untrained), Masterwork (melee threat +1), Artisan (Protection +1 per armour
     piece worn, +2 melee damage); merchant (Delver, Scholar) Haggler (favour +15 %), Deep
     pockets (carrying +10 kg, coins weightless), Eye for quality (what is bought or sold is
     identified), Trade routes (journeys −20 %), Credit (leave owing up to 100 gold: no
-    dialog, no theft, the debt stays on the bill), Appraiser (descriptions show worth and each
-    gem's), Insured (shops pay +50 %, never more than they ask), Magnate (quest gold +100 %, the
+    dialog, no theft, the debt stays on the bill), Insured (shops pay +50 %, never more than they ask), Magnate (quest gold +100 %, the
     favour cap +10), Golden tongue (Presence +2, favour +10 % and its cap +10). The favour cap
     is 50 % unless lifted, at most 90 %. Worth shown is the value, which never includes unknown
-    magic. The adventurers' tables come with I1–I3 (#243–#245). Dumps mark them `Well dressed (class)`;
+    magic. #774 cut the filler and the duplicates (Connoisseur, Hearty, Keen appraisal, Jeweller,
+    Appraiser) and left their levels empty. The adventurers' tables come with I1–I3 (#243–#245). Dumps mark them `Well dressed (class)`;
     JSON `talents[].class`, `due.bonus`. **Saves change** (`Due::bonus`, `Magic::carried`).
   - **Scholar, Grit, Delver** (#240; the design's §7.5 but for the five mana talents, which
     came with #242: Deep well, Clear mind, Meditation, Frugal caster, Blood magic, §8 "Mana"). Their effects share what the class abilities use where the rules
@@ -835,10 +823,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     "Resources"):
     **effective eyes** (the design's B4, `WorldState::eyes`, §5 "Effective eyes"):
     `threshold_percent` (Night eyes: −50 %, eyes normal), `darkvision` (Dark adaptation: +2,
-    eyes darkvision; Owl eyes: 2 cells for low-light eyes, level 9), `sees_uv` (Rune sight,
-    Intelligence 14, level 15); `scent` (Blood scent: a bleeding creature in line of sight
+    eyes darkvision; Owl eyes: 2 cells for low-light eyes, level 9); `scent` (Blood scent: a bleeding creature in line of sight
     within 9 cells, four beyond darkvision's five, is seen however dark, eyes darkvision);
-    `night_sight` (Moon-eyed: overworld sight one cell longer at night, eyes low-light);
     `lantern_light` (Lamplighter: a lit lantern ready in the Tool slot burns as `lantern_bright`, a
     cell farther, not while hooded, in `WorldState::carried_light`, so creatures see it too); `ambush` (Ambusher: +1d6 after Protection on
     a hit, any attack, at a target that has not seen the attacker (`World::unaware`, §8
@@ -851,12 +837,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     alone, climbing out onto it half price); `wading_proof` (Marsh walker: wading never exposes
     to a disease, no draw); `beast_friend` (Beast-friend: creatures of `animal` factions are
     neutral to the player until they attack one, `Progress::empathy_broken` by creature type,
-    saved; read by `World::stance`, the AI's choice of a hostile, and look mode); `forecast`
-    (Weather-wise: the weather coming within 3 hours, §5 "Weather"); `sun_healing`
+    saved; read by `World::stance`, the AI's choice of a hostile, and look mode); `sun_healing`
     (Sun-blessed: healing half again as fast while the sun is up over an unroofed cell of the
     current level, whatever the clouds, `World::healing_rate`). Silent feet also counts toward
-    the hearing system. The light and factions systems stay `pending` until Hooded light and the
-    class tables bring their second talent. The `awareness` system came off `pending` with
+    the hearing system. The light and factions systems are held to the bar since it is one
+    talent (#773). The `awareness` system came off `pending` with
     surprise (#681, §8 "Surprise and sneak attacks"): Wary (Delver, Willpower 12,
     `initiative_bonus = 4`: added to the initiative check) and Cool head (Grit, Willpower 14,
     level 9, `surprise_ease = 100`: Surprised slows no action), beside Ambusher; #687 added
@@ -872,8 +857,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Weaponcraft, any launcher or thrown skill at 4, `sneak_reach = 3`: shots, throws, and attack
     spells sneak-attack 3 cells farther), beside Ambusher and the thief's Sneak attack, Improved
     sneak attack, Master thief, and Patient blade. The `danger` system (#326, §7 "Danger
-    levels") came with its two: Quiet delver (`spawn_every_percent`) and Sixth sense
-    (`danger_sense`, 2 ranks, after Alert), both Delver. The `special_rooms` system (#402, §7
+    levels") came with Quiet delver (`spawn_every_percent`, Delver; Sixth sense was cut in #774). The `special_rooms` system (#402, §7
     "Special rooms") came with its two: Sense of place (Wayfarer, free, `sense_of_place`: a
     special room is known from a glimpse, `PerceptionView::room`, and a whole level's `pervade`
     line names its effect) and Hallowed rest (Grit, Willpower 11, `room_pace_percent` 50: where a
@@ -923,8 +907,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each
     talent asking for its race. Elf: Elven accuracy (bows 3: threat +1 with bows, `weapon`),
     Ageless (level 9: hunger 20 % slower, and `disease_interval_percent` 100, a disease's
-    progressions twice as far apart, `World::disease_turn`). Half-elf: Dual heritage (a skill
-    roll more every level), Diplomat (Presence 11: favour +10 %, quest gold +25 %). Dwarf: Stone
+    progressions twice as far apart, `World::disease_turn`). Half-elf: Diplomat (Presence 11: favour +10 %, quest gold +25 %). Dwarf: Stone
     sense (`stone_find` +4 to finding what is hidden on a `stone` cell, searching and in
     passing; digging +25 %), Dwarven resilience (Toughness 14: Poisoned eases twice as fast,
     disease checks +2), Stout (level 12: `stout`, Strained costs what Burdened costs others,
@@ -1071,7 +1054,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (healing +100 %).
   - **Druid**: Wild empathy (`beast_friend`), Spark (level 1, at 1: a bolt, 1d4 electricity;
     1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Woodland stride (the ranger's: forest floor,
-    bush, reeds, tall grass, marsh as grass), Weather sense (a 3-hour forecast), Nature's ward
+    bush, reeds, tall grass, marsh as grass), Nature's ward
     (wading never sickens; poison eases twice as fast), Winter's friend (ice holds the body's
     weight alone, plunges never hurt, climbing out is free), Call lightning (at 12; level 11: a line of
     8 cells, 2d6 electricity, its ladder Willpower 13: 3d6 to 25: 5d6+2, a thunderclap; open
@@ -1168,7 +1151,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
     2 lower, never below 3; and its finisher, an active aimed in a direction, `use:master_thief:E`,
     for 5 openings: a melee blow that is a critical whenever it hits, with no confirmation roll,
-    `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Wide learning (a skill roll more every level), Song of rest
+    `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Song of rest
     (resting heals half again as fast), Jack of all trades (every trained skill counts 5
     higher, as a skill bonus in `Actor::skill_effect`), Honeyed words (favour +15 %, quest gold
     +25 %), Legend (quest XP +50 %, Presence +1), Virtuoso (Inspire gives Inspired greatly, to
@@ -1384,9 +1367,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     style is `hidden` (§7): no class or race gives it, it defaults to no style, and it is not
     listed (the weapon skills screen, the `weapon_skills` dump layer and its JSON, the Talents
     page for a talent that asks for it, Stylist's choices) until its owner has marks in it
-    (`WeaponSkills::shows`). Talents: Loose straps (Two Shields 5: the failure chance 40 points
-    smaller), Anvil and hammer (6: the follow-up 15 points likelier), Craven's wall (8: in the
-    coward's stance both shields' Shield bonuses add up, `TalentEffect::BothShields`).
+    (`WeaponSkills::shows`). Talent: Anvil and hammer (Two Shields 6: the follow-up 15 points
+    likelier).
   - **Abilities**: a style's ranks teach abilities as weapon skills' do ("Weapon abilities"
     below), working only in the style's grip.
   - **What the player perceives**: their own ranks and marks (as weapon skills), and which

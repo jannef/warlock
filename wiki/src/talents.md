@@ -93,12 +93,6 @@ at once, on top of your [starting kit](starting-kit.md).
   [background story](background.md#how-rare) come twice as often: its uncommon, rare, and
   fateful sentences at 24 %, 6 %, and 1 % a chapter instead of 12 %, 3 %, and 0.5 %. It is a
   gamble: a commoner story may still be told, and nothing good is promised.
-- **[Hard-won](talents.md#talent-hard-won)**: each [stat](stats.md) point a sentence of your
-  [story](background.md#what-a-story-gives) takes is sixty [stat training marks](stats.md#training)
-  on that stat, some two fifths of the point's price, so it comes back within your first days of
-  play. The
-  score and its [potential](stats.md#potentials) still fall with the sentence; what comes back is
-  a real rise.
 
 {{#include generated/talents-heirlooms.md}}
 
@@ -132,12 +126,15 @@ talent taken at level 3 still matters at level 50.
 ## Coverage
 
 Every talent names the parts of the game it touches, from a fixed list, and the game checks at
-start-up that no part of the game on that list goes without talents: at least two talents each
+start-up that no part of the game on that list goes without talents: at least one talent each
 (and, once [classes](classes.md) have their level tables, at least one [class ability](talents.md#class-abilities)). Parts marked pending
-are waiting for theirs.
+are waiting for theirs. The parts are broad (fighting, stealth, magic, light, hunger, ...): a
+single kind of room, chest, or creature belongs to its part, not a part of its own, and a
+talent is only made when it changes how a character plays, never for a number shown or a
+small gain in a rare place.
 
-This is a promise about the future too: **every new part of the game arrives with its
-talents**, so no system is ever left with nothing that makes it better at it. That holds for
+This is a promise about the future too: **every new part of the game arrives with a
+talent**, so no system is ever left with nothing that makes it better at it. That holds for
 new [resources](resources.md) as well: [mana](mana.md#how-much) came with talents for a deeper pool, a quicker refill, and cheaper
 casting, [spells](magic.md#the-spells) with the Spellcraft tree ([Quick study](talents.md#talent-quick-study), [Overreach](talents.md#talent-overreach), [School focus](talents.md#talent-school-focus)) and talents for
 [wands](magic.md#wands) and [rods](magic.md#rods) ([Wand mastery](talents.md#talent-wand-mastery), [Channeler](talents.md#talent-channeler)), and the same goes for each [class](classes.md)'s own pool later (a [barbarian](classes.md#barbarian)'s

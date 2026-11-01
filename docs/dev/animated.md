@@ -116,8 +116,7 @@ weapon skills.
 ## In play (`world/animated.rs`)
 
 - **Drops** (`World::remains`, called by `creature_dies` for what a creature leaves): an
-  animated creature's body falls whole by `[drops] intact` plus the player's
-  `TalentMods::salvage_percent` (Salvager), one draw on `drop/<actor id>` (its `loot` is 0, so
+  animated creature's body falls whole by `[drops] intact`, one draw on `drop/<actor id>` (its `loot` is 0, so
   `loot_of` draws nothing there); else it breaks into its parts, `object::break_up` at
   `[drops] pieces` percent (loose gems, pieces of its grouped materials, nothing of paper; no
   magic; `docs/dev/objects.md` "Pieces and breaking"). One draw per body stack, in inventory
@@ -132,9 +131,6 @@ weapon skills.
   `World::expose` refuses a disease when `immune` holds the diseases' status, nothing rolled.
 - **Stealing**: `World::steal` refuses an animated creature before the hostile check: "It is all
   of a piece.", no time.
-- **Unbinder**: `TalentEffect::Bane { tag, to_hit, damage }` sums into `TalentMods::banes`;
-  `World::bane` adds them to an attack's profile against a creature whose type carries the tag,
-  beside Favoured prey in `World::resolve`.
 - **Death line**: `fight::death_message(end, dies)`, its callers passing the dead type's
   `death_verb`.
 
@@ -157,11 +153,6 @@ shaped by the piece in its tier's `shown_by` slot: its colour, and with `item_gl
 material word for it: the gear line names what it wields ("An animated blade (hostile,
 unhurt), wielding an iron great sword, on stone floor."). Hollow armour and panoplies are shown
 by their `body` piece, as `A` in its colour (no `item_glyph`).
-
-**Appraiser's eye** (`TalentEffect::AppraiseAnimated`, `TalentMods::appraise_animated`):
-perception sets `SeenActor::hums` for an animated creature any of whose stacks is magic or rare
-(ground truth, read in perception only, with the talent), and look mode ends its line with " It
-hums with power.".
 
 ## Inherited powers
 
@@ -189,22 +180,23 @@ them). Populations: Cealdhlāw (candlestick, cutlery, teapot, cooking pot), Fenn
 20): its home is the **armoury** (#487, `docs/dev/special-rooms.md` "Homes of animated
 things"), a special room whose own population is the three families drawn four dangers deeper,
 so Fyrdelf's bottom floor (danger 16, which favours armouries at 20) has them; the **workshop**
-holds the household things of a house's work. Legends and the dev `spawn` place them too. Talents: system
-`animated` with Salvager (delver), Unbinder (weaponcraft), and Appraiser's eye (scholar).
+holds the household things of a house's work. Legends and the dev `spawn` place them too. No talents
+of their own: the `animated` system and its Salvager, Unbinder, and Appraiser's eye were cut in
+#773/#774 (animated objects are creatures; their remains are `creature_gear`).
 
 ## Tests
 
 `content/animated_tests.rs` (ids, order, numbers, group effects, identity, every load the same,
 collisions and bad bodies), `world/animated_tests.rs` (the legend's body, composition and its
 stream, material weights, the cutlery's count, immunities, stealing, the drop rule and
-Salvager, broken bodies as their parts with the break line, a loose gem and a book's leather,
-Unbinder, saves and a replay), `world/animated_blade_tests.rs` (the family's ids and numbers, a
+broken bodies as their parts with the break line, a loose gem and a book's leather,
+saves and a replay), `world/animated_blade_tests.rs` (the family's ids and numbers, a
 blade's weapon, rank, stream, odds, and fight, first kills, quests, and the tag objective
 counting the family once, saves), `world/animated_panoply_tests.rs` (the composites' ids and
 numbers, slot lines by `from` and `count`, the two-handed rule, ranks, shape, stream, the
 inherited powers by `fight`: a Flaming sword, rings of the Bear and the Ox, a resistance, a
-glowing ring; Appraiser's eye, populations, saves), `content/danger.rs` (a family candidate's weight and member,
-out of depth too), `ui/look.rs` (the look lines, a blade's and the composites', with and without Appraiser's eye,
+glowing ring; populations, saves), `content/danger.rs` (a family candidate's weight and member,
+out of depth too), `ui/look.rs` (the look lines, a blade's and the composites',
 as insta snapshots), `mapgen/homes_tests.rs` (the armoury and the workshop: dressing, their own
 sleepers in a branch of kobolds, eligibility by danger, Fyrdelf's panoplies). The wiki's
 tables are `xtask/src/wiki/animated.rs`.

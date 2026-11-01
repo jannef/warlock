@@ -164,8 +164,6 @@ Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` 
   cell, and cries: `make_noise_at(id, Act::Mutter, cry × 100 / VOICE_NOISE)` (a voice of `cry`,
   scaled by the room like any noise), which recurses into `spread_noise`. Each sleeper wakes once,
   so the cascade ends; it is deterministic (hearers in actor order, no draws).
-- Sixth sense: `sense_danger` (`spawn.rs`) ends with `sense_sleepers`, "Something sleeps on this
-  level." when any actor on the level sleeps.
 
 Sleepers are ordinary hostile actors otherwise: `hostiles_here` counts them toward the spawn cap,
 a kill is `kill_hostile`, the status is saved and hashed with the actor. The `bench-turns` `delf`
@@ -392,7 +390,7 @@ altar side by side. Talent: Devout (system `special_rooms`, which holds prayer s
 The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
 applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stats::lessen`,
 floor `DRAIN_FLOOR`, then stat damage clamped and `keep_hp_within_max`), `levels` (positive:
-`gain_level`, `add_xp` to the next threshold exactly, unscaled by Good learner; negative:
+`gain_level`, `add_xp` to the next threshold exactly, unscaled by `xp_percent`; negative:
 `World::lose_level`), `talent` (Chosen: `talent::offers` flattened to the ways not held, one
 drawn, `bestow`: `Talents::take`, `class::hand_out`, `train_chosen`, and pushed to
 `Actor::boons`), and `flaw` (Forsaken: the `flaw` talents not held, by id, one drawn, given

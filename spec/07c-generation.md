@@ -97,11 +97,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   door, shop floor, or sanctuary (up to 32 tries, else nothing comes), with a short out-and-back
   route where one fits, else a post. Floors the player is not on stay frozen: on arrival the next
   attempt is put off to `every` from then. A rest perceives after any turn in which one came. The
-  dev action `spawn` makes one attempt now, whatever the cap and chance. Talents (system
-  `danger`): Quiet delver (`spawn_every_percent` 100: attempts half as often), Sixth sense
-  (`danger_sense`, 2 ranks: on arrival "This place feels quiet / uneasy / dangerous / deadly."
-  at danger up to level − 4 / level / level + 3 / beyond; at 2, the note "Something stirs in the
-  dark." when one comes). Hidden in the game; the wiki's dungeons page states it all.
+  dev action `spawn` makes one attempt now, whatever the cap and chance. Talent (system
+  `danger`): Quiet delver (`spawn_every_percent` 100: attempts half as often). Hidden in the game; the wiki's dungeons page states it all.
   **The initial population**: a generated floor of a branch with a danger is laid down full:
   its `population_count` for the floor's walkable cells (by default 35 per 1000, 25 to 80; on
   top of the generator's own patrols), each creature drawn by the weights above, a unique type

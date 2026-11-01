@@ -222,8 +222,7 @@ kobold (which hears 15, so wakes at 30) up to three cells away; with some [Steal
 talent *[Hush-foot](talents.md#talent-hush-foot)* (Shadow, Stealth 10: sleepers need twice the noise to wake from anything you
 do), you can walk right past. A sleeper has seen no one, so *[sneak attacks](talents.md#talent-sneak-attack)* land on it every
 time; but every blow is noise, and a kill is a fight its neighbours may hear. A sleeper you see
-shows as "asleep" in [look mode](controls.md#look-mode), and you are told when one wakes. The talent *[Sixth sense](talents.md#talent-sixth-sense)* tells
-you on arrival when something sleeps on the level.
+shows as "asleep" in [look mode](controls.md#look-mode), and you are told when one wakes.
 
 Sleepers count among the level's creatures: while the den is full, fewer newcomers find their
 way to the level. Killing a sleeper is like killing any other foe.

@@ -282,51 +282,6 @@ fn a_gem_falls_loose_and_paper_falls_as_nothing() {
 }
 
 #[test]
-fn salvager_raises_the_share_that_falls_whole() {
-    // At 70 %, two ranks of Salvager (15 each) make it certain.
-    let falls = |ranks: u8| {
-        let mut whole = 0;
-        for seed in 0..40 {
-            let mut w = World::new(content(70), "hall", Some(seed)).expect("run");
-            for _ in 0..ranks {
-                w.player_mut().talents.take("salvager", None);
-            }
-            whole += [Pos::new(2, 2), Pos::new(4, 2), Pos::new(6, 2)]
-                .into_iter()
-                .filter(|&p| {
-                    let body = w.state.actors[&at(&w, p)].inventory[0].object;
-                    kill_at(&mut w, p).first().is_some_and(|s| s.object == body)
-                })
-                .count();
-        }
-        whole
-    };
-    assert_eq!(falls(2), 120, "every one");
-    let without = falls(0);
-    assert!((60..120).contains(&without), "about 70 % of 120: {without}");
-}
-
-#[test]
-fn unbinder_strikes_surer_and_harder_at_animated_things() {
-    let mut w = hall(50);
-    let player = w.player_id();
-    let (candlestick, kobold) = (at(&w, Pos::new(2, 2)), at(&w, Pos::new(4, 3)));
-    let profile = w.state.player().melee(w.content());
-    assert_eq!(w.bane(player, candlestick, profile.clone()), profile);
-    w.player_mut().talents.take("unbinder", None);
-    let bane = w.bane(player, candlestick, profile.clone());
-    assert_eq!(
-        (bane.to_hit, bane.bonus),
-        (profile.to_hit + 1, profile.bonus + 2)
-    );
-    assert_eq!(
-        w.bane(player, kobold, profile.clone()),
-        profile,
-        "a kobold is no thing"
-    );
-}
-
-#[test]
 fn an_animated_thing_survives_a_save_and_a_replay() {
     let w = hall(50);
     let loaded = crate::save::decode(&crate::save::encode(&w), content(50)).expect("decodes");

@@ -164,7 +164,7 @@ remembers each affix's tier and value (so enchanting can work on them later).
 ## What systems have affixes
 
 Every affix by the part of the game it works in, and the [talents](talents.md) that work at the same place:
-an affix's value adds to theirs (or, for [Attuned](talents.md#talent-attuned) and [Bellows](talents.md#talent-bellows), is raised by them), so a worn item
+an affix's value adds to theirs (or, for [Attuned](talents.md#talent-attuned), is raised by it), so a worn item
 and a talent stack within the same limits.
 
 {{#include generated/magic-systems.md}}

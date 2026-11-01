@@ -417,7 +417,7 @@ cast path shares.
   - **Instances**: `Stack::charges` (private `Charges { used, known, carried }`; `None` = as
     made: full, unknown; saved and hashed, left out while `None`, so other stacks save as
     before; saves change). `charges_left` (rules, dev), `known_charges` / `charges_known`
-    (presentation), `use_charge`, `identify_charges`; `carry_for` (Connoisseur) counts a
+    (presentation), `use_charge`, `identify_charges`; `carry_for` (Lore) counts a
     wand's unknown charges too; `is_valid_for` holds `used` within the wand's charges.
     `Stack::wand_rung` (S5, #752; private `Option<u8>`, `None` for everything but a wand;
     saved and hashed, left out while `None`; saves change): drawn by

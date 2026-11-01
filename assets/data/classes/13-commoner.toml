@@ -16,7 +16,6 @@ styles = { brawler = 1 }
 # any tree, the commoner's gift.
 abilities = [
     { level = 1, talent = "hard_work" },
-    { level = 6, talent = "hearty" },
     { level = 12, talent = "stubborn" },
     { level = 18, talent = "big_hands" },
     { level = 25, talent = "thick_skull" },

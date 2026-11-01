@@ -239,7 +239,7 @@ fn heavy_armour_mastery_asks_for_heavy_armour() {
 }
 
 #[test]
-fn stalwart_and_unflinching_soften_their_stances() {
+fn stalwart_softens_its_stance() {
     let mut w = world();
     let content = w.content().clone();
     let to_hit = |w: &World| w.state.player().melee(&content).to_hit;
@@ -249,21 +249,6 @@ fn stalwart_and_unflinching_soften_their_stances() {
     assert!(defensive < neutral);
     give(&mut w, "stalwart", None);
     assert_eq!(to_hit(&w), neutral, "no to-hit lost");
-    w.player_mut().stance = CombatStance::Coward;
-    let coward = to_hit(&w);
-    give(&mut w, "unflinching", None);
-    assert_eq!(
-        to_hit(&w),
-        neutral - (neutral - coward) / 2,
-        "half the penalty"
-    );
-
-    // Fleeing steps 10 % cheaper again.
-    let floor = content.terrain(content.terrain_id("floor").expect("floor"));
-    let me = w.state.player;
-    let fleeing = w.step_price(me, floor, true);
-    w.player_mut().talents = Default::default();
-    assert_eq!(fleeing, w.step_price(me, floor, true) * 90 / 100);
 }
 
 #[test]

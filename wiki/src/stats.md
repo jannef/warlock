@@ -146,8 +146,7 @@ level's check comes on top):
 
 The **[Hard training](talents.md#talent-hard-training)** [talent](talents.md) gives every use half
 again its chance of a mark (a sure one stays sure), so every stat trains half again as fast.
-**[Gifted](talents.md#talent-gifted)**, taken for one stat (again for another), makes that stat's
-price for a rise 15 % lower (a drop's price stays as it is). **[Late
+**[Late
 bloomer](talents.md#talent-late-bloomer)** (level 20) counts every point past the potential as
 one fewer, so the first point beyond it costs the plain price. **[Ascetic](talents.md#talent-ascetic)**
 (Willpower 13) gives Willpower 15 marks at every daily check you meet Hungry or worse, and a

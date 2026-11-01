@@ -95,8 +95,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nearest, its value held to that tier's range (an old 13 is +3: save compatibility for a
     stored number, not a limit on spells; `Magic::retier`). `caster_level` (of the Adept) is read in `Actor::caster_level`; **Attuned**
     (Scholar, Intelligence 12, level 6) counts the caster level magic items give half again,
-    rounded up (+1 → +2, +3 → +5), and **Bellows** (Vigour, Toughness 12) the stamina they add
-    to the maximum twice (affixes design §10).
+    rounded up (+1 → +2, +3 → +5) (affixes design §10; its stamina twin, Bellows, was cut in
+    #774).
     The utility hooks
     are in (#631), worn by the player or a creature, identified or not: `door_kick` adds to a
     kick's Strength as Lockbreaker's does (a door's and a chest's), `dig_percent` is that much
@@ -345,7 +345,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     changes). It is identified when one is used ("It is a wand of fireball.") or identified;
     every wand of it then shows by its name. Its **charges** (`Stack`'s `charges`: the charges
     used, saved, left out of the save while the wand is as made) stay unknown until the wand
-    itself is identified, by the scroll of identify or by Connoisseur's carrying ("a wand of
+    itself is identified, by the scroll of identify or by Lore's carrying ("a wand of
     fireball (7 charges)", "(empty)"). Its **rung** comes with its type: once the type is known
     the item description says what it does in the user's hands, the roll at its rung plus their
     wand rungs with their other hooks, its damage type, and a burst's radius ("Holds Fireball:

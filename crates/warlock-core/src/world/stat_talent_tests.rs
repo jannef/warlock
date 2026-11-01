@@ -1,5 +1,4 @@
-//! The stat training talents and class abilities (spec §8 "Stats"; the design's §9): Gifted
-//! (a stat chosen, its rise 15 % cheaper), Late bloomer (the ramp a point shorter), Ascetic (a
+//! The stat training talents and class abilities (spec §8 "Stats"; the design's §9): Late bloomer (the ramp a point shorter), Ascetic (a
 //! hungry dawn steels the will and starves nothing), Hard living (the barbarian's: no hunger
 //! deed), and Discipline (the monk's: enduring and praying twice over, a faint free), each read
 //! at its one hook.
@@ -8,7 +7,6 @@ use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::{Factor, PriceEase, StatDeed, StatUse};
-use crate::dump::{self, Layer};
 use crate::stats::{PerStat, Stat, Stats};
 use std::sync::LazyLock;
 
@@ -74,75 +72,11 @@ fn give(world: &mut World, id: &str, choice: Option<&str>) {
 }
 
 #[test]
-fn gifted_is_chosen_for_a_stat_and_eases_only_its_rise() {
-    let mut w = world("warrior");
-    // Level 2, then level 3's pick due: Gifted is offered for each of the six stats.
-    reach(&mut w, 2);
-    let spec = w.state.character.as_ref().map(|c| &c.spec);
-    let factor = Factor::of(w.content(), spec);
-    let more = w.content().experience().threshold_for(3, factor) - w.player_xp();
-    run(&mut w, &format!("xp:{more}"));
-    w.advance_auto();
-    let progress = dump::ascii(&w, &[Layer::Progress]);
-    assert!(
-        progress.contains("gifted:{strength,dexterity,toughness,intelligence,willpower,presence}"),
-        "{progress}"
-    );
-    run(&mut w, "talent:gifted:luck");
-    assert!(!holds(&w, "gifted"), "no such stat");
-    run(&mut w, "talent:gifted:strength");
-    assert_eq!(
-        w.state.player().talents.rank_of("gifted", Some("strength")),
-        1
-    );
-    let mods = w.state.player().talent_mods(w.content()).into_owned();
-    assert_eq!(mods.price_percent[Stat::Strength], -15);
-    assert_eq!(mods.price_percent[Stat::Dexterity], 0);
-    // The price: 120 at 10 below the potential, 102 for the gifted stat; a drop's is plain.
-    let rules = w.content().stat_training();
-    let ease = mods.price_ease(Stat::Strength);
-    assert_eq!(rules.price_for(5, 10, 18, PriceEase::default()), Some(120));
-    assert_eq!(rules.price_for(5, 10, 18, ease), Some(102));
-    assert_eq!(
-        rules.price_for(-5, 10, 18, ease),
-        rules.price_for(-5, 10, 18, PriceEase::default())
-    );
-    // The dev progress line and the check read the same eased price.
-    set_stats(&mut w, 18);
-    w.player_mut().stat_marks[Stat::Strength] = 60_000;
-    w.player_mut().stat_marks[Stat::Dexterity] = 60_000;
-    let progress = dump::ascii(&w, &[Layer::Progress]);
-    assert!(
-        progress.contains("St 60000/102, Dx 60000/120"),
-        "{progress}"
-    );
-    let moved = w.settle(stat_training::Check::Daily);
-    assert!(moved.contains(&stat_training::Moved::Rose(Stat::Strength)));
-    assert!(moved.contains(&stat_training::Moved::Rose(Stat::Dexterity)));
-    assert_eq!(
-        marks(&w, Stat::Strength),
-        60_000 - 102,
-        "the gifted price paid"
-    );
-    assert_eq!(marks(&w, Stat::Dexterity), 60_000 - 120);
-}
-
-#[test]
 fn late_bloomer_starts_the_ramp_a_point_later() {
     let mut w = world("warrior");
     give(&mut w, "late_bloomer", None);
-    let ease = w
-        .state
-        .player()
-        .talent_mods(w.content())
-        .price_ease(Stat::Strength);
-    assert_eq!(
-        ease,
-        PriceEase {
-            percent: 0,
-            ramp: 1
-        }
-    );
+    let ease = w.state.player().talent_mods(w.content()).price_ease();
+    assert_eq!(ease, PriceEase { ramp: 1 });
     let rules = w.content().stat_training();
     // The point reaching the potential: the base either way.
     assert_eq!(rules.eased_price(17, 18, ease), rules.base_price(17));
@@ -151,15 +85,6 @@ fn late_bloomer_starts_the_ramp_a_point_later() {
     assert_eq!(rules.eased_price(18, 18, ease), rules.base_price(18));
     // The second past it: ×4, ×2 for a late bloomer.
     assert_eq!(rules.eased_price(19, 18, ease), rules.base_price(19) * 2);
-    // Gifted on top: the whole, 15 % less.
-    let both = PriceEase {
-        percent: -15,
-        ramp: 1,
-    };
-    assert_eq!(
-        rules.eased_price(19, 18, both),
-        rules.base_price(19) * 2 * 85 / 100
-    );
 }
 
 #[test]

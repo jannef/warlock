@@ -37,8 +37,6 @@
 //!
 //! **Weather** ([`crate::weather`]) is known only under the open sky: on such a level the sky
 //! carries it ([`PerceptionView::weather`]), and its clouds dim the sun, the moons, and the sky.
-//! Weather-wise players also know the weather coming within its hours
-//! ([`PerceptionView::forecast`]).
 //!
 //! Light on a transparent cell is the level's ambient light, plus the light of every source that
 //! reaches it, plus weak **bounce light** reflected by the lit surfaces around it
@@ -99,7 +97,7 @@ use crate::talent::{self, Candidate};
 use crate::temperature::Temperature;
 use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
-use crate::weather::{self, Weather};
+use crate::weather::Weather;
 use crate::world::mirrors::image_id;
 use crate::world::surprise::creature_unaware;
 use crate::world::{
@@ -261,10 +259,6 @@ pub struct SeenActor {
     /// "Animated objects"), which anyone sees.
     #[serde(skip)]
     pub shape: Option<Shape>,
-    /// An animated thing that hums with power: something it is made of is magic, and the
-    /// player has Appraiser's eye to tell it (spec §8 "Animated objects").
-    #[serde(skip)]
-    pub hums: bool,
     /// It has not noticed the player (`World::unaware`: asleep, disguised, slipped past, or
     /// hunting no one and not seeing them), told only to a player with Stalker's eye; false
     /// for everyone otherwise (spec §8 "Surprise and sneak attacks": the unaware mark).
@@ -437,8 +431,6 @@ pub(crate) struct Perception {
     ambient: Light,
     /// The sun, the moons, and the sky over a level under the open sky.
     sky: Option<Sky>,
-    /// The weather coming, which a Weather-wise player knows under the open sky.
-    forecast: Option<Weather>,
     /// The temperature of the air where the player is (spec §5 "Temperature").
     temperature: Temperature,
     /// Ambient plus sky plus bounce light; meaningful on visible cells only.
@@ -794,7 +786,6 @@ impl Perception {
                 pos: a.pos,
                 health: a.health(content),
                 shape: shape(a, content),
-                hums: talents.appraise_animated && hums(a, content),
                 unaware: false,
             })
             .collect();
@@ -892,25 +883,11 @@ impl Perception {
         // The player feels the air where they stand: fixed underground, the weather's under the
         // open sky, and what a hot or a cold room adds.
         let temperature = state.temperature_at(level, content, state.time, player.pos);
-        // Weather-wise (spec §8 "Talents"): the weather coming, under the open sky.
-        let forecast = (sky.is_some() && talents.forecast > 0)
-            .then(|| {
-                let over = state.weather_override.as_ref();
-                weather::forecast(
-                    state.seed,
-                    state.time,
-                    content.climate(),
-                    over,
-                    talents.forecast,
-                )
-            })
-            .flatten();
         Self {
             viewer,
             eye: eyes,
             ambient,
             sky,
-            forecast,
             temperature,
             base,
             sight,
@@ -1384,13 +1361,6 @@ impl<'a> PerceptionView<'a> {
     /// scenario gave no character.
     pub fn character(&self) -> Option<&'a Character> {
         self.character
-    }
-
-    /// The tiers of the player's story's lines (Storyteller's favour reads them; never shown).
-    fn story_tiers(&self) -> Vec<crate::content::StoryTier> {
-        (self.character)
-            .map(|c| crate::background::tiers(self.content, self.campaign, &c.story))
-            .unwrap_or_default()
     }
 
     /// The player's background story (spec §8 "Background story"), which they know: its
@@ -2027,12 +1997,6 @@ impl<'a> PerceptionView<'a> {
         self.snapshot.weather()
     }
 
-    /// The weather coming within the hours a Weather-wise player foresees (spec §8 "Talents"),
-    /// if it changes; `None` when it stays, without the talent, or away from the open sky.
-    pub fn forecast(&self) -> Option<Weather> {
-        self.snapshot.forecast
-    }
-
     /// The temperature of the air where the player is (spec §5 "Temperature"), which they feel,
     /// in dungeons and under the open sky alike, a hot or a cold room's included (the status bar
     /// shows it).
@@ -2176,7 +2140,7 @@ impl<'a> PerceptionView<'a> {
             shop,
             shops,
             content: self.content,
-            favour: favour(self.content, shops, self.player, &self.story_tiers()),
+            favour: favour(self.content, shops, self.player),
             more: self.player.talent_mods(self.content).sell_percent,
             now: self.time,
         })
@@ -2254,13 +2218,6 @@ impl<'a> PerceptionView<'a> {
     pub fn own_gold(&self) -> u32 {
         (self.content.shops()).map_or(0, |s| count_of(&self.player.inventory, s.currency))
     }
-}
-
-/// Whether actor `a` is an animated thing of which something it is made of is magic or rare
-/// (what Appraiser's eye tells).
-fn hums(a: &Actor, content: &Content) -> bool {
-    content.creature(a.creature).animated.is_some()
-        && (a.inventory.iter()).any(|s| s.rarity() != crate::magic::Rarity::Normal)
 }
 
 /// How actor `a` looks by what it is made of (spec §8 "Animated objects"): a household thing by

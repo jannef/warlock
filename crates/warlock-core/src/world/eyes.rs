@@ -35,7 +35,7 @@ impl World {
 }
 
 /// `base` as talents `mods` change it: the threshold by its percent (never below 0), the
-/// darkvision radius farther, ultraviolet seen with the talent. Its id and name stay the base's.
+/// darkvision radius farther. Its id and name stay the base's.
 pub(crate) fn eyes_with(base: &VisionProfile, mods: &TalentMods) -> VisionProfile {
     let mut eye = base.clone();
     if mods.threshold_percent != 0 {
@@ -44,6 +44,5 @@ pub(crate) fn eyes_with(base: &VisionProfile, mods: &TalentMods) -> VisionProfil
         eye.threshold = u16::try_from(threshold).unwrap_or(u16::MAX);
     }
     eye.darkvision = (eye.darkvision + mods.darkvision).max(0);
-    eye.sees_uv |= mods.sees_uv;
     eye
 }

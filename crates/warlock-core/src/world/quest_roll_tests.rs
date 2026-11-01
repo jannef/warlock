@@ -556,33 +556,6 @@ fn picks_variants_and_placeholders_are_checked_at_load() {
 // The bounties system's talents.
 
 #[test]
-fn quarry_sense_tells_of_a_quarry_on_arrival() {
-    let mut files = ContentFiles::builtin();
-    files.insert(
-        "data/quests/quarry_test.toml",
-        "[[quest]]\nid = \"rat_cull\"\nname = \"Rats\"\ngiver = \"shopkeeper\"\ntype = \"kill\"\n\
-         target = \"rat\"\ncount = 50\noffer = \"O.\"\nreminder = \"R.\"\ndone = \"D.\"\n",
-    );
-    let content = Arc::new(Content::load(&files).expect("test content is valid"));
-    let arrive = |talent: bool, given: bool| {
-        let mut w = World::new(content.clone(), "showcase", None).expect("run");
-        if given {
-            w.state.quests =
-                serde_json::from_str(r#"{"records": {"rat_cull": {"stage": "active"}}}"#)
-                    .expect("records");
-        }
-        if talent {
-            w.player_mut().talents.take("quarry_sense", None);
-        }
-        w.travel("arena", None).expect("the arena");
-        said(&w).contains(&"Your quarry is here.".to_string())
-    };
-    assert!(arrive(true, true));
-    assert!(!arrive(false, true), "not without the talent");
-    assert!(!arrive(true, false), "not without the quest");
-}
-
-#[test]
 fn sworn_foe_hits_its_kind_surer_and_harder() {
     let content = Arc::new(Content::builtin().expect("content"));
     let mut w = World::new(content.clone(), "arena", None).expect("run");

@@ -7,7 +7,7 @@
 use super::class_active_tests::{reach, run, world};
 use super::*;
 use crate::character::CharacterSpec;
-use crate::content::{Build, ResourceId};
+use crate::content::ResourceId;
 use crate::stats::{PerStat, Stat, Stats, modifier};
 
 fn stamina(w: &World) -> ResourceId {
@@ -138,18 +138,6 @@ fn steady_breathing_brings_it_back_half_again_as_fast() {
     run(&mut twin, "wait*4");
     assert_eq!(held(&twin), Some(2));
     assert_eq!(held(&w), Some(3));
-}
-
-#[test]
-fn second_breath_gives_a_point_back_for_a_kill() {
-    let mut w = world("warrior");
-    let player = w.state.player;
-    set(&mut w, 3);
-    w.gain_resource(player, Build::Kill);
-    assert_eq!(held(&w), Some(3), "a kill alone gives none");
-    give(&mut w, "second_breath");
-    w.gain_resource(player, Build::Kill);
-    assert_eq!(held(&w), Some(4));
 }
 
 #[test]

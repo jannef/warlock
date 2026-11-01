@@ -211,8 +211,36 @@ fn several_levels_at_once_queue_their_picks_and_auto_spends_them_in_order() {
     assert_eq!(w.due(), None);
     assert_eq!(player(&w).talents.len(), 2);
     // Auto took the first talent of the first tree it may take: Vigour's, in file order,
-    // Bellows (this warrior's Toughness allows it).
-    assert_eq!(last(&w), "You learn Bellows.");
+    // Clotting.
+    assert_eq!(last(&w), "You learn Clotting.");
+}
+
+/// A save from before a talent was cut (#774: Gifted, Bellows) loads: the talents the content no
+/// longer has are let go, each said in the log, and the rest are kept.
+#[test]
+fn a_save_naming_a_cut_talent_loads_without_it() {
+    let mut w = world();
+    w.player_mut().talents.take("healthy", None);
+    w.player_mut().talents.take("gifted", Some("strength"));
+    w.player_mut().talents.take("bellows", None);
+    let back = World::from_state(w.content().clone(), w.state().clone()).expect("it loads");
+    let held: Vec<&str> = (back.state().player().talents.iter())
+        .map(|t| t.id.as_str())
+        .collect();
+    assert_eq!(
+        held,
+        ["versatile", "healthy"],
+        "the race's grant and the pick"
+    );
+    for id in ["gifted", "bellows"] {
+        assert!(
+            back.retiered()
+                .iter()
+                .any(|l| l.contains(&format!("`{id}`"))),
+            "{:?}",
+            back.retiered()
+        );
+    }
 }
 
 #[test]
@@ -302,10 +330,6 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
         .replace(
             "tree = \"scholar\"\ndescription = \"What you drink teaches",
             "tree = \"scholar\"\nneeds = { race = \"elf\" }\ndescription = \"What you drink teaches",
-        )
-        .replace(
-            "choice = \"stat\"\n",
-            "choice = \"stat\"\nneeds = { race = \"elf\" }\n",
         )
         .replace(
             "needs = { level = 12 }\neffects = [{ kind = \"spell_mod\"",
@@ -398,11 +422,10 @@ fn each_talent_changes_the_rule_it_names() {
     w.exert(ActionKind::Melee);
     assert_eq!(player(&w).satiation.expect("hungers").nutrition, fed);
 
-    // Good learner: 5 % more experience on every gain.
-    take(&mut w, 24, "good_learner");
-    let xp = w.player_xp();
-    run(&mut w, "xp:1000");
-    assert_eq!(w.player_xp(), xp + 1050);
+    // Quick learner: one skill roll more every level.
+    let rolls = w.level_rolls();
+    take(&mut w, 24, "quick_learner");
+    assert_eq!(w.level_rolls(), rolls + 1);
 
     // Alert: notices in passing, 2 better.
     let passive = w.search_modifier(Look::Passive, Hidden::Door(0));
@@ -553,7 +576,6 @@ fn perception_and_dumps_show_talents_in_words_only() {
     assert!(
         progress.contains(
             "takeable deep_lungs, \
-             gifted:{strength,dexterity,toughness,intelligence,willpower,presence}, \
              hard_training, healthy, "
         ),
         "{progress}"

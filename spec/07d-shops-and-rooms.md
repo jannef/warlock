@@ -670,8 +670,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wake the next, and so on: a cascade, deterministic, each sleeper waking once. Light and
     sight never wake one. A plain step (60) beside a kobold (hearing 15) wakes it; one three
     cells off, 30 there, too; the stealthy cross. The player is told "The kobold wakes up." when
-    they see it; look mode shows *asleep* on a sleeper; Sixth sense adds "Something sleeps on
-    this level." to its arrival note. Killing a sleeper is a hostile kill like any other (no
+    they see it; look mode shows *asleep* on a sleeper. Killing a sleeper is a hostile kill like any other (no
     alignment of its own).
   - **Generation** (`mapgen/special.rs`): last of all, from the level's map stream, each room of
     a rooms level but the arrival room and vaults, and each of eight chambers a caves level

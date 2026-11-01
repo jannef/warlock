@@ -22,10 +22,6 @@ driest:
 Over many days each weather comes up as often as its chance says. Nothing you do changes it: the
 weather is the same however you spend the time, waiting, resting, or travelling.
 
-The **[Weather-wise](talents.md#talent-weather-wise)** [talent](talents.md) reads the sky: under it, you know the first change of
-weather coming within the next three hours, and the [status bar](controls.md#the-screen) says it (`Clear, then rain`). When
-the weather holds for three hours it says only the weather now.
-
 ## Clouds and light
 
 Clouds take light away from the sky. They block most of the direct light of the [sun](sun.md#the-suns-path) and the [moon](sun.md#moonlight),

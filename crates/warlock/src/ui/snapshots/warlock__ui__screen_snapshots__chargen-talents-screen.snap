@@ -2,39 +2,38 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
-              ┌─ Choose your talents (4 of 5): 3 left ──────────────────── Page 1/3 ─┐
+              ┌─ Choose your talents (4 of 5): 3 left ──────────────────── Page 1/2 ─┐
               │                                                                      │
               │ Chance                                                               │
               │ > a  Random                                                          │
               │ Heritage                                                             │
               │   b  Family wealth            You were born to money: you set out w… │
               │   c  Favoured child           Fortune watched over your youth: the … │
-              │   d  Hard-won                 What your youth took from you, you me… │
               │ Vigour                                                               │
-              │   e  Deep lungs               Your stamina holds a good deal more.   │
-              │   f  Gifted                   One of your stats comes to you more r… │
-              │   g  Hard training            You drill every day: everything you d… │
-              │   h  Healthy                  Your hit points come back a quarter f… │
+              │   d  Deep lungs               Your stamina holds a good deal more.   │
+              │   e  Hard training            You drill every day: everything you d… │
+              │   f  Healthy                  Your hit points come back a quarter f… │
               │ Might                                                                │
-              │   i  Mighty kick              Your kicks land like hammers: they hu… │
-              │   j  Second breath            Every kill of yours gives you back a … │
+              │   g  Mighty kick              Your kicks land like hammers: they hu… │
               │ Finesse                                                              │
-              │   k  Dodge                    You slip aside from blows: Dodge +1 t… │
-              │   l  Light step               You tread lightly: a trap you step on… │
-              │   m  Nimble                   A load slows your feet less than most… │
-              │   n  Opportunist              A foe that turns from you pays for it… │
-              │   o  Slick                    You slip out of a mimic's glue before… │
+              │   h  Dodge                    You slip aside from blows: Dodge +1 t… │
+              │   i  Light step               You tread lightly: a trap you step on… │
+              │   j  Nimble                   A load slows your feet less than most… │
+              │   k  Opportunist              A foe that turns from you pays for it… │
+              │   l  Slick                    You slip out of a mimic's glue before… │
               │ Weaponcraft                                                          │
-              │   p  Far shot                 Your shots fly 2 cells farther, and w… │
-              │   q  Sworn foe                You have sworn yourself against one k… │
-              │   r  Unbinder                 You strike at the binding, not the th… │
-              │   s  Wand mastery             You draw more from a wand than its ma… │
-              │   t  Weapon focus             You have drilled with one kind of wea… │
+              │   m  Far shot                 Your shots fly 2 cells farther, and w… │
+              │   n  Sworn foe                You have sworn yourself against one k… │
+              │   o  Wand mastery             You draw more from a wand than its ma… │
+              │   p  Weapon focus             You have drilled with one kind of wea… │
               │ Guard                                                                │
-              │   u  Armour training          You move freely in armour: it hampers… │
+              │   q  Armour training          You move freely in armour: it hampers… │
               │ Shadow                                                               │
-              │   v  Hush-foot                You move among sleepers as a breath o… │
-              │   w  Keen ears                You hear fainter sounds, fainter stil… │
+              │   r  Hush-foot                You move among sleepers as a breath o… │
+              │   s  Keen ears                You hear fainter sounds, fainter stil… │
+              │   t  Lamplighter              You tend your lantern well: it burns … │
+              │   u  Night eyes               Your eyes grow used to the dark: you … │
+              │   v  Silent feet              Your footsteps are a fifth quieter fo… │
               │                                                                      │
               │ Let chance pick your talents.                                        │
               │                                                                      │

@@ -106,10 +106,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     drop, while Overloaded; Dexterity, chance 10), `knew_better` (a trap the player knew of sprung
     under them by stepping onto it; Intelligence 20), `caught` (caught stealing, by a keeper or
     anyone; Presence 20). Bad luck alone (a hidden trap, a blow, a disease or drain check lost)
-    takes nothing. **Talents** (#726; one `TalentMods` field each, one read): Gifted (`choice =
-    "stat"`, `price_percent` −15: that stat's rise price 15 % lower, rounded down, a drop's
-    untouched) and Late bloomer (level 20, `ramp_ease` 1: `over` counted one fewer, the first
-    point past the potential at the base) through `StatTraining::eased_price` in `settle`;
+    takes nothing. **Talents** (#726; one `TalentMods` field each, one read): Late bloomer (level
+    20, `ramp_ease` 1: `over` counted one fewer, the first point past the potential at the base)
+    through `StatTraining::eased_price` in `settle`;
     Ascetic (Grit, Willpower 13: `fasting_marks` 15, Willpower marks at once at a daily check met
     Hungry or worse, before the draws, and `no_deed` hungry_dawn); the barbarian's Hard living
     (level 18: `no_deed` hungry_dawn, starved, vomited, fainted) and the monk's Discipline

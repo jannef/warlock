@@ -1,8 +1,0 @@
-[[talent]]
-id = "weather_sense"
-name = "Weather sense"
-tree = "class"
-granted = true
-description = "You smell the weather coming: under the open sky you know what the next three hours bring."
-effects = [{ kind = "forecast", hours = 3 }]
-systems = ["weather"]

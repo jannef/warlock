@@ -161,9 +161,6 @@ rate or animation.
     one per change (changes are at least 1½ hours apart); arriving under the sky says nothing (the
     status bar shows it). Rain starting or growing heavier stops a rest; the other news is logged
     without stopping it.
-  - **Forecast** (`weather::forecast`; #239): a Weather-wise player (§8 "Talents") knows, under
-    the open sky, the first weather other than the present one within the next 3 hours, looked
-    for every ten minutes; the status bar says it (`Clear, then rain`). No draw, no state.
   - **Dev override**: the action `weather:clear|overcast|rain|heavy` sets the weather (with its
     full clouds, at once) for 3 hours of game time from the moment it is given; then the weather
     of the day returns. It takes no time, is recorded in replays, and is kept in the world state
@@ -268,7 +265,7 @@ rate or animation.
   of 06:00 and 18:00), at night 2 plus one cell per 20 of moonlight (the brightness of all moons'
   direct and sky light together on open ground, through the clouds), at most 4: a full moon high in
   the sky gives 4, a half moon 3. Rain then takes its `sight` away (2 cells in rain, 4 in heavy
-  rain; "Weather" above), never below 2; Moon-eyed (§8 "Talents") adds a cell at night. Light,
+  rain; "Weather" above), never below 2. Light,
   the eye's threshold, and darkvision play no part.
   Mountain ranges and dense forest are opaque; forest is not.
 - **Overworld night light**: the overworld is lit by the sun and the sky like any level under the
@@ -296,7 +293,7 @@ rate or animation.
   time but is recorded in replays like any action. Infravision is deferred.
 - **Effective eyes** (`world/eyes.rs`, `WorldState::eyes`; #239): the profile is the base; the
   player's talents change it (§8 "Talents": Night eyes halves the threshold, Dark adaptation and
-  Owl eyes add 2 cells of darkvision, Rune sight sees UV), and perception reads the result (keeping
+  Owl eyes add 2 cells of darkvision), and perception reads the result (keeping
   the base's id and name). Creatures keep their types' profiles.
 - **Objects are seen** where creatures are: on cells in line of sight that are visible (never on
   completed walls). The player's own cell is always visible, so they always know what lies under
