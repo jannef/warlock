@@ -2,10 +2,7 @@
 id = "ascetic"
 name = "Ascetic"
 tree = "grit"
-description = "Hunger is a discipline to you: a dawn met hungry steels your will, and greeting it starving costs your body nothing."
+description = "You have mastered your body's wants: hunger never weakens you, however long you go without, and you never faint from it. Starving still kills."
 needs = { stats = { willpower = 13 } }
-effects = [
-    { kind = "fasting_marks", marks = 15 },
-    { kind = "no_deed", on = ["hungry_dawn"] },
-]
-systems = ["hunger", "stat_training"]
+effects = [{ kind = "no_hunger_weakness" }]
+systems = ["hunger"]

@@ -115,7 +115,7 @@ fn keen_appraiser_tells_what_things_are_worth() {
 }
 
 #[test]
-fn scroll_savant_reads_in_half_the_time_and_careful_reader_is_spared_its_burst() {
+fn scroll_savant_reads_in_half_the_time_and_is_spared_its_burst() {
     let pack = "[\"scroll_of_fireball*3\"]";
     let map = "#######\n#@D...#\n#######\n";
     let mut w = hall(map, pack);
@@ -125,7 +125,6 @@ fn scroll_savant_reads_in_half_the_time_and_careful_reader_is_spared_its_burst()
     assert!(w.state.actors[&me].hp < hp, "the burst caught the reader");
     let mut w = hall(map, pack);
     give(&mut w, "scroll_savant");
-    give(&mut w, "careful_reader");
     assert!(w.perception().bursts_spare_me());
     let quick = run(&mut w, "read:a:2,1").remove(0);
     assert_eq!(w.state.actors[&me].hp, hp, "spared");
@@ -138,14 +137,14 @@ fn scroll_savant_reads_in_half_the_time_and_careful_reader_is_spared_its_burst()
 }
 
 #[test]
-fn spell_recall_now_and_then_keeps_the_scroll() {
-    let read = |recall: bool| {
+fn scroll_savant_now_and_then_keeps_the_scroll_at_its_second_rank() {
+    let read = |ranks: usize| {
         let mut w = hall(
             "##########\n#@.......#\n##########\n",
             "[\"scroll_of_fireball*20\"]",
         );
-        if recall {
-            give(&mut w, "spell_recall");
+        for _ in 0..ranks {
+            give(&mut w, "scroll_savant");
         }
         run(&mut w, "read:a:7,1*12");
         let left = w.state.player().inventory.first().map_or(0, |s| s.count);
@@ -154,8 +153,9 @@ fn spell_recall_now_and_then_keeps_the_scroll() {
             .count();
         (left, kept)
     };
-    assert_eq!(read(false), (8, 0));
-    let (left, kept) = read(true);
+    assert_eq!(read(0), (8, 0));
+    assert_eq!(read(1), (8, 0), "not at the first rank");
+    let (left, kept) = read(2);
     assert!(kept > 0 && kept < 12, "{kept}");
     assert_eq!(left as usize, 8 + kept);
 }

@@ -50,7 +50,7 @@ pub(super) fn chest_descriptions(content: &Content) -> String {
 /// The chance each stack breaks when a chest is kicked open or blown apart, and what is spared.
 pub(super) fn chest_breaking(content: &Content) -> String {
     let destroyed = content.chests().destroyed;
-    let deft = (content.talents().id("deft_breaker"))
+    let deft = (content.talents().id("lockbreaker"))
         .map(|id| content.talents().get(id))
         .and_then(|t| {
             t.effects.iter().find_map(|e| match e {
@@ -64,7 +64,7 @@ pub(super) fn chest_breaking(content: &Content) -> String {
         "| How it opens | Each stack inside breaks | Spared |\n|---|:---:|---|\n\
          | Opened (a key, Pick lock, Knock then open, or unlocked) | never | everything |\n\
          | Kicked open | {destroyed}% | coins and loose gems |\n\
-         | Kicked open, with Deft breaker | {with_deft}% | coins and loose gems |\n\
+         | Kicked open, with [Lockbreaker](talents.md#talent-lockbreaker) | {with_deft}% | coins and loose gems |\n\
          | Blown apart by a blast | {destroyed}% | nothing |\n"
     )
 }

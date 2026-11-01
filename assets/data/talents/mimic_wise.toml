@@ -1,8 +1,0 @@
-[[talent]]
-id = "mimic_wise"
-name = "Mimic-wise"
-tree = "scholar"
-description = "You know the look of a thing that only pretends to be a chest: close by, a mimic is plainly a mimic to you."
-needs = { either = { skills = { spot = 10 }, stats = { intelligence = 12 } } }
-effects = [{ kind = "sees_mimics", value = 2 }]
-systems = ["chests"]

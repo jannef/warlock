@@ -9,7 +9,7 @@
 //! died, one is taken and the new creature stands there (or on the nearest free cell). A corpse
 //! picked up, eaten, or destroyed meanwhile does not rise; one carried out and dropped elsewhere
 //! is not cursed again. Levels the player is not on stay frozen, so what was due while they
-//! were away rises on their first turn back. Grave warden: what the player kills never rises.
+//! were away rises on their first turn back. Old delver: what the player kills never rises.
 
 use super::{World, travel};
 use crate::content::{Content, CreatureId, CreatureSpawn, FactionId};
@@ -110,7 +110,7 @@ pub fn rises_as(
 impl World {
     /// Creature `dead` has just died (its corpse, if any, left at its cell): if the effects there
     /// raise the dead and it may rise, its rising is kept; returns the line the player is told,
-    /// if they saw it. Grave warden: never what the player (`by_player`) killed.
+    /// if they saw it. Old delver: never what the player (`by_player`) killed.
     pub(super) fn curse_corpse(&mut self, dead: &super::Actor, by_player: bool) -> Option<String> {
         let content = self.content.clone();
         let rise = self.effects_at(&dead.level, dead.pos).rise()?.clone();

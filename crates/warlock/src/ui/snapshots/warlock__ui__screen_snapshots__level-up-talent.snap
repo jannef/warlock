@@ -10,35 +10,35 @@ expression: "render(case, content.clone())"
             │   c  Healthy                          Your hit points come back a quart… │
             │ Might                                                                    │
             │   d  Brawn                       1/2  Your blows up close hit harder: 1… │
-            │   e  Deft breaker                     You know where to put your boot: … │
-            │   f  Mighty kick                      Your kicks land like hammers: the… │
+            │   e  Mighty kick                      Your kicks land like hammers: the… │
             │ Finesse                                                                  │
-            │   g  Opportunist                      A foe that turns from you pays fo… │
+            │   f  Opportunist                      A foe that turns from you pays fo… │
             │ Weaponcraft                                                              │
-            │   h  Far shot                         Your shots fly 2 cells farther, a… │
-            │   i  Sworn foe                        You have sworn yourself against o… │
-            │   j  Wand mastery                     You draw more from a wand than it… │
-            │   k  Weapon focus (long blades)       You have drilled with one kind of… │
+            │   g  Far shot                         Your shots fly 2 cells farther, a… │
+            │   h  Sworn foe                        You have sworn yourself against o… │
+            │   i  Wand mastery                     You draw more from a wand than it… │
+            │   j  Weapon focus (long blades)       You have drilled with one kind of… │
             │ Guard                                                                    │
-            │   l  Armour training             1/2  You move freely in armour: it ham… │
-            │   m  Grave warden                     What you lay low stays down: noth… │
+            │   k  Armour training             1/2  You move freely in armour: it ham… │
             │ Shadow                                                                   │
-            │   n  Lamplighter                      You tend your lantern well: it bu… │
-            │   o  Night eyes                       Your eyes grow used to the dark: … │
+            │   l  Keen ears                   1/2  You hear fainter sounds, fainter … │
+            │   m  Night eyes                       Your eyes grow used to the dark: … │
             │ Wayfarer                                                                 │
-            │   p  Long strider                     Your journeys across the overworl… │
-            │   q  Pilgrim                          You have knelt in many temples: t… │
-            │   r  Sense of place                   You read a place at a glance: a s… │
-            │   s  Sun-blessed                      The sun mends you: under the open… │
-            │   t  Swimmer                          Water does not slow you: you wade… │
+            │   n  Devout                           You pray as one who means it: an … │
+            │   o  Pilgrim                          You have knelt in many temples: t… │
+            │   p  Sense of place                   You read a place at a glance: a s… │
+            │   q  Sun-blessed                      The sun mends you: under the open… │
+            │   r  Swimmer                          Water does not slow you: you wade… │
             │ Scholar                                                                  │
-            │   u  Anchored mind                    Your power is moored fast: no pla… │
-            │   v  Apprentice                  1/3  You take up a skill you lack, or … │
-            │   w  Clear mind                       A mind at peace gathers its stren… │
+            │   s  Apprentice                  1/3  You take up a skill you lack, or … │
+            │   t  Clear mind                       A mind at peace gathers its stren… │
+            │   u  Deep well                   1/3  Your power runs deep: more mana f… │
+            │   v  Quick study of the body          What you drink teaches your body … │
             │                                                                          │
             │ Your stamina holds a good deal more.                                     │
             │                                                                          │
             │                                                                          │
             │                                                                          │
-            │ a-w or Enter choose   > < page                                           │
- The Hub  · └──────────────────────────────────────────────────────────────────────────┘ ? controls
+            │ a-v or Enter choose   > < page                                           │
+            └──────────────────────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 28/28  ·  MP 5/5  ·  Sta 10/10  ·  Lv 3  ·  08:00  ·  11 Darkening       ? controls

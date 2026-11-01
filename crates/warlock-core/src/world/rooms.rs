@@ -35,7 +35,7 @@ impl World {
     }
 
     /// The percent `room` (the pace a special room gives healing or mana, 100 none) is for
-    /// `actor`: where it quickens, Hallowed rest quickens it more (spec §8 "Talents").
+    /// `actor`: where it quickens, Old delver quickens it more (spec §8 "Talents").
     pub(super) fn room_pace(&self, actor: &Actor, room: u32) -> u32 {
         if room <= 100 || actor.talents.is_empty() {
             return room;
@@ -80,7 +80,7 @@ impl World {
     /// anew (`stacking = "refresh"`), so it lasts while the actor stays and eases by its own pace
     /// once it leaves. Everyone inside, creatures too (`World::pass_time`, at the start of each
     /// stretch of time, so a long action and a coarse turn hold it all along), but one whose
-    /// talents spare them (Anchored mind: Ebbing), and one with no mana for a status that only
+    /// talents spare them (Old delver: Ebbing), and one with no mana for a status that only
     /// touches mana; one immune to its kind of damage never takes it (`World::afflict`).
     pub(super) fn dwell(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let Some(actor) = self.state.actors.get(&id) else {

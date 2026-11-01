@@ -30,8 +30,7 @@ kit = [
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["scholar", "spellcraft"] }
 # The level table (spec §8 "Class abilities").
 # The spells (spec §8 "Spells"): Ray of frost, Magic missile, Burning hands, and Arcane bolt are
-# the guaranteed spells, paid in mana; the rest come from scrolls. Spell recall is the Scholar
-# talent, handed out.
+# the guaranteed spells, paid in mana; the rest come from scrolls.
 abilities = [
     { level = 1, talent = "scroll_adept" },
     { level = 1, talent = "ray_of_frost" },
@@ -39,7 +38,6 @@ abilities = [
     { level = 3, talent = "magic_missile" },
     { level = 4, talent = "knock" },
     { level = 6, talent = "arcane_lore" },
-    { level = 12, talent = "spell_recall" },
     { level = 12, talent = "burning_hands" },
     { level = 18, talent = "arcane_bolt" },
     { level = 25, talent = "mage_armour" },

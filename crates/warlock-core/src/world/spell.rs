@@ -221,7 +221,7 @@ impl World {
     /// reader of a scroll, from whom it flew): its effect ([`Event::Spell`] over the cells it
     /// reaches, [`burst_cells`], its own cell never stopping it (a trap's on a shut door), so
     /// what is drawn is what is hit), one roll of its damage for
-    /// everyone on them (but a caster its own burst spares, Careful reader), half of it (at
+    /// everyone on them (but a caster its own burst spares, Scroll savant), half of it (at
     /// least 1) beyond radius − 1; then the walls its blast
     /// breaks ([`World::blast`]), then the ice it melts ([`World::shock`]) or the water it
     /// freezes ([`World::frost`]).
@@ -250,7 +250,7 @@ impl World {
         let inner = radius2(radius - 1);
         let level = self.state.current_level.clone();
         let reached: BTreeSet<Pos> = cells.into_iter().collect();
-        // Careful reader (spec §8 "Talents"): a caster's own burst may spare it.
+        // Scroll savant (spec §8 "Talents"): a caster's own burst may spare it.
         let spared = |a: &Actor| {
             matches!(caster, Caster::Actor(id) if id == a.id)
                 && a.talent_mods(&self.content).spares_self

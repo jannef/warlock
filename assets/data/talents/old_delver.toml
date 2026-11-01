@@ -1,0 +1,19 @@
+[[talent]]
+id = "old_delver"
+name = "Old delver"
+tree = "delver"
+ranks = 2
+description = "Strange places hold few tricks you have not met: a cracked floor never gives way under you, a draining room cannot draw your mana, and nothing you kill rises in a cursed place. At the second rank you take what a place gives gladly: a room that quickens healing or mana quickens it half again more for you, and you lift one thing from a tempting hoard before it springs."
+systems = ["special_rooms"]
+
+[[talent.rank]]
+needs = { either = { stats = { willpower = 11, dexterity = 12 } } }
+effects = [
+    { kind = "collapse_proof" },
+    { kind = "room_status_immune", status = "ebbing" },
+    { kind = "grave_warden" },
+]
+
+[[talent.rank]]
+needs = { level = 10 }
+effects = [{ kind = "room_pace_percent", value = 50 }, { kind = "hoard_grace", value = 1 }]

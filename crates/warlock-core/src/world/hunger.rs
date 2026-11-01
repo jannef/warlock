@@ -116,13 +116,17 @@ impl World {
 
     /// As a turn begins, a player who is Fainting or Starving may faint (one draw of the gameplay
     /// stream, while the chance is not 0): they lose turns, a wait each, while the others act.
-    /// Returns the price of the turns lost (0 if they did not faint).
+    /// Ascetic never faints (no draw). Returns the price of the turns lost (0 if they did not
+    /// faint).
     pub(super) fn faint(&mut self) -> i64 {
         let content = self.content.clone();
         let Some(def) = content.hunger() else {
             return 0;
         };
         if def.faint.chance == 0 || !self.player_hunger().is_some_and(Hunger::faints) {
+            return 0;
+        }
+        if self.state.player().talent_mods(&content).no_hunger_weakness {
             return 0;
         }
         if !self.state.rng.chance(u32::from(def.faint.chance)) {

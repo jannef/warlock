@@ -9,7 +9,7 @@
 //!
 //! What seals it is the player's pick-up inside it (one line in `carry.rs::pick_up`,
 //! [`World::lift_in_hoard`]): each stack lifted counts ([`SpecialRoom::lifted`]), and the room
-//! seals once the count passes the player's grace (none; Hoard-wise, one stack).
+//! seals once the count passes the player's grace (none; Old delver, one stack).
 //!
 //! The guardians are drawn from the gameplay stream: how many, then for each its type (the
 //! branch's population and strays by the danger, [`danger::draw`], hostile to the player and

@@ -1,8 +1,0 @@
-[[talent]]
-id = "mirror_wise"
-name = "Mirror-wise"
-tree = "scholar"
-description = "You know how a mirror lies: close by, a reflection is plainly glass to you, and only the creature itself stands there."
-needs = { stats = { intelligence = 12 } }
-effects = [{ kind = "sees_reflections", value = 2 }]
-systems = ["special_rooms"]

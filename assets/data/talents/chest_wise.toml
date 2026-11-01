@@ -2,7 +2,7 @@
 id = "chest_wise"
 name = "Chest-wise"
 tree = "delver"
-description = "You tell a locked chest from an unlocked one at a glance, and a trapped chest gives itself away as you look at it."
+description = "You know every trick a chest can play: a locked one from an unlocked one at a glance, a trapped one as you look at it, and close by, a mimic for what it is. A mimic's glue never holds you."
 needs = { either = { stats = { intelligence = 11 }, skills = { detect_traps = 15 } } }
-effects = [{ kind = "chest_wise" }]
+effects = [{ kind = "chest_wise" }, { kind = "sees_mimics", value = 2 }, { kind = "slick" }]
 systems = ["chests"]

@@ -1,8 +1,0 @@
-[[talent]]
-id = "deft_breaker"
-name = "Deft breaker"
-tree = "might"
-description = "You know where to put your boot: when you kick a chest open, what is inside breaks half as often."
-needs = { stats = { strength = 12 } }
-effects = [{ kind = "smash_destroy_percent", value = -50 }]
-systems = ["chests"]

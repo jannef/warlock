@@ -118,8 +118,7 @@ pub(super) fn special_rooms(content: &Content) -> String {
         if let Some(m) = e.mirrors {
             does.push(format!(
                 "Everyone inside you see is shown with {} reflections of them on free floor of \
-                 the room, moving every turn and looking just like them (Mirror-wise: none \
-                 within 2 cells of you). A blow or a step into one meets only glass and takes a \
+                 the room, moving every turn and looking just like them. A blow or a step into one meets only glass and takes a \
                  blow's time; a missile aimed at one flies on through it. A creature outside \
                  shooting or throwing at you inside aims at you or one of your reflections, \
                  each alike; creatures inside are not fooled.",
@@ -173,7 +172,7 @@ pub(super) fn special_rooms(content: &Content) -> String {
                 "Every step of yours onto its cracked floor has a {}% chance ({}% while you are \
                  Burdened or worse) to give way: you fall to the level below, landing somewhere \
                  open on it (never behind a locked door, never in a shop), take {} damage (it can \
-                 kill you), and are Staggered. Creatures never fall (Light tread: \
+                 kill you), and are Staggered. Creatures never fall ([Old delver](talents.md#talent-old-delver): \
                  you never do).",
                 c.chance,
                 (u32::from(c.chance) * 2).min(100),
@@ -194,8 +193,8 @@ pub(super) fn special_rooms(content: &Content) -> String {
                  you lift inside seals it: every door of it shuts (unless something is in the \
                  doorway) and locks with a lock of the level's depth that only a skeleton key \
                  opens, and {least} to {most} creatures hostile to you of the level's danger + \
-                 {} come on its edge, out of your sight where they can (Hoard-wise: the second \
-                 stack). It seals once.",
+                 {} come on its edge, out of your sight where they can ([Old delver](talents.md#talent-old-delver) \
+                 at its second rank: the second stack). It seals once.",
                 h.items, h.loot_level, h.danger
             ));
         }
@@ -227,8 +226,7 @@ pub(super) fn special_rooms(content: &Content) -> String {
         }
         if let Some(line) = &e.arrive {
             does.push(format!(
-                "On every arrival on its level until you have been inside: \"{line}\" \
-                 (Treasure sense: and which way it lies)."
+                "On every arrival on its level until you have been inside: \"{line}\"."
             ));
         }
         if let Some(rise) = &e.rise {
