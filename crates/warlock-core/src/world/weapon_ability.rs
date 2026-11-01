@@ -32,8 +32,8 @@ use super::{Actor, ActorId, AttackSkills, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::{self, Blow, Category, Strike};
 use crate::content::{
-    Content, ExtraDice, FreeBlowKind, LevelKind, On, Stance, StatusId, Trigger, WeaponAbilityId,
-    WeaponDoes, WeaponSkillId,
+    Content, ExtraDice, FreeBlowKind, LevelKind, On, Role, Stance, StatusId, Trigger,
+    WeaponAbilityId, WeaponDoes, WeaponSkillId,
 };
 use crate::damage::Damage;
 use crate::dice::{Dice, Roll};
@@ -207,6 +207,11 @@ impl World {
                         On::Target => fired.other,
                         On::Own => by,
                     };
+                    // A spell landing on its caster (a buff) lays no status meant for the
+                    // other end on it (Thunderstruck on Light).
+                    if on == On::Target && whom == by {
+                        continue;
+                    }
                     let severity = match turns {
                         Some(dice) => {
                             let max = i32::from(content.status(status).max);
@@ -221,7 +226,8 @@ impl World {
                         .actors
                         .get(&whom)
                         .is_some_and(|a| a.effects.has(status));
-                    if trigger.defending() && whom != by && has {
+                    let said = trigger.defending() || trigger == Trigger::SpellLands;
+                    if said && whom != by && has {
                         self.staggers_from(by, whom, trigger, status);
                     }
                 }
@@ -237,8 +243,8 @@ impl World {
     }
 
     /// The player's defending ability (Staggering block) left `whom`, who attacked them, with
-    /// `status`: "The orc staggers from your shield." Said only for the player's, of one they
-    /// see.
+    /// `status`: "The orc staggers from your shield."; a school ability (Thunderstruck) the one
+    /// its spell landed on: "The orc staggers." Said only for the player's, of one they see.
     fn staggers_from(&mut self, by: ActorId, whom: ActorId, trigger: Trigger, status: StatusId) {
         if by != self.state.player {
             return;
@@ -613,8 +619,12 @@ impl World {
             .filter(|(_, id)| !before.iter().any(|(_, b)| b == id))
             .map(|(skill, id)| {
                 let ability = content.weapon_ability(id);
-                let name = ability.name.to_lowercase();
-                let line = format!("You have learned the {name}.");
+                // A school's ability is a name, not a blow: "You have learned Thunderstruck."
+                let line = if content.weapon_skills().skill(skill).role == Role::School {
+                    format!("You have learned {}.", ability.name)
+                } else {
+                    format!("You have learned the {}.", ability.name.to_lowercase())
+                };
                 (skill, line, ability.active.is_some())
             })
             .collect()
