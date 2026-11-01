@@ -309,6 +309,10 @@ fn fight_rest(content: &Arc<Content>) -> Result<(u64, f64), String> {
     Ok((world.turn() - turn, start.elapsed().as_secs_f64() * 1000.0))
 }
 
+/// What fifty spell circles may cost a frame at 2560x1440, in ms (docs/design/buff-circles.md
+/// §10.3).
+const CIRCLES_BUDGET: f64 = 0.2;
+
 /// Frame-time measurement: runs the release game offscreen with `--capture-after-frames` N and
 /// M, and divides the wall-clock difference by M - N, which cancels startup and capture cost.
 /// `WARLOCK_UNPACED=1` removes the game's 60 Hz capture-mode pacing, so this measures CPU + GPU
@@ -341,8 +345,31 @@ pub fn frames(window: &str) -> Result<(), String> {
         "budget ms",
         HIGH - LOW
     );
+    // Fifty spell circles (`bench_circles.rs`), and the same hall with circles off, whose
+    // difference is the circles' own cost.
+    let (content, replay) = crate::bench_circles::fixture()?;
+    let off = target.join("xtask/bench-circles/off");
+    std::fs::create_dir_all(&off).map_err(|e| e.to_string())?;
+    std::fs::write(off.join("settings.toml"), "[effects]\ncircles = false\n")
+        .map_err(|e| e.to_string())?;
+    let circles = |config: Option<&std::path::Path>| {
+        let mut args = vec!["--content-dir".into(), content.clone().into_os_string()];
+        args.extend(["--replay".into(), replay.clone().into_os_string()]);
+        if let Some(dir) = config {
+            args.extend(["--config-dir".into(), dir.as_os_str().to_owned()]);
+        }
+        args
+    };
+    let scenario = |id: &str| vec!["--scenario".into(), id.into()];
+    let rows: [(&str, Vec<std::ffi::OsString>); 4] = [
+        ("hub", scenario("showcase")),
+        ("vast", scenario("vast")),
+        ("circle", circles(None)),
+        ("c-off", circles(Some(&off))),
+    ];
     let mut failed = false;
-    for (scenario, label) in [("showcase", "hub"), ("vast", "vast")] {
+    let mut times = Vec::new();
+    for (label, args) in &rows {
         let time = |frames: u32| -> Result<f64, String> {
             let mut best = f64::MAX;
             for _ in 0..RUNS {
@@ -350,7 +377,8 @@ pub fn frames(window: &str) -> Result<(), String> {
                 let status = Command::new(&exe)
                     .current_dir(&root)
                     .env("WARLOCK_UNPACED", "1")
-                    .args(["--scenario", scenario, "--window", window, "--scale", "1"])
+                    .args(args)
+                    .args(["--window", window, "--scale", "1"])
                     .args(["--capture-after-frames", &frames.to_string(), "--capture"])
                     .arg(&out)
                     .status()
@@ -371,7 +399,15 @@ pub fn frames(window: &str) -> Result<(), String> {
             1000.0 / ms,
             if ok { "ok" } else { "OVER BUDGET" }
         );
+        times.push(ms);
     }
+    // Shown, not judged: the difference of two best-of-five runs carries noise of about the
+    // budget's size (0.05 to 0.1 ms between runs on the same build).
+    println!(
+        "fifty circles cost {:.3} ms a frame at {window} (circle - c-off; design budget \
+         {CIRCLES_BUDGET} ms at 2560x1440)",
+        times[2] - times[3]
+    );
     if failed {
         Err("frame time over budget".into())
     } else {
