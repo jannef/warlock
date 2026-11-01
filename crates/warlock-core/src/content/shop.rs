@@ -279,6 +279,7 @@ impl Shops {
             equipment: self.keeper.equipment.clone(),
             rolls_gear: false,
             asleep: false,
+            status: Vec::new(),
         }
     }
 

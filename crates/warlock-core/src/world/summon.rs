@@ -109,6 +109,7 @@ impl World {
                 equipment: Default::default(),
                 rolls_gear: true,
                 asleep: false,
+                status: Vec::new(),
             };
             let made = super::travel::make_creature(&mut self.state, &content, &level, &spawn);
             if let Some(actor) = self.state.actors.get_mut(&made) {

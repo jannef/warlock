@@ -89,6 +89,7 @@ fn rat_at(w: &mut World, p: Pos) -> ActorId {
         equipment: Default::default(),
         rolls_gear: false,
         asleep: false,
+        status: Vec::new(),
     };
     let (content, level) = (w.content.clone(), w.state.current_level.clone());
     travel::make_creature(&mut w.state, &content, &level, &spawn)

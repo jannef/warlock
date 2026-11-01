@@ -163,7 +163,8 @@ Water is calm by design; motion stays tasteful, never busy:
   spell effects' motion, bloom and glow, distortion, particles, screen fades = fades, flashes,
   and spell effects darkening the view, screen shake, weather); an effect runs only when its
   switch is on and reduced effects is off. Blood (§4.8) has a switch too, outside the
-  preset: reduced effects leaves it as it is. Rain has a switch of its own rather than riding on particles: it moves
+  preset: reduced effects leaves it as it is; so do spell circles (§4.8), which reduced effects
+  only stills. Rain has a switch of its own rather than riding on particles: it moves
   over the whole view, not around a few sources. The weather itself (its light, the status bar)
   never depends on it. No gameplay information may
   depend on an effect: heard sounds keep a still marker when their ripple (glyph animation) is
@@ -287,6 +288,35 @@ glow, barely perceptible distortion, short fades.
   (fastest at first). A few drops are barely there; only many deaths in one place look gory. A
   **Blood** switch in the settings (on by default) hides stains, in look mode too; it is a
   content preference, not an effect, so reduced effects leaves it as it is.
+- **Spell circles** (`data/runes.toml`, §7; design: `docs/design/buff-circles.md`): about every
+  actor the player sees with a buff's or a hex's status (a runed status: one of a buff or hex
+  spell's, whatever laid it, a potion or an altar too), a thin, slowly turning transmutation
+  circle, drawn from the perception snapshot only (the player's own statuses, a seen creature's
+  that show) over the map grid and under the creatures:
+  - **The rule**: the effects of one kind on one actor, in status order (the status bar's), fill
+    `n × ⌈3 / n⌉` slots: one effect is a triangle of its rune thrice (never a lone rune), two a
+    square `A B A B`, three a triangle `A B C`, then a square, a pentagon, a hexagon; a regular
+    polygon inscribed in the innermost ring has its corners at the slots, and a rune (one kana
+    or low-stroke kanji per status, upright) sits outside each corner. One thin ring per effect,
+    three at most (the distinct runes give the count beyond); six effects show, a seventh has no
+    rune.
+  - **Buffs and hexes**: buffs are whole (solid rings and sides) and turn clockwise, a revolution
+    a minute; hexes are broken (dashed) and turn counter-clockwise, a revolution in 45 s. On an
+    actor with both, the buffs' circle is the inner one and the hexes' the outer; alone, either
+    is the compact inner figure.
+  - **Schools**: a rune is drawn in its school's colour (seven, through the palette), the rings
+    and sides in the first rune's.
+  - **Sizes** in cell heights `h`: rings at 0.48, 0.58, and 0.68 h, runes 0.55 h square centred
+    1.0 h out (extent 1.3 h: 2.6 rows by 5.2 columns); the outer circle's rings from 1.35 h and
+    runes at 1.88 h (extent 2.15 h). Lines one pixel at the default font and scale 1; rings and
+    sides 0.28 opaque, runes 0.7; not lit by the scene, but darkened with free glyphs while a
+    spell effect darkens the view.
+  - A circle appears and goes at once and a change of count is a cut; with `motion` off or
+    reduced effects it stands still (the inner at its first angle, the outer half a turn round):
+    still information, not off. A **Spell circles** switch (on by default, outside the preset)
+    turns the drawing off; the statuses and what look mode says of them stay. With frozen visual
+    time it shows the frozen moment's angle. The runes come from a subset of Noto Sans JP
+    (§4.1's font has no kana): `assets/fonts/NotoSansJP-Runes.ttf`.
 - With frozen visual time (`--freeze-time`) fades complete instantly and bursts show a fixed
   moment early in their life, so captures are reproducible; spell effects show the frozen moment
   after they began.

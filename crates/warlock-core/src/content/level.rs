@@ -53,6 +53,7 @@ use super::trap::{Trap, TrapEffect};
 use super::unique::UNIQUE;
 use super::{
     ActionKind, Content, ContentError, Cutting, DIFFICULTIES, MAX_ITEM_LEVEL, Rarity, Speaker,
+    StatusId,
 };
 use crate::alignment::Alignment;
 use crate::chest::Chest;
@@ -308,6 +309,9 @@ pub(super) struct LegendDetail {
     wield: Option<OneOrMany>,
     /// Objects of what it carries that it wears (armor, rings, amulets), by object id.
     wear: Option<OneOrMany>,
+    /// Statuses the creature on this cell is placed with, by status id, `*N` for N degrees
+    /// (`status = ["blessed", "weakened*2"]`; default one).
+    status: Option<Vec<String>>,
     /// An animated household thing's body (spec §8 "Animated objects"): `animated = { material =
     /// "silver" }` makes the animated candlestick on this cell of silver (else of its object's
     /// own material); it carries its body from the start, nothing drawn.
@@ -455,6 +459,9 @@ pub struct CreatureSpawn {
     /// Whether it is placed asleep (a teeming den's sleeper, spec §7 "Special rooms": the
     /// `asleep` status).
     pub asleep: bool,
+    /// The statuses it is placed with, at their degrees (`status = ["blessed", "weakened*2"]`;
+    /// a test world's fixture: the `circles` hall's buffed and hexed kobolds).
+    pub status: Vec<(StatusId, u16)>,
 }
 
 /// A staircase cell and where it leads.
@@ -731,6 +738,7 @@ pub(super) fn parse_level(
                     equipment: Equipment::default(),
                     rolls_gear: false,
                     asleep: false,
+                    status: Vec::new(),
                 });
             }
             if let Some(spec) = detail.chest.as_ref().filter(|_| !mimic) {
@@ -841,6 +849,11 @@ pub(super) fn parse_level(
                     || detail.wield.is_some()
                     || detail.wear.is_some()
                     || detail.animated.is_some();
+                let status = match &detail.status {
+                    Some(specs) => parse_statuses(specs, content)
+                        .map_err(|m| err(format!("legend `{ch}`: status: {m}")))?,
+                    None => Vec::new(),
+                };
                 creatures.push(CreatureSpawn {
                     creature: id,
                     faction,
@@ -852,6 +865,7 @@ pub(super) fn parse_level(
                     equipment,
                     rolls_gear: !fixed,
                     asleep: false,
+                    status,
                 });
             } else if detail.route.is_some()
                 || detail.animated.is_some()
@@ -861,10 +875,11 @@ pub(super) fn parse_level(
                 || detail.carry.is_some()
                 || detail.wield.is_some()
                 || detail.wear.is_some()
+                || detail.status.is_some()
             {
                 return Err(err(format!(
                     "legend `{ch}` has a faction, alignment, npc, route, animated, carry, wield, \
-                     or wear but no creature"
+                     wear, or status but no creature"
                 )));
             }
         }
@@ -1677,6 +1692,32 @@ fn animated_body(
     };
     let mut stacks = parse_stacks(&[spec], content)?;
     stacks.pop().ok_or_else(|| "no body".into())
+}
+
+/// The statuses a legend places a creature with (`["blessed", "weakened*2"]`): each a status id,
+/// `*N` for N degrees (default one, at most the status's `max`), each once.
+fn parse_statuses(specs: &[String], content: &Content) -> Result<Vec<(StatusId, u16)>, String> {
+    let mut statuses: Vec<(StatusId, u16)> = Vec::new();
+    for spec in specs {
+        let (name, degrees) = match spec.split_once('*') {
+            Some((name, n)) => {
+                let n = (n.trim().parse::<u16>().ok()).filter(|&n| n >= 1);
+                let n = n.ok_or_else(|| format!("`{spec}`: the count must be a number from 1"))?;
+                (name.trim(), n)
+            }
+            None => (spec.trim(), 1),
+        };
+        let id = (content.status_id(name)).ok_or_else(|| format!("unknown status `{name}`"))?;
+        let max = content.status(id).max;
+        if degrees > max {
+            return Err(format!("`{spec}`: more than its {max} degrees"));
+        }
+        if statuses.iter().any(|&(s, _)| s == id) {
+            return Err(format!("status `{name}` is placed twice"));
+        }
+        statuses.push((id, degrees));
+    }
+    Ok(statuses)
 }
 
 /// What a creature spawned carrying `carry` wears and wields: its `wield` objects, then its

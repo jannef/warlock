@@ -120,10 +120,12 @@ fn without_a_choice_the_run_is_the_scenarios_character() {
     // Choosing the same character is the same run.
     let same = start("human,female,thief", 1);
     assert_eq!(same.state_hash(), w.state_hash());
-    // Every built-in scenario has a character, with normal eyes.
+    // Every built-in scenario has a character, with normal eyes; but the spell circles' hall,
+    // whose player is given every buff and hex spell and the mana for them instead of a class
+    // (docs/design/buff-circles.md §13.2).
     for def in CONTENT.scenarios() {
         let w = World::new(CONTENT.clone(), &def.id, None).expect("world");
-        assert!(w.character().is_some(), "{}", def.id);
+        assert_eq!(w.character().is_some(), def.id != "circles", "{}", def.id);
         assert_eq!(w.state.vision, "normal", "{}", def.id);
     }
 }

@@ -12,7 +12,10 @@ legend; see `assets/campaigns/showcase/levels/hub.toml` and spec §7. A legend e
 `data/factions.toml`) to override its type's faction for that spawn (`Actor::faction_override`; read it with
 `Actor::faction`, never the creature type's, when computing stance), and `alignment = "good"`
 to override its type's alignment the same way (`Actor::alignment_override`, read with
-`Actor::nature`; `docs/dev/alignment.md`). The showcase (hub, vast, courtyard) is safe
+`Actor::nature`; `docs/dev/alignment.md`), and `status = ["blessed", "weakened*2"]` to place it
+with statuses (`CreatureSpawn::status`, `level.rs::parse_statuses`: a status id, `*N` degrees,
+default one; unknown, over its `max`, or twice refused; added in `travel.rs::make_creature`
+beside a den's `asleep`; the test world's `circles` hall, spec §4.8 "Spell circles"). The showcase (hub, vast, courtyard) is safe
 this way: `xtask/src/vast.rs` emits it for its rats and kobolds; fighting is the arena's and the Depths'. A level
 file's optional `arrival = "..."` line is said when the player arrives by stairs (a dungeon
 branch's on its first level, `Content::arrival`; a scenario's `arrival` once, as a run of it

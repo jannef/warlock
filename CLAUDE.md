@@ -52,7 +52,8 @@ Game flags (`cargo run -p warlock -- --help`):
   the first floor of Fennmynster, the drowned minster's cellars, `fyrdelf` on the first floor of Fyrdelf,
   its deepest, `shrine` before three forgotten altars, good, neutral, and evil, to pray at, `forge`
   beside a forge's anvil with arms and armour to temper, `spring` below a cave room with a healing
-  spring to drink at), `--seed S`
+  spring to drink at, `circles` in a hall of peaceful kobolds already buffed and hexed, knowing
+  every buff and hex spell with 300 mana, for the spell circles), `--seed S`
   (default: the scenario's seed; a number, or a word hashed with FNV-1a, e.g. `--seed warlock`),
   `--character RACE,GENDER,CLASS` (e.g. `dwarf,female,warrior`; default: the scenario's
   character; like `--seed` it shapes the run other flags start and alone does not skip the menu),

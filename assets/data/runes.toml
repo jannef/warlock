@@ -1,0 +1,102 @@
+# Spell circles (spec §4.8 "Spell circles", docs/design/buff-circles.md): the rune and the school
+# of every buff's and hex's status. Presentation only: the renderer draws a circle about every
+# actor the player sees with a runed status, its runes in their school's colour; no rule reads
+# this file, and it is not in the content fingerprint.
+#
+# [[school]]   one row per school of magic (data/spells: `school`)
+#   id         the school
+#   color      its colour, "#rrggbb", through the palette as every content colour is
+#
+# [[rune]]     one row per runed status; every `kind = "buff"` or `"hex"` spell's status has one
+#   status     an id in data/status.toml; it must have `seen` (others see it on a creature)
+#   rune       exactly one character, kana or a kanji of five strokes or fewer, unlike every other
+#              rune at 10 px; it must be in assets/fonts/NotoSansJP-Runes.ttf (assets/fonts/README.md)
+#   school     the school whose colour it is drawn in
+#
+# Rows are in no particular order: a circle orders its runes by status order (data/status.toml).
+
+[[school]]
+id = "evocation"
+color = "#e0803c"
+
+[[school]]
+id = "necromancy"
+color = "#a48cc8"
+
+[[school]]
+id = "abjuration"
+color = "#80b4e0"
+
+[[school]]
+id = "restoration"
+color = "#e0c060"
+
+[[school]]
+id = "transmutation"
+color = "#78c478"
+
+[[school]]
+id = "enchantment"
+color = "#d07ab0"
+
+[[school]]
+id = "divination"
+color = "#d8d8e8"
+
+# Buffs.
+
+# Light: katakana hi, of 光 hikari, light.
+[[rune]]
+status = "lit"
+rune = "ヒ"
+school = "evocation"
+
+# Haste: katakana ha, of 速い hayai, fast.
+[[rune]]
+status = "hasted"
+rune = "ハ"
+school = "transmutation"
+
+# Barkskin: ki, tree.
+[[rune]]
+status = "barkskin"
+rune = "木"
+school = "transmutation"
+
+# Blessing: katakana shi, of 祝 shuku, blessing.
+[[rune]]
+status = "blessed"
+rune = "シ"
+school = "abjuration"
+
+# Hexes.
+
+# Evil eye: me, eye.
+[[rune]]
+status = "ill_wished"
+rune = "目"
+school = "enchantment"
+
+# Hex of weakness: shō, small, lesser.
+[[rune]]
+status = "weakened"
+rune = "小"
+school = "necromancy"
+
+# Curse of sloth: shi, stop, halt.
+[[rune]]
+status = "sluggish"
+rune = "止"
+school = "transmutation"
+
+# Sleep: katakana ne, of 寝る neru, to sleep.
+[[rune]]
+status = "drowsy"
+rune = "ネ"
+school = "enchantment"
+
+# Web: i, a well; the lattice reads as a net.
+[[rune]]
+status = "webbed"
+rune = "井"
+school = "transmutation"

@@ -1,6 +1,7 @@
 //! Rendering: the glyph atlas, console buffers, and the layers they are drawn in (spec §4).
 //!
-//! Layers, bottom to top: the map grid (terrain, in-cell animation; [`grid`]), the free-glyph
+//! Layers, bottom to top: the map grid (terrain, in-cell animation; [`grid`]), the spell
+//! circles about buffed and hexed actors ([`circles`], runes from [`rune_atlas`]), the free-glyph
 //! layer (creatures, particles, and glyphs that move or grow; [`free_glyph`], [`particles`]), and
 //! the UI console (text, panels, overlays). Both consoles are drawn by the same console material;
 //! the map grid's is lit by the visual light ([`lighting`], with creature [`shadows`] and each
@@ -9,6 +10,7 @@
 
 pub mod anim;
 pub mod atlas;
+pub mod circles;
 pub mod console;
 pub mod free_glyph;
 pub mod grid;
@@ -16,6 +18,7 @@ pub mod lighting;
 pub mod modulation;
 pub mod particles;
 pub mod post;
+pub mod rune_atlas;
 pub mod shadows;
 pub mod spells;
 pub mod water;
@@ -55,6 +58,7 @@ impl Plugin for RenderPlugin {
         app.add_plugins((
             Material2dPlugin::<ConsoleMaterial>::default(),
             free_glyph::FreeGlyphPlugin,
+            circles::CirclesPlugin,
             lighting::LightingPlugin,
             post::PostPlugin,
         ))

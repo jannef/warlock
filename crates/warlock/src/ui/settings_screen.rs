@@ -18,6 +18,8 @@ enum Effect {
     Glow,
     Distortion,
     Particles,
+    /// Information as much as an effect: reduced effects only stills it.
+    Circles,
     ScreenFades,
     ScreenShake,
     Weather,
@@ -34,6 +36,7 @@ impl Effect {
             Effect::Glow => "Bloom and glow",
             Effect::Distortion => "Heat haze",
             Effect::Particles => "Particles",
+            Effect::Circles => "Spell circles",
             Effect::ScreenFades => "Screen fades",
             Effect::ScreenShake => "Screen shake",
             Effect::Weather => "Weather",
@@ -49,6 +52,7 @@ impl Effect {
             Effect::Glow => "Bloom around glowing glyphs such as lava and crystals.",
             Effect::Distortion => "Heat haze rising over lava and fires.",
             Effect::Particles => "Sparks, embers, splashes, and dust.",
+            Effect::Circles => "Runes about the buffed and hexed (still with the preset).",
             Effect::ScreenFades => "Level fades, flashes, bright spells darkening the view.",
             Effect::ScreenShake => "The view shakes when a spell lands near you.",
             Effect::Weather => "Rain falling, splashing, and rings on water.",
@@ -64,6 +68,7 @@ impl Effect {
             Effect::Glow => &mut e.glow,
             Effect::Distortion => &mut e.distortion,
             Effect::Particles => &mut e.particles,
+            Effect::Circles => &mut e.circles,
             Effect::ScreenFades => &mut e.screen_fades,
             Effect::ScreenShake => &mut e.screen_shake,
             Effect::Weather => &mut e.weather,
@@ -73,7 +78,7 @@ impl Effect {
 
     /// Whether the reduced-effects preset turns it off.
     fn in_preset(self) -> bool {
-        self != Effect::Blood
+        !matches!(self, Effect::Blood | Effect::Circles)
     }
 }
 
@@ -103,6 +108,7 @@ const ROWS: &[Row] = &[
     Row::Effect(Effect::ScreenFades),
     Row::Effect(Effect::ScreenShake),
     Row::Effect(Effect::Weather),
+    Row::Effect(Effect::Circles),
     Row::Effect(Effect::Blood),
     Row::Palette,
     Row::Clock,
@@ -113,7 +119,7 @@ const ROWS: &[Row] = &[
 ];
 
 /// Index of the first action row (Files); a gap is drawn before it.
-const FIRST_ACTION: usize = 15;
+const FIRST_ACTION: usize = 16;
 
 /// The sample line under the help: how text and the marks read at this size and palette.
 const SAMPLE: &str = "Sample: legible text, then  [ marked ]  and  * flagged *";
@@ -175,6 +181,11 @@ impl SettingsScreen {
         let panel = Panel::new(console, " Settings ", 60, 28);
         let label_w = 18;
         let mut switches = settings.effects;
+        // The rows start 2 down. A gap before the actions separates them from the options, when
+        // there is room for it and the help line below; a panel cut short loses it first.
+        let footer_y = panel.y + panel.h - 2;
+        let rows_end = panel.y + 2 + ROWS.len() as i32;
+        let gap = i32::from(rows_end + 2 <= footer_y);
         for (i, row) in ROWS.iter().enumerate() {
             let on_off = |on: bool| if on { "On" } else { "Off" }.to_string();
             let (label, value) = match row {
@@ -191,7 +202,8 @@ impl SettingsScreen {
                     } else {
                         on_off(own)
                     };
-                    // The preset's switches sit under it; blood is a setting of its own.
+                    // The preset's switches sit under it; spell circles and blood are settings
+                    // of their own.
                     let indent = if e.in_preset() { "  " } else { "" };
                     (format!("{indent}{}", e.label()), value)
                 }
@@ -208,8 +220,7 @@ impl SettingsScreen {
                 Row::Reset => ("Reset to defaults".to_string(), String::new()),
                 Row::Back => ("Back".to_string(), String::new()),
             };
-            // A gap before Reset and Back separates actions from options.
-            let y = panel.y + 2 + i as i32 + i32::from(i >= FIRST_ACTION);
+            let y = panel.y + 2 + i as i32 + gap * i32::from(i >= FIRST_ACTION);
             panel.row_with(
                 console,
                 y,
@@ -239,8 +250,7 @@ impl SettingsScreen {
             (SAMPLE, TEXT),
             ("Sample accent text", ACCENT),
         ];
-        let footer_y = panel.y + panel.h - 2;
-        let mut y = panel.y + ROWS.len() as i32 + 4;
+        let mut y = rows_end + gap + 1;
         if y + below.len() as i32 > footer_y {
             y -= 1;
         }
@@ -324,7 +334,7 @@ mod tests {
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);
         assert!(s.reduced_effects);
-        for _ in 0..11 {
+        for _ in 0..12 {
             press(&mut screen, &mut s, Nav::Down);
         }
         press(&mut screen, &mut s, Nav::Right);
@@ -375,6 +385,10 @@ mod tests {
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);
         assert!(!s.effects.weather);
+        // Then the spell circles.
+        press(&mut screen, &mut s, Nav::Down);
+        press(&mut screen, &mut s, Nav::Enter);
+        assert!(!s.effects.circles && s.effects.blood);
         // Then blood.
         press(&mut screen, &mut s, Nav::Down);
         press(&mut screen, &mut s, Nav::Enter);

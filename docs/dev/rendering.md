@@ -41,6 +41,29 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    own phase) with glyph animation on, and stands at 0.25 without it (reduced effects): still
    information, no motion. Tuned against the darkvision fade (less than it), with captures
    beside an aware creature of the same type.
+   **Spell circles** (spec §4.8 "Spell circles", `docs/design/buff-circles.md`; between the map
+   grid and the free glyphs, `render/circles.rs::LAYER_Z` 0.5): `ui/circles.rs::emit` (in the
+   map chain after `lighting::update`) builds, when `Game` changes, the list of circled actors
+   from the snapshot (the player's `own_effects`, a seen creature's `effects_of`, through
+   `Content::runes()`), and each frame pushes a `CircleInstance` per actor (its `Motion`
+   position, the two circles' `angle`, `VisualLight::keep`) into `render::circles::Circles`
+   (emptied in `PreUpdate`, like `FreeGlyphs`). `render/circles.rs` holds the pure rule
+   (`layout(effects) -> Circle`: slots `n × ⌈3 / n⌉`, `min(n, 3)` rings, six effects at most,
+   buffs inner, hexes outer; `angle`: 60 s clockwise, 45 s counter-clockwise, still at 0 and π
+   without `motion`; its unit tests are the design's §4 rows and sketches) and draws one dynamic
+   mesh of one quad per circle (`2 × extent` square), the circle packed into flat vertex
+   attributes (`pack`: a head of effects, hex, outer, line school, slots, and rings, and nine bits
+   a rune, slot and school), with `CircleMaterial` (`circles.wesl`: rings and the polygon as
+   signed distances one pixel wide at 18 px (`h / 18`), dashes along arc and side for a hex, an
+   upright rune square per slot; the sizes are mirrored constants, change both together; alphas
+   0.28 and 0.7; the school colours a uniform, palette-mapped in `ui/circles.rs`). The runes come
+   from `render/rune_atlas.rs`: every rune of `runes.toml` rasterised from
+   `assets/fonts/NotoSansJP-Runes.ttf` (a subset of Noto Sans JP Medium; `assets/fonts/README.md`
+   has the `pyftsubset` command, and `every_rune_is_in_the_rune_font` checks it is current) into
+   2× square slots with an empty one-texel border, one `R8Unorm` texture sampled linearly,
+   rebuilt when the cell height changes. The `circles` switch turns the drawing off; reduced
+   effects leaves it on and only stills it (as `motion` off does). Slice 1 has no fades or glides
+   (a cut) and no light; check with `--scenario circles` captures (the golden `circles`).
 3. **UI console**: the same console material over the whole window; unwritten cells are
    transparent.
 
@@ -80,7 +103,8 @@ terrain, the UI console's 1×1 textures) are drawn as they are. Free glyphs are 
 `VisualLight::sample` + `lighting::shade`, which mirror the shader — change both together.
 
 Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distortion`,
-`screen_fades`, `screen_shake`, `weather`) and all off with reduced effects:
+`screen_fades`, `screen_shake`, `weather`) and all off with reduced effects (but `blood` and
+`circles`, which reduced effects leaves as set):
 - **Particles** (`render/particles.rs`): stateless, a pure function of visual time and a seed via
   a visual-only SplitMix RNG (ambient emitters: one particle per `1/rate` slot; bursts: `count`
   particles per event). `ui/effects.rs` emits them from perception (visible cells, seen creatures,
@@ -128,7 +152,7 @@ Effects (spec §4.8), each off with its own switch (`particles`, `glow`, `distor
   `effect:fireball@30,14` and `effect:lightning_bolt@21,17>58,17` in the arena, 0.03 to 0.6 s).
 
 `ui/` decides what is drawn from the perception snapshot: `ui/mod.rs` (UI console, map grid in
-base colors, the status bar: `status_segments`), `ui/glyphs.rs` (free glyphs), `ui/motion.rs`
+base colors, the status bar: `status_segments`), `ui/circles.rs` (spell circles), `ui/glyphs.rs` (free glyphs), `ui/motion.rs`
 (slides from `Outcome.events`, one per creature along all the steps it took that turn; camera
 easing; new input completes running motion), `ui/effects.rs` (particles, bursts, glow and haze,
 fades), `ui/rain.rs` (rain), `ui/spells.rs` (spell effects), `ui/sounds.rs` (heard-sound markers), `ui/look.rs` (look mode), `ui/dev.rs` (dev overlays: reveal map, the one reader of

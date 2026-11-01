@@ -1,0 +1,10 @@
+# Spell circles (spec §4.8 "Spell circles"): the shader's rings, polygons, and runes, which no
+# text snapshot or dump can see. The circles hall after six casts, a second after it all began:
+# the player's three-ring square ヒ シ ハ 木 (Light, Blessing, Haste, Barkskin); the pre-set
+# kobolds' one-ring triangle of シ, two-ring dashed square 小 止, the double figure (a solid
+# triangle of シ inside a dashed one of 目), and three-ring triangle シ ハ 木; the Sleep burst's
+# dashed triangles of ネ on the pair; and Web's on one of them, a dashed square ネ 井.
+[[golden]]
+name = "circles"
+scenario = "circles"
+actions = "use:light use:haste use:barkskin use:blessing use:sleep:14,2 use:web:13,2"

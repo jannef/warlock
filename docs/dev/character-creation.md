@@ -127,7 +127,12 @@ the halfling's apples gave way to it, so the weakest halfling paladin stays Unbu
 `Replay::new` copies it into the replay. `kit::starting_pack(content, scenario, kit)` is the one
 place the starting pack is put together (the kit, if any, else the scenario's `wield`, then `carry` on top): used by
 `World::start_run` and the summary (`ui/chargen_screen.rs::kit_words`, names from
-`Pack::names`). The heritage talents (Family wealth's gold and gems, Father's sword's
+`Pack::names`). A scenario's `spells` (`ScenarioDef::spells`, `spells = ["haste"]`, resolved by
+the loader, an unknown id refused) go into `Actor::spells` in `World::begin`, for its own
+character and a chosen one alike, on top of the class's: known from the start as a studied spell
+is (saved and hashed as `Actor::spells` always is). Only the test world's `circles` uses it, and
+it is the one built-in scenario with no `character` (it gives the eyes, stats, hit points, and
+300 mana itself; `world/character_tests.rs` and `content/mod.rs`'s scenario test name it). The heritage talents (Family wealth's gold and gems, Father's sword's
 heirloom; #697) come on top as they are taken, after the pack (`world/heirloom.rs`,
 docs/dev/progression.md "Creation picks"): the summary's kit list does not name them. `rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing,
 refusals), `kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministic choices, no

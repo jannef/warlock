@@ -800,7 +800,8 @@ impl World {
             alignment_override: None,
             npc: None,
             talk: Talk::default(),
-            spells: Default::default(),
+            // The scenario's spells, known from the start (a test world's fixture).
+            spells: def.spells.iter().copied().collect(),
             streak: None,
             satiation: content.hunger().map(|h| Satiation::new(h.start)),
             stance: CombatStance::Neutral,
@@ -1487,6 +1488,8 @@ mod chest_hall_tests;
 mod chest_tests;
 #[cfg(test)]
 mod chest_trap_tests;
+#[cfg(test)]
+mod circle_tests;
 #[cfg(test)]
 mod class_active_tests;
 #[cfg(test)]

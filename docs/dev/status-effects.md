@@ -42,7 +42,21 @@ drip hook `drip_blood` (#127's stains go there). The player's statuses beginning
 `Event::Status` (said by `perceive_events`: begin = `say`, stops a rest; end = `note`, does not;
 the rest loop keeps them from the turns it does not perceive). Presentation reads
 `PerceptionView::own_effects` (status bar after HP, character screen `Status` row) and
-`effects_of(actor)` (look mode; only statuses with `seen`), never severities. Saved and hashed
+`effects_of(actor)` (look mode; only statuses with `seen`), never severities. **A buff status
+carries `seen`, whatever its source** (owner, 2026-11-01; docs/design/buff-circles.md §9): a
+status that lends something (a positive `penalty`, a `combat` bonus, a `cost` under 100, a
+`vision`, a `resist`, or a `light`) shows on creatures: `hasted` "quickened", `barkskin`
+"bark-skinned", the potions' boosts, visions, and resistances by their names, `spell_ward`
+"warded", `light_footed` "light-footed". Not buffs, never shown: `disguised` (a mimic's disguise),
+`lurking`, the cooldowns, and harms. `content/runes.rs`'s `every_buff_status_is_seen` test keeps
+it. **Runes** (spec §4.8 "Spell circles"): `data/runes.toml` (`content/runes.rs`, `Runes`,
+`Content::runes()`; presentation only, not fingerprinted) gives each buff and hex spell's status
+a rune and a school, drawn as a spell circle about the actor: `lit` ヒ, `hasted` ハ, `barkskin` 木
+(transmutation), `blessed` シ (abjuration); `ill_wished` 目, `drowsy` ネ (enchantment),
+`weakened` 小 (necromancy), `sluggish` 止, `webbed` 井 (transmutation). A runed status must have
+`seen` (a load-time check: the circle shows only what look mode may say) and be laid by a buff or
+hex spell (which makes its circle a buff's or a hex's); every buff and hex spell's status must
+have a rune. Saved and hashed
 (`Actor::regen` counts hundredths of a second at the normal pace). The dev
 action `afflict:ID` (`Action::Afflict`) gives the player a degree, for tests and captures. Tests:
 `status.rs`, `content/status.rs`, `world/status_tests.rs`.

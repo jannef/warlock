@@ -51,7 +51,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   stack of that object not yet equipped, in the first free slot that fits it (a second ring on
   the other hand). `wield` takes what goes in a slot of action `wield` or `ready` (weapons,
   shields, missile weapons and missiles), `wear` the rest; an object it does not carry, one with
-  no free slot, or the wrong one of the two is a content error. `[[pile]] at = [x, y] objects =
+  no free slot, or the wrong one of the two is a content error. A creature's entry may place it
+  with statuses, `status = ["blessed", "weakened*2"]` (a status id, `*N` for N degrees, default
+  one; an unknown status, more degrees than its `max`, or one named twice is a content error; the
+  test world's spell circles hall). `[[pile]] at = [x, y] objects =
   [...]` places a pile without a legend character (on top of the legend's there, if any).
   Objects lie only on walkable terrain. Vaults place objects the same way, and generators stamp
   them with the vault.

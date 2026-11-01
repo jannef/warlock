@@ -209,6 +209,7 @@ above.
 | Mishap | `magic.md#learning-spells-from-scrolls` |
 | Studying a spell from a scroll, overreach | `magic.md#learning-spells-from-scrolls` |
 | Wand, rod, charges | `magic.md#wands`, `magic.md#rods` |
+| Spell circle, rune, buff, hex (as seen on a creature) | `magic.md#spell-circles` |
 | Resource (Rage, Ki, Focus, …) | `resources.md` (a resource: its row; Rage: `resources.md#rage`) |
 | **Creatures and people** | |
 | Creature, monster | `creatures.md` (a creature: its row) |

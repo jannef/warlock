@@ -106,6 +106,7 @@ mod room_treasury;
 mod room_treasury_tests;
 #[cfg(test)]
 mod room_warp_tests;
+mod runes;
 mod scenario;
 mod scroll;
 mod scroll_label;
@@ -248,6 +249,7 @@ pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
 pub(crate) use room_treasury::breach_fault;
 pub use room_treasury::{Heaps, MAX_COINS_EACH, MAX_TREASURE, Sealed, SecretDoors, Treasury};
+pub use runes::{RuneDef, Runes, school_index};
 pub use scenario::ScenarioDef;
 pub use scroll::{Reading, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
@@ -661,6 +663,8 @@ pub struct Content {
     background: Option<Background>,
     /// Spell effects, in `data/effects.toml` order: presentation only.
     effects: Vec<EffectDef>,
+    /// Spell circles' runes (`data/runes.toml`): presentation only, not fingerprinted.
+    runes: Runes,
     hunger: Option<HungerDef>,
     /// The corpse object of each creature type, by creature id (`None`: it leaves none).
     corpses: Vec<Option<ObjectId>>,
@@ -785,6 +789,7 @@ impl Content {
             horoscope: None,
             background: None,
             effects: Vec::new(),
+            runes: Runes::default(),
             hunger: None,
             corpses: Vec::new(),
             weapon_skills: WeaponSkillTable::default(),
@@ -1024,6 +1029,11 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.effects = effect::parse(path, text)?;
         }
+        // Spell circles' runes name statuses and the spells that lay them.
+        let path = "data/runes.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.runes = runes::parse(path, text, &content)?;
+        }
         scroll::check_spells(&content).map_err(|m| ContentError::new("data/objects", m))?;
         talent::check_heirlooms(&content).map_err(|m| ContentError::new("data/talents", m))?;
         spell_def::check_effects(&content).map_err(|m| ContentError::new("data/spells", m))?;
@@ -1123,6 +1133,12 @@ impl Content {
             scenario.carry = object::parse_stacks(&scenario.carry_spec, &content).map_err(err)?;
             let err = |m: String| ContentError::new(path, format!("wield: {m}"));
             scenario.wield = object::parse_stacks(&scenario.wield_spec, &content).map_err(err)?;
+            for name in &scenario.spells_spec {
+                let spell = (content.spell_id(name)).ok_or_else(|| {
+                    ContentError::new(path, format!("spells: unknown spell `{name}`"))
+                })?;
+                scenario.spells.push(spell);
+            }
             scenario.campaign = campaign::of_path(path).map(str::to_string);
             content.scenarios.insert(id.to_string(), scenario);
         }
@@ -3573,6 +3589,12 @@ impl Content {
         &self.effects
     }
 
+    /// The spell circles' runes of `data/runes.toml` (none without the file). Presentation
+    /// only: no rule reads them.
+    pub fn runes(&self) -> &Runes {
+        &self.runes
+    }
+
     /// The spell effect with id `id`.
     pub fn effect(&self, id: &str) -> Option<&EffectDef> {
         self.effects.iter().find(|e| e.id == id)
@@ -4621,8 +4643,11 @@ mod tests {
                 assert!(names.len() >= 10, "{} {gender:?}: {names:?}", race.id);
             }
         }
+        // (But the spell circles' hall, which has no character: its player is given every buff
+        // and hex spell instead of a class, docs/design/buff-circles.md §13.2.)
         for scenario in content.scenarios() {
-            assert!(scenario.character_name.is_some(), "{}", scenario.id);
+            let named = scenario.character_name.is_some();
+            assert_eq!(named, scenario.id != "circles", "{}", scenario.id);
         }
         let classes: Vec<&str> = content.classes().iter().map(|c| c.id.as_str()).collect();
         assert_eq!(
@@ -5540,6 +5565,18 @@ mod tests {
         let err = Content::load(&files).unwrap_err();
         assert_eq!(err.file, "scenarios/test.toml");
         assert!(err.message.contains("willpower 99"), "{}", err.message);
+        let mut files = minimal_files("#@#\n", "");
+        files.insert(
+            "scenarios/test.toml",
+            "name = \"T\"\nstart_level = \"test\"\nspells = [\"fireball\"]\n",
+        );
+        let err = Content::load(&files).unwrap_err();
+        assert_eq!(err.file, "scenarios/test.toml");
+        assert!(
+            err.message.contains("spells: unknown spell `fireball`"),
+            "{}",
+            err.message
+        );
     }
 
     #[test]
@@ -5568,6 +5605,30 @@ mod tests {
     }
 
     #[test]
+    fn a_spawn_may_be_placed_with_statuses() {
+        let map = "###\n#k#\n###\n";
+        let kobold = "\"k\" = { terrain = \"floor\", creature = \"kobold\"";
+        let content = stream(
+            map,
+            &format!("{kobold}, status = [\"blessed\", \"weakened*2\"] }}\n"),
+        )
+        .unwrap();
+        let spawn = &content.level("stream").unwrap().creatures[0];
+        let id = |name: &str| content.status_id(name).unwrap();
+        assert_eq!(spawn.status, [(id("blessed"), 1), (id("weakened"), 2)]);
+        for (status, why) in [
+            ("\"blest\"", "unknown status `blest`"),
+            ("\"blessed*4\"", "more than its 3 degrees"),
+            ("\"blessed*0\"", "count must be"),
+            ("\"blessed\", \"blessed\"", "twice"),
+        ] {
+            let legend = format!("{kobold}, status = [{status}] }}\n");
+            let err = stream(map, &legend).unwrap_err();
+            assert!(err.message.contains(why), "{status}: {}", err.message);
+        }
+    }
+
+    #[test]
     fn misplaced_objects_are_reported() {
         let cases = [
             (
@@ -5588,7 +5649,11 @@ mod tests {
             ),
             (
                 "\"x\" = { terrain = \"floor\", carry = [\"dagger\"] }",
-                "carry, wield, or wear but no creature",
+                "carry, wield, wear, or status but no creature",
+            ),
+            (
+                "\"x\" = { terrain = \"floor\", status = [\"blessed\"] }",
+                "or status but no creature",
             ),
             (
                 "\"x\" = \"floor\"\n[[pile]]\nat = [9, 9]\nobjects = [\"dagger\"]",

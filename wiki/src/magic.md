@@ -283,3 +283,30 @@ look at it and aim it. Rods lie in the dungeon and in general stores.
 least 1); *[Frugal caster](talents.md#talent-frugal-caster)* then takes its fifth off what is left.
 
 {{#include generated/rods.md}}
+
+## Spell circles
+
+Everyone you see who has a buff or a hex on them (a [status](status-effects.md) laid by one of
+the spells below, or the same status from anywhere else: a [potion of quickness](potions.md#potion-of-quickness)
+hastes you as [Haste](#spell-haste) does) has a thin circle of runes turning slowly about them.
+It says no more than the [status bar](controls.md#the-screen) and [look mode](controls.md#look-mode)
+do: which buffs and hexes, never how strong or for how long.
+
+- **Each spell has a rune**, one character, drawn in the colour of its [school](schools.md).
+- **The runes sit at the corners of a figure**, repeated so that there are always at least three:
+  one effect is a triangle of its rune, two a square of both in turn (`A B A B`), three a
+  triangle `A B C`, four a square, five a pentagon, six a hexagon. A seventh has no rune.
+- **One thin ring per effect**, three at most: one ring is one effect, two rings two, three rings
+  three or more (count the different runes then).
+- **Buffs are whole and turn clockwise**, a turn a minute. **Hexes are broken** (dashed rings and
+  sides) **and turn the other way**, a turn in 45 seconds. Someone with both has the buffs' circle
+  inside and the hexes' around it.
+- The runes go in the order the status bar lists the statuses, so the same buffs always make the
+  same figure.
+
+Every buff shows on a creature, whatever gave it: look mode names a hasted creature "quickened",
+a bark-skinned one "bark-skinned", one that drank a [potion of might](potions.md#potion-of-might) "fortified" (see
+[Status effects](status-effects.md)). The circles are only for show (the **Spell circles**
+switch in [Settings](settings.md) hides them; Reduced effects only stills them).
+
+{{#include generated/spell-runes.md}}

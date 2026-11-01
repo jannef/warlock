@@ -9,7 +9,7 @@ screen instead; see [Controls](controls.md#rebinding-keys).
 | Setting | What it does |
 |---|---|
 | Font size | The size of the glyphs, from 12 to 36 (18 to start with). Larger glyphs show less of the map. |
-| Reduced effects | Turns every effect below but Blood off at once, whatever its own switch says. |
+| Reduced effects | Turns every effect below but Spell circles and Blood off at once, whatever its own switch says. |
 | Glyph animation | Water waves and flows, the altar pulses, and a [sound you hear](hearing.md) ripples in on the map. |
 | Light flicker | Firelight flickers and drifts in color. Off, every [light](light.md#what-light-is) is steady. |
 | Slides, camera | Creatures slide from cell to cell, attackers lunge, the view follows you smoothly, and a [fireball](magic.md#spell-fireball) or a [lightning bolt](magic.md#spell-lightning-bolt) plays out. Off, they jump, and a [spell](magic.md) is a brief still flash of the cells it hits. |
@@ -19,6 +19,7 @@ screen instead; see [Controls](controls.md#rebinding-keys).
 | Screen fades | The fade in from black after you change level, and the rest of the view darkening for a moment while a [fireball](magic.md#spell-fireball) or a [lightning bolt](magic.md#spell-lightning-bolt) flares. |
 | Screen shake | The view shakes for a moment when a [fireball](magic.md#spell-fireball) or a [lightning bolt](magic.md#spell-lightning-bolt) goes off near you; the nearer, the harder. |
 | Weather | [Rain](weather.md#how-the-weather-changes) falling, splashing, and ringing on water. |
+| Spell circles | The turning circles of runes about everyone who has a [buff or a hex](magic.md#spell-circles) on them. Reduced effects only stills them, as Slides, camera off does: they say something. Off, they are not drawn; [look mode](controls.md#look-mode) still says what each creature suffers. |
 | Blood | The stains big hits and kills leave on floors and walls (see [Combat](combat.md#blood)). Not one of the effects: Reduced effects leaves it as it is. |
 | Color palette | The colors: Default, High contrast, or Colorblind (red-green). See below. |
 | Clock | How the [time of day](time.md#days) is written: 24-hour (`14:32`, the default) or 12-hour (`2:32 PM`). It changes the [status bar](controls.md#the-screen) and the death screen; the game itself keeps one clock. |
@@ -38,6 +39,8 @@ Every effect is only for show, and no information depends on one:
   its light, the darkening, and the shake are only for show.
 - Creature shadows are always drawn, and they never change what you or anyone else can see (see
   [Light](light.md#what-is-only-for-show)).
+- With Spell circles off, nobody's [buffs and hexes](magic.md#spell-circles) are hidden: the
+  [status bar](controls.md#the-screen) shows yours and [look mode](controls.md#look-mode) names a creature's.
 - Blood is only for show: with the Blood switch off, nothing about a fight changes, and [look
   mode](controls.md#look-mode) stops mentioning it.
 

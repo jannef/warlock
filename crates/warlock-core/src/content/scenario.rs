@@ -94,6 +94,14 @@ pub struct ScenarioDef {
     /// What the scenario's own character has ready, from `wield`; filled in by the loader.
     #[serde(skip)]
     pub wield: Vec<crate::object::Stack>,
+    /// Spells the player knows at the start of a run of it (`spells = ["haste"]`, ids in
+    /// `data/spells/`), on top of what their class gives, for the scenario's own character and a
+    /// chosen one alike (a test world's fixture: `circles`).
+    #[serde(default, rename = "spells")]
+    pub(super) spells_spec: Vec<String>,
+    /// The spells of `spells`; filled in by the loader.
+    #[serde(skip)]
+    pub spells: Vec<super::SpellId>,
 }
 
 /// A scenario's `character` table: a race, a gender, and a class, as a [`CharacterSpec`] is

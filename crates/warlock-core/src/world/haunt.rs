@@ -73,6 +73,7 @@ impl World {
             equipment: Default::default(),
             rolls_gear: false,
             asleep: false,
+            status: Vec::new(),
         };
         let came = travel::make_creature(&mut self.state, &content, &id, &spawn);
         // It comes for the sleeper: it goes to where the player lies, as to one it lost sight of.
