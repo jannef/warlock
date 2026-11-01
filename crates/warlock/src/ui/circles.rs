@@ -5,9 +5,10 @@
 //! The snapshot only: the player's own statuses (`own_effects`) and a seen creature's that show
 //! (`effects_of`, statuses with `seen`; every runed status has it), in status order. No severity
 //! and no time left: a circle says what the status bar and look mode say. An unseen actor has no
-//! circle. The list is rebuilt when the game changes (a turn), the angles and the sliding
-//! positions every frame.
+//! circle. The list is rebuilt when the game changes (a turn), the angles, the fades and glides
+//! (`circle_tracks.rs`), and the sliding positions every frame.
 
+use super::circle_tracks::Tracks;
 use super::motion::Motion;
 use crate::game::Game;
 use crate::render::circles::{self, CircleInstance, Circles, Rune, SchoolColors};
@@ -21,14 +22,15 @@ use warlock_core::Pos;
 use warlock_core::content::{School, school_index};
 use warlock_core::world::{ActorId, ActorKind};
 
-/// How emissive a circle's ink is with glow on (`post::emissive`: × 1.15), the design's §8.4.
-const CIRCLE_GLOW: f32 = 0.15;
+/// How emissive a circle's ink is with glow on (`post::emissive`: × 1.1), the design's §8.4.
+const CIRCLE_GLOW: f32 = 0.1;
 
-/// The circled actors of the current turn: who, where they stand, and their circle; and
-/// whether the list is current (it is not after a frame with circles off).
+/// The circled actors of the current turn (who and where they stand), their circles' fades and
+/// glides, and whether the list is current (it is not after a frame with circles off).
 #[derive(Default)]
 pub(super) struct Circled {
-    list: Vec<(ActorId, Pos, circles::Circle)>,
+    list: Vec<(ActorId, Pos)>,
+    tracks: Tracks,
     current: bool,
 }
 
@@ -64,12 +66,17 @@ pub(super) fn emit(
     }
     if !effects.circles {
         circled.current = false;
+        circled.tracks = Tracks::default();
         return;
     }
+    let time = visual.seconds;
+    let animate = effects.motion && !visual.frozen;
     if game.is_changed() || !circled.current {
         circled.current = true;
         let runes = content.runes();
-        circled.list.clear();
+        let Circled { list, tracks, .. } = &mut *circled;
+        list.clear();
+        let mut seen = Vec::new();
         for actor in view.actors() {
             let statuses: Vec<_> = match actor.kind {
                 ActorKind::Player => view.own_effects().collect(),
@@ -83,22 +90,21 @@ pub(super) fn emit(
                 };
                 Some((rune, def.hex))
             }));
-            if !circle.is_empty() {
-                circled.list.push((actor.id, actor.pos, circle));
+            // An actor whose circle has just gone keeps its place in the list while it fades.
+            if !circle.is_empty() || tracks.has(actor.id) {
+                list.push((actor.id, actor.pos));
+                seen.push((actor.id, circle));
             }
         }
+        tracks.update(time, &seen);
     }
-    let time = visual.seconds;
-    for &(id, pos, circle) in &circled.list {
+    circled.tracks.settle(time, animate);
+    for &(id, pos) in &circled.list {
+        let kinds = circled.tracks.shown(id, time, animate, effects.motion);
         let at = motion.actor_pos(id, pos, time);
-        let center = grid.to_screen(at) + grid.cell * 0.5;
-        let angle = |ring: Option<&circles::Ring>| {
-            ring.map_or(0.0, |r| circles::angle(r, time, effects.motion))
-        };
         out.push(CircleInstance {
-            center,
-            circle,
-            angles: [angle(circle.inner.as_ref()), angle(circle.outer.as_ref())],
+            center: grid.to_screen(at) + grid.cell * 0.5,
+            kinds,
             keep: light.keep(),
         });
     }

@@ -28,6 +28,7 @@ mod character_screen;
 mod characters_screen;
 mod chargen_screen;
 mod chargen_talents_screen;
+mod circle_tracks;
 mod circles;
 mod controls_screen;
 mod death_screen;
