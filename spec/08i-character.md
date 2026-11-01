@@ -755,8 +755,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     armour), Masterwork (melee threat +1), Artisan (Protection +1 per armour piece worn, +2
     melee damage); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
     shop favour, #787), Deep pockets (carrying +10 kg, coins weightless), Eye for quality (what
-    is bought or sold is identified), Insured (shops pay +50 %, never more than they ask). The
-    favour cap is 50 %. #774 cut the filler and the duplicates (Connoisseur, Hearty, Keen
+    is bought or sold is identified); #789 cut its level 40 Insured (shops paid +50 %), a
+    capstone that paid only in gold. The favour cap is 50 %. #774 cut the filler and the duplicates (Connoisseur, Hearty, Keen
     appraisal, Jeweller, Appraiser) and #787 the weak ones of the #776 review (Well dressed,
     Noblesse, Commanding, Legacy, Thick skull, Folk hero, Whetstone, Fletching, Mining, Tinker,
     Trade routes, Credit, Magnate, Golden tongue), and left their levels empty. The adventurers'
@@ -931,7 +931,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     system already listed). **A talent earns its place**: a real choice at its tier that changes
     how a build plays or what it can do; never information only, a small percentage on a niche
     mechanic, an effect another talent, class ability, or skill rank already gives, or one that
-    matters only in a rare room or against one rare creature. A talent names a system only if
+    matters only in a rare room or against one rare creature. **Capstones are not economy,
+    quests, or XP** (#789): from class level 40 on a class ability changes what the character
+    can do in a fight or a dungeon, and there is no XP or quest-reward effect at or above level
+    30; a quest-reward effect is judged by its total over a campaign's fixed pool, not its
+    percent. A talent names a system only if
     its effect reads that system. Resources are systems too: mana and the pools of #225 join the
     list with talents on their maximum, refill, and costs, and abilities that spend them carry
     their tag; a cost in a resource stands instead of a cooldown status, never beside one.

@@ -173,7 +173,6 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `carry_kg`, `weightless_coins` | `burden::load` (with the affixes' kilograms; coins, item class `coins`, left out of the load) |
 | `quest_gold_percent` | `World::complete` (`quest.rs`) |
 | `favour_percent` | `world::shop::favour` (before the cap, `MAX_FAVOUR`) |
-| `sell_percent` | `Shops::offer_more` from `World::deal` and `ShopView::offer` |
 | `identify_trades` | `World::pay` (what was unpaid) and `World::trade` (what is sold, "That was …!") |
 | `gem_worth` | `PerceptionView::appraisal` → `magic::describe::appraised` (the describe screen) |
 | `identify_carried` | `World::appraise_carried` from `live`: `Magic::carried` counts the seconds (saved, left out while 0) |
@@ -315,6 +314,16 @@ cut them). The owner: "Modify the talent rule to prevent this type of talent cre
   - an effect another talent, a class ability, or a skill rank already gives (extend that one or
     add a rank to it instead; #774 kept one of each duplicate group);
   - something that only matters in a rare room or against one rare creature.
+- **Capstones are not economy, quests, or XP** (#776's rule 1, #789). From class level 40 on, a
+  class ability changes what the character can do in a fight or a dungeon: never one that pays
+  only in gold, favour, quest rewards, or experience, nor one that works only outside the
+  dungeon. And no XP or quest-reward effect (`xp_percent`, `quest_gold_percent`) at or above
+  level 30, pickable or class: past `max_level` (60) XP buys nothing, and the quest pool is spent
+  by then. Such a half of an otherwise good ability is dropped and the rest kept.
+- **A fixed pool is no scaling** (#776's rule 2). Quest gold and quest XP are finite and small
+  (the Ascmearc's 12 stages pay about 2,200 gold and 3,700 XP, none repeatable): a
+  `quest_*_percent` effect is judged by its total over a campaign (+25 % is about 550 gold),
+  never by its percent, and a talent whose total is negligible is removed.
 - **Tags match hooks.** A talent names a system in its `systems` only if its effect reads that
   system's rules. A general bonus is tagged by the system it is for, not by every rule that
   happens to read it (Iron will's +2 to Willpower checks is `diseases`, not also `searching` for
@@ -368,6 +377,16 @@ Penitent, Devout, and Pilgrim are one two-rank talent, **Pious** (Wayfarer, `spe
 Willpower 12 and level 10, `penitent`. Tests: `outcome_tests.rs` (rank 1 at prayer),
 `boons_tests.rs` (rank 2), `service_tests.rs` (rank 1 at a cure), `class_rogue_tests.rs`
 (Stalker's eye at 2).
+
+**The rules 1-2 audit** (#789) read every class table's levels from 30 up and every talent with
+an XP or quest effect. One violator: the merchant's level 40 Insured (shops pay half again as
+much), a capstone that paid only in gold, removed with `sell_percent` (its one user;
+`Shops::offer_more` folded back into `Shops::offer`); merchant 40 is left empty. The rest pass:
+the other abilities from 40 up change a fight or a dungeon (Holy radiance is a light below
+ground too), and no class ability carries an XP or quest effect. The two talents with one are
+below 30: the half-elf's Diplomat (`quest_gold_percent` 25, about 550 gold over the Ascmearc,
+mostly paid at low levels where it buys a chain mail or two, beside favour +10 %: kept), and the
+Sphinx sign's Riddler's mind (`xp_percent` 10, the horoscope, which the owner keeps whole).
 
 ## Creation picks
 

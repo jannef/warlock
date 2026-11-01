@@ -33,6 +33,10 @@ A talent must earn its place: a real choice at its tier that changes how a build
 it can do. Not information only; not a small percentage on a niche mechanic; not an effect
 another talent, class ability, or skill rank already gives (extend that one instead); not
 something that matters only in a rare room or against one rare creature.
+Capstones are not economy, quests, or XP: from class level 40 on, a class ability changes what
+the character can do in a fight or a dungeon (not gold, favour, quest rewards, or XP alone, nor
+only outside the dungeon); no XP or quest-reward effect at or above level 30; a quest-reward
+effect is judged by its total over the campaign's fixed pool, not by its percent.
 Or none: a sub-feature (a room effect, a creature family's gimmick, a chest kind, an info
 readout) extends its parent system: name the tag and the talents that already touch it. Or it is
 presentation only (no rule reads it, as blood stains). -->
