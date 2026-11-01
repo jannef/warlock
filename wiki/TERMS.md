@@ -39,6 +39,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A weapon skill | `weapon-skills.md#weapon-skill-ID` | `weapon-skills.md#weapon-skill-long-blades` |
 | A school of magic (Evocation, Restoration, …) | `schools.md#school-ID` | `schools.md#school-evocation` |
 | A weapon skill's ability (Lunge, Sunder, …) | `weapon-skills.md#weapon-ability-ID` | `weapon-skills.md#weapon-ability-lunge` |
+| A school ability (Thunderstruck, Aegis, …) | `schools.md#school-ability-ID` | `schools.md#school-ability-thunderstruck` |
 | A fighting style | `fighting-styles.md#style-ID` | `fighting-styles.md#style-sword-and-board` |
 | A fighting style's ability (Riposte, Feint, …) | `fighting-styles.md#style-ability-ID` | `fighting-styles.md#style-ability-riposte` |
 | A special room | `special-rooms.md#room-ID` | `special-rooms.md#room-draining` |
