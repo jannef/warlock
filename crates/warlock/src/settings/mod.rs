@@ -19,6 +19,7 @@
 //! glow = true             # bloom and glyph glow
 //! distortion = true       # heat haze
 //! particles = true
+//! circles = true          # spell circles about buffed and hexed creatures; still, not off, with reduced effects
 //! screen_fades = true     # level-change fade, flashes, and spell effects darkening the view
 //! screen_shake = true     # the view shakes when a spell effect lands near the player
 //! weather = true          # rain falling, splashing, and rings on water
@@ -128,6 +129,10 @@ pub struct EffectSwitches {
     /// Heat haze.
     pub distortion: bool,
     pub particles: bool,
+    /// Spell circles (spec §4.8 "Spell circles"): a turning circle of runes about every seen
+    /// actor with a buff's or a hex's status. Information, not decoration: reduced effects only
+    /// stills it (as `motion` off does), so it stays as set, as blood does.
+    pub circles: bool,
     /// The level-change fade, screen flashes, and bright spell effects darkening the rest of the
     /// view while they peak.
     pub screen_fades: bool,
@@ -150,6 +155,7 @@ impl EffectSwitches {
         glow: true,
         distortion: true,
         particles: true,
+        circles: true,
         screen_fades: true,
         screen_shake: true,
         weather: true,
@@ -162,6 +168,7 @@ impl EffectSwitches {
         glow: false,
         distortion: false,
         particles: false,
+        circles: false,
         screen_fades: false,
         screen_shake: false,
         weather: false,
@@ -169,11 +176,13 @@ impl EffectSwitches {
     };
 
     /// The effective switches: each as set, and when `reduced` every effect off; blood stays
-    /// as set (it is a content preference, not an effect).
+    /// as set (it is a content preference, not an effect), and so do spell circles (information:
+    /// still, without `motion`).
     pub fn effective(self, reduced: bool) -> Self {
         if reduced {
             Self {
                 blood: self.blood,
+                circles: self.circles,
                 ..Self::ALL_OFF
             }
         } else {
@@ -182,13 +191,14 @@ impl EffectSwitches {
     }
 
     /// The setting names, for the file.
-    const KEYS: [&'static str; 10] = [
+    const KEYS: [&'static str; 11] = [
         "glyph_animation",
         "flicker",
         "motion",
         "glow",
         "distortion",
         "particles",
+        "circles",
         "screen_fades",
         "screen_shake",
         "weather",
@@ -211,6 +221,7 @@ impl EffectSwitches {
             "glow" => &mut self.glow,
             "distortion" => &mut self.distortion,
             "particles" => &mut self.particles,
+            "circles" => &mut self.circles,
             "screen_fades" => &mut self.screen_fades,
             "screen_shake" => &mut self.screen_shake,
             "weather" => &mut self.weather,
@@ -551,6 +562,7 @@ mod tests {
             reduced_effects: true,
             effects: EffectSwitches {
                 particles: false,
+                circles: false,
                 flicker: false,
                 screen_shake: false,
                 weather: false,
@@ -622,9 +634,10 @@ mod tests {
         s.effects.particles = false;
         let e = s.effective_effects(false);
         assert!(!e.particles && e.glow && e.flicker);
-        // Reduced effects turns every effect off, but blood stays as set.
+        // Reduced effects turns every effect off, but blood and spell circles stay as set.
         let reduced = EffectSwitches {
             blood: true,
+            circles: true,
             ..EffectSwitches::ALL_OFF
         };
         s.reduced_effects = true;

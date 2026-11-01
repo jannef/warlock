@@ -9,8 +9,10 @@ temperature unit (`temperature = "celsius"`/`"fahrenheit"`, `settings::Temperatu
 applied only where the status bar shows the temperature (`TemperatureUnit::show`). Effects:
 `reduced_effects` is a preset over the `[effects]` switches (`EffectSwitches`: glyph_animation,
 flicker, motion, glow, distortion, particles, screen_fades, screen_shake, weather; all on by default), all but
-`blood` (on by default too), a content preference the preset leaves as set
-(`EffectSwitches::effective`; its settings row is not indented and never says "(preset)"). Each consumer reads
+`blood` (on by default too), a content preference the preset leaves as set, and `circles` (the
+spell circles, on by default: information the preset only stills, as `motion` off does)
+(`EffectSwitches::effective`; their settings rows are not indented and never say "(preset)";
+the gap before the settings screen's actions goes first when the window is short). Each consumer reads
 its own switch from the `render::Effects` resource (the effective values, synced every frame from
 `Settings` + `--reduced-effects`), never the preset; a new effect needs a switch in
 `EffectSwitches`, the file, and a row in `ui/settings_screen.rs`. `clock` (`settings/clock.rs`, `"24h"`/`"12h"`) is the one way a time of day is written

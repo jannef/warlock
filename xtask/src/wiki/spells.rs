@@ -2,7 +2,7 @@
 //! casting percents, the spell list by spell level, the classes' guaranteed spells, the armour
 //! that makes casting dearer, and the wands.
 
-use super::text::{Term, anchored};
+use super::text::{Term, anchored, link};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellPurpose, TalentEffect,
@@ -105,6 +105,37 @@ pub(super) fn list(content: &Content) -> String {
             grows_with(spell),
             rules.mana(spell, 0),
             spell.casts,
+        );
+    }
+    out
+}
+
+/// The spell circles' runes (`data/runes.toml`): each buff's and hex's rune, the spell and the
+/// status it marks, and its school's colour; buffs first, then hexes, each by spell name.
+pub(super) fn runes(content: &Content) -> String {
+    let mut rows: Vec<(bool, &SpellData, &warlock_core::content::RuneDef)> = (content.spells())
+        .iter()
+        .filter(|s| matches!(s.kind, SpellPurpose::Buff | SpellPurpose::Hex))
+        .filter_map(|s| {
+            let (status, _) = s.effect.status?;
+            Some((s.kind == SpellPurpose::Hex, s, content.runes().of(status)?))
+        })
+        .collect();
+    rows.sort_by(|a, b| (a.0, &a.1.name).cmp(&(b.0, &b.1.name)));
+    let mut out = String::from(
+        "| Rune | Spell | Kind | Status | School | Colour |\n|:---:|---|---|---|---|---|\n",
+    );
+    for (hex, spell, rune) in rows {
+        let status = content.status(rune.status);
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} | {} | `{}` |",
+            rune.rune,
+            link(Term::Spell, &spell.id, &spell.name),
+            if hex { "hex" } else { "buff" },
+            link(Term::Status, &status.id, &status.name),
+            link(Term::School, rune.school.id(), rune.school.id()),
+            content.runes().color(rune.school),
         );
     }
     out
