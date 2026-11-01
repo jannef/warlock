@@ -37,9 +37,7 @@
 use super::{ActorId, Deed, Spent, World};
 use crate::action::{Event, Meal, Positions};
 use crate::content::StatUse;
-use crate::content::{
-    ActionKind, Content, MAX_FAVOUR, MOST_FAVOUR, ShopId, ShopPlan, Shops, TerrainId,
-};
+use crate::content::{ActionKind, Content, MAX_FAVOUR, ShopId, ShopPlan, Shops, TerrainId};
 use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::object::{self, Stack};
@@ -217,15 +215,14 @@ pub fn unpaid_parts(inventory: &[Stack], unpaid: &[Stack]) -> Vec<u32> {
 /// How far prices move in `actor`'s favour, in percent (spec §7 "Shops"): the shops' `presence`
 /// for each point of their Presence modifier, plus what their skills give (Negotiation's
 /// bargaining), plus what a good keeper makes of their alignment (spec §8 "Alignment"), at most
-/// [`MAX_FAVOUR`] either way. Talents (spec §8 "Class abilities": Haggler, Well dressed) add
-/// theirs before the cap, and may lift it (Magnate), never past [`MOST_FAVOUR`]. Never shown.
+/// [`MAX_FAVOUR`] either way. Talents (spec §8 "Class abilities": the merchant's Haggler) add
+/// theirs before the cap. Never shown.
 pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
     let presence = actor.stats.modifier(Stat::Presence) * i32::from(shops.presence);
     let bargain = actor.skill_effect(content, Effect::Bargain);
     let alignment = super::alignment::keeper_favour(content, shops, actor);
     let talents = actor.talent_mods(content);
-    let cap = (MAX_FAVOUR + talents.favour_cap).clamp(0, MOST_FAVOUR);
-    (presence + bargain + alignment + talents.favour_percent).clamp(-MAX_FAVOUR, cap)
+    (presence + bargain + alignment + talents.favour_percent).clamp(-MAX_FAVOUR, MAX_FAVOUR)
 }
 
 /// How many of `object` `stacks` hold.
@@ -647,9 +644,6 @@ impl World {
             .iter()
             .find(|s| s.is_open() && s.contains(from) && s.is_exit(to) && !s.unpaid.is_empty())?
             .clone();
-        if self.on_credit(&shop) {
-            return None;
-        }
         let level = self.state.current();
         let free = |p: Pos| {
             p != from
@@ -675,13 +669,6 @@ impl World {
         Some(land)
     }
 
-    /// Whether the keeper of `shop` lets the player leave owing what they owe it (spec §8 "Class
-    /// abilities": Credit, Commanding): no more than their credit. The debt stays on its bill.
-    fn on_credit(&self, shop: &Shop) -> bool {
-        let credit = self.state.player().talent_mods(&self.content).credit;
-        credit > 0 && shop.owed(self.shop_kinds(), &self.content, self.player_favour()) <= credit
-    }
-
     /// The player stepped from `from` to `to` on the current level: entering an open shop the
     /// keeper greets them; leaving one owing anything (any way but its ways out, which turn them
     /// back) is theft (spec §7 "Shops").
@@ -695,9 +682,6 @@ impl World {
             let (was, is) = (shop.contains(from), shop.contains(to));
             if !was && is {
                 self.say(format!("Welcome to {}!", shop.sign(&content)));
-            } else if was && !is && !shop.unpaid.is_empty() && self.on_credit(shop) {
-                let name = shop.name.clone();
-                self.say(format!("{name} nods: you can pay next time."));
             } else if was && !is && !shop.unpaid.is_empty() {
                 let name = shop.name.clone();
                 self.outrage(i);

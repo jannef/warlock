@@ -4,7 +4,7 @@
 //! talents' ambush dice on top (Ambusher, Improved sneak attack; `Dice::and`), and with Master
 //! thief threatens a critical sooner. A blow counts at any reach; a shot, a throw, or an attack
 //! spell within `missile_reach` cells (Long reach's farther). Nothing lands on a target with no
-//! vitals for the attacker ([`World::has_vitals_for`], `Content::has_vitals`: also immune to
+//! vitals ([`World::has_vitals`], `Content::has_vitals`: also immune to
 //! criticals, `combat::Target::no_criticals`). "Has not seen" is [`World::unaware`]
 //! (`surprise.rs`). It is asked before the strike (no draw); the dice are drawn from the gameplay
 //! stream only when a hit lands, and the player's sneak attack marks Sneak attack and Dexterity
@@ -45,7 +45,7 @@ impl World {
         if !(unaware || self.surprised(target)) || self.sneak_dice(attacker).is_none() {
             return false;
         }
-        if !self.has_vitals_for(attacker, target) {
+        if !self.has_vitals(target) {
             return false;
         }
         let (Some(a), Some(t), Some(rules)) = (
@@ -75,15 +75,12 @@ impl World {
         }
     }
 
-    /// Whether actor `target` has vitals to find for `attacker`'s attacks
-    /// (`Content::has_vitals`, with the attacker's Anatomist tags).
-    pub(super) fn has_vitals_for(&self, attacker: ActorId, target: ActorId) -> bool {
+    /// Whether actor `target` has vitals to find (`Content::has_vitals`).
+    pub(super) fn has_vitals(&self, target: ActorId) -> bool {
         let Some(t) = self.state.actors.get(&target) else {
             return true;
         };
-        let mods = (self.state.actors.get(&attacker)).map(|a| a.talent_mods(&self.content));
-        let vitals_in = mods.as_ref().map_or(&[][..], |m| &m.vitals_in[..]);
-        self.content.has_vitals(t.creature, vitals_in)
+        self.content.has_vitals(t.creature)
     }
 
     /// A blow of the player's that would be a critical whenever it hits (Vital strike, Master
@@ -95,11 +92,11 @@ impl World {
         }
     }
 
-    /// `struck`, the side of `target` an attack by `attacker` strikes, immune to criticals when
-    /// it has no vitals for the attacker.
-    pub(super) fn vitals(&self, attacker: ActorId, target: ActorId, struck: Target) -> Target {
+    /// `struck`, the side of `target` an attack strikes, immune to criticals when it has no
+    /// vitals.
+    pub(super) fn vitals(&self, target: ActorId, struck: Target) -> Target {
         Target {
-            no_criticals: !self.has_vitals_for(attacker, target),
+            no_criticals: !self.has_vitals(target),
             ..struck
         }
     }

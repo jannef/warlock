@@ -111,9 +111,7 @@ Some things have **no vitals** to find, and so are **immune to criticals** and t
 spot."). They are the [incorporeal](creatures.md#incorporeal-creatures) (ghosts and wraiths),
 [animated objects](animated.md), and every [creature](creatures.md) tagged elemental, skeleton,
 spirit, or construct (the mud golem; [elementals](creatures.md#elementals)). The fleshy undead
-(draugr, ghouls, the drowned, vampires, mummies) have vitals. The
-[Anatomist](talents.md#talent-anatomist) talent finds them in skeletons and constructs too.
-The list is under [Surprise and sneak attacks](surprise.md#no-vitals).
+(draugr, ghouls, the drowned, vampires, mummies) have vitals. The list is under [Surprise and sneak attacks](surprise.md#no-vitals).
 
 {{#include generated/threats.md}}
 

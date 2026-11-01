@@ -223,6 +223,10 @@ fn a_save_naming_a_cut_talent_loads_without_it() {
     w.player_mut().talents.take("healthy", None);
     w.player_mut().talents.take("gifted", Some("strength"));
     w.player_mut().talents.take("bellows", None);
+    // #787 and #788's: one cut, one merged into Pious, one from creation.
+    for id in ["silver_tongue", "penitent", "favoured_child"] {
+        w.player_mut().talents.take(id, None);
+    }
     let back = World::from_state(w.content().clone(), w.state().clone()).expect("it loads");
     let held: Vec<&str> = (back.state().player().talents.iter())
         .map(|t| t.id.as_str())
@@ -232,7 +236,13 @@ fn a_save_naming_a_cut_talent_loads_without_it() {
         ["versatile", "healthy"],
         "the race's grant and the pick"
     );
-    for id in ["gifted", "bellows"] {
+    for id in [
+        "gifted",
+        "bellows",
+        "silver_tongue",
+        "penitent",
+        "favoured_child",
+    ] {
         assert!(
             back.retiered()
                 .iter()
@@ -261,7 +271,7 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // (any skill, three ranks each) would keep a pick open to the last level, and so would Sworn
     // foe (any creature tag) and School focus (any school or element): here they are an
     // elf's, and Apprentice's tree waits for a free talent; Salvager, Unbinder, Overreach, Wand
-    // mastery, Channeler, Appraiser's eye, Devout, Deep lungs, Second breath, Hard training,
+    // mastery, Channeler, Appraiser's eye, Deep lungs, Second breath, Hard training,
     // Quick study of the body, Early mastery, Gifted (six stats), Late bloomer, Sure hand,
     // Numbing cold, Brimming, and Devotee are held back the same way so the picks fit in
     // the levels there are.
@@ -294,10 +304,6 @@ fn a_pick_nothing_can_be_spent_on_is_dropped() {
         .replace(
             "choice = \"tag\"\n",
             "choice = \"tag\"\nneeds = { race = \"elf\" }\n",
-        )
-        .replace(
-            "tree = \"wayfarer\"\ndescription = \"You pray as one",
-            "tree = \"wayfarer\"\nneeds = { race = \"elf\" }\ndescription = \"You pray as one",
         )
         .replace(
             "choice = \"school\"\n",
@@ -470,27 +476,6 @@ fn each_talent_changes_the_rule_it_names() {
 }
 
 #[test]
-fn long_strider_quickens_journeys_on_the_overworld() {
-    let spec: CharacterSpec = "human,male,warrior".parse().expect("a character");
-    let mut w =
-        World::with_character(BUILTIN.clone(), "world", Some(7), Some(&spec)).expect("world");
-    let id = w.state.player;
-    let content = w.content().clone();
-    let here = *w
-        .state
-        .current()
-        .terrain
-        .get(w.player_pos())
-        .expect("a cell");
-    let terrain = content.terrain(here).clone();
-    let price = w.step_price(id, &terrain, false);
-    reach(&mut w, 3);
-    run(&mut w, "talent:long_strider");
-    assert_eq!(last(&w), "You learn Long strider.");
-    assert_eq!(w.step_price(id, &terrain, false), price * 85 / 100);
-}
-
-#[test]
 fn a_talent_may_switch_on_a_free_blow() {
     let mut files = ContentFiles::builtin();
     files.insert(
@@ -570,7 +555,7 @@ fn perception_and_dumps_show_talents_in_words_only() {
     // While the pick is due: the progress layer says so, with what may be taken.
     let progress = dump::ascii(&w, &[Layer::Progress]);
     assert!(progress.contains("due level 3: 1 talent"), "{progress}");
-    for free in ["healthy", "keen_ears", "long_strider", "lean"] {
+    for free in ["healthy", "keen_ears", "pious", "lean"] {
         assert!(progress.contains(free), "{progress}");
     }
     assert!(

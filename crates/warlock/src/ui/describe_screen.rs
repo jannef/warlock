@@ -216,17 +216,13 @@ mod tests {
     }
 
     #[test]
-    fn an_eye_for_worth_shows_what_things_and_gems_are_worth() {
-        // A merchant who took Keen appraiser picks up the same arms.
+    fn an_eye_for_gems_shows_what_they_are_worth() {
+        // A gnome who took Gem lore picks up the same arms.
         let content = Arc::new(Content::builtin().expect("content"));
-        let spec = "human,male,merchant"
+        let spec = "gnome,male,merchant"
             .parse::<warlock_core::character::CharacterSpec>()
             .expect("a character")
-            .with_talents(
-                ["keen_appraiser", "healthy", "lean"]
-                    .map(String::from)
-                    .to_vec(),
-            );
+            .with_talents(["gem_lore", "healthy"].map(String::from).to_vec());
         let mut world =
             World::start_run(content, "showcase", None, Some(&spec), None, true).expect("world");
         let walk = "move:N*3 open:N move:N*2 move:E*16 open:S move:S*4 open:W move:W*5 pickup \
@@ -237,11 +233,10 @@ mod tests {
         let view = world.perception();
         let item = view.inventory().len() - 1;
         let sword = text(&DescribeScreen::new(Some(&view), Some(item)));
-        assert!(has(&sword, "Worth "), "{sword:#?}");
         assert!(has(&sword, "fine cut (worth "), "{sword:#?}");
         // Without the eye, no worth.
         let plain = text(&DescribeScreen::new(Some(&armed().perception()), Some(3)));
-        assert!(!has(&plain, "Worth "), "{plain:#?}");
+        assert!(!has(&plain, "(worth "), "{plain:#?}");
     }
 
     #[test]

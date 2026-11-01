@@ -1,8 +1,7 @@
 //! The Shadow and Wayfarer talents (spec §8 "Talents"; #239): effective eyes (Night eyes, Dark
-//! adaptation, Owl eyes), Blood scent, Lamplighter, Ambusher, and the land's: Pathfinder,
-//! Swimmer, Winter-born, Marsh walker, Beast-friend, Sun-blessed. Each changes the one rule it names.
+//! adaptation, Owl eyes), Blood scent, Lamplighter, Ambusher, and the land's: Swimmer, Marsh
+//! walker, Beast-friend. Each changes the one rule it names.
 
-use super::ice::Footing;
 use super::*;
 use crate::action::{AttackKind, parse_actions};
 use crate::combat::{Blow, Strike};
@@ -281,22 +280,6 @@ fn ambusher_hurts_a_creature_that_has_not_seen_you() {
 }
 
 #[test]
-fn pathfinder_prices_rough_land_as_plains() {
-    let mut w = world("world");
-    let player = w.player_id();
-    let price = |w: &World, id: &str| w.step_price(player, terrain(w, id), false);
-    let plains = price(&w, "plains");
-    assert!(price(&w, "forest") > plains);
-    give(&mut w, "long_strider");
-    give(&mut w, "pathfinder");
-    let plains = price(&w, "plains");
-    for id in ["forest", "dense_forest", "hills", "swamp"] {
-        assert_eq!(price(&w, id), plains, "{id}");
-    }
-    assert!(price(&w, "road") < plains, "roads stay quicker");
-}
-
-#[test]
 fn swimmer_and_marsh_walker_wade_as_they_walk() {
     let mut w = world("fen");
     let player = w.player_id();
@@ -333,32 +316,6 @@ fn a_swimmer_takes_no_harm_from_a_plunge() {
     };
     assert!(plunge(false) > 0);
     assert_eq!(plunge(true), 0);
-}
-
-#[test]
-fn winter_born_ice_holds_and_climbing_out_is_quicker() {
-    let laden = |winter_born: bool| {
-        let mut w = world("fen");
-        let rock = CONTENT.object_id("rock").expect("rock");
-        w.player_mut().inventory = vec![crate::object::Stack::new(rock, 144)];
-        if winter_born {
-            give(&mut w, "winter_born");
-        }
-        run(&mut w, "move:E*4");
-        assert_eq!(w.player_pos(), Pos::new(5, 1));
-        w.messages().iter().any(|m| m.text.contains("plunge"))
-    };
-    assert!(laden(false), "115 kg of rocks break 5 cm of ice");
-    assert!(
-        !laden(true),
-        "it holds a Winter-born as if they carried nothing"
-    );
-    let mut w = world("fen");
-    let player = w.player_id();
-    let climb = Footing::Held { climb: true };
-    let price = w.tread_price(player, climb);
-    give(&mut w, "winter_born");
-    assert_eq!(w.tread_price(player, climb), price / 2);
 }
 
 #[test]
@@ -414,27 +371,4 @@ fn a_beast_friend_sees_animals_as_neutral() {
     for seen in rats {
         assert_eq!(view.stance(seen), Stance::Neutral);
     }
-}
-
-#[test]
-fn sun_blessed_heals_faster_under_the_open_sun() {
-    let mut w = world("courtyard");
-    let player = w.player_id();
-    assert!(w.state.sky(&CONTENT).is_some_and(|s| s.sun.is_up()));
-    let rate = w.healing_rate(player);
-    give(&mut w, "sun_blessed");
-    assert_eq!(w.healing_rate(player), rate * 3 / 2);
-    run(&mut w, "rest:dusk skip:2h");
-    let mut night = world("courtyard");
-    run(&mut night, "rest:dusk skip:2h");
-    assert_eq!(
-        w.healing_rate(player),
-        night.healing_rate(player),
-        "not at night"
-    );
-    let mut hub = world("showcase");
-    let player = hub.player_id();
-    let rate = hub.healing_rate(player);
-    give(&mut hub, "sun_blessed");
-    assert_eq!(hub.healing_rate(player), rate, "not underground");
 }

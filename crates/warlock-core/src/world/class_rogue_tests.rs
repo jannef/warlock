@@ -139,13 +139,12 @@ fn the_three_tables_come_with_the_levels() {
         [
             "Favoured prey",
             "Trained wind",
+            "Stalker's eye",
             "Tracker",
             "Barkskin",
             "Rapid shot",
             "Woodland stride",
-            "Swift tracker",
             "Evasion",
-            "Camouflage",
             "Volley",
             "Master hunter"
         ]
@@ -249,7 +248,21 @@ fn tracker_hears_fainter_and_places_sounds_exactly() {
 }
 
 #[test]
-fn rapid_shot_woodland_stride_and_swift_tracker() {
+fn a_ranger_gains_stalkers_eye_at_level_two() {
+    let mut w = world("ranger");
+    let sees = |w: &World| w.state.player().talent_mods(w.content()).sees_unaware;
+    assert!(!sees(&w));
+    reach(&mut w, 2);
+    assert!(sees(&w));
+    assert!(said(&w).contains(&"You gain Stalker's eye.".to_string()));
+    // Nobody picks it: it is the ranger's own.
+    let book = w.content().talents();
+    let eye = book.get(book.id("stalkers_eye").expect("stalker's eye"));
+    assert!(eye.granted);
+}
+
+#[test]
+fn rapid_shot_and_woodland_stride() {
     let mut w = world("ranger");
     let content = w.content().clone();
     let player = w.state.player;
@@ -266,16 +279,10 @@ fn rapid_shot_woodland_stride_and_swift_tracker() {
     for id in ["forest_floor", "bush", "reeds", "tall_grass", "marsh"] {
         assert_eq!(w.step_price(player, terrain(id), false), grass, "{id}");
     }
-    // The bonus picks of Wayfarer may have quickened the journeys too.
-    reach(&mut w, 24);
-    let before = w.state.player().talent_mods(&content).travel_percent;
-    reach(&mut w, 25);
-    let mods = w.state.player().talent_mods(&content);
-    assert_eq!(mods.travel_percent, before - 20, "Swift tracker");
 }
 
 #[test]
-fn camouflage_and_hide_in_plain_sight_quiet_the_steps() {
+fn hide_in_plain_sight_quiets_the_steps() {
     let step = |w: &World, burden| {
         let to = w.player_pos().step(Dir::E);
         let a = w.state.player();
@@ -288,14 +295,6 @@ fn camouflage_and_hide_in_plain_sight_quiet_the_steps() {
         noise::noise(w.content(), w.state.current(), a, Burden::Unburdened, act)
             .map_or(0, |n| n.loudness)
     };
-    // The showcase is underground: Camouflage changes nothing there.
-    let mut r = world("ranger");
-    let below = step(&r, Burden::Unburdened);
-    reach(&mut r, 40);
-    assert_eq!(step(&r, Burden::Unburdened), below, "no sky");
-    r.state.current_mut().kind = crate::content::LevelKind::Outdoor;
-    let sky = step(&r, Burden::Unburdened);
-    assert!(sky < below && sky > 0, "{sky} < {below}");
     // Hide in plain sight: silent while Unburdened, quieter attacks.
     let mut t = world("thief");
     let loud = attack(&t);
@@ -651,16 +650,6 @@ fn throw_your_voice_is_the_bards_alone() {
     let mut b = world("bard");
     reach(&mut b, 32);
     assert_eq!(own(&b, Ability::ThrowVoice), Some(None));
-}
-
-#[test]
-fn honeyed_words_and_legend() {
-    let mut w = world("bard");
-    let content = w.content().clone();
-    reach(&mut w, 50);
-    let mods = w.state.player().talent_mods(&content);
-    assert_eq!(mods.favour_percent, 15);
-    assert_eq!((mods.quest_gold_percent, mods.quest_xp_percent), (25, 50));
 }
 
 #[test]

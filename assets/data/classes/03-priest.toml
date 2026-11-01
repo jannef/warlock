@@ -36,7 +36,6 @@ abilities = [
     { level = 3, talent = "cure_wounds" },
     { level = 9, talent = "consecrate" },
     { level = 12, talent = "remove_disease" },
-    { level = 18, talent = "ward_of_faith" },
     { level = 25, talent = "purify" },
     { level = 32, talent = "divine_health" },
     { level = 40, talent = "smite" },

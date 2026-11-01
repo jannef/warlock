@@ -90,21 +90,6 @@ impl World {
         }
         let content = self.content.clone();
         let talents = self.state.player().talent_mods(&content);
-        // Discipline: some uses count twice.
-        let count = count.saturating_mul(talents.use_times(used));
-        // Quick study of the body: a potion's marks, more of them.
-        let count = match used.names_stat() {
-            true => {
-                let percent = talents.potion_marks_percent;
-                let more = (u32::from(count) * percent.clamp(-100, 1000) as u32 / 100) as u16;
-                if percent >= 0 {
-                    count.saturating_add(more)
-                } else {
-                    count
-                }
-            }
-            false => count,
-        };
         for rule in content.stat_training().rules(used) {
             let Some(stat) = rule.stat.or(named).filter(|&s| only[s]) else {
                 continue;

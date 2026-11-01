@@ -1,8 +1,0 @@
-[[talent]]
-id = "mining"
-name = "Mining"
-tree = "class"
-granted = true
-description = "You know how stone breaks: you dig half again as fast."
-effects = [{ kind = "dig_percent", value = 50 }]
-systems = ["digging"]

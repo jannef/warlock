@@ -600,10 +600,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                        what you wield, before its attack lands (a free blow, \
                                        once per surprise; it brings no free blows of its own)"
             .to_string(),
-        TalentEffect::VitalsIn { tags } => format!(
-            "creatures tagged {} have vitals for you: your criticals and sneak attacks land on them",
-            tags.join(", ")
-        ),
         TalentEffect::CarryPercent { value } => format!("carrying limit {}", percent(value)),
         TalentEffect::IgnoreBurdened => "being Burdened costs you nothing (as a dwarf)".to_string(),
         TalentEffect::StepSlowdownPercent { value } => format!(
@@ -641,10 +637,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::BeastFriend => "creatures of animal factions are neutral to you until you \
                                       attack one of that type"
             .to_string(),
-        TalentEffect::SunHealing { value } => format!(
-            "healing pace {} under the open sun (sun up, no roof, whatever the clouds)",
-            percent(value)
-        ),
         TalentEffect::HungerPercent { value } => format!("hunger pace {}", percent(value)),
         TalentEffect::SmellRot => {
             "the eat list says whether food smells fresh, turning (old),              or rotten"
@@ -670,10 +662,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a fresh corpse's chance to raise each stat {} (at most 100 %)",
             percent(value)
         ),
-        TalentEffect::PotionMarksPercent { value } => format!(
-            "the training marks a potion or an elixir gives {}",
-            percent(value)
-        ),
         TalentEffect::TrainPercent { value } => format!(
             "every stat training use's chance of a mark {} (at most 100 %)",
             percent(value)
@@ -682,20 +670,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "the [training price](stats.md#training)'s ramp past a potential counts each point \
              past it {points} fewer (the first point past the potential at the plain price)"
         ),
-        TalentEffect::NoDeed { on } => {
-            let deeds: Vec<&str> = on.iter().map(|d| d.describe()).collect();
-            format!(
-                "no [training marks](stats.md#training) are lost for {}",
-                deeds.join("; ")
-            )
-        }
-        TalentEffect::UseMarks { on, times } => {
-            let uses: Vec<&str> = on.iter().map(|u| u.describe()).collect();
-            format!(
-                "{times} times the [training marks](stats.md#training) for {}",
-                uses.join("; ")
-            )
-        }
         TalentEffect::XpPercent { value } => format!("experience gained {}", percent(value)),
         TalentEffect::SkillRolls { value } => format!("skill rolls every level {}", signed(value)),
         TalentEffect::ExtraPick { level: 1 } => "one more talent at creation".to_string(),
@@ -726,11 +700,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              {level} (two: [magic](magic-items.md); more: [rare](magic-items.md#rarity)), \
              [identified](magic-items.md#unidentified-items), readied in its own \
              [slot](equipment.md#what-fits-where) if that is free, else carried"
-        ),
-        TalentEffect::StoryLuck { value } => format!(
-            "the odds of your [background story](background.md#how-rare)'s uncommon, rare, and \
-             fateful lines {} in every chapter (the common lines' fall to match)",
-            percent(value)
         ),
         TalentEffect::LootMagicPercent { value } => format!(
             "the weights of the rarities better than a find's least {} (anything found: magic \
@@ -769,31 +738,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::PotionKept { chance } => {
             format!("a {chance} % chance a potion you drink is not used up")
         }
-        TalentEffect::PotionSmell => {
-            "an unknown potion you pick up tells its kind (not its type) by its smell".to_string()
-        }
-        TalentEffect::PotionHeals { value } => {
-            format!("a healing potion you drink heals {value} % more")
-        }
-        TalentEffect::QuestXpPercent { value } => {
-            format!("experience from quests {}", percent(value))
-        }
         TalentEffect::QuestGoldPercent { value } => {
             format!("gold from quests {}", percent(value))
         }
         TalentEffect::FavourPercent { value } => {
             format!("shop favour {} (before the cap)", percent(value))
         }
-        TalentEffect::FavourCap { value } => {
-            format!("the cap on shop favour {} (50 % without)", percent(value))
-        }
         TalentEffect::SellPercent { value } => format!(
             "shops pay {} for what they buy from you (never more than they would ask)",
             percent(value)
         ),
-        TalentEffect::Credit { gold } => {
-            format!("keepers let you leave owing up to {gold} gold (the debt stays on their bill)")
-        }
         TalentEffect::IdentifyTrades => "what you buy or sell in a shop is identified".to_string(),
         TalentEffect::Pilgrim => {
             "temple services cost half (rounded up), and a cure also mends one point of each \
@@ -803,7 +757,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Scavenger => {
             "what a creature you kill drops is identified as it lands".to_string()
         }
-        TalentEffect::ItemWorth => "item descriptions show what things are worth".to_string(),
         TalentEffect::GemWorth => "item descriptions show what each gem is worth".to_string(),
         TalentEffect::IdentifyCarried { hours } => format!(
             "a magic item you carry for {hours} hours (counted from when you gain this) is \
@@ -832,9 +785,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                     outcomes instead; the altar's explosion is not great and \
                                     still happens"
             .into(),
-        TalentEffect::SenseOfPlace => "knows a special room's nature from a glimpse of it, \
-            and the effect covering a whole level by name on arrival"
-            .into(),
         TalentEffect::ChestWise => "sees whether a shut chest in sight is locked (look mode: \
             \"a locked coffer\", \"an unlocked coffer\"), and knows the trap of every shut chest \
             it sees, no check"
@@ -852,12 +802,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::GraveWarden => {
             "nothing you kill ever rises in a cursed room (see Special rooms)".into()
         }
-        TalentEffect::WakePercent { value } => format!(
-            "the noise that wakes a sleeper, from what you do, {} (a den's 200% of its \
-             hearing threshold becomes {}%)",
-            percent(value),
-            200 * (100 + value) / 100
-        ),
         TalentEffect::StoneSense => "notices hidden things on stone in passing".into(),
         TalentEffect::StoneFind { value } => format!(
             "{} to every check to find what is hidden on stone, searching and in passing",
@@ -891,9 +835,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             let name =
                 (content.skill_id(&skill)).map_or(skill.clone(), |s| content.skill(s).name.clone());
             format!("{name} counts {}", signed(value))
-        }
-        TalentEffect::MakeWay => {
-            "anyone not hostile makes way for you, those keeping a post too".to_string()
         }
         TalentEffect::FreeBlow { trigger } => {
             use warlock_core::content::FreeBlowTrigger as T;
@@ -1032,7 +973,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             };
             format!("steps cost {}{when}", percent(value))
         }
-        TalentEffect::Steadfast => "Burdened costs you nothing (as a dwarf)".to_string(),
         TalentEffect::Stout => {
             "Strained costs you what Burdened costs others (slowdown, Dexterity cap, noise)"
                 .to_string()
@@ -1205,10 +1145,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("range {} cells with launchers of {name}", signed(value))
         }
         TalentEffect::ThrowRange { value } => format!("throwing range {} cells", signed(value)),
-        TalentEffect::MissileBreaks { value } => format!(
-            "your missiles' chance to break when they hit {} (rounded down)",
-            percent(value)
-        ),
         TalentEffect::MaxDex { value } => {
             format!("worn armour's Dexterity cap {}", signed(value))
         }
@@ -1578,9 +1514,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             );
             format!("eating {what} heals {dice} hit points besides")
         }
-        TalentEffect::DiseaseStill => "your diseases never progress: a failed check does no \
-                                       harm (they still show until shaken off or cured)"
-            .to_string(),
         TalentEffect::StatusDamage { status: id, value } => {
             format!(
                 "{} damage on hits against a creature {}",
@@ -1618,10 +1551,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::ExactSounds => {
             "every sound you hear is placed at the cell it came from, not roughly".to_string()
         }
-        TalentEffect::SkyFootstepsPercent { value } => format!(
-            "footsteps under the open sky (no roof over the cell stepped to) {}",
-            percent(value)
-        ),
         TalentEffect::SilentUnburdened => "no footsteps at all while Unburdened".to_string(),
         TalentEffect::AttackNoisePercent { value } => {
             format!("the noise of your attacks {}", percent(value))

@@ -1,5 +1,5 @@
 //! Services (spec §8 "Services"; the campaign design §6.1): a fixture sister who cures and mends
-//! for gold, asked for like topics; the price, the refusals, Pilgrim, saves, and replays.
+//! for gold, asked for like topics; the price, the refusals, Pious, saves, and replays.
 
 use super::*;
 use crate::action::parse_actions;
@@ -219,9 +219,9 @@ fn a_mending_restores_every_point_but_not_while_a_disease_shows() {
 }
 
 #[test]
-fn pilgrim_pays_half_and_a_cure_mends_a_point() {
+fn pious_at_its_first_rank_pays_half_and_a_cure_mends_a_point() {
     let mut w = world(100);
-    w.player_mut().talents.take("pilgrim", None);
+    w.player_mut().talents.take("pious", None);
     let prices: Vec<Option<u32>> = w.topics(ActorId(1)).iter().map(|t| t.price).collect();
     assert_eq!(prices, [None, Some(30), Some(20)]);
     run(&mut w, "infect:the_shakes");

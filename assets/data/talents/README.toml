@@ -126,9 +126,6 @@
 #                                 unaware mark (Stalker's eye)
 #   startled_blow                 an initiative check it makes against a hostile attacker
 #                                 beside it is answered with a free blow at once (Hair trigger)
-#   vitals_in { tags }            creature types carrying one of those tags have vitals for its
-#                                 attacks (critical hits and sneak attacks land), never the
-#                                 incorporeal ("skeleton", "construct")
 #   carry_percent { value }       carrying limit, that percent more
 #   ignore_burdened               being Burdened costs it nothing, as a dwarf's burden
 #   step_slowdown_percent { value }   the slowdown its burden and Bloated put on its steps, that
@@ -147,7 +144,6 @@
 #   wading_proof                  wading never gives it a disease
 #   beast_friend                  creatures of animal factions (../factions.toml) are neutral
 #                                 to it until it attacks one of that type
-#   sun_healing { value }         hit points come back that percent faster under the open sun
 #   hunger_percent { value }      hunger burns that percent faster (negative: slower)
 #   rot_harm_percent { value }    the sickness rotten food gives, that percent more (rounded
 #                                 down; negative: less)
@@ -159,16 +155,10 @@
 #                                 (Starving still costs hit points)
 #   corpse_stats_percent { value }   a fresh corpse's stat training marks and its chances to
 #                                 widen a potential, that percent more (never above certain)
-#   potion_marks_percent { value }   the training marks a potion or an elixir gives, that
-#                                 percent more
 #   train_percent { value }       every stat training use's chance of a mark, that percent more
 #                                 (a use at 100 stays sure)
 #   ramp_ease { points }          the training price's ramp counts each point past a potential
 #                                 that many fewer (1: the first past it at the plain price)
-#   no_deed { on }                those stat training deeds (data/stats.toml `[[training.deed]]`
-#                                 `on`) take nothing
-#   use_marks { on, times }       those stat training uses count that many times over (the
-#                                 most counts)
 #   xp_percent { value }          experience gained, that percent more
 #   skill_rolls { value }         skill rolls every level, that many more
 #   extra_pick { level }          one more talent pick at that character level (1: at creation)
@@ -189,9 +179,6 @@
 #   read_percent { value }        reading a scroll takes that percent more time (negative: less)
 #   scroll_kept { chance }        a scroll it reads is not used up, by that chance in percent
 #   potion_kept { chance }        a potion it drinks is not used up, by that chance in percent
-#   potion_smell                  an unknown potion it picks up tells its kind (never its type)
-#                                 by its smell
-#   potion_heals { value }        a healing potion it drinks heals that percent more
 #   spares_self                   its own bursts never catch it
 #   find { value }                added to its checks to find what is hidden, searching and in
 #                                 passing
@@ -199,19 +186,18 @@
 #   search_reach { value }        its searching reaches that many cells farther
 #   trap_damage_percent { value } the damage traps do it, that percent more (negative: less; at
 #                                 least 1)
-#   quest_xp_percent { value }    the experience a quest gives, that percent more
 #   quest_gold_percent { value }  the gold a quest gives, that percent more
 #   favour_percent { value }      shop favour, that many percent more (before the cap)
-#   favour_cap { value }          the cap on shop favour, that many percent higher
 #   sell_percent { value }        shops pay that percent more for what they buy from it (never
 #                                 more than they ask)
-#   credit { gold }               keepers let it leave owing up to that much gold (1 to 1000);
-#                                 the debt stays on their bill
 #   identify_trades               what it buys or sells in a shop is identified
 #   pilgrim                       temple services cost half (rounded up), and a cure also mends
-#                                 a point of each damaged stat
-#   item_worth, gem_worth         item descriptions show what things, and each gem in them, are
-#                                 worth
+#                                 a point of each damaged stat (Pious)
+#   devout                        at a forgotten altar of its own side the side's lean counts
+#                                 twice, at one of the other side not at all (Pious)
+#   penitent                      at a forgotten altar a great bane drawn becomes nothing
+#                                 (Pious's second rank)
+#   gem_worth                     item descriptions show what each gem in them is worth
 #   identify_carried { hours }    a magic item carried that many hours (1 to 240) from when it
 #                                 has the effect is identified
 #   gem_find_percent { value }    loot it finds and creatures drop is a loose gem that percent
@@ -222,8 +208,6 @@
 #                                 that percent longer
 #   room_status_immune { status } a special room's (or a whole level's) status never takes it
 #                                 (Old delver: Ebbing)
-#   wake_percent { value }        sleepers (a teeming den's) need that percent more noise to
-#                                 wake from what it does (Hush-foot: 100, twice the noise)
 #   grave_warden                  nothing it kills rises in a cursed room (a `rise` effect)
 #   stone_sense                   notices hidden things on stone in passing, as a dwarf does
 #   stone_find { value }          added to its checks to find what is hidden on stone,
@@ -232,8 +216,7 @@
 #                                 passing)
 #   search_reach { value }        searching reaches that many cells farther
 #   skill { skill, value }        that skill counts that much higher (an untrained one from 0)
-#   make_way                      anyone not hostile makes way for it, those at a post too
-#   distrusted                    no one makes way for it, make_way or not
+#   distrusted                    no one makes way for it
 #   free_blow { trigger }         a free blow: "cleave", "great_cleave", "riposte",
 #                                 "opportunist", "flurry" (a melee attack with nothing in
 #                                 hand strikes twice), or "gatekeeper" (a hostile stepping up
@@ -251,7 +234,6 @@
 #   launcher_range { value, skill }   the readied missile weapon shoots that many cells
 #                                 farther; with `skill` (a weapon skill id), only a launcher of it
 #   throw_range { value }         throws reach that many cells farther
-#   missile_breaks { value }      its missiles break that percent more often (negative: less)
 #   max_dex { value }             worn armour's cap on Dexterity in Defence, that much higher
 #   deflection { value }          Defence in the Deflection category, on top of magic items'
 #   protection { value, body_armour, shield, per_piece }   Protection, only while the armour
@@ -360,7 +342,6 @@
 #   stance_dodge { stance, percent }   that stance's Dodge penalty that percent smaller
 #   step_percent { value, unarmoured, unburdened, no_shield }   steps cost that percent more
 #                                 (negative: cheaper), only while each condition set holds
-#   steadfast                     Burdened costs nothing, as a dwarf's
 #   stout                         Strained costs what Burdened costs others
 #   disease_immune                no disease is ever caught: no check, no infection
 #   no_penalty_to { stat }        no status lowers its score in that stat
@@ -427,7 +408,6 @@
 #   purify                        rotten food neither sickens it nor exposes it to a disease
 #   corpse_harmless               a fresh corpse's own harm (on_eat sickness, vomiting) never
 #   meal_heals { object, dice }   eating that object (no object: a fresh corpse) heals dice too
-#   disease_still                 a failed disease check does nothing: its diseases never progress
 #   status_damage { status, value }   its hits on a creature suffering that status do value more
 #   reprieve { once, status, stat, by, message }   once in its life (`once` names it), what
 #                                 would kill it (not starving or choking) leaves it at 1 hit
@@ -441,8 +421,6 @@
 #   sworn_foe { to_hit, damage }  against creature types carrying the tag it was taken for (a
 #                                 talent with `choice = "tag"`), that to-hit and damage
 #   exact_sounds                  every sound it hears is placed where it was made
-#   sky_footsteps_percent { value }   its footsteps under the open sky (no roof over the cell
-#                                 stepped to) that percent louder (negative: quieter)
 #   silent_unburdened             its steps make no sound while it is Unburdened
 #   attack_noise_percent { value }   its attacks that percent louder (negative: quieter)
 #   trap_ease { value }           hidden traps that much easier for it to find (not to disarm)

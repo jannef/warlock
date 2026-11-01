@@ -27,7 +27,7 @@ expression: "render(case, content.clone())"
 │ HP  Hit points    20/20   MP  Mana       4/4                                                     │
 │ Dv  Defence       12      Pv  Protection  1                                                      │
 │     Stance        Neutral                                                                        │
-│     Stamina       10/14                                                                          │
+│     Stamina       10/10                                                                          │
 │     Alignment     Neutral                                                                        │
 │     Resistant to  acid                                                                           │
 │                                                                                                  │
@@ -37,4 +37,4 @@ expression: "render(case, content.clone())"
 │ @ or Esc close   A skills                                                                        │
 └─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘
 
- The Hub  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/14  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls
+ The Hub  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls

@@ -547,11 +547,9 @@ struct Snap {
     /// Its weapon skills and styles, and the rank of the caster style it was paced in.
     ranks: crate::weapon_skills::WeaponSkills,
     style_rank: Option<u8>,
-    /// Its sneak dice (`World::sneak_dice`), Master thief's lower threat on a sneak attack, and
-    /// the tags Anatomist finds vitals in.
+    /// Its sneak dice (`World::sneak_dice`) and Master thief's lower threat on a sneak attack.
     sneak: Option<Dice>,
     ambush_threat: u8,
-    vitals_in: Vec<String>,
 }
 
 /// Applies action text `text` to `w`.
@@ -684,7 +682,6 @@ fn career(
                 fought_a_day: f64::from(log.fought_casts) / days,
                 sneak: w2.sneak_dice(player),
                 ambush_threat: mods.ambush_threat,
-                vitals_in: mods.vitals_in.clone(),
             });
         }
     }

@@ -305,7 +305,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`hand_over`, the purse code `pay` uses), `cure` ends what `prayer` cures (`World::cure`;
     every disease lists it) and `mend` clears every point of stat damage (`World::mend`), the
     speaker says the `reply`, and it takes the time of `chat`. The price is the data's, never
-    moved by favour; the Pilgrim talent halves it (rounded up) and has a cure also mend a point
+    moved by favour; the Pious talent halves it (rounded up) and has a cure also mend a point
     of each damaged stat (`TalentMods::services`). No alignment shift, no stream drawn, no new
     state.
   - **Identification** (`does = "identify"`, #432; Factor Wulfrun in Cēaptūn, nobody in the
@@ -316,7 +316,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `TopicView::items`; the dialogue screen lists "(100 gold each)" and, with something to
     identify, asks first in the one dialog with the total (`Pay 300 gold` or `Not now`; without
     the gold only `Go back`). All or nothing: refused with the `nothing` line when everything is
-    known and with "You cannot pay." short of the total, neither taking time. Pilgrim does not
+    known and with "You cannot pay." short of the total, neither taking time. Pious does not
     halve it (a temple's talent), nor does Lore.
   - **Muttering**: after each of its actions, a creature whose dialogue has a `mutter`, that goes
     about its routine (its mind calm) within 5 cells of the player (as far as a voice carries), mutters

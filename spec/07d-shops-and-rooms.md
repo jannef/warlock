@@ -488,7 +488,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       gameplay draw of the table's `kinds` (boon 35, nothing 30, bane 35), leaned by the side
       against the player's band's side: agreement (good and good, evil and evil) moves `lean`
       (15) from bane to boon, opposition from boon to bane, a neutral altar or a neutral player
-      nothing (Devout, §8 "Talents": an agreeing lean doubled, an opposed one none); then one
+      nothing (Pious, §8 "Talents": an agreeing lean doubled, an opposed one none); then one
       draw by weight among that kind's outcomes, its line said (one of its `messages`, drawn),
       and its hooks (`OutcomeEffect`, one existing system each: healing, cures, mending, mana,
       statuses (told by the outcome's line, not the status's own), hunger by states, objects
@@ -520,7 +520,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       toward level 2 is lost), *Forsaken* (a flaw talent of the birth signs the player lacks,
       kept for life in `Actor::boons`), *Damned* (2d4 hostiles of the floor's danger + 3, awake,
       around the altar). Talents an altar gave are shown "(altar)" (a flaw "(altar, flaw)").
-      Penitent (§8 "Talents") turns a great bane drawn into one of the nothing outcomes, drawn
+      Pious at its second rank (§8 "Talents") turns a great bane drawn into one of the nothing outcomes, drawn
       in its place; the explosion is moderate and still comes. No outcome grants a wish.
     - **The altar explodes** (the bane `burst`, 5 of the banes): "The altar bursts apart in
       fire!", then a fireball (3d6 fire, radius 2, `Caster::Place`) centred on the altar through
@@ -659,8 +659,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     heard is forgotten) and is unaware of everyone (§8 "Class abilities": a sneak attack lands
     on it). Nothing wakes it with time. It **wakes** (the status ends) when (1) a noise reaches
     it at least at its hearing threshold × its den's `wake` percent (100 to 1000; 100 outside a
-    den) where it lies (`World::spread_noise`, where every noise is heard; a noise the player
-    makes needs Hush-foot's percent more); (2) a blow or any harm leaves it alive
+    den) where it lies (`World::spread_noise`, where every noise is heard); (2) a blow or any harm leaves it alive
     (`World::hurt`); or (3) a neighbour **cries**: a sleeper that wakes cries out at once, a
     voice of its den's `cry` loudness where it lies (0 to 300; none outside a den), which may
     wake the next, and so on: a cascade, deterministic, each sleeper waking once. Light and
@@ -713,18 +712,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its `near` line said (not when they first see it from inside); the first time the player's
     cell is in a special room (after any action, or arriving there), the room is marked entered
     and its `enter` message is said; never again for that room. On every arrival on a level an
-    effect covers, its `pervade` line is said (with Sense of place, followed by "The whole level
-    is like a gloomy room."). Perception knows a room only once entered (with Sense of place, once
-    glimpsed; `PerceptionView::room`, on cells seen or remembered): look mode names it (§6); it
+    effect covers, its `pervade` line is said. Perception knows a room only once entered
+    (`PerceptionView::room`, on cells seen or remembered): look mode names it (§6); it
     never names the whole level's effect (`PerceptionView::pervading`, JSON dumps' `pervading`).
     The light it changes is seen like any light, before and after.
-  - **Talents** (system `special_rooms`, §8 "Talents"): Sense of place (a room known from a
-    glimpse; a whole level's effect named on arrival), Hush-foot (shadow; sleepers need twice
-    the noise to wake from anything the player does; #405), and Old delver (delver, two ranks,
+  - **Talents** (system `special_rooms`, §8 "Talents"): Old delver (delver, two ranks,
     #775: a collapsed floor never gives way under them, a room's or a level's Ebbing never
     takes them, and nothing they kill rises; at the second rank a room's quickening of healing
     and mana half again more, and one stack lifted from a tempting hoard before it seals). It
     merged #775's one-room talents (Light tread, Anchored mind, Grave warden, Hallowed rest,
-    Hoard-wise; Mirror-wise and Treasure sense, information only, were dropped). The class ability Consecrate (above) lifts an unholy room or level. System `prayer`: Devout (wayfarer; an altar of the player's
-    side leans twice as far, an opposed one not at all; #406) and Penitent (grit, Willpower 12;
-    a great bane becomes nothing; #407).
+    Hoard-wise; Mirror-wise and Treasure sense, information only, were dropped), and Pious
+    (wayfarer, two ranks, #788, which merged Devout, #406, Penitent, #407, and Pilgrim: at the
+    first rank an altar of the player's side leans twice as far, an opposed one not at all, and
+    a temple's services cost half; at the second, Willpower 12 and level 10, a great bane
+    becomes nothing). #787 cut Sense of place and Hush-foot. The class ability Consecrate
+    (above) lifts an unholy room or level.

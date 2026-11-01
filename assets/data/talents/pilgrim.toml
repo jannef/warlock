@@ -1,7 +1,0 @@
-[[talent]]
-id = "pilgrim"
-name = "Pilgrim"
-tree = "wayfarer"
-description = "You have knelt in many temples: their cures and mendings cost you less, and a cure leaves you stronger."
-effects = [{ kind = "pilgrim" }]
-systems = ["talk"]

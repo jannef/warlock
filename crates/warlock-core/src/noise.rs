@@ -296,22 +296,10 @@ pub fn noise(
     let loudness = match act {
         // Hide in plain sight: no footsteps at all while Unburdened.
         Act::Step(_) if talents.silent_unburdened && burden == Burden::Unburdened => 0,
-        Act::Step(to) => {
+        Act::Step(_) => {
             let quieter = actor.mods(content).get(ItemEffect::Stealth);
             let loudness = crate::magic::mods::less(u64::from(loudness), quieter);
-            // Camouflage: quieter under the open sky (no roof over the cell stepped to).
-            let roofed = level
-                .terrain
-                .get(to)
-                .is_some_and(|t| content.terrain(*t).roofed);
-            let sky = level.kind.is_sky_exposed() && !roofed;
-            let percent = talents.footsteps_percent
-                + if sky {
-                    talents.sky_footsteps_percent
-                } else {
-                    0
-                };
-            TalentMods::scaled(loudness, percent) as u32
+            TalentMods::scaled(loudness, talents.footsteps_percent) as u32
         }
         Act::OpenDoor(_) | Act::CloseDoor(_) if talents.silent_doors => 0,
         Act::Kick(_) => TalentMods::scaled(u64::from(loudness), talents.kick_noise_percent) as u32,

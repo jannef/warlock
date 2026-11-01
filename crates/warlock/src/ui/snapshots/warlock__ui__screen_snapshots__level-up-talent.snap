@@ -6,7 +6,7 @@ expression: "render(case, content.clone())"
  Your athlet│                                                                          │
             │ Vigour                                                                   │
             │ > a  Deep lungs                       Your stamina holds a good deal mo… │
-            │   b  Hardy                       1/3  Tougher than most: more hit point… │
+            │   b  Hard training                    You drill every day: everything y… │
             │   c  Healthy                          Your hit points come back a quart… │
             │ Might                                                                    │
             │   d  Brawn                       1/2  Your blows up close hit harder: 1… │
@@ -19,26 +19,26 @@ expression: "render(case, content.clone())"
             │   i  Wand mastery                     You draw more from a wand than it… │
             │   j  Weapon focus (long blades)       You have drilled with one kind of… │
             │ Guard                                                                    │
-            │   k  Armour training             1/2  You move freely in armour: it ham… │
+            │   k  Armour training             2/2  You move freely in armour: it ham… │
+            │   l  Stalwart                         Standing on the defensive costs y… │
             │ Shadow                                                                   │
-            │   l  Keen ears                   1/2  You hear fainter sounds, fainter … │
-            │   m  Night eyes                       Your eyes grow used to the dark: … │
+            │   m  Keen ears                   1/2  You hear fainter sounds, fainter … │
+            │   n  Lamplighter                      You tend your lantern well: it bu… │
             │ Wayfarer                                                                 │
-            │   n  Devout                           You pray as one who means it: an … │
-            │   o  Pilgrim                          You have knelt in many temples: t… │
-            │   p  Sense of place                   You read a place at a glance: a s… │
-            │   q  Sun-blessed                      The sun mends you: under the open… │
-            │   r  Swimmer                          Water does not slow you: you wade… │
+            │   o  Pious                       1/2  You keep the old observances: an … │
+            │   p  Swimmer                          Water does not slow you: you wade… │
             │ Scholar                                                                  │
-            │   s  Apprentice                  1/3  You take up a skill you lack, or … │
-            │   t  Clear mind                       A mind at peace gathers its stren… │
-            │   u  Deep well                   1/3  Your power runs deep: more mana f… │
-            │   v  Quick study of the body          What you drink teaches your body … │
+            │   q  Apprentice                  1/3  You take up a skill you lack, or … │
+            │   r  Clear mind                       A mind at peace gathers its stren… │
+            │   s  Deep well                   1/3  Your power runs deep: more mana f… │
+            │ Spellcraft                                                               │
+            │   t  Keen mind                        One school of magic, or one eleme… │
+            │   u  Quick study                      Spells come easily to you: you le… │
+            │   v  School focus                     You have made one school of magic… │
             │                                                                          │
             │ Your stamina holds a good deal more.                                     │
             │                                                                          │
             │                                                                          │
             │                                                                          │
             │ a-v or Enter choose   > < page                                           │
-            └──────────────────────────────────────────────────────────────────────────┘
- The Hub  ·  HP 28/28  ·  MP 5/5  ·  Sta 10/10  ·  Lv 3  ·  08:00  ·  11 Darkening       ? controls
+ The Hub  · └──────────────────────────────────────────────────────────────────────────┘ ? controls

@@ -25,18 +25,18 @@ kit = [
 ]
 # Bonus talents from Weaponcraft and Wayfarer.
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["weaponcraft", "wayfarer"] }
-# The level table (spec §8 "Class abilities"). Evasion is the Finesse talent, given. Rapid shot
-# and Volley move onto a Focus pool with the alternative resources (#225).
+# The level table (spec §8 "Class abilities"). Evasion is the Finesse talent, given; Stalker's
+# eye is the ranger's own (#788). Rapid shot and Volley move onto a Focus pool with the
+# alternative resources (#225).
 abilities = [
     { level = 1, talent = "favoured_prey" },
     { level = 1, talent = "trained_wind" },
+    { level = 2, talent = "stalkers_eye" },
     { level = 6, talent = "tracker" },
     { level = 6, talent = "barkskin" },
     { level = 12, talent = "rapid_shot" },
     { level = 18, talent = "woodland_stride" },
-    { level = 25, talent = "swift_tracker" },
     { level = 32, talent = "evasion" },
-    { level = 40, talent = "camouflage" },
     { level = 50, talent = "volley" },
     { level = 60, talent = "master_hunter" },
 ]

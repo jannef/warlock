@@ -37,7 +37,5 @@ abilities = [
     { level = 18, talent = "inspire" },
     { level = 25, talent = "jack_of_all_trades" },
     { level = 32, talent = "throw_voice" },
-    { level = 40, talent = "honeyed_words" },
-    { level = 50, talent = "legend" },
     { level = 60, talent = "virtuoso" },
 ]

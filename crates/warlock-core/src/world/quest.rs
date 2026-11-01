@@ -747,8 +747,7 @@ impl World {
         self.say(format!("Quest complete: {}.", def.name));
         self.train_stat(StatUse::Quest);
         let who = capitalized(&self.called(&self.state.actors[&id]));
-        // Class abilities (spec §8 "Class abilities": Well dressed, Folk hero, Magnate) make a
-        // quest pay more gold and experience.
+        // A talent (spec §8 "Talents": the half-elf's Diplomat) makes a quest pay more gold.
         let talents = self.state.player().talent_mods(&content);
         let mut stacks = def.reward.stacks(&content);
         if let Some(gold) = (content.object_id(crate::content::GOLD))
@@ -757,8 +756,7 @@ impl World {
             let more = TalentMods::scaled(u64::from(gold.count), talents.quest_gold_percent);
             gold.count = u32::try_from(more).unwrap_or(u32::MAX).max(1);
         }
-        let xp = TalentMods::scaled(u64::from(def.reward.xp), talents.quest_xp_percent);
-        let xp = u32::try_from(xp).unwrap_or(u32::MAX);
+        let xp = def.reward.xp;
         crate::rot::made_at(&mut stacks, &content, self.state.time);
         if !stacks.is_empty() {
             self.say(format!(

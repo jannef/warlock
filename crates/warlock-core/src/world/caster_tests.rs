@@ -27,11 +27,7 @@ pub(super) fn world_with(content: Arc<Content>, class: &str) -> World {
         .parse()
         .expect("a character");
     // Creation picks that no test here reads (a human's three: Versatile adds one).
-    let spec = spec.with_talents(vec![
-        "keen_ears".into(),
-        "lean".into(),
-        "long_strider".into(),
-    ]);
+    let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into(), "pious".into()]);
     let w = World::start_run(
         content.clone(),
         "showcase",
@@ -164,7 +160,6 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Cure wounds",
                 "Consecrate",
                 "Remove disease",
-                "Ward of faith",
                 "Purify",
                 "Divine health",
                 "Smite",
@@ -183,9 +178,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Call lightning",
                 "Nature's ward",
                 "Winter's friend",
-                "Sun and moon",
                 "Flame and frost",
-                "Timeless body",
             ],
         ),
         (
@@ -197,7 +190,6 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Hex of weakness",
                 "Poison lore",
                 "Cause wounds",
-                "Cauldron-wise",
                 "Second sight",
                 "Curse of sloth",
                 "Blight",
@@ -594,19 +586,6 @@ fn poison_lore_hurts_the_poisoned_more() {
     let mut events = Vec::new();
     w.afflict(target, poisoned, 1, None, &mut events);
     assert_eq!(w.lore_blow(player, target, hit).damage, 7);
-}
-
-#[test]
-fn timeless_body_keeps_a_disease_from_growing() {
-    let mut w = world("druid");
-    let mods = |w: &World| w.state.player().talent_mods(w.content());
-    assert!(!mods(&w).disease_still);
-    reach(&mut w, 60);
-    assert!(mods(&w).disease_still);
-    assert!(mods(&w).hunger_percent <= -50);
-    run(&mut w, "infect:the_shakes rest:24h*3");
-    let me = w.state.player();
-    assert!(!me.damage.is_damaged(), "no stat damage: {:?}", me.damage);
 }
 
 #[test]

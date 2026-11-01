@@ -258,7 +258,7 @@ impl World {
             _ => {}
         }
         self.pay_active(id, events);
-        let vitalless = !self.has_vitals_for(player, target);
+        let vitalless = !self.has_vitals(target);
         let blow = self.player_blow_with(target, seen, profile, events);
         if effect == WeaponDoes::SureCritical {
             self.no_vital_spot(vitalless, blow);
