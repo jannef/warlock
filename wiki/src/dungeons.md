@@ -73,7 +73,21 @@ The [Delver](talents.md#delver) tree's **[Quiet delver](talents.md#talent-quiet-
 
 ## The dungeons
 
-**Cealdhlāw**, the cold barrow, is the Ascmearc's first dungeon, its way in on the downs of
+**Lytelscræf**, the little cave, is the easiest place to start: its mouth opens in the foot of
+the western wall two cells from Beorggeat, where you come into the Ascmearc, and you see it
+from your first step. It is three short floors of cave at [danger](#who-lives-there-and-how-many) 1, 2, and 3,
+thinly peopled by the weakest things in the land and nothing else: [giant rats](creatures.md#creature-rat),
+[cave bats](creatures.md#creature-bat), [cave beetles](creatures.md#creature-beetle),
+[grave worms](creatures.md#creature-grave-worm), and [kobolds](creatures.md#creature-kobold). No
+[stray](#who-lives-there-and-how-many) from elsewhere comes in, and none from
+[deeper down](#who-lives-there-and-how-many). Its [traps](traps.md) are a few
+[pits](traps.md#trap-pit) and [arrows](traps.md#trap-arrow); it has no [shop](shops.md) and no
+[special rooms](special-rooms.md). On its third floor, always, is the **kobolds' cache**: two
+[kobolds](creatures.md#creature-kobold) keeping a [chest](chests.md) that is neither
+[locked](chests.md#locked-chests) nor [trapped](chests.md#trapped-chests), filled as any chest
+of that floor would be. On the first floor the cave smells of wet stone and rats.
+
+**Cealdhlāw**, the cold barrow, is the first of the Ascmearc's deeper dungeons, its way in on the downs of
 Hlāwdūn east of Cēaptūn. Its first two floors are the barrow's passages and chambers; the four
 below are the hollows of the hill, wide caves. It is [cold](temperature.md) (8 °C), its traps are [arrows](traps.md#trap-arrow), [spears](traps.md#trap-spear),
 [pits](traps.md#trap-pit), and [alarms](traps.md#trap-alarm), and its dead walk: crawling hands and the bones of rats and wolves, [skeletons](creatures.md#creature-skeleton)

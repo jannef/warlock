@@ -1,0 +1,36 @@
+# Lytelscræf, "the little cave" (#792; docs/design/campaign.md §5.8, §7.1; the fields:
+# data/dungeons.toml): a cave in the foot of Grægweall, two cells from Beorggeat, where the
+# player comes down. The Ascmearc's first and easiest dungeon: three short floors of vermin and
+# a few kobolds, and the kobolds' cache at the bottom with a chest for certain.
+
+[[dungeon]]
+id = "lytelscraef"
+name = "Lytelscræf"
+arrival = "The cave smells of wet stone and rats."
+generator = "caves"
+depth = 3
+# Short floors: the smallest caves the generator makes are 40x30.
+size = [60, 30]
+traps = ["pit", "arrow"]
+traps_per_level = [1, 2]
+loot = [1, 3]
+temperature = 6
+# Danger 1 on the first floor to 3 on the third (spec §7 "Danger levels"); nothing scales with
+# the player. The weakest of what lives in the campaign: rats, bats, beetles, grave worms, and
+# kobolds, all of level 1 or 2, so a first-level character of any class can clear it.
+danger = 1
+population = ["rat", "bat", "beetle", "grave_worm", "kobold"]
+# Only its own folk, and none drawn deeper: nothing tougher strays in.
+stray = 0
+out_of_depth = 0
+# A thin population: about a dozen on a floor.
+population_count = { per_1000 = 15, least = 8, most = 16 }
+# A cave of vermin keeps no shop (spec §7 "Shops"), and no special room (spec §7 "Special
+# rooms"): a teeming den's swarm would be too much for a first fight.
+shops = { chance = 0 }
+room_effects = { chance = 0 }
+
+# The bottom: the kobolds' cache, with its chest.
+[[dungeon.levels]]
+from = 3
+vaults = ["kobolds_cache"]

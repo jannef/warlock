@@ -3,7 +3,9 @@
 # grassland 50, forest 90, hills 120, swamp and dense forest 150, a ford 30).
 #
 # The player comes in by Beorggeat (P), the pass in Grægweall, the western wall: a closed way back,
-# with no level behind it. The road runs five cells east to Cēaptūn (T), the market town at the
+# with no level behind it. Two cells from it, in the foot of the wall, is Lytelscræf (8, the little
+# cave), the starter dungeon, in sight from the start: the one place closer than six cells to
+# another, on purpose (#792). The road runs five cells east to Cēaptūn (T), the market town at the
 # crossroads, then on east over Hlāwdūn, the barrow downs, past Cealdhlāw (1, the cold barrow), to
 # the ford (%) over Blæcwæter and the village beyond (Fordwīc's site, the road's end at 94, 28).
 # South, the road crosses Beorhtburna by the bridge (b) and follows its south bank to Fennhām's
@@ -55,7 +57,7 @@ MMMMMMMMMM."..""""="""""""hhhhhhhhhhhhhhhhhhfffffffffffffffff"ff""""""hhhhhhhhhh
 MMMMMMMMMM""""""""="""""hhhhhhhhhhhhhhhhhhhhhffffffffffffff"""""""""""""hhhhhhhhhhhhhhhhh↙↙hhhhhhhhhhhhhhhh"""""........
 MMMMMMMMMMMM""""""="""""hhhhhhhhhh1hhhhhhhhhhhhfffffffffffff""""""""""""hhhhhhhhhhhhhhhh↙↙hhhhhhhhhhhhhhhh""""""".......
 MMMMMMMMMMMMMM""""="""hhhhhhhhhhhhhhhhhhhhhhhhhh"""f""f"""f""""""""""""""""hhhhhhhhhhhh↙↙hhhhhhhhhhhhh""""""""""""......
-MMMMMMMMMMMMMM""""="""hhhhhhhhhhhhhhhhhhhhhhh"hh"""""""""""""""""""""""""""""hhhhhhhhh↙↙hhh"hhhhhhhhh"""""""""""""......
+MMMMMMMMMMMMMM8"""="""hhhhhhhhhhhhhhhhhhhhhhh"hh"""""""""""""""""""""""""""""hhhhhhhhh↙↙hhh"hhhhhhhhh"""""""""""""......
 MMMMMMMMMMMMP=====T==================================================================%%========"""h"""""""""""""""""....
 MMMMMMMMMMMMMM""""="""""hhhhhhhhhhhhhhhhhhhhhhh"""""""""""""""""""""""""""""""hhhhhh↓↓hh""""""""""""""""""""""""""""....
 MMMMMMMMMMMMMM""""=""""""hhhhhhhhhhhhhhhhhhh"h""""""""""""""""""""""""""""""""""....↓↓""""""""""""""""""""""""""""""""..
@@ -112,6 +114,8 @@ MMMMMMMMMMMMMMMMMMM.ff..................................."......................
 "P" = { terrain = "mountain_pass", spawn = "player", name = "Beorggeat", note = "The way you came; snow has closed it behind you." }
 "T" = { terrain = "town", name = "Cēaptūn", to = "ceaptun" }
 "1" = { terrain = "barrow", name = "Cealdhlāw", to = "cealdhlaw:1" }
+# The little cave in the foot of the wall, two cells from the pass: the first and easiest dungeon.
+"8" = { terrain = "cave_mouth", name = "Lytelscræf", to = "lytelscraef:1" }
 "2" = { terrain = "swamp", hidden = { id = "fennmynster", terrain = "dungeon_entrance", to = "fennmynster:1", name = "Fennmynster" } }
 "3" = { terrain = "hills", hidden = { id = "fyrdelf", terrain = "mine", to = "fyrdelf:1", name = "Fyrdelf" } }
 # The four lairs of the wanted (docs/design/adventurers-guild.md §8), on reserved sites: Wat

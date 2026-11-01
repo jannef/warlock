@@ -854,6 +854,8 @@ mod homes_tests;
 #[cfg(test)]
 mod lairs_tests;
 #[cfg(test)]
+mod lytelscraef_tests;
+#[cfg(test)]
 mod scriptorium_tests;
 #[cfg(test)]
 mod seeds_tests;
