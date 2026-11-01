@@ -636,9 +636,9 @@ Every system the design added meets the coverage bar (`assets/data/talents.toml`
   technique, Drillmaster).
 - `stamina` has 5 (Trained wind, Deep lungs, Steady breathing, Armour-breaker, Drillmaster;
   Second breath and Bellows were cut in #774).
-- `stat_training` has 4 (Hard training, Late bloomer, Gourmand, Cauldron; #726; Hard-won and
+- `stat_training` has 2 (Gourmand, Cauldron; #726; Hard-won and
   Gifted were cut in #774, Ascetic became a `hunger` talent in #775, and Quick study of the
-  body, Hard living, and Discipline were cut in #787).
+  body, Hard living, and Discipline were cut in #787, Hard training and Late bloomer in #791).
 - `potions` has 2 (Thrifty drinker, Lasting draughts; Nose for draughts and Cauldron-wise were
   cut in #787).
 

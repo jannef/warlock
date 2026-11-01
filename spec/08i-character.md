@@ -830,14 +830,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a hit, any attack, at a target that has not seen the attacker (`World::unaware`, §8
     "Surprise and sneak attacks") or is Surprised; the die is drawn only then,
     `world/ambush.rs`); `terrain_as` (a step onto these terrains costs one onto
-    another, `World::step_price`: Swimmer, still, running, and shallow water as floor; Marsh walker, marsh
-    and reeds as floor); `plunge_proof` (Swimmer: a plunge through ice does no harm and draws
-    nothing); `wading_proof` (Marsh walker: wading never exposes
-    to a disease, no draw); `beast_friend` (Beast-friend: creatures of `animal` factions are
+    another, `World::step_price`: Swimmer, still, running, and shallow water as floor);
+    `plunge_proof` (Swimmer: a plunge through ice does no harm and draws
+    nothing); `beast_friend` (Beast-friend: creatures of `animal` factions are
     neutral to the player until they attack one, `Progress::empathy_broken` by creature type,
     saved; read by `World::stance`, the AI's choice of a hostile, and look mode). #787 cut
     Pathfinder, Winter-born, and Sun-blessed (`sun_healing` with it), and folded the `weather`
-    system into `travel`, the outdoors. Silent feet also counts toward
+    system into `travel`, the outdoors; #791 cut Marsh walker (outdoors only; `wading_proof` is
+    Nature's ward's now). Silent feet also counts toward
     the hearing system. The light and factions systems are held to the bar since it is one
     talent (#773). The `awareness` system came off `pending` with
     surprise (#681, §8 "Surprise and sneak attacks"): Wary (Delver, Willpower 12,
@@ -943,7 +943,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     effect kind with it is that talent's next rank; the load refuses either, but for the pairs
     `alike` lists in `data/talents.toml` (Cleave and Cleaving strike, which stack into a great
     cleave; the birth signs' gifts). A pickable a class table gives that the character already
-    picked brings a talent pick in its place at that level. A talent names a system only if
+    picked brings a talent pick in its place at that level. **Flaws, the outdoors, hidden marks,
+    information, shop favour** (#791): a flaw's cost shows up on an ordinary dungeon floor, and
+    no two sources share one (the horoscope's flaws are kept as they are); a talent that works
+    only outdoors or in one season is niche unless it also does something underground; an
+    effect on stat-training marks, which are never shown, is at least twice a common source's,
+    or the talent has a visible effect beside it; a whole talent of information goes, an
+    information half of a good talent may stay; and Haggler (the merchant's) is the one class
+    ability on shop favour, with no new source among the pickables or the class tables (the
+    half-elf's Diplomat and the horoscope's Dragon's hoard stay). A talent names a system only if
     its effect reads that system. Resources are systems too: mana and the pools of #225 join the
     list with talents on their maximum, refill, and costs, and abilities that spend them carry
     their tag; a cost in a resource stands instead of a cooldown status, never beside one.
@@ -1056,14 +1064,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Smite (the paladin's own talents, so Smite works only for a priest of the good side), Miracle, Saint
     (healing +100 %).
   - **Druid**: Beast-friend (the Wayfarer talent, given; its copy Wild empathy until #790), Spark (level 1, at 1: a bolt, 1d4 electricity;
-    1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Woodland stride (the ranger's: forest floor,
-    bush, reeds, tall grass, marsh as grass), Nature's ward
-    (wading never sickens; poison eases twice as fast), Winter's friend (ice holds the body's
-    weight alone, plunges never hurt, climbing out is free), Call lightning (at 12; level 11: a line of
+    1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Nature's ward
+    (wading never sickens; poison eases twice as fast), Call lightning (at 12; level 11: a line of
     8 cells, 2d6 electricity, its ladder Willpower 13: 3d6 to 25: 5d6+2, a thunderclap; open
     sky only; 20 mana), Flame and frost (two spells, Flame: level 12, the fireball's
     burst, 3d6 fire, radius 2, blast, 29 mana; Frost: level 6, 2d6 cold, freezes water, 14
-    mana).
+    mana). #791 cut Woodland stride (6; the ranger's 18 too) and Winter's friend (25), which
+    worked only outdoors: those levels are empty.
   - **Wizard**: Scroll adept (reading −50 %; the spell scrolls read a rung higher, scrolls only:
     the spell scaling design, decision 12),
     Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Arcane training
@@ -1139,8 +1146,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creatures in view have not noticed it, `sees_unaware`, above), Tracker (hears 3 fainter; every sound it hears placed at its
     own cell, `noise::Exact::All`), Rapid shot (grants Focus, §8 "Resources"; a shot loosed
     with `fire` while the ranger holds 2 focus spends them and takes 10 % less time, the whole
-    shot's price; with less it is an ordinary shot; `world/focus.rs`), Woodland stride (forest floor, bushes, reeds, tall grass, and marsh priced as
-    grass; their noise stays), Master hunter (bows and crossbows threat +1; Favoured
+    shot's price; with less it is an ordinary shot; `world/focus.rs`), Master hunter (bows and crossbows threat +1; Favoured
     prey +1 and +2 more); Sneak attack (#682: the class passive beside the Sneak attack skill,
     whose dice the thief trains, `2d6+10` and known for: it grants the Openings pool from level
     1, and those the thief catches unawares make their initiative check 2 harder,

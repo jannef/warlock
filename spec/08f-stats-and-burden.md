@@ -34,8 +34,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     a mark on its use, one draw of the **training** stream per rule below 100, never gameplay;
     marks never decay and have no cap (saturating at `i32::MAX`). A use may give several marks at
     once (`World::train_stat_times`, a potion's `marks`): one draw per mark below 100, none at
-    100; Hard training's `train_percent` (+50) raises every chance below 100 (the draws stay
-    as they are). A use that names its own stat (`drank`, `elixir`: the potion's) has rules without a
+    100. A use that names its own stat (`drank`, `elixir`: the potion's) has rules without a
     `stat`; every other use's rules have one. The chances are plentiful (the balance probe, #727,
     `docs/balance.md` "Stat training": 70 to 600 marks a game day in a stat a build lives by
     from level 10, 2 to 3 in one it does not use). The uses (`StatUse`), each
@@ -106,10 +105,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     drop, while Overloaded; Dexterity, chance 10), `knew_better` (a trap the player knew of sprung
     under them by stepping onto it; Intelligence 20), `caught` (caught stealing, by a keeper or
     anyone; Presence 20). Bad luck alone (a hidden trap, a blow, a disease or drain check lost)
-    takes nothing. **Talents** (#726; one `TalentMods` field each, one read): Late bloomer (level
-    20, `ramp_ease` 1: `over` counted one fewer, the first point past the potential at the base)
-    through `StatTraining::eased_price` in `settle` (#787 cut the barbarian's Hard living and
-    the monk's Discipline, `no_deed` and `use_marks` with them). A deed that takes a pile from out of the drop's play (`quarter × |m| < L`, or
+    takes nothing. **Talents**: Gourmand and the witch's Cauldron (a fresh corpse's marks
+    twice over, §8 "Hunger"); #787 cut the barbarian's Hard living and the monk's Discipline
+    (`no_deed` and `use_marks`), and #791 Hard training (`train_percent` +50) and Late bloomer
+    (`ramp_ease`): marks are never shown, so an effect on them is at least ×2 or has a visible
+    half beside it. A deed that takes a pile from out of the drop's play (`quarter × |m| < L`, or
     `m ≥ 0`) to within it warns at once in words ("You feel your strength wasting.", "Your hands
     feel less sure.", "You feel your health failing.", "Your mind feels dull.", "Your will feels
     brittle.", "You feel small and unregarded."), so the warning always precedes a drop. A rise
