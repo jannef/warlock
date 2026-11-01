@@ -93,7 +93,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     each with what it hands out and kept in `Actor::boons` as the forgotten altar's Chosen and
     Forsaken are (`World::bestow`), so every restore puts it back; never a given, class, or flaw
     talent as a `talent`, and never one held (the roll skips a line that would give one held or
-    given by an earlier line; a class table that names it later gives nothing in its place); the
+    given by an earlier line; a class table that names it later gives a talent pick in its place,
+    #790); the
     Talents page and the `talents` dump mark it "(story)" or "(story, flaw)". **No caps and no protection** (the owner, 2026-10-29):
     nothing is counted across chapters; only a line's own worth is checked against its tier at
     load (rare and fateful lines never cost anything). It is told in `World::start_run` after the
@@ -682,8 +683,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     learner (cut in #774), Alert, Thick skin.
   - **Weaponcraft and Guard** (#238): `weapon` adds to the benefits of the chosen weapon skill
     or style (no `role`) or of every skill of a role, read in `Actor::benefit`, so every
-    attack, Defence, and price that reads a skill's benefits reads it: Weapon focus (+1 to hit),
-    Weapon specialization (+2 damage), Improved critical (threat one roll wider), Stylist (the
+    attack, Defence, and price that reads a skill's benefits reads it: Weapon focus (+1 to hit;
+    its second rank +2 damage, Weapon specialization before #790), Improved critical (threat one roll wider), Stylist (the
     style's benefits one rank higher, never past 10, and only for a rank held), Two-weapon
     training (both two-weapon penalties eased by 2), Shield expert (Shield +1; Sword and
     Board's free bash 10 more likely where it has one), Deadly aim (+2 damage with shots),
@@ -714,10 +715,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     each status's lowering of a score halved toward 0, raises untouched, `Effects::penalty_for`);
     `disease_checks` (Strong constitution, +2 on catching and on every progression) and
     `disease_recovery` (Fever-proof: a check fewer won in a row shakes a disease off, never
-    below 1, never one that does not recover); `free_blow` (Cleave, Great cleave, Riposte,
-    Opportunist); `kick_die` (Mighty kick: kicks at creatures roll 1d6) and `door_kick` (Mighty
-    kick and Breaker, +4 each to a door kick's Strength); `dig_percent` (Breaker: a quarter more
-    work a turn); `two_handed_price` (Iron grip: blows with a two-handed weapon 10 % cheaper,
+    below 1, never one that does not recover); `free_blow` (Cleave, its second rank Great
+    cleave, a talent of its own before #790; Riposte, Opportunist); `kick_die` (Mighty kick: kicks
+    at creatures roll 1d6) and `door_kick` (Mighty kick, +4 a rank to a door kick's Strength);
+    `dig_percent` (Mighty kick's second rank, Breaker before #790: a quarter more work a turn); `two_handed_price` (Iron grip: blows with a two-handed weapon 10 % cheaper,
     `World::attack_price`); `critical_status` (Staggering blow: a critical confirmed in melee
     leaves the target Staggered, `cost = 150` until its next action: that action half again
     as dear; `World::after_blow`, no draw of its own); `penetration` (Crusher: +2 on blows and kicks
@@ -738,7 +739,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (the aristocrat's Riposte at 18, the commoner's Second wind at 32). The player is given each
     at rank 1 as they reach its level ("You gain Fencing." with the level's news), level 1's at
     creation, and again whatever is missing when a run is restored, so a grown table reaches a
-    save; one already held (picked earlier) is not given again, and nothing is taken away. What
+    save; one already held (picked earlier, or a story's boon) is not given again: its level
+    brings a talent pick in its place instead ("You know Second wind already: choose a talent in
+    its place.", #790; not on a restore), and nothing is taken away. What
     a rank hands out once comes with it: hit points by level, and **stat gifts** (`stat`: score
     and potential, Iron will's Presence +1; a Toughness gift raises the hit points with the
     maximum). Its `bonus_talents` (`levels`, `trees`) add a **bonus pick** at those levels
@@ -935,7 +938,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     quests, or XP** (#789): from class level 40 on a class ability changes what the character
     can do in a fight or a dungeon, and there is no XP or quest-reward effect at or above level
     30; a quest-reward effect is judged by its total over a campaign's fixed pool, not its
-    percent. A talent names a system only if
+    percent. **No clones, no chains of one effect** (#790): a class table names the pickable's
+    id, never a talent that does the same, and a talent whose one talent prerequisite shares an
+    effect kind with it is that talent's next rank; the load refuses either, but for the pairs
+    `alike` lists in `data/talents.toml` (Cleave and Cleaving strike, which stack into a great
+    cleave; the birth signs' gifts). A pickable a class table gives that the character already
+    picked brings a talent pick in its place at that level. A talent names a system only if
     its effect reads that system. Resources are systems too: mana and the pools of #225 join the
     list with talents on their maximum, refill, and costs, and abilities that spend them carry
     their tag; a cost in a resource stands instead of a cooldown status, never beside one.
@@ -962,8 +970,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     effect (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
     `quivering_palm`) makes the talent that has it the ability's name and description in the
     menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Monk's
-    Deflect missiles is the ordinary talent, handed out. Shared entries (`divine_health` is
-    the paladin's, `purity_of_body` the monk's) are a talent each.
+    Deflect missiles is the ordinary talent, handed out. A shared entry is one talent the tables
+    name alike (`purity_of_body`: the paladin's, the priest's, and the monk's; Divine health was
+    its copy until #790).
   - **Bonus picks**: warrior (Weaponcraft or Guard) at 4, 10, 16, 22, 28, 34, 46, 58;
     barbarian (Might or Vigour), paladin (Guard or Vigour), monk (Finesse or Vigour) at 10, 20,
     30, 45, 55; as the bullet above says.
@@ -1001,7 +1010,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Raging's raises doubled, 10 more rage at most, Exhausted eases twice as fast), Unstoppable
     (while raging bleeding and poison tick nothing, and a blow that would take the last hit point
     leaves it for 10 rage, while that much is held); Divine grace
-    (disease checks +2, poison eases twice as fast), Divine health and Purity of body (no
+    (disease checks +2, poison eases twice as fast), Purity of body (no
     disease is ever caught: `World::expose` refuses, nothing rolled), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
     status that ticks and every disease, one degree of Drained); Martial arts (bare hands and
     kicks roll 1d6), Fleet (steps 10 % cheaper in no body armour and with no shield), Deflect
@@ -1043,10 +1052,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Blessed 10 min a degree: +1 to hit, Willpower +1; 3 mana), Cure wounds (level 3, at 3: a
     touch, 2d6; 2 casts; 2 mana), Remove disease (level 11, at 12: every disease and Poisoned;
     11 mana),
-    Purify (rotten food never sickens nor exposes; no draw), Divine health and
+    Purify (rotten food never sickens nor exposes; no draw), Purity of body and
     Smite (the paladin's own talents, so Smite works only for a priest of the good side), Miracle, Saint
     (healing +100 %).
-  - **Druid**: Wild empathy (`beast_friend`), Spark (level 1, at 1: a bolt, 1d4 electricity;
+  - **Druid**: Beast-friend (the Wayfarer talent, given; its copy Wild empathy until #790), Spark (level 1, at 1: a bolt, 1d4 electricity;
     1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Woodland stride (the ranger's: forest floor,
     bush, reeds, tall grass, marsh as grass), Nature's ward
     (wading never sickens; poison eases twice as fast), Winter's friend (ice holds the body's
@@ -1092,7 +1101,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **The ranger's, thief's, and bard's tables** (M30, #244; design §4.6–4.8, §4.1 B6): as the
   adventurers' above. Shared entries are the ordinary talents, handed out: Evasion (Finesse;
   the ranger's at 32, the thief's at 18) and Lore (Scholar; the bard's at 1). One the player
-  picked before its level comes is not given again.
+  picked before its level comes is not given again (a pick comes in its place). The bard's Fast
+  healer (Vigour) and the druid's Beast-friend (Wayfarer) are shared the same way (#790).
   - **The kill tally** (the design's B6, `Quests::kills`): every kill of the player's is
     tallied by level and creature type, whatever the type (kill quests read the same tally);
     `Quests::prey` is the type killed most, the first to get there of those tied (it changes
@@ -1142,8 +1152,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
     2 lower, never below 3; and its finisher, an active aimed in a direction, `use:master_thief:E`,
     for 5 openings: a melee blow that is a critical whenever it hits, with no confirmation roll,
-    `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Song of rest
-    (resting heals half again as fast), Jack of all trades (every trained skill counts 5
+    `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Fast healer
+    (the Vigour talent, given at 12; its copy Song of rest until #790: resting heals half again
+    as fast), Jack of all trades (every trained skill counts 5
     higher, as a skill bonus in `Actor::skill_effect`), Virtuoso (Inspire gives Inspired greatly, to
     hit +2 and Dodge +2 for 10 minutes, for nothing: neither mana nor inspiration).
   - **Resources**: the ranger's Focus (R2, #250), the thief's Openings (R3, #251), and the

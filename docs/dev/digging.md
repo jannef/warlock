@@ -14,7 +14,7 @@ instead, `Action::UseTool`, `world/lamp.rs`, #643) needs `Actor::dig_tool`; `sta
 `Spent::Dig(at)`, and `dig` runs `keep_at` with a `dig` action per turn
 (priced by `price_of`, so burden slows it): `dig_turn` makes `Act::Dig` noise (`DIG_NOISE` 80,
 `SoundKind::Digging`) and adds `dig_work(power, strength)` (power × (Strength score + 10), in
-`WORK_SCALE` = 20ths of a hardness point; the talents' `dig_percent` (Tunneler, Breaker) plus the
+`WORK_SCALE` = 20ths of a hardness point; the talents' `dig_percent` (Tunneler, Mighty kick's second rank) plus the
 worn `dig_percent` (a Delving affix) more) to `LevelState::dug` (saved, by position); at hardness ×
 20 `break_wall` sets the `becomes` terrain through `set_terrain` (light masks), clears the
 progress, bares `face`s around, and pushes `Event::WallBroken { pos, cause: Breach::Dug }`.
