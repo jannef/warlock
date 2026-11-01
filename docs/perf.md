@@ -87,6 +87,22 @@ objects design's open performance risk, §12). Its turns take 1.0 ms on average 
 most (budget 16 ms; `delf` 0.4 ms and 1.2 ms in the same run), so `Mods::worn` stays uncached.
 Its rest is cut short at once (the panoplies see the player), so the row times the walk only.
 
+Spell circles (#779, 2026-11-01, same machine): `bench-frames` has two more rows, `circle`, a
+hall of 48 peaceful kobolds each buffed, hexed, or both and the player with a buffs' and a
+hexes' circle, fifty circles in view (`xtask/src/bench_circles.rs`, the design's stress case,
+docs/design/buff-circles.md §10.3), and `c-off`, the same hall with the Spell circles switch off;
+their difference is the circles' own cost, printed after the table and not judged (it is the
+difference of two best-of-five runs, whose noise is of the budget's size).
+
+| Measurement | hub | vast | circle | c-off | fifty circles |
+|---|---|---|---|---|---|
+| Frame time, 2560x1440 | 0.893 ms | 0.902 ms | 0.990 ms | 0.940 ms | 0.050 ms (budget 0.2 ms) |
+| Frame time, 2560x1440, an earlier run | 0.901 ms | 0.901 ms | 0.986 ms | 0.944 ms | 0.042 ms |
+| Frame time, 1280x720 | | | 0.888 ms | 0.782 ms | 0.106 ms |
+
+The circles' CPU part is an `O(circles)` loop a frame plus one mesh of a quad each; the GPU part
+is one draw of fifty small quads. Within the budget at both sizes.
+
 Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
 submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the
 sleep granularity, not by rendering. All budgets are met with a large margin. Before lighting and

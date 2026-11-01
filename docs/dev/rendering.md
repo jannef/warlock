@@ -45,28 +45,52 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    grid and the free glyphs, `render/circles.rs::LAYER_Z` 0.5): `ui/circles.rs::emit` (in the
    map chain after `lighting::update`) builds, when `Game` changes, the list of circled actors
    from the snapshot (the player's `own_effects`, a seen creature's `effects_of`, through
-   `Content::runes()`), and each frame pushes a `CircleInstance` per actor (its `Motion`
-   position, the two circles' `angle`, `VisualLight::keep`) into `render::circles::Circles`
-   (emptied in `PreUpdate`, like `FreeGlyphs`). `render/circles.rs` holds the pure rule
+   `Content::runes()`), feeds it to `ui/circle_tracks.rs::Tracks` (the fades and glides, below),
+   and each frame pushes a `CircleInstance` per actor (its `Motion` position, a `Shown` per kind,
+   buffs and hexes, `VisualLight::keep`) into `render::circles::Circles` (emptied in
+   `PreUpdate`, like `FreeGlyphs`). `render/circles.rs` holds the pure rule
    (`layout(effects) -> Circle`: slots `n × ⌈3 / n⌉`, `min(n, 3)` rings, six effects at most,
    buffs inner, hexes outer; `angle`: 60 s clockwise, 45 s counter-clockwise, still at 0 and π
-   without `motion`; its unit tests are the design's §4 rows and sketches) and draws one dynamic
-   mesh of one quad per circle (`2 × extent` square), the circle packed into flat vertex
-   attributes (`pack`: a head of effects, hex, outer, line school, slots, and rings, and nine bits
-   a rune, slot and school), with `CircleMaterial` (`circles.wesl`: rings and the polygon as
-   signed distances one pixel wide at 18 px (`h / 18`), dashes along arc and side for a hex, an
-   upright rune square per slot; the sizes are mirrored constants, change both together; alphas
-   0.28 and 0.7; the school colours a uniform, palette-mapped in `ui/circles.rs`). The runes come
+   without `motion`; `slot_angle`: the glide's path; its unit tests are the design's §4 rows and
+   sketches) and draws one dynamic mesh of one quad per circle (`2 × extent` square), the circle
+   packed into flat vertex attributes (`pack`: a head of effects, hex, outer, line school, slots,
+   and rings, and nine bits a rune, slot and school; per kind the old figure's head and runes,
+   and `[angle, fade, blend, place]`), with `CircleMaterial` (`circles.wesl`: rings and the
+   polygon as signed distances one pixel wide at 18 px (`h / 18`, × `LINE_WEIGHT`), dashes along
+   arc and side for a hex, an upright rune square per slot; the sizes are mirrored constants,
+   change both together; alphas `LINE_ALPHA` 0.2 and `RUNE_ALPHA` 0.7; the school colours a
+   uniform, palette-mapped in `ui/circles.rs`).
+
+   **Circle motion** (`ui/circle_tracks.rs`, design §11): one `Track` per actor and kind, fed
+   each turn's circles (`update`) and read each frame (`settle`, then `shown`). A kind that
+   appears fades in over `render/circles.rs::FADE` (0.5 s), one that ends stays drawn as its
+   last figure while it fades out (its actor stays in the list), and a fade that turns goes on
+   from where it stood. A changed figure (`Ring::same_figure`: runes, count, kind) keeps the old
+   one as `from` and blends over `GLIDE` (0.4 s, `ease`: smoothstep): in the shader every slot up
+   to the larger count stands at `slot_angle(k, old, new, blend)`, its rune drawn whole when the
+   old and the new rune there agree, else cross-faded; rings beyond either count and the old and
+   new polygon fade by the blend; the line colour blends too. The hexes' kind stands at `place`
+   1 (the outer radii, which the shader mixes by it) while its actor has a buffs' track (a going
+   one too), else 0, and glides there over `GLIDE`. An actor no longer seen, a level change, or
+   the `circles` switch going off drops the tracks at once. Without animation (`motion` off,
+   reduced effects, or frozen visual time: `animate = motion && !frozen`, as `ui/motion.rs`)
+   every kind is `Shown::settled` and a going one is dropped: still and cut, and a
+   `--freeze-time` capture shows the settled figure at the frozen angle. The runes come
    from `render/rune_atlas.rs`: every rune of `runes.toml` rasterised from
    `assets/fonts/NotoSansJP-Runes.ttf` (a subset of Noto Sans JP Medium; `assets/fonts/README.md`
    has the `pyftsubset` command, and `every_rune_is_in_the_rune_font` checks it is current) into
    2× square slots with an empty one-texel border, one `R8Unorm` texture sampled linearly,
    rebuilt when the cell height changes. The `circles` switch turns the drawing off; reduced
    effects leaves it on and only stills it (as `motion` off does). With `glow` on the school
-   colours are `post::emissive` by `ui/circles.rs::CIRCLE_GLOW` (0.15). The light about a circled
+   colours are `post::emissive` by `ui/circles.rs::CIRCLE_GLOW` (0.1). The light about a circled
    actor is core's (the status's `light`, docs/dev/status-effects.md), drawn by the lighting pass
-   like any carried light, its UV tint only for UV eyes; the circle switch never hides it. No
-   fades or glides yet (a cut); check with `--scenario circles` captures (the golden `circles`).
+   like any carried light, its UV tint only for UV eyes; the circle switch never hides it. Check
+   with `--scenario circles` captures (the golden `circles`, at `freeze_time = 1`: settled);
+   a capture without `--freeze-time` at a low `--capture-after-frames` shows the fade in. The
+   tuning (#779): rings and sides from 0.28 to 0.2 opaque and the glow from 0.15 to 0.1, after
+   captures at the default font where three rings 1.8 px apart read as one bright band;
+   the runes, the sizes, and the speeds are as designed. Frame cost: `cargo xtask
+   bench-frames`' `circles` row (`xtask/src/bench_circles.rs`: fifty circles, `docs/perf.md`).
 3. **UI console**: the same console material over the whole window; unwritten cells are
    transparent.
 

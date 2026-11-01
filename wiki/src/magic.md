@@ -303,6 +303,12 @@ do: which buffs and hexes, never how strong or for how long.
   inside and the hexes' around it.
 - The runes go in the order the status bar lists the statuses, so the same buffs always make the
   same figure.
+- **A circle fades in** over half a second when the first buff or hex begins, and out as long
+  when the last ends. When one begins or ends while others go on, the figure changes over 0.4
+  seconds: the runes glide round the ring to their new corners, and the old figure and rings fade
+  into the new. A hexes' circle moves outward when a buff's circle comes inside it, and back in
+  once that one is gone. With Reduced effects or Slides, camera off, none of this moves: a circle
+  appears, changes, and goes at once.
 
 Every buff shows on a creature, whatever gave it: look mode names a hasted creature "quickened",
 a bark-skinned one "bark-skinned", one that drank a [potion of might](potions.md#potion-of-might) "fortified" (see

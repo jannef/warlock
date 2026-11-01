@@ -9,13 +9,15 @@
 //! - `golden [--update | --local]`: compare headless captures with `tests/golden/*.png`.
 //! - `wiki [--build | --check-links]`: write the player wiki's generated tables (`--build`: run
 //!   mdBook; `--check-links`: also check every link and anchor in the built book).
-//! - `bench-frames`: release-mode frame-time measurement of offscreen captures.
+//! - `bench-frames`: release-mode frame-time measurement of offscreen captures (the hub, the
+//!   vast level, and fifty spell circles, `bench_circles.rs`).
 //! - `bench-turns`: release-mode turn-time table for the hub and the vast level.
 //!
 //! `target/` above is Cargo's target directory, wherever it is ([`target_dir`]): build output
 //! is looked for there and xtask's own output (`xtask/`, `web/`) goes there too.
 
 mod bench;
+mod bench_circles;
 mod golden;
 mod licenses;
 mod vast;

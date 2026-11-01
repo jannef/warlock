@@ -42,8 +42,10 @@ const OUTER_RUNE_RADIUS: f32 = 1.88;
 const DASH: f32 = 0.2;
 const GAP: f32 = 0.12;
 // Opacity of the rings and sides, and of the runes.
-const LINE_ALPHA: f32 = 0.28;
+const LINE_ALPHA: f32 = 0.2;
 const RUNE_ALPHA: f32 = 0.7;
+// The rings' and sides' width, in pixels at the default font and scale 1.
+const LINE_WEIGHT: f32 = 1.0;
 
 struct Vertex {
     @builtin(instance_index) instance_index: u32,
@@ -51,10 +53,17 @@ struct Vertex {
     @location(0) position: vec3<f32>,
     // From the actor's centre, in pixels.
     @location(1) local: vec2<f32>,
-    // Cell height, inner angle, outer angle, darkening.
+    // Cell height, darkening.
     @location(2) shape: vec4<f32>,
+    // The buffs' circle and the hexes': `[head, runes 0-2, runes 3-5, the old figure's head]`.
     @location(3) inner: vec4<u32>,
     @location(4) outer: vec4<u32>,
+    // The old figures' runes: the buffs' two words, the hexes' two.
+    @location(5) olds: vec4<u32>,
+    // Each circle's angle, fade, blend (0 the old figure, 1 the new), and place (0 the inner
+    // radii, 1 the outer).
+    @location(6) inner_motion: vec4<f32>,
+    @location(7) outer_motion: vec4<f32>,
 };
 
 struct VertexOutput {
@@ -63,6 +72,9 @@ struct VertexOutput {
     @location(1) @interpolate(flat) shape: vec4<f32>,
     @location(2) @interpolate(flat) inner: vec4<u32>,
     @location(3) @interpolate(flat) outer: vec4<u32>,
+    @location(4) @interpolate(flat) olds: vec4<u32>,
+    @location(5) @interpolate(flat) inner_motion: vec4<f32>,
+    @location(6) @interpolate(flat) outer_motion: vec4<f32>,
 };
 
 @vertex
@@ -80,6 +92,9 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     out.shape = vertex.shape;
     out.inner = vertex.inner;
     out.outer = vertex.outer;
+    out.olds = vertex.olds;
+    out.inner_motion = vertex.inner_motion;
+    out.outer_motion = vertex.outer_motion;
     return out;
 }
 
@@ -104,12 +119,12 @@ fn dashed(s: f32, h: f32) -> f32 {
     return clamp(into + 0.5, 0.0, 1.0);
 }
 
-// Rune `k` (0 to 5) of a packed circle: its atlas slot and its school.
-fn rune_of(c: vec4<u32>, k: u32) -> vec2<u32> {
-    var word = c.y;
+// Rune `k` (0 to 5) of a circle's two rune words: its atlas slot and its school.
+fn rune_of(words: vec2<u32>, k: u32) -> vec2<u32> {
+    var word = words.x;
     var i = k;
     if k >= 3u {
-        word = c.z;
+        word = words.y;
         i = k - 3u;
     }
     let bits = (word >> (9u * i)) & 0x1ffu;
@@ -130,72 +145,124 @@ fn rune_coverage(slot: u32, q: vec2<f32>) -> f32 {
     return textureSampleLevel(runes, runes_sampler, p / size, 0.0).r;
 }
 
-fn circle(c: vec4<u32>, p: vec2<f32>, h: f32, angle: f32) -> Ink {
+// Where slot `k` stands on a figure changing from `was` slots to `to`, `blend` of the way, in
+// radians from the first corner (`circles.rs::slot_angle`): from its old place to its new.
+fn slot_angle(k: u32, was: u32, to: u32, blend: f32) -> f32 {
+    let at_old = TAU * f32(k) / f32(max(was, 1u));
+    let at_new = TAU * f32(k) / f32(max(to, 1u));
+    return mix(at_old, at_new, blend);
+}
+
+// Coverage of the sides of a regular `m`-gon inscribed in a circle of radius `r0`, its first
+// corner at angle `first`, at the pixel `d` from the centre at angle `theta`; dashed for a hex.
+fn polygon(m: u32, d: f32, theta: f32, first: f32, r0: f32, w: f32, hex: bool, h: f32) -> f32 {
+    if m < 3u {
+        return 0.0;
+    }
+    let mf = f32(m);
+    let sector = TAU / mf;
+    var phi = theta - first + sector * 0.5;
+    phi = phi - floor(phi / sector) * sector - sector * 0.5;
+    let apothem = r0 * cos(PI / mf);
+    var side = stroke(d * cos(phi) - apothem, w);
+    if hex {
+        let half_side = r0 * sin(PI / mf);
+        side *= dashed(d * sin(phi) + half_side, h);
+    }
+    return side;
+}
+
+// One kind's circle at `p`: `c` its ring words, `old` the runes of the figure it changes from
+// (whose head is `c.w`), `m` its angle, fade, blend, and place. Settled (blend 1, the old figure
+// its own) it is the figure alone; changing, the rings and the polygon cross-fade and every rune
+// glides from its old slot to its new one, changing its character on the way if it has to.
+fn circle(c: vec4<u32>, old: vec2<u32>, m: vec4<f32>, p: vec2<f32>, h: f32) -> Ink {
     var ink = Ink(0.0, vec3(0.0), 0.0, vec3(0.0));
     let n = c.x & 15u;
-    if n == 0u {
+    let fade = m.y;
+    if n == 0u || fade <= 0.0 {
         return ink;
     }
+    let angle = m.x;
+    let t = m.z;
     let hex = (c.x & 16u) != 0u;
-    let outer = (c.x & 32u) != 0u;
-    let line_school = (c.x >> 8u) & 7u;
-    var r0 = RING * h;
-    var rr = RUNE_RADIUS * h;
-    if outer {
-        r0 = OUTER_RING * h;
-        rr = OUTER_RUNE_RADIUS * h;
-    }
+    let o = c.w;
+    let on = max(o & 15u, 1u);
+    let r0 = mix(RING, OUTER_RING, m.w) * h;
+    let rr = mix(RUNE_RADIUS, OUTER_RUNE_RADIUS, m.w) * h;
     // One physical pixel at the default font and scale 1, more as the cells grow.
-    let w = max(h / 18.0, 1.0);
+    let w = max(h / 18.0, 1.0) * LINE_WEIGHT;
     let d = length(p);
     // The pixel's angle on screen (y down: clockwise), from the circle's turned origin.
     let theta = atan2(p.y, p.x);
     let along = theta - angle;
 
-    // Rings: one per effect, up to three (counted on the CPU, `Ring::rings`).
+    // Rings: one per effect, up to three (counted on the CPU, `Ring::rings`); one the old figure
+    // had and the new has not (or the other way) fades as the figure changes.
     let rings = (c.x >> 16u) & 3u;
+    let old_rings = (o >> 16u) & 3u;
     var line = 0.0;
-    for (var k = 0u; k < rings; k++) {
+    for (var k = 0u; k < max(rings, old_rings); k++) {
+        let weight = mix(select(0.0, 1.0, k < old_rings), select(0.0, 1.0, k < rings), t);
         let r = r0 + RING_GAP * h * f32(k);
         var cov = stroke(d - r, w);
         if hex {
             let s = (along - floor(along / TAU) * TAU) * r;
             cov *= dashed(s, h);
         }
-        line = max(line, cov);
+        line = max(line, cov * weight);
     }
 
     // The polygon: `slots` corners on the innermost ring (`Ring::slots`), the first at the top,
-    // turned.
+    // turned; while the count changes, the old polygon fades out as the new fades in.
     let slots = (c.x >> 12u) & 15u;
-    let m = f32(slots);
-    let sector = TAU / m;
+    let old_slots = (o >> 12u) & 15u;
     let first = angle - PI * 0.5;
-    var phi = theta - first + sector * 0.5;
-    phi = phi - floor(phi / sector) * sector - sector * 0.5;
-    let apothem = r0 * cos(PI / m);
-    var side = stroke(d * cos(phi) - apothem, w);
-    if hex {
-        let half_side = r0 * sin(PI / m);
-        side *= dashed(d * sin(phi) + half_side, h);
+    var side = polygon(slots, d, theta, first, r0, w, hex, h);
+    if old_slots != slots {
+        side = max(side * t, polygon(old_slots, d, theta, first, r0, w, hex, h) * (1.0 - t));
     }
     line = max(line, side);
-    ink.line = line;
-    ink.line_rgb = params.schools[line_school].rgb;
+    ink.line = line * fade;
+    let line_rgb = params.schools[(c.x >> 8u) & 7u].rgb;
+    let old_rgb = params.schools[(o >> 8u) & 7u].rgb;
+    ink.line_rgb = mix(old_rgb, line_rgb, t);
 
-    // The runes: upright squares about each slot's centre on the rune radius.
+    // The runes: upright squares about each slot's centre on the rune radius, each gliding from
+    // its old slot's place to its new one's.
     let size = params.rune_size * h;
-    for (var k = 0u; k < slots; k++) {
-        let a = first + sector * f32(k);
+    let words = c.yz;
+    for (var k = 0u; k < max(slots, old_slots); k++) {
+        let a = first + slot_angle(k, old_slots, slots, t);
         let centre = rr * vec2(cos(a), sin(a));
         let q = (p - centre) / size + vec2(0.5);
-        let rune = rune_of(c, k % n);
-        let cov = rune_coverage(rune.x, q);
+        let has_new = k < slots;
+        let has_old = k < old_slots;
+        let rune = rune_of(words, k % n);
+        let was = rune_of(old, k % on);
+        var cov = 0.0;
+        var rgb = vec3(0.0);
+        if has_new && has_old && all(rune == was) {
+            cov = rune_coverage(rune.x, q);
+            rgb = params.schools[rune.y].rgb;
+        } else {
+            var cov_now = 0.0;
+            if has_new {
+                cov_now = rune_coverage(rune.x, q) * t;
+            }
+            var cov_then = 0.0;
+            if has_old {
+                cov_then = rune_coverage(was.x, q) * (1.0 - t);
+            }
+            cov = max(cov_now, cov_then);
+            rgb = params.schools[select(was.y, rune.y, cov_now >= cov_then)].rgb;
+        }
         if cov > ink.rune {
             ink.rune = cov;
-            ink.rune_rgb = params.schools[rune.y].rgb;
+            ink.rune_rgb = rgb;
         }
     }
+    ink.rune *= fade;
     return ink;
 }
 
@@ -206,10 +273,10 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
         return vec4(0.0);
     }
     let h = in.shape.x;
-    let a = circle(in.inner, in.local, h, in.shape.y);
-    let b = circle(in.outer, in.local, h, in.shape.z);
-    // The two circles never overlap (the outer's rings clear the inner's runes): take each part
-    // from the one that has it.
+    let a = circle(in.inner, in.olds.xy, in.inner_motion, in.local, h);
+    let b = circle(in.outer, in.olds.zw, in.outer_motion, in.local, h);
+    // The two circles never overlap once settled (the outer's rings clear the inner's runes):
+    // take each part from the one that has the more of it.
     var line = a.line;
     var line_rgb = a.line_rgb;
     if b.line > line {
@@ -231,5 +298,5 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     }
     let rgb = (rune_rgb * ra + line_rgb * la) / alpha;
     // A spell effect's darkening dims it as it dims free glyphs.
-    return vec4(rgb * in.shape.w, alpha);
+    return vec4(rgb * in.shape.y, alpha);
 }
