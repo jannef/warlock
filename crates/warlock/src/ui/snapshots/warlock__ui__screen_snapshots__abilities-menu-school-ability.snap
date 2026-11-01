@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
                     │ Birth sign                                               │
                     │ > a  Transfixing stare         at a place you see        │
                     │ Spells                                                   │
-                    │   b  Ray of frost              level 1, 1 mana, aimed    │
+                    │   b  Ray of frost              3d8 cold, 1 mana, aimed   │
                     │ Skills                                                   │
                     │   c  Decipher script           not usable yet            │
                     │   d  Knowledge                 not usable yet            │
@@ -24,9 +24,9 @@ expression: "render(case, content.clone())"
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
+                    │                                                          │
                     │ a-g or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
 
