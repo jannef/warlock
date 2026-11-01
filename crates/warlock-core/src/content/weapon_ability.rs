@@ -8,7 +8,7 @@
 //! id = "rend"
 //! name = "Rend"
 //! description = "When both your blades bite in one attack, ..."
-//! skills = ["twin_blades"]   # one or more weapon skills, or one or more styles
+//! skills = ["twin_blades"]   # one or more weapon skills, styles, or schools of magic
 //! rank = 4
 //! kind = "triggered"
 //! trigger = "both_hands_hit" # or a list of triggers
@@ -39,7 +39,7 @@
 //! reach = 2
 //! ```
 
-use super::{ActionKind, Content, ContentError, StatusId, WeaponSkillId, duplicate_id};
+use super::{ActionKind, Content, ContentError, Role, StatusId, WeaponSkillId, duplicate_id};
 use crate::combat::Category;
 use crate::dice::Dice;
 use serde::Deserialize;
@@ -70,6 +70,11 @@ pub enum Trigger {
     Kill,
     /// A sneak attack of the actor's hits: its sneak dice land (`world/ambush.rs`).
     SneakAttack,
+    /// A spell of the actor's, paid in mana, lands on a creature: harms it, takes on it (a
+    /// hex), or heals it; a buff, a cure, or a utility lands on the caster (`world/cast.rs`).
+    /// Once per creature, an area's in ascending actor id; never for a miss, a scroll, or a
+    /// wand.
+    SpellLands,
     /// The actor is hit.
     Struck,
     /// A melee attack on the actor missed by its Parry.
@@ -89,12 +94,13 @@ pub enum Trigger {
 
 impl Trigger {
     /// Every trigger, in the wiki's order.
-    pub const ALL: [Trigger; 12] = [
+    pub const ALL: [Trigger; 13] = [
         Trigger::Hit,
         Trigger::Critical,
         Trigger::BigHit,
         Trigger::Kill,
         Trigger::SneakAttack,
+        Trigger::SpellLands,
         Trigger::Struck,
         Trigger::Parried,
         Trigger::Blocked,
@@ -112,6 +118,7 @@ impl Trigger {
             Trigger::BigHit => "big_hit",
             Trigger::Kill => "kill",
             Trigger::SneakAttack => "sneak_attack",
+            Trigger::SpellLands => "spell_lands",
             Trigger::Struck => "struck",
             Trigger::Parried => "parried",
             Trigger::Blocked => "blocked",
@@ -130,6 +137,11 @@ impl Trigger {
             Trigger::BigHit => "a hit of yours takes a third of the target's hit points",
             Trigger::Kill => "a blow, shot, or throw of yours kills",
             Trigger::SneakAttack => "a sneak attack of yours hits",
+            Trigger::SpellLands => {
+                "a spell you cast with your own mana lands on a creature (harms it, takes on it, \
+                 or heals it; a buff lands on you), each creature an area strikes; never a miss, \
+                 a scroll, or a wand"
+            }
             Trigger::Struck => "you are hit",
             Trigger::Parried => "a melee attack on you misses by your Parry",
             Trigger::Blocked => "a melee attack on you misses by your Shield",
@@ -505,7 +517,7 @@ fn resolve(spec: WeaponAbilitySpec, content: &Content) -> Result<WeaponAbility, 
     }
     let table = content.weapon_skills();
     if spec.skills.is_empty() {
-        return Err("`skills` names one or more weapon skills or styles".into());
+        return Err("`skills` names one or more weapon skills, styles, or schools".into());
     }
     let mut skills = Vec::new();
     for name in &spec.skills {
@@ -517,12 +529,14 @@ fn resolve(spec: WeaponAbilitySpec, content: &Content) -> Result<WeaponAbility, 
         }
         skills.push(id);
     }
-    let styles = skills
-        .iter()
-        .filter(|&&s| table.skill(s).is_style())
-        .count();
-    if styles != 0 && styles != skills.len() {
-        return Err("`skills` names weapon skills or styles, not both".into());
+    // Weapon skills, styles, or schools of magic (spec §8 "Weapon abilities"): one kind.
+    let kind = |s: WeaponSkillId| match table.skill(s).role {
+        Role::Style => 1,
+        Role::School => 2,
+        _ => 0,
+    };
+    if skills.iter().any(|&s| kind(s) != kind(skills[0])) {
+        return Err("`skills` names weapon skills, styles, or schools, never two of them".into());
     }
     skills.sort();
     if !(1..=MAX_ABILITY_RANK).contains(&spec.rank) {
@@ -967,6 +981,33 @@ mod tests {
             WeaponDoes::Status { status: s, turns: Some(_), on: On::Target, .. } if s == status("pinned")
         ));
         assert_eq!(Trigger::SneakAttack.id(), "sneak_attack");
+        // The school abilities (the spell scaling design §8.5): a school in `skills`.
+        let school = |ability: &str, skill: &str, rank: u8, on: On, effect: &str| {
+            let a = (content.weapon_abilities().iter())
+                .find(|a| a.id == ability)
+                .expect(ability);
+            let skill = content.weapon_skills().id(skill).expect(skill);
+            assert_eq!(
+                (a.skills.as_slice(), a.rank, a.triggers.as_slice()),
+                (&[skill][..], rank, &[Trigger::SpellLands][..]),
+                "{ability}"
+            );
+            assert!(
+                matches!(a.effect, WeaponDoes::Status { status: s, severity: 1, turns: None, on: o }
+                    if Some(s) == content.status_id(effect) && o == on),
+                "{ability}"
+            );
+            assert_eq!(
+                a.systems,
+                ["weapon_abilities", "schools", "spells", "status"],
+                "{ability}"
+            );
+        };
+        school("thunderstruck", "evocation", 10, On::Target, "staggered");
+        school("wasting", "necromancy", 10, On::Target, "weakened");
+        school("aegis", "abjuration", 7, On::Own, "spell_ward");
+        school("lulling", "enchantment", 10, On::Target, "sluggish");
+        assert!(!Trigger::SpellLands.defending());
         // Every trigger has an id the parser reads back.
         for t in Trigger::ALL {
             assert_eq!(Trigger::parse(t.id()), Ok(t));
@@ -1013,7 +1054,19 @@ mod tests {
             (
                 "skills = [\"duelist\", \"long_blades\"]\nrank = 4\nkind = \"triggered\"\n\
                  [weapon_ability.effect]\nkind = \"parry_missiles\"",
-                "not both",
+                "never two of them",
+            ),
+            (
+                "skills = [\"evocation\", \"long_blades\"]\nrank = 10\nkind = \"triggered\"\n\
+                 trigger = \"spell_lands\"\n[weapon_ability.effect]\nkind = \"status\"\n\
+                 status = \"staggered\"",
+                "never two of them",
+            ),
+            (
+                "skills = [\"conjuration\"]\nrank = 10\nkind = \"triggered\"\n\
+                 trigger = \"spell_lands\"\n[weapon_ability.effect]\nkind = \"status\"\n\
+                 status = \"staggered\"",
+                "unknown weapon skill `conjuration`",
             ),
             (
                 "skills = [\"duelist\"]\nrank = 11\nkind = \"triggered\"\n\

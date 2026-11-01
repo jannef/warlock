@@ -1,12 +1,14 @@
 # Weapon abilities (spec §8 "Weapon skills", "Fighting styles"; the combat progression design
-# §4): what a rank in a weapon skill or a fighting style teaches. One `[[weapon_ability]]` per
+# §4): what a rank in a weapon skill, a fighting style, or a school of magic teaches (a school's
+# are its school abilities, the spell scaling design §8.5). One `[[weapon_ability]]` per
 # file, named by its id; a campaign's data/weapon_abilities/ may add more. An ability names its
 # skills; a skill does not list its abilities. Every number is a first guess, kept here.
 #
 # Fields:
 #   id, name      its id and its name, as the abilities menu shows it ("Deep cut")
 #   description   what it does, in the game's words (no number the game hides)
-#   skills        the weapon skills, or the fighting styles (never both), whose rank teaches it
+#   skills        the weapon skills, the fighting styles, or the schools of magic (one kind,
+#                 never two), whose rank teaches it
 #   rank          the rank in one of them that teaches it (1 to 10); a weapon talent's ranks
 #                 (Stylist, Fencing) and Early mastery bring it sooner. A style's ability works
 #                 only while its holder fights in that style's grip
@@ -29,8 +31,13 @@
 #                 that rolls an attack on the actor, a bolt, a ray, or a touch, misses by its
 #                 Shield: what it holds counts), both_hands_hit (both blows of a
 #                 two-weapon attack hit one foe, which lives), approaches (a hostile steps up
-#                 beside the actor: its missile weapon or what it has ready to throw counts). A
-#                 switch effect (free_blow, parry_missiles) has none
+#                 beside the actor: its missile weapon or what it has ready to throw counts),
+#                 spell_lands (a spell the actor casts with its own mana lands on a creature:
+#                 harms it, takes on it as a hex, or heals it; a buff, a cure, or a utility
+#                 lands on the caster; once per creature, an area's each; never a miss, a
+#                 scroll, or a wand: the spell's school and caster style count; a status `on`
+#                 the target is never laid on the caster itself). A switch effect (free_blow,
+#                 parry_missiles) has none
 #   systems       the talent table's systems it touches (talents.toml's [[system]] ids)
 #   [weapon_ability.effect]   what it does, by `kind`, with only its own fields:
 #                 free_blow       `trigger`: riposte, cleave, great_cleave, opportunist, or

@@ -56,6 +56,7 @@ use super::reflect::{Shot, Turned};
 use super::spell::{Caster, burst_cells, cone_cells};
 use super::spell_rung::CastBy;
 use super::talk::capitalized;
+use super::weapon_ability::Fired;
 use super::{Actor, ActorId, AttackSkills, Cause, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::position_text;
@@ -63,7 +64,7 @@ use crate::action::{AttackKind, Event, ReadTarget, SpellShape};
 use crate::combat::{self, Attack, Category, Profile, Strike};
 use crate::content::{
     Bolt, Burst, Content, Grip, Resolution, Shape, SpellData, SpellPurpose, Stance, StatusId,
-    merge_rider,
+    Trigger, merge_rider,
 };
 use crate::content::{Effect as ItemEffect, ObjectId, SpellId};
 use crate::damage::{Damage, Kinds};
@@ -292,7 +293,7 @@ impl World {
         };
         let done = match cast.def.kind {
             SpellPurpose::Buff => self.cast_buff(cast, events),
-            SpellPurpose::Heal => self.cast_heal(cast, at),
+            SpellPurpose::Heal => self.cast_heal(cast, at, events),
             SpellPurpose::Cleanse => self.cleanse(cast, events),
             SpellPurpose::Hex => self.cast_hex(cast, at, events),
             SpellPurpose::Damage => self.cast_damage(cast, at, events),
@@ -301,7 +302,7 @@ impl World {
                     Some(ReadTarget::Item(on)) => Some(on),
                     _ => None,
                 };
-                self.cast_identify(cast, on)
+                self.cast_identify(cast, on, events)
             }
             SpellPurpose::Utility => {
                 self.say("Nothing happens.");
@@ -379,13 +380,38 @@ impl World {
     /// `cast` reached creature `other` (spec §8 "Weapon skills": "Schools of magic"): its
     /// [`Outcome`] weighs the strongest creature struck at, and `landed` (a harm done, a hex
     /// taken, a heal given, a buff or a cure or a utility's work done) makes it a success. The
-    /// one place every kind reports a landing.
-    fn spell_landed(&self, cast: &Cast<'_>, other: ActorId, landed: bool) {
+    /// one place every kind reports a landing, and so where a cast paid in mana that `landed`
+    /// raises the school abilities' trigger (spec §8 "Weapon abilities": `spell_lands`; the
+    /// spell scaling design §8.5) with the cast's school and caster style, for `other` if it
+    /// lives. A lookup when nothing has the trigger: no draw.
+    fn spell_landed(
+        &mut self,
+        cast: &Cast<'_>,
+        other: ActorId,
+        landed: bool,
+        events: &mut Vec<Event>,
+    ) {
         let mut outcome = cast.outcome.get();
         let level = self.level_of(other);
         outcome.level = Some(outcome.level.map_or(level, |l| l.max(level)));
         outcome.landed |= landed;
         cast.outcome.set(outcome);
+        if !landed
+            || !matches!(cast.pay, Pay::Mana(_))
+            || self.state.death.is_some()
+            || !self.state.actors.contains_key(&other)
+        {
+            return;
+        }
+        let player = self.state.player;
+        let skills = self.state.player().spell_skills(&self.content, cast.def);
+        let fired = Fired {
+            other,
+            kind: AttackKind::Spell,
+            skills,
+            blow: None,
+        };
+        self.weapon_trigger(player, Trigger::SpellLands, fired, events);
     }
 
     /// A buff: its status on the caster, at the degrees its ladder and hooks give.
@@ -396,7 +422,7 @@ impl World {
         let player = self.state.player;
         self.pay_cast(cast);
         self.afflict(player, status, severity, Some(player), events);
-        self.spell_landed(cast, player, true);
+        self.spell_landed(cast, player, true, events);
         true
     }
 
@@ -404,7 +430,12 @@ impl World {
     /// told it ([`World::identify`]). Refused (said, `false`) without such a stack, or for one
     /// whose truth is known. A scroll read on its own stack identifies nothing more: the read
     /// named it.
-    fn cast_identify(&mut self, cast: &Cast<'_>, on: Option<usize>) -> bool {
+    fn cast_identify(
+        &mut self,
+        cast: &Cast<'_>,
+        on: Option<usize>,
+        events: &mut Vec<Event>,
+    ) -> bool {
         let Some(on) = on else {
             return false;
         };
@@ -430,13 +461,13 @@ impl World {
         if matches!(self.identify(on), super::Identified::Now(_)) {
             self.train_stat(crate::content::StatUse::Identified);
         }
-        self.spell_landed(cast, self.state.player, true);
+        self.spell_landed(cast, self.state.player, true, events);
         true
     }
 
     /// A heal: its dice back to the caster (self), or to the one it touches
     /// (a touch: the cell next to the caster, or their own).
-    fn cast_heal(&mut self, cast: &Cast<'_>, at: Option<Pos>) -> bool {
+    fn cast_heal(&mut self, cast: &Cast<'_>, at: Option<Pos>, events: &mut Vec<Event>) -> bool {
         let player = self.state.player;
         let target = match (cast.def.shape, at) {
             (Shape::Touch, Some(at)) if at != self.player_pos() => {
@@ -472,7 +503,6 @@ impl World {
         };
         self.pay_cast(cast);
         let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
-        self.spell_landed(cast, target, back > 0);
         if target == player {
             self.heal_player(back);
             self.say("Your wounds close.");
@@ -483,6 +513,7 @@ impl World {
             let who = capitalized(&self.called(&self.state.actors[&target]));
             self.say(format!("{who} looks better."));
         }
+        self.spell_landed(cast, target, back > 0, events);
         true
     }
 
@@ -506,7 +537,6 @@ impl World {
             return false;
         }
         self.pay_cast(cast);
-        self.spell_landed(cast, player, true);
         self.say("A cleansing warmth runs through you.");
         let from = events.len();
         for e in &ended {
@@ -535,6 +565,7 @@ impl World {
         for text in said {
             self.say(text);
         }
+        self.spell_landed(cast, player, true, events);
         true
     }
 
@@ -555,11 +586,11 @@ impl World {
         let player = self.state.player;
         self.pay_cast(cast);
         self.afflict(target, status, severity, Some(player), events);
-        self.spell_landed(cast, target, self.suffers(target, status));
         let who = capitalized(&self.called(&self.state.actors[&target]));
         let content = self.content.clone();
         let word = (content.status(status).seen.clone()).unwrap_or_else(|| "hexed".into());
         self.say(format!("{who} is {word}."));
+        self.spell_landed(cast, target, self.suffers(target, status), events);
         true
     }
 
@@ -609,12 +640,12 @@ impl World {
         let word = (content.status(status).seen.clone()).unwrap_or_else(|| "hexed".into());
         for id in caught {
             self.afflict(id, status, severity, Some(player), events);
-            self.spell_landed(cast, id, self.suffers(id, status));
             let pos = self.state.actors[&id].pos;
             if self.perception.sees_actors_at(pos) {
                 let who = capitalized(&self.called(&self.state.actors[&id]));
                 self.say(format!("{who} is {word}."));
             }
+            self.spell_landed(cast, id, self.suffers(id, status), events);
         }
         true
     }
@@ -750,8 +781,8 @@ impl World {
 
     /// Says what `by`'s cast `def` did (`made`, its events) and gives everyone it harmed who
     /// lives its status and the cast's `riders` (the rider hook; a status of both merged). The
-    /// player's own `cast` hears of each creature it struck at, harmed or missed
-    /// ([`World::spell_landed`]).
+    /// player's own `cast` then hears of each creature it struck at, harmed or missed, in the
+    /// order struck (an area's in ascending actor id; [`World::spell_landed`]).
     fn spell_lands(
         &mut self,
         by: ActorId,
@@ -760,22 +791,7 @@ impl World {
         cast: Option<&Cast<'_>>,
         events: &mut Vec<Event>,
     ) {
-        if let Some(cast) = cast {
-            for e in &made {
-                if let Event::Attacked {
-                    attacker,
-                    target,
-                    kind: AttackKind::Spell,
-                    strike: Some(strike),
-                    ..
-                } = *e
-                    && attacker == by
-                {
-                    self.spell_landed(cast, target, strike.is_hit());
-                }
-            }
-        }
-        let reached: Vec<ActorId> = (made.iter())
+        let struck: Vec<(ActorId, bool)> = (made.iter())
             .filter_map(|e| match *e {
                 Event::Attacked {
                     attacker,
@@ -783,9 +799,13 @@ impl World {
                     kind: AttackKind::Spell,
                     strike: Some(strike),
                     ..
-                } if attacker == by && strike.is_hit() => Some(target),
+                } if attacker == by => Some((target, strike.is_hit())),
                 _ => None,
             })
+            .collect();
+        let reached: Vec<ActorId> = (struck.iter())
+            .filter(|&&(_, hit)| hit)
+            .map(|&(id, _)| id)
             .collect();
         self.say_spell((&def.look.noun, &def.look.verb), made, events);
         let mut laid: Vec<(StatusId, u16)> = def.effect.status.into_iter().collect();
@@ -797,6 +817,11 @@ impl World {
                 if self.state.actors.contains_key(&id) && self.state.death.is_none() {
                     self.afflict(id, status, severity, Some(by), events);
                 }
+            }
+        }
+        if let Some(cast) = cast {
+            for (target, hit) in struck {
+                self.spell_landed(cast, target, hit, events);
             }
         }
     }

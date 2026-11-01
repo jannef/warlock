@@ -1664,6 +1664,8 @@ mod rot_tests;
 #[cfg(test)]
 mod rumour_tests;
 #[cfg(test)]
+mod school_ability_tests;
+#[cfg(test)]
 mod school_skill_tests;
 #[cfg(test)]
 mod scriptorium_tests;

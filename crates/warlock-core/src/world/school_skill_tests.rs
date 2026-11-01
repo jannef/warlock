@@ -18,7 +18,7 @@ static BUILTIN: LazyLock<Arc<Content>> =
     LazyLock::new(|| Arc::new(Content::builtin().expect("content")));
 
 /// A level-18 wizard of the built-in content.
-fn wizard() -> World {
+pub(super) fn wizard() -> World {
     let mut w = world_with(BUILTIN.clone(), "wizard");
     reach(&mut w, 18);
     w
@@ -29,7 +29,7 @@ fn skill(w: &World, name: &str) -> WeaponSkillId {
 }
 
 /// The player's ranks set to exactly `ranks` (every other skill untrained, no marks).
-fn ranks(w: &mut World, ranks: &[(&str, u8)]) {
+pub(super) fn ranks(w: &mut World, ranks: &[(&str, u8)]) {
     let content = w.content().clone();
     let table = content.weapon_skills();
     let ids: Vec<(WeaponSkillId, u8)> = (ranks.iter())
@@ -63,7 +63,7 @@ fn level_of(w: &World, id: ActorId) -> u32 {
 
 /// The player casts `name` at the cell `(dx, dy)` from them (`None`: on themselves), mana and
 /// hit points topped up; what the cast's events were.
-fn cast(w: &mut World, name: &str, at: Option<(i32, i32)>) -> Vec<Event> {
+pub(super) fn cast(w: &mut World, name: &str, at: Option<(i32, i32)>) -> Vec<Event> {
     w.player_mut().spells.insert(sp(name));
     w.player_mut().mana = 60;
     let max = w.state.player().max_hp(w.content());
