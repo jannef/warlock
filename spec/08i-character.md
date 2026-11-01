@@ -1043,9 +1043,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the one cast path: level, cost, reach, dice, and resolution are the spell's. A full caster
     has a cantrip at level 1 and about four spells in all; the bard, the paladin, and the
     ranger a cantrip or a boon (§8 "Spells", "Guaranteed spells").
-    `Ability::Spell` in the menu's own **Spells** group (`Source::Spell`, after Class) with its
-    spell level and what it costs the player now ("level 6, 11 mana"; short of mana "level 6,
-    11 mana: too little", `ability::spell_unavailable`), `Action::Cast`
+    `Ability::Spell` in the menu's own **Spells** group (`Source::Spell`, after Class) with the
+    roll it makes now, its damage type, and what it costs the player, as the character screen
+    shows a weapon's ("4d6 fire, 26 mana, aimed", "3 mana" for one that rolls nothing; short of
+    mana "4d6 fire, 26 mana: you have 14", `ability::spell_unavailable`; the owner's one
+    exception to hidden numbers, the spell scaling design decision 11), its description line
+    adding its reach now and a reroll ("Range 11, radius 2. Your 1s are rolled again."),
+    `Action::Cast`
     (`use:blessing`, `use:arcane_bolt:12,5`, the replay text unchanged). They **cost mana
     instead of a cooldown** (spec §8 "Mana"); refused, no time and no mana, without the spell,
     without the cell, out of range, with no hostile seen there to hex, nothing to cure, not

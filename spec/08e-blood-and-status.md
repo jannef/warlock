@@ -508,7 +508,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
       spell level and cost and their roll and reach now, `Fireball (level 11, 26 mana): 4d6 fire,
       range 11, radius 2`, then the scrolls one could study
       with the chance in words) and JSON's
-      `spells` and `studies`; the exact odds only in the dev `progress` layer.
+      `spells` (each with `level`, `cost`, `roll`, `damage_type`, and `reach`) and `studies`; the
+      exact odds only in the dev `progress` layer.
 - **Resources** (`warlock-core/src/resource.rs`, the pools and time's rules;
   `content/resource.rs`, the data; `world/resource.rs`, applying them; #225): alternative
   resources, integer pools beside hit points and mana (which everyone has) that a character holds

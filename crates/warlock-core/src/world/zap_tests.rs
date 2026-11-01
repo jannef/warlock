@@ -148,17 +148,19 @@ fn identifying_a_wand_tells_its_spell_and_charges() {
         w.lore().describe(stack),
         "a wand of magic missile (12 charges)"
     );
-    let lines: Vec<String> =
-        (crate::magic::describe::appraised(stack, w.lore(), Default::default()))
-            .into_iter()
-            .map(|l| l.text)
-            .collect();
-    assert!(
-        lines
-            .iter()
-            .any(|l| l.starts_with("Holds Magic missile (level 3)")),
-        "{lines:?}"
-    );
+    // Its dice as the player would use it: the wand's own rung and their wand rungs, as the
+    // abilities menu shows a spell's.
+    let lines: Vec<String> = (w.perception().describe_item(stack).into_iter())
+        .map(|l| l.text)
+        .collect();
+    let content = w.content.clone();
+    let wand = content.object(stack.object).wand.expect("a wand");
+    let by = super::CastBy::Wand(stack.known_wand_rung(w.lore()).expect("its rung"));
+    let roll = (w.state.player())
+        .spell_roll_words(&content, content.spell(wand.spell), by)
+        .expect("it rolls");
+    let holds = format!("Holds Magic missile: {}", roll.text);
+    assert!(lines.contains(&holds), "{lines:?}");
     assert!(lines.iter().any(|l| l == "12 charges left"), "{lines:?}");
 }
 

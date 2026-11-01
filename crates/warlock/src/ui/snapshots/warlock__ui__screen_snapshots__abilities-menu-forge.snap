@@ -23,9 +23,9 @@ expression: "render(case, content.clone())"
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
+                    │                                                          │
                     │ a-e or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
 

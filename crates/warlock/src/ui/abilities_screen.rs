@@ -4,10 +4,12 @@
 //! `PerceptionView::abilities` (the one registry, `warlock_core::ability`) as the one paged list
 //! (`paged_list`), grouped by where each comes from under a header per source, lettered down each
 //! page from `a`. Each row has the ability's name and what it asks for ("in a direction"); a
-//! spell's says its spell level and what it costs the player now first ("level 6, 11 mana"),
+//! spell's says the roll it makes now and what it costs the player first, as the character
+//! screen says a weapon's ("4d6 fire, 26 mana, aimed"; the spell scaling design decision 11),
 //! an active weapon ability its stamina ("3 stamina, in a direction"; never its time). One that
 //! cannot be used now is greyed out with why ("you hold no shield"), and choosing it says so
-//! instead. The selected ability's one-line description shows below the list.
+//! instead. The selected ability's one-line description shows below the list; a spell's adds its
+//! reach now ("Range 11, radius 2.") and a reroll ("Your 1s are rolled again.").
 //!
 //! A letter, or Enter on the `>` row, uses an ability: the menu closes and the ability asks for
 //! what it needs, as its action would (a direction in the message line), then is applied as that
@@ -25,6 +27,7 @@ use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::ability::{Ability, Aim, Source, Unavailable};
 use warlock_core::perception::PerceptionView;
+use warlock_core::world::{reach_words, reroll_words};
 
 /// Width of the panel, at least: wider while a row needs it (a weapon ability's name after its
 /// skill's, "Sword and Board: Staggering block"), as the console allows.
@@ -32,9 +35,12 @@ const WIDTH: i32 = 60;
 /// Columns of a row besides its name and its state: the frame, the margins, the cursor, the
 /// letter, and the gaps.
 const ROW_EXTRA: i32 = 11;
-/// Rows besides the list: the frame, a margin, a gap, the description (two lines), a gap, the
-/// footer, the frame.
-const EXTRA: i32 = 8;
+/// Lines of the selected ability's description: three, for a spell's reach and reroll after
+/// its words.
+const DESCRIPTION: i32 = 3;
+/// Rows besides the list: the frame, a margin, a gap, the description, a gap, the footer, the
+/// frame.
+const EXTRA: i32 = 6 + DESCRIPTION;
 
 /// One ability as the menu shows it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -69,16 +75,21 @@ impl AbilitiesScreen {
                         Some(why) => why.reason(content),
                         None => needs(a.aim(content)).into(),
                     };
-                    // A spell says its spell level and what it costs the player now, first;
-                    // short of mana, that it is too little; one cast at a place, that it is
-                    // aimed (the row has no room for more).
+                    // A spell says the roll it makes now with its type, as the character
+                    // screen says a weapon's (the spell scaling design decision 11), and what
+                    // it costs the player, first; short of mana, what they have; one cast at a
+                    // place, that it is aimed (the row has no room for more).
                     let state = match a {
                         Ability::Spell(spell) => {
-                            let level = content.spell_of(spell).map_or(0, |s| s.level);
                             let cost = view.own_spell_cost(spell).unwrap_or(0);
-                            let head = format!("level {level}, {cost} mana");
+                            let head = match view.own_spell_roll(spell) {
+                                Some(roll) => format!("{}, {cost} mana", roll.text),
+                                None => format!("{cost} mana"),
+                            };
                             match own.unavailable {
-                                Some(Unavailable::NoMana) => format!("{head}: too little").into(),
+                                Some(Unavailable::NoMana) => {
+                                    format!("{head}: you have {}", view.own_mana().0).into()
+                                }
                                 Some(_) => format!("{head}: {state}").into(),
                                 None if state.is_empty() => head.into(),
                                 None => format!("{head}, aimed").into(),
@@ -99,7 +110,7 @@ impl AbilitiesScreen {
                     let entry = Entry {
                         ability: a,
                         name: a.name(content).to_string(),
-                        description: a.description(content).to_string(),
+                        description: describe(view, a),
                         state: state.to_string(),
                         available: own.unavailable.is_none(),
                     };
@@ -240,7 +251,8 @@ impl AbilitiesScreen {
         let words: Vec<String> = text.split(' ').map(String::from).collect();
         let lines = fit_joined(&words, " ", panel.inner_w());
         // In a panel cut short, never over the list.
-        for (line, y) in lines.iter().take(2).zip(panel.y + panel.h - 5..) {
+        let first = panel.y + panel.h - 3 - DESCRIPTION;
+        for (line, y) in lines.iter().take(DESCRIPTION as usize).zip(first..) {
             if fits(y) && y >= top + count {
                 console.print(x, y, line, color);
             }
@@ -264,6 +276,28 @@ impl AbilitiesScreen {
             None => close,
         }
     }
+}
+
+/// The one-line description of `ability`; a spell's says how far it reaches now, in cells
+/// ("Range 11, radius 2."), and which faces of its dice the player rolls again ("Your 1s are
+/// rolled again.").
+fn describe(view: &PerceptionView<'_>, ability: Ability) -> String {
+    let content = view.content();
+    let mut text = ability.description(content).to_string();
+    let Ability::Spell(spell) = ability else {
+        return text;
+    };
+    let reach = (content.spell_of(spell).zip(view.own_spell_reach(spell)))
+        .map(|(def, reach)| reach_words(def.shape, reach).join(", "))
+        .unwrap_or_default();
+    let mut chars = reach.chars();
+    if let Some(first) = chars.next() {
+        text += &format!(" {}{}.", first.to_ascii_uppercase(), chars.as_str());
+    }
+    if let Some(reroll) = reroll_words(view.own_spell_reroll(spell)) {
+        text += &format!(" {reroll}");
+    }
+    text
 }
 
 /// What an ability that can be used now asks for, as its row says it.
@@ -424,7 +458,7 @@ mod tests {
         // A short console pages the list, showing the cursor's page: letters restart on it.
         let last = Some(Ability::ShieldBash);
         let screen = AbilitiesScreen::new(Some(&world.perception()), last);
-        let text = drawn(&screen, 80, 12).join("\n");
+        let text = drawn(&screen, 80, 13).join("\n");
         assert!(text.contains("Page 3/3"), "{text}");
         assert!(text.contains("> a  Shield bash"), "{text}");
     }

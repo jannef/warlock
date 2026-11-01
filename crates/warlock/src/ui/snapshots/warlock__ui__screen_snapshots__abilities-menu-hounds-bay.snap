@@ -8,7 +8,6 @@ expression: "render(case, content.clone())"
 
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -22,6 +21,7 @@ expression: "render(case, content.clone())"
                     │                                                          │
                     │ An old soldier's second breath (an ability): hit points  │
                     │ back at once, then winded a quarter hour.                │
+                    │                                                          │
                     │                                                          │
                     │ a-d or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘

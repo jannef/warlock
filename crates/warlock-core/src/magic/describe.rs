@@ -157,12 +157,8 @@ pub(crate) fn wand_does(stack: &Stack, lore: Lore<'_>, user: &Actor) -> Option<S
     let wand = content.object(stack.object).wand?;
     let rung = stack.known_wand_rung(lore)?;
     let spell = content.spell(wand.spell);
-    let roll = user.spell_roll(content, spell, CastBy::Wand(rung))?;
-    let what = match spell.damage_type {
-        Some(kind) => content.damage_type(kind).name.clone(),
-        None => "healed".into(),
-    };
-    let mut text = format!("{roll} {what}");
+    let roll = user.spell_roll_words(content, spell, CastBy::Wand(rung))?;
+    let mut text = roll.text;
     if let Some(radius) = user.spell_reach(content, spell).radius {
         text += &format!(", radius {radius}");
     }

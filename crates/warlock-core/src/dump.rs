@@ -1102,39 +1102,44 @@ fn spell_does(view: &PerceptionView<'_>, spell: crate::content::SpellId) -> Vec<
     let Some(def) = content.spell_of(spell) else {
         return Vec::new();
     };
-    let mut parts = Vec::new();
-    if let Some(roll) = view.own_spell_roll(spell) {
-        let what = match def.damage_type {
-            Some(kind) => content.damage_type(kind).id.clone(),
-            None => "healed".into(),
-        };
-        parts.push(format!("{roll} {what}"));
-    }
+    let mut parts: Vec<String> = view
+        .own_spell_roll(spell)
+        .map(|r| r.text)
+        .into_iter()
+        .collect();
     if let Some(reach) = view.own_spell_reach(spell) {
-        use crate::content::Shape;
-        match (def.shape, reach.range) {
-            (Shape::Cone | Shape::Line, Some(n)) => parts.push(format!("length {n}")),
-            (Shape::Ray | Shape::Bolt | Shape::Burst, Some(n)) => parts.push(format!("range {n}")),
-            _ => {}
-        }
-        if let Some(r) = reach.radius {
-            parts.push(format!("radius {r}"));
-        }
+        parts.extend(crate::world::reach_words(def.shape, reach));
     }
     parts
 }
 
-/// The spells the player knows (`[{"id", "level", "cost"}]`) and the scrolls they could study
+/// The spells the player knows (`[{"id", "level", "cost", "roll", "damage_type", "reach"}]`:
+/// the roll's text as the abilities menu shows it, `"healed"` for a heal's type, `reach` with
+/// `range`, `length`, `radius`; each null where none) and the scrolls they could study
 /// (`[{"letter", "spell", "chance"}]`).
 fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
+    use crate::content::Shape;
     let content = view.content();
     let known: Vec<Value> = (view.own_spells().into_iter())
         .filter_map(|spell| {
             let def = content.spell_of(spell)?;
+            let roll = view.own_spell_roll(spell);
+            let damage_type = roll.as_ref().map(|r| match r.damage_type {
+                Some(kind) => content.damage_type(kind).id.clone(),
+                None => "healed".into(),
+            });
+            let reach = view.own_spell_reach(spell).unwrap_or_default();
+            let (range, length) = match def.shape {
+                Shape::Cone | Shape::Line => (None, reach.range),
+                _ => (reach.range, None),
+            };
             Some(json!({
                 "id": def.id,
                 "level": def.level,
                 "cost": view.own_spell_cost(spell),
+                "roll": roll.map(|r| r.text),
+                "damage_type": damage_type,
+                "reach": { "range": range, "length": length, "radius": reach.radius },
             }))
         })
         .collect();

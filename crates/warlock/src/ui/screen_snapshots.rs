@@ -500,13 +500,24 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A priest blessed and drained to their last mana: the spells in their Spells group with
-    // spell level and cost, those that cost more than is left greyed out ("you have too little
-    // mana").
+    // the roll each makes now and its cost (the spell scaling design decision 11), those that
+    // cost more than is left greyed out with what is left ("3 mana: you have 2").
     Case {
         name: "abilities-menu-spells",
         character: Some("human,female,priest"),
         actions: "xp:100000 levelup:auto use:blessing drain:101",
         screen: Some("abilities"),
+        ..BASE
+    },
+    // A gnome wizard at Intelligence 19 (Keen) with Empower (level 32; the spell scaling design
+    // §11): the rolls up their ladders and a rung more, Magic missile selected, its reach in the
+    // description line.
+    Case {
+        name: "abilities-menu-spells-grown",
+        character: Some("gnome,male,wizard"),
+        actions: "xp:1000000 levelup:auto afflict:keen",
+        screen: Some("abilities"),
+        keys: Some("Down Down"),
         ..BASE
     },
     // A bard of level 32 with too little mana (#244): Throw your voice aimed at a place, Inspire

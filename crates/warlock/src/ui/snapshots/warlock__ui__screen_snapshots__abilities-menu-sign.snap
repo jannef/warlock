@@ -23,9 +23,9 @@ expression: "render(case, content.clone())"
                     │ Strike someone next to you with the shield you hold.     │
                     │                                                          │
                     │                                                          │
+                    │                                                          │
                     │ a-f or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
 

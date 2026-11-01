@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You learn Dragon's hoard.
+ Your thoughts run keen and clear.
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Class                                                    │
+                    │   a  Knock            in a direction                     │
+                    │ Spells                                                   │
+                    │   b  Ray of frost     1d8 cold, 1 mana, aimed            │
+                    │ > c  Magic missile    3d4+1 force, 2 mana, aimed         │
+                    │   d  Burning hands    3d4+2 fire, 5 mana, aimed          │
+                    │   e  Arcane bolt      3d6+4 force, 9 mana, aimed         │
+                    │ Skills                                                   │
+                    │   f  Decipher script  not usable yet                     │
+                    │   g  Heal             nothing to treat                   │
+                    │   h  Knowledge        not usable yet                     │
+                    │ Weapon skills                                            │
+                    │   i  Shield bash      you hold no shield                 │
+                    │                                                          │
+                    │ A dart of force toward a place you aim at: it never      │
+                    │ misses the first creature in its way. Range 8.           │
+                    │                                                          │
+                    │                                                          │
+                    │ a-i or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+ The Hub  ·  HP 43/43  ·  MP 298/299  ·  Keen  ·  Lv 32  ·  08:00  ·  11 Darkening       ? controls
