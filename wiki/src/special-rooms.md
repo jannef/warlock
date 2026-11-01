@@ -136,7 +136,7 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   if you guess well. Without a digging tool or a blast you cannot get in: come back with one.
   Nothing the level needs is ever inside, no [trap](traps.md#finding-traps) is hidden in it, and no creature wanders in.
   On every arrival on its level until you have been inside, *something tells you a fortune lies
-  walled up on this level* (with [Treasure sense](talents.md#talent-treasure-sense), and which way it lies).
+  walled up on this level*.
 - **Tempting hoard.** Only on a level with a danger: three items lie on its
   floor, better than the level's own (three item levels above it), and no one guards them. The
   moment you pick anything up inside, the room seals: every door of it slams shut and locks
@@ -173,18 +173,12 @@ gets where a dungeon favours or bans nothing. "Only" says where it can come at a
   are trained in it, where elsewhere it is one study in two. Only rooms of 9 floor cells or more
   can be one.
 
-The talent *[Hallowed rest](talents.md#talent-hallowed-rest)* (Grit) makes a room that quickens healing or mana quicken it half
-again more for you: a [sanctuary](special-rooms.md#room-sanctuary)'s three times as fast becomes four times. The talent *[Anchored
-mind](talents.md#talent-anchored-mind)* (Scholar) keeps your power moored: Ebbing never takes you. The talent *[Mirror-wise](talents.md#talent-mirror-wise)*
-(Scholar) sees through reflections within 2 cells of you: they are not shown, and nothing stops
-your step there. The talent *[Light tread](talents.md#talent-light-tread)* (Delver) carries you over a [collapsed floor](special-rooms.md#room-collapsed) as if it
-were sound rock: it never gives way under you. The talent *[Grave warden](talents.md#talent-grave-warden)* (Guard) keeps what you
-kill down: nothing you kill ever rises in a [cursed room](special-rooms.md#room-cursed).
-The talent *[Hoard-wise](talents.md#talent-hoard-wise)* (Delver) knows how a tempting hoard is baited: you
-can lift one thing from it before it seals; the second seals it. The talent *[Treasure sense](talents.md#talent-treasure-sense)*
-(Wayfarer, [Spot](skills.md#skill-spot) 10) tells you which way a treasure room lies when you arrive: "Something tells
-you there is wealth hidden on this level, to the north-east." (from where you arrived to the
-middle of the nearest one, in eight directions).
+The talent *[Old delver](talents.md#talent-old-delver)* (Delver, two ranks) makes you at home in strange rooms. At its
+first rank ([Willpower](stats.md#stat-willpower) 11 or [Dexterity](stats.md#stat-dexterity) 12) a [collapsed floor](special-rooms.md#room-collapsed) never gives way under you,
+the [Ebbing](status-effects.md#status-ebbing) of a [draining room](special-rooms.md#room-draining) never takes you, and nothing you kill ever rises in a
+[cursed room](special-rooms.md#room-cursed). At its second (level 10) a room that quickens healing or mana quickens it
+half again more for you (a [sanctuary](special-rooms.md#room-sanctuary)'s three times as fast becomes four times), and you
+can lift one thing from a [tempting hoard](special-rooms.md#room-hoard) before it seals; the second seals it.
 
 Only what happens inside counts: a sound made in an [echoing hall](special-rooms.md#room-echoing) is [loud](hearing.md#how-loud) wherever it is heard,
 while one made outside and heard inside is not changed. Light outside a [shadowed room](special-rooms.md#room-shadowed) is as

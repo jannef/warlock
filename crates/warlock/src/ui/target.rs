@@ -251,7 +251,7 @@ impl Aim {
     /// goes off on the first creature they see in its way, before the first cell they know is
     /// solid, or on the cursor; the player within its radius of that, walls between not
     /// counted). Returns what would catch them ("fireball"); `None` for anything else, and for
-    /// a player their own bursts spare (Careful reader).
+    /// a player their own bursts spare (Scroll savant).
     pub fn catches_reader(&self, view: &PerceptionView<'_>) -> Option<String> {
         if view.bursts_spare_me() {
             return None;

@@ -431,12 +431,14 @@ impl Actor {
         }
     }
 
-    /// What its status effects, hunger (Weak or worse), and stat damage take off its scores, if
-    /// anything.
+    /// What its status effects, hunger (Weak or worse, unless Ascetic), and stat damage take
+    /// off its scores, if anything.
     fn penalty(&self, content: &Content) -> Option<PerStat<i32>> {
-        let mut by = (self.effects).penalty_for(content, &self.talent_mods(content));
+        let mods = self.talent_mods(content);
+        let mut by = (self.effects).penalty_for(content, &mods);
         if let (Some(def), Some(hunger)) = (content.hunger(), self.hunger(content))
             && hunger.is_weak()
+            && !mods.no_hunger_weakness
         {
             let by = by.get_or_insert_with(|| PerStat::splat(0));
             for stat in Stat::ALL {

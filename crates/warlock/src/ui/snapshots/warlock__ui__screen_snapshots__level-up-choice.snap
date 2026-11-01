@@ -2,43 +2,43 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
+ Welcome to level 3.
  Your athletics improves. (×6)
- You learn Sun-blessed.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            ┌─ Level 3 · Talent 1 ────────────────────────────────────────── Page 1/2 ─┐
+            │                                                                          │
+            │ Apprentice                                                               │
+            │ > a  Appraise                                                            │
+            │   b  Athletics                                                           │
+            │   c  Balance                                                             │
+            │   d  Bluff                                                               │
+            │   e  Concentration                                                       │
+            │   f  Decipher script                                                     │
+            │   g  Detect traps                                                        │
+            │   h  Disable device                                                      │
+            │   i  Escape artist                                                       │
+            │   j  Handle animal                                                       │
+            │   k  Heal                                                                │
+            │   l  Initiative                                                          │
+            │   m  Intimidate                                                          │
+            │   n  Knowledge                                                           │
+            │   o  Listen                                                              │
+            │   p  Metalcraft                                                          │
+            │   q  Music                                                               │
+            │   r  Negotiation                                                         │
+            │   s  Open lock                                                           │
+            │   t  Search                                                              │
+            │   u  Sneak attack                                                        │
+            │   v  Spellcraft                                                          │
+            │   w  Spot                                                                │
+            │   x  Steal                                                               │
+            │   y  Stealth                                                             │
+            │   z  Survival                                                            │
+            │                                                                          │
+            │ You take up a skill you lack, or get better at one you have; each rank,  │
+            │ better still.                                                            │
+            │                                                                          │
+            │                                                                          │
+            │ a-z or Enter choose   > < page   Esc back                                │
+            └──────────────────────────────────────────────────────────────────────────┘
 
  The Hub  ·  HP 28/28  ·  MP 5/5  ·  Sta 10/10  ·  Lv 3  ·  08:00  ·  11 Darkening       ? controls

@@ -369,6 +369,10 @@ pub enum TalentEffect {
     NoExertion,
     /// A meal never leaves it Bloated: what does not fit below Bloated is lost (Gourmand).
     NoBloating,
+    /// Hunger never weakens it: Weak, Fainting, and Starving take nothing off its Strength and
+    /// Dexterity (`Actor::penalty`), and it never faints (`World::faint`; Ascetic). Starving
+    /// still costs hit points.
+    NoHungerWeakness,
     /// A fresh corpse's stat training marks and chances to widen a potential, this percent more
     /// (Gourmand).
     CorpseStatsPercent { value: i32 },
@@ -381,10 +385,7 @@ pub enum TalentEffect {
     /// The training price's ramp past a potential counts each point past it this many fewer
     /// (the first beyond the potential at the plain price: Late bloomer; ranks add up).
     RampEase { points: u8 },
-    /// A daily stat check met Hungry or worse gives Willpower this many stat training marks
-    /// (Ascetic; the most counts).
-    FastingMarks { marks: u16 },
-    /// These stat training deeds take nothing (Hard living, Discipline, Ascetic).
+    /// These stat training deeds take nothing (Hard living, Discipline).
     NoDeed { on: Vec<StatDeed> },
     /// Each of these stat training uses counts this many times over (Discipline: two marks
     /// where one came; the most counts).
@@ -417,7 +418,7 @@ pub enum TalentEffect {
         overreach_percent: i32,
     },
     /// A scroll it reads is not used up, by this chance in percent (one gameplay draw a read;
-    /// Spell recall).
+    /// Scroll savant).
     ScrollKept { chance: u8 },
     /// A potion it drinks is not used up, by this chance in percent (one gameplay draw a drink;
     /// Thrifty drinker).
@@ -427,7 +428,7 @@ pub enum TalentEffect {
     PotionSmell,
     /// A healing potion it drinks heals this percent more (Cauldron-wise).
     PotionHeals { value: i32 },
-    /// Its own bursts never catch it (Careful reader).
+    /// Its own bursts never catch it (Scroll savant).
     SparesSelf,
     /// Added to its searching, not to noticing in passing (Keen searcher).
     Searching { value: i32 },
@@ -507,14 +508,11 @@ pub enum TalentEffect {
     /// [`crate::perception::PerceptionView::chest_at`]), and a shut chest's trap in its sight
     /// becomes known to it (`World::chest_wise_look`).
     ChestWise,
-    /// A disguised mimic within this many cells is seen for what it is (Mimic-wise;
+    /// A disguised mimic within this many cells is seen for what it is (Chest-wise;
     /// [`crate::perception::Perception`]'s disguises).
     SeesMimics { value: i32 },
-    /// A mimic's grip never holds it (Slick; `World::afflict`).
+    /// A mimic's grip never holds it (Chest-wise; `World::afflict`).
     Slick,
-    /// The hint said on arriving on a level with a treasure room tells which way it lies
-    /// (Treasure sense; `world/treasury.rs`).
-    TreasureSense,
     /// At a forgotten altar of the actor's own side the side's lean counts double, and an
     /// opposed one leans as a neutral one (Devout; the prayer draw, `World::lean`).
     Devout,
@@ -522,23 +520,20 @@ pub enum TalentEffect {
     /// `world/pray.rs`).
     Penitent,
     /// Where a special room quickens healing or mana, the quickening is this percent more
-    /// (Hallowed rest; the room's pace in `World::healing_rate` and `World::mana_rate`).
+    /// (Old delver; the room's pace in `World::healing_rate` and `World::mana_rate`).
     RoomPacePercent { value: i32 },
-    /// A special room's (or a whole level's) `status` never takes it (Anchored mind: Ebbing;
+    /// A special room's (or a whole level's) `status` never takes it (Old delver: Ebbing;
     /// `World::dwell`).
     RoomStatusImmune { status: String },
-    /// A collapsed floor never gives way under it (Light tread; `World::collapse_step`).
+    /// A collapsed floor never gives way under it (Old delver; `World::collapse_step`).
     CollapseProof,
-    /// A hall of mirrors' reflections within this many cells are seen for what they are, and not
-    /// shown (Mirror-wise; `world/mirrors.rs`).
-    SeesReflections { value: i32 },
-    /// A tempting hoard seals only after this many stacks more are lifted inside it (Hoard-wise;
+    /// A tempting hoard seals only after this many stacks more are lifted inside it (Old delver;
     /// `World::lift_in_hoard`, `world/hoard.rs`).
     HoardGrace { value: i32 },
     /// Sleepers need this percent more noise to wake from what it does (Hush-foot; the wake
     /// check in `World::spread_noise`, `world/den.rs`).
     WakePercent { value: i32 },
-    /// What it kills never rises in a cursed room (Grave warden; `World::curse_corpse`).
+    /// What it kills never rises in a cursed room (Old delver; `World::curse_corpse`).
     GraveWarden,
     /// Searching reaches this many cells farther.
     SearchReach { value: i32 },
@@ -852,8 +847,8 @@ pub enum TalentEffect {
     DoorKick { value: i32 },
     /// Its door kicks are this percent louder (negative: quieter; Lockbreaker).
     KickNoisePercent { value: i32 },
-    /// What a chest it kicks open holds breaks this percent more often (negative: less; Deft
-    /// breaker; spec §8 "Chests").
+    /// What a chest it kicks open holds breaks this percent more often (negative: less;
+    /// Lockbreaker; spec §8 "Chests").
     SmashDestroyPercent { value: i32 },
     /// Its digging does this percent more work a turn.
     DigPercent { value: i32 },
@@ -1188,7 +1183,6 @@ impl TalentEffect {
             | TalentEffect::Threat { value }
             | TalentEffect::Search { value }
             | TalentEffect::SearchReach { value }
-            | TalentEffect::SeesReflections { value }
             | TalentEffect::SeesMimics { value }
             | TalentEffect::HoardGrace { value }
             | TalentEffect::ThrowRange { value }
@@ -1364,12 +1358,6 @@ impl TalentEffect {
             TalentEffect::RampEase { points } => {
                 if !(1..=5).contains(points) {
                     return Err("`ramp_ease`: points is 1 to 5".into());
-                }
-                Ok(())
-            }
-            TalentEffect::FastingMarks { marks } => {
-                if !(1..=100).contains(marks) {
-                    return Err("`fasting_marks`: marks is 1 to 100".into());
                 }
                 Ok(())
             }
@@ -1984,11 +1972,11 @@ impl TalentEffect {
             | TalentEffect::PitProof
             | TalentEffect::IgnoreBurdened
             | TalentEffect::NoBloating
+            | TalentEffect::NoHungerWeakness
             | TalentEffect::SparesSelf
             | TalentEffect::SenseOfPlace
             | TalentEffect::ChestWise
             | TalentEffect::Slick
-            | TalentEffect::TreasureSense
             | TalentEffect::Devout
             | TalentEffect::Penitent
             | TalentEffect::CollapseProof

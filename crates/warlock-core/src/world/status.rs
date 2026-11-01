@@ -88,7 +88,7 @@ impl World {
         {
             return;
         }
-        // Slick (spec §8 "Mimics"): a mimic's grip never holds it.
+        // Chest-wise (spec §8 "Mimics"): a mimic's grip never holds it.
         if self.content.status(status).hold.is_some() && self.slips(id, by) {
             return;
         }

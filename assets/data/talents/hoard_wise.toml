@@ -1,8 +1,0 @@
-[[talent]]
-id = "hoard_wise"
-name = "Hoard-wise"
-tree = "delver"
-description = "You know how a tempting hoard is baited: you can lift one thing from it before its doors slam shut and its guardians come."
-needs = { stats = { intelligence = 11 } }
-effects = [{ kind = "hoard_grace", value = 1 }]
-systems = ["special_rooms"]

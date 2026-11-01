@@ -56,7 +56,7 @@ puts it away unread. A cell out of reach is marked "Out of range.", and the scro
   everyone within its radius, you too if you stand that close: when you aim so near that it may,
   a window asks first (`The fireball may catch you too. Read the scroll of fireball anyway?`),
   with **Read it** (`y`), **Aim again** (`n`), and **Don't read it** (`Esc`, chosen at first);
-  with the [talent](talents.md) [Careful reader](talents.md#talent-careful-reader) your own bursts never catch you, and nothing asks.
+  with the [talent](talents.md) [Scroll savant](talents.md#talent-scroll-savant) your own bursts never catch you, and nothing asks.
   A
   fireball blows apart the softer [walls](terrain.md#walls) it reaches and [melts ice](temperature.md#walking-on-ice) (whoever stands on it [falls in](temperature.md#falling-in));
   frost freezes the [water](terrain.md#water) it reaches into ice that holds a laden person (see
@@ -72,9 +72,9 @@ the [death](combat.md#death) screen ("Killed by their own scroll of fireball"). 
 heard like any noise (see [Hearing](hearing.md)). Spells cannot be read on the [overworld](overworld.md#travel).
 
 Reading a scroll uses it up. Scholars do better (see [Talents](talents.md)): [Scroll savant](talents.md#talent-scroll-savant) reads
-in half the time, and with [Spell recall](talents.md#talent-spell-recall) one read in four leaves the scroll as it was ("The
-writing does not fade from the scroll."). A scroll you study is always used up, Spell recall or
-not.
+in half the time (with the [wizard](classes.md#wizard)'s Scroll adept as well, in a quarter: no less), and at its
+second rank one read in four leaves the scroll as it was ("The writing does not fade from the
+scroll."). A scroll you study is always used up, Scroll savant or not.
 
 ## The scroll of identify
 

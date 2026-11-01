@@ -773,11 +773,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `quest_gold_percent` and `quest_xp_percent`: Well liked, a quarter more of each; `checks`
     and `stat`: Iron will, +2 on Willpower checks and Presence +1). Iron will and Haggler are
     one talent each, a Grit and a Delver talent a class's table may also give (the aristocrat's
-    Iron will, the merchant's Haggler). New: `read_percent` (Scroll savant: reading takes half
-    the time); `spares_self` (Careful reader: the reader's own burst never catches them, and the
-    game does not warn before reading one close); `scroll_kept` (Spell recall: one read in four
-    keeps the scroll, one gameplay draw a read with the talent, "The writing does not fade from
-    the scroll."); `loot_magic_percent` (Treasure hunter: the weights of the rarities better than
+    Iron will, the merchant's Haggler). New: Scroll savant (Scholar, two ranks; #775 merged
+    Careful reader and Spell recall into it): at its first rank (Intelligence 13) `read_percent`
+    (reading takes half the time; with the wizard's Scroll adept a quarter, the least talents
+    leave) and `spares_self` (the caster's own burst, a scroll's or a spell's, never catches
+    them, and the game does not warn before reading one close); at its second (Intelligence 15,
+    level 12) `scroll_kept` (one read in four keeps the scroll, one gameplay draw a read with
+    the rank, "The writing does not fade from the scroll."); `loot_magic_percent` (Treasure hunter: the weights of the rarities better than
     a find's least half again, so anything found is magic and rare more often and a creature's
     drop, always magic, rare more often; from the same draws of the loot streams, so a map never
     changes, and a level made before the talent keeps its loot); `skill_rolls` (Quick learner: a
@@ -791,11 +793,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     searching) with the birth signs' `search_reach` (a cell farther); `search` and `trap_damage_percent` (Trap sense: +3 to finding hidden
     traps and secret doors, searching and in passing; a trap's damage halved, rounded down, at
     least 1); `door_kick` and `kick_noise_percent` (Lockbreaker: a door or chest kick as if 6
-    stronger, half as loud); `smash_destroy_percent` (Deft breaker, Might, Strength 12: what a
-    chest kicked open holds breaks half as often, 25 % a stack; a blown-up chest is no kick) and
-    `chest_wise` (Chest-wise, Delver, Intelligence 11 or Detect traps 15: look mode tells a
-    locked shut chest in sight from an unlocked one, and the trap of a shut chest in sight is
-    known at once, no check), the `chests` system's (§8 "Chests"), with Lockbreaker
+    stronger, half as loud) and its `smash_destroy_percent` (what a chest kicked open holds
+    breaks half as often, 25 % a stack; a blown-up chest is no kick; Deft breaker's, merged in
+    #775), and `chest_wise` (Chest-wise, Delver, Intelligence 11 or Detect traps 15: look mode
+    tells a locked shut chest in sight from an unlocked one, and the trap of a shut chest in
+    sight is known at once, no check; with Mimic-wise's `sees_mimics` 2 and Slick's `slick`,
+    merged in #775), the `chests` system's (§8 "Chests"), with Lockbreaker
     and the wizard's Knock; `dig_percent` (Tunneler: half again the work a turn). A prerequisite may be `either`
     of several (Treasure hunter: "Intelligence 12 or Appraise 20"). The Scholar and Delver trees
     and the searching, digging, shops, magic items, scrolls, skills, and experience systems are
@@ -860,23 +863,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels") came with Quiet delver (`spawn_every_percent`, Delver; Sixth sense was cut in #774). The `special_rooms` system (#402, §7
     "Special rooms") came with its two: Sense of place (Wayfarer, free, `sense_of_place`: a
     special room is known from a glimpse, `PerceptionView::room`, and a whole level's `pervade`
-    line names its effect) and Hallowed rest (Grit, Willpower 11, `room_pace_percent` 50: where a
-    room quickens healing or mana, the quickening is half again more, `World::room_pace`: a
-    sanctuary's 300 % becomes 400 %); its third, Anchored mind (Scholar, Willpower 12,
-    `room_status_immune` `ebbing`, systems `special_rooms` and `mana`, #403): a draining room's
-    (or level's) Ebbing never takes them, `World::dwell`; its fourth, Hush-foot (Shadow, Stealth
+    line names its effect) and Old delver (Delver, two ranks, #775, which merged Light tread,
+    Anchored mind, Grave warden, Hallowed rest, and Hoard-wise into it and dropped Mirror-wise
+    and Treasure sense): at its first rank (Willpower 11 or Dexterity 12) `collapse_proof` (a
+    collapsed floor never gives way under them, `World::collapse_step`, which then draws
+    nothing), `room_status_immune` `ebbing` (a draining room's or level's Ebbing never takes
+    them, `World::dwell`), and `grave_warden` (nothing they kill rises in a cursed room,
+    `World::curse_corpse`); at its second (level 10) `room_pace_percent` 50 (where a room
+    quickens healing or mana, the quickening is half again more, `World::room_pace`: a
+    sanctuary's 300 % becomes 400 %) and `hoard_grace` 1 (a tempting hoard seals only after the
+    second stack lifted inside it, `World::lift_in_hoard`); then Hush-foot (Shadow, Stealth
     10, `wake_percent` 100, systems `special_rooms` and `stealth`, #405): a sleeper needs twice
     the noise to wake from what they do (a den's 200 % of its hearing threshold becomes 400 %),
-    the wake check in `World::spread_noise`;
-    Mirror-wise (Scholar, Intelligence 12, `sees_reflections` 2, #419): a hall of mirrors' images
-    within 2 cells are seen for what they are and not shown, so no glass stops a step there
-    (`world/mirrors.rs`, perception); Light tread (Delver, Dexterity 12, `collapse_proof`, #420):
-    a collapsed floor never gives way under them (`World::collapse_step`, which then draws
-    nothing);
-    Hoard-wise (Delver, Intelligence 11, `hoard_grace` 1, #415): a tempting
-    hoard seals only after the second stack lifted inside it, `World::lift_in_hoard`;
-    Treasure sense (Wayfarer, Spot 10, `treasure_sense`, #617): the hint said on arriving on a
-    level with a treasure room says which way the nearest lies (`world/treasury.rs`).
+    the wake check in `World::spread_noise`.
     The `spells` system (the magic design §10, #400) came with the **Spellcraft** tree: Quick
     study (free, #396: study +2, study time −50 %), Overreach (level 6,
     `study { overreach_percent = -33 }`, the spell scaling design §7.2: a spell's levels over
@@ -900,8 +899,6 @@ developer notes (CLAUDE.md, `docs/dev/`).
     skill leave the schools out), and the wizard's class ability **Magister** (level 45:
     `weapon { role = "school", ranks = 1 }`, every school a rank higher); Early mastery's
     description names the schools too (their abilities, a later slice).
-    Grave warden (Guard, Willpower 12, `grave_warden`, #408): nothing the player kills rises in
-    a cursed room (`World::curse_corpse`, the rise line of `fight.rs::creature_dies`).
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
     `World::target_against`).
   - **Racial talents** (#241; the design's §7.5 Racial): the `racial` tree (`no_free`), each
@@ -1069,7 +1066,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (at 1: caster level +1 per 5 character levels, `caster_level` with `per_levels`), Magic missile
     (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
     mana), Arcane lore (a magic item carried
-    an hour is identified), Spell recall (the Scholar talent, handed out), Burning hands (level
+    an hour is identified), Burning hands (level
     4, at 12: a cone of 3 cells, 1d4 fire, its ladder to 3d4+2; 6 mana), Arcane bolt (level 6, at
     18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Mage armour (Deflection +2 in no body armour),
     Empower (`spell_mod { rungs = 1 }`: its spells a rung higher on their ladders; spells' mana

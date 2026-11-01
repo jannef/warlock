@@ -1,6 +1,5 @@
 //! Treasure rooms in play (spec §7 "Special rooms"; `world/treasury.rs`): the hint on every
-//! arrival until the room is entered, Treasure sense's bearing, the enter line, one line however
-//! many rooms, and saving.
+//! arrival until the room is entered, the enter line, one line however many rooms, and saving.
 
 use super::*;
 use crate::action::parse_actions;
@@ -50,10 +49,6 @@ fn told(w: &World, start: &str) -> u32 {
         .filter(|m| m.text.starts_with(start))
         .map(|m| m.count)
         .sum()
-}
-
-fn last_message(world: &World) -> String {
-    (world.messages().iter().last()).map_or(String::new(), |m| m.text.clone())
 }
 
 #[test]
@@ -318,16 +313,4 @@ fn the_rooms_dump_names_the_breach() {
 fn two_treasure_rooms_say_it_once() {
     let w = world(&[[9, 0, 14, 4], [4, 2, 7, 4]]);
     assert_eq!(told(&w, LINE), 1);
-}
-
-#[test]
-fn treasure_sense_says_which_way_it_lies() {
-    let mut w = world(&[[9, 0, 14, 4]]);
-    w.player_mut().talents.take("treasure_sense", None);
-    w.travel("other", None).expect("travels");
-    w.travel("test_treasury", None).expect("travels back");
-    assert_eq!(
-        last_message(&w),
-        "Something tells you there is wealth hidden on this level, to the east."
-    );
 }

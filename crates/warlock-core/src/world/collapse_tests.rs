@@ -1,6 +1,6 @@
 //! The collapsed floor (spec §7 "Special rooms", design §9.13; `world/collapse.rs`): a step of the
 //! player onto its cracked floor gives way with 15 % (doubled while Burdened), and they fall to
-//! the level below, hurt (a fall can kill) and Staggered; Light tread never falls; creatures
+//! the level below, hurt (a fall can kill) and Staggered; Old delver never falls; creatures
 //! never do; no draw anywhere else. A generated one keeps a sound rim round its cracks.
 
 use super::*;
@@ -153,9 +153,9 @@ fn a_burdened_step_gives_way_twice_as_often() {
 }
 
 #[test]
-fn light_tread_never_falls_and_draws_nothing() {
+fn old_delver_never_falls_and_draws_nothing() {
     let mut w = world();
-    w.player_mut().talents.take("light_tread", None);
+    w.player_mut().talents.take("old_delver", None);
     let rng = w.state.rng.clone();
     assert_eq!(falls(&mut w, CRACKED, 500), 0);
     assert_eq!(w.state.rng, rng);
