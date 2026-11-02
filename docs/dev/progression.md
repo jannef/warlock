@@ -245,7 +245,13 @@ a talent the content no longer has (the thief's three removed by #684, the 27 cu
 weak ones #787 cut and the three #788 merged into Pious, #790's clones and chains) loads
 without it: `Talents::drop_unknown` in `World::from_state`,
 each said in `World::retiered` (logged on load; `talent_tests.rs`
-`a_save_naming_a_cut_talent_loads_without_it`). Keys: the actives have none of their own (as Second wind; the abilities menu
+`a_save_naming_a_cut_talent_loads_without_it`). A talent **merged** into another is not
+dropped but mapped: `merged` in `data/talents.toml` names each removed id and the talent it
+became (Owl eyes into Dark adaptation, #817; the load refuses a removed id still in the data or
+one merged into an unknown talent), and `Talents::merge_removed`, run just before
+`drop_unknown`, holds the merged talent in its place at the same rank (at most its ranks); held
+both ways, the first place is kept at the higher rank. Each is said in `World::retiered`
+(`land_talent_tests.rs` `owl_eyes_in_a_save_is_dark_adaptation`). Keys: the actives have none of their own (as Second wind; the abilities menu
 and its repeat key use them).
 
 ## Caster spells
@@ -340,10 +346,7 @@ cut them). The owner: "Modify the talent rule to prevent this type of talent cre
   needing exactly one other talent with an effect kind (`TalentEffect`'s variant) in common,
   fail the load, but for the pairs `alike` lists in `data/talents.toml`; a listed pair that is
   neither is an error too, so the list stays honest. The list: Cleave and Cleaving strike (the
-  warrior's; two cleave sources make a great cleave, `TalentMods::add`), Dark adaptation and Owl
-  eyes (the same two cells of darkvision for darkvision eyes and, from level 9, for low-light
-  eyes: no one can take both, and one talent would need a prerequisite of either eyes, which
-  `Needs` cannot say), and the birth signs' gifts that match a pickable or each other (Alert and
+  warrior's; two cleave sources make a great cleave, `TalentMods::add`), and the birth signs' gifts that match a pickable or each other (Alert and
   Unblinking, Clear mind and Tidal, Quick's first rank and Fleet-footed, Orcish hide and Stone
   hide, the flaws Grim company and Little loved): the horoscope is kept whole (the owner,
   #776). Tests: `talent_alike::tests`.

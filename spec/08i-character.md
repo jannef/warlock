@@ -823,7 +823,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     "Resources"):
     **effective eyes** (the design's B4, `WorldState::eyes`, §5 "Effective eyes"):
     `threshold_percent` (Night eyes: −50 %, eyes normal), `darkvision` (Dark adaptation: +2,
-    eyes darkvision; Owl eyes: 2 cells for low-light eyes, level 9); `scent` (Blood scent: a bleeding creature in line of sight
+    eyes darkvision or low-light, `eyes = ["darkvision", "low_light"]`; it took in Owl eyes,
+    #817); `scent` (Blood scent: a bleeding creature in line of sight
     within 9 cells, four beyond darkvision's five, is seen however dark, eyes darkvision);
     `lantern_light` (Lamplighter: a lit lantern ready in the Tool slot burns as `lantern_bright`, a
     cell farther, not while hooded, in `WorldState::carried_light`, so creatures see it too); `ambush` (Ambusher: +1d6 after Protection on

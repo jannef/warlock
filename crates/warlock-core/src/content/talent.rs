@@ -9,6 +9,7 @@
 //! behind as the list grows. Without the files there are no talents, and no level asks for one.
 
 use super::affix::Once;
+use super::level::OneOrMany;
 use super::{
     Build, CombatStance, Content, ContentError, ItemKind, MAX_ITEM_LEVEL, MAX_LEVEL, MAX_RANK,
     MAX_RESOURCE, ResourceId, Role, WeaponSkillId, duplicate_id,
@@ -1965,8 +1966,8 @@ pub enum Need {
     Level(u8),
     /// A race, by id.
     Race(String),
-    /// Eyes: the race's vision profile, by id.
-    Eyes(String),
+    /// Eyes: the race's vision profile, any one of these ids.
+    Eyes(Vec<String>),
     /// A class, by id.
     Class(String),
     /// A birth sign's animal, by id (spec §8 "Birth sign").
@@ -2010,9 +2011,12 @@ impl Need {
                 let name = content.class(id).map_or(id.as_str(), |c| c.name.as_str());
                 format!("to be {} {}", article(name), name.to_lowercase())
             }
-            Need::Eyes(id) => {
-                let name = content.vision(id).map_or(id.as_str(), |v| v.name.as_str());
-                format!("{} eyes", name.to_lowercase())
+            Need::Eyes(ids) => {
+                let names: Vec<String> = (ids.iter())
+                    .map(|id| content.vision(id).map_or(id.as_str(), |v| v.name.as_str()))
+                    .map(str::to_lowercase)
+                    .collect();
+                format!("{} eyes", crate::talent::list_with(&names, "or"))
             }
             Need::Animal(id) => {
                 let name = (content.horoscope())
@@ -2060,7 +2064,8 @@ pub struct Needs {
     /// 0 asks nothing.
     pub level: u8,
     pub race: Option<String>,
-    pub eyes: Option<String>,
+    /// The race's vision profiles, any one of which will do; empty asks nothing.
+    pub eyes: Vec<String>,
     pub class: Option<String>,
     /// The birth sign's animal and element asked, by id, and a lucky day.
     pub animal: Option<String>,
@@ -2092,7 +2097,7 @@ impl Needs {
         let chosen = self.chosen.map(Need::Chosen);
         let level = (self.level > 0).then_some(Need::Level(self.level));
         let race = self.race.clone().map(Need::Race);
-        let eyes = self.eyes.clone().map(Need::Eyes);
+        let eyes = (!self.eyes.is_empty()).then(|| Need::Eyes(self.eyes.clone()));
         let class = self.class.clone().map(Need::Class);
         let animal = self.animal.clone().map(Need::Animal);
         let element = self.element.clone().map(Need::Element);
@@ -2211,6 +2216,9 @@ pub struct TalentBook {
     pub coverage: Coverage,
     /// The most ranks a talent may have.
     pub max_ranks: u8,
+    /// Talents merged into another (`merged`): a removed id, the talent a save holding it
+    /// holds instead ([`crate::talent::Talents::merge_removed`]).
+    pub merged: BTreeMap<String, String>,
     list: Vec<TalentDef>,
     ids: BTreeMap<String, TalentId>,
 }
@@ -2362,6 +2370,8 @@ struct TalentFile {
     coverage: Option<Coverage>,
     /// The pairs the identical-effects check lets be (`talent_alike.rs`).
     alike: Option<Vec<[String; 2]>>,
+    /// Removed talents and the talent each was merged into.
+    merged: Option<BTreeMap<String, String>>,
     #[serde(default)]
     tree: Vec<TreeSpec>,
     #[serde(default)]
@@ -2447,7 +2457,8 @@ struct NeedsSpec {
     chosen: Option<u8>,
     level: u8,
     race: Option<String>,
-    eyes: Option<String>,
+    /// One vision profile or several, any one of which will do.
+    eyes: Option<OneOrMany>,
     class: Option<String>,
     animal: Option<String>,
     element: Option<String>,
@@ -2635,10 +2646,9 @@ fn resolve_needs(
     {
         return Err(format!("needs an unknown class `{class}`"));
     }
-    if let Some(eyes) = &spec.eyes
-        && content.vision(eyes).is_none()
-    {
-        return Err(format!("needs unknown eyes `{eyes}` (a vision profile)"));
+    let eyes = spec.eyes.as_ref().map_or(&[][..], OneOrMany::ids).to_vec();
+    if let Some(unknown) = eyes.iter().find(|e| content.vision(e).is_none()) {
+        return Err(format!("needs unknown eyes `{unknown}` (a vision profile)"));
     }
     let either = match spec.either {
         Some(alternatives) => {
@@ -2663,7 +2673,7 @@ fn resolve_needs(
         chosen: spec.chosen,
         level: spec.level,
         race: spec.race,
-        eyes: spec.eyes,
+        eyes,
         class: spec.class,
         animal: spec.animal,
         element: spec.element,
@@ -2709,6 +2719,7 @@ pub(super) fn parse<'a>(
     let mut max_ranks = Once::new("max_ranks");
     let mut coverage = Once::new("coverage");
     let mut alike = Once::new("alike");
+    let mut merged = Once::new("merged");
     let mut first_file = None;
     let mut trees: Vec<(&str, TreeSpec)> = Vec::new();
     let mut systems: Vec<(&str, SystemSpec)> = Vec::new();
@@ -2720,6 +2731,7 @@ pub(super) fn parse<'a>(
         max_ranks.take(file, parsed.max_ranks)?;
         coverage.take(file, parsed.coverage)?;
         alike.take(file, parsed.alike.map(|pairs| (file, pairs)))?;
+        merged.take(file, parsed.merged.map(|ids| (file, ids)))?;
         trees.extend(parsed.tree.into_iter().map(|t| (file, t)));
         systems.extend(parsed.system.into_iter().map(|s| (file, s)));
         pending.extend(parsed.talent.into_iter().map(|spec| Pending { file, spec }));
@@ -2735,6 +2747,7 @@ pub(super) fn parse<'a>(
         systems: Vec::new(),
         coverage,
         max_ranks,
+        merged: BTreeMap::new(),
         list: Vec::new(),
         ids: BTreeMap::new(),
     };
@@ -2970,6 +2983,23 @@ pub(super) fn parse<'a>(
     }
     let (alike_file, alike) = alike.get_or((first_file, Vec::new()));
     super::talent_alike::check(&book, &alike, alike_file)?;
+    // A merged id is gone from the data, and what it became is there.
+    let (merged_file, merged) = merged.get_or((first_file, BTreeMap::new()));
+    for (gone, into) in &merged {
+        if book.id(gone).is_some() {
+            return Err(ContentError::new(
+                merged_file,
+                format!("`merged` names talent `{gone}`, which is still in the data"),
+            ));
+        }
+        if book.id(into).is_none() {
+            return Err(ContentError::new(
+                merged_file,
+                format!("`merged` merges `{gone}` into an unknown talent `{into}`"),
+            ));
+        }
+    }
+    book.merged = merged;
     Ok(book)
 }
 
@@ -3079,6 +3109,19 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
         ));
         assert!(e.contains("duplicate talent id `healthy`"), "{e}");
         assert!(e.contains("data/talents/healthy.toml"), "{e}");
+    }
+
+    #[test]
+    fn a_merged_id_is_gone_and_merged_into_one_there() {
+        let with =
+            |merged: &str| SETTINGS.replace("max_ranks = 3", &format!("max_ranks = 3\n{merged}"));
+        let talents = [("healthy", HEALTHY), ("hardy", HARDY)];
+        let content = load(&with("merged = { hale = \"healthy\" }"), &talents).expect("loads");
+        assert_eq!(content.talents().merged["hale"], "healthy");
+        let e = err(load(&with("merged = { hardy = \"healthy\" }"), &talents));
+        assert!(e.contains("which is still in the data"), "{e}");
+        let e = err(load(&with("merged = { hale = \"robust\" }"), &talents));
+        assert!(e.contains("into an unknown talent `robust`"), "{e}");
     }
 
     #[test]
