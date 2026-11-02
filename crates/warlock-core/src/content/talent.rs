@@ -76,7 +76,7 @@ pub struct SystemDef {
     /// Its talents are still to come: counted and shown, not yet required.
     pub pending: bool,
     /// The fewest talents it may have, when not the bar's (`[coverage]`): a young system that
-    /// ships with one (`creature_gear`, Scavenger).
+    /// ships with one.
     pub min_talents: Option<u32>,
 }
 
@@ -415,13 +415,9 @@ pub enum TalentEffect {
     QuestGoldPercent { value: i32 },
     /// Prices move this many percent more in its favour (spec §7 "Shops"), before the cap.
     FavourPercent { value: i32 },
-    /// What it buys or sells in a shop is identified.
-    IdentifyTrades,
     /// Temple services cost it half, and a cure also mends a point of each damaged stat
     /// (Pious; `world/service.rs`).
     Pilgrim,
-    /// What a creature it kills drops is identified as it lands (spec §8 "Creature gear").
-    Scavenger,
     /// Item descriptions show what each gem in a thing is worth.
     GemWorth,
     /// A magic item it has carried this many hours since it held the effect is identified.
@@ -981,6 +977,9 @@ pub enum TalentEffect {
     /// The class active Knock: for `mana` mana, the lock of the locked door or chest in a
     /// direction springs open (`world/knock.rs`; spec §8 "Chests").
     Knock { mana: i32 },
+    /// The class active Merchant's eye: a stack the player carries is identified, for the time of
+    /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
+    MerchantsEye,
 }
 
 /// One degree: a cooldown's default.
@@ -1066,6 +1065,7 @@ impl TalentEffect {
             TalentEffect::Inspire { .. } => A::Inspire,
             TalentEffect::Consecrate { .. } => A::Consecrate,
             TalentEffect::Knock { .. } => A::Knock,
+            TalentEffect::MerchantsEye => A::MerchantsEye,
             _ => return None,
         })
     }
@@ -1895,9 +1895,7 @@ impl TalentEffect {
             | TalentEffect::Avatar
             | TalentEffect::Whirlwind
             | TalentEffect::WeightlessCoins
-            | TalentEffect::IdentifyTrades
             | TalentEffect::Pilgrim
-            | TalentEffect::Scavenger
             | TalentEffect::GemWorth
             | TalentEffect::SeesUnaware
             | TalentEffect::StartledBlow
@@ -1909,6 +1907,7 @@ impl TalentEffect {
             | TalentEffect::ThrowVoice
             | TalentEffect::Finisher
             | TalentEffect::LowBlow
+            | TalentEffect::MerchantsEye
             | TalentEffect::GraveWarden
             | TalentEffect::Disarm
             | TalentEffect::Purify

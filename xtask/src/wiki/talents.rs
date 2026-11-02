@@ -736,14 +736,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::FavourPercent { value } => {
             format!("shop favour {} (before the cap)", percent(value))
         }
-        TalentEffect::IdentifyTrades => "what you buy or sell in a shop is identified".to_string(),
         TalentEffect::Pilgrim => {
             "temple services cost half (rounded up), and a cure also mends one point of each \
              damaged stat"
                 .to_string()
-        }
-        TalentEffect::Scavenger => {
-            "what a creature you kill drops is identified as it lands".to_string()
         }
         TalentEffect::GemWorth => "item descriptions show what each gem is worth".to_string(),
         TalentEffect::IdentifyCarried { hours } => format!(
@@ -1623,6 +1619,18 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "active (aimed in a direction, for {mana} mana, the time of a spell): the lock of \
              the locked door or shut chest there springs open; nothing opens and no trap \
              springs. Where nothing locked stands it is refused, with no time or mana spent"
+        ),
+        TalentEffect::MerchantsEye => format!(
+            "active (on a thing you carry, for the time of reading a scroll, {} at normal pace; \
+             no mana, cooldown, or check, as often as you like): the thing is identified as a \
+             scroll of identify would identify it. On a thing you already know it is refused, \
+             with no time spent",
+            super::actions::at_normal_pace(warlock_core::content::price(
+                content
+                    .action_costs()
+                    .cost(warlock_core::content::ActionKind::Read),
+                warlock_core::content::BASE_TURN
+            ))
         ),
     }
 }

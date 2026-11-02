@@ -155,6 +155,7 @@ mod loot;
 mod lucky;
 mod lurk;
 mod mana;
+mod merchants_eye;
 mod mimic;
 pub(crate) mod mirrors;
 mod openings;
@@ -1396,6 +1397,7 @@ impl World {
             Action::UseTalent(TalentActive::BloodMagic) => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
+            Action::UseOn(active, item) => return self.use_class_on(*active, *item),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
             // A `use:ID` that names no spell but a weapon active is that active.
             Action::Cast(id, at)
@@ -1666,6 +1668,8 @@ mod magic_tests;
 mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
+#[cfg(test)]
+mod merchants_eye_tests;
 #[cfg(test)]
 mod mimic_tests;
 #[cfg(test)]

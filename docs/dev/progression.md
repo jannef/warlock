@@ -29,6 +29,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley and Rage (Inspire, #244, among them); Hardened's hit points are `level_up`'s. |
 | `world/rage.rs` | The barbarian's Rage on the Rage resource (R1, #249): `World::rage` (`grant_resource_with_status`), `World::unstoppable` (from `hurt`). |
 | `world/volley.rs` | `use_class_at` (`Action::UseAt`, a class active aimed at a cell: `use:volley:12,5`) and the ranger's Volley (#244), on 6 Focus (#250). |
+| `world/merchants_eye.rs` | `use_class_on` (`Action::UseOn`, a class active on a stack carried: `use:merchants_eye:c`) and the merchant's Merchant's eye (#816): `World::identify` on the stack for the time of a `read`; no mana, cooldown, check, or limit; refused, no time, for a stack not carried or already known. |
 | `world/focus.rs` | The ranger's Focus (R2, #250): `hold` (what a talent's `grants_resource` grants, from `class::hand_out` and `World::grant_class`), `World::rapid_shot` (from `shoot.rs::fire`). `docs/dev/resources.md`. |
 | `world/quest.rs` | `tally_kill` (every kill of the player's, by level and type; `Quests::prey`, `killed`): the design's B6. |
 
@@ -140,6 +141,7 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `reprieve` | `World::hurt` → `World::reprieve` (after Rise from the ashes; `Progress::once`) |
 | `inspire`, `virtuoso` | `world/class_ability.rs` (`World::inspire`: `TalentMods::inspiring`, its `instead` resource via `World::spend_resource`, else `World::spend_mana`); `Ability::unavailable` (`Unavailable::NoMana` when the resource falls short too) |
 | `volley` | `world/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
+| `merchants_eye` | `world/merchants_eye.rs` (`Action::UseOn`, `World::use_class_on`; `ClassActive::aims_item`, `Aim::Item`, `Ability::action_on`; the UI opens the identify list, `IdentifyBy::Class`) |
 | `favoured_prey` | `World::resolve` → `World::favoured` (`world/ambush.rs`), against `Quests::prey` |
 | `ambush` (summed), `ambush_threat` | `World::resolve` → `World::sneaks` (before the strike), `sneak_threat`, `ambushed`; `Dice::and` adds the dice of the same sides |
 | `exact_sounds` | `Perception::compute` → `noise::perceive` (`noise::Exact::All`) |
@@ -174,7 +176,6 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `carry_kg`, `weightless_coins` | `burden::load` (with the affixes' kilograms; coins, item class `coins`, left out of the load) |
 | `quest_gold_percent` | `World::complete` (`quest.rs`) |
 | `favour_percent` | `world::shop::favour` (before the cap, `MAX_FAVOUR`) |
-| `identify_trades` | `World::pay` (what was unpaid) and `World::trade` (what is sold, "That was …!") |
 | `gem_worth` | `PerceptionView::appraisal` → `magic::describe::appraised` (the describe screen) |
 | `identify_carried` | `World::appraise_carried` from `live`: `Magic::carried` counts the seconds (saved, left out while 0) |
 | `gem_find_percent` | `gem::find_with` (the gems' chance scaled, at most 100) through `magic::loot::Luck` (`Luck::of(talents)`: with `loot_magic_percent`, from `level_template` and `World::loot_of`) |
@@ -242,7 +243,8 @@ is used and does nothing, `docs/dev/alignment.md`). A shared entry is one talent
 name alike (`purity_of_body`, the paladin's, the priest's, and the monk's: #790 cut its copy
 `divine_health`); the monk's Deflect missiles is the ordinary talent, handed out. A save holding
 a talent the content no longer has (the thief's three removed by #684, the 27 cut by #774, the
-weak ones #787 cut and the three #788 merged into Pious, #790's clones and chains) loads
+weak ones #787 cut and the three #788 merged into Pious, #790's clones and chains, #816's
+identification talents) loads
 without it: `Talents::drop_unknown` in `World::from_state`,
 each said in `World::retiered` (logged on load; `talent_tests.rs`
 `a_save_naming_a_cut_talent_loads_without_it`). A talent **merged** into another is not
@@ -312,7 +314,8 @@ cut them). The owner: "Modify the talent rule to prevent this type of talent cre
   their remains `creature_gear`). The #776 review's cull (#787) left two tags bare: `weather`
   folded into `travel` (the outdoors: the overworld, its local areas, and the sky over them;
   the druid's Call lightning carries it), and `background` was dropped (Favoured child was its
-  one talent, and no parent fits a draw made once at creation).
+  one talent, and no parent fits a draw made once at creation). #816 dropped `creature_gear` the
+  same way when Scavenger, its one talent, was cut.
 - **The bar is one talent.** `min_talents = 1`, and a feature issue may answer "none: it extends
   X, whose talents already touch it".
 - **A talent must earn its place.** It is a real choice at its tier: it changes how a build plays
@@ -364,10 +367,15 @@ cut them). The owner: "Modify the talent rule to prevent this type of talent cre
   bloats); one that is neither is cut, or only its hidden half where the rest is good.
 - **Information is a garnish, never a talent** (#776's rule 8, #791): beside the policy's
   "information only", the half of an otherwise good talent that only tells (Gem lore's worth,
-  Tracker's exact sounds) may stay, a whole talent that only tells may not. Identification
-  (Lore, Arcane lore, Eye for quality, Scavenger) is the item game's own rule, not a readout:
-  it decides which unknown potion, scroll, or wand is used, and the scroll and spell of
-  identify do the same.
+  Tracker's exact sounds) may stay, a whole talent that only tells may not.
+- **No identification talents** (the owner, 2026-11-02, #816: "get rid of identification
+  talents. give item identification as an ability to merchant class"). Lore, Arcane lore, Eye
+  for quality, and Scavenger are cut, with the effects only they read (`identify_trades`,
+  `scavenger`); the bard's 1 and the wizard's 6 keep their other entries, and the merchant's 12
+  is now the class active Merchant's eye (`world/merchants_eye.rs`). Identifying is the scroll
+  and spell of identify, the Appraise skill, Old lore (a birth sign's gift, `identify_carried`),
+  and the merchant's eye. Dropping Scavenger left `creature_gear` with no talent, and no parent
+  fits what creatures carry and drop, so the tag is dropped (as `background` was by #787).
 - **Shop favour is not over-supplied** (#776's rule 9, #791). The merchant's Haggler is the one
   class ability on shop favour (`favour_percent`); no new source of shop favour joins the
   pickable talents or the class tables. The half-elf's Diplomat and the horoscope's Dragon's
@@ -445,8 +453,7 @@ abilities, so one id stays and the three tables name it. Chains: Weapon speciali
 focus, Great cleave → Cleave, Breaker → Mighty kick, each now the second rank (with the old
 rank's needs and effects; Mighty kick's rank 1 stays the Might tree's free talent). No
 class-table level was emptied. Kept: the stronger class versions of a pickable's effect
-(Improved sneak attack's 2d6 beside Ambusher's 1d6, Arcane lore's hourly identification beside
-Lore's daily, Arcane mastery's +100 % mana regeneration beside Clear mind's +25 %, Diamond
+(Improved sneak attack's 2d6 beside Ambusher's 1d6, Arcane mastery's +100 % mana regeneration beside Clear mind's +25 %, Diamond
 soul's Deflection +2 beside Deflection's +1, Saint's healing +100 % beside Healthy's +25 %,
 Uncanny dodge's burden Dexterity 2 beside Nimble's 1, Bulwark's plain Protection +2), Fast
 movement and Fleet (their conditions differ: unburdened, no shield), Miracle and Hag's bargain

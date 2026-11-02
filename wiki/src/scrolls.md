@@ -21,6 +21,8 @@ You learn what a kind of scroll is, for good, in one of four ways:
   scroll is aimed first, and a [fireball](magic.md#spell-fireball) aimed near you may catch you too.
 - **The [scroll of identify](#the-scroll-of-identify)**, read on it (below): the scroll of identify is known once you read
   your first one.
+- **A [merchant](classes.md#merchant)'s [Merchant's eye](talents.md#talent-merchants-eye)** (from level 12), used on it from
+  the abilities menu: it tells the scroll for what it is, as the scroll of identify would.
 - **An appraisal**: Factor Wulfrun in Cēaptūn identifies everything you carry for 100 [gold](shops.md#money) per
   [unidentified](magic-items.md#unidentified-items) [stack](objects.md#piles) (see [Services](npcs.md#services)).
 - **Your [starting kit](starting-kit.md)**: you know the scrolls you start with.

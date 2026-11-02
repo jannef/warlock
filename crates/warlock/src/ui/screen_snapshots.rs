@@ -479,6 +479,16 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A merchant past level 12 (#816): Merchant's eye among the class abilities, asking for
+    // something carried.
+    Case {
+        name: "abilities-menu-merchants-eye",
+        character: Some("human,male,merchant"),
+        kit: true,
+        actions: "xp:60000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
     Case {
         name: "abilities-menu-here",

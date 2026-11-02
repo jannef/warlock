@@ -46,7 +46,7 @@ use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::burden::{Burden, Load};
 use warlock_core::color::Rgb;
-use warlock_core::content::{Rarity, SpellId};
+use warlock_core::content::{ClassActive, Rarity, SpellId};
 use warlock_core::equipment;
 use warlock_core::object::{Stack, Weight, format_weight};
 use warlock_core::perception::PerceptionView;
@@ -83,6 +83,8 @@ pub enum IdentifyBy {
     Scroll(usize),
     /// A spell cast on a stack the player carries (Identify), paid in mana.
     Spell(SpellId),
+    /// A class active used on a stack the player carries (the merchant's Merchant's eye).
+    Class(ClassActive),
 }
 
 impl ObjectList {
@@ -396,6 +398,9 @@ impl ObjectScreen {
                 Some(spell) => ScreenAction::Act(Action::CastOn(spell.clone(), item.position())),
                 None => ScreenAction::Stay,
             },
+            (ObjectList::Identify(IdentifyBy::Class(active)), item) => {
+                ScreenAction::Act(Action::UseOn(active, item.position()))
+            }
             (ObjectList::Temper, item) => ScreenAction::Act(Action::Temper {
                 item: item.position(),
             }),

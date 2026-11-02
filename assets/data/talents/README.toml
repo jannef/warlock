@@ -185,7 +185,6 @@
 #                                 least 1)
 #   quest_gold_percent { value }  the gold a quest gives, that percent more
 #   favour_percent { value }      shop favour, that many percent more (before the cap)
-#   identify_trades               what it buys or sells in a shop is identified
 #   pilgrim                       temple services cost half (rounded up), and a cure also mends
 #                                 a point of each damaged stat (Pious)
 #   devout                        at a forgotten altar of its own side the side's lean counts
@@ -457,6 +456,10 @@
 #                                 that mana (0 to 100) the lock of the locked door or shut
 #                                 chest there springs open; refused, no time, where nothing
 #                                 locked stands
+#   merchants_eye                 the active Merchant's eye (on a stack carried,
+#                                 `use:merchants_eye:c`): the stack is identified as the scroll
+#                                 of identify would, for the time of a `read`; refused, no
+#                                 time, for one already known
 #   A birth sign's actives (spec §8 "Birth sign"; the abilities menu's Birth sign group, the
 #   talent's id the ability's id, `use:horns_grace`):
 #   horns_grace { cures, diseases, cooldown, degrees }   the active Horn's grace: the statuses

@@ -217,6 +217,10 @@ pub enum Action {
     /// (`use:volley:12,5`). Takes the time of its cost's action; refused (no time) without the
     /// ability or while its cooldown lasts.
     UseAt(ClassActive, Pos),
+    /// Use a class active on a stack the player carries, by its position (spec §8 "Class
+    /// abilities"): the merchant's Merchant's eye (`use:merchants_eye:c`). Takes the time of its
+    /// cost's action; refused (no time) without the ability, or for a stack it may not work on.
+    UseOn(ClassActive, usize),
     /// Use a birth sign's active gift (spec §8 "Birth sign"; the abilities menu's Birth sign
     /// group): Horn's grace, Blaze, and, aimed at a cell, the Transfixing stare
     /// (`use:horns_grace`, `use:blaze`, `use:transfixing_stare:12,5`). Takes the time of its
@@ -801,6 +805,7 @@ impl fmt::Display for Action {
             Action::Act(id, dir) => write!(f, "use:{id}:{dir}"),
             Action::CastOn(spell, on) => write!(f, "use:{spell}:{}", position_text(*on)),
             Action::UseAt(active, at) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
+            Action::UseOn(active, on) => write!(f, "use:{}:{}", active.id(), position_text(*on)),
             Action::Gift(active, None) => write!(f, "use:{}", active.id()),
             Action::Gift(active, Some(at)) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::Talent { id, choice: None } => write!(f, "talent:{id}"),
@@ -961,6 +966,13 @@ impl FromStr for Action {
                     let at = aim
                         .ok_or_else(|| format!("`use:{id}` needs a cell, e.g. `use:{id}:12,5`"))?;
                     return Ok(Action::UseAt(active, parse_cell(at)?));
+                }
+                // One that works on a stack the player carries, `use:merchants_eye:c` (bare, the
+                // rules ask for the stack).
+                if let Some(aim) = aim.filter(|_| active.aims_item()) {
+                    let on = parse_position(aim)
+                        .ok_or_else(|| format!("`use:{id}` needs a stack, e.g. `use:{id}:c`"))?;
+                    return Ok(Action::UseOn(active, on));
                 }
                 let dir = aim.map(str::parse::<Dir>).transpose()?;
                 Ok(Action::Use(active, dir))
@@ -1464,6 +1476,8 @@ mod tests {
             Action::Use(ClassActive::Rage, None),
             Action::Use(ClassActive::Smite, Some(Dir::SW)),
             Action::UseAt(ClassActive::Volley, Pos::new(12, 5)),
+            Action::UseOn(ClassActive::MerchantsEye, 2),
+            Action::UseOn(ClassActive::MerchantsEye, 30),
             Action::Gift(SignActive::Blaze, None),
             Action::Cast("blessing".into(), None),
             Action::Cast("arcane_bolt".into(), Some(Pos::new(12, 5))),

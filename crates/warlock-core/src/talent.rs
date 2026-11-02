@@ -387,13 +387,9 @@ pub struct TalentMods {
     pub quest_gold_percent: i32,
     /// Percent more favour in shops, before the cap.
     pub favour_percent: i32,
-    /// What it buys or sells is identified.
-    pub identify_trades: bool,
     /// Temple services cost it half, and a cure also mends a point of each damaged stat
     /// (Pious).
     pub services: bool,
-    /// What a creature it kills drops is identified as it lands (Scavenger).
-    pub scavenger: bool,
     /// Item descriptions show its gems' worth.
     pub gem_worth: bool,
     /// The hours a magic item must be carried to be identified, if it has the effect (the
@@ -675,6 +671,8 @@ pub struct TalentMods {
     pub lurk: Option<StatusId>,
     /// The active Low blow: a blow that is a sneak attack whatever the foe knows.
     pub low_blow: bool,
+    /// The active Merchant's eye: a stack it carries identified, for the time of a reading.
+    pub merchants_eye: bool,
     /// How much higher every skill it is trained in counts (Jack of all trades).
     pub trained_skills: i32,
     /// The alternative resources its talents grant it, in the order first named (Rapid shot's
@@ -995,6 +993,7 @@ impl TalentMods {
             A::Volley => self.volley.is_some(),
             A::Lurk => self.lurk.is_some(),
             A::LowBlow => self.low_blow,
+            A::MerchantsEye => self.merchants_eye,
             A::MasterThief => self.finisher,
             A::Inspire => self.inspire.is_some(),
             A::Consecrate => self.consecrate.is_some(),
@@ -1242,9 +1241,7 @@ impl TalentMods {
             TalentEffect::TrapDamagePercent { value } => self.trap_damage_percent += value,
             TalentEffect::QuestGoldPercent { value } => self.quest_gold_percent += value,
             TalentEffect::FavourPercent { value } => self.favour_percent += value,
-            TalentEffect::IdentifyTrades => self.identify_trades = true,
             TalentEffect::Pilgrim => self.services = true,
-            TalentEffect::Scavenger => self.scavenger = true,
             TalentEffect::GemWorth => self.gem_worth = true,
             TalentEffect::IdentifyCarried { hours } => {
                 self.identify_carried = Some(self.identify_carried.map_or(hours, |h| h.min(hours)));
@@ -1774,6 +1771,7 @@ impl TalentMods {
                 self.lurk = content.status_id(&status).or(self.lurk);
             }
             TalentEffect::LowBlow => self.low_blow = true,
+            TalentEffect::MerchantsEye => self.merchants_eye = true,
             TalentEffect::TrainedSkills { value } => self.trained_skills += value,
             TalentEffect::GrantsResource { resource } => {
                 if let Some(resource) = content.resource_id(&resource)

@@ -562,6 +562,7 @@ impl Ability {
             Ability::Spell(spell) if aimed(content, spell) => Aim::Cell,
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
+            Ability::Class(active) if active.aims_item() => Aim::Item,
             Ability::Weapon(_, id) => match content.weapon_ability(id).active.map(|a| a.aim) {
                 Some(ActiveAim::Direction) => Aim::Direction,
                 Some(ActiveAim::Cell) => Aim::Cell,
@@ -700,10 +701,11 @@ impl Ability {
     }
 
     /// The action it is, worked or cast on inventory stack `item`, for one that asks for a stack
-    /// the player carries (Identify, Temper); `None` for any other.
+    /// the player carries (Identify, Temper, Merchant's eye); `None` for any other.
     pub fn action_on(self, content: &Content, item: usize) -> Option<Action> {
         match self {
             Ability::Temper => Some(Action::Temper { item }),
+            Ability::Class(active) if active.aims_item() => Some(Action::UseOn(active, item)),
             Ability::Spell(spell) if aims_item(content, spell) => {
                 Some(Action::CastOn(spell_name(content, spell)?, item))
             }
@@ -837,6 +839,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Inspire
         | ClassActive::Consecrate
         | ClassActive::Knock
+        | ClassActive::MerchantsEye
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))

@@ -182,7 +182,7 @@ things"), a special room whose own population is the three families drawn four d
 so Fyrdelf's bottom floor (danger 16, which favours armouries at 20) has them; the **workshop**
 holds the household things of a house's work. Legends and the dev `spawn` place them too. No talents
 of their own: the `animated` system and its Salvager, Unbinder, and Appraiser's eye were cut in
-#773/#774 (animated objects are creatures; their remains are `creature_gear`).
+#773/#774 (animated objects are creatures; their remains fall as any creature's gear does).
 
 ## Tests
 

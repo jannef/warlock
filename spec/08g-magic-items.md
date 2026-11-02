@@ -41,7 +41,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     ADOM and Path of Exile; so an attentive player may notice them: a stat on the character
     screen, a glow). Wearing or wielding an item for a while does not identify it. The core API
     `World::identify(item)` (`world/loot.rs`; crate-internal, for actions: the scroll of identify,
-    #150, calls it from its read action) identifies the player's inventory stack `item` and says
+    #150, calls it from its read action, the Identify spell and the merchant's Merchant's eye too) identifies the player's inventory stack `item` and says
     "This is a Sharp long sword of the Bear!", returning `Identified::Now(name)`, `Known`
     (already identified, or normal), or `NoSuchItem`. Presentation reaches affixes only through
     `Stack::known_magic` (nothing until identified), so neither perception, the UI, nor
@@ -352,7 +352,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     changes). It is identified when one is used ("It is a wand of fireball.") or identified;
     every wand of it then shows by its name. Its **charges** (`Stack`'s `charges`: the charges
     used, saved, left out of the save while the wand is as made) stay unknown until the wand
-    itself is identified, by the scroll of identify or by Lore's carrying ("a wand of
+    itself is identified, by the scroll of identify or a merchant's eye ("a wand of
     fireball (7 charges)", "(empty)"). Its **rung** comes with its type: once the type is known
     the item description says what it does in the user's hands, the roll at its rung plus their
     wand rungs with their other hooks, its damage type, and a burst's radius ("Holds Fireball:

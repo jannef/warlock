@@ -875,11 +875,11 @@ impl Screens<'_> {
         self.stack.screens.push(screen);
     }
 
-    /// Opens the identify list for a spell cast on a stack the player carries (Identify, chosen
-    /// in the abilities menu): choosing a stack casts it there.
-    pub fn open_identify_spell(&mut self, spell: warlock_core::content::SpellId) {
+    /// Opens the identify list for an ability used on a stack the player carries (the Identify
+    /// spell or Merchant's eye, chosen in the abilities menu): choosing a stack uses it there.
+    pub fn open_identify(&mut self, by: IdentifyBy) {
         let view = self.game.as_ref().map(|game| game.world.perception());
-        let list = ObjectList::Identify(IdentifyBy::Spell(spell));
+        let list = ObjectList::Identify(by);
         let screen = Screen::Objects(ObjectScreen::new(list, view.as_ref()));
         self.stack.screens.push(screen);
     }

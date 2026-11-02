@@ -367,12 +367,6 @@ name = "Experience"
 id = "speed"
 name = "Speed"
 
-# Creature gear (#328): what creatures spawn carrying, wielding, and wearing, and drop where they
-# die (animated objects' remains too); Scavenger.
-[[system]]
-id = "creature_gear"
-name = "The gear creatures carry and drop"
-
 [[system]]
 id = "factions"
 name = "Factions and creatures' stance toward you"

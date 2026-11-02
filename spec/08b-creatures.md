@@ -249,9 +249,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   stays carried. It fights with what it wields and wears (combat reads it as it reads anyone's),
   a ranged creature shoots with its bow and arrows, and all of it falls where it dies with the
   rest of what it carried. Others see what it wears and wields, never what else it carries.
-  Gear adds no state: it is the creature's inventory and equipment. **Scavenger** (Delver
-  talent, the `creature_gear` system): what a creature the player kills drops is identified as
-  it lands. The wiki's creatures table states each type's gear exactly. A gear line may name a
+  Gear adds no state: it is the creature's inventory and equipment, and what falls is
+  unidentified as any loot is. The wiki's creatures table states each type's gear exactly. A gear line may name a
   unique item (`unique:ID`, §8 "Magic items"): the Ascmearc's four wanted criminals (the
   `outlaws` faction, hostile to the player only and to no one else, with the footpads and
   footpad archers; #424, the guild design §8) each wield or wear their own this way.
@@ -317,7 +316,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     identify, asks first in the one dialog with the total (`Pay 300 gold` or `Not now`; without
     the gold only `Go back`). All or nothing: refused with the `nothing` line when everything is
     known and with "You cannot pay." short of the total, neither taking time. Pious does not
-    halve it (a temple's talent), nor does Lore.
+    halve it (a temple's talent).
   - **An offer** (`world/wares.rs`; #808, docs/design/overworld-encounters.md §15 Q7: the
     pedlar): a dialogue's `[dialogue.offer]` is one item at a fixed price, take it or leave it,
     asked for like a topic (`ask:E:wares`) and listed after the services. It is made the first
