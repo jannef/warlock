@@ -450,3 +450,37 @@ E1 and E3 add saved state and actions (E1) and content (E3): two PRs at once at 
 | Q8 | **Alert widened** to the lookout (its tags gain `awareness`), or left alone? | widened: one read, no new talent, and its description already fits |
 | Q9 | **Where the choice is asked**: the dialog with Esc leaving the question pending (info screens allowed first), or a dialog that cannot be closed? | pending with Esc: a player should be able to check their pack before choosing |
 | Q10 | **A fled party persists in the area** (§6.2) with no cap on parties in one area. | yes; the rates cap it in practice, and a wood with two bands in it is a story |
+
+## 15. The owner's decisions (2026-11-02, PR #796)
+
+These override the sections above wherever they differ.
+
+| # | Decision | What changes |
+|---|---|---|
+| Q1 | Rates as written for now; tuned in data later | nothing |
+| Q2 | Pass by is nothing | nothing |
+| Q3 | **Yes**: resting on the overworld rolls encounters, and so does **foraging** (the Forage ability, `world/forage.rs`) | the E4 slice: both hooks, the §14 Q3 default (a quarter of the landscape's rate per hour; a resting player's lookout by Listen's `hearing`; a forager's as a traveller's) |
+| Q4 | One action of debt when ambushed | nothing |
+| Q5 | **No level gates.** Some entries *might* be retired as the player rises | `when.level` keeps only `max` (an entry or table that stops at a level); every `level.min` of §7.2 and §7.4 is dropped |
+| Q6 | The rolled quest's variant condition goes wherever it is cheapest | the E3 content slice, where it is first used |
+| Q7 | **The pedlar trades**: he offers **one item at a fixed price, take it or leave it**. The item is a *favoured* roll, much better than random loot but still generated. **Three new uniques** appear in his offer very rarely: one **ring**, one **neck**, one **hands** item, each about the power of ADOM's black torc | a slice of its own (E5): the offer (a favoured magic-item roll, a fixed price, the one dialog: "Buy it" / "Leave it"), and the three uniques in `assets/campaigns/ascmearc/data/uniques/` (or shared `data/uniques/`), placed only through the pedlar's offer. No shop, no floor |
+| Q8 | Alert widened | nothing |
+| Q9 | **The dialog cannot be closed without a choice: it must be answered** | §5.3: no Esc, no info screens first; the pending state still lives in the world so a save mid-question resumes on the dialog |
+| Q10 | A fled party persists; **the dialog acknowledges it**: "You remember slipping by these footpads before." (or similar) when the entry rolled on a cell whose area holds a party the player slipped past or fled | `Pending` records that the party is a known one; the text gains the line |
+
+**Escape works as in ADOM** (the owner):
+
+- **The player's distance from the area's edge depends on how advantaged the encounter is.** The ambushed player starts in the middle of the area with the party around them; a player who lies in wait starts near the edge they came from; a chosen fight or a met party starts between the two; a failed evade nearer the middle than a chosen fight. The distances are data (`[positions]` in `data/encounters.toml`, the player's cells from the arrival edge per outcome, the party's placed relative to the player as §6.1 says).
+- **The quick leave (`<`) is refused with enemies about**, as it is today (`world/quick_leave.rs`).
+- **Walking off the area's edge is refused while an enemy is within 3 cells** of the player ("They are too close to slip away.", no time). This is a rule of every local area, not only of encounters' (the cheapest and the most consistent); 3 is data.
+
+### Revised slices
+
+| Slice | What | Depends on |
+|---|---|---|
+| **E0 Edge rule** | the edge-exit refusal with a hostile within 3 (every local area), its test, docs, wiki line | — |
+| **E1 Rules** | §13's E1, with Q5 (`level.max` only), Q9 (no leaving the choice), Q10 (the known party), and the edge distances by outcome | — |
+| **E2 UI** | §13's E2; the dialog has no cancel | E1 |
+| **E3 Content** | §13's E3 without level gates; the variant condition (Q6) | E1, E2 |
+| **E4 Resting and foraging** | the Q3 hooks in `world/rest.rs` and `world/forage.rs` | E1 |
+| **E5 The pedlar's offer and three uniques** | Q7 | E1, E2, E3 (the pedlar) |
