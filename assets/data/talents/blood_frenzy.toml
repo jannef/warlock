@@ -3,6 +3,9 @@ id = "blood_frenzy"
 name = "Blood frenzy"
 tree = "class"
 granted = true
-description = "Every kill feeds your rage and keeps it burning longer."
-effects = [{ kind = "resource_build", resource = "rage", on = "kill", amount = 5 }]
-systems = ["status", "resources"]
+description = "Raging, you fight in a blood frenzy: your blows come a fifth faster, and every kill feeds the fire."
+effects = [
+    { kind = "attack_price_percent", value = -20, while = "raging" },
+    { kind = "resource_build", resource = "rage", on = "kill", amount = 5 },
+]
+systems = ["combat", "speed", "resources"]
