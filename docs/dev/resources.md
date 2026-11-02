@@ -130,7 +130,13 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   carries `resource_rate` +100 (read in `World::resource_rate`). Flurry (level 1) carries
   `TalentEffect::FlurryCost { resource, cost }` (`TalentMods::flurry_cost`), read in one place,
   `World::flurry` (`free_blow.rs`, from `second_blow` on `Cue::First`, which now takes `events`
-  for the spend): the second blow is decided only once its cost is spent; short, none. Quivering
+  for the spend): the second blow is decided only once its cost is spent; short, none. Patient
+  defence (level 18, S5, #849) costs `resource = { id = "ki", cost = 1 }` on its talent
+  (`TalentEffect::PatientDefence { status }`, `TalentMods::patient_defence`): `World::patient_defence`
+  (`world/ascetic.rs`) gives a degree of Poised for a wait's price; refused only by
+  `may_use_class` with no ki. Given during the priced action, the status sits on `World::fresh`,
+  so the creatures' turns meet it and the next action eases it. Tests: `world/ascetic_tests.rs`.
+  Quivering
   palm costs `resource = { id = "ki", cost = 5 }` on its talent and lost its cooldown
   (`TalentEffect::QuiveringPalm { status, severity }`); `use_class` refuses it with a weapon in
   hand before the spend (`ClassActive::bare_handed`). Stunning strike (12, #848) costs

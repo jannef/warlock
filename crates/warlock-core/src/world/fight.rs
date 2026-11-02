@@ -532,13 +532,16 @@ impl World {
         };
         if kind == AttackKind::Melee {
             let mut parried = free_blow::parried(blow);
+            let mut dodged = free_blow::dodged(blow);
             if let Some(second) = self.second_blow(attacker, target, Cue::First(blow), events) {
                 let with = second.with;
                 let struck = self.strike_free(second, events);
                 parried |= free_blow::parried(struck);
+                dodged |= free_blow::dodged(struck);
                 self.both_hands(attacker, target, (blow, struck), with, events);
             }
-            self.after_attack(attacker, target, parried, events);
+            // A blow dodged is answered by a Poised target (`ascetic.rs`).
+            self.after_melee(attacker, target, (parried, dodged), events);
         }
         blow
     }
@@ -572,7 +575,7 @@ impl World {
                     profile,
                 })
                 .or_else(|| self.flurry(striker, target, events)),
-            Cue::Attacked { parried } => {
+            Cue::Attacked { parried, dodged } => {
                 // A parry fires the target's weapon abilities (Staggering block) as the attack
                 // ends, before the free blows it may bring.
                 let stand =
@@ -587,7 +590,7 @@ impl World {
                     self.weapon_trigger(target, crate::content::Trigger::Parried, fired, events);
                 }
                 (self.cleave(striker, target, false))
-                    .or_else(|| self.riposte(striker, target, parried))
+                    .or_else(|| self.riposte(striker, target, (parried, dodged)))
             }
             Cue::Cleaved => self.cleave(striker, target, true),
             Cue::Leaves => self.opportunist(striker, target),

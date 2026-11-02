@@ -1013,7 +1013,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels, at least 1d6, a magic weapon's extra die folded into the bonus at its average; then
     Spent, 5 minutes; works for Kind or better), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
-    glowing item's; a cast; works for Kind or better), Step of the wind (the
+    glowing item's; a cast; works for Kind or better), Patient defence (the ascetic's at 18, #849: for a
+    point of Ki and a wait's time, Poised until their next action: Dodge +4 from the status's own
+    `combat`, and a melee blow on them missed by their Dexterity, Dodge, or Parry answered at once
+    by the riposte, which the status switches on in `World::free_blows_of` (a blow missed by
+    Dexterity or Dodge is answered only while Poised: `Cue::Attacked { dodged }`, raised only by
+    a creature's attack, `World::attack`); refused, no time or ki, only with no ki; never for
+    nobody near, and taken again while Poised it holds one action more; any grip), Step of the wind (the
     ascetic's at 6, #847: for a point of Ki and **no time**, a degree of Light-footed, so the next
     action, whatever it is, costs half its price and ends it; refused, no time or ki, while
     Light-footed already, "You are already light on your feet."; any grip), Stunning strike (the ascetic's at 12,
@@ -1070,7 +1076,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the effect: `protection 2 while raging` is not Bulwark's `protection 2`.
   - **Resources**: Rage, War cry, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
     (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Step of the wind, Stunning strike,
-    Diamond soul's catch, and Quivering palm spend (R4, #252; #846, #847, #848, #851).
+    Patient defence, Diamond soul's catch, and Quivering palm spend (R4, #252; #846, #847, #848, #849,
+    #851).
   - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):

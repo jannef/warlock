@@ -710,6 +710,10 @@ pub enum TalentEffect {
     /// The class active Holy radiance: a toggle; while it suffers `status` it sheds light
     /// `light` (an id in `data/lights.toml`).
     Radiance { status: String, light: String },
+    /// The class active Patient defence: a wait, then a degree of `status` (Poised: Dodge up
+    /// and the riposte switched on until the next action; what it costs is the talent's
+    /// `resource`: Ki; `world/ascetic.rs`).
+    PatientDefence { status: String },
     /// The class active Quivering palm: an unarmed blow in a direction; a hit that wounds
     /// leaves the target `severity` degrees of `status` (what it costs is the talent's
     /// `resource`: Ki).
@@ -1100,6 +1104,7 @@ impl TalentEffect {
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
             TalentEffect::Smite { .. } => A::Smite,
             TalentEffect::Radiance { .. } => A::HolyRadiance,
+            TalentEffect::PatientDefence { .. } => A::PatientDefence,
             TalentEffect::StunningStrike { .. } => A::StunningStrike,
             TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
             TalentEffect::WindStep { .. } => A::StepOfTheWind,
@@ -1513,6 +1518,7 @@ impl TalentEffect {
                 }
                 status(id)
             }
+            TalentEffect::PatientDefence { status: id } => status(id),
             TalentEffect::Blaze {
                 radius,
                 damage,
