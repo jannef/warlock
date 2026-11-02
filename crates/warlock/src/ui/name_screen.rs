@@ -1,8 +1,7 @@
 //! Character creation's Name step (spec §6 "New run", §8 "Character creation"): after the class,
-//! before the summary, a text field for the character's name. The game's text field: the keys
-//! bound in `Context::Text` edit it (accept, erase, a random name, back), and every other key
-//! types its text, literally, as long as the font draws it and the name has room
-//! ([`MAX_NAME`]). Held keys type and erase again, but never accept.
+//! before the summary, a text field for the character's name: the game's text field
+//! ([`TextField`]) of [`MAX_NAME`] characters, with Random on top. Held keys type and erase
+//! again, but never accept.
 //!
 //! Random fills the field with one of the race's names for the gender, drawn from the run seed
 //! (`character::random_name`); an empty field shows, dimmed, the name accepting it gives: the
@@ -11,9 +10,9 @@
 use super::chargen_screen::{Draft, Step};
 use super::menu::{Edit, Panel, Press, wrap};
 use super::screens::{ScreenAction, ScreenName};
+use super::text_field::TextField;
 use super::{TEXT, TEXT_DIM};
 use crate::input::{Bindings, KeyCommand};
-use crate::render::atlas;
 use crate::render::console::Console;
 use warlock_core::character::{MAX_NAME, NAMELESS, random_name};
 use warlock_core::content::Content;
@@ -25,7 +24,7 @@ const DRAWS: u32 = 64;
 #[derive(Debug)]
 pub struct NameScreen {
     /// What is typed.
-    text: String,
+    field: TextField,
     /// The random names, in the order Random gives them; the first is what an empty field
     /// gives. Never empty.
     draws: Vec<String>,
@@ -58,7 +57,7 @@ impl NameScreen {
             format!("{article} {} {}", race.to_lowercase(), class.to_lowercase())
         });
         Self {
-            text: draft.remembered_name().unwrap_or_default(),
+            field: TextField::new(draft.remembered_name().unwrap_or_default(), MAX_NAME),
             draws,
             rolls: 0,
             who,
@@ -67,7 +66,7 @@ impl NameScreen {
 
     /// What is typed (possibly nothing).
     pub fn text(&self) -> &str {
-        &self.text
+        self.field.text()
     }
 
     /// The name accepting an empty field gives: the first random name.
@@ -75,53 +74,35 @@ impl NameScreen {
         &self.draws[0]
     }
 
-    /// Whether the field takes `ch`: a printable character the font draws, while there is room,
-    /// and no space to begin with.
-    fn takes(&self, ch: char) -> bool {
-        !ch.is_control()
-            && atlas::draws(ch)
-            && self.text.chars().count() < MAX_NAME
-            && !(ch == ' ' && self.text.is_empty())
-    }
-
     /// The next random name that is not the one shown.
     fn random(&mut self) {
-        let shown = if self.text.is_empty() {
+        let shown = if self.text().is_empty() {
             self.placeholder().to_string()
         } else {
-            self.text.clone()
+            self.text().to_string()
         };
         for _ in 0..self.draws.len() {
             self.rolls += 1;
-            let name = &self.draws[self.rolls % self.draws.len()];
-            if *name != shown {
-                self.text = name.clone();
+            let name = self.draws[self.rolls % self.draws.len()].clone();
+            if name != shown {
+                self.field.set(name);
                 return;
             }
         }
-        self.text = shown;
+        self.field.set(shown);
     }
 
     pub fn handle(&mut self, press: &Press) -> ScreenAction {
-        match press.edit {
+        match self.field.handle(press) {
             Some(Edit::Back) => ScreenAction::Close,
             Some(Edit::Confirm) => ScreenAction::Open(ScreenName::Summary),
-            Some(Edit::Erase) => {
-                self.text.pop();
-                ScreenAction::Stay
-            }
             Some(Edit::Random) => {
                 if !press.repeat {
                     self.random();
                 }
                 ScreenAction::Stay
             }
-            None => {
-                if let Some(ch) = press.text.filter(|&ch| self.takes(ch)) {
-                    self.text.push(ch);
-                }
-                ScreenAction::Stay
-            }
+            Some(Edit::Erase) | None => ScreenAction::Stay,
         }
     }
 
@@ -145,15 +126,8 @@ impl NameScreen {
             );
         }
         y += 2;
-        console.print(x + 2, y, "Name: [", TEXT);
-        let (shown, color) = if self.text.is_empty() {
-            (self.placeholder(), TEXT_DIM)
-        } else {
-            (self.text.as_str(), TEXT)
-        };
-        let printed = console.print(x + 9, y, shown, color);
-        console.print(x + 9 + printed, y, "_", TEXT);
-        console.print(x + 9 + MAX_NAME as i32 + 1, y, "]", TEXT);
+        console.print(x + 2, y, "Name: ", TEXT);
+        self.field.draw(console, x + 8, y, self.placeholder());
         y += 2;
         let key = |command| bindings.key_name(command).unwrap_or_else(|| "?".into());
         let help = format!(
