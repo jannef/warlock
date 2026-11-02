@@ -236,6 +236,10 @@ fn dump_command(content: Arc<Content>, args: DumpArgs) -> Result<(), String> {
 fn replay_command(content: Arc<Content>, args: ReplayArgs) -> Result<(), String> {
     if let Some(path) = &args.verify {
         let replay = read_replay(path)?;
+        // Not pinned: another version's replay is played, and its hashes are the check.
+        if let Some(note) = replay.version_note() {
+            eprintln!("warning: {}: {note}", path.display());
+        }
         replay.run(content).map_err(|e| e.to_string())?;
         println!(
             "{}: ok, {} steps verified",

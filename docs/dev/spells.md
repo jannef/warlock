@@ -227,10 +227,8 @@ cast path shares.
     reach a talent adds** is held only by the engine's limits (a cone at `MAX_CONE`): School
     focus on Burning hands is a cone of 4, where S1 held it at its cap of 3. **Trained stats**
     are the ladders' stats (Intelligence when the roll has none): a spell with no reach ladder
-    (Burning hands) no longer trains Willpower by the old default. **An old Potent** is held to
-    the nearest tier's range at the lenient read (`Magic::retier`, for every affix whose value
-    no tier holds: there was no such affix in a save before, and the read had kept the value,
-    which `Magic::check` then refused).
+    (Burning hands) no longer trains Willpower by the old default. **An old Potent** was held to
+    the nearest tier's range at a lenient read until #840 pinned saves to their version.
   - A ray/bolt flies to the first creature on its line; a hex (`ray`, `auto`) keeps the
     placeholder's rule, the creature seen at the cell aimed at.
   - The migrated tiers (#395, history: S1 turned them into levels, §5.8): the lowest tier

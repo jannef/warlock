@@ -30,12 +30,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   character (§8 "Character creation"); every built-in scenario names its own (Tamsin, Pip, Rowena,
   Aldric and Roderick, Maren, Osric, Garrick, Bram).
 - **Saves**: suspend-only. One save per character, written as a run starts, on quit, and by
-  periodic autosave; loading continues the run. Dev builds add named snapshots. Format: a versioned envelope (magic, format
-  version, game version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
-  atomically (temp file + rename). Before 1.0, incompatible saves are rejected with a clear message;
-  from 1.0 on, saves are migrated. The format version is bumped once per release by the
-  integrator, never by a feature change (`docs/dev/merging.md`): saves are not promised
-  across development builds, and a save a build cannot read is kept as `run.sav.bad`. The web build keeps the same bytes in the browser's
+  periodic autosave; loading continues the run. Dev builds add named snapshots. Format: an envelope (magic, game
+  version) around a JSON payload, gzip-compressed with a pure-Rust backend, written
+  atomically (temp file + rename). **A save is pinned to the game version that wrote it**
+  (#840): a save of another version is never loaded and never migrated; the list of saved
+  characters shows it as another version's, it cannot be continued (Continue skips it), and it
+  can be deleted. Nothing maps old ids or reads an old state leniently. Development builds
+  between releases share a version, so their saves are not promised across builds: a save a
+  build cannot read is kept as `<id>.sav.bad`. Replays are not pinned: they record the version
+  and play in any, their state hashes the check (a warning names another version). The web build keeps the same bytes in the browser's
   `localStorage` (below). The envelope also records a content fingerprint (hash of the ordered
   terrain, creature, level, light, dungeon-branch, object, equipment slot, skill, room effect,
   weapon skill, status, disease, trap, and shop
@@ -114,8 +117,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   saved again (every trigger that would save it deletes the save instead; on the web nothing is
   kept for the page being hidden). Dev snapshots: `F5` saves and `F9` loads `snapshots/<id>.sav`,
   the character's own (debug builds or `--dev`). A save of the single-save layout before this
-  (`run.sav`) is left where it is, never read: the next release's format version rejects it
-  anyway.
+  (`run.sav`) is left where it is, never read: another version made it.
   **File locations and portable mode** (`paths.rs` decides them all): per folder, an explicit
   `--config-dir` / `--save-dir` wins, then `--portable DIR`, then a `warlock-data` folder next to
   the game (the executable's folder; on macOS, the folder holding `Warlock.app`, never inside the

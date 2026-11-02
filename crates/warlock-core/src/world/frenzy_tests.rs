@@ -111,29 +111,12 @@ fn every_end_of_the_rage_leaves_the_berserker_aggressive() {
 }
 
 #[test]
-fn a_save_mid_rage_comes_back_raging_and_a_broken_one_is_put_right() {
+fn a_save_mid_rage_comes_back_raging() {
     let mut w = world("berserker");
     run(&mut w, "use:rage");
     let content = w.content().clone();
-    let back = crate::save::decode(&crate::save::encode(&w), content.clone()).expect("loads");
+    let back = crate::save::decode(&crate::save::encode(&w), content).expect("loads");
     assert_eq!(back.state(), w.state());
-    assert_eq!(back.perception().own_stance(), Frenzy);
-    assert!(back.retiered().is_empty());
-    // Frenzy without the rage: aggressive, with a line for the log.
-    let mut calm = world("berserker");
-    calm.player_mut().stance = Frenzy;
-    let back = crate::save::decode(&crate::save::encode(&calm), content.clone()).expect("loads");
-    assert_eq!(back.perception().own_stance(), Aggressive);
-    assert!(
-        (back.retiered().iter()).any(|l| l.contains("not raging in the frenzy stance")),
-        "{:?}",
-        back.retiered()
-    );
-    // Raging out of it: the frenzy again.
-    let mut odd = world("berserker");
-    run(&mut odd, "use:rage");
-    odd.player_mut().stance = Coward;
-    let back = crate::save::decode(&crate::save::encode(&odd), content).expect("loads");
     assert_eq!(back.perception().own_stance(), Frenzy);
 }
 

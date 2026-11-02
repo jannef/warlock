@@ -190,7 +190,7 @@ disease is treated against its own `difficulty`: made, `streak + 1` while that s
 `disease_turn` uses too), else `left` raised to the disease's interval (within
 `longest_wait`, so `is_valid_for` holds); the infection's `treated` is set either way.
 **`Effect::treated` and `Infection::treated` are saved state** (serde-skipped while false, so
-older saves and hashes are unchanged; no `FORMAT_VERSION` bump). The ability is
+hashes are unchanged). The ability is
 `Ability::Heal` (`Aim::Ailment`, `Unavailable::NothingToTreat`); the game's choice of what to
 treat is the one dialog (`input.rs::treat_dialog`). Tests: `world/heal_tests.rs`, the parse
 cases in `content/status.rs`.

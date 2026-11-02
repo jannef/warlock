@@ -130,9 +130,10 @@ impl SaveStore {
         characters
     }
 
-    /// The character played last, if any is saved: the one Continue resumes.
+    /// The character played last that this version can continue, if any is saved: the one
+    /// Continue resumes (a save of another version is skipped).
     pub fn last_played(&self) -> Option<SavedCharacter> {
-        self.characters().into_iter().next()
+        self.characters().into_iter().find(SavedCharacter::playable)
     }
 
     /// A new save id for a character named `name`, taken by no file of another character (its
@@ -151,7 +152,8 @@ impl SaveStore {
     }
 
     /// Reads character `id`'s save. An unusable save is renamed to `<id>.sav.bad` (never
-    /// deleted), and its summary goes, so the list no longer shows it.
+    /// deleted), and its summary goes, so the list no longer shows it; a save made by another
+    /// version of the game is left as it is (`warlock_core::save`: saves are pinned).
     pub fn resume(&self, id: &str, content: &Arc<Content>) -> Resume {
         let Some(backend) = &self.backend else {
             return Resume::NoSave;
@@ -162,9 +164,10 @@ impl SaveStore {
             Err(e) => return Resume::Failed(format!("Could not read the save: {e}.")),
         };
         match save::decode(&bytes, content.clone()) {
-            Ok(world) => {
-                log_retiered(&world);
-                Resume::Loaded(Box::new(world))
+            Ok(world) => Resume::Loaded(Box::new(world)),
+            // Another version's save is kept as it is, listed as that version's.
+            Err(err @ save::SaveError::OtherVersion { .. }) => {
+                Resume::Failed(format!("Could not resume: {err}."))
             }
             Err(err) => {
                 let kept = match self.writable() {
@@ -229,10 +232,7 @@ impl SaveStore {
         let bytes = backend
             .read(&snapshot_file(id))
             .map_err(|e| format!("No snapshot to load ({e})."))?;
-        let world = save::decode(&bytes, content.clone())
-            .map_err(|e| format!("Could not load snapshot: {e}."))?;
-        log_retiered(&world);
-        Ok(world)
+        save::decode(&bytes, content.clone()).map_err(|e| format!("Could not load snapshot: {e}."))
     }
 
     fn write(&self, name: &str, world: &World) -> Result<(), String> {
@@ -427,13 +427,6 @@ fn save_on_exit(
 fn reload_on_exit(mut exits: MessageReader<AppExit>) {
     if exits.read().count() > 0 {
         crate::storage::web::reload();
-    }
-}
-
-/// Logs what loading re-tiered: saved affixes a regraded ladder moved (`World::retiered`).
-fn log_retiered(world: &World) {
-    for line in world.retiered() {
-        info!("save read leniently: {line}");
     }
 }
 
@@ -664,6 +657,73 @@ mod tests {
             Resume::Failed(_)
         ));
         assert!(dir(&s).join("saves/tamsin-1.sav").exists(), "not renamed");
+    }
+
+    /// A save of another version is listed with its summary, skipped by Continue, and never
+    /// loaded or renamed: it is kept as it is, to be deleted from the list.
+    #[test]
+    fn a_save_of_another_version_is_listed_but_never_continued() {
+        let s = store("other-version");
+        s.save_run("brakka-1", &dwarf("Brakka")).expect("save");
+        s.save_run("osric-1", &world()).expect("save");
+        let dir = dir(&s);
+        // Osric was played last, by version 0.1.0.
+        let file = dir.join("saves/osric-1.toml");
+        let mut summary =
+            Summary::from_text(&std::fs::read_to_string(&file).expect("summary")).expect("valid");
+        (summary.played, summary.version) = (summary.played + 60, "0.1.0".into());
+        std::fs::write(&file, summary.to_text()).expect("write");
+        let save = dir.join("saves/osric-1.sav");
+        let mut json = Vec::new();
+        let bytes = std::fs::read(&save).expect("save");
+        std::io::Read::read_to_end(&mut flate2::read::GzDecoder::new(&bytes[..]), &mut json)
+            .expect("gunzip");
+        let text = String::from_utf8(json).expect("utf-8").replacen(
+            &format!("\"game_version\":\"{}\"", warlock_core::GAME_VERSION),
+            "\"game_version\":\"0.1.0\"",
+            1,
+        );
+        let mut gz = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        std::io::Write::write_all(&mut gz, text.as_bytes()).expect("gzip");
+        std::fs::write(&save, gz.finish().expect("gzip")).expect("write");
+        assert_eq!(ids(&s), ["osric-1", "brakka-1"]);
+        assert!(!s.characters()[0].playable());
+        assert_eq!(s.last_played().map(|c| c.id).as_deref(), Some("brakka-1"));
+        let Resume::Failed(msg) = s.resume("osric-1", &content()) else {
+            panic!("refused");
+        };
+        assert!(msg.contains("made by version 0.1.0"), "{msg}");
+        assert!(save.is_file(), "kept as it is");
+        assert!(!dir.join("saves/osric-1.sav.bad").exists());
+        assert_eq!(ids(&s), ["osric-1", "brakka-1"], "still listed");
+    }
+
+    /// The fixture the screen snapshots list (`tests/golden/saved-characters`): its characters
+    /// are this version's, but Osric, another's. When the workspace version is bumped, set the
+    /// others' `version` to it.
+    #[test]
+    fn the_listed_fixture_is_of_this_version() {
+        let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/golden/saved-characters");
+        let s = SaveStore {
+            backend: Some(Backend::Dir(fixture)),
+            read_only: true,
+            dev: false,
+        };
+        let listed: Vec<(String, bool)> = (s.characters().into_iter())
+            .map(|c| (c.id.clone(), c.playable()))
+            .collect();
+        assert_eq!(
+            listed,
+            [
+                ("osric-1".to_string(), false),
+                ("brakka-2".to_string(), true),
+                ("tamsin-1".to_string(), true),
+                ("brakka-1".to_string(), true),
+            ],
+            "set the fixture summaries' `version` to {}",
+            warlock_core::GAME_VERSION
+        );
     }
 
     #[test]

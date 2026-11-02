@@ -522,7 +522,7 @@ A successful compile does not verify anything visual. Before opening a PR:
   overlap: at most about three PRs at once that add actions or save state.
 - **Hot files**: new entries in registries go where they belong (by group or alphabetically),
   never at the end; generated files are never hand-merged (take one side, regenerate);
-  `FORMAT_VERSION` is bumped by the integrator once per release, never in a feature PR; a
+  saves are pinned to the game version (no format number, no load-time id maps); a
   feature's dispatch lives in its own module with one line in each hot file; churning content
   tables are directories, one file per entity. All in the playbook.
 - **Design documents** pending the owner's approval are draft PRs that add

@@ -176,7 +176,6 @@ mod read;
 mod reflect;
 mod resource;
 mod rest;
-mod retier;
 mod reveal;
 mod rod;
 mod rooms;
@@ -541,10 +540,6 @@ pub struct World {
     /// Notes the current action earned (not saved): said after its own messages and the news,
     /// as notes that do not stop a rest (an alignment band crossed, `alignment.rs`).
     notes: Vec<String>,
-    /// What loading re-tiered (not saved): a line per affix of a saved item moved to the tier of
-    /// a regraded ladder that holds its value (`retier.rs`), and per actor whose stance broke
-    /// the frenzy's rule (`frenzy.rs`), for the game's log.
-    retiered: Vec<String>,
     /// While the player strikes a free blow in another's turn (not saved): what is said
     /// meanwhile, to join the news (`free_blow.rs`).
     held: Option<Vec<String>>,
@@ -899,7 +894,6 @@ impl World {
     /// (`world/stars.rs`), as the content now has them.
     pub fn from_state(content: Arc<Content>, mut state: WorldState) -> Result<Self, WorldError> {
         state.check()?;
-        let retiered = retier::retier(&mut state, &content);
         let Some(scenario) = content.scenario(&state.scenario) else {
             return Err(WorldError::UnknownScenario(state.scenario.clone()));
         };
@@ -922,6 +916,20 @@ impl World {
             character
                 .check(&content)
                 .map_err(|m| WorldError::InconsistentState(format!("character: {m}")))?;
+        }
+        if let Some(line) = (state.character.as_ref())
+            .and_then(|c| crate::background::unknown_line(&content, &state.campaign, c))
+        {
+            return Err(WorldError::InconsistentState(format!(
+                "story line `{line}` is not in this content"
+            )));
+        }
+        if let Some((actor, id)) = (state.actors.values())
+            .find_map(|a| a.talents.unknown_to(&content).map(|id| (a.id, id)))
+        {
+            return Err(WorldError::InconsistentState(format!(
+                "actor {actor} holds talent `{id}`, which this content does not have"
+            )));
         }
         if let Some(id) = state.quests.unknown_to(&content) {
             return Err(WorldError::InconsistentState(format!(
@@ -990,48 +998,8 @@ impl World {
             );
             player.boons = boons;
         }
-        let mut retiered = retiered;
-        if let Some(character) = &state.character {
-            retiered.extend(crate::background::missing(
-                &content,
-                &state.campaign,
-                character,
-            ));
-        }
-        // A talent the content no longer has (the thief's Trapfinding, Pick lock, and Light
-        // fingers, #684; the cull's filler and duplicates, #774) is let go, and said in the log.
-        // A talent merged into another (Owl eyes into Dark adaptation, #817) is held as that one.
-        for actor in state.actors.values_mut() {
-            for (gone, into) in actor.talents.merge_removed(&content) {
-                retiered.push(format!(
-                    "actor {} held talent `{gone}`, merged into `{into}`: holds that",
-                    actor.id
-                ));
-            }
-            for id in actor.talents.drop_unknown(&content) {
-                retiered.push(format!(
-                    "actor {} held talent `{id}`, which this content does not have: dropped",
-                    actor.id
-                ));
-            }
-        }
-        // The frenzy stance exactly while raging (`frenzy.rs`): a save that broke the rule
-        // is put right.
-        for actor in state.actors.values_mut() {
-            if let Some(was) = frenzy::settle(actor, &content) {
-                let why = match actor.stance {
-                    CombatStance::Frenzy => "raging",
-                    _ => "not raging",
-                };
-                retiered.push(format!(
-                    "actor {} {why} in the {was} stance: now in the {} stance",
-                    actor.id, actor.stance
-                ));
-            }
-        }
         let mut world = Self::assemble(content, state);
         world.grant_class(world.player_level(), false);
-        world.retiered = retiered;
         Ok(world)
     }
 
@@ -1054,7 +1022,6 @@ impl World {
             fallen: Vec::new(),
             news: Vec::new(),
             notes: Vec::new(),
-            retiered: Vec::new(),
             held: None,
             sprung: 0,
             spawned: 0,
@@ -1070,12 +1037,6 @@ impl World {
             technique: weapon_active::Technique::default(),
             encounter: Default::default(),
         }
-    }
-
-    /// What loading re-tiered: a line per affix of a saved item that a regraded ladder moved
-    /// (`retier.rs`), for the log; empty for a world made new.
-    pub fn retiered(&self) -> &[String] {
-        &self.retiered
     }
 
     pub fn content(&self) -> &Arc<Content> {
@@ -1722,8 +1683,6 @@ mod read_tests;
 mod resource_talent_tests;
 #[cfg(test)]
 mod resource_tests;
-#[cfg(test)]
-mod retier_tests;
 #[cfg(test)]
 mod reveal_tests;
 #[cfg(test)]

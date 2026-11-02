@@ -134,19 +134,6 @@ fn a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place() {
     assert_eq!(w.due().map(|d| d.level), None);
 }
 
-/// A save from before a table named the pickable (#790: the druid's Wild empathy, now
-/// Beast-friend) loads with the clone dropped and the pickable given in its place.
-#[test]
-fn a_save_holding_a_cut_clone_is_given_the_pickable() {
-    let mut w = world("druid");
-    assert!(holds(&w, "beast_friend"));
-    w.player_mut().talents.forget("beast_friend");
-    give(&mut w, "wild_empathy");
-    let back = World::from_state(w.content().clone(), w.state().clone()).expect("it loads");
-    assert!(holds(&back, "beast_friend") && !holds(&back, "wild_empathy"));
-    assert!(mods(&back).beast_friend);
-}
-
 #[test]
 fn stat_gifts_raise_score_and_potential_once() {
     let mut w = world("aristocrat");

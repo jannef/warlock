@@ -172,7 +172,7 @@ before.
 
 None. The `background` system (B4, #705) had Favoured child, a heritage talent that doubled the
 luckier tiers' odds (`story_luck`); #787 cut it and dropped the system (Hard-won and Storyteller
-had gone in #774). A save naming it loads without it (`Talents::drop_unknown`).
+had gone in #774). A save naming it is refused (saves are pinned to their version, docs/dev/saves.md).
 
 ## Who, and what is saved
 
@@ -180,10 +180,9 @@ Only a run that starts with the kit (`WorldState::kit`: New run, `--character`, 
 `--talents`, a replay with `kit`) is told a story; `World::new`, `with_character`, `World::draft`
 (the Talents step), and every `--scenario`-only run, test, and golden walk are not, and draw and
 save nothing new, so their hashes hold. `Character::story: Vec<Told>` (ids) is saved and hashed
-with the character, left out while empty (saves change: old saves load without a story;
-`FORMAT_VERSION` untouched). The text is never saved: `retell` tells it from the content, so an
-edited sentence reaches a saved character; a line the content lost is skipped (its `set` too)
-and `World::from_state` adds a log line for it to `World::retiered`. The effects are in the actor
+with the character, left out while empty. The text is never saved: `retell` tells it from the content, so an
+edited sentence reaches a saved character; a line the content lacks is skipped by `retell` (its `set` too),
+and `World::from_state` refuses a saved state holding one (`background::unknown_line`). The effects are in the actor
 and are never applied again. Every kit run's hash changed once with B1 (the screen snapshots
 `kit-*`, `character-*`, `level-up-*`, `abilities-menu-*`, and others built on kitted runs).
 

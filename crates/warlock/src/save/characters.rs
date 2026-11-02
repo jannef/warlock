@@ -39,6 +39,10 @@ pub struct Summary {
     /// When the character was last saved: seconds since 1970 (UTC).
     #[serde(default)]
     pub played: u64,
+    /// The game version that wrote the save (`warlock_core::GAME_VERSION`): only that version
+    /// can continue it. Empty in a summary from before saves were pinned.
+    #[serde(default)]
+    pub version: String,
 }
 
 impl Summary {
@@ -63,7 +67,13 @@ impl Summary {
             campaign: (content.campaign(world.campaign()))
                 .map_or_else(String::new, |c| c.name.clone()),
             played,
+            version: warlock_core::GAME_VERSION.to_string(),
         }
+    }
+
+    /// Whether this version of the game made the save, so can continue it.
+    pub fn this_version(&self) -> bool {
+        self.version == warlock_core::GAME_VERSION
     }
 
     /// The summary file's text.
@@ -98,6 +108,13 @@ impl SavedCharacter {
     /// The name the list shows: the summary's, else the id.
     pub fn name(&self) -> &str {
         self.summary.as_ref().map_or(&self.id, |s| &s.name)
+    }
+
+    /// Whether this version may try to continue it: its summary says this version made it. A
+    /// save without a readable summary is tried (the save itself then says which version made
+    /// it, and one of another version is refused).
+    pub fn playable(&self) -> bool {
+        self.summary.as_ref().is_none_or(Summary::this_version)
     }
 
     /// When it was last played, if known.
@@ -206,6 +223,7 @@ mod tests {
         assert_eq!(summary.level, 1);
         assert_eq!(summary.place, world.perception().level_name());
         assert_eq!(summary.campaign, "The Showcase");
+        assert!(summary.this_version());
         assert_eq!(Summary::from_text(&summary.to_text()), Some(summary));
         assert_eq!(Summary::from_text("not = [a summary"), None);
     }
@@ -222,6 +240,7 @@ mod tests {
                 place: String::new(),
                 campaign: String::new(),
                 played,
+                version: warlock_core::GAME_VERSION.into(),
             }),
         };
         let mut list = vec![

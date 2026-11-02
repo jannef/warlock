@@ -362,8 +362,11 @@ impl Screen {
         let choice = |step| Screen::Choice(ChoiceScreen::new(step, content, draft));
         match name {
             ScreenName::Main => {
-                let last = launch.characters.first().map(|c| c.name().to_string());
-                Screen::Menu(MainMenu::main(last))
+                // Continue skips a save of another version.
+                let last = (launch.characters.iter())
+                    .find(|c| c.playable())
+                    .map(|c| c.name().to_string());
+                Screen::Menu(MainMenu::main(last, !launch.characters.is_empty()))
             }
             ScreenName::Characters => {
                 let campaigns = content.campaigns().len() > 1;
@@ -1658,7 +1661,9 @@ mod tests {
         let release = NewRunScreen::new(&content, Some(5));
         assert!(release.skips());
         let mut stack = ScreenStack::default();
-        stack.screens.push(Screen::Menu(MainMenu::main(None)));
+        stack
+            .screens
+            .push(Screen::Menu(MainMenu::main(None, false)));
         stack.screens.push(Screen::NewRun(release));
         let draft = stack.draft();
         let pick = draft.scenario.as_ref().map(|p| p.id.as_str());
