@@ -486,6 +486,13 @@
 #                                 on a level an unholy effect covers), it prays for `time` (1s
 #                                 to 1h) for that mana (0 to 100), and the room's effect (the
 #                                 level's) is lifted for good; refused, no time, elsewhere
+#   prayer { tier, title, uses, answers, all }   the priest's prayer (`use:orison` at every
+#                                 tier; data/prayer.toml, docs/dev/prayer.md): `tier` (1 to 5)
+#                                 with its `title = { holy, dark }` (the tier-1 talent carries
+#                                 the ability), `uses` it may answer (disease, poison, wounds,
+#                                 release, mana, hunger, restoration), `answers` problems a
+#                                 prayer (1 to 7, the largest held), `all` every problem and
+#                                 every resource pool at once; at least one of them
 #   knock { mana }                the active Knock (aimed in a direction, `use:knock:E`): for
 #                                 that mana (0 to 100) the lock of the locked door or shut
 #                                 chest there springs open; refused, no time, where nothing

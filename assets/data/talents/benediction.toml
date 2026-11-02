@@ -1,0 +1,8 @@
+[[talent]]
+id = "benediction"
+name = "Benediction"
+tree = "class"
+granted = true
+description = "Two things that ail you are answered by one prayer."
+effects = [{ kind = "prayer", tier = 4, title = { holy = "Benediction", dark = "Pact" }, answers = 2 }]
+systems = ["hit_points", "status", "diseases", "mana", "hunger"]

@@ -164,6 +164,7 @@ mod merchants_eye;
 mod mimic;
 pub(crate) mod mirrors;
 mod openings;
+mod orison;
 mod outcome;
 mod path;
 mod perceive;
@@ -254,6 +255,7 @@ pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use mirrors::Image;
+pub use orison::PrayerState;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
@@ -1664,6 +1666,8 @@ mod numbers_tests;
 mod object_tests;
 #[cfg(test)]
 mod openings_tests;
+#[cfg(test)]
+mod orison_tests;
 #[cfg(test)]
 mod outcome_tests;
 #[cfg(test)]

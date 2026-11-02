@@ -85,6 +85,7 @@ pub(crate) mod part;
 mod particles;
 mod plural;
 mod potion;
+mod prayer;
 mod quest;
 mod quest_roll;
 mod race;
@@ -244,6 +245,7 @@ pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use plural::{MAX_WORD, Plurals};
 pub use potion::{Draught, Drink, MAX_POTION_MARKS};
+pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use quest::{
     GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
     QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
@@ -646,6 +648,9 @@ pub struct Content {
     /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
     /// without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
+    /// The priest's prayer (`data/prayer.toml`, spec §8 "Class abilities"): the strain, the
+    /// faces, the uses in their order; none without the file, when every prayer is refused.
+    prayer: Option<PrayerRules>,
     /// The constants of the ally core (`data/allies.toml`, spec §8 "Allies"); none without the
     /// file, when no ally can be made.
     allies: Option<AllyRules>,
@@ -792,6 +797,7 @@ impl Content {
             encounter_tables: Vec::new(),
             forage: None,
             intimidate: None,
+            prayer: None,
             allies: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
@@ -1106,6 +1112,10 @@ impl Content {
         let path = "data/intimidate.toml";
         if let Some(text) = files.get_optional(path) {
             content.intimidate = Some(IntimidateRules::parse(path, text, &content)?);
+        }
+        let path = "data/prayer.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.prayer = Some(PrayerRules::parse(path, text, &content)?);
         }
         let path = "data/allies.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3017,6 +3027,12 @@ impl Content {
     /// without the file, when nobody intimidates.
     pub fn intimidate(&self) -> Option<&IntimidateRules> {
         self.intimidate.as_ref()
+    }
+
+    /// The priest's prayer (spec §8 "Class abilities"; `data/prayer.toml`); `None` without the
+    /// file, when every prayer is refused.
+    pub fn prayer(&self) -> Option<&PrayerRules> {
+        self.prayer.as_ref()
     }
 
     /// The constants of the ally core (spec §8 "Allies"; `data/allies.toml`); `None` without the

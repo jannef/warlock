@@ -1,0 +1,8 @@
+[[talent]]
+id = "litany_of_the_mind"
+name = "Litany of the mind"
+tree = "class"
+granted = true
+description = "Your prayers fill your mind: your mana, to the full."
+effects = [{ kind = "prayer", uses = ["mana"] }]
+systems = ["mana"]
