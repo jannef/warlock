@@ -84,4 +84,9 @@ already it is refused and costs nothing.
 your bare hand that leaves a foe it wounds [stunned](status-effects.md#status-stunned), caught
 [flat-footed](surprise.md#stunned) and slow to act. **[Quivering palm](abilities.md#ability-quivering-palm)**
 costs 5 ki. Neither has any other wait, and neither can be used with a weapon in hand.
+**[Stillness](abilities.md#ability-stillness)** (level 25, with [still mind](talents.md#talent-still-mind)) costs 2 ki and
+takes no time at all: whichever of these you suffer ends at once, so you act this very turn:
+[held](status-effects.md#status-held), [pinned](status-effects.md#status-pinned), [staggered](status-effects.md#status-staggered), [stunned](status-effects.md#status-stunned),
+[surprised](status-effects.md#status-surprised), [transfixed](status-effects.md#status-transfixed), [frightened](status-effects.md#status-frightened), [drowsy](status-effects.md#status-drowsy), and
+[webbed](status-effects.md#status-webbed). With none of them on you it is refused and costs nothing. Any grip will do.
 
