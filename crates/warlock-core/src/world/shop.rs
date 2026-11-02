@@ -444,15 +444,8 @@ impl World {
             return Spent::Nothing;
         }
         self.hand_over(self.state.player, shop.keeper, owed);
-        let bought = unpaid_parts(&self.state.player().inventory, &shop.unpaid);
         self.state.current_mut().shops[i].unpaid.clear();
         self.say(format!("You pay {} {owed} gold.", shop.name));
-        // Eye for quality (spec §8 "Class abilities"): what was bought is known for what it is.
-        if self.state.player().talent_mods(&content).identify_trades {
-            for (item, _) in (bought.iter().enumerate()).filter(|&(_, &n)| n > 0) {
-                self.identify(item);
-            }
-        }
         self.train_deal();
         self.player_did(Deed::PaidDebt);
         Spent::NoTime
@@ -491,19 +484,9 @@ impl World {
         };
         let content = self.content.clone();
         let shop = self.state.current().shops[i].clone();
-        let mut deal = self.deal(&shop, &inventory, &chosen, sell);
+        let deal = self.deal(&shop, &inventory, &chosen, sell);
         let name = shop.name.as_str();
-        // Eye for quality (spec §8 "Class abilities"): what is sold is known for what it was,
-        // once it is sold.
         let sold = object::phrase(&deal.sold, self.lore());
-        let mut learned = Vec::new();
-        if self.state.player().talent_mods(&content).identify_trades {
-            for stack in &mut deal.sold {
-                if stack.identify() {
-                    learned.push(stack.describe(&content));
-                }
-            }
-        }
         if !deal.refused.is_empty() {
             let what = object::phrase(&deal.refused, self.lore());
             self.say(format!("{name} has no use for {what}."));
@@ -554,9 +537,6 @@ impl World {
                 "You sell {sold} to {name} for {} gold.",
                 deal.payment
             ));
-            for what in learned {
-                self.say(format!("That was {what}!"));
-            }
             self.train_deal();
         }
         Some(spent)

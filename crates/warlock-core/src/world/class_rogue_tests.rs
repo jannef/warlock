@@ -153,13 +153,9 @@ fn the_three_tables_come_with_the_levels() {
     reach(&mut t, 18);
     assert!(said(&t).contains(&"You gain Evasion.".to_string()));
     let mut b = world("bard");
-    assert_eq!(
-        class_rows(&b),
-        ["Lore", "Mend", "Trained wind"],
-        "the Scholar's Lore, given"
-    );
+    assert_eq!(class_rows(&b), ["Mend", "Trained wind"]);
     reach(&mut b, 6);
-    assert_eq!(class_rows(&b), ["Lore", "Mend", "Trained wind", "Blessing"]);
+    assert_eq!(class_rows(&b), ["Mend", "Trained wind", "Blessing"]);
     let restored = World::from_state(b.content().clone(), b.state().clone()).expect("restored");
     assert_eq!(class_rows(&restored), class_rows(&b));
 }

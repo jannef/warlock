@@ -1126,8 +1126,7 @@ impl World {
 
     /// Creature `id` dies: it leaves the world, and what it carried (worn and wielded things
     /// too) falls on its cell, on top of what lies there, in the order it carried them, and its
-    /// corpse on top of that (spec §8 "Hunger"); identified, when the player killed it
-    /// (`by_player`) with Scavenger. Returns the lines for an animated thing's components that
+    /// corpse on top of that (spec §8 "Hunger"). `by_player`: the player killed it. Returns the lines for an animated thing's components that
     /// broke as they fell, if the player saw it ([`World::break_lines`]).
     fn creature_dies(&mut self, id: ActorId, by_player: bool) -> Vec<String> {
         let Some(actor) = self.state.actors.remove(&id) else {
@@ -1143,10 +1142,6 @@ impl World {
         let (mut dropped, broken) = self.remains(&actor);
         let mut lines = self.break_lines(&actor.level, actor.pos, &broken);
         dropped.extend(self.loot_of(&actor));
-        // Scavenger (spec §8 "Creature gear"): what the player's kill drops is known at once.
-        if by_player && self.state.player().talent_mods(&self.content).scavenger {
-            dropped.iter_mut().for_each(|stack| _ = stack.identify());
-        }
         // An incorporeal creature dies inside a wall: what it carried falls out of it.
         let mut actor = actor;
         actor.pos = self.landing(&actor.level, actor.pos);

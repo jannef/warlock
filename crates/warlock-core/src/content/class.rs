@@ -504,6 +504,9 @@ pub enum ClassActive {
     Consecrate,
     /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
     Knock,
+    /// A careful look that tells a thing the player carries for what it is, as the scroll of
+    /// identify would (the merchant's Merchant's eye).
+    MerchantsEye,
 }
 
 impl ClassActive {
@@ -523,6 +526,7 @@ impl ClassActive {
         ClassActive::Inspire,
         ClassActive::Consecrate,
         ClassActive::Knock,
+        ClassActive::MerchantsEye,
     ];
 
     /// Its id: the id of the class ability that has it, and its replay text (`use:rage`).
@@ -542,6 +546,7 @@ impl ClassActive {
             ClassActive::Inspire => "inspire",
             ClassActive::Consecrate => "consecrate",
             ClassActive::Knock => "knock",
+            ClassActive::MerchantsEye => "merchants_eye",
         }
     }
 
@@ -585,6 +590,12 @@ impl ClassActive {
         matches!(self, ClassActive::Volley)
     }
 
+    /// Whether it asks for a stack the player carries before it is used
+    /// (`use:merchants_eye:c`).
+    pub const fn aims_item(self) -> bool {
+        matches!(self, ClassActive::MerchantsEye)
+    }
+
     /// What it costs, as an action of this kind (`data/actions.toml`).
     pub const fn cost(self) -> ActionKind {
         match self {
@@ -600,6 +611,7 @@ impl ClassActive {
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire => ActionKind::Chat,
+            ClassActive::MerchantsEye => ActionKind::Read,
         }
     }
 }

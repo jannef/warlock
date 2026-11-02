@@ -214,7 +214,6 @@ fn every_caster_has_its_table_by_level_sixty() {
             "Arcane training",
             "Magic missile",
             "Knock",
-            "Arcane lore",
             "Burning hands"
         ]
     );
