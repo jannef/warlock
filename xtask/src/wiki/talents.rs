@@ -1822,6 +1822,23 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              on a level a curse or a drain covers whole, the whole level's is lifted instead. \
              A good deed (see Alignment). Anywhere else it is refused, with no time spent"
         ),
+        TalentEffect::Sanctuary {
+            mana,
+            time,
+            radius,
+            lasts,
+            regen,
+        } => format!(
+            "active ({time} of kneeling, for {mana} mana; interrupted as a rest is, it lays \
+             nothing): the ground within {radius} cells of where the player knelt is hallowed \
+             for {lasts}. No creature hostile to them steps onto it from outside (one already \
+             on it may move about and leave; nothing spawns there; missiles and spells cross \
+             it), and whoever stands on it heals and regains mana at {regen} % of the pace, or \
+             a special room's, the larger. A blow, shot, throw, or harmful spell of the \
+             player's from on it breaks it; being struck does not. The same for either face of \
+             the prayer (dreaded ground for the dark: the words alone). Refused, with no time \
+             spent, on the overworld, in water, in a shop, or on hallowed ground"
+        ),
         TalentEffect::Prayer {
             tier,
             title,

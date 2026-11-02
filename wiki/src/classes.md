@@ -72,6 +72,10 @@ answer (a disease still brewing is not yet anything) costs nothing.
 or better: a minute's prayer, for 15 [mana](mana.md#spending-it), that lifts a cursed, draining, or haunted room's curse for good
 (see [Special rooms](special-rooms.md#cursed-rooms)).
 
+The priest's **[Sanctuary](abilities.md#ability-sanctuary)** (level 50, 30 [mana](mana.md#spending-it), a minute's kneeling) hallows the ground about them
+for an hour: hostile creatures keep off it and whoever stands on it heals and gets mana back
+three times as fast, until the priest strikes from it (see [Special rooms](special-rooms.md#hallowed-ground)).
+
 The [wizard](classes.md#wizard)'s **[Knock](abilities.md#ability-knock)** (from level 4, 5 [mana](mana.md#spending-it)) springs the lock of the [locked door](doors.md#locked-doors) or chest in a
 direction; nothing opens by itself (see [Chests](chests.md#locked-chests)).
 
