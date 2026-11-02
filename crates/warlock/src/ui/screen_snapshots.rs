@@ -554,6 +554,15 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A druid past Pack leader (#839) who has called two wolves: the calls among the spells,
+    // "2 called" with Pack leader's one more, and the Allies group's orders.
+    Case {
+        name: "abilities-menu-druid-calls",
+        character: Some("human,female,druid"),
+        actions: "xp:1000000 levelup:auto use:call_of_the_wild",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Set on chosen from the menu: the aiming mode, its prompt in the message line.
     Case {
         name: "set-on-aim",

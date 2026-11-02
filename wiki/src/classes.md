@@ -52,7 +52,8 @@ are used from the menu as **spells** ([Magic](magic.md)): each costs [mana](mana
 greyed out ("too little") while you have less; there is no other wait. A [burst](magic.md#shapes) flies and goes
 off as a [scroll](scrolls.md)'s does, a [line](magic.md#shapes) runs through everyone on it, its blows and kills
 yours; a [hex](magic.md#shapes) falls on a [hostile](creatures.md#factions) you see within its reach. [Call lightning](abilities.md#ability-call-lightning) answers only under the
-open sky. A [priest](classes.md#priest)'s
+open sky. The [druid](classes.md#druid)'s calls bring wolves, bears, and elementals to fight beside them
+as [allies](allies.md). A [priest](classes.md#priest)'s
 [Smite](abilities.md#ability-smite) is the [paladin](classes.md#paladin)'s, and works only while the priest is Kind or better.
 
 **[Consecrate](abilities.md#ability-consecrate)** (the [priest](classes.md#priest)'s at level 9, the [paladin](classes.md#paladin)'s at 12) works only while you are Kind

@@ -4,8 +4,8 @@ Developer notes for working on this part of Warlock; the rules it implements are
 spec/08b-creatures.md ("Allies"), the design is `docs/design/druid-and-summons.md` (§4 the ally
 core, §14 the owner's decisions, which override the rest). Slices: **A1** (#836, this file: the
 core), A2 (#837, "Summons" below: the spell kind, `Ally::until` set from the spell's degrees), A3 (the UI: the
-Allies group's rows, Set on's aim, the friendly mark, look mode's "(your wolf)"), D1 (the druid's
-calls), and the ranger's companion (#825) on `AllySource::Companion`. Keep it current with the
+Allies group's rows, Set on's aim, the friendly mark, look mode's "(your wolf)"), D1 (#839, "The druid's
+calls" below), and the ranger's companion (#825) on `AllySource::Companion`. Keep it current with the
 code, as CLAUDE.md says.
 
 ## What an ally is
@@ -131,8 +131,8 @@ allies in the retinue at once.
 actors' energies are written back, before `spawn_tick`): every ally on the current level past
 its time departs through `World::ally_departs` (removed from `actors`, nothing left behind, no
 corpse or pile, `Event::Departed { actor, at }`, pushed to `fallen` so the turn's reports may
-name it, "The wolf fades away." when the player sees its cell; a type's own `depart` line is
-left to D1, with the beasts). Nothing ticks on another level or in the retinue: a summon left behind, or on
+name it, "The wolf fades away." when the player sees its cell, or the type's own `depart` words, "The wolf
+slips back into the dark." (`CreatureDef::depart`, D1). Nothing ticks on another level or in the retinue: a summon left behind, or on
 the road, is checked by the clock when it is next met (`follow_along`, above). Statuses on an
 ally tick as any creature's while it acts.
 
@@ -197,6 +197,36 @@ spells (rats; a rat or a bat) and talents: the call beside the caster on their s
 (the global cap, with and without one giving way; the overworld) costing nothing; `ally_mod`'s
 four reads; the bias (never a rat); a slain call leaving nothing; `study_difficulty`; the load
 checks; a save round trip and determinism.
+
+## The druid's calls (D1, #839)
+
+The first shipped summon spells, enchantment, each `count = "1"`, `most = 1` (the owner's Q8: one
+of each at once), five minutes, `degrees = "presence 14 8, 18 12, 22 16"`, a scroll each with a
+high `study_difficulty` (the owner's Q7: very hard to learn), and no count ladder (with a cap of
+one a bigger roll would only be shown, never come; Pack leader's `count` is the more):
+
+| Spell | Level | Pool | `study_difficulty` | Druid level |
+|---|---:|---|---:|---:|
+| `call_of_the_wild` | 5 | `wolf` | 8 | 6 |
+| `call_of_the_forest` | 20 | `bear` | 10 | 25 |
+| `call_the_elements` | 35 | `greater_earth_elemental`, `greater_water_elemental`, `greater_air_elemental`, `greater_fire_elemental` (one drawn) | 12 | 40 |
+
+The druid's abilities raise them, class talents with `ally_mod`: **Pack leader** (32; `count =
+1, most = 1, duration_percent = 50`: two of each, a call brings both, half again as long) and
+**Lord of the wild** (60; `lasting = true, most = 1`: three of each, until slain). The global
+cap (`[allies] most`, 8) is data alone. The beasts: `docs/dev/creatures/beasts.md`. The menu's
+and the `spells` dump's count (`spell_words.rs`) adds `ally_mod`'s `count` as the cast does
+(`2 called` with Pack leader); a fixed roll is said as its number (`1 called`, not `+1`).
+
+**Fights**: `fight::End::Yours(name)` is an ally of the player's they see: "Your wolf bites the
+kobold.", "The kobold claws your wolf.", "Your wolf dies." (`perceive_events`' ends; the
+player's own blow at one, `fight.rs`; a throw's, `hurl.rs`); unseen it is "something" as ever.
+
+Tests: `world/caster_tests.rs` (the table to 60 by `levelup:auto`, the calls one of each and
+the raises, the fight words and the departure), `content/beast_roster_tests.rs`,
+`content/spell_def.rs`'s shipped-spell table, `world/spell_list_tests.rs` (the calls counted
+apart from a full caster's four to six spells). The balance probe's "Summons" table
+(`balance_probe/summons.rs`, `docs/balance.md`).
 
 ## Experience, quests, resources
 

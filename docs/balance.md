@@ -390,6 +390,27 @@ and raging fight cells are unchanged (#842 changes no blow). What the run shows:
 If a duel's rage should run out mid-fight, the levers are `struck`'s amount or a faster decay;
 #842 keeps the design's numbers.
 
+## Summons
+
+The druid's calls (#839), cast by a human druid (untrained stats, every score as rolled, seed 1) at each level a call comes or Pack leader (32) and Lord of the wild (60) change them: what comes of one cast (each type's count), for how many minutes (`lasting`: until slain), the mana over the pool, and each called type against the monsters within two levels of the druid, as in "Fights" (the beast's side bare: P(it hits) / P(it is hit) % · damage a round · rounds to kill / rounds to die).
+
+| Call | L | comes | minutes | mana / pool | the called against the druid's level |
+|---|---|---|---|---|---|
+| Call of the wild (5) | 6 | 1 wolf | 5 | 5 / 43 (9 casts) | wolf 4: 69/69 · 2.8:3.8 · 8.0 / 4.2 |
+| Call of the wild (5) | 25 | 1 wolf | 5 | 5 / 161 (32 casts) | wolf 4: 54/97 · 1.8:19.0 · 52 / 0.8 |
+| Call of the forest (20) | 25 | 1 bear | 5 | 20 / 161 (8 casts) | bear 12: 81/99 · 8.3:19.3 · 12 / 3.1 |
+| Call of the wild (5) | 32 | 2 wolves | 7 | 5 / 204 (41 casts) | wolf 4: 46/99 · 1.3:25.4 · 94 / 0.6 |
+| Call of the forest (20) | 32 | 2 bears | 7 | 20 / 204 (10 casts) | bear 12: 75/99 · 7.2:25.6 · 18 / 2.3 |
+| Call of the wild (5) | 40 | 2 wolves | 7 | 5 / 253 (51 casts) | wolf 4: 25/99 · 0.7:22.8 · 237 / 0.7 |
+| Call of the forest (20) | 40 | 2 bears | 7 | 20 / 253 (13 casts) | bear 12: 54/99 · 5.4:23.1 · 30 / 2.6 |
+| Call the elements (35) | 40 | 1 greater air elemental, 1 greater fire elemental | 7 | 35 / 253 (7 casts) | greater earth elemental 24: 85/99 · 14.8:16.8 · 11 / 7.3; greater water elemental 26: 69/99 · 12.1:20.2 · 13 / 4.3; greater air elemental 31: 81/75 · 29.4:13.3 · 5.5 / 7.0; greater fire elemental 38: 90/93 · 24.2:18.5 · 7.0 / 6.6 |
+| Call of the wild (5) | 50 | 2 wolves | 7 | 5 / 314 (63 casts) | wolf 4: 19/99 · 0.3:33.1 · 531 / 0.5 |
+| Call of the forest (20) | 50 | 2 bears | 7 | 20 / 314 (16 casts) | bear 12: 46/99 · 4.0:33.7 · 48 / 1.8 |
+| Call the elements (35) | 50 | 1 greater air elemental, 1 greater fire elemental | 7 | 35 / 314 (9 casts) | greater earth elemental 24: 81/99 · 13.0:20.6 · 16 / 6.0; greater water elemental 26: 62/99 · 10.0:25.2 · 19 / 3.5; greater air elemental 31: 75/90 · 26.2:19.5 · 8.2 / 4.8; greater fire elemental 38: 85/99 · 24.1:31.9 · 8.7 / 3.8 |
+| Call of the wild (5) | 60 | 2 wolves | lasting | 5 / 374 (75 casts) | wolf 4: 7/99 · 0.1:35.4 · >999 / 0.5 |
+| Call of the forest (20) | 60 | 2 bears | lasting | 20 / 374 (19 casts) | bear 12: 25/99 · 1.4:37.2 · 136 / 1.6 |
+| Call the elements (35) | 60 | 1 greater air elemental, 1 greater fire elemental | lasting | 35 / 374 (11 casts) | greater earth elemental 24: 62/99 · 8.5:26.0 · 24 / 4.7; greater water elemental 26: 38/99 · 5.7:30.0 · 42 / 2.9; greater air elemental 31: 54/98 · 16.5:25.2 · 13 / 3.7; greater fire elemental 38: 69/99 · 18.9:32.3 · 12 / 3.8 |
+
 ## Stat training
 
 The stat training design (`docs/design/stat-training.md`, slices T1 to T6, #722 to #727) set

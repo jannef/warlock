@@ -1083,7 +1083,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     sky only; 20 mana), Flame and frost (two spells, Flame: level 12, the fireball's
     burst, 3d6 fire, radius 2, blast, 29 mana; Frost: level 6, 2d6 cold, freezes water, 14
     mana). #791 cut Woodland stride (6; the ranger's 18 too) and Winter's friend (25), which
-    worked only outdoors: those levels are empty.
+    worked only outdoors; #839 fills 6, 25, 32, 40, and 60 with the calls (§8 "Allies"): Call of
+    the wild (at 6; level 5: a wolf for 5 minutes, Presence 14: 8, 18: 12, 22: 16; 5 mana), Call
+    of the forest (at 25; level 20: a bear; 20 mana), Pack leader (32: each call brings one more,
+    keeps two of each, and lasts half again as long), Call the elements (at 40; level 35: a
+    greater elemental of earth, water, air, or fire, one drawn; 35 mana), and Lord of the wild
+    (60: calls last until slain, three of each). Each call keeps one of its own at once until
+    Pack leader; its scroll is very hard to learn (`study_difficulty` 8, 10, 12).
   - **Wizard**: Scroll adept (reading −50 %; the spell scrolls read a rung higher, scrolls only:
     the spell scaling design, decision 12),
     Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Arcane training

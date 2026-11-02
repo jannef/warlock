@@ -301,9 +301,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     by spell level (the spell scaling design §5.8): 0 Evil eye, Light (#589: the scroll of
     light's; Lit, its status, sheds a light about the caster, `light` on a status); 1 Mend, Ray
     of frost, Spark; 3 Barkskin, Blessing, Cure wounds, Curse of sloth, Hex of weakness, Magic
-    missile; 4 Burning hands, Cause wounds; 6 Arcane bolt, Frost, Identify, Sleep; 7 Blight,
-    Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst folded into it),
-    Haste, Lightning bolt, Remove disease; 12 Flame. A spell is cast by its
+    missile; 4 Burning hands, Cause wounds; 5 Call of the wild; 6 Arcane bolt, Frost, Identify,
+    Sleep; 7 Blight, Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst
+    folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest; 35
+    Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
     the abilities menu lists the spells known by spell level, then path order. Sleep and Web are
@@ -324,8 +325,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
     least 1; the content test). Wizard: Ray of
     frost (1), Magic missile (3), Burning hands (12), Arcane bolt (18). Priest: Mend (1),
-    Blessing (3), Cure wounds (3), Remove disease (12). Druid: Spark (1), Barkskin (3), Call
-    lightning (12), Flame and frost (50). Witch: Evil eye (1), Hex of weakness (3), Cause wounds
+    Blessing (3), Cure wounds (3), Remove disease (12). Druid: Spark (1), Barkskin (3), Call of
+    the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
+    frost (50). Witch: Evil eye (1), Hex of weakness (3), Cause wounds
     (12), Curse of sloth (32), Blight (40). Bard: Mend (1), Blessing (6). Paladin: Blessing
     (6). Ranger: Barkskin (6). Every other class none. Every class has some mana (the
     berserker and the warrior 1); a race adds none unless its data says so.
