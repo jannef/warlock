@@ -93,6 +93,10 @@ pub struct Conversation {
     /// The topic this answers, if the player asked about one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub asked: Option<String>,
+    /// Whether the player may say words to them (their dialogue knows some, and speaks to the
+    /// player): the dialogue screen's Say row (`words.rs`).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub words: bool,
 }
 
 /// A line muttered during the current turn (not saved): said when perception runs, if the
@@ -204,6 +208,9 @@ impl World {
         let Some(id) = self.dialogue_of(actor) else {
             return Vec::new();
         };
+        if !self.speaks_to(id) {
+            return Vec::new();
+        }
         let mut topics = self.quest_topics(id);
         let dialogue = self.content.dialogue(id);
         topics.extend(dialogue.topics.iter().map(|t| TopicView {
@@ -297,8 +304,9 @@ impl World {
     }
 
     /// The dialogue of creature `id` if it will talk to the player; if not, says why: it has
-    /// nothing to say, or it is hostile to them.
-    fn listens(&mut self, id: ActorId) -> Option<DialogueId> {
+    /// nothing to say, it is hostile to them, or the player is outside its `speaks_to` (its
+    /// `silent` line).
+    pub(super) fn listens(&mut self, id: ActorId) -> Option<DialogueId> {
         let actor = &self.state.actors[&id];
         let who = capitalized(&self.called(actor));
         let dialogue = self.dialogue_of(actor);
@@ -306,9 +314,20 @@ impl World {
         match dialogue {
             None => self.say(format!("{who} doesn't answer.")),
             Some(_) if hostile => self.say(format!("{who} is in no mood to talk.")),
+            Some(d) if !self.speaks_to(d) => {
+                let silent = self.content.dialogue(d).silent.clone();
+                self.say(silent.unwrap_or_else(|| format!("{who} doesn't answer.")));
+            }
             Some(d) => return Some(d),
         }
         None
+    }
+
+    /// Whether whoever speaks dialogue `d` talks to the player: their alignment band is in its
+    /// `speaks_to`, if it has one (an NPC's reaction, as a cold greeting is).
+    fn speaks_to(&self, d: DialogueId) -> bool {
+        let band = || self.state.player().band(&self.content);
+        (self.content.dialogue(d).speaks_to).is_none_or(|r| r.allows(band()))
     }
 
     /// Says what creature `id` answered and records the conversation for presentation.
@@ -321,11 +340,27 @@ impl World {
     ) {
         let who = capitalized(&self.called(&self.state.actors[&id]));
         self.say(format!("{who} says: \"{line}\""));
+        self.converse(id, line, asked, events);
+    }
+
+    /// Records the conversation with creature `id`, its last line `line`, for presentation (the
+    /// dialogue screen opens on it).
+    pub(super) fn converse(
+        &self,
+        id: ActorId,
+        line: String,
+        asked: Option<String>,
+        events: &mut Vec<Event>,
+    ) {
+        let words = (self.state.actors.get(&id))
+            .and_then(|a| self.dialogue_of(a))
+            .is_some_and(|d| self.speaks_to(d) && !self.content.dialogue(d).words.is_empty());
         events.push(Event::Talked(Conversation {
             with: id,
             line,
             topics: self.topics(id),
             asked,
+            words,
         }));
     }
 
