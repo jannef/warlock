@@ -36,6 +36,9 @@ mod dungeon;
 mod effect;
 #[cfg(test)]
 mod elemental_roster_tests;
+mod encounter;
+#[cfg(test)]
+mod encounter_tests;
 mod experience;
 mod faction;
 #[cfg(test)]
@@ -185,6 +188,10 @@ pub use dungeon::{
 pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
     MAX_SHAKE_PIXELS, Shake,
+};
+pub use encounter::{
+    Checks, EncounterEntry, EncounterRules, EncounterTable, EntryStance, Evade, PhaseRates,
+    PlayerPlaces, Positions, When,
 };
 pub use experience::{
     Discovery, Experience, FACTORS, Factor, Guideline, Kills, Levels, MAX_LEVEL, MAX_XP, pace_words,
@@ -620,6 +627,11 @@ pub struct Content {
     /// The numbers of being caught unawares (`data/surprise.toml`, spec §8 "Surprise and sneak
     /// attacks"); none without the file, when nobody is surprised.
     surprise: Option<SurpriseRules>,
+    /// The numbers of overworld encounters (`data/encounters.toml`, spec §7 "Overworld
+    /// encounters"); none without the file, when nobody meets anybody.
+    encounters: Option<EncounterRules>,
+    /// The campaigns' encounter tables (`campaigns/<id>/data/encounters/`), by campaign and id.
+    encounter_tables: Vec<EncounterTable>,
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
@@ -762,6 +774,8 @@ impl Content {
             search: SearchRules::default(),
             steal: None,
             surprise: None,
+            encounters: None,
+            encounter_tables: Vec::new(),
             forage: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
@@ -1063,6 +1077,9 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.surprise = Some(SurpriseRules::parse(path, text, &content)?);
         }
+        if let Some(text) = files.get_optional(encounter::RULES) {
+            content.encounters = Some(EncounterRules::parse(encounter::RULES, text)?);
+        }
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
             content.forage = Some(ForageRules::parse(path, text, &content)?);
@@ -1178,6 +1195,7 @@ impl Content {
         }
         content.quests = quest::parse(files.table("quests"), &content)?;
         content.guilds = guild::parse(files.table("guilds"), &content)?;
+        content.encounter_tables = encounter::parse(files.table("encounters"), &content)?;
         content.validate()?;
         content.check_topic_routes()?;
         content.check_campaigns()?;

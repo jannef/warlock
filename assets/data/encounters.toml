@@ -1,0 +1,61 @@
+# Overworld encounters (spec §7 "Overworld encounters"; docs/design/overworld-encounters.md,
+# #804). Optional: without it nobody meets anybody. The tables of who is met are each campaign's
+# (`campaigns/<id>/data/encounters/*.toml`); a campaign without tables meets nobody.
+#
+# After every overworld step onto a cell with a local area, the chance of an encounter is the
+# destination's rate per hour x the step's time x the phase of the day's percent (x each matching
+# table's `rate_percent`). Then two lookout checks, 2d12 + modifier against a difficulty: the
+# player's (Willpower modifier + Spot's and Survival's `lookout` + Alert's notice) against
+# `difficulty` + the party's stalk (its lead's Stealth) + the land's cover + the dark + the rain;
+# the party's (its lead's Willpower modifier + its Spot) against `difficulty` + the player's stalk
+# (Stealth) + the cover + the dark (only for a lead without darkvision) + the rain - `light` (a
+# light the player carries lit at night or twilight). The player made it and the party failed:
+# the drop (lie in wait, slip past, or fight); both made it: met (slip away or fight); the party
+# made it alone: ambushed; neither: they pass each other by and nothing happens.
+
+# Chances in basis points (1/100 of a percent) per hour of travel on that landscape, by day.
+[rate]
+road = 100
+plains = 300
+grassland = 300
+forest = 500
+hills = 500
+dense_forest = 800
+swamp = 800
+
+# Percent of the rate by the phase of the day.
+[phase]
+day = 100
+twilight = 150
+night = 200
+
+[checks]
+difficulty = 13
+cover = { road = 0, plains = 0, grassland = 1, hills = 2, forest = 2, dense_forest = 4, swamp = 3 }
+night = 3          # for eyes without darkvision (halved for a player with it)
+twilight = 1
+rain = 1
+heavy_rain = 2
+light = 4          # off the party's difficulty: the player carries a lit light at night or twilight
+
+# Where each side stands when the fight opens in the cell's local area (the owner: the more the
+# encounter favours the player, the nearer they stand to the edge they came from).
+[positions]
+# The player's place, in percent of the way from the arrival edge to the area's middle.
+player = { ambush = 10, fight = 40, close = 70, ambushed = 100 }
+fight = 7          # cells from the player, further in: a chosen fight, or after meeting
+ambush = 5         # lying in wait: further in, walking toward the player's cover
+ambushed = 2       # around the player, the lead on the side of the edge
+close = 3          # a failed evade: between the player and the edge
+
+# Slipping away: Dexterity modifier + Survival's `evade` (+ Stealth's stalk while they have not
+# seen the player) against `difficulty` + the lead's pursuit (+1 per `pursuit_per` of speed above
+# normal) + `aware` once they have seen the player.
+[evade]
+difficulty = 13
+detour_percent = 50   # of the step's time, again, whatever comes of it
+aware = 2
+pursuit_per = 100
+
+[ambush]
+wait_seconds = 600    # lying in cover until they come

@@ -68,6 +68,9 @@ pub const MAX_SEARCH_REACH: i32 = 2;
 /// The most a skill adds to slipping past a creature unseen (spec §8 "Surprise and sneak
 /// attacks").
 pub const MAX_SLIP_BONUS: i32 = 20;
+/// The most a skill adds to an overworld encounter's lookout, stalk, or evade (spec §7
+/// "Overworld encounters").
+pub const MAX_ENCOUNTER_BONUS: i32 = 20;
 /// The most a skill adds to stealing from someone (spec §8 "Stealing").
 pub const MAX_STEAL_BONUS: i32 = 20;
 /// The most d6 a skill adds to a sneak attack (spec §8 "Surprise and sneak attacks").
@@ -166,6 +169,14 @@ pub enum Effect {
     /// Points added to the player's side of slipping past a creature that would see them by
     /// darkvision alone (spec §8 "Surprise and sneak attacks"; `world/slip.rs`).
     Slip,
+    /// Points added to the player's lookout for a party on the overworld (spec §7 "Overworld
+    /// encounters"; `world/encounter.rs`), and a creature's Spot to the party's.
+    Lookout,
+    /// Points added to the other side's lookout difficulty on the overworld: the actor stalks
+    /// unseen (`world/encounter.rs`); and, while the party is unaware, to slipping away.
+    Stalk,
+    /// Points added to slipping away from a party on the overworld (`world/encounter.rs`).
+    Evade,
     /// Points added to stealing from someone (spec §8 "Stealing"; `world/steal.rs`); a skill
     /// with it, trained, lets the actor steal at all (the abilities menu's Steal).
     Steal,
@@ -228,6 +239,7 @@ impl Effect {
             Effect::Search | Effect::Spot | Effect::DetectTraps => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
             Effect::Slip => MAX_SLIP_BONUS,
+            Effect::Lookout | Effect::Stalk | Effect::Evade => MAX_ENCOUNTER_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
             Effect::Heal => MAX_HEAL_BONUS,
             Effect::Disarm => MAX_DISARM_BONUS,
@@ -270,6 +282,9 @@ pub enum Use {
     Burdened,
     /// A step on the overworld: a journey.
     Travel,
+    /// A lookout for a party met on the overworld (spec §7 "Overworld encounters"), whatever
+    /// came of it.
+    Lookout,
     /// A forage that ran its time (spec §8 "Foraging"), whatever it found.
     Forage,
     /// An attempt to steal from someone (spec §8 "Stealing"), whatever comes of it.
@@ -314,6 +329,7 @@ impl Use {
             Use::Dodge => "dodging an attack or a known trap",
             Use::Burdened => "acting (not waiting) while your load slows you",
             Use::Travel => "a journey on the overworld",
+            Use::Lookout => "keeping a lookout for those met on the overworld",
             Use::Forage => "foraging in the wild",
             Use::Steal => "trying to steal from someone",
             Use::SneakAttack => "a sneak attack that hits",
@@ -430,6 +446,7 @@ impl Use {
             Use::Dodge => "dodge",
             Use::Burdened => "burdened",
             Use::Travel => "travel",
+            Use::Lookout => "lookout",
             Use::Forage => "forage",
             Use::Steal => "steal",
             Use::SneakAttack => "sneak_attack",
@@ -465,6 +482,9 @@ impl Effect {
             Effect::Bargain => "bargain",
             Effect::Identify => "identify",
             Effect::Slip => "slip",
+            Effect::Lookout => "lookout",
+            Effect::Stalk => "stalk",
+            Effect::Evade => "evade",
             Effect::Steal => "steal",
             Effect::SneakDice => "sneak_dice",
             Effect::Surprise => "surprise",

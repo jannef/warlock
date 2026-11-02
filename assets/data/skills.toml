@@ -345,11 +345,15 @@ id = "spot"
 name = "Spot"
 description = "Noticing what is hiding or out of place at a glance."
 kind = "passive"
-mark = [{ on = "spot", chance = 50 }]
+mark = [{ on = "spot", chance = 50 }, { on = "lookout", chance = 50 }]
 # Noticing hidden features in passing (spec §8 "Searching"): secret doors, hollow walls, and
 # disguised mimics, not traps (Detect traps); trained at all, you notice them (else only elves
-# and dwarves do); added to the check, +8 at 100, +12 at 200.
-benefit = [{ effect = "spot", curve = [[0, 0], [100, 8], [200, 12]] }]
+# and dwarves do); added to the check, +8 at 100, +12 at 200. The lookout for a party on the
+# overworld (spec §7 "Overworld encounters", encounters.toml): +8 at 100, +12 at 200.
+benefit = [
+  { effect = "spot", curve = [[0, 0], [100, 8], [200, 12]] },
+  { effect = "lookout", curve = [[0, 0], [100, 8], [200, 12]] },
+]
 
 [[skill]]
 id = "steal"
@@ -368,10 +372,13 @@ description = "Moving unheard and unseen: soft steps, quiet doors, and slipping 
 kind = "passive"
 mark = [{ on = "sneak", chance = 15 }]
 # 60% quieter at 100, 75% at 150 and beyond; and slipping past a creature that would see you
-# by darkvision alone (data/surprise.toml `[slip]`): +8 at 100, +12 at 200.
+# by darkvision alone (data/surprise.toml `[slip]`): +8 at 100, +12 at 200. Stalking unseen on
+# the overworld (encounters.toml): +4 at 50, +8 at 100, +12 at 200 on the difficulty of a party's
+# lookout, and on slipping away from a party that has not seen you.
 benefit = [
   { effect = "quiet", curve = [[0, 0], [100, 60], [150, 75]] },
   { effect = "slip", curve = [[0, 0], [100, 8], [200, 12]] },
+  { effect = "stalk", curve = [[0, 0], [50, 4], [100, 8], [200, 12]] },
 ]
 
 [[skill]]
@@ -379,13 +386,16 @@ id = "survival"
 name = "Survival"
 description = "Living off the land and finding the easiest way through the wild."
 kind = "passive"
-mark = [{ on = "travel", chance = 10 }, { on = "forage", chance = 25 }]
+mark = [{ on = "travel", chance = 10 }, { on = "lookout", chance = 10 }, { on = "forage", chance = 25 }]
 # 20% quicker journeys at 100, at most. Foraging in the wild (spec §8 "Foraging", forage.toml;
 # the Forage ability): trained at all, you can forage; +15 percent to finding food at 100, +30 at
-# 200.
+# 200. On the overworld (spec §7 "Overworld encounters", encounters.toml): the lookout for a party,
+# +4 at 100, +6 at 200; slipping away from one, +8 at 100, +12 at 200.
 benefit = [
     { effect = "travel", curve = [[0, 0], [100, 20]] },
     { effect = "forage", curve = [[0, 0], [100, 15], [200, 30]] },
+    { effect = "lookout", curve = [[0, 0], [100, 4], [200, 6]] },
+    { effect = "evade", curve = [[0, 0], [100, 8], [200, 12]] },
 ]
 
 [[skill]]
