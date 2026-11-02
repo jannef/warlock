@@ -51,6 +51,10 @@
 //!   the stance it forces), and what feeds the pool a round: the foe's blows that `is_hit()`,
 //!   the berserker's criticals, and kills, at the content's and the talents' builds.
 //!
+//! - **Ki** (#846): the ascetic bare-handed (`ki_of`: the hands emptied), with one blow an
+//!   attack and with the flurry's second (`World::flurry`'s profile), the pool's maximum
+//!   (`Actor::resource_max`), and its pace a round (`World::resource_rate`).
+//!
 //! Not modelled: triggered and active weapon abilities, stances (but the rage table's), talents chosen for a build
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
 //! blow, potions, and resistances against spells.
@@ -129,7 +133,7 @@ struct Build {
     gear: fn(u8) -> Vec<(&'static str, &'static str)>,
 }
 
-const BUILDS: [Build; 6] = [
+const BUILDS: [Build; 7] = [
     Build {
         class: "warrior",
         skills: &[
@@ -195,10 +199,20 @@ const BUILDS: [Build; 6] = [
         fights_with_spells: false,
         gear: berserker,
     },
+    // Measured for the ki table alone (#846).
+    Build {
+        class: "ascetic",
+        skills: &[("unarmed", 0), ("brawler", 0)],
+        extras: &[(StatUse::Exerted, 3.0)],
+        casts_a_kill: false,
+        school: None,
+        fights_with_spells: false,
+        gear: ascetic,
+    },
 ];
 
 /// The builds the stat training's sweep and the tables before "Spells" measure (the witch is
-/// measured for necromancy alone, the berserker for its rage).
+/// measured for necromancy alone, the berserker for its rage, the ascetic for its ki).
 const MELEE_TABLES: usize = 4;
 
 fn warrior(l: u8) -> Vec<(&'static str, &'static str)> {
@@ -254,6 +268,19 @@ fn berserker(l: u8) -> Vec<(&'static str, &'static str)> {
         g.push(("cloak", "fur_cloak"));
     }
     g
+}
+
+/// The ascetic bare-handed and unarmoured (#846): gloves, boots, and a cloak from level 5. A kit
+/// that rolled the staff has it taken off where the ki is measured (`ki_of`).
+fn ascetic(l: u8) -> Vec<(&'static str, &'static str)> {
+    if l < 5 {
+        return Vec::new();
+    }
+    vec![
+        ("hands", "leather_gloves"),
+        ("feet", "leather_boots"),
+        ("cloak", "wool_cloak"),
+    ]
 }
 
 fn thief(l: u8) -> Vec<(&'static str, &'static str)> {
@@ -580,6 +607,50 @@ struct Snap {
     ambush_threat: u8,
     /// Raging, in plain gear (a class with the Rage ability).
     rage: Option<Rage>,
+    /// Its ki, bare-handed in plain gear (a class whose Flurry spends ki).
+    ki: Option<Ki>,
+}
+
+/// A bare-handed player's ki (#846): their side with one blow an attack and with the flurry's
+/// second, the pool's maximum, and the ki that comes back a round.
+#[derive(Clone)]
+struct Ki {
+    single: Side,
+    flurry: Side,
+    max: u16,
+    /// Ki back a round (a normal turn), at its pace.
+    back: f64,
+}
+
+/// Player `id`'s ki in `w`, if their Flurry spends it: their hands emptied, the second blow as
+/// `World::flurry` makes it.
+fn ki_of(w: &World, id: ActorId) -> Option<Ki> {
+    let content = w.content.clone();
+    let cost = (w.state.actors[&id].talent_mods(&content)).flurry_cost?;
+    let ki = cost.resource;
+    let mut w = w.clone();
+    if w.state.actors[&id].weapon_item(&content).is_some() {
+        act(&mut w, "remove:main_hand");
+    }
+    let me = &w.state.actors[&id];
+    assert!(me.weapon_item(&content).is_none(), "bare-handed");
+    let single = side_of(&w, id);
+    let mut second = me.melee(&content);
+    second.to_hit += super::free_blow::FLURRY_TO_HIT;
+    let every = match content.resource(ki).over_time {
+        Some(crate::content::OverTime::Regenerates { every }) => f64::from(every),
+        _ => f64::INFINITY,
+    };
+    let turn = BASE_TURN.as_seconds() as f64;
+    Some(Ki {
+        flurry: Side {
+            off: Some(second),
+            ..single.clone()
+        },
+        single,
+        max: me.resource_max(&content, ki, w.holder_level(id)),
+        back: turn / every * f64::from(w.resource_rate(id, ki)) / 100.0,
+    })
 }
 
 /// A raging player (#842): their side with the frenzy stance and Raging on, the pool as the
@@ -765,6 +836,7 @@ fn career(
                 rage: (gear == Gear::Plain)
                     .then(|| rage_of(&w2, player))
                     .flatten(),
+                ki: (gear == Gear::Plain).then(|| ki_of(&w2, player)).flatten(),
             });
         }
     }
@@ -953,6 +1025,7 @@ fn balance_probe() {
     tables::school_pace(&p, &mut out);
     tables::sneak_attacks(&p, &mut rng, &mut out);
     tables::rage(&p, &mut rng, &mut out);
+    tables::ki(&p, &mut rng, &mut out);
     tables::stats(&p, &mut out);
     tables::stat_sweep(&p, &mut out);
     println!("{out}");
