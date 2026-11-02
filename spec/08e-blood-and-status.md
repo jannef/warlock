@@ -357,7 +357,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Spells** (`data/spells/`, one `[[spell]]` file each, numbered in path order: `SpellId` an
     index, in the content fingerprint): id, name, description, level, the **tags** school
     (evocation, necromancy, abjuration, restoration, transmutation, enchantment, divination),
-    kind (damage, heal, buff, hex, cleanse, utility), shape, and damage type (a `damage` spell's,
+    kind (damage, heal, buff, hex, cleanse, utility, summon), shape, and damage type (a `damage` spell's,
     needed); a resolution that fits the shape (`area` exactly for cone, line, and burst, `touch`
     only for touch, `attack` for a ray or a bolt, `auto` for any single target); its **base**
     reach, each shape exactly its own (`range` 1 to 20 for a ray, bolt, or burst, `radius` 1
@@ -368,7 +368,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     everyone it harms); `aim` (an attack or touch damage spell's: the stat whose modifier aims
     it, default Dexterity); `casts` (its time in `cast` actions, 1 to 10); `open_sky`; `mana`, a
     cost given outright in place of its level's (Identify); `[spell.effect] identify` (a
-    `utility` spell on `self` that asks for a stack); `[spell.cast]` (the `effect` drawn,
+    `utility` spell on `self` that asks for a stack); `[spell.effect] summon` (a `summon`
+    spell's call on `self` with `auto`: `creatures`, `count`, `most`, `minutes`, `spread`; spec
+    §8 "Allies"); `study_difficulty`; `[spell.cast]` (the `effect` drawn,
     `noun`, `verb`, `message`, `noise`, and a burst's `blast`, `heat`, `frost`); and
     `[spell.grows]`, its ladders (below). Retired and refused, each naming its replacement:
     `tier`, `[spell.damage]`'s table form (`dice`, `per_levels`, `max_dice`, `bonus`),
@@ -492,12 +494,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
       scroll (design §14 q1). Once begun, the player cannot stop it themselves.
     - **The check**, as the last turn ends, on the scroll used up (Scroll savant never keeps a
       studied scroll, design §14 q7): overreach is the spell's level less the caster level. At
-      0 or less the spell is learned, no draw. Above, a 2d12 check with
+      0 or less the spell is learned, no draw, unless the spell is made hard to learn
+      (`study_difficulty` above 0: a check at any caster level, overreach counted as at least
+      0). Above, a 2d12 check with
       the Intelligence modifier + the skills' `study` benefit (Spellcraft and Decipher script,
       each value ÷ 10, at most 20) + the class's `affinity` with the spell's school
       (`data/classes/`, −10 to 10) + Quick study's bonus (2), against `base` (12) +
       `per_overreach` (1) × overreach′ + the sum of the levels of the spells known ÷
-      `known_per_point` (20) (`data/study.toml`), overreach′ being the overreach with
+      `known_per_point` (20) (`data/study.toml`) + the spell's `study_difficulty` (−20 to 40,
+      default 0), overreach′ being the overreach with
       Overreach's third off, rounded down (`study { overreach_percent = -33 }`). Made: "…you
       have learned Frost."
     - **Failure**: "The words twist away from you, and the scroll crumbles to dust.", then a

@@ -3,7 +3,7 @@
 Developer notes for working on this part of Warlock; the rules it implements are in
 spec/08b-creatures.md ("Allies"), the design is `docs/design/druid-and-summons.md` (§4 the ally
 core, §14 the owner's decisions, which override the rest). Slices: **A1** (#836, this file: the
-core), A2 (summons: the spell kind, `Ally::until` set from the spell's degrees), A3 (the UI: the
+core), A2 (#837, "Summons" below: the spell kind, `Ally::until` set from the spell's degrees), A3 (the UI: the
 Allies group's rows, Set on's aim, the friendly mark, look mode's "(your wolf)"), D1 (the druid's
 calls), and the ranger's companion (#825) on `AllySource::Companion`. Keep it current with the
 code, as CLAUDE.md says.
@@ -131,10 +131,72 @@ allies in the retinue at once.
 actors' energies are written back, before `spawn_tick`): every ally on the current level past
 its time departs through `World::ally_departs` (removed from `actors`, nothing left behind, no
 corpse or pile, `Event::Departed { actor, at }`, pushed to `fallen` so the turn's reports may
-name it, "The wolf fades away." when the player sees its cell; A2 gives the type its own
-`depart` line). Nothing ticks on another level or in the retinue: a summon left behind, or on
+name it, "The wolf fades away." when the player sees its cell; a type's own `depart` line is
+left to D1, with the beasts). Nothing ticks on another level or in the retinue: a summon left behind, or on
 the road, is checked by the clock when it is next met (`follow_along`, above). Statuses on an
 ally tick as any creature's while it acts.
+
+## Summons (A2, #837)
+
+A spell of `kind = "summon"` (`content/spell_def.rs`; `SpellPurpose::Summon`, its tag
+`summon`) calls creatures to the player's side. It is cast on `self` with `auto` (refused
+otherwise as it loads), priced as any self spell. Its call is `[spell.effect] summon = {
+creatures, count, most, minutes, spread }` (`SpellEffect::summon: Option<SpellSummon>`): the
+pool's names, resolved by `spell_def::resolve_summons` once every creature type is known (one
+step after `Content::load_summons`; known, not `player`, not `unique`, not animated), `count` a
+`Roll` of 1 to `summon::MAX_COUNT` (12), `most` 1 to 12, `minutes` 1 to `MAX_SUMMON_MINUTES`
+(600), `spread` 1 to 5 (default 2). Ladders: `[spell.grows] count` (a roll ladder, a summon's
+alone, each rung 1 to 12; `Grows::roll()` is damage, heal, or count, so `SpellData::roll()`,
+the rung, Empower, and the dice hooks act on the count as on any roll) and `degrees` on its
+minutes (`SpellData::base_degrees()`: a status's severity, else a summon's minutes; Lingering's
+`degrees` lengthen it). The menu and the `spells` dump say the count as `2 called` (JSON
+`damage_type` `"called"`).
+
+`World::cast_summon` (`world/summon_spell.rs`; the `Summon` arm of `cast.rs::perform`, which
+made `Cast`'s needed fields, `pay_cast`, and `spell_landed` `pub(super)`), after the cast path's
+own refusals (unknown, silenced, too little mana):
+
+1. Refused, no time and no mana: without `allies.toml` ("Nothing answers your call."); on the
+   overworld ("Nothing answers your call out here."); no free cell in `summon_cells(player,
+   spread)` (the enemy summoner's, shared: "There is no room for them beside you."); the
+   player's allies on the level at `[allies] most` unless one of this spell's own would give way
+   ("You cannot lead more than this.").
+2. Paid, `[spell.cast] message` said, `[spell.cast] noise` at the caster.
+3. This spell's calls alive (`calls_of`: on any level and in the retinue, by
+   `AllySource::Summoned { spell: Some(id) }`) at its `most` + `ally_mod`'s `most` (the owner's
+   Q8: per spell; the global cap is data alone): the **oldest** (lowest id) give way until one
+   more fits, departing as a lapsed one does here (`ally_departs`), removed silently elsewhere.
+4. The count: the cast's roll (its rung, the dice hooks, rerolls) + `ally_mod`'s `count`, at
+   least 1, held to the spell's room, the global cap's, and the free cells (recomputed after the
+   giving way).
+5. Each: `World::summon_draw(pool, &TalentMods::summon_bias)` (`world/summon.rs`, shared with
+   the enemy summoner, which passes no bias: one `below(pool.len())` as before), then
+   `make_ally` on the next cell, `AllySource::Summoned { spell: Some(id) }`, `until` = now + the
+   cast's degrees (minutes) × (100 + `ally_mod`'s `duration_percent`) % (rounded down, at least
+   1), or `None` with `ally_mod`'s `lasting`. `Actor::summoner` stays unset (the master is the
+   ally's own field).
+6. Said: "Two wolves come to your call." (`few`, by type, `and_list`); landed on the player
+   (`spell_landed`), so the school is practised as any cast, and a self spell trains no style.
+
+**The draw's bias** (the owner's Q9: an item that guarantees fire, someday):
+`TalentEffect::SummonBias { tag, weight }` → `TalentMods::summon_bias` (in the order taken). An
+entry whose type carries a bias's tag weighs that weight (several multiply), the rest 1; one
+`below(total)`; a total of 0, or every weight 1, falls back to the plain draw. No talent or item
+gives one yet; an item affix would feed the same list.
+
+**A slain summon** (`AllySource::Summoned`, the dev `ally:`'s too) leaves no corpse and drops
+nothing: `fight.rs::creature_dies` returns before `remains`, loot, the corpse, and a cursed
+room's rising; blood is spilled as any.
+
+`TalentEffect::AllyMod` gains `count`, `duration_percent`, `lasting`, `most` (`AllyMods`, summed;
+`lasting` any), read only in `cast_summon`; the wiki's talent text says each.
+
+Tests: `world/summon_spell_tests.rs` on the built-in content's spell-circle hall with fixture
+spells (rats; a rat or a bat) and talents: the call beside the caster on their side with its
+`until`, the words and the noise; the oldest giving way past `most`; the clock; the refusals
+(the global cap, with and without one giving way; the overworld) costing nothing; `ally_mod`'s
+four reads; the bias (never a rat); a slain call leaving nothing; `study_difficulty`; the load
+checks; a save round trip and determinism.
 
 ## Experience, quests, resources
 

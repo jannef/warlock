@@ -1154,6 +1154,13 @@ impl World {
             let slain = def.id.clone();
             self.state.quests.slay(&slain);
         }
+        // A summoned ally leaves nothing: no corpse, no pile (spec §8 "Allies": "Summons").
+        if (actor.ally.as_ref())
+            .is_some_and(|a| matches!(a.source, super::AllySource::Summoned { .. }))
+        {
+            self.fallen.push(actor);
+            return Vec::new();
+        }
         // An animated thing's body falls whole or not at all (spec §8 "Animated objects").
         let (mut dropped, broken) = self.remains(&actor);
         let mut lines = self.break_lines(&actor.level, actor.pos, &broken);

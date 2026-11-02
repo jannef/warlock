@@ -143,6 +143,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `[allies] most` (8) allies on one level. **Beast-bond** (Wayfarer; Handle animal 20): your
   allies strike +1 to hit and take Protection +1, read through you. The messages never say a
   number. The dev `ally:CREATURE[:N[:DURATION]]` makes allies for tests and captures.
+  **Summons** (`world/summon_spell.rs`; #837): a spell of `kind = "summon"`, cast on oneself,
+  calls `count` creatures of its pool (`[spell.effect] summon`; the count a roll, grown by its
+  `count` ladder and the dice hooks) beside the caster within `spread`, nearest first, on the
+  player's side with no gear, for `minutes` (its `degrees` ladder, Lingering), each drawn as an
+  enemy summoner draws (a summon bias, a talent effect, weighs the pool by tag; nothing gives
+  one yet). A spell keeps at most `most` of its calls at once: past it the oldest departs, so a
+  call always brings one. Refused, costing nothing, on the overworld, without a free cell beside
+  the caster, and at `[allies] most` on the level (unless one of the spell's own gives way).
+  `ally_mod` talents bring `count` more, make calls last `duration_percent` longer or, with
+  `lasting`, until slain, and keep `most` more of each spell's. A slain summon leaves no corpse
+  and drops nothing. "Two wolves come to your call."
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

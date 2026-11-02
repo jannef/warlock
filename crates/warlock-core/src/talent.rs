@@ -452,8 +452,12 @@ pub struct TalentMods {
     pub deflection: i32,
     /// Protection, each with what it asks to be worn ([`TalentMods::protection_with`]).
     pub protection: Vec<Guard>,
-    /// What it gives its allies (spec §8 "Allies": Beast-bond), read through their master.
+    /// What it gives its allies (spec §8 "Allies": Beast-bond), read through their master, and
+    /// its summon spells' calls.
     pub ally: AllyMods,
+    /// The summon draw's bias: a pool creature carrying the tag weighs this many times as much
+    /// (`world/summon_spell.rs`), in the order taken.
+    pub summon_bias: Vec<(String, u32)>,
     /// Percent less of a stance's to-hit penalty, by stance.
     pub stance_to_hit: Vec<(CombatStance, i32)>,
     /// Percent more a step out of reach of every hostile beside it costs (negative: cheaper).
@@ -832,6 +836,14 @@ pub struct AllyMods {
     pub to_hit: i32,
     /// Added to every ally's Protection.
     pub protection: i32,
+    /// More creatures every summon spell's call brings (added to its count roll).
+    pub count: i32,
+    /// Percent longer every call lasts (on its minutes, rounded down, at least 1).
+    pub duration_percent: i32,
+    /// Calls never lapse: they stay until slain.
+    pub lasting: bool,
+    /// More of each summon spell's calls kept at once (on its `most`).
+    pub most: i32,
 }
 
 /// Protection a talent adds, while what it asks is worn.
@@ -1132,10 +1144,22 @@ impl TalentMods {
             TalentEffect::MeleeDamage { value } => self.melee_damage += value,
             TalentEffect::Ferocity { value } => self.ferocity += value,
             TalentEffect::Threat { value } => self.threat += value,
-            TalentEffect::AllyMod { to_hit, protection } => {
+            TalentEffect::AllyMod {
+                to_hit,
+                protection,
+                count,
+                duration_percent,
+                lasting,
+                most,
+            } => {
                 self.ally.to_hit += to_hit;
                 self.ally.protection += protection;
+                self.ally.count += count;
+                self.ally.duration_percent += duration_percent;
+                self.ally.lasting |= lasting;
+                self.ally.most += most;
             }
+            TalentEffect::SummonBias { tag, weight } => self.summon_bias.push((tag, weight)),
             TalentEffect::RerollFumble => self.reroll_fumble = true,
             TalentEffect::Streak { max, damage_every } => {
                 self.streak = self.streak.max(max);
