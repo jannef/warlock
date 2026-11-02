@@ -125,7 +125,7 @@ only then.
 - **The roads** are the safest ground, but footpads walk them at every level, with their bowmen
   at night. The pedlar knows the ways east to Cealdhlāw and the ford, and tells them, marking
   them on your map as [rumoured ways](overworld.md#rumoured-ways) are; ask him for the news of
-  the roads too. Villagers of the vale greet you on their way to market.
+  the roads too, and for [his one offer](npcs.md#the-pedlars-offer). Villagers of the vale greet you on their way to market.
 - **Hlāwdūn**, the barrow downs: by day the vale's raiders and the barrows' spiders, at night and
   in twilight the barrows' dead, and whatever walks out of Cealdhlāw.
 - **The deep woods** and **Ascdūn**: once you know where [Wulfeshol or Fyrdelf](overworld.md#hidden-locations)

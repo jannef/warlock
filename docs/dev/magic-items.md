@@ -200,6 +200,14 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
   placement defines a unique of its own (`world/unique_tests.rs`), and a test that drops the
   uniques table puts the base items in their place (`character.rs`'s `skill_free_content`). The
   wiki's table names who carries each (`xtask/src/wiki/uniques.rs`, from the gear lines).
+- **The pedlar's three** (#808): the Brosinga Mene (gold amulet), the Eorcanstān (gold ring),
+  and Grendles Grāpe (gauntlets), `campaigns/ascmearc/data/uniques/`, each item level 12 with six
+  affixes and a `ward`, after ADOM's black torc (resistances, speed, Defence and Protection; the
+  caster's and the fighter's counterparts). They are placed only at run time, through a trader's
+  offer (`docs/dev/npcs.md` "A trader's offer"): `offer::check_placements` refuses content that
+  also places one, and the run's `WorldState::uniques_offered` keeps each to one offer a run (the
+  load-time `Uniques::place` flag does not apply: it marks content placements). The wiki's
+  "Carried by" names the offer with its chance (`offered_by`).
 - **Powers**, a variant each, read in one place each: `Power::Inflict(OnHit)` rides
   `Mods::local` of the weapon into `Profile::on_hit` (`sharpen`), which `World::resolve` hands
   to `after_blow` after the natural attack's `on_hit` (`Mods::worn` never carries it: it is the

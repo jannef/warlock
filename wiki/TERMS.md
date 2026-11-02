@@ -229,6 +229,7 @@ above.
 | Mimic | `mimics.md` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
 | Services (cure, mending, identification) | `npcs.md#services` |
+| The pedlar's offer, his wares | `npcs.md#the-pedlars-offer` |
 | Quest, quest log | `quests.md`, `quests.md#the-quest-log` |
 | Sorts of creatures (a quest's), drawn quests | `quests.md#sorts-of-creatures`, `quests.md#drawn-quests` |
 | The Weyfarers' Gilde, bounties, ranks | `guild.md`, `guild.md#the-wanted`, `guild.md#ranks` |

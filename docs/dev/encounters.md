@@ -4,8 +4,8 @@ Developer notes for working on this part of Warlock; the design is
 `docs/design/overworld-encounters.md` (its §15, the owner's decisions, overrides the rest), the
 slices #803 (E0, the edge rule: `world/edge_leave.rs`, `docs/dev/overworld.md`), #804 (E1, the
 rules, this file), #805 (E2, the dialog), #806 (E3, the Ascmearc's tables, `draw`, `npc`, and
-`quest_variant`, the pedlar, the wiki page, the spec section), #807 (E4, resting and foraging roll too: "Camping and foraging" below), E5 (the
-pedlar's offer). Keep it current with the code, as CLAUDE.md says.
+`quest_variant`, the pedlar, the wiki page, the spec section), #807 (E4, resting and foraging roll too: "Camping and foraging" below), #808 (E5, the
+pedlar's offer: "The pedlar's offer" below). Keep it current with the code, as CLAUDE.md says.
 
 ## Modules and data
 
@@ -119,6 +119,17 @@ The design's §14 Q3 default, which the owner widened to foraging (§15 Q3).
   `encounter_tick` after the rest's action, as a step's does.
 - Off the overworld (in the cell's local area too) a rest and a forage roll nothing; so does a
   campaign without tables (no replay moves).
+
+## The pedlar's offer (#808)
+
+The owner's Q7 (§15): one item at a fixed price, take it or leave it, a favoured roll, and three
+uniques very rarely. No shop and no floor: a dialogue's `[dialogue.offer]` (`content/offer.rs`,
+`TradeOffer`; `Dialogue::offer`) asked for like a topic, done in `world/wares.rs`. The details
+(data, draws, price, saved state, the UI) are in `docs/dev/npcs.md` "A trader's offer"; the
+pedlar's numbers are in `campaigns/ascmearc/data/dialogue/road.toml` and the three uniques in
+`campaigns/ascmearc/data/uniques/` (`brosinga_mene`, `eorcanstan`, `grendles_grape`;
+`docs/dev/magic-items.md` "Unique items"). Hailing him opens the area as before; the offer is
+made on the first chat (or ask), on its own stream, so the encounter rolls are unchanged.
 
 ## The checks (gameplay stream, two draws each)
 

@@ -4,7 +4,7 @@
 use super::order;
 use super::text::capital;
 use std::fmt::Write as _;
-use warlock_core::content::{Affliction, Content, ItemKind, Power, UniqueDef};
+use warlock_core::content::{Affliction, Content, DialogueId, ItemKind, Power, UniqueDef};
 use warlock_core::magic::describe;
 
 /// Every unique item of the campaigns the wiki describes, by name.
@@ -45,7 +45,7 @@ pub(super) fn uniques(content: &Content) -> String {
 /// The creature types whose gear always or sometimes gives them unique `u` ("Black Wystan"), or
 /// "-" when it lies elsewhere (a level's pile or legend).
 fn carried_by(content: &Content, u: &UniqueDef) -> String {
-    let who: Vec<&str> = (content.creature_defs().iter())
+    let who: Vec<String> = (content.creature_defs().iter())
         .filter(|c| order::described(content, c.campaign.as_deref()))
         .filter(|c| {
             (c.gear.lines.iter())
@@ -53,13 +53,32 @@ fn carried_by(content: &Content, u: &UniqueDef) -> String {
                 .flat_map(|(stacks, _)| stacks.iter())
                 .any(|s| *s == u.stack)
         })
-        .map(|c| c.name.as_str())
+        .map(|c| c.name.to_string())
+        .chain(offered_by(content, u))
         .collect();
     if who.is_empty() {
         "-".into()
     } else {
         who.join(", ")
     }
+}
+
+/// The traders whose offer may be unique `u` (#808), with the chance: "the pedlar's offer (2%
+/// of his offers, shared among 3; once a run)".
+fn offered_by(content: &Content, u: &UniqueDef) -> Vec<String> {
+    (content.dialogues().iter().enumerate())
+        .filter(|(_, d)| order::described(content, d.campaign.as_deref()))
+        .filter_map(|(i, d)| {
+            let offer = d.offer.as_ref().filter(|o| o.uniques.contains(&u.id))?;
+            let who = content.speaker_called(DialogueId(i as u16));
+            let percent = f64::from(offer.unique_chance) / 100.0;
+            Some(format!(
+                "{}'s offer ({percent}% of offers, shared among {}; once a run)",
+                capital(&who),
+                offer.uniques.len()
+            ))
+        })
+        .collect()
 }
 
 /// What a unique's power does, exactly.
