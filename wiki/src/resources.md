@@ -95,7 +95,11 @@ long calm after it. At none the rage ends, its bar with it, and the [berserker](
 [Exhausted](status-effects.md#status-exhausted) for two and a half minutes (150 seconds), with no rage until that passes. Something that ends the [Raging](status-effects.md#status-raging) otherwise ends the rage too. The berserker's later levels
 add to it (see [Talents](talents.md)):
 
-- **[Blood frenzy](talents.md#talent-blood-frenzy)** (level 40): every kill while raging builds 5 rage more (8 in all).
+- **[Battle-scarred](talents.md#talent-battle-scarred)** (level 6): [Protection](combat.md#protection) +1, and +2 more while raging (3 in all),
+  whatever armour you wear.
+- **[Headlong](talents.md#talent-headlong)** (level 12): while raging, every step costs a fifth less
+  [time](time.md), in any armour and under any [burden](burden.md).
+- **[Blood frenzy](talents.md#talent-blood-frenzy)** (level 40): while raging, every melee attack costs a fifth less time; and every kill builds 5 rage more (8 in all).
 - **[Mighty rage](talents.md#talent-mighty-rage)** (level 50): [Raging](status-effects.md#status-raging) gives Strength +4 and Toughness +4, rage holds up to 30, and
   the exhaustion lasts 75 seconds.
 - **[Unstoppable](talents.md#talent-unstoppable)** (level 60): while [raging](status-effects.md#status-raging), [bleeding](status-effects.md#status-bleeding) and [poison](status-effects.md#status-poisoned) cost no hit points, and a blow

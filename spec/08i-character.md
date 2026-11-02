@@ -1014,11 +1014,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     cleave), Armour drill (worn armour's Dexterity cap +1, Protection +1 while wearing any),
     Weapon mastery (threat +1 with melee weapon skills at rank 8 or more), Iron stance (the
     aggressive stance's Dodge penalty and the defensive's to-hit penalty gone), Champion
-    (critical multiplier +1 with melee weapons, at most ×5); Thick hide (natural armour +2 in
-    no body armour: nothing in the Body slot), Fast movement (steps 10 % cheaper Unburdened in
-    no body armour, `World::step_price`), Brutal critical (critical multiplier +1 with a
-    two-handed weapon), Hardened (each level past `hp_level` adds the level's hit points again
-    and 3 more), Mighty thews, Blood frenzy (a kill while raging builds 5 rage), Mighty rage
+    (critical multiplier +1 with melee weapons, at most ×5); Battle-scarred (Protection +1, and
+    +2 more while raging: +3 in all, in any armour), Headlong (while raging, steps 20 % cheaper,
+    in any armour and any burden, `World::step_price`), Brutal critical (critical multiplier +1
+    with a two-handed weapon), Hardened (each level past `hp_level` adds the level's hit points
+    again and 3 more), Mighty thews, Blood frenzy (while raging, melee attacks 20 % cheaper,
+    `World::attack_price`; and a kill builds 5 rage), Mighty rage
     (Raging's raises doubled, 10 more rage at most, Exhausted eases twice as fast), Unstoppable
     (while raging bleeding and poison tick nothing, and a blow that would take the last hit point
     leaves it for 10 rage, while that much is held); Divine grace
@@ -1031,7 +1032,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Still mind (+2 on checks made with Willpower: diseases', noticing
     in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
     Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1). The paladin's
-    passives do not ask for Good; only the gifts used from the menu do.
+    passives do not ask for Good; only the gifts used from the menu do. No berserker row reads
+    what the berserker wears (#843).
+  - **While a status lasts** (#843): any talent effect the talents' one sum reads may say
+    `while = "STATUS"` (a status id, checked at load); it counts only while its holder suffers
+    that status (`Talents::mods`, given the actor's statuses; every rule keeps its one read).
+    Battle-scarred's second half, Headlong, and Blood frenzy's price say `while = "raging"`. An
+    active, a spell given, or what is rolled or handed down when a talent is taken carries no
+    condition (refused at load). The identical-effects check counts the condition as part of
+    the effect: `protection 2 while raging` is not Bulwark's `protection 2`.
   - **Resources**: Rage, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
     (§8 "Resources", R1); Flurry and Quivering palm on the Ki resource (R4, #252).
   - **Coverage**: `min_class` stays 0 until every class has its table.

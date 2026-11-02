@@ -46,7 +46,7 @@ pub fn creation_count(content: &Content, spec: &CharacterSpec) -> u8 {
     for id in content.race(&spec.race).map_or(&[][..], |r| &r.talents[..]) {
         granted.take(id, None);
     }
-    let race = granted.mods(content).extra_picks_at(1);
+    let race = (granted.mods(content, &Default::default())).extra_picks_at(1);
     (content.experience().creation_talents())
         .saturating_add(class)
         .saturating_add(race)

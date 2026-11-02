@@ -173,6 +173,13 @@ impl World {
             _ if kind != ActionKind::Melee || !two_handed => base,
             percent => percent_of(base, u32::try_from((100 + percent).max(0)).unwrap_or(0)),
         };
+        // Blood frenzy (spec §8 "Class abilities"; while raging, the sum's `while`): every
+        // melee attack costs less.
+        let base = match actor.talent_mods(&self.content).attack_price_percent {
+            0 => base,
+            _ if kind != ActionKind::Melee => base,
+            percent => percent_of(base, u32::try_from((100 + percent).max(0)).unwrap_or(0)),
+        };
         let base = self.shields_slowed(id, base);
         // A status that makes attacks dearer (Walled) on top of what makes every action so.
         let base = actor.effects.slow_attack(&self.content, base);
@@ -225,7 +232,8 @@ impl World {
                 price = percent_of(price, u32::try_from((100 + percent).max(1)).unwrap_or(1));
             }
         }
-        // Fast movement and Fleet (spec §8 "Class abilities"): lighter steps, unarmoured.
+        // Fleet and Headlong (spec §8 "Class abilities"): lighter steps, Fleet's unarmoured,
+        // Headlong's while raging (the sum's `while`).
         let talents = actor.talent_mods(&self.content);
         if !talents.step_percent.is_empty() {
             let armoured = actor.wears_body_armour(&self.content);
