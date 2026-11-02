@@ -4,8 +4,8 @@
 use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Need, OverTime, Role, SignActive, SongOn, SpellData, SpellModSpec, StatusId,
-    TalentDef, TalentEffect, TreeId,
+    Content, Faced, Need, OverTime, PrayerUse, Role, SignActive, SongOn, SpellData, SpellModSpec,
+    StatusId, TalentDef, TalentEffect, TreeId,
 };
 use warlock_core::noise::SONG_NOISE;
 
@@ -477,6 +477,82 @@ fn buff(content: &Content, id: &str) -> String {
     let each = if s.max > 1 { " a degree" } else { "" };
     said.extend(s.eases.map(|e| format!("{} min{each}", e / 60)));
     format!("{} ({})", s.name, said.join(", "))
+}
+
+/// What a prayer use answers, in words (`data/prayer.toml`'s release list named).
+fn prayer_use_text(content: &Content, id: PrayerUse) -> String {
+    match id {
+        PrayerUse::Disease => "every disease, showing or still brewing (a brewing one alone is \
+                               nothing to pray for)"
+            .into(),
+        PrayerUse::Poison => "poison".into(),
+        PrayerUse::Wounds => "bleeding, and hit points to full".into(),
+        PrayerUse::Release => {
+            let names: Vec<String> = (content.prayer().into_iter())
+                .flat_map(|r| r.release.iter())
+                .map(|&s| content.status(s).name.clone())
+                .collect();
+            format!("hexes and holds ({})", names.join(", "))
+        }
+        PrayerUse::Mana => "mana to full".into(),
+        PrayerUse::Hunger => "hunger (Hungry or worse), fed to Satiated".into(),
+        PrayerUse::Restoration => "all stat damage, and every point drained".into(),
+    }
+}
+
+/// The priest's prayer effect in full: the tier's title, what it adds, and, for the first tier,
+/// the strain's numbers and the priority order.
+fn prayer_text(
+    content: &Content,
+    tier: Option<u8>,
+    title: Option<&Faced>,
+    uses: &[PrayerUse],
+    answers: Option<u8>,
+    all: bool,
+) -> String {
+    let mut parts = Vec::new();
+    if let (Some(tier), Some(title)) = (tier, title) {
+        parts.push(format!(
+            "the prayer's tier {tier}: it is called {} (answered by the holy powers) or {} (by \
+             the dark)",
+            title.holy, title.dark
+        ));
+    }
+    if !uses.is_empty() {
+        let said: Vec<String> = uses.iter().map(|&u| prayer_use_text(content, u)).collect();
+        parts.push(format!("a prayer may answer {}", said.join("; ")));
+    }
+    if let Some(n) = answers {
+        parts.push(format!("a prayer answers {n} problems at once"));
+    }
+    if all {
+        parts.push(
+            "a prayer answers every problem at once, every use included, and fills every \
+             resource pool held (stamina too)"
+                .into(),
+        );
+    }
+    if tier == Some(1)
+        && let Some(rules) = content.prayer()
+    {
+        let order: Vec<&str> = rules.uses.iter().map(|u| u.id.id()).collect();
+        parts.push(format!(
+            "active (`use:orison`, the time of a spell, no mana): it answers the first problem \
+             the priest has, in the order {}. The holy powers answer {} and better, the dark \
+             ones {} and worse, by the band at the moment. Every attempt adds {} strain, \
+             answered or not, and a point passes every {}; a prayer fizzles with a chance of {} % \
+             per 100 strain (at most 100 %), and a fizzle locks the prayer: every prayer fizzles \
+             until the strain has passed to 0. With nothing to answer it is refused, with no \
+             time or strain",
+            order.join(", "),
+            rules.holy.min.map_or("every band", |b| b.name()),
+            rules.dark.max.map_or("every band", |b| b.name()),
+            rules.strain,
+            rules.decay,
+            rules.fizzle_per_100,
+        ));
+    }
+    parts.join("; ")
 }
 
 pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
@@ -1765,6 +1841,13 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              on a level a curse or a drain covers whole, the whole level's is lifted instead. \
              A good deed (see Alignment). Anywhere else it is refused, with no time spent"
         ),
+        TalentEffect::Prayer {
+            tier,
+            title,
+            uses,
+            answers,
+            all,
+        } => prayer_text(content, tier, title.as_ref(), &uses, answers, all),
         TalentEffect::Knock { mana } => format!(
             "active (aimed in a direction, for {mana} mana, the time of a spell): the lock of \
              the locked door or shut chest there springs open; nothing opens and no trap \

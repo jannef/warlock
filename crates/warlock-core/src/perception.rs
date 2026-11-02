@@ -1629,6 +1629,33 @@ impl<'a> PerceptionView<'a> {
             .collect()
     }
 
+    /// The name the abilities menu gives `ability`: its own, but the priest's prayer by its
+    /// highest tier as the face that answers them gives it ("Orison", "Whisper"; they know their
+    /// band and their own talents).
+    pub fn ability_name(&self, ability: Ability) -> std::borrow::Cow<'a, str> {
+        match ability {
+            Ability::Class(crate::content::ClassActive::Orison) => {
+                match self.player.prayer_title(self.content) {
+                    Some((name, _)) => name.into(),
+                    None => ability.name(self.content),
+                }
+            }
+            _ => ability.name(self.content),
+        }
+    }
+
+    /// What the abilities menu says `ability` does: its own line, but the priest's prayer's
+    /// that of its highest tier.
+    pub fn ability_description(&self, ability: Ability) -> &'a str {
+        match ability {
+            Ability::Class(crate::content::ClassActive::Orison) => {
+                (self.player.prayer_title(self.content))
+                    .map_or_else(|| ability.description(self.content), |(_, d)| d)
+            }
+            _ => ability.description(self.content),
+        }
+    }
+
     /// The spells the player knows (spec §8 "Spells": learned, or their class gives them), in
     /// menu order.
     pub fn own_spells(&self) -> Vec<crate::content::SpellId> {

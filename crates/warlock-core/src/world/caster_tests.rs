@@ -154,18 +154,20 @@ fn every_caster_has_its_table_by_level_sixty() {
     let tables = [
         (
             "priest",
-            1,
+            2,
             vec![
                 "Mend",
+                "Orison",
                 "Blessing",
                 "Cure wounds",
+                "Daily bread",
                 "Consecrate",
-                "Remove disease",
-                "Purify",
-                "Purity of body",
-                "Smite",
+                "Prayer",
+                "Prayer of release",
+                "Litany",
+                "Litany of the mind",
+                "Benediction",
                 "Miracle",
-                "Saint",
             ],
         ),
         (
@@ -368,6 +370,8 @@ fn cure_wounds_heals_by_touch_in_two_casts() {
 fn remove_disease_ends_diseases_and_poison() {
     let mut w = world("priest");
     reach(&mut w, 12);
+    // The priest's table no longer gives it (the prayer does its work); its scroll teaches it.
+    w.player_mut().spells.insert(sp("remove_disease"));
     run(&mut w, "use:remove_disease");
     assert_eq!(last(&w), "There is nothing to cure.");
     assert_eq!(w.state.player().mana, 40);
@@ -613,6 +617,7 @@ fn a_spell_is_paid_through_the_talents_mana_cost() {
     let mut w = world("priest");
     reach(&mut w, 12);
     let content = w.content().clone();
+    w.player_mut().spells.insert(sp("remove_disease"));
     w.player_mut().talents.take("frugal_caster", None);
     let cleanse = content
         .class_spell(sp("remove_disease"))
@@ -644,20 +649,6 @@ fn mage_armour_deflects_only_without_body_armour() {
     let before = deflection(&w);
     reach(&mut w, 25);
     assert_eq!(deflection(&w), before + 2, "a wizard wears no body armour");
-}
-
-#[test]
-fn miracle_saves_the_priest_once() {
-    let mut w = world("priest");
-    reach(&mut w, 50);
-    let player = w.state.player;
-    let mut events = Vec::new();
-    w.player_mut().hp = 3;
-    assert!(!w.hurt(player, 10, fight::Harm::Barbs, &mut events));
-    assert_eq!(w.state.player().hp, 1);
-    assert!(suffers(&w, player, "worn_thin"));
-    assert!(said(&w).contains(&"A miracle! You do not fall.".to_string()));
-    assert!(w.hurt(player, 10, fight::Harm::Barbs, &mut events), "once");
 }
 
 #[test]

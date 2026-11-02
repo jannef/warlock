@@ -691,6 +691,32 @@ pub struct TalentMods {
     pub consecrate: Option<Consecrate>,
     /// The active Knock, if it has it.
     pub knock: Option<Knock>,
+    /// The priest's prayer, its talents summed (`world/orison.rs`), if it has any.
+    pub prayer: Option<Prayer>,
+}
+
+/// The priest's prayer (spec §8 "Class abilities"; `world/orison.rs`): what its prayer talents
+/// sum to: the uses (their union), the answers a prayer gives (the largest; at least 1), every
+/// problem at once (any), and the highest tier with its titles.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Prayer {
+    pub uses: std::collections::BTreeSet<crate::content::PrayerUse>,
+    pub answers: u8,
+    pub all: bool,
+    pub tier: u8,
+    pub title: Option<crate::content::Faced>,
+}
+
+impl Prayer {
+    /// Whether it may answer `id`: a use held, or every use with `all`.
+    pub fn answers_to(&self, id: crate::content::PrayerUse) -> bool {
+        self.all || self.uses.contains(&id)
+    }
+
+    /// Its title as `face` gives it (`Orison`, `Whisper`), if a tier is held.
+    pub fn title(&self, face: crate::content::Face) -> Option<&str> {
+        self.title.as_ref().map(|t| t.of(face))
+    }
 }
 
 /// A once-in-a-life reprieve from death (Miracle, Hag's bargain): what it is called in
@@ -1043,6 +1069,7 @@ impl TalentMods {
             A::Inspire => self.songs.iter().any(|s| s.active == active),
             A::Consecrate => self.consecrate.is_some(),
             A::Knock => self.knock.is_some(),
+            A::Orison => self.prayer.as_ref().is_some_and(|p| p.tier > 0),
         }
     }
 
@@ -1956,6 +1983,25 @@ impl TalentMods {
                 }
             }
             TalentEffect::Knock { mana } => self.knock = Some(Knock { mana }),
+            TalentEffect::Prayer {
+                tier,
+                title,
+                uses,
+                answers,
+                all,
+            } => {
+                let prayer = self.prayer.get_or_insert_with(|| Prayer {
+                    answers: 1,
+                    ..Prayer::default()
+                });
+                prayer.uses.extend(uses);
+                prayer.answers = prayer.answers.max(answers.unwrap_or(1));
+                prayer.all |= all;
+                if let Some(tier) = tier.filter(|&t| t > prayer.tier) {
+                    prayer.tier = tier;
+                    prayer.title = title;
+                }
+            }
         }
     }
 

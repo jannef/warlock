@@ -953,6 +953,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::MasterThief
         | ClassActive::Inspire
         | ClassActive::Consecrate
+        | ClassActive::Orison
         | ClassActive::Knock
         | ClassActive::MerchantsEye
         | ClassActive::Volley => Vec::new(),

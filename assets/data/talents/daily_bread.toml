@@ -1,0 +1,8 @@
+[[talent]]
+id = "daily_bread"
+name = "Daily bread"
+tree = "class"
+granted = true
+description = "Your prayers feed you: hungry, you are fed. And rotten food neither sickens you nor carries a disease into you."
+effects = [{ kind = "prayer", uses = ["hunger"] }, { kind = "purify" }]
+systems = ["hunger", "diseases"]

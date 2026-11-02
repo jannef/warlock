@@ -1,0 +1,8 @@
+[[talent]]
+id = "prayer_of_release"
+name = "Prayer of release"
+tree = "class"
+granted = true
+description = "Your prayers free you: whatever hexes, holds, or webs you lets go."
+effects = [{ kind = "prayer", uses = ["release"] }]
+systems = ["status"]
