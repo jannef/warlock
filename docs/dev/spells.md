@@ -251,7 +251,7 @@ cast path shares.
     the id string (checked against `data/spells/` at load, resolved in `TalentMods::spells`).
     `Content::spells_by_level` is the menu's order (spell level, then path), `Ability::every`'s
     too.
-  - **The list** (26 spells, by spell level, the spell scaling design §5.8): 0 Evil eye, Light
+  - **The list** (29 spells, by spell level, the spell scaling design §5.8): 0 Evil eye, Light
     (self buff: Lit, whose `light` the light cache sheds about the caster; #589, the scroll of
     light's); 1 Mend (touch heal), Ray of frost (ray, attack), Spark (bolt, auto); 3 Barkskin
     (buff), Blessing, Cure wounds (touch heal 2d6), Curse of sloth, Hex of weakness, Magic
@@ -259,7 +259,11 @@ cast path shares.
     necrotic); 6 Arcane bolt, Frost, Identify (#592, below), Sleep (area hex, burst radius 1);
     7 Blight, Scorching ray (ray, attack, 1d6 to 3d6, the design's "one to three rays" as
     dice), Web (area hex); 11 Call lightning, Fireball (2d6 to 3d6), Haste (buff), Lightning
-    bolt (line), Remove disease; 12 Flame. Six costs moved with the levels: Cause wounds 2 → 3,
+    bolt (line), Remove disease; 12 Flame. The druid's calls (#839; summons, `docs/dev/allies.md`
+    "The druid's calls"): 5 Call of the wild, 20 Call of the forest, 35 Call the elements, each
+    with a scroll at the README's convention carried past level 12 (item level about half the
+    spell's: 3, 10, 18; frequency 35, 10, 5; value 100, 320, 500) and a `study_difficulty` (8,
+    10, 12). Six costs moved with the levels: Cause wounds 2 → 3,
     Burning hands 5 → 6, Scorching ray 6 → 7, Web 11 → 13, Blight 14 → 17, Flame 26 → 29. New statuses: `drowsy` (cost 300), `webbed`
     (blocks `step`), `hasted` (cost 75: `COST_PERCENT` is now 50 to 1000, and `spell_def`
     refuses a status below 100 on anything but a buff, so only the caster is hastened and the

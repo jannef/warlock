@@ -56,6 +56,7 @@
 //! blow, potions, and resistances against spells.
 
 mod schools;
+mod summons;
 mod tables;
 mod training;
 
@@ -953,6 +954,7 @@ fn balance_probe() {
     tables::school_pace(&p, &mut out);
     tables::sneak_attacks(&p, &mut rng, &mut out);
     tables::rage(&p, &mut rng, &mut out);
+    summons::summons(&p, &mut rng, &mut out);
     tables::stats(&p, &mut out);
     tables::stat_sweep(&p, &mut out);
     println!("{out}");

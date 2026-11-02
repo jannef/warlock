@@ -272,6 +272,9 @@ pub(super) enum End<'a> {
     You,
     /// A creature the player sees, by its type's name.
     Seen(&'a str),
+    /// One of the player's own allies they see, by its type's name: "your wolf"
+    /// (`docs/dev/allies.md`).
+    Yours(&'a str),
     /// Something the player does not see.
     Unseen,
     /// A trap's missile, blades, or blast, by what hits ("arrow", "fireball"): it attacks by
@@ -281,9 +284,10 @@ pub(super) enum End<'a> {
 
 impl End<'_> {
     /// As the subject: "You", "The kobold", "Something", "The arrow".
-    fn subject(self) -> String {
+    pub(super) fn subject(self) -> String {
         match self {
             End::You => "You".into(),
+            End::Yours(name) => format!("Your {name}"),
             End::Seen(name) | End::Trap(name) => crate::content::the_start(name),
             End::Unseen => "Something".into(),
         }
@@ -293,6 +297,7 @@ impl End<'_> {
     pub(super) fn object(self) -> String {
         match self {
             End::You => "you".into(),
+            End::Yours(name) => format!("your {name}"),
             End::Seen(name) | End::Trap(name) => crate::content::the(name),
             End::Unseen => "something".into(),
         }
@@ -303,6 +308,7 @@ impl End<'_> {
         match self {
             End::You => "your".into(),
             End::Seen(name) => format!("{}'s", crate::content::the(name)),
+            End::Yours(name) => format!("your {name}'s"),
             End::Unseen => "something's".into(),
             End::Trap(_) => "the".into(),
         }
@@ -470,6 +476,7 @@ pub(super) fn death_message(who: End<'_>, dies: &str) -> String {
     match who {
         End::You => "You die...".into(),
         End::Seen(name) => format!("{} {dies}.", crate::content::the_start(name)),
+        End::Yours(name) => format!("Your {name} {dies}."),
         End::Unseen | End::Trap(_) => "Something dies.".into(),
     }
 }
@@ -1345,7 +1352,9 @@ impl World {
         let target_actor = self.actor_or_fallen(target);
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
         let guard = Guard::of(target_actor, &content, &self.state);
+        let yours = target_actor.is_some_and(|a| a.master() == Some(player));
         let end = match name {
+            Some(name) if seen && yours => End::Yours(name),
             Some(name) if seen => End::Seen(name),
             _ => End::Unseen,
         };

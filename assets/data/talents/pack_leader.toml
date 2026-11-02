@@ -1,0 +1,10 @@
+# The druid's at 32 (spec §8 "Class abilities"; docs/design/druid-and-summons.md §6, §14 Q8):
+# every call brings one more, keeps one more alive at once, and lasts half again as long.
+[[talent]]
+id = "pack_leader"
+name = "Pack leader"
+tree = "class"
+granted = true
+description = "The wild follows you gladly: each of your calls brings one more, you may keep one more of each at your side, and they stay half again as long."
+effects = [{ kind = "ally_mod", count = 1, most = 1, duration_percent = 50 }]
+systems = ["allies", "spells"]

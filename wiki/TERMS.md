@@ -227,6 +227,8 @@ above.
 | A creature's craft for surprise (its sneak attack, initiative, spot) | `creature-numbers.md#surprise` |
 | Animated object | `animated.md` |
 | Mimic | `mimics.md` |
+| Ally, your wolf, orders (Come to heel, Hold here, Set on) | `allies.md`, `allies.md#orders` |
+| Summon, summon spell, a call (the druid's) | `allies.md#summons`, `allies.md#the-druids-calls` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
 | Services (cure, mending, identification) | `npcs.md#services` |
 | The pedlar's offer, his wares | `npcs.md#the-pedlars-offer` |

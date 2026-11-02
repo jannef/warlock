@@ -13,6 +13,8 @@ pub mod animated;
 #[cfg(test)]
 mod animated_tests;
 mod background;
+#[cfg(test)]
+mod beast_roster_tests;
 mod calendar;
 mod campaign;
 mod chest;
@@ -1649,6 +1651,12 @@ impl Content {
             if spec.dies.as_ref().is_some_and(|d| d.trim().is_empty()) {
                 return Err(err(format!(
                     "creature `{}`: `dies` must not be empty",
+                    spec.id
+                )));
+            }
+            if spec.depart.as_ref().is_some_and(|d| d.trim().is_empty()) {
+                return Err(err(format!(
+                    "creature `{}`: `depart` must not be empty",
                     spec.id
                 )));
             }

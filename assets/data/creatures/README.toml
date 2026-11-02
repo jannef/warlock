@@ -70,6 +70,8 @@
 #            planes: every yugoloth, demon, and devil; and the fiends of no family, #450),
 #            giant (every type of the "giant" faction, the ogres too), ogre (the ogres)
 #            animated (every animated object, #483: generated, never written here)
+#            beast (the wild animals the druid calls, wildlife: the wolf and the bear, #839;
+#            content::beast_roster_tests checks them)
 #   roles    archer (shoots: the goblin, kobold, and skeleton archers), caster (every
 #            combat = "caster" type), cultist (the minster's cult, and the necromancer and dark
 #            wizard of its kind), skeleton (walking bones), spirit (the incorporeal dead), troll
@@ -216,6 +218,8 @@
 #   immune    status ids it never suffers (`immune = ["poisoned", "bleeding"]`; `diseased` is
 #             every disease): refused where they are given, nothing rolled
 #   dies      the verb of its death line, "The animated chair splinters." (default "dies")
+#   depart    the words of its going as an ally whose call has run out, "The wolf slips back into
+#             the dark." (default "fades away"; docs/dev/allies.md)
 #
 # Animated objects (spec §8 "Animated objects", #483) are not written here: their types are
 # generated when content loads from data/animated.toml and data/animated/ (`animated_<body>`),

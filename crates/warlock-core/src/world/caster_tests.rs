@@ -175,9 +175,14 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Beast-friend",
                 "Spark",
                 "Barkskin",
+                "Call of the wild",
                 "Call lightning",
                 "Nature's ward",
+                "Call of the forest",
+                "Pack leader",
+                "Call the elements",
                 "Flame and frost",
+                "Lord of the wild",
             ],
         ),
         (
@@ -248,6 +253,8 @@ fn the_spells_are_abilities_by_level() {
             // Level 4.
             "Burning hands",
             "Cause wounds",
+            // Level 5.
+            "Call of the wild",
             // Level 6.
             "Arcane bolt",
             "Frost",
@@ -264,7 +271,11 @@ fn the_spells_are_abilities_by_level() {
             "Lightning bolt",
             "Remove disease",
             // Level 12.
-            "Flame"
+            "Flame",
+            // Level 20.
+            "Call of the forest",
+            // Level 35.
+            "Call the elements",
         ]
     );
     let bolt = Ability::Spell(sp("arcane_bolt"));
@@ -464,6 +475,95 @@ fn call_lightning_wants_the_open_sky() {
     let hurt = 500 - w.state.actors[&target].hp;
     assert!(hurt >= 1, "2d6, less what it resists: {hurt}");
     assert_eq!(w.state.player().mana, 20, "level 11 × 1.8");
+}
+
+/// The player's allies, by id.
+fn pack(world: &World) -> Vec<&Actor> {
+    (world.state.actors.values())
+        .filter(|a| a.master() == Some(world.state.player))
+        .collect()
+}
+
+/// How many of the player's allies are of creature type `id`.
+fn of_kind(world: &World, id: &str) -> usize {
+    (pack(world).into_iter())
+        .filter(|a| world.content().creature(a.creature).id == id)
+        .count()
+}
+
+#[test]
+fn the_druids_calls_bring_one_of_each_until_its_abilities_raise_that() {
+    let mut w = world("druid");
+    assert_eq!(
+        own(&w, sp("call_of_the_wild")),
+        None,
+        "a druid calls from 6"
+    );
+    reach(&mut w, 6);
+    assert_eq!(own(&w, sp("call_of_the_wild")), Some(None));
+    run(&mut w, "use:call_of_the_wild");
+    assert!(
+        said(&w)
+            .iter()
+            .any(|m| m == "You call, and the wild answers.")
+    );
+    assert_eq!(last(&w), "A wolf comes to your call.");
+    let first = pack(&w)[0].id;
+    assert_eq!(of_kind(&w, "wolf"), 1);
+    assert!(pack(&w)[0].ally.as_ref().expect("an ally").until.is_some());
+    // One at a time: a second call, and the first gives way.
+    w.player_mut().mana = 40;
+    run(&mut w, "use:call_of_the_wild");
+    assert_eq!(of_kind(&w, "wolf"), 1);
+    assert!(!w.state.actors.contains_key(&first));
+    // A bear beside the wolf: the cap is each call's.
+    reach(&mut w, 25);
+    run(&mut w, "use:call_of_the_forest");
+    assert_eq!((of_kind(&w, "wolf"), of_kind(&w, "bear")), (1, 1));
+    // Pack leader: two at once, both from one call.
+    reach(&mut w, 32);
+    run(&mut w, "use:call_of_the_wild");
+    assert_eq!(of_kind(&w, "wolf"), 2);
+    // Greater elementals of the elements the wild chooses, two with Pack leader.
+    reach(&mut w, 40);
+    w.player_mut().mana = 100;
+    run(&mut w, "use:call_the_elements");
+    let elementals = (pack(&w).into_iter())
+        .filter(|a| w.content().has_tag(a.creature, "elemental"))
+        .count();
+    assert_eq!(elementals, 2);
+    // Lord of the wild: three at once, and they stay until slain.
+    reach(&mut w, 60);
+    run(&mut w, "use:call_of_the_wild");
+    assert_eq!(of_kind(&w, "wolf"), 3);
+    assert!(
+        (pack(&w).iter()).any(|a| a.ally.as_ref().is_some_and(|x| x.until.is_none())),
+        "a lasting call"
+    );
+}
+
+#[test]
+fn a_called_wolf_fights_as_yours_and_slips_back_into_the_dark() {
+    let mut w = world("druid");
+    reach(&mut w, 6);
+    let foe = kobold(&mut w, 3, 500);
+    run(&mut w, "use:call_of_the_wild wait*6");
+    assert!(
+        said(&w).iter().any(|m| m.starts_with("Your wolf ")),
+        "{:?}",
+        said(&w)
+    );
+    w.state.actors.remove(&foe);
+    // Presence 14: eight minutes; then it goes, said by its type's own words.
+    run(&mut w, "wait*90");
+    assert_eq!(of_kind(&w, "wolf"), 0);
+    assert!(
+        said(&w)
+            .iter()
+            .any(|m| m == "The wolf slips back into the dark."),
+        "{:?}",
+        said(&w)
+    );
 }
 
 #[test]

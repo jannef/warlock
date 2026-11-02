@@ -478,7 +478,7 @@ Rule 6: Woodland stride (druid 6, ranger 18: forest floor, bushes, reeds, tall g
 priced as grass, terrain only the overworld, its local areas, and towns have), Marsh walker
 (Wayfarer: marsh and reeds as floor, and wading never sickens, but only marsh ague is caught
 wading, in marsh and swamp), and Winter's friend (druid 25: ice only, which no dungeon of the
-Ascmearc is cold enough to keep) cut; druid 6 and 25 and ranger 18 are left empty. Kept: Swimmer
+Ascmearc is cold enough to keep) cut; druid 6 and 25 and ranger 18 are left empty (the druid's since filled by its calls, #839). Kept: Swimmer
 (water underground too), Nature's ward (its poison half), and the effect kinds they share
 (`terrain_as`, `wading_proof`, `plunge_proof`; Of the deep keeps `light_on_ice` and
 `climb_percent`). Rule 7: Late bloomer (`ramp_ease`, hidden) and Hard training (`train_percent`
