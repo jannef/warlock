@@ -52,6 +52,8 @@ const CHAIN: [&str; 3] = ["guild_quarry", "guild_hundred", "guild_scroll"];
 static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = ContentFiles::builtin();
     files.remove("data/hunger.toml");
+    // Nobody met on the way: the walks test the lairs (`ascmearc_encounter_tests`).
+    files.remove_encounter_tables();
     Arc::new(Content::load(&files).expect("builtin content"))
 });
 

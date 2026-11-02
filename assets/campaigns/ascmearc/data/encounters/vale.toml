@@ -1,0 +1,40 @@
+# The open land of the march off the roads: the vales of Cēapdenu, Burnadenu, and Ēastmearc,
+# and the plains, meadows, and low hills between the woods, under the mountains, and on the
+# coast (docs/design/overworld-encounters.md §7.4, widened to the open ground of Holegnwudu,
+# Lindwudu, Rēcbeorgas, and Grægsæ and to the vales' few hills and wet cells, which no other
+# table covers).
+
+[[table]]
+id = "vale"
+when = { regions = ["Cēapdenu", "Burnadenu", "Ēastmearc", "Holegnwudu", "Lindwudu", "Rēcbeorgas", "Grægsæ"], landscapes = ["plains", "grassland", "hills", "swamp"] }
+
+[[table.entry]]
+id = "vale_deer"
+name = "a herd of deer"
+weight = 4
+stance = "wildlife"
+group = [{ creature = "deer", count = "1d4+1" }]
+
+[[table.entry]]
+id = "vale_rats"
+name = "a pack of giant rats"
+weight = 3
+group = [{ creature = "rat", count = "2d3" }]
+
+[[table.entry]]
+id = "vale_kobolds"
+name = "a band of kobolds"
+weight = 3
+group = [{ creature = "kobold", count = "1d4+1" }, { creature = "kobold_archer", count = "1d2-1" }]
+
+[[table.entry]]
+id = "vale_goblins"
+name = "goblin raiders"
+weight = 2
+group = [{ creature = "goblin", count = "1d3" }, { creature = "goblin_archer", count = "1d2-1" }]
+
+[[table.entry]]
+id = "vale_footpad"
+name = "a lone footpad"
+weight = 1
+group = [{ creature = "footpad", count = "1" }]

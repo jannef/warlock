@@ -654,6 +654,14 @@ const CASES: &[Case] = &[
         size: (100, 40),
         ..BASE
     },
+    // The Ascmearc's pedlar met on the road east of Cēaptūn (#806): the one dialog, which
+    // must be answered.
+    Case {
+        name: "encounter-pedlar",
+        scenario: "ascmearc",
+        actions: "move:E*7 meet:road_pedlar",
+        ..BASE
+    },
     // A story talent (#707): the flux gave this warrior Hardy, "(story)".
     Case {
         name: "talents-screen-story",

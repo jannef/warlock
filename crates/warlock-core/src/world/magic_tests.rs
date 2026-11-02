@@ -3,7 +3,7 @@
 //! else leaks them; items survive saves and replays; creatures drop loot and generated levels hold
 //! it, deterministically.
 
-use super::fixture_factions::peaceful_factions;
+use super::fixture_factions::make_peace;
 use super::*;
 use crate::action::{AttackKind, Positions, parse_actions};
 use crate::combat::{self, Category, Profile};
@@ -33,7 +33,7 @@ map = '''
 fn content() -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     // At peace: the kobold stands by.
-    files.insert("data/factions.toml", &peaceful_factions());
+    make_peace(&mut files);
     files.insert("levels/vault.toml", LEVEL);
     files.insert(
         "scenarios/vault.toml",

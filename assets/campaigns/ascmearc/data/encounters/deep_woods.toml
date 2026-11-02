@@ -1,0 +1,33 @@
+# The deep woods, Dēopholt and Deorcholt (docs/design/overworld-encounters.md §7.4): orcs,
+# wargs, the dead wolves of the night, and, once Wulfeshol is known, what runs with Black Wystan
+# out of his cave.
+
+[[table]]
+id = "deep_woods"
+when = { regions = ["Dēopholt", "Deorcholt"] }
+
+[[table.entry]]
+id = "deep_orcs"
+name = "orc runts"
+weight = 3
+group = [{ creature = "orc_runt", count = "1d4" }, { creature = "orc_warrior", count = "1d2-1" }]
+
+[[table.entry]]
+id = "deep_wargs"
+name = "a pack of wargs"
+weight = 2
+group = [{ creature = "warg", count = "1d3" }]
+
+[[table.entry]]
+id = "deep_skeletal_wolves"
+name = "a skeletal wolf pack"
+weight = 2
+when = { phase = ["night"] }
+group = [{ creature = "skeletal_wolf", count = "1d3" }]
+
+[[table.entry]]
+id = "deep_wulfeshol"
+name = "something from Wulfeshol"
+weight = 2
+when = { revealed = "wulfeshol" }
+draw = { pool = "wulfeshol", danger = 5, count = "1d3" }

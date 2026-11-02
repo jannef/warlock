@@ -27,6 +27,7 @@ mod dialogue;
 mod digging;
 mod doors;
 mod dungeons;
+mod encounters;
 mod experience;
 mod gems;
 mod guild;
@@ -150,6 +151,12 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("overworld-places.md", overworld::locations),
         ("overworld-map.md", overworld::map),
         ("overworld-regions.md", overworld::regions),
+        ("encounter-rates.md", encounters::rates),
+        ("encounter-checks.md", encounters::checks),
+        ("encounter-odds.md", encounters::odds),
+        ("encounter-ladders.md", encounters::ladders),
+        ("encounter-positions.md", encounters::positions),
+        ("encounter-tables-ascmearc.md", encounters::ascmearc_tables),
         ("moons.md", moons::moons),
         ("weather.md", weather::weather_chances),
         ("weather-effects.md", weather::weather_effects),

@@ -1,0 +1,40 @@
+# Ascdūn, the ash hills under Fyrbeorg, off the road (docs/design/overworld-encounters.md §7.4,
+# widened to its grass and plains; no level gates, the owner's #796 Q5): kobolds and goblins,
+# the duergar who prospect the old diggings, a hill troll by night, and, once Fyrdelf is known,
+# what climbs out of the delf.
+
+[[table]]
+id = "ascdun"
+when = { regions = ["Ascdūn"], landscapes = ["hills", "grassland", "plains"] }
+
+[[table.entry]]
+id = "ascdun_kobolds"
+name = "a band of kobolds"
+weight = 3
+group = [{ creature = "kobold", count = "1d4+1" }, { creature = "kobold_archer", count = "1d2-1" }]
+
+[[table.entry]]
+id = "ascdun_goblins"
+name = "goblin raiders"
+weight = 2
+group = [{ creature = "goblin", count = "1d3" }, { creature = "goblin_archer", count = "1d2-1" }]
+
+[[table.entry]]
+id = "ascdun_duergar"
+name = "duergar prospectors"
+weight = 2
+group = [{ creature = "duergar_miner", count = "1d2" }]
+
+[[table.entry]]
+id = "ascdun_troll"
+name = "a hill troll"
+weight = 1
+when = { phase = ["night"] }
+group = [{ creature = "hill_troll", count = "1" }]
+
+[[table.entry]]
+id = "ascdun_fyrdelf"
+name = "something from the delf"
+weight = 2
+when = { revealed = "fyrdelf" }
+draw = { pool = "fyrdelf", danger = 6, count = "1d2" }

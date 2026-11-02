@@ -2,7 +2,7 @@
 //! the time it takes, dropping what is worn, weight, saves and replays, and what creatures wear
 //! and wield.
 
-use super::fixture_factions::peaceful_factions;
+use super::fixture_factions::make_peace;
 use super::*;
 use crate::action::parse_actions;
 use crate::content::ContentFiles;
@@ -33,7 +33,7 @@ const PICK_ALL: &str = "pickup";
 fn files() -> ContentFiles {
     let mut files = ContentFiles::builtin();
     // At peace: the kobolds stand by.
-    files.insert("data/factions.toml", &peaceful_factions());
+    make_peace(&mut files);
     files.insert("levels/armory.toml", LEVEL);
     // Strong enough to carry the whole armory (22.7 kg) unburdened: up to 25 kg (spec §8
     // "Burden").

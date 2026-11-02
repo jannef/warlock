@@ -1,0 +1,52 @@
+# Who is met on the march's roads (docs/design/overworld-encounters.md §7.4; the fields:
+# docs/dev/encounters.md, the rules: data/encounters.toml). The road's rate is the lowest of any
+# land, so it is the safe way, not a safe one: footpads walk it at every level.
+
+[[table]]
+id = "roads"
+when = { landscapes = ["road"] }
+
+[[table.entry]]
+id = "road_footpads"
+name = "a band of footpads"
+weight = 3
+when = { phase = ["day", "twilight"] }
+group = [{ creature = "footpad", count = "1d3+1" }]
+
+# By night they bring their bowmen.
+[[table.entry]]
+id = "road_footpads_night"
+name = "a band of footpads"
+weight = 3
+when = { phase = ["night"] }
+group = [{ creature = "footpad", count = "1d3+1" }, { creature = "footpad_archer", count = "1d2-1" }]
+
+[[table.entry]]
+id = "road_goblins"
+name = "goblin raiders"
+weight = 2
+group = [{ creature = "goblin", count = "1d3" }, { creature = "goblin_archer", count = "1d2-1" }]
+
+[[table.entry]]
+id = "road_pedlar"
+name = "a pedlar"
+weight = 3
+stance = "peaceful"
+group = [{ creature = "pedlar", count = "1" }]
+
+# The vale's villagers on their way to market: the road's own lines (data/dialogue/road.toml).
+[[table.entry]]
+id = "road_villagers"
+name = "villagers on the road"
+weight = 2
+stance = "peaceful"
+when = { regions = ["Cēapdenu", "Burnadenu"] }
+group = [{ creature = "villager", count = "1d3" }]
+npc = "road_folk"
+
+[[table.entry]]
+id = "road_deer"
+name = "a herd of deer"
+weight = 2
+stance = "wildlife"
+group = [{ creature = "deer", count = "1d4+1" }]

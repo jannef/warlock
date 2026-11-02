@@ -156,6 +156,7 @@ impl World {
             (way.0 + across.0, way.1 + across.1),
             (way.0 - across.0, way.1 - across.1),
         ];
+        let entry = (content.encounter_entry(&self.state.campaign, &pending.entry)).map(|(_, e)| e);
         let known = self.known_party(&pending.entry, pending.cell);
         let count = if known.is_empty() {
             pending.members.len()
@@ -212,11 +213,15 @@ impl World {
                     actor
                 }
                 None => {
+                    let creature = pending.members[i];
+                    // A peaceful party's dialogue: the lead's type speaks it (villagers all).
+                    let npc = (entry.and_then(|e| e.npc.clone()))
+                        .filter(|_| pending.members.first() == Some(&creature));
                     let spawn = CreatureSpawn {
-                        creature: pending.members[i],
+                        creature,
                         faction: None,
                         alignment: None,
-                        npc: None,
+                        npc,
                         pos: spot,
                         route,
                         carry: Vec::new(),
