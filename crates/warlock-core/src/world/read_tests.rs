@@ -109,7 +109,9 @@ fn builtin_scrolls_cast_their_spells_at_their_rungs() {
         ("scroll_of_lightning", "lightning_bolt", 2, "4d6"),
         ("scroll_of_frost", "frost", 0, "2d6"),
     ] {
-        let Reading::Cast(cast) = reading(scroll);
+        let Reading::Cast(cast) = reading(scroll) else {
+            panic!("a spell scroll")
+        };
         let def = content.spell(cast.spell);
         assert_eq!((def.id.as_str(), cast.rungs), (spell, rungs), "{scroll}");
         let at = def.roll_at(usize::from(cast.rungs)).expect("a roll");
@@ -121,19 +123,24 @@ fn builtin_scrolls_cast_their_spells_at_their_rungs() {
         );
     }
     // The scroll of identify casts Identify on a stack the reader carries (#592).
-    let Reading::Cast(scroll) = reading("scroll_of_identify");
+    let Reading::Cast(scroll) = reading("scroll_of_identify") else {
+        panic!("a spell scroll")
+    };
     assert_eq!(content.spell(scroll.spell).id, "identify");
     assert!(reading("scroll_of_identify").on_item());
     assert!(!reading("scroll_of_light").on_item());
     // The scroll of light casts the Light spell (#589: it had no reading at all).
-    let Reading::Cast(scroll) = reading("scroll_of_light");
+    let Reading::Cast(scroll) = reading("scroll_of_light") else {
+        panic!("a spell scroll")
+    };
     assert_eq!(content.spell(scroll.spell).id, "light");
 }
 
 /// Every scroll of the content (#589): an object of the scrolls class named `scroll_of_*` has a
 /// reading, and a reader who aims it (at a creature's cell, or on another stack) reads it: a
 /// turn spent and one scroll used up. Read without the target it needs, it says why. Every one
-/// is a real spell (#592): it teaches a spell of `data/spells/`, so it may be studied.
+/// is a real spell (#592): it teaches a spell of `data/spells/`, so it may be studied; the one
+/// exception is a cleansing (the scroll of restoration, #887), which teaches nothing.
 #[test]
 fn every_builtin_scroll_can_be_read() {
     let mut checked = 0;
@@ -149,15 +156,17 @@ fn every_builtin_scroll_can_be_read() {
             continue;
         }
         let reading = (def.read.as_ref()).unwrap_or_else(|| panic!("{} has no reading", def.id));
-        let taught = (reading.teaches()).unwrap_or_else(|| panic!("{} teaches nothing", def.id));
-        assert!(
-            content.spell_of(taught).is_some(),
-            "{}: no such spell",
-            def.id
-        );
+        if let Reading::Cast(scroll) = reading {
+            assert!(
+                content.spell_of(scroll.spell).is_some(),
+                "{}: no such spell",
+                def.id
+            );
+        }
         // The fixture's refusals, each with its reason: under a roof, a spell that needs the
-        // open sky; at the peaceful dummy, a hex; on a hale reader, a cure.
+        // open sky; at the peaceful dummy, a hex; on a hale reader, a cure or a restoration.
         let refusal = match reading {
+            Reading::Cleanse(_) => Some("nothing to restore"),
             Reading::Cast(scroll) => {
                 let spell = content.spell(scroll.spell);
                 match spell.kind {
@@ -204,6 +213,68 @@ fn every_builtin_scroll_can_be_read() {
         checked += 1;
     }
     assert!(checked > 20, "only {checked} scrolls");
+}
+
+/// The scroll of restoration (#887): no spell behind it. Read by a hale reader it is refused and
+/// kept; read with stat damage and drained points, it mends and restores them all, takes a
+/// read's time, is used up, and names each stat that came back. It cannot be studied.
+#[test]
+fn the_scroll_of_restoration_mends_and_restores() {
+    use crate::stats::Stat;
+    let mut w = world("#####\n#@..#\n#####\n");
+    let id = w
+        .content
+        .object_id("scroll_of_restoration")
+        .expect("scroll");
+    let reading = w.content.object(id).read.clone().expect("readable");
+    assert!(matches!(
+        reading,
+        Reading::Cleanse(c) if c.mends && c.restores
+    ));
+    assert_eq!(reading.teaches(), None);
+    let item = w.state.player().inventory.len();
+    w.player_mut().inventory.push(Stack::new(id, 2));
+    let action = format!("read:{}", crate::action::position_text(item));
+    let out = run(&mut w, &action);
+    assert!(!out[0].took_turn, "nothing to restore");
+    assert_eq!(count(&w, "scroll_of_restoration"), 2, "kept");
+    assert!(
+        texts(&w)
+            .iter()
+            .any(|t| t == "There is nothing to restore.")
+    );
+    // Aimed, it is refused too.
+    let aimed = run(&mut w, &format!("{action}:2,1"));
+    assert!(!aimed[0].took_turn);
+    // Studied, it teaches nothing.
+    let study = run(
+        &mut w,
+        &format!("study:{}", crate::action::position_text(item)),
+    );
+    assert!(!study[0].took_turn);
+    assert_eq!(count(&w, "scroll_of_restoration"), 2);
+    // Damaged Dexterity, drained Strength.
+    let strength = w.state.player().stats.score(Stat::Strength);
+    let me = w.player_mut();
+    me.damage.take(Stat::Dexterity, 3, 10);
+    let lost = me.stats.drain(Stat::Strength, 2, 3);
+    me.drained[Stat::Strength] = lost;
+    assert!(lost > 0);
+    let out = run(&mut w, &action);
+    assert!(out[0].took_turn, "read: {:?}", texts(&w));
+    assert_eq!(count(&w, "scroll_of_restoration"), 1, "one used up");
+    let me = w.state.player();
+    assert!(!me.damage.is_damaged());
+    assert_eq!(me.drained[Stat::Strength], 0);
+    assert_eq!(me.stats.score(Stat::Strength), strength);
+    let said = texts(&w);
+    for line in [
+        "You feel your strength return.",
+        "You feel your dexterity return.",
+    ] {
+        assert!(said.iter().any(|t| t == line), "{line}: {said:?}");
+    }
+    assert!(World::from_state(w.content().clone(), w.state().clone()).is_ok());
 }
 
 /// The scroll of light (#589): read in the dark, its reader is Lit and sheds a light that goes

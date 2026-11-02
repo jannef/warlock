@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You pick up a tin rod and a marble rod.
+ You pick up a gilded rod and a marble rod.
  This is a rod of digging! This is a rod of sleep!
 
 

@@ -269,7 +269,7 @@ pub use room_shrine::{Regard, Shrine};
 pub(crate) use room_treasury::breach_fault;
 pub use room_treasury::{Heaps, MAX_COINS_EACH, MAX_TREASURE, Sealed, SecretDoors, Treasury};
 pub use scenario::ScenarioDef;
-pub use scroll::{Reading, SpellScroll};
+pub use scroll::{Cleansing, Reading, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
 pub use search::{
     PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,

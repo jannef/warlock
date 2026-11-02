@@ -150,8 +150,8 @@ fn the_built_in_content_types_every_source_of_damage() {
         if let Some(bash) = &o.bash {
             assert_eq!(bash.kinds.main(), c.unarmed_damage(), "{}", o.id);
         }
-        if let Some(read) = &o.read {
-            let spell = c.spell(read.scroll().spell);
+        if let Some(scroll) = o.read.as_ref().and_then(|r| r.scroll()) {
+            let spell = c.spell(scroll.spell);
             if spell.kind == crate::content::SpellPurpose::Damage {
                 assert!(spell.damage_type.is_some(), "{} casts untyped damage", o.id);
             }

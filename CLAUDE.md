@@ -138,7 +138,7 @@ cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
 stack underfoot; `read:b:12,5` reads scroll stack `b` at level cell (12, 5) (a spell scroll:
 fireball, lightning, frost, or any scroll of an aimed spell), `read:b` a scroll of a spell on
-oneself (haste), `read:b:c` reads it on inventory stack `c` (the scroll of
+oneself (haste) or the scroll of restoration, `read:b:c` reads it on inventory stack `c` (the scroll of
 identify); `study:c` studies scroll stack `c` to learn the spell it teaches
 (docs/dev/spells.md "Learning"); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
