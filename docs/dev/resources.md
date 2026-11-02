@@ -133,7 +133,10 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   for the spend): the second blow is decided only once its cost is spent; short, none. Quivering
   palm costs `resource = { id = "ki", cost = 5 }` on its talent and lost its cooldown
   (`TalentEffect::QuiveringPalm { status, severity }`); `use_class` refuses it with a weapon in
-  hand before the spend. Tests: `world/ki_tests.rs`.
+  hand before the spend (`ClassActive::bare_handed`). Stunning strike (12, #848) costs
+  `resource = { id = "ki", cost = 1 }` on its talent (`TalentEffect::StunningStrike { status,
+  severity }`), refused the same way; both blows are `World::palm_blow` (`world/ascetic.rs`).
+  Tests: `world/ki_tests.rs`, `world/stunning_strike_tests.rs`.
 - **Inspiration** (R4, #252): Inspire grants it and its effect names what it spends instead of
   mana, `inspire { status, mana, resource, cost }` (`talent::Inspire::instead`, a
   `ResourceCost`; Virtuoso's `inspiring()` clears it, so its song costs nothing).

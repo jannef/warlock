@@ -43,7 +43,7 @@ otherwise you can still use them, and nothing happens. The passives do not care.
 [mana](mana.md#how-much). The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
 [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
 [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend; the
-[ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry) and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
+[ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry), [stunning strike](abilities.md#ability-stunning-strike), and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
 [inspiration](resources.md#resource-inspiration) when the bard has enough.
 
 The spells a class gives (the [priest](classes.md#priest)'s, [druid](classes.md#druid)'s, [wizard](classes.md#wizard)'s, and [witch](classes.md#witch)'s few, a [bard](classes.md#bard)'s, a
@@ -76,5 +76,8 @@ The [ascetic](classes.md#ascetic)'s **[martial arts](talents.md#talent-martial-a
 [Willpower](stats.md#stat-willpower) 12, growing with Willpower and your [level](experience.md#levels)), and **[flurry](talents.md#talent-flurry)**, from level 1
 too, spends it: every attack with nothing in your hands strikes a
 second blow, at −2 [to hit](combat.md#hitting), for a point of ki; with none left, the attack is a single blow.
-**[Quivering palm](abilities.md#ability-quivering-palm)** costs 5 ki and has no other wait.
+**[Stunning strike](abilities.md#ability-stunning-strike)** (level 12) costs 1 ki: a blow of
+your bare hand that leaves a foe it wounds [stunned](status-effects.md#status-stunned), caught
+[flat-footed](surprise.md#stunned) and slow to act. **[Quivering palm](abilities.md#ability-quivering-palm)**
+costs 5 ki. Neither has any other wait, and neither can be used with a weapon in hand.
 

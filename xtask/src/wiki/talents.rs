@@ -1167,6 +1167,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::QuiveringPalm {
             status: id,
             severity,
+        }
+        | TalentEffect::StunningStrike {
+            status: id,
+            severity,
         } => format!(
             "active (the time of a melee attack), in a direction, nothing in hand: a bare-handed \
              blow; a hit that does damage leaves {severity} degrees of {}",

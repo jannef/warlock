@@ -176,6 +176,23 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             })
             .map(|o| format!("drinking a {}", o.name)),
     );
+    // The class abilities whose bare-handed blow leaves it (Stunning strike, Quivering palm).
+    causes.extend(
+        (content.talents().iter())
+            .map(|(_, t)| t)
+            .filter(|t| {
+                t.effects.iter().any(|e| match e {
+                    warlock_core::content::TalentEffect::StunningStrike { status: s, .. }
+                    | warlock_core::content::TalentEffect::QuiveringPalm { status: s, .. } => {
+                        content
+                            .status_id(s)
+                            .is_some_and(|s| usize::from(s.0) == status)
+                    }
+                    _ => false,
+                })
+            })
+            .map(|t| format!("a wounding hit of {} (a class ability)", t.name)),
+    );
     // Being caught unawares (the surprise rules, spec §8 "Surprise and sneak attacks").
     if let Some(rules) = content
         .surprise()
@@ -226,13 +243,11 @@ fn also(content: &Content, def: &StatusDef) -> String {
     if !fighting.is_empty() {
         parts.push(fighting.join(", "));
     }
-    let surprise = content
-        .surprise()
-        .map(|r| content.status(r.status).id.as_str());
-    if surprise == Some(def.id.as_str()) {
+    if def.flat_footed {
         parts.push(
             "flat-footed: Dexterity and Dodge count nothing toward your Defence; no free blow \
-             out of your turn (riposte, opportunist, gatekeeper, a point-blank shot)"
+             out of your turn (riposte, opportunist, gatekeeper, a point-blank shot); sneak \
+             dice land on you"
                 .to_string(),
         );
     }
