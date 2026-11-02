@@ -1285,12 +1285,6 @@ impl Content {
             check_terrain_noise(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_terrain_ice(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
             check_kicking(spec).map_err(|m| err(format!("terrain `{}`: {m}", spec.id)))?;
-            if spec.announce && !spec.walkable {
-                return Err(err(format!(
-                    "terrain `{}`: only walkable terrain may `announce`",
-                    spec.id
-                )));
-            }
             let breaks = match (spec.hardness, &spec.becomes) {
                 (None, None) => None,
                 (Some(hardness), Some(_)) if (1..=MAX_HARDNESS).contains(&hardness) => {
@@ -5059,6 +5053,7 @@ mod tests {
                 "captains_hall",
                 "drakes_hoard",
                 "foremans_cabin",
+                "hunters_statue",
                 "kobolds_cache",
                 "robbers_hoard",
                 "still_room",
