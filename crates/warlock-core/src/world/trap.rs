@@ -213,6 +213,8 @@ impl World {
         let to = self.state.actors.get(&target)?.pos;
         let struck = self.target_against(target, source.1);
         let blow = combat::strike(profile, &struck, &mut self.state.rng);
+        // Diamond soul's catch (`ascetic.rs`): a trap's missile too.
+        let blow = self.caught_trap_shot(trap, target, source.1, blow, events);
         events.push(Event::TrapStruck {
             trap,
             target,
@@ -312,6 +314,10 @@ impl World {
                 let blow = self.trap_strikes(trap, someone, source, &profile, &mut struck_events);
                 if blow.is_some_and(|b| b.strike.is_hit()) {
                     struck = true;
+                    break;
+                }
+                // Caught (Diamond soul, `ascetic.rs`): it falls here.
+                if std::mem::take(&mut self.caught) {
                     break;
                 }
             }

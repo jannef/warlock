@@ -1065,8 +1065,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Step of the wind's passive half (level 6: steps 10 % cheaper in no body armour and with no
     shield; it took Fleet's place, #847),
     Still mind (+2 on checks made with Willpower: diseases', noticing
-    in passing; no status lowers Intelligence or Willpower; its active is Stillness, above), Diamond soul (Deflection +2),
-    Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1; ki comes back
+    in passing; no status lowers Intelligence or Willpower; its active is Stillness, above), Diamond soul (Deflection +2; and, #851, a shot or throw, a
+    trap's missile too, that would hit the ascetic while they hold no weapon and no shield
+    spends a point of ki by itself and misses, the missile falling on their cell: "You pluck
+    the arrow from the air.", said after the attack's own words; with no ki, the hit stands;
+    spells and bursts are never caught; no action), Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1; ki comes back
     twice as fast). The paladin's
     passives do not ask for Good; only the gifts used from the menu do. No berserker row reads
     what the berserker wears (#843).
@@ -1079,7 +1082,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the effect: `protection 2 while raging` is not Bulwark's `protection 2`.
   - **Resources**: Rage, War cry, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
     (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Step of the wind, Stunning strike,
-    Patient defence, Stillness, and Quivering palm spend (R4, #252; #846, #847, #848, #849, #850).
+    Patient defence, Stillness, Diamond soul's catch, and Quivering palm spend (R4, #252; #846, #847,
+    #848, #849, #850, #851).
   - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):

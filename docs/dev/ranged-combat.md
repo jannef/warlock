@@ -7,8 +7,10 @@ Ranged combat (spec §8 "Ranged combat"; keys: `t` shoots or throws the Missile 
 `throw`, and `creature_shoots` loose one missile (`loose`): it leaves its stack, makes its noise
 once, flies along `Pos::ray` (the line the AI's `clear_shot` checks) over transparent cells as far
 as the weapon's `range`, attacks whoever stands in its way (`World::missile_hits`, no noise) until
-one is hit, and comes down (`come_down`) on top of the pile, unless it broke (`breaks`, one
-gameplay draw on a hit) or the cell is not walkable. What is `lit` flies as its burning object and
+one is hit (or caught: Diamond soul's catch sets `World::caught` and the flight ends on that
+cell, a miss; `world/ascetic.rs`, a trap's `trap_shot` alike), and comes down (`come_down`) on
+top of the pile, unless it broke (`breaks`, one gameplay draw on a hit) or the cell is not
+walkable. What is `lit` flies as its burning object and
 starts a fire (`LevelState::fires`, saved): a light source in `LightCache::sources` while the clock
 is before its end, cleaned up by `World::burn_out` at the start of `perceive`. Prices go through
 `attack_price` (shoot with the missile weapon, throw with nothing; priced as the shot begins, so

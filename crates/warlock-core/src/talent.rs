@@ -678,6 +678,8 @@ pub struct TalentMods {
     pub rapid_shot: Option<RapidShot>,
     /// What each second blow of its flurry costs, if anything (Flurry, on Ki).
     pub flurry_cost: Option<ResourceCost>,
+    /// What a missile caught costs, if it catches them (Diamond soul, on Ki; `world/ascetic.rs`).
+    pub catch_missiles: Option<ResourceCost>,
     /// The active Volley, if it has it.
     pub volley: Option<Volley>,
     /// The active Inspire, if it has it.
@@ -1895,6 +1897,14 @@ impl TalentMods {
             TalentEffect::FlurryCost { resource, cost } => {
                 if let Some(resource) = content.resource_id(&resource) {
                     self.flurry_cost = Some(ResourceCost {
+                        resource,
+                        amount: cost,
+                    });
+                }
+            }
+            TalentEffect::CatchMissiles { resource, cost } => {
+                if let Some(resource) = content.resource_id(&resource) {
+                    self.catch_missiles = Some(ResourceCost {
                         resource,
                         amount: cost,
                     });
