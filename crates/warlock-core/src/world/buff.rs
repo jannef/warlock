@@ -114,6 +114,7 @@ impl World {
             | Action::Advance(_)
             | Action::LevelUpAuto
             | Action::GrantXp(_)
+            | Action::Call(_)
             | Action::SetRank { .. }
             | Action::Freeze { .. }
             | Action::Thaw { .. } => return None,

@@ -383,9 +383,9 @@ fn each_talent_changes_the_rule_it_names() {
     assert_eq!(player(&w).satiation.expect("hungers").nutrition, fed);
 
     // Quick learner: one skill roll more every level.
-    let rolls = w.level_rolls();
+    let rolls = w.level_rolls(w.player_level());
     take(&mut w, 24, "quick_learner");
-    assert_eq!(w.level_rolls(), rolls + 1);
+    assert_eq!(w.level_rolls(w.player_level()), rolls + 1);
 
     // Alert: notices in passing, 2 better.
     let passive = w.search_modifier(Look::Passive, Hidden::Door(0));

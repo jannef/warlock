@@ -332,6 +332,13 @@ pub enum Action {
     /// Dev command: the player gains this much experience, and any levels it brings (spec §8
     /// "Experience"), for tests and captures. Takes no game time; recorded in replays.
     GrantXp(u32),
+    /// Dev command: the player is called into prestige class `ID` (spec §8 "Prestige
+    /// classes") now, whatever their level, through the calling of the run's campaign that
+    /// opens it to their class, as saying its words would: the class is theirs, and the
+    /// experience the first prestige level costs with it. Refused with no such prestige class,
+    /// one held already, or no calling open to their class. For tests and captures. Takes no
+    /// game time; recorded in replays.
+    Call(String),
     /// Dev command: the player's rank in weapon skill or fighting style `skill` (an id in
     /// `data/weapon_skills.toml`) becomes `rank` (0 to 10), its marks starting from 0, as a
     /// rank risen would (the skills it raises by default rise too, and what the ranks teach is
@@ -864,6 +871,7 @@ impl fmt::Display for Action {
             Action::Advance(skill) => write!(f, "advance:{skill}"),
             Action::LevelUpAuto => f.write_str("levelup:auto"),
             Action::GrantXp(xp) => write!(f, "xp:{xp}"),
+            Action::Call(id) => write!(f, "call:{id}"),
             Action::SetRank { skill, rank } => write!(f, "rank:{skill}:{rank}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
@@ -1290,6 +1298,10 @@ impl FromStr for Action {
                 Some(xp) if xp > 0 => Ok(Action::GrantXp(xp)),
                 _ => Err("`xp` needs a number of experience points, e.g. `xp:2500`".into()),
             },
+            "call" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => Ok(Action::Call(id.to_string())),
+                _ => Err("`call` needs a prestige class id, e.g. `call:hunter`".into()),
+            },
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
@@ -1617,6 +1629,7 @@ mod tests {
             Action::CastOn("identify".into(), 30),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
+            Action::Call("hunter".into()),
             Action::SetRank {
                 skill: "twin_blades".into(),
                 rank: 4,

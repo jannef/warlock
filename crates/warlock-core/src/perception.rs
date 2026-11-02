@@ -1779,12 +1779,22 @@ impl<'a> PerceptionView<'a> {
     pub fn own_experience(&self) -> Progress {
         let rules = self.content.experience();
         let factor = Factor::of(self.content, self.character.map(|c| &c.spec));
-        let level = rules.level_for(self.experience, factor);
+        // The level stops at the classes' cap (spec §8 "Prestige classes"): no next level
+        // there, as at the curve's top.
+        let cap = (self.character).map_or(rules.max_level(), |c| c.level_cap(self.content));
+        let level = rules.level_for(self.experience, factor, cap);
         Progress {
             level,
             xp: self.experience,
-            next: (level < rules.max_level()).then(|| rules.threshold_for(level + 1, factor)),
+            next: (level < cap).then(|| rules.threshold_for(level + 1, factor)),
         }
+    }
+
+    /// The level whose choices the level-up screen spends now: the first due's, else the
+    /// player's own (the class of that level sets the rolls and the bonus trees, spec §8
+    /// "Prestige classes").
+    fn due_level(&self) -> u8 {
+        (self.due()).map_or_else(|| self.own_experience().level, |d| d.level)
     }
 
     /// The choices a level still asks of the player (spec §8 "Talents"), if any: the level and
@@ -1796,7 +1806,7 @@ impl<'a> PerceptionView<'a> {
     /// Where a level's skill rolls come from now (spec §8 "Skills"): the level-up screen names
     /// it (the owner's call: numbers on that screen).
     pub fn roll_count(&self) -> RollCount {
-        world::roll_count(self.content, self.player, self.character)
+        world::roll_count(self.content, self.player, self.character, self.due_level())
     }
 
     /// What a level-up roll on trained skill `skill` would be: the dice and what set them (the
@@ -1817,12 +1827,11 @@ impl<'a> PerceptionView<'a> {
         &self.progress.due
     }
 
-    /// The trees a bonus pick is of (the player's class's `bonus_talents`); `None`: any.
+    /// The trees the bonus pick due now is of (the `bonus_talents` of the class of the level
+    /// that brought it); `None`: any.
     pub fn bonus_trees(&self) -> Option<Vec<TreeId>> {
-        let class = self
-            .character
-            .and_then(|c| self.content.class(&c.spec.class));
-        class.and_then(|c| c.bonus_trees(self.content.talents()))
+        let (table, _) = self.character?.class_of(self.content, self.due_level())?;
+        table.bonus_trees(self.content.talents())
     }
 
     /// Whether the player's own bursts spare them (spec §8 "Talents": Scroll savant), so a
@@ -1843,10 +1852,13 @@ impl<'a> PerceptionView<'a> {
     pub fn own_talents(&self) -> Vec<OwnTalent> {
         let book = self.content.talents();
         let level = self.own_experience().level;
-        let class = (self.character)
-            .and_then(|c| self.content.class(&c.spec.class))
-            .map(|c| c.abilities_to(book, level))
-            .unwrap_or_default();
+        // The class abilities held: every table's (the prestige class's too), to its level.
+        let class: Vec<crate::content::TalentId> = (self.character)
+            .map(|c| c.class_levels(self.content, level))
+            .unwrap_or_default()
+            .into_iter()
+            .flat_map(|(table, own)| table.abilities_to(book, own))
+            .collect();
         // The rising is spent once it is used up: the first with no Second rising, else both.
         let risen = self.progress.happened(crate::world::RISEN);
         let twice = self.progress.happened(crate::world::RISEN_TWICE);

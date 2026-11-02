@@ -39,6 +39,10 @@
 # 9, ...) brings a talent pick (talents.toml), chosen on the spot: nothing is banked. 0, or no
 # table: never. A character the player chose (New run, `--character`) takes creation_talents
 # picks at creation (a class may add more: classes/), on the creation Talents step or at random.
+# class_max is the highest level a class reaches unless its file says otherwise (classes/
+# `max_level`; spec §8 "Prestige classes"): a character's level is read off the curve as ever but
+# stops at their class's cap, plus a prestige class's levels once they are called; 0, or none,
+# is max_level.
 
 max_level = 60
 hp_level = 50
@@ -65,6 +69,7 @@ arrival = 5
 
 [levels]
 talent_every = 3
+class_max = 60
 creation_talents = 2
 
 # ZD from each player level on, in order.

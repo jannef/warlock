@@ -77,27 +77,28 @@ impl World {
     pub(super) fn level_up(&mut self, from: u8, to: u8) {
         let content = self.content.clone();
         let every = content.experience().talent_every();
-        let rolls = self.level_rolls();
-        let class = (self.state.character.as_ref()).and_then(|c| content.class(&c.spec.class));
+        let character = self.state.character.clone();
         for level in from.saturating_add(1)..=to {
+            // Its skill rolls and bonus pick are the class of the level's (spec §8 "Prestige
+            // classes").
+            let rolls = self.level_rolls(level);
+            let bonus = (character.as_ref())
+                .and_then(|c| c.class_of(&content, level))
+                .map_or(0, |(table, own)| table.bonus_at(own));
             // Versatile (the humans'): one more pick at its levels.
             let more = self
                 .state
                 .player()
                 .talent_mods(&content)
                 .extra_picks_at(level);
-            let bonus = class.map_or(0, |c| c.bonus_at(level));
             // A level lost and gained again brings no choices: they were made the first time.
             let again = level <= self.state.progress.peak;
             // A pickable the class gives now that was picked before: a pick in its place.
             let held = match again {
                 true => Vec::new(),
-                false => class::held_already(
-                    &content,
-                    class.map(|c| c.id.as_str()),
-                    self.state.player(),
-                    level,
-                ),
+                false => {
+                    class::held_already(&content, character.as_ref(), self.state.player(), level)
+                }
             };
             for &id in &held {
                 let name = &content.talents().get(id).name;
@@ -128,7 +129,7 @@ impl World {
             // Hardened: every level past the hit point levels adds a level's hit points again.
             let hardened = self.state.player().talent_mods(&content).hardened;
             if let Some(bonus) = hardened.filter(|_| level > content.experience().hp_level()) {
-                let hp = self.level_hp(&content) + bonus;
+                let hp = self.level_hp(&content, level) + bonus;
                 let player = self.player_mut();
                 player.hp_base += hp;
                 player.hp += hp;
@@ -147,12 +148,31 @@ impl World {
         trees.as_ref().is_none_or(|t| t.contains(&tree))
     }
 
-    /// The talents the player may take now for a bonus pick, with their choices.
-    fn bonus_offers(&self) -> Vec<(TalentId, Vec<Option<String>>)> {
-        let trees = self.bonus_trees();
+    /// The trees of every bonus pick still due, by the level that brought it (the class of
+    /// that level's trees, spec §8 "Prestige classes"), the lowest level's first.
+    fn bonus_trees_due(&self) -> Vec<(u8, Option<Vec<TreeId>>)> {
+        (self.state.progress.due.iter())
+            .filter(|d| d.bonus > 0)
+            .map(|d| (d.level, self.bonus_trees_at(d.level)))
+            .collect()
+    }
+
+    /// The talents the player may take now for a bonus pick of total level `level`, with their
+    /// choices.
+    fn bonus_offers_at(&self, level: u8) -> Vec<(TalentId, Vec<Option<String>>)> {
+        let trees = self.bonus_trees_at(level);
         (talent::offers(&self.content, &self.candidate()).into_iter())
             .filter(|(id, _)| self.fits_bonus(&trees, *id))
             .collect()
+    }
+
+    /// The talents the player may take now for the first bonus pick due that any fits, with
+    /// their choices; none without a bonus pick due.
+    fn bonus_offers(&self) -> Vec<(TalentId, Vec<Option<String>>)> {
+        (self.bonus_trees_due().into_iter())
+            .map(|(level, _)| self.bonus_offers_at(level))
+            .find(|offers| !offers.is_empty())
+            .unwrap_or_default()
     }
 
     /// Drops the choices nothing can be spent on: talent picks when no talent may be taken now
@@ -170,9 +190,14 @@ impl World {
         let no_talents = due.iter().any(|d| d.talents > 0)
             && !rolls_left
             && talent::offers(&self.content, &self.candidate()).is_empty();
-        let no_bonus =
-            due.iter().any(|d| d.bonus > 0) && !rolls_left && self.bonus_offers().is_empty();
-        if !no_rolls && !no_talents && !no_bonus {
+        // A bonus pick nothing of its level's trees fits is dropped on its own: the trees are
+        // the class of the level's (spec §8 "Prestige classes").
+        let no_bonus: Vec<u8> = (self.bonus_trees_due().into_iter())
+            .filter(|_| !rolls_left)
+            .map(|(level, _)| level)
+            .filter(|&level| self.bonus_offers_at(level).is_empty())
+            .collect();
+        if !no_rolls && !no_talents && no_bonus.is_empty() {
             return;
         }
         for due in &mut self.state.progress.due {
@@ -182,7 +207,7 @@ impl World {
             if no_talents {
                 due.talents = 0;
             }
-            if no_bonus {
+            if no_bonus.contains(&due.level) {
                 due.bonus = 0;
             }
         }
@@ -233,17 +258,21 @@ impl World {
         let Some(talent) = content.talents().id(id) else {
             return Err(format!("There is no talent `{id}`."));
         };
-        let trees = self.bonus_trees();
-        let bonus = self.fits_bonus(&trees, talent);
+        // A bonus pick first, of the level whose class's trees the talent is of.
         let Some((at, as_bonus)) =
             (self.state.progress.due.iter())
                 .enumerate()
                 .find_map(|(i, d)| match () {
-                    () if bonus && d.bonus > 0 => Some((i, true)),
+                    () if d.bonus > 0 && self.fits_bonus(&self.bonus_trees_at(d.level), talent) => {
+                        Some((i, true))
+                    }
                     () if d.talents > 0 => Some((i, false)),
                     () => None,
                 })
         else {
+            let trees = (self.bonus_trees_due().into_iter())
+                .next()
+                .and_then(|(_, t)| t);
             let names: Vec<String> = (trees.iter().flatten())
                 .map(|&t| content.talents().tree(t).name.clone())
                 .collect();

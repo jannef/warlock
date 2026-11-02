@@ -116,23 +116,25 @@ impl World {
     pub(super) fn level_up_mana(&mut self, before: u8, after: u8) {
         let content = self.content.clone();
         let rules = content.experience();
-        let grown = (before + 1..=after)
+        let mana: i32 = (before + 1..=after)
             .filter(|&l| l <= rules.mana_level())
-            .count();
-        let mana = i32::try_from(grown).unwrap_or(0) * self.level_mana(&content);
+            .map(|l| self.level_mana(&content, l))
+            .sum();
         if let Some(player) = self.state.actors.get_mut(&self.state.player) {
             player.grow_mana_base(&content, mana);
         }
     }
 
-    /// What one level adds to the player's mana: half the class's mana (the scenario's `mana`
-    /// without a character) plus the better of the Intelligence and Willpower modifiers, at
-    /// least 0 (the progression design, `docs/design/progression.md` §3.7). The stats as what
-    /// the player wears raises them, not as a status lowers them: the penalty passes, this mana
-    /// stays.
-    pub(super) fn level_mana(&self, content: &Content) -> i32 {
+    /// What total level `level` adds to the player's mana: half the mana of the class the
+    /// level falls in (spec §8 "Prestige classes"; the scenario's `mana` without a character)
+    /// plus the better of the Intelligence and Willpower modifiers, at least 0 (the progression
+    /// design, `docs/design/progression.md` §3.7). The stats as what the player wears raises
+    /// them, not as a status lowers them: the penalty passes, this mana stays.
+    pub(super) fn level_mana(&self, content: &Content, level: u8) -> i32 {
         let class_mana = match &self.state.character {
-            Some(c) => c.spec.class(content).map_or(0, |class| class.mana),
+            Some(c) => c
+                .class_of(content, level)
+                .map_or(0, |(table, _)| table.mana()),
             None => content
                 .scenario(&self.state.scenario)
                 .map_or(0, |s| i32::from(s.mana)),

@@ -18,7 +18,7 @@ use crate::object::{Stack, format_weight};
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
 use crate::weather::Weather;
-use crate::world::{Cause, LevelState, World};
+use crate::world::{CallingStatus, Cause, LevelState, World};
 use serde_json::{Value, json};
 use std::fmt::Write;
 use std::str::FromStr;
@@ -733,9 +733,9 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         let race = spec
             .race(content)
             .map_or(spec.race.as_str(), |r| r.name.as_str());
-        let class = spec
-            .class(content)
-            .map_or(spec.class.as_str(), |k| k.name.as_str());
+        // The classes as the character screen's Class row says them (spec §8 "Prestige
+        // classes"): `Bard`, `Bard 30` at the cap, `Bard 30, Hunter 4` once called.
+        let class = c.class_text(content, view.own_experience().level);
         rows.push(format!("Race {race}"));
         rows.push(match spec.gender {
             Gender::Other => format!("Gender Other ({} +1)", c.raised.name()),
@@ -916,6 +916,31 @@ fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
 
 /// The player's progression (dev): the choices due, the talents they may take now with the
 /// choices each may be taken for, and the creature types whose first kill has paid.
+/// Each calling a run of the campaign may walk through and where the player stands with it
+/// (`progress`, dev-only; spec §8 "Prestige classes").
+fn calling_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    (content.callings_of(world.campaign()))
+        .map(|c| match world.calling_status(c) {
+            CallingStatus::Open => format!("calling {}: open", c.class),
+            CallingStatus::LevelNotMet => format!("calling {}: level {} not met", c.class, c.level),
+            CallingStatus::NotFrom => {
+                let class = (world.character())
+                    .and_then(|k| k.spec.class(content).ok())
+                    .map_or("nobody".to_string(), |k| {
+                        format!(
+                            "{} {}",
+                            crate::content::article(&k.name),
+                            k.name.to_lowercase()
+                        )
+                    });
+                format!("calling {}: not for {class}", c.class)
+            }
+            CallingStatus::Called => format!("called {} at {}", c.class, c.level),
+        })
+        .collect()
+}
+
 fn progress_rows(world: &World) -> Vec<String> {
     let view = world.perception();
     let content = view.content();
@@ -977,6 +1002,10 @@ fn progress_rows(world: &World) -> Vec<String> {
     if !takeable.is_empty() {
         rows.push(format!("takeable {}", takeable.join(", ")));
     }
+    // The callings of the run's campaign and where the player stands with each (spec §8
+    // "Prestige classes"): `calling hunter: open`, `calling hunter: level 30 not met`,
+    // `calling hunter: not for a thief`, and once called `called hunter at 30`.
+    rows.extend(calling_rows(world));
     let kills: Vec<&str> = progress
         .discovered
         .kills
@@ -1896,6 +1925,16 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             if let Some(title) = c.title(content) {
                 character["lucky"] = json!(title);
             }
+            // The prestige class once called, and every class with its own level (spec §8
+            // "Prestige classes").
+            if let Some(prestige) = &c.prestige {
+                character["prestige"] = json!(prestige);
+            }
+            let level = view.own_experience().level;
+            let classes: Vec<Value> = (c.class_levels(content, level).into_iter())
+                .map(|(table, own)| json!({ "class": table.id(), "level": own }))
+                .collect();
+            character["classes"] = json!(classes);
             // The background story's lines by id (spec §8 "Background story"), if told.
             if !c.story.is_empty() {
                 character["story"] = c.story.iter().map(|t| t.id()).collect();
@@ -1992,6 +2031,19 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         out["danger"] = json!(world.danger(&world.state().current_level));
         // The encounter tables matching the player's overworld cell (ground truth).
         out["encounter_tables"] = json!(world.encounter_tables_here());
+        // The callings of the campaign and where the player stands with each.
+        let callings: Vec<Value> = (world.content().callings_of(world.campaign()))
+            .map(|c| {
+                let status = match world.calling_status(c) {
+                    CallingStatus::Open => "open",
+                    CallingStatus::LevelNotMet => "level_not_met",
+                    CallingStatus::NotFrom => "not_from",
+                    CallingStatus::Called => "called",
+                };
+                json!({ "class": c.class, "level": c.level, "from": c.from, "status": status })
+            })
+            .collect();
+        out["callings"] = json!(callings);
     }
     out
 }
