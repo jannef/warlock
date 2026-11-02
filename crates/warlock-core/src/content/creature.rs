@@ -248,6 +248,9 @@ pub(super) struct CreatureSpec {
     pub immune: Vec<String>,
     /// The verb of its death line ("The animated chair splinters."); none: "dies".
     pub dies: Option<String>,
+    /// The words of its departure, an ally whose time has run out ("The wolf slips back into
+    /// the dark."; `docs/dev/allies.md`); none: "fades away".
+    pub depart: Option<String>,
     /// Its ranks in weapon skills (spec §8 "Weapon skills"), by skill id.
     #[serde(default)]
     pub weapon_skills: BTreeMap<String, u8>,
@@ -654,6 +657,7 @@ impl CreatureSpec {
             blood: r.blood,
             immune: r.immune,
             dies: self.dies,
+            depart: self.depart,
             animated: self.animated,
             mimic: self.mimic,
             weapon_skills: r.weapon_skills,
@@ -821,6 +825,9 @@ pub struct CreatureDef {
     pub immune: Vec<StatusId>,
     /// Presentation-only: the verb of its death line ("splinters"); `None`: "dies".
     pub dies: Option<String>,
+    /// Presentation-only: the words of its departure as an ally whose time ran out ("slips back
+    /// into the dark"); `None`: "fades away".
+    pub depart: Option<String>,
     /// Gameplay: what makes it an animated object (spec §8 "Animated objects"), for a type
     /// generated from `data/animated/`; `None` for every other.
     pub animated: Option<AnimatedDef>,
