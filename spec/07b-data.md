@@ -802,6 +802,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   campaign whose giving or completion reaches the rank, or neither (a rank kept for later,
   allowed only after every rank that has one). An unknown material, quest, or master is a
   content error.
+- **Prestige classes and callings** (#876; §8 "Prestige classes"): `data/prestige/`, one file
+  per class, `[[prestige]]` with `id` (never a class's), `name`, `description`, `levels` (1 to
+  60), `hp`, `mana`, `rolls` (default 2), `known_for` (skill ids), `abilities` and
+  `bonus_talents` as a class's at its own levels (checked within `levels`, and against the
+  talents once loaded); `data/prestige/README.toml` has the notes, and no class ships yet. A
+  class file may name `max_level` (2 to the curve's top; default `data/experience.toml`
+  `[levels] class_max`, 60; its table within it). A campaign's `data/callings/`, one file per
+  calling, `[[calling]]` with `class` (a prestige id), `from` (base class ids, each named by one
+  calling of the campaign), `level` (at least each `from` class's `max_level`), and `message`
+  (1 to 160 characters); a calling outside every campaign (`data/callings/`) is a fixture's.
 - **Plurals** (`data/plurals.toml`, and a campaign's `data/plurals.toml`; optional; without it
   every plural is the word and an `s`): the plural dictionary, one `singular = "plural"` line
   per word that does not take a plain `s` (`wolf = "wolves"`, `undead = "undead"`,

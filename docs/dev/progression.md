@@ -579,6 +579,16 @@ characters are thieves, the forest's and the world's rangers: their runs start w
 or Favoured prey. `world/class_tests.rs` covers the grants, bonus picks,
 restores, replays, and every hook; `content::class::tests` the table checks.
 
+A class's table stops at its `max_level` (`ClassDef::settle_cap` refuses a row or a bonus level
+past it), and a **prestige class's** table (`data/prestige/`, `PrestigeDef`, #876) is a second
+one at its own levels, read once the character is called (`docs/dev/experience.md` "Prestige
+classes"): `class::grant` walks `Character::class_levels` (every table with the level reached in
+it), `held_already` and the bonus pick of a level read `Character::class_of`, and each `Due`'s
+bonus trees are the class of its level's (`World::bonus_trees_at`). A prestige class's abilities
+are class abilities to the coverage check (`Content::check_class_tables` counts both tables) and
+are marked `(class)` in the dumps like a class's. No prestige class ships yet; the tests' Warden
+(`world/calling_tests.rs`) gives Fencing at its level 1 and Riposte at 2.
+
 ## The trees so far
 
 Vigour, Might, and Finesse (#237) ship whole; Battle trance and Inner calm (the class
