@@ -1,7 +1,9 @@
 # Warlock — The bard: a jack of all trades, mediocre at everything
 
 Design document for the owner's review (issue #819; first draft 2026-11-02, **second round
-2026-11-02** after the owner's answers on PR #835). Written against `origin/main` at 38c5085d
+2026-11-02** after the owner's answers on PR #835; the third round, 2026-11-02, changed only
+`prestige-classes.md`: the calling is now the oath said to the Strange Spirit, and the Hunter's
+first level comes by a level-up at total 31). Written against `origin/main` at 38c5085d
 (Allies A1–A3, the summon spell kind, saves pinned to the game version, #840; the #776 review's
 cull, #798, emptied the bard's old 40 and 50; Lore is gone from the game, #827). Nothing here is
 implemented; §11 cuts it into issues. It builds on what is there: the bard's class file
@@ -135,7 +137,7 @@ The old nine levels (1, 6, 12, 18, 25, 32, 40, 50, 60) halve into 1, 3, 6, 9, 12
 
 **Bonus picks** move with the cadence, 5, 10, 15, 23, 28 (the old 10, 20, 30, 45, 55 halved), and come **from any tree** (Q13: `bonus_talents = { levels = [5, 10, 15, 23, 28] }`, no `trees`, the commoner's gift shared). The class file's `skills`, `optional_skills`, `rolls = 4`, `creation_talents = 1`, `weapon_skills`, `styles`, `affinity`, `casting = 75`, and the kit are unchanged: they are the breadth already. Talent picks stay every third level (3, 6, ..., 30: ten in all); a bard's 30 levels bring ten picks and five bonus picks where sixty brought twenty and five.
 
-**The cap.** `max_level = 30` in `02-bard.toml` (`ClassDef::max_level`, a new field, default `[levels] class_max` of `data/experience.toml`, 60: no other class changes). `World::player_level` reads the curve to the character's cap (`Character::level_cap`: the base class's, plus a prestige class's levels once called; `prestige-classes.md` §4). A bard at 30 keeps earning XP (as anyone at 60 does today: "XP beyond it still counts but buys nothing"); the XP row shows no next level, as at the top today; nothing in the game says why. When the Hunter's calling comes (the drake's heart eaten, `prestige-classes.md` §7), the banked XP turns into Hunter levels at once. The class's level-up news keeps its words; the character screen's Class row reads `Bard 30` and later `Bard 30, Hunter 4` (the prestige design's §8).
+**The cap.** `max_level = 30` in `02-bard.toml` (`ClassDef::max_level`, a new field, default `[levels] class_max` of `data/experience.toml`, 60: no other class changes). `World::player_level` reads the curve to the character's cap (`Character::level_cap`: the base class's, plus a prestige class's levels once called; `prestige-classes.md` §4). A bard at 30 keeps earning XP (as anyone at 60 does today: "XP beyond it still counts but buys nothing"); the XP row shows no next level, as at the top today; nothing in the game says why. When the Hunter's calling comes (the oath said to the Strange Spirit, `prestige-classes.md` §7), the character is given the XP level 31 costs if the bank is short, and the level-up to Hunter 1 and every level banked come at once. The class's level-up news keeps its words; the character screen's Class row reads `Bard 30` and later `Bard 30, Hunter 4` (the prestige design's §10).
 
 **Rule 1 under a 30-level class.** The policy reads "from class level 40 on" and "no XP or quest-reward effect at or above level 30" against a 60-level table. For the bard the capstone end is its last third (20 and up) and the XP bar its last half (16 and up): the Lullaby, Jack 2, and Virtuoso are judged as capstones above, and no entry of the table pays in gold, favour, quests, or XP at any level. `progression.md`'s wording should say "the last third of a class's table" when the bard's lands (B6).
 
