@@ -80,5 +80,9 @@ second blow, at −2 [to hit](combat.md#hitting), for a point of ki; with none l
 shield, and for a point of ki, taking no time at all, leaves you [light-footed](status-effects.md#status-light-footed): your next action,
 whatever it is (a step, a blow, a shot), takes half its [time](turns.md#what-actions-cost). It cannot be stacked: while you are light-footed
 already it is refused and costs nothing.
+**[Diamond soul](talents.md#talent-diamond-soul)** (level 40) adds +2 [Deflection](combat.md#defence), and while you hold no weapon and no
+shield, a [shot or a throw](ranged.md) that would hit you, a [trap](traps.md)'s arrow too, is plucked from the air for a point of ki,
+spent by itself: the hit is a miss, and the missile falls at your feet. With no ki left, or a weapon or shield in hand, it hits. Spells and
+blasts are never caught.
 **[Quivering palm](abilities.md#ability-quivering-palm)** costs 5 ki and has no other wait.
 

@@ -1651,6 +1651,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "each second blow of the flurry spends {cost} {}; with less, there is none",
             resource_name(content, &resource).to_lowercase()
         ),
+        TalentEffect::CatchMissiles { resource, cost } => format!(
+            "a shot or throw (a trap's too) that would hit you while you hold no weapon and no \
+             shield spends {cost} {} by itself and misses, the missile falling at your feet; \
+             with less, it hits",
+            resource_name(content, &resource).to_lowercase()
+        ),
         TalentEffect::Volley { shots } => format!(
             "active (the time of one shot, one exertion), at a cell: {shots} shots of the readied \
              missile weapon"
