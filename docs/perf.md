@@ -111,6 +111,10 @@ far pairs skipped at once), so the shader reads one byte a rune. A first cut tha
 rune in the shader (twenty texel loads a pixel) and changed the material's uniform every frame
 cost 0.30 ms.
 
+After C5 (#786: no backdrop, the rings' glow, glints, the circled glyphs' glow and glints in a
+second pass over the free glyphs; 2026-11-02, an M5 Pro): fifty circles cost 0.084 ms at
+2560x1440, as C4's 0.080 within the noise (budget 0.2 ms).
+
 Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
 submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the
 sleep granularity, not by rendering. All budgets are met with a large margin. Before lighting and
