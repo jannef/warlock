@@ -14,6 +14,7 @@
 mod abilities;
 mod actions;
 mod alignment;
+mod allies;
 mod animated;
 mod background;
 mod burden;
@@ -308,6 +309,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("wands.md", spells::wands),
         ("rods.md", spells::rods),
         ("spell-circles.md", spells::circles),
+        ("ally-rules.md", allies::rules),
+        ("summon-spells.md", allies::summon_spells),
         ("school-skills.md", schools::skills),
         ("school-benefits.md", schools::benefits),
         ("school-abilities.md", schools::abilities),

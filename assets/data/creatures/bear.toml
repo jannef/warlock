@@ -1,0 +1,30 @@
+# The beasts (docs/dev/creatures/beasts.md; content::beast_roster_tests checks them): the brown
+# bear of the deep woods, which the druid's Call of the forest brings to their side (#839). Slow
+# and huge, a thick hide over a great deal of strength, claws that tear. Wildlife: it fights no
+# one unless it is called, so it strays nowhere and no population names it.
+[[creature]]
+id = "bear"
+level = 12
+xp = 70
+name = "bear"
+glyph = "q"
+fg = "#8a5a32"
+speed = 1000
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+vision = "low_light"
+sight = 10
+footsteps = 70
+hearing = 14
+weight = 300000
+stats = { strength = 21, dexterity = 11, toughness = 18, intelligence = 2, willpower = 12, presence = 6 }
+base_hp = 42
+natural = { defence = 1, protection = 0, name = "thick hide" }
+depart = "lumbers back into the shadows"
+on_eat = { message = "Rich, fatty bear meat.", satiation = 1500 }
+[creature.attack]
+damage = "2d6"
+damage_type = "slashing"
+name = "claws"
+verb = "claws"

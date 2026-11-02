@@ -1,0 +1,29 @@
+# The beasts (docs/dev/creatures/beasts.md; content::beast_roster_tests checks them): the grey wolf
+# of the forests, which the druid's Call of the wild brings to their side (#839). Quick, keen of
+# nose and ear, and loud on its feet: a pack is heard coming. Wildlife: it fights no one unless
+# it is called, so it strays nowhere and no population names it.
+[[creature]]
+id = "wolf"
+level = 4
+xp = 30
+name = "wolf"
+glyph = "C"
+fg = "#9a958c"
+speed = 1250
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 12
+footsteps = 60
+hearing = 20
+weight = 40000
+stats = { strength = 13, dexterity = 15, toughness = 12, intelligence = 3, willpower = 10, presence = 4 }
+base_hp = 4
+depart = "slips back into the dark"
+on_eat = { message = "Tough, gamy wolf meat.", vomit = 10 }
+[creature.attack]
+damage = "1d6"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
