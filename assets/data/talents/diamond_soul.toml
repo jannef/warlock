@@ -3,6 +3,9 @@ id = "diamond_soul"
 name = "Diamond soul"
 tree = "class"
 granted = true
-description = "Blows turn aside before they reach you: Deflection +2."
-effects = [{ kind = "deflection", value = 2 }]
-systems = ["defence"]
+description = "Blows turn aside before they reach you: Deflection +2. With your hands empty, a shot or a throw that would strike you is plucked from the air for a point of ki."
+effects = [
+    { kind = "deflection", value = 2 },
+    { kind = "catch_missiles", resource = "ki", cost = 1 },
+]
+systems = ["defence", "ranged", "resources"]

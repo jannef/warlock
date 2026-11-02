@@ -41,7 +41,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   { id, cost }`, checked: a known id, a talent with a class active, a cost no more than
   `ResourceDef::most`, the data's `max` with what `max_from` adds at the highest level for
   average stats (ki: 20, so Quivering palm's 5 stands although `max` is 4); the effects'
-  `flurry_cost` and `rapid_shot` costs are checked against it too).
+  `flurry_cost`, `catch_missiles`, and `rapid_shot` costs are checked against it too).
 - **State**: `Actor::resources: Pools` (`resource.rs`): `Pool { resource, value, progress }` in
   resource order (`Pools::set` keeps it sorted), saved and hashed, skipped in the JSON while
   empty. Creatures never get any; nothing stops one but nothing grants one.
@@ -147,8 +147,14 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   `World::wind_step` (`world/ascetic.rs`) gives a degree of Light-footed and returns
   `Spent::NoTime`; `World::may_wind_step` refuses it before the spend while Light-footed already.
   The status is taken off `World::fresh` (a status given in a priced action is not eased by it):
-  no time passed, so the next action eases it. Tests: `world/ki_tests.rs`,
-  `world/ascetic_tests.rs`.
+  no time passed, so the next action eases it. Diamond soul (level 40, S7, #851) carries
+  `TalentEffect::CatchMissiles { resource, cost }` (`TalentMods::catch_missiles`), a passive
+  spend like Flurry's: `World::caught_missile` (`world/ascetic.rs`) spends it by itself when a
+  missile (`resolve` for a shot or throw, `trap_strikes` for a trap's) hits a holder with no
+  weapon and no shield in hand, and the hit becomes `Blow::missed(None)`; the transient
+  `World::caught` stops the flight there (`fly`, `trap_shot`) so the missile falls on that
+  cell; the player is told through `news`, after the attack's own words. Tests:
+  `world/ki_tests.rs`, `world/ascetic_tests.rs`.
 - **Inspiration** (R4, #252): Inspire grants it and its effect names what it spends instead of
   mana, `inspire { status, mana, resource, cost }` (`talent::Inspire::instead`, a
   `ResourceCost`; Virtuoso's `inspiring()` clears it, so its song costs nothing).

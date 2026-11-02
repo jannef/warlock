@@ -86,6 +86,10 @@ by your Dexterity or Dodge) or parry meanwhile is answered with a blow of yours 
 [riposte](combat.md#free-blows). Taken again while poised, it holds for one action more; with any grip, a staff too.
 **[Stunning strike](abilities.md#ability-stunning-strike)** (level 12) costs 1 ki: a blow of
 your bare hand that leaves a foe it wounds [stunned](status-effects.md#status-stunned), caught
-[flat-footed](surprise.md#stunned) and slow to act. **[Quivering palm](abilities.md#ability-quivering-palm)**
-costs 5 ki. Neither has any other wait, and neither can be used with a weapon in hand.
+[flat-footed](surprise.md#stunned) and slow to act. It cannot be used with a weapon in hand.
+**[Diamond soul](talents.md#talent-diamond-soul)** (level 40) adds +2 [Deflection](combat.md#defence), and while you hold no weapon and no
+shield, a [shot or a throw](ranged.md) that would hit you, a [trap](traps.md)'s arrow too, is plucked from the air for a point of ki,
+spent by itself: the hit is a miss, and the missile falls at your feet. With no ki left, or a weapon or shield in hand, it hits. Spells and
+blasts are never caught.
+**[Quivering palm](abilities.md#ability-quivering-palm)** (level 50) costs 5 ki and has no other wait; it cannot be used with a weapon in hand.
 

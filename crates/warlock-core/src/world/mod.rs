@@ -544,6 +544,9 @@ pub struct World {
     /// While the player strikes a free blow in another's turn (not saved): what is said
     /// meanwhile, to join the news (`free_blow.rs`).
     held: Option<Vec<String>>,
+    /// Whether the missile that just reached someone was caught (not saved; Diamond soul,
+    /// `ascetic.rs`): its flight ends there, and it falls.
+    caught: bool,
     /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
     /// turn in which one went off (a teleport moves someone farther than a step).
     sprung: u64,
@@ -1024,6 +1027,7 @@ impl World {
             news: Vec::new(),
             notes: Vec::new(),
             held: None,
+            caught: false,
             sprung: 0,
             spawned: 0,
             reshaped: 0,

@@ -413,11 +413,16 @@ impl World {
                         struck = true;
                         break;
                     }
+                    // Caught (Diamond soul, `ascetic.rs`): it falls here.
+                    if std::mem::take(&mut self.caught) {
+                        break;
+                    }
                 }
                 None if cell == at && !through => break,
                 None => {}
             }
         }
+        self.caught = false;
         let end = path.last().copied().unwrap_or(from);
         let broke = struck && flight.breaks > 0 && self.state.rng.chance(flight.breaks);
         if let Some(lands) = flight.lands

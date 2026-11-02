@@ -467,6 +467,10 @@
 #                                 time; with less, an ordinary shot
 #   flurry_cost { resource, cost }   each second blow of its flurry spends `cost` of the
 #                                 resource; with less, it strikes none
+#   catch_missiles { resource, cost }   a missile (a shot, a throw, a trap's) that would hit it
+#                                 while it holds no weapon and no shield spends `cost` of the
+#                                 resource by itself and misses, falling on its cell; with
+#                                 less, it hits (Diamond soul)
 #   volley { shots }              the active Volley, aimed at a cell (`use:volley:12,5`): shots
 #                                 (2 to 5) of the readied missile weapon there for the price of
 #                                 one; what it costs is the talent's `resource`

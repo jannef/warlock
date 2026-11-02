@@ -998,6 +998,10 @@ pub enum TalentEffect {
     /// Each second blow of its flurry spends `cost` of `resource`; holding less, it strikes
     /// none (Flurry, on Ki).
     FlurryCost { resource: String, cost: u16 },
+    /// A missile (a shot, a throw, a trap's) that would hit it while its hands hold no weapon
+    /// and no shield spends `cost` of `resource` by itself and misses; holding less, it hits
+    /// (Diamond soul's catch, on Ki; `world/ascetic.rs`).
+    CatchMissiles { resource: String, cost: u16 },
     /// The class active Volley: `shots` shots at a cell for the price of one (what it costs is
     /// the talent's `resource`, if anything).
     Volley { shots: u8 },
@@ -1324,6 +1328,9 @@ impl TalentEffect {
             }
             TalentEffect::FlurryCost { resource: id, cost } => {
                 resource_cost("flurry_cost", id, *cost)
+            }
+            TalentEffect::CatchMissiles { resource: id, cost } => {
+                resource_cost("catch_missiles", id, *cost)
             }
             TalentEffect::Virtuoso { status: id } => status(id),
             TalentEffect::Consecrate { mana, time } => {
