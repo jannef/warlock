@@ -95,6 +95,16 @@ dear (60 mana), so only an experienced caster can afford it (see
 The scroll of identify is the commonest scroll: it turns up more often than any other in [loot](magic-items.md#finding-them),
 and every [general store](shops.md) in the [dungeons](dungeons.md) has a [stack](objects.md#piles) of them.
 
+## The scroll of restoration
+
+The scroll of restoration casts no spell. Read it, and it is read at once, on you: every point of
+[stat damage](diseases.md#stat-damage) you carry mends, and every point [drains](stats.md#drained-stats) took comes back ("You feel your
+strength return.", one line for each stat), as Sister Hild's mending in Cēaptūn does (see
+[Services](npcs.md#services)), but wherever you are. It works with a [disease](diseases.md) still on you, though the
+disease may damage the stat again. With nothing to restore it is not read ("There is nothing to
+restore."), and you keep it. As no spell is behind it, there is nothing in it to
+[study](magic.md#learning-spells-from-scrolls). It is rare: from [item level](magic-items.md#base-items) 8, and dear (the table above).
+
 ## Where scrolls are
 
 - **Loot**: scrolls lie about as [loot](magic-items.md#finding-them) on the floors of generated dungeon levels (see [Dungeons and danger](dungeons.md)), from the item

@@ -1,0 +1,22 @@
+# A scroll of restoration (spec §8 "Scrolls"; the priest design §11, #887): read it (`r`), and every
+# point of stat damage you carry mends and every point a drain took comes back, as a temple's
+# mending does, wherever you are. No spell is behind it, so there is nothing in it to study. Rare:
+# a hope for one drained far from a temple.
+[[object]]
+id = "scroll_of_restoration"
+name = "scroll of restoration"
+plural = "scrolls of restoration"
+glyph = "?"
+fg = "#f0dca0"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 300
+stackable = true
+level = 8
+frequency = 10
+
+[object.read]
+kind = "cleanse"
+mends = true
+restores = true
