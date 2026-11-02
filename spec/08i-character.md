@@ -757,8 +757,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     stat +1); craftsperson (Weaponcraft, Guard, Delver) Sturdy work (Protection +1 in body
     armour), Masterwork (melee threat +1), Artisan (Protection +1 per armour piece worn, +2
     melee damage); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
-    shop favour, #787), Deep pockets (carrying +10 kg, coins weightless), Eye for quality (what
-    is bought or sold is identified); #789 cut its level 40 Insured (shops paid +50 %), a
+    shop favour, #787), Deep pockets (carrying +10 kg, coins weightless), Merchant's eye (#816, at 12: an
+    ability, on a thing carried, that identifies it as the scroll of identify would, for a
+    reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a
     capstone that paid only in gold. The favour cap is 50 %. #774 cut the filler and the duplicates (Connoisseur, Hearty, Keen
     appraisal, Jeweller, Appraiser) and #787 the weak ones of the #776 review (Well dressed,
     Noblesse, Commanding, Legacy, Thick skull, Folk hero, Whetstone, Fletching, Mining, Tinker,
@@ -767,8 +768,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     JSON `talents[].class`, `due.bonus`. **Saves change** (`Due::bonus`, `Magic::carried`).
   - **Scholar, Grit, Delver** (#240; the design's §7.5 but for the five mana talents, which
     came with #242: Deep well, Clear mind, Meditation, Frugal caster, Blood magic, §8 "Mana"). Their effects share what the class abilities use where the rules
-    are the same (`identify_carried`: Lore, a magic item carried 24 hours; `checks` and `stat`:
-    Iron will, +2 on Willpower checks and Presence +1). Iron will is a Grit talent the
+    are the same (`checks` and `stat`: Iron will, +2 on Willpower checks and Presence +1). Iron will is a Grit talent the
     aristocrat's table also gives. #787 cut Keen appraiser, Silver tongue, and Well liked;
     Haggler is the merchant's class ability alone. New: Scroll savant (Scholar, two ranks; #775 merged
     Careful reader and Spell recall into it): at its first rank (Intelligence 13) `read_percent`
@@ -1004,7 +1004,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; works
     for Kind or better), Knock (the wizard's at 4: in a direction, for 5 mana and a cast's time, the lock
     of the locked door or shut chest there springs open and nothing opens; refused, no time or
-    mana, where nothing locked stands; §8 "Chests").
+    mana, where nothing locked stands; §8 "Chests"), Merchant's eye (the merchant's at 12, #816:
+    on a stack carried, `use:merchants_eye:c`, chosen from the identify list; it is identified as
+    the scroll of identify would identify it, for the time of a `read` and nothing else, no mana,
+    cooldown, check, or limit; refused, no time, for one already known).
   - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
     Shield line (Shield +1), Cleaving strike (the cleave free blow; with the Cleave talent too, great
     cleave), Armour drill (worn armour's Dexterity cap +1, Protection +1 while wearing any),
@@ -1076,8 +1079,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Arcane training
     (at 1: caster level +1 per 5 character levels, `caster_level` with `per_levels`), Magic missile
     (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
-    mana), Arcane lore (a magic item carried
-    an hour is identified), Burning hands (level
+    mana), Burning hands (level
     4, at 12: a cone of 3 cells, 1d4 fire, its ladder to 3d4+2; 6 mana), Arcane bolt (level 6, at
     18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Mage armour (Deflection +2 in no body armour),
     Empower (`spell_mod { rungs = 1 }`: its spells a rung higher on their ladders; spells' mana
@@ -1107,7 +1109,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (new status ids).
 - **The ranger's, thief's, and bard's tables** (M30, #244; design §4.6–4.8, §4.1 B6): as the
   adventurers' above. Shared entries are the ordinary talents, handed out: Evasion (Finesse;
-  the ranger's at 32, the thief's at 18) and Lore (Scholar; the bard's at 1). One the player
+  the ranger's at 32, the thief's at 18). One the player
   picked before its level comes is not given again (a pick comes in its place). The bard's Fast
   healer (Vigour) and the druid's Beast-friend (Wayfarer) are shared the same way (#790).
   - **The kill tally** (the design's B6, `Quests::kills`): every kill of the player's is

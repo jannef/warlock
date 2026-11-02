@@ -216,8 +216,8 @@ The exact numbers are on [Creatures in numbers](creature-numbers.md).
   item level, and [unidentified](magic-items.md#unidentified-items)). A kind's **racial weapon** is the first line, 90% unless the
   table says otherwise, and every kind with one is trained in its [weapon skill](weapon-skills.md). What a creature
   could not carry (over its [carrying limit](burden.md#how-much-you-can-carry)) it goes without, and what it gets is made of a
-  material by the creature's level, as the drops are. The **[Scavenger](talents.md#talent-scavenger)** talent identifies what a
-  creature you kill drops as it lands.
+  material by the creature's level, as the drops are. What falls is
+  [unidentified](magic-items.md#unidentified-items), as any find is.
 
 ## The creatures
 

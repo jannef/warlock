@@ -198,8 +198,7 @@ keeper): a generated level clears it in `gear::arm` (stream `gear/<level id>`, a
 `world/travel.rs::placed_gear` rolls the rest as `instantiate_level` places them (stream
 `gear/<actor id>`). The danger levels' paths set `rolls_gear`: the initial population of a
 generated floor (rolled by `gear::arm` after it) and a spawn in play (rolled by
-`make_creature`). Scavenger is one hook in `World::creature_dies`
-(`TalentMods::scavenger`, the kill the player's). Tests: `world/gear_tests.rs`; the mapgen
+`make_creature`). What falls is unidentified (Scavenger, which told it, was cut by #816). Tests: `world/gear_tests.rs`; the mapgen
 snapshots print each spawn's gear.
 
 ## Creature waves

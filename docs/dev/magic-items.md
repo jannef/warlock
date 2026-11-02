@@ -38,7 +38,8 @@ the material first, then the gem. Creature drops try `gem::find` before the magi
 its rung last (`Stack::draw_wand_rung`, `Stack::wand_rung`, S5 #752: one draw, a wand's only;
 the other makers of wands and the fallback streams are docs/dev/spells.md "Wands").
 `world/loot.rs` has `World::identify` (the API the scroll of identify calls from its read action,
-`docs/dev/scrolls.md`; it identifies a labelled scroll's or wand's type too, `World::learn_scroll`,
+`docs/dev/scrolls.md`, the Identify spell, and the merchant's class active Merchant's eye,
+`world/merchants_eye.rs`, #816; it identifies a labelled scroll's or wand's type too, `World::learn_scroll`,
 and a wand's charges, `Stack::identify_charges`; wands and rods are docs/dev/spells.md "Wands" and "Rods"),
 creature drops (`drop/<actor id>` stream), and the hit-point clamp after equipment changes
 (to `Actor::lasting_max_hp`: a penalty's lower maximum passes). Stats raised by magic are

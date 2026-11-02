@@ -49,8 +49,9 @@ Magic and rare items are **unidentified** when you find them. You see their rari
 (magic)", "an iron helm (rare)"), not their affixes or a rare item's name. Their magic works all
 the same while you wear or wield them, as in ADOM and Path of Exile: an unknown [ring](objects.md#class-rings) of [Strength](stats.md#stat-strength)
 makes you stronger, and one that glows lights your way. Wearing it for a while does not tell you
-what it is. A [scroll of identify](scrolls.md#the-scroll-of-identify) will, and so does carrying
-it for a day if you have the [talent](talents.md) [Lore](talents.md#talent-lore), and so does Factor Wulfrun in Cēaptūn,
+what it is. A [scroll of identify](scrolls.md#the-scroll-of-identify) will, and so does a
+[merchant](classes.md#merchant)'s [Merchant's eye](talents.md#talent-merchants-eye) (from level 12: a careful look, for the time it takes to read a scroll),
+carrying it for a day if you were born to [Old lore](talents.md#talent-old-lore), and Factor Wulfrun in Cēaptūn,
 for 100 [gold](shops.md#money) per unidentified [stack](objects.md#piles) you carry ([Services](npcs.md#services)); once identified, an
 item stays known
 wherever it goes: "This is a Sharp long sword of the Bear!"
