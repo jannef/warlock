@@ -114,6 +114,35 @@ developer notes (CLAUDE.md, `docs/dev/`).
   goblins and a warg!", "something" when they see none of it); an unseen summoner's creatures
   only as they appear in sight ("A skeleton appears!"); nothing seen, nothing said. Sight is the
   last turn's perception, so a summoning in the turn a door opens may go unseen.
+- **Allies** (`warlock-core/src/world/ally.rs`, the rules; `content/ally.rs` and
+  `data/allies.toml`, the numbers; #836, design `docs/design/druid-and-summons.md` §4 and §14):
+  creatures on the player's side, a summon (the druid's calls, to come) or a companion (the
+  ranger's, to come). An ally is an ordinary creature of its type (stats, speed, eyes, attacks,
+  hit points, statuses, death) made with the player's faction, so every rule that reads stances
+  (hostile creatures, the spawn cap, the quick leave, resting, swapping places) treats it as the
+  player's. **Its mind**: it attacks the nearest actor it sees that its *master* is hostile to
+  (a Beast-friend's wolf spares the rats as the druid does; a shopkeeper is never an ally's
+  idea), else obeys its order: *follow* (heel within `heel` cells of the master; fighting farther
+  than `leash` away, it breaks off and heels), *stay* (hold its cell, fighting only what comes
+  within `stay.reach` of it), *hunt* (go to the cell it was set on and fight what is within
+  `hunt.reach` of it; arrived with nothing to fight, it comes back to heel). It draws from no
+  stream. **Orders**: three abilities of the Allies group of the abilities menu, no key of their
+  own, given to every ally on the level at once: Come to heel, Hold here, Set on (a cell the
+  player sees). An order takes **no time** and is a voice (`[orders] noise`) where the player
+  stands; refused with no ally on the level. There is no sending away: a summon departs when its
+  time runs out or it is slain. **Following**: allies within `comes_along` cells of the player
+  as they take stairs or leave an area come along, placed beside them; the rest stay where they
+  are, frozen. Onto the overworld, which has no creatures, they join the player's **retinue**
+  (never drawn, never acting, never in the way) and step out beside them at the next level.
+  **Time**: a summon's stay ends by the clock, wherever it is: one whose time has passed departs
+  where the player is ("The wolf fades away.", nothing left behind), and is gone when they
+  return to a level they left it on, or when the retinue steps out. **Experience**: an ally's
+  kill pays its master as their own blow would, at `[xp] ally_percent` (100): the first-kill
+  bonus, the quest log, Favoured prey, the named monsters slain, what a kill builds; the ally
+  gets nothing. Handle animal earns its marks from an order given and an ally's kill. At most
+  `[allies] most` (8) allies on one level. **Beast-bond** (Wayfarer; Handle animal 20): your
+  allies strike +1 to hit and take Protection +1, read through you. The messages never say a
+  number. The dev `ally:CREATURE[:N[:DURATION]]` makes allies for tests and captures.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

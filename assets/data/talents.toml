@@ -283,6 +283,12 @@ name = "Creature sight and awareness"
 id = "danger"
 name = "Danger levels and creatures that come"
 
+# Allies (docs/design/druid-and-summons.md §4, §10): creatures on the player's side, their orders,
+# their following, and their fights. Beast-bond; the druid's calls carry the tag too (D1).
+[[system]]
+id = "allies"
+name = "Allies: summons and companions, their orders and their fights"
+
 # Special rooms (#402): rooms, and rarely whole levels, that change the rules inside them; the
 # forgotten altars' prayer (#406) among them.
 [[system]]

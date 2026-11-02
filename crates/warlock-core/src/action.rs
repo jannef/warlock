@@ -115,6 +115,11 @@ pub enum Action {
     /// and look. Takes the time of `throw_voice`; refused (no time) at a cell they do not see,
     /// out of reach, solid, or their own.
     ThrowVoice(Pos),
+    /// Give every ally of the player's on the level an order (spec §8 "Allies";
+    /// `world/ally.rs`): `order:follow` (Come to heel), `order:stay` (Hold here), `order:hunt:X,Y`
+    /// (Set on a cell). No time, a voice's noise where the player stands; refused (no time, no
+    /// noise) with no ally on the level, and Set on at a cell the player does not see.
+    Order(Command),
     /// Eat one of a stack, from the pack or the floor (spec §8 "Hunger"): a meal of as many
     /// turns (each the `eat` action) as the food takes, stopping early like a rest; the food is
     /// eaten and feeds at the end.
@@ -252,6 +257,16 @@ pub enum Action {
     /// levels"), whatever its cap and chance: a type by its danger, out of the player's sight.
     /// Refused on a level of danger 0. Takes no game time; recorded in replays.
     Spawn,
+    /// Dev command: `count` allies of type `creature` beside the player, following, on their
+    /// side (spec §8 "Allies"; `world/ally.rs`), their stay ending after `lasts` if given
+    /// (`ally:wolf`, `ally:wolf:2`, `ally:wolf:2:10m`). No game time; refused without
+    /// `data/allies.toml`, for an unknown type, at the cap, or with no free cell beside the
+    /// player. Recorded in replays.
+    Ally {
+        creature: String,
+        count: u8,
+        lasts: Option<Duration>,
+    },
     /// Dev command: overworld encounter entry `entry` (an id of the run's campaign's tables) is
     /// met now on the player's overworld cell (spec §7 "Overworld encounters"), whatever its
     /// tables say there: the lookouts as usual, or `outcome` forced (`meet:kobolds:ambushed`).
@@ -340,6 +355,19 @@ pub const MAX_BURST: i32 = 20;
 
 /// The most turns one search action may last (`search:N`).
 pub const MAX_SEARCH: u8 = 100;
+
+/// An order to one's allies ([`Action::Order`]; spec §8 "Allies"): what the three abilities of
+/// the Allies group tell every ally on the level.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum Command {
+    /// Come to heel: follow (the default behaviour).
+    Heel,
+    /// Hold here: each holds the cell it stands on.
+    Hold,
+    /// Set on: go to that cell and fight what is near it.
+    SetOn(Pos),
+}
 
 /// How long to rest.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -614,6 +642,16 @@ pub enum Event {
     VoiceThrown {
         at: Pos,
     },
+    /// The player called an order to their allies (spec §8 "Allies") from this cell.
+    Ordered {
+        at: Pos,
+    },
+    /// An ally departed (spec §8 "Allies"): its time ran out where the player is. Nothing is
+    /// left on its cell; presentation may fade it.
+    Departed {
+        actor: ActorId,
+        at: Pos,
+    },
     /// A wall gave way (spec §8 "Digging") and is rubble now. Kept when the player sees the cell
     /// afterwards.
     WallBroken {
@@ -786,6 +824,9 @@ impl fmt::Display for Action {
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::Steal(d) => write!(f, "steal:{d}"),
             Action::ThrowVoice(at) => write!(f, "throw_voice:{},{}", at.x, at.y),
+            Action::Order(Command::Heel) => f.write_str("order:follow"),
+            Action::Order(Command::Hold) => f.write_str("order:stay"),
+            Action::Order(Command::SetOn(at)) => write!(f, "order:hunt:{},{}", at.x, at.y),
             Action::SetStance(stance) => write!(f, "stance:{stance}"),
             Action::Dig(d) => write!(f, "dig:{d}"),
             Action::Search(1) => f.write_str("search"),
@@ -821,6 +862,21 @@ impl fmt::Display for Action {
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
             Action::Spawn => f.write_str("spawn"),
+            Action::Ally {
+                creature,
+                count,
+                lasts: None,
+            } if *count == 1 => write!(f, "ally:{creature}"),
+            Action::Ally {
+                creature,
+                count,
+                lasts: None,
+            } => write!(f, "ally:{creature}:{count}"),
+            Action::Ally {
+                creature,
+                count,
+                lasts: Some(lasts),
+            } => write!(f, "ally:{creature}:{count}:{lasts}"),
             Action::Meet { entry, outcome } => match outcome {
                 Some(o) => write!(f, "meet:{entry}:{}", o.id()),
                 None => write!(f, "meet:{entry}"),
@@ -1013,6 +1069,36 @@ impl FromStr for Action {
                 _ => Err("`skip` needs a positive duration, e.g. `skip:1h`".into()),
             },
             "spawn" => bare(Action::Spawn),
+            "ally" => {
+                let usage = || {
+                    "`ally` needs a creature, e.g. `ally:wolf`, `ally:wolf:2`, or `ally:wolf:2:10m`"
+                        .to_string()
+                };
+                let mut parts = arg.ok_or_else(usage)?.split(':');
+                let creature = parts.next().filter(|c| !c.is_empty()).ok_or_else(usage)?;
+                let count = match parts.next() {
+                    None => 1,
+                    Some(n) => n
+                        .parse::<u8>()
+                        .ok()
+                        .filter(|n| (1..=crate::world::MAX_DEV_ALLIES).contains(n))
+                        .ok_or_else(|| {
+                            format!("`ally`: the count is 1 to {}", crate::world::MAX_DEV_ALLIES)
+                        })?,
+                };
+                let lasts = match parts.next() {
+                    None => None,
+                    Some(d) => Some(d.parse::<Duration>()?).filter(|d| !d.is_zero()),
+                };
+                if parts.next().is_some() {
+                    return Err(usage());
+                }
+                Ok(Action::Ally {
+                    creature: creature.to_string(),
+                    count,
+                    lasts,
+                })
+            }
             "meet" => {
                 let usage = || {
                     "`meet` needs an encounter entry, e.g. `meet:kobolds` or \
@@ -1072,6 +1158,20 @@ impl FromStr for Action {
             "throw_voice" => {
                 let usage = || "`throw_voice` needs a cell, e.g. `throw_voice:12,5`".to_string();
                 parse_cell(arg.ok_or_else(usage)?).map(Action::ThrowVoice)
+            }
+            "order" => {
+                let usage = || {
+                    "`order` needs an order: `order:follow`, `order:stay`, or `order:hunt:X,Y`"
+                        .to_string()
+                };
+                match arg.map(|a| a.split_once(':')) {
+                    Some(None) if arg == Some("follow") => Ok(Action::Order(Command::Heel)),
+                    Some(None) if arg == Some("stay") => Ok(Action::Order(Command::Hold)),
+                    Some(Some(("hunt", at))) => {
+                        parse_cell(at).map(|at| Action::Order(Command::SetOn(at)))
+                    }
+                    _ => Err(usage()),
+                }
             }
             "eat" => {
                 let usage = || "`eat` needs a letter, e.g. `eat:b` or `eat:floor:a`".to_string();
@@ -1366,6 +1466,24 @@ mod tests {
             Action::SkipTime(Duration::hours(1)),
             Action::SkipTime(Duration::seconds(30)),
             Action::Spawn,
+            Action::Order(Command::Heel),
+            Action::Order(Command::Hold),
+            Action::Order(Command::SetOn(Pos::new(12, 5))),
+            Action::Ally {
+                creature: "wolf".into(),
+                count: 1,
+                lasts: None,
+            },
+            Action::Ally {
+                creature: "wolf".into(),
+                count: 3,
+                lasts: None,
+            },
+            Action::Ally {
+                creature: "bear".into(),
+                count: 2,
+                lasts: Some(Duration::minutes(10)),
+            },
             Action::PickUp(Positions::default()),
             Action::PickUp(Positions::of([0])),
             Action::PickUp(Positions::of([0, 2, 25])),

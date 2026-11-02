@@ -386,6 +386,7 @@ impl World {
     /// staircase.
     pub(super) fn travel(&mut self, to: &str, at: Option<Pos>) -> Result<(), WorldError> {
         let from = self.state.current_level.clone();
+        let old = self.player_pos();
         let new = !self.state.levels.contains_key(to);
         self.visit(to, Some(&from))?;
         let target = &self.state.levels[to];
@@ -416,6 +417,8 @@ impl World {
         // Floors the player was not on stay frozen: what comes, comes from now on (spec §7
         // "Danger levels").
         self.arrive_spawner(to);
+        // The player's allies beside them come along, and the retinue steps out (`ally.rs`).
+        self.follow_along(&from, to, old, arrival);
         // Sounds remembered on the level left say nothing about this one.
         self.state.recent_sounds.clear();
         if let Some(line) = self.content.arrival(to) {
@@ -610,6 +613,7 @@ pub(super) fn make_creature(
         faction_override: (spawn.faction)
             .or_else(|| super::court::join(content, state.seed, actor_id, spawn.creature)),
         summoner: None,
+        ally: None,
         alignment: None,
         alignment_override: spawn.alignment,
         npc: spawn.npc.clone(),

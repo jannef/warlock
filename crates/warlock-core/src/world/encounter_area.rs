@@ -163,7 +163,11 @@ impl World {
         } else {
             known.len()
         };
-        let mut taken: BTreeSet<Pos> = occupied.clone();
+        // Whoever stands here now: the player's retinue stepped out beside them (`ally.rs`).
+        let mut taken: BTreeSet<Pos> = (self.state.actors.values())
+            .filter(|x| x.level == id && !x.in_retinue())
+            .map(|x| x.pos)
+            .collect();
         taken.insert(me);
         let mut spots = Vec::new();
         for i in 0..count {

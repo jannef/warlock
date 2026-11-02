@@ -129,6 +129,7 @@ pub(super) fn kobold_at(world: &mut World, (dx, dy): (i32, i32), hp: i32) -> Act
         npc: None,
         faction_override: None,
         summoner: None,
+        ally: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),

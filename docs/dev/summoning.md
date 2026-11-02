@@ -28,7 +28,8 @@ abilities").
 - **Rules** (`world/summon.rs`, one line in `ai.rs::fight`, before throws, shots, and spells,
   and one arm in `creature_turn`): `World::summons_at` (the conditions: a hostile it sees within
   `range`, casting not blocked, the status off, `Actor::mana_cost` of the cost at hand, fewer
-  than `most` alive, a free cell), `summon_cells` (the free cells within `spread`, in its line
+  than `most` alive, a free cell), `summon_cells(id, spread)` (shared with the dev `ally:` of
+  `docs/dev/allies.md`: the free cells within `spread`, in its line
   of sight (`LineOfSight` to `radius_for(2·spread²)`), walkable, no actor, not `World::shuns`;
   sorted by Chebyshev distance, squared distance, y, x), `creature_summons` (`spend_mana`,
   `afflict` the status, `make_noise(Act::Attack(Spell))`, `count.roll` on `state.rng`, capped

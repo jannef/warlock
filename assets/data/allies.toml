@@ -1,0 +1,24 @@
+# Allies (spec §8 "Allies"; docs/design/druid-and-summons.md §4, §14): every constant of the ally
+# core. An ally is a creature on the player's side (a summon, a companion); these numbers say
+# how it follows, holds, hunts, and comes along, how loud an order is, how many may be led, and
+# what an ally's kill pays. Without this file no ally can be made.
+
+[follow]
+heel = 2            # a following ally stays within this many cells of its master
+leash = 8           # farther than this, a following ally breaks off a fight and heels
+comes_along = 3     # allies within this many cells of the player come along to another level
+
+[stay]
+reach = 1           # a holding ally fights only what comes within this of its post
+
+[hunt]
+reach = 3           # a set-on ally fights what is within this of the cell it was sent to
+
+[orders]
+noise = 60          # an order's loudness (a voice, heard where the player stands)
+
+[allies]
+most = 8            # the player's allies on one level at most, every source
+
+[xp]
+ally_percent = 100  # what an ally's kill pays its master, of the master's own kill

@@ -85,6 +85,13 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   while afterwards, greyed out until it passes; a [paladin](classes.md#paladin)'s holy gifts are never greyed out by
   [alignment](alignment.md), but do nothing unless you are Kind or better (see [Alignment](alignment.md)). They have no key of their own
   yet: `X` uses the one you used last again.
+- **Allies** ([Come to heel](abilities.md#ability-heel), [Hold here](abilities.md#ability-hold), [Set on](abilities.md#ability-set-on)): once a creature fights on your side (the
+  druid's calls and the ranger's companion are on their way), the Allies group appears, and the
+  three orders tell every ally of yours on the level at once what to do: follow you and fight
+  what threatens you (the default), hold where they stand, or go to a place you see and fight
+  what is near it, then come back. An order takes no time, but it is a shout: anything near
+  enough hears it (see [Hearing](hearing.md)). Greyed out "no allies here" while none of them is
+  on the level with you. Each order, and each kill of theirs, trains [Handle animal](skills.md#skill-handle-animal).
 - No [race](races.md) gives an ability yet.
 
 ## Keys of their own
