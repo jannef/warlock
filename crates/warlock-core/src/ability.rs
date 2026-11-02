@@ -68,6 +68,11 @@ pub enum Ability {
     /// skill's use. Whoever is trained in a skill with the `steal` benefit has it, in that
     /// skill's place among the skills.
     Steal,
+    /// Threaten a foe you see (spec §8 "Skills": Intimidate; #868): [`Action::Intimidate`] at
+    /// its cell, the Intimidate skill's use (the skill with the `intimidate` benefit, listed as
+    /// this in its place while `data/intimidate.toml` exists). Had by whoever is trained in it;
+    /// usable whenever they have it (the rules refuse, taking no time, without a foe there).
+    Intimidate,
     /// Forage for food in the wild (spec §8 "Foraging"): [`Action::Forage`], Survival's use (the
     /// skill with the `forage` benefit, listed as this in its place, while `data/forage.toml`
     /// exists). Had by whoever is trained in it; unavailable ([`Unavailable::NotHere`]) anywhere
@@ -375,7 +380,8 @@ impl Ability {
     /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
     /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
     /// [`Ability::PickLock`], the Steal skill's (the `steal` benefit, with `data/steal.toml`)
-    /// [`Ability::Steal`], Heal's (the heal effect's) [`Ability::Heal`], Survival's (the
+    /// [`Ability::Steal`], Heal's (the heal effect's) [`Ability::Heal`], Intimidate's (the
+    /// `intimidate` benefit, with `data/intimidate.toml`) [`Ability::Intimidate`], Survival's (the
     /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`]. `None` for a skill whose
     /// use is to come, or that has none.
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
@@ -383,6 +389,10 @@ impl Ability {
         (gives(Effect::Disarm).then_some(Ability::Disarm))
             .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
             .or_else(|| gives(Effect::Heal).then_some(Ability::Heal))
+            .or_else(|| {
+                (gives(Effect::Intimidate) && content.intimidate().is_some())
+                    .then_some(Ability::Intimidate)
+            })
             .or_else(|| {
                 (gives(Effect::Steal) && content.steal().is_some()).then_some(Ability::Steal)
             })
@@ -458,6 +468,7 @@ impl Ability {
             }
             Ability::Forage => actor.skills.trains_effect(content, Effect::Forage),
             Ability::Heal => actor.skills.trains_effect(content, Effect::Heal),
+            Ability::Intimidate => actor.skills.trains_effect(content, Effect::Intimidate),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
@@ -481,6 +492,7 @@ impl Ability {
             Ability::Disarm => "disarm",
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
+            Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
             Ability::Heal => "heal",
             Ability::SecondWind => "second_wind",
@@ -515,6 +527,7 @@ impl Ability {
             Ability::Disarm => "Disarm a trap",
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
+            Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
             Ability::Heal => "Heal",
             Ability::SecondWind => "Second wind",
@@ -547,6 +560,10 @@ impl Ability {
             Ability::Steal => {
                 "Lift a purse or a trinket from someone next to you who is not hostile; caught, \
                  they turn on you."
+            }
+            Ability::Intimidate => {
+                "Threaten a foe you see nearby: unless it keeps its nerve, it flees from you a \
+                 moment, longer the better you intimidate."
             }
             Ability::Forage => {
                 "Spend a while searching the wild around you for something to eat: berries, \
@@ -603,6 +620,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Intimidate
             | Ability::Forage
             | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
@@ -639,7 +657,7 @@ impl Ability {
             | Ability::Hold
             | Ability::Drink => Aim::Nothing,
             Ability::Temper => Aim::Item,
-            Ability::ThrowVoice | Ability::SetOn => Aim::Cell,
+            Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
                 Aim::Direction
@@ -659,6 +677,7 @@ impl Ability {
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
+            Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
@@ -687,6 +706,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Intimidate
             | Ability::Forage
             | Ability::Heal
             | Ability::SecondWind
@@ -708,6 +728,7 @@ impl Ability {
     pub fn reach(self, content: &Content) -> Option<i32> {
         match self {
             Ability::Spell(spell) => content.spell_of(spell).and_then(|s| s.base_range()),
+            Ability::Intimidate => content.intimidate().map(|r| r.range),
             other => other.range(),
         }
     }
@@ -748,7 +769,7 @@ impl Ability {
                     _ => None,
                 }
             }
-            (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
+            (Ability::Skill(_) | Ability::ThrowVoice | Ability::Intimidate, _) => None,
             // The first thing there is to treat; the menu names one when there are several.
             (Ability::Heal, _) => Some(Action::Heal(None)),
             (Ability::SecondWind, _) => Some(Action::UseTalent(TalentActive::SecondWind)),
@@ -790,6 +811,7 @@ impl Ability {
     pub fn action_at(self, content: &Content, at: Pos) -> Option<Action> {
         match self {
             Ability::ThrowVoice => Some(Action::ThrowVoice(at)),
+            Ability::Intimidate => Some(Action::Intimidate(at)),
             Ability::SetOn => Some(Action::Order(Command::SetOn(at))),
             Ability::Sign(active) if active.aimed() => Some(Action::Gift(active, Some(at))),
             Ability::Spell(spell) if aimed(content, spell) => {
@@ -871,6 +893,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Intimidate
             | Ability::Forage
             | Ability::BloodMagic
             | Ability::Pray

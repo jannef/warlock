@@ -110,6 +110,12 @@ pub enum Action {
     /// Willpower; caught, it turns on them. Takes the time of `steal`; refused (no time) when the
     /// player sees no one there, or someone hostile.
     Steal(Dir),
+    /// Intimidate the creature on a cell the player sees within the `range` of
+    /// `data/intimidate.toml` (spec §8 "Skills": Intimidate; `world/intimidate.rs`): a hostile
+    /// one that hears and sees them checks its nerve, and failed, is frightened. Takes the time
+    /// of `intimidate`; refused (no time) untrained, at no one seen, out of reach, at one not
+    /// hostile, or at one with no vitals.
+    Intimidate(Pos),
     /// Throw the player's voice to a cell they see within [`crate::world::VOICE_RANGE`] (spec §5
     /// "Hearing"): a voice sounds there, and creatures that hear it and do not see its cell go
     /// and look. Takes the time of `throw_voice`; refused (no time) at a cell they do not see,
@@ -823,6 +829,7 @@ impl fmt::Display for Action {
             Action::Chat(d) => write!(f, "chat:{d}"),
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::Steal(d) => write!(f, "steal:{d}"),
+            Action::Intimidate(at) => write!(f, "intimidate:{},{}", at.x, at.y),
             Action::ThrowVoice(at) => write!(f, "throw_voice:{},{}", at.x, at.y),
             Action::Order(Command::Heel) => f.write_str("order:follow"),
             Action::Order(Command::Hold) => f.write_str("order:stay"),
@@ -1155,6 +1162,10 @@ impl FromStr for Action {
                 let at = arg.ok_or_else(|| "`fire` needs a cell, e.g. `fire:12,5`".to_string())?;
                 parse_cell(at).map(Action::Fire)
             }
+            "intimidate" => {
+                let usage = || "`intimidate` needs a cell, e.g. `intimidate:12,5`".to_string();
+                parse_cell(arg.ok_or_else(usage)?).map(Action::Intimidate)
+            }
             "throw_voice" => {
                 let usage = || "`throw_voice` needs a cell, e.g. `throw_voice:12,5`".to_string();
                 parse_cell(arg.ok_or_else(usage)?).map(Action::ThrowVoice)
@@ -1455,6 +1466,7 @@ mod tests {
             Action::UseTool,
             Action::ThrowVoice(Pos::new(12, 5)),
             Action::ThrowVoice(Pos::new(0, 40)),
+            Action::Intimidate(Pos::new(12, 5)),
             Action::SetStance(CombatStance::Aggressive),
             Action::SetStance(CombatStance::Coward),
             Action::SetVision("low_light".into()),
@@ -1711,6 +1723,12 @@ mod tests {
             parse_actions("throw_voice:3,-4"),
             Ok(vec![Action::ThrowVoice(Pos::new(3, -4))])
         );
+        assert_eq!(
+            parse_actions("intimidate:3,4"),
+            Ok(vec![Action::Intimidate(Pos::new(3, 4))])
+        );
+        assert!(parse_actions("intimidate").is_err());
+        assert!(parse_actions("intimidate:E").is_err());
         for bad in [
             "lantern",
             "hood",

@@ -76,6 +76,7 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Heal => "Treating yourself with the Heal skill (whatever comes of it)",
             ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
             ActionKind::Steal => "Trying to steal from someone, whatever comes of it",
+            ActionKind::Intimidate => "Intimidating a foe, whatever comes of it",
             ActionKind::ThrowVoice => "Throwing your voice",
             ActionKind::Climb => {
                 "Climbing out of the water onto ice (on top of the step onto the ice)"

@@ -149,6 +149,7 @@ mod hunger;
 mod hurl;
 mod ice;
 mod incorporeal;
+mod intimidate;
 mod knock;
 mod knowledge;
 mod lamp;
@@ -1351,6 +1352,7 @@ impl World {
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Steal(dir) => return self.steal(*dir),
+            Action::Intimidate(at) => return self.intimidate(*at, events),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
             Action::Order(command) => return self.order(*command, events),
             Action::Eat(meal) => return self.eat(*meal, events),
@@ -1622,6 +1624,8 @@ mod identify_service_tests;
 mod identify_spell_tests;
 #[cfg(test)]
 mod incorporeal_tests;
+#[cfg(test)]
+mod intimidate_tests;
 #[cfg(test)]
 mod ki_tests;
 #[cfg(test)]

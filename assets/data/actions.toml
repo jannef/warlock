@@ -95,6 +95,9 @@ chat = 500
 # Trying to steal from someone next to you (the abilities menu's Steal; spec §8 "Stealing"),
 # whether it works or you are caught.
 steal = 1000
+# Threatening a foe you see (the abilities menu's Intimidate; spec §8 "Skills"), whether it quails or
+# not.
+intimidate = 1000
 # Throwing your voice to a place you see: a voice sounds there.
 throw_voice = 1000
 # Climbing out of the water onto ice (spec §5 "Ice"), on top of the step onto the ice: hauling
