@@ -301,6 +301,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     come later. It is a scroll of the spell Identify (#592, §8 "Spells"): read, it casts it free
     of mana through the one cast path (`read:b:c`); studied, it teaches it. It is the commonest scroll in loot (`frequency` 300 against the spell scrolls'
     20 to 60, by tier) and a regular general-store item.
+  - **The scroll of restoration** (#887; the priest design §11) casts no spell (`read` of kind
+    `cleanse`, `mends` and `restores`; `world/restore.rs`): read on oneself (`read:b`; refused,
+    no time, with a target), every point of the reader's stat damage mends and every point
+    drains took comes back (§8 "Stats": "Drain"), as a temple's mending does (`StatDamage::mend_all`,
+    `World::restore_drained`), a disease showing or not; each stat that comes back is said ("You
+    feel your strength return."). With neither to mend it is refused, takes no time, and keeps
+    the scroll ("There is nothing to restore."). It teaches nothing, so study refuses it
+    ("There is no spell in a scroll of restoration to learn."). Rare and dear: item level 8, frequency 10, 300 gold.
   - **Where**: loot (by `level` and `frequency`, never magic), general stores' stock (they sell
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
     "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two each of fireball,

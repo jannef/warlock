@@ -180,6 +180,7 @@ mod read;
 mod reflect;
 mod resource;
 mod rest;
+mod restore;
 mod reveal;
 mod rod;
 mod rooms;
@@ -229,6 +230,7 @@ mod wares;
 mod warp;
 mod weapon_ability;
 mod weapon_active;
+mod words;
 mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
@@ -1355,6 +1357,7 @@ impl World {
             Action::Encounter(choice) => return self.answer_encounter(*choice),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
+            Action::Say { dir, words } => return self.say_to(*dir, words, events),
             Action::Steal(dir) => return self.steal(*dir),
             Action::Intimidate(at) => return self.intimidate(*at, events),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
@@ -1832,6 +1835,8 @@ mod weapon_active_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+#[cfg(test)]
+mod words_tests;
 #[cfg(test)]
 mod zap_tests;
 

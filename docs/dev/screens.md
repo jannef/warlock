@@ -218,7 +218,7 @@ to open, read keys for, or draw one:
   (`SignScreen`, *Born under the stars* after the race: the birth, the sign, its legend, a
   lucky day's line, the gifts in words with flaws as "but …", the adjustments; no rows, no
   choice: Enter opens the gender, Esc closes), `ui/name_screen.rs`
-  (`NameScreen`, the Name step and the game's text field: typed text literal while the font draws
+  (`NameScreen`, the Name step on the game's text field, `TextField`: typed text literal while the font draws
   it (`render::atlas::draws`) and there is room; the `Context::Text` keys accept, erase, put in the
   next of the race's random names (never the one shown; not on a held key), and back out; an empty
   field shows, dimmed, the name it gives), `ui/characters_screen.rs` (`CharactersScreen`: the saved
@@ -233,8 +233,10 @@ to open, read keys for, or draw one:
   keeps, scrolled in lines from the newest at the bottom by `Nav::Up`/`Down` and a panel's height
   by `Nav::PrevPage`/`NextPage`; no info page, and no `PagedList`, whose rows are lettered single
   lines to choose from; the stack calls its `fit` before a press), `ui/dialogue_screen.rs`
-  (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
-  shows more than the player was told), `ui/abilities_screen.rs` (`AbilitiesScreen`, below),
+  (the speaker, their last line, numbered topics, and the fixed `s` Say row and its field where
+  `Conversation::words`; built from the last `Event::Talked`, so it never shows more than the
+  player was told), `ui/text_field.rs` (`TextField`: the game's one text field, the Name step's
+  and the Say field's), `ui/abilities_screen.rs` (`AbilitiesScreen`, below),
   `ui/level_up_screen.rs` (`LevelUpScreen`: the first `Due`'s step, rolls, then a bonus pick of
   `PerceptionView::bonus_trees`, then the talent, each a `PagedList` whose letters are `Act`s; a
   talent with several openings lists them in its place; Esc only says what is left, in the panel;

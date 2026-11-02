@@ -231,6 +231,7 @@ above.
 | Ally, your wolf, orders (Come to heel, Hold here, Set on) | `allies.md`, `allies.md#orders` |
 | Summon, summon spell, a call (the druid's) | `allies.md#summons`, `allies.md#the-druids-calls` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
+| Saying words, passwords, riddles | `npcs.md#saying-words` |
 | Services (cure, mending, identification) | `npcs.md#services` |
 | The pedlar's offer, his wares | `npcs.md#the-pedlars-offer` |
 | Quest, quest log | `quests.md`, `quests.md#the-quest-log` |

@@ -33,9 +33,7 @@ use crate::settings::{Role, Settings};
 use bevy::prelude::*;
 use warlock_core::ability::Ability;
 use warlock_core::color::Rgb;
-use warlock_core::content::{
-    ClassActive, Reading, Shape, SpellData, SpellId, SpellPurpose, Stance,
-};
+use warlock_core::content::{ClassActive, Shape, SpellData, SpellId, SpellPurpose, Stance};
 use warlock_core::fov::radius2;
 use warlock_core::perception::{CellView, PerceptionView};
 use warlock_core::world::{ActorId, cone_cells};
@@ -354,9 +352,8 @@ fn spell_of(view: &PerceptionView<'_>, kind: AimKind) -> Option<SpellId> {
         }
         AimKind::Read(item) => {
             let stack = view.inventory().get(item)?;
-            match view.content().object(stack.object).read.as_ref()? {
-                Reading::Cast(scroll) => Some(scroll.spell),
-            }
+            let read = view.content().object(stack.object).read.as_ref()?;
+            read.scroll().map(|scroll| scroll.spell)
         }
         _ => None,
     }

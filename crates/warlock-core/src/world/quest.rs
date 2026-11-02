@@ -44,7 +44,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// The topic of a quest: its giving, reminder, or hand-in (`quest-rats`).
-const QUEST: &str = "quest-";
+pub(super) const QUEST: &str = "quest-";
 
 /// Where a quest the player has heard of stands.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -668,7 +668,7 @@ impl World {
     /// quest is active at once (a kill quest counting from now when it is rolled or a repeat),
     /// the giver says the offer and their `accept` line, reveals what it reveals as given, and
     /// hands over what is to be delivered; if its goal is met already, the player is told.
-    fn give(&mut self, id: ActorId, q: QuestId, topic: &str, events: &mut Vec<Event>) {
+    pub(super) fn give(&mut self, id: ActorId, q: QuestId, topic: &str, events: &mut Vec<Event>) {
         let content = self.content.clone();
         let def = content.quest(q);
         let standing = self.guild_standing();

@@ -93,6 +93,58 @@ pub(super) fn rumoured_ways(content: &Content) -> String {
     out
 }
 
+/// Who knows words (`[[dialogue.word]]`, those the wiki describes): each speaker, whom they
+/// speak to at all, each phrase as written, and what saying it does; sorted by who, then by the
+/// phrase.
+pub(super) fn words(content: &Content) -> String {
+    let mut rows: Vec<(String, String, String, String)> = Vec::new();
+    for d in (content.dialogues().iter())
+        .filter(|d| super::order::described(content, d.campaign.as_deref()))
+    {
+        let who = match (&d.speaker, &d.name) {
+            (Speaker::Creature(c), _) => capital(&content.creature(*c).name),
+            (Speaker::Npc(_), Some(name)) => name.clone(),
+            (Speaker::Npc(npc), None) => format!("`{npc}`"),
+        };
+        let speaks_to = d.speaks_to.map_or_else(
+            || "anyone".to_string(),
+            |r| match (r.min, r.max) {
+                (Some(min), Some(max)) => format!("{} to {}", min.name(), max.name()),
+                (Some(min), None) => format!("{} or better", min.name()),
+                (None, Some(max)) => format!("{} or worse", max.name()),
+                (None, None) => "anyone".to_string(),
+            },
+        );
+        for w in &d.words {
+            let mut does: Vec<String> = Vec::new();
+            if let Some(calling) = &w.does.calls {
+                does.push(format!("calls to the `{calling}` calling"));
+            }
+            if let Some(q) = (w.does.quest.as_deref()).and_then(|q| content.quest_id(q)) {
+                does.push(format!("gives the quest {}", content.quest(q).name));
+            }
+            if w.does.departs {
+                does.push("the speaker leaves".to_string());
+            }
+            let does = if does.is_empty() {
+                "a reply".to_string()
+            } else {
+                does.join(", then ")
+            };
+            rows.push((who.clone(), w.phrase.clone(), speaks_to.clone(), does));
+        }
+    }
+    if rows.is_empty() {
+        return "No one knows words to say to them yet.\n".to_string();
+    }
+    rows.sort();
+    let mut out = String::from("| Who | Words | Speaks to | Saying them |\n|---|---|---|---|\n");
+    for (who, phrase, speaks_to, does) in rows {
+        let _ = writeln!(out, "| {who} | *{phrase}* | {speaks_to} | {does} |");
+    }
+    out
+}
+
 /// Who gives quests (`data/quests.toml` and the campaigns' `data/quests/`, those the wiki
 /// describes, in load order: each chain in its order): each quest's name, its giver, its kind,
 /// what it asks, what it pays, what must be done first, the character level it is given from,
