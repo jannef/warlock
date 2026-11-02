@@ -867,6 +867,11 @@ impl Ability {
                             .then(|| actor.talent_mods(content).consecrate)
                             .flatten();
                         let mana = mana + consecrate.map_or(0, |c| c.mana);
+                        // Sanctuary costs its mana.
+                        let sanctuary = (active == ClassActive::Sanctuary)
+                            .then(|| actor.talent_mods(content).sanctuary)
+                            .flatten();
+                        let mana = mana + sanctuary.map_or(0, |s| s.mana);
                         // Knock costs its mana.
                         let knock = (active == ClassActive::Knock)
                             .then(|| actor.talent_mods(content).knock)
@@ -948,6 +953,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Inspire
         | ClassActive::Consecrate
         | ClassActive::Orison
+        | ClassActive::Sanctuary
         | ClassActive::Knock
         | ClassActive::MerchantsEye
         | ClassActive::Volley => Vec::new(),

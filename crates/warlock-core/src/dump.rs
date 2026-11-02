@@ -235,6 +235,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
             encounter_header(world),
             truth_rows(world),
             chest_rows(world),
+            hallow_rows(world),
         ]
         .concat(),
         Layer::Actors => [spawn_header(world), actor_rows(world), rising_rows(world)].concat(),
@@ -439,6 +440,25 @@ fn truth_rows(world: &World) -> Vec<String> {
                 .map_or(' ', |t| content.terrain(t).glyph),
         }
     })
+}
+
+/// Dev: the hallowed ground on the current level (Sanctuary; `world/sanctuary.rs`), one a line
+/// in the order laid: `hallow at (12, 5) r2 until 09:15:00` (`, dark` for dreaded ground).
+fn hallow_rows(world: &World) -> Vec<String> {
+    (world.hallows().iter())
+        .map(|h| {
+            let until = h.until();
+            format!(
+                "hallow at {} r{} until {:02}:{:02}:{:02}{}",
+                h.at(),
+                h.radius(),
+                until.hour(),
+                until.minute(),
+                until.second(),
+                if h.dark() { ", dark" } else { "" }
+            )
+        })
+        .collect()
 }
 
 /// Dev: the chests on the current level (spec §8 "Chests"; ground truth), one a line by
@@ -2014,6 +2034,17 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "answers": p.answers,
             });
         }
+        // The current level's hallowed ground (Sanctuary; ground truth).
+        out["hallows"] = (world.hallows().iter())
+            .map(|h| {
+                json!({
+                    "pos": h.at(),
+                    "radius": h.radius(),
+                    "until": h.until().seconds(),
+                    "dark": h.dark(),
+                })
+            })
+            .collect();
     }
     out
 }

@@ -455,15 +455,17 @@ impl World {
     /// Which cells creature `id` keeps out of on the current level: a creature hostile to the
     /// player does not step into a special room whose effect it shuns (a sanctuary, spec §7
     /// "Special rooms") from outside it; one already inside may move about in it, and leave.
+    /// Hallowed ground (Sanctuary, `sanctuary.rs`) is shunned the same way.
     pub(super) fn shuns(&self, id: ActorId) -> impl Fn(Pos) -> bool + '_ {
         let level = self.state.current();
         let hostile = self.stance(id, self.state.player) == Stance::Hostile;
-        let inside = (self.state.actors.get(&id)).and_then(|me| level.room_at(me.pos));
+        let from = self.state.actors.get(&id).map(|me| me.pos);
+        let inside = from.and_then(|from| level.room_at(from));
         move |p: Pos| {
             hostile
-                && level.room_at(p).is_some_and(|room| {
+                && (level.room_at(p).is_some_and(|room| {
                     inside != Some(room) && self.content.room_effect(room.effect).shunned
-                })
+                }) || level.shuts_out(from, p, self.state.time))
         }
     }
 

@@ -1177,6 +1177,16 @@ impl<'a> PerceptionView<'a> {
         room.entered.then(|| self.content.room_effect(room.effect))
     }
 
+    /// Whether `p` is hallowed ground (Sanctuary, `world/sanctuary.rs`), and whether the dark
+    /// powers laid it (`Some(true)`: dreaded ground): the player laid it, so they know it where
+    /// they see or remember the cell.
+    pub fn hallow(&self, p: Pos) -> Option<bool> {
+        if matches!(self.cell(p), CellView::Unknown) {
+            return None;
+        }
+        self.level.hallows_at(p, self.time).next().map(|h| h.dark)
+    }
+
     /// The percent of all light a special room keeps at a visible cell (a shadowed room's
     /// darkness, which the player sees; 100 elsewhere), for light that presentation adds of its
     /// own (a burning missile in flight); `None` for cells not in view.

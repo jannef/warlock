@@ -29,16 +29,24 @@ use crate::hunger::Hunger;
 use crate::mana;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::time::GameTime;
 
 impl World {
-    /// How fast actor `id` gets mana back now, in percent of the normal pace (spec §8 "Mana"):
-    /// the slowest `mana_regen` of its statuses and of the diseases that show (100 without
-    /// any), times `[healing] mana_resting` while the player rests (Meditation adds its percent
-    /// to that), times the `mana_regen` of a special room it stands in, times what the mana
-    /// regeneration affixes of what it wears and wields and its talents add (+50 % is half
+    /// [`World::mana_rate_at`] now.
+    #[cfg(test)]
+    pub(crate) fn mana_rate(&self, id: ActorId) -> u32 {
+        self.mana_rate_at(id, self.state.time)
+    }
+
+    /// How fast actor `id` gets mana back at `now` (a moment of `World::live`), in percent of
+    /// the normal pace (spec §8 "Mana"): the slowest `mana_regen` of its statuses and of the
+    /// diseases that show (100 without any), times `[healing] mana_resting` while the player
+    /// rests (Meditation adds its percent to that), times the `mana_regen` of a special room it
+    /// stands in or the pace of hallowed ground (`sanctuary.rs`), the larger, times what the
+    /// mana regeneration affixes of what it wears and wields and its talents add (+50 % is half
     /// again as fast; Tidal's and Clear mind's +25 %). None for a Starving player (spec §8
     /// "Hunger"). The one place that decides it.
-    pub(crate) fn mana_rate(&self, id: ActorId) -> u32 {
+    pub(crate) fn mana_rate_at(&self, id: ActorId, now: GameTime) -> u32 {
         let Some(actor) = self.state.actors.get(&id) else {
             return 0;
         };
@@ -57,6 +65,8 @@ impl World {
         let room = (self.state.levels.get(&actor.level)).map_or(100, |level| {
             level.effects_at(&self.content, actor.pos).mana_regen()
         });
+        // Hallowed ground's pace or the room's, the larger (`sanctuary.rs`).
+        let room = room.max(self.hallow_pace(actor, now));
         let rate = rate * self.room_pace(actor, room) / 100;
         let faster = actor
             .mods(&self.content)

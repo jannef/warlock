@@ -688,6 +688,8 @@ pub struct TalentMods {
     pub virtuoso: Option<StatusId>,
     /// The active Consecrate, if it has it.
     pub consecrate: Option<Consecrate>,
+    /// The active Sanctuary, if it has it.
+    pub sanctuary: Option<Sanctuary>,
     /// The active Knock, if it has it.
     pub knock: Option<Knock>,
     /// The priest's prayer, its talents summed (`world/orison.rs`), if it has any.
@@ -775,6 +777,18 @@ pub struct WarCry {
 pub struct Consecrate {
     pub mana: i32,
     pub time: crate::time::Duration,
+}
+
+/// The active Sanctuary (spec §8 "Class abilities", §7 "Special rooms"; `world/sanctuary.rs`):
+/// its mana, how long the rite takes, and the hallow it lays: its radius, how long it lasts,
+/// and the healing and mana pace inside it, in percent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Sanctuary {
+    pub mana: i32,
+    pub time: crate::time::Duration,
+    pub radius: u8,
+    pub lasts: crate::time::Duration,
+    pub regen: u16,
 }
 
 /// The active Knock (spec §8 "Class abilities", "Chests"): its mana.
@@ -1054,6 +1068,7 @@ impl TalentMods {
             A::MasterThief => self.finisher,
             A::Inspire => self.inspire.is_some(),
             A::Consecrate => self.consecrate.is_some(),
+            A::Sanctuary => self.sanctuary.is_some(),
             A::Knock => self.knock.is_some(),
             A::Orison => self.prayer.as_ref().is_some_and(|p| p.tier > 0),
         }
@@ -1943,6 +1958,23 @@ impl TalentMods {
             TalentEffect::Consecrate { mana, time } => {
                 if let Ok(time) = time.parse() {
                     self.consecrate = Some(Consecrate { mana, time });
+                }
+            }
+            TalentEffect::Sanctuary {
+                mana,
+                time,
+                radius,
+                lasts,
+                regen,
+            } => {
+                if let (Ok(time), Ok(lasts)) = (time.parse(), lasts.parse()) {
+                    self.sanctuary = Some(Sanctuary {
+                        mana,
+                        time,
+                        radius,
+                        lasts,
+                        regen,
+                    });
                 }
             }
             TalentEffect::Knock { mana } => self.knock = Some(Knock { mana }),

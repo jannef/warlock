@@ -185,6 +185,7 @@ mod rod;
 mod rooms;
 mod rot;
 mod rumour;
+mod sanctuary;
 mod schedule;
 mod search;
 mod second_wind;
@@ -259,6 +260,7 @@ pub use mirrors::Image;
 pub use orison::PrayerState;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
+pub use sanctuary::Hallow;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
 pub use siphon::SIPHON_RANGE;
@@ -613,6 +615,8 @@ enum Spent {
     Study(learn::Lesson),
     /// Praying to consecrate a place until this moment (see [`World::consecrate`]).
     Consecrate(GameTime),
+    /// Kneeling to hallow the ground until this moment (see [`World::sanctuary`]).
+    Sanctuary(GameTime),
     /// Praying at a forgotten altar (see [`World::pray`]).
     Pray(pray::Prayer),
     /// Drinking at a healing spring (see [`World::drink`]).
@@ -1240,6 +1244,7 @@ impl World {
             Spent::Search(turns) => self.search(turns, &mut events),
             Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Consecrate(until) => self.consecrate(until, &mut events),
+            Spent::Sanctuary(until) => self.sanctuary(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Drink(draught) => self.drink(draught, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
@@ -1711,6 +1716,8 @@ mod room_tests;
 mod rot_tests;
 #[cfg(test)]
 mod rumour_tests;
+#[cfg(test)]
+mod sanctuary_tests;
 #[cfg(test)]
 mod school_ability_tests;
 #[cfg(test)]
