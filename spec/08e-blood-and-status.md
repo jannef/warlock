@@ -325,7 +325,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
     least 1; the content test). Wizard: Ray of
     frost (1), Magic missile (3), Burning hands (12), Arcane bolt (18). Priest: Mend (1),
-    Blessing (3), Cure wounds (3), Remove disease (12). Druid: Spark (1), Barkskin (3), Call of
+    Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
     the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
     frost (50). Witch: Evil eye (1), Hex of weakness (3), Cause wounds
     (12), Curse of sloth (32), Blight (40). Bard: Mend (1), Blessing (6). Paladin: Blessing

@@ -307,7 +307,8 @@ cast path shares.
     (`assets/data/talents/`, `tree = "class"`, `granted`, systems `spells` first), shared by
     the classes that give it. The content test holds every given spell's level at most the
     class's caster level at the level it comes (`level × casting ÷ 100`, at least 1; S1, §5.6),
-    a full caster to a cantrip (level 0 or 1) at 1 and four to six spells, and the others to at
+    a full caster to a cantrip (level 0 or 1) at 1 and three to six spells (the priest's three:
+    their rite is the Orison, `docs/dev/prayer.md`), and the others to at
     most two boons of level 5 or less. Every class has `mana`
     at least 1 (the berserker and the warrior gained theirs); races keep their own.
   - **Choices** (design §14, the defaults): q1, q2, q3, q5, q7 as above (interrupted study
