@@ -1044,6 +1044,25 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                  while it or what follows it lasts"
             )
         }
+        TalentEffect::WarCry {
+            status: id,
+            severity,
+            difficulty,
+        } => {
+            let eases = (content.status_id(&id))
+                .and_then(|s| content.status(s).eases)
+                .map_or_else(String::new, |e| format!(", a degree easing every {e} s"));
+            format!(
+                "active (the time of a wait): a roar of loudness {}; every hostile that hears \
+                 it, sees you, and has vitals rolls its Willpower against {difficulty} + your \
+                 Strength modifier + your Intimidate (see Skills); failed, it suffers {} at \
+                 {severity} degrees (it runs from you while a step takes it farther{eases}). \
+                 No level cut; with nobody to hear it the roar is still made, its time and cost \
+                 spent",
+                warlock_core::noise::HOWL_NOISE,
+                status(&id),
+            )
+        }
         TalentEffect::ResourceBuild {
             resource: id,
             on,

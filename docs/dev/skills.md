@@ -50,7 +50,10 @@ Sneak attack's `sneak_dice` is read in `World::sneak_dice` and `surprise` (the c
 `World::status_cost` (`world/ambush.rs`, `world/surprise.rs`; `docs/dev/surprise.md`). Their uses:
 `sneak_attack` (in `ambushed`, where the dice land; shared with the stats as
 `StatUse::SneakAttack`, a Dexterity mark) and `surprise` (in `startle`, the player's check made,
-whatever came of it). Rules read a benefit through `Actor::skill_effect`
+whatever came of it). Intimidate's `intimidate` (#844) is read in `World::war_cry`
+(`world/war_cry.rs`), added to the difficulty of the Willpower check the cry asks of every hostile
+that hears and sees the player, and its use `intimidate` is marked there, once a cry, whatever
+came of it (`world/war_cry_tests.rs`). Rules read a benefit through `Actor::skill_effect`
 (the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in

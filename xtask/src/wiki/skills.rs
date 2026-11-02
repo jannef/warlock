@@ -103,6 +103,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SurpriseEase => "less time lost when you are surprised",
         Effect::Heal => "treating your bleeding, poison, and diseases",
         Effect::Pick => "picking locks",
+        Effect::Intimidate => "your war cry's check is harder to stand against",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::ManaRegen => "mana back faster",
         Effect::MaxMana => "a slightly larger mana pool (at most a fifth more)",
@@ -150,6 +151,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::SurpriseEase => "surprise's extra cost",
             Effect::Heal => "treating",
             Effect::Pick => "picking locks",
+            Effect::Intimidate => "war cry's difficulty",
             Effect::Temper => "tempering",
             Effect::ManaRegen => "mana back",
             Effect::MaxMana => "mana pool",
@@ -180,6 +182,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Heal
                 | Effect::Disarm
                 | Effect::Pick
+                | Effect::Intimidate
                 | Effect::Temper
                 | Effect::Surprise
                 | Effect::Initiative

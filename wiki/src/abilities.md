@@ -79,12 +79,25 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   [Foraging](skills.md#foraging)).
 - **Other skills used as actions** ([Handle animal](skills.md#skill-handle-animal), ...): each is in the menu once you are trained
   in it (see [Skills](skills.md)), greyed out until its use comes to the game.
-- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
+- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
   [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Knock](abilities.md#ability-knock)): your [class](classes.md)'s level table gives them (see [Classes](classes.md#levels)),
   each under Class from the level that brings it. Most leave you [spent](status-effects.md#status-spent), [winded](status-effects.md#status-winded), or [drained](status-effects.md#status-drained) for a
   while afterwards, greyed out until it passes; a [paladin](classes.md#paladin)'s holy gifts are never greyed out by
   [alignment](alignment.md), but do nothing unless you are Kind or better (see [Alignment](alignment.md)). They have no key of their own
   yet: `X` uses the one you used last again.
+- **[War cry](abilities.md#ability-war-cry)**, the [berserker](classes.md#berserker)'s at level 25, is paid in
+  [rage](resources.md): 4 of it and the time of a wait, so it is greyed out "you have not the
+  rage for it" until you [rage](abilities.md#ability-rage). You roar as loud as a
+  [howl](hearing.md), heard across the floor (it wakes sleepers and draws the curious). Every
+  hostile that hears you, sees you, and has [vitals](combat.md#criticals) (no skeletons, spirits,
+  or animated things) rolls its Willpower modifier on 2d12 against 10 + your Strength
+  modifier + your [Intimidate](skills.md#skill-intimidate) (+8 at 100, +12 at 200); short of it,
+  it is [frightened](status-effects.md#status-frightened) three degrees and runs from you, about
+  three turns. There is no level cut: a troll checks as a kobold does, only with more nerve.
+  For example, a creature of Willpower 10 against a berserker of Strength 15 (+2), untrained in
+  Intimidate, stands on 14 or more: it flees 54 % of the time; at Intimidate 100 it flees
+  96 %. A roar with nobody near is still a roar: the turn, the rage, and the noise are spent.
+  Every cry trains Intimidate.
 - **Allies** ([Come to heel](abilities.md#ability-heel), [Hold here](abilities.md#ability-hold), [Set on](abilities.md#ability-set-on)): once a creature fights on your side (the
   druid's calls and the ranger's companion are on their way), the Allies group appears, and the
   three orders tell every ally of yours on the level at once what to do: follow you and fight

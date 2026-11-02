@@ -237,7 +237,9 @@ class-tree talents (`data/talents/`, `granted`) named by their class files' `abi
 they are held like any talent, saved with them, and read through `TalentMods`. Their effects are
 the talents' kinds and the class's own (the README of `data/talents/` lists them). The seven
 actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
-`quivering_palm`) are effects that `TalentEffect::active` maps to a `ClassActive`;
+`quivering_palm`; since then the others in `ClassActive::ALL`, among them the berserker's
+`war_cry { status, severity, difficulty }`, #844, `world/war_cry.rs`, paid in rage by its
+talent's `resource`) are effects that `TalentEffect::active` maps to a `ClassActive`;
 `Content::class_active` finds the talent that has one, whose name and description the abilities
 menu shows; a holy gift's talent may name the bands it works for (`alignment`; outside them it
 is used and does nothing, `docs/dev/alignment.md`). A shared entry is one talent the tables

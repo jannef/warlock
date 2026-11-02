@@ -107,6 +107,10 @@ The passive skills help you more the higher they are:
   you unseen: +8 to the initiative check at 100, +12 at 200, and when you are
   [surprised](status-effects.md#status-surprised) all the same, your next action loses less time
   (half the extra at 100, three quarters at 200). Every such check trains it.
+- **[Intimidate](skills.md#skill-intimidate)** makes your
+  [War cry](abilities.md#ability-war-cry) (the [berserker](classes.md#berserker)'s) harder to stand
+  against: the Willpower check it asks of those who hear and see you is 8 harder at 100, 12 at
+  200 (at most 20). Every cry trains it, whatever comes of it.
 
 {{#include generated/skill-benefits.md}}
 

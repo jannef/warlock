@@ -656,6 +656,15 @@ pub enum TalentEffect {
     /// suffers its status (Raging) while it lasts; no rage while that or the status it `follows`
     /// into lasts.
     Rage { resource: String },
+    /// The class active War cry: a roar as loud as a howl; every hostile that hears it, sees the
+    /// player, and has vitals rolls Willpower against `difficulty` + the player's Strength
+    /// modifier + their Intimidate; failed, it suffers `severity` degrees of `status` (one that
+    /// `flees`; `world/war_cry.rs`).
+    WarCry {
+        status: String,
+        severity: u16,
+        difficulty: i32,
+    },
     /// Event `on` builds `resource` this much more while it is held, beside what the resource's
     /// own `builds` give (Blood frenzy: 5 rage a kill).
     ResourceBuild {
@@ -1060,6 +1069,7 @@ impl TalentEffect {
         use super::ClassActive as A;
         Some(match self {
             TalentEffect::Rage { .. } => A::Rage,
+            TalentEffect::WarCry { .. } => A::WarCry,
             TalentEffect::VeteransWind { .. } => A::VeteransWind,
             TalentEffect::Whirlwind => A::Whirlwind,
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
@@ -1449,6 +1459,16 @@ impl TalentEffect {
                     return Err(format!("`rage`: the resource `{id}` brings no `status`"));
                 }
                 Ok(())
+            }
+            TalentEffect::WarCry {
+                status: id,
+                severity,
+                difficulty,
+            } => {
+                if *severity == 0 || !(0..=30).contains(difficulty) {
+                    return Err("`war_cry`: severity is at least 1, difficulty 0 to 30".into());
+                }
+                status(id)
             }
             TalentEffect::ResourceBuild {
                 resource: id,

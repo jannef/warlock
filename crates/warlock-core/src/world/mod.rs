@@ -219,6 +219,7 @@ mod treasury;
 mod two_shields;
 mod voice;
 mod volley;
+mod war_cry;
 mod wares;
 mod warp;
 mod weapon_ability;
@@ -1836,6 +1837,8 @@ mod variant_tests;
 mod vitals_tests;
 #[cfg(test)]
 mod voice_tests;
+#[cfg(test)]
+mod war_cry_tests;
 #[cfg(test)]
 mod wares_tests;
 #[cfg(test)]
