@@ -1,5 +1,5 @@
 //! The Shadow and Wayfarer talents (spec §8 "Talents"; #239): effective eyes (Night eyes, Dark
-//! adaptation, Owl eyes), Blood scent, Lamplighter, Ambusher, and the land's: Swimmer, Marsh
+//! adaptation, which took in Owl eyes, #817), Blood scent, Lamplighter, Ambusher, and the land's: Swimmer, Marsh
 //! walker, Beast-friend. Each changes the one rule it names.
 
 use super::*;
@@ -114,11 +114,53 @@ fn the_eyes_are_the_profile_as_the_talents_change_it() {
         "normal",
         "named as the base profile"
     );
-    // Owl eyes give low-light eyes darkvision of their own.
+    // Dark adaptation gives low-light eyes darkvision of their own.
     let mut w = world("den");
     w.state.vision = "low_light".into();
-    give(&mut w, "owl_eyes");
+    give(&mut w, "dark_adaptation");
     assert_eq!((w.eyes().threshold, w.eyes().darkvision), (12, 2));
+}
+
+#[test]
+fn dark_adaptation_is_for_darkvision_or_low_light_eyes() {
+    let w = world("den");
+    let book = CONTENT.talents();
+    let def = book.get(book.id("dark_adaptation").expect("the talent"));
+    let player = w.state.player();
+    let who = |eyes| crate::talent::Candidate {
+        eyes,
+        ..crate::talent::Candidate::player(&CONTENT, player, None, 3)
+    };
+    for eyes in ["darkvision", "low_light"] {
+        let may = crate::talent::may_take(&CONTENT, &who(Some(eyes)), def, None);
+        assert_eq!(may, Ok(1), "{eyes}");
+    }
+    let refused = crate::talent::may_take(&CONTENT, &who(Some("normal")), def, None);
+    let Err(refusal) = refused else {
+        panic!("normal eyes may not take it");
+    };
+    assert_eq!(
+        refusal.words(&CONTENT, &def.name),
+        "You cannot take Dark adaptation: you need darkvision or low-light eyes."
+    );
+}
+
+/// A save from before #817 held Owl eyes, Dark adaptation's low-light twin: it loads holding
+/// Dark adaptation in its place, once even when it held both, and says so in the log.
+#[test]
+fn owl_eyes_in_a_save_is_dark_adaptation() {
+    for both in [false, true] {
+        let mut w = world("den");
+        w.player_mut().talents.take("owl_eyes", None);
+        if both {
+            w.player_mut().talents.take("dark_adaptation", None);
+        }
+        let loaded = crate::save::decode(&crate::save::encode(&w), CONTENT.clone()).expect("loads");
+        let held: Vec<_> = loaded.state().player().talents.iter().cloned().collect();
+        assert_eq!(held.len(), 1, "{held:?}");
+        assert_eq!((held[0].id.as_str(), held[0].rank), ("dark_adaptation", 1));
+        assert_eq!(loaded.eyes().darkvision, 2, "the two cells, once");
+    }
 }
 
 #[test]

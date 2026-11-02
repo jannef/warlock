@@ -25,7 +25,7 @@
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
 //! player's own cell is always visible. The profile is the player's **eyes**: their vision
 //! profile as their talents change it ([`crate::world::WorldState::eyes`]: Night eyes, Dark
-//! adaptation, Owl eyes, Rune sight). Blood scent sees a bleeding creature's cell in line of
+//! adaptation, Rune sight). Blood scent sees a bleeding creature's cell in line of
 //! sight within its radius as darkvision would. A **light-blind** player (their race's
 //! [`LightBlind`](crate::content::LightBlind): drow) whose own cell is lit at least to its
 //! `glare` is dazzled: they see nothing farther than its `sight`.

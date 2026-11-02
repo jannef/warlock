@@ -66,6 +66,31 @@ impl Talents {
         self.0.retain(|t| t.id != id);
     }
 
+    /// Holds the talent each removed talent was merged into (`merged` in `data/talents.toml`:
+    /// Owl eyes into Dark adaptation, #817) in its place, at the same rank, at most the merged
+    /// one's ranks; held both ways (both ids, or the new one already), the one place is kept,
+    /// the first, at the higher rank. Run before [`Talents::drop_unknown`]. Returns each
+    /// `(removed, merged into)` it mapped, in the order taken.
+    pub fn merge_removed(&mut self, content: &Content) -> Vec<(String, String)> {
+        let book = content.talents();
+        let mut mapped = Vec::new();
+        let mut kept: Vec<Taken> = Vec::with_capacity(self.0.len());
+        for mut taken in std::mem::take(&mut self.0) {
+            if let Some(into) = book.merged.get(&taken.id) {
+                mapped.push((taken.id.clone(), into.clone()));
+                let ranks = book.id(into).map_or(1, |t| book.get(t).rank_count());
+                taken.id = into.clone();
+                taken.rank = taken.rank.min(ranks);
+            }
+            match (kept.iter_mut()).find(|t| t.id == taken.id && t.choice == taken.choice) {
+                Some(first) => first.rank = first.rank.max(taken.rank),
+                None => kept.push(taken),
+            }
+        }
+        self.0 = kept;
+        mapped
+    }
+
     /// Lets go of every talent the content has no longer (a save from before it was taken out
     /// of the data); their ids, in the order taken.
     pub fn drop_unknown(&mut self, content: &Content) -> Vec<String> {
@@ -2018,7 +2043,7 @@ impl<'a> Candidate<'a> {
             },
             Need::Level(level) => self.level >= *level,
             Need::Race(id) => self.race == Some(id.as_str()),
-            Need::Eyes(id) => self.eyes == Some(id.as_str()),
+            Need::Eyes(ids) => ids.iter().any(|id| self.eyes == Some(id.as_str())),
             Need::Class(id) => self.class == Some(id.as_str()),
             Need::Animal(id) => self.sign.is_some_and(|s| s.is_animal(id)),
             Need::Element(id) => self.sign.is_some_and(|s| s.is_element(id)),

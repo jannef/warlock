@@ -990,7 +990,14 @@ impl World {
         }
         // A talent the content no longer has (the thief's Trapfinding, Pick lock, and Light
         // fingers, #684; the cull's filler and duplicates, #774) is let go, and said in the log.
+        // A talent merged into another (Owl eyes into Dark adaptation, #817) is held as that one.
         for actor in state.actors.values_mut() {
+            for (gone, into) in actor.talents.merge_removed(&content) {
+                retiered.push(format!(
+                    "actor {} held talent `{gone}`, merged into `{into}`: holds that",
+                    actor.id
+                ));
+            }
             for id in actor.talents.drop_unknown(&content) {
                 retiered.push(format!(
                     "actor {} held talent `{id}`, which this content does not have: dropped",

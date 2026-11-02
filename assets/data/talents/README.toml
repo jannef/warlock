@@ -35,7 +35,8 @@
 #                                                        such a choice)
 #                   level = 9                            the character level
 #                   race = "dwarf", class = "warrior"    the character's
-#                   eyes = "darkvision"                  the race's vision profile
+#                   eyes = "darkvision"                  the race's vision profile; a list,
+#                                                        any one of them
 #                   animal = "roc", element = "fire"     the birth sign's (horoscope.toml)
 #                   lucky = true                         born on a lucky day
 #                   creation = true                      only at character creation (the

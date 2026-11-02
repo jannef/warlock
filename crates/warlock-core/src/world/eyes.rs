@@ -2,7 +2,7 @@
 //! talents change it. `WorldState::vision` stays the base profile (the race's, or the dev
 //! `vision:` override); [`WorldState::eyes`] betters it by a unique item's Vision power they
 //! wear (`Actor::eyes`; not the dev override), then applies the talents (Night eyes' threshold,
-//! Dark adaptation's and Owl eyes' darkvision, Rune sight's UV) and is what perception reads.
+//! Dark adaptation's darkvision, Rune sight's UV) and is what perception reads.
 //! Creatures see with their types' profiles, bettered the same way by a unique item they wear.
 
 use super::{World, WorldState};
