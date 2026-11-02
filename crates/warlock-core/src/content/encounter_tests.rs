@@ -43,7 +43,9 @@ fn the_meetings_are_all_given_or_none_and_in_range() {
     let err = EncounterRules::parse("x", some).unwrap_err().to_string();
     assert!(err.contains("all given or none"), "{err}");
     let no_swamp = SHIPPED.replace("swamp = 800\n", "");
-    let err = EncounterRules::parse("x", &no_swamp).unwrap_err().to_string();
+    let err = EncounterRules::parse("x", &no_swamp)
+        .unwrap_err()
+        .to_string();
     assert!(err.contains("names no `swamp`"), "{err}");
     let far = SHIPPED.replace("fight = 7 ", "fight = 30 ");
     assert!(EncounterRules::parse("x", &far).is_err());
@@ -74,7 +76,9 @@ fn a_campaigns_table_loads() {
     let tables: Vec<_> = content.encounter_tables("showcase").collect();
     assert_eq!(tables.len(), 1);
     assert_eq!(tables[0].rate_percent, 100);
-    let (_, entry) = content.encounter_entry("showcase", "kobolds").expect("entry");
+    let (_, entry) = content
+        .encounter_entry("showcase", "kobolds")
+        .expect("entry");
     assert_eq!(entry.weight, 3);
     assert_eq!(entry.lead, content.creature_id("kobold").unwrap());
     assert_eq!(entry.stance, EntryStance::Hostile);
@@ -85,14 +89,46 @@ fn a_campaigns_table_loads() {
 fn the_load_checks_refuse_what_is_not_there() {
     let cases = [
         ("count = \"1d2+1\"", "count = \"1d2-1\"", "at least 1"),
-        ("creature = \"kobold\"", "creature = \"nobody\"", "unknown creature"),
-        ("weight = 3", "weight = 3\nwhen = { regions = [\"Nowhere\"] }", "no region"),
-        ("weight = 3", "weight = 3\nwhen = { landscapes = [\"sea\"] }", "no landscape"),
-        ("weight = 3", "weight = 3\nwhen = { quest_active = \"nope\" }", "no quest"),
-        ("weight = 3", "weight = 3\nwhen = { revealed = \"nope\" }", "no hidden location"),
-        ("weight = 3", "weight = 3\nwhen = { level = { min = 3 } }", "unknown field"),
-        ("weight = 3", "weight = 3\nstance = \"peaceful\"", "hostile to the player"),
-        ("id = \"wilds\"", "id = \"wilds\"\nreplaces = [\"gone\"]", "no other table"),
+        (
+            "creature = \"kobold\"",
+            "creature = \"nobody\"",
+            "unknown creature",
+        ),
+        (
+            "weight = 3",
+            "weight = 3\nwhen = { regions = [\"Nowhere\"] }",
+            "no region",
+        ),
+        (
+            "weight = 3",
+            "weight = 3\nwhen = { landscapes = [\"sea\"] }",
+            "no landscape",
+        ),
+        (
+            "weight = 3",
+            "weight = 3\nwhen = { quest_active = \"nope\" }",
+            "no quest",
+        ),
+        (
+            "weight = 3",
+            "weight = 3\nwhen = { revealed = \"nope\" }",
+            "no hidden location",
+        ),
+        (
+            "weight = 3",
+            "weight = 3\nwhen = { level = { min = 3 } }",
+            "unknown field",
+        ),
+        (
+            "weight = 3",
+            "weight = 3\nstance = \"peaceful\"",
+            "hostile to the player",
+        ),
+        (
+            "id = \"wilds\"",
+            "id = \"wilds\"\nreplaces = [\"gone\"]",
+            "no other table",
+        ),
     ];
     for (from, to, why) in cases {
         let err = load(&TABLE.replacen(from, to, 1)).expect_err(to);
@@ -101,7 +137,11 @@ fn the_load_checks_refuse_what_is_not_there() {
     let err = load(&TABLE.replace("kobold\"", "hermit\"")).expect_err("hermit");
     assert!(err.contains("not hostile"), "{err}");
     // A level ceiling is the one level condition (the owner, #796 Q5).
-    let max = TABLE.replacen("weight = 3", "weight = 3\nwhen = { level = { max = 8 } }", 1);
+    let max = TABLE.replacen(
+        "weight = 3",
+        "weight = 3\nwhen = { level = { max = 8 } }",
+        1,
+    );
     let content = load(&max).expect("loads");
     let (_, e) = content.encounter_entry("showcase", "kobolds").unwrap();
     assert_eq!(e.when.level_max, Some(8));

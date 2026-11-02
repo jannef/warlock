@@ -95,6 +95,8 @@ impl World {
             | Action::SkipTime(_)
             | Action::SetWeather(_)
             | Action::Spawn
+            | Action::Meet { .. }
+            | Action::Encounter(_)
             | Action::Effect { .. }
             | Action::Identify(_)
             | Action::Afflict(_)

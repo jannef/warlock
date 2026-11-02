@@ -93,6 +93,9 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Identify => "now and then telling something you carry for what it is",
         Effect::Kick => "more Strength for kicking doors in",
         Effect::Slip => "slipping past eyes that see in the dark",
+        Effect::Lookout => "seeing those you meet on the overworld before they see you",
+        Effect::Stalk => "going unseen by those you meet on the overworld",
+        Effect::Evade => "slipping away from those you meet on the overworld",
         Effect::Steal => "stealing at all, and better",
         Effect::SneakDice => "more damage on a foe that has not seen you or is surprised",
         Effect::Surprise => "those you catch unawares recover less often",
@@ -137,6 +140,9 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Identify => "identifying, each hour",
             Effect::Kick => "kicking doors in",
             Effect::Slip => "slipping past",
+            Effect::Lookout => "lookout",
+            Effect::Stalk => "their lookout",
+            Effect::Evade => "slipping away",
             Effect::Steal => "stealing",
             Effect::SneakDice => "sneak attack dice",
             Effect::Surprise => "their check's difficulty",
@@ -167,6 +173,9 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::DetectTraps
                 | Effect::Study
                 | Effect::Slip
+                | Effect::Lookout
+                | Effect::Stalk
+                | Effect::Evade
                 | Effect::Steal
                 | Effect::Heal
                 | Effect::Disarm

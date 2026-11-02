@@ -119,3 +119,8 @@ Rumoured ways (spec §8 "Dialogue"; `docs/dev/npcs.md`): a dialogue topic's `rou
 overworld's memory as day sight along it would (`world/rumour.rs`), reading only the terrain
 grid, so hidden locations stay their plain terrain and are never marked or named; a visible
 location (Cealdhlāw) is remembered and then listed by the `locations` layer as when seen.
+
+Overworld encounters (#804; `docs/dev/encounters.md`): after an overworld step onto a cell with a
+local area (`travel.rs::player_moves` records it, `World::apply` rolls it after the turn), a
+party may be met; a fight opens in the cell's local area as `>` would open it, the player placed
+by how the encounter went.

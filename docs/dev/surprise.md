@@ -118,6 +118,10 @@ Keep it current with the code, as CLAUDE.md says.
 | `ai.rs::decide` (#686) | `lurker_waits` (`lurk.rs`) on the plan `fight` returns for a hostile in sight |
 | `dump.rs` (#686) | the `actors` layer: `lurks` after the awareness of a lurking type |
 
+Overworld encounters (#804; `docs/dev/encounters.md`) use both doors: a party the player lies in
+wait for is placed with `Mind::missed` set (a slip already won) and one action behind; an
+ambushed player is `startle`d once by the party's lead, every member already `noticed`.
+
 Slipping past's hooks (#683): `ai.rs::nearest_hostile_in_sight` calls `slip::looks_at` for each
 hostile; `ai.rs::decide` calls `slip_lapses` first; `ai.rs::noise_to_look_into` takes a cell seen
 by darkvision alone for unseen while slipped past; `surprise.rs::unaware` reads `slipped_past`;

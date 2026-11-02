@@ -501,14 +501,18 @@ pub(super) fn parse<'a>(
     for (file, text) in table.filter(|(f, _)| *f != RULES) {
         let err = |m: String| ContentError::new(file, m);
         let Some(campaign) = super::campaign::of_path(file) else {
-            return Err(err("encounter tables belong to a campaign's `data/encounters/`".into()));
+            return Err(err(
+                "encounter tables belong to a campaign's `data/encounters/`".into(),
+            ));
         };
         let parsed: TableFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
         for spec in parsed.table {
             let id = spec.id.clone();
             let bad = |m: String| err(format!("encounter table `{id}`: {m}"));
             if !super::dialogue::is_id(&id) {
-                return Err(bad("ids are lower-case letters, digits, and underscores".into()));
+                return Err(bad(
+                    "ids are lower-case letters, digits, and underscores".into()
+                ));
             }
             if let Some(first) = seen.insert((campaign.to_string(), id.clone()), file) {
                 return Err(super::duplicate_id("encounter table", &id, file, first));
@@ -522,7 +526,10 @@ pub(super) fn parse<'a>(
         let file = super::campaign::table_file(Some(&t.campaign), "encounters");
         let err = |m: String| ContentError::new(&file, format!("encounter table `{}`: {m}", t.id));
         for r in &t.replaces {
-            if !tables.iter().any(|o| o.campaign == t.campaign && &o.id == r && o.id != t.id) {
+            if !tables
+                .iter()
+                .any(|o| o.campaign == t.campaign && &o.id == r && o.id != t.id)
+            {
                 return Err(err(format!("`replaces`: no other table `{r}`")));
             }
         }
@@ -639,7 +646,9 @@ fn when(spec: WhenSpec, campaign: &str, content: &Content) -> Result<When, Strin
     let overworld = content.overworld_of(campaign);
     for r in &spec.regions {
         if !overworld.is_some_and(|o| o.regions.iter().any(|g| &g.name == r)) {
-            return Err(format!("`when.regions`: no region `{r}` on the campaign's overworld"));
+            return Err(format!(
+                "`when.regions`: no region `{r}` on the campaign's overworld"
+            ));
         }
     }
     let landscapes = (spec.landscapes.iter())

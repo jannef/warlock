@@ -263,6 +263,10 @@ impl World {
         if self.state.death.is_none() {
             self.step_up(player, from, events);
         }
+        // Who is met on the way is rolled once the step's time has passed (`encounter.rs`).
+        if overworld {
+            self.encounter_step(step);
+        }
         Spent::Turn(step + climb)
     }
 
