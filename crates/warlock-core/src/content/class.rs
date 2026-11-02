@@ -105,12 +105,19 @@ struct ClassSpec {
     max_level: Option<u8>,
 }
 
-/// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent.
+/// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent;
+/// `rank = 2` gives its second rank (default 1).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct AbilitySpec {
     level: u8,
     talent: String,
+    #[serde(default = "first_rank")]
+    rank: u8,
+}
+
+fn first_rank() -> u8 {
+    1
 }
 
 /// `{ levels = [10, 20], trees = ["guard"] }`: a bonus talent pick at each of those levels,
@@ -124,14 +131,14 @@ pub(super) struct BonusSpec {
 }
 
 /// The `abilities` rows of a class or prestige table (`what`: `class \`bard\``, for errors),
-/// checked: levels 1 to `MAX_LEVEL`, ascending, no talent twice. The cap's own check is
-/// [`check_levels`], once the cap is known.
+/// checked: levels 1 to `MAX_LEVEL`, ascending, ranks from 1, a talent's ranks rising down the
+/// table. The cap's own check is [`check_levels`], once the cap is known.
 pub(super) fn table_rows(
     err: &impl Fn(String) -> ContentError,
     what: &str,
     rows: Vec<AbilitySpec>,
-) -> Result<Vec<(u8, String)>, ContentError> {
-    let mut abilities: Vec<(u8, String)> = Vec::with_capacity(rows.len());
+) -> Result<Vec<(u8, String, u8)>, ContentError> {
+    let mut abilities: Vec<(u8, String, u8)> = Vec::with_capacity(rows.len());
     for a in rows {
         if !(1..=MAX_LEVEL).contains(&a.level) {
             return Err(err(format!(
@@ -139,15 +146,24 @@ pub(super) fn table_rows(
                 a.level
             )));
         }
-        if abilities.last().is_some_and(|(l, _)| *l > a.level) {
+        if abilities.last().is_some_and(|(l, _, _)| *l > a.level) {
             return Err(err(format!(
                 "{what}: abilities are listed by level, lowest first"
             )));
         }
-        if abilities.iter().any(|(_, t)| *t == a.talent) {
-            return Err(err(format!("{what}: abilities: `{}` twice", a.talent)));
+        if a.rank == 0 {
+            return Err(err(format!(
+                "{what}: abilities: `{}` at rank 0 (ranks start at 1)",
+                a.talent
+            )));
         }
-        abilities.push((a.level, a.talent));
+        if (abilities.iter()).any(|(_, t, r)| *t == a.talent && *r >= a.rank) {
+            return Err(err(format!(
+                "{what}: abilities: `{}` rank {} twice, or after a higher rank",
+                a.talent, a.rank
+            )));
+        }
+        abilities.push((a.level, a.talent, a.rank));
     }
     Ok(abilities)
 }
@@ -180,11 +196,11 @@ pub(super) fn bonus_rows(
 pub(super) fn check_levels(
     err: &impl Fn(String) -> ContentError,
     what: &str,
-    abilities: &[(u8, String)],
+    abilities: &[(u8, String, u8)],
     bonus: &BonusTalents,
     cap: u8,
 ) -> Result<(), ContentError> {
-    if let Some((level, talent)) = abilities.iter().find(|(l, _)| *l > cap) {
+    if let Some((level, talent, _)) = abilities.iter().find(|(l, _, _)| *l > cap) {
         return Err(err(format!(
             "{what}: abilities: `{talent}` at level {level} is past its highest level, {cap}"
         )));
@@ -199,19 +215,26 @@ pub(super) fn check_levels(
 
 /// Checks a level table (`abilities` and `bonus_talents`) against `book` once the talents are
 /// loaded (nothing to check against a book without a class tree, whose tables give nothing):
-/// every talent named is in the book, and every bonus tree is a tree that is no class tree.
+/// every talent named is in the book with the rank named, and every bonus tree is a tree that
+/// is no class tree.
 pub(super) fn check_rows(
     err: &impl Fn(String) -> ContentError,
-    abilities: &[(u8, String)],
+    abilities: &[(u8, String, u8)],
     bonus: &BonusTalents,
     book: &TalentBook,
 ) -> Result<(), ContentError> {
     if !book.has_class_tree() {
         return Ok(());
     }
-    for (_, talent) in abilities {
-        if book.id(talent).is_none() {
+    for (_, talent, rank) in abilities {
+        let Some(id) = book.id(talent) else {
             return Err(err(format!("abilities: unknown talent `{talent}`")));
+        };
+        let ranks = book.get(id).rank_count();
+        if *rank > ranks {
+            return Err(err(format!(
+                "abilities: `{talent}` rank {rank}, but it has {ranks}"
+            )));
         }
     }
     for tree in &bonus.trees {
@@ -293,8 +316,8 @@ pub struct ClassDef {
     /// pack; filled in by the loader once objects are known.
     pub kit: Kit,
     /// Its class abilities (spec §8 "Class abilities"): at each level, the talent it gives, by
-    /// id, ascending by level.
-    pub abilities: Vec<(u8, String)>,
+    /// id, and the rank of it (1 first), ascending by level; a talent's ranks rise down the table.
+    pub abilities: Vec<(u8, String, u8)>,
     /// Its bonus talent picks.
     pub bonus_talents: BonusTalents,
     /// The highest level the class reaches (spec §8 "Prestige classes"): the file's
@@ -515,16 +538,17 @@ impl ClassDef {
         self.known_for.contains(&skill)
     }
 
-    /// The talents its level table gives up to `level`, in table order; none from a book
-    /// without a class tree (content whose talents have no class abilities, a fixture's).
+    /// The talents its level table gives up to `level`, in table order, each once (a later
+    /// rank names the talent again); none from a book without a class tree (content whose
+    /// talents have no class abilities, a fixture's).
     pub fn abilities_to(&self, book: &TalentBook, level: u8) -> Vec<TalentId> {
-        if !book.has_class_tree() {
-            return Vec::new();
-        }
-        (self.abilities.iter())
-            .take_while(|(l, _)| *l <= level)
-            .filter_map(|(_, id)| book.id(id))
-            .collect()
+        super::prestige::Table::Class(self).abilities_to(book, level)
+    }
+
+    /// Each talent its level table gives up to `level` with the rank given there, in table
+    /// order; none from a book without a class tree.
+    pub fn ranks_to(&self, book: &TalentBook, level: u8) -> Vec<(TalentId, u8)> {
+        super::prestige::Table::Class(self).ranks_to(book, level)
     }
 
     /// The bonus talent picks level `level` brings (0 or 1).
@@ -1035,7 +1059,16 @@ mod tests {
             ),
             (
                 ("talent = \"riposte\"", "talent = \"fencing\""),
-                "`fencing` twice",
+                "`fencing` rank 1 twice",
+            ),
+            // A rank names the talent again, higher down the table, within its ranks.
+            (
+                ("talent = \"riposte\"", "talent = \"fencing\", rank = 2"),
+                "`fencing` rank 2, but it has 1",
+            ),
+            (
+                ("talent = \"fencing\"", "talent = \"fencing\", rank = 0"),
+                "rank 0 (ranks start at 1)",
             ),
             (("[10, 20, 30, 45, 55]", "[20, 10]"), "ascending"),
         ] {

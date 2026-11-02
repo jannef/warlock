@@ -151,6 +151,7 @@ mod hurl;
 mod ice;
 mod incorporeal;
 mod intimidate;
+mod jack;
 mod knock;
 mod knowledge;
 mod lamp;
@@ -879,7 +880,7 @@ impl World {
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }
-        if let Some(text) = feature::feature_line(&state, &content) {
+        for text in feature::feature_lines(&state, &content, None) {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);

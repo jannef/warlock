@@ -1266,6 +1266,8 @@ impl TalentMods {
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
             // Handed out as the rank is taken (`World::take_talent`), never read after.
             TalentEffect::TrainSkill { .. }
+            | TalentEffect::WeaponRanks { .. }
+            | TalentEffect::TakeUpSkills { .. }
             | TalentEffect::StartingGold { .. }
             | TalentEffect::StartingGems { .. }
             | TalentEffect::Heirloom { .. } => {}

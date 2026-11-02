@@ -20,7 +20,8 @@ this way: `xtask/src/vast.rs` emits it for its rats and kobolds; fighting is the
 file's optional `arrival = "..."` line is said when the player arrives by stairs (a dungeon
 branch's on its first level, `Content::arrival`; a scenario's `arrival` once, as a run of it
 starts). A legend entry's `name` (and `note`) names the place on
-its cell (`docs/dev/overworld.md`, "Named places"). `secret =
+its cell (`docs/dev/overworld.md`, "Named places"); a vault's are stamped with it
+(`docs/dev/mapgen.md`). `secret =
 true` (or a difficulty) on a closed door makes it a secret door: the cell shows the wall around
 it until found (`docs/dev/searching.md`). Water: `~` is still water; running water (terrain with a
 `flow` anim) needs a flow on every cell from its legend entry (`flow = "S"`, optional

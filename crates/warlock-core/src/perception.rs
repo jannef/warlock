@@ -1205,7 +1205,7 @@ impl<'a> PerceptionView<'a> {
         if matches!(self.cell(p), CellView::Unknown) {
             return None;
         }
-        self.content.level(&self.level.id)?.places.get(&p)
+        self.level.place(self.content, p)
     }
 
     /// The locations the player knows on the overworld, by position, each with its name: the

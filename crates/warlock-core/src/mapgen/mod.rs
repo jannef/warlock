@@ -51,7 +51,7 @@ mod vault;
 use crate::chest::Chest;
 use crate::content::{
     Content, CreatureId, CreatureSpawn, Flow, Generator, LevelKind, LevelTemplate, LightId,
-    ObjectId, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom, StairsDir,
+    ObjectId, Place, RoomEffectId, RoomOdds, Secret, ShopOdds, ShopPlan, SpecialRoom, StairsDir,
     StairsLink, TerrainId, Trap, Vault, secret_look,
 };
 use crate::door::Lock;
@@ -199,6 +199,8 @@ pub(crate) struct Canvas<'a> {
     pub secrets: BTreeMap<Pos, Secret>,
     /// Chests stamped from vaults (spec §8 "Chests"), their level the floor's once it is known.
     pub chests: BTreeMap<Pos, Chest>,
+    /// Named places stamped from vaults (a legend's `name` and `note`: an inscribed statue).
+    pub places: BTreeMap<Pos, Place>,
     pub creatures: Vec<CreatureSpawn>,
     /// Special rooms (spec §7 "Special rooms"; `special.rs`).
     pub rooms: Vec<SpecialRoom>,
@@ -244,6 +246,7 @@ impl<'a> Canvas<'a> {
             locks: BTreeMap::new(),
             secrets: BTreeMap::new(),
             chests: BTreeMap::new(),
+            places: BTreeMap::new(),
             creatures: Vec::new(),
             rooms: Vec::new(),
             pervading: None,
@@ -530,7 +533,7 @@ pub fn generate_for(
             chests,
             secrets: canvas.secrets,
             hidden: BTreeMap::new(),
-            places: BTreeMap::new(),
+            places: canvas.places,
             regions: Vec::new(),
             rooms: canvas.rooms,
             pervading: canvas.pervading,

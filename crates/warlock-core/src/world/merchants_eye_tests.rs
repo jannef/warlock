@@ -62,8 +62,8 @@ fn ring(w: &mut World) -> usize {
 fn the_merchant_gains_it_at_level_twelve() {
     let w = world();
     let def = w.content.class("merchant").expect("merchant");
-    let at = (def.abilities.iter()).find(|(_, t)| t == "merchants_eye");
-    assert_eq!(at.map(|(level, _)| *level), Some(12));
+    let at = (def.abilities.iter()).find(|(_, t, _)| t == "merchants_eye");
+    assert_eq!(at.map(|(level, _, _)| *level), Some(12));
     let talents = w.content.talents();
     let id = talents.id("merchants_eye").expect("the talent");
     assert!(talents.get(id).granted, "a class ability, never picked");

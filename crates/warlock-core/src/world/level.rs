@@ -10,8 +10,8 @@ use crate::blood::{Spatter, Stain};
 use crate::chest::Chest;
 use crate::color::Rgb;
 use crate::content::{
-    Content, EdgeExit, Flow, Here, HiddenLocation, LevelKind, LevelTemplate, LightId, RoomEffectId,
-    Secret, SpecialRoom, StairsLink, TerrainDef, TerrainId, Trap, TrapId,
+    Content, EdgeExit, Flow, Here, HiddenLocation, LevelKind, LevelTemplate, LightId, Place,
+    RoomEffectId, Secret, SpecialRoom, StairsLink, TerrainDef, TerrainId, Trap, TrapId,
 };
 use crate::door::Lock;
 use crate::geom::Pos;
@@ -87,6 +87,10 @@ pub struct LevelState {
     /// its entrance and is gone from here. Ground truth.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) hidden: BTreeMap<Pos, HiddenLocation>,
+    /// A generated level's named places, by position: its vaults' (an inscribed statue's note).
+    /// A hand-made level's stay in its template ([`Self::place`] reads both).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) places: BTreeMap<Pos, Place>,
     /// The breaches of sealed rooms the player has found (spec §7 "Special rooms": a greater
     /// treasure room's), by position: walls that sound hollow, which look mode names. Gone once
     /// the wall is broken.
@@ -174,6 +178,11 @@ impl LevelState {
             chests: template.chests.clone(),
             secrets: template.secrets.clone(),
             hidden: template.hidden.clone(),
+            // A hand-made level's places are read from its template in `Content`.
+            places: match content.level(&template.id) {
+                Some(_) => BTreeMap::new(),
+                None => template.places.clone(),
+            },
             hollows: BTreeSet::new(),
             blood: BTreeMap::new(),
             blood_memory: BTreeMap::new(),
@@ -217,6 +226,12 @@ impl LevelState {
 
     pub fn kind(&self) -> LevelKind {
         self.kind
+    }
+
+    /// The named place at `p` (a legend's `name` and `note`): a generated level's from its
+    /// vaults, a hand-made level's from its template.
+    pub fn place<'a>(&'a self, content: &'a Content, p: Pos) -> Option<&'a Place> {
+        (self.places.get(&p)).or_else(|| content.level(&self.id)?.places.get(&p))
     }
 
     /// The energy price of stepping onto `terrain` here for an actor whose step costs `step`
