@@ -12,7 +12,7 @@
 //! is identified ([`World::appraise_carried`]).
 
 use super::{Actor, World, focus};
-use crate::content::{Content, TalentDef, TalentId};
+use crate::content::{Content, Role, TalentDef, TalentEffect, TalentId};
 use crate::talent::TalentMods;
 
 /// Hands out what holding rank `rank` of `def` gives once, as it is taken or given at character
@@ -30,6 +30,39 @@ pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, ra
     actor.hp += hp;
     actor.grow_mana_base(content, mods.mana_at(level));
     focus::hold(content, actor, &mods.grants, level);
+    for effect in def.effects_at(rank) {
+        if let TalentEffect::WeaponRanks { to, skills, .. } = effect {
+            raise_ranks(content, actor, to, &skills);
+        }
+    }
+}
+
+/// A `weapon_ranks` hand-out (Travelled hands): every weapon skill and style `skills` names
+/// (none: every row but the schools of magic and hidden styles, whatever the content holds)
+/// held below rank `to` rises to it, in file order, its defaults with it.
+fn raise_ranks(content: &Content, actor: &mut Actor, to: u8, skills: &[String]) {
+    let table = content.weapon_skills();
+    let rows: Vec<_> = match skills.is_empty() {
+        true => (table.ids())
+            .filter(|(_, s)| s.role != Role::School && !s.hidden)
+            .map(|(id, _)| id)
+            .collect(),
+        false => skills.iter().filter_map(|s| table.id(s)).collect(),
+    };
+    for id in rows {
+        actor.weapon_skills.raise_to(table, id, to);
+    }
+}
+
+/// What the hand-outs of rank `rank` of `def` say as a class table gives it (Travelled hands:
+/// one line, never one per skill).
+fn handed_news(def: &TalentDef, rank: u8) -> Vec<String> {
+    (def.effects_at(rank))
+        .filter_map(|e| match e {
+            TalentEffect::WeaponRanks { news, .. } => news,
+            _ => None,
+        })
+        .collect()
 }
 
 /// Gives `actor` the talents `class` (an id; none without a class) gives up to `level` that it
@@ -103,8 +136,9 @@ impl World {
         focus::hold(&content, self.player_mut(), &grants, level);
         if news {
             for id in given {
-                self.news
-                    .push(format!("You gain {}.", content.talents().get(id).name));
+                let def = content.talents().get(id);
+                self.news.push(format!("You gain {}.", def.name));
+                self.news.extend(handed_news(def, 1));
             }
         }
     }

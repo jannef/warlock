@@ -1230,7 +1230,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
     2 lower, never below 3; and its finisher, an active aimed in a direction, `use:master_thief:E`,
     for 5 openings: a melee blow that is a critical whenever it hits, with no confirmation roll,
-    `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Fast healer
+    `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Travelled hands
+    (the bard's at 6, in Blessing's place, #871: a hand-out once, `weapon_ranks { to = 1 }`:
+    every weapon skill and fighting style the bard holds at rank 0, whatever rows the content
+    has, but the schools of magic and hidden styles, rises to rank 1 by
+    `WeaponSkills::raise_to`, its defaults with it; "Your hands know every weapon a little.";
+    the optional `skills` names the rows instead, for a later class's trade); Fast healer
     (the Vigour talent, given at 12; its copy Song of rest until #790: resting heals half again
     as fast), Jack of all trades (every trained skill counts 5
     higher, as a skill bonus in `Actor::skill_effect`), Virtuoso (Inspire gives Inspired greatly, to

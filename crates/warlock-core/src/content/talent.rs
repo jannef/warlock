@@ -402,6 +402,18 @@ pub enum TalentEffect {
     /// by them if trained already: rolled once, from the `levels` stream, as the rank is taken
     /// (Apprentice).
     TrainSkill { dice: crate::dice::Dice },
+    /// Handed out once, as the rank is taken or given: every weapon skill and style of
+    /// `skills` (none named: every row of `weapon_skills.toml` but the schools of magic and
+    /// hidden styles, whatever the content holds) held below rank `to` rises to it, its defaults
+    /// with it (Travelled hands; `WeaponSkills::raise_to`). `news` is said when a class table
+    /// gives it.
+    WeaponRanks {
+        to: u8,
+        #[serde(default)]
+        skills: Vec<String>,
+        #[serde(default)]
+        news: Option<String>,
+    },
     /// Loot it finds (what generated levels hold, what creatures drop) rolls magic and rare this
     /// percent more often: their rarity weights (Treasure hunter).
     LootMagicPercent { value: i32 },
@@ -1148,6 +1160,7 @@ impl TalentEffect {
                     | TalentEffect::SpellMod(_)
                     | TalentEffect::WeaponStamina { .. }
                     | TalentEffect::TrainSkill { .. }
+                    | TalentEffect::WeaponRanks { .. }
                     | TalentEffect::ExtraPick { .. }
                     | TalentEffect::StartingGold { .. }
                     | TalentEffect::StartingGems { .. }
@@ -1433,6 +1446,19 @@ impl TalentEffect {
                     "`train_skill` is for the chosen skill: it needs `choice = \"skill\"`".into(),
                 ),
             },
+            TalentEffect::WeaponRanks { to, skills, .. } => {
+                if !(1..=super::MAX_RANK).contains(to) {
+                    return Err(format!("`weapon_ranks`: to is 1 to {}", super::MAX_RANK));
+                }
+                let table = content.weapon_skills();
+                match skills
+                    .iter()
+                    .find(|s| !table.is_empty() && table.id(s).is_none())
+                {
+                    Some(id) => Err(format!("names an unknown weapon skill `{id}`")),
+                    None => Ok(()),
+                }
+            }
             TalentEffect::ScrollKept { chance } => {
                 if !(1..=100).contains(chance) {
                     return Err("`scroll_kept`: chance is 1 to 100".into());
@@ -3410,6 +3436,11 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
                 .contains("`ranks = 2` but 1")
         );
         assert!(bad("").contains("does nothing"));
+        assert!(bad("effects = [{ kind = \"weapon_ranks\", to = 0 }]").contains("to is 1 to"));
+        assert!(
+            bad("effects = [{ kind = \"weapon_ranks\", to = 1, skills = [\"x\"] }]")
+                .contains("unknown weapon skill `x`")
+        );
         assert!(
             bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { either = { level = 3 } }")
                 .contains("fewer than two")

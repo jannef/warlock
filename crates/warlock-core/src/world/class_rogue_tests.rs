@@ -8,7 +8,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Strike};
-use crate::content::{ClassActive, Factor};
+use crate::content::{ClassActive, ContentFiles, Factor, Role};
 use crate::dump::{self, Layer};
 use crate::noise::{self, Act};
 use crate::replay::Replay;
@@ -156,9 +156,83 @@ fn the_three_tables_come_with_the_levels() {
     let mut b = world("bard");
     assert_eq!(class_rows(&b), ["Mend", "Trained wind"]);
     reach(&mut b, 6);
-    assert_eq!(class_rows(&b), ["Mend", "Trained wind", "Blessing"]);
+    assert_eq!(class_rows(&b), ["Mend", "Trained wind", "Travelled hands"]);
     let restored = World::from_state(b.content().clone(), b.state().clone()).expect("restored");
     assert_eq!(class_rows(&restored), class_rows(&b));
+}
+
+#[test]
+fn travelled_hands_raises_every_weapon_skill_and_style_held_at_nothing_to_one() {
+    let mut b = world("bard");
+    let content = b.content().clone();
+    let table = content.weapon_skills();
+    let rank = |w: &World, id: &str| w.state.player().weapon_skills.rank(table.id(id).expect(id));
+    // The bard starts in short blades and Duelist, nothing else of a fighter's.
+    let held = |w: &World| -> Vec<u8> {
+        (table.ids())
+            .map(|(id, _)| w.state.player().weapon_skills.rank(id))
+            .collect()
+    };
+    let before = held(&b);
+    assert_eq!(rank(&b, "long_blades"), 0);
+    assert_eq!(rank(&b, "marksman"), 0);
+    reach(&mut b, 5);
+    assert_eq!(held(&b), before, "nothing before level 6");
+    reach(&mut b, 6);
+    for ((id, skill), was) in table.ids().zip(&before) {
+        let now = b.state.player().weapon_skills.rank(id);
+        let left = skill.role == Role::School || skill.hidden;
+        match left {
+            // The schools of magic and hidden styles (Two Shields) are no weapon.
+            true => assert_eq!(now, *was, "{} untouched", skill.id),
+            // Every other row at 1 at least; a rank held already is untouched.
+            false => assert_eq!(now, (*was).max(1), "{}", skill.id),
+        }
+    }
+    assert_eq!(rank(&b, "two_shields"), 0);
+    assert!(said(&b).contains(&"You gain Travelled hands.".to_string()));
+    assert!(said(&b).contains(&"Your hands know every weapon a little.".to_string()));
+    // Blessing is no longer the bard's: a priest's spell.
+    assert!(!b.state.player().talents.has("blessing", 1));
+    // The rank is real: a restored run keeps it, and marks carry it on.
+    let restored = World::from_state(content.clone(), b.state().clone()).expect("restored");
+    assert_eq!(rank(&restored, "long_blades"), 1);
+}
+
+#[test]
+fn weapon_ranks_walks_the_content_or_the_rows_it_names() {
+    // A weapon skill the content adds later is the bard's too: the hand-out reads the table.
+    let mut files = ContentFiles::builtin();
+    files.edit_table("weapon_skills", |text| {
+        format!(
+            "{text}\n[[skill]]\nid = \"flails\"\nname = \"Flails\"\nphrase = \"with flails\"\n\
+             role = \"melee\"\ncurve = \"melee\"\nto_hit = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]\n"
+        )
+    });
+    // And a hand-out that names its rows (the Hunter's trade, later) raises only those.
+    files.insert(
+        "data/talents/fixture_trade.toml",
+        "[[talent]]\nid = \"fixture_trade\"\nname = \"Trade\"\ntree = \"class\"\n\
+         granted = true\ndescription = \"x\"\nsystems = [\"weapon_skills\"]\n\
+         effects = [{ kind = \"weapon_ranks\", to = 3, skills = [\"bows\", \"duelist\"] }]\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    let table = content.weapon_skills();
+    let state = world("bard").state().clone();
+    let mut b = World::from_state(content.clone(), state).expect("restores");
+    let flails = table.id("flails").expect("flails");
+    reach(&mut b, 6);
+    assert_eq!(b.state.player().weapon_skills.rank(flails), 1);
+    let mut actor = b.state.player().clone();
+    actor.weapon_skills = Default::default();
+    let book = content.talents();
+    let trade = book.get(book.id("fixture_trade").expect("the fixture"));
+    super::class::hand_out(&content, &mut actor, trade, 1, 1);
+    let ranked: Vec<&str> = (actor.weapon_skills.trained())
+        .filter(|(_, t)| t.rank == 3)
+        .map(|(id, _)| table.skill(id).id.as_str())
+        .collect();
+    assert_eq!(ranked, ["bows", "duelist"]);
 }
 
 #[test]

@@ -709,6 +709,21 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "the chosen skill trained at {dice}, or raised by {dice} if trained (rolled as the \
              rank is taken)"
         ),
+        TalentEffect::WeaponRanks { to, skills, .. } if skills.is_empty() => format!(
+            "every [weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) \
+             (not the schools of magic or a hidden style) below rank {to} rises to rank {to}, \
+             once, as it is given"
+        ),
+        TalentEffect::WeaponRanks { to, skills, .. } => {
+            let table = content.weapon_skills();
+            let names: Vec<String> = (skills.iter())
+                .filter_map(|s| table.id(s).map(|id| table.skill(id).name.clone()))
+                .collect();
+            format!(
+                "{} below rank {to} rise to rank {to}, once, as it is given",
+                names.join(", ")
+            )
+        }
         TalentEffect::StartingGold {
             percent,
             at_least,

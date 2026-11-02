@@ -188,6 +188,7 @@ wiki's effect text appends "while raging".
 | `small_target` | `World::small_target` (`world/racial.rs`) |
 | `launcher_range { skill }` | `Actor::launcher_range` through `TalentMods::launcher_range_for` (the launcher's `skill` id) |
 | `train_skill` | handed out, not read: `take_talent` → `train_chosen` rolls the dice from `levels_rng` into the chosen skill (`Skills::add`: trained at the roll, or raised by it) |
+| `weapon_ranks` | handed out, not read: `class::hand_out` (`raise_ranks`) raises every row of `skills` (none named: every weapon skill and style of the content but schools and hidden styles, read from the table, never a list) held below `to` to it, `WeaponSkills::raise_to` (defaults with it); its `news` said by `grant_class` (Travelled hands, the bard's) |
 | `ignore_burdened` | `burden::load` (`Load::ignores_burdened`, as a dwarf's) |
 | `no_bloating`, `corpse_stats_percent` | `eat.rs`: `feed` (nutrition stops one below Bloated, nothing overeats) and `corpse_gifts` (a corpse's `train` marks and `widen` chances scaled, the chance at most 100) |
 | `step_slowdown_percent` | `World::step_price` → `slowed` (the burden's ease and `bloated`'s slowdown, steps only) |
