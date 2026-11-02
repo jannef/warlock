@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content.clone())"
+---
+ Welcome to World. Press ? for controls.
+ You spot a band of kobolds on the road ahead. They have not seen you.
+
+
+
+
+
+
+
+                             ┌─ A band of kobolds ────────────────────┐
+                             │                                        │
+                             │ You spot a band of kobolds on the road │
+                             │     ahead. They have not seen you.     │
+                             │                                        │
+                             │           > Lie in wait                │
+                             │             Slip past                  │
+                             │             Stand and fight            │
+                             │                                        │
+                             │ ↑/↓ choose  Enter select               │
+                             └────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  Clear        ? controls

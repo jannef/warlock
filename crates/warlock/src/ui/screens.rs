@@ -800,8 +800,13 @@ impl ScreenStack {
     }
 
     /// Whether the death screen is open.
-    fn shows_death(&self) -> bool {
+    pub(super) fn shows_death(&self) -> bool {
         (self.screens.iter()).any(|s| matches!(s, Screen::Death(_)))
+    }
+
+    /// Whether a dialog that must be answered is open (an overworld encounter's).
+    pub(super) fn asks_required(&self) -> bool {
+        (self.screens.iter()).any(|s| matches!(s, Screen::Dialog(d) if d.must_answer()))
     }
 }
 

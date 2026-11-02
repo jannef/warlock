@@ -9,7 +9,8 @@
 //! Keys: the menu keys move the selection (↑/↓, ←/→) and Enter takes it; the `Context::Dialog`
 //! commands Yes and No (`y` and `n` by default; rebindable, in a context of their own because
 //! `y` and `n` move the player in play) pick the option whose role is Accept, and Decline (else
-//! Cancel); Esc picks the Cancel option (else Decline), or closes the dialog if there is none.
+//! Cancel); Esc picks the Cancel option (else Decline), or closes the dialog if there is none;
+//! a dialog that must be answered ([`Dialog::required`]: an overworld encounter) ignores Esc.
 //! The safe option (Cancel, else Decline) is selected at first. Each option shows its shortcut
 //! keys. A held key's repeats never answer (`ScreenStack::handle`).
 
@@ -48,6 +49,8 @@ pub struct Dialog {
     pub title: String,
     pub text: String,
     pub options: Vec<Choice>,
+    /// It must be answered: Esc does nothing (an overworld encounter, the owner, #796 Q9).
+    pub required: bool,
 }
 
 /// The widest the question is wrapped to.
@@ -60,7 +63,14 @@ impl Dialog {
             title: title.into(),
             text: text.into(),
             options: Vec::new(),
+            required: false,
         }
+    }
+
+    /// Makes it a question that must be answered: Esc does nothing, and only an option closes it.
+    pub fn required(mut self) -> Self {
+        self.required = true;
+        self
     }
 
     /// Adds an option.
@@ -158,6 +168,11 @@ impl DialogScreen {
         Self { dialog, selected }
     }
 
+    /// Whether it must be answered ([`Dialog::required`]).
+    pub fn must_answer(&self) -> bool {
+        self.dialog.required
+    }
+
     pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
         let pick = |i: Option<usize>| {
             i.and_then(|i| self.dialog.options.get(i))
@@ -168,6 +183,7 @@ impl DialogScreen {
         match (shortcut, press.nav) {
             (Some(KeyCommand::Yes), _) => pick(self.dialog.by_role(Role::Accept)),
             (Some(KeyCommand::No), _) => pick(self.dialog.by_role(Role::Decline)),
+            (_, Nav::Back) if self.dialog.required => None,
             (_, Nav::Back) => pick(self.dialog.by_role(Role::Cancel)).or(Some(ScreenAction::Close)),
             (_, Nav::Enter) => pick(Some(self.selected)).or(Some(ScreenAction::Close)),
             (_, Nav::Up | Nav::Left) if count > 0 => {
@@ -288,6 +304,22 @@ mod tests {
         let mut s = DialogScreen::new(quit());
         assert_eq!(s.handle(&key("q"), &b), ScreenAction::Stay);
         assert_eq!(s.handle(&key("1"), &b), ScreenAction::Stay);
+    }
+
+    #[test]
+    fn a_required_dialog_ignores_esc_and_is_answered_by_an_option() {
+        let b = Bindings::default();
+        let dialog = Dialog::new("Kobolds", "They have not seen you.")
+            .plain("Lie in wait", MenuChoice::Quit)
+            .plain("Stand and fight", MenuChoice::SaveToMenu)
+            .required();
+        let mut s = DialogScreen::new(dialog);
+        assert_eq!(s.handle(&Press::nav(Nav::Back), &b), ScreenAction::Stay);
+        assert_eq!(s.handle(&key("n"), &b), ScreenAction::Stay);
+        assert_eq!(
+            s.handle(&Press::nav(Nav::Enter), &b),
+            ScreenAction::Choose(MenuChoice::Quit)
+        );
     }
 
     #[test]

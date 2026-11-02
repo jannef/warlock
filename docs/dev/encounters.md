@@ -116,6 +116,15 @@ action and never saved.
 cell); the `truth` layer's `encounter rate here N bp/h, tables: ...` on the overworld of a
 campaign with tables; the `actors` layer's `of encounter ID`.
 
+The app (`crates/warlock/src/ui/encounter.rs`, #805): `on_encounter` opens the one dialog
+(`Dialog`, `docs/dev/screens.md`) from the view whenever the run changed with an encounter
+pending and no such dialog open: after the step that met them and on load. Its title and text
+are the view's (the known line included), a plain row per choice sending `Action::Encounter`;
+`Dialog::required`: Esc does nothing and no info page opens over it (the owner, Q9; the
+design's §5.3 Esc and info screens first are overridden). It runs before `on_level_up`, so a
+level's picks, which `refuse_due` asks first, show over it. The messages are the core's `say`s
+(the dialog's text is also the message line's). No new `KeyCommand`.
+
 ## Tests
 
 `content/encounter_tests.rs` (the shipped file, the all-or-none tables, ranges, a fixture table,
@@ -123,4 +132,7 @@ each refusal); `world/encounter_tests.rs` (no draws without tables or while pend
 roll, the choices by outcome, pass by makes nothing, the positions and awareness by outcome and
 their order from the edge, the ambushing party unaware and in debt, the ambushed player
 startled once, evade both ways, the known party, a save mid-question, replays through every
-outcome, the dumps); `magic/tests.rs::skill_reader` names `encounter.rs` for the three benefits.
+outcome, the dumps); `magic/tests.rs::skill_reader` names `encounter.rs` for the three benefits. The app:
+`ui/screen_snapshots.rs::encounters_as_text` (`encounter-drop`, with Esc and `1` pressed over it,
+`encounter-met`, `encounter-peaceful`, `encounter-wildlife`, on a fixture table, the dialog as a
+load opens it) and `an_encounter_row_answers_it`; `dialog_screen.rs`'s required dialog.

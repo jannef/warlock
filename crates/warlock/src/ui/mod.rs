@@ -37,6 +37,7 @@ mod dev;
 mod dialog_screen;
 mod dialogue_screen;
 mod effects;
+mod encounter;
 mod equipment_screen;
 mod files_screen;
 mod glyphs;
@@ -175,6 +176,7 @@ impl Plugin for UiPlugin {
                         screens::on_run_start,
                         screens::converse,
                         screens::on_death,
+                        encounter::on_encounter,
                         screens::on_level_up,
                     )
                         .chain()

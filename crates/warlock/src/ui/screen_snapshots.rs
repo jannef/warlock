@@ -1151,6 +1151,79 @@ fn quest_refused_as_too_early() {
     insta::assert_snapshot!(case.name, render(&case, content));
 }
 
+/// The built-in content with an encounter table in the showcase campaign (which ships none):
+/// kobolds (hostile), deer (wildlife), and the hermit (peaceful), met by the dev `meet`.
+fn encounter_content() -> Arc<Content> {
+    const TABLE: &str = r#"
+[[table]]
+id = "wilds"
+[[table.entry]]
+id = "kobolds"
+name = "a band of kobolds"
+weight = 1
+group = [{ creature = "kobold", count = "3" }]
+[[table.entry]]
+id = "deer"
+name = "a herd of deer"
+weight = 1
+stance = "wildlife"
+group = [{ creature = "deer", count = "2" }]
+[[table.entry]]
+id = "hermit"
+name = "a hermit"
+weight = 1
+stance = "peaceful"
+group = [{ creature = "hermit", count = "1" }]
+"#;
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    files.insert("campaigns/showcase/data/encounters/test.toml", TABLE);
+    Arc::new(Content::load(&files).expect("content"))
+}
+
+/// The encounter dialog (#805) over the overworld beside the Hall, as each outcome asks it.
+/// Esc and an info page's number do nothing over it: it must be answered (the owner, #796 Q9).
+#[test]
+fn encounters_as_text() {
+    let content = encounter_content();
+    let cases = [
+        ("encounter-drop", "meet:kobolds:drop", "Esc 1"),
+        ("encounter-met", "meet:kobolds:met", ""),
+        ("encounter-peaceful", "meet:hermit", ""),
+        ("encounter-wildlife", "meet:deer", ""),
+    ];
+    for (name, actions, keys) in cases {
+        let case = Case {
+            name,
+            scenario: "world",
+            actions,
+            keys: Some(keys),
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
+}
+
+/// A row of the dialog answers the encounter: the dialog closes and the world has no question
+/// left; the area opens for a fight.
+#[test]
+fn an_encounter_row_answers_it() {
+    let case = Case {
+        scenario: "world",
+        actions: "meet:kobolds:met",
+        ..BASE
+    };
+    let mut app = start(&case, encounter_content());
+    assert!(app.world().resource::<ScreenStack>().asks_required());
+    press_keys(&mut app, "Down Enter");
+    assert!(!app.world().resource::<ScreenStack>().asks_required());
+    let game = app.world().resource::<Game>();
+    assert!(game.world.perception().encounter().is_none());
+    assert_eq!(
+        game.world.messages().iter().last().map(|m| m.text.as_str()),
+        Some("You stand your ground.")
+    );
+}
+
 /// The UI console's text once `case` has started and its keys were pressed: one line a row,
 /// trailing blanks trimmed.
 fn render(case: &Case, content: Arc<Content>) -> String {
@@ -1228,6 +1301,7 @@ pub(super) fn start(case: &Case, content: Arc<Content>) -> App {
                     screens::on_run_start,
                     screens::converse,
                     screens::on_death,
+                    encounter::on_encounter,
                     screens::on_level_up,
                     more::wait,
                 )

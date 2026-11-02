@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content.clone())"
+---
+ Welcome to World. Press ? for controls.
+ You come upon a herd of deer.
+
+
+
+
+
+
+
+
+                                 ┌─ A herd of deer ──────────────┐
+                                 │                               │
+                                 │ You come upon a herd of deer. │
+                                 │                               │
+                                 │         > Hunt them           │
+                                 │           Let them be         │
+                                 │                               │
+                                 │ ↑/↓ choose  Enter select      │
+                                 └───────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+ The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  Clear        ? controls

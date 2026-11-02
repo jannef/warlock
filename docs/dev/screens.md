@@ -84,13 +84,18 @@ to open, read keys for, or draw one:
   a column, each with its shortcut keys. Keys: the menu keys move the selection, Enter takes it;
   the `Context::Dialog` commands `KeyCommand::Yes`/`No` (`y`/`n` by default, rebindable, in their
   own context) pick the Accept option and the Decline
-  option (else Cancel); Esc picks Cancel (else Decline; else closes); the safe option (Cancel,
+  option (else Cancel); Esc picks Cancel (else Decline; else closes), except in a dialog that must
+  be answered (`Dialog::required`), where Esc does nothing; the safe option (Cancel,
   else Decline) is selected first. A menu choice pops the dialog and is applied as usual, an
   action closes it and is applied (`play.act`, which may answer with a dialog of its own: the
   sell offer), a follow-up dialog replaces it (`ScreenStack::handle`). Users: every quit path
   (`menu::quit_dialog(saving)` for the pause and main menu Quit and a bound `KeyCommand::Quit`,
   `save_to_menu_dialog`), the step onto a known trap (`input::trap_dialog`, spec §8 "Traps"), a burst
-  read so close it may catch the player (`input::burst_dialog`, spec §8 "Scrolls"), and the shop (`input.rs`: `leaving_dialog`, `sale_dialog`; spec §7 "Shops"). **A new
+  read so close it may catch the player (`input::burst_dialog`, spec §8 "Scrolls"), the shop (`input.rs`: `leaving_dialog`, `sale_dialog`; spec §7 "Shops"), and the overworld
+  encounter (`ui/encounter.rs`: `on_encounter`, after `on_death` and before `on_level_up`, opens
+  `dialog(view)` from `PerceptionView::encounter()` whenever the run changed with one pending and
+  none is open, so after the step and on load; a plain row per choice, `Action::Encounter`;
+  `required`: no Esc, no info page over it, the owner's #796 Q9; `docs/dev/encounters.md`). **A new
   question is a `Dialog` value at its call site**, e.g. `Dialog::yes_no("Quest", text,
   "Accept", Action::.., "Not now")` returned as `ScreenAction::Dialog`, with no screen, prompt,
   `InputMode`, or key handling of its own (quests are given through dialogue topics, which
