@@ -110,32 +110,35 @@ pub(super) fn list(content: &Content) -> String {
     out
 }
 
-/// The spell circles' runes (`data/runes.toml`): each buff's and hex's rune, the spell and the
-/// status it marks, and its school's colour; buffs first, then hexes, each by spell name.
-pub(super) fn runes(content: &Content) -> String {
-    let mut rows: Vec<(bool, &SpellData, &warlock_core::content::RuneDef)> = (content.spells())
-        .iter()
-        .filter(|s| matches!(s.kind, SpellPurpose::Buff | SpellPurpose::Hex))
-        .filter_map(|s| {
-            let (status, _) = s.effect.status?;
-            Some((s.kind == SpellPurpose::Hex, s, content.runes().of(status)?))
-        })
-        .collect();
+/// The spell circles' statuses (`data/circles.toml`): each buff's and hex's spell, the status it
+/// marks, and its school's colour; buffs first, then hexes, each by spell name.
+pub(super) fn circles(content: &Content) -> String {
+    let mut rows: Vec<(bool, &SpellData, &warlock_core::content::CircledStatus)> = (content
+        .spells())
+    .iter()
+    .filter(|s| matches!(s.kind, SpellPurpose::Buff | SpellPurpose::Hex))
+    .filter_map(|s| {
+        let (status, _) = s.effect.status?;
+        Some((
+            s.kind == SpellPurpose::Hex,
+            s,
+            content.circles().of(status)?,
+        ))
+    })
+    .collect();
     rows.sort_by(|a, b| (a.0, &a.1.name).cmp(&(b.0, &b.1.name)));
-    let mut out = String::from(
-        "| Rune | Spell | Kind | Status | School | Colour |\n|:---:|---|---|---|---|---|\n",
-    );
-    for (hex, spell, rune) in rows {
-        let status = content.status(rune.status);
+    let mut out =
+        String::from("| Spell | Kind | Status | School | Colour |\n|---|---|---|---|---|\n");
+    for (hex, spell, row) in rows {
+        let status = content.status(row.status);
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} | {} | `{}` |",
-            rune.rune,
+            "| {} | {} | {} | {} | `{}` |",
             link(Term::Spell, &spell.id, &spell.name),
             if hex { "hex" } else { "buff" },
             link(Term::Status, &status.id, &status.name),
-            link(Term::School, rune.school.id(), rune.school.id()),
-            content.runes().color(rune.school),
+            link(Term::School, row.school.id(), row.school.id()),
+            content.circles().color(row.school),
         );
     }
     out

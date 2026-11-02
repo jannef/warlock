@@ -15,6 +15,7 @@ mod background;
 mod calendar;
 mod campaign;
 mod chest;
+mod circles;
 mod class;
 mod creature;
 #[cfg(test)]
@@ -109,7 +110,6 @@ mod room_treasury;
 mod room_treasury_tests;
 #[cfg(test)]
 mod room_warp_tests;
-mod runes;
 mod scenario;
 mod scroll;
 mod scroll_label;
@@ -166,6 +166,7 @@ pub use background::{
 pub use calendar::Calendar;
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 pub use chest::{ChestBand, ChestGold, ChestLoot, ChestRules};
+pub use circles::{CircleStatuses, CircledStatus, school_index};
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
 pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
@@ -257,7 +258,6 @@ pub use room_lore::RoomLoot;
 pub use room_shrine::{Regard, Shrine};
 pub(crate) use room_treasury::breach_fault;
 pub use room_treasury::{Heaps, MAX_COINS_EACH, MAX_TREASURE, Sealed, SecretDoors, Treasury};
-pub use runes::{RuneDef, Runes, school_index};
 pub use scenario::ScenarioDef;
 pub use scroll::{Reading, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
@@ -675,9 +675,9 @@ pub struct Content {
     background: Option<Background>,
     /// Spell effects, in `data/effects.toml` order: presentation only.
     effects: Vec<EffectDef>,
-    /// Spell circles' runes (`data/runes.toml`): a runed status sheds its school's light, so the
+    /// Spell circles' statuses (`data/circles.toml`): a circled status sheds its school's light, so the
     /// rows' statuses and schools are fingerprinted.
-    runes: Runes,
+    circles: CircleStatuses,
     hunger: Option<HungerDef>,
     /// The corpse object of each creature type, by creature id (`None`: it leaves none).
     corpses: Vec<Option<ObjectId>>,
@@ -804,7 +804,7 @@ impl Content {
             horoscope: None,
             background: None,
             effects: Vec::new(),
-            runes: Runes::default(),
+            circles: CircleStatuses::default(),
             hunger: None,
             corpses: Vec::new(),
             weapon_skills: WeaponSkillTable::default(),
@@ -1044,11 +1044,11 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.effects = effect::parse(path, text)?;
         }
-        // Spell circles' runes name statuses and the spells that lay them.
-        let path = "data/runes.toml";
+        // Spell circles name statuses and the spells that lay them.
+        let path = "data/circles.toml";
         if let Some(text) = files.get_optional(path) {
-            content.runes = runes::parse(path, text, &content)?;
-            runes::shed_lights(&mut content);
+            content.circles = circles::parse(path, text, &content)?;
+            circles::shed_lights(&mut content);
         }
         scroll::check_spells(&content).map_err(|m| ContentError::new("data/objects", m))?;
         talent::check_heirlooms(&content).map_err(|m| ContentError::new("data/talents", m))?;
@@ -2651,8 +2651,8 @@ impl Content {
                 .map(|a| a.id.as_str())
                 .collect(),
             self.statuses.iter().map(|s| s.id.as_str()).collect(),
-            // A runed status sheds its school's light (`data/runes.toml`).
-            (self.runes.rows().iter())
+            // A circled status sheds its school's light (`data/circles.toml`).
+            (self.circles.rows().iter())
                 .flat_map(|r| [self.status(r.status).id.as_str(), r.school.id()])
                 .collect(),
             self.diseases.iter().map(|d| d.id.as_str()).collect(),
@@ -3620,10 +3620,10 @@ impl Content {
         &self.effects
     }
 
-    /// The spell circles' runes of `data/runes.toml` (none without the file). The renderer draws
-    /// them; the one rule they make, a runed status's light, is in its `StatusDef::light`.
-    pub fn runes(&self) -> &Runes {
-        &self.runes
+    /// The spell circles' statuses of `data/circles.toml` (none without the file). The renderer draws
+    /// their circles; the one rule they make, a circled status's light, is in its `StatusDef::light`.
+    pub fn circles(&self) -> &CircleStatuses {
+        &self.circles
     }
 
     /// The spell effect with id `id`.

@@ -103,6 +103,22 @@ difference of two best-of-five runs, whose noise is of the budget's size).
 The circles' CPU part is an `O(circles)` loop a frame plus one mesh of a quad each; the GPU part
 is one draw of fifty small quads. Within the budget at both sizes.
 
+After #786 (the per-cell masks, crowding, backdrop, halo, tidal lock, and pulse; 2026-11-01,
+same machine, runs alternated with main's): fifty circles cost 0.080 and 0.081 ms at 2560x1440
+against main's 0.056 and 0.053 (budget 0.2 ms). A single pair can mislead: one run of main
+printed -0.115 ms. The runes' masks and crowding are worked out on the CPU (`O(circles²)`, with
+far pairs skipped at once), so the shader reads one byte a rune. A first cut that masked every
+rune in the shader (twenty texel loads a pixel) and changed the material's uniform every frame
+cost 0.30 ms.
+
+After C5 (#786: no backdrop, the rings' glow, glints, the circled glyphs' glow and glints in a
+second pass over the free glyphs; 2026-11-02, an M5 Pro): fifty circles cost 0.084 ms at
+2560x1440, as C4's 0.080 within the noise (budget 0.2 ms). The runes were then dropped (the
+owner, #797): the shader does strictly less per pixel (no rune loop, no atlas taps but the
+glyph's) and the CPU no masks or crowding. Two runs after it on the same machine under a load
+average of 20 to 30 (other builds) printed 0.247 and 0.225 ms, with the hub row itself swinging
+from 0.97 to 1.54 ms: not a measurement; rerun on an idle machine.
+
 Visual light skip (#785, 2026-11-02, same machine, load average 8 to 49 from other builds):
 `lighting::update` skips a frame whose composite would repeat the last (docs/dev/rendering.md).
 `bench-frames` has a `steady` row, the hub with the Flicker switch off. `lighting::update` alone,

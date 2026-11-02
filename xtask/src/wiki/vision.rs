@@ -113,8 +113,8 @@ fn light_name(content: &Content, id: LightId) -> String {
     if !tended.is_empty() {
         return format!("Your lantern ({})", tended.join(", "));
     }
-    // A spell circle's (spec §4.8): every runed status of a school sheds it, on anyone.
-    let circled: Vec<&str> = (content.runes().rows().iter())
+    // A spell circle's (spec §4.8): every circled status of a school sheds it, on anyone.
+    let circled: Vec<&str> = (content.circles().rows().iter())
         .filter(|r| content.status(r.status).light == Some(id))
         .map(|r| content.status(r.status).name.as_str())
         .collect();

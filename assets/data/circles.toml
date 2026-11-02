@@ -1,0 +1,94 @@
+# Spell circles (spec §4.8 "Spell circles", docs/design/buff-circles.md): the school of every
+# buff's and hex's status, and each school's colour. The renderer draws a circle about every actor
+# the player sees with a circled status, in its first effect's school's colour. One rule reads it
+# (spec §8 "Status effects"): a circled status without a light of its own sheds its school's,
+# `circle_<school>` in lights.toml, so the rows' statuses and schools are in the content
+# fingerprint.
+#
+# [[school]]   one row per school of magic (data/spells: `school`)
+#   id         the school
+#   color      its colour, "#rrggbb", through the palette as every content colour is; the school
+#              must have a light `circle_<id>` in lights.toml
+#
+# [[status]]   one row per circled status; every `kind = "buff"` or `"hex"` spell's status has one
+#   status     an id in data/status.toml; it must have `seen` (others see it on a creature)
+#   school     the school whose colour it is drawn in
+#
+# Rows are in no particular order: a circle orders its effects by status order (data/status.toml).
+
+[[school]]
+id = "evocation"
+color = "#e0803c"
+
+[[school]]
+id = "necromancy"
+color = "#a48cc8"
+
+[[school]]
+id = "abjuration"
+color = "#80b4e0"
+
+[[school]]
+id = "restoration"
+color = "#e0c060"
+
+[[school]]
+id = "transmutation"
+color = "#78c478"
+
+[[school]]
+id = "enchantment"
+color = "#d07ab0"
+
+[[school]]
+id = "divination"
+color = "#d8d8e8"
+
+# Buffs.
+
+# Light.
+[[status]]
+status = "lit"
+school = "evocation"
+
+# Haste.
+[[status]]
+status = "hasted"
+school = "transmutation"
+
+# Barkskin.
+[[status]]
+status = "barkskin"
+school = "transmutation"
+
+# Blessing.
+[[status]]
+status = "blessed"
+school = "abjuration"
+
+# Hexes.
+
+# Evil eye.
+[[status]]
+status = "ill_wished"
+school = "enchantment"
+
+# Hex of weakness.
+[[status]]
+status = "weakened"
+school = "necromancy"
+
+# Curse of sloth.
+[[status]]
+status = "sluggish"
+school = "transmutation"
+
+# Sleep.
+[[status]]
+status = "drowsy"
+school = "enchantment"
+
+# Web.
+[[status]]
+status = "webbed"
+school = "transmutation"

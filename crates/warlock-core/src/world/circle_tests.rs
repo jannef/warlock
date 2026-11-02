@@ -1,7 +1,7 @@
 //! The spell circles' test scenario (spec §4.8 "Spell circles", docs/design/buff-circles.md §13):
 //! a scenario's `spells` are known from the start, a spawn's `status` is on the creature, and
 //! what the circles are drawn from shows in perception. And the circle's light (spec §8 "Status
-//! effects", the design's §8): a runed status sheds its school's faint light.
+//! effects", the design's §8): a circled status sheds its school's faint light.
 
 use super::*;
 use crate::action::parse_actions;
@@ -24,9 +24,9 @@ fn the_scenario_knows_every_buff_and_hex_spell() {
     let world = circles();
     let player = world.state.player();
     for spell in CONTENT.spells() {
-        let runed = matches!(spell.kind, SpellPurpose::Buff | SpellPurpose::Hex);
+        let circled = matches!(spell.kind, SpellPurpose::Buff | SpellPurpose::Hex);
         let id = CONTENT.spell_id(&spell.id).unwrap();
-        assert_eq!(player.knows_spell(&CONTENT, id), runed, "{}", spell.id);
+        assert_eq!(player.knows_spell(&CONTENT, id), circled, "{}", spell.id);
     }
     assert!(
         player.max_mana(&CONTENT) >= 300,
@@ -158,7 +158,7 @@ fn low_light_eyes_see_a_cell_away_and_uv_eyes_plainly() {
 }
 
 #[test]
-fn several_runed_statuses_shed_one_light_the_first_in_status_order() {
+fn several_circled_statuses_shed_one_light_the_first_in_status_order() {
     let world = circles();
     // Blessed, hasted, bark-skinned: one light, of the first.
     let m = actor_at(&world, Pos::new(19, 8));

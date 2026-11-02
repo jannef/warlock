@@ -288,27 +288,32 @@ least 1); *[Frugal caster](talents.md#talent-frugal-caster)* then takes its fift
 
 Everyone you see who has a buff or a hex on them (a [status](status-effects.md) laid by one of
 the spells below, or the same status from anywhere else: a [potion of quickness](potions.md#potion-of-quickness)
-hastes you as [Haste](#spell-haste) does) has a thin circle of runes turning slowly about them.
+hastes you as [Haste](#spell-haste) does) has a thin circle turning slowly about them.
 It says no more than the [status bar](controls.md#the-screen) and [look mode](controls.md#look-mode)
-do: which buffs and hexes, never how strong or for how long.
+do: which kinds of magic, never how strong or for how long.
 
-- **Each spell has a rune**, one character, drawn in the colour of its [school](schools.md).
-- **The runes sit at the corners of a figure**, repeated so that there are always at least three:
-  one effect is a triangle of its rune, two a square of both in turn (`A B A B`), three a
-  triangle `A B C`, four a square, five a pentagon, six a hexagon. A seventh has no rune.
+- **A figure inside the rings**: one effect is a triangle, two a square, three a triangle again,
+  four a square, five a pentagon, six a hexagon. A seventh changes nothing.
 - **One thin ring per effect**, three at most: one ring is one effect, two rings two, three rings
-  three or more (count the different runes then).
+  three or more.
 - **Buffs are whole and turn clockwise**, a turn a minute. **Hexes are broken** (dashed rings and
   sides) **and turn the other way**, a turn in 45 seconds. Someone with both has the buffs' circle
   inside and the hexes' around it.
-- The runes go in the order the status bar lists the statuses, so the same buffs always make the
-  same figure.
+- **The colour** is the [school](schools.md) of the first effect in the order the status bar
+  lists them. The rings have a faint glow of their colour, and so does the glyph of whoever wears
+  the circle (in its rings' colour, the buffs' if they have both). Now and then a tiny glint
+  flashes on the wearer's glyph (two beats, every 5.3 and 7.1 seconds, each showing for about a
+  tenth of it), and a soft brighter arc runs round each ring (every 7 seconds).
+- **A circle keeps to what you see**: its rings show only over floor you can see now, never over
+  walls, darkness, or anything else drawn on the map (a creature, an item, a torch on the wall);
+  they fade out softly where they reach one. Where two circles crowd, the later one's rings pass
+  under the earlier's (yours first).
 - **A circle fades in** over half a second when the first buff or hex begins, and out as long
-  when the last ends. When one begins or ends while others go on, the figure changes over 0.4
-  seconds: the runes glide round the ring to their new corners, and the old figure and rings fade
-  into the new. A hexes' circle moves outward when a buff's circle comes inside it, and back in
-  once that one is gone. With Reduced effects or Slides, camera off, none of this moves: a circle
-  appears, changes, and goes at once.
+  when the last ends. When one begins or ends while others go on, the old figure and rings fade
+  into the new over 0.4 seconds. A hexes' circle moves outward when a buff's circle comes inside
+  it, and back in once that one is gone. With Reduced effects or Slides, camera off, none of this
+  moves (nor do the glints or the arcs): a circle appears, changes, and goes at once. Reduced
+  effects also takes the glow away ([Settings](settings.md)).
 
 Every buff shows on a creature, whatever gave it: look mode names a hasted creature "quickened",
 a bark-skinned one "bark-skinned", one that drank a [potion of might](potions.md#potion-of-might) "fortified" (see
@@ -316,15 +321,15 @@ a bark-skinned one "bark-skinned", one that drank a [potion of might](potions.md
 switch in [Settings](settings.md) hides them; Reduced effects only stills them), but the light
 they shed is not.
 
-{{#include generated/spell-runes.md}}
+{{#include generated/spell-circles.md}}
 
 ### The circle's light
 
-A runed status sheds a faint, steady [light](light.md) of its rune's school, whatever gave the
+A circled status sheds a faint, steady [light](light.md) of its school, whatever gave the
 status (the potion of quickness's Hasted too) and whoever has it, you or a creature: the
 `circle_<school>` lights of the [lights table](light.md#light-sources), each reaching one cell,
 with a strong [ultraviolet](vision.md#the-four-types) share. Its strength never changes with the status's
-[severity](status-effects.md#how-they-work) or the time left, and it goes the turn the status ends. Someone with several runed
+[severity](status-effects.md#how-they-work) or the time left, and it goes the turn the status ends. Someone with several circled
 statuses sheds one such light, the first in status order's. The Light spell's own light is
 brighter and wins over it.
 

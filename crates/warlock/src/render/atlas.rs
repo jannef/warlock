@@ -156,6 +156,31 @@ fn cap_rows(font: &fontdue::Font, px: f32) -> Vec2 {
     Vec2::new(bottom - m.height as f32, bottom)
 }
 
+/// The box of `c`'s ink in its 1:1 cell at `px`, in pixels from the cell's top-left, as
+/// [`rasterize`] places it (a character the font lacks is drawn as `?`); `None` for a blank.
+/// Where a spell circle centres on its actor's glyph.
+pub fn ink_box(font: &fontdue::Font, px: f32, c: char) -> Option<Rect> {
+    let c = if font.lookup_glyph_index(c) == 0 {
+        '?'
+    } else {
+        c
+    };
+    let ascent = font
+        .horizontal_line_metrics(px)
+        .map_or(px * 0.8, |l| l.ascent);
+    let baseline = ascent.round();
+    let m = font.metrics(c, px);
+    if m.width == 0 || m.height == 0 {
+        return None;
+    }
+    let top = baseline - (m.height as i32 + m.ymin) as f32;
+    let min = Vec2::new(m.xmin as f32, top);
+    Some(Rect::from_corners(
+        min,
+        min + Vec2::new(m.width as f32, m.height as f32),
+    ))
+}
+
 /// Rasterizes `chars` at `px` physical pixels into cell-sized slots, `supersample` times larger
 /// (1 for the 1:1 atlas). Cell size and baseline are fixed at `px` and then scaled, so a
 /// supersampled slot holds exactly the same outline as its 1:1 slot. Characters the font lacks
@@ -250,6 +275,36 @@ mod tests {
         assert!(slot_ink('#') > 0);
         assert!(slot_ink('≈') > 0);
         assert_eq!(slot_ink(' '), 0);
+    }
+
+    // A spell circle centres on its actor's ink (#786): the box `ink_box` gives is where the
+    // atlas drew the glyph, and it is not the cell's middle.
+    #[test]
+    fn ink_boxes_are_where_the_atlas_draws_the_ink() {
+        let font = Font::load().unwrap();
+        for px in [18.0, 36.0] {
+            let atlas = rasterize(&font.0, px, &glyph_set([]), 1);
+            for c in ['@', 'k', 'A', 'g', '#'] {
+                let inked = |x: u32, y: u32| texel(&atlas, c, x, y) > 0;
+                let (w, h) = (atlas.cell.x, atlas.cell.y);
+                let rows: Vec<u32> = (0..h).filter(|&y| (0..w).any(|x| inked(x, y))).collect();
+                let cols: Vec<u32> = (0..w).filter(|&x| (0..h).any(|y| inked(x, y))).collect();
+                let b = ink_box(&font.0, px, c).unwrap();
+                let (top, bottom) = (rows[0] as f32, (rows[rows.len() - 1] + 1) as f32);
+                let (left, right) = (cols[0] as f32, (cols[cols.len() - 1] + 1) as f32);
+                assert!(
+                    (b.min.y - top).abs() <= 1.0,
+                    "{c} at {px}: top {b:?} vs {top}"
+                );
+                assert!((b.max.y - bottom).abs() <= 1.0, "{c} at {px}: bottom");
+                assert!((b.min.x - left).abs() <= 1.0, "{c} at {px}: left");
+                assert!((b.max.x - right).abs() <= 1.0, "{c} at {px}: right");
+            }
+            // The `@` hangs below the baseline: its ink is centred lower than a `k`'s.
+            let mid = |c| ink_box(&font.0, px, c).unwrap().center().y;
+            assert!(mid('@') > mid('k'), "at {px}");
+        }
+        assert_eq!(ink_box(&font.0, 18.0, ' '), None);
     }
 
     #[test]

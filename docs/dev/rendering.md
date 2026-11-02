@@ -45,52 +45,103 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    grid and the free glyphs, `render/circles.rs::LAYER_Z` 0.5): `ui/circles.rs::emit` (in the
    map chain after `lighting::update`) builds, when `Game` changes, the list of circled actors
    from the snapshot (the player's `own_effects`, a seen creature's `effects_of`, through
-   `Content::runes()`), feeds it to `ui/circle_tracks.rs::Tracks` (the fades and glides, below),
+   `Content::circles()`), feeds it to `ui/circle_tracks.rs::Tracks` (the fades and glides, below),
    and each frame pushes a `CircleInstance` per actor (its `Motion` position, a `Shown` per kind,
-   buffs and hexes, `VisualLight::keep`) into `render::circles::Circles` (emptied in
-   `PreUpdate`, like `FreeGlyphs`). `render/circles.rs` holds the pure rule
-   (`layout(effects) -> Circle`: slots `n × ⌈3 / n⌉`, `min(n, 3)` rings, six effects at most,
-   buffs inner, hexes outer; `angle`: 60 s clockwise, 45 s counter-clockwise, still at 0 and π
-   without `motion`; `slot_angle`: the glide's path; its unit tests are the design's §4 rows and
-   sketches) and draws one dynamic mesh of one quad per circle (`2 × extent` square), the circle
-   packed into flat vertex attributes (`pack`: a head of effects, hex, outer, line school, slots,
-   and rings, and nine bits a rune, slot and school; per kind the old figure's head and runes,
-   and `[angle, fade, blend, place]`), with `CircleMaterial` (`circles.wesl`: rings and the
-   polygon as signed distances one pixel wide at 18 px (`h / 18`, × `LINE_WEIGHT`), dashes along
-   arc and side for a hex, an upright rune square per slot; the sizes are mirrored constants,
-   change both together; alphas `LINE_ALPHA` 0.2 and `RUNE_ALPHA` 0.7; the school colours a
-   uniform, palette-mapped in `ui/circles.rs`).
+   buffs and hexes, `VisualLight::keep`, its glyph and its id as a seed) into
+   `render::circles::Circles` (emptied in `PreUpdate`, like `FreeGlyphs`). `render/circles.rs`
+   holds the pure rule (`layout(effects) -> Circle`: a polygon of `n × ⌈3 / n⌉` corners,
+   `min(n, 3)` rings, six effects at most, buffs inner, hexes outer, a `Mark` per effect (its
+   status's row and school) only to tell figures apart and colour the lines; `angle`: 60 s
+   clockwise, 45 s counter-clockwise, still at 0 and π without `motion`) and draws one dynamic
+   mesh of one quad per circle (`2 × (extent + quad_margin)` square), the circle packed into
+   flat vertex attributes (`pack`: a head of effects, hex, outer, line school, slots, and rings;
+   per kind the old figure's head and `[angle, fade, blend, place]`), with `CircleMaterial`
+   (`circles.wesl`: rings and the polygon as signed distances one pixel wide at 18 px (`h / 18`,
+   × `LINE_WEIGHT`), dashes along arc and side for a hex; rings at `RING` 0.48 and `RING_GAP`
+   0.1 apart, the hexes' outer circle from `OUTER_RING` 0.84; the sizes are mirrored constants,
+   change both together; `LINE_ALPHA` 0.2; the school colours a uniform, palette-mapped in
+   `ui/circles.rs`).
+
+   **No runes** (the owner, 2026-11-02, #797: "let's just get rid of the hovering kana. i think
+   the transmutation circles are enough"): the kana at the polygon's corners, their atlas, and
+   their font are gone; so are what served them alone (their tidal lock, pulse, backdrop,
+   crowding, and per-rune masks on the CPU). `data/circles.toml` keeps each circled status's
+   school and the schools' colours, which colour the lines and decide the status's light.
 
    **Circle motion** (`ui/circle_tracks.rs`, design §11): one `Track` per actor and kind, fed
    each turn's circles (`update`) and read each frame (`settle`, then `shown`). A kind that
    appears fades in over `render/circles.rs::FADE` (0.5 s), one that ends stays drawn as its
    last figure while it fades out (its actor stays in the list), and a fade that turns goes on
-   from where it stood. A changed figure (`Ring::same_figure`: runes, count, kind) keeps the old
-   one as `from` and blends over `GLIDE` (0.4 s, `ease`: smoothstep): in the shader every slot up
-   to the larger count stands at `slot_angle(k, old, new, blend)`, its rune drawn whole when the
-   old and the new rune there agree, else cross-faded; rings beyond either count and the old and
-   new polygon fade by the blend; the line colour blends too. The hexes' kind stands at `place`
-   1 (the outer radii, which the shader mixes by it) while its actor has a buffs' track (a going
-   one too), else 0, and glides there over `GLIDE`. An actor no longer seen, a level change, or
-   the `circles` switch going off drops the tracks at once. Without animation (`motion` off,
-   reduced effects, or frozen visual time: `animate = motion && !frozen`, as `ui/motion.rs`)
-   every kind is `Shown::settled` and a going one is dropped: still and cut, and a
-   `--freeze-time` capture shows the settled figure at the frozen angle. The runes come
-   from `render/rune_atlas.rs`: every rune of `runes.toml` rasterised from
-   `assets/fonts/NotoSansJP-Runes.ttf` (a subset of Noto Sans JP Medium; `assets/fonts/README.md`
-   has the `pyftsubset` command, and `every_rune_is_in_the_rune_font` checks it is current) into
-   2× square slots with an empty one-texel border, one `R8Unorm` texture sampled linearly,
-   rebuilt when the cell height changes. The `circles` switch turns the drawing off; reduced
-   effects leaves it on and only stills it (as `motion` off does). With `glow` on the school
-   colours are `post::emissive` by `ui/circles.rs::CIRCLE_GLOW` (0.1). The light about a circled
-   actor is core's (the status's `light`, docs/dev/status-effects.md), drawn by the lighting pass
-   like any carried light, its UV tint only for UV eyes; the circle switch never hides it. Check
-   with `--scenario circles` captures (the golden `circles`, at `freeze_time = 1`: settled);
-   a capture without `--freeze-time` at a low `--capture-after-frames` shows the fade in. The
-   tuning (#779): rings and sides from 0.28 to 0.2 opaque and the glow from 0.15 to 0.1, after
-   captures at the default font where three rings 1.8 px apart read as one bright band;
-   the runes, the sizes, and the speeds are as designed. Frame cost: `cargo xtask
-   bench-frames`' `circles` row (`xtask/src/bench_circles.rs`: fifty circles, `docs/perf.md`).
+   from where it stood. A changed figure (`Ring::same_figure`: marks, count, kind) keeps the old
+   one as `from` and blends over `GLIDE` (0.4 s, `ease`: smoothstep): rings beyond either count
+   and the old and new polygon fade by the blend; the line colour blends too. The hexes' kind
+   stands at `place` 1 (the outer radii, which the shader mixes by it) while its actor has a
+   buffs' track (a going one too), else 0, and glides there over `GLIDE`. An actor no longer
+   seen, a level change, or the `circles` switch going off drops the tracks at once. Without
+   animation (`motion` off, reduced effects, or frozen visual time: `animate = motion &&
+   !frozen`, as `ui/motion.rs`) every kind is `Shown::settled` and a going one is dropped:
+   still and cut, and a `--freeze-time` capture shows the settled figure at the frozen angle.
+
+   **Where a circle shows** (#786, the owner's review: "cringe when glyphs overlap other
+   glyphs"): the circle material binds the map's `light_flags` (`lighting.rs::cell_flags`: `LIT`,
+   `OPAQUE`, and `OCCUPIED`, a visible cell with a glyph of its own: an actor, an object or
+   chest, a known trap, or terrain not walkable such as a wall torch) and finds a pixel's cell
+   from the framebuffer position and the grid's origin and cell size (`Circles::grid_origin`,
+   `cell`, as `console.wesl` does). `show_at` is 1 over clear seen floor, 0 over unseen,
+   remembered, opaque, or occupied cells (the actor's own cell, an instance attribute, never
+   counts), eased across a cell edge over `SOFT` (0.22 cells) either side; a line pixel is
+   masked where it is. `under` gives each circle the nearest earlier one whose rings reach it
+   (`ATTRIBUTE_UNDER`; earlier is the order `emit` pushes them: the snapshot's actors, the player
+   first): its lines are left out inside that circle's outermost ring. The lines also part about
+   the actor's glyph's own outline (its halo in `GlyphGlow`, `1 - smoothstep(0.02, 0.25,
+   halo)`), or, for a glyph the atlas lacks, stop `GLYPH_GAP` (a pixel at the default font)
+   short of its ink box (`ATTRIBUTE_INK`).
+
+   **Centring**: `emit` centres a circle on its actor's glyph's ink (`atlas::ink_box`: the
+   glyph's outline box placed as `rasterize` places it, on the baseline at `ascent.round()`), not
+   on the cell's middle: the font's cell holds the descent below the baseline, so a `k` sits a
+   little above the middle and an `@` (which hangs below the baseline) a little below it.
+
+   **Glow, glints, shimmer** (#786): per pixel, bottom up, the actor's glyph's halo
+   (`GLYPH_HALO_ALPHA` 0.6 × its green, in its buffs' circle's line colour, else its hexes';
+   under the glyph, which the free-glyph layer draws over it), the lines' glow
+   (`LINE_HALO_ALPHA` 0.1 × a Gaussian of the distance to the ring or side, `LINE_HALO_SIGMA`
+   0.045 cell heights), and the lines. Every glow is `Circles::halo`, off with reduced effects,
+   separate from the `glow` switch's bloom. The glyph's halo and glints come from
+   `render/glyph_glow.rs::GlyphGlow`: each glyph a circled actor shows, rasterised from the map
+   font at `Circles::glyph_px` into 2× square slots a cell height wide (ink centred), padded for
+   the halo and the rays with an empty one-texel border, one `Rgba8Unorm` texture sampled
+   linearly: red the coverage, green the halo (blurred by `GLOW_SIGMA` 0.053 cell heights, ×
+   1.5), blue and alpha two glints (`glint_points`: the deepest place in the strokes, the most ink
+   with the most ink about it, and the deepest a third of the square from it; each a point of
+   `GLINT_SIGMA` 0.03 cell heights with four rays `GLINT_RAY` 0.2 long, `sparkle`); built with
+   `@`, grown when a circled actor shows a glyph it lacks (at most `MAX_GLYPHS`), and rebuilt
+   when the font size or the cell height changes. A **glint** is the atlas's blue or alpha ×
+   `glint(phase, period)`, the top of a sine sharpened (`GLINT_SHARP` 24: about a tenth of its
+   beat), periods `GLINT_PERIODS` 5.3 and 7.1 s, on `glint_phase(seed, g)` (the actor's id,
+   `CircleInstance::seed`, so two actors are never in step), in the glow's colour most of the
+   way to white (`GLINT_WHITE` 0.75) and, with `glow` on, overbright × 2.5 so it blooms
+   (`Circles::bloom`); only with `motion` on and without reduced effects. The glints are drawn
+   by a **second pass** over the free-glyph layer: the same mesh with a second `CircleMaterial`
+   (`params.top` 1, `circles.rs::TOP_Z` 1.2), which draws nothing but them within a cell height
+   of the centre. The glyph's slot and the seed ride in the fourth of `ATTRIBUTE_UNDER`
+   (`pack_glyph`). The **shimmer**: a soft arc a quarter of a ring wide runs round each ring in
+   `SHIMMER_PERIOD` 7 s (rings in turn the other way), up to `SHIMMER` 1.5× brighter, lines and
+   glow; motion on and no reduced effects. The time and the motion switch ride in
+   `ATTRIBUTE_INK`, not the uniform, so the material is never re-prepared a frame. The quad
+   reaches `quad_margin()` past the extent for the lines' glow; the glyph's square fits inside
+   (a test checks it). The Rust functions are the shader's mirrors, tested in `circles.rs`. The
+   `circles` switch turns the drawing off; reduced effects leaves it on and only stills it (as
+   `motion` off does). With `glow` on the school colours are `post::emissive` by
+   `ui/circles.rs::CIRCLE_GLOW` (0.1). The light about a circled actor is core's (the status's
+   `light`, docs/dev/status-effects.md), drawn by the lighting pass like any carried light, its
+   UV tint only for UV eyes; the circle switch never hides it. Check with `--scenario circles`
+   captures (a capture without `--freeze-time` at a low `--capture-after-frames` shows the fade
+   in); there is no golden of the circles (the owner: "do not create golden screen shot out of
+   this particle effect. it's not worth"). The tuning (#779): rings and sides from 0.28 to 0.2
+   opaque and the glow from 0.15 to 0.1, after captures at the default font where three rings
+   1.8 px apart read as one bright band. Frame cost: `cargo xtask bench-frames`' `circles` row
+   (`xtask/src/bench_circles.rs`: fifty circles, `docs/perf.md`).
 3. **UI console**: the same console material over the whole window; unwritten cells are
    transparent.
 
@@ -127,7 +178,8 @@ light); its intensity `gain` becomes the per-cell brightness gain (drawn-light-w
 base light = 1) applied after shading. Tune with captures at several `--freeze-time` values;
 the crystals, fungus, runes, and altar must stay constant. Two textures on the map material:
 `light` (`Rgba32Float`: rgb light, 1.0 = fully lit, and saturation) and `light_flags`
-(`Rgba8Uint`: lit/opaque flags, intensity gain byte). The shader
+(`Rgba8Uint`: lit/opaque/occupied flags, intensity gain byte; the spell circles read the flags
+too). The shader
 interpolates light per pixel between cell centers, never across opaque, unseen, or remembered
 cells (walls are lit flat by their wall-face light); then exposure (readability floor, soft
 overbright knee plus a faint glow in the light's hue), desaturation, gain. Unlit cells (remembered

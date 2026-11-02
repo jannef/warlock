@@ -1,6 +1,6 @@
 //! The fades and glides of spell circles (spec §4.8 "Spell circles", docs/design/buff-circles.md
 //! §11): a circle appears over [`FADE`] seconds and goes over as long; when an effect begins or
-//! ends, its figure changes over [`GLIDE`] seconds (the runes glide to their new slots, the
+//! ends, its figure changes over [`GLIDE`] seconds (the
 //! polygon and the rings blend from the old count), and a hexes' circle moves out when a buffs'
 //! one comes inside it and back in once that one has gone.
 //!
@@ -155,20 +155,20 @@ impl Tracks {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::circles::{Rune, layout};
+    use crate::render::circles::{Mark, layout};
 
     const A: ActorId = ActorId(7);
 
-    fn buff(slot: u8) -> (Rune, bool) {
-        (Rune { slot, school: 2 }, false)
+    fn buff(slot: u8) -> (Mark, bool) {
+        (Mark { slot, school: 2 }, false)
     }
 
-    fn hex(slot: u8) -> (Rune, bool) {
-        (Rune { slot, school: 5 }, true)
+    fn hex(slot: u8) -> (Mark, bool) {
+        (Mark { slot, school: 5 }, true)
     }
 
     /// Feeds one turn's circle for `A` at `now` and settles.
-    fn turn(tracks: &mut Tracks, now: f32, effects: &[(Rune, bool)]) {
+    fn turn(tracks: &mut Tracks, now: f32, effects: &[(Mark, bool)]) {
         tracks.update(now, &[(A, layout(effects.iter().copied()))]);
         tracks.settle(now, true);
     }

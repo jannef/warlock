@@ -48,17 +48,18 @@ status that lends something (a positive `penalty`, a `combat` bonus, a `cost` un
 `vision`, a `resist`, or a `light`) shows on creatures: `hasted` "quickened", `barkskin`
 "bark-skinned", the potions' boosts, visions, and resistances by their names, `spell_ward`
 "warded", `light_footed` "light-footed". Not buffs, never shown: `disguised` (a mimic's disguise),
-`lurking`, the cooldowns, and harms. `content/runes.rs`'s `every_buff_status_is_seen` test keeps
-it. **Runes** (spec §4.8 "Spell circles"): `data/runes.toml` (`content/runes.rs`, `Runes`,
-`Content::runes()`; the rows' statuses and schools fingerprinted) gives each buff and hex spell's status
-a rune and a school, drawn as a spell circle about the actor: `lit` ヒ, `hasted` ハ, `barkskin` 木
-(transmutation), `blessed` シ (abjuration); `ill_wished` 目, `drowsy` ネ (enchantment),
-`weakened` 小 (necromancy), `sluggish` 止, `webbed` 井 (transmutation). A runed status must have
-`seen` (a load-time check: the circle shows only what look mode may say) and be laid by a buff or
-hex spell (which makes its circle a buff's or a hex's); every buff and hex spell's status must
-have a rune. **The circle's light** (docs/design/buff-circles.md §8): `runes::shed_lights` fills
-`StatusDef::light` at load with the school's `circle_<school>` preset (`data/lights.toml`: radius
-1, steady, luma 40 to 52 and UV 90 at the source) for every runed status without a light of its
+`lurking`, the cooldowns, and harms. `content/circles.rs`'s `every_buff_status_is_seen` test keeps
+it. **Circled statuses** (spec §4.8 "Spell circles"): `data/circles.toml` (`content/circles.rs`,
+`CircleStatuses`, `Content::circles()`; the rows' statuses and schools fingerprinted) gives each
+buff and hex spell's status a school, whose colour its spell circle about the actor is drawn in:
+`lit` (evocation), `hasted`, `barkskin` (transmutation), `blessed` (abjuration); `ill_wished`,
+`drowsy` (enchantment), `weakened` (necromancy), `sluggish`, `webbed` (transmutation). A circled
+status must have `seen` (a load-time check: the circle shows only what look mode may say) and be
+laid by a buff or hex spell (which makes its circle a buff's or a hex's); every buff and hex
+spell's status must have a row. **The circle's light** (docs/design/buff-circles.md §8):
+`circles::shed_lights` fills `StatusDef::light` at load with the school's `circle_<school>` preset
+(`data/lights.toml`: radius 1, steady, luma 40 to 52 and UV 90 at the source) for every circled
+status without a light of its
 own (`lit` keeps `spell_light`). Nothing new reads it: `light/cache.rs` already pushes one source
 per actor for its status lights, the widest, the first in status order on a tie (key `CARRIED |
 LIT | id`, so the mask stays cached while the actor stands); severity and time left never scale
@@ -67,7 +68,7 @@ circled actor is seen by normal eyes on its own cell in the dark, by low-light e
 plainly by UV eyes; creatures see the player the same way (a buffed sneak is seen), and it adds
 to a light-blind player's glare. Tests: `world/circle_tests.rs` (the alcove archer of
 `--scenario circles` seen by its glow alone, the eyes, the tie, a cast's light and its end, the
-disguise, the drow at noon) and `content/runes.rs` (the presets, a missing one refused, the
+disguise, the drow at noon) and `content/circles.rs` (the presets, a missing one refused, the
 fingerprint). Saved and hashed
 (`Actor::regen` counts hundredths of a second at the normal pace). The dev
 action `afflict:ID` (`Action::Afflict`) gives the player a degree, for tests and captures. Tests:

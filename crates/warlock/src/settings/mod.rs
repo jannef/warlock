@@ -129,7 +129,7 @@ pub struct EffectSwitches {
     /// Heat haze.
     pub distortion: bool,
     pub particles: bool,
-    /// Spell circles (spec §4.8 "Spell circles"): a turning circle of runes about every seen
+    /// Spell circles (spec §4.8 "Spell circles"): a turning circle about every seen
     /// actor with a buff's or a hex's status. Information, not decoration: reduced effects only
     /// stills it (as `motion` off does), so it stays as set, as blood does.
     pub circles: bool,

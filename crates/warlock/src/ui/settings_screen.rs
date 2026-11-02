@@ -52,7 +52,7 @@ impl Effect {
             Effect::Glow => "Bloom around glowing glyphs such as lava and crystals.",
             Effect::Distortion => "Heat haze rising over lava and fires.",
             Effect::Particles => "Sparks, embers, splashes, and dust.",
-            Effect::Circles => "Runes about the buffed and hexed (still with the preset).",
+            Effect::Circles => "Circles about the buffed and hexed (still with the preset).",
             Effect::ScreenFades => "Level fades, flashes, bright spells darkening the view.",
             Effect::ScreenShake => "The view shakes when a spell lands near you.",
             Effect::Weather => "Rain falling, splashing, and rings on water.",

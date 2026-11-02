@@ -131,11 +131,11 @@ pub fn fixture() -> Result<(PathBuf, PathBuf), String> {
 /// The seen actors with a status the circle shows: the player, and every kobold in view.
 fn circled(world: &World) -> usize {
     let view = world.perception();
-    let runes = view.content().runes();
-    let player = view.own_effects().any(|s| runes.of(s).is_some());
+    let circles = view.content().circles();
+    let player = view.own_effects().any(|s| circles.of(s).is_some());
     let others = (view.actors().iter())
         .filter(|a| a.kind != ActorKind::Player)
-        .filter(|a| view.effects_of(a.id).any(|s| runes.of(s).is_some()))
+        .filter(|a| view.effects_of(a.id).any(|s| circles.of(s).is_some()))
         .count();
     others + usize::from(player)
 }
@@ -158,9 +158,9 @@ mod tests {
         }
         assert_eq!(circled(&world), COLUMNS * ROWS + 1);
         let view = world.perception();
-        let runes = view.content().runes();
+        let circles = view.content().circles();
         let kinds: std::collections::BTreeSet<bool> = (view.own_effects())
-            .filter_map(|s| runes.of(s).map(|r| r.hex))
+            .filter_map(|s| circles.of(s).map(|r| r.hex))
             .collect();
         assert_eq!(
             kinds.len(),
