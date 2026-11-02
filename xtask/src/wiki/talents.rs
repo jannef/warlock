@@ -1172,6 +1172,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              blow; a hit that does damage leaves {severity} degrees of {}",
             status(&id)
         ),
+        TalentEffect::WindStep { status: id } => format!(
+            "active, taking no time: a degree of {}, so the next action, whatever it is, costs \
+             half its time; refused while you are {} already",
+            status(&id),
+            status(&id)
+        ),
         TalentEffect::Hardened { bonus } => format!(
             "every level past the last that adds hit points adds them again, and {bonus} more"
         ),

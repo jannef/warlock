@@ -1,0 +1,12 @@
+[[talent]]
+id = "step_of_the_wind"
+name = "Step of the wind"
+tree = "class"
+granted = true
+description = "In no body armour and with no shield, you move a little quicker; and for a point of ki (an ability, taking no time) your next action is quick, at half its time."
+effects = [
+    { kind = "step_percent", value = -10, unarmoured = true, no_shield = true },
+    { kind = "wind_step", status = "light_footed" },
+]
+resource = { id = "ki", cost = 1 }
+systems = ["speed", "resources"]
