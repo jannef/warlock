@@ -111,11 +111,12 @@ impl LastTarget {
     }
 }
 
-/// The creatures in view but the player, nearest first (ties: the lower id): what Tab cycles.
+/// The creatures in view but the player and their allies (spec §8 "Allies": their own side is
+/// no one's target), nearest first (ties: the lower id): what Tab cycles.
 fn targets(view: &PerceptionView<'_>) -> Vec<(Pos, Stance)> {
     let me = view.viewer();
     let mut seen: Vec<_> = (view.actors().iter())
-        .filter(|a| a.pos != me)
+        .filter(|a| a.pos != me && !a.ally)
         .map(|a| (a.pos.dist2(me), a.id, a.pos, view.stance(a)))
         .collect();
     seen.sort_by_key(|&(d2, id, ..)| (d2, id));
@@ -744,5 +745,39 @@ mod tests {
             })
         );
         assert_eq!(aim.action(&content), Some(Action::Fire(Pos::new(1, 1))));
+    }
+
+    #[test]
+    fn set_on_aims_past_the_allies_at_a_foe() {
+        // Two wolves beside the player in the arena, the war band in sight.
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "arena", None).expect("arena");
+        let walk = "move:E*6 move:NE*3 ally:brimwolf:2 wait";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            w.apply(&action);
+        }
+        let view = w.perception();
+        let allies: Vec<Pos> = (view.actors().iter())
+            .filter(|a| a.ally)
+            .map(|a| a.pos)
+            .collect();
+        assert_eq!(allies.len(), 2);
+        // Tab never lands on them.
+        let cycled = targets(&view);
+        assert!(!cycled.is_empty());
+        assert!(cycled.iter().all(|(p, _)| !allies.contains(p)));
+        // Set on starts on the nearest foe and sets the pack on its cell.
+        let aim = Aim::start(
+            AimKind::Ability(Ability::SetOn),
+            &view,
+            &LastTarget::default(),
+        );
+        assert_ne!(aim.at, view.viewer());
+        assert!(!allies.contains(&aim.at));
+        assert_eq!(aim.range(&view), None);
+        assert_eq!(
+            aim.action(view.content()),
+            Some(Action::Order(warlock_core::action::Command::SetOn(aim.at)))
+        );
     }
 }
