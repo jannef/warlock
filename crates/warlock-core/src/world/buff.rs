@@ -62,7 +62,7 @@ impl World {
             Action::Bash(_) => ActionKind::Melee,
             Action::Fire(_) => ActionKind::Shoot,
             Action::Throw { .. } => ActionKind::Throw,
-            Action::Chat(_) | Action::Ask { .. } => ActionKind::Chat,
+            Action::Chat(_) | Action::Ask { .. } | Action::Say { .. } => ActionKind::Chat,
             Action::Steal(_) => ActionKind::Steal,
             Action::Intimidate(_) => ActionKind::Intimidate,
             Action::ThrowVoice(_) => ActionKind::ThrowVoice,

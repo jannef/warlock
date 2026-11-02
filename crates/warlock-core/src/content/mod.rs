@@ -153,6 +153,7 @@ mod wand;
 mod weapon_ability;
 mod weapon_skill;
 mod weather;
+mod word;
 #[cfg(test)]
 mod yugoloth_roster_tests;
 
@@ -326,6 +327,7 @@ pub use weapon_skill::{
 pub use weather::{
     Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,
 };
+pub use word::{Does, MAX_REPLY_LINES, MAX_WORDS, Word};
 
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
@@ -1225,6 +1227,7 @@ impl Content {
         content.encounter_tables = encounter::parse(files.table("encounters"), &content)?;
         content.validate()?;
         content.check_topic_routes()?;
+        content.check_words()?;
         offer::check_placements(&content)?;
         content.check_campaigns()?;
         Ok(content)
