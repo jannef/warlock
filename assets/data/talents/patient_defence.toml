@@ -1,0 +1,9 @@
+[[talent]]
+id = "patient_defence"
+name = "Patient defence"
+tree = "class"
+granted = true
+description = "For a point of ki and the time of a wait (an ability), you settle into your guard: until your next action you dodge far better, and every blow you dodge or parry is answered with one of yours at once."
+effects = [{ kind = "patient_defence", status = "poised" }]
+resource = { id = "ki", cost = 1 }
+systems = ["defence", "free_blows", "resources"]

@@ -320,7 +320,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Strike::Missed { by: Parry }`, `Defence::why_missed`), a blow back with what it wields
     once the attack is over (decided: one per attack however many of its blows were parried,
     after the attack's last blow, so it never cuts into it). Shots and throws are never
-    riposted.
+    riposted. While Poised (the ascetic's Patient defence, §8 "Class abilities", #849) the
+    actor has the riposte whatever its talents, and a blow missed by its Dexterity or Dodge is
+    answered as a parried one is (a dodged blow fires no `parried` weapon ability).
   - **Opportunist** (`opportunist`): a hostile stepping from beside the actor to a cell out of
     its reach (the geometry of fleeing, `World::leaves`, whatever the stepper's stance) is struck
     as it turns to go, before it leaves its cell (`World::step_away`, from the player's step and

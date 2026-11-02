@@ -1012,7 +1012,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels, at least 1d6, a magic weapon's extra die folded into the bonus at its average; then
     Spent, 5 minutes; works for Kind or better), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
-    glowing item's; a cast; works for Kind or better), Quivering palm (a bare-handed blow in a direction,
+    glowing item's; a cast; works for Kind or better), Patient defence (the ascetic's at 18, #849: for a
+    point of Ki and a wait's time, Poised until their next action: Dodge +4 from the status's own
+    `combat`, and a melee blow on them missed by their Dexterity, Dodge, or Parry answered at once
+    by the riposte, which the status switches on in `World::free_blows_of` (a blow missed by
+    Dexterity or Dodge is answered only while Poised: `Cue::Attacked { dodged }`, raised only by
+    a creature's attack, `World::attack`); refused, no time or ki, only with no ki; never for
+    nobody near, and taken again while Poised it holds one action more; any grip), Quivering palm
+    (a bare-handed blow in a direction,
     refused with a weapon in hand before anything is spent; a hit that does damage leaves three
     degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Consecrate (the priest's at
     9, the paladin's at 12: a minute's prayer, for 15 mana, that lifts an unholy special room's

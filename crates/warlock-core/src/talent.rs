@@ -588,6 +588,8 @@ pub struct TalentMods {
     pub smite: Option<Smite>,
     /// The active Holy radiance: its status and the light it sheds while it lasts.
     pub radiance: Option<(StatusId, LightId)>,
+    /// The active Patient defence, if it has it: the status it gives (Poised).
+    pub patient_defence: Option<StatusId>,
     /// The active Quivering palm, if it has it.
     pub quivering_palm: Option<QuiveringPalm>,
     /// Hit points every level past `hp_level` adds beyond a level's own, if it has Hardened.
@@ -1005,6 +1007,7 @@ impl TalentMods {
             A::LayOnHands => self.lay_on_hands.is_some(),
             A::Smite => self.smite.is_some(),
             A::HolyRadiance => self.radiance.is_some(),
+            A::PatientDefence => self.patient_defence.is_some(),
             A::QuiveringPalm => self.quivering_palm.is_some(),
             A::Volley => self.volley.is_some(),
             A::Lurk => self.lurk.is_some(),
@@ -1812,6 +1815,9 @@ impl TalentMods {
             TalentEffect::ThrowVoice => self.throw_voice = true,
             TalentEffect::AmbushThreat { value } => self.ambush_threat += value,
             TalentEffect::Finisher => self.finisher = true,
+            TalentEffect::PatientDefence { status } => {
+                self.patient_defence = content.status_id(&status).or(self.patient_defence);
+            }
             TalentEffect::Lurk { status } => {
                 self.lurk = content.status_id(&status).or(self.lurk);
             }

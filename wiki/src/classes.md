@@ -77,4 +77,8 @@ The [ascetic](classes.md#ascetic)'s **[martial arts](talents.md#talent-martial-a
 too, spends it: every attack with nothing in your hands strikes a
 second blow, at −2 [to hit](combat.md#hitting), for a point of ki; with none left, the attack is a single blow.
 **[Quivering palm](abilities.md#ability-quivering-palm)** costs 5 ki and has no other wait.
+**[Patient defence](abilities.md#ability-patient-defence)** (level 18) costs a point of ki and the [time](turns.md#what-actions-cost) of a wait, and leaves you
+[poised](status-effects.md#status-poised) until your next action, whatever it is: +4 [Dodge](combat.md#defence), and every melee blow you dodge (it misses
+by your Dexterity or Dodge) or parry meanwhile is answered with a blow of yours at once, a
+[riposte](combat.md#free-blows). Taken again while poised, it holds for one action more; with any grip, a staff too.
 

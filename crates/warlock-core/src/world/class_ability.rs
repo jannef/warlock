@@ -74,6 +74,7 @@ impl World {
             (ClassActive::LayOnHands, _) => self.lay_on_hands(events),
             (ClassActive::HolyRadiance, _) => self.holy_radiance(events),
             (ClassActive::Inspire, _) => self.inspire(events),
+            (ClassActive::PatientDefence, _) => self.patient_defence(events),
             (ClassActive::Lurk, _) => self.lurk(events),
             (ClassActive::Consecrate, _) => self.begin_consecrate(),
             (ClassActive::Smite, Some(dir)) => self.smite(dir, events),

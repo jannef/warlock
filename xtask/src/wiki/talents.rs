@@ -1613,6 +1613,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Finisher => "active (the time of a melee attack), in a direction: a blow \
                                    that is a critical whenever it hits, with no confirmation roll"
             .to_string(),
+        TalentEffect::PatientDefence { status: id } => format!(
+            "active (the time of a wait): you are {} until your next action; a melee blow you \
+             dodge (it misses by your Dexterity or Dodge) or parry meanwhile is answered with \
+             your blow at once (a riposte, a free blow)",
+            status(&id)
+        ),
         TalentEffect::Lurk { status: id } => format!(
             "active (the time of a wait): you are {} until your next action; a hostile that steps \
              up beside you meanwhile takes your blow at once (a free blow), caught unawares \

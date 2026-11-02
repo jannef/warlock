@@ -47,7 +47,7 @@ carries `seen`, whatever its source** (owner, 2026-11-01; docs/design/buff-circl
 status that lends something (a positive `penalty`, a `combat` bonus, a `cost` under 100, a
 `vision`, a `resist`, or a `light`) shows on creatures: `hasted` "quickened", `barkskin`
 "bark-skinned", the potions' boosts, visions, and resistances by their names, `spell_ward`
-"warded", `light_footed` "light-footed". Not buffs, never shown: `disguised` (a mimic's disguise),
+"warded", `light_footed` "light-footed", `poised` "poised". Not buffs, never shown: `disguised` (a mimic's disguise),
 `lurking`, the cooldowns, and harms. `content/circles.rs`'s `every_buff_status_is_seen` test keeps
 it. **Circled statuses** (spec §4.8 "Spell circles"): `data/circles.toml` (`content/circles.rs`,
 `CircleStatuses`, `Content::circles()`; the rows' statuses and schools fingerprinted) gives each
