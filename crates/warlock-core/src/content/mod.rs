@@ -4691,7 +4691,7 @@ mod tests {
                 "bard",
                 "priest",
                 "druid",
-                "monk",
+                "ascetic",
                 "paladin",
                 "ranger",
                 "thief",

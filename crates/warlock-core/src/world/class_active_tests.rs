@@ -1,5 +1,5 @@
 //! Class abilities in the world (spec §8 "Class abilities"; #243): the warrior's, barbarian's,
-//! paladin's, and monk's level tables. A level brings its abilities and says so, the bonus picks
+//! paladin's, and ascetic's level tables. A level brings its abilities and says so, the bonus picks
 //! come from the class's trees, each passive changes the rule it names, and each active is used
 //! from the abilities menu with its cooldown.
 
@@ -562,9 +562,9 @@ fn purity_of_body_and_avatar() {
 
 #[test]
 fn martial_arts_flurry_still_mind_and_quivering_palm() {
-    let mut w = world("monk");
+    let mut w = world("ascetic");
     let content = w.content().clone();
-    // The monk's own kit: gloves (Brawler) or a staff (Staff fighter); bare hands either way.
+    // The ascetic's own kit: gloves (Brawler) or a staff (Staff fighter); bare hands either way.
     w.player_mut().equipment = Default::default();
     let fists = |w: &World| w.state.player().melee(&content).damage.to_string();
     assert_eq!(fists(&w), "1d6", "Martial arts");

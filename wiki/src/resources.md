@@ -37,7 +37,7 @@ knows. At level 60 [Master thief](talents.md#talent-master-thief)'s **finisher**
 ability, aimed in a direction) spends all 5 for a melee blow that is a [critical](combat.md#criticals) whenever it
 hits: no confirmation roll is made. A miss still spends them.
 
-The [monk](classes.md#monk)'s **ki** comes with [flurry](talents.md#talent-flurry) (level 18), full: each second blow of a flurry spends a
+The [ascetic](classes.md#ascetic)'s **ki** comes with [flurry](talents.md#talent-flurry) (level 18), full: each second blow of a flurry spends a
 point, and with none the attack is one blow; [quivering palm](talents.md#talent-quivering-palm) (level 50) spends all 5. Ki comes
 back a point every 3 base turns (18 seconds), resting too.
 
@@ -47,7 +47,7 @@ Inspire spends 3 inspiration instead of its 3 [mana](mana.md#how-much) whenever 
 with less it costs mana as before. A virtuoso's inspire spends neither.
 
 **Stamina** is the fighter's breath, the pool active weapon abilities are paid from (see
-[Combat](combat.md#stamina)). Every [warrior](classes.md#warrior), [barbarian](classes.md#barbarian), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [monk](classes.md#monk), [thief](classes.md#thief), and [bard](classes.md#bard)
+[Combat](combat.md#stamina)). Every [warrior](classes.md#warrior), [barbarian](classes.md#barbarian), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [ascetic](classes.md#ascetic), [thief](classes.md#thief), and [bard](classes.md#bard)
 holds it from level 1 ([Trained wind](talents.md#talent-trained-wind)), full. It holds 10, plus your [Toughness](stats.md#stat-toughness) [modifier](stats.md#modifiers), plus a
 point per 10 [levels](experience.md#levels), never less than 5 (Toughness 14 holds 12 at level 1); it comes back a point
 every 2 base turns (12 seconds), resting too, and sits at 0 when spent. A [barbarian](classes.md#barbarian) holds rage
@@ -70,9 +70,9 @@ Two items naming the same pool add up. Taking the item off lowers what you hold 
 maximum at once.
 
 Such an item never **grants** a pool: it does nothing for one who does not hold it. Who holds
-which: stamina, every [warrior](classes.md#warrior), [barbarian](classes.md#barbarian), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [monk](classes.md#monk), [thief](classes.md#thief), and [bard](classes.md#bard), and anyone
+which: stamina, every [warrior](classes.md#warrior), [barbarian](classes.md#barbarian), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [ascetic](classes.md#ascetic), [thief](classes.md#thief), and [bard](classes.md#bard), and anyone
 else once a [weapon rank](weapon-skills.md#marks-and-ranks) teaches an active; rage, a [raging](status-effects.md#status-raging) [barbarian](classes.md#barbarian) (only while the rage
-lasts); focus, a [ranger](classes.md#ranger) from level 12; ki, a [monk](classes.md#monk) from level 18; inspiration, a [bard](classes.md#bard) from level
+lasts); focus, a [ranger](classes.md#ranger) from level 12; ki, an [ascetic](classes.md#ascetic) from level 18; inspiration, a [bard](classes.md#bard) from level
 18; openings, a [thief](classes.md#thief) from level 1. A ring of rage on a [wizard](classes.md#wizard) is dead weight, and [creatures](creatures.md)
 never hold a pool, so their gear does nothing for them, only for whoever takes it from them.
 
@@ -103,7 +103,7 @@ pick from their trees, from the level given):
 - **[Battle trance](talents.md#talent-battle-trance)** (Might; [barbarian](classes.md#barbarian), level 6): your rage starts at 18 instead of 12 (never
   above its most), and wears off at two thirds of its pace: a point about every 9 seconds
   instead of every 6.
-- **[Inner calm](talents.md#talent-inner-calm)** (Finesse; [monk](classes.md#monk), level 18): ki holds up to 7 instead of 5, and comes back half
+- **[Inner calm](talents.md#talent-inner-calm)** (Finesse; [ascetic](classes.md#ascetic), level 18): ki holds up to 7 instead of 5, and comes back half
   again as fast: a point every 12 seconds instead of every 18.
 - **[Steady hand](talents.md#talent-steady-hand)** (Weaponcraft; [ranger](classes.md#ranger), level 12): focus comes back half again as fast, a point
   every 4 seconds instead of every 6; still not while you rest.
@@ -111,4 +111,4 @@ pick from their trees, from the level given):
   base turns instead of every 20, and a [sneak attack](talents.md#talent-sneak-attack) that kills gives two openings instead of
   one.
 
-Inner calm changes nothing until something grants the [monk](classes.md#monk) [ki](resources.md#resource-ki).
+Inner calm changes nothing until something grants the [ascetic](classes.md#ascetic) [ki](resources.md#resource-ki).

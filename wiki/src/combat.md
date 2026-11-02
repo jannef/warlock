@@ -228,7 +228,7 @@ skill](weapon-skills.md). It never brings another free blow, except a cleave aft
 ## Stamina
 
 **Stamina** is the breath a fighter has for weapon feats (a [resource](resources.md), shown as
-`Sta 7/12` on the status bar). Every [warrior](classes.md#warrior), [barbarian](classes.md#barbarian), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [monk](classes.md#monk), [thief](classes.md#thief), and [bard](classes.md#bard)
+`Sta 7/12` on the status bar). Every [warrior](classes.md#warrior), [barbarian](classes.md#barbarian), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [ascetic](classes.md#ascetic), [thief](classes.md#thief), and [bard](classes.md#bard)
 holds it from [level](experience.md#levels) 1. Its most is
 
 > 10 + your [Toughness](stats.md#stat-toughness) [modifier](stats.md#modifiers) + 1 per 10 [levels](experience.md#levels), at least 5

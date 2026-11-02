@@ -72,7 +72,7 @@ start = 0
 decays = 120
 builds = [{ on = "sneak_attack", amount = 1 }]
 
-# The monk's ki: a point back every three base turns, resting too.
+# The ascetic's ki: a point back every three base turns, resting too.
 [[resource]]
 id = "ki"
 name = "Ki"

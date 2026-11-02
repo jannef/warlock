@@ -27,7 +27,7 @@
 #   casting       the class's casting percent (spec §8 "Spells"; 1 to 100, default 25): a
 #                 character's caster level is this percent of their level, rounded down, before
 #                 talents and items. Full casters 100, the bard and the aristocrat 75, the
-#                 paladin, the ranger, and the monk 50, everyone else 25: nobody casts at 0
+#                 paladin, the ranger, and the ascetic 50, everyone else 25: nobody casts at 0
 #   affinity      the class's affinity with the schools of magic (spec §8 "Spells"): a table of
 #                 school = points (-10 to 10), taken off the difficulty of studying a spell of
 #                 that school (a malus when negative); schools left out are 0

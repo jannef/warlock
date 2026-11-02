@@ -187,7 +187,7 @@ more from that creature turn, and, won, the creature does not see them.
 
 ## Hashes that move (#682)
 
-A run with a thief, ranger, monk, bard, warrior, or barbarian (their new class skills move the
+A run with a thief, ranger, ascetic, bard, warrior, or barbarian (their new class skills move the
 later skill rolls of creation) or a drow (its optional roll) starts with other skills; a thief
 holds Openings from level 1; a thief's surprises are 2 harder to shrug off and a trained
 character's dear action is eased; a threat on a thing without vitals draws one fewer (no

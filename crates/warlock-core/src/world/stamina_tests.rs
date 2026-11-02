@@ -51,7 +51,7 @@ fn the_fighting_classes_hold_it_from_level_one_and_the_others_do_not() {
         "barbarian",
         "paladin",
         "ranger",
-        "monk",
+        "ascetic",
         "thief",
         "bard",
     ] {
