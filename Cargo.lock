@@ -5467,6 +5467,7 @@ dependencies = [
  "bevy",
  "clap",
  "directories",
+ "flate2",
  "fontdue",
  "image",
  "insta",

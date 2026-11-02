@@ -227,10 +227,8 @@ cast path shares.
     reach a talent adds** is held only by the engine's limits (a cone at `MAX_CONE`): School
     focus on Burning hands is a cone of 4, where S1 held it at its cap of 3. **Trained stats**
     are the ladders' stats (Intelligence when the roll has none): a spell with no reach ladder
-    (Burning hands) no longer trains Willpower by the old default. **An old Potent** is held to
-    the nearest tier's range at the lenient read (`Magic::retier`, for every affix whose value
-    no tier holds: there was no such affix in a save before, and the read had kept the value,
-    which `Magic::check` then refused).
+    (Burning hands) no longer trains Willpower by the old default. **An old Potent** was held to
+    the nearest tier's range at a lenient read until #840 pinned saves to their version.
   - A ray/bolt flies to the first creature on its line; a hex (`ray`, `auto`) keeps the
     placeholder's rule, the creature seen at the cell aimed at.
   - The migrated tiers (#395, history: S1 turned them into levels, §5.8): the lowest tier
@@ -372,12 +370,15 @@ cast path shares.
     scroll used up (`use_scroll`, never Scroll savant's keeping: §14 q7, decided no), then the check.
   - **Odds** (`study_odds(actor, content, character, caster_level, spell) -> Odds`, pure;
     `World::player_study_odds`): `Odds::overreach` = the spell's level − the caster level; at 0
-    or less `check: None` (certain, no draw); else `(bonus, difficulty)`: Intelligence
+    or less `check: None` (certain, no draw), unless the spell's `study_difficulty`
+    (`SpellData::study_difficulty`, −20 to 40, default 0; the owner's Q7 of #828: the calls'
+    scrolls are very hard to learn) is above 0, which makes it a check at any caster level with
+    the overreach counted as at least 0; else `(bonus, difficulty)`: Intelligence
     modifier + `skill_effect(Effect::Study)` + the class's affinity with the school +
     `TalentMods::study_bonus`, against `StudyRules::difficulty(overreach′, known levels)`, where
     overreach′ is the overreach × (100 + `TalentMods::study_overreach_percent`) / 100, rounded
     down (Overreach's −33), and the known levels `Actor::known_levels`, the sum of the levels
-    of the spells known; the mishap's band reads the plain overreach;
+    of the spells known, then + `study_difficulty`; the mishap's band reads the plain overreach;
     `Odds::ways()` of 144 (`check::ways`). `StudyRules::words` turns ways into "certain",
     "easy", "a struggle", "far beyond you".
   - **Mishaps** (`World::draw_mishap`, `World::mishap`): one `rng.below(total weight)` among

@@ -8,7 +8,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
   Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
   magic): the list is one typed definition in core (id, abbreviation, name per stat), and every
-  per-stat value is stored by stat, so a new stat is one entry there (plus a save format bump).
+  per-stat value is stored by stat, so a new stat is one entry there.
   - **Scores** are integers, 10 the average and the default. Every actor has one in each stat:
     a creature from its type, the player from their character (§8 "Character creation") or,
     without one, from the scenario (§7).

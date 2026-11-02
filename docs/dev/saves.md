@@ -16,14 +16,40 @@ every turn (`storage::web::Pending`: encoding is milliseconds on the vast level)
 Unavailable storage means no saving plus a log warning; failed writes (quota) are messages, never
 panics. Only the `web-sys` features in `crates/warlock/Cargo.toml` are enabled (size).
 
-**The background story** (#702): `Character::story`, the ids of its lines, is saved and hashed
-with the character and left out while empty, so a save from before it loads with no story; the
-text is told again from the content (docs/dev/background.md).
+**Saves are pinned to the game version that wrote them** (#840; owner, 2026-11-02: "we do not
+need to preserve saves"). The envelope (`warlock-core/src/save.rs`) is `magic`, `game_version`
+(`warlock_core::GAME_VERSION`, the workspace version), `content_fingerprint`, and the state;
+`save::decode` refuses a save whose `game_version` is not this build's (`SaveError::OtherVersion`,
+before the state is read; a save that names none, from before the pin, is "an older version"),
+then one whose fingerprint differs (`ContentMismatch`), then one that does not read (`Corrupt`).
+Nothing carries a save across versions: no format number, no id maps, no lenient reads. A state
+naming something the content does not have (a talent, a story line, an affix value outside its
+tier, ...) is refused by `World::from_state`'s checks, never dropped or mapped.
+`#[serde(default)]` on new fields stays (harmless, and it keeps replays readable). Between two
+releases every development build shares the version, so there the content fingerprint and the
+decoder are what refuse a save a build cannot read (a renamed `.sav.bad`, as below); saves are
+not promised across development builds.
 
-**A wand's rung** (#752, the spell scaling design §7.4): `Stack::wand_rung`, drawn as the wand is
-made, is saved and hashed with the stack and left out for everything but a wand, so every other
-stack saves byte for byte as before; a wand in a save from before it has none and reads as rung 0
-(the base), never refused (docs/dev/spells.md "Wands").
+The summary beside a save records the version too (`Summary::version`; empty in a summary from
+before the pin, which counts as another version). `SavedCharacter::playable` is true when the
+summary names this version, or there is no readable summary (the save is tried, and the
+envelope decides). The Characters screen lists another version's save with `other version` in
+the level column and `Made by version 0.8.0 of the game: it cannot be continued here.` above
+its place; Enter does nothing on it, Erase deletes it through the dialog. Continue
+(`SaveStore::last_played`, the main menu's Continue row, and a start that skips the menu)
+resumes the character played last that is playable; the main menu offers Characters while any
+save is listed, Continue only with a playable one. Resuming another version's save
+(`Resume::Failed`) leaves it as it is: never renamed `.sav.bad`, still listed. The screen
+snapshots' fixture (`tests/golden/saved-characters`) holds Osric, made by 0.8.0 and played
+last; the other summaries carry this version, so **the release that bumps the workspace
+version sets their `version` too** (`save.rs` test `the_listed_fixture_is_of_this_version`
+says so when it fails).
+
+Replays are not pinned: a replay records `game_version`, but `replay --verify` and `--replay`
+play it in any version and compare the state hashes step by step, which is the check that
+matters (a replay whose hashes still match is still good, and the tests' replays live across
+releases). A version other than this build's is said as a warning beside the result, never a
+failure (`Replay::version_note`).
 
 **One save per character** (#218; `save.rs`, `save/characters.rs`): every character has a save id,
 a slug of its name and the lowest free number (`characters::fresh_id`: `brakka-1`, then
@@ -46,15 +72,16 @@ Characters screen resumes one by id (`MenuChoice::Resume`) or deletes it after t
 shows it) and the main menu opens afresh with the reason. Captures and replays never write: with
 `--save-dir` their store is read-only (`SaveStore::read_only`), so a capture can show the list of
 the characters in a folder (`tests/golden/saved-characters`, whose saves are placeholders: only the
-summaries are read; the screen snapshots' `main-menu-saved` and `characters-screen` read it too). A pre-#218 `run.sav` is left alone: not read, listed, or deleted (the next
-release's format bump would reject it anyway, and its character has no name).
+summaries are read; the screen snapshots' `main-menu-saved` and `characters-screen` read it too). A pre-#218 `run.sav` is left alone: not read, listed, or deleted (its
+version is not this one's, and its character has no name).
 
-Format and `Content::fingerprint` live in `warlock-core/src/save.rs`.
-`FORMAT_VERSION` is bumped by the integrator once per release, never in a feature PR
-(`docs/dev/merging.md`): an incompatible `WorldState` change, or adding or reordering terrain, creatures,
-lights, levels, objects, equipment slots, skills, weapon skills (fighting styles too), statuses, diseases, traps, or
-dungeon branches, invalidates existing saves (affixes are saved by id: adding them does not,
-removing one a save uses does); say so in the PR and leave the number alone.
+The envelope lives in `warlock-core/src/save.rs`, `Content::fingerprint` in the content. There
+is no format number to bump: a release's new workspace version is what retires the saves of the
+last (`docs/dev/merging.md`). An incompatible `WorldState` change, or adding or reordering
+terrain, creatures, lights, levels, objects, equipment slots, skills, weapon skills (fighting
+styles too), statuses, diseases, traps, or dungeon branches, invalidates development saves of
+the same version too (affixes are saved by id: adding them does not, removing one a save uses
+does); say so in the PR.
 
 **Permadeath**: when the player dies, `screens::on_death` deletes that character's files, and no
 other character's (`SaveStore::delete_character(&game.save_id)`: its save, summary, and snapshot)

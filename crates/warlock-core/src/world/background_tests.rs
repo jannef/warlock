@@ -376,7 +376,7 @@ fn a_replay_and_a_save_keep_the_story() {
     let character = world.state().character.clone().expect("a character");
     let told = crate::background::retell(&BUILTIN, "ascmearc", &character);
     assert_eq!(told.len(), 4, "{told:?}");
-    // An edited sentence reaches the saved character; a line gone is skipped, and logged.
+    // An edited sentence reaches the saved character; a save holding a line gone is refused.
     let first = character.story[0].clone();
     let chapter = BUILTIN
         .background()
@@ -398,15 +398,14 @@ fn a_replay_and_a_save_keep_the_story() {
     let id = format!("id = \"{}\"", first.line);
     files.edit_table("background", |t| t.replace(&id, "id = \"renamed_line\""));
     let renamed = Arc::new(Content::load(&files).expect("valid"));
-    let loaded = crate::save::decode(&bytes, renamed.clone()).expect("loads");
-    let c = loaded.state().character.as_ref().expect("a character");
+    let refused = crate::save::decode(&bytes, renamed)
+        .err()
+        .map(|e| e.to_string());
+    let why = format!("story line `{}` is not in this content", first.id());
     assert!(
-        !crate::background::retell(&renamed, "ascmearc", c)
-            .concat()
-            .contains(&text)
+        refused.as_ref().is_some_and(|e| e.contains(&why)),
+        "{refused:?}"
     );
-    let log = format!("story line `{}` is not in the content: skipped", first.id());
-    assert!(loaded.retiered().contains(&log), "{:?}", loaded.retiered());
 }
 
 #[test]

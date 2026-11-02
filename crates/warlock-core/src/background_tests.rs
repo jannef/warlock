@@ -247,7 +247,7 @@ fn texts_fill_their_slots() {
     );
     c.spec.gender = Gender::Other;
     assert_eq!(fill("{They} and {them}", &c, &words), "They and them");
-    // A line the content no longer has is skipped, and said so for the log.
+    // A line the content does not have is skipped, and named (a save holding it is refused).
     c.story = story(&[
         "parents/plain_folk",
         "birth/gone_line",
@@ -257,8 +257,8 @@ fn texts_fill_their_slots() {
     assert_eq!(told.len(), 2);
     assert!(!told[0].contains("mercy"));
     assert_eq!(
-        missing(&CONTENT, "ascmearc", &c),
-        ["story line `birth/gone_line` is not in the content: skipped"]
+        unknown_line(&CONTENT, "ascmearc", &c).as_deref(),
+        Some("birth/gone_line")
     );
     // The road is the campaign's: outside the Ascmearc its line is not there.
     c.story = story(&["road/the_last_cart"]);

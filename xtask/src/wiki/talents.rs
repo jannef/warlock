@@ -482,16 +482,45 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("threat range {} with every attack", signed(value))
         }
         TalentEffect::RerollFumble => "a natural 2 on the attack roll is rolled again, once".into(),
-        TalentEffect::AllyMod { to_hit, protection } => {
-            let mut parts = Vec::new();
+        TalentEffect::AllyMod {
+            to_hit,
+            protection,
+            count,
+            duration_percent,
+            lasting,
+            most,
+        } => {
+            let mut gets = Vec::new();
             if to_hit != 0 {
-                parts.push(format!("to-hit {} on their attacks", signed(to_hit)));
+                gets.push(format!("to-hit {} on their attacks", signed(to_hit)));
             }
             if protection != 0 {
-                parts.push(format!("Protection {}", signed(protection)));
+                gets.push(format!("Protection {}", signed(protection)));
             }
-            format!("your allies get {}", parts.join(" and "))
+            let mut parts = Vec::new();
+            if !gets.is_empty() {
+                parts.push(format!("your allies get {}", gets.join(" and ")));
+            }
+            if count != 0 {
+                parts.push(format!("every summon spell's call brings {count} more"));
+            }
+            if duration_percent != 0 {
+                parts.push(format!("calls last {duration_percent}% longer"));
+            }
+            if lasting {
+                parts.push("calls never lapse: they stay until slain".into());
+            }
+            if most != 0 {
+                parts.push(format!("{most} more of each summon spell's calls at once"));
+            }
+            parts.join("; ")
         }
+        TalentEffect::SummonBias { tag, weight } => match weight {
+            0 => format!(
+                "a summon spell never calls a creature tagged `{tag}` while another may come"
+            ),
+            n => format!("a summon spell calls a creature tagged `{tag}` {n} times as often"),
+        },
         TalentEffect::MaxHpPerLevels {
             per_levels,
             at_least,

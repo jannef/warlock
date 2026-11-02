@@ -2,8 +2,8 @@
 //! console.
 //!
 //! [`Press`] is a key press as screens see it, and [`Panel`] a centered frame with row helpers.
-//! [`MainMenu`] is the main menu (Continue, as the character played last, and Characters when a
-//! character is saved; New run, Settings, Controls, Quit) or, over a run, the pause menu (Resume, Settings, Controls, Save and quit to menu, Quit). Like
+//! [`MainMenu`] is the main menu (Continue, as the character played last that this version can
+//! continue, and Characters when any character is saved; New run, Settings, Controls, Quit) or, over a run, the pause menu (Resume, Settings, Controls, Save and quit to menu, Quit). Like
 //! every screen it is a plain state machine: it takes presses and answers with a
 //! [`ScreenAction`], so it is testable without a window. Selection is always shown by text (a `>`
 //! marker), never by color alone.
@@ -274,17 +274,21 @@ pub struct MainMenu {
     selected: usize,
     /// The pause menu rather than the main menu.
     pause: bool,
-    /// The name of the character played last, if any is saved: the main menu offers to
-    /// Continue as them, and the list of saved characters.
+    /// The name of the character played last that this version can continue, if any: the main
+    /// menu offers to Continue as them.
     last: Option<String>,
+    /// Any character is saved (of this version or another): the main menu offers the list.
+    saved: bool,
 }
 
 impl MainMenu {
-    /// The main menu; `last` names the character played last, if any is saved.
-    pub fn main(last: Option<String>) -> Self {
+    /// The main menu; `last` names the character Continue resumes, if any, and `saved` says
+    /// whether any character is saved.
+    pub fn main(last: Option<String>, saved: bool) -> Self {
         Self {
             selected: 0,
             pause: false,
+            saved: saved || last.is_some(),
             last,
         }
     }
@@ -294,6 +298,7 @@ impl MainMenu {
             selected: 0,
             pause: true,
             last: None,
+            saved: false,
         }
     }
 
@@ -313,7 +318,10 @@ impl MainMenu {
         }
         let mut items = Vec::new();
         if self.last.is_some() {
-            items.extend([MainItem::Continue, MainItem::Characters]);
+            items.push(MainItem::Continue);
+        }
+        if self.saved {
+            items.push(MainItem::Characters);
         }
         items.extend([MainItem::NewRun, MainItem::Settings, MainItem::Controls]);
         // A web page cannot quit: closing the tab is the browser's job.
@@ -595,8 +603,13 @@ mod tests {
 
     #[test]
     fn continue_and_characters_are_offered_only_with_a_save() {
-        assert_eq!(MainMenu::main(None).items()[0], MainItem::NewRun);
-        let mut with_save = MainMenu::main(Some("Brakka".into()));
+        assert_eq!(MainMenu::main(None, false).items()[0], MainItem::NewRun);
+        // Only saves of another version: the list, but nothing to continue.
+        assert_eq!(
+            MainMenu::main(None, true).items()[..2],
+            [MainItem::Characters, MainItem::NewRun]
+        );
+        let mut with_save = MainMenu::main(Some("Brakka".into()), true);
         assert_eq!(
             with_save.items()[..3],
             [MainItem::Continue, MainItem::Characters, MainItem::NewRun]
@@ -614,7 +627,7 @@ mod tests {
 
     #[test]
     fn main_menu_opens_sub_screens_and_ignores_esc() {
-        let mut m = MainMenu::main(None);
+        let mut m = MainMenu::main(None, false);
         assert_eq!(
             press(&mut m, Nav::Enter),
             ScreenAction::Open(ScreenName::NewRun)
@@ -668,7 +681,7 @@ mod tests {
 
     #[test]
     fn quit_is_the_last_row_and_selection_wraps() {
-        let mut m = MainMenu::main(None);
+        let mut m = MainMenu::main(None, false);
         press(&mut m, Nav::Up);
         assert_eq!(
             press(&mut m, Nav::Enter),

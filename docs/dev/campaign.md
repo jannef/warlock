@@ -114,7 +114,8 @@ name (`The Ascmearc`; left out when empty, `#[serde(default)]` for summaries wri
 The Characters screen names it beside the place, `In Cēaptūn (The Ascmearc).`, only when more
 than one campaign is installed (a developer build, with the test world): a release build has
 one. The fixture summaries under `tests/golden/saved-characters/` (the `characters-screen` text
-snapshot) carry `The Showcase`.
+snapshot) carry `The Showcase`, but Osric's, `The Ascmearc` (made by another version,
+docs/dev/saves.md).
 
 ## The test world in release builds (#331, design §4)
 

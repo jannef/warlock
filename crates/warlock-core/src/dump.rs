@@ -1130,7 +1130,8 @@ fn spell_does(view: &PerceptionView<'_>, spell: crate::content::SpellId) -> Vec<
 }
 
 /// The spells the player knows (`[{"id", "level", "cost", "roll", "damage_type", "reach"}]`:
-/// the roll's text as the abilities menu shows it, `"healed"` for a heal's type, `reach` with
+/// the roll's text as the abilities menu shows it, `"healed"` for a heal's type, `"called"` for
+/// a summon's count, `reach` with
 /// `range`, `length`, `radius`; each null where none) and the scrolls they could study
 /// (`[{"letter", "spell", "chance"}]`).
 fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
@@ -1142,6 +1143,7 @@ fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
             let roll = view.own_spell_roll(spell);
             let damage_type = roll.as_ref().map(|r| match r.damage_type {
                 Some(kind) => content.damage_type(kind).id.clone(),
+                None if def.kind == crate::content::SpellPurpose::Summon => "called".into(),
                 None => "healed".into(),
             });
             let reach = view.own_spell_reach(spell).unwrap_or_default();

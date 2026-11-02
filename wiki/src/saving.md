@@ -19,9 +19,11 @@ never saved again: there is nothing to continue.
 On the web the page is also saved when it is hidden or closed.
 
 Choose **Continue** on the [main menu](controls.md#menus) to resume the character you played last (it names them, and
-appears only if a character is saved). **Characters** lists every saved character: name, [race](races.md)
+appears only if a character this version of the game can continue is saved). **Characters** lists every saved character: name, [race](races.md)
 and [class](classes.md), [level](experience.md#levels), and for the one selected where they are and when you last played them (in UTC).
-Press `Enter` to resume one, or `Delete` to delete one for good (the game asks first). **New run**
+Press `Enter` to resume one, or `Delete` to delete one for good (the game asks first). A
+character saved by another version of the game is listed as made by that version: it cannot be
+continued, and Continue skips it, but you can still delete it. **New run**
 lets you [create your character](character.md) for [the Ascmearc](ascmearc.md), and starts a fresh run with a save of its own: it never
 touches your other characters.
 
@@ -74,10 +76,9 @@ message appears on the [message line](controls.md#messages).
 
 ## Good to know
 
-- A save only works with the same game content it was made with. After a game update that changes
-  the world's content, an old save may be rejected with a message when you try to resume it. The
-  unreadable file is renamed (`brakka-1.sav.bad`) and never deleted, and the list of characters no
+- A save only works in the version of the game that made it. After an update, your earlier
+  characters stay on the list, marked as made by another version, and cannot be continued; the
+  older version of the game can still continue them. A save that cannot be read at all is renamed (`brakka-1.sav.bad`) and never deleted, and the list of characters no
   longer shows it. Saves made before characters had their own (a single `run.sav`) are left where
   they are and not read.
-- Saves from before version 1.0 may be rejected after updates. From 1.0 on, saves will be migrated.
 - The [status bar](controls.md#the-screen) shows the run's **seed**: give it when you report a problem with a run.
