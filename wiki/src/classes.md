@@ -72,7 +72,9 @@ at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and 
 **[inspire](abilities.md#ability-inspire)** costs 3 [inspiration](resources.md#resource-inspiration) when you hold 3, else 3 [mana](mana.md#spending-it), and can be sung again while it
 lasts (it starts over); a virtuoso's costs nothing at all, and keeps the inspiration.
 
-The [ascetic](classes.md#ascetic)'s **[flurry](talents.md#talent-flurry)** gives you [ki](resources.md#resource-ki) (5, full): every attack with nothing in your hands strikes a
+The [ascetic](classes.md#ascetic)'s **[martial arts](talents.md#talent-martial-arts)** gives you [ki](resources.md#resource-ki) at level 1, full (5 with
+[Willpower](stats.md#stat-willpower) 12, growing with Willpower and your [level](experience.md#levels)), and **[flurry](talents.md#talent-flurry)**, from level 1
+too, spends it: every attack with nothing in your hands strikes a
 second blow, at −2 [to hit](combat.md#hitting), for a point of ki; with none left, the attack is a single blow.
-**[Quivering palm](abilities.md#ability-quivering-palm)** costs all 5 ki and has no other wait.
+**[Quivering palm](abilities.md#ability-quivering-palm)** costs 5 ki and has no other wait.
 

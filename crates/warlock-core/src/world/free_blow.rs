@@ -77,7 +77,7 @@ impl FreeBlows {
 }
 
 /// The flurry's second blow's to-hit.
-const FLURRY_TO_HIT: i32 = -2;
+pub(super) const FLURRY_TO_HIT: i32 = -2;
 
 fn is_false(b: &bool) -> bool {
     !*b

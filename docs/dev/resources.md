@@ -38,7 +38,10 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   group, after the damage types). `Build` is the closed list of events (`kill`, `hit`,
   `critical`, `struck`, `sneak_attack`; `Build::ALL` in wiki order). Loaded before the talents,
   whose class actives may cost one (`TalentDef::resource: Option<ResourceCost>`, data `resource =
-  { id, cost }`, checked: a known id, a talent with a class active, a cost no more than `max`).
+  { id, cost }`, checked: a known id, a talent with a class active, a cost no more than
+  `ResourceDef::most`, the data's `max` with what `max_from` adds at the highest level for
+  average stats (ki: 20, so Quivering palm's 5 stands although `max` is 4); the effects'
+  `flurry_cost` and `rapid_shot` costs are checked against it too).
 - **State**: `Actor::resources: Pools` (`resource.rs`): `Pool { resource, value, progress }` in
   resource order (`Pools::set` keeps it sorted), saved and hashed, skipped in the JSON while
   empty. Creatures never get any; nothing stops one but nothing grants one.
@@ -121,7 +124,10 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   4 }` on its talent): `short_of` greys it with the pool's `lacking`, and `World::may_use_class`
   says a pool's `lacking` words, capitalized, when it has them ("You have not the rage for
   it."), else "You have too little X.".
-- **Ki** (R4, #252): Flurry grants it (`grants_resource`) and carries
+- **Ki** (R4, #252; the ki tricks design S2, #846): Martial arts (level 1) grants it
+  (`grants_resource`), full; `max = 4`, `max_from = { stat = "willpower", per_levels = 6,
+  least = 3 }` (no code: stamina's field), `lacking = "your ki is spent"`. Perfect self (60)
+  carries `resource_rate` +100 (read in `World::resource_rate`). Flurry (level 1) carries
   `TalentEffect::FlurryCost { resource, cost }` (`TalentMods::flurry_cost`), read in one place,
   `World::flurry` (`free_blow.rs`, from `second_blow` on `Cue::First`, which now takes `events`
   for the spend): the second blow is decided only once its cost is spent; short, none. Quivering

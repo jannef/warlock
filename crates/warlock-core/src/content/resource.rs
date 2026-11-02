@@ -216,6 +216,13 @@ pub struct ResourceDef {
 }
 
 impl ResourceDef {
+    /// The most it may hold by data at the highest level for a holder of average stats, before
+    /// talents and affixes: `max`, with what `max_from` adds at [`super::MAX_LEVEL`] (ki: 4 and
+    /// a point per 6 levels). What a talent's cost is checked against at load.
+    pub fn most(&self) -> u16 {
+        (self.max_from).map_or(self.max, |from| from.max(self.max, 0, super::MAX_LEVEL))
+    }
+
     /// How much event `on` builds it up (0: it does not).
     pub fn built_by(&self, on: Build) -> u16 {
         (self.builds.iter())

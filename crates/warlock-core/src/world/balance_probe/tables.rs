@@ -588,6 +588,50 @@ pub(super) fn rage(p: &Probe, rng: &mut Rng, out: &mut String) {
     }
 }
 
+/// The ascetic's ki (#846): the pool by level, and the fight with one blow an attack against the
+/// fight with the flurry's second, and how long a full pool keeps the flurry up.
+pub(super) fn ki(p: &Probe, rng: &mut Rng, out: &mut String) {
+    writeln!(out, "\n## Ki\n").unwrap();
+    writeln!(
+        out,
+        "The ascetic bare-handed (a brawler; from level 5 leather gloves, boots, and a wool cloak, no armour), trained stats, against the monsters within two levels. The pool's maximum as Martial arts grants it (the seeds' mean: Willpower and the level; Inner calm where the picks took it) and the ki back a round; the fight cells as in \"Fights\", with one blow an attack (no ki) and with the flurry's second blow (−2 to hit, a point of ki an attack); then the ki the flurry spends a round against what comes back, and how many rounds a full pool keeps it up (`holds` when it comes back as fast).\n"
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "| L | ki | back a round | One blow | Flurry | spent − back = net · rounds from full |\n|---|---|---|---|---|---|"
+    )
+    .unwrap();
+    for &level in &LEVELS {
+        let w = p.window(level, -2, 2);
+        let snaps = p.of("ascetic", level, Gear::Plain, true);
+        let ki: Vec<_> = snaps.iter().filter_map(|s| s.ki.as_ref()).collect();
+        if ki.is_empty() {
+            continue;
+        }
+        let singles: Vec<&Side> = ki.iter().map(|k| &k.single).collect();
+        let flurries: Vec<&Side> = ki.iter().map(|k| &k.flurry).collect();
+        let one = super::fight_sides(&singles, &w, None, rng);
+        let two = super::fight_sides(&flurries, &w, None, rng);
+        let max = avg(ki.iter().map(|k| f64::from(k.max)));
+        let back = avg(ki.iter().map(|k| k.back));
+        let spent = avg(ki.iter().map(|k| k.flurry.blows));
+        let net = spent - back;
+        let lasts = if net > 0.0 {
+            r(max / net)
+        } else {
+            "holds".into()
+        };
+        writeln!(
+            out,
+            "| {level} | {max:.1} | {back:.2} | {} | {} | {spent:.2} − {back:.2} = {net:.2} · {lasts} |",
+            fight_cell(&one),
+            fight_cell(&two),
+        )
+        .unwrap();
+    }
+}
+
 const CLASSES: [&str; 4] = ["warrior", "thief", "wizard", "priest"];
 
 /// Stat training (#727): the trained careers' scores by level, the marks a day the hooks gave,

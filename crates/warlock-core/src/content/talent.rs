@@ -1146,7 +1146,7 @@ impl TalentEffect {
             if cost == 0 {
                 return Err(format!("`{kind}`: cost is at least 1"));
             }
-            match resource(id)?.map(|r| content.resource(r).max) {
+            match resource(id)?.map(|r| content.resource(r).most()) {
                 Some(max) if cost > max => Err(format!(
                     "`{kind}`: costs {cost} of `{id}`, more than its maximum {max}"
                 )),
@@ -1242,7 +1242,7 @@ impl TalentEffect {
                 if !(1..=50).contains(saving) {
                     return Err("`rapid_shot`: saving is 1 to 50".into());
                 }
-                match resource(id)?.map(|r| content.resource(r).max) {
+                match resource(id)?.map(|r| content.resource(r).most()) {
                     Some(max) if *cost > max => Err(format!(
                         "`rapid_shot`: costs {cost} of `{id}`, more than its maximum {max}"
                     )),
@@ -3060,7 +3060,7 @@ pub(super) fn parse<'a>(
                         cost.id
                     ))
                 })?;
-                if cost.cost > content.resource(resource).max {
+                if cost.cost > content.resource(resource).most() {
                     return Err(err(format!("costs more `{}` than it can hold", cost.id)));
                 }
                 Some(ResourceCost {

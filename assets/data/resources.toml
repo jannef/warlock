@@ -76,13 +76,18 @@ start = 0
 decays = 120
 builds = [{ on = "sneak_attack", amount = 1 }]
 
-# The ascetic's ki: a point back every three base turns, resting too.
+# The ascetic's ki (the ki tricks design): granted full by Martial arts at level 1, a point back
+# every three base turns, resting too; it never ends. Its maximum is 4, plus the Willpower
+# modifier, plus a point per 6 character levels, at least 3; talents add on top (Inner calm),
+# and so does the affix of Stillness. Perfect self and Inner calm bring it back faster.
 [[resource]]
 id = "ki"
 name = "Ki"
 short = "Ki"
-max = 5
+max = 4
+max_from = { stat = "willpower", per_levels = 6, least = 3 }
 regenerates = 18
+lacking = "your ki is spent"
 
 # The bard's inspiration: built by the bard's own kills, a point lost every 30 base turns.
 [[resource]]

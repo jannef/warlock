@@ -25,7 +25,7 @@ cargo test --release -p warlock-core balance_probe -- --ignored --nocapture
 
 It takes about three minutes in release (most of it the stat training's sweep, a hundred and
 seventy careers to level 60). It prints the Markdown tables of the sections from "Players" to
-"Rage" below, and those of "Stat training", and the same content always prints the same tables (fixed seeds and streams).
+"Ki" below, and those of "Stat training", and the same content always prints the same tables (fixed seeds and streams).
 After a PR that tunes combat data (weapon skills, creatures, classes, spells, stats, items), run
 it again and replace those sections, then revisit the tuning notes. The code is
 `crates/warlock-core/src/world/balance_probe.rs` (the measuring, with the method in its module
@@ -389,6 +389,42 @@ and raging fight cells are unchanged (#842 changes no blow). What the run shows:
 
 If a duel's rage should run out mid-fight, the levers are `struck`'s amount or a faster decay;
 #842 keeps the design's numbers.
+
+## Ki
+
+The ascetic bare-handed (a brawler; from level 5 leather gloves, boots, and a wool cloak, no armour), trained stats, against the monsters within two levels. The pool's maximum as Martial arts grants it (the seeds' mean: Willpower and the level; Inner calm where the picks took it) and the ki back a round; the fight cells as in "Fights", with one blow an attack (no ki) and with the flurry's second blow (−2 to hit, a point of ki an attack); then the ki the flurry spends a round against what comes back, and how many rounds a full pool keeps it up (`holds` when it comes back as fast).
+
+| L | ki | back a round | One blow | Flurry | spent − back = net · rounds from full |
+|---|---|---|---|---|---|
+| 1 | 5.3 | 0.33 | 82/63 · 5.6:1.1 · 2.1 / 19 | 82/63 · 10.5:1.1 · 1.2 / 19 | 0.99 − 0.33 = 0.66 · 8.1 |
+| 5 | 5.3 | 0.33 | 90/70 · 7.9:3.0 · 2.7 / 10 | 90/70 · 15.0:2.9 · 1.4 / 11 | 1.00 − 0.33 = 0.67 · 8.0 |
+| 10 | 6.3 | 0.33 | 95/70 · 15.0:5.9 · 2.8 / 9.6 | 95/70 · 28.9:5.8 · 1.4 / 9.7 | 1.13 − 0.33 = 0.80 · 8.0 |
+| 15 | 7.7 | 0.33 | 99/73 · 20.9:8.8 · 3.1 / 9.9 | 99/73 · 41.3:8.9 · 1.6 / 9.7 | 1.21 − 0.33 = 0.88 · 8.7 |
+| 20 | 8.8 | 0.33 | 99/78 · 25.2:10.0 · 3.1 / 13 | 99/78 · 50.6:10.2 · 1.6 / 13 | 1.30 − 0.33 = 0.96 · 9.2 |
+| 30 | 11.5 | 0.33 | 99/86 · 34.1:18.9 · 4.2 / 11 | 99/86 · 68.0:18.8 · 2.1 / 11 | 1.41 − 0.33 = 1.07 · 11 |
+| 40 | 13.3 | 0.33 | 99/88 · 45.4:18.1 · 3.6 / 17 | 99/88 · 91.0:17.8 · 1.8 / 17 | 1.53 − 0.33 = 1.20 · 11 |
+| 50 | 15.7 | 0.33 | 99/92 · 47.3:28.0 · 4.7 / 14 | 99/92 · 94.8:28.1 · 2.3 / 14 | 1.54 − 0.33 = 1.20 · 13 |
+| 60 | 19.3 | 0.78 | 99/98 · 56.2:32.0 · 4.6 / 12 | 99/98 · 109.2:33.1 · 2.3 / 12 | 1.54 − 0.78 = 0.76 · 26 |
+
+This section is #846's run (the ki tricks design's S2: the pool from level 1 by Martial arts,
+its maximum `4 + the Willpower modifier + level / 6`, at least 3, and Perfect self's pace); the
+other sections are unchanged by it. The same probe on the content before #846 (ki from Flurry at
+18, a flat 5) printed no row below 20 (no pool, so no flurry: the "One blow" cells were the
+ascetic's whole fight to level 17), and from 20 the same fight cells with a pool of 5.0 (6.3 at
+60 with Inner calm) and 0.33 back a round (0.44 at 60): a full pool kept the flurry up 5.2
+rounds at 20, 4.7 at 30, 4.2 at 40 and 50, and 5.8 at 60, against 9.2, 11, 11, 13, and 26 now.
+What the run shows:
+
+- **The flurry doubles the ascetic's damage** at every level (the second blow at −2 lands about
+  as often as the first against the monsters of their level), so rounds to kill halve: 1.2 to
+  2.3 rounds a monster of their level.
+- **A full pool outlasts a fight**: eight to thirteen rounds of flurry from full against one to
+  two and a half rounds a kill, so a duel never runs dry; a run of three or four fights back to
+  back does, and then the flurry comes every third attack (0.33 back a round). Perfect self's
+  pace (0.67, 0.83 with Inner calm) makes it every other attack or better at 60.
+- **The maximum grows as the design meant**: 5.3 at 1, 8.8 at 20, 15.7 at 50, 19.3 at 60
+  (Inner calm included where the picks took it), so the later tricks (S3 to S7) have points to
+  draw on beside the flurry.
 
 ## Summons
 
