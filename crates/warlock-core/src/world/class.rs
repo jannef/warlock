@@ -4,8 +4,9 @@
 //! news), and again when a run is restored, so a table that grew reaches saved characters (never
 //! taking anything away). A given talent is held like a picked one, at rank 1, so every rule
 //! reads it through `Actor::talent_mods`; what a rank hands out once (hit points by level, a stat
-//! gift) is handed out as it is given ([`hand_out`]). A talent already held (a class ability the
-//! player picked before their class gave it) is not given again.
+//! gift) is handed out as it is given ([`hand_out`]). A talent already held (a pickable the
+//! table names, which the player picked before their class gave it) is not given again: the
+//! level brings a talent pick in its place instead ([`held_already`], #790).
 //!
 //! The one ability here that runs with time is Connoisseur's: a magic item carried long enough
 //! is identified ([`World::appraise_carried`]).
@@ -54,6 +55,30 @@ pub(super) fn grant(
         given.push(id);
     }
     given
+}
+
+/// The talents `class` (an id) gives at exactly `level` that `actor` already holds: a pickable
+/// the table names (Fast healer, Beast-friend, Evasion, Riposte) that the player took as a pick
+/// before the class gave it. Each brings a talent pick in its place (#790), so a pick made
+/// early is never lost to the table.
+pub(super) fn held_already(
+    content: &Content,
+    class: Option<&str>,
+    actor: &Actor,
+    level: u8,
+) -> Vec<TalentId> {
+    let Some(class) = class.and_then(|c| content.class(c)) else {
+        return Vec::new();
+    };
+    let book = content.talents();
+    if !book.has_class_tree() {
+        return Vec::new();
+    }
+    (class.abilities.iter())
+        .filter(|(l, _)| *l == level)
+        .filter_map(|(_, id)| book.id(id))
+        .filter(|&id| actor.talents.rank_of(&book.get(id).id, None) > 0)
+        .collect()
 }
 
 impl World {

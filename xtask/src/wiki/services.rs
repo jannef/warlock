@@ -5,7 +5,7 @@ use std::fmt::Write as _;
 use warlock_core::content::{Content, DialogueId, ServiceKind};
 
 /// The services (`[[dialogue.service]]` in the dialogue data): who sells each, what it does, and
-/// its price before Pilgrim, sorted by who sells it and then by the service's name.
+/// its price before Pious, sorted by who sells it and then by the service's name.
 pub(super) fn services(content: &Content) -> String {
     let mut rows: Vec<(String, String, &'static str, String)> = Vec::new();
     for (i, d) in content.dialogues().iter().enumerate() {

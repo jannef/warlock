@@ -1,7 +1,0 @@
-[[talent]]
-id = "sense_of_place"
-name = "Sense of place"
-tree = "wayfarer"
-description = "You read a place at a glance: a special room's nature is known to you as soon as you see it, and you know what has a whole level in its grip."
-effects = [{ kind = "sense_of_place" }]
-systems = ["special_rooms"]

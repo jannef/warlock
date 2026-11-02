@@ -156,8 +156,7 @@ Sleep (`world/den.rs`): a creature whose effects include a status with `sleeps` 
 - `World::spread_noise` is where every noise is heard (`make_noise_at` and `sound_at` call it;
   `noise::hearers` decides who hears): each hearer keeps the `Heard`, then each sleeper among them
   wakes when `loudness × 100 ≥ threshold × percent` (`wakes_to`): `percent` its den's `wake`
-  (`Here::swarm`, the room's only; 100 outside a den), × (100 + the player's
-  `TalentMods::wake_percent`) / 100 for a noise whose maker is the player (Hush-foot).
+  (`Here::swarm`, the room's only; 100 outside a den).
 - `World::hurt`: harm that leaves an actor alive (spared or not) wakes it.
 - `World::wake`: removes the sleep status (not through `ended`: it says nothing to the player
   about themselves), says "The <creature> wakes up." if the player's last perception sees its
@@ -383,8 +382,8 @@ seen creature's line, `Harm::Place`), and `becomes` (the placed light removed, `
 Nothing new is saved but `SpecialRoom::side` (left out while `None`): the terrain is the record
 of a spent or blown altar. The `rooms` dev layer adds `, side good` and `, spent`/`, destroyed`
 (`dump.rs::feature_state`). The showcase's `shrine` scenario has a good, a neutral, and an evil
-altar side by side. Talent: Devout (system `special_rooms`, which holds prayer since #773; `TalentMods::devout`; hook
-`leaned_kinds`).
+altar side by side. Talent: Pious's first rank (system `special_rooms`, which holds prayer
+since #773; `devout`, `TalentMods::devout`; hook `leaned_kinds`).
 
 The great outcomes (#407, `world/boons.rs`; tests `world/boons_tests.rs`) are five more hooks,
 applied after `becomes`: `gift` (`Stats::gift` on a random stat), `wrath` (`Stats::lessen`,
@@ -402,7 +401,7 @@ likewise); `rarity` (`magic`/`rare`, only with `loot`) is the relic's floor, the
 `level_mana` (up to `mana_level`) off the bases (hit points never below 1), drops `Due`s of
 that level and above, and raises `Progress::peak` (saved, left out at 0): `level_up` gives a
 level up to `peak` its hit points and mana again but no `Due`, no stat checks, and no class
-news. Penitent (`TalentMods::penitent`) is read in `prayer_answered`: a drawn outcome of kind
+news. Pious's second rank (`penitent`, `TalentMods::penitent`) is read in `prayer_answered`: a drawn outcome of kind
 bane and tier great is replaced by `draw_in(table, nothing)`. Perception's `OwnTalent::boon`
 marks them: `(altar)`/`(altar, flaw)` in the talents dump, "altar" on the Talents page, left
 out of the character screen's sign gifts; JSON adds `boon: true` only then.
@@ -706,18 +705,17 @@ arrival (stairs, falls, teleports), and `World::new` says it at the start of a r
 left out of it (look mode's blood word follows the blood effect switch, a presentation setting;
 messages do not). Tests: `world/feature_tests.rs`.
 `pervade_line` is said on every arrival on a pervaded level (`World::travel`, and at the start of
-a run), with Sense of place followed by what the effect is. `PerceptionView::room` names a room
-once entered (with Sense of place, once glimpsed) on cells seen or remembered; look mode reads it.
+a run). `PerceptionView::room` names a room once entered on cells seen or remembered; look mode
+reads it.
 `PerceptionView::pervading` is the whole level's effect (JSON dumps: `pervading`); look mode does
 not name it. The `rooms` dev layer marks each room's plain ground, lists each room with
 `entered`/`glimpsed`, and heads with `pervading <id>`.
 
 ## Talents
 
-System `special_rooms` (`data/talents.toml`): Sense of place (wayfarer, `sense_of_place`; hook
-`PerceptionView::room` and `pervade_line`), Hush-foot (shadow, Stealth 10, `wake_percent` 100,
-also system `stealth`; hook `World::spread_noise`'s wake check), and Old delver (delver, two
-ranks, #775). Its first rank (Willpower 11 or Dexterity 12): `collapse_proof` (hook
+System `special_rooms` (`data/talents.toml`): Old delver (delver, two ranks, #775) and Pious
+(below). #787 cut Sense of place (`sense_of_place`) and Hush-foot (`wake_percent`) with their
+hooks. Its first rank (Willpower 11 or Dexterity 12): `collapse_proof` (hook
 `World::collapse_step`, which then draws nothing), `room_status_immune` `ebbing` (hook
 `World::dwell`), and `grave_warden` (hook `World::curse_corpse`); its second (level 10):
 `room_pace_percent` 50 (hook `World::room_pace`) and `hoard_grace` 1 (hook
@@ -725,8 +723,11 @@ ranks, #775). Its first rank (Willpower 11 or Dexterity 12): `collapse_proof` (h
 warden, Hallowed rest, and Hoard-wise; Mirror-wise (`sees_reflections`) and Treasure sense
 (`treasure_bearing`, the hint's bearing), information only, were dropped with their hooks.
 The class ability Consecrate (above) carries the
-system too. Prayer is part of the system (the `prayer` tag folded into it, #773): Devout (wayfarer, `devout`; hook `world/outcome.rs::leaned_kinds`) and Penitent
-(grit, Willpower 12, `penitent`; hook `world/pray.rs::prayer_answered`). The forge
+system too. Prayer is part of the system (the `prayer` tag folded into it, #773): **Pious**
+(wayfarer, two ranks, #788, which merged Devout, Penitent, and Pilgrim; also `talk`, for the
+temple's services, `docs/dev/npcs.md`). Its first rank (free): `devout` (hook
+`world/outcome.rs::leaned_kinds`) and `pilgrim` (hook `world/service.rs`); its second
+(Willpower 12, level 10): `penitent` (hook `world/pray.rs::prayer_answered`). The forge
 adds no talent (the issue's "None new"): Metalcraft is its lean.
 
 ## Tests
@@ -739,7 +740,7 @@ levels, the talents, saving), `world/dwell_tests.rs` (a room's status: Ebbing on
 creatures, not on one without mana, through a rest, over a drained level, eased after leaving,
 Old delver, saving), `world/den_tests.rs` (the den's data and refusals, sleepers take no
 turn and never wake by time, quiet and loud noises and the cry cascade, a kicked door, a step,
-Hush-foot, a blow, sneak attacks, the waking line and look mode's word, the spawn cap, Sixth
+a blow, sneak attacks, the waking line and look mode's word, the spawn cap, Sixth
 sense, saving, and a generated den's sleepers and hoard over a fixture branch),
 `world/beast_den_tests.rs` (the beast den's data, unknown or twice-named factions and an unknown
 hoard refused, a generated one's sleepers all beasts with bones and corpses for a hoard, and a
@@ -764,7 +765,7 @@ creatures' aim, the dumps, a rest among reflections), `content/room_warp_tests.r
 `Here::warp`), `content/outcome_tests.rs` (the altar's table, `offer_at`, defaults, the lean,
 refusals), `mapgen/altar_tests.rs` (one altar a room, never by a door, its side's light, the
 level still joined, the sides one to two to one), `world/outcome_tests.rs` (Pray only beside an
-altar not spent, a minute, a broken prayer, the lean and Devout, the draw's shares, the nothing
+altar not spent, a minute, a broken prayer, the lean and Pious, the draw's shares, the nothing
 lines, each hook, the explosion, the deed, exhaustion near half and a spent altar after a save
 and load), `world/temper_tests.rs` (Temper only beside an anvil, refusals with no time, ten
 minutes, identifying and the Metalcraft mark, an interrupted one changing nothing, the lean,

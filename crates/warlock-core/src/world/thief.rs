@@ -106,7 +106,7 @@ impl World {
         let with = me.weapon_item(&content);
         let price = self.attack_price(player, ActionKind::Melee, with, melee);
         let profile = me.melee(&content);
-        let vitalless = !self.has_vitals_for(player, target);
+        let vitalless = !self.has_vitals(target);
         self.technique.sneak = true;
         let blow = self.player_blow_with(target, seen, profile, events);
         self.technique.sneak = false;

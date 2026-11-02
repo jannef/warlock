@@ -1,8 +1,0 @@
-[[talent]]
-id = "pathfinder"
-name = "Pathfinder"
-tree = "wayfarer"
-description = "You find the easy ways: forests, hills, and swamps slow your journeys no more than plains."
-needs = { talents = { long_strider = 1 }, skills = { survival = 20 } }
-effects = [{ kind = "terrain_as", terrains = ["forest", "dense_forest", "hills", "swamp"], like = "plains" }]
-systems = ["travel"]

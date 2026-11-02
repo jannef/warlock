@@ -31,7 +31,7 @@ impl World {
         let mut profile = me.melee(&content);
         profile.sure_critical = true;
         self.say("You strike at the opening!");
-        let vitalless = !self.has_vitals_for(player, target);
+        let vitalless = !self.has_vitals(target);
         let blow = self.player_blow_with(target, seen, profile, events);
         self.no_vital_spot(vitalless, blow);
         self.after_attack(player, target, super::free_blow::parried(blow), events);

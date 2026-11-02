@@ -86,10 +86,28 @@ impl World {
                 .player()
                 .talent_mods(&content)
                 .extra_picks_at(level);
-            let talents = u8::from(every > 0 && level % every == 0).saturating_add(more);
             let bonus = class.map_or(0, |c| c.bonus_at(level));
             // A level lost and gained again brings no choices: they were made the first time.
             let again = level <= self.state.progress.peak;
+            // A pickable the class gives now that was picked before: a pick in its place.
+            let held = match again {
+                true => Vec::new(),
+                false => class::held_already(
+                    &content,
+                    class.map(|c| c.id.as_str()),
+                    self.state.player(),
+                    level,
+                ),
+            };
+            for &id in &held {
+                let name = &content.talents().get(id).name;
+                (self.news).push(format!(
+                    "You know {name} already: choose a talent in its place."
+                ));
+            }
+            let talents = u8::from(every > 0 && level % every == 0)
+                .saturating_add(more)
+                .saturating_add(held.len() as u8);
             if !again && (talents > 0 || rolls > 0 || bonus > 0) {
                 (self.state.progress.due).push(Due {
                     level,

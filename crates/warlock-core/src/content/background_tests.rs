@@ -345,14 +345,9 @@ fn worth_follows_the_points() {
     assert_eq!(gold("-15"), (0, 1));
     assert_eq!(gold("-100"), (0, 4));
     assert_eq!(Effect::Stat(Stat::Strength, -2).worth(&p), (0, 4));
-    assert_eq!(b.tiers.of(0, 100), Tier::Fateful);
-    assert_eq!(b.tiers.of(4, 100), Tier::Fateful);
-    assert_eq!(b.tiers.of(5, 100), Tier::Rare);
-    assert_eq!(b.tiers.of(35, 100), Tier::Uncommon);
-    assert_eq!(b.tiers.of(155, 100), Tier::Common);
-    assert_eq!(
-        b.tiers.of(9, 200),
-        Tier::Fateful,
-        "the luckier tiers doubled"
-    );
+    assert_eq!(b.tiers.of(0), Tier::Fateful);
+    assert_eq!(b.tiers.of(4), Tier::Fateful);
+    assert_eq!(b.tiers.of(5), Tier::Rare);
+    assert_eq!(b.tiers.of(35), Tier::Uncommon);
+    assert_eq!(b.tiers.of(155), Tier::Common);
 }

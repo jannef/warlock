@@ -134,26 +134,14 @@ fn what_has_no_vitals_by_rule_and_by_data() {
         ("air_elemental", false),
     ] {
         let creature = content.creature_id(id).expect(id);
-        assert_eq!(content.has_vitals(creature, &[]), vitals, "{id}");
+        assert_eq!(content.has_vitals(creature), vitals, "{id}");
     }
     // Animated objects have none.
     let animated = (content.creature_defs().iter())
         .find(|c| c.animated.is_some())
         .and_then(|c| content.creature_id(&c.id))
         .expect("an animated object");
-    assert!(!content.has_vitals(animated, &[]));
-    // Anatomist's tags find them in bones and constructs, never in a ghost or the stone man.
-    let anatomist = ["skeleton".to_string(), "construct".to_string()];
-    for (id, vitals) in [
-        ("skeleton", true),
-        ("mud_golem", true),
-        ("ghost", false),
-        ("vt_stone", false),
-        ("air_elemental", false),
-    ] {
-        let creature = content.creature_id(id).expect(id);
-        assert_eq!(content.has_vitals(creature, &anatomist), vitals, "{id}");
-    }
+    assert!(!content.has_vitals(animated));
     // The sides the blows strike say so.
     for (id, immune) in [("goblin", false), ("skeleton", true), ("draugr", false)] {
         assert_eq!(w.target_of(one(&w, id)).no_criticals, immune, "{id}");
@@ -182,10 +170,6 @@ fn no_critical_lands_on_a_thing_without_vitals() {
         }
         assert!(criticals > 20, "the goblin has vitals: {criticals}");
     }
-    // Anatomist finds the skeleton's.
-    w.player_mut().talents.take("anatomist", None);
-    let found = (0..20).any(|_| blow(&mut w, skeleton, true) == Strike::Hit { critical: true });
-    assert!(found);
 }
 
 #[test]
@@ -211,9 +195,5 @@ fn no_sneak_dice_land_on_a_thing_without_vitals_though_it_is_surprised() {
     let mut events = Vec::new();
     w.startle(skeleton, Some(player), &mut events);
     assert!(w.surprised(skeleton));
-    // With Anatomist the bones and the golem take the dice; the ghost never does.
-    w.player_mut().talents.take("anatomist", None);
-    assert!(w.sneaking(player, one(&w, "skeleton"), false));
-    assert!(w.sneaking(player, one(&w, "mud_golem"), false));
-    assert!(!w.sneaking(player, one(&w, "ghost"), false));
+    assert!(!w.sneaking(player, skeleton, false));
 }

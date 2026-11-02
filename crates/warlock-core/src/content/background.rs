@@ -86,13 +86,11 @@ pub struct Tiers {
 }
 
 impl Tiers {
-    /// The tier a draw of `roll` (0 to 999) gives, the luckier odds scaled by `percent` (100:
-    /// as written).
-    pub fn of(&self, roll: u32, percent: u32) -> Tier {
-        let scaled = |n: u32| n * percent / 100;
-        let fateful = scaled(self.fateful);
-        let rare = fateful + scaled(self.rare);
-        let uncommon = rare + scaled(self.uncommon);
+    /// The tier a draw of `roll` (0 to 999) gives.
+    pub fn of(&self, roll: u32) -> Tier {
+        let fateful = self.fateful;
+        let rare = fateful + self.rare;
+        let uncommon = rare + self.uncommon;
         match roll {
             r if r < fateful => Tier::Fateful,
             r if r < rare => Tier::Rare,

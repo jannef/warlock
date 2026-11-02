@@ -50,7 +50,7 @@ A sentence may give or take:
 - **a talent**, at its first [rank](talents.md#ranks-choices-prerequisites), for life, whatever
   it would ask of you (the flux's [Hardy](talents.md#talent-hardy)): never one you hold already,
   so a sentence that would give it is not told to you; a class whose table names it later gives
-  nothing in its place. The Talents page marks it "(story)";
+  you a [talent pick](talents.md) in its place at that level. The Talents page marks it "(story)";
 - **a flaw**: one of the [birth signs'](horoscope.md#what-a-sign-does) flaws, for life, likewise; marked
   "(story, flaw)".
 
@@ -88,15 +88,6 @@ each sentence true to its kind.
 {{#include generated/background-points.md}}
 
 Only a character you make is told a story; a run that is resumed keeps the story it had.
-
-## Talents
-
-One [talent](talents.md) touches your story: [Favoured child](talents.md#talent-favoured-child), a
-[heritage](talents.md#heritage-only-at-character-creation) talent, offered only at character
-creation, since the story is told as the run begins and nothing later changes it. It doubles the
-odds of the luckier kinds (the "With Favoured child" column above).
-
-{{#include generated/background-talents.md}}
 
 ## Every sentence
 

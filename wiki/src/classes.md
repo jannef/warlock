@@ -31,8 +31,8 @@ words, here exactly. A stat it raises rises for good, score and potential. Some 
 used from the [abilities menu](abilities.md); the rest simply work. So far the [warrior](classes.md#warrior), the
 [barbarian](classes.md#barbarian), the [paladin](classes.md#paladin), the [monk](classes.md#monk), the [priest](classes.md#priest), the [druid](classes.md#druid), the [wizard](classes.md#wizard), the [witch](classes.md#witch), the [ranger](classes.md#ranger), the
 [thief](classes.md#thief), the [bard](classes.md#bard), and the everyday folk have their tables. A table may hand out an ordinary talent
-(the [ranger](classes.md#ranger)'s and the [thief](classes.md#thief)'s [Evasion](talents.md#talent-evasion), the [bard](classes.md#bard)'s [Lore](talents.md#talent-lore)); if you took it already, the level gives
-nothing in its place.
+(the [ranger](classes.md#ranger)'s and the [thief](classes.md#thief)'s [Evasion](talents.md#talent-evasion), the [bard](classes.md#bard)'s [Lore](talents.md#talent-lore) and [Fast healer](talents.md#talent-fast-healer), the [druid](classes.md#druid)'s [Beast-friend](talents.md#talent-beast-friend)); if you took it already, the level gives
+you a talent pick in its place.
 
 
 {{#include generated/class-levels.md}}

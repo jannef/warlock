@@ -23,7 +23,7 @@ numbers are below.
   have slipped past it, it is unaware of you. The odds and what ends it are under
   [Slipping past](skills.md#slipping-past).
 
-With the [Stalker's eye](talents.md#talent-stalkers-eye) talent you can tell which creatures in
+With [Stalker's eye](talents.md#talent-stalkers-eye), the [ranger](classes.md#ranger)'s from level 2, you can tell which creatures in
 view have not noticed you: look mode says "unaware of you", and they are drawn with a slow,
 faint shimmer. Without it nothing tells you.
 
@@ -100,8 +100,7 @@ Some things have no vitals to find: no sneak attack dice land on them, and no
 [critical](combat.md#criticals) is ever confirmed on them. [Vital strike](weapon-skills.md#weapon-ability-vital-strike)
 and the master thief's finisher are a plain blow on them ("It has no vital spot."). They are
 still surprised like anyone, and still struck flat-footed. The fleshy undead (draugr, ghouls,
-the drowned, vampires, mummies) have vitals. [Anatomist](talents.md#talent-anatomist) finds
-them in walking bones and constructs.
+the drowned, vampires, mummies) have vitals.
 
 {{#include generated/surprise-vitals.md}}
 

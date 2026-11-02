@@ -1,8 +1,0 @@
-[[talent]]
-id = "wild_empathy"
-name = "Wild empathy"
-tree = "class"
-granted = true
-description = "Animals know you for a friend: rats and deer alike leave you be until you attack one of their kind."
-effects = [{ kind = "beast_friend" }]
-systems = ["factions"]

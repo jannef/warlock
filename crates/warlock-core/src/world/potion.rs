@@ -15,17 +15,14 @@
 //!   sickness ([`World::afflict`]). Dice are gameplay draws.
 //!   A boost, a vision, a haste, or a resistance gives its status for a while
 //!   ([`World::afflict`]: Fortified, Owl-eyed, Hasted, Warmed), which lasts as the status's
-//!   `eases` says and the drinker's talents lengthen (Lasting draughts, Cauldron-wise:
-//!   `status_lasts`). What begins and ends of statuses and diseases is told from the action's
+//!   `eases` says and the drinker's talents lengthen (Lasting draughts: `status_lasts`). What begins and ends of statuses and diseases is told from the action's
 //!   events, as perception reports them ("You feel hale.", "The poison wears off."); a dose
 //!   that only strengthens one already felt says the status's own line again, and one that
 //!   changes nothing says so.
-//! - **Cauldron-wise** (the witch's): a healing potion heals a fifth more (`potion_heals`).
 //! - **Marks**: each stat its `marks` name gets that many sure training marks (the `drank` use,
 //!   [`World::train_stat_times`]; an elixir's are the `elixir` use's).
 //!
-//! Creatures do not drink. Nose for draughts tells an unknown potion's kind by its smell when it
-//! is picked up ([`World::smell_potions`]).
+//! Creatures do not drink.
 //!
 //! [`Action::Eat`]: crate::action::Action::Eat
 //! [`Draught`]: crate::content::Draught
@@ -54,21 +51,6 @@ impl Actor {
 /// What the player is told when Thrifty drinker keeps a potion they drank.
 pub(super) const KEPT: &str = "There is enough left in the flask for another draught.";
 
-/// What an unknown potion of a kind smells of, with Nose for draughts: the kind, never the type.
-fn smell(does: &Draught) -> &'static str {
-    match does {
-        Draught::Heal { .. } => "of honey and iron: healing of some kind",
-        Draught::Cure { .. } => "of herbs: a cure of some kind",
-        Draught::Mana { .. } => "sharp, like the air before a storm: something for the mind",
-        Draught::Elixir { .. } => "rich and strange: something that lasts",
-        Draught::Harm { .. } => "foul: nothing good",
-        Draught::Boost { .. } => "of sweat and hot iron: something for the body",
-        Draught::Vision { .. } => "of night air and moss: something for the eyes",
-        Draught::Haste { .. } => "of lightning and quicksilver: something to quicken you",
-        Draught::Resistance { .. } => "of salt and ash: a ward of some kind",
-    }
-}
-
 impl World {
     /// The player drinks one of `stack`, lying where `meal` says (module docs). Returns what it
     /// cost: always a turn.
@@ -96,9 +78,6 @@ impl World {
         match &drink.does {
             Draught::Heal { dice, cures } => {
                 let points = dice.roll(&mut self.state.rng).max(0);
-                // Cauldron-wise: a fifth more.
-                let more = self.state.player().talent_mods(&content).potion_heals;
-                let points = points * (100 + more).max(0) / 100;
                 let max = self.state.player().max_hp(&content);
                 let me = self.player_mut();
                 let before = me.hp;
@@ -232,28 +211,6 @@ impl World {
                 }
                 (one, kept)
             }
-        }
-    }
-
-    /// With Nose for draughts (spec §8 "Talents"), each unknown potion type among `got` (just
-    /// picked up) tells its kind by its smell: "The fizzy red potion smells of herbs: a cure of
-    /// some kind." Never its type, and nothing without the talent.
-    pub(super) fn smell_potions(&mut self, got: &[Stack]) {
-        if !self.state.player().talent_mods(&self.content).potion_smell {
-            return;
-        }
-        let content = self.content.clone();
-        let mut told = Vec::new();
-        for stack in got {
-            let Some(drink) = &content.object(stack.object).drink else {
-                continue;
-            };
-            if self.lore().label(stack.object).is_none() || told.contains(&stack.object) {
-                continue;
-            }
-            told.push(stack.object);
-            let title = self.lore().title(stack);
-            self.say(format!("The {title} smells {}.", smell(&drink.does)));
         }
     }
 }

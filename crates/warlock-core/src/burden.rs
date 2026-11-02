@@ -250,8 +250,8 @@ pub fn load(actor: &Actor, race: Option<&RaceDef>, content: &Content, room: u32)
     Load {
         carried,
         limit: in_room(limit, room),
-        // Porter and Steadfast (spec §8) shrug Burdened off as a dwarf does.
-        ignores_burdened: ignores_burdened || talents.ignore_burdened || talents.steadfast,
+        // Porter (spec §8) shrugs Burdened off as a dwarf does.
+        ignores_burdened: ignores_burdened || talents.ignore_burdened,
         // Stout (a dwarf's talent): Strained costs what Burdened costs others.
         stout: talents.stout,
     }

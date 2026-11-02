@@ -170,28 +170,17 @@ pub(super) fn initiative_odds(content: &Content) -> String {
 }
 
 /// Every creature with no vitals to find, by name, and why (incorporeal, `vitals = false`, a
-/// `no_vitals` tag), with the talents that find vitals in it after all; then the animated
-/// objects, all of them.
+/// `no_vitals` tag); then the animated objects, all of them.
 pub(super) fn no_vitals(content: &Content) -> String {
     let Some(rules) = content.surprise() else {
         return "Everything has vitals.\n".into();
     };
-    let finders: Vec<(&str, &str, &[String])> = (content.talents().iter())
-        .flat_map(|(_, def)| {
-            def.effects.iter().filter_map(move |e| match e {
-                TalentEffect::VitalsIn { tags } => {
-                    Some((def.id.as_str(), def.name.as_str(), &tags[..]))
-                }
-                _ => None,
-            })
-        })
-        .collect();
-    let mut out = String::from("| Creature | Why | Found by |\n|---|---|---|\n");
+    let mut out = String::from("| Creature | Why |\n|---|---|\n");
     let listed: Vec<(CreatureId, &CreatureDef)> = (super::order::creatures(content).into_iter())
         .filter(|(_, c)| c.id != "player" && c.animated.is_none())
         .collect();
     for (id, c) in listed {
-        if content.has_vitals(id, &[]) {
+        if content.has_vitals(id) {
             continue;
         }
         let why = if c.incorporeal.is_some() {
@@ -205,22 +194,13 @@ pub(super) fn no_vitals(content: &Content) -> String {
                 .collect();
             tags.join(", ")
         };
-        let found: Vec<String> = (finders.iter())
-            .filter(|(_, _, tags)| content.has_vitals(id, tags))
-            .map(|(tid, name, _)| link(Term::Talent, tid, name))
-            .collect();
-        let found = if found.is_empty() {
-            "-".to_string()
-        } else {
-            found.join(", ")
-        };
         let _ = writeln!(
             out,
-            "| {} | {why} | {found} |",
+            "| {} | {why} |",
             link(Term::Creature, &c.id, &super::text::capital(&c.name))
         );
     }
-    out.push_str("| every [animated object](animated.md) | made, not born | - |\n");
+    out.push_str("| every [animated object](animated.md) | made, not born |\n");
     out
 }
 
@@ -242,7 +222,6 @@ mod tests {
         let vitals = no_vitals(&content);
         assert!(vitals.contains("incorporeal"), "{vitals}");
         assert!(vitals.contains("`skeleton`"), "{vitals}");
-        assert!(vitals.contains("[Anatomist]"), "{vitals}");
         let rules = surprise_rules(&content);
         assert!(
             rules.contains("| 150% of its time, then it ends |"),

@@ -82,28 +82,26 @@ fn mods(world: &World) -> crate::talent::TalentMods {
 
 #[test]
 fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
-    let mut w = world("aristocrat");
-    assert!(holds(&w, "well_dressed"), "level 1's");
-    assert!(!holds(&w, "fencing"));
+    let mut w = world("merchant");
+    assert!(holds(&w, "haggler"), "level 1's");
+    assert!(!holds(&w, "deep_pockets"));
     // (A birth sign's gifts come first and are no business of the class.)
     let rows = dump::layer_rows(&w, Layer::Talents);
-    assert_eq!(
-        rows.last().map(String::as_str),
-        Some("Well dressed (class)")
-    );
+    assert_eq!(rows.last().map(String::as_str), Some("Haggler (class)"));
     assert!(rows.iter().filter(|r| r.contains("(class)")).count() == 1);
-    // Level 6 brings Fencing, as news of the level.
+    // Level 6 brings Deep pockets, as news of the level.
     reach(&mut w, 6);
-    assert!(holds(&w, "fencing"));
+    assert!(holds(&w, "deep_pockets"));
     assert!(
-        said(&w).contains(&"You gain Fencing.".to_string()),
+        said(&w).contains(&"You gain Deep pockets.".to_string()),
         "{:?}",
         said(&w)
     );
-    // An ordinary talent the table hands out (Riposte at 18) is held like a picked one, so it
-    // cannot be picked again.
+    // An ordinary talent the table hands out (the aristocrat's Riposte at 18) is held like a
+    // picked one, so it cannot be picked again.
+    let mut w = world("aristocrat");
     reach(&mut w, 18);
-    assert!(holds(&w, "riposte") && holds(&w, "noblesse"));
+    assert!(holds(&w, "riposte") && holds(&w, "fencing"));
     assert!(w.state.player().talent_mods(w.content()).free_blows.riposte);
     let json = dump::json(&w, &[], false);
     let riposte = (json["talents"].as_array().expect("talents").iter())
@@ -114,13 +112,39 @@ fn level_one_abilities_come_with_the_character_and_others_with_their_levels() {
 }
 
 #[test]
-fn a_talent_already_picked_is_not_given_again() {
+fn a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place() {
     let mut w = world("commoner");
     give(&mut w, "second_wind");
-    reach(&mut w, 32);
+    // Level 32 brings no pick of its own (picks come every third level and at the bonus
+    // levels): only the one in Second wind's place (#790).
+    arrive(&mut w, 32);
     assert_eq!(w.state.player().talents.rank_of("second_wind", None), 1);
     assert!(!said(&w).contains(&"You gain Second wind.".to_string()));
-    assert!(holds(&w, "thick_skull"), "the others still come");
+    assert!(
+        said(&w).contains(&"You know Second wind already: choose a talent in its place.".into()),
+        "{:?}",
+        said(&w)
+    );
+    assert_eq!(w.due().map(|d| (d.level, d.talents)), Some((32, 1)));
+    assert!(holds(&w, "big_hands"), "the others still come");
+    // Without the pick made early, the level brings nothing to choose.
+    let mut w = world("commoner");
+    arrive(&mut w, 32);
+    assert!(holds(&w, "second_wind"));
+    assert_eq!(w.due().map(|d| d.level), None);
+}
+
+/// A save from before a table named the pickable (#790: the druid's Wild empathy, now
+/// Beast-friend) loads with the clone dropped and the pickable given in its place.
+#[test]
+fn a_save_holding_a_cut_clone_is_given_the_pickable() {
+    let mut w = world("druid");
+    assert!(holds(&w, "beast_friend"));
+    w.player_mut().talents.forget("beast_friend");
+    give(&mut w, "wild_empathy");
+    let back = World::from_state(w.content().clone(), w.state().clone()).expect("it loads");
+    assert!(holds(&back, "beast_friend") && !holds(&back, "wild_empathy"));
+    assert!(mods(&back).beast_friend);
 }
 
 #[test]
@@ -187,7 +211,6 @@ fn a_restore_gives_what_a_grown_table_gives_and_nothing_else_changes() {
     for id in ["haggler", "deep_pockets", "eye_for_quality"] {
         assert!(holds(&back, id), "{id}");
     }
-    assert!(!holds(&back, "trade_routes"), "not before its level");
     let _ = hash;
 }
 
@@ -269,14 +292,14 @@ fn the_commoners_bonus_picks_come_from_any_tree() {
 
 #[test]
 fn class_levels_replay_exactly() {
-    let mut w = world("craftsperson");
+    let mut w = world("commoner");
     let actions = parse_actions("xp:200000 levelup:auto*12 wait").expect("actions");
     let mut replay = Replay::new(&w);
     for action in &actions {
         w.apply(action);
         replay.push(action, &w);
     }
-    assert!(holds(&w, "whetstone") && holds(&w, "fletching"));
+    assert!(holds(&w, "hard_work") && holds(&w, "stubborn"));
     let back = replay.run(BUILTIN.clone()).expect("replays");
     assert_eq!(back.state_hash(), w.state_hash());
 }
@@ -284,36 +307,17 @@ fn class_levels_replay_exactly() {
 // The hooks, one each.
 
 #[test]
-fn shop_favour_and_its_cap_follow_the_talents() {
+fn shop_favour_follows_the_talents_up_to_its_cap() {
     let mut w = world("warrior");
     let shops = BUILTIN.shops().expect("shops");
     let base = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
     give(&mut w, "haggler");
     let haggler = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
     assert_eq!(haggler, (base + 15).clamp(-MAX_FAVOUR, MAX_FAVOUR));
-    // Presence of 40 is far past the cap: Magnate lifts it by 10, Golden tongue by 10 more.
+    // Presence of 40 is far past the cap, which holds.
     w.player_mut().stats.gift(Stat::Presence, 30);
     let capped = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
     assert_eq!(capped, MAX_FAVOUR);
-    give(&mut w, "magnate");
-    let magnate = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
-    assert_eq!(magnate, MAX_FAVOUR + 10);
-    give(&mut w, "golden_tongue");
-    let tongue = crate::world::shop::favour(&BUILTIN, shops, w.state.player());
-    assert_eq!(tongue, MAX_FAVOUR + 20);
-}
-
-#[test]
-fn noblesse_makes_anyone_not_hostile_budge() {
-    let w = World::new(BUILTIN.clone(), "courtyard", None).expect("courtyard");
-    // Born under no sign: the scenario's Basilisk is trusted by none (spec §8 "Birth sign").
-    let mut state = w.state().clone();
-    state.character.as_mut().expect("a character").sign = None;
-    let mut w = World::from_state(BUILTIN.clone(), state).expect("restores");
-    let keeper = w.state.current().shops[0].keeper;
-    assert!(w.refusal(keeper).is_some(), "a keeper at its post keeps it");
-    give(&mut w, "noblesse");
-    assert_eq!(w.refusal(keeper), None);
 }
 
 #[test]
@@ -373,12 +377,11 @@ fn weapons_and_styles_read_the_talents_benefits() {
     give(&mut w, "big_hands");
     let maced = w.state.player().benefit(w.content(), Some(maces));
     assert_eq!(maced.damage, before_maces.damage + 1);
-    give(&mut w, "whetstone");
     give(&mut w, "masterwork");
     let honed = w.state.player().benefit(w.content(), Some(long));
     assert_eq!(
         (honed.damage, honed.threat),
-        (before_long.damage + 1, before_long.threat + 1)
+        (before_long.damage, before_long.threat + 1)
     );
 }
 
@@ -404,15 +407,10 @@ fn armour_talents_add_protection() {
         .count() as i32;
     assert!(pieces > 0);
     let worn = w.state.player().protection(w.content(), None).base;
-    give(&mut w, "thick_skull");
     give(&mut w, "sturdy_work");
     give(&mut w, "artisan");
     let more = w.state.player().protection(w.content(), None).base;
-    assert_eq!(
-        more,
-        worn + 1 + 1 + pieces,
-        "Thick skull, Sturdy work, Artisan's pieces"
-    );
+    assert_eq!(more, worn + 1 + pieces, "Sturdy work, Artisan's pieces");
 }
 
 #[test]
@@ -447,10 +445,10 @@ fn burden_and_coins_follow_the_talents() {
 }
 
 #[test]
-fn tinker_lets_the_untrained_disarm() {
+fn tinkerer_lets_the_untrained_disarm() {
     let mut w = world("warrior");
     assert!(!Ability::Disarm.had_by(w.state.player(), w.content()));
-    give(&mut w, "tinker");
+    give(&mut w, "tinkerer");
     assert!(Ability::Disarm.had_by(w.state.player(), w.content()));
 }
 
@@ -480,68 +478,13 @@ fn lore_identifies_a_magic_item_carried_a_day() {
 }
 
 #[test]
-fn worth_shows_only_to_an_eye_for_it() {
+fn trade_talents_sum_into_the_mods() {
     let mut w = world("warrior");
-    assert_eq!(w.perception().appraisal(), Default::default());
-    give(&mut w, "keen_appraiser");
-    let appraisal = w.perception().appraisal();
-    assert!(appraisal.worth && appraisal.gems);
-    let dagger = Stack::new(w.content().object_id("dagger").expect("dagger"), 3);
-    let lines = crate::magic::describe::appraised(&dagger, w.lore(), appraisal);
-    let worth = dagger.value(w.content());
-    let text = format!("Worth {} gold each, {worth} gold in all", worth / 3);
-    assert!(lines.iter().any(|l| l.text == text), "{lines:?}");
-    let plain = crate::magic::describe::lines(&dagger, w.content());
-    assert!(!plain.iter().any(|l| l.text.starts_with("Worth")));
-}
-
-#[test]
-fn quest_and_trade_talents_sum_into_the_mods() {
-    let mut w = world("warrior");
-    for id in [
-        "well_dressed",
-        "folk_hero",
-        "insured",
-        "credit",
-        "commanding",
-        "fletching",
-    ] {
+    for id in ["haggler", "eye_for_quality"] {
         give(&mut w, id);
     }
     let m = mods(&w);
-    assert_eq!((m.quest_gold_percent, m.quest_xp_percent), (75, 50));
-    assert_eq!(
-        (m.sell_percent, m.credit),
-        (50, 100),
-        "the most credit counts"
-    );
-    assert_eq!(m.missile_breaks, -50);
-    let intimidate = w.content().skill_id("intimidate").expect("intimidate");
-    assert_eq!(m.skills, [(intimidate, 20)]);
-}
-
-#[test]
-fn credit_lets_the_player_leave_owing_a_little() {
-    // The courtyard store (as `shop_tests` walks in): in, pick up the dagger, out of the door.
-    let into = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
-                move:E*5";
-    let mut w = World::new(BUILTIN.clone(), "courtyard", None).expect("courtyard");
-    run(&mut w, into);
-    let shop = w.state.current().shops[0].clone();
-    assert!(shop.contains(w.player_pos()), "in the shop");
-    let keeper = shop.keeper;
-    give(&mut w, "credit");
-    run(&mut w, "move:E move:NE pickup move:SW move:W move:W");
-    assert!(
-        said(&w)
-            .iter()
-            .any(|m| m.ends_with("nods: you can pay next time.")),
-        "{:?}",
-        said(&w)
-    );
-    assert!(!w.state.current().shops[0].contains(w.player_pos()), "out");
-    assert_eq!(w.stance(w.player_id(), keeper), Stance::Neutral, "no theft");
-    assert!(!w.state.current().shops[0].unpaid.is_empty(), "still owed");
+    assert_eq!((m.favour_percent, m.identify_trades), (15, true));
 }
 
 /// A magic long sword, unidentified, set with no gem (one the store can afford).
@@ -564,7 +507,7 @@ fn magic_sword(content: &Content) -> Stack {
 }
 
 #[test]
-fn a_merchant_knows_what_they_sell_and_is_paid_more_for_it() {
+fn a_merchant_knows_what_they_sell() {
     let into = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
                 move:E*5";
     let sale = |talents: &[&str]| {
@@ -581,8 +524,8 @@ fn a_merchant_knows_what_they_sell_and_is_paid_more_for_it() {
     };
     let (plain, offer) = sale(&[]);
     assert!(!said(&plain).iter().any(|m| m.starts_with("That was")));
-    let (w, more) = sale(&["eye_for_quality", "insured"]);
-    assert!(more > offer, "{offer} → {more}");
+    let (w, known) = sale(&["eye_for_quality"]);
+    assert_eq!(known, offer, "knowing it is no better price");
     assert!(
         said(&w).iter().any(|m| m.starts_with("That was ")),
         "{:?}",

@@ -1,7 +1,0 @@
-[[talent]]
-id = "devout"
-name = "Devout"
-tree = "wayfarer"
-description = "You pray as one who means it: an altar of your own side hears you all the more kindly, and one of the other side no more harshly than any."
-effects = [{ kind = "devout" }]
-systems = ["special_rooms"]

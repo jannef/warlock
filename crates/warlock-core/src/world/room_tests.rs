@@ -511,14 +511,6 @@ fn a_pervaded_level_is_told_on_every_arrival_and_saved() {
     assert!(w.state.current().pervading.is_none());
     w.travel("test_room", None).expect("travels back");
     assert_eq!(told(&w), 2, "each time the player arrives");
-    // With Sense of place the line says what it is.
-    w.player_mut().talents.take("sense_of_place", None);
-    w.travel("other", None).expect("travels");
-    w.travel("test_room", None).expect("travels back");
-    assert_eq!(
-        last_message(&w),
-        "A gloom lies over this level. The whole level is like a gloomy room."
-    );
     let bytes = crate::save::encode(&w);
     let back = crate::save::decode(&bytes, w.content().clone()).expect("loads");
     assert_eq!(back.state(), w.state());
@@ -583,19 +575,6 @@ fn a_room_seen_from_outside_says_its_near_line_once() {
     inside.apply(&Action::Wait);
     assert_eq!(told(&inside), 0);
     assert!(inside.state.current().rooms[0].glimpsed);
-}
-
-#[test]
-fn sense_of_place_names_a_glimpsed_room() {
-    let mut w = hall_with("echoing", "");
-    w.player_mut().talents.take("sense_of_place", None);
-    w.apply(&Action::Wait);
-    assert_eq!(
-        w.perception().room(Pos::new(18, 3)).map(|e| e.id.as_str()),
-        Some("echoing"),
-        "known from a glimpse"
-    );
-    assert!(!w.state.current().rooms[0].entered);
 }
 
 #[test]

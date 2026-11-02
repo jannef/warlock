@@ -1,6 +1,6 @@
 //! The identification service (#432; spec §8 "Services"): a fixture appraiser who identifies
 //! everything the player carries for 100 gold per unidentified stack; the count, the refusals,
-//! magic items and scroll types identified, Pilgrim left out, saves, and replays.
+//! magic items and scroll types identified, Pious left out, saves, and replays.
 
 use super::*;
 use crate::action::parse_actions;
@@ -121,8 +121,8 @@ fn it_is_listed_at_its_price_each_with_the_count_of_unidentified_stacks() {
     carry_ring(&mut w);
     assert_eq!(w.unidentified().len(), 3);
     assert_eq!(topic(&w), ("identify".into(), Some(100), Some(3)));
-    // Pilgrim halves a temple's price, never an appraisal's.
-    w.player_mut().talents.take("pilgrim", None);
+    // Pious halves a temple's price, never an appraisal's.
+    w.player_mut().talents.take("pious", None);
     assert_eq!(topic(&w).1, Some(100));
 }
 

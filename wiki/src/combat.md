@@ -111,9 +111,7 @@ Some things have **no vitals** to find, and so are **immune to criticals** and t
 spot."). They are the [incorporeal](creatures.md#incorporeal-creatures) (ghosts and wraiths),
 [animated objects](animated.md), and every [creature](creatures.md) tagged elemental, skeleton,
 spirit, or construct (the mud golem; [elementals](creatures.md#elementals)). The fleshy undead
-(draugr, ghouls, the drowned, vampires, mummies) have vitals. The
-[Anatomist](talents.md#talent-anatomist) talent finds them in skeletons and constructs too.
-The list is under [Surprise and sneak attacks](surprise.md#no-vitals).
+(draugr, ghouls, the drowned, vampires, mummies) have vitals. The list is under [Surprise and sneak attacks](surprise.md#no-vitals).
 
 {{#include generated/threats.md}}
 
@@ -216,8 +214,8 @@ ranks of weapon skills and fighting styles teach them (see
 [What a rank teaches](weapon-skills.md#what-a-rank-teaches)).
 
 - **[Cleave](talents.md#talent-cleave)**: when your attack kills, you strike another [hostile](creatures.md#factions) creature next to you: the next
-  one round from where your victim stood, going clockwise. Once per attack, or, with [great cleave](talents.md#talent-great-cleave),
-  again after every cleave that kills.
+  one round from where your victim stood, going clockwise. Once per attack, or, with Cleave's second [rank](talents.md#ranks-choices-prerequisites) (great
+  cleave), again after every cleave that kills.
 - **[Riposte](talents.md#talent-riposte)**: when your Parry turns a blow aside, you strike back once the attack is over (once
   per attack, however many of its blows you parried). Shots and throws are never riposted.
 - **[Opportunist](talents.md#talent-opportunist)**: a [hostile](creatures.md#factions) creature that steps away from beside you is struck as it turns to

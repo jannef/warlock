@@ -66,11 +66,7 @@ fn content() -> Arc<Content> {
 fn world(class: &str) -> World {
     let content = content();
     let spec: CharacterSpec = format!("human,male,{class}").parse().expect("a character");
-    let spec = spec.with_talents(vec![
-        "keen_ears".into(),
-        "lean".into(),
-        "long_strider".into(),
-    ]);
+    let spec = spec.with_talents(vec!["keen_ears".into(), "lean".into(), "pious".into()]);
     let w = World::start_run(
         content.clone(),
         "showcase",

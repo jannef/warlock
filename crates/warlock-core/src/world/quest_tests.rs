@@ -523,8 +523,8 @@ fn a_kill_quest_counts_the_players_kills_and_rewards_with_xp() {
 }
 
 #[test]
-fn class_abilities_make_a_quest_pay_more_gold_and_experience() {
-    // The yard with one talent: a quarter more gold, half again the experience.
+fn a_talent_makes_a_quest_pay_more_gold() {
+    // The yard with one talent: a quarter more gold, the experience as it is.
     let mut files = files_with("#########\n#E@pp...#\n#########\n", QUESTS);
     files.insert(
         "data/talents.toml",
@@ -535,7 +535,7 @@ fn class_abilities_make_a_quest_pay_more_gold_and_experience() {
         "data/talents/patron.toml",
         "[[talent]]\nid = \"patron\"\nname = \"Patron\"\ntree = \"class\"\ngranted = true\n\
          description = \"d\"\nsystems = [\"talk\"]\neffects = [\
-         { kind = \"quest_gold_percent\", value = 25 }, { kind = \"quest_xp_percent\", value = 50 }]\n",
+         { kind = \"quest_gold_percent\", value = 25 }]\n",
     );
     let content = Content::load(&files).expect("test content is valid");
     let mut w = World::new(Arc::new(content), "yard", None).expect("world");
@@ -550,10 +550,10 @@ fn class_abilities_make_a_quest_pay_more_gold_and_experience() {
         [
             "Quest complete: Pups.",
             "The elder gives you 6 gold coins.",
-            "You gain 75 experience.",
+            "You gain 50 experience.",
         ]
     );
-    assert_eq!(w.player_xp(), xp + 75);
+    assert_eq!(w.player_xp(), xp + 50);
     assert_eq!(carried(&w, "gold_coin"), 6);
 }
 

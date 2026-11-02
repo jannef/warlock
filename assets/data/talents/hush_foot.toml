@@ -1,8 +1,0 @@
-[[talent]]
-id = "hush_foot"
-name = "Hush-foot"
-tree = "shadow"
-description = "You move among sleepers as a breath of air: it takes twice the noise to wake them from anything you do."
-needs = { skills = { stealth = 10 } }
-effects = [{ kind = "wake_percent", value = 100 }]
-systems = ["special_rooms", "stealth"]

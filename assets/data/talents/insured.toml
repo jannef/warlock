@@ -1,8 +1,0 @@
-[[talent]]
-id = "insured"
-name = "Insured"
-tree = "class"
-granted = true
-description = "You never sell at a loss: shops pay you half again as much for what they buy, never more than they would ask for it."
-effects = [{ kind = "sell_percent", value = 50 }]
-systems = ["shops"]

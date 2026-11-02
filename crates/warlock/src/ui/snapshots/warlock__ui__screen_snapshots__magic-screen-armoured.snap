@@ -12,7 +12,7 @@ expression: "render(case, content.clone())"
 
 ┌─ Magic ─────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                             │
-│ Mana 6/6                                                                                                    │
+│ Mana 9/9                                                                                                    │
 │                                                                                                             │
 │ Schools                                                                                                     │
 │   Evocation                0  ──────────                                                                    │
@@ -41,4 +41,4 @@ expression: "render(case, content.clone())"
 
 
 
- The Forge  ·  HP 20/20  ·  MP 6/6  ·  Sta 10/10  ·  Burdened  ·  Lv 1  ·  08:01  ·  11 Darkening    ? controls
+ The Forge  ·  HP 20/20  ·  MP 9/9  ·  Sta 10/10  ·  Burdened  ·  Lv 1  ·  08:01  ·  11 Darkening    ? controls

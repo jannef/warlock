@@ -50,7 +50,7 @@ impl World {
         if actor.diseases.has(disease) {
             return false;
         }
-        // Divine health (spec §8 "Class abilities"): never caught, nothing rolled.
+        // Purity of body (spec §8 "Class abilities"): never caught, nothing rolled.
         if actor.talent_mods(&self.content).disease_immune {
             return false;
         }
@@ -112,12 +112,12 @@ impl World {
     /// The player stepped onto `terrain`, a step of `seconds`: for every disease caught there
     /// that they do not carry, one draw for its chance (`per_hour` percent an hour, by the
     /// step's length; none when it is sure), then exposure. Creatures do not catch diseases
-    /// from the land, nor does a Marsh walker (no draw).
+    /// from the land, nor does one with Nature's ward (no draw).
     pub(super) fn wade(&mut self, terrain: TerrainId, seconds: u64) {
         let player = self.state.player;
         let content = self.content.clone();
         // A strong swimmer (spec §8 "Birth sign") never catches anything wading, nor does a
-        // Marsh walker.
+        // druid with Nature's ward.
         let mods = self.state.player().talent_mods(&content);
         if mods.swimmer || mods.wading_proof {
             return;
@@ -198,12 +198,6 @@ impl World {
             return true;
         }
         infection.streak = 0;
-        // Timeless body (spec §8 "Class abilities"): a failed check does no harm, and the
-        // disease grows no worse; it still shows until it is shaken off or cured.
-        if talents.disease_still {
-            infection.progressions = n.saturating_sub(1);
-            return true;
-        }
         // The damage of a failed check, stat by stat in display order, then hit points.
         let mut no_toughness = false;
         for stat in Stat::ALL {

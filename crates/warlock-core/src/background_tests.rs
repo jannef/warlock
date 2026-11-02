@@ -52,7 +52,6 @@ impl Seen {
             talents: &self.talents,
             trained: &self.trained,
             campaign,
-            luck: 100,
         }
     }
 }
@@ -72,7 +71,7 @@ fn tier_odds_hold_over_many_seeds() {
     for seed in 0..20_000 {
         for chapter in b.chapters_for("") {
             let roll = Rng::background(seed, &spec, &chapter.id).below(1000);
-            *counts.entry(b.tiers.of(roll, 100)).or_default() += 1;
+            *counts.entry(b.tiers.of(roll)).or_default() += 1;
             draws += 1;
         }
     }
@@ -115,12 +114,13 @@ fn no_score_falls_below_one() {
 }
 
 /// The built-in content with its chapters replaced by `chapters` (`(file name, text)`), every
-/// campaign's too.
-fn only_chapters(chapters: &[(&str, &str)]) -> Content {
+/// campaign's too, and `data/background.toml` rewritten by `settings`.
+fn with_chapters(chapters: &[(&str, &str)], settings: impl FnMut(&str) -> String) -> Content {
     let mut files = ContentFiles::builtin();
     files.remove("data/background/");
     files.remove("campaigns/ascmearc/data/background/");
     files.remove("campaigns/showcase/data/background/");
+    files.edit_table("background", settings);
     for (name, text) in chapters {
         files.insert(&format!("data/background/{name}"), text);
     }
@@ -151,18 +151,20 @@ effects = [{ stat = { dexterity = 2 } }]
 
 #[test]
 fn an_empty_tier_falls_to_the_plain_line() {
-    let content = only_chapters(&[("01-one.toml", FALLBACK)]);
+    // Odds such that every draw is fateful: nothing fateful fits, so the rare line, else the
+    // common one.
+    let fated = |t: &str| {
+        (t.replace("uncommon = 120", "uncommon = 0"))
+            .replace("rare = 30", "rare = 0")
+            .replace("fateful = 5", "fateful = 1000")
+    };
+    let content = with_chapters(&[("01-one.toml", FALLBACK)], fated);
     for (character, told) in [
         ("human,male,warrior", "one/plain"),
         ("kobold,male,warrior", "one/kobolds_luck"),
     ] {
         let seen = Seen::new(&content, character, 1, &[]);
-        // Luck enough that every draw is fateful: nothing fateful fits, so the rare line, else
-        // the common one.
-        let witness = Witness {
-            luck: 1_000_000,
-            ..seen.witness(&content, "")
-        };
+        let witness = seen.witness(&content, "");
         for seed in 0..20 {
             assert_eq!(ids(&tell(&content, seed, &witness)), [told], "{character}");
         }

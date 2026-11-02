@@ -130,6 +130,7 @@ mod summoner_roster_tests;
 mod surprise;
 mod tag;
 mod talent;
+mod talent_alike;
 mod terrain;
 mod throw;
 mod trap;
@@ -274,7 +275,7 @@ pub use spell_ladder::{
 pub use spell_mod::{SpellMod, SpellModSpec, SpellMods, merge_rider};
 pub use stance::{CombatStance, StanceDef, Stances, percent_of};
 pub use stat_training::{
-    DeedRule, HAUL_GRAMS, ODDS_SCALE, PriceEase, StatDeed, StatRule, StatTraining, StatUse,
+    DeedRule, HAUL_GRAMS, ODDS_SCALE, StatDeed, StatRule, StatTraining, StatUse,
 };
 pub use status::{
     Affliction, COST_PERCENT, CombatBonus, Drain, Healing, MAX_DRAIN_POINTS, MAX_REGEN,

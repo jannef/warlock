@@ -1,6 +1,6 @@
 //! Forgotten altars and prayer (spec §7 "Special rooms"; `world/pray.rs`, `world/outcome.rs`):
 //! the Here group lists Pray only beside an altar, a broken prayer gives nothing, the lean by
-//! side and band (Devout), the hooks, the shares of the draw, exhaustion, the explosion, the
+//! side and band (Pious), the hooks, the shares of the draw, exhaustion, the explosion, the
 //! deed, and a spent altar kept as terrain alone.
 
 use super::*;
@@ -142,10 +142,57 @@ fn the_lean_follows_the_altars_side_and_the_players_band() {
     assert_eq!(leaned_kinds(&table, Evil, Good, false), [20, 30, 50]);
     assert_eq!(leaned_kinds(&table, Good, Neutral, false), [35, 30, 35]);
     assert_eq!(leaned_kinds(&table, Neutral, Good, false), [35, 30, 35]);
-    // Devout: an agreeing lean counts double, an opposed one not at all.
+    // Pious (`devout`): an agreeing lean counts double, an opposed one not at all.
     assert_eq!(leaned_kinds(&table, Good, Good, true), [65, 30, 5]);
     assert_eq!(leaned_kinds(&table, Evil, Good, true), [35, 30, 35]);
     assert_eq!(leaned_kinds(&table, Neutral, Evil, true), [35, 30, 35]);
+}
+
+#[test]
+fn pious_at_its_first_rank_doubles_the_lean_of_an_altar_of_its_side() {
+    // A good altar whose lean takes half the bane away from one of the good, and all of it with
+    // the talent's doubled lean: every prayer of the pious is a boon.
+    let table = "seconds = 60\nkinds = { boon = 10, bane = 20 }\nlean = 10\nexhaust = 0\n\
+                 [[outcome]]\nkind = \"boon\"\ntier = \"minor\"\nid = \"warmth\"\nweight = 1\n\
+                 message = \"Warmth fills you.\"\n\
+                 [[outcome]]\nkind = \"bane\"\ntier = \"minor\"\nid = \"chill\"\nweight = 1\n\
+                 message = \"A chill runs through you.\"\n";
+    let mut files = ContentFiles::builtin();
+    files.insert(
+        "levels/test_altar.toml",
+        &format!(
+            "name = \"Test\"\nambient = [120, 120, 120, 0]\nmap = '''\n{ROOM}'''\n\
+             [[room]]\neffect = \"altar\"\narea = [0, 0, 10, 6]\nside = \"good\"\n\
+             [legend]\n\"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n\
+             \"A\" = \"forgotten_altar\"\n\"k\" = \"floor\"\n"
+        ),
+    );
+    files.insert(
+        "scenarios/test_altar.toml",
+        "name = \"T\"\nstart_level = \"test_altar\"\n\
+         character = { race = \"human\", gender = \"female\", class = \"warrior\" }\n",
+    );
+    files.insert("data/outcomes/forgotten_altar.toml", table);
+    let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
+    let prayers = |pious: bool| {
+        let mut w = World::new(content.clone(), "test_altar", None).expect("world");
+        w.player_mut().alignment = Some(Score::new(500));
+        if pious {
+            w.player_mut().talents.take("pious", None);
+        }
+        for _ in 0..40 {
+            w.apply(&Action::Pray);
+        }
+        let count = |line: &str| w.messages().iter().filter(|m| m.text == line).count();
+        (
+            count("Warmth fills you."),
+            count("A chill runs through you."),
+        )
+    };
+    assert_eq!(prayers(true), (40, 0));
+    let (boons, banes) = prayers(false);
+    assert_eq!(boons + banes, 40);
+    assert!(banes > 0, "a third of plain prayers are banes: {banes}");
 }
 
 #[test]

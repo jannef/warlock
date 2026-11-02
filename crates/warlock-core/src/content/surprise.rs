@@ -106,22 +106,18 @@ impl SurpriseRules {
 }
 
 impl Content {
-    /// Whether creature type `id` has vitals to find for an attacker whose talents name
-    /// `vitals_in` (Anatomist's tags): the one reader of what has none (spec §8 "Surprise and
-    /// sneak attacks"). Without vitals it is immune to criticals and to sneak attacks: an
-    /// incorporeal type always; one that says `vitals = false`; an animated object or a type
-    /// carrying a `no_vitals` tag, unless it carries one of `vitals_in` too. Everything has
-    /// vitals without the surprise rules (fixtures).
-    pub fn has_vitals(&self, id: CreatureId, vitals_in: &[String]) -> bool {
+    /// Whether creature type `id` has vitals to find: the one reader of what has none (spec §8
+    /// "Surprise and sneak attacks"). Without vitals it is immune to criticals and to sneak
+    /// attacks: an incorporeal type; one that says `vitals = false`; an animated object or a
+    /// type carrying a `no_vitals` tag. Everything has vitals without the surprise rules
+    /// (fixtures).
+    pub fn has_vitals(&self, id: CreatureId) -> bool {
         let Some(rules) = self.surprise() else {
             return true;
         };
         let def = self.creature(id);
         if def.incorporeal.is_some() || !def.vitals {
             return false;
-        }
-        if vitals_in.iter().any(|t| self.has_tag(id, t)) {
-            return true;
         }
         def.animated.is_none() && !rules.no_vitals.iter().any(|t| self.has_tag(id, t))
     }

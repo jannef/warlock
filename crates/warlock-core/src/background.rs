@@ -4,7 +4,7 @@
 //! of the finished character ([`Witness`]), it draws each chapter from its own stream,
 //! [`Rng::background`] (`background/<race>,<gender>,<class>/<chapter>`), so no other roll moves:
 //!
-//! 1. the tier: one draw of `below(1000)` against `[tiers]` (scaled by [`Witness::luck`]);
+//! 1. the tier: one draw of `below(1000)` against `[tiers]`;
 //! 2. the pool: the chapter's lines of that tier whose `when` holds (against the witness and the
 //!    tags earlier lines set), falling to the tier below, down to common, when none does; if an
 //!    `only` line of the chapter fits, the fitting `only` lines alone (common, whatever the tier);
@@ -65,8 +65,6 @@ pub struct Witness<'a> {
     pub trained: &'a [WeaponSkillId],
     /// The run's campaign (`""` outside every campaign).
     pub campaign: &'a str,
-    /// The luckier tiers' odds in percent of `[tiers]` (100: as written).
-    pub luck: u32,
 }
 
 impl Witness<'_> {
@@ -134,7 +132,7 @@ pub fn tell(content: &Content, seed: u64, witness: &Witness) -> Story {
     let mut given: Vec<(String, Option<String>)> = Vec::new();
     for chapter in background.chapters_for(witness.campaign) {
         let mut rng = Rng::background(seed, &witness.character.spec, &chapter.id);
-        let mut tier = Some(background.tiers.of(rng.below(1000), witness.luck));
+        let mut tier = Some(background.tiers.of(rng.below(1000)));
         let fits = |l: &&StoryLine| {
             witness.fits(l, &tags)
                 && !gifts_of(l).any(|(id, choice)| {

@@ -186,26 +186,6 @@ fn a_door_kicked_beside_the_den_wakes_it() {
 }
 
 #[test]
-fn hush_foot_needs_twice_the_noise() {
-    let mut w = world("");
-    w.player_mut().talents.take("hush_foot", None);
-    w.spread_noise(noise(&w, 6, 40));
-    assert_eq!(sleeping(&w), [true; 4], "30 at `a`, under 60");
-    // Not the player's noise: as loud as ever.
-    let other = Noise {
-        maker: None,
-        ..noise(&w, 6, 40)
-    };
-    w.spread_noise(other);
-    assert!(!sleeps(&w, 7));
-    // The player's, loud enough for twice: 60 at `a`.
-    let mut w = world("");
-    w.player_mut().talents.take("hush_foot", None);
-    w.spread_noise(noise(&w, 6, 70));
-    assert!(!sleeps(&w, 7));
-}
-
-#[test]
 fn a_blow_wakes_the_one_struck() {
     let mut w = world("");
     let id = at(&w, 18);
@@ -257,19 +237,12 @@ fn sleepers_count_toward_the_spawn_cap() {
 }
 
 #[test]
-fn a_plain_step_beside_a_sleeper_wakes_it_a_hush_footed_one_does_not() {
-    let step = |hush: bool| {
-        let mut w = world("");
-        if hush {
-            w.player_mut().talents.take("hush_foot", None);
-        }
-        w.player_mut().pos = Pos::new(5, 2);
-        w.apply(&Action::Move(Dir::E));
-        assert_eq!(w.state.player().pos, Pos::new(6, 2));
-        sleeps(&w, 7)
-    };
-    assert!(!step(false), "footsteps of 60, 50 beside it: awake");
-    assert!(step(true), "under twice its den's 30");
+fn a_plain_step_beside_a_sleeper_wakes_it() {
+    let mut w = world("");
+    w.player_mut().pos = Pos::new(5, 2);
+    w.apply(&Action::Move(Dir::E));
+    assert_eq!(w.state.player().pos, Pos::new(6, 2));
+    assert!(!sleeps(&w, 7), "footsteps of 60, 50 beside it: awake");
 }
 
 #[test]

@@ -198,29 +198,6 @@ fn the_save_holds_a_lengthened_easing() {
 }
 
 #[test]
-fn cauldron_wise_heals_a_fifth_more_and_lengthens_boosts() {
-    let sure = "[[object]]\nid = \"sure_draught\"\nname = \"sure draught\"\nplural = \
-                \"sure draughts\"\nglyph = \"!\"\nfg = \"#c83c3c\"\nclass = \"potions\"\n\
-                materials = [\"glass\"]\nweight = 250\nvalue = 1\nstackable = true\n\
-                [object.drink]\nkind = \"heal\"\ndice = \"+10\"\ncolour = \"red\"\n";
-    let mut w = world_with(
-        "[\"sure_draught*2\", \"potion_of_will\"]",
-        &[("data/objects/sure_draught.toml", sure)],
-    );
-    w.player_mut().hp = 100;
-    run(&mut w, "eat:a");
-    assert_eq!(w.state.player().hp, 110, "without the talent");
-    w.player_mut().talents.take("cauldron_wise", None);
-    run(&mut w, "eat:a");
-    assert_eq!(w.state.player().hp, 122, "a fifth more");
-    run(&mut w, "eat:a");
-    pass(&mut w, 11);
-    assert_eq!(severity(&w, "steadfast"), Some(1), "12 minutes, not 10");
-    pass(&mut w, 2);
-    assert_eq!(severity(&w, "steadfast"), None);
-}
-
-#[test]
 fn potions_of_every_new_kind_describe_themselves_in_words() {
     let mut w = world("[\"potion_of_might\", \"potion_of_owls_eyes\", \"potion_of_earthing\"]");
     run(&mut w, "identify");

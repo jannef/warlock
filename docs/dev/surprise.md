@@ -11,10 +11,10 @@ Keep it current with the code, as CLAUDE.md says.
   `missile_reach`, `memory_turns`, `no_vitals`), `Content::surprise()`. Optional: without it
   nobody is surprised, no Defence is stripped, and the player is never unaware (fixtures). Load
   checks: the status exists, is `per_action` with `max = 1`; the numbers in range; each
-  `no_vitals` tag carried by some creature type. `Content::has_vitals(creature, vitals_in)`
-  (#682) is the one reader of what has no vitals: incorporeal, `vitals = false`
-  (`CreatureDef::vitals`, default true), else an animated object or a `no_vitals` tag unless a
-  tag of `vitals_in` (Anatomist's) is carried too; everything has vitals without the file.
+  `no_vitals` tag carried by some creature type. `Content::has_vitals(creature)` (#682) is the
+  one reader of what has no vitals: incorporeal, `vitals = false` (`CreatureDef::vitals`,
+  default true), an animated object, or a `no_vitals` tag (Anatomist, which found vitals in
+  some, was cut in #787); everything has vitals without the file.
 - `assets/data/skills.toml`: `sneak_attack` (after Search; `sneak_dice`, `surprise`; marks on
   `sneak_attack`) and `initiative` (after Heal; `initiative`, `surprise_ease`; marks on
   `surprise`). The classes' lines and the drow's `optional_skills` (#682).
@@ -24,7 +24,8 @@ Keep it current with the code, as CLAUDE.md says.
   - `World::unaware(id, other)` (moved from `ambush.rs` with `sees_now`): the one definition,
     both ways round. A creature: asleep or disguised, else `Mind::last_seen` unset and
     `sees_now` false (`creature_unaware`, a free function of the state, content, and light
-    masks, so `Perception::compute` asks it too: Stalker's eye, #687). The player
+    masks, so `Perception::compute` asks it too: Stalker's eye, #687, the ranger's class
+    ability at level 2 since #788). The player
     (`player_unaware`): the attacker is not among `perception().actors()` and its
     `Mind::noticed` is `None` or more than `memory_turns` turns before `WorldState::turn`;
     never without the rules.
@@ -61,8 +62,8 @@ Keep it current with the code, as CLAUDE.md says.
   missile)` (dice, unaware or Surprised, vitals for the attacker, a missile within
   `missile_reach` + `sneak_reach`, Chebyshev; no draw), `sneak_threat` (Master thief),
   `ambushed` (the dice on a hit, gameplay stream; `Build::SneakAttack`; the player's
-  `Use::SneakAttack`, training stream), `has_vitals_for` and `vitals` (the struck side's
-  `no_criticals` with the attacker's Anatomist tags), `no_vital_spot` (Vital strike's and the
+  `Use::SneakAttack`, training stream), `has_vitals` and `vitals` (the struck side's
+  `no_criticals`), `no_vital_spot` (Vital strike's and the
   finisher's "It has no vital spot.", a `news` line after the blow's).
 - `world/thief.rs`, the thief's actives and passive on surprise (#684): Lurk (`lurking` in
   `status.toml`, after Surprised: `per_action`, `max = 1`, `refresh`, "You wait in ambush.",
@@ -86,7 +87,7 @@ Keep it current with the code, as CLAUDE.md says.
   Initiative's, and Stealth's slip benefits by value through `Benefit::at`, and what the
   Surprised action costs after the ease, as `World::status_cost` prices it),
   `surprise-check.md` (`check::ways` by edge and craft), `surprise-vitals.md` (every type
-  `Content::has_vitals` refuses, why, and the `vitals_in` talents that find them). The page
+  `Content::has_vitals` refuses, and why). The page
   also includes `slipping-past.md` (`skills.rs`) and `creature-surprise.md` (`creatures.rs`).
 - `world/balance_probe.rs`, `balance_probe/tables.rs::sneak_attacks` (#688; `docs/balance.md`
   "Sneak attacks"): the thief's first blow on an unaware monster with vitals against its plain
@@ -165,7 +166,8 @@ bystanders, the hash test, saves and replays, Hair trigger's blow, its one per s
 attacker it fells, Stalker's eye's gate); `world/ambush_tests.rs` (the ladder, the sum with
 the talents, the reach and Long reach, Surprised as the second door, the marks, the spell path,
 the craft and Initiative in the check); `world/vitals_tests.rs` (what has none, no critical, no
-dice, Anatomist, still surprised); `weapon_active_tests` (Vital strike's line);
+dice, still surprised); `world/class_rogue_tests.rs`
+(`a_ranger_gains_stalkers_eye_at_level_two`); `weapon_active_tests` (Vital strike's line);
 `combat.rs` (no confirmation drawn); `content/surprise.rs` (parse and refusals, optional file,
 `[slip]` off); `world/slip_tests.rs` (the moment, made and lost, no second roll, each ending, the
 creature that came to look caught unawares, another hostile, the no-draw test, saves and replays,

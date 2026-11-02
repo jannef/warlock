@@ -5,4 +5,4 @@ tree = "class"
 granted = true
 description = "Call the sky's fire down (a spell, paid in mana): under the open sky, a bolt of lightning toward a place you aim at."
 effects = [{ kind = "spell", spell = "call_lightning" }]
-systems = ["spells", "mana", "weather"]
+systems = ["spells", "mana", "travel"]

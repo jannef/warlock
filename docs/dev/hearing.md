@@ -22,9 +22,7 @@ becomes `PerceptionView::sounds()` (sources not visible only; kind, `Volume`, an
 never the actor; a walker's several steps within one turn are one sound; a listener with
 Watchful's `exact_footsteps`, #267, places footsteps at their own cell, and the ranger's Tracker,
 `exact_sounds` (#244), every sound: `noise::perceive`'s `exact`, a `noise::Exact`). In
-`noise::noise` the thief's and ranger's talents (#244) quiet the player: Camouflage's
-`sky_footsteps_percent` (a step onto an unroofed cell of a sky-exposed level, summed with
-`footsteps_percent`), Hide in plain sight's `silent_unburdened` (no footsteps while the burden is
+`noise::noise` the thief's talents (#244) quiet the player: Hide in plain sight's `silent_unburdened` (no footsteps while the burden is
 Unburdened) and `attack_noise_percent` (attacks, the one percent they take). `World::hear` logs news
 (`noise::news` against `WorldState::recent_sounds`) as messages, which stop a rest (voices are said
 with their words by `World::say_mutters` instead, as notes). The app draws

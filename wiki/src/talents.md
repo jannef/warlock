@@ -43,7 +43,7 @@ from those you don't, so you can plan a build there.
 
 **Class abilities** are talents too, of their own tree: your [class](classes.md) gives them as its levels
 come (see [Classes](classes.md#levels)), you never pick them, and one your class gives that you
-already learned is not given again. Some are talents anyone may pick (the [aristocrat](classes.md#aristocrat)'s
+already learned is not given again: that level gives you a talent pick in its place. Some are talents anyone may pick (the [aristocrat](classes.md#aristocrat)'s
 [Riposte](talents.md#talent-riposte), the [commoner](classes.md#commoner)'s [Second wind](talents.md#talent-second-wind)).
 
 ## Ranks, choices, prerequisites
@@ -89,10 +89,6 @@ at once, on top of your [starting kit](starting-kit.md).
   (two make it magic, more make it [rare](magic-items.md#rarity) and give it a name), and you [know what it does](magic-items.md#unidentified-items) from the
   start. It is readied in its own [slot](equipment.md#what-fits-where) (the main hand, the [missile weapon](ranged.md#getting-ready) slot for a sling or a
   bow) if your kit left that free; otherwise it waits in your pack beside the kit's own weapon.
-- **[Favoured child](talents.md#talent-favoured-child)**: the luckier turns of your
-  [background story](background.md#how-rare) come twice as often: its uncommon, rare, and
-  fateful sentences at 24 %, 6 %, and 1 % a chapter instead of 12 %, 3 %, and 0.5 %. It is a
-  gamble: a commoner story may still be told, and nothing good is promised.
 
 {{#include generated/talents-heirlooms.md}}
 

@@ -1,7 +1,7 @@
 //! A forgotten altar's great boons and banes (spec §7 "Special rooms"; `world/boons.rs`): Gift
 //! and Wrath of the forgotten, Exalted and Unmade (a level gained again gives no choices),
-//! Chosen and Forsaken (kept for life through a save), the relic, the horde, Penitent, and the
-//! great tier's share of the draw.
+//! Chosen and Forsaken (kept for life through a save), the relic, the horde, Pious's second
+//! rank, and the great tier's share of the draw.
 
 use super::super::World;
 use crate::Pos;
@@ -345,25 +345,33 @@ fn bane_only(bane: &str) -> String {
 }
 
 #[test]
-fn penitent_turns_a_great_bane_into_nothing_but_not_the_explosion() {
+fn pious_at_its_second_rank_turns_a_great_bane_into_nothing_but_not_the_explosion() {
     let wrath = "[[outcome]]\nkind = \"bane\"\ntier = \"great\"\nid = \"wrath\"\nweight = 1\n\
                  effect = { wrath = \"1d3\" }\nmessage = \"You feel lessened, forever.\"\n";
+    let pious = |w: &mut World, ranks: u8| {
+        for _ in 0..ranks {
+            w.player_mut().talents.take("pious", None);
+        }
+    };
     let mut w = world_with(Some(&bane_only(wrath)));
-    w.player_mut().talents.take("penitent", None);
+    pious(&mut w, 2);
     let before = scores(&w);
     w.apply(&Action::Pray);
     assert!(said(&w, "Silence answers you."));
     assert!(!said(&w, "You feel lessened, forever."));
     assert_eq!(scores(&w), before);
-    // Without the talent the bane comes.
-    let mut w = world_with(Some(&bane_only(wrath)));
-    w.apply(&Action::Pray);
-    assert!(said(&w, "You feel lessened, forever."));
-    // The explosion is moderate: it comes to the penitent too.
+    // At the first rank, and without the talent, the bane comes.
+    for ranks in [1, 0] {
+        let mut w = world_with(Some(&bane_only(wrath)));
+        pious(&mut w, ranks);
+        w.apply(&Action::Pray);
+        assert!(said(&w, "You feel lessened, forever."), "rank {ranks}");
+    }
+    // The explosion is moderate: it comes to the pious too.
     let burst = "[[outcome]]\nkind = \"bane\"\ntier = \"moderate\"\nid = \"burst\"\nweight = 1\n\
                  effect = { becomes = \"rubble\" }\nmessage = \"The altar bursts apart in fire!\"\n";
     let mut w = world_with(Some(&bane_only(burst)));
-    w.player_mut().talents.take("penitent", None);
+    pious(&mut w, 2);
     w.apply(&Action::Pray);
     assert!(said(&w, "The altar bursts apart in fire!"));
 }

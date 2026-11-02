@@ -116,15 +116,11 @@ fn hit_points_follow_a_toughness_elixir_and_mana_an_intelligence_one() {
 }
 
 #[test]
-fn an_elixir_gives_sixty_marks_and_quick_study_doubles_them() {
+fn an_elixir_gives_sixty_marks() {
     let mut w = world("[\"elixir_of_grace\"]");
     run(&mut w, "eat:a");
     assert_eq!(w.state.player().stat_marks[Stat::Dexterity], 60);
     assert_eq!(w.state.player().stat_marks[Stat::Strength], 0);
-    let mut w = world("[\"elixir_of_grace\"]");
-    w.player_mut().talents.take("quick_study_of_the_body", None);
-    run(&mut w, "eat:a");
-    assert_eq!(w.state.player().stat_marks[Stat::Dexterity], 120);
 }
 
 #[test]

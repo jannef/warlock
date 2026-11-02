@@ -780,7 +780,7 @@ impl Actor {
             defence: self.defence(content, burden, race),
             protection: self.protection(content, race),
             resistances: self.resistances(content, race),
-            no_criticals: !content.has_vitals(self.creature, &[]),
+            no_criticals: !content.has_vitals(self.creature),
         }
     }
 

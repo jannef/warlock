@@ -2,8 +2,8 @@
 
 Spec §8 "Potions" (`spec/08g-magic-items.md`); the combat progression design §10
 (`docs/design/combat-progression.md`); #565 (Q1: the kinds `heal`, `cure`, `mana`, `harm`); #567
-(Q2: `boost`, `vision`, `haste`, `resistance`, their thirteen statuses, Lasting draughts,
-Cauldron-wise); #568 (Q3: `elixir`).
+(Q2: `boost`, `vision`, `haste`, `resistance`, their thirteen statuses, Lasting draughts);
+#568 (Q3: `elixir`).
 
 ## Objects and data
 
@@ -103,18 +103,13 @@ Cauldron-wise); #568 (Q3: `elixir`).
 - **Thrifty drinker** (`potion_kept { chance }`, `TalentMods::potion_kept`): read in
   `Actor::potion_kept` with the worn `potion_kept` affixes (#633; the sum held to `MAX_KEPT`,
   50, unless the talent alone is above it), which `take_draught` reads; one draw only above 0.
-- **Quick study of the body** (system `stat_training`, shipped with T2): doubles the `drank`
-  and `elixir` counts in `train_stat_times`, so an elixir gives 120 marks.
 - **Lasting draughts** (Vigour, Toughness 13; #567): `status_lasts` (50) on the six boosts and
   three visions, `TalentMods::status_lasts`, read in `TalentMods::eases_every` (each degree
   takes half again as long to ease). The design called it "Strong constitution", a name a
   diseases talent already has.
-- **Cauldron-wise** (the witch's class ability at 12; granted): `potion_heals` (20,
-  `TalentMods::potion_heals`, read in the `Heal` arm) and `status_lasts` (20) on the six boosts.
-  The Cauldron talent (level 50) is about corpses and does not overlap.
-- **Nose for draughts** (`potion_smell`, `TalentMods::potion_smell`): `World::smell_potions`,
-  called by `pick_up` after "You pick up ...": one line per unknown potion type picked up, by
-  its kind (`smell`), never its type.
+
+#787 cut Quick study of the body, the witch's Cauldron-wise, and Nose for draughts, with their
+effect kinds (`potion_marks_percent`, `potion_heals`, `potion_smell`) and `World::smell_potions`.
 
 ## UI
 
@@ -127,12 +122,12 @@ Cauldron-wise); #568 (Q3: `elixir`).
 - `world/potion_status_tests.rs` (#567): boosts raise and wear off, greater ones ease to
   common ones, `highest`, visions change `Actor::eyes` and what is seen in the dark,
   resistances add as gear and never reach immunity, haste, Lasting draughts, a save with a
-  lengthened easing, Cauldron-wise, descriptions, drinks that lend the wrong status refused.
+  lengthened easing, descriptions, drinks that lend the wrong status refused.
   `content/status.rs` tests `vision`, `resist`, and `per_degree`. Text snapshot
   `potion-boost` (the character screen and status bar with Fortified and Owl-eyed).
 - `world/potion_tests.rs`: every kind through `eat:`, a floor potion, food still eaten,
   refusals with no time, words and colours, `known_scrolls`, identify, marks by count, Thrifty
-  drinker (no draw without it), Nose for draughts, the witch's kit, earlier labels unchanged,
+  drinker (no draw without it), the witch's kit, earlier labels unchanged,
   content refusals.
 - `world/elixir_tests.rs`: score +1 and potential +1 or +2 over seeds (both come up), the
   potential lifted first, hit points after a Toughness elixir and maximum mana after an

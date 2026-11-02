@@ -35,7 +35,7 @@ use crate::variant::Source;
 /// The kinds' weights of `table` for a player of side `player` at a place of side `place`
 /// (spec §7 "Special rooms"): agreement (both good, or both evil) moves its `lean` from the bane
 /// to the boon, opposition (good against evil) from the boon to the bane; a neutral place or
-/// player leans nothing. Devout (`devout`) doubles an agreeing lean and takes an opposed one away.
+/// player leans nothing. Pious (`devout`) doubles an agreeing lean and takes an opposed one away.
 pub fn leaned_kinds(
     table: &OutcomeTable,
     place: Alignment,

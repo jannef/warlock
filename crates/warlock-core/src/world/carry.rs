@@ -81,7 +81,6 @@ impl World {
             text.push_str(&format!(" You owe {name} {owed} gold."));
         }
         self.say(text);
-        self.smell_potions(&got);
         self.train_haul(&got);
         self.lift_in_hoard(here, got.len());
         true

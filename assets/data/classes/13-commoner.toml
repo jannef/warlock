@@ -18,10 +18,8 @@ abilities = [
     { level = 1, talent = "hard_work" },
     { level = 12, talent = "stubborn" },
     { level = 18, talent = "big_hands" },
-    { level = 25, talent = "thick_skull" },
     { level = 32, talent = "second_wind" },
     { level = 40, talent = "salt_of_the_earth" },
-    { level = 50, talent = "folk_hero" },
     { level = 60, talent = "unlikely_hero" },
 ]
 bonus_talents = { levels = [10, 20, 30, 45, 55] }

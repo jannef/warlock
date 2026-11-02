@@ -106,15 +106,10 @@ impl World {
 }
 
 /// The line said as the player arrives on the current level when an effect covers it whole: its
-/// `pervade` line, and with Sense of place what the effect is.
+/// `pervade` line.
 pub(super) fn pervade_line(state: &WorldState, content: &Content) -> Option<String> {
-    let effect = content.room_effect(state.current().pervading?);
-    let line = effect.pervade.clone()?;
-    let player = state.player();
-    let knows = !player.talents.is_empty() && player.talent_mods(content).sense_of_place;
-    Some(if knows {
-        format!("{line} The whole level is like {}.", effect.with_article())
-    } else {
-        line
-    })
+    content
+        .room_effect(state.current().pervading?)
+        .pervade
+        .clone()
 }

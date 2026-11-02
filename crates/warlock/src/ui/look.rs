@@ -936,21 +936,22 @@ map = '''
             "name = \"Hall\"\nstart_level = \"hall\"\n",
         );
         let content = Arc::new(Content::load(&files).expect("content"));
-        let spec = "dwarf,male,thief".parse::<warlock_core::character::CharacterSpec>();
-        // The talent needs Stealth 20 and Spot 10: the first fate that rolls them.
-        let start = |picks: [&str; 2]| {
-            let talents = picks.map(String::from).to_vec();
-            let spec = spec.clone().expect("a character").with_talents(talents);
-            (1..100)
-                .find_map(|seed| {
-                    World::start_run(content.clone(), "hall", Some(seed), Some(&spec), None, true)
-                        .ok()
-                })
-                .expect("a thief sharp enough")
-        };
-        let said: Vec<String> = [["healthy", "lean"], ["stalkers_eye", "healthy"]]
+        let spec = "dwarf,male,ranger"
+            .parse::<warlock_core::character::CharacterSpec>()
+            .expect("a character")
+            .with_talents(["healthy", "lean"].map(String::from).to_vec());
+        // A ranger gains the talent at level 2.
+        let said: Vec<String> = ["", "xp:691 levelup:auto*2"]
             .into_iter()
-            .map(|picks| describe(&start(picks).perception(), Pos::new(4, 1), true))
+            .map(|actions| {
+                let mut w =
+                    World::start_run(content.clone(), "hall", Some(1), Some(&spec), None, true)
+                        .expect("starts");
+                for action in warlock_core::action::parse_actions(actions).expect("actions") {
+                    w.apply(&action);
+                }
+                describe(&w.perception(), Pos::new(4, 1), true)
+            })
             .collect();
         assert_eq!(said[0], "A deer (unhurt), on stone floor.");
         assert_eq!(said[1], "A deer (unhurt, unaware of you), on stone floor.");

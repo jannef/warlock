@@ -276,7 +276,7 @@ pub(super) fn altar_outcomes(content: &Content) -> String {
 }
 
 /// How often a prayer brings each tier, by the side's lean, and what an altar gives over its
-/// prayers: a row per lean (none, agreement, opposition, and Devout's agreement), each with the
+/// prayers: a row per lean (none, agreement, opposition, and Pious's agreement), each with the
 /// kinds' weights, the shares per prayer of nothing, minor, moderate, and great outcomes and of
 /// the altar exploding, and per altar the prayers it takes on average and the chance it
 /// explodes. Then the facts the table and the room's sides give.
@@ -295,7 +295,7 @@ pub(super) fn altar_shares(content: &Content) -> String {
         ("None (a neutral altar, or a neutral you)", 0),
         ("Agreement (good at good, evil at evil)", lean),
         ("Opposition (good at evil, evil at good)", -lean),
-        ("Agreement, Devout", 2 * lean),
+        ("Agreement, Pious", 2 * lean),
     ] {
         let kinds = table.leaned(by);
         let sum = f64::from(kinds.iter().sum::<u32>().max(1));

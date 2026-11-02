@@ -106,15 +106,6 @@ fn lore_identifies_what_has_been_carried_for_a_day() {
 }
 
 #[test]
-fn keen_appraiser_tells_what_things_are_worth() {
-    let mut w = world();
-    assert_eq!(w.perception().appraisal(), Default::default());
-    give(&mut w, "keen_appraiser");
-    let appraisal = w.perception().appraisal();
-    assert!(appraisal.worth && appraisal.gems);
-}
-
-#[test]
 fn scroll_savant_reads_in_half_the_time_and_is_spared_its_burst() {
     let pack = "[\"scroll_of_fireball*3\"]";
     let map = "#######\n#@D...#\n#######\n";
@@ -371,21 +362,6 @@ fn lockbreaker_kicks_harder_and_quieter_and_tunneler_digs_faster() {
     assert_eq!(loud(&w), before / 2);
     let mods = w.state.player().talent_mods(w.content());
     assert_eq!((mods.door_kick, mods.dig_percent), (6, 50));
-}
-
-#[test]
-fn silver_tongue_and_haggler_move_prices_in_the_players_favour() {
-    let mut w = world();
-    let shops = w.content().shops().expect("shops").clone();
-    let favour = |w: &World| super::shop::favour(w.content(), &shops, w.state.player());
-    let plain = favour(&w);
-    give(&mut w, "silver_tongue");
-    assert_eq!(favour(&w), plain + 10);
-    give(&mut w, "haggler");
-    assert_eq!(favour(&w), plain + 25);
-    // Neither lifts the cap.
-    w.player_mut().stats = Stats::new(PerStat::splat(40), PerStat::splat(40));
-    assert_eq!(favour(&w), crate::content::MAX_FAVOUR);
 }
 
 #[test]

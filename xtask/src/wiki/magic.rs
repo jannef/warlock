@@ -349,7 +349,7 @@ fn talents_beside(content: &Content, a: &AffixDef) -> &'static [&'static str] {
     let pool = a.resource.map(|r| content.resource(r).id.as_str());
     match (a.effect, pool) {
         (E::ToHit, _) => &["weapon_focus"],
-        (E::Damage, _) => &["whetstone"],
+        (E::Damage, _) => &["brawn"],
         (E::Threat, _) => &["improved_critical", "masterwork"],
         (E::Crit, _) => &["brutal_critical"],
         (E::Range, _) => &["far_shot"],

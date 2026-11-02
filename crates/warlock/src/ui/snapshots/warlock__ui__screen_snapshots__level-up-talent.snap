@@ -6,39 +6,39 @@ expression: "render(case, content.clone())"
  Your athlet│                                                                          │
             │ Vigour                                                                   │
             │ > a  Deep lungs                       Your stamina holds a good deal mo… │
-            │   b  Hardy                       1/3  Tougher than most: more hit point… │
-            │   c  Healthy                          Your hit points come back a quart… │
+            │   b  Healthy                          Your hit points come back a quart… │
             │ Might                                                                    │
-            │   d  Brawn                       1/2  Your blows up close hit harder: 1… │
-            │   e  Mighty kick                      Your kicks land like hammers: the… │
+            │   c  Brawn                       1/2  Your blows up close hit harder: 1… │
+            │   d  Mighty kick                 1/2  Your kicks land like hammers: the… │
             │ Finesse                                                                  │
-            │   f  Opportunist                      A foe that turns from you pays fo… │
+            │   e  Opportunist                      A foe that turns from you pays fo… │
             │ Weaponcraft                                                              │
-            │   g  Far shot                         Your shots fly 2 cells farther, a… │
-            │   h  Sworn foe                        You have sworn yourself against o… │
-            │   i  Wand mastery                     You draw more from a wand than it… │
-            │   j  Weapon focus (long blades)       You have drilled with one kind of… │
+            │   f  Far shot                         Your shots fly 2 cells farther, a… │
+            │   g  Sworn foe                        You have sworn yourself against o… │
+            │   h  Wand mastery                     You draw more from a wand than it… │
+            │   i  Weapon focus (long blades)  1/2  You have drilled with one kind of… │
             │ Guard                                                                    │
-            │   k  Armour training             1/2  You move freely in armour: it ham… │
+            │   j  Armour training             1/2  You move freely in armour: it ham… │
             │ Shadow                                                                   │
-            │   l  Keen ears                   1/2  You hear fainter sounds, fainter … │
-            │   m  Night eyes                       Your eyes grow used to the dark: … │
+            │   k  Lamplighter                      You tend your lantern well: it bu… │
             │ Wayfarer                                                                 │
-            │   n  Devout                           You pray as one who means it: an … │
-            │   o  Pilgrim                          You have knelt in many temples: t… │
-            │   p  Sense of place                   You read a place at a glance: a s… │
-            │   q  Sun-blessed                      The sun mends you: under the open… │
-            │   r  Swimmer                          Water does not slow you: you wade… │
+            │   l  Pious                       1/2  You keep the old observances: an … │
+            │   m  Swimmer                          Water does not slow you: you wade… │
             │ Scholar                                                                  │
-            │   s  Apprentice                  1/3  You take up a skill you lack, or … │
-            │   t  Clear mind                       A mind at peace gathers its stren… │
-            │   u  Deep well                   1/3  Your power runs deep: more mana f… │
-            │   v  Quick study of the body          What you drink teaches your body … │
+            │   n  Apprentice                  1/3  You take up a skill you lack, or … │
+            │   o  Clear mind                       A mind at peace gathers its stren… │
+            │   p  Deep well                   1/3  Your power runs deep: more mana f… │
+            │ Spellcraft                                                               │
+            │   q  Keen mind                        One school of magic, or one eleme… │
+            │   r  Quick study                      Spells come easily to you: you le… │
+            │   s  School focus                     You have made one school of magic… │
+            │ Grit                                                                     │
+            │   t  Lean                             You go hungry more slowly, and ex… │
+            │   u  Pack mule                   1/2  You can carry a tenth more for ea… │
             │                                                                          │
             │ Your stamina holds a good deal more.                                     │
             │                                                                          │
             │                                                                          │
             │                                                                          │
-            │ a-v or Enter choose   > < page                                           │
-            └──────────────────────────────────────────────────────────────────────────┘
- The Hub  ·  HP 28/28  ·  MP 5/5  ·  Sta 10/10  ·  Lv 3  ·  08:00  ·  11 Darkening       ? controls
+            │ a-u or Enter choose   > < page                                           │
+ The Hub  · └──────────────────────────────────────────────────────────────────────────┘ ? controls

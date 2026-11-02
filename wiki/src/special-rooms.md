@@ -17,8 +17,7 @@ you see or remember ("A stone floor in an echoing hall.", "You remember a stone 
 sanctuary."). Before you have been inside, it is just a room, though you may notice something
 odd about it from the doorway: an unnatural darkness, a faint warm glow, [water](terrain.md#water) on the floor.
 Some rooms give themselves away from outside: the first time you see any part of one, a line
-hints at what lies there. The talent *[Sense of place](talents.md#talent-sense-of-place)* (Wayfarer) lets you know a room's nature
-as soon as you see it, without stepping in.
+hints at what lies there.
 
 Special rooms are not terribly common, but not rare either: about three levels of a generated
 [dungeon](dungeons.md) in five have one, and a level never has more than one (some [dungeons](dungeons.md) allow more). In the rooms-and-corridors levels it is a
@@ -212,9 +211,8 @@ Sleepers never wake by themselves, however long you wait or rest nearby. They wa
   cry may wake those near it, and theirs the next, until the whole den is up.
 
 [Light](light.md#what-light-is) does not wake them: carrying your [lantern](lantern.md) in is safe. Your plain footsteps (60) wake a
-kobold (which hears 15, so wakes at 30) up to three cells away; with some [Stealth](skills.md#skill-stealth), or the
-talent *[Hush-foot](talents.md#talent-hush-foot)* (Shadow, Stealth 10: sleepers need twice the noise to wake from anything you
-do), you can walk right past. A sleeper has seen no one, so *[sneak attacks](talents.md#talent-sneak-attack)* land on it every
+kobold (which hears 15, so wakes at 30) up to three cells away; with some [Stealth](skills.md#skill-stealth) you can walk
+right past. A sleeper has seen no one, so *[sneak attacks](talents.md#talent-sneak-attack)* land on it every
 time; but every blow is noise, and a kill is a fight its neighbours may hear. A sleeper you see
 shows as "asleep" in [look mode](controls.md#look-mode), and you are told when one wakes.
 
@@ -293,7 +291,7 @@ glow does: gold, grey, or red. The side tilts the odds against your own [alignme
 [Alignment](alignment.md)): pray at an altar of your own side and the boons come more often,
 at one of the other side the banes. A neutral altar, or a neutral you, leans neither way.
 Praying also moves your [alignment](alignment.md#what-moves-you) a little: toward good at a good altar, toward evil (more) at an
-evil one. The talent *[Devout](talents.md#talent-devout)* (Wayfarer) doubles the lean of an altar of your side and takes
+evil one. The talent *[Pious](talents.md#talent-pious)* (Wayfarer) doubles the lean of an altar of your side and takes
 away an opposed one's.
 
 After each completed prayer, there is an even chance the altar is **[spent](terrain.md#terrain-spent-altar)**: its glow gutters and
@@ -307,7 +305,7 @@ Rarely, an altar marks you for good. The great boons raise a [stat](stats.md) fo
 an elixir (see [Potions](potions.md#elixirs)) at the altar's foot. The great banes lower a [stat](stats.md) for good, take a [level](experience.md#levels) away (what you chose at
 that level you keep, but gaining it again gives no new choices), mark you with a flaw for life,
 or call a horde around the altar. Talents an altar gave you are marked "altar" on the Talents
-page. The talent *[Penitent](talents.md#talent-penitent)* (Grit) turns a great bane into nothing at all; the altar bursting
+page. *[Pious](talents.md#talent-pious)* at its second rank turns a great bane into nothing at all; the altar bursting
 is not great, and still happens.
 
 The outcomes, by kind and tier ("Of its kind" is its share of its kind's draws):

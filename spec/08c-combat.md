@@ -425,8 +425,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Vitals** (critical immunity; `Content::has_vitals`, the one reader): an incorporeal
     creature, an animated object, a type carrying a tag of `no_vitals` (elemental, skeleton,
     spirit, construct), or one with `vitals = false` has no vitals: no critical is confirmed on it
-    (`combat::Target::no_criticals`, set by `World::target_of` and, with the attacker's
-    Anatomist tags, `ambush.rs::vitals`: a threat is a plain hit, no confirmation drawn, a sure
+    (`combat::Target::no_criticals`, set by `World::target_of` and `ambush.rs::vitals`: a threat is a plain hit, no confirmation drawn, a sure
     critical a plain hit too), no sneak dice land on it, no Master thief threat; it is surprised
     like anyone. Vital strike or the finisher that hits one says "It has no vital spot." after
     the blow's line. The fleshy undead have vitals. Without `data/surprise.toml` everything has
@@ -435,7 +434,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     kobold whirls to face you." before the player's blow's line (nothing more on a sleeper or a
     mimic); "You are taken by surprise!" / "You keep your wits about you." before a creature's
     attack line, after a trap's; look mode's "surprised"; Surprised in the status bar.
-  - **Stalker's eye** (#687): the perception snapshot carries `SeenActor::unaware` for each
+  - **Stalker's eye** (#687; the ranger's class ability at level 2 since #788): the perception snapshot carries `SeenActor::unaware` for each
     creature in view (`surprise::creature_unaware`, the creature half of `World::unaware`, a
     function of state: a sleeper, a mimic Chest-wise sees, one slipped past, one hunting no one
     whose eyes miss the player), computed in `Perception::compute` only for a player with the

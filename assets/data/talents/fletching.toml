@@ -1,8 +1,0 @@
-[[talent]]
-id = "fletching"
-name = "Fletching"
-tree = "class"
-granted = true
-description = "Your arrows, bolts, and stones are well made: they break half as often."
-effects = [{ kind = "missile_breaks", value = -50 }]
-systems = ["ranged"]

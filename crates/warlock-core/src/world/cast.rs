@@ -963,7 +963,7 @@ impl World {
                 }
                 self.attacked_near(by, target);
                 let struck = self.target_against(target, missile);
-                let struck = self.vitals(by, target, struck);
+                let struck = self.vitals(target, struck);
                 let struck = self.flat_footed(target, unaware, struck);
                 let against = combat::Target {
                     no_criticals: struck.no_criticals,

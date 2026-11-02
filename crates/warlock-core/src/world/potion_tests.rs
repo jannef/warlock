@@ -6,7 +6,6 @@ use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::content::ContentFiles;
-use crate::stats::{PerStat, Stats};
 
 /// Every potion type, by id.
 const POTIONS: &[&str] = &[
@@ -300,20 +299,6 @@ fn thrifty_drinker_keeps_potions_by_its_chance_and_draws_only_when_held() {
             .known_scrolls
             .contains(&id(&w, "potion_of_antidote"))
     );
-}
-
-#[test]
-fn nose_for_draughts_tells_the_kind_on_pickup() {
-    let mut w = world("[]");
-    w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(40));
-    run(&mut w, "move:E pickup");
-    assert!(!said(&w).iter().any(|m| m.contains("smells")));
-    let mut w = world("[]");
-    w.player_mut().talents.take("nose_for_draughts", None);
-    run(&mut w, "move:E pickup");
-    let word = w.labels.get(id(&w, "potion_of_healing")).expect("a word");
-    let line = format!("The {word} red potion smells of honey and iron: healing of some kind.");
-    assert!(said(&w).contains(&line), "{:?}", said(&w));
 }
 
 #[test]

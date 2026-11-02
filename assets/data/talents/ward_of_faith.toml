@@ -1,8 +1,0 @@
-[[talent]]
-id = "ward_of_faith"
-name = "Ward of faith"
-tree = "class"
-granted = true
-description = "Your faith turns blows aside: Deflection +1 to your Defence."
-effects = [{ kind = "deflection", value = 1 }]
-systems = ["defence"]

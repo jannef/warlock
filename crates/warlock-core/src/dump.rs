@@ -986,16 +986,10 @@ fn progress_rows(world: &World) -> Vec<String> {
     // Each stat's pile with the price in force: the rise's, or the drop's for a negative pile.
     let player = world.state().player();
     let rules = world.content().stat_training();
-    let talents = player.talent_mods(world.content());
     let marked: Vec<String> = (player.stat_marks.iter())
         .filter_map(|(stat, n)| {
             let stats = &player.stats;
-            let price = rules.price_for(
-                n,
-                stats.score(stat),
-                stats.potential(stat),
-                talents.price_ease(),
-            )?;
+            let price = rules.price_for(n, stats.score(stat), stats.potential(stat))?;
             Some(format!("{} {n}/{price}", stat.abbrev()))
         })
         .collect();

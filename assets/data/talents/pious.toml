@@ -1,0 +1,16 @@
+# Penitent, Devout, and Pilgrim in one (#788), built as Old delver was (#782).
+[[talent]]
+id = "pious"
+name = "Pious"
+tree = "wayfarer"
+ranks = 2
+description = "You keep the old observances: an altar of your own side hears your prayers all the more kindly and one of the other side no more harshly than any, and a temple's cures and mendings cost you half and leave you stronger. At the second rank you kneel as one who knows their debts: whatever would curse you for good at a forgotten altar passes over you."
+systems = ["special_rooms", "talk"]
+
+# Rank 1 needs nothing: the Wayfarer tree's free talent (`free_per_tree`).
+[[talent.rank]]
+effects = [{ kind = "devout" }, { kind = "pilgrim" }]
+
+[[talent.rank]]
+needs = { stats = { willpower = 12 }, level = 10 }
+effects = [{ kind = "penitent" }]
