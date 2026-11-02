@@ -1025,15 +1025,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (disease checks +2, poison eases twice as fast), Purity of body (no
     disease is ever caught: `World::expose` refuses, nothing rolled), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
     status that ticks and every disease, one degree of Drained); Martial arts (bare hands and
-    kicks roll 1d6), Fleet (steps 10 % cheaper in no body armour and with no shield), Deflect
-    missiles (Dodge +2 against missiles), Flurry (grants Ki, §8 "Resources"; a melee attack
+    kicks roll 1d6; grants Ki, §8 "Resources"), Flurry (level 1 beside it: a melee attack
     with nothing in hand strikes twice, the second at −2, for a point of ki; with none, once),
+    Fleet (steps 10 % cheaper in no body armour and with no shield), Deflect
+    missiles (Dodge +2 against missiles),
     Still mind (+2 on checks made with Willpower: diseases', noticing
     in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
-    Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1). The paladin's
+    Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1; ki comes back
+    twice as fast). The paladin's
     passives do not ask for Good; only the gifts used from the menu do.
   - **Resources**: Rage, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
-    (§8 "Resources", R1); Flurry and Quivering palm on the Ki resource (R4, #252).
+    (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry and Quivering palm spend (R4,
+    #252; #846).
   - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):

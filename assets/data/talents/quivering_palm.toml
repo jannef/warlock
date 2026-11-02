@@ -3,7 +3,7 @@ id = "quivering_palm"
 name = "Quivering palm"
 tree = "class"
 granted = true
-description = "A bare-handed blow (an ability) that leaves a wounded foe bleeding badly, for all of your ki."
+description = "A bare-handed blow (an ability) that leaves a wounded foe bleeding badly, for five ki."
 effects = [{ kind = "quivering_palm", status = "bleeding", severity = 3 }]
 resource = { id = "ki", cost = 5 }
 systems = ["kicks", "status", "resources"]

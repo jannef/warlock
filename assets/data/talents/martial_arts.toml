@@ -3,6 +3,9 @@ id = "martial_arts"
 name = "Martial arts"
 tree = "class"
 granted = true
-description = "Trained hands and feet: your bare-handed blows and kicks hit far harder."
-effects = [{ kind = "unarmed_die", sides = 6 }]
-systems = ["kicks", "combat"]
+description = "Trained hands and feet: your bare-handed blows and kicks hit far harder. You gain Ki, which grows as you do and comes back with time, resting too."
+effects = [
+    { kind = "unarmed_die", sides = 6 },
+    { kind = "grants_resource", resource = "ki" },
+]
+systems = ["kicks", "combat", "resources"]

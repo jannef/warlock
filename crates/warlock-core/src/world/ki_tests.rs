@@ -1,7 +1,9 @@
 //! The ascetic's Ki and the bard's Inspiration (spec §8 "Resources"; the progression design §4.18,
-//! R4, #252): Flurry grants Ki and each second blow spends a point of it, Quivering palm costs
-//! five instead of a cooldown, Inspire grants Inspiration and spends three of it in place of its
-//! mana when they are held, and Virtuoso's song costs nothing.
+//! R4, #252; the ki tricks design, #846): Martial arts grants Ki at level 1, its maximum grows
+//! with Willpower and the level, Flurry's second blows spend a point each from level 1, Quivering
+//! palm costs five instead of a cooldown, Perfect self brings it back twice as fast, Inspire
+//! grants Inspiration and spends three of it in place of its mana when they are held, and
+//! Virtuoso's song costs nothing.
 
 use super::class_active_tests::{at_normal_speed, beside, last, reach, run, suffers, world};
 use super::*;
@@ -12,6 +14,7 @@ use crate::content::{Build, ClassActive, ResourceId};
 use crate::equipment::{free_slot, slots_taken};
 use crate::object::Stack;
 use crate::replay::Replay;
+use crate::stats::{PerStat, Stats, modifier};
 
 fn resource(w: &World, id: &str) -> ResourceId {
     w.content().resource_id(id).expect(id)
@@ -45,17 +48,78 @@ fn fresh(class: &str) -> World {
 fn ascetic(level: u8) -> World {
     let mut w = world("ascetic");
     w.player_mut().equipment = Default::default();
-    reach(&mut w, level);
+    if level > 1 {
+        reach(&mut w, level);
+    }
     at_normal_speed(&mut w);
     w
 }
 
+/// The most ki the player may hold now.
+fn ki_max(w: &World) -> u16 {
+    let level = w.player_level();
+    (w.state.player()).resource_max(w.content(), resource(w, "ki"), level)
+}
+
+/// Every score of the player at `score` (Willpower among them).
+fn scores(w: &mut World, score: u8) {
+    w.player_mut().stats = Stats::new(PerStat::splat(score), PerStat::splat(40));
+}
+
 #[test]
-fn flurry_grants_ki_and_each_second_blow_spends_a_point() {
-    let w = ascetic(17);
-    assert_eq!(held(&w, "ki"), None, "no ki before Flurry");
-    let mut w = ascetic(18);
-    assert_eq!(held(&w, "ki"), Some(5), "Flurry: Ki, full");
+fn martial_arts_grants_ki_full_at_level_one_and_no_other_class_holds_it() {
+    let w = fresh("ascetic");
+    assert_eq!(w.player_level(), 1);
+    assert_eq!(held(&w, "ki"), Some(ki_max(&w)), "Martial arts: Ki, full");
+    for class in ["berserker", "thief", "warrior", "wizard"] {
+        assert_eq!(held(&fresh(class), "ki"), None, "{class}");
+    }
+}
+
+#[test]
+fn the_maximum_grows_with_willpower_and_the_level_and_never_falls_below_three() {
+    let mut w = ascetic(1);
+    // 4, the Willpower modifier, a point per 6 levels: the design's three samples.
+    scores(&mut w, 12);
+    assert_eq!(ki_max(&w), 4 + u16::try_from(modifier(12)).unwrap());
+    assert_eq!(ki_max(&w), 5, "Willpower 12 at level 1");
+    scores(&mut w, 1);
+    assert!(modifier(1) <= -2);
+    assert_eq!(ki_max(&w), 3, "at least 3");
+    reach(&mut w, 25);
+    // The picks may have taken Inner calm: this is the pool's own maximum.
+    w.player_mut().talents.forget("inner_calm");
+    scores(&mut w, 14);
+    assert_eq!(ki_max(&w), 10, "Willpower 14 at level 25");
+    reach(&mut w, 60);
+    w.player_mut().talents.forget("inner_calm");
+    scores(&mut w, 16);
+    assert_eq!(ki_max(&w), 17, "Willpower 16 at level 60");
+}
+
+#[test]
+fn perfect_self_brings_ki_back_twice_as_fast() {
+    let mut w = ascetic(59);
+    w.player_mut().talents.forget("inner_calm");
+    let player = w.state.player;
+    let ki = resource(&w, "ki");
+    assert_eq!(w.resource_rate(player, ki), 100);
+    reach(&mut w, 60);
+    w.player_mut().talents.forget("inner_calm");
+    assert_eq!(w.resource_rate(player, ki), 200, "Perfect self");
+    set(&mut w, "ki", 0);
+    run(&mut w, "wait*3");
+    assert_eq!(
+        held(&w, "ki"),
+        Some(2),
+        "a point every base turn and a half"
+    );
+}
+
+#[test]
+fn a_level_one_ascetic_flurries_and_each_second_blow_spends_a_point() {
+    let mut w = ascetic(1);
+    set(&mut w, "ki", 5);
     let kobold = beside(&mut w, "kobold", 500);
     let player = w.state.player;
     assert!(w.flurry(player, kobold, &mut Vec::new()).is_some());
@@ -71,7 +135,8 @@ fn flurry_grants_ki_and_each_second_blow_spends_a_point() {
 
 #[test]
 fn an_attack_with_ki_strikes_twice_and_without_once() {
-    let mut w = ascetic(18);
+    let mut w = ascetic(1);
+    set(&mut w, "ki", 5);
     let kobold = beside(&mut w, "kobold", 500);
     run(&mut w, "move:E");
     assert_eq!(

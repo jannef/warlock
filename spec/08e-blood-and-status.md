@@ -607,11 +607,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), one
     slips away every 120 s (20 base turns), and at 0 they stay, held. Master thief (level 60)
     spends 5 on its finisher (§8 "Class abilities").
-  - **Ki** (the ascetic's; R4, #252): Flurry (level 18) grants it (5, full); it comes back a point
-    every 18 s (3 base turns), resting too, and never ends. Each second blow of a flurry spends a
-    point (`flurry_cost`, in `World::flurry`): with none held there is no second blow, the
-    attack is one blow. Quivering palm (level 50) costs 5 and has no cooldown; with a weapon in
-    hand it is refused before the ki is spent. The ascetic's mana stays theirs, separate.
+  - **Ki** (the ascetic's; R4, #252; the ki tricks design, #846): Martial arts (level 1) grants
+    it, full. Its maximum is 4, plus the Willpower modifier, plus a point per 6 character levels,
+    at least 3 (`max_from = { stat = "willpower", per_levels = 6, least = 3 }`: 5 at level 1 with
+    Willpower 12, 10 at level 25 with 14, 17 at level 60 with 16); Inner calm adds 2 and the affix
+    of Stillness its own. It comes back a point every 18 s (3 base turns), resting too (Inner
+    calm +50 %, Perfect self at 60 +100 %), and never ends; the abilities menu greys what it pays
+    for "your ki is spent". Each second blow of a flurry (Flurry, level 1) spends a point
+    (`flurry_cost`, in `World::flurry`): with none held there is no second blow, the attack is
+    one blow. Quivering palm (level 50) costs 5 and has no cooldown; with a weapon in hand it is
+    refused before the ki is spent. The ascetic's mana stays theirs, separate.
   - **Inspiration** (the bard's; R4, #252): Inspire (level 18) grants it at 0; each kill credited
     to the bard builds one (to 5), one fades every 180 s (30 base turns), and at 0 it stays,
     held. Inspire spends 3 inspiration **in place of** its 3 mana while the bard holds 3 (then

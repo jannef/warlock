@@ -594,8 +594,8 @@ The `resources` system (#225, `docs/dev/resources.md`) is in the list: its four 
 at 150 %), and Patient blade (Shadow, thief 32: openings decay at 50 %, and a sneak attack that
 kills builds one more, the `sneak_kill` event); the only class-limited picks
 (`needs = { class, level }`). `world/resource_talent_tests.rs` covers each rule and the
-prerequisites. A talent of a resource the class has not been granted yet (Inner calm before
-Flurry grants ki, R4) holds the change until it is. Wild guard (Might, berserker 6; #680) halves
+prerequisites. A talent of a resource the class has not been granted yet holds the change until
+it is (Martial arts grants ki at level 1, so Inner calm, at 18, always finds it). Wild guard (Might, berserker 6; #680) halves
 the frenzy stance's Dodge penalty (`stance_dodge`), the stance a berserker's rage holds them
 in (`world/frenzy.rs`); `world/frenzy_tests.rs` covers it.
 
