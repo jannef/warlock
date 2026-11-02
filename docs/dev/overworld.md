@@ -28,6 +28,14 @@ stairs up underfoot on an `Outdoor` level with an `exit` goes through `leave_by_
 `QUICK_LEAVE_REACH` (10, Chebyshev) unseen; ground truth, read as a rule. Refused, it says
 `QUICK_LEAVE_REFUSED` and spends nothing. `take_stairs` calls it in its "no way" branch, so stairs
 underfoot win and dungeons and the overworld are untouched. Tests: `world/quick_leave_tests.rs`.
+The edge rule (#803, `world/edge_leave.rs`): `player_moves` off the grid of a level with an
+`exit` asks `held_at_edge` before `leave_by_edge`: any actor on the level with `Stance::Hostile`
+toward the player within `EncounterRules::edge_reach` (`data/encounters.toml`,
+`content/encounter.rs`; 3, 0 to 10, 0 off; without the file the default 3), Chebyshev, seen or
+not (ground truth, like the quick leave's unseen clause, so no sight test). Refused, it says
+`EDGE_LEAVE_REFUSED` and spends nothing. The quick leave is untouched (its wider check refuses
+first). `data/encounters.toml` is the file the encounters design (docs/design/overworld-encounters.md)
+grows. Tests: `world/edge_leave_tests.rs`.
 Sight on the overworld is line
 of sight within `daylight::overworld_sight` (day 9, twilight 5, night 2 plus one per
 `MOONLIGHT_PER_CELL` of `Sky::moonlight`, at most `SIGHT_MOONLIT` 4), ignoring light. The
@@ -111,3 +119,8 @@ Rumoured ways (spec §8 "Dialogue"; `docs/dev/npcs.md`): a dialogue topic's `rou
 overworld's memory as day sight along it would (`world/rumour.rs`), reading only the terrain
 grid, so hidden locations stay their plain terrain and are never marked or named; a visible
 location (Cealdhlāw) is remembered and then listed by the `locations` layer as when seen.
+
+Overworld encounters (#804; `docs/dev/encounters.md`): after an overworld step onto a cell with a
+local area (`travel.rs::player_moves` records it, `World::apply` rolls it after the turn), a
+party may be met; a fight opens in the cell's local area as `>` would open it, the player placed
+by how the encounter went.

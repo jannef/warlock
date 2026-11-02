@@ -117,8 +117,11 @@ mod door;
 mod drain;
 mod drink;
 mod eat;
+mod edge_leave;
 mod element_gifts;
 mod elixir;
+mod encounter;
+mod encounter_area;
 mod equip;
 mod experience;
 mod eyes;
@@ -226,6 +229,11 @@ pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text
 pub use curse::{Rising, rise_candidates, rises_as};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
 pub use disarm::SPRINGS_SHORT_BY;
+pub(crate) use encounter::view as encounter_view;
+pub use encounter::{
+    Choice as EncounterChoice, EncounterView, Forced as EncounterForced, KNOWN_LINE,
+    Outcome as EncounterOutcome, PENDING_REFUSED, Party, Pending,
+};
 pub use experience::{Discovered, Progress};
 pub use fight::{Cause, Death};
 pub(crate) use forage::forage_ground;
@@ -337,6 +345,16 @@ pub struct WorldState {
     /// then arrives on the side of the local area they came from. Cleared on any level change.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) overworld_step: Option<Dir>,
+    /// The overworld encounters' random stream (spec §7 "Overworld encounters": the rate roll,
+    /// the entry, the party's dice), made on the first roll (`world/encounter.rs`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) encounters: Option<Rng>,
+    /// The encounter the player must answer before anything else (`world/encounter.rs`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) encounter: Option<encounter::Pending>,
+    /// The parties encounters made, by their areas (`world/encounter.rs`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) parties: Vec<encounter::Party>,
     /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) recent_sounds: Vec<Recent>,
@@ -549,6 +567,9 @@ pub struct World {
     /// The player's weapon active under way (not saved): what its attack does beyond a plain
     /// one, read where that is resolved (`weapon_active.rs`).
     technique: weapon_active::Technique,
+    /// What an overworld encounter has under way within the action (not saved:
+    /// `encounter.rs`).
+    encounter: encounter::Underway,
 }
 
 /// How much time an action took.
@@ -759,6 +780,9 @@ impl World {
             character,
             kit: with_kit,
             overworld_step: None,
+            encounters: None,
+            encounter: None,
+            parties: Vec::new(),
             recent_sounds: Vec::new(),
             weather_override: None,
             death: None,
@@ -1018,6 +1042,7 @@ impl World {
             fresh: Vec::new(),
             reflection: Default::default(),
             technique: weapon_active::Technique::default(),
+            encounter: Default::default(),
         }
     }
 
@@ -1122,6 +1147,7 @@ impl World {
             messages: &self.state.messages,
             lore: self.lore(),
             snapshot: &self.perception,
+            encounter: self.state.encounter.as_ref(),
         }
     }
 
@@ -1234,6 +1260,7 @@ impl World {
                 self.perceive(&mut events);
             }
         }
+        self.encounter_tick(&mut events);
         if self.state.death.is_none() {
             self.burden_news(burden);
             self.quest_news(&quests);
@@ -1289,6 +1316,9 @@ impl World {
         if let Some(refused) = self.refuse_due(action) {
             return refused;
         }
+        if let Some(refused) = self.refuse_pending(action) {
+            return refused;
+        }
         // A step while held is a struggle to break free (`hold.rs`).
         if let Some(spent) = self.struggle(action) {
             return spent;
@@ -1330,6 +1360,7 @@ impl World {
             Action::Fire(at) => return self.fire(*at, events),
             Action::Throw { item, at } => return self.throw(*item, *at, events),
             Action::Rest(goal) => return self.start_rest(*goal),
+            Action::Encounter(choice) => return self.answer_encounter(*choice),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Steal(dir) => return self.steal(*dir),
@@ -1376,6 +1407,7 @@ impl World {
             Action::SetWeather(weather) => return self.set_weather_dev(*weather),
             Action::SkipTime(duration) => return self.skip_time_dev(*duration),
             Action::Spawn => return self.spawn_dev(),
+            Action::Meet { entry, outcome } => return self.meet_dev(entry, *outcome),
             Action::Effect { effect, at, to } => {
                 return self.show_effect(effect, *at, *to, events);
             }
@@ -1531,9 +1563,13 @@ mod dwell_tests;
 #[cfg(test)]
 mod eat_tests;
 #[cfg(test)]
+mod edge_leave_tests;
+#[cfg(test)]
 mod element_gift_tests;
 #[cfg(test)]
 mod elixir_tests;
+#[cfg(test)]
+mod encounter_tests;
 #[cfg(test)]
 mod equip_tests;
 #[cfg(test)]

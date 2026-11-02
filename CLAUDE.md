@@ -31,7 +31,7 @@ Update them together whenever behavior, commands, or architecture change.
 | Third-party notices | `cargo xtask licenses` (regenerates `THIRD_PARTY_LICENSES.html` with `cargo-about`, config `about.toml`/`about.hbs`; install: `cargo install cargo-about --locked --features cli`); `--check` fails when it is stale (CI runs it). **Run it after changing dependencies** (`Cargo.toml`/`Cargo.lock`); keep `about.toml`'s `accepted` list in sync with `deny.toml`'s `allow` |
 | Player wiki tables | `cargo xtask wiki` (writes `wiki/src/generated/*.md` from the game data; not committed: CI and the release workflow run it before `mdbook build wiki`), `--build` (also runs `mdbook build wiki` into `wiki/book/`; needs `cargo install mdbook --locked`), `--check-links` (builds, then fails on any link to a missing page or anchor, or an anchor defined twice; CI runs it) |
 | Golden screenshots | `cargo xtask golden` (compare; authoritative on Linux only), `--local` (capture to `target/xtask/golden/*.local.png`, no compare), `--update` (rewrite references; see "Golden screenshots") |
-| Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; the hub, the vast level, and fifty spell circles with the switch on and off, `xtask/src/bench_circles.rs`; method and results in `docs/perf.md`) |
+| Frame-time benchmark | `cargo xtask bench-frames [WxH]` (release, offscreen; the hub, again with the Flicker switch off (`steady`), the vast level, and fifty spell circles with the switch on and off, `xtask/src/bench_circles.rs`; method and results in `docs/perf.md`) |
 | Turn-time benchmark | `cargo xtask bench-turns` (re-runs itself in release; budgets: hub 5 ms, vast 16 ms, generated depths level 5 ms, sunlit courtyard at dawn 5 ms, overworld 5 ms, generated forest area at dawn 5 ms, courtyard and forest area at full-moon midnight 5 ms, arena 5 ms, a generated 120×60 cave floor at full population (a fixture branch of danger 8 with a teeming den, `delf`), the same floor with all but its kobolds shedding a spell circle's light (`d-hex`; its rest is shown, not judged: `bench.rs::UNJUDGED_REST`), and the same floor of animated panoplies at danger 40 (`panop`) 16 ms per turn; a dusk-to-dawn rest 500 ms (on `delf` too: far creatures take coarse turns while the player rests, `docs/dev/creatures.md`), also beside the arena's fight going on unseen until one side is dead (a walk that gets the player killed starts over, untimed), and rested on to dawn when rain wakes the player) |
 | Light stress benchmark | `cargo test --release -p warlock-core turn_cost -- --ignored --nocapture` (400×300, 825 lights; again outdoors at 06:15) |
 | Balance probe | `cargo test --release -p warlock-core balance_probe -- --ignored --nocapture` (prints the tables `docs/balance.md` records: the player against the monsters of their level, through the game's own code; run it after tuning combat data and update the tables) |
@@ -121,9 +121,9 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend use_tool
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N rank:SKILL:N
-skip:DURATION weather:KIND spawn effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
+skip:DURATION weather:KIND spawn meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`; `berserker` is refused: only rage gives it); `LETTERS` = stacks by position, as letters
 for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
@@ -170,7 +170,12 @@ saying what it teaches, as a rank risen would; no time; docs/dev/weapon-abilitie
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `spawn` is the dev spawn: one attempt to bring a creature to the
 current level now, whatever its cap and chance (refused at danger 0; no time; spec §7 "Danger
-levels"); `weather` is the dev weather override, `KIND` =
+levels"); `encounter:fight` answers the overworld encounter pending (`CHOICE` = `ambush`, `evade`,
+`fight`, `hail`, `hunt`, `pass`, as its outcome offers; while one pends every other action that
+takes time is refused; docs/dev/encounters.md), and `meet:kobolds:ambushed` is the dev meeting:
+entry `ENTRY` of the run's campaign's encounter tables met now on the player's overworld cell,
+by the lookouts or with `OUTCOME` (`drop`, `met`, `ambushed`, `pass`) forced (no time; refused
+off the overworld or a cell with a local area); `weather` is the dev weather override, `KIND` =
 `clear`, `overcast`, `rain`, `heavy`, for three hours of game time; `effect` is the dev spell
 effect, `ID` an id in `assets/data/effects.toml`: `effect:fireball@30,14` (a burst there),
 `effect:fireball@20,10>30,14` (flying there first), `effect:lightning_bolt@21,17>58,17` (a bolt
@@ -251,10 +256,11 @@ against 17, 36/144` (the overreach in spell levels), **dev-only**),
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
 17/17` and `mp 3/3`, each resource they hold (`rage 11/20`), (and `dead` once the run has ended), `hunger hungry` unless Not hungry, `dazzled` while
-strong light dazzles light-blind eyes, and the
+strong light dazzles light-blind eyes, `encounter pending: a band of kobolds (ambush, evade,
+fight)` while an overworld encounter waits for an answer, and the
 `temperature`; JSON dumps add `hp`, `mana` (`current`, `max`), `caster_level`, `resources` (the
 ones held: `id`, `current`, `max`), `defence`, `protection`, `resistances` (by damage type id, the
-word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `guilds` (`id`, `name`, `rank`; left out before joining one), `hunger`, `stance` (the combat stance's id), `dazzled`, `effects`
+word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `guilds` (`id`, `name`, `rank`; left out before joining one), `hunger`, `stance` (the combat stance's id), `dazzled`, `encounter` (the overworld encounter pending: `entry`, `name`, `outcome`, `title`, `text`, `choices` (`id`, `label`), or null; with `--state` also the dev `encounter_tables`, those matching the player's cell), `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
 `spells` (the spells known: `id`, `level`, `cost`, `roll` (the menu's text, `4d6 fire`, or null), `damage_type` (`healed` for a heal, or null), `reach` (`range`, `length`, `radius`, each null where none)), `known_traps`, `known_hollows` (the hollow walls found: positions), `known_locations` (`pos`, `name`), `chests` (seen or remembered: `pos`, `band`, `state`, `locked` with Chest-wise, else null), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
@@ -359,6 +365,7 @@ file). Topics:
 - `docs/dev/potions.md` — potions: the drink kinds, drinking through Consume, words and colours, sources, their talents
 - `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists
 - `docs/dev/overworld.md` — the overworld level, locations, sight at map scale, generated local areas
+- `docs/dev/encounters.md` — overworld encounters: the rules file and the campaigns' tables, the roll, the lookouts, the pending choice, evading, where everyone stands by outcome, known parties
 - `docs/dev/mapgen.md` — RNG streams, dungeon branches, generators, vaults, snapshots
 - `docs/dev/special-rooms.md` — room effects as data, the draw (weights, favoured and banned, eligibility), whole-level effects, `effects_at`, what the player is told
 - `docs/dev/rendering.md` — the three layers, the console shader, visual lighting and creature shadows, light stability, particles, glow, post, rain, spell effects, the `ui/` modules

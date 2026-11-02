@@ -93,7 +93,10 @@ explore that cell on foot. You enter an outdoor area, 80 by 40 cells, made for t
 
 Every outdoor place you reach from the overworld is left the same way: a [local area](#local-areas), and a town
 such as Cēaptūn, which has no stairs. **Walk off any edge** and you are back on its cell of the
-overworld, 6 seconds, like taking [stairs](terrain.md#stairs).
+overworld, 6 seconds, like taking [stairs](terrain.md#stairs). But not with an enemy at your
+heels: while any creature [hostile](creatures.md#factions) to you is within **3 cells** of you
+(counting a diagonal step as one cell; seen or not, awake or asleep), you are told "They are too
+close to slip away." and no time passes. Fight, or get farther from them first.
 
 There is a quicker way: press `<` anywhere in the area (not on [stairs](terrain.md#stairs) up, which you take as
 usual). You leave at once, exactly as if you had walked off the edge, **unless an enemy is
@@ -106,5 +109,5 @@ about**:
 
 Creatures that are not [hostile](creatures.md#factions) (townsfolk, merchants, [deer](creatures.md#creature-deer)) never stop you. If an enemy is
 about you are told "You cannot slip away with enemies about." and no time passes; walk off the
-edge instead. Underground and on the overworld itself, `<` still needs [stairs](terrain.md#stairs), and an outdoor
+edge instead (where none is within 3 cells of you, as above). Underground and on the overworld itself, `<` still needs [stairs](terrain.md#stairs), and an outdoor
 place no overworld cell leads into (the showcase's walled courtyard) is left by its stairs.

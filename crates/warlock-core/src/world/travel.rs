@@ -104,7 +104,7 @@ impl World {
         let level = self.state.current();
         let Some(&terrain) = level.terrain.get(to) else {
             if let Some(exit) = level.exit.clone() {
-                if !self.can_move() {
+                if !self.can_move() || self.held_at_edge() {
                     return Spent::Nothing;
                 }
                 return self.leave_by_edge(exit, events);
@@ -262,6 +262,10 @@ impl World {
         // `weapon_ability.rs`), they are met as they come, as a creature is (`free_blow.rs`).
         if self.state.death.is_none() {
             self.step_up(player, from, events);
+        }
+        // Who is met on the way is rolled once the step's time has passed (`encounter.rs`).
+        if overworld {
+            self.encounter_step(step);
         }
         Spent::Turn(step + climb)
     }

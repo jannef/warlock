@@ -296,7 +296,7 @@ fn is_shared(file: &str) -> bool {
 
 /// The table directory of campaign `campaign` (`data/<name>` outside every campaign), for an
 /// error.
-fn table_file(campaign: Option<&str>, name: &str) -> String {
+pub(super) fn table_file(campaign: Option<&str>, name: &str) -> String {
     match campaign {
         Some(c) => format!("{CAMPAIGNS}/{c}/data/{name}"),
         None => format!("data/{name}"),

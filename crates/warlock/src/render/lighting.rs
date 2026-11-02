@@ -34,6 +34,11 @@
 //! contribution away behind the creatures it lights. The shaded light is left out of what is
 //! drawn but not out of what darkvision measures, so darkvision's glow never brightens a shadow.
 //!
+//! [`update`] skips a frame whose composite would repeat the last one: `Game` and `Shadows`
+//! unchanged, no transient or spell light live (now or then), the same origin, size, and flicker
+//! switch, and no flickering source lighting the grid or the same visual time
+//! ([`VisualLight::would_repeat`]). A new input of the composite must join these conditions.
+//!
 //! The console shader (`lighting.wesl`) lights terrain per pixel, interpolating between cell
 //! centers ([`interpolation_weights`]). A neighbor only contributes if it is lit and transparent,
 //! so light never bleeds across walls or into unseen or remembered cells, and walls show their own
@@ -198,7 +203,7 @@ impl SpellLights {
     }
 }
 
-/// Visual light for the map grid, recomposited every frame.
+/// Visual light for the map grid, recomposited every frame something it reads changed.
 #[derive(Resource, Debug)]
 pub struct VisualLight {
     /// Level position of the first cell: [`MARGIN`] cells up and left of the map grid's (0, 0).
@@ -212,6 +217,18 @@ pub struct VisualLight {
     keep: f32,
     /// Set when the light changed and needs uploading.
     dirty: bool,
+    /// What the last composite read beyond `Game` and `Shadows`; `None` when a transient or
+    /// spell light took part (the next composite is never skipped).
+    last: Option<Inputs>,
+}
+
+/// A composite's grid, visual time, and whether a flickering source lit the grid.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Inputs {
+    origin: IVec2,
+    size: UVec2,
+    time: Option<f32>,
+    unsteady: bool,
 }
 
 impl Default for VisualLight {
@@ -223,6 +240,7 @@ impl Default for VisualLight {
             flags: Vec::new(),
             keep: 1.0,
             dirty: false,
+            last: None,
         }
     }
 }
@@ -286,12 +304,15 @@ impl VisualLight {
                 gains[i] = Vec2::splat(base.element_sum());
             }
         }
+        let mut unsteady = false;
         for source in view.light_sources() {
             if let (Some(pos), Some(preset)) = (source.pos(), source.preset())
                 && transients.held.contains(&(pos, preset))
             {
                 continue;
             }
+            let flickers = time.is_some()
+                && (source.preset()).is_some_and(|p| !content.light(p).stability.is_stable());
             // The sun and the moons have no preset: they are never modulated.
             let modulation = match (time, source.preset()) {
                 (Some(time), Some(preset)) => modulation(source.key, content.light(preset), time),
@@ -304,6 +325,7 @@ impl VisualLight {
                 {
                     let light = light_vec(light);
                     let draw = modulation.color(light) * shadows.keep(p);
+                    unsteady |= flickers;
                     sums[i] += light;
                     drawn[i] += draw;
                     gains[i] += Vec2::new(modulation.gain, 1.0) * draw.element_sum();
@@ -400,8 +422,26 @@ impl VisualLight {
                 flags,
                 keep,
                 dirty: true,
+                last: None,
             };
         }
+        let idle = *transients == Transients::default() && *spells == SpellLights::default();
+        self.last = idle.then_some(Inputs {
+            origin,
+            size,
+            time,
+            unsteady,
+        });
+    }
+
+    /// Whether compositing at `origin`, `size`, and `time` would repeat the last composite, given
+    /// `Game` and `Shadows` unchanged and no transient or spell light live: it had none either,
+    /// read the same grid and flicker switch, and no flickering source lit it or `time` is the same.
+    fn would_repeat(&self, origin: IVec2, size: UVec2, time: Option<f32>) -> bool {
+        self.last.is_some_and(|last| {
+            (last.origin, last.size, last.time.is_some()) == (origin, size, time.is_some())
+                && (!last.unsteady || last.time == time)
+        })
     }
 
     /// The share of light (and of the readability floor) kept while spell effects darken the
@@ -600,6 +640,11 @@ pub fn update(
     let size = UVec2::new(grid.console.cols(), grid.console.rows()) + 2 * MARGIN as u32;
     let time = effects.flicker.then_some(visual.seconds);
     let origin = grid.level_origin - MARGIN;
+    let idle = *transients == Transients::default() && *spells == SpellLights::default();
+    if idle && !game.is_changed() && !shadows.is_changed() && light.would_repeat(origin, size, time)
+    {
+        return;
+    }
     let extra = (&*transients, &*spells);
     light.composite_with(&view, &shadows, extra, origin, size, time);
 }
@@ -873,6 +918,59 @@ mod tests {
         let size = steady.size;
         steady.composite(&view, &Shadows::compute(&view), IVec2::ZERO, size, None);
         assert!(!steady.dirty, "unchanged light is not uploaded again");
+    }
+
+    #[test]
+    fn a_frame_repeats_only_while_nothing_it_reads_changes() {
+        // The start room's torches flicker: a new time changes the light, the same one does not.
+        let world = showcase(&[]);
+        let view = world.perception();
+        let shadows = Shadows::compute(&view);
+        let mut light = whole_level(&world, Some(1.0));
+        let (origin, size) = (IVec2::ZERO, light.size);
+        assert!(light.would_repeat(origin, size, Some(1.0)));
+        assert!(
+            !light.would_repeat(origin, size, Some(1.5)),
+            "flicker moves"
+        );
+        assert!(
+            !light.would_repeat(origin, size, None),
+            "flicker switched off"
+        );
+        assert!(!light.would_repeat(IVec2::ONE, size, Some(1.0)), "scrolled");
+        assert!(
+            !light.would_repeat(origin, size + UVec2::X, Some(1.0)),
+            "resized"
+        );
+        // Steady light repeats at any time until the flicker switch is turned on.
+        light.composite(&view, &shadows, origin, size, None);
+        assert!(light.would_repeat(origin, size, None));
+        assert!(!light.would_repeat(origin, size, Some(1.0)));
+        // A grid no torch lights repeats at any time, flicker on.
+        light.composite(&view, &shadows, origin, UVec2::ONE, Some(1.0));
+        assert!(light.would_repeat(origin, UVec2::ONE, Some(2.0)));
+        // While a transient or spell light is live, and the frame after, nothing repeats.
+        let missile = Transients {
+            lights: vec![TransientLight {
+                at: center(view.viewer()),
+                preset: LightId(0),
+                key: 1,
+            }],
+            held: Vec::new(),
+        };
+        let spell = SpellLights {
+            dim: 0.5,
+            ..SpellLights::default()
+        };
+        for extra in [
+            (&missile, &SpellLights::default()),
+            (&Transients::default(), &spell),
+        ] {
+            light.composite_with(&view, &shadows, extra, origin, size, None);
+            assert!(!light.would_repeat(origin, size, None));
+            light.composite(&view, &shadows, origin, size, None);
+            assert!(light.would_repeat(origin, size, None));
+        }
     }
 
     #[test]

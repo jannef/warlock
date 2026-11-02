@@ -119,6 +119,24 @@ glyph's) and the CPU no masks or crowding. Two runs after it on the same machine
 average of 20 to 30 (other builds) printed 0.247 and 0.225 ms, with the hub row itself swinging
 from 0.97 to 1.54 ms: not a measurement; rerun on an idle machine.
 
+Visual light skip (#785, 2026-11-02, same machine, load average 8 to 49 from other builds):
+`lighting::update` skips a frame whose composite would repeat the last (docs/dev/rendering.md).
+`bench-frames` has a `steady` row, the hub with the Flicker switch off. `lighting::update` alone,
+mean of frames 11 to 2010, timed with a temporary `Instant` (not committed), median of three runs:
+
+| `lighting::update` | hub | steady | vast | courtyard | depths |
+|---|---|---|---|---|---|
+| before, 2560x1440 | 0.051 ms | 0.058 ms | 0.057 ms | 0.054 ms | 0.047 ms |
+| after, 2560x1440 | 0.051 ms | 0.0002 ms | 0.060 ms | 0.056 ms | 0.049 ms |
+| before, 1280x720 | 0.017 ms | 0.019 ms | 0.017 ms | 0.021 ms | 0.014 ms |
+| after, 1280x720 | 0.018 ms | 0.0001 ms | 0.019 ms | 0.021 ms | 0.015 ms |
+
+With flicker on, every scene has a torch or lava in view and composites every frame as before;
+with it off (or under `--freeze-time`, or idle) the composite and the upload are skipped. Whole
+frames (`bench-frames`, two alternated rounds, best of five each) moved within their noise:
+`steady` 0.895/0.961 ms before, 0.990/0.942 ms after at 2560x1440, 0.786/0.776 ms and
+0.788/0.792 ms at 1280x720.
+
 Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
 submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the
 sleep granularity, not by rendering. All budgets are met with a large margin. Before lighting and
