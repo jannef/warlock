@@ -545,6 +545,11 @@ impl World {
             && when.quest_active.as_ref().is_none_or(active)
             && when.quest_done.as_ref().is_none_or(done)
             && (when.quest_not.as_ref()).is_none_or(|q| quests.record(q).is_none())
+            && (when.quest_variant.as_ref()).is_none_or(|(q, v)| {
+                (quests.record(q)).is_some_and(|r| {
+                    (r.roll.as_ref()).is_some_and(|roll| roll.variant.as_ref() == Some(v))
+                })
+            })
             && (when.revealed.as_ref()).is_none_or(|h| self.state.revealed.contains(h))
             && (when.hidden.as_ref()).is_none_or(|h| !self.state.revealed.contains(h))
             && when.after_days.is_none_or(|d| here.days >= d)
@@ -602,6 +607,56 @@ impl World {
             .collect()
     }
 
+    /// The type that leads a party of `entry` (rolled as `members`, or the known one in the
+    /// area of `cell`): the entry's `lead`, else the first member (a `draw`'s first drawn).
+    fn lead_of(
+        &self,
+        entry: &EncounterEntry,
+        members: &[CreatureId],
+        cell: Pos,
+    ) -> Option<CreatureId> {
+        let known = || {
+            (self.known_party(&entry.id, cell).first())
+                .and_then(|id| self.state.actors.get(id))
+                .map(|a| a.creature)
+        };
+        entry
+            .lead
+            .or_else(|| members.first().copied())
+            .or_else(known)
+    }
+
+    /// A `draw` entry's members (the `encounters` stream: the count's dice, then `danger::draw`
+    /// for each): the branch's population at the draw's danger with its odds, uniques and types
+    /// not hostile to the player left out (as a hoard's guardians). Empty when nothing may be
+    /// drawn.
+    fn draw_members(&mut self, draw: &crate::content::EncounterDraw) -> Vec<CreatureId> {
+        let content = self.content.clone();
+        let Some(spawning) = (content.dungeon(&draw.pool)).and_then(|b| b.spawning.as_ref()) else {
+            return Vec::new();
+        };
+        let player = content.creature_id("player");
+        let fit = |list: Vec<crate::content::danger::Candidate>| -> Vec<_> {
+            (list.into_iter())
+                .filter(|&(c, _, _)| !content.creature(c).unique)
+                .filter(|&(c, _, _)| {
+                    player.is_some_and(|p| content.stance(c, p) == crate::content::Stance::Hostile)
+                })
+                .collect()
+        };
+        let once = self.state.progress.uniques.clone();
+        let own = fit(content.candidates(&spawning.population, &once));
+        let generic = fit(content.candidates(&spawning.generic, &once));
+        let rng = self.encounters_rng();
+        let n = draw.count.roll(rng).max(0);
+        (0..n)
+            .filter_map(|_| {
+                let rng = self.encounters_rng();
+                crate::content::danger::draw(rng, &own, &generic, draw.danger, &spawning.odds)
+            })
+            .collect()
+    }
+
     /// `entry` is met on `cell`, arriving on `side`, after a step of price `step`: the party
     /// rolled (or the known one), then the lookouts (or `forced`), and what comes of them.
     fn meet(
@@ -626,9 +681,20 @@ impl World {
                 let n = dice.roll(self.encounters_rng()).max(0);
                 members.extend(std::iter::repeat_n(creature, n as usize));
             }
+            if let Some(draw) = &entry.draw {
+                members = self.draw_members(draw);
+                if members.is_empty() {
+                    return;
+                }
+            }
             // The lead first: it stands where the outcome puts the lead.
-            members.sort_by_key(|&c| c != entry.lead);
+            if let Some(lead) = entry.lead {
+                members.sort_by_key(|&c| c != lead);
+            }
         }
+        let Some(lead) = self.lead_of(entry, &members, cell) else {
+            return;
+        };
         let outcome = match entry.stance {
             EntryStance::Peaceful => Some(Outcome::Peaceful),
             EntryStance::Wildlife => Some(Outcome::Wildlife),
@@ -639,8 +705,8 @@ impl World {
                     Some(Forced::Ambushed) => (false, true),
                     Some(Forced::Pass) => (false, false),
                     // Asleep: the party always finds the camp; woken in time, they meet.
-                    None if watch == Watch::Rest => (self.sleepers_lookout(entry), true),
-                    None => self.lookouts(entry),
+                    None if watch == Watch::Rest => (self.sleepers_lookout(lead), true),
+                    None => self.lookouts(lead),
                 };
                 match (mine, theirs) {
                     (true, false) => Some(Outcome::Drop),
@@ -688,7 +754,7 @@ impl World {
     /// The two lookouts (gameplay stream, two draws each): whether the player sees the party
     /// first, and whether the party sees them. Marks Spot's and Survival's lookout, and
     /// Stealth's sneak when the party missed the player.
-    fn lookouts(&mut self, entry: &EncounterEntry) -> (bool, bool) {
+    fn lookouts(&mut self, lead: CreatureId) -> (bool, bool) {
         let content = self.content.clone();
         let Some(rules) = content.meetings() else {
             return (false, false);
@@ -698,7 +764,7 @@ impl World {
             return (false, false);
         };
         let c = &rules.checks;
-        let lead = content.creature(entry.lead);
+        let lead = content.creature(lead);
         let player = self.state.player();
         let talents = player.talent_mods(&content);
         let dark = match here.phase {
@@ -755,7 +821,7 @@ impl World {
     /// [`crate::skills::MAX_ENCOUNTER_BONUS`]; none for the deaf) + Alert's `notice`, against
     /// `difficulty` + the lead type's `stalk` + the rain (neither cover nor the dark hides a
     /// sound). Marks Listen's `hear`.
-    fn sleepers_lookout(&mut self, entry: &EncounterEntry) -> bool {
+    fn sleepers_lookout(&mut self, lead: CreatureId) -> bool {
         let content = self.content.clone();
         let Some(rules) = content.meetings() else {
             return false;
@@ -764,7 +830,7 @@ impl World {
             return false;
         };
         let c = &rules.checks;
-        let lead = content.creature(entry.lead);
+        let lead = content.creature(lead);
         let player = self.state.player();
         let talents = player.talent_mods(&content);
         let ears = match player.hearing(&content) {
@@ -890,7 +956,8 @@ impl World {
             + player.skill_effect(&content, Effect::Evade)
             + stalk;
         let e = rules.evade;
-        let speed = content.creature(entry.lead).speed;
+        let lead = self.lead_of(entry, &pending.members, pending.cell);
+        let speed = lead.map_or(crate::content::NORMAL_SPEED, |c| content.creature(c).speed);
         let pursuit =
             i32::try_from(speed.saturating_sub(crate::content::NORMAL_SPEED) / e.pursuit_per)
                 .unwrap_or(i32::MAX);

@@ -190,8 +190,8 @@ pub use effect::{
     MAX_SHAKE_PIXELS, Shake,
 };
 pub use encounter::{
-    Checks, EDGE_REACHES, EncounterEntry, EncounterRules, EncounterTable, EntryStance, Evade,
-    Meetings, PhaseRates, PlayerPlaces, Positions, When as EncounterWhen,
+    Checks, Draw as EncounterDraw, EDGE_REACHES, EncounterEntry, EncounterRules, EncounterTable,
+    EntryStance, Evade, Meetings, PhaseRates, PlayerPlaces, Positions, When as EncounterWhen,
 };
 pub use experience::{
     Discovery, Experience, FACTORS, Factor, Guideline, Kills, Levels, MAX_LEVEL, MAX_XP, pace_words,

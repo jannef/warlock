@@ -379,6 +379,8 @@ pub struct When {
     pub quest_active: Option<String>,
     pub quest_done: Option<String>,
     pub quest_not: Option<String>,
+    /// A rolled quest drew this variant (`QuestRecord::roll`): `(quest, variant)` (#796 Q6).
+    pub quest_variant: Option<(String, String)>,
     /// A hidden location of the overworld revealed, or still hidden.
     pub revealed: Option<String>,
     pub hidden: Option<String>,
@@ -404,6 +406,7 @@ struct WhenSpec {
     quest_active: Option<String>,
     quest_done: Option<String>,
     quest_not: Option<String>,
+    quest_variant: Option<VariantSpec>,
     revealed: Option<String>,
     hidden: Option<String>,
     after_days: Option<u32>,
@@ -415,6 +418,14 @@ struct WhenSpec {
 #[serde(deny_unknown_fields)]
 struct LevelSpec {
     max: u8,
+}
+
+/// `quest_variant = { quest = "guild_wanted", variant = "wystan" }`.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct VariantSpec {
+    quest: String,
+    variant: String,
 }
 
 /// How a party stands toward the player.
@@ -439,11 +450,36 @@ pub struct EncounterEntry {
     pub weight: u32,
     /// Narrows its table's conditions.
     pub when: When,
-    /// Counted types; the first row gives at least one.
+    /// Counted types; the first row gives at least one. Empty for a `draw` entry.
     pub group: Vec<(CreatureId, Dice)>,
-    /// The type whose eyes and Stealth the party's checks use.
-    pub lead: CreatureId,
+    /// A branch's population drawn instead of a group.
+    pub draw: Option<Draw>,
+    /// The type whose eyes and Stealth the party's checks use; `None` for a `draw` entry,
+    /// whose first member drawn leads.
+    pub lead: Option<CreatureId>,
     pub stance: EntryStance,
+    /// A peaceful party's dialogue (an npc id of the campaign's dialogue), given to every member
+    /// of the lead's type.
+    pub npc: Option<String>,
+}
+
+/// `draw = { pool = "wulfeshol", danger = 5, count = "1d3" }`: members drawn one by one from a
+/// branch's population at a danger (`danger::draw` with the branch's odds: strays and
+/// out-of-depth as a floor's), uniques and those not hostile to the player left out.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Draw {
+    /// The branch: a dungeon id of the campaign with a population.
+    pub pool: String,
+    pub danger: u8,
+    pub count: Dice,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DrawSpec {
+    pool: String,
+    danger: u8,
+    count: String,
 }
 
 /// A campaign's encounter table (spec §7 "Overworld encounters").
@@ -493,10 +529,13 @@ struct EntrySpec {
     weight: u32,
     #[serde(default)]
     when: WhenSpec,
+    #[serde(default)]
     group: Vec<MemberSpec>,
+    draw: Option<DrawSpec>,
     lead: Option<String>,
     #[serde(default)]
     stance: EntryStance,
+    npc: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -599,8 +638,25 @@ fn entry(spec: EntrySpec, campaign: &str, content: &Content) -> Result<Encounter
     if !(1..=1000).contains(&spec.weight) {
         return Err("`weight` is 1 to 1000".into());
     }
-    if spec.group.is_empty() {
-        return Err("`group` names at least one creature".into());
+    let draw = match (&spec.draw, spec.group.is_empty()) {
+        (Some(_), false) => return Err("an entry has a `group` or a `draw`, not both".into()),
+        (None, true) => return Err("`group` names at least one creature".into()),
+        (None, false) => None,
+        (Some(d), true) => Some(draw(d, campaign, content, spec.stance)?),
+    };
+    if spec.lead.is_some() && draw.is_some() {
+        return Err("a `draw` entry has no `lead`: its first member leads".into());
+    }
+    if let Some(npc) = &spec.npc {
+        let speaker = super::Speaker::Npc(npc.clone());
+        let theirs = (content.dialogues().iter())
+            .any(|d| d.speaker == speaker && d.campaign.as_deref() == Some(campaign));
+        if !theirs {
+            return Err(format!("`npc`: no dialogue of npc `{npc}` in the campaign"));
+        }
+        if spec.stance != EntryStance::Peaceful {
+            return Err("only a peaceful entry has an `npc`".into());
+        }
     }
     let player = content.creature_id("player");
     let mut group = Vec::new();
@@ -637,15 +693,17 @@ fn entry(spec: EntrySpec, campaign: &str, content: &Content) -> Result<Encounter
         }
         group.push((c, dice));
     }
-    if group[0].1.min() < 1 {
+    if draw.is_none() && group[0].1.min() < 1 {
         return Err("the first `group` row's `count` must give at least 1".into());
     }
     let lead = match &spec.lead {
-        None => group[0].0,
+        None => group.first().map(|g| g.0),
         Some(name) => {
             let c = content.creature_id(name);
-            c.filter(|c| group.iter().any(|(g, _)| g == c))
-                .ok_or_else(|| format!("`lead`: `{name}` is none of the group"))?
+            let c = c
+                .filter(|c| group.iter().any(|(g, _)| g == c))
+                .ok_or_else(|| format!("`lead`: `{name}` is none of the group"))?;
+            Some(c)
         }
     };
     Ok(EncounterEntry {
@@ -654,8 +712,47 @@ fn entry(spec: EntrySpec, campaign: &str, content: &Content) -> Result<Encounter
         weight: spec.weight,
         when: when(spec.when, campaign, content)?,
         group,
+        draw,
         lead,
         stance: spec.stance,
+        npc: spec.npc,
+    })
+}
+
+/// A `draw`: a hostile entry's, from a branch of the campaign with a population.
+fn draw(
+    spec: &DrawSpec,
+    campaign: &str,
+    content: &Content,
+    stance: EntryStance,
+) -> Result<Draw, String> {
+    if stance != EntryStance::Hostile {
+        return Err("only a hostile entry has a `draw`".into());
+    }
+    let branch = content.dungeon(&spec.pool);
+    if !branch.is_some_and(|b| b.campaign.as_deref() == Some(campaign)) {
+        return Err(format!(
+            "`draw.pool`: no branch `{}` of the campaign",
+            spec.pool
+        ));
+    }
+    if branch.and_then(|b| b.spawning.as_ref()).is_none() {
+        return Err(format!(
+            "`draw.pool`: branch `{}` has no population",
+            spec.pool
+        ));
+    }
+    if !(1..=99).contains(&spec.danger) {
+        return Err("`draw.danger` is 1 to 99".into());
+    }
+    let count: Dice = spec.count.parse()?;
+    if count.min() < 1 || count.max() > MAX_MEMBERS {
+        return Err(format!("`draw.count` gives 1 to {MAX_MEMBERS}"));
+    }
+    Ok(Draw {
+        pool: spec.pool.clone(),
+        danger: spec.danger,
+        count,
     })
 }
 
@@ -711,6 +808,22 @@ fn when(spec: WhenSpec, campaign: &str, content: &Content) -> Result<When, Strin
             return Err(format!("`when`: no quest `{q}` of the campaign"));
         }
     }
+    let quest_variant = match spec.quest_variant {
+        None => None,
+        Some(VariantSpec { quest, variant }) => {
+            let def = content.quest_id(&quest).map(|id| content.quest(id));
+            let def = (def.filter(|d| d.campaign.as_deref().is_none_or(|c| c == campaign)))
+                .ok_or_else(|| {
+                    format!("`when.quest_variant`: no quest `{quest}` of the campaign")
+                })?;
+            if def.variant(&variant).is_none() {
+                return Err(format!(
+                    "`when.quest_variant`: quest `{quest}` has no variant `{variant}`"
+                ));
+            }
+            Some((quest, variant))
+        }
+    };
     for h in [&spec.revealed, &spec.hidden].into_iter().flatten() {
         if content.hidden_location(campaign, h).is_none() {
             return Err(format!("`when`: no hidden location `{h}` on the overworld"));
@@ -731,11 +844,27 @@ fn when(spec: WhenSpec, campaign: &str, content: &Content) -> Result<When, Strin
         quest_active: spec.quest_active,
         quest_done: spec.quest_done,
         quest_not: spec.quest_not,
+        quest_variant,
         revealed: spec.revealed,
         hidden: spec.hidden,
         after_days: spec.after_days,
         before_days: spec.before_days,
     })
+}
+
+#[cfg(test)]
+impl super::ContentFiles {
+    /// Every campaign's encounter tables removed (the rules stay): for tests that walk the
+    /// overworld for something else, or whose fixture makes peace with every type.
+    pub(crate) fn remove_encounter_tables(&mut self) {
+        let tables: Vec<String> = (self.table("encounters"))
+            .map(|(path, _)| path.to_string())
+            .filter(|path| path != RULES)
+            .collect();
+        for path in tables {
+            self.remove(&path);
+        }
+    }
 }
 
 impl Content {
