@@ -5,7 +5,7 @@ before you set out. For now a class changes your starting [stats](stats.md), add
 points](combat.md#hit-points) (see [Combat](combat.md#hit-points)), trains you in a handful of
 [skills](skills.md#who-trains-what) (and sets how many skill rolls each level gives and which
 skills it is known for, see [Getting better](skills.md#getting-better)), and gives you your first ranks in a few
-[weapon skills](weapon-skills.md) (a barbarian has learned one of two) and
+[weapon skills](weapon-skills.md) (a berserker has learned one of two) and
 [fighting styles](fighting-styles.md) (a thief or an ascetic one of two), and decides most of your
 [starting kit](starting-kit.md); no [spells](magic.md) come with it. A class with a level table also gives
 **[class abilities](talents.md#class-abilities)** as you reach its levels, and bonus [talents](talents.md) (see
@@ -29,7 +29,7 @@ a bonus [talent](talents.md) at a few levels between, from the trees it names. A
 you reach its level ("You gain Fencing."), and works from then on; in the game each is told in
 words, here exactly. A stat it raises rises for good, score and potential. Some abilities are
 used from the [abilities menu](abilities.md); the rest simply work. So far the [warrior](classes.md#warrior), the
-[barbarian](classes.md#barbarian), the [paladin](classes.md#paladin), the [ascetic](classes.md#ascetic), the [priest](classes.md#priest), the [druid](classes.md#druid), the [wizard](classes.md#wizard), the [witch](classes.md#witch), the [ranger](classes.md#ranger), the
+[berserker](classes.md#berserker), the [paladin](classes.md#paladin), the [ascetic](classes.md#ascetic), the [priest](classes.md#priest), the [druid](classes.md#druid), the [wizard](classes.md#wizard), the [witch](classes.md#witch), the [ranger](classes.md#ranger), the
 [thief](classes.md#thief), the [bard](classes.md#bard), and the everyday folk have their tables. A table may hand out an ordinary talent
 (the [ranger](classes.md#ranger)'s and the [thief](classes.md#thief)'s [Evasion](talents.md#talent-evasion), the [bard](classes.md#bard)'s [Fast healer](talents.md#talent-fast-healer), the [druid](classes.md#druid)'s [Beast-friend](talents.md#talent-beast-friend)); if you took it already, the level gives
 you a talent pick in its place.
@@ -40,7 +40,7 @@ you a talent pick in its place.
 A [paladin](classes.md#paladin)'s holy abilities used from the menu ([Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance), [Consecrate](abilities.md#ability-consecrate))
 work only while you are on the good side, Kind or better (see [Alignment](alignment.md)):
 otherwise you can still use them, and nothing happens. The passives do not care. [Lay on hands](abilities.md#ability-lay-on-hands) drains you instead of costing
-[mana](mana.md#how-much). The [barbarian](classes.md#barbarian)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
+[mana](mana.md#how-much). The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
 [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
 [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend; the
 [ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry) and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends

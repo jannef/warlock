@@ -19,7 +19,7 @@ pool.
 Your most mana is what your [race](races.md) and your [class](classes.md) give, plus what your
 [Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), and [Presence](stats.md#stat-presence) add: high scores add to it, low ones take from it, and it
 never goes below nothing. [Wizards](classes.md#wizard) and [witches](classes.md#witch) have the most, and [aristocrats](classes.md#aristocrat) oddly much;
-every class gives at least 1 ([warriors](classes.md#warrior), [barbarians](classes.md#barbarian), [thieves](classes.md#thief), [commoners](classes.md#commoner), and [craftspeople](classes.md#craftsperson) no
+every class gives at least 1 ([warriors](classes.md#warrior), [berserkers](classes.md#berserker), [thieves](classes.md#thief), [commoners](classes.md#commoner), and [craftspeople](classes.md#craftsperson) no
 more), and only [elves](races.md#race-elf), [gnomes](races.md#race-gnome), [half-elves](races.md#race-half-elf), [halflings](races.md#race-halfling), and [humans](races.md#race-human) have any of their race's.
 
 {{#include generated/mana.md}}

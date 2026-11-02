@@ -2,7 +2,7 @@
 id = "wild_guard"
 name = "Wild guard"
 tree = "might"
-description = "Even in a berserker's fury your guard keeps half of what it would give up."
-needs = { class = "barbarian", level = 6 }
-effects = [{ kind = "stance_dodge", stance = "berserker", percent = 50 }]
+description = "Even in the frenzy of your rage your guard keeps half of what it would give up."
+needs = { class = "berserker", level = 6 }
+effects = [{ kind = "stance_dodge", stance = "frenzy", percent = 50 }]
 systems = ["stances"]

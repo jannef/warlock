@@ -31,7 +31,7 @@ halflings also start trained in the [weapon](weapon-skills.md) their race gives 
   class's things come first, so an elven [ranger](classes.md#ranger) readies the ranger's short bow and carries the
   elven long bow, and a dwarven paladin wears the order's gauntlets and carries the steel pair.
 - **It follows your training**: some things come only with a [weapon skill](weapon-skills.md) or
-  [fighting style](fighting-styles.md) your class trained you in. A [barbarian](classes.md#barbarian) who learned [axes](weapon-skills.md#weapon-skill-axes)
+  [fighting style](fighting-styles.md) your class trained you in. A [berserker](classes.md#berserker) who learned [axes](weapon-skills.md#weapon-skill-axes)
   carries a great axe, one who learned [great blades](weapon-skills.md#weapon-skill-great-blades) a great sword; a [thief](classes.md#thief) of [Twin Blades](fighting-styles.md#style-twin-blades)
   wields two daggers, a [Duelist](fighting-styles.md#style-duelist) one, with a stiletto up the sleeve.
 - **One of a few**: where a kit says "one of", one of them is picked when your character is made,

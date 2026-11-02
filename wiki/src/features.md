@@ -123,7 +123,7 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
   class, your [Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), and [Presence](stats.md#stat-presence), your levels, and magic items. It comes back
   with time by your Willpower, faster while you rest or in a [sanctuary](special-rooms.md#room-sanctuary), slower while poisoned or
   diseased, not at all while starving. The status bar shows it (`MP 5/12`).
-- **[Resources](resources.md)** — pools of your own beside hit points and mana, such as a barbarian's [rage](resources.md#rage) or a
+- **[Resources](resources.md)** — pools of your own beside hit points and mana, such as a berserker's [rage](resources.md#rage) or a
   ranger's [focus](resources.md#resource-focus): some come back with time, some wear off, some build up from kills and blows,
   abilities spend them, and some end when they run out. You may hold several; the status bar
   shows each one you hold (`Rage 7`, `Focus 7/10`).
@@ -163,7 +163,7 @@ outdoor areas [generated from it](overworld.md#local-areas), the market town of 
 - **[Character creation](character.md)** — ADOM-style, at the start of every run: thirteen [races](races.md) ([elf](races.md#race-elf), [half-elf](races.md#race-half-elf),
   [human](races.md#race-human), [dwarf](races.md#race-dwarf), [halfling](races.md#race-halfling), [gnome](races.md#race-gnome), [half-orc](races.md#race-half-orc), and the [evil](races.md#the-evil-races) [goblin](races.md#race-goblin), [drow](races.md#race-drow), [kobold](races.md#race-kobold), [lizardfolk](races.md#race-lizardfolk),
   [duergar](races.md#race-duergar), and [ratfolk](races.md#race-ratfolk)), each with its own eyes, three [genders](character.md#gender), and fifteen
-  [classes](classes.md) from [barbarian](classes.md#barbarian) and [wizard](classes.md#wizard) to [merchant](classes.md#merchant) and [commoner](classes.md#commoner) shape your starting stats and
+  [classes](classes.md) from [berserker](classes.md#berserker) and [wizard](classes.md#wizard) to [merchant](classes.md#merchant) and [commoner](classes.md#commoner) shape your starting stats and
   skills, with dice rolled in the background (a [warrior's](classes.md#warrior) Strength is 1d3+1). Your [age and birthday](character.md#age-birthday-and-sign) are
   random, and the year you were born gives you a [horoscope](horoscope.md) sign: one of twelve mythological
   [animals](horoscope.md#animals) and five [elements](horoscope.md#elements), sixty signs in a [great cycle](horoscope.md#the-great-cycle) (the Fire Manticore, the Water

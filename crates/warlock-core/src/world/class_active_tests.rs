@@ -1,4 +1,4 @@
-//! Class abilities in the world (spec §8 "Class abilities"; #243): the warrior's, barbarian's,
+//! Class abilities in the world (spec §8 "Class abilities"; #243): the warrior's, berserker's,
 //! paladin's, and ascetic's level tables. A level brings its abilities and says so, the bonus picks
 //! come from the class's trees, each passive changes the rule it names, and each active is used
 //! from the abilities menu with its cooldown.
@@ -203,8 +203,8 @@ fn the_bonus_picks_come_from_the_classs_trees() {
         !progress.iter().any(|r| r.contains("bonus")),
         "{progress:?}"
     );
-    // A barbarian has none until 10, then from Might and Vigour; levelup:auto spends it there.
-    let mut b = world("barbarian");
+    // A berserker has none until 10, then from Might and Vigour; levelup:auto spends it there.
+    let mut b = world("berserker");
     reach(&mut b, 9);
     let need = (b.content().experience()).threshold_for(
         10,
@@ -278,7 +278,7 @@ fn veterans_wind_heals_by_the_level_then_winds() {
 
 #[test]
 fn rage_raises_strength_blocks_reading_and_exhausts() {
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     let content = w.content().clone();
     let player = w.state.player;
     let strength = |w: &World| (w.state.player().effective_stats(&content)).score(Stat::Strength);
@@ -312,7 +312,7 @@ fn rage_raises_strength_blocks_reading_and_exhausts() {
     run(&mut w, "use:rage");
     assert_eq!(last(&w), "You are still exhausted.");
     // Mighty rage: twice the Strength, and room for ten more rage.
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     let rage_id = content.resource_id("rage").expect("rage");
     assert_eq!(w.state.player().resource_max(&content, rage_id, 1), 20);
     reach(&mut w, 50);
@@ -340,7 +340,7 @@ fn set_rage(w: &mut World, value: u16) {
 
 #[test]
 fn raging_ended_otherwise_takes_the_rage_with_it() {
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     let player = w.state.player;
     run(&mut w, "use:rage");
     let raging = status(&w, "raging");
@@ -354,7 +354,7 @@ fn raging_ended_otherwise_takes_the_rage_with_it() {
 
 #[test]
 fn a_rage_spends_no_mana() {
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     let player = w.state.player;
     w.player_mut().mana = 5;
     run(&mut w, "use:rage");
@@ -365,7 +365,7 @@ fn a_rage_spends_no_mana() {
 
 #[test]
 fn thick_hide_fast_movement_hardened_and_mighty_thews() {
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     let content = w.content().clone();
     let natural = |w: &World| {
         let me = w.state.player();
@@ -403,13 +403,13 @@ fn thick_hide_fast_movement_hardened_and_mighty_thews() {
 #[test]
 fn blood_frenzy_and_unstoppable_keep_the_rage() {
     // Before Blood frenzy a kill builds no rage.
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     let player = w.state.player;
     run(&mut w, "use:rage");
     w.gain_resource(player, Build::Kill);
     assert_eq!(rage(&w), Some(11));
     // With it, five rage a kill (up to Mighty rage's thirty).
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     reach(&mut w, 60);
     at_normal_speed(&mut w);
     run(&mut w, "use:rage");
@@ -422,7 +422,7 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
     let hp = w.state.player().hp;
     run(&mut w, "afflict:bleeding wait*4");
     assert_eq!(w.state.player().hp, hp, "no blood lost while raging");
-    // A blow that would fell the raging barbarian leaves 1 hit point for ten rage.
+    // A blow that would fell the raging berserker leaves 1 hit point for ten rage.
     set_rage(&mut w, 25);
     let kobold = beside(&mut w, "kobold", 5);
     let mut events = Vec::new();
@@ -432,7 +432,7 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
     assert!(suffers(&w, player, "raging"), "the rage goes on");
     assert!(!w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
     assert_eq!(rage(&w), Some(5));
-    // (This barbarian is a Phoenix: its one rising spent, nothing more stands between.)
+    // (This berserker is a Phoenix: its one rising spent, nothing more stands between.)
     w.state
         .progress
         .once
@@ -442,7 +442,7 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
         "too little rage left to hold on"
     );
     // Spending the last of it ends the rage: exhaustion follows.
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     reach(&mut w, 60);
     at_normal_speed(&mut w);
     run(&mut w, "use:rage");
@@ -641,7 +641,7 @@ fn whirlwind_strikes_every_hostile_beside_for_one_attack() {
 
 #[test]
 fn class_actives_replay_and_dump_the_same() {
-    let spec: CharacterSpec = "human,male,barbarian".parse().expect("a character");
+    let spec: CharacterSpec = "human,male,berserker".parse().expect("a character");
     let mut w = World::start_run(
         BUILTIN.clone(),
         "showcase",

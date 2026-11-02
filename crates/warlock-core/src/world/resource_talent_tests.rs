@@ -212,14 +212,14 @@ fn the_resource_talents_need_their_class_and_level() {
         run(&mut w, &format!("talent:{talent}"));
         w.state.player().talents.rank_of(talent, None) == 1
     };
-    assert!(pick("human,male,barbarian", 6, "battle_trance"));
+    assert!(pick("human,male,berserker", 6, "battle_trance"));
     assert!(
-        !pick("human,male,barbarian", 5, "battle_trance"),
+        !pick("human,male,berserker", 5, "battle_trance"),
         "too early"
     );
     assert!(
         !pick("human,male,warrior", 6, "battle_trance"),
-        "not a barbarian"
+        "not a berserker"
     );
     assert!(pick("human,male,ranger", 12, "steady_hand"));
     assert!(!pick("human,male,thief", 12, "steady_hand"));
