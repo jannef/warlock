@@ -290,7 +290,7 @@ mod tests {
     fn limits_follow_strength_toughness_and_size() {
         // The issue's sample characters.
         assert_eq!(limit(10, 10, 100), 45_000, "human, St 10 To 10");
-        assert_eq!(limit(16, 14, 100), 69_000, "half-orc barbarian");
+        assert_eq!(limit(16, 14, 100), 69_000, "half-orc berserker");
         assert_eq!(limit(14, 16, 100), 66_000, "dwarf warrior");
         assert_eq!(limit(8, 12, 75), 31_500, "halfling thief");
         assert_eq!(limit(6, 8, 100), 30_000, "elf wizard");

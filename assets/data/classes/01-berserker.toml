@@ -1,7 +1,7 @@
 [[class]]
-id = "barbarian"
-name = "Barbarian"
-description = "A warrior of the wild lands, fueled by fury: mighty and hardy, with no patience for books or manners."
+id = "berserker"
+name = "Berserker"
+description = "A warrior of the wild lands who fights in a fury: mighty and hardy, quicker to rage than to read."
 stats = { strength = "1d3+1", dexterity = 1, toughness = "1d3", intelligence = "-1d2", presence = -1 }
 hp = 8
 mana = 1
@@ -14,7 +14,7 @@ rolls = 2
 weapon_skills = { unarmed = 1 }
 weapon_skill_choice = [{ axes = 2 }, { great_blades = 2 }]
 styles = { great_weapon = 1 }
-# The wild lands' arms: a great weapon of the kind the barbarian learned, and furs.
+# The wild lands' arms: a great weapon of the kind the berserker learned, and furs.
 kit = [
     { wield = "great_axe", trained = "axes" },
     { wield = "great_sword", trained = "great_blades" },

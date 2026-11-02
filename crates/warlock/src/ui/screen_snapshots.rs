@@ -306,10 +306,10 @@ const CASES: &[Case] = &[
         ..BASE
     },
     Case {
-        // A barbarian's rage makes a berserker (#680): the stance in the status bar and the
+        // A berserker's rage brings the frenzy (#680): the stance in the status bar and the
         // Stance row, the change refused while the rage holds it.
-        name: "berserker",
-        character: Some("human,male,barbarian"),
+        name: "frenzy",
+        character: Some("human,male,berserker"),
         actions: "stance:coward use:rage stance:neutral",
         screen: Some("character"),
         size: (120, 36),

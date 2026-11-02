@@ -137,7 +137,7 @@ foe's next action takes half again as long. A brace and a point-blank shot are
 
 You start with some skills from your [race](races.md) and your [class](classes.md): a [warrior](classes.md#warrior)
 knows [long blades](weapon-skills.md#weapon-skill-long-blades), a [ranger](classes.md#ranger) [bows](weapon-skills.md#weapon-skill-bows), a [thief](classes.md#thief) [daggers](weapon-skills.md#weapon-skill-daggers). Some are dice (`1d2` is one or two), rolled
-when you start, and a [barbarian](classes.md#barbarian) learned either [axes](weapon-skills.md#weapon-skill-axes) or great blades: which one, the dice decide.
+when you start, and a [berserker](classes.md#berserker) learned either [axes](weapon-skills.md#weapon-skill-axes) or great blades: which one, the dice decide.
 Your starting ranks then raise their related skills, as above. Your race's and your class's
 ranks add up.
 

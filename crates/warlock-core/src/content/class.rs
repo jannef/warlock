@@ -173,7 +173,7 @@ pub struct ClassDef {
     /// Starting ranks in weapon skills (spec §8 "Weapon skills"), in skill order: added to the
     /// race's.
     pub weapon_skills: Vec<(WeaponSkillId, Dice)>,
-    /// Sets of starting ranks of which one is picked at random (the barbarian: axes or great
+    /// Sets of starting ranks of which one is picked at random (the berserker: axes or great
     /// blades); empty for none.
     pub weapon_skill_choice: Vec<Vec<(WeaponSkillId, Dice)>>,
     /// Starting ranks in fighting styles (spec §8 "Fighting styles"), in skill order.

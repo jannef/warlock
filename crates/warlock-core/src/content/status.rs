@@ -543,7 +543,7 @@ pub struct StatusDef {
     /// What every attack costs the actor while it lasts, in percent of its price, on top of
     /// `cost` ([`COST_PERCENT`]; Walled: 125). Several multiply.
     pub attack_cost: u32,
-    /// The actions refused while it lasts, by their kind (`read`: a raging barbarian cannot
+    /// The actions refused while it lasts, by their kind (`read`: a raging berserker cannot
     /// read); an ability that costs one of them cannot be used.
     pub blocks: Vec<ActionKind>,
     /// A creature suffering it runs from the one who gave it, or from the nearest foe it sees,

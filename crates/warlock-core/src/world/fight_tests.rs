@@ -441,8 +441,8 @@ flee_cost = 80
 flee_noise = 50
 
 [[stance]]
-id = "berserker"
-name = "Berserker"
+id = "frenzy"
+name = "Frenzy"
 to_hit = 2
 damage = 4
 dodge = -6
@@ -557,8 +557,8 @@ fn the_players_hit_points_come_from_toughness_race_and_class() {
         );
         (player.hp_base, player.max_hp(&content) - toughness)
     };
-    // #113's tables: dwarf 6 + barbarian 8; human 4 + warrior 7; elf 2 + wizard 0.
-    assert_eq!(hp("dwarf,male,barbarian"), (14, 14));
+    // #113's tables: dwarf 6 + berserker 8; human 4 + warrior 7; elf 2 + wizard 0.
+    assert_eq!(hp("dwarf,male,berserker"), (14, 14));
     assert_eq!(hp("human,female,warrior"), (11, 11));
     assert_eq!(hp("elf,other,wizard"), (2, 2));
     assert_eq!(hp("halfling,male,thief"), (6, 6));

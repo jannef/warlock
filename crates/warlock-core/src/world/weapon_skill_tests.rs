@@ -765,11 +765,11 @@ fn starting_ranks_come_from_race_and_class_and_never_move_the_stats() {
     let thief = ranks_of("human,female,thief", 1);
     assert_eq!(thief.rank(id("daggers")), 2);
     assert_eq!(thief.rank(id("thrown")), 1);
-    // A barbarian takes axes 2 or great blades 2, by the seed, never both.
+    // A berserker takes axes 2 or great blades 2, by the seed, never both.
     let (axes, great) = (id("axes"), id("great_blades"));
     let picks: Vec<(u8, u8)> = (0..40)
         .map(|seed| {
-            let r = ranks_of("half_orc,male,barbarian", seed);
+            let r = ranks_of("half_orc,male,berserker", seed);
             (r.rank(axes), r.rank(great))
         })
         .collect();
@@ -796,7 +796,7 @@ fn starting_ranks_come_from_race_and_class_and_never_move_the_stats() {
     let showcase = BUILTIN.scenario("showcase").expect("showcase");
     for character in [
         "human,male,warrior",
-        "half_orc,other,barbarian",
+        "half_orc,other,berserker",
         "elf,female,ranger",
         "half_elf,male,bard",
     ] {
