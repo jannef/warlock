@@ -23,8 +23,7 @@ abilities").
   100, refresh, no `seen`): the house rule for ability limits (`ability.rs` module docs). It is
   saved with the actor's `effects`, as every status is; nothing counts uses.
 - **State**: `Actor::summoner: Option<ActorId>` (`serde(default, skip_serializing_if =
-  "Option::is_none")`): who called it. Old saves load and hash as before; no `FORMAT_VERSION`
-  bump. `World::live_summons(id)` counts the actors that name `id`, on any level.
+  "Option::is_none")`): who called it. Hashes are as before for an actor without one. `World::live_summons(id)` counts the actors that name `id`, on any level.
 - **Rules** (`world/summon.rs`, one line in `ai.rs::fight`, before throws, shots, and spells,
   and one arm in `creature_turn`): `World::summons_at` (the conditions: a hostile it sees within
   `range`, casting not blocked, the status off, `Actor::mana_cost` of the cost at hand, fewer

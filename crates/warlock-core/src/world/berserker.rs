@@ -3,9 +3,8 @@
 //! own Rage (the status its Rage ability brings) is in the berserker stance, and one in the
 //! berserker stance that is not raging so is put in the aggressive stance. The world settles the
 //! stance wherever a status begins (`World::afflict`) or ends (`World::ended`, and the rising
-//! that burns every status away), and loading settles a saved state that broke the rule, with a
-//! line for the log. `World::set_stance` refuses the berserker's stance, and any change while it
-//! holds.
+//! that burns every status away). `World::set_stance` refuses the berserker's stance, and any
+//! change while it holds.
 
 use super::{Actor, ActorId, Spent, World};
 use crate::content::{CombatStance, Content};

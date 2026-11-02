@@ -278,41 +278,6 @@ fn the_magus_potent_and_lingering_join_the_hooks() {
     );
 }
 
-/// A save from before the spell scaling design (§7.3) holds a Potent of 4 to 15 at its old
-/// tiers; the lenient read puts it in the tier that holds it or the nearest and holds its value
-/// there: an old 13 is a +3.
-#[test]
-fn an_old_potent_reads_as_the_top_tiers_bonus() {
-    let w = wizard(Arc::new(Content::builtin().expect("content")));
-    let content = w.content().clone();
-    let object = content.object_id("iron_ring").expect("ring");
-    for (tier, value, now) in [
-        (6, 13, (3, 3)),
-        (1, 4, (3, 3)),
-        (1, 1, (1, 1)),
-        (2, 2, (2, 2)),
-    ] {
-        let mut magic = Magic {
-            rarity: Rarity::Magic,
-            level: 3,
-            affixes: vec![Affix {
-                id: "potent".into(),
-                tier,
-                value,
-            }],
-            name: None,
-            identified: false,
-            carried: 0,
-            unique: None,
-        };
-        magic.retier(&content);
-        let a = &magic.affixes[0];
-        assert_eq!((a.tier, a.value), now, "tier {tier} value {value}");
-        let stack = Stack::with_magic(object, 1, magic);
-        assert!(stack.is_valid_for(&content), "tier {tier} value {value}");
-    }
-}
-
 #[test]
 fn of_farcasting_reaches_farther_on_the_range_never_the_radius() {
     let mut w = wizard(content(false));

@@ -10,16 +10,16 @@ expression: "render(case, content.clone())"
 
 
 
-
               ┌─ Characters ─────────────────────────────────────────────────────────┐
               │                                                                      │
-              │ > Brakka                Dwarf Warrior                      level 4   │
+              │ > Osric                 Human Paladin                other version   │
+              │   Brakka                Dwarf Warrior                      level 4   │
               │   Tamsin                Human Thief                        level 2   │
               │   Brakka                Dwarf Priest                       level 1   │
               │                                                                      │
-              │   In The Depths 2 (The Showcase).                                    │
-              │   Last played 2026-10-20 14:32 UTC.                                  │
-              │                                                                      │
+              │   Made by version 0.8.0 of the game: it cannot be continued here.    │
+              │   In Cēaptūn (The Ascmearc).                                         │
+              │   Last played 2026-10-21 14:32 UTC.                                  │
               │                                                                      │
               │ ↑↓ choose   Enter play   Del delete   Esc back                       │
               └──────────────────────────────────────────────────────────────────────┘

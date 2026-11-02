@@ -288,18 +288,16 @@ pub fn gave(
         .any(|line| gifts_of(line).any(|(i, c)| i == id && c == choice))
 }
 
-/// The lines of `character`'s story the content (in a run of `campaign`) no longer has, as log
-/// lines: they are skipped when the story is told again.
-pub fn missing(content: &Content, campaign: &str, character: &Character) -> Vec<String> {
+/// The first line of `character`'s story the content (in a run of `campaign`) does not have, by
+/// its id, if any: a saved state is refused for it (saves are pinned to the version that wrote
+/// them).
+pub fn unknown_line(content: &Content, campaign: &str, character: &Character) -> Option<String> {
     let known = |t: &Told| {
         (content.background())
             .and_then(|b| b.chapter(campaign, &t.chapter))
             .is_some_and(|c| c.line(&t.line).is_some())
     };
-    (character.story.iter())
-        .filter(|t| !known(t))
-        .map(|t| format!("story line `{}` is not in the content: skipped", t.id()))
-        .collect()
+    (character.story.iter()).find(|t| !known(t)).map(Told::id)
 }
 
 /// The pronouns of `gender`: they, them, their.

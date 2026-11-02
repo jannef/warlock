@@ -298,8 +298,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   world settles it wherever a status begins (`World::afflict`) or ends (`World::ended`: the rage
   decaying or spent to nothing, Raging cured; and the Phoenix's rising that burns every status
   away), with a note ("You fight as a berserker.", "You fall back into an aggressive stance.")
-  after the rage's own words; `World::from_state` settles a saved state that broke the rule,
-  with a line for the log (`World::retiered`). Wild guard (Might, barbarian 6) halves its Dodge
+  after the rage's own words. Wild guard (Might, barbarian 6) halves its Dodge
   penalty. The player perceives it (`PerceptionView::own_stance`): the status bar shows
   it when it is not neutral, the character screen always (§6); the wiki's Combat page has the
   generated table.
