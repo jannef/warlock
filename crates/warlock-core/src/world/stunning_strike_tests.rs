@@ -75,7 +75,7 @@ fn stunning_strike_comes_at_level_twelve_in_place_of_deflect_missiles() {
         c.id != "ascetic"
             || c.abilities
                 .iter()
-                .all(|(_, talent)| talent != "deflect_missiles")
+                .all(|(_, talent, _)| talent != "deflect_missiles")
     }));
 }
 

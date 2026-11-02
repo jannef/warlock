@@ -13,7 +13,8 @@ shields bash (`bash` → `ObjectDef::bash`), races and classes give starting ran
 is `weapon_skills.rs`: `WeaponSkills` (a `Training { rank, marks }` per skill on
 `Actor::weapon_skills`, saved and hashed), `train`
 (marks → a rank, then
-`raise`: the defaults rise, their marks reset; no chaining), `from_ranks` (starting ranks,
+`raise`: the defaults rise, their marks reset; no chaining), `raise_to` (a floor: `raise` only
+from below, for a talent's `weapon_ranks` hand-out, Travelled hands), `from_ranks` (starting ranks,
 order-free), `progress`. The rules hook in at one place each: `Actor::attack_skill(kind, with)`
 picks the skill of an attack (a blow: the wielded weapon's, else unarmed; `Melee` `with` a
 shield: shield bashing; a shot: the launcher's; a throw: thrown; a kick, spec §8 "Doors": unarmed

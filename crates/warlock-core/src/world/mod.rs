@@ -150,6 +150,7 @@ mod hurl;
 mod ice;
 mod incorporeal;
 mod intimidate;
+mod jack;
 mod knock;
 mod knowledge;
 mod lamp;
