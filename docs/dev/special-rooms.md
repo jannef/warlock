@@ -552,7 +552,8 @@ is said otherwise. Consecrate lifts it (`unholy`).
 `World::dwell(id)` (`world/rooms.rs`): every status `Here::statuses` gives at the actor's cell (the
 room's, then the level's) is given at one degree through `World::afflict` (so `refresh` stacking
 renews its easing; immunity to its `damage_type` refuses it). Skipped for an actor whose
-`TalentMods::room_status_immune` lists it (Old delver) and, for a status that only touches mana
+`TalentMods::room_status_immune` lists it (Old delver), for an unholy effect's status for one that
+`World::communes` (Communion with the dark, `docs/dev/prayer.md`), and, for a status that only touches mana
 (`StatusDef::touches_only_mana`), for one whose `max_mana` is 0 (no rat shows "ebbing", and a
 quiet creature stays quiet in `untouched_by`). The one call is in `World::pass_time`, before each
 actor lives through a stretch of time, when `World::dwelling_here` says the current level has an
