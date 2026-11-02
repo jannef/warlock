@@ -78,6 +78,7 @@ impl World {
             (ClassActive::PatientDefence, _) => self.patient_defence(events),
             (ClassActive::Lurk, _) => self.lurk(events),
             (ClassActive::StepOfTheWind, _) => self.wind_step(events),
+            (ClassActive::Stillness, _) => self.stillness(events),
             (ClassActive::Consecrate, _) => self.begin_consecrate(),
             (ClassActive::Smite, Some(dir)) => self.smite(dir, events),
             (ClassActive::StunningStrike, Some(dir)) => self.stunning_strike(dir, events),
@@ -133,6 +134,7 @@ impl World {
                         content.resource(resource).name.to_lowercase()
                     ),
                 },
+                Unavailable::Still => "Your mind is already still.".to_string(),
                 other => format!("You cannot: {}.", other.reason(&content)),
             });
             return false;

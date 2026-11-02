@@ -147,7 +147,13 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   `World::wind_step` (`world/ascetic.rs`) gives a degree of Light-footed and returns
   `Spent::NoTime`; `World::may_wind_step` refuses it before the spend while Light-footed already.
   The status is taken off `World::fresh` (a status given in a priced action is not eased by it):
-  no time passed, so the next action eases it. Diamond soul (level 40, S7, #851) carries
+  no time passed, so the next action eases it. Tests: `world/ki_tests.rs`,
+  `world/ascetic_tests.rs`. Stillness (Still mind, level 25, S6, #850) costs `resource = { id =
+  "ki", cost = 2 }` on Still mind (`TalentEffect::Stillness { name, statuses }`,
+  `TalentMods::stillness`): `World::stillness` ends every listed status the ascetic suffers and
+  returns `Spent::NoTime`; with none of them to end `Unavailable::Still` refuses it before the
+  spend ("Your mind is already still."), and so does too little ki.
+  Diamond soul (level 40, S7, #851) carries
   `TalentEffect::CatchMissiles { resource, cost }` (`TalentMods::catch_missiles`), a passive
   spend like Flurry's: `World::caught_missile` (`world/ascetic.rs`) spends it by itself when a
   missile (`resolve` for a shot or throw, `trap_strikes` for a trap's) hits a holder with no

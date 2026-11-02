@@ -228,3 +228,30 @@ impl World {
         Spent::Turn(price)
     }
 }
+
+// --- Stillness (#850) ---------------------------------------------------------------------------
+
+impl World {
+    /// Stillness (`use:stillness`, Still mind's active at level 25): every status of its list
+    /// the player suffers ends at once, as if cured ([`World::ended`]: each says its `end`
+    /// words), **taking no time**, so the player acts this turn, held fast or stunned no longer.
+    /// Its two ki were spent by `use_class`; nothing to end refused it before that
+    /// ([`crate::ability::Unavailable::Still`]: "Your mind is already still."). Draws nothing.
+    pub(super) fn stillness(&mut self, events: &mut Vec<Event>) -> Spent {
+        let player = self.state.player;
+        let content = self.content.clone();
+        let Some(ends) = self.state.player().talent_mods(&content).stillness.clone() else {
+            return Spent::Nothing;
+        };
+        self.say("You still your mind.");
+        let me = self.player_mut();
+        let ended: Vec<crate::status::Effect> = (ends.iter())
+            .filter_map(|&status| me.effects.get(status).copied())
+            .collect();
+        for e in &ended {
+            me.effects.remove(e.status);
+        }
+        self.ended(player, &ended, events);
+        Spent::NoTime
+    }
+}

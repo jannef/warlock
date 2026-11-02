@@ -725,6 +725,11 @@ pub enum TalentEffect {
     /// The class active Step of the wind: a degree of `status` (Light-footed) on the player,
     /// taking no time (what it costs is the talent's `resource`: Ki; `world/ascetic.rs`).
     WindStep { status: String },
+    /// The class active Stillness (the ascetic's, on Still mind, #850): every status of
+    /// `statuses` the player suffers ends at once, taking no time (what it costs is the talent's
+    /// `resource`: Ki; `world/ascetic.rs`). `name` is the abilities menu's, as the talent that
+    /// carries it has a passive name of its own.
+    Stillness { name: String, statuses: Vec<String> },
     /// The active Blaze (a birth sign's, spec §8 "Birth sign"): a burst of `radius` around the
     /// player that does `damage` of kind `damage_type` (an id in `data/damage_types.toml`) to
     /// every creature it reaches but them, melts the ice it reaches, and sets each cell it
@@ -1108,6 +1113,7 @@ impl TalentEffect {
             TalentEffect::StunningStrike { .. } => A::StunningStrike,
             TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
             TalentEffect::WindStep { .. } => A::StepOfTheWind,
+            TalentEffect::Stillness { .. } => A::Stillness,
             TalentEffect::Volley { .. } => A::Volley,
             TalentEffect::Lurk { .. } => A::Lurk,
             TalentEffect::LowBlow => A::LowBlow,
@@ -1118,6 +1124,15 @@ impl TalentEffect {
             TalentEffect::MerchantsEye => A::MerchantsEye,
             _ => return None,
         })
+    }
+
+    /// The name of the class active it is, where that is not its talent's (Stillness, on Still
+    /// mind).
+    pub fn active_name(&self) -> Option<&str> {
+        match self {
+            TalentEffect::Stillness { name, .. } => Some(name),
+            _ => None,
+        }
     }
 
     /// Whether it may carry a `while` condition: only a kind the one sum reads
@@ -1505,6 +1520,12 @@ impl TalentEffect {
             TalentEffect::Lurk { status: id }
             | TalentEffect::SneakKillStatus { status: id }
             | TalentEffect::WindStep { status: id } => status(id),
+            TalentEffect::Stillness { name, statuses } => {
+                if name.trim().is_empty() || statuses.is_empty() {
+                    return Err("`stillness`: a name, and at least one status".into());
+                }
+                statuses.iter().try_for_each(|id| status(id))
+            }
             TalentEffect::QuiveringPalm {
                 status: id,
                 severity,

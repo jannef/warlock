@@ -509,6 +509,16 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // An ascetic past level 25 (#850): Stillness, Still mind's active, greyed with nothing to
+    // end.
+    Case {
+        name: "abilities-menu-stillness",
+        character: Some("human,male,ascetic"),
+        kit: true,
+        actions: "xp:3000000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
     Case {
         name: "abilities-menu-here",

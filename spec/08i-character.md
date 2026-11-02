@@ -1028,7 +1028,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     does damage leaves the foe **Stunned**, "You stun the kobold.": `per_action`, one degree,
     `refresh`, `cost = 150`, `flat_footed`, §8 "Surprise and sneak attacks"; for 1 Ki and no
     cooldown), Quivering palm (the same blow, `World::palm_blow`, one body for both; a hit that
-    does damage leaves three degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Consecrate (the priest's at
+    does damage leaves three degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown),
+    Stillness (Still mind's active, the ascetic's at 25, #850, `world/ascetic.rs`: for 2 Ki and
+    **no time**, every status of its list the ascetic suffers ends at once, each with its own end
+    words after "You still your mind.": Held, Pinned, Staggered, Stunned, Surprised, Transfixed,
+    Frightened, Drowsy, Webbed, the list data on the effect, each id checked at load; refused, no
+    time or ki, with none of them to end, "Your mind is already still." (greyed so in the menu);
+    any grip), Consecrate (the priest's at
     9, the paladin's at 12: a minute's prayer, for 15 mana, that lifts an unholy special room's
     effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; works
     for Kind or better), Knock (the wizard's at 4: in a direction, for 5 mana and a cast's time, the lock
@@ -1059,7 +1065,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Step of the wind's passive half (level 6: steps 10 % cheaper in no body armour and with no
     shield; it took Fleet's place, #847),
     Still mind (+2 on checks made with Willpower: diseases', noticing
-    in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2; and, #851, a shot or throw, a
+    in passing; no status lowers Intelligence or Willpower; its active is Stillness, above), Diamond soul (Deflection +2; and, #851, a shot or throw, a
     trap's missile too, that would hit the ascetic while they hold no weapon and no shield
     spends a point of ki by itself and misses, the missile falling on their cell: "You pluck
     the arrow from the air.", said after the attack's own words; with no ki, the hit stands;
@@ -1076,8 +1082,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the effect: `protection 2 while raging` is not Bulwark's `protection 2`.
   - **Resources**: Rage, War cry, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
     (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Step of the wind, Stunning strike,
-    Patient defence, Diamond soul's catch, and Quivering palm spend (R4, #252; #846, #847, #848, #849,
-    #851).
+    Patient defence, Stillness, Diamond soul's catch, and Quivering palm spend (R4, #252; #846, #847,
+    #848, #849, #850, #851).
   - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):

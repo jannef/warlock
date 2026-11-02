@@ -1182,6 +1182,14 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             status(&id),
             status(&id)
         ),
+        TalentEffect::Stillness { name, statuses } => {
+            let names: Vec<String> = statuses.iter().map(|s| status(s)).collect();
+            format!(
+                "active ({name}), taking no time: whichever of {} you suffer ends at once; \
+                 refused with none of them to end",
+                names.join(", ")
+            )
+        }
         TalentEffect::Hardened { bonus } => format!(
             "every level past the last that adds hit points adds them again, and {bonus} more"
         ),

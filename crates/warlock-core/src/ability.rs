@@ -248,6 +248,8 @@ pub enum Unavailable {
     NotSoHeld,
     /// An order with no ally of the player's on the level to hear it (spec §8 "Allies").
     NoAllies,
+    /// Stillness with nothing to end: none of the statuses it ends is suffered.
+    Still,
 }
 
 impl Unavailable {
@@ -272,6 +274,7 @@ impl Unavailable {
             }
             Unavailable::NotSoHeld => "your hands are not so held".into(),
             Unavailable::NoAllies => "no allies here".into(),
+            Unavailable::Still => "your mind is already still".into(),
         }
     }
 
@@ -286,6 +289,7 @@ impl Unavailable {
             Unavailable::FiresByItself => "fires_by_itself".into(),
             Unavailable::NotSoHeld => "not_so_held".into(),
             Unavailable::NoAllies => "no_allies".into(),
+            Unavailable::Still => "still".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
                 format!("short:{}", content.resource(resource).id).into()
@@ -501,7 +505,10 @@ impl Ability {
                 return format!("{skill}: {name}").into();
             }
             Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.name),
-            Ability::Class(active) => content.class_active(active).map_or("", |a| &a.name),
+            Ability::Class(active) => content.class_active(active).map_or("", |a| {
+                // Stillness is named apart from Still mind, its talent.
+                (a.effects.iter().find_map(TalentEffect::active_name)).unwrap_or(&a.name)
+            }),
             Ability::Spell(spell) => content.spell_of(spell).map_or("", |s| &s.name),
             Ability::Skill(id) => &content.skill(id).name,
             Ability::ThrowVoice => "Throw your voice",
@@ -822,6 +829,7 @@ impl Ability {
                 let def = content.class_active(active);
                 (class_cooldown(actor, content, active).map(Unavailable::While))
                     .or_else(|| short_of(actor, def?.resource?))
+                    .or_else(|| still(actor, content, active))
                     .or_else(|| {
                         // Inspire costs its inspiration while that is held, else mana
                         // (Virtuoso's none), which a status that blocks casting (Raging) keeps
@@ -910,6 +918,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::StunningStrike
         | ClassActive::QuiveringPalm
         | ClassActive::StepOfTheWind
+        | ClassActive::Stillness
         | ClassActive::Lurk
         | ClassActive::LowBlow
         | ClassActive::MasterThief
@@ -920,6 +929,16 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
+}
+
+/// Stillness with nothing to end (the ascetic's, #850): `actor` suffers none of its statuses.
+fn still(actor: &Actor, content: &Content, active: ClassActive) -> Option<Unavailable> {
+    if active != ClassActive::Stillness {
+        return None;
+    }
+    let mods = actor.talent_mods(content);
+    let ends = mods.stillness.as_ref()?;
+    (!ends.iter().any(|&s| actor.effects.has(s))).then_some(Unavailable::Still)
 }
 
 /// Why `actor` cannot use weapon ability `id` now: a triggered one fires by itself; an active

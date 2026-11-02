@@ -7,7 +7,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::action::{AttackKind, parse_actions};
 use crate::character::CharacterSpec;
 use crate::combat::{Category, Strike};
-use crate::content::{ClassActive, ResourceId};
+use crate::content::{ClassActive, ContentFiles, ResourceId};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 
@@ -267,6 +267,161 @@ fn step_of_the_wind_replays() {
     assert!(w.player_level() >= 6, "level {}", w.player_level());
     let ki_max = (w.state.player()).resource_max(w.content(), ki(&w), w.player_level());
     assert!(held_ki(&w) < Some(ki_max), "ki spent");
+    let verified = Replay::from_json(&replay.to_json())
+        .expect("json")
+        .run(w.content().clone())
+        .expect("the replay verifies");
+    assert_eq!(verified.state_hash(), w.state_hash());
+}
+
+// Stillness (#850).
+
+const STILL: ClassActive = ClassActive::Stillness;
+
+/// The statuses Stillness ends, in its data's order.
+const STILLED: [&str; 9] = [
+    "held",
+    "pinned",
+    "staggered",
+    "stunned",
+    "surprised",
+    "transfixed",
+    "frightened",
+    "drowsy",
+    "webbed",
+];
+
+/// Everything said since `from` messages were in the log.
+fn said_since(w: &World, from: usize) -> Vec<String> {
+    (w.messages().iter().skip(from))
+        .map(|m| m.display())
+        .collect()
+}
+
+#[test]
+fn stillness_comes_with_still_mind_at_level_twenty_five() {
+    let w = ascetic(24);
+    assert_eq!(own(&w, STILL), None, "not before level 25");
+    let mut w = ascetic(25);
+    let rows = dump::layer_rows(&w, Layer::Talents);
+    assert!(rows.iter().any(|r| r == "Still mind (class)"), "{rows:?}");
+    let row = (w.perception().abilities().into_iter())
+        .find(|a| a.ability == Ability::Class(STILL))
+        .expect("in the menu");
+    assert_eq!(row.ability.name(w.content()), "Stillness");
+    assert_eq!(row.unavailable, Some(Unavailable::Still), "nothing to end");
+    run(&mut w, "afflict:stunned");
+    assert_eq!(own(&w, STILL), Some(None), "ready with a stun to end");
+    let mods = w.state.player().talent_mods(w.content());
+    let ends: Vec<&str> = (mods.stillness.as_ref().expect("stillness").iter())
+        .map(|&s| w.content().status(s).id.as_str())
+        .collect();
+    assert_eq!(ends, STILLED);
+}
+
+#[test]
+fn stillness_is_refused_before_the_spend() {
+    let mut w = ascetic(25);
+    let player = w.state.player;
+    let (turn, time) = (w.state.turn, w.state.time);
+    // Nothing to end: refused, the ki kept, no time.
+    set_ki(&mut w, 5);
+    run(&mut w, "use:stillness");
+    assert_eq!(last(&w), "Your mind is already still.");
+    assert_eq!(held_ki(&w), Some(5), "nothing spent");
+    // Suffering only what it does not end (poison) is nothing to end either.
+    run(&mut w, "afflict:poisoned use:stillness");
+    assert_eq!(last(&w), "Your mind is already still.");
+    assert_eq!(held_ki(&w), Some(5));
+    // One point of ki is not enough for two: greyed and refused, the stun kept.
+    set_ki(&mut w, 1);
+    run(&mut w, "afflict:stunned");
+    assert_eq!(own(&w, STILL), Some(Some(Unavailable::Short(ki(&w)))));
+    run(&mut w, "use:stillness");
+    assert_eq!(last(&w), "Your ki is spent.");
+    assert!(suffers(&w, player, "stunned"));
+    assert_eq!(held_ki(&w), Some(1));
+    assert_eq!((w.state.turn, w.state.time), (turn, time), "no time at all");
+}
+
+#[test]
+fn stillness_ends_what_holds_and_clouds_at_once_and_no_more() {
+    let mut w = ascetic(25);
+    let player = w.state.player;
+    set_ki(&mut w, 5);
+    run(
+        &mut w,
+        "afflict:held afflict:stunned afflict:frightened afflict:webbed afflict:poisoned",
+    );
+    for id in ["held", "stunned", "frightened", "webbed", "poisoned"] {
+        assert!(suffers(&w, player, id), "{id}");
+    }
+    let from = w.messages().iter().count();
+    let outcome = w.apply(&parse_actions("use:stillness").expect("an action")[0]);
+    assert_eq!(outcome.elapsed, crate::time::Duration::ZERO, "no time");
+    assert_eq!(held_ki(&w), Some(3), "two ki");
+    for id in ["held", "stunned", "frightened", "webbed"] {
+        assert!(!suffers(&w, player, id), "{id} ended");
+    }
+    assert!(suffers(&w, player, "poisoned"), "not in its list");
+    let said = said_since(&w, from);
+    assert_eq!(
+        said.first().map(String::as_str),
+        Some("You still your mind.")
+    );
+    for words in [
+        "You are free to move.",
+        "Your head clears.",
+        "You master your fear.",
+        "You tear free of the web.",
+    ] {
+        assert!(said.iter().any(|s| s.contains(words)), "{words}: {said:?}");
+    }
+    // The stun is gone before the next action: it costs its plain price.
+    let freed = w.apply(&Action::Wait).elapsed;
+    let plain = w.apply(&Action::Wait).elapsed;
+    assert_eq!(freed, plain, "no stun left to slow it");
+}
+
+#[test]
+fn stillness_names_only_statuses_the_content_has() {
+    let mut files = ContentFiles::builtin();
+    let still = include_str!("../../../../assets/data/talents/still_mind.toml");
+    let bad = still.replace("\"webbed\",", "\"befuddled\",");
+    files.insert("data/talents/still_mind.toml", &bad);
+    let err = Content::load(&files)
+        .expect_err("unknown status")
+        .to_string();
+    assert!(err.contains("unknown status `befuddled`"), "{err}");
+    let mut files = ContentFiles::builtin();
+    let empty = (still.split_once("statuses = [").map(|(head, tail)| {
+        let (_, rest) = tail.split_once(']').expect("the list ends");
+        format!("{head}statuses = []{rest}")
+    }))
+    .expect("a list");
+    files.insert("data/talents/still_mind.toml", &empty);
+    let err = Content::load(&files)
+        .expect_err("an empty list")
+        .to_string();
+    assert!(err.contains("stillness"), "{err}");
+}
+
+#[test]
+fn stillness_replays() {
+    let content = Arc::new(Content::builtin().expect("content"));
+    let spec: CharacterSpec = "human,male,ascetic".parse().expect("a character");
+    let mut w =
+        World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("world");
+    let mut replay = Replay::new(&w);
+    let text = "xp:3000000 levelup:auto afflict:held afflict:stunned use:stillness move:E \
+                use:stillness wait";
+    for action in parse_actions(text).expect("actions") {
+        w.apply(&action);
+        replay.push(&action, &w);
+    }
+    assert!(w.player_level() >= 25, "level {}", w.player_level());
+    let player = w.state.player;
+    assert!(!suffers(&w, player, "held") && !suffers(&w, player, "stunned"));
     let verified = Replay::from_json(&replay.to_json())
         .expect("json")
         .run(w.content().clone())
