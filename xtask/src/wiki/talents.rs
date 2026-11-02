@@ -165,15 +165,18 @@ pub(super) fn class_levels(content: &Content) -> String {
             );
         }
         out.push_str("| Level | Ability | Effect |\n|---:|---|---|\n");
-        for (level, id) in &class.abilities {
+        for (level, id, rank) in &class.abilities {
             let Some(talent) = book.id(id) else { continue };
             let def = book.get(talent);
-            let _ = writeln!(
-                out,
-                "| {level} | {} | {} |",
-                def.name,
-                effects_text(content, def)
-            );
+            // A talent of ranks the table hands out rank by rank: each row that rank's.
+            let (name, effects) = match def.rank_count() > 1 {
+                true => (
+                    format!("{} {rank}/{}", def.name, def.rank_count()),
+                    rank_text(content, def, *rank),
+                ),
+                false => (def.name.clone(), effects_text(content, def)),
+            };
+            let _ = writeln!(out, "| {level} | {name} | {effects} |");
         }
         out.push('\n');
     }
@@ -324,6 +327,15 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
         let name = content.resource(cost.resource).name.to_lowercase();
         parts.push(format!("costs {} {name}", cost.amount));
     }
+    parts.join("; ")
+}
+
+/// What rank `rank` of `def` adds, as a class table gives it: the per-rank effects and that
+/// rank's own.
+fn rank_text(content: &Content, def: &TalentDef, rank: u8) -> String {
+    let parts: Vec<String> = (def.effects_at(rank))
+        .map(|e| effect_text(content, &e))
+        .collect();
     parts.join("; ")
 }
 
@@ -711,6 +723,34 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "the chosen skill trained at {dice}, or raised by {dice} if trained (rolled as the \
              rank is taken)"
         ),
+        TalentEffect::WeaponRanks { to, skills, .. } if skills.is_empty() => format!(
+            "every [weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) \
+             (not the schools of magic or a hidden style) below rank {to} rises to rank {to}, \
+             once, as it is given"
+        ),
+        TalentEffect::WeaponRanks { to, skills, .. } => {
+            let table = content.weapon_skills();
+            let names: Vec<String> = (skills.iter())
+                .filter_map(|s| table.id(s).map(|id| table.skill(id).name.clone()))
+                .collect();
+            format!(
+                "{} below rank {to} rise to rank {to}, once, as it is given",
+                names.join(", ")
+            )
+        }
+        TalentEffect::TakeUpSkills { dice, except, .. } => {
+            let mut text = format!(
+                "every [skill](skills.md) you are not trained in, whatever skills there are, \
+                 trained at {dice} (rolled once, as it is given)"
+            );
+            let names: Vec<String> = (except.iter())
+                .filter_map(|s| content.skill_id(s).map(|id| content.skill(id).name.clone()))
+                .collect();
+            if !names.is_empty() {
+                text.push_str(&format!(", but {}", names.join(" and ")));
+            }
+            text
+        }
         TalentEffect::StartingGold {
             percent,
             at_least,

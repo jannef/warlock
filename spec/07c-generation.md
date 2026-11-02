@@ -222,7 +222,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   cell is reachable from it (4-connected), every side has at least 3 walkable cells, running water
   and only running water has a flow, and patrols are valid.
 - **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped verbatim
-  (terrain, lights, objects, traps, locks, creatures) where they fit — into rock with room for corridors or tunnels to
+  (terrain, lights, objects, traps, locks, named places with their notes, creatures) where they fit — into rock with room for corridors or tunnels to
   every entrance. A vault's edge is solid except for its entrances (doors, not on a corner); it has
   no stairs, player start, or unique character (`npc`), and all its walkable cells are reachable
   from an entrance. Its locks
@@ -270,7 +270,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`shops = { chance = 100 }`: about one gallery floor in four) kept by a **duergar trader** (the
   campaign's own keeper type, with the shared keeper's kit). Its vaults (`campaigns/ascmearc/vaults/`):
   the **foreman's cabin** on each gallery level (a duergar miner at his post, a pick-axe, a lamp,
-  a brass key) and the **drake's hoard** on level 12 alone (the fire drake on its gold, a rare
-  and a magic find, ringed with lava). The drake is not in the population, so it is met there
+  a brass key), the **hunter's statue** on level 11 alone (a worn statue on a raised floor between
+  two torches, its plinth inscribed: the hint of the Hunter's oath,
+  `docs/design/prestige-classes.md` §8), and the **drake's hoard** on level 12 alone (the fire
+  drake on its gold, a rare and a magic find, ringed with lava). The drake is not in the population, so it is met there
   only (Factor Wulfrun's last quest). Its `arrival`: "The galleries smell of sulphur." The
   `fyrdelf` dev scenario starts on level 1.

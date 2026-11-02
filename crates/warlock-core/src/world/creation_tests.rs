@@ -32,7 +32,7 @@ fn picked(world: &World) -> Vec<String> {
     // Not what the class's table gives (the bard's Lore is a Scholar talent).
     let class =
         (world.state().character.as_ref()).and_then(|c| world.content().class(&c.spec.class));
-    let given = |id: &str| class.is_some_and(|c| c.abilities.iter().any(|(_, t)| t == id));
+    let given = |id: &str| class.is_some_and(|c| c.abilities.iter().any(|(_, t, _)| t == id));
     (world.state().player().talents.iter())
         .filter(|t| book.id(&t.id).is_some_and(|id| !book.get(id).granted))
         .filter(|t| !given(&t.id))

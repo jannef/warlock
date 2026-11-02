@@ -104,12 +104,19 @@ struct ClassSpec {
     bonus_talents: Option<BonusSpec>,
 }
 
-/// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent.
+/// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent;
+/// `rank = 2` gives its second rank (default 1).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct AbilitySpec {
     level: u8,
     talent: String,
+    #[serde(default = "first_rank")]
+    rank: u8,
+}
+
+fn first_rank() -> u8 {
+    1
 }
 
 /// `{ levels = [10, 20], trees = ["guard"] }`: a bonus talent pick at each of those levels,
@@ -187,8 +194,8 @@ pub struct ClassDef {
     /// pack; filled in by the loader once objects are known.
     pub kit: Kit,
     /// Its class abilities (spec §8 "Class abilities"): at each level, the talent it gives, by
-    /// id, ascending by level.
-    pub abilities: Vec<(u8, String)>,
+    /// id, and the rank of it (1 first), ascending by level; a talent's ranks rise down the table.
+    pub abilities: Vec<(u8, String, u8)>,
     /// Its bonus talent picks.
     pub bonus_talents: BonusTalents,
     /// The file it was read from, for the errors of [`ClassDef::check_table`].
@@ -334,7 +341,7 @@ impl ClassDef {
         let styles = ranks(&spec.styles, Ranked::Styles)?;
         let style_choice = choice("style_choice", &spec.style_choice, Ranked::Styles)?;
         let level_ok = |l: u8| (1..=MAX_LEVEL).contains(&l);
-        let mut abilities: Vec<(u8, String)> = Vec::with_capacity(spec.abilities.len());
+        let mut abilities: Vec<(u8, String, u8)> = Vec::with_capacity(spec.abilities.len());
         for a in spec.abilities {
             if !level_ok(a.level) {
                 return Err(err(format!(
@@ -342,18 +349,24 @@ impl ClassDef {
                     a.level
                 )));
             }
-            if abilities.last().is_some_and(|(l, _)| *l > a.level) {
+            if abilities.last().is_some_and(|(l, _, _)| *l > a.level) {
                 return Err(err(format!(
                     "class `{id}`: abilities are listed by level, lowest first"
                 )));
             }
-            if abilities.iter().any(|(_, t)| *t == a.talent) {
+            if a.rank == 0 {
                 return Err(err(format!(
-                    "class `{id}`: abilities: `{}` twice",
+                    "class `{id}`: abilities: `{}` at rank 0 (ranks start at 1)",
                     a.talent
                 )));
             }
-            abilities.push((a.level, a.talent));
+            if (abilities.iter()).any(|(_, t, r)| *t == a.talent && *r >= a.rank) {
+                return Err(err(format!(
+                    "class `{id}`: abilities: `{}` rank {} twice, or after a higher rank",
+                    a.talent, a.rank
+                )));
+            }
+            abilities.push((a.level, a.talent, a.rank));
         }
         let bonus_talents = match spec.bonus_talents {
             None => BonusTalents::default(),
@@ -409,15 +422,28 @@ impl ClassDef {
         self.known_for.contains(&skill)
     }
 
-    /// The talents its level table gives up to `level`, in table order; none from a book
-    /// without a class tree (content whose talents have no class abilities, a fixture's).
+    /// The talents its level table gives up to `level`, in table order, each once (a later
+    /// rank names the talent again); none from a book without a class tree (content whose
+    /// talents have no class abilities, a fixture's).
     pub fn abilities_to(&self, book: &TalentBook, level: u8) -> Vec<TalentId> {
+        let mut given: Vec<TalentId> = Vec::new();
+        for (id, _) in self.ranks_to(book, level) {
+            if !given.contains(&id) {
+                given.push(id);
+            }
+        }
+        given
+    }
+
+    /// Each talent its level table gives up to `level` with the rank given there, in table
+    /// order; none from a book without a class tree.
+    pub fn ranks_to(&self, book: &TalentBook, level: u8) -> Vec<(TalentId, u8)> {
         if !book.has_class_tree() {
             return Vec::new();
         }
         (self.abilities.iter())
-            .take_while(|(l, _)| *l <= level)
-            .filter_map(|(_, id)| book.id(id))
+            .take_while(|(l, _, _)| *l <= level)
+            .filter_map(|(_, id, rank)| book.id(id).map(|t| (t, *rank)))
             .collect()
     }
 
@@ -446,9 +472,15 @@ impl ClassDef {
             return Ok(());
         }
         let err = |m: String| ContentError::new(&self.file, format!("class `{}`: {m}", self.id));
-        for (_, talent) in &self.abilities {
-            if book.id(talent).is_none() {
+        for (_, talent, rank) in &self.abilities {
+            let Some(id) = book.id(talent) else {
                 return Err(err(format!("abilities: unknown talent `{talent}`")));
+            };
+            let ranks = book.get(id).rank_count();
+            if *rank > ranks {
+                return Err(err(format!(
+                    "abilities: `{talent}` rank {rank}, but it has {ranks}"
+                )));
             }
         }
         for tree in &self.bonus_talents.trees {
@@ -951,7 +983,16 @@ mod tests {
             ),
             (
                 ("talent = \"riposte\"", "talent = \"fencing\""),
-                "`fencing` twice",
+                "`fencing` rank 1 twice",
+            ),
+            // A rank names the talent again, higher down the table, within its ranks.
+            (
+                ("talent = \"riposte\"", "talent = \"fencing\", rank = 2"),
+                "`fencing` rank 2, but it has 1",
+            ),
+            (
+                ("talent = \"fencing\"", "talent = \"fencing\", rank = 0"),
+                "rank 0 (ranks start at 1)",
             ),
             (("[10, 20, 30, 45, 55]", "[20, 10]"), "ascending"),
         ] {

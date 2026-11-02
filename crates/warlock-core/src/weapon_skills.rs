@@ -138,6 +138,21 @@ impl WeaponSkills {
         risen
     }
 
+    /// Skill `id` raised to `rank` if it holds less ([`WeaponSkills::raise`]: its defaults rise
+    /// too, marks start again); a rank held already is untouched (a floor, never a raise).
+    /// Returns the skills that rose (a talent's hand-out, Travelled hands).
+    pub fn raise_to(
+        &mut self,
+        table: &WeaponSkillTable,
+        id: WeaponSkillId,
+        rank: u8,
+    ) -> Vec<WeaponSkillId> {
+        if self.rank(id) >= rank.min(MAX_RANK) {
+            return Vec::new();
+        }
+        self.raise(table, id, rank)
+    }
+
     /// `marks` more in skill `id`. When they reach what the next rank asks for, it gains the
     /// rank ([`WeaponSkills::raise`]: its defaults rise too) and the marks left over count toward
     /// the one after (one rank at a time). Returns the skills that rose; none at [`MAX_RANK`].

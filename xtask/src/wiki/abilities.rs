@@ -141,7 +141,7 @@ fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> Stri
     let book = content.talents();
     let mut who: Vec<(String, u8)> = (content.classes().iter())
         .filter_map(|c| {
-            let (level, _) = c.abilities.iter().find(|(_, talent)| {
+            let (level, _, _) = c.abilities.iter().find(|(_, talent, _)| {
                 (book.id(talent)).is_some_and(|t| (book.get(t).effects.iter()).any(&has))
             })?;
             Some((c.name.to_lowercase(), *level))

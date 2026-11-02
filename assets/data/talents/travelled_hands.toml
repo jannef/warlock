@@ -1,0 +1,10 @@
+[[talent]]
+id = "travelled_hands"
+name = "Travelled hands"
+tree = "class"
+granted = true
+description = "You have fought with whatever came to hand, every way there is: you know every weapon and every style a little."
+# Every weapon skill and fighting style held at rank 0 rises to rank 1, once, whatever rows the
+# content has: never the schools of magic or a hidden style (the bard design §8).
+effects = [{ kind = "weapon_ranks", to = 1, news = "Your hands know every weapon a little." }]
+systems = ["weapon_skills", "combat"]

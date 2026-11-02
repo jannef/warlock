@@ -216,8 +216,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   a dagger.` for one stack, `There are several objects here.` for more. A special feature of the
   ground (terrain with `announce`: an altar, a faint rune) is named first, once each time the
   player arrives on it, however they came (a step, stairs, a fall, a teleport, the start of a
-  run): `There is an altar here.`, with the terrain's look-mode description after if it has one;
-  waiting, resting, or searching there says nothing more. Look mode names what lies
+  run): `There is an altar here.`, with the terrain's look-mode description after if it has one,
+  then the note of a named place on the cell (§7 "Named places"); waiting, resting, or searching
+  there says nothing more. One that cannot be stood on (a worn statue) is named so when the
+  player arrives beside it, and not again while they move from cell to cell beside it: `There is
+  a worn statue here. Stone, old, … Letters are cut deep into the plinth, …`. Look mode names what lies
   on a cell, seen or remembered: `a dagger`, `a dagger and 12 arrows`, up to three stacks, then a
   count (`17 objects`). A stack is some number of one object: stackable objects (coins, arrows,
   potions) join a stack of the same object wherever they go; any other object is a stack of one.

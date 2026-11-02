@@ -1,7 +1,8 @@
 # Terrain types. Colors are the fully lit appearance; lighting darkens and tints them.
 # Fields: id, name, description (what look mode adds after the name; optional), announce (a special
-# feature of the ground, an altar: arriving on it says so, "There is an altar here."; walkable
-# terrain only; default false), glyph, fg, bg (default black), walkable (default true),
+# feature of the ground, an altar: arriving on it says so, "There is an altar here.", with its
+# description and the note of a place on the cell after; one that is not walkable, a statue, is
+# told on arriving beside it; default false), glyph, fg, bg (default black), walkable (default true),
 # transparent (default true), move_cost (what a step onto it costs, in percent of a normal step,
 # the `step` cost in actions.toml; default 100; local levels only), opens_to / closes_to (doors),
 # breaks_to and sturdiness (closed doors, spec §8 "Doors": a kick breaks the door into this
@@ -435,6 +436,19 @@ stone = true
 walkable = false
 glyph = "≡"
 fg = "#a08458"
+bg = "#0d0d10"
+
+# A statue (spec §7, a vault's; terrain.toml `announce`): a figure of stone, seen past, not walked through. Arriving beside
+# it says so; a vault may cut an inscription into it (its legend cell's `note`).
+[[terrain]]
+id = "statue"
+name = "worn statue"
+description = "Stone, old, and worn smooth where hands have touched it."
+announce = true
+stone = true
+walkable = false
+glyph = "Ω"
+fg = "#b8b0a0"
 bg = "#0d0d10"
 
 # Chests (spec §8 "Chests"; chests.toml): a fixture of the cell, as a door is. The chest on the

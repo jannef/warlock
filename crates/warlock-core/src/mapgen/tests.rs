@@ -77,6 +77,11 @@ pub(super) fn describe_in(content: &Content, level: &LevelTemplate) -> String {
             def.id, shop.keeper, shop.min, shop.max, shop.post
         );
     }
+    // Named places stamped from vaults (an inscribed statue), with their notes.
+    for (p, place) in &level.places {
+        let note = place.note.as_deref().unwrap_or("");
+        let _ = writeln!(out, "place {} at {p}: {note}", place.name);
+    }
     out + &ascii_with_rooms(level, content)
 }
 

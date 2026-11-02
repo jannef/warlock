@@ -42,7 +42,8 @@ pub(super) struct TerrainSpec {
     /// What look mode adds after its name (a forgotten altar's), if anything.
     #[serde(default)]
     pub description: Option<String>,
-    /// A special feature of the ground (an altar): stepping onto it says so.
+    /// A special feature of the ground (an altar, a statue): arriving on it, or beside it if it
+    /// cannot be stood on, says so (`world/feature.rs`).
     #[serde(default)]
     pub announce: bool,
     pub glyph: char,
@@ -196,8 +197,8 @@ pub struct TerrainDef {
     /// What look mode says of it after its name, if anything (a forgotten altar's, spec §7
     /// "Special rooms").
     pub description: Option<String>,
-    /// A special feature of the ground (an altar, a faint rune; spec §6): arriving
-    /// on it says so (`world/feature.rs`). Only walkable terrain has it.
+    /// A special feature of the ground (an altar, a faint rune, a statue; spec §6): arriving
+    /// on it, or beside it if it is not walkable, says so (`world/feature.rs`).
     pub announce: bool,
     pub glyph: char,
     /// Presentation-only: glyphs the map draws in place of `glyph`, one per cell

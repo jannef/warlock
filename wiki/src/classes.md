@@ -76,6 +76,14 @@ as long as a chat, is [heard](hearing.md#what-makes-noise) as a voice of loudnes
 sung again while it lasts (it starts over). A [virtuoso](talents.md#talent-virtuoso)'s songs cost nothing at all and give a
 degree more.
 
+The bard knows a little of everything. **[Travelled hands](talents.md#talent-travelled-hands)** raises every
+[weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) the bard has at rank 0 to rank 1, once (never a
+[school of magic](schools.md), and never a hidden style): a point surer with whatever comes to hand.
+**[Jack of all trades](talents.md#talent-jack-of-all-trades)** comes in two ranks: the first trains every [skill](skills.md) the bard
+lacks (but Sneak attack, the thief's) at 1d4+1, whatever skills there are; from then on they are
+skills like any other, used, marked, and raised at a level. The second makes every skill count 5
+higher. A class table may give a talent rank by rank like this; a rank missed comes with the next.
+
 The [ascetic](classes.md#ascetic)'s **[martial arts](talents.md#talent-martial-arts)** gives you [ki](resources.md#resource-ki) at level 1, full (5 with
 [Willpower](stats.md#stat-willpower) 12, growing with Willpower and your [level](experience.md#levels)), and **[flurry](talents.md#talent-flurry)**, from level 1
 too, spends it: every attack with nothing in your hands strikes a
