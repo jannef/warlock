@@ -181,7 +181,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   night), woods, deep woods, Ascdūn, fen, the cult on the fen while Sister Hild's errand is
   under way, Black Wystan's archers while the Gilde wants him, and the orcs come down into
   Burnadenu after thirty days; the pedlar (merchants, he talks: the ways to Cealdhlāw and the
-  ford as a rumoured way, and the news) and the villagers of the vale (their road lines) are its
+  ford as a rumoured way, and the news; and he sells one thing, §8 "Dialogue", "An offer") and the villagers of the vale (their road lines) are its
   peaceful parties, deer its wildlife.
 - **Generators** (`warlock-core`, integer-only): *rooms* — walled rooms joined along a minimum
   spanning tree plus a few loops by corridors dug as cheapest paths (bends cost extra), with closed

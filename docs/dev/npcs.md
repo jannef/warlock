@@ -57,6 +57,41 @@ Nothing is saved that was not before, and no stream is drawn. Tests: `world/serv
 scroll types identified, the replay and the save), Wulfrun's in `world/ceaptun_tests.rs`,
 the screen's row in `ui/dialogue_screen.rs`; the wiki's table is `xtask/src/wiki/services.rs`.
 
+**A trader's offer** (#808, docs/design/overworld-encounters.md §15 Q7; spec §8 "Dialogue"):
+`content/offer.rs` (`TradeOffer`, a dialogue's `[dialogue.offer]`: `id`, `name`, `reply` said on
+a sale, `sold` said after, `level = { bonus, least }`, `affixes` as `[count, weight]` pairs,
+`price = { affix, unique }`, `uniques = { chance, items }` with the chance in basis points),
+`world/wares.rs`. Its id shares the topic namespace (the nine counts it); load checks: an id,
+not a topic's or service's, the shops' currency, lines, `least` 1 to 99, counts 1 to 6 with some
+weight, `price.affix` ≥ 1, the chance ≤ 10 000, `price.unique` ≥ 1 with uniques, each unique
+known, of the dialogue's campaign or shared, once; and, after everything that places objects
+loaded, `offer::check_placements`: a unique an offer names is placed by no other content
+(`Uniques::is_placed`), so it comes only through the offer. `World::stock_wares` (one line in
+`chat` and in `ask`, after `listens`) makes a trader's `Wares` once, from `Rng::stream(seed,
+"wares/<actor id>")`: one `below(10_000)` against the chance (only with uniques); made, one
+`below` among its uniques not in `WorldState::uniques_offered` (then added); else
+`magic::loot::favoured` at the player's level + `bonus`, clamped to `least`..99 (a base that can
+be magic, not ammunition or a stack, by frequency in id order; the count by weight;
+`loot::heirloom`, so rare). The item is identified (a trader names his wares). Price: a unique
+`price.unique`; else `Stack::value` + `price.affix` × affixes × item level; no favour.
+`World::topics` lists it after the services (`World::offer_topic`) with `TopicView::price` and
+`TopicView::ware` (the item listed, then its affix and power lines from `describe::lines`,
+joined by ". ") while for sale. `World::ask_offer` (in `ask` after `ask_service`): sold, the
+`sold` line (no time); without the gold "You cannot pay." (no time); else `hand_over`, "You pay
+the pedlar N gold for X.", the item into the pack, `Wares::item` cleared, `train_deal`, the
+`reply`, `chat`'s time. Saved: `WorldState::wares` (`BTreeMap<ActorId, Wares>`) and
+`uniques_offered`, both left out while empty (old saves and replays unchanged). The `actors`
+dump layer shows `wares ITEM for N gold` / `wares sold (N gold)` and the player's `uniques
+offered`. The app: `DialogueScreen` opens the one dialog for a topic with a `ware`
+(`offer_dialog`: the speaker's name, "ITEM. N gold, take it or leave it.", "Buy it" sending the
+ask and "Leave it" closing it; short of gold, " You have only N." and "Leave it" alone).
+Leaving it is nothing. Tests: `world/wares_tests.rs` (determinism, the favoured roll's rarity,
+count, level, and price, buy, sold, can't pay, the uniques by a certain chance each once then a
+find, the three's slots and the placement refusal, the load checks, a replay and a save),
+`ui/dialogue_screen.rs::an_offer_asks_buy_it_or_leave_it` (snapshots `offer-buy`,
+`offer-short`); the wiki's `npcs.md` "The pedlar's offer" and the uniques table's offer column
+(`xtask/src/wiki/uniques.rs::offered_by`).
+
 **Rumoured ways** (the owner's request of 2026-10-27; spec §8 "Dialogue"): `world/rumour.rs`.
 A topic's optional `route` (`Topic::route`, waypoints `[x, y]` on the campaign's overworld;
 `Topic::route_cells` joins them with `Pos::line_between`) is checked when content loads

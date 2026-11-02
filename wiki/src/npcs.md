@@ -79,6 +79,35 @@ neither [Presence](stats.md#stat-presence) nor [Negotiation](skills.md#skill-neg
 
 {{#include generated/services.md}}
 
+## The pedlar's offer
+
+The **[pedlar](creatures.md#creature-pedlar)** met on the roads ([Encounters](encounters.md#the-ascmearcs-encounters))
+carries one thing worth more than pins and needles, and offers it for a fixed price: take it or
+leave it. Ask him about **Your wares**, listed after his topics with the price; a dialog shows
+the item, already [identified](magic-items.md#unidentified-items) (a pedlar knows what he sells),
+its affixes in words, and the price, with **Buy it** and **Leave it**.
+
+- **What it is**: a [rare](magic-items.md#rarity) item of any kind loot holds, but no ammunition,
+  with **four affixes (half the time), five (35%), or six (15%)**, made at an
+  [item level](magic-items.md#finding-them) of **your level plus four**, at least 4. Loot is
+  rare one time in fifty, most often with three affixes, and at the depth's level, so his is
+  much the better.
+- **One of three uniques**: one offer in fifty (2%) is instead one of the three
+  [unique items](magic-items.md#unique-items) only pedlars carry, the Brosinga Mene, the
+  Eorcanstān, and Grendles Grāpe, each offered at most once a run. When all three have been
+  offered, his offers are rare finds again.
+- **The price** is fixed, never haggled ([Presence](stats.md#stat-presence) and
+  [Negotiation](skills.md#skill-negotiation) do not move it): its value plus **15 [gold](shops.md#money)
+  per affix per item level** (four affixes at item level 5: its value and 300 gold), and
+  **1500 gold** for a unique.
+- **Buying** pays him, puts the item in your pack, and takes the time of a chat; it is a deal,
+  which trains Negotiation and [Presence](stats.md#stat-presence) as trade does. Without enough gold
+  the dialog only lets you leave it, and you are told "You cannot pay." Leaving it costs nothing,
+  and he keeps it for you: ask again while he is near.
+- **One offer per pedlar**: once you have bought it he has nothing more ("That was the only one
+  I 'ad"). The same pedlar met again on the road still has his; another pedlar brings another
+  offer, made when you first talk to him.
+
 ## Muttering
 
 Now and then, while they go about their business and you are within a few cells, people mutter

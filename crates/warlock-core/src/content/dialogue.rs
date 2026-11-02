@@ -11,7 +11,8 @@
 //! `reply`, and an optional `route`: the way it describes, marked on the player's overworld map
 //! as they ask) asked about on the dialogue screen, optional `[[dialogue.service]]`s (`id`, `name`,
 //! `price`, `does`, `reply`, `nothing`: a cure or a mending for gold, asked for like a topic;
-//! `world/service.rs`), and an optional `mutter`: the percent chance per
+//! `world/service.rs`), an optional `[dialogue.offer]` (one item at a fixed price, asked for
+//! like a topic; `content/offer.rs`, `world/wares.rs`), and an optional `mutter`: the percent chance per
 //! action that it mutters one of the mutter's `lines` (with a `verb`, "mutters" by default) while
 //! the player is near enough to hear it.
 
@@ -61,6 +62,7 @@ struct DialogueSpec {
     topic: Vec<Topic>,
     #[serde(default)]
     service: Vec<Service>,
+    offer: Option<super::offer::OfferSpec>,
     mutter: Option<MutterSpec>,
 }
 
@@ -188,6 +190,8 @@ pub struct Dialogue {
     pub topics: Vec<Topic>,
     /// What the speaker sells as a service, listed after the topics.
     pub services: Vec<Service>,
+    /// The one item it offers for a fixed price, listed after the services (`world/wares.rs`).
+    pub offer: Option<super::TradeOffer>,
     pub mutter: Option<Mutter>,
     /// The campaign whose `data/dialogue/` it is in; `None` for shared ones (the shopkeeper's)
     /// and those outside every campaign.
@@ -335,8 +339,11 @@ fn parse_file<'a>(
             .chain(&spec.greet_evil)
             .chain(&spec.greet_good);
         check_lines(said, MAX_LINE).map_err(bad)?;
-        if spec.topic.len() + spec.service.len() > MAX_TOPICS {
-            return Err(bad(format!("at most {MAX_TOPICS} topics and services")));
+        let offers = usize::from(spec.offer.is_some());
+        if spec.topic.len() + spec.service.len() + offers > MAX_TOPICS {
+            return Err(bad(format!(
+                "at most {MAX_TOPICS} topics, services, and an offer"
+            )));
         }
         for (i, topic) in spec.topic.iter().enumerate() {
             if !is_id(&topic.id) {
@@ -376,6 +383,17 @@ fn parse_file<'a>(
                 .and_then(|()| check_lines([&service.reply, &service.nothing], MAX_REPLY))
                 .map_err(bad)?;
         }
+        let offer = match spec.offer {
+            Some(o) => {
+                let taken = |id: &str| {
+                    (spec.topic.iter()).any(|t| t.id == id)
+                        || spec.service.iter().any(|s| s.id == id)
+                };
+                let offer = super::offer::resolve(o, campaign.as_deref(), taken, content);
+                Some(offer.map_err(bad)?)
+            }
+            None => None,
+        };
         let mutter = match spec.mutter {
             Some(m) => {
                 if !MUTTER_CHANCES.contains(&m.chance) {
@@ -410,6 +428,7 @@ fn parse_file<'a>(
             lines: spec.lines,
             topics: spec.topic,
             services: spec.service,
+            offer,
             mutter,
             campaign: campaign.clone(),
         });

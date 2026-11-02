@@ -318,6 +318,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the gold only `Go back`). All or nothing: refused with the `nothing` line when everything is
     known and with "You cannot pay." short of the total, neither taking time. Pious does not
     halve it (a temple's talent), nor does Lore.
+  - **An offer** (`world/wares.rs`; #808, docs/design/overworld-encounters.md §15 Q7: the
+    pedlar): a dialogue's `[dialogue.offer]` is one item at a fixed price, take it or leave it,
+    asked for like a topic (`ask:E:wares`) and listed after the services. It is made the first
+    time the player chats with or asks the trader, from the stream `wares/<actor id>`: by
+    `uniques.chance` (basis points) one of the offer's uniques not yet offered in the run, else
+    a **favoured** roll (`magic::loot::favoured`: a rare item of any base that can be magic but
+    ammunition, with `affixes` of them by weight, at the player's level plus `level.bonus`, at
+    least `level.least`), identified. Its price is fixed (no favour): `price.unique` for a
+    unique, else its value plus `price.affix` gold per affix per item level. The dialogue screen
+    asks in the one dialog with the item in words and the price ("Buy it" / "Leave it"; short of
+    gold, "Leave it" alone); leaving it is nothing. Buying moves the gold to the trader, the item
+    into the pack, counts as a deal (Negotiation's and Presence's marks), and takes the time of
+    `chat`; refused, with no time, with "You cannot pay." Once sold the trader says `sold`: one
+    offer per trader (the same actor met again keeps his). Saved: `WorldState::wares` and
+    `uniques_offered`, left out while empty. The pedlar: four to six affixes (50/35/15), level
+    + 4 (at least 4), 15 gold per affix per level, 2 % one of his three uniques at 1500 gold.
   - **Muttering**: after each of its actions, a creature whose dialogue has a `mutter`, that goes
     about its routine (its mind calm) within 5 cells of the player (as far as a voice carries), mutters
     with its `chance` (a hash of the run seed, the actor, and the moment: the gameplay stream is

@@ -75,6 +75,10 @@ pub struct TopicView {
     /// many things it would be paid for now; none for anything else.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub items: Option<u32>,
+    /// For a trader's offer while it is for sale (`wares.rs`): the item in words, as the one
+    /// dialog shows it before the player buys or leaves it; none for anything else.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ware: Option<String>,
 }
 
 /// A creature's answer to the player (an [`Event::Talked`]).
@@ -204,13 +208,16 @@ impl World {
             name: t.name.clone(),
             price: None,
             items: None,
+            ware: None,
         }));
         topics.extend(dialogue.services.iter().map(|s| TopicView {
             id: s.id.clone(),
             name: s.name.clone(),
             price: Some(self.service_price(s)),
             items: self.service_items(s),
+            ware: None,
         }));
+        topics.extend(self.offer_topic(actor.id, id));
         topics
     }
 
@@ -226,6 +233,7 @@ impl World {
         let Some(dialogue) = self.listens(id) else {
             return Spent::Turn(price);
         };
+        self.stock_wares(id, dialogue);
         let actor = &self.state.actors[&id];
         let d = self.content.dialogue(dialogue);
         let talk = actor.talk;
@@ -266,6 +274,9 @@ impl World {
             return spent;
         }
         if let Some(spent) = self.ask_service(id, dialogue, topic, events) {
+            return spent;
+        }
+        if let Some(spent) = self.ask_offer(id, dialogue, topic, events) {
             return spent;
         }
         let reply = (self.content.dialogue(dialogue).topic(topic)).map(|t| t.reply.clone());

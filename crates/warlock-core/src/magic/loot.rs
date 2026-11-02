@@ -359,6 +359,29 @@ pub fn heirloom(content: &Content, rng: &mut Rng, object: ObjectId, count: u8, l
     }
 }
 
+/// A favoured find (spec §8 "Overworld encounters": the pedlar's offer, #808): a base item
+/// that can be magic at item level `level` (not ammunition: one item), by frequency, ordered by
+/// object id as [`roll`]'s are (one draw); how many affixes it has by `counts`' weights (one
+/// draw); then it is made as an [`heirloom`] of that many at `level`. Better than loot: never
+/// normal, and never fewer affixes than `counts` names. `None` when no base can be magic there.
+pub fn favoured(
+    content: &Content,
+    rng: &mut Rng,
+    level: u8,
+    counts: &[(u8, u32)],
+) -> Option<Stack> {
+    let level = level.max(1);
+    let mut bases: Vec<(ObjectId, u32)> = (content.object_defs().iter().enumerate())
+        .filter(|(_, o)| o.frequency > 0 && o.level <= level && o.kind != Some(ItemKind::Ammo))
+        .filter(|(_, o)| !o.stackable && can_be_magic(content, o, level))
+        .map(|(i, o)| (ObjectId(i as u16), o.frequency))
+        .collect();
+    bases.sort_by(|a, b| content.object(a.0).id.cmp(&content.object(b.0).id));
+    let object = *pick_weighted(rng, &bases)?;
+    let count = *pick_weighted(rng, counts)?;
+    Some(heirloom(content, rng, object, count, level))
+}
+
 /// Whether some affix of `kind` may roll on base item `def` at item level `level` (what
 /// [`roll_affix`] would draw among, before what the item has already rolled).
 fn rolls_any(content: &Content, def: &ObjectDef, level: u8, kind: AffixKind) -> bool {

@@ -154,6 +154,7 @@ the player, `ask:E:rooms` asks it about topic `rooms` (an id in a campaign's `da
 quest topics are `quest-ID`, ids in a campaign's `data/quests/`: asking gives the quest, there is
 no accepting or declining (#422); a
 service is asked for by its id the same way, `ask:E:cure`, paid in gold and taking a chat's time,
+and a trader's one offer too, `ask:E:wares` buying it (the pedlar's; docs/dev/npcs.md "A trader's offer"),
 docs/dev/npcs.md);
 `use_tool` uses the light ready in the Tool slot (a lantern: unlit, lit, hooded, unlit again; `u`
 in the game, which asks for a direction to dig instead without one), `throw_voice:X,Y`

@@ -1,0 +1,25 @@
+---
+source: crates/warlock/src/ui/dialogue_screen.rs
+expression: shown
+---
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                   ┌─ The old hermit ──────────────────────┐                    
+                   │                                       │                    
+                   │  Hex Loop, gold ring. Mystic: +9 to   │                    
+                   │ maximum mana. of Clarity: mana comes  │                    
+                   │ back 35% faster. 340 gold, take it or │                    
+                   │               leave it.               │                    
+                   │                                       │                    
+                   │           Buy it  (y)                 │                    
+                   │         > Leave it  (n, Esc)          │                    
+                   │                                       │                    
+                   │ ↑/↓ choose  Enter select              │                    
+                   └───────────────────────────────────────┘

@@ -215,6 +215,7 @@ mod treasury;
 mod two_shields;
 mod voice;
 mod volley;
+mod wares;
 mod warp;
 mod weapon_ability;
 mod weapon_active;
@@ -355,6 +356,12 @@ pub struct WorldState {
     /// The parties encounters made, by their areas (`world/encounter.rs`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) parties: Vec<encounter::Party>,
+    /// What traders offer, by trader, once asked (`world/wares.rs`): the item and its price.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) wares: BTreeMap<ActorId, wares::Wares>,
+    /// The unique items traders' offers have made in the run (`world/wares.rs`): each once.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) uniques_offered: BTreeSet<String>,
     /// Sounds the player perceived lately: those like them are no news ([`noise::news`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) recent_sounds: Vec<Recent>,
@@ -783,6 +790,8 @@ impl World {
             encounters: None,
             encounter: None,
             parties: Vec::new(),
+            wares: BTreeMap::new(),
+            uniques_offered: BTreeSet::new(),
             recent_sounds: Vec::new(),
             weather_override: None,
             death: None,
@@ -1808,6 +1817,8 @@ mod variant_tests;
 mod vitals_tests;
 #[cfg(test)]
 mod voice_tests;
+#[cfg(test)]
+mod wares_tests;
 #[cfg(test)]
 mod weapon_ability_tests;
 #[cfg(test)]

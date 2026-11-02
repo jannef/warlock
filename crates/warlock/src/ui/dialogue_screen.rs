@@ -35,6 +35,8 @@ pub struct DialogueScreen {
     topics: Vec<(String, String)>,
     /// Per topic, for a service paid per thing: its price per thing and how many things now.
     per_item: Vec<Option<(u32, u32)>>,
+    /// Per topic, for a trader's offer for sale: its price and the item in words.
+    wares: Vec<Option<(u32, String)>>,
     /// The gold the player carries.
     gold: u32,
     /// The selected topic.
@@ -51,6 +53,7 @@ impl DialogueScreen {
             line: "There is no one to talk to.".into(),
             topics: Vec::new(),
             per_item: Vec::new(),
+            wares: Vec::new(),
             gold: 0,
             selected: 0,
         };
@@ -77,6 +80,9 @@ impl DialogueScreen {
             })
             .collect();
         let per_item = (talk.topics.iter()).map(|t| t.price.zip(t.items)).collect();
+        let wares = (talk.topics.iter())
+            .map(|t| t.price.zip(t.ware.clone()))
+            .collect();
         let selected = (talk.asked.as_ref())
             .and_then(|asked| topics.iter().position(|(id, _)| id == asked))
             .unwrap_or(0);
@@ -86,6 +92,7 @@ impl DialogueScreen {
             line: talk.line.clone(),
             topics,
             per_item,
+            wares,
             gold: view.own_gold(),
             selected,
         }
@@ -132,6 +139,9 @@ impl DialogueScreen {
             dir,
             topic: self.topics[i].0.clone(),
         };
+        if let Some((price, ware)) = self.wares.get(i).cloned().flatten() {
+            return ScreenAction::Dialog(Box::new(self.offer_dialog(price, &ware, ask)));
+        }
         match self.per_item.get(i).copied().flatten() {
             Some((price, items)) if items > 0 => {
                 ScreenAction::Dialog(Box::new(self.pay_dialog(price, items, ask)))
@@ -163,6 +173,25 @@ impl DialogueScreen {
             };
             Dialog::new(title.clone(), format!("{text} You have {have}."))
                 .cancel("Go back", ScreenAction::Close)
+        }
+    }
+
+    /// The dialog a trader's offer opens (`world/wares.rs`): the item in words and its fixed
+    /// price, "Buy it" (`ask`) or "Leave it"; without the gold, only leaving it.
+    fn offer_dialog(&self, price: u32, ware: &str, ask: Action) -> Dialog {
+        let text = format!("{ware}. {price} gold, take it or leave it.");
+        let title = &self.name;
+        if self.gold >= price {
+            Dialog::new(title.clone(), text)
+                .accept("Buy it", ask)
+                .cancel("Leave it", ScreenAction::Close)
+        } else {
+            let have = match self.gold {
+                0 => "no gold".to_string(),
+                n => format!("only {n}"),
+            };
+            Dialog::new(title.clone(), format!("{text} You have {have}."))
+                .cancel("Leave it", ScreenAction::Close)
         }
     }
 
@@ -290,6 +319,7 @@ mod tests {
             name: "A cure for what ails you".into(),
             price: Some(60),
             items: None,
+            ware: None,
         });
         let screen = DialogueScreen::new(Some(&talk), Some(&view));
         let mut console = Console::default();
@@ -314,6 +344,7 @@ mod tests {
             name: "An appraisal of your goods".into(),
             price: Some(100),
             items: Some(items),
+            ware: None,
         });
         let mut screen = DialogueScreen::new(Some(&talk), Some(&view));
         screen.gold = gold;
@@ -347,6 +378,59 @@ mod tests {
             topic: "identify".into(),
         };
         assert_eq!(appraisal(0, 500), Err(Box::new(ScreenAction::Act(ask))));
+    }
+
+    /// The dialog a trader's offer at 340 gold opens, as text, for a player with `gold`, and
+    /// what its first row does.
+    fn offer(gold: u32) -> (String, ScreenAction) {
+        let (world, outcome) = at_the_hermit();
+        let view = world.perception();
+        let mut talk = last_talk(&outcome).expect("talked").clone();
+        talk.topics.push(warlock_core::world::TopicView {
+            id: "wares".into(),
+            name: "Your wares".into(),
+            price: Some(340),
+            items: None,
+            ware: Some(
+                "Hex Loop, gold ring. Mystic: +9 to maximum mana. of Clarity: mana comes back \
+                 35% faster"
+                    .into(),
+            ),
+        });
+        let mut screen = DialogueScreen::new(Some(&talk), Some(&view));
+        screen.gold = gold;
+        let mut console = Console::default();
+        console.resize(80, 30);
+        let bindings = Bindings::default();
+        screen.draw(&mut console, &bindings);
+        let shown = text(&console);
+        assert!(shown.contains("  7  Your wares (340 gold)"), "{shown}");
+        let ScreenAction::Dialog(dialog) = screen.handle(&Press::typed('7'), &bindings) else {
+            panic!("the offer opens the dialog");
+        };
+        let mut dialog = DialogScreen::new(*dialog);
+        let mut console = Console::default();
+        console.resize(80, 30);
+        dialog.draw(&mut console, &bindings);
+        // The first row: up from Leave it, which is selected first, then Enter.
+        dialog.handle(&Press::nav(Nav::Up), &bindings);
+        let first = dialog.handle(&Press::nav(Nav::Enter), &bindings);
+        (text(&console), first)
+    }
+
+    #[test]
+    fn an_offer_asks_buy_it_or_leave_it() {
+        let (shown, first) = offer(500);
+        insta::assert_snapshot!("offer-buy", shown);
+        let buy = Action::Ask {
+            dir: Dir::SE,
+            topic: "wares".into(),
+        };
+        assert_eq!(first, ScreenAction::Act(buy));
+        // Without the gold only leaving it: the first row goes back.
+        let (shown, first) = offer(120);
+        insta::assert_snapshot!("offer-short", shown);
+        assert_eq!(first, ScreenAction::Close);
     }
 
     #[test]

@@ -187,8 +187,9 @@ names it after the gem: "Sharp emerald-pommelled bronze long sword of the Bear".
 A unique item is one of a kind: a [rare](#rarity) item with a name, affixes, and an [item level](#base-items) set by hand,
 and a **power**, a rule of its own that no affix gives. It is found unidentified like any rare
 item ("a stiletto (rare)"); identified, it shows its name, its affixes, its power in words, and a
-line of lore. Each lies in one place in the world (most are carried by those who own them), so a
-character finds each at most once; loot never makes one. Its power works while it is worn or
+line of lore. Each lies in one place in the world (most are carried by those who own them; three
+are only ever offered by a [pedlar](npcs.md#the-pedlars-offer), very rarely), so a character
+finds each at most once; loot never makes one. Its power works while it is worn or
 wielded, identified or not:
 
 - **Inflict**: a hit with it that leaves its target alive causes a [status](status-effects.md#how-they-work), every time or by a

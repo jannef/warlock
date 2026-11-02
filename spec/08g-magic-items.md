@@ -231,7 +231,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Mystic, of Clarity, of the Owl, of Shadows; darkvision), and the Turncoat (banded mail:
     Reinforced, Hardened, Hale, of the Ox; never frightened), each at item level 12, placed by
     its owner's gear line (Mother Sallow, Black Wystan, Brother Osrick, Sergeant Herrick); the test
-    world's Stonebiter lies in the quarry.
+    world's Stonebiter lies in the quarry. The pedlar's three (#808), after ADOM's black torc,
+    are placed only through a trader's offer (§8 "Dialogue", "An offer"), each at most once a
+    run (`WorldState::uniques_offered`, the one save state a unique has), and no other content
+    may place them: the Brosinga Mene (gold amulet: Shimmering, Oaken, Hale, of the Salamander,
+    of Warmth, of the Wind; never poisoned), the Eorcanstān (gold ring: Mystic, Potent, Hale, of
+    the Adept, of Clarity, of Thrift; never silenced), and Grendles Grāpe (gauntlets: Accurate,
+    Vicious, Hardened, of the Bear, of Celerity, of the Ox; never staggered), each at item
+    level 12.
   - **Dev**: replay text `identify` / `identify:LETTERS` (`Action::Identify`, `F8` in dev
     builds: everything carried) identifies without time passing, recorded in replays.
 
