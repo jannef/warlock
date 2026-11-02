@@ -1,0 +1,23 @@
+# Vault of the Ascmearc (docs/design/prestige-classes.md §8): a hunter's statue in Fyrdelf's
+# deep. A small chamber off a cave passage, a worn statue on a raised floor between two torches,
+# and nothing else: the inscription is the treasure, the hint of the oath the Hunter's calling
+# asks (the strange spirit's words). Fyrdelf names it for its eleventh floor (`vaults` in its
+# `[[dungeon.levels]]`), so it is stamped there and nowhere else. The statue cell's `note` is
+# said when the player arrives beside it (`world/feature.rs`) and in look mode.
+name = "Hunter's statue"
+map = '''
+###¡###
+#.....#
+#.fff.#
++.fSf.#
+#.fff.#
+#.....#
+###¡###
+'''
+
+[legend]
+"¡" = "sconce"
+"f" = "flagstones"
+# The inscription, in the old tongue with its sense below, as the campaign's names are given
+# (`ÆR` for ǣr: the font has no Ǣ).
+"S" = { terrain = "statue", name = "a hooded figure", note = "Its empty hands are held as if about a hilt that is not there. Letters are cut deep into the plinth, in the old tongue: LĪF ÆR DĒAÞE. Below, in a later hand: 'Life before death. So the hunters swore, to the one who waited for them on the road; and the road gave them each a blade.'" }

@@ -5053,6 +5053,7 @@ mod tests {
                 "captains_hall",
                 "drakes_hoard",
                 "foremans_cabin",
+                "hunters_statue",
                 "kobolds_cache",
                 "robbers_hoard",
                 "still_room",
