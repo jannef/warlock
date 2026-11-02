@@ -178,6 +178,7 @@ mod read;
 mod reflect;
 mod resource;
 mod rest;
+mod restore;
 mod reveal;
 mod rod;
 mod rooms;
