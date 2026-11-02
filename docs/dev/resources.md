@@ -139,7 +139,13 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   Quivering
   palm costs `resource = { id = "ki", cost = 5 }` on its talent and lost its cooldown
   (`TalentEffect::QuiveringPalm { status, severity }`); `use_class` refuses it with a weapon in
-  hand before the spend. Tests: `world/ki_tests.rs`.
+  hand before the spend. Step of the wind (level 6, S3, #847) costs `resource = { id = "ki",
+  cost = 1 }` on its talent (`TalentEffect::WindStep { status }`, `TalentMods::wind_step`):
+  `World::wind_step` (`world/ascetic.rs`) gives a degree of Light-footed and returns
+  `Spent::NoTime`; `World::may_wind_step` refuses it before the spend while Light-footed already.
+  The status is taken off `World::fresh` (a status given in a priced action is not eased by it):
+  no time passed, so the next action eases it. Tests: `world/ki_tests.rs`,
+  `world/ascetic_tests.rs`.
 - **Inspiration** (R4, #252): Inspire grants it and its effect names what it spends instead of
   mana, `inspire { status, mana, resource, cost }` (`talent::Inspire::instead`, a
   `ResourceCost`; Virtuoso's `inspiring()` clears it, so its song costs nothing).

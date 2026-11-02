@@ -29,7 +29,7 @@ abilities = [
     { level = 1, talent = "martial_arts" },
     { level = 1, talent = "flurry" },
     { level = 1, talent = "trained_wind" },
-    { level = 6, talent = "fleet" },
+    { level = 6, talent = "step_of_the_wind" },
     { level = 12, talent = "deflect_missiles" },
     { level = 18, talent = "patient_defence" },
     { level = 25, talent = "still_mind" },

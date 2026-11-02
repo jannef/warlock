@@ -68,6 +68,10 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Weapon(..) => continue,
         };
         let (asks, takes) = match a.cost() {
+            // The breath between actions (Step of the wind).
+            Some(_) if matches!(a, Ability::Class(active) if active.takes_no_time()) => {
+                (aim(a.aim(content)), "no time".to_string())
+            }
             // A long action: its prayer's time, whatever the pace.
             Some(_) if a == Ability::Class(ClassActive::Consecrate) => {
                 let book = content.talents();

@@ -41,7 +41,7 @@ The [ascetic](classes.md#ascetic)'s **ki** comes with [martial arts](talents.md#
 [Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers), plus a point per 6 [levels](experience.md#levels), never less than 3 (Willpower 12
 holds 5 at level 1, Willpower 14 holds 10 at level 25, Willpower 16 holds 17 at level 60);
 [inner calm](talents.md#talent-inner-calm) adds 2. Each second blow of a [flurry](talents.md#talent-flurry) (level 1) spends a point, and with none
-the attack is one blow; [quivering palm](talents.md#talent-quivering-palm) (level 50) spends 5. Ki comes back a point every 3 base
+the attack is one blow; [step of the wind](abilities.md#ability-step-of-the-wind) (level 6) spends 1, taking no time; [quivering palm](talents.md#talent-quivering-palm) (level 50) spends 5. Ki comes back a point every 3 base
 turns (18 seconds), resting too; [perfect self](talents.md#talent-perfect-self) (level 60) brings it back twice as fast, a point
 every 9 seconds. [Patient defence](abilities.md#ability-patient-defence) (level 18) spends 1, with a wait's time.
 
@@ -76,7 +76,7 @@ maximum at once.
 Such an item never **grants** a pool: it does nothing for one who does not hold it. Who holds
 which: stamina, every [warrior](classes.md#warrior), [berserker](classes.md#berserker), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [ascetic](classes.md#ascetic), [thief](classes.md#thief), and [bard](classes.md#bard), and anyone
 else once a [weapon rank](weapon-skills.md#marks-and-ranks) teaches an active; rage, a [raging](status-effects.md#status-raging) [berserker](classes.md#berserker) (only while the rage
-lasts); focus, a [ranger](classes.md#ranger) from level 12; ki, an [ascetic](classes.md#ascetic) from level 18; inspiration, a [bard](classes.md#bard) from level
+lasts); focus, a [ranger](classes.md#ranger) from level 12; ki, an [ascetic](classes.md#ascetic) from level 1; inspiration, a [bard](classes.md#bard) from level
 18; openings, a [thief](classes.md#thief) from level 1. A ring of rage on a [wizard](classes.md#wizard) is dead weight, and [creatures](creatures.md)
 never hold a pool, so their gear does nothing for them, only for whoever takes it from them.
 

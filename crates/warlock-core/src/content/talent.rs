@@ -718,6 +718,9 @@ pub enum TalentEffect {
     /// leaves the target `severity` degrees of `status` (what it costs is the talent's
     /// `resource`: Ki).
     QuiveringPalm { status: String, severity: u16 },
+    /// The class active Step of the wind: a degree of `status` (Light-footed) on the player,
+    /// taking no time (what it costs is the talent's `resource`: Ki; `world/ascetic.rs`).
+    WindStep { status: String },
     /// The active Blaze (a birth sign's, spec §8 "Birth sign"): a burst of `radius` around the
     /// player that does `damage` of kind `damage_type` (an id in `data/damage_types.toml`) to
     /// every creature it reaches but them, melts the ice it reaches, and sets each cell it
@@ -1095,6 +1098,7 @@ impl TalentEffect {
             TalentEffect::Radiance { .. } => A::HolyRadiance,
             TalentEffect::PatientDefence { .. } => A::PatientDefence,
             TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
+            TalentEffect::WindStep { .. } => A::StepOfTheWind,
             TalentEffect::Volley { .. } => A::Volley,
             TalentEffect::Lurk { .. } => A::Lurk,
             TalentEffect::LowBlow => A::LowBlow,
@@ -1486,9 +1490,9 @@ impl TalentEffect {
                 }
                 status(cooldown)
             }
-            TalentEffect::Lurk { status: id } | TalentEffect::SneakKillStatus { status: id } => {
-                status(id)
-            }
+            TalentEffect::Lurk { status: id }
+            | TalentEffect::SneakKillStatus { status: id }
+            | TalentEffect::WindStep { status: id } => status(id),
             TalentEffect::QuiveringPalm {
                 status: id,
                 severity,
