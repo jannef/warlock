@@ -1,0 +1,830 @@
+//! Overworld encounters (spec §7 "Overworld encounters"; `docs/dev/encounters.md`; the design
+//! `docs/design/overworld-encounters.md`, its §15 the owner's decisions): the roll after an
+//! overworld step, the two lookouts, the four outcomes, the pending choice that must be answered
+//! ([`crate::action::Action::Encounter`]), evading, and the dev `meet`. Where everyone stands
+//! when a fight opens is `encounter_area.rs`.
+//!
+//! - **The roll** ([`World::encounter_roll`]): after a step onto an overworld cell with a local
+//!   area, in a campaign with tables, with nothing pending: the destination landscape's rate
+//!   (basis points an hour) × the step's seconds × the phase's percent × each matching table's
+//!   `rate_percent`, one `below(10_000)` of the `encounters` stream (made on the first roll);
+//!   then the matching tables' entries by weight (one `below`), and each group row's dice.
+//! - **The lookouts** ([`World::lookouts`]): two `check::check`s on the gameplay stream, the
+//!   player's then the party's, only for a hostile entry. Made / failed: the drop; both: met; the
+//!   party alone: ambushed; neither: they pass each other by (nothing happens, nothing is said).
+//! - **The pending choice** ([`Pending`], `WorldState::encounter`): the drop, met, a peaceful or
+//!   a wildlife party wait for `encounter:CHOICE`; every other action but the free ones is
+//!   refused ([`World::refuse_pending`]). Ambushed and a failed evade never pend: the area opens.
+//! - **Opening** happens after the action's turn (`World::encounter_tick`, one line in
+//!   `World::apply`), so the step's or the wait's time passes on the overworld, never in the area.
+
+use super::{ActorId, Spent, World};
+use crate::check;
+use crate::content::{
+    ActionKind, BASE_TURN, Content, CreatureId, EncounterEntry, EncounterTable, EncounterWhen,
+    EntryStance, Landscape, LevelKind, local_area_id,
+};
+use crate::daylight::{self, DayPhase};
+use crate::geom::{Dir, Pos};
+use crate::rng::Rng;
+use crate::skills::{Effect, Use};
+use crate::stats::Stat;
+use crate::weather::Weather;
+use serde::{Deserialize, Serialize};
+
+/// What the player answers a pending encounter with (`encounter:CHOICE`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Choice {
+    /// Lie in wait: the party walks into the player's ambush (the drop only).
+    Ambush,
+    /// Slip past or away: a check.
+    Evade,
+    /// Stand and fight.
+    Fight,
+    /// Hail travellers.
+    Hail,
+    /// Hunt animals.
+    Hunt,
+    /// Pass by travellers or animals.
+    Pass,
+}
+
+impl Choice {
+    pub const ALL: &[Choice] = &[
+        Choice::Ambush,
+        Choice::Evade,
+        Choice::Fight,
+        Choice::Hail,
+        Choice::Hunt,
+        Choice::Pass,
+    ];
+
+    /// Its id in action text: `ambush`.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Choice::Ambush => "ambush",
+            Choice::Evade => "evade",
+            Choice::Fight => "fight",
+            Choice::Hail => "hail",
+            Choice::Hunt => "hunt",
+            Choice::Pass => "pass",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.iter().copied().find(|c| c.id() == id)
+    }
+}
+
+/// How a pending encounter came about: what the player may answer.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Outcome {
+    /// The player saw them first.
+    Drop,
+    /// Each saw the other.
+    Met,
+    /// Travellers.
+    Peaceful,
+    /// Animals.
+    Wildlife,
+}
+
+impl Outcome {
+    /// Its id (dumps): `drop`.
+    pub const fn id(self) -> &'static str {
+        match self {
+            Outcome::Drop => "drop",
+            Outcome::Met => "met",
+            Outcome::Peaceful => "peaceful",
+            Outcome::Wildlife => "wildlife",
+        }
+    }
+
+    /// The choices it offers, in the dialog's order.
+    pub const fn choices(self) -> &'static [Choice] {
+        match self {
+            Outcome::Drop => &[Choice::Ambush, Choice::Evade, Choice::Fight],
+            Outcome::Met => &[Choice::Evade, Choice::Fight],
+            Outcome::Peaceful => &[Choice::Hail, Choice::Pass],
+            Outcome::Wildlife => &[Choice::Hunt, Choice::Pass],
+        }
+    }
+
+    /// How the dialog labels `choice`.
+    pub const fn label(self, choice: Choice) -> &'static str {
+        match (self, choice) {
+            (_, Choice::Ambush) => "Lie in wait",
+            (Outcome::Met, Choice::Evade) => "Give them the slip",
+            (_, Choice::Evade) => "Slip past",
+            (_, Choice::Fight) => "Stand and fight",
+            (_, Choice::Hail) => "Hail them",
+            (_, Choice::Hunt) => "Hunt them",
+            (Outcome::Wildlife, Choice::Pass) => "Let them be",
+            (_, Choice::Pass) => "Pass by",
+        }
+    }
+}
+
+/// The dev `meet:ENTRY:OUTCOME`'s forced outcome of the lookouts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Forced {
+    Drop,
+    Met,
+    Ambushed,
+    Pass,
+}
+
+impl Forced {
+    pub const ALL: &[Forced] = &[Forced::Drop, Forced::Met, Forced::Ambushed, Forced::Pass];
+
+    pub const fn id(self) -> &'static str {
+        match self {
+            Forced::Drop => "drop",
+            Forced::Met => "met",
+            Forced::Ambushed => "ambushed",
+            Forced::Pass => "pass",
+        }
+    }
+
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.iter().copied().find(|c| c.id() == id)
+    }
+}
+
+/// An encounter the player must answer (saved: a quit mid-question resumes on it).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Pending {
+    /// The entry's id in the run's campaign's tables.
+    pub entry: String,
+    /// The overworld cell: its local area is where a fight opens.
+    pub cell: Pos,
+    /// The side of the area the player arrives on (the step's opposite).
+    pub side: Dir,
+    pub outcome: Outcome,
+    /// The party's types, as rolled; empty for a known party.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub members: Vec<CreatureId>,
+    /// The step's energy price: a detour takes its share of it.
+    pub step: i64,
+    /// The area holds this party already: one the player got away from (the owner, #796 Q10).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub known: bool,
+}
+
+/// A party made by an encounter, on its area's level (saved): who to place again when the same
+/// entry is met there, and the dev dumps' `of encounter ID`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Party {
+    pub entry: String,
+    pub level: String,
+    pub members: Vec<ActorId>,
+}
+
+/// How a fight opens (`encounter_area.rs`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum How {
+    Fight,
+    Ambush,
+    Ambushed,
+    Close,
+    Hail,
+    Hunt,
+}
+
+/// An area to open once the action's turn has run.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(super) struct Opening {
+    pub pending: Pending,
+    pub how: How,
+}
+
+/// What an encounter has under way within one action (not saved: resolved before it returns).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub(super) struct Underway {
+    /// The overworld step just taken: its price, for the roll after its turn.
+    pub step: Option<i64>,
+    pub opening: Option<Opening>,
+}
+
+/// What the player is shown of a pending encounter ([`crate::perception::PerceptionView::encounter`]):
+/// the one dialog's title, text, and rows.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EncounterView {
+    /// The entry's name, as written: "a band of footpads".
+    pub name: String,
+    pub title: String,
+    pub text: String,
+    pub choices: Vec<(String, Choice)>,
+}
+
+/// The first letter in upper case.
+fn capital(text: &str) -> String {
+    let mut chars = text.chars();
+    chars.next().map_or_else(String::new, |c| {
+        c.to_uppercase().chain(chars).collect::<String>()
+    })
+}
+
+/// "Ahead" as the way there is: on the road, on the trail, or across the land.
+fn ahead(landscape: Option<Landscape>) -> &'static str {
+    match landscape {
+        Some(Landscape::Road) => "on the road ahead",
+        Some(Landscape::Forest | Landscape::DenseForest) => "on the trail ahead",
+        _ => "ahead",
+    }
+}
+
+/// Where an ambush comes from, by the land.
+fn from_cover(landscape: Option<Landscape>) -> &'static str {
+    match landscape {
+        Some(Landscape::Road) => "from the roadside",
+        Some(Landscape::Forest | Landscape::DenseForest) => "from the undergrowth",
+        Some(Landscape::Hills) => "from behind the rocks",
+        Some(Landscape::Swamp) => "from the reeds",
+        _ => "from the long grass",
+    }
+}
+
+/// Where a party is lost, by the land.
+fn lost_in(landscape: Option<Landscape>) -> &'static str {
+    match landscape {
+        Some(Landscape::Road) => "the byways",
+        Some(Landscape::Forest | Landscape::DenseForest) => "the woods",
+        Some(Landscape::Hills) => "the hills",
+        Some(Landscape::Swamp) => "the marsh",
+        _ => "the long grass",
+    }
+}
+
+/// The line that acknowledges a party met again (#796 Q10).
+pub const KNOWN_LINE: &str = "You remember them: you got away from them here before.";
+
+/// What the player is told of a party `name` met with `outcome` on `landscape`.
+fn told(outcome: Outcome, name: &str, landscape: Option<Landscape>) -> String {
+    match outcome {
+        Outcome::Drop => format!(
+            "You spot {name} {}. They have not seen you.",
+            ahead(landscape)
+        ),
+        Outcome::Met => format!("You and {name} see each other at the same moment."),
+        Outcome::Peaceful => format!("You meet {name} on the way."),
+        Outcome::Wildlife => format!("You come upon {name}."),
+    }
+}
+
+/// The view of `pending`, its entry named by `name`.
+pub(crate) fn view(pending: &Pending, name: &str, landscape: Option<Landscape>) -> EncounterView {
+    let text = told(pending.outcome, name, landscape);
+    let text = if pending.known {
+        format!("{text} {KNOWN_LINE}")
+    } else {
+        text
+    };
+    EncounterView {
+        name: name.to_string(),
+        title: capital(name),
+        text,
+        choices: (pending.outcome.choices().iter())
+            .map(|&c| (pending.outcome.label(c).to_string(), c))
+            .collect(),
+    }
+}
+
+/// What a cell and the moment are, for a table's `when`.
+struct Here {
+    region: Option<String>,
+    landscape: Landscape,
+    terrain: crate::content::TerrainId,
+    phase: DayPhase,
+    weather: Weather,
+    level: u8,
+    days: u32,
+}
+
+impl World {
+    /// The overworld step just taken, for the roll after its turn (one line in `player_moves`).
+    pub(super) fn encounter_step(&mut self, price: i64) {
+        self.encounter.step = Some(price);
+    }
+
+    /// After the action's turn: the roll for an overworld step just taken, then any area an
+    /// encounter opens (perceived at once). One line in `World::apply`.
+    pub(super) fn encounter_tick(&mut self, events: &mut Vec<crate::action::Event>) {
+        let step = self.encounter.step.take();
+        if self.state.death.is_some() {
+            self.encounter.opening = None;
+            return;
+        }
+        if let Some(step) = step {
+            self.encounter_roll(step);
+        }
+        if let Some(opening) = self.encounter.opening.take() {
+            self.open_encounter(opening, events);
+        }
+    }
+
+    /// The roll after an overworld step whose energy price was `step` (module docs). Draws
+    /// nothing without the rules or the campaign's tables, off a cell with a local area, or
+    /// while an encounter is pending.
+    fn encounter_roll(&mut self, step: i64) {
+        let content = self.content.clone();
+        let Some(rules) = content.meetings() else {
+            return;
+        };
+        if self.state.encounter.is_some() || self.state.current().kind != LevelKind::Overworld {
+            return;
+        }
+        let campaign = self.state.campaign.clone();
+        if content.encounter_tables(&campaign).next().is_none() {
+            return;
+        }
+        let cell = self.player_pos();
+        let Some(here) = self.here(cell) else {
+            return;
+        };
+        let tables = self.matching(&content, &campaign, &here);
+        let percent = (tables.iter()).fold(u64::from(rules.phase.of(here.phase)), |p, t| {
+            p * u64::from(t.rate_percent) / 100
+        });
+        let speed = u64::from(self.state.player().speed(&content).max(1));
+        let seconds = u64::try_from(step).unwrap_or(0) / speed;
+        let chance = u64::from(rules.rate_of(here.landscape)) * seconds * percent / (3600 * 100);
+        if chance == 0 {
+            return;
+        }
+        let rng = self.encounters_rng();
+        if u64::from(rng.below(10_000)) >= chance {
+            return;
+        }
+        let entries: Vec<&EncounterEntry> = (tables.iter())
+            .flat_map(|t| &t.entries)
+            .filter(|e| self.when_holds(&e.when, &here))
+            .collect();
+        let total: u32 = entries.iter().map(|e| e.weight).sum();
+        if total == 0 {
+            return;
+        }
+        let mut r = self.encounters_rng().below(total);
+        let Some(entry) = entries.into_iter().find(|e| {
+            let hit = r < e.weight;
+            r = r.saturating_sub(e.weight);
+            hit
+        }) else {
+            return;
+        };
+        let side = self.arrival_side();
+        self.meet(entry, cell, side, step, None);
+    }
+
+    /// The `encounters` stream, made on the first draw.
+    fn encounters_rng(&mut self) -> &mut Rng {
+        let seed = self.state.seed;
+        (self.state.encounters).get_or_insert_with(|| Rng::stream(seed, "encounters"))
+    }
+
+    /// The side of the area the player arrives on: the opposite of their last overworld step,
+    /// else the south.
+    fn arrival_side(&self) -> Dir {
+        self.state.overworld_step.map_or(Dir::S, Dir::opposite)
+    }
+
+    /// The cell and the moment for the tables; `None` off a cell with a local area.
+    fn here(&self, cell: Pos) -> Option<Here> {
+        let area = self
+            .content
+            .local_area(&self.state.campaign, &local_area_id(cell))?;
+        let over = self.state.weather_override.as_ref();
+        let now = crate::weather::conditions(
+            self.state.seed,
+            self.state.time,
+            self.content.climate(),
+            over,
+        );
+        let start =
+            (self.content.scenario(&self.state.scenario)).map_or(self.state.time, |s| s.start);
+        let days = self.state.time.since(start).as_seconds() / crate::time::DAY;
+        Some(Here {
+            region: area.overworld.region_at(cell).map(str::to_string),
+            landscape: area.landscape,
+            terrain: area.terrain,
+            phase: daylight::phase(self.state.time),
+            weather: now.weather,
+            level: self.player_level(),
+            days: u32::try_from(days).unwrap_or(u32::MAX),
+        })
+    }
+
+    /// The campaign's tables whose `when` holds here, less those a kept one `replaces`.
+    fn matching<'c>(
+        &self,
+        content: &'c Content,
+        campaign: &str,
+        here: &Here,
+    ) -> Vec<&'c EncounterTable> {
+        let kept: Vec<&EncounterTable> = (content.encounter_tables(campaign))
+            .filter(|t| self.when_holds(&t.when, here))
+            .collect();
+        let replaced: Vec<&String> = kept.iter().flat_map(|t| &t.replaces).collect();
+        kept.into_iter()
+            .filter(|t| !replaced.contains(&&t.id))
+            .collect()
+    }
+
+    /// Whether `when` holds here and now.
+    fn when_holds(&self, when: &EncounterWhen, here: &Here) -> bool {
+        let quests = &self.state.quests;
+        let active =
+            |q: &String| (quests.record(q)).is_some_and(|r| r.stage == super::Stage::Active);
+        let done = |q: &String| {
+            (quests.record(q)).is_some_and(|r| r.completed > 0 || r.stage == super::Stage::Done)
+        };
+        (when.regions.is_empty()
+            || here
+                .region
+                .as_ref()
+                .is_some_and(|r| when.regions.contains(r)))
+            && (when.landscapes.is_empty() || when.landscapes.contains(&here.landscape))
+            && (when.terrains.is_empty() || when.terrains.contains(&here.terrain))
+            && (when.phase.is_empty() || when.phase.contains(&here.phase))
+            && (when.weather.is_empty() || when.weather.contains(&here.weather))
+            && when.level_max.is_none_or(|m| here.level <= m)
+            && when.quest_active.as_ref().is_none_or(active)
+            && when.quest_done.as_ref().is_none_or(done)
+            && (when.quest_not.as_ref()).is_none_or(|q| quests.record(q).is_none())
+            && (when.revealed.as_ref()).is_none_or(|h| self.state.revealed.contains(h))
+            && (when.hidden.as_ref()).is_none_or(|h| !self.state.revealed.contains(h))
+            && when.after_days.is_none_or(|d| here.days >= d)
+            && when.before_days.is_none_or(|d| here.days < d)
+    }
+
+    /// The ids of the tables that match the player's overworld cell now (dev dumps).
+    pub fn encounter_tables_here(&self) -> Vec<String> {
+        let content = self.content.clone();
+        match self.here(self.player_pos()) {
+            Some(here) if self.state.current().kind == LevelKind::Overworld => (self
+                .matching(&content, &self.state.campaign, &here)
+                .into_iter())
+            .map(|t| t.id.clone())
+            .collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    /// The encounter rate on the player's overworld cell now, in basis points an hour, with
+    /// the phase and the matching tables (dev dumps); `None` where nothing is rolled.
+    pub fn encounter_rate_here(&self) -> Option<u64> {
+        let content = self.content.clone();
+        let rules = content.meetings()?;
+        let tabled = content
+            .encounter_tables(&self.state.campaign)
+            .next()
+            .is_some();
+        if !tabled || self.state.current().kind != LevelKind::Overworld {
+            return None;
+        }
+        let here = self.here(self.player_pos())?;
+        let tables = self.matching(&content, &self.state.campaign, &here);
+        let percent = (tables.iter()).fold(u64::from(rules.phase.of(here.phase)), |p, t| {
+            p * u64::from(t.rate_percent) / 100
+        });
+        Some(u64::from(rules.rate_of(here.landscape)) * percent / 100)
+    }
+
+    /// The entry of the encounter that made actor `id`, if one did (dev dumps).
+    pub fn party_of(&self, id: ActorId) -> Option<&str> {
+        (self.state.parties.iter())
+            .find(|p| p.members.contains(&id))
+            .map(|p| p.entry.as_str())
+    }
+
+    /// The living members of earlier parties of `entry` in the area of `cell`.
+    pub(super) fn known_party(&self, entry: &str, cell: Pos) -> Vec<ActorId> {
+        let level = local_area_id(cell);
+        (self.state.parties.iter())
+            .filter(|p| p.entry == entry && p.level == level)
+            .flat_map(|p| &p.members)
+            .copied()
+            .filter(|id| self.state.actors.get(id).is_some_and(|a| a.level == level))
+            .collect()
+    }
+
+    /// `entry` is met on `cell`, arriving on `side`, after a step of price `step`: the party
+    /// rolled (or the known one), then the lookouts (or `forced`), and what comes of them.
+    fn meet(
+        &mut self,
+        entry: &EncounterEntry,
+        cell: Pos,
+        side: Dir,
+        step: i64,
+        forced: Option<Forced>,
+    ) {
+        // Parties whose members are all gone are forgotten.
+        let state = &mut *self.state;
+        let actors = &state.actors;
+        state
+            .parties
+            .retain(|p| p.members.iter().any(|m| actors.contains_key(m)));
+        let known = !self.known_party(&entry.id, cell).is_empty();
+        let mut members = Vec::new();
+        if !known {
+            for &(creature, dice) in &entry.group {
+                let n = dice.roll(self.encounters_rng()).max(0);
+                members.extend(std::iter::repeat_n(creature, n as usize));
+            }
+            // The lead first: it stands where the outcome puts the lead.
+            members.sort_by_key(|&c| c != entry.lead);
+        }
+        let outcome = match entry.stance {
+            EntryStance::Peaceful => Some(Outcome::Peaceful),
+            EntryStance::Wildlife => Some(Outcome::Wildlife),
+            EntryStance::Hostile => {
+                let (mine, theirs) = match forced {
+                    Some(Forced::Drop) => (true, false),
+                    Some(Forced::Met) => (true, true),
+                    Some(Forced::Ambushed) => (false, true),
+                    Some(Forced::Pass) => (false, false),
+                    None => self.lookouts(entry),
+                };
+                match (mine, theirs) {
+                    (true, false) => Some(Outcome::Drop),
+                    (true, true) => Some(Outcome::Met),
+                    (false, true) => None,
+                    (false, false) => return,
+                }
+            }
+        };
+        let landscape = self.here(cell).map(|h| h.landscape);
+        let pending = Pending {
+            entry: entry.id.clone(),
+            cell,
+            side,
+            outcome: outcome.unwrap_or(Outcome::Met),
+            members,
+            step,
+            known,
+        };
+        let Some(outcome) = outcome else {
+            // Ambushed: no question; the fight opens on the party's terms.
+            self.say(format!(
+                "You are set upon by {} {}!",
+                entry.name,
+                from_cover(landscape)
+            ));
+            self.encounter.opening = Some(Opening {
+                pending,
+                how: How::Ambushed,
+            });
+            return;
+        };
+        self.say(told(outcome, &entry.name, landscape));
+        if known {
+            self.say(KNOWN_LINE);
+        }
+        self.state.encounter = Some(pending);
+    }
+
+    /// The two lookouts (gameplay stream, two draws each): whether the player sees the party
+    /// first, and whether the party sees them. Marks Spot's and Survival's lookout, and
+    /// Stealth's sneak when the party missed the player.
+    fn lookouts(&mut self, entry: &EncounterEntry) -> (bool, bool) {
+        let content = self.content.clone();
+        let Some(rules) = content.meetings() else {
+            return (false, false);
+        };
+        let cell = self.player_pos();
+        let Some(here) = self.here(cell) else {
+            return (false, false);
+        };
+        let c = &rules.checks;
+        let lead = content.creature(entry.lead);
+        let player = self.state.player();
+        let talents = player.talent_mods(&content);
+        let dark = match here.phase {
+            DayPhase::Day => 0,
+            DayPhase::Twilight => c.twilight,
+            DayPhase::Night => c.night,
+        };
+        let rain = match here.weather {
+            Weather::Rain => c.rain,
+            Weather::HeavyRain => c.heavy_rain,
+            _ => 0,
+        };
+        let cover = rules.cover_of(here.landscape);
+        let seeing = |profile: Option<&crate::content::VisionProfile>| {
+            profile.is_some_and(|v| v.darkvision > 0)
+        };
+        let mine_dark = match seeing(content.vision(&self.state.vision)) {
+            true => dark / 2,
+            false => dark,
+        };
+        let theirs_dark = match seeing(content.vision_profiles().get(lead.vision)) {
+            true => 0,
+            false => dark,
+        };
+        let lit = here.phase != DayPhase::Day && self.state.carried_light(&content).is_some();
+        let mine = player.effective_stats(&content).modifier(Stat::Willpower)
+            + talents.check(Stat::Willpower)
+            + player.skill_effect(&content, Effect::Lookout)
+            + talents.notice.unwrap_or(0);
+        let mine_against =
+            c.difficulty + lead.skills.effect(&content, Effect::Stalk) + cover + mine_dark + rain;
+        let theirs =
+            lead.stats.modifier(Stat::Willpower) + lead.skills.effect(&content, Effect::Lookout);
+        let theirs_against = c.difficulty
+            + player.skill_effect(&content, Effect::Stalk)
+            + cover
+            + theirs_dark
+            + rain
+            - if lit { c.light } else { 0 };
+        let saw = check::check(&mut self.state.rng, mine, mine_against);
+        let seen = check::check(&mut self.state.rng, theirs, theirs_against);
+        if self.trains(Use::Lookout) {
+            self.train(Use::Lookout);
+        }
+        if !seen && self.trains(Use::Sneak) {
+            self.train(Use::Sneak);
+        }
+        (saw, seen)
+    }
+
+    /// Refuses `action` while an encounter is pending, unless it answers it or takes no game
+    /// time and makes nothing happen (a stance, the level's picks, the dev switches).
+    pub(super) fn refuse_pending(&mut self, action: &crate::action::Action) -> Option<Spent> {
+        use crate::action::Action as A;
+        self.state.encounter.as_ref()?;
+        let free = matches!(
+            action,
+            A::Encounter(_)
+                | A::Talent { .. }
+                | A::Advance(_)
+                | A::LevelUpAuto
+                | A::SetStance(_)
+                | A::SetVision(_)
+                | A::SetWeather(_)
+                | A::Identify(_)
+                | A::Afflict(_)
+                | A::Drain(_)
+                | A::Resource(_)
+                | A::Infect(_)
+                | A::Reveal(_)
+                | A::QuestRoll { .. }
+                | A::GrantXp(_)
+                | A::SetRank { .. }
+                | A::Effect { .. }
+        );
+        if free {
+            return None;
+        }
+        self.say(PENDING_REFUSED);
+        Some(Spent::Nothing)
+    }
+
+    /// `encounter:CHOICE` ([`crate::action::Action::Encounter`]): the answer to the pending
+    /// encounter. Refused (no time) with nothing pending or a choice it does not offer.
+    pub(super) fn answer_encounter(&mut self, choice: Choice) -> Spent {
+        let Some(pending) = self.state.encounter.clone() else {
+            self.say("There is nothing to decide.");
+            return Spent::Nothing;
+        };
+        if !pending.outcome.choices().contains(&choice) {
+            self.say("That is not a choice now.");
+            return Spent::Nothing;
+        }
+        let content = self.content.clone();
+        let Some((_, entry)) = content.encounter_entry(&self.state.campaign, &pending.entry) else {
+            // Content changed under a save: the encounter is gone.
+            self.state.encounter = None;
+            return Spent::NoTime;
+        };
+        self.state.encounter = None;
+        let player = self.state.player;
+        let open = |how| {
+            Some(Opening {
+                pending: pending.clone(),
+                how,
+            })
+        };
+        match choice {
+            Choice::Pass => Spent::NoTime,
+            Choice::Evade => self.evade(entry, pending),
+            Choice::Ambush => {
+                self.say("You wait in cover.");
+                self.encounter.opening = open(How::Ambush);
+                let wait = content.meetings().map_or(0, |r| u64::from(r.ambush_wait));
+                let turns = i64::try_from(wait / BASE_TURN.as_seconds().max(1))
+                    .unwrap_or(1)
+                    .max(1);
+                Spent::Turn(self.price_of(player, ActionKind::Wait) * turns)
+            }
+            Choice::Fight | Choice::Hail | Choice::Hunt => {
+                let (how, line) = match choice {
+                    Choice::Fight => (How::Fight, "You stand your ground.".to_string()),
+                    Choice::Hail => (How::Hail, format!("You go to meet {}.", entry.name)),
+                    _ => (How::Hunt, format!("You go after {}.", entry.name)),
+                };
+                self.say(line);
+                self.encounter.opening = open(how);
+                Spent::Turn(self.price_of(player, ActionKind::Stairs))
+            }
+        }
+    }
+
+    /// Slipping away (gameplay stream, two draws): the detour's time whatever comes of it;
+    /// made, nothing more; failed, the fight opens with the party close.
+    fn evade(&mut self, entry: &EncounterEntry, pending: Pending) -> Spent {
+        let content = self.content.clone();
+        let Some(rules) = content.meetings() else {
+            return Spent::NoTime;
+        };
+        let unaware = pending.outcome == Outcome::Drop;
+        let player = self.state.player();
+        let talents = player.talent_mods(&content);
+        let stalk = match unaware {
+            true => player.skill_effect(&content, Effect::Stalk),
+            false => 0,
+        };
+        let modifier = player.effective_stats(&content).modifier(Stat::Dexterity)
+            + talents.check(Stat::Dexterity)
+            + player.skill_effect(&content, Effect::Evade)
+            + stalk;
+        let e = rules.evade;
+        let speed = content.creature(entry.lead).speed;
+        let pursuit =
+            i32::try_from(speed.saturating_sub(crate::content::NORMAL_SPEED) / e.pursuit_per)
+                .unwrap_or(i32::MAX);
+        let aware = if unaware { 0 } else { e.aware };
+        let made = check::check(
+            &mut self.state.rng,
+            modifier,
+            e.difficulty + pursuit + aware,
+        );
+        let price = (pending.step * i64::from(e.detour_percent) / 100).max(1);
+        let landscape = self.here(pending.cell).map(|h| h.landscape);
+        if made {
+            match unaware {
+                true => self.say("You slip away unseen."),
+                false => self.say(format!("You lose them in {}.", lost_in(landscape))),
+            }
+            if self.trains(Use::Travel) {
+                self.train(Use::Travel);
+            }
+            if unaware && self.trains(Use::Sneak) {
+                self.train(Use::Sneak);
+            }
+        } else {
+            match unaware {
+                true => self.say("They are onto you."),
+                false => self.say("They run you down."),
+            }
+            self.encounter.opening = Some(Opening {
+                pending,
+                how: How::Close,
+            });
+        }
+        Spent::Turn(price)
+    }
+
+    /// The dev `meet:ENTRY[:OUTCOME]`: entry `id` of the run's campaign is met now on the
+    /// player's overworld cell, by the lookouts or with `forced`'s outcome. Takes no time;
+    /// refused (no time) off the overworld, on a cell without a local area, for an unknown entry,
+    /// or while one is pending.
+    pub(super) fn meet_dev(&mut self, id: &str, forced: Option<Forced>) -> Spent {
+        let content = self.content.clone();
+        let Some((_, entry)) = content.encounter_entry(&self.state.campaign, id) else {
+            self.say(format!("There is no encounter `{id}` (dev)."));
+            return Spent::Nothing;
+        };
+        let cell = self.player_pos();
+        let local = content.local_area(&self.state.campaign, &local_area_id(cell));
+        if self.state.current().kind != LevelKind::Overworld || local.is_none() {
+            self.say("Nobody is met here: no local area (dev).");
+            return Spent::Nothing;
+        }
+        if content.meetings().is_none() {
+            self.say("Nobody meets anybody: no encounter rules (dev).");
+            return Spent::Nothing;
+        }
+        let side = self.arrival_side();
+        let step = price_of_travel(&content, local.map(|l| l.terrain));
+        self.meet(entry, cell, side, step, forced);
+        Spent::NoTime
+    }
+}
+
+/// Text said when an action is refused while an encounter is pending.
+pub const PENDING_REFUSED: &str = "You must decide what to do about them.";
+
+/// The energy price of a plain step onto overworld terrain `terrain` (the dev `meet`'s stand-in
+/// for the step a roll follows).
+fn price_of_travel(content: &Content, terrain: Option<crate::content::TerrainId>) -> i64 {
+    let minutes = terrain
+        .and_then(|t| content.terrain(t).travel_minutes)
+        .unwrap_or(1);
+    crate::content::price(
+        1000,
+        crate::time::Duration::seconds(u64::from(minutes) * 60),
+    )
+}

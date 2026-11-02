@@ -88,6 +88,12 @@ pub enum Action {
     /// Wait turn after turn (creatures act) until the goal, stopping early when a creature comes
     /// into view or a message is logged.
     Rest(Rest),
+    /// Answer the overworld encounter that is pending (spec §7 "Overworld encounters";
+    /// `encounter:ambush`, `evade`, `fight`, `hail`, `hunt`, `pass`): lie in wait (ten minutes),
+    /// slip away (a check; half the step's time again), or fight, hail, or hunt (the area opens
+    /// as `>` opens it), or pass by (no time). While one pends, every other action that takes
+    /// time is refused. Refused (no time) with none pending or a choice it does not offer.
+    Encounter(crate::world::EncounterChoice),
     /// Chat with the creature in a direction (spec §8 "Dialogue"): it answers with a line, and
     /// one that has topics opens the dialogue screen. Takes the time of `chat`; refused (no
     /// time) when the player sees no one there.
@@ -242,6 +248,15 @@ pub enum Action {
     /// levels"), whatever its cap and chance: a type by its danger, out of the player's sight.
     /// Refused on a level of danger 0. Takes no game time; recorded in replays.
     Spawn,
+    /// Dev command: overworld encounter entry `entry` (an id of the run's campaign's tables) is
+    /// met now on the player's overworld cell (spec §7 "Overworld encounters"), whatever its
+    /// tables say there: the lookouts as usual, or `outcome` forced (`meet:kobolds:ambushed`).
+    /// Refused (no time) off the overworld or on a cell without a local area. Takes no game time;
+    /// recorded in replays.
+    Meet {
+        entry: String,
+        outcome: Option<crate::world::EncounterForced>,
+    },
     /// Dev command: show spell effect `effect` (an id in `data/effects.toml`) at level cell `at`,
     /// or from `at` toward `to`: a burst around `at` (around `to`, flying there from `at`), or a
     /// bolt from `at` to `to` (cut short by the first opaque cell). It only shows: it hurts no
@@ -762,6 +777,7 @@ impl fmt::Display for Action {
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
+            Action::Encounter(choice) => write!(f, "encounter:{}", choice.id()),
             Action::Chat(d) => write!(f, "chat:{d}"),
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::Steal(d) => write!(f, "steal:{d}"),
@@ -800,6 +816,10 @@ impl fmt::Display for Action {
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
             Action::Spawn => f.write_str("spawn"),
+            Action::Meet { entry, outcome } => match outcome {
+                Some(o) => write!(f, "meet:{entry}:{}", o.id()),
+                None => write!(f, "meet:{entry}"),
+            },
             Action::Effect { effect, at, to } => {
                 write!(f, "effect:{effect}@{},{}", at.x, at.y)?;
                 match to {
@@ -981,6 +1001,33 @@ impl FromStr for Action {
                 _ => Err("`skip` needs a positive duration, e.g. `skip:1h`".into()),
             },
             "spawn" => bare(Action::Spawn),
+            "meet" => {
+                let usage = || {
+                    "`meet` needs an encounter entry, e.g. `meet:kobolds` or \
+                     `meet:kobolds:ambushed` (drop, met, ambushed, pass)"
+                        .to_string()
+                };
+                let (entry, outcome) = match arg.ok_or_else(usage)?.split_once(':') {
+                    Some((entry, o)) => (entry, Some(o)),
+                    None => (arg.unwrap_or_default(), None),
+                };
+                let outcome = outcome
+                    .map(|o| crate::world::EncounterForced::from_id(o).ok_or_else(usage))
+                    .transpose()?;
+                if entry.is_empty() {
+                    return Err(usage());
+                }
+                Ok(Action::Meet {
+                    entry: entry.to_string(),
+                    outcome,
+                })
+            }
+            "encounter" => arg
+                .and_then(crate::world::EncounterChoice::from_id)
+                .map(Action::Encounter)
+                .ok_or_else(|| {
+                    "`encounter` needs a choice: ambush, evade, fight, hail, hunt, or pass".into()
+                }),
             "weather" => match arg.and_then(Weather::from_id) {
                 Some(w) => Ok(Action::SetWeather(w)),
                 None => Err("`weather` needs `clear`, `overcast`, `rain`, or `heavy`".into()),

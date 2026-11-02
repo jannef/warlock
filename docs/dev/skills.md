@@ -130,5 +130,10 @@ without its "This is ...!" line; Appraise says "You realise your X is Y." and re
 `Use::Appraise`. Tests: `world/appraise_tests.rs` (the split, prices, the line, untrained,
 cutting time, rest and skip, replays), `world/shop_tests.rs::deals_train_negotiation`.
 
+Overworld encounters (#804; `docs/dev/encounters.md`): Spot's and Survival's `lookout`,
+Stealth's `stalk`, and Survival's `evade` are read in `world/encounter.rs` only (the player's
+through `Actor::skill_effect`, a party's lead type's through `Skills::effect`); `Use::Lookout`
+(Spot and Survival) is reported on every lookout there.
+
 Pending hooks:
 athletics (climbing out of pits, #128) and escape artist (pits, #128).

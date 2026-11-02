@@ -230,7 +230,13 @@ pub fn parse_layers(text: &str) -> Result<Vec<Layer>, String> {
 /// Renders one layer as rows of text with trailing spaces trimmed.
 pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
-        Layer::Truth => [spawn_header(world), truth_rows(world), chest_rows(world)].concat(),
+        Layer::Truth => [
+            spawn_header(world),
+            encounter_header(world),
+            truth_rows(world),
+            chest_rows(world),
+        ]
+        .concat(),
         Layer::Actors => [spawn_header(world), actor_rows(world), rising_rows(world)].concat(),
         Layer::Progress => progress_rows(world),
         Layer::Rooms => room_rows(world),
@@ -373,6 +379,22 @@ fn spawn_header(world: &World) -> Vec<String> {
     vec![format!(
         "danger {danger} population {hostiles}/{cap} spawn next {next}"
     )]
+}
+
+/// Dev: the header of the `truth` layer on the overworld where encounters are rolled (spec §7
+/// "Overworld encounters"): `encounter rate here 300 bp/h, tables: roads, vale`, the rate with
+/// the phase of the day and the matching tables' percents; none elsewhere.
+fn encounter_header(world: &World) -> Vec<String> {
+    let Some(rate) = world.encounter_rate_here() else {
+        return Vec::new();
+    };
+    let tables = world.encounter_tables_here();
+    let tables = if tables.is_empty() {
+        "none".to_string()
+    } else {
+        tables.join(", ")
+    };
+    vec![format!("encounter rate here {rate} bp/h, tables: {tables}")]
 }
 
 /// Dev: the risings due on the current level (spec §7 "Special rooms": a cursed room), one a
@@ -1390,6 +1412,11 @@ fn actor_rows(world: &World) -> Vec<String> {
                 Some(by) => format!("{court}; summoned by {by}"),
                 None => court,
             };
+            // The overworld encounter that made it (spec §7 "Overworld encounters").
+            let court = match world.party_of(a.id) {
+                Some(entry) => format!("{court}; of encounter {entry}"),
+                None => court,
+            };
             let talk = if a.talk.is_new() {
                 String::new()
             } else {
@@ -1564,8 +1591,13 @@ fn summary(world: &World) -> String {
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     let dazzled = if view.dazzled() { " dazzled" } else { "" };
+    // An overworld encounter to answer (spec §7 "Overworld encounters").
+    let encounter = view.encounter().map_or(String::new(), |e| {
+        let choices: Vec<&str> = e.choices.iter().map(|(_, c)| c.id()).collect();
+        format!(" encounter pending: {} ({})", e.name, choices.join(", "))
+    });
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{weather} \
+        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{encounter}{weather} \
          temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
@@ -1858,6 +1890,20 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "hunger": view.own_hunger(),
         "stance": view.own_stance().id(),
         "dazzled": view.dazzled(),
+        // The overworld encounter to answer (spec §7 "Overworld encounters"), or null.
+        "encounter": view.encounter().map(|e| {
+            let (entry, outcome) = view.encounter_pending().expect("pending");
+            json!({
+                "entry": entry,
+                "name": e.name,
+                "outcome": outcome.id(),
+                "title": e.title,
+                "text": e.text,
+                "choices": (e.choices.iter())
+                    .map(|(label, c)| json!({ "id": c.id(), "label": label }))
+                    .collect::<Vec<_>>(),
+            })
+        }),
         "death": death,
         "messages": messages,
         "layers": layer_map,
@@ -1876,6 +1922,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         out["state"] = serde_json::to_value(world.state()).expect("state serializes");
         // The current level's danger (spec §7 "Danger levels"): ground truth, never stored.
         out["danger"] = json!(world.danger(&world.state().current_level));
+        // The encounter tables matching the player's overworld cell (ground truth).
+        out["encounter_tables"] = json!(world.encounter_tables_here());
     }
     out
 }

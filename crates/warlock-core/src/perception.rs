@@ -1039,6 +1039,8 @@ pub struct PerceptionView<'a> {
     /// What the player knows of scroll types: how they name what they see.
     pub(crate) lore: crate::scroll_label::Lore<'a>,
     pub(crate) snapshot: &'a Perception,
+    /// The overworld encounter the player must answer, which they know.
+    pub(crate) encounter: Option<&'a crate::world::Pending>,
 }
 
 impl<'a> PerceptionView<'a> {
@@ -1073,6 +1075,29 @@ impl<'a> PerceptionView<'a> {
 
     /// The named region the player is in: on a level with regions (the overworld), the one
     /// around the viewer; in a local area, the one around its overworld cell.
+    /// The overworld encounter the player must answer now (spec §7 "Overworld encounters"),
+    /// as the one dialog asks it: its title, text, and rows; `None` while none is pending. The
+    /// app opens the dialog from it after any action and on load, and it cannot be closed
+    /// without an answer (the owner, #796 Q9).
+    pub fn encounter(&self) -> Option<crate::world::EncounterView> {
+        let pending = self.encounter?;
+        let (_, entry) = self
+            .content
+            .encounter_entry(self.campaign, &pending.entry)?;
+        let id = crate::content::local_area_id(pending.cell);
+        let area = self.content.local_area(self.campaign, &id);
+        Some(crate::world::encounter_view(
+            pending,
+            &entry.name,
+            area.map(|a| a.landscape),
+        ))
+    }
+
+    /// The pending encounter's entry id and outcome (dumps); `None` while none is pending.
+    pub fn encounter_pending(&self) -> Option<(&'a str, crate::world::EncounterOutcome)> {
+        self.encounter.map(|p| (p.entry.as_str(), p.outcome))
+    }
+
     pub fn region(&self) -> Option<&'a str> {
         let (level, at) = match &self.level.exit {
             Some(exit) => (exit.to.as_str(), exit.pos),
