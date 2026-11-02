@@ -567,6 +567,8 @@ pub struct TalentMods {
     /// The active Rage: the resource it grants (Rage, which brings the Raging status), if it
     /// has it.
     pub rage: Option<ResourceId>,
+    /// The active War cry, if it has it.
+    pub war_cry: Option<WarCry>,
     /// What events build resources beyond the resources' own `builds`: `(resource, on,
     /// amount)` (Blood frenzy's rage a kill).
     pub resource_builds: Vec<(ResourceId, Build, u16)>,
@@ -721,6 +723,15 @@ pub struct HoundsBay {
     pub status: StatusId,
     pub severity: u16,
     pub cooldown: StatusId,
+}
+
+/// The active War cry (spec §8 "Class abilities"): the status a roar leaves on the hostiles who
+/// hear and see its holder and fail their check, its degrees, and the check's base difficulty.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct WarCry {
+    pub status: StatusId,
+    pub severity: u16,
+    pub difficulty: i32,
 }
 
 /// The active Consecrate (spec §8 "Class abilities"): its mana and how long the prayer takes.
@@ -988,6 +999,7 @@ impl TalentMods {
         use crate::content::ClassActive as A;
         match active {
             A::Rage => self.rage.is_some(),
+            A::WarCry => self.war_cry.is_some(),
             A::VeteransWind => self.veterans_wind.is_some(),
             A::Whirlwind => self.whirlwind,
             A::LayOnHands => self.lay_on_hands.is_some(),
@@ -1708,6 +1720,19 @@ impl TalentMods {
             }
             TalentEffect::Rage { resource } => {
                 self.rage = content.resource_id(&resource).or(self.rage);
+            }
+            TalentEffect::WarCry {
+                status,
+                severity,
+                difficulty,
+            } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.war_cry = Some(WarCry {
+                        status,
+                        severity,
+                        difficulty,
+                    });
+                }
             }
             TalentEffect::ResourceBuild {
                 resource,

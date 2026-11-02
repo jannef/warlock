@@ -414,7 +414,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its own with its action, listed in the skill's place: `Ability::use_of`); **Second wind**
     (`Ability::SecondWind`, under Talents, §8 "Talents"), which the Second wind talent gives,
     asking for nothing, greyed out while Winded; the **class actives** (`Ability::Class`,
-    under Class, §8 "Class abilities": Rage, Veteran's wind, Whirlwind, Lay on hands, Smite,
+    under Class, §8 "Class abilities": Rage, War cry (greyed "you have not the rage for it"
+    until the rage is up), Veteran's wind, Whirlwind, Lay on hands, Smite,
     Holy radiance, Quivering palm, Inspire, Consecrate, Knock; Volley at a cell, aimed as a shot is; Merchant's eye on a thing carried, from the identify list), each from the level its class's table gives it, Smite,
     Quivering palm, and Knock in a direction, greyed out during their cooldowns (Rage while raging and
     exhausted); throwing one's voice (Class; #235,

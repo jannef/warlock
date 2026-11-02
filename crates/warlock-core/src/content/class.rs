@@ -474,6 +474,9 @@ impl ClassDef {
 pub enum ClassActive {
     /// Fly into a rage: the rage's status (Raging), then what it `follows` into.
     Rage,
+    /// A roar, for rage, that frightens the hostiles who hear and see you unless they keep
+    /// their nerve (the berserker's War cry, `world/war_cry.rs`).
+    WarCry,
     /// Hit points back at once, then a cooldown (the warrior's Veteran's wind).
     VeteransWind,
     /// A blow at every hostile beside you for the price of one attack.
@@ -513,6 +516,7 @@ impl ClassActive {
     /// Every active, in menu order.
     pub const ALL: &[ClassActive] = &[
         ClassActive::Rage,
+        ClassActive::WarCry,
         ClassActive::VeteransWind,
         ClassActive::Whirlwind,
         ClassActive::LayOnHands,
@@ -533,6 +537,7 @@ impl ClassActive {
     pub const fn id(self) -> &'static str {
         match self {
             ClassActive::Rage => "rage",
+            ClassActive::WarCry => "war_cry",
             ClassActive::VeteransWind => "veterans_wind",
             ClassActive::Whirlwind => "whirlwind",
             ClassActive::LayOnHands => "lay_on_hands",
@@ -599,7 +604,10 @@ impl ClassActive {
     /// What it costs, as an action of this kind (`data/actions.toml`).
     pub const fn cost(self) -> ActionKind {
         match self {
-            ClassActive::Rage | ClassActive::VeteransWind | ClassActive::Lurk => ActionKind::Wait,
+            ClassActive::Rage
+            | ClassActive::WarCry
+            | ClassActive::VeteransWind
+            | ClassActive::Lurk => ActionKind::Wait,
             ClassActive::Whirlwind
             | ClassActive::Smite
             | ClassActive::QuiveringPalm

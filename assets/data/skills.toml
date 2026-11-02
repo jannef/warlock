@@ -31,7 +31,8 @@
 #                 at a closed door), "study" (a spell studied from a scroll,
 #                 whatever comes of it), "pick" (a try at picking a
 #                 lock), "deal" (a deal made in a shop: goods paid for, or your own sold),
-#                 "appraise" (something you carry told for what it is: "identify" below). Marks gather until a level-up roll on the skill spends them ([ladder]
+#                 "appraise" (something you carry told for what it is: "identify" below),
+#                 "intimidate" (a war cry roared, whatever comes of it). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
@@ -61,7 +62,9 @@
 #                 treating your bleeding, poison, or a disease, at most 20; trained, a skill with
 #                 it lets you treat them at all: the Heal ability), "pick" (points added to
 #                 picking a lock, at most 20; trained, a skill with it
-#                 lets you pick locks at all: the Pick lock ability), "study" (points off the
+#                 lets you pick locks at all: the Pick lock ability), "intimidate" (points added to
+#                 the difficulty of the Willpower check your war cry asks of those who hear and
+#                 see you, at most 20), "study"(points off the
 #                 difficulty of studying a spell, spec §8 "Spells", at most 20). The percent effects stay
 #                 within 0 to 100.
 #
@@ -239,6 +242,12 @@ id = "intimidate"
 name = "Intimidate"
 description = "Making others back down with a look or a threat."
 kind = "action"
+# War cry's (#844; spec §8 "Class abilities", the berserker's at 25): marked by "intimidate" (a
+# war cry roared, whatever comes of it). Effect "intimidate": points added to the difficulty of
+# the Willpower check the cry asks of every hostile that hears and sees you, +8 at 100, +12 at
+# 200 (at most 20). Nothing else reads it.
+mark = [{ on = "intimidate", chance = 100 }]
+benefit = [{ effect = "intimidate", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "knowledge"
