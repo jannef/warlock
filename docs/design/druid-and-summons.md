@@ -601,3 +601,31 @@ PR, not kept).
 | Q10 | **Beast-bond's needs**: Handle animal 40 (the druid's and ranger's skill), or Willpower 13 as Beast-friend's? | Handle animal 40: the skill has few readers and this is its home |
 | Q11 | **The pack's noise**: a wolf's footsteps 60 wake the floor. Quieter beasts (`footsteps` 30), or the loud pack as the price of a summoner? | loud: a stealthy druid with wolves is the data saying no |
 | Q12 | **The ally mark** in the glyph layer (as the unaware mark) or only look mode's "(ally)"? | the mark: two wolves and a warg in a dark corridor must read at a glance; the unaware mark's guard covers it |
+
+## 14. The owner's decisions (2026-11-02, PR #828)
+
+These override the sections above wherever they differ.
+
+| # | Decision | What changes |
+|---|---|---|
+| Q1 | **Full experience**: summons are spells cast by the summoner, so their kills are the summoner's | `ally_percent = 100` as written |
+| Q2 | **Summons should be helpful without much ordering.** Only basic orders in the abilities menu: **Stay**, **Attack a target**, and **default behaviour** | three orders: *Hold here* (`order:stay`), *Set on* (`order:hunt:X,Y`), *Come to heel* (`order:follow`, the default behaviour). **Send away is dropped** (a summon departs when its time runs out or it is slain). The default AI (§4.3) must be good on its own: it follows, fights what threatens the master, and returns to heel |
+| Q3 | **Friendly fire: yes**, every area spell hits everything in it | as written |
+| Q4 | **Allies may come onto the overworld** and step out at the next location **if the spell's duration is still running** | the retinue stays, but a summon's minutes **keep running** while it is in the retinue (it is not frozen): one that runs out on the road departs and does not step out at the next location |
+| Q5 | **Summons follow the player when within 3 cells**; otherwise they stay, frozen, on the level. When the player returns, the summon's duration is checked; an expired summon is removed from the level | `[follow] comes_along = 3`. A summon left behind does not act, but its end is by the clock: its departure time is stored (absolute game time), and on the player's return (or when the level is next run) any summon past it is removed silently. A companion left behind (#825) is not timed |
+| Q6 | (the owner asked what this meant; the default stands until the owner says otherwise) | Lord of the wild (level 60) makes the druid's calls **last until slain**, instead of adding a fourth, bigger call |
+| Q7 | **Scrolls of the calls stay, but are very hard to learn** | a new per-spell **learning difficulty modifier** (`study_difficulty`, added to the study check's difficulty; `docs/dev/spells.md` "Learning"), set high on the three calls. Any spell may use it |
+| Q8 | **Start with a cap of 1 per spell; the druid's abilities raise it as the druid levels** | each call's `most = 1`; the druid's table gains its raises through `ally_mod { most }` (Pack leader at 32 raises every call's `most`, Lord of the wild at 60 again; the D1 slice sets the numbers). The global cap stays as data |
+| Q9 | **The element is drawn**, and the draw can be affected (e.g. an item that guarantees fire) | the draw stays; A2 adds one hook for weighting a summon pool's draw (`TalentMods`/item affix reading `summon_bias`), with no item yet |
+| Q10 | **Handle animal 40 is too hard to reach** (the skill has no training marks today) | Beast-bond needs **Handle animal 20**; and A1 gives Handle animal its first mark: an order given to an ally, and an ally's kill, each mark it (`Use::Handle`, a chance in `skills.toml`) |
+| Q11 | Loud pack: yes | as written |
+| Q12 | **A tasteful way to identify friendlies** | the A3 slice designs the mark (subtle, under the effect switches' taste rule; e.g. a faint underline or tint on the glyph), and look mode's "(your wolf)" |
+
+### Revised slices
+
+| Slice | What | Depends on |
+|---|---|---|
+| **A1 The ally core** | §12's A1 with Q2 (three orders, no Send away), Q4/Q5 (comes along within 3; summons' clock-based expiry, ticking in the retinue), Q10 (Handle animal mark, Beast-bond at 20) | — |
+| **A2 Summons** | §12's A2 with Q7 (`study_difficulty`), Q9 (the draw's bias hook) | A1 |
+| **A3 UI** | §12's A3 with Q12 (the friendly mark) and the three orders | A1 |
+| **D1 The druid** | §12's D1 with Q8 (caps 1, raised by the druid's abilities) and Q7's difficulties on the calls | A1, A2, A3 |
