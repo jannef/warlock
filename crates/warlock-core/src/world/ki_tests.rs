@@ -168,7 +168,7 @@ fn quivering_palm_costs_five_ki_and_no_cooldown() {
     assert_eq!(own(&w, palm), Some(Some(Unavailable::Short(ki))));
     let turn = w.state.turn;
     run(&mut w, "use:quivering_palm:E");
-    assert_eq!(last(&w), "You have too little ki.");
+    assert_eq!(last(&w), "Your ki is spent.");
     assert_eq!((w.state.turn, held(&w, "ki")), (turn, Some(4)));
     // A weapon in hand: refused before the ki is spent.
     set(&mut w, "ki", 5);
