@@ -60,6 +60,8 @@ impl DeathScreen {
         let by = match view.character() {
             Some(c) => {
                 lines.push(format!("Here lies {},", c.titled_name(view.content())));
+                // "a bard", or "a bard and hunter" once called (spec §8 "Prestige classes").
+                lines.push(format!("{},", c.class_phrase(view.content())));
                 let mut chars = by.chars();
                 chars
                     .next()

@@ -54,7 +54,8 @@ impl Summary {
             Some(c) => (
                 c.name.clone(),
                 (c.spec.race(content)).map_or(c.spec.race.clone(), |r| r.name.clone()),
-                (c.spec.class(content)).map_or(c.spec.class.clone(), |k| k.name.clone()),
+                // `Bard 30, Hunter 4` once called (spec §8 "Prestige classes").
+                c.class_text(content, view.own_experience().level),
             ),
             None => (NAMELESS.to_string(), String::new(), String::new()),
         };
