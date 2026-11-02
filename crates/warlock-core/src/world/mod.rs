@@ -1761,6 +1761,8 @@ mod steal_tests;
 #[cfg(test)]
 mod stride_tests;
 #[cfg(test)]
+mod stunning_strike_tests;
+#[cfg(test)]
 mod style_tests;
 #[cfg(test)]
 mod summon_spell_tests;

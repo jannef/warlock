@@ -499,6 +499,16 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // An ascetic past level 12 (#848): Stunning strike among the class abilities, asking for
+    // a direction, paid in ki.
+    Case {
+        name: "abilities-menu-stunning-strike",
+        character: Some("human,male,ascetic"),
+        kit: true,
+        actions: "xp:80000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
     Case {
         name: "abilities-menu-here",

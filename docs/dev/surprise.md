@@ -43,8 +43,12 @@ Keep it current with the code, as CLAUDE.md says.
     whether the attacker still stands, and `resolve` and `spell_attack` stop when it does not. When the player is the one
     caught, the attacker's `noticed` becomes the turn (the second place it is set; never on
     load). The messages (below).
+  - `World::off_guard(id)`: whether the actor suffers a status with `flat_footed = true` in
+    data (`StatusDef::flat_footed`, `Effects::flat_footed`; Surprised and Stunned, the ascetic's
+    Stunning strike, #848). Every flat-footed hook reads this field, never the id `surprised`:
+    the Defence strip, the free blows, and `sneaks`.
   - `World::flat_footed(target, unaware, struck)`: `Target::without([Dexterity, Dodge])` when
-    unaware (with the rules) or Surprised.
+    unaware (with the rules) or `off_guard`.
   - `World::surprised(id)`, and `World::status_cost(id, status)`: a status's `cost` percent as
     its sufferer pays it; Surprised's extra eased by `TalentMods::surprise_ease` (Cool head) and
     the Initiative skill's `surprise_ease`, together capped at all of it, every other status's
@@ -59,7 +63,7 @@ Keep it current with the code, as CLAUDE.md says.
   and its skills' `spot`.
 - `world/ambush.rs`, the sneak attack (#682): `World::sneak_dice(id)` (the Sneak attack skill's
   `sneak_dice` d6s `and` the talents' `ambush`), `World::sneaks(attacker, target, unaware,
-  missile)` (dice, unaware or Surprised, vitals for the attacker, a missile within
+  missile)` (dice, unaware or `off_guard`: Surprised, Stunned; vitals for the attacker, a missile within
   `missile_reach` + `sneak_reach`, Chebyshev; no draw), `sneak_threat` (Master thief),
   `ambushed` (the dice on a hit, gameplay stream; `Build::SneakAttack`; the player's
   `Use::SneakAttack`, training stream), `has_vitals` and `vitals` (the struck side's
@@ -98,14 +102,14 @@ Keep it current with the code, as CLAUDE.md says.
 
 | Where | What |
 |---|---|
-| `fight.rs::resolve` | `unaware` asked of every attack with a profile (no draw); `sneaks` (`ambush.rs`) decides the sneak dice on unaware **or Surprised**, a missile within reach, a target with vitals; `startle` before the mimic is found out and before the strike's draws; `vitals` and `flat_footed` after `target_against` |
+| `fight.rs::resolve` | `unaware` asked of every attack with a profile (no draw); `sneaks` (`ambush.rs`) decides the sneak dice on unaware **or flat-footed** (`off_guard`: Surprised, Stunned), a missile within reach, a target with vitals; `startle` before the mimic is found out and before the strike's draws; `vitals` and `flat_footed` after `target_against` |
 | `fight.rs::target_of`, `Actor::target` | `no_criticals` from `Content::has_vitals` |
 | `cast.rs::spell_attack` | a spell that rolls to hit (an own cast, a scroll's, a wand's, a reflected one): `unaware`, `sneaks` (a missile unless a touch), `startle`, `vitals`, `flat_footed`, `sneak_threat` before its roll; `ambushed` after, its dice on top of the spell's cap |
 | `fight.rs::resolve`, `cast.rs::spell_attack` | `sneak_trigger` (`ambush.rs`) after `resolve_triggers` (`spell_practised`): a sneak attack that hit (its dice landed) fires the `sneak_attack` weapon abilities of the attack's skills (#685; docs/dev/weapon-abilities.md) |
 | `weapon_active.rs::active_blow`, `openings.rs::finisher` | `no_vital_spot` after a sure critical's blow |
 | `trap.rs::step_onto_trap` | a hidden trap (any trap for a creature, an unknown one for the player) that sprang (`World::sprung` moved) `startle`s its victim, after the trap's own draws; nobody beside |
-| `free_blow.rs::free_blows_of` | Surprised: no riposte, opportunist, gatekeeper (its own attack's cleave, flurry, and second blow stay) |
-| `weapon_ability.rs::approached` | a Surprised keeper fires no Point-blank shot |
+| `free_blow.rs::free_blows_of` | flat-footed (`off_guard`: Surprised, Stunned): no riposte, opportunist, gatekeeper (its own attack's cleave, flurry, and second blow stay) |
+| `weapon_ability.rs::approached` | a flat-footed keeper fires no Point-blank shot |
 | `schedule.rs::slowed` | `Effects::slow_with(price, status_cost)`: the dear action |
 | `weapon_ability.rs::spend_actions` | a `per_action` status that ends pushes `Event::Status { began: false }` (its `end` line: "You recover your wits.", Staggered's and Pinned's too) |
 | `fight.rs::resolve` (#684) | `lurked` (a lurk's blow on a creature not hunting the player is unaware: `startle`, flat-footed, dice) and `low_blow_taken` (a low blow passes `sneaks` as unaware: dice only); `vanishing_act` beside `Build::SneakKill` |

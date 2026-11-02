@@ -332,6 +332,12 @@ impl Effects {
         !self.0.is_empty() && self.0.iter().any(|e| content.status(e.status).hides)
     }
 
+    /// Whether one of its statuses leaves its sufferer flat-footed (`flat_footed`: Surprised,
+    /// Stunned; spec §8 "Surprise and sneak attacks").
+    pub fn flat_footed(&self, content: &Content) -> bool {
+        !self.0.is_empty() && self.0.iter().any(|e| content.status(e.status).flat_footed)
+    }
+
     /// The first (the most important) of its statuses that refuses actions of `kind` while it
     /// lasts (`blocks`), if any.
     pub fn blocking(&self, content: &Content, kind: ActionKind) -> Option<StatusId> {

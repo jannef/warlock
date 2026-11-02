@@ -983,8 +983,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     talents' kinds and the class's own (the effects README of `data/talents/`); an active's
     effect (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
     `quivering_palm`) makes the talent that has it the ability's name and description in the
-    menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Ascetic's
-    Deflect missiles is the ordinary talent, handed out. A shared entry is one talent the tables
+    menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Deflect
+    missiles left the ascetic's table for Stunning strike at 12 (#848); it stays the ordinary
+    Finesse talent, a bonus pick away. A shared entry is one talent the tables
     name alike (`purity_of_body`: the paladin's, the priest's, and the ascetic's; Divine health was
     its copy until #790).
   - **Bonus picks**: warrior (Weaponcraft or Guard) at 4, 10, 16, 22, 28, 34, 46, 58;
@@ -1012,12 +1013,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels, at least 1d6, a magic weapon's extra die folded into the bonus at its average; then
     Spent, 5 minutes; works for Kind or better), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
-    glowing item's; a cast; works for Kind or better), Quivering palm (a bare-handed blow in a direction,
-    refused with a weapon in hand before anything is spent; a hit that does damage leaves three
-    degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Step of the wind (the
+    glowing item's; a cast; works for Kind or better), Step of the wind (the
     ascetic's at 6, #847: for a point of Ki and **no time**, a degree of Light-footed, so the next
     action, whatever it is, costs half its price and ends it; refused, no time or ki, while
-    Light-footed already, "You are already light on your feet."; any grip), Consecrate (the priest's at
+    Light-footed already, "You are already light on your feet."; any grip), Stunning strike (the ascetic's at 12,
+    #848, `world/ascetic.rs`: a bare-handed blow in a direction at a melee attack's price,
+    refused with a weapon in hand or nobody hostile there before anything is spent; a hit that
+    does damage leaves the foe **Stunned**, "You stun the kobold.": `per_action`, one degree,
+    `refresh`, `cost = 150`, `flat_footed`, §8 "Surprise and sneak attacks"; for 1 Ki and no
+    cooldown), Quivering palm (the same blow, `World::palm_blow`, one body for both; a hit that
+    does damage leaves three degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Consecrate (the priest's at
     9, the paladin's at 12: a minute's prayer, for 15 mana, that lifts an unholy special room's
     effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; works
     for Kind or better), Knock (the wizard's at 4: in a direction, for 5 mana and a cast's time, the lock
@@ -1046,7 +1051,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     kicks roll 1d6; grants Ki, §8 "Resources"), Flurry (level 1 beside it: a melee attack
     with nothing in hand strikes twice, the second at −2, for a point of ki; with none, once),
     Step of the wind's passive half (level 6: steps 10 % cheaper in no body armour and with no
-    shield; it took Fleet's place, #847), Deflect missiles (Dodge +2 against missiles),
+    shield; it took Fleet's place, #847),
     Still mind (+2 on checks made with Willpower: diseases', noticing
     in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
     Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1; ki comes back
@@ -1061,8 +1066,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     condition (refused at load). The identical-effects check counts the condition as part of
     the effect: `protection 2 while raging` is not Bulwark's `protection 2`.
   - **Resources**: Rage, War cry, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
-    (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Step of the wind, and Quivering
-    palm spend (R4, #252; #846, #847).
+    (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Step of the wind, Stunning strike,
+    and Quivering palm spend (R4, #252; #846, #847, #848).
   - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):
