@@ -64,6 +64,7 @@ mod hag_roster_tests;
 mod hobgoblin_roster_tests;
 mod horoscope;
 mod hunger;
+mod intimidate;
 mod item_class;
 mod kit;
 mod learning;
@@ -216,6 +217,7 @@ pub use hunger::{
     Corpses, EXERTIONS, Faint, Food, HungerDef, MAX_MEAL, MAX_NUTRITION, MAX_SHELF_LIFE,
     Overeating, Rotten, Starve, States,
 };
+pub use intimidate::IntimidateRules;
 #[cfg(test)]
 pub(crate) use item_class::BUILTIN as BUILTIN_ITEM_CLASSES;
 pub use item_class::{ItemClassDef, ItemClassId, MAX_ITEM_CLASSES};
@@ -641,6 +643,9 @@ pub struct Content {
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
+    /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
+    /// without the file, when nobody intimidates.
+    intimidate: Option<IntimidateRules>,
     /// The constants of the ally core (`data/allies.toml`, spec §8 "Allies"); none without the
     /// file, when no ally can be made.
     allies: Option<AllyRules>,
@@ -786,6 +791,7 @@ impl Content {
             surprise: None,
             encounter_tables: Vec::new(),
             forage: None,
+            intimidate: None,
             allies: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
@@ -1096,6 +1102,10 @@ impl Content {
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
             content.forage = Some(ForageRules::parse(path, text, &content)?);
+        }
+        let path = "data/intimidate.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.intimidate = Some(IntimidateRules::parse(path, text, &content)?);
         }
         let path = "data/allies.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3001,6 +3011,12 @@ impl Content {
     /// the file, when nobody forages.
     pub fn forage(&self) -> Option<&ForageRules> {
         self.forage.as_ref()
+    }
+
+    /// The numbers of intimidating (spec §8 "Skills": Intimidate; `data/intimidate.toml`); `None`
+    /// without the file, when nobody intimidates.
+    pub fn intimidate(&self) -> Option<&IntimidateRules> {
+        self.intimidate.as_ref()
     }
 
     /// The constants of the ally core (spec §8 "Allies"; `data/allies.toml`); `None` without the

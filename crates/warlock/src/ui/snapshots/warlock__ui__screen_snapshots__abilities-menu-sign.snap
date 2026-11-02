@@ -14,15 +14,15 @@ expression: "render(case, content.clone())"
                     │   a  Horn's grace  you are graceless                     │
                     │ Skills                                                   │
                     │   b  Heal          nothing to treat                      │
-                    │   c  Intimidate    not usable yet                        │
+                    │ > c  Intimidate    at a place you see                    │
                     │   d  Metalcraft    not usable yet                        │
                     │   e  Forage        not usable here                       │
                     │ Weapon skills                                            │
-                    │ > f  Shield bash   in a direction                        │
+                    │   f  Shield bash   in a direction                        │
                     │                                                          │
-                    │ Strike someone next to you with the shield you hold.     │
-                    │                                                          │
-                    │                                                          │
+                    │ Threaten a foe you see nearby: unless it keeps its       │
+                    │ nerve, it flees from you a moment, longer the better you │
+                    │ intimidate.                                              │
                     │                                                          │
                     │ a-f or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘

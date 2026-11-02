@@ -405,7 +405,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     direction ("Disarm in which direction? (Esc to cancel)"); **Pick lock** (`Ability::PickLock`,
     §8 "Doors", #233), Open lock's use, which whoever is trained in it has (thieves), in a
     direction; **Steal** (`Ability::Steal`, §8 "Stealing"), the Steal skill's use, which whoever
-    is trained in Steal has, in a direction, in that skill's place; **Forage** (`Ability::Forage`,
+    is trained in Steal has, in a direction, in that skill's place; **Intimidate**
+    (`Ability::Intimidate`, §8 "Skills"), the Intimidate skill's use, which whoever is trained in
+    it has, at a place they see (the aiming mode), in that skill's place; **Forage** (`Ability::Forage`,
     §8 "Foraging"), Survival's use, which whoever is trained in it has, asking for nothing, in
     that skill's place, greyed out "not usable here" (`Unavailable::NotHere`) outside the wild;
     and each other skill used as

@@ -179,7 +179,7 @@ pub enum Act {
     Kick(Pos),
     /// Digs into a wall, from where it stands.
     Dig,
-    /// Mutters to itself, where it stands.
+    /// Mutters to itself, where it stands; or speaks a threat aloud (the player's Intimidate).
     Mutter,
     /// Throws its voice to this cell: a voice sounds there.
     ThrowVoice(Pos),

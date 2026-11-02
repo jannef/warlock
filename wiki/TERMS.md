@@ -168,6 +168,7 @@ above.
 | Skill rolls, skill marks | `skills.md#getting-better` |
 | Slipping past (a creature with darkvision, unlit) | `skills.md#slipping-past` |
 | Stealing | `skills.md#stealing` |
+| Intimidating (a threat at one foe) | `skills.md#intimidating` |
 | Treating yourself, binding a wound | `skills.md#treating-yourself` |
 | Foraging | `skills.md#foraging` |
 | Abilities, the abilities menu | `abilities.md#the-abilities-menu` |

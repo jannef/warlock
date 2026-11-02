@@ -53,7 +53,19 @@ Sneak attack's `sneak_dice` is read in `World::sneak_dice` and `surprise` (the c
 whatever came of it). Intimidate's `intimidate` (#844) is read in `World::war_cry`
 (`world/war_cry.rs`), added to the difficulty of the Willpower check the cry asks of every hostile
 that hears and sees the player, and its use `intimidate` is marked there, once a cry, whatever
-came of it (`world/war_cry_tests.rs`). Rules read a benefit through `Actor::skill_effect`
+came of it (`world/war_cry_tests.rs`). The skill's own use, the **Intimidate** ability (#868),
+is `Action::Intimidate(Pos)` (replay text `intimidate:X,Y`, cost `intimidate`,
+`ActionKind::Intimidate`), dispatched by one arm in `World::player_acts` to `World::intimidate`
+in `world/intimidate.rs`: a single-target threat on War cry's check, sharing
+`World::threat_difficulty` (the one read of `intimidate` for the difficulty), `World::heard_by`
+(who would hear a noise, asked before it is made), and `World::cow` (the nerve check, the
+status, the message) with `World::war_cry`. Its numbers are data, `data/intimidate.toml`
+(`content/intimidate.rs`, `IntimidateRules`: `range`, `difficulty`, `status` (one that
+`flees`), and `degrees`, the ladder of `[points, degrees]` by what Intimidate adds, read by
+`IntimidateRules::degrees_at`); without the file the skill stays "not usable yet". It is
+marked once a threat, refused or not reached (no hearing, no sight) aside. Tests:
+`world/intimidate_tests.rs` (the menu row, refusals with no time and no draw, the turn and the
+voice and the mark, the check, the ladder), `content/intimidate.rs` (parsing, refusals). Rules read a benefit through `Actor::skill_effect`
 (the actor's skills plus what magic items' skill affixes add, `Skills::effect_with`), never
 `Skills::effect` directly. Each effect is read in one place: Dodge in
 `Actor::defence`, quiet in `noise::noise`, hearing in `Actor::hearing`, burden in
@@ -101,7 +113,8 @@ menu (#156, `docs/dev/screens.md`): each trained skill of kind `action` is an `A
 there (`warlock_core::ability`), unavailable ("not usable yet") until its use exists, when it
 becomes an ability of its own in the skill's place (`Ability::use_of`): Disable device is
 `Ability::Disarm` (`docs/dev/traps.md`), Open lock `Ability::PickLock` (`docs/dev/doors.md`),
-Steal `Ability::Steal` (`docs/dev/stealing.md`), Heal `Ability::Heal` (`docs/dev/status-effects.md`).
+Steal `Ability::Steal` (`docs/dev/stealing.md`), Heal `Ability::Heal` (`docs/dev/status-effects.md`),
+Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from the data).
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
 `Ability::use_of` of every skill): Survival is `Ability::Forage` (below).
 

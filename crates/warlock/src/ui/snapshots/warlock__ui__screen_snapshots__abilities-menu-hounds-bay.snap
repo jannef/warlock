@@ -15,7 +15,7 @@ expression: "render(case, content.clone())"
                     │ Class                                                    │
                     │ > b  Veteran's wind                                      │
                     │ Skills                                                   │
-                    │   c  Intimidate      not usable yet                      │
+                    │   c  Intimidate      at a place you see                  │
                     │ Weapon skills                                            │
                     │   d  Shield bash     in a direction                      │
                     │                                                          │

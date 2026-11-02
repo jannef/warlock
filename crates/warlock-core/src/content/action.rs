@@ -110,6 +110,8 @@ pub enum ActionKind {
     Chat,
     /// Trying to steal from a creature (spec §8 "Stealing"), whatever comes of it.
     Steal,
+    /// Threatening a foe (spec §8 "Skills": Intimidate), whatever comes of it.
+    Intimidate,
     /// Throwing one's voice to a cell (spec §5 "Hearing").
     ThrowVoice,
     /// Climbing out of the water onto ice (spec §5 "Ice"): on top of the step onto it.
@@ -154,6 +156,7 @@ impl ActionKind {
         ActionKind::Heal,
         ActionKind::Chat,
         ActionKind::Steal,
+        ActionKind::Intimidate,
         ActionKind::ThrowVoice,
         ActionKind::Climb,
     ];
@@ -196,6 +199,7 @@ impl ActionKind {
             ActionKind::Heal => "heal",
             ActionKind::Chat => "chat",
             ActionKind::Steal => "steal",
+            ActionKind::Intimidate => "intimidate",
             ActionKind::ThrowVoice => "throw_voice",
             ActionKind::Climb => "climb",
         }
@@ -257,6 +261,7 @@ impl ActionKind {
             ActionKind::Heal => "tend your hurts",
             ActionKind::Chat => "talk",
             ActionKind::Steal => "steal",
+            ActionKind::Intimidate => "intimidate",
             ActionKind::ThrowVoice => "throw your voice",
             ActionKind::Climb => "climb",
         }

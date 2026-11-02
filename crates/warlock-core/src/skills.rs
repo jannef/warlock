@@ -200,7 +200,10 @@ pub enum Effect {
     /// ability).
     Heal,
     /// Points added to the difficulty of the Willpower check the actor's war cry asks of those
-    /// who hear and see it (spec §8 "Class abilities": War cry; `world/war_cry.rs`).
+    /// who hear and see it (spec §8 "Class abilities": War cry; `world/war_cry.rs`), and their
+    /// threat at one foe (spec §8 "Skills": Intimidate; `world/intimidate.rs`), whose degrees of
+    /// fear the points also set; a skill with it, trained, lets the actor intimidate at all (the
+    /// Intimidate ability).
     Intimidate,
     /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
     /// "Doors"; `world/door.rs`).
@@ -304,7 +307,8 @@ pub enum Use {
     Heal,
     /// An order given to one's allies, or an ally's kill (spec §8 "Allies": Handle animal).
     Handle,
-    /// A war cry roared (spec §8 "Class abilities": War cry), whatever comes of it.
+    /// A war cry roared (spec §8 "Class abilities": War cry) or a foe threatened (spec §8
+    /// "Skills": Intimidate), whatever comes of it.
     Intimidate,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
@@ -347,7 +351,7 @@ impl Use {
             Use::Surprise => "being caught unawares (the initiative check, whatever comes of it)",
             Use::Heal => "trying to treat bleeding, poison, or a disease",
             Use::Handle => "giving your allies an order, or a kill of theirs",
-            Use::Intimidate => "roaring a war cry",
+            Use::Intimidate => "roaring a war cry, or threatening a foe",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
