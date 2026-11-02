@@ -1048,6 +1048,10 @@ pub enum TalentEffect {
     /// The class active Consecrate: `time` (a duration) of prayer, for `mana` mana, lifts an
     /// unholy special room (or a whole level's unholy effect) for good (`world/consecrate.rs`).
     Consecrate { mana: i32, time: String },
+    /// Communion with the dark (the priest design §6.3, `world/dark_face.rs`): standing in an
+    /// unholy place, its prayers add no strain and the place's status never touches it. A
+    /// band-gated passive: outside its talent's `alignment` it does nothing.
+    Communion,
     /// The priest's prayer (the class active Orison, `world/orison.rs`; `data/prayer.toml`):
     /// a prayer talent of `tier` (1 to 5, its `title` for each face) or a use added between
     /// them; `uses` it may answer, `answers` problems a prayer (the largest held), `all` every
@@ -1175,6 +1179,12 @@ impl TalentEffect {
         }
     }
 
+    /// Whether it is a passive that works only within its talent's `alignment` bands (Communion
+    /// with the dark; `docs/dev/alignment.md`), as a holy active's gift does.
+    pub fn band_gated(&self) -> bool {
+        matches!(self, TalentEffect::Communion)
+    }
+
     /// Whether it may carry a `while` condition: only a kind the one sum reads
     /// ([`crate::talent::Talents::mods`]), never one read off the talent's effects directly (an
     /// active, a spell given, what is rolled or handed down once when it is taken).
@@ -1186,6 +1196,7 @@ impl TalentEffect {
                     | TalentEffect::BloodMagic { .. }
                     | TalentEffect::Spell { .. }
                     | TalentEffect::Prayer { .. }
+                    | TalentEffect::Communion
                     | TalentEffect::SpellMod(_)
                     | TalentEffect::WeaponStamina { .. }
                     | TalentEffect::TrainSkill { .. }
@@ -2151,6 +2162,7 @@ impl TalentEffect {
             | TalentEffect::GraveWarden
             | TalentEffect::Disarm
             | TalentEffect::Purify
+            | TalentEffect::Communion
             | TalentEffect::CorpseHarmless => Ok(()),
             // A spell ability names a spell of data/spells/ of its id, aimed as the ability is
             // (content without spells has nothing to check it by).
@@ -2400,9 +2412,9 @@ pub struct TalentDef {
     /// `resource = { id = "focus", cost = 6 }` (0 asks only that it is held), if anything.
     pub resource: Option<ResourceCost>,
     /// The alignment bands its class active works for (spec §8 "Alignment"; `alignment = { min
-    /// = "kind" }` in data: the paladin's holy gifts), if any. It bars nothing: the ability is
-    /// had, listed, and used whatever the band, and outside these bands it does nothing
-    /// (`World::answered`).
+    /// = "kind" }` in data: the paladin's holy gifts), or its band-gated passive (Communion), if
+    /// any. It bars nothing: the ability is had, listed, and used whatever the band, and outside
+    /// these bands it does nothing (`World::answered`, `World::communes`).
     pub alignment: Option<Requirement>,
 }
 
@@ -3208,10 +3220,10 @@ pub(super) fn parse<'a>(
             }
         };
         if let Some(bands) = spec.alignment {
-            if !effects.iter().any(|e| e.active().is_some_and(|a| a.holy())) {
+            if !(effects.iter()).any(|e| e.band_gated() || e.active().is_some_and(|a| a.holy())) {
                 return Err(err(
                     "an `alignment` is for a holy class active (lay_on_hands, smite, \
-                     holy_radiance, consecrate)"
+                     holy_radiance, consecrate) or a band-gated passive (communion)"
                         .into(),
                 ));
             }

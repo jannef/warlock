@@ -162,6 +162,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Cure wounds",
                 "Daily bread",
                 "Consecrate",
+                "Communion with the dark",
                 "Prayer",
                 "Prayer of release",
                 "Litany",

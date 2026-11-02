@@ -1,0 +1,9 @@
+[[talent]]
+id = "communion"
+name = "Communion with the dark"
+tree = "class"
+granted = true
+description = "The unholy places are yours: in a cursed, draining, or haunted room, or on a level such a curse lies over, your prayers cost you nothing, and the place's drain does not touch you."
+effects = [{ kind = "communion" }]
+systems = ["special_rooms"]
+alignment = { max = "callous" }

@@ -1682,6 +1682,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              you vomit)"
                 .to_string()
         }
+        TalentEffect::Communion => {
+            "while the dark answers your prayers (Callous or worse), standing in an unholy place \
+             (a cursed, draining, or haunted room, or a level such a curse covers): your prayers \
+             add no strain, and the place's status (Ebbing) never touches you"
+                .to_string()
+        }
         TalentEffect::CorpseHarmless => {
             "a fresh corpse's own harm (its sickness and its vomiting) never touches you"
                 .to_string()

@@ -111,6 +111,7 @@ mod consecrate;
 mod court;
 mod creation;
 mod curse;
+mod dark_face;
 mod den;
 mod dev;
 mod dig;
@@ -1545,6 +1546,8 @@ mod curse_tests;
 mod damage_talent_tests;
 #[cfg(test)]
 mod damage_tests;
+#[cfg(test)]
+mod dark_face_tests;
 #[cfg(test)]
 mod den_tests;
 #[cfg(test)]

@@ -688,6 +688,9 @@ pub struct TalentMods {
     pub virtuoso: Option<StatusId>,
     /// The active Consecrate, if it has it.
     pub consecrate: Option<Consecrate>,
+    /// Communion with the dark: in an unholy place its prayers add no strain and the place's
+    /// status never touches it, within its talent's bands (`World::communes`).
+    pub communion: bool,
     /// The active Knock, if it has it.
     pub knock: Option<Knock>,
     /// The priest's prayer, its talents summed (`world/orison.rs`), if it has any.
@@ -1946,6 +1949,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::Knock { mana } => self.knock = Some(Knock { mana }),
+            TalentEffect::Communion => self.communion = true,
             TalentEffect::Prayer {
                 tier,
                 title,
