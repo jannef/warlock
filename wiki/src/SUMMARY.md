@@ -37,6 +37,7 @@
 - [Your character](character.md)
   - [Races](races.md)
   - [Classes](classes.md)
+  - [Allies](allies.md)
   - [Starting kit](starting-kit.md)
   - [Horoscope](horoscope.md)
   - [Your story](background.md)

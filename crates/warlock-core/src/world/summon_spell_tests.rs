@@ -1,8 +1,8 @@
 //! Player summons (spec §8 "Allies": "Summons", `summon_spell.rs`): the spell kind's checks, the
 //! call, its count, cap, and time, the oldest giving way, the global cap, the `ally_mod` reads,
 //! the draw's bias, a slain summon's nothing, `study_difficulty`, saves, and determinism. On the
-//! built-in content's spell-circle hall (peaceful kobolds) with fixture spells and talents: no
-//! summon spell ships yet (the druid's are D1's).
+//! built-in content's spell-circle hall (peaceful kobolds) with fixture spells and talents, and
+//! the druid's Pack leader (the druid's calls themselves: `caster_tests.rs`).
 
 use super::*;
 use crate::action::parse_actions;
@@ -70,14 +70,6 @@ effect = { status = "hasted" }
 "#;
 
 const TALENTS: &str = r#"
-[[talent]]
-id = "zz_pack"
-name = "Pack"
-tree = "wayfarer"
-description = "x"
-effects = [{ kind = "ally_mod", count = 1, duration_percent = 50, most = 1 }]
-systems = ["allies"]
-
 [[talent]]
 id = "zz_lord"
 name = "Lord"
@@ -243,7 +235,8 @@ fn a_call_is_refused_without_room_on_the_overworld_and_at_the_cap() {
 #[test]
 fn ally_mod_brings_more_for_longer_and_keeps_more() {
     let mut w = world();
-    take(&mut w, "zz_pack");
+    // The druid's Pack leader (#839): one more, half again as long, one more kept.
+    take(&mut w, "pack_leader");
     let time = w.time();
     run(&mut w, "use:zz_call_rats");
     let pack = calls(&w);

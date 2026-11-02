@@ -1,0 +1,10 @@
+# The druid's capstone at 60 (spec §8 "Class abilities"; docs/design/druid-and-summons.md §6,
+# §14 Q6 and Q8): calls no longer lapse, and one more of each may stay.
+[[talent]]
+id = "lord_of_the_wild"
+name = "Lord of the wild"
+tree = "class"
+granted = true
+description = "The wild is yours to command: what you call stays beside you until it is slain, and you may keep one more of each call at your side."
+effects = [{ kind = "ally_mod", lasting = true, most = 1 }]
+systems = ["allies", "spells"]

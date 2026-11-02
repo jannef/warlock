@@ -573,8 +573,9 @@ impl World {
             at: actor.pos,
         });
         if self.perception.sees_actors_at(actor.pos) {
-            let name = &self.content.creature(actor.creature).name;
-            self.say(format!("{} fades away.", the_start(name)));
+            let def = self.content.creature(actor.creature);
+            let words = def.depart.as_deref().unwrap_or("fades away");
+            self.say(format!("{} {words}.", the_start(&def.name)));
         }
         self.fallen.push(actor);
     }

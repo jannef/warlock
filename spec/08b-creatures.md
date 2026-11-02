@@ -116,7 +116,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   last turn's perception, so a summoning in the turn a door opens may go unseen.
 - **Allies** (`warlock-core/src/world/ally.rs`, the rules; `content/ally.rs` and
   `data/allies.toml`, the numbers; #836, design `docs/design/druid-and-summons.md` §4 and §14):
-  creatures on the player's side, a summon (the druid's calls, to come) or a companion (the
+  creatures on the player's side, a summon (the druid's calls, #839) or a companion (the
   ranger's, to come). An ally is an ordinary creature of its type (stats, speed, eyes, attacks,
   hit points, statuses, death) made with the player's faction, so every rule that reads stances
   (hostile creatures, the spawn cap, the quick leave, resting, swapping places) treats it as the
@@ -153,7 +153,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
   the caster, and at `[allies] most` on the level (unless one of the spell's own gives way).
   `ally_mod` talents bring `count` more, make calls last `duration_percent` longer or, with
   `lasting`, until slain, and keep `most` more of each spell's. A slain summon leaves no corpse
-  and drops nothing. "Two wolves come to your call."
+  and drops nothing. "Two wolves come to your call." The druid's calls (#839, §8 "Class abilities"):
+  Call of the wild (a wolf), Call of the forest (a bear), Call the elements (a greater
+  elemental, the element drawn), one of each at once until Pack leader and Lord of the wild
+  raise it. The beasts (`wolf`, `bear`) are wildlife, never strays. The messages call an ally
+  the player sees "your": "Your wolf bites the kobold.", "Your wolf dies."; one whose time runs
+  out goes in its type's words ("The wolf slips back into the dark.").
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

@@ -1,0 +1,21 @@
+# The druid's Call of the forest (spec §8 "Class abilities", "Allies"; #839): a bear comes to the
+# caster's side for a few minutes. One at a time: Pack leader and Lord of the wild raise the
+# druid's cap. Very hard to learn from its scroll (the owner's Q7 of #828).
+[[spell]]
+id = "call_of_the_forest"
+name = "Call of the forest"
+description = "Call the deep woods to your side: a bear lumbers out of the shadows to fight beside you for a few minutes."
+level = 20
+school = "enchantment"
+kind = "summon"
+shape = "self"
+resolution = "auto"
+study_difficulty = 10
+effect = { summon = { creatures = ["bear"], count = "1", most = 1, minutes = 5 } }
+
+[spell.cast]
+message = "You call, and the forest answers."
+noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+degrees = "presence 14 8, 18 12, 22 16"
