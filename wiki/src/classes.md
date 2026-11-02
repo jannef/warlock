@@ -6,7 +6,7 @@ points](combat.md#hit-points) (see [Combat](combat.md#hit-points)), trains you i
 [skills](skills.md#who-trains-what) (and sets how many skill rolls each level gives and which
 skills it is known for, see [Getting better](skills.md#getting-better)), and gives you your first ranks in a few
 [weapon skills](weapon-skills.md) (a berserker has learned one of two) and
-[fighting styles](fighting-styles.md) (a thief or a monk one of two), and decides most of your
+[fighting styles](fighting-styles.md) (a thief or an ascetic one of two), and decides most of your
 [starting kit](starting-kit.md); no [spells](magic.md) come with it. A class with a level table also gives
 **[class abilities](talents.md#class-abilities)** as you reach its levels, and bonus [talents](talents.md) (see
 [Levels](#levels) below).
@@ -29,7 +29,7 @@ a bonus [talent](talents.md) at a few levels between, from the trees it names. A
 you reach its level ("You gain Fencing."), and works from then on; in the game each is told in
 words, here exactly. A stat it raises rises for good, score and potential. Some abilities are
 used from the [abilities menu](abilities.md); the rest simply work. So far the [warrior](classes.md#warrior), the
-[berserker](classes.md#berserker), the [paladin](classes.md#paladin), the [monk](classes.md#monk), the [priest](classes.md#priest), the [druid](classes.md#druid), the [wizard](classes.md#wizard), the [witch](classes.md#witch), the [ranger](classes.md#ranger), the
+[berserker](classes.md#berserker), the [paladin](classes.md#paladin), the [ascetic](classes.md#ascetic), the [priest](classes.md#priest), the [druid](classes.md#druid), the [wizard](classes.md#wizard), the [witch](classes.md#witch), the [ranger](classes.md#ranger), the
 [thief](classes.md#thief), the [bard](classes.md#bard), and the everyday folk have their tables. A table may hand out an ordinary talent
 (the [ranger](classes.md#ranger)'s and the [thief](classes.md#thief)'s [Evasion](talents.md#talent-evasion), the [bard](classes.md#bard)'s [Fast healer](talents.md#talent-fast-healer), the [druid](classes.md#druid)'s [Beast-friend](talents.md#talent-beast-friend)); if you took it already, the level gives
 you a talent pick in its place.
@@ -43,7 +43,7 @@ otherwise you can still use them, and nothing happens. The passives do not care.
 [mana](mana.md#how-much). The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
 [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
 [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend; the
-[monk](classes.md#monk)'s [flurry](talents.md#talent-flurry) and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
+[ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry) and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
 [inspiration](resources.md#resource-inspiration) when the bard has enough.
 
 The spells a class gives (the [priest](classes.md#priest)'s, [druid](classes.md#druid)'s, [wizard](classes.md#wizard)'s, and [witch](classes.md#witch)'s few, a [bard](classes.md#bard)'s, a
@@ -71,7 +71,7 @@ at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and 
 **[inspire](abilities.md#ability-inspire)** costs 3 [inspiration](resources.md#resource-inspiration) when you hold 3, else 3 [mana](mana.md#spending-it), and can be sung again while it
 lasts (it starts over); a virtuoso's costs nothing at all, and keeps the inspiration.
 
-The [monk](classes.md#monk)'s **[flurry](talents.md#talent-flurry)** gives you [ki](resources.md#resource-ki) (5, full): every attack with nothing in your hands strikes a
+The [ascetic](classes.md#ascetic)'s **[flurry](talents.md#talent-flurry)** gives you [ki](resources.md#resource-ki) (5, full): every attack with nothing in your hands strikes a
 second blow, at −2 [to hit](combat.md#hitting), for a point of ki; with none left, the attack is a single blow.
 **[Quivering palm](abilities.md#ability-quivering-palm)** costs all 5 ki and has no other wait.
 

@@ -12,28 +12,35 @@
 //! two cleave sources make a great cleave; the birth signs' gifts, which the owner keeps whole).
 //! A listed pair that is no longer alike is an error too, so the list stays honest.
 
-use super::{ContentError, TalentBook, TalentDef, TalentEffect};
+use super::{ContentError, StatusId, TalentBook, TalentDef, TalentEffect};
 use std::mem::discriminant;
 
+/// One effect with the status it counts only under (`while`), if any: the condition is part of
+/// the effect's identity, so `protection 2 while raging` is not Bulwark's plain `protection 2`.
+type Effect = (Option<StatusId>, TalentEffect);
+
+/// What `def` adds at `rank`, plain and conditional.
+fn effects_at(def: &TalentDef, rank: u8) -> impl Iterator<Item = Effect> + '_ {
+    (def.effects_at(rank).map(|e| (None, e)))
+        .chain(def.effects_while_at(rank).map(|(s, e)| (Some(s), e)))
+}
+
 /// What `def` does at each of its ranks: the effects that rank adds.
-fn signature(def: &TalentDef) -> Vec<Vec<TalentEffect>> {
+fn signature(def: &TalentDef) -> Vec<Vec<Effect>> {
     (1..=def.rank_count())
-        .map(|r| def.effects_at(r).collect())
+        .map(|r| effects_at(def, r).collect())
         .collect()
 }
 
 /// Whether two effect lists hold the same effects, in any order.
-fn same(a: &[TalentEffect], b: &[TalentEffect]) -> bool {
+fn same(a: &[Effect], b: &[Effect]) -> bool {
     a.len() == b.len() && a.iter().all(|e| b.contains(e)) && b.iter().all(|e| a.contains(e))
 }
 
 /// Whether `a` (no more ranks than `b`) does at each of its ranks what `b` does at the same
 /// rank, and does something: a clone of `b` or of its first ranks. Talents taken for different
 /// kinds of choice never match (Stylist's `weapon` reads a style, Schooled's a school).
-fn clone_of(
-    (a, sa): (&TalentDef, &[Vec<TalentEffect>]),
-    (b, sb): (&TalentDef, &[Vec<TalentEffect>]),
-) -> bool {
+fn clone_of((a, sa): (&TalentDef, &[Vec<Effect>]), (b, sb): (&TalentDef, &[Vec<Effect>])) -> bool {
     a.choice == b.choice
         && sa.len() <= sb.len()
         && sa.iter().any(|r| !r.is_empty())
@@ -45,8 +52,8 @@ fn chained(a: &TalentDef, b: &TalentDef) -> bool {
     let kinds = |d: &TalentDef| {
         (1..=d.rank_count())
             .flat_map(|r| {
-                d.effects_at(r)
-                    .map(|e| discriminant(&e))
+                effects_at(d, r)
+                    .map(|(s, e)| (s, discriminant(&e)))
                     .collect::<Vec<_>>()
             })
             .collect::<Vec<_>>()
@@ -75,7 +82,7 @@ pub(super) fn check(
 ) -> Result<(), ContentError> {
     let listed =
         |a: &str, b: &str| (alike.iter()).any(|[x, y]| (x == a && y == b) || (x == b && y == a));
-    let defs: Vec<(&TalentDef, Vec<Vec<TalentEffect>>)> =
+    let defs: Vec<(&TalentDef, Vec<Vec<Effect>>)> =
         book.iter().map(|(_, d)| (d, signature(d))).collect();
     let mut found: Vec<(&str, &str)> = Vec::new();
     for (i, (a, sa)) in defs.iter().enumerate() {
@@ -229,6 +236,32 @@ systems = ["schools"]
 "#;
         let e = refusal(load(&[("schooled_twin", twin)], str::to_string));
         assert!(e.contains("`schooled` and `schooled_twin`"), "{e}");
+    }
+
+    #[test]
+    fn an_effect_under_a_status_is_not_alike_the_plain_one() {
+        // Bulwark's `protection 2`, raging only: not a clone of Bulwark.
+        let raging = r#"
+[[talent]]
+id = "raging_wall"
+name = "Raging wall"
+tree = "class"
+granted = true
+description = "Raging, you take a blow."
+effects = [{ kind = "protection", value = 2, while = "raging" }]
+systems = ["protection"]
+"#;
+        load(&[("raging_wall", raging)], str::to_string).expect("not alike: it loads");
+        // The same under the same status is a clone of it.
+        let twin = raging.replace("raging_wall", "raging_twin");
+        let e = refusal(load(
+            &[("raging_wall", raging), ("raging_twin", &twin)],
+            str::to_string,
+        ));
+        assert!(
+            e.contains("have the same effects") && e.contains("`raging_twin`"),
+            "{e}"
+        );
     }
 
     #[test]

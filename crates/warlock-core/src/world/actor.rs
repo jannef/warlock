@@ -380,7 +380,7 @@ impl Actor {
         if self.talents.is_empty() {
             Cow::Borrowed(&NONE)
         } else {
-            Cow::Owned(self.talents.mods(content))
+            Cow::Owned(self.talents.mods(content, &self.effects))
         }
     }
 
@@ -436,7 +436,7 @@ impl Actor {
         }
     }
 
-    /// What its status effects, hunger (Weak or worse, unless Ascetic), and stat damage take
+    /// What its status effects, hunger (Weak or worse, unless Long fast), and stat damage take
     /// off its scores, if anything.
     fn penalty(&self, content: &Content) -> Option<PerStat<i32>> {
         let mods = self.talent_mods(content);
@@ -643,13 +643,7 @@ impl Actor {
         // hide ([`Actor::hide`]) or a magic item's, or stands alone.
         let own = self.hide(content, race).map(|hide| hide.defence);
         let magic_natural = Some(mods.get(ItemEffect::Natural)).filter(|&n| n != 0);
-        // Thick hide (spec §8 "Class abilities"): more natural armour with no body armour on.
-        let hide = match talents.natural_unarmoured {
-            0 => 0,
-            _ if self.wears_body_armour(content) => 0,
-            more => more,
-        };
-        let added = talents.natural + hide;
+        let added = talents.natural;
         let natural: Vec<(Category, i32)> = match (own, magic_natural) {
             (None, None) if added == 0 => Vec::new(),
             (None, None) => vec![(Category::Natural, added)],
@@ -728,7 +722,7 @@ impl Actor {
     }
 
     /// Whether it wears body armour: anything in a slot worn as body armour (`body_armor`, the
-    /// Body slot). Thick hide, Fast movement, and Fleet ask for none (spec §8 "Class abilities").
+    /// Body slot). Mage armour and Fleet ask for none (spec §8 "Class abilities").
     pub fn wears_body_armour(&self, content: &Content) -> bool {
         (self.equipment.items().into_iter())
             .any(|(slot, _)| content.slot(slot).action == ActionKind::BodyArmor)

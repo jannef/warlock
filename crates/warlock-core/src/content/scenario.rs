@@ -260,11 +260,11 @@ mod tests {
             parse("vision = \"low_light\"").unwrap().vision(),
             "low_light"
         );
-        let character = "character = { race = \"dwarf\", gender = \"other\", class = \"monk\" }";
+        let character = "character = { race = \"dwarf\", gender = \"other\", class = \"ascetic\" }";
         let def = parse(character).unwrap();
         assert_eq!(
             def.character.map(|c| c.to_string()).as_deref(),
-            Some("dwarf,other,monk")
+            Some("dwarf,other,ascetic")
         );
         assert_eq!(
             parse("hp = 7").unwrap().hp,
@@ -292,7 +292,7 @@ mod tests {
                 err.message
             );
         }
-        let err = parse("character = { race = \"dwarf\", gender = \"x\", class = \"monk\" }")
+        let err = parse("character = { race = \"dwarf\", gender = \"x\", class = \"ascetic\" }")
             .unwrap_err();
         assert!(
             err.message.contains("unknown variant `x`"),
@@ -310,27 +310,27 @@ mod tests {
                 &format!("name = \"S\"\nstart_level = \"hub\"\ncharacter = {character}\n"),
             )
         };
-        let def = parse("{ race = \"dwarf\", gender = \"male\", class = \"monk\" }").unwrap();
+        let def = parse("{ race = \"dwarf\", gender = \"male\", class = \"ascetic\" }").unwrap();
         assert_eq!(def.character_name, None);
         let named =
-            "{ race = \"dwarf\", gender = \"male\", class = \"monk\", name = \" Brakka \" }";
+            "{ race = \"dwarf\", gender = \"male\", class = \"ascetic\", name = \" Brakka \" }";
         let def = parse(named).unwrap();
         assert_eq!(def.character_name.as_deref(), Some("Brakka"));
         assert_eq!(
             def.character.map(|c| c.to_string()).as_deref(),
-            Some("dwarf,male,monk")
+            Some("dwarf,male,ascetic")
         );
         for (bad, why) in [
             ("\"\"", "cannot be empty"),
             ("\"Brakka of the Deep Halls\"", "longer than 20"),
         ] {
             let text = format!(
-                "{{ race = \"dwarf\", gender = \"male\", class = \"monk\", name = {bad} }}"
+                "{{ race = \"dwarf\", gender = \"male\", class = \"ascetic\", name = {bad} }}"
             );
             let err = parse(&text).unwrap_err();
             assert!(err.message.contains(why), "{bad}: {}", err.message);
         }
-        let err = parse("{ race = \"dwarf\", gender = \"male\", class = \"monk\", age = 3 }")
+        let err = parse("{ race = \"dwarf\", gender = \"male\", class = \"ascetic\", age = 3 }")
             .unwrap_err();
         assert!(
             err.message.contains("unknown field `age`"),

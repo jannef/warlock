@@ -152,7 +152,11 @@ amount in between as likely:
 
 - **Every piece adds up**: body armour, helm, gloves, boots, and cloak each add their
   Protection (the armour table above), and so does the magic of armour that is
-  *[Hardened](magic-items.md#prefixes)* (see [Magic items](magic-items.md)). A [shield](objects.md#class-shields) gives [Defence](combat.md#defence) only. Creatures have
+  *[Hardened](magic-items.md#prefixes)* (see [Magic items](magic-items.md)). Some [talents](talents.md) add to it too:
+  [Bulwark](talents.md#talent-bulwark) 2, and the [berserker's](classes.md#berserker)
+  [Battle-scarred](talents.md#talent-battle-scarred) 1, and 3 while
+  [raging](status-effects.md#status-raging), in any armour; the `Pv` on the character screen shows
+  it as it is now. A [shield](objects.md#class-shields) gives [Defence](combat.md#defence) only. Creatures have
   their own: a [cave beetle's](creatures.md#creature-beetle) shell turns aside much of what hits it.
 - **[Criticals](combat.md#criticals) punch through**: a confirmed critical rolls its damage twice (or more) first, and
   the Protection comes off only once.
@@ -228,7 +232,7 @@ skill](weapon-skills.md). It never brings another free blow, except a cleave aft
 ## Stamina
 
 **Stamina** is the breath a fighter has for weapon feats (a [resource](resources.md), shown as
-`Sta 7/12` on the status bar). Every [warrior](classes.md#warrior), [berserker](classes.md#berserker), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [monk](classes.md#monk), [thief](classes.md#thief), and [bard](classes.md#bard)
+`Sta 7/12` on the status bar). Every [warrior](classes.md#warrior), [berserker](classes.md#berserker), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [ascetic](classes.md#ascetic), [thief](classes.md#thief), and [bard](classes.md#bard)
 holds it from [level](experience.md#levels) 1. Its most is
 
 > 10 + your [Toughness](stats.md#stat-toughness) [modifier](stats.md#modifiers) + 1 per 10 [levels](experience.md#levels), at least 5

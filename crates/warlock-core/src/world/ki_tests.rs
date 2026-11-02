@@ -1,4 +1,4 @@
-//! The monk's Ki and the bard's Inspiration (spec §8 "Resources"; the progression design §4.18,
+//! The ascetic's Ki and the bard's Inspiration (spec §8 "Resources"; the progression design §4.18,
 //! R4, #252): Flurry grants Ki and each second blow spends a point of it, Quivering palm costs
 //! five instead of a cooldown, Inspire grants Inspiration and spends three of it in place of its
 //! mana when they are held, and Virtuoso's song costs nothing.
@@ -41,9 +41,9 @@ fn fresh(class: &str) -> World {
     World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("world")
 }
 
-/// A monk with nothing in hand at `level`.
-fn monk(level: u8) -> World {
-    let mut w = world("monk");
+/// An ascetic with nothing in hand at `level`.
+fn ascetic(level: u8) -> World {
+    let mut w = world("ascetic");
     w.player_mut().equipment = Default::default();
     reach(&mut w, level);
     at_normal_speed(&mut w);
@@ -52,9 +52,9 @@ fn monk(level: u8) -> World {
 
 #[test]
 fn flurry_grants_ki_and_each_second_blow_spends_a_point() {
-    let w = monk(17);
+    let w = ascetic(17);
     assert_eq!(held(&w, "ki"), None, "no ki before Flurry");
-    let mut w = monk(18);
+    let mut w = ascetic(18);
     assert_eq!(held(&w, "ki"), Some(5), "Flurry: Ki, full");
     let kobold = beside(&mut w, "kobold", 500);
     let player = w.state.player;
@@ -71,7 +71,7 @@ fn flurry_grants_ki_and_each_second_blow_spends_a_point() {
 
 #[test]
 fn an_attack_with_ki_strikes_twice_and_without_once() {
-    let mut w = monk(18);
+    let mut w = ascetic(18);
     let kobold = beside(&mut w, "kobold", 500);
     run(&mut w, "move:E");
     assert_eq!(
@@ -94,7 +94,7 @@ fn an_attack_with_ki_strikes_twice_and_without_once() {
 
 #[test]
 fn quivering_palm_costs_five_ki_and_no_cooldown() {
-    let mut w = monk(50);
+    let mut w = ascetic(50);
     let palm = Ability::Class(ClassActive::QuiveringPalm);
     let kobold = beside(&mut w, "kobold", 500);
     let ki = resource(&w, "ki");
@@ -180,7 +180,7 @@ fn inspire_spends_inspiration_in_place_of_mana() {
 fn ki_and_inspiration_replay() {
     for (class, text) in [
         (
-            "monk",
+            "ascetic",
             "xp:3000000 levelup:auto wait*4 use:quivering_palm:E wait",
         ),
         (

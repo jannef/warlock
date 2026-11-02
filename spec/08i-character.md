@@ -407,7 +407,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Concentration** (#668): a trained Concentration makes mana come back faster and the pool a
     little deeper (§8 "Mana": the curves in `data/skills.toml`, the pool's at most a fifth);
     untrained, it gives nothing, even raised by an item or a talent. The Skills screen says so
-    in its description, in words. The priest, druid, wizard, monk, paladin, and witch start
+    in its description, in words. The priest, druid, wizard, ascetic, paladin, and witch start
     trained in it; every class has some mana, so any trained in it gains.
   - **From race and class** (§7): their `skills` are dice rolled when the character is made,
     after every other roll ("Character creation" above); a skill both train sums the two; the
@@ -488,7 +488,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Cool head's, at most all; `World::status_cost`), marked by `surprise` (100 %: a check made,
     whatever came of it). The thief trains Sneak attack (`2d6+10`, known for) and Initiative
     (`2d4+4`), and Detect traps and Disable device at `2d6+10`, known for, and Search at
-    `2d6+4` (#684: in place of the Trapfinding class ability); the ranger and the monk Initiative `2d6+10`; the bard, warrior, and berserker
+    `2d6+4` (#684: in place of the Trapfinding class ability); the ranger and the ascetic Initiative `2d6+10`; the bard, warrior, and berserker
     `2d4+4`; a drow may start with Sneak attack (an optional skill of the race).
   - **Intimidate** (#844; `kind = "action"`): gives `intimidate` (+8 at 100, +12 at 200, at most
     20) on the difficulty of the Willpower check the berserker's War cry asks of those who hear
@@ -975,7 +975,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wiki's Talents page states them.
 - **The adventurers' class tables, and the class actives** (`content/class.rs`: `ClassActive`;
   `world/class_ability.rs`; M30, #243; design `docs/design/progression.md` §4.2–4.5): the
-  warrior, berserker, paladin, and monk have level tables as the everyday folk do (the
+  warrior, berserker, paladin, and ascetic have level tables as the everyday folk do (the
   "Class abilities" bullet above): `abilities` rows naming talents of the class tree
   (`data/talents/`, `granted`) and `bonus_talents`.
   - **Who has them**: given as the level comes, "You gain Rage." (the shared rules of the bullet
@@ -983,12 +983,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     talents' kinds and the class's own (the effects README of `data/talents/`); an active's
     effect (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
     `quivering_palm`) makes the talent that has it the ability's name and description in the
-    menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Monk's
+    menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Ascetic's
     Deflect missiles is the ordinary talent, handed out. A shared entry is one talent the tables
-    name alike (`purity_of_body`: the paladin's, the priest's, and the monk's; Divine health was
+    name alike (`purity_of_body`: the paladin's, the priest's, and the ascetic's; Divine health was
     its copy until #790).
   - **Bonus picks**: warrior (Weaponcraft or Guard) at 4, 10, 16, 22, 28, 34, 46, 58;
-    berserker (Might or Vigour), paladin (Guard or Vigour), monk (Finesse or Vigour) at 10, 20,
+    berserker (Might or Vigour), paladin (Guard or Vigour), ascetic (Finesse or Vigour) at 10, 20,
     30, 45, 55; as the bullet above says.
   - **Actives** (`Ability::Class`, the abilities menu's Class group; `Action::Use`, `use:rage`,
     `use:smite:E`; refused, no time, without the ability or while its cooldown lasts; a holy
@@ -1028,11 +1028,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     cleave), Armour drill (worn armour's Dexterity cap +1, Protection +1 while wearing any),
     Weapon mastery (threat +1 with melee weapon skills at rank 8 or more), Iron stance (the
     aggressive stance's Dodge penalty and the defensive's to-hit penalty gone), Champion
-    (critical multiplier +1 with melee weapons, at most ×5); Thick hide (natural armour +2 in
-    no body armour: nothing in the Body slot), Fast movement (steps 10 % cheaper Unburdened in
-    no body armour, `World::step_price`), Brutal critical (critical multiplier +1 with a
-    two-handed weapon), Hardened (each level past `hp_level` adds the level's hit points again
-    and 3 more), Mighty thews, Blood frenzy (a kill while raging builds 5 rage), Mighty rage
+    (critical multiplier +1 with melee weapons, at most ×5); Battle-scarred (Protection +1, and
+    +2 more while raging: +3 in all, in any armour), Headlong (while raging, steps 20 % cheaper,
+    in any armour and any burden, `World::step_price`), Brutal critical (critical multiplier +1
+    with a two-handed weapon), Hardened (each level past `hp_level` adds the level's hit points
+    again and 3 more), Mighty thews, Blood frenzy (while raging, melee attacks 20 % cheaper,
+    `World::attack_price`; and a kill builds 5 rage), Mighty rage
     (Raging's raises doubled, 10 more rage at most, Exhausted eases twice as fast), Unstoppable
     (while raging bleeding and poison tick nothing, and a blow that would take the last hit point
     leaves it for 10 rage, while that much is held); Divine grace
@@ -1045,7 +1046,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Still mind (+2 on checks made with Willpower: diseases', noticing
     in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
     Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1). The paladin's
-    passives do not ask for Good; only the gifts used from the menu do.
+    passives do not ask for Good; only the gifts used from the menu do. No berserker row reads
+    what the berserker wears (#843).
+  - **While a status lasts** (#843): any talent effect the talents' one sum reads may say
+    `while = "STATUS"` (a status id, checked at load); it counts only while its holder suffers
+    that status (`Talents::mods`, given the actor's statuses; every rule keeps its one read).
+    Battle-scarred's second half, Headlong, and Blood frenzy's price say `while = "raging"`. An
+    active, a spell given, or what is rolled or handed down when a talent is taken carries no
+    condition (refused at load). The identical-effects check counts the condition as part of
+    the effect: `protection 2 while raging` is not Bulwark's `protection 2`.
   - **Resources**: Rage, War cry, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
     (§8 "Resources", R1); Flurry and Quivering palm on the Ki resource (R4, #252).
   - **Coverage**: `min_class` stays 0 until every class has its table.

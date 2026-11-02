@@ -51,8 +51,8 @@ tags = ["temple"]
 id = "the_cloister"
 tier = "common"
 weight = 5
-text = "You were given to the cloister young, and spent your youth in silence, in hard work, and in learning to fall without hurting."
-when = { class = ["monk"] }
+text = "You were given young to a house of the discipline, and spent your youth in silence, in hard work, and in learning to fall without hurting."
+when = { class = ["ascetic"] }
 effects = [{ skill = { concentration = "2d4", tumble = "1d4" } }]
 tags = ["cloister"]
 

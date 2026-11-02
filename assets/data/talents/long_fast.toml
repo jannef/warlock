@@ -1,6 +1,6 @@
 [[talent]]
-id = "ascetic"
-name = "Ascetic"
+id = "long_fast"
+name = "Long fast"
 tree = "grit"
 description = "You have mastered your body's wants: hunger never weakens you, however long you go without, and you never faint from it. Starving still kills."
 needs = { stats = { willpower = 13 } }
