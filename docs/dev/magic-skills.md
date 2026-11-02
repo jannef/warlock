@@ -135,7 +135,6 @@ untrained; no race or creature gives one.
 
 Saves change: a `Training` per school on `Actor::weapon_skills` (by index), the styles moved an
 index, a save's Spell attacks training dropped (the content fingerprint refuses such a save).
-`FORMAT_VERSION` untouched (the integrator's).
 
 ## Tests
 

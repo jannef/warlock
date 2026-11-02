@@ -258,19 +258,11 @@ actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radianc
 menu shows; a holy gift's talent may name the bands it works for (`alignment`; outside them it
 is used and does nothing, `docs/dev/alignment.md`). A shared entry is one talent the tables
 name alike (`purity_of_body`, the paladin's, the priest's, and the ascetic's: #790 cut its copy
-`divine_health`); the ascetic's Deflect missiles is the ordinary talent, handed out. A save holding
-a talent the content no longer has (the thief's three removed by #684, the 27 cut by #774, the
-weak ones #787 cut and the three #788 merged into Pious, #790's clones and chains, #816's
-identification talents) loads
-without it: `Talents::drop_unknown` in `World::from_state`,
-each said in `World::retiered` (logged on load; `talent_tests.rs`
-`a_save_naming_a_cut_talent_loads_without_it`). A talent **merged** into another is not
-dropped but mapped: `merged` in `data/talents.toml` names each removed id and the talent it
-became (Owl eyes into Dark adaptation, #817; the load refuses a removed id still in the data or
-one merged into an unknown talent), and `Talents::merge_removed`, run just before
-`drop_unknown`, holds the merged talent in its place at the same rank (at most its ranks); held
-both ways, the first place is kept at the higher rank. Each is said in `World::retiered`
-(`land_talent_tests.rs` `owl_eyes_in_a_save_is_dark_adaptation`). Keys: the actives have none of their own (as Second wind; the abilities menu
+`divine_health`); the ascetic's Deflect missiles is the ordinary talent, handed out. A talent cut,
+renamed, or merged into another needs nothing for saves: saves are pinned to the version that
+wrote them (#840, docs/dev/saves.md), and `World::from_state` refuses a state holding a talent
+the content does not have (`Talents::unknown_to`; `class_rogue_tests.rs`
+`a_save_holding_a_talent_the_content_no_longer_has_is_refused`). Keys: the actives have none of their own (as Second wind; the abilities menu
 and its repeat key use them).
 
 ## Caster spells

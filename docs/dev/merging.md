@@ -115,14 +115,18 @@ roster wave, and what to do in each:
 - `xtask/src/wiki/mod.rs` test rows that list creatures use `row_has(page, start, fragments)`:
   assert the stable parts of a row, never the whole list, so a creature edits no assertion.
 
-## The save format: one bump per release
+## The save format: pinned to the version
 
-`FORMAT_VERSION` (`warlock-core/src/save.rs`) is bumped by the integrator once per release, never
-in a feature PR, and its history is one line per release. Feature PRs that change `WorldState` or
-the content fingerprint (any new id in an indexed table) say "saves change" in the PR and leave the
-number alone: before 1.0, saves are not promised across development builds, and a save a build
-cannot read is renamed `run.sav.bad`, never lost. Do not write "format version N" in the spec,
-CLAUDE.md, the topic files, or the wiki.
+A save is pinned to the game version that wrote it (#840, `docs/dev/saves.md`): another
+version's save is listed, never loaded. There is no format number: the workspace version, which
+the release bumps, is the pin, and nothing carries a save across it. So a feature PR that
+renames, removes, or merges an id (a talent, a story line, an affix tier) adds **no** load-time
+mapping, `merged` table, or lenient read for old saves; `#[serde(default)]` on a new field is
+fine. Feature PRs that change `WorldState` or the content fingerprint (any new id in an indexed
+table) say "saves change" in the PR: development builds share a version, so their saves are not
+promised across builds, and a save a build cannot read is renamed `<id>.sav.bad`, never lost.
+The release that bumps the workspace version also sets `version` in the fixture summaries under
+`tests/golden/saved-characters/saves/` (all but Osric's, another version's on purpose).
 
 ## Design documents
 

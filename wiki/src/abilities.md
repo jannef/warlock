@@ -92,6 +92,9 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   what is near it, then come back. An order takes no time, but it is a shout: anything near
   enough hears it (see [Hearing](hearing.md)). Greyed out "no allies here" while none of them is
   on the level with you. Each order, and each kill of theirs, trains [Handle animal](skills.md#skill-handle-animal).
+  Set on asks for the place as aiming a shot does; Tab skips your own allies. On the map an ally
+  of yours has a short, faint green line under it, and looking at one says it is yours ("Your
+  wolf (unhurt)").
 - No [race](races.md) gives an ability yet.
 
 ## Keys of their own

@@ -35,6 +35,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
    quieter. With glyph animation on the mix breathes between 0.15 and 0.35 over 6 s on the
    creature's own phase; off (reduced effects) it stands still at 0.25. Less than the
    darkvision fade; no shader change (free glyphs are coloured on the CPU).
+   **The ally mark** (§8 "Allies"): a creature the snapshot says is the player's ally
+   (`SeenActor::ally`) has a short, faint underline beneath its glyph: `_` at 0.8 of the cell's
+   width, a tenth of a cell lower, a muted sage (`#8fc096`, through the palette) at 0.85
+   opacity. The creature's own colour is untouched (it still tells its type); the line slides
+   with it and is lit as it is, and is still, so it looks the same with effects on or off.
 3. **UI layer** — panels, message log, and overlays, drawn in glyphs.
 4. **Post-processing** — glow/bloom, distortion, fades (§4.8).
 

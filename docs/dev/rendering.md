@@ -41,6 +41,14 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    own phase) with glyph animation on, and stands at 0.25 without it (reduced effects): still
    information, no motion. Tuned against the darkvision fade (less than it), with captures
    beside an aware creature of the same type.
+   **The ally mark** (#838; `docs/dev/allies.md`): for a creature whose `SeenActor::ally` is
+   set, `ui/glyphs.rs::ally_mark` pushes a free glyph before the creature's (so it draws under
+   it): `ALLY_MARK_GLYPH` (`_`) scaled by `ALLY_MARK_SCALE` (0.8, so neighbours' lines never
+   join), dropped `ALLY_MARK_DROP` (0.1 cell heights) below the cell to clear the baseline, in
+   `ALLY_MARK` (`#8fc096`, a muted sage, through the palette) at `ALLY_MARK_ALPHA` (0.85), lit
+   with `ACTOR_FLOOR` at the creature's sliding position. The creature's colour is left alone
+   (it tells the type; a tint would read as another creature, and the unaware mark already
+   tints). Still: no switch needs to stop it, so reduced effects show the same mark.
    **Spell circles** (spec §4.8 "Spell circles", `docs/design/buff-circles.md`; between the map
    grid and the free glyphs, `render/circles.rs::LAYER_Z` 0.5): `ui/circles.rs::emit` (in the
    map chain after `lighting::update`) builds, when `Game` changes, the list of circled actors

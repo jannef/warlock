@@ -154,7 +154,10 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                 let name = &content.creature(actor.creature).name;
                 // Its type tells the player how it stands toward them (its faction), and they
                 // see how hurt it is: in words, never in hit points.
+                // An ally of the player's is theirs (spec §8 "Allies"): "Your wolf (unhurt)", or
+                // a named one "(your ally, unhurt)".
                 let stance = match view.stance(actor) {
+                    _ if actor.ally => "",
                     Stance::Hostile => "hostile, ",
                     Stance::Neutral => "",
                 };
@@ -177,15 +180,16 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                 let proper = (actor.dialogue)
                     .and_then(|d| content.dialogue(d).name.as_deref())
                     .or_else(|| warlock_core::content::is_proper(name).then_some(name.as_str()));
+                let ally = if actor.ally { "your ally, " } else { "" };
                 match proper {
                     Some(proper) => format!(
-                        "{proper} ({stance}{health}{effects}){}{gear}, on {}{here}.",
+                        "{proper} ({ally}{stance}{health}{effects}){}{gear}, on {}{here}.",
                         services(content, actor),
                         terrain(t)
                     ),
                     None => format!(
                         "{} {name}{} ({stance}{health}{effects}){gear}, on {}{here}.",
-                        article(name),
+                        if actor.ally { "Your" } else { article(name) },
                         made_of(content, actor).0,
                         terrain(t)
                     ),
@@ -912,6 +916,23 @@ map = '''
         // The gear line names what it wears and wields, unidentified.
         said.extend([Pos::new(2, 1), Pos::new(4, 1)].map(|p| describe(&view, p, true)));
         insta::assert_snapshot!(said.join("\n"));
+    }
+
+    #[test]
+    fn an_ally_is_yours() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "showcase", None).expect("showcase");
+        for action in warlock_core::action::parse_actions("ally:dire_warg").expect("actions") {
+            w.apply(&action);
+        }
+        let view = w.perception();
+        let ally = (view.actors().iter())
+            .find(|a| a.ally)
+            .expect("the warg beside the player");
+        assert_eq!(
+            describe(&view, ally.pos, true),
+            "Your dire warg (unhurt), on stone floor."
+        );
     }
 
     #[test]

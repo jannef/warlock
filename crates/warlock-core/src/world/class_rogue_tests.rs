@@ -370,7 +370,7 @@ fn the_thiefs_skills_give_disarm_pick_lock_and_steal_from_the_first_level() {
 }
 
 #[test]
-fn a_save_holding_a_talent_the_content_no_longer_has_loads_without_it() {
+fn a_save_holding_a_talent_the_content_no_longer_has_is_refused() {
     let w = world("thief");
     let mut state = w.state().clone();
     let player = state.player;
@@ -383,13 +383,14 @@ fn a_save_holding_a_talent_the_content_no_longer_has_loads_without_it() {
     });
     me.talents =
         serde_json::from_value(serde_json::to_value(&talents).expect("json")).expect("talents");
-    let back = World::from_state(BUILTIN.clone(), state).expect("loads");
-    assert!(!back.state.player().talents.has("trapfinding", 1));
-    assert_eq!(class_rows(&back), class_rows(&w));
+    let refused = World::from_state(BUILTIN.clone(), state)
+        .err()
+        .map(|e| e.to_string());
     assert!(
-        (back.retiered().iter()).any(|l| l.contains("talent `trapfinding`")),
-        "{:?}",
-        back.retiered()
+        refused
+            .as_ref()
+            .is_some_and(|e| e.contains("talent `trapfinding`")),
+        "{refused:?}"
     );
 }
 

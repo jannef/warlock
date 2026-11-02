@@ -132,6 +132,9 @@ impl Game {
                     .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
                 let replay =
                     Replay::from_json(&text).map_err(|e| format!("{}: {e}", path.display()))?;
+                if let Some(note) = replay.version_note() {
+                    eprintln!("warlock: warning: {}: {note}", path.display());
+                }
                 let (world, divergence, outcome, before) = play_replay(&replay, content)
                     .map_err(|e| format!("{}: {e}", path.display()))?;
                 if let Some(divergence) = divergence {

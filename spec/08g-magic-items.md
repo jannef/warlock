@@ -90,10 +90,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     beside the talents' (§8 "Spells": "Hooks", `Actor::spell_mods`; no tag filter on an item:
     each acts on every spell): `spell_rungs` rungs, `spell_bonus` (Potent: +1, +2, +3 at item
     levels 3, 7, 11) on the roll, `spell_sides`, `spell_dice`, `spell_reroll`, `spell_reach`
-    cells of range or length with School focus's, `spell_duration` degrees. An old Potent
-    (stored 4 to 15 before the spell scaling design) is read into the tier that holds it or the
-    nearest, its value held to that tier's range (an old 13 is +3: save compatibility for a
-    stored number, not a limit on spells; `Magic::retier`). `caster_level` (of the Adept) is read in `Actor::caster_level`; **Attuned**
+    cells of range or length with School focus's, `spell_duration` degrees. `caster_level` (of the Adept) is read in `Actor::caster_level`; **Attuned**
     (Scholar, Intelligence 12, level 6) counts the caster level magic items give half again,
     rounded up (+1 → +2, +3 → +5) (affixes design §10; its stamina twin, Bellows, was cut in
     #774).

@@ -119,7 +119,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   lasts. Raging `blocks` `cast`, so `World::spend_mana` refuses while it lasts. While the
   player's own Raging lasts they are in the frenzy stance and cannot leave it, and its end
   leaves them aggressive (`world/frenzy.rs`, #680; spec §8 "Stances"): `frenzy::settle`
-  runs where a status begins or ends and on load; `world/frenzy_tests.rs` covers it.
+  runs where a status begins or ends; `world/frenzy_tests.rs` covers it.
 - **Ki** (R4, #252; the ki tricks design S2, #846): Martial arts (level 1) grants it
   (`grants_resource`), full; `max = 4`, `max_from = { stat = "willpower", per_levels = 6,
   least = 3 }` (no code: stamina's field), `lacking = "your ki is spent"`. Perfect self (60)
