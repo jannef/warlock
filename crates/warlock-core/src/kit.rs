@@ -234,7 +234,7 @@ mod tests {
     }
 
     #[test]
-    fn the_barbarians_great_weapon_follows_the_weapon_skill_picked() {
+    fn the_berserkers_great_weapon_follows_the_weapon_skill_picked() {
         let axes = CONTENT.weapon_skills().id("axes").expect("axes");
         let blades = CONTENT
             .weapon_skills()
@@ -242,7 +242,7 @@ mod tests {
             .expect("great blades");
         let mut seen = [false; 2];
         for seed in 0..30 {
-            let s = start(&CONTENT, "human,male,barbarian", seed);
+            let s = start(&CONTENT, "human,male,berserker", seed);
             let held = held(&s.kit);
             let weapon = &held[0];
             assert_eq!(weapon.1.as_deref(), Some("main_hand"), "{held:?}");

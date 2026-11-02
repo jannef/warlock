@@ -1,4 +1,4 @@
-//! The barbarian's rage in the world (spec §8 "Class abilities" and "Resources"; the
+//! The berserker's rage in the world (spec §8 "Class abilities" and "Resources"; the
 //! progression design §4.18, R1): the Rage ability grants the Rage resource, which brings the
 //! Raging status (its benefits and what it blocks) for as long as it lasts. Rage decays a point a
 //! base turn and ends at zero, taking Raging with it, and Exhausted follows (`World::live`,

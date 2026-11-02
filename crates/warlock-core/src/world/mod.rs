@@ -91,7 +91,6 @@ mod appraise;
 mod attacks;
 mod background;
 mod beast_friend;
-mod berserker;
 mod bleed;
 mod boons;
 mod buff;
@@ -131,6 +130,7 @@ mod flavour;
 mod focus;
 mod forage;
 mod free_blow;
+mod frenzy;
 mod gifts;
 mod glare;
 mod guild;
@@ -535,7 +535,7 @@ pub struct World {
     notes: Vec<String>,
     /// What loading re-tiered (not saved): a line per affix of a saved item moved to the tier of
     /// a regraded ladder that holds its value (`retier.rs`), and per actor whose stance broke
-    /// the berserker's rule (`berserker.rs`), for the game's log.
+    /// the frenzy's rule (`frenzy.rs`), for the game's log.
     retiered: Vec<String>,
     /// While the player strikes a free blow in another's turn (not saved): what is said
     /// meanwhile, to join the news (`free_blow.rs`).
@@ -1006,12 +1006,12 @@ impl World {
                 ));
             }
         }
-        // The berserker stance exactly while raging (`berserker.rs`): a save that broke the rule
+        // The frenzy stance exactly while raging (`frenzy.rs`): a save that broke the rule
         // is put right.
         for actor in state.actors.values_mut() {
-            if let Some(was) = berserker::settle(actor, &content) {
+            if let Some(was) = frenzy::settle(actor, &content) {
                 let why = match actor.stance {
-                    CombatStance::Berserker => "raging",
+                    CombatStance::Frenzy => "raging",
                     _ => "not raging",
                 };
                 retiered.push(format!(
@@ -1447,8 +1447,8 @@ impl World {
 
     /// The player takes combat stance `stance` (spec §8 "Stances"). Takes no time, but a wait's
     /// for those set in their ways (spec §8 "Birth sign").
-    /// The berserker's stance is refused, and so is any while rage holds the player in it
-    /// (`berserker.rs`).
+    /// The frenzy stance is refused, and so is any while rage holds the player in it
+    /// (`frenzy.rs`).
     fn set_stance(&mut self, stance: CombatStance) -> Spent {
         if let Some(refused) = self.stance_refused(stance) {
             return refused;
@@ -1504,8 +1504,6 @@ mod attacks_tests;
 mod balance_probe;
 #[cfg(test)]
 mod beast_den_tests;
-#[cfg(test)]
-mod berserker_tests;
 #[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]
@@ -1608,6 +1606,8 @@ mod focus_tests;
 mod forage_tests;
 #[cfg(test)]
 mod free_blow_tests;
+#[cfg(test)]
+mod frenzy_tests;
 #[cfg(test)]
 mod gear_tests;
 #[cfg(test)]

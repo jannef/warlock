@@ -38,7 +38,7 @@
 #
 # The numbers are the progression design's first guesses (§4.18).
 
-# The barbarian's rage (the Rage ability): it counts down a point a base turn, resting too, and
+# The berserker's rage (the Rage ability): it counts down a point a base turn, resting too, and
 # ends at zero, taking the Raging status with it (whose end is what the player is told; then
 # Exhausted follows). Blood frenzy builds it by kills, Mighty rage raises its maximum, and
 # Unstoppable spends it (talents/).

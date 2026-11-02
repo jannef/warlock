@@ -1,4 +1,4 @@
-//! The berserker stance (spec §8 "Stances"; #680): rage puts a barbarian in it and holds them
+//! The frenzy stance (spec §8 "Stances"; #680): rage puts a berserker in it and holds them
 //! there, every end of the rage leaves them aggressive, and nothing else ever gives it.
 
 use super::class_active_tests::{last, run, world};
@@ -15,54 +15,54 @@ fn raging(w: &World) -> bool {
 }
 
 #[test]
-fn rage_forces_the_berserker_stance_from_every_other() {
+fn rage_forces_the_frenzy_stance_from_every_other() {
     for from in CombatStance::CHOSEN {
-        let mut w = world("barbarian");
+        let mut w = world("berserker");
         run(&mut w, &format!("stance:{from}"));
         assert_eq!(stance(&w), from);
         run(&mut w, "use:rage");
         assert!(raging(&w));
-        assert_eq!(stance(&w), Berserker, "from {from}");
-        assert_eq!(w.state.player().stance, Berserker);
+        assert_eq!(stance(&w), Frenzy, "from {from}");
+        assert_eq!(w.state.player().stance, Frenzy);
     }
     // The dev grant starts Raging too, and with it the stance.
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     run(&mut w, "stance:coward resource:rage");
-    assert_eq!(stance(&w), Berserker);
+    assert_eq!(stance(&w), Frenzy);
 }
 
 #[test]
 fn rage_holds_the_stance_and_nothing_else_gives_it() {
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     // Never chosen: refused, no time, with a line.
-    let out = w.apply(&Action::SetStance(Berserker));
+    let out = w.apply(&Action::SetStance(Frenzy));
     assert!(!out.took_turn && out.elapsed.is_zero());
-    assert_eq!(last(&w), "Only rage makes a berserker.");
+    assert_eq!(last(&w), "Only rage brings the frenzy.");
     assert_eq!(stance(&w), Neutral);
     run(&mut w, "use:rage");
     let told = w.messages().len();
     for to in CombatStance::ALL {
         let out = w.apply(&Action::SetStance(to));
         assert!(!out.took_turn && out.elapsed.is_zero(), "{to}");
-        assert!(last(&w).starts_with("Your rage holds you in the berserker's stance."));
-        assert_eq!(stance(&w), Berserker);
+        assert!(last(&w).starts_with("Your rage holds you in the frenzy."));
+        assert_eq!(stance(&w), Frenzy);
     }
     assert!(w.messages().len() > told);
     // The keys step nowhere from it.
-    assert_eq!(Berserker.more_aggressive(), Berserker);
-    assert_eq!(Berserker.more_defensive(), Berserker);
+    assert_eq!(Frenzy.more_aggressive(), Frenzy);
+    assert_eq!(Frenzy.more_defensive(), Frenzy);
 }
 
 #[test]
-fn only_a_barbarians_own_rage_makes_a_berserker() {
-    // A warrior granted rage (the dev grant: Raging with it) is not a barbarian.
+fn only_a_berserkers_own_rage_brings_the_frenzy() {
+    // A warrior granted rage (the dev grant: Raging with it) is not a berserker.
     let mut w = world("warrior");
     run(&mut w, "stance:defensive resource:rage");
     assert!(raging(&w));
     assert_eq!(stance(&w), Defensive);
     run(&mut w, "stance:aggressive");
     assert_eq!(stance(&w), Aggressive, "not held");
-    run(&mut w, "stance:berserker");
+    run(&mut w, "stance:frenzy");
     assert_eq!(stance(&w), Aggressive);
     // A creature that suffers Raging stays neutral.
     let raging_id = w.content().status_id("raging").expect("raging");
@@ -75,9 +75,9 @@ fn only_a_barbarians_own_rage_makes_a_berserker() {
 }
 
 #[test]
-fn every_end_of_the_rage_leaves_the_barbarian_aggressive() {
+fn every_end_of_the_rage_leaves_the_berserker_aggressive() {
     // The rage running out.
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     run(&mut w, "stance:coward use:rage wait*30");
     assert!(!raging(&w));
     assert_eq!(stance(&w), Aggressive, "not the coward's from before");
@@ -87,7 +87,7 @@ fn every_end_of_the_rage_leaves_the_barbarian_aggressive() {
     run(&mut w, "stance:defensive");
     assert_eq!(stance(&w), Defensive, "free to choose again");
     // Raging ended otherwise (cured, `World::ended`).
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     run(&mut w, "use:rage");
     let raging_id = w.content().status_id("raging").expect("raging");
     let effect = *w.state.player().effects.get(raging_id).expect("raging");
@@ -96,7 +96,7 @@ fn every_end_of_the_rage_leaves_the_barbarian_aggressive() {
     w.ended(player, &[effect], &mut Vec::new());
     assert_eq!(stance(&w), Aggressive);
     // The rage spent to nothing (Unstoppable's cost, any spending).
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     run(&mut w, "use:rage");
     let rage = w.content().resource_id("rage").expect("rage");
     let held = w.state.player().resources.get(rage).expect("held").value;
@@ -104,7 +104,7 @@ fn every_end_of_the_rage_leaves_the_barbarian_aggressive() {
     assert!(!raging(&w));
     assert_eq!(stance(&w), Aggressive);
     // Rest through it: the rage decays while resting too.
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     run(&mut w, "use:rage rest:1h");
     assert!(!raging(&w));
     assert_eq!(stance(&w), Aggressive);
@@ -112,42 +112,39 @@ fn every_end_of_the_rage_leaves_the_barbarian_aggressive() {
 
 #[test]
 fn a_save_mid_rage_comes_back_raging_and_a_broken_one_is_put_right() {
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     run(&mut w, "use:rage");
     let content = w.content().clone();
     let back = crate::save::decode(&crate::save::encode(&w), content.clone()).expect("loads");
     assert_eq!(back.state(), w.state());
-    assert_eq!(back.perception().own_stance(), Berserker);
+    assert_eq!(back.perception().own_stance(), Frenzy);
     assert!(back.retiered().is_empty());
-    // Berserker without the rage: aggressive, with a line for the log.
-    let mut calm = world("barbarian");
-    calm.player_mut().stance = Berserker;
+    // Frenzy without the rage: aggressive, with a line for the log.
+    let mut calm = world("berserker");
+    calm.player_mut().stance = Frenzy;
     let back = crate::save::decode(&crate::save::encode(&calm), content.clone()).expect("loads");
     assert_eq!(back.perception().own_stance(), Aggressive);
     assert!(
-        (back.retiered().iter()).any(|l| l.contains("not raging in the berserker stance")),
+        (back.retiered().iter()).any(|l| l.contains("not raging in the frenzy stance")),
         "{:?}",
         back.retiered()
     );
-    // Raging out of it: berserker again.
-    let mut odd = world("barbarian");
+    // Raging out of it: the frenzy again.
+    let mut odd = world("berserker");
     run(&mut odd, "use:rage");
     odd.player_mut().stance = Coward;
     let back = crate::save::decode(&crate::save::encode(&odd), content).expect("loads");
-    assert_eq!(back.perception().own_stance(), Berserker);
+    assert_eq!(back.perception().own_stance(), Frenzy);
 }
 
 #[test]
-fn the_berserker_hits_harder_and_more_often_and_guards_worse_than_the_aggressive() {
-    let mut w = world("barbarian");
+fn the_frenzy_hits_harder_and_more_often_and_guards_worse_than_the_aggressive() {
+    let mut w = world("berserker");
     let content = w.content().clone();
-    let (aggressive, berserker) = (
-        content.stance_def(Aggressive),
-        content.stance_def(Berserker),
-    );
-    assert!(berserker.to_hit > aggressive.to_hit);
-    assert!(berserker.damage > aggressive.damage);
-    assert!(berserker.dodge < aggressive.dodge);
+    let (aggressive, frenzy) = (content.stance_def(Aggressive), content.stance_def(Frenzy));
+    assert!(frenzy.to_hit > aggressive.to_hit);
+    assert!(frenzy.damage > aggressive.damage);
+    assert!(frenzy.dodge < aggressive.dodge);
     let player = w.state.player;
     let measure = |w: &mut World, s: CombatStance| {
         w.player_mut().stance = s;
@@ -155,20 +152,20 @@ fn the_berserker_hits_harder_and_more_often_and_guards_worse_than_the_aggressive
         (profile.to_hit, profile.bonus, w.defence_of(player).total())
     };
     let (hit_a, damage_a, dv_a) = measure(&mut w, Aggressive);
-    let (hit_b, damage_b, dv_b) = measure(&mut w, Berserker);
-    assert_eq!(hit_b - hit_a, berserker.to_hit - aggressive.to_hit);
-    assert_eq!(damage_b - damage_a, berserker.damage - aggressive.damage);
-    assert_eq!(dv_b - dv_a, berserker.dodge - aggressive.dodge);
-    // Wild guard halves the berserker's Dodge penalty.
+    let (hit_b, damage_b, dv_b) = measure(&mut w, Frenzy);
+    assert_eq!(hit_b - hit_a, frenzy.to_hit - aggressive.to_hit);
+    assert_eq!(damage_b - damage_a, frenzy.damage - aggressive.damage);
+    assert_eq!(dv_b - dv_a, frenzy.dodge - aggressive.dodge);
+    // Wild guard halves the frenzy's Dodge penalty.
     w.player_mut().talents.take("wild_guard", None);
-    let (_, _, dv_wild) = measure(&mut w, Berserker);
-    assert_eq!(dv_wild - dv_b, -berserker.dodge - (-berserker.dodge) / 2);
+    let (_, _, dv_wild) = measure(&mut w, Frenzy);
+    assert_eq!(dv_wild - dv_b, -frenzy.dodge - (-frenzy.dodge) / 2);
 }
 
 #[test]
 fn rage_is_all_a_replay_needs() {
     let content = Arc::new(Content::builtin().expect("content"));
-    let spec: crate::character::CharacterSpec = "human,male,barbarian".parse().expect("spec");
+    let spec: crate::character::CharacterSpec = "human,male,berserker".parse().expect("spec");
     let mut w =
         World::start_run(content, "showcase", Some(7), Some(&spec), None, true).expect("world");
     let mut replay = crate::replay::Replay::new(&w);

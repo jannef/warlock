@@ -12,7 +12,7 @@
 //! - **Slowness**: its `cost` multiplies the price of every action the actor takes, after its
 //!   burden and hunger (`World::burdened`, the one place every price passes).
 //! - **Blocks**: the player cannot take an action of a kind a status of theirs `blocks` (a raging
-//!   barbarian cannot read): the rules refuse it, taking no time ([`World::refuse_blocked`]), and
+//!   berserker cannot read): the rules refuse it, taking no time ([`World::refuse_blocked`]), and
 //!   the abilities menu greys out an ability that costs one
 //!   ([`crate::ability::Unavailable::While`]). Creatures' plans consult it for steps only: one a
 //!   status of its blocks `step` (Held) neither steps nor opens a door, and fights back
@@ -162,7 +162,7 @@ impl World {
         }
         self.end_resources_of(id, ended, events);
         self.keep_hp_within_max(id);
-        // Rage's end leaves a berserker aggressive (`berserker.rs`).
+        // Rage's end leaves the frenzy for the aggressive stance (`frenzy.rs`).
         self.settle_stance(id);
     }
 }

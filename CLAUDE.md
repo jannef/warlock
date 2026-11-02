@@ -125,7 +125,7 @@ eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR searc
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N rank:SKILL:N
 skip:DURATION weather:KIND spawn meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
-NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`; `berserker` is refused: only rage gives it); `LETTERS` = stacks by position, as letters
+NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`; `frenzy` is refused: only rage gives it); `LETTERS` = stacks by position, as letters
 for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
 e.g. `pickup:ac` (the pile on the player's cell, `a` its top) or `drop:b` (the inventory), none
 = everything; `LETTER` = one position, `b` or `27` (`equip:body:27`, `eat:floor:30`); positions
@@ -215,7 +215,7 @@ and its thresholds),
 (the player's name, race, gender, and class, age, birth date, and sign with a lucky day's title,
 `Sign Wood Salamander, the Racer`, then their own scores as the rules read them, then
 their caster level, `Caster level 3`, then their alignment band, `Alignment Kind`, then their combat stance when it is not neutral,
-`Stance Berserker`, then each guild they belong to with their rank, `Guild
+`Stance Frenzy`, then each guild they belong to with their rank, `Guild
 Weyfarers' Gilde, Tin`, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
