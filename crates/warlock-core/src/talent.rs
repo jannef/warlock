@@ -594,6 +594,8 @@ pub struct TalentMods {
     pub quivering_palm: Option<PalmBlow>,
     /// The active Step of the wind, if it has it: the status it gives (Light-footed).
     pub wind_step: Option<StatusId>,
+    /// The active Stillness, if it has it: the statuses it ends.
+    pub stillness: Option<Vec<StatusId>>,
     /// Hit points every level past `hp_level` adds beyond a level's own, if it has Hardened.
     pub hardened: Option<i32>,
     /// Percent more maximum hit points (negative: fewer).
@@ -1013,6 +1015,7 @@ impl TalentMods {
             A::StunningStrike => self.stunning_strike.is_some(),
             A::QuiveringPalm => self.quivering_palm.is_some(),
             A::StepOfTheWind => self.wind_step.is_some(),
+            A::Stillness => self.stillness.is_some(),
             A::Volley => self.volley.is_some(),
             A::Lurk => self.lurk.is_some(),
             A::LowBlow => self.low_blow,
@@ -1806,6 +1809,14 @@ impl TalentMods {
             }
             TalentEffect::WindStep { status } => {
                 self.wind_step = self.wind_step.or(content.status_id(&status));
+            }
+            TalentEffect::Stillness { statuses, .. } => {
+                let ends = self.stillness.get_or_insert_with(Vec::new);
+                for id in statuses.iter().filter_map(|s| content.status_id(s)) {
+                    if !ends.contains(&id) {
+                        ends.push(id);
+                    }
+                }
             }
             TalentEffect::Hardened { bonus } => {
                 self.hardened = Some(self.hardened.unwrap_or(0) + bonus);

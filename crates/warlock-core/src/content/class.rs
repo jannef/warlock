@@ -495,6 +495,9 @@ pub enum ClassActive {
     /// Light on the feet for ki, taking no time: the next action at half its price (the
     /// ascetic's Step of the wind, `world/ascetic.rs`).
     StepOfTheWind,
+    /// What clouds the mind or holds the body ended at once, for ki, taking no time (the
+    /// ascetic's Stillness, on Still mind, `world/ascetic.rs`).
+    Stillness,
     /// Shots at a cell, several for the price of one, then a cooldown (the ranger's Volley).
     Volley,
     /// A wait in ambush: a hostile stepping up beside you takes your blow at once (the
@@ -531,6 +534,7 @@ impl ClassActive {
         ClassActive::StunningStrike,
         ClassActive::QuiveringPalm,
         ClassActive::StepOfTheWind,
+        ClassActive::Stillness,
         ClassActive::Volley,
         ClassActive::Lurk,
         ClassActive::LowBlow,
@@ -554,6 +558,7 @@ impl ClassActive {
             ClassActive::StunningStrike => "stunning_strike",
             ClassActive::QuiveringPalm => "quivering_palm",
             ClassActive::StepOfTheWind => "step_of_the_wind",
+            ClassActive::Stillness => "stillness",
             ClassActive::Volley => "volley",
             ClassActive::Lurk => "lurk",
             ClassActive::LowBlow => "low_blow",
@@ -621,10 +626,10 @@ impl ClassActive {
         matches!(self, ClassActive::MerchantsEye)
     }
 
-    /// Whether it takes no time at all (Step of the wind): its [`ClassActive::cost`] then names
-    /// only the statuses that block it.
+    /// Whether it takes no time at all (Step of the wind, Stillness): its [`ClassActive::cost`]
+    /// then names only the statuses that block it.
     pub const fn takes_no_time(self) -> bool {
-        matches!(self, ClassActive::StepOfTheWind)
+        matches!(self, ClassActive::StepOfTheWind | ClassActive::Stillness)
     }
 
     /// What it costs, as an action of this kind (`data/actions.toml`).
@@ -635,7 +640,8 @@ impl ClassActive {
             | ClassActive::VeteransWind
             | ClassActive::Lurk
             // It takes no time (`takes_no_time`): none block a wait.
-            | ClassActive::StepOfTheWind => ActionKind::Wait,
+            | ClassActive::StepOfTheWind
+            | ClassActive::Stillness => ActionKind::Wait,
             ClassActive::Whirlwind
             | ClassActive::Smite
             | ClassActive::StunningStrike
