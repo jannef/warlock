@@ -31,6 +31,7 @@ fn the_shipped_meetings_read_as_the_design_has_them() {
     assert_eq!(m.cover_of(Landscape::DenseForest), 4);
     assert_eq!(m.phase.night, 200);
     assert_eq!(m.ambush_wait, 600);
+    assert_eq!(m.rest_percent, 25, "a quarter of the rate an hour of rest");
     let p = m.positions.player;
     // The more the encounter favours the player, the nearer the edge they stand.
     assert!(p.ambush < p.fight && p.fight < p.close && p.close < p.ambushed);

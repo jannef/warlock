@@ -123,4 +123,5 @@ location (Cealdhlāw) is remembered and then listed by the `locations` layer as 
 Overworld encounters (#804; `docs/dev/encounters.md`): after an overworld step onto a cell with a
 local area (`travel.rs::player_moves` records it, `World::apply` rolls it after the turn), a
 party may be met; a fight opens in the cell's local area as `>` would open it, the player placed
-by how the encounter went.
+by how the encounter went. A rest and a forage on the overworld roll too, each turn (#807,
+`World::watch_roll`).
