@@ -1,20 +1,26 @@
-# Warlock — The priest: weak in a fight, master of roguelike housekeeping
+# Warlock — The priest: one prayer, answered as far as it reaches
 
-Design document for the owner's review (2026-11-02, #820). Written against `origin/main` at
-f3846261 (encounters E5). Nothing here is implemented; §11 cuts it into issues. It builds on
-what is there: the class tables and the coverage policy (`docs/dev/progression.md`, rules 1–9 of
-#776), the spell data and the one cast path (`docs/dev/spells.md`, `docs/dev/spell-scaling.md`
-§7.1's hooks, the restoration school's rows, `docs/dev/magic-skills.md`), statuses, diseases,
-and treating oneself (`docs/dev/status-effects.md`), drain and stat damage (`docs/dev/stats.md`
-"Drain"), hunger and rot (`docs/dev/hunger.md`), the temple's services (`docs/dev/npcs.md`,
-`world/service.rs`), special rooms and Consecrate (`docs/dev/special-rooms.md`), and the gaps
-report (draft PR #802, `docs/design/class-ability-gaps.md`). Every number is data and hidden in
-the game but where the menu already shows it (a spell's mana and dice, as a weapon's); the wiki
-states it (the owner's rule: the game is vague, the wiki is accurate).
+Design document for the owner's review (2026-11-02, #820; round 2, after the owner's answers on
+PR #831, recorded in §13). Written against `origin/main` at c9201000 (the druid design). Nothing
+here is implemented; §11 cuts it into issues. It builds on what is there: the class tables and the
+coverage policy (`docs/dev/progression.md`, rules 1–9 of #776), the class actives and the holy
+gifts' bands (`docs/dev/alignment.md`, `world/class_ability.rs`, `world/consecrate.rs`), the spell
+data and the one cast path (`docs/dev/spells.md`), statuses, diseases, and treating oneself
+(`docs/dev/status-effects.md`), drain and stat damage (`docs/dev/stats.md` "Drain"), hunger
+(`docs/dev/hunger.md`), mana (`docs/dev/mana.md`), the resources (`docs/dev/resources.md`), the
+temple's services (`world/service.rs`), special rooms and the forgotten altar's prayer
+(`docs/dev/special-rooms.md`, `world/pray.rs`), and the gaps report (draft PR #802). Every number
+is data and hidden in the game; the wiki states it (the owner's rule: the game is vague, the wiki
+is accurate).
 
-**The owner's request** (2026-11-02, #820, verbatim): "lean into it being generally pretty shit,
-but having tools to heal/cure/get rid of poison/create food. Kinda having the tools to overcome
-all the traditional rogue like housekeeping issues, but not any extra ability to fight."
+**The owner's request** (#820, verbatim): "lean into it being generally pretty shit, but having
+tools to heal/cure/get rid of poison/create food. Kinda having the tools to overcome all the
+traditional rogue like housekeeping issues, but not any extra ability to fight." **The new
+direction** (PR #831, 2026-11-02, §13): one prayer, given early and spammable as ADOM's, that fixes
+the priest's worst problem from a list that grows with their level, under a hidden strain that
+makes it fizzle when overused; grander names as it grows, two answers a prayer later, and at 60
+**Miracle**, everything at once for one cost; evil versions of the gifts, not twins, and better if
+they turn out better.
 
 ## Contents
 
@@ -23,318 +29,440 @@ all the traditional rogue like housekeeping issues, but not any extra ability to
 3. The housekeeping of Warlock: what bites, and what answers it today
 4. What exists: the priest's table and class file
 5. The proposal: the table, level by level
-6. The new spells and the new active, as data
+6. The prayer, the dark faces, Communion, and Sanctuary, as data
 7. Determinism, saves, replays
 8. What the player sees: the menu, messages, dumps, the wiki
 9. Talents and class abilities (the coverage policy)
 10. Rejected ideas
 11. Implementation plan (slices)
 12. Open questions, each with a recommended default
+13. The owner's decisions (2026-11-02, round 1)
 
 ## 1. Summary
 
 | Piece | Proposal |
 |---|---|
-| **The fantasy** | The priest is a poor fighter by numbers (Strength −1, Dexterity −1, 4 hit points a level, a mace and a buckler) and the table gives them **nothing for a fight**: no blow, no attack spell, no buff to hit. What it gives is an answer to every housekeeping problem a roguelike has: wounds, bleeding, poison, hexes, disease, stat damage and the permanent drain of the undead, hunger, cursed places, and a safe place to rest. Light is already theirs (the kit's scroll of light teaches Light for certain at level 1); identification is the merchant's (the owner). §5 |
-| **Goes** | **Smite** (40): a blow is a fight ability, and it is the paladin's (#823 owns smiting). **Blessing** (3): +1 to hit is a fight buff; the paladin and the bard keep it, and a priest may still learn it from its scroll (abjuration affinity +2). **Purify** (25) as an entry of its own: its effect moves into Daily bread's talent (one rotten-food rule beside the spell that makes rot a non-issue). §5, Q1 |
-| **Stays** | Mend (1), Cure wounds (3), Consecrate (9), Remove disease (12), Purity of body (32), Miracle (50), Saint (60). The kit, stats, skills, and weapon ranks as they are (Q6). §4, §5 |
-| **New** | **Daily bread** (6): a utility spell that makes a wafer of waybread (1000 nutrition, worth nothing) for 6 mana, and Purify's rule. **Balm** (18): a cleanse that ends bleeding, poison, every hex, and whatever holds or webs the caster. **Restoration** (25): a minute's rite for 40 mana that mends all stat damage and restores every drained point: the temple's mending as a spell. **Sanctuary** (40): a minute's rite for 30 mana that hallows the ground within 2 cells for an hour: no hostile steps in, wounds and mana come back at a sanctuary's pace, and the peace breaks if the priest strikes from inside it. §5, §6 |
-| **The table** | 1 Mend · 3 Cure wounds · 6 Daily bread · 9 Consecrate · 12 Remove disease · 18 Balm · 25 Restoration · 32 Purity of body · 40 Sanctuary · 50 Miracle · 60 Saint. Every standard level of the cadence (1, 6, 12, 18, 25, 32, 40, 50, 60) filled; the off-cadence 3 and 9 kept, as the gaps report notes they are on purpose. §5 |
-| **Spells, not cooldowns** | The three new spells are `[[spell]]` files of the restoration school cast by the one cast path: they cost mana, train restoration (whose rows already make heals cheaper and quicker), have ladders and scrolls, and reach the hooks the talents and items use. Sanctuary is a class active built as Consecrate is (a rite with `mana` and `time`), since it lays a place, not a status. §6 |
-| **Data kinds** | `utility` gains `creates = { object, count }` beside `identify`; `cleanse` gains `mends` (stat damage) and `restores` (drained points) beside `cures` and `diseases`; a new talent effect `sanctuary { mana, time, radius, lasts }` and `WorldState::hallows`. One read each. §6, §7 |
-| **Talents** | **None new**: every entry extends a system that has its talents (`hit_points`, `status`, `diseases`, `hunger`, `special_rooms`, `spells`, `mana`). The one new rule (a hallowed place) is a sub-feature of `special_rooms` (a sanctuary the player lays), no tag of its own. §9 |
-| **Slices** | P1 the three spells and the table (rules, data, scrolls, dumps, tests); P2 Sanctuary (the hallow, the AI hook, the pace hook, the break); P3 the wiki, the spec, the balance probe's priest column. §11 |
+| **The fantasy** | A poor fighter by numbers (Strength −1, Dexterity −1, 4 hit points a level, a mace and a buckler) with **one prayer** from level 1 that answers whatever ails them most: wounds first, then as they grow hunger, disease and poison, hexes and holds, drain and stat damage, mana; two answers a prayer from 40; at 60 **Miracle**, everything at once. The prayer costs no mana, takes a cast's time, and is limited only by a hidden **strain** that decays with time: pray too often and nothing answers for a while. §5, §6.1 |
+| **Who answers** | The priest's alignment band at the moment: Neutral or better, the holy powers (the **holy face**: Orison → Prayer → Litany → Benediction → Miracle); Callous or worse, the dark ones (the **dark face**: Whisper → Invocation → Rite → Pact → Miracle). The dark face answers the same problems with its own twists, some of them better: hunger filled to the brim, a disease or poison cured *and passed to the nearest creature in sight*, a hex ended *and turned back on its caster*. One ability, one strain, two faces. §6.1, §6.2 |
+| **Stays** | Mend (1), Blessing (3, the owner: in), Cure wounds (3): the mana economy beside the strain's. Consecrate (9, the paladin's shared gift, `min = kind`). The kit, stats, skills, and weapon ranks (q6). §4 |
+| **Goes** | Smite (40: #823's), Purity of body (32: q10 "no"), Saint (60: Miracle takes its place, q7), the reprieve named Miracle (50: its name is the capstone's; Hag's bargain stays the witch's), Remove disease (12) and Purify (25) as entries of their own: both fold into the prayer's unlocks. §4 |
+| **New** | The prayer's seven uses and five tiers (§6.1); **Communion with the dark** (9, the dark face's gift beside Consecrate: in an unholy place a prayer adds no strain and the place's drain does not touch you); **Sanctuary** (50: hallowed, or dreaded, ground for an hour: no foe steps within two paces, wounds and mind mend as in a sanctuary room, broken by the priest's own blow); **Miracle** (60). §6 |
+| **The table** | 1 Mend, **Orison** · 3 Blessing, Cure wounds · 6 **Daily bread** (hunger) · 9 Consecrate / **Communion with the dark** · 12 **Prayer** (disease, poison) · 18 **Prayer of release** (hexes, holds) · 25 **Litany** (drain, stat damage) · 32 **Litany of the mind** (mana) · 40 **Benediction** (two answers) · 50 **Sanctuary** · 60 **Miracle**. Eight of the thirteen rows are the prayer. §5 |
+| **The strain** | Hidden. +100 per attempt, answered or not; a point gone a minute (100 in 100 minutes); the chance a prayer fizzles is the strain over 10 in percent (100 → 10 %, 500 → 50 %, 1000 → certain); a fizzle adds its 100 and **locks** the prayer until the strain has decayed to 0. All data in `assets/data/prayer.toml`; the wiki states it. §6.1 |
+| **Data kinds** | one talent effect `prayer { tier, title, uses, answers, all }`, one `communion`, one `sanctuary { mana, time, radius, lasts, regen }`; `data/prayer.toml` (the strain, the faces' bands, the priority order, the words); `Progress::prayer` (the strain) and `WorldState::hallows`. One read each. §6, §7 |
+| **Talents** | **None new, no new system**: the prayer is a class ability whose uses extend systems that have their talents (`hit_points`, `status`, `diseases`, `mana`, `hunger`, `resources`, `special_rooms`); the strain is the ability's own time-refilled limit, as the policy's step 4 wants (no cooldown status, time is the price). §9 |
+| **Slices** | P1 the prayer's holy face, the strain, the table and the cuts; P2 the dark face and Communion; P3 Sanctuary; P4 the wiki, the spec, the probe; beside them a small issue for the scroll of restoration (q9). §11 |
 
 **Key choices, and why**
 
-1. *Housekeeping is the class, so every entry answers a problem the player would otherwise solve with gold, luck, or a walk to town.* §3 lists what bites in Warlock today and what answers it; the table gives the priest one spell per row, in the order the problems arrive (hunger by day two, disease by the first rat bite, drain by the barrows, the long rest by the deep floors).
-2. *Spells, because the machinery is there.* A spell has a cost, a school that trains, ladders for growth, a scroll others may find, and the six hooks; a bespoke active has none of that. Only Sanctuary is an active, because it makes a place, and the cast path makes rolls and statuses.
-3. *The temple's services stay the non-priest's way, and the priest's way is cheaper only in gold.* Restoration costs 40 mana and a minute; the temple's mending 40 gold and a walk. Both exist; neither is removed (no economy capstone, rule 1).
-4. *Sanctuary is a rest, not a fortress.* It is the one entry that touches creatures, and it does so by keeping them out, not by hurting them; striking from inside ends it, so it cannot be a turret. It passes rule 1 (a capstone changes what the character can do in a dungeon).
-5. *Nothing to fight with, down to Blessing.* The owner's "not any extra ability to fight" is read literally: Smite goes, and Blessing (+1 to hit) is proposed out too, as a question (Q1). What the priest can do in a fight is what any character can: swing the mace, read a scroll, run.
+1. *One ability that grows, not a list of spells.* The owner's direction: the prayer is given at 1 and gains uses, a second answer, and a grander name as the priest levels, so the table reads as one thing deepening. The previous round's Daily bread, Balm, and Restoration are now **uses** of the prayer (§5); Mend, Blessing, and Cure wounds stay as spells, because a mana heal beside a strain-limited one is two economies, as ADOM's priest has spells beside prayer.
+2. *ADOM's shape, NetHack's counter.* The prayer fixes the worst problem first from a fixed priority order (ADOM, §2), and its limit is a hidden number that a prayer raises and time lowers (NetHack's prayer timeout, verified in §2: 300 to start, reset by a prayer, down one a turn, unsafe above a threshold). The owner's fizzle rule (a chance by the number, a lock after a fizzle) is the Warlock turn on it.
+3. *The band picks the face, never the gift.* Alignment bars nothing (`docs/dev/alignment.md`): a priest of any band has the one prayer and is always answered by someone. The dark face is not a mirror: its answers carry twists that only a dark power would grant (passing a plague on, turning a hex back, feeding to the brim), and where that is simply better, so be it (the owner, q3).
+4. *Hidden numbers stay hidden.* No message names the strain, its lock, or a chance; a locked prayer fizzles in the same words as an unlucky one, as ADOM's unheard prayer does. The wiki states every number.
+5. *Weak in a fight, still.* Nothing here adds a blow, an attack spell, or a defence; Blessing's +1 to hit stays because the owner called it harmless (q1). The dark twists hurt a creature only as a side of a cure.
 
 ## 2. Research, tied to the decisions
 
 | Source | What it does | Taken | Left, and why |
 |---|---|---|---|
-| **NetHack's Priest** (nethackwiki.com/wiki/Priest, fetched) | starts with a blessed mace, a small shield, four potions of holy water, garlic, wolfsbane, two clerical spellbooks; **always knows an item's beatitude** ("Priests have inherent knowledge of any item's beatitude"); special spell Remove curse; `#turn` undead ("leaves the Priest immobilized for a few turns"); intrinsics warning (15) and fire resistance (20). The role's strength is curse housekeeping: holy water "allows reliable uncursing" | the mace-and-buckler start (kept, §4); the idea that the class's power is *knowing and undoing the dungeon's nuisances*, not hitting (§5); a cleanse of hexes as the nearest thing to Remove curse (Balm, §6.2) | Warlock has no cursed items and no beatitude, so no B/U/C sight; identification is the merchant's (the owner); turn undead is a fight ability |
-| **DCSS's Elyvilon** (crawl-ref `ability.txt`, fetched) | Purification "purges your body of poison, confusion, slowness, petrification, weakness, and sickness" and restores drained maximum health; Heal Self; the god pacifies and saves | **one cleanse of everything that ails** (Balm's list: bleeding, poison, every hex, holds; §6.2) and **a rite that undoes drain** (Restoration, §6.3) | pacifying is a fight tool; the life-saving is Miracle already |
-| **DCSS's Zin** (`ability.txt`, `gods.txt`, fetched) | Vitalisation "temporarily provides protection from poison, confusion, petrification, and sickness"; **Sanctuary** "transforms the area around the user into a domain of unbreakable law for a short duration" (in play: monsters will not enter, and attacking from within ends it) | **Sanctuary at 40** (§6.4): a hallowed radius hostiles will not enter, broken by the priest's own blow | the tithe (gold is not a class mechanic here); Recite and Imprison (fight tools) |
-| **DCSS's trend** (0.24 removed remove-curse scrolls, 0.26 removed hunger) | the modern answer to housekeeping is to delete it | nothing: Warlock keeps hunger, rot, disease, drain, and unholy rooms as the spec has them, and gives one class the tools instead. That is the owner's call in #820 | — |
-| **ADOM's Priest and Healer** (ancardia wiki unreachable, HTTP 402; from memory, unverified) | the Priest starts with Healing and knows an altar's alignment; its class powers lean on prayer and piety (cheaper prayers early, turn undead later). The Healer is ADOM's housekeeping class: Healing from the start, faster regeneration, and class powers that neutralise poison and cure sickness and disease at fixed levels | the Healer's shape, not the Priest's: fixed-level answers to poison, disease, and regeneration (§5), and the Heal skill from level 1 (the priest's `heal = 2d6+10`, already there) | prayer and piety: Warlock's prayer is the forgotten altar's outcome table for everyone (`data/outcomes/forgotten_altar.toml`); the priest gets no private piety |
-| **D&D 3.5's cleric list** (recalled) | Purify Food and Drink 0; Sanctuary 1st; Delay Poison 2nd; Create Food and Water, Remove Disease, Remove Curse 3rd (cleric 5); Neutralize Poison, Restoration 4th (cleric 7); Greater Restoration 7th | **the order**: food and disease early, poison and hexes next, restoration after (§5); Sanctuary as a cleric's, not a wizard's | raise dead: permadeath |
-| **Warlock's own temple** (`campaigns/ascmearc/data/dialogue/ceaptun.toml`) | Sister Hild's `cure` (60 gold: every disease and poison) and `mend` (40 gold: all stat damage, every drained point) | Restoration does exactly `World::mend` (§6.3), Remove disease exactly `cure`; the priest carries the temple | the prices stay: the non-priest's way |
+| **ADOM's prayer** (the ADOM Guidebook, adomgb.info §0.2, fetched; the ancardia wiki unreachable: HTTP 402, then a JavaScript wall) | Verified from the Guidebook: piety "constantly decreases with time"; a prayer that finds nothing to fix "remains unheard" and costs little; "repeatedly praying will anger a deity" through a ladder of punishments; being Doomed "makes it much more difficult to pray for divine help"; crowning lets one "pray more often". Recalled, unverified: a heard prayer fixes the PC's worst trouble in a fixed order (death's door first, then starvation, sickness, poison, blindness, confusion, paralysis, a cursed item, hunger), and a hidden prayer timeout makes a second prayer soon after the first unsafe | the **spammable prayer** that fixes one problem in priority order (§6.1); the **unheard prayer is free** (a prayer with nothing to answer is refused with no time and no strain); **time lowers the counter** (the strain decays a point a minute) | piety by sacrifice (Warlock has no sacrifice, and the forgotten altar's prayer is everyone's: `data/outcomes/forgotten_altar.toml`); anger as a ladder of punishments (the fizzle and lock are the whole cost: time is the penalty) |
+| **NetHack's prayer timeout** (nethackwiki.com/wiki/Prayer, /Prayer_timeout, fetched) | a hidden counter: 300 at the start, down one a turn; a successful prayer resets it to between 50 and 1000 (rnz(350), sometimes far more); praying is safe with major trouble under 201, with minor trouble under 101, with none only at 0; too high: "your god's anger is incremented by one, you lose 3 luck, and your god smites you"; a prayer fixes all major troubles first, then minor | the **one hidden counter a prayer raises and time lowers** (§6.1); **major before minor** became the owner's priority order; the thresholds became a chance by the number (the owner's q7) | the reset to a random value (the owner's +100 is flat and known to the wiki); luck and anger |
+| **ADOM's Healer and Priest** (recalled) | the Priest starts with Healing and leans on prayer; the Healer is the housekeeping class: Healing, faster regeneration, powers that neutralise poison and cure sickness at fixed levels | the Heal skill from level 1 (the priest's `heal = 2d6+10`, there already); fixed-level unlocks (§5) | — |
+| **DCSS's Elyvilon and Zin** (crawl-ref `ability.txt`, fetched for round 1) | Purification "purges your body of poison, confusion, slowness, petrification, weakness, and sickness" and restores drained maximum health; Zin's **Sanctuary** "transforms the area around the user into a domain of unbreakable law" (monsters do not enter; attacking from inside ends it) | the release use's list (§6.1: bleeding, poison, every hex, holds) and the restoration use; **Sanctuary at 50** (§6.4) | pacifying, Recite, Imprison (fight tools); the tithe |
+| **DCSS's dark gods** (Kikubaaqudgha, Makhleb, Yredelemnul; recalled) | the dark powers give by taking: Makhleb heals on kills, Yred drains life, Kiku delivers corpses and turns pain back | the **dark face's twists**: a cure that passes the plague on, a hex turned on its caster, a feast rather than a wafer (§6.2) | heal-on-kill (a fight economy: the owner's priest fights no better) |
+| **NetHack's Priest** (nethackwiki, fetched for round 1) | a mace and a small shield; sees beatitude; `#turn` undead | the mace-and-buckler start (kept); nothing of curses (Warlock has none) | turn undead (a fight ability) |
+| **Warlock's own temple** (`campaigns/ascmearc/data/dialogue/ceaptun.toml`) | Sister Hild's `cure` (60 gold: every disease and poison) and `mend` (40 gold: all stat damage, every drained point) | the prayer's disease, poison, and restoration uses call the same two functions (`World::cure`'s ends, `World::mend`); the priest carries the temple | the prices stay: the non-priest's way |
 
 ## 3. The housekeeping of Warlock: what bites, and what answers it today
 
-Read from the data on `main`. The right column is what the proposal adds.
+Read from the data on `main`. The right column is the prayer's use and the level it comes.
 
-| Problem | How bad it is | Answers today | The priest's answer (level) |
+| Problem | How bad it is | Answers today | The prayer's answer (level) |
 |---|---|---|---|
-| **Wounds** | 1 hit point back per max(60, 360 − 12 × Toughness) s (Toughness 10: 4 minutes), × 2 resting, × 3 in a sanctuary; none while Starving | rest; potions of healing (2d8, level 1, frequency 60); Second wind (talent); the altar's boons | Mend (1, 1d3 to 1d6), Cure wounds (3, 2d6 to 3d6+3, two casts of time), Saint (60) |
-| **Bleeding** | 1 hp per 40 s a degree, up to 5 degrees, eases a degree a minute; from slashing and piercing big hits and criticals | the Heal skill (an Intelligence check against 6 + 2 a degree, 2.5 turns, retry at will), the bandage means | the Heal skill from level 1 (`heal = 2d6+10`, known for); Balm (18) ends it at once |
-| **Poison** | 1 hp per 2 min a degree, up to 10, eases a degree per 2 min, Strength and Dexterity −1 from 4 degrees, healing and mana at half pace; 26 of 295 creature types poison | potion of antidote (60 gold, level 2); the Heal skill once per dose; Divine grace and Nature's ward (eases twice as fast) | Remove disease (12), Balm (18) |
-| **Hexes and holds** | Ill-wished, Weakened (Strength and Dexterity −2), Sluggish (×1.5 time), Drowsy (×3), Webbed and Held (no step): from altar banes, mishaps, spiders, the drowning grip | wait them out (60 s to 2 min a degree); a Strength check against a hold | Balm (18) |
-| **Disease** | 9 diseases; 26 creature types carry one; rotten food carries grave rot (never leaves by itself, kills); marsh ague from wading; a failed check a day takes 1d3 to 1d6 off a stat; Diseased halves healing and mana | angelica root (30 gold, forage), potion of cure disease (150 gold, level 4), the temple's cure (60 gold), the Heal skill's try; Purity of body at 32 | Remove disease (12), Purity of body (32) |
-| **Stat damage** | a disease's; mends a point a day once nothing shows | the temple's mend (40 gold) | Restoration (25) |
-| **Drain** | **for good**: 36 of 295 creature types drain a stat on a hit (wights, wraiths, mummies, the hags: Toughness, Strength, Intelligence, Presence, 1 or 2 points at a time against a check of 16 to 24); the score falls to a floor of 3, hit points and mana with it | the temple's mend (the only restore); Unbroken soul, Divine grace, Iron will (the checks) | Restoration (25) |
-| **Hunger** | a human burns 1440 a day, starts at 3600 (hungry after a day and a half); Weak takes Strength and Dexterity; Starving takes 1 hp per 10 min and stops healing; food rots (bread 5 days, a ration 30) | buy food (a ration 5 gold, 1500), forage (Survival), eat corpses (rot, disease), the altar's "sated" | **Daily bread (6)**: a wafer (1000) for 6 mana |
-| **Rot** | rotten food: 50 % vomit, else 1d4 degrees of poison and a disease check (grave rot) | Iron stomach, Herb lore, Purify (priest 25), Cauldron | Purify's rule, in Daily bread's talent (6) |
-| **Cursed places** | cursed rooms raise the dead you leave, haunted rooms bring undead every hour of a rest, draining rooms (and whole levels) take a point of mana every 20 s | Consecrate (priest 9, paladin 12) | Consecrate (9) stays |
-| **The long rest** | a floor with a danger spawns a creature every 15 min at 60 %; a rest stops when one comes into view; a haunted room's hour | a sanctuary room (shunned, × 3), Quiet delver, Consecrate on the haunt | **Sanctuary (40)** |
-| **Light** | every race without darkvision starts with a lantern (never runs dry; snuffed by an altar bane); Light is a level-0 spell (`lit`, half an hour a degree) | the lantern, the scroll of light | the kit's scroll of light: studied at level 1 (a level-0 spell at caster level 1 is certain), the priest knows Light for 1 mana. Nothing added (§10) |
-| **Identification** | unknown scrolls, potions, wands, magic items | Lore talents, the scroll and spell of identify, the appraiser (100 gold a kind) | nothing: the merchant's (the owner, #776 rule 8 and the Eye for quality line) |
-| **Death** | permadeath | Miracle (50), Rise from the ashes (a birth sign) | Miracle (50) stays |
+| **Wounds** | 1 hit point back per max(60, 360 − 12 × Toughness) s (Toughness 10: 4 minutes), × 2 resting, × 3 in a sanctuary; none while Starving | rest; potions of healing (2d8, level 1); Second wind; the altar's boons | **wounds** (1): bleeding stops, hit points to full. Mend (1) and Cure wounds (3) for mana beside it |
+| **Bleeding** | 1 hp per 40 s a degree, up to 5, eases a degree a minute | the Heal skill (a check, 2.5 turns), bandages | **wounds** (1) |
+| **Hunger** | a human burns 1440 a day, starts at 3600 (Hungry after a day and a half); Weak takes Strength and Dexterity; Starving takes 1 hp per 10 min and stops healing; food rots | buy food, forage, eat corpses, the altar's "sated" | **hunger** (6, Daily bread): fed to Satiated; the dark face to the brim. Rotten food harmless (Purify's rule rides on it) |
+| **Disease** | 9 diseases, 26 creature types carry one, rotten food carries grave rot, marsh ague from wading; a failed check a day takes 1d3 to 1d6 off a stat; Diseased halves healing and mana | angelica root, potion of cure disease (150 gold), the temple's cure (60 gold), the Heal skill's try | **disease** (12): every disease gone, the showing and the brewing alike |
+| **Poison** | 1 hp per 2 min a degree, up to 10; Strength and Dexterity −1 from 4 degrees; healing and mana at half pace | potion of antidote, the Heal skill once a dose, Divine grace, Nature's ward | **poison** (12) |
+| **Hexes and holds** | Hexed, Weakened (St and Dx −2), Sluggish (×1.5 time), Drowsy (×3), Webbed and Held (no step), Frightened, Transfixed, Ashen (an altar's bane: −2 to every stat a day) | wait them out; a Strength check against a hold | **release** (18) |
+| **Stat damage** | a disease's; mends a point a day once nothing shows | the temple's mend (40 gold) | **restoration** (25) |
+| **Drain** | **for good**: 36 of 295 creature types drain a stat on a hit against a check of 16 to 24; the score falls to a floor of 3, hit points and mana with it | the temple's mend (the only restore); Unbroken soul, Divine grace, Iron will | **restoration** (25) |
+| **Mana** | regenerates a point per max(60, 360 − 12 × Willpower) s; a rest to full takes about 3 hours at level 12, 7 at 30 (`docs/dev/spells.md` "Balance") | rest, Meditation, Clear mind | **mana** (32): to full |
+| **Cursed places** | cursed rooms raise the dead you leave, haunted rooms bring undead every hour of a rest, draining rooms (and whole levels) take a point of mana every 20 s | Consecrate (priest 9, paladin 12) | Consecrate (9, holy); **Communion with the dark** (9, dark): the place is yours to use |
+| **The long rest** | a floor with a danger spawns a creature every 15 min at 60 %; a rest stops when one comes into view | a sanctuary room (shunned, × 3), Quiet delver, Consecrate on a haunt | **Sanctuary** (50) |
+| **Everything at once** | the deep floors: drained, poisoned, bleeding, hungry, and out of mana after one fight | several of the above, one by one | **Miracle** (60): every use at once, and every pool (stamina, whatever else is held) to full, for one attempt's strain |
+| **Light** | every race without darkvision starts with a lantern; Light is a level-0 spell the kit's scroll teaches for certain at level 1 | the lantern, the scroll | nothing added (§10) |
+| **Identification** | unknown scrolls, potions, wands, magic items | the Lore talents, the scroll and spell of identify, the appraiser | nothing: the merchant's (the owner) |
 
-Not in Warlock, so not here: cursed items, blindness, confusion, lycanthropy, level drain, item destruction by fire or water, running out of lamp oil.
+Not in Warlock, so not here: cursed items, blindness, confusion, lycanthropy, level drain, item
+destruction, lamp oil.
 
 ## 4. What exists: the priest's table and class file
 
-`assets/data/classes/03-priest.toml`: Strength −1, Dexterity −1, Intelligence +1, Willpower 1d3+1, Presence 1d2; `hp = 4`, `mana = 9`, `casting = 100`; affinity restoration +3, abjuration +2, divination +1, necromancy −2; skills Heal 2d6+10, Knowledge 2d6+10, Concentration 2d4+4, Decipher script 2d4+4; weapon skills maces 2, shield block 1, restoration 1; styles sword and board 1, toucher 1; the kit a mace, a buckler, a wool cloak, an amber amulet, a scroll of light, three candles, bread, 10 gold; bonus talents from Vigour and Grit at 10, 20, 30, 45, 55.
+`assets/data/classes/03-priest.toml`: Strength −1, Dexterity −1, Intelligence +1, Willpower 1d3+1,
+Presence 1d2; `hp = 4`, `mana = 9`, `casting = 100`; affinity restoration +3, abjuration +2,
+divination +1, necromancy −2; skills Heal 2d6+10, Knowledge 2d6+10, Concentration 2d4+4, Decipher
+script 2d4+4; weapon skills maces 2, shield block 1, restoration 1; styles sword and board 1,
+toucher 1; the kit a mace, a buckler, a wool cloak, an amber amulet, a scroll of light, three
+candles, bread, 10 gold; bonus talents from Vigour and Grit at 10, 20, 30, 45, 55; no `alignment`
+of its own, so a priest starts at their race's score (a human's 0, an elf's 50: the Neutral band;
+a drow's −450: Evil) nudged by the birth animal.
 
 | Level | Today | Effect (data) | Fate |
 |---:|---|---|---|
 | 1 | Mend | spell `mend`: touch heal 1d3 (Willpower 16: 1d4, 22: 1d6), 1 mana | **stays** |
-| 3 | Blessing | spell `blessing`: Blessed 10 min a degree (+1 to hit, Willpower +1), 3 mana | **goes** from the priest's table (Q1); the paladin (6) and bard (6) keep it; the scroll of blessing teaches it |
-| 3 | Cure wounds | spell `cure_wounds`: touch heal 2d6 (16: 3d6, 22: 3d6+3), two casts, 2 mana | **stays** |
-| 9 | Consecrate | active, 15 mana, a minute: lifts an unholy room's effect for good (the level's if it pervades), `alignment min = kind`, Consecrated +20 | **stays** |
-| 12 | Remove disease | spell `remove_disease`: cleanse, every disease and Poisoned, 11 mana | **stays** |
-| 25 | Purify | `purify`: rotten food neither sickens nor exposes | **moves** into Daily bread's talent at 6; the entry's level goes to Restoration |
-| 32 | Purity of body | `disease_immune` (shared with the paladin 18 and the monk 32) | **stays** |
-| 40 | Smite | a blow of holy wrath (shared with the paladin 12) | **goes**: a fight ability, and #823's |
-| 50 | Miracle | `reprieve` once: a killing blow leaves 1 hp, Worn thin a day | **stays** |
-| 60 | Saint | `healing_percent` +100 | **stays** |
-
-Gaps (the report): 6 (never had one), 18 (Ward of faith, Deflection +1, cut by #798 as a weak defence passive). Both were defence or nothing; the proposal fills them with housekeeping.
+| 3 | Blessing | spell `blessing`: Blessed 10 min a degree (+1 to hit, Willpower +1), 3 mana | **stays** (q1: "in") |
+| 3 | Cure wounds | spell `cure_wounds`: touch heal 2d6 (16: 3d6, 22: 3d6+3), two casts, 2 mana | **stays**: the mana heal beside the prayer's |
+| 9 | Consecrate | active, 15 mana, a minute: lifts an unholy room's effect for good, `alignment min = kind`, Consecrated +20 | **stays** (shared with the paladin, untouched; Q3 asks whether its band should be `neutral`) |
+| 12 | Remove disease | spell `remove_disease`: cleanse, every disease and Poisoned, 11 mana | **folds** into the prayer's disease and poison uses at 12; the spell file stays for its scroll (`scroll_of_remove_disease` teaches it to anyone) |
+| 25 | Purify | `purify`: rotten food neither sickens nor exposes | **folds** into Daily bread's talent at 6 (one hunger talent) |
+| 32 | Purity of body | `disease_immune` (the paladin's 18 and the monk's 32) | **goes** from the priest (q10); the others keep it |
+| 40 | Smite | a blow of holy wrath (the paladin's 12) | **goes**: a fight ability, and #823's |
+| 50 | Miracle | `reprieve` once: a killing blow leaves 1 hp, Worn thin a day | **goes**: the capstone takes the name (q7); the `reprieve` kind stays Hag's bargain's |
+| 60 | Saint | `healing_percent` +100 | **goes**: Miracle (60) replaces it (q7) |
 
 ## 5. The proposal: the table, level by level
 
-Bonus talents (Vigour, Grit) at 10, 20, 30, 45, 55 unchanged. Skill rolls 2 unchanged.
+Bonus talents (Vigour, Grit) at 10, 20, 30, 45, 55 unchanged. Skill rolls 2 unchanged. Where a
+row has a holy and a dark face, the band at the moment of use picks (§6.1): Neutral and better the
+holy, Callous and worse the dark.
 
-| Lv | id | Name | Kind | What it does (the game's words) | Data | Problem (§3) |
-|---:|---|---|---|---|---|---|
-| 1 | `mend` | Mend | spell (restoration, touch heal) | "A touch that closes a scratch: a few hit points back, yours or another's beside you." | as today | wounds |
-| 3 | `cure_wounds` | Cure wounds | spell (restoration, touch heal) | as today | as today | wounds |
-| 6 | `daily_bread` | Daily bread | spell (restoration, utility) **+ `purify`** | "Pray, and bread is given (a spell, paid in mana): a wafer of waybread in your pack. And rotten food neither sickens you nor carries a disease into you." | spell level 6, `creates = { object = "waybread", count = 1 }`, count ladder Willpower 18: 2, 26: 3; talent effects `[{ kind = "spell", spell = "daily_bread" }, { kind = "purify" }]` | hunger, rot |
-| 9 | `consecrate` | Consecrate | active | as today | as today | cursed places |
-| 12 | `remove_disease` | Remove disease | spell (restoration, cleanse) | as today | as today | disease, poison |
-| 18 | `balm` | Balm | spell (restoration, cleanse) | "A balm of prayer on body and mind (a spell, paid in mana): bleeding stops, poison and every hex leave you, and whatever holds or webs you lets go." | spell level 7, `cures = ["bleeding", "poisoned", "ill_wished", "weakened", "sluggish", "drowsy", "webbed", "held"]` | bleeding, poison, hexes, holds |
-| 25 | `restoration` | Restoration | spell (restoration, cleanse) | "A long rite of restoring (a spell, paid in much mana; it takes a minute to say): what sickness took from your body is mended, and what the dead drank from you is given back." | spell level 20, `mana = 40`, `casts = 6`, `mends = true`, `restores = true` | stat damage, drain |
-| 32 | `purity_of_body` | Purity of body | passive | as today | as today | disease |
-| 40 | `sanctuary` | Sanctuary | active (a rite) | "Kneel and hallow the ground about you (an ability, paid in mana; a minute's rite): for an hour no foe will set foot within two paces of where you knelt, and your wounds and your mind mend there as in a sanctuary. The peace breaks if you strike from within it." | `{ kind = "sanctuary", mana = 30, time = "1m", radius = 2, lasts = "1h" }` | the long rest |
-| 50 | `miracle` | Miracle | passive | as today | as today | death |
-| 60 | `saint` | Saint | passive | as today | as today | wounds |
+| Lv | id | Name (holy / dark) | Kind | What it does (the game's words) | Data |
+|---:|---|---|---|---|---|
+| 1 | `mend` | Mend | spell | as today | as today |
+| 1 | `orison` | **Orison** / Whisper | the prayer, tier 1 | "Pray (an ability; the time of a cast, no mana): what ails you most is answered, as far as your prayers yet reach: for now, your wounds. Pray too often and nothing answers for a while." Use **wounds**: bleeding stops, hit points to full | `{ kind = "prayer", tier = 1, title = { holy = "Orison", dark = "Whisper" }, uses = ["wounds"] }` |
+| 3 | `blessing` | Blessing | spell | as today | as today |
+| 3 | `cure_wounds` | Cure wounds | spell | as today | as today |
+| 6 | `daily_bread` | **Daily bread** | prayer use | "Your prayers feed you: hungry, you are fed. And rotten food neither sickens you nor carries a disease into you." Use **hunger**: Hungry or worse, fed to Satiated (holy) or to the brim, one short of Bloated (dark); Purify's rule on both faces | `[{ kind = "prayer", uses = ["hunger"] }, { kind = "purify" }]` |
+| 9 | `consecrate` | Consecrate | active (holy, `min = kind`) | as today | as today |
+| 9 | `communion` | **Communion with the dark** | passive (dark, `max = callous`) | "The unholy places are yours: in a cursed, draining, or haunted room, or on a level such a curse lies over, your prayers cost you nothing, and the place's drain does not touch you." | `{ kind = "communion" }` |
+| 12 | `prayer_of_cleansing` | **Prayer** / Invocation | prayer, tier 2 | "Your prayers reach further: every disease in you, shown or brewing, is gone, and any poison with it." Uses **disease**, **poison**. Dark: each disease cured is passed to the nearest creature you see; the poison the same, at the degrees it had | `{ kind = "prayer", tier = 2, title = { holy = "Prayer", dark = "Invocation" }, uses = ["disease", "poison"] }` |
+| 18 | `prayer_of_release` | **Prayer of release** | prayer use | "Whatever hexes, holds, or webs you lets go." Use **release**: every status in `prayer.toml`'s `release` list ends (Hexed, Weakened, Sluggish, Drowsy, Webbed, Held, Frightened, Transfixed, Ashen). Dark: a hex ended is laid on its caster, if you see them, at the degrees it had; a hold's holder is Webbed as long as it held you | `{ kind = "prayer", uses = ["release"] }` |
+| 25 | `litany_of_restoring` | **Litany** / Rite | prayer, tier 3 | "What sickness took from your body is mended, and what the dead drank from you is given back." Use **restoration**: all stat damage mended, every drained point restored (`World::mend`, the temple's) | `{ kind = "prayer", tier = 3, title = { holy = "Litany", dark = "Rite" }, uses = ["restoration"] }` |
+| 32 | `litany_of_the_mind` | **Litany of the mind** | prayer use | "Your mind is filled: mana to full." Use **mana** | `{ kind = "prayer", uses = ["mana"] }` |
+| 40 | `benediction` | **Benediction** / Pact | prayer, tier 4 | "Two things that ail you are answered by one prayer." `answers = 2` | `{ kind = "prayer", tier = 4, title = { holy = "Benediction", dark = "Pact" }, answers = 2 }` |
+| 50 | `sanctuary` | Sanctuary | active (a rite; the words by band) | "Kneel and hallow the ground about you (an ability, paid in mana; a minute's rite): for an hour no foe will set foot within two paces of where you knelt, and your wounds and your mind mend there as in a sanctuary. The peace breaks if you strike from within it." | `{ kind = "sanctuary", mana = 30, time = "1m", radius = 2, lasts = "1h", regen = 300 }` |
+| 60 | `miracle` | **Miracle** | prayer, tier 5 | "Everything that ails you is answered at once: wounds, hunger, sickness and poison, hexes and holds, what was taken from you, your mana, and every other pool you hold, filled." `all = true` | `{ kind = "prayer", tier = 5, title = { holy = "Miracle", dark = "Miracle" }, all = true }` |
+
+**The priority order** (which problem a prayer answers when several ail the priest and it answers
+fewer than all; the owner's list, ADOM's shape; `prayer.toml`'s `[[use]]` order): **disease,
+poison, wounds, release, mana, hunger, restoration**. A use not yet unlocked is skipped; a problem
+the priest does not have is skipped; with none left the prayer is refused (no time, no strain).
 
 **Why these levels.**
 
-- *6, Daily bread*: hunger is the first problem (a day and a half in), and a level-6 priest's pool (about 49 mana, `docs/dev/spells.md` "Identify") buys eight wafers from a full pool: 8 000 nutrition, five and a half days for a human. The spell is a day's bread for about twenty minutes of regeneration (6 points at a point per 204 s at Willpower 13), and the restoration rows cut its mana from rank 4. A wafer is worth 0 gold (`waybread.toml`), so a shop buys none: no gold from bread. No cap and no cooldown (the owner: no anti-farming limits; time is the price; a stack of wafers weighs 100 g each, the burden is the only limit).
-- *18, Balm*: the gap. Bleeding and poison have the Heal skill from level 1 and Remove disease from 12; what has nothing until here is the hexes and the holds, and a sure, one-turn end to bleeding in a fight (the Heal skill's try is a check and 2.5 turns). Its level is 7 (7 mana, a scroll of it teaches at caster level 7): the class gives it at 18, late for its power, which is the shape of a class whose table is all housekeeping and whose owner wants it "pretty shit".
-- *25, Restoration*: drain is the housekeeping problem Warlock makes worst (36 types, for good, a floor of 3) and answers least (one sister in one town). A priest of 25 has about 180 mana (interpolating the probe's 90 at 12 and 216 at 30): 40 is a fifth of it, and a minute kneeling in a dungeon is a risk. Earlier would make the barrows' wights toothless to a priest of 12; later would be past the levels where a drained Toughness ends runs.
-- *40, Sanctuary*: the capstone-grade entry (rule 1: it changes what the character can do in a dungeon, and only there), from Zin. Rest is the priest's whole economy (mana and hit points come back with time), and the deep floors make resting the dangerous part. 30 mana and a minute for an hour of peace with no spawn reaching the circle; the regen × 3 is the sanctuary room's own number.
-- *3 and 9 kept off-cadence*: the report counts them as deliberate; moving Cure wounds to 6 would leave a level-3 priest with Mend alone and push Daily bread to 12, past the first hungry days.
+- *1, wounds*: the first problem, and ADOM's first fix. A level-1 priest who can pray their hit
+  points full is strong out of a fight and no better in one: the prayer takes a cast's time, and
+  the second prayer in the same fight already risks a fizzle (§6.1). Mend stays for a touch heal
+  on someone beside them and Cure wounds for the mana economy.
+- *6, hunger* ("daily bread first", q2): hunger comes by day two and has no sure answer but gold.
+  Fed to Satiated (4000) from Hungry (under 1440) is a day and three quarters for a human: a wafer
+  a day was the old proposal; this is "pretty good" (q4) for one attempt's strain.
+- *12, disease and poison*: Remove disease's level, where the first rat bites and marsh wadings
+  have shown their fevers. The brewing diseases go too (the priest is told only of the shown ones,
+  so nothing hidden leaks: §8).
+- *18, release*: the gap level. Hexes and holds have nothing but waiting; a sure, one-turn end to
+  a web or a hold in a fight is the one answer the table gives that matters mid-fight, and it
+  comes late for its power, which is the shape of a class whose owner wants it "pretty shit".
+- *25, restoration*: drain is the housekeeping problem Warlock makes worst (36 types, for good, a
+  floor of 3) and answers least (one sister in one town). Earlier would make the barrows' wights
+  toothless to a priest of 12.
+- *32, mana*: a prayer that fills the pool makes the priest's spells near free, limited by the
+  strain alone. At 32 the pool is about 230 (interpolating the probe's 216 at 30): one attempt's
+  strain for three hours of regeneration.
+- *40, two answers* (rule 1: a capstone changes what the character can do in a dungeon): the
+  priest who comes out of a fight bleeding and poisoned prays once.
+- *50, Sanctuary*: the rest is the priest's whole economy (mana and strain both come back with
+  time), and the deep floors make resting the dangerous part.
+- *60, Miracle*: the owner's: "pretty busted". Everything, every pool, one attempt.
+- *3 and 9 kept off-cadence*: the report counts them as deliberate.
 
-**What the priest cannot do**, so the owner sees the shape: no attack spell of their own (Spark, Magic missile, Ray of frost are the others' tables'; scrolls may teach them, at necromancy ↔ restoration −4 and no evocation affinity); no blow (Smite gone); no buff to hit (Blessing gone, Q1); no summon (the druid's, #821); no stealth, no pet, no voice. In a fight they have a mace at rank 2, a buckler, 4 hit points a level, and the Toucher style, which is for Mend and Cure wounds on someone beside them.
+**What the priest cannot do**, so the owner sees the shape: no attack spell of their own, no blow
+(Smite gone), no summon (the druid's, #821), no stealth, no pet, no voice. In a fight they have a
+mace at rank 2, a buckler, 4 hit points a level, Blessing's +1, and a prayer that takes a turn and
+may fizzle.
 
-## 6. The new spells and the new active, as data
+## 6. The prayer, the dark faces, Communion, and Sanctuary, as data
 
-### 6.1 Daily bread
+### 6.1 The prayer
 
-```toml
-# assets/data/spells/daily_bread.toml
-[[spell]]
-id = "daily_bread"
-name = "Daily bread"
-description = "Pray, and bread is given: a wafer of waybread in your pack."
-level = 6
-school = "restoration"
-kind = "utility"
-shape = "self"
-resolution = "auto"
-effect = { creates = { object = "waybread", count = 1 } }
-
-[spell.grows]
-count = "willpower 18 2, 26 3"
-```
-
-| Field | Rule |
-|---|---|
-| `effect.creates = { object, count }` | new on `SpellEffect` (`creates: Option<(ObjectId, u8)>`); allowed for `utility` only (`spell_def::effect`'s `only`); the object must exist and be `food` (a load check in `spell_def::resolve`, as `identify` is checked); `count` 1 to 10. A `utility` spell needs `identify` or `creates`, exactly one |
-| `grows.count` | a new ladder dimension, integer rungs (`RungValue::Count`, the `Cells` rule: strictly ascending from the base, at most 10); `Grows::count`; `spell_def::grows` allows it only with `creates`; `Actor::spell_count(content, spell)` climbs it as `spell_degrees` does (`degree_rungs` and `degrees` of `SpellMods` apply to it too: a *of Lingering* ring gives a wafer more; the owner may strike that, Q4) |
-| The cast | `World::cast_create` (in `world/cast.rs` beside `cast_identify`): pays, then `count` stacks of the object are made with `rot::made_at(now)` (fresh) and put into the caster's pack (`carry::give`, as a quest gift is; a pack that cannot take them drops them at the caster's feet with "… falls at your feet."); "Bread is given." The `Outcome` is `landed` (restoration trains, `practise_cast`) and `level` the caster's own |
-| Draws | none: no die but the count's, which is a ladder |
-| `waybread` | unchanged: nutrition 1000, 2 turns to eat, keeps 60 days, value 0, 100 g |
-| The scroll | `scroll_of_daily_bread` (level 4, frequency 30, 130 gold: the level 6–7 convention), `read` kind `spell`, `teaches` it; reading one gives a wafer |
-| Cost | 6 (self, auto: 100 %); the restoration rows' `mana` take 5 % off from rank 4, 10 from 7, 15 at 10; Frugal caster −20 % |
-
-### 6.2 Balm
-
-```toml
-[[spell]]
-id = "balm"
-name = "Balm"
-description = "A balm of prayer on body and mind: bleeding stops, poison and every hex leave you, and whatever holds or webs you lets go."
-level = 7
-school = "restoration"
-kind = "cleanse"
-shape = "self"
-resolution = "auto"
-effect = { cures = ["bleeding", "poisoned", "ill_wished", "weakened", "sluggish", "drowsy", "webbed", "held"] }
-```
-
-Nothing new in the engine: `cleanse` with `cures` is Remove disease's kind, through `World::ended` for each status (a hold ends as `loosen_holds` ends it: the holder lets go). The cast is refused with nothing to cure ("You have nothing to cure.", no time, no mana: the cleanse's existing refusal). A status not on the list (Staggered, Surprised, Pinned, which ease by actions; the places' Silenced, Unwelcome, Ebbing, which refresh while one stands inside; the cooldowns) stays. Scroll: `scroll_of_balm` (level 4, frequency 30, 130 gold). Cost 7.
-
-### 6.3 Restoration
+One class active, `ClassActive::Orison`, id `orison` (`use:orison` in action text at every tier:
+the id never changes, the name does), carried by the tier-1 talent; the later prayer talents add
+uses, answers, and titles to it through `TalentMods::prayer` (`Prayer { uses: BTreeSet<Use>,
+answers: u8, all: bool, title: Option<(String, String)> }`: `uses` the union, `answers` the
+largest, `all` any, `title` the highest `tier`'s). The abilities menu's Class group shows the
+title of the face in force (§8).
 
 ```toml
-[[spell]]
+# assets/data/prayer.toml — the priest's prayer (spec §8 "Class abilities"): the strain, the
+# faces, the uses in their priority order, and the words. Every number is hidden in the game and
+# stated in the wiki.
+strain = 100           # added by every attempt, answered or not (1 to 1000)
+decay = "1m"           # a point of strain gone every this long (10 s to 1 h)
+fizzle_per_100 = 10    # percent chance a prayer fizzles per 100 points of strain (1 to 100)
+holy = { min = "neutral" }   # the bands the holy powers answer
+dark = { max = "callous" }   # the bands the dark powers answer
+release = ["ill_wished", "weakened", "sluggish", "drowsy", "webbed", "held", "frightened", "transfixed", "ashen"]
+
+[words]
+holy = { pray = "You kneel and pray.", fizzle = "You pray, but nothing answers.", nothing = "You have nothing to pray for." }
+dark = { pray = "You whisper to the dark.", fizzle = "The dark is silent.", nothing = "You have nothing to ask of the dark." }
+
+[[use]]           # the order is the priority: the first that ails the priest is answered first
+id = "disease"
+holy = "The sickness leaves you."
+dark = "The sickness leaves you, and finds another."
+[[use]]
+id = "poison"
+holy = "The poison leaves you."
+dark = "The poison leaves you, and finds another."
+[[use]]
+id = "wounds"
+holy = "Your wounds close."
+dark = "Your wounds close, cold to the touch."
+[[use]]
+id = "release"
+holy = "You are released."
+dark = "You are released, and it is returned."
+[[use]]
+id = "mana"
+holy = "Your mind is filled."
+dark = "Your mind is filled with a cold clarity."
+[[use]]
+id = "hunger"
+holy = "You feel fed."
+dark = "You feel glutted."
+[[use]]
 id = "restoration"
-name = "Restoration"
-description = "A long rite of restoring: what sickness took from your body is mended, and what the dead drank from you is given back."
-level = 20
-school = "restoration"
-kind = "cleanse"
-shape = "self"
-resolution = "auto"
-casts = 6
-mana = 40
-effect = { mends = true, restores = true }
-```
-
-| Field | Rule |
-|---|---|
-| `effect.mends`, `effect.restores` | new on `SpellEffect`, `cleanse` only; a cleanse needs at least one of `cures`, `diseases`, `mends`, `restores` |
-| The cast | `World::cast_cleanse` gains two lines: `mends` → `StatDamage::mend_all` (as `World::mend` does for the temple, `world/service.rs`); `restores` → `World::restore_drained` (the same). Refused with nothing to do ("You are whole.", no time, no mana) when no stat is damaged and nothing is drained; a disease still showing is no bar (the temple refuses a mend while one shows; the rite mends what it can and the disease takes again tomorrow: Q5) |
-| `casts = 6` | a minute of `cast` actions (10 s each at normal speed), interruptible as any multi-cast spell is: a creature coming into view stops it, the mana unspent (`pay_cast` pays when the cast is sure) |
-| `mana = 40` | explicit, as Identify's 60: the level (20) is how hard a scroll of it is to learn (certain at caster level 20; a struggle for a priest of 12), the cost stands apart; the restoration rows still take their percent off |
-| The scroll | `scroll_of_restoration`: level 8, frequency 10, 300 gold (beyond the README's convention, which stops at level 12: a new row for it), so a warrior may find the rite the temple sells |
-| Marks | the Willpower mark of every spend (`StatUse::Cast`), restoration's `landed` when anything mended |
-
-### 6.4 Sanctuary
-
-A class active like Consecrate (`TalentEffect::Consecrate { mana, time }` → `ClassActive::Consecrate`, `world/consecrate.rs`): `TalentEffect::Sanctuary { mana, time, radius, lasts }` → `ClassActive::Sanctuary`, `world/sanctuary.rs`. `use:sanctuary` in action text; the abilities menu's Class group.
-
-```toml
-# assets/data/talents/sanctuary.toml
-[[talent]]
-id = "sanctuary"
-name = "Sanctuary"
-tree = "class"
-granted = true
-description = "Kneel and hallow the ground about you (an ability, paid in mana; a minute's rite): for an hour no foe will set foot within two paces of where you knelt, and your wounds and your mind mend there as in a sanctuary. The peace breaks if you strike from within it."
-effects = [{ kind = "sanctuary", mana = 30, time = "1m", radius = 2, lasts = "1h", regen = 300 }]
-systems = ["special_rooms", "hit_points", "mana"]
+holy = "You feel whole again."
+dark = "What was taken is taken back."
 ```
 
 | Part | Rule |
 |---|---|
-| The rite | `use_class` → `begin_sanctuary`: refused (no time, no mana) on the overworld, in water, inside a shop, or where a hallow already stands within `radius`; else `spend_mana` and `Spent::Sanctuary(until)`, kept at through `keep_at` as Consecrate is (a creature coming into view, a message, or a blow interrupts: "You rise from your knees.", the mana spent, nothing laid: time is the price) |
-| The hallow | `WorldState::hallows: Vec<Hallow { level: LevelId, at: Pos, radius: u8, until: GameTime, regen: u16 }>`; laid at the end of the rite on the priest's cell; "The ground about you is hallowed." |
-| Who keeps out | `World::shuns(id)` (`world/ai.rs`, the one place a hostile creature keeps out of a sanctuary room) gains one clause: a hostile not already inside the hallow treats every cell within `radius` (Chebyshev, as rooms are cells) as shunned. A creature inside when it is laid may move within and leave (the sanctuary room's rule); one that is not never steps in, opens no door into it, and waits (`creature_steps`' existing wait). `spawn.rs` leaves hallowed cells out (its `shunned` clause, one more condition). Missiles and spells cross it as they cross a sanctuary room: the hallow keeps feet out, not arrows |
-| The pace | `World::healing_rate` and `World::mana_rate` take `× regen / 100` for an actor standing in a hallow on the current level, beside the room's `regen` (the larger of the two counts, never both: a hallow laid in a sanctuary room is × 3, not × 9) |
-| The break | `World::resolve` (a blow, shot, or throw by the player) and `spell_strikes`/`cast_area_hex` (a harmful cast by the player) call `World::break_hallow()` when the player stands inside one: it ends ("The peace is broken.", `Event::Hallow(End)`), whoever it kept out is free to come. Casting Mend, Balm, or Daily bread inside breaks nothing (no target harmed). Being hit inside breaks nothing: the one who struck from outside with an arrow owes nothing |
-| The end | `World::live`'s event loop takes `hallow_until` as a moment (so splitting time never changes the result) and drops hallows past `until` ("The hallowing fades.", a `note`: a rest goes on); leaving the level keeps it (it is on its level; it fades at its hour wherever the priest is) |
-| Alignment | none: a priest of any band hallows (the words the same; an unholy priest's hallow is as holy to the goblins, who keep out). Q3 |
-| What it is not | not a room effect (rooms are generated; a hallow is laid on cells), not a status (it stays when the priest walks away), not a wall (nothing is unwalkable: the player, a neutral, a beast, and a hostile already inside walk it freely; only a hostile outside chooses not to), not a turret (the break) |
+| The uses | a closed list in code (`prayer::Use`: Disease, Poison, Wounds, Release, Mana, Hunger, Restoration); the file names each once and gives the order and the words (a use missing or twice is a `ContentError`); `release` names statuses (checked against `status.toml`; none may be a hold's holder-side status, a buff, or Diseased). Without the file the prayer is refused ("You have nothing to pray for."), so fixtures load |
+| The problem of each use | disease: a disease **showing** (`Infection::shown`; a brewing one alone is no problem, so the prayer never tells the player of one: once answered, every infection goes, brewing ones too, silently); poison: Poisoned; wounds: Bleeding or `hp < max_hp`; release: any status of the list; mana: `mana < max_mana`; hunger: Hungry or worse (`Hunger < NotHungry`); restoration: any stat damage or any drained point |
+| The face | `World::prayer_face()`: the player's band (`Actor::band`) within `holy` → Holy, within `dark` → Dark; without alignment rules, Holy. A band in neither (none with these defaults: `neutral` down to `callous` leaves no gap) → Holy. The two `Requirement`s are checked at load to leave no band unanswered |
+| The time and the block | `Spent::Turn(price_of(player, ActionKind::Cast))` (`cast = 1000`: 10 s at normal speed, a spell's). `kind_of(Use(Orison))` is `Cast`, so Raging and Silenced block it (a silenced priest cannot pray aloud), as they block a spell |
+| The refusals | no time, no strain: no prayer talent; no `prayer.toml`; no problem among the unlocked uses (the face's `nothing`) |
+| The strain | `Progress::prayer: Option<Strain { value: u16, at: GameTime, locked: bool }>`; `Strain::now(rules, time) = value.saturating_sub(elapsed(at, time) / decay)` (lazy: no moment in `World::live`, no state to tick; reading never writes); at 0 the lock is off. An attempt reads `now`, then writes `value = now + strain, at = time` |
+| The attempt | locked → fizzle. Else `chance = min(100, now × fizzle_per_100 / 100)`; `chance > 0` → **one gameplay draw**, `below(100) < chance` → fizzle; `chance = 0` (no strain) → no draw, answered. A fizzle: the face's `fizzle` line, `locked = true`, the strain added. Answered: the face's `pray` line, the strain added, then the first `answers` problems in priority order (`all`: every problem, and every resource pool to its maximum: `Pools`' values, through `World::grant_resource`'s cap), each through its one existing place and each said in the face's words |
+| The fixes | disease → `World::end_disease` for every infection (the temple's `cure`); poison → `World::ended(poisoned)`; wounds → `ended(bleeding)`, `hp = max_hp` (not `heal_player`: no cause, no cap but the maximum); release → `ended` for each (a hold ends as `loosen_holds` ends one); mana → `mana = max_mana`; hunger → `Satiation::feed` to `states.satiated` (holy) or `states.bloated − 1` (dark), never less than it has; restoration → `World::mend(player)` (`StatDamage::mend_all`, `restore_drained`). Nothing here draws but the one fizzle die |
+| Communion | `TalentMods::communion` (the dark 9, §6.3): the strain is **not** added when the player stands where `effects_at` says an unholy effect lies (a room's or the level's) and the face is Dark (the talent's `alignment = { max = "callous" }`, read as the holy gifts read theirs: outside the bands it does nothing) |
+| Marks | none: the prayer is no cast (`train_spell` is the cast path's) and no stat use; the Willpower mark would make a hidden pile out of a free ability (rule 7's spirit) |
+| Alignment | none: praying moves no score (`prayed_good`/`prayed_evil` are the altar's) |
 
-Numbers as data: `radius` 1 to 5, `lasts` 10 minutes to 12 hours, `regen` 100 to 1000, `mana` 1 to 500, `time` 10 s to an hour (load checks on the talent effect).
+Numbers against the pool: with `decay = "1m"` and `fizzle_per_100 = 10`, a prayer an hour and
+forty minutes apart never risks a fizzle; two twenty minutes apart risk 8 % at the second; a
+third ten minutes later 17 %; a fizzle at 270 strain locks the prayer for 370 minutes, about six
+hours. ADOM's unheard prayer and NetHack's 300-turn timeout are the scale. Miracle at 60 under
+the same numbers is the owner's "pretty busted": everything, every hour and forty minutes, free.
 
-### 6.5 Costs against the pool
+### 6.2 The dark face's twists
 
-The probe's priest pools (`docs/dev/spells.md` "Balance": 27 at 3, 42 at 5, 49 at 6–7, 63 at 8, 90 at 12, 216 at 30, 426 at 60; 18 and 25 interpolated).
+The dark powers answer the same problems and add, each a line in the use's fix, no draw:
 
-| Level | Pool | Mend (1) | Cure wounds (2) | Daily bread (6) | Remove disease (11) | Balm (7) | Restoration (40) | Sanctuary (30) |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 3 | 27 | 27 casts | 13 | — | — | — | — | — |
-| 6 | 49 | 49 | 24 | 8 wafers | — | — | — | — |
-| 12 | 90 | 90 | 45 | 15 | 8 | — | — | — |
-| 18 | 132 | 132 | 66 | 22 | 12 | 18 | — | — |
-| 25 | 180 | 180 | 90 | 30 | 16 | 25 | 4 | — |
-| 40 | 300 | 300 | 150 | 50 | 27 | 42 | 7 | 10 |
+| Use | The twist | Through |
+|---|---|---|
+| disease | each disease cured is passed to the **nearest creature the priest sees** (the least `dist2`, the lowest `ActorId` on a tie; none seen: nothing more): it incubates in them as if they had lost the check | `World::infect` (the dev `infect`'s path; no check) |
+| poison | the degrees cured are laid on that creature | `World::afflict(target, poisoned, degrees, player)`: immunity and resistance apply as to any dose |
+| release | each hex ended whose `by` the priest sees is laid on that `by` at the degrees ended; a hold's holder is Webbed for the degrees the hold had | `afflict` (a creature type's `immune` list refuses; a buff status never: the list is checked at load to hold no buff) |
+| hunger | fed to one short of Bloated, not to Satiated | `Satiation::feed`'s target |
+| wounds, mana, restoration | the words alone | — |
 
-A rest to full is under an hour at level 3, about 3 hours at 12, 7 at 30 (the probe). The restoration school's `mana` row (5 % from rank 4, 10 from 7, 15 at 10) and its `speed` row (a tenth quicker from rank 3, a third at 9) make every row above cheaper and quicker as the priest casts; rank 5 comes in the first fortnight of a caster who casts daily (the spell scaling design §8.4), and a priest who makes bread, mends, and cleanses casts daily.
+A kill by a passed-on poison is a death by a status the player caused: `dies` judges it as any
+kill of theirs (`judge_kill`, XP as today). Nothing here is a blow: the twists ride on cures.
+
+### 6.3 Communion with the dark (9)
+
+```toml
+# assets/data/talents/communion.toml
+[[talent]]
+id = "communion"
+name = "Communion with the dark"
+tree = "class"
+granted = true
+description = "The unholy places are yours: in a cursed, draining, or haunted room, or on a level such a curse lies over, your prayers cost you nothing, and the place's drain does not touch you."
+effects = [{ kind = "communion" }]
+systems = ["special_rooms"]
+alignment = { max = "callous" }
+```
+
+Two reads: `World::orison` (no strain, §6.1) and the one place a room effect's `status` is laid
+on the player (the draining room's Ebbing: skipped for a holder of the Dark face standing in an
+unholy place). A holder of the Holy face (a priest risen to Neutral) has it and it does nothing,
+as a holy gift outside its bands does. `TalentDef::alignment`'s load check widens from "a holy
+active's talent" to "a holy active's or a band-gated passive's" (`communion` the first), the
+reading of `docs/dev/alignment.md`: "would work the same way, by band at the moment of use".
+
+### 6.4 Sanctuary (50)
+
+As round 1 designed it (the owner: q3 "create evil versions", q8 "sure", no light), moved from 40
+to 50 and given a dark face in words alone: the rule is the same for both, since the owner allows
+twins and a safe rest is a safe rest.
+
+A class active like Consecrate (`TalentEffect::Sanctuary { mana, time, radius, lasts, regen }` →
+`ClassActive::Sanctuary`, `world/sanctuary.rs`; `use:sanctuary`; the Class group).
+
+| Part | Rule |
+|---|---|
+| The rite | `begin_sanctuary`: refused (no time, no mana) on the overworld, in water, inside a shop, or where a hallow already stands within `radius`; else `spend_mana` and `Spent::Sanctuary(until)`, kept at through `keep_at` as Consecrate is (a creature coming into view, a message, or a blow interrupts: "You rise from your knees.", the mana spent, nothing laid) |
+| The hallow | `WorldState::hallows: Vec<Hallow { level, at, radius, until, regen }>`, laid at the end of the rite on the priest's cell; holy: "The ground about you is hallowed."; dark: "A dread settles on the ground about you." |
+| Who keeps out | `World::shuns(id)` (`world/ai.rs`, the one place a hostile keeps out of a sanctuary room) gains one clause: a hostile not already inside treats every cell within `radius` (Chebyshev) as shunned; one inside when it is laid may move within and leave; `spawn.rs` leaves hallowed cells out. Missiles and spells cross it: the hallow keeps feet out |
+| The pace | `World::healing_rate` and `World::mana_rate` take `× regen / 100` for an actor standing in a hallow on the current level (the larger of the hallow's and the room's, never both) |
+| The break | `World::resolve` (a blow, shot, or throw by the player) and the player's harmful casts call `World::break_hallow()` when the player stands inside: "The peace is broken." A dark twist of the prayer (a plague passed on from inside) breaks it too: it harms. Being hit inside breaks nothing |
+| The end | `World::live`'s event loop takes `hallow_until` as a moment and drops hallows past `until` ("The hallowing fades.", a `note`); leaving the level keeps it |
+| Light | none (q8) |
+
+Numbers as data: `radius` 1 to 5, `lasts` 10 minutes to 12 hours, `regen` 100 to 1000, `mana` 1
+to 500, `time` 10 s to an hour (load checks on the talent effect).
+
+### 6.5 The spells that stay, and the test
+
+Mend (1), Blessing (3), Cure wounds (3) are the priest's guaranteed spells: three. The full
+caster's bound in `world/spell_list_tests.rs` (`4..=6`) becomes `3..=6`, and `docs/dev/spells.md`'s
+"four to six spells" reads "three to six: the priest's rite is the Orison". The cantrip at 1 (Mend)
+holds. `remove_disease.toml` stays a spell file (its scroll teaches it; nothing names it in a
+table), as do `smite`, `purity_of_body`, and `purify`'s **effect kind** (`purify` rides on Daily
+bread's talent; the `purify` talent file goes). `saint.toml` and the old `miracle.toml` go;
+`miracle.toml` is written anew as the tier-5 prayer talent (the id reused: saves are pinned to
+versions, §7).
 
 ## 7. Determinism, saves, replays
 
 | What | Rule |
 |---|---|
-| Draws | Daily bread none (a ladder count), Balm none, Restoration none, Sanctuary none. The three spells' only dice are Mend's and Cure wounds', unchanged. A run without a priest hashes as before |
-| Saved | `WorldState::hallows` (`#[serde(default, skip_serializing_if = "Vec::is_empty")]`), hashed in `state_hash`; nothing else new (`Actor::talents` holds the table's talents as today; the wafers are ordinary stacks with `died`) |
-| Old priest saves | `class::grant` on `from_state` gives what the grown table has and the save lacks (Daily bread, Balm, Restoration, Sanctuary at their levels) and takes nothing away: a saved priest keeps Smite, Blessing, and Purify (`docs/dev/progression.md`: "nothing is taken away"). Purify's talent file is removed (its effect lives in Daily bread's); a save naming `purify` loads without it (`Talents::drop_unknown`, said in `retiered`) |
-| Content fingerprint | changes (three spell files, three scroll objects, one talent file removed and two added, the class file): saves of every class note the new fingerprint as every content PR does; `FORMAT_VERSION` untouched |
-| Replays | `use:daily_bread`, `use:balm`, `use:restoration` (spells by id, as today), `use:sanctuary` (a class active); no new syntax |
-| Tests | `world/caster_tests.rs` (the priest's table: each entry at its level, the two cut not given, Blessing not given (Q1)); `world/spell_list_tests.rs`: the full caster's count bound stays `4..=6` with Blessing out (mend, cure_wounds, daily_bread, remove_disease, balm, restoration), or widens to `4..=7` with it in; the per-spell checks (level ≤ class level at the grant: 6 ≤ 6, 7 ≤ 18, 20 ≤ 25) hold; `content/spell_def.rs` (`creates`, `count`, `mends`, `restores`, the refusals); `world/bread_tests.rs` (a wafer in the pack, fresh, the count ladder, a full pack, the scroll, no draw); `world/balm_tests.rs` (each status ended, a hold let go, the refusal with nothing); `world/restoration_tests.rs` (stat damage mended, drained points back with the hit points and mana they carry, the refusal, interrupted at the third cast with the mana unspent); `world/sanctuary_tests.rs` (a kobold outside never steps in and waits; one inside leaves; the pace × 3; a blow from inside breaks it; an arrow from outside does not; it fades at the hour whoever is where; refused on the overworld and over another; the save and a replay) |
+| Draws | the prayer: one gameplay draw per attempt **only while the strain is above 0 and the prayer unlocked** (a priest's first prayer, or any an hour and forty minutes after the last, draws nothing); the twists none; Sanctuary none. A run without a priest draws as before |
+| Saved | `Progress::prayer` (`#[serde(default, skip_serializing_if = "Option::is_none")]`, hashed in `state_hash` while `Some`; a run that never prayed saves and hashes as before); `WorldState::hallows` (left out while empty, hashed). Nothing else new: the talents of the table are `Actor::talents` as today |
+| Old saves | **none carried**: the owner pins saves to game versions; this design adds no alias for `remove_disease`, `purify`, `smite`, `purity_of_body`, `saint`, or the old `miracle`, and no shim for a save holding them. `Talents::drop_unknown` stays what it is for the ids that no longer exist in any file (`purify`, `saint`); `miracle` loads as the new talent, which is what a version-pinned save never meets |
+| Content fingerprint | changes (talent files added and removed, the class file, `prayer.toml`'s use ids are not ids of the fingerprint: the uses are closed in code); `FORMAT_VERSION` untouched (the integrator's) |
+| Replays | `use:orison` (every tier), `use:sanctuary`, `use:consecrate`; the spells by id as today; no new syntax |
+| Time | the strain's decay is a function of `GameTime` (lazy), so cutting time differently never changes it; the hallow's end is a moment of `live` |
+| Tests | `world/orison_tests.rs`: each use at its level and not before; the priority order with several problems; one answer before 40, two from 40, all at 60 and the pools filled; the refusal with nothing (no time, no strain); the strain's growth, decay by the clock however cut, the chance at 100 and 500 (mirrored draws), the lock and its end at 0; a brewing disease alone is no problem and goes with a shown one; the Holy face at Neutral, the Dark at Callous, the swap when the band falls; a silenced priest refused; a save and a replay. `world/dark_face_tests.rs`: the plague passed to the nearest seen creature, the poison at its degrees and resisted by an immune one, a hex turned on its caster and not on one unseen, a hold's holder webbed, the brim; Communion: no strain in a cursed room, Ebbing not laid, nothing for the Holy face. `world/sanctuary_tests.rs` as round 1 (a kobold outside never steps in; one inside leaves; the pace × 3; a blow from inside breaks it; an arrow from outside does not; a twist from inside breaks it; the fade; refused on the overworld; save and replay). `world/caster_tests.rs`: the priest's table (each entry at its level, the six cut not given). `content/prayer.rs`: the parse, a use missing or twice, a buff in `release`, a band unanswered by both faces |
 
 ## 8. What the player sees
 
 | Where | What |
 |---|---|
-| The abilities menu | the Spells group lists Daily bread ("makes a wafer of waybread"; with the count at 2 or more, "two wafers"), Balm ("cures bleeding, poison, hexes, holds"), Restoration ("mends your body; a minute") with their mana as every spell; the Class group lists Sanctuary with Consecrate's pattern (greyed `NoMana`, `While` nothing: it has no cooldown) |
-| Messages | "Bread is given." / "A wafer of waybread falls at your feet." · Balm: the statuses' own `end` lines ("The bleeding stops.", "The poison wears off.", "The web falls away.") · Restoration: "You feel whole again." (the temple's words, `World::mend`'s event) · Sanctuary: "You kneel and pray." … "The ground about you is hallowed." / "You rise from your knees." / "The peace is broken." / "The hallowing fades." · a creature kept out says nothing (as at a sanctuary room's door) |
-| Look mode | a hallowed cell: "… on hallowed ground" (as a special room names its floor to one who knows it; the player knows their own hallow); nothing on a creature |
-| The status bar | nothing: a hallow is a place, not a status; the mana shows as today |
-| Dumps | `spells` layer: `Daily bread (level 6, 6 mana): 1 wafer`, `Balm (level 7, 7 mana)`, `Restoration (level 20, 40 mana)`; `abilities`: `Sanctuary (class): here`; `truth` (dev): `hallow at (12, 5) r2 until 09:15:00`; JSON `hallows` (`pos`, `radius`, `until`) for the current level |
-| The wiki | `wiki/src/classes.md`'s priest row (the generated `class-levels.md` picks the table up); `spell-list.md` and the scroll tables pick the spells up; a new paragraph under Special rooms → "Sanctuary" with the numbers (radius, hour, × 3, the break), generated from the talent's effect by `xtask/src/wiki/talents.rs`'s `effect_text` (one arm); the housekeeping table of §3 as a new page `wiki/src/housekeeping.md` ("What ails you, and what cures it": every status, disease, and drain with its cures, the priest's spell and level among them), generated by a new `xtask/src/wiki/housekeeping.rs` from `status.toml`, `diseases.toml`, the objects' `cures`, the services, and the class tables |
-| The spec | spec/08i-character.md "Class abilities": the priest's row; spec/07d-shops-and-rooms.md "Special rooms": the hallowed ground paragraph |
+| The abilities menu | the Class group lists the prayer by the face's title (`PerceptionView::own_alignment` picks it): "Orison", later "Prayer", "Litany", "Benediction", "Miracle"; for a dark priest "Whisper", "Invocation", "Rite", "Pact", "Miracle"; its description the highest tier's talent's; greyed `While(raging)`/`While(silenced)` as a spell; never greyed for the strain (hidden: the rules refuse or fizzle). Communion is a passive: the Talents page. Sanctuary with Consecrate's pattern (`NoMana`) |
+| Messages | the face's `pray` line, then one line per answer (§6.1's words; a disease's own `recovered` line is **not** said: the prayer's one line covers every disease, so the brewing ones stay unnamed); a fizzle the face's `fizzle` line, the same whether locked or unlucky; the refusal the face's `nothing`. Sanctuary: "You kneel and pray." … "The ground about you is hallowed." / "A dread settles on the ground about you." / "You rise from your knees." / "The peace is broken." / "The hallowing fades." |
+| The status bar | nothing: the strain is hidden, a hallow is a place |
+| Look mode | a hallowed cell: "… on hallowed ground" (dark: "… on dreaded ground"); nothing on a creature |
+| The character screen | nothing new (the band shows as today) |
+| Dumps | `abilities`: `Orison (class): here` (the face's title; `Unavailable` as the menu); `talents`: the prayer talents as held, `Communion with the dark (class)`; `progress` (dev): `prayer strain 180 (locked)`, the uses unlocked, the face; `truth` (dev): `hallow at (12, 5) r2 until 09:15:00`; JSON `abilities` as today, dev `prayer: { strain, locked, face, uses }`, `hallows` |
+| The wiki | `wiki/src/classes.md`'s priest section (the generated `class-levels.md` picks the table up); a new page `wiki/src/prayer.md` ("The priest's prayer") with a generated table from `prayer.toml` and the class table (`xtask/src/wiki/prayer.rs`): each use, its level, its priority, what it answers on each face, the twist; the strain's numbers in words and figures (+100 an attempt, a point a minute, the chance per 100, the lock); Communion and Sanctuary with their numbers; `TERMS.md` rows for prayer, strain, face |
+| The spec | spec/08i-character.md "Class abilities": the priest's row and the prayer; spec/07d-shops-and-rooms.md "Special rooms": hallowed ground |
 
 ## 9. Talents and class abilities
 
-**No new talent, no new system.** The coverage policy's test (`docs/dev/progression.md`): a system is broad; a sub-feature extends its parent and mints nothing.
+**No new talent, no new system.** The coverage policy's test (`docs/dev/progression.md`): a
+system is broad; a sub-feature extends its parent and mints nothing; a class ability is counted
+by the systems it reads. The prayer is a class ability; its limit (the strain) is the ability's
+own time-refilled cost, which the policy's step 4 asks of every cost ("time refills it, 'time is
+the penalty'"; "a talent that changes a cost changes the data's cost, never adds a timer").
 
-| Entry | System(s) it reads | Its parent's talents, unchanged |
+| Entry | System(s) it reads (`systems`) | Its parent's talents, unchanged |
 |---|---|---|
-| Daily bread | `hunger` (feeds), `spells`, `mana` | Lean, Ascetic, Iron stomach, Gourmand, Herb lore; Purify's rule rides in this talent |
-| Balm | `status` (ends statuses), `spells`, `mana` | Clotting, Poison resistance, Divine grace, Nature's ward, Cool head |
-| Restoration | `diseases` (stat damage and drain are its tag: `drain` folded into `diseases` in #773), `spells`, `mana` | Unbroken soul, Iron will, Fever-proof, Strong constitution |
-| Sanctuary | `special_rooms` (a sanctuary the player lays; the room effect's `shunned` and `regen` are its rules), `hit_points`, `mana` | Pious, Old delver; Healthy, Fast healer; Meditation, Clear mind |
+| Orison (wounds) | `hit_points`, `status` | Healthy, Fast healer; Clotting |
+| Daily bread (hunger, Purify's rule) | `hunger`, `diseases` | Lean, Ascetic, Iron stomach, Gourmand, Herb lore |
+| Communion with the dark | `special_rooms` | Pious, Old delver, Quiet delver |
+| Prayer (disease, poison) | `diseases`, `status` | Fever-proof, Strong constitution, Poison resistance, Divine grace |
+| Prayer of release | `status` | Cool head, Nature's ward |
+| Litany (restoration) | `diseases` (drain's tag since #773) | Unbroken soul, Iron will |
+| Litany of the mind (mana) | `mana` | Deep well, Clear mind, Meditation |
+| Benediction (two answers) | `hit_points`, `status`, `diseases`, `mana`, `hunger` (what it answers more of) | as above |
+| Sanctuary | `special_rooms`, `hit_points`, `mana` | Pious, Old delver; Healthy; Meditation |
+| Miracle (all, every pool) | the five above and `resources` | Deep lungs, Steady breathing |
 
-Against the bar, entry by entry: none is information only (rule 8); none is a small percentage on a niche mechanic; none duplicates a talent's effect (Restoration is the temple's service, which is no talent; Balm's list is no talent's; Pious cheapens the temple and is untouched) (rule 3); none chains (rule 4); every one works underground (rule 6: Daily bread anywhere, Sanctuary refused only on the overworld); no hidden marks (rule 7); no gold, favour, XP, or quest effect anywhere, and the 40 changes what a dungeon rest is (rule 1); nothing on shop favour (rule 9). Tags match hooks: Daily bread reads `hunger` (it feeds) and `spells`/`mana` (it is a cast); Sanctuary reads `special_rooms` (the `shunned` and `regen` rules), and `hit_points`/`mana` for the pace it changes.
+Against the bar, entry by entry: none is information only (rule 8); none a small percentage on a
+niche mechanic; none duplicates a talent's effect (rule 3: the prayer's cures are the temple's
+functions, which no talent gives; `purify` rides on one talent now that the `purify` talent goes;
+Purity of body leaves the priest, so no immunity sits beside a cure); none chains (rule 4: the
+tiers are table rows, not prerequisites); every one works underground (rule 6: Sanctuary refused
+only on the overworld; Communion's rooms are the dungeon's); no hidden stat marks (rule 7: the
+prayer trains nothing; the strain is hidden but is a cost, not a mark, and the wiki states it);
+nothing on gold, favour, XP, or quests (rules 1, 2, 9), and the 40, 50, and 60 change what the
+character can do in a dungeon (rule 1). Tags match hooks: each prayer talent names the systems its
+uses' fixes read, Communion `special_rooms` (its two reads are a room's status and a room's
+unholiness).
 
-Class abilities of other classes: none touched but the two shared entries the priest's table stops naming (Smite stays the paladin's, Blessing the paladin's and bard's); their talent files are unchanged.
+**Should the strain be a system with a pickable?** The policy's step 3 ("a broad rule set a talent
+could change: a check, a price, a pace") fits it (a talent *Fervent*, priest-only, "the strain of
+your prayers passes twice as fast", would be a real choice and visible enough by rule 7's
+analogy). Not proposed: the strain is one class's limit, as Lay on hands' Drained is the
+paladin's, and the owner's direction asks for the prayer, not a tree about it. Q8 leaves the
+door open.
+
+Class abilities of other classes: none touched. The paladin keeps Smite, Consecrate (its
+`alignment` as today unless Q3 lowers it), and Purity of body; the monk Purity of body; the witch
+Hag's bargain (the `reprieve` kind's one holder now).
 
 ## 10. Rejected ideas
 
 | Idea | Why not |
 |---|---|
-| **Turn undead** (NetHack, ADOM) | a fight ability: the undead flee or die. Against the owner's "not any extra ability to fight" |
-| **Keep Smite for a priest of the good side** | it is a blow; and #823 (the paladin, modes of smiting) owns it |
-| **Keep Blessing** as "a priest without a prayer is odd" | +1 to hit is a fight buff; Blessing is the paladin's and bard's table entry and its scroll teaches it (abjuration +2 affinity: a struggle at caster level 1, easy by 3). Asked as Q1 |
-| **Light as a table entry** (the owner's example) | the kit's scroll of light teaches Light for certain at level 1 (a level-0 spell at caster level 1), and every race without darkvision has a lantern: a table entry would spend a level on what the first turn gives. The candles stay flavour (Q6) |
-| **Remove curse** on items | Warlock has no cursed items; Balm takes the hexes, Consecrate the places |
-| **Identify** | the merchant's (the owner); the scroll and spell of identify exist for all |
-| **Purify as its own entry at 25** | small beside a spell that makes bread; folded into Daily bread's talent so the effect kind stays in use and the level goes to Restoration |
-| **Create water, holy water** | there is no thirst, and holy water's uses (NetHack) are curse uses |
-| **A private piety or favour pool** (ADOM) | the altar's prayer is everyone's (`forgotten_altar.toml`); a second pool for one class is a system for one class, and the resources system says a pool joins with its own talents (policy step 4). Mana is the priest's pool |
-| **Sanctuary as a buff status on the priest** (hostiles shun the priest's cell) | a status that moves with the priest is an escort; the owner's "no fighting" and Zin's shape both want a *place* one kneels in and leaves; and a status would show a spell circle about a priest walking through a goblin den untouched |
-| **Sanctuary as a generated room effect laid at run time** | room effects are the generator's (`mapgen/special.rs`), per room, in the fingerprint; a hallow is cells on any level |
-| **Sanctuary that also stops spawning on the level** | Quiet delver's territory, and a level-wide effect for a kneel; the hallow keeps spawns out of its cells only |
-| **A ward (Deflection, Protection) at 18**, as the cut Ward of faith | a defence passive is a fight ability by another door, and #798 cut it as weak (#776's bar) |
-| **Faster mana regeneration as the capstone** (Arcane mastery's twin) | a percent on a pace, the wizard's already; Saint stays as approved |
-| **Resurrection, a second Miracle** | permadeath; Miracle is once in a life by the owner's design |
-| **Raising Saint to healing and mana × 2** | the owner approved Saint; a change is not asked for. Left as a line for the owner if the capstone feels thin (Q7) |
-| **Daily bread making a ration or bread** (sellable) | 5 and 2 gold a cast is a gold trickle: rule 1's spirit (no economy ability); the wafer is worth 0 |
-| **A hunger-stilling status instead of food** (D&D's *sustain*) | hunger is a count the player never sees; food is what the system has, and a wafer is a thing in the pack that spoils in 60 days, drops, and weighs |
+| **The three spells of round 1** (Daily bread, Balm, Restoration as `[[spell]]` files) | the owner's direction folds them into the one prayer's uses: a spell has a cost in mana and a school that trains, which a prayer paid in strain does not; keeping both would be two ways to the same cure |
+| **The dark powers bargain instead of fizzling** (no random fizzle; a hard wall at a cap; blood or alignment as the price) | a second cost model for one ability; the owner's fizzle is the mechanic, and the dark face's twists are where the dark differs |
+| **A dark face that heals on kills** (Makhleb) | a fight economy: the priest fights no better; the twists ride on cures only |
+| **A dark face that raises the dead** (an undead ally) | the druid's allies (#821) and a fight ability |
+| **Turn undead** | a fight ability (the undead flee or die) |
+| **Keep Smite** | a blow, and #823's |
+| **Keep the reprieve at 50 under another name** | its name is the capstone's (q7); a priest who prays their hit points full needs it less; Rise from the ashes is the sign's and Hag's bargain the witch's; the table has no row to spare |
+| **Keep Saint as healing × 2 beside Miracle** | Miracle fills the pool; a pace on top is a percent no one feels (rule: a small percentage) |
+| **Keep Remove disease as a spell in the table** | the prayer's 12 is the same cure; the spell file and its scroll stay for everyone |
+| **The prayer trains Willpower** | a hidden pile from a free ability; the policy's rule 7 spirit |
+| **A prayer with nothing to answer still strains** | ADOM's unheard prayer costs little; a free refusal is kinder and leaks nothing (a priest cannot probe for a brewing disease: a brewing one alone is no problem) |
+| **Telling a locked prayer from an unlucky one** ("Silence." against "Nothing answers.") | the lock is a hidden number's state; one line for both, as ADOM's |
+| **Showing the strain** (a bar, a word) | hidden numbers stay hidden; the wiki states it; the fizzle is what the player learns from |
+| **Cooldowns among the release list** (Spent, Drained, Winded, Worn thin, Exhausted, Hoarse) | a prayer that resets another gift's price is a cross-class reset; the list holds what ails, not what was paid |
+| **A separate dark table** (two class files, or two talents a row) | twenty rows for one class; one talent a row with two faces keeps the table readable and the data in one place |
+| **Light as a table entry** | the kit's scroll teaches Light for certain at level 1 |
+| **Identify** | the merchant's (the owner) |
+| **A hallow that sheds light** | q8: no (no golden, no glare, no beacon) |
+| **Hunger answered at Not hungry** | a priest spamming bread; Hungry or worse is the problem |
 
 ## 11. Implementation plan
 
 | Slice | Issue | What it touches | Depends on |
 |---|---|---|---|
-| **P1 The spells and the table** | priest: Daily bread, Balm, Restoration; Smite, Blessing (Q1), Purify out | `warlock-core`: `content/spell_def.rs` (`creates`, `count` ladder, `mends`, `restores`, the checks), `content/spell_ladder.rs` (`RungValue::Count`), `world/cast.rs` (`cast_create`, `cast_cleanse`'s two lines), `world/spell_rung.rs` (`spell_count`), `world/spell_words.rs` (the menu's words), dumps; data: `spells/daily_bread.toml`, `balm.toml`, `restoration.toml`, `objects/scroll_of_*.toml` (three), `talents/daily_bread.toml`, `balm.toml`, `restoration.toml` (one spell a talent, `tree = "class"`, `granted`), `talents/purify.toml` removed, `classes/03-priest.toml`; tests §7; `docs/dev/spells.md`, `docs/dev/progression.md` (the priest's line), CLAUDE.md's action text if any (none: `use:ID` covers it) | — |
-| **P2 Sanctuary** | priest 40: the hallowed ground | `content/talent.rs` (`TalentEffect::Sanctuary`), `talent.rs` (`TalentMods::sanctuary`), `content/class.rs` (`ClassActive::Sanctuary`), `world/sanctuary.rs` (the rite, `Spent::Sanctuary`, `keep_at`, the hallow, `break_hallow`, the fade), one clause in `ai.rs::shuns` and `spawn.rs`, one term in `healing_rate` and `mana_rate`, one call in `fight.rs::resolve` and `spell.rs::spell_strikes`, `WorldState::hallows`, perception (`PerceptionView::hallowed(pos)` for look mode), dumps; data: `talents/sanctuary.toml`, the class file's 40; tests §7; `docs/dev/special-rooms.md` (a section "Hallowed ground"), `docs/dev/screens.md` nothing (the menu's existing Class group) | P1 (the class file) |
-| **P3 Wiki, spec, probe** | the priest's pages | `xtask/src/wiki/housekeeping.rs` and `wiki/src/housekeeping.md`, `SUMMARY.md`, `TERMS.md`; the priest's row in `classes.md`; spec/08i-character.md and spec/07d-shops-and-rooms.md; `world/balance_probe.rs`'s priest column gains the new spells (no roll: a line each); `ui/screen_snapshots.rs` a case `abilities-priest-40` (the menu over a level-40 priest: text) | P1, P2 |
+| **P1 The prayer and the table** | priest: the Orison, its uses, the strain, the cuts | `warlock-core`: `content/prayer.rs` (`PrayerRules`, the parse and checks, `Content::prayer()`), `content/talent.rs` (`TalentEffect::Prayer`), `talent.rs` (`TalentMods::prayer`), `content/class.rs` (`ClassActive::Orison`), `world/orison.rs` (the face, the problems, the strain, the attempt, the fixes; one arm in `class_ability.rs::use_class`, one in `buff.rs::kind_of`), `world/experience.rs` (`Progress::prayer`), `dump.rs` (the layers), `perception.rs` (the title); data: `prayer.toml`, `talents/orison.toml`, `daily_bread.toml` (with `purify`), `prayer_of_cleansing.toml`, `prayer_of_release.toml`, `litany_of_restoring.toml`, `litany_of_the_mind.toml`, `benediction.toml`, `miracle.toml` (rewritten), `purify.toml` and `saint.toml` removed, `classes/03-priest.toml`; `spell_list_tests`' bound; tests §7; `docs/dev/progression.md` (the priest's line, "Class actives"), a new `docs/dev/prayer.md`, `docs/dev/spells.md` (the bound), CLAUDE.md's action text (`use:orison`). The holy face only: the dark words may ship, the twists wait | — |
+| **P2 The dark face and Communion** | priest: the dark powers' answers | `world/orison.rs` (the twists, §6.2), `world/dark_face.rs` (the nearest seen creature, the pass-on, the turn-back), `content/talent.rs` (`TalentEffect::Communion`, the widened `alignment` check), the room status's one place; data: `talents/communion.toml`, the class file's 9; tests §7; `docs/dev/prayer.md`, `docs/dev/alignment.md` (band-gated passives) | P1 |
+| **P3 Sanctuary** | priest 50: the hallowed ground | as round 1's P2: `TalentEffect::Sanctuary`, `ClassActive::Sanctuary`, `world/sanctuary.rs`, one clause in `ai.rs::shuns` and `spawn.rs`, one term in `healing_rate` and `mana_rate`, one call in `fight.rs::resolve`, `spell.rs::spell_strikes`, and the twists, `WorldState::hallows`, perception for look mode, dumps; data: `talents/sanctuary.toml`, the class file's 50; tests §7; `docs/dev/special-rooms.md` "Hallowed ground" | P1 (the class file) |
+| **P4 Wiki, spec, probe** | the priest's pages | `xtask/src/wiki/prayer.rs` and `wiki/src/prayer.md`, `SUMMARY.md`, `TERMS.md`; the priest in `classes.md`; spec/08i-character.md, spec/07d-shops-and-rooms.md; `world/balance_probe.rs`'s priest column (a line for the prayer: no roll); `ui/screen_snapshots.rs` cases `abilities-priest-1` and `abilities-priest-60` (the menu's titles: text) | P1–P3 |
+| **The scroll of restoration** (q9, its own small issue, not the priest's) | a read scroll, no spell behind it (as the scroll of identify): `read` kind `cleanse` with `mends`, `restores`; level 8, frequency 10, 300 gold; so a warrior drained far from Cēaptūn has a dice-roll's hope | — |
 
-P1 and P2 each add saved state or actions (P2 the state, P1 none but content): by the integrator's rule they may run beside one other such PR. No golden anywhere (nothing here is the GPU's: a hallow draws no light, Q8).
+P1 adds saved state (`Progress::prayer`) and an action, P3 state; by the integrator's rule each
+may run beside one other such PR. No golden anywhere (nothing here is the GPU's).
 
 ## 12. Open questions, each with a recommended default
 
 | # | Question | Recommended default |
 |---|---|---|
-| Q1 | **Blessing** (3): out of the priest's table (a +1 to hit is a fight buff), or kept as the one prayer a priest says over themselves? | **out**: the owner's words are "not any extra ability to fight"; the scroll of blessing teaches it to a priest who wants it (abjuration +2), and the spell count test's `4..=6` holds without it |
-| Q2 | **Daily bread at 6 and Balm at 18**, or Balm at 6 (bleeding and poison in a fight from the start) and Daily bread at 18? | **bread first**: hunger comes by day two and has no sure answer but gold; bleeding has the Heal skill from level 1 and poison Remove disease at 12 |
-| Q3 | **Sanctuary and alignment**: holy gifts (Consecrate, Smite, Lay on hands) do nothing outside the good bands; should a hallow? | **no alignment field**: the priest's whole table is housekeeping, and an evil priest who cannot rest is a class that cannot be played evil. Consecrate keeps its band (it was approved so) |
-| Q4 | **Daily bread's count on the degree hooks** (`degree_rungs`, `degrees`: *of Lingering*, the transmutation rows): a wafer more from a duration item is odd. | **no**: `spell_count` climbs its own ladder and reads no hook; the restoration rows' `mana` and `speed` are its growth (a note in the spells README) |
-| Q5 | **Restoration while a disease still shows**: refused (the temple's rule), or mends what it can? | **mends**: 40 mana and a minute buy the mend now; the disease takes its point tomorrow and Remove disease (12) is the priest's own answer to that. The temple keeps its refusal |
-| Q6 | **The kit and the weapon ranks** (maces 2, shield block 1, sword and board 1; three candles that do nothing): unchanged, or the mace to rank 1 and the candles to a burning light? | **unchanged**: the ranks are a starting skill, not an ability, and NetHack's mace is the fantasy; the candles are rite flavour. A burning candle is a light-system issue, not the priest's |
-| Q7 | **Saint** (60): healing × 2 as approved, or healing and mana × 2 (a capstone that feels like one)? | **as approved**; the owner may widen it in one line of data (`mana_regen_percent` 100) if the table reads thin at the top |
-| Q8 | **Should a hallow shed light** (as a shrine's stone does), so the player and the goblins see its edge? | **no light** (no golden, no glare for light-blind eyes, no beacon to the floor); look mode says "hallowed ground", and a creature that stops two cells off and waits is the edge made visible. If the owner wants it drawn, a steady dim preset (`circle_restoration`'s luma, radius 2) is one line and one golden |
-| Q9 | **Restoration's scroll** (a level-8, 300-gold scroll that undoes drain for any class): ship it, or keep the rite the priest's and the temple's? | **ship it**, rare (frequency 10): a warrior drained to the floor far from Cēaptūn should have a dice-roll's hope, and "every spell has a scroll" is the magic design's rule |
-| Q10 | **Purity of body at 32** with Remove disease at 12: keep (a convenience: no mana, no rest interrupted by a fever), or replace with something that answers a problem the table still lacks? | **keep**: it is the owner's approved shared entry, and the table lacks nothing in §3 by 32; immunity is the right shape for a priest past the barrows |
+| Q1 | **The strain's numbers**: +100 an attempt, a point a minute, 10 % per 100? | **as written**: a prayer every hour and forty minutes is free, a second within the hour risks under 10 %, a fizzle costs about six hours; NetHack's 300 turns and ADOM's unheard prayer are the scale. All three are one line of `prayer.toml` |
+| Q2 | **The bands**: the holy powers answer Neutral and better, the dark Callous and worse? | **yes**: a human or elven priest starts Neutral and is answered from the first turn; the first evil deed does not change who answers, the fall to Callous does |
+| Q3 | **Consecrate's band** (`min = kind`, the paladin's shared talent): a Neutral priest's Consecrate goes unanswered until they do good. Lower it to `neutral`? | **lower it**: one line of `consecrate.toml`, the paladin (starting Good at 550) unaffected in practice, and a fresh priest's 9 answers. Communion's `max = callous` leaves the Neutral band to Consecrate |
+| Q4 | **Cure wounds (3)**: keep as the mana heal beside the prayer, or cut (Orison fills the pool at 1)? | **keep**: a mana heal when the strain is high, a touch heal for someone beside you (the Toucher style), and the priest's third spell (the test's bound) |
+| Q5 | **The release list** (Hexed, Weakened, Sluggish, Drowsy, Webbed, Held, Frightened, Transfixed, Ashen): Ashen in (an altar's bane, a day of −2), the cooldowns out? | **as written**: an altar's bane ails; a cooldown is a price paid |
+| Q6 | **A brewing disease**: cured only with a shown one (so the prayer leaks nothing), or a problem of its own? | **only with a shown one**: the priest never learns of a disease by praying; Miracle at 60 takes everything either way |
+| Q7 | **The hunger threshold**: Hungry or worse, or anything under Satiated? | **Hungry or worse**: the problem is hunger, not room for more |
+| Q8 | **A pickable on the strain** (*Fervent*: the strain passes twice as fast, priest-only, Grit)? | **no**: one class's limit, as Lay on hands' Drained; the owner may ask for it later in one talent file (its hook is `Strain::now`'s divisor) |
+| Q9 | **The scroll of restoration** (the owner: sure): with Restoration no longer a spell, a read scroll of its own? | **yes, its own small issue** (§11): the item game's, not the priest's |
+| Q10 | **Sanctuary's dark name**: "Sanctuary" for both faces with the words differing, or a name of its own? | **one name**: the ability is the same; the lines differ |
+
+## 13. The owner's decisions (2026-11-02, round 1)
+
+Recorded verbatim from PR #831, with what this round did with each.
+
+| # | The owner | Done here |
+|---|---|---|
+| q1 | "in. there is no need to hamstring the priest completely. +1 to hit is fucking trash ability in grand scheme of things. It's not going to make or break a priest." | Blessing stays at 3 (§4, §5) |
+| q2 | "daily bread first" | the hunger use is the first unlocked after wounds (6); release (the old Balm) at 18 (§5) |
+| q3 | "create evil versions of these gifts too. They do not need to share the same theme or be evil twin type of thing. if evil priest is just better, then do be it." | the dark face (§6.2: the plague passed on, the hex turned back, the brim), Communion with the dark beside Consecrate (§6.3), Sanctuary's dark words (§6.4); where the dark is better, it is |
+| q4 | "you can make it pretty good. not terribly important." | the hunger answer fills to Satiated (the dark to the brim) rather than a wafer (§5) |
+| q5 | "priest could just get rid of the thing entirely" | read as: no refusal and no mending around a disease: the prayer cures the disease (priority 1) and restores in its turn (priority 7); from 40 both in one prayer (§5, §6.1) |
+| q6 | "sure" | the kit, the stats, the skills, and the weapon ranks unchanged (§4) |
+| q7 | "capstone can be pretty busted. Let's call it 'Miracle' instead. It fills satiation, cures all ailments, fills hp pool, fills mana pool (and fills all other pools too). It takes roughly same time as casting normal spell. It tracks an invisible number (like +100 per miracle) that decays over time. Every time miracle is attempted, there is a chance based on number already in the pool that it just does not work (kinda like when out of piety in adom). If it fizzles out, +100 is added and future uses fizzle out automatically until the pool has decayed to 0." | Miracle at 60 (`all`: every use and every pool), a cast's time, the strain exactly so (§6.1); Saint and the reprieve go (§4) |
+| q8 | "sure" | the hallow sheds no light (§6.4) |
+| q9 | "sure" | the scroll of restoration ships, as a read scroll of its own now that Restoration is a prayer's use (§11) |
+| q10 | "no." | Purity of body leaves the priest's table (§4) |
+| the direction | "i think we take the idea of the miracle, and give that to priest pretty early (same as ADOM has 'spammable' pray). We just keep adding things it does (and making it's name grander) as the priest levels up. basically before lvl60, it picks from the list of ailments in priority order same as adom, based on what uses is unlocked already. like: 1. cure disease 2. cure poison 3. stop bleeding + fill hp pool 5. fill mana 6. fill satiation 7. etc etc. Then we just keep adding things it can do, then perhaps it does 2 things per prayer. Last at miracle state it just does everything at once for 1 cost." | the Orison at 1 with the strain; uses added at 6, 12, 18, 25, 32; the titles Orison → Prayer → Litany → Benediction → Miracle (the dark Whisper → Invocation → Rite → Pact → Miracle); the priority order disease, poison, wounds, release, mana, hunger, restoration; two answers at 40; everything at 60 for one attempt's strain (§5, §6.1) |
