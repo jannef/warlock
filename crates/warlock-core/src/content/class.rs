@@ -102,13 +102,14 @@ struct ClassSpec {
     #[serde(default)]
     abilities: Vec<AbilitySpec>,
     bonus_talents: Option<BonusSpec>,
+    max_level: Option<u8>,
 }
 
 /// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent;
 /// `rank = 2` gives its second rank (default 1).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct AbilitySpec {
+pub(super) struct AbilitySpec {
     level: u8,
     talent: String,
     #[serde(default = "first_rank")]
@@ -123,10 +124,131 @@ fn first_rank() -> u8 {
 /// from those trees (none: any).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct BonusSpec {
+pub(super) struct BonusSpec {
     levels: Vec<u8>,
     #[serde(default)]
     trees: Vec<String>,
+}
+
+/// The `abilities` rows of a class or prestige table (`what`: `class \`bard\``, for errors),
+/// checked: levels 1 to `MAX_LEVEL`, ascending, ranks from 1, a talent's ranks rising down the
+/// table. The cap's own check is [`check_levels`], once the cap is known.
+pub(super) fn table_rows(
+    err: &impl Fn(String) -> ContentError,
+    what: &str,
+    rows: Vec<AbilitySpec>,
+) -> Result<Vec<(u8, String, u8)>, ContentError> {
+    let mut abilities: Vec<(u8, String, u8)> = Vec::with_capacity(rows.len());
+    for a in rows {
+        if !(1..=MAX_LEVEL).contains(&a.level) {
+            return Err(err(format!(
+                "{what}: abilities: level {} is not 1 to {MAX_LEVEL}",
+                a.level
+            )));
+        }
+        if abilities.last().is_some_and(|(l, _, _)| *l > a.level) {
+            return Err(err(format!(
+                "{what}: abilities are listed by level, lowest first"
+            )));
+        }
+        if a.rank == 0 {
+            return Err(err(format!(
+                "{what}: abilities: `{}` at rank 0 (ranks start at 1)",
+                a.talent
+            )));
+        }
+        if (abilities.iter()).any(|(_, t, r)| *t == a.talent && *r >= a.rank) {
+            return Err(err(format!(
+                "{what}: abilities: `{}` rank {} twice, or after a higher rank",
+                a.talent, a.rank
+            )));
+        }
+        abilities.push((a.level, a.talent, a.rank));
+    }
+    Ok(abilities)
+}
+
+/// The `bonus_talents` of a class or prestige table, checked: at least one level, 1 to
+/// `MAX_LEVEL`, ascending.
+pub(super) fn bonus_rows(
+    err: &impl Fn(String) -> ContentError,
+    what: &str,
+    spec: Option<BonusSpec>,
+) -> Result<BonusTalents, ContentError> {
+    let Some(b) = spec else {
+        return Ok(BonusTalents::default());
+    };
+    let ascending = b.levels.windows(2).all(|w| w[0] < w[1]);
+    if b.levels.is_empty() || !ascending || !b.levels.iter().all(|&l| (1..=MAX_LEVEL).contains(&l))
+    {
+        return Err(err(format!(
+            "{what}: bonus_talents: levels are 1 to {MAX_LEVEL}, at least one, ascending"
+        )));
+    }
+    Ok(BonusTalents {
+        levels: b.levels,
+        trees: b.trees,
+    })
+}
+
+/// Checks that every level of a table (`abilities` rows and `bonus_talents`) is within its
+/// highest level `cap` (spec §8 "Prestige classes": a level past the cap never comes).
+pub(super) fn check_levels(
+    err: &impl Fn(String) -> ContentError,
+    what: &str,
+    abilities: &[(u8, String, u8)],
+    bonus: &BonusTalents,
+    cap: u8,
+) -> Result<(), ContentError> {
+    if let Some((level, talent, _)) = abilities.iter().find(|(l, _, _)| *l > cap) {
+        return Err(err(format!(
+            "{what}: abilities: `{talent}` at level {level} is past its highest level, {cap}"
+        )));
+    }
+    if let Some(level) = bonus.levels.iter().find(|&&l| l > cap) {
+        return Err(err(format!(
+            "{what}: bonus_talents: level {level} is past its highest level, {cap}"
+        )));
+    }
+    Ok(())
+}
+
+/// Checks a level table (`abilities` and `bonus_talents`) against `book` once the talents are
+/// loaded (nothing to check against a book without a class tree, whose tables give nothing):
+/// every talent named is in the book with the rank named, and every bonus tree is a tree that
+/// is no class tree.
+pub(super) fn check_rows(
+    err: &impl Fn(String) -> ContentError,
+    abilities: &[(u8, String, u8)],
+    bonus: &BonusTalents,
+    book: &TalentBook,
+) -> Result<(), ContentError> {
+    if !book.has_class_tree() {
+        return Ok(());
+    }
+    for (_, talent, rank) in abilities {
+        let Some(id) = book.id(talent) else {
+            return Err(err(format!("abilities: unknown talent `{talent}`")));
+        };
+        let ranks = book.get(id).rank_count();
+        if *rank > ranks {
+            return Err(err(format!(
+                "abilities: `{talent}` rank {rank}, but it has {ranks}"
+            )));
+        }
+    }
+    for tree in &bonus.trees {
+        match book.tree_id(tree) {
+            Some(t) if !book.tree(t).class => {}
+            Some(_) => {
+                return Err(err(format!(
+                    "bonus_talents: `{tree}` is the class tree: nothing is picked from it"
+                )));
+            }
+            None => return Err(err(format!("bonus_talents: unknown tree `{tree}`"))),
+        }
+    }
+    Ok(())
 }
 
 /// A class's bonus talent picks (spec §8 "Class abilities").
@@ -198,6 +320,11 @@ pub struct ClassDef {
     pub abilities: Vec<(u8, String, u8)>,
     /// Its bonus talent picks.
     pub bonus_talents: BonusTalents,
+    /// The highest level the class reaches (spec §8 "Prestige classes"): the file's
+    /// `max_level`, else `[levels] class_max` of `data/experience.toml`, filled in by the loader
+    /// ([`ClassDef::settle_cap`]; 0 until then). A character's level stops here until a prestige
+    /// class takes them on.
+    pub max_level: u8,
     /// The file it was read from, for the errors of [`ClassDef::check_table`].
     pub(super) file: String,
 }
@@ -340,50 +467,14 @@ impl ClassDef {
         )?;
         let styles = ranks(&spec.styles, Ranked::Styles)?;
         let style_choice = choice("style_choice", &spec.style_choice, Ranked::Styles)?;
-        let level_ok = |l: u8| (1..=MAX_LEVEL).contains(&l);
-        let mut abilities: Vec<(u8, String, u8)> = Vec::with_capacity(spec.abilities.len());
-        for a in spec.abilities {
-            if !level_ok(a.level) {
-                return Err(err(format!(
-                    "class `{id}`: abilities: level {} is not 1 to {MAX_LEVEL}",
-                    a.level
-                )));
-            }
-            if abilities.last().is_some_and(|(l, _, _)| *l > a.level) {
-                return Err(err(format!(
-                    "class `{id}`: abilities are listed by level, lowest first"
-                )));
-            }
-            if a.rank == 0 {
-                return Err(err(format!(
-                    "class `{id}`: abilities: `{}` at rank 0 (ranks start at 1)",
-                    a.talent
-                )));
-            }
-            if (abilities.iter()).any(|(_, t, r)| *t == a.talent && *r >= a.rank) {
-                return Err(err(format!(
-                    "class `{id}`: abilities: `{}` rank {} twice, or after a higher rank",
-                    a.talent, a.rank
-                )));
-            }
-            abilities.push((a.level, a.talent, a.rank));
+        let what = format!("class `{id}`");
+        let abilities = table_rows(&err, &what, spec.abilities)?;
+        let bonus_talents = bonus_rows(&err, &what, spec.bonus_talents)?;
+        if let Some(cap) = spec.max_level.filter(|c| !(2..=MAX_LEVEL).contains(c)) {
+            return Err(err(format!(
+                "{what}: max_level {cap} is not 2 to {MAX_LEVEL}"
+            )));
         }
-        let bonus_talents = match spec.bonus_talents {
-            None => BonusTalents::default(),
-            Some(b) => {
-                let ascending = b.levels.windows(2).all(|w| w[0] < w[1]);
-                if b.levels.is_empty() || !ascending || !b.levels.iter().all(|&l| level_ok(l)) {
-                    return Err(err(format!(
-                        "class `{id}`: bonus_talents: levels are 1 to {MAX_LEVEL}, at least \
-                         one, ascending"
-                    )));
-                }
-                BonusTalents {
-                    levels: b.levels,
-                    trees: b.trees,
-                }
-            }
-        };
         Ok(ClassDef {
             id: spec.id,
             name: spec.name,
@@ -408,8 +499,33 @@ impl ClassDef {
             kit: Kit::default(),
             abilities,
             bonus_talents,
+            max_level: spec.max_level.unwrap_or(0),
             file: file.to_string(),
         })
+    }
+
+    /// Settles its highest level once the experience rules are read: `default` (`[levels]
+    /// class_max`) where the file named none, at most `highest` (the curve's `max_level`), and
+    /// every level of its table within it.
+    pub(super) fn settle_cap(&mut self, default: u8, highest: u8) -> Result<(), ContentError> {
+        let err = |m: String| ContentError::new(&self.file, m);
+        let what = format!("class `{}`", self.id);
+        if self.max_level == 0 {
+            self.max_level = default;
+        }
+        if self.max_level > highest {
+            return Err(err(format!(
+                "{what}: max_level {} is more than the curve's {highest}",
+                self.max_level
+            )));
+        }
+        check_levels(
+            &err,
+            &what,
+            &self.abilities,
+            &self.bonus_talents,
+            self.max_level,
+        )
     }
 
     /// Whether it trains skill `skill` (any of its grants, known for or not).
@@ -426,25 +542,13 @@ impl ClassDef {
     /// rank names the talent again); none from a book without a class tree (content whose
     /// talents have no class abilities, a fixture's).
     pub fn abilities_to(&self, book: &TalentBook, level: u8) -> Vec<TalentId> {
-        let mut given: Vec<TalentId> = Vec::new();
-        for (id, _) in self.ranks_to(book, level) {
-            if !given.contains(&id) {
-                given.push(id);
-            }
-        }
-        given
+        super::prestige::Table::Class(self).abilities_to(book, level)
     }
 
     /// Each talent its level table gives up to `level` with the rank given there, in table
     /// order; none from a book without a class tree.
     pub fn ranks_to(&self, book: &TalentBook, level: u8) -> Vec<(TalentId, u8)> {
-        if !book.has_class_tree() {
-            return Vec::new();
-        }
-        (self.abilities.iter())
-            .take_while(|(l, _, _)| *l <= level)
-            .filter_map(|(_, id, rank)| book.id(id).map(|t| (t, *rank)))
-            .collect()
+        super::prestige::Table::Class(self).ranks_to(book, level)
     }
 
     /// The bonus talent picks level `level` brings (0 or 1).
@@ -468,33 +572,8 @@ impl ClassDef {
     /// against a book without a class tree, whose class tables give nothing): every talent it
     /// names is in the book, and every bonus tree is a tree that is no class tree.
     pub(super) fn check_table(&self, book: &TalentBook) -> Result<(), ContentError> {
-        if !book.has_class_tree() {
-            return Ok(());
-        }
         let err = |m: String| ContentError::new(&self.file, format!("class `{}`: {m}", self.id));
-        for (_, talent, rank) in &self.abilities {
-            let Some(id) = book.id(talent) else {
-                return Err(err(format!("abilities: unknown talent `{talent}`")));
-            };
-            let ranks = book.get(id).rank_count();
-            if *rank > ranks {
-                return Err(err(format!(
-                    "abilities: `{talent}` rank {rank}, but it has {ranks}"
-                )));
-            }
-        }
-        for tree in &self.bonus_talents.trees {
-            match book.tree_id(tree) {
-                Some(t) if !book.tree(t).class => {}
-                Some(_) => {
-                    return Err(err(format!(
-                        "bonus_talents: `{tree}` is the class tree: nothing is picked from it"
-                    )));
-                }
-                None => return Err(err(format!("bonus_talents: unknown tree `{tree}`"))),
-            }
-        }
-        Ok(())
+        check_rows(&err, &self.abilities, &self.bonus_talents, book)
     }
 }
 
@@ -846,6 +925,10 @@ mod tests {
             ),
             (format!("{ONE}rolls = 11\n"), "rolls 11 is more than 10"),
             (
+                format!("{ONE}max_level = 1\n"),
+                "max_level 1 is not 2 to 99",
+            ),
+            (
                 format!(
                     "{ONE}skills = {{ spellcraft = 1 }}\n\
                      optional_skills = {{ spellcraft = {{ chance = 20, dice = \"2d4\" }} }}\n"
@@ -996,6 +1079,33 @@ mod tests {
             (("[10, 20, 30, 45, 55]", "[20, 10]"), "ascending"),
         ] {
             let e = with_aristocrat(|t| t.replacen(edit.0, edit.1, 1)).unwrap_err();
+            assert!(e.message.contains(why), "{why}: {}", e.message);
+        }
+    }
+
+    /// The highest level a class reaches (spec §8 "Prestige classes"): the file's `max_level`,
+    /// else the experience file's `class_max`; its table stays within it.
+    #[test]
+    fn max_level_defaults_to_the_class_cap_and_bounds_the_table() {
+        let content = with_aristocrat(|t| t.to_string()).expect("built-in");
+        assert!(
+            (content.classes().iter()).all(|c| c.max_level == content.experience().class_max()),
+            "every shipped class is at the default, 60"
+        );
+        assert_eq!(content.experience().class_max(), 60);
+        // A class capped at 60 names it: the same.
+        let capped = with_aristocrat(|t| format!("{t}max_level = 60\n")).expect("valid");
+        assert_eq!(
+            capped.class("aristocrat").expect("aristocrat").max_level,
+            60
+        );
+        for (cap, why) in [
+            // Its table reaches 50 and its bonus picks 55: a lower cap leaves a row past it.
+            (30, "`iron_will` at level 32 is past its highest level, 30"),
+            (50, "bonus_talents: level 55 is past its highest level, 50"),
+            (61, "max_level 61 is more than the curve's 60"),
+        ] {
+            let e = with_aristocrat(|t| format!("{t}max_level = {cap}\n")).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }

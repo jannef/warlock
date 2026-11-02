@@ -182,10 +182,9 @@ impl CharacterScreen {
                     (spec.race(content)).map_or(spec.race.clone(), |r| r.name.clone()),
                 ),
                 ("Gender", gender_text(c)),
-                (
-                    "Class",
-                    (spec.class(content)).map_or(spec.class.clone(), |k| k.name.clone()),
-                ),
+                // `Bard` until the class is full, `Bard 30` at its cap, `Bard 30, Hunter 4` once
+                // called (spec §8 "Prestige classes").
+                ("Class", c.class_text(content, view.own_experience().level)),
             ]
         });
         let birth = (view.character()).map_or(Vec::new(), |c| birth_parts(c, content, view.time()));

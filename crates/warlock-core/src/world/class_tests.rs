@@ -241,7 +241,7 @@ fn a_level_with_both_picks_spends_the_bonus_on_a_talent_of_its_trees() {
         "{rows:?}"
     );
     // A talent of no bonus tree fills the ordinary pick; the bonus waits for its trees.
-    let trees = w.bonus_trees().expect("the aristocrat's trees");
+    let trees = w.bonus_trees_at(30).expect("the aristocrat's trees");
     let book = BUILTIN.talents();
     for _ in 0..2 {
         let (other, _) = (crate::talent::offers(w.content(), &w.candidate()).into_iter())

@@ -98,6 +98,7 @@ mod beast_friend;
 mod bleed;
 mod boons;
 mod buff;
+mod calling;
 mod carry;
 mod cast;
 mod caster;
@@ -236,6 +237,7 @@ pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
 pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
 pub use attacks::{AttackSource, OwnAttack};
+pub use calling::CallingStatus;
 pub use cast::Reach;
 pub use caster_level::casting_percent;
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
@@ -860,8 +862,7 @@ impl World {
         };
         stars::grant(&content, state.character.as_ref(), &[], &mut player.talents);
         // The class abilities of level 1 (spec §8 "Class abilities").
-        let class = (state.character.as_ref()).map(|c| c.spec.class.clone());
-        class::grant(&content, class.as_deref(), &mut player, 1);
+        class::grant(&content, state.character.as_ref(), &mut player, 1);
         player.hp = player.max_hp(&content);
         player.mana = player.max_mana(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
@@ -1424,6 +1425,7 @@ impl World {
             Action::QuestRoll { quest, target } => return self.quest_roll_dev(quest, target),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
+            Action::Call(id) => return self.call_dev(id),
             Action::SetRank { skill, rank } => return self.set_rank_dev(skill, *rank),
         };
         self.took(done, kind)
@@ -1502,6 +1504,8 @@ mod branch_tests;
 mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
+#[cfg(test)]
+mod calling_tests;
 #[cfg(test)]
 mod cast_tests;
 #[cfg(test)]

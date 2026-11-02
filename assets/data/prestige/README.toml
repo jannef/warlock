@@ -1,0 +1,44 @@
+# Prestige classes (spec §8 "Prestige classes"; docs/design/prestige-classes.md): one file per
+# class holding one `[[prestige]]`. This file holds only the notes below: a file of comments
+# defines nothing, and the game ships no prestige class yet (the Hunter is the design's H1).
+#
+# A character has one level, read off experience.toml's curve as ever, but it stops at their
+# class's highest level (classes/ `max_level`, default experience.toml's `[levels] class_max`).
+# Once they are **called** (below) their cap grows by the prestige class's `levels`, and every
+# level past the class's cap is the prestige class's: a bard capped at 30 who is called becomes
+# Hunter 1 at total level 31 and Hunter 30 at 60. Nothing is taken away: the class's talents,
+# skills, casting, and kit stay, and the prestige class's table adds. Each level brings what the
+# class it falls in gives: its hit points (half `hp` plus the Toughness modifier), its mana, its
+# skill `rolls`, a bonus pick at its `bonus_talents` levels, and the class abilities of its
+# `abilities` table; a level-up roll on a skill either class is `known_for` steps up the ladder.
+# A prestige class is a class in everything a level reads and nothing a creation reads: it has
+# no stats, kit, skills, weapon skills, casting, experience factor, or alignment.
+#
+# Fields:
+#   id, name      the prestige class's id (a class and a prestige class never share one) and name
+#   description   one line, for the wiki
+#   levels        how many levels it has (1 to 60): the character's cap grows by this many
+#   hp, mana      what each of its levels adds, as a class's `hp` and `mana` (default 0)
+#   rolls         the skill rolls each of its levels gives (0 to 10, default 2)
+#   known_for     the skills it is known for, by skill id (skills.toml; default none)
+#   abilities     its level table, at its *own* levels 1 to `levels`: `{ level = 1, talent = "x" }`
+#                 rows, lowest first, each a talent given at rank 1 as the level comes (a talent of
+#                 the `class` tree, ../talents/, or an ordinary one), as a class's (classes/README)
+#   bonus_talents `{ levels = [5, 10], trees = ["guard"] }`: a bonus talent pick at each of those
+#                 of its own levels, from those trees (none: any)
+#
+# The calling: a prestige class is never offered or chosen. A **calling** is the door into one,
+# and it is a campaign's (`campaigns/<id>/data/callings/`, one file per calling holding one
+# `[[calling]]`; one outside every campaign, data/callings/, is a test fixture's and any run's):
+#   class         the prestige class it opens (its id here)
+#   from          the base classes it is open to, by id; a class is named by at most one calling
+#                 of a campaign (one door a class)
+#   level         the total level it asks: at least every `from` class's `max_level`
+#   message       what the character is told as they are called (1 to 160 characters)
+# The calling is open to a character of a `from` class at that level who holds no prestige class
+# yet. How a world makes it (a word said to the right creature, the design's W1 and C1) is that
+# world's; the dev action `call:ID` makes it whatever the level. Being called gives exactly the
+# experience the next level costs if the bank is short of it, so the first prestige level comes
+# at once (with every level a fuller bank buys), and nothing else is tracked.
+#
+# Balance is not a goal: a prestige class may well make its base class very strong.
