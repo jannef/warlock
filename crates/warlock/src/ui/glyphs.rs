@@ -9,6 +9,10 @@
 //! the player (`SeenActor::unaware`) is drawn a shade cooler, its colour mixed toward
 //! [`UNAWARE_TINT`] before lighting, the mix breathing slowly with glyph animation on and
 //! standing still without it.
+//!
+//! The ally mark (spec §8 "Allies"): a creature the snapshot says is the player's ally
+//! (`SeenActor::ally`) has a short, faint sage underline beneath its glyph ([`ALLY_MARK`]),
+//! sliding and lit with it; still, so the same with effects on or off.
 
 use super::motion::Motion;
 use crate::game::Game;
@@ -71,6 +75,12 @@ pub(super) fn emit(
                 c
             })
         };
+        // The ally mark, under the glyph and sliding with it, lit as it is.
+        if actor.ally {
+            let mut mark = ally_mark(&grid, at, palette(ALLY_MARK));
+            mark.color = lit(mark.color, &light, at, home, ACTOR_FLOOR);
+            free.push(mark);
+        }
         let mut g = glyph(&grid, at, actor.glyph(content), colour(fg), frame);
         // Each band is lit and glows as the glyph does: they share its light.
         let finish = |color| {
@@ -126,6 +136,29 @@ pub(super) fn unaware_tint(fg: Rgb, mix: f32) -> Rgb {
     };
     let t = UNAWARE_TINT;
     Rgb::new(channel(fg.r, t.r), channel(fg.g, t.g), channel(fg.b, t.b))
+}
+
+/// The ally mark's colour: a muted sage, friendly without shouting, through the palette.
+pub(super) const ALLY_MARK: Rgb = Rgb::new(0x8f, 0xc0, 0x96);
+
+/// How opaque the ally mark is: a faint line, never as strong as a glyph.
+const ALLY_MARK_ALPHA: f32 = 0.85;
+
+/// The ally mark's glyph, how much of the cell's width it takes, and how far below the cell's
+/// center (in cell heights) its middle sits once shrunk: a short line under the creature.
+const ALLY_MARK_GLYPH: char = '_';
+const ALLY_MARK_SCALE: f32 = 0.8;
+const ALLY_MARK_DROP: f32 = 0.1;
+
+/// The ally mark (spec §8 "Allies"): a short, faint underline beneath a creature the snapshot
+/// says is the player's ally (`SeenActor::ally`), at level position `at`, coloured `fg`. Still:
+/// it neither breathes nor flickers, so it is the same with effects on or off.
+fn ally_mark(grid: &MapGrid, at: Vec2, fg: Rgb) -> FreeGlyph {
+    let mut mark = glyph(grid, at, ALLY_MARK_GLYPH, fg, AnimFrame::STILL);
+    mark.scale = ALLY_MARK_SCALE;
+    mark.pos.y += ALLY_MARK_DROP * grid.cell.y;
+    mark.color.alpha = ALLY_MARK_ALPHA;
+    mark
 }
 
 /// How far, in band heights, the borders between a composite's colour bands have drifted at
@@ -337,6 +370,23 @@ mod tests {
         for t in [0.0, 1.5, 3.0, 4.5] {
             assert_eq!(unaware_mix(id, t, false), 0.25);
         }
+    }
+
+    #[test]
+    fn the_ally_mark_is_a_short_faint_line_under_the_creature() {
+        let grid = MapGrid {
+            cell: Vec2::new(10.0, 20.0),
+            ..default()
+        };
+        let at = Vec2::new(3.0, 4.0);
+        let mark = ally_mark(&grid, at, ALLY_MARK);
+        let creature = glyph(&grid, at, 'w', Rgb::WHITE, AnimFrame::STILL);
+        assert_eq!(mark.ch, '_');
+        // Narrower than a cell, a little below the glyph's own cell, fainter than a glyph.
+        assert!(mark.scale < 1.0);
+        assert_eq!(mark.pos.x, creature.pos.x);
+        assert!(mark.pos.y > creature.pos.y && mark.pos.y < creature.pos.y + 0.25 * 20.0);
+        assert!(mark.color.alpha < 1.0 && mark.color.alpha > 0.3);
     }
 
     #[test]

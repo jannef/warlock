@@ -231,6 +231,30 @@ it (`xtask/src/wiki/talents.rs::effect_text`).
   (`AllyView`, the snapshot's `allies`: the player knows their own); each seen actor's `ally:
   true` (`SeenActor::ally`, for A3's mark and look mode); the `abilities` layer's Allies rows.
 
+## The app (A3, #838)
+
+All read from the perception snapshot; nothing in core.
+
+- **The menu**: `ui/abilities_screen.rs` lists the Allies group as any other (`Source::Ally`'s
+  header, the rows' states: nothing for Come to heel and Hold here, "at a place you see" for Set
+  on, "no allies here" greyed). Come to heel and Hold here are `Aim::Nothing`: chosen, the
+  order is sent at once (`input.rs::use_ability`). Set on is `Aim::Cell`: the aiming mode
+  (`ui/target.rs`, `AimKind::Ability(Ability::SetOn)`), with no range (`reach` is `None`: any
+  cell the player sees, `sight_line`), the prompt "Set on: Tab or direction keys aim, Enter uses
+  it, Esc cancels.", loosed as `Ability::action_at` → `order:hunt:X,Y`. No `KeyCommand`.
+- **Targets**: `target.rs::targets` (what Tab cycles and where an aim starts) leaves allies
+  out, so Set on, a shot, or a spell starts on the nearest foe, never on the player's own wolf
+  (the direction keys still reach any cell).
+- **Look mode**: `ui/look.rs` says "Your dire warg (unhurt), on stone floor." (no stance word);
+  a proper-named one "(your ally, unhurt)".
+- **The ally mark**: `ui/glyphs.rs::ally_mark`, a short faint sage underline beneath the glyph
+  (`docs/dev/rendering.md`; spec §4.2).
+- The words of orders, arrivals, departures, and fights are core's (`world/ally.rs`,
+  `fight::attack_message`); the app shows them as any message.
+- Tests: the screen snapshots `abilities-menu-allies`, `abilities-menu-allies-none` (an ally in
+  the retinue on the overworld), `set-on-aim`, `come-to-heel`; `look.rs::an_ally_is_yours`;
+  `target.rs::set_on_aims_past_the_allies_at_a_foe`; `glyphs.rs`'s mark test.
+
 ## Tests
 
 `world/ally_tests.rs` (a fixture of a wolf, a kobold, a deer, two levels, the shipped

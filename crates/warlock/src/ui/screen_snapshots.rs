@@ -538,6 +538,36 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // Two allies beside the player (spec §8 "Allies"): the Allies group's three orders, Set on
+    // asking for a place.
+    Case {
+        name: "abilities-menu-allies",
+        actions: "ally:dire_warg:2",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // An ally in the retinue on the overworld, none on the level: the orders greyed.
+    Case {
+        name: "abilities-menu-allies-none",
+        scenario: "world",
+        actions: "ally:dire_warg",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // Set on chosen from the menu: the aiming mode, its prompt in the message line.
+    Case {
+        name: "set-on-aim",
+        actions: "ally:dire_warg:2",
+        keys: Some("a h"),
+        ..BASE
+    },
+    // Come to heel chosen from the menu: the order's words, no time.
+    Case {
+        name: "come-to-heel",
+        actions: "ally:dire_warg:2",
+        keys: Some("a f"),
+        ..BASE
+    },
     // A paladin of some level: the Class group, Lay on hands drained, Smite ready.
     Case {
         name: "abilities-menu-class",
