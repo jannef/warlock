@@ -487,7 +487,10 @@ pub enum ClassActive {
     Smite,
     /// A light of your own, on and off (a status that sheds light while it lasts).
     HolyRadiance,
-    /// An unarmed blow in a direction that leaves a wound bleeding, then a cooldown.
+    /// An unarmed blow in a direction that leaves a wounded foe Stunned, for ki (the
+    /// ascetic's Stunning strike).
+    StunningStrike,
+    /// An unarmed blow in a direction that leaves a wound bleeding, for ki.
     QuiveringPalm,
     /// Light on the feet for ki, taking no time: the next action at half its price (the
     /// ascetic's Step of the wind, `world/ascetic.rs`).
@@ -525,6 +528,7 @@ impl ClassActive {
         ClassActive::LayOnHands,
         ClassActive::Smite,
         ClassActive::HolyRadiance,
+        ClassActive::StunningStrike,
         ClassActive::QuiveringPalm,
         ClassActive::StepOfTheWind,
         ClassActive::Volley,
@@ -547,6 +551,7 @@ impl ClassActive {
             ClassActive::LayOnHands => "lay_on_hands",
             ClassActive::Smite => "smite",
             ClassActive::HolyRadiance => "holy_radiance",
+            ClassActive::StunningStrike => "stunning_strike",
             ClassActive::QuiveringPalm => "quivering_palm",
             ClassActive::StepOfTheWind => "step_of_the_wind",
             ClassActive::Volley => "volley",
@@ -570,10 +575,20 @@ impl ClassActive {
         matches!(
             self,
             ClassActive::Smite
+                | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
                 | ClassActive::LowBlow
                 | ClassActive::MasterThief
                 | ClassActive::Knock
+        )
+    }
+
+    /// Whether it is a blow of the bare hand (refused, no time, with a weapon in hand): the
+    /// ascetic's Stunning strike and Quivering palm (`World::palm_blow`).
+    pub const fn bare_handed(self) -> bool {
+        matches!(
+            self,
+            ClassActive::StunningStrike | ClassActive::QuiveringPalm
         )
     }
 
@@ -623,6 +638,7 @@ impl ClassActive {
             | ClassActive::StepOfTheWind => ActionKind::Wait,
             ClassActive::Whirlwind
             | ClassActive::Smite
+            | ClassActive::StunningStrike
             | ClassActive::QuiveringPalm
             | ClassActive::LowBlow
             | ClassActive::MasterThief => ActionKind::Melee,

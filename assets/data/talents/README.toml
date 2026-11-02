@@ -384,6 +384,9 @@
 #   quivering_palm { status, severity }   the active Quivering palm: a bare-handed blow in a
 #                                 direction (what it costs is the talent's `resource`: five ki)
 #                                 that leaves the status
+#   stunning_strike { status, severity }  the active Stunning strike: Quivering palm's blow
+#                                 (what it costs is the talent's `resource`: a point of ki) that
+#                                 leaves its status (Stunned) where it wounds
 #   wind_step { status }          the active Step of the wind: a degree of the status
 #                                 (Light-footed) for no time (what it costs is the talent's
 #                                 `resource`: a point of ki); refused while it lasts

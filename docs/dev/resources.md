@@ -133,7 +133,10 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   for the spend): the second blow is decided only once its cost is spent; short, none. Quivering
   palm costs `resource = { id = "ki", cost = 5 }` on its talent and lost its cooldown
   (`TalentEffect::QuiveringPalm { status, severity }`); `use_class` refuses it with a weapon in
-  hand before the spend. Step of the wind (level 6, S3, #847) costs `resource = { id = "ki",
+  hand before the spend (`ClassActive::bare_handed`). Stunning strike (12, #848) costs
+  `resource = { id = "ki", cost = 1 }` on its talent (`TalentEffect::StunningStrike { status,
+  severity }`), refused the same way; both blows are `World::palm_blow` (`world/ascetic.rs`).
+  Tests: `world/ki_tests.rs`, `world/stunning_strike_tests.rs`. Step of the wind (level 6, S3, #847) costs `resource = { id = "ki",
   cost = 1 }` on its talent (`TalentEffect::WindStep { status }`, `TalentMods::wind_step`):
   `World::wind_step` (`world/ascetic.rs`) gives a degree of Light-footed and returns
   `Spent::NoTime`; `World::may_wind_step` refuses it before the spend while Light-footed already.

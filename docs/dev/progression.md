@@ -168,6 +168,7 @@ wiki's effect text appends "while raging".
 | `trap_ease` | `search.rs::finding` (searching and in passing; `difficulty_of`, which disarming reads, is unchanged) |
 | `pick_lock`, `steal`, `throw_voice` | `Ability::had_by` (and the actions' refusals: `lockpick.rs`, `steal.rs`, `voice.rs` ask it); no talent carries `pick_lock`, `steal`, or `trap_ease` since #684 took the thief's Trapfinding, Pick lock, and Light fingers (the kinds stay) |
 | `lurk` | `world/thief.rs` (`World::lurk`, `use_class`; `thief_may` refuses "Too late to lurk."); the status switches the gatekeeper's free blow on in `World::free_blows_of`; `World::step_up` → `lie_in_wait` flags the blow (`Technique::lurk`), `resolve` → `lurked` makes its target unaware unless `Mind::last_seen` is set |
+| `stunning_strike`, `quivering_palm` | `world/ascetic.rs` (`World::stunning_strike`; `World::palm_blow`, the one body of both blows, Quivering palm's caller in `class_ability.rs`); `use_class` refuses either with a weapon in hand (`ClassActive::bare_handed`) or nobody hostile there before the ki is spent; `TalentMods::stunning_strike`/`quivering_palm: Option<PalmBlow>` |
 | `low_blow` | `world/thief.rs` (`World::low_blow`, `use_class`; `thief_may` refuses "There is no one there to blind."); `Technique::sneak`, taken in `resolve` by `low_blow_taken`, passes `sneaks` as unaware (no `startle`, no flat-footed) |
 | `sneak_kill_status` | `World::resolve` → `World::vanishing_act` (`world/thief.rs`), beside `Build::SneakKill` |
 | `trained_skills` | `Actor::skill_effect` (a bonus for every trained skill, as `skill`'s) |
@@ -262,7 +263,8 @@ talent's `resource`) are effects that `TalentEffect::active` maps to a `ClassAct
 menu shows; a holy gift's talent may name the bands it works for (`alignment`; outside them it
 is used and does nothing, `docs/dev/alignment.md`). A shared entry is one talent the tables
 name alike (`purity_of_body`, the paladin's, the priest's, and the ascetic's: #790 cut its copy
-`divine_health`); the ascetic's Deflect missiles is the ordinary talent, handed out. A talent cut,
+`divine_health`); Deflect missiles left the ascetic's table for Stunning strike (#848) and stays
+the ordinary Finesse talent. A talent cut,
 renamed, or merged into another needs nothing for saves: saves are pinned to the version that
 wrote them (#840, docs/dev/saves.md), and `World::from_state` refuses a state holding a talent
 the content does not have (`Talents::unknown_to`; `class_rogue_tests.rs`
@@ -567,7 +569,7 @@ Favoured prey, every passive, Volley and Inspire, the abilities the thief's skil
 Low blow, and Vanishing act (#684), and a save holding a talent the content dropped); the priest, druid, wizard, and witch (I3, #245) theirs, in `world/caster_tests.rs`. The I2 tables hand out two ordinary talents (Evasion,
 Lore; and since #790 the bard's Fast healer and the druid's Beast-friend), so a creation pick
 or a bonus pick may already have taken one; the table then gives a talent pick in its place at
-that level instead (as for the ascetic's Deflect missiles; `class::held_already`, counted into the
+that level instead (as for the ascetic's Deflect missiles before #848; `class::held_already`, counted into the
 level's `Due` by `level_up`, with the news "You know Second wind already: choose a talent in its
 place."; not on a restore, where a grown table only gives what is missing).
 `class_tests.rs::a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place`. The showcase's and the arena's own
