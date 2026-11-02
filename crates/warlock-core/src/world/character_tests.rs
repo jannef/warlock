@@ -143,7 +143,7 @@ fn the_same_seed_and_choices_make_the_same_character() {
     }
     // Other seeds roll other characters.
     let rolled: std::collections::BTreeSet<Vec<u8>> = (0..20)
-        .map(|seed| scores(&start("half_orc,male,barbarian", seed)))
+        .map(|seed| scores(&start("half_orc,male,berserker", seed)))
         .collect();
     assert!(rolled.len() > 5, "{rolled:?}");
 }
@@ -198,9 +198,9 @@ fn unknown_races_and_classes_cannot_start_a_run() {
 
 #[test]
 fn the_dev_vision_switch_still_works() {
-    let mut w = start("half_orc,male,barbarian", 1);
+    let mut w = start("half_orc,male,berserker", 1);
     assert_eq!(w.perception().vision().id, "darkvision");
     w.apply(&Action::SetVision("uv_sight".into()));
     assert_eq!(w.perception().vision().id, "uv_sight");
-    assert_eq!(chosen(&w), Some(&spec("half_orc,male,barbarian")));
+    assert_eq!(chosen(&w), Some(&spec("half_orc,male,berserker")));
 }

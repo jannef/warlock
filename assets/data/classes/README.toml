@@ -3,7 +3,7 @@
 # up), gives hit points, trains the character in skills and weapon skills, and gives a starting
 # kit: no spells come with it. This file holds only the notes below: a file of comments defines nothing.
 #
-# The classes are offered in path order, so the files are named `NN-id.toml` (`01-barbarian.toml`):
+# The classes are offered in path order, so the files are named `NN-id.toml` (`01-berserker.toml`):
 # the number keeps the order. The adventurers come first, then everyday folk; a new class takes
 # the number of its place and the ones after it move up. Saves name the class by id, so a renamed
 # file keeps saves; the same id in two files is a load error naming both (docs/dev/content.md).
@@ -60,7 +60,7 @@
 #                 race's (at most 10). Each starting rank then raises the weapon skills it
 #                 defaults to
 #   weapon_skill_choice  two or more such sets, of which one is picked at random when the
-#                 character is made (the barbarian's axes or great blades)
+#                 character is made (the berserker's axes or great blades)
 #   styles, style_choice  the same for fighting styles (spec §8 "Fighting styles"; the styles in
 #                 weapon_skills.toml), rolled after everything else (the thief's Twin Blades or
 #                 Duelist)
@@ -78,7 +78,7 @@
 #                 and may add:
 #                   trained = "id"     only if the class trained that weapon skill or fighting
 #                                      style: its weapon_skills or styles, or the set of its
-#                                      choice that was picked (the barbarian's great axe with
+#                                      choice that was picked (the berserker's great axe with
 #                                      axes, the thief's second dagger with Twin Blades)
 #                   gender = "female"  only for that gender (male, female, or other)
 #                   magic = "any"      a base item (one with a `kind`) made as loot makes it, its

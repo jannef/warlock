@@ -4687,7 +4687,7 @@ mod tests {
         assert_eq!(
             classes,
             [
-                "barbarian",
+                "berserker",
                 "bard",
                 "priest",
                 "druid",

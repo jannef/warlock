@@ -106,7 +106,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     under them by stepping onto it; Intelligence 20), `caught` (caught stealing, by a keeper or
     anyone; Presence 20). Bad luck alone (a hidden trap, a blow, a disease or drain check lost)
     takes nothing. **Talents**: Gourmand and the witch's Cauldron (a fresh corpse's marks
-    twice over, §8 "Hunger"); #787 cut the barbarian's Hard living and the ascetic's Discipline
+    twice over, §8 "Hunger"); #787 cut the berserker's Hard living and the ascetic's Discipline
     (`no_deed` and `use_marks`), and #791 Hard training (`train_percent` +50) and Late bloomer
     (`ramp_ease`): marks are never shown, so an effect on them is at least ×2 or has a visible
     half beside it. A deed that takes a pile from out of the drop's play (`quarter × |m| < L`, or

@@ -133,7 +133,7 @@ This is a promise about the future too: **every new part of the game arrives wit
 talent**, so no system is ever left with nothing that makes it better at it. That holds for
 new [resources](resources.md) as well: [mana](mana.md#how-much) came with talents for a deeper pool, a quicker refill, and cheaper
 casting, [spells](magic.md#the-spells) with the Spellcraft tree ([Quick study](talents.md#talent-quick-study), [Overreach](talents.md#talent-overreach), [School focus](talents.md#talent-school-focus)) and talents for
-[wands](magic.md#wands) and [rods](magic.md#rods) ([Wand mastery](talents.md#talent-wand-mastery), [Channeler](talents.md#talent-channeler)), and the same goes for each [class](classes.md)'s own pool later (a [barbarian](classes.md#barbarian)'s
+[wands](magic.md#wands) and [rods](magic.md#rods) ([Wand mastery](talents.md#talent-wand-mastery), [Channeler](talents.md#talent-channeler)), and the same goes for each [class](classes.md)'s own pool later (a [berserker](classes.md#berserker)'s
 [rage](resources.md#rage), a [ranger](classes.md#ranger)'s [focus](resources.md#resource-focus)). [Abilities](abilities.md) that cost such a [resource](resources.md) have no waiting time on top: the
 [resource](resources.md) coming back with time is the limit.
 

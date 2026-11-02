@@ -759,7 +759,7 @@ fn starting_styles_come_from_the_class_and_move_no_other_roll() {
         skills.rank(table.id(style).expect(style))
     };
     assert_eq!(rank("human,male,warrior", 7, "sword_and_board"), 1);
-    assert_eq!(rank("half_orc,male,barbarian", 3, "great_weapon"), 1);
+    assert_eq!(rank("half_orc,male,berserker", 3, "great_weapon"), 1);
     assert_eq!(rank("elf,female,ranger", 3, "marksman"), 1);
     assert_eq!(rank("human,male,wizard", 3, "staff_fighter"), 0);
     // A thief is a twin blade or a duelist, by the seed, never both; the same for the same seed.
@@ -794,7 +794,7 @@ fn starting_styles_come_from_the_class_and_move_no_other_roll() {
     for character in [
         "human,female,thief",
         "human,male,ascetic",
-        "half_orc,male,barbarian",
+        "half_orc,male,berserker",
     ] {
         let spec: CharacterSpec = character.parse().expect("a character");
         for seed in 0..10 {

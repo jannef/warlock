@@ -273,7 +273,7 @@ always fails and a roll of 24 always works.
 
 ## Foraging
 
-If you are trained in **[Survival](skills.md#skill-survival)** ([barbarians](classes.md#barbarian), [druids](classes.md#druid), [rangers](classes.md#ranger), and [lizardfolk](races.md#race-lizardfolk) are),
+If you are trained in **[Survival](skills.md#skill-survival)** ([berserkers](classes.md#berserker), [druids](classes.md#druid), [rangers](classes.md#ranger), and [lizardfolk](races.md#race-lizardfolk) are),
 **[Forage](abilities.md#ability-forage)** is in your [abilities menu](abilities.md): choose it, and you spend a while searching
 the land around you for something to eat. You can forage only in the wild: on the
 [overworld](overworld.md), on open land, in woods, on the hills, or in the marshes, or in the

@@ -132,7 +132,7 @@ impl World {
                 began: true,
             });
         }
-        // Rage makes a berserker (`berserker.rs`).
+        // Rage brings the frenzy (`frenzy.rs`).
         self.settle_stance(id);
     }
 

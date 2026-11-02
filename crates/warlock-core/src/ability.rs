@@ -210,7 +210,7 @@ pub enum Unavailable {
     /// A skill whose use is not in the game yet.
     NotYet,
     /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
-    /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
+    /// ability is (a raging berserker cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
     While(StatusId),
     /// One that costs an alternative resource the character does not hold, or holds too little
