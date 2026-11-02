@@ -124,7 +124,9 @@ pub fn study_odds(
 ) -> Option<Odds> {
     let (study, def) = (content.study_rules()?, content.spell_of(spell)?);
     let overreach = i32::from(def.level) - caster_level;
-    if overreach <= 0 {
+    // A spell made hard to learn (`study_difficulty`, the owner's Q7 of #828) is a check at any
+    // caster level.
+    if overreach <= 0 && def.study_difficulty <= 0 {
         return Some(Odds {
             overreach,
             check: None,
@@ -136,8 +138,8 @@ pub fn study_odds(
         + affinity(content, character, spell)
         + mods.study_bonus;
     // Overreach's third off, rounded down (the spell scaling design §7.2).
-    let counted = overreach * (100 + mods.study_overreach_percent).max(0) / 100;
-    let difficulty = study.difficulty(counted, actor.known_levels(content));
+    let counted = overreach.max(0) * (100 + mods.study_overreach_percent).max(0) / 100;
+    let difficulty = study.difficulty(counted, actor.known_levels(content)) + def.study_difficulty;
     Some(Odds {
         overreach,
         check: Some((bonus, difficulty)),

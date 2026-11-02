@@ -22,6 +22,7 @@ use crate::damage::Kinds;
 use crate::dice::Dice;
 use crate::skills::{SkillId, Skills};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::status::Effects;
 use crate::weapon_skills::WeaponSkills;
 use crate::world::{Actor, FreeBlows};
 use serde::{Deserialize, Serialize};
@@ -160,9 +161,11 @@ impl Talents {
         self.0.splice(0..0, given);
     }
 
-    /// What every rank held does, summed ([`TalentMods`]). Talents the content no longer has
-    /// do nothing.
-    pub fn mods(&self, content: &Content) -> TalentMods {
+    /// What every rank held does, summed ([`TalentMods`]), with the effects that count only
+    /// under a status (`while`) counted while its holder suffers it (`effects`, its statuses):
+    /// the one place the condition is read, so no rule knows it exists. Talents the content no
+    /// longer has do nothing.
+    pub fn mods(&self, content: &Content, effects: &Effects) -> TalentMods {
         let mut mods = TalentMods::default();
         if self.0.is_empty() {
             return mods;
@@ -181,6 +184,11 @@ impl Talents {
                         mods.gift_reach.note(content, &effect);
                     }
                     mods.add(content, effect, taken.choice.as_deref());
+                }
+                for (status, effect) in def.effects_while_at(rank) {
+                    if effects.has(status) {
+                        mods.add(content, effect, taken.choice.as_deref());
+                    }
                 }
             }
         }
@@ -222,8 +230,6 @@ pub struct TalentMods {
     pub dodge: i32,
     /// Natural armour, on top of the actor's own.
     pub natural: i32,
-    /// Natural armour as `natural`, while it wears no body armour.
-    pub natural_unarmoured: i32,
     /// Added to every melee blow's damage.
     pub melee_damage: i32,
     /// Added to every attack's damage below a third of its hit points (Ferocity).
@@ -452,8 +458,12 @@ pub struct TalentMods {
     pub deflection: i32,
     /// Protection, each with what it asks to be worn ([`TalentMods::protection_with`]).
     pub protection: Vec<Guard>,
-    /// What it gives its allies (spec §8 "Allies": Beast-bond), read through their master.
+    /// What it gives its allies (spec §8 "Allies": Beast-bond), read through their master, and
+    /// its summon spells' calls.
     pub ally: AllyMods,
+    /// The summon draw's bias: a pool creature carrying the tag weighs this many times as much
+    /// (`world/summon_spell.rs`), in the order taken.
+    pub summon_bias: Vec<(String, u32)>,
     /// Percent less of a stance's to-hit penalty, by stance.
     pub stance_to_hit: Vec<(CombatStance, i32)>,
     /// Percent more a step out of reach of every hostile beside it costs (negative: cheaper).
@@ -509,6 +519,8 @@ pub struct TalentMods {
     pub dig_percent: i32,
     /// Percent more its blows with a two-handed weapon cost (negative: cheaper).
     pub two_handed_price: i32,
+    /// Percent more its melee attacks cost (negative: cheaper; Blood frenzy while raging).
+    pub attack_price_percent: i32,
     /// The status a critical it confirms in melee leaves on the target.
     pub critical_status: Option<StatusId>,
     /// The status a melee hit of its holds the creature with (Drowning grip), if any.
@@ -832,6 +844,14 @@ pub struct AllyMods {
     pub to_hit: i32,
     /// Added to every ally's Protection.
     pub protection: i32,
+    /// More creatures every summon spell's call brings (added to its count roll).
+    pub count: i32,
+    /// Percent longer every call lasts (on its minutes, rounded down, at least 1).
+    pub duration_percent: i32,
+    /// Calls never lapse: they stay until slain.
+    pub lasting: bool,
+    /// More of each summon spell's calls kept at once (on its `most`).
+    pub most: i32,
 }
 
 /// Protection a talent adds, while what it asks is worn.
@@ -1128,14 +1148,25 @@ impl TalentMods {
         match effect {
             TalentEffect::Dodge { value } => self.dodge += value,
             TalentEffect::Natural { value } => self.natural += value,
-            TalentEffect::NaturalUnarmoured { value } => self.natural_unarmoured += value,
             TalentEffect::MeleeDamage { value } => self.melee_damage += value,
             TalentEffect::Ferocity { value } => self.ferocity += value,
             TalentEffect::Threat { value } => self.threat += value,
-            TalentEffect::AllyMod { to_hit, protection } => {
+            TalentEffect::AllyMod {
+                to_hit,
+                protection,
+                count,
+                duration_percent,
+                lasting,
+                most,
+            } => {
                 self.ally.to_hit += to_hit;
                 self.ally.protection += protection;
+                self.ally.count += count;
+                self.ally.duration_percent += duration_percent;
+                self.ally.lasting |= lasting;
+                self.ally.most += most;
             }
+            TalentEffect::SummonBias { tag, weight } => self.summon_bias.push((tag, weight)),
             TalentEffect::RerollFumble => self.reroll_fumble = true,
             TalentEffect::Streak { max, damage_every } => {
                 self.streak = self.streak.max(max);
@@ -1424,6 +1455,7 @@ impl TalentMods {
             TalentEffect::SmashDestroyPercent { value } => self.smash_destroy_percent += value,
             TalentEffect::DigPercent { value } => self.dig_percent += value,
             TalentEffect::TwoHandedPrice { value } => self.two_handed_price += value,
+            TalentEffect::AttackPricePercent { value } => self.attack_price_percent += value,
             TalentEffect::Grip { status } => {
                 self.grip = content.status_id(&status).or(self.grip);
             }

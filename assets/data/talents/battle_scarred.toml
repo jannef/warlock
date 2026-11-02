@@ -1,0 +1,8 @@
+[[talent]]
+id = "battle_scarred"
+name = "Battle-scarred"
+tree = "class"
+granted = true
+description = "Your scars have taught your body to take a blow: Protection +1, and +2 more while you rage."
+effects = [{ kind = "protection", value = 1 }, { kind = "protection", value = 2, while = "raging" }]
+systems = ["protection", "resources"]

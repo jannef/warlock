@@ -3,10 +3,12 @@
 Developer notes for working on this part of Warlock; the rules it implements are in
 spec/08b-creatures.md ("Summoning", #520). Keep it current with the code, as CLAUDE.md says.
 
-Summoning is an **enemy-only creature ability**: a creature type with `[creature.summon]` calls
-forth creatures of its side. The player has no summoning (the owner, #520), so there is no
-ability in the abilities menu, no action, no key, and no talents (#520's "Talents and class
-abilities").
+Summoning here is a **creature ability**: a creature type with `[creature.summon]` calls forth
+creatures of its side, with no ability in the abilities menu, no action, no key, and no talents
+(#520's "Talents and class abilities"). The player's summons are spells of `kind = "summon"`
+(#837, `docs/dev/allies.md` "Summons"): they share this file's `summon_cells` and
+`World::summon_draw` (the pool's draw, with the player's bias; the enemy's passes none, one
+`below(pool.len())` as before), and make allies.
 
 - **Data** (`content/summon.rs`): `SummonSpec` as written (`CreatureSpec::summon`, checked by
   `SummonSpec::check` as the type loads), kept on `CreatureDef::summon_spec` until every type is
