@@ -1140,7 +1140,7 @@ mod tests {
                  Balance: Burdened / Strained | Concentration: mana back | Concentration: mana pool | \
                  Decipher script: study check | Detect traps: finding traps | Disable device: disarming traps | \
                  Heal: treating | Initiative: initiative check | Initiative: surprise's extra cost | \
-                 Intimidate: threat's difficulty | Listen: hears fainter by | Metalcraft: tempering | Negotiation: prices | Open lock: picking locks | Search: searching | \
+                 Intimidate: threat's difficulty | Listen: hears fainter by | Metalcraft: tempering | Music: song degrees | Music: song's difficulty | Negotiation: prices | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Sneak attack: sneak attack dice | Sneak attack: their check's difficulty | \
                  Spellcraft: study check | Spot: noticing | Spot: lookout | Steal: \
                  stealing | Stealth: noise | Stealth: slipping past | Stealth: their lookout | Survival: journeys | \
@@ -1163,11 +1163,11 @@ mod tests {
         );
         assert!(benefits.contains(
             "| 100 | 12% | +8 Strength | +5% | ×1.1 / ×1.2 | +40% | +5 mana | +10 | +8 | +8 | +8 | +8 | \u{2212}50% \
-             | +8 | 10 | +8 | 20% better | +8 | +8 | +1 cell | 5d6 | +8 | +10 | +8 | +8 | +8 | \u{2212}60% | +8 | +8 | \u{2212}20% | +15% | +4 | +8 | +5 |"
+             | +8 | 10 | +8 | +2 | +4 | 20% better | +8 | +8 | +1 cell | 5d6 | +8 | +10 | +8 | +8 | +8 | \u{2212}60% | +8 | +8 | \u{2212}20% | +15% | +4 | +8 | +5 |"
         ));
         assert!(benefits.contains(
             "| 150 | 16% | +10 Strength | +7% | ×1.08 / ×1.15 | +50% | +6 mana | +15 | +10 | +10 | +10 | +10 \
-             | \u{2212}62% | +10 | 15 | +10 | 25% better | +10 | +10 | +1 cell | 6d6 | +10 | +15 | +10 | +10 | +10 | \u{2212}75% | +10 | +10 | \u{2212}20% | +22% | +5 | +10 | +7 |"
+             | \u{2212}62% | +10 | 15 | +10 | +2 | +6 | 25% better | +10 | +10 | +1 cell | 6d6 | +10 | +15 | +10 | +10 | +10 | \u{2212}75% | +10 | +10 | \u{2212}20% | +22% | +5 | +10 | +7 |"
         ));
         // Treating oneself: the difficulty and odds of each ailment.
         let heal = text("heal-targets.md");
