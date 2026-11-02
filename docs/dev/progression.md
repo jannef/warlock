@@ -27,7 +27,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `world/caster.rs` | `cast_spell` (`Action::Cast`, `use:blessing`, `use:arcane_bolt:12,5`), `Actor::spell_cost`, the strike on the scrolls' shared code, `reprieve` (Miracle, Hag's bargain, from `hurt`), `lore_blow` (Poison lore, from `resolve`). |
 | `world/racial.rs` | The racial talents (#241): `grants` (a race's `talents`, `data/races.toml`, put in by `stars::grant` before the sign's gifts, through `Talents::regrant`, which now replaces every granted talent outside a class tree), `World::small_target` (Small target's Dodge, from `resolve` after `target_against`, when the attacker's `size_of` is larger). `content/race.rs::check_talents` (at load): a race grants only `granted` talents of the `racial` tree. |
 | `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley and Rage (Inspire, #244, among them); Hardened's hit points are `level_up`'s. |
-| `world/rage.rs` | The barbarian's Rage on the Rage resource (R1, #249): `World::rage` (`grant_resource_with_status`), `World::unstoppable` (from `hurt`). |
+| `world/rage.rs` | The berserker's Rage on the Rage resource (R1, #249): `World::rage` (`grant_resource_with_status`), `World::unstoppable` (from `hurt`). |
 | `world/volley.rs` | `use_class_at` (`Action::UseAt`, a class active aimed at a cell: `use:volley:12,5`) and the ranger's Volley (#244), on 6 Focus (#250). |
 | `world/merchants_eye.rs` | `use_class_on` (`Action::UseOn`, a class active on a stack carried: `use:merchants_eye:c`) and the merchant's Merchant's eye (#816): `World::identify` on the stack for the time of a `read`; no mana, cooldown, check, or limit; refused, no time, for a stack not carried or already known. |
 | `world/focus.rs` | The ranger's Focus (R2, #250): `hold` (what a talent's `grants_resource` grants, from `class::hand_out` and `World::grant_class`), `World::rapid_shot` (from `shoot.rs::fire`). `docs/dev/resources.md`. |
@@ -231,7 +231,7 @@ with its words at load) is what "a melee skill at 3" asks.
 
 ## Class actives
 
-The warrior, barbarian, paladin, and monk (#243) have their tables the way the everyday folk do:
+The warrior, berserker, paladin, and monk (#243) have their tables the way the everyday folk do:
 class-tree talents (`data/talents/`, `granted`) named by their class files' `abilities`, so
 they are held like any talent, saved with them, and read through `TalentMods`. Their effects are
 the talents' kinds and the class's own (the README of `data/talents/` lists them). The seven
@@ -541,7 +541,7 @@ dropped picks, every hook, a free-blow talent, saves and replays, perception and
 The everyday folk (#246: aristocrat, commoner, craftsperson, merchant) have their tables: nine
 abilities each at 1, 6, 12, 18, 25, 32, 40, 50, 60 (34 class-tree talents, plus Riposte and
 Second wind, which their tables hand out), and bonus picks at 10, 20, 30, 45, 55. The
-warrior, barbarian, paladin, and monk (I1) have theirs, in `world/class_active_tests.rs`; the
+warrior, berserker, paladin, and monk (I1) have theirs, in `world/class_active_tests.rs`; the
 ranger, thief, and bard (I2, #244) theirs, in `world/class_rogue_tests.rs` (the kill tally and
 Favoured prey, every passive, Volley and Inspire, the abilities the thief's skills give, Lurk,
 Low blow, and Vanishing act (#684), and a save holding a talent the content dropped); the priest, druid, wizard, and witch (I3, #245) theirs, in `world/caster_tests.rs`. The I2 tables hand out two ordinary talents (Evasion,
@@ -580,15 +580,15 @@ hash differently from before. The dump's `talents` layer marks it `(race)`, the 
 `racial_tests.rs` covers each rule, the prerequisites, the picks, and a replay.
 
 The `resources` system (#225, `docs/dev/resources.md`) is in the list: its four talents (R5,
-#253) are Battle trance (Might, barbarian 6: rage starts 6 higher, decays at 67 %), Inner calm
+#253) are Battle trance (Might, berserker 6: rage starts 6 higher, decays at 67 %), Inner calm
 (Finesse, monk 18: ki +2 at most, back at 150 %), Steady hand (Weaponcraft, ranger 12: focus back
 at 150 %), and Patient blade (Shadow, thief 32: openings decay at 50 %, and a sneak attack that
 kills builds one more, the `sneak_kill` event); the only class-limited picks
 (`needs = { class, level }`). `world/resource_talent_tests.rs` covers each rule and the
 prerequisites. A talent of a resource the class has not been granted yet (Inner calm before
-Flurry grants ki, R4) holds the change until it is. Wild guard (Might, barbarian 6; #680) halves
-the berserker stance's Dodge penalty (`stance_dodge`), the stance a barbarian's rage holds them
-in (`world/berserker.rs`); `world/berserker_tests.rs` covers it.
+Flurry grants ki, R4) holds the change until it is. Wild guard (Might, berserker 6; #680) halves
+the frenzy stance's Dodge penalty (`stance_dodge`), the stance a berserker's rage holds them
+in (`world/frenzy.rs`); `world/frenzy_tests.rs` covers it.
 
 The damage-type talents (#248), Elemental ward (H2) and Crusher (H1), are the `damage_types`
 system's two, so it is no longer `pending`; `world/damage_talent_tests.rs` covers the ward

@@ -4,8 +4,8 @@
 //! shown to the player: only the stance's name is.
 //!
 //! The file has exactly one entry for each [`CombatStance`]; without it every stance is plain
-//! (no effect at all). The berserker's is never chosen: only a barbarian's rage puts them in it,
-//! and its end puts them in the aggressive stance (`world/berserker.rs`).
+//! (no effect at all). The frenzy is never chosen: only a berserker's rage puts them in it,
+//! and its end puts them in the aggressive stance (`world/frenzy.rs`).
 
 use super::ContentError;
 use crate::combat::{Category, Profile};
@@ -20,7 +20,7 @@ pub const BONUS: RangeInclusive<i32> = -20..=20;
 pub const PERCENT: RangeInclusive<u32> = 10..=1000;
 
 /// A combat stance. The player chooses one of [`CombatStance::CHOSEN`] (`+` and `-`); a raging
-/// barbarian is [`CombatStance::Berserker`], which nothing else gives; creatures stay
+/// berserker is [`CombatStance::Frenzy`], which nothing else gives; creatures stay
 /// [`CombatStance::Neutral`].
 #[derive(
     Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize,
@@ -32,8 +32,8 @@ pub enum CombatStance {
     Neutral,
     Defensive,
     Coward,
-    /// A raging barbarian's, and only theirs (`world/berserker.rs`).
-    Berserker,
+    /// A raging berserker's, and only theirs (`world/frenzy.rs`).
+    Frenzy,
 }
 
 impl CombatStance {
@@ -43,11 +43,11 @@ impl CombatStance {
         CombatStance::Defensive,
         CombatStance::Neutral,
         CombatStance::Aggressive,
-        CombatStance::Berserker,
+        CombatStance::Frenzy,
     ];
 
     /// The stances the player may choose (`+` and `-` step through them), from the most
-    /// defensive to the most aggressive: every one but the berserker's.
+    /// defensive to the most aggressive: every one but the frenzy.
     pub const CHOSEN: [CombatStance; 4] = [
         CombatStance::Coward,
         CombatStance::Defensive,
@@ -62,7 +62,7 @@ impl CombatStance {
             CombatStance::Neutral => "neutral",
             CombatStance::Defensive => "defensive",
             CombatStance::Coward => "coward",
-            CombatStance::Berserker => "berserker",
+            CombatStance::Frenzy => "frenzy",
         }
     }
 
@@ -71,7 +71,7 @@ impl CombatStance {
     }
 
     /// One step more aggressive among the chosen stances (Coward, Defensive, Neutral,
-    /// Aggressive); Aggressive stays, and so does Berserker (rage holds it there).
+    /// Aggressive); Aggressive stays, and so does Frenzy (rage holds it there).
     pub fn more_aggressive(self) -> Self {
         match Self::CHOSEN.iter().position(|&s| s == self) {
             Some(i) => Self::CHOSEN[(i + 1).min(Self::CHOSEN.len() - 1)],
@@ -79,7 +79,7 @@ impl CombatStance {
         }
     }
 
-    /// One step more defensive; Coward stays, and so does Berserker.
+    /// One step more defensive; Coward stays, and so does Frenzy.
     pub fn more_defensive(self) -> Self {
         match Self::CHOSEN.iter().position(|&s| s == self) {
             Some(i) => Self::CHOSEN[i.saturating_sub(1)],
@@ -94,7 +94,7 @@ impl CombatStance {
             CombatStance::Neutral => "a neutral",
             CombatStance::Defensive => "a defensive",
             CombatStance::Coward => "a cowardly",
-            CombatStance::Berserker => "a berserker's",
+            CombatStance::Frenzy => "a frenzied",
         }
     }
 
@@ -115,7 +115,7 @@ impl FromStr for CombatStance {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s = s.to_ascii_lowercase();
         Self::ALL.into_iter().find(|c| c.id() == s).ok_or_else(|| {
-            "`stance` needs aggressive, neutral, defensive, or coward (berserker comes only of \
+            "`stance` needs aggressive, neutral, defensive, or coward (frenzy comes only of \
              rage), e.g. `stance:coward`"
                 .into()
         })
@@ -293,7 +293,7 @@ mod tests {
     const NEUTRAL: &str = "[[stance]]\nid = \"neutral\"\nname = \"Neutral\"\n";
 
     fn all() -> String {
-        let rest = ["aggressive", "defensive", "coward", "berserker"]
+        let rest = ["aggressive", "defensive", "coward", "frenzy"]
             .map(|id| format!("[[stance]]\nid = \"{id}\"\nname = \"{id}\"\nto_hit = 1\n"));
         format!("{NEUTRAL}{}", rest.join(""))
     }
@@ -354,11 +354,11 @@ mod tests {
             down.push(stance);
         }
         assert_eq!(down, [Aggressive, Neutral, Defensive, Coward, Coward]);
-        assert_eq!(Berserker.more_aggressive(), Berserker, "rage holds it");
-        assert_eq!(Berserker.more_defensive(), Berserker);
+        assert_eq!(Frenzy.more_aggressive(), Frenzy, "rage holds it");
+        assert_eq!(Frenzy.more_defensive(), Frenzy);
         assert_eq!(
-            "berserker".parse(),
-            Ok(Berserker),
+            "frenzy".parse(),
+            Ok(Frenzy),
             "parsed, for the world to refuse"
         );
         assert_eq!("Coward".parse(), Ok(CombatStance::Coward));

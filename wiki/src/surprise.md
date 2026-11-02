@@ -89,7 +89,7 @@ all) and from talents: [Ambusher](talents.md#talent-ambusher) and the thief's
 What [Sneak attack](skills.md#skill-sneak-attack), [Initiative](skills.md#skill-initiative), and
 [Stealth](skills.md#skill-stealth)'s slipping past give by value. A thief starts with Sneak
 attack (`2d6+10`), and a [drow](races.md#race-drow) may, whatever their class; Initiative is
-trained by warriors, rangers, monks, barbarians, bards, and thieves (see
+trained by warriors, rangers, monks, berserkers, bards, and thieves (see
 [Who trains what](skills.md#who-trains-what)).
 
 {{#include generated/surprise-ladders.md}}

@@ -127,7 +127,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lasts, the ability is `Unavailable::While` it ("you are winded"), a visible limit that only
     time lifts; nothing counts uses. An ability that buffs the player calls `World::afflict(player,
     status, 1, player)`. The class abilities that give them come with the class tables; the
-    built-in data has the barbarian's rage as the example: Raging (Strength and Toughness +2,
+    built-in data has the berserker's rage as the example: Raging (Strength and Toughness +2,
     Intelligence −2, no reading or casting, while the Rage resource lasts, "Resources" below),
     then Exhausted (10 minutes: Strength −1). A status that `blocks` casting also refuses every
     spending of mana (`World::spend_mana`) and greys out an ability that costs mana.
@@ -328,7 +328,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lightning (12), Flame and frost (50). Witch: Evil eye (1), Hex of weakness (3), Cause wounds
     (12), Curse of sloth (32), Blight (40). Bard: Mend (1), Blessing (6). Paladin: Blessing
     (6). Ranger: Barkskin (6). Every other class none. Every class has some mana (the
-    barbarian and the warrior 1); a race adds none unless its data says so.
+    berserker and the warrior 1); a race adds none unless its data says so.
   - **Spell scrolls** (§8 "Scrolls"): every spell comes on one scroll (`scroll_of_ID`, a
     `read` table of kind `spell`), which casts it through the cast path at the scroll's own
     `rungs` of the spell's damage or heal ladder (default 0, the base; at most the ladder's
@@ -529,8 +529,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   resources, integer pools beside hit points and mana (which everyone has) that a character holds
   once something grants them. A character may hold any number at once; creatures hold none
   (their rage would never show). The class features of the progression design's §4.18 (the
-  barbarian's Rage, the ranger's Focus, the thief's Openings, the monk's Ki, the bard's
-  Inspiration) move onto them in follow-up changes (R1–R5); the barbarian's Rage has (R1,
+  berserker's Rage, the ranger's Focus, the thief's Openings, the monk's Ki, the bard's
+  Inspiration) move onto them in follow-up changes (R1–R5); the berserker's Rage has (R1,
   "Rage" below), and the ranger's Focus (R2), the thief's Openings (R3), and the monk's Ki and
   the bard's Inspiration (R4) have (below). Mana is separate: nothing converts between them;
   Inspiration is the one resource spent in place of mana.
@@ -619,12 +619,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     song costs neither.
   - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives pay
     from (§8 "Weapon abilities", #564). The granted talent **Trained wind**
-    (`grants_resource`) is in the level-1 row of the warrior's, barbarian's, paladin's,
+    (`grants_resource`) is in the level-1 row of the warrior's, berserker's, paladin's,
     ranger's, monk's, thief's, and bard's tables, so those hold it from creation, full; a saved
     character of those classes is granted it on load (`World::grant_class`). Its maximum is 10
     + the Toughness modifier + a point per 10 levels, at least 5 (`max_from`), so Toughness 14
     holds 12 at level 1; it comes back a point every 12 s (2 base turns), resting too, and sits
-    at 0. A barbarian holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
+    at 0. A berserker holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
     `stamina` system): **Deep lungs** (Vigour): +4 at most; **Steady breathing**
     (Weaponcraft, a weapon skill at 5): back at 150 %. Anyone else is granted it, full, on the first weapon
     rank that teaches an active (the third grant place, #564: `fight.rs::grant_stamina`, where
@@ -635,10 +635,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the character screen under the stance; the dump header (`rage 11/20`), JSON dumps'
     `resources`, and the dev `actors` layer (every actor's, with progress). Never a creature's,
     and never the pace. The dev action `resource:ID` grants one (§9; "You gain Rage: 12 (dev).").
-  - **Rage** (the barbarian's, R1; `world/rage.rs`): the Rage ability (a wait's time) grants the
+  - **Rage** (the berserker's, R1; `world/rage.rs`): the Rage ability (a wait's time) grants the
     Rage resource (20 at most, starting at 12, a point lost every 6 s, resting too; it ends at
     zero) and with it Raging; the action's own wait costs the first point. No rage while Raging
-    or Exhausted lasts. Blood frenzy (level 40): each kill credited to the barbarian builds 5
+    or Exhausted lasts. Blood frenzy (level 40): each kill credited to the berserker builds 5
     rage (a `resource_build`). Mighty rage (50): Raging's raises doubled, 10 more rage at most,
     Exhausted eases twice as fast. Unstoppable (60): while raging, bleeding and poison tick
     nothing, and a blow (`Harm::Actor`) that would take the last hit point leaves it for 10 rage
@@ -647,7 +647,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Raging blocks `cast`).
   - **Talents** (R5, #253): the `resources` system is in the coverage list, held to its bar by
     the four resource talents, the only picks limited to a class (a resource belongs to the class
-    that has it): **Battle trance** (Might; barbarian, level 6): rage starts 6 higher (18) and
+    that has it): **Battle trance** (Might; berserker, level 6): rage starts 6 higher (18) and
     decays at 67 % of its pace; **Inner calm** (Finesse; monk, level 18): ki holds 2 more (7) and
     comes back at 150 %; **Steady hand** (Weaponcraft; ranger, level 12): focus comes back at
     150 % (still not while resting); **Patient blade** (Shadow; thief, level 32): openings decay

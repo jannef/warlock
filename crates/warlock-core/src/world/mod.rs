@@ -91,7 +91,6 @@ mod appraise;
 mod attacks;
 mod background;
 mod beast_friend;
-mod berserker;
 mod bleed;
 mod boons;
 mod buff;
@@ -131,6 +130,7 @@ mod flavour;
 mod focus;
 mod forage;
 mod free_blow;
+mod frenzy;
 mod gifts;
 mod glare;
 mod guild;
@@ -1408,8 +1408,8 @@ impl World {
 
     /// The player takes combat stance `stance` (spec §8 "Stances"). Takes no time, but a wait's
     /// for those set in their ways (spec §8 "Birth sign").
-    /// The berserker's stance is refused, and so is any while rage holds the player in it
-    /// (`berserker.rs`).
+    /// The frenzy stance is refused, and so is any while rage holds the player in it
+    /// (`frenzy.rs`).
     fn set_stance(&mut self, stance: CombatStance) -> Spent {
         if let Some(refused) = self.stance_refused(stance) {
             return refused;
@@ -1465,8 +1465,6 @@ mod attacks_tests;
 mod balance_probe;
 #[cfg(test)]
 mod beast_den_tests;
-#[cfg(test)]
-mod berserker_tests;
 #[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]
@@ -1569,6 +1567,8 @@ mod focus_tests;
 mod forage_tests;
 #[cfg(test)]
 mod free_blow_tests;
+#[cfg(test)]
+mod frenzy_tests;
 #[cfg(test)]
 mod gear_tests;
 #[cfg(test)]

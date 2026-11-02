@@ -305,7 +305,7 @@ cast path shares.
     class's caster level at the level it comes (`level × casting ÷ 100`, at least 1; S1, §5.6),
     a full caster to a cantrip (level 0 or 1) at 1 and four to six spells, and the others to at
     most two boons of level 5 or less. Every class has `mana`
-    at least 1 (the barbarian and the warrior gained theirs); races keep their own.
+    at least 1 (the berserker and the warrior gained theirs); races keep their own.
   - **Choices** (design §14, the defaults): q1, q2, q3, q5, q7 as above (interrupted study
     keeps the scroll; Dexterity aims; no talent lifts a cap (since S1 there is none); `force` and `necrotic` stay; Scroll savant
     never keeps a studied scroll); q4: the casting percents as §3 and the guaranteed lists as

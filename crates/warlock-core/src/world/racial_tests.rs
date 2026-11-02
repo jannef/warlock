@@ -286,7 +286,7 @@ fn gnomes_tinker_with_traps_and_know_their_gems() {
 
 #[test]
 fn half_orcs_hit_harder_when_badly_hurt_and_have_a_thicker_hide() {
-    let mut w = world("half_orc,male,barbarian");
+    let mut w = world("half_orc,male,berserker");
     let content = w.content().clone();
     let bonus = |w: &World| w.state.player().melee(&content).bonus;
     let max = w.state.player().max_hp(&content);

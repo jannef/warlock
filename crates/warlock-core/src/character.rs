@@ -777,7 +777,7 @@ mod tests {
         let mut differ = 0;
         for seed in 0..100 {
             let a = start(&content, "dwarf,female,warrior", seed);
-            let b = start(&content, "dwarf,female,barbarian", seed);
+            let b = start(&content, "dwarf,female,berserker", seed);
             strength.insert(a.stats.score(Stat::Strength));
             differ += usize::from(scores(&a.stats) != scores(&b.stats));
         }
@@ -798,9 +798,9 @@ mod tests {
         let content = content();
         let h = content.horoscope().expect("a horoscope");
         for seed in 0..40 {
-            let s = start(&content, "half_orc,other,barbarian", seed);
+            let s = start(&content, "half_orc,other,berserker", seed);
             let race = content.race("half_orc").expect("race");
-            let class = content.class("barbarian").expect("class");
+            let class = content.class("berserker").expect("class");
             let (animal, element) = h
                 .parts(s.character.sign.as_ref().expect("a sign"))
                 .expect("parts");
