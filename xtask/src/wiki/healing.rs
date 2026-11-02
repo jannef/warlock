@@ -70,7 +70,21 @@ fn disease_regen(content: &Content, def: &DiseaseDef) -> u16 {
 fn every(seconds: u32) -> String {
     match seconds {
         60 => "a minute".into(),
-        s => format!("every {}", Duration::seconds(u64::from(s)).spoken()),
+        s => format!("every {}", exactly(s)),
+    }
+}
+
+/// A time in words, to the second: `40 seconds`, `2 minutes`, `2 minutes and 30 seconds`.
+fn exactly(seconds: u32) -> String {
+    let d = Duration::seconds(u64::from(seconds));
+    match (seconds / 60, seconds % 60) {
+        (0, _) | (_, 0) => d.spoken(),
+        (m, s) if m < 60 => format!(
+            "{} and {}",
+            Duration::minutes(u64::from(m)).spoken(),
+            Duration::seconds(u64::from(s)).spoken()
+        ),
+        _ => d.spoken(),
     }
 }
 
@@ -325,11 +339,11 @@ pub(super) fn status_effects(content: &Content) -> String {
                 format!(
                     "after {turns} turns ({} each) at most; at once when the holder dies, leaves \
                      your side, or is held or slowed",
-                    Duration::seconds(u64::from(e)).spoken()
+                    exactly(e)
                 )
             }
             Some(e) if def.max == 1 => {
-                format!("after {}", Duration::seconds(u64::from(e)).spoken())
+                format!("after {}", exactly(e))
             }
             Some(e) => format!("a degree {}", every(e)),
             None if def.per_action && def.max == 1 => {

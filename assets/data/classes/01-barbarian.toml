@@ -33,9 +33,9 @@ abilities = [
     { level = 6, talent = "thick_hide" },
     { level = 12, talent = "fast_movement" },
     { level = 18, talent = "brutal_critical" },
-    { level = 25, talent = "hardened" },
     { level = 32, talent = "mighty_thews" },
     { level = 40, talent = "blood_frenzy" },
     { level = 50, talent = "mighty_rage" },
+    { level = 50, talent = "hardened" },
     { level = 60, talent = "unstoppable" },
 ]

@@ -38,10 +38,12 @@
 #
 # The numbers are the progression design's first guesses (§4.18).
 
-# The barbarian's rage (the Rage ability): it counts down a point a base turn, resting too, and
-# ends at zero, taking the Raging status with it (whose end is what the player is told; then
-# Exhausted follows). Blood frenzy builds it by kills, Mighty rage raises its maximum, and
-# Unstoppable spends it (talents/).
+# The barbarian's rage (the Rage ability): granted at 12, it counts down a point a base turn,
+# resting too, and ends at zero, taking the Raging status with it (whose end is what the player
+# is told; then Exhausted follows). Blood feeds it: a blow that hits the holder (soaked or
+# resisted too), a critical of theirs, and a kill; so a rage lasts the fight and burns out
+# after. Blood frenzy feeds it more by kills, Mighty rage raises its maximum, and Unstoppable
+# spends it (talents/).
 [[resource]]
 id = "rage"
 name = "Rage"
@@ -52,6 +54,8 @@ show_max = false
 decays = 6
 ends_at_zero = true
 status = "raging"
+lacking = "you have not the rage for it"
+builds = [{ on = "struck", amount = 1 }, { on = "critical", amount = 2 }, { on = "kill", amount = 3 }]
 
 # The ranger's focus: it comes back a point a base turn, but not while resting.
 [[resource]]

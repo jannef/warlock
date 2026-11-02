@@ -5,7 +5,7 @@ use super::{
     Cast, Gear, LEVELS, Probe, STRIKES, Side, Snap, armoured, avg, bony, dice_text, fight,
     fight_cell, hide, hit_mean, hit_pct, median, r, roll_mean, strike_mean,
 };
-use crate::combat::{self, Category, Profile, Target};
+use crate::combat::{self, Category, Profile, Strike, Target};
 use crate::dice::Dice;
 use crate::rng::Rng;
 use crate::stats::Stat;
@@ -502,6 +502,87 @@ pub(super) fn sneak_attacks(p: &Probe, rng: &mut Rng, out: &mut String) {
             out,
             "| {level} | {} | {dice} | {share:.0}% |{row}",
             super::sneak_value(level)
+        )
+        .unwrap();
+    }
+}
+
+/// The barbarian's rage (#842): the fight raging against calm, and what feeds the pool a round
+/// against one foe and against three (each foe's blows that hit, soaked or not, build `struck`;
+/// the barbarian's criticals and kills come at their own pace whatever the crowd).
+pub(super) fn rage(p: &Probe, rng: &mut Rng, out: &mut String) {
+    writeln!(out, "\n## Rage\n").unwrap();
+    writeln!(
+        out,
+        "The barbarian in plain gear (a great axe; from level 5 the warrior's armour: chain mail, banded mail from 15, plate from 30), trained stats, against the monsters within two levels: calm (the stance the run starts in) and raging (Raging and the berserker stance). The pool as the Rage ability grants it (start / most); the fight cells as in \"Fights\"; then the rage a round against one foe, the medians of hits taken × their build + criticals × theirs + kills × theirs − the decay (kills a round: one over the rounds to kill, so a fight's average); the same without the kills (a foe that outlasts the rage, or the turns before the first kill) and how many rounds the rage lasts from its start at that net (`grows` when it does not fall); and the net against three foes (three foes' hits, the same criticals and kills).\n"
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "| L | rage | Calm | Raging | one foe: struck + crit + kill − decay = net | one foe that does not die: net · rounds the rage lasts | three foes: net |\n|---|---|---|---|---|---|---|"
+    )
+    .unwrap();
+    for &level in &LEVELS {
+        let w = p.window(level, -2, 2);
+        let snaps = p.of("barbarian", level, Gear::Plain, true);
+        let raging: Vec<_> = snaps.iter().filter_map(|s| s.rage.as_ref()).collect();
+        let Some(first) = raging.first() else {
+            continue;
+        };
+        let calm = fight(&snaps, &w, None, rng);
+        let sides: Vec<&Side> = raging.iter().map(|r| &r.side).collect();
+        let hot = super::fight_sides(&sides, &w, None, rng);
+        let mut rows = Vec::new();
+        for m in &w {
+            let mut per = Vec::new();
+            for (s, rage) in raging.iter().enumerate() {
+                let them = &m.geared[s % m.geared.len()];
+                let me = &rage.side;
+                let share = |n: u32| f64::from(n) / f64::from(STRIKES);
+                let hits = (0..STRIKES)
+                    .filter(|_| combat::strike(&them.blow, &me.target, rng).strike.is_hit())
+                    .count() as u32;
+                let mut crits = 0.0;
+                let mut dealt = 0.0;
+                for blow in std::iter::once(&me.blow).chain(&me.off) {
+                    let mut n = 0;
+                    for _ in 0..STRIKES {
+                        let b = combat::strike(blow, &them.target, rng);
+                        n += u32::from(b.strike == Strike::Hit { critical: true });
+                        dealt += f64::from(b.damage) / f64::from(STRIKES);
+                    }
+                    crits += share(n);
+                }
+                let kills = dealt * me.blows / f64::from(them.hp.max(1));
+                per.push((
+                    share(hits) * them.blows * rage.builds[0],
+                    crits * me.blows * rage.builds[1],
+                    kills * rage.builds[2],
+                    rage.decay,
+                ));
+            }
+            rows.push(per);
+        }
+        let pick = |f: fn(&(f64, f64, f64, f64)) -> f64| {
+            median(rows.iter().map(|per| avg(per.iter().map(f))).collect())
+        };
+        let (struck, crit, kill, decay) =
+            (pick(|r| r.0), pick(|r| r.1), pick(|r| r.2), pick(|r| r.3));
+        let one = struck + crit + kill - decay;
+        let held = struck + crit - decay;
+        let three = 3.0 * struck + crit + kill - decay;
+        let lasts = if held < 0.0 {
+            r(f64::from(first.start) / -held)
+        } else {
+            "grows".into()
+        };
+        writeln!(
+            out,
+            "| {level} | {}/{} | {} | {} | {struck:.2} + {crit:.2} + {kill:.2} − {decay:.2} = {one:+.2} | {held:+.2} · {lasts} | {three:+.2} |",
+            first.start,
+            first.max,
+            fight_cell(&calm),
+            fight_cell(&hot),
         )
         .unwrap();
     }

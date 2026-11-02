@@ -142,7 +142,7 @@ counts how often you use an ability.
 
 **[Raging](status-effects.md#status-raging)** (the barbarian's [rage](resources.md#rage), which comes with the [class abilities](talents.md#class-abilities)): while your
 [rage](resources.md#rage) lasts you are stronger and tougher but less clever, and cannot read or spend
-[mana](mana.md#spending-it). When the rage runs out you are **[Exhausted](status-effects.md#status-exhausted)** for ten minutes: a little weaker, and no rage
+[mana](mana.md#spending-it). When the rage runs out you are **[Exhausted](status-effects.md#status-exhausted)** for two and a half minutes: a little weaker, and no rage
 until it passes.
 
 ## In the message line
