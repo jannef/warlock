@@ -15,16 +15,16 @@ expression: "render(case, content.clone())"
                     │ > a  Transfixing stare  at a place you see               │
                     │ Class                                                    │
                     │   b  Stunning strike    in a direction                   │
+                    │   c  Step of the wind                                    │
                     │ Weapon skills                                            │
-                    │   c  Shield bash        you hold no shield               │
+                    │   d  Shield bash        you hold no shield               │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-c or Enter use   Esc close                             │
+                    │ a-d or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
 
