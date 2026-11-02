@@ -490,6 +490,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`2d4+4`), and Detect traps and Disable device at `2d6+10`, known for, and Search at
     `2d6+4` (#684: in place of the Trapfinding class ability); the ranger and the ascetic Initiative `2d6+10`; the bard, warrior, and berserker
     `2d4+4`; a drow may start with Sneak attack (an optional skill of the race).
+  - **Intimidate** (#844; `kind = "action"`): gives `intimidate` (+8 at 100, +12 at 200, at most
+    20) on the difficulty of the Willpower check the berserker's War cry asks of those who hear
+    and see it ("Class abilities" below; read in `world/war_cry.rs` and nowhere else), marked by
+    `intimidate` (100 %: a cry roared, whatever came of it). The berserker trains it `2d4+4`,
+    the half-orc `1d6+4`. It has no ability of its own: the cry is the class's.
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
@@ -989,7 +994,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `use:smite:E`; refused, no time, without the ability or while its cooldown lasts; a holy
     gift outside its bands is used and does nothing, §8 "Alignment"): Rage (the Rage resource and with it Raging:
     St +2, To +2, In −2, no reading or casting, while the rage lasts, §8 "Resources"; then
-    Exhausted 150 s; no rage while either lasts; a wait's time),
+    Exhausted 150 s; no rage while either lasts; a wait's time), War cry (the berserker's at
+    25, #844, `world/war_cry.rs`: 4 rage, the talent's `resource`, and a wait's time; a roar as
+    loud as a howl, `Act::Howl`, heard across the floor, waking dens; every hostile that hears
+    it, sees the player now, and has vitals rolls its Willpower modifier against 10 + the
+    player's Strength modifier + their Intimidate, two gameplay draws apiece in actor-id order,
+    no level cut; failed, Frightened 3 degrees, caused by the player, it runs from them; "The
+    kobold quails and flees from you." or "The kobold does not flinch." for those the player
+    sees. Its one refusal is the rage: not held, or less than 4, "You have not the rage for
+    it.", no time; a roar with nobody to hear it still spends the turn, the rage, and the noise;
+    each cry marks Intimidate),
     Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
     blow at every hostile beside, clockwise from the north, each with the free blows the end of
     an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit
@@ -1041,7 +1055,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     active, a spell given, or what is rolled or handed down when a talent is taken carries no
     condition (refused at load). The identical-effects check counts the condition as part of
     the effect: `protection 2 while raging` is not Bulwark's `protection 2`.
-  - **Resources**: Rage, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
+  - **Resources**: Rage, War cry, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
     (§8 "Resources", R1); Flurry and Quivering palm on the Ki resource (R4, #252).
   - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;

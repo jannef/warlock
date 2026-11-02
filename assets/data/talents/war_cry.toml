@@ -1,0 +1,9 @@
+[[talent]]
+id = "war_cry"
+name = "War cry"
+tree = "class"
+granted = true
+description = "Roar your fury (an ability, while you rage): the foes who hear and see you flee from you a few moments, unless they keep their nerve; it is heard far."
+resource = { id = "rage", cost = 4 }
+effects = [{ kind = "war_cry", status = "frightened", severity = 3, difficulty = 10 }]
+systems = ["status", "hearing", "skills", "resources"]

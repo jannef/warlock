@@ -116,7 +116,11 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   lasts. Raging `blocks` `cast`, so `World::spend_mana` refuses while it lasts. While the
   player's own Raging lasts they are in the frenzy stance and cannot leave it, and its end
   leaves them aggressive (`world/frenzy.rs`, #680; spec §8 "Stances"): `frenzy::settle`
-  runs where a status begins or ends; `world/frenzy_tests.rs` covers it.
+  runs where a status begins or ends; `world/frenzy_tests.rs` covers it. War cry
+  (#844, `world/war_cry.rs`) is a class active paid in rage (`resource = { id = "rage", cost =
+  4 }` on its talent): `short_of` greys it with the pool's `lacking`, and `World::may_use_class`
+  says a pool's `lacking` words, capitalized, when it has them ("You have not the rage for
+  it."), else "You have too little X.".
 - **Ki** (R4, #252): Flurry grants it (`grants_resource`) and carries
   `TalentEffect::FlurryCost { resource, cost }` (`TalentMods::flurry_cost`), read in one place,
   `World::flurry` (`free_blow.rs`, from `second_blow` on `Cue::First`, which now takes `events`

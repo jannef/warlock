@@ -1,6 +1,6 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
-//! (`use:rage`, `use:smite:E`): Rage, Veteran's wind, Whirlwind, Lay on hands, Smite, Holy
+//! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Whirlwind, Lay on hands, Smite, Holy
 //! radiance, Quivering palm (for ki), Inspire (for inspiration or mana, #244, R4), the thief's
 //! Lurk and Low blow (`world/thief.rs`), Master thief's finisher (for openings,
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`). The
@@ -68,6 +68,7 @@ impl World {
         }
         match (active, dir) {
             (ClassActive::Rage, _) => self.rage(events),
+            (ClassActive::WarCry, _) => self.war_cry(events),
             (ClassActive::VeteransWind, _) => self.veterans_wind(events),
             (ClassActive::Whirlwind, _) => self.whirlwind(events),
             (ClassActive::LayOnHands, _) => self.lay_on_hands(events),
@@ -118,10 +119,15 @@ impl World {
                     )
                 }
                 Unavailable::NoMana => "You have too little mana.".to_string(),
-                Unavailable::Short(resource) => format!(
-                    "You have too little {}.",
-                    content.resource(resource).name.to_lowercase()
-                ),
+                // A pool with words of its own says them (Rage's "You have not the rage for
+                // it.").
+                Unavailable::Short(resource) => match &content.resource(resource).lacking {
+                    Some(words) => format!("{}.", super::talk::capitalized(words)),
+                    None => format!(
+                        "You have too little {}.",
+                        content.resource(resource).name.to_lowercase()
+                    ),
+                },
                 other => format!("You cannot: {}.", other.reason(&content)),
             });
             return false;

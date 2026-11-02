@@ -469,6 +469,16 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A berserker at level 25 (#844): War cry under Rage among the class abilities, greyed
+    // while no rage is held.
+    Case {
+        name: "abilities-menu-war-cry",
+        character: Some("human,male,berserker"),
+        kit: true,
+        actions: "xp:350000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A wizard at level 4 (spec §8 "Chests"): Knock among the class abilities, asking for a
     // direction, paid in mana.
     Case {
