@@ -269,6 +269,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skill-rolls.md", skills::skill_rolls),
         ("slipping-past.md", skills::slipping_past),
         ("stealing.md", skills::stealing),
+        ("intimidating.md", skills::intimidating),
         ("heal-targets.md", skills::heal_targets),
         ("abilities.md", abilities::abilities),
         ("weapons.md", combat::weapons),
@@ -1139,7 +1140,7 @@ mod tests {
                  Balance: Burdened / Strained | Concentration: mana back | Concentration: mana pool | \
                  Decipher script: study check | Detect traps: finding traps | Disable device: disarming traps | \
                  Heal: treating | Initiative: initiative check | Initiative: surprise's extra cost | \
-                 Intimidate: war cry's difficulty | Listen: hears fainter by | Metalcraft: tempering | Negotiation: prices | Open lock: picking locks | Search: searching | \
+                 Intimidate: threat's difficulty | Listen: hears fainter by | Metalcraft: tempering | Negotiation: prices | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Sneak attack: sneak attack dice | Sneak attack: their check's difficulty | \
                  Spellcraft: study check | Spot: noticing | Spot: lookout | Steal: \
                  stealing | Stealth: noise | Stealth: slipping past | Stealth: their lookout | Survival: journeys | \
@@ -1182,6 +1183,20 @@ mod tests {
         let stealing = text("stealing.md");
         assert!(stealing.contains("| +0 | 53% | 47% |"), "{stealing}");
         assert!(stealing.contains("| \u{2212}6 | 22% | 78% |"), "{stealing}");
+        // Intimidating: the ladder of degrees, from a little skill to War cry's three.
+        let intimidating = text("intimidating.md");
+        assert!(
+            intimidating.contains("| 0+ | +0 | 1 degree |"),
+            "{intimidating}"
+        );
+        assert!(
+            intimidating.contains("| 38+ | +3 | 2 degrees |"),
+            "{intimidating}"
+        );
+        assert!(
+            intimidating.contains("| 75+ | +6 | 3 degrees |"),
+            "{intimidating}"
+        );
         // Searching: the hidden things' chances for an average character, deeper down, and who
         // notices in passing.
         let features = text("search-features.md");

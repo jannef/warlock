@@ -107,10 +107,13 @@ The passive skills help you more the higher they are:
   you unseen: +8 to the initiative check at 100, +12 at 200, and when you are
   [surprised](status-effects.md#status-surprised) all the same, your next action loses less time
   (half the extra at 100, three quarters at 200). Every such check trains it.
-- **[Intimidate](skills.md#skill-intimidate)** makes your
+- **[Intimidate](skills.md#skill-intimidate)** lets you threaten one foe
+  ([Intimidate](abilities.md#ability-intimidate) in the abilities menu; see
+  [Intimidating](skills.md#intimidating)) and makes your threats and your
   [War cry](abilities.md#ability-war-cry) (the [berserker](classes.md#berserker)'s) harder to stand
-  against: the Willpower check it asks of those who hear and see you is 8 harder at 100, 12 at
-  200 (at most 20). Every cry trains it, whatever comes of it.
+  against: the Willpower check they ask is 8 harder at 100, 12 at 200 (at most 20). A threat
+  also frightens longer the more it adds. Every threat and every cry trains it, whatever comes of
+  it.
 
 {{#include generated/skill-benefits.md}}
 
@@ -245,6 +248,27 @@ is for sale, and taking it out without paying is theft by the shop's own rules. 
 whose purse you lifted unnoticed still trades with you, but cannot pay for what you sell.
 
 You may try as often as you like; someone who caught you stays angry, and that is the price.
+
+## Intimidating
+
+If you are trained in **[Intimidate](skills.md#skill-intimidate)**, **[Intimidate](abilities.md#ability-intimidate)** is in your
+[abilities menu](abilities.md): choose it, then a place you see (the [aiming](controls.md#aiming) cursor), and you
+threaten whoever stands there. It must be a [creature](creatures.md) hostile to you, within reach, with a heart to
+quail: not a skeleton, a spirit, or an animated thing (those without [vitals](combat.md#criticals)). Otherwise it is
+refused and takes no time. A threat takes a turn and is spoken aloud: those about you
+[hear](hearing.md) a voice.
+
+It is [War cry](abilities.md#ability-war-cry)'s check at one foe. If it hears you and sees you, it rolls 2d12 plus its
+[Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers) against the difficulty below plus your
+[Strength](stats.md#stat-strength) modifier plus what your Intimidate adds (the benefits table above); short of it, it
+is [frightened](status-effects.md#status-frightened) and runs from you, a few moments a degree. How many degrees
+depends on your skill: a little Intimidate frightens a foe for a moment, a great deal as long as a
+war cry does. A foe that does not hear or see you pays you no heed, and the turn is spent all
+the same.
+
+{{#include generated/intimidating.md}}
+
+You may threaten as often as you like; every threat trains Intimidate, whatever comes of it.
 
 ## Treating yourself
 

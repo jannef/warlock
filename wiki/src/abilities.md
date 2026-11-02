@@ -69,6 +69,10 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 - **Steal**: anyone trained in the [Steal](skills.md#skill-steal) skill has it, in the skill's place among the Skills.
   It asks for a direction and tries to lift something from whoever stands there, if they are
   not hostile to you (see [Stealing](skills.md#stealing)).
+- **Intimidate**: anyone trained in the [Intimidate](skills.md#skill-intimidate) skill has it, in the skill's place among
+  the Skills. It asks for a place you see, within 6 cells, and threatens the hostile creature
+  there: unless it keeps its nerve it is [frightened](status-effects.md#status-frightened) and
+  flees, longer the better your skill (see [Intimidating](skills.md#intimidating)).
 - **Heal**: anyone trained in the [Heal](skills.md#skill-heal) skill has it, in the skill's place among the Skills. It
   treats you: your [bleeding](status-effects.md#bleeding), a [poison](status-effects.md#poisoned), or a [disease](diseases.md#how-a-disease-goes) that shows, asking which when there is more
   than one; greyed out "nothing to treat" otherwise (see

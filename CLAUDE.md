@@ -121,7 +121,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend use_tool
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] intimidate:X,Y pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N rank:SKILL:N
 skip:DURATION weather:KIND spawn ally:CREATURE[:N[:DURATION]] meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
@@ -149,7 +149,10 @@ or a known trap there); `heal:bleeding` treats the player's own bleeding with th
 Heal ability: a status id with a `treat` table, `heal:poisoned`, or a showing disease's id,
 `heal:filth_fever`; bare `heal` the first there is; refused, with no time, untrained, with
 nothing to treat, or for a poison or disease already tried; docs/dev/status-effects.md);
-`chat:E` talks to the creature east of
+`intimidate:X,Y` threatens the hostile creature on level cell (X, Y), one the player sees within
+6 (the Intimidate ability, for those trained in it: War cry's check at one foe, Frightened for
+more degrees the better their Intimidate; refused, with no time, without the skill or a hostile
+with vitals there; `data/intimidate.toml`, docs/dev/skills.md); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in a campaign's `data/dialogue/`;
 quest topics are `quest-ID`, ids in a campaign's `data/quests/`: asking gives the quest, there is
 no accepting or declining (#422); a

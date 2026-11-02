@@ -492,9 +492,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `2d4+4`; a drow may start with Sneak attack (an optional skill of the race).
   - **Intimidate** (#844; `kind = "action"`): gives `intimidate` (+8 at 100, +12 at 200, at most
     20) on the difficulty of the Willpower check the berserker's War cry asks of those who hear
-    and see it ("Class abilities" below; read in `world/war_cry.rs` and nowhere else), marked by
-    `intimidate` (100 %: a cry roared, whatever came of it). The berserker trains it `2d4+4`,
-    the half-orc `1d6+4`. It has no ability of its own: the cry is the class's.
+    and see it ("Class abilities" below) and of the skill's own threat, marked by `intimidate`
+    (100 %: a cry roared or a threat made, whatever came of it). The berserker trains it `2d4+4`,
+    the half-orc `1d6+4`. Its use (#868) is the **Intimidate** ability (the abilities menu's
+    Skills group, in the skill's place, while `data/intimidate.toml` exists; no key): aimed at a
+    cell the player sees within the file's `range` (6), `intimidate:X,Y`, at a hostile creature
+    with vitals there. It takes the `intimidate` action (a turn), is spoken aloud (a voice where
+    the player stands, as loud as a mutter), and marks Intimidate, whatever comes of it. If the
+    foe hears the voice (asked before it is made) and sees the player now, it rolls War cry's
+    check (`world/war_cry.rs`, shared: two gameplay draws, its Willpower modifier against the
+    file's `difficulty` 10 + the player's Strength modifier + their Intimidate); failed, it is
+    Frightened, caused by the player, at the degrees the file's ladder gives for the points
+    Intimidate adds (`degrees = [[0, 1], [3, 2], [6, 3]]`: one degree below 3 points, value 38;
+    two from there; War cry's three from 6 points, value 75). A foe that does not hear or see
+    the player pays no heed (no draw). Refused, with no time and no draw: untrained, at the
+    player's own cell, out of range, at no creature seen, at one not hostile, or at one without
+    vitals.
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
