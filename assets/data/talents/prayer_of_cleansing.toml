@@ -1,0 +1,8 @@
+[[talent]]
+id = "prayer_of_cleansing"
+name = "Prayer"
+tree = "class"
+granted = true
+description = "Your prayers reach further: every disease in you, shown or brewing, is gone, and any poison with it."
+effects = [{ kind = "prayer", tier = 2, title = { holy = "Prayer", dark = "Invocation" }, uses = ["disease", "poison"] }]
+systems = ["diseases", "status"]

@@ -106,7 +106,7 @@ impl AbilitiesScreen {
                     };
                     let entry = Entry {
                         ability: a,
-                        name: a.name(content).to_string(),
+                        name: view.ability_name(a).to_string(),
                         description: describe(view, a),
                         state: state.to_string(),
                         available: own.unavailable.is_none(),
@@ -280,7 +280,7 @@ impl AbilitiesScreen {
 /// rolled again.").
 fn describe(view: &PerceptionView<'_>, ability: Ability) -> String {
     let content = view.content();
-    let mut text = ability.description(content).to_string();
+    let mut text = view.ability_description(ability).to_string();
     let Ability::Spell(spell) = ability else {
         return text;
     };

@@ -80,6 +80,7 @@ impl World {
             (ClassActive::StepOfTheWind, _) => self.wind_step(events),
             (ClassActive::Stillness, _) => self.stillness(events),
             (ClassActive::Consecrate, _) => self.begin_consecrate(),
+            (ClassActive::Orison, _) => self.orison(events),
             (ClassActive::Smite, Some(dir)) => self.smite(dir, events),
             (ClassActive::StunningStrike, Some(dir)) => self.stunning_strike(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
