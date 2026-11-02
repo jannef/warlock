@@ -989,7 +989,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `use:smite:E`; refused, no time, without the ability or while its cooldown lasts; a holy
     gift outside its bands is used and does nothing, §8 "Alignment"): Rage (the Rage resource and with it Raging:
     St +2, To +2, In −2, no reading or casting, while the rage lasts, §8 "Resources"; then
-    Exhausted 10 minutes; no rage while either lasts; a wait's time),
+    Exhausted 150 s; no rage while either lasts; a wait's time),
     Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
     blow at every hostile beside, clockwise from the north, each with the free blows the end of
     an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit

@@ -393,8 +393,15 @@ fn thick_hide_fast_movement_hardened_and_mighty_thews() {
             "{stat:?}"
         );
     }
-    // Hardened: past level 50 levels add hit points again, three more each.
+    // Hardened: the level-50 row (#842), not before; past level 50 levels add hit points
+    // again, three more each.
+    reach(&mut w, 49);
+    assert!(
+        !w.state.player().talents.has("hardened", 1),
+        "not at 25 any more"
+    );
     reach(&mut w, 50);
+    assert!(w.state.player().talents.has("hardened", 1));
     let at_50 = w.state.player().max_hp(&content);
     reach(&mut w, 51);
     let per_level = w.level_hp(&content);
@@ -403,19 +410,19 @@ fn thick_hide_fast_movement_hardened_and_mighty_thews() {
 
 #[test]
 fn blood_frenzy_and_unstoppable_keep_the_rage() {
-    // Before Blood frenzy a kill builds no rage.
+    // Before Blood frenzy a kill builds the pool's own three rage.
     let mut w = world("berserker");
     let player = w.state.player;
     run(&mut w, "use:rage");
     w.gain_resource(player, Build::Kill);
-    assert_eq!(rage(&w), Some(11));
-    // With it, five rage a kill (up to Mighty rage's thirty).
+    assert_eq!(rage(&w), Some(14));
+    // With it, five more a kill, eight in all (up to Mighty rage's thirty).
     let mut w = world("berserker");
     reach(&mut w, 60);
     at_normal_speed(&mut w);
     run(&mut w, "use:rage");
     w.gain_resource(player, Build::Kill);
-    assert_eq!(rage(&w), Some(16));
+    assert_eq!(rage(&w), Some(19));
     set_rage(&mut w, 28);
     w.gain_resource(player, Build::Kill);
     assert_eq!(rage(&w), Some(30), "never past the maximum");

@@ -1395,8 +1395,8 @@ mod tests {
         let resources = text("resources.md");
         assert!(
             resources.contains(
-                "| Rage | 20 | 12 | a point lost every 6 seconds | - | ends, and its bar goes, and \
-                 Raging with it |"
+                "| Rage | 20 | 12 | a point lost every 6 seconds | +3 for a kill, +2 for a critical, +1 \
+                 for being hit | ends, and its bar goes, and Raging with it |"
             ),
             "{resources}"
         );
@@ -1453,7 +1453,7 @@ mod tests {
              page) |",
             "| Strength +2, Toughness +2, Intelligence \u{2212}2 | — | You cannot read, study, or \
              cast spells; Exhausted follows it |",
-            "| Exhausted | no | The end of Raging | Nothing |",
+            "| Exhausted | no | The end of Raging | Nothing | After 2 minutes and 30 seconds |",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
         }

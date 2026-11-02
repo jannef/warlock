@@ -861,13 +861,16 @@ impl World {
                 self.practise(block, true, levels.0);
             }
         }
-        // Resources built by blows (spec §8 "Resources"): a hit and a critical build the
-        // attacker's, being hit the target's.
+        // Resources built by blows (spec §8 "Resources"): a hit and a critical that do harm
+        // build the attacker's; being hit at all, soaked or resisted to nothing too, the
+        // target's (the berserker's rage: hits taken before mitigation).
         if let Some(Strike::Hit { critical }) = blow.map(|b| b.strike) {
             self.gain_resource(attacker, Build::Hit);
             if critical {
                 self.gain_resource(attacker, Build::Critical);
             }
+        }
+        if blow.is_some_and(|b| b.strike.is_hit()) {
             self.gain_resource(target, Build::Struck);
         }
         // Weapon abilities (`weapon_ability.rs`) fire on the same events, and on a melee
