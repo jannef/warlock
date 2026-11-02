@@ -629,6 +629,9 @@ pub enum ClassActive {
     /// A minute's prayer that lifts an unholy room's effect for good, for mana (the priest's and
     /// the paladin's Consecrate).
     Consecrate,
+    /// A prayer that answers what ails the priest most, as far as their prayers reach, under a
+    /// hidden strain (the priest's Orison and the tiers after it, `world/orison.rs`).
+    Orison,
     /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
     Knock,
     /// A careful look that tells a thing the player carries for what it is, as the scroll of
@@ -657,6 +660,7 @@ impl ClassActive {
         ClassActive::MasterThief,
         ClassActive::Inspire,
         ClassActive::Consecrate,
+        ClassActive::Orison,
         ClassActive::Knock,
         ClassActive::MerchantsEye,
     ];
@@ -682,6 +686,7 @@ impl ClassActive {
             ClassActive::MasterThief => "master_thief",
             ClassActive::Inspire => "inspire",
             ClassActive::Consecrate => "consecrate",
+            ClassActive::Orison => "orison",
             ClassActive::Knock => "knock",
             ClassActive::MerchantsEye => "merchants_eye",
         }
@@ -769,6 +774,7 @@ impl ClassActive {
             ClassActive::LayOnHands
             | ClassActive::HolyRadiance
             | ClassActive::Consecrate
+            | ClassActive::Orison
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire => ActionKind::Chat,

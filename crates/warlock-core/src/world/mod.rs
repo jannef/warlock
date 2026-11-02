@@ -166,6 +166,7 @@ mod merchants_eye;
 mod mimic;
 pub(crate) mod mirrors;
 mod openings;
+mod orison;
 mod outcome;
 mod path;
 mod perceive;
@@ -180,6 +181,7 @@ mod read;
 mod reflect;
 mod resource;
 mod rest;
+mod restore;
 mod reveal;
 mod rod;
 mod rooms;
@@ -228,6 +230,7 @@ mod wares;
 mod warp;
 mod weapon_ability;
 mod weapon_active;
+mod words;
 mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
@@ -257,6 +260,7 @@ pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use mirrors::Image;
+pub use orison::PrayerState;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
@@ -1353,6 +1357,7 @@ impl World {
             Action::Encounter(choice) => return self.answer_encounter(*choice),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
+            Action::Say { dir, words } => return self.say_to(*dir, words, events),
             Action::Steal(dir) => return self.steal(*dir),
             Action::Intimidate(at) => return self.intimidate(*at, events),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
@@ -1670,6 +1675,8 @@ mod object_tests;
 #[cfg(test)]
 mod openings_tests;
 #[cfg(test)]
+mod orison_tests;
+#[cfg(test)]
 mod outcome_tests;
 #[cfg(test)]
 mod outlaw_tests;
@@ -1829,6 +1836,8 @@ mod weapon_active_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+#[cfg(test)]
+mod words_tests;
 #[cfg(test)]
 mod zap_tests;
 

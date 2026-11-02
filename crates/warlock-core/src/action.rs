@@ -105,6 +105,14 @@ pub enum Action {
         dir: Dir,
         topic: String,
     },
+    /// Say words to the creature in a direction (spec §8 "Dialogue", "Saying words";
+    /// `world/words.rs`): it answers what it knows of them, or its `unheard` line. `words` are
+    /// normalised (`words::normalise`); the text joins them with `_` (`say:E:life_before_death`).
+    /// Takes the time of `chat` whether heard or not; refused (no time) as a chat is.
+    Say {
+        dir: Dir,
+        words: String,
+    },
     /// Try to steal from the creature in a direction (spec §8 "Stealing"): one stack of what it
     /// carries and neither wears nor wields, if the player's Dexterity and Steal skill beat its
     /// Willpower; caught, it turns on them. Takes the time of `steal`; refused (no time) when the
@@ -835,6 +843,7 @@ impl fmt::Display for Action {
             Action::Encounter(choice) => write!(f, "encounter:{}", choice.id()),
             Action::Chat(d) => write!(f, "chat:{d}"),
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
+            Action::Say { dir, words } => write!(f, "say:{dir}:{}", words.replace(' ', "_")),
             Action::Steal(d) => write!(f, "steal:{d}"),
             Action::Intimidate(at) => write!(f, "intimidate:{},{}", at.x, at.y),
             Action::ThrowVoice(at) => write!(f, "throw_voice:{},{}", at.x, at.y),
@@ -949,6 +958,18 @@ impl FromStr for Action {
                 Ok(Action::Ask {
                     dir: dir.parse().map_err(|_| usage())?,
                     topic: topic.to_string(),
+                })
+            }
+            "say" => {
+                let usage = || "`say` needs a direction and words, e.g. `say:E:hello`".to_string();
+                let (dir, words) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
+                let words = crate::words::normalise(&words.replace('_', " "));
+                if words.is_empty() {
+                    return Err(usage());
+                }
+                Ok(Action::Say {
+                    dir: dir.parse().map_err(|_| usage())?,
+                    words,
                 })
             }
             "steal" => dir().map(Action::Steal),
@@ -1646,6 +1667,14 @@ mod tests {
                 dir: Dir::S,
                 topic: "quest-rats".into(),
             },
+            Action::Say {
+                dir: Dir::E,
+                words: "life before death".into(),
+            },
+            Action::Say {
+                dir: Dir::NW,
+                words: "ǣþelstān".into(),
+            },
             Action::Search(1),
             Action::Search(10),
             Action::Search(MAX_SEARCH),
@@ -1856,6 +1885,14 @@ mod tests {
                 }
             ])
         );
+        // Words are normalised as they are parsed, so any spelling of them is one action.
+        assert_eq!(
+            parse_actions("SAY:e:Life_BEFORE__death!"),
+            Ok(vec![Action::Say {
+                dir: Dir::E,
+                words: "life before death".into()
+            }])
+        );
         assert_eq!(
             parse_actions("FIRE:3,4 throw:B:10,2"),
             Ok(vec![
@@ -1985,6 +2022,11 @@ mod tests {
             "ask:E:",
             "ask:up:rooms",
             "ask:E:a:b",
+            "say",
+            "say:E",
+            "say:E:",
+            "say:E:_!_",
+            "say:up:hello",
             "dig",
             "dig:",
             "dig:down",

@@ -50,6 +50,25 @@ Chatting takes a few words' time (half a normal action, 3 seconds; see
 Some people have work for you: their [quests](quests.md) are topics too, listed first. See
 [Quests](quests.md).
 
+## Saying words
+
+Some people listen for words: a password, the answer to a riddle, a name. Where the one you
+talk to knows any, their talk screen has one more row under the topics, `s  Say something…`.
+Press `s` (or choose the row and press `Enter`) and type what you say, up to 40 characters, then
+`Enter` to say it (`Esc` goes back to the topics; an empty line says nothing).
+
+- Only the words count: capitals, punctuation, and extra spaces are ignored, so *Life before
+  death!* and *life, before death* are the same words.
+- If they know the words they answer, a line at a time, and saying them may do something: give
+  you a [quest](quests.md), or send the speaker on their way.
+- If they do not, they say so in their own way, or say nothing.
+- Saying something takes a chat's time ([3 seconds](turns.md#what-actions-cost)), heard or not.
+  You may try as often as you like.
+- Some speak only to people of a certain [alignment](alignment.md): anyone else gets a line
+  that turns them away, and no topics to ask about and nothing to say.
+
+{{#include generated/words.md}}
+
 ## Services
 
 A few people sell a **service**: a cure, a mending, or an identification, for [gold](shops.md#money). Services are

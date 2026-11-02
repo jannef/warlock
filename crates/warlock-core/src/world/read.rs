@@ -17,6 +17,9 @@
 //! **Unknown scrolls** ([`crate::scroll_label`]) read just as known ones do; the read names the
 //! scroll by its label ("You read the scroll labelled ZUNBAR.") and identifies its type ("It is a
 //! scroll of fireball."), the scroll of identify's own too.
+//!
+//! **The scroll of restoration** casts no spell ([`Reading::Cleanse`], `restore.rs`): read on
+//! oneself, it mends every point of stat damage and gives back every point drains took.
 
 use super::fight::{End, Guard, Words, attack_message, death_message};
 use super::{Spent, World};
@@ -52,6 +55,18 @@ impl World {
             return Spent::Nothing;
         };
         match (reading, target) {
+            (Reading::Cleanse(_), Some(_)) => {
+                self.say("It is read on yourself: `read:a`.");
+                Spent::Nothing
+            }
+            (&Reading::Cleanse(cleansing), None) => {
+                let price = self.read_price();
+                if self.read_cleanse(item, cleansing) {
+                    Spent::Turn(price)
+                } else {
+                    Spent::Nothing
+                }
+            }
             (Reading::Cast(scroll), Some(ReadTarget::Cell(_)) | None) if scroll.on_item => {
                 self.say("Read it on what? Name a stack you carry: `read:a:b`.");
                 Spent::Nothing

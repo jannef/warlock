@@ -86,6 +86,7 @@ pub(crate) mod part;
 mod particles;
 mod plural;
 mod potion;
+mod prayer;
 mod prestige;
 mod quest;
 mod quest_roll;
@@ -155,6 +156,7 @@ mod wand;
 mod weapon_ability;
 mod weapon_skill;
 mod weather;
+mod word;
 #[cfg(test)]
 mod yugoloth_roster_tests;
 
@@ -247,6 +249,7 @@ pub use part::{MAX_OBJECT_PARTS, MAX_PARTS, Part, PartDef, PartId, PartRole, and
 pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use plural::{MAX_WORD, Plurals};
 pub use potion::{Draught, Drink, MAX_POTION_MARKS};
+pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
 pub use prestige::{MAX_PRESTIGE_LEVELS, PrestigeDef, Table};
 pub use quest::{
     GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
@@ -271,7 +274,7 @@ pub use room_shrine::{Regard, Shrine};
 pub(crate) use room_treasury::breach_fault;
 pub use room_treasury::{Heaps, MAX_COINS_EACH, MAX_TREASURE, Sealed, SecretDoors, Treasury};
 pub use scenario::ScenarioDef;
-pub use scroll::{Reading, SpellScroll};
+pub use scroll::{Cleansing, Reading, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
 pub use search::{
     PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,
@@ -330,6 +333,7 @@ pub use weapon_skill::{
 pub use weather::{
     Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,
 };
+pub use word::{Does, MAX_REPLY_LINES, MAX_WORDS, Word};
 
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
@@ -650,6 +654,9 @@ pub struct Content {
     /// The numbers of intimidating (`data/intimidate.toml`, spec §8 "Skills": Intimidate); none
     /// without the file, when nobody intimidates.
     intimidate: Option<IntimidateRules>,
+    /// The priest's prayer (`data/prayer.toml`, spec §8 "Class abilities"): the strain, the
+    /// faces, the uses in their order; none without the file, when every prayer is refused.
+    prayer: Option<PrayerRules>,
     /// The constants of the ally core (`data/allies.toml`, spec §8 "Allies"); none without the
     /// file, when no ally can be made.
     allies: Option<AllyRules>,
@@ -800,6 +807,7 @@ impl Content {
             encounter_tables: Vec::new(),
             forage: None,
             intimidate: None,
+            prayer: None,
             allies: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
@@ -1132,6 +1140,10 @@ impl Content {
         if let Some(text) = files.get_optional(path) {
             content.intimidate = Some(IntimidateRules::parse(path, text, &content)?);
         }
+        let path = "data/prayer.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.prayer = Some(PrayerRules::parse(path, text, &content)?);
+        }
         let path = "data/allies.toml";
         if let Some(text) = files.get_optional(path) {
             content.allies = Some(AllyRules::parse(path, text)?);
@@ -1251,6 +1263,7 @@ impl Content {
         content.encounter_tables = encounter::parse(files.table("encounters"), &content)?;
         content.validate()?;
         content.check_topic_routes()?;
+        content.check_words()?;
         offer::check_placements(&content)?;
         content.check_campaigns()?;
         Ok(content)
@@ -3037,6 +3050,12 @@ impl Content {
     /// without the file, when nobody intimidates.
     pub fn intimidate(&self) -> Option<&IntimidateRules> {
         self.intimidate.as_ref()
+    }
+
+    /// The priest's prayer (spec §8 "Class abilities"; `data/prayer.toml`); `None` without the
+    /// file, when every prayer is refused.
+    pub fn prayer(&self) -> Option<&PrayerRules> {
+        self.prayer.as_ref()
     }
 
     /// The constants of the ally core (spec §8 "Allies"; `data/allies.toml`); `None` without the

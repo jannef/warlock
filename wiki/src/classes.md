@@ -37,8 +37,8 @@ you a talent pick in its place.
 
 {{#include generated/class-levels.md}}
 
-A [paladin](classes.md#paladin)'s holy abilities used from the menu ([Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance), [Consecrate](abilities.md#ability-consecrate))
-work only while you are on the good side, Kind or better (see [Alignment](alignment.md)):
+A [paladin](classes.md#paladin)'s holy abilities used from the menu ([Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance))
+work only while you are on the good side, Kind or better ([Consecrate](abilities.md#ability-consecrate) Neutral or better; see [Alignment](alignment.md)):
 otherwise you can still use them, and nothing happens. The passives do not care. [Lay on hands](abilities.md#ability-lay-on-hands) drains you instead of costing
 [mana](mana.md#how-much). The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
 [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
@@ -53,10 +53,22 @@ greyed out ("too little") while you have less; there is no other wait. A [burst]
 off as a [scroll](scrolls.md)'s does, a [line](magic.md#shapes) runs through everyone on it, its blows and kills
 yours; a [hex](magic.md#shapes) falls on a [hostile](creatures.md#factions) you see within its reach. [Call lightning](abilities.md#ability-call-lightning) answers only under the
 open sky. The [druid](classes.md#druid)'s calls bring wolves, bears, and elementals to fight beside them
-as [allies](allies.md). A [priest](classes.md#priest)'s
-[Smite](abilities.md#ability-smite) is the [paladin](classes.md#paladin)'s, and works only while the priest is Kind or better.
+as [allies](allies.md).
 
-**[Consecrate](abilities.md#ability-consecrate)** (the [priest](classes.md#priest)'s at level 9, the [paladin](classes.md#paladin)'s at 12) works only while you are Kind
+**The priest's prayer** ([Orison](abilities.md#ability-orison), from level 1) costs no [mana](mana.md#spending-it) and takes the time of a spell:
+it answers the worst thing that ails you, in this order: a [disease](diseases.md) that shows, [poison](status-effects.md#status-poisoned), wounds
+([bleeding](status-effects.md#status-bleeding) and lost [hit points](combat.md#hit-points)), hexes and holds, [mana](mana.md), [hunger](hunger.md), and [stat damage](diseases.md#stat-damage) or drained points.
+At first it answers wounds only; the priest's levels add the rest (hunger at 6, disease and
+poison at 12, hexes and holds at 18, stat damage and drain at 25, mana at 32), two answers a
+prayer at 40, and at 60 everything at once with every pool filled. Its name grows with it:
+Orison, Prayer, Litany, Benediction, Miracle, while you are [Neutral or better](alignment.md); a priest fallen to
+Callous or worse is answered by the dark powers instead, and prays a Whisper, an Invocation, a
+Rite, a Pact, a Miracle. Every prayer adds 100 to a hidden **strain**, answered or not, and a
+point of it passes each minute; a prayer fizzles with a chance of 10 % for every 100 strain, and
+once one has fizzled every prayer fizzles until the strain is gone. A prayer with nothing to
+answer (a disease still brewing is not yet anything) costs nothing.
+
+**[Consecrate](abilities.md#ability-consecrate)** (the [priest](classes.md#priest)'s at level 9, the [paladin](classes.md#paladin)'s at 12) works only while you are Neutral
 or better: a minute's prayer, for 15 [mana](mana.md#spending-it), that lifts a cursed, draining, or haunted room's curse for good
 (see [Special rooms](special-rooms.md#cursed-rooms)).
 

@@ -1048,6 +1048,22 @@ pub enum TalentEffect {
     /// The class active Consecrate: `time` (a duration) of prayer, for `mana` mana, lifts an
     /// unholy special room (or a whole level's unholy effect) for good (`world/consecrate.rs`).
     Consecrate { mana: i32, time: String },
+    /// The priest's prayer (the class active Orison, `world/orison.rs`; `data/prayer.toml`):
+    /// a prayer talent of `tier` (1 to 5, its `title` for each face) or a use added between
+    /// them; `uses` it may answer, `answers` problems a prayer (the largest held), `all` every
+    /// problem and every pool at once. The tier-1 talent carries the ability.
+    Prayer {
+        #[serde(default)]
+        tier: Option<u8>,
+        #[serde(default)]
+        title: Option<super::Faced>,
+        #[serde(default)]
+        uses: Vec<super::PrayerUse>,
+        #[serde(default)]
+        answers: Option<u8>,
+        #[serde(default)]
+        all: bool,
+    },
     /// The class active Knock: for `mana` mana, the lock of the locked door or chest in a
     /// direction springs open (`world/knock.rs`; spec §8 "Chests").
     Knock { mana: i32 },
@@ -1143,6 +1159,7 @@ impl TalentEffect {
             TalentEffect::Finisher => A::MasterThief,
             TalentEffect::Inspire { .. } => A::Inspire,
             TalentEffect::Consecrate { .. } => A::Consecrate,
+            TalentEffect::Prayer { tier: Some(1), .. } => A::Orison,
             TalentEffect::Knock { .. } => A::Knock,
             TalentEffect::MerchantsEye => A::MerchantsEye,
             _ => return None,
@@ -1168,6 +1185,7 @@ impl TalentEffect {
                 TalentEffect::SecondWind { .. }
                     | TalentEffect::BloodMagic { .. }
                     | TalentEffect::Spell { .. }
+                    | TalentEffect::Prayer { .. }
                     | TalentEffect::SpellMod(_)
                     | TalentEffect::WeaponStamina { .. }
                     | TalentEffect::TrainSkill { .. }
@@ -1380,6 +1398,30 @@ impl TalentEffect {
                 let time: crate::time::Duration = time.parse()?;
                 if !(1..=3600).contains(&time.as_seconds()) {
                     return Err("`consecrate`: time is 1s to 1h".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Prayer {
+                tier,
+                title,
+                uses,
+                answers,
+                all,
+            } => {
+                if tier.is_some_and(|t| !(1..=5).contains(&t)) {
+                    return Err("`prayer`: tier is 1 to 5".into());
+                }
+                if tier.is_some() != title.is_some() {
+                    return Err("`prayer`: a tier has a `title`, and only a tier".into());
+                }
+                if answers.is_some_and(|a| !(1..=7).contains(&a)) {
+                    return Err("`prayer`: answers is 1 to 7".into());
+                }
+                if (1..uses.len()).any(|i| uses[..i].contains(&uses[i])) {
+                    return Err("`prayer`: a use named twice".into());
+                }
+                if tier.is_none() && uses.is_empty() && answers.is_none() && !all {
+                    return Err("`prayer`: it gives a tier, uses, answers, or all".into());
                 }
                 Ok(())
             }

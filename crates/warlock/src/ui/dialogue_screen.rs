@@ -9,14 +9,21 @@
 //! reply, on the topic just asked. A service paid per thing (an identification, #432) asks
 //! first, in the one dialog, with the total it would cost now; with nothing to pay for it asks
 //! straight away (the speaker says there is nothing to do).
+//!
+//! Where the speaker knows words and talks to the player ([`Conversation::words`]), a fixed row
+//! `s  Say something…` follows the topics: `s` (or the row chosen and Enter) opens the say field
+//! in the panel, the game's [`TextField`] of [`MAX_SAID`] characters; Enter sends what is typed
+//! ([`Action::Say`]; an empty line just closes the field), Esc goes back to the topics.
 
 use super::dialog_screen::Dialog;
-use super::menu::{Hints, Nav, Panel, Press, wrap};
+use super::menu::{Edit, Hints, Nav, Panel, Press, wrap};
 use super::screens::ScreenAction;
+use super::text_field::TextField;
 use super::{ACCENT, TEXT};
 use crate::input::{Bindings, KeyCommand};
 use crate::render::console::Console;
 use warlock_core::perception::PerceptionView;
+use warlock_core::words::{MAX_SAID, normalise};
 use warlock_core::world::Conversation;
 use warlock_core::{Action, Dir, Event, Outcome};
 
@@ -39,9 +46,16 @@ pub struct DialogueScreen {
     wares: Vec<Option<(u32, String)>>,
     /// The gold the player carries.
     gold: u32,
-    /// The selected topic.
+    /// The selected row: a topic, or past them the Say row.
     selected: usize,
+    /// Whether the player may say words here: the Say row.
+    words: bool,
+    /// The say field, while it is open.
+    field: Option<TextField>,
 }
+
+/// The fixed key of the Say row.
+const SAY_KEY: char = 's';
 
 impl DialogueScreen {
     /// The screen for `talk` (the run's last conversation, if any) as the player perceives the
@@ -56,6 +70,8 @@ impl DialogueScreen {
             wares: Vec::new(),
             gold: 0,
             selected: 0,
+            words: false,
+            field: None,
         };
         let (Some(talk), Some(view)) = (talk, view) else {
             return nobody();
@@ -95,23 +111,38 @@ impl DialogueScreen {
             wares,
             gold: view.own_gold(),
             selected,
+            words: talk.words,
+            field: None,
         }
+    }
+
+    /// How many rows may be chosen: the topics, and the Say row.
+    fn rows(&self) -> usize {
+        self.topics.len() + usize::from(self.words)
     }
 
     /// Applies a key press: a topic's number (or Enter on the selected one) asks about it, the
     /// arrows move the selection, Esc or the chat key leaves.
     pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
+        if self.field.is_some() {
+            return self.type_words(press);
+        }
+        if self.words && press.text == Some(SAY_KEY) {
+            self.open_field();
+            return ScreenAction::Stay;
+        }
         let own_key = (press.binding.as_ref())
             .is_some_and(|key| bindings.owner(key) == Some(KeyCommand::Chat));
         if own_key || press.nav == Nav::Back {
             return ScreenAction::Close;
         }
-        let n = self.topics.len();
+        let topics = self.topics.len();
+        let n = self.rows();
         let number = press
             .text
             .and_then(|c| c.to_digit(10))
             .and_then(|d| (d as usize).checked_sub(1))
-            .filter(|&i| i < n);
+            .filter(|&i| i < topics);
         match (number, press.nav) {
             (Some(i), _) => self.ask(i),
             (None, Nav::Up) if n > 0 => {
@@ -122,9 +153,42 @@ impl DialogueScreen {
                 self.selected = (self.selected + 1) % n;
                 ScreenAction::Stay
             }
-            (None, Nav::Enter) if n > 0 => self.ask(self.selected),
+            (None, Nav::Enter) if self.selected < topics => self.ask(self.selected),
+            (None, Nav::Enter) if n > 0 => {
+                self.open_field();
+                ScreenAction::Stay
+            }
             (None, Nav::Enter) => ScreenAction::Close,
             _ => ScreenAction::Stay,
+        }
+    }
+
+    /// Opens the say field, empty, on the Say row.
+    fn open_field(&mut self) {
+        self.selected = self.topics.len();
+        self.field = Some(TextField::new("", MAX_SAID));
+    }
+
+    /// A key press in the say field: Enter says what is typed (nothing typed, or nothing but
+    /// punctuation, closes the field), Esc goes back to the topics, anything else types.
+    fn type_words(&mut self, press: &Press) -> ScreenAction {
+        let Some(field) = self.field.as_mut() else {
+            return ScreenAction::Stay;
+        };
+        match field.handle(press) {
+            Some(Edit::Confirm) => {
+                let words = normalise(field.text());
+                self.field = None;
+                match self.toward {
+                    Some(dir) if !words.is_empty() => ScreenAction::Act(Action::Say { dir, words }),
+                    _ => ScreenAction::Stay,
+                }
+            }
+            Some(Edit::Back) => {
+                self.field = None;
+                ScreenAction::Stay
+            }
+            Some(Edit::Erase | Edit::Random) | None => ScreenAction::Stay,
         }
     }
 
@@ -198,10 +262,12 @@ impl DialogueScreen {
     pub fn draw(&self, console: &mut Console, bindings: &Bindings) {
         let width = WIDTH.min(console.cols() as i32) - 4;
         let said = wrap(&format!("\"{}\"", self.line), width);
-        // Rows: margin, what was said, a gap, the topics (and a gap), the footer, the frame.
-        let topic_rows = match self.topics.len() {
-            0 => 0,
-            n => n as i32 + 1,
+        // Rows: margin, what was said, a gap, the topics and the Say row (and a gap), or the
+        // question and the field (and a gap), the footer, the frame.
+        let topic_rows = match (&self.field, self.rows()) {
+            (Some(_), _) => 3,
+            (None, 0) => 0,
+            (None, n) => n as i32 + 1,
         };
         let h = said.len() as i32 + topic_rows + 5;
         let title = if self.name.is_empty() {
@@ -221,22 +287,46 @@ impl DialogueScreen {
             y += 1;
         }
         y += 1;
-        for (i, (_, name)) in self.topics.iter().enumerate() {
+        if let Some(field) = &self.field {
+            if fits(y + 1) {
+                let whom = lower_first(&self.name);
+                console.print(x + 2, y, &format!("What do you say to {whom}?"), TEXT);
+                field.draw(console, x + 2, y + 1, "");
+            }
+            let key = |command| bindings.key_name(command).unwrap_or_else(|| "?".into());
+            let footer = format!(
+                "{}  say    {}  erase    Esc  back",
+                key(KeyCommand::TextConfirm),
+                key(KeyCommand::TextErase),
+            );
+            panel.footer(console, &footer);
+            return;
+        }
+        let rows = (self.topics.iter().enumerate())
+            .map(|(i, (_, name))| format!("{}  {name}", i + 1))
+            .chain(self.words.then(|| format!("{SAY_KEY}  Say something…")));
+        for (i, row) in rows.enumerate() {
             if fits(y) {
                 let selected = i == self.selected;
                 let color = if selected { ACCENT } else { TEXT };
                 if selected {
                     console.print(x, y, ">", ACCENT);
                 }
-                console.print(x + 2, y, &format!("{}  {name}", i + 1), color);
+                console.print(x + 2, y, &row, color);
             }
             y += 1;
         }
         let confirm = Hints::of(bindings).confirm;
+        let say = if self.words {
+            format!("{SAY_KEY}  say    ")
+        } else {
+            String::new()
+        };
         let footer = match self.topics.len() {
+            0 if self.words => format!("{say}Esc  leave"),
             0 => "Esc  leave".to_string(),
-            1 => format!("1 or {confirm}  ask    Esc  leave"),
-            n => format!("1-{n} or {confirm}  ask    Esc  leave"),
+            1 => format!("1 or {confirm}  ask    {say}Esc  leave"),
+            n => format!("1-{n} or {confirm}  ask    {say}Esc  leave"),
         };
         panel.footer(console, &footer);
     }
@@ -248,6 +338,15 @@ pub fn last_talk(outcome: &Outcome) -> Option<&Conversation> {
         Event::Talked(talk) => Some(talk),
         _ => None,
     })
+}
+
+/// `text` with its first letter in lower case, unless it is a proper name: "the old hermit",
+/// "Sister Hild".
+fn lower_first(text: &str) -> String {
+    match text.strip_prefix("The ") {
+        Some(rest) => format!("the {rest}"),
+        None => text.to_string(),
+    }
 }
 
 /// `text` with its first letter in upper case.

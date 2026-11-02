@@ -46,6 +46,25 @@ pub(super) fn scrolls(content: &Content) -> String {
                 };
                 (what, roll, reach, sound_text(def.look.noise))
             }
+            Reading::Cleanse(cleansing) => {
+                let does = match (cleansing.mends, cleansing.restores) {
+                    (true, true) => {
+                        "Mends every point of [stat damage](diseases.md#stat-damage) and gives back every point [drains](stats.md#drained-stats) took"
+                    }
+                    (true, false) => "Mends every point of [stat damage](diseases.md#stat-damage)",
+                    _ => "Gives back every point [drains](stats.md#drained-stats) took",
+                };
+                let what = format!(
+                    "{does}; casts no spell, so there is nothing to study. Refused, and kept, \
+                     with nothing to restore"
+                );
+                (
+                    what,
+                    "—".to_string(),
+                    "yourself".to_string(),
+                    sound_text(None),
+                )
+            }
         };
         let found = match o.frequency {
             0 => "not as loot".to_string(),

@@ -562,9 +562,16 @@ impl World {
         }
     }
 
-    /// Ally `id` departs: removed from the world with nothing left behind (no corpse, no pile),
-    /// said when the player sees its cell.
+    /// Ally `id` departs (its time is up): [`World::departs`].
     pub(super) fn ally_departs(&mut self, id: ActorId, events: &mut Vec<Event>) {
+        self.departs(id, events);
+    }
+
+    /// Creature `id` departs: removed from the world with nothing left behind (no corpse, no
+    /// pile, no experience, no kill judged), said when the player sees its cell (its type's
+    /// `depart`, else "fades away"). An ally whose time is up, a speaker a word sends away
+    /// (`words.rs`).
+    pub(super) fn departs(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let Some(actor) = self.state.actors.remove(&id) else {
             return;
         };

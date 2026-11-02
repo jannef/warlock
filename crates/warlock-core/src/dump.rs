@@ -1034,6 +1034,18 @@ fn progress_rows(world: &World) -> Vec<String> {
     if !slain.is_empty() {
         rows.push(format!("slain {}", slain.join(", ")));
     }
+    // The prayer's strain (the priest's, hidden in the game), its face, and what it answers.
+    if let Some(prayer) = world.prayer_state() {
+        let locked = if prayer.locked { " (locked)" } else { "" };
+        let uses: Vec<&str> = prayer.uses.iter().map(|u| u.id()).collect();
+        let answers = prayer.answers.map_or("all".to_string(), |n| n.to_string());
+        rows.push(format!(
+            "prayer strain {}{locked}, face {}, answers {answers}, uses {}",
+            prayer.strain,
+            prayer.face.id(),
+            uses.join(", ")
+        ));
+    }
     // Each stat's pile with the price in force: the rise's, or the drop's for a negative pile.
     let player = world.state().player();
     let rules = world.content().stat_training();
@@ -1214,7 +1226,7 @@ fn ability_rows(view: &PerceptionView<'_>) -> Vec<String> {
                 None => aim_word(a.aim(content)).into(),
             };
             let source = a.source().id().replace('_', " ");
-            format!("{} ({source}): {state}", a.name(content))
+            format!("{} ({source}): {state}", view.ability_name(a))
         })
         .collect()
 }
@@ -2044,6 +2056,16 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             })
             .collect();
         out["callings"] = json!(callings);
+        // The priest's prayer: its strain, lock, face, and uses (ground truth).
+        if let Some(p) = world.prayer_state() {
+            out["prayer"] = json!({
+                "strain": p.strain,
+                "locked": p.locked,
+                "face": p.face.id(),
+                "uses": p.uses.iter().map(|u| u.id()).collect::<Vec<_>>(),
+                "answers": p.answers,
+            });
+        }
     }
     out
 }

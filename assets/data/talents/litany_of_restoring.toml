@@ -1,0 +1,8 @@
+[[talent]]
+id = "litany_of_restoring"
+name = "Litany"
+tree = "class"
+granted = true
+description = "Your prayers reach further still: what sickness took from your body is mended, and what the dead drank from you is given back."
+effects = [{ kind = "prayer", tier = 3, title = { holy = "Litany", dark = "Rite" }, uses = ["restoration"] }]
+systems = ["diseases"]

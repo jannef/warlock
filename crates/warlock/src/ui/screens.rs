@@ -929,8 +929,8 @@ pub(super) fn converse(
         return;
     }
     // An answer to a topic shows there even when nothing is left to ask (a quest handed in to
-    // someone with no other topics).
-    let shown = |talk: &Conversation| !talk.topics.is_empty() || talk.asked.is_some();
+    // someone with no other topics); so does anyone the player may say words to.
+    let shown = |talk: &Conversation| !talk.topics.is_empty() || talk.asked.is_some() || talk.words;
     if last_talk(&game.last_outcome).is_some_and(shown) {
         screens.open(ScreenName::Dialogue);
     }
