@@ -416,7 +416,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     asking for nothing, greyed out while Winded; the **class actives** (`Ability::Class`,
     under Class, §8 "Class abilities": Rage, War cry (greyed "you have not the rage for it"
     until the rage is up), Veteran's wind, Whirlwind, Lay on hands, Smite,
-    Holy radiance, Stunning strike, Quivering palm, Step of the wind, Inspire, Consecrate, Knock; Volley at a cell, aimed as a shot is; Merchant's eye on a thing carried, from the identify list), each from the level its class's table gives it, Smite,
+    Holy radiance, Patient defence, Stunning strike, Quivering palm, Step of the wind, Inspire, Consecrate, Knock; Volley at a cell, aimed as a shot is; Merchant's eye on a thing carried, from the identify list), each from the level its class's table gives it, Smite,
     Stunning strike, Quivering palm, and Knock in a direction, greyed out during their cooldowns (Rage while raging and
     exhausted); throwing one's voice (Class; #235,
     `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's (Throw

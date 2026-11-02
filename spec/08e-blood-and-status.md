@@ -624,7 +624,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`flurry_cost`, in `World::flurry`): with none held there is no second blow, the attack is
     one blow. Step of the wind (level 6) costs 1 and no time, refused before the spend while
     the ascetic is Light-footed already. Stunning strike (level 12, #848) costs 1 and Quivering palm (level 50) 5, neither
-    with a cooldown; with a weapon in hand either is refused before the ki is spent. The ascetic's mana stays theirs, separate.
+    with a cooldown; with a weapon in hand either is refused before the ki is spent. Patient defence (level 18) costs 1 and
+    a wait's time (#849). The ascetic's mana stays theirs, separate.
   - **Inspiration** (the bard's; R4, #252): Inspire (level 18) grants it at 0; each kill credited
     to the bard builds one (to 5), one fades every 180 s (30 base turns), and at 0 it stays,
     held. Inspire spends 3 inspiration **in place of** its 3 mana while the bard holds 3 (then

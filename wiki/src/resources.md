@@ -43,7 +43,7 @@ holds 5 at level 1, Willpower 14 holds 10 at level 25, Willpower 16 holds 17 at 
 [inner calm](talents.md#talent-inner-calm) adds 2. Each second blow of a [flurry](talents.md#talent-flurry) (level 1) spends a point, and with none
 the attack is one blow; [step of the wind](abilities.md#ability-step-of-the-wind) (level 6) spends 1, taking no time; [stunning strike](talents.md#talent-stunning-strike) (level 12) spends 1 and [quivering palm](talents.md#talent-quivering-palm) (level 50) 5. Ki comes back a point every 3 base
 turns (18 seconds), resting too; [perfect self](talents.md#talent-perfect-self) (level 60) brings it back twice as fast, a point
-every 9 seconds.
+every 9 seconds. [Patient defence](abilities.md#ability-patient-defence) (level 18) spends 1, with a wait's time.
 
 The [bard](classes.md#bard)'s **inspiration** comes with [inspire](talents.md#talent-inspire) (level 18), starting at 0. Every kill of your own
 gives one, up to 5, and one fades every 30 base turns (3 minutes); empty, it stays with you.
