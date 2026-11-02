@@ -384,6 +384,9 @@
 #   quivering_palm { status, severity }   the active Quivering palm: a bare-handed blow in a
 #                                 direction (what it costs is the talent's `resource`: five ki)
 #                                 that leaves the status
+#   stunning_strike { status, severity }  the active Stunning strike: Quivering palm's blow
+#                                 (what it costs is the talent's `resource`: a point of ki) that
+#                                 leaves its status (Stunned) where it wounds
 #   The casters' (spec §8 "Class abilities"; the priest's, druid's, wizard's, witch's):
 #   spell_mod { ... }             what it does to its spells through the six hooks (the spell
 #                                 scaling design §7.1; docs/dev/spells.md "The hooks"), each

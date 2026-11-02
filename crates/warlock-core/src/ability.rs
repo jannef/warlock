@@ -900,11 +900,13 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         ClassActive::VeteransWind => mods.veterans_wind.map(|w| w.cooldown).into_iter().collect(),
         ClassActive::LayOnHands => mods.lay_on_hands.map(|h| h.cooldown).into_iter().collect(),
         ClassActive::Smite => mods.smite.map(|s| s.cooldown).into_iter().collect(),
-        // Volley costs Focus, Low blow and Master thief Openings, and Quivering palm Ki instead
+        // Volley costs Focus, Low blow and Master thief Openings, and Stunning strike and
+        // Quivering palm Ki instead
         // (their talents' `resource`, [`short_of`]), as War cry Rage; Lurk only its time.
         ClassActive::Whirlwind
         | ClassActive::WarCry
         | ClassActive::HolyRadiance
+        | ClassActive::StunningStrike
         | ClassActive::QuiveringPalm
         | ClassActive::Lurk
         | ClassActive::LowBlow

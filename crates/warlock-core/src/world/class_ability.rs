@@ -1,7 +1,7 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
 //! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Whirlwind, Lay on hands, Smite, Holy
-//! radiance, Quivering palm (for ki), Inspire (for inspiration or mana, #244, R4), the thief's
+//! radiance, Stunning strike and Quivering palm (for ki, `world/ascetic.rs`), Inspire (for inspiration or mana, #244, R4), the thief's
 //! Lurk and Low blow (`world/thief.rs`), Master thief's finisher (for openings,
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`). The
 //! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
@@ -46,17 +46,15 @@ impl World {
             (_, dir) => dir,
         };
         // An aimed blow with nobody hostile there is refused before anything is spent, and so is
-        // a quivering palm with a weapon in hand, a low blow with nobody there, and a lurk too
-        // late (`thief.rs`).
+        // a blow of the bare hand (Stunning strike, Quivering palm) with a weapon in hand, a low
+        // blow with nobody there, and a lurk too late (`thief.rs`).
         if !self.thief_may(active, dir) {
             return Spent::Nothing;
         }
         if dir.is_some_and(|d| active.strikes() && self.hostile_toward(d).is_none()) {
             return Spent::Nothing;
         }
-        if active == ClassActive::QuiveringPalm
-            && self.state.player().weapon_item(&self.content).is_some()
-        {
+        if active.bare_handed() && self.state.player().weapon_item(&self.content).is_some() {
             self.say("Your hands are not free.");
             return Spent::Nothing;
         }
@@ -77,12 +75,14 @@ impl World {
             (ClassActive::Lurk, _) => self.lurk(events),
             (ClassActive::Consecrate, _) => self.begin_consecrate(),
             (ClassActive::Smite, Some(dir)) => self.smite(dir, events),
+            (ClassActive::StunningStrike, Some(dir)) => self.stunning_strike(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
             (ClassActive::LowBlow, Some(dir)) => self.low_blow(dir, events),
             (ClassActive::MasterThief, Some(dir)) => self.finisher(dir, events),
             (ClassActive::Knock, Some(dir)) => self.knock(dir),
             (
                 ClassActive::Smite
+                | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
                 | ClassActive::LowBlow
                 | ClassActive::MasterThief
@@ -293,29 +293,18 @@ impl World {
     }
 
     /// Quivering palm: a blow of the player's bare hand at the hostile in `dir`; a hit that
-    /// does damage leaves it bleeding (the palm's degrees). Its ki was spent by `use_class`,
-    /// which refused (no time) with a weapon in hand or no hostile there.
+    /// does damage leaves it bleeding (the palm's degrees; `ascetic.rs::palm_blow`). Its ki was
+    /// spent by `use_class`, which refused (no time) with a weapon in hand or no hostile there.
     fn quivering_palm(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
-        let content = self.content.clone();
-        let player = self.state.player;
-        let Some(palm) = self.state.player().talent_mods(&content).quivering_palm else {
+        let Some(palm) = self
+            .state
+            .player()
+            .talent_mods(&self.content)
+            .quivering_palm
+        else {
             return Spent::Nothing;
         };
-        let Some((target, seen)) = self.hostile_toward(dir) else {
-            return Spent::Nothing;
-        };
-        let me = self.state.player();
-        let melee = me.attack_skills(&content, AttackKind::Melee, None);
-        let price = self.attack_price(player, ActionKind::Melee, None, melee);
-        let profile = me.melee(&content);
-        let blow = self.player_blow_with(target, seen, profile, events);
-        let wounded = blow.is_some_and(|b| b.damage > 0);
-        if wounded && self.state.actors.contains_key(&target) {
-            self.afflict(target, palm.status, palm.severity, Some(player), events);
-        }
-        self.after_attack(player, target, super::free_blow::parried(blow), events);
-        self.exert(ActionKind::Melee);
-        Spent::Turn(price)
+        self.palm_blow(dir, palm, None, events)
     }
 
     /// The hostiles beside the player, clockwise from the north, each with whether the player

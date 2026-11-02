@@ -1,0 +1,9 @@
+[[talent]]
+id = "stunning_strike"
+name = "Stunning strike"
+tree = "class"
+granted = true
+description = "A bare-handed blow (an ability) that leaves a wounded foe stunned, off its guard and slow to act, for a point of ki."
+effects = [{ kind = "stunning_strike", status = "stunned", severity = 1 }]
+resource = { id = "ki", cost = 1 }
+systems = ["kicks", "status", "resources"]

@@ -714,6 +714,10 @@ pub enum TalentEffect {
     /// leaves the target `severity` degrees of `status` (what it costs is the talent's
     /// `resource`: Ki).
     QuiveringPalm { status: String, severity: u16 },
+    /// The class active Stunning strike (the ascetic's, #848): an unarmed blow in a direction;
+    /// a hit that wounds leaves the target `severity` degrees of `status` (Stunned; what it
+    /// costs is the talent's `resource`: Ki). Quivering palm's blow with another status.
+    StunningStrike { status: String, severity: u16 },
     /// The active Blaze (a birth sign's, spec §8 "Birth sign"): a burst of `radius` around the
     /// player that does `damage` of kind `damage_type` (an id in `data/damage_types.toml`) to
     /// every creature it reaches but them, melts the ice it reaches, and sets each cell it
@@ -1089,6 +1093,7 @@ impl TalentEffect {
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
             TalentEffect::Smite { .. } => A::Smite,
             TalentEffect::Radiance { .. } => A::HolyRadiance,
+            TalentEffect::StunningStrike { .. } => A::StunningStrike,
             TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
             TalentEffect::Volley { .. } => A::Volley,
             TalentEffect::Lurk { .. } => A::Lurk,
@@ -1487,9 +1492,13 @@ impl TalentEffect {
             TalentEffect::QuiveringPalm {
                 status: id,
                 severity,
+            }
+            | TalentEffect::StunningStrike {
+                status: id,
+                severity,
             } => {
                 if *severity == 0 {
-                    return Err("`quivering_palm`: severity is at least 1".into());
+                    return Err("a palm blow's severity is at least 1".into());
                 }
                 status(id)
             }

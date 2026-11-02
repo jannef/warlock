@@ -91,6 +91,7 @@ mod ally_tests;
 mod ambush;
 mod animated;
 mod appraise;
+mod ascetic;
 mod attacks;
 mod background;
 mod beast_friend;
@@ -1757,6 +1758,8 @@ mod status_tests;
 mod steal_tests;
 #[cfg(test)]
 mod stride_tests;
+#[cfg(test)]
+mod stunning_strike_tests;
 #[cfg(test)]
 mod style_tests;
 #[cfg(test)]

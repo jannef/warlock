@@ -588,8 +588,10 @@ pub struct TalentMods {
     pub smite: Option<Smite>,
     /// The active Holy radiance: its status and the light it sheds while it lasts.
     pub radiance: Option<(StatusId, LightId)>,
+    /// The active Stunning strike, if it has it.
+    pub stunning_strike: Option<PalmBlow>,
     /// The active Quivering palm, if it has it.
-    pub quivering_palm: Option<QuiveringPalm>,
+    pub quivering_palm: Option<PalmBlow>,
     /// Hit points every level past `hp_level` adds beyond a level's own, if it has Hardened.
     pub hardened: Option<i32>,
     /// Percent more maximum hit points (negative: fewer).
@@ -799,9 +801,10 @@ impl Smite {
     }
 }
 
-/// The active Quivering palm (spec §8 "Class abilities").
+/// A bare-handed blow that leaves a wounded foe `severity` degrees of `status`: the actives
+/// Stunning strike and Quivering palm (spec §8 "Class abilities"; `World::palm_blow`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct QuiveringPalm {
+pub struct PalmBlow {
     pub status: StatusId,
     pub severity: u16,
 }
@@ -1005,6 +1008,7 @@ impl TalentMods {
             A::LayOnHands => self.lay_on_hands.is_some(),
             A::Smite => self.smite.is_some(),
             A::HolyRadiance => self.radiance.is_some(),
+            A::StunningStrike => self.stunning_strike.is_some(),
             A::QuiveringPalm => self.quivering_palm.is_some(),
             A::Volley => self.volley.is_some(),
             A::Lurk => self.lurk.is_some(),
@@ -1789,7 +1793,12 @@ impl TalentMods {
             }
             TalentEffect::QuiveringPalm { status, severity } => {
                 if let Some(status) = content.status_id(&status) {
-                    self.quivering_palm = Some(QuiveringPalm { status, severity });
+                    self.quivering_palm = Some(PalmBlow { status, severity });
+                }
+            }
+            TalentEffect::StunningStrike { status, severity } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.stunning_strike = Some(PalmBlow { status, severity });
                 }
             }
             TalentEffect::Hardened { bonus } => {

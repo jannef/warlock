@@ -448,8 +448,9 @@ impl World {
             .filter(|other| other.id != mover && other.level == me.level)
             .filter(|other| other.pos.chebyshev(me.pos) == 1 && other.pos.chebyshev(from) > 1)
             .filter(|other| !other.weapon_skills.is_empty())
-            // Surprised, it fires nothing out of its turn (`surprise.rs`).
-            .filter(|other| !self.surprised(other.id))
+            // Flat-footed (Surprised, Stunned), it fires nothing out of its turn
+            // (`surprise.rs`).
+            .filter(|other| !self.off_guard(other.id))
             .filter(|other| self.stance(mover, other.id) == Stance::Hostile)
             .map(|other| other.id)
             .collect();
