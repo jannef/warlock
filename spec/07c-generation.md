@@ -148,6 +148,41 @@ developer notes (CLAUDE.md, `docs/dev/`).
   refused with one line that names no creature and does not say whether it was seen ("You
   cannot slip away with enemies about."), taking no time. Stairs up under the player are taken
   as ever; on dungeon levels and on the overworld `<` needs stairs.
+- **Overworld encounters** (#804, #805, #807, #806; the design `docs/design/overworld-encounters.md`,
+  its §15 the owner's decisions; `docs/dev/encounters.md`): after every overworld step onto a cell
+  with a local area, in a campaign with tables, with nothing pending, the chance of meeting
+  someone is the destination landscape's rate (basis points an hour, `data/encounters.toml`
+  `[rate]`: road 100, plains and grassland 300, forest and hills 500, dense forest and swamp 800)
+  × the step's hours at the player's speed × the phase's percent (day 100, twilight 150, night
+  200) × each matching table's `rate_percent`, drawn from its own stream (`encounters`). A rest on
+  the overworld rolls `[rest] rate_percent` (25) of it for each turn's time, a forage all of it.
+  The campaign's tables (`campaigns/<id>/data/encounters/*.toml`) match by region, landscape,
+  terrain, phase, weather, a level ceiling (no level floor: the owner), a quest active, done,
+  or never given, a rolled quest's variant, a hidden location revealed or not, and the days since
+  the run began; a matching table may replace others. One entry is drawn by weight from the
+  matching tables' entries whose own conditions hold: a group of counted types, or a `draw` of
+  a branch's population at a danger (`danger::draw`, its odds, uniques and types not hostile to
+  the player left out). A hostile entry rolls two lookouts (2d12 checks on the gameplay stream:
+  the player's Willpower modifier + Spot's and Survival's lookout + Alert's notice against the
+  difficulty + the leader's stalk + cover + the dark + rain; the leader's Willpower modifier +
+  its lookout against the difficulty + the player's stalk + cover + the dark for eyes without
+  darkvision + rain − a carried lit light at night): the player alone, the drop (lie in wait,
+  slip past, fight); both, met (give them the slip, fight); the party alone, ambushed (the area
+  opens at once, the player startled and one action behind); neither, nothing. A sleeping player
+  hears instead (Willpower modifier + hearing + Alert against the difficulty + stalk + rain;
+  made, met; failed, ambushed). A peaceful entry asks hail or pass by, a wildlife one hunt or let
+  them be; an entry's `npc` dialogue is given to the members of its lead's type. The question
+  must be answered: everything else but the free actions is refused. Slipping away is a
+  Dexterity check (+ Survival's evade, + stalk from the drop) against its difficulty + pursuit +
+  awareness, the detour half the step's time again; failed, the fight opens close. Fights open
+  in the cell's local area, the player nearer the edge they came from the better the encounter
+  went (`[positions]`), the party at its distance; a party the player got away from stays there
+  and is met again as the same one. The Ascmearc's tables are its roads, vale, downs (and their
+  night), woods, deep woods, Ascdūn, fen, the cult on the fen while Sister Hild's errand is
+  under way, Black Wystan's archers while the Gilde wants him, and the orcs come down into
+  Burnadenu after thirty days; the pedlar (merchants, he talks: the ways to Cealdhlāw and the
+  ford as a rumoured way, and the news) and the villagers of the vale (their road lines) are its
+  peaceful parties, deer its wildlife.
 - **Generators** (`warlock-core`, integer-only): *rooms* — walled rooms joined along a minimum
   spanning tree plus a few loops by corridors dug as cheapest paths (bends cost extra), with closed
   doors, open doors, or doorways where corridors enter, and wall torches in most rooms; with the

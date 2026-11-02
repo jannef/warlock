@@ -17,6 +17,7 @@
 - [Temperature and ice](temperature.md)
 - [The Ascmearc](ascmearc.md)
 - [The overworld](overworld.md)
+  - [Encounters on the way](encounters.md)
 - [Terrain](terrain.md)
   - [Digging and walls](digging.md)
 - [Doors](doors.md)

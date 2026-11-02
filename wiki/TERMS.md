@@ -89,6 +89,11 @@ above.
 | Overworld, travel | `overworld.md#travel` |
 | Location, hidden location | `overworld.md#locations`, `overworld.md#hidden-locations` |
 | Local area | `overworld.md#local-areas` |
+| Encounter, meeting someone on the way, its chance | `encounters.md`, `encounters.md#the-chance-of-meeting-someone` |
+| Lookout, stalk, having the drop, ambushed, passing each other by | `encounters.md#who-sees-whom` |
+| Lying in wait, slipping past, giving them the slip, hailing, hunting | `encounters.md#deciding-what-to-do` |
+| Camping (resting on the overworld), the sleeper's lookout | `encounters.md#camping-and-foraging` |
+| An encounter table | `encounters.md#the-ascmearcs-encounters` (a table: `encounters.md#encounter-table-ID`) |
 | The Ascmearc and its places | `ascmearc.md#the-places` |
 | Terrain, walls, water, stairs | `terrain.md#walls`, `terrain.md#water`, `terrain.md#stairs` |
 | Digging, wall hardness | `digging.md#digging`, `digging.md#what-breaks-and-what-does-not` |

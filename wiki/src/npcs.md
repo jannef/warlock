@@ -18,6 +18,12 @@ of the [Ascmearc](ascmearc.md), you meet:
 The people of the town are known by their names: `Sister Hild says: "…"`. They belong to the **peaceful folk** (see [Creatures](creatures.md#factions)): they never fight,
 not even if you attack them.
 
+On the roads of the march you may [meet](encounters.md) people too: villagers of the vale on their
+way to market, with a word for the road, and a **[pedlar](creatures.md#creature-pedlar)** with
+his pack, who tells you the news of the roads and the way east to Cealdhlāw and the ford (he
+marks it on your map as Godgifu does). He is one of the merchants (see
+[Creatures](creatures.md#factions)), not of the peaceful folk.
+
 ## Chatting
 
 Press `C` next to someone to chat. If exactly one creature you can see stands next to you, you

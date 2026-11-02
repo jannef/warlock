@@ -3,8 +3,8 @@
 Developer notes for working on this part of Warlock; the design is
 `docs/design/overworld-encounters.md` (its §15, the owner's decisions, overrides the rest), the
 slices #803 (E0, the edge rule: `world/edge_leave.rs`, `docs/dev/overworld.md`), #804 (E1, the
-rules, this file), #805 (E2, the dialog), E3 (the Ascmearc's tables, the wiki page, the spec
-section), #807 (E4, resting and foraging roll too: "Camping and foraging" below), E5 (the
+rules, this file), #805 (E2, the dialog), #806 (E3, the Ascmearc's tables, `draw`, `npc`, and
+`quest_variant`, the pedlar, the wiki page, the spec section), #807 (E4, resting and foraging roll too: "Camping and foraging" below), E5 (the
 pedlar's offer). Keep it current with the code, as CLAUDE.md says.
 
 ## Modules and data
@@ -20,18 +20,43 @@ pedlar's offer). Keep it current with the code, as CLAUDE.md says.
   quarter of the rate an hour of rest). The seven tables are all given or none (none: nobody meets anybody).
 - `campaigns/<id>/data/encounters/*.toml`: `[[table]]` (`id`, `when`, `rate_percent`,
   `replaces`, `[[table.entry]]`: `id`, `name`, `weight`, `when`, `group = [{ creature, count }]`,
-  `lead`, `stance = hostile|peaceful|wildlife`), read by `content/encounter.rs::parse` from
+  `lead`, `stance = hostile|peaceful|wildlife`, `draw = { pool, danger, count }` instead of a
+  `group`, `npc`), read by `content/encounter.rs::parse` from
   `ContentFiles::table("encounters")` less the rules file, after the quests, sorted by campaign
   and id. A table outside every campaign is refused. `when`: `regions`, `landscapes`,
   `terrains`, `phase`, `weather` (`clear`, `overcast`, `rain`, `heavy_rain`), `level = { max }`
-  (no minimum: the owner, Q5), `quest_active`, `quest_done`, `quest_not`, `revealed`, `hidden`,
-  `after_days`, `before_days`. Load checks (`content/encounter_tests.rs`): regions of the
-  campaign's overworld, landscapes, terrain ids, quests of the campaign, hidden locations of its
-  overworld, creature types of the campaign or shared, no unique, a hostile entry of hostile
-  types and a peaceful or wildlife one of types not hostile to the player, the first row's dice
-  at least 1, at most 12 a row, `lead` one of the group, `replaces` another table, entry ids
-  unique in the campaign. Not yet: the design's `draw` (a branch's population) and `npc` rows
-  (E3, with their first use).
+  (no minimum: the owner, Q5), `quest_active`, `quest_done`, `quest_not`, `quest_variant = {
+  quest, variant }` (the rolled quest's record drew that variant, `QuestRecord::roll`, any stage:
+  pair it with `quest_active`; #806, the owner's Q6), `revealed`, `hidden`, `after_days`,
+  `before_days`. Load checks (`content/encounter_tests.rs`): regions of the
+  campaign's overworld, landscapes, terrain ids, quests of the campaign, a variant of that quest,
+  hidden locations of its overworld, creature types of the campaign or shared, no unique, a
+  hostile entry of hostile types and a peaceful or wildlife one of types not hostile to the
+  player, the first row's dice at least 1, at most 12 a row, `lead` one of the group,
+  `replaces` another table, entry ids unique in the campaign; a `draw` only on a hostile entry,
+  without a `group` or a `lead`, its pool a branch of the campaign with a population, danger 1 to
+  99, a count of 1 to 12; an `npc` only on a peaceful entry, a dialogue `npc = ID` of the
+  campaign's.
+- **`draw`** (`EncounterDraw`; `World::draw_members`): the count's dice, then `danger::draw` per
+  member on the `encounters` stream, from the branch's `population` and `generic` lists
+  (`Content::candidates`, the uniques met left out) with its odds, uniques and types not hostile
+  to the player left out (as a hoard's guardians); a draw that finds nobody meets nobody. The
+  first member drawn leads (`EncounterEntry::lead` is `None`; `World::lead_of`: the entry's lead,
+  else the first member rolled, else a known party's first actor).
+- **`npc`**: `encounter_area.rs` gives it (`CreatureSpawn::npc`) to every member of the lead's
+  type as the party is made, so `Content::dialogue_of` prefers that dialogue (the villagers on the
+  road speak `road_folk`'s lines, not the town's). The dialogue has no `name`: they stay
+  "villager".
+- The Ascmearc (#806): `campaigns/ascmearc/data/encounters/`, a file per table (`roads`, `vale`,
+  `downs` with `downs_night`, `woods`, `deep_woods`, `ascdun`, `fen` with `fen_cult`,
+  `wanted_wystan`, `orcs_come_down`); the pedlar (`data/creatures/pedlar.toml`, faction
+  `merchants`) and the road's dialogues (`data/dialogue/road.toml`: the pedlar's lines, mutter,
+  `rumours` with a `route` from Cealdhlāw to the ford, and `news`; `road_folk` for the
+  villagers). Every land cell with a local area but Grægweall's matches a table by day (a test).
+  Adapted from the design's §7.4: the boggle (of the fey courts, not hostile to everyone) is a
+  bog body; `giant rats` are the `rat` type; the footpads' night bowmen and the orcs' night wargs
+  are separate night rows (a group row has no conditions); the vale and the woods also cover the
+  open ground and the copses of the regions the design left without a table.
 - `assets/data/skills.toml`: Spot's and Survival's `lookout` (and `Use::Lookout` marks on both),
   Stealth's `stalk`, Survival's `evade` (`skills::Effect::{Lookout, Stalk, Evade}`, read only in
   `world/encounter.rs`). Alert (`talents/alert.toml`) is read once more there (its `notice`) and
@@ -134,7 +159,13 @@ the player's next action, not by this one), then perception.
 
 `WorldState::encounters` (`Option<Rng>`), `encounter` (`Option<Pending>`), `parties`
 (`Vec<Party>`), each left out while empty, so runs without encounters hash as before. A campaign
-without tables (the showcase, the Ascmearc until E3) draws nothing: no replay moves. The
+without tables (the showcase) draws nothing: no replay moves. A run of the Ascmearc draws the
+rate roll on every overworld step onto a local area's cell from `encounters` alone, so its
+gameplay stream and hash change only from a step that meets someone. Tests that walk the
+Ascmearc's overworld for something else (the ways into its dungeons, the lairs) load without
+the tables (`ContentFiles::remove_encounter_tables`, test-only), and so do fixtures that make
+peace with every faction (`fixture_factions::make_peace`: a hostile entry's types must be
+hostile). The
 `Underway` field on `World` (the step's price and the area to open) is resolved within the
 action and never saved.
 
@@ -164,7 +195,13 @@ roll, the choices by outcome, pass by makes nothing, the positions and awareness
 their order from the edge, the ambushing party unaware and in debt, the ambushed player
 startled once, evade both ways, the known party, a save mid-question, replays through every
 outcome, the dumps; #807: no draws resting without tables, a share, or the overworld, a rest stopped
-and never the drop for a sleeper, met and ambushed, a forage cut short, camping replays); `magic/tests.rs::skill_reader` names `encounter.rs` for the three benefits. The app:
+and never the drop for a sleeper, met and ambushed, a forage cut short, camping replays);
+`world/ascmearc_encounter_tests.rs` (#806: the regions and no level gates, every land cell
+covered, the road's rate, a replay through a forced encounter of each outcome and kind, the
+pedlar's topics and his way marked, the villagers' npc, a `draw`'s members, the variant, quest,
+and days conditions); `content/encounter_tests.rs::draws_npcs_and_quest_variants_are_checked`;
+the wiki's `xtask/src/wiki/encounters.rs` (`wiki/src/encounters.md`: rates, checks, odds,
+ladders, positions, the Ascmearc's tables); `magic/tests.rs::skill_reader` names `encounter.rs` for the three benefits. The app:
 `ui/screen_snapshots.rs::encounters_as_text` (`encounter-drop`, with Esc and `1` pressed over it,
 `encounter-met`, `encounter-peaceful`, `encounter-wildlife`, on a fixture table, the dialog as a
 load opens it) and `an_encounter_row_answers_it`; `dialog_screen.rs`'s required dialog.

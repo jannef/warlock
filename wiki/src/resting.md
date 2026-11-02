@@ -52,7 +52,9 @@ A rest stops early when:
   and someone [muttering](npcs.md#muttering) to themselves, is written to the message line but lets you rest on, or
 - you get [hungrier](hunger.md#how-hungry-you-are): [hungry](hunger.md#how-hungry-you-are), [weak](hunger.md#how-hungry-you-are), [fainting](hunger.md#how-hungry-you-are), or [starving](hunger.md#how-hungry-you-are) ("You are getting hungry."), or you faint
   from hunger. Resting burns [food](food.md#eating) like any other time (see [Hunger](hunger.md)); a full stomach
-  settling ("You no longer feel satiated.") lets you rest on.
+  settling ("You no longer feel satiated.") lets you rest on, or
+- on the [overworld](overworld.md#travel), someone finds your camp (see
+  [Camping and foraging](encounters.md#camping-and-foraging)).
 
 So resting next to a creature walking back and forth behind a [door](doors.md) is interrupted each time it
 comes back into [earshot](hearing.md). A [creature](creatures.md) already in view when you start does not stop the rest by
