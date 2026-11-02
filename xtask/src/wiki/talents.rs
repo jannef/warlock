@@ -5,8 +5,7 @@ use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Faced, Need, OverTime, PrayerUse, Role, SignActive, SongOn, SpellData, SpellModSpec,
-    StatusId,
-    TalentDef, TalentEffect, TreeId,
+    StatusId, TalentDef, TalentEffect, TreeId,
 };
 use warlock_core::noise::SONG_NOISE;
 
