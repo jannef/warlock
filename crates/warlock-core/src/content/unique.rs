@@ -5,7 +5,9 @@
 //! `objects` and `carry`, and `wield`/`wear` by the same name, a gear line, a kit, a shop's or a
 //! scenario's `carry`, a quest reward's `items`); [`Uniques::place`] makes it, and refuses a
 //! second placement anywhere in the content (a load error), so with pinned vaults and unique
-//! creatures a run holds it at most once with no save state. Loot never rolls one.
+//! creatures a run holds it at most once with no save state. Loot never rolls one. A trader's
+//! offer may name uniques instead (`content/offer.rs`, #808): those are made at run time, once
+//! a run each (`WorldState::uniques_offered`), and no other content may place them.
 //!
 //! The item is [`Magic`] of rarity rare with its name, plus [`Magic::unique`] (its id, saved),
 //! by which its power and lore are found again ([`Content::unique`]).
@@ -84,6 +86,11 @@ impl Uniques {
 
     pub fn get(&self, id: &str) -> Option<&UniqueDef> {
         self.ids.get(id).map(|&i| &self.defs[i])
+    }
+
+    /// Whether content has placed unique item `id` (`false` for an unknown id).
+    pub(super) fn is_placed(&self, id: &str) -> bool {
+        (self.ids.get(id)).is_some_and(|&i| self.placed[i].load(Ordering::Relaxed))
     }
 
     /// The unique item `id` as a placement makes it; an error for an unknown id or one already

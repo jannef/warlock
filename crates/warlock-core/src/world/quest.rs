@@ -575,6 +575,7 @@ impl World {
                 name: def.name.clone(),
                 price: None,
                 items: None,
+                ware: None,
             };
             let active = quests.is_active(def);
             if def.giver == speaker {

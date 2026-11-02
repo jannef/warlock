@@ -1,0 +1,13 @@
+# The Brosinga mene (Beowulf 1199: "the Brosings' necklace", the finest neck-ring under heaven):
+# one of the pedlar's three, found only in his offer and very rarely (data/dialogue/road.toml's
+# `[dialogue.offer]`; #808, docs/design/overworld-encounters.md §15 Q7). After ADOM's black
+# torc: fire and frost turned, a quicker step, a harder skin, and no venom that takes. The
+# whole body's ward, for anyone.
+[[unique]]
+id = "brosinga_mene"
+name = "The Brosinga Mene"
+object = "gold_amulet"
+affixes = ["shimmering:5", "oaken:5", "hale:11", "of_the_salamander:12", "of_warmth:12", "of_the_wind:7"]
+level = 12
+power = { ward = "poisoned", message = "The venom finds no hold on you.", phrase = "No venom takes hold of its wearer." }
+lore = "Hama carried it off to the bright city, and nobody since has said where it went."

@@ -3,7 +3,7 @@
 #
 # The pedlar (docs/design/overworld-encounters.md §8): a travelling hawker of small wares, met on
 # the march's roads (the `roads` encounter table, data/encounters/roads.toml). A merchant, at
-# peace with everyone (his trade is a later slice, #808). He talks: the news of the
+# peace with everyone. He sells one thing at a time (his `[dialogue.offer]`, #808). He talks: the news of the
 # roads, and the ways to Cealdhlāw and the ford, which his telling marks on the player's map
 # (data/dialogue/road.toml). A pack of wares on his back, a staff for the lonely stretches.
 [[creature]]

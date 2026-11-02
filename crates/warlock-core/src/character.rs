@@ -1061,6 +1061,13 @@ mod tests {
         files.edit_table("races", untrained);
         files.edit_table("classes", untrained);
         files.edit_table("creatures", untrained);
+        // A trader's offer names no unique then (the pedlar's, #808).
+        files.edit_table("dialogue", |text| {
+            let kept: Vec<&str> = (text.lines())
+                .filter(|l| !l.starts_with("uniques = "))
+                .collect();
+            kept.join("\n")
+        });
         // The creatures that carry a unique carry its plain base item instead.
         let full = content();
         let bases: Vec<(String, String)> = (full.uniques())

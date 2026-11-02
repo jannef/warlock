@@ -1,0 +1,12 @@
+# Grendles grāpe (Beowulf 836: "Grendel's grip", the claw torn off and hung under Heorot's roof):
+# one of the pedlar's three, found only in his offer and very rarely (data/dialogue/road.toml's
+# `[dialogue.offer]`; #808). A fighter's gauntlets of black-torc power: a giant's strength and
+# toughness, quicker and surer blows that cut deeper, and footing no blow can shake.
+[[unique]]
+id = "grendles_grape"
+name = "Grendles Grāpe"
+object = "gauntlets"
+affixes = ["accurate:5", "vicious:3", "hardened:4", "of_the_bear:6", "of_celerity:11", "of_the_ox:5"]
+level = 12
+power = { ward = "staggered", message = "You keep your feet.", phrase = "No blow staggers its wearer." }
+lore = "The fingers close a little tighter than the hand inside them does."

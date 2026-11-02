@@ -180,7 +180,7 @@ fn the_pedlar_hailed_talks_and_tells_the_ways() {
     assert!(said(&w, "You go to meet a pedlar."));
     let pedlar = (party(&w).first().map(|a| a.id)).expect("the pedlar");
     let topics: Vec<String> = (w.topics(pedlar).into_iter()).map(|t| t.id).collect();
-    assert_eq!(topics, ["rumours", "news"]);
+    assert_eq!(topics, ["rumours", "news", "wares"]);
     // Beside him: the ways he tells mark the map.
     let me = w.player_pos();
     let level = &w.state.levels[&w.state.current_level];

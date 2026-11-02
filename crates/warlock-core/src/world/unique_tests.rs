@@ -132,7 +132,7 @@ fn a_unique_is_made_from_its_table_rare_with_its_name_and_affixes() {
         ]
     );
     assert_eq!(def.stack.count, 1);
-    // The four, each with its power.
+    // The criminals' four and the pedlar's three (#808), each with its power.
     let powers: Vec<(&str, &str)> = (content.uniques())
         .filter(|u| u.stack.magic().is_some_and(|m| m.level == 12))
         .map(|u| {
@@ -147,6 +147,9 @@ fn a_unique_is_made_from_its_table_rare_with_its_name_and_affixes() {
     assert_eq!(
         powers,
         [
+            ("brosinga_mene", "ward"),
+            ("eorcanstan", "ward"),
+            ("grendles_grape", "ward"),
             ("high_toby", "inflict"),
             ("turncoat", "ward"),
             ("unhalwed_bedes", "vision"),

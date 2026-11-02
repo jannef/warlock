@@ -71,6 +71,7 @@ pub mod mimic;
 mod mimic_roster_tests;
 mod names;
 mod object;
+mod offer;
 #[cfg(test)]
 mod orc_roster_tests;
 mod outcome;
@@ -226,6 +227,7 @@ pub use names::{NameLists, Names};
 pub use object::{
     MAX_BONUS, MAX_DIG, MAX_PLACED, MAX_VALUE, ObjectDef, ObjectId, article, counted, weapon_noun,
 };
+pub use offer::TradeOffer;
 pub use outcome::{
     Amount, Explosion, Harmful, Near, OutcomeDef, OutcomeEffect, OutcomeKind, OutcomeSummon,
     OutcomeTable, OutcomeTables, OutcomeTier, Work,
@@ -1198,6 +1200,7 @@ impl Content {
         content.encounter_tables = encounter::parse(files.table("encounters"), &content)?;
         content.validate()?;
         content.check_topic_routes()?;
+        offer::check_placements(&content)?;
         content.check_campaigns()?;
         Ok(content)
     }

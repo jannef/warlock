@@ -1417,6 +1417,26 @@ fn actor_rows(world: &World) -> Vec<String> {
                 Some(entry) => format!("{court}; of encounter {entry}"),
                 None => court,
             };
+            // A trader's offer, once made (`world/wares.rs`): the item and its price, or sold.
+            let court = match world.state().wares.get(&a.id) {
+                Some(w) => match &w.item {
+                    Some(item) => {
+                        let item = item.describe_truth(content);
+                        format!("{court}; wares {item} for {} gold", w.price)
+                    }
+                    None => format!("{court}; wares sold ({} gold)", w.price),
+                },
+                None => court,
+            };
+            // The traders' uniques the run has offered (each once).
+            let court = match a.id == player && !world.state().uniques_offered.is_empty() {
+                true => {
+                    let offered: Vec<&str> =
+                        world.state().uniques_offered.iter().map(String::as_str).collect();
+                    format!("{court}; uniques offered {}", offered.join(", "))
+                }
+                false => court,
+            };
             let talk = if a.talk.is_new() {
                 String::new()
             } else {
