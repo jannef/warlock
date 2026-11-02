@@ -491,12 +491,15 @@ pub struct HiddenLocation {
     pub name: String,
 }
 
-/// A named place on a cell of a hand-made level (a legend's `name`): a location, a landmark.
-/// Look mode names it on a cell the player sees or remembers; it is no secret.
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// A named place on a cell of a hand-made level or a vault (a legend's `name`): a location, a
+/// landmark, an inscribed statue. Look mode names it on a cell the player sees or remembers; it
+/// is no secret.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Place {
     pub name: String,
-    /// A sentence look mode adds about it.
+    /// A sentence look mode adds about it (and the line an announced terrain's arrival says
+    /// after its description, `world/feature.rs`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
 }
 
@@ -536,6 +539,7 @@ pub struct LevelTemplate {
     /// terrain there is the plain terrain each shows until a quest reveals it.
     pub hidden: BTreeMap<Pos, HiddenLocation>,
     /// Named places, by position (a legend's `name`); a way in on such a cell goes by its name.
+    /// A generated level's are its vaults', stamped with them (`mapgen/vault.rs`).
     pub places: BTreeMap<Pos, Place>,
     /// Named areas, first match wins.
     pub regions: Vec<Region>,

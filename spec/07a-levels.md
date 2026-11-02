@@ -120,7 +120,10 @@ Rule: **hand-authored data is TOML; machine-written data is JSON.**
   mountain pass, Beorggeat." and the note after); a way in on that cell goes by the name (look
   mode's "leading to Cēaptūn", "The way into Cēaptūn is here.", "You enter …"), even while it
   leads nowhere yet. A `name` beside a `hidden` (it would give the place away), an empty one,
-  or a `note` without a `name` is a content error.
+  or a `note` without a `name` is a content error. A vault's named places are stamped with it
+  into the generated level (`LevelState::places`, saved and hashed, left out while empty): the
+  Ascmearc's `hunters_statue`, pinned on Fyrdelf's eleventh floor, has a worn statue (terrain
+  `statue`, announced from beside it, §6) whose note is an inscription in the old tongue.
   State: `LevelState::hidden` (ground truth: the unrevealed ones, by cell) and
   `WorldState::revealed` (the ids revealed so far), both saved and hashed and left out while
   empty; a save naming a location the content does not have is refused. Only the reveal and the
