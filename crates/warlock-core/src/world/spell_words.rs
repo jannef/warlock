@@ -1,6 +1,7 @@
 //! A spell's numbers in the words the player reads them (the spell scaling design §11, decision
 //! 11: the owner's one exception to hidden numbers, a spell's roll shown as a weapon's is): its
-//! roll with its damage type or "healed" (`4d6 fire`, `3d6 healed`), its reach (`range 11`,
+//! roll with its damage type, "healed", or a summon's "called" (`4d6 fire`, `3d6 healed`,
+//! `1d2 called`), its reach (`range 11`,
 //! `radius 2`), and a reroll (`Your 1s are rolled again.`). The abilities menu, the wand's
 //! description, and the `spells` dump all say them so; built from what the caster has, never a
 //! hidden number of anyone else's.
@@ -40,6 +41,7 @@ impl Actor {
 pub fn roll_words(content: &Content, spell: &SpellData, roll: Roll) -> SpellRoll {
     let what = match spell.damage_type {
         Some(kind) => content.damage_type(kind).name.as_str(),
+        None if spell.kind == crate::content::SpellPurpose::Summon => "called",
         None => "healed",
     };
     SpellRoll {

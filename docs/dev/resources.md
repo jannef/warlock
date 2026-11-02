@@ -107,7 +107,9 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   ability grant the pool with Raging (`World::rage`); the cooldown is Raging and what it `follows`
   (`ability.rs::class_cooldown`). The pool's own `builds` (#842) are `struck` 1, `critical` 2,
   and `kill` 3, and its `lacking` is "you have not the rage for it"; Exhausted `eases = 150`,
-  and Hardened is the level-50 row beside Mighty rage. Blood frenzy is a `resource_build`, Mighty rage a
+  and Hardened is the level-50 row beside Mighty rage. Battle-scarred, Headlong, and Blood
+  frenzy's attack price read the rage through the talents' `while = "raging"` (#843,
+  `docs/dev/progression.md` "The hooks"). Blood frenzy is also a `resource_build`, Mighty rage a
   `resource_max` beside its `raise_percent` and `status_eases`, Unstoppable `unstoppable {
   statuses, cost }`: `World::unstoppable` spends `cost` rage for the last hit point
   (`spend_resource`, so the rage ends at 0), and `World::live` numbs the statuses while Raging
@@ -143,7 +145,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   `resources.toml` (file order is save order), `short = "Sta"`, `max = 10`, `max_from = { stat =
   "toughness", per_levels = 10, least = 5 }`, `regenerates = 12`, resting too, starting full.
   The granted talent `trained_wind` (`grants_resource`) is in the level-1 row of the warrior's,
-  berserker's, paladin's, ranger's, monk's, thief's, and bard's tables (`data/classes/`), so
+  berserker's, paladin's, ranger's, ascetic's, thief's, and bard's tables (`data/classes/`), so
   `class::grant` holds it at creation and `World::grant_class` on load. The weapon actives
   spend it (#564, `world/weapon_active.rs::pay_active`, through `spend_resource`, after their
   refusals); its `lacking` words ("you are short of breath") are how `Unavailable::Short` reads

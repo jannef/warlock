@@ -12,7 +12,7 @@ use super::affix::Once;
 use super::level::OneOrMany;
 use super::{
     Build, CombatStance, Content, ContentError, ItemKind, MAX_ITEM_LEVEL, MAX_LEVEL, MAX_RANK,
-    MAX_RESOURCE, ResourceId, Role, WeaponSkillId, duplicate_id,
+    MAX_RESOURCE, ResourceId, Role, StatusId, WeaponSkillId, duplicate_id,
 };
 use crate::alignment::Requirement;
 use crate::dice::Dice;
@@ -212,8 +212,6 @@ pub enum TalentEffect {
     Dodge { value: i32 },
     /// Natural armour: added to the actor's own, whatever the best item gives.
     Natural { value: i32 },
-    /// Natural armour as `natural`, only while it wears no body armour (Thick hide).
-    NaturalUnarmoured { value: i32 },
     /// Damage added to every melee blow (the main hand's and the off hand's).
     MeleeDamage { value: i32 },
     /// Damage added to every attack it makes while below a third of its hit points (Ferocity).
@@ -223,13 +221,27 @@ pub enum TalentEffect {
     /// A natural 2 on an attack roll (a fumble) is rolled again, once.
     RerollFumble,
     /// What the holder's allies get (spec §8 "Allies": Beast-bond): to-hit on their attacks
-    /// and Protection, read through their master (`world/ally.rs`).
+    /// and Protection, read through their master (`world/ally.rs`); and what the holder's summon
+    /// spells do (`world/summon_spell.rs`): `count` more come every call, a call lasts
+    /// `duration_percent` longer, `lasting` calls stay until slain, `most` more of each call's
+    /// are kept at once.
     AllyMod {
         #[serde(default)]
         to_hit: i32,
         #[serde(default)]
         protection: i32,
+        #[serde(default)]
+        count: i32,
+        #[serde(default)]
+        duration_percent: i32,
+        #[serde(default)]
+        lasting: bool,
+        #[serde(default)]
+        most: i32,
     },
+    /// The summon draw's bias (the owner's Q9 of #828): a creature of a summon spell's pool that
+    /// carries `tag` is `weight` times as likely to come (0: it never comes while another may).
+    SummonBias { tag: String, weight: u32 },
     /// Each melee blow at the creature its last blow was at, in a row (its own turn or the one
     /// before), is +1 to hit more, to `max` (Relentless; `World::streak`); with `damage_every`
     /// (Relentless fury), every that many blows before it in the streak add +1 damage too.
@@ -374,7 +386,7 @@ pub enum TalentEffect {
     /// A meal never leaves it Bloated: what does not fit below Bloated is lost (Gourmand).
     NoBloating,
     /// Hunger never weakens it: Weak, Fainting, and Starving take nothing off its Strength and
-    /// Dexterity (`Actor::penalty`), and it never faints (`World::faint`; Ascetic). Starving
+    /// Dexterity (`Actor::penalty`), and it never faints (`World::faint`; Long fast). Starving
     /// still costs hit points.
     NoHungerWeakness,
     /// A fresh corpse's stat training marks and chances to widen a potential, this percent more
@@ -821,6 +833,8 @@ pub enum TalentEffect {
     DigPercent { value: i32 },
     /// Its blows with a two-handed weapon cost this percent more (negative: cheaper).
     TwoHandedPrice { value: i32 },
+    /// Its melee attacks cost this percent more (negative: cheaper; Blood frenzy while raging).
+    AttackPricePercent { value: i32 },
     /// A critical it confirms in melee leaves the target suffering `status` (one degree).
     CriticalStatus { status: String },
     /// A creature it hits in melee suffers `status` (one degree, caused by it), and is held by
@@ -869,7 +883,7 @@ pub enum TalentEffect {
     SpeedPercent { value: i32 },
     /// Its steps cost this percent more (negative: cheaper), only while it wears no body armour
     /// (if `unarmoured`), is Unburdened (if `unburdened`), and holds no shield (if `no_shield`):
-    /// Fast movement, Fleet.
+    /// Fleet; Headlong, while raging.
     StepPercent {
         value: i32,
         #[serde(default)]
@@ -1088,6 +1102,29 @@ impl TalentEffect {
         })
     }
 
+    /// Whether it may carry a `while` condition: only a kind the one sum reads
+    /// ([`crate::talent::Talents::mods`]), never one read off the talent's effects directly (an
+    /// active, a spell given, what is rolled or handed down once when it is taken).
+    fn may_be_conditional(&self) -> bool {
+        self.active().is_none()
+            && !matches!(
+                self,
+                TalentEffect::SecondWind { .. }
+                    | TalentEffect::BloodMagic { .. }
+                    | TalentEffect::Spell { .. }
+                    | TalentEffect::SpellMod(_)
+                    | TalentEffect::WeaponStamina { .. }
+                    | TalentEffect::TrainSkill { .. }
+                    | TalentEffect::ExtraPick { .. }
+                    | TalentEffect::StartingGold { .. }
+                    | TalentEffect::StartingGems { .. }
+                    | TalentEffect::Heirloom { .. }
+                    | TalentEffect::TerrainAs { .. }
+                    | TalentEffect::Scent { .. }
+                    | TalentEffect::NightSight { .. }
+            )
+    }
+
     /// Whether the numbers are within what the rules expect, and the statuses and damage types
     /// it names are in `content` (content without statuses or damage types has nothing to check
     /// them by: they stay, and do nothing).
@@ -1137,7 +1174,6 @@ impl TalentEffect {
         match self {
             TalentEffect::Dodge { value }
             | TalentEffect::Natural { value }
-            | TalentEffect::NaturalUnarmoured { value }
             | TalentEffect::Hardened { bonus: value }
             | TalentEffect::MeleeDamage { value }
             | TalentEffect::Hearing { value }
@@ -1213,12 +1249,40 @@ impl TalentEffect {
                     _ => Ok(()),
                 }
             }
-            TalentEffect::AllyMod { to_hit, protection } => {
-                if *to_hit == 0 && *protection == 0 {
+            TalentEffect::AllyMod {
+                to_hit,
+                protection,
+                count,
+                duration_percent,
+                lasting,
+                most,
+            } => {
+                if *to_hit == 0
+                    && *protection == 0
+                    && *count == 0
+                    && *duration_percent == 0
+                    && !*lasting
+                    && *most == 0
+                {
                     return Err("`ally_mod`: gives nothing".into());
                 }
                 for v in [to_hit, protection].into_iter().filter(|v| **v != 0) {
                     bonus(*v)?;
+                }
+                if !(0..=6).contains(count) || !(0..=6).contains(most) {
+                    return Err("`ally_mod`: count and most are 0 to 6".into());
+                }
+                if !(0..=500).contains(duration_percent) {
+                    return Err("`ally_mod`: duration_percent is 0 to 500".into());
+                }
+                Ok(())
+            }
+            TalentEffect::SummonBias { tag, weight } => {
+                if tag.trim().is_empty() || *weight == 1 || *weight > 100 {
+                    return Err(
+                        "`summon_bias`: a tag, and a weight of 0 or 2 to 100 (1 changes nothing)"
+                            .into(),
+                    );
                 }
                 Ok(())
             }
@@ -1748,6 +1812,7 @@ impl TalentEffect {
             | TalentEffect::RoomPacePercent { value }
             | TalentEffect::SurpriseEase { value }
             | TalentEffect::TwoHandedPrice { value }
+            | TalentEffect::AttackPricePercent { value }
             | TalentEffect::WeaponEnergyPercent { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
@@ -2164,6 +2229,8 @@ impl Needs {
 pub struct Rank {
     pub needs: Needs,
     pub effects: Vec<TalentEffect>,
+    /// Its effects that count only while the holder suffers a status (`while`).
+    pub effects_while: Vec<(StatusId, TalentEffect)>,
 }
 
 /// A talent.
@@ -2180,6 +2247,9 @@ pub struct TalentDef {
     pub needs: Needs,
     /// What every rank held adds.
     pub effects: Vec<TalentEffect>,
+    /// What every rank held adds only while the holder suffers a status (`while = "raging"`:
+    /// Battle-scarred's rage half), apart from the plain effects: only the one sum reads them.
+    pub effects_while: Vec<(StatusId, TalentEffect)>,
     /// Its ranks, first to last (at least one).
     pub ranks: Vec<Rank>,
     /// The systems it touches (the coverage list).
@@ -2225,6 +2295,16 @@ impl TalentDef {
     pub fn effects_at(&self, rank: u8) -> impl Iterator<Item = TalentEffect> + '_ {
         let own = (self.ranks.get(usize::from(rank.max(1)) - 1)).map(|r| r.effects.as_slice());
         (self.effects.iter().cloned()).chain(own.into_iter().flatten().cloned())
+    }
+
+    /// What holding `rank` (1 first) adds while its holder suffers a status, each with that
+    /// status: the per-rank ones, then that rank's own ([`TalentDef::effects_while`]).
+    pub fn effects_while_at(
+        &self,
+        rank: u8,
+    ) -> impl Iterator<Item = (StatusId, TalentEffect)> + '_ {
+        let own = (self.ranks.get(usize::from(rank.max(1)) - 1)).map(|r| &r.effects_while);
+        (self.effects_while.iter().cloned()).chain(own.into_iter().flatten().cloned())
     }
 
     /// Whether its first rank may be taken by anyone: no prerequisites at all.
@@ -2452,7 +2532,7 @@ struct TalentSpec {
     #[serde(default)]
     needs: NeedsSpec,
     #[serde(default)]
-    effects: Vec<TalentEffect>,
+    effects: Vec<EffectSpec>,
     #[serde(default)]
     rank: Vec<RankSpec>,
     #[serde(default)]
@@ -2473,13 +2553,52 @@ struct CostSpec {
     cost: u16,
 }
 
+/// One effect as written: its kind and fields, and the status it counts only under, if any
+/// (`while = "raging"`; the effect's own fields are checked by [`TalentEffect`]).
+#[derive(Deserialize)]
+struct EffectSpec {
+    #[serde(rename = "while", default)]
+    under: Option<String>,
+    #[serde(flatten)]
+    effect: TalentEffect,
+}
+
+/// `effects` split into the plain ones and those under a status, each checked; a `while` on
+/// content without statuses has nothing to check it by, and its effect does nothing.
+fn split_effects(
+    specs: Vec<EffectSpec>,
+    content: &Content,
+    choice: Option<Choice>,
+) -> Result<(Vec<TalentEffect>, Vec<(StatusId, TalentEffect)>), String> {
+    let (mut plain, mut under) = (Vec::new(), Vec::new());
+    for spec in specs {
+        spec.effect.check(content, choice)?;
+        let Some(name) = spec.under else {
+            plain.push(spec.effect);
+            continue;
+        };
+        if !spec.effect.may_be_conditional() {
+            return Err(format!(
+                "`while = \"{name}\"` is only for an effect the talents' sum reads, not {:?}",
+                spec.effect
+            ));
+        }
+        match content.status_id(&name) {
+            Some(status) => under.push((status, spec.effect)),
+            None if content.status_ids().next().is_none() => {}
+            None => return Err(format!("`while` names an unknown status `{name}`")),
+        }
+    }
+    Ok((plain, under))
+}
+
 #[derive(Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 struct RankSpec {
     #[serde(default)]
     needs: NeedsSpec,
     #[serde(default)]
-    effects: Vec<TalentEffect>,
+    effects: Vec<EffectSpec>,
 }
 
 #[derive(Deserialize, Default)]
@@ -2903,10 +3022,8 @@ pub(super) fn parse<'a>(
         if needs.talents.iter().any(|(t, _)| *t == TalentId(i as u16)) {
             return Err(err("needs itself".into()));
         }
-        for effect in &spec.effects {
-            effect.check(content, spec.choice).map_err(err)?;
-        }
-        let effects = spec.effects;
+        let (effects, effects_while) =
+            split_effects(spec.effects, content, spec.choice).map_err(err)?;
         for effect in &effects {
             if let TalentEffect::Spell { spell } = effect
                 && !spell_ids.insert(spell.clone())
@@ -2921,18 +3038,19 @@ pub(super) fn parse<'a>(
             if own.talents.iter().any(|(t, _)| *t == TalentId(i as u16)) {
                 return Err(err(format!("rank {}: needs itself", n + 1)));
             }
-            for effect in &rank.effects {
-                effect
-                    .check(content, spec.choice)
-                    .map_err(|m| err(format!("rank {}: {m}", n + 1)))?;
-            }
+            let (own_effects, own_while) = split_effects(rank.effects, content, spec.choice)
+                .map_err(|m| err(format!("rank {}: {m}", n + 1)))?;
             rank_defs.push(Rank {
                 needs: own,
-                effects: rank.effects,
+                effects: own_effects,
+                effects_while: own_while,
             });
         }
         rank_defs.resize_with(usize::from(count), Rank::default);
-        if effects.is_empty() && rank_defs.iter().all(|r| r.effects.is_empty()) {
+        if effects.is_empty()
+            && effects_while.is_empty()
+            && (rank_defs.iter()).all(|r| r.effects.is_empty() && r.effects_while.is_empty())
+        {
             return Err(err("does nothing: it needs `effects`".into()));
         }
         if spec.flaw && !spec.granted {
@@ -2977,6 +3095,7 @@ pub(super) fn parse<'a>(
             description: spec.description,
             needs,
             effects,
+            effects_while,
             ranks: rank_defs,
             systems,
             granted: spec.granted,
@@ -3158,6 +3277,52 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
         assert!(e.contains("which is still in the data"), "{e}");
         let e = err(load(&with("merged = { hale = \"robust\" }"), &talents));
         assert!(e.contains("into an unknown talent `robust`"), "{e}");
+    }
+
+    #[test]
+    fn an_effect_under_a_status_is_kept_apart_and_checked() {
+        let with = |effects: &str| {
+            let text = format!(
+                "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\ndescription = \"d\"\n\
+                 systems = [\"hit_points\"]\neffects = [{effects}]\n"
+            );
+            load(
+                SETTINGS,
+                &[("healthy", HEALTHY), ("hardy", HARDY), ("x", &text)],
+            )
+        };
+        let content = with(
+            "{ kind = \"dodge\", value = 1 }, { kind = \"dodge\", value = 2, while = \"raging\" }",
+        )
+        .expect("loads");
+        let book = content.talents();
+        let x = book.get(book.id("x").expect("x"));
+        let raging = content.status_id("raging").expect("raging");
+        assert_eq!(x.effects, vec![TalentEffect::Dodge { value: 1 }]);
+        assert_eq!(
+            x.effects_while,
+            vec![(raging, TalentEffect::Dodge { value: 2 })]
+        );
+        // Alone, it is something to do.
+        with("{ kind = \"dodge\", value = 2, while = \"raging\" }").expect("loads");
+        assert!(
+            err(with("{ kind = \"dodge\", value = 2, while = \"sulking\" }"))
+                .contains("unknown status `sulking`")
+        );
+        assert!(
+            err(with("{ kind = \"dodge\", value = 0, while = \"raging\" }")).contains("a bonus")
+        );
+        assert!(
+            err(with("{ kind = \"dodge\", value = 2, whilst = \"raging\" }"))
+                .contains("unknown field")
+        );
+        // An active is used, not summed: no condition on it.
+        assert!(
+            err(with(
+                "{ kind = \"rage\", resource = \"rage\", while = \"raging\" }"
+            ))
+            .contains("only for an effect the talents' sum reads")
+        );
     }
 
     #[test]

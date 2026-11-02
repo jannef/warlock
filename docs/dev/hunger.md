@@ -63,7 +63,7 @@ an `Event::Died` (`Death::cause`: `Cause::Starvation`, `Choked`; a death by food
 the status's, `Death::of`). Weak lowers `Actor::effective_stats(content)` (adding to the status
 effects' `penalty`, `Stats::adjusted_by`), which combat profiles, `Actor::defence`,
 `burden::load`, and `own_scores` read; never `actor.stats` directly in a rule that hunger
-should touch. Ascetic (`TalentMods::no_hunger_weakness`, #775's rework) is read in those two
+should touch. Long fast (`TalentMods::no_hunger_weakness`, #775's rework) is read in those two
 places only: `Actor::penalty` leaves Weak's stats out, and `World::faint` returns before its
 draw. Eating (`world/eat.rs`): `Action::Eat(Meal::Pack|Floor)` (a potion goes to
 `World::drink_potion` instead, before any hunger check: docs/dev/potions.md) → `Spent::Meal(Dish)` →

@@ -47,7 +47,11 @@
 #                   either = { stats = { intelligence = 12 }, skills = { appraise = 20 } }
 #                                                        any one of what it asks (at least two;
 #                                                        no `either` within it)
-#   effects       what every rank held adds: a list of { kind = ..., ... } (below)
+#   effects       what every rank held adds: a list of { kind = ..., ... } (below); any effect
+#                 the talents' sum reads (not an active, a spell given, or what is rolled or
+#                 handed down when it is taken) may also say
+#                   while = "raging"   it counts only while its holder suffers that status
+#                                      (../status.toml); left out, always
 #   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
 #                 besides the talent's, and its own `effects` besides the per-rank ones
 #   granted       true: given (by a race, a birth sign, a class), never on a pick list; a birth sign's
@@ -73,9 +77,16 @@
 #                                 points
 #   threat { value }              every attack threatens a critical that many points lower
 #   reroll_fumble                 a natural 2 on an attack roll is rolled again, once
-#   ally_mod { to_hit, protection }   what its allies get (allies.toml; spec §8 "Allies"): that
-#                                 to-hit on their attacks and that Protection, read through their
-#                                 master; either may be left out, not both
+#   ally_mod { to_hit, protection, count, duration_percent, lasting, most }   what its allies
+#                                 get (allies.toml; spec §8 "Allies"): that to-hit on their
+#                                 attacks and that Protection, read through their master; and its
+#                                 summon spells: `count` (0 to 6) more come every call, a call
+#                                 lasts `duration_percent` (0 to 500) longer, `lasting = true`
+#                                 calls stay until slain, `most` (0 to 6) more of each spell's
+#                                 kept at once; any may be left out, not all
+#   summon_bias { tag, weight }   a creature of a summon spell's pool carrying the tag is that
+#                                 many times as likely to come (0: never while another may; 2 to
+#                                 100 otherwise)
 #   streak { max, damage_every }  each melee blow at the creature its last blow was at (in its
 #                                 turn or the next) +1 to hit per blow before it, to max (1 to 10);
 #                                 with damage_every (0 to 10), +1 damage per that many blows before
@@ -298,6 +309,8 @@
 #   dig_percent { value }         its digging does that percent more work a turn
 #   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
 #                                 (negative: cheaper)
+#   attack_price_percent { value }   its melee attacks cost that percent more (negative:
+#                                 cheaper); shots and throws are not melee
 #   critical_status { status }    a critical it confirms in melee leaves the target that status
 #   grip { status }               a creature it hits in melee suffers that status, caused by it
 #                                 (one that `blocks` steps: held), until it misses that creature,
@@ -325,7 +338,6 @@
 #                                 (negative: less)
 #   Class abilities' own (spec §8 "Class abilities"; the actives are used from the abilities
 #   menu, each one's id the ability's id, `use:rage`):
-#   natural_unarmoured { value }  natural armour, only while nothing is worn in a body armour slot
 #   weapon_marks { role, value }  the marks its attacks earn in that role's weapon skills, that
 #                                 percent more; without `role`, in every weapon skill and style
 #                                 (never a school of magic: those are `school_marks_percent`'s)

@@ -11,7 +11,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 |---|---|
 | `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `ranks: Vec<Rank>`, `needs` for every rank plus each rank's own, `effects` per rank held plus each rank's own, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400), and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
 | `content/talent_alike.rs` | The identical-effects check (#790, "Coverage policy"): no two talents alike at every rank the shorter has, no talent chained to one sharing an effect kind, but for `alike`'s pairs in `data/talents.toml`. |
-| `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, rank, choice }>` on `Actor::talents`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content)` / `Actor::talent_mods`, a `Cow`: borrowed and shared for an actor without talents, which most creatures are, so the many reads a turn copy nothing), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words), `openings`, `offers` (the pick list, tree by tree). |
+| `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, rank, choice }>` on `Actor::talents`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content, effects)`, the effects under a status counted while the holder suffers it, / `Actor::talent_mods`, a `Cow`: borrowed and shared for an actor without talents, which most creatures are, so the many reads a turn copy nothing), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words), `openings`, `offers` (the pick list, tree by tree). |
 | `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
 | `world/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/talent.rs`) is `take_talent` without its words. |
 | `world/class.rs` | Class abilities (#246): `grant` gives the talents a class's level table names up to a level that the player lacks (rank 1, `hand_out` for hit points by level and stat gifts), at creation (`start_run`, level 1), as each level comes (`level_up`, with the news "You gain Fencing."), and on `from_state` (a grown table reaches saves; nothing is taken away); `bonus_trees`; `appraise_carried` (Lore, Arcane lore, Old lore, from `World::live` for the player). |
@@ -36,7 +36,21 @@ hit points a level gives) is `docs/dev/experience.md`.
 ## The hooks
 
 `TalentMods` is read where the rules already read what magic items do (`Mods::worn`), one read
-each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its one read:
+each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its one read.
+
+**`while = "STATUS"`** (#843, the Berserker design §6.1): any effect may carry it in data, a
+status id resolved at load (`content/talent.rs::split_effects`; an unknown one is refused). Such
+an effect is kept apart from the plain ones (`TalentDef::effects_while`, `Rank::effects_while`;
+`TalentDef::effects_while_at(rank)`) and only `Talents::mods(content, effects)` reads it: it
+adds the effect while `effects` (the holder's statuses; `Actor::talent_mods` passes
+`&self.effects`) has the status, so no rule below knows the condition exists. `effects_at` and
+every reader of a talent's effects other than the sum see only the plain ones, so a kind they
+read is refused a condition (`TalentEffect::may_be_conditional`: actives, Second wind, Blood
+magic, `spell`, `spell_mod`, `weapon_stamina`, what is rolled or handed down when taken,
+`terrain_as`, and the gifts' `scent` and `night_sight`). The alike check counts the status as
+part of the effect (`talent_alike.rs::Effect`). Battle-scarred (`protection 2`), Headlong
+(`step_percent −20`), and Blood frenzy (`attack_price_percent −20`) use it with `raging`; the
+wiki's effect text appends "while raging".
 
 | Effect | Read in |
 |---|---|
@@ -72,6 +86,8 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `surprise_difficulty` | `World::startle`'s `craft` (`world/surprise.rs`): added to the difficulty of the check of those the holder catches unawares (the thief's Sneak attack) |
 | `sneak_reach` | `World::sneaks` (`world/ambush.rs`): cells beyond `missile_reach` a missile or attack spell still sneak-attacks (Long reach) |
 | `ally_mod` (`to_hit`, `protection`) | `World::ally_blow` (`fight.rs::resolve`) and `World::ally_protection` (`World::protection_of`), through an ally's *master's* mods (`world/ally.rs::ally_mods`; Beast-bond, docs/dev/allies.md) |
+| `ally_mod` (`count`, `duration_percent`, `lasting`, `most`) | `World::cast_summon` (`world/summon_spell.rs`): more come, a longer `Ally::until`, none, each spell's `most` raised (docs/dev/allies.md "Summons") |
+| `summon_bias` (`tag`, `weight`) | `World::summon_draw` (`world/summon.rs`), from `cast_summon`: the pool's weights (no item or talent yet; the owner's Q9 of #828) |
 | `sees_unaware` | `Perception::compute` (`perception.rs`): `SeenActor::unaware` from `surprise::creature_unaware` for each creature in view, false for all without it; read by look mode ("unaware of you") and `ui/glyphs.rs` (the unaware mark) (Stalker's eye, the ranger's at level 2) |
 | `startled_blow` | `World::startle` → `World::hair_trigger` (`world/free_blow.rs`): a check made against a hostile attacker beside the holder is answered by `Cue::Startled`'s free blow before the attack is rolled; `resolve` (and `cast.rs::spell_attack`) stop when it fells the attacker (Hair trigger) |
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
@@ -107,12 +123,12 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `door_kick` | `World::kick_door` (added to Strength and athletics) |
 | `dig_percent` | `World::dig_turn` |
 | `two_handed_price` | `World::attack_price` (melee with a `two_handed` object) |
+| `attack_price_percent` | `World::attack_price` (every melee attack; shots and throws are `shot_price`'s) |
 | `critical_status` | `World::after_blow` (a confirmed critical in melee) |
 | `penetration` | `Actor::melee`, `off_hand_blow`, `bash`, `kick` (`TalentMods::penetration_for` the profile's kinds) |
 | `burden_dex` | `Actor::defence` (the burden's cap) |
 | `sure_step`, `pit_proof` | `World::step_onto_trap` → `steps_lightly` (the player's steps only) |
 | `speed_percent` | `World::burdened`, the one place every price passes (`quicker`) |
-| `natural_unarmoured` | `Actor::defence` (no body armour: nothing in a `body_armor` slot, `Actor::wears_body_armour`) |
 | `weapon` `crit`, `at_rank` | `TalentMods::weapon_benefit` (the held rank passed in) |
 | `weapon_marks` | `World::practise` (`TalentMods::marks`; no `role`: every skill, Forge-born) |
 | `blaze` | `world/element_gifts.rs` (`Action::Gift`, `Ability::Sign` under `Source::Sign`): the burst, the fires, then its `cooldown` status |
@@ -232,7 +248,7 @@ with its words at load) is what "a melee skill at 3" asks.
 
 ## Class actives
 
-The warrior, berserker, paladin, and monk (#243) have their tables the way the everyday folk do:
+The warrior, berserker, paladin, and ascetic (#243) have their tables the way the everyday folk do:
 class-tree talents (`data/talents/`, `granted`) named by their class files' `abilities`, so
 they are held like any talent, saved with them, and read through `TalentMods`. Their effects are
 the talents' kinds and the class's own (the README of `data/talents/` lists them). The seven
@@ -243,8 +259,8 @@ talent's `resource`) are effects that `TalentEffect::active` maps to a `ClassAct
 `Content::class_active` finds the talent that has one, whose name and description the abilities
 menu shows; a holy gift's talent may name the bands it works for (`alignment`; outside them it
 is used and does nothing, `docs/dev/alignment.md`). A shared entry is one talent the tables
-name alike (`purity_of_body`, the paladin's, the priest's, and the monk's: #790 cut its copy
-`divine_health`); the monk's Deflect missiles is the ordinary talent, handed out. A save holding
+name alike (`purity_of_body`, the paladin's, the priest's, and the ascetic's: #790 cut its copy
+`divine_health`); the ascetic's Deflect missiles is the ordinary talent, handed out. A save holding
 a talent the content no longer has (the thief's three removed by #684, the 27 cut by #774, the
 weak ones #787 cut and the three #788 merged into Pious, #790's clones and chains, #816's
 identification talents) loads
@@ -340,7 +356,7 @@ cut them). The owner: "Modify the talent rule to prevent this type of talent cre
   never by its percent, and a talent whose total is negligible is removed.
 - **No clones** (#776's rule 3, #790). A class table names the pickable's id, never a talent
   that does the same under another name: the bard's Fast healer (Song of rest until #790), the
-  druid's Beast-friend (Wild empathy), and one Purity of body for the paladin, priest, and monk
+  druid's Beast-friend (Wild empathy), and one Purity of body for the paladin, priest, and ascetic
   (Divine health was its copy). A pickable a table gives that the character already holds
   brings a talent pick in its place at that level (above, "Class tables").
 - **One effect, two ids, chained, is a rank** (#776's rule 4, #790). A talent whose one talent
@@ -451,15 +467,14 @@ Sphinx sign's Riddler's mind (`xp_percent` 10, the horoscope, which the owner ke
 other's (the clones), and every talent needing one talent with what that one does (the chains),
 then read the near misses (the same effect kinds at other values). Clones: Song of rest (bard
 12) = Fast healer, Wild empathy (druid 1) = Beast-friend, both cut and the tables naming the
-pickables; Divine health (paladin 18, priest 32) = Purity of body (monk 32), both class
+pickables; Divine health (paladin 18, priest 32) = Purity of body (ascetic 32), both class
 abilities, so one id stays and the three tables name it. Chains: Weapon specialization → Weapon
 focus, Great cleave → Cleave, Breaker → Mighty kick, each now the second rank (with the old
 rank's needs and effects; Mighty kick's rank 1 stays the Might tree's free talent). No
 class-table level was emptied. Kept: the stronger class versions of a pickable's effect
 (Improved sneak attack's 2d6 beside Ambusher's 1d6, Arcane mastery's +100 % mana regeneration beside Clear mind's +25 %, Diamond
 soul's Deflection +2 beside Deflection's +1, Saint's healing +100 % beside Healthy's +25 %,
-Uncanny dodge's burden Dexterity 2 beside Nimble's 1, Bulwark's plain Protection +2), Fast
-movement and Fleet (their conditions differ: unburdened, no shield), Miracle and Hag's bargain
+Uncanny dodge's burden Dexterity 2 beside Nimble's 1, Bulwark's plain Protection +2), Miracle and Hag's bargain
 (the bargain costs Presence), Schooled and Stylist (one `weapon` effect for a school and for a
 style), and the pairs `alike` lists (above). The chains left (Fast healer after Healthy, Porter
 after Pack mule, Meditation after Clear mind, and the others) add an effect of another kind.
@@ -552,13 +567,13 @@ dropped picks, every hook, a free-blow talent, saves and replays, perception and
 The everyday folk (#246: aristocrat, commoner, craftsperson, merchant) have their tables: nine
 abilities each at 1, 6, 12, 18, 25, 32, 40, 50, 60 (34 class-tree talents, plus Riposte and
 Second wind, which their tables hand out), and bonus picks at 10, 20, 30, 45, 55. The
-warrior, berserker, paladin, and monk (I1) have theirs, in `world/class_active_tests.rs`; the
+warrior, berserker, paladin, and ascetic (I1) have theirs, in `world/class_active_tests.rs`; the
 ranger, thief, and bard (I2, #244) theirs, in `world/class_rogue_tests.rs` (the kill tally and
 Favoured prey, every passive, Volley and Inspire, the abilities the thief's skills give, Lurk,
 Low blow, and Vanishing act (#684), and a save holding a talent the content dropped); the priest, druid, wizard, and witch (I3, #245) theirs, in `world/caster_tests.rs`. The I2 tables hand out two ordinary talents (Evasion,
 Lore; and since #790 the bard's Fast healer and the druid's Beast-friend), so a creation pick
 or a bonus pick may already have taken one; the table then gives a talent pick in its place at
-that level instead (as for the monk's Deflect missiles; `class::held_already`, counted into the
+that level instead (as for the ascetic's Deflect missiles; `class::held_already`, counted into the
 level's `Due` by `level_up`, with the news "You know Second wind already: choose a talent in its
 place."; not on a restore, where a grown table only gives what is missing).
 `class_tests.rs::a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place`. The showcase's and the arena's own
@@ -592,7 +607,7 @@ hash differently from before. The dump's `talents` layer marks it `(race)`, the 
 
 The `resources` system (#225, `docs/dev/resources.md`) is in the list: its four talents (R5,
 #253) are Battle trance (Might, berserker 6: rage starts 6 higher, decays at 67 %), Inner calm
-(Finesse, monk 18: ki +2 at most, back at 150 %), Steady hand (Weaponcraft, ranger 12: focus back
+(Finesse, ascetic 18: ki +2 at most, back at 150 %), Steady hand (Weaponcraft, ranger 12: focus back
 at 150 %), and Patient blade (Shadow, thief 32: openings decay at 50 %, and a sneak attack that
 kills builds one more, the `sneak_kill` event); the only class-limited picks
 (`needs = { class, level }`). `world/resource_talent_tests.rs` covers each rule and the

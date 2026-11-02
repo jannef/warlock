@@ -287,11 +287,11 @@ fn fainting_costs_turns_and_is_deterministic() {
 }
 
 #[test]
-fn ascetic_is_never_weakened_by_hunger_nor_faints() {
+fn long_fast_is_never_weakened_by_hunger_nor_faints() {
     let content = content_with(&[("chance = 5", "chance = 100")]);
     let mut w = world_in(&content, "pantry");
     let fed = w.perception().own_scores();
-    w.player_mut().talents.take("ascetic", None);
+    w.player_mut().talents.take("long_fast", None);
     set_nutrition(&mut w, 500);
     assert_eq!(hunger(&w), Hunger::Weak);
     assert_eq!(w.perception().own_scores(), fed, "Weak takes nothing off");

@@ -30,7 +30,7 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["vigour", "grit"] }
 # The level table (spec §8 "Class abilities").
 # The gifts that cost mana are spells (the placeholders until the spell system); Smite
 # and Purity of body are the paladin's own (Smite works only for the good side: its
-# `alignment`), and Purity of body the monk's too.
+# `alignment`), and Purity of body the ascetic's too.
 abilities = [
     { level = 1, talent = "mend" },
     { level = 3, talent = "blessing" },

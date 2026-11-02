@@ -277,8 +277,9 @@ pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
-    Grows, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL, Ratio, Resolution, School, Shape,
-    SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose, SpellRules,
+    Grows, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL, MAX_SUMMON_MINUTES, Ratio, Resolution,
+    STUDY_DIFFICULTY, School, Shape, SpellData, SpellEffect, SpellId, SpellLook, SpellPurpose,
+    SpellRules, SpellSummon,
 };
 pub use spell_ladder::{
     Ladder as SpellLadder, MAX_RUNGS, MAX_SCORE, RungValue, Unit as LadderUnit,
@@ -1044,6 +1045,8 @@ impl Content {
         content.load_gear()?;
         content.load_throws()?;
         content.load_summons()?;
+        // Summon spells' pools, once every creature type is known.
+        spell_def::resolve_summons(&mut content)?;
         let path = "data/shops.toml";
         if let Some(text) = files.get_optional(path) {
             content.shops = Some(Shops::parse(path, text, &content)?);
@@ -4707,7 +4710,7 @@ mod tests {
                 "bard",
                 "priest",
                 "druid",
-                "monk",
+                "ascetic",
                 "paladin",
                 "ranger",
                 "thief",

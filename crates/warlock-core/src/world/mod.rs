@@ -207,6 +207,7 @@ mod status;
 mod steal;
 mod stride;
 mod summon;
+mod summon_spell;
 pub(crate) mod surprise;
 mod talent;
 mod talk;
@@ -1799,6 +1800,8 @@ mod steal_tests;
 mod stride_tests;
 #[cfg(test)]
 mod style_tests;
+#[cfg(test)]
+mod summon_spell_tests;
 #[cfg(test)]
 mod summon_tests;
 #[cfg(test)]

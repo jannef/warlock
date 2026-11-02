@@ -202,6 +202,9 @@ high (the **overreach**) makes it harder: a roll of 2d12 plus your bonus must re
 every 20 levels of the spells you already know, added up. Your bonus is your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), a tenth of your
 *[Spellcraft](skills.md#skill-spellcraft)* and of your *[Decipher script](skills.md#skill-decipher-script)* (each at most +20), your class's affinity with the
 spell's school, and *[Quick study](talents.md#talent-quick-study)*'s +2. A natural 24 always succeeds and a natural 2 always fails.
+A few spells are harder to learn than their level says: their own difficulty is added to the
+check, and a spell made harder this way is never learned for certain, however high your caster
+level (its overreach then counts as 0). [The spell list](#the-spells) says which, and by how much.
 The game tells you the chance in words: *certain*, *easy*, *a struggle*, or *far beyond you*.
 
 {{#include generated/study-chances.md}}

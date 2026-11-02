@@ -372,12 +372,15 @@ cast path shares.
     scroll used up (`use_scroll`, never Scroll savant's keeping: §14 q7, decided no), then the check.
   - **Odds** (`study_odds(actor, content, character, caster_level, spell) -> Odds`, pure;
     `World::player_study_odds`): `Odds::overreach` = the spell's level − the caster level; at 0
-    or less `check: None` (certain, no draw); else `(bonus, difficulty)`: Intelligence
+    or less `check: None` (certain, no draw), unless the spell's `study_difficulty`
+    (`SpellData::study_difficulty`, −20 to 40, default 0; the owner's Q7 of #828: the calls'
+    scrolls are very hard to learn) is above 0, which makes it a check at any caster level with
+    the overreach counted as at least 0; else `(bonus, difficulty)`: Intelligence
     modifier + `skill_effect(Effect::Study)` + the class's affinity with the school +
     `TalentMods::study_bonus`, against `StudyRules::difficulty(overreach′, known levels)`, where
     overreach′ is the overreach × (100 + `TalentMods::study_overreach_percent`) / 100, rounded
     down (Overreach's −33), and the known levels `Actor::known_levels`, the sum of the levels
-    of the spells known; the mishap's band reads the plain overreach;
+    of the spells known, then + `study_difficulty`; the mishap's band reads the plain overreach;
     `Odds::ways()` of 144 (`check::ways`). `StudyRules::words` turns ways into "certain",
     "easy", "a struggle", "far beyond you".
   - **Mishaps** (`World::draw_mishap`, `World::mishap`): one `rng.below(total weight)` among
@@ -540,7 +543,7 @@ cast path shares.
   1. **Pools** (the stats the seed rolls, so a +1 or +2 mental modifier; `levelup:auto` may
      take Deep well): wizard 33 / 106 / 254 / 502 at levels 3 / 12 / 30 / 60 (caster level 3,
      14, 36, 72), priest, druid, and witch about 27 / 90 / 216 / 426 (caster level = level),
-     bard and aristocrat 17 / 45–53 / 103–125 / 201–246, monk, paladin, and ranger 9–14 /
+     bard and aristocrat 17 / 45–53 / 103–125 / 201–246, ascetic, paladin, and ranger 9–14 /
      27–50 / 63–122 / 123–242, the 25 % classes 4 / 13 / 31 / 61. A full caster's pool is about
      ten casts of a spell of the caster's own level at every level (the design's aim; the spell
      scaling design §12.4): 106 at level 12 against a level-11 spell's 11 mana, 254 at 30

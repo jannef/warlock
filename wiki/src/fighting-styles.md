@@ -141,6 +141,6 @@ have in it.
 
 Your [class](classes.md) starts you with a rank in a style or two: a [warrior](classes.md#warrior) fights with [sword
 and board](fighting-styles.md#style-sword-and-board), a [berserker](classes.md#berserker) with a [great weapon](fighting-styles.md#style-great-weapon), a [ranger](classes.md#ranger) is a [marksman](fighting-styles.md#style-marksman), and a [thief](classes.md#thief) has learned
-either [Twin Blades](fighting-styles.md#style-twin-blades) or [Duelist](fighting-styles.md#style-duelist) (the dice decide, as do a [monk's](classes.md#monk) [Brawler](fighting-styles.md#style-brawler) or [Staff Fighter](fighting-styles.md#style-staff-fighter)). The
+either [Twin Blades](fighting-styles.md#style-twin-blades) or [Duelist](fighting-styles.md#style-duelist) (the dice decide, as do an [ascetic's](classes.md#ascetic) [Brawler](fighting-styles.md#style-brawler) or [Staff Fighter](fighting-styles.md#style-staff-fighter)). The
 [weapon skills screen](weapon-skills.md#seeing-your-skills) (`W`) lists your styles below your
 weapon skills, and marks the ones you fight in now with a `•`.

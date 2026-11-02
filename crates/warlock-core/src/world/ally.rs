@@ -582,7 +582,7 @@ impl World {
 
 /// `count` of a thing in words, as the player is told it: "a wolf", "two wolves", "thirteen
 /// wolves" (the counts of a pack are small; a bigger one is a numeral).
-fn few(name: &str, plural: &str, count: u32) -> String {
+pub(super) fn few(name: &str, plural: &str, count: u32) -> String {
     const WORDS: [&str; 13] = [
         "no", "a", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
         "eleven", "twelve",
@@ -597,7 +597,7 @@ fn few(name: &str, plural: &str, count: u32) -> String {
 }
 
 /// `text` with its first letter upper-case.
-fn capital(text: &str) -> String {
+pub(super) fn capital(text: &str) -> String {
     let mut chars = text.chars();
     match chars.next() {
         Some(first) => first.to_uppercase().chain(chars).collect(),

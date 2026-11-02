@@ -1,7 +1,7 @@
 [[class]]
-id = "monk"
-name = "Monk"
-description = "A disciple of a cloister's discipline, body and mind trained as one: quick, enduring, inward-turned."
+id = "ascetic"
+name = "Ascetic"
+description = "A wandering ascetic of the old discipline, body and breath trained as one: quick, enduring, inward-turned."
 stats = { dexterity = "1d3", toughness = 1, willpower = "1d3", presence = -1 }
 hp = 5
 mana = 4

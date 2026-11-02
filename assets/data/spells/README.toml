@@ -14,7 +14,8 @@
 #   The tags (talents, abilities, items, and the wiki key on them; magic design §6):
 #   school        evocation, necromancy, abjuration, restoration, transmutation, enchantment,
 #                 or divination
-#   kind          damage, heal, buff, hex, cleanse, or utility
+#   kind          damage, heal, buff, hex, cleanse, utility, or summon (a summon is cast on
+#                 `self` with `auto`: it calls creatures to the caster's side, spec §8 "Allies")
 #   shape         ray, bolt, touch, self (single targets), cone, line, or burst (areas)
 #   damage_type   a damage type of ../damage_types.toml (needed by a `damage` spell, its tag)
 #   resolution    how it finds its targets (../spells.toml [resolution]): `area` for the area
@@ -36,6 +37,9 @@
 #   aim           an `attack` or `touch` damage spell's: the stat whose modifier is added to
 #                 its attack roll, as a blow adds Dexterity's (default `dexterity`). A scroll's
 #                 or a wand's always aims with Dexterity
+#   study_difficulty  added to the study check's difficulty (-20 to 40, default 0); above 0, a
+#                 study of it is a check at any caster level, never certain (the calls' scrolls
+#                 are very hard to learn: the owner, #828 Q7)
 #   [spell.effect]  what a spell of another kind does:
 #     heal        a `heal` spell's base hit points: a roll, as `damage`
 #     status, severity  a `buff`'s status on the caster, a `hex`'s on its target, a `damage`
@@ -45,6 +49,12 @@
 #                 disease
 #     identify    true: a `utility` spell on `self` that identifies one stack the caster carries
 #                 (asked for as it is cast, `use:identify:c`)
+#     summon      a `summon` spell's call, `{ creatures = ["wolf"], count = "1d2", most = 1,
+#                 minutes = 5, spread = 2 }`: each comes from the pool `creatures` (known types;
+#                 not the player, a unique, or an animated thing; each as likely), `count` a roll
+#                 that brings 1 to 12, `most` (1 to 12) of this spell's calls kept at once (past
+#                 it the oldest departs), `minutes` (1 to 600) their stay, `spread` (1 to 5,
+#                 default 2) how far from the caster they appear
 #   [spell.cast]  how it shows and sounds (needed by a `damage` spell cast at a distance):
 #     effect      the effect presentation shows (../effects.toml): a burst's for a burst or a
 #                 cone, a bolt's for a ray, a bolt, or a line; none for touch or self
@@ -58,7 +68,9 @@
 #                 stats rise. Every key optional; a dimension left out never grows by stats.
 #     damage      a `damage` spell's roll        heal      a `heal` spell's roll
 #     range       a ray's, bolt's, or burst's    length    a cone's or a line's
-#     radius      a burst's                      degrees   a buff's or a hex's status's degrees
+#     radius      a burst's                      degrees   a buff's or a hex's status's degrees,
+#     count       a `summon`'s count (a roll,              or a summon's minutes (to 600)
+#                 each rung bringing 1 to 12)
 #                 A ladder is one string: the stat's id, then rungs separated by commas, each
 #                 `AT VALUE` with one space: `"intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2"`.
 #                 `AT` is a score, 1 to 40, strictly ascending; at most 8 rungs. `VALUE` is a
