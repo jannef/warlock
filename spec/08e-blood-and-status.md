@@ -642,8 +642,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     raised on every strike that `is_hit()`: soaked and resisted to nothing too, the hit taken
     before mitigation), a critical of theirs that does damage 2, and a kill credited to them 3;
     a blow of theirs that lands builds nothing. Exhausted (150 s) follows its end; no rage while
-    Raging or Exhausted lasts. Blood frenzy (level 40): each kill credited to the berserker
-    builds 5 rage more (a `resource_build`, 8 in all). Mighty rage (50): Raging's raises doubled, 10 more rage at most,
+    Raging or Exhausted lasts. While Raging, Battle-scarred (level 6) gives 2 Protection more
+    (3 in all), Headlong (12) takes 20 % off every step, and Blood frenzy (40) 20 % off every
+    melee attack (the talents' `while = "raging"`, §8 "Class abilities"). Blood frenzy: each
+    kill credited to the berserker builds 5 rage more (a `resource_build`, 8 in all). Mighty rage (50): Raging's raises doubled, 10 more rage at most,
     Exhausted eases twice as fast. Unstoppable (60): while raging, bleeding and poison tick
     nothing, and a blow (`Harm::Actor`) that would take the last hit point leaves it for 10 rage
     (`World::spend_resource`; refused, so the blow falls, with less), as often as the rage

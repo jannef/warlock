@@ -376,7 +376,7 @@ fn talents_beside(content: &Content, a: &AffixDef) -> &'static [&'static str] {
         (E::ResourceMax, Some("ki")) => &["inner_calm"],
         (E::ResourceRate, Some("stamina")) => &["steady_breathing"],
         (E::ActiveStamina, _) => &["drillmaster"],
-        (E::MoveSpeed, _) => &["fleet", "fast_movement"],
+        (E::MoveSpeed, _) => &["fleet", "headlong"],
         (E::Carry, _) => &["pack_mule"],
         (E::Stealth, _) => &["silent_feet"],
         (E::DoorKick, _) => &["lockbreaker"],

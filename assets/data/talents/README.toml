@@ -47,7 +47,11 @@
 #                   either = { stats = { intelligence = 12 }, skills = { appraise = 20 } }
 #                                                        any one of what it asks (at least two;
 #                                                        no `either` within it)
-#   effects       what every rank held adds: a list of { kind = ..., ... } (below)
+#   effects       what every rank held adds: a list of { kind = ..., ... } (below); any effect
+#                 the talents' sum reads (not an active, a spell given, or what is rolled or
+#                 handed down when it is taken) may also say
+#                   while = "raging"   it counts only while its holder suffers that status
+#                                      (../status.toml); left out, always
 #   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
 #                 besides the talent's, and its own `effects` besides the per-rank ones
 #   granted       true: given (by a race, a birth sign, a class), never on a pick list; a birth sign's
@@ -298,6 +302,8 @@
 #   dig_percent { value }         its digging does that percent more work a turn
 #   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
 #                                 (negative: cheaper)
+#   attack_price_percent { value }   its melee attacks cost that percent more (negative:
+#                                 cheaper); shots and throws are not melee
 #   critical_status { status }    a critical it confirms in melee leaves the target that status
 #   grip { status }               a creature it hits in melee suffers that status, caused by it
 #                                 (one that `blocks` steps: held), until it misses that creature,
@@ -325,7 +331,6 @@
 #                                 (negative: less)
 #   Class abilities' own (spec §8 "Class abilities"; the actives are used from the abilities
 #   menu, each one's id the ability's id, `use:rage`):
-#   natural_unarmoured { value }  natural armour, only while nothing is worn in a body armour slot
 #   weapon_marks { role, value }  the marks its attacks earn in that role's weapon skills, that
 #                                 percent more; without `role`, in every weapon skill and style
 #                                 (never a school of magic: those are `school_marks_percent`'s)

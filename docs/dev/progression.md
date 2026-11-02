@@ -11,7 +11,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 |---|---|
 | `content/talent.rs` | `TalentBook` from `data/talents.toml` (settings: `max_ranks`, `[coverage]`, `[[tree]]`, `[[system]]`, each set in one file) and `data/talents/*.toml` (one `[[talent]]` a file, `ContentFiles::table("talents")` order; `TalentId` an index, saves name talents by id so it is **not** in the content fingerprint). `TalentDef` (tree, `ranks: Vec<Rank>`, `needs` for every rank plus each rank's own, `effects` per rank held plus each rank's own, `choice`, `systems`, `granted`), `Needs`/`Need` (the prerequisite kinds and their words: talents, stat scores, skill values, weapon-skill ranks, any skill of a role (`any_weapon_skill`), `chosen`, level, race, class, eyes (never an alignment band: alignment bars nothing, `docs/dev/alignment.md`), and `either`, any one of several, `Need::Either`), `TalentEffect` (the typed effects), `Choice::options`/`name` (`school`: a spell school or a non-physical damage type, #400), and the **coverage check** (`TalentBook::coverage_gap`, run at load: a `ContentError`). |
 | `content/talent_alike.rs` | The identical-effects check (#790, "Coverage policy"): no two talents alike at every rank the shorter has, no talent chained to one sharing an effect kind, but for `alike`'s pairs in `data/talents.toml`. |
-| `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, rank, choice }>` on `Actor::talents`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content)` / `Actor::talent_mods`, a `Cow`: borrowed and shared for an actor without talents, which most creatures are, so the many reads a turn copy nothing), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words), `openings`, `offers` (the pick list, tree by tree). |
+| `talent.rs` | The runtime: `Talents` (`Vec<Taken { id, rank, choice }>` on `Actor::talents`, saved and hashed, left out of the JSON while empty), `TalentMods` (every effect summed; `Talents::mods(content, effects)`, the effects under a status counted while the holder suffers it, / `Actor::talent_mods`, a `Cow`: borrowed and shared for an actor without talents, which most creatures are, so the many reads a turn copy nothing), `Candidate` (what prerequisites read: `Candidate::player`), `unmet`, `may_take` → `Refusal` (in words), `openings`, `offers` (the pick list, tree by tree). |
 | `world/talent.rs` | `Due { level, talents }` in `Progress::due` (lowest level first); `World::level_up(from, to)` from `grant_xp` (a pick every `Experience::talent_every` levels, and the per-level hit points of talents held); `refuse_due` (the first line of `player_acts`: everything but `Talent`, `Advance`, `LevelUpAuto` is refused with "You have skill rolls to spend." or "You must choose a talent first."); `take_talent` (the first due with a pick, so a talent may come before the rolls), `level_up_auto` (dev); `settle_due` drops talent picks nothing can be spent on (`offers` empty and no roll left) and rolls when no skill is trained, asked again after each pick. `Due { level, talents, rolls, bonus }`: a level with rolls but no pick is due too; `bonus` are the class's bonus picks (a talent of the class's trees spends one before an ordinary pick; "You must choose a talent of Weaponcraft or Delver."), dropped like the others when nothing fits. |
 | `world/creation.rs` | Creation picks (#236; below): `creation_count`, `World::open_creation` (a level 1 `Due` from `begin`, for a run with the kit), `take_creation` (from `start_run`: the spec's picks, else `take_random` on the `character/talents/<spec>` stream; recorded in `CharacterSpec::talents`), `World::draft` / `creation_offers` / `random_creation` (character creation's Talents step), `chosen_with_talents` and `parse_talents` (`--talents`). `World::learn` (`world/talent.rs`) is `take_talent` without its words. |
 | `world/class.rs` | Class abilities (#246): `grant` gives the talents a class's level table names up to a level that the player lacks (rank 1, `hand_out` for hit points by level and stat gifts), at creation (`start_run`, level 1), as each level comes (`level_up`, with the news "You gain Fencing."), and on `from_state` (a grown table reaches saves; nothing is taken away); `bonus_trees`; `appraise_carried` (Lore, Arcane lore, Old lore, from `World::live` for the player). |
@@ -36,7 +36,21 @@ hit points a level gives) is `docs/dev/experience.md`.
 ## The hooks
 
 `TalentMods` is read where the rules already read what magic items do (`Mods::worn`), one read
-each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its one read:
+each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its one read.
+
+**`while = "STATUS"`** (#843, the Berserker design §6.1): any effect may carry it in data, a
+status id resolved at load (`content/talent.rs::split_effects`; an unknown one is refused). Such
+an effect is kept apart from the plain ones (`TalentDef::effects_while`, `Rank::effects_while`;
+`TalentDef::effects_while_at(rank)`) and only `Talents::mods(content, effects)` reads it: it
+adds the effect while `effects` (the holder's statuses; `Actor::talent_mods` passes
+`&self.effects`) has the status, so no rule below knows the condition exists. `effects_at` and
+every reader of a talent's effects other than the sum see only the plain ones, so a kind they
+read is refused a condition (`TalentEffect::may_be_conditional`: actives, Second wind, Blood
+magic, `spell`, `spell_mod`, `weapon_stamina`, what is rolled or handed down when taken,
+`terrain_as`, and the gifts' `scent` and `night_sight`). The alike check counts the status as
+part of the effect (`talent_alike.rs::Effect`). Battle-scarred (`protection 2`), Headlong
+(`step_percent −20`), and Blood frenzy (`attack_price_percent −20`) use it with `raging`; the
+wiki's effect text appends "while raging".
 
 | Effect | Read in |
 |---|---|
@@ -107,12 +121,12 @@ each; a new effect is a `TalentEffect` variant, a `TalentMods` field, and its on
 | `door_kick` | `World::kick_door` (added to Strength and athletics) |
 | `dig_percent` | `World::dig_turn` |
 | `two_handed_price` | `World::attack_price` (melee with a `two_handed` object) |
+| `attack_price_percent` | `World::attack_price` (every melee attack; shots and throws are `shot_price`'s) |
 | `critical_status` | `World::after_blow` (a confirmed critical in melee) |
 | `penetration` | `Actor::melee`, `off_hand_blow`, `bash`, `kick` (`TalentMods::penetration_for` the profile's kinds) |
 | `burden_dex` | `Actor::defence` (the burden's cap) |
 | `sure_step`, `pit_proof` | `World::step_onto_trap` → `steps_lightly` (the player's steps only) |
 | `speed_percent` | `World::burdened`, the one place every price passes (`quicker`) |
-| `natural_unarmoured` | `Actor::defence` (no body armour: nothing in a `body_armor` slot, `Actor::wears_body_armour`) |
 | `weapon` `crit`, `at_rank` | `TalentMods::weapon_benefit` (the held rank passed in) |
 | `weapon_marks` | `World::practise` (`TalentMods::marks`; no `role`: every skill, Forge-born) |
 | `blaze` | `world/element_gifts.rs` (`Action::Gift`, `Ability::Sign` under `Source::Sign`): the burst, the fires, then its `cooldown` status |
@@ -448,8 +462,7 @@ rank's needs and effects; Mighty kick's rank 1 stays the Might tree's free talen
 class-table level was emptied. Kept: the stronger class versions of a pickable's effect
 (Improved sneak attack's 2d6 beside Ambusher's 1d6, Arcane mastery's +100 % mana regeneration beside Clear mind's +25 %, Diamond
 soul's Deflection +2 beside Deflection's +1, Saint's healing +100 % beside Healthy's +25 %,
-Uncanny dodge's burden Dexterity 2 beside Nimble's 1, Bulwark's plain Protection +2), Fast
-movement and Fleet (their conditions differ: unburdened, no shield), Miracle and Hag's bargain
+Uncanny dodge's burden Dexterity 2 beside Nimble's 1, Bulwark's plain Protection +2), Miracle and Hag's bargain
 (the bargain costs Presence), Schooled and Stylist (one `weapon` effect for a school and for a
 style), and the pairs `alike` lists (above). The chains left (Fast healer after Healthy, Porter
 after Pack mule, Meditation after Clear mind, and the others) add an effect of another kind.

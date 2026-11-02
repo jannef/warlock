@@ -4,8 +4,8 @@
 use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Need, OverTime, Role, SignActive, SpellData, SpellModSpec, TalentDef, TalentEffect,
-    TreeId,
+    Content, Need, OverTime, Role, SignActive, SpellData, SpellModSpec, StatusId, TalentDef,
+    TalentEffect, TreeId,
 };
 
 /// Every tree in display order: a heading, its description, and its talents (name, ranks, what
@@ -298,9 +298,14 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
         TalentEffect::SpellMod(spec) => spell_mod_text(content, spec, chosen),
         other => effect_text(content, other),
     };
-    let mut parts: Vec<String> = (def.effects.iter())
-        .map(|e| {
-            let text = text_of(e);
+    // An effect under a status (`while`): its text, then "while raging" (the status's name).
+    let under = |(status, e): &(StatusId, TalentEffect)| {
+        let name = content.status(*status).name.to_lowercase();
+        format!("{} while {name}", text_of(e))
+    };
+    let plain = (def.effects.iter()).map(text_of);
+    let mut parts: Vec<String> = (plain.chain(def.effects_while.iter().map(under)))
+        .map(|text| {
             if ranked {
                 format!("{text} per rank")
             } else {
@@ -309,8 +314,9 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
         })
         .collect();
     for (i, rank) in def.ranks.iter().enumerate() {
-        for effect in &rank.effects {
-            parts.push(format!("rank {}: {}", i + 1, text_of(effect)));
+        let own = (rank.effects.iter().map(text_of)).chain(rank.effects_while.iter().map(under));
+        for text in own {
+            parts.push(format!("rank {}: {text}", i + 1));
         }
     }
     if let Some(cost) = def.resource {
@@ -467,12 +473,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
     match effect.clone() {
         TalentEffect::Dodge { value } => format!("Dodge {}", signed(value)),
         TalentEffect::Natural { value } => format!("natural armour {}", signed(value)),
-        TalentEffect::NaturalUnarmoured { value } => {
-            format!(
-                "natural armour {} while you wear no body armour",
-                signed(value)
-            )
-        }
         TalentEffect::MeleeDamage { value } => format!("melee damage {}", signed(value)),
         TalentEffect::Ferocity { value } => format!(
             "damage {} with every attack while below a third of your hit points",
@@ -1398,6 +1398,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::DigPercent { value } => format!("digging work a turn {}", percent(value)),
         TalentEffect::TwoHandedPrice { value } => {
             format!("blows with a two-handed weapon cost {}", percent(value))
+        }
+        TalentEffect::AttackPricePercent { value } => {
+            format!("melee attacks cost {}", percent(value))
         }
         TalentEffect::CriticalStatus { status: id } => format!(
             "a critical you confirm in melee leaves the target {} (one degree)",
