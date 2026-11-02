@@ -187,8 +187,8 @@ impl World {
             riposte: blows.riposte || self.poised(actor),
             ..blows
         };
-        // Surprised, it strikes nothing out of its turn (`surprise.rs`).
-        if self.surprised(actor.id) {
+        // Flat-footed (Surprised, Stunned), it strikes nothing out of its turn (`surprise.rs`).
+        if self.off_guard(actor.id) {
             return FreeBlows {
                 riposte: false,
                 opportunist: false,

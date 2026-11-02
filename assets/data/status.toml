@@ -62,6 +62,10 @@
 #   hides      true: a creature suffering it hides as a shut chest (a mimic's Disguised): it takes
 #              no turn, has seen no one, no creature sets on it, and perception shows the chest in
 #              its place, never it; only being found out ends it (spec §8 "Mimics")
+#   flat_footed true: its sufferer is flat-footed while it lasts (Surprised, Stunned): its
+#              Dexterity and Dodge count nothing toward its Defence, it makes no free blow out
+#              of its turn, and an attacker's sneak dice land on it (spec §8 "Surprise and sneak
+#              attacks")
 #   sleeps     true: a creature suffering it sleeps: it takes no turn and has seen no one (a
 #              sneak attack lands); noise at its hearing threshold times its den's `wake`, a
 #              blow, or a cry wakes it, which ends the status (spec §7 "Special rooms")
@@ -412,6 +416,21 @@ cost = 150
 start = "You stagger."
 end = "You find your feet again."
 
+# Stunned (the ascetic's Stunning strike, #848): reeling from a blow. Flat-footed (Dexterity and
+# Dodge count nothing toward Defence, no free blows, sneak dice land), and the next action costs
+# half again as much; that action ends it. A second stun before it only keeps it (refresh).
+[[status]]
+id = "stunned"
+name = "Stunned"
+seen = "stunned"
+max = 1
+stacking = "refresh"
+per_action = true
+cost = 150
+flat_footed = true
+start = "You are stunned."
+end = "Your head clears."
+
 # The Transfixing stare's (a Basilisk's birth sign gift): a creature held by the gaze, its next
 # actions twice as slow; a degree for each, eased away a turn's time (at the slowed pace) apiece.
 [[status]]
@@ -752,6 +771,7 @@ max = 1
 stacking = "refresh"
 per_action = true
 cost = 150
+flat_footed = true
 start = "You are taken by surprise!"
 end = "You recover your wits."
 

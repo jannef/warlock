@@ -590,8 +590,10 @@ pub struct TalentMods {
     pub radiance: Option<(StatusId, LightId)>,
     /// The active Patient defence, if it has it: the status it gives (Poised).
     pub patient_defence: Option<StatusId>,
+    /// The active Stunning strike, if it has it.
+    pub stunning_strike: Option<PalmBlow>,
     /// The active Quivering palm, if it has it.
-    pub quivering_palm: Option<QuiveringPalm>,
+    pub quivering_palm: Option<PalmBlow>,
     /// The active Step of the wind, if it has it: the status it gives (Light-footed).
     pub wind_step: Option<StatusId>,
     /// Hit points every level past `hp_level` adds beyond a level's own, if it has Hardened.
@@ -803,9 +805,10 @@ impl Smite {
     }
 }
 
-/// The active Quivering palm (spec §8 "Class abilities").
+/// A bare-handed blow that leaves a wounded foe `severity` degrees of `status`: the actives
+/// Stunning strike and Quivering palm (spec §8 "Class abilities"; `World::palm_blow`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct QuiveringPalm {
+pub struct PalmBlow {
     pub status: StatusId,
     pub severity: u16,
 }
@@ -1010,6 +1013,7 @@ impl TalentMods {
             A::Smite => self.smite.is_some(),
             A::HolyRadiance => self.radiance.is_some(),
             A::PatientDefence => self.patient_defence.is_some(),
+            A::StunningStrike => self.stunning_strike.is_some(),
             A::QuiveringPalm => self.quivering_palm.is_some(),
             A::StepOfTheWind => self.wind_step.is_some(),
             A::Volley => self.volley.is_some(),
@@ -1795,7 +1799,12 @@ impl TalentMods {
             }
             TalentEffect::QuiveringPalm { status, severity } => {
                 if let Some(status) = content.status_id(&status) {
-                    self.quivering_palm = Some(QuiveringPalm { status, severity });
+                    self.quivering_palm = Some(PalmBlow { status, severity });
+                }
+            }
+            TalentEffect::StunningStrike { status, severity } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.stunning_strike = Some(PalmBlow { status, severity });
                 }
             }
             TalentEffect::WindStep { status } => {

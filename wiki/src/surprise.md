@@ -59,9 +59,19 @@ Your **edge** is your Dexterity modifier plus what Wary and Initiative add. The 
 attacker's craft and the difficulty it makes; a roll of 2 always fails and a roll of 24 always
 works.
 
+### Stunned
+
+The ascetic's [Stunning strike](talents.md#talent-stunning-strike) leaves a foe it wounds
+[Stunned](status-effects.md#status-stunned) until it next acts, and Stunned is flat-footed just
+as Surprised is: no Dexterity and no Dodge in its Defence, no free blow, and
+[sneak dice](#sneak-attacks) land on it. Its next action costs half as much time again too, but
+neither [Initiative](skills.md#skill-initiative) nor [Cool head](talents.md#talent-cool-head)
+spares any of that: they ease surprise, not a blow to the head.
+
 ## Sneak attacks
 
-Whoever has **sneak dice** adds them to a hit on a target unaware of them or Surprised. The dice
+Whoever has **sneak dice** adds them to a hit on a target unaware of them, Surprised, or
+[Stunned](#stunned). The dice
 come from the [Sneak attack](skills.md#skill-sneak-attack) skill (1d6 once you are trained at
 all) and from talents: [Ambusher](talents.md#talent-ambusher) and the thief's
 [Improved sneak attack](talents.md#talent-improved-sneak-attack). They are added after

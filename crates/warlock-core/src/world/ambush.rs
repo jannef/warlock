@@ -32,7 +32,8 @@ impl World {
 
     /// Whether `attacker`'s attack on `target`, a blow or (`missile`) a shot, a throw, or an
     /// attack spell, is a sneak attack, with whether `target` is `unaware` of it already asked:
-    /// the attacker has sneak dice, the target is unaware or Surprised, has vitals for the
+    /// the attacker has sneak dice, the target is unaware or flat-footed (Surprised, Stunned:
+    /// [`World::off_guard`]), has vitals for the
     /// attacker, and a missile flies no farther than the rules' `missile_reach` plus the
     /// attacker's Long reach (no limit, and vitals everywhere, without the surprise rules).
     pub(super) fn sneaks(
@@ -42,7 +43,7 @@ impl World {
         unaware: bool,
         missile: bool,
     ) -> bool {
-        if !(unaware || self.surprised(target)) || self.sneak_dice(attacker).is_none() {
+        if !(unaware || self.off_guard(target)) || self.sneak_dice(attacker).is_none() {
             return false;
         }
         if !self.has_vitals(target) {

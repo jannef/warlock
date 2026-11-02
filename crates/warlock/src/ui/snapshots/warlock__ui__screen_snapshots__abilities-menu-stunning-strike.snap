@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Your athletics improves. (×36) You learn Deep lungs. You learn Dodge. You learn Light step (1).
+ You learn Nimble. You learn Petrifying gaze.
+
+
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │ > a  Transfixing stare  at a place you see               │
+                    │ Class                                                    │
+                    │   b  Stunning strike    in a direction                   │
+                    │   c  Step of the wind                                    │
+                    │ Weapon skills                                            │
+                    │   d  Shield bash        you hold no shield               │
+                    │                                                          │
+                    │ The basilisk's stare: a foe nearby that sees you slows   │
+                    │ to a crawl a moment; your eyes then rest two hours.      │
+                    │                                                          │
+                    │                                                          │
+                    │ a-d or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+ The Hub  ·  HP 43/43  ·  MP 55/55  ·  Ki 6/8  ·  Sta 10/15  ·  Lv 13  ·  08:00          ? controls

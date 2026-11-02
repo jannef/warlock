@@ -11,7 +11,10 @@ natural attack, `NaturalAttack::on_hit`; `Content::status`/`status_id`/`status_i
 optional file; `StatusId` is an index, in the fingerprint; `per_action` statuses, Staggered,
 Pinned, and Light-footed, ease by their sufferer's actions instead of time,
 `World::spend_actions`, docs/dev/weapon-abilities.md; Surprised too, docs/dev/surprise.md, whose
-`cost` is read through `World::status_cost`; one that ends there pushes its `Event::Status` end). `crate::status` holds one actor's
+`cost` is read through `World::status_cost`, and Stunned, the ascetic's Stunning strike's (#848);
+one that ends there pushes its `Event::Status` end). `flat_footed` (Surprised, Stunned) leaves
+its sufferer flat-footed, read by the field through `Effects::flat_footed` and
+`World::off_guard` (docs/dev/surprise.md). `crate::status` holds one actor's
 effects (`Actor::effects: Effects`, at most one `Effect { status, severity, tick, wear, by }` per
 status in status order; `Effects::add` applies the stacking rule, `penalty`, `regen`,
 `is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank

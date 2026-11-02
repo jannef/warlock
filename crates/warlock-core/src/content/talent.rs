@@ -718,6 +718,10 @@ pub enum TalentEffect {
     /// leaves the target `severity` degrees of `status` (what it costs is the talent's
     /// `resource`: Ki).
     QuiveringPalm { status: String, severity: u16 },
+    /// The class active Stunning strike (the ascetic's, #848): an unarmed blow in a direction;
+    /// a hit that wounds leaves the target `severity` degrees of `status` (Stunned; what it
+    /// costs is the talent's `resource`: Ki). Quivering palm's blow with another status.
+    StunningStrike { status: String, severity: u16 },
     /// The class active Step of the wind: a degree of `status` (Light-footed) on the player,
     /// taking no time (what it costs is the talent's `resource`: Ki; `world/ascetic.rs`).
     WindStep { status: String },
@@ -1097,6 +1101,7 @@ impl TalentEffect {
             TalentEffect::Smite { .. } => A::Smite,
             TalentEffect::Radiance { .. } => A::HolyRadiance,
             TalentEffect::PatientDefence { .. } => A::PatientDefence,
+            TalentEffect::StunningStrike { .. } => A::StunningStrike,
             TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
             TalentEffect::WindStep { .. } => A::StepOfTheWind,
             TalentEffect::Volley { .. } => A::Volley,
@@ -1496,9 +1501,13 @@ impl TalentEffect {
             TalentEffect::QuiveringPalm {
                 status: id,
                 severity,
+            }
+            | TalentEffect::StunningStrike {
+                status: id,
+                severity,
             } => {
                 if *severity == 0 {
-                    return Err("`quivering_palm`: severity is at least 1".into());
+                    return Err("a palm blow's severity is at least 1".into());
                 }
                 status(id)
             }

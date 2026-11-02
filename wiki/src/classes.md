@@ -43,7 +43,7 @@ otherwise you can still use them, and nothing happens. The passives do not care.
 [mana](mana.md#how-much). The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
 [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
 [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend; the
-[ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry) and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
+[ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry), [stunning strike](abilities.md#ability-stunning-strike), and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
 [inspiration](resources.md#resource-inspiration) when the bard has enough.
 
 The spells a class gives (the [priest](classes.md#priest)'s, [druid](classes.md#druid)'s, [wizard](classes.md#wizard)'s, and [witch](classes.md#witch)'s few, a [bard](classes.md#bard)'s, a
@@ -80,9 +80,12 @@ second blow, at −2 [to hit](combat.md#hitting), for a point of ki; with none l
 shield, and for a point of ki, taking no time at all, leaves you [light-footed](status-effects.md#status-light-footed): your next action,
 whatever it is (a step, a blow, a shot), takes half its [time](turns.md#what-actions-cost). It cannot be stacked: while you are light-footed
 already it is refused and costs nothing.
-**[Quivering palm](abilities.md#ability-quivering-palm)** costs 5 ki and has no other wait.
 **[Patient defence](abilities.md#ability-patient-defence)** (level 18) costs a point of ki and the [time](turns.md#what-actions-cost) of a wait, and leaves you
 [poised](status-effects.md#status-poised) until your next action, whatever it is: +4 [Dodge](combat.md#defence), and every melee blow you dodge (it misses
 by your Dexterity or Dodge) or parry meanwhile is answered with a blow of yours at once, a
 [riposte](combat.md#free-blows). Taken again while poised, it holds for one action more; with any grip, a staff too.
+**[Stunning strike](abilities.md#ability-stunning-strike)** (level 12) costs 1 ki: a blow of
+your bare hand that leaves a foe it wounds [stunned](status-effects.md#status-stunned), caught
+[flat-footed](surprise.md#stunned) and slow to act. **[Quivering palm](abilities.md#ability-quivering-palm)**
+costs 5 ki. Neither has any other wait, and neither can be used with a weapon in hand.
 

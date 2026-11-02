@@ -407,8 +407,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     half the extra at 100, three quarters at 200) and Cool head ease of the extra, together at
     most all of it (`World::status_cost`, the one place); that action ends it ("You recover your
     wits."). The surprising attack itself is rolled flat-footed whether the check is made or not.
+    Flat-footedness is the status field `flat_footed` (#848), which Surprised and **Stunned**
+    (the ascetic's Stunning strike, §8 "Character") take: the Defence strip, the free blows, and
+    the sneak dice read the field (`World::off_guard`), never the id; Cool head's ease is
+    Surprised's alone.
   - **Sneak attacks** (`world/ambush.rs`): an attack on a target unaware of the attacker or
-    Surprised, by an attacker with **sneak dice** (`World::sneak_dice`: the Sneak attack skill's
+    flat-footed (Surprised, Stunned), by an attacker with **sneak dice** (`World::sneak_dice`: the Sneak attack skill's
     `sneak_dice` d6s, 1d6 trained at all, +1d6 at 25, 50, 75, and 100, then every 50; and its
     talents' `ambush` dice on top, Ambusher, Improved sneak attack, `Dice::and`), adds them on a
     hit, after Protection, never multiplied by a critical, of the blow's kind; Master thief
