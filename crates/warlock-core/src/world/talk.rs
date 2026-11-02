@@ -188,7 +188,10 @@ impl World {
     pub(super) fn disturbs_rest(&self, actor: &Actor) -> bool {
         let fights =
             (actor.faction(&self.content)).is_some_and(|f| self.content.factions().has_enemies(f));
-        actor.kind == ActorKind::Creature && (fights || self.dialogue_of(actor).is_none())
+        // An ally of the player's never disturbs their rest (`ally.rs`).
+        actor.kind == ActorKind::Creature
+            && actor.ally.is_none()
+            && (fights || self.dialogue_of(actor).is_none())
     }
 
     /// What the player may ask `actor` about: its quest topics first (`quest.rs`), then its

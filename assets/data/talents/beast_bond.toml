@@ -1,0 +1,11 @@
+# Allies (spec §8 "Allies"; docs/design/druid-and-summons.md §10, §14 Q10): the one pickable of
+# the `allies` system. Handle animal 20, not 40: the skill earns its marks from orders and allies'
+# kills, and 40 was too far to reach (the owner).
+[[talent]]
+id = "beast_bond"
+name = "Beast-bond"
+tree = "wayfarer"
+description = "Those who fight beside you fight the better for it: your allies strike surer and take less harm."
+needs = { skills = { handle_animal = 20 } }
+effects = [{ kind = "ally_mod", to_hit = 1, protection = 1 }]
+systems = ["allies"]

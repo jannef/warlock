@@ -37,6 +37,8 @@ up, default 100): `CreatureDef::kill_xp` applies it, and `earn_kill` starts both
 scaling and the first-kill bonus from it (`Experience::kill_xp` and `first_kill_xp` count in
 `u64` and saturate, as the modifier has no ceiling). The saved state is
 `WorldState::experience` and `progress` (the level follows from the total and the character);
-the UI reads `PerceptionView::own_experience()`. Other kills (traps, creatures) give nothing:
+the UI reads `PerceptionView::own_experience()`. Other kills (traps, creatures) give nothing, with
+one exception: a kill by an ally of the player's pays the player through `earn_kill_at` at the
+allies' `ally_percent` (`docs/dev/allies.md`; `fight.rs::dies`), as the owner decided. Otherwise:
 keep it that way by awarding only where the attacker is the player. `Progress` is where the
 progression state of the design's later items (talents, due choices) goes.

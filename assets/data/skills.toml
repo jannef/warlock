@@ -203,6 +203,8 @@ id = "handle_animal"
 name = "Handle animal"
 description = "Calming, leading, and training beasts."
 kind = "action"
+# Its first marks (spec §8 "Allies"): an order given to one's allies, and an ally's kill.
+mark = [{ on = "handle", chance = 50 }]
 
 [[skill]]
 id = "heal"
