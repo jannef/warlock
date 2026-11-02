@@ -185,6 +185,9 @@ pub enum Act {
     ThrowVoice(Pos),
     /// Howls, where it stands (Hound's bay).
     Howl,
+    /// Calls an order to its allies, where it stands (spec §8 "Allies"): a voice, as loud as
+    /// `[orders] noise` of `data/allies.toml` says.
+    Order,
 }
 
 /// A noise made by an actor, or by a trap going off.
@@ -285,7 +288,10 @@ pub fn noise(
         let loudness = TalentMods::scaled(u64::from(plain.loudness), percent) as u16;
         return (loudness > 0).then_some(Noise { loudness, ..plain });
     }
-    if matches!(act, Act::Mutter | Act::ThrowVoice(_) | Act::Howl) {
+    if matches!(
+        act,
+        Act::Mutter | Act::ThrowVoice(_) | Act::Howl | Act::Order
+    ) {
         return Some(plain);
     }
     let quiet = actor.skill_effect(content, Effect::Quiet).clamp(0, 100) as u16;
@@ -352,6 +358,10 @@ pub fn plain_noise(
         Act::Mutter => (SoundKind::Voice, actor.pos, u32::from(VOICE_NOISE)),
         Act::ThrowVoice(at) => (SoundKind::Voice, at, u32::from(VOICE_NOISE)),
         Act::Howl => (SoundKind::Howl, actor.pos, u32::from(HOWL_NOISE)),
+        Act::Order => {
+            let loudness = content.allies().map_or(VOICE_NOISE, |r| r.order_noise);
+            (SoundKind::Voice, actor.pos, u32::from(loudness))
+        }
         Act::Kick(p) => (SoundKind::Banging, p, u32::from(KICK_NOISE)),
         Act::Dig => (SoundKind::Digging, actor.pos, u32::from(DIG_NOISE)),
     };

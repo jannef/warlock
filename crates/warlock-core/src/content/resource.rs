@@ -39,7 +39,8 @@ pub enum Build {
     Hit,
     /// A blow of the holder's was a critical.
     Critical,
-    /// The holder was hit by a blow.
+    /// The holder was hit by a blow: any that hit, even one their armour soaked or they
+    /// resisted to nothing (`Strike::is_hit`).
     Struck,
     /// A sneak attack of the holder's hit: a blow at a creature unaware of it (spec §8 "Class
     /// abilities": the thief's sneak attack).

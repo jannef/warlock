@@ -313,7 +313,9 @@ impl World {
         };
         // In the order ties go: the player, then the creatures by ascending id.
         let creatures = self.state.actors.values();
-        let creatures = creatures.filter(|a| a.level == *level && a.id != player);
+        // The retinue travels with the player and takes no turn (`ally.rs`).
+        let creatures =
+            creatures.filter(|a| a.level == *level && a.id != player && !a.in_retinue());
         let mut schedule: Vec<Scheduled> = std::iter::once(self.state.player())
             .chain(creatures)
             .map(scheduled)
@@ -372,6 +374,8 @@ impl World {
                 actor.energy = s.energy;
             }
         }
+        // Allies whose time has run out depart (`ally.rs`).
+        self.allies_lapse(events);
         // The player's next action is under way from here.
         self.acting = Some(player);
         self.fresh.clear();

@@ -267,6 +267,34 @@ fn a_soaked_bite_does_not_poison_and_says_what_it_glanced_off() {
 }
 
 #[test]
+fn a_soaked_bite_still_feeds_the_rage() {
+    // Rage builds on hits taken before mitigation (#842): in a leather jerkin every bite that
+    // lands glances off, and each is a point of rage all the same.
+    let mut w = world();
+    wear(&mut w, &[(one("leather_jerkin"), "body")]);
+    w.apply(&"resource:rage".parse().expect("action"));
+    let rage = w.content().resource_id("rage").expect("rage");
+    let held = |w: &World| (w.state.player().resources.get(rage)).map(|p| p.value);
+    let start = held(&w).expect("raging");
+    let hp = w.state.player().hp;
+    let player = w.state.player;
+    let tortoise = actor_of(&w, "tortoise");
+    let mut soaked = 0;
+    for _ in 0..8 {
+        let mut events = Vec::new();
+        if let Some(blow) = w.attack(tortoise, player, AttackKind::Melee, &mut events)
+            && blow.strike.is_hit()
+        {
+            assert_eq!(blow.strike, Strike::Soaked);
+            soaked += 1;
+        }
+    }
+    assert!(soaked > 0);
+    assert_eq!(held(&w), Some(start + soaked), "{soaked} bites soaked");
+    assert_eq!(w.state.player().hp, hp, "and none of them hurt");
+}
+
+#[test]
 fn weapons_and_missiles_carry_their_penetration() {
     let mut w = world();
     let content = w.content().clone();

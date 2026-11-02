@@ -323,10 +323,12 @@ fn the_built_in_rage_raises_and_lowers_scores_blocks_reading_and_is_followed_by_
     );
     // The hit points the rage gave go with it.
     assert_eq!(w.state.player().hp, lasting);
-    // Reading again, and ten minutes later the exhaustion passes too.
+    // Reading again, and two and a half minutes later the exhaustion passes too.
     run(&mut w, "read:a");
     assert_ne!(last_message(&w), "You cannot read while raging.");
-    run(&mut w, "wait*100");
+    run(&mut w, "wait*23");
+    assert!(effect(&w, player, "exhausted").is_some(), "not yet");
+    run(&mut w, "wait*2");
     assert_eq!(effect(&w, player, "exhausted"), None);
     assert_eq!(scores(&w), calm);
 }

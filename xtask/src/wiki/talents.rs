@@ -482,6 +482,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("threat range {} with every attack", signed(value))
         }
         TalentEffect::RerollFumble => "a natural 2 on the attack roll is rolled again, once".into(),
+        TalentEffect::AllyMod { to_hit, protection } => {
+            let mut parts = Vec::new();
+            if to_hit != 0 {
+                parts.push(format!("to-hit {} on their attacks", signed(to_hit)));
+            }
+            if protection != 0 {
+                parts.push(format!("Protection {}", signed(protection)));
+            }
+            format!("your allies get {}", parts.join(" and "))
+        }
         TalentEffect::MaxHpPerLevels {
             per_levels,
             at_least,

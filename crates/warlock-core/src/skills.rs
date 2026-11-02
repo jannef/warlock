@@ -295,6 +295,8 @@ pub enum Use {
     Surprise,
     /// A try at treating oneself (spec §8 "Skills": Heal), whatever comes of it.
     Heal,
+    /// An order given to one's allies, or an ally's kill (spec §8 "Allies": Handle animal).
+    Handle,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
@@ -335,6 +337,7 @@ impl Use {
             Use::SneakAttack => "a sneak attack that hits",
             Use::Surprise => "being caught unawares (the initiative check, whatever comes of it)",
             Use::Heal => "trying to treat bleeding, poison, or a disease",
+            Use::Handle => "giving your allies an order, or a kill of theirs",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
@@ -452,6 +455,7 @@ impl Use {
             Use::SneakAttack => "sneak_attack",
             Use::Surprise => "surprise",
             Use::Heal => "heal",
+            Use::Handle => "handle",
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Temper => "temper",

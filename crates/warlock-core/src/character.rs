@@ -641,7 +641,7 @@ mod tests {
         if horoscope {
             // The builtin signs' picks name animals and elements this horoscope lacks.
             let picks: Vec<String> = (files.table("talents"))
-                .filter(|(_, text)| text.contains("animal = ") || text.contains("element = "))
+                .filter(|(_, text)| text.contains("animal = \"") || text.contains("element = \""))
                 .map(|(path, _)| path.to_string())
                 .collect();
             for path in picks {

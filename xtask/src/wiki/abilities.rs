@@ -4,7 +4,7 @@
 use super::actions::at_normal_pace;
 use super::text::{Term, anchored};
 use std::fmt::Write as _;
-use warlock_core::ability::{Ability, Aim};
+use warlock_core::ability::{Ability, Aim, Source};
 use warlock_core::content::{
     BASE_TURN, ClassActive, Content, Offer, SignActive, TalentEffect, price,
 };
@@ -61,6 +61,9 @@ pub(super) fn abilities(content: &Content) -> String {
                 "everyone beside a forge's anvil (tempering takes ten minutes)".into()
             }
             Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
+            Ability::Heel | Ability::Hold | Ability::SetOn => {
+                "everyone with an ally (usable while one is on the level)".into()
+            }
             // Weapon abilities have a table of their own (`weapon_abilities.rs`).
             Ability::Weapon(..) => continue,
         };
@@ -91,6 +94,8 @@ pub(super) fn abilities(content: &Content) -> String {
                 let cost = content.action_costs().cost(kind);
                 (aim(a.aim(content)), at_normal_pace(price(cost, BASE_TURN)))
             }
+            // An order is a shout: no time at all.
+            None if a.source() == Source::Ally => (aim(a.aim(content)), "no time".to_string()),
             None => ("—", "not usable yet".to_string()),
         };
         let _ = writeln!(

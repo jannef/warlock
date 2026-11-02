@@ -271,7 +271,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `docs/dev/status-effects.md`; alignment never makes one unavailable, `docs/dev/alignment.md`;
   `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
   why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
-  wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
+  wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. The orders to one's allies
+  (`Ability::Heel`, `Hold`, `SetOn`, `Source::Ally`, the Allies group after Here) are had by nobody
+  and listed by `Ability::orders` while the player has an ally anywhere, greyed `NoAllies` with
+  none on the level (docs/dev/allies.md). Skills used as actions are
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
   variant of its own, listed in its skill's place (`Ability::use_of`: the skill's benefit effect
   names it, so `had_by` asks `Skills::trains_effect`): `Ability::Disarm`, Disable device's

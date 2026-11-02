@@ -83,14 +83,21 @@ never hold a pool, so their gear does nothing for them, only for whoever takes i
 A [berserker](classes.md#berserker)'s **Rage** [ability](abilities.md#ability-rage) (from the abilities menu, the time of a wait) gives them 12 rage,
 and they are **[Raging](status-effects.md#status-raging)** (see [Status effects](status-effects.md)) for as long as they hold any:
 [Strength](stats.md#stat-strength) +2 and [Toughness](stats.md#stat-toughness) +2, [Intelligence](stats.md#stat-intelligence) −2, and they can neither read nor spend [mana](mana.md#spending-it). Rage
-wears off a point a base turn, the turn of the rage itself first, resting too; at none the rage
-ends, its bar with it, and the [berserker](classes.md#berserker) is [Exhausted](status-effects.md#status-exhausted) for ten minutes, with no rage until that
-passes. Something that ends the [Raging](status-effects.md#status-raging) otherwise ends the rage too. The berserker's later levels
+wears off a point a base turn, the turn of the rage itself first, resting too, and fighting feeds it:
+
+- every blow, shot, or throw that hits you builds 1, even one your [Protection](combat.md#protection) soaks or you
+  [resist](damage-types.md#armour-and-resistance) to nothing (it need not hurt you);
+- every [critical](combat.md#criticals) of yours that does damage builds 2;
+- every kill of yours builds 3.
+
+A blow of yours that merely [lands](combat.md#hitting) builds nothing. Rage holds 20 at most, so a long fight banks no
+long calm after it. At none the rage ends, its bar with it, and the [berserker](classes.md#berserker) is
+[Exhausted](status-effects.md#status-exhausted) for two and a half minutes (150 seconds), with no rage until that passes. Something that ends the [Raging](status-effects.md#status-raging) otherwise ends the rage too. The berserker's later levels
 add to it (see [Talents](talents.md)):
 
-- **[Blood frenzy](talents.md#talent-blood-frenzy)** (level 40): every kill while raging builds 5 rage.
+- **[Blood frenzy](talents.md#talent-blood-frenzy)** (level 40): every kill while raging builds 5 rage more (8 in all).
 - **[Mighty rage](talents.md#talent-mighty-rage)** (level 50): [Raging](status-effects.md#status-raging) gives Strength +4 and Toughness +4, rage holds up to 30, and
-  the exhaustion lasts five minutes.
+  the exhaustion lasts 75 seconds.
 - **[Unstoppable](talents.md#talent-unstoppable)** (level 60): while [raging](status-effects.md#status-raging), [bleeding](status-effects.md#status-bleeding) and [poison](status-effects.md#status-poisoned) cost no hit points, and a blow
   that would take your last [hit point](combat.md#hit-points) leaves it to you for 10 rage, as often as you have that
   much; spending the last of it ends the rage.

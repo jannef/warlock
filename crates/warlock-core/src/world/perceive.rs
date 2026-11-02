@@ -207,7 +207,12 @@ impl World {
                 }
                 seen
             }
-            Event::LevelChanged { .. } | Event::Talked(_) | Event::VoiceThrown { .. } => true,
+            Event::LevelChanged { .. }
+            | Event::Talked(_)
+            | Event::VoiceThrown { .. }
+            | Event::Ordered { .. } => true,
+            // An ally departed where the player sees (spec §8 "Allies").
+            Event::Departed { at, .. } => perception.sees_actors_at(at),
             Event::Missile { ref path, .. } => !path.is_empty(),
             Event::Spell { ref cells, .. } => !cells.is_empty(),
             Event::Attacked {

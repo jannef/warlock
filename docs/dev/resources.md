@@ -49,8 +49,10 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   - `World::gain_resource(id, on)`: every pool held that builds on `on` gains its amount (its
     `builds`, plus the talents' `resource_build`s, `TalentMods::resource_builds`), up to the
     maximum. Called in `fight.rs::dies` (`Kill`, for `by`, creatures' deaths only),
-    `fight.rs::resolve` (`Hit` and `Critical` for the attacker, `Struck` for the target, on a
-    `Strike::Hit`, before the damage, so a killing blow counts), and `ambush.rs::ambushed`
+    `fight.rs::resolve` (`Hit` and `Critical` for the attacker on a `Strike::Hit`, `Struck` for
+    the target on every strike that `is_hit()`, `Soaked` and `Resisted` too (#842: the rage
+    builds on hits taken before mitigation; no other pool builds on `Struck`), before the
+    damage, so a killing blow counts), and `ambush.rs::ambushed`
     (`SneakAttack`, when the sneak attack's dice are added). A new event is a `Build` variant and
     one call where it happens.
   - `World::spend_resource(id, resource, amount, events) -> bool`: refused when not held or
@@ -103,7 +105,9 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
 - **Rage** (R1, #249; `world/rage.rs`): the talent effect `rage { resource = "rage" }`
   (`TalentMods::rage: Option<ResourceId>`, `rage_status` its resource's status) makes the Rage
   ability grant the pool with Raging (`World::rage`); the cooldown is Raging and what it `follows`
-  (`ability.rs::class_cooldown`). Blood frenzy is a `resource_build`, Mighty rage a
+  (`ability.rs::class_cooldown`). The pool's own `builds` (#842) are `struck` 1, `critical` 2,
+  and `kill` 3, and its `lacking` is "you have not the rage for it"; Exhausted `eases = 150`,
+  and Hardened is the level-50 row beside Mighty rage. Blood frenzy is a `resource_build`, Mighty rage a
   `resource_max` beside its `raise_percent` and `status_eases`, Unstoppable `unstoppable {
   statuses, cost }`: `World::unstoppable` spends `cost` rage for the last hit point
   (`spend_resource`, so the rage ends at 0), and `World::live` numbs the statuses while Raging

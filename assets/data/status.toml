@@ -209,7 +209,7 @@ end = "You no longer feel unwelcome."
 # Buffs and cooldowns (a class's abilities give them; the dev action `afflict:raging` too).
 # A berserker's rage: stronger and tougher, too wild to read or to cast; it lasts while their
 # Rage lasts (resources.toml: the status of the rage resource, so it never eases by itself);
-# then exhausted for ten minutes, and no rage until that passes.
+# then exhausted for two and a half minutes, and no rage until that passes.
 [[status]]
 id = "raging"
 name = "Raging"
@@ -227,7 +227,7 @@ id = "exhausted"
 name = "Exhausted"
 max = 1
 stacking = "refresh"
-eases = 600
+eases = 150
 penalty = { from = 1, strength = -1 }
 start = "You are exhausted."
 end = "You feel rested again."

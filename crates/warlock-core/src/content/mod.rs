@@ -7,6 +7,7 @@
 mod action;
 mod affix;
 mod alignment;
+mod ally;
 mod anim;
 pub mod animated;
 #[cfg(test)]
@@ -158,6 +159,7 @@ pub use affix::{
     MAX_TIERS, Rarity, Tier,
 };
 pub use alignment::{AlignmentRules, BandDef, ByAlignment, Shifts};
+pub use ally::AllyRules;
 pub use anim::GlyphAnim;
 pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Line, Numbers, Ramp, SlotLine};
 pub use background::{
@@ -636,6 +638,9 @@ pub struct Content {
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
+    /// The constants of the ally core (`data/allies.toml`, spec §8 "Allies"); none without the
+    /// file, when no ally can be made.
+    allies: Option<AllyRules>,
     /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
     stat_training: StatTraining,
     factions: Factions,
@@ -778,6 +783,7 @@ impl Content {
             surprise: None,
             encounter_tables: Vec::new(),
             forage: None,
+            allies: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
             lights: Vec::new(),
@@ -1085,6 +1091,10 @@ impl Content {
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
             content.forage = Some(ForageRules::parse(path, text, &content)?);
+        }
+        let path = "data/allies.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.allies = Some(AllyRules::parse(path, text)?);
         }
         let path = "data/stats.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2980,6 +2990,12 @@ impl Content {
     /// the file, when nobody forages.
     pub fn forage(&self) -> Option<&ForageRules> {
         self.forage.as_ref()
+    }
+
+    /// The constants of the ally core (spec §8 "Allies"; `data/allies.toml`); `None` without the
+    /// file, when no ally can be made.
+    pub fn allies(&self) -> Option<&AllyRules> {
+        self.allies.as_ref()
     }
 
     /// The rules of stat training (spec §8 "Stats"; `data/stats.toml`, else

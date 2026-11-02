@@ -1412,6 +1412,28 @@ fn actor_rows(world: &World) -> Vec<String> {
                 Some(by) => format!("{court}; summoned by {by}"),
                 None => court,
             };
+            // Whose ally it is, what made it one, how long it stays, and its order (spec §8
+            // "Allies"): `; ally of #0 (summoned, 4 min; follow)`, `(companion; stay at (12, 5))`,
+            // `(summoned; follow; retinue)`.
+            let court = match &a.ally {
+                Some(ally) => {
+                    let lasts = match ally.until {
+                        Some(until) => {
+                            let seconds = until.since(world.time()).as_seconds();
+                            format!(", {} min", seconds.div_ceil(60))
+                        }
+                        None => String::new(),
+                    };
+                    let order = match ally.order.at() {
+                        Some(at) => format!("{} at ({}, {})", ally.order.id(), at.x, at.y),
+                        None => ally.order.id().to_string(),
+                    };
+                    let retinue = if ally.retinue { "; retinue" } else { "" };
+                    let source = ally.source.id();
+                    format!("{court}; ally of {} ({source}{lasts}; {order}{retinue})", ally.master)
+                }
+                None => court,
+            };
             // The overworld encounter that made it (spec §7 "Overworld encounters").
             let court = match world.party_of(a.id) {
                 Some(entry) => format!("{court}; of encounter {entry}"),
@@ -1611,13 +1633,18 @@ fn summary(world: &World) -> String {
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     let dazzled = if view.dazzled() { " dazzled" } else { "" };
+    // The allies with the player: on the level or in the retinue (spec §8 "Allies").
+    let allies = match view.allies_with() {
+        0 => String::new(),
+        n => format!(" allies {n}"),
+    };
     // An overworld encounter to answer (spec §7 "Overworld encounters").
     let encounter = view.encounter().map_or(String::new(), |e| {
         let choices: Vec<&str> = e.choices.iter().map(|(_, c)| c.id()).collect();
         format!(" encounter pending: {} ({})", e.name, choices.join(", "))
     });
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{encounter}{weather} \
+        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{allies}{encounter}{weather} \
          temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
@@ -1684,6 +1711,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             // Stalker's eye: it has not noticed the player (never told without the talent).
             if a.unaware {
                 seen["unaware"] = json!(true);
+            }
+            // An ally of the player's (spec §8 "Allies").
+            if a.ally {
+                seen["ally"] = json!(true);
             }
             seen
         })
@@ -1910,6 +1941,21 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "hunger": view.own_hunger(),
         "stance": view.own_stance().id(),
         "dazzled": view.dazzled(),
+        // The player's allies, wherever they are (spec §8 "Allies").
+        "allies": (view.allies().iter())
+            .map(|a| json!({
+                "id": a.id,
+                "creature": content.creature(a.creature).id,
+                "name": a.name,
+                "health": a.health,
+                "order": a.order.id(),
+                "at": a.order.at(),
+                "source": a.source.id(),
+                "lasts": a.lasts,
+                "retinue": a.retinue,
+                "here": a.here,
+            }))
+            .collect::<Vec<_>>(),
         // The overworld encounter to answer (spec §7 "Overworld encounters"), or null.
         "encounter": view.encounter().map(|e| {
             let (entry, outcome) = view.encounter_pending().expect("pending");

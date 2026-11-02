@@ -637,9 +637,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and never the pace. The dev action `resource:ID` grants one (§9; "You gain Rage: 12 (dev).").
   - **Rage** (the berserker's, R1; `world/rage.rs`): the Rage ability (a wait's time) grants the
     Rage resource (20 at most, starting at 12, a point lost every 6 s, resting too; it ends at
-    zero) and with it Raging; the action's own wait costs the first point. No rage while Raging
-    or Exhausted lasts. Blood frenzy (level 40): each kill credited to the berserker builds 5
-    rage (a `resource_build`). Mighty rage (50): Raging's raises doubled, 10 more rage at most,
+    zero) and with it Raging; the action's own wait costs the first point. Fighting feeds it
+    (#842, `builds` in data): every blow, shot, or throw that hits the holder builds 1 (`Struck`,
+    raised on every strike that `is_hit()`: soaked and resisted to nothing too, the hit taken
+    before mitigation), a critical of theirs that does damage 2, and a kill credited to them 3;
+    a blow of theirs that lands builds nothing. Exhausted (150 s) follows its end; no rage while
+    Raging or Exhausted lasts. Blood frenzy (level 40): each kill credited to the berserker
+    builds 5 rage more (a `resource_build`, 8 in all). Mighty rage (50): Raging's raises doubled, 10 more rage at most,
     Exhausted eases twice as fast. Unstoppable (60): while raging, bleeding and poison tick
     nothing, and a blow (`Harm::Actor`) that would take the last hit point leaves it for 10 rage
     (`World::spend_resource`; refused, so the blow falls, with less), as often as the rage

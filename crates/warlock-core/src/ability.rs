@@ -21,7 +21,7 @@
 //!
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
-use crate::action::Action;
+use crate::action::{Action, Command};
 use crate::content::{
     ActionKind, ActiveAim, ClassActive, Content, Offer, ResourceCost, ResourceId, SignActive,
     SkillDef, SpellId, StatusId, TalentActive, TalentEffect, WeaponAbilityId, WeaponSkillId,
@@ -111,6 +111,18 @@ pub enum Ability {
     /// Drink at a healing spring (spec §7 "Special rooms"): [`Action::Drink`]. A place offers
     /// it, as Pray: listed only while the player stands next to a spring.
     Drink,
+    /// Come to heel (spec §8 "Allies"): [`Action::Order`] with [`Command::Heel`], every ally of
+    /// the player's on the level follows. The Allies group ([`Ability::orders`]): listed while
+    /// the player has an ally anywhere, unavailable ([`Unavailable::NoAllies`]) with none on the
+    /// level. No time, a voice's noise.
+    Heel,
+    /// Hold here (spec §8 "Allies"): [`Action::Order`] with [`Command::Hold`], every ally holds
+    /// the cell it stands on. Listed and available as [`Ability::Heel`].
+    Hold,
+    /// Set on (spec §8 "Allies"): [`Action::Order`] with [`Command::SetOn`] a cell the player
+    /// sees, every ally goes there and fights what is near it. Listed and available as
+    /// [`Ability::Heel`]; it asks for the cell in the aiming mode.
+    SetOn,
 }
 
 /// Where an ability comes from: the abilities menu's groups, in this order.
@@ -136,6 +148,8 @@ pub enum Source {
     /// The place the character stands in (spec §7 "Special rooms"): what a special room's
     /// feature offers next to it (Pray at a forgotten altar, Drink at a spring).
     Place,
+    /// The character's allies (spec §8 "Allies"): the orders given to them.
+    Ally,
 }
 
 impl Source {
@@ -150,6 +164,7 @@ impl Source {
         Source::WeaponSkill,
         Source::Item,
         Source::Place,
+        Source::Ally,
     ];
 
     /// Its group's heading in the abilities menu.
@@ -164,6 +179,7 @@ impl Source {
             Source::WeaponSkill => "Weapon skills",
             Source::Item => "Items",
             Source::Place => "Here",
+            Source::Ally => "Allies",
         }
     }
 
@@ -179,6 +195,7 @@ impl Source {
             Source::WeaponSkill => "weapon_skill",
             Source::Item => "item",
             Source::Place => "place",
+            Source::Ally => "ally",
         }
     }
 }
@@ -229,6 +246,8 @@ pub enum Unavailable {
     /// skill, the grip of its style, a shield for shield blocking's ("your hands are not so
     /// held").
     NotSoHeld,
+    /// An order with no ally of the player's on the level to hear it (spec §8 "Allies").
+    NoAllies,
 }
 
 impl Unavailable {
@@ -252,6 +271,7 @@ impl Unavailable {
                 }
             }
             Unavailable::NotSoHeld => "your hands are not so held".into(),
+            Unavailable::NoAllies => "no allies here".into(),
         }
     }
 
@@ -265,6 +285,7 @@ impl Unavailable {
             Unavailable::NothingToTreat => "nothing_to_treat".into(),
             Unavailable::FiresByItself => "fires_by_itself".into(),
             Unavailable::NotSoHeld => "not_so_held".into(),
+            Unavailable::NoAllies => "no_allies".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
                 format!("short:{}", content.resource(resource).id).into()
@@ -341,6 +362,7 @@ impl Ability {
             .chain(skills)
             .chain(weapon_skills)
             .chain(here)
+            .chain(Ability::orders(content.allies().is_some()))
             .collect();
         all.sort_by_key(|a| a.source());
         all
@@ -381,6 +403,17 @@ impl Ability {
         found.sort();
         found.dedup();
         found
+    }
+
+    /// The orders to one's allies (spec §8 "Allies"), in menu order, while `any`: the player
+    /// has an ally anywhere (the perception knows); none otherwise, as a place's abilities are
+    /// absent away from the place.
+    pub(crate) fn orders(any: bool) -> Vec<Ability> {
+        if any {
+            vec![Ability::Heel, Ability::Hold, Ability::SetOn]
+        } else {
+            Vec::new()
+        }
     }
 
     /// Every ability `actor` has, in menu order.
@@ -426,8 +459,10 @@ impl Ability {
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
             Ability::ShieldBash => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
-            // A place offers it, not who one is ([`Ability::here`]).
+            // A place offers it, not who one is ([`Ability::here`]); an order needs allies
+            // ([`Ability::orders`]).
             Ability::Pray | Ability::Temper | Ability::Drink => false,
+            Ability::Heel | Ability::Hold | Ability::SetOn => false,
         }
     }
 
@@ -451,6 +486,9 @@ impl Ability {
             Ability::Pray => "pray",
             Ability::Temper => "temper",
             Ability::Drink => "drink",
+            Ability::Heel => "heel",
+            Ability::Hold => "hold",
+            Ability::SetOn => "set_on",
         }
     }
 
@@ -478,6 +516,9 @@ impl Ability {
             Ability::Pray => "Pray",
             Ability::Temper => "Temper",
             Ability::Drink => "Drink",
+            Ability::Heel => "Come to heel",
+            Ability::Hold => "Hold here",
+            Ability::SetOn => "Set on",
         };
         name.into()
     }
@@ -530,6 +571,18 @@ impl Ability {
                 "Drink from the spring beside you. Its water is mostly good, and now and then \
                  foul."
             }
+            Ability::Heel => {
+                "Call your allies to your side: they follow you and fight what threatens you. \
+                 A shout, heard about you; it takes no time."
+            }
+            Ability::Hold => {
+                "Tell your allies to hold where they stand, fighting only what comes beside \
+                 them. A shout; it takes no time."
+            }
+            Ability::SetOn => {
+                "Set your allies on a place you see: they go there and fight what is near it, \
+                 then come back to heel. A shout; it takes no time."
+            }
         }
     }
 
@@ -549,6 +602,7 @@ impl Ability {
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash | Ability::Weapon(..) => Source::WeaponSkill,
             Ability::Pray | Ability::Temper | Ability::Drink => Source::Place,
+            Ability::Heel | Ability::Hold | Ability::SetOn => Source::Ally,
         }
     }
 
@@ -574,9 +628,11 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::Forage
             | Ability::Pray
+            | Ability::Heel
+            | Ability::Hold
             | Ability::Drink => Aim::Nothing,
             Ability::Temper => Aim::Item,
-            Ability::ThrowVoice => Aim::Cell,
+            Ability::ThrowVoice | Ability::SetOn => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
                 Aim::Direction
@@ -603,6 +659,8 @@ impl Ability {
             Ability::Pray => Some(ActionKind::Pray),
             Ability::Temper => Some(ActionKind::Temper),
             Ability::Drink => Some(ActionKind::Drink),
+            // An order takes no time (spec §8 "Allies"): it is priced as nothing.
+            Ability::Heel | Ability::Hold | Ability::SetOn => None,
         }
     }
 
@@ -630,7 +688,10 @@ impl Ability {
             | Ability::Weapon(..)
             | Ability::Pray
             | Ability::Temper
-            | Ability::Drink => None,
+            | Ability::Drink
+            | Ability::Heel
+            | Ability::Hold
+            | Ability::SetOn => None,
         }
     }
 
@@ -697,6 +758,10 @@ impl Ability {
             (Ability::Forage, _) => Some(Action::Forage),
             // It asks for an item ([`Ability::action_on`]).
             (Ability::Temper, _) => None,
+            (Ability::Heel, _) => Some(Action::Order(Command::Heel)),
+            (Ability::Hold, _) => Some(Action::Order(Command::Hold)),
+            // It asks for a cell ([`Ability::action_at`]).
+            (Ability::SetOn, _) => None,
         }
     }
 
@@ -718,6 +783,7 @@ impl Ability {
     pub fn action_at(self, content: &Content, at: Pos) -> Option<Action> {
         match self {
             Ability::ThrowVoice => Some(Action::ThrowVoice(at)),
+            Ability::SetOn => Some(Action::Order(Command::SetOn(at))),
             Ability::Sign(active) if active.aimed() => Some(Action::Gift(active, Some(at))),
             Ability::Spell(spell) if aimed(content, spell) => {
                 Some(Action::Cast(spell_name(content, spell)?, Some(at)))
@@ -742,7 +808,9 @@ impl Ability {
             | Ability::ShieldBash
             | Ability::Pray
             | Ability::Temper
-            | Ability::Drink => None,
+            | Ability::Drink
+            | Ability::Heel
+            | Ability::Hold => None,
         }
     }
 
@@ -799,7 +867,11 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::Pray
             | Ability::Temper
-            | Ability::Drink => None,
+            | Ability::Drink
+            // Whether anyone is there to hear an order is the perception's to say.
+            | Ability::Heel
+            | Ability::Hold
+            | Ability::SetOn => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
                 .map(|w| w.cooldown)
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -932,7 +1004,8 @@ mod tests {
                 "Skills",
                 "Weapon skills",
                 "Items",
-                "Here"
+                "Here",
+                "Allies"
             ]
         );
     }
@@ -974,11 +1047,18 @@ mod tests {
                 "woodcraft",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(3).rev().copied().collect();
+        let last: Vec<Ability> = every.iter().rev().take(6).rev().copied().collect();
         assert_eq!(
             last,
-            [Ability::Pray, Ability::Temper, Ability::Drink],
-            "then what a place offers"
+            [
+                Ability::Pray,
+                Ability::Temper,
+                Ability::Drink,
+                Ability::Heel,
+                Ability::Hold,
+                Ability::SetOn
+            ],
+            "then what a place offers, then the orders to one's allies"
         );
         // The weapon skills' group: the shield bash, then what the ranks teach, by skill in file
         // order, then rank.
