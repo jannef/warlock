@@ -135,7 +135,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   overworld's order) records that location as its edge exit, like a local area: walking off its
   edge returns to the location's cell (Cēaptūn has no stairs and is left only so, or as below).
   An outdoor level no location leads into (the showcase's courtyard) has no edge exit and keeps
-  its stairs. **The quick leave**: `<` (`ascend`) on an outdoor level with an edge exit, when the
+  its stairs. **The edge rule** (#803): walking off the edge of an outdoor level with an edge
+  exit is refused while a creature hostile to the player (by faction stance, awake or asleep,
+  seen or not) is on the level within `edge_reach` cells of them (`data/encounters.toml`, 3;
+  Chebyshev distance), read from the true positions, with one line that names no creature
+  ("They are too close to slip away."), taking no time. **The quick leave**: `<` (`ascend`) on an outdoor level with an edge exit, when the
   player is not on stairs up, leaves it exactly as walking off the edge does (the same arrival,
   message, and the time of taking stairs) if and only if no creature hostile to the player
   (by faction stance, awake or asleep) is on the level where the player sees it, at any distance,

@@ -36,6 +36,7 @@ mod dungeon;
 mod effect;
 #[cfg(test)]
 mod elemental_roster_tests;
+mod encounter;
 mod experience;
 mod faction;
 #[cfg(test)]
@@ -186,6 +187,7 @@ pub use effect::{
     Darken, EffectDef, EffectLight, EffectShape, FILL_GLYPH, MAX_BURST_RADIUS, MAX_DARKEN,
     MAX_SHAKE_PIXELS, Shake,
 };
+pub use encounter::{EDGE_REACHES, EncounterRules};
 pub use experience::{
     Discovery, Experience, FACTORS, Factor, Guideline, Kills, Levels, MAX_LEVEL, MAX_XP, pace_words,
 };
@@ -614,6 +616,8 @@ pub struct Content {
     trap_avoid: TrapAvoid,
     /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
     search: SearchRules,
+    /// The numbers of encounters (`data/encounters.toml`, spec §7 "Leaving an outdoor area").
+    encounters: EncounterRules,
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
     /// "Stealing"); none without the file.
     steal: Option<StealRules>,
@@ -760,6 +764,7 @@ impl Content {
             trap_ids: BTreeMap::new(),
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
+            encounters: EncounterRules::default(),
             steal: None,
             surprise: None,
             forage: None,
@@ -1051,6 +1056,10 @@ impl Content {
             content.study = Some(StudyRules::parse(path, text)?);
         }
         content.mishaps = learning::parse(files.table("mishaps"), &content)?;
+        let path = "data/encounters.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.encounters = EncounterRules::parse(path, text)?;
+        }
         let path = "data/search.toml";
         if let Some(text) = files.get_optional(path) {
             content.search = SearchRules::parse(path, text)?;
@@ -2929,6 +2938,12 @@ impl Content {
     /// `[avoid]` in `data/traps.toml`, else [`TrapAvoid::default`]).
     pub fn trap_avoid(&self) -> &TrapAvoid {
         &self.trap_avoid
+    }
+
+    /// The numbers of encounters (spec §7 "Leaving an outdoor area"; `data/encounters.toml`,
+    /// else [`EncounterRules::default`]).
+    pub fn encounters(&self) -> &EncounterRules {
+        &self.encounters
     }
 
     /// The numbers of searching for hidden features (spec §8 "Searching"; `data/search.toml`,
