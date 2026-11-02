@@ -145,24 +145,6 @@ fn dark_adaptation_is_for_darkvision_or_low_light_eyes() {
     );
 }
 
-/// A save from before #817 held Owl eyes, Dark adaptation's low-light twin: it loads holding
-/// Dark adaptation in its place, once even when it held both, and says so in the log.
-#[test]
-fn owl_eyes_in_a_save_is_dark_adaptation() {
-    for both in [false, true] {
-        let mut w = world("den");
-        w.player_mut().talents.take("owl_eyes", None);
-        if both {
-            w.player_mut().talents.take("dark_adaptation", None);
-        }
-        let loaded = crate::save::decode(&crate::save::encode(&w), CONTENT.clone()).expect("loads");
-        let held: Vec<_> = loaded.state().player().talents.iter().cloned().collect();
-        assert_eq!(held.len(), 1, "{held:?}");
-        assert_eq!((held[0].id.as_str(), held[0].rank), ("dark_adaptation", 1));
-        assert_eq!(loaded.eyes().darkvision, 2, "the two cells, once");
-    }
-}
-
 #[test]
 fn dark_adaptation_sees_farther_in_the_dark() {
     let mut w = world("den");

@@ -1,8 +1,9 @@
-//! Save format: a versioned envelope around [`WorldState`], as gzip-compressed JSON (spec §7).
+//! Save format: an envelope around [`WorldState`], as gzip-compressed JSON (spec §7).
 //!
 //! This module only turns a world into bytes and back; where the bytes live is the app's concern.
-//! Before 1.0, a save from another format version, a build with different content, or a damaged
-//! file is rejected with a clear error and never misread.
+//! A save is pinned to the game version that wrote it ([`crate::GAME_VERSION`], the workspace
+//! version): a save from another version, a build with different content, or a damaged file is
+//! rejected with a clear error and never misread. Nothing carries a save across versions.
 
 use crate::content::Content;
 use crate::world::{World, WorldState};
@@ -15,75 +16,6 @@ use std::sync::Arc;
 
 /// Marker identifying a Warlock save inside the envelope.
 const MAGIC: &str = "WARLOCK-SAVE";
-/// The only save format version this build reads.
-///
-/// Bumped by the integrator once per release, never by a feature PR (`docs/dev/merging.md`):
-/// before 1.0, saves are not promised across development builds (a save a build cannot read is
-/// renamed `run.sav.bad`, never lost), so every incompatible change to [`WorldState`] or to the
-/// content fingerprint between two releases is covered by the next release's bump. The history
-/// below is per feature up to 30; from here on it is one line per release.
-///
-/// 2: the gameplay random stream in the world state; ambient and placed lights in level states.
-/// 3: the game clock (`time`) in the world state; level kind and turn length in level states.
-/// 4: level states keep their start (arrival point) and edge exit (local areas of the overworld).
-/// 5: actors carry scheduler energy (the speed system).
-/// 6: objects: piles and remembered piles in level states, inventories on actors.
-/// 7: creatures keep what they have in mind (`Actor::mind`: last seen, noise, post; the AI).
-/// 8: actors have stats (`Actor::stats`: a score and a potential for every stat).
-/// 9: the player's character (`WorldState::character`: race, gender, and class, the stat the
-/// gender raised, birth date, and birth sign).
-/// 10: actors wear and wield things (`Actor::equipment`: an inventory stack per slot).
-/// 11: combat: actors have hit points (`Actor::hp`, `hp_base`, `regen`); the world records the
-///     player's death.
-/// 12: ranged combat: level states keep their fires (burning missiles and when they burn out).
-/// 13: experience: the player's XP total in the world state (`WorldState::experience`); creature
-///     types have levels and XP.
-/// 14: skills: actors' trained skills (`Actor::skills`: value and training marks by skill) and the
-///     training random stream (`WorldState::training`).
-/// 15: special rooms: level states keep their special rooms and whether the player has been in
-///     each (`LevelState::rooms`); content fingerprints cover room effect ids.
-/// 16: weapon skills: actors have a rank and marks in each (`Actor::weapon_skills`).
-/// 17: digging: level states keep the work done on walls dug into (`LevelState::dug`).
-/// 18: combat stances (`Actor::stance`).
-/// 19: blood: level states keep their stains and the stains as last seen.
-/// 20: status effects: actors have them (`Actor::effects`), their healing progress counts
-///     hundredths of a second (`Actor::regen`), and the player's death records the status that
-///     killed them (`Death::of`).
-/// 21: hunger: the player's satiation (`Actor::satiation`: nutrition and what time has banked),
-///     corpses' death times (`Stack::died`), and what killed the player when neither a creature
-///     nor a status did (`Death::cause`: starving, choking).
-/// 22: doors: level states keep the locks on their doors (`LevelState::locks`).
-/// 23: NPCs and dialogue: actors keep how far their talk has got (`Actor::talk`: lines said and
-///     muttered, met) and the unique character a level made them (`Actor::npc`).
-/// 24: temperature and ice: level states keep their temperature (underground), the ice on their
-///     water, and when it was last brought up to date.
-/// 25: diseases: actors carry them (`Actor::diseases`: each infection's timer, stage,
-///     progressions, recovery streak, and who gave it) and stat damage (`Actor::damage`, with
-///     its mending progress); disease ids are in the content fingerprint.
-/// 26: magic items: a stack may carry what it rolled (`Stack::magic`: rarity, item level, each
-///     affix by id with its tier and value, a rare item's name, whether it is identified).
-/// 27: quests: the player's quests (stage, completions, counted kills, reached) and the kills
-///     they count, by level and creature type (`WorldState::quests`).
-/// 28: traps: level states keep their traps (kind, known, charges left, a bolt's direction) and
-///     the traps the player remembers; the player's death records the trap that killed them.
-/// 29: fighting styles: `Actor::weapon_skills` holds a rank and marks in each style too (after
-///     the weapon skills), and a light weapon may be in the off hand (two weapons).
-/// 30: shops: level states keep their shops (`LevelState::shops`: the keeper, the ways out,
-///     what the player owes, how the keeper stands); content fingerprints cover shop ids, and
-///     objects have values.
-/// 31: the first campaign (0.6.0): campaigns as directories, danger and spawning, hidden
-///     locations and reveals, creature gear, temple services, quests and proper names; new
-///     content ids change the fingerprint.
-/// 32: 0.7.0: creature ids, factions, terrain, statuses, objects and talents changed widely,
-///     so the content fingerprints differ; saves of 0.6.0 do not load.
-/// 33: 0.8.0: chests, mimics, treasure rooms, combat progression (stamina, weapon abilities,
-///     potions), two shields, the affix ladder, new and split skills (Detect traps, Negotiation),
-///     optional class skills, the lantern as an item; ids and content fingerprints changed, so
-///     saves of 0.7.0 do not load.
-/// 34: 0.9.0: surprise and sneak attacks (Mind::noticed and ::missed, the Surprised status, two
-///     skills, the thief's rework), the background story (`Character::story`, its talents and
-///     fateful lines); ids and content fingerprints changed, so saves of 0.8.0 do not load.
-pub const FORMAT_VERSION: u32 = 34;
 /// Upper bound on the decompressed size, so a hostile file cannot exhaust memory.
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 
@@ -92,18 +24,27 @@ const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 pub enum SaveError {
     #[error("this is not a Warlock save file")]
     NotASave,
-    #[error("this save uses format version {found}, but this game reads version {supported}")]
-    UnsupportedVersion { found: u32, supported: u32 },
+    /// Made by another version of the game (`found`; empty when the save does not say).
+    #[error("this save was made by {}, and only that version can continue it", version_words(.found))]
+    OtherVersion { found: String },
     #[error("this save was made with different game content and cannot be loaded")]
     ContentMismatch,
     #[error("the save file is damaged: {0}")]
     Corrupt(String),
 }
 
+/// `version 0.8.0`, or for a save that does not say, `an older version`.
+fn version_words(found: &str) -> String {
+    if found.is_empty() {
+        "an older version".into()
+    } else {
+        format!("version {found}")
+    }
+}
+
 #[derive(Serialize)]
 struct EnvelopeOut<'a> {
     magic: &'static str,
-    format_version: u32,
     game_version: &'a str,
     content_fingerprint: u64,
     state: &'a WorldState,
@@ -113,7 +54,8 @@ struct EnvelopeOut<'a> {
 #[derive(Deserialize)]
 struct EnvelopeIn {
     magic: String,
-    format_version: u32,
+    #[serde(default)]
+    game_version: String,
     #[serde(default)]
     content_fingerprint: u64,
     state: serde_json::Value,
@@ -129,7 +71,6 @@ pub fn encode(world: &World) -> Vec<u8> {
 pub fn encode_state(state: &WorldState, content_fingerprint: u64) -> Vec<u8> {
     let envelope = EnvelopeOut {
         magic: MAGIC,
-        format_version: FORMAT_VERSION,
         game_version: crate::GAME_VERSION,
         content_fingerprint,
         state,
@@ -173,10 +114,9 @@ pub fn decode(bytes: &[u8], content: Arc<Content>) -> Result<World, SaveError> {
     if envelope.magic != MAGIC {
         return Err(SaveError::NotASave);
     }
-    if envelope.format_version != FORMAT_VERSION {
-        return Err(SaveError::UnsupportedVersion {
-            found: envelope.format_version,
-            supported: FORMAT_VERSION,
+    if envelope.game_version != crate::GAME_VERSION {
+        return Err(SaveError::OtherVersion {
+            found: envelope.game_version,
         });
     }
     if envelope.content_fingerprint
@@ -192,7 +132,7 @@ pub fn decode(bytes: &[u8], content: Arc<Content>) -> Result<World, SaveError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Action, Dir};
+    use crate::{Action, Dir, GAME_VERSION};
 
     fn content() -> Arc<Content> {
         Arc::new(Content::builtin().expect("builtin content loads"))
@@ -238,40 +178,54 @@ mod tests {
     }
 
     #[test]
-    fn saves_with_a_level_turn_length_still_load() {
-        // Before action costs (#105) every level state had its turn length; it is ignored now.
-        let w = world();
-        let mut state = serde_json::to_value(w.state()).expect("state");
-        let levels = state["levels"].as_object_mut().expect("levels");
-        for level in levels.values_mut() {
-            level["turn"] = serde_json::json!(600);
-        }
-        let mut envelope = serde_json::json!({
-            "magic": MAGIC,
-            "format_version": FORMAT_VERSION,
-            "content_fingerprint": w.fingerprint(),
-        });
-        envelope["state"] = state;
-        let restored = decode(&gz(&envelope.to_string()), content()).expect("loads");
-        assert_eq!(restored.state(), w.state());
+    fn a_save_records_the_version_that_wrote_it() {
+        let mut json = Vec::new();
+        let bytes = encode(&world());
+        GzDecoder::new(&bytes[..])
+            .read_to_end(&mut json)
+            .expect("gunzip");
+        let envelope: serde_json::Value = serde_json::from_slice(&json).expect("json");
+        assert_eq!(envelope["game_version"], GAME_VERSION);
     }
 
+    /// A save of another version is refused before its state is read, however well it would
+    /// read; one that names no version (older than the pin) too.
     #[test]
-    fn rejects_other_format_version() {
-        let json = r#"{"magic":"WARLOCK-SAVE","format_version":99,"state":null}"#;
+    fn rejects_another_version() {
+        let w = world();
+        let mut state = serde_json::to_value(w.state()).expect("state");
+        let other = |version: Option<&str>, state: &mut serde_json::Value| {
+            let mut envelope = serde_json::json!({
+                "magic": MAGIC,
+                "content_fingerprint": w.fingerprint(),
+            });
+            if let Some(version) = version {
+                envelope["game_version"] = version.into();
+            }
+            envelope["state"] = state.take();
+            decode(&gz(&envelope.to_string()), content()).err()
+        };
         assert_eq!(
-            decode(&gz(json), content()).err(),
-            Some(SaveError::UnsupportedVersion {
-                found: 99,
-                supported: FORMAT_VERSION
+            other(Some("0.1.0"), &mut state.clone()),
+            Some(SaveError::OtherVersion {
+                found: "0.1.0".into()
             })
         );
+        let unnamed = other(None, &mut state);
+        assert_eq!(
+            unnamed,
+            Some(SaveError::OtherVersion {
+                found: String::new()
+            })
+        );
+        let text = unnamed.map(|e| e.to_string()).unwrap_or_default();
+        assert!(text.contains("an older version"), "{text}");
     }
 
     #[test]
     fn rejects_content_mismatch() {
         let json = format!(
-            r#"{{"magic":"WARLOCK-SAVE","format_version":{FORMAT_VERSION},"content_fingerprint":1,"state":null}}"#
+            r#"{{"magic":"WARLOCK-SAVE","game_version":"{GAME_VERSION}","content_fingerprint":1,"state":null}}"#
         );
         assert_eq!(
             decode(&gz(&json), content()).err(),
@@ -282,7 +236,7 @@ mod tests {
     #[test]
     fn rejects_foreign_data() {
         assert_eq!(decode(b"hello", content()).err(), Some(SaveError::NotASave));
-        let other = gz(r#"{"magic":"OTHER","format_version":1,"state":1}"#);
+        let other = gz(r#"{"magic":"OTHER","game_version":"0.1.0","state":1}"#);
         assert_eq!(decode(&other, content()).err(), Some(SaveError::NotASave));
     }
 
@@ -299,7 +253,7 @@ mod tests {
             Err(SaveError::Corrupt(_))
         ));
         let bad_state = format!(
-            r#"{{"magic":"WARLOCK-SAVE","format_version":{FORMAT_VERSION},"content_fingerprint":{},"state":{{"seed":"x"}}}}"#,
+            r#"{{"magic":"WARLOCK-SAVE","game_version":"{GAME_VERSION}","content_fingerprint":{},"state":{{"seed":"x"}}}}"#,
             content().fingerprint_for("")
         );
         assert!(matches!(

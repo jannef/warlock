@@ -2312,9 +2312,6 @@ pub struct TalentBook {
     pub coverage: Coverage,
     /// The most ranks a talent may have.
     pub max_ranks: u8,
-    /// Talents merged into another (`merged`): a removed id, the talent a save holding it
-    /// holds instead ([`crate::talent::Talents::merge_removed`]).
-    pub merged: BTreeMap<String, String>,
     list: Vec<TalentDef>,
     ids: BTreeMap<String, TalentId>,
 }
@@ -2466,8 +2463,6 @@ struct TalentFile {
     coverage: Option<Coverage>,
     /// The pairs the identical-effects check lets be (`talent_alike.rs`).
     alike: Option<Vec<[String; 2]>>,
-    /// Removed talents and the talent each was merged into.
-    merged: Option<BTreeMap<String, String>>,
     #[serde(default)]
     tree: Vec<TreeSpec>,
     #[serde(default)]
@@ -2854,7 +2849,6 @@ pub(super) fn parse<'a>(
     let mut max_ranks = Once::new("max_ranks");
     let mut coverage = Once::new("coverage");
     let mut alike = Once::new("alike");
-    let mut merged = Once::new("merged");
     let mut first_file = None;
     let mut trees: Vec<(&str, TreeSpec)> = Vec::new();
     let mut systems: Vec<(&str, SystemSpec)> = Vec::new();
@@ -2866,7 +2860,6 @@ pub(super) fn parse<'a>(
         max_ranks.take(file, parsed.max_ranks)?;
         coverage.take(file, parsed.coverage)?;
         alike.take(file, parsed.alike.map(|pairs| (file, pairs)))?;
-        merged.take(file, parsed.merged.map(|ids| (file, ids)))?;
         trees.extend(parsed.tree.into_iter().map(|t| (file, t)));
         systems.extend(parsed.system.into_iter().map(|s| (file, s)));
         pending.extend(parsed.talent.into_iter().map(|spec| Pending { file, spec }));
@@ -2882,7 +2875,6 @@ pub(super) fn parse<'a>(
         systems: Vec::new(),
         coverage,
         max_ranks,
-        merged: BTreeMap::new(),
         list: Vec::new(),
         ids: BTreeMap::new(),
     };
@@ -3118,23 +3110,6 @@ pub(super) fn parse<'a>(
     }
     let (alike_file, alike) = alike.get_or((first_file, Vec::new()));
     super::talent_alike::check(&book, &alike, alike_file)?;
-    // A merged id is gone from the data, and what it became is there.
-    let (merged_file, merged) = merged.get_or((first_file, BTreeMap::new()));
-    for (gone, into) in &merged {
-        if book.id(gone).is_some() {
-            return Err(ContentError::new(
-                merged_file,
-                format!("`merged` names talent `{gone}`, which is still in the data"),
-            ));
-        }
-        if book.id(into).is_none() {
-            return Err(ContentError::new(
-                merged_file,
-                format!("`merged` merges `{gone}` into an unknown talent `{into}`"),
-            ));
-        }
-    }
-    book.merged = merged;
     Ok(book)
 }
 
@@ -3244,19 +3219,6 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
         ));
         assert!(e.contains("duplicate talent id `healthy`"), "{e}");
         assert!(e.contains("data/talents/healthy.toml"), "{e}");
-    }
-
-    #[test]
-    fn a_merged_id_is_gone_and_merged_into_one_there() {
-        let with =
-            |merged: &str| SETTINGS.replace("max_ranks = 3", &format!("max_ranks = 3\n{merged}"));
-        let talents = [("healthy", HEALTHY), ("hardy", HARDY)];
-        let content = load(&with("merged = { hale = \"healthy\" }"), &talents).expect("loads");
-        assert_eq!(content.talents().merged["hale"], "healthy");
-        let e = err(load(&with("merged = { hardy = \"healthy\" }"), &talents));
-        assert!(e.contains("which is still in the data"), "{e}");
-        let e = err(load(&with("merged = { hale = \"robust\" }"), &talents));
-        assert!(e.contains("into an unknown talent `robust`"), "{e}");
     }
 
     #[test]

@@ -26,12 +26,6 @@ alike = [
     ["orcish_hide", "stone_hide"],
 ]
 
-# Talents merged into another (docs/dev/progression.md "Class actives", saves): a removed id, and the
-# talent a character or save that held it holds instead, at the same rank (both held: one, at the
-# higher). The removed id must be gone from talents/, the other there. Owl eyes was Dark
-# adaptation's two cells of darkvision for low-light eyes (#817).
-merged = { owl_eyes = "dark_adaptation" }
-
 # The coverage bar (spec §8 "Talents"; docs/dev/progression.md "Coverage policy", #773): the
 # game refuses to load when a system below that is not `pending` has fewer than min_talents
 # talents or min_class class abilities, or a tree that is not `pending` (nor `no_free`) has fewer
