@@ -92,7 +92,7 @@ impl World {
     }
 
     /// The most of `resource` actor `id` may hold ([`Actor::resource_max`]).
-    fn resource_max(&self, id: ActorId, resource: ResourceId) -> u16 {
+    pub(super) fn resource_max(&self, id: ActorId, resource: ResourceId) -> u16 {
         let level = self.holder_level(id);
         (self.state.actors.get(&id)).map_or(0, |a| a.resource_max(&self.content, resource, level))
     }

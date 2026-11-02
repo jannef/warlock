@@ -24,7 +24,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `rng.rs` | `Rng::levels(seed)`, the `levels` stream, kept in `WorldState::levels_rng: Option<Rng>` **from the first draw** (the stat checks of each level, `world/stat_training.rs`; skill rolls, `world/skill_roll.rs`), so runs that never drew hash as before. |
 | `xtask/src/wiki/talents.rs` | `talents.md` (trees with the rules), `talents-by-system.md` (the coverage matrix, class abilities beside the talents); `effect_text`, the rule of one effect, shared with the class tables. |
 | `content/class.rs` (#243) | `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). |
-| `world/caster.rs` | `cast_spell` (`Action::Cast`, `use:blessing`, `use:arcane_bolt:12,5`), `Actor::spell_cost`, the strike on the scrolls' shared code, `reprieve` (Miracle, Hag's bargain, from `hurt`), `lore_blow` (Poison lore, from `resolve`). |
+| `world/caster.rs` | `cast_spell` (`Action::Cast`, `use:blessing`, `use:arcane_bolt:12,5`), `Actor::spell_cost`, the strike on the scrolls' shared code, `reprieve` (Hag's bargain, from `hurt`), `lore_blow` (Poison lore, from `resolve`). |
 | `world/racial.rs` | The racial talents (#241): `grants` (a race's `talents`, `data/races.toml`, put in by `stars::grant` before the sign's gifts, through `Talents::regrant`, which now replaces every granted talent outside a class tree), `World::small_target` (Small target's Dodge, from `resolve` after `target_against`, when the attacker's `size_of` is larger). `content/race.rs::check_talents` (at load): a race grants only `granted` talents of the `racial` tree. |
 | `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley and Rage (Inspire, #244, among them); Hardened's hit points are `level_up`'s. |
 | `world/rage.rs` | The berserker's Rage on the Rage resource (R1, #249): `World::rage` (`grant_resource_with_status`), `World::unstoppable` (from `hurt`). |
@@ -265,8 +265,12 @@ actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radianc
 talent's `resource`) are effects that `TalentEffect::active` maps to a `ClassActive`;
 `Content::class_active` finds the talent that has one, whose name and description the abilities
 menu shows; a holy gift's talent may name the bands it works for (`alignment`; outside them it
-is used and does nothing, `docs/dev/alignment.md`). A shared entry is one talent the tables
-name alike (`purity_of_body`, the paladin's, the priest's, and the ascetic's: #790 cut its copy
+is used and does nothing, `docs/dev/alignment.md`). The priest's prayer (`prayer`, #883,
+`docs/dev/prayer.md`) is one active, `orison`, carried by its tier-1 talent (`active` maps only
+`tier = 1`); the later prayer talents add uses, answers, and titles to `TalentMods::prayer`, and
+the menu names it by its highest tier and the face that answers (`PerceptionView::ability_name`).
+A shared entry is one talent the tables
+name alike (`purity_of_body`, the paladin's and the ascetic's, the priest's too until #883: #790 cut its copy
 `divine_health`); Deflect missiles left the ascetic's table for Stunning strike (#848) and stays
 the ordinary Finesse talent. A talent cut,
 renamed, or merged into another needs nothing for saves: saves are pinned to the version that
@@ -288,8 +292,9 @@ itself is `data/spells/ID.toml`, cast by the one cast path
 listed there). They cost mana (`Actor::spell_cost`, `World::spend_mana`) and never a cooldown;
 `Unavailable::NoMana` greys them out. A refusal (no cell, out of range, no hostile seen to
 hex, no sky, nothing to cure, not hurt) spends neither time nor mana. Shared entries: the
-priest names the paladin's `smite` (so it asks Good) and `purity_of_body` (the druid named the
-ranger's `woodland_stride` until #791 cut it). The wizard's level 12 handed out the
+priest named the paladin's `smite` and `purity_of_body` until the prayer (#883) took their
+places (the druid named the ranger's `woodland_stride` until #791 cut it). The priest's guaranteed
+spells are three (Mend, Blessing, Cure wounds): their rite is the prayer. The wizard's level 12 handed out the
 Scholar `spell_recall` until #775 merged it into Scroll savant's second rank, which a wizard
 picks from the Scholar tree.
 New statuses: Blessed, Hexed (`ill_wished`), Weakened, Sluggish (`sluggish`, cost

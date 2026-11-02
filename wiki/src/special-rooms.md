@@ -251,7 +251,7 @@ rises. A [corpse](food.md#corpses) carried out of the room and dropped elsewhere
 leave stays as it was until you come back, and whatever was due to rise meanwhile rises as you
 return.
 
-**Consecrate.** A Good [priest](classes.md#priest) (from level 9) or [paladin](classes.md#paladin) (from level 12) can lift the curse:
+**Consecrate.** A [priest](classes.md#priest) (from level 9) or [paladin](classes.md#paladin) (from level 12) of [Neutral or better](alignment.md) can lift the curse:
 standing inside a [cursed](special-rooms.md#room-cursed), a [draining](special-rooms.md#room-draining), or a [haunted](special-rooms.md#room-haunted) room, they spend 15 [mana](mana.md#how-much) and pray for a minute (from the
 [abilities menu](abilities.md#the-abilities-menu)). If nothing disturbs the prayer (anything that would stop a [rest](resting.md#how-resting-works) stops it, and
 then the mana and the time are lost), the room becomes a plain room for good: the dead no longer

@@ -670,7 +670,7 @@ const CASES: &[Case] = &[
         name: "heal-dialog",
         character: Some("human,female,priest"),
         actions: "afflict:bleeding*2 afflict:poisoned*2",
-        keys: Some("a d"),
+        keys: Some("a e"),
         ..BASE
     },
     // Progression: a warrior gaining levels 2 and 3 at once (the level-up screen opens by

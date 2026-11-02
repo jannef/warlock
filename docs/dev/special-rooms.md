@@ -521,7 +521,7 @@ level's) feeds the `actors` dev layer's `rising <from> at (x, y) as <into> at hh
 
 Consecrate (`world/consecrate.rs`): `ClassActive::Consecrate` (`TalentEffect::Consecrate { mana,
 time }`, `TalentMods::consecrate`; the `consecrate` talent, priest 9 and paladin 12, `alignment =
-{ min = "kind" }`). `use_class` → `begin_consecrate`: `hallowable` (the unholy room the player
+{ min = "neutral" }`). `use_class` → `begin_consecrate`: `hallowable` (the unholy room the player
 stands in, else an unholy `pervading`), refused with no time when none; then, outside the bands
 its `alignment` names, `World::unanswered` (a cast's time, no mana, nothing lifted;
 `docs/dev/alignment.md`); then `spend_mana` and `Spent::Consecrate(until)`; `World::consecrate` keeps at it through

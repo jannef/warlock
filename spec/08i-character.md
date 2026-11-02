@@ -383,8 +383,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     include it. **Alignment bars nothing** (#642): no class, talent, or ability asks for a
     band, nothing is greyed out or refused by it, and nothing remembers a drop in band. A
     **holy gift** (Lay on hands, Smite, Holy radiance, Consecrate) may name the bands it works
-    for (`alignment = { min = "kind" }` on its talent; all four are Kind or better, the good
-    side): outside them it is still listed and used, and does nothing ("You call for holy
+    for (`alignment = { min = "kind" }` on its talent; Lay on hands, Smite, and Holy radiance
+    are Kind or better, the good side, and Consecrate Neutral or better): outside them it is still listed and used, and does nothing ("You call for holy
     wrath, but none answers."), taking the time of a cast and spending no cooldown, mana, or
     resource; putting Holy radiance out always works. Mana reads nothing of it, for now. Gods
     and prayer, holy and unholy damage and items, and artifacts that work only for some bands
@@ -1123,13 +1123,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
     hurt, or (Call lightning) under a roof or below ground. Their kills are the caster's, and
     one that kills its caster is `Cause::Spell` ("Killed by their own fireball"). Too close a
     burst asks first, as a scroll's does ("Cast it anyway?").
-  - **Priest**: Mend (level 1, at 1: a touch, 1d3 back; 1 mana), Blessing (level 3, at 3:
-    Blessed 10 min a degree: +1 to hit, Willpower +1; 3 mana), Cure wounds (level 3, at 3: a
-    touch, 2d6; 2 casts; 2 mana), Remove disease (level 11, at 12: every disease and Poisoned;
-    11 mana),
-    Purify (rotten food never sickens nor exposes; no draw), Purity of body and
-    Smite (the paladin's own talents, so Smite works only for a priest of the good side), Miracle, Saint
-    (healing +100 %).
+  - **Priest** (the priest design, `docs/design/priest.md`; #883): Mend (level 1, at 1: a
+    touch, 1d3 back; 1 mana), Blessing (level 3, at 3: Blessed 10 min a degree: +1 to hit,
+    Willpower +1; 3 mana), Cure wounds (level 3, at 3: a touch, 2d6; 2 casts; 2 mana),
+    Consecrate (9), and **the prayer** (`use:orison` at every tier; `docs/dev/prayer.md`): one
+    class active given at 1 that answers what ails the priest most, in a fixed priority order
+    (disease, poison, wounds, release, mana, hunger, restoration; `data/prayer.toml`), as far as
+    its uses reach: wounds at 1 (Orison: bleeding stops, hit points to full), hunger at 6 (Daily
+    bread: Hungry or worse fed to Satiated, with Purify's rule: rotten food never sickens nor
+    exposes), disease and poison at 12 (Prayer: every disease, the brewing ones with the shown,
+    and poison), release at 18 (Prayer of release: hexes, holds, webs), restoration at 25
+    (Litany: stat damage and drained points, the temple's mending), mana at 32 (Litany of the
+    mind), two answers a prayer at 40 (Benediction), and at 60 everything at once with every
+    resource pool filled (Miracle). It takes a cast's time and no mana; Raging and Silenced
+    block it. A hidden **strain** limits it: +100 an attempt, answered or not, a point passing a
+    minute; a prayer fizzles with 10 % per 100 strain, and a fizzle locks it until the strain
+    has passed to 0 (the same words for both). With nothing to answer (a brewing disease alone is
+    nothing) it is refused, with no time or strain. The band at the moment picks who answers:
+    Neutral and better the holy powers (Orison, Prayer, Litany, Benediction, Miracle), Callous
+    and worse the dark ones (Whisper, Invocation, Rite, Pact, Miracle), each with its own words;
+    the dark powers' twists come with #884. Remove disease, Purify, Purity of body, Smite, the
+    reprieve, and Saint left the table (the spell and its scroll stay).
   - **Druid**: Beast-friend (the Wayfarer talent, given; its copy Wild empathy until #790), Spark (level 1, at 1: a bolt, 1d4 electricity;
     1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Nature's ward
     (wading never sickens; poison eases twice as fast), Call lightning (at 12; level 11: a line of

@@ -59,7 +59,8 @@ play.
 greyed out, refused, or taken away by alignment, and no state remembers a drop in band (the
 paladin's class `alignment` of 550 is only where they start).
 A holy gift (`ClassActive::holy`: Lay on hands, Smite, Holy radiance, Consecrate) may name the
-bands it works for, `alignment = { min = "kind" }` on its talent (`TalentDef::alignment`, checked
+bands it works for, `alignment = { min = "kind" }` on its talent (Consecrate's `neutral`, the
+priest design's Q3; `TalentDef::alignment`, checked
 on load: only a holy active's talent may have one). Its function in `world/class_ability.rs`
 (`consecrate.rs` for Consecrate) asks `World::answered(active)` after its free refusals (nobody
 there, nothing to consecrate); outside the bands `World::unanswered(active)` says the gift's line
