@@ -139,7 +139,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   `resources.toml` (file order is save order), `short = "Sta"`, `max = 10`, `max_from = { stat =
   "toughness", per_levels = 10, least = 5 }`, `regenerates = 12`, resting too, starting full.
   The granted talent `trained_wind` (`grants_resource`) is in the level-1 row of the warrior's,
-  berserker's, paladin's, ranger's, monk's, thief's, and bard's tables (`data/classes/`), so
+  berserker's, paladin's, ranger's, ascetic's, thief's, and bard's tables (`data/classes/`), so
   `class::grant` holds it at creation and `World::grant_class` on load. The weapon actives
   spend it (#564, `world/weapon_active.rs::pay_active`, through `spend_resource`, after their
   refusals); its `lacking` words ("you are short of breath") are how `Unavailable::Short` reads

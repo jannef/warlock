@@ -374,7 +374,7 @@ pub enum TalentEffect {
     /// A meal never leaves it Bloated: what does not fit below Bloated is lost (Gourmand).
     NoBloating,
     /// Hunger never weakens it: Weak, Fainting, and Starving take nothing off its Strength and
-    /// Dexterity (`Actor::penalty`), and it never faints (`World::faint`; Ascetic). Starving
+    /// Dexterity (`Actor::penalty`), and it never faints (`World::faint`; Long fast). Starving
     /// still costs hit points.
     NoHungerWeakness,
     /// A fresh corpse's stat training marks and chances to widen a potential, this percent more

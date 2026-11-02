@@ -407,7 +407,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Concentration** (#668): a trained Concentration makes mana come back faster and the pool a
     little deeper (§8 "Mana": the curves in `data/skills.toml`, the pool's at most a fifth);
     untrained, it gives nothing, even raised by an item or a talent. The Skills screen says so
-    in its description, in words. The priest, druid, wizard, monk, paladin, and witch start
+    in its description, in words. The priest, druid, wizard, ascetic, paladin, and witch start
     trained in it; every class has some mana, so any trained in it gains.
   - **From race and class** (§7): their `skills` are dice rolled when the character is made,
     after every other roll ("Character creation" above); a skill both train sums the two; the
@@ -488,7 +488,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Cool head's, at most all; `World::status_cost`), marked by `surprise` (100 %: a check made,
     whatever came of it). The thief trains Sneak attack (`2d6+10`, known for) and Initiative
     (`2d4+4`), and Detect traps and Disable device at `2d6+10`, known for, and Search at
-    `2d6+4` (#684: in place of the Trapfinding class ability); the ranger and the monk Initiative `2d6+10`; the bard, warrior, and berserker
+    `2d6+4` (#684: in place of the Trapfinding class ability); the ranger and the ascetic Initiative `2d6+10`; the bard, warrior, and berserker
     `2d4+4`; a drow may start with Sneak attack (an optional skill of the race).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
@@ -970,7 +970,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wiki's Talents page states them.
 - **The adventurers' class tables, and the class actives** (`content/class.rs`: `ClassActive`;
   `world/class_ability.rs`; M30, #243; design `docs/design/progression.md` §4.2–4.5): the
-  warrior, berserker, paladin, and monk have level tables as the everyday folk do (the
+  warrior, berserker, paladin, and ascetic have level tables as the everyday folk do (the
   "Class abilities" bullet above): `abilities` rows naming talents of the class tree
   (`data/talents/`, `granted`) and `bonus_talents`.
   - **Who has them**: given as the level comes, "You gain Rage." (the shared rules of the bullet
@@ -978,12 +978,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     talents' kinds and the class's own (the effects README of `data/talents/`); an active's
     effect (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
     `quivering_palm`) makes the talent that has it the ability's name and description in the
-    menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Monk's
+    menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Ascetic's
     Deflect missiles is the ordinary talent, handed out. A shared entry is one talent the tables
-    name alike (`purity_of_body`: the paladin's, the priest's, and the monk's; Divine health was
+    name alike (`purity_of_body`: the paladin's, the priest's, and the ascetic's; Divine health was
     its copy until #790).
   - **Bonus picks**: warrior (Weaponcraft or Guard) at 4, 10, 16, 22, 28, 34, 46, 58;
-    berserker (Might or Vigour), paladin (Guard or Vigour), monk (Finesse or Vigour) at 10, 20,
+    berserker (Might or Vigour), paladin (Guard or Vigour), ascetic (Finesse or Vigour) at 10, 20,
     30, 45, 55; as the bullet above says.
   - **Actives** (`Ability::Class`, the abilities menu's Class group; `Action::Use`, `use:rage`,
     `use:smite:E`; refused, no time, without the ability or while its cooldown lasts; a holy

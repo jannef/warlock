@@ -352,7 +352,7 @@ pub struct TalentMods {
     /// A meal never leaves it Bloated.
     pub no_bloating: bool,
     /// Hunger never weakens it: Weak or worse takes nothing off its stats, and it never faints
-    /// (Ascetic).
+    /// (Long fast).
     pub no_hunger_weakness: bool,
     /// Percent more of a fresh corpse's stat training marks and its chances to widen a
     /// potential (`on_eat` `train` and `widen`).

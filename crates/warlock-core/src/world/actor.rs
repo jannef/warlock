@@ -436,7 +436,7 @@ impl Actor {
         }
     }
 
-    /// What its status effects, hunger (Weak or worse, unless Ascetic), and stat damage take
+    /// What its status effects, hunger (Weak or worse, unless Long fast), and stat damage take
     /// off its scores, if anything.
     fn penalty(&self, content: &Content) -> Option<PerStat<i32>> {
         let mods = self.talent_mods(content);

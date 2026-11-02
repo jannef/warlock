@@ -232,7 +232,7 @@ with its words at load) is what "a melee skill at 3" asks.
 
 ## Class actives
 
-The warrior, berserker, paladin, and monk (#243) have their tables the way the everyday folk do:
+The warrior, berserker, paladin, and ascetic (#243) have their tables the way the everyday folk do:
 class-tree talents (`data/talents/`, `granted`) named by their class files' `abilities`, so
 they are held like any talent, saved with them, and read through `TalentMods`. Their effects are
 the talents' kinds and the class's own (the README of `data/talents/` lists them). The seven
@@ -241,8 +241,8 @@ actives (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radianc
 `Content::class_active` finds the talent that has one, whose name and description the abilities
 menu shows; a holy gift's talent may name the bands it works for (`alignment`; outside them it
 is used and does nothing, `docs/dev/alignment.md`). A shared entry is one talent the tables
-name alike (`purity_of_body`, the paladin's, the priest's, and the monk's: #790 cut its copy
-`divine_health`); the monk's Deflect missiles is the ordinary talent, handed out. A save holding
+name alike (`purity_of_body`, the paladin's, the priest's, and the ascetic's: #790 cut its copy
+`divine_health`); the ascetic's Deflect missiles is the ordinary talent, handed out. A save holding
 a talent the content no longer has (the thief's three removed by #684, the 27 cut by #774, the
 weak ones #787 cut and the three #788 merged into Pious, #790's clones and chains, #816's
 identification talents) loads
@@ -338,7 +338,7 @@ cut them). The owner: "Modify the talent rule to prevent this type of talent cre
   never by its percent, and a talent whose total is negligible is removed.
 - **No clones** (#776's rule 3, #790). A class table names the pickable's id, never a talent
   that does the same under another name: the bard's Fast healer (Song of rest until #790), the
-  druid's Beast-friend (Wild empathy), and one Purity of body for the paladin, priest, and monk
+  druid's Beast-friend (Wild empathy), and one Purity of body for the paladin, priest, and ascetic
   (Divine health was its copy). A pickable a table gives that the character already holds
   brings a talent pick in its place at that level (above, "Class tables").
 - **One effect, two ids, chained, is a rank** (#776's rule 4, #790). A talent whose one talent
@@ -449,7 +449,7 @@ Sphinx sign's Riddler's mind (`xp_percent` 10, the horoscope, which the owner ke
 other's (the clones), and every talent needing one talent with what that one does (the chains),
 then read the near misses (the same effect kinds at other values). Clones: Song of rest (bard
 12) = Fast healer, Wild empathy (druid 1) = Beast-friend, both cut and the tables naming the
-pickables; Divine health (paladin 18, priest 32) = Purity of body (monk 32), both class
+pickables; Divine health (paladin 18, priest 32) = Purity of body (ascetic 32), both class
 abilities, so one id stays and the three tables name it. Chains: Weapon specialization → Weapon
 focus, Great cleave → Cleave, Breaker → Mighty kick, each now the second rank (with the old
 rank's needs and effects; Mighty kick's rank 1 stays the Might tree's free talent). No
@@ -550,13 +550,13 @@ dropped picks, every hook, a free-blow talent, saves and replays, perception and
 The everyday folk (#246: aristocrat, commoner, craftsperson, merchant) have their tables: nine
 abilities each at 1, 6, 12, 18, 25, 32, 40, 50, 60 (34 class-tree talents, plus Riposte and
 Second wind, which their tables hand out), and bonus picks at 10, 20, 30, 45, 55. The
-warrior, berserker, paladin, and monk (I1) have theirs, in `world/class_active_tests.rs`; the
+warrior, berserker, paladin, and ascetic (I1) have theirs, in `world/class_active_tests.rs`; the
 ranger, thief, and bard (I2, #244) theirs, in `world/class_rogue_tests.rs` (the kill tally and
 Favoured prey, every passive, Volley and Inspire, the abilities the thief's skills give, Lurk,
 Low blow, and Vanishing act (#684), and a save holding a talent the content dropped); the priest, druid, wizard, and witch (I3, #245) theirs, in `world/caster_tests.rs`. The I2 tables hand out two ordinary talents (Evasion,
 Lore; and since #790 the bard's Fast healer and the druid's Beast-friend), so a creation pick
 or a bonus pick may already have taken one; the table then gives a talent pick in its place at
-that level instead (as for the monk's Deflect missiles; `class::held_already`, counted into the
+that level instead (as for the ascetic's Deflect missiles; `class::held_already`, counted into the
 level's `Due` by `level_up`, with the news "You know Second wind already: choose a talent in its
 place."; not on a restore, where a grown table only gives what is missing).
 `class_tests.rs::a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place`. The showcase's and the arena's own
@@ -590,7 +590,7 @@ hash differently from before. The dump's `talents` layer marks it `(race)`, the 
 
 The `resources` system (#225, `docs/dev/resources.md`) is in the list: its four talents (R5,
 #253) are Battle trance (Might, berserker 6: rage starts 6 higher, decays at 67 %), Inner calm
-(Finesse, monk 18: ki +2 at most, back at 150 %), Steady hand (Weaponcraft, ranger 12: focus back
+(Finesse, ascetic 18: ki +2 at most, back at 150 %), Steady hand (Weaponcraft, ranger 12: focus back
 at 150 %), and Patient blade (Shadow, thief 32: openings decay at 50 %, and a sneak attack that
 kills builds one more, the `sneak_kill` event); the only class-limited picks
 (`needs = { class, level }`). `world/resource_talent_tests.rs` covers each rule and the

@@ -223,7 +223,7 @@ fn the_resource_talents_need_their_class_and_level() {
     );
     assert!(pick("human,male,ranger", 12, "steady_hand"));
     assert!(!pick("human,male,thief", 12, "steady_hand"));
-    assert!(pick("human,male,monk", 18, "inner_calm"));
+    assert!(pick("human,male,ascetic", 18, "inner_calm"));
     assert!(!pick("human,male,ranger", 18, "inner_calm"));
     assert!(pick("human,male,thief", 32, "patient_blade"));
     assert!(!pick("human,male,thief", 31, "patient_blade"));

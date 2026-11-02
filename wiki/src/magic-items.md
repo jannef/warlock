@@ -141,7 +141,7 @@ Wands) are told on the [Magic](magic.md) and [Mana](mana.md) pages: *of Wands* m
 rung or two higher, and *of the Adept* raises your [caster level](magic.md#caster-level), which is how far your learning
 reaches (it never changes what a spell does or costs); of Breath, of Ease, and of the
 Hunt help [stamina](resources.md#resource-stamina). *Of Fury*, *of Steadiness*, *of Stillness*, *of Guile*, and *of the Muse* raise
-the most [rage](resources.md#rage), [focus](resources.md#resource-focus), [ki](resources.md#resource-ki), [openings](resources.md#resource-openings), or [inspiration](resources.md#resource-inspiration) you can hold: only [berserkers](classes.md#berserker), [rangers](classes.md#ranger), [monks](classes.md#monk),
+the most [rage](resources.md#rage), [focus](resources.md#resource-focus), [ki](resources.md#resource-ki), [openings](resources.md#resource-openings), or [inspiration](resources.md#resource-inspiration) you can hold: only [berserkers](classes.md#berserker), [rangers](classes.md#ranger), [ascetics](classes.md#ascetic),
 [thieves](classes.md#thief), and [bards](classes.md#bard) hold those (see [Resources](resources.md)), so to anyone else they are of no
 use. *Of Siphoning* and *of the Hunt* give their [mana](mana.md#mana-on-a-kill) or [stamina](resources.md#resource-stamina) only for a kill of your own blow,
 shot, or spell, the slain within three cells. *Of Sustenance* slows [hunger](hunger.md#how-hungry-you-are), *of Wariness* softens

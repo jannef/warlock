@@ -464,9 +464,9 @@ fn acting_under_a_load_trains_balance() {
     w.apply(&Action::Move(Dir::E));
     assert_eq!(marks(&w, "balance"), Some(1));
     // A dwarf's Burdened costs nothing, so it trains nothing either.
-    let spec: CharacterSpec = "dwarf,male,monk".parse().expect("a character");
+    let spec: CharacterSpec = "dwarf,male,ascetic".parse().expect("a character");
     let mut dwarf = World::with_character(content(true), "yard", None, Some(&spec)).expect("world");
-    assert!(value(&dwarf, "balance").is_some(), "monks know balance");
+    assert!(value(&dwarf, "balance").is_some(), "ascetics know balance");
     let player = dwarf.state.player;
     dwarf
         .state

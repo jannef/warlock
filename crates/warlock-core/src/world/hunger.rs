@@ -116,7 +116,7 @@ impl World {
 
     /// As a turn begins, a player who is Fainting or Starving may faint (one draw of the gameplay
     /// stream, while the chance is not 0): they lose turns, a wait each, while the others act.
-    /// Ascetic never faints (no draw). Returns the price of the turns lost (0 if they did not
+    /// Long fast never faints (no draw). Returns the price of the turns lost (0 if they did not
     /// faint).
     pub(super) fn faint(&mut self) -> i64 {
         let content = self.content.clone();
