@@ -73,6 +73,9 @@
 #                                 points
 #   threat { value }              every attack threatens a critical that many points lower
 #   reroll_fumble                 a natural 2 on an attack roll is rolled again, once
+#   ally_mod { to_hit, protection }   what its allies get (allies.toml; spec §8 "Allies"): that
+#                                 to-hit on their attacks and that Protection, read through their
+#                                 master; either may be left out, not both
 #   streak { max, damage_every }  each melee blow at the creature its last blow was at (in its
 #                                 turn or the next) +1 to hit per blow before it, to max (1 to 10);
 #                                 with damage_every (0 to 10), +1 damage per that many blows before

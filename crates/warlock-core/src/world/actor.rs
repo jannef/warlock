@@ -1,6 +1,6 @@
 //! Actors: the player and creatures.
 
-use super::{FreeBlows, Talk};
+use super::{Ally, FreeBlows, Talk};
 use crate::action::AttackKind;
 use crate::alignment::{Alignment, Band, Score};
 use crate::burden::Burden;
@@ -223,6 +223,11 @@ pub struct Actor {
     /// counts toward that summoner's live summons. Left out of saves while `None`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub summoner: Option<ActorId>,
+    /// Whose ally it is, and what it was told (spec §8 "Allies", `world/ally.rs`): a summon or a
+    /// companion on the player's side. `None` for every other actor, and left out of saves
+    /// then, so runs without allies save and hash as before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ally: Option<Ally>,
     /// Its alignment score (spec §8 "Alignment"; [`crate::alignment`]): the player's, when the
     /// content has alignment rules; creatures have none, and stand where [`Actor::nature`]
     /// says. Moved only by `World::shift_alignment`; never shown as a number.
@@ -431,7 +436,7 @@ impl Actor {
         }
     }
 
-    /// What its status effects, hunger (Weak or worse, unless Ascetic), and stat damage take
+    /// What its status effects, hunger (Weak or worse, unless Long fast), and stat damage take
     /// off its scores, if anything.
     fn penalty(&self, content: &Content) -> Option<PerStat<i32>> {
         let mods = self.talent_mods(content);
@@ -698,12 +703,23 @@ impl Actor {
     /// by what the pieces say (spec §8 "Damage types": chain mail +1 against slashing, −1
     /// against piercing), and nothing against an element.
     pub fn protection(&self, content: &Content, race: Option<&RaceDef>) -> Protection {
+        self.protection_plus(content, race, 0)
+    }
+
+    /// [`Actor::protection`] with `more` on top against every physical kind: what an ally's
+    /// master gives it (spec §8 "Allies"; `World::protection_of`).
+    pub fn protection_plus(
+        &self,
+        content: &Content,
+        race: Option<&RaceDef>,
+        more: i32,
+    ) -> Protection {
         let worn: Vec<&Stack> = (self.equipment.items().into_iter())
             .filter_map(|(_, item)| self.inventory.get(item))
             .collect();
         let base: i32 = worn.iter().map(|s| s.protection(content)).sum();
         let natural = self.hide(content, race).map_or(0, |h| h.protection);
-        let base = base + self.talent_protection(content);
+        let base = base + self.talent_protection(content) + more;
         let adjustments = (worn.iter()).flat_map(|s| s.protects(content).iter().copied());
         if content.damage_types().is_empty() {
             return Protection::plain(base + natural);

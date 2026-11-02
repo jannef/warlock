@@ -538,7 +538,7 @@ cast path shares.
   1. **Pools** (the stats the seed rolls, so a +1 or +2 mental modifier; `levelup:auto` may
      take Deep well): wizard 33 / 106 / 254 / 502 at levels 3 / 12 / 30 / 60 (caster level 3,
      14, 36, 72), priest, druid, and witch about 27 / 90 / 216 / 426 (caster level = level),
-     bard and aristocrat 17 / 45–53 / 103–125 / 201–246, monk, paladin, and ranger 9–14 /
+     bard and aristocrat 17 / 45–53 / 103–125 / 201–246, ascetic, paladin, and ranger 9–14 /
      27–50 / 63–122 / 123–242, the 25 % classes 4 / 13 / 31 / 61. A full caster's pool is about
      ten casts of a spell of the caster's own level at every level (the design's aim; the spell
      scaling design §12.4): 106 at level 12 against a level-11 spell's 11 mana, 254 at 30

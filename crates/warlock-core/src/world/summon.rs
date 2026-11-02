@@ -20,7 +20,7 @@
 
 use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
-use crate::content::{ActionKind, CreatureId, CreatureSpawn, Summon, and_list, counted, the_start};
+use crate::content::{ActionKind, CreatureId, CreatureSpawn, and_list, counted, the_start};
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::sight::LineOfSight;
@@ -40,7 +40,7 @@ impl World {
                 .is_none()
             && me.mana >= me.mana_cost(&self.content, summon.mana)
             && self.live_summons(id) < usize::from(summon.most)
-            && !self.summon_cells(id, summon).is_empty()
+            && !self.summon_cells(id, summon.spread).is_empty()
     }
 
     /// How many creatures summoned by `id` live.
@@ -50,13 +50,13 @@ impl World {
             .count()
     }
 
-    /// Where creature `id`'s summoned may appear: the cells within its `spread` (Chebyshev) it has
-    /// a line of sight to, walkable, with no one there, and not a sanctuary it would shun; nearest
-    /// first (Chebyshev distance, then squared distance, then row order).
-    fn summon_cells(&self, id: ActorId, summon: &Summon) -> Vec<Pos> {
+    /// Where creature `id`'s summoned may appear: the cells within `spread` (Chebyshev) it has a
+    /// line of sight to, walkable, with no one there, and not a sanctuary it would shun; nearest
+    /// first (Chebyshev distance, then squared distance, then row order). The dev `ally:` places
+    /// the player's allies with it too (`ally.rs`).
+    pub(super) fn summon_cells(&self, id: ActorId, spread: i32) -> Vec<Pos> {
         let me = &self.state.actors[&id];
         let level = self.state.current();
-        let spread = summon.spread;
         let radius = LineOfSight::radius_for(2 * spread * spread);
         let los = LineOfSight::compute(me.pos, radius, |p| level.is_opaque(&self.content, p));
         let shuns = self.shuns(id);
@@ -79,7 +79,7 @@ impl World {
         let Some(summon) = content.creature(me.creature).summon.as_ref() else {
             return price;
         };
-        let cells = self.summon_cells(id, summon);
+        let cells = self.summon_cells(id, summon.spread);
         if !self.spend_mana(id, summon.mana) {
             return price;
         }

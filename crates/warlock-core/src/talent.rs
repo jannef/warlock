@@ -324,7 +324,7 @@ pub struct TalentMods {
     /// A meal never leaves it Bloated.
     pub no_bloating: bool,
     /// Hunger never weakens it: Weak or worse takes nothing off its stats, and it never faints
-    /// (Ascetic).
+    /// (Long fast).
     pub no_hunger_weakness: bool,
     /// Percent more of a fresh corpse's stat training marks and its chances to widen a
     /// potential (`on_eat` `train` and `widen`).
@@ -424,6 +424,8 @@ pub struct TalentMods {
     pub deflection: i32,
     /// Protection, each with what it asks to be worn ([`TalentMods::protection_with`]).
     pub protection: Vec<Guard>,
+    /// What it gives its allies (spec §8 "Allies": Beast-bond), read through their master.
+    pub ally: AllyMods,
     /// Percent less of a stance's to-hit penalty, by stance.
     pub stance_to_hit: Vec<(CombatStance, i32)>,
     /// Percent more a step out of reach of every hostile beside it costs (negative: cheaper).
@@ -794,6 +796,16 @@ pub struct WeaponBonus {
     pub at_rank: u8,
 }
 
+/// What a talent gives the holder's allies (spec §8 "Allies"): read where an ally strikes and
+/// is struck (`world/ally.rs`), through its master's mods.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct AllyMods {
+    /// Added to every ally's attacks.
+    pub to_hit: i32,
+    /// Added to every ally's Protection.
+    pub protection: i32,
+}
+
 /// Protection a talent adds, while what it asks is worn.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Guard {
@@ -1092,6 +1104,10 @@ impl TalentMods {
             TalentEffect::MeleeDamage { value } => self.melee_damage += value,
             TalentEffect::Ferocity { value } => self.ferocity += value,
             TalentEffect::Threat { value } => self.threat += value,
+            TalentEffect::AllyMod { to_hit, protection } => {
+                self.ally.to_hit += to_hit;
+                self.ally.protection += protection;
+            }
             TalentEffect::RerollFumble => self.reroll_fumble = true,
             TalentEffect::Streak { max, damage_every } => {
                 self.streak = self.streak.max(max);

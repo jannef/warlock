@@ -243,7 +243,7 @@ mod tests {
 
     #[test]
     fn replays_record_and_reproduce_the_character() {
-        let dwarf: CharacterSpec = "dwarf,other,monk".parse().expect("a character");
+        let dwarf: CharacterSpec = "dwarf,other,ascetic".parse().expect("a character");
         let mut world =
             World::with_character(content(), "showcase", Some(9), Some(&dwarf)).expect("world");
         let mut replay = Replay::new(&world);
@@ -266,7 +266,7 @@ mod tests {
         ));
         // An unknown race is an error, not a silent fallback.
         let mut unknown = parsed;
-        unknown.character = Some("orc,male,monk".parse().expect("a character"));
+        unknown.character = Some("orc,male,ascetic".parse().expect("a character"));
         assert!(matches!(
             unknown.run(content()),
             Err(ReplayError::World(WorldError::Character(_)))

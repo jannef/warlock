@@ -121,9 +121,9 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend use_tool
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N rank:SKILL:N
-skip:DURATION weather:KIND spawn meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
+skip:DURATION weather:KIND spawn ally:CREATURE[:N[:DURATION]] meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
 NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`; `frenzy` is refused: only rage gives it); `LETTERS` = stacks by position, as letters
 for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
@@ -159,6 +159,7 @@ docs/dev/npcs.md);
 `use_tool` uses the light ready in the Tool slot (a lantern: unlit, lit, hooded, unlit again; `u`
 in the game, which asks for a direction to dig instead without one), `throw_voice:X,Y`
 throws the player's voice to level cell (X, Y) (one they see, within 6; the bard's, refused without the ability);
+`order:follow`, `order:stay`, and `order:hunt:X,Y` give every ally of the player's on the level an order (Come to heel, Hold here, Set on a cell the player sees: the Allies group of the abilities menu; no time, a voice's noise; refused with no ally on the level; docs/dev/allies.md);
 `talent:hardy` takes a talent (an id in `assets/data/talents/`; `talent:weapon_focus:long_blades`
 with its choice) when a level's pick is due (every third level; until it is made every other
 action is refused), `advance:stealth` spends one of a level's skill rolls (on a trained skill; `world/skill_roll.rs`), `levelup:auto`
@@ -171,7 +172,7 @@ saying what it teaches, as a rank risen would; no time; docs/dev/weapon-abilitie
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `spawn` is the dev spawn: one attempt to bring a creature to the
 current level now, whatever its cap and chance (refused at danger 0; no time; spec §7 "Danger
-levels"); `encounter:fight` answers the overworld encounter pending (`CHOICE` = `ambush`, `evade`,
+levels"); `ally:wolf`, `ally:wolf:2`, `ally:wolf:2:10m` is the dev ally: N (1 to 12) allies of the type beside the player, following, on their side, their stay ending after the duration if given (on the overworld they join the retinue at once); no time; refused without `data/allies.toml`, at the cap (`[allies] most`), or with no free cell (docs/dev/allies.md); `encounter:fight` answers the overworld encounter pending (`CHOICE` = `ambush`, `evade`,
 `fight`, `hail`, `hunt`, `pass`, as its outcome offers; while one pends every other action that
 takes time is refused; docs/dev/encounters.md), and `meet:kobolds:ambushed` is the dev meeting:
 entry `ENTRY` of the run's campaign's encounter tables met now on the player's overworld cell,
@@ -241,7 +242,7 @@ Defence and Protection, its alignment (`alignment evil`; the player's score and 
 are, "(unidentified)" marked, a wand's rung `(rung 2)`), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
-turn), stat damage, and drained points (`drained St 2`), the player's nutrition, its npc id and talk counts, if any, and what it resists in percent (`resists fire 25`); then
+turn), stat damage, and drained points (`drained St 2`), the player's nutrition, its npc id and talk counts, if any, whose ally it is with what made it one, its minutes left, and its order (`; ally of #0 (summoned, 4 min; follow)`, `(summoned; stay at (12, 5))`, `; retinue` while travelling with the player), and what it resists in percent (`resists fire 25`); then
 all food on the level and in the packs of those on it with when it was made (a corpse: when it
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
 **dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, `due level 30: 1
@@ -257,7 +258,7 @@ against 17, 36/144` (the overreach in spell levels), **dev-only**),
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
 17/17` and `mp 3/3`, each resource they hold (`rage 11/20`), (and `dead` once the run has ended), `hunger hungry` unless Not hungry, `dazzled` while
-strong light dazzles light-blind eyes, `encounter pending: a band of kobolds (ambush, evade,
+strong light dazzles light-blind eyes, `allies 2` while the player has allies on the level or in their retinue, `encounter pending: a band of kobolds (ambush, evade,
 fight)` while an overworld encounter waits for an answer, and the
 `temperature`; JSON dumps add `hp`, `mana` (`current`, `max`), `caster_level`, `resources` (the
 ones held: `id`, `current`, `max`), `defence`, `protection`, `resistances` (by damage type id, the
@@ -271,7 +272,7 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it), `due` (the level-up choices due: `level`, `talents`,
 `rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`, `target` (what a rolled quest drew, else null),
-`objective`, `status`), `story` (the background story's lines: `chapter`, `line`, `text`; `character.story` the ids, `parents/plain_folk`), each seen actor's `health` and `effects` (those that show) and a composite animated thing's `bands` (its colours, top first), `room` (the
+`objective`, `status`), `story` (the background story's lines: `chapter`, `line`, `text`; `character.story` the ids, `parents/plain_folk`), each seen actor's `health` and `effects` (those that show), `ally` (true for an ally of the player's), and a composite animated thing's `bands` (its colours, top first), `allies` (the player's allies wherever they are: `id`, `creature`, `name`, `health`, `order`, `at`, `source`, `lasts` (minutes, or null), `retinue`, `here`), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, `magic` (affixes only once identified), and `numbers` (what it gives as the
@@ -350,6 +351,7 @@ file). Topics:
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
+- `docs/dev/allies.md` — allies: `Actor::ally`, the side, the ally arm of the AI, the three orders, following across levels and the retinue, the clock, an ally's kill, Beast-bond, the dev `ally:`
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log

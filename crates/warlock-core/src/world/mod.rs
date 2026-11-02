@@ -85,6 +85,9 @@
 mod actor;
 mod ai;
 mod alignment;
+mod ally;
+#[cfg(test)]
+mod ally_tests;
 mod ambush;
 mod animated;
 mod appraise;
@@ -223,6 +226,7 @@ mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
+pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
 pub use attacks::{AttackSource, OwnAttack};
 pub use cast::Reach;
 pub use caster_level::casting_percent;
@@ -464,10 +468,12 @@ impl WorldState {
             .expect("current level is instantiated")
     }
 
+    /// Who stands on `p` of level `level`, if anyone: never an ally in the retinue, which stands
+    /// in no one's way (`ally.rs`).
     fn actor_at(&self, level: &str, p: Pos) -> Option<&Actor> {
         self.actors
             .values()
-            .find(|a| a.level == level && a.pos == p)
+            .find(|a| a.level == level && a.pos == p && !a.in_retinue())
     }
 
     fn check(&self) -> Result<(), WorldError> {
@@ -825,6 +831,7 @@ impl World {
             weapon_skills,
             faction_override: None,
             summoner: None,
+            ally: None,
             alignment: content.alignment().map(|_| alignment),
             alignment_override: None,
             npc: None,
@@ -1095,12 +1102,7 @@ impl World {
     /// or if they are a Beast-friend and an animal they befriended ([`beast_friend::befriended`]).
     pub fn stance(&self, a: ActorId, b: ActorId) -> Stance {
         match (self.state.actors.get(&a), self.state.actors.get(&b)) {
-            (Some(a), Some(b)) if beast_friend::befriended(&self.state, &self.content, a, b) => {
-                Stance::Neutral
-            }
-            (Some(a), Some(b)) => self
-                .content
-                .stance_of(a.faction(&self.content), b.faction(&self.content)),
+            (Some(a), Some(b)) => stance_between(&self.state, &self.content, a, b),
             _ => Stance::Neutral,
         }
     }
@@ -1343,6 +1345,7 @@ impl World {
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Steal(dir) => return self.steal(*dir),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
+            Action::Order(command) => return self.order(*command, events),
             Action::Eat(meal) => return self.eat(*meal, events),
             Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Study { item } => return self.start_study(*item),
@@ -1386,6 +1389,11 @@ impl World {
             Action::SetWeather(weather) => return self.set_weather_dev(*weather),
             Action::SkipTime(duration) => return self.skip_time_dev(*duration),
             Action::Spawn => return self.spawn_dev(),
+            Action::Ally {
+                creature,
+                count,
+                lasts,
+            } => return self.ally_dev(creature, *count, *lasts),
             Action::Meet { entry, outcome } => return self.meet_dev(entry, *outcome),
             Action::Effect { effect, at, to } => {
                 return self.show_effect(effect, *at, *to, events);
@@ -1799,3 +1807,17 @@ mod weapon_skill_tests;
 mod weather_tests;
 #[cfg(test)]
 mod zap_tests;
+
+/// How actors `a` and `b` stand toward each other ([`World::stance`], for a borrowed state): the
+/// stance of their factions, [`Stance::Neutral`] for a Beast-friend and an animal they befriended.
+pub(crate) fn stance_between(
+    state: &WorldState,
+    content: &Content,
+    a: &Actor,
+    b: &Actor,
+) -> Stance {
+    if beast_friend::befriended(state, content, a, b) {
+        return Stance::Neutral;
+    }
+    content.stance_of(a.faction(content), b.faction(content))
+}

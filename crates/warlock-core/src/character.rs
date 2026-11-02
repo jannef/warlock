@@ -641,7 +641,7 @@ mod tests {
         if horoscope {
             // The builtin signs' picks name animals and elements this horoscope lacks.
             let picks: Vec<String> = (files.table("talents"))
-                .filter(|(_, text)| text.contains("animal = ") || text.contains("element = "))
+                .filter(|(_, text)| text.contains("animal = \"") || text.contains("element = \""))
                 .map(|(path, _)| path.to_string())
                 .collect();
             for path in picks {
@@ -936,9 +936,9 @@ mod tests {
         }
         assert!(seen.len() > 5, "draws vary: {seen:?}");
         // The class plays no part; the seed does.
-        let monk = spec("dwarf,female,monk");
+        let ascetic = spec("dwarf,female,ascetic");
         assert_eq!(
-            random_name(&content, 7, &monk, 0),
+            random_name(&content, 7, &ascetic, 0),
             random_name(&content, 7, &dwarf, 0)
         );
         let other = spec("dwarf,other,warrior");

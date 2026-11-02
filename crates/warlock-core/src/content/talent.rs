@@ -222,6 +222,14 @@ pub enum TalentEffect {
     Threat { value: i32 },
     /// A natural 2 on an attack roll (a fumble) is rolled again, once.
     RerollFumble,
+    /// What the holder's allies get (spec §8 "Allies": Beast-bond): to-hit on their attacks
+    /// and Protection, read through their master (`world/ally.rs`).
+    AllyMod {
+        #[serde(default)]
+        to_hit: i32,
+        #[serde(default)]
+        protection: i32,
+    },
     /// Each melee blow at the creature its last blow was at, in a row (its own turn or the one
     /// before), is +1 to hit more, to `max` (Relentless; `World::streak`); with `damage_every`
     /// (Relentless fury), every that many blows before it in the streak add +1 damage too.
@@ -366,7 +374,7 @@ pub enum TalentEffect {
     /// A meal never leaves it Bloated: what does not fit below Bloated is lost (Gourmand).
     NoBloating,
     /// Hunger never weakens it: Weak, Fainting, and Starving take nothing off its Strength and
-    /// Dexterity (`Actor::penalty`), and it never faints (`World::faint`; Ascetic). Starving
+    /// Dexterity (`Actor::penalty`), and it never faints (`World::faint`; Long fast). Starving
     /// still costs hit points.
     NoHungerWeakness,
     /// A fresh corpse's stat training marks and chances to widen a potential, this percent more
@@ -1194,6 +1202,15 @@ impl TalentEffect {
                     )),
                     _ => Ok(()),
                 }
+            }
+            TalentEffect::AllyMod { to_hit, protection } => {
+                if *to_hit == 0 && *protection == 0 {
+                    return Err("`ally_mod`: gives nothing".into());
+                }
+                for v in [to_hit, protection].into_iter().filter(|v| **v != 0) {
+                    bonus(*v)?;
+                }
+                Ok(())
             }
             TalentEffect::Volley { shots } => {
                 if !(2..=5).contains(shots) {

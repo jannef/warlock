@@ -793,7 +793,7 @@ fn starting_styles_come_from_the_class_and_move_no_other_roll() {
     let start = BUILTIN.scenario("showcase").expect("showcase").start;
     for character in [
         "human,female,thief",
-        "human,male,monk",
+        "human,male,ascetic",
         "half_orc,male,berserker",
     ] {
         let spec: CharacterSpec = character.parse().expect("a character");

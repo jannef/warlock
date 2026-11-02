@@ -228,7 +228,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   discount: about 2 600 such kills to reach level 20 and 14 600 to reach 60; a test pins the
   table's hash; XP beyond the cap counts but buys nothing). **Race and class factors**: races and classes have `experience`, a percent of the
   XP a level needs (50 to 200, default 100: elf 140, gnome 120, dwarf 115, half-elf 105, human
-  100, halfling 95, half-orc 90; wizard 125, monk 120, priest, druid, and witch 115, paladin 110,
+  100, halfling 95, half-orc 90; wizard 125, ascetic 120, priest, druid, and witch 115, paladin 110,
   ranger 105, warrior and bard 100, thief 95, berserker, craftsperson, aristocrat, and merchant
   90, commoner 80), and a character's thresholds are `(threshold × race × class + 5 000) ÷
   10 000` (`content::Factor`; a run without a character is at 100 %): an elf wizard needs 175 %,
@@ -307,7 +307,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   place for every extra blow. The second blow of an attack (the off hand's, Sword and Board's
   bash, §8 "Fighting styles") is one; the others are free blows, switched on per actor
   (`FreeBlows` on `Actor::free_blows`, saved and hashed but left out while none is on, read
-  only through `World::free_blows_of`; talents and class abilities switch them on; the monk's
+  only through `World::free_blows_of`; talents and class abilities switch them on; the ascetic's
   Flurry, `flurry`, is a second blow of a melee attack with nothing in hand, at −2 to hit, §8
   "Class abilities"; two sources of cleave, the Cleave talent and Cleaving strike, cleave as
   great cleave):

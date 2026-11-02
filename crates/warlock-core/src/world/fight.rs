@@ -639,7 +639,10 @@ impl World {
     pub(crate) fn protection_of(&self, id: ActorId) -> Protection {
         (self.state.actors.get(&id)).map_or_else(
             || Protection::plain(0),
-            |a| a.protection(&self.content, self.state.race_of(&self.content, a)),
+            |a| {
+                let race = self.state.race_of(&self.content, a);
+                a.protection_plus(&self.content, race, self.ally_protection(id))
+            },
         )
     }
 
@@ -768,6 +771,8 @@ impl World {
         let profile = profile.map(|p| self.relentless(attacker, target, kind, p));
         // Favoured prey and a sneak attack (spec §8 "Class abilities").
         let profile = profile.map(|p| self.favoured(attacker, target, p));
+        // An ally's master's gifts to it (spec §8 "Allies": Beast-bond).
+        let profile = profile.map(|p| self.ally_blow(attacker, p));
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         // A lurk's blow finds a creature not hunting the player unawares; a low blow is a sneak
@@ -856,13 +861,16 @@ impl World {
                 self.practise(block, true, levels.0);
             }
         }
-        // Resources built by blows (spec §8 "Resources"): a hit and a critical build the
-        // attacker's, being hit the target's.
+        // Resources built by blows (spec §8 "Resources"): a hit and a critical that do harm
+        // build the attacker's; being hit at all, soaked or resisted to nothing too, the
+        // target's (the berserker's rage: hits taken before mitigation).
         if let Some(Strike::Hit { critical }) = blow.map(|b| b.strike) {
             self.gain_resource(attacker, Build::Hit);
             if critical {
                 self.gain_resource(attacker, Build::Critical);
             }
+        }
+        if blow.is_some_and(|b| b.strike.is_hit()) {
             self.gain_resource(target, Build::Struck);
         }
         // Weapon abilities (`weapon_ability.rs`) fire on the same events, and on a melee
@@ -1109,17 +1117,28 @@ impl World {
         } else {
             // The break lines are said with the death, before what the kill earned.
             let earned = self.news.len();
+            // An ally's kill is its master's (spec §8 "Allies"; `ally.rs`).
+            let player = self.state.player;
+            let master = by.and_then(|b| self.master_of(b)).filter(|&m| m == player);
+            let credited = by == Some(player) || master.is_some();
             // A kill builds the killer's resources (spec §8 "Resources").
-            if let Some(by) = by {
+            if let Some(by) = master.or(by) {
                 self.gain_resource(by, Build::Kill);
             }
-            if by == Some(self.state.player) {
-                self.earn_kill(creature);
+            if credited {
+                let percent = match master {
+                    Some(_) => self.content.allies().map_or(100, |r| r.ally_percent),
+                    None => 100,
+                };
+                self.earn_kill_at(creature, percent);
                 let level = self.state.current_level.clone();
                 self.tally_kill(creature, &level);
                 self.judge_kill(id);
+                if master.is_some() && self.trains(Use::Handle) {
+                    self.train(Use::Handle);
+                }
             }
-            let lines = self.creature_dies(id, by == Some(self.state.player));
+            let lines = self.creature_dies(id, credited);
             self.news.splice(earned..earned, lines);
         }
     }

@@ -3,6 +3,6 @@ id = "rage"
 name = "Rage"
 tree = "class"
 granted = true
-description = "Fly into a rage (an ability): stronger and tougher, too wild to read; exhausted after, and no rage till then."
+description = "Fly into a rage (an ability): stronger and tougher, too wild to read or cast, and fighting keeps the fire fed; exhausted after, and no rage till then."
 effects = [{ kind = "rage", resource = "rage" }]
 systems = ["status", "combat", "resources"]

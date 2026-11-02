@@ -92,6 +92,8 @@ impl World {
             Action::Cast(..) | Action::CastOn(..) => ActionKind::Cast,
             Action::Sell(_)
             | Action::Pay(None)
+            | Action::Order(_)
+            | Action::Ally { .. }
             | Action::SetStance(_)
             | Action::SetVision(_)
             | Action::SkipTime(_)

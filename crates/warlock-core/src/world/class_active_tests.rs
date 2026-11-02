@@ -1,5 +1,5 @@
 //! Class abilities in the world (spec §8 "Class abilities"; #243): the warrior's, berserker's,
-//! paladin's, and monk's level tables. A level brings its abilities and says so, the bonus picks
+//! paladin's, and ascetic's level tables. A level brings its abilities and says so, the bonus picks
 //! come from the class's trees, each passive changes the rule it names, and each active is used
 //! from the abilities menu with its cooldown.
 
@@ -124,6 +124,7 @@ pub(super) fn beside(world: &mut World, creature: &str, hp: i32) -> ActorId {
         npc: None,
         faction_override: None,
         summoner: None,
+        ally: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),
@@ -392,8 +393,15 @@ fn thick_hide_fast_movement_hardened_and_mighty_thews() {
             "{stat:?}"
         );
     }
-    // Hardened: past level 50 levels add hit points again, three more each.
+    // Hardened: the level-50 row (#842), not before; past level 50 levels add hit points
+    // again, three more each.
+    reach(&mut w, 49);
+    assert!(
+        !w.state.player().talents.has("hardened", 1),
+        "not at 25 any more"
+    );
     reach(&mut w, 50);
+    assert!(w.state.player().talents.has("hardened", 1));
     let at_50 = w.state.player().max_hp(&content);
     reach(&mut w, 51);
     let per_level = w.level_hp(&content);
@@ -402,19 +410,19 @@ fn thick_hide_fast_movement_hardened_and_mighty_thews() {
 
 #[test]
 fn blood_frenzy_and_unstoppable_keep_the_rage() {
-    // Before Blood frenzy a kill builds no rage.
+    // Before Blood frenzy a kill builds the pool's own three rage.
     let mut w = world("berserker");
     let player = w.state.player;
     run(&mut w, "use:rage");
     w.gain_resource(player, Build::Kill);
-    assert_eq!(rage(&w), Some(11));
-    // With it, five rage a kill (up to Mighty rage's thirty).
+    assert_eq!(rage(&w), Some(14));
+    // With it, five more a kill, eight in all (up to Mighty rage's thirty).
     let mut w = world("berserker");
     reach(&mut w, 60);
     at_normal_speed(&mut w);
     run(&mut w, "use:rage");
     w.gain_resource(player, Build::Kill);
-    assert_eq!(rage(&w), Some(16));
+    assert_eq!(rage(&w), Some(19));
     set_rage(&mut w, 28);
     w.gain_resource(player, Build::Kill);
     assert_eq!(rage(&w), Some(30), "never past the maximum");
@@ -562,9 +570,9 @@ fn purity_of_body_and_avatar() {
 
 #[test]
 fn martial_arts_flurry_still_mind_and_quivering_palm() {
-    let mut w = world("monk");
+    let mut w = world("ascetic");
     let content = w.content().clone();
-    // The monk's own kit: gloves (Brawler) or a staff (Staff fighter); bare hands either way.
+    // The ascetic's own kit: gloves (Brawler) or a staff (Staff fighter); bare hands either way.
     w.player_mut().equipment = Default::default();
     let fists = |w: &World| w.state.player().melee(&content).damage.to_string();
     assert_eq!(fists(&w), "1d6", "Martial arts");

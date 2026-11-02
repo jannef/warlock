@@ -264,6 +264,54 @@ pub struct SeenActor {
     /// for everyone otherwise (spec §8 "Surprise and sneak attacks": the unaware mark).
     #[serde(skip)]
     pub unaware: bool,
+    /// It is an ally of the player's (spec §8 "Allies"), which they know by sight.
+    #[serde(skip)]
+    pub ally: bool,
+}
+
+/// One of the player's allies as they know it (spec §8 "Allies"): never a number.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AllyView {
+    pub id: ActorId,
+    pub creature: CreatureId,
+    /// Its type's name.
+    pub name: String,
+    /// How hurt it looks.
+    pub health: Health,
+    pub order: crate::world::Order,
+    pub source: crate::world::AllySource,
+    /// How long its stay has left, if it ends; whole minutes, rounded up.
+    pub lasts: Option<u32>,
+    /// Travelling with the player off any level.
+    pub retinue: bool,
+    /// On the level the player is on, acting.
+    pub here: bool,
+}
+
+/// The player's allies ([`AllyView`]), in actor id order.
+fn allies_of(state: &WorldState, content: &Content) -> Vec<AllyView> {
+    let player = state.player;
+    (state.actors.values())
+        .filter(|a| a.master() == Some(player))
+        .filter_map(|a| {
+            let ally = a.ally.as_ref()?;
+            let lasts = ally.until.map(|until| {
+                let seconds = until.since(state.time).as_seconds();
+                u32::try_from(seconds.div_ceil(60)).unwrap_or(u32::MAX)
+            });
+            Some(AllyView {
+                id: a.id,
+                creature: a.creature,
+                name: content.creature(a.creature).name.clone(),
+                health: a.health(content),
+                order: ally.order,
+                source: ally.source.clone(),
+                lasts,
+                retinue: ally.retinue,
+                here: a.level == state.current_level && !ally.retinue,
+            })
+        })
+        .collect()
 }
 
 /// How a creature looks by what it is made of (spec §8 "Animated objects"): an animated
@@ -458,6 +506,9 @@ pub(crate) struct Perception {
     /// The disguised mimics of the level (`world/mimic.rs`), by position: each is a shut chest to
     /// the player, never an actor, but those Chest-wise sees through.
     disguises: Vec<Disguise>,
+    /// The player's allies, wherever they are (`world/ally.rs`), in actor id order: the player
+    /// knows their own.
+    allies: Vec<AllyView>,
 }
 
 /// A disguised mimic as the snapshot hides it: a shut chest of its level's band at its cell.
@@ -774,6 +825,8 @@ impl Perception {
             .actors
             .values()
             .filter(|a| a.level == level.id && sight.get(a.pos) == Some(&Sight::Seen))
+            // The retinue is with the player, not on the map (`world/ally.rs`).
+            .filter(|a| !a.in_retinue())
             .filter(|a| !hidden(a))
             .collect();
         let mut actors: Vec<SeenActor> = (seen.iter())
@@ -787,6 +840,7 @@ impl Perception {
                 health: a.health(content),
                 shape: shape(a, content),
                 unaware: false,
+                ally: a.master() == Some(state.player),
             })
             .collect();
         // Stalker's eye: which of them have not noticed the player.
@@ -899,6 +953,7 @@ impl Perception {
             images,
             dazzled: dazzled.is_some(),
             disguises,
+            allies: allies_of(state, content),
         }
     }
 
@@ -1542,11 +1597,18 @@ impl<'a> PerceptionView<'a> {
     /// what they can do and what they hold.
     pub fn abilities(&self) -> Vec<OwnAbility> {
         let here = Ability::here(self.level, self.content, self.player.pos);
+        let orders = Ability::orders(!self.snapshot.allies.is_empty());
+        let allies_here = self.snapshot.allies.iter().any(|a| a.here);
         (Ability::of(self.player, self.content).into_iter())
             .chain(here)
+            .chain(orders)
             .map(|ability| OwnAbility {
                 ability,
                 unavailable: match ability {
+                    // An order needs someone on the level to hear it (spec §8 "Allies").
+                    Ability::Heel | Ability::Hold | Ability::SetOn if !allies_here => {
+                        Some(crate::ability::Unavailable::NoAllies)
+                    }
                     Ability::Spell(spell) => {
                         crate::ability::spell_unavailable(self.player, self.content, spell)
                     }
@@ -1989,6 +2051,18 @@ impl<'a> PerceptionView<'a> {
     /// and fight worse. Only that it does, never how much.
     pub fn dazzled(&self) -> bool {
         self.snapshot.dazzled
+    }
+
+    /// The player's allies (spec §8 "Allies"), wherever they are, in actor id order.
+    pub fn allies(&self) -> &[AllyView] {
+        &self.snapshot.allies
+    }
+
+    /// How many allies are with the player: on their level or in their retinue.
+    pub fn allies_with(&self) -> usize {
+        (self.snapshot.allies.iter())
+            .filter(|a| a.here || a.retinue)
+            .count()
     }
 
     /// The level's ambient light, as the player perceives it.

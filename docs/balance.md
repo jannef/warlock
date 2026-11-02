@@ -25,7 +25,7 @@ cargo test --release -p warlock-core balance_probe -- --ignored --nocapture
 
 It takes about three minutes in release (most of it the stat training's sweep, a hundred and
 seventy careers to level 60). It prints the Markdown tables of the sections from "Players" to
-"Sneak attacks" below, and those of "Stat training", and the same content always prints the same tables (fixed seeds and streams).
+"Rage" below, and those of "Stat training", and the same content always prints the same tables (fixed seeds and streams).
 After a PR that tunes combat data (weapon skills, creatures, classes, spells, stats, items), run
 it again and replace those sections, then revisit the tuning notes. The code is
 `crates/warlock-core/src/world/balance_probe.rs` (the measuring, with the method in its module
@@ -86,7 +86,14 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/s
   12 plus 3.5 a level (15 at 1, 117 at 30, 222 at 60), the design's "about 100 by level 25 to
   30". Only the first blow is measured: the initiative check's Surprised, which strips the
   Defence for the next blow too, is not.
-- **Not modelled**: triggered and active weapon abilities (Rend, Riposte, Sunder, ...), stances,
+- **Rage** (#842): a human male berserker (great axe; axes, great blades, and the great weapon
+  style at the warrior's ranks), measured for that table alone, calm and raging: the Rage pool
+  granted (the dev grant: Raging and the stance it forces), and its `builds` and decay read from
+  the content and the talents (Blood frenzy, Battle trance). Each foe's blows a round times the
+  share of its strikes that `is_hit()` (soaked and resisted too) build `struck`; the berserker's
+  blows times the share of `Strike::Hit { critical: true }` build `critical`; one over the
+  rounds to kill builds `kill`.
+- **Not modelled**: triggered and active weapon abilities (Rend, Riposte, Sunder, ...), stances (but the rage table's),
   sneak attacks outside the table above, a talent build, potions, resistances against spells, healing between rounds,
   and fights against several monsters at once.
 
@@ -340,6 +347,48 @@ The thief's main-hand blow on the monsters of their level (trained stats), aware
 | 40 | 152 | 8d6 | 59% | 99/99 · 15.9:43.7 · ×2.7 | 99/99 · 22.7:50.6 · ×2.2 |
 | 50 | 187 | 8d6 | 52% | 99/99 · 17.0:44.6 · ×2.6 | 99/99 · 27.5:55.1 · ×2.0 |
 | 60 | 222 | 9d6 | 47% | 99/99 · 18.2:51.9 · ×2.9 | 99/99 · 25.6:60.2 · ×2.4 |
+
+## Rage
+
+The berserker in plain gear (a great axe; from level 5 the warrior's armour: chain mail, banded mail from 15, plate from 30), trained stats, against the monsters within two levels: calm (the stance the run starts in) and raging (Raging and the frenzy stance). The pool as the Rage ability grants it (start / most); the fight cells as in "Fights"; then the rage a round against one foe, the medians of hits taken × their build + criticals × theirs + kills × theirs − the decay (kills a round: one over the rounds to kill, so a fight's average); the same without the kills (a foe that outlasts the rage, or the turns before the first kill) and how many rounds the rage lasts from its start at that net (`grows` when it does not fall); and the net against three foes (three foes' hits, the same criticals and kills).
+
+| L | rage | Calm | Raging | one foe: struck + crit + kill − decay = net | one foe that does not die: net · rounds the rage lasts | three foes: net |
+|---|---|---|---|---|---|---|
+| 1 | 12/20 | 85/70 · 8.3:0.8 · 1.4 / 33 | 95/96 · 13.8:1.0 · 0.9 / 27 | 0.98 + 0.07 + 3.48 − 1.00 = +3.53 | +0.05 · grows | +5.48 |
+| 5 | 12/20 | 88/63 · 8.9:0.9 · 2.6 / 57 | 97/93 · 13.9:1.4 · 1.6 / 36 | 0.91 + 0.06 + 1.92 − 1.00 = +1.89 | -0.03 · 431 | +3.71 |
+| 10 | 12/20 | 88/68 · 13.2:3.2 · 3.3 / 26 | 97/95 · 18.5:4.3 · 2.3 / 20 | 0.96 + 0.07 + 1.32 − 1.00 = +1.34 | +0.03 · grows | +3.26 |
+| 15 | 12/20 | 93/84 · 16.5:5.1 · 3.8 / 24 | 98/99 · 22.3:6.2 · 2.8 / 20 | 0.99 + 0.08 + 1.10 − 1.00 = +1.16 | +0.06 · grows | +3.14 |
+| 20 | 12/20 | 95/90 · 24.7:6.9 · 3.4 / 25 | 99/99 · 32.4:8.1 · 2.6 / 21 | 0.99 + 0.14 + 1.21 − 1.00 = +1.34 | +0.13 · grows | +3.32 |
+| 30 | 12/20 | 94/97 · 29.6:15.6 · 4.7 / 17 | 99/99 · 37.8:15.9 · 3.9 / 17 | 0.99 + 0.14 + 0.79 − 1.00 = +0.92 | +0.13 · grows | +2.91 |
+| 40 | 12/20 | 97/99 · 47.8:15.2 · 3.8 / 25 | 99/99 · 60.0:15.8 · 3.2 / 24 | 1.05 + 0.22 + 2.53 − 0.89 = +2.91 | +0.38 · grows | +5.00 |
+| 50 | 18/30 | 96/99 · 49.5:22.5 · 4.8 / 23 | 99/99 · 69.2:22.3 · 3.4 / 23 | 1.04 + 0.25 + 2.42 − 0.67 = +3.04 | +0.62 · grows | +5.13 |
+| 60 | 18/30 | 89/99 · 43.4:24.3 · 5.5 / 28 | 99/99 · 53.3:24.7 · 3.9 / 28 | 1.18 + 0.00 + 2.06 − 0.67 = +2.57 | +0.51 · grows | +4.92 |
+
+This section is #842's run (the rage pool's builds); the sections above are still #754's. Against
+the same table before #842 (the pool fed by nothing but Blood frenzy's kills from 40): one foe's
+net was −1.00 a round at every level to 30 (the rage lasted its twelve rounds, whatever the
+fight), +0.69 at 40, +0.84 at 50, and +0.62 at 60; without the kills −1.00 (12 rounds) to 30,
+−0.89 (13) at 40, and −0.67 (27) at 50 and 60; and three foes fed it no more than one. The calm
+and raging fight cells are unchanged (#842 changes no blow). What the run shows:
+
+- **Hits taken alone hold the rage.** A raging berserker's Dodge −6 lets the monsters of their
+  level land 93 to 99 % of their blows (the berserker design's arithmetic assumed about six in
+  ten), so at their one blow a round `struck` is worth 0.9 to 1.2 rage a round: about the
+  decay. A duel with a foe that will not die holds the rage level (−0.03 to +0.13 a round to 30;
+  it falls only at 5, over 431 rounds), so the design's "a duel of twelve rage lasts about thirty
+  turns" is, by these numbers, "a duel's rage lasts as long as the foe does". From 40 Blood
+  frenzy and, where the picks took it, Battle trance's slower decay make it grow.
+- **Kills feed it most** while the fight is short: raging, the berserker kills a monster of their
+  level in one to four rounds, so +3 a kill is 0.8 to 3.5 rage a round over the fight.
+- **Criticals are a garnish**: 0.06 to 0.25 a round (none at 60, where the median monster of the
+  window takes none).
+- **A crowd builds it**: three foes put +2.9 to +5.5 a round into it, so a fight against several
+  ends at the cap (20; 30 with Mighty rage), and the rage burns out over 20 rounds after it (45
+  with Mighty rage and Battle trance's slower decay), then Exhausted's 150 s (75 with Mighty
+  rage).
+
+If a duel's rage should run out mid-fight, the levers are `struck`'s amount or a faster decay;
+#842 keeps the design's numbers.
 
 ## Stat training
 
@@ -637,7 +686,7 @@ Every system the design added meets the coverage bar (`assets/data/talents.toml`
 - `stamina` has 5 (Trained wind, Deep lungs, Steady breathing, Armour-breaker, Drillmaster;
   Second breath and Bellows were cut in #774).
 - `stat_training` has 2 (Gourmand, Cauldron; #726; Hard-won and
-  Gifted were cut in #774, Ascetic became a `hunger` talent in #775, and Quick study of the
+  Gifted were cut in #774, Long fast became a `hunger` talent in #775, and Quick study of the
   body, Hard living, and Discipline were cut in #787, Hard training and Late bloomer in #791).
 - `potions` has 2 (Thrifty drinker, Lasting draughts; Nose for draughts and Cauldron-wise were
   cut in #787).

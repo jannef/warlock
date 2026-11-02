@@ -107,7 +107,14 @@ impl World {
     /// The player has killed a creature of type `creature` by their own attack: gains its XP,
     /// and its XP once more the first time they kill one of its type, and any levels that
     /// earns. The messages wait in `news` until the attack's own are said.
+    #[cfg(test)]
     pub(super) fn earn_kill(&mut self, creature: CreatureId) {
+        self.earn_kill_at(creature, 100);
+    }
+
+    /// [`World::earn_kill`] at `percent` of what the player's own blow would have paid (the
+    /// first-kill bonus and the level scaling included): an ally's kill (spec §8 "Allies").
+    pub(super) fn earn_kill_at(&mut self, creature: CreatureId, percent: u8) {
         let content = self.content.clone();
         let def = content.creature(creature);
         let rules = content.experience();
@@ -125,6 +132,7 @@ impl World {
             self.train_stat(StatUse::Discovered);
             self.discovered();
         }
+        let gain = u32::try_from(u64::from(gain) * u64::from(percent) / 100).unwrap_or(u32::MAX);
         self.grant_xp(gain);
     }
 
