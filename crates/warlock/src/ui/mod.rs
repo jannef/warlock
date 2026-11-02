@@ -73,6 +73,7 @@ mod weapon_skills_screen;
 
 pub use dialog_screen::Dialog;
 pub use menu::{Press, quit_dialog};
+pub use object_screen::IdentifyBy;
 pub use screens::{MenuChoice, ScreenAction, ScreenName, ScreenStack, Screens};
 
 pub use dev::DevOverlays;

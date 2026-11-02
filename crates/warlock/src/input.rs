@@ -22,8 +22,8 @@ use crate::render::console::Console;
 use crate::save::SaveCommand;
 use crate::settings::Settings;
 use crate::ui::{
-    Aim, AimKind, DevOverlays, Dialog, LastTarget, MenuChoice, Press, ScreenAction, ScreenName,
-    Screens, more, quit_dialog,
+    Aim, AimKind, DevOverlays, Dialog, IdentifyBy, LastTarget, MenuChoice, Press, ScreenAction,
+    ScreenName, Screens, more, quit_dialog,
 };
 use bevy::ecs::system::SystemParam;
 use bevy::input::ButtonState;
@@ -750,8 +750,8 @@ pub fn route_keys(
                 // From the abilities menu, or from play (its key, the quick repeat).
                 screens.stack.close();
                 screens.stack.remember_ability(ability);
-                if let Some(spell) = play.item_spell(ability) {
-                    screens.open_identify_spell(spell);
+                if let Some(by) = play.identify_by(ability) {
+                    screens.open_identify(by);
                 } else {
                     match play.use_ability(ability) {
                         Some(ScreenAction::Open(name)) => screens.open(name),
@@ -1194,16 +1194,18 @@ impl Gameplay<'_> {
         None
     }
 
-    /// The spell `ability` casts on a stack the player carries, when they can cast it now
-    /// (Identify): the identify list asks which stack.
-    fn item_spell(&self, ability: Ability) -> Option<warlock_core::content::SpellId> {
+    /// What `ability` identifies with on a stack the player carries, when they can use it now
+    /// (the Identify spell, Merchant's eye): the identify list asks which stack.
+    fn identify_by(&self, ability: Ability) -> Option<IdentifyBy> {
         let game = self.game.as_ref()?;
-        let Ability::Spell(spell) = ability else {
-            return None;
+        let by = match ability {
+            Ability::Spell(spell) => IdentifyBy::Spell(spell),
+            Ability::Class(active) => IdentifyBy::Class(active),
+            _ => return None,
         };
         let usable = (game.world.perception().abilities().iter())
             .any(|own| own.ability == ability && own.unavailable.is_none());
-        (usable && ability.aim(game.world.content()) == ability::Aim::Item).then_some(spell)
+        (usable && ability.aim(game.world.content()) == ability::Aim::Item).then_some(by)
     }
 
     /// Uses `ability`: asks for what it needs (a direction in the message line, a cell in the
@@ -1219,7 +1221,7 @@ impl Gameplay<'_> {
         match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
-            // Temper's list; the identify list asks which stack (`item_spell`, before this).
+            // Temper's list; the identify list asks which stack (`identify_by`, before this).
             (true, ability::Aim::Item) => {
                 if ability == Ability::Temper {
                     return Some(ScreenAction::Open(ScreenName::Temper));
