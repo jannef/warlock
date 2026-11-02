@@ -1,0 +1,63 @@
+# Folk met on the roads of the march (docs/design/overworld-encounters.md §8; the encounter
+# tables, data/encounters/): the pedlar, and the villagers of the vale on their way to and from
+# the market (the `roads` table's `road_villagers`, whose `npc = "road_folk"` gives them these
+# lines instead of the town's). Commoners: they talk as the town does.
+
+# The pedlar: news of the roads, and the ways. His `rumours` route marks on the player's map
+# what walking it by day would show (spec §8 "Dialogue", "Rumoured ways"): from Cealdhlāw down
+# to the road and east along it to the ford over Blæcwæter. Only terrain: nothing hidden.
+[[dialogue]]
+creature = "pedlar"
+greet = "Pins, needles, laces, candles! Wot can I do yer for, traveller?"
+greet_evil = [
+    "Keep yer 'ands where I can see 'em, if it's all the same to you.",
+    "Nuffink for sale to the likes o' you. Move along.",
+]
+lines = [
+    "Roads is quiet this week. Too quiet, if yer ask me.",
+    "Footpads on the downs road again. Walk it by day, that's my advice.",
+    "Rained three days at Fennhām. Mud up to me knees, an' no custom.",
+    "There's goblins come down out o' the 'ills. Bold as brass, they are.",
+    "Snow on the pass. Nobody comin' in, nobody goin' out. Bad for trade.",
+    "Lights out on the fen at night. I don't go lookin', an' nor should you.",
+    "The carters say the ford's up to the axles. Mind 'ow yer cross.",
+    "Fyrbeorg's coughin' ash again. Spoils the ribbons, it does.",
+]
+mutter = { chance = 2, verb = "whistles", lines = [
+    "Pins an' needles, needles an' pins...",
+    "Cēaptūn by nightfall, if me feet 'old out.",
+    "Two pence a candle, an' cheap at 'alf the price.",
+] }
+
+[[dialogue.topic]]
+id = "rumours"
+name = "The ways"
+reply = "Wot, the ways? Easy. East from the town, the road runs over the downs. Yer'll see the big barrow, Cealdhlāw, right by it, cold as a tomb, an' that's wot it is. On past that, the road goes all the way to the ford over Blæcwæter. Shallow, mostly. Mostly."
+route = [[34, 26], [34, 28], [87, 28]]
+
+[[dialogue.topic]]
+id = "news"
+name = "News of the roads"
+reply = "News? Footpads on the downs road, goblins in the 'ills, an' summat nasty in the fen wot nobody'll name. The Gilde in Cēaptūn's payin' bounties, so I 'ear. Me, I just keep walkin' an' keep me wits about me. Best way."
+
+# The villagers of the vale, met on the road (not in town): greetings for the way.
+[[dialogue]]
+npc = "road_folk"
+greet = "Mornin'. Fine day for the road, innit."
+greet_evil = [
+    "Don't want no trouble. Just passin', we are.",
+    "Go on, then. Leave us be.",
+]
+lines = [
+    "Off to market. Turnips won't sell themselves, will they.",
+    "Mind the downs road after dark. Lights on the barrows.",
+    "Comin' from the mill. Flour's dear, an' dearer every week.",
+    "You one o' them Gilde folk? Good luck to yer, I s'pose.",
+    "Saw a pedlar this mornin'. Sold me a ribbon I don't need.",
+    "Keep to the road. The road's safe, mostly.",
+]
+mutter = { chance = 2, lines = [
+    "My feet, my poor feet.",
+    "Rain by evenin', you mark my words.",
+    "Should've set off at dawn.",
+] }

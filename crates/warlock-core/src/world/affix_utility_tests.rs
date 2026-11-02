@@ -7,7 +7,7 @@
 //! Hobnailed, Delving, of Sustenance, of Wariness, and of Health. The pick-axe is a base item
 //! (`tool`): loot rolls it magic from item level 3, while the hand-placed ones stay normal.
 
-use super::fixture_factions::peaceful_factions;
+use super::fixture_factions::make_peace;
 use super::*;
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
@@ -47,7 +47,7 @@ fn affix(kind: &str, id: &str, effect: &str, category: &str, bases: &str, value:
 
 fn files() -> ContentFiles {
     let mut files = ContentFiles::builtin();
-    files.insert("data/factions.toml", &peaceful_factions());
+    make_peace(&mut files);
     let fixtures = [
         (
             "prefix",

@@ -1,6 +1,6 @@
 //! Objects (spec §5, §6): piles, picking up and dropping, inventories, weights, and memory.
 
-use super::fixture_factions::peaceful_factions;
+use super::fixture_factions::make_peace;
 use super::*;
 use crate::action::{Positions, parse_actions};
 use crate::content::ContentFiles;
@@ -44,7 +44,7 @@ const DOOR: Pos = Pos::new(6, 2);
 fn content() -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     // At peace: the kobold only carries objects here; it neither hunts the player nor blocks them.
-    files.insert("data/factions.toml", &peaceful_factions());
+    make_peace(&mut files);
     files.insert("levels/store.toml", LEVEL);
     files.insert(
         "scenarios/store.toml",

@@ -1,0 +1,52 @@
+# Micelfenn, the great fen (docs/design/overworld-encounters.md §7.4; the design's boggle is of
+# the fey courts, which are not everyone's enemies, so a bog body stands in for it). While Sister
+# Hild's errand to the fen minster is under way, the cult walks the fen road (`fen_cult`).
+
+[[table]]
+id = "fen"
+when = { regions = ["Micelfenn"] }
+
+[[table.entry]]
+id = "fen_leeches"
+name = "giant leeches"
+weight = 3
+group = [{ creature = "giant_leech", count = "1d3" }]
+
+[[table.entry]]
+id = "fen_frogs"
+name = "giant frogs"
+weight = 3
+group = [{ creature = "giant_frog", count = "1d2" }]
+
+[[table.entry]]
+id = "fen_drowned"
+name = "the drowned"
+weight = 2
+when = { phase = ["night"] }
+group = [{ creature = "drowned", count = "1d3" }]
+
+# Where the design has a boggle: one of the fen's dead, walking out of the peat.
+[[table.entry]]
+id = "fen_bog_body"
+name = "a bog body"
+weight = 2
+when = { phase = ["night", "twilight"] }
+group = [{ creature = "bog_body", count = "1" }]
+
+[[table.entry]]
+id = "fen_wisp"
+name = "a will-o'-wisp"
+weight = 1
+when = { phase = ["night"] }
+group = [{ creature = "will_o_wisp", count = "1" }]
+
+[[table]]
+id = "fen_cult"
+when = { regions = ["Micelfenn"], quest_active = "fen_minster" }
+rate_percent = 150
+
+[[table.entry]]
+id = "fen_cultists"
+name = "cultists on the fen road"
+weight = 4
+group = [{ creature = "cultist", count = "1d3+1" }, { creature = "cult_priest", count = "1d2-1" }]

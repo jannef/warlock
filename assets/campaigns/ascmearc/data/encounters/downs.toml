@@ -1,0 +1,55 @@
+# Hlāwdūn, the barrow downs, off the road (docs/design/overworld-encounters.md §7.2, §7.4): by
+# day the vale's folk and the barrows' spiders; at night and twilight the barrows' dead walk, and
+# that table replaces the day's.
+
+[[table]]
+id = "downs"
+when = { regions = ["Hlāwdūn"], landscapes = ["grassland", "hills", "plains", "forest"] }
+
+[[table.entry]]
+id = "downs_kobolds"
+name = "a band of kobolds"
+weight = 3
+group = [{ creature = "kobold", count = "1d4+1" }, { creature = "kobold_archer", count = "1d2-1" }]
+
+[[table.entry]]
+id = "downs_goblins"
+name = "goblin raiders"
+weight = 2
+group = [{ creature = "goblin", count = "1d3" }, { creature = "goblin_archer", count = "1d2-1" }]
+
+[[table.entry]]
+id = "downs_spiders"
+name = "barrow spiders"
+weight = 2
+group = [{ creature = "barrow_spider", count = "1d3" }]
+
+[[table]]
+id = "downs_night"
+when = { regions = ["Hlāwdūn"], landscapes = ["grassland", "hills", "plains", "forest"], phase = ["night", "twilight"] }
+replaces = ["downs"]
+
+[[table.entry]]
+id = "downs_skeletons"
+name = "a knot of skeletons"
+weight = 4
+group = [{ creature = "skeleton", count = "1d3+1" }, { creature = "skeleton_archer", count = "1d2-1" }]
+
+[[table.entry]]
+id = "downs_ghoul"
+name = "a barrow ghoul"
+weight = 2
+group = [{ creature = "barrow_ghoul", count = "1" }]
+
+[[table.entry]]
+id = "downs_wight"
+name = "a barrow wight"
+weight = 1
+group = [{ creature = "barrow_wight", count = "1" }]
+
+# Whatever walks out of Cealdhlāw: its population at the first floors' danger.
+[[table.entry]]
+id = "downs_strays"
+name = "something from the barrow"
+weight = 2
+draw = { pool = "cealdhlaw", danger = 3, count = "1d3" }

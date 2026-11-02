@@ -1,0 +1,21 @@
+# A month into the winter the orcs come down out of the deep woods into Burnadenu
+# (docs/design/overworld-encounters.md §7.4: the march changes as the scenario goes on). By
+# night their wargs run with them.
+
+[[table]]
+id = "orcs_come_down"
+when = { regions = ["Burnadenu"], after_days = 30 }
+
+[[table.entry]]
+id = "orc_raiders"
+name = "an orc raiding party"
+weight = 3
+when = { phase = ["day", "twilight"] }
+group = [{ creature = "orc_runt", count = "1d3" }, { creature = "orc_warrior", count = "1d2" }]
+
+[[table.entry]]
+id = "orc_raiders_night"
+name = "an orc raiding party"
+weight = 3
+when = { phase = ["night"] }
+group = [{ creature = "orc_runt", count = "1d3" }, { creature = "orc_warrior", count = "1d2" }, { creature = "warg", count = "1" }]

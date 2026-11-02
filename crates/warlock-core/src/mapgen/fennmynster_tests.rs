@@ -16,6 +16,8 @@ use std::sync::{Arc, LazyLock};
 static CONTENT: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = ContentFiles::builtin();
     files.remove("data/hunger.toml");
+    // Nobody met on the way: the walks test the ways in (`ascmearc_encounter_tests`).
+    files.remove_encounter_tables();
     Arc::new(Content::load(&files).expect("builtin content"))
 });
 

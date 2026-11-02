@@ -1,0 +1,39 @@
+# The woods of the march: Holegnwudu and Lindwudu, and the copses of the vales
+# (docs/design/overworld-encounters.md §7.4, widened to the vales' forest cells). Their deep
+# hearts are `deep_woods`.
+
+[[table]]
+id = "woods"
+when = { regions = ["Holegnwudu", "Lindwudu", "Cēapdenu", "Burnadenu", "Ēastmearc", "Grægsæ"], landscapes = ["forest", "dense_forest"] }
+
+[[table.entry]]
+id = "woods_deer"
+name = "a herd of deer"
+weight = 4
+stance = "wildlife"
+group = [{ creature = "deer", count = "1d4+1" }]
+
+[[table.entry]]
+id = "woods_goblins"
+name = "goblin raiders"
+weight = 3
+group = [{ creature = "goblin", count = "1d3" }, { creature = "goblin_archer", count = "1d2-1" }]
+
+[[table.entry]]
+id = "woods_spiders"
+name = "barrow spiders"
+weight = 2
+group = [{ creature = "barrow_spider", count = "1d3" }]
+
+[[table.entry]]
+id = "woods_wargs"
+name = "a pair of wargs"
+weight = 2
+when = { phase = ["night", "twilight"] }
+group = [{ creature = "warg", count = "1d2" }]
+
+[[table.entry]]
+id = "woods_footpads"
+name = "a band of footpads"
+weight = 1
+group = [{ creature = "footpad", count = "1d3+1" }]

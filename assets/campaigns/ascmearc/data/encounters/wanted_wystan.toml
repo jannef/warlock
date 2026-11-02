@@ -1,0 +1,14 @@
+# While Wat One-Eye's "Wanted" names Black Wystan (the quest's `wystan` variant,
+# data/quests/wat.toml), his archers watch the roads of the vale and the downs
+# (docs/design/overworld-encounters.md §7.4, §14 Q6).
+
+[[table]]
+id = "wanted_wystan"
+when = { landscapes = ["road"], regions = ["Cēapdenu", "Hlāwdūn"], quest_active = "guild_wanted", quest_variant = { quest = "guild_wanted", variant = "wystan" } }
+
+[[table.entry]]
+id = "wystan_archers"
+name = "Wystan's archers"
+weight = 5
+lead = "footpad_archer"
+group = [{ creature = "footpad_archer", count = "1d3" }, { creature = "footpad", count = "1d2" }]

@@ -2,7 +2,7 @@
 //! reader, whose kills are theirs; the scroll of identify; refusals that keep the scroll; deaths
 //! by one's own scroll; loot; saves and replays.
 
-use super::fixture_factions::peaceful_factions;
+use super::fixture_factions::make_peace;
 use super::*;
 use crate::action::{ReadTarget, SpellShape, parse_actions};
 use crate::content::{ContentFiles, Reading, SpellPurpose};
@@ -27,7 +27,7 @@ fn world_with(map: &str, hp: u16) -> World {
 /// [`world_with`] under white `ambient` light (0: dark).
 fn hall(map: &str, hp: u16, ambient: u16) -> World {
     let mut files = ContentFiles::builtin();
-    files.insert("data/factions.toml", &peaceful_factions());
+    make_peace(&mut files);
     files.insert("data/creatures/dummy.toml", DUMMY);
     files.insert(
         "levels/hall.toml",
