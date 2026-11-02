@@ -3,7 +3,7 @@
 //! `render/circles.rs` draws them.
 //!
 //! The snapshot only: the player's own statuses (`own_effects`) and a seen creature's that show
-//! (`effects_of`, statuses with `seen`; every runed status has it), in status order. No severity
+//! (`effects_of`, statuses with `seen`; every circled status has it), in status order. No severity
 //! and no time left: a circle says what the status bar and look mode say. An unseen actor has no
 //! circle. The list is rebuilt when the game changes (a turn), the angles, the fades and glides
 //! (`circle_tracks.rs`), and the sliding positions every frame.
@@ -13,7 +13,7 @@ use super::motion::Motion;
 use crate::cli::Args;
 use crate::game::Game;
 use crate::render::atlas::{self, Font, GlyphAtlas};
-use crate::render::circles::{self, CircleInstance, Circles, Rune, SchoolColors};
+use crate::render::circles::{self, CircleInstance, Circles, Mark, SchoolColors};
 use crate::render::grid::MapGrid;
 use crate::render::lighting::VisualLight;
 use crate::render::post::emissive;
@@ -56,21 +56,21 @@ pub(super) fn emit(
     out.cell = grid.cell;
     out.glyph_px = atlas.px;
     out.time = visual.seconds;
-    // The runes pulse with motion on (at the frozen moment under `--freeze-time`), and glow but
-    // with reduced effects (which also stills them, as `motion` off does).
-    out.pulse = effects.motion;
+    // The glints and the shimmer move with motion on (at the frozen moment under
+    // `--freeze-time`), and everything glows but with reduced effects (which also stills them).
+    out.motion = effects.motion;
     out.halo = !(settings.reduced_effects || args.reduced_effects);
     out.bloom = effects.glow;
     let view = game.world.perception();
     let content = view.content();
     if settings.is_changed() || effects.is_changed() || colors.0 == [Vec4::ZERO; 8] {
-        let runes = content.runes();
+        let defs = content.circles();
         let mut table = [Vec4::ONE; 8];
         // The circle sheds its school's light (core: the status's `light`); with glow on its
         // ink is a little emissive too.
         let glow = if effects.glow { CIRCLE_GLOW } else { 0.0 };
         for school in School::ALL {
-            let c = settings.palette.apply(runes.color(school), Role::Fg);
+            let c = settings.palette.apply(defs.color(school), Role::Fg);
             let linear = emissive(Color::srgb_u8(c.r, c.g, c.b).to_linear(), glow);
             table[school_index(school)] = Vec4::new(linear.red, linear.green, linear.blue, 1.0);
         }
@@ -85,7 +85,7 @@ pub(super) fn emit(
     let animate = effects.motion && !visual.frozen;
     if game.is_changed() || !circled.current {
         circled.current = true;
-        let runes = content.runes();
+        let defs = content.circles();
         let Circled { list, tracks, .. } = &mut *circled;
         list.clear();
         let mut seen = Vec::new();
@@ -95,12 +95,12 @@ pub(super) fn emit(
                 _ => view.effects_of(actor.id).collect(),
             };
             let circle = circles::layout(statuses.into_iter().filter_map(|s| {
-                let (index, def) = (runes.index(s)?, runes.of(s)?);
-                let rune = Rune {
+                let (index, def) = (defs.index(s)?, defs.of(s)?);
+                let mark = Mark {
                     slot: index as u8,
                     school: school_index(def.school) as u8,
                 };
-                Some((rune, def.hex))
+                Some((mark, def.hex))
             }));
             // An actor whose circle has just gone keeps its place in the list while it fades.
             if !circle.is_empty() || tracks.has(actor.id) {
@@ -116,7 +116,7 @@ pub(super) fn emit(
         let at = motion.actor_pos(id, pos, time);
         // Centred on the actor's glyph's ink, not its cell: a glyph sits on the baseline, its
         // ink above the cell's middle or below it (`@` reaches under the baseline).
-        // The glyph drawn there glows and glints with its runes (the snapshot's glyph: what the
+        // The glyph drawn there glows and glints within its circle (the snapshot's glyph: what the
         // player sees).
         let drawn = view.actor_at(pos).map(|a| a.glyph(content));
         let ink = ink(&font.0, atlas.px, drawn.unwrap_or('@'), grid.cell);

@@ -533,8 +533,11 @@ like utter shit. get rid of that entirely. even smaller font size for the kana w
 and also pull them tighter to the circles. the glow effect on the runes is very nice. please
 apply same glow effect to the transmutation circles themselves"; then "add small specular
 hilights to the runes that can glimmer in and out of existence", and that any circled
-character's glyph should glow and glint too. Since C5: no backdrop; runes `0.44 h` (8 px at the
-default font, overriding §3's `0.55 h`) sitting against the outermost ring (overriding §3's
-fixed `1.0 h` and `1.88 h`; the outer circle's rings from `1.24 h`); the rings and sides glow
-faintly; runes and the circled actor's glyph glint now and then; the glyph glows in its
-circle's colour; and a soft arc runs round each ring.
+character's glyph should glow and glint too. Then, of C5: "let's just get rid of the hovering
+kana. i think the transmutation circles are enough. purge the font from the game files". So
+**the runes are dropped** (the owner, 2026-11-02), overriding §3, §4's runes, §7, and the rune
+font: a circle is its rings and polygon alone, coloured by its first effect's school
+(`data/circles.toml`, which keeps the schools and the light rule of §8); the hexes' outer circle
+starts at `0.84 h`. The rings and sides glow faintly, the circled actor's glyph glows in its
+circle's colour and glints now and then, and a soft arc runs round each ring. No golden of the
+circles ("do not create golden screen shot out of this particle effect").

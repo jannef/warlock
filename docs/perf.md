@@ -113,7 +113,11 @@ cost 0.30 ms.
 
 After C5 (#786: no backdrop, the rings' glow, glints, the circled glyphs' glow and glints in a
 second pass over the free glyphs; 2026-11-02, an M5 Pro): fifty circles cost 0.084 ms at
-2560x1440, as C4's 0.080 within the noise (budget 0.2 ms).
+2560x1440, as C4's 0.080 within the noise (budget 0.2 ms). The runes were then dropped (the
+owner, #797): the shader does strictly less per pixel (no rune loop, no atlas taps but the
+glyph's) and the CPU no masks or crowding. Two runs after it on the same machine under a load
+average of 20 to 30 (other builds) printed 0.247 and 0.225 ms, with the hub row itself swinging
+from 0.97 to 1.54 ms: not a measurement; rerun on an idle machine.
 
 Frame time is nearly identical across levels and resolutions, which means the loop is CPU or
 submission bound on this machine; the offscreen run at the default 60 Hz pacing is bounded by the

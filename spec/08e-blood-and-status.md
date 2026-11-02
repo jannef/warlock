@@ -171,7 +171,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lurking are no buffs and never show. A buff's or hex's status carries a spell circle
     (§4.8), which a check at load keeps to statuses that show. Effects are part of the world
     state (saved, covered by the state hash).
-  - **The circle's light**: a runed status (`data/runes.toml`) without a `light` of its own sheds
+  - **The circle's light**: a circled status (`data/circles.toml`) without a `light` of its own sheds
     its school's, `circle_<school>` (radius 1, steady, a strong UV share: just over normal eyes'
     threshold on the bearer's cell, under it a cell away, bright to UV eyes; Lit keeps the Light
     spell's brighter one). One light per actor, the widest status light, the first in status

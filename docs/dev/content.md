@@ -51,8 +51,8 @@ no table: the shared file, then each campaign's `data/plurals.toml`, merged into
 first so creature, object, and gem names without a `plural` take theirs from it. Ids (`CreatureId`, `ObjectId`, `MaterialId`, an affix's
 index) are indices in that order and feed the content fingerprint, so moving entries between
 files changes ids and invalidates saves (the release bump covers it). Besides ids, one group of
-pairs feeds it: `data/runes.toml`'s rows as status and school (a school decides the light a
-runed status sheds, `runes::shed_lights`; docs/dev/status-effects.md). Each file is parsed on its
+pairs feeds it: `data/circles.toml`'s rows as status and school (a school decides the light a
+circled status sheds, `circles::shed_lights`; docs/dev/status-effects.md). Each file is parsed on its
 own, so an error names the file the bad entry is in; **a duplicate id across files is a
 `ContentError` naming both** (`content::duplicate_id`). For affixes the scalar tables (`[rarity]`,
 `[magic]`, `[rare]`, `[names]`) stay in the settings file `data/affixes.toml`, each set in

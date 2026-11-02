@@ -1,33 +1,30 @@
-//! Spell circles' runes (`assets/data/runes.toml`, spec §4.8 "Spell circles"): the rune and the
-//! school of every buff's and hex's status, and each school's colour.
+//! Spell circles' statuses (`assets/data/circles.toml`, spec §4.8 "Spell circles"): the school of
+//! every buff's and hex's status, and each school's colour.
 //!
-//! The renderer draws a circle about every actor the player sees with a runed status
-//! (`crates/warlock/src/ui/circles.rs`). Without the file there are no runes and no circles.
+//! The renderer draws a circle about every actor the player sees with a circled status
+//! (`crates/warlock/src/ui/circles.rs`). Without the file there are no circles.
 //!
-//! **One rule** (spec §8 "Status effects", docs/design/buff-circles.md §8): a runed status sheds
+//! **One rule** (spec §8 "Status effects", docs/design/buff-circles.md §8): a circled status sheds
 //! its school's light, `circle_<school>` in `data/lights.toml`, through the status light
-//! (`StatusDef::light`, filled by [`shed_lights`] for every runed status without a light of its
+//! (`StatusDef::light`, filled by [`shed_lights`] for every circled status without a light of its
 //! own: `lit` keeps the Light spell's). So the school of a row decides a light, and the rows'
 //! statuses and schools are in the content fingerprint.
 //!
 //! Load-time checks: every row's status exists and has `seen` (a circle shows only what look mode
-//! may say); its rune is exactly one character, used by no other row; its school is one of the
-//! seven and has a colour and a `circle_<school>` light; the status is a buff or hex spell's
-//! (which says whether its circle is a buff's or a hex's), and every buff or hex spell's status
-//! has a row.
+//! may say); its school is one of the seven and has a colour and a `circle_<school>` light; the
+//! status is a buff or hex spell's (which says whether its circle is a buff's or a hex's), and
+//! every buff or hex spell's status has a row.
 
 use super::{Content, ContentError, LightId, School, SpellPurpose, StatusId};
 use crate::color::Rgb;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
-/// One runed status.
+/// One circled status.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct RuneDef {
+pub struct CircledStatus {
     pub status: StatusId,
-    /// The character drawn at the circle's corners.
-    pub rune: char,
-    /// The school whose colour it is drawn in.
+    /// The school whose colour its circle is drawn in.
     pub school: School,
     /// A hex's (a broken circle, outside a buff's), else a buff's.
     pub hex: bool,
@@ -35,29 +32,30 @@ pub struct RuneDef {
     pub light: LightId,
 }
 
-/// Every runed status and the schools' colours.
+/// Every circled status and the schools' colours.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct Runes {
+pub struct CircleStatuses {
     /// In file order.
-    rows: Vec<RuneDef>,
+    rows: Vec<CircledStatus>,
     by_status: BTreeMap<StatusId, usize>,
     /// By [`School::ALL`] position; set for every school once there are rows.
     colors: [Rgb; 7],
 }
 
-impl Runes {
-    /// The rune of `status`, if it has one.
-    pub fn of(&self, status: StatusId) -> Option<&RuneDef> {
+impl CircleStatuses {
+    /// The row of `status`, if it is circled.
+    pub fn of(&self, status: StatusId) -> Option<&CircledStatus> {
         self.by_status.get(&status).map(|&i| &self.rows[i])
     }
 
-    /// The position of `status`'s rune in [`Runes::rows`], if it has one.
+    /// The position of `status`'s row in [`CircleStatuses::rows`], if it is circled: a number
+    /// of its own, which tells one effect from another on a circle.
     pub fn index(&self, status: StatusId) -> Option<usize> {
         self.by_status.get(&status).copied()
     }
 
-    /// Every runed status, in file order.
-    pub fn rows(&self) -> &[RuneDef] {
+    /// Every circled status, in file order.
+    pub fn rows(&self) -> &[CircledStatus] {
         &self.rows
     }
 
@@ -78,7 +76,7 @@ struct File {
     #[serde(default)]
     school: Vec<SchoolRow>,
     #[serde(default)]
-    rune: Vec<RuneRow>,
+    status: Vec<StatusRow>,
 }
 
 #[derive(Deserialize)]
@@ -90,14 +88,17 @@ struct SchoolRow {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct RuneRow {
+struct StatusRow {
     status: String,
-    rune: String,
     school: School,
 }
 
-/// Parses and checks `data/runes.toml` against the loaded statuses and spells.
-pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Runes, ContentError> {
+/// Parses and checks `data/circles.toml` against the loaded statuses and spells.
+pub(super) fn parse(
+    path: &str,
+    text: &str,
+    content: &Content,
+) -> Result<CircleStatuses, ContentError> {
     let err = |m: String| ContentError::new(path, m);
     let file: File = toml::from_str(text).map_err(|e| err(e.to_string()))?;
     let mut colors: [Option<Rgb>; 7] = [None; 7];
@@ -128,28 +129,15 @@ pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Runes, 
             spell_kind.entry(status).or_insert((hex, &spell.id));
         }
     }
-    let mut runes = Runes::default();
-    let mut used: BTreeMap<char, &str> = BTreeMap::new();
-    for row in &file.rune {
+    let mut circles = CircleStatuses::default();
+    for row in &file.status {
         let name = &row.status;
         let status =
             (content.status_id(name)).ok_or_else(|| err(format!("unknown status `{name}`")))?;
         if content.status(status).seen.is_none() {
             return Err(err(format!(
-                "status `{name}` has a rune but no `seen`: a circle shows only what others see \
-                 (data/status.toml)"
-            )));
-        }
-        let mut chars = row.rune.chars();
-        let (Some(rune), None) = (chars.next(), chars.next()) else {
-            return Err(err(format!(
-                "status `{name}`: rune `{}` is not exactly one character",
-                row.rune
-            )));
-        };
-        if let Some(first) = used.insert(rune, name) {
-            return Err(err(format!(
-                "status `{name}`: rune `{rune}` is already `{first}`'s"
+                "status `{name}` is circled but has no `seen`: a circle shows only what others \
+                 see (data/status.toml)"
             )));
         }
         let Some(light) = lights[school_index(row.school)] else {
@@ -160,40 +148,43 @@ pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Runes, 
         };
         let &(hex, _) = spell_kind.get(&status).ok_or_else(|| {
             err(format!(
-                "status `{name}` has a rune but no buff or hex spell lays it: a circle is a \
+                "status `{name}` is circled but no buff or hex spell lays it: a circle is a \
                  spell's mark"
             ))
         })?;
-        if runes.by_status.insert(status, runes.rows.len()).is_some() {
-            return Err(err(format!("status `{name}` has two runes")));
+        if circles
+            .by_status
+            .insert(status, circles.rows.len())
+            .is_some()
+        {
+            return Err(err(format!("status `{name}` is listed twice")));
         }
-        runes.rows.push(RuneDef {
+        circles.rows.push(CircledStatus {
             status,
-            rune,
             school: row.school,
             hex,
             light,
         });
     }
     if let Some((status, (_, spell))) =
-        (spell_kind.iter()).find(|(s, _)| !runes.by_status.contains_key(s))
+        (spell_kind.iter()).find(|(s, _)| !circles.by_status.contains_key(s))
     {
         let name = &content.status(*status).id;
         return Err(err(format!(
-            "spell `{spell}` lays status `{name}`, which has no rune (`[[rune]]`)"
+            "spell `{spell}` lays status `{name}`, which has no row (`[[status]]`)"
         )));
     }
     for (i, color) in colors.iter().enumerate() {
-        runes.colors[i] = color.unwrap_or(Rgb::WHITE);
+        circles.colors[i] = color.unwrap_or(Rgb::WHITE);
     }
-    Ok(runes)
+    Ok(circles)
 }
 
-/// The one rule of the runes: every runed status without a light of its own sheds its school's
-/// (`lit` keeps the Light spell's, brighter in every way). Constant whatever the severity, so a
-/// source's shadow mask stays cached while its bearer stands.
+/// The one rule of the circles: every circled status without a light of its own sheds its
+/// school's (`lit` keeps the Light spell's, brighter in every way). Constant whatever the
+/// severity, so a source's shadow mask stays cached while its bearer stands.
 pub(super) fn shed_lights(content: &mut Content) {
-    for row in content.runes.rows.clone() {
+    for row in content.circles.rows.clone() {
         let def = &mut content.statuses[usize::from(row.status.0)];
         def.light.get_or_insert(row.light);
     }
@@ -204,7 +195,7 @@ mod tests {
     use super::*;
     use crate::content::ContentFiles;
 
-    const PATH: &str = "data/runes.toml";
+    const PATH: &str = "data/circles.toml";
 
     fn load_with(text: &str) -> Result<Content, ContentError> {
         let mut files = ContentFiles::builtin();
@@ -217,42 +208,34 @@ mod tests {
     }
 
     #[test]
-    fn the_shipped_runes_cover_every_buff_and_hex() {
+    fn the_shipped_rows_cover_every_buff_and_hex() {
         let content = Content::builtin().unwrap();
-        let runes = content.runes();
-        let rune = |s: &str| {
-            runes
+        let circles = content.circles();
+        let row = |s: &str| {
+            circles
                 .of(content.status_id(s).unwrap())
-                .map(|r| (r.rune, r.hex))
+                .map(|r| (r.school, r.hex))
         };
-        assert_eq!(rune("lit"), Some(('ヒ', false)));
-        assert_eq!(rune("blessed"), Some(('シ', false)));
-        assert_eq!(rune("webbed"), Some(('井', true)));
-        assert_eq!(rune("ill_wished"), Some(('目', true)));
-        assert_eq!(rune("fortified"), None, "a potion's boost has no rune");
-        assert_eq!(runes.rows().len(), 9);
-        let blessed = runes.of(content.status_id("blessed").unwrap()).unwrap();
-        assert_eq!(blessed.school, School::Abjuration);
-        assert_eq!(runes.color(School::Abjuration).to_string(), "#80b4e0");
+        assert_eq!(row("lit"), Some((School::Evocation, false)));
+        assert_eq!(row("blessed"), Some((School::Abjuration, false)));
+        assert_eq!(row("webbed"), Some((School::Transmutation, true)));
+        assert_eq!(row("ill_wished"), Some((School::Enchantment, true)));
+        assert_eq!(row("fortified"), None, "a potion's boost has no circle");
+        assert_eq!(circles.rows().len(), 9);
+        assert_eq!(circles.color(School::Abjuration).to_string(), "#80b4e0");
     }
 
     #[test]
     fn bad_files_are_refused() {
         let shipped = shipped();
-        let blessed = "[[rune]]\nstatus = \"blessed\"\nrune = \"シ\"\nschool = \"abjuration\"\n";
+        let blessed = "[[status]]\nstatus = \"blessed\"\nschool = \"abjuration\"\n";
         assert!(shipped.contains(blessed));
         let cases = [
-            (shipped.replace(blessed, ""), "lays status `blessed`, which has no rune"),
+            (shipped.replace(blessed, ""), "lays status `blessed`, which has no row"),
             (
                 shipped.replace("status = \"blessed\"", "status = \"blest\""),
                 "unknown status `blest`",
             ),
-            (
-                shipped.replace("rune = \"シ\"", "rune = \"シシ\""),
-                "not exactly one character",
-            ),
-            (shipped.replace("rune = \"シ\"", "rune = \"\""), "not exactly one character"),
-            (shipped.replace("rune = \"シ\"", "rune = \"ヒ\""), "already `lit`'s"),
             (
                 shipped.replace("school = \"abjuration\"", "school = \"alchemy\""),
                 "unknown variant `alchemy`",
@@ -265,12 +248,9 @@ mod tests {
                 shipped.replace("[[school]]\nid = \"abjuration\"\ncolor = \"#80b4e0\"\n", ""),
                 "school `abjuration` has no colour",
             ),
+            (format!("{shipped}\n{blessed}"), "`blessed` is listed twice"),
             (
-                format!("{shipped}\n[[rune]]\nstatus = \"blessed\"\nrune = \"祝\"\nschool = \"abjuration\"\n"),
-                "two runes",
-            ),
-            (
-                format!("{shipped}\n[[rune]]\nstatus = \"radiant\"\nrune = \"光\"\nschool = \"restoration\"\n"),
+                format!("{shipped}\n[[status]]\nstatus = \"radiant\"\nschool = \"restoration\"\n"),
                 "no buff or hex spell lays it",
             ),
         ];
@@ -281,7 +261,7 @@ mod tests {
     }
 
     #[test]
-    fn a_runed_status_sheds_its_schools_light() {
+    fn a_circled_status_sheds_its_schools_light() {
         let content = Content::builtin().unwrap();
         let light = |s: &str| {
             let id = content.status(content.status_id(s).unwrap()).light;
@@ -292,8 +272,8 @@ mod tests {
         assert_eq!(light("drowsy"), Some("circle_enchantment"));
         assert_eq!(light("weakened"), Some("circle_necromancy"));
         assert_eq!(light("lit"), Some("spell_light"), "Light keeps its own");
-        assert_eq!(light("fortified"), None, "no rune, no light");
-        for row in content.runes().rows() {
+        assert_eq!(light("fortified"), None, "no circle, no light");
+        for row in content.circles().rows() {
             let def = content.light(content.status(row.status).light.unwrap());
             assert!(def.stability.is_stable(), "{}: steady", def.id);
         }
@@ -317,13 +297,13 @@ mod tests {
     fn a_rows_school_is_in_the_fingerprint() {
         // A school decides a light, which decides what creatures see.
         let a = Content::builtin().unwrap().fingerprint_for("showcase");
-        let blessed = "status = \"blessed\"\nrune = \"シ\"\nschool = \"abjuration\"";
+        let blessed = "status = \"blessed\"\nschool = \"abjuration\"";
         let text = shipped().replace(blessed, &blessed.replace("abjuration", "restoration"));
         assert_ne!(a, load_with(&text).unwrap().fingerprint_for("showcase"));
     }
 
     #[test]
-    fn a_runed_status_must_be_seen() {
+    fn a_circled_status_must_be_seen() {
         let mut files = ContentFiles::builtin();
         let status = files.get("data/status.toml").unwrap().to_string();
         let seen = "seen = \"bark-skinned\"\n";
@@ -331,7 +311,8 @@ mod tests {
         files.insert("data/status.toml", &status.replace(seen, ""));
         let err = Content::load(&files).unwrap_err();
         assert!(
-            err.message.contains("`barkskin` has a rune but no `seen`"),
+            err.message
+                .contains("`barkskin` is circled but has no `seen`"),
             "{}",
             err.message
         );

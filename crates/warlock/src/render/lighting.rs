@@ -66,7 +66,7 @@ pub const LIT: u8 = 1;
 pub const OPAQUE: u8 = 2;
 /// Cell flag: a visible cell drawn with a glyph of its own over the floor: a creature, an object
 /// or a chest, a known trap, or terrain that stands in the way (a wall torch). Lighting ignores
-/// it; spell circles fade over it (`circles.wesl`), so their runes never cover another glyph.
+/// it; spell circles fade over it (`circles.wesl`), so their lines never cross another glyph.
 pub const OCCUPIED: u8 = 4;
 
 /// The flags of level cell `p` as the player perceives it: [`LIT`] if visible, with [`OPAQUE`]
@@ -409,17 +409,6 @@ impl VisualLight {
     /// shader does.
     pub fn keep(&self) -> f32 {
         self.keep
-    }
-
-    /// Every cell's flags, row-major (what `light_flags` uploads).
-    pub fn flags(&self) -> &[u8] {
-        &self.flags
-    }
-
-    /// The flags of map grid cell `cell` (console coordinates; the margin is outside), as the
-    /// shaders read them from `light_flags`; 0 beyond.
-    pub fn console_flags(&self, cell: IVec2) -> u8 {
-        self.flags_at(cell + MARGIN)
     }
 
     fn flags_at(&self, cell: IVec2) -> u8 {

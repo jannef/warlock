@@ -288,68 +288,54 @@ glow, barely perceptible distortion, short fades.
   (fastest at first). A few drops are barely there; only many deaths in one place look gory. A
   **Blood** switch in the settings (on by default) hides stains, in look mode too; it is a
   content preference, not an effect, so reduced effects leaves it as it is.
-- **Spell circles** (`data/runes.toml`, §7; design: `docs/design/buff-circles.md`): about every
-  actor the player sees with a buff's or a hex's status (a runed status: one of a buff or hex
+- **Spell circles** (`data/circles.toml`, §7; design: `docs/design/buff-circles.md`): about every
+  actor the player sees with a buff's or a hex's status (a circled status: one of a buff or hex
   spell's, whatever laid it, a potion or an altar too), a thin, slowly turning transmutation
   circle, drawn from the perception snapshot only (the player's own statuses, a seen creature's
   that show) over the map grid and under the creatures:
-  - **The rule**: the effects of one kind on one actor, in status order (the status bar's), fill
-    `n × ⌈3 / n⌉` slots: one effect is a triangle of its rune thrice (never a lone rune), two a
-    square `A B A B`, three a triangle `A B C`, then a square, a pentagon, a hexagon; a regular
-    polygon inscribed in the innermost ring has its corners at the slots, and a rune (one kana
-    or low-stroke kanji per status) sits outside each corner, tidally locked: turned with its
-    slot so its foot faces the centre (the top rune upright, the bottom one on its head). One thin ring per effect,
-    three at most (the distinct runes give the count beyond); six effects show, a seventh has no
-    rune.
+  - **The rule**: the effects of one kind on one actor, in status order (the status bar's), make
+    a regular polygon of `n × ⌈3 / n⌉` corners inscribed in the innermost ring: one effect is a
+    triangle, two a square, three a triangle, then a square, a pentagon, a hexagon. One thin
+    ring per effect, three at most; six effects count, a seventh changes nothing. No runes or
+    other characters (the owner, 2026-11-02: "the transmutation circles are enough").
   - **Buffs and hexes**: buffs are whole (solid rings and sides) and turn clockwise, a revolution
     a minute; hexes are broken (dashed) and turn counter-clockwise, a revolution in 45 s. On an
     actor with both, the buffs' circle is the inner one and the hexes' the outer; alone, either
     is the compact inner figure.
-  - **Schools**: a rune is drawn in its school's colour (seven, through the palette), the rings
-    and sides in the first rune's.
-  - **Sizes** in cell heights `h`: rings at 0.48, 0.58, and 0.68 h, runes 0.44 h square sitting
-    against the outermost ring (their inner edge 0.04 h past it: centred 0.74 h out with one
-    ring, 0.94 h with three; extent 1.16 h); the outer circle's rings from 1.24 h, its runes the
-    same against its own (extent 1.92 h). Lines one pixel at the default font and scale 1; rings
-    and sides 0.2 opaque, runes 0.7; not lit by the scene, but darkened with free glyphs while a
-    spell effect darkens the view. A circle is centred on the ink of its actor's glyph (not on
-    its cell, whose middle a glyph sitting on the baseline misses), and its lines part about
-    that glyph's outline.
-  - **Only over clear, seen floor** (the owner's review, #786): a rune shows only where the
-    cells under it are seen now, are not walls, and hold no other glyph (a creature, an object
-    or chest, a known trap, terrain in the way such as a wall torch; the actor's own cell
-    excepted); a line the same, pixel by pixel. Each fades softly across a cell's edge, never
-    cut; a rune as a whole, by the least clear of the cells under it. Where circles crowd, a
-    rune near an earlier circle's rune fades out (the player's circle first, then the
-    creatures' in order), and a circle's lines pass under an earlier circle's rings, so runes
-    never lie over runes and rings never tangle.
-  - **Glow and glints**: each rune has a faint halo of its school's colour, and the rings and
-    sides a fainter one of theirs; the circled actor's own glyph glows too, in its circle's line
-    colour (the buffs' if it has both). None of this is the bloom of the `glow` switch: it is
-    its own, off with reduced effects. No dark patch under the runes (the owner, of the C4
-    build). With `motion` on each rune pulses gently, a little in opacity and size, on its own
-    phase (3.6 s); now and then a tiny bright glint (a point with four short rays) shows on a
-    rune or on the actor's glyph and is gone, each on its own beat (5.3 and 7.1 s, a tenth of
-    it showing; two actors never in step), blooming with `glow` on; and a soft brighter arc runs
-    round each ring (7 s). All still without motion or with reduced effects (no glints, no
-    arc), and at the frozen moment under `--freeze-time`.
+  - **Schools**: the rings and sides are drawn in the first effect's school's colour (seven,
+    through the palette).
+  - **Sizes** in cell heights `h`: rings at 0.48, 0.58, and 0.68 h (extent 0.68 h); the outer
+    circle's rings from 0.84 h (extent 1.04 h). Lines one pixel at the default font and scale 1,
+    0.2 opaque; not lit by the scene, but darkened with free glyphs while a spell effect darkens
+    the view. A circle is centred on the ink of its actor's glyph (not on its cell, whose middle
+    a glyph sitting on the baseline misses), and its lines part about that glyph's outline.
+  - **Only over clear, seen floor** (the owner's review, #786): a line shows only where the cell
+    under it is seen now, is not a wall, and holds no other glyph (a creature, an object or
+    chest, a known trap, terrain in the way such as a wall torch; the actor's own cell excepted),
+    fading softly across a cell's edge, never cut. Where circles crowd, a circle's lines pass
+    under an earlier circle's rings (the player's circle first, then the creatures' in order), so
+    rings never tangle.
+  - **Glow and glints**: the rings and sides have a faint halo of their colour, and the circled
+    actor's own glyph glows too, in its circle's line colour (the buffs' if it has both). None of
+    this is the bloom of the `glow` switch: it is its own, off with reduced effects. With
+    `motion` on, now and then a tiny bright glint (a point with four short rays) shows on the
+    actor's glyph and is gone (two beats, 5.3 and 7.1 s, a tenth of each showing; two actors
+    never in step), blooming with `glow` on; and a soft brighter arc runs round each ring (7 s).
+    All still without motion or with reduced effects (no glints, no arc), and at the frozen
+    moment under `--freeze-time`.
   - **Motion**: a circle fades in over half a second when its first effect begins and out as
     long when its last ends; when an effect begins or ends on a circled actor, the figure changes
-    over 0.4 s: every rune glides along the ring from its old slot to its new one (a slot that is
-    new comes out from under the first rune, one that goes slides back under it; a slot whose
-    rune changes cross-fades it on the way), the old polygon fades out as the new one fades in,
-    and so does a ring that comes or goes. A hexes' circle moves out to the outer radii as a
-    buffs' circle comes inside it, and back in once that one has gone. An actor the player stops
-    seeing loses its circle at once. With `motion` off or reduced effects there is none of this
-    (nor the pulse): the circle stands still (the inner at its first angle, the outer half a turn round), appears
-    and goes at once, and a change is a cut: still information, not off. A **Spell circles**
-    switch (on by default, outside the preset) turns the drawing off; the statuses and what look
-    mode says of them stay. With frozen visual time it shows the frozen moment's angle, its fades
-    and glides complete. The runes come from a subset of Noto Sans JP (§4.1's font has no kana):
-    `assets/fonts/NotoSansJP-Runes.ttf`.
-  - **The light** is a rule (§8 "Status effects"): a runed status sheds its school's faint light,
-    lit in the lighting pass as any light (its UV share tints only for eyes that see UV), and the
-    switch never hides it. With `glow` on the circle's ink is a little emissive (× 1.1).
+    over 0.4 s: the old polygon fades out as the new one fades in, and so does a ring that comes
+    or goes. A hexes' circle moves out to the outer radii as a buffs' circle comes inside it,
+    and back in once that one has gone. An actor the player stops seeing loses its circle at
+    once. With `motion` off or reduced effects there is none of this: the circle stands still
+    (the inner at its first angle, the outer half a turn round), appears and goes at once, and a
+    change is a cut: still information, not off. A **Spell circles** switch (on by default,
+    outside the preset) turns the drawing off; the statuses and what look mode says of them stay.
+    With frozen visual time it shows the frozen moment's angle, its fades and glides complete.
+  - **The light** is a rule (§8 "Status effects"): a circled status sheds its school's faint
+    light, lit in the lighting pass as any light (its UV share tints only for eyes that see UV),
+    and the switch never hides it. With `glow` on the circle's ink is a little emissive (× 1.1).
 - With frozen visual time (`--freeze-time`) fades complete instantly and bursts show a fixed
   moment early in their life, so captures are reproducible; spell effects show the frozen moment
   after they began.
