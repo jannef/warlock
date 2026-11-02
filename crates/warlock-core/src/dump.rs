@@ -2167,7 +2167,8 @@ mod tests {
             json!({ "name": "Tamsin", "race": "human", "gender": "female", "class": "thief",
                     "raised": "dexterity", "age": 34,
                     "born": { "year": 1410, "month": 5, "day": 29 },
-                    "sign": { "animal": "basilisk", "element": "water" } })
+                    "sign": { "animal": "basilisk", "element": "water" },
+                    "classes": [{ "class": "thief", "level": 1 }] })
         );
         assert_eq!(
             value["stats"],

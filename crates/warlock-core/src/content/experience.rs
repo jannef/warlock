@@ -788,6 +788,7 @@ mod tests {
         let capped = |max: u8| {
             SHIPPED
                 .replace("max_level = 60", &format!("max_level = {max}"))
+                .replace("class_max = 60", &format!("class_max = {max}"))
                 .replace("hp_level = 50", "hp_level = 1")
                 .replace("mana_level = 60", "mana_level = 1")
         };
