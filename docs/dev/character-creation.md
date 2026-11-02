@@ -135,7 +135,7 @@ it is the one built-in scenario with no `character` (it gives the eyes, stats, h
 300 mana itself; `world/character_tests.rs` and `content/mod.rs`'s scenario test name it). The heritage talents (Family wealth's gold and gems, Father's sword's
 heirloom; #697) come on top as they are taken, after the pack (`world/heirloom.rs`,
 docs/dev/progression.md "Creation picks"): the summary's kit list does not name them. `rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing,
-refusals), `kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministic choices, no
+refusals), `kit.rs` (Twin Blades and Duelist, the berserker's pick, deterministic choices, no
 other roll moves, every worn or wielded item finds its slot unless an earlier line took it (a
 race's bow or gauntlets after the class's own: an elven ranger, a dwarven paladin), nobody
 Strained at the worst case (`least_score`) and an ordinary character (`ordinary_score`, dice at

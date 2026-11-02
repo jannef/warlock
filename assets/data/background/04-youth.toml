@@ -16,7 +16,7 @@ id = "the_levy"
 tier = "common"
 weight = 5
 text = "At fourteen you stood in the levy with a borrowed spear, and found you had a taste for it."
-when = { class = ["warrior", "paladin", "barbarian", "commoner"], age = { min = 14 } }
+when = { class = ["warrior", "paladin", "berserker", "commoner"], age = { min = 14 } }
 effects = [{ weapon_marks = { spears = 3 } }, { skill = { athletics = "1d4" } }]
 tags = ["soldier"]
 
@@ -25,7 +25,7 @@ id = "the_raids"
 tier = "common"
 weight = 5
 text = "You rode on your first raid before your voice had broken, and came home with a horse that was not yours and a cut you were proud of."
-when = { class = ["barbarian"] }
+when = { class = ["berserker"] }
 effects = [{ weapon_marks = { best = 3 } }, { skill = { intimidate = "1d4" } }, { alignment = -25 }]
 tags = ["soldier"]
 

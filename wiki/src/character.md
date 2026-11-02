@@ -69,7 +69,7 @@ Classes roll their key stats: a [warrior](classes.md#warrior)'s [Strength](stats
 only the final scores, after the rolls; change a choice and the dice are rolled again.
 
 The choices are not balanced, and they are not meant to be. Some combinations are poor on
-purpose: a [halfling](races.md#race-halfling) [commoner](classes.md#commoner), or a [gnome](races.md#race-gnome) [barbarian](classes.md#barbarian), makes for a hard start. That is part of the
+purpose: a [halfling](races.md#race-halfling) [commoner](classes.md#commoner), or a [gnome](races.md#race-gnome) [berserker](classes.md#berserker), makes for a hard start. That is part of the
 fun. The poor choices have one consolation: your race and class also set how much
 [experience](experience.md#levels) each level needs, and the long-lived [races](races.md) and the patient
 callings level slowly, while short-lived races and everyday folk level quickly.

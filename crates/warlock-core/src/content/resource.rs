@@ -91,7 +91,7 @@ impl Build {
 pub enum OverTime {
     /// Toward its maximum (a ranger's focus).
     Regenerates { every: u32 },
-    /// Toward 0 (a barbarian's rage).
+    /// Toward 0 (a berserker's rage).
     Decays { every: u32 },
 }
 

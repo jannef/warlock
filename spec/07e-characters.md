@@ -153,7 +153,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and monk 50,
   the rest 25), `experience` (as for
   races, multiplied with the race's; §8 "Experience": wizard 125, monk 120, priest, druid, and
-  witch 115, paladin 110, ranger 105, warrior and bard 100, thief 95, barbarian, aristocrat,
+  witch 115, paladin 110, ranger 105, warrior and bard 100, thief 95, berserker, aristocrat,
   craftsperson, and merchant 90, commoner 80), `alignment` (as for races, added to the race's:
   paladin 550, Good under any birth animal unless the race is evil (#317); thief and witch −200, Callous; the rest 0), `skills` (as for races),
   `known_for` (the skills of `skills` it is known for, its `2d6+10` ones: a level-up roll on one
@@ -168,7 +168,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Class abilities"), and `bonus_talents` (`{ levels, trees }`: a bonus talent pick at each of
   those levels from those trees, none named: any). Each class rolls
   its key stats (the warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the
-  commoner To `1d3-1`); the rest are fixed. Adventurers: barbarian (8 hit points), bard (2),
+  commoner To `1d3-1`); the rest are fixed. Adventurers: berserker (8 hit points), bard (2),
   priest (4), druid (4), monk (5), paladin (6), ranger (5), thief (3), wizard (0), witch (1),
   warrior (7); everyday folk: aristocrat (1), commoner (3), craftsperson (3), merchant (2). A
   class adjusts the starting scores, gives hit points, sets how fast levels come, trains skills,
@@ -179,16 +179,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   disable device, escape artist, initiative, negotiation, search, and spot a little (the thief
   alone of the classes starts trained in detect traps, #663, and in sneak attack, #682); the
   ranger initiative, spot, survival, and woodcraft well, athletics, handle animal, listen, and
-  swim a little (the monk initiative well too; the bard, warrior, and barbarian a little); the wizard concentration, knowledge, and spellcraft well,
+  swim a little (the monk initiative well too; the bard, warrior, and berserker a little); the wizard concentration, knowledge, and spellcraft well,
   decipher script a little; the commoner athletics and handle animal a
   little. Each class also has two to five optional skills, modest ones at `2d4` (10 to 35 %;
   the thief balance, bluff, and listen; the warrior heal, metalcraft, and survival; the commoner
-  heal, metalcraft, survival, swim, and woodcraft; the full lists are in the wiki). Weapon skills: barbarian unarmed 1 and axes 2 or great blades 2, bard short blades 1
+  heal, metalcraft, survival, swim, and woodcraft; the full lists are in the wiki). Weapon skills: berserker unarmed 1 and axes 2 or great blades 2, bard short blades 1
   and daggers `1d2`, priest maces 2 and shield blocking 1, druid staves 2 and slings 1, monk
   unarmed 2 and staves 1, paladin long blades 2, shield blocking `1d2`, and shield bashing 1,
   ranger bows 2 and short blades 1, thief daggers 2 and thrown 1, wizard staves 1, witch daggers
   1 and staves 1, warrior long blades 2 and shield blocking `1d2`, aristocrat long blades 1,
-  commoner maces 1, craftsperson axes 1, merchant daggers 1. Fighting styles: barbarian great
+  commoner maces 1, craftsperson axes 1, merchant daggers 1. Fighting styles: berserker great
   weapon 1, bard duelist 1, priest sword and board 1, druid staff fighter 1, monk brawler 1 or
   staff fighter 1, paladin sword and board 1, ranger marksman 1, thief twin blades 1 or duelist
   1, warrior sword and board 1, aristocrat duelist 1, commoner brawler 1; the wizard, witch,

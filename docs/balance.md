@@ -86,11 +86,11 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/s
   12 plus 3.5 a level (15 at 1, 117 at 30, 222 at 60), the design's "about 100 by level 25 to
   30". Only the first blow is measured: the initiative check's Surprised, which strips the
   Defence for the next blow too, is not.
-- **Rage** (#842): a human male barbarian (great axe; axes, great blades, and the great weapon
+- **Rage** (#842): a human male berserker (great axe; axes, great blades, and the great weapon
   style at the warrior's ranks), measured for that table alone, calm and raging: the Rage pool
   granted (the dev grant: Raging and the stance it forces), and its `builds` and decay read from
   the content and the talents (Blood frenzy, Battle trance). Each foe's blows a round times the
-  share of its strikes that `is_hit()` (soaked and resisted too) build `struck`; the barbarian's
+  share of its strikes that `is_hit()` (soaked and resisted too) build `struck`; the berserker's
   blows times the share of `Strike::Hit { critical: true }` build `critical`; one over the
   rounds to kill builds `kill`.
 - **Not modelled**: triggered and active weapon abilities (Rend, Riposte, Sunder, ...), stances (but the rage table's),
@@ -350,7 +350,7 @@ The thief's main-hand blow on the monsters of their level (trained stats), aware
 
 ## Rage
 
-The barbarian in plain gear (a great axe; from level 5 the warrior's armour: chain mail, banded mail from 15, plate from 30), trained stats, against the monsters within two levels: calm (the stance the run starts in) and raging (Raging and the berserker stance). The pool as the Rage ability grants it (start / most); the fight cells as in "Fights"; then the rage a round against one foe, the medians of hits taken × their build + criticals × theirs + kills × theirs − the decay (kills a round: one over the rounds to kill, so a fight's average); the same without the kills (a foe that outlasts the rage, or the turns before the first kill) and how many rounds the rage lasts from its start at that net (`grows` when it does not fall); and the net against three foes (three foes' hits, the same criticals and kills).
+The berserker in plain gear (a great axe; from level 5 the warrior's armour: chain mail, banded mail from 15, plate from 30), trained stats, against the monsters within two levels: calm (the stance the run starts in) and raging (Raging and the frenzy stance). The pool as the Rage ability grants it (start / most); the fight cells as in "Fights"; then the rage a round against one foe, the medians of hits taken × their build + criticals × theirs + kills × theirs − the decay (kills a round: one over the rounds to kill, so a fight's average); the same without the kills (a foe that outlasts the rage, or the turns before the first kill) and how many rounds the rage lasts from its start at that net (`grows` when it does not fall); and the net against three foes (three foes' hits, the same criticals and kills).
 
 | L | rage | Calm | Raging | one foe: struck + crit + kill − decay = net | one foe that does not die: net · rounds the rage lasts | three foes: net |
 |---|---|---|---|---|---|---|
@@ -371,14 +371,14 @@ fight), +0.69 at 40, +0.84 at 50, and +0.62 at 60; without the kills −1.00 (12
 −0.89 (13) at 40, and −0.67 (27) at 50 and 60; and three foes fed it no more than one. The calm
 and raging fight cells are unchanged (#842 changes no blow). What the run shows:
 
-- **Hits taken alone hold the rage.** A raging barbarian's Dodge −6 lets the monsters of their
+- **Hits taken alone hold the rage.** A raging berserker's Dodge −6 lets the monsters of their
   level land 93 to 99 % of their blows (the berserker design's arithmetic assumed about six in
   ten), so at their one blow a round `struck` is worth 0.9 to 1.2 rage a round: about the
   decay. A duel with a foe that will not die holds the rage level (−0.03 to +0.13 a round to 30;
   it falls only at 5, over 431 rounds), so the design's "a duel of twelve rage lasts about thirty
   turns" is, by these numbers, "a duel's rage lasts as long as the foe does". From 40 Blood
   frenzy and, where the picks took it, Battle trance's slower decay make it grow.
-- **Kills feed it most** while the fight is short: raging, the barbarian kills a monster of their
+- **Kills feed it most** while the fight is short: raging, the berserker kills a monster of their
   level in one to four rounds, so +3 a kill is 0.8 to 3.5 rage a round over the fight.
 - **Criticals are a garnish**: 0.06 to 0.25 a round (none at 60, where the median monster of the
   window takes none).

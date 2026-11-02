@@ -507,14 +507,14 @@ pub(super) fn sneak_attacks(p: &Probe, rng: &mut Rng, out: &mut String) {
     }
 }
 
-/// The barbarian's rage (#842): the fight raging against calm, and what feeds the pool a round
+/// The berserker's rage (#842): the fight raging against calm, and what feeds the pool a round
 /// against one foe and against three (each foe's blows that hit, soaked or not, build `struck`;
-/// the barbarian's criticals and kills come at their own pace whatever the crowd).
+/// the berserker's criticals and kills come at their own pace whatever the crowd).
 pub(super) fn rage(p: &Probe, rng: &mut Rng, out: &mut String) {
     writeln!(out, "\n## Rage\n").unwrap();
     writeln!(
         out,
-        "The barbarian in plain gear (a great axe; from level 5 the warrior's armour: chain mail, banded mail from 15, plate from 30), trained stats, against the monsters within two levels: calm (the stance the run starts in) and raging (Raging and the berserker stance). The pool as the Rage ability grants it (start / most); the fight cells as in \"Fights\"; then the rage a round against one foe, the medians of hits taken × their build + criticals × theirs + kills × theirs − the decay (kills a round: one over the rounds to kill, so a fight's average); the same without the kills (a foe that outlasts the rage, or the turns before the first kill) and how many rounds the rage lasts from its start at that net (`grows` when it does not fall); and the net against three foes (three foes' hits, the same criticals and kills).\n"
+        "The berserker in plain gear (a great axe; from level 5 the warrior's armour: chain mail, banded mail from 15, plate from 30), trained stats, against the monsters within two levels: calm (the stance the run starts in) and raging (Raging and the frenzy stance). The pool as the Rage ability grants it (start / most); the fight cells as in \"Fights\"; then the rage a round against one foe, the medians of hits taken × their build + criticals × theirs + kills × theirs − the decay (kills a round: one over the rounds to kill, so a fight's average); the same without the kills (a foe that outlasts the rage, or the turns before the first kill) and how many rounds the rage lasts from its start at that net (`grows` when it does not fall); and the net against three foes (three foes' hits, the same criticals and kills).\n"
     )
     .unwrap();
     writeln!(
@@ -524,7 +524,7 @@ pub(super) fn rage(p: &Probe, rng: &mut Rng, out: &mut String) {
     .unwrap();
     for &level in &LEVELS {
         let w = p.window(level, -2, 2);
-        let snaps = p.of("barbarian", level, Gear::Plain, true);
+        let snaps = p.of("berserker", level, Gear::Plain, true);
         let raging: Vec<_> = snaps.iter().filter_map(|s| s.rage.as_ref()).collect();
         let Some(first) = raging.first() else {
             continue;

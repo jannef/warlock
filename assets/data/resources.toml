@@ -38,7 +38,7 @@
 #
 # The numbers are the progression design's first guesses (§4.18).
 
-# The barbarian's rage (the Rage ability): granted at 12, it counts down a point a base turn,
+# The berserker's rage (the Rage ability): granted at 12, it counts down a point a base turn,
 # resting too, and ends at zero, taking the Raging status with it (whose end is what the player
 # is told; then Exhausted follows). Blood feeds it: a blow that hits the holder (soaked or
 # resisted too), a critical of theirs, and a kill; so a rage lasts the fight and burns out

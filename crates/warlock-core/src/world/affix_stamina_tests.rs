@@ -283,8 +283,8 @@ fn one_without_the_pool_gets_nothing() {
 }
 
 #[test]
-fn of_fury_raises_a_barbarians_rage_and_does_nothing_for_a_wizard() {
-    let mut w = world("barbarian");
+fn of_fury_raises_a_berserkers_rage_and_does_nothing_for_a_wizard() {
+    let mut w = world("berserker");
     let (before, stamina) = (max(&w, "rage"), max(&w, "stamina"));
     let ring = magic(&w, "iron_ring", "fixture_of_fury", 4, true);
     wear(&mut w, "left_ring", ring);

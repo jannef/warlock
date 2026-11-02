@@ -47,9 +47,9 @@
 //!   the talents), the foe flat-footed (`World::flat_footed`), Master thief's threat
 //!   (`TalentMods::ambush_threat`), and no dice on a type without vitals (`Content::has_vitals`).
 //!
-//! - **Rage** (#842): the barbarian, calm and raging (`rage_of`: the pool granted, Raging and
+//! - **Rage** (#842): the berserker, calm and raging (`rage_of`: the pool granted, Raging and
 //!   the stance it forces), and what feeds the pool a round: the foe's blows that `is_hit()`,
-//!   the barbarian's criticals, and kills, at the content's and the talents' builds.
+//!   the berserker's criticals, and kills, at the content's and the talents' builds.
 //!
 //! Not modelled: triggered and active weapon abilities, stances (but the rage table's), talents chosen for a build
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
@@ -187,18 +187,18 @@ const BUILDS: [Build; 6] = [
     },
     // Measured for the rage table alone (#842).
     Build {
-        class: "barbarian",
+        class: "berserker",
         skills: &[("axes", 0), ("great_blades", 0), ("great_weapon", 0)],
         extras: &[(StatUse::Exerted, 5.0)],
         casts_a_kill: false,
         school: None,
         fights_with_spells: false,
-        gear: barbarian,
+        gear: berserker,
     },
 ];
 
 /// The builds the stat training's sweep and the tables before "Spells" measure (the witch is
-/// measured for necromancy alone, the barbarian for its rage).
+/// measured for necromancy alone, the berserker for its rage).
 const MELEE_TABLES: usize = 4;
 
 fn warrior(l: u8) -> Vec<(&'static str, &'static str)> {
@@ -242,8 +242,8 @@ fn warrior(l: u8) -> Vec<(&'static str, &'static str)> {
     g
 }
 
-/// The barbarian in armour (no unarmoured fantasy, #842): a great axe, the warrior's mail and plate.
-fn barbarian(l: u8) -> Vec<(&'static str, &'static str)> {
+/// The berserker in armour (no unarmoured fantasy, #842): a great axe, the warrior's mail and plate.
+fn berserker(l: u8) -> Vec<(&'static str, &'static str)> {
     let mut g = vec![("main_hand", "great_axe")];
     if l >= 5 {
         g.extend(

@@ -11,7 +11,7 @@
 //!   rings, amulets), each in the first free slot it fits;
 //! - alternatives `"club|quarterstaff"`: one of them, rolled when the character is made;
 //! - `trained`: only for a character whose class trained this weapon skill or fighting style (its
-//!   fixed ranks, or the set of its choice that was picked): the barbarian's great axe goes with
+//!   fixed ranks, or the set of its choice that was picked): the berserker's great axe goes with
 //!   axes, the thief's second dagger with Twin Blades;
 //! - `gender`: only for that gender (the hook for gender's items);
 //! - `magic`: a base item made as loot makes it, its rarity rolled (`any`: perhaps magic,

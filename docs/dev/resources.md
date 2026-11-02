@@ -112,9 +112,9 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   statuses, cost }`: `World::unstoppable` spends `cost` rage for the last hit point
   (`spend_resource`, so the rage ends at 0), and `World::live` numbs the statuses while Raging
   lasts. Raging `blocks` `cast`, so `World::spend_mana` refuses while it lasts. While the
-  player's own Raging lasts they are in the berserker stance and cannot leave it, and its end
-  leaves them aggressive (`world/berserker.rs`, #680; spec §8 "Stances"): `berserker::settle`
-  runs where a status begins or ends and on load; `world/berserker_tests.rs` covers it.
+  player's own Raging lasts they are in the frenzy stance and cannot leave it, and its end
+  leaves them aggressive (`world/frenzy.rs`, #680; spec §8 "Stances"): `frenzy::settle`
+  runs where a status begins or ends and on load; `world/frenzy_tests.rs` covers it.
 - **Ki** (R4, #252): Flurry grants it (`grants_resource`) and carries
   `TalentEffect::FlurryCost { resource, cost }` (`TalentMods::flurry_cost`), read in one place,
   `World::flurry` (`free_blow.rs`, from `second_blow` on `Cue::First`, which now takes `events`
@@ -139,7 +139,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   `resources.toml` (file order is save order), `short = "Sta"`, `max = 10`, `max_from = { stat =
   "toughness", per_levels = 10, least = 5 }`, `regenerates = 12`, resting too, starting full.
   The granted talent `trained_wind` (`grants_resource`) is in the level-1 row of the warrior's,
-  barbarian's, paladin's, ranger's, monk's, thief's, and bard's tables (`data/classes/`), so
+  berserker's, paladin's, ranger's, monk's, thief's, and bard's tables (`data/classes/`), so
   `class::grant` holds it at creation and `World::grant_class` on load. The weapon actives
   spend it (#564, `world/weapon_active.rs::pay_active`, through `spend_resource`, after their
   refusals); its `lacking` words ("you are short of breath") are how `Unavailable::Short` reads

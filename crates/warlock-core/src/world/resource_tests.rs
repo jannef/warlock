@@ -381,7 +381,7 @@ fn a_fight_builds_hits_criticals_being_hit_and_the_kill() {
 
 #[test]
 fn a_class_active_that_costs_a_resource_is_unavailable_without_it_and_spends_it() {
-    let spec: CharacterSpec = "human,male,barbarian".parse().expect("spec");
+    let spec: CharacterSpec = "human,male,berserker".parse().expect("spec");
     let mut w = World::with_character(content(true), "hall", None, Some(&spec)).expect("world");
     let rage = Ability::Class(ClassActive::Rage);
     let focus = id(&w, "focus");

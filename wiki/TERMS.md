@@ -33,7 +33,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A spell | `magic.md#spell-ID` | `magic.md#spell-fireball` |
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
 | A resource (Rage, Stamina, Ki, Focus, Inspiration, Openings) | `resources.md#resource-ID` | `resources.md#resource-ki` |
-| A stance | `combat.md#stance-NAME` | `combat.md#stance-berserker` |
+| A stance | `combat.md#stance-NAME` | `combat.md#stance-frenzy` |
 | A stat | `stats.md#stat-NAME` | `stats.md#stat-toughness` |
 | A race | `races.md#race-ID` | `races.md#race-half-elf` |
 | A weapon skill | `weapon-skills.md#weapon-skill-ID` | `weapon-skills.md#weapon-skill-long-blades` |
@@ -53,7 +53,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A terrain | `terrain.md#terrain-ID` | `terrain.md#terrain-shallow-water` |
 
 A term with a section of its own links to the section instead (Bleeding:
-`status-effects.md#bleeding`; Rage: `resources.md#rage`; a class: `classes.md#barbarian`).
+`status-effects.md#bleeding`; Rage: `resources.md#rage`; a class: `classes.md#berserker`).
 The generators make these anchors with `text::anchored` and link rows with `text::link`
 (`xtask/src/wiki/text.rs`, the one helper); a new kind of row is a new `Term` there and a line
 above.
@@ -144,7 +144,7 @@ above.
 | Age, birthday, birth sign | `character.md#age-birthday-and-sign`, `horoscope.md#what-a-sign-does` |
 | Race | `races.md` (a race: its row) |
 | Evil races | `races.md#the-evil-races` |
-| Class, class levels | `classes.md`, `classes.md#levels` (a class: its heading, `classes.md#barbarian`) |
+| Class, class levels | `classes.md`, `classes.md#levels` (a class: its heading, `classes.md#berserker`) |
 | Starting kit | `starting-kit.md` |
 | Background story, its chapters, how rare | `background.md`, `background.md#how-rare` |
 | Story, a story's sentence (line), its kind (tier: common, uncommon, rare, fateful) | `background.md#how-rare` |

@@ -165,7 +165,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     bow's draw lowering the Strength it needs) and the global ones of what the attacker wears and
     wields, then its combat stance. A threat goes no lower than 2, a multiplier no higher than 5.
   - **Hit points** (ADOM-like, no hit dice, no levels): maximum = Toughness + race HP + class
-    HP (§7 tables: e.g. a dwarf barbarian with To 16 has 6 + 8 + 16 = 30; a human warrior with
+    HP (§7 tables: e.g. a dwarf berserker with To 16 has 6 + 8 + 16 = 30; a human warrior with
     To 12 has 23; an elf wizard with To 8 has 10), at least 1; a creature's = Toughness + its
     type's `base_hp` (a giant rat with To 12 and none has 12). Linear in Toughness: no runaway
     pools. Every actor starts at its maximum (`Actor::hp`, `hp_base`). Magic items add to the
@@ -229,7 +229,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   table's hash; XP beyond the cap counts but buys nothing). **Race and class factors**: races and classes have `experience`, a percent of the
   XP a level needs (50 to 200, default 100: elf 140, gnome 120, dwarf 115, half-elf 105, human
   100, halfling 95, half-orc 90; wizard 125, monk 120, priest, druid, and witch 115, paladin 110,
-  ranger 105, warrior and bard 100, thief 95, barbarian, craftsperson, aristocrat, and merchant
+  ranger 105, warrior and bard 100, thief 95, berserker, craftsperson, aristocrat, and merchant
   90, commoner 80), and a character's thresholds are `(threshold × race × class + 5 000) ÷
   10 000` (`content::Factor`; a run without a character is at 100 %): an elf wizard needs 175 %,
   a half-orc commoner 72 %. The factor is on the thresholds only, so every source of XP is
@@ -269,7 +269,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`PerceptionView::own_experience`), and nothing else about the rules.
 - **Stances** (`content/stance.rs`, `data/stances.toml`; M22), after ADOM's combat tactics. The
   player is in one of four **combat stances** they choose (`CombatStance::CHOSEN`): aggressive,
-  neutral (the default), defensive, coward; a raging barbarian is in a fifth, **berserker**
+  neutral (the default), defensive, coward; a raging berserker is in a fifth, **frenzy**
   (#680), below. It is `Actor::stance` (saved, in the state hash; creatures stay
   neutral for now, and the AI may pick one later). `Action::SetStance(stance)`, text
   `stance:aggressive`, takes no game time (`Spent::NoTime`) and is recorded in replays; it says
@@ -287,19 +287,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   numbers (first guesses, tuned by playtesting; none is ever shown, only the stance's name):
   aggressive +1 to hit, +2 damage, -3 Dodge, marks ×1.25; defensive -2 to hit, -1 damage, +2
   Dodge, +1 Parry; coward -4 to hit, -3 damage, +4 Dodge, attacks ×1.25, fleeing steps ×0.85
-  and half as loud; berserker +2 to hit, +4 damage, -6 Dodge, fleeing steps ×1.5, marks ×1.25.
-  **Berserker** (`world/berserker.rs`) is never chosen: `World::set_stance` refuses it ("Only
-  rage makes a berserker.", `Spent::Nothing`), and refuses every stance while the player rages
-  ("Your rage holds you in the berserker's stance."), so `stance:berserker` and `+`/`-` (which
-  stay put on it) never change it. The one rule, `berserker::settle`: an actor suffering the
-  status its own Rage ability brings (`TalentMods::rage_status`: Raging, so a barbarian, and
-  never a creature or another class granted the resource) is in the berserker stance, and one in
+  and half as loud; frenzy +2 to hit, +4 damage, -6 Dodge, fleeing steps ×1.5, marks ×1.25.
+  **Frenzy** (`world/frenzy.rs`) is never chosen: `World::set_stance` refuses it ("Only
+  rage brings the frenzy.", `Spent::Nothing`), and refuses every stance while the player rages
+  ("Your rage holds you in the frenzy."), so `stance:frenzy` and `+`/`-` (which
+  stay put on it) never change it. The one rule, `frenzy::settle`: an actor suffering the
+  status its own Rage ability brings (`TalentMods::rage_status`: Raging, so a berserker, and
+  never a creature or another class granted the resource) is in the frenzy stance, and one in
   it that is not raging so is put in the aggressive stance (not the stance before the rage). The
   world settles it wherever a status begins (`World::afflict`) or ends (`World::ended`: the rage
   decaying or spent to nothing, Raging cured; and the Phoenix's rising that burns every status
-  away), with a note ("You fight as a berserker.", "You fall back into an aggressive stance.")
+  away), with a note ("You fight in a frenzy.", "You fall back into an aggressive stance.")
   after the rage's own words; `World::from_state` settles a saved state that broke the rule,
-  with a line for the log (`World::retiered`). Wild guard (Might, barbarian 6) halves its Dodge
+  with a line for the log (`World::retiered`). Wild guard (Might, berserker 6) halves its Dodge
   penalty. The player perceives it (`PerceptionView::own_stance`): the status bar shows
   it when it is not neutral, the character screen always (§6); the wiki's Combat page has the
   generated table.

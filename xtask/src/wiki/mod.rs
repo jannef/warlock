@@ -1282,7 +1282,7 @@ mod tests {
         // Combat: race and class hit points, weapons, armour, the rules' odds.
         assert!(text("races.md").contains("| Normal | 16–35 | 4 |"));
         assert!(
-            text("classes.md").contains("| Barbarian |") && text("classes.md").contains(" 8 |")
+            text("classes.md").contains("| Berserker |") && text("classes.md").contains(" 8 |")
         );
         assert!(text("hit-points.md").contains("| Dwarf | 6 |"));
         assert!(text("hit-points.md").contains("| Wizard | 0 |"));
