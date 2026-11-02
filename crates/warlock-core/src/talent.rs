@@ -592,6 +592,8 @@ pub struct TalentMods {
     pub stunning_strike: Option<PalmBlow>,
     /// The active Quivering palm, if it has it.
     pub quivering_palm: Option<PalmBlow>,
+    /// The active Step of the wind, if it has it: the status it gives (Light-footed).
+    pub wind_step: Option<StatusId>,
     /// Hit points every level past `hp_level` adds beyond a level's own, if it has Hardened.
     pub hardened: Option<i32>,
     /// Percent more maximum hit points (negative: fewer).
@@ -1010,6 +1012,7 @@ impl TalentMods {
             A::HolyRadiance => self.radiance.is_some(),
             A::StunningStrike => self.stunning_strike.is_some(),
             A::QuiveringPalm => self.quivering_palm.is_some(),
+            A::StepOfTheWind => self.wind_step.is_some(),
             A::Volley => self.volley.is_some(),
             A::Lurk => self.lurk.is_some(),
             A::LowBlow => self.low_blow,
@@ -1800,6 +1803,9 @@ impl TalentMods {
                 if let Some(status) = content.status_id(&status) {
                     self.stunning_strike = Some(PalmBlow { status, severity });
                 }
+            }
+            TalentEffect::WindStep { status } => {
+                self.wind_step = self.wind_step.or(content.status_id(&status));
             }
             TalentEffect::Hardened { bonus } => {
                 self.hardened = Some(self.hardened.unwrap_or(0) + bonus);

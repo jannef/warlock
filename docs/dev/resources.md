@@ -136,7 +136,13 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   hand before the spend (`ClassActive::bare_handed`). Stunning strike (12, #848) costs
   `resource = { id = "ki", cost = 1 }` on its talent (`TalentEffect::StunningStrike { status,
   severity }`), refused the same way; both blows are `World::palm_blow` (`world/ascetic.rs`).
-  Tests: `world/ki_tests.rs`, `world/stunning_strike_tests.rs`.
+  Tests: `world/ki_tests.rs`, `world/stunning_strike_tests.rs`. Step of the wind (level 6, S3, #847) costs `resource = { id = "ki",
+  cost = 1 }` on its talent (`TalentEffect::WindStep { status }`, `TalentMods::wind_step`):
+  `World::wind_step` (`world/ascetic.rs`) gives a degree of Light-footed and returns
+  `Spent::NoTime`; `World::may_wind_step` refuses it before the spend while Light-footed already.
+  The status is taken off `World::fresh` (a status given in a priced action is not eased by it):
+  no time passed, so the next action eases it. Tests: `world/ki_tests.rs`,
+  `world/ascetic_tests.rs`.
 - **Inspiration** (R4, #252): Inspire grants it and its effect names what it spends instead of
   mana, `inspire { status, mana, resource, cost }` (`talent::Inspire::instead`, a
   `ResourceCost`; Virtuoso's `inspiring()` clears it, so its song costs nothing).

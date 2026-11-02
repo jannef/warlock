@@ -1013,7 +1013,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels, at least 1d6, a magic weapon's extra die folded into the bonus at its average; then
     Spent, 5 minutes; works for Kind or better), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
-    glowing item's; a cast; works for Kind or better), Stunning strike (the ascetic's at 12,
+    glowing item's; a cast; works for Kind or better), Step of the wind (the
+    ascetic's at 6, #847: for a point of Ki and **no time**, a degree of Light-footed, so the next
+    action, whatever it is, costs half its price and ends it; refused, no time or ki, while
+    Light-footed already, "You are already light on your feet."; any grip), Stunning strike (the ascetic's at 12,
     #848, `world/ascetic.rs`: a bare-handed blow in a direction at a melee attack's price,
     refused with a weapon in hand or nobody hostile there before anything is spent; a hit that
     does damage leaves the foe **Stunned**, "You stun the kobold.": `per_action`, one degree,
@@ -1047,7 +1050,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     status that ticks and every disease, one degree of Drained); Martial arts (bare hands and
     kicks roll 1d6; grants Ki, §8 "Resources"), Flurry (level 1 beside it: a melee attack
     with nothing in hand strikes twice, the second at −2, for a point of ki; with none, once),
-    Fleet (steps 10 % cheaper in no body armour and with no shield),
+    Step of the wind's passive half (level 6: steps 10 % cheaper in no body armour and with no
+    shield; it took Fleet's place, #847),
     Still mind (+2 on checks made with Willpower: diseases', noticing
     in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
     Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1; ki comes back
@@ -1062,8 +1066,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     condition (refused at load). The identical-effects check counts the condition as part of
     the effect: `protection 2 while raging` is not Bulwark's `protection 2`.
   - **Resources**: Rage, War cry, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
-    (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Stunning strike, and Quivering
-    palm spend (R4, #252; #846; #848).
+    (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Step of the wind, Stunning strike,
+    and Quivering palm spend (R4, #252; #846, #847, #848).
   - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):

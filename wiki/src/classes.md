@@ -76,6 +76,10 @@ The [ascetic](classes.md#ascetic)'s **[martial arts](talents.md#talent-martial-a
 [Willpower](stats.md#stat-willpower) 12, growing with Willpower and your [level](experience.md#levels)), and **[flurry](talents.md#talent-flurry)**, from level 1
 too, spends it: every attack with nothing in your hands strikes a
 second blow, at −2 [to hit](combat.md#hitting), for a point of ki; with none left, the attack is a single blow.
+**[Step of the wind](abilities.md#ability-step-of-the-wind)** (level 6) makes your steps 10 % quicker in no body armour and with no
+shield, and for a point of ki, taking no time at all, leaves you [light-footed](status-effects.md#status-light-footed): your next action,
+whatever it is (a step, a blow, a shot), takes half its [time](turns.md#what-actions-cost). It cannot be stacked: while you are light-footed
+already it is refused and costs nothing.
 **[Stunning strike](abilities.md#ability-stunning-strike)** (level 12) costs 1 ki: a blow of
 your bare hand that leaves a foe it wounds [stunned](status-effects.md#status-stunned), caught
 [flat-footed](surprise.md#stunned) and slow to act. **[Quivering palm](abilities.md#ability-quivering-palm)**

@@ -3,6 +3,14 @@
 //! ki by `class_ability.rs::use_class`, which also refuses them (no time, nothing spent) before
 //! the spend. Each trick is its own section below.
 //!
+//! - **Step of the wind** (`use:step_of_the_wind`, level 6, for a point of ki): a degree of its
+//!   status (Light-footed) on the player, **taking no time**: the next action they take, whatever
+//!   it is, costs half its price and ends it. Refused, no time and no ki, while they are
+//!   Light-footed already (one degree is the most it holds), and by `may_use_class` with no ki.
+//!   The talent's passive half (Fleet's quicker steps, unarmoured and shieldless) is a
+//!   `step_percent` read in `schedule.rs`.
+//! - **Stunning strike** and the palm blow it shares with Quivering palm (below).
+//!
 //! [`Action::Use`]: crate::action::Action::Use
 
 use super::{Spent, World};
@@ -10,6 +18,38 @@ use crate::action::{AttackKind, Event};
 use crate::content::{ActionKind, the};
 use crate::geom::Dir;
 use crate::talent::PalmBlow;
+
+// --- Step of the wind (#847) --------------------------------------------------------------------
+
+impl World {
+    /// Step of the wind's refusal before its ki is spent (no time; said): the player is
+    /// Light-footed already.
+    pub(super) fn may_wind_step(&mut self) -> bool {
+        let content = self.content.clone();
+        let me = self.state.player();
+        let Some(status) = me.talent_mods(&content).wind_step else {
+            return false;
+        };
+        if me.effects.has(status) {
+            self.say("You are already light on your feet.");
+            return false;
+        }
+        true
+    }
+
+    /// Step of the wind: a degree of its status on the player, taking no time; its ki was spent
+    /// by `use_class`. The status is no fresh one of an action under way (as one given during a
+    /// priced action is, `status.rs`): this took no time, so the player's next action eases it.
+    pub(super) fn wind_step(&mut self, events: &mut Vec<Event>) -> Spent {
+        let player = self.state.player;
+        let Some(status) = self.state.player().talent_mods(&self.content).wind_step else {
+            return Spent::Nothing;
+        };
+        self.afflict(player, status, 1, Some(player), events);
+        self.fresh.retain(|&(a, s)| (a, s) != (player, status));
+        Spent::NoTime
+    }
+}
 
 // --- Stunning strike and the palm blow (#848) ---------------------------------------------------
 

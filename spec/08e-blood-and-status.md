@@ -622,7 +622,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     calm +50 %, Perfect self at 60 +100 %), and never ends; the abilities menu greys what it pays
     for "your ki is spent". Each second blow of a flurry (Flurry, level 1) spends a point
     (`flurry_cost`, in `World::flurry`): with none held there is no second blow, the attack is
-    one blow. Stunning strike (level 12, #848) costs 1 and Quivering palm (level 50) 5, neither
+    one blow. Step of the wind (level 6) costs 1 and no time, refused before the spend while
+    the ascetic is Light-footed already. Stunning strike (level 12, #848) costs 1 and Quivering palm (level 50) 5, neither
     with a cooldown; with a weapon in hand either is refused before the ki is spent. The ascetic's mana stays theirs, separate.
   - **Inspiration** (the bard's; R4, #252): Inspire (level 18) grants it at 0; each kill credited
     to the bard builds one (to 5), one fades every 180 s (30 base turns), and at 0 it stays,

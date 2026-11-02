@@ -1,7 +1,7 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
 //! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Whirlwind, Lay on hands, Smite, Holy
-//! radiance, Stunning strike and Quivering palm (for ki, `world/ascetic.rs`), Inspire (for inspiration or mana, #244, R4), the thief's
+//! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), Inspire (for inspiration or mana, #244, R4), the thief's
 //! Lurk and Low blow (`world/thief.rs`), Master thief's finisher (for openings,
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`). The
 //! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
@@ -51,6 +51,9 @@ impl World {
         if !self.thief_may(active, dir) {
             return Spent::Nothing;
         }
+        if active == ClassActive::StepOfTheWind && !self.may_wind_step() {
+            return Spent::Nothing;
+        }
         if dir.is_some_and(|d| active.strikes() && self.hostile_toward(d).is_none()) {
             return Spent::Nothing;
         }
@@ -73,6 +76,7 @@ impl World {
             (ClassActive::HolyRadiance, _) => self.holy_radiance(events),
             (ClassActive::Inspire, _) => self.inspire(events),
             (ClassActive::Lurk, _) => self.lurk(events),
+            (ClassActive::StepOfTheWind, _) => self.wind_step(events),
             (ClassActive::Consecrate, _) => self.begin_consecrate(),
             (ClassActive::Smite, Some(dir)) => self.smite(dir, events),
             (ClassActive::StunningStrike, Some(dir)) => self.stunning_strike(dir, events),

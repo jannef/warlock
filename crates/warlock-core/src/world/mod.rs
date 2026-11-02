@@ -1467,6 +1467,8 @@ mod animated_tests;
 #[cfg(test)]
 mod appraise_tests;
 #[cfg(test)]
+mod ascetic_tests;
+#[cfg(test)]
 mod ascmearc_encounter_tests;
 #[cfg(test)]
 mod ascmearc_tests;
