@@ -79,10 +79,18 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    from `render/rune_atlas.rs`: every rune of `runes.toml` rasterised from
    `assets/fonts/NotoSansJP-Runes.ttf` (a subset of Noto Sans JP Medium; `assets/fonts/README.md`
    has the `pyftsubset` command, and `every_rune_is_in_the_rune_font` checks it is current) into
-   2× square slots padded for the blur (`pad`, three of `BACKDROP_SIGMA`) with an empty
-   one-texel border, one `Rgba8Unorm` texture sampled linearly: red the coverage, green the halo
-   (the coverage blurred by `HALO_SIGMA`, 0.12 rune squares, × 1.5), blue the backdrop (blurred
-   by `BACKDROP_SIGMA`, 0.25, × 3), rebuilt when the cell height changes.
+   2× square slots (`RUNE_SIZE` 0.44 cell heights, 8 px at 18 px) padded for the halo and the
+   glints' rays (`pad`) with an empty one-texel border, one `Rgba8Unorm` texture sampled
+   linearly: red the coverage, green the halo (the coverage blurred by `HALO_SIGMA`, 0.12 rune
+   squares, × 1.5), blue and alpha two glints (`glint_points`: the deepest place in the strokes,
+   the most ink with the most ink about it, and the deepest a third of the square from it; each a
+   point of `GLINT_SIGMA` 0.03 cell heights with four rays `GLINT_RAY` 0.11 long, `sparkle`),
+   rebuilt when the cell height changes. `GlyphGlow` is the same for the circled actors' own
+   glyphs (the map font at `Circles::glyph_px`, a cell height square, rays `GLYPH_RAY` 0.2 long,
+   built with `@` and grown when a circled actor shows a glyph it lacks, at most `MAX_GLYPHS`; a
+   second texture of `CircleMaterial`). The C4 backdrop (a blurred dark patch under each rune) is
+   gone: the owner, of C4: "the blur effect around character glyphs look like utter shit. get rid
+   of that entirely".
 
    **Where a circle shows** (#786, the owner's review: "cringe when glyphs overlap other
    glyphs"): the circle material binds the map's `light_flags` (`lighting.rs::cell_flags`: `LIT`,
@@ -100,8 +108,15 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    `emit` pushes them: the snapshot's actors, the player first), packed a byte a rune
    (`ATTRIBUTE_CROWD`; the mesh is rebuilt when the map's flags change). `under` gives each circle the
    nearest earlier one whose rings reach it (`ATTRIBUTE_UNDER`): its lines are left out inside
-   that circle's outermost ring. The lines also stop `GLYPH_GAP` (a pixel at the default font)
-   short of the actor's glyph's ink box (`ATTRIBUTE_INK`).
+   that circle's outermost ring. The lines also part about the actor's glyph's own outline (its
+   halo in `GlyphGlow`, `1 - smoothstep(0.02, 0.25, halo)`), or, for a glyph the atlas lacks,
+   stop `GLYPH_GAP` (a pixel at the default font) short of its ink box (`ATTRIBUTE_INK`).
+
+   **Where the runes stand** (C5, the owner: "pull them tighter to the circles"): a rune's
+   centre is `rune_radius(place, rings)` out, the outermost ring's radius plus half a rune and
+   `RUNE_GAP` (0.04), so its foot sits against the last ring however many there are (the count
+   blending as a ring comes or goes, `shown_rune_radius`; the shader's `rr`); the hexes' outer
+   circle starts at `OUTER_RING` 1.24. `extent` is the three-ring rune's outer edge.
 
    **Centring**: `emit` centres a circle on its actor's glyph's ink (`atlas::ink_box`: the
    glyph's outline box placed as `rasterize` places it, on the baseline at `ascent.round()`), not
@@ -109,10 +124,26 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    little above the middle and an `@` (which hangs below the baseline) a little below it; the
    old centre was 3 px off an `@` at scale 2.
 
-   **Backdrop, halo, lock, pulse** (#786): per pixel, bottom up, the backdrop darkens
-   (`BACKDROP_ALPHA` 0.8 × the blue channel), the halo glows in the rune's school colour
-   (`HALO_ALPHA` 0.3 × green; `Circles::halo`, off with reduced effects, separate from the
-   `glow` switch's bloom), then the lines, then the rune. Each rune is turned by `rune_turn(a) =
+   **Glow, glints, lock, pulse** (#786, C5): per pixel, bottom up, the actor's glyph's halo
+   (`GLYPH_HALO_ALPHA` 0.6 × its green, in its buffs' circle's line colour, else its hexes'; under
+   the glyph, which the free-glyph layer draws over it), the runes' halo in the rune's school
+   colour (`HALO_ALPHA` 0.3 × green), the lines' glow (`LINE_HALO_ALPHA` 0.1 × a Gaussian of the
+   distance to the ring or side, `LINE_HALO_SIGMA` 0.045 cell heights: the runes' glow on the
+   rings, the owner: "apply same glow effect to the transmutation circles themselves"), the
+   lines, the rune, and its glints on top. All the glows are `Circles::halo`, off with reduced
+   effects, separate from the `glow` switch's bloom. A **glint** (the owner: "small specular
+   hilights to the runes that can glimmer in and out of existence") is the atlas's blue or alpha
+   × `glint(phase, period)`, the top of a sine sharpened (`GLINT_SHARP` 24: about a tenth of its
+   beat), periods `GLINT_PERIODS` 5.3 and 7.1 s, on `glint_phase(seed, k, hex, g)` (the actor's
+   id, `CircleInstance::seed`, so two actors are never in step; slot `k`, 6 for the glyph), in
+   the rune's colour most of the way to white (`GLINT_WHITE` 0.75) and, with `glow` on,
+   overbright × 2.5 so it blooms (`Circles::bloom`); only with `motion` on and without reduced
+   effects. The glyph's glints are drawn by a **second pass** over the free-glyph layer: the same
+   mesh with a second `CircleMaterial` (`params.top` 1, `TOP_Z` 1.2), which draws nothing but
+   them within a cell height of the centre. The glyph's slot and the seed ride in the fourth of
+   `ATTRIBUTE_UNDER` (`pack_glyph`). The **shimmer** (C5's extra touch): a soft arc a quarter of a
+   ring wide runs round each ring in `SHIMMER_PERIOD` 7 s (rings in turn the other way), up to
+   `SHIMMER` 1.5× brighter, lines and glow; motion on and no reduced effects. Each rune is turned by `rune_turn(a) =
    a + π/2` (its foot to the centre) and pulses by `pulse(time, phase)`, a sine of
    `PULSE_PERIOD` 3.6 s on `pulse_phase(k, hex)` (golden-ratio steps by slot, a hex's half a
    period on), `PULSE_ALPHA` 0.12 of its opacity and `PULSE_SIZE` 0.04 of its square, only with
@@ -120,7 +151,7 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    switch ride in `ATTRIBUTE_INK`, not the uniform, so the material is never re-prepared a
    frame; a first cut that masked runes in the shader and put the time in the uniform cost
    0.30 ms on the fifty-circle bench, this one 0.08 ms). The quad reaches
-   `quad_margin()` past the ink for the blur and the pulse. The Rust functions are the shader's
+   `quad_margin()` past the ink for the halo, the glints' rays, and the pulse. The Rust functions are the shader's
    mirrors, tested in `circles.rs`. The `circles` switch turns the drawing off; reduced
    effects leaves it on and only stills it (as `motion` off does). With `glow` on the school
    colours are `post::emissive` by `ui/circles.rs::CIRCLE_GLOW` (0.1). The light about a circled

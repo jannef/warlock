@@ -4,10 +4,14 @@
 // runes 3-5, 0]`.
 //
 // The fragment works in pixels from the actor's centre (`local`, y down): thin anti-aliased
-// rings at signed distances, a regular polygon inscribed in the innermost ring with its corners
-// at the rune slots, dashed for a hex along both, and a rune at each slot, turned so its foot
-// faces the centre, a tap of the rune atlas: its coverage, its halo, and its backdrop (red,
-// green, blue). Sizes are in cell heights and mirror `circles.rs`: change both together.
+// rings at signed distances with a faint glow about them, a regular polygon inscribed in the
+// innermost ring with its corners at the rune slots, dashed for a hex along both, and a rune at
+// each slot against the outermost ring, turned so its foot faces the centre, a tap of the rune
+// atlas: its coverage, its halo, and its two glints (red, green, blue, alpha). Sizes are in cell
+// heights and mirror `circles.rs`: change both together.
+//
+// The actor's own glyph glows too (the glyph atlas, `rune_atlas.rs::GlyphGlow`): its halo here,
+// under the free-glyph layer, and its glints in a second pass over it (`params.top`).
 //
 // The map's per-cell flags (`light_flags`, `lighting.rs`) keep the circle to what the player
 // sees: a rune fades by the cell under its centre, a line by the cell under its pixel, softly
@@ -32,8 +36,16 @@ struct CircleParams {
     supersample: u32,
     // A rune's square, in cell heights.
     rune_size: f32,
-    // The halo's strength (0 or 1).
+    // The halo's strength (0 or 1): the runes', the lines', the glyph's; and the glints'.
     halo: f32,
+    // The glyph atlas's slot side and padding (texels), and its square (pixels).
+    glyph_slot: u32,
+    glyph_pad: u32,
+    glyph_square: f32,
+    // 1 with the `glow` switch on (glints bloom), else 0.
+    bloom: f32,
+    // 1: the pass over the free-glyph layer, the actors' glyphs' glints alone.
+    top: u32,
     // The school colours, palette-mapped, linear (rgb), by `School::ALL` position.
     schools: array<vec4<f32>, 8>,
 }
@@ -42,6 +54,8 @@ struct CircleParams {
 @group(constants::MATERIAL_BIND_GROUP) @binding(1) var runes: texture_2d<f32>;
 @group(constants::MATERIAL_BIND_GROUP) @binding(2) var runes_sampler: sampler;
 @group(constants::MATERIAL_BIND_GROUP) @binding(3) var light_flags: texture_2d<u32>;
+@group(constants::MATERIAL_BIND_GROUP) @binding(4) var glyphs: texture_2d<f32>;
+@group(constants::MATERIAL_BIND_GROUP) @binding(5) var glyphs_sampler: sampler;
 
 const PI: f32 = 3.14159265;
 const TAU: f32 = 6.2831853;
@@ -49,9 +63,8 @@ const TAU: f32 = 6.2831853;
 // Mirrors of `circles.rs` (cell heights).
 const RING: f32 = 0.48;
 const RING_GAP: f32 = 0.1;
-const RUNE_RADIUS: f32 = 1.0;
-const OUTER_RING: f32 = 1.35;
-const OUTER_RUNE_RADIUS: f32 = 1.88;
+const OUTER_RING: f32 = 1.24;
+const RUNE_GAP: f32 = 0.04;
 // A hex's dashes along its rings and sides, and the gaps between them (cell heights).
 const DASH: f32 = 0.2;
 const GAP: f32 = 0.12;
@@ -60,13 +73,30 @@ const LINE_ALPHA: f32 = 0.2;
 const RUNE_ALPHA: f32 = 0.7;
 // The rings' and sides' width, in pixels at the default font and scale 1.
 const LINE_WEIGHT: f32 = 1.0;
-// The darkening under a rune, and its halo's opacity in its school's colour.
-const BACKDROP_ALPHA: f32 = 0.8;
+// A rune's halo's opacity in its school's colour, and the lines' (their glow's deviation in
+// cell heights): the runes' glow, softer, as the lines are fainter.
 const HALO_ALPHA: f32 = 0.3;
+const LINE_HALO_ALPHA: f32 = 0.1;
+const LINE_HALO_SIGMA: f32 = 0.045;
+// The actor's glyph's halo.
+const GLYPH_HALO_ALPHA: f32 = 0.6;
+// The shimmer running round the rings: how much brighter at its middle, and its period.
+const SHIMMER: f32 = 1.5;
+const SHIMMER_PERIOD: f32 = 7.0;
 // `circles.rs`: the pulse's period and swing.
 const PULSE_PERIOD: f32 = 3.6;
 const PULSE_ALPHA: f32 = 0.12;
 const PULSE_SIZE: f32 = 0.04;
+// `circles.rs`: the glints' periods and sharpness, their opacity, and how far toward white.
+const GLINT_PERIOD_A: f32 = 5.3;
+const GLINT_PERIOD_B: f32 = 7.1;
+const GLINT_SHARP: f32 = 24.0;
+const GLINT_ALPHA: f32 = 0.9;
+const GLINT_WHITE: f32 = 0.75;
+const GLINT_BLOOM: f32 = 1.5;
+// The glyph slot that means none (`circles.rs::NO_GLYPH`), and the glyph's glints' slot.
+const NO_GLYPH: u32 = 255u;
+const GLYPH_K: u32 = 6u;
 // `lighting.rs`'s cell flags, and the margin of its textures (cells).
 const LIT: u32 = 1u;
 const OPAQUE: u32 = 2u;
@@ -97,14 +127,14 @@ struct Vertex {
     // radii, 1 the outer).
     @location(6) inner_motion: vec4<f32>,
     @location(7) outer_motion: vec4<f32>,
-    // Half the size of the actor's glyph's ink, in pixels about the centre.
     // Half the size of the actor's glyph's ink (pixels), the visual time, and the pulse (0 or 1).
     @location(8) ink: vec4<f32>,
     // How much of each rune shows where circles crowd, a byte each (`circles.rs::crowding`):
     // the buffs' slots 0-3, 4-5, the hexes' 0-3, 4-5.
     @location(9) crowd: vec4<u32>,
     // The earlier circle this one passes under (`circles.rs::under`): its centre from this
-    // one's and its outermost ring's radius, in pixels (radius 0: none).
+    // one's and its outermost ring's radius, in pixels (radius 0: none); then the actor's glyph's
+    // slot and seed (`circles.rs::pack_glyph`).
     @location(10) under: vec4<f32>,
 };
 
@@ -146,21 +176,28 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     return out;
 }
 
-// What one circle draws at a pixel: the lines' coverage and colour; the runes', their halo's
-// (in the rune's colour), and their backdrop's.
+// What one circle draws at a pixel: the lines' coverage, their glow's, and their colour; the
+// runes', their halo's and their glints' (in the rune's colour).
 struct Ink {
     line: f32,
+    glow: f32,
     line_rgb: vec3<f32>,
     rune: f32,
     rune_rgb: vec3<f32>,
     halo: f32,
     halo_rgb: vec3<f32>,
-    backdrop: f32,
+    glint: f32,
+    glint_rgb: vec3<f32>,
 }
 
 // Coverage of a line of width `w` pixels at distance `d` from it, anti-aliased over a pixel.
 fn stroke(d: f32, w: f32) -> f32 {
     return clamp(w * 0.5 + 0.5 - abs(d), 0.0, 1.0);
+}
+
+// A line's glow at distance `d` from it, deviation `s` pixels: 1 on it.
+fn glow_at(d: f32, s: f32) -> f32 {
+    return exp(-d * d / (2.0 * s * s));
 }
 
 // Whether arc length `s` (pixels) falls on a dash, softened over a pixel at its ends.
@@ -184,19 +221,33 @@ fn rune_of(words: vec2<u32>, k: u32) -> vec2<u32> {
 }
 
 // The rune in atlas slot `slot` at `q`, the pixel's place in the rune's square (0 to 1 across,
-// y down; its halo and backdrop reach into the padding about it): coverage, halo, backdrop.
-fn rune_texel(slot: u32, q: vec2<f32>) -> vec3<f32> {
+// y down; its halo and glints reach into the padding about it): coverage, halo, two glints.
+fn rune_texel(slot: u32, q: vec2<f32>) -> vec4<f32> {
     let s = f32(params.slot);
     let pad = f32(params.pad);
     let inner = s - 2.0 * pad;
     // Inside the slot's one-texel border: filtering never reads a neighbour.
     let t = pad + q * inner;
     if any(t < vec2(1.0)) || any(t > vec2(s - 1.0)) {
-        return vec3(0.0);
+        return vec4(0.0);
     }
     let origin = vec2<f32>(f32(slot % params.columns), f32(slot / params.columns)) * s;
     let size = vec2<f32>(textureDimensions(runes));
-    return textureSampleLevel(runes, runes_sampler, (origin + t) / size, 0.0).rgb;
+    return textureSampleLevel(runes, runes_sampler, (origin + t) / size, 0.0);
+}
+
+// The same of the glyph atlas: an actor's glyph in slot `slot`, `q` across its square.
+fn glyph_texel(slot: u32, q: vec2<f32>) -> vec4<f32> {
+    let s = f32(params.glyph_slot);
+    let pad = f32(params.glyph_pad);
+    let inner = s - 2.0 * pad;
+    let t = pad + q * inner;
+    if any(t < vec2(1.0)) || any(t > vec2(s - 1.0)) {
+        return vec4(0.0);
+    }
+    let origin = vec2<f32>(f32(slot % params.columns), f32(slot / params.columns)) * s;
+    let size = vec2<f32>(textureDimensions(glyphs));
+    return textureSampleLevel(glyphs, glyphs_sampler, (origin + t) / size, 0.0);
 }
 
 // How much of the circle shows over map grid cell `cell`: none where the player does not see
@@ -253,36 +304,74 @@ fn pulse(phase: f32, clock: vec2<f32>) -> f32 {
     return sin(TAU * (clock.x / PULSE_PERIOD + phase)) * clock.y;
 }
 
+// `circles.rs::glint_phase` and `glint`: glint `g` of slot `k` of an actor's (`seed`) circle,
+// and how bright it is at the frame's time: a moment's sparkle, then gone. None without motion
+// or with reduced effects.
+fn glint_phase(seed: u32, k: u32, hex: bool, g: u32) -> f32 {
+    return fract(f32(seed) * 0.137036 + f32(k) * 0.381966 + select(0.0, 0.29, hex) + f32(g) * 0.5);
+}
+
+fn glint(phase: f32, period: f32, clock: vec2<f32>) -> f32 {
+    let s = max(sin(TAU * (clock.x / period + phase)), 0.0);
+    return pow(s, GLINT_SHARP) * clock.y * params.halo;
+}
+
+// A glint's colour: its rune's (or glyph's glow's) school colour most of the way to white, and
+// overbright with the `glow` switch on (`params.bloom`), so the bloom gives it a tiny star.
+fn glint_colour(rgb: vec3<f32>) -> vec3<f32> {
+    return mix(rgb, vec3(1.0), GLINT_WHITE) * (1.0 + GLINT_BLOOM * params.bloom);
+}
+
+// Both glints of a texel `tex` (blue, alpha) of slot `k`, each on its own beat.
+fn glints(tex: vec4<f32>, seed: u32, k: u32, hex: bool, clock: vec2<f32>) -> f32 {
+    let a = tex.b * glint(glint_phase(seed, k, hex, 0u), GLINT_PERIOD_A, clock);
+    let b = tex.a * glint(glint_phase(seed, k, hex, 1u), GLINT_PERIOD_B, clock);
+    return max(a, b);
+}
+
+// The shimmer on ring `k` at angle `along` from the circle's origin: a soft arc a quarter of
+// the ring wide, `SHIMMER` brighter at its middle, running round in `SHIMMER_PERIOD` (rings in
+// turn the other way). None without motion or with reduced effects.
+fn shimmer(along: f32, k: u32, hex: bool, clock: vec2<f32>) -> f32 {
+    let way = select(1.0, -1.0, (k & 1u) == 1u);
+    let phase = f32(k) * 2.1 + select(0.0, 1.3, hex);
+    let c = 0.5 + 0.5 * cos(along - way * TAU * clock.x / SHIMMER_PERIOD - phase);
+    return SHIMMER * pow(c, 6.0) * clock.y * params.halo;
+}
+
 // How much of slot `k`'s rune shows where circles crowd, from its kind's two crowd words.
 fn crowd_of(words: vec2<u32>, k: u32) -> f32 {
     let word = select(words.x, words.y, k >= 4u);
     return f32((word >> (8u * (k % 4u))) & 255u) / 255.0;
 }
 
-// Coverage of the sides of a regular `m`-gon inscribed in a circle of radius `r0`, its first
-// corner at angle `first`, at the pixel `d` from the centre at angle `theta`; dashed for a hex.
-fn polygon(m: u32, d: f32, theta: f32, first: f32, r0: f32, w: f32, hex: bool, h: f32) -> f32 {
+// The signed distance (pixels) to the sides of a regular `m`-gon inscribed in a circle of
+// radius `r0`, its first corner at angle `first`, from the pixel `d` from the centre at angle
+// `theta`, and whether it falls on a dash (1 but for a hex). No sides (a large distance) under
+// three corners.
+fn polygon(m: u32, d: f32, theta: f32, first: f32, r0: f32, hex: bool, h: f32) -> vec2<f32> {
     if m < 3u {
-        return 0.0;
+        return vec2(1e4, 0.0);
     }
     let mf = f32(m);
     let sector = TAU / mf;
     var phi = theta - first + sector * 0.5;
     phi = phi - floor(phi / sector) * sector - sector * 0.5;
     let apothem = r0 * cos(PI / mf);
-    var side = stroke(d * cos(phi) - apothem, w);
+    var dash = 1.0;
     if hex {
         let half_side = r0 * sin(PI / mf);
-        side *= dashed(d * sin(phi) + half_side, h);
+        dash = dashed(d * sin(phi) + half_side, h);
     }
-    return side;
+    return vec2(d * cos(phi) - apothem, dash);
 }
 
 // One kind's circle at `p`: `c` its ring words, `old` the runes of the figure it changes from
 // (whose head is `c.w`), `m` its angle, fade, blend, and place; `at` the actor's centre in
-// framebuffer pixels and `own` its cell, for the mask. Settled (blend 1, the old figure its
-// own) it is the figure alone; changing, the rings and the polygon cross-fade and every rune
-// glides from its old slot to its new one, changing its character on the way if it has to.
+// framebuffer pixels and `own` its cell, for the mask; `seed` the actor's, for its glints.
+// Settled (blend 1, the old figure its own) it is the figure alone; changing, the rings and the
+// polygon cross-fade and every rune glides from its old slot to its new one, changing its
+// character on the way if it has to.
 fn circle(
     c: vec4<u32>,
     old: vec2<u32>,
@@ -293,8 +382,9 @@ fn circle(
     own: vec2<i32>,
     crowd: vec2<u32>,
     clock: vec2<f32>,
+    seed: u32,
 ) -> Ink {
-    var ink = Ink(0.0, vec3(0.0), 0.0, vec3(0.0), 0.0, vec3(0.0), 0.0);
+    var ink = Ink(0.0, 0.0, vec3(0.0), 0.0, vec3(0.0), 0.0, vec3(0.0), 0.0, vec3(0.0));
     let n = c.x & 15u;
     let fade = m.y;
     if n == 0u || fade <= 0.0 {
@@ -306,9 +396,9 @@ fn circle(
     let o = c.w;
     let on = max(o & 15u, 1u);
     let r0 = mix(RING, OUTER_RING, m.w) * h;
-    let rr = mix(RUNE_RADIUS, OUTER_RUNE_RADIUS, m.w) * h;
     // One physical pixel at the default font and scale 1, more as the cells grow.
     let w = max(h / 18.0, 1.0) * LINE_WEIGHT;
+    let sigma = LINE_HALO_SIGMA * h;
     let d = length(p);
     // The pixel's angle on screen (y down: clockwise), from the circle's turned origin.
     let theta = atan2(p.y, p.x);
@@ -319,15 +409,19 @@ fn circle(
     let rings = (c.x >> 16u) & 3u;
     let old_rings = (o >> 16u) & 3u;
     var line = 0.0;
+    var glow = 0.0;
     for (var k = 0u; k < max(rings, old_rings); k++) {
         let weight = mix(select(0.0, 1.0, k < old_rings), select(0.0, 1.0, k < rings), t);
         let r = r0 + RING_GAP * h * f32(k);
-        var cov = stroke(d - r, w);
+        var dash = 1.0;
         if hex {
             let s = (along - floor(along / TAU) * TAU) * r;
-            cov *= dashed(s, h);
+            dash = dashed(s, h);
         }
-        line = max(line, cov * weight);
+        // A soft brighter arc runs round each ring, each its own way along.
+        let lift = 1.0 + shimmer(along, k, hex, clock);
+        line = max(line, stroke(d - r, w) * dash * weight * lift);
+        glow = max(glow, glow_at(d - r, sigma) * dash * weight * lift);
     }
 
     // The polygon: `slots` corners on the innermost ring (`Ring::slots`), the first at the top,
@@ -335,24 +429,35 @@ fn circle(
     let slots = (c.x >> 12u) & 15u;
     let old_slots = (o >> 12u) & 15u;
     let first = angle - PI * 0.5;
-    var side = polygon(slots, d, theta, first, r0, w, hex, h);
+    let side = polygon(slots, d, theta, first, r0, hex, h);
+    var cov = stroke(side.x, w) * side.y;
+    var shine = glow_at(side.x, sigma) * side.y;
     if old_slots != slots {
-        side = max(side * t, polygon(old_slots, d, theta, first, r0, w, hex, h) * (1.0 - t));
+        let was = polygon(old_slots, d, theta, first, r0, hex, h);
+        cov = max(cov * t, stroke(was.x, w) * was.y * (1.0 - t));
+        shine = max(shine * t, glow_at(was.x, sigma) * was.y * (1.0 - t));
     }
-    line = max(line, side);
-    if line > 0.0 {
-        line *= show_at(at + p, own);
+    line = max(line, cov);
+    glow = max(glow, shine);
+    if line > 0.0 || glow > 0.001 {
+        let show = show_at(at + p, own);
+        line *= show;
+        glow *= show;
     }
     ink.line = line * fade;
+    ink.glow = glow * fade;
     let line_rgb = params.schools[(c.x >> 8u) & 7u].rgb;
     let old_rgb = params.schools[(o >> 8u) & 7u].rgb;
     ink.line_rgb = mix(old_rgb, line_rgb, t);
 
-    // The runes: squares about each slot's centre on the rune radius, turned to face the
+    // The runes: squares about each slot's centre just outside the outermost ring (its count
+    // blending as a ring comes or goes, `circles.rs::shown_rune_radius`), turned to face the
     // centre, each gliding from its old slot's place to its new one's, and pulsing.
     let size = params.rune_size * h;
+    let ring_count = mix(f32(max(old_rings, 1u)), f32(max(rings, 1u)), t);
+    let rr = r0 + (RING_GAP * (ring_count - 1.0) + params.rune_size * 0.5 + RUNE_GAP) * h;
     // Past a rune's centre by this much nothing of it shows: its square's corner, its padding
-    // (the halo and backdrop), and its pulse.
+    // (the halo and the glints' rays), and its pulse.
     let pad = f32(params.pad) / f32(params.slot - 2u * params.pad);
     let reach = size * (0.5 + pad) * 1.415 * (1.0 + PULSE_SIZE);
     let words = c.yz;
@@ -374,24 +479,24 @@ fn circle(
         let has_old = k < old_slots;
         let rune = rune_of(words, k % n);
         let was = rune_of(old, k % on);
-        var tex = vec3(0.0);
+        var tex = vec4(0.0);
         var rgb = vec3(0.0);
         if has_new && has_old && all(rune == was) {
             tex = rune_texel(rune.x, q);
             rgb = params.schools[rune.y].rgb;
         } else {
-            var now = vec3(0.0);
+            var now = vec4(0.0);
             if has_new {
                 now = rune_texel(rune.x, q) * t;
             }
-            var then = vec3(0.0);
+            var then = vec4(0.0);
             if has_old {
                 then = rune_texel(was.x, q) * (1.0 - t);
             }
             tex = max(now, then);
             rgb = params.schools[select(was.y, rune.y, now.r + now.g >= then.r + then.g)].rgb;
         }
-        if all(tex == vec3(0.0)) {
+        if all(tex == vec4(0.0)) {
             continue;
         }
         // The whole rune shows by the cells under it (never cut in two) and gives way to an
@@ -407,7 +512,11 @@ fn circle(
             ink.halo = tex.g * show;
             ink.halo_rgb = rgb;
         }
-        ink.backdrop = max(ink.backdrop, tex.b * show);
+        let sparkle = glints(tex, seed, k, hex, clock) * show;
+        if sparkle > ink.glint {
+            ink.glint = sparkle;
+            ink.glint_rgb = rgb;
+        }
     }
     return ink;
 }
@@ -417,6 +526,22 @@ fn over(dst: vec4<f32>, rgb: vec3<f32>, a: f32) -> vec4<f32> {
     return vec4(rgb * a + dst.rgb * (1.0 - a), a + dst.a * (1.0 - a));
 }
 
+// The actor's glyph's colour of glow: its buffs' circle's lines', else its hexes'; and how far
+// either has faded in.
+fn glyph_rgb(in: VertexOutput) -> vec4<f32> {
+    let buffs = (in.inner.x & 15u) != 0u && in.inner_motion.y > 0.0;
+    let hexes = (in.outer.x & 15u) != 0u && in.outer_motion.y > 0.0;
+    let head = select(in.outer.x, in.inner.x, buffs);
+    var fade = 0.0;
+    if buffs {
+        fade = in.inner_motion.y;
+    }
+    if hexes {
+        fade = max(fade, in.outer_motion.y);
+    }
+    return vec4(params.schools[(head >> 8u) & 7u].rgb, fade);
+}
+
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     let frag = in.position.xy;
@@ -424,17 +549,43 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
         return vec4(0.0);
     }
     let h = in.shape.x;
+    let clock = in.ink.zw;
+    let packed = u32(in.under.w);
+    let glyph = packed >> 16u;
+    let seed = packed & 0xffffu;
+    // The glyph's own square (and its padding) about the centre, if it has one.
+    var glyph_tex = vec4(0.0);
+    let near = all(abs(in.local) < vec2(params.glyph_square));
+    if params.top == 1u && !near {
+        return vec4(0.0);
+    }
+    if glyph != NO_GLYPH && near {
+        glyph_tex = glyph_texel(glyph, in.local / params.glyph_square + vec2(0.5));
+    }
+
+    // Over the free-glyph layer: the glyph's glints, nothing else.
+    if params.top == 1u {
+        let g = glyph_rgb(in);
+        let sparkle = glints(glyph_tex, seed, GLYPH_K, false, clock) * g.a;
+        let a = min(GLINT_ALPHA * sparkle, 1.0);
+        if a <= 0.0 {
+            return vec4(0.0);
+        }
+        return vec4(glint_colour(g.rgb) * in.shape.y, a);
+    }
+
     let at = frag - in.local;
     let own = vec2<i32>(round(in.shape.zw));
-    let clock = in.ink.zw;
-    let a = circle(in.inner, in.olds.xy, in.inner_motion, in.local, h, at, own, in.crowd.xy, clock);
-    let b = circle(in.outer, in.olds.zw, in.outer_motion, in.local, h, at, own, in.crowd.zw, clock);
+    let a = circle(in.inner, in.olds.xy, in.inner_motion, in.local, h, at, own, in.crowd.xy, clock, seed);
+    let b = circle(in.outer, in.olds.zw, in.outer_motion, in.local, h, at, own, in.crowd.zw, clock, seed);
     // The two circles never overlap once settled (the outer's rings clear the inner's runes):
     // take each part from the one that has the more of it.
     var line = a.line;
+    var glow = a.glow;
     var line_rgb = a.line_rgb;
-    if b.line > line {
+    if b.line + b.glow > line + glow {
         line = b.line;
+        glow = b.glow;
         line_rgb = b.line_rgb;
     }
     var rune = a.rune;
@@ -449,23 +600,46 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
         halo = b.halo;
         halo_rgb = b.halo_rgb;
     }
-    let backdrop = max(a.backdrop, b.backdrop);
-    // No line crosses the actor's own glyph: they stop a pixel short of its ink, softly.
+    var sparkle = a.glint;
+    var glint_rgb = a.glint_rgb;
+    if b.glint > sparkle {
+        sparkle = b.glint;
+        glint_rgb = b.glint_rgb;
+    }
+    // No line crosses the actor's own glyph: they part about its ink's own outline (its halo in
+    // the glyph atlas, widened), or, for a glyph the atlas lacks, stop a pixel short of its ink's
+    // box, softly.
     let px = max(h / 18.0, 1.0);
-    let off_box = abs(in.local) - in.ink.xy;
-    line *= smoothstep(GLYPH_GAP * px, (GLYPH_GAP + 1.5) * px, max(off_box.x, off_box.y));
+    var clear = 1.0;
+    if glyph != NO_GLYPH {
+        clear = 1.0 - smoothstep(0.02, 0.25, glyph_tex.g);
+    } else {
+        let off_box = abs(in.local) - in.ink.xy;
+        clear = smoothstep(GLYPH_GAP * px, (GLYPH_GAP + 1.5) * px, max(off_box.x, off_box.y));
+    }
+    line *= clear;
+    glow *= clear;
     // Nor tangles with an earlier circle's: it passes under it, out of sight inside its rings.
     if in.under.z > 0.0 {
         let past = length(in.local - in.under.xy) - in.under.z;
-        line *= smoothstep(GLYPH_GAP * px, (GLYPH_GAP + 1.5) * px, past);
+        let below = smoothstep(GLYPH_GAP * px, (GLYPH_GAP + 1.5) * px, past);
+        line *= below;
+        glow *= below;
     }
-    // Bottom up: the backdrop darkens what is under a rune, the halo glows about it, the lines,
-    // and the rune itself on top (it never crosses a line, but may touch a polygon's corner).
+    // Bottom up: the glyph's halo (under the glyph itself, drawn over this layer), the runes'
+    // halo, the lines' glow, the lines, the rune itself (it never crosses a line, but may touch a
+    // polygon's corner), and its glints on top.
     var ink = vec4(0.0);
-    ink = over(ink, vec3(0.0), BACKDROP_ALPHA * backdrop);
+    if glyph_tex.g > 0.0 && params.halo > 0.0 {
+        let g = glyph_rgb(in);
+        let shown = show_at(frag, own);
+        ink = over(ink, g.rgb, GLYPH_HALO_ALPHA * glyph_tex.g * g.a * shown);
+    }
     ink = over(ink, halo_rgb, HALO_ALPHA * halo * params.halo);
+    ink = over(ink, line_rgb, LINE_HALO_ALPHA * glow * params.halo);
     ink = over(ink, line_rgb, LINE_ALPHA * line);
     ink = over(ink, rune_rgb, min(RUNE_ALPHA * rune, 1.0));
+    ink = over(ink, glint_colour(glint_rgb), min(GLINT_ALPHA * sparkle, 1.0));
     if ink.a <= 0.0 {
         return vec4(0.0);
     }

@@ -303,8 +303,12 @@ do: which buffs and hexes, never how strong or for how long.
   inside and the hexes' around it.
 - The runes go in the order the status bar lists the statuses, so the same buffs always make the
   same figure. Each rune faces the middle of its circle (its foot toward the centre, so the one
-  at the bottom stands on its head), has a soft dark patch under it and a faint glow of its
-  colour, and slowly swells and fades a little, each on its own beat (every 3.6 seconds).
+  at the bottom stands on its head) and sits just outside the outermost ring. Runes and rings
+  have a faint glow of their colour, and so does the glyph of whoever wears the circle (in its
+  rings' colour, the buffs' if they have both). Each rune slowly swells and fades a little, each
+  on its own beat (every 3.6 seconds); now and then a tiny glint flashes on a rune or on the
+  wearer's glyph (each on its own beat, every 5.3 and 7.1 seconds, for about a tenth of it), and
+  a soft brighter arc runs round each ring (every 7 seconds).
 - **A circle keeps to what you see**: its runes and rings show only over floor you can see now,
   never over walls, darkness, or anything else drawn on the map (a creature, an item, a torch on
   the wall); they fade out softly where they reach one. Where two circles crowd, the later one's
@@ -314,8 +318,8 @@ do: which buffs and hexes, never how strong or for how long.
   seconds: the runes glide round the ring to their new corners, and the old figure and rings fade
   into the new. A hexes' circle moves outward when a buff's circle comes inside it, and back in
   once that one is gone. With Reduced effects or Slides, camera off, none of this moves (nor do
-  the runes swell): a circle appears, changes, and goes at once. Reduced effects also takes the
-  runes' glow away ([Settings](settings.md)).
+  the runes swell, glint, or the arcs run): a circle appears, changes, and goes at once. Reduced
+  effects also takes the glow away ([Settings](settings.md)).
 
 Every buff shows on a creature, whatever gave it: look mode names a hasted creature "quickened",
 a bark-skinned one "bark-skinned", one that drank a [potion of might](potions.md#potion-of-might) "fortified" (see

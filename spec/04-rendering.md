@@ -307,13 +307,14 @@ glow, barely perceptible distortion, short fades.
     is the compact inner figure.
   - **Schools**: a rune is drawn in its school's colour (seven, through the palette), the rings
     and sides in the first rune's.
-  - **Sizes** in cell heights `h`: rings at 0.48, 0.58, and 0.68 h, runes 0.55 h square centred
-    1.0 h out (extent 1.3 h: 2.6 rows by 5.2 columns); the outer circle's rings from 1.35 h and
-    runes at 1.88 h (extent 2.15 h). Lines one pixel at the default font and scale 1; rings and
-    sides 0.2 opaque, runes 0.7; not lit by the scene, but darkened with free glyphs while a
+  - **Sizes** in cell heights `h`: rings at 0.48, 0.58, and 0.68 h, runes 0.44 h square sitting
+    against the outermost ring (their inner edge 0.04 h past it: centred 0.74 h out with one
+    ring, 0.94 h with three; extent 1.16 h); the outer circle's rings from 1.24 h, its runes the
+    same against its own (extent 1.92 h). Lines one pixel at the default font and scale 1; rings
+    and sides 0.2 opaque, runes 0.7; not lit by the scene, but darkened with free glyphs while a
     spell effect darkens the view. A circle is centred on the ink of its actor's glyph (not on
-    its cell, whose middle a glyph sitting on the baseline misses), and its lines stop a pixel
-    short of that ink.
+    its cell, whose middle a glyph sitting on the baseline misses), and its lines part about
+    that glyph's outline.
   - **Only over clear, seen floor** (the owner's review, #786): a rune shows only where the
     cells under it are seen now, are not walls, and hold no other glyph (a creature, an object
     or chest, a known trap, terrain in the way such as a wall torch; the actor's own cell
@@ -322,11 +323,16 @@ glow, barely perceptible distortion, short fades.
     rune near an earlier circle's rune fades out (the player's circle first, then the
     creatures' in order), and a circle's lines pass under an earlier circle's rings, so runes
     never lie over runes and rings never tangle.
-  - **Legible and alive**: each rune has a soft dark backdrop under it (its own outline
-    blurred), lifting it off floor dots and lit floor, and a faint halo of its school's colour
-    (not the bloom of the `glow` switch: its own, off with reduced effects). With `motion` on
-    each rune pulses gently, a little in opacity and size, on its own phase (3.6 s); still
-    without motion, and at the frozen moment under `--freeze-time`.
+  - **Glow and glints**: each rune has a faint halo of its school's colour, and the rings and
+    sides a fainter one of theirs; the circled actor's own glyph glows too, in its circle's line
+    colour (the buffs' if it has both). None of this is the bloom of the `glow` switch: it is
+    its own, off with reduced effects. No dark patch under the runes (the owner, of the C4
+    build). With `motion` on each rune pulses gently, a little in opacity and size, on its own
+    phase (3.6 s); now and then a tiny bright glint (a point with four short rays) shows on a
+    rune or on the actor's glyph and is gone, each on its own beat (5.3 and 7.1 s, a tenth of
+    it showing; two actors never in step), blooming with `glow` on; and a soft brighter arc runs
+    round each ring (7 s). All still without motion or with reduced effects (no glints, no
+    arc), and at the frozen moment under `--freeze-time`.
   - **Motion**: a circle fades in over half a second when its first effect begins and out as
     long when its last ends; when an effect begins or ends on a circled actor, the figure changes
     over 0.4 s: every rune glides along the ring from its old slot to its new one (a slot that is

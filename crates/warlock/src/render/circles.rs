@@ -13,7 +13,7 @@
 //! **The draw**: `ui/circles.rs` pushes a [`CircleInstance`] per circled actor each frame; here
 //! they become one dynamic mesh of one quad each, every vertex carrying the instance as flat
 //! attributes, drawn with [`CircleMaterial`] (`circles.wesl`: signed distances for the rings and
-//! the polygon, a tap of the [`RuneAtlas`] per rune: its coverage, halo, and backdrop) in one draw
+//! the polygon, a tap of the [`RuneAtlas`] per rune: its coverage, halo, and glints) in one draw
 //! call, over the map grid and under the free-glyph layer. The school colours are a uniform,
 //! palette-mapped. Each rune is turned to face the centre (`rune_turn`) and pulses (`pulse`);
 //! the map's `light_flags` keep runes and lines to seen floor with no other glyph
@@ -24,7 +24,7 @@
 //! cross-fade), its fade in or out, and its place between the inner and the outer radii
 //! (`ui/circle_tracks.rs` keeps them; [`FADE`], [`GLIDE`]).
 
-use super::rune_atlas::{self, RUNE_SIZE, RuneAtlas};
+use super::rune_atlas::{self, GlyphGlow, RUNE_SIZE, RuneAtlas};
 use crate::game::GameContent;
 use bevy::asset::{AssetPath, RenderAssetUsages, embedded_asset, embedded_path};
 use bevy::camera::visibility::NoFrustumCulling;
@@ -58,13 +58,26 @@ pub const RING: f32 = 0.48;
 #[allow(dead_code)]
 pub const RING_GAP: f32 = 0.1;
 
-/// The runes' centres from the actor's, in cell heights: outside the rings.
-pub const RUNE_RADIUS: f32 = 1.0;
+/// How far a rune's square stays off its circle's outermost ring, in cell heights: the runes
+/// sit against the rings, their feet on the last one (C5, the owner: "pull them tighter to the
+/// circles").
+pub const RUNE_GAP: f32 = 0.04;
 
-/// The hexes' circle outside a buffs' one: its innermost ring and its runes, in cell heights.
-#[allow(dead_code)]
-pub const OUTER_RING: f32 = 1.35;
-pub const OUTER_RUNE_RADIUS: f32 = 1.88;
+/// The hexes' circle outside a buffs' one: its innermost ring, in cell heights.
+pub const OUTER_RING: f32 = 1.24;
+
+/// The runes' centres from the actor's, in cell heights, for a circle `place` of the way from
+/// the inner radii to the outer with `rings` rings (fractional while a ring comes or goes):
+/// just outside its outermost ring. The shader's `rr`.
+pub fn rune_radius(place: f32, rings: f32) -> f32 {
+    lerp(RING, OUTER_RING, place) + RING_GAP * (rings.max(1.0) - 1.0) + RUNE_SIZE / 2.0 + RUNE_GAP
+}
+
+/// [`rune_radius`] of a shown circle, its rings blending from the old figure's to the new's.
+pub fn shown_rune_radius(s: &Shown) -> f32 {
+    let (was, to) = (s.from.rings().max(1), s.ring.rings().max(1));
+    rune_radius(s.place, lerp(f32::from(was), f32::from(to), s.blend))
+}
 
 /// Seconds a buffs' circle takes to turn once (clockwise), and a hexes' (counter-clockwise).
 pub const BUFF_PERIOD: f32 = 60.0;
@@ -112,15 +125,43 @@ pub fn pulse(time: f32, phase: f32) -> f32 {
 }
 
 /// The extent (the farthest ink) of a circle `place` of the way from the inner circle's radii
-/// to the outer's, in cell heights: its runes' outer edge.
+/// to the outer's, in cell heights: its runes' outer edge with the most rings.
 pub fn extent(place: f32) -> f32 {
-    lerp(RUNE_RADIUS, OUTER_RUNE_RADIUS, place) + RUNE_SIZE / 2.0
+    rune_radius(place, MAX_RINGS as f32) + RUNE_SIZE / 2.0
 }
 
-/// How far past its ink a circle's quad reaches, in cell heights: room for the runes' halo and
-/// backdrop (the atlas's blur, three deviations) and their pulse.
+/// How far past its ink a circle's quad reaches, in cell heights: room for the runes' halo (the
+/// atlas's blur, three deviations), their glints' rays, and their pulse.
 pub fn quad_margin() -> f32 {
-    RUNE_SIZE * (3.0 * rune_atlas::BACKDROP_SIGMA + PULSE_SIZE)
+    (RUNE_SIZE * (3.0 * rune_atlas::HALO_SIGMA + PULSE_SIZE)).max(rune_atlas::GLINT_RAY)
+}
+
+/// Seconds between one glint of a rune and its next, for its first and its second glint (the
+/// atlas's blue and alpha), and how sharp a glint is: the share of its beat it shows grows
+/// smaller as this grows (`motion` on; none without it). The shader's (the tests check them).
+#[allow(dead_code)]
+pub const GLINT_PERIODS: [f32; 2] = [5.3, 7.1];
+#[allow(dead_code)]
+pub const GLINT_SHARP: f32 = 24.0;
+
+/// A glint's phase (0 to 1): of the actor's `seed`, slot `k` (the glyph's own glints: slot 6),
+/// the hexes' circle, and the glint `g` (0 or 1), so no two neighbours glint together and two
+/// actors' circles never in step. The shader's `glint_phase`.
+#[cfg(test)]
+pub fn glint_phase(seed: u32, k: u32, hex: bool, g: u32) -> f32 {
+    let x = (seed & 0xffff) as f32 * 0.137_036
+        + k as f32 * 0.381_966
+        + if hex { 0.29 } else { 0.0 }
+        + g as f32 * 0.5;
+    x - x.floor()
+}
+
+/// A glint's brightness at `time` (0 to 1): the top of a sine of its period, sharpened, so it
+/// shows for a moment and is gone. The shader's `glint`.
+#[cfg(test)]
+pub fn glint(time: f32, phase: f32, g: usize) -> f32 {
+    let s = (std::f32::consts::TAU * (time / GLINT_PERIODS[g] + phase)).sin();
+    s.max(0.0).powf(GLINT_SHARP)
 }
 
 fn lerp(a: f32, b: f32, t: f32) -> f32 {
@@ -161,7 +202,7 @@ pub fn rune_places(c: &CircleInstance, h: f32) -> [Option<Vec2>; RUNES] {
             continue;
         };
         let (to, was) = (s.ring.slots(), s.from.slots());
-        let r = lerp(RUNE_RADIUS, OUTER_RUNE_RADIUS, s.place) * h;
+        let r = shown_rune_radius(&s) * h;
         for k in 0..to.max(was).min(MAX_EFFECTS as u8) {
             let a = s.angle - std::f32::consts::FRAC_PI_2 + slot_angle(k, was, to, s.blend);
             out[kind * MAX_EFFECTS + usize::from(k)] = Some(c.center + r * Vec2::from_angle(a));
@@ -292,6 +333,17 @@ fn pack_crowding(show: &[f32; RUNES]) -> [u32; 4] {
     [word(0, 4), word(4, 2), word(6, 4), word(10, 2)]
 }
 
+/// An actor's glyph's slot in the [`GlyphGlow`] atlas (`None`: no glow, [`NO_GLYPH`]) and its
+/// seed's low sixteen bits as one `f32` (exact: under 2²⁴), `slot << 16 | seed`: the fourth of
+/// [`ATTRIBUTE_UNDER`].
+fn pack_glyph(slot: Option<u32>, seed: u32) -> f32 {
+    let slot = slot.filter(|&s| s < NO_GLYPH).unwrap_or(NO_GLYPH);
+    (slot << 16 | (seed & 0xffff)) as f32
+}
+
+/// The glyph slot that means none (the shader's).
+const NO_GLYPH: u32 = 255;
+
 /// One rune on a circle: its atlas slot (its row in `data/runes.toml`) and its school (by
 /// `School::ALL` position).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -344,11 +396,9 @@ impl Ring {
     /// The innermost ring's radius and the runes', in cell heights.
     #[cfg(test)]
     pub fn radii(&self) -> (f32, f32) {
-        if self.outer {
-            (OUTER_RING, OUTER_RUNE_RADIUS)
-        } else {
-            (RING, RUNE_RADIUS)
-        }
+        let place = if self.outer { 1.0 } else { 0.0 };
+        let rings = f32::from(self.rings());
+        (lerp(RING, OUTER_RING, place), rune_radius(place, rings))
     }
 }
 
@@ -474,6 +524,10 @@ pub struct CircleInstance {
     pub cell: IVec2,
     /// Half the size of the actor's glyph's ink, in pixels about `center`: no line crosses it.
     pub ink: Vec2,
+    /// The actor's glyph, which glows and glints with its runes (`None`: it does not).
+    pub glyph: Option<char>,
+    /// A number of the actor's own (its id), for its glints' beats: two actors' never in step.
+    pub seed: u32,
 }
 
 impl CircleInstance {
@@ -495,11 +549,15 @@ pub struct Circles {
     /// finds a pixel's cell in the map's `light_flags` (`lighting.rs`).
     pub grid_origin: Vec2,
     pub cell: Vec2,
+    /// The map font's size in pixels: the circled actors' glyphs are rasterised at it.
+    pub glyph_px: f32,
     /// Visual time, for the runes' pulse.
     pub time: f32,
     /// Whether the runes pulse (`motion`), and glow (not with reduced effects).
     pub pulse: bool,
     pub halo: bool,
+    /// Whether the glints bloom (the `glow` switch).
+    pub bloom: bool,
 }
 
 impl Circles {
@@ -541,8 +599,18 @@ pub struct CircleParams {
     pub columns: u32,
     pub supersample: u32,
     pub rune_size: f32,
-    /// The halo's strength (0 off, 1 on).
+    /// The halo's strength (0 off, 1 on): the runes', the lines', and the actor's glyph's.
     pub halo: f32,
+    /// The glyph atlas's ([`GlyphGlow`]) slot side and padding in texels, and its square (a
+    /// cell height) in pixels.
+    pub glyph_slot: u32,
+    pub glyph_pad: u32,
+    pub glyph_square: f32,
+    /// 1 with the `glow` switch on: the glints are overbright, so they bloom.
+    pub bloom: f32,
+    /// 1 for the pass over the free-glyph layer, which draws the actors' glyphs' glints alone;
+    /// 0 for the circles under it.
+    pub top: u32,
     pub schools: [Vec4; 8],
 }
 
@@ -557,6 +625,10 @@ pub struct CircleMaterial {
     /// map's material.
     #[texture(3, sample_type = "u_int")]
     pub light_flags: Handle<Image>,
+    /// The circled actors' glyphs ([`GlyphGlow`]).
+    #[texture(4, sample_type = "float", filterable = true)]
+    #[sampler(5)]
+    pub glyphs: Handle<Image>,
 }
 
 /// The instance's cell height and darkening, and its actor's cell (`[h, keep, x, y]`).
@@ -674,28 +746,33 @@ fn pack_shown(shown: Option<&Shown>) -> ([u32; 4], [u32; 2], [f32; 4]) {
     )
 }
 
+/// The layer's one mesh and its two materials: the circles under the free-glyph layer, and the
+/// actors' glyphs' glints over it ([`TOP_Z`]).
 #[derive(Resource, Debug)]
 struct LayerHandles {
     mesh: Handle<Mesh>,
     material: Handle<CircleMaterial>,
+    top: Handle<CircleMaterial>,
 }
 
+/// Draw order of the glints on circled actors' glyphs: over the free-glyph layer (1), under the
+/// post tint (1.5) and the UI console.
+pub const TOP_Z: f32 = 1.2;
+
+#[allow(clippy::too_many_arguments)]
 fn spawn_layer(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<CircleMaterial>>,
     mut images: ResMut<Assets<Image>>,
     content: Res<GameContent>,
-    atlas: Res<super::atlas::GlyphAtlas>,
+    (atlas, font): (Res<super::atlas::GlyphAtlas>, Res<super::atlas::Font>),
     consoles: Res<Assets<super::ConsoleMaterial>>,
     console_handles: Res<super::ConsoleHandles>,
 ) {
-    let runes = RuneAtlas::new(
-        &rune_atlas::font(),
-        content.0.runes(),
-        atlas.cell.y as f32,
-        &mut images,
-    );
+    let h = atlas.cell.y as f32;
+    let runes = RuneAtlas::new(&rune_atlas::font(), content.0.runes(), h, &mut images);
+    let glyphs = GlyphGlow::new(&font.0, vec!['@'], atlas.px, h, &mut images);
     let light_flags = consoles
         .get(&console_handles.map)
         .map(|m| m.light_flags.clone())
@@ -706,21 +783,43 @@ fn spawn_layer(
         pulse: false,
         grid: (Vec2::ZERO, Vec2::ONE),
     };
-    let mesh = meshes.add(circle_mesh(&[], &frame, &|_| 0));
-    let material = materials.add(CircleMaterial {
-        params: CircleParams::default(),
+    let mesh = meshes.add(circle_mesh(&[], &frame, &|_| 0, &|_| None));
+    let new = |top: u32| CircleMaterial {
+        params: CircleParams { top, ..default() },
         runes: runes.image.clone(),
-        light_flags,
-    });
-    commands.spawn((
-        Mesh2d(mesh.clone()),
-        MeshMaterial2d(material.clone()),
-        Transform::from_xyz(0.0, 0.0, LAYER_Z),
-        // Vertices are in framebuffer pixels, not world space, so culling would be wrong.
-        NoFrustumCulling,
-    ));
+        light_flags: light_flags.clone(),
+        glyphs: glyphs.image.clone(),
+    };
+    let (material, top) = (materials.add(new(0)), materials.add(new(1)));
+    for (material, z) in [(&material, LAYER_Z), (&top, TOP_Z)] {
+        commands.spawn((
+            Mesh2d(mesh.clone()),
+            MeshMaterial2d(material.clone()),
+            Transform::from_xyz(0.0, 0.0, z),
+            // Vertices are in framebuffer pixels, not world space, so culling would be wrong.
+            NoFrustumCulling,
+        ));
+    }
     commands.insert_resource(runes);
-    commands.insert_resource(LayerHandles { mesh, material });
+    commands.insert_resource(glyphs);
+    commands.insert_resource(LayerHandles {
+        mesh,
+        material,
+        top,
+    });
+}
+
+/// The glyphs `circles` needs glowing that `glow` lacks, with the ones it has (a new atlas is
+/// due), or `None` when it holds them all.
+fn glyphs_wanted(circles: &[CircleInstance], glow: &GlyphGlow) -> Option<Vec<char>> {
+    let mut chars = glow.chars.clone();
+    for c in circles.iter().filter_map(|c| c.glyph) {
+        if !chars.contains(&c) {
+            chars.push(c);
+        }
+    }
+    // A full atlas stays as it is: a glyph beyond it only goes without its glow.
+    (chars.len() > glow.chars.len() && glow.chars.len() < rune_atlas::MAX_GLYPHS).then_some(chars)
 }
 
 fn clear(mut circles: ResMut<Circles>) {
@@ -735,7 +834,11 @@ fn build_mesh(
     colors: Res<SchoolColors>,
     content: Res<GameContent>,
     handles: Res<LayerHandles>,
-    mut atlas: ResMut<RuneAtlas>,
+    (mut atlas, mut glow, font): (
+        ResMut<RuneAtlas>,
+        ResMut<GlyphGlow>,
+        Res<super::atlas::Font>,
+    ),
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<CircleMaterial>>,
@@ -745,6 +848,15 @@ fn build_mesh(
     let h = circles.cell_height;
     if h > 0.0 && (h - atlas.cell_height).abs() > f32::EPSILON {
         *atlas = RuneAtlas::new(&rune_atlas::font(), content.0.runes(), h, &mut images);
+    }
+    let px = circles.glyph_px;
+    let resized = h > 0.0 && px > 0.0 && (h, px) != (glow.cell_height, glow.px);
+    if let Some(chars) =
+        glyphs_wanted(&circles.instances, &glow).or(resized.then(|| glow.chars.clone()))
+        && h > 0.0
+        && px > 0.0
+    {
+        *glow = GlyphGlow::new(&font.0, chars, px, h, &mut images);
     }
     let on = |b: bool| if b { 1.0 } else { 0.0 };
     let params = CircleParams {
@@ -758,14 +870,25 @@ fn build_mesh(
         supersample: rune_atlas::SUPERSAMPLE,
         rune_size: RUNE_SIZE,
         halo: on(circles.halo),
+        glyph_slot: glow.slot,
+        glyph_pad: glow.pad,
+        glyph_square: glow.cell_height.ceil(),
+        bloom: on(circles.bloom),
+        top: 0,
         schools: colors.0,
     };
-    if let Some(material) = materials.get(&handles.material)
-        && (material.params != params || material.runes != atlas.image)
-        && let Some(mut material) = materials.get_mut(&handles.material)
-    {
-        material.params = params;
-        material.runes = atlas.image.clone();
+    for (handle, top) in [(&handles.material, 0), (&handles.top, 1)] {
+        let params = CircleParams { top, ..params };
+        if let Some(material) = materials.get(handle)
+            && (material.params != params
+                || material.runes != atlas.image
+                || material.glyphs != glow.image)
+            && let Some(mut material) = materials.get_mut(handle)
+        {
+            material.params = params;
+            material.runes = atlas.image.clone();
+            material.glyphs = glow.image.clone();
+        }
     }
     let frame = Frame {
         h,
@@ -786,9 +909,12 @@ fn build_mesh(
         return;
     }
     if let Some(mut mesh) = meshes.get_mut(&handles.mesh) {
-        *mesh = circle_mesh(&circles.instances, &frame, &|cell| {
-            light.console_flags(cell)
-        });
+        *mesh = circle_mesh(
+            &circles.instances,
+            &frame,
+            &|cell| light.console_flags(cell),
+            &|c| glow.slot_of(c),
+        );
     }
     *built = Some(key);
 }
@@ -805,8 +931,14 @@ pub struct Frame {
 
 /// One quad per circle, `2 × extent` square about its centre (and a pixel more). An empty
 /// layer gets a single quad with no circle, so the mesh is never empty. `flags` gives the map's
-/// flags of a grid cell, for the runes' masks.
-fn circle_mesh(instances: &[CircleInstance], frame: &Frame, flags: &dyn Fn(IVec2) -> u8) -> Mesh {
+/// flags of a grid cell, for the runes' masks, and `glyphs` an actor's glyph's slot in the
+/// [`GlyphGlow`] atlas.
+fn circle_mesh(
+    instances: &[CircleInstance],
+    frame: &Frame,
+    flags: &dyn Fn(IVec2) -> u8,
+    glyphs: &dyn Fn(char) -> Option<u32>,
+) -> Mesh {
     let h = frame.h;
     const NONE: CircleInstance = CircleInstance {
         center: Vec2::ZERO,
@@ -814,6 +946,8 @@ fn circle_mesh(instances: &[CircleInstance], frame: &Frame, flags: &dyn Fn(IVec2
         keep: 1.0,
         cell: IVec2::ZERO,
         ink: Vec2::ZERO,
+        glyph: None,
+        seed: 0,
     };
     let instances = if instances.is_empty() {
         &[NONE][..]
@@ -847,6 +981,8 @@ fn circle_mesh(instances: &[CircleInstance], frame: &Frame, flags: &dyn Fn(IVec2
         }
         let crowd = pack_crowding(&show);
         let pulse = if frame.pulse { 1.0 } else { 0.0 };
+        let mut under = under[i];
+        under[3] = pack_glyph(c.glyph.and_then(glyphs), c.seed);
         for corner in [
             Vec2::new(-half, -half),
             Vec2::new(half, -half),
@@ -859,7 +995,7 @@ fn circle_mesh(instances: &[CircleInstance], frame: &Frame, flags: &dyn Fn(IVec2
             shapes.push([h, c.keep, c.cell.x as f32, c.cell.y as f32]);
             inks.push([c.ink.x, c.ink.y, frame.time, pulse]);
             crowds.push(crowd);
-            unders.push(under[i]);
+            unders.push(under);
             from.push(olds);
             for (k, kind) in [buffs, hexes].iter().enumerate() {
                 rings[k].push(kind.0);
@@ -980,7 +1116,7 @@ mod tests {
         let c = layout([(r(4, 5), true)]);
         let ring = c.inner.unwrap();
         assert!(ring.hex && !ring.outer);
-        assert_eq!(ring.radii(), (RING, RUNE_RADIUS));
+        assert_eq!(ring.radii(), (RING, rune_radius(0.0, 1.0)));
         assert_eq!(c.outer, None);
         assert_eq!(sequence(&ring), [4, 4, 4]);
     }
@@ -1003,7 +1139,7 @@ mod tests {
         assert!(!inner.hex && outer.hex && outer.outer);
         assert_eq!(sequence(&inner), [3, 1, 3, 1]);
         assert_eq!(sequence(&outer), [4, 4, 4]);
-        assert_eq!(outer.radii(), (OUTER_RING, OUTER_RUNE_RADIUS));
+        assert_eq!(outer.radii(), (OUTER_RING, rune_radius(1.0, 1.0)));
     }
 
     // §3: the sizes hold together: the third ring stays inside the runes' band, the outer
@@ -1011,18 +1147,26 @@ mod tests {
     #[test]
     fn the_rings_never_cross_the_runes() {
         let half_rune = RUNE_SIZE / 2.0;
-        let third = RING + 2.0 * RING_GAP;
-        assert!(third + 0.03 < RUNE_RADIUS - half_rune);
+        // The runes sit against the outermost ring, however many rings, never on it.
+        for place in [0.0, 1.0] {
+            let ring = lerp(RING, OUTER_RING, place);
+            for rings in 1..=MAX_RINGS {
+                let last = ring + RING_GAP * (rings - 1) as f32;
+                let foot = rune_radius(place, rings as f32) - half_rune;
+                assert!(foot > last + 0.03 && foot < last + 0.05, "{place} {rings}");
+            }
+        }
         assert!(extent(0.0) < OUTER_RING);
-        assert!(OUTER_RING + 2.0 * RING_GAP + 0.03 < OUTER_RUNE_RADIUS - half_rune);
-        assert!((extent(0.0) - 1.275).abs() < 1e-6);
-        assert!((extent(1.0) - 2.155).abs() < 1e-6);
+        assert!((extent(0.0) - 1.16).abs() < 1e-5);
+        assert!((extent(1.0) - 1.92).abs() < 1e-5);
         let settled = |c: Circle| CircleInstance {
             center: Vec2::ZERO,
             kinds: c.kinds().map(|k| k.map(|ring| Shown::settled(ring, 0.0))),
             keep: 1.0,
             cell: IVec2::ZERO,
             ink: Vec2::ZERO,
+            glyph: None,
+            seed: 0,
         };
         let one = settled(layout([(r(0, 0), false)]));
         let both = settled(layout([(r(0, 0), false), (r(1, 1), true)]));
@@ -1133,6 +1277,8 @@ mod tests {
             keep: 1.0,
             cell: IVec2::new(3, 4),
             ink: Vec2::new(4.0, 7.0),
+            glyph: Some('k'),
+            seed: 0x1_beef,
         };
         let both = CircleInstance {
             kinds: settled(layout([(r(0, 0), false), (r(1, 1), true)])),
@@ -1145,7 +1291,7 @@ mod tests {
             grid: (Vec2::ZERO, Vec2::new(9.0, 18.0)),
         };
         let floor = |_: IVec2| super::super::lighting::LIT;
-        let mesh = circle_mesh(&[one, both], &frame, &floor);
+        let mesh = circle_mesh(&[one, both], &frame, &floor, &|_| Some(3));
         assert_eq!(mesh.count_vertices(), 8);
         assert_eq!(mesh.indices().map(Indices::len), Some(12));
         let Some(bevy::mesh::VertexAttributeValues::Float32x2(local)) =
@@ -1157,8 +1303,17 @@ mod tests {
         let quad = |c: &CircleInstance| (c.extent() + quad_margin()) * 18.0 + 1.0;
         assert!((half(0) - quad(&one)).abs() < 1e-4);
         assert!((half(4) - quad(&both)).abs() < 1e-4);
-        // The halo and the backdrop fit: the quad reaches past the ink by their blur.
-        assert!(quad_margin() > 3.0 * rune_atlas::BACKDROP_SIGMA * RUNE_SIZE);
+        // The halo and the glints fit: the quad reaches past the ink by their blur and rays.
+        assert!(quad_margin() > 3.0 * rune_atlas::HALO_SIGMA * RUNE_SIZE);
+        assert!(quad_margin() >= rune_atlas::GLINT_RAY);
+        // The glyph's slot and the actor's seed ride in the fourth of `under`, exactly.
+        let Some(bevy::mesh::VertexAttributeValues::Float32x4(under)) =
+            mesh.attribute(ATTRIBUTE_UNDER)
+        else {
+            panic!("unders are Float32x4");
+        };
+        assert_eq!(under[0][3] as u32, 3 << 16 | 0xbeef);
+        assert_eq!(pack_glyph(None, 7) as u32, NO_GLYPH << 16 | 7);
         let Some(bevy::mesh::VertexAttributeValues::Float32x4(shape)) =
             mesh.attribute(ATTRIBUTE_SHAPE)
         else {
@@ -1183,7 +1338,7 @@ mod tests {
         assert_eq!(crowd[0], [0xffff_ffff, 0xffff, 0xffff_ffff, 0xffff]);
         // Over walls the triangle's three runes show not at all.
         let wall = |_: IVec2| super::super::lighting::LIT | super::super::lighting::OPAQUE;
-        let walled = circle_mesh(&[one], &frame, &wall);
+        let walled = circle_mesh(&[one], &frame, &wall, &|_| None);
         let Some(bevy::mesh::VertexAttributeValues::Uint32x4(crowd)) =
             walled.attribute(ATTRIBUTE_CROWD)
         else {
@@ -1193,7 +1348,7 @@ mod tests {
             crowd[0][0], 0xff00_0000,
             "slots 0 to 2 hidden, slot 3 unused"
         );
-        let none = circle_mesh(&[], &frame, &floor);
+        let none = circle_mesh(&[], &frame, &floor, &|_| None);
         assert_eq!(none.count_vertices(), 4, "never empty");
     }
 
@@ -1257,6 +1412,8 @@ mod tests {
             keep: 1.0,
             cell: IVec2::ZERO,
             ink: Vec2::ZERO,
+            glyph: None,
+            seed: 0,
         }
     }
 
@@ -1267,12 +1424,13 @@ mod tests {
         let h = 18.0;
         let one = buffs(&[0]);
         // The first rune of a settled circle at angle 0 stands straight up, a rune radius out.
+        let rr = rune_radius(0.0, 1.0) * h;
         let places = rune_places(&at(Vec2::ZERO, one), h);
-        assert!(places[0].unwrap().distance(Vec2::new(0.0, -h)) < 1e-3);
+        assert!(places[0].unwrap().distance(Vec2::new(0.0, -rr)) < 1e-3);
         assert_eq!(places.iter().flatten().count(), 3, "a triangle");
         // Two circles, the second's top rune exactly on the first's: it goes, the rest stay.
         let first = at(Vec2::ZERO, one);
-        let second = at(Vec2::new(0.75f32.sqrt() * h, 1.5 * h), one);
+        let second = at(Vec2::new(0.75f32.sqrt() * rr, 1.5 * rr), one);
         let wide = at(Vec2::new(10.0 * h, 0.0), one);
         let show = crowding(&[first, second, wide], h);
         assert_eq!(show[0], [1.0; RUNES], "the earliest never gives way");
@@ -1356,6 +1514,32 @@ mod tests {
             }
         }
         assert!(close(pulse_phase(0, true), 0.5));
+    }
+
+    // The glints: a moment's sparkle now and then (most of the time none), each rune's and each
+    // actor's on its own beat, the same at the same moment (a frozen capture).
+    #[test]
+    fn glints_come_and_go_out_of_step() {
+        for (g, period) in GLINT_PERIODS.iter().enumerate() {
+            let samples: Vec<f32> = (0..2000)
+                .map(|i| glint(i as f32 * 0.01 * period, 0.3, g))
+                .collect();
+            let shown = samples.iter().filter(|&&v| v > 0.1).count() as f32 / 2000.0;
+            assert!((0.04..0.15).contains(&shown), "glint {g} shows {shown}");
+            assert!(samples.iter().any(|&v| v > 0.99), "glint {g} peaks");
+            assert!(samples.iter().all(|&v| (0.0..=1.0).contains(&v)));
+        }
+        assert_eq!(glint(1.7, 0.4, 0), glint(1.7, 0.4, 0));
+        let phases: Vec<f32> = (0..6).map(|k| glint_phase(9, k, false, 0)).collect();
+        for (k, p) in phases.iter().enumerate() {
+            assert!((0.0..1.0).contains(p));
+            if k > 0 {
+                let d = (p - phases[k - 1]).abs();
+                assert!(d.min(1.0 - d) > 0.1, "slots {k} and {}", k - 1);
+            }
+        }
+        let d = (glint_phase(1, 0, false, 0) - glint_phase(2, 0, false, 0)).abs();
+        assert!(d.min(1.0 - d) > 0.1, "two actors out of step");
     }
 
     // A settled circle's old figure is its own; a changing one carries the old runes and head.

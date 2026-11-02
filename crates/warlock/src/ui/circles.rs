@@ -54,11 +54,13 @@ pub(super) fn emit(
     out.cell_height = grid.cell.y;
     out.grid_origin = grid.origin;
     out.cell = grid.cell;
+    out.glyph_px = atlas.px;
     out.time = visual.seconds;
     // The runes pulse with motion on (at the frozen moment under `--freeze-time`), and glow but
     // with reduced effects (which also stills them, as `motion` off does).
     out.pulse = effects.motion;
     out.halo = !(settings.reduced_effects || args.reduced_effects);
+    out.bloom = effects.glow;
     let view = game.world.perception();
     let content = view.content();
     if settings.is_changed() || effects.is_changed() || colors.0 == [Vec4::ZERO; 8] {
@@ -114,14 +116,18 @@ pub(super) fn emit(
         let at = motion.actor_pos(id, pos, time);
         // Centred on the actor's glyph's ink, not its cell: a glyph sits on the baseline, its
         // ink above the cell's middle or below it (`@` reaches under the baseline).
-        let glyph = view.actor_at(pos).map_or('@', |a| a.glyph(content));
-        let ink = ink(&font.0, atlas.px, glyph, grid.cell);
+        // The glyph drawn there glows and glints with its runes (the snapshot's glyph: what the
+        // player sees).
+        let drawn = view.actor_at(pos).map(|a| a.glyph(content));
+        let ink = ink(&font.0, atlas.px, drawn.unwrap_or('@'), grid.cell);
         out.push(CircleInstance {
             center: grid.to_screen(at) + ink.center(),
             kinds,
             keep: light.keep(),
             cell: grid.to_console(pos),
             ink: ink.half_size(),
+            glyph: drawn,
+            seed: id.0,
         });
     }
 }

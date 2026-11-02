@@ -527,3 +527,14 @@ the circle is centred on its actor's glyph's ink; each rune has a dark backdrop 
 in its school's colour, is **tidally locked** (turned so its foot faces the centre, replacing
 the upright runes of §3), and pulses gently on its own phase with `motion` on. Spec §4.8 and
 `docs/dev/rendering.md` have the details.
+
+**The owner's review of C4 (2026-11-02, #786)**: "the blur effect around character glyphs look
+like utter shit. get rid of that entirely. even smaller font size for the kana would be fine,
+and also pull them tighter to the circles. the glow effect on the runes is very nice. please
+apply same glow effect to the transmutation circles themselves"; then "add small specular
+hilights to the runes that can glimmer in and out of existence", and that any circled
+character's glyph should glow and glint too. Since C5: no backdrop; runes `0.44 h` (8 px at the
+default font, overriding §3's `0.55 h`) sitting against the outermost ring (overriding §3's
+fixed `1.0 h` and `1.88 h`; the outer circle's rings from `1.24 h`); the rings and sides glow
+faintly; runes and the circled actor's glyph glint now and then; the glyph glows in its
+circle's colour; and a soft arc runs round each ring.
