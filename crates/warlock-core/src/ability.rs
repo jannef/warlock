@@ -906,6 +906,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::WarCry
         | ClassActive::HolyRadiance
         | ClassActive::QuiveringPalm
+        | ClassActive::StepOfTheWind
         | ClassActive::Lurk
         | ClassActive::LowBlow
         | ClassActive::MasterThief

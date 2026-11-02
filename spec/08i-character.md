@@ -1014,7 +1014,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
     glowing item's; a cast; works for Kind or better), Quivering palm (a bare-handed blow in a direction,
     refused with a weapon in hand before anything is spent; a hit that does damage leaves three
-    degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Consecrate (the priest's at
+    degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Step of the wind (the
+    ascetic's at 6, #847: for a point of Ki and **no time**, a degree of Light-footed, so the next
+    action, whatever it is, costs half its price and ends it; refused, no time or ki, while
+    Light-footed already, "You are already light on your feet."; any grip), Consecrate (the priest's at
     9, the paladin's at 12: a minute's prayer, for 15 mana, that lifts an unholy special room's
     effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; works
     for Kind or better), Knock (the wizard's at 4: in a direction, for 5 mana and a cast's time, the lock
@@ -1042,8 +1045,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     status that ticks and every disease, one degree of Drained); Martial arts (bare hands and
     kicks roll 1d6; grants Ki, §8 "Resources"), Flurry (level 1 beside it: a melee attack
     with nothing in hand strikes twice, the second at −2, for a point of ki; with none, once),
-    Fleet (steps 10 % cheaper in no body armour and with no shield), Deflect
-    missiles (Dodge +2 against missiles),
+    Step of the wind's passive half (level 6: steps 10 % cheaper in no body armour and with no
+    shield; it took Fleet's place, #847), Deflect missiles (Dodge +2 against missiles),
     Still mind (+2 on checks made with Willpower: diseases', noticing
     in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
     Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1; ki comes back
@@ -1058,8 +1061,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     condition (refused at load). The identical-effects check counts the condition as part of
     the effect: `protection 2 while raging` is not Bulwark's `protection 2`.
   - **Resources**: Rage, War cry, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
-    (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry and Quivering palm spend (R4,
-    #252; #846).
+    (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Step of the wind, and Quivering
+    palm spend (R4, #252; #846, #847).
   - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):
