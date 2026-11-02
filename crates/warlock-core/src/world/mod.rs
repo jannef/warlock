@@ -117,6 +117,7 @@ mod door;
 mod drain;
 mod drink;
 mod eat;
+mod edge_leave;
 mod element_gifts;
 mod elixir;
 mod equip;
@@ -1530,6 +1531,8 @@ mod drain_tests;
 mod dwell_tests;
 #[cfg(test)]
 mod eat_tests;
+#[cfg(test)]
+mod edge_leave_tests;
 #[cfg(test)]
 mod element_gift_tests;
 #[cfg(test)]

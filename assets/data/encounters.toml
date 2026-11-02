@@ -1,17 +1,29 @@
-# Overworld encounters (spec §7 "Overworld encounters"; docs/design/overworld-encounters.md,
-# #804). Optional: without it nobody meets anybody. The tables of who is met are each campaign's
-# (`campaigns/<id>/data/encounters/*.toml`); a campaign without tables meets nobody.
+# Encounters on the overworld (spec §7 "Leaving an outdoor area", "Overworld encounters";
+# docs/design/overworld-encounters.md).
+#
+# Walking off the edge of an outdoor area (a local area of the overworld, or a hand-made one an
+# overworld location leads into) back to the overworld is refused while a creature hostile to
+# you is within `edge_reach` cells of you, seen or not: "They are too close to slip away." It
+# takes no time. Distance counts diagonal steps as one (a creature two cells east and three
+# north is three away). The quick leave (`<` off any stairs) has its own, wider rule.
+
+# How near a hostile creature holds you at the edge, in cells (0 to 10; 0: never).
+edge_reach = 3
+
+# Meeting someone on the way (#804). The tables below are all given or none (then nobody meets
+# anybody); who is met is each campaign's (`campaigns/<id>/data/encounters/*.toml`), and a
+# campaign without tables meets nobody.
 #
 # After every overworld step onto a cell with a local area, the chance of an encounter is the
 # destination's rate per hour x the step's time x the phase of the day's percent (x each matching
 # table's `rate_percent`). Then two lookout checks, 2d12 + modifier against a difficulty: the
 # player's (Willpower modifier + Spot's and Survival's `lookout` + Alert's notice) against
 # `difficulty` + the party's stalk (its lead's Stealth) + the land's cover + the dark + the rain;
-# the party's (its lead's Willpower modifier + its Spot) against `difficulty` + the player's stalk
-# (Stealth) + the cover + the dark (only for a lead without darkvision) + the rain - `light` (a
-# light the player carries lit at night or twilight). The player made it and the party failed:
-# the drop (lie in wait, slip past, or fight); both made it: met (slip away or fight); the party
-# made it alone: ambushed; neither: they pass each other by and nothing happens.
+# the party's (its lead's Willpower modifier + its `lookout`, Spot's) against `difficulty` + the
+# player's stalk (Stealth) + the cover + the dark (only for a lead without darkvision) + the rain
+# - `light` (a light the player carries lit at night or twilight). The player made it and the
+# party failed: the drop (lie in wait, slip past, or fight); both made it: met (slip away or
+# fight); the party made it alone: ambushed; neither: they pass each other by and nothing happens.
 
 # Chances in basis points (1/100 of a percent) per hour of travel on that landscape, by day.
 [rate]

@@ -190,8 +190,8 @@ pub use effect::{
     MAX_SHAKE_PIXELS, Shake,
 };
 pub use encounter::{
-    Checks, EncounterEntry, EncounterRules, EncounterTable, EntryStance, Evade, PhaseRates,
-    PlayerPlaces, Positions, When,
+    Checks, EDGE_REACHES, EncounterEntry, EncounterRules, EncounterTable, EntryStance, Evade,
+    Meetings, PhaseRates, PlayerPlaces, Positions, When as EncounterWhen,
 };
 pub use experience::{
     Discovery, Experience, FACTORS, Factor, Guideline, Kills, Levels, MAX_LEVEL, MAX_XP, pace_words,
@@ -621,15 +621,14 @@ pub struct Content {
     trap_avoid: TrapAvoid,
     /// The numbers of searching for hidden features (`data/search.toml`, spec §8 "Searching").
     search: SearchRules,
+    /// The numbers of encounters (`data/encounters.toml`, spec §7 "Leaving an outdoor area").
+    encounters: EncounterRules,
     /// What becomes of a creature that catches the player stealing (`data/steal.toml`, spec §8
     /// "Stealing"); none without the file.
     steal: Option<StealRules>,
     /// The numbers of being caught unawares (`data/surprise.toml`, spec §8 "Surprise and sneak
     /// attacks"); none without the file, when nobody is surprised.
     surprise: Option<SurpriseRules>,
-    /// The numbers of overworld encounters (`data/encounters.toml`, spec §7 "Overworld
-    /// encounters"); none without the file, when nobody meets anybody.
-    encounters: Option<EncounterRules>,
     /// The campaigns' encounter tables (`campaigns/<id>/data/encounters/`), by campaign and id.
     encounter_tables: Vec<EncounterTable>,
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
@@ -772,9 +771,9 @@ impl Content {
             trap_ids: BTreeMap::new(),
             trap_avoid: TrapAvoid::default(),
             search: SearchRules::default(),
+            encounters: EncounterRules::default(),
             steal: None,
             surprise: None,
-            encounters: None,
             encounter_tables: Vec::new(),
             forage: None,
             stat_training: StatTraining::default(),
@@ -1065,6 +1064,10 @@ impl Content {
             content.study = Some(StudyRules::parse(path, text)?);
         }
         content.mishaps = learning::parse(files.table("mishaps"), &content)?;
+        let path = "data/encounters.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.encounters = EncounterRules::parse(path, text)?;
+        }
         let path = "data/search.toml";
         if let Some(text) = files.get_optional(path) {
             content.search = SearchRules::parse(path, text)?;
@@ -1076,9 +1079,6 @@ impl Content {
         let path = "data/surprise.toml";
         if let Some(text) = files.get_optional(path) {
             content.surprise = Some(SurpriseRules::parse(path, text, &content)?);
-        }
-        if let Some(text) = files.get_optional(encounter::RULES) {
-            content.encounters = Some(EncounterRules::parse(encounter::RULES, text)?);
         }
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
@@ -2947,6 +2947,12 @@ impl Content {
     /// `[avoid]` in `data/traps.toml`, else [`TrapAvoid::default`]).
     pub fn trap_avoid(&self) -> &TrapAvoid {
         &self.trap_avoid
+    }
+
+    /// The numbers of encounters (spec §7 "Leaving an outdoor area"; `data/encounters.toml`,
+    /// else [`EncounterRules::default`]).
+    pub fn encounters(&self) -> &EncounterRules {
+        &self.encounters
     }
 
     /// The numbers of searching for hidden features (spec §8 "Searching"; `data/search.toml`,

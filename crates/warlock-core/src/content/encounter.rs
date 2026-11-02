@@ -1,10 +1,13 @@
-//! Overworld encounters (`assets/data/encounters.toml`, spec §7 "Overworld encounters";
-//! `docs/dev/encounters.md`): the numbers of meeting someone on the road, and each campaign's
-//! encounter tables (`campaigns/<id>/data/encounters/*.toml`, [`EncounterTable`]).
+//! Encounters on the overworld (`assets/data/encounters.toml`, spec §7 "Leaving an outdoor
+//! area", "Overworld encounters"; `docs/dev/encounters.md`): the edge rule, how near a hostile
+//! creature holds the player in an outdoor area when they walk off its edge
+//! (`world/edge_leave.rs`); the numbers of meeting someone on the way ([`Meetings`]); and each
+//! campaign's encounter tables (`campaigns/<id>/data/encounters/*.toml`, [`EncounterTable`]).
 //!
-//! The rules live in `world/encounter.rs` (the roll, the lookouts, the choice) and
-//! `world/encounter_area.rs` (the local area and who stands where). The rules file is optional:
-//! without it nobody meets anybody, and so is a campaign without tables.
+//! The meetings live in `world/encounter.rs` (the roll, the lookouts, the choice) and
+//! `world/encounter_area.rs` (the local area and who stands where). Without the file the rules
+//! are [`EncounterRules::default`]: the edge rule at 3 and nobody meets anybody; so does a
+//! campaign without tables.
 
 use super::{Content, ContentError, CreatureId, Landscape, Stance};
 use crate::daylight::DayPhase;
@@ -12,6 +15,29 @@ use crate::dice::Dice;
 use crate::weather::Weather;
 use serde::Deserialize;
 use std::collections::BTreeMap;
+use std::ops::RangeInclusive;
+
+/// How near a hostile creature may hold the player at an area's edge, in cells (0: never).
+pub const EDGE_REACHES: RangeInclusive<i32> = 0..=10;
+
+/// The numbers of encounters.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EncounterRules {
+    /// Walking off the edge of an outdoor area is refused while a creature hostile to the player
+    /// is within this many cells (Chebyshev) of them: 3. 0 never refuses it.
+    pub edge_reach: i32,
+    /// Meeting someone on the way; `None` when nobody meets anybody.
+    pub meetings: Option<Meetings>,
+}
+
+impl Default for EncounterRules {
+    fn default() -> Self {
+        Self {
+            edge_reach: 3,
+            meetings: None,
+        }
+    }
+}
 
 /// The landscapes a step may roll an encounter on: every land and the road.
 const LANDSCAPES: [Landscape; 7] = [
@@ -31,9 +57,9 @@ const MAX_NAME: usize = 60;
 /// The farthest a party stands from the player, in cells.
 const MAX_CELLS: i32 = 20;
 
-/// The rules of overworld encounters that live in data.
+/// The numbers of meeting someone on the overworld.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct EncounterRules {
+pub struct Meetings {
     /// Chance per hour of travel, in basis points (1/100 of a percent), by the destination's
     /// landscape, by day.
     pub rate: BTreeMap<Landscape, u32>,
@@ -141,12 +167,13 @@ pub struct Evade {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RulesFile {
-    rate: BTreeMap<String, u32>,
-    phase: PhaseRates,
-    checks: ChecksSpec,
-    positions: Positions,
-    evade: Evade,
-    ambush: AmbushSpec,
+    edge_reach: i32,
+    rate: Option<BTreeMap<String, u32>>,
+    phase: Option<PhaseRates>,
+    checks: Option<ChecksSpec>,
+    positions: Option<Positions>,
+    evade: Option<Evade>,
+    ambush: Option<AmbushSpec>,
 }
 
 #[derive(Deserialize)]
@@ -178,11 +205,73 @@ fn by_landscape<T: Copy>(
 }
 
 impl EncounterRules {
-    /// Parses `data/encounters.toml`: every landscape of land and the road rated and covered,
-    /// the numbers in range.
+    /// Parses `data/encounters.toml`: an `edge_reach` within [`EDGE_REACHES`]; and the
+    /// meetings' tables all given or none ([`Meetings::parse`]).
     pub(super) fn parse(file: &str, text: &str) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(file, m);
         let parsed: RulesFile = toml::from_str(text).map_err(|e| err(e.to_string()))?;
+        if !EDGE_REACHES.contains(&parsed.edge_reach) {
+            return Err(err(format!(
+                "edge_reach {} is out of range ({} to {})",
+                parsed.edge_reach,
+                EDGE_REACHES.start(),
+                EDGE_REACHES.end()
+            )));
+        }
+        let edge_reach = parsed.edge_reach;
+        let meetings = match parsed {
+            RulesFile {
+                rate: None,
+                phase: None,
+                checks: None,
+                positions: None,
+                evade: None,
+                ambush: None,
+                ..
+            } => None,
+            RulesFile {
+                rate: Some(rate),
+                phase: Some(phase),
+                checks: Some(checks),
+                positions: Some(positions),
+                evade: Some(evade),
+                ambush: Some(ambush),
+                ..
+            } => Some(Meetings::parse(MeetingsFile {
+                rate,
+                phase,
+                checks,
+                positions,
+                evade,
+                ambush,
+            })),
+            _ => Some(Err(
+                "`rate`, `phase`, `checks`, `positions`, `evade`, and `ambush` are all given \
+                 or none"
+                    .to_string(),
+            )),
+        };
+        Ok(Self {
+            edge_reach,
+            meetings: meetings.transpose().map_err(err)?,
+        })
+    }
+}
+
+/// The meetings' tables of the rules file.
+struct MeetingsFile {
+    rate: BTreeMap<String, u32>,
+    phase: PhaseRates,
+    checks: ChecksSpec,
+    positions: Positions,
+    evade: Evade,
+    ambush: AmbushSpec,
+}
+
+impl Meetings {
+    /// Every landscape of land and the road rated and covered, the numbers in range.
+    fn parse(parsed: MeetingsFile) -> Result<Self, String> {
+        let err = |m: String| m;
         let rate = by_landscape("rate", &parsed.rate).map_err(err)?;
         if rate.values().any(|&r| r > 10_000) {
             return Err(err("`rate` is 0 to 10000 basis points an hour".into()));
@@ -624,10 +713,10 @@ fn when(spec: WhenSpec, campaign: &str, content: &Content) -> Result<When, Strin
 }
 
 impl Content {
-    /// The numbers of overworld encounters (`data/encounters.toml`); `None` without the file,
-    /// when nobody meets anybody.
-    pub fn encounters(&self) -> Option<&EncounterRules> {
-        self.encounters.as_ref()
+    /// The numbers of meeting someone on the overworld (`data/encounters.toml`); `None`
+    /// without them, when nobody meets anybody.
+    pub fn meetings(&self) -> Option<&Meetings> {
+        self.encounters().meetings.as_ref()
     }
 
     /// Campaign `campaign`'s encounter tables, by id (spec §7 "Overworld encounters").
