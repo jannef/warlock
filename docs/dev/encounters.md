@@ -4,8 +4,8 @@ Developer notes for working on this part of Warlock; the design is
 `docs/design/overworld-encounters.md` (its §15, the owner's decisions, overrides the rest), the
 slices #803 (E0, the edge rule: `world/edge_leave.rs`, `docs/dev/overworld.md`), #804 (E1, the
 rules, this file), #805 (E2, the dialog), E3 (the Ascmearc's tables, the wiki page, the spec
-section), E4 (resting and foraging roll too), E5 (the pedlar's offer). Keep it current with the
-code, as CLAUDE.md says.
+section), #807 (E4, resting and foraging roll too: "Camping and foraging" below), E5 (the
+pedlar's offer). Keep it current with the code, as CLAUDE.md says.
 
 ## Modules and data
 
@@ -16,8 +16,8 @@ code, as CLAUDE.md says.
   `night`, `twilight`, `rain`, `heavy_rain`, `light`), `[positions]` (`player = { ambush, fight,
   close, ambushed }` in percent of the way from the arrival edge to the area's middle; `fight`,
   `ambush`, `ambushed`, `close` in cells from the player), `[evade]` (`difficulty`,
-  `detour_percent`, `aware`, `pursuit_per`), `[ambush] wait_seconds`. The six tables are all
-  given or none (none: nobody meets anybody).
+  `detour_percent`, `aware`, `pursuit_per`), `[ambush] wait_seconds`, `[rest] rate_percent` (25: a
+  quarter of the rate an hour of rest). The seven tables are all given or none (none: nobody meets anybody).
 - `campaigns/<id>/data/encounters/*.toml`: `[[table]]` (`id`, `when`, `rate_percent`,
   `replaces`, `[[table.entry]]`: `id`, `name`, `weight`, `when`, `group = [{ creature, count }]`,
   `lead`, `stance = hostile|peaceful|wildlife`), read by `content/encounter.rs::parse` from
@@ -63,6 +63,37 @@ code, as CLAUDE.md says.
    it; a check; failed, the area opens `Close`); `ambush` (`wait_seconds` of waits); `fight`,
    `hail`, `hunt` (the `stairs` action, as `>`). The area opens after that turn, in
    `encounter_tick`, so no wait is ever spent in the area.
+
+## Camping and foraging (#807)
+
+The design's §14 Q3 default, which the owner widened to foraging (§15 Q3).
+
+- **The roll**: each turn of a rest (`rest.rs::rest_until`) and of a forage (`forage.rs::forage`)
+  calls `World::watch_roll(Watch, price)` from its `keep_at` turn, before the turn runs, for the
+  turn's time (`price` / the player's speed). Where it rolls and what it draws is the step's roll
+  (`World::odds`: the rules, the overworld, a cell with a local area, a campaign with tables,
+  nothing pending; and nothing while an area is to open), but drawn exactly: one
+  `below(10_000 × 3600 × 100)` of the `encounters` stream against rate (bp an hour) × seconds ×
+  the percent (phase × tables) × the share, so turns of a few seconds add up to the rate an hour.
+  The share is `[rest] rate_percent` (25) for a rest, 100 for a forage (a forager is a
+  traveller). A chance of 0 draws nothing. Then `draw_entry` (the step's: the entries by weight,
+  `meet`), the detour's `step` the price of a plain step onto the cell's terrain (as the dev
+  `meet`'s), the side the opposite of the last overworld step, as ever.
+- **The sleeper's lookout** (`World::sleepers_lookout`, a hostile entry met during a rest): one
+  check, Willpower modifier + talents' Willpower checks + the player's hearing (Listen's `hearing`
+  plus Keen ears' `hearing`, at most `MAX_ENCOUNTER_BONUS`; 0 for a deaf player) + Alert's
+  `notice`, against `difficulty` + the lead's `stalk` + the rain (no cover, no dark: those hide
+  from eyes). The party always finds the camp: made, **met** (woken in time); failed,
+  **ambushed**. Never the drop, never pass by. Marks `Use::Hear` (Listen), not `Use::Lookout`.
+  A forager's lookouts are the traveller's two.
+- **What is said**: `Pending::woken` (saved, left out while false) words the dialog for a rest:
+  "You wake to the sound of NAME close by your camp." (met), "You wake to find NAME at your
+  camp." (peaceful), "... near your camp." (wildlife); ambushed: "You wake with NAME upon you!".
+  The line is a `say`, so `keep_at` stops: "You stop resting after 2 hours." / "You stop
+  foraging." (a forage cut short finds nothing). An ambushed sleeper's area opens in
+  `encounter_tick` after the rest's action, as a step's does.
+- Off the overworld (in the cell's local area too) a rest and a forage roll nothing; so does a
+  campaign without tables (no replay moves).
 
 ## The checks (gameplay stream, two draws each)
 
@@ -132,7 +163,8 @@ each refusal); `world/encounter_tests.rs` (no draws without tables or while pend
 roll, the choices by outcome, pass by makes nothing, the positions and awareness by outcome and
 their order from the edge, the ambushing party unaware and in debt, the ambushed player
 startled once, evade both ways, the known party, a save mid-question, replays through every
-outcome, the dumps); `magic/tests.rs::skill_reader` names `encounter.rs` for the three benefits. The app:
+outcome, the dumps; #807: no draws resting without tables, a share, or the overworld, a rest stopped
+and never the drop for a sleeper, met and ambushed, a forage cut short, camping replays); `magic/tests.rs::skill_reader` names `encounter.rs` for the three benefits. The app:
 `ui/screen_snapshots.rs::encounters_as_text` (`encounter-drop`, with Esc and `1` pressed over it,
 `encounter-met`, `encounter-peaceful`, `encounter-wildlife`, on a fixture table, the dialog as a
 load opens it) and `an_encounter_row_answers_it`; `dialog_screen.rs`'s required dialog.

@@ -26,6 +26,7 @@
 //!
 //! [`Action::Forage`]: crate::action::Action::Forage
 
+use super::encounter::Watch;
 use super::rest::Ended;
 use super::{LevelState, Spent, World};
 use crate::action::Event;
@@ -87,7 +88,12 @@ impl World {
         let ended = self.keep_at(
             events,
             |w| w.state.time < until,
-            |w, _| turn.min(w.price_until(until)),
+            |w, _| {
+                let price = turn.min(w.price_until(until));
+                // Who comes upon a forager on the overworld (`encounter.rs`, #807).
+                w.watch_roll(Watch::Forage, price);
+                price
+            },
         );
         match ended {
             Ended::Died => {}

@@ -2,6 +2,7 @@
 //! loop of a long action ([`World::keep_at`]) that resting, eating, and digging share.
 //! `world/mod.rs` has only the dispatch line.
 
+use super::encounter::Watch;
 use super::{ActorId, Spent, World};
 use crate::action::{DiseaseNews, Event, MAX_REST, Rest};
 use crate::content::{ActionKind, LevelKind, StatUse};
@@ -44,7 +45,12 @@ impl World {
         let ended = self.keep_at(
             events,
             |w| w.state.time < until,
-            |w, _| wait.min(w.price_until(until)),
+            |w, _| {
+                let price = wait.min(w.price_until(until));
+                // Who comes upon a camp on the overworld (`encounter.rs`, #807).
+                w.watch_roll(Watch::Rest, price);
+                price
+            },
         );
         let rested = self.state.time.since(start).spoken();
         let text = match (ended, goal) {

@@ -98,7 +98,12 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
 `console.wesl`): every frame `lighting::update` composites the perceived light for the map grid's
 cells plus a one-cell margin, from `PerceptionView::base_light` (ambient plus gameplay bounce light,
 steady, never shadowed by creatures) and `light_sources()` contributions, less creature shadows,
-and folds in UV (violet tint) and the darkvision fade. Gameplay light lives in
+and folds in UV (violet tint) and the darkvision fade. It skips the frame (no composite, no
+upload) when the composite would repeat the last one (#785): `Game` and `Shadows` unchanged
+(change detection), no transient or spell light live now or in the last composite, the same
+origin, size, and flicker switch, and either no flickering source lit the grid or the visual time
+is the same (`VisualLight::would_repeat`; `--freeze-time`, flicker off, idle frames). A new input
+of the composite must become one of these conditions, or the map keeps stale light. Gameplay light lives in
 `warlock-core/src/light/` (`mod.rs`: falloff and the wall-face rule; `cache.rs`: per-source shadow
 masks, a `hollow` preset's leaving out its own cell, and the player's carried light from
 `WorldState::carried_light`, `world/lamp.rs`: a lantern ready in the Tool slot, by its object's

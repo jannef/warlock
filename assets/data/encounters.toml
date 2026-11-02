@@ -71,3 +71,13 @@ pursuit_per = 100
 
 [ambush]
 wait_seconds = 600    # lying in cover until they come
+
+# Camping and foraging (#807): resting on the overworld rolls this percent of the landscape's
+# rate (by the phase and the tables, as a step's) for every hour of rest, and a forage there rolls
+# the whole rate for its time. A resting player keeps no watch but their ears: their lookout is
+# Willpower modifier + Listen's hearing (and Keen ears) + Alert's notice against `difficulty` + the
+# party's stalk + the rain (neither cover nor the dark hides a sound), and the party always finds
+# them: made, met (woken in time); failed, ambushed in their sleep. A forager keeps a traveller's
+# lookouts.
+[rest]
+rate_percent = 25
