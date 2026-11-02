@@ -667,11 +667,100 @@ fn uncanny_dodge_fast_healer_and_jack_of_all_trades() {
         let bonus: Vec<_> = me.skills.iter().map(|(s, _)| (s, 5)).collect();
         me.skills.effect_with(&content, effect, &bonus)
     };
+    // Its first rank (25) takes skills up and adds nothing to them; its second (50) does.
+    reach(&mut b, 25);
     let plain = b.state.player().skills.effect(&content, effect);
     assert_eq!(b.state.player().skill_effect(&content, effect), plain);
-    reach(&mut b, 25);
+    assert_eq!(b.state.player().talent_mods(&content).trained_skills, 0);
+    reach(&mut b, 50);
     assert_eq!(b.state.player().skill_effect(&content, effect), raised(&b));
     assert_eq!(b.state.player().talent_mods(&content).trained_skills, 5);
+}
+
+/// The skills the player is trained in, by id, with their values.
+fn skill_values(w: &World) -> Vec<(String, u16)> {
+    (w.state.player().skills.iter())
+        .map(|(id, t)| (w.content().skill(id).id.clone(), t.value))
+        .collect()
+}
+
+#[test]
+fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_raises_them() {
+    let mut b = world("bard");
+    reach(&mut b, 24);
+    let before = skill_values(&b);
+    assert!(!b.state.player().talents.has("jack_of_all_trades", 1));
+    reach(&mut b, 25);
+    assert_eq!(
+        b.state.player().talents.rank_of("jack_of_all_trades", None),
+        1
+    );
+    let after = skill_values(&b);
+    let content = b.content().clone();
+    for (id, skill) in content.skill_ids() {
+        let had = before.iter().find(|(s, _)| *s == skill.id);
+        let now = after.iter().find(|(s, _)| *s == skill.id).map(|(_, v)| *v);
+        match (skill.id.as_str(), had) {
+            // The thief's alone (the surprise design's decision 7).
+            ("sneak_attack", _) => assert_eq!(now, None, "never Sneak attack"),
+            // A skill held already is not taken up again (the level's rolls may raise it).
+            (_, Some((_, v))) => assert!(now >= Some(*v), "{}", skill.id),
+            // Every other is taken up at 1d4+1.
+            (_, None) => assert!((2..=5).contains(&now.expect("taken up")), "{id:?}"),
+        }
+    }
+    assert!(said(&b).contains(&"You gain Jack of all trades.".to_string()));
+    assert!(said(&b).contains(&"You find you know a little of everything.".to_string()));
+    // The talents layer shows the rank held of two.
+    let rows = dump::layer_rows(&b, Layer::Talents);
+    assert!(
+        rows.iter().any(|r| r == "Jack of all trades 1/2 (class)"),
+        "{rows:?}"
+    );
+    reach(&mut b, 49);
+    let kept = skill_values(&b);
+    reach(&mut b, 50);
+    assert_eq!(
+        b.state.player().talents.rank_of("jack_of_all_trades", None),
+        2
+    );
+    assert!(said(&b).contains(&"Your Jack of all trades grows.".to_string()));
+    // The second rank takes nothing up again: the skills only grow by the level's rolls.
+    assert_eq!(skill_values(&b).len(), kept.len());
+}
+
+#[test]
+fn a_restored_bard_past_both_ranks_is_given_each_and_a_skill_added_later_is_taken_up() {
+    // A skill the content adds later is the bard's too: the hand-out reads the content.
+    let mut files = ContentFiles::builtin();
+    files.edit_table("skills", |text| {
+        format!(
+            "{text}\n[[skill]]\nid = \"juggling\"\nname = \"Juggling\"\n\
+             description = \"Keeping three things in the air.\"\nkind = \"action\"\n"
+        )
+    });
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    let mut b = world("bard");
+    reach(&mut b, 50);
+    let mut state = b.state().clone();
+    let player = state.player;
+    let me = state.actors.get_mut(&player).expect("player");
+    me.talents.forget("jack_of_all_trades");
+    let skills = me.skills.clone();
+    let restored = World::from_state(content.clone(), state).expect("restored");
+    // Both ranks, the first's skills taken up on the way (no news on a restore).
+    let me = restored.state.player();
+    assert_eq!(me.talents.rank_of("jack_of_all_trades", None), 2);
+    assert_eq!(me.talent_mods(&content).trained_skills, 5);
+    let juggling = content.skill_id("juggling").expect("juggling");
+    assert!((2..=5).contains(&me.skills.value(juggling).expect("taken up")));
+    assert!(me.skills.iter().count() > skills.iter().count());
+    // And it is the same run: restoring again takes nothing up twice.
+    let again = World::from_state(content.clone(), restored.state().clone()).expect("again");
+    assert_eq!(
+        again.state().player().skills,
+        restored.state().player().skills
+    );
 }
 
 #[test]

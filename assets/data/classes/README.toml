@@ -92,7 +92,10 @@
 #                 rows, lowest level first, each a talent the class gives at that level (a talent
 #                 of the `class` tree, ../talents/, or an ordinary one it hands out: the
 #                 aristocrat's Riposte); given at rank 1 as the level comes, never picked, and
-#                 not given again to one who holds it already (default none)
+#                 not given again to one who holds it already (default none). `rank = 2`
+#                 gives that rank of it (`{ level = 50, talent = "jack_of_all_trades", rank = 2
+#                 }`; default 1): within the talent's ranks, after its lower ranks, never twice;
+#                 one who lacks a rank below is given it too
 #   bonus_talents `{ levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }`: a bonus talent
 #                 pick at each of those levels besides the usual ones, of a talent from those
 #                 trees (no `trees`: any tree, the commoner's gift; default none)

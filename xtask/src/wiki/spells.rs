@@ -156,7 +156,7 @@ pub(super) fn class_spells(content: &Content) -> String {
     );
     for class in classes {
         let mut given: Vec<(u8, &str, u8)> = Vec::new();
-        for (level, talent) in &class.abilities {
+        for (level, talent, _) in &class.abilities {
             let Some(id) = book.id(talent) else {
                 continue;
             };

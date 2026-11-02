@@ -1237,8 +1237,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `WeaponSkills::raise_to`, its defaults with it; "Your hands know every weapon a little.";
     the optional `skills` names the rows instead, for a later class's trade); Fast healer
     (the Vigour talent, given at 12; its copy Song of rest until #790: resting heals half again
-    as fast), Jack of all trades (every trained skill counts 5
-    higher, as a skill bonus in `Actor::skill_effect`), Virtuoso (Inspire gives Inspired greatly, to
+    as fast), Jack of all trades (two ranks, #872; the class table names the rank,
+    `{ level = 50, talent = "jack_of_all_trades", rank = 2 }`: rank 1 at 25, a hand-out once,
+    `take_up_skills { dice = "1d4+1", except = ["sneak_attack"] }`: every skill of the content
+    the bard is not trained in, but Sneak attack, trained at 1d4+1 from the `levels` stream in
+    file order, `world/jack.rs`, "You find you know a little of everything."; rank 2 at 50,
+    "Your Jack of all trades grows.": every trained skill counts 5 higher, as a skill bonus in
+    `Actor::skill_effect`), Virtuoso (Inspire gives Inspired greatly, to
     hit +2 and Dodge +2 for 10 minutes, for nothing: neither mana nor inspiration).
   - **Resources**: the ranger's Focus (R2, #250), the thief's Openings (R3, #251), and the
     bard's Inspiration (R4, #252) are in.

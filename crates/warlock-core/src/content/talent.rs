@@ -414,6 +414,17 @@ pub enum TalentEffect {
         #[serde(default)]
         news: Option<String>,
     },
+    /// Handed out once, as the rank is taken or given: every skill of `skills.toml` the holder
+    /// is not trained in, but those `except` names, is trained at `dice`, rolled from the
+    /// `levels` stream, whatever skills the content holds (Jack of all trades;
+    /// `world/jack.rs`). `news` is said when a class table gives it.
+    TakeUpSkills {
+        dice: crate::dice::Dice,
+        #[serde(default)]
+        except: Vec<String>,
+        #[serde(default)]
+        news: Option<String>,
+    },
     /// Loot it finds (what generated levels hold, what creatures drop) rolls magic and rare this
     /// percent more often: their rarity weights (Treasure hunter).
     LootMagicPercent { value: i32 },
@@ -1161,6 +1172,7 @@ impl TalentEffect {
                     | TalentEffect::WeaponStamina { .. }
                     | TalentEffect::TrainSkill { .. }
                     | TalentEffect::WeaponRanks { .. }
+                    | TalentEffect::TakeUpSkills { .. }
                     | TalentEffect::ExtraPick { .. }
                     | TalentEffect::StartingGold { .. }
                     | TalentEffect::StartingGems { .. }
@@ -1456,6 +1468,17 @@ impl TalentEffect {
                     .find(|s| !table.is_empty() && table.id(s).is_none())
                 {
                     Some(id) => Err(format!("names an unknown weapon skill `{id}`")),
+                    None => Ok(()),
+                }
+            }
+            TalentEffect::TakeUpSkills { dice, except, .. } => {
+                if dice.min() < 1 || dice.max() > 100 {
+                    return Err("`take_up_skills`: its dice roll 1 to 100".into());
+                }
+                let unknown = (except.iter())
+                    .find(|s| !content.skills().is_empty() && content.skill_id(s).is_none());
+                match unknown {
+                    Some(id) => Err(format!("names an unknown skill `{id}`")),
                     None => Ok(()),
                 }
             }
@@ -3440,6 +3463,10 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
         assert!(
             bad("effects = [{ kind = \"weapon_ranks\", to = 1, skills = [\"x\"] }]")
                 .contains("unknown weapon skill `x`")
+        );
+        assert!(
+            bad("effects = [{ kind = \"take_up_skills\", dice = \"1d200\" }]")
+                .contains("roll 1 to 100")
         );
         assert!(
             bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { either = { level = 3 } }")

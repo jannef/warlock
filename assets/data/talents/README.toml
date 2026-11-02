@@ -181,6 +181,11 @@
 #                                 styles, whatever the content holds) held below rank `to` rises
 #                                 to it, its defaults with it; `news`, if any, said when a class
 #                                 table gives it
+#   take_up_skills { dice, except, news }   handed out once, as the rank is taken or given:
+#                                 every skill of ../skills.toml it is not trained in, but those
+#                                 `except` names, whatever the content holds, is trained at
+#                                 `dice` (1 to 100), rolled from the levels stream in file order;
+#                                 `news`, if any, said when a class table gives it
 #   starting_gold { percent, at_least, at_most }   handed out once, as it is taken (with
 #                                 `creation = true`): gold coins, that percent of those carried
 #                                 (kit and scenario), at least at_least, at most at_most

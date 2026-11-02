@@ -29,7 +29,8 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["scholar", "delver"] }
 # The level table (spec §8 "Class abilities"). Fast healer is the Vigour talent, given (#790: a
 # table names the pickable, never a clone). Inspire moves onto an Inspiration pool with the
 # alternative resources (#225). Travelled hands takes Blessing's place (the bard design §5:
-# Blessing is a priest's abjuration, off the bard's schools).
+# Blessing is a priest's abjuration, off the bard's schools). Jack of all trades comes in two
+# ranks: every skill taken up at 25, every skill 5 higher at 50 (#872).
 abilities = [
     { level = 1, talent = "mend" },
     { level = 1, talent = "trained_wind" },
@@ -38,5 +39,6 @@ abilities = [
     { level = 18, talent = "inspire" },
     { level = 25, talent = "jack_of_all_trades" },
     { level = 32, talent = "throw_voice" },
+    { level = 50, talent = "jack_of_all_trades", rank = 2 },
     { level = 60, talent = "virtuoso" },
 ]
