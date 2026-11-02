@@ -1,7 +1,7 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
 //! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Whirlwind, Lay on hands, Smite, Holy
-//! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), Inspire (for inspiration or mana, #244, R4), the thief's
+//! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), the songs (Inspire, for inspiration, `world/song.rs`), the thief's
 //! Lurk and Low blow (`world/thief.rs`), Master thief's finisher (for openings,
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`). The
 //! abilities themselves are talents of the class tree, given as levels come (`world/class.rs`)
@@ -74,7 +74,7 @@ impl World {
             (ClassActive::Whirlwind, _) => self.whirlwind(events),
             (ClassActive::LayOnHands, _) => self.lay_on_hands(events),
             (ClassActive::HolyRadiance, _) => self.holy_radiance(events),
-            (ClassActive::Inspire, _) => self.inspire(events),
+            (ClassActive::Inspire, _) => self.sing(active, events),
             (ClassActive::PatientDefence, _) => self.patient_defence(events),
             (ClassActive::Lurk, _) => self.lurk(events),
             (ClassActive::StepOfTheWind, _) => self.wind_step(events),
@@ -140,25 +140,6 @@ impl World {
             return false;
         }
         true
-    }
-
-    /// Inspire: the player sings themselves (Inspired), spending its inspiration while they
-    /// hold enough, else its mana (Virtuoso: a greater inspiration, for nothing), for the time
-    /// of a `chat`.
-    fn inspire(&mut self, events: &mut Vec<Event>) -> Spent {
-        let player = self.state.player;
-        let Some(inspire) = self.state.player().talent_mods(&self.content).inspiring() else {
-            return Spent::Nothing;
-        };
-        let inspired = (inspire.instead)
-            .is_some_and(|c| self.spend_resource(player, c.resource, c.amount, events));
-        if !inspired && !self.spend_mana(player, inspire.mana) {
-            self.say("You have too little mana.");
-            return Spent::Nothing;
-        }
-        self.afflict(player, inspire.status, 1, Some(player), events);
-        self.train_stat(crate::content::StatUse::Inspired);
-        Spent::Turn(self.price_of(player, ActionKind::Chat))
     }
 
     /// Veteran's wind: hit points back at once (one a level, at least its floor), then its

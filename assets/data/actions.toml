@@ -92,6 +92,9 @@ heal = 2500
 # Chatting with someone (`C`): a few words. Asking about a topic on the dialogue screen takes no
 # time.
 chat = 500
+# Singing a song (a bard's Inspire; spec §8 "Class abilities"): a verse, as long as a chat, and
+# heard well beyond it.
+song = 500
 # Trying to steal from someone next to you (the abilities menu's Steal; spec §8 "Stealing"),
 # whether it works or you are caught.
 steal = 1000
