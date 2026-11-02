@@ -487,6 +487,10 @@ pub enum ClassActive {
     Smite,
     /// A light of your own, on and off (a status that sheds light while it lasts).
     HolyRadiance,
+    /// A breath taken in the guard, for ki and a wait: Poised until the next action, Dodge up
+    /// and a blow dodged or parried answered at once (the ascetic's Patient defence,
+    /// `world/ascetic.rs`).
+    PatientDefence,
     /// An unarmed blow in a direction that leaves a wounded foe Stunned, for ki (the
     /// ascetic's Stunning strike).
     StunningStrike,
@@ -531,6 +535,7 @@ impl ClassActive {
         ClassActive::LayOnHands,
         ClassActive::Smite,
         ClassActive::HolyRadiance,
+        ClassActive::PatientDefence,
         ClassActive::StunningStrike,
         ClassActive::QuiveringPalm,
         ClassActive::StepOfTheWind,
@@ -555,6 +560,7 @@ impl ClassActive {
             ClassActive::LayOnHands => "lay_on_hands",
             ClassActive::Smite => "smite",
             ClassActive::HolyRadiance => "holy_radiance",
+            ClassActive::PatientDefence => "patient_defence",
             ClassActive::StunningStrike => "stunning_strike",
             ClassActive::QuiveringPalm => "quivering_palm",
             ClassActive::StepOfTheWind => "step_of_the_wind",
@@ -638,6 +644,7 @@ impl ClassActive {
             ClassActive::Rage
             | ClassActive::WarCry
             | ClassActive::VeteransWind
+            | ClassActive::PatientDefence
             | ClassActive::Lurk
             // It takes no time (`takes_no_time`): none block a wait.
             | ClassActive::StepOfTheWind

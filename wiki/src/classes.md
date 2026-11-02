@@ -80,6 +80,10 @@ second blow, at −2 [to hit](combat.md#hitting), for a point of ki; with none l
 shield, and for a point of ki, taking no time at all, leaves you [light-footed](status-effects.md#status-light-footed): your next action,
 whatever it is (a step, a blow, a shot), takes half its [time](turns.md#what-actions-cost). It cannot be stacked: while you are light-footed
 already it is refused and costs nothing.
+**[Patient defence](abilities.md#ability-patient-defence)** (level 18) costs a point of ki and the [time](turns.md#what-actions-cost) of a wait, and leaves you
+[poised](status-effects.md#status-poised) until your next action, whatever it is: +4 [Dodge](combat.md#defence), and every melee blow you dodge (it misses
+by your Dexterity or Dodge) or parry meanwhile is answered with a blow of yours at once, a
+[riposte](combat.md#free-blows). Taken again while poised, it holds for one action more; with any grip, a staff too.
 **[Stunning strike](abilities.md#ability-stunning-strike)** (level 12) costs 1 ki: a blow of
 your bare hand that leaves a foe it wounds [stunned](status-effects.md#status-stunned), caught
 [flat-footed](surprise.md#stunned) and slow to act. **[Quivering palm](abilities.md#ability-quivering-palm)**

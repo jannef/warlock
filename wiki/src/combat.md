@@ -222,6 +222,8 @@ ranks of weapon skills and fighting styles teach them (see
   cleave), again after every cleave that kills.
 - **[Riposte](talents.md#talent-riposte)**: when your Parry turns a blow aside, you strike back once the attack is over (once
   per attack, however many of its blows you parried). Shots and throws are never riposted.
+  While you are [poised](status-effects.md#status-poised) (the [ascetic](classes.md#ascetic)'s [patient defence](abilities.md#ability-patient-defence)) you riposte
+  whatever your talents, and a blow that misses by your Dexterity or Dodge is answered too.
 - **[Opportunist](talents.md#talent-opportunist)**: a [hostile](creatures.md#factions) creature that steps away from beside you is struck as it turns to
   go; it may not live to take the step. A creature that fights this way strikes you the same
   way when you step away from it.
