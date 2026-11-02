@@ -16,7 +16,7 @@ expression: "render(case, content.clone())"
                     │   c  War cry            you have not the rage for it     │
                     │ Skills                                                   │
                     │   d  Heal               nothing to treat                 │
-                    │   e  Intimidate         not usable yet                   │
+                    │   e  Intimidate         at a place you see               │
                     │   f  Forage             not usable here                  │
                     │ Weapon skills                                            │
                     │   g  Shield bash        you hold no shield               │
