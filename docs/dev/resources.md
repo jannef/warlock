@@ -161,12 +161,11 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   `World::caught` stops the flight there (`fly`, `trap_shot`) so the missile falls on that
   cell; the player is told through `news`, after the attack's own words. Tests:
   `world/ki_tests.rs`, `world/ascetic_tests.rs`.
-- **Inspiration** (R4, #252): Inspire grants it and its effect names what it spends instead of
-  mana, `inspire { status, mana, resource, cost }` (`talent::Inspire::instead`, a
-  `ResourceCost`; Virtuoso's `inspiring()` clears it, so its song costs nothing).
-  `World::inspire` spends the resource when held (`spend_resource`), else the mana;
-  `Ability::unavailable` checks mana (and the casting block) only when the resource falls
-  short. Tests: `world/ki_tests.rs`.
+- **Inspiration** (R4, #252): Inspire grants it, and its `song` effect (#870) costs `cost` of
+  it and nothing else (`talent::SongCost::Resource`; Virtuoso's `TalentMods::song` clears the
+  cost, so its songs are free). `World::sing` (`world/song.rs`) spends it (`spend_resource`);
+  `Ability::unavailable` greys it out `Unavailable::Short` while short. Tests:
+  `world/ki_tests.rs`, `world/song_tests.rs`.
 - **Openings** (R3, #251; `world/openings.rs`): the thief's Sneak attack (level 1, #682) grants the pool
   (`grants_resource`); its build is the data's `sneak_attack`; Master thief's `finisher` effect is
   the class active `ClassActive::MasterThief` (`use:master_thief:E`, aimed, the cost `resource = {

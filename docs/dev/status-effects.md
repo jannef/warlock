@@ -132,6 +132,9 @@ refused). Draws: the turns' dice as a hold begins or is renewed, two for a strug
 away from its `by` instead while a step takes it farther (`World::frightened`,
 `world/sign_picks.rs`, before `held_back`). A status that blocks `cast` also refuses spending
 mana (`World::spend_mana`) and greys out a class active that costs mana (`Ability::unavailable`).
+Silenced also blocks `song` (the bard's songs, `world/song.rs`, #870). A song's statuses
+(`inspired`, `inspired_greatly`) are `max = 3`, `stacking = "refresh"`: Music adds degrees, and
+degrees are time, the combat bonus stays.
 Built-in example: `raging` (penalty St +2, To +2, In −2; `blocks = ["read", "cast"]`; `follows =
 "exhausted"`; no `eases`: the Rage resource brings it and ends it, `docs/dev/resources.md`) and
 `exhausted` (St −1). A followed status must end: it eases, is cured, or a resource brings it

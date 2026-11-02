@@ -1195,10 +1195,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     focus" while short, "You have too little focus." if used), spent as it is loosed and priced
     as one ordinary shot (Rapid shot does not touch it); refused as a shot is, spending
     nothing), Inspire
-    (the bard's, 18: grants Inspiration, §8 "Resources"; Inspired, to hit +1 and Dodge +1 for 5
-    minutes, for 3 inspiration while the bard holds 3, else 3 mana, the time of a chat; no
-    cooldown, the cost is the price: greyed out "you have too little mana",
-    `Unavailable::NoMana`, while the player has neither). Throw your voice (the bard's, 32) is no
+    (the bard's, 18: grants Inspiration, §8 "Resources"; a **song**, #870: Inspired, to hit +1
+    and Dodge +1 for 5 minutes a degree, for 3 inspiration and nothing else (no mana fallback:
+    each song costs one thing), the time of a `song` (500, a chat's); no cooldown, the cost is the
+    price: greyed out "you have too little inspiration", `Unavailable::Short`, while short).
+    **Songs** (`world/song.rs::sing`, the one place a song is sung; the `song` talent effect
+    `{ id, on, status, severity, resource, cost | mana, check, difficulty }`, an active that
+    `ClassActive::sings`): paid in their one cost, heard (`Act::Sing`, a voice of `SONG_NOISE`
+    80 where the singer stands: those who hear it come to look), then the status, `severity`
+    degrees plus Music's `song_degrees` (one more at 50 and at 100, then one more every 100), at
+    most the status's `max` (Inspired and Inspired greatly are `max = 3`: the degrees are time,
+    the bonus stays), then a Presence mark (inspired) and a Music mark (`song`). Refused, no time,
+    on the overworld and while Silenced (`silenced` blocks the `song` action). A song `on =
+    "hearers"` (every hostile hearer checks `check` against `difficulty` plus Music's
+    `song_craft`, +4 at 100, +8 at 200) is data-ready for the Lullaby (#873). Music is
+    `kind = "rules"` (no "not usable yet" row). Throw your voice (the bard's, 32) is no
     longer everyone's: the ability is had by a talent with the `throw_voice` effect (the
     action is refused, "You do not know how to throw your voice.", without it). The thief's
     Lurk (6, #684: `use:lurk`, the time of a wait, no cost and no cooldown: the thief suffers
@@ -1233,8 +1244,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Fast healer
     (the Vigour talent, given at 12; its copy Song of rest until #790: resting heals half again
     as fast), Jack of all trades (every trained skill counts 5
-    higher, as a skill bonus in `Actor::skill_effect`), Virtuoso (Inspire gives Inspired greatly, to
-    hit +2 and Dodge +2 for 10 minutes, for nothing: neither mana nor inspiration).
+    higher, as a skill bonus in `Actor::skill_effect`), Virtuoso (every song costs nothing and gives a
+    degree more; Inspire gives Inspired greatly, to hit +2 and Dodge +2 for 10 minutes a degree).
   - **Resources**: the ranger's Focus (R2, #250), the thief's Openings (R3, #251), and the
     bard's Inspiration (R4, #252) are in.
   - **Saves change**: `Quests::prey`, the tally of every type, the statuses `inspired` and
