@@ -133,7 +133,9 @@ cutting time, rest and skip, replays), `world/shop_tests.rs::deals_train_negotia
 Overworld encounters (#804; `docs/dev/encounters.md`): Spot's and Survival's `lookout`,
 Stealth's `stalk`, and Survival's `evade` are read in `world/encounter.rs` only (the player's
 through `Actor::skill_effect`, a party's lead type's through `Skills::effect`); `Use::Lookout`
-(Spot and Survival) is reported on every lookout there.
+(Spot and Survival) is reported on every lookout there. A resting player's lookout (#807) reads
+Listen's `hearing` (with Keen ears, capped at `MAX_ENCOUNTER_BONUS`) instead and reports
+`Use::Hear`.
 
 Pending hooks:
 athletics (climbing out of pits, #128) and escape artist (pits, #128).

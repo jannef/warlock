@@ -36,6 +36,11 @@ const RULES: &str = include_str!("../../../../assets/data/encounters.toml");
 /// The built-in content with the fixture table, under a clear sky and with nobody hungering;
 /// `certain`: every step rolls an encounter (the rates at their highest, the table at 1000 %).
 fn content(certain: bool) -> Arc<Content> {
+    fixture(certain, 25)
+}
+
+/// [`content`], with a rest rolling `rest` percent of the rate when `certain` (#807).
+fn fixture(certain: bool, rest: u32) -> Arc<Content> {
     let mut files = ContentFiles::builtin();
     files.remove("data/weather.toml");
     files.remove("data/hunger.toml");
@@ -48,6 +53,7 @@ fn content(certain: bool) -> Arc<Content> {
     if certain {
         let rules = (RULES.lines())
             .map(|l| match l.split_once(" = ") {
+                Some(("rate_percent", _)) => format!("rate_percent = {rest}"),
                 Some((k, _))
                     if [
                         "road",
@@ -417,4 +423,133 @@ fn the_dumps_say_what_is_pending_and_who_came_of_it() {
     let text = dump::ascii(&w, &[Layer::Actors]);
     assert!(text.contains("of encounter kobolds"), "{text}");
     assert!(dump::json(&w, &[], false)["encounter"].is_null());
+}
+
+/// The certain fixture (a rest rolling `rest` percent of the rate) at `seed`.
+fn camp(rest: u32, seed: u64) -> World {
+    World::new(fixture(true, rest), "world", Some(seed)).expect("world")
+}
+
+#[test]
+fn resting_without_tables_a_share_or_the_overworld_draws_nothing() {
+    let mut plain = World::new(
+        Arc::new(Content::load(&ContentFiles::builtin()).expect("builtin")),
+        "world",
+        None,
+    )
+    .expect("world");
+    act(&mut plain, "rest:8h");
+    assert!(plain.state.encounters.is_none(), "no tables: no stream");
+    // No share of the rate for a rest: none drawn either.
+    let mut w = camp(0, 1);
+    act(&mut w, "rest:8h");
+    assert!(w.state.encounters.is_none(), "a chance of 0 draws nothing");
+    assert!(said(&w, "You rest for 8 hours"), "{}", last(&w));
+    // In the cell's area (no roll there) a rest rolls nothing.
+    let mut w = camp(25, 1);
+    act(&mut w, "descend rest:8h");
+    assert_eq!(w.state.current().kind, LevelKind::Outdoor);
+    assert!(w.state.encounters.is_none());
+}
+
+#[test]
+fn an_encounter_stops_a_rest_and_a_sleeper_never_has_the_drop() {
+    let (mut met, mut ambushed) = (0, 0);
+    for seed in 0..24 {
+        let mut w = camp(25, seed);
+        let time = w.time();
+        act(&mut w, "rest:24h");
+        assert!(w.state.encounters.is_some(), "the rest rolled");
+        let rested = w.time().since(time);
+        assert!(rested < crate::time::Duration::hours(24), "{rested:?}");
+        assert!(said(&w, "You stop resting after"), "{}", last(&w));
+        match &w.state.encounter {
+            Some(p) => {
+                assert!(p.woken, "met in camp");
+                assert_ne!(p.outcome, EncounterOutcome::Drop, "asleep: never the drop");
+                let view = w.perception().encounter().expect("pending");
+                assert!(view.text.starts_with("You wake"), "{}", view.text);
+                if p.outcome == EncounterOutcome::Met {
+                    met += 1;
+                }
+                // Nothing more until it is answered.
+                act(&mut w, "rest:1h");
+                assert_eq!(last(&w), PENDING_REFUSED);
+            }
+            None => {
+                assert!(said(&w, "You wake with a band of kobolds upon you!"));
+                assert_eq!(w.state.current().kind, LevelKind::Outdoor);
+                assert!(!party(&w).is_empty());
+                ambushed += 1;
+            }
+        }
+    }
+    assert!(met > 0 && ambushed > 0, "met {met}, ambushed {ambushed}");
+}
+
+/// The player trained in Survival, standing on the nearest overworld cell of wild land with a
+/// local area.
+fn forager(w: &mut World) {
+    let content = w.content.clone();
+    let survival = content.skill_id("survival").expect("Survival");
+    let player = w.state.player;
+    let me = w.state.actors.get_mut(&player).expect("player");
+    let mut skills: Vec<_> = me.skills.iter().filter(|(s, _)| *s != survival).collect();
+    let trained = crate::skills::Trained {
+        value: 20,
+        marks: 0,
+    };
+    skills.push((survival, trained));
+    me.skills = skills.into_iter().collect();
+    let campaign = w.state.campaign.clone();
+    let level = w.state.current();
+    let from = w.player_pos();
+    let wild = (level.terrain.iter())
+        .map(|(p, _)| p)
+        .filter(|&p| super::forage::forage_ground(&content, level, p).is_some())
+        .filter(|&p| content.local_area(&campaign, &local_area_id(p)).is_some())
+        .min_by_key(|&p| (p.chebyshev(from), p))
+        .expect("wild land near the start");
+    w.state.actors.get_mut(&player).unwrap().pos = wild;
+}
+
+#[test]
+fn a_forage_on_the_overworld_rolls_and_an_encounter_cuts_it_short() {
+    let mut stopped = 0;
+    for seed in 0..24 {
+        let mut w = camp(25, seed);
+        forager(&mut w);
+        act(&mut w, "forage");
+        assert!(w.state.encounters.is_some(), "the forage rolled");
+        let met = w.state.encounter.is_some() || w.state.current().kind != LevelKind::Overworld;
+        if met {
+            stopped += 1;
+            assert!(said(&w, "You stop foraging."), "{}", last(&w));
+            assert!(!said(&w, "You gather"), "a forage cut short finds nothing");
+            if let Some(p) = &w.state.encounter {
+                assert!(!p.woken, "a forager is awake");
+            }
+        }
+    }
+    assert!(stopped > 0, "someone came upon a forager");
+}
+
+#[test]
+fn camping_replays_exactly() {
+    let content = fixture(true, 25);
+    for actions in ["rest:24h encounter:pass rest:2h", "rest:dawn wait*3"] {
+        for seed in [1, 2, 3] {
+            let mut w = World::new(content.clone(), "world", Some(seed)).expect("world");
+            let mut replay = Replay::new(&w);
+            for action in parse_actions(actions).expect("actions") {
+                w.apply(&action);
+                replay.push(&action, &w);
+            }
+            let verified = Replay::from_json(&replay.to_json())
+                .expect("json")
+                .run(content.clone())
+                .expect("the replay verifies");
+            assert_eq!(verified.state_hash(), w.state_hash(), "{actions}");
+        }
+    }
 }

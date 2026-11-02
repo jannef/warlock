@@ -9,6 +9,12 @@
 //!   (basis points an hour) × the step's seconds × the phase's percent × each matching table's
 //!   `rate_percent`, one `below(10_000)` of the `encounters` stream (made on the first roll);
 //!   then the matching tables' entries by weight (one `below`), and each group row's dice.
+//! - **Camping and foraging** ([`World::watch_roll`], #807; one line in each turn of a rest,
+//!   `rest.rs`, and of a forage, `forage.rs`): the same roll for each turn's time, drawn exactly
+//!   (`below(3_600_000_000)`, a chance in basis points × seconds × percent), a rest's at
+//!   `[rest] rate_percent` of the rate. A forager keeps a traveller's lookouts; a resting
+//!   player's is by ear alone ([`World::sleepers_lookout`]) and the party always finds them:
+//!   made, met; failed, ambushed. The message it says stops the rest or the forage.
 //! - **The lookouts** ([`World::lookouts`]): two `check::check`s on the gameplay stream, the
 //!   player's then the party's, only for a hostile entry. Made / failed: the drop; both: met; the
 //!   party alone: ambushed; neither: they pass each other by (nothing happens, nothing is said).
@@ -172,6 +178,20 @@ pub struct Pending {
     /// The area holds this party already: one the player got away from (the owner, #796 Q10).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub known: bool,
+    /// Met while the player rested: they woke to the party (#807).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub woken: bool,
+}
+
+/// What the player was doing on the overworld when an encounter is rolled (#807).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Watch {
+    /// A step: the rate for its time, both lookouts.
+    Travel,
+    /// A rest: `[rest] rate_percent` of the rate, the sleeper's lookout by ear alone.
+    Rest,
+    /// A forage: the rate for its time, both lookouts, as a traveller's.
+    Forage,
 }
 
 /// A party made by an encounter, on its area's level (saved): who to place again when the same
@@ -263,7 +283,16 @@ fn lost_in(landscape: Option<Landscape>) -> &'static str {
 pub const KNOWN_LINE: &str = "You remember them: you got away from them here before.";
 
 /// What the player is told of a party `name` met with `outcome` on `landscape`.
-fn told(outcome: Outcome, name: &str, landscape: Option<Landscape>) -> String {
+fn told(outcome: Outcome, name: &str, landscape: Option<Landscape>, woken: bool) -> String {
+    if woken {
+        return match outcome {
+            Outcome::Drop | Outcome::Met => {
+                format!("You wake to the sound of {name} close by your camp.")
+            }
+            Outcome::Peaceful => format!("You wake to find {name} at your camp."),
+            Outcome::Wildlife => format!("You wake to find {name} near your camp."),
+        };
+    }
     match outcome {
         Outcome::Drop => format!(
             "You spot {name} {}. They have not seen you.",
@@ -277,7 +306,7 @@ fn told(outcome: Outcome, name: &str, landscape: Option<Landscape>) -> String {
 
 /// The view of `pending`, its entry named by `name`.
 pub(crate) fn view(pending: &Pending, name: &str, landscape: Option<Landscape>) -> EncounterView {
-    let text = told(pending.outcome, name, landscape);
+    let text = told(pending.outcome, name, landscape, pending.woken);
     let text = if pending.known {
         format!("{text} {KNOWN_LINE}")
     } else {
@@ -331,26 +360,10 @@ impl World {
     /// while an encounter is pending.
     fn encounter_roll(&mut self, step: i64) {
         let content = self.content.clone();
-        let Some(rules) = content.meetings() else {
+        let Some((rules, cell, here, tables, percent)) = self.odds(&content) else {
             return;
         };
-        if self.state.encounter.is_some() || self.state.current().kind != LevelKind::Overworld {
-            return;
-        }
-        let campaign = self.state.campaign.clone();
-        if content.encounter_tables(&campaign).next().is_none() {
-            return;
-        }
-        let cell = self.player_pos();
-        let Some(here) = self.here(cell) else {
-            return;
-        };
-        let tables = self.matching(&content, &campaign, &here);
-        let percent = (tables.iter()).fold(u64::from(rules.phase.of(here.phase)), |p, t| {
-            p * u64::from(t.rate_percent) / 100
-        });
-        let speed = u64::from(self.state.player().speed(&content).max(1));
-        let seconds = u64::try_from(step).unwrap_or(0) / speed;
+        let seconds = self.seconds_of(step);
         let chance = u64::from(rules.rate_of(here.landscape)) * seconds * percent / (3600 * 100);
         if chance == 0 {
             return;
@@ -359,9 +372,87 @@ impl World {
         if u64::from(rng.below(10_000)) >= chance {
             return;
         }
+        self.draw_entry(&tables, &here, cell, step, Watch::Travel);
+    }
+
+    /// The roll for a turn of a rest or a forage on the overworld whose energy price is
+    /// `price` (#807; one line in each one's turn): the rate for the turn's time (a rest's
+    /// `[rest] rate_percent` of it), drawn exactly (`below` of 10 000 × 3600 × 100: the chance
+    /// in basis points × seconds × percent), so turns of a few seconds add up to the rate an
+    /// hour. Draws nothing where a step's roll draws nothing, or while an area is to open.
+    pub(super) fn watch_roll(&mut self, watch: Watch, price: i64) {
+        if self.encounter.opening.is_some() {
+            return;
+        }
+        let content = self.content.clone();
+        let Some((rules, cell, here, tables, percent)) = self.odds(&content) else {
+            return;
+        };
+        let share = match watch {
+            Watch::Rest => u64::from(rules.rest_percent),
+            Watch::Travel | Watch::Forage => 100,
+        };
+        let seconds = self.seconds_of(price);
+        let chance = u64::from(rules.rate_of(here.landscape)) * seconds * percent * share / 100;
+        if chance == 0 {
+            return;
+        }
+        const OUT_OF: u32 = 10_000 * 3600 * 100;
+        if u64::from(self.encounters_rng().below(OUT_OF)) >= chance {
+            return;
+        }
+        let step = price_of_travel(&content, Some(here.terrain));
+        self.draw_entry(&tables, &here, cell, step, watch);
+    }
+
+    /// The game seconds an energy price is to the player, at their speed.
+    fn seconds_of(&self, price: i64) -> u64 {
+        let speed = u64::from(self.state.player().speed(&self.content).max(1));
+        u64::try_from(price).unwrap_or(0) / speed
+    }
+
+    /// What a roll on the player's overworld cell now goes by: the rules, the cell, the moment,
+    /// the matching tables, and the percent of the rate (the phase's × each table's); `None`
+    /// where nothing is rolled (the module docs' roll).
+    #[allow(clippy::type_complexity)]
+    fn odds<'c>(
+        &self,
+        content: &'c Content,
+    ) -> Option<(
+        &'c crate::content::Meetings,
+        Pos,
+        Here,
+        Vec<&'c EncounterTable>,
+        u64,
+    )> {
+        let rules = content.meetings()?;
+        if self.state.encounter.is_some() || self.state.current().kind != LevelKind::Overworld {
+            return None;
+        }
+        let campaign = &self.state.campaign;
+        content.encounter_tables(campaign).next()?;
+        let cell = self.player_pos();
+        let here = self.here(cell)?;
+        let tables = self.matching(content, campaign, &here);
+        let percent = (tables.iter()).fold(u64::from(rules.phase.of(here.phase)), |p, t| {
+            p * u64::from(t.rate_percent) / 100
+        });
+        Some((rules, cell, here, tables, percent))
+    }
+
+    /// A roll made: the matching tables' entries whose own `when` holds, one by weight (one
+    /// draw), met on `cell` (`step` the price a detour takes its share of).
+    fn draw_entry(
+        &mut self,
+        tables: &[&EncounterTable],
+        here: &Here,
+        cell: Pos,
+        step: i64,
+        watch: Watch,
+    ) {
         let entries: Vec<&EncounterEntry> = (tables.iter())
             .flat_map(|t| &t.entries)
-            .filter(|e| self.when_holds(&e.when, &here))
+            .filter(|e| self.when_holds(&e.when, here))
             .collect();
         let total: u32 = entries.iter().map(|e| e.weight).sum();
         if total == 0 {
@@ -376,7 +467,7 @@ impl World {
             return;
         };
         let side = self.arrival_side();
-        self.meet(entry, cell, side, step, None);
+        self.meet(entry, cell, side, step, None, watch);
     }
 
     /// The `encounters` stream, made on the first draw.
@@ -520,6 +611,7 @@ impl World {
         side: Dir,
         step: i64,
         forced: Option<Forced>,
+        watch: Watch,
     ) {
         // Parties whose members are all gone are forgotten.
         let state = &mut *self.state;
@@ -546,6 +638,8 @@ impl World {
                     Some(Forced::Met) => (true, true),
                     Some(Forced::Ambushed) => (false, true),
                     Some(Forced::Pass) => (false, false),
+                    // Asleep: the party always finds the camp; woken in time, they meet.
+                    None if watch == Watch::Rest => (self.sleepers_lookout(entry), true),
                     None => self.lookouts(entry),
                 };
                 match (mine, theirs) {
@@ -565,21 +659,26 @@ impl World {
             members,
             step,
             known,
+            woken: watch == Watch::Rest,
         };
         let Some(outcome) = outcome else {
             // Ambushed: no question; the fight opens on the party's terms.
-            self.say(format!(
-                "You are set upon by {} {}!",
-                entry.name,
-                from_cover(landscape)
-            ));
+            let line = match pending.woken {
+                true => format!("You wake with {} upon you!", entry.name),
+                false => format!(
+                    "You are set upon by {} {}!",
+                    entry.name,
+                    from_cover(landscape)
+                ),
+            };
+            self.say(line);
             self.encounter.opening = Some(Opening {
                 pending,
                 how: How::Ambushed,
             });
             return;
         };
-        self.say(told(outcome, &entry.name, landscape));
+        self.say(told(outcome, &entry.name, landscape, pending.woken));
         if known {
             self.say(KNOWN_LINE);
         }
@@ -648,6 +747,46 @@ impl World {
             self.train(Use::Sneak);
         }
         (saw, seen)
+    }
+
+    /// The resting player's lookout (gameplay stream, two draws; #807): whether they wake in
+    /// time. By ear alone: Willpower modifier + talents' Willpower checks + their hearing
+    /// (Listen's `hearing` and Keen ears, as [`super::Actor::hearing`] reads them, at most
+    /// [`crate::skills::MAX_ENCOUNTER_BONUS`]; none for the deaf) + Alert's `notice`, against
+    /// `difficulty` + the lead type's `stalk` + the rain (neither cover nor the dark hides a
+    /// sound). Marks Listen's `hear`.
+    fn sleepers_lookout(&mut self, entry: &EncounterEntry) -> bool {
+        let content = self.content.clone();
+        let Some(rules) = content.meetings() else {
+            return false;
+        };
+        let Some(here) = self.here(self.player_pos()) else {
+            return false;
+        };
+        let c = &rules.checks;
+        let lead = content.creature(entry.lead);
+        let player = self.state.player();
+        let talents = player.talent_mods(&content);
+        let ears = match player.hearing(&content) {
+            Some(_) => (player.skill_effect(&content, Effect::Hearing) + talents.hearing)
+                .clamp(0, crate::skills::MAX_ENCOUNTER_BONUS),
+            None => 0,
+        };
+        let rain = match here.weather {
+            Weather::Rain => c.rain,
+            Weather::HeavyRain => c.heavy_rain,
+            _ => 0,
+        };
+        let mine = player.effective_stats(&content).modifier(Stat::Willpower)
+            + talents.check(Stat::Willpower)
+            + ears
+            + talents.notice.unwrap_or(0);
+        let against = c.difficulty + lead.skills.effect(&content, Effect::Stalk) + rain;
+        let woke = check::check(&mut self.state.rng, mine, against);
+        if self.trains(Use::Hear) {
+            self.train(Use::Hear);
+        }
+        woke
     }
 
     /// Refuses `action` while an encounter is pending, unless it answers it or takes no game
@@ -809,7 +948,7 @@ impl World {
         }
         let side = self.arrival_side();
         let step = price_of_travel(&content, local.map(|l| l.terrain));
-        self.meet(entry, cell, side, step, forced);
+        self.meet(entry, cell, side, step, forced, Watch::Travel);
         Spent::NoTime
     }
 }

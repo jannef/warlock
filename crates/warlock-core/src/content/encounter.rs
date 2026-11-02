@@ -73,6 +73,8 @@ pub struct Meetings {
     pub evade: Evade,
     /// How long lying in wait takes, in seconds (`encounter:ambush`).
     pub ambush_wait: u32,
+    /// Percent of the landscape's rate an hour of rest on the overworld rolls (#807).
+    pub rest_percent: u32,
 }
 
 /// Percent of the rate by day, in twilight, and at night.
@@ -174,12 +176,19 @@ struct RulesFile {
     positions: Option<Positions>,
     evade: Option<Evade>,
     ambush: Option<AmbushSpec>,
+    rest: Option<RestSpec>,
 }
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct AmbushSpec {
     wait_seconds: u32,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RestSpec {
+    rate_percent: u32,
 }
 
 /// The landscape an id names, among those a step may roll on.
@@ -227,6 +236,7 @@ impl EncounterRules {
                 positions: None,
                 evade: None,
                 ambush: None,
+                rest: None,
                 ..
             } => None,
             RulesFile {
@@ -236,6 +246,7 @@ impl EncounterRules {
                 positions: Some(positions),
                 evade: Some(evade),
                 ambush: Some(ambush),
+                rest: Some(rest),
                 ..
             } => Some(Meetings::parse(MeetingsFile {
                 rate,
@@ -244,10 +255,11 @@ impl EncounterRules {
                 positions,
                 evade,
                 ambush,
+                rest,
             })),
             _ => Some(Err(
-                "`rate`, `phase`, `checks`, `positions`, `evade`, and `ambush` are all given \
-                 or none"
+                "`rate`, `phase`, `checks`, `positions`, `evade`, `ambush`, and `rest` are all \
+                 given or none"
                     .to_string(),
             )),
         };
@@ -266,6 +278,7 @@ struct MeetingsFile {
     positions: Positions,
     evade: Evade,
     ambush: AmbushSpec,
+    rest: RestSpec,
 }
 
 impl Meetings {
@@ -317,6 +330,9 @@ impl Meetings {
         if !(1..=crate::time::MINUTES_PER_DAY * 60).contains(&parsed.ambush.wait_seconds) {
             return Err(err("`ambush.wait_seconds` is 1 to a day".into()));
         }
+        if parsed.rest.rate_percent > 1000 {
+            return Err(err("`rest.rate_percent` is 0 to 1000".into()));
+        }
         Ok(Self {
             rate,
             phase: parsed.phase,
@@ -332,6 +348,7 @@ impl Meetings {
             positions: pos,
             evade: e,
             ambush_wait: parsed.ambush.wait_seconds,
+            rest_percent: parsed.rest.rate_percent,
         })
     }
 
