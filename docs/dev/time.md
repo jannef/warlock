@@ -35,7 +35,9 @@ that disturb a rest, with the player's line of sight kept while `World::reshaped
 overworld, with Blood scent, and for light-blind eyes, where only a perception will do
 (`stride_tests::a_rest_sees_whom_a_perception_sees`). While the player rests (`World::resting`),
 creatures away from them take coarse turns (`world/stride.rs`, `docs/dev/creatures.md`), and
-`out_of_view_for` counts a stride's head start. A new action that takes time
+`out_of_view_for` counts a stride's head start. On the overworld each turn of a rest or a forage rolls for an
+encounter (`World::watch_roll`, `docs/dev/encounters.md` "Camping and foraging"); the line it says
+stops the long action. A new action that takes time
 needs an `ActionKind` (with its id and a line in `data/actions.toml`) and must return its price
 there,
 asked through `price_of`/`step_price`/`price_for`: those apply the actor's burden (`docs/dev/burden.md`,
