@@ -138,6 +138,7 @@ Silenced also blocks `song` (the bard's songs, `world/song.rs`, #870). A song's 
 degrees are time, the combat bonus stays. The Lullaby (#873) gives `drowsy` (`max = 3`,
 `stacking = "refresh"`) to the hostile hearers who fail its check, caused by the singer.
 **Under a hex**: an actor has an effect whose status a `kind = "hex"` spell lays;
+A familiar's touch gives hexes too, with its master as the giver (`docs/dev/familiar.md`).
 `Content::hex_statuses()` (computed at load from the spells, in status order; `ill_wished`,
 `weakened`, `sluggish`, `drowsy`, `webbed`) is the one definition, "of hers" adds `Effect::by`
 the player. The witch's Cackle (#904, `world/witch.rs`) reads it: each such hex on a creature

@@ -68,6 +68,10 @@ pub struct Witness<'a> {
     /// The type of the companion at their side as the run begins, if any (spec §8 "Allies":
     /// made before the story is told).
     pub companion: Option<CreatureId>,
+    /// A kept beast at their side as the run begins, a companion or a familiar (spec §8
+    /// "Allies"): what the companion chapter's `when` reads. A familiar's own lines are #931's
+    /// (F3); until then a familiar is told the chapter's plain line.
+    pub kept: bool,
 }
 
 impl Witness<'_> {
@@ -137,7 +141,7 @@ pub fn tell(content: &Content, seed: u64, witness: &Witness) -> Story {
     for chapter in background.chapters_for(witness.campaign) {
         // A chapter that is not this witness's is skipped before its stream is drawn: its own
         // stream, so no other chapter moves (the companion's chapter, `docs/dev/companion.md`).
-        if !chapter.when.fits(witness.companion.is_some()) {
+        if !chapter.when.fits(witness.kept) {
             continue;
         }
         let mut rng = Rng::background(seed, &witness.character.spec, &chapter.id);

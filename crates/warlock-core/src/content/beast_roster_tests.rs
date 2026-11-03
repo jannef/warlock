@@ -1,25 +1,31 @@
-//! The beasts (#839, #916, `docs/dev/creatures/beasts.md`): the wild animals the druid's calls
-//! bring and the ranger's companions, every type tagged `beast`. Wildlife (neutral to everyone,
-//! so never a stray), on the XP guideline, no unique, tameable, and each at the numbers of the
-//! druid design's table (§7.3) and the companion design's (§12.2).
+//! The beasts (#839, #916, #929, `docs/dev/creatures/beasts.md`): the wild animals the druid's
+//! calls bring, the ranger's companions, and the witch's familiars, every type tagged `beast`.
+//! Wildlife (neutral to everyone, so never a stray), on the XP guideline, no unique, tameable
+//! but for the familiars' own kinds (called, never tamed), and each at the numbers of the druid
+//! design's table (§7.3), the companion design's (§12.2), and the familiar design's (§6.1).
 
 use super::Content;
 use crate::stats::Stat;
 
-/// Every beast: its id, level, max hit points (Toughness + `base_hp`), and attack dice, by id.
-const BEASTS: &[(&str, u8, i32, &str)] = &[
-    ("badger", 2, 19, "1d6"),
-    ("bear", 12, 60, "2d6"),
-    ("black_hound", 5, 24, "1d8"),
-    ("boar", 2, 20, "1d8"),
-    ("cave_lizard", 2, 16, "1d6"),
-    ("great_boar", 6, 30, "2d6"),
-    ("hound", 1, 12, "1d4"),
-    ("large_spider", 2, 13, "1d4"),
-    ("lynx", 2, 13, "1d6"),
-    ("panther", 6, 24, "1d8"),
-    ("polecat", 1, 10, "1d4"),
-    ("wolf", 4, 16, "1d6"),
+/// Every beast: its id, level, max hit points (Toughness + `base_hp`), attack dice, and whether
+/// it may be tamed, by id.
+const BEASTS: &[(&str, u8, i32, &str, bool)] = &[
+    ("badger", 2, 19, "1d6", true),
+    ("bear", 12, 60, "2d6", true),
+    ("black_hound", 5, 24, "1d8", true),
+    ("boar", 2, 20, "1d8", true),
+    ("cat", 1, 10, "1d2", false),
+    ("cave_lizard", 2, 16, "1d6", true),
+    ("great_boar", 6, 30, "2d6", true),
+    ("hare", 1, 10, "1d2", false),
+    ("hound", 1, 12, "1d4", true),
+    ("large_spider", 2, 13, "1d4", true),
+    ("lynx", 2, 13, "1d6", true),
+    ("panther", 6, 24, "1d8", true),
+    ("polecat", 1, 10, "1d4", true),
+    ("raven", 1, 9, "1d3", false),
+    ("toad", 1, 10, "1d2", false),
+    ("wolf", 4, 16, "1d6", true),
 ];
 
 #[test]
@@ -31,7 +37,7 @@ fn the_beasts_keep_to_their_table() {
     for creature in content.tagged("beast") {
         let def = content.creature(creature);
         let id = def.id.as_str();
-        let &(_, level, hp, dice) = (BEASTS.iter())
+        let &(_, level, hp, dice, tameable) = (BEASTS.iter())
             .find(|(b, ..)| *b == id)
             .unwrap_or_else(|| panic!("{id}: give it a row in BEASTS"));
         seen.push(id);
@@ -49,7 +55,10 @@ fn the_beasts_keep_to_their_table() {
         let attack = def.attack.as_ref().expect("an attack");
         assert_eq!(attack.attack.damage.to_string(), dice, "{id}: attack");
         assert!(def.depart.is_some(), "{id}: its own departure words");
-        assert!(def.tameable, "{id}: a beast may be tamed");
+        assert_eq!(
+            def.tameable, tameable,
+            "{id}: tameable, or a familiar's kind"
+        );
     }
     seen.sort_unstable();
     let listed: Vec<&str> = BEASTS.iter().map(|b| b.0).collect();

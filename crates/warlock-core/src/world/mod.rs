@@ -132,6 +132,7 @@ mod encounter_area;
 mod equip;
 mod experience;
 mod eyes;
+mod familiar;
 mod feature;
 mod fight;
 mod flavour;
@@ -263,6 +264,7 @@ pub use encounter::{
     Outcome as EncounterOutcome, PENDING_REFUSED, Party, Pending,
 };
 pub use experience::{Discovered, Progress};
+pub use familiar::{draw as familiar_draw, name_for as familiar_name};
 pub use fight::{Cause, Death};
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
@@ -909,9 +911,12 @@ impl World {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);
-        // Animal companion's beast (spec §8 "Allies"; `companion.rs`), before the story knows it.
+        // Animal companion's beast and the witch's familiar (spec §8 "Allies"; `companion.rs`,
+        // `familiar.rs`), before the story knows them.
         world.bring_companion();
-        if world.settle_in() || world.companion().is_some() {
+        world.bring_familiar();
+        let kept = world.companion().is_some() || world.familiar().is_some();
+        if world.settle_in() || kept {
             *world.perception =
                 Perception::compute(&world.state, &world.content, &mut world.lights);
         }

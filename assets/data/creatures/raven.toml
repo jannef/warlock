@@ -1,0 +1,27 @@
+# The beasts (docs/dev/creatures/beasts.md; content::beast_roster_tests checks them): the
+# witch's raven, *hræfn* (#929; docs/design/witch-familiar.md §6), the far-seeing one, keenest
+# in daylight. It flies: no footsteps. A familiar's kind (familiars.toml), called, never tamed.
+# Wildlife: it fights no one unless it is someone's.
+[[creature]]
+id = "raven"
+level = 1
+xp = 15
+name = "raven"
+glyph = "B"
+fg = "#4a4a5a"
+speed = 1300
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+sight = 12
+hearing = 8
+weight = 1200
+size = "small"
+stats = { strength = 2, dexterity = 16, toughness = 9, intelligence = 2, willpower = 12, presence = 6 }
+depart = "flaps away into the dark"
+on_eat = { message = "Dark, tough meat that tastes of carrion.", vomit = 20 }
+[creature.attack]
+damage = "1d3"
+damage_type = "piercing"
+name = "beak"
+verb = "pecks"

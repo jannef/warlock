@@ -33,6 +33,7 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["scholar", "grit"] }
 abilities = [
     { level = 1, talent = "herb_lore" },
     { level = 1, talent = "evil_eye" },
+    { level = 1, talent = "familiar" },
     { level = 3, talent = "hex_of_weakness" },
     { level = 6, talent = "cackle" },
     { level = 12, talent = "poison_lore" },

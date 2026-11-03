@@ -147,6 +147,7 @@ A **hex** is a status a [hex spell](magic.md#shapes) lays: [Hexed](status-effect
 [Drowsy](status-effects.md#status-drowsy), and [Webbed](status-effects.md#status-webbed). A
 [witch](classes.md#witch)'s [cackle](abilities.md#ability-cackle) keeps the hexes she laid on: each
 on a creature she sees grows a degree, to its maximum, and its degree's time starts again. Her
+[familiar](allies.md#the-touch)'s touch lays her Hexed on what it hits and starts her other hexes on it afresh. Her
 [malison](talents.md#talent-malison) makes a creature under a hex take 3 more damage from her
 for each hex, and one dying under a hex of hers pays her mana.
 

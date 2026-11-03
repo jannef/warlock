@@ -6,6 +6,9 @@ decisions, which override the rest). Slice **C1** (#916, this file: the starting
 story's chapter, growth, always along, the nose) **C4** Pack tactics (#919, below), and **C5** Hunter's bond (#920, below); C2 Tame, C3 the
 collar, C6 Sic 'em, C7 the wild beasts, C8 the probe build on it. The ally core it uses as
 it is (the side, the arm, the orders, the retinue, the kill credit) is `docs/dev/allies.md`.
+The witch's familiar (`docs/dev/familiar.md`) is the same **kept** beast: what here is the name,
+growth, always along, the words, the status bar, and the Character screen's row reads
+`AllySource::kept()` (`Actor::kept()`), and only what is the ranger's reads `Actor::companion()`.
 Keep it current with the code, as CLAUDE.md says.
 
 ## What a companion is
