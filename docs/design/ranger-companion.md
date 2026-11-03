@@ -838,3 +838,14 @@ Only what genuinely needs the owner; everything else above is decided with a rea
 | Q2 | **The rares**: a wolf (4), a black hound (5), a great boar (6), a panther (6), at 50 per mille for every race | **as listed**: all between 4 and 6, so a jackpot is felt (two to three levels of hit points and dice over a common start) without carrying the first floors alone; a bear (12) is left out on purpose |
 | Q3 | **The nose through doors**: a beast smells only along its line of sight (as Blood scent does), or also through a closed door (what is behind a door is the classic use of a dog)? | **line of sight**: one rule, the pass the code has, and a closed door is opened by the ranger in a turn; through doors is one more arm (the cells beyond each door adjacent to the beast) if the owner wants it |
 | Q4 | **Shared buffs' sources**: every buff status the ranger gains (spells, scrolls, potions, boons), or buff spells only? | **every buff status**: the hook in `afflict` is one door and sees them all; "buffs cast on" in the owner's words was about the kind, not the source. A potion of haste shared with the hound is the fun of it |
+
+## 20. Decisions: the owner's third round (2026-11-03, approving)
+
+Recorded verbatim from PR #832; the §19 questions not named take their defaults.
+
+| # | The owner | What it means |
+|---|---|---|
+| §19 q1 | "Growth for every master: yes," | a tamed beast grows with its master's level, whoever the master |
+| §19 q2 | (not named) | the default: wolf, black hound, great boar, panther at 50 ‰ |
+| §19 q3 | "The nose through doors: through closed door too." | **not the default**: the nose finds hostiles within its reach through closed doors as well, not only in the beast's line of sight (C1's nose predicate and C5's shared cells read it so) |
+| §19 q4 | "Shared buffs' sources: every buff status" | the default: any buff status, whatever laid it; never a hex |
