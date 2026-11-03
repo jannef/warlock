@@ -107,6 +107,7 @@ mod chest;
 mod class;
 mod class_ability;
 mod collapse;
+mod companion;
 mod concentration;
 mod consecrate;
 mod court;
@@ -248,6 +249,7 @@ pub use attacks::{AttackSource, OwnAttack};
 pub use calling::CallingStatus;
 pub use cast::Reach;
 pub use caster_level::casting_percent;
+pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use curse::{Rising, rise_candidates, rises_as};
 pub use dig::{MAX_DIG, WORK_SCALE, dig_work, digs_to_break};
@@ -904,7 +906,9 @@ impl World {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);
-        if world.settle_in() {
+        // Animal companion's beast (spec §8 "Allies"; `companion.rs`), before the story knows it.
+        world.bring_companion();
+        if world.settle_in() || world.companion().is_some() {
             *world.perception =
                 Perception::compute(&world.state, &world.content, &mut world.lights);
         }
@@ -1732,6 +1736,8 @@ mod read_tests;
 mod resource_talent_tests;
 #[cfg(test)]
 mod resource_tests;
+#[cfg(test)]
+mod retribution_tests;
 #[cfg(test)]
 mod reveal_tests;
 #[cfg(test)]

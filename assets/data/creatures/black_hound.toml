@@ -1,0 +1,30 @@
+# The beasts (docs/dev/creatures/beasts.md; content::beast_roster_tests checks them): the great
+# black dog of the lanes that the old folk cross themselves at, a rare starting companion for
+# any race (#916). The best nose there is. Wildlife: it fights no one unless it is someone's.
+[[creature]]
+id = "black_hound"
+level = 5
+xp = 35
+name = "black hound"
+glyph = "d"
+fg = "#4a4a58"
+speed = 1250
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 12
+footsteps = 40
+hearing = 22
+weight = 45000
+stats = { strength = 15, dexterity = 15, toughness = 14, intelligence = 4, willpower = 13, presence = 8 }
+base_hp = 10
+tameable = true
+nose = 10
+depart = "is gone into the fog"
+on_eat = { message = "Dog. You try not to think about it.", vomit = 10 }
+[creature.attack]
+damage = "1d8"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"

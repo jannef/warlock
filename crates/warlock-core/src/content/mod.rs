@@ -21,6 +21,7 @@ mod campaign;
 mod chest;
 mod circles;
 mod class;
+mod companion;
 mod creature;
 #[cfg(test)]
 mod creature_body_tests;
@@ -171,8 +172,8 @@ pub use ally::AllyRules;
 pub use anim::GlyphAnim;
 pub use animated::{Animated, AnimatedDef, Body, ID_PREFIX, Line, Numbers, Ramp, SlotLine};
 pub use background::{
-    AgeRange, Background, Chapter, Effect as StoryEffect, Line as StoryLine, Marks, Points,
-    Tier as StoryTier, Tiers, When,
+    AgeRange, Background, Chapter, ChapterWhen, Effect as StoryEffect, Line as StoryLine, Marks,
+    Points, Tier as StoryTier, Tiers, When,
 };
 pub use calendar::Calendar;
 pub use calling::{CallingDef, MAX_MESSAGE as MAX_CALLING_MESSAGE};
@@ -182,6 +183,9 @@ pub use circles::{CircleStatuses, CircledStatus, school_index};
 #[cfg(test)]
 pub(crate) use class::strip_tables as strip_class_tables;
 pub use class::{BonusTalents, CASTING, ClassActive, ClassDef};
+pub use companion::{
+    CHAPTER as COMPANION_CHAPTER, CompanionRules, Growth as CompanionGrowth, TameRules,
+};
 pub use creature::{
     Budge, Combat, CorpseGifts, CreatureDef, CreatureId, DEFAULT_SIGHT, Hide, Incorporeal,
     MAX_TAG_WIDEN, MAX_TRAIN, MAX_WIDEN, NORMAL_SPEED, NaturalAttack, OnEat, SPEEDS, is_proper,
@@ -665,6 +669,9 @@ pub struct Content {
     /// The constants of the ally core (`data/allies.toml`, spec §8 "Allies"); none without the
     /// file, when no ally can be made.
     allies: Option<AllyRules>,
+    /// The animal companion's data (`data/companions.toml`, spec §8 "Allies"); none without
+    /// the file, when no companion can be made.
+    companions: Option<CompanionRules>,
     /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
     stat_training: StatTraining,
     factions: Factions,
@@ -817,6 +824,7 @@ impl Content {
             intimidate: None,
             prayer: None,
             allies: None,
+            companions: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
             lights: Vec::new(),
@@ -1226,6 +1234,11 @@ impl Content {
         overworld::link_edge_exits(&mut content.levels);
         content.load_kits()?;
         content.load_background(files)?;
+        // The companion's data names creatures, races, and the story's chapter.
+        let path = "data/companions.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.companions = Some(CompanionRules::parse(path, text, &content)?);
+        }
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("scenarios") {
             if let Some(first) = seen.insert(id.to_string(), path) {
@@ -1721,6 +1734,45 @@ impl Content {
                     "creature `{}`: `depart` must not be empty",
                     spec.id
                 )));
+            }
+            // A companion's type (spec §8 "Allies"): a beast, and nothing cleverer (the orcs'
+            // wargs are beasts of a people's faction, so the faction is not what decides).
+            if spec.tameable {
+                let armed = spec.racial_weapon.is_some() || !spec.gear.is_empty();
+                let why = match () {
+                    _ if spec.unique => Some("a unique"),
+                    _ if spec.animated.is_some() => Some("an animated object"),
+                    _ if spec.summon.is_some() => Some("a summoner"),
+                    _ if spec.opens_doors => Some("one that opens doors"),
+                    _ if spec.race.is_some() => Some("one of the peoples"),
+                    _ if spec.combat != creature::Combat::Melee => {
+                        Some("one that fights from afar")
+                    }
+                    _ if armed => Some("one that carries gear"),
+                    _ => None,
+                };
+                if let Some(why) = why {
+                    return Err(err(format!(
+                        "creature `{}`: `tameable`, but {why}",
+                        spec.id
+                    )));
+                }
+            }
+            if let Some(nose) = spec.nose {
+                if !spec.tameable {
+                    return Err(err(format!(
+                        "creature `{}`: `nose` is for a `tameable` type",
+                        spec.id
+                    )));
+                }
+                if !creature::NOSES.contains(&nose) {
+                    return Err(err(format!(
+                        "creature `{}`: `nose` is {} to {} cells, not {nose}",
+                        spec.id,
+                        creature::NOSES.start(),
+                        creature::NOSES.end()
+                    )));
+                }
             }
             if let Some(animated) = &mut spec.animated {
                 animated.family = CreatureId(id.0 - u16::from(animated.member));
@@ -3087,6 +3139,12 @@ impl Content {
     /// file, when no ally can be made.
     pub fn allies(&self) -> Option<&AllyRules> {
         self.allies.as_ref()
+    }
+
+    /// The animal companion's data (spec §8 "Allies"; `data/companions.toml`); `None` without
+    /// the file, when no companion can be made.
+    pub fn companions(&self) -> Option<&CompanionRules> {
+        self.companions.as_ref()
     }
 
     /// The rules of stat training (spec §8 "Stats"; `data/stats.toml`, else

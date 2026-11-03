@@ -11,10 +11,14 @@ use warlock_core::content::{Content, Marks, StoryEffect, StoryLine, StoryTier};
 const CAMPAIGN: &str = "ascmearc";
 
 /// How many chapters a story of the campaign has.
+/// The chapters every story in the Ascmearc has: those told to everyone (the companion's is
+/// told only with a starting beast, and counts for no one's odds).
 fn chapters(content: &Content) -> usize {
-    content
-        .background()
-        .map_or(0, |b| b.chapters_for(CAMPAIGN).count())
+    content.background().map_or(0, |b| {
+        (b.chapters_for(CAMPAIGN))
+            .filter(|c| c.when == warlock_core::content::ChapterWhen::default())
+            .count()
+    })
 }
 
 /// A percentage to a tenth, the tenth left out when it is 0: `12 %`, `0.5 %`, `3.9 %`.
@@ -258,6 +262,18 @@ fn when_text(content: &Content, line: &StoryLine) -> String {
     if !campaigns.is_empty() {
         parts.push(format!("in {}", any_of(&campaigns)));
     }
+    let beasts: Vec<String> = (w.companion.iter())
+        .map(|&c| {
+            link(
+                Term::Creature,
+                &content.creature(c).id,
+                &content.creature(c).name,
+            )
+        })
+        .collect();
+    if !beasts.is_empty() {
+        parts.push(format!("with {} at your side", any_of(&beasts)));
+    }
     parts.retain(|p| !p.is_empty());
     dash(parts.join("; "))
 }
@@ -357,4 +373,8 @@ pub(super) fn leaving(content: &Content) -> String {
 
 pub(super) fn road(content: &Content) -> String {
     chapter(content, "road")
+}
+
+pub(super) fn companion(content: &Content) -> String {
+    chapter(content, "companion")
 }

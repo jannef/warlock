@@ -1,0 +1,31 @@
+# The beasts (docs/dev/creatures/beasts.md; content::beast_roster_tests checks them): the
+# ratter of the burrows and barns, small and quick, a companion of the halflings', gnomes', and
+# ratfolk's (#916). Wildlife: it fights no one unless it is someone's.
+[[creature]]
+id = "polecat"
+level = 1
+xp = 15
+name = "polecat"
+glyph = "r"
+fg = "#a08860"
+speed = 1300
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+vision = "low_light"
+sight = 8
+footsteps = 20
+hearing = 15
+weight = 1500
+size = "small"
+stats = { strength = 6, dexterity = 16, toughness = 9, intelligence = 2, willpower = 10, presence = 4 }
+base_hp = 1
+tameable = true
+nose = 6
+depart = "darts away into the straw"
+on_eat = { message = "Rank and stringy; it stays down, barely.", vomit = 20 }
+[creature.attack]
+damage = "1d4"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"

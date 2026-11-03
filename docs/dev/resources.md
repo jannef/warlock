@@ -182,7 +182,12 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   Fire breath's). The cost is read in one place, `ability.rs::class_cost` (the talent's
   `resource`, with Avatar's `hands_cost_percent` of it for Lay on hands, `percent_of`, at least
   1), by `Ability::unavailable` and by `use_class`, which, for a holy gift (`ClassActive::holy`),
-  asks `World::answered` before it spends, so an unanswered smite or heal spends nothing. A deed
+  asks `World::answered` before it spends, so an unanswered smite or heal spends nothing.
+  Retribution (P3, #912, the paladin's at 25) spends 4 a blow it answers:
+  `TalentEffect::Retribution { resource, cost }` (`TalentMods::retribution`), read in one place,
+  `World::retribution` (`world/smite.rs`), after its other checks (the attack hit, the attacker
+  beside, the bands), so a blow it does not answer spends nothing; the blow taken has already
+  built its point (`Struck` fires in `resolve`, before the attack's end), so 3 held answers. A deed
   toward evil empties it (`World::shift_alignment`, `docs/dev/alignment.md`). The priest no
   longer has Smite (#891), so the paladin alone holds it. Tests: `world/smite_tests.rs`,
   `world/smite_mode_tests.rs`, `world/class_active_tests.rs`.

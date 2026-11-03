@@ -151,3 +151,57 @@ impl World {
         Some(profile)
     }
 }
+
+impl World {
+    /// Retribution (the paladin design §6.4; `Cue::Attacked`, `free_blow.rs`): hostile
+    /// `attacker`'s melee attack on `target` is over and landed a blow (`hit`). When `target` is
+    /// the player, holding Retribution and its cost, within its bands, not off guard, and the
+    /// attacker still stands beside them, the cost is spent and their smite (the dice, the aim,
+    /// the unholy die; no mode's rider) answers it, free but for one exertion. Unanswered, it is
+    /// silent: no line, nothing spent. No draw while deciding.
+    pub(super) fn retribution(
+        &mut self,
+        attacker: ActorId,
+        target: ActorId,
+        hit: bool,
+        events: &mut Vec<Event>,
+    ) -> Option<super::free_blow::FreeBlow> {
+        let player = self.state.player;
+        if !hit || target != player || self.state.death.is_some() {
+            return None;
+        }
+        let content = self.content.clone();
+        let (me, them) = (self.state.player(), self.state.actors.get(&attacker)?);
+        let cost = me.talent_mods(&content).retribution?;
+        let beside = me.level == them.level && me.pos.chebyshev(them.pos) == 1;
+        let hostile = self.stance(player, attacker) == crate::content::Stance::Hostile;
+        if !beside || !hostile || self.off_guard(player) {
+            return None;
+        }
+        // Its own bands, as a holy gift's (`World::answered`).
+        let bands = (content.talents().iter())
+            .map(|(_, def)| def)
+            .find(|def| {
+                (def.effects.iter())
+                    .any(|e| matches!(e, crate::content::TalentEffect::Retribution { .. }))
+            })
+            .and_then(|def| def.alignment);
+        if let (Some(bands), Some(_)) = (bands, content.alignment())
+            && !bands.allows(me.band(&content))
+        {
+            return None;
+        }
+        let profile = self.smite_profile(attacker)?;
+        if !self.spend_resource(player, cost.resource, cost.amount, events) {
+            return None;
+        }
+        self.exert(ActionKind::Melee);
+        Some(super::free_blow::FreeBlow {
+            by: player,
+            at: attacker,
+            kind: super::free_blow::Free::Retribution,
+            with: None,
+            profile,
+        })
+    }
+}

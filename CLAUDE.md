@@ -246,7 +246,10 @@ order, each with its source and what it asks for or why it cannot be used now: `
 one a line), `locations` (the overworld locations the player knows, `(45, 23) The Hall`, a hidden
 one only once revealed), `quests` (the quest log, active
 first: name, stage, giver, objective, and status), `story` (the player's background story,
-a paragraph a line as the story screen tells it, `no story` without one), `truth`
+a paragraph a line as the story screen tells it, `no story` without one), `companion` (the
+player's animal companion as they know it, `Snel, a hound (grade 12) at (12, 5): unhurt, order
+follow`, the cell only where they see it, `Snel, a hound (grade 12): with you` in the retinue,
+`no companion` without one; docs/dev/companion.md), `truth`
 (ground truth, hidden traps and secret doors (`S`) too, a sealed room's standing breach (`H`), a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, and hidden locations by their entrance's
 glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana (and, with any, its caster level, `cl 8`), its resources (`resources rage
@@ -287,7 +290,7 @@ word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the ba
 `raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it, `prestige`, the prestige class once called, and `classes`, every class with its own level, `[{ class, level }]`), `due` (the level-up choices due: `level`, `talents`,
 `rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`, `target` (what a rolled quest drew, else null),
-`objective`, `status`), `story` (the background story's lines: `chapter`, `line`, `text`; `character.story` the ids, `parents/plain_folk`), each seen actor's `health` and `effects` (those that show), `ally` (true for an ally of the player's), and a composite animated thing's `bands` (its colours, top first), `allies` (the player's allies wherever they are: `id`, `creature`, `name`, `health`, `order`, `at`, `source`, `lasts` (minutes, or null), `retinue`, `here`), `room` (the
+`objective`, `status`), `story` (the background story's lines: `chapter`, `line`, `text`; `character.story` the ids, `parents/plain_folk`), each seen actor's `health` and `effects` (those that show), `ally` (true for an ally of the player's), and a composite animated thing's `bands` (its colours, top first), `allies` (the player's allies wherever they are: `id`, `creature`, `name`, `health`, `order`, `at`, `source`, `lasts` (minutes, or null), `retinue`, `here`), `companion` (the player's companion: `id`, `name`, `creature`, `grade`, `health`, `order`, `at`, `pos` (where seen, else null), `retinue`; null without one), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, `magic` (affixes only once identified), and `numbers` (what it gives as the
@@ -367,6 +370,7 @@ file). Topics:
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
 - `docs/dev/allies.md` — allies: `Actor::ally`, the side, the ally arm of the AI, the three orders, following across levels and the retinue, the clock, an ally's kill, Beast-bond, the dev `ally:`
+- `docs/dev/companion.md` — the animal companion: `AllySource::Companion(CompanionData)`, the starting beast by race and the rares (`data/companions.toml`), the name, growth with the master's level (the hooks in `actor.rs`), always along, the nose, `CreatureDef::{tameable, nose}`, the story's chapter, the `companion` dump
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log

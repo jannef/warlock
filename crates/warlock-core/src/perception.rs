@@ -277,6 +277,10 @@ pub struct SeenActor {
     /// It is an ally of the player's (spec §8 "Allies"), which they know by sight.
     #[serde(skip)]
     pub ally: bool,
+    /// It is the player's companion (`world/companion.rs`): its name is in
+    /// [`PerceptionView::allies`] under its id.
+    #[serde(skip)]
+    pub companion: bool,
 }
 
 /// One of the player's allies as they know it (spec §8 "Allies"): never a number.
@@ -854,6 +858,7 @@ impl Perception {
                 shape: shape(a, content),
                 unaware: false,
                 ally: a.master() == Some(state.player),
+                companion: a.master() == Some(state.player) && a.companion().is_some(),
             })
             .collect();
         // Stalker's eye: which of them have not noticed the player.
@@ -2167,6 +2172,15 @@ impl<'a> PerceptionView<'a> {
     /// The player's allies (spec §8 "Allies"), wherever they are, in actor id order.
     pub fn allies(&self) -> &[AllyView] {
         &self.snapshot.allies
+    }
+
+    /// The player's companion among their allies (`world/companion.rs`), with its name and
+    /// grade; `None` without one.
+    pub fn companion(&self) -> Option<(&AllyView, &crate::world::CompanionData)> {
+        (self.snapshot.allies.iter()).find_map(|a| match &a.source {
+            crate::world::AllySource::Companion(data) => Some((a, data)),
+            crate::world::AllySource::Summoned { .. } => None,
+        })
     }
 
     /// How many allies are with the player: on their level or in their retinue.

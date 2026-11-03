@@ -1,0 +1,180 @@
+//! The animal companion (spec §8 "Allies"; `data/companions.toml`): the starting beasts by race
+//! and the rares with their odds, the growth table at the cadence levels for every tameable
+//! beast, through the game's own code, and the rules in words.
+
+use super::creatures::bare;
+use super::order;
+use super::text::{Term, damage_text, link, signed};
+use std::fmt::Write as _;
+use warlock_core::burden::Burden;
+use warlock_core::combat::Category;
+use warlock_core::content::{Content, CreatureId};
+use warlock_core::world::{Ally, AllySource, CompanionData, Order};
+
+/// The levels the growth table is printed at.
+const GRADES: [u8; 7] = [1, 10, 20, 30, 40, 50, 60];
+
+fn beast(content: &Content, id: CreatureId) -> String {
+    let def = content.creature(id);
+    format!(
+        "{} ({})",
+        link(Term::Creature, &def.id, &def.name),
+        def.level
+    )
+}
+
+/// Every race's starting beasts, then the rares with the odds.
+pub(super) fn starts(content: &Content) -> String {
+    let Some(rules) = content.companions() else {
+        return String::new();
+    };
+    let mut out = String::from("| Race | Starting beasts |\n|---|---|\n");
+    for (race, list) in &rules.by_race {
+        let name = content.race(race).map_or(race.clone(), |r| r.name.clone());
+        let beasts: Vec<String> = list.iter().map(|&b| beast(content, b)).collect();
+        let _ = writeln!(
+            out,
+            "| {} | {} |",
+            link(Term::Race, race, &name),
+            beasts.join(", ")
+        );
+    }
+    let rares: Vec<String> = rules.rare.iter().map(|&b| beast(content, b)).collect();
+    let _ = write!(
+        out,
+        "\nAt {} in a thousand ({:.1} %), any race's ranger begins with one of the rares instead, \
+         each as likely: {}. The beast's level is in brackets; the ranger's starting beast is at \
+         least their own level from the first turn (see the growth table below).\n",
+        rules.rare_per_mille,
+        f64::from(rules.rare_per_mille) / 10.0,
+        rares.join(", ")
+    );
+    out
+}
+
+/// Every tameable beast at the cadence levels: hit points, the blow, Defence, and Protection,
+/// read from the rules as a companion of that grade would be.
+pub(super) fn growth(content: &Content) -> String {
+    let Some(rules) = content.companions() else {
+        return String::new();
+    };
+    let mut out = String::from("| Beast | Level |");
+    for grade in GRADES {
+        let _ = write!(out, " At {grade} |");
+    }
+    out.push_str("\n|---|:---:|");
+    for _ in GRADES {
+        out.push_str("---|");
+    }
+    out.push('\n');
+    let mut beasts: Vec<(CreatureId, &warlock_core::content::CreatureDef)> =
+        (order::creatures(content).into_iter())
+            .filter(|(_, c)| c.tameable)
+            .collect();
+    beasts.sort_by(|a, b| a.1.level.cmp(&b.1.level).then(a.1.name.cmp(&b.1.name)));
+    for (id, def) in beasts {
+        let _ = write!(
+            out,
+            "| {} | {} |",
+            link(Term::Creature, &def.id, &def.name),
+            def.level
+        );
+        for grade in GRADES {
+            let mut actor = bare(content, id);
+            actor.ally = Some(Ally {
+                master: actor.id,
+                source: AllySource::Companion(CompanionData {
+                    name: String::new(),
+                    grade: rules.growth.grade(grade, def.level),
+                    scent: None,
+                }),
+                order: Order::Follow,
+                retinue: false,
+                until: None,
+            });
+            let hp = actor.max_hp(content);
+            let blow = actor.melee(content);
+            let defence = actor.defence(content, Burden::Unburdened, None);
+            let natural = defence.bonus(Category::Natural);
+            let protection = actor.protection_plus(content, None, 0).against(None);
+            let _ = write!(
+                out,
+                " {hp} hp, {} to hit, {}, Defence {}, Protection {protection} |",
+                signed(blow.to_hit),
+                damage_text(blow.damage, blow.bonus),
+                if natural != 0 {
+                    format!("{} ({} natural)", defence.total(), signed(natural))
+                } else {
+                    defence.total().to_string()
+                }
+            );
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// The companion's rules in words and numbers.
+pub(super) fn rules(content: &Content) -> String {
+    let Some(r) = content.companions() else {
+        return String::new();
+    };
+    let g = r.growth;
+    let rows = [
+        (
+            "The start",
+            format!(
+                "a ranger begins with a beast of their race's list, or at {} in a thousand one of the rares",
+                r.rare_per_mille
+            ),
+        ),
+        (
+            "Its level",
+            format!(
+                "{} % of yours, never below its kind's own, re-set at every level you gain",
+                g.grade_percent
+            ),
+        ),
+        (
+            "Hit points",
+            format!("+{} per level above its kind's", g.hp_per_level),
+        ),
+        (
+            "To hit",
+            format!("+1 per {} levels above its kind's", g.to_hit_every),
+        ),
+        (
+            "Damage",
+            format!(
+                "+1 per {} levels above its kind's, and one more die of its attack per {}",
+                g.damage_bonus_every, g.damage_dice_every
+            ),
+        ),
+        (
+            "Defence",
+            format!(
+                "+1 natural armour per {} levels above its kind's",
+                g.defence_every
+            ),
+        ),
+        (
+            "Protection",
+            "its body's at its level (a hide (level − 10) ÷ 8, scales or a shell level ÷ 6, stone \
+             level ÷ 4 + 1), never below its kind's own"
+                .to_string(),
+        ),
+        (
+            "Strength, Dexterity, Toughness",
+            format!("+1 per {} levels above its kind's", g.stat_every),
+        ),
+        (
+            "Names",
+            format!("one of {}: {}", r.names.len(), r.names.join(", ")),
+        ),
+    ];
+    let mut out = String::from("| Rule | What it is |\n|---|---|\n");
+    for (name, text) in rows {
+        let _ = writeln!(out, "| {name} | {text} |");
+    }
+    out
+}

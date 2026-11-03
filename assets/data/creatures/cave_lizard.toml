@@ -1,0 +1,31 @@
+# The beasts (docs/dev/creatures/beasts.md; content::beast_roster_tests checks them): the caves'
+# and the fens' lizard, scaled and patient, a companion of the kobolds' and lizardfolk's (#916).
+# Wildlife: it fights no one unless it is someone's.
+[[creature]]
+id = "cave_lizard"
+level = 2
+xp = 20
+name = "cave lizard"
+glyph = "l"
+fg = "#6a9a6a"
+speed = 1000
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 8
+footsteps = 30
+hearing = 10
+weight = 15000
+size = "small"
+stats = { strength = 12, dexterity = 12, toughness = 12, intelligence = 2, willpower = 10, presence = 4 }
+base_hp = 4
+natural = { defence = 1, protection = 0, name = "scales" }
+tameable = true
+depart = "slides back into a crack in the rock"
+on_eat = { message = "Lizard. Like chicken, nearly." }
+[creature.attack]
+damage = "1d6"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"

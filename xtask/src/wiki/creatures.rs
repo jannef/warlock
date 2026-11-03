@@ -222,7 +222,7 @@ fn fights(content: &Content, c: &CreatureDef) -> bool {
 /// It is read from the actor's saved form with only the fields a save requires, so every other
 /// field takes its default, as it does for a fresh creature (a field an actor gains later
 /// needs nothing here); then its type's skills.
-fn bare(content: &Content, id: CreatureId) -> Actor {
+pub(super) fn bare(content: &Content, id: CreatureId) -> Actor {
     let def = content.creature(id);
     let saved = serde_json::json!({
         "id": ActorId(0),
@@ -552,12 +552,14 @@ pub(super) fn creature_summons(content: &Content) -> String {
 }
 
 /// Each creature's speed and how long a normal action takes it, how far and with which eyes it
-/// sees, how faint a sound it hears (its listen skill included), how loud its steps are, what it
-/// weighs, its size, and its carrying limit (spec §8 "Burden").
+/// sees, how faint a sound it hears (its listen skill included), how loud its steps are, its
+/// nose as a companion (spec §8 "Allies") and whether it may be tamed, what it weighs, its size,
+/// and its carrying limit (spec §8 "Burden").
 pub(super) fn creature_senses(content: &Content) -> String {
     let mut out = String::from(
-        "| Creature | Speed | A normal action takes | Sight | Vision | Hearing | Footsteps | Weight \
-         | Size | Carrying limit |\n|---|---:|---:|---:|---|:---:|:---:|---:|---|---:|\n",
+        "| Creature | Speed | A normal action takes | Sight | Vision | Hearing | Footsteps | Nose \
+         | Tameable | Weight | Size | Carrying limit |\n\
+         |---|---:|---:|---:|---|:---:|:---:|:---:|:---:|---:|---|---:|\n",
     );
     for (id, c) in listed(content) {
         let actor = bare(content, id);
@@ -574,14 +576,19 @@ pub(super) fn creature_senses(content: &Content) -> String {
             c.stats.score(Stat::Toughness),
             size.carry,
         );
+        let nose = match c.nose {
+            Some(n) => format!("{n} cells"),
+            None => "-".to_string(),
+        };
         let _ = writeln!(
             out,
-            "| {} | {} | {} | {} cells | {} | {hearing} | {footsteps} | {} | {} | {} |",
+            "| {} | {} | {} | {} cells | {} | {hearing} | {footsteps} | {nose} | {} | {} | {} | {} |",
             link(Term::Creature, &c.id, &capital(&c.name)),
             c.speed,
             at_speed(price(NORMAL_COST, BASE_TURN), c.speed),
             c.sight,
             content.vision_profiles()[c.vision].name,
+            yes(c.tameable),
             format_weight(u64::from(c.weight)),
             size.name,
             format_weight(limit)

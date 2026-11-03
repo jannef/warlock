@@ -141,6 +141,7 @@ wiki's effect text appends "while raging".
 | `no_penalty_to`, `raise_percent` | `TalentMods::penalty(status, stat, by)` in `Effects::penalty_for` |
 | `free_blow` `flurry` | `World::second_blow` on `Cue::First` (`World::flurry`), after the off hand and the bash; two `cleave` sources make `great_cleave` |
 | `flurry_cost` | `World::flurry`: the second blow spends its cost (Ki) first, else none (`TalentMods::flurry_cost`; `docs/dev/resources.md`) |
+| `retribution { resource, cost }` (the paladin's at 25, #912; band-gated) | `World::retribution` (`world/smite.rs`), from `World::second_blow`'s `Cue::Attacked { hit }` arm before the riposte: a hostile beside the player whose melee attack hit them takes their smite (`smite_profile`) as `Free::Retribution`, its cost (zeal) spent first, else none (`TalentMods::retribution`; `docs/dev/combat.md`, `docs/dev/resources.md`) |
 | `hardened` | `World::level_up`, as the level comes (a level's hit points again, and `bonus` more, past `hp_level`) |
 | `resource_build` (Blood frenzy, Patient blade), `resource_max` (Mighty rage, Inner calm), `resource_start` (Battle trance), `resource_rate` (Battle trance, Inner calm, Steady hand, Patient blade) | `World::gain_resource` (beside the resource's own `builds`), `Actor::resource_max`, `Actor::resource_start` (`World::grant_resource`, `focus::hold`), `World::resource_rate` |
 | `unstoppable` | `World::unstoppable` (`hurt`, `Harm::Actor`: `cost` of the rage via `spend_resource`), `World::live` (the numb statuses tick nothing while Raging lasts) |

@@ -741,6 +741,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a sneak attack of yours that kills leaves you {} (1 degree)",
             status(&id)
         ),
+        TalentEffect::Companion => "an [animal companion](allies.md#companions) from the first \
+                                    turn: a beast of your race's kind, or rarely a rarer one, \
+                                    that fights for you, always comes along, and grows with \
+                                    your level"
+            .into(),
+        TalentEffect::Tame { bonus } => format!("{} on your taming checks", signed(bonus)),
         TalentEffect::SeesUnaware => "you see which creatures in view have not noticed you: \
                                       look mode says \"unaware of you\", and their glyphs are \
                                       drawn a shade cooler, breathing slowly (standing still \
@@ -1864,6 +1870,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         ),
         TalentEffect::FlurryCost { resource, cost } => format!(
             "each second blow of the flurry spends {cost} {}; with less, there is none",
+            resource_name(content, &resource).to_lowercase()
+        ),
+        TalentEffect::Retribution { resource, cost } => format!(
+            "a hostile beside you whose melee attack lands a blow on you takes your plain smite \
+             back at once (its dice, its aim, and its unholy die), free but for an exertion, spending {cost} {}; with less, or outside the talent's alignment, \
+             nothing; an attack it answers is not also riposted",
             resource_name(content, &resource).to_lowercase()
         ),
         TalentEffect::CatchMissiles { resource, cost } => format!(

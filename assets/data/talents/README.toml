@@ -498,6 +498,11 @@
 #                                 time; with less, an ordinary shot
 #   flurry_cost { resource, cost }   each second blow of its flurry spends `cost` of the
 #                                 resource; with less, it strikes none
+#   retribution { resource, cost }   a hostile's melee attack beside it that lands a blow is
+#                                 answered at once by its smite (the dice and aim of its smite
+#                                 effect, no mode's rider), free, spending `cost` of the
+#                                 resource; with less, nothing; outside the talent's
+#                                 `alignment` bands, nothing (Retribution, on zeal)
 #   catch_missiles { resource, cost }   a missile (a shot, a throw, a trap's) that would hit it
 #                                 while it holds no weapon and no shield spends `cost` of the
 #                                 resource by itself and misses, falling on its cell; with

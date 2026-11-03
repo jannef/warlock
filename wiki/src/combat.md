@@ -220,6 +220,10 @@ ranks of weapon skills and fighting styles teach them (see
 - **[Cleave](talents.md#talent-cleave)**: when your attack kills, you strike another [hostile](creatures.md#factions) creature next to you: the next
   one round from where your victim stood, going clockwise. Once per attack, or, with Cleave's second [rank](talents.md#ranks-choices-prerequisites) (great
   cleave), again after every cleave that kills.
+- **[Retribution](talents.md#talent-retribution)**: the [paladin](classes.md#paladin)'s from level 25. When a [hostile](creatures.md#factions) creature beside you
+  lands a blow of its melee attack on you, you answer with your [smite](abilities.md#ability-smite) once the attack is over (its
+  dice, your [Presence](stats.md#stat-presence) to hit, the die more on the unholy), for 4 [zeal](resources.md#resource-zeal). With less, or while you are not
+  Kind or better (see [Alignment](alignment.md)), nothing happens. An attack it answers is not also riposted.
 - **[Riposte](talents.md#talent-riposte)**: when your Parry turns a blow aside, you strike back once the attack is over (once
   per attack, however many of its blows you parried). Shots and throws are never riposted.
   While you are [poised](status-effects.md#status-poised) (the [ascetic](classes.md#ascetic)'s [patient defence](abilities.md#ability-patient-defence)) you riposte

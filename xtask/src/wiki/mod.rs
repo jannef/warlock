@@ -22,6 +22,7 @@ mod calendar;
 mod character;
 mod chests;
 mod combat;
+mod companions;
 mod creatures;
 mod damage;
 mod dialogue;
@@ -250,6 +251,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("background-trial.md", background::trial),
         ("background-fortune.md", background::fortune),
         ("background-leaving.md", background::leaving),
+        ("background-companion.md", background::companion),
         ("background-road.md", background::road),
         ("class-kits.md", kits::class_kits),
         ("race-kits.md", kits::race_kits),
@@ -325,6 +327,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("spell-circles.md", spells::circles),
         ("ally-rules.md", allies::rules),
         ("summon-spells.md", allies::summon_spells),
+        ("companion-starts.md", companions::starts),
+        ("companion-growth.md", companions::growth),
+        ("companion-rules.md", companions::rules),
         ("school-skills.md", schools::skills),
         ("school-benefits.md", schools::benefits),
         ("school-abilities.md", schools::abilities),
@@ -626,12 +631,19 @@ mod tests {
         );
         has(
             "creature-senses.md",
-            "| Cave bat | 2000 | 3 seconds | 8 cells | Darkvision | 3 | silent | 500 g | Small |",
+            "| Cave bat | 2000 | 3 seconds | 8 cells | Darkvision | 3 | silent | - | yes | 500 g | Small |",
         );
         has(
             "creature-senses.md",
-            "| Deer | 1300 | 4.6 seconds | 12 cells | Normal | 2 | 50 |",
+            "| Deer | 1300 | 4.6 seconds | 12 cells | Normal | 2 | 50 | - | yes |",
         );
+        // The companion's nose and the growth table through the rules (spec §8 "Allies").
+        has(
+            "creature-senses.md",
+            "| Hound | 1200 | 5 seconds | 10 cells | Low-light | 20 | 40 | 6 cells | yes |",
+        );
+        has("companion-starts.md", "| Human | hound (1), boar (2) |");
+        has("companion-growth.md", "| hound | 1 | 12 hp,");
         assert!(!text("creature-senses.md").contains("| You"));
         // Speed: yours first, then the quickest.
         assert!(

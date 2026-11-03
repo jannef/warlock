@@ -20,6 +20,9 @@ hearing = 20
 weight = 40000
 stats = { strength = 13, dexterity = 15, toughness = 12, intelligence = 3, willpower = 10, presence = 4 }
 base_hp = 4
+# A wolf cub may grow up at a hearth: a rare starting companion, and tameable (spec §8 "Allies").
+tameable = true
+nose = 8
 depart = "slips back into the dark"
 on_eat = { message = "Tough, gamy wolf meat.", vomit = 10 }
 [creature.attack]

@@ -26,13 +26,16 @@ The chapters, in order:
 | The trial | what it cost you, and what you kept |
 | Fortune | what was given you |
 | Leaving | why you left |
+| The companion | how the beast at your side came to be yours: told only to one who begins with a [companion](allies.md#companions) |
 | The road | how you came to where the run begins: [the Ascmearc](ascmearc.md)'s own chapter |
 
 Each sentence fits the character it is told of: a line may ask for a [race](races.md), a
 [class](classes.md), a gender, a birth animal or element, a [lucky day](horoscope.md#lucky-days),
 your starting [alignment](alignment.md), the [talents](talents.md) and [skills](skills.md) you
-start with, your age, and what the story has already said (a foundling's leaving is not a
-quarrel with their parents).
+start with, your age, the beast at your side, and what the story has already said (a foundling's
+leaving is not a quarrel with their parents). A whole chapter may be for some characters only:
+The companion is told to a [ranger](classes.md#ranger), who begins with one, and skipped for
+everyone else, whose story is no shorter for it.
 
 ## What a story gives
 
@@ -129,6 +132,13 @@ dice start the [skill](skills.md) if you were not trained in it, or raise it if 
 ### Leaving
 
 {{#include generated/background-leaving.md}}
+
+### The companion
+
+Told only to one who begins with an [animal companion](allies.md#companions): one sentence for
+each beast a start may bring, and a plain one for a beast with no tale of its own.
+
+{{#include generated/background-companion.md}}
 
 ### The road
 

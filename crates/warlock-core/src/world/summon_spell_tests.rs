@@ -135,9 +135,10 @@ fn last_said(w: &World) -> String {
     said(w).last().cloned().unwrap_or_default()
 }
 
+/// The player's summons (not a scenario character's companion: the showcase's Osric is a ranger).
 fn calls(w: &World) -> Vec<&Actor> {
     (w.state.actors.values())
-        .filter(|a| a.master() == Some(w.state.player))
+        .filter(|a| a.master() == Some(w.state.player) && a.companion().is_none())
         .collect()
 }
 

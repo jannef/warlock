@@ -1,0 +1,30 @@
+# The beasts (docs/dev/creatures/beasts.md; content::beast_roster_tests checks them): the
+# forest's pig, loud on its feet and a hard charge, a companion of the humans', half-orcs', and
+# lizardfolk's (#916). Wildlife: it fights no one unless it is someone's.
+[[creature]]
+id = "boar"
+level = 2
+xp = 20
+name = "boar"
+glyph = "q"
+fg = "#7a5a3a"
+speed = 1100
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+vision = "low_light"
+sight = 8
+footsteps = 60
+hearing = 12
+weight = 90000
+stats = { strength = 15, dexterity = 11, toughness = 14, intelligence = 2, willpower = 11, presence = 4 }
+base_hp = 6
+tameable = true
+nose = 6
+depart = "crashes away through the brush"
+on_eat = { message = "Wild pork! It does you good.", satiation = 800, heal = "1d4" }
+[creature.attack]
+damage = "1d8"
+damage_type = "piercing"
+name = "tusks"
+verb = "gores"

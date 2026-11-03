@@ -17,4 +17,6 @@ weight = 500
 size = "small"
 stats = { strength = 1, dexterity = 15, toughness = 10, intelligence = 2, willpower = 14, presence = 4 }
 attack = { damage = "1d3", damage_type = "piercing", name = "bite", verb = "bites" }
+# A bat that comes to a whistle may be tamed (spec §8 "Allies").
+tameable = true
 on_eat = { message = "Leathery wings, and they disagree with you.", harm = "1d2" }

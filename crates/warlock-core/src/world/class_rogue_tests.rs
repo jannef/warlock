@@ -133,11 +133,15 @@ fn beside(world: &mut World, creature: &str, hp: i32, dir: Dir) -> ActorId {
 #[test]
 fn the_three_tables_come_with_the_levels() {
     let mut w = world("ranger");
-    assert_eq!(class_rows(&w), ["Favoured prey", "Trained wind"]);
+    assert_eq!(
+        class_rows(&w),
+        ["Animal companion", "Favoured prey", "Trained wind"]
+    );
     reach(&mut w, 60);
     assert_eq!(
         class_rows(&w),
         [
+            "Animal companion",
             "Favoured prey",
             "Trained wind",
             "Stalker's eye",

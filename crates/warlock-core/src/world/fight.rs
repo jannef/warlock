@@ -275,6 +275,8 @@ pub(super) enum End<'a> {
     /// One of the player's own allies they see, by its type's name: "your wolf"
     /// (`docs/dev/allies.md`).
     Yours(&'a str),
+    /// The player's companion, seen, by its name: "Snel" (`companion.rs`).
+    Named(&'a str),
     /// Something the player does not see.
     Unseen,
     /// A trap's missile, blades, or blast, by what hits ("arrow", "fireball"): it attacks by
@@ -288,6 +290,7 @@ impl End<'_> {
         match self {
             End::You => "You".into(),
             End::Yours(name) => format!("Your {name}"),
+            End::Named(name) => name.into(),
             End::Seen(name) | End::Trap(name) => crate::content::the_start(name),
             End::Unseen => "Something".into(),
         }
@@ -298,6 +301,7 @@ impl End<'_> {
         match self {
             End::You => "you".into(),
             End::Yours(name) => format!("your {name}"),
+            End::Named(name) => name.into(),
             End::Seen(name) | End::Trap(name) => crate::content::the(name),
             End::Unseen => "something".into(),
         }
@@ -309,6 +313,7 @@ impl End<'_> {
             End::You => "your".into(),
             End::Seen(name) => format!("{}'s", crate::content::the(name)),
             End::Yours(name) => format!("your {name}'s"),
+            End::Named(name) => format!("{name}'s"),
             End::Unseen => "something's".into(),
             End::Trap(_) => "the".into(),
         }
@@ -477,6 +482,7 @@ pub(super) fn death_message(who: End<'_>, dies: &str) -> String {
         End::You => "You die...".into(),
         End::Seen(name) => format!("{} {dies}.", crate::content::the_start(name)),
         End::Yours(name) => format!("Your {name} {dies}."),
+        End::Named(name) => format!("{name} {dies}."),
         End::Unseen | End::Trap(_) => "Something dies.".into(),
     }
 }
@@ -533,15 +539,18 @@ impl World {
         if kind == AttackKind::Melee {
             let mut parried = free_blow::parried(blow);
             let mut dodged = free_blow::dodged(blow);
+            let mut hit = blow.is_some_and(|b| b.strike.is_hit());
             if let Some(second) = self.second_blow(attacker, target, Cue::First(blow), events) {
                 let with = second.with;
                 let struck = self.strike_free(second, events);
                 parried |= free_blow::parried(struck);
                 dodged |= free_blow::dodged(struck);
+                hit |= struck.is_some_and(|b| b.strike.is_hit());
                 self.both_hands(attacker, target, (blow, struck), with, events);
             }
-            // A blow dodged is answered by a Poised target (`ascetic.rs`).
-            self.after_melee(attacker, target, (parried, dodged), events);
+            // A blow dodged is answered by a Poised target (`ascetic.rs`), one that hit the
+            // player by their Retribution (`smite.rs`).
+            self.after_melee(attacker, target, (parried, dodged, hit), events);
         }
         blow
     }
@@ -550,14 +559,15 @@ impl World {
     /// blows"), if any: who strikes whom, and with what. The one place every blow beyond an
     /// attack's first is decided (`free_blow.rs`):
     /// - [`Cue::First`]: the second blow of `striker`'s melee attack on `target` (below);
-    /// - [`Cue::Attacked`]: its end: a cleave if it killed `target`, else `target`'s riposte;
+    /// - [`Cue::Attacked`]: its end: a cleave if it killed `target`, else `target`'s
+    ///   Retribution (on a hit), else its riposte;
     /// - [`Cue::Cleaved`]: another cleave, with great cleave, after one that killed `target`;
     /// - [`Cue::Leaves`]: `target` steps away from beside `striker`: the opportunist's blow;
     /// - [`Cue::Approaches`]: `target` stepped up beside `striker`: the gatekeeper's blow;
     /// - [`Cue::Startled`]: `target`'s attack did not catch `striker` off guard: Hair trigger's.
     ///
-    /// Only the second blow may draw while deciding, and only the flurry spends (its ki); the
-    /// free blows do neither.
+    /// Only the second blow may draw while deciding, and only the flurry (its ki) and
+    /// Retribution (its zeal, and an exertion) spend; the other free blows do neither.
     pub(super) fn second_blow(
         &mut self,
         striker: ActorId,
@@ -575,7 +585,11 @@ impl World {
                     profile,
                 })
                 .or_else(|| self.flurry(striker, target, events)),
-            Cue::Attacked { parried, dodged } => {
+            Cue::Attacked {
+                parried,
+                dodged,
+                hit,
+            } => {
                 // A parry fires the target's weapon abilities (Staggering block) as the attack
                 // ends, before the free blows it may bring.
                 let stand =
@@ -589,7 +603,9 @@ impl World {
                     };
                     self.weapon_trigger(target, crate::content::Trigger::Parried, fired, events);
                 }
+                // One free blow an attack: Retribution's smite, else the riposte.
                 (self.cleave(striker, target, false))
+                    .or_else(|| self.retribution(striker, target, hit, events))
                     .or_else(|| self.riposte(striker, target, (parried, dodged)))
             }
             Cue::Cleaved => self.cleave(striker, target, true),
@@ -1361,7 +1377,11 @@ impl World {
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
         let guard = Guard::of(target_actor, &content, &self.state);
         let yours = target_actor.is_some_and(|a| a.master() == Some(player));
+        let named = target_actor
+            .and_then(|a| a.companion())
+            .map(|c| c.name.as_str());
         let end = match name {
+            Some(_) if seen && yours && named.is_some() => End::Named(named.unwrap_or_default()),
             Some(name) if seen && yours => End::Yours(name),
             Some(name) if seen => End::Seen(name),
             _ => End::Unseen,

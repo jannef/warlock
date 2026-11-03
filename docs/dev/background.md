@@ -10,7 +10,7 @@ effects B5 (#707). Keep it current with the code, as CLAUDE.md says.
 
 | Module | What |
 |---|---|
-| `content/background.rs` | The data: `Background { tiers, points, chapters }`, `Chapter`, `Line` (`StoryLine` outside), `When`, `Effect` (`StoryEffect`), `Marks`, `Tier` (`StoryTier`), `Tiers::of(roll, percent)`, `slots_of`; `Content::load_background` (after the kits: races, classes, skills, weapon skills, talents, objects, slots, the horoscope, and the campaigns are known) and every check. Tests: `content/background_tests.rs`. |
+| `content/background.rs` | The data: `Background { tiers, points, chapters }`, `Chapter` (with `ChapterWhen`, a chapter's own condition), `Line` (`StoryLine` outside), `When`, `Effect` (`StoryEffect`), `Marks`, `Tier` (`StoryTier`), `Tiers::of(roll, percent)`, `slots_of`; `Content::load_background` (after the kits: races, classes, skills, weapon skills, talents, objects, slots, the horoscope, and the campaigns are known) and every check. Tests: `content/background_tests.rs`. |
 | `background.rs` | The roll, pure: `Witness` (what conditions read) and `Witness::fits`, `tell(content, seed, &witness) -> Story { told, effects }`, `Rolled` (an effect with its dice rolled), `Told { chapter, line }` (saved), `retell` and `lines` (the text again from the content, slots filled), `missing` (log lines for ids the content lost). Tests: `background_tests.rs`. |
 | `world/background.rs` | `World::tell_background` (from `start_run`), `apply_story` (one arm per effect kind), `story_gold`, `story_item`. Tests: `world/background_tests.rs`. |
 | `rng.rs` | `Rng::background(seed, spec, chapter)`: `background/<race>,<gender>,<class>/<chapter>`. |
@@ -23,7 +23,9 @@ effects B5 (#707). Keep it current with the code, as CLAUDE.md says.
 common the rest) and `[points]` (what each effect kind is worth: only for the tier check at load
 and the wiki; nothing counts a story's total). Its comments document every field.
 `assets/data/background/NN-<chapter>.toml` is one chapter a file in file-name order (`[chapter]`
-`id`, `name`, `paragraph` 1 to 4, slot `defaults`; `[[line]]`s), then a campaign's own in
+`id`, `name`, `paragraph` 1 to 4, slot `defaults`, and `when = { companion = true }` for a chapter
+told only to a witness with a companion (`false`: without one; `Chapter::when`, `ChapterWhen::fits`);
+`[[line]]`s), then a campaign's own in
 `assets/campaigns/<id>/data/background/` (read by `ContentFiles::table("background")` after the
 shared ones; `Chapter::campaign` from the path). A story told in campaign `c` is the shared
 chapters, then `c`'s (`Background::chapters_for`). Two campaigns may each have a `road`.
@@ -32,7 +34,7 @@ chapters, then `c`'s (`Background::chapters_for`). Two campaigns may each have a
 a chapter's `paragraph` 1 to 4 and never less than an earlier chapter's; ids unique (a line's in
 its chapter, a chapter's in each story's order, so a campaign never redefines a shared one);
 `weight` 1 to 20; every id a `when` names exists (races, classes, animals, elements, talents,
-skills, campaigns; a `band` well formed); a tag in `when.tags`/`not_tags` is set by a line of an
+skills, campaigns, `companion` a known `tameable` creature; a `band` well formed); a tag in `when.tags`/`not_tags` is set by a line of an
 earlier chapter of that story; slots are `{name}`, `{they}`, `{them}`, `{their}`, `{guardian}`,
 `{home}`, `{trade}` (and capitalised), `set` and `defaults` fill only the last three, and a slot
 used has a default in this chapter or an earlier one; an `only` line is common; an effect names
@@ -51,10 +53,11 @@ the built-in content without it, for tests of what a story would add to).
 
 ## The pools (B3, #704)
 
-The shared chapters (`assets/data/background/01-parents.toml` to `07-leaving.toml`) and the
-Ascmearc's `road` hold 126 lines, written by the implementers (decision 13 of the design; the
+The shared chapters (`assets/data/background/01-parents.toml` to `08-companion.toml`) and the
+Ascmearc's `road` hold 141 lines, written by the implementers (decision 13 of the design; the
 owner reviews the texts after the wave): Parents 18, Birth 12, Childhood 17, Youth 27, The trial
-15, Fortune 15, Leaving 15, the road 7. Of them 17 are uncommon, 11 rare, and 5
+15, Fortune 15, Leaving 15, The companion 15 (#916: told only with a starting beast, one `only`
+line a beast and the plain line; `docs/dev/companion.md`), the road 7. Of them 17 are uncommon, 11 rare, and 5
 fateful (`the_comet`, `the_master`, `the_flux`, `the_named_blade`, `the_hollow_tree`). How
 they are spread:
 
@@ -112,8 +115,9 @@ line's kind and worth) and read the new stories before pinning them.
 `xtask/src/wiki/background.rs`, one function a table, registered in `generate()` after the
 horoscope's: `background-tiers.md` (each kind's odds per chapter, at least one and the expected
 count in a story of the Ascmearc's eight chapters, its worth band, whether it may take),
-`background-points.md` (`[points]` in words), and `background-<chapter>.md` for the eight
-chapters of a story in the Ascmearc (never the showcase's road): every line, commonest first
+`background-points.md` (`[points]` in words), and `background-<chapter>.md` for the nine
+chapters of a story in the Ascmearc (never the showcase's road; the companion's is told only
+with a starting beast): every line, commonest first
 then by weight, with its kind (and `only`), weight, conditions in words, text (slots as
 written), effects exactly with the line's worth, and the tags and words it sets. The page is
 `wiki/src/background.md`.
@@ -124,8 +128,12 @@ written), effects exactly with the line's worth, and the tags and words it sets.
 `take_creation`): the character (spec, sign, birth date), the age at the start date, a lucky day,
 the starting band (before the story's nudges), the trained skills, the talents held (creation
 picks, Random ones too, the sign's gifts, the race's and the class's level 1 grants), the weapon
-skills with a rank (what `prefer_trained` prefers), and the campaign. `background::tell` then, per chapter in order, from its own stream:
+skills with a rank (what `prefer_trained` prefers), the campaign, and the type of the companion
+at their side (`World::companion()`, made in `begin` before the story). `background::tell` then, per chapter in order, from its own stream:
 
+0. a chapter whose `when` does not fit the witness (the companion's, for one without a beast) is
+   skipped before its stream is touched, so no other chapter moves and the story hashes as it
+   did without the chapter;
 1. the tier: `rng.below(1000)` against `Tiers::of(roll)`;
 2. the pool: if a line with `only` fits, the fitting `only` lines (they are common, so they
    force the chapter whatever the tier: Family wealth's `old_money`, Father's sword's
