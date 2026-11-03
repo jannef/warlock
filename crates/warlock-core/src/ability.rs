@@ -223,6 +223,9 @@ pub enum Aim {
     /// the identify list; Temper: a weapon or armour, [`crate::world::temperable`];
     /// [`Ability::action_on`]).
     Item,
+    /// A weapon's shape, from the list of every one there is (the Hunter's Spirit weapon:
+    /// [`crate::world::weapon_shapes`], `use:spirit_weapon:long_sword`).
+    Shape,
 }
 
 /// Why an ability cannot be used now: the abilities menu shows it beside the greyed-out row.
@@ -643,6 +646,7 @@ impl Ability {
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
             Ability::Class(active) if active.aims_item() => Aim::Item,
+            Ability::Class(active) if active.aims_shape() => Aim::Shape,
             Ability::Weapon(_, id) => match content.weapon_ability(id).active.map(|a| a.aim) {
                 Some(ActiveAim::Direction) => Aim::Direction,
                 Some(ActiveAim::Cell) => Aim::Cell,
@@ -963,6 +967,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Sanctuary
         | ClassActive::Knock
         | ClassActive::MerchantsEye
+        | ClassActive::SpiritWeapon
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))

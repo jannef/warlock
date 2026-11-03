@@ -175,12 +175,17 @@ impl<'a> Lore<'a> {
 
     /// `stack` as the item lists name it: [`Lore::describe`] with what it gives in numbers
     /// after it, as the player knows it (`magic::numbers`): "a long sword (+0 hit, 1d8)", "a
-    /// leather jerkin (Dv +1, Pv 1)".
+    /// leather jerkin (Dv +1, Pv 1)"; a spirit weapon marked so, "a long sword (+3 hit, 1d9)
+    /// (spirit)".
     pub fn listed(&self, stack: &Stack) -> String {
         let name = self.describe(stack);
-        match crate::magic::Numbers::of(stack, self.content).text(self.content) {
+        let name = match crate::magic::Numbers::of(stack, self.content).text(self.content) {
             Some(numbers) => format!("{name} ({numbers})"),
             None => name,
+        };
+        match stack.is_spirit() {
+            true => format!("{name} (spirit)"),
+            false => name,
         }
     }
 

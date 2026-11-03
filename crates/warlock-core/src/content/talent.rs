@@ -1098,6 +1098,17 @@ pub enum TalentEffect {
     /// The class active Merchant's eye: a stack the player carries is identified, for the time of
     /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
     MerchantsEye,
+    /// The class active Spirit weapon: a melee weapon of spirit-stuff called into the hand in a
+    /// shape chosen (`world/spirit_weapon.rs`; spec §8 "Prestige classes"), which strikes
+    /// `to_hit` surer, threatens `threat` lower, and ignores all Protection if
+    /// `ignores_protection`; `phrase` is its description's power line.
+    SpiritWeapon {
+        to_hit: i32,
+        threat: u8,
+        #[serde(default)]
+        ignores_protection: bool,
+        phrase: String,
+    },
 }
 
 /// One degree: a cooldown's default.
@@ -1202,6 +1213,7 @@ impl TalentEffect {
             TalentEffect::Prayer { tier: Some(1), .. } => A::Orison,
             TalentEffect::Knock { .. } => A::Knock,
             TalentEffect::MerchantsEye => A::MerchantsEye,
+            TalentEffect::SpiritWeapon { .. } => A::SpiritWeapon,
             _ => return None,
         })
     }
@@ -1523,6 +1535,20 @@ impl TalentEffect {
             TalentEffect::Knock { mana } => {
                 if !(0..=100).contains(mana) {
                     return Err("`knock`: mana is 0 to 100".into());
+                }
+                Ok(())
+            }
+            TalentEffect::SpiritWeapon {
+                to_hit,
+                threat,
+                phrase,
+                ..
+            } => {
+                if !(0..=10).contains(to_hit) || *threat > 10 {
+                    return Err("`spirit_weapon`: to_hit and threat are 0 to 10".into());
+                }
+                if phrase.trim().is_empty() {
+                    return Err("`spirit_weapon`: needs a `phrase`".into());
                 }
                 Ok(())
             }

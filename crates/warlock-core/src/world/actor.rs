@@ -1251,6 +1251,10 @@ impl Actor {
         mods.sharpen(&mut profile);
         profile.bonus += talents.melee_damage;
         profile.penetration += talents.penetration_for(&profile.kinds);
+        // A spirit weapon's gifts (the Hunter's Spirit weapon, `spirit_weapon.rs`).
+        if let Some(stack) = weapon {
+            super::spirit_weapon::gifts(&talents, stack, &mut profile);
+        }
         // Brutal critical (spec §8 "Class abilities"): a two-handed weapon's criticals hit harder.
         if talents.two_handed_crit > 0
             && weapon.is_some_and(|s| content.object(s.object).two_handed)
@@ -1314,6 +1318,7 @@ impl Actor {
         // Tentacles (a Kraken's pick): the off hand's blows harder.
         profile.bonus += talents.melee_damage + talents.off_hand_damage;
         profile.penetration += talents.penetration_for(&profile.kinds);
+        super::spirit_weapon::gifts(&talents, stack, &mut profile);
         Some((stack.object, self.stanced(content, profile)))
     }
 

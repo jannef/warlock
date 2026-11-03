@@ -160,9 +160,24 @@ fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> Stri
         })
         .collect();
     who.sort();
-    let parts: Vec<String> = (who.iter())
+    let mut parts: Vec<String> = (who.iter())
         .map(|(class, level)| format!("{class}s from level {level}"))
         .collect();
+    // A prestige class's table counts its own levels (Hunter 1 is the level after its base
+    // class's highest).
+    let mut prestige: Vec<(String, u8)> = (content.prestiges().iter())
+        .filter_map(|p| {
+            let (level, _, _) = p.abilities.iter().find(|(_, talent, _)| {
+                (book.id(talent)).is_some_and(|t| (book.get(t).effects.iter()).any(&has))
+            })?;
+            Some((p.name.clone(), *level))
+        })
+        .collect();
+    prestige.sort();
+    parts.extend(
+        (prestige.iter())
+            .map(|(class, level)| format!("{}s from {class} level {level}", class.to_lowercase())),
+    );
     parts.join(", ")
 }
 
@@ -195,5 +210,6 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Cell => "a place you see",
         Aim::Ailment => "what to treat, when there is more than one",
         Aim::Item => "an item you carry",
+        Aim::Shape => "a weapon's shape, from every melee weapon",
     }
 }

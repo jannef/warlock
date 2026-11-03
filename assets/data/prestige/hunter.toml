@@ -1,7 +1,3 @@
-# The Hunter (docs/design/prestige-classes.md §9.1). A PLACEHOLDER from the Strange Spirit's PR
-# (#879): the Ascmearc's calling (campaigns/ascmearc/data/callings/hunter.toml) names this class,
-# and a calling must name one. The Hunter's own PR (#881) replaces this file whole with the class
-# and its level-1 ability, the spirit weapon.
 [[prestige]]
 id = "hunter"
 name = "Hunter"
@@ -11,3 +7,6 @@ hp = 7
 rolls = 2
 known_for = ["athletics", "survival"]
 bonus_talents = { levels = [5, 10, 15, 23, 28], trees = ["weaponcraft", "guard"] }
+abilities = [
+    { level = 1, talent = "spirit_weapon" },
+]

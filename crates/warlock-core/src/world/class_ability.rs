@@ -105,6 +105,10 @@ impl World {
                 self.say("Use it on what?");
                 Spent::Nothing
             }
+            (ClassActive::SpiritWeapon, _) => {
+                self.say("Call it in what shape?");
+                Spent::Nothing
+            }
         }
     }
 

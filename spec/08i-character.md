@@ -826,10 +826,36 @@ developer notes (CLAUDE.md, `docs/dev/`).
     same; the death screen "Here lies Brakka, / a bard and hunter,"; the XP row shows no next
     level at a cap. Dumps: `stats` `Class Bard 30, Hunter 4`, `progress` (dev) `calling hunter:
     open` / `level 30 not met` / `not for a thief` / `called hunter at 30`, JSON
-    `character.prestige`, `character.classes`, and with `--state` `callings`. No prestige class
-    ships yet (the Hunter is H1): `data/prestige/README.toml` has the format; the tests'
-    fixture is the Warden, called from a bard capped at 12 (`world/calling_tests.rs`). No new
-    `[[system]]` and no talent: a prestige class is a class. **Saves change** (`Character::prestige`).
+    `character.prestige`, `character.classes`, and with `--state` `callings`.
+    `data/prestige/README.toml` has the format; the tests' fixture is the Warden, called from a
+    bard capped at 12 (`world/calling_tests.rs`). No new `[[system]]` and no talent: a prestige
+    class is a class. **Saves change** (`Character::prestige`).
+  - **The Hunter** (#881, H1 of the design, §9): `data/prestige/hunter.toml`, 30 levels, `hp = 7`
+    (the warrior's), two rolls, known for Athletics and Survival, bonus picks at its own 5, 10,
+    15, 23, and 28 from Weaponcraft and Guard, and one row: **Spirit weapon** at its level 1 (the
+    owner: "regular martial progression with no abilities above level 1 for now"). Its door is a
+    campaign's calling (the Strange Spirit's, C1). Spirit weapon (`talents/spirit_weapon.toml`,
+    effect `spirit_weapon { to_hit = 3, threat = 2, ignores_protection = true, phrase }`;
+    `world/spirit_weapon.rs`) is a class active asking for a **shape** (`Aim::Shape`, the shape
+    list: every `melee_weapons` object with an attack a hand holds, 22, grouped by weapon skill,
+    each as a plain one is listed; `use:spirit_weapon:long_sword`, `Action::Shape`; refused, no
+    time, without it or for an id that is no shape's). It makes a `Stack::spirit` of that base
+    (count 1, no magic, known; weighs, is made of, and is valued as its base; saved, left out
+    while false), puts it in the pack, and wields it in the main hand through the equip path,
+    what the hands held put away into the pack as a swap does and paid for as one: the call is a
+    wield (`ClassActive::cost`), and nothing else is spent (no mana, cooldown, or limit). One
+    held already fades first, so calling again reshapes. In a hand (the off hand too) and with
+    the talent, its profile has +3 to hit, a threat 2 lower (never below 3), and every point of
+    Protection ignored (`penetration` `ALL_PROTECTION`, no soak drawn). **The invariant**: a
+    spirit stack exists only in a hand slot. Taken out of the hands and left in the pack (removed,
+    swapped for steel, moved to the missile weapon slot) it fades at once ("The long sword fades
+    from your hand."); a drop or a sale takes it off and lets it fade instead of letting it go
+    (the shop never sees it, the floor never holds it); a throw is refused with no time ("It will
+    not leave your hand."); quests never count it; a tithe or a forge's ruin takes spirit-stuff,
+    which is called again. Its description adds the effect's `phrase` as a power line, its
+    numbers and critical range fold the gifts in, and "Pierces armour"; item lists mark it
+    `(spirit)`; the character screen's attack says `pierces armour`. Creatures never hold one.
+    **Adds an action and saved state** (`Stack::spirit`).
   - **Scholar, Grit, Delver** (#240; the design's §7.5 but for the five mana talents, which
     came with #242: Deep well, Clear mind, Meditation, Frugal caster, Blood magic, §8 "Mana"). Their effects share what the class abilities use where the rules
     are the same (`checks` and `stat`: Iron will, +2 on Willpower checks and Presence +1). Iron will is a Grit talent the

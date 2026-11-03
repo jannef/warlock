@@ -1891,6 +1891,33 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 warlock_core::content::BASE_TURN
             ))
         ),
+        TalentEffect::SpiritWeapon {
+            to_hit,
+            threat,
+            ignores_protection,
+            ..
+        } => {
+            let armour = match ignores_protection {
+                true => ", and ignores every point of the target's Protection",
+                false => "",
+            };
+            format!(
+                "active (in the shape of any melee weapon, for the time of wielding one, {} at \
+                 normal pace, with what the hands held put away as any swap; no mana, cooldown, \
+                 or check, as often as you like): a weapon of spirit-stuff of that shape, made \
+                 and weighing as its plain base, is put in your main hand (both, for a two-handed \
+                 one), and one you hold fades first. It strikes {} to hit, threatens criticals \
+                 {threat} lower{armour}; it fades the moment it leaves your hands (put away, \
+                 swapped, dropped, sold) and cannot be thrown",
+                super::actions::at_normal_pace(warlock_core::content::price(
+                    content
+                        .action_costs()
+                        .cost(warlock_core::content::ActionKind::Wield),
+                    warlock_core::content::BASE_TURN
+                )),
+                signed(to_hit),
+            )
+        }
     }
 }
 

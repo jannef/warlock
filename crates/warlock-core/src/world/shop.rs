@@ -227,8 +227,9 @@ pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
 
 /// How many of `object` `stacks` hold.
 pub fn count_of(stacks: &[Stack], object: crate::content::ObjectId) -> u32 {
+    // A spirit weapon is nothing anyone may be given (`spirit_weapon.rs`).
     (stacks.iter())
-        .filter(|s| s.object == object)
+        .filter(|s| s.object == object && !s.is_spirit())
         .map(|s| s.count)
         .sum()
 }
@@ -473,15 +474,20 @@ impl World {
     /// shop.
     pub(super) fn trade(&mut self, positions: &Positions, sell: bool) -> Option<Spent> {
         let i = self.shop_here()?;
-        let inventory = self.state.player().inventory.clone();
-        if inventory.is_empty() {
+        let len = self.state.player().inventory.len();
+        if len == 0 {
             self.say("You are not carrying anything.");
             return Some(Spent::Nothing);
         }
-        let Some(chosen) = self.chosen(positions, inventory.len(), "You carry no such thing.")
-        else {
+        let Some(chosen) = self.chosen(positions, len, "You carry no such thing.") else {
             return Some(Spent::Nothing);
         };
+        // A spirit weapon is not let go: it fades, and the shop never sees it.
+        let (chosen, faded) = self.release_spirit(&chosen);
+        if chosen.is_empty() {
+            return Some(self.price_for(&faded));
+        }
+        let inventory = self.state.player().inventory.clone();
         let content = self.content.clone();
         let shop = self.state.current().shops[i].clone();
         let deal = self.deal(&shop, &inventory, &chosen, sell);
@@ -503,12 +509,16 @@ impl World {
             self.say(format!("{name} offers {} gold for {what}.", deal.offer));
         }
         if deal.back.is_empty() && deal.sold.is_empty() {
-            return Some(Spent::Nothing);
+            return Some(match faded.is_empty() {
+                true => Spent::Nothing,
+                false => self.price_for(&faded),
+            });
         }
         // What leaves whole is taken off first, if worn or wielded.
         let gone =
             Positions::of((0..inventory.len()).filter(|&k| deal.leaving[k] == inventory[k].count));
-        let mut kinds = self.take_off_before_dropping(gone.iter());
+        let mut kinds = faded;
+        kinds.extend(self.take_off_before_dropping(gone.iter()));
         kinds.push(ActionKind::Drop);
         // Priced at the load the player has as they begin.
         let spent = self.price_for(&kinds);

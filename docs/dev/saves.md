@@ -83,7 +83,8 @@ styles too), statuses, diseases, traps, or dungeon branches, invalidates develop
 the same version too (affixes are saved by id: adding them does not, removing one a save uses
 does); say so in the PR. A new optional field (`Character::prestige`, #876: `#[serde(default,
 skip_serializing_if)]`) changes nothing a save from before holds; prestige classes and callings
-are not fingerprinted (they are read by id).
+are not fingerprinted (they are read by id). `Stack::spirit` (#881, a spirit weapon in the hand)
+is the same: left out while false, saved and hashed while held.
 
 **Permadeath**: when the player dies, `screens::on_death` deletes that character's files, and no
 other character's (`SaveStore::delete_character(&game.save_id)`: its save, summary, and snapshot)

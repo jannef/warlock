@@ -537,6 +537,14 @@
 #                                 `use:merchants_eye:c`): the stack is identified as the scroll
 #                                 of identify would, for the time of a `read`; refused, no
 #                                 time, for one already known
+#   spirit_weapon { to_hit, threat, ignores_protection, phrase }   the active Spirit weapon (a
+#                                 prestige class's, `use:spirit_weapon:long_sword`): a weapon of
+#                                 spirit-stuff in the shape of any melee weapon is called into
+#                                 the main hand for the time of a wield (one held fades first);
+#                                 in the hand it strikes to_hit (0 to 10) surer, threatens
+#                                 `threat` (0 to 10) lower, and ignores all Protection if
+#                                 ignores_protection; it fades the moment it leaves the hand
+#                                 and is never thrown. `phrase` is its description's power line
 #   A birth sign's actives (spec §8 "Birth sign"; the abilities menu's Birth sign group, the
 #   talent's id the ability's id, `use:horns_grace`):
 #   horns_grace { cures, diseases, cooldown, degrees }   the active Horn's grace: the statuses

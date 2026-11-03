@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase┌─ Spirit weapon: which shape? ───────────────── Page 2/2 ─┐
+                    │                                                          │
+                    │ Polearms                                                 │
+                    │ > a - ) a glaive (+0 hit, 1d10, Dv +1)             5 kg  │
+                    │   b - ) a halberd (+0 hit, 1d10)                 5.5 kg  │
+                    │ Staves                                                   │
+                    │   c - ) an ironwood staff (+0 hit, 1d8, Dv +1)   2.5 kg  │
+                    │   d - ) a quarterstaff (+0 hit, 1d6, Dv +1)        2 kg  │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │ a-d or Enter call   > < page   Esc back                  │
+ The Hub  ·  HP 18/1└──────────────────────────────────────────────────────────┘00       ? controls

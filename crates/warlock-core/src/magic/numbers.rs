@@ -80,8 +80,16 @@ impl Numbers {
             };
         }
         let known = stack.as_known();
+        let mut attack = attack(&known, content);
+        // A spirit weapon's gift to hit (spec §8 "Prestige classes"), with its own.
+        if let (Some(attack), Some((to_hit, ..))) =
+            (attack.as_mut(), crate::world::spirit_gift(content))
+            && stack.is_spirit()
+        {
+            attack.to_hit += to_hit;
+        }
         Self {
-            attack: attack(&known, content),
+            attack,
             defence: defence(&known, content),
         }
     }

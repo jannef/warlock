@@ -240,6 +240,11 @@ pub enum Action {
     /// abilities"): the merchant's Merchant's eye (`use:merchants_eye:c`). Takes the time of its
     /// cost's action; refused (no time) without the ability, or for a stack it may not work on.
     UseOn(ClassActive, usize),
+    /// Use a class active in a weapon's shape, by the object's id (spec §8 "Prestige classes"):
+    /// the Hunter's Spirit weapon (`use:spirit_weapon:long_sword`) calls a weapon of that shape
+    /// into the main hand, for the time of a wield. Refused (no time) without the ability, or
+    /// for an id that is no melee weapon's.
+    Shape(ClassActive, String),
     /// Use a birth sign's active gift (spec §8 "Birth sign"; the abilities menu's Birth sign
     /// group): Horn's grace, Blaze, and, aimed at a cell, the Transfixing stare
     /// (`use:horns_grace`, `use:blaze`, `use:transfixing_stare:12,5`). Takes the time of its
@@ -870,6 +875,7 @@ impl fmt::Display for Action {
             Action::CastOn(spell, on) => write!(f, "use:{spell}:{}", position_text(*on)),
             Action::UseAt(active, at) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::UseOn(active, on) => write!(f, "use:{}:{}", active.id(), position_text(*on)),
+            Action::Shape(active, shape) => write!(f, "use:{}:{shape}", active.id()),
             Action::Gift(active, None) => write!(f, "use:{}", active.id()),
             Action::Gift(active, Some(at)) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::Talent { id, choice: None } => write!(f, "talent:{id}"),
@@ -1058,6 +1064,19 @@ impl FromStr for Action {
                     let at = aim
                         .ok_or_else(|| format!("`use:{id}` needs a cell, e.g. `use:{id}:12,5`"))?;
                     return Ok(Action::UseAt(active, parse_cell(at)?));
+                }
+                // One called in a weapon's shape, `use:spirit_weapon:long_sword` (bare, the rules
+                // ask for the shape).
+                if let Some(aim) = aim.filter(|_| active.aims_shape()) {
+                    if aim.is_empty()
+                        || !(aim.chars())
+                            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+                    {
+                        return Err(format!(
+                            "`use:{id}` needs a weapon's id, e.g. `use:{id}:long_sword`"
+                        ));
+                    }
+                    return Ok(Action::Shape(active, aim.to_string()));
                 }
                 // One that works on a stack the player carries, `use:merchants_eye:c` (bare, the
                 // rules ask for the stack).
@@ -1641,6 +1660,8 @@ mod tests {
             Action::UseAt(ClassActive::Volley, Pos::new(12, 5)),
             Action::UseOn(ClassActive::MerchantsEye, 2),
             Action::UseOn(ClassActive::MerchantsEye, 30),
+            Action::Shape(ClassActive::SpiritWeapon, "long_sword".into()),
+            Action::Shape(ClassActive::SpiritWeapon, "great_axe".into()),
             Action::Gift(SignActive::Blaze, None),
             Action::Cast("blessing".into(), None),
             Action::Cast("arcane_bolt".into(), Some(Pos::new(12, 5))),

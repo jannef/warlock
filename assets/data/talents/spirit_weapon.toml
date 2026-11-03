@@ -1,0 +1,8 @@
+[[talent]]
+id = "spirit_weapon"
+name = "Spirit weapon"
+tree = "class"
+granted = true
+description = "Call a weapon of spirit-stuff into your hand in the shape you choose (an ability). It strikes surer and finds the gaps in any armour, and it goes back whence it came the moment it leaves your grip; call it again."
+effects = [{ kind = "spirit_weapon", to_hit = 3, threat = 2, ignores_protection = true, phrase = "A weapon of spirit-stuff: it finds the gaps in any armour, and fades when it leaves your hand." }]
+systems = ["combat", "magic_items"]

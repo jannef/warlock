@@ -1602,6 +1602,13 @@ impl<'a> PerceptionView<'a> {
             .map(|(_, s)| *s)
     }
 
+    /// The shapes a spirit weapon may be called in (the Hunter's Spirit weapon,
+    /// `use:spirit_weapon:ID`): every melee weapon there is, by weapon skill then id. They are
+    /// the game's objects, nothing of the run.
+    pub fn weapon_shapes(&self) -> Vec<ObjectId> {
+        crate::world::weapon_shapes(self.content)
+    }
+
     /// The player's abilities, in menu order (grouped by source, [`crate::ability`]), each with
     /// why it cannot be used now, if it cannot: what the abilities menu (#156) lists. They know
     /// what they can do and what they hold.

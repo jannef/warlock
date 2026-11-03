@@ -88,7 +88,11 @@ Protection, else the hide) into `attack_message`: "Your sword glances off the ca
 shell.", "Something hits you but does no harm." when an end is unseen. Penetration is
 `ObjectDef::penetration` (weapons and ammunition), set on the profile by `Actor::melee`,
 `off_hand_blow`, `ranged` (launcher plus ammunition), and `thrown`; natural attacks, bashes,
-kicks, and traps have none. Data: objects `protection` (armour worn, never a hand slot or a
+kicks, and traps have none. A spirit weapon (the Hunter's, `world/spirit_weapon.rs::gifts`, read
+in `Actor::melee` and `off_hand_blow` when the stack is `spirit` and the actor has
+`TalentMods::spirit_weapon`) adds its `to_hit`, lowers the threat (never below 3), and sets the
+penetration to `ALL_PROTECTION` (`world/weapon_active.rs`: no soak drawn); the character screen's
+attack then says `pierces armour` (`OwnAttack::pierces`). Data: objects `protection` (armour worn, never a hand slot or a
 shield; `check_protection`) and `penetration`; creatures `natural = { defence, protection,
 name }`. Presentation: `PerceptionView::own_protection` (the character screen's `Pv` beside `Dv`, the
 equipment screen's totals line, the JSON dump's `protection`), the item description

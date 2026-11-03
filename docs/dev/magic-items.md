@@ -215,7 +215,11 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
   `magic::worn_powers` lists the powers of what an actor has equipped.
 - **Description**: `describe::lines` adds `LineKind::Power` (the `phrase`) and
   `LineKind::Lore` after the affixes, only through `known_magic`; the UI labels the first
-  "Power" and dims the lore in a section of its own.
+  "Power" and dims the lore in a section of its own. A spirit weapon (`Stack::spirit`, the
+  Hunter's Spirit weapon, #881; plain, never magic) gets a power line too: the `spirit_weapon`
+  effect's `phrase` (`world::spirit_gift`), with its gifts folded into its numbers
+  (`Numbers::of`: `+3 hit`), its critical range, and "Pierces armour"; `Lore::listed` marks it
+  `(spirit)`.
 - **Adding a power**: a `Power` variant, its parse in `unique::power`, its one read, and its
   words in `xtask/src/wiki/uniques.rs` (`power_text`); the item's own words are its `phrase`.
 - **Tests**: `world/unique_tests.rs` (the table, hiding until identified, one placement,

@@ -644,6 +644,9 @@ pub enum ClassActive {
     /// A careful look that tells a thing the player carries for what it is, as the scroll of
     /// identify would (the merchant's Merchant's eye).
     MerchantsEye,
+    /// A weapon of spirit-stuff called into the hand in the shape chosen, as a wield (the
+    /// Hunter's Spirit weapon, `world/spirit_weapon.rs`).
+    SpiritWeapon,
 }
 
 impl ClassActive {
@@ -672,6 +675,7 @@ impl ClassActive {
         ClassActive::Sanctuary,
         ClassActive::Knock,
         ClassActive::MerchantsEye,
+        ClassActive::SpiritWeapon,
     ];
 
     /// Its id: the id of the class ability that has it, and its replay text (`use:rage`).
@@ -700,6 +704,7 @@ impl ClassActive {
             ClassActive::Sanctuary => "sanctuary",
             ClassActive::Knock => "knock",
             ClassActive::MerchantsEye => "merchants_eye",
+            ClassActive::SpiritWeapon => "spirit_weapon",
         }
     }
 
@@ -765,6 +770,12 @@ impl ClassActive {
         matches!(self, ClassActive::MerchantsEye)
     }
 
+    /// Whether it asks for a weapon's shape before it is used, an object id
+    /// (`use:spirit_weapon:long_sword`).
+    pub const fn aims_shape(self) -> bool {
+        matches!(self, ClassActive::SpiritWeapon)
+    }
+
     /// Whether it takes no time at all (Step of the wind, Stillness): its [`ClassActive::cost`]
     /// then names only the statuses that block it.
     pub const fn takes_no_time(self) -> bool {
@@ -797,6 +808,8 @@ impl ClassActive {
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
+            // A weapon taken in hand, as wielding one is.
+            ClassActive::SpiritWeapon => ActionKind::Wield,
         }
     }
 }
