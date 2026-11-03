@@ -74,9 +74,9 @@ say why. With one way the old rows hold.
 
 The collar (C3, #918, `docs/dev/companion.md`) reads the same `kept_beside()`: Give works on a
 familiar as on a companion, and with more than one beside the player its list's choice then asks
-the way (`InputMode::GiveWay`). Tame is not built yet (C2): until it is, no character has two kept
-beasts in play, and only tests reach the asks (`giving_with_two_kept_beasts_beside`'s fixture, a
-witch whose table gives Animal companion too).
+the way (`InputMode::GiveWay`). A witch trained in Handle animal has both once she tames a beast
+(`collar_tests::a_witch_who_tames_a_beast_names_the_way_to_each_and_it_replays`, the screen case
+`giving_with_two_kept_beasts_beside`).
 
 ## What the player sees
 

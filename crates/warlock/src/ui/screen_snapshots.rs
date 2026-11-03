@@ -1358,21 +1358,35 @@ fn saying_words() {
     }
 }
 
-/// A witch who keeps a companion too, as Tame (C2) will let her; in the shipped classes no
-/// character starts with both: Give's list, then the way it asks with both beside her, and the
+/// A witch who tames a hound beside her familiar (a witch's Handle animal is one draw in four:
+/// here the content gives it): Give's list, then the way it asks with both beside her, and the
 /// fastening once the way is told (the owner, #907 Q4).
 #[test]
 fn giving_with_two_kept_beasts_beside() {
     let mut files = warlock_core::content::ContentFiles::builtin();
-    let path = "data/classes/10-witch.toml";
     let witch = include_str!("../../../../assets/data/classes/10-witch.toml");
-    let both = witch.replacen(
-        "{ level = 1, talent = \"familiar\" },",
-        "{ level = 1, talent = \"familiar\" },\n    { level = 1, talent = \"animal_companion\" },",
-        1,
+    let trained = witch
+        .replacen("handle_animal = { chance = 25, dice = \"2d4\" }, ", "", 1)
+        .replacen(
+            "skills = { heal",
+            "skills = { handle_animal = \"+100\", heal",
+            1,
+        );
+    assert_ne!(trained, witch, "the witch's skills");
+    files.insert("data/classes/10-witch.toml", &trained);
+    files.insert(
+        "levels/nook.toml",
+        "name = \"Nook\"\nambient = [255, 255, 255, 0]\nmap = '''\n#####\n##b##\n#.@.#\n#...#\n#####\n'''\n\
+         [legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\
+         \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+         \"b\" = { terrain = \"floor\", creature = \"hound\" }\n",
     );
-    assert_ne!(both, witch, "the witch's table gives the familiar");
-    files.insert(path, &both);
+    files.insert(
+        "scenarios/nook.toml",
+        "name = \"Nook\"\nstart_level = \"nook\"\n\
+         character = { race = \"human\", gender = \"female\", class = \"witch\" }\n\
+         carry = [\"jade_amulet*3\", \"dried_meat*3\"]\n",
+    );
     let content = Arc::new(Content::load(&files).expect("content"));
     let cases = [
         ("give-list-two-kept", None),
@@ -1383,8 +1397,8 @@ fn giving_with_two_kept_beasts_beside() {
     for (name, keys) in cases {
         let case = Case {
             name,
-            character: Some("human,female,witch"),
-            run: true,
+            scenario: "nook",
+            actions: "tame:N",
             screen: Some("give"),
             keys,
             ..BASE

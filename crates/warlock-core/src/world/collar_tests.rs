@@ -256,62 +256,89 @@ fn a_familiar_wears_a_collar_as_a_companion_does() {
     assert_eq!(row.unavailable, Some(Unavailable::NotBeside));
 }
 
+/// A witch trained in Handle animal in a nook, a calm hound north of her, jade amulets carried:
+/// the content does the training, so a replay starts as the run does.
+fn tamer() -> World {
+    let mut files = crate::content::ContentFiles::builtin();
+    let class = "data/classes/10-witch.toml";
+    let witch = include_str!("../../../../assets/data/classes/10-witch.toml");
+    let trained = witch
+        .replacen("handle_animal = { chance = 25, dice = \"2d4\" }, ", "", 1)
+        .replacen(
+            "skills = { heal",
+            "skills = { handle_animal = \"+100\", heal",
+            1,
+        );
+    assert_ne!(trained, witch);
+    files.insert(class, &trained);
+    files.insert("levels/nook.toml", LEVEL);
+    files.insert("scenarios/nook.toml", SCENARIO);
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    World::new(content, "nook", Some(7)).expect("world")
+}
+
+const LEVEL: &str = "name = \"Nook\"\nambient = [255, 255, 255, 0]\nmap = '''\n#####\n##b##\n#.@.#\n#...#\n#####\n'''\n\
+         [legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\
+         \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+         \"b\" = { terrain = \"floor\", creature = \"hound\" }\n";
+const SCENARIO: &str = "name = \"Nook\"\nstart_level = \"nook\"\n\
+         character = { race = \"human\", gender = \"female\", class = \"witch\" }\n\
+         carry = [\"jade_amulet*3\", \"dried_meat*3\"]\n";
+
 #[test]
-fn with_two_kept_beasts_beside_the_way_says_which_wears_it() {
-    let mut w = witch();
-    run(&mut w, "ally:hound");
-    let hound = w.content.creature_id("hound").expect("hounds");
-    let snel = (w.allies_of(w.state.player).into_iter())
-        .find(|id| w.state.actors[id].creature == hound)
-        .expect("the hound");
-    (w.state
-        .actors
-        .get_mut(&snel)
-        .unwrap()
-        .ally
-        .as_mut()
-        .unwrap())
-    .source = AllySource::Companion(CompanionData {
-        name: "Snel".into(),
-        grade: 1,
-        scent: None,
-    });
-    let tibb = w.familiar().expect("a familiar");
-    let me = w.state.player().pos;
-    for (id, d) in [(tibb, Dir::S), (snel, Dir::E)] {
-        let at = me.step(d);
-        if let Some(there) = w.state.actor_at(&w.state.current_level, at).map(|a| a.id) {
-            w.state.actors.get_mut(&there).unwrap().pos = Pos::new(0, 0);
-        }
-        w.state.actors.get_mut(&id).unwrap().pos = at;
-    }
-    *w.perception = Perception::compute(&w.state, &w.content, &mut w.lights);
-    assert_eq!(w.perception().kept_beside(), [Dir::E, Dir::S]);
+fn a_witch_who_tames_a_beast_names_the_way_to_each_and_it_replays() {
+    let mut w = tamer();
+    let content = w.content().clone();
+    let tibb = w.familiar().expect("the witch begins with a familiar");
+    let mut replay = Replay::new(&w);
+    let mut act = |w: &mut World, action: Action| {
+        w.apply(&action);
+        replay.push(&action, w);
+    };
+    act(&mut w, Action::Tame(Dir::N));
+    let snel = w.companion().expect("tamed");
+    let ways = allies_beside(&w.state);
+    let toward = |id| ways.iter().find(|(_, a)| a.id == id).map(|(d, _)| *d);
+    let (to_tibb, to_snel) = (toward(tibb).expect("beside"), toward(snel).expect("beside"));
+    assert_eq!(w.perception().kept_beside().len(), 2, "the game asks");
+    let jade = BUILTIN.object_id("jade_amulet").expect("jade");
+    let item = |w: &World| (w.state.player().inventory.iter()).position(|s| s.object == jade);
     let slot = w.content.slot_id("neck").expect("the neck slot");
-    let wearing_it = |w: &World, id| w.state.actors[&id].equipment.get(slot).is_some();
-    let on_tibb = carry(&mut w, plain("jade_amulet"));
-    w.apply(&Action::Give {
-        item: on_tibb,
-        ally: Some(Dir::S),
-    });
-    assert!(wearing_it(&w, tibb) && !wearing_it(&w, snel));
-    let on_snel = carry(&mut w, plain("jade_amulet"));
-    w.apply(&Action::Give {
-        item: on_snel,
-        ally: Some(Dir::E),
-    });
-    assert!(wearing_it(&w, snel), "{:?}", said(&w));
-    assert!(said(&w).contains(&"You fasten the jade amulet about Snel's neck.".to_string()));
-    // A way with no beast of theirs: refused, no time, the stack kept.
-    let spare = carry(&mut w, plain("jade_amulet"));
-    let (time, count) = (w.time(), w.state.player().inventory[spare].count);
-    w.apply(&Action::Give {
-        item: spare,
-        ally: Some(Dir::NW),
-    });
+    let wears = |w: &World, id| w.state.actors[&id].equipment.get(slot).is_some();
+    let stack = item(&w).expect("carried");
+    act(
+        &mut w,
+        Action::Give {
+            item: stack,
+            ally: Some(to_tibb),
+        },
+    );
+    assert!(wears(&w, tibb) && !wears(&w, snel), "{:?}", said(&w));
+    act(
+        &mut w,
+        Action::Give {
+            item: stack,
+            ally: Some(to_snel),
+        },
+    );
+    assert!(wears(&w, snel), "{:?}", said(&w));
+    // A way with no beast of hers: refused, no time, the stack kept.
+    let nobody = (Dir::ALL.into_iter()).find(|d| ![to_tibb, to_snel].contains(d));
+    let (time, count) = (w.time(), w.state.player().inventory[stack].count);
+    act(
+        &mut w,
+        Action::Give {
+            item: stack,
+            ally: nobody,
+        },
+    );
     assert_eq!(w.time(), time);
-    assert_eq!(w.state.player().inventory[spare].count, count);
+    assert_eq!(w.state.player().inventory[stack].count, count);
     assert!(said(&w).contains(&"No beast of yours stands that way.".to_string()));
+    let replay = Replay::from_json(&replay.to_json()).expect("parses");
+    let (played, divergence) = replay.play(content).expect("plays");
+    assert!(divergence.is_none(), "{divergence:?}");
+    assert_eq!(played.state_hash(), w.state_hash());
 }
 
 #[test]
