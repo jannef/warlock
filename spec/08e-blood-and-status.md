@@ -630,6 +630,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     to the bard builds one (to 5), one fades every 180 s (30 base turns), and at 0 it stays,
     held. Inspire, a song (§8 "Class abilities"), costs 3 inspiration and nothing else
     (#870: no mana fallback); a Virtuoso's song costs nothing.
+  - **Zeal** (the paladin's; P1, #910, `docs/design/paladin-smites.md` §4): Smite (level 1)
+    grants it at 5; its maximum is 10 + the Presence modifier + a point per 10 levels, at least
+    6 (`max_from`); a blow, shot, or throw of the holder's that hits builds one, and so does
+    every blow that hits them (`hit`, `struck`); it comes back a point every 60 s (10 base
+    turns), resting too, and sits at 0, never ending. Smite costs 3 and Lay on hands 6
+    (Avatar: half, 3); a holy gift unanswered outside its bands spends none. A deed that moves
+    the player toward evil empties it (§8 "Alignment"). Shown as `Zeal 7/12`.
   - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives pay
     from (§8 "Weapon abilities", #564). The granted talent **Trained wind**
     (`grants_resource`) is in the level-1 row of the warrior's, berserker's, paladin's,

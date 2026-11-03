@@ -54,7 +54,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
     maximum. Called in `fight.rs::dies` (`Kill`, for `by`, creatures' deaths only),
     `fight.rs::resolve` (`Hit` and `Critical` for the attacker on a `Strike::Hit`, `Struck` for
     the target on every strike that `is_hit()`, `Soaked` and `Resisted` too (#842: the rage
-    builds on hits taken before mitigation; no other pool builds on `Struck`), before the
+    builds on hits taken before mitigation; zeal builds on it too, #910), before the
     damage, so a killing blow counts), and `ambush.rs::ambushed`
     (`SneakAttack`, when the sneak attack's dice are added). A new event is a `Build` variant and
     one call where it happens.
@@ -173,7 +173,20 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   hit a critical, no confirmation draw; `combat::strike_with`). `use_class` refuses an aimed
   active with nobody hostile that way before it spends anything. Tests:
   `world/openings_tests.rs`, and `combat.rs`'s sure-critical test.
-- **Stamina** (SP1, #560; the combat progression design §4.5): the last entry of
+- **Zeal** (P1, #910; `docs/design/paladin-smites.md` §4): the last entry of `resources.toml`.
+  The paladin's Smite (level 1) grants it (`grants_resource`) at `start = 5`; `max = 10`,
+  `max_from = { stat = "presence", per_levels = 10, least = 6 }`, `regenerates = 60` (resting
+  too), `builds` `hit` 1 and `struck` 1 (no code: the events `resolve` already raises), `lacking
+  = "your zeal is not enough"`. Smite costs `resource = { id = "zeal", cost = 3 }` and Lay on
+  hands `cost = 6` on their talents; both lost their cooldowns (Spent is deleted; Drained stays,
+  Fire breath's). The cost is read in one place, `ability.rs::class_cost` (the talent's
+  `resource`, with Avatar's `hands_cost_percent` of it for Lay on hands, `percent_of`, at least
+  1), by `Ability::unavailable` and by `use_class`, which, for a holy gift (`ClassActive::holy`),
+  asks `World::answered` before it spends, so an unanswered smite or heal spends nothing. A deed
+  toward evil empties it (`World::shift_alignment`, `docs/dev/alignment.md`). The priest no
+  longer has Smite (#891), so the paladin alone holds it. Tests: `world/smite_tests.rs`,
+  `world/class_active_tests.rs`.
+- **Stamina** (SP1, #560; the combat progression design §4.5): the entry of
   `resources.toml` (file order is save order), `short = "Sta"`, `max = 10`, `max_from = { stat =
   "toughness", per_levels = 10, least = 5 }`, `regenerates = 12`, resting too, starting full.
   The granted talent `trained_wind` (`grants_resource`) is in the level-1 row of the warrior's,
@@ -197,7 +210,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
 - **Talents**: `[[system]] id = "resources"` in `data/talents.toml`, held to the coverage bar
   since R5 (#253): Battle trance, Inner calm, Steady hand, and Patient blade (the only
   class-limited picks), and the class abilities Rage, Blood frenzy, Mighty rage, Unstoppable,
-  Rapid shot, Volley, Improved sneak attack, and Master thief. Tests:
+  Rapid shot, Volley, Improved sneak attack, Master thief, Smite, Lay on hands, and Avatar. Tests:
   `world/resource_talent_tests.rs`.
 - **Wiki**: `xtask/src/wiki/resources.rs` (the table) for `wiki/src/resources.md`.
 - **Tests**: `content/resource.rs` (parsing, refusals, a resource's status, a followed status
@@ -206,5 +219,6 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   otherwise, no mana while raging), `world/buff_tests.rs` (Raging's scores and end), `world/resource_tests.rs` (granting,
   decay to the end and the bar going, time cut differently and resting, regeneration, spending,
   several at once, builds from events and from a real fight, a class active's cost, content
-  checks of costs, dumps, saves, the hash, a replay), `ui/mod.rs` (the status bar), and the
+  checks of costs, dumps, saves, the hash, a replay), `world/smite_tests.rs` (zeal: its grant,
+  builds, pace, costs, the sin, a save without it, a replay), `ui/mod.rs` (the status bar), and the
   `resources` screen snapshot (the character screen and the status bar).

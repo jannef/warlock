@@ -93,8 +93,8 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   in it (see [Skills](skills.md)), greyed out until its use comes to the game.
 - **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Lullaby](abilities.md#ability-lullaby), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
   [Step of the wind](abilities.md#ability-step-of-the-wind), [Stunning strike](abilities.md#ability-stunning-strike), [Patient defence](abilities.md#ability-patient-defence), [Stillness](abilities.md#ability-stillness), [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Orison](abilities.md#ability-orison), [Sanctuary](abilities.md#ability-sanctuary), [Knock](abilities.md#ability-knock)): your [class](classes.md)'s level table gives them (see [Classes](classes.md#levels)),
-  each under Class from the level that brings it. Most leave you [spent](status-effects.md#status-spent), [winded](status-effects.md#status-winded), or [drained](status-effects.md#status-drained) for a
-  while afterwards, greyed out until it passes; a [paladin](classes.md#paladin)'s holy gifts are never greyed out by
+  each under Class from the level that brings it. Some leave you [winded](status-effects.md#status-winded) for a while afterwards, greyed out until it passes, and most are paid
+  from a [resource](resources.md) instead (greyed out while you hold too little); a [paladin](classes.md#paladin)'s holy gifts are never greyed out by
   [alignment](alignment.md), but do nothing unless you are Kind or better (see [Alignment](alignment.md)). They have no key of their own
   yet: `X` uses the one you used last again.
 - **[War cry](abilities.md#ability-war-cry)**, the [berserker](classes.md#berserker)'s at level 25, is paid in

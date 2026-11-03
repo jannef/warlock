@@ -51,6 +51,15 @@ gives one, up to 5, and one fades every 30 base turns (3 minutes); empty, it sta
 [mana](mana.md#spending-it); see [Songs](abilities.md#songs)): 3 inspiration and nothing else, and with less you cannot sing it. A
 [virtuoso](talents.md#talent-virtuoso)'s inspire spends none.
 
+The [paladin](classes.md#paladin)'s **zeal** comes with [Smite](talents.md#talent-smite) at level 1, holding 5. It holds 10, plus
+your [Presence](stats.md#stat-presence) [modifier](stats.md#modifiers), plus a point per 10 [levels](experience.md#levels), never less than 6 (Presence 12 holds 11 at
+level 1, Presence 16 holds 16 at level 30). Every blow, shot, or throw of yours that hits builds a point, and so does every
+blow that hits you; it comes back a point every 10 base turns (a minute) besides, resting too, and sits at 0 when spent:
+an empty pool is full again in about ten minutes. [Smite](abilities.md#ability-smite) spends 3 and
+[Lay on hands](abilities.md#ability-lay-on-hands) 6 ([Avatar](talents.md#talent-avatar): 3), so wrath and mercy are paid from the one pool. A
+holy gift that does not answer (you are not Kind or better, see [Alignment](alignment.md)) spends none. **A deed that moves
+you toward evil** (see [Alignment](alignment.md)) empties it at once: "Your zeal deserts you."
+
 **Stamina** is the fighter's breath, the pool active weapon abilities are paid from (see
 [Combat](combat.md#stamina)). Every [warrior](classes.md#warrior), [berserker](classes.md#berserker), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [ascetic](classes.md#ascetic), [thief](classes.md#thief), and [bard](classes.md#bard)
 holds it from level 1 ([Trained wind](talents.md#talent-trained-wind)), full. It holds 10, plus your [Toughness](stats.md#stat-toughness) [modifier](stats.md#modifiers), plus a

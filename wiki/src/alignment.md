@@ -69,8 +69,10 @@ Nothing else moves you. When you cross into another band you feel it ("You feel 
 - **Holy gifts**: no class, talent, or ability is barred by your alignment, and nothing you have
   is taken away when it sinks. But the holy gifts work only for the good side: used by anyone
   else they are still used, take the time of a cast, and do nothing (no healing, no blow, no
-  light, no consecration, and no cooldown or [mana](mana.md#spending-it) spent). Putting your holy light out always
+  light, no consecration, and no cooldown, [zeal](resources.md#resource-zeal), or [mana](mana.md#spending-it) spent). Putting your holy light out always
   works.
+- **Zeal**: any deed that moves you toward evil empties a [paladin](classes.md#paladin)'s
+  [zeal](resources.md#resource-zeal) at once ("Your zeal deserts you."). It bars nothing: the pool fills again.
 
 {{#include generated/alignment-gifts.md}}
 

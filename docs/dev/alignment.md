@@ -62,8 +62,9 @@ A holy gift (`ClassActive::holy`: Lay on hands, Smite, Holy radiance, Consecrate
 bands it works for, `alignment = { min = "kind" }` on its talent (Consecrate's `neutral`, the
 priest design's Q3; `TalentDef::alignment`, checked
 on load: only a holy active's talent or a band-gated passive's may have one). Its function in `world/class_ability.rs`
-(`consecrate.rs` for Consecrate) asks `World::answered(active)` after its free refusals (nobody
-there, nothing to consecrate); outside the bands `World::unanswered(active)` says the gift's line
+(`consecrate.rs` for Consecrate, `smite.rs` for Smite) asks `World::answered(active)` after its free refusals (nobody
+there, nothing to consecrate); one paid in a resource (Smite and Lay on hands, zeal) is asked by
+`use_class` before the cost is spent; outside the bands `World::unanswered(active)` says the gift's line
 ("You call for holy wrath, but none answers.") and takes the time of a cast, spending no cooldown,
 mana, or resource. Putting Holy radiance out always works. Without alignment rules every gift
 works. A **band-gated passive** (`TalentEffect::band_gated`: Communion with the dark, the
@@ -74,6 +75,13 @@ where it would act, and outside them the passive does nothing, saying nothing
 way) would work the same way, by band at the moment of use, hooking into `attack_with` (the
 target's `nature`), `shift_alignment` (by `cause`), and `Actor::defence`/`check`. Mana reads
 nothing of alignment.
+
+**A sin empties zeal** (#910, the paladin design §4.3): `World::shift_alignment`, after the score
+moves, calls `sin_empties_zeal` when the player's score went down (a deed toward evil that
+moved it: a diminished one that moved 0 empties nothing). It sets the pool `data/smite.toml`'s
+`sin_empties` names (zeal) to 0, if held and above 0, and notes "Your zeal deserts you." with
+the deed's own lines. One `if`; without the file nothing happens. The only reading of the score
+in the smiting rules (`smite_tests.rs::a_sin_empties_zeal`).
 
 **Tests.** `alignment.rs` (diminishing, bands, scorn, requirements, loading), `content/alignment.rs`
 (the built-in bands cover the scale, news, bad files), `world/alignment_tests.rs` (starting bands, the birth animal's nudge, a paladin of a race not
