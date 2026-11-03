@@ -39,11 +39,7 @@ you a talent pick in its place.
 
 {{#include generated/class-levels.md}}
 
-A [paladin](classes.md#paladin)'s holy abilities used from the menu ([Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite) and its modes, [Holy radiance](abilities.md#ability-holy-radiance))
-work only while you are on the good side, Kind or better ([Consecrate](abilities.md#ability-consecrate) Neutral or better; see [Alignment](alignment.md)):
-otherwise you can still use them, and nothing happens (no [zeal](resources.md#resource-zeal) spent). The passives do not care, but for
-[Retribution](talents.md#talent-retribution), which answers no blow outside them. [Holy wrath](talents.md#talent-holy-wrath) (level 40) adds a die to every blow, shot, or throw of yours that hits the [unholy](talents.md#talent-smite), and from [Avatar](talents.md#talent-avatar) (level 60) to every one that hits anything; [Banishing smite](abilities.md#ability-banishing-smite) (level 50) ends a [summoned](creature-numbers.md#summoning) creature outright, whatever its [hit points](combat.md#hit-points). [Smite](abilities.md#ability-smite) and
-[Lay on hands](abilities.md#ability-lay-on-hands) are paid in [zeal](resources.md#resource-zeal), not [mana](mana.md#how-much). The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
+The [paladin](#the-paladin) has a section of its own below. The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
 [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
 [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend; the
 [ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry), [stunning strike](abilities.md#ability-stunning-strike), and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
@@ -145,6 +141,62 @@ shield, a [shot or a throw](ranged.md) that would hit you, a [trap](traps.md)'s 
 spent by itself: the hit is a miss, and the missile falls at your feet. With no ki left, or a weapon or shield in hand, it hits. Spells and
 blasts are never caught.
 **[Quivering palm](abilities.md#ability-quivering-palm)** (level 50) costs 5 ki and has no other wait; it cannot be used with a weapon in hand.
+
+### The paladin
+
+The paladin's fight is one pool, **[zeal](resources.md#resource-zeal)**, for wrath and mercy
+alike: it holds 10, plus your [Presence](stats.md#stat-presence) [modifier](stats.md#modifiers),
+plus a point per 10 [levels](experience.md#levels); it comes with Smite at level 1, holding 5.
+Every blow, shot, or throw of yours that hits builds a point, every blow that hits you builds a
+point, and it comes back a point a minute besides, resting too (see
+[Resources](resources.md#resource-zeal)). Your [mana](mana.md#how-much) is for your spells, and
+none of this spends it. **A deed that moves you toward evil** empties the pool at once ("Your zeal
+deserts you."), and it fills again: it bars nothing (see [Alignment](alignment.md)).
+
+**The unholy** are the creatures holy wrath falls hardest on: every type tagged undead, fiend,
+demon, devil, or yugoloth. What a creature has done, or which side it is on, is no part of it; a
+hostile bear takes your smite as well as a ghoul does, and only the unholy die is the ghoul's.
+
+**The smites** are each a row of the [abilities menu](abilities.md): a melee blow with what you
+wield at the [hostile](creatures.md#factions) in a direction, priced as the attack, with
+[Presence](stats.md#stat-presence)'s modifier added to hit and 1d6 more [damage](combat.md) per 10
+levels (at least 1d6), and one die more against the unholy. With nobody hostile there it is
+refused, for no time and no zeal; a miss still spends its zeal.
+
+| Level | Smite | Zeal | What it does |
+|---:|---|---:|---|
+| 1 | [Smite](abilities.md#ability-smite) | 3 | The blow, and nothing more |
+| 12 | [Branding smite](abilities.md#ability-branding-smite) | 3 | The foe it wounds is [Branded](status-effects.md#status-branded) for five minutes: it sheds a faint light wherever it goes, so you can see it in the dark and it lights its fellows |
+| 32 | [Wrathful smite](abilities.md#ability-wrathful-smite) | 4 | The foe it wounds makes a [Willpower](stats.md#stat-willpower) [check](diseases.md#checks) against 13 plus your Presence modifier; failing, it is [Frightened](status-effects.md#status-frightened) of you for 2d3 turns and flees |
+| 50 | [Banishing smite](abilities.md#ability-banishing-smite) | 6 | A foe it wounds that was [summoned](creature-numbers.md#summoning) is unmade, whatever its [hit points](combat.md#hit-points), your kill as any other; an unholy foe not summoned takes the smite's dice twice over; anyone else takes a plain smite |
+
+A rider with nothing to do still spends its zeal, and a blow that does no damage carries none.
+
+**[Lay on hands](abilities.md#ability-lay-on-hands)** (level 1) spends 6 zeal and a spell's time
+for 2 hit points a level. **[Avatar](talents.md#talent-avatar)** (level 60) makes it heal fully,
+cure every status that ticks and every [disease](diseases.md), and cost half: 3 zeal.
+
+**[Retribution](talents.md#talent-retribution)** (level 25) is a passive: when a hostile creature
+beside you lands a blow of its melee attack on you, your smite answers it once the attack is over,
+free but for an [exertion](combat.md#stamina), for 4 zeal. The blow has built its point first, so
+3 zeal is enough. With less, or while you are off guard, nothing happens, and an attack it answers
+is not also [riposted](fighting-styles.md#style-ability-riposte); see
+[Combat](combat.md#free-blows).
+
+**[Holy wrath](talents.md#talent-holy-wrath)** (level 40) is a passive and costs nothing: every
+blow, shot, or throw of yours that hits the unholy rolls 1d6 more, of the blow's own kind,
+[resisted](damage-types.md#armour-and-resistance) but never soaked by Protection, smites too. From
+[Avatar](talents.md#talent-avatar) it lands on every creature you hit.
+
+**[Zealot](talents.md#talent-zealot)** is the one pick on the pool, from level 6: every blow that
+hits you builds 2 zeal instead of 1, for a paladin who stands in the doorway and takes them.
+
+**Which side you are on.** [Lay on hands](abilities.md#ability-lay-on-hands), the smites, and
+[Holy radiance](abilities.md#ability-holy-radiance) work only while you are Kind or better
+([Consecrate](abilities.md#ability-consecrate), Neutral or better; see
+[Alignment](alignment.md)): otherwise you can still use them, nothing happens, and no zeal is spent
+(a smite says "You call for holy wrath, but none answers."). The passives do not care, but for
+Retribution, which answers no blow outside them; your zeal builds whichever side you are on.
 
 ### The bard
 

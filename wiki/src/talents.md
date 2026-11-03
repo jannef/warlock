@@ -107,9 +107,9 @@ In the game a talent is described in words; the tables below state the rule exac
 talents simply change a rule for good. An **active** talent ([Second wind](talents.md#talent-second-wind)) is something you do:
 it appears in the [abilities menu](abilities.md) under Talents, and after use it leaves a
 status ([Winded](status-effects.md#status-winded)) during which it cannot be used again; [Blood magic](talents.md#talent-blood-magic) is active too, and has no
-waiting time: it costs [hit points](combat.md#hit-points) instead (see [Mana](mana.md#spending-it)). Four talents
+waiting time: it costs [hit points](combat.md#hit-points) instead (see [Mana](mana.md#spending-it)). Five talents
 work on a [class](classes.md)'s [resources](resources.md#talents-on-resources) and can be taken only by that
-class ([Battle trance](talents.md#talent-battle-trance), [Inner calm](talents.md#talent-inner-calm), [Steady hand](talents.md#talent-steady-hand), [Patient blade](talents.md#talent-patient-blade)); one that needs the [lantern's hood](lantern.md#the-hood)
+class ([Battle trance](talents.md#talent-battle-trance), [Inner calm](talents.md#talent-inner-calm), [Steady hand](talents.md#talent-steady-hand), [Patient blade](talents.md#talent-patient-blade), [Zealot](talents.md#talent-zealot)); one that needs the [lantern's hood](lantern.md#the-hood)
 (Hooded light) is still to come. [Apprentice](talents.md#talent-apprentice)'s
 [skill](skills.md) points are rolled once, as the rank is taken. [Treasure hunter](talents.md#talent-treasure-hunter) changes loot as it is made: a
 level you have already been to keeps what lies there, and the levels themselves never change.

@@ -211,7 +211,8 @@ id = "schools"
 name = "Schools of magic: ranks and marks"
 
 # Alternative resources (#225): pools beside hit points and mana (Rage, Focus, Openings, Ki,
-# Inspiration); their talents are Battle trance, Inner calm, Steady hand, and Patient blade.
+# Inspiration, Zeal); their talents are Battle trance, Inner calm, Steady hand, Patient blade, and
+# Zealot.
 [[system]]
 id = "resources"
 name = "Resources"
