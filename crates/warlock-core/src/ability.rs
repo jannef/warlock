@@ -965,6 +965,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Consecrate
         | ClassActive::Orison
         | ClassActive::Sanctuary
+        | ClassActive::Cackle
         | ClassActive::Knock
         | ClassActive::MerchantsEye
         | ClassActive::SpiritWeapon

@@ -695,6 +695,15 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A witch past level 6 (#904): Cackle under Class, nothing to aim, listed usable (the rules
+    // refuse it with no hex of hers in sight), beside her hexes in Spells.
+    Case {
+        name: "abilities-menu-witch",
+        character: Some("human,female,witch"),
+        actions: "xp:20000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A priest bleeding and poisoned (#549): Heal in the Skills group, used on yourself.
     Case {
         name: "abilities-menu-heal",

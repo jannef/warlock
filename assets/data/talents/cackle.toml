@@ -1,0 +1,8 @@
+[[talent]]
+id = "cackle"
+name = "Cackle"
+tree = "class"
+granted = true
+description = "You cackle, loud enough to be heard: every hex you have laid on a creature you see holds a while longer."
+effects = [{ kind = "cackle", degrees = 1, noise = 60 }]
+systems = ["status", "spells"]

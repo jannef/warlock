@@ -196,6 +196,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Herb lore",
                 "Evil eye",
                 "Hex of weakness",
+                "Cackle",
                 "Poison lore",
                 "Cause wounds",
                 "Second sight",

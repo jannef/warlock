@@ -529,6 +529,10 @@
 #                                 release, mana, hunger, restoration), `answers` problems a
 #                                 prayer (1 to 7, the largest held), `all` every problem and
 #                                 every resource pool at once; at least one of them
+#   cackle { degrees, noise }     the active Cackle (`use:cackle`, the time of a cast): a voice
+#                                 that loud (1 to 300); every hex of its own on a creature it
+#                                 sees grows that many degrees (1 to 6) to its max and starts
+#                                 afresh; refused, no time, with no hex of its own in sight
 #   knock { mana }                the active Knock (aimed in a direction, `use:knock:E`): for
 #                                 that mana (0 to 100) the lock of the locked door or shut
 #                                 chest there springs open; refused, no time, where nothing

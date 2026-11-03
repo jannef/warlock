@@ -1260,7 +1260,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     come from the Scholar and Spellcraft trees.
   - **Witch**: Herb lore (rotten food −50 %, a corpse's `on_eat` harm and vomiting never, the
     angelica root heals 1d6), Evil eye (level 0, at 1: Hexed 1 min a degree: −2 to hit; 1 mana),
-    Hex of weakness (level 3, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Poison lore
+    Hex of weakness (level 3, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Cackle (at
+    6, #904: `use:cackle`, nothing to aim, the time of a cast, no mana or cooldown; a voice 60
+    loud, `Act::Cackle`; every effect on a creature the player's perception sees whose status a
+    hex lays, `Content::hex_statuses()`, and whose giver is the player grows a degree, to its
+    max, and starts its degree afresh, in actor-id order; refused with no time when no creature
+    in sight is under a hex of hers, "No one you see is under your hex.", and while a status
+    blocks a cast; "You cackle." "Your hexes hold."; no draws, no marks), Poison lore
     (poison eases twice as fast; +2 damage on hits at a Poisoned creature, `World::lore_blow`),
     Cause wounds (level 4, at 12: a touch that rolls to hit, 1d6 necrotic, to 2d6; 3 mana),
     Second sight (noticing

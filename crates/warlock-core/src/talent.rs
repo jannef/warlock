@@ -569,6 +569,8 @@ pub struct TalentMods {
     pub rage: Option<ResourceId>,
     /// The active War cry, if it has it.
     pub war_cry: Option<WarCry>,
+    /// The active Cackle, if it has it.
+    pub cackle: Option<Cackle>,
     /// What events build resources beyond the resources' own `builds`: `(resource, on,
     /// amount)` (Blood frenzy's rage a kill).
     pub resource_builds: Vec<(ResourceId, Build, u16)>,
@@ -776,6 +778,14 @@ pub struct WarCry {
     pub status: StatusId,
     pub severity: u16,
     pub difficulty: i32,
+}
+
+/// The active Cackle (spec §8 "Class abilities"; `world/witch.rs`): how many degrees it adds
+/// to each hex of its holder's in sight, and how loud it is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cackle {
+    pub degrees: u16,
+    pub noise: u16,
 }
 
 /// The active Consecrate (spec §8 "Class abilities"): its mana and how long the prayer takes.
@@ -1079,6 +1089,7 @@ impl TalentMods {
         match active {
             A::Rage => self.rage.is_some(),
             A::WarCry => self.war_cry.is_some(),
+            A::Cackle => self.cackle.is_some(),
             A::VeteransWind => self.veterans_wind.is_some(),
             A::Whirlwind => self.whirlwind,
             A::LayOnHands => self.lay_on_hands.is_some(),
@@ -1826,6 +1837,9 @@ impl TalentMods {
                         difficulty,
                     });
                 }
+            }
+            TalentEffect::Cackle { degrees, noise } => {
+                self.cackle = Some(Cackle { degrees, noise });
             }
             TalentEffect::ResourceBuild {
                 resource,

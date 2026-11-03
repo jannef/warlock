@@ -639,6 +639,9 @@ pub enum ClassActive {
     /// A minute's kneeling rite that hallows the ground about the priest for an hour, for mana:
     /// no foe sets foot in it and wounds and mind mend there faster (`world/sanctuary.rs`).
     Sanctuary,
+    /// A loud cackle that holds every hex of the witch's on the creatures she sees a degree
+    /// longer (the witch's Cackle, `world/witch.rs`).
+    Cackle,
     /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
     Knock,
     /// A careful look that tells a thing the player carries for what it is, as the scroll of
@@ -673,6 +676,7 @@ impl ClassActive {
         ClassActive::Consecrate,
         ClassActive::Orison,
         ClassActive::Sanctuary,
+        ClassActive::Cackle,
         ClassActive::Knock,
         ClassActive::MerchantsEye,
         ClassActive::SpiritWeapon,
@@ -702,6 +706,7 @@ impl ClassActive {
             ClassActive::Consecrate => "consecrate",
             ClassActive::Orison => "orison",
             ClassActive::Sanctuary => "sanctuary",
+            ClassActive::Cackle => "cackle",
             ClassActive::Knock => "knock",
             ClassActive::MerchantsEye => "merchants_eye",
             ClassActive::SpiritWeapon => "spirit_weapon",
@@ -804,6 +809,7 @@ impl ClassActive {
             | ClassActive::Consecrate
             | ClassActive::Orison
             | ClassActive::Sanctuary
+            | ClassActive::Cackle
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,

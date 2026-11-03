@@ -700,6 +700,10 @@ pub enum TalentEffect {
         severity: u16,
         difficulty: i32,
     },
+    /// The class active Cackle: a voice `noise` loud; every hex of the player's on a creature
+    /// they see grows `degrees` and starts its degree afresh, to its status's `max`
+    /// (`world/witch.rs`).
+    Cackle { degrees: u16, noise: u16 },
     /// Event `on` builds `resource` this much more while it is held, beside what the resource's
     /// own `builds` give (Blood frenzy: 5 rage a kill).
     ResourceBuild {
@@ -1193,6 +1197,7 @@ impl TalentEffect {
         Some(match self {
             TalentEffect::Rage { .. } => A::Rage,
             TalentEffect::WarCry { .. } => A::WarCry,
+            TalentEffect::Cackle { .. } => A::Cackle,
             TalentEffect::VeteransWind { .. } => A::VeteransWind,
             TalentEffect::Whirlwind => A::Whirlwind,
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
@@ -1792,6 +1797,12 @@ impl TalentEffect {
                     return Err("`war_cry`: severity is at least 1, difficulty 0 to 30".into());
                 }
                 status(id)
+            }
+            TalentEffect::Cackle { degrees, noise } => {
+                if !(1..=6).contains(degrees) || !(1..=crate::noise::MAX_LOUDNESS).contains(noise) {
+                    return Err("`cackle`: degrees 1 to 6, noise 1 to 300".into());
+                }
+                Ok(())
             }
             TalentEffect::ResourceBuild {
                 resource: id,

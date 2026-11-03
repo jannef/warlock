@@ -234,6 +234,7 @@ mod wares;
 mod warp;
 mod weapon_ability;
 mod weapon_active;
+mod witch;
 mod words;
 mod zap;
 
@@ -1858,6 +1859,8 @@ mod weapon_active_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+#[cfg(test)]
+mod witch_tests;
 #[cfg(test)]
 mod words_tests;
 #[cfg(test)]
