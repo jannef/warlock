@@ -3,7 +3,7 @@
 Developer notes for the companion, a beast that is the player's for good (spec §8 "Allies": "The
 animal companion"; the design is `docs/design/ranger-companion.md`, §18 and §20 the owner's
 decisions, which override the rest). Slice **C1** (#916, this file: the starting beast, the
-story's chapter, growth, always along, the nose) and **C4** Pack tactics (#919, below); C2 Tame, C3 the collar, C5
+story's chapter, growth, always along, the nose), **C3** the collar (#918, below), and **C4** Pack tactics (#919, below); C2 Tame, C5
 Hunter's bond, C6 Sic 'em, C7 the wild beasts, C8 the probe build on it. The ally core it uses as
 it is (the side, the arm, the orders, the retinue, the kill credit) is `docs/dev/allies.md`.
 Keep it current with the code, as CLAUDE.md says.
@@ -149,6 +149,30 @@ ids checked at load: known and `tameable`; `Witness::companion` is the companion
 `World::tell_background` from `World::companion()`), plus the plain line, the net for a beast
 without one. Details in `docs/dev/background.md`.
 
+## The collar (C3, #918)
+
+`world/collar.rs`, `Action::Give { item, ally }`, `give:LETTER[:DIR]`, `Ability::Give`
+(`Source::Ally`, `Aim::Item`; the last row of the Allies group, listed while the player has a
+companion, `Ability::orders(any, kept)`; unavailable `NotBeside`, from the snapshot's
+`companion_beside`). One of the stack goes from the player's pack to the end of the beast's
+`Actor::inventory` and into its `neck` slot; a last one worn by the player comes off first, paying
+for that too (`take_off_before_dropping`). Priced as a `wear`. The old one leaves the beast's
+inventory for the pile on its cell, with the ordinary rules (standing in an open shop, that makes
+it the keeper's goods, as anything lying there is). `world::fits_neck` is the Give list's filter
+and the rule's. Unpaid goods are refused (`may_loose`).
+
+Nothing new is saved: the collar is an ordinary stack in the beast's equipment, so `Mods::worn`,
+`Actor::eyes`, and the regeneration affixes read it, `SeenGear` shows it (look mode's `wearing`),
+`World::creature_dies` drops it, and the `actors` layer lists it. `AllyView::wears` carries it to
+the `companion` dump wherever the beast is (`, wearing a jade amulet`; JSON `wears`, null with
+none): the player fastened it. No identification: nothing reads the beast's wearing for lore.
+
+**More kept beasts.** `World::collar_wearer` is the one place that says which ally wears a collar
+(`Actor::companion()`), and `ally` picks the way: when the familiar lands (#929: `Actor::kept()`,
+`PerceptionView::kept_beside()`), Give goes to it by changing that predicate, and the UI's ask
+(two kept beasts beside the player: a direction first, `input.rs::tend_way`'s pattern, the owner's
+#907 Q4) only has to send `ally: Some(dir)`.
+
 ## Pack tactics (C4, #919)
 
 The ranger's level 18 (`assets/data/talents/pack_tactics.toml`: tree `class`, `granted`, effects
@@ -186,7 +210,7 @@ flanked too, and another type nothing).
 - **Dumps**: the `companion` layer (`Snel, a hound (grade 12) at (12, 5): unhurt, order follow`,
   the cell only where the player sees it; `Snel, a hound (grade 12): with you` in the retinue;
   `no companion`); JSON `companion` (`id`, `name`, `creature`, `grade`, `health`, `order`, `at`,
-  `pos` (seen, else null), `retinue`; null without one); the `allies` JSON's `source` is
+  `pos` (seen, else null), `retinue`, `wears`; null without one); the `allies` JSON's `source` is
   `"companion"`; the `actors` layer appends `; named Snel, grade 12`; the header's `allies N`
   counts it. `PerceptionView::companion()` is the one read for the UI and the dumps; the
   snapshot's `AllyView::source` carries the data.

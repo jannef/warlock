@@ -26,6 +26,8 @@ trade first pass their positions through `World::release_spirit` (the spirit sta
 faded, the rest renumbered), so neither the floor nor a shop ever holds one; `World::throw`
 refuses one; `shop::count_of` and the quests' counts skip it. What takes a stack out of the pack
 (an outcome's `remove_stacks`, the forge's ruin) needs nothing: the stack is gone either way.
+A companion's collar (`world/collar.rs`, `docs/dev/companion.md`) is the one thing handed over to
+a creature's `equipment` in play: the `neck` slot, by the Give ability.
 Creatures wield and wear from their spawn
 (`wield`/`wear` in a level legend, resolved in `content/level.rs::equip`). Presentation reads
 `PerceptionView::equipment` (the player's own) and `PerceptionView::gear(actor)` (what a seen

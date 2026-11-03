@@ -192,8 +192,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   creature's: a companion is no summon). The player sees it in the status bar ("Snel: unhurt",
   "Snel: with you"), in look mode ("Snel, your hound (unhurt), …"), on the Character screen
   ("With    Snel, a hound"), and in the `companion` dump; the wiki states the lists, the odds,
-  and the growth table exactly. Taming (C2), the collar (C3), and the ranger's later abilities
-  (C4–C6) are the design's next slices.
+  and the growth table exactly. **The collar** (`world/collar.rs`; #918): a companion wears one
+  thing, on its neck. The **Give** ability (the Allies group, listed with a companion, greyed out
+  "not beside you" with it away; `give:LETTER[:DIR]`) asks for a stack the player carries that
+  fits a neck; one of it leaves the pack, taken off first if it was on the player, and goes on the
+  beast, a wear's time ("You fasten the jade amulet about Snel's neck."), and what it wore falls
+  on its cell ("Snel's bone amulet falls to the floor."). Refused, no time: with it not beside
+  the player ("Snel is not beside you."), in the retinue too; a stack that fits no neck ("Snel has
+  no use for that."); goods unpaid for. Its magic works on the beast as on any wearer, and wearing
+  it on the beast teaches the player nothing. There is no taking one back but giving another or
+  its death, when the collar is in its pile. Look mode says "Snel, your hound (unhurt), wearing a
+  jade amulet, ...". Taming (C2) and the ranger's later abilities (C5, C6) are the design's next
+  slices.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

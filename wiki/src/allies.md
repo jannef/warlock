@@ -94,6 +94,16 @@ yours however dark it is, and **through a closed door**, though never through a 
 for it when its eyes find nothing. When it scents something you cannot see, it growls, once
 ("Snel growls at the dark."). A door it cannot open keeps it from what it smells: open it.
 
+### The collar
+
+Your companion wears one thing, on its neck. [Give](abilities.md#ability-give), in the Allies
+group, fastens something of yours that goes on a neck, an amulet, on the companion beside you,
+for the time wearing it would take you ([What takes time](time.md#what-takes-time)): one of a stack, and taken off you first if
+you wore it. Whatever it wore before falls to the floor beneath it. The magic works on the beast
+as it would on you: its [resistances](damage-types.md#armour-and-resistance), its armour, its eyes. You learn nothing about
+what you give by the beast's wearing it. You cannot take a collar back: give another and pick up
+the old one, or find it among the beast's remains. Goods you have not paid for stay with you.
+
 ### Starting companions
 
 The [ranger](classes.md#ranger)'s **Animal companion** (level 1) means a beast at their side from
