@@ -19,6 +19,9 @@ documents".
 - `witch-and-wizard.md` (#826): the witch's hex loop (Cackle at 6, Malison at 18: W1, W2) and
   the wizard's preparation (Scribe at 12, Magister to 40: Z1, #906).
 
+- `witch-familiar.md` (#907): the witch's familiar, a kept beast whose touch is her evil eye. §16 the
+  owner's round overrides §15's defaults. F1 is #929, F2 Call familiar #930, F3 the story's lines #931.
+
 ## Built
 
 - `magic.md` (#392): built by #393 to #401 (unidentified scrolls, the spell data and tiers, the

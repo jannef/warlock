@@ -746,6 +746,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                     that fights for you, always comes along, and grows with \
                                     your level"
             .into(),
+        TalentEffect::Familiar => "a [familiar](allies.md#familiars) from the first turn: a \
+                                   small beast whose touch is your [evil eye](allies.md#the-touch), \
+                                   that goes for what you have hexed, always comes along, and \
+                                   grows with your level"
+            .into(),
         TalentEffect::Tame { bonus } => format!("{} on your taming checks", signed(bonus)),
         TalentEffect::SharedSight => "you see what your [companion](allies.md#hunters-bond) \
                                       sees, by its own eyes, and the foes its nose finds, \

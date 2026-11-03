@@ -14,7 +14,7 @@ use warlock_core::world::{Ally, AllySource, CompanionData, Order};
 /// The levels the growth table is printed at.
 const GRADES: [u8; 7] = [1, 10, 20, 30, 40, 50, 60];
 
-fn beast(content: &Content, id: CreatureId) -> String {
+pub(super) fn beast(content: &Content, id: CreatureId) -> String {
     let def = content.creature(id);
     format!(
         "{} ({})",
@@ -55,6 +55,20 @@ pub(super) fn starts(content: &Content) -> String {
 /// Every tameable beast at the cadence levels: hit points, the blow, Defence, and Protection,
 /// read from the rules as a companion of that grade would be.
 pub(super) fn growth(content: &Content) -> String {
+    let mut beasts: Vec<CreatureId> = (order::creatures(content).into_iter())
+        .filter(|(_, c)| c.tameable)
+        .map(|(id, _)| id)
+        .collect();
+    beasts.sort_by_key(|&id| {
+        let def = content.creature(id);
+        (def.level, def.name.clone())
+    });
+    growth_table(content, &beasts)
+}
+
+/// `beasts` at the cadence levels, as a kept beast of that grade would be (a companion's table,
+/// a familiar's: one rule).
+pub(super) fn growth_table(content: &Content, beasts: &[CreatureId]) -> String {
     let Some(rules) = content.companions() else {
         return String::new();
     };
@@ -67,12 +81,8 @@ pub(super) fn growth(content: &Content) -> String {
         out.push_str("---|");
     }
     out.push('\n');
-    let mut beasts: Vec<(CreatureId, &warlock_core::content::CreatureDef)> =
-        (order::creatures(content).into_iter())
-            .filter(|(_, c)| c.tameable)
-            .collect();
-    beasts.sort_by(|a, b| a.1.level.cmp(&b.1.level).then(a.1.name.cmp(&b.1.name)));
-    for (id, def) in beasts {
+    for &id in beasts {
+        let def = content.creature(id);
         let _ = write!(
             out,
             "| {} | {} |",

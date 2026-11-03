@@ -939,6 +939,10 @@ impl World {
                 self.barbed(attacker, target, kind, events);
             }
         }
+        // A familiar's touch is its master's hex (`familiar.rs`), on a hit that leaves it alive.
+        if blow.is_some_and(|b| b.strike.is_hit()) {
+            self.familiar_touch(attacker, target, kind, events);
+        }
         // Drowning grip (spec §8 "Birth sign"): a hit holds, a miss or another target lets go.
         self.grip(attacker, target, kind, blow.as_ref(), events);
         blow
@@ -1379,9 +1383,7 @@ impl World {
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
         let guard = Guard::of(target_actor, &content, &self.state);
         let yours = target_actor.is_some_and(|a| a.master() == Some(player));
-        let named = target_actor
-            .and_then(|a| a.companion())
-            .map(|c| c.name.as_str());
+        let named = target_actor.and_then(|a| a.kept()).map(|c| c.name.as_str());
         let end = match name {
             Some(_) if seen && yours && named.is_some() => End::Named(named.unwrap_or_default()),
             Some(name) if seen && yours => End::Yours(name),

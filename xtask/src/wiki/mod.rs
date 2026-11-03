@@ -31,6 +31,7 @@ mod doors;
 mod dungeons;
 mod encounters;
 mod experience;
+mod familiars;
 mod gems;
 mod guild;
 mod healing;
@@ -331,6 +332,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("companion-growth.md", companions::growth),
         ("companion-rules.md", companions::rules),
         ("companion-taming.md", companions::taming),
+        ("familiar-starts.md", familiars::starts),
+        ("familiar-growth.md", familiars::growth),
+        ("familiar-rules.md", familiars::rules),
         ("school-skills.md", schools::skills),
         ("school-benefits.md", schools::benefits),
         ("school-abilities.md", schools::abilities),
@@ -645,6 +649,11 @@ mod tests {
         );
         has("companion-starts.md", "| Human | hound (1), boar (2) |");
         has("companion-growth.md", "| hound | 1 | 12 hp,");
+        has(
+            "familiar-starts.md",
+            "| Human | cat (1), toad (1), hare (1) |",
+        );
+        has("familiar-growth.md", "| cat | 1 |");
         assert!(!text("creature-senses.md").contains("| You"));
         // Speed: yours first, then the quickest.
         assert!(

@@ -53,6 +53,7 @@ impl Seen {
             trained: &self.trained,
             campaign,
             companion: None,
+            kept: false,
         }
     }
 }

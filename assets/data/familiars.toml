@@ -1,0 +1,59 @@
+# The witch's familiar (spec §8 "Class abilities", "Allies"; docs/design/witch-familiar.md,
+# §16 the owner's round; docs/dev/familiar.md): a small beast of the old craft at her heel, a
+# kept beast of the ally core as the ranger's companion is. This file holds only the familiar's
+# own data; the allies' rules are allies.toml, the kept beasts' growth companions.toml. Without
+# this file no familiar can be made: the witch's Familiar then gives nothing.
+
+# What a familiar is called: the names the English witch trials recorded (Chelmsford 1566, St
+# Osyth 1582, Pendle 1612, Hopkins 1647; #378 may rename), one drawn on the stream
+# `companion/name/<actor id>`, as a companion's name is.
+names = ["Tibb", "Fancie", "Dandy", "Tyffin", "Pigin", "Tittey", "Suckin", "Robbin", "Jarmara", "Holt", "Newes", "Elemauzer", "Pyewacket", "Greedigut", "Sathan"]
+
+# The hex spell whose status a familiar's blow lays on what it hits, at the degrees its master
+# would cast it now, with its master as the giver (`world/familiar.rs::familiar_touch`).
+touch = "evil_eye"
+
+# The starting familiar (the witch's Familiar), drawn as the run begins on the stream
+# `familiar/<race>,<gender>,<class>`: at `rare_per_mille` in a thousand a beast of `rare`, else
+# one of the race's list (the owner, #907 Q2: race lists and a jackpot, as companions.toml). A
+# race's list holds beasts of level at most `most_level`; the rares are free of it. A familiar is
+# called, not tamed: its kind need not be `tameable`, but it is a plain beast all the same (no
+# unique, animated thing, summoner, door-opener, one of the peoples, or one fighting from afar).
+[start]
+rare_per_mille = 50
+# The black dog of the Witch of Edmonton (1621), and a black cat grown large.
+rare = ["black_hound", "panther"]
+most_level = 2
+
+# Every race of races.toml has one to three beasts here: the old craft's cat, toad, raven,
+# hare, and bat, and the small beasts the ranger's lists already give a race where they fit a
+# witch.
+[start.by_race]
+human = ["cat", "toad", "hare"]
+elf = ["raven", "hare", "cat"]
+half_elf = ["cat", "raven", "hare"]
+dwarf = ["toad", "raven"]
+halfling = ["hare", "toad", "cat"]
+gnome = ["toad", "polecat", "cat"]
+half_orc = ["raven", "toad"]
+goblin = ["bat", "rat", "toad"]
+drow = ["bat", "large_spider", "cat"]
+kobold = ["cave_lizard", "bat", "rat"]
+lizardfolk = ["toad", "cave_lizard"]
+duergar = ["bat", "large_spider", "toad"]
+ratfolk = ["rat", "polecat", "toad"]
+
+# How each kind arrives, said with its name and kind: "Tibb, your cat, winds about your
+# ankles." Every beast a start may draw has its line.
+[arrives]
+cat = "winds about your ankles"
+toad = "squats in your shadow"
+raven = "settles on your shoulder"
+hare = "crouches at your heel"
+bat = "hangs from your hood"
+rat = "runs up your sleeve and sits on your shoulder"
+polecat = "curls about your neck"
+large_spider = "spins a thread from your sleeve"
+cave_lizard = "flicks its tongue at your heel"
+black_hound = "pads out of your shadow"
+panther = "pads out of the dark to your side"

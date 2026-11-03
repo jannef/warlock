@@ -160,9 +160,9 @@ impl World {
 
     /// What `actor` is called in messages: "the gardener", a shop's keeper by its name
     /// ("Grimbold"; spec §7 "Shops"), a unique character by its proper name ("Sister Hild"), or
-    /// a companion by its own ("Snel"; spec §8 "Allies").
+    /// a kept beast (a companion, a familiar) by its own ("Snel"; spec §8 "Allies").
     pub(super) fn called(&self, actor: &Actor) -> String {
-        if let Some(data) = actor.companion() {
+        if let Some(data) = actor.kept() {
             return data.name.clone();
         }
         let keeper = (self.state.levels.get(&actor.level))

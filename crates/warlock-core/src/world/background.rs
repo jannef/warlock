@@ -58,6 +58,7 @@ impl World {
             trained: &trained,
             campaign: &self.state.campaign,
             companion,
+            kept: companion.is_some() || self.familiar().is_some(),
         };
         let story = background::tell(&content, self.state.seed, &witness);
         for effect in story.effects {

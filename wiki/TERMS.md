@@ -246,6 +246,7 @@ above.
 | Summon, summon spell, a call (the druid's) | `allies.md#summons`, `allies.md#the-druids-calls` |
 | Companion, animal companion, the nose, a companion's level (grade) | `allies.md#companions`, `allies.md#starting-companions`, `allies.md#growth` |
 | Tame, taming | `allies.md#taming` |
+| Familiar, a familiar's touch, what it goes for | `allies.md#familiars`, `allies.md#the-touch`, `allies.md#what-it-goes-for` |
 | Hunter's bond, shared sight, shared buffs | `allies.md#hunters-bond` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
 | Saying words, passwords, riddles | `npcs.md#saying-words` |
