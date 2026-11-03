@@ -146,7 +146,9 @@ A **hex** is a status a [hex spell](magic.md#shapes) lays: [Hexed](status-effect
 [Weakened](status-effects.md#status-weakened), [Sluggish](status-effects.md#status-sluggish),
 [Drowsy](status-effects.md#status-drowsy), and [Webbed](status-effects.md#status-webbed). A
 [witch](classes.md#witch)'s [cackle](abilities.md#ability-cackle) keeps the hexes she laid on: each
-on a creature she sees grows a degree, to its maximum, and its degree's time starts again.
+on a creature she sees grows a degree, to its maximum, and its degree's time starts again. Her
+[malison](talents.md#talent-malison) makes a creature under a hex take 3 more damage from her
+for each hex, and one dying under a hex of hers pays her mana.
 
 A **cooldown** is a status effect that only waits to wear off: while you are, say, [winded](status-effects.md#status-winded), the
 [ability](abilities.md) that winded you cannot be used again (`you are winded`). Time is the only price; nothing

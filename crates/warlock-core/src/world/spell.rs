@@ -372,6 +372,16 @@ impl World {
             return;
         };
         let from = self.state.actors.get(&by).map_or(source.0, |a| a.pos);
+        // Poison lore's and Malison's bite lands with a spell as with a blow, before resistance.
+        let damage = if damage.amount > 0 {
+            let blow = Blow {
+                strike,
+                ..Blow::plain(damage.amount, damage.kind)
+            };
+            Damage::new(self.lore_blow(by, target, blow).damage, damage.kind)
+        } else {
+            damage
+        };
         let taken = if strike.is_hit() {
             self.resisted(target, damage)
         } else {

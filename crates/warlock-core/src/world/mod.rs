@@ -163,6 +163,7 @@ mod lockpick;
 mod loot;
 mod lucky;
 mod lurk;
+mod malison;
 mod mana;
 mod merchants_eye;
 mod mimic;
@@ -1682,6 +1683,8 @@ mod lullaby_tests;
 mod lurk_tests;
 #[cfg(test)]
 mod magic_tests;
+#[cfg(test)]
+mod malison_tests;
 #[cfg(test)]
 mod mana_talent_tests;
 #[cfg(test)]

@@ -1157,6 +1157,8 @@ impl World {
                     self.train(Use::Handle);
                 }
             }
+            // Malison: a death under the player's hex pays them mana (`malison.rs`).
+            self.hex_tithe(id);
             let lines = self.creature_dies(id, credited);
             self.news.splice(earned..earned, lines);
         }

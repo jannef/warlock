@@ -1278,8 +1278,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     max, and starts its degree afresh, in actor-id order; refused with no time when no creature
     in sight is under a hex of hers, "No one you see is under your hex.", and while a status
     blocks a cast; "You cackle." "Your hexes hold."; no draws, no marks), Poison lore
-    (poison eases twice as fast; +2 damage on hits at a Poisoned creature, `World::lore_blow`),
+    (poison eases twice as fast; +2 damage on hits and spells at a Poisoned creature,
+    `World::lore_blow`, from `resolve` and `spell_strikes` before resistance),
     Cause wounds (level 4, at 12: a touch that rolls to hit, 1d6 necrotic, to 2d6; 3 mana),
+    Malison (at 18, #905: +3 damage on hits and spells at a creature under each hex it is under,
+    anyone's, `status_damage` on the five hex statuses; and the tithe, `hex_tithe`: a creature
+    that dies under a hex of the player's, by any cause and anyone's hand, anywhere, gives the
+    player its level / 2 in mana, at least 1, never past their maximum, `World::hex_tithe` from
+    `dies`; "The hex comes home." when any came; never for the player's own death; no draws),
     Second sight (noticing
     as Spot +2, searching +2), Curse of sloth (level 3: Sluggish 1 min a degree: every action
     costs 150 %; 3 mana), Blight (level 7: a burst of 2d6 poison, radius 2, and two degrees of

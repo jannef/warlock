@@ -89,6 +89,11 @@ dies of [poison](status-effects.md#status-poisoned) or [bleeding](status-effects
 gives nothing, and neither does a kill farther off. Two items add up, identified or not. A
 creature wearing such an item refills its own mana the same way when it kills.
 
+A [witch](classes.md#witch)'s [Malison](talents.md#talent-malison) (from level 18) pays her
+mana for a death under one of her [hexes](status-effects.md#status-ill-wished), however it died
+and whoever killed it, at any distance: half the creature's level (rounded down, at least 1),
+never above her most. It adds to an item of Siphoning's.
+
 ## When the most falls
 
 - Taking off a [magic item](magic-items.md) that raised it lowers what you have down to your new most, if need be.

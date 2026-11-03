@@ -626,6 +626,9 @@ pub struct TalentMods {
     pub meal_heals: Vec<(Option<crate::content::ObjectId>, Dice)>,
     /// Damage more against a creature suffering a status: `(status, value)`.
     pub status_damage: Vec<(StatusId, i32)>,
+    /// Malison's tithe, if it has it: a creature dying under its hex gives it the creature's
+    /// level divided by this in mana, at least 1 (`world/malison.rs`).
+    pub hex_tithe: Option<u8>,
     /// Its once-in-a-life reprieve from death, if it has one.
     pub reprieve: Option<Reprieve>,
     /// It may rise from the ashes once more (Second rising).
@@ -1623,6 +1626,7 @@ impl TalentMods {
                     self.status_damage.push((status, value));
                 }
             }
+            TalentEffect::HexTithe { per_levels } => self.hex_tithe = Some(per_levels),
             TalentEffect::Reprieve {
                 once,
                 status,
