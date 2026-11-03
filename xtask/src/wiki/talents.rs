@@ -741,6 +741,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a sneak attack of yours that kills leaves you {} (1 degree)",
             status(&id)
         ),
+        TalentEffect::Companion => "an [animal companion](allies.md#companions) from the first \
+                                    turn: a beast of your race's kind, or rarely a rarer one, \
+                                    that fights for you, always comes along, and grows with \
+                                    your level"
+            .into(),
+        TalentEffect::Tame { bonus } => format!("{} on your taming checks", signed(bonus)),
         TalentEffect::SeesUnaware => "you see which creatures in view have not noticed you: \
                                       look mode says \"unaware of you\", and their glyphs are \
                                       drawn a shade cooler, breathing slowly (standing still \
