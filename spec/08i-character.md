@@ -1302,7 +1302,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     player its level / 2 in mana, at least 1, never past their maximum, `World::hex_tithe` from
     `dies`; "The hex comes home." when any came; never for the player's own death; no draws),
     Second sight (noticing
-    as Spot +2, searching +2), Curse of sloth (level 3: Sluggish 1 min a degree: every action
+    as Spot +2, searching +2), Familiar's sight (#932: her familiar's sight and nose, §8 "Allies":
+    "The familiar"; `TalentEffect::FamiliarSight` read in `Perception::compute`), Curse of sloth (level 3: Sluggish 1 min a degree: every action
     costs 150 %; 3 mana), Blight (level 7: a burst of 2d6 poison, radius 2, and two degrees of
     Poisoned on everyone it harms; 17 mana), Cauldron (a corpse's harm never; its stat marks and widening chances doubled; a fresh one heals 1d4),
     Hag's bargain.

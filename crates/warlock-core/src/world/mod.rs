@@ -252,7 +252,7 @@ pub use attacks::{AttackSource, OwnAttack};
 pub use calling::CallingStatus;
 pub use cast::Reach;
 pub use caster_level::casting_percent;
-pub(crate) use companion::smelt;
+pub(crate) use companion::smelt_within;
 pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use curse::{Rising, rise_candidates, rises_as};

@@ -86,6 +86,14 @@ pub(super) fn rules(content: &Content) -> String {
                 .to_string(),
         ),
         (
+            "Her familiar's nose",
+            format!(
+                "with [Familiar's sight](#familiars-sight), it finds foes for her within {} cells, \
+                 or its kind's Nose where that is farther",
+                r.nose
+            ),
+        ),
+        (
             "Names",
             format!("one of {}: {}", r.names.len(), r.names.join(", ")),
         ),

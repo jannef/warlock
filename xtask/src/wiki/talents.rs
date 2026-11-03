@@ -756,6 +756,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                       sees, by its own eyes, and the foes its nose finds, \
                                       through the dark and closed doors"
             .into(),
+        TalentEffect::FamiliarSight => "you see what your [familiar](allies.md#familiars-sight) \
+                                        sees, by its own eyes, and the foes its nose finds, \
+                                        through the dark and closed doors"
+            .into(),
         TalentEffect::SharedBuffs => "a [buff](allies.md#hunters-bond) that lands on you or \
                                       your companion lands on the other too, at the same \
                                       strength; a hex never does"

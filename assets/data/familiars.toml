@@ -13,6 +13,11 @@ names = ["Tibb", "Fancie", "Dandy", "Tyffin", "Pigin", "Tittey", "Suckin", "Robb
 # would cast it now, with its master as the giver (`world/familiar.rs::familiar_touch`).
 touch = "evil_eye"
 
+# How far a familiar's nose reaches for its master once she has Familiar's sight (#932), when its
+# kind's own `nose` reaches less or it has none: most of the old craft's beasts hunt by eye, and
+# this gives them no scent of their own to hunt by.
+nose = 6
+
 # The starting familiar (the witch's Familiar), drawn as the run begins on the stream
 # `familiar/<race>,<gender>,<class>`: at `rare_per_mille` in a thousand a beast of `rare`, else
 # one of the race's list (the owner, #907 Q2: race lists and a jackpot, as companions.toml). A
