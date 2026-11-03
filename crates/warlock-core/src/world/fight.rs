@@ -789,6 +789,8 @@ impl World {
         let profile = profile.map(|p| self.favoured(attacker, target, p));
         // An ally's master's gifts to it (spec §8 "Allies": Beast-bond).
         let profile = profile.map(|p| self.ally_blow(attacker, p));
+        // Pack tactics: a flanked creature, the companion's share of the prey (`pack.rs`).
+        let profile = profile.map(|p| self.pack_blow(attacker, target, kind, p));
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         // A lurk's blow finds a creature not hunting the player unawares; a low blow is a sneak
