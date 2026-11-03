@@ -151,6 +151,7 @@ fn the_three_tables_come_with_the_levels() {
             "Pack tactics",
             "Hunter's bond",
             "Evasion",
+            "Sic 'em",
             "Volley",
             "Master hunter"
         ]

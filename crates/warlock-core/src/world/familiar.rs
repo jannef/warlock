@@ -143,6 +143,7 @@ impl World {
             name: String::new(),
             grade,
             scent: None,
+            quarry: None,
         };
         let id = self.make_ally(creature, at, AllySource::Familiar(data), None);
         let name = name_for(&content, self.state.seed, id);

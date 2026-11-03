@@ -32,7 +32,8 @@
 #              adds on top of a held shield's Defence (Walled)
 #   cost       what every action costs while it lasts, in percent of its price (50 to 1000;
 #              default 100): 150 is half again as slow. Several multiply. Below 100 it hastens,
-#              which only a spell's buff on its caster may do (Haste)
+#              which only a spell's buff on its caster may do (Haste), and Sic 'em's Savage on
+#              a companion
 #   attack_cost  what every attack costs while it lasts, in percent of its price, on top of
 #              `cost` (50 to 1000; default 100): 125 a quarter slower. Several multiply
 #   blocks     the actions refused while it lasts, by their ids in actions.toml: ["read"]; an
@@ -66,6 +67,8 @@
 #              Dexterity and Dodge count nothing toward its Defence, it makes no free blow out
 #              of its turn, and an attacker's sneak dice land on it (spec §8 "Surprise and sneak
 #              attacks")
+#   auto_critical  true: its sufferer's blows that hit are criticals without the confirmation
+#              roll, and each such hit spends a degree (Savage, Sic 'em's)
 #   sleeps     true: a creature suffering it sleeps: it takes no turn and has seen no one (a
 #              sneak attack lands); noise at its hearing threshold times its den's `wake`, a
 #              blow, or a cry wakes it, which ends the status (spec §7 "Special rooms")
@@ -520,6 +523,19 @@ eases = 60
 cost = 75
 start = "The world slows around you."
 end = "The world quickens again."
+
+# Savage, Sic 'em's (the ranger's level 40) on the companion: half again as fast, and its next
+# three hits are criticals with no confirmation, a degree each; a degree a minute otherwise. No
+# buff spell's or potion's status, so Hunter's bond's shared buffs never carry it to the ranger.
+[[status]]
+id = "savage"
+name = "Savage"
+seen = "savage"
+max = 3
+stacking = "refresh"
+eases = 60
+cost = 67
+auto_critical = true
 
 [[status]]
 id = "barkskin"

@@ -423,6 +423,7 @@ fn a_witch_may_keep_a_familiar_and_a_companion_at_once() {
         name: "Snel".into(),
         grade: 1,
         scent: None,
+        quarry: None,
     });
     assert!(w.companion().is_some() && w.familiar().is_some());
     *w.perception = Perception::compute(&w.state, &w.content, &mut w.lights);

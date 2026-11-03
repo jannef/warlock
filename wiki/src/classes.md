@@ -111,7 +111,7 @@ more often. From level 18 **[Pack tactics](talents.md#talent-pack-tactics)** mak
 [companion](allies.md#companions) hunt as one: a creature standing beside you both is
 **flanked**, and your melee attacks and your companion's at it get +2 [to hit](combat.md#hitting)
 (not shots, throws, or spells), and your companion's attacks at your favoured prey carry your
-favoured prey's bonus, to hit and damage ([Master hunter](talents.md#talent-master-hunter)'s too). A **[volley](abilities.md#ability-volley)** looses three shots of your [readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming)
+favoured prey's bonus, to hit and damage ([Master hunter](talents.md#talent-master-hunter)'s too). From level 40 **[Sic 'em](abilities.md#ability-sic)** sets your companion on a creature you see for 5 [focus](resources.md#resource-focus): it [hunts that creature, savage](allies.md#companions). A **[volley](abilities.md#ability-volley)** looses three shots of your [readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming)
 at, one after another, for the time of one ordinary shot; it stops early when you run out, and
 costs 6 [focus](resources.md#resource-focus). **[Rapid shot](talents.md#talent-rapid-shot)** gives you focus (10, full); every shot you loose while you have
 at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and with less it is an ordinary shot.

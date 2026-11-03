@@ -1754,6 +1754,8 @@ impl<'a> PerceptionView<'a> {
         let here = Ability::here(self.level, self.content, self.player.pos);
         let orders = Ability::orders(!self.snapshot.allies.is_empty());
         let allies_here = self.snapshot.allies.iter().any(|a| a.here);
+        let companion_here = (self.snapshot.allies.iter())
+            .any(|a| a.here && matches!(a.source, crate::world::AllySource::Companion(_)));
         (Ability::of(self.player, self.content).into_iter())
             .chain(here)
             .chain(orders)
@@ -1763,6 +1765,10 @@ impl<'a> PerceptionView<'a> {
                     // An order needs someone on the level to hear it (spec §8 "Allies").
                     Ability::Heel | Ability::Hold | Ability::SetOn if !allies_here => {
                         Some(crate::ability::Unavailable::NoAllies)
+                    }
+                    // Sic 'em needs its beast on the level (`world/sic.rs`).
+                    Ability::Class(crate::content::ClassActive::Sic) if !companion_here => {
+                        Some(crate::ability::Unavailable::NoCompanion)
                     }
                     // A companion is one at a time (spec §8 "Allies": Tame).
                     Ability::Tame if self.companion().is_some() => {

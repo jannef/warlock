@@ -1,0 +1,11 @@
+# Sic 'em, the ranger's level 40 (#921; docs/design/ranger-companion.md §11.3): the companion set
+# on a creature, on the Focus Rapid shot gives. `world/sic.rs`.
+[[talent]]
+id = "sic"
+name = "Sic 'em"
+tree = "class"
+granted = true
+description = "Set your companion on a creature you see (an ability), for much of your focus: it runs that creature down at a savage pace, and its next few bites that land are terrible."
+effects = [{ kind = "sic", status = "savage", blows = 3, range = 10 }]
+resource = { id = "focus", cost = 5 }
+systems = ["combat", "resources", "allies"]

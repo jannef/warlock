@@ -74,6 +74,7 @@ pub(super) fn familiar(p: &Probe, out: &mut String) {
                 name: "Tibb".into(),
                 grade,
                 scent: None,
+                quarry: None,
             };
             let id = w.make_ally(creature, at, AllySource::Familiar(data), None);
             let side = side_of(&w, id);

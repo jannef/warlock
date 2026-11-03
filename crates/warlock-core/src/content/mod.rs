@@ -3564,6 +3564,14 @@ impl Content {
             .find(|def| def.effects.iter().any(|e| e.active() == Some(active)))
     }
 
+    /// How far Sic 'em reaches (`world/sic.rs`), as its talent says.
+    pub fn sic_range(&self) -> Option<i32> {
+        (self.class_active(ClassActive::Sic)?.effects.iter()).find_map(|e| match e {
+            TalentEffect::Sic { range, .. } => Some(*range),
+            _ => None,
+        })
+    }
+
     /// The caster's spell `spell` (spec §8 "Class abilities", "Spells"): the spell of its id in
     /// `data/spells/`, when a class ability gives it (its `spell` effect names it); `None`
     /// otherwise.

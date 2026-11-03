@@ -88,8 +88,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       burden and Bloated (`World::burdened`, the one place every price passes); several multiply.
       Only a spell's buff on its caster may hasten (Haste's Hasted, 75; #397), the potion of
       quickness the same Hasted on the player who drinks it (§8 "Potions"), and Light-footed
-      (50, the skirmisher's Hit and run, a weapon ability: one action), so a creature's quickest
-      step stays what a rest's batching counts on;
+      (50, the skirmisher's Hit and run, a weapon ability: one action), and Savage on a companion
+      (67, Sic 'em's, §8 "Allies"; an ally never disturbs a rest), so the quickest step of a
+      creature that disturbs a rest stays what a rest's batching counts on;
     - **lend eyes** (`vision`, an id of `data/vision.toml`): `Actor::eyes` betters its sufferer's
       profile by it part by part, as a unique item's Vision power (the lower threshold, the
       farther darkvision, ultraviolet if any sees it), so what the player sees in the dark
@@ -607,8 +608,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Focus** (the ranger's; R2, #250): Rapid shot (level 12) grants it (10, full); it comes
     back a point a base turn but not while resting, and never ends. A shot loosed with `fire`
     while the ranger holds 2 spends them and takes 10 % less time (the whole price, reloading
-    too; with less it is an ordinary shot, `World::rapid_shot`); Volley (level 50) costs 6 and
-    has no cooldown.
+    too; with less it is an ordinary shot, `World::rapid_shot`); Sic 'em (level 40) costs 5 and
+    Volley (level 50) 6, neither with a cooldown.
   - **Openings** (the thief's; R3, #251, `world/openings.rs`): Sneak attack (level 1; #682)
     grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), one
     slips away every 120 s (20 base turns), and at 0 they stay, held. Master thief (level 60)

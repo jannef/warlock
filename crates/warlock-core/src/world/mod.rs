@@ -202,6 +202,7 @@ mod service;
 mod shoot;
 mod shop;
 mod shrine;
+mod sic;
 mod sidestep;
 mod sign_picks;
 mod siphon;
@@ -1792,6 +1793,8 @@ mod shoot_tests;
 mod shop_tests;
 #[cfg(test)]
 mod shrine_tests;
+#[cfg(test)]
+mod sic_tests;
 #[cfg(test)]
 mod sidestep_tests;
 #[cfg(test)]

@@ -35,6 +35,7 @@ fn snel() -> CompanionData {
         name: "Snel".into(),
         grade: 1,
         scent: None,
+        quarry: None,
     }
 }
 
