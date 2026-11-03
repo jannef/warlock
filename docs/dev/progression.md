@@ -159,7 +159,7 @@ wiki's effect text appends "while raging".
 | `purify`, `corpse_harmless`, `meal_heals` | `eat.rs`: `eat_rotten` (no sickness, no exposure, no draw), `eat_fresh` (no `on_eat` harm or vomiting, no draw), `meal_heals` from `finish` (an object, or a fresh corpse) |
 | `status_damage` | `World::resolve` → `World::lore_blow` (a hit at a creature suffering the status) |
 | `reprieve` | `World::hurt` → `World::reprieve` (after Rise from the ashes; `Progress::once`) |
-| `song`, `virtuoso` | `world/song.rs` (`World::sing`: `TalentMods::song`, Virtuoso's free and a degree greater; its one cost via `World::spend_resource` or `World::spend_mana`; `Act::Sing`; the status at `severity` plus Music's `Effect::SongDegrees`); `Ability::unavailable` (`Unavailable::Short` or `NoMana` by its cost) |
+| `song`, `virtuoso` | `world/song.rs` (`World::sing`: `TalentMods::song`, Virtuoso's free and a degree greater; its one cost via `World::spend_resource` or `World::spend_mana`; `Act::Sing`; the status at `severity` plus Music's `Effect::SongDegrees`, on the singer or, `on = "hearers"`, on each hostile hearer who fails `check` against `difficulty` plus Music's `Effect::SongCraft`: `World::lull`, the Lullaby's); `Ability::unavailable` (`Unavailable::Short` or `NoMana` by its cost) |
 | `volley` | `world/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
 | `merchants_eye` | `world/merchants_eye.rs` (`Action::UseOn`, `World::use_class_on`; `ClassActive::aims_item`, `Aim::Item`, `Ability::action_on`; the UI opens the identify list, `IdentifyBy::Class`) |
 | `favoured_prey` | `World::resolve` → `World::favoured` (`world/ambush.rs`), against `Quests::prey` |

@@ -10,7 +10,9 @@ terrain `step_noise` percent × the burden's `footsteps()` percent for `Act::Ste
 `Act::ThrowVoice(at)`, which is made on that cell, not the actor's, `HOWL_NOISE` for `Act::Howl`
 (Hound's bay, #270: `SoundKind::Howl`, "a howl", `h` in the sound layer; `noise::hearers` tells
 the howler who hears it), `SONG_NOISE` (80) for `Act::Sing` (a song, `world/song.rs`, #870: a
-voice where the singer stands, untouched by stealth); `make_noise` passes the actor's
+voice where the singer stands, untouched by stealth; the Lullaby, #873, asks
+`World::heard_by(Act::Sing)` before the noise is made, as War cry does, and checks the hostile
+hearers); `make_noise` passes the actor's
 `Load::penalty`):
 a new noisy action gets an `Act` variant there, and its call site in the feature's module (the makers are `world/hearing.rs`) is one
 `self.make_noise(actor, Act::…)` where the action happens. `noise::make` delivers it at once to

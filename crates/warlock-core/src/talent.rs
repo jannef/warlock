@@ -1083,7 +1083,7 @@ impl TalentMods {
             A::LowBlow => self.low_blow,
             A::MerchantsEye => self.merchants_eye,
             A::MasterThief => self.finisher,
-            A::Inspire => self.songs.iter().any(|s| s.active == active),
+            A::Inspire | A::Lullaby => self.songs.iter().any(|s| s.active == active),
             A::Consecrate => self.consecrate.is_some(),
             A::Sanctuary => self.sanctuary.is_some(),
             A::Knock => self.knock.is_some(),
