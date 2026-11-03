@@ -499,6 +499,21 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // The Hunter's Spirit weapon asks for a shape (#881): every melee weapon by weapon skill,
+    // as plain ones; the list is the game's objects, whoever opens it.
+    Case {
+        name: "shape-list",
+        run: true,
+        screen: Some("shape"),
+        ..BASE
+    },
+    Case {
+        name: "shape-list-second-page",
+        run: true,
+        screen: Some("shape"),
+        keys: Some(">"),
+        ..BASE
+    },
     // An ascetic past level 12 (#848): Stunning strike among the class abilities, asking for
     // a direction, paid in ki.
     Case {

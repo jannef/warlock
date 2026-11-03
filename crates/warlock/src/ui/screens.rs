@@ -48,6 +48,7 @@ use super::new_run_screen::{self, NewRunScreen};
 use super::object_screen::{IdentifyBy, ObjectList, ObjectScreen};
 use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
+use super::shape_screen::ShapeScreen;
 use super::sign_screen::SignScreen;
 use super::skills_screen::SkillsScreen;
 use super::story_screen::StoryScreen;
@@ -158,6 +159,9 @@ pub enum ScreenName {
     /// The abilities menu (`a` in play): racial, class, skill, weapon skill, and item
     /// abilities, to choose one to use.
     Abilities,
+    /// Choose a weapon's shape to call (the Hunter's Spirit weapon, from the abilities menu):
+    /// every melee weapon, grouped by weapon skill.
+    Shape,
     /// Talking with someone who has topics (`C` next to them): opens by itself when they answer;
     /// as `--screen`, over a run whose last action was such a chat (a replay's last step).
     Dialogue,
@@ -203,6 +207,7 @@ impl ScreenName {
                 | ScreenName::Identify
                 | ScreenName::Temper
                 | ScreenName::Abilities
+                | ScreenName::Shape
                 | ScreenName::Dialogue
                 | ScreenName::Death
                 | ScreenName::LevelUp
@@ -325,6 +330,8 @@ enum Screen {
     Story(StoryScreen),
     Messages(MessagesScreen),
     Abilities(AbilitiesScreen),
+    /// Choosing the shape of a spirit weapon.
+    Shape(ShapeScreen),
     Dialogue(DialogueScreen),
     Death(DeathScreen),
     LevelUp(LevelUpScreen),
@@ -420,6 +427,7 @@ impl Screen {
             ))),
             ScreenName::Temper => objects(ObjectList::Temper),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
+            ScreenName::Shape => Screen::Shape(ShapeScreen::new(run)),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
             ScreenName::LevelUp => Screen::LevelUp(LevelUpScreen::new(run)),
@@ -465,6 +473,7 @@ impl Screen {
             Screen::Story(_) => ScreenName::Story,
             Screen::Messages(_) => ScreenName::Messages,
             Screen::Abilities(_) => ScreenName::Abilities,
+            Screen::Shape(_) => ScreenName::Shape,
             Screen::Dialogue(_) => ScreenName::Dialogue,
             Screen::Death(_) => ScreenName::Death,
             Screen::LevelUp(_) => ScreenName::LevelUp,
@@ -731,6 +740,12 @@ impl ScreenStack {
                 }
                 screen.handle(press, bindings)
             }
+            Some(Screen::Shape(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press, bindings)
+            }
             Some(Screen::Dialogue(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
             Some(Screen::LevelUp(screen)) => {
@@ -795,6 +810,7 @@ impl ScreenStack {
             Some(Screen::Story(screen)) => screen.draw(console, bindings),
             Some(Screen::Messages(screen)) => screen.draw(console, bindings),
             Some(Screen::Abilities(screen)) => screen.draw(console, bindings),
+            Some(Screen::Shape(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::LevelUp(screen)) => screen.draw(console, bindings),
