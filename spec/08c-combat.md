@@ -165,7 +165,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     bow's draw lowering the Strength it needs) and the global ones of what the attacker wears and
     wields, then its combat stance. A threat goes no lower than 2, a multiplier no higher than 5.
   - **Hit points** (ADOM-like, no hit dice, no levels): maximum = Toughness + race HP + class
-    HP (§7 tables: e.g. a dwarf barbarian with To 16 has 6 + 8 + 16 = 30; a human warrior with
+    HP (§7 tables: e.g. a dwarf berserker with To 16 has 6 + 8 + 16 = 30; a human warrior with
     To 12 has 23; an elf wizard with To 8 has 10), at least 1; a creature's = Toughness + its
     type's `base_hp` (a giant rat with To 12 and none has 12). Linear in Toughness: no runaway
     pools. Every actor starts at its maximum (`Actor::hp`, `hp_base`). Magic items add to the
@@ -214,7 +214,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   their character (M30, #226; the design is `docs/design/progression.md` §3). **The curve is
   written in kills** of the player's own level (`[kills]`): with m = n − 1 a level n costs
   `k(n) = plateau × m ÷ (m + ramp) + slope_per_100 ÷ 100 × m` kills (213, 5, 285: 38 for level
-  2, 163 for level 10, 223 for 20, 365 for 60, before the early discount), each worth the
+  2, 163 for level 10, 223 for 20, 365 for 60, 485 for 100, before the early discount), each worth the
   **creature XP guideline**
   `per_level × n + base` (5 and 10, which the creature data follows: a content test fails for a
   type more than three times off it either way, but for the listed outliers, the bat, the deer,
@@ -223,13 +223,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   to 11, 100 % from level 12 on; the list may cover levels 2 to the cap, each value 1 to 100, never
   decreasing, else the file is refused), rounded once from the exact fraction, and the threshold
   of level n is the sum over levels 2 to n (192 for level 2, 691 for 3, 1 619 for 4, 3 104 for 5,
-  29 715 for 10, 52 688 for 12, 205 205 for 20, 2 845 856 for the cap, level 60; from level 12 on
+  29 715 for 10, 52 688 for 12, 205 205 for 20, 2 845 856 for 60, 9 966 935 for the curve's top,
+  level 100 (`max_level`, #877; `docs/design/prestige-classes.md` §5); from level 12 on
   each level costs what it would undiscounted, so the totals are 15 892 lower than without the
   discount: about 2 600 such kills to reach level 20 and 14 600 to reach 60; a test pins the
-  table's hash; XP beyond the cap counts but buys nothing). **Race and class factors**: races and classes have `experience`, a percent of the
+  table's hash; XP beyond the cap counts but buys nothing). The level also stops at the
+  character's **class cap** (`ClassDef::max_level`, default `[levels] class_max`, 60: every class
+  today; a run without a character stops there too) until a prestige class raises it, at most to
+  100; hit points still grow to level 50 and mana to 60 (`hp_level`, `mana_level`), so levels 61 to
+  100 add neither (but Hardened's hit points; Q14 of the design) (§8 "Prestige classes"; `Experience::level_for(xp,
+  factor, cap)`, the cap `Character::level_cap`): XP past it banks the same way. **Race and class factors**: races and classes have `experience`, a percent of the
   XP a level needs (50 to 200, default 100: elf 140, gnome 120, dwarf 115, half-elf 105, human
-  100, halfling 95, half-orc 90; wizard 125, monk 120, priest, druid, and witch 115, paladin 110,
-  ranger 105, warrior and bard 100, thief 95, barbarian, craftsperson, aristocrat, and merchant
+  100, halfling 95, half-orc 90; wizard 125, ascetic 120, priest, druid, and witch 115, paladin 110,
+  ranger 105, warrior and bard 100, thief 95, berserker, craftsperson, aristocrat, and merchant
   90, commoner 80), and a character's thresholds are `(threshold × race × class + 5 000) ÷
   10 000` (`content::Factor`; a run without a character is at 100 %): an elf wizard needs 175 %,
   a half-orc commoner 72 %. The factor is on the thresholds only, so every source of XP is
@@ -238,7 +244,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   % for each level of difference up to 4 (+20 %), rounded; below it `xp × (ZD − d) ÷ ZD` rounded,
   with `d` the levels below and `ZD` the "zero difference" for the player's level (5 at levels 1 to
   7, 6 at 8–9, 7 at 10–11, 8 at 12–15, 9 at 16–19, 11 at 20–29, 12 at 30–39, 13 at 40–44, 14 at
-  45–49, 15 at 50–54, 16 at 55–59, 17 at 60); a monster `d ≥ ZD` below is grey and gives 0, any other kill at least 1, and a creature worth
+  45–49, 15 at 50–54, 16 at 55–59, 17 at 60–64, and one more every five levels to 25 at 100); a monster `d ≥ ZD` below is grey and gives 0, any other kill at least 1, and a creature worth
   0 XP gives 0. The `xp` a kill starts from is the creature's `xp` times its hand-set `xp_percent`
   (§7, default 100; `CreatureDef::kill_xp`, the one place it is read), so the modifier scales the
   level scaling and the first-kill bonus alike. Only kills by the player count: `World::dies` awards the XP when the one who
@@ -269,7 +275,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`PerceptionView::own_experience`), and nothing else about the rules.
 - **Stances** (`content/stance.rs`, `data/stances.toml`; M22), after ADOM's combat tactics. The
   player is in one of four **combat stances** they choose (`CombatStance::CHOSEN`): aggressive,
-  neutral (the default), defensive, coward; a raging barbarian is in a fifth, **berserker**
+  neutral (the default), defensive, coward; a raging berserker is in a fifth, **frenzy**
   (#680), below. It is `Actor::stance` (saved, in the state hash; creatures stay
   neutral for now, and the AI may pick one later). `Action::SetStance(stance)`, text
   `stance:aggressive`, takes no game time (`Spent::NoTime`) and is recorded in replays; it says
@@ -287,19 +293,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   numbers (first guesses, tuned by playtesting; none is ever shown, only the stance's name):
   aggressive +1 to hit, +2 damage, -3 Dodge, marks ×1.25; defensive -2 to hit, -1 damage, +2
   Dodge, +1 Parry; coward -4 to hit, -3 damage, +4 Dodge, attacks ×1.25, fleeing steps ×0.85
-  and half as loud; berserker +2 to hit, +4 damage, -6 Dodge, fleeing steps ×1.5, marks ×1.25.
-  **Berserker** (`world/berserker.rs`) is never chosen: `World::set_stance` refuses it ("Only
-  rage makes a berserker.", `Spent::Nothing`), and refuses every stance while the player rages
-  ("Your rage holds you in the berserker's stance."), so `stance:berserker` and `+`/`-` (which
-  stay put on it) never change it. The one rule, `berserker::settle`: an actor suffering the
-  status its own Rage ability brings (`TalentMods::rage_status`: Raging, so a barbarian, and
-  never a creature or another class granted the resource) is in the berserker stance, and one in
+  and half as loud; frenzy +2 to hit, +4 damage, -6 Dodge, fleeing steps ×1.5, marks ×1.25.
+  **Frenzy** (`world/frenzy.rs`) is never chosen: `World::set_stance` refuses it ("Only
+  rage brings the frenzy.", `Spent::Nothing`), and refuses every stance while the player rages
+  ("Your rage holds you in the frenzy."), so `stance:frenzy` and `+`/`-` (which
+  stay put on it) never change it. The one rule, `frenzy::settle`: an actor suffering the
+  status its own Rage ability brings (`TalentMods::rage_status`: Raging, so a berserker, and
+  never a creature or another class granted the resource) is in the frenzy stance, and one in
   it that is not raging so is put in the aggressive stance (not the stance before the rage). The
   world settles it wherever a status begins (`World::afflict`) or ends (`World::ended`: the rage
   decaying or spent to nothing, Raging cured; and the Phoenix's rising that burns every status
-  away), with a note ("You fight as a berserker.", "You fall back into an aggressive stance.")
-  after the rage's own words; `World::from_state` settles a saved state that broke the rule,
-  with a line for the log (`World::retiered`). Wild guard (Might, barbarian 6) halves its Dodge
+  away), with a note ("You fight in a frenzy.", "You fall back into an aggressive stance.")
+  after the rage's own words. Wild guard (Might, berserker 6) halves its Dodge
   penalty. The player perceives it (`PerceptionView::own_stance`): the status bar shows
   it when it is not neutral, the character screen always (§6); the wiki's Combat page has the
   generated table.
@@ -308,7 +313,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   place for every extra blow. The second blow of an attack (the off hand's, Sword and Board's
   bash, §8 "Fighting styles") is one; the others are free blows, switched on per actor
   (`FreeBlows` on `Actor::free_blows`, saved and hashed but left out while none is on, read
-  only through `World::free_blows_of`; talents and class abilities switch them on; the monk's
+  only through `World::free_blows_of`; talents and class abilities switch them on; the ascetic's
   Flurry, `flurry`, is a second blow of a melee attack with nothing in hand, at −2 to hit, §8
   "Class abilities"; two sources of cleave, the Cleave talent and Cleaving strike, cleave as
   great cleave):
@@ -321,7 +326,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`Strike::Missed { by: Parry }`, `Defence::why_missed`), a blow back with what it wields
     once the attack is over (decided: one per attack however many of its blows were parried,
     after the attack's last blow, so it never cuts into it). Shots and throws are never
-    riposted.
+    riposted. While Poised (the ascetic's Patient defence, §8 "Class abilities", #849) the
+    actor has the riposte whatever its talents, and a blow missed by its Dexterity or Dodge is
+    answered as a parried one is (a dodged blow fires no `parried` weapon ability).
   - **Opportunist** (`opportunist`): a hostile stepping from beside the actor to a cell out of
     its reach (the geometry of fleeing, `World::leaves`, whatever the stepper's stance) is struck
     as it turns to go, before it leaves its cell (`World::step_away`, from the player's step and
@@ -406,8 +413,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     half the extra at 100, three quarters at 200) and Cool head ease of the extra, together at
     most all of it (`World::status_cost`, the one place); that action ends it ("You recover your
     wits."). The surprising attack itself is rolled flat-footed whether the check is made or not.
+    Flat-footedness is the status field `flat_footed` (#848), which Surprised and **Stunned**
+    (the ascetic's Stunning strike, §8 "Character") take: the Defence strip, the free blows, and
+    the sneak dice read the field (`World::off_guard`), never the id; Cool head's ease is
+    Surprised's alone.
   - **Sneak attacks** (`world/ambush.rs`): an attack on a target unaware of the attacker or
-    Surprised, by an attacker with **sneak dice** (`World::sneak_dice`: the Sneak attack skill's
+    flat-footed (Surprised, Stunned), by an attacker with **sneak dice** (`World::sneak_dice`: the Sneak attack skill's
     `sneak_dice` d6s, 1d6 trained at all, +1d6 at 25, 50, 75, and 100, then every 50; and its
     talents' `ambush` dice on top, Ambusher, Improved sneak attack, `Dice::and`), adds them on a
     hit, after Protection, never multiplied by a critical, of the blow's kind; Master thief

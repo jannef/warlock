@@ -306,10 +306,10 @@ const CASES: &[Case] = &[
         ..BASE
     },
     Case {
-        // A barbarian's rage makes a berserker (#680): the stance in the status bar and the
+        // A berserker's rage brings the frenzy (#680): the stance in the status bar and the
         // Stance row, the change refused while the rage holds it.
-        name: "berserker",
-        character: Some("human,male,barbarian"),
+        name: "frenzy",
+        character: Some("human,male,berserker"),
         actions: "stance:coward use:rage stance:neutral",
         screen: Some("character"),
         size: (120, 36),
@@ -469,6 +469,16 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A berserker at level 25 (#844): War cry under Rage among the class abilities, greyed
+    // while no rage is held.
+    Case {
+        name: "abilities-menu-war-cry",
+        character: Some("human,male,berserker"),
+        kit: true,
+        actions: "xp:350000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A wizard at level 4 (spec §8 "Chests"): Knock among the class abilities, asking for a
     // direction, paid in mana.
     Case {
@@ -477,6 +487,73 @@ const CASES: &[Case] = &[
         kit: true,
         actions: "xp:3000 levelup:auto",
         screen: Some("abilities"),
+        ..BASE
+    },
+    // A merchant past level 12 (#816): Merchant's eye among the class abilities, asking for
+    // something carried.
+    Case {
+        name: "abilities-menu-merchants-eye",
+        character: Some("human,male,merchant"),
+        kit: true,
+        actions: "xp:60000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // The Hunter's Spirit weapon asks for a shape (#881): every melee weapon by weapon skill,
+    // as plain ones; the list is the game's objects, whoever opens it.
+    Case {
+        name: "shape-list",
+        run: true,
+        screen: Some("shape"),
+        ..BASE
+    },
+    Case {
+        name: "shape-list-second-page",
+        run: true,
+        screen: Some("shape"),
+        keys: Some(">"),
+        ..BASE
+    },
+    // An ascetic past level 12 (#848): Stunning strike among the class abilities, asking for
+    // a direction, paid in ki.
+    Case {
+        name: "abilities-menu-stunning-strike",
+        character: Some("human,male,ascetic"),
+        kit: true,
+        actions: "xp:80000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // An ascetic past level 25 (#850): Stillness, Still mind's active, greyed with nothing to
+    // end.
+    Case {
+        name: "abilities-menu-stillness",
+        character: Some("human,male,ascetic"),
+        kit: true,
+        actions: "xp:3000000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A priest at level 1 (#886): the prayer by its first tier's title, Orison, chosen, its
+    // description below.
+    Case {
+        name: "abilities-priest-1",
+        character: Some("human,male,priest"),
+        kit: true,
+        run: true,
+        screen: Some("abilities"),
+        keys: Some("Down"),
+        ..BASE
+    },
+    // A priest at level 60 (#886): the prayer by its last tier's title, Miracle, chosen,
+    // between Consecrate and Sanctuary.
+    Case {
+        name: "abilities-priest-60",
+        character: Some("human,male,priest"),
+        kit: true,
+        actions: "xp:30000000 levelup:auto",
+        screen: Some("abilities"),
+        keys: Some("Down Down"),
         ..BASE
     },
     // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
@@ -528,6 +605,45 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // Two allies beside the player (spec §8 "Allies"): the Allies group's three orders, Set on
+    // asking for a place.
+    Case {
+        name: "abilities-menu-allies",
+        actions: "ally:dire_warg:2",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // An ally in the retinue on the overworld, none on the level: the orders greyed.
+    Case {
+        name: "abilities-menu-allies-none",
+        scenario: "world",
+        actions: "ally:dire_warg",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A druid past Pack leader (#839) who has called two wolves: the calls among the spells,
+    // "2 called" with Pack leader's one more, and the Allies group's orders.
+    Case {
+        name: "abilities-menu-druid-calls",
+        character: Some("human,female,druid"),
+        actions: "xp:1000000 levelup:auto use:call_of_the_wild",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // Set on chosen from the menu: the aiming mode, its prompt in the message line.
+    Case {
+        name: "set-on-aim",
+        actions: "ally:dire_warg:2",
+        keys: Some("a h"),
+        ..BASE
+    },
+    // Come to heel chosen from the menu: the order's words, no time.
+    Case {
+        name: "come-to-heel",
+        actions: "ally:dire_warg:2",
+        keys: Some("a f"),
+        ..BASE
+    },
     // A paladin of some level: the Class group, Lay on hands drained, Smite ready.
     Case {
         name: "abilities-menu-class",
@@ -569,12 +685,13 @@ const CASES: &[Case] = &[
         keys: Some("Down Down"),
         ..BASE
     },
-    // A bard of level 32 with too little mana (#244): Throw your voice aimed at a place, Inspire
-    // greyed out for mana.
+    // A bard of level 25 with too little mana (#244): Throw your voice aimed at a place, Inspire
+    // greyed out for inspiration (a song costs one thing, #870), the Lullaby for mana (#873),
+    // Music no row (read by rules).
     Case {
         name: "abilities-menu-bard",
         character: Some("human,female,bard"),
-        actions: "xp:1000000 levelup:auto drain:156",
+        actions: "xp:400000 levelup:auto drain:106",
         screen: Some("abilities"),
         ..BASE
     },
@@ -591,7 +708,7 @@ const CASES: &[Case] = &[
         name: "heal-dialog",
         character: Some("human,female,priest"),
         actions: "afflict:bleeding*2 afflict:poisoned*2",
-        keys: Some("a d"),
+        keys: Some("a e"),
         ..BASE
     },
     // Progression: a warrior gaining levels 2 and 3 at once (the level-up screen opens by
@@ -1157,6 +1274,36 @@ fn quest_refused_as_too_early() {
         ..BASE
     };
     insta::assert_snapshot!(case.name, render(&case, content));
+}
+
+/// The hermit knowing a word (`[[dialogue.word]]`, #878), which the showcase's content does
+/// not give him: the dialogue screen's Say row under his topics, the say field open, the field
+/// with words typed in it, and his reply once they are said.
+#[test]
+fn saying_words() {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    let path = "campaigns/showcase/data/dialogue/showcase.toml";
+    let dialogue =
+        include_str!("../../../../assets/campaigns/showcase/data/dialogue/showcase.toml");
+    let word = "\n[[dialogue.word]]\nphrase = \"Hello\"\nreply = [\"Hm. Hello yourself.\"]\n";
+    files.insert(path, &format!("{dialogue}{word}"));
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let cases = [
+        ("dialogue-say-row", None),
+        ("dialogue-say-field", Some("s")),
+        ("dialogue-say-field-typed", Some("s H e l")),
+        ("dialogue-say-reply", Some("s H e l l o Enter")),
+    ];
+    for (name, keys) in cases {
+        let case = Case {
+            name,
+            actions: concat!(hermit!(), " chat:SE"),
+            screen: Some("dialogue"),
+            keys,
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
 }
 
 /// The built-in content with an encounter table in the showcase campaign (which ships none):

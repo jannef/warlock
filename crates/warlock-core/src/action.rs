@@ -105,16 +105,35 @@ pub enum Action {
         dir: Dir,
         topic: String,
     },
+    /// Say words to the creature in a direction (spec §8 "Dialogue", "Saying words";
+    /// `world/words.rs`): it answers what it knows of them, or its `unheard` line. `words` are
+    /// normalised (`words::normalise`); the text joins them with `_` (`say:E:life_before_death`).
+    /// Takes the time of `chat` whether heard or not; refused (no time) as a chat is.
+    Say {
+        dir: Dir,
+        words: String,
+    },
     /// Try to steal from the creature in a direction (spec §8 "Stealing"): one stack of what it
     /// carries and neither wears nor wields, if the player's Dexterity and Steal skill beat its
     /// Willpower; caught, it turns on them. Takes the time of `steal`; refused (no time) when the
     /// player sees no one there, or someone hostile.
     Steal(Dir),
+    /// Intimidate the creature on a cell the player sees within the `range` of
+    /// `data/intimidate.toml` (spec §8 "Skills": Intimidate; `world/intimidate.rs`): a hostile
+    /// one that hears and sees them checks its nerve, and failed, is frightened. Takes the time
+    /// of `intimidate`; refused (no time) untrained, at no one seen, out of reach, at one not
+    /// hostile, or at one with no vitals.
+    Intimidate(Pos),
     /// Throw the player's voice to a cell they see within [`crate::world::VOICE_RANGE`] (spec §5
     /// "Hearing"): a voice sounds there, and creatures that hear it and do not see its cell go
     /// and look. Takes the time of `throw_voice`; refused (no time) at a cell they do not see,
     /// out of reach, solid, or their own.
     ThrowVoice(Pos),
+    /// Give every ally of the player's on the level an order (spec §8 "Allies";
+    /// `world/ally.rs`): `order:follow` (Come to heel), `order:stay` (Hold here), `order:hunt:X,Y`
+    /// (Set on a cell). No time, a voice's noise where the player stands; refused (no time, no
+    /// noise) with no ally on the level, and Set on at a cell the player does not see.
+    Order(Command),
     /// Eat one of a stack, from the pack or the floor (spec §8 "Hunger"): a meal of as many
     /// turns (each the `eat` action) as the food takes, stopping early like a rest; the food is
     /// eaten and feeds at the end.
@@ -217,6 +236,15 @@ pub enum Action {
     /// (`use:volley:12,5`). Takes the time of its cost's action; refused (no time) without the
     /// ability or while its cooldown lasts.
     UseAt(ClassActive, Pos),
+    /// Use a class active on a stack the player carries, by its position (spec §8 "Class
+    /// abilities"): the merchant's Merchant's eye (`use:merchants_eye:c`). Takes the time of its
+    /// cost's action; refused (no time) without the ability, or for a stack it may not work on.
+    UseOn(ClassActive, usize),
+    /// Use a class active in a weapon's shape, by the object's id (spec §8 "Prestige classes"):
+    /// the Hunter's Spirit weapon (`use:spirit_weapon:long_sword`) calls a weapon of that shape
+    /// into the main hand, for the time of a wield. Refused (no time) without the ability, or
+    /// for an id that is no melee weapon's.
+    Shape(ClassActive, String),
     /// Use a birth sign's active gift (spec §8 "Birth sign"; the abilities menu's Birth sign
     /// group): Horn's grace, Blaze, and, aimed at a cell, the Transfixing stare
     /// (`use:horns_grace`, `use:blaze`, `use:transfixing_stare:12,5`). Takes the time of its
@@ -248,6 +276,16 @@ pub enum Action {
     /// levels"), whatever its cap and chance: a type by its danger, out of the player's sight.
     /// Refused on a level of danger 0. Takes no game time; recorded in replays.
     Spawn,
+    /// Dev command: `count` allies of type `creature` beside the player, following, on their
+    /// side (spec §8 "Allies"; `world/ally.rs`), their stay ending after `lasts` if given
+    /// (`ally:wolf`, `ally:wolf:2`, `ally:wolf:2:10m`). No game time; refused without
+    /// `data/allies.toml`, for an unknown type, at the cap, or with no free cell beside the
+    /// player. Recorded in replays.
+    Ally {
+        creature: String,
+        count: u8,
+        lasts: Option<Duration>,
+    },
     /// Dev command: overworld encounter entry `entry` (an id of the run's campaign's tables) is
     /// met now on the player's overworld cell (spec §7 "Overworld encounters"), whatever its
     /// tables say there: the lookouts as usual, or `outcome` forced (`meet:kobolds:ambushed`).
@@ -307,6 +345,13 @@ pub enum Action {
     /// Dev command: the player gains this much experience, and any levels it brings (spec §8
     /// "Experience"), for tests and captures. Takes no game time; recorded in replays.
     GrantXp(u32),
+    /// Dev command: the player is called into prestige class `ID` (spec §8 "Prestige
+    /// classes") now, whatever their level, through the calling of the run's campaign that
+    /// opens it to their class, as saying its words would: the class is theirs, and the
+    /// experience the first prestige level costs with it. Refused with no such prestige class,
+    /// one held already, or no calling open to their class. For tests and captures. Takes no
+    /// game time; recorded in replays.
+    Call(String),
     /// Dev command: the player's rank in weapon skill or fighting style `skill` (an id in
     /// `data/weapon_skills.toml`) becomes `rank` (0 to 10), its marks starting from 0, as a
     /// rank risen would (the skills it raises by default rise too, and what the ranks teach is
@@ -336,6 +381,19 @@ pub const MAX_BURST: i32 = 20;
 
 /// The most turns one search action may last (`search:N`).
 pub const MAX_SEARCH: u8 = 100;
+
+/// An order to one's allies ([`Action::Order`]; spec §8 "Allies"): what the three abilities of
+/// the Allies group tell every ally on the level.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum Command {
+    /// Come to heel: follow (the default behaviour).
+    Heel,
+    /// Hold here: each holds the cell it stands on.
+    Hold,
+    /// Set on: go to that cell and fight what is near it.
+    SetOn(Pos),
+}
 
 /// How long to rest.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -610,6 +668,16 @@ pub enum Event {
     VoiceThrown {
         at: Pos,
     },
+    /// The player called an order to their allies (spec §8 "Allies") from this cell.
+    Ordered {
+        at: Pos,
+    },
+    /// An ally departed (spec §8 "Allies"): its time ran out where the player is. Nothing is
+    /// left on its cell; presentation may fade it.
+    Departed {
+        actor: ActorId,
+        at: Pos,
+    },
     /// A wall gave way (spec §8 "Digging") and is rubble now. Kept when the player sees the cell
     /// afterwards.
     WallBroken {
@@ -780,8 +848,13 @@ impl fmt::Display for Action {
             Action::Encounter(choice) => write!(f, "encounter:{}", choice.id()),
             Action::Chat(d) => write!(f, "chat:{d}"),
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
+            Action::Say { dir, words } => write!(f, "say:{dir}:{}", words.replace(' ', "_")),
             Action::Steal(d) => write!(f, "steal:{d}"),
+            Action::Intimidate(at) => write!(f, "intimidate:{},{}", at.x, at.y),
             Action::ThrowVoice(at) => write!(f, "throw_voice:{},{}", at.x, at.y),
+            Action::Order(Command::Heel) => f.write_str("order:follow"),
+            Action::Order(Command::Hold) => f.write_str("order:stay"),
+            Action::Order(Command::SetOn(at)) => write!(f, "order:hunt:{},{}", at.x, at.y),
             Action::SetStance(stance) => write!(f, "stance:{stance}"),
             Action::Dig(d) => write!(f, "dig:{d}"),
             Action::Search(1) => f.write_str("search"),
@@ -801,6 +874,8 @@ impl fmt::Display for Action {
             Action::Act(id, dir) => write!(f, "use:{id}:{dir}"),
             Action::CastOn(spell, on) => write!(f, "use:{spell}:{}", position_text(*on)),
             Action::UseAt(active, at) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
+            Action::UseOn(active, on) => write!(f, "use:{}:{}", active.id(), position_text(*on)),
+            Action::Shape(active, shape) => write!(f, "use:{}:{shape}", active.id()),
             Action::Gift(active, None) => write!(f, "use:{}", active.id()),
             Action::Gift(active, Some(at)) => write!(f, "use:{}:{},{}", active.id(), at.x, at.y),
             Action::Talent { id, choice: None } => write!(f, "talent:{id}"),
@@ -811,11 +886,27 @@ impl fmt::Display for Action {
             Action::Advance(skill) => write!(f, "advance:{skill}"),
             Action::LevelUpAuto => f.write_str("levelup:auto"),
             Action::GrantXp(xp) => write!(f, "xp:{xp}"),
+            Action::Call(id) => write!(f, "call:{id}"),
             Action::SetRank { skill, rank } => write!(f, "rank:{skill}:{rank}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
             Action::SetWeather(w) => write!(f, "weather:{}", w.id()),
             Action::Spawn => f.write_str("spawn"),
+            Action::Ally {
+                creature,
+                count,
+                lasts: None,
+            } if *count == 1 => write!(f, "ally:{creature}"),
+            Action::Ally {
+                creature,
+                count,
+                lasts: None,
+            } => write!(f, "ally:{creature}:{count}"),
+            Action::Ally {
+                creature,
+                count,
+                lasts: Some(lasts),
+            } => write!(f, "ally:{creature}:{count}:{lasts}"),
             Action::Meet { entry, outcome } => match outcome {
                 Some(o) => write!(f, "meet:{entry}:{}", o.id()),
                 None => write!(f, "meet:{entry}"),
@@ -873,6 +964,18 @@ impl FromStr for Action {
                 Ok(Action::Ask {
                     dir: dir.parse().map_err(|_| usage())?,
                     topic: topic.to_string(),
+                })
+            }
+            "say" => {
+                let usage = || "`say` needs a direction and words, e.g. `say:E:hello`".to_string();
+                let (dir, words) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
+                let words = crate::words::normalise(&words.replace('_', " "));
+                if words.is_empty() {
+                    return Err(usage());
+                }
+                Ok(Action::Say {
+                    dir: dir.parse().map_err(|_| usage())?,
+                    words,
                 })
             }
             "steal" => dir().map(Action::Steal),
@@ -962,6 +1065,26 @@ impl FromStr for Action {
                         .ok_or_else(|| format!("`use:{id}` needs a cell, e.g. `use:{id}:12,5`"))?;
                     return Ok(Action::UseAt(active, parse_cell(at)?));
                 }
+                // One called in a weapon's shape, `use:spirit_weapon:long_sword` (bare, the rules
+                // ask for the shape).
+                if let Some(aim) = aim.filter(|_| active.aims_shape()) {
+                    if aim.is_empty()
+                        || !(aim.chars())
+                            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+                    {
+                        return Err(format!(
+                            "`use:{id}` needs a weapon's id, e.g. `use:{id}:long_sword`"
+                        ));
+                    }
+                    return Ok(Action::Shape(active, aim.to_string()));
+                }
+                // One that works on a stack the player carries, `use:merchants_eye:c` (bare, the
+                // rules ask for the stack).
+                if let Some(aim) = aim.filter(|_| active.aims_item()) {
+                    let on = parse_position(aim)
+                        .ok_or_else(|| format!("`use:{id}` needs a stack, e.g. `use:{id}:c`"))?;
+                    return Ok(Action::UseOn(active, on));
+                }
                 let dir = aim.map(str::parse::<Dir>).transpose()?;
                 Ok(Action::Use(active, dir))
             }
@@ -1001,6 +1124,36 @@ impl FromStr for Action {
                 _ => Err("`skip` needs a positive duration, e.g. `skip:1h`".into()),
             },
             "spawn" => bare(Action::Spawn),
+            "ally" => {
+                let usage = || {
+                    "`ally` needs a creature, e.g. `ally:wolf`, `ally:wolf:2`, or `ally:wolf:2:10m`"
+                        .to_string()
+                };
+                let mut parts = arg.ok_or_else(usage)?.split(':');
+                let creature = parts.next().filter(|c| !c.is_empty()).ok_or_else(usage)?;
+                let count = match parts.next() {
+                    None => 1,
+                    Some(n) => n
+                        .parse::<u8>()
+                        .ok()
+                        .filter(|n| (1..=crate::world::MAX_DEV_ALLIES).contains(n))
+                        .ok_or_else(|| {
+                            format!("`ally`: the count is 1 to {}", crate::world::MAX_DEV_ALLIES)
+                        })?,
+                };
+                let lasts = match parts.next() {
+                    None => None,
+                    Some(d) => Some(d.parse::<Duration>()?).filter(|d| !d.is_zero()),
+                };
+                if parts.next().is_some() {
+                    return Err(usage());
+                }
+                Ok(Action::Ally {
+                    creature: creature.to_string(),
+                    count,
+                    lasts,
+                })
+            }
             "meet" => {
                 let usage = || {
                     "`meet` needs an encounter entry, e.g. `meet:kobolds` or \
@@ -1057,9 +1210,27 @@ impl FromStr for Action {
                 let at = arg.ok_or_else(|| "`fire` needs a cell, e.g. `fire:12,5`".to_string())?;
                 parse_cell(at).map(Action::Fire)
             }
+            "intimidate" => {
+                let usage = || "`intimidate` needs a cell, e.g. `intimidate:12,5`".to_string();
+                parse_cell(arg.ok_or_else(usage)?).map(Action::Intimidate)
+            }
             "throw_voice" => {
                 let usage = || "`throw_voice` needs a cell, e.g. `throw_voice:12,5`".to_string();
                 parse_cell(arg.ok_or_else(usage)?).map(Action::ThrowVoice)
+            }
+            "order" => {
+                let usage = || {
+                    "`order` needs an order: `order:follow`, `order:stay`, or `order:hunt:X,Y`"
+                        .to_string()
+                };
+                match arg.map(|a| a.split_once(':')) {
+                    Some(None) if arg == Some("follow") => Ok(Action::Order(Command::Heel)),
+                    Some(None) if arg == Some("stay") => Ok(Action::Order(Command::Hold)),
+                    Some(Some(("hunt", at))) => {
+                        parse_cell(at).map(|at| Action::Order(Command::SetOn(at)))
+                    }
+                    _ => Err(usage()),
+                }
             }
             "eat" => {
                 let usage = || "`eat` needs a letter, e.g. `eat:b` or `eat:floor:a`".to_string();
@@ -1166,6 +1337,10 @@ impl FromStr for Action {
             "xp" => match arg.and_then(|a| a.parse::<u32>().ok()) {
                 Some(xp) if xp > 0 => Ok(Action::GrantXp(xp)),
                 _ => Err("`xp` needs a number of experience points, e.g. `xp:2500`".into()),
+            },
+            "call" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => Ok(Action::Call(id.to_string())),
+                _ => Err("`call` needs a prestige class id, e.g. `call:hunter`".into()),
             },
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
@@ -1343,6 +1518,7 @@ mod tests {
             Action::UseTool,
             Action::ThrowVoice(Pos::new(12, 5)),
             Action::ThrowVoice(Pos::new(0, 40)),
+            Action::Intimidate(Pos::new(12, 5)),
             Action::SetStance(CombatStance::Aggressive),
             Action::SetStance(CombatStance::Coward),
             Action::SetVision("low_light".into()),
@@ -1354,6 +1530,24 @@ mod tests {
             Action::SkipTime(Duration::hours(1)),
             Action::SkipTime(Duration::seconds(30)),
             Action::Spawn,
+            Action::Order(Command::Heel),
+            Action::Order(Command::Hold),
+            Action::Order(Command::SetOn(Pos::new(12, 5))),
+            Action::Ally {
+                creature: "wolf".into(),
+                count: 1,
+                lasts: None,
+            },
+            Action::Ally {
+                creature: "wolf".into(),
+                count: 3,
+                lasts: None,
+            },
+            Action::Ally {
+                creature: "bear".into(),
+                count: 2,
+                lasts: Some(Duration::minutes(10)),
+            },
             Action::PickUp(Positions::default()),
             Action::PickUp(Positions::of([0])),
             Action::PickUp(Positions::of([0, 2, 25])),
@@ -1464,6 +1658,10 @@ mod tests {
             Action::Use(ClassActive::Rage, None),
             Action::Use(ClassActive::Smite, Some(Dir::SW)),
             Action::UseAt(ClassActive::Volley, Pos::new(12, 5)),
+            Action::UseOn(ClassActive::MerchantsEye, 2),
+            Action::UseOn(ClassActive::MerchantsEye, 30),
+            Action::Shape(ClassActive::SpiritWeapon, "long_sword".into()),
+            Action::Shape(ClassActive::SpiritWeapon, "great_axe".into()),
             Action::Gift(SignActive::Blaze, None),
             Action::Cast("blessing".into(), None),
             Action::Cast("arcane_bolt".into(), Some(Pos::new(12, 5))),
@@ -1473,6 +1671,7 @@ mod tests {
             Action::CastOn("identify".into(), 30),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
+            Action::Call("hunter".into()),
             Action::SetRank {
                 skill: "twin_blades".into(),
                 rank: 4,
@@ -1488,6 +1687,14 @@ mod tests {
             Action::Ask {
                 dir: Dir::S,
                 topic: "quest-rats".into(),
+            },
+            Action::Say {
+                dir: Dir::E,
+                words: "life before death".into(),
+            },
+            Action::Say {
+                dir: Dir::NW,
+                words: "ǣþelstān".into(),
             },
             Action::Search(1),
             Action::Search(10),
@@ -1579,6 +1786,12 @@ mod tests {
             parse_actions("throw_voice:3,-4"),
             Ok(vec![Action::ThrowVoice(Pos::new(3, -4))])
         );
+        assert_eq!(
+            parse_actions("intimidate:3,4"),
+            Ok(vec![Action::Intimidate(Pos::new(3, 4))])
+        );
+        assert!(parse_actions("intimidate").is_err());
+        assert!(parse_actions("intimidate:E").is_err());
         for bad in [
             "lantern",
             "hood",
@@ -1692,6 +1905,14 @@ mod tests {
                     topic: "rooms".into()
                 }
             ])
+        );
+        // Words are normalised as they are parsed, so any spelling of them is one action.
+        assert_eq!(
+            parse_actions("SAY:e:Life_BEFORE__death!"),
+            Ok(vec![Action::Say {
+                dir: Dir::E,
+                words: "life before death".into()
+            }])
         );
         assert_eq!(
             parse_actions("FIRE:3,4 throw:B:10,2"),
@@ -1822,6 +2043,11 @@ mod tests {
             "ask:E:",
             "ask:up:rooms",
             "ask:E:a:b",
+            "say",
+            "say:E",
+            "say:E:",
+            "say:E:_!_",
+            "say:up:hello",
             "dig",
             "dig:",
             "dig:down",

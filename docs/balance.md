@@ -25,7 +25,7 @@ cargo test --release -p warlock-core balance_probe -- --ignored --nocapture
 
 It takes about three minutes in release (most of it the stat training's sweep, a hundred and
 seventy careers to level 60). It prints the Markdown tables of the sections from "Players" to
-"Sneak attacks" below, and those of "Stat training", and the same content always prints the same tables (fixed seeds and streams).
+"Ki" below, and those of "Stat training", and the same content always prints the same tables (fixed seeds and streams).
 After a PR that tunes combat data (weapon skills, creatures, classes, spells, stats, items), run
 it again and replace those sections, then revisit the tuning notes. The code is
 `crates/warlock-core/src/world/balance_probe.rs` (the measuring, with the method in its module
@@ -70,7 +70,8 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/s
   the roll (decision 16). Beside it the same roll with the school and the style at rank 0 (the
   ladder alone), and the mean of a roll counts its rerolls exactly. No casts to kill: what a
   spell is worth against a monster is the content's question; the probe's is the roll and the
-  pool.
+  pool. The priest's prayer (#886; `docs/dev/prayer.md`) has no roll and no mana: its line a
+  level gives the name the menu shows and what one prayer answers of the uses reached.
 - **School pace**: before each level, each of its days the caster spends one pool on the
   spell of their school they cast most (of the most mean roll among those costing at most a
   fifth of the pool; none cast only under the open sky; the priest's a heal, at most one a
@@ -86,7 +87,14 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/s
   12 plus 3.5 a level (15 at 1, 117 at 30, 222 at 60), the design's "about 100 by level 25 to
   30". Only the first blow is measured: the initiative check's Surprised, which strips the
   Defence for the next blow too, is not.
-- **Not modelled**: triggered and active weapon abilities (Rend, Riposte, Sunder, ...), stances,
+- **Rage** (#842): a human male berserker (great axe; axes, great blades, and the great weapon
+  style at the warrior's ranks), measured for that table alone, calm and raging: the Rage pool
+  granted (the dev grant: Raging and the stance it forces), and its `builds` and decay read from
+  the content and the talents (Blood frenzy, Battle trance). Each foe's blows a round times the
+  share of its strikes that `is_hit()` (soaked and resisted too) build `struck`; the berserker's
+  blows times the share of `Strike::Hit { critical: true }` build `critical`; one over the
+  rounds to kill builds `kill`.
+- **Not modelled**: triggered and active weapon abilities (Rend, Riposte, Sunder, ...), stances (but the rage table's),
   sneak attacks outside the table above, a talent build, potions, resistances against spells, healing between rounds,
   and fights against several monsters at once.
 
@@ -265,6 +273,13 @@ Each spell that rolls (harm or healing) of the schools the trained caster knows 
 | Cure wounds (3, touch) | 20 | 1 | 10 (Battle caster 10) | 4d8+3 1s and 2s again, 24.0 (rank 0: 3d6, 10.5) | 2 (2) / 162 |
 | Cure wounds (3, touch) | 30 | 1–2 | 10 (Battle caster 10) | 4d8+3 1s and 2s again, 24.5 (rank 0: 3d6, 11.0) | 2 (2) / 251 |
 | Cure wounds (3, touch) | 60 | 1–2 | 10 (Battle caster 10) | 4d8+6 1s and 2s again, 26.5 (rank 0: 3d6+3, 13.0) | 2 (2) / 543 |
+| Orison (prayer) | 10 | – | – | no roll: answers 1 of 2 (wounds, hunger) | 0 (0) / 77 |
+| Prayer (prayer) | 20 | – | – | no roll: answers 1 of 5 (disease, poison, wounds, release, hunger) | 0 (0) / 161 |
+| Litany (prayer) | 30 | – | – | no roll: answers 1 of 6 (disease, poison, wounds, release, hunger, restoration) | 0 (0) / 252 |
+| Miracle (prayer) | 60 | – | – | no roll: answers all of 7 (disease, poison, wounds, release, mana, hunger, restoration) | 0 (0) / 545 |
+
+The prayer's rows are #886's run (on `main` after the priest's P1 to P3); its pools differ from
+the spells' above by the content merged since #754.
 
 **Witch**
 
@@ -340,6 +355,105 @@ The thief's main-hand blow on the monsters of their level (trained stats), aware
 | 40 | 152 | 8d6 | 59% | 99/99 · 15.9:43.7 · ×2.7 | 99/99 · 22.7:50.6 · ×2.2 |
 | 50 | 187 | 8d6 | 52% | 99/99 · 17.0:44.6 · ×2.6 | 99/99 · 27.5:55.1 · ×2.0 |
 | 60 | 222 | 9d6 | 47% | 99/99 · 18.2:51.9 · ×2.9 | 99/99 · 25.6:60.2 · ×2.4 |
+
+## Rage
+
+The berserker in plain gear (a great axe; from level 5 the warrior's armour: chain mail, banded mail from 15, plate from 30), trained stats, against the monsters within two levels: calm (the stance the run starts in) and raging (Raging and the frenzy stance). The pool as the Rage ability grants it (start / most); the fight cells as in "Fights"; then the rage a round against one foe, the medians of hits taken × their build + criticals × theirs + kills × theirs − the decay (kills a round: one over the rounds to kill, so a fight's average); the same without the kills (a foe that outlasts the rage, or the turns before the first kill) and how many rounds the rage lasts from its start at that net (`grows` when it does not fall); and the net against three foes (three foes' hits, the same criticals and kills).
+
+| L | rage | Calm | Raging | one foe: struck + crit + kill − decay = net | one foe that does not die: net · rounds the rage lasts | three foes: net |
+|---|---|---|---|---|---|---|
+| 1 | 12/20 | 85/70 · 8.3:0.8 · 1.4 / 33 | 95/96 · 13.8:1.0 · 0.9 / 27 | 0.98 + 0.07 + 3.48 − 1.00 = +3.53 | +0.05 · grows | +5.48 |
+| 5 | 12/20 | 88/63 · 8.9:0.9 · 2.6 / 57 | 97/93 · 13.9:1.4 · 1.6 / 36 | 0.91 + 0.06 + 1.92 − 1.00 = +1.89 | -0.03 · 431 | +3.71 |
+| 10 | 12/20 | 88/68 · 13.2:3.2 · 3.3 / 26 | 97/95 · 18.5:4.3 · 2.3 / 20 | 0.96 + 0.07 + 1.32 − 1.00 = +1.34 | +0.03 · grows | +3.26 |
+| 15 | 12/20 | 93/84 · 16.5:5.1 · 3.8 / 24 | 98/99 · 22.3:6.2 · 2.8 / 20 | 0.99 + 0.08 + 1.10 − 1.00 = +1.16 | +0.06 · grows | +3.14 |
+| 20 | 12/20 | 95/90 · 24.7:6.9 · 3.4 / 25 | 99/99 · 32.4:8.1 · 2.6 / 21 | 0.99 + 0.14 + 1.21 − 1.00 = +1.34 | +0.13 · grows | +3.32 |
+| 30 | 12/20 | 94/97 · 29.6:15.6 · 4.7 / 17 | 99/99 · 37.8:15.9 · 3.9 / 17 | 0.99 + 0.14 + 0.79 − 1.00 = +0.92 | +0.13 · grows | +2.91 |
+| 40 | 12/20 | 97/99 · 47.8:15.2 · 3.8 / 25 | 99/99 · 60.0:15.8 · 3.2 / 24 | 1.05 + 0.22 + 2.53 − 0.89 = +2.91 | +0.38 · grows | +5.00 |
+| 50 | 18/30 | 96/99 · 49.5:22.5 · 4.8 / 23 | 99/99 · 69.2:22.3 · 3.4 / 23 | 1.04 + 0.25 + 2.42 − 0.67 = +3.04 | +0.62 · grows | +5.13 |
+| 60 | 18/30 | 89/99 · 43.4:24.3 · 5.5 / 28 | 99/99 · 53.3:24.7 · 3.9 / 28 | 1.18 + 0.00 + 2.06 − 0.67 = +2.57 | +0.51 · grows | +4.92 |
+
+This section is #842's run (the rage pool's builds); the sections above are still #754's. Against
+the same table before #842 (the pool fed by nothing but Blood frenzy's kills from 40): one foe's
+net was −1.00 a round at every level to 30 (the rage lasted its twelve rounds, whatever the
+fight), +0.69 at 40, +0.84 at 50, and +0.62 at 60; without the kills −1.00 (12 rounds) to 30,
+−0.89 (13) at 40, and −0.67 (27) at 50 and 60; and three foes fed it no more than one. The calm
+and raging fight cells are unchanged (#842 changes no blow). What the run shows:
+
+- **Hits taken alone hold the rage.** A raging berserker's Dodge −6 lets the monsters of their
+  level land 93 to 99 % of their blows (the berserker design's arithmetic assumed about six in
+  ten), so at their one blow a round `struck` is worth 0.9 to 1.2 rage a round: about the
+  decay. A duel with a foe that will not die holds the rage level (−0.03 to +0.13 a round to 30;
+  it falls only at 5, over 431 rounds), so the design's "a duel of twelve rage lasts about thirty
+  turns" is, by these numbers, "a duel's rage lasts as long as the foe does". From 40 Blood
+  frenzy and, where the picks took it, Battle trance's slower decay make it grow.
+- **Kills feed it most** while the fight is short: raging, the berserker kills a monster of their
+  level in one to four rounds, so +3 a kill is 0.8 to 3.5 rage a round over the fight.
+- **Criticals are a garnish**: 0.06 to 0.25 a round (none at 60, where the median monster of the
+  window takes none).
+- **A crowd builds it**: three foes put +2.9 to +5.5 a round into it, so a fight against several
+  ends at the cap (20; 30 with Mighty rage), and the rage burns out over 20 rounds after it (45
+  with Mighty rage and Battle trance's slower decay), then Exhausted's 150 s (75 with Mighty
+  rage).
+
+If a duel's rage should run out mid-fight, the levers are `struck`'s amount or a faster decay;
+#842 keeps the design's numbers.
+
+## Ki
+
+The ascetic bare-handed (a brawler; from level 5 leather gloves, boots, and a wool cloak, no armour), trained stats, against the monsters within two levels. The pool's maximum as Martial arts grants it (the seeds' mean: Willpower and the level; Inner calm where the picks took it) and the ki back a round; the fight cells as in "Fights", with one blow an attack (no ki) and with the flurry's second blow (−2 to hit, a point of ki an attack); then the ki the flurry spends a round against what comes back, and how many rounds a full pool keeps it up (`holds` when it comes back as fast).
+
+| L | ki | back a round | One blow | Flurry | spent − back = net · rounds from full |
+|---|---|---|---|---|---|
+| 1 | 5.3 | 0.33 | 82/63 · 5.6:1.1 · 2.1 / 19 | 82/63 · 10.5:1.1 · 1.2 / 19 | 0.99 − 0.33 = 0.66 · 8.1 |
+| 5 | 5.3 | 0.33 | 90/70 · 7.9:3.0 · 2.7 / 10 | 90/70 · 15.0:2.9 · 1.4 / 11 | 1.00 − 0.33 = 0.67 · 8.0 |
+| 10 | 6.3 | 0.33 | 95/70 · 15.0:5.9 · 2.8 / 9.6 | 95/70 · 28.9:5.8 · 1.4 / 9.7 | 1.13 − 0.33 = 0.80 · 8.0 |
+| 15 | 7.7 | 0.33 | 99/73 · 20.9:8.8 · 3.1 / 9.9 | 99/73 · 41.3:8.9 · 1.6 / 9.7 | 1.21 − 0.33 = 0.88 · 8.7 |
+| 20 | 8.8 | 0.33 | 99/78 · 25.2:10.0 · 3.1 / 13 | 99/78 · 50.6:10.2 · 1.6 / 13 | 1.30 − 0.33 = 0.96 · 9.2 |
+| 30 | 11.5 | 0.33 | 99/86 · 34.1:18.9 · 4.2 / 11 | 99/86 · 68.0:18.8 · 2.1 / 11 | 1.41 − 0.33 = 1.07 · 11 |
+| 40 | 13.3 | 0.33 | 99/88 · 45.4:18.1 · 3.6 / 17 | 99/88 · 91.0:17.8 · 1.8 / 17 | 1.53 − 0.33 = 1.20 · 11 |
+| 50 | 15.7 | 0.33 | 99/92 · 47.3:28.0 · 4.7 / 14 | 99/92 · 94.8:28.1 · 2.3 / 14 | 1.54 − 0.33 = 1.20 · 13 |
+| 60 | 19.3 | 0.78 | 99/98 · 56.2:32.0 · 4.6 / 12 | 99/98 · 109.2:33.1 · 2.3 / 12 | 1.54 − 0.78 = 0.76 · 26 |
+
+This section is #846's run (the ki tricks design's S2: the pool from level 1 by Martial arts,
+its maximum `4 + the Willpower modifier + level / 6`, at least 3, and Perfect self's pace); the
+other sections are unchanged by it. The same probe on the content before #846 (ki from Flurry at
+18, a flat 5) printed no row below 20 (no pool, so no flurry: the "One blow" cells were the
+ascetic's whole fight to level 17), and from 20 the same fight cells with a pool of 5.0 (6.3 at
+60 with Inner calm) and 0.33 back a round (0.44 at 60): a full pool kept the flurry up 5.2
+rounds at 20, 4.7 at 30, 4.2 at 40 and 50, and 5.8 at 60, against 9.2, 11, 11, 13, and 26 now.
+What the run shows:
+
+- **The flurry doubles the ascetic's damage** at every level (the second blow at −2 lands about
+  as often as the first against the monsters of their level), so rounds to kill halve: 1.2 to
+  2.3 rounds a monster of their level.
+- **A full pool outlasts a fight**: eight to thirteen rounds of flurry from full against one to
+  two and a half rounds a kill, so a duel never runs dry; a run of three or four fights back to
+  back does, and then the flurry comes every third attack (0.33 back a round). Perfect self's
+  pace (0.67, 0.83 with Inner calm) makes it every other attack or better at 60.
+- **The maximum grows as the design meant**: 5.3 at 1, 8.8 at 20, 15.7 at 50, 19.3 at 60
+  (Inner calm included where the picks took it), so the later tricks (S3 to S7) have points to
+  draw on beside the flurry.
+
+## Summons
+
+The druid's calls (#839), cast by a human druid (untrained stats, every score as rolled, seed 1) at each level a call comes or Pack leader (32) and Lord of the wild (60) change them: what comes of one cast (each type's count), for how many minutes (`lasting`: until slain), the mana over the pool, and each called type against the monsters within two levels of the druid, as in "Fights" (the beast's side bare: P(it hits) / P(it is hit) % · damage a round · rounds to kill / rounds to die).
+
+| Call | L | comes | minutes | mana / pool | the called against the druid's level |
+|---|---|---|---|---|---|
+| Call of the wild (5) | 6 | 1 wolf | 5 | 5 / 43 (9 casts) | wolf 4: 69/69 · 2.8:3.8 · 8.0 / 4.2 |
+| Call of the wild (5) | 25 | 1 wolf | 5 | 5 / 161 (32 casts) | wolf 4: 54/97 · 1.8:19.0 · 52 / 0.8 |
+| Call of the forest (20) | 25 | 1 bear | 5 | 20 / 161 (8 casts) | bear 12: 81/99 · 8.3:19.3 · 12 / 3.1 |
+| Call of the wild (5) | 32 | 2 wolves | 7 | 5 / 204 (41 casts) | wolf 4: 46/99 · 1.3:25.4 · 94 / 0.6 |
+| Call of the forest (20) | 32 | 2 bears | 7 | 20 / 204 (10 casts) | bear 12: 75/99 · 7.2:25.6 · 18 / 2.3 |
+| Call of the wild (5) | 40 | 2 wolves | 7 | 5 / 253 (51 casts) | wolf 4: 25/99 · 0.7:22.8 · 237 / 0.7 |
+| Call of the forest (20) | 40 | 2 bears | 7 | 20 / 253 (13 casts) | bear 12: 54/99 · 5.4:23.1 · 30 / 2.6 |
+| Call the elements (35) | 40 | 1 greater air elemental, 1 greater fire elemental | 7 | 35 / 253 (7 casts) | greater earth elemental 24: 85/99 · 14.8:16.8 · 11 / 7.3; greater water elemental 26: 69/99 · 12.1:20.2 · 13 / 4.3; greater air elemental 31: 81/75 · 29.4:13.3 · 5.5 / 7.0; greater fire elemental 38: 90/93 · 24.2:18.5 · 7.0 / 6.6 |
+| Call of the wild (5) | 50 | 2 wolves | 7 | 5 / 314 (63 casts) | wolf 4: 19/99 · 0.3:33.1 · 531 / 0.5 |
+| Call of the forest (20) | 50 | 2 bears | 7 | 20 / 314 (16 casts) | bear 12: 46/99 · 4.0:33.7 · 48 / 1.8 |
+| Call the elements (35) | 50 | 1 greater air elemental, 1 greater fire elemental | 7 | 35 / 314 (9 casts) | greater earth elemental 24: 81/99 · 13.0:20.6 · 16 / 6.0; greater water elemental 26: 62/99 · 10.0:25.2 · 19 / 3.5; greater air elemental 31: 75/90 · 26.2:19.5 · 8.2 / 4.8; greater fire elemental 38: 85/99 · 24.1:31.9 · 8.7 / 3.8 |
+| Call of the wild (5) | 60 | 2 wolves | lasting | 5 / 374 (75 casts) | wolf 4: 7/99 · 0.1:35.4 · >999 / 0.5 |
+| Call of the forest (20) | 60 | 2 bears | lasting | 20 / 374 (19 casts) | bear 12: 25/99 · 1.4:37.2 · 136 / 1.6 |
+| Call the elements (35) | 60 | 1 greater air elemental, 1 greater fire elemental | lasting | 35 / 374 (11 casts) | greater earth elemental 24: 62/99 · 8.5:26.0 · 24 / 4.7; greater water elemental 26: 38/99 · 5.7:30.0 · 42 / 2.9; greater air elemental 31: 54/98 · 16.5:25.2 · 13 / 3.7; greater fire elemental 38: 69/99 · 18.9:32.3 · 12 / 3.8 |
 
 ## Stat training
 
@@ -637,7 +751,7 @@ Every system the design added meets the coverage bar (`assets/data/talents.toml`
 - `stamina` has 5 (Trained wind, Deep lungs, Steady breathing, Armour-breaker, Drillmaster;
   Second breath and Bellows were cut in #774).
 - `stat_training` has 2 (Gourmand, Cauldron; #726; Hard-won and
-  Gifted were cut in #774, Ascetic became a `hunger` talent in #775, and Quick study of the
+  Gifted were cut in #774, Long fast became a `hunger` talent in #775, and Quick study of the
   body, Hard living, and Discipline were cut in #787, Hard training and Late bloomer in #791).
 - `potions` has 2 (Thrifty drinker, Lasting draughts; Nose for draughts and Cauldron-wise were
   cut in #787).

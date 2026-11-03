@@ -227,8 +227,9 @@ pub fn favour(content: &Content, shops: &Shops, actor: &super::Actor) -> i32 {
 
 /// How many of `object` `stacks` hold.
 pub fn count_of(stacks: &[Stack], object: crate::content::ObjectId) -> u32 {
+    // A spirit weapon is nothing anyone may be given (`spirit_weapon.rs`).
     (stacks.iter())
-        .filter(|s| s.object == object)
+        .filter(|s| s.object == object && !s.is_spirit())
         .map(|s| s.count)
         .sum()
 }
@@ -444,15 +445,8 @@ impl World {
             return Spent::Nothing;
         }
         self.hand_over(self.state.player, shop.keeper, owed);
-        let bought = unpaid_parts(&self.state.player().inventory, &shop.unpaid);
         self.state.current_mut().shops[i].unpaid.clear();
         self.say(format!("You pay {} {owed} gold.", shop.name));
-        // Eye for quality (spec §8 "Class abilities"): what was bought is known for what it is.
-        if self.state.player().talent_mods(&content).identify_trades {
-            for (item, _) in (bought.iter().enumerate()).filter(|&(_, &n)| n > 0) {
-                self.identify(item);
-            }
-        }
         self.train_deal();
         self.player_did(Deed::PaidDebt);
         Spent::NoTime
@@ -480,30 +474,25 @@ impl World {
     /// shop.
     pub(super) fn trade(&mut self, positions: &Positions, sell: bool) -> Option<Spent> {
         let i = self.shop_here()?;
-        let inventory = self.state.player().inventory.clone();
-        if inventory.is_empty() {
+        let len = self.state.player().inventory.len();
+        if len == 0 {
             self.say("You are not carrying anything.");
             return Some(Spent::Nothing);
         }
-        let Some(chosen) = self.chosen(positions, inventory.len(), "You carry no such thing.")
-        else {
+        let Some(chosen) = self.chosen(positions, len, "You carry no such thing.") else {
             return Some(Spent::Nothing);
         };
+        // A spirit weapon is not let go: it fades, and the shop never sees it.
+        let (chosen, faded) = self.release_spirit(&chosen);
+        if chosen.is_empty() {
+            return Some(self.price_for(&faded));
+        }
+        let inventory = self.state.player().inventory.clone();
         let content = self.content.clone();
         let shop = self.state.current().shops[i].clone();
-        let mut deal = self.deal(&shop, &inventory, &chosen, sell);
+        let deal = self.deal(&shop, &inventory, &chosen, sell);
         let name = shop.name.as_str();
-        // Eye for quality (spec §8 "Class abilities"): what is sold is known for what it was,
-        // once it is sold.
         let sold = object::phrase(&deal.sold, self.lore());
-        let mut learned = Vec::new();
-        if self.state.player().talent_mods(&content).identify_trades {
-            for stack in &mut deal.sold {
-                if stack.identify() {
-                    learned.push(stack.describe(&content));
-                }
-            }
-        }
         if !deal.refused.is_empty() {
             let what = object::phrase(&deal.refused, self.lore());
             self.say(format!("{name} has no use for {what}."));
@@ -520,12 +509,16 @@ impl World {
             self.say(format!("{name} offers {} gold for {what}.", deal.offer));
         }
         if deal.back.is_empty() && deal.sold.is_empty() {
-            return Some(Spent::Nothing);
+            return Some(match faded.is_empty() {
+                true => Spent::Nothing,
+                false => self.price_for(&faded),
+            });
         }
         // What leaves whole is taken off first, if worn or wielded.
         let gone =
             Positions::of((0..inventory.len()).filter(|&k| deal.leaving[k] == inventory[k].count));
-        let mut kinds = self.take_off_before_dropping(gone.iter());
+        let mut kinds = faded;
+        kinds.extend(self.take_off_before_dropping(gone.iter()));
         kinds.push(ActionKind::Drop);
         // Priced at the load the player has as they begin.
         let spent = self.price_for(&kinds);
@@ -554,9 +547,6 @@ impl World {
                 "You sell {sold} to {name} for {} gold.",
                 deal.payment
             ));
-            for what in learned {
-                self.say(format!("That was {what}!"));
-            }
             self.train_deal();
         }
         Some(spent)

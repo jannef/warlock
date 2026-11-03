@@ -1,0 +1,70 @@
+# The priest's prayer (spec §8 "Class abilities"; docs/dev/prayer.md): the strain, the faces,
+# the uses in their priority order, and the words. Every number is hidden in the game and stated
+# in the wiki.
+#
+# Every attempt, answered or not, adds `strain`; a point passes every `decay`. A prayer fizzles
+# by chance, `fizzle_per_100` percent for every 100 points of strain it finds (100 % at most);
+# a fizzle locks the prayer, and every prayer fizzles until the strain has passed to 0. A prayer
+# with nothing to answer is refused and costs nothing.
+strain = 100           # added by every attempt, answered or not (1 to 1000)
+decay = "1m"           # a point of strain gone every this long (10s to 1h)
+fizzle_per_100 = 10    # percent chance a prayer fizzles per 100 points of strain (1 to 100)
+# The bands each face answers, by the priest's band at the moment; together they leave none out.
+holy = { min = "neutral" }
+dark = { max = "callous" }
+# What the release use ends: hexes, holds, and webs (status ids; never bleeding, poison, the
+# diseases' status, or a status a resource brings).
+release = [
+    "ill_wished",
+    "weakened",
+    "sluggish",
+    "drowsy",
+    "webbed",
+    "held",
+    "frightened",
+    "transfixed",
+    "ashen",
+]
+
+[words]
+holy = { pray = "You kneel and pray.", fizzle = "You pray, but nothing answers.", nothing = "You have nothing to pray for." }
+dark = { pray = "You whisper to the dark.", fizzle = "The dark is silent.", nothing = "You have nothing to ask of the dark." }
+
+# The order is the priority: the first that ails the priest is answered first. Every use once.
+# The dark powers answer with a twist (docs/dev/prayer.md "The dark face"): the diseases and the
+# poison cured pass to the nearest creature the priest sees, a hex released is laid on its caster
+# if seen (a hold's holder is webbed), and the hunger use feeds to the brim, one short of Bloated.
+[[use]]
+id = "disease"
+holy = "The sickness leaves you."
+dark = "The sickness leaves you, and finds another."
+
+[[use]]
+id = "poison"
+holy = "The poison leaves you."
+dark = "The poison leaves you, and finds another."
+
+[[use]]
+id = "wounds"
+holy = "Your wounds close."
+dark = "Your wounds close, cold to the touch."
+
+[[use]]
+id = "release"
+holy = "You are released."
+dark = "You are released, and it is returned."
+
+[[use]]
+id = "mana"
+holy = "Your mind is filled."
+dark = "Your mind is filled with a cold clarity."
+
+[[use]]
+id = "hunger"
+holy = "You feel fed."
+dark = "You feel glutted."
+
+[[use]]
+id = "restoration"
+holy = "You feel whole again."
+dark = "What was taken is taken back."

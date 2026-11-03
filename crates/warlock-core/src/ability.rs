@@ -21,13 +21,14 @@
 //!
 //! [`PerceptionView::abilities`]: crate::perception::PerceptionView::abilities
 
-use crate::action::Action;
+use crate::action::{Action, Command};
 use crate::content::{
     ActionKind, ActiveAim, ClassActive, Content, Offer, ResourceCost, ResourceId, SignActive,
     SkillDef, SpellId, StatusId, TalentActive, TalentEffect, WeaponAbilityId, WeaponSkillId,
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
+use crate::talent::SongCost;
 use crate::world::{Actor, BREATH_RANGE, LevelState, STARE_RANGE, VOICE_RANGE};
 use std::borrow::Cow;
 
@@ -35,7 +36,7 @@ use std::borrow::Cow;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Ability {
     /// Throw your voice (spec §5 "Hearing"; #235): [`Action::ThrowVoice`] at a cell the player
-    /// sees. The bard's (design §4.8, at level 32): had by whoever holds a talent with the
+    /// sees. The bard's (design §4.8, at level 16): had by whoever holds a talent with the
     /// `throw_voice` effect.
     ThrowVoice,
     /// A birth sign's active gift (spec §8 "Birth sign"): [`Action::Gift`], had by whoever's
@@ -68,6 +69,11 @@ pub enum Ability {
     /// skill's use. Whoever is trained in a skill with the `steal` benefit has it, in that
     /// skill's place among the skills.
     Steal,
+    /// Threaten a foe you see (spec §8 "Skills": Intimidate; #868): [`Action::Intimidate`] at
+    /// its cell, the Intimidate skill's use (the skill with the `intimidate` benefit, listed as
+    /// this in its place while `data/intimidate.toml` exists). Had by whoever is trained in it;
+    /// usable whenever they have it (the rules refuse, taking no time, without a foe there).
+    Intimidate,
     /// Forage for food in the wild (spec §8 "Foraging"): [`Action::Forage`], Survival's use (the
     /// skill with the `forage` benefit, listed as this in its place, while `data/forage.toml`
     /// exists). Had by whoever is trained in it; unavailable ([`Unavailable::NotHere`]) anywhere
@@ -111,6 +117,18 @@ pub enum Ability {
     /// Drink at a healing spring (spec §7 "Special rooms"): [`Action::Drink`]. A place offers
     /// it, as Pray: listed only while the player stands next to a spring.
     Drink,
+    /// Come to heel (spec §8 "Allies"): [`Action::Order`] with [`Command::Heel`], every ally of
+    /// the player's on the level follows. The Allies group ([`Ability::orders`]): listed while
+    /// the player has an ally anywhere, unavailable ([`Unavailable::NoAllies`]) with none on the
+    /// level. No time, a voice's noise.
+    Heel,
+    /// Hold here (spec §8 "Allies"): [`Action::Order`] with [`Command::Hold`], every ally holds
+    /// the cell it stands on. Listed and available as [`Ability::Heel`].
+    Hold,
+    /// Set on (spec §8 "Allies"): [`Action::Order`] with [`Command::SetOn`] a cell the player
+    /// sees, every ally goes there and fights what is near it. Listed and available as
+    /// [`Ability::Heel`]; it asks for the cell in the aiming mode.
+    SetOn,
 }
 
 /// Where an ability comes from: the abilities menu's groups, in this order.
@@ -136,6 +154,8 @@ pub enum Source {
     /// The place the character stands in (spec §7 "Special rooms"): what a special room's
     /// feature offers next to it (Pray at a forgotten altar, Drink at a spring).
     Place,
+    /// The character's allies (spec §8 "Allies"): the orders given to them.
+    Ally,
 }
 
 impl Source {
@@ -150,6 +170,7 @@ impl Source {
         Source::WeaponSkill,
         Source::Item,
         Source::Place,
+        Source::Ally,
     ];
 
     /// Its group's heading in the abilities menu.
@@ -164,6 +185,7 @@ impl Source {
             Source::WeaponSkill => "Weapon skills",
             Source::Item => "Items",
             Source::Place => "Here",
+            Source::Ally => "Allies",
         }
     }
 
@@ -179,6 +201,7 @@ impl Source {
             Source::WeaponSkill => "weapon_skill",
             Source::Item => "item",
             Source::Place => "place",
+            Source::Ally => "ally",
         }
     }
 }
@@ -200,6 +223,9 @@ pub enum Aim {
     /// the identify list; Temper: a weapon or armour, [`crate::world::temperable`];
     /// [`Ability::action_on`]).
     Item,
+    /// A weapon's shape, from the list of every one there is (the Hunter's Spirit weapon:
+    /// [`crate::world::weapon_shapes`], `use:spirit_weapon:long_sword`).
+    Shape,
 }
 
 /// Why an ability cannot be used now: the abilities menu shows it beside the greyed-out row.
@@ -210,7 +236,7 @@ pub enum Unavailable {
     /// A skill whose use is not in the game yet.
     NotYet,
     /// While a status lasts (spec §8 "Status effects"): one that blocks the kind of action the
-    /// ability is (a raging barbarian cannot read), or the ability's cooldown, which the class
+    /// ability is (a raging berserker cannot read), or the ability's cooldown, which the class
     /// abilities bring (Winded: "you are winded"). Only time lifts it.
     While(StatusId),
     /// One that costs an alternative resource the character does not hold, or holds too little
@@ -229,6 +255,10 @@ pub enum Unavailable {
     /// skill, the grip of its style, a shield for shield blocking's ("your hands are not so
     /// held").
     NotSoHeld,
+    /// An order with no ally of the player's on the level to hear it (spec §8 "Allies").
+    NoAllies,
+    /// Stillness with nothing to end: none of the statuses it ends is suffered.
+    Still,
 }
 
 impl Unavailable {
@@ -252,6 +282,8 @@ impl Unavailable {
                 }
             }
             Unavailable::NotSoHeld => "your hands are not so held".into(),
+            Unavailable::NoAllies => "no allies here".into(),
+            Unavailable::Still => "your mind is already still".into(),
         }
     }
 
@@ -265,6 +297,8 @@ impl Unavailable {
             Unavailable::NothingToTreat => "nothing_to_treat".into(),
             Unavailable::FiresByItself => "fires_by_itself".into(),
             Unavailable::NotSoHeld => "not_so_held".into(),
+            Unavailable::NoAllies => "no_allies".into(),
+            Unavailable::Still => "still".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
                 format!("short:{}", content.resource(resource).id).into()
@@ -341,6 +375,7 @@ impl Ability {
             .chain(skills)
             .chain(weapon_skills)
             .chain(here)
+            .chain(Ability::orders(content.allies().is_some()))
             .collect();
         all.sort_by_key(|a| a.source());
         all
@@ -349,7 +384,8 @@ impl Ability {
     /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
     /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
     /// [`Ability::PickLock`], the Steal skill's (the `steal` benefit, with `data/steal.toml`)
-    /// [`Ability::Steal`], Heal's (the heal effect's) [`Ability::Heal`], Survival's (the
+    /// [`Ability::Steal`], Heal's (the heal effect's) [`Ability::Heal`], Intimidate's (the
+    /// `intimidate` benefit, with `data/intimidate.toml`) [`Ability::Intimidate`], Survival's (the
     /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`]. `None` for a skill whose
     /// use is to come, or that has none.
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
@@ -357,6 +393,10 @@ impl Ability {
         (gives(Effect::Disarm).then_some(Ability::Disarm))
             .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
             .or_else(|| gives(Effect::Heal).then_some(Ability::Heal))
+            .or_else(|| {
+                (gives(Effect::Intimidate) && content.intimidate().is_some())
+                    .then_some(Ability::Intimidate)
+            })
             .or_else(|| {
                 (gives(Effect::Steal) && content.steal().is_some()).then_some(Ability::Steal)
             })
@@ -381,6 +421,17 @@ impl Ability {
         found.sort();
         found.dedup();
         found
+    }
+
+    /// The orders to one's allies (spec §8 "Allies"), in menu order, while `any`: the player
+    /// has an ally anywhere (the perception knows); none otherwise, as a place's abilities are
+    /// absent away from the place.
+    pub(crate) fn orders(any: bool) -> Vec<Ability> {
+        if any {
+            vec![Ability::Heel, Ability::Hold, Ability::SetOn]
+        } else {
+            Vec::new()
+        }
     }
 
     /// Every ability `actor` has, in menu order.
@@ -421,13 +472,16 @@ impl Ability {
             }
             Ability::Forage => actor.skills.trains_effect(content, Effect::Forage),
             Ability::Heal => actor.skills.trains_effect(content, Effect::Heal),
+            Ability::Intimidate => actor.skills.trains_effect(content, Effect::Intimidate),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
             Ability::ShieldBash => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
-            // A place offers it, not who one is ([`Ability::here`]).
+            // A place offers it, not who one is ([`Ability::here`]); an order needs allies
+            // ([`Ability::orders`]).
             Ability::Pray | Ability::Temper | Ability::Drink => false,
+            Ability::Heel | Ability::Hold | Ability::SetOn => false,
         }
     }
 
@@ -442,6 +496,7 @@ impl Ability {
             Ability::Disarm => "disarm",
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
+            Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
             Ability::Heal => "heal",
             Ability::SecondWind => "second_wind",
@@ -451,6 +506,9 @@ impl Ability {
             Ability::Pray => "pray",
             Ability::Temper => "temper",
             Ability::Drink => "drink",
+            Ability::Heel => "heel",
+            Ability::Hold => "hold",
+            Ability::SetOn => "set_on",
         }
     }
 
@@ -463,13 +521,17 @@ impl Ability {
                 return format!("{skill}: {name}").into();
             }
             Ability::Sign(active) => content.sign_active(active).map_or("", |a| &a.name),
-            Ability::Class(active) => content.class_active(active).map_or("", |a| &a.name),
+            Ability::Class(active) => content.class_active(active).map_or("", |a| {
+                // Stillness is named apart from Still mind, its talent.
+                (a.effects.iter().find_map(TalentEffect::active_name)).unwrap_or(&a.name)
+            }),
             Ability::Spell(spell) => content.spell_of(spell).map_or("", |s| &s.name),
             Ability::Skill(id) => &content.skill(id).name,
             Ability::ThrowVoice => "Throw your voice",
             Ability::Disarm => "Disarm a trap",
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
+            Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
             Ability::Heal => "Heal",
             Ability::SecondWind => "Second wind",
@@ -478,6 +540,9 @@ impl Ability {
             Ability::Pray => "Pray",
             Ability::Temper => "Temper",
             Ability::Drink => "Drink",
+            Ability::Heel => "Come to heel",
+            Ability::Hold => "Hold here",
+            Ability::SetOn => "Set on",
         };
         name.into()
     }
@@ -499,6 +564,10 @@ impl Ability {
             Ability::Steal => {
                 "Lift a purse or a trinket from someone next to you who is not hostile; caught, \
                  they turn on you."
+            }
+            Ability::Intimidate => {
+                "Threaten a foe you see nearby: unless it keeps its nerve, it flees from you a \
+                 moment, longer the better you intimidate."
             }
             Ability::Forage => {
                 "Spend a while searching the wild around you for something to eat: berries, \
@@ -530,6 +599,18 @@ impl Ability {
                 "Drink from the spring beside you. Its water is mostly good, and now and then \
                  foul."
             }
+            Ability::Heel => {
+                "Call your allies to your side: they follow you and fight what threatens you. \
+                 A shout, heard about you; it takes no time."
+            }
+            Ability::Hold => {
+                "Tell your allies to hold where they stand, fighting only what comes beside \
+                 them. A shout; it takes no time."
+            }
+            Ability::SetOn => {
+                "Set your allies on a place you see: they go there and fight what is near it, \
+                 then come back to heel. A shout; it takes no time."
+            }
         }
     }
 
@@ -543,12 +624,14 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Intimidate
             | Ability::Forage
             | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
             Ability::SecondWind | Ability::BloodMagic => Source::Talent,
             Ability::ShieldBash | Ability::Weapon(..) => Source::WeaponSkill,
             Ability::Pray | Ability::Temper | Ability::Drink => Source::Place,
+            Ability::Heel | Ability::Hold | Ability::SetOn => Source::Ally,
         }
     }
 
@@ -562,6 +645,8 @@ impl Ability {
             Ability::Spell(spell) if aimed(content, spell) => Aim::Cell,
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
+            Ability::Class(active) if active.aims_item() => Aim::Item,
+            Ability::Class(active) if active.aims_shape() => Aim::Shape,
             Ability::Weapon(_, id) => match content.weapon_ability(id).active.map(|a| a.aim) {
                 Some(ActiveAim::Direction) => Aim::Direction,
                 Some(ActiveAim::Cell) => Aim::Cell,
@@ -573,9 +658,11 @@ impl Ability {
             | Ability::BloodMagic
             | Ability::Forage
             | Ability::Pray
+            | Ability::Heel
+            | Ability::Hold
             | Ability::Drink => Aim::Nothing,
             Ability::Temper => Aim::Item,
-            Ability::ThrowVoice => Aim::Cell,
+            Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
             Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
                 Aim::Direction
@@ -595,6 +682,7 @@ impl Ability {
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
+            Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
@@ -602,6 +690,8 @@ impl Ability {
             Ability::Pray => Some(ActionKind::Pray),
             Ability::Temper => Some(ActionKind::Temper),
             Ability::Drink => Some(ActionKind::Drink),
+            // An order takes no time (spec §8 "Allies"): it is priced as nothing.
+            Ability::Heel | Ability::Hold | Ability::SetOn => None,
         }
     }
 
@@ -621,6 +711,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Intimidate
             | Ability::Forage
             | Ability::Heal
             | Ability::SecondWind
@@ -629,7 +720,10 @@ impl Ability {
             | Ability::Weapon(..)
             | Ability::Pray
             | Ability::Temper
-            | Ability::Drink => None,
+            | Ability::Drink
+            | Ability::Heel
+            | Ability::Hold
+            | Ability::SetOn => None,
         }
     }
 
@@ -639,6 +733,7 @@ impl Ability {
     pub fn reach(self, content: &Content) -> Option<i32> {
         match self {
             Ability::Spell(spell) => content.spell_of(spell).and_then(|s| s.base_range()),
+            Ability::Intimidate => content.intimidate().map(|r| r.range),
             other => other.range(),
         }
     }
@@ -679,7 +774,7 @@ impl Ability {
                     _ => None,
                 }
             }
-            (Ability::Skill(_) | Ability::ThrowVoice, _) => None,
+            (Ability::Skill(_) | Ability::ThrowVoice | Ability::Intimidate, _) => None,
             // The first thing there is to treat; the menu names one when there are several.
             (Ability::Heal, _) => Some(Action::Heal(None)),
             (Ability::SecondWind, _) => Some(Action::UseTalent(TalentActive::SecondWind)),
@@ -696,14 +791,19 @@ impl Ability {
             (Ability::Forage, _) => Some(Action::Forage),
             // It asks for an item ([`Ability::action_on`]).
             (Ability::Temper, _) => None,
+            (Ability::Heel, _) => Some(Action::Order(Command::Heel)),
+            (Ability::Hold, _) => Some(Action::Order(Command::Hold)),
+            // It asks for a cell ([`Ability::action_at`]).
+            (Ability::SetOn, _) => None,
         }
     }
 
     /// The action it is, worked or cast on inventory stack `item`, for one that asks for a stack
-    /// the player carries (Identify, Temper); `None` for any other.
+    /// the player carries (Identify, Temper, Merchant's eye); `None` for any other.
     pub fn action_on(self, content: &Content, item: usize) -> Option<Action> {
         match self {
             Ability::Temper => Some(Action::Temper { item }),
+            Ability::Class(active) if active.aims_item() => Some(Action::UseOn(active, item)),
             Ability::Spell(spell) if aims_item(content, spell) => {
                 Some(Action::CastOn(spell_name(content, spell)?, item))
             }
@@ -716,6 +816,8 @@ impl Ability {
     pub fn action_at(self, content: &Content, at: Pos) -> Option<Action> {
         match self {
             Ability::ThrowVoice => Some(Action::ThrowVoice(at)),
+            Ability::Intimidate => Some(Action::Intimidate(at)),
+            Ability::SetOn => Some(Action::Order(Command::SetOn(at))),
             Ability::Sign(active) if active.aimed() => Some(Action::Gift(active, Some(at))),
             Ability::Spell(spell) if aimed(content, spell) => {
                 Some(Action::Cast(spell_name(content, spell)?, Some(at)))
@@ -740,7 +842,9 @@ impl Ability {
             | Ability::ShieldBash
             | Ability::Pray
             | Ability::Temper
-            | Ability::Drink => None,
+            | Ability::Drink
+            | Ability::Heel
+            | Ability::Hold => None,
         }
     }
 
@@ -752,21 +856,32 @@ impl Ability {
                 let def = content.class_active(active);
                 (class_cooldown(actor, content, active).map(Unavailable::While))
                     .or_else(|| short_of(actor, def?.resource?))
+                    .or_else(|| still(actor, content, active))
                     .or_else(|| {
-                        // Inspire costs its inspiration while that is held, else mana
-                        // (Virtuoso's none), which a status that blocks casting (Raging) keeps
-                        // from being spent.
-                        let inspire = (active == ClassActive::Inspire)
-                            .then(|| actor.talent_mods(content).inspiring())
+                        // A song costs one thing (a Virtuoso's nothing): its resource
+                        // (Inspire's inspiration), or its mana, which a status that blocks
+                        // casting (Raging) keeps from being spent.
+                        let song = (active.sings())
+                            .then(|| actor.talent_mods(content).song(active))
                             .flatten();
-                        let inspired = (inspire.and_then(|i| i.instead))
-                            .is_some_and(|c| short_of(actor, c).is_none());
-                        let mana = inspire.filter(|_| !inspired).map_or(0, |i| i.mana);
+                        let (pool, mana) = match song.and_then(|s| s.cost) {
+                            Some(SongCost::Resource(cost)) => (Some(cost), 0),
+                            Some(SongCost::Mana(mana)) => (None, mana),
+                            None => (None, 0),
+                        };
+                        if let Some(short) = pool.and_then(|cost| short_of(actor, cost)) {
+                            return Some(short);
+                        }
                         // Consecrate costs its mana.
                         let consecrate = (active == ClassActive::Consecrate)
                             .then(|| actor.talent_mods(content).consecrate)
                             .flatten();
                         let mana = mana + consecrate.map_or(0, |c| c.mana);
+                        // Sanctuary costs its mana.
+                        let sanctuary = (active == ClassActive::Sanctuary)
+                            .then(|| actor.talent_mods(content).sanctuary)
+                            .flatten();
+                        let mana = mana + sanctuary.map_or(0, |s| s.mana);
                         // Knock costs its mana.
                         let knock = (active == ClassActive::Knock)
                             .then(|| actor.talent_mods(content).knock)
@@ -793,11 +908,16 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Intimidate
             | Ability::Forage
             | Ability::BloodMagic
             | Ability::Pray
             | Ability::Temper
-            | Ability::Drink => None,
+            | Ability::Drink
+            // Whether anyone is there to hear an order is the perception's to say.
+            | Ability::Heel
+            | Ability::Hold
+            | Ability::SetOn => None,
             Ability::SecondWind => (actor.talent_mods(content).second_wind)
                 .map(|w| w.cooldown)
                 .filter(|&cooldown| actor.effects.has(cooldown))
@@ -826,20 +946,41 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         ClassActive::VeteransWind => mods.veterans_wind.map(|w| w.cooldown).into_iter().collect(),
         ClassActive::LayOnHands => mods.lay_on_hands.map(|h| h.cooldown).into_iter().collect(),
         ClassActive::Smite => mods.smite.map(|s| s.cooldown).into_iter().collect(),
-        // Volley costs Focus, Low blow and Master thief Openings, and Quivering palm Ki instead
-        // (their talents' `resource`, [`short_of`]); Lurk only its time.
+        // Volley costs Focus, Low blow and Master thief Openings, and Stunning strike and
+        // Quivering palm Ki instead
+        // (their talents' `resource`, [`short_of`]), as War cry Rage; Lurk only its time.
         ClassActive::Whirlwind
+        | ClassActive::WarCry
         | ClassActive::HolyRadiance
+        | ClassActive::PatientDefence
+        | ClassActive::StunningStrike
         | ClassActive::QuiveringPalm
+        | ClassActive::StepOfTheWind
+        | ClassActive::Stillness
         | ClassActive::Lurk
         | ClassActive::LowBlow
         | ClassActive::MasterThief
         | ClassActive::Inspire
+        | ClassActive::Lullaby
         | ClassActive::Consecrate
+        | ClassActive::Orison
+        | ClassActive::Sanctuary
         | ClassActive::Knock
+        | ClassActive::MerchantsEye
+        | ClassActive::SpiritWeapon
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))
+}
+
+/// Stillness with nothing to end (the ascetic's, #850): `actor` suffers none of its statuses.
+fn still(actor: &Actor, content: &Content, active: ClassActive) -> Option<Unavailable> {
+    if active != ClassActive::Stillness {
+        return None;
+    }
+    let mods = actor.talent_mods(content);
+    let ends = mods.stillness.as_ref()?;
+    (!ends.iter().any(|&s| actor.effects.has(s))).then_some(Unavailable::Still)
 }
 
 /// Why `actor` cannot use weapon ability `id` now: a triggered one fires by itself; an active
@@ -929,7 +1070,8 @@ mod tests {
                 "Skills",
                 "Weapon skills",
                 "Items",
-                "Here"
+                "Here",
+                "Allies"
             ]
         );
     }
@@ -964,18 +1106,24 @@ mod tests {
                 "intimidate",
                 "knowledge",
                 "metalcraft",
-                "music",
                 "pick_lock",
                 "steal",
                 "forage",
                 "woodcraft",
             ]
         );
-        let last: Vec<Ability> = every.iter().rev().take(3).rev().copied().collect();
+        let last: Vec<Ability> = every.iter().rev().take(6).rev().copied().collect();
         assert_eq!(
             last,
-            [Ability::Pray, Ability::Temper, Ability::Drink],
-            "then what a place offers"
+            [
+                Ability::Pray,
+                Ability::Temper,
+                Ability::Drink,
+                Ability::Heel,
+                Ability::Hold,
+                Ability::SetOn
+            ],
+            "then what a place offers, then the orders to one's allies"
         );
         // The weapon skills' group: the shield bash, then what the ranks teach, by skill in file
         // order, then rank.

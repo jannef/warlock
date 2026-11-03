@@ -3,7 +3,8 @@
 //! one where it is (and in which campaign, when more than one is installed: a developer build)
 //! and when it was last played. Choose one to resume it; the Erase key deletes
 //! the selected one, through the one dialog. A save without a readable summary is listed by its
-//! id.
+//! id. A save another version of the game made (saves are pinned to their version) is listed
+//! as that, and cannot be chosen; it can be deleted.
 //!
 //! Like every screen it is a plain state machine, testable without a window. What the list
 //! shows comes from the saves' summaries (`save::Summary`), read when the screen opens.
@@ -23,6 +24,8 @@ const WIDTH: i32 = 72;
 const RACE_X: i32 = 24;
 /// Where the level column ends.
 const LEVEL_END: i32 = 66;
+/// What the level column says of a save another version of the game made.
+const OTHER_VERSION: &str = "other version";
 
 /// The saved characters.
 #[derive(Debug)]
@@ -54,6 +57,17 @@ impl CharactersScreen {
         }
     }
 
+    /// Why a save of another version cannot be played: `Made by version 0.8.0 of the game: it
+    /// cannot be continued here.` (a summary from before saves were pinned names none).
+    fn made_by(summary: &Summary) -> String {
+        let version = if summary.version.is_empty() {
+            "an older version".to_string()
+        } else {
+            format!("version {}", summary.version)
+        };
+        format!("Made by {version} of the game: it cannot be continued here.")
+    }
+
     /// The dialog deleting `character` asks first.
     fn delete_dialog(character: &SavedCharacter) -> Dialog {
         let text = format!(
@@ -76,7 +90,10 @@ impl CharactersScreen {
             Nav::Up if count > 0 => self.selected = (self.selected + count - 1) % count,
             Nav::Down if count > 0 => self.selected = (self.selected + 1) % count,
             Nav::Enter => {
-                if let Some(character) = self.characters.get(self.selected) {
+                // A save of another version cannot be continued: the details say so.
+                if let Some(character) = self.characters.get(self.selected)
+                    && character.playable()
+                {
                     return ScreenAction::Choose(MenuChoice::Resume(character.id.clone()));
                 }
             }
@@ -112,8 +129,17 @@ impl CharactersScreen {
                 0,
             );
             if let Some(summary) = &character.summary {
-                console.print(x + RACE_X, y, &summary.race_and_class(), TEXT);
-                let level = format!("level {}", summary.level);
+                let colour = if summary.this_version() {
+                    TEXT
+                } else {
+                    TEXT_DIM
+                };
+                console.print(x + RACE_X, y, &summary.race_and_class(), colour);
+                let level = if summary.this_version() {
+                    format!("level {}", summary.level)
+                } else {
+                    OTHER_VERSION.to_string()
+                };
                 let lx = x + LEVEL_END - level.chars().count() as i32;
                 console.print(lx, y, &level, TEXT);
             }
@@ -128,10 +154,18 @@ impl CharactersScreen {
             Some(SavedCharacter {
                 summary: Some(summary),
                 ..
-            }) => vec![
-                self.place(summary),
-                format!("Last played {}.", played_text(summary.played, clock)),
-            ],
+            }) => {
+                let mut lines = Vec::new();
+                if !summary.this_version() {
+                    lines.push(Self::made_by(summary));
+                }
+                lines.push(self.place(summary));
+                lines.push(format!(
+                    "Last played {}.",
+                    played_text(summary.played, clock)
+                ));
+                lines
+            }
             Some(_) => vec!["Nothing is known of this save until it is played.".into()],
             None => Vec::new(),
         };
@@ -166,6 +200,7 @@ mod tests {
                 place: "the Hub".into(),
                 campaign: "The Showcase".into(),
                 played: 1_781_654_400,
+                version: warlock_core::GAME_VERSION.into(),
             }),
         }
     }
@@ -238,6 +273,34 @@ mod tests {
         assert!(text.contains("> tamsin-1"), "{text}");
         assert!(text.contains("Nothing is known"), "{text}");
         assert!(drawn(&CharactersScreen::new(Vec::new(), false)).contains("No saved characters."));
+    }
+
+    /// A save another version made is listed as that, says why it cannot be continued, and is
+    /// never chosen; it can still be deleted.
+    #[test]
+    fn a_save_of_another_version_is_listed_but_not_continued() {
+        let mut old = saved("osric-1", "Osric", 5);
+        if let Some(summary) = &mut old.summary {
+            summary.version = "0.1.0".into();
+        }
+        let mut s = CharactersScreen::new(vec![old.clone()], false);
+        let text = drawn(&s);
+        assert!(text.contains("Dwarf Warrior"), "{text}");
+        assert!(text.contains("other version"), "{text}");
+        assert!(!text.contains("level 5"), "{text}");
+        assert!(
+            text.contains("Made by version 0.1.0 of the game: it cannot be continued here."),
+            "{text}"
+        );
+        assert_eq!(s.handle(&Press::nav(Nav::Enter)), ScreenAction::Stay);
+        assert!(matches!(
+            s.handle(&Press::nav(Nav::Erase)),
+            ScreenAction::Dialog(_)
+        ));
+        if let Some(summary) = &mut s.characters[0].summary {
+            summary.version.clear();
+        }
+        assert!(drawn(&s).contains("Made by an older version of the game"));
     }
 
     /// With more than one campaign installed (a developer build) the place names its campaign;

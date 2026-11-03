@@ -1,5 +1,5 @@
 //! Creature gear (spec §8 "Creature gear"): the tables, the rolls, where they are made, and
-//! Scavenger.
+//! what falls where a creature dies.
 
 use super::*;
 use crate::content::{ContentFiles, Keep, LevelTemplate, ObjectId, Rarity};
@@ -412,13 +412,9 @@ fn a_hand_made_levels_creatures_roll_from_their_own_stream_unless_given_a_kit() 
     );
 }
 
-/// The den after its kobold, given a magic dagger, died by the player's hand; with Scavenger
-/// if `scavenger`.
-fn kill_in_the_den(scavenger: bool) -> World {
+/// The den after its kobold, given a magic dagger, died by the player's hand.
+fn kill_in_the_den() -> World {
     let mut w = World::new(CONTENT.clone(), "den", None).expect("den");
-    if scavenger {
-        w.player_mut().talents.take("scavenger", None);
-    }
     let id = w.state.actor_at("den", Pos::new(2, 1)).expect("kobold").id;
     let mut rng = Rng::stream(1, "test");
     let dagger = loot::make(&CONTENT, &mut rng, object("dagger"), 1, 3, LootGrade::Magic);
@@ -430,15 +426,13 @@ fn kill_in_the_den(scavenger: bool) -> World {
 }
 
 #[test]
-fn scavenger_identifies_what_a_kill_drops() {
+fn what_a_kill_drops_falls_unidentified() {
     let dagger = object("dagger");
-    for scavenger in [false, true] {
-        let w = kill_in_the_den(scavenger);
-        let pile = w.state.current().objects_at(Pos::new(2, 1));
-        let stack = pile
-            .iter()
-            .find(|s| s.object == dagger)
-            .expect("the dagger");
-        assert_eq!(stack.is_identified(), scavenger);
-    }
+    let w = kill_in_the_den();
+    let pile = w.state.current().objects_at(Pos::new(2, 1));
+    let stack = pile
+        .iter()
+        .find(|s| s.object == dagger)
+        .expect("the dagger");
+    assert!(!stack.is_identified());
 }

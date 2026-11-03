@@ -48,6 +48,7 @@ use super::new_run_screen::{self, NewRunScreen};
 use super::object_screen::{IdentifyBy, ObjectList, ObjectScreen};
 use super::quest_screen::QuestScreen;
 use super::settings_screen::SettingsScreen;
+use super::shape_screen::ShapeScreen;
 use super::sign_screen::SignScreen;
 use super::skills_screen::SkillsScreen;
 use super::story_screen::StoryScreen;
@@ -158,6 +159,9 @@ pub enum ScreenName {
     /// The abilities menu (`a` in play): racial, class, skill, weapon skill, and item
     /// abilities, to choose one to use.
     Abilities,
+    /// Choose a weapon's shape to call (the Hunter's Spirit weapon, from the abilities menu):
+    /// every melee weapon, grouped by weapon skill.
+    Shape,
     /// Talking with someone who has topics (`C` next to them): opens by itself when they answer;
     /// as `--screen`, over a run whose last action was such a chat (a replay's last step).
     Dialogue,
@@ -203,6 +207,7 @@ impl ScreenName {
                 | ScreenName::Identify
                 | ScreenName::Temper
                 | ScreenName::Abilities
+                | ScreenName::Shape
                 | ScreenName::Dialogue
                 | ScreenName::Death
                 | ScreenName::LevelUp
@@ -325,6 +330,8 @@ enum Screen {
     Story(StoryScreen),
     Messages(MessagesScreen),
     Abilities(AbilitiesScreen),
+    /// Choosing the shape of a spirit weapon.
+    Shape(ShapeScreen),
     Dialogue(DialogueScreen),
     Death(DeathScreen),
     LevelUp(LevelUpScreen),
@@ -362,8 +369,11 @@ impl Screen {
         let choice = |step| Screen::Choice(ChoiceScreen::new(step, content, draft));
         match name {
             ScreenName::Main => {
-                let last = launch.characters.first().map(|c| c.name().to_string());
-                Screen::Menu(MainMenu::main(last))
+                // Continue skips a save of another version.
+                let last = (launch.characters.iter())
+                    .find(|c| c.playable())
+                    .map(|c| c.name().to_string());
+                Screen::Menu(MainMenu::main(last, !launch.characters.is_empty()))
             }
             ScreenName::Characters => {
                 let campaigns = content.campaigns().len() > 1;
@@ -417,6 +427,7 @@ impl Screen {
             ))),
             ScreenName::Temper => objects(ObjectList::Temper),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
+            ScreenName::Shape => Screen::Shape(ShapeScreen::new(run)),
             ScreenName::Dialogue => Screen::Dialogue(DialogueScreen::new(talk, run)),
             ScreenName::Death => Screen::Death(DeathScreen::new(run)),
             ScreenName::LevelUp => Screen::LevelUp(LevelUpScreen::new(run)),
@@ -462,6 +473,7 @@ impl Screen {
             Screen::Story(_) => ScreenName::Story,
             Screen::Messages(_) => ScreenName::Messages,
             Screen::Abilities(_) => ScreenName::Abilities,
+            Screen::Shape(_) => ScreenName::Shape,
             Screen::Dialogue(_) => ScreenName::Dialogue,
             Screen::Death(_) => ScreenName::Death,
             Screen::LevelUp(_) => ScreenName::LevelUp,
@@ -728,6 +740,12 @@ impl ScreenStack {
                 }
                 screen.handle(press, bindings)
             }
+            Some(Screen::Shape(screen)) => {
+                if let Some((cols, rows)) = self.console {
+                    screen.fit(cols, rows);
+                }
+                screen.handle(press, bindings)
+            }
             Some(Screen::Dialogue(screen)) => screen.handle(press, bindings),
             Some(Screen::Death(screen)) => screen.handle(press),
             Some(Screen::LevelUp(screen)) => {
@@ -792,6 +810,7 @@ impl ScreenStack {
             Some(Screen::Story(screen)) => screen.draw(console, bindings),
             Some(Screen::Messages(screen)) => screen.draw(console, bindings),
             Some(Screen::Abilities(screen)) => screen.draw(console, bindings),
+            Some(Screen::Shape(screen)) => screen.draw(console, bindings),
             Some(Screen::Dialogue(screen)) => screen.draw(console, bindings),
             Some(Screen::Death(screen)) => screen.draw(console, settings.clock, bindings),
             Some(Screen::LevelUp(screen)) => screen.draw(console, bindings),
@@ -875,11 +894,11 @@ impl Screens<'_> {
         self.stack.screens.push(screen);
     }
 
-    /// Opens the identify list for a spell cast on a stack the player carries (Identify, chosen
-    /// in the abilities menu): choosing a stack casts it there.
-    pub fn open_identify_spell(&mut self, spell: warlock_core::content::SpellId) {
+    /// Opens the identify list for an ability used on a stack the player carries (the Identify
+    /// spell or Merchant's eye, chosen in the abilities menu): choosing a stack uses it there.
+    pub fn open_identify(&mut self, by: IdentifyBy) {
         let view = self.game.as_ref().map(|game| game.world.perception());
-        let list = ObjectList::Identify(IdentifyBy::Spell(spell));
+        let list = ObjectList::Identify(by);
         let screen = Screen::Objects(ObjectScreen::new(list, view.as_ref()));
         self.stack.screens.push(screen);
     }
@@ -926,8 +945,8 @@ pub(super) fn converse(
         return;
     }
     // An answer to a topic shows there even when nothing is left to ask (a quest handed in to
-    // someone with no other topics).
-    let shown = |talk: &Conversation| !talk.topics.is_empty() || talk.asked.is_some();
+    // someone with no other topics); so does anyone the player may say words to.
+    let shown = |talk: &Conversation| !talk.topics.is_empty() || talk.asked.is_some() || talk.words;
     if last_talk(&game.last_outcome).is_some_and(shown) {
         screens.open(ScreenName::Dialogue);
     }
@@ -1658,7 +1677,9 @@ mod tests {
         let release = NewRunScreen::new(&content, Some(5));
         assert!(release.skips());
         let mut stack = ScreenStack::default();
-        stack.screens.push(Screen::Menu(MainMenu::main(None)));
+        stack
+            .screens
+            .push(Screen::Menu(MainMenu::main(None, false)));
         stack.screens.push(Screen::NewRun(release));
         let draft = stack.draft();
         let pick = draft.scenario.as_ref().map(|p| p.id.as_str());
@@ -2167,7 +2188,7 @@ mod tests {
         assert_eq!(actions(&app), [Action::Bash(Dir::E), Action::Bash(Dir::W)]);
     }
 
-    /// A run of a bard of level 32, who throws their voice (#244), with a key bound for it (`B`:
+    /// A run of a bard of level 16, who throws their voice (#244), with a key bound for it (`B`:
     /// unbound by default).
     fn bard() -> App {
         let content = content();

@@ -3,10 +3,22 @@ id = "still_mind"
 name = "Still mind"
 tree = "class"
 granted = true
-description = "Your mind is still: you resist what tests your will more easily, and nothing that ails you dulls your wits or your will."
+description = "Your mind is still: you resist what tests your will more easily, and nothing that ails you dulls your wits or your will. And for two ki (Stillness, an ability taking no time) what clouds your mind or holds your body ends at once."
 effects = [
     { kind = "checks", stat = "willpower", value = 2 },
     { kind = "no_penalty_to", stat = "intelligence" },
     { kind = "no_penalty_to", stat = "willpower" },
+    { kind = "stillness", name = "Stillness", statuses = [
+        "held",
+        "pinned",
+        "staggered",
+        "stunned",
+        "surprised",
+        "transfixed",
+        "frightened",
+        "drowsy",
+        "webbed",
+    ] },
 ]
-systems = ["status", "diseases"]
+resource = { id = "ki", cost = 2 }
+systems = ["status", "diseases", "resources"]

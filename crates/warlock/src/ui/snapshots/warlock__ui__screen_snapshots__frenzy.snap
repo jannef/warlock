@@ -1,0 +1,40 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You fight in a frenzy.
+ You┌─ Character ─────────────────────────────────────────────────────────────────────────────────────────────────┐
+    │                                                                                                             │
+    │ Garrick                                                                                                     │
+    │                                                                                                             │
+    │ Race    Human                                                                                               │
+    │ Gender  Male                                                                                                │
+    │ Class   Berserker                                                                                           │
+    │ Age 34 · born 29 Greenleaf 1410 · year of the Water Basilisk                                                │
+    │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal                                 │
+    │                                                                                                             │
+    │ St  Strength      17   Main hand  great axe                                                                 │
+    │ Dx  Dexterity     11              +6 to hit, 1d12+9 slashing                                                │
+    │ To  Toughness     14                                                                                        │
+    │ In  Intelligence   7                                                                                        │
+    │ Wi  Willpower     14                                                                                        │
+    │ Pr  Presence       7                                                                                        │
+    │                                                                                                             │
+    │ Lv  Level         1                                                                                         │
+    │ XP  Experience    0 / 173                                                                                   │
+    │     Talents       9                                                                                         │
+    │ HP  Hit points    24/26   MP  Mana       0/0                                                                │
+    │ Dv  Defence        4      Pv  Protection  1                                                                 │
+    │     Stance        Frenzy                                                                                    │
+    │     Rage          11/20                                                                                     │
+    │     Stamina       11/12                                                                                     │
+    │     Alignment     Neutral                                                                                   │
+    │     Status        Raging                                                                                    │
+    │     Resistant to  cold                                                                                      │
+    │                                                                                                             │
+    │ Weight 79.3 kg (you 70 kg, carrying 9.3 kg)                                                                 │
+    │ Burdened over 24 kg, strained over 48 kg, overloaded over 72 kg                                             │
+    │                                                                                                             │
+    │ @ or Esc close   A skills                                                                                   │
+    └─ 1 Character · 2 Inventory · 3 Equipment · 4 Skills · 5 Weapons · 6 Magic · 7 Quests · 8 Talents · 9 Story ─┘
+ The Hub  ·  HP 24/26  ·  MP 0/0  ·  Rage 11  ·  Sta 11/12  ·  Raging  ·  Lv 1  ·  Frenzy  ·  08:00          ? controls

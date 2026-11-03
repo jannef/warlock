@@ -163,6 +163,9 @@ pub const VOICE_NOISE: u16 = 50;
 /// How loud a howl is where the howler stands (spec §8 "Birth sign": Hound's bay): it carries
 /// well beyond a fight's noise.
 pub const HOWL_NOISE: u16 = 150;
+/// How loud a song is where the singer stands (spec §8 "Class abilities", the bard's songs):
+/// farther than a voice, well short of a howl.
+pub const SONG_NOISE: u16 = 80;
 
 /// Something an actor does that makes noise.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -179,12 +182,17 @@ pub enum Act {
     Kick(Pos),
     /// Digs into a wall, from where it stands.
     Dig,
-    /// Mutters to itself, where it stands.
+    /// Mutters to itself, where it stands; or speaks a threat aloud (the player's Intimidate).
     Mutter,
     /// Throws its voice to this cell: a voice sounds there.
     ThrowVoice(Pos),
     /// Howls, where it stands (Hound's bay).
     Howl,
+    /// Sings a song, where it stands (the bard's songs, `world/song.rs`): a voice.
+    Sing,
+    /// Calls an order to its allies, where it stands (spec §8 "Allies"): a voice, as loud as
+    /// `[orders] noise` of `data/allies.toml` says.
+    Order,
 }
 
 /// A noise made by an actor, or by a trap going off.
@@ -285,7 +293,10 @@ pub fn noise(
         let loudness = TalentMods::scaled(u64::from(plain.loudness), percent) as u16;
         return (loudness > 0).then_some(Noise { loudness, ..plain });
     }
-    if matches!(act, Act::Mutter | Act::ThrowVoice(_) | Act::Howl) {
+    if matches!(
+        act,
+        Act::Mutter | Act::ThrowVoice(_) | Act::Howl | Act::Sing | Act::Order
+    ) {
         return Some(plain);
     }
     let quiet = actor.skill_effect(content, Effect::Quiet).clamp(0, 100) as u16;
@@ -352,6 +363,11 @@ pub fn plain_noise(
         Act::Mutter => (SoundKind::Voice, actor.pos, u32::from(VOICE_NOISE)),
         Act::ThrowVoice(at) => (SoundKind::Voice, at, u32::from(VOICE_NOISE)),
         Act::Howl => (SoundKind::Howl, actor.pos, u32::from(HOWL_NOISE)),
+        Act::Sing => (SoundKind::Voice, actor.pos, u32::from(SONG_NOISE)),
+        Act::Order => {
+            let loudness = content.allies().map_or(VOICE_NOISE, |r| r.order_noise);
+            (SoundKind::Voice, actor.pos, u32::from(loudness))
+        }
         Act::Kick(p) => (SoundKind::Banging, p, u32::from(KICK_NOISE)),
         Act::Dig => (SoundKind::Digging, actor.pos, u32::from(DIG_NOISE)),
     };

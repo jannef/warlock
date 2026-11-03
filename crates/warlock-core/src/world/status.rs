@@ -132,7 +132,7 @@ impl World {
                 began: true,
             });
         }
-        // Rage makes a berserker (`berserker.rs`).
+        // Rage brings the frenzy (`frenzy.rs`).
         self.settle_stance(id);
     }
 
@@ -305,7 +305,8 @@ impl World {
         let room = (self.state.levels.get(&actor.level)).map_or(100, |level| {
             level.effects_at(&self.content, actor.pos).regen()
         });
-        let room = room * self.shrine_pace(actor) / 100;
+        // Hallowed ground's pace or the room's, the larger (`sanctuary.rs`).
+        let room = room.max(self.hallow_pace(actor, now)) * self.shrine_pace(actor) / 100;
         let rate = rate * self.room_pace(actor, room) / 100;
         // Then the regeneration of what it wears and wields, and its talents' (Healthy).
         let talents = actor.talent_mods(&self.content);
@@ -387,10 +388,12 @@ impl World {
             let now = start + Duration::seconds(passed);
             let rate = self.healing_rate_at(id, now);
             let birthday = self.until_birthday_turns(id, now);
-            let mana_rate = self.mana_rate(id);
+            let mana_rate = self.mana_rate_at(id, now);
             let hungrier = self.until_hungrier(id);
             let paces = self.resource_paces(id);
             let stat_check = self.until_stat_check(id, now);
+            // Hallowed ground fading: the paces change then (`sanctuary.rs`).
+            let unhallowed = self.until_unhallowed(id, now);
             let Some(actor) = self.state.actors.get_mut(&id) else {
                 return;
             };
@@ -412,6 +415,7 @@ impl World {
                     .is_none_or(|r| r > left)
                 && birthday.is_none_or(|b| b >= left)
                 && stat_check.is_none_or(|c| c > left)
+                && unhallowed.is_none_or(|h| h >= left)
             {
                 heal(actor, &content, left, rate);
                 mana::regain(actor, &content, left, mana_rate);
@@ -435,6 +439,9 @@ impl World {
             }
             if let Some(r) = rots {
                 step = step.min(r.max(1));
+            }
+            if let Some(h) = unhallowed {
+                step = step.min(h.max(1));
             }
             let talents = actor.talent_mods(&content);
             let eases = |e: &crate::status::Effect| {

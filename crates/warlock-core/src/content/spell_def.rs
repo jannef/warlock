@@ -16,8 +16,11 @@
 use super::effect::EffectShape;
 use super::spell::{Burst, BurstIce, SpellFields, check_effect, default_verb};
 use super::spell_ladder::{Ladder, RungValue, Unit};
+use super::summon;
 use super::trap::TrapNoise;
-use super::{Content, ContentError, DamageTypeId, MAX_SEVERITY, StatusId, duplicate_id};
+use super::{
+    Content, ContentError, CreatureId, DamageTypeId, MAX_SEVERITY, StatusId, duplicate_id,
+};
 use crate::dice::Roll;
 use crate::noise::MAX_LOUDNESS;
 use crate::stats::{PerStat, Stat};
@@ -34,6 +37,10 @@ pub const MAX_CONE: u8 = 5;
 pub const MAX_CASTS: u8 = 10;
 /// The most mana a spell's explicit `mana` may ask.
 pub const MAX_SPELL_MANA: u16 = 500;
+/// The most minutes a summon spell's call may last, its ladder and base alike.
+pub const MAX_SUMMON_MINUTES: u16 = 600;
+/// What a spell's `study_difficulty` may add to (or take from) the study check's difficulty.
+pub const STUDY_DIFFICULTY: std::ops::RangeInclusive<i32> = -20..=40;
 /// The percents a shape's or a resolution's multiplier may be.
 const PERCENTS: std::ops::RangeInclusive<u16> = 1..=1000;
 
@@ -90,17 +97,20 @@ pub enum SpellPurpose {
     Hex,
     Cleanse,
     Utility,
+    /// Calls creatures to the caster's side (spec §8 "Allies"; `world/summon_spell.rs`).
+    Summon,
 }
 
 impl SpellPurpose {
-    /// Every kind, in the order the design lists them (§6).
-    pub const ALL: [SpellPurpose; 6] = [
+    /// Every kind, in the order the design lists them (§6), the summon last.
+    pub const ALL: [SpellPurpose; 7] = [
         SpellPurpose::Damage,
         SpellPurpose::Heal,
         SpellPurpose::Buff,
         SpellPurpose::Hex,
         SpellPurpose::Cleanse,
         SpellPurpose::Utility,
+        SpellPurpose::Summon,
     ];
 
     /// Its id in data files and as a tag.
@@ -112,6 +122,7 @@ impl SpellPurpose {
             SpellPurpose::Hex => "hex",
             SpellPurpose::Cleanse => "cleanse",
             SpellPurpose::Utility => "utility",
+            SpellPurpose::Summon => "summon",
         }
     }
 }
@@ -377,6 +388,8 @@ struct SpellSpec {
     /// A roll (`"2d6"`); the old table form is refused naming it.
     damage: Option<toml::Value>,
     aim: Option<String>,
+    /// Added to the study check's difficulty ([`STUDY_DIFFICULTY`]; the owner's Q7 of #828).
+    study_difficulty: Option<i32>,
     effect: Option<EffectSpec>,
     cast: Option<CastSpec>,
     grows: Option<GrowsSpec>,
@@ -409,6 +422,18 @@ struct EffectSpec {
     diseases: bool,
     #[serde(default)]
     identify: bool,
+    summon: Option<SummonSpellSpec>,
+}
+
+/// A summon spell's `summon = { creatures, count, most, minutes, spread }` as written.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct SummonSpellSpec {
+    creatures: Vec<String>,
+    count: String,
+    most: u8,
+    minutes: u16,
+    spread: Option<i32>,
 }
 
 /// `[spell.grows]` as written: one ladder string a dimension, each optional.
@@ -417,6 +442,7 @@ struct EffectSpec {
 struct GrowsSpec {
     damage: Option<String>,
     heal: Option<String>,
+    count: Option<String>,
     range: Option<String>,
     length: Option<String>,
     radius: Option<String>,
@@ -431,20 +457,24 @@ pub struct Grows {
     pub damage: Option<Ladder>,
     /// A `heal` spell's roll.
     pub heal: Option<Ladder>,
+    /// A `summon` spell's count, its roll.
+    pub count: Option<Ladder>,
     /// A ray's, bolt's, or burst's range.
     pub range: Option<Ladder>,
     /// A cone's or a line's length.
     pub length: Option<Ladder>,
     /// A burst's radius.
     pub radius: Option<Ladder>,
-    /// A buff's or a hex's degrees of its status.
+    /// A buff's or a hex's degrees of its status; a summon's minutes.
     pub degrees: Option<Ladder>,
 }
 
 impl Grows {
-    /// The ladder of its roll, harm or healing.
+    /// The ladder of its roll, harm, healing, or a summon's count.
     pub fn roll(&self) -> Option<&Ladder> {
-        self.damage.as_ref().or(self.heal.as_ref())
+        (self.damage.as_ref())
+            .or(self.heal.as_ref())
+            .or(self.count.as_ref())
     }
 
     /// The ladder of its reach: the range's, else the length's.
@@ -457,6 +487,7 @@ impl Grows {
         let all = [
             ("damage", &self.damage),
             ("heal", &self.heal),
+            ("count", &self.count),
             ("range", &self.range),
             ("length", &self.length),
             ("radius", &self.radius),
@@ -482,6 +513,27 @@ pub struct SpellEffect {
     pub diseases: bool,
     /// Whether a `utility` spell identifies one stack the caster carries (Identify).
     pub identify: bool,
+    /// A `summon`'s call.
+    pub summon: Option<SpellSummon>,
+}
+
+/// A summon spell's call (`[spell.effect] summon`; spec §8 "Allies": "Summons";
+/// `world/summon_spell.rs`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SpellSummon {
+    /// The pool as written: each called creature is one of these, each as likely.
+    pub creatures: Vec<String>,
+    /// The pool resolved once every creature type is known ([`resolve_summons`]).
+    pub pool: Vec<CreatureId>,
+    /// How many come at its base (its `count` ladder grows it): at least 1, at most
+    /// [`summon::MAX_COUNT`].
+    pub count: Roll,
+    /// How many of this spell's calls the caster keeps at once: past it the oldest departs.
+    pub most: u8,
+    /// How long a call stays at its base, in minutes (its `degrees` ladder grows it).
+    pub minutes: u16,
+    /// How far from the caster they appear (Chebyshev), as an enemy summoner's.
+    pub spread: i32,
 }
 
 /// How a spell shows and sounds, and what its area does to walls and ice (`[spell.cast]`).
@@ -543,6 +595,9 @@ pub struct SpellData {
     /// The stat whose modifier aims an `attack` or `touch` spell of its caster's own (default
     /// Dexterity; a scroll's or a wand's always Dexterity).
     pub aim: Stat,
+    /// Added to the study check's difficulty (0: none); a positive one makes the study a check
+    /// at any caster level (`world/learn.rs`).
+    pub study_difficulty: i32,
 }
 
 impl SpellData {
@@ -565,9 +620,17 @@ impl SpellData {
         self.effect.identify
     }
 
-    /// Its base roll, harm or healing.
+    /// Its base roll, harm, healing, or a summon's count.
     pub fn roll(&self) -> Option<Roll> {
-        self.damage.or(self.effect.heal)
+        (self.damage)
+            .or(self.effect.heal)
+            .or(self.effect.summon.as_ref().map(|s| s.count))
+    }
+
+    /// The base its degrees ladder grows: a buff's, a hex's, or a damage spell's status's
+    /// severity, or a summon's minutes.
+    pub fn base_degrees(&self) -> Option<u16> {
+        (self.effect.status.map(|(_, n)| n)).or(self.effect.summon.as_ref().map(|s| s.minutes))
     }
 
     /// Its roll at rung `rung` of its damage or heal ladder, before any hook: the rung's value,
@@ -777,6 +840,21 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         Some(e) => effect(e, spec.kind, content)?,
         None => SpellEffect::default(),
     };
+    if spec.kind == SpellPurpose::Summon
+        && (shape != Shape::Myself || spec.resolution != Resolution::Auto)
+    {
+        return Err(
+            "a `summon` spell is cast on `self` with `auto`: they appear about the caster".into(),
+        );
+    }
+    let study_difficulty = spec.study_difficulty.unwrap_or(0);
+    if !STUDY_DIFFICULTY.contains(&study_difficulty) {
+        return Err(format!(
+            "`study_difficulty` is {} to {}",
+            STUDY_DIFFICULTY.start(),
+            STUDY_DIFFICULTY.end()
+        ));
+    }
     let needs = match spec.kind {
         SpellPurpose::Heal => effect.heal.is_none().then_some("`heal`"),
         SpellPurpose::Buff | SpellPurpose::Hex => effect.status.is_none().then_some("`status`"),
@@ -784,6 +862,7 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             (effect.cures.is_empty() && !effect.diseases).then_some("`cures` or `diseases`")
         }
         SpellPurpose::Utility => (!effect.identify).then_some("`identify`"),
+        SpellPurpose::Summon => effect.summon.is_none().then_some("`summon`"),
         SpellPurpose::Damage => None,
     };
     if effect.identify && shape != Shape::Myself {
@@ -810,20 +889,24 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         }
         Some(id) => Stat::from_id(id).ok_or_else(|| format!("`aim`: unknown stat `{id}`"))?,
     };
+    let status_degrees = matches!(spec.kind, SpellPurpose::Buff | SpellPurpose::Hex)
+        .then_some(effect.status)
+        .flatten()
+        .map(|(s, n)| (n, content.status(s).max.min(MAX_SEVERITY)));
+    let summon_minutes = (effect.summon.as_ref()).map(|s| (s.minutes, MAX_SUMMON_MINUTES));
     let bases = Bases {
         damage,
         heal: effect.heal,
+        count: effect.summon.as_ref().map(|s| s.count),
         range,
         length,
         radius,
-        degrees: matches!(spec.kind, SpellPurpose::Buff | SpellPurpose::Hex)
-            .then_some(effect.status)
-            .flatten(),
+        degrees: status_degrees.or(summon_minutes),
         shape,
         burst_most: rules.max_radius(),
     };
     let grows = match spec.grows {
-        Some(g) => grows(g, &bases, content)?,
+        Some(g) => grows(g, &bases)?,
         None => Grows::default(),
     };
     let look = look(spec.cast, shape, radius, damage_type, content)?;
@@ -852,6 +935,7 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         effect,
         grows,
         aim,
+        study_difficulty,
     })
 }
 
@@ -859,11 +943,14 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
 struct Bases {
     damage: Option<Roll>,
     heal: Option<Roll>,
+    /// A summon's count.
+    count: Option<Roll>,
     range: Option<u8>,
     length: Option<u8>,
     radius: Option<u8>,
-    /// A buff's or a hex's status and base degrees.
-    degrees: Option<(StatusId, u16)>,
+    /// A buff's or a hex's base degrees and the most its status takes; a summon's minutes and
+    /// [`MAX_SUMMON_MINUTES`].
+    degrees: Option<(u16, u16)>,
     shape: Shape,
     /// The largest radius a burst may have (the burst table's length).
     burst_most: u8,
@@ -874,9 +961,10 @@ struct Bases {
 /// and `max` non-decreasing from the base, each rung different from the one before); cells and
 /// degrees strictly ascending from the base, within the engine's limits (a range to
 /// [`MAX_REACH`], a cone to [`MAX_CONE`], a line to [`MAX_REACH`], a radius to the burst
-/// table's length, degrees to the status's `max` and [`MAX_SEVERITY`]). Nothing reads how much
-/// a rung does (decision 16).
-fn grows(spec: GrowsSpec, bases: &Bases, content: &Content) -> Result<Grows, String> {
+/// table's length, degrees to the status's `max` and [`MAX_SEVERITY`], a summon's minutes to
+/// [`MAX_SUMMON_MINUTES`]; a summon's count from 1 to [`summon::MAX_COUNT`]). Nothing reads how
+/// much a rung does (decision 16).
+fn grows(spec: GrowsSpec, bases: &Bases) -> Result<Grows, String> {
     let lacks = |name: &str, why: &str| Err(format!("grows: `{name}` is for {why}"));
     let rolls = |name: &str, text: Option<String>, base: Option<Roll>, why: &str| {
         let Some(text) = text else {
@@ -932,9 +1020,18 @@ fn grows(spec: GrowsSpec, bases: &Bases, content: &Content) -> Result<Grows, Str
     } else {
         MAX_REACH
     };
-    let degrees_most = (bases.degrees).map_or(MAX_SEVERITY, |(s, _)| {
-        content.status(s).max.min(MAX_SEVERITY)
-    });
+    let degrees_most = (bases.degrees).map_or(MAX_SEVERITY, |(_, most)| most);
+    let count = rolls("count", spec.count, bases.count, "a `summon` spell's count")?;
+    if let Some(ladder) = &count
+        && let Some(roll) = (ladder.values())
+            .filter_map(RungValue::roll)
+            .find(|r| r.min() < 1 || r.max() > summon::MAX_COUNT)
+    {
+        return Err(format!(
+            "grows: `count`'s rung `{roll}` must lie within 1 to {}",
+            summon::MAX_COUNT
+        ));
+    }
     Ok(Grows {
         damage: rolls(
             "damage",
@@ -943,6 +1040,7 @@ fn grows(spec: GrowsSpec, bases: &Bases, content: &Content) -> Result<Grows, Str
             "a `damage` spell's roll",
         )?,
         heal: rolls("heal", spec.heal, bases.heal, "a `heal` spell's roll")?,
+        count,
         range: numbers(
             "range",
             spec.range,
@@ -970,10 +1068,10 @@ fn grows(spec: GrowsSpec, bases: &Bases, content: &Content) -> Result<Grows, Str
         degrees: numbers(
             "degrees",
             spec.degrees,
-            bases.degrees.map(|(_, d)| d),
+            bases.degrees.map(|(d, _)| d),
             degrees_most,
             Unit::Degrees,
-            "a buff's or a hex's status",
+            "a buff's or a hex's status, or a summon's minutes",
         )?,
     })
 }
@@ -1091,6 +1189,11 @@ fn effect(e: EffectSpec, kind: SpellPurpose, content: &Content) -> Result<SpellE
     only("cures", !e.cures.is_empty(), &[SpellPurpose::Cleanse])?;
     only("diseases", e.diseases, &[SpellPurpose::Cleanse])?;
     only("identify", e.identify, &[SpellPurpose::Utility])?;
+    only("summon", e.summon.is_some(), &[SpellPurpose::Summon])?;
+    let summon = match e.summon {
+        Some(s) => Some(summon_call(s)?),
+        None => None,
+    };
     let status = |name: &str| {
         content
             .status_id(name)
@@ -1128,7 +1231,77 @@ fn effect(e: EffectSpec, kind: SpellPurpose, content: &Content) -> Result<SpellE
         cures,
         diseases: e.diseases,
         identify: e.identify,
+        summon,
     })
+}
+
+/// A summon spell's `summon` table, checked as far as it can be before the creature types are
+/// known ([`resolve_summons`] resolves its pool): a pool of at least one, a count that brings 1
+/// to [`summon::MAX_COUNT`], `most` 1 to [`summon::MAX_COUNT`], minutes 1 to
+/// [`MAX_SUMMON_MINUTES`], a spread within [`summon::SPREADS`] (default 2).
+fn summon_call(s: SummonSpellSpec) -> Result<SpellSummon, String> {
+    if s.creatures.is_empty() {
+        return Err("summon: `creatures` names at least one".into());
+    }
+    let count: Roll = s.count.parse().map_err(|e| format!("summon: {e}"))?;
+    if count.min() < 1 || count.max() > summon::MAX_COUNT {
+        return Err(format!(
+            "summon: `count` must lie within 1 to {}",
+            summon::MAX_COUNT
+        ));
+    }
+    if !(1..=summon::MAX_COUNT).contains(&i32::from(s.most)) {
+        return Err(format!("summon: `most` is 1 to {}", summon::MAX_COUNT));
+    }
+    if !(1..=MAX_SUMMON_MINUTES).contains(&s.minutes) {
+        return Err(format!("summon: `minutes` is 1 to {MAX_SUMMON_MINUTES}"));
+    }
+    let spread = s.spread.unwrap_or(2);
+    if !summon::SPREADS.contains(&spread) {
+        return Err(format!(
+            "summon: `spread` is {} to {}",
+            summon::SPREADS.start(),
+            summon::SPREADS.end()
+        ));
+    }
+    Ok(SpellSummon {
+        creatures: s.creatures,
+        pool: Vec::new(),
+        count,
+        most: s.most,
+        minutes: s.minutes,
+        spread,
+    })
+}
+
+/// Resolves every summon spell's pool once the creature types are known: each a known type, not
+/// the player's, not a unique, not an animated thing.
+pub(super) fn resolve_summons(content: &mut Content) -> Result<(), ContentError> {
+    for i in 0..content.spells.len() {
+        let Some(call) = &content.spells[i].effect.summon else {
+            continue;
+        };
+        let mut pool = Vec::new();
+        for name in &call.creatures {
+            let err = |m: String| {
+                ContentError::new(
+                    "data/spells/",
+                    format!("spell `{}`: summon: {m}", content.spells[i].id),
+                )
+            };
+            let c = (content.creature_id(name))
+                .ok_or_else(|| err(format!("unknown creature `{name}`")))?;
+            let def = content.creature(c);
+            if def.id == "player" || def.unique || def.animated.is_some() {
+                return Err(err(format!("`{name}` cannot be called")));
+            }
+            pool.push(c);
+        }
+        if let Some(call) = content.spells[i].effect.summon.as_mut() {
+            call.pool = pool;
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -1720,6 +1893,9 @@ damage = "2d6"
             ("blight", 7, Some("2d6"), 17, true),
             ("burning_hands", 4, Some("1d4"), 6, true),
             ("call_lightning", 11, Some("2d6"), 20, true),
+            ("call_of_the_forest", 20, Some("+1"), 20, true),
+            ("call_of_the_wild", 5, Some("+1"), 5, true),
+            ("call_the_elements", 35, Some("+1"), 35, true),
             ("cause_wounds", 4, Some("1d6"), 3, true),
             ("cure_wounds", 3, Some("2d6"), 2, true),
             ("curse_of_sloth", 3, None, 3, true),

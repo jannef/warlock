@@ -3,10 +3,12 @@
 Developer notes for working on this part of Warlock; the rules it implements are in
 spec/08b-creatures.md ("Summoning", #520). Keep it current with the code, as CLAUDE.md says.
 
-Summoning is an **enemy-only creature ability**: a creature type with `[creature.summon]` calls
-forth creatures of its side. The player has no summoning (the owner, #520), so there is no
-ability in the abilities menu, no action, no key, and no talents (#520's "Talents and class
-abilities").
+Summoning here is a **creature ability**: a creature type with `[creature.summon]` calls forth
+creatures of its side, with no ability in the abilities menu, no action, no key, and no talents
+(#520's "Talents and class abilities"). The player's summons are spells of `kind = "summon"`
+(#837, `docs/dev/allies.md` "Summons"): they share this file's `summon_cells` and
+`World::summon_draw` (the pool's draw, with the player's bias; the enemy's passes none, one
+`below(pool.len())` as before), and make allies.
 
 - **Data** (`content/summon.rs`): `SummonSpec` as written (`CreatureSpec::summon`, checked by
   `SummonSpec::check` as the type loads), kept on `CreatureDef::summon_spec` until every type is
@@ -23,12 +25,12 @@ abilities").
   100, refresh, no `seen`): the house rule for ability limits (`ability.rs` module docs). It is
   saved with the actor's `effects`, as every status is; nothing counts uses.
 - **State**: `Actor::summoner: Option<ActorId>` (`serde(default, skip_serializing_if =
-  "Option::is_none")`): who called it. Old saves load and hash as before; no `FORMAT_VERSION`
-  bump. `World::live_summons(id)` counts the actors that name `id`, on any level.
+  "Option::is_none")`): who called it. Hashes are as before for an actor without one. `World::live_summons(id)` counts the actors that name `id`, on any level.
 - **Rules** (`world/summon.rs`, one line in `ai.rs::fight`, before throws, shots, and spells,
   and one arm in `creature_turn`): `World::summons_at` (the conditions: a hostile it sees within
   `range`, casting not blocked, the status off, `Actor::mana_cost` of the cost at hand, fewer
-  than `most` alive, a free cell), `summon_cells` (the free cells within `spread`, in its line
+  than `most` alive, a free cell), `summon_cells(id, spread)` (shared with the dev `ally:` of
+  `docs/dev/allies.md`: the free cells within `spread`, in its line
   of sight (`LineOfSight` to `radius_for(2·spread²)`), walkable, no actor, not `World::shuns`;
   sorted by Chebyshev distance, squared distance, y, x), `creature_summons` (`spend_mana`,
   `afflict` the status, `make_noise(Act::Attack(Spell))`, `count.roll` on `state.rng`, capped

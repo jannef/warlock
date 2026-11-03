@@ -24,6 +24,15 @@ name = "barrow spiders"
 weight = 2
 group = [{ creature = "barrow_spider", count = "1d3" }]
 
+# The Strange Spirit, as on the roads (roads.toml): by day, while the Hunter's calling is open.
+[[table.entry]]
+id = "strange_spirit_downs"
+name = "a strange spirit"
+weight = 2
+stance = "peaceful"
+when = { phase = ["day"], calling = "hunter" }
+group = [{ creature = "strange_spirit", count = "1" }]
+
 [[table]]
 id = "downs_night"
 when = { regions = ["Hlāwdūn"], landscapes = ["grassland", "hills", "plains", "forest"], phase = ["night", "twilight"] }

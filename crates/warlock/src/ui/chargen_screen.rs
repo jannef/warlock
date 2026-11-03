@@ -1201,7 +1201,7 @@ mod tests {
                 .spec(&CONTENT)
                 .map(|s| s.to_string())
                 .as_deref(),
-            Some("elf,male,barbarian")
+            Some("elf,male,berserker")
         );
         // Without a scenario the summary cannot start a run.
         let mut s = SummaryScreen::new(&CONTENT, &Draft::default());

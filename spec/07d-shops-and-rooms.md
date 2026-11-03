@@ -200,7 +200,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     slower (150) and loud (200) to wade ("The floor here is flooded."); a *black chamber* (5)
     keeps no light at all, carried light too, so only darkvision sees in it ("The dark here
     swallows your light."); a *draining room* (6, #403) gives everyone inside **Ebbing** (§8
-    "Status effects": a point of mana drained every 20 seconds and none coming back), glows a
+    "Status effects": a point of mana drained every 20 seconds and none coming back; never a
+    priest who communes with the dark, below), glows a
     faint cold violet (`[10, 6, 24, 8]`), and covers a whole level with `level_chance` 5 ("You
     feel your power seeping out of you."; over a level: "Something here drinks at your
     power."); a *teeming den* (8, #405; only on a level with a danger, in a room of at least 16
@@ -461,6 +462,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Risings no longer under a curse are dropped, and it is a good deed (`consecrate` in
     `data/alignment.toml`, 20). Elsewhere it is refused with no time ("There is nothing here
     to consecrate.").
+  - **Communion with the dark** (the priest's at 9, §8 "Class abilities"; #884;
+    `world/dark_face.rs`): Consecrate's dark twin, a passive working only for a priest of
+    Callous or worse whom the dark powers answer (`World::communes`). Where an unholy effect
+    lies at their cell (a room's or the level's), their prayers add no strain (the fizzle's
+    chance and lock still read the strain there is), and the effect's status (the draining
+    room's Ebbing) is never laid on them (`World::dwell`); a holy effect's status still is.
   - **Forgotten altars and prayer** (`feature`, `sides`, `offers`, #406; `world/pray.rs`,
     `world/outcome.rs`; the design's §7): ADOM's pool with another flavour, not its gods: no god
     to name or serve, no sacrifice, no conversion. A room whose effect has a `feature` gets that
@@ -704,7 +711,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     box, a blob's cells, whether the player has seen a cell of it (`glimpsed`) and been inside
     (`entered`), a sealed room's `breach`; and the hollow walls found, `LevelState::hollows`)
     and the effect covering it (`LevelState::pervading`); saved and hashed, each
-    left out while empty. The rules ask one question, `World::effects_at(level, pos)` (inside the
+    left out while empty.
+  - **Hallowed ground** (the priest's Sanctuary, §8 "Class abilities"; #885): a place of
+    peace laid by a rite, not a room. `LevelState::hallows` (saved and hashed, left out while
+    empty) holds each: the cell knelt on, its radius (Chebyshev), when it fades, its pace, and
+    whether the dark powers laid it. While it lasts a creature hostile to the player does not
+    step onto it unless it stands on it already (a sanctuary's rule, `World::shuns`), nothing
+    spawns there, and whoever stands on it heals and regains mana at its pace or a special
+    room's, the larger (never both). The player's blow, shot, throw, or harmful spell from on it
+    breaks it, and so does a twist of the dark powers' prayer that reaches a creature; its end is a moment of the time that passes, and the turn that passes it drops
+    it ("The hallowing fades."). Look mode says "on hallowed ground" ("on dreaded ground" for
+    the dark powers'). It sheds no light. The rules ask one question, `World::effects_at(level, pos)` (inside the
     core the level state's `effects_at`), which gives the room's effect and the level's, folded
     the same way by every reader (percents multiply, glows add, flags hold if either does): light
     and creature sight, noise, regeneration and mana, and creatures that shun a sanctuary (by the

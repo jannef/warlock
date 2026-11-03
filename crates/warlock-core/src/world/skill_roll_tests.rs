@@ -92,7 +92,7 @@ fn a_level_gives_the_classs_the_races_and_intelligences_rolls() {
     let rolls = |character: &str, intelligence: u8| {
         let mut w = world(character);
         set_intelligence(&mut w, intelligence);
-        w.level_rolls()
+        w.level_rolls(w.player_level())
     };
     // A warrior 2, a human 1 more; Intelligence 14 one more, and one more every 4 points.
     assert_eq!(rolls("human,male,warrior", 10), 3);
@@ -106,7 +106,7 @@ fn a_level_gives_the_classs_the_races_and_intelligences_rolls() {
     // Trained in nothing, a level has nothing to roll on.
     let mut w = world("human,male,warrior");
     w.player_mut().skills = Default::default();
-    assert_eq!(w.level_rolls(), 0);
+    assert_eq!(w.level_rolls(w.player_level()), 0);
     reach(&mut w, 2);
     assert_eq!(w.due(), None, "nothing due");
 }
@@ -161,7 +161,7 @@ fn the_screen_shows_the_dice_the_rule_rolls_and_where_the_rolls_come_from() {
     let count = w.perception().roll_count();
     let parts = (count.class, count.race, count.intelligence, count.talents);
     assert_eq!(parts, (2, 1, 2, 0));
-    assert_eq!(count.total(), w.level_rolls());
+    assert_eq!(count.total(), w.level_rolls(w.player_level()));
 }
 
 #[test]

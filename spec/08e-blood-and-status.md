@@ -127,7 +127,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lasts, the ability is `Unavailable::While` it ("you are winded"), a visible limit that only
     time lifts; nothing counts uses. An ability that buffs the player calls `World::afflict(player,
     status, 1, player)`. The class abilities that give them come with the class tables; the
-    built-in data has the barbarian's rage as the example: Raging (Strength and Toughness +2,
+    built-in data has the berserker's rage as the example: Raging (Strength and Toughness +2,
     Intelligence −2, no reading or casting, while the Rage resource lasts, "Resources" below),
     then Exhausted (10 minutes: Strength −1). A status that `blocks` casting also refuses every
     spending of mana (`World::spend_mana`) and greys out an ability that costs mana.
@@ -193,8 +193,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Magic items"). `World::healing_rate` is the one place that decides the pace.
 - **Mana** (`warlock-core/src/mana.rs`, the pure rules; `world/mana.rs`, applying them; #223):
   a second pool beside hit points, built the same way. Spells spend it ("Spells" below: the
-  casters' class spells and those learned from scrolls), as do rods (§8 "Rods"), the bard's
-  inspire when short of inspiration, and a summoner's summons (§8 "Creatures"); Blood magic
+  casters' class spells and those learned from scrolls), as do rods (§8 "Rods") and a summoner's summons (§8 "Creatures"); Blood magic
   refills it. Every
   new system says in its issue how it interacts with mana, if at all.
   - **The maximum** (`Actor::max_mana`): `mana_base` (the race's and the class's `mana`, §7; a
@@ -301,9 +300,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     by spell level (the spell scaling design §5.8): 0 Evil eye, Light (#589: the scroll of
     light's; Lit, its status, sheds a light about the caster, `light` on a status); 1 Mend, Ray
     of frost, Spark; 3 Barkskin, Blessing, Cure wounds, Curse of sloth, Hex of weakness, Magic
-    missile; 4 Burning hands, Cause wounds; 6 Arcane bolt, Frost, Identify, Sleep; 7 Blight,
-    Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst folded into it),
-    Haste, Lightning bolt, Remove disease; 12 Flame. A spell is cast by its
+    missile; 4 Burning hands, Cause wounds; 5 Call of the wild; 6 Arcane bolt, Frost, Identify,
+    Sleep; 7 Blight, Scorching ray, Web; 11 Call lightning, Fireball (the wizard's Fire burst
+    folded into it), Haste, Lightning bolt, Remove disease; 12 Flame; 20 Call of the forest; 35
+    Call the elements (the druid's calls, #839: summons, §8b "Allies"). A spell is cast by its
     data id (`use:magic_missile:12,5`, any `use:ID` that is no class or birth sign ability; one
     that is no spell either is a weapon active's, §8i "Weapon abilities");
     the abilities menu lists the spells known by spell level, then path order. Sleep and Web are
@@ -324,11 +324,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     comes at, never above the class's caster level then (character level × `casting` ÷ 100, at
     least 1; the content test). Wizard: Ray of
     frost (1), Magic missile (3), Burning hands (12), Arcane bolt (18). Priest: Mend (1),
-    Blessing (3), Cure wounds (3), Remove disease (12). Druid: Spark (1), Barkskin (3), Call
-    lightning (12), Flame and frost (50). Witch: Evil eye (1), Hex of weakness (3), Cause wounds
-    (12), Curse of sloth (32), Blight (40). Bard: Mend (1), Blessing (6). Paladin: Blessing
+    Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
+    the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
+    frost (50). Witch: Evil eye (1), Hex of weakness (3), Cause wounds
+    (12), Curse of sloth (32), Blight (40). Bard: Mend (1). Paladin: Blessing
     (6). Ranger: Barkskin (6). Every other class none. Every class has some mana (the
-    barbarian and the warrior 1); a race adds none unless its data says so.
+    berserker and the warrior 1); a race adds none unless its data says so.
   - **Spell scrolls** (§8 "Scrolls"): every spell comes on one scroll (`scroll_of_ID`, a
     `read` table of kind `spell`), which casts it through the cast path at the scroll's own
     `rungs` of the spell's damage or heal ladder (default 0, the base; at most the ladder's
@@ -357,7 +358,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Spells** (`data/spells/`, one `[[spell]]` file each, numbered in path order: `SpellId` an
     index, in the content fingerprint): id, name, description, level, the **tags** school
     (evocation, necromancy, abjuration, restoration, transmutation, enchantment, divination),
-    kind (damage, heal, buff, hex, cleanse, utility), shape, and damage type (a `damage` spell's,
+    kind (damage, heal, buff, hex, cleanse, utility, summon), shape, and damage type (a `damage` spell's,
     needed); a resolution that fits the shape (`area` exactly for cone, line, and burst, `touch`
     only for touch, `attack` for a ray or a bolt, `auto` for any single target); its **base**
     reach, each shape exactly its own (`range` 1 to 20 for a ray, bolt, or burst, `radius` 1
@@ -368,7 +369,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     everyone it harms); `aim` (an attack or touch damage spell's: the stat whose modifier aims
     it, default Dexterity); `casts` (its time in `cast` actions, 1 to 10); `open_sky`; `mana`, a
     cost given outright in place of its level's (Identify); `[spell.effect] identify` (a
-    `utility` spell on `self` that asks for a stack); `[spell.cast]` (the `effect` drawn,
+    `utility` spell on `self` that asks for a stack); `[spell.effect] summon` (a `summon`
+    spell's call on `self` with `auto`: `creatures`, `count`, `most`, `minutes`, `spread`; spec
+    §8 "Allies"); `study_difficulty`; `[spell.cast]` (the `effect` drawn,
     `noun`, `verb`, `message`, `noise`, and a burst's `blast`, `heat`, `frost`); and
     `[spell.grows]`, its ladders (below). Retired and refused, each naming its replacement:
     `tier`, `[spell.damage]`'s table form (`dice`, `per_levels`, `max_dice`, `bonus`),
@@ -462,7 +465,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
       all); a spell without a roll, and a rider, draw nothing. Nothing new is saved.
   - **Caster level** (`World::caster_level`, `Actor::caster_level`; derived, never stored): the
     player's level times their class's `casting` percent (`data/classes/`, 1 to 100, default
-    25: wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and monk
+    25: wizard, witch, priest, and druid 100, bard and aristocrat 75, paladin, ranger, and ascetic
     50, everyone else 25; 100 without a class), a creature's its type's level, rounded down; plus
     the `caster_level` talent effect (racial and birth-sign gifts are talents; flat, or `value`
     per `per_levels` character levels: the wizard's Arcane training, +1 per 5) and affix effect;
@@ -492,12 +495,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
       scroll (design §14 q1). Once begun, the player cannot stop it themselves.
     - **The check**, as the last turn ends, on the scroll used up (Scroll savant never keeps a
       studied scroll, design §14 q7): overreach is the spell's level less the caster level. At
-      0 or less the spell is learned, no draw. Above, a 2d12 check with
+      0 or less the spell is learned, no draw, unless the spell is made hard to learn
+      (`study_difficulty` above 0: a check at any caster level, overreach counted as at least
+      0). Above, a 2d12 check with
       the Intelligence modifier + the skills' `study` benefit (Spellcraft and Decipher script,
       each value ÷ 10, at most 20) + the class's `affinity` with the spell's school
       (`data/classes/`, −10 to 10) + Quick study's bonus (2), against `base` (12) +
       `per_overreach` (1) × overreach′ + the sum of the levels of the spells known ÷
-      `known_per_point` (20) (`data/study.toml`), overreach′ being the overreach with
+      `known_per_point` (20) (`data/study.toml`) + the spell's `study_difficulty` (−20 to 40,
+      default 0), overreach′ being the overreach with
       Overreach's third off, rounded down (`study { overreach_percent = -33 }`). Made: "…you
       have learned Frost."
     - **Failure**: "The words twist away from you, and the scroll crumbles to dust.", then a
@@ -529,11 +535,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   resources, integer pools beside hit points and mana (which everyone has) that a character holds
   once something grants them. A character may hold any number at once; creatures hold none
   (their rage would never show). The class features of the progression design's §4.18 (the
-  barbarian's Rage, the ranger's Focus, the thief's Openings, the monk's Ki, the bard's
-  Inspiration) move onto them in follow-up changes (R1–R5); the barbarian's Rage has (R1,
-  "Rage" below), and the ranger's Focus (R2), the thief's Openings (R3), and the monk's Ki and
-  the bard's Inspiration (R4) have (below). Mana is separate: nothing converts between them;
-  Inspiration is the one resource spent in place of mana.
+  berserker's Rage, the ranger's Focus, the thief's Openings, the ascetic's Ki, the bard's
+  Inspiration) move onto them in follow-up changes (R1–R5); the berserker's Rage has (R1,
+  "Rage" below), and the ranger's Focus (R2), the thief's Openings (R3), and the ascetic's Ki and
+  the bard's Inspiration (R4) have (below). Mana is separate: nothing converts between them,
+  and nothing is paid in one else the other (a song costs one thing, #870).
   - **Data** (`data/resources.toml`, §7): each resource's maximum, start, whether the status bar
     shows its maximum, how it changes over time (it **regenerates** toward its maximum or
     **decays** toward 0, a point every so many seconds, while resting too or not), whether it
@@ -607,24 +613,31 @@ developer notes (CLAUDE.md, `docs/dev/`).
     grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), one
     slips away every 120 s (20 base turns), and at 0 they stay, held. Master thief (level 60)
     spends 5 on its finisher (§8 "Class abilities").
-  - **Ki** (the monk's; R4, #252): Flurry (level 18) grants it (5, full); it comes back a point
-    every 18 s (3 base turns), resting too, and never ends. Each second blow of a flurry spends a
-    point (`flurry_cost`, in `World::flurry`): with none held there is no second blow, the
-    attack is one blow. Quivering palm (level 50) costs 5 and has no cooldown; with a weapon in
-    hand it is refused before the ki is spent. The monk's mana stays theirs, separate.
-  - **Inspiration** (the bard's; R4, #252): Inspire (level 18) grants it at 0; each kill credited
+  - **Ki** (the ascetic's; R4, #252; the ki tricks design, #846): Martial arts (level 1) grants
+    it, full. Its maximum is 4, plus the Willpower modifier, plus a point per 6 character levels,
+    at least 3 (`max_from = { stat = "willpower", per_levels = 6, least = 3 }`: 5 at level 1 with
+    Willpower 12, 10 at level 25 with 14, 17 at level 60 with 16); Inner calm adds 2 and the affix
+    of Stillness its own. It comes back a point every 18 s (3 base turns), resting too (Inner
+    calm +50 %, Perfect self at 60 +100 %), and never ends; the abilities menu greys what it pays
+    for "your ki is spent". Each second blow of a flurry (Flurry, level 1) spends a point
+    (`flurry_cost`, in `World::flurry`): with none held there is no second blow, the attack is
+    one blow. Step of the wind (level 6) costs 1 and no time, refused before the spend while
+    the ascetic is Light-footed already. Stunning strike (level 12, #848) costs 1 and Quivering palm (level 50) 5, neither
+    with a cooldown; with a weapon in hand either is refused before the ki is spent. Patient defence (level 18) costs 1 and
+    a wait's time (#849). Stillness (Still mind's, level 25, #850) costs 2 and no time, refused before the spend with
+    nothing to end. The ascetic's mana stays theirs, separate.
+  - **Inspiration** (the bard's; R4, #252): Inspire (level 9) grants it at 0; each kill credited
     to the bard builds one (to 5), one fades every 180 s (30 base turns), and at 0 it stays,
-    held. Inspire spends 3 inspiration **in place of** its 3 mana while the bard holds 3 (then
-    no mana is spent, and nothing blocks it as casting), else its mana as before; Virtuoso's
-    song costs neither.
+    held. Inspire, a song (§8 "Class abilities"), costs 3 inspiration and nothing else
+    (#870: no mana fallback); a Virtuoso's song costs nothing.
   - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives pay
     from (§8 "Weapon abilities", #564). The granted talent **Trained wind**
-    (`grants_resource`) is in the level-1 row of the warrior's, barbarian's, paladin's,
-    ranger's, monk's, thief's, and bard's tables, so those hold it from creation, full; a saved
+    (`grants_resource`) is in the level-1 row of the warrior's, berserker's, paladin's,
+    ranger's, ascetic's, thief's, and bard's tables, so those hold it from creation, full; a saved
     character of those classes is granted it on load (`World::grant_class`). Its maximum is 10
     + the Toughness modifier + a point per 10 levels, at least 5 (`max_from`), so Toughness 14
     holds 12 at level 1; it comes back a point every 12 s (2 base turns), resting too, and sits
-    at 0. A barbarian holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
+    at 0. A berserker holds Rage and Stamina at once. Shown as `Sta 7/12`. Talents (the
     `stamina` system): **Deep lungs** (Vigour): +4 at most; **Steady breathing**
     (Weaponcraft, a weapon skill at 5): back at 150 %. Anyone else is granted it, full, on the first weapon
     rank that teaches an active (the third grant place, #564: `fight.rs::grant_stamina`, where
@@ -635,11 +648,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the character screen under the stance; the dump header (`rage 11/20`), JSON dumps'
     `resources`, and the dev `actors` layer (every actor's, with progress). Never a creature's,
     and never the pace. The dev action `resource:ID` grants one (§9; "You gain Rage: 12 (dev).").
-  - **Rage** (the barbarian's, R1; `world/rage.rs`): the Rage ability (a wait's time) grants the
+  - **Rage** (the berserker's, R1; `world/rage.rs`): the Rage ability (a wait's time) grants the
     Rage resource (20 at most, starting at 12, a point lost every 6 s, resting too; it ends at
-    zero) and with it Raging; the action's own wait costs the first point. No rage while Raging
-    or Exhausted lasts. Blood frenzy (level 40): each kill credited to the barbarian builds 5
-    rage (a `resource_build`). Mighty rage (50): Raging's raises doubled, 10 more rage at most,
+    zero) and with it Raging; the action's own wait costs the first point. Fighting feeds it
+    (#842, `builds` in data): every blow, shot, or throw that hits the holder builds 1 (`Struck`,
+    raised on every strike that `is_hit()`: soaked and resisted to nothing too, the hit taken
+    before mitigation), a critical of theirs that does damage 2, and a kill credited to them 3;
+    a blow of theirs that lands builds nothing. Exhausted (150 s) follows its end; no rage while
+    Raging or Exhausted lasts. While Raging, Battle-scarred (level 6) gives 2 Protection more
+    (3 in all), Headlong (12) takes 20 % off every step, and Blood frenzy (40) 20 % off every
+    melee attack (the talents' `while = "raging"`, §8 "Class abilities"). Blood frenzy: each
+    kill credited to the berserker builds 5 rage more (a `resource_build`, 8 in all). Mighty rage (50): Raging's raises doubled, 10 more rage at most,
     Exhausted eases twice as fast. Unstoppable (60): while raging, bleeding and poison tick
     nothing, and a blow (`Harm::Actor`) that would take the last hit point leaves it for 10 rage
     (`World::spend_resource`; refused, so the blow falls, with less), as often as the rage
@@ -647,8 +666,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (Raging blocks `cast`).
   - **Talents** (R5, #253): the `resources` system is in the coverage list, held to its bar by
     the four resource talents, the only picks limited to a class (a resource belongs to the class
-    that has it): **Battle trance** (Might; barbarian, level 6): rage starts 6 higher (18) and
-    decays at 67 % of its pace; **Inner calm** (Finesse; monk, level 18): ki holds 2 more (7) and
+    that has it): **Battle trance** (Might; berserker, level 6): rage starts 6 higher (18) and
+    decays at 67 % of its pace; **Inner calm** (Finesse; ascetic, level 18): ki holds 2 more (7) and
     comes back at 150 %; **Steady hand** (Weaponcraft; ranger, level 12): focus comes back at
     150 % (still not while resting); **Patient blade** (Shadow; thief, level 32): openings decay
     at 50 %, and a sneak attack that kills builds one more (two in all). Rage, Blood frenzy,

@@ -578,7 +578,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`{ kind = "dodge", value = 1 }`: `dodge`, `natural`, `melee_damage`, `max_hp_per_levels
   { per_levels, at_least }`, `healing_percent`, `footsteps_percent`, `silent_doors`, `hearing`,
   `carry_percent`, `travel_percent`, `hunger_percent`, `no_exertion`, `xp_percent`, `notice`,
-  `free_blow { trigger }`; bonuses −20 to 20, percents −100 to 100, never 0), `[[talent.rank]]`
+  `free_blow { trigger }`; bonuses −20 to 20, percents −100 to 100, never 0; every kind is in
+  `talents/README.toml`, among them the bard's `song`, `virtuoso`, `weapon_ranks`, and
+  `take_up_skills` and the Hunter's `spirit_weapon`), `[[talent.rank]]`
   (a rank's own `needs` and `effects`, as many as `ranks` or none), `systems` (at least one),
   `granted`, `resource` (a class active's cost), `alignment` (`{ min = "kind" }`: the bands a holy
   class active works for; it bars nothing, §8 "Alignment"). Talents are saved by id (not in the content fingerprint); without skills content a
@@ -737,7 +739,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
   with a unique `id` in lower-case letters, digits, and underscores, a `name`, a `reply`, and an
   optional `route`, the way the topic describes as waypoints `[[x, y], ...]` on the campaign's
   overworld, joined by straight lines: at least two, every cell walkable, only in a campaign's
-  dialogue; §8 "Dialogue", Rumoured ways), and
+  dialogue; §8 "Dialogue", Rumoured ways), optional `[[dialogue.word]]`s (at most 9: words the
+  player may say to it, §8 "Dialogue", "Saying words": a `phrase` of 1 to 40 characters with a
+  letter or digit, no two alike once normalised; a `reply` of 1 to 9 lines; an optional
+  `does = { calls, quest, departs }`: `quest` a quest of the dialogue's campaign, `departs` only
+  on a creature type's dialogue, `calls` a calling of the dialogue's campaign), an
+  optional `unheard` (said to words it does not know), an optional `speaks_to` (an alignment
+  range, `{ min, max }` bands as a quest's `requires_alignment`) with the `silent` line it
+  needs (said instead of anything to a character outside it), and
   an optional `mutter = { chance, verb, lines }` (`chance` in percent per action, 1 to 100; `verb`
   one lower-case word, default "mutters"; at least one line). Lines, greetings, topic names, and
   muttered lines are one line of at most 72 characters (they fit the message line with the
@@ -802,6 +811,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   campaign whose giving or completion reaches the rank, or neither (a rank kept for later,
   allowed only after every rank that has one). An unknown material, quest, or master is a
   content error.
+- **Prestige classes and callings** (#876; §8 "Prestige classes"): `data/prestige/`, one file
+  per class, `[[prestige]]` with `id` (never a class's), `name`, `description`, `levels` (1 to
+  60), `hp`, `mana`, `rolls` (default 2), `known_for` (skill ids), `abilities` and
+  `bonus_talents` as a class's at its own levels (checked within `levels`, and against the
+  talents once loaded); `data/prestige/README.toml` has the notes; the Hunter (`hunter.toml`, #881) ships, its one
+  row the talent `spirit_weapon` (`talents/spirit_weapon.toml`: effect `spirit_weapon { to_hit,
+  threat, ignores_protection, phrase }`, `talents/README.toml`). A
+  class file may name `max_level` (2 to the curve's top; default `data/experience.toml`
+  `[levels] class_max`, 60; its table within it). A campaign's `data/callings/`, one file per
+  calling, `[[calling]]` with `class` (a prestige id), `from` (base class ids, each named by one
+  calling of the campaign), `level` (at least each `from` class's `max_level`), and `message`
+  (1 to 160 characters); a calling outside every campaign (`data/callings/`) is a fixture's.
 - **Plurals** (`data/plurals.toml`, and a campaign's `data/plurals.toml`; optional; without it
   every plural is the word and an `s`): the plural dictionary, one `singular = "plural"` line
   per word that does not take a plain `s` (`wolf = "wolves"`, `undead = "undead"`,

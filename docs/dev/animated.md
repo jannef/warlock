@@ -39,8 +39,7 @@ reads it as it reads a kobold, and the guideline and roster tests cover it with 
   shared `data/creatures/` file and before the first campaign's, in body path order, each named
   by its body's file (errors name it). A generated id a creature file uses is the duplicate-id
   error. Generation draws nothing, so the ids and `Content::fingerprint_for` are the same on
-  every load; adding a body shifts every later id, as adding a creature file does (saves change:
-  the integrator's format bump).
+  every load; adding a body shifts every later id, as adding a creature file does (saves change).
 - **Families** (A3): a tier with `bodies = false` generates one type per level of its
   `levels`, `animated_<tier>_<level>` (`Animated::member`), least first, after the bodies'
   types (tiers in file order). Its name, glyph, colour, rarity, speed and Defence by level
@@ -182,7 +181,7 @@ things"), a special room whose own population is the three families drawn four d
 so Fyrdelf's bottom floor (danger 16, which favours armouries at 20) has them; the **workshop**
 holds the household things of a house's work. Legends and the dev `spawn` place them too. No talents
 of their own: the `animated` system and its Salvager, Unbinder, and Appraiser's eye were cut in
-#773/#774 (animated objects are creatures; their remains are `creature_gear`).
+#773/#774 (animated objects are creatures; their remains fall as any creature's gear does).
 
 ## Tests
 

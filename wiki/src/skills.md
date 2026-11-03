@@ -53,6 +53,10 @@ The passive skills help you more the higher they are:
   never drops below 1).
 - **[Balance](skills.md#skill-balance)** takes some of the slowdown of a heavy load away (see [Burden](burden.md)): a
   [burdened](burden.md#burden-1) master is slowed by a tenth, not a quarter.
+- **[Music](skills.md#skill-music)** makes your [songs](abilities.md#songs) last longer (a
+  degree more at 50, at 100, and every 100 after) and harder for those they are sung against to
+  shake off (+4 to their difficulty at 100, +8 at 200); its two columns in the table below are
+  its ladders. Every song trains it.
 - **[Athletics](skills.md#skill-athletics)** makes you quicker in everything you do, a twentieth at 100 and a tenth at 200
   (it adds to the quickness of [talents](talents.md) such as [Fleet-footed](talents.md#talent-fleet-footed) and [Quick](talents.md#talent-quick); see
   [Burden](burden.md) for the load, which slows you on top of it). It also helps you kick [doors](doors.md)
@@ -107,6 +111,13 @@ The passive skills help you more the higher they are:
   you unseen: +8 to the initiative check at 100, +12 at 200, and when you are
   [surprised](status-effects.md#status-surprised) all the same, your next action loses less time
   (half the extra at 100, three quarters at 200). Every such check trains it.
+- **[Intimidate](skills.md#skill-intimidate)** lets you threaten one foe
+  ([Intimidate](abilities.md#ability-intimidate) in the abilities menu; see
+  [Intimidating](skills.md#intimidating)) and makes your threats and your
+  [War cry](abilities.md#ability-war-cry) (the [berserker](classes.md#berserker)'s) harder to stand
+  against: the Willpower check they ask is 8 harder at 100, 12 at 200 (at most 20). A threat
+  also frightens longer the more it adds. Every threat and every cry trains it, whatever comes of
+  it.
 
 {{#include generated/skill-benefits.md}}
 
@@ -242,6 +253,27 @@ whose purse you lifted unnoticed still trades with you, but cannot pay for what 
 
 You may try as often as you like; someone who caught you stays angry, and that is the price.
 
+## Intimidating
+
+If you are trained in **[Intimidate](skills.md#skill-intimidate)**, **[Intimidate](abilities.md#ability-intimidate)** is in your
+[abilities menu](abilities.md): choose it, then a place you see (the [aiming](controls.md#aiming) cursor), and you
+threaten whoever stands there. It must be a [creature](creatures.md) hostile to you, within reach, with a heart to
+quail: not a skeleton, a spirit, or an animated thing (those without [vitals](combat.md#criticals)). Otherwise it is
+refused and takes no time. A threat takes a turn and is spoken aloud: those about you
+[hear](hearing.md) a voice.
+
+It is [War cry](abilities.md#ability-war-cry)'s check at one foe. If it hears you and sees you, it rolls 2d12 plus its
+[Willpower](stats.md#stat-willpower) [modifier](stats.md#modifiers) against the difficulty below plus your
+[Strength](stats.md#stat-strength) modifier plus what your Intimidate adds (the benefits table above); short of it, it
+is [frightened](status-effects.md#status-frightened) and runs from you, a few moments a degree. How many degrees
+depends on your skill: a little Intimidate frightens a foe for a moment, a great deal as long as a
+war cry does. A foe that does not hear or see you pays you no heed, and the turn is spent all
+the same.
+
+{{#include generated/intimidating.md}}
+
+You may threaten as often as you like; every threat trains Intimidate, whatever comes of it.
+
 ## Treating yourself
 
 If you are trained in **[Heal](skills.md#skill-heal)** ([priests](classes.md#priest), [witches](classes.md#witch), [druids](classes.md#druid), and [paladins](classes.md#paladin) are), **[Heal](abilities.md#ability-heal)** is in your
@@ -273,7 +305,7 @@ always fails and a roll of 24 always works.
 
 ## Foraging
 
-If you are trained in **[Survival](skills.md#skill-survival)** ([barbarians](classes.md#barbarian), [druids](classes.md#druid), [rangers](classes.md#ranger), and [lizardfolk](races.md#race-lizardfolk) are),
+If you are trained in **[Survival](skills.md#skill-survival)** ([berserkers](classes.md#berserker), [druids](classes.md#druid), [rangers](classes.md#ranger), and [lizardfolk](races.md#race-lizardfolk) are),
 **[Forage](abilities.md#ability-forage)** is in your [abilities menu](abilities.md): choose it, and you spend a while searching
 the land around you for something to eat. You can forage only in the wild: on the
 [overworld](overworld.md), on open land, in woods, on the hills, or in the marshes, or in the

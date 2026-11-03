@@ -24,19 +24,26 @@ kit = [
     "bread",
     "gold_coin*30",
 ]
-# Bonus talents from Scholar and Delver.
-bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["scholar", "delver"] }
-# The level table (spec §8 "Class abilities"). Lore and Fast healer are the Scholar and Vigour
-# talents, given (#790: a table names the pickable, never a clone). Inspire moves onto an
-# Inspiration pool with the alternative resources (#225).
+# The bard's levels end at 30 (the bard design §5): experience past it still counts and buys
+# nothing until a calling opens a prestige class (the Hunter), when the levels banked come at once.
+max_level = 30
+# Bonus talents from any tree (the bard design's Q13), on the halved cadence.
+bonus_talents = { levels = [5, 10, 15, 23, 28] }
+# The level table (spec §8 "Class abilities"), every ability by 30 (the bard design §5: the old
+# 1, 6, 12, 18, 25, 32, 40, 50, 60 halved). Fast healer is the Vigour talent, given (#790: a
+# table names the pickable, never a clone). Inspire is a song paid in Inspiration (#870).
+# Travelled hands takes Blessing's place (Blessing is a priest's abjuration, off the bard's
+# schools). Jack of all trades comes in two ranks: every skill taken up at 12, every skill 5
+# higher at 25 (#872). The Lullaby, the song against foes, at 20 (#873).
 abilities = [
-    { level = 1, talent = "lore" },
     { level = 1, talent = "mend" },
     { level = 1, talent = "trained_wind" },
-    { level = 6, talent = "blessing" },
-    { level = 12, talent = "fast_healer" },
-    { level = 18, talent = "inspire" },
-    { level = 25, talent = "jack_of_all_trades" },
-    { level = 32, talent = "throw_voice" },
-    { level = 60, talent = "virtuoso" },
+    { level = 3, talent = "travelled_hands" },
+    { level = 6, talent = "fast_healer" },
+    { level = 9, talent = "inspire" },
+    { level = 12, talent = "jack_of_all_trades" },
+    { level = 16, talent = "throw_voice" },
+    { level = 20, talent = "lullaby" },
+    { level = 25, talent = "jack_of_all_trades", rank = 2 },
+    { level = 30, talent = "virtuoso" },
 ]

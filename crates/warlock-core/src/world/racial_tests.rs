@@ -98,11 +98,7 @@ fn humans_are_granted_versatile_and_pick_one_more_at_creation_and_at_level_30() 
     assert!(versatile.granted && versatile.race && !versatile.class);
     assert_eq!(picked(&human), 3, "two and Versatile's");
     let bard = kitted("human,other,bard");
-    assert_eq!(
-        picked(&bard),
-        5,
-        "the bard's, Versatile's, and Lore, which the class table gives"
-    );
+    assert_eq!(picked(&bard), 4, "the bard's and Versatile's");
     assert_eq!(creation_count(&CONTENT, &spec("human,other,bard")), 4);
     assert_eq!(creation_count(&CONTENT, &spec("elf,other,bard")), 3);
     let dwarf = kitted("dwarf,male,warrior");
@@ -290,7 +286,7 @@ fn gnomes_tinker_with_traps_and_know_their_gems() {
 
 #[test]
 fn half_orcs_hit_harder_when_badly_hurt_and_have_a_thicker_hide() {
-    let mut w = world("half_orc,male,barbarian");
+    let mut w = world("half_orc,male,berserker");
     let content = w.content().clone();
     let bonus = |w: &World| w.state.player().melee(&content).bonus;
     let max = w.state.player().max_hp(&content);

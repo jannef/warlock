@@ -19,7 +19,7 @@ pool.
 Your most mana is what your [race](races.md) and your [class](classes.md) give, plus what your
 [Intelligence](stats.md#stat-intelligence), [Willpower](stats.md#stat-willpower), and [Presence](stats.md#stat-presence) add: high scores add to it, low ones take from it, and it
 never goes below nothing. [Wizards](classes.md#wizard) and [witches](classes.md#witch) have the most, and [aristocrats](classes.md#aristocrat) oddly much;
-every class gives at least 1 ([warriors](classes.md#warrior), [barbarians](classes.md#barbarian), [thieves](classes.md#thief), [commoners](classes.md#commoner), and [craftspeople](classes.md#craftsperson) no
+every class gives at least 1 ([warriors](classes.md#warrior), [berserkers](classes.md#berserker), [thieves](classes.md#thief), [commoners](classes.md#commoner), and [craftspeople](classes.md#craftsperson) no
 more), and only [elves](races.md#race-elf), [gnomes](races.md#race-gnome), [half-elves](races.md#race-half-elf), [halflings](races.md#race-halfling), and [humans](races.md#race-human) have any of their race's.
 
 {{#include generated/mana.md}}
@@ -71,7 +71,7 @@ three pieces of 20 % and the talent still take only 50 %, so 10 becomes 5. It wo
 item you have not identified, and stops when you take it off. This cut comes last, after
 everything else that changes a spell's or a rod's cost (see
 [What a spell costs](magic.md#what-a-spell-costs)), and it is the one for every ability that
-costs mana: spells, [rods](magic.md#rods), *[Inspire](abilities.md#ability-inspire)*, a summoning.
+costs mana: spells, [rods](magic.md#rods), a summoning.
 
 The talent *[Blood magic](talents.md#talent-blood-magic)* gives you an ability (in the [abilities menu](abilities.md#the-abilities-menu)) that turns 5 of your [hit
 points](combat.md#hit-points) into 3 mana at once, for the time of a wait. It never takes your last [hit point](combat.md#hit-points) (with 5

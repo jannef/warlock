@@ -39,7 +39,9 @@
 //!   their school's and caster style's ranks, the talents' and items' hooks, nothing holding the
 //!   roll; beside it the same roll at rank 0 (the ladder alone). The ranks are not set by level:
 //!   each level's days are cast through `World::practise`, a pool a day (`schools`), so the pace
-//!   is the real curve's. No casts to kill: the probe prints the roll and the pool.
+//!   is the real curve's. No casts to kill: the probe prints the roll and the pool. The
+//!   priest's prayer (#886, `world/orison.rs`) has no roll: a line a level says its name and
+//!   what one prayer answers (`World::prayer_state`).
 //!
 //! - **Sneak attacks** (#688): the thief's first blow on a foe unaware of them against its
 //!   plain blow. Its Sneak attack skill is set by level (`sneak_value`), as it rises by use and
@@ -47,11 +49,20 @@
 //!   the talents), the foe flat-footed (`World::flat_footed`), Master thief's threat
 //!   (`TalentMods::ambush_threat`), and no dice on a type without vitals (`Content::has_vitals`).
 //!
-//! Not modelled: triggered and active weapon abilities, stances, talents chosen for a build
+//! - **Rage** (#842): the berserker, calm and raging (`rage_of`: the pool granted, Raging and
+//!   the stance it forces), and what feeds the pool a round: the foe's blows that `is_hit()`,
+//!   the berserker's criticals, and kills, at the content's and the talents' builds.
+//!
+//! - **Ki** (#846): the ascetic bare-handed (`ki_of`: the hands emptied), with one blow an
+//!   attack and with the flurry's second (`World::flurry`'s profile), the pool's maximum
+//!   (`Actor::resource_max`), and its pace a round (`World::resource_rate`).
+//!
+//! Not modelled: triggered and active weapon abilities, stances (but the rage table's), talents chosen for a build
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
 //! blow, potions, and resistances against spells.
 
 mod schools;
+mod summons;
 mod tables;
 mod training;
 
@@ -125,7 +136,7 @@ struct Build {
     gear: fn(u8) -> Vec<(&'static str, &'static str)>,
 }
 
-const BUILDS: [Build; 5] = [
+const BUILDS: [Build; 7] = [
     Build {
         class: "warrior",
         skills: &[
@@ -181,10 +192,30 @@ const BUILDS: [Build; 5] = [
         fights_with_spells: true,
         gear: witch,
     },
+    // Measured for the rage table alone (#842).
+    Build {
+        class: "berserker",
+        skills: &[("axes", 0), ("great_blades", 0), ("great_weapon", 0)],
+        extras: &[(StatUse::Exerted, 5.0)],
+        casts_a_kill: false,
+        school: None,
+        fights_with_spells: false,
+        gear: berserker,
+    },
+    // Measured for the ki table alone (#846).
+    Build {
+        class: "ascetic",
+        skills: &[("unarmed", 0), ("brawler", 0)],
+        extras: &[(StatUse::Exerted, 3.0)],
+        casts_a_kill: false,
+        school: None,
+        fights_with_spells: false,
+        gear: ascetic,
+    },
 ];
 
 /// The builds the stat training's sweep and the tables before "Spells" measure (the witch is
-/// measured for necromancy alone).
+/// measured for necromancy alone, the berserker for its rage, the ascetic for its ki).
 const MELEE_TABLES: usize = 4;
 
 fn warrior(l: u8) -> Vec<(&'static str, &'static str)> {
@@ -226,6 +257,33 @@ fn warrior(l: u8) -> Vec<(&'static str, &'static str)> {
         g.push(("cloak", "wool_cloak"));
     }
     g
+}
+
+/// The berserker in armour (no unarmoured fantasy, #842): a great axe, the warrior's mail and plate.
+fn berserker(l: u8) -> Vec<(&'static str, &'static str)> {
+    let mut g = vec![("main_hand", "great_axe")];
+    if l >= 5 {
+        g.extend(
+            warrior(l)
+                .into_iter()
+                .filter(|(slot, _)| !matches!(*slot, "main_hand" | "off_hand" | "cloak")),
+        );
+        g.push(("cloak", "fur_cloak"));
+    }
+    g
+}
+
+/// The ascetic bare-handed and unarmoured (#846): gloves, boots, and a cloak from level 5. A kit
+/// that rolled the staff has it taken off where the ki is measured (`ki_of`).
+fn ascetic(l: u8) -> Vec<(&'static str, &'static str)> {
+    if l < 5 {
+        return Vec::new();
+    }
+    vec![
+        ("hands", "leather_gloves"),
+        ("feet", "leather_boots"),
+        ("cloak", "wool_cloak"),
+    ]
 }
 
 fn thief(l: u8) -> Vec<(&'static str, &'static str)> {
@@ -550,6 +608,105 @@ struct Snap {
     /// Its sneak dice (`World::sneak_dice`) and Master thief's lower threat on a sneak attack.
     sneak: Option<Dice>,
     ambush_threat: u8,
+    /// Raging, in plain gear (a class with the Rage ability).
+    rage: Option<Rage>,
+    /// Its ki, bare-handed in plain gear (a class whose Flurry spends ki).
+    ki: Option<Ki>,
+    /// Its prayer's name in the menu and its state, in plain gear (a class that prays): no roll,
+    /// so the spell table prints what it answers.
+    prayer: Option<(String, super::orison::PrayerState)>,
+}
+
+/// A bare-handed player's ki (#846): their side with one blow an attack and with the flurry's
+/// second, the pool's maximum, and the ki that comes back a round.
+#[derive(Clone)]
+struct Ki {
+    single: Side,
+    flurry: Side,
+    max: u16,
+    /// Ki back a round (a normal turn), at its pace.
+    back: f64,
+}
+
+/// Player `id`'s ki in `w`, if their Flurry spends it: their hands emptied, the second blow as
+/// `World::flurry` makes it.
+fn ki_of(w: &World, id: ActorId) -> Option<Ki> {
+    let content = w.content.clone();
+    let cost = (w.state.actors[&id].talent_mods(&content)).flurry_cost?;
+    let ki = cost.resource;
+    let mut w = w.clone();
+    if w.state.actors[&id].weapon_item(&content).is_some() {
+        act(&mut w, "remove:main_hand");
+    }
+    let me = &w.state.actors[&id];
+    assert!(me.weapon_item(&content).is_none(), "bare-handed");
+    let single = side_of(&w, id);
+    let mut second = me.melee(&content);
+    second.to_hit += super::free_blow::FLURRY_TO_HIT;
+    let every = match content.resource(ki).over_time {
+        Some(crate::content::OverTime::Regenerates { every }) => f64::from(every),
+        _ => f64::INFINITY,
+    };
+    let turn = BASE_TURN.as_seconds() as f64;
+    Some(Ki {
+        flurry: Side {
+            off: Some(second),
+            ..single.clone()
+        },
+        single,
+        max: me.resource_max(&content, ki, w.holder_level(id)),
+        back: turn / every * f64::from(w.resource_rate(id, ki)) / 100.0,
+    })
+}
+
+/// A raging player (#842): their side with the frenzy stance and Raging on, the pool as the
+/// Rage ability grants it, and what its builds and decay are worth.
+#[derive(Clone)]
+struct Rage {
+    side: Side,
+    start: u16,
+    max: u16,
+    /// Rage a hit taken (`struck`), a critical of theirs, and a kill build: the data's and the
+    /// talents'.
+    builds: [f64; 3],
+    /// Rage lost a round (a normal turn), at its decay's rate.
+    decay: f64,
+}
+
+/// Player `id`'s rage in `w`, if their talents give them the Rage ability: granted at once (the
+/// dev grant, with its status and the stance it brings).
+fn rage_of(w: &World, id: ActorId) -> Option<Rage> {
+    use crate::content::Build as Event;
+    let content = w.content.clone();
+    let rage = (w.state.actors[&id].talent_mods(&content)).rage?;
+    let mut w = w.clone();
+    act(&mut w, &format!("resource:{}", content.resource(rage).id));
+    let me = &w.state.actors[&id];
+    let mods = me.talent_mods(&content);
+    let def = content.resource(rage);
+    let built = |on: Event| {
+        let more: u16 = (mods.resource_builds.iter())
+            .filter(|(r, b, _)| *r == rage && *b == on)
+            .map(|(_, _, n)| *n)
+            .sum();
+        f64::from(def.built_by(on) + more)
+    };
+    let every = match def.over_time {
+        Some(crate::content::OverTime::Decays { every }) => f64::from(every),
+        _ => f64::INFINITY,
+    };
+    let turn = BASE_TURN.as_seconds() as f64;
+    Some(Rage {
+        side: side_of(&w, id),
+        start: me.resources.get(rage).map_or(0, |p| p.value),
+        max: me.resource_max(&content, rage, w.holder_level(id)),
+        builds: [
+            built(Event::Struck),
+            built(Event::Critical),
+            built(Event::Kill),
+        ],
+        decay: turn / every * f64::from(w.resource_rate(id, rage)) / 100.0,
+    })
 }
 
 /// Applies action text `text` to `w`.
@@ -682,6 +839,16 @@ fn career(
                 fought_a_day: f64::from(log.fought_casts) / days,
                 sneak: w2.sneak_dice(player),
                 ambush_threat: mods.ambush_threat,
+                rage: (gear == Gear::Plain)
+                    .then(|| rage_of(&w2, player))
+                    .flatten(),
+                ki: (gear == Gear::Plain).then(|| ki_of(&w2, player)).flatten(),
+                prayer: (gear == Gear::Plain)
+                    .then(|| {
+                        let title = me.prayer_title(content)?.0.to_string();
+                        Some((title, w2.prayer_state()?))
+                    })
+                    .flatten(),
             });
         }
     }
@@ -725,11 +892,21 @@ fn fight(
     pv: Option<fn(u8) -> i32>,
     rng: &mut Rng,
 ) -> Fight {
+    let sides: Vec<&Side> = snaps.iter().map(|s| &s.side).collect();
+    fight_sides(&sides, monsters, pv, rng)
+}
+
+/// [`fight`] of the players' `sides` (one per seed; a raging side, #842).
+fn fight_sides(
+    sides: &[&Side],
+    monsters: &[&Monster],
+    pv: Option<fn(u8) -> i32>,
+    rng: &mut Rng,
+) -> Fight {
     let mut rows = Vec::new();
     for m in monsters {
         let mut per = Vec::new();
-        for (s, snap) in snaps.iter().enumerate() {
-            let me = &snap.side;
+        for (s, me) in sides.iter().enumerate() {
             let them = &m.geared[s % m.geared.len()];
             let mut target = them.target.clone();
             if let Some(pv) = pv {
@@ -859,6 +1036,9 @@ fn balance_probe() {
     tables::spells(&p, &mut out);
     tables::school_pace(&p, &mut out);
     tables::sneak_attacks(&p, &mut rng, &mut out);
+    tables::rage(&p, &mut rng, &mut out);
+    tables::ki(&p, &mut rng, &mut out);
+    summons::summons(&p, &mut rng, &mut out);
     tables::stats(&p, &mut out);
     tables::stat_sweep(&p, &mut out);
     println!("{out}");

@@ -8,7 +8,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Strength (St), Dexterity (Dx), Toughness (To; D&D's Constitution), Intelligence (In),
   Willpower (Wi; D&D's Wisdom), and Presence (Pr; D&D's Charisma). More will come (mostly
   magic): the list is one typed definition in core (id, abbreviation, name per stat), and every
-  per-stat value is stored by stat, so a new stat is one entry there (plus a save format bump).
+  per-stat value is stored by stat, so a new stat is one entry there.
   - **Scores** are integers, 10 the average and the default. Every actor has one in each stat:
     a creature from its type, the player from their character (§8 "Character creation") or,
     without one, from the scenario (§7).
@@ -106,7 +106,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     under them by stepping onto it; Intelligence 20), `caught` (caught stealing, by a keeper or
     anyone; Presence 20). Bad luck alone (a hidden trap, a blow, a disease or drain check lost)
     takes nothing. **Talents**: Gourmand and the witch's Cauldron (a fresh corpse's marks
-    twice over, §8 "Hunger"); #787 cut the barbarian's Hard living and the monk's Discipline
+    twice over, §8 "Hunger"); #787 cut the berserker's Hard living and the ascetic's Discipline
     (`no_deed` and `use_marks`), and #791 Hard training (`train_percent` +50) and Late bloomer
     (`ramp_ease`): marks are never shown, so an effect on them is at least ×2 or has a visible
     half beside it. A deed that takes a pile from out of the drop's play (`quarter × |m| < L`, or

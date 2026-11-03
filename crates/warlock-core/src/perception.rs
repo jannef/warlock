@@ -25,7 +25,7 @@
 //! light is at least the vision profile's threshold or it lies within the darkvision radius. The
 //! player's own cell is always visible. The profile is the player's **eyes**: their vision
 //! profile as their talents change it ([`crate::world::WorldState::eyes`]: Night eyes, Dark
-//! adaptation, Owl eyes, Rune sight). Blood scent sees a bleeding creature's cell in line of
+//! adaptation, Rune sight). Blood scent sees a bleeding creature's cell in line of
 //! sight within its radius as darkvision would. A **light-blind** player (their race's
 //! [`LightBlind`](crate::content::LightBlind): drow) whose own cell is lit at least to its
 //! `glare` is dazzled: they see nothing farther than its `sight`.
@@ -264,6 +264,54 @@ pub struct SeenActor {
     /// for everyone otherwise (spec §8 "Surprise and sneak attacks": the unaware mark).
     #[serde(skip)]
     pub unaware: bool,
+    /// It is an ally of the player's (spec §8 "Allies"), which they know by sight.
+    #[serde(skip)]
+    pub ally: bool,
+}
+
+/// One of the player's allies as they know it (spec §8 "Allies"): never a number.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AllyView {
+    pub id: ActorId,
+    pub creature: CreatureId,
+    /// Its type's name.
+    pub name: String,
+    /// How hurt it looks.
+    pub health: Health,
+    pub order: crate::world::Order,
+    pub source: crate::world::AllySource,
+    /// How long its stay has left, if it ends; whole minutes, rounded up.
+    pub lasts: Option<u32>,
+    /// Travelling with the player off any level.
+    pub retinue: bool,
+    /// On the level the player is on, acting.
+    pub here: bool,
+}
+
+/// The player's allies ([`AllyView`]), in actor id order.
+fn allies_of(state: &WorldState, content: &Content) -> Vec<AllyView> {
+    let player = state.player;
+    (state.actors.values())
+        .filter(|a| a.master() == Some(player))
+        .filter_map(|a| {
+            let ally = a.ally.as_ref()?;
+            let lasts = ally.until.map(|until| {
+                let seconds = until.since(state.time).as_seconds();
+                u32::try_from(seconds.div_ceil(60)).unwrap_or(u32::MAX)
+            });
+            Some(AllyView {
+                id: a.id,
+                creature: a.creature,
+                name: content.creature(a.creature).name.clone(),
+                health: a.health(content),
+                order: ally.order,
+                source: ally.source.clone(),
+                lasts,
+                retinue: ally.retinue,
+                here: a.level == state.current_level && !ally.retinue,
+            })
+        })
+        .collect()
 }
 
 /// How a creature looks by what it is made of (spec §8 "Animated objects"): an animated
@@ -458,6 +506,9 @@ pub(crate) struct Perception {
     /// The disguised mimics of the level (`world/mimic.rs`), by position: each is a shut chest to
     /// the player, never an actor, but those Chest-wise sees through.
     disguises: Vec<Disguise>,
+    /// The player's allies, wherever they are (`world/ally.rs`), in actor id order: the player
+    /// knows their own.
+    allies: Vec<AllyView>,
 }
 
 /// A disguised mimic as the snapshot hides it: a shut chest of its level's band at its cell.
@@ -774,6 +825,8 @@ impl Perception {
             .actors
             .values()
             .filter(|a| a.level == level.id && sight.get(a.pos) == Some(&Sight::Seen))
+            // The retinue is with the player, not on the map (`world/ally.rs`).
+            .filter(|a| !a.in_retinue())
             .filter(|a| !hidden(a))
             .collect();
         let mut actors: Vec<SeenActor> = (seen.iter())
@@ -787,6 +840,7 @@ impl Perception {
                 health: a.health(content),
                 shape: shape(a, content),
                 unaware: false,
+                ally: a.master() == Some(state.player),
             })
             .collect();
         // Stalker's eye: which of them have not noticed the player.
@@ -899,6 +953,7 @@ impl Perception {
             images,
             dazzled: dazzled.is_some(),
             disguises,
+            allies: allies_of(state, content),
         }
     }
 
@@ -1122,6 +1177,16 @@ impl<'a> PerceptionView<'a> {
         room.entered.then(|| self.content.room_effect(room.effect))
     }
 
+    /// Whether `p` is hallowed ground (Sanctuary, `world/sanctuary.rs`), and whether the dark
+    /// powers laid it (`Some(true)`: dreaded ground): the player laid it, so they know it where
+    /// they see or remember the cell.
+    pub fn hallow(&self, p: Pos) -> Option<bool> {
+        if matches!(self.cell(p), CellView::Unknown) {
+            return None;
+        }
+        self.level.hallows_at(p, self.time).next().map(|h| h.dark)
+    }
+
     /// The percent of all light a special room keeps at a visible cell (a shadowed room's
     /// darkness, which the player sees; 100 elsewhere), for light that presentation adds of its
     /// own (a burning missile in flight); `None` for cells not in view.
@@ -1150,7 +1215,7 @@ impl<'a> PerceptionView<'a> {
         if matches!(self.cell(p), CellView::Unknown) {
             return None;
         }
-        self.content.level(&self.level.id)?.places.get(&p)
+        self.level.place(self.content, p)
     }
 
     /// The locations the player knows on the overworld, by position, each with its name: the
@@ -1537,16 +1602,30 @@ impl<'a> PerceptionView<'a> {
             .map(|(_, s)| *s)
     }
 
+    /// The shapes a spirit weapon may be called in (the Hunter's Spirit weapon,
+    /// `use:spirit_weapon:ID`): every melee weapon there is, by weapon skill then id. They are
+    /// the game's objects, nothing of the run.
+    pub fn weapon_shapes(&self) -> Vec<ObjectId> {
+        crate::world::weapon_shapes(self.content)
+    }
+
     /// The player's abilities, in menu order (grouped by source, [`crate::ability`]), each with
     /// why it cannot be used now, if it cannot: what the abilities menu (#156) lists. They know
     /// what they can do and what they hold.
     pub fn abilities(&self) -> Vec<OwnAbility> {
         let here = Ability::here(self.level, self.content, self.player.pos);
+        let orders = Ability::orders(!self.snapshot.allies.is_empty());
+        let allies_here = self.snapshot.allies.iter().any(|a| a.here);
         (Ability::of(self.player, self.content).into_iter())
             .chain(here)
+            .chain(orders)
             .map(|ability| OwnAbility {
                 ability,
                 unavailable: match ability {
+                    // An order needs someone on the level to hear it (spec §8 "Allies").
+                    Ability::Heel | Ability::Hold | Ability::SetOn if !allies_here => {
+                        Some(crate::ability::Unavailable::NoAllies)
+                    }
                     Ability::Spell(spell) => {
                         crate::ability::spell_unavailable(self.player, self.content, spell)
                     }
@@ -1565,6 +1644,33 @@ impl<'a> PerceptionView<'a> {
                 },
             })
             .collect()
+    }
+
+    /// The name the abilities menu gives `ability`: its own, but the priest's prayer by its
+    /// highest tier as the face that answers them gives it ("Orison", "Whisper"; they know their
+    /// band and their own talents).
+    pub fn ability_name(&self, ability: Ability) -> std::borrow::Cow<'a, str> {
+        match ability {
+            Ability::Class(crate::content::ClassActive::Orison) => {
+                match self.player.prayer_title(self.content) {
+                    Some((name, _)) => name.into(),
+                    None => ability.name(self.content),
+                }
+            }
+            _ => ability.name(self.content),
+        }
+    }
+
+    /// What the abilities menu says `ability` does: its own line, but the priest's prayer's
+    /// that of its highest tier.
+    pub fn ability_description(&self, ability: Ability) -> &'a str {
+        match ability {
+            Ability::Class(crate::content::ClassActive::Orison) => {
+                (self.player.prayer_title(self.content))
+                    .map_or_else(|| ability.description(self.content), |(_, d)| d)
+            }
+            _ => ability.description(self.content),
+        }
     }
 
     /// The spells the player knows (spec §8 "Spells": learned, or their class gives them), in
@@ -1717,12 +1823,22 @@ impl<'a> PerceptionView<'a> {
     pub fn own_experience(&self) -> Progress {
         let rules = self.content.experience();
         let factor = Factor::of(self.content, self.character.map(|c| &c.spec));
-        let level = rules.level_for(self.experience, factor);
+        // The level stops at the classes' cap (spec §8 "Prestige classes"): no next level
+        // there, as at the curve's top.
+        let cap = (self.character).map_or(rules.class_max(), |c| c.level_cap(self.content));
+        let level = rules.level_for(self.experience, factor, cap);
         Progress {
             level,
             xp: self.experience,
-            next: (level < rules.max_level()).then(|| rules.threshold_for(level + 1, factor)),
+            next: (level < cap).then(|| rules.threshold_for(level + 1, factor)),
         }
+    }
+
+    /// The level whose choices the level-up screen spends now: the first due's, else the
+    /// player's own (the class of that level sets the rolls and the bonus trees, spec §8
+    /// "Prestige classes").
+    fn due_level(&self) -> u8 {
+        (self.due()).map_or_else(|| self.own_experience().level, |d| d.level)
     }
 
     /// The choices a level still asks of the player (spec §8 "Talents"), if any: the level and
@@ -1734,7 +1850,7 @@ impl<'a> PerceptionView<'a> {
     /// Where a level's skill rolls come from now (spec §8 "Skills"): the level-up screen names
     /// it (the owner's call: numbers on that screen).
     pub fn roll_count(&self) -> RollCount {
-        world::roll_count(self.content, self.player, self.character)
+        world::roll_count(self.content, self.player, self.character, self.due_level())
     }
 
     /// What a level-up roll on trained skill `skill` would be: the dice and what set them (the
@@ -1755,12 +1871,11 @@ impl<'a> PerceptionView<'a> {
         &self.progress.due
     }
 
-    /// The trees a bonus pick is of (the player's class's `bonus_talents`); `None`: any.
+    /// The trees the bonus pick due now is of (the `bonus_talents` of the class of the level
+    /// that brought it); `None`: any.
     pub fn bonus_trees(&self) -> Option<Vec<TreeId>> {
-        let class = self
-            .character
-            .and_then(|c| self.content.class(&c.spec.class));
-        class.and_then(|c| c.bonus_trees(self.content.talents()))
+        let (table, _) = self.character?.class_of(self.content, self.due_level())?;
+        table.bonus_trees(self.content.talents())
     }
 
     /// Whether the player's own bursts spare them (spec §8 "Talents": Scroll savant), so a
@@ -1781,10 +1896,13 @@ impl<'a> PerceptionView<'a> {
     pub fn own_talents(&self) -> Vec<OwnTalent> {
         let book = self.content.talents();
         let level = self.own_experience().level;
-        let class = (self.character)
-            .and_then(|c| self.content.class(&c.spec.class))
-            .map(|c| c.abilities_to(book, level))
-            .unwrap_or_default();
+        // The class abilities held: every table's (the prestige class's too), to its level.
+        let class: Vec<crate::content::TalentId> = (self.character)
+            .map(|c| c.class_levels(self.content, level))
+            .unwrap_or_default()
+            .into_iter()
+            .flat_map(|(table, own)| table.abilities_to(book, own))
+            .collect();
         // The rising is spent once it is used up: the first with no Second rising, else both.
         let risen = self.progress.happened(crate::world::RISEN);
         let twice = self.progress.happened(crate::world::RISEN_TWICE);
@@ -1989,6 +2107,18 @@ impl<'a> PerceptionView<'a> {
     /// and fight worse. Only that it does, never how much.
     pub fn dazzled(&self) -> bool {
         self.snapshot.dazzled
+    }
+
+    /// The player's allies (spec §8 "Allies"), wherever they are, in actor id order.
+    pub fn allies(&self) -> &[AllyView] {
+        &self.snapshot.allies
+    }
+
+    /// How many allies are with the player: on their level or in their retinue.
+    pub fn allies_with(&self) -> usize {
+        (self.snapshot.allies.iter())
+            .filter(|a| a.here || a.retinue)
+            .count()
     }
 
     /// The level's ambient light, as the player perceives it.

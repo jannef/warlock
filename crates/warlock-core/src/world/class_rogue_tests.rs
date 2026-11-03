@@ -8,7 +8,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::{Blow, Strike};
-use crate::content::{ClassActive, Factor};
+use crate::content::{ClassActive, ContentFiles, Factor, Role};
 use crate::dump::{self, Layer};
 use crate::noise::{self, Act};
 use crate::replay::Replay;
@@ -113,6 +113,7 @@ fn beside(world: &mut World, creature: &str, hp: i32, dir: Dir) -> ActorId {
         npc: None,
         faction_override: None,
         summoner: None,
+        ally: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),
@@ -153,15 +154,85 @@ fn the_three_tables_come_with_the_levels() {
     reach(&mut t, 18);
     assert!(said(&t).contains(&"You gain Evasion.".to_string()));
     let mut b = world("bard");
-    assert_eq!(
-        class_rows(&b),
-        ["Lore", "Mend", "Trained wind"],
-        "the Scholar's Lore, given"
-    );
-    reach(&mut b, 6);
-    assert_eq!(class_rows(&b), ["Lore", "Mend", "Trained wind", "Blessing"]);
+    assert_eq!(class_rows(&b), ["Mend", "Trained wind"]);
+    reach(&mut b, 3);
+    assert_eq!(class_rows(&b), ["Mend", "Trained wind", "Travelled hands"]);
     let restored = World::from_state(b.content().clone(), b.state().clone()).expect("restored");
     assert_eq!(class_rows(&restored), class_rows(&b));
+}
+
+#[test]
+fn travelled_hands_raises_every_weapon_skill_and_style_held_at_nothing_to_one() {
+    let mut b = world("bard");
+    let content = b.content().clone();
+    let table = content.weapon_skills();
+    let rank = |w: &World, id: &str| w.state.player().weapon_skills.rank(table.id(id).expect(id));
+    // The bard starts in short blades and Duelist, nothing else of a fighter's.
+    let held = |w: &World| -> Vec<u8> {
+        (table.ids())
+            .map(|(id, _)| w.state.player().weapon_skills.rank(id))
+            .collect()
+    };
+    let before = held(&b);
+    assert_eq!(rank(&b, "long_blades"), 0);
+    assert_eq!(rank(&b, "marksman"), 0);
+    reach(&mut b, 2);
+    assert_eq!(held(&b), before, "nothing before level 3");
+    reach(&mut b, 3);
+    for ((id, skill), was) in table.ids().zip(&before) {
+        let now = b.state.player().weapon_skills.rank(id);
+        let left = skill.role == Role::School || skill.hidden;
+        match left {
+            // The schools of magic and hidden styles (Two Shields) are no weapon.
+            true => assert_eq!(now, *was, "{} untouched", skill.id),
+            // Every other row at 1 at least; a rank held already is untouched.
+            false => assert_eq!(now, (*was).max(1), "{}", skill.id),
+        }
+    }
+    assert_eq!(rank(&b, "two_shields"), 0);
+    assert!(said(&b).contains(&"You gain Travelled hands.".to_string()));
+    assert!(said(&b).contains(&"Your hands know every weapon a little.".to_string()));
+    // Blessing is no longer the bard's: a priest's spell.
+    assert!(!b.state.player().talents.has("blessing", 1));
+    // The rank is real: a restored run keeps it, and marks carry it on.
+    let restored = World::from_state(content.clone(), b.state().clone()).expect("restored");
+    assert_eq!(rank(&restored, "long_blades"), 1);
+}
+
+#[test]
+fn weapon_ranks_walks_the_content_or_the_rows_it_names() {
+    // A weapon skill the content adds later is the bard's too: the hand-out reads the table.
+    let mut files = ContentFiles::builtin();
+    files.edit_table("weapon_skills", |text| {
+        format!(
+            "{text}\n[[skill]]\nid = \"flails\"\nname = \"Flails\"\nphrase = \"with flails\"\n\
+             role = \"melee\"\ncurve = \"melee\"\nto_hit = [0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7]\n"
+        )
+    });
+    // And a hand-out that names its rows (the Hunter's trade, later) raises only those.
+    files.insert(
+        "data/talents/fixture_trade.toml",
+        "[[talent]]\nid = \"fixture_trade\"\nname = \"Trade\"\ntree = \"class\"\n\
+         granted = true\ndescription = \"x\"\nsystems = [\"weapon_skills\"]\n\
+         effects = [{ kind = \"weapon_ranks\", to = 3, skills = [\"bows\", \"duelist\"] }]\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    let table = content.weapon_skills();
+    let state = world("bard").state().clone();
+    let mut b = World::from_state(content.clone(), state).expect("restores");
+    let flails = table.id("flails").expect("flails");
+    reach(&mut b, 3);
+    assert_eq!(b.state.player().weapon_skills.rank(flails), 1);
+    let mut actor = b.state.player().clone();
+    actor.weapon_skills = Default::default();
+    let book = content.talents();
+    let trade = book.get(book.id("fixture_trade").expect("the fixture"));
+    super::class::hand_out(&content, &mut actor, trade, 1, 1);
+    let ranked: Vec<&str> = (actor.weapon_skills.trained())
+        .filter(|(_, t)| t.rank == 3)
+        .map(|(id, _)| table.skill(id).id.as_str())
+        .collect();
+    assert_eq!(ranked, ["bows", "duelist"]);
 }
 
 #[test]
@@ -373,7 +444,7 @@ fn the_thiefs_skills_give_disarm_pick_lock_and_steal_from_the_first_level() {
 }
 
 #[test]
-fn a_save_holding_a_talent_the_content_no_longer_has_loads_without_it() {
+fn a_save_holding_a_talent_the_content_no_longer_has_is_refused() {
     let w = world("thief");
     let mut state = w.state().clone();
     let player = state.player;
@@ -386,13 +457,14 @@ fn a_save_holding_a_talent_the_content_no_longer_has_loads_without_it() {
     });
     me.talents =
         serde_json::from_value(serde_json::to_value(&talents).expect("json")).expect("talents");
-    let back = World::from_state(BUILTIN.clone(), state).expect("loads");
-    assert!(!back.state.player().talents.has("trapfinding", 1));
-    assert_eq!(class_rows(&back), class_rows(&w));
+    let refused = World::from_state(BUILTIN.clone(), state)
+        .err()
+        .map(|e| e.to_string());
     assert!(
-        (back.retiered().iter()).any(|l| l.contains("talent `trapfinding`")),
-        "{:?}",
-        back.retiered()
+        refused
+            .as_ref()
+            .is_some_and(|e| e.contains("talent `trapfinding`")),
+        "{refused:?}"
     );
 }
 
@@ -574,7 +646,7 @@ fn uncanny_dodge_fast_healer_and_jack_of_all_trades() {
     let mut b = world("bard");
     // Fast healer, the Vigour talent the table gives (Song of rest before #790): resting's pace
     // half again (`healing_rate` reads it).
-    reach(&mut b, 12);
+    reach(&mut b, 6);
     let after = b.state.player().talent_mods(&content).resting_percent;
     // Measured against a twin without it (the level's own pick may move the pace too).
     let mut twin = b.state().clone();
@@ -595,28 +667,118 @@ fn uncanny_dodge_fast_healer_and_jack_of_all_trades() {
         let bonus: Vec<_> = me.skills.iter().map(|(s, _)| (s, 5)).collect();
         me.skills.effect_with(&content, effect, &bonus)
     };
+    // Its first rank (12) takes skills up and adds nothing to them; its second (25) does.
+    reach(&mut b, 12);
     let plain = b.state.player().skills.effect(&content, effect);
     assert_eq!(b.state.player().skill_effect(&content, effect), plain);
+    assert_eq!(b.state.player().talent_mods(&content).trained_skills, 0);
     reach(&mut b, 25);
     assert_eq!(b.state.player().skill_effect(&content, effect), raised(&b));
     assert_eq!(b.state.player().talent_mods(&content).trained_skills, 5);
 }
 
+/// The skills the player is trained in, by id, with their values.
+fn skill_values(w: &World) -> Vec<(String, u16)> {
+    (w.state.player().skills.iter())
+        .map(|(id, t)| (w.content().skill(id).id.clone(), t.value))
+        .collect()
+}
+
 #[test]
-fn inspire_costs_mana_and_virtuoso_sings_longer_for_none() {
+fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_raises_them() {
+    let mut b = world("bard");
+    reach(&mut b, 11);
+    let before = skill_values(&b);
+    assert!(!b.state.player().talents.has("jack_of_all_trades", 1));
+    reach(&mut b, 12);
+    assert_eq!(
+        b.state.player().talents.rank_of("jack_of_all_trades", None),
+        1
+    );
+    let after = skill_values(&b);
+    let content = b.content().clone();
+    for (id, skill) in content.skill_ids() {
+        let had = before.iter().find(|(s, _)| *s == skill.id);
+        let now = after.iter().find(|(s, _)| *s == skill.id).map(|(_, v)| *v);
+        match (skill.id.as_str(), had) {
+            // The thief's alone (the surprise design's decision 7).
+            ("sneak_attack", _) => assert_eq!(now, None, "never Sneak attack"),
+            // A skill held already is not taken up again (the level's rolls may raise it).
+            (_, Some((_, v))) => assert!(now >= Some(*v), "{}", skill.id),
+            // Every other is taken up at 1d4+1.
+            (_, None) => assert!((2..=5).contains(&now.expect("taken up")), "{id:?}"),
+        }
+    }
+    assert!(said(&b).contains(&"You gain Jack of all trades.".to_string()));
+    assert!(said(&b).contains(&"You find you know a little of everything.".to_string()));
+    // The talents layer shows the rank held of two.
+    let rows = dump::layer_rows(&b, Layer::Talents);
+    assert!(
+        rows.iter().any(|r| r == "Jack of all trades 1/2 (class)"),
+        "{rows:?}"
+    );
+    reach(&mut b, 24);
+    let kept = skill_values(&b);
+    reach(&mut b, 25);
+    assert_eq!(
+        b.state.player().talents.rank_of("jack_of_all_trades", None),
+        2
+    );
+    assert!(said(&b).contains(&"Your Jack of all trades grows.".to_string()));
+    // The second rank takes nothing up again: the skills only grow by the level's rolls.
+    assert_eq!(skill_values(&b).len(), kept.len());
+}
+
+#[test]
+fn a_restored_bard_past_both_ranks_is_given_each_and_a_skill_added_later_is_taken_up() {
+    // A skill the content adds later is the bard's too: the hand-out reads the content.
+    let mut files = ContentFiles::builtin();
+    files.edit_table("skills", |text| {
+        format!(
+            "{text}\n[[skill]]\nid = \"juggling\"\nname = \"Juggling\"\n\
+             description = \"Keeping three things in the air.\"\nkind = \"action\"\n"
+        )
+    });
+    let content = Arc::new(Content::load(&files).expect("test content is valid"));
+    let mut b = world("bard");
+    reach(&mut b, 25);
+    let mut state = b.state().clone();
+    let player = state.player;
+    let me = state.actors.get_mut(&player).expect("player");
+    me.talents.forget("jack_of_all_trades");
+    let skills = me.skills.clone();
+    let restored = World::from_state(content.clone(), state).expect("restored");
+    // Both ranks, the first's skills taken up on the way (no news on a restore).
+    let me = restored.state.player();
+    assert_eq!(me.talents.rank_of("jack_of_all_trades", None), 2);
+    assert_eq!(me.talent_mods(&content).trained_skills, 5);
+    let juggling = content.skill_id("juggling").expect("juggling");
+    assert!((2..=5).contains(&me.skills.value(juggling).expect("taken up")));
+    assert!(me.skills.iter().count() > skills.iter().count());
+    // And it is the same run: restoring again takes nothing up twice.
+    let again = World::from_state(content.clone(), restored.state().clone()).expect("again");
+    assert_eq!(
+        again.state().player().skills,
+        restored.state().player().skills
+    );
+}
+
+#[test]
+fn inspire_costs_inspiration_and_virtuoso_sings_longer_for_none() {
     let mut w = world("bard");
     let inspire = Ability::Class(ClassActive::Inspire);
     assert_eq!(own(&w, inspire), None);
-    reach(&mut w, 18);
-    w.player_mut().mana = 2;
-    assert_eq!(own(&w, inspire), Some(Some(Unavailable::NoMana)));
+    reach(&mut w, 9);
+    let pool = w.content().resource_id("inspiration").expect("inspiration");
+    assert_eq!(own(&w, inspire), Some(Some(Unavailable::Short(pool))));
     run(&mut w, "use:inspire");
-    assert_eq!(last(&w), "You have too little mana.");
+    assert_eq!(last(&w), "You have too little inspiration.");
+    w.player_mut().resources.set(pool, 3);
     w.player_mut().mana = 10;
     let turn = w.state.turn;
     run(&mut w, "use:inspire");
-    assert!(w.state.turn > turn, "a chat's time");
-    assert_eq!(w.state.player().mana, 7);
+    assert!(w.state.turn > turn, "a song's time");
+    assert_eq!(w.state.player().mana, 10);
     assert!(suffers(&w, "inspired"));
     let content = w.content().clone();
     let me = w.state.player();
@@ -625,9 +787,9 @@ fn inspire_costs_mana_and_virtuoso_sings_longer_for_none() {
         me.effects.sharpen(&content, profile.clone()).to_hit,
         profile.to_hit + 1
     );
-    reach(&mut w, 60);
-    w.player_mut().mana = 0;
-    assert_eq!(own(&w, inspire), Some(None), "Virtuoso: no mana");
+    reach(&mut w, 30);
+    w.player_mut().resources.set(pool, 0);
+    assert_eq!(own(&w, inspire), Some(None), "Virtuoso: free");
     run(&mut w, "use:inspire");
     assert!(suffers(&w, "inspired_greatly"));
 }
@@ -640,7 +802,7 @@ fn throw_your_voice_is_the_bards_alone() {
     run(&mut w, &format!("throw_voice:{},{}", at.x, at.y));
     assert_eq!(last(&w), "You do not know how to throw your voice.");
     let mut b = world("bard");
-    reach(&mut b, 32);
+    reach(&mut b, 16);
     assert_eq!(own(&b, Ability::ThrowVoice), Some(None));
 }
 

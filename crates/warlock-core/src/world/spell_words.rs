@@ -1,6 +1,7 @@
 //! A spell's numbers in the words the player reads them (the spell scaling design §11, decision
 //! 11: the owner's one exception to hidden numbers, a spell's roll shown as a weapon's is): its
-//! roll with its damage type or "healed" (`4d6 fire`, `3d6 healed`), its reach (`range 11`,
+//! roll with its damage type, "healed", or a summon's "called" (`4d6 fire`, `3d6 healed`,
+//! `1d2 called`), its reach (`range 11`,
 //! `radius 2`), and a reroll (`Your 1s are rolled again.`). The abilities menu, the wand's
 //! description, and the `spells` dump all say them so; built from what the caster has, never a
 //! hidden number of anyone else's.
@@ -31,7 +32,11 @@ impl Actor {
         spell: &SpellData,
         by: CastBy,
     ) -> Option<SpellRoll> {
-        let roll = self.spell_roll(content, spell, by)?;
+        let mut roll = self.spell_roll(content, spell, by)?;
+        // A call brings `ally_mod`'s `count` more (Pack leader), as `cast_summon` adds it.
+        if spell.kind == crate::content::SpellPurpose::Summon {
+            roll = roll.plus(self.talent_mods(content).ally.count);
+        }
         Some(roll_words(content, spell, roll))
     }
 }
@@ -40,10 +45,17 @@ impl Actor {
 pub fn roll_words(content: &Content, spell: &SpellData, roll: Roll) -> SpellRoll {
     let what = match spell.damage_type {
         Some(kind) => content.damage_type(kind).name.as_str(),
+        None if spell.kind == crate::content::SpellPurpose::Summon => "called",
         None => "healed",
     };
+    // A fixed roll is its number ("1 called"), never a bonus's "+1".
+    let shown = if roll.is_fixed() {
+        roll.min().to_string()
+    } else {
+        roll.to_string()
+    };
     SpellRoll {
-        text: format!("{roll} {what}"),
+        text: format!("{shown} {what}"),
         roll,
         damage_type: spell.damage_type,
     }

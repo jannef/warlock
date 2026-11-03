@@ -202,6 +202,9 @@ high (the **overreach**) makes it harder: a roll of 2d12 plus your bonus must re
 every 20 levels of the spells you already know, added up. Your bonus is your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), a tenth of your
 *[Spellcraft](skills.md#skill-spellcraft)* and of your *[Decipher script](skills.md#skill-decipher-script)* (each at most +20), your class's affinity with the
 spell's school, and *[Quick study](talents.md#talent-quick-study)*'s +2. A natural 24 always succeeds and a natural 2 always fails.
+A few spells are harder to learn than their level says: their own difficulty is added to the
+check, and a spell made harder this way is never learned for certain, however high your caster
+level (its overreach then counts as 0). [The spell list](#the-spells) says which, and by how much.
 The game tells you the chance in words: *certain*, *easy*, *a struggle*, or *far beyond you*.
 
 {{#include generated/study-chances.md}}
@@ -238,8 +241,8 @@ to keep. Wands are **never recharged**.
 
 Wands are found unknown, each kind with a look of its own for the whole game ("an oak wand").
 Using one tells you what kind it is, and from then on every wand of that kind shows by its name;
-its **charges** stay unknown until you [identify](magic-items.md#unidentified-items) that wand (the [scroll of identify](scrolls.md#scroll-of-identify), or carrying
-it long enough with *[Lore](talents.md#talent-lore)*). Wands lie in the dungeon and in general stores.
+its **charges** stay unknown until you [identify](magic-items.md#unidentified-items) that wand (the [scroll of identify](scrolls.md#scroll-of-identify), or a [merchant](classes.md#merchant)'s
+[Merchant's eye](talents.md#talent-merchants-eye)). Wands lie in the dungeon and in general stores.
 
 *[Wand mastery](talents.md#talent-wand-mastery)* (Weaponcraft) takes every wand you use a rung up, and [magic items](magic-items.md#suffixes)
 *of Wands* their rungs with it, never past the ladder's last rung. Once you know a wand, its

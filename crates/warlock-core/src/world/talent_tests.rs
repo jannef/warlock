@@ -215,66 +215,6 @@ fn several_levels_at_once_queue_their_picks_and_auto_spends_them_in_order() {
     assert_eq!(last(&w), "You learn Clotting.");
 }
 
-/// A save from before a talent was cut (#774: Gifted, Bellows) loads: the talents the content no
-/// longer has are let go, each said in the log, and the rest are kept.
-#[test]
-fn a_save_naming_a_cut_talent_loads_without_it() {
-    let mut w = world();
-    w.player_mut().talents.take("healthy", None);
-    w.player_mut().talents.take("gifted", Some("strength"));
-    w.player_mut().talents.take("bellows", None);
-    // #787 and #788's: one cut, one merged into Pious, one from creation; #789's capstone.
-    // #790's: three chains, now ranks, and three clones, now the pickables' ids.
-    let merged = [
-        "great_cleave",
-        "weapon_specialization",
-        "breaker",
-        "song_of_rest",
-        "wild_empathy",
-        "divine_health",
-        // #791's: outdoors only, and marks no one sees.
-        "marsh_walker",
-        "woodland_stride",
-        "winters_friend",
-        "hard_training",
-        "late_bloomer",
-    ];
-    for id in ["silver_tongue", "penitent", "favoured_child", "insured"]
-        .into_iter()
-        .chain(merged)
-    {
-        w.player_mut().talents.take(id, None);
-    }
-    let back = World::from_state(w.content().clone(), w.state().clone()).expect("it loads");
-    let held: Vec<&str> = (back.state().player().talents.iter())
-        .map(|t| t.id.as_str())
-        .collect();
-    assert_eq!(
-        held,
-        ["versatile", "healthy"],
-        "the race's grant and the pick"
-    );
-    for id in [
-        "gifted",
-        "bellows",
-        "silver_tongue",
-        "penitent",
-        "favoured_child",
-        "insured",
-    ]
-    .into_iter()
-    .chain(merged)
-    {
-        assert!(
-            back.retiered()
-                .iter()
-                .any(|l| l.contains(&format!("`{id}`"))),
-            "{:?}",
-            back.retiered()
-        );
-    }
-}
-
 #[test]
 fn a_pick_nothing_can_be_spent_on_is_dropped() {
     // Without talents in the content, a level asks for nothing and the player acts on.
@@ -443,9 +383,9 @@ fn each_talent_changes_the_rule_it_names() {
     assert_eq!(player(&w).satiation.expect("hungers").nutrition, fed);
 
     // Quick learner: one skill roll more every level.
-    let rolls = w.level_rolls();
+    let rolls = w.level_rolls(w.player_level());
     take(&mut w, 24, "quick_learner");
-    assert_eq!(w.level_rolls(), rolls + 1);
+    assert_eq!(w.level_rolls(w.player_level()), rolls + 1);
 
     // Alert: notices in passing, 2 better.
     let passive = w.search_modifier(Look::Passive, Hidden::Door(0));

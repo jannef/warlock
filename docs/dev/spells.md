@@ -227,10 +227,8 @@ cast path shares.
     reach a talent adds** is held only by the engine's limits (a cone at `MAX_CONE`): School
     focus on Burning hands is a cone of 4, where S1 held it at its cap of 3. **Trained stats**
     are the ladders' stats (Intelligence when the roll has none): a spell with no reach ladder
-    (Burning hands) no longer trains Willpower by the old default. **An old Potent** is held to
-    the nearest tier's range at the lenient read (`Magic::retier`, for every affix whose value
-    no tier holds: there was no such affix in a save before, and the read had kept the value,
-    which `Magic::check` then refused).
+    (Burning hands) no longer trains Willpower by the old default. **An old Potent** was held to
+    the nearest tier's range at a lenient read until #840 pinned saves to their version.
   - A ray/bolt flies to the first creature on its line; a hex (`ray`, `auto`) keeps the
     placeholder's rule, the creature seen at the cell aimed at.
   - The migrated tiers (#395, history: S1 turned them into levels, §5.8): the lowest tier
@@ -253,7 +251,7 @@ cast path shares.
     the id string (checked against `data/spells/` at load, resolved in `TalentMods::spells`).
     `Content::spells_by_level` is the menu's order (spell level, then path), `Ability::every`'s
     too.
-  - **The list** (26 spells, by spell level, the spell scaling design §5.8): 0 Evil eye, Light
+  - **The list** (29 spells, by spell level, the spell scaling design §5.8): 0 Evil eye, Light
     (self buff: Lit, whose `light` the light cache sheds about the caster; #589, the scroll of
     light's); 1 Mend (touch heal), Ray of frost (ray, attack), Spark (bolt, auto); 3 Barkskin
     (buff), Blessing, Cure wounds (touch heal 2d6), Curse of sloth, Hex of weakness, Magic
@@ -261,7 +259,11 @@ cast path shares.
     necrotic); 6 Arcane bolt, Frost, Identify (#592, below), Sleep (area hex, burst radius 1);
     7 Blight, Scorching ray (ray, attack, 1d6 to 3d6, the design's "one to three rays" as
     dice), Web (area hex); 11 Call lightning, Fireball (2d6 to 3d6), Haste (buff), Lightning
-    bolt (line), Remove disease; 12 Flame. Six costs moved with the levels: Cause wounds 2 → 3,
+    bolt (line), Remove disease; 12 Flame. The druid's calls (#839; summons, `docs/dev/allies.md`
+    "The druid's calls"): 5 Call of the wild, 20 Call of the forest, 35 Call the elements, each
+    with a scroll at the README's convention carried past level 12 (item level about half the
+    spell's: 3, 10, 18; frequency 35, 10, 5; value 100, 320, 500) and a `study_difficulty` (8,
+    10, 12). Six costs moved with the levels: Cause wounds 2 → 3,
     Burning hands 5 → 6, Scorching ray 6 → 7, Web 11 → 13, Blight 14 → 17, Flame 26 → 29. New statuses: `drowsy` (cost 300), `webbed`
     (blocks `step`), `hasted` (cost 75: `COST_PERCENT` is now 50 to 1000, and `spell_def`
     refuses a status below 100 on anything but a buff, so only the caster is hastened and the
@@ -305,9 +307,10 @@ cast path shares.
     (`assets/data/talents/`, `tree = "class"`, `granted`, systems `spells` first), shared by
     the classes that give it. The content test holds every given spell's level at most the
     class's caster level at the level it comes (`level × casting ÷ 100`, at least 1; S1, §5.6),
-    a full caster to a cantrip (level 0 or 1) at 1 and four to six spells, and the others to at
+    a full caster to a cantrip (level 0 or 1) at 1 and three to six spells (the priest's three:
+    their rite is the Orison, `docs/dev/prayer.md`), and the others to at
     most two boons of level 5 or less. Every class has `mana`
-    at least 1 (the barbarian and the warrior gained theirs); races keep their own.
+    at least 1 (the berserker and the warrior gained theirs); races keep their own.
   - **Choices** (design §14, the defaults): q1, q2, q3, q5, q7 as above (interrupted study
     keeps the scroll; Dexterity aims; no talent lifts a cap (since S1 there is none); `force` and `necrotic` stay; Scroll savant
     never keeps a studied scroll); q4: the casting percents as §3 and the guaranteed lists as
@@ -372,12 +375,15 @@ cast path shares.
     scroll used up (`use_scroll`, never Scroll savant's keeping: §14 q7, decided no), then the check.
   - **Odds** (`study_odds(actor, content, character, caster_level, spell) -> Odds`, pure;
     `World::player_study_odds`): `Odds::overreach` = the spell's level − the caster level; at 0
-    or less `check: None` (certain, no draw); else `(bonus, difficulty)`: Intelligence
+    or less `check: None` (certain, no draw), unless the spell's `study_difficulty`
+    (`SpellData::study_difficulty`, −20 to 40, default 0; the owner's Q7 of #828: the calls'
+    scrolls are very hard to learn) is above 0, which makes it a check at any caster level with
+    the overreach counted as at least 0; else `(bonus, difficulty)`: Intelligence
     modifier + `skill_effect(Effect::Study)` + the class's affinity with the school +
     `TalentMods::study_bonus`, against `StudyRules::difficulty(overreach′, known levels)`, where
     overreach′ is the overreach × (100 + `TalentMods::study_overreach_percent`) / 100, rounded
     down (Overreach's −33), and the known levels `Actor::known_levels`, the sum of the levels
-    of the spells known; the mishap's band reads the plain overreach;
+    of the spells known, then + `study_difficulty`; the mishap's band reads the plain overreach;
     `Odds::ways()` of 144 (`check::ways`). `StudyRules::words` turns ways into "certain",
     "easy", "a struggle", "far beyond you".
   - **Mishaps** (`World::draw_mishap`, `World::mishap`): one `rng.below(total weight)` among
@@ -540,7 +546,7 @@ cast path shares.
   1. **Pools** (the stats the seed rolls, so a +1 or +2 mental modifier; `levelup:auto` may
      take Deep well): wizard 33 / 106 / 254 / 502 at levels 3 / 12 / 30 / 60 (caster level 3,
      14, 36, 72), priest, druid, and witch about 27 / 90 / 216 / 426 (caster level = level),
-     bard and aristocrat 17 / 45–53 / 103–125 / 201–246, monk, paladin, and ranger 9–14 /
+     bard and aristocrat 17 / 45–53 / 103–125 / 201–246, ascetic, paladin, and ranger 9–14 /
      27–50 / 63–122 / 123–242, the 25 % classes 4 / 13 / 31 / 61. A full caster's pool is about
      ten casts of a spell of the caster's own level at every level (the design's aim; the spell
      scaling design §12.4): 106 at level 12 against a level-11 spell's 11 mana, 254 at 30

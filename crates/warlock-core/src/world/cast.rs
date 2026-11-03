@@ -29,7 +29,8 @@
 //!   ([`World::cast_bolt`]); a cone fans out from the caster ([`super::spell::cone_cells`],
 //!   drawn as a burst around the caster over its cells); a ray or a bolt flies to the first
 //!   creature on its line; a touch reaches one cell; a hex falls on the creature the caster sees
-//!   at the cell aimed at; self is the caster. A spell that identifies (Identify) asks for a
+//!   at the cell aimed at; self is the caster (a summon calls creatures about them,
+//!   `summon_spell.rs`). A spell that identifies (Identify) asks for a
 //!   stack the caster carries instead of a cell (`use:identify:c`, [`Action::CastOn`]).
 //! - **Explicit costs**: a spell with its own `mana` (Identify) costs that, armour and talents
 //!   counted, whatever its level ([`crate::content::SpellRules::mana`]).
@@ -311,6 +312,7 @@ impl World {
                 self.say("Nothing happens.");
                 false
             }
+            SpellPurpose::Summon => self.cast_summon(cast, events),
         };
         if let Some((object, kept)) = cast.read.get() {
             if kept && self.state.death.is_none() {
@@ -326,7 +328,7 @@ impl World {
 
     /// Pays for `cast` as it is sure to go off: the caster's mana, or the scroll read (used
     /// up, unless Scroll savant keeps it, and said as read).
-    fn pay_cast(&mut self, cast: &Cast<'_>) {
+    pub(super) fn pay_cast(&mut self, cast: &Cast<'_>) {
         match cast.pay {
             Pay::Mana(mana) => {
                 self.spend_mana(self.state.player, mana);
@@ -368,7 +370,7 @@ impl World {
     /// raises the school abilities' trigger (spec §8 "Weapon abilities": `spell_lands`; the
     /// spell scaling design §8.5) with the cast's school and caster style, for `other` if it
     /// lives. A lookup when nothing has the trigger: no draw.
-    fn spell_landed(
+    pub(super) fn spell_landed(
         &mut self,
         cast: &Cast<'_>,
         other: ActorId,
@@ -1027,23 +1029,23 @@ enum Pay {
 }
 
 /// One cast's settled facts, handed to each kind's code.
-struct Cast<'c> {
-    spell: SpellId,
-    def: &'c SpellData,
+pub(super) struct Cast<'c> {
+    pub(super) spell: SpellId,
+    pub(super) def: &'c SpellData,
     pay: Pay,
     reach: Reach,
     /// The school and the caster style it is cast in (`spell_aim.rs`), decided once before its
     /// kind runs: its marks, a rolling spell's attack and triggers.
     skills: AttackSkills,
-    /// Its roll, harm or healing, at the rung reached with the dice hook applied
-    /// ([`Actor::spell_roll`]); `None` for a spell that rolls nothing.
-    roll: Option<Roll>,
+    /// Its roll, harm, healing, or a summon's count, at the rung reached with the dice hook
+    /// applied ([`Actor::spell_roll`]); `None` for a spell that rolls nothing.
+    pub(super) roll: Option<Roll>,
     /// The roll hook: a die showing this or less is drawn once more.
-    reroll: u32,
+    pub(super) reroll: u32,
     /// The rider hook: statuses laid on everyone its harm reaches.
     riders: Vec<(StatusId, u16)>,
-    /// A buff's or a hex's degrees ([`Actor::spell_degrees`]).
-    degrees: Option<u16>,
+    /// A buff's or a hex's degrees, a summon's minutes ([`Actor::spell_degrees`]).
+    pub(super) degrees: Option<u16>,
     /// A scroll read, once paid: its object, and whether Scroll savant kept it.
     read: Cell<Option<(ObjectId, bool)>>,
     /// What it came to, as its kind fills it ([`World::spell_landed`]), for its marks.

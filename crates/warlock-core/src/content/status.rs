@@ -468,6 +468,8 @@ struct StatusSpec {
     #[serde(default)]
     hides: bool,
     #[serde(default)]
+    flat_footed: bool,
+    #[serde(default)]
     per_action: bool,
     follows: Option<String>,
     wound: Option<WoundSpec>,
@@ -543,7 +545,7 @@ pub struct StatusDef {
     /// What every attack costs the actor while it lasts, in percent of its price, on top of
     /// `cost` ([`COST_PERCENT`]; Walled: 125). Several multiply.
     pub attack_cost: u32,
-    /// The actions refused while it lasts, by their kind (`read`: a raging barbarian cannot
+    /// The actions refused while it lasts, by their kind (`read`: a raging berserker cannot
     /// read); an ability that costs one of them cannot be used.
     pub blocks: Vec<ActionKind>,
     /// A creature suffering it runs from the one who gave it, or from the nearest foe it sees,
@@ -559,6 +561,10 @@ pub struct StatusDef {
     /// perception snapshot shows a shut chest in its place, never it (`world/mimic.rs`). Nothing
     /// ends it but being found out.
     pub hides: bool,
+    /// Its sufferer is flat-footed while it lasts (Surprised, Stunned; spec §8 "Surprise and
+    /// sneak attacks"): its Dexterity and Dodge count nothing toward its Defence, it makes no
+    /// free blow out of its turn, and sneak dice land on it (`world/surprise.rs`).
+    pub flat_footed: bool,
     /// It eases a degree with each action its sufferer takes, instead of with time (Staggered,
     /// Pinned, Light-footed; the combat progression design §6): at one degree it is the next
     /// action's, which is priced with it. One given during an action is not eased by that
@@ -631,6 +637,7 @@ impl StatusDef {
             && !self.flees
             && !self.sleeps
             && !self.hides
+            && !self.flat_footed
             && !self.per_action
             && self.follows.is_none()
             && self.wound.is_none()
@@ -859,6 +866,7 @@ fn resolve(
         flees: spec.flees,
         sleeps: spec.sleeps,
         hides: spec.hides,
+        flat_footed: spec.flat_footed,
         per_action: spec.per_action,
         follows: None,
         wound,

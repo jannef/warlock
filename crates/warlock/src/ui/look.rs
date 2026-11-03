@@ -90,6 +90,13 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let room = (view.room(p))
         .filter(|_| walkable)
         .map(|r| format!("in {}", r.with_article()));
+    // Ground hallowed by Sanctuary: "on hallowed ground" (the dark powers': "on dreaded ground").
+    let hallow = (view.hallow(p).filter(|_| walkable))
+        .map(|dark| format!("on {} ground", if dark { "dreaded" } else { "hallowed" }));
+    let room = match (room, hallow) {
+        (Some(room), Some(hallow)) => Some(format!("{room}, {hallow}")),
+        (room, hallow) => room.or(hallow),
+    };
     let ground = |t| match (&room, view.leads_to(p)) {
         (Some(room), Some(_)) => format!("{}, {room}", named(t)),
         (Some(room), None) => format!("{} {room}", named(t)),
@@ -154,7 +161,10 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                 let name = &content.creature(actor.creature).name;
                 // Its type tells the player how it stands toward them (its faction), and they
                 // see how hurt it is: in words, never in hit points.
+                // An ally of the player's is theirs (spec §8 "Allies"): "Your wolf (unhurt)", or
+                // a named one "(your ally, unhurt)".
                 let stance = match view.stance(actor) {
+                    _ if actor.ally => "",
                     Stance::Hostile => "hostile, ",
                     Stance::Neutral => "",
                 };
@@ -177,16 +187,18 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                 let proper = (actor.dialogue)
                     .and_then(|d| content.dialogue(d).name.as_deref())
                     .or_else(|| warlock_core::content::is_proper(name).then_some(name.as_str()));
+                let ally = if actor.ally { "your ally, " } else { "" };
                 match proper {
                     Some(proper) => format!(
-                        "{proper} ({stance}{health}{effects}){}{gear}, on {}{here}.",
+                        "{proper} ({ally}{stance}{health}{effects}){}{gear}, on {}{here}.",
                         services(content, actor),
                         terrain(t)
                     ),
                     None => format!(
-                        "{} {name}{} ({stance}{health}{effects}){gear}, on {}{here}.",
-                        article(name),
+                        "{} {name}{} ({stance}{health}{effects}){}{gear}, on {}{here}.",
+                        if actor.ally { "Your" } else { article(name) },
                         made_of(content, actor).0,
+                        waits(content, actor),
                         terrain(t)
                     ),
                 }
@@ -227,6 +239,20 @@ fn services(content: &Content, actor: &SeenActor) -> String {
         [] => String::new(),
         [one] => format!(", who {one} for gold"),
         [rest @ .., last] => format!(", who {} and {last} for gold", rest.join(", ")),
+    }
+}
+
+/// ", who waits" after a seen creature's name when its dialogue knows words and offers nothing
+/// else, no topic, service, or wares (the Strange Spirit: "a strange spirit (unhurt), who waits";
+/// docs/design/prestige-classes.md §7); nothing for any other.
+fn waits(content: &Content, actor: &SeenActor) -> &'static str {
+    let Some(dialogue) = actor.dialogue else {
+        return "";
+    };
+    let d = content.dialogue(dialogue);
+    match !d.words.is_empty() && d.topics.is_empty() && d.services.is_empty() && d.offer.is_none() {
+        true => ", who waits",
+        false => "",
     }
 }
 
@@ -478,6 +504,57 @@ mod tests {
         assert_eq!(
             describe(&w.perception(), Pos::new(27, 25), true),
             "Sister Hild (unhurt), who cures and mends for gold, on plank floor in a sanctuary."
+        );
+    }
+
+    /// One who knows words and has nothing else to offer waits (the Strange Spirit,
+    /// docs/design/prestige-classes.md §7); the encounter is forced, whoever the player is.
+    #[test]
+    fn one_with_words_and_nothing_to_ask_waits() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content.clone(), "ascmearc", None).expect("the Ascmearc");
+        let walk = "move:E*7 skip:4h meet:strange_spirit_roads encounter:hail";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            w.apply(&action);
+        }
+        let spirit = content.creature_id("strange_spirit").expect("the spirit");
+        let view = w.perception();
+        let at = (view.actors().iter())
+            .find(|a| a.creature == spirit)
+            .map(|a| a.pos)
+            .expect("hailed, and in sight");
+        let seen = describe(&w.perception(), at, true);
+        assert!(
+            seen.starts_with("A strange spirit (unhurt), who waits, on "),
+            "{seen}"
+        );
+    }
+
+    #[test]
+    fn hallowed_ground_says_so() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let spec: warlock_core::character::CharacterSpec =
+            "human,female,priest".parse().expect("a character");
+        let mut w = World::start_run(
+            content.clone(),
+            "showcase",
+            Some(7),
+            Some(&spec),
+            None,
+            true,
+        )
+        .expect("world");
+        let factor = warlock_core::content::Factor::of(&content, Some(&spec));
+        let need = content.experience().threshold_for(50, factor);
+        let actions = format!("xp:{need} levelup:auto use:sanctuary");
+        for action in warlock_core::action::parse_actions(&actions).expect("actions") {
+            w.apply(&action);
+        }
+        let me = w.player_pos();
+        assert_eq!(w.hallows().len(), 1, "hallowed");
+        assert_eq!(
+            describe(&w.perception(), me, true),
+            "You, on stone floor on hallowed ground."
         );
     }
 
@@ -912,6 +989,23 @@ map = '''
         // The gear line names what it wears and wields, unidentified.
         said.extend([Pos::new(2, 1), Pos::new(4, 1)].map(|p| describe(&view, p, true)));
         insta::assert_snapshot!(said.join("\n"));
+    }
+
+    #[test]
+    fn an_ally_is_yours() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "showcase", None).expect("showcase");
+        for action in warlock_core::action::parse_actions("ally:dire_warg").expect("actions") {
+            w.apply(&action);
+        }
+        let view = w.perception();
+        let ally = (view.actors().iter())
+            .find(|a| a.ally)
+            .expect("the warg beside the player");
+        assert_eq!(
+            describe(&view, ally.pos, true),
+            "Your dire warg (unhurt), on stone floor."
+        );
     }
 
     #[test]

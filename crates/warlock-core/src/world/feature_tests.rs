@@ -1,5 +1,6 @@
 //! A feature of the ground the player arrives on is named (`world/feature.rs`): once per arrival,
-//! before what lies there, never again while they stay; ordinary ground says nothing.
+//! before what lies there, never again while they stay; ordinary ground says nothing. One that
+//! cannot be stood on (a statue) is named, with its place's note, on arriving beside it.
 
 use super::*;
 use crate::action::Rest;
@@ -135,20 +136,85 @@ fn arriving_on_another_level_on_an_altar_names_it() {
     assert_eq!(times(&w, ALTAR), altars + 1);
 }
 
-#[test]
-fn only_walkable_terrain_may_announce() {
+/// A hall with a statue (`S`) with a note, the player north-west of it.
+const HALL: &str = "\
+#######
+#.@...#
+#..S..#
+#.....#
+#######
+";
+
+const STATUE: &str = "There is a worn statue here. Stone, old, and worn smooth where hands have \
+                      touched it. Letters say: hello.";
+
+fn statue_world() -> World {
     let mut files = ContentFiles::builtin();
-    let terrain = include_str!("../../../../assets/data/terrain.toml");
     files.insert(
-        "data/terrain.toml",
+        "levels/test_hall.toml",
         &format!(
-            "{terrain}\n[[terrain]]\nid = \"test_wall_feature\"\nname = \"carved wall\"\nannounce = true\n\
-         walkable = false\ntransparent = false\nglyph = \"#\"\nfg = \"#ffffff\"\n"
+            "name = \"Hall\"\nambient = [120, 120, 120, 0]\nmap = '''\n{HALL}'''\n[legend]\n\
+             \"S\" = {{ terrain = \"statue\", name = \"a figure\", note = \"Letters say: hello.\" }}\n\
+             \"@\" = {{ terrain = \"floor\", spawn = \"player\" }}\n"
         ),
     );
-    let err = Content::load(&files).expect_err("refused").to_string();
-    assert!(
-        err.contains("only walkable terrain may `announce`"),
-        "{err}"
+    files.insert(
+        "scenarios/test_statue.toml",
+        "name = \"T\"\nstart_level = \"test_hall\"\n",
     );
+    let content = Arc::new(Content::load(&files).expect("fixture content is valid"));
+    World::new(content, "test_statue", None).expect("world")
+}
+
+#[test]
+fn a_statue_is_named_with_its_note_on_arriving_beside_it_once() {
+    let mut w = statue_world();
+    // The run starts beside it.
+    assert_eq!(times(&w, STATUE), 1);
+    // Moving from beside it to beside it says nothing more; nor does waiting, nor bumping it.
+    w.apply(&Action::Move(Dir::E));
+    w.apply(&Action::Move(Dir::S));
+    w.apply(&Action::Move(Dir::E));
+    w.apply(&Action::Wait);
+    assert_eq!(times(&w, STATUE), 1);
+    // Off and back beside it: a new arrival.
+    w.apply(&Action::Move(Dir::E));
+    w.apply(&Action::Move(Dir::W));
+    assert_eq!(times(&w, STATUE), 2);
+    // Look mode reads the same note.
+    let place = w.perception().place(Pos::new(3, 2)).expect("named");
+    assert_eq!(place.note.as_deref(), Some("Letters say: hello."));
+}
+
+/// On Fyrdelf's eleventh floor (a generated level), arriving beside the hunter's statue reads
+/// its inscription: the vault's note is stamped into the level's state, and look mode reads it.
+#[test]
+fn the_hunters_statue_on_fyrdelf_reads_its_inscription() {
+    let content = Arc::new(Content::builtin().expect("builtin content"));
+    let mut w = World::new(Arc::clone(&content), "fyrdelf", Some(1)).expect("world");
+    let id = "fyrdelf:11";
+    let template =
+        crate::mapgen::generate(&content, ("ascmearc", w.state.seed), id, None).expect("made");
+    let statue = content.terrain_id("statue").expect("statue");
+    let (at, _) = (template.terrain.iter())
+        .find(|(_, t)| **t == statue)
+        .expect("the statue");
+    super::travel::instantiate_level(&mut w.state, &content, &template);
+    let beside = (Dir::ALL.into_iter())
+        .map(|d| at.step(d))
+        .find(|&p| w.state.actor_at(id, p).is_none())
+        .expect("a free cell beside it");
+    w.state.current_level = id.into();
+    let player = w.player_mut();
+    player.level = id.into();
+    player.pos = beside;
+    w.apply(&Action::Wait);
+    let said: Vec<&str> = (w.messages().iter())
+        .map(|m| m.text.as_str())
+        .filter(|t| t.starts_with("There is a worn statue here."))
+        .collect();
+    assert_eq!(said.len(), 1, "{said:?}");
+    assert!(said[0].contains("LĪF ÆR DĒAÞE"), "{}", said[0]);
+    let place = w.perception().place(at).expect("look mode names it");
+    assert_eq!(place.name, "a hooded figure");
 }

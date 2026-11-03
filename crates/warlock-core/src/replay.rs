@@ -119,6 +119,19 @@ impl Replay {
         text
     }
 
+    /// A warning when another version of the game recorded it. Replays are not pinned as saves
+    /// are (docs/dev/saves.md): they are played in any version, and their state hashes are the
+    /// check.
+    pub fn version_note(&self) -> Option<String> {
+        (self.game_version != crate::GAME_VERSION).then(|| {
+            format!(
+                "recorded by version {}, played by {}",
+                self.game_version,
+                crate::GAME_VERSION
+            )
+        })
+    }
+
     /// A fresh world at the start of this replay.
     pub fn start(&self, content: Arc<Content>) -> Result<World, WorldError> {
         World::start_run(
@@ -230,7 +243,7 @@ mod tests {
 
     #[test]
     fn replays_record_and_reproduce_the_character() {
-        let dwarf: CharacterSpec = "dwarf,other,monk".parse().expect("a character");
+        let dwarf: CharacterSpec = "dwarf,other,ascetic".parse().expect("a character");
         let mut world =
             World::with_character(content(), "showcase", Some(9), Some(&dwarf)).expect("world");
         let mut replay = Replay::new(&world);
@@ -253,7 +266,7 @@ mod tests {
         ));
         // An unknown race is an error, not a silent fallback.
         let mut unknown = parsed;
-        unknown.character = Some("orc,male,monk".parse().expect("a character"));
+        unknown.character = Some("orc,male,ascetic".parse().expect("a character"));
         assert!(matches!(
             unknown.run(content()),
             Err(ReplayError::World(WorldError::Character(_)))
@@ -265,6 +278,12 @@ mod tests {
         let old = r#"{"game_version":"0.3.0","scenario":"showcase","seed":1,"steps":[]}"#;
         let replay = Replay::from_json(old).expect("loads");
         assert_eq!(replay.character, None);
+        // Another version's replay plays (replays are not pinned), with a warning to say.
+        let note = format!(
+            "recorded by version 0.3.0, played by {}",
+            crate::GAME_VERSION
+        );
+        assert_eq!(replay.version_note(), Some(note));
         let world = replay.run(content()).expect("starts");
         assert_eq!(
             world.character().map(|c| c.spec.to_string()).as_deref(),

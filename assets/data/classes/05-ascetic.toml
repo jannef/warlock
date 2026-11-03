@@ -1,0 +1,40 @@
+[[class]]
+id = "ascetic"
+name = "Ascetic"
+description = "A wandering ascetic of the old discipline, body and breath trained as one: quick, enduring, inward-turned."
+stats = { dexterity = "1d3", toughness = 1, willpower = "1d3", presence = -1 }
+hp = 5
+mana = 4
+casting = 50
+experience = 120
+skills = { balance = "2d6+10", initiative = "2d6+10", tumble = "2d6+10", athletics = "2d4+4", concentration = "2d4+4", escape_artist = "2d4+4", listen = "2d4+4" }
+known_for = ["balance", "tumble"]
+optional_skills = { heal = { chance = 25, dice = "2d4" }, stealth = { chance = 20, dice = "2d4" }, swim = { chance = 20, dice = "2d4" } }
+rolls = 2
+weapon_skills = { unarmed = 2, staves = 1 }
+style_choice = [{ brawler = 1 }, { staff_fighter = 1 }]
+# A vow of poverty: a staff or bound hands, alms in copper, and an apple or three.
+kit = [
+    { wield = "quarterstaff", trained = "staff_fighter" },
+    { wear = "leather_gloves", trained = "brawler" },
+    { wear = "wool_cloak" },
+    "apple*3",
+    "copper_coin*7",
+]
+# Bonus talents from Finesse and Vigour.
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["finesse", "vigour"] }
+# The level table (spec §8 "Class abilities"). Martial arts grants the Ki pool Flurry and
+# Quivering palm spend (the ki tricks design).
+abilities = [
+    { level = 1, talent = "martial_arts" },
+    { level = 1, talent = "flurry" },
+    { level = 1, talent = "trained_wind" },
+    { level = 6, talent = "step_of_the_wind" },
+    { level = 12, talent = "stunning_strike" },
+    { level = 18, talent = "patient_defence" },
+    { level = 25, talent = "still_mind" },
+    { level = 32, talent = "purity_of_body" },
+    { level = 40, talent = "diamond_soul" },
+    { level = 50, talent = "quivering_palm" },
+    { level = 60, talent = "perfect_self" },
+]

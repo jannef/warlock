@@ -70,7 +70,21 @@ fn disease_regen(content: &Content, def: &DiseaseDef) -> u16 {
 fn every(seconds: u32) -> String {
     match seconds {
         60 => "a minute".into(),
-        s => format!("every {}", Duration::seconds(u64::from(s)).spoken()),
+        s => format!("every {}", exactly(s)),
+    }
+}
+
+/// A time in words, to the second: `40 seconds`, `2 minutes`, `2 minutes and 30 seconds`.
+fn exactly(seconds: u32) -> String {
+    let d = Duration::seconds(u64::from(seconds));
+    match (seconds / 60, seconds % 60) {
+        (0, _) | (_, 0) => d.spoken(),
+        (m, s) if m < 60 => format!(
+            "{} and {}",
+            Duration::minutes(u64::from(m)).spoken(),
+            Duration::seconds(u64::from(s)).spoken()
+        ),
+        _ => d.spoken(),
     }
 }
 
@@ -162,6 +176,46 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             })
             .map(|o| format!("drinking a {}", o.name)),
     );
+    // The class abilities whose bare-handed blow leaves it (Stunning strike, Quivering palm).
+    causes.extend(
+        (content.talents().iter())
+            .map(|(_, t)| t)
+            .filter(|t| {
+                t.effects.iter().any(|e| match e {
+                    warlock_core::content::TalentEffect::StunningStrike { status: s, .. }
+                    | warlock_core::content::TalentEffect::QuiveringPalm { status: s, .. } => {
+                        content
+                            .status_id(s)
+                            .is_some_and(|s| usize::from(s.0) == status)
+                    }
+                    _ => false,
+                })
+            })
+            .map(|t| format!("a wounding hit of {} (a class ability)", t.name)),
+    );
+    // The songs sung over their hearers (the bard's Lullaby): a check failed.
+    for (_, t) in content.talents().iter() {
+        for e in &t.effects {
+            if let warlock_core::content::TalentEffect::Song {
+                on: warlock_core::content::SongOn::Hearers,
+                status: s,
+                check: Some(stat),
+                difficulty,
+                ..
+            } = e
+                && content
+                    .status_id(s)
+                    .is_some_and(|s| usize::from(s.0) == status)
+            {
+                causes.push(format!(
+                    "hearing {} (a class ability's song) and failing the check: 2d12 + the \
+                     {} modifier against {difficulty} plus the singer's Music",
+                    t.name,
+                    stat.name()
+                ));
+            }
+        }
+    }
     // Being caught unawares (the surprise rules, spec §8 "Surprise and sneak attacks").
     if let Some(rules) = content
         .surprise()
@@ -212,13 +266,11 @@ fn also(content: &Content, def: &StatusDef) -> String {
     if !fighting.is_empty() {
         parts.push(fighting.join(", "));
     }
-    let surprise = content
-        .surprise()
-        .map(|r| content.status(r.status).id.as_str());
-    if surprise == Some(def.id.as_str()) {
+    if def.flat_footed {
         parts.push(
             "flat-footed: Dexterity and Dodge count nothing toward your Defence; no free blow \
-             out of your turn (riposte, opportunist, gatekeeper, a point-blank shot)"
+             out of your turn (riposte, opportunist, gatekeeper, a point-blank shot); sneak \
+             dice land on you"
                 .to_string(),
         );
     }
@@ -325,11 +377,11 @@ pub(super) fn status_effects(content: &Content) -> String {
                 format!(
                     "after {turns} turns ({} each) at most; at once when the holder dies, leaves \
                      your side, or is held or slowed",
-                    Duration::seconds(u64::from(e)).spoken()
+                    exactly(e)
                 )
             }
             Some(e) if def.max == 1 => {
-                format!("after {}", Duration::seconds(u64::from(e)).spoken())
+                format!("after {}", exactly(e))
             }
             Some(e) => format!("a degree {}", every(e)),
             None if def.per_action && def.max == 1 => {

@@ -11,7 +11,7 @@ Scrolls (spec §8 "Scrolls") are objects with a `read` table (`content/scroll.rs
 (`scroll_of_fireball`, `scroll_of_lightning`, `scroll_of_frost`) are spell scrolls too, at a
 rung of their spells' ladders (1, 2, and 0: 3d6, 4d6, 2d6, as they rolled); their `burst` and
 `bolt` readings are gone (a `read` of either kind is refused, naming the `spell` kind and
-`rungs`). **Every scroll is a real spell** (#592): each teaches its spell
+`rungs`). **Every scroll is a real spell** (#592), but the scroll of restoration (below, #887): each teaches its spell
 (`read_tests.rs::every_builtin_scroll_can_be_read` holds every `scroll_of_*` to it); the
 `identify` reading kind is gone, and `scroll_of_identify` is a `spell` scroll of Identify
 (below). `scroll_of_light` casts the cantrip Light (#589: until then it had no `read` and could
@@ -54,6 +54,23 @@ fireball"). The scroll of identify casts Identify through the cast path
 (`World::cast_identify`: refused without the stack or for one already known; then paid, the
 scroll used up, and `World::identify` on the stack named, one place up if the used-up scroll
 stack was before it).
+
+**The scroll of restoration** (#887, the priest design §11) is the one scroll with no spell
+behind it: `read` of kind `cleanse` (`Reading::Cleanse(Cleansing { mends, restores })`; one of
+the two at least, neither with `spell` or `rungs`, nor they on a `spell` reading). `teaches()`
+is `None`, `scroll()` (the `SpellScroll`) is `None`, `range()` and `on_item()` are a cast's
+only, so the read list reads it at once, study refuses it ("There is no spell in ... to
+learn."), a mishap never backfires it, and the aiming mode never sees it. `World::read` sends it
+to `World::read_cleanse` (`world/restore.rs`): refused, no time, with a target or with nothing to
+mend (no stat damage while `mends`, no drained point while `restores`: "There is nothing to
+restore."); otherwise `use_up` (Scroll savant's keep, the Read stat training), `say_read`, then
+`StatDamage::mend_all` and `World::restore_drained` (the temple's `World::mend`, split by the two
+switches), and "You feel your strength return." for each stat that came back. No disease check
+(the temple's "Be cured first." is not a rule here), no stream drawn but Scroll savant's, nothing
+new saved. Adding it moved every label drawn after the scrolls (wands', rods', potions': the
+`identification` stream draws types in id order), hence the screen snapshots' new potion and
+wand words. `read_tests.rs::the_scroll_of_restoration_mends_and_restores`;
+`every_builtin_scroll_can_be_read` expects its refusal on a hale reader.
 
 **Unidentified scrolls** (#393, `scroll_label.rs`): every readable object type (`read`) has a
 label for the run, "a scroll labelled ZUNBAR". `content/scroll_label.rs` reads

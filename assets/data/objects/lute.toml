@@ -1,5 +1,5 @@
-# A bard's lute (data/classes/): music for the road. Playing it waits for the Music skill's
-# use; until then it is carried for the tunes to come.
+# A bard's lute (data/classes/): a bard sings; the lute is for the inn, and for selling when the
+# road is long.
 [[object]]
 id = "lute"
 name = "lute"

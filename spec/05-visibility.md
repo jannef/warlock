@@ -292,8 +292,8 @@ rate or animation.
   The scenario sets the starting profile. The dev action `SetVision` switches it; it takes no game
   time but is recorded in replays like any action. Infravision is deferred.
 - **Effective eyes** (`world/eyes.rs`, `WorldState::eyes`; #239): the profile is the base; the
-  player's talents change it (§8 "Talents": Night eyes halves the threshold, Dark adaptation and
-  Owl eyes add 2 cells of darkvision), and perception reads the result (keeping
+  player's talents change it (§8 "Talents": Night eyes halves the threshold, Dark adaptation adds 2
+  cells of darkvision, to darkvision or low-light eyes), and perception reads the result (keeping
   the base's id and name). Creatures keep their types' profiles.
 - **Objects are seen** where creatures are: on cells in line of sight that are visible (never on
   completed walls). The player's own cell is always visible, so they always know what lies under

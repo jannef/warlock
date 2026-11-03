@@ -156,7 +156,7 @@ pub(super) fn class_spells(content: &Content) -> String {
     );
     for class in classes {
         let mut given: Vec<(u8, &str, u8)> = Vec::new();
-        for (level, talent) in &class.abilities {
+        for (level, talent, _) in &class.abilities {
             let Some(id) = book.id(talent) else {
                 continue;
             };
@@ -251,6 +251,21 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
             format!("ends {}", ends.join(" and "))
         }
         SpellPurpose::Utility => spell.description.clone(),
+        SpellPurpose::Summon => match &spell.effect.summon {
+            Some(call) => {
+                let pool: Vec<&str> = (call.pool.iter())
+                    .map(|&c| content.creature(c).name.as_str())
+                    .collect();
+                format!(
+                    "calls {} of {} to your side for {} minutes, {} at most at once",
+                    call.count,
+                    pool.join(" or "),
+                    call.minutes,
+                    call.most
+                )
+            }
+            None => String::new(),
+        },
     };
     if spell.kind == SpellPurpose::Damage
         && let Some((s, n)) = spell.effect.status
@@ -263,6 +278,13 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
     }
     if spell.open_sky {
         text.push_str("; only under the open sky");
+    }
+    if spell.study_difficulty != 0 {
+        let _ = write!(
+            text,
+            "; {:+} to the difficulty of learning it",
+            spell.study_difficulty
+        );
     }
     text
 }

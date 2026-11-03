@@ -305,13 +305,41 @@ fn events_build_what_is_held_up_to_its_maximum() {
         "a kill builds inspiration"
     );
     assert_eq!(held(&w, "openings"), Some(0), "but not openings");
-    assert_eq!(held(&w, "rage"), Some(12), "nor rage, before Blood frenzy");
+    assert_eq!(held(&w, "rage"), Some(15), "and rage, three a kill");
     w.gain_resource(player, Build::SneakAttack);
     assert_eq!(held(&w, "openings"), Some(1));
     for _ in 0..9 {
         w.gain_resource(player, Build::Kill);
     }
     assert_eq!(held(&w, "inspiration"), Some(5), "never above its maximum");
+}
+
+#[test]
+fn rage_builds_on_hits_taken_criticals_and_kills_but_not_on_hits_dealt() {
+    let mut w = world("hall");
+    let player = w.state.player;
+    run(&mut w, "resource:rage");
+    w.gain_resource(player, Build::Hit);
+    assert_eq!(
+        held(&w, "rage"),
+        Some(12),
+        "a blow of one's own that lands feeds nothing"
+    );
+    w.gain_resource(player, Build::Struck);
+    assert_eq!(held(&w, "rage"), Some(13), "a blow taken, one");
+    w.gain_resource(player, Build::Critical);
+    assert_eq!(held(&w, "rage"), Some(15), "a critical, two");
+    w.gain_resource(player, Build::Kill);
+    assert_eq!(held(&w, "rage"), Some(18), "a kill, three");
+    for _ in 0..3 {
+        w.gain_resource(player, Build::Kill);
+    }
+    assert_eq!(held(&w, "rage"), Some(20), "never above its maximum");
+    let rage = w.content().resource(id(&w, "rage"));
+    assert_eq!(
+        rage.lacking.as_deref(),
+        Some("you have not the rage for it")
+    );
 }
 
 #[test]
@@ -328,15 +356,16 @@ fn a_fight_builds_hits_criticals_being_hit_and_the_kill() {
         for e in &outcome.events {
             if let Event::Attacked {
                 attacker,
-                strike: Some(Strike::Hit { critical }),
+                strike: Some(strike),
                 ..
             } = e
             {
-                if *attacker == player {
+                if *attacker != player {
+                    // Every hit taken, soaked or resisted to nothing too.
+                    struck += u16::from(strike.is_hit());
+                } else if let Strike::Hit { critical } = strike {
                     hits += 1;
                     criticals += u16::from(*critical);
-                } else {
-                    struck += 1;
                 }
             }
         }
@@ -352,7 +381,7 @@ fn a_fight_builds_hits_criticals_being_hit_and_the_kill() {
 
 #[test]
 fn a_class_active_that_costs_a_resource_is_unavailable_without_it_and_spends_it() {
-    let spec: CharacterSpec = "human,male,barbarian".parse().expect("spec");
+    let spec: CharacterSpec = "human,male,berserker".parse().expect("spec");
     let mut w = World::with_character(content(true), "hall", None, Some(&spec)).expect("world");
     let rage = Ability::Class(ClassActive::Rage);
     let focus = id(&w, "focus");

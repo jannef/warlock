@@ -88,7 +88,11 @@ Protection, else the hide) into `attack_message`: "Your sword glances off the ca
 shell.", "Something hits you but does no harm." when an end is unseen. Penetration is
 `ObjectDef::penetration` (weapons and ammunition), set on the profile by `Actor::melee`,
 `off_hand_blow`, `ranged` (launcher plus ammunition), and `thrown`; natural attacks, bashes,
-kicks, and traps have none. Data: objects `protection` (armour worn, never a hand slot or a
+kicks, and traps have none. A spirit weapon (the Hunter's, `world/spirit_weapon.rs::gifts`, read
+in `Actor::melee` and `off_hand_blow` when the stack is `spirit` and the actor has
+`TalentMods::spirit_weapon`) adds its `to_hit`, lowers the threat (never below 3), and sets the
+penetration to `ALL_PROTECTION` (`world/weapon_active.rs`: no soak drawn); the character screen's
+attack then says `pierces armour` (`OwnAttack::pierces`). Data: objects `protection` (armour worn, never a hand slot or a
 shield; `check_protection`) and `penetration`; creatures `natural = { defence, protection,
 name }`. Presentation: `PerceptionView::own_protection` (the character screen's `Pv` beside `Dv`, the
 equipment screen's totals line, the JSON dump's `protection`), the item description
@@ -144,8 +148,11 @@ Free blows (spec §8 "Free blows", #228; design `docs/design/progression.md` §4
 `world/free_blow.rs`. **`World::second_blow(striker, target, Cue)` (`fight.rs`) is the one place
 every blow beyond an attack's first is decided**; a new kind of extra blow is a `Cue` (or a case
 of one) there and a `Free` kind, never a second mechanism. Cues: `First(blow)` (the off hand's or
-Sword and Board's bash, `off_hand_or_bash`, unchanged), `Attacked { parried }` (the end of a
-melee attack: `World::cleave` if the target is gone, else `World::riposte`), `Cleaved` (great
+Sword and Board's bash, `off_hand_or_bash`, unchanged), `Attacked { parried, dodged }` (the end of a
+melee attack: `World::cleave` if the target is gone, else `World::riposte`; `dodged`, a blow
+missed by the target's Dexterity or Dodge, is answered only while the target is Poised, the
+ascetic's Patient defence, `world/ascetic.rs`, #849, and is raised only by `World::attack`, through
+`World::after_melee`: the player's attacks call `after_attack`, never dodged), `Cleaved` (great
 cleave's next), `Leaves` (`World::opportunist`), `Approaches` (`World::gatekeeper`, #267: a
 hostile that steps up beside a gatekeeper, from `World::step_up(id, from)` at the end of
 `ai.rs::creature_steps`, after the trap; each gatekeeper it was not beside before strikes).

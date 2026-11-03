@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+
+
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │   a  Transfixing stare  at a place you see               │
+                    │ Class                                                    │
+                    │ > b  Orison                                              │
+                    │ Spells                                                   │
+                    │   c  Mend               1d4 healed, 1 mana, aimed        │
+                    │ Skills                                                   │
+                    │   d  Decipher script    not usable yet                   │
+                    │   e  Heal               nothing to treat                 │
+                    │   f  Knowledge          not usable yet                   │
+                    │ Weapon skills                                            │
+                    │   g  Shield bash        in a direction                   │
+                    │                                                          │
+                    │ Pray (a cast's time, no mana): what ails you most is     │
+                    │ answered, as far as your prayers reach; for now, your    │
+                    │ wounds. Pray too often and nothing answers a while.      │
+                    │                                                          │
+                    │ a-g or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+
+
+ The Hub  ·  HP 17/17  ·  MP 14/14  ·  Lv 1  ·  08:00  ·  11 Darkening, Year 1444        ? controls

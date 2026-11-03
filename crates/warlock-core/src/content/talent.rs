@@ -9,9 +9,10 @@
 //! behind as the list grows. Without the files there are no talents, and no level asks for one.
 
 use super::affix::Once;
+use super::level::OneOrMany;
 use super::{
     Build, CombatStance, Content, ContentError, ItemKind, MAX_ITEM_LEVEL, MAX_LEVEL, MAX_RANK,
-    MAX_RESOURCE, ResourceId, Role, WeaponSkillId, duplicate_id,
+    MAX_RESOURCE, ResourceId, Role, StatusId, WeaponSkillId, duplicate_id,
 };
 use crate::alignment::Requirement;
 use crate::dice::Dice;
@@ -75,7 +76,7 @@ pub struct SystemDef {
     /// Its talents are still to come: counted and shown, not yet required.
     pub pending: bool,
     /// The fewest talents it may have, when not the bar's (`[coverage]`): a young system that
-    /// ships with one (`creature_gear`, Scavenger).
+    /// ships with one.
     pub min_talents: Option<u32>,
 }
 
@@ -211,8 +212,6 @@ pub enum TalentEffect {
     Dodge { value: i32 },
     /// Natural armour: added to the actor's own, whatever the best item gives.
     Natural { value: i32 },
-    /// Natural armour as `natural`, only while it wears no body armour (Thick hide).
-    NaturalUnarmoured { value: i32 },
     /// Damage added to every melee blow (the main hand's and the off hand's).
     MeleeDamage { value: i32 },
     /// Damage added to every attack it makes while below a third of its hit points (Ferocity).
@@ -221,6 +220,28 @@ pub enum TalentEffect {
     Threat { value: i32 },
     /// A natural 2 on an attack roll (a fumble) is rolled again, once.
     RerollFumble,
+    /// What the holder's allies get (spec §8 "Allies": Beast-bond): to-hit on their attacks
+    /// and Protection, read through their master (`world/ally.rs`); and what the holder's summon
+    /// spells do (`world/summon_spell.rs`): `count` more come every call, a call lasts
+    /// `duration_percent` longer, `lasting` calls stay until slain, `most` more of each call's
+    /// are kept at once.
+    AllyMod {
+        #[serde(default)]
+        to_hit: i32,
+        #[serde(default)]
+        protection: i32,
+        #[serde(default)]
+        count: i32,
+        #[serde(default)]
+        duration_percent: i32,
+        #[serde(default)]
+        lasting: bool,
+        #[serde(default)]
+        most: i32,
+    },
+    /// The summon draw's bias (the owner's Q9 of #828): a creature of a summon spell's pool that
+    /// carries `tag` is `weight` times as likely to come (0: it never comes while another may).
+    SummonBias { tag: String, weight: u32 },
     /// Each melee blow at the creature its last blow was at, in a row (its own turn or the one
     /// before), is +1 to hit more, to `max` (Relentless; `World::streak`); with `damage_every`
     /// (Relentless fury), every that many blows before it in the streak add +1 damage too.
@@ -365,7 +386,7 @@ pub enum TalentEffect {
     /// A meal never leaves it Bloated: what does not fit below Bloated is lost (Gourmand).
     NoBloating,
     /// Hunger never weakens it: Weak, Fainting, and Starving take nothing off its Strength and
-    /// Dexterity (`Actor::penalty`), and it never faints (`World::faint`; Ascetic). Starving
+    /// Dexterity (`Actor::penalty`), and it never faints (`World::faint`; Long fast). Starving
     /// still costs hit points.
     NoHungerWeakness,
     /// A fresh corpse's stat training marks and chances to widen a potential, this percent more
@@ -381,6 +402,29 @@ pub enum TalentEffect {
     /// by them if trained already: rolled once, from the `levels` stream, as the rank is taken
     /// (Apprentice).
     TrainSkill { dice: crate::dice::Dice },
+    /// Handed out once, as the rank is taken or given: every weapon skill and style of
+    /// `skills` (none named: every row of `weapon_skills.toml` but the schools of magic and
+    /// hidden styles, whatever the content holds) held below rank `to` rises to it, its defaults
+    /// with it (Travelled hands; `WeaponSkills::raise_to`). `news` is said when a class table
+    /// gives it.
+    WeaponRanks {
+        to: u8,
+        #[serde(default)]
+        skills: Vec<String>,
+        #[serde(default)]
+        news: Option<String>,
+    },
+    /// Handed out once, as the rank is taken or given: every skill of `skills.toml` the holder
+    /// is not trained in, but those `except` names, is trained at `dice`, rolled from the
+    /// `levels` stream, whatever skills the content holds (Jack of all trades;
+    /// `world/jack.rs`). `news` is said when a class table gives it.
+    TakeUpSkills {
+        dice: crate::dice::Dice,
+        #[serde(default)]
+        except: Vec<String>,
+        #[serde(default)]
+        news: Option<String>,
+    },
     /// Loot it finds (what generated levels hold, what creatures drop) rolls magic and rare this
     /// percent more often: their rarity weights (Treasure hunter).
     LootMagicPercent { value: i32 },
@@ -414,13 +458,9 @@ pub enum TalentEffect {
     QuestGoldPercent { value: i32 },
     /// Prices move this many percent more in its favour (spec §7 "Shops"), before the cap.
     FavourPercent { value: i32 },
-    /// What it buys or sells in a shop is identified.
-    IdentifyTrades,
     /// Temple services cost it half, and a cure also mends a point of each damaged stat
     /// (Pious; `world/service.rs`).
     Pilgrim,
-    /// What a creature it kills drops is identified as it lands (spec §8 "Creature gear").
-    Scavenger,
     /// Item descriptions show what each gem in a thing is worth.
     GemWorth,
     /// A magic item it has carried this many hours since it held the effect is identified.
@@ -651,6 +691,15 @@ pub enum TalentEffect {
     /// suffers its status (Raging) while it lasts; no rage while that or the status it `follows`
     /// into lasts.
     Rage { resource: String },
+    /// The class active War cry: a roar as loud as a howl; every hostile that hears it, sees the
+    /// player, and has vitals rolls Willpower against `difficulty` + the player's Strength
+    /// modifier + their Intimidate; failed, it suffers `severity` degrees of `status` (one that
+    /// `flees`; `world/war_cry.rs`).
+    WarCry {
+        status: String,
+        severity: u16,
+        difficulty: i32,
+    },
     /// Event `on` builds `resource` this much more while it is held, beside what the resource's
     /// own `builds` give (Blood frenzy: 5 rage a kill).
     ResourceBuild {
@@ -684,10 +733,26 @@ pub enum TalentEffect {
     /// The class active Holy radiance: a toggle; while it suffers `status` it sheds light
     /// `light` (an id in `data/lights.toml`).
     Radiance { status: String, light: String },
+    /// The class active Patient defence: a wait, then a degree of `status` (Poised: Dodge up
+    /// and the riposte switched on until the next action; what it costs is the talent's
+    /// `resource`: Ki; `world/ascetic.rs`).
+    PatientDefence { status: String },
     /// The class active Quivering palm: an unarmed blow in a direction; a hit that wounds
     /// leaves the target `severity` degrees of `status` (what it costs is the talent's
     /// `resource`: Ki).
     QuiveringPalm { status: String, severity: u16 },
+    /// The class active Stunning strike (the ascetic's, #848): an unarmed blow in a direction;
+    /// a hit that wounds leaves the target `severity` degrees of `status` (Stunned; what it
+    /// costs is the talent's `resource`: Ki). Quivering palm's blow with another status.
+    StunningStrike { status: String, severity: u16 },
+    /// The class active Step of the wind: a degree of `status` (Light-footed) on the player,
+    /// taking no time (what it costs is the talent's `resource`: Ki; `world/ascetic.rs`).
+    WindStep { status: String },
+    /// The class active Stillness (the ascetic's, on Still mind, #850): every status of
+    /// `statuses` the player suffers ends at once, taking no time (what it costs is the talent's
+    /// `resource`: Ki; `world/ascetic.rs`). `name` is the abilities menu's, as the talent that
+    /// carries it has a passive name of its own.
+    Stillness { name: String, statuses: Vec<String> },
     /// The active Blaze (a birth sign's, spec §8 "Birth sign"): a burst of `radius` around the
     /// player that does `damage` of kind `damage_type` (an id in `data/damage_types.toml`) to
     /// every creature it reaches but them, melts the ice it reaches, and sets each cell it
@@ -807,6 +872,8 @@ pub enum TalentEffect {
     DigPercent { value: i32 },
     /// Its blows with a two-handed weapon cost this percent more (negative: cheaper).
     TwoHandedPrice { value: i32 },
+    /// Its melee attacks cost this percent more (negative: cheaper; Blood frenzy while raging).
+    AttackPricePercent { value: i32 },
     /// A critical it confirms in melee leaves the target suffering `status` (one degree).
     CriticalStatus { status: String },
     /// A creature it hits in melee suffers `status` (one degree, caused by it), and is held by
@@ -855,7 +922,7 @@ pub enum TalentEffect {
     SpeedPercent { value: i32 },
     /// Its steps cost this percent more (negative: cheaper), only while it wears no body armour
     /// (if `unarmoured`), is Unburdened (if `unburdened`), and holds no shield (if `no_shield`):
-    /// Fast movement, Fleet.
+    /// Fleet; Headlong, while raging.
     StepPercent {
         value: i32,
         #[serde(default)]
@@ -959,27 +1026,89 @@ pub enum TalentEffect {
     /// Each second blow of its flurry spends `cost` of `resource`; holding less, it strikes
     /// none (Flurry, on Ki).
     FlurryCost { resource: String, cost: u16 },
+    /// A missile (a shot, a throw, a trap's) that would hit it while its hands hold no weapon
+    /// and no shield spends `cost` of `resource` by itself and misses; holding less, it hits
+    /// (Diamond soul's catch, on Ki; `world/ascetic.rs`).
+    CatchMissiles { resource: String, cost: u16 },
     /// The class active Volley: `shots` shots at a cell for the price of one (what it costs is
     /// the talent's `resource`, if anything).
     Volley { shots: u8 },
-    /// The class active Inspire: it suffers `status` (Inspired), for `mana` mana; or, while it
-    /// holds `cost` of `resource` (Inspiration), for those in place of the mana.
-    Inspire {
+    /// A song (spec §8 "Class abilities", the bard's songs; `world/song.rs`): class active `id`
+    /// (`use:inspire`), sung aloud. Who it is `on` suffers `severity` degrees of `status`, and the
+    /// singer's Music's `song_degrees` more; it costs **one** thing, `cost` of `resource`
+    /// (Inspire's 3 Inspiration) or `mana`. A song on its hearers asks each hostile one a
+    /// `check` of that stat against `difficulty` plus the singer's `song_craft` (the Lullaby's,
+    /// #873).
+    Song {
+        id: String,
+        on: SongOn,
         status: String,
-        mana: i32,
+        #[serde(default = "one_degree")]
+        severity: u16,
         #[serde(default)]
         resource: Option<String>,
         #[serde(default)]
         cost: u16,
+        #[serde(default)]
+        mana: i32,
+        #[serde(default)]
+        check: Option<Stat>,
+        #[serde(default)]
+        difficulty: i32,
     },
-    /// Inspire gives `status` instead, and costs no mana (Virtuoso).
+    /// Every song costs nothing and gives a degree more; a song on the singer gives `status`
+    /// instead (Virtuoso: Inspired greatly).
     Virtuoso { status: String },
     /// The class active Consecrate: `time` (a duration) of prayer, for `mana` mana, lifts an
     /// unholy special room (or a whole level's unholy effect) for good (`world/consecrate.rs`).
     Consecrate { mana: i32, time: String },
+    /// Communion with the dark (the priest design §6.3, `world/dark_face.rs`): standing in an
+    /// unholy place, its prayers add no strain and the place's status never touches it. A
+    /// band-gated passive: outside its talent's `alignment` it does nothing.
+    Communion,
+    /// The class active Sanctuary: `time` (a duration) of a kneeling rite, for `mana` mana,
+    /// hallows the ground within `radius` of the player for `lasts`: no hostile sets foot in it,
+    /// and those in it heal and regain mana `regen` percent as fast (`world/sanctuary.rs`).
+    Sanctuary {
+        mana: i32,
+        time: String,
+        radius: u8,
+        lasts: String,
+        regen: u16,
+    },
+    /// The priest's prayer (the class active Orison, `world/orison.rs`; `data/prayer.toml`):
+    /// a prayer talent of `tier` (1 to 5, its `title` for each face) or a use added between
+    /// them; `uses` it may answer, `answers` problems a prayer (the largest held), `all` every
+    /// problem and every pool at once. The tier-1 talent carries the ability.
+    Prayer {
+        #[serde(default)]
+        tier: Option<u8>,
+        #[serde(default)]
+        title: Option<super::Faced>,
+        #[serde(default)]
+        uses: Vec<super::PrayerUse>,
+        #[serde(default)]
+        answers: Option<u8>,
+        #[serde(default)]
+        all: bool,
+    },
     /// The class active Knock: for `mana` mana, the lock of the locked door or chest in a
     /// direction springs open (`world/knock.rs`; spec §8 "Chests").
     Knock { mana: i32 },
+    /// The class active Merchant's eye: a stack the player carries is identified, for the time of
+    /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
+    MerchantsEye,
+    /// The class active Spirit weapon: a melee weapon of spirit-stuff called into the hand in a
+    /// shape chosen (`world/spirit_weapon.rs`; spec §8 "Prestige classes"), which strikes
+    /// `to_hit` surer, threatens `threat` lower, and ignores all Protection if
+    /// `ignores_protection`; `phrase` is its description's power line.
+    SpiritWeapon {
+        to_hit: i32,
+        threat: u8,
+        #[serde(default)]
+        ignores_protection: bool,
+        phrase: String,
+    },
 }
 
 /// One degree: a cooldown's default.
@@ -1033,6 +1162,17 @@ pub enum FreeBlowTrigger {
     Gatekeeper,
 }
 
+/// Whom a song is sung on ([`TalentEffect::Song`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SongOn {
+    /// The singer suffers its status (Inspire).
+    #[serde(rename = "self")]
+    Singer,
+    /// Every hostile creature that hears it checks against it (the Lullaby, #873).
+    Hearers,
+}
+
 impl TalentEffect {
     /// The birth sign's active it is, if it is one (spec §8 "Birth sign").
     pub fn sign_active(&self) -> Option<super::SignActive> {
@@ -1052,21 +1192,72 @@ impl TalentEffect {
         use super::ClassActive as A;
         Some(match self {
             TalentEffect::Rage { .. } => A::Rage,
+            TalentEffect::WarCry { .. } => A::WarCry,
             TalentEffect::VeteransWind { .. } => A::VeteransWind,
             TalentEffect::Whirlwind => A::Whirlwind,
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
             TalentEffect::Smite { .. } => A::Smite,
             TalentEffect::Radiance { .. } => A::HolyRadiance,
+            TalentEffect::PatientDefence { .. } => A::PatientDefence,
+            TalentEffect::StunningStrike { .. } => A::StunningStrike,
             TalentEffect::QuiveringPalm { .. } => A::QuiveringPalm,
+            TalentEffect::WindStep { .. } => A::StepOfTheWind,
+            TalentEffect::Stillness { .. } => A::Stillness,
             TalentEffect::Volley { .. } => A::Volley,
             TalentEffect::Lurk { .. } => A::Lurk,
             TalentEffect::LowBlow => A::LowBlow,
             TalentEffect::Finisher => A::MasterThief,
-            TalentEffect::Inspire { .. } => A::Inspire,
+            TalentEffect::Song { id, .. } => return A::from_id(id).filter(|a| a.sings()),
             TalentEffect::Consecrate { .. } => A::Consecrate,
+            TalentEffect::Sanctuary { .. } => A::Sanctuary,
+            TalentEffect::Prayer { tier: Some(1), .. } => A::Orison,
             TalentEffect::Knock { .. } => A::Knock,
+            TalentEffect::MerchantsEye => A::MerchantsEye,
+            TalentEffect::SpiritWeapon { .. } => A::SpiritWeapon,
             _ => return None,
         })
+    }
+
+    /// The name of the class active it is, where that is not its talent's (Stillness, on Still
+    /// mind).
+    pub fn active_name(&self) -> Option<&str> {
+        match self {
+            TalentEffect::Stillness { name, .. } => Some(name),
+            _ => None,
+        }
+    }
+
+    /// Whether it is a passive that works only within its talent's `alignment` bands (Communion
+    /// with the dark; `docs/dev/alignment.md`), as a holy active's gift does.
+    pub fn band_gated(&self) -> bool {
+        matches!(self, TalentEffect::Communion)
+    }
+
+    /// Whether it may carry a `while` condition: only a kind the one sum reads
+    /// ([`crate::talent::Talents::mods`]), never one read off the talent's effects directly (an
+    /// active, a spell given, what is rolled or handed down once when it is taken).
+    fn may_be_conditional(&self) -> bool {
+        self.active().is_none()
+            && !matches!(
+                self,
+                TalentEffect::SecondWind { .. }
+                    | TalentEffect::BloodMagic { .. }
+                    | TalentEffect::Spell { .. }
+                    | TalentEffect::Prayer { .. }
+                    | TalentEffect::Communion
+                    | TalentEffect::SpellMod(_)
+                    | TalentEffect::WeaponStamina { .. }
+                    | TalentEffect::TrainSkill { .. }
+                    | TalentEffect::WeaponRanks { .. }
+                    | TalentEffect::TakeUpSkills { .. }
+                    | TalentEffect::ExtraPick { .. }
+                    | TalentEffect::StartingGold { .. }
+                    | TalentEffect::StartingGems { .. }
+                    | TalentEffect::Heirloom { .. }
+                    | TalentEffect::TerrainAs { .. }
+                    | TalentEffect::Scent { .. }
+                    | TalentEffect::NightSight { .. }
+            )
     }
 
     /// Whether the numbers are within what the rules expect, and the statuses and damage types
@@ -1090,7 +1281,7 @@ impl TalentEffect {
             if cost == 0 {
                 return Err(format!("`{kind}`: cost is at least 1"));
             }
-            match resource(id)?.map(|r| content.resource(r).max) {
+            match resource(id)?.map(|r| content.resource(r).most()) {
                 Some(max) if cost > max => Err(format!(
                     "`{kind}`: costs {cost} of `{id}`, more than its maximum {max}"
                 )),
@@ -1118,7 +1309,6 @@ impl TalentEffect {
         match self {
             TalentEffect::Dodge { value }
             | TalentEffect::Natural { value }
-            | TalentEffect::NaturalUnarmoured { value }
             | TalentEffect::Hardened { bonus: value }
             | TalentEffect::MeleeDamage { value }
             | TalentEffect::Hearing { value }
@@ -1187,12 +1377,49 @@ impl TalentEffect {
                 if !(1..=50).contains(saving) {
                     return Err("`rapid_shot`: saving is 1 to 50".into());
                 }
-                match resource(id)?.map(|r| content.resource(r).max) {
+                match resource(id)?.map(|r| content.resource(r).most()) {
                     Some(max) if *cost > max => Err(format!(
                         "`rapid_shot`: costs {cost} of `{id}`, more than its maximum {max}"
                     )),
                     _ => Ok(()),
                 }
+            }
+            TalentEffect::AllyMod {
+                to_hit,
+                protection,
+                count,
+                duration_percent,
+                lasting,
+                most,
+            } => {
+                if *to_hit == 0
+                    && *protection == 0
+                    && *count == 0
+                    && *duration_percent == 0
+                    && !*lasting
+                    && *most == 0
+                {
+                    return Err("`ally_mod`: gives nothing".into());
+                }
+                for v in [to_hit, protection].into_iter().filter(|v| **v != 0) {
+                    bonus(*v)?;
+                }
+                if !(0..=6).contains(count) || !(0..=6).contains(most) {
+                    return Err("`ally_mod`: count and most are 0 to 6".into());
+                }
+                if !(0..=500).contains(duration_percent) {
+                    return Err("`ally_mod`: duration_percent is 0 to 500".into());
+                }
+                Ok(())
+            }
+            TalentEffect::SummonBias { tag, weight } => {
+                if tag.trim().is_empty() || *weight == 1 || *weight > 100 {
+                    return Err(
+                        "`summon_bias`: a tag, and a weight of 0 or 2 to 100 (1 changes nothing)"
+                            .into(),
+                    );
+                }
+                Ok(())
             }
             TalentEffect::Volley { shots } => {
                 if !(2..=5).contains(shots) {
@@ -1200,24 +1427,49 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::Inspire {
-                status: id,
-                mana,
-                resource: instead,
+            TalentEffect::Song {
+                id,
+                on,
+                status: status_id,
+                severity,
+                resource: pool,
                 cost,
+                mana,
+                check,
+                difficulty,
             } => {
-                if !(0..=100).contains(mana) {
-                    return Err("`inspire`: mana is 0 to 100".into());
+                if (super::ClassActive::from_id(id)).is_none_or(|a| !a.sings()) {
+                    return Err(format!("`song`: `{id}` is no song's active"));
                 }
-                if let Some(instead) = instead {
-                    resource_cost("inspire", instead, *cost)?;
-                } else if *cost != 0 {
-                    return Err("`inspire`: a `cost` needs its `resource`".into());
+                match (pool, *mana) {
+                    (Some(pool), 0) => resource_cost("song", pool, *cost)?,
+                    (None, 1..=100) if *cost == 0 => {}
+                    _ => {
+                        return Err(
+                            "`song`: costs one thing, `cost` of a `resource` or 1 to 100 `mana`"
+                                .into(),
+                        );
+                    }
                 }
-                status(id)
+                if !(1..=10).contains(severity) {
+                    return Err("`song`: severity is 1 to 10".into());
+                }
+                match (on, check) {
+                    (SongOn::Hearers, Some(_)) if (0..=30).contains(difficulty) => {}
+                    (SongOn::Singer, None) if *difficulty == 0 => {}
+                    _ => {
+                        return Err("`song`: a song on its hearers asks a `check` against a \
+                                    `difficulty` of 0 to 30; one on the singer neither"
+                            .into());
+                    }
+                }
+                status(status_id)
             }
             TalentEffect::FlurryCost { resource: id, cost } => {
                 resource_cost("flurry_cost", id, *cost)
+            }
+            TalentEffect::CatchMissiles { resource: id, cost } => {
+                resource_cost("catch_missiles", id, *cost)
             }
             TalentEffect::Virtuoso { status: id } => status(id),
             TalentEffect::Consecrate { mana, time } => {
@@ -1230,9 +1482,73 @@ impl TalentEffect {
                 }
                 Ok(())
             }
+            TalentEffect::Sanctuary {
+                mana,
+                time,
+                radius,
+                lasts,
+                regen,
+            } => {
+                if !(1..=500).contains(mana) {
+                    return Err("`sanctuary`: mana is 1 to 500".into());
+                }
+                let time: crate::time::Duration = time.parse()?;
+                if !(10..=3600).contains(&time.as_seconds()) {
+                    return Err("`sanctuary`: time is 10s to 1h".into());
+                }
+                if !(1..=5).contains(radius) {
+                    return Err("`sanctuary`: radius is 1 to 5".into());
+                }
+                let lasts: crate::time::Duration = lasts.parse()?;
+                if !(600..=12 * 3600).contains(&lasts.as_seconds()) {
+                    return Err("`sanctuary`: lasts is 10m to 12h".into());
+                }
+                if !(100..=1000).contains(regen) {
+                    return Err("`sanctuary`: regen is 100 to 1000".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Prayer {
+                tier,
+                title,
+                uses,
+                answers,
+                all,
+            } => {
+                if tier.is_some_and(|t| !(1..=5).contains(&t)) {
+                    return Err("`prayer`: tier is 1 to 5".into());
+                }
+                if tier.is_some() != title.is_some() {
+                    return Err("`prayer`: a tier has a `title`, and only a tier".into());
+                }
+                if answers.is_some_and(|a| !(1..=7).contains(&a)) {
+                    return Err("`prayer`: answers is 1 to 7".into());
+                }
+                if (1..uses.len()).any(|i| uses[..i].contains(&uses[i])) {
+                    return Err("`prayer`: a use named twice".into());
+                }
+                if tier.is_none() && uses.is_empty() && answers.is_none() && !all {
+                    return Err("`prayer`: it gives a tier, uses, answers, or all".into());
+                }
+                Ok(())
+            }
             TalentEffect::Knock { mana } => {
                 if !(0..=100).contains(mana) {
                     return Err("`knock`: mana is 0 to 100".into());
+                }
+                Ok(())
+            }
+            TalentEffect::SpiritWeapon {
+                to_hit,
+                threat,
+                phrase,
+                ..
+            } => {
+                if !(0..=10).contains(to_hit) || *threat > 10 {
+                    return Err("`spirit_weapon`: to_hit and threat are 0 to 10".into());
+                }
+                if phrase.trim().is_empty() {
+                    return Err("`spirit_weapon`: needs a `phrase`".into());
                 }
                 Ok(())
             }
@@ -1305,6 +1621,30 @@ impl TalentEffect {
                     "`train_skill` is for the chosen skill: it needs `choice = \"skill\"`".into(),
                 ),
             },
+            TalentEffect::WeaponRanks { to, skills, .. } => {
+                if !(1..=super::MAX_RANK).contains(to) {
+                    return Err(format!("`weapon_ranks`: to is 1 to {}", super::MAX_RANK));
+                }
+                let table = content.weapon_skills();
+                match skills
+                    .iter()
+                    .find(|s| !table.is_empty() && table.id(s).is_none())
+                {
+                    Some(id) => Err(format!("names an unknown weapon skill `{id}`")),
+                    None => Ok(()),
+                }
+            }
+            TalentEffect::TakeUpSkills { dice, except, .. } => {
+                if dice.min() < 1 || dice.max() > 100 {
+                    return Err("`take_up_skills`: its dice roll 1 to 100".into());
+                }
+                let unknown = (except.iter())
+                    .find(|s| !content.skills().is_empty() && content.skill_id(s).is_none());
+                match unknown {
+                    Some(id) => Err(format!("names an unknown skill `{id}`")),
+                    None => Ok(()),
+                }
+            }
             TalentEffect::ScrollKept { chance } => {
                 if !(1..=100).contains(chance) {
                     return Err("`scroll_kept`: chance is 1 to 100".into());
@@ -1389,18 +1729,29 @@ impl TalentEffect {
                 }
                 status(cooldown)
             }
-            TalentEffect::Lurk { status: id } | TalentEffect::SneakKillStatus { status: id } => {
-                status(id)
+            TalentEffect::Lurk { status: id }
+            | TalentEffect::SneakKillStatus { status: id }
+            | TalentEffect::WindStep { status: id } => status(id),
+            TalentEffect::Stillness { name, statuses } => {
+                if name.trim().is_empty() || statuses.is_empty() {
+                    return Err("`stillness`: a name, and at least one status".into());
+                }
+                statuses.iter().try_for_each(|id| status(id))
             }
             TalentEffect::QuiveringPalm {
                 status: id,
                 severity,
+            }
+            | TalentEffect::StunningStrike {
+                status: id,
+                severity,
             } => {
                 if *severity == 0 {
-                    return Err("`quivering_palm`: severity is at least 1".into());
+                    return Err("a palm blow's severity is at least 1".into());
                 }
                 status(id)
             }
+            TalentEffect::PatientDefence { status: id } => status(id),
             TalentEffect::Blaze {
                 radius,
                 damage,
@@ -1431,6 +1782,16 @@ impl TalentEffect {
                     return Err(format!("`rage`: the resource `{id}` brings no `status`"));
                 }
                 Ok(())
+            }
+            TalentEffect::WarCry {
+                status: id,
+                severity,
+                difficulty,
+            } => {
+                if *severity == 0 || !(0..=30).contains(difficulty) {
+                    return Err("`war_cry`: severity is at least 1, difficulty 0 to 30".into());
+                }
+                status(id)
             }
             TalentEffect::ResourceBuild {
                 resource: id,
@@ -1710,6 +2071,7 @@ impl TalentEffect {
             | TalentEffect::RoomPacePercent { value }
             | TalentEffect::SurpriseEase { value }
             | TalentEffect::TwoHandedPrice { value }
+            | TalentEffect::AttackPricePercent { value }
             | TalentEffect::WeaponEnergyPercent { value }
             | TalentEffect::SpeedPercent { value }
             | TalentEffect::SpellDamagePercent { value }
@@ -1894,9 +2256,7 @@ impl TalentEffect {
             | TalentEffect::Avatar
             | TalentEffect::Whirlwind
             | TalentEffect::WeightlessCoins
-            | TalentEffect::IdentifyTrades
             | TalentEffect::Pilgrim
-            | TalentEffect::Scavenger
             | TalentEffect::GemWorth
             | TalentEffect::SeesUnaware
             | TalentEffect::StartledBlow
@@ -1908,9 +2268,11 @@ impl TalentEffect {
             | TalentEffect::ThrowVoice
             | TalentEffect::Finisher
             | TalentEffect::LowBlow
+            | TalentEffect::MerchantsEye
             | TalentEffect::GraveWarden
             | TalentEffect::Disarm
             | TalentEffect::Purify
+            | TalentEffect::Communion
             | TalentEffect::CorpseHarmless => Ok(()),
             // A spell ability names a spell of data/spells/ of its id, aimed as the ability is
             // (content without spells has nothing to check it by).
@@ -1965,8 +2327,8 @@ pub enum Need {
     Level(u8),
     /// A race, by id.
     Race(String),
-    /// Eyes: the race's vision profile, by id.
-    Eyes(String),
+    /// Eyes: the race's vision profile, any one of these ids.
+    Eyes(Vec<String>),
     /// A class, by id.
     Class(String),
     /// A birth sign's animal, by id (spec §8 "Birth sign").
@@ -2010,9 +2372,12 @@ impl Need {
                 let name = content.class(id).map_or(id.as_str(), |c| c.name.as_str());
                 format!("to be {} {}", article(name), name.to_lowercase())
             }
-            Need::Eyes(id) => {
-                let name = content.vision(id).map_or(id.as_str(), |v| v.name.as_str());
-                format!("{} eyes", name.to_lowercase())
+            Need::Eyes(ids) => {
+                let names: Vec<String> = (ids.iter())
+                    .map(|id| content.vision(id).map_or(id.as_str(), |v| v.name.as_str()))
+                    .map(str::to_lowercase)
+                    .collect();
+                format!("{} eyes", crate::talent::list_with(&names, "or"))
             }
             Need::Animal(id) => {
                 let name = (content.horoscope())
@@ -2060,7 +2425,8 @@ pub struct Needs {
     /// 0 asks nothing.
     pub level: u8,
     pub race: Option<String>,
-    pub eyes: Option<String>,
+    /// The race's vision profiles, any one of which will do; empty asks nothing.
+    pub eyes: Vec<String>,
     pub class: Option<String>,
     /// The birth sign's animal and element asked, by id, and a lucky day.
     pub animal: Option<String>,
@@ -2092,7 +2458,7 @@ impl Needs {
         let chosen = self.chosen.map(Need::Chosen);
         let level = (self.level > 0).then_some(Need::Level(self.level));
         let race = self.race.clone().map(Need::Race);
-        let eyes = self.eyes.clone().map(Need::Eyes);
+        let eyes = (!self.eyes.is_empty()).then(|| Need::Eyes(self.eyes.clone()));
         let class = self.class.clone().map(Need::Class);
         let animal = self.animal.clone().map(Need::Animal);
         let element = self.element.clone().map(Need::Element);
@@ -2123,6 +2489,8 @@ impl Needs {
 pub struct Rank {
     pub needs: Needs,
     pub effects: Vec<TalentEffect>,
+    /// Its effects that count only while the holder suffers a status (`while`).
+    pub effects_while: Vec<(StatusId, TalentEffect)>,
 }
 
 /// A talent.
@@ -2139,6 +2507,9 @@ pub struct TalentDef {
     pub needs: Needs,
     /// What every rank held adds.
     pub effects: Vec<TalentEffect>,
+    /// What every rank held adds only while the holder suffers a status (`while = "raging"`:
+    /// Battle-scarred's rage half), apart from the plain effects: only the one sum reads them.
+    pub effects_while: Vec<(StatusId, TalentEffect)>,
     /// Its ranks, first to last (at least one).
     pub ranks: Vec<Rank>,
     /// The systems it touches (the coverage list).
@@ -2151,9 +2522,9 @@ pub struct TalentDef {
     /// `resource = { id = "focus", cost = 6 }` (0 asks only that it is held), if anything.
     pub resource: Option<ResourceCost>,
     /// The alignment bands its class active works for (spec §8 "Alignment"; `alignment = { min
-    /// = "kind" }` in data: the paladin's holy gifts), if any. It bars nothing: the ability is
-    /// had, listed, and used whatever the band, and outside these bands it does nothing
-    /// (`World::answered`).
+    /// = "kind" }` in data: the paladin's holy gifts), or its band-gated passive (Communion), if
+    /// any. It bars nothing: the ability is had, listed, and used whatever the band, and outside
+    /// these bands it does nothing (`World::answered`, `World::communes`).
     pub alignment: Option<Requirement>,
 }
 
@@ -2184,6 +2555,16 @@ impl TalentDef {
     pub fn effects_at(&self, rank: u8) -> impl Iterator<Item = TalentEffect> + '_ {
         let own = (self.ranks.get(usize::from(rank.max(1)) - 1)).map(|r| r.effects.as_slice());
         (self.effects.iter().cloned()).chain(own.into_iter().flatten().cloned())
+    }
+
+    /// What holding `rank` (1 first) adds while its holder suffers a status, each with that
+    /// status: the per-rank ones, then that rank's own ([`TalentDef::effects_while`]).
+    pub fn effects_while_at(
+        &self,
+        rank: u8,
+    ) -> impl Iterator<Item = (StatusId, TalentEffect)> + '_ {
+        let own = (self.ranks.get(usize::from(rank.max(1)) - 1)).map(|r| &r.effects_while);
+        (self.effects_while.iter().cloned()).chain(own.into_iter().flatten().cloned())
     }
 
     /// Whether its first rank may be taken by anyone: no prerequisites at all.
@@ -2406,7 +2787,7 @@ struct TalentSpec {
     #[serde(default)]
     needs: NeedsSpec,
     #[serde(default)]
-    effects: Vec<TalentEffect>,
+    effects: Vec<EffectSpec>,
     #[serde(default)]
     rank: Vec<RankSpec>,
     #[serde(default)]
@@ -2427,13 +2808,52 @@ struct CostSpec {
     cost: u16,
 }
 
+/// One effect as written: its kind and fields, and the status it counts only under, if any
+/// (`while = "raging"`; the effect's own fields are checked by [`TalentEffect`]).
+#[derive(Deserialize)]
+struct EffectSpec {
+    #[serde(rename = "while", default)]
+    under: Option<String>,
+    #[serde(flatten)]
+    effect: TalentEffect,
+}
+
+/// `effects` split into the plain ones and those under a status, each checked; a `while` on
+/// content without statuses has nothing to check it by, and its effect does nothing.
+fn split_effects(
+    specs: Vec<EffectSpec>,
+    content: &Content,
+    choice: Option<Choice>,
+) -> Result<(Vec<TalentEffect>, Vec<(StatusId, TalentEffect)>), String> {
+    let (mut plain, mut under) = (Vec::new(), Vec::new());
+    for spec in specs {
+        spec.effect.check(content, choice)?;
+        let Some(name) = spec.under else {
+            plain.push(spec.effect);
+            continue;
+        };
+        if !spec.effect.may_be_conditional() {
+            return Err(format!(
+                "`while = \"{name}\"` is only for an effect the talents' sum reads, not {:?}",
+                spec.effect
+            ));
+        }
+        match content.status_id(&name) {
+            Some(status) => under.push((status, spec.effect)),
+            None if content.status_ids().next().is_none() => {}
+            None => return Err(format!("`while` names an unknown status `{name}`")),
+        }
+    }
+    Ok((plain, under))
+}
+
 #[derive(Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 struct RankSpec {
     #[serde(default)]
     needs: NeedsSpec,
     #[serde(default)]
-    effects: Vec<TalentEffect>,
+    effects: Vec<EffectSpec>,
 }
 
 #[derive(Deserialize, Default)]
@@ -2447,7 +2867,8 @@ struct NeedsSpec {
     chosen: Option<u8>,
     level: u8,
     race: Option<String>,
-    eyes: Option<String>,
+    /// One vision profile or several, any one of which will do.
+    eyes: Option<OneOrMany>,
     class: Option<String>,
     animal: Option<String>,
     element: Option<String>,
@@ -2635,10 +3056,9 @@ fn resolve_needs(
     {
         return Err(format!("needs an unknown class `{class}`"));
     }
-    if let Some(eyes) = &spec.eyes
-        && content.vision(eyes).is_none()
-    {
-        return Err(format!("needs unknown eyes `{eyes}` (a vision profile)"));
+    let eyes = spec.eyes.as_ref().map_or(&[][..], OneOrMany::ids).to_vec();
+    if let Some(unknown) = eyes.iter().find(|e| content.vision(e).is_none()) {
+        return Err(format!("needs unknown eyes `{unknown}` (a vision profile)"));
     }
     let either = match spec.either {
         Some(alternatives) => {
@@ -2663,7 +3083,7 @@ fn resolve_needs(
         chosen: spec.chosen,
         level: spec.level,
         race: spec.race,
-        eyes: spec.eyes,
+        eyes,
         class: spec.class,
         animal: spec.animal,
         element: spec.element,
@@ -2854,10 +3274,8 @@ pub(super) fn parse<'a>(
         if needs.talents.iter().any(|(t, _)| *t == TalentId(i as u16)) {
             return Err(err("needs itself".into()));
         }
-        for effect in &spec.effects {
-            effect.check(content, spec.choice).map_err(err)?;
-        }
-        let effects = spec.effects;
+        let (effects, effects_while) =
+            split_effects(spec.effects, content, spec.choice).map_err(err)?;
         for effect in &effects {
             if let TalentEffect::Spell { spell } = effect
                 && !spell_ids.insert(spell.clone())
@@ -2872,18 +3290,19 @@ pub(super) fn parse<'a>(
             if own.talents.iter().any(|(t, _)| *t == TalentId(i as u16)) {
                 return Err(err(format!("rank {}: needs itself", n + 1)));
             }
-            for effect in &rank.effects {
-                effect
-                    .check(content, spec.choice)
-                    .map_err(|m| err(format!("rank {}: {m}", n + 1)))?;
-            }
+            let (own_effects, own_while) = split_effects(rank.effects, content, spec.choice)
+                .map_err(|m| err(format!("rank {}: {m}", n + 1)))?;
             rank_defs.push(Rank {
                 needs: own,
-                effects: rank.effects,
+                effects: own_effects,
+                effects_while: own_while,
             });
         }
         rank_defs.resize_with(usize::from(count), Rank::default);
-        if effects.is_empty() && rank_defs.iter().all(|r| r.effects.is_empty()) {
+        if effects.is_empty()
+            && effects_while.is_empty()
+            && (rank_defs.iter()).all(|r| r.effects.is_empty() && r.effects_while.is_empty())
+        {
             return Err(err("does nothing: it needs `effects`".into()));
         }
         if spec.flaw && !spec.granted {
@@ -2901,7 +3320,7 @@ pub(super) fn parse<'a>(
                         cost.id
                     ))
                 })?;
-                if cost.cost > content.resource(resource).max {
+                if cost.cost > content.resource(resource).most() {
                     return Err(err(format!("costs more `{}` than it can hold", cost.id)));
                 }
                 Some(ResourceCost {
@@ -2911,10 +3330,10 @@ pub(super) fn parse<'a>(
             }
         };
         if let Some(bands) = spec.alignment {
-            if !effects.iter().any(|e| e.active().is_some_and(|a| a.holy())) {
+            if !(effects.iter()).any(|e| e.band_gated() || e.active().is_some_and(|a| a.holy())) {
                 return Err(err(
                     "an `alignment` is for a holy class active (lay_on_hands, smite, \
-                     holy_radiance, consecrate)"
+                     holy_radiance, consecrate) or a band-gated passive (communion)"
                         .into(),
                 ));
             }
@@ -2928,6 +3347,7 @@ pub(super) fn parse<'a>(
             description: spec.description,
             needs,
             effects,
+            effects_while,
             ranks: rank_defs,
             systems,
             granted: spec.granted,
@@ -3082,6 +3502,91 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
     }
 
     #[test]
+    fn an_effect_under_a_status_is_kept_apart_and_checked() {
+        let with = |effects: &str| {
+            let text = format!(
+                "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\ndescription = \"d\"\n\
+                 systems = [\"hit_points\"]\neffects = [{effects}]\n"
+            );
+            load(
+                SETTINGS,
+                &[("healthy", HEALTHY), ("hardy", HARDY), ("x", &text)],
+            )
+        };
+        let content = with(
+            "{ kind = \"dodge\", value = 1 }, { kind = \"dodge\", value = 2, while = \"raging\" }",
+        )
+        .expect("loads");
+        let book = content.talents();
+        let x = book.get(book.id("x").expect("x"));
+        let raging = content.status_id("raging").expect("raging");
+        assert_eq!(x.effects, vec![TalentEffect::Dodge { value: 1 }]);
+        assert_eq!(
+            x.effects_while,
+            vec![(raging, TalentEffect::Dodge { value: 2 })]
+        );
+        // Alone, it is something to do.
+        with("{ kind = \"dodge\", value = 2, while = \"raging\" }").expect("loads");
+        assert!(
+            err(with("{ kind = \"dodge\", value = 2, while = \"sulking\" }"))
+                .contains("unknown status `sulking`")
+        );
+        assert!(
+            err(with("{ kind = \"dodge\", value = 0, while = \"raging\" }")).contains("a bonus")
+        );
+        assert!(
+            err(with("{ kind = \"dodge\", value = 2, whilst = \"raging\" }"))
+                .contains("unknown field")
+        );
+        // An active is used, not summed: no condition on it.
+        assert!(
+            err(with(
+                "{ kind = \"rage\", resource = \"rage\", while = \"raging\" }"
+            ))
+            .contains("only for an effect the talents' sum reads")
+        );
+    }
+
+    #[test]
+    fn a_song_names_a_song_and_costs_one_thing() {
+        let song = |fields: &str| {
+            let text = format!(
+                "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\n\
+                 description = \"d\"\nsystems = [\"hit_points\"]\n\
+                 effects = [{{ kind = \"song\", status = \"inspired\", {fields} }}]\n"
+            );
+            load(
+                SETTINGS,
+                &[("healthy", HEALTHY), ("hardy", HARDY), ("x", &text)],
+            )
+        };
+        let inspire = "id = \"inspire\", on = \"self\"";
+        song(&format!("{inspire}, resource = \"inspiration\", cost = 3")).expect("a pool");
+        song(&format!("{inspire}, mana = 6")).expect("mana");
+        let refused = |fields: &str| err(song(fields));
+        assert!(
+            refused(&format!("{inspire}, mana = 6, resource = \"x\", cost = 3"))
+                .contains("one thing")
+        );
+        assert!(refused(inspire).contains("one thing"), "free");
+        assert!(refused(&format!("{inspire}, mana = 6, cost = 3")).contains("one thing"));
+        assert!(refused("id = \"rage\", on = \"self\", mana = 6").contains("no song"));
+        assert!(refused(&format!("{inspire}, mana = 6, severity = 0")).contains("severity"));
+        // A song on the singer asks no check; one on its hearers asks one.
+        assert!(
+            refused(&format!(
+                "{inspire}, mana = 6, check = \"willpower\", difficulty = 13"
+            ))
+            .contains("neither")
+        );
+        assert!(refused("id = \"inspire\", on = \"hearers\", mana = 6").contains("asks a `check`"));
+        song(
+            "id = \"inspire\", on = \"hearers\", mana = 6, check = \"willpower\", difficulty = 13",
+        )
+        .expect("data-ready for the Lullaby");
+    }
+
+    #[test]
     fn bad_prerequisites_and_effects_are_refused() {
         let bad = |body: &str| {
             let text = format!(
@@ -3157,6 +3662,15 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
                 .contains("`ranks = 2` but 1")
         );
         assert!(bad("").contains("does nothing"));
+        assert!(bad("effects = [{ kind = \"weapon_ranks\", to = 0 }]").contains("to is 1 to"));
+        assert!(
+            bad("effects = [{ kind = \"weapon_ranks\", to = 1, skills = [\"x\"] }]")
+                .contains("unknown weapon skill `x`")
+        );
+        assert!(
+            bad("effects = [{ kind = \"take_up_skills\", dice = \"1d200\" }]")
+                .contains("roll 1 to 100")
+        );
         assert!(
             bad("effects = [{ kind = \"dodge\", value = 1 }]\nneeds = { either = { level = 3 } }")
                 .contains("fewer than two")

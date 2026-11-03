@@ -1,0 +1,8 @@
+[[talent]]
+id = "headlong"
+name = "Headlong"
+tree = "class"
+granted = true
+description = "Raging, you go headlong: your steps cost a fifth less."
+effects = [{ kind = "step_percent", value = -20, while = "raging" }]
+systems = ["speed", "resources"]

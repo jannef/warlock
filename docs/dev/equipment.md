@@ -16,7 +16,17 @@ worn"), `verbs` (the message verbs per action). `world/equip.rs` is the rules: `
 slot, item }` / `Action::Remove(slot)` take off what is in the way (a swap) and cost the slot
 action (`wield`, `wear`, `body_armor`, `ready` in `data/actions.toml`) of everything put on or
 taken off (`World::price_for`); dropping takes off first (`take_off_before_dropping`) and
-`Equipment::after_removal` follows the positions (past the 26th too: the pack has no count limit). Creatures wield and wear from their spawn
+`Equipment::after_removal` follows the positions (past the 26th too: the pack has no count limit).
+**Spirit weapons** (the Hunter's Spirit weapon, #881, `world/spirit_weapon.rs`): a `Stack::spirit`
+exists only in a hand slot. `World::equip_saying` (what `World::equip` calls, with the call's own
+line, "A long sword of pale light is in your hand.") and `World::remove` end with
+`World::fade_spirit`: any spirit stack in the pack and out of the hands (taken off, swapped for
+steel, moved to the missile weapon slot) is removed, its positions followed. A drop and a shop's
+trade first pass their positions through `World::release_spirit` (the spirit stacks taken off and
+faded, the rest renumbered), so neither the floor nor a shop ever holds one; `World::throw`
+refuses one; `shop::count_of` and the quests' counts skip it. What takes a stack out of the pack
+(an outcome's `remove_stacks`, the forge's ruin) needs nothing: the stack is gone either way.
+Creatures wield and wear from their spawn
 (`wield`/`wear` in a level legend, resolved in `content/level.rs::equip`). Presentation reads
 `PerceptionView::equipment` (the player's own) and `PerceptionView::gear(actor)` (what a seen
 creature wears and wields, all of what it carries that is seen; look mode, `ui/look.rs::gear`).

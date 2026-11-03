@@ -114,6 +114,51 @@ developer notes (CLAUDE.md, `docs/dev/`).
   goblins and a warg!", "something" when they see none of it); an unseen summoner's creatures
   only as they appear in sight ("A skeleton appears!"); nothing seen, nothing said. Sight is the
   last turn's perception, so a summoning in the turn a door opens may go unseen.
+- **Allies** (`warlock-core/src/world/ally.rs`, the rules; `content/ally.rs` and
+  `data/allies.toml`, the numbers; #836, design `docs/design/druid-and-summons.md` §4 and §14):
+  creatures on the player's side, a summon (the druid's calls, #839) or a companion (the
+  ranger's, to come). An ally is an ordinary creature of its type (stats, speed, eyes, attacks,
+  hit points, statuses, death) made with the player's faction, so every rule that reads stances
+  (hostile creatures, the spawn cap, the quick leave, resting, swapping places) treats it as the
+  player's. **Its mind**: it attacks the nearest actor it sees that its *master* is hostile to
+  (a Beast-friend's wolf spares the rats as the druid does; a shopkeeper is never an ally's
+  idea), else obeys its order: *follow* (heel within `heel` cells of the master; fighting farther
+  than `leash` away, it breaks off and heels), *stay* (hold its cell, fighting only what comes
+  within `stay.reach` of it), *hunt* (go to the cell it was set on and fight what is within
+  `hunt.reach` of it; arrived with nothing to fight, it comes back to heel). It draws from no
+  stream. **Orders**: three abilities of the Allies group of the abilities menu, no key of their
+  own, given to every ally on the level at once: Come to heel, Hold here, Set on (a cell the
+  player sees). An order takes **no time** and is a voice (`[orders] noise`) where the player
+  stands; refused with no ally on the level. There is no sending away: a summon departs when its
+  time runs out or it is slain. **Following**: allies within `comes_along` cells of the player
+  as they take stairs or leave an area come along, placed beside them; the rest stay where they
+  are, frozen. Onto the overworld, which has no creatures, they join the player's **retinue**
+  (never drawn, never acting, never in the way) and step out beside them at the next level.
+  **Time**: a summon's stay ends by the clock, wherever it is: one whose time has passed departs
+  where the player is ("The wolf fades away.", nothing left behind), and is gone when they
+  return to a level they left it on, or when the retinue steps out. **Experience**: an ally's
+  kill pays its master as their own blow would, at `[xp] ally_percent` (100): the first-kill
+  bonus, the quest log, Favoured prey, the named monsters slain, what a kill builds; the ally
+  gets nothing. Handle animal earns its marks from an order given and an ally's kill. At most
+  `[allies] most` (8) allies on one level. **Beast-bond** (Wayfarer; Handle animal 20): your
+  allies strike +1 to hit and take Protection +1, read through you. The messages never say a
+  number. The dev `ally:CREATURE[:N[:DURATION]]` makes allies for tests and captures.
+  **Summons** (`world/summon_spell.rs`; #837): a spell of `kind = "summon"`, cast on oneself,
+  calls `count` creatures of its pool (`[spell.effect] summon`; the count a roll, grown by its
+  `count` ladder and the dice hooks) beside the caster within `spread`, nearest first, on the
+  player's side with no gear, for `minutes` (its `degrees` ladder, Lingering), each drawn as an
+  enemy summoner draws (a summon bias, a talent effect, weighs the pool by tag; nothing gives
+  one yet). A spell keeps at most `most` of its calls at once: past it the oldest departs, so a
+  call always brings one. Refused, costing nothing, on the overworld, without a free cell beside
+  the caster, and at `[allies] most` on the level (unless one of the spell's own gives way).
+  `ally_mod` talents bring `count` more, make calls last `duration_percent` longer or, with
+  `lasting`, until slain, and keep `most` more of each spell's. A slain summon leaves no corpse
+  and drops nothing. "Two wolves come to your call." The druid's calls (#839, §8 "Class abilities"):
+  Call of the wild (a wolf), Call of the forest (a bear), Call the elements (a greater
+  elemental, the element drawn), one of each at once until Pack leader and Lord of the wild
+  raise it. The beasts (`wolf`, `bear`) are wildlife, never strays. The messages call an ally
+  the player sees "your": "Your wolf bites the kobold.", "Your wolf dies."; one whose time runs
+  out goes in its type's words ("The wolf slips back into the dark.").
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature
@@ -249,9 +294,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   stays carried. It fights with what it wields and wears (combat reads it as it reads anyone's),
   a ranged creature shoots with its bow and arrows, and all of it falls where it dies with the
   rest of what it carried. Others see what it wears and wields, never what else it carries.
-  Gear adds no state: it is the creature's inventory and equipment. **Scavenger** (Delver
-  talent, the `creature_gear` system): what a creature the player kills drops is identified as
-  it lands. The wiki's creatures table states each type's gear exactly. A gear line may name a
+  Gear adds no state: it is the creature's inventory and equipment, and what falls is
+  unidentified as any loot is. The wiki's creatures table states each type's gear exactly. A gear line may name a
   unique item (`unique:ID`, §8 "Magic items"): the Ascmearc's four wanted criminals (the
   `outlaws` faction, hostile to the player only and to no one else, with the footpads and
   footpad archers; #424, the guild design §8) each wield or wear their own this way.
@@ -280,6 +324,38 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§6). Asking (`Action::Ask { dir, topic }`, replay text `ask:E:rooms`) takes no time and gets
     the topic's reply; an unknown topic is "The sage knows nothing about that." `World::topics`
     is the one place topics come from: quests ("Quests" below) add theirs there, first.
+  - **Saying words** (`warlock-core/src/words.rs`, `content/word.rs`, `world/words.rs`;
+    docs/design/prestige-classes.md §6, #878): a dialogue may know words (`[[dialogue.word]]`,
+    §7 "Dialogue"). Saying something (`Action::Say { dir, words }`, replay text
+    `say:E:life_before_death`, the words normalised and joined by `_`) to the creature beside
+    the player is refused as a chat is (no one seen there: no time; no dialogue or a hostile:
+    the chat's words and its time). Else what was said is normalised (`words::normalise`:
+    Unicode lower case, every character that is not a letter or digit a space, runs of spaces
+    one, trimmed; so case and punctuation never matter) and matched against the dialogue's
+    words in order: the first whose normalised `phrase` equals it and whose `does` can be done
+    is heard. Its `reply` lines are said, each a message (`The spirit says: "…"`), the last the
+    dialogue screen's line; then what it `does`: `quest` gives that quest as asking its topic
+    would, if it could be asked for now (not active, its requirements and alignment met, the
+    player not too green; else the reply is all); `departs` sends the speaker away after the
+    reply (`World::departs`, as an ally whose time is up: no corpse, no pile, no experience, no
+    kill; the screen does not reopen); `calls` (a prestige class's calling, §8 "Prestige
+    classes", one of the dialogue's campaign) makes the calling after the reply, before
+    `quest` and `departs`, and the word is heard only while the calling is open (anyone else
+    gets `unheard`). The Ascmearc's **Strange Spirit** (`strange_spirit`, faction `spirits`,
+    hostile to no one; good; one hit point, no corpse, no blood, no experience; rooted,
+    `budge = never`) is met on the roads, vale, downs, and woods by day (`when = { calling =
+    "hunter" }`, weight 2), speaks only to the Kind or better (`speaks_to`), has no topics, and
+    knows one word, *life before death*: it echoes the oath's six lines, calls the bard into
+    the Hunter, and departs ("The strange spirit fades, and is gone."). Killed, it is a
+    peaceful good soul killed; its party is forgotten and it may be met again while the calling
+    is open. Look mode says ", who waits" after one whose dialogue has words and nothing else
+    to offer. No match: the
+    dialogue's `unheard` line (without one, "The sage says nothing.", told plainly, the
+    screen's line "…"). Either way it takes the time
+    of `chat`: no count of tries, no lock-out. Nothing is drawn, trained, or saved; others hear
+    a chat. A dialogue's `speaks_to` (an alignment range, §8 "Alignment") is the speaker's
+    reaction to the player: outside it a chat or a say gets only its `silent` line (a chat's
+    time; an ask, none), with no topics and no Say row.
   - **Rumoured ways** (`world/rumour.rs`; the owner's request of 2026-10-27): a topic with a
     `route` (§7 "Dialogue") tells the way to a place. Asking it, every time, marks on the
     player's overworld map what walking the route by day would show: each cell in line of sight
@@ -317,7 +393,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     identify, asks first in the one dialog with the total (`Pay 300 gold` or `Not now`; without
     the gold only `Go back`). All or nothing: refused with the `nothing` line when everything is
     known and with "You cannot pay." short of the total, neither taking time. Pious does not
-    halve it (a temple's talent), nor does Lore.
+    halve it (a temple's talent).
   - **An offer** (`world/wares.rs`; #808, docs/design/overworld-encounters.md §15 Q7: the
     pedlar): a dialogue's `[dialogue.offer]` is one item at a fixed price, take it or leave it,
     asked for like a topic (`ask:E:wares`) and listed after the services. It is made the first

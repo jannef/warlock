@@ -39,7 +39,11 @@ uses it for damage. Scenarios name their character (`character = { race, gender,
 Some(&spec))` as another, `World::with_character_named(.., name)` named, and
 `World::start_run(.., kit)` with the starting kit or without (below); `WorldState::character`
 (the `Character`, saved, hashed) and `PerceptionView::character` (the player knows it;
-`PerceptionView::time` for their age). Replays record the spec, the name (`Replay::name`), and
+`PerceptionView::time` for their age). `Character::prestige` (the prestige class once called,
+`docs/dev/experience.md` "Prestige classes"; left out of the JSON while none) is the one field
+set after creation, by `World::call` alone; `Character::class_of`, `class_levels`, `level_cap`,
+`class_text` (the Class row: `Bard 30, Hunter 4`), and `class_phrase` (the epitaph's "a bard and
+hunter") read it. Replays record the spec, the name (`Replay::name`), and
 whether the run started with the kit (`Replay::kit`). A run with the kit also takes its creation talents
 (`CharacterSpec::talents`, else the Random picks; the Talents step after the class,
 `ui/chargen_talents_screen.rs`, and `--talents`; `docs/dev/progression.md` "Creation picks"),
@@ -135,7 +139,7 @@ it is the one built-in scenario with no `character` (it gives the eyes, stats, h
 300 mana itself; `world/character_tests.rs` and `content/mod.rs`'s scenario test name it). The heritage talents (Family wealth's gold and gems, Father's sword's
 heirloom; #697) come on top as they are taken, after the pack (`world/heirloom.rs`,
 docs/dev/progression.md "Creation picks"): the summary's kit list does not name them. `rot::made_at` dates the food as before. Tests: `content/kit.rs` (parsing,
-refusals), `kit.rs` (Twin Blades and Duelist, the barbarian's pick, deterministic choices, no
+refusals), `kit.rs` (Twin Blades and Duelist, the berserker's pick, deterministic choices, no
 other roll moves, every worn or wielded item finds its slot unless an earlier line took it (a
 race's bow or gauntlets after the class's own: an elven ranger, a dwarven paladin), nobody
 Strained at the worst case (`least_score`) and an ordinary character (`ordinary_score`, dice at

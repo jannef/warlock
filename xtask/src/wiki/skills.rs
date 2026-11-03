@@ -1,6 +1,7 @@
 //! Skills (spec §8 "Skills"): what each does and trains on, what it gives by value, who trains
-//! it, the provisional increase curve, the odds of stealing (spec §8 "Stealing"), and what
-//! foraging finds (spec §8 "Foraging").
+//! it, the provisional increase curve, the odds of stealing (spec §8 "Stealing"), how long an
+//! intimidated foe flees (spec §8 "Skills": Intimidate), and what foraging finds (spec §8
+//! "Foraging").
 
 use super::burden::factor;
 use super::combat::percent;
@@ -103,6 +104,11 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::SurpriseEase => "less time lost when you are surprised",
         Effect::Heal => "treating your bleeding, poison, and diseases",
         Effect::Pick => "picking locks",
+        Effect::Intimidate => {
+            "your threats and your war cry are harder to stand against, and a threat frightens longer"
+        }
+        Effect::SongDegrees => "your songs last longer",
+        Effect::SongCraft => "your songs are harder to shake off",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::ManaRegen => "mana back faster",
         Effect::MaxMana => "a slightly larger mana pool (at most a fifth more)",
@@ -150,6 +156,9 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::SurpriseEase => "surprise's extra cost",
             Effect::Heal => "treating",
             Effect::Pick => "picking locks",
+            Effect::Intimidate => "threat's difficulty",
+            Effect::SongDegrees => "song degrees",
+            Effect::SongCraft => "song's difficulty",
             Effect::Temper => "tempering",
             Effect::ManaRegen => "mana back",
             Effect::MaxMana => "mana pool",
@@ -180,6 +189,9 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Heal
                 | Effect::Disarm
                 | Effect::Pick
+                | Effect::Intimidate
+                | Effect::SongDegrees
+                | Effect::SongCraft
                 | Effect::Temper
                 | Effect::Surprise
                 | Effect::Initiative
@@ -314,6 +326,32 @@ pub(super) fn stealing(_content: &Content) -> String {
             percent(won, CONTEST_WAYS),
             percent(CONTEST_WAYS - won, CONTEST_WAYS)
         );
+    }
+    out
+}
+
+/// How long a foe that fails to keep its nerve against the player's Intimidate flees (spec §8
+/// "Skills": Intimidate; `data/intimidate.toml`): each rung of the ladder, by the points
+/// Intimidate adds and the lowest value of the skill that adds them.
+pub(super) fn intimidating(content: &Content) -> String {
+    let Some(rules) = content.intimidate() else {
+        return "Nobody intimidates anyone.\n".into();
+    };
+    let benefit = (content.skills().iter())
+        .flat_map(|s| s.benefits.iter())
+        .find(|b| b.effect == Effect::Intimidate);
+    let status = &content.status(rules.status).name;
+    let mut out = format!(
+        "Within {} cells; the check is {} + your Strength modifier + what Intimidate adds.\n\n\
+         | Intimidate | Adds | {status} for |\n|---:|---:|:---:|\n",
+        rules.range, rules.difficulty
+    );
+    for &(points, degrees) in &rules.degrees {
+        let value = (0..=warlock_core::skills::MAX_VALUE)
+            .find(|&v| benefit.is_some_and(|b| b.at(v) >= points))
+            .map_or("—".to_string(), |v| format!("{v}+"));
+        let plural = if degrees == 1 { "" } else { "s" };
+        let _ = writeln!(out, "| {value} | +{points} | {degrees} degree{plural} |");
     }
     out
 }

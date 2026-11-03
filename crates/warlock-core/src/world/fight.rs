@@ -272,6 +272,9 @@ pub(super) enum End<'a> {
     You,
     /// A creature the player sees, by its type's name.
     Seen(&'a str),
+    /// One of the player's own allies they see, by its type's name: "your wolf"
+    /// (`docs/dev/allies.md`).
+    Yours(&'a str),
     /// Something the player does not see.
     Unseen,
     /// A trap's missile, blades, or blast, by what hits ("arrow", "fireball"): it attacks by
@@ -281,9 +284,10 @@ pub(super) enum End<'a> {
 
 impl End<'_> {
     /// As the subject: "You", "The kobold", "Something", "The arrow".
-    fn subject(self) -> String {
+    pub(super) fn subject(self) -> String {
         match self {
             End::You => "You".into(),
+            End::Yours(name) => format!("Your {name}"),
             End::Seen(name) | End::Trap(name) => crate::content::the_start(name),
             End::Unseen => "Something".into(),
         }
@@ -293,6 +297,7 @@ impl End<'_> {
     pub(super) fn object(self) -> String {
         match self {
             End::You => "you".into(),
+            End::Yours(name) => format!("your {name}"),
             End::Seen(name) | End::Trap(name) => crate::content::the(name),
             End::Unseen => "something".into(),
         }
@@ -303,6 +308,7 @@ impl End<'_> {
         match self {
             End::You => "your".into(),
             End::Seen(name) => format!("{}'s", crate::content::the(name)),
+            End::Yours(name) => format!("your {name}'s"),
             End::Unseen => "something's".into(),
             End::Trap(_) => "the".into(),
         }
@@ -470,6 +476,7 @@ pub(super) fn death_message(who: End<'_>, dies: &str) -> String {
     match who {
         End::You => "You die...".into(),
         End::Seen(name) => format!("{} {dies}.", crate::content::the_start(name)),
+        End::Yours(name) => format!("Your {name} {dies}."),
         End::Unseen | End::Trap(_) => "Something dies.".into(),
     }
 }
@@ -525,13 +532,16 @@ impl World {
         };
         if kind == AttackKind::Melee {
             let mut parried = free_blow::parried(blow);
+            let mut dodged = free_blow::dodged(blow);
             if let Some(second) = self.second_blow(attacker, target, Cue::First(blow), events) {
                 let with = second.with;
                 let struck = self.strike_free(second, events);
                 parried |= free_blow::parried(struck);
+                dodged |= free_blow::dodged(struck);
                 self.both_hands(attacker, target, (blow, struck), with, events);
             }
-            self.after_attack(attacker, target, parried, events);
+            // A blow dodged is answered by a Poised target (`ascetic.rs`).
+            self.after_melee(attacker, target, (parried, dodged), events);
         }
         blow
     }
@@ -565,7 +575,7 @@ impl World {
                     profile,
                 })
                 .or_else(|| self.flurry(striker, target, events)),
-            Cue::Attacked { parried } => {
+            Cue::Attacked { parried, dodged } => {
                 // A parry fires the target's weapon abilities (Staggering block) as the attack
                 // ends, before the free blows it may bring.
                 let stand =
@@ -580,7 +590,7 @@ impl World {
                     self.weapon_trigger(target, crate::content::Trigger::Parried, fired, events);
                 }
                 (self.cleave(striker, target, false))
-                    .or_else(|| self.riposte(striker, target, parried))
+                    .or_else(|| self.riposte(striker, target, (parried, dodged)))
             }
             Cue::Cleaved => self.cleave(striker, target, true),
             Cue::Leaves => self.opportunist(striker, target),
@@ -639,7 +649,10 @@ impl World {
     pub(crate) fn protection_of(&self, id: ActorId) -> Protection {
         (self.state.actors.get(&id)).map_or_else(
             || Protection::plain(0),
-            |a| a.protection(&self.content, self.state.race_of(&self.content, a)),
+            |a| {
+                let race = self.state.race_of(&self.content, a);
+                a.protection_plus(&self.content, race, self.ally_protection(id))
+            },
         )
     }
 
@@ -768,6 +781,8 @@ impl World {
         let profile = profile.map(|p| self.relentless(attacker, target, kind, p));
         // Favoured prey and a sneak attack (spec §8 "Class abilities").
         let profile = profile.map(|p| self.favoured(attacker, target, p));
+        // An ally's master's gifts to it (spec §8 "Allies": Beast-bond).
+        let profile = profile.map(|p| self.ally_blow(attacker, p));
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         // A lurk's blow finds a creature not hunting the player unawares; a low blow is a sneak
@@ -781,6 +796,10 @@ impl World {
             return None;
         }
         self.attacked_near(attacker, target);
+        // The player strikes from hallowed ground: the peace is broken (`sanctuary.rs`).
+        if attacker == self.state.player {
+            self.break_hallow();
+        }
         // A blow at a disguised mimic finds it out (`mimic.rs`), after the sneak attack is
         // decided: it was unaware.
         if self.disguised(target) {
@@ -803,6 +822,8 @@ impl World {
         let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
         let blow = blow.map(|b| self.ambushed(attacker, unseen, b));
         let blow = blow.map(|b| self.lore_blow(attacker, target, b));
+        // Diamond soul's catch (`ascetic.rs`): a missile's hit undone for a point of ki.
+        let blow = self.caught_shot(target, (missile, with), blow, events);
         events.push(Event::Attacked {
             attacker,
             target,
@@ -856,13 +877,16 @@ impl World {
                 self.practise(block, true, levels.0);
             }
         }
-        // Resources built by blows (spec §8 "Resources"): a hit and a critical build the
-        // attacker's, being hit the target's.
+        // Resources built by blows (spec §8 "Resources"): a hit and a critical that do harm
+        // build the attacker's; being hit at all, soaked or resisted to nothing too, the
+        // target's (the berserker's rage: hits taken before mitigation).
         if let Some(Strike::Hit { critical }) = blow.map(|b| b.strike) {
             self.gain_resource(attacker, Build::Hit);
             if critical {
                 self.gain_resource(attacker, Build::Critical);
             }
+        }
+        if blow.is_some_and(|b| b.strike.is_hit()) {
             self.gain_resource(target, Build::Struck);
         }
         // Weapon abilities (`weapon_ability.rs`) fire on the same events, and on a melee
@@ -1109,25 +1133,35 @@ impl World {
         } else {
             // The break lines are said with the death, before what the kill earned.
             let earned = self.news.len();
+            // An ally's kill is its master's (spec §8 "Allies"; `ally.rs`).
+            let player = self.state.player;
+            let master = by.and_then(|b| self.master_of(b)).filter(|&m| m == player);
+            let credited = by == Some(player) || master.is_some();
             // A kill builds the killer's resources (spec §8 "Resources").
-            if let Some(by) = by {
+            if let Some(by) = master.or(by) {
                 self.gain_resource(by, Build::Kill);
             }
-            if by == Some(self.state.player) {
-                self.earn_kill(creature);
+            if credited {
+                let percent = match master {
+                    Some(_) => self.content.allies().map_or(100, |r| r.ally_percent),
+                    None => 100,
+                };
+                self.earn_kill_at(creature, percent);
                 let level = self.state.current_level.clone();
                 self.tally_kill(creature, &level);
                 self.judge_kill(id);
+                if master.is_some() && self.trains(Use::Handle) {
+                    self.train(Use::Handle);
+                }
             }
-            let lines = self.creature_dies(id, by == Some(self.state.player));
+            let lines = self.creature_dies(id, credited);
             self.news.splice(earned..earned, lines);
         }
     }
 
     /// Creature `id` dies: it leaves the world, and what it carried (worn and wielded things
     /// too) falls on its cell, on top of what lies there, in the order it carried them, and its
-    /// corpse on top of that (spec §8 "Hunger"); identified, when the player killed it
-    /// (`by_player`) with Scavenger. Returns the lines for an animated thing's components that
+    /// corpse on top of that (spec §8 "Hunger"). `by_player`: the player killed it. Returns the lines for an animated thing's components that
     /// broke as they fell, if the player saw it ([`World::break_lines`]).
     fn creature_dies(&mut self, id: ActorId, by_player: bool) -> Vec<String> {
         let Some(actor) = self.state.actors.remove(&id) else {
@@ -1139,14 +1173,17 @@ impl World {
             let slain = def.id.clone();
             self.state.quests.slay(&slain);
         }
+        // A summoned ally leaves nothing: no corpse, no pile (spec §8 "Allies": "Summons").
+        if (actor.ally.as_ref())
+            .is_some_and(|a| matches!(a.source, super::AllySource::Summoned { .. }))
+        {
+            self.fallen.push(actor);
+            return Vec::new();
+        }
         // An animated thing's body falls whole or not at all (spec §8 "Animated objects").
         let (mut dropped, broken) = self.remains(&actor);
         let mut lines = self.break_lines(&actor.level, actor.pos, &broken);
         dropped.extend(self.loot_of(&actor));
-        // Scavenger (spec §8 "Creature gear"): what the player's kill drops is known at once.
-        if by_player && self.state.player().talent_mods(&self.content).scavenger {
-            dropped.iter_mut().for_each(|stack| _ = stack.identify());
-        }
         // An incorporeal creature dies inside a wall: what it carried falls out of it.
         let mut actor = actor;
         actor.pos = self.landing(&actor.level, actor.pos);
@@ -1324,7 +1361,9 @@ impl World {
         let target_actor = self.actor_or_fallen(target);
         let name = target_actor.map(|a| content.creature(a.creature).name.as_str());
         let guard = Guard::of(target_actor, &content, &self.state);
+        let yours = target_actor.is_some_and(|a| a.master() == Some(player));
         let end = match name {
+            Some(name) if seen && yours => End::Yours(name),
             Some(name) if seen => End::Seen(name),
             _ => End::Unseen,
         };

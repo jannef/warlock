@@ -33,7 +33,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A spell | `magic.md#spell-ID` | `magic.md#spell-fireball` |
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
 | A resource (Rage, Stamina, Ki, Focus, Inspiration, Openings) | `resources.md#resource-ID` | `resources.md#resource-ki` |
-| A stance | `combat.md#stance-NAME` | `combat.md#stance-berserker` |
+| A stance | `combat.md#stance-NAME` | `combat.md#stance-frenzy` |
 | A stat | `stats.md#stat-NAME` | `stats.md#stat-toughness` |
 | A race | `races.md#race-ID` | `races.md#race-half-elf` |
 | A weapon skill | `weapon-skills.md#weapon-skill-ID` | `weapon-skills.md#weapon-skill-long-blades` |
@@ -49,11 +49,12 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A creature | `creatures.md#creature-ID` | `creatures.md#creature-kobold` |
 | An item class | `objects.md#class-ID` | `objects.md#class-melee-weapons` |
 | A potion | `potions.md#potion-ID` | `potions.md#potion-of-healing` |
+| A use of the priest's prayer (disease, poison, wounds, release, mana, hunger, restoration) | `prayer.md#prayer-ID` | `prayer.md#prayer-wounds` |
 | A scroll | `scrolls.md#scroll-ID` | `scrolls.md#scroll-of-identify` |
 | A terrain | `terrain.md#terrain-ID` | `terrain.md#terrain-shallow-water` |
 
 A term with a section of its own links to the section instead (Bleeding:
-`status-effects.md#bleeding`; Rage: `resources.md#rage`; a class: `classes.md#barbarian`).
+`status-effects.md#bleeding`; Rage: `resources.md#rage`; a class: `classes.md#berserker`).
 The generators make these anchors with `text::anchored` and link rows with `text::link`
 (`xtask/src/wiki/text.rs`, the one helper); a new kind of row is a new `Term` there and a line
 above.
@@ -144,7 +145,7 @@ above.
 | Age, birthday, birth sign | `character.md#age-birthday-and-sign`, `horoscope.md#what-a-sign-does` |
 | Race | `races.md` (a race: its row) |
 | Evil races | `races.md#the-evil-races` |
-| Class, class levels | `classes.md`, `classes.md#levels` (a class: its heading, `classes.md#barbarian`) |
+| Class, class levels | `classes.md`, `classes.md#levels` (a class: its heading, `classes.md#berserker`) |
 | Starting kit | `starting-kit.md` |
 | Background story, its chapters, how rare | `background.md`, `background.md#how-rare` |
 | Story, a story's sentence (line), its kind (tier: common, uncommon, rare, fateful) | `background.md#how-rare` |
@@ -158,6 +159,17 @@ above.
 | Racial talents | `talents.md#racial-talents` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
+| The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `classes.md#the-bard` |
+| Songs (Inspire, the Lullaby), singing, a song's degrees, shaking a song off, Virtuoso | `abilities.md#songs` |
+| Prestige class, the Hunter, total level, a class's cap (last level) | `classes.md#prestige-classes` (a prestige class's table: its heading, `classes.md#hunter`) |
+| A calling, being called | `classes.md#callings` |
+| Spirit weapon | `abilities.md#ability-spirit-weapon` |
+| The Strange Spirit, the oath | `npcs.md#the-strange-spirit` |
+| The priest's prayer (Orison, Prayer, Litany, Benediction, Miracle), what it answers | `prayer.md`, `prayer.md#what-it-answers` (a use: its row) |
+| Strain, a fizzled prayer | `prayer.md#strain` |
+| The holy and the dark powers, the dark face's twists (Whisper, Invocation, Rite, Pact) | `prayer.md#the-holy-and-the-dark` |
+| Communion with the dark | `talents.md#talent-communion`, `prayer.md#communion-and-sanctuary` |
+| Hallowed ground, dreaded ground (Sanctuary) | `special-rooms.md#hallowed-ground` |
 | Stats (Strength, Dexterity, …), score | `stats.md` (a stat: its row) |
 | Modifier | `stats.md#modifiers` |
 | Potential | `stats.md#potentials` |
@@ -166,12 +178,15 @@ above.
 | Drained stats, stat damage | `stats.md#drained-stats`, `diseases.md#stat-damage` |
 | Skills, trained and untrained | `skills.md`, `skills.md#what-skills-give` (a skill: its row) |
 | Skill rolls, skill marks | `skills.md#getting-better` |
+| A skill's ladder (what it gives by value: Music's song degrees and difficulty, …) | `skills.md#what-skills-give` |
 | Slipping past (a creature with darkvision, unlit) | `skills.md#slipping-past` |
 | Stealing | `skills.md#stealing` |
+| Intimidating (a threat at one foe) | `skills.md#intimidating` |
 | Treating yourself, binding a wound | `skills.md#treating-yourself` |
 | Foraging | `skills.md#foraging` |
 | Abilities, the abilities menu | `abilities.md#the-abilities-menu` |
 | Experience, XP, levels | `experience.md`, `experience.md#levels` |
+| The level curve to 100, the XP of every level | `experience.md#levels` |
 | Experience for discoveries | `experience.md#discovery` |
 | A level-up, what a level gives | `experience.md#what-a-level-gives` |
 | **Fighting** | |
@@ -227,7 +242,10 @@ above.
 | A creature's craft for surprise (its sneak attack, initiative, spot) | `creature-numbers.md#surprise` |
 | Animated object | `animated.md` |
 | Mimic | `mimics.md` |
+| Ally, your wolf, orders (Come to heel, Hold here, Set on) | `allies.md`, `allies.md#orders` |
+| Summon, summon spell, a call (the druid's) | `allies.md#summons`, `allies.md#the-druids-calls` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
+| Saying words, passwords, riddles | `npcs.md#saying-words` |
 | Services (cure, mending, identification) | `npcs.md#services` |
 | The pedlar's offer, his wares | `npcs.md#the-pedlars-offer` |
 | Quest, quest log | `quests.md`, `quests.md#the-quest-log` |

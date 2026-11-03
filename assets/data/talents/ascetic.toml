@@ -1,8 +1,0 @@
-[[talent]]
-id = "ascetic"
-name = "Ascetic"
-tree = "grit"
-description = "You have mastered your body's wants: hunger never weakens you, however long you go without, and you never faint from it. Starving still kills."
-needs = { stats = { willpower = 13 } }
-effects = [{ kind = "no_hunger_weakness" }]
-systems = ["hunger"]

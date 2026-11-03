@@ -89,7 +89,12 @@ fn the_silent_vault_is_data_a_hush_and_a_status() {
     let status = w.content.status(silenced(&w));
     assert_eq!(
         status.blocks,
-        [ActionKind::Cast, ActionKind::Read, ActionKind::ThrowVoice]
+        [
+            ActionKind::Cast,
+            ActionKind::Read,
+            ActionKind::Song,
+            ActionKind::ThrowVoice
+        ]
     );
     assert_eq!(status.eases, Some(10));
     assert!(!status.touches_only_mana(), "creatures without mana too");

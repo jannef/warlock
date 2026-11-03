@@ -22,6 +22,7 @@ use crate::damage::Kinds;
 use crate::dice::Dice;
 use crate::skills::{SkillId, Skills};
 use crate::stats::{PerStat, Stat, Stats};
+use crate::status::Effects;
 use crate::weapon_skills::WeaponSkills;
 use crate::world::{Actor, FreeBlows};
 use serde::{Deserialize, Serialize};
@@ -66,16 +67,13 @@ impl Talents {
         self.0.retain(|t| t.id != id);
     }
 
-    /// Lets go of every talent the content has no longer (a save from before it was taken out
-    /// of the data); their ids, in the order taken.
-    pub fn drop_unknown(&mut self, content: &Content) -> Vec<String> {
+    /// The first talent held that the content does not have, if any (a saved state is refused
+    /// for it: saves are pinned to the version that wrote them, `docs/dev/saves.md`).
+    pub fn unknown_to(&self, content: &Content) -> Option<&str> {
         let book = content.talents();
-        let gone: Vec<String> = (self.0.iter())
-            .filter(|t| book.id(&t.id).is_none())
-            .map(|t| t.id.clone())
-            .collect();
-        self.0.retain(|t| book.id(&t.id).is_some());
-        gone
+        (self.0.iter())
+            .find(|t| book.id(&t.id).is_none())
+            .map(|t| t.id.as_str())
     }
 
     /// The rank held of talent `id` taken for `choice` (0: not held).
@@ -135,9 +133,11 @@ impl Talents {
         self.0.splice(0..0, given);
     }
 
-    /// What every rank held does, summed ([`TalentMods`]). Talents the content no longer has
-    /// do nothing.
-    pub fn mods(&self, content: &Content) -> TalentMods {
+    /// What every rank held does, summed ([`TalentMods`]), with the effects that count only
+    /// under a status (`while`) counted while its holder suffers it (`effects`, its statuses):
+    /// the one place the condition is read, so no rule knows it exists. Talents the content no
+    /// longer has do nothing.
+    pub fn mods(&self, content: &Content, effects: &Effects) -> TalentMods {
         let mut mods = TalentMods::default();
         if self.0.is_empty() {
             return mods;
@@ -156,6 +156,11 @@ impl Talents {
                         mods.gift_reach.note(content, &effect);
                     }
                     mods.add(content, effect, taken.choice.as_deref());
+                }
+                for (status, effect) in def.effects_while_at(rank) {
+                    if effects.has(status) {
+                        mods.add(content, effect, taken.choice.as_deref());
+                    }
                 }
             }
         }
@@ -197,8 +202,6 @@ pub struct TalentMods {
     pub dodge: i32,
     /// Natural armour, on top of the actor's own.
     pub natural: i32,
-    /// Natural armour as `natural`, while it wears no body armour.
-    pub natural_unarmoured: i32,
     /// Added to every melee blow's damage.
     pub melee_damage: i32,
     /// Added to every attack's damage below a third of its hit points (Ferocity).
@@ -327,7 +330,7 @@ pub struct TalentMods {
     /// A meal never leaves it Bloated.
     pub no_bloating: bool,
     /// Hunger never weakens it: Weak or worse takes nothing off its stats, and it never faints
-    /// (Ascetic).
+    /// (Long fast).
     pub no_hunger_weakness: bool,
     /// Percent more of a fresh corpse's stat training marks and its chances to widen a
     /// potential (`on_eat` `train` and `widen`).
@@ -362,13 +365,9 @@ pub struct TalentMods {
     pub quest_gold_percent: i32,
     /// Percent more favour in shops, before the cap.
     pub favour_percent: i32,
-    /// What it buys or sells is identified.
-    pub identify_trades: bool,
     /// Temple services cost it half, and a cure also mends a point of each damaged stat
     /// (Pious).
     pub services: bool,
-    /// What a creature it kills drops is identified as it lands (Scavenger).
-    pub scavenger: bool,
     /// Item descriptions show its gems' worth.
     pub gem_worth: bool,
     /// The hours a magic item must be carried to be identified, if it has the effect (the
@@ -431,6 +430,12 @@ pub struct TalentMods {
     pub deflection: i32,
     /// Protection, each with what it asks to be worn ([`TalentMods::protection_with`]).
     pub protection: Vec<Guard>,
+    /// What it gives its allies (spec §8 "Allies": Beast-bond), read through their master, and
+    /// its summon spells' calls.
+    pub ally: AllyMods,
+    /// The summon draw's bias: a pool creature carrying the tag weighs this many times as much
+    /// (`world/summon_spell.rs`), in the order taken.
+    pub summon_bias: Vec<(String, u32)>,
     /// Percent less of a stance's to-hit penalty, by stance.
     pub stance_to_hit: Vec<(CombatStance, i32)>,
     /// Percent more a step out of reach of every hostile beside it costs (negative: cheaper).
@@ -486,6 +491,8 @@ pub struct TalentMods {
     pub dig_percent: i32,
     /// Percent more its blows with a two-handed weapon cost (negative: cheaper).
     pub two_handed_price: i32,
+    /// Percent more its melee attacks cost (negative: cheaper; Blood frenzy while raging).
+    pub attack_price_percent: i32,
     /// The status a critical it confirms in melee leaves on the target.
     pub critical_status: Option<StatusId>,
     /// The status a melee hit of its holds the creature with (Drowning grip), if any.
@@ -560,6 +567,8 @@ pub struct TalentMods {
     /// The active Rage: the resource it grants (Rage, which brings the Raging status), if it
     /// has it.
     pub rage: Option<ResourceId>,
+    /// The active War cry, if it has it.
+    pub war_cry: Option<WarCry>,
     /// What events build resources beyond the resources' own `builds`: `(resource, on,
     /// amount)` (Blood frenzy's rage a kill).
     pub resource_builds: Vec<(ResourceId, Build, u16)>,
@@ -579,8 +588,16 @@ pub struct TalentMods {
     pub smite: Option<Smite>,
     /// The active Holy radiance: its status and the light it sheds while it lasts.
     pub radiance: Option<(StatusId, LightId)>,
+    /// The active Patient defence, if it has it: the status it gives (Poised).
+    pub patient_defence: Option<StatusId>,
+    /// The active Stunning strike, if it has it.
+    pub stunning_strike: Option<PalmBlow>,
     /// The active Quivering palm, if it has it.
-    pub quivering_palm: Option<QuiveringPalm>,
+    pub quivering_palm: Option<PalmBlow>,
+    /// The active Step of the wind, if it has it: the status it gives (Light-footed).
+    pub wind_step: Option<StatusId>,
+    /// The active Stillness, if it has it: the statuses it ends.
+    pub stillness: Option<Vec<StatusId>>,
     /// Hit points every level past `hp_level` adds beyond a level's own, if it has Hardened.
     pub hardened: Option<i32>,
     /// Percent more maximum hit points (negative: fewer).
@@ -650,6 +667,10 @@ pub struct TalentMods {
     pub lurk: Option<StatusId>,
     /// The active Low blow: a blow that is a sneak attack whatever the foe knows.
     pub low_blow: bool,
+    /// The active Merchant's eye: a stack it carries identified, for the time of a reading.
+    pub merchants_eye: bool,
+    /// The active Spirit weapon, and what a spirit weapon in its hand gives, if it has it.
+    pub spirit_weapon: Option<SpiritWeapon>,
     /// How much higher every skill it is trained in counts (Jack of all trades).
     pub trained_skills: i32,
     /// The alternative resources its talents grant it, in the order first named (Rapid shot's
@@ -659,16 +680,50 @@ pub struct TalentMods {
     pub rapid_shot: Option<RapidShot>,
     /// What each second blow of its flurry costs, if anything (Flurry, on Ki).
     pub flurry_cost: Option<ResourceCost>,
+    /// What a missile caught costs, if it catches them (Diamond soul, on Ki; `world/ascetic.rs`).
+    pub catch_missiles: Option<ResourceCost>,
     /// The active Volley, if it has it.
     pub volley: Option<Volley>,
-    /// The active Inspire, if it has it.
-    pub inspire: Option<Inspire>,
-    /// The status Inspire gives instead, for no mana (Virtuoso).
+    /// The songs it sings (Inspire), in the order first named: one a class active.
+    pub songs: Vec<Song>,
+    /// The status a song on the singer gives instead, every song free and a degree greater
+    /// (Virtuoso).
     pub virtuoso: Option<StatusId>,
     /// The active Consecrate, if it has it.
     pub consecrate: Option<Consecrate>,
+    /// Communion with the dark: in an unholy place its prayers add no strain and the place's
+    /// status never touches it, within its talent's bands (`World::communes`).
+    pub communion: bool,
+    /// The active Sanctuary, if it has it.
+    pub sanctuary: Option<Sanctuary>,
     /// The active Knock, if it has it.
     pub knock: Option<Knock>,
+    /// The priest's prayer, its talents summed (`world/orison.rs`), if it has any.
+    pub prayer: Option<Prayer>,
+}
+
+/// The priest's prayer (spec §8 "Class abilities"; `world/orison.rs`): what its prayer talents
+/// sum to: the uses (their union), the answers a prayer gives (the largest; at least 1), every
+/// problem at once (any), and the highest tier with its titles.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Prayer {
+    pub uses: std::collections::BTreeSet<crate::content::PrayerUse>,
+    pub answers: u8,
+    pub all: bool,
+    pub tier: u8,
+    pub title: Option<crate::content::Faced>,
+}
+
+impl Prayer {
+    /// Whether it may answer `id`: a use held, or every use with `all`.
+    pub fn answers_to(&self, id: crate::content::PrayerUse) -> bool {
+        self.all || self.uses.contains(&id)
+    }
+
+    /// Its title as `face` gives it (`Orison`, `Whisper`), if a tier is held.
+    pub fn title(&self, face: crate::content::Face) -> Option<&str> {
+        self.title.as_ref().map(|t| t.of(face))
+    }
 }
 
 /// A once-in-a-life reprieve from death (Miracle, Hag's bargain): what it is called in
@@ -714,11 +769,41 @@ pub struct HoundsBay {
     pub cooldown: StatusId,
 }
 
+/// The active War cry (spec §8 "Class abilities"): the status a roar leaves on the hostiles who
+/// hear and see its holder and fail their check, its degrees, and the check's base difficulty.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct WarCry {
+    pub status: StatusId,
+    pub severity: u16,
+    pub difficulty: i32,
+}
+
 /// The active Consecrate (spec §8 "Class abilities"): its mana and how long the prayer takes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Consecrate {
     pub mana: i32,
     pub time: crate::time::Duration,
+}
+
+/// The active Spirit weapon (spec §8 "Prestige classes"; `world/spirit_weapon.rs`): what a
+/// spirit weapon in the hand gives, more to hit, a threat lower, and Protection ignored.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SpiritWeapon {
+    pub to_hit: i32,
+    pub threat: u8,
+    pub ignores_protection: bool,
+}
+
+/// The active Sanctuary (spec §8 "Class abilities", §7 "Special rooms"; `world/sanctuary.rs`):
+/// its mana, how long the rite takes, and the hallow it lays: its radius, how long it lasts,
+/// and the healing and mana pace inside it, in percent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Sanctuary {
+    pub mana: i32,
+    pub time: crate::time::Duration,
+    pub radius: u8,
+    pub lasts: crate::time::Duration,
+    pub regen: u16,
 }
 
 /// The active Knock (spec §8 "Class abilities", "Chests"): its mana.
@@ -727,13 +812,26 @@ pub struct Knock {
     pub mana: i32,
 }
 
-/// The active Inspire (spec §8 "Class abilities"): the status it gives, its mana, and what it
-/// spends in place of the mana while that is held (Inspiration).
+/// A song (spec §8 "Class abilities", the bard's songs; `world/song.rs`): the class active it
+/// is, whom it is sung on, the status it gives at its base degrees, what it costs (`None`:
+/// nothing, a Virtuoso's), and for a song on its hearers the stat they check and its difficulty.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Inspire {
+pub struct Song {
+    pub active: crate::content::ClassActive,
+    pub on: crate::content::SongOn,
     pub status: StatusId,
-    pub mana: i32,
-    pub instead: Option<ResourceCost>,
+    pub severity: u16,
+    pub cost: Option<SongCost>,
+    pub check: Option<(Stat, i32)>,
+}
+
+/// What a song costs: one thing (the owner: no dual costs).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SongCost {
+    /// So much of an alternative resource (Inspire's Inspiration).
+    Resource(ResourceCost),
+    /// So much mana.
+    Mana(i32),
 }
 
 /// Rise from the ashes (spec §8 "Birth sign"): what rising gives back, the burst it rises in,
@@ -779,9 +877,10 @@ impl Smite {
     }
 }
 
-/// The active Quivering palm (spec §8 "Class abilities").
+/// A bare-handed blow that leaves a wounded foe `severity` degrees of `status`: the actives
+/// Stunning strike and Quivering palm (spec §8 "Class abilities"; `World::palm_blow`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct QuiveringPalm {
+pub struct PalmBlow {
     pub status: StatusId,
     pub severity: u16,
 }
@@ -797,6 +896,24 @@ pub struct WeaponBonus {
     pub ranks: u8,
     /// Only for a skill held at this rank at least (0: any).
     pub at_rank: u8,
+}
+
+/// What a talent gives the holder's allies (spec §8 "Allies"): read where an ally strikes and
+/// is struck (`world/ally.rs`), through its master's mods.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct AllyMods {
+    /// Added to every ally's attacks.
+    pub to_hit: i32,
+    /// Added to every ally's Protection.
+    pub protection: i32,
+    /// More creatures every summon spell's call brings (added to its count roll).
+    pub count: i32,
+    /// Percent longer every call lasts (on its minutes, rounded down, at least 1).
+    pub duration_percent: i32,
+    /// Calls never lapse: they stay until slain.
+    pub lasting: bool,
+    /// More of each summon spell's calls kept at once (on its `most`).
+    pub most: i32,
 }
 
 /// Protection a talent adds, while what it asks is worn.
@@ -961,32 +1078,46 @@ impl TalentMods {
         use crate::content::ClassActive as A;
         match active {
             A::Rage => self.rage.is_some(),
+            A::WarCry => self.war_cry.is_some(),
             A::VeteransWind => self.veterans_wind.is_some(),
             A::Whirlwind => self.whirlwind,
             A::LayOnHands => self.lay_on_hands.is_some(),
             A::Smite => self.smite.is_some(),
             A::HolyRadiance => self.radiance.is_some(),
+            A::PatientDefence => self.patient_defence.is_some(),
+            A::StunningStrike => self.stunning_strike.is_some(),
             A::QuiveringPalm => self.quivering_palm.is_some(),
+            A::StepOfTheWind => self.wind_step.is_some(),
+            A::Stillness => self.stillness.is_some(),
             A::Volley => self.volley.is_some(),
             A::Lurk => self.lurk.is_some(),
             A::LowBlow => self.low_blow,
+            A::MerchantsEye => self.merchants_eye,
+            A::SpiritWeapon => self.spirit_weapon.is_some(),
             A::MasterThief => self.finisher,
-            A::Inspire => self.inspire.is_some(),
+            A::Inspire | A::Lullaby => self.songs.iter().any(|s| s.active == active),
             A::Consecrate => self.consecrate.is_some(),
+            A::Sanctuary => self.sanctuary.is_some(),
             A::Knock => self.knock.is_some(),
+            A::Orison => self.prayer.as_ref().is_some_and(|p| p.tier > 0),
         }
     }
 
-    /// What Inspire gives and costs, if it has it: Virtuoso's status for no mana, else its own.
-    pub fn inspiring(&self) -> Option<Inspire> {
-        let inspire = self.inspire?;
+    /// Song `active` as it is sung, if it has it: a Virtuoso's free, a degree greater, and on the
+    /// singer giving the Virtuoso's status; else as its data says.
+    pub fn song(&self, active: crate::content::ClassActive) -> Option<Song> {
+        let song = *self.songs.iter().find(|s| s.active == active)?;
         Some(match self.virtuoso {
-            Some(status) => Inspire {
-                status,
-                mana: 0,
-                instead: None,
+            Some(status) => Song {
+                status: match song.on {
+                    crate::content::SongOn::Singer => status,
+                    crate::content::SongOn::Hearers => song.status,
+                },
+                severity: song.severity + 1,
+                cost: None,
+                ..song
             },
-            None => inspire,
+            None => song,
         })
     }
 
@@ -1092,10 +1223,25 @@ impl TalentMods {
         match effect {
             TalentEffect::Dodge { value } => self.dodge += value,
             TalentEffect::Natural { value } => self.natural += value,
-            TalentEffect::NaturalUnarmoured { value } => self.natural_unarmoured += value,
             TalentEffect::MeleeDamage { value } => self.melee_damage += value,
             TalentEffect::Ferocity { value } => self.ferocity += value,
             TalentEffect::Threat { value } => self.threat += value,
+            TalentEffect::AllyMod {
+                to_hit,
+                protection,
+                count,
+                duration_percent,
+                lasting,
+                most,
+            } => {
+                self.ally.to_hit += to_hit;
+                self.ally.protection += protection;
+                self.ally.count += count;
+                self.ally.duration_percent += duration_percent;
+                self.ally.lasting |= lasting;
+                self.ally.most += most;
+            }
+            TalentEffect::SummonBias { tag, weight } => self.summon_bias.push((tag, weight)),
             TalentEffect::RerollFumble => self.reroll_fumble = true,
             TalentEffect::Streak { max, damage_every } => {
                 self.streak = self.streak.max(max);
@@ -1196,6 +1342,8 @@ impl TalentMods {
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
             // Handed out as the rank is taken (`World::take_talent`), never read after.
             TalentEffect::TrainSkill { .. }
+            | TalentEffect::WeaponRanks { .. }
+            | TalentEffect::TakeUpSkills { .. }
             | TalentEffect::StartingGold { .. }
             | TalentEffect::StartingGems { .. }
             | TalentEffect::Heirloom { .. } => {}
@@ -1217,9 +1365,7 @@ impl TalentMods {
             TalentEffect::TrapDamagePercent { value } => self.trap_damage_percent += value,
             TalentEffect::QuestGoldPercent { value } => self.quest_gold_percent += value,
             TalentEffect::FavourPercent { value } => self.favour_percent += value,
-            TalentEffect::IdentifyTrades => self.identify_trades = true,
             TalentEffect::Pilgrim => self.services = true,
-            TalentEffect::Scavenger => self.scavenger = true,
             TalentEffect::GemWorth => self.gem_worth = true,
             TalentEffect::IdentifyCarried { hours } => {
                 self.identify_carried = Some(self.identify_carried.map_or(hours, |h| h.min(hours)));
@@ -1386,6 +1532,7 @@ impl TalentMods {
             TalentEffect::SmashDestroyPercent { value } => self.smash_destroy_percent += value,
             TalentEffect::DigPercent { value } => self.dig_percent += value,
             TalentEffect::TwoHandedPrice { value } => self.two_handed_price += value,
+            TalentEffect::AttackPricePercent { value } => self.attack_price_percent += value,
             TalentEffect::Grip { status } => {
                 self.grip = content.status_id(&status).or(self.grip);
             }
@@ -1667,6 +1814,19 @@ impl TalentMods {
             TalentEffect::Rage { resource } => {
                 self.rage = content.resource_id(&resource).or(self.rage);
             }
+            TalentEffect::WarCry {
+                status,
+                severity,
+                difficulty,
+            } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.war_cry = Some(WarCry {
+                        status,
+                        severity,
+                        difficulty,
+                    });
+                }
+            }
             TalentEffect::ResourceBuild {
                 resource,
                 on,
@@ -1722,7 +1882,23 @@ impl TalentMods {
             }
             TalentEffect::QuiveringPalm { status, severity } => {
                 if let Some(status) = content.status_id(&status) {
-                    self.quivering_palm = Some(QuiveringPalm { status, severity });
+                    self.quivering_palm = Some(PalmBlow { status, severity });
+                }
+            }
+            TalentEffect::StunningStrike { status, severity } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.stunning_strike = Some(PalmBlow { status, severity });
+                }
+            }
+            TalentEffect::WindStep { status } => {
+                self.wind_step = self.wind_step.or(content.status_id(&status));
+            }
+            TalentEffect::Stillness { statuses, .. } => {
+                let ends = self.stillness.get_or_insert_with(Vec::new);
+                for id in statuses.iter().filter_map(|s| content.status_id(s)) {
+                    if !ends.contains(&id) {
+                        ends.push(id);
+                    }
                 }
             }
             TalentEffect::Hardened { bonus } => {
@@ -1745,10 +1921,26 @@ impl TalentMods {
             TalentEffect::ThrowVoice => self.throw_voice = true,
             TalentEffect::AmbushThreat { value } => self.ambush_threat += value,
             TalentEffect::Finisher => self.finisher = true,
+            TalentEffect::PatientDefence { status } => {
+                self.patient_defence = content.status_id(&status).or(self.patient_defence);
+            }
             TalentEffect::Lurk { status } => {
                 self.lurk = content.status_id(&status).or(self.lurk);
             }
             TalentEffect::LowBlow => self.low_blow = true,
+            TalentEffect::MerchantsEye => self.merchants_eye = true,
+            TalentEffect::SpiritWeapon {
+                to_hit,
+                threat,
+                ignores_protection,
+                ..
+            } => {
+                self.spirit_weapon = Some(SpiritWeapon {
+                    to_hit,
+                    threat,
+                    ignores_protection,
+                });
+            }
             TalentEffect::TrainedSkills { value } => self.trained_skills += value,
             TalentEffect::GrantsResource { resource } => {
                 if let Some(resource) = content.resource_id(&resource)
@@ -1771,30 +1963,56 @@ impl TalentMods {
                 }
             }
             TalentEffect::Volley { shots } => self.volley = Some(Volley { shots }),
-            TalentEffect::Inspire {
+            TalentEffect::Song {
+                id,
+                on,
                 status,
-                mana,
+                severity,
                 resource,
                 cost,
+                mana,
+                check,
+                difficulty,
             } => {
-                if let Some(status) = content.status_id(&status) {
-                    let instead =
-                        (resource.and_then(|r| content.resource_id(&r))).map(|resource| {
-                            ResourceCost {
-                                resource,
-                                amount: cost,
-                            }
-                        });
-                    self.inspire = Some(Inspire {
+                let active = crate::content::ClassActive::from_id(&id);
+                // A pool content lacks cannot pay for it: no song (content without resources).
+                let cost = match resource {
+                    Some(r) => (content.resource_id(&r)).map(|resource| {
+                        SongCost::Resource(ResourceCost {
+                            resource,
+                            amount: cost,
+                        })
+                    }),
+                    None => Some(SongCost::Mana(mana)),
+                };
+                let status = content.status_id(&status);
+                if let (Some(active), Some(status), Some(cost)) = (active, status, cost) {
+                    let cost = Some(cost);
+                    let song = Song {
+                        active,
+                        on,
                         status,
-                        mana,
-                        instead,
-                    });
+                        severity,
+                        cost,
+                        check: check.map(|stat| (stat, difficulty)),
+                    };
+                    match self.songs.iter_mut().find(|s| s.active == active) {
+                        Some(held) => *held = song,
+                        None => self.songs.push(song),
+                    }
                 }
             }
             TalentEffect::FlurryCost { resource, cost } => {
                 if let Some(resource) = content.resource_id(&resource) {
                     self.flurry_cost = Some(ResourceCost {
+                        resource,
+                        amount: cost,
+                    });
+                }
+            }
+            TalentEffect::CatchMissiles { resource, cost } => {
+                if let Some(resource) = content.resource_id(&resource) {
+                    self.catch_missiles = Some(ResourceCost {
                         resource,
                         amount: cost,
                     });
@@ -1806,7 +2024,44 @@ impl TalentMods {
                     self.consecrate = Some(Consecrate { mana, time });
                 }
             }
+            TalentEffect::Sanctuary {
+                mana,
+                time,
+                radius,
+                lasts,
+                regen,
+            } => {
+                if let (Ok(time), Ok(lasts)) = (time.parse(), lasts.parse()) {
+                    self.sanctuary = Some(Sanctuary {
+                        mana,
+                        time,
+                        radius,
+                        lasts,
+                        regen,
+                    });
+                }
+            }
             TalentEffect::Knock { mana } => self.knock = Some(Knock { mana }),
+            TalentEffect::Communion => self.communion = true,
+            TalentEffect::Prayer {
+                tier,
+                title,
+                uses,
+                answers,
+                all,
+            } => {
+                let prayer = self.prayer.get_or_insert_with(|| Prayer {
+                    answers: 1,
+                    ..Prayer::default()
+                });
+                prayer.uses.extend(uses);
+                prayer.answers = prayer.answers.max(answers.unwrap_or(1));
+                prayer.all |= all;
+                if let Some(tier) = tier.filter(|&t| t > prayer.tier) {
+                    prayer.tier = tier;
+                    prayer.title = title;
+                }
+            }
         }
     }
 
@@ -2018,7 +2273,7 @@ impl<'a> Candidate<'a> {
             },
             Need::Level(level) => self.level >= *level,
             Need::Race(id) => self.race == Some(id.as_str()),
-            Need::Eyes(id) => self.eyes == Some(id.as_str()),
+            Need::Eyes(ids) => ids.iter().any(|id| self.eyes == Some(id.as_str())),
             Need::Class(id) => self.class == Some(id.as_str()),
             Need::Animal(id) => self.sign.is_some_and(|s| s.is_animal(id)),
             Need::Element(id) => self.sign.is_some_and(|s| s.is_element(id)),

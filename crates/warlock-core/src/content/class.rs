@@ -102,24 +102,153 @@ struct ClassSpec {
     #[serde(default)]
     abilities: Vec<AbilitySpec>,
     bonus_talents: Option<BonusSpec>,
+    max_level: Option<u8>,
 }
 
-/// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent.
+/// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent;
+/// `rank = 2` gives its second rank (default 1).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct AbilitySpec {
+pub(super) struct AbilitySpec {
     level: u8,
     talent: String,
+    #[serde(default = "first_rank")]
+    rank: u8,
+}
+
+fn first_rank() -> u8 {
+    1
 }
 
 /// `{ levels = [10, 20], trees = ["guard"] }`: a bonus talent pick at each of those levels,
 /// from those trees (none: any).
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-struct BonusSpec {
+pub(super) struct BonusSpec {
     levels: Vec<u8>,
     #[serde(default)]
     trees: Vec<String>,
+}
+
+/// The `abilities` rows of a class or prestige table (`what`: `class \`bard\``, for errors),
+/// checked: levels 1 to `MAX_LEVEL`, ascending, ranks from 1, a talent's ranks rising down the
+/// table. The cap's own check is [`check_levels`], once the cap is known.
+pub(super) fn table_rows(
+    err: &impl Fn(String) -> ContentError,
+    what: &str,
+    rows: Vec<AbilitySpec>,
+) -> Result<Vec<(u8, String, u8)>, ContentError> {
+    let mut abilities: Vec<(u8, String, u8)> = Vec::with_capacity(rows.len());
+    for a in rows {
+        if !(1..=MAX_LEVEL).contains(&a.level) {
+            return Err(err(format!(
+                "{what}: abilities: level {} is not 1 to {MAX_LEVEL}",
+                a.level
+            )));
+        }
+        if abilities.last().is_some_and(|(l, _, _)| *l > a.level) {
+            return Err(err(format!(
+                "{what}: abilities are listed by level, lowest first"
+            )));
+        }
+        if a.rank == 0 {
+            return Err(err(format!(
+                "{what}: abilities: `{}` at rank 0 (ranks start at 1)",
+                a.talent
+            )));
+        }
+        if (abilities.iter()).any(|(_, t, r)| *t == a.talent && *r >= a.rank) {
+            return Err(err(format!(
+                "{what}: abilities: `{}` rank {} twice, or after a higher rank",
+                a.talent, a.rank
+            )));
+        }
+        abilities.push((a.level, a.talent, a.rank));
+    }
+    Ok(abilities)
+}
+
+/// The `bonus_talents` of a class or prestige table, checked: at least one level, 1 to
+/// `MAX_LEVEL`, ascending.
+pub(super) fn bonus_rows(
+    err: &impl Fn(String) -> ContentError,
+    what: &str,
+    spec: Option<BonusSpec>,
+) -> Result<BonusTalents, ContentError> {
+    let Some(b) = spec else {
+        return Ok(BonusTalents::default());
+    };
+    let ascending = b.levels.windows(2).all(|w| w[0] < w[1]);
+    if b.levels.is_empty() || !ascending || !b.levels.iter().all(|&l| (1..=MAX_LEVEL).contains(&l))
+    {
+        return Err(err(format!(
+            "{what}: bonus_talents: levels are 1 to {MAX_LEVEL}, at least one, ascending"
+        )));
+    }
+    Ok(BonusTalents {
+        levels: b.levels,
+        trees: b.trees,
+    })
+}
+
+/// Checks that every level of a table (`abilities` rows and `bonus_talents`) is within its
+/// highest level `cap` (spec §8 "Prestige classes": a level past the cap never comes).
+pub(super) fn check_levels(
+    err: &impl Fn(String) -> ContentError,
+    what: &str,
+    abilities: &[(u8, String, u8)],
+    bonus: &BonusTalents,
+    cap: u8,
+) -> Result<(), ContentError> {
+    if let Some((level, talent, _)) = abilities.iter().find(|(l, _, _)| *l > cap) {
+        return Err(err(format!(
+            "{what}: abilities: `{talent}` at level {level} is past its highest level, {cap}"
+        )));
+    }
+    if let Some(level) = bonus.levels.iter().find(|&&l| l > cap) {
+        return Err(err(format!(
+            "{what}: bonus_talents: level {level} is past its highest level, {cap}"
+        )));
+    }
+    Ok(())
+}
+
+/// Checks a level table (`abilities` and `bonus_talents`) against `book` once the talents are
+/// loaded (nothing to check against a book without a class tree, whose tables give nothing):
+/// every talent named is in the book with the rank named, and every bonus tree is a tree that
+/// is no class tree.
+pub(super) fn check_rows(
+    err: &impl Fn(String) -> ContentError,
+    abilities: &[(u8, String, u8)],
+    bonus: &BonusTalents,
+    book: &TalentBook,
+) -> Result<(), ContentError> {
+    if !book.has_class_tree() {
+        return Ok(());
+    }
+    for (_, talent, rank) in abilities {
+        let Some(id) = book.id(talent) else {
+            return Err(err(format!("abilities: unknown talent `{talent}`")));
+        };
+        let ranks = book.get(id).rank_count();
+        if *rank > ranks {
+            return Err(err(format!(
+                "abilities: `{talent}` rank {rank}, but it has {ranks}"
+            )));
+        }
+    }
+    for tree in &bonus.trees {
+        match book.tree_id(tree) {
+            Some(t) if !book.tree(t).class => {}
+            Some(_) => {
+                return Err(err(format!(
+                    "bonus_talents: `{tree}` is the class tree: nothing is picked from it"
+                )));
+            }
+            None => return Err(err(format!("bonus_talents: unknown tree `{tree}`"))),
+        }
+    }
+    Ok(())
 }
 
 /// A class's bonus talent picks (spec §8 "Class abilities").
@@ -173,7 +302,7 @@ pub struct ClassDef {
     /// Starting ranks in weapon skills (spec §8 "Weapon skills"), in skill order: added to the
     /// race's.
     pub weapon_skills: Vec<(WeaponSkillId, Dice)>,
-    /// Sets of starting ranks of which one is picked at random (the barbarian: axes or great
+    /// Sets of starting ranks of which one is picked at random (the berserker: axes or great
     /// blades); empty for none.
     pub weapon_skill_choice: Vec<Vec<(WeaponSkillId, Dice)>>,
     /// Starting ranks in fighting styles (spec §8 "Fighting styles"), in skill order.
@@ -187,10 +316,15 @@ pub struct ClassDef {
     /// pack; filled in by the loader once objects are known.
     pub kit: Kit,
     /// Its class abilities (spec §8 "Class abilities"): at each level, the talent it gives, by
-    /// id, ascending by level.
-    pub abilities: Vec<(u8, String)>,
+    /// id, and the rank of it (1 first), ascending by level; a talent's ranks rise down the table.
+    pub abilities: Vec<(u8, String, u8)>,
     /// Its bonus talent picks.
     pub bonus_talents: BonusTalents,
+    /// The highest level the class reaches (spec §8 "Prestige classes"): the file's
+    /// `max_level`, else `[levels] class_max` of `data/experience.toml`, filled in by the loader
+    /// ([`ClassDef::settle_cap`]; 0 until then). A character's level stops here until a prestige
+    /// class takes them on.
+    pub max_level: u8,
     /// The file it was read from, for the errors of [`ClassDef::check_table`].
     pub(super) file: String,
 }
@@ -333,44 +467,14 @@ impl ClassDef {
         )?;
         let styles = ranks(&spec.styles, Ranked::Styles)?;
         let style_choice = choice("style_choice", &spec.style_choice, Ranked::Styles)?;
-        let level_ok = |l: u8| (1..=MAX_LEVEL).contains(&l);
-        let mut abilities: Vec<(u8, String)> = Vec::with_capacity(spec.abilities.len());
-        for a in spec.abilities {
-            if !level_ok(a.level) {
-                return Err(err(format!(
-                    "class `{id}`: abilities: level {} is not 1 to {MAX_LEVEL}",
-                    a.level
-                )));
-            }
-            if abilities.last().is_some_and(|(l, _)| *l > a.level) {
-                return Err(err(format!(
-                    "class `{id}`: abilities are listed by level, lowest first"
-                )));
-            }
-            if abilities.iter().any(|(_, t)| *t == a.talent) {
-                return Err(err(format!(
-                    "class `{id}`: abilities: `{}` twice",
-                    a.talent
-                )));
-            }
-            abilities.push((a.level, a.talent));
+        let what = format!("class `{id}`");
+        let abilities = table_rows(&err, &what, spec.abilities)?;
+        let bonus_talents = bonus_rows(&err, &what, spec.bonus_talents)?;
+        if let Some(cap) = spec.max_level.filter(|c| !(2..=MAX_LEVEL).contains(c)) {
+            return Err(err(format!(
+                "{what}: max_level {cap} is not 2 to {MAX_LEVEL}"
+            )));
         }
-        let bonus_talents = match spec.bonus_talents {
-            None => BonusTalents::default(),
-            Some(b) => {
-                let ascending = b.levels.windows(2).all(|w| w[0] < w[1]);
-                if b.levels.is_empty() || !ascending || !b.levels.iter().all(|&l| level_ok(l)) {
-                    return Err(err(format!(
-                        "class `{id}`: bonus_talents: levels are 1 to {MAX_LEVEL}, at least \
-                         one, ascending"
-                    )));
-                }
-                BonusTalents {
-                    levels: b.levels,
-                    trees: b.trees,
-                }
-            }
-        };
         Ok(ClassDef {
             id: spec.id,
             name: spec.name,
@@ -395,8 +499,33 @@ impl ClassDef {
             kit: Kit::default(),
             abilities,
             bonus_talents,
+            max_level: spec.max_level.unwrap_or(0),
             file: file.to_string(),
         })
+    }
+
+    /// Settles its highest level once the experience rules are read: `default` (`[levels]
+    /// class_max`) where the file named none, at most `highest` (the curve's `max_level`), and
+    /// every level of its table within it.
+    pub(super) fn settle_cap(&mut self, default: u8, highest: u8) -> Result<(), ContentError> {
+        let err = |m: String| ContentError::new(&self.file, m);
+        let what = format!("class `{}`", self.id);
+        if self.max_level == 0 {
+            self.max_level = default;
+        }
+        if self.max_level > highest {
+            return Err(err(format!(
+                "{what}: max_level {} is more than the curve's {highest}",
+                self.max_level
+            )));
+        }
+        check_levels(
+            &err,
+            &what,
+            &self.abilities,
+            &self.bonus_talents,
+            self.max_level,
+        )
     }
 
     /// Whether it trains skill `skill` (any of its grants, known for or not).
@@ -409,16 +538,17 @@ impl ClassDef {
         self.known_for.contains(&skill)
     }
 
-    /// The talents its level table gives up to `level`, in table order; none from a book
-    /// without a class tree (content whose talents have no class abilities, a fixture's).
+    /// The talents its level table gives up to `level`, in table order, each once (a later
+    /// rank names the talent again); none from a book without a class tree (content whose
+    /// talents have no class abilities, a fixture's).
     pub fn abilities_to(&self, book: &TalentBook, level: u8) -> Vec<TalentId> {
-        if !book.has_class_tree() {
-            return Vec::new();
-        }
-        (self.abilities.iter())
-            .take_while(|(l, _)| *l <= level)
-            .filter_map(|(_, id)| book.id(id))
-            .collect()
+        super::prestige::Table::Class(self).abilities_to(book, level)
+    }
+
+    /// Each talent its level table gives up to `level` with the rank given there, in table
+    /// order; none from a book without a class tree.
+    pub fn ranks_to(&self, book: &TalentBook, level: u8) -> Vec<(TalentId, u8)> {
+        super::prestige::Table::Class(self).ranks_to(book, level)
     }
 
     /// The bonus talent picks level `level` brings (0 or 1).
@@ -442,27 +572,8 @@ impl ClassDef {
     /// against a book without a class tree, whose class tables give nothing): every talent it
     /// names is in the book, and every bonus tree is a tree that is no class tree.
     pub(super) fn check_table(&self, book: &TalentBook) -> Result<(), ContentError> {
-        if !book.has_class_tree() {
-            return Ok(());
-        }
         let err = |m: String| ContentError::new(&self.file, format!("class `{}`: {m}", self.id));
-        for (_, talent) in &self.abilities {
-            if book.id(talent).is_none() {
-                return Err(err(format!("abilities: unknown talent `{talent}`")));
-            }
-        }
-        for tree in &self.bonus_talents.trees {
-            match book.tree_id(tree) {
-                Some(t) if !book.tree(t).class => {}
-                Some(_) => {
-                    return Err(err(format!(
-                        "bonus_talents: `{tree}` is the class tree: nothing is picked from it"
-                    )));
-                }
-                None => return Err(err(format!("bonus_talents: unknown tree `{tree}`"))),
-            }
-        }
-        Ok(())
+        check_rows(&err, &self.abilities, &self.bonus_talents, book)
     }
 }
 
@@ -474,6 +585,9 @@ impl ClassDef {
 pub enum ClassActive {
     /// Fly into a rage: the rage's status (Raging), then what it `follows` into.
     Rage,
+    /// A roar, for rage, that frightens the hostiles who hear and see you unless they keep
+    /// their nerve (the berserker's War cry, `world/war_cry.rs`).
+    WarCry,
     /// Hit points back at once, then a cooldown (the warrior's Veteran's wind).
     VeteransWind,
     /// A blow at every hostile beside you for the price of one attack.
@@ -484,8 +598,21 @@ pub enum ClassActive {
     Smite,
     /// A light of your own, on and off (a status that sheds light while it lasts).
     HolyRadiance,
-    /// An unarmed blow in a direction that leaves a wound bleeding, then a cooldown.
+    /// A breath taken in the guard, for ki and a wait: Poised until the next action, Dodge up
+    /// and a blow dodged or parried answered at once (the ascetic's Patient defence,
+    /// `world/ascetic.rs`).
+    PatientDefence,
+    /// An unarmed blow in a direction that leaves a wounded foe Stunned, for ki (the
+    /// ascetic's Stunning strike).
+    StunningStrike,
+    /// An unarmed blow in a direction that leaves a wound bleeding, for ki.
     QuiveringPalm,
+    /// Light on the feet for ki, taking no time: the next action at half its price (the
+    /// ascetic's Step of the wind, `world/ascetic.rs`).
+    StepOfTheWind,
+    /// What clouds the mind or holds the body ended at once, for ki, taking no time (the
+    /// ascetic's Stillness, on Still mind, `world/ascetic.rs`).
+    Stillness,
     /// Shots at a cell, several for the price of one, then a cooldown (the ranger's Volley).
     Volley,
     /// A wait in ambush: a hostile stepping up beside you takes your blow at once (the
@@ -497,51 +624,87 @@ pub enum ClassActive {
     /// A blow in a direction that is a critical if it hits, for openings (the Master thief's
     /// finisher).
     MasterThief,
-    /// A song that lifts the player's fighting a while, for mana (the bard's Inspire).
+    /// A song that lifts the player's fighting a while, for inspiration (the bard's Inspire,
+    /// `world/song.rs`).
     Inspire,
+    /// A song that leaves the foes who hear it and cannot shake it off drowsy, for mana (the
+    /// bard's Lullaby, `world/song.rs`).
+    Lullaby,
     /// A minute's prayer that lifts an unholy room's effect for good, for mana (the priest's and
     /// the paladin's Consecrate).
     Consecrate,
+    /// A prayer that answers what ails the priest most, as far as their prayers reach, under a
+    /// hidden strain (the priest's Orison and the tiers after it, `world/orison.rs`).
+    Orison,
+    /// A minute's kneeling rite that hallows the ground about the priest for an hour, for mana:
+    /// no foe sets foot in it and wounds and mind mend there faster (`world/sanctuary.rs`).
+    Sanctuary,
     /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
     Knock,
+    /// A careful look that tells a thing the player carries for what it is, as the scroll of
+    /// identify would (the merchant's Merchant's eye).
+    MerchantsEye,
+    /// A weapon of spirit-stuff called into the hand in the shape chosen, as a wield (the
+    /// Hunter's Spirit weapon, `world/spirit_weapon.rs`).
+    SpiritWeapon,
 }
 
 impl ClassActive {
     /// Every active, in menu order.
     pub const ALL: &[ClassActive] = &[
         ClassActive::Rage,
+        ClassActive::WarCry,
         ClassActive::VeteransWind,
         ClassActive::Whirlwind,
         ClassActive::LayOnHands,
         ClassActive::Smite,
         ClassActive::HolyRadiance,
+        ClassActive::PatientDefence,
+        ClassActive::StunningStrike,
         ClassActive::QuiveringPalm,
+        ClassActive::StepOfTheWind,
+        ClassActive::Stillness,
         ClassActive::Volley,
         ClassActive::Lurk,
         ClassActive::LowBlow,
         ClassActive::MasterThief,
         ClassActive::Inspire,
+        ClassActive::Lullaby,
         ClassActive::Consecrate,
+        ClassActive::Orison,
+        ClassActive::Sanctuary,
         ClassActive::Knock,
+        ClassActive::MerchantsEye,
+        ClassActive::SpiritWeapon,
     ];
 
     /// Its id: the id of the class ability that has it, and its replay text (`use:rage`).
     pub const fn id(self) -> &'static str {
         match self {
             ClassActive::Rage => "rage",
+            ClassActive::WarCry => "war_cry",
             ClassActive::VeteransWind => "veterans_wind",
             ClassActive::Whirlwind => "whirlwind",
             ClassActive::LayOnHands => "lay_on_hands",
             ClassActive::Smite => "smite",
             ClassActive::HolyRadiance => "holy_radiance",
+            ClassActive::PatientDefence => "patient_defence",
+            ClassActive::StunningStrike => "stunning_strike",
             ClassActive::QuiveringPalm => "quivering_palm",
+            ClassActive::StepOfTheWind => "step_of_the_wind",
+            ClassActive::Stillness => "stillness",
             ClassActive::Volley => "volley",
             ClassActive::Lurk => "lurk",
             ClassActive::LowBlow => "low_blow",
             ClassActive::MasterThief => "master_thief",
             ClassActive::Inspire => "inspire",
+            ClassActive::Lullaby => "lullaby",
             ClassActive::Consecrate => "consecrate",
+            ClassActive::Orison => "orison",
+            ClassActive::Sanctuary => "sanctuary",
             ClassActive::Knock => "knock",
+            ClassActive::MerchantsEye => "merchants_eye",
+            ClassActive::SpiritWeapon => "spirit_weapon",
         }
     }
 
@@ -555,10 +718,20 @@ impl ClassActive {
         matches!(
             self,
             ClassActive::Smite
+                | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
                 | ClassActive::LowBlow
                 | ClassActive::MasterThief
                 | ClassActive::Knock
+        )
+    }
+
+    /// Whether it is a blow of the bare hand (refused, no time, with a weapon in hand): the
+    /// ascetic's Stunning strike and Quivering palm (`World::palm_blow`).
+    pub const fn bare_handed(self) -> bool {
+        matches!(
+            self,
+            ClassActive::StunningStrike | ClassActive::QuiveringPalm
         )
     }
 
@@ -580,26 +753,63 @@ impl ClassActive {
         )
     }
 
+    /// Whether it is a song (`world/song.rs`): a talent's `song` effect names it, and it is
+    /// sung aloud.
+    pub const fn sings(self) -> bool {
+        matches!(self, ClassActive::Inspire | ClassActive::Lullaby)
+    }
+
     /// Whether it asks for a cell before it is used (`use:volley:12,5`).
     pub const fn aims_cell(self) -> bool {
         matches!(self, ClassActive::Volley)
     }
 
+    /// Whether it asks for a stack the player carries before it is used
+    /// (`use:merchants_eye:c`).
+    pub const fn aims_item(self) -> bool {
+        matches!(self, ClassActive::MerchantsEye)
+    }
+
+    /// Whether it asks for a weapon's shape before it is used, an object id
+    /// (`use:spirit_weapon:long_sword`).
+    pub const fn aims_shape(self) -> bool {
+        matches!(self, ClassActive::SpiritWeapon)
+    }
+
+    /// Whether it takes no time at all (Step of the wind, Stillness): its [`ClassActive::cost`]
+    /// then names only the statuses that block it.
+    pub const fn takes_no_time(self) -> bool {
+        matches!(self, ClassActive::StepOfTheWind | ClassActive::Stillness)
+    }
+
     /// What it costs, as an action of this kind (`data/actions.toml`).
     pub const fn cost(self) -> ActionKind {
         match self {
-            ClassActive::Rage | ClassActive::VeteransWind | ClassActive::Lurk => ActionKind::Wait,
+            ClassActive::Rage
+            | ClassActive::WarCry
+            | ClassActive::VeteransWind
+            | ClassActive::PatientDefence
+            | ClassActive::Lurk
+            // It takes no time (`takes_no_time`): none block a wait.
+            | ClassActive::StepOfTheWind
+            | ClassActive::Stillness => ActionKind::Wait,
             ClassActive::Whirlwind
             | ClassActive::Smite
+            | ClassActive::StunningStrike
             | ClassActive::QuiveringPalm
             | ClassActive::LowBlow
             | ClassActive::MasterThief => ActionKind::Melee,
             ClassActive::LayOnHands
             | ClassActive::HolyRadiance
             | ClassActive::Consecrate
+            | ClassActive::Orison
+            | ClassActive::Sanctuary
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
-            ClassActive::Inspire => ActionKind::Chat,
+            ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,
+            ClassActive::MerchantsEye => ActionKind::Read,
+            // A weapon taken in hand, as wielding one is.
+            ClassActive::SpiritWeapon => ActionKind::Wield,
         }
     }
 }
@@ -746,6 +956,10 @@ mod tests {
             ),
             (format!("{ONE}rolls = 11\n"), "rolls 11 is more than 10"),
             (
+                format!("{ONE}max_level = 1\n"),
+                "max_level 1 is not 2 to 100",
+            ),
+            (
                 format!(
                     "{ONE}skills = {{ spellcraft = 1 }}\n\
                      optional_skills = {{ spellcraft = {{ chance = 20, dice = \"2d4\" }} }}\n"
@@ -882,11 +1096,51 @@ mod tests {
             ),
             (
                 ("talent = \"riposte\"", "talent = \"fencing\""),
-                "`fencing` twice",
+                "`fencing` rank 1 twice",
+            ),
+            // A rank names the talent again, higher down the table, within its ranks.
+            (
+                ("talent = \"riposte\"", "talent = \"fencing\", rank = 2"),
+                "`fencing` rank 2, but it has 1",
+            ),
+            (
+                ("talent = \"fencing\"", "talent = \"fencing\", rank = 0"),
+                "rank 0 (ranks start at 1)",
             ),
             (("[10, 20, 30, 45, 55]", "[20, 10]"), "ascending"),
         ] {
             let e = with_aristocrat(|t| t.replacen(edit.0, edit.1, 1)).unwrap_err();
+            assert!(e.message.contains(why), "{why}: {}", e.message);
+        }
+    }
+
+    /// The highest level a class reaches (spec §8 "Prestige classes"): the file's `max_level`,
+    /// else the experience file's `class_max`; its table stays within it.
+    #[test]
+    fn max_level_defaults_to_the_class_cap_and_bounds_the_table() {
+        let content = with_aristocrat(|t| t.to_string()).expect("built-in");
+        // The bard alone ends early (the bard design §5); every other class at the default.
+        for class in content.classes() {
+            let cap = match class.id.as_str() {
+                "bard" => 30,
+                _ => content.experience().class_max(),
+            };
+            assert_eq!(class.max_level, cap, "{}", class.id);
+        }
+        assert_eq!(content.experience().class_max(), 60);
+        // A class capped at 60 names it: the same.
+        let capped = with_aristocrat(|t| format!("{t}max_level = 60\n")).expect("valid");
+        assert_eq!(
+            capped.class("aristocrat").expect("aristocrat").max_level,
+            60
+        );
+        for (cap, why) in [
+            // Its table reaches 50 and its bonus picks 55: a lower cap leaves a row past it.
+            (30, "`iron_will` at level 32 is past its highest level, 30"),
+            (50, "bonus_talents: level 55 is past its highest level, 50"),
+            (101, "max_level 101 is not 2 to 100"),
+        ] {
+            let e = with_aristocrat(|t| format!("{t}max_level = {cap}\n")).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);
         }
     }

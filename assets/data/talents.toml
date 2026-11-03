@@ -18,9 +18,6 @@ alike = [
     # Two cleave sources together cleave on and on (`TalentMods`: the warrior's Cleaving strike
     # beside the pickable Cleave is a great cleave).
     ["cleave", "cleaving_strike"],
-    # The same two cells of darkvision for two kinds of eyes, each gated its own way: one is
-    # for darkvision eyes, the other gives low-light eyes some from level 9. No one can take both.
-    ["dark_adaptation", "owl_eyes"],
     # The birth signs' gifts and flaws: the horoscope is kept whole (the owner, #776).
     ["alert", "unblinking"],
     ["clear_mind", "tidal"],
@@ -280,6 +277,12 @@ name = "Creature sight and awareness"
 id = "danger"
 name = "Danger levels and creatures that come"
 
+# Allies (docs/design/druid-and-summons.md §4, §10): creatures on the player's side, their orders,
+# their following, and their fights. Beast-bond; the druid's calls carry the tag too (D1).
+[[system]]
+id = "allies"
+name = "Allies: summons and companions, their orders and their fights"
+
 # Special rooms (#402): rooms, and rarely whole levels, that change the rules inside them; the
 # forgotten altars' prayer (#406) among them.
 [[system]]
@@ -363,12 +366,6 @@ name = "Experience"
 [[system]]
 id = "speed"
 name = "Speed"
-
-# Creature gear (#328): what creatures spawn carrying, wielding, and wearing, and drop where they
-# die (animated objects' remains too); Scavenger.
-[[system]]
-id = "creature_gear"
-name = "The gear creatures carry and drop"
 
 [[system]]
 id = "factions"

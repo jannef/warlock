@@ -39,7 +39,8 @@ pub enum Build {
     Hit,
     /// A blow of the holder's was a critical.
     Critical,
-    /// The holder was hit by a blow.
+    /// The holder was hit by a blow: any that hit, even one their armour soaked or they
+    /// resisted to nothing (`Strike::is_hit`).
     Struck,
     /// A sneak attack of the holder's hit: a blow at a creature unaware of it (spec §8 "Class
     /// abilities": the thief's sneak attack).
@@ -90,7 +91,7 @@ impl Build {
 pub enum OverTime {
     /// Toward its maximum (a ranger's focus).
     Regenerates { every: u32 },
-    /// Toward 0 (a barbarian's rage).
+    /// Toward 0 (a berserker's rage).
     Decays { every: u32 },
 }
 
@@ -215,6 +216,13 @@ pub struct ResourceDef {
 }
 
 impl ResourceDef {
+    /// The most it may hold by data at the highest level for a holder of average stats, before
+    /// talents and affixes: `max`, with what `max_from` adds at [`super::MAX_LEVEL`] (ki: 4 and
+    /// a point per 6 levels). What a talent's cost is checked against at load.
+    pub fn most(&self) -> u16 {
+        (self.max_from).map_or(self.max, |from| from.max(self.max, 0, super::MAX_LEVEL))
+    }
+
     /// How much event `on` builds it up (0: it does not).
     pub fn built_by(&self, on: Build) -> u16 {
         (self.builds.iter())

@@ -11,7 +11,10 @@ natural attack, `NaturalAttack::on_hit`; `Content::status`/`status_id`/`status_i
 optional file; `StatusId` is an index, in the fingerprint; `per_action` statuses, Staggered,
 Pinned, and Light-footed, ease by their sufferer's actions instead of time,
 `World::spend_actions`, docs/dev/weapon-abilities.md; Surprised too, docs/dev/surprise.md, whose
-`cost` is read through `World::status_cost`; one that ends there pushes its `Event::Status` end). `crate::status` holds one actor's
+`cost` is read through `World::status_cost`, and Stunned, the ascetic's Stunning strike's (#848);
+one that ends there pushes its `Event::Status` end). `flat_footed` (Surprised, Stunned) leaves
+its sufferer flat-footed, read by the field through `Effects::flat_footed` and
+`World::off_guard` (docs/dev/surprise.md). `crate::status` holds one actor's
 effects (`Actor::effects: Effects`, at most one `Effect { status, severity, tick, wear, by }` per
 status in status order; `Effects::add` applies the stacking rule, `penalty`, `regen`,
 `is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank
@@ -47,7 +50,7 @@ carries `seen`, whatever its source** (owner, 2026-11-01; docs/design/buff-circl
 status that lends something (a positive `penalty`, a `combat` bonus, a `cost` under 100, a
 `vision`, a `resist`, or a `light`) shows on creatures: `hasted` "quickened", `barkskin`
 "bark-skinned", the potions' boosts, visions, and resistances by their names, `spell_ward`
-"warded", `light_footed` "light-footed". Not buffs, never shown: `disguised` (a mimic's disguise),
+"warded", `light_footed` "light-footed", `poised` "poised". Not buffs, never shown: `disguised` (a mimic's disguise),
 `lurking`, the cooldowns, and harms. `content/circles.rs`'s `every_buff_status_is_seen` test keeps
 it. **Circled statuses** (spec §4.8 "Spell circles"): `data/circles.toml` (`content/circles.rs`,
 `CircleStatuses`, `Content::circles()`; the rows' statuses and schools fingerprinted) gives each
@@ -129,6 +132,10 @@ refused). Draws: the turns' dice as a hold begins or is renewed, two for a strug
 away from its `by` instead while a step takes it farther (`World::frightened`,
 `world/sign_picks.rs`, before `held_back`). A status that blocks `cast` also refuses spending
 mana (`World::spend_mana`) and greys out a class active that costs mana (`Ability::unavailable`).
+Silenced also blocks `song` (the bard's songs, `world/song.rs`, #870). A song's statuses
+(`inspired`, `inspired_greatly`) are `max = 3`, `stacking = "refresh"`: Music adds degrees, and
+degrees are time, the combat bonus stays. The Lullaby (#873) gives `drowsy` (`max = 3`,
+`stacking = "refresh"`) to the hostile hearers who fail its check, caused by the singer.
 Built-in example: `raging` (penalty St +2, To +2, In −2; `blocks = ["read", "cast"]`; `follows =
 "exhausted"`; no `eases`: the Rage resource brings it and ends it, `docs/dev/resources.md`) and
 `exhausted` (St −1). A followed status must end: it eases, is cured, or a resource brings it
@@ -190,7 +197,7 @@ disease is treated against its own `difficulty`: made, `streak + 1` while that s
 `disease_turn` uses too), else `left` raised to the disease's interval (within
 `longest_wait`, so `is_valid_for` holds); the infection's `treated` is set either way.
 **`Effect::treated` and `Infection::treated` are saved state** (serde-skipped while false, so
-older saves and hashes are unchanged; no `FORMAT_VERSION` bump). The ability is
+hashes are unchanged). The ability is
 `Ability::Heal` (`Aim::Ailment`, `Unavailable::NothingToTreat`); the game's choice of what to
 treat is the one dialog (`input.rs::treat_dialog`). Tests: `world/heal_tests.rs`, the parse
 cases in `content/status.rs`.

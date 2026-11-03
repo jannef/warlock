@@ -1,0 +1,14 @@
+# The Hunter's calling in the Ascmearc (docs/design/prestige-classes.md §7): the oath said to the
+# Strange Spirit, met on the march's open roads by a bard whose class is full (the encounter
+# entries `strange_spirit_*`, `when = { calling = "hunter" }`, in data/encounters/), who is good
+# enough for it to speak to (its dialogue's `speaks_to`, data/dialogue/spirit.toml). The deed is
+# the spirit's word, `does = { calls = "hunter" }`; this file is the door.
+#
+# `level` is the bard's highest level (classes/ `max_level`): the calling comes the moment the
+# class is full, 30. world/strange_spirit_tests.rs checks the two stay together (so does the test
+# world's calling).
+[[calling]]
+class = "hunter"
+from = ["bard"]
+level = 30
+message = "The oath is in you now, as a blade is in its sheath. You are a hunter."

@@ -5,11 +5,11 @@ expression: "render(case, content.clone())"
 
               ┌─ Choose your class (3 of 5) ─────────────────────────────────────────┐
               │                                                                      │
-              │   Barbarian                                                          │
+              │   Berserker                                                          │
               │   Bard                                                               │
               │   Priest                                                             │
               │   Druid                                                              │
-              │   Monk                                                               │
+              │   Ascetic                                                            │
               │   Paladin                                                            │
               │   Ranger                                                             │
               │ > Thief                                                              │

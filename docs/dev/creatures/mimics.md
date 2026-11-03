@@ -19,8 +19,7 @@ numbers are `Numbers::of` (`content/animated.rs`, the roster's formulas, shared 
 animated families) with the brute's adjustments from `[family]`.
 
 - **Order**: `load_creatures` splices the members after the animated types and before the first
-  campaign's (in level order). Adding a level or a band shifts every later id (saves change: the
-  integrator's format bump), as adding a creature file does. Generation draws nothing.
+  campaign's (in level order). Adding a level or a band shifts every later id (saves change), as adding a creature file does. Generation draws nothing.
 - **`MimicDef`** on `CreatureDef::mimic` (`#[serde(skip)]` on the spec): the family's first type
   and the member's place in it, filled in at numbering.
 - **The family reads**: `Content::family`, `family_key` (`mimic`), `family_levels`, and

@@ -69,6 +69,9 @@ pub struct OwnAttack {
     pub riders: Vec<Rider>,
     /// How far it reaches, in cells: a shot's or a throw's; `None` for a blow.
     pub range: Option<i32>,
+    /// Whether it ignores every point of Protection (a spirit weapon's blow): only that it
+    /// does is said, as an item's description says "Pierces armour".
+    pub pierces: bool,
 }
 
 impl OwnAttack {
@@ -83,6 +86,7 @@ impl OwnAttack {
             source,
             kind,
             name,
+            pierces: super::pierces_all(&profile),
             to_hit: profile.to_hit,
             damage: profile.damage.plus(profile.bonus),
             extra: profile.extra,
@@ -129,6 +133,9 @@ impl OwnAttack {
         );
         if let Some(range) = self.range {
             text.push_str(&format!(", range {range}"));
+        }
+        if self.pierces {
+            text.push_str(", pierces armour");
         }
         text
     }

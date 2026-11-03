@@ -153,9 +153,9 @@ impl Actor {
         }
     }
 
-    /// The degrees of `spell`'s buff or hex status as it casts it (module docs): its base, the
-    /// degrees ladder's value, then `degrees`; at least 1. `None` for a spell with no such
-    /// status.
+    /// The degrees of `spell`'s buff or hex status as it casts it, or a summon's minutes (module
+    /// docs): its base, the degrees ladder's value, then `degrees`; at least 1. `None` for a
+    /// spell with neither.
     pub fn spell_degrees(&self, content: &Content, spell: &SpellData) -> Option<u16> {
         self.spell_degrees_with(content, spell, &self.standing_spell_mods(content, spell))
     }
@@ -167,7 +167,7 @@ impl Actor {
         spell: &SpellData,
         mods: &SpellMods,
     ) -> Option<u16> {
-        let (_, base) = spell.effect.status?;
+        let base = spell.base_degrees()?;
         let ladder = spell.grows.degrees.as_ref();
         let stats = self.effective_stats(content);
         let rung = ladder.map_or(0, |l| climb(l, &stats, mods.degree_rungs));

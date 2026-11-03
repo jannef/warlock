@@ -33,6 +33,14 @@ menu).
 
 {{#include generated/abilities.md}}
 
+[Spirit weapon](#ability-spirit-weapon) asks for a weapon's shape: a list of every melee weapon,
+grouped by [weapon skill](weapon-skills.md), each with the numbers a plain one has. The weapon it
+calls into your hand is that plain weapon in every way (its damage, weight, and how it is
+[held](equipment.md#what-fits-where)) with the talent's gifts besides: +3 to hit, a
+[threat](combat.md#criticals) 2 lower (a long sword's criticals on 18 or better instead of 20),
+and every point of the target's [Protection](combat.md#protection) ignored. Calling it again
+reshapes it; it fades the moment it leaves your hands, and it cannot be thrown.
+
 What the ranks of [weapon skills](weapon-skills.md) and [fighting styles](fighting-styles.md) teach is listed in the menu too, under
 *Weapon skills* after the skill's name ("Long blades: Deep cut"), greyed with `fires by itself`:
 those abilities are never chosen, they work by themselves as you fight. They have tables of their
@@ -42,7 +50,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 - **Throw your voice**: a voice sounds at a place you choose that you see, not solid, within 6
   cells (the [aiming](controls.md#aiming) cursor, as for a shot). It is as loud there as someone talking, and it is
   made there, not where you stand, so [creatures](creatures.md) that hear it and cannot see that spot go to have
-  a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. [Bards](classes.md#bard) learn it at level 32
+  a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. [Bards](classes.md#bard) learn it at level 16
   (see [Classes](classes.md)).
 - **Lurk**: the [thief](classes.md#thief)'s, from level 6. You wait in ambush, in the time of a
   wait, and are [Lurking](status-effects.md#status-lurking) until your next action. A hostile
@@ -69,6 +77,10 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 - **Steal**: anyone trained in the [Steal](skills.md#skill-steal) skill has it, in the skill's place among the Skills.
   It asks for a direction and tries to lift something from whoever stands there, if they are
   not hostile to you (see [Stealing](skills.md#stealing)).
+- **Intimidate**: anyone trained in the [Intimidate](skills.md#skill-intimidate) skill has it, in the skill's place among
+  the Skills. It asks for a place you see, within 6 cells, and threatens the hostile creature
+  there: unless it keeps its nerve it is [frightened](status-effects.md#status-frightened) and
+  flees, longer the better your skill (see [Intimidating](skills.md#intimidating)).
 - **Heal**: anyone trained in the [Heal](skills.md#skill-heal) skill has it, in the skill's place among the Skills. It
   treats you: your [bleeding](status-effects.md#bleeding), a [poison](status-effects.md#poisoned), or a [disease](diseases.md#how-a-disease-goes) that shows, asking which when there is more
   than one; greyed out "nothing to treat" otherwise (see
@@ -79,13 +91,81 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   [Foraging](skills.md#foraging)).
 - **Other skills used as actions** ([Handle animal](skills.md#skill-handle-animal), ...): each is in the menu once you are trained
   in it (see [Skills](skills.md)), greyed out until its use comes to the game.
-- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
-  [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Knock](abilities.md#ability-knock)): your [class](classes.md)'s level table gives them (see [Classes](classes.md#levels)),
+- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Lullaby](abilities.md#ability-lullaby), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
+  [Step of the wind](abilities.md#ability-step-of-the-wind), [Stunning strike](abilities.md#ability-stunning-strike), [Patient defence](abilities.md#ability-patient-defence), [Stillness](abilities.md#ability-stillness), [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Orison](abilities.md#ability-orison), [Sanctuary](abilities.md#ability-sanctuary), [Knock](abilities.md#ability-knock)): your [class](classes.md)'s level table gives them (see [Classes](classes.md#levels)),
   each under Class from the level that brings it. Most leave you [spent](status-effects.md#status-spent), [winded](status-effects.md#status-winded), or [drained](status-effects.md#status-drained) for a
   while afterwards, greyed out until it passes; a [paladin](classes.md#paladin)'s holy gifts are never greyed out by
   [alignment](alignment.md), but do nothing unless you are Kind or better (see [Alignment](alignment.md)). They have no key of their own
   yet: `X` uses the one you used last again.
+- **[War cry](abilities.md#ability-war-cry)**, the [berserker](classes.md#berserker)'s at level 25, is paid in
+  [rage](resources.md): 4 of it and the time of a wait, so it is greyed out "you have not the
+  rage for it" until you [rage](abilities.md#ability-rage). You roar as loud as a
+  [howl](hearing.md), heard across the floor (it wakes sleepers and draws the curious). Every
+  hostile that hears you, sees you, and has [vitals](combat.md#criticals) (no skeletons, spirits,
+  or animated things) rolls its Willpower modifier on 2d12 against 10 + your Strength
+  modifier + your [Intimidate](skills.md#skill-intimidate) (+8 at 100, +12 at 200); short of it,
+  it is [frightened](status-effects.md#status-frightened) three degrees and runs from you, about
+  three turns. There is no level cut: a troll checks as a kobold does, only with more nerve.
+  For example, a creature of Willpower 10 against a berserker of Strength 15 (+2), untrained in
+  Intimidate, stands on 14 or more: it flees 54 % of the time; at Intimidate 100 it flees
+  96 %. A roar with nobody near is still a roar: the turn, the rage, and the noise are spent.
+  Every cry trains Intimidate.
+- **[Inspire](abilities.md#ability-inspire)** and the **[Lullaby](abilities.md#ability-lullaby)**,
+  the [bard](classes.md#bard)'s at levels 9 and 20, are songs: see [Songs](#songs) below.
+- **Allies** ([Come to heel](abilities.md#ability-heel), [Hold here](abilities.md#ability-hold), [Set on](abilities.md#ability-set-on)): once a creature fights on your side (the
+  druid's calls and the ranger's companion are on their way), the Allies group appears, and the
+  three orders tell every ally of yours on the level at once what to do: follow you and fight
+  what threatens you (the default), hold where they stand, or go to a place you see and fight
+  what is near it, then come back. An order takes no time, but it is a shout: anything near
+  enough hears it (see [Hearing](hearing.md)). Greyed out "no allies here" while none of them is
+  on the level with you. Each order, and each kill of theirs, trains [Handle animal](skills.md#skill-handle-animal).
+  Set on asks for the place as aiming a shot does; Tab skips your own allies. On the map an ally
+  of yours has a short, faint green line under it, and looking at one says it is yours ("Your
+  wolf (unhurt)").
 - No [race](races.md) gives an ability yet.
+
+## Songs
+
+A [bard](classes.md#bard) sings two songs, both from the menu, under Class: **[Inspire](abilities.md#ability-inspire)**, sung
+to yourself, and the **[Lullaby](abilities.md#ability-lullaby)**, sung against your foes.
+
+- **Paid in one thing each.** Inspire costs 3 [inspiration](resources.md#resource-inspiration) and nothing
+  else, the Lullaby 6 [mana](mana.md#spending-it) and nothing else. With less, the song is greyed
+  out ("not enough inspiration", "you have too little mana") and choosing it costs
+  nothing.
+- **Heard.** A song takes as long as a chat (3 seconds at a [normal pace](turns.md#what-actions-cost)) and is
+  [heard](hearing.md#what-makes-noise) as a voice of loudness 80 where you stand: those who
+  hear it and cannot see you come to look. You cannot sing on the
+  [overworld](overworld.md#travel), or while [silenced](status-effects.md#status-silenced); trying
+  takes no time.
+- **Lengthened by [Music](skills.md#skill-music).** Each song brings its status at one degree, and
+  your Music adds degrees to every song (more degrees last longer; what a degree does stays the
+  same), up to three, the most these statuses take. Sung again while it lasts, a song starts over at the
+  degrees it brings now. Every song you sing trains Music, once you are trained in it, and your
+  [Presence](stats.md#stat-presence).
+- **Shaken off.** A song sung against foes is heard by every [hostile](creatures.md#factions)
+  creature in earshot, seen or not, and each rolls its stat's modifier on 2d12 against the
+  song's difficulty plus what your Music adds; short of it, it suffers the song. Friendly and
+  peaceful creatures only hear it. There is no level cut: a troll checks as a kobold does, only
+  with more nerve. A song with nobody to hear it is still sung: its price and its time are spent,
+  and the noise made.
+- **[Virtuoso](talents.md#talent-virtuoso)** (the bard's at 30): every song costs nothing at all and
+  brings a degree more, and Inspire lifts you higher, [greatly inspired](status-effects.md#status-inspired-greatly)
+  (+2 to hit and +2 [Dodge](combat.md#defence), 10 minutes a degree) instead of
+  [inspired](status-effects.md#status-inspired) (+1 and +1, 5 minutes a degree).
+
+{{#include generated/songs.md}}
+
+What Music adds to every song, by its value (see [Skills](skills.md#what-skills-give)):
+
+{{#include generated/song-music.md}}
+
+The chance a hostile creature shakes a song off, by its edge (its modifier of the stat the song
+checks; see [Stats](stats.md)) and your Music, the difficulty in brackets. A
+[drowsy](status-effects.md#status-drowsy) creature does everything three times as slowly, 12
+seconds a degree.
+
+{{#include generated/song-odds.md}}
 
 ## Keys of their own
 

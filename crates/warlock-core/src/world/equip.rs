@@ -15,6 +15,17 @@ impl World {
     /// Puts inventory stack `item` on in slot `slot` (an id), taking off first what is in the
     /// slots it takes, and moving it if it is in another slot.
     pub(super) fn equip(&mut self, slot: &str, item: usize) -> Spent {
+        self.equip_saying(slot, item, None)
+    }
+
+    /// [`World::equip`], saying `put_on` in place of "You wield ..." (a spirit weapon called,
+    /// `spirit_weapon.rs`). A spirit weapon that leaves the hands by it fades.
+    pub(super) fn equip_saying(
+        &mut self,
+        slot: &str,
+        item: usize,
+        put_on: Option<String>,
+    ) -> Spent {
         let content = self.content.clone();
         let Some(slot) = content.slot_id(slot) else {
             self.say(format!("There is no slot `{slot}`."));
@@ -65,13 +76,15 @@ impl World {
             .collect();
         let kind = content.slot(slot).action;
         kinds.push(kind);
-        let (put_on, _) = verbs(kind);
         let hands = if taken.len() > 1 {
             " in both hands"
         } else {
             ""
         };
-        said.push(format!("You {put_on} {what}{hands}."));
+        said.push(put_on.unwrap_or_else(|| {
+            let (put_on, _) = verbs(kind);
+            format!("You {put_on} {what}{hands}.")
+        }));
         let worn = &mut self.player_mut().equipment;
         for i in off {
             worn.take_off(i);
@@ -80,6 +93,7 @@ impl World {
         for text in said {
             self.say(text);
         }
+        self.fade_spirit();
         self.price_for(&kinds)
     }
 
@@ -103,6 +117,7 @@ impl World {
         let what = self.lore().describe(&player.inventory[item]);
         self.player_mut().equipment.take_off(item);
         self.say(format!("You {take_off} {what}."));
+        self.fade_spirit();
         self.price_for(&[kind])
     }
 

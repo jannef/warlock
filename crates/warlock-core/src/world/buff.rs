@@ -12,7 +12,7 @@
 //! - **Slowness**: its `cost` multiplies the price of every action the actor takes, after its
 //!   burden and hunger (`World::burdened`, the one place every price passes).
 //! - **Blocks**: the player cannot take an action of a kind a status of theirs `blocks` (a raging
-//!   barbarian cannot read): the rules refuse it, taking no time ([`World::refuse_blocked`]), and
+//!   berserker cannot read): the rules refuse it, taking no time ([`World::refuse_blocked`]), and
 //!   the abilities menu greys out an ability that costs one
 //!   ([`crate::ability::Unavailable::While`]). Creatures' plans consult it for steps only: one a
 //!   status of its blocks `step` (Held) neither steps nor opens a door, and fights back
@@ -62,8 +62,9 @@ impl World {
             Action::Bash(_) => ActionKind::Melee,
             Action::Fire(_) => ActionKind::Shoot,
             Action::Throw { .. } => ActionKind::Throw,
-            Action::Chat(_) | Action::Ask { .. } => ActionKind::Chat,
+            Action::Chat(_) | Action::Ask { .. } | Action::Say { .. } => ActionKind::Chat,
             Action::Steal(_) => ActionKind::Steal,
+            Action::Intimidate(_) => ActionKind::Intimidate,
             Action::ThrowVoice(_) => ActionKind::ThrowVoice,
             Action::Eat(_) => ActionKind::Eat,
             Action::Read { .. } => ActionKind::Read,
@@ -76,7 +77,10 @@ impl World {
             Action::Temper { .. } => ActionKind::Temper,
             Action::Disarm(_) => ActionKind::Disarm,
             Action::Heal(_) => ActionKind::Heal,
-            Action::Use(active, _) | Action::UseAt(active, _) => active.cost(),
+            Action::Use(active, _)
+            | Action::UseAt(active, _)
+            | Action::UseOn(active, _)
+            | Action::Shape(active, _) => active.cost(),
             Action::Gift(active, _) => active.cost(),
             // A `use:ID` of a weapon active (no spell's id) is the action its energy names.
             Action::Cast(id, _) | Action::Act(id, _)
@@ -90,6 +94,8 @@ impl World {
             Action::Cast(..) | Action::CastOn(..) => ActionKind::Cast,
             Action::Sell(_)
             | Action::Pay(None)
+            | Action::Order(_)
+            | Action::Ally { .. }
             | Action::SetStance(_)
             | Action::SetVision(_)
             | Action::SkipTime(_)
@@ -109,6 +115,7 @@ impl World {
             | Action::Advance(_)
             | Action::LevelUpAuto
             | Action::GrantXp(_)
+            | Action::Call(_)
             | Action::SetRank { .. }
             | Action::Freeze { .. }
             | Action::Thaw { .. } => return None,
@@ -160,7 +167,7 @@ impl World {
         }
         self.end_resources_of(id, ended, events);
         self.keep_hp_within_max(id);
-        // Rage's end leaves a berserker aggressive (`berserker.rs`).
+        // Rage's end leaves the frenzy for the aggressive stance (`frenzy.rs`).
         self.settle_stance(id);
     }
 }

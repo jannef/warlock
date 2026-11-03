@@ -53,13 +53,17 @@ So a [kobold shaman](creatures.md#creature-kobold-shaman) is worth less every le
 
 ## Levels
 
-The highest level is 60, and the road there is long. Each level costs a number of kills of
-[creatures](creatures.md) of your own level: 38 for level 2, about 160 a level by level 10, and more for every
-level after that, up to 365 for level 60. The first levels come faster: level 2 costs only 25 %
+Every [class](classes.md) stops at level 60, its last, but the [bard](classes.md#bard), who stops at
+30 (the table below says so for each), and the road there is long. A bard at 30 keeps every point
+of XP earned after it; one who becomes a [hunter](classes.md#prestige-classes) gains at once every level that XP buys, from
+level 31 on. The curve itself runs on to level 100, for levels a class does not give.
+Each level costs a number of kills of [creatures](creatures.md) of your own level: 38 for level 2,
+about 160 a level by level 10, and more for every level after that, up to 365 for level 60 and
+485 for level 100. The first levels come faster: level 2 costs only 25 %
 of that (10 kills), level 3 30 %, then 35, 40, 50, 60, 70, 80, 90, and 95 % for level 11; from
 level 12 on a level costs its full price. That is about 2,600 such kills to reach level 20 and
 14,600 to reach level 60 (real counts run higher: weaker monsters are worth less, and grey ones
-nothing). Gaining a level says "You feel more experienced." and "Welcome to level N."; one kill
+nothing). At your last level your XP still counts, but buys nothing more. Gaining a level says "You feel more experienced." and "Welcome to level N."; one kill
 can bring several levels at once.
 
 Your **[race](races.md) and [class](classes.md)** change how much XP every level needs: long-lived [races](races.md) and the patient
@@ -70,7 +74,8 @@ slowly." or "Levels come quickly." where it matters:
 {{#include generated/experience-factors.md}}
 
 The XP needed for each level, for a character of 100 % (a [human](races.md#race-human) [warrior](classes.md#warrior), say) and for the
-quickest and the slowest [race](races.md) and [class](classes.md):
+quickest and the slowest [race](races.md) and [class](classes.md), with what each level grows (see
+[What a level gives](#what-a-level-gives)) and the [classes](classes.md) that stop there:
 
 {{#include generated/experience-levels.md}}
 

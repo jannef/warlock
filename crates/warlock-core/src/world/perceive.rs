@@ -125,6 +125,9 @@ impl World {
         let perception = &self.perception;
         let end = |id: ActorId, seen: bool| match self.actor_or_fallen(id) {
             _ if id == player => End::You,
+            Some(a) if seen && a.master() == Some(player) => {
+                End::Yours(content.creature(a.creature).name.as_str())
+            }
             Some(a) if seen => End::Seen(content.creature(a.creature).name.as_str()),
             _ => End::Unseen,
         };
@@ -207,7 +210,12 @@ impl World {
                 }
                 seen
             }
-            Event::LevelChanged { .. } | Event::Talked(_) | Event::VoiceThrown { .. } => true,
+            Event::LevelChanged { .. }
+            | Event::Talked(_)
+            | Event::VoiceThrown { .. }
+            | Event::Ordered { .. } => true,
+            // An ally departed where the player sees (spec §8 "Allies").
+            Event::Departed { at, .. } => perception.sees_actors_at(at),
             Event::Missile { ref path, .. } => !path.is_empty(),
             Event::Spell { ref cells, .. } => !cells.is_empty(),
             Event::Attacked {

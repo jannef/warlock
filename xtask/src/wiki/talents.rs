@@ -4,9 +4,10 @@
 use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Need, OverTime, Role, SignActive, SpellData, SpellModSpec, TalentDef, TalentEffect,
-    TreeId,
+    Content, Faced, Need, OverTime, PrayerUse, Role, SignActive, SongOn, SpellData, SpellModSpec,
+    StatusId, Table, TalentDef, TalentEffect, TreeId,
 };
+use warlock_core::noise::SONG_NOISE;
 
 /// Every tree in display order: a heading, its description, and its talents (name, ranks, what
 /// each rank needs, what it does as the rule, and the systems it touches).
@@ -140,46 +141,68 @@ pub(super) fn racial(content: &Content) -> String {
 /// The classes' level tables (spec §8 "Class abilities"), in the order New run offers them:
 /// each class with a table, its bonus talent picks, and every level's ability with its rule.
 pub(super) fn class_levels(content: &Content) -> String {
-    let book = content.talents();
     let mut out = String::new();
     for class in content.classes() {
-        if class.abilities.is_empty() && class.bonus_talents.levels.is_empty() {
-            continue;
-        }
-        let _ = writeln!(out, "### {}\n", class.name);
-        let bonus = &class.bonus_talents;
-        if !bonus.levels.is_empty() {
-            let levels: Vec<String> = bonus.levels.iter().map(u8::to_string).collect();
-            let trees = match class.bonus_trees(book) {
-                None => "any tree".to_string(),
-                Some(trees) => (trees.iter())
-                    .map(|&t| book.tree(t).name.clone())
-                    .collect::<Vec<_>>()
-                    .join(" or "),
-            };
-            let _ = writeln!(
-                out,
-                "A bonus talent at levels {}, from {trees}.\n",
-                levels.join(", ")
-            );
-        }
-        out.push_str("| Level | Ability | Effect |\n|---:|---|---|\n");
-        for (level, id) in &class.abilities {
-            let Some(talent) = book.id(id) else { continue };
-            let def = book.get(talent);
-            let _ = writeln!(
-                out,
-                "| {level} | {} | {} |",
-                def.name,
-                effects_text(content, def)
-            );
-        }
-        out.push('\n');
+        level_table(content, Table::Class(class), &mut out);
     }
     if out.is_empty() {
         out.push_str("No class has a level table yet.\n");
     }
     out
+}
+
+/// Every prestige class's level table (spec §8 "Prestige classes"), at its own levels, as
+/// [`class_levels`] shows a class's.
+pub(super) fn prestige_levels(content: &Content) -> String {
+    let mut out = String::new();
+    for prestige in content.prestiges() {
+        level_table(content, Table::Prestige(prestige), &mut out);
+    }
+    if out.is_empty() {
+        out.push_str("No prestige class has a level table yet.\n");
+    }
+    out
+}
+
+/// One class's (or prestige class's) table: a heading, its bonus picks, then each row's
+/// ability with what it does (a talent handed out rank by rank, that rank's).
+fn level_table(content: &Content, table: Table, out: &mut String) {
+    let book = content.talents();
+    let bonus = table.bonus_talents();
+    if table.abilities().is_empty() && bonus.levels.is_empty() {
+        return;
+    }
+    let _ = writeln!(out, "### {}\n", table.name());
+    if !bonus.levels.is_empty() {
+        let levels: Vec<String> = bonus.levels.iter().map(u8::to_string).collect();
+        let trees = match table.bonus_trees(book) {
+            None => "any tree".to_string(),
+            Some(trees) => (trees.iter())
+                .map(|&t| book.tree(t).name.clone())
+                .collect::<Vec<_>>()
+                .join(" or "),
+        };
+        let _ = writeln!(
+            out,
+            "A bonus talent at levels {}, from {trees}.\n",
+            levels.join(", ")
+        );
+    }
+    out.push_str("| Level | Ability | Effect |\n|---:|---|---|\n");
+    for (level, id, rank) in table.abilities() {
+        let Some(talent) = book.id(id) else { continue };
+        let def = book.get(talent);
+        // A talent of ranks the table hands out rank by rank: each row that rank's.
+        let (name, effects) = match def.rank_count() > 1 {
+            true => (
+                format!("{} {rank}/{}", def.name, def.rank_count()),
+                rank_text(content, def, *rank),
+            ),
+            false => (def.name.clone(), effects_text(content, def)),
+        };
+        let _ = writeln!(out, "| {level} | {name} | {effects} |");
+    }
+    out.push('\n');
 }
 
 /// The coverage matrix: every system of the closed list with the talents that touch it, and
@@ -298,9 +321,14 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
         TalentEffect::SpellMod(spec) => spell_mod_text(content, spec, chosen),
         other => effect_text(content, other),
     };
-    let mut parts: Vec<String> = (def.effects.iter())
-        .map(|e| {
-            let text = text_of(e);
+    // An effect under a status (`while`): its text, then "while raging" (the status's name).
+    let under = |(status, e): &(StatusId, TalentEffect)| {
+        let name = content.status(*status).name.to_lowercase();
+        format!("{} while {name}", text_of(e))
+    };
+    let plain = (def.effects.iter()).map(text_of);
+    let mut parts: Vec<String> = (plain.chain(def.effects_while.iter().map(under)))
+        .map(|text| {
             if ranked {
                 format!("{text} per rank")
             } else {
@@ -309,14 +337,24 @@ pub(super) fn effects_text(content: &Content, def: &TalentDef) -> String {
         })
         .collect();
     for (i, rank) in def.ranks.iter().enumerate() {
-        for effect in &rank.effects {
-            parts.push(format!("rank {}: {}", i + 1, text_of(effect)));
+        let own = (rank.effects.iter().map(text_of)).chain(rank.effects_while.iter().map(under));
+        for text in own {
+            parts.push(format!("rank {}: {text}", i + 1));
         }
     }
     if let Some(cost) = def.resource {
         let name = content.resource(cost.resource).name.to_lowercase();
         parts.push(format!("costs {} {name}", cost.amount));
     }
+    parts.join("; ")
+}
+
+/// What rank `rank` of `def` adds, as a class table gives it: the per-rank effects and that
+/// rank's own.
+fn rank_text(content: &Content, def: &TalentDef, rank: u8) -> String {
+    let parts: Vec<String> = (def.effects_at(rank))
+        .map(|e| effect_text(content, &e))
+        .collect();
     parts.join("; ")
 }
 
@@ -455,8 +493,88 @@ fn buff(content: &Content, id: &str) -> String {
         .filter(|(_, v)| *v != 0)
         .map(|(what, v)| format!("{what} {}", signed(*v)))
         .collect();
-    said.extend(s.eases.map(|e| format!("{} min", e / 60)));
+    let each = if s.max > 1 { " a degree" } else { "" };
+    said.extend(s.eases.map(|e| match e {
+        e if e % 60 == 0 => format!("{} min{each}", e / 60),
+        e => format!("{e} s{each}"),
+    }));
     format!("{} ({})", s.name, said.join(", "))
+}
+
+/// What a prayer use answers, in words (`data/prayer.toml`'s release list named).
+fn prayer_use_text(content: &Content, id: PrayerUse) -> String {
+    match id {
+        PrayerUse::Disease => "every disease, showing or still brewing (a brewing one alone is \
+                               nothing to pray for)"
+            .into(),
+        PrayerUse::Poison => "poison".into(),
+        PrayerUse::Wounds => "bleeding, and hit points to full".into(),
+        PrayerUse::Release => {
+            let names: Vec<String> = (content.prayer().into_iter())
+                .flat_map(|r| r.release.iter())
+                .map(|&s| content.status(s).name.clone())
+                .collect();
+            format!("hexes and holds ({})", names.join(", "))
+        }
+        PrayerUse::Mana => "mana to full".into(),
+        PrayerUse::Hunger => "hunger (Hungry or worse), fed to Satiated".into(),
+        PrayerUse::Restoration => "all stat damage, and every point drained".into(),
+    }
+}
+
+/// The priest's prayer effect in full: the tier's title, what it adds, and, for the first tier,
+/// the strain's numbers and the priority order.
+fn prayer_text(
+    content: &Content,
+    tier: Option<u8>,
+    title: Option<&Faced>,
+    uses: &[PrayerUse],
+    answers: Option<u8>,
+    all: bool,
+) -> String {
+    let mut parts = Vec::new();
+    if let (Some(tier), Some(title)) = (tier, title) {
+        parts.push(format!(
+            "the prayer's tier {tier}: it is called {} (answered by the holy powers) or {} (by \
+             the dark)",
+            title.holy, title.dark
+        ));
+    }
+    if !uses.is_empty() {
+        let said: Vec<String> = uses.iter().map(|&u| prayer_use_text(content, u)).collect();
+        parts.push(format!("a prayer may answer {}", said.join("; ")));
+    }
+    if let Some(n) = answers {
+        parts.push(format!("a prayer answers {n} problems at once"));
+    }
+    if all {
+        parts.push(
+            "a prayer answers every problem at once, every use included, and fills every \
+             resource pool held (stamina too)"
+                .into(),
+        );
+    }
+    if tier == Some(1)
+        && let Some(rules) = content.prayer()
+    {
+        let order: Vec<&str> = rules.uses.iter().map(|u| u.id.id()).collect();
+        parts.push(format!(
+            "active (`use:orison`, the time of a spell, no mana): it answers the first problem \
+             the priest has, in the order {}. The holy powers answer {} and better, the dark \
+             ones {} and worse, by the band at the moment. Every attempt adds {} strain, \
+             answered or not, and a point passes every {}; a prayer fizzles with a chance of {} % \
+             per 100 strain (at most 100 %), and a fizzle locks the prayer: every prayer fizzles \
+             until the strain has passed to 0. With nothing to answer it is refused, with no \
+             time or strain",
+            order.join(", "),
+            rules.holy.min.map_or("every band", |b| b.name()),
+            rules.dark.max.map_or("every band", |b| b.name()),
+            rules.strain,
+            rules.decay,
+            rules.fizzle_per_100,
+        ));
+    }
+    parts.join("; ")
 }
 
 pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
@@ -467,12 +585,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
     match effect.clone() {
         TalentEffect::Dodge { value } => format!("Dodge {}", signed(value)),
         TalentEffect::Natural { value } => format!("natural armour {}", signed(value)),
-        TalentEffect::NaturalUnarmoured { value } => {
-            format!(
-                "natural armour {} while you wear no body armour",
-                signed(value)
-            )
-        }
         TalentEffect::MeleeDamage { value } => format!("melee damage {}", signed(value)),
         TalentEffect::Ferocity { value } => format!(
             "damage {} with every attack while below a third of your hit points",
@@ -482,6 +594,45 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!("threat range {} with every attack", signed(value))
         }
         TalentEffect::RerollFumble => "a natural 2 on the attack roll is rolled again, once".into(),
+        TalentEffect::AllyMod {
+            to_hit,
+            protection,
+            count,
+            duration_percent,
+            lasting,
+            most,
+        } => {
+            let mut gets = Vec::new();
+            if to_hit != 0 {
+                gets.push(format!("to-hit {} on their attacks", signed(to_hit)));
+            }
+            if protection != 0 {
+                gets.push(format!("Protection {}", signed(protection)));
+            }
+            let mut parts = Vec::new();
+            if !gets.is_empty() {
+                parts.push(format!("your allies get {}", gets.join(" and ")));
+            }
+            if count != 0 {
+                parts.push(format!("every summon spell's call brings {count} more"));
+            }
+            if duration_percent != 0 {
+                parts.push(format!("calls last {duration_percent}% longer"));
+            }
+            if lasting {
+                parts.push("calls never lapse: they stay until slain".into());
+            }
+            if most != 0 {
+                parts.push(format!("{most} more of each summon spell's calls at once"));
+            }
+            parts.join("; ")
+        }
+        TalentEffect::SummonBias { tag, weight } => match weight {
+            0 => format!(
+                "a summon spell never calls a creature tagged `{tag}` while another may come"
+            ),
+            n => format!("a summon spell calls a creature tagged `{tag}` {n} times as often"),
+        },
         TalentEffect::MaxHpPerLevels {
             per_levels,
             at_least,
@@ -670,6 +821,34 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "the chosen skill trained at {dice}, or raised by {dice} if trained (rolled as the \
              rank is taken)"
         ),
+        TalentEffect::WeaponRanks { to, skills, .. } if skills.is_empty() => format!(
+            "every [weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) \
+             (not the schools of magic or a hidden style) below rank {to} rises to rank {to}, \
+             once, as it is given"
+        ),
+        TalentEffect::WeaponRanks { to, skills, .. } => {
+            let table = content.weapon_skills();
+            let names: Vec<String> = (skills.iter())
+                .filter_map(|s| table.id(s).map(|id| table.skill(id).name.clone()))
+                .collect();
+            format!(
+                "{} below rank {to} rise to rank {to}, once, as it is given",
+                names.join(", ")
+            )
+        }
+        TalentEffect::TakeUpSkills { dice, except, .. } => {
+            let mut text = format!(
+                "every [skill](skills.md) you are not trained in, whatever skills there are, \
+                 trained at {dice} (rolled once, as it is given)"
+            );
+            let names: Vec<String> = (except.iter())
+                .filter_map(|s| content.skill_id(s).map(|id| content.skill(id).name.clone()))
+                .collect();
+            if !names.is_empty() {
+                text.push_str(&format!(", but {}", names.join(" and ")));
+            }
+            text
+        }
         TalentEffect::StartingGold {
             percent,
             at_least,
@@ -736,14 +915,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::FavourPercent { value } => {
             format!("shop favour {} (before the cap)", percent(value))
         }
-        TalentEffect::IdentifyTrades => "what you buy or sell in a shop is identified".to_string(),
         TalentEffect::Pilgrim => {
             "temple services cost half (rounded up), and a cure also mends one point of each \
              damaged stat"
                 .to_string()
-        }
-        TalentEffect::Scavenger => {
-            "what a creature you kill drops is identified as it lands".to_string()
         }
         TalentEffect::GemWorth => "item descriptions show what each gem is worth".to_string(),
         TalentEffect::IdentifyCarried { hours } => format!(
@@ -1038,6 +1213,25 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                  while it or what follows it lasts"
             )
         }
+        TalentEffect::WarCry {
+            status: id,
+            severity,
+            difficulty,
+        } => {
+            let eases = (content.status_id(&id))
+                .and_then(|s| content.status(s).eases)
+                .map_or_else(String::new, |e| format!(", a degree easing every {e} s"));
+            format!(
+                "active (the time of a wait): a roar of loudness {}; every hostile that hears \
+                 it, sees you, and has vitals rolls its Willpower against {difficulty} + your \
+                 Strength modifier + your Intimidate (see Skills); failed, it suffers {} at \
+                 {severity} degrees (it runs from you while a step takes it farther{eases}). \
+                 No level cut; with nobody to hear it the roar is still made, its time and cost \
+                 spent",
+                warlock_core::noise::HOWL_NOISE,
+                status(&id),
+            )
+        }
         TalentEffect::ResourceBuild {
             resource: id,
             on,
@@ -1113,11 +1307,29 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::QuiveringPalm {
             status: id,
             severity,
+        }
+        | TalentEffect::StunningStrike {
+            status: id,
+            severity,
         } => format!(
             "active (the time of a melee attack), in a direction, nothing in hand: a bare-handed \
              blow; a hit that does damage leaves {severity} degrees of {}",
             status(&id)
         ),
+        TalentEffect::WindStep { status: id } => format!(
+            "active, taking no time: a degree of {}, so the next action, whatever it is, costs \
+             half its time; refused while you are {} already",
+            status(&id),
+            status(&id)
+        ),
+        TalentEffect::Stillness { name, statuses } => {
+            let names: Vec<String> = statuses.iter().map(|s| status(s)).collect();
+            format!(
+                "active ({name}), taking no time: whichever of {} you suffer ends at once; \
+                 refused with none of them to end",
+                names.join(", ")
+            )
+        }
         TalentEffect::Hardened { bonus } => format!(
             "every level past the last that adds hit points adds them again, and {bonus} more"
         ),
@@ -1393,6 +1605,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::TwoHandedPrice { value } => {
             format!("blows with a two-handed weapon cost {}", percent(value))
         }
+        TalentEffect::AttackPricePercent { value } => {
+            format!("melee attacks cost {}", percent(value))
+        }
         TalentEffect::CriticalStatus { status: id } => format!(
             "a critical you confirm in melee leaves the target {} (one degree)",
             status(&id)
@@ -1491,6 +1706,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              you vomit)"
                 .to_string()
         }
+        TalentEffect::Communion => {
+            "while the dark answers your prayers (Callous or worse), standing in an unholy place \
+             (a cursed, draining, or haunted room, or a level such a curse covers): your prayers \
+             add no strain, and the place's status (Ebbing) never touches you"
+                .to_string()
+        }
         TalentEffect::CorpseHarmless => {
             "a fresh corpse's own harm (its sickness and its vomiting) never touches you"
                 .to_string()
@@ -1556,6 +1777,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Finisher => "active (the time of a melee attack), in a direction: a blow \
                                    that is a critical whenever it hits, with no confirmation roll"
             .to_string(),
+        TalentEffect::PatientDefence { status: id } => format!(
+            "active (the time of a wait): you are {} until your next action; a melee blow you \
+             dodge (it misses by your Dexterity or Dodge) or parry meanwhile is answered with \
+             your blow at once (a riposte, a free blow)",
+            status(&id)
+        ),
         TalentEffect::Lurk { status: id } => format!(
             "active (the time of a wait): you are {} until your next action; a hostile that steps \
              up beside you meanwhile takes your blow at once (a free blow), caught unawares \
@@ -1588,42 +1815,128 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "each second blow of the flurry spends {cost} {}; with less, there is none",
             resource_name(content, &resource).to_lowercase()
         ),
+        TalentEffect::CatchMissiles { resource, cost } => format!(
+            "a shot or throw (a trap's too) that would hit you while you hold no weapon and no \
+             shield spends {cost} {} by itself and misses, the missile falling at your feet; \
+             with less, it hits",
+            resource_name(content, &resource).to_lowercase()
+        ),
         TalentEffect::Volley { shots } => format!(
             "active (the time of one shot, one exertion), at a cell: {shots} shots of the readied \
              missile weapon"
         ),
-        TalentEffect::Inspire {
+        TalentEffect::Song {
+            on,
             status: id,
-            mana,
+            severity,
             resource,
             cost,
+            mana,
+            check,
+            difficulty,
+            ..
         } => {
             let price = match resource {
-                Some(r) => format!(
-                    "{cost} {} while you hold that much, else {mana} mana",
-                    resource_name(content, &r).to_lowercase()
-                ),
+                Some(r) => format!("{cost} {}", resource_name(content, &r).to_lowercase()),
                 None => format!("{mana} mana"),
             };
+            let degrees = match severity {
+                1 => "1 degree".to_string(),
+                n => format!("{n} degrees"),
+            };
+            let whom = match (on, check) {
+                (SongOn::Hearers, Some(stat)) => format!(
+                    "each hostile creature that hears it checks {} against {difficulty} plus \
+                     your Music's song difficulty; failed, it suffers",
+                    stat.name()
+                ),
+                _ => "you suffer".to_string(),
+            };
             format!(
-                "active (the time of a chat), {price}: {}",
+                "active, a song (the time of a song, heard as a voice of loudness {SONG_NOISE}; \
+                 not on the overworld or while silenced), {price}: {whom} {} at {degrees}, plus \
+                 your Music's song degrees",
                 buff(content, &id)
             )
         }
-        TalentEffect::Virtuoso { status: id } => {
-            format!("Inspire gives {} instead, for nothing", buff(content, &id))
-        }
+        TalentEffect::Virtuoso { status: id } => format!(
+            "every song costs nothing and gives a degree more; a song on yourself gives {} instead",
+            buff(content, &id)
+        ),
         TalentEffect::Consecrate { mana, time } => format!(
             "active ({time} of prayer, for {mana} mana; interrupted as a rest is, it lifts \
              nothing): standing in a cursed or draining room, it becomes a plain room for good; \
              on a level a curse or a drain covers whole, the whole level's is lifted instead. \
              A good deed (see Alignment). Anywhere else it is refused, with no time spent"
         ),
+        TalentEffect::Sanctuary {
+            mana,
+            time,
+            radius,
+            lasts,
+            regen,
+        } => format!(
+            "active ({time} of kneeling, for {mana} mana; interrupted as a rest is, it lays \
+             nothing): the ground within {radius} cells of where the player knelt is hallowed \
+             for {lasts}. No creature hostile to them steps onto it from outside (one already \
+             on it may move about and leave; nothing spawns there; missiles and spells cross \
+             it), and whoever stands on it heals and regains mana at {regen} % of the pace, or \
+             a special room's, the larger. A blow, shot, throw, or harmful spell of the \
+             player's from on it breaks it; being struck does not. The same for either face of \
+             the prayer (dreaded ground for the dark: the words alone). Refused, with no time \
+             spent, on the overworld, in water, in a shop, or on hallowed ground"
+        ),
+        TalentEffect::Prayer {
+            tier,
+            title,
+            uses,
+            answers,
+            all,
+        } => prayer_text(content, tier, title.as_ref(), &uses, answers, all),
         TalentEffect::Knock { mana } => format!(
             "active (aimed in a direction, for {mana} mana, the time of a spell): the lock of \
              the locked door or shut chest there springs open; nothing opens and no trap \
              springs. Where nothing locked stands it is refused, with no time or mana spent"
         ),
+        TalentEffect::MerchantsEye => format!(
+            "active (on a thing you carry, for the time of reading a scroll, {} at normal pace; \
+             no mana, cooldown, or check, as often as you like): the thing is identified as a \
+             scroll of identify would identify it. On a thing you already know it is refused, \
+             with no time spent",
+            super::actions::at_normal_pace(warlock_core::content::price(
+                content
+                    .action_costs()
+                    .cost(warlock_core::content::ActionKind::Read),
+                warlock_core::content::BASE_TURN
+            ))
+        ),
+        TalentEffect::SpiritWeapon {
+            to_hit,
+            threat,
+            ignores_protection,
+            ..
+        } => {
+            let armour = match ignores_protection {
+                true => ", and ignores every point of the target's Protection",
+                false => "",
+            };
+            format!(
+                "active (in the shape of any melee weapon, for the time of wielding one, {} at \
+                 normal pace, with what the hands held put away as any swap; no mana, cooldown, \
+                 or check, as often as you like): a weapon of spirit-stuff of that shape, made \
+                 and weighing as its plain base, is put in your main hand (both, for a two-handed \
+                 one), and one you hold fades first. It strikes {} to hit, threatens criticals \
+                 {threat} lower{armour}; it fades the moment it leaves your hands (put away, \
+                 swapped, dropped, sold) and cannot be thrown",
+                super::actions::at_normal_pace(warlock_core::content::price(
+                    content
+                        .action_costs()
+                        .cost(warlock_core::content::ActionKind::Wield),
+                    warlock_core::content::BASE_TURN
+                )),
+                signed(to_hit),
+            )
+        }
     }
 }
 

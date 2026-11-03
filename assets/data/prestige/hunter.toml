@@ -1,0 +1,12 @@
+[[prestige]]
+id = "hunter"
+name = "Hunter"
+description = "One who has sworn the old oath on the road and been answered: a fighter whose weapon comes to the hand when called."
+levels = 30
+hp = 7
+rolls = 2
+known_for = ["athletics", "survival"]
+bonus_talents = { levels = [5, 10, 15, 23, 28], trees = ["weaponcraft", "guard"] }
+abilities = [
+    { level = 1, talent = "spirit_weapon" },
+]

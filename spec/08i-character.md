@@ -383,8 +383,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     include it. **Alignment bars nothing** (#642): no class, talent, or ability asks for a
     band, nothing is greyed out or refused by it, and nothing remembers a drop in band. A
     **holy gift** (Lay on hands, Smite, Holy radiance, Consecrate) may name the bands it works
-    for (`alignment = { min = "kind" }` on its talent; all four are Kind or better, the good
-    side): outside them it is still listed and used, and does nothing ("You call for holy
+    for (`alignment = { min = "kind" }` on its talent; Lay on hands, Smite, and Holy radiance
+    are Kind or better, the good side, and Consecrate Neutral or better): outside them it is still listed and used, and does nothing ("You call for holy
     wrath, but none answers."), taking the time of a cast and spending no cooldown, mana, or
     resource; putting Holy radiance out always works. Mana reads nothing of it, for now. Gods
     and prayer, holy and unholy damage and items, and artifacts that work only for some bands
@@ -407,7 +407,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Concentration** (#668): a trained Concentration makes mana come back faster and the pool a
     little deeper (§8 "Mana": the curves in `data/skills.toml`, the pool's at most a fifth);
     untrained, it gives nothing, even raised by an item or a talent. The Skills screen says so
-    in its description, in words. The priest, druid, wizard, monk, paladin, and witch start
+    in its description, in words. The priest, druid, wizard, ascetic, paladin, and witch start
     trained in it; every class has some mana, so any trained in it gains.
   - **From race and class** (§7): their `skills` are dice rolled when the character is made,
     after every other roll ("Character creation" above); a skill both train sums the two; the
@@ -488,8 +488,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Cool head's, at most all; `World::status_cost`), marked by `surprise` (100 %: a check made,
     whatever came of it). The thief trains Sneak attack (`2d6+10`, known for) and Initiative
     (`2d4+4`), and Detect traps and Disable device at `2d6+10`, known for, and Search at
-    `2d6+4` (#684: in place of the Trapfinding class ability); the ranger and the monk Initiative `2d6+10`; the bard, warrior, and barbarian
+    `2d6+4` (#684: in place of the Trapfinding class ability); the ranger and the ascetic Initiative `2d6+10`; the bard, warrior, and berserker
     `2d4+4`; a drow may start with Sneak attack (an optional skill of the race).
+  - **Intimidate** (#844; `kind = "action"`): gives `intimidate` (+8 at 100, +12 at 200, at most
+    20) on the difficulty of the Willpower check the berserker's War cry asks of those who hear
+    and see it ("Class abilities" below) and of the skill's own threat, marked by `intimidate`
+    (100 %: a cry roared or a threat made, whatever came of it). The berserker trains it `2d4+4`,
+    the half-orc `1d6+4`. Its use (#868) is the **Intimidate** ability (the abilities menu's
+    Skills group, in the skill's place, while `data/intimidate.toml` exists; no key): aimed at a
+    cell the player sees within the file's `range` (6), `intimidate:X,Y`, at a hostile creature
+    with vitals there. It takes the `intimidate` action (a turn), is spoken aloud (a voice where
+    the player stands, as loud as a mutter), and marks Intimidate, whatever comes of it. If the
+    foe hears the voice (asked before it is made) and sees the player now, it rolls War cry's
+    check (`world/war_cry.rs`, shared: two gameplay draws, its Willpower modifier against the
+    file's `difficulty` 10 + the player's Strength modifier + their Intimidate); failed, it is
+    Frightened, caused by the player, at the degrees the file's ladder gives for the points
+    Intimidate adds (`degrees = [[0, 1], [3, 2], [6, 3]]`: one degree below 3 points, value 38;
+    two from there; War cry's three from 6 points, value 75). A foe that does not hear or see
+    the player pays no heed (no draw). Refused, with no time and no draw: untrained, at the
+    player's own cell, out of range, at no creature seen, at one not hostile, or at one without
+    vitals.
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,
@@ -757,18 +775,90 @@ developer notes (CLAUDE.md, `docs/dev/`).
     stat +1); craftsperson (Weaponcraft, Guard, Delver) Sturdy work (Protection +1 in body
     armour), Masterwork (melee threat +1), Artisan (Protection +1 per armour piece worn, +2
     melee damage); merchant (Delver, Scholar) Haggler (favour +15 %: the one class ability on
-    shop favour, #787), Deep pockets (carrying +10 kg, coins weightless), Eye for quality (what
-    is bought or sold is identified); #789 cut its level 40 Insured (shops paid +50 %), a
+    shop favour, #787), Deep pockets (carrying +10 kg, coins weightless), Merchant's eye (#816, at 12: an
+    ability, on a thing carried, that identifies it as the scroll of identify would, for a
+    reading's time and nothing else; refused, no time, for a thing already known); #789 cut its level 40 Insured (shops paid +50 %), a
     capstone that paid only in gold. The favour cap is 50 %. #774 cut the filler and the duplicates (Connoisseur, Hearty, Keen
     appraisal, Jeweller, Appraiser) and #787 the weak ones of the #776 review (Well dressed,
     Noblesse, Commanding, Legacy, Thick skull, Folk hero, Whetstone, Fletching, Mining, Tinker,
     Trade routes, Credit, Magnate, Golden tongue), and left their levels empty. The adventurers'
     tables come with I1–I3 (#243–#245). Dumps mark them `Haggler (class)`;
     JSON `talents[].class`, `due.bonus`. **Saves change** (`Due::bonus`, `Magic::carried`).
+  - **Prestige classes** (#876, P1 of `docs/design/prestige-classes.md` §4; the owner, PR #835:
+    "not going to be a general multiclass thing. More like prestige classes achievable by
+    finding a 'hidden' mechanism"): a character has **one level**, read off the one curve from
+    their XP as ever, but it stops at their class's **cap**, `ClassDef::max_level`
+    (`data/classes/`, default `data/experience.toml` `[levels] class_max`, 60; the bard's
+    30, #874, the only class below it; checked at load: 2 to the curve's top, every `abilities` row and `bonus_talents`
+    level within it), plus a **prestige class's** `levels` once they are called
+    (`Character::level_cap`). A prestige class (`data/prestige/`, `PrestigeDef`: `id`, `name`,
+    `description`, `levels` 1 to 60, `hp`, `mana`, `rolls`, `known_for`, `abilities`,
+    `bonus_talents` at its own levels; never a class's id) is a class in everything a level
+    reads and nothing a creation reads. Levels up to the cap are the class's; each level past
+    it is the prestige class's at its own level (`Character::class_of`: a bard capped at 30
+    called becomes Hunter 1 at total 31, Hunter 30 at 60). **Every per-level read goes through
+    the class of the level** (`content::Table`, the one view of either): hit points (half its
+    `hp` plus Toughness, `World::level_hp(content, level)`), mana (`level_mana`), skill rolls
+    (`roll_count(.., level)`), the bonus pick and its trees (`Table::bonus_at`,
+    `World::bonus_trees_at(level)`: each `Due` keeps its level's trees), and the class abilities
+    table by table (`class::grant` over `Character::class_levels`, at creation, as each level
+    comes, and on a restore); a level-up roll steps up the ladder for a skill **either** class is
+    known for; talent picks (every third level), stat checks, casting (the class's percent of
+    the total level), and the experience factor are unchanged. **The calling** is the door:
+    `CallingDef` (a campaign's `data/callings/`, `content/calling.rs`: `class` a prestige id,
+    `from` the base classes, each named by one calling of a campaign, `level` at least each
+    one's cap, `message`; one outside every campaign is a fixture's and any run's). It is
+    **open** (`World::calling_open`) to a character of a `from` class at that level with no
+    prestige class yet; `World::call` (`world/calling.rs`, the one place a prestige class is
+    given) sets `Character::prestige` (saved, hashed, left out while none; never cleared),
+    says the `message`, and gives **exactly the XP the next level costs** if the bank is short
+    (`add_xp`'s rule, never `grant_xp`'s scaling; a full bank is spent as it is and gives every
+    level it buys), then the level-up (`World::rise_from`) with its hit points, rolls, picks,
+    and the new class's abilities ("Welcome to level 31.", "You gain Spirit weapon."). Unmade's
+    lost level lowers the total and so the prestige level, and gives back as it returns; the
+    choices were made the first time. Who calls: the dev action `call:ID` (`Action::Call`, no
+    time, whatever the level; refused with no such class, one held, or no calling open to the
+    class), and a dialogue word's `calls` (§8 "Dialogue", "Saying words": the Ascmearc's
+    Strange Spirit, §8 "Creatures"; the test world's hermit); an encounter entry's `when = {
+    calling }` holds while a calling is open. Both worlds' Hunter callings ask for the bard's
+    `max_level`, 30 (#874). The character screen's Class row:
+    `Bard`, `Bard 30` at the cap, `Bard 30, Hunter 4` after; the Characters list's summary the
+    same; the death screen "Here lies Brakka, / a bard and hunter,"; the XP row shows no next
+    level at a cap. Dumps: `stats` `Class Bard 30, Hunter 4`, `progress` (dev) `calling hunter:
+    open` / `level 30 not met` / `not for a thief` / `called hunter at 30`, JSON
+    `character.prestige`, `character.classes`, and with `--state` `callings`.
+    `data/prestige/README.toml` has the format; the tests' fixture is the Warden, called from a
+    bard capped at 12 (`world/calling_tests.rs`). No new `[[system]]` and no talent: a prestige
+    class is a class. **Saves change** (`Character::prestige`).
+  - **The Hunter** (#881, H1 of the design, §9): `data/prestige/hunter.toml`, 30 levels, `hp = 7`
+    (the warrior's), two rolls, known for Athletics and Survival, bonus picks at its own 5, 10,
+    15, 23, and 28 from Weaponcraft and Guard, and one row: **Spirit weapon** at its level 1 (the
+    owner: "regular martial progression with no abilities above level 1 for now"). Its door is a
+    campaign's calling (the Strange Spirit's, C1). Spirit weapon (`talents/spirit_weapon.toml`,
+    effect `spirit_weapon { to_hit = 3, threat = 2, ignores_protection = true, phrase }`;
+    `world/spirit_weapon.rs`) is a class active asking for a **shape** (`Aim::Shape`, the shape
+    list: every `melee_weapons` object with an attack a hand holds, 22, grouped by weapon skill,
+    each as a plain one is listed; `use:spirit_weapon:long_sword`, `Action::Shape`; refused, no
+    time, without it or for an id that is no shape's). It makes a `Stack::spirit` of that base
+    (count 1, no magic, known; weighs, is made of, and is valued as its base; saved, left out
+    while false), puts it in the pack, and wields it in the main hand through the equip path,
+    what the hands held put away into the pack as a swap does and paid for as one: the call is a
+    wield (`ClassActive::cost`), and nothing else is spent (no mana, cooldown, or limit). One
+    held already fades first, so calling again reshapes. In a hand (the off hand too) and with
+    the talent, its profile has +3 to hit, a threat 2 lower (never below 3), and every point of
+    Protection ignored (`penetration` `ALL_PROTECTION`, no soak drawn). **The invariant**: a
+    spirit stack exists only in a hand slot. Taken out of the hands and left in the pack (removed,
+    swapped for steel, moved to the missile weapon slot) it fades at once ("The long sword fades
+    from your hand."); a drop or a sale takes it off and lets it fade instead of letting it go
+    (the shop never sees it, the floor never holds it); a throw is refused with no time ("It will
+    not leave your hand."); quests never count it; a tithe or a forge's ruin takes spirit-stuff,
+    which is called again. Its description adds the effect's `phrase` as a power line, its
+    numbers and critical range fold the gifts in, and "Pierces armour"; item lists mark it
+    `(spirit)`; the character screen's attack says `pierces armour`. Creatures never hold one.
+    **Adds an action and saved state** (`Stack::spirit`).
   - **Scholar, Grit, Delver** (#240; the design's §7.5 but for the five mana talents, which
     came with #242: Deep well, Clear mind, Meditation, Frugal caster, Blood magic, §8 "Mana"). Their effects share what the class abilities use where the rules
-    are the same (`identify_carried`: Lore, a magic item carried 24 hours; `checks` and `stat`:
-    Iron will, +2 on Willpower checks and Presence +1). Iron will is a Grit talent the
+    are the same (`checks` and `stat`: Iron will, +2 on Willpower checks and Presence +1). Iron will is a Grit talent the
     aristocrat's table also gives. #787 cut Keen appraiser, Silver tongue, and Well liked;
     Haggler is the merchant's class ability alone. New: Scroll savant (Scholar, two ranks; #775 merged
     Careful reader and Spell recall into it): at its first rank (Intelligence 13) `read_percent`
@@ -823,7 +913,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     "Resources"):
     **effective eyes** (the design's B4, `WorldState::eyes`, §5 "Effective eyes"):
     `threshold_percent` (Night eyes: −50 %, eyes normal), `darkvision` (Dark adaptation: +2,
-    eyes darkvision; Owl eyes: 2 cells for low-light eyes, level 9); `scent` (Blood scent: a bleeding creature in line of sight
+    eyes darkvision or low-light, `eyes = ["darkvision", "low_light"]`; it took in Owl eyes,
+    #817); `scent` (Blood scent: a bleeding creature in line of sight
     within 9 cells, four beyond darkvision's five, is seen however dark, eyes darkvision);
     `lantern_light` (Lamplighter: a lit lantern ready in the Tool slot burns as `lantern_bright`, a
     cell farther, not while hooded, in `WorldState::carried_light`, so creatures see it too); `ambush` (Ambusher: +1d6 after Protection on
@@ -969,7 +1060,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     wiki's Talents page states them.
 - **The adventurers' class tables, and the class actives** (`content/class.rs`: `ClassActive`;
   `world/class_ability.rs`; M30, #243; design `docs/design/progression.md` §4.2–4.5): the
-  warrior, barbarian, paladin, and monk have level tables as the everyday folk do (the
+  warrior, berserker, paladin, and ascetic have level tables as the everyday folk do (the
   "Class abilities" bullet above): `abilities` rows naming talents of the class tree
   (`data/talents/`, `granted`) and `bonus_talents`.
   - **Who has them**: given as the level comes, "You gain Rage." (the shared rules of the bullet
@@ -977,18 +1068,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
     talents' kinds and the class's own (the effects README of `data/talents/`); an active's
     effect (`rage`, `veterans_wind`, `whirlwind`, `lay_on_hands`, `smite`, `radiance`,
     `quivering_palm`) makes the talent that has it the ability's name and description in the
-    menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Monk's
-    Deflect missiles is the ordinary talent, handed out. A shared entry is one talent the tables
-    name alike (`purity_of_body`: the paladin's, the priest's, and the monk's; Divine health was
+    menu; a holy gift's `alignment` names the bands it works for (§8 "Alignment"). Deflect
+    missiles left the ascetic's table for Stunning strike at 12 (#848); it stays the ordinary
+    Finesse talent, a bonus pick away. A shared entry is one talent the tables
+    name alike (`purity_of_body`: the paladin's, the priest's, and the ascetic's; Divine health was
     its copy until #790).
   - **Bonus picks**: warrior (Weaponcraft or Guard) at 4, 10, 16, 22, 28, 34, 46, 58;
-    barbarian (Might or Vigour), paladin (Guard or Vigour), monk (Finesse or Vigour) at 10, 20,
+    berserker (Might or Vigour), paladin (Guard or Vigour), ascetic (Finesse or Vigour) at 10, 20,
     30, 45, 55; as the bullet above says.
   - **Actives** (`Ability::Class`, the abilities menu's Class group; `Action::Use`, `use:rage`,
     `use:smite:E`; refused, no time, without the ability or while its cooldown lasts; a holy
     gift outside its bands is used and does nothing, §8 "Alignment"): Rage (the Rage resource and with it Raging:
     St +2, To +2, In −2, no reading or casting, while the rage lasts, §8 "Resources"; then
-    Exhausted 10 minutes; no rage while either lasts; a wait's time),
+    Exhausted 150 s; no rage while either lasts; a wait's time), War cry (the berserker's at
+    25, #844, `world/war_cry.rs`: 4 rage, the talent's `resource`, and a wait's time; a roar as
+    loud as a howl, `Act::Howl`, heard across the floor, waking dens; every hostile that hears
+    it, sees the player now, and has vitals rolls its Willpower modifier against 10 + the
+    player's Strength modifier + their Intimidate, two gameplay draws apiece in actor-id order,
+    no level cut; failed, Frightened 3 degrees, caused by the player, it runs from them; "The
+    kobold quails and flees from you." or "The kobold does not flinch." for those the player
+    sees. Its one refusal is the rage: not held, or less than 4, "You have not the rage for
+    it.", no time; a roar with nobody to hear it still spends the turn, the rage, and the noise;
+    each cry marks Intimidate),
     Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
     blow at every hostile beside, clockwise from the north, each with the free blows the end of
     an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit
@@ -997,39 +1098,77 @@ developer notes (CLAUDE.md, `docs/dev/`).
     levels, at least 1d6, a magic weapon's extra die folded into the bonus at its average; then
     Spent, 5 minutes; works for Kind or better), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
-    glowing item's; a cast; works for Kind or better), Quivering palm (a bare-handed blow in a direction,
-    refused with a weapon in hand before anything is spent; a hit that does damage leaves three
-    degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown), Consecrate (the priest's at
+    glowing item's; a cast; works for Kind or better), Patient defence (the ascetic's at 18, #849: for a
+    point of Ki and a wait's time, Poised until their next action: Dodge +4 from the status's own
+    `combat`, and a melee blow on them missed by their Dexterity, Dodge, or Parry answered at once
+    by the riposte, which the status switches on in `World::free_blows_of` (a blow missed by
+    Dexterity or Dodge is answered only while Poised: `Cue::Attacked { dodged }`, raised only by
+    a creature's attack, `World::attack`); refused, no time or ki, only with no ki; never for
+    nobody near, and taken again while Poised it holds one action more; any grip), Step of the wind (the
+    ascetic's at 6, #847: for a point of Ki and **no time**, a degree of Light-footed, so the next
+    action, whatever it is, costs half its price and ends it; refused, no time or ki, while
+    Light-footed already, "You are already light on your feet."; any grip), Stunning strike (the ascetic's at 12,
+    #848, `world/ascetic.rs`: a bare-handed blow in a direction at a melee attack's price,
+    refused with a weapon in hand or nobody hostile there before anything is spent; a hit that
+    does damage leaves the foe **Stunned**, "You stun the kobold.": `per_action`, one degree,
+    `refresh`, `cost = 150`, `flat_footed`, §8 "Surprise and sneak attacks"; for 1 Ki and no
+    cooldown), Quivering palm (the same blow, `World::palm_blow`, one body for both; a hit that
+    does damage leaves three degrees of Bleeding; for 5 Ki, §8 "Resources", and no cooldown),
+    Stillness (Still mind's active, the ascetic's at 25, #850, `world/ascetic.rs`: for 2 Ki and
+    **no time**, every status of its list the ascetic suffers ends at once, each with its own end
+    words after "You still your mind.": Held, Pinned, Staggered, Stunned, Surprised, Transfixed,
+    Frightened, Drowsy, Webbed, the list data on the effect, each id checked at load; refused, no
+    time or ki, with none of them to end, "Your mind is already still." (greyed so in the menu);
+    any grip), Consecrate (the priest's at
     9, the paladin's at 12: a minute's prayer, for 15 mana, that lifts an unholy special room's
     effect, or a whole level's, for good, §7 "Special rooms"; refused, no time, elsewhere; works
     for Kind or better), Knock (the wizard's at 4: in a direction, for 5 mana and a cast's time, the lock
     of the locked door or shut chest there springs open and nothing opens; refused, no time or
-    mana, where nothing locked stands; §8 "Chests").
+    mana, where nothing locked stands; §8 "Chests"), Merchant's eye (the merchant's at 12, #816:
+    on a stack carried, `use:merchants_eye:c`, chosen from the identify list; it is identified as
+    the scroll of identify would identify it, for the time of a `read` and nothing else, no mana,
+    cooldown, check, or limit; refused, no time, for one already known).
   - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
     Shield line (Shield +1), Cleaving strike (the cleave free blow; with the Cleave talent too, great
     cleave), Armour drill (worn armour's Dexterity cap +1, Protection +1 while wearing any),
     Weapon mastery (threat +1 with melee weapon skills at rank 8 or more), Iron stance (the
     aggressive stance's Dodge penalty and the defensive's to-hit penalty gone), Champion
-    (critical multiplier +1 with melee weapons, at most ×5); Thick hide (natural armour +2 in
-    no body armour: nothing in the Body slot), Fast movement (steps 10 % cheaper Unburdened in
-    no body armour, `World::step_price`), Brutal critical (critical multiplier +1 with a
-    two-handed weapon), Hardened (each level past `hp_level` adds the level's hit points again
-    and 3 more), Mighty thews, Blood frenzy (a kill while raging builds 5 rage), Mighty rage
+    (critical multiplier +1 with melee weapons, at most ×5); Battle-scarred (Protection +1, and
+    +2 more while raging: +3 in all, in any armour), Headlong (while raging, steps 20 % cheaper,
+    in any armour and any burden, `World::step_price`), Brutal critical (critical multiplier +1
+    with a two-handed weapon), Hardened (each level past `hp_level` adds the level's hit points
+    again and 3 more), Mighty thews, Blood frenzy (while raging, melee attacks 20 % cheaper,
+    `World::attack_price`; and a kill builds 5 rage), Mighty rage
     (Raging's raises doubled, 10 more rage at most, Exhausted eases twice as fast), Unstoppable
     (while raging bleeding and poison tick nothing, and a blow that would take the last hit point
     leaves it for 10 rage, while that much is held); Divine grace
     (disease checks +2, poison eases twice as fast), Purity of body (no
     disease is ever caught: `World::expose` refuses, nothing rolled), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
     status that ticks and every disease, one degree of Drained); Martial arts (bare hands and
-    kicks roll 1d6), Fleet (steps 10 % cheaper in no body armour and with no shield), Deflect
-    missiles (Dodge +2 against missiles), Flurry (grants Ki, §8 "Resources"; a melee attack
+    kicks roll 1d6; grants Ki, §8 "Resources"), Flurry (level 1 beside it: a melee attack
     with nothing in hand strikes twice, the second at −2, for a point of ki; with none, once),
+    Step of the wind's passive half (level 6: steps 10 % cheaper in no body armour and with no
+    shield; it took Fleet's place, #847),
     Still mind (+2 on checks made with Willpower: diseases', noticing
-    in passing; no status lowers Intelligence or Willpower), Diamond soul (Deflection +2),
-    Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1). The paladin's
-    passives do not ask for Good; only the gifts used from the menu do.
-  - **Resources**: Rage, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
-    (§8 "Resources", R1); Flurry and Quivering palm on the Ki resource (R4, #252).
+    in passing; no status lowers Intelligence or Willpower; its active is Stillness, above), Diamond soul (Deflection +2; and, #851, a shot or throw, a
+    trap's missile too, that would hit the ascetic while they hold no weapon and no shield
+    spends a point of ki by itself and misses, the missile falling on their cell: "You pluck
+    the arrow from the air.", said after the attack's own words; with no ki, the hit stands;
+    spells and bursts are never caught; no action), Perfect self (bare hands 1d8; unarmed threat +1, critical multiplier +1; ki comes back
+    twice as fast). The paladin's
+    passives do not ask for Good; only the gifts used from the menu do. No berserker row reads
+    what the berserker wears (#843).
+  - **While a status lasts** (#843): any talent effect the talents' one sum reads may say
+    `while = "STATUS"` (a status id, checked at load); it counts only while its holder suffers
+    that status (`Talents::mods`, given the actor's statuses; every rule keeps its one read).
+    Battle-scarred's second half, Headlong, and Blood frenzy's price say `while = "raging"`. An
+    active, a spell given, or what is rolled or handed down when a talent is taken carries no
+    condition (refused at load). The identical-effects check counts the condition as part of
+    the effect: `protection 2 while raging` is not Bulwark's `protection 2`.
+  - **Resources**: Rage, War cry, Blood frenzy, Mighty rage, and Unstoppable run on the Rage resource
+    (§8 "Resources", R1); Martial arts grants the Ki resource, which Flurry, Step of the wind, Stunning strike,
+    Patient defence, Stillness, Diamond soul's catch, and Quivering palm spend (R4, #252; #846, #847,
+    #848, #849, #850, #851).
   - **Coverage**: `min_class` stays 0 until every class has its table.
 - **The casters' class tables, and their spells** (`content/spell_def.rs`: `SpellId`;
   `data/spells/`; `world/cast.rs`, `world/caster.rs`; M30, #245, #395; design §4.9–4.12, §3.7):
@@ -1056,13 +1195,42 @@ developer notes (CLAUDE.md, `docs/dev/`).
     hurt, or (Call lightning) under a roof or below ground. Their kills are the caster's, and
     one that kills its caster is `Cause::Spell` ("Killed by their own fireball"). Too close a
     burst asks first, as a scroll's does ("Cast it anyway?").
-  - **Priest**: Mend (level 1, at 1: a touch, 1d3 back; 1 mana), Blessing (level 3, at 3:
-    Blessed 10 min a degree: +1 to hit, Willpower +1; 3 mana), Cure wounds (level 3, at 3: a
-    touch, 2d6; 2 casts; 2 mana), Remove disease (level 11, at 12: every disease and Poisoned;
-    11 mana),
-    Purify (rotten food never sickens nor exposes; no draw), Purity of body and
-    Smite (the paladin's own talents, so Smite works only for a priest of the good side), Miracle, Saint
-    (healing +100 %).
+  - **Priest** (the priest design, `docs/design/priest.md`; #883): Mend (level 1, at 1: a
+    touch, 1d3 back; 1 mana), Blessing (level 3, at 3: Blessed 10 min a degree: +1 to hit,
+    Willpower +1; 3 mana), Cure wounds (level 3, at 3: a touch, 2d6; 2 casts; 2 mana),
+    Consecrate (9), Communion with the dark (9: Consecrate's dark twin, a passive working only
+    for a Callous or worse priest: in an unholy place, a room's or a whole level's, their prayers
+    add no strain and the place's status, Ebbing, never touches them), and **the prayer** (`use:orison` at every tier; `docs/dev/prayer.md`; the wiki's Prayer page states its numbers): one
+    class active given at 1 that answers what ails the priest most, in a fixed priority order
+    (disease, poison, wounds, release, mana, hunger, restoration; `data/prayer.toml`), as far as
+    its uses reach: wounds at 1 (Orison: bleeding stops, hit points to full), hunger at 6 (Daily
+    bread: Hungry or worse fed to Satiated, with Purify's rule: rotten food never sickens nor
+    exposes), disease and poison at 12 (Prayer: every disease, the brewing ones with the shown,
+    and poison), release at 18 (Prayer of release: hexes, holds, webs), restoration at 25
+    (Litany: stat damage and drained points, the temple's mending), mana at 32 (Litany of the
+    mind), two answers a prayer at 40 (Benediction), and at 60 everything at once with every
+    resource pool filled (Miracle). It takes a cast's time and no mana; Raging and Silenced
+    block it. A hidden **strain** limits it: +100 an attempt, answered or not, a point passing a
+    minute; a prayer fizzles with 10 % per 100 strain, and a fizzle locks it until the strain
+    has passed to 0 (the same words for both). With nothing to answer (a brewing disease alone is
+    nothing) it is refused, with no time or strain. The band at the moment picks who answers:
+    Neutral and better the holy powers (Orison, Prayer, Litany, Benediction, Miracle), Callous
+    and worse the dark ones (Whisper, Invocation, Rite, Pact, Miracle), each with its own words.
+    The dark ones answer with a twist (`docs/dev/prayer.md` "The dark face"): the diseases cured
+    pass to the nearest creature the priest sees (incubating, unchecked), the poison cured is
+    laid on it at its degrees, a released hex is laid on its caster if seen (a hold's holder is
+    Webbed), and the hunger use feeds to one short of Bloated. **Sanctuary** (50; `use:sanctuary`, #885): the
+    priest kneels a minute for 30 mana (interrupted as a rest is, nothing is laid) and the
+    ground within two cells of where they knelt is hallowed for an hour: no creature hostile to
+    them steps onto it from outside (one already on it may move about and leave; nothing spawns
+    there; missiles and spells cross it), and whoever stands on it heals and regains mana three
+    times as fast (or a special room's pace, the larger). A blow, shot, throw, or harmful spell
+    of the priest's from on it breaks it ("The peace is broken."), and so does a dark twist that
+    reaches a creature; being struck does not. The
+    same rule for both faces, the words differing ("The ground about you is hallowed." / "A
+    dread settles on the ground about you."); no light. Refused, with no time or mana, on the
+    overworld, in water, in a shop, or on hallowed ground. Remove disease, Purify, Purity of body, Smite, the
+    reprieve, and Saint left the table (the spell and its scroll stay).
   - **Druid**: Beast-friend (the Wayfarer talent, given; its copy Wild empathy until #790), Spark (level 1, at 1: a bolt, 1d4 electricity;
     1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Nature's ward
     (wading never sickens; poison eases twice as fast), Call lightning (at 12; level 11: a line of
@@ -1070,14 +1238,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     sky only; 20 mana), Flame and frost (two spells, Flame: level 12, the fireball's
     burst, 3d6 fire, radius 2, blast, 29 mana; Frost: level 6, 2d6 cold, freezes water, 14
     mana). #791 cut Woodland stride (6; the ranger's 18 too) and Winter's friend (25), which
-    worked only outdoors: those levels are empty.
+    worked only outdoors; #839 fills 6, 25, 32, 40, and 60 with the calls (§8 "Allies"): Call of
+    the wild (at 6; level 5: a wolf for 5 minutes, Presence 14: 8, 18: 12, 22: 16; 5 mana), Call
+    of the forest (at 25; level 20: a bear; 20 mana), Pack leader (32: each call brings one more,
+    keeps two of each, and lasts half again as long), Call the elements (at 40; level 35: a
+    greater elemental of earth, water, air, or fire, one drawn; 35 mana), and Lord of the wild
+    (60: calls last until slain, three of each). Each call keeps one of its own at once until
+    Pack leader; its scroll is very hard to learn (`study_difficulty` 8, 10, 12).
   - **Wizard**: Scroll adept (reading −50 %; the spell scrolls read a rung higher, scrolls only:
     the spell scaling design, decision 12),
     Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Arcane training
     (at 1: caster level +1 per 5 character levels, `caster_level` with `per_levels`), Magic missile
     (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
-    mana), Arcane lore (a magic item carried
-    an hour is identified), Burning hands (level
+    mana), Burning hands (level
     4, at 12: a cone of 3 cells, 1d4 fire, its ladder to 3d4+2; 6 mana), Arcane bolt (level 6, at
     18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Mage armour (Deflection +2 in no body armour),
     Empower (`spell_mod { rungs = 1 }`: its spells a rung higher on their ladders; spells' mana
@@ -1107,15 +1280,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (new status ids).
 - **The ranger's, thief's, and bard's tables** (M30, #244; design §4.6–4.8, §4.1 B6): as the
   adventurers' above. Shared entries are the ordinary talents, handed out: Evasion (Finesse;
-  the ranger's at 32, the thief's at 18) and Lore (Scholar; the bard's at 1). One the player
+  the ranger's at 32, the thief's at 18). One the player
   picked before its level comes is not given again (a pick comes in its place). The bard's Fast
   healer (Vigour) and the druid's Beast-friend (Wayfarer) are shared the same way (#790).
   - **The kill tally** (the design's B6, `Quests::kills`): every kill of the player's is
     tallied by level and creature type, whatever the type (kill quests read the same tally);
     `Quests::prey` is the type killed most, the first to get there of those tied (it changes
     only when another is killed more often). Saved, hashed, left out while empty.
-  - **Bonus picks**: ranger (Weaponcraft, Wayfarer) and bard (Scholar, Delver) at 10, 20, 30,
-    45, 55; thief (Finesse, Shadow, Delver) at 4, 10, 16, 22, 28, 34, 46, 58.
+  - **Bonus picks**: ranger (Weaponcraft, Wayfarer) at 10, 20, 30, 45, 55; bard (any tree) at
+    5, 10, 15, 23, 28 (#874); thief (Finesse, Shadow, Delver) at 4, 10, 16, 22, 28, 34, 46, 58.
+  - **The bard's 30 levels** (#874; the bard design §5): its table is the old one halved, every
+    ability by 30 (Mend and Trained wind 1, Travelled hands 3, Fast healer 6, Inspire 9, Jack of
+    all trades 12 and its second rank 25, Throw your voice 16, Lullaby 20, Virtuoso 30), and the
+    class ends there, `max_level = 30` ("Prestige classes" above): experience past it counts and
+    buys nothing until the Hunter's calling, when Hunter 1 comes at total level 31.
   - **Actives**: Volley (the ranger's, 50: `Action::UseAt`, `use:volley:X,Y`, aimed at a cell
     as a shot is; the readied missile weapon's three shots there, one after another, each its
     own flight and attack, for the price of one shot and one exertion; it stops when the
@@ -1123,10 +1301,32 @@ developer notes (CLAUDE.md, `docs/dev/`).
     focus" while short, "You have too little focus." if used), spent as it is loosed and priced
     as one ordinary shot (Rapid shot does not touch it); refused as a shot is, spending
     nothing), Inspire
-    (the bard's, 18: grants Inspiration, §8 "Resources"; Inspired, to hit +1 and Dodge +1 for 5
-    minutes, for 3 inspiration while the bard holds 3, else 3 mana, the time of a chat; no
-    cooldown, the cost is the price: greyed out "you have too little mana",
-    `Unavailable::NoMana`, while the player has neither). Throw your voice (the bard's, 32) is no
+    (the bard's, 9: grants Inspiration, §8 "Resources"; a **song**, #870: Inspired, to hit +1
+    and Dodge +1 for 5 minutes a degree, for 3 inspiration and nothing else (no mana fallback:
+    each song costs one thing), the time of a `song` (500, a chat's); no cooldown, the cost is the
+    price: greyed out "not enough inspiration", `Unavailable::Short`, while short; "You have
+    too little inspiration." if used).
+    **Songs** (`world/song.rs::sing`, the one place a song is sung; the `song` talent effect
+    `{ id, on, status, severity, resource, cost | mana, check, difficulty }`, an active that
+    `ClassActive::sings`): paid in their one cost, heard (`Act::Sing`, a voice of `SONG_NOISE`
+    80 where the singer stands: those who hear it come to look), then the status, `severity`
+    degrees plus Music's `song_degrees` (one more at 50 and at 100, then one more every 100), at
+    most the status's `max` (Inspired and Inspired greatly are `max = 3`: the degrees are time,
+    the bonus stays), then a Presence mark (inspired) and a Music mark (`song`). Refused, no time,
+    on the overworld and while Silenced (`silenced` blocks the `song` action). A song `on =
+    "hearers"` is sung over every creature that hears it (the Sing noise's hearers on ground
+    truth, asked before it is made: an unseen foe in earshot is checked like any other) and is
+    hostile to the singer; friends, allies, and the peaceful only hear it. Each, in actor-id
+    order, checks `check` (its modifier and its talents' checks of that stat) against
+    `difficulty` plus Music's `song_craft` (+4 at 100, +8 at 200), two gameplay draws apiece;
+    failed, it suffers the song's status at the song's degrees, caused by the singer. "You sing a
+    lullaby.", then for each seen "The kobold's eyes grow heavy." or "The kobold shakes off the
+    song."; nothing of the unseen. Sung to an empty room all the same (no refusal: who hears is
+    the world's). The **Lullaby** (the bard's, 20, #873: `use:lullaby`, nothing to aim): Drowsy
+    (everything costs 300 %, a degree easing every 12 s) to hostile hearers who fail Willpower
+    against 13 plus the craft, for 6 mana and the time of a song, no cooldown; greyed out "you
+    have too little mana" while short. Music is
+    `kind = "rules"` (no "not usable yet" row). Throw your voice (the bard's, 16) is no
     longer everyone's: the ability is had by a talent with the `throw_voice` effect (the
     action is refused, "You do not know how to throw your voice.", without it). The thief's
     Lurk (6, #684: `use:lurk`, the time of a wait, no cost and no cooldown: the thief suffers
@@ -1158,11 +1358,22 @@ developer notes (CLAUDE.md, `docs/dev/`).
     attacks half as loud), Master thief (an attack on an unaware creature threatens a critical
     2 lower, never below 3; and its finisher, an active aimed in a direction, `use:master_thief:E`,
     for 5 openings: a melee blow that is a critical whenever it hits, with no confirmation roll,
-    `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Fast healer
-    (the Vigour talent, given at 12; its copy Song of rest until #790: resting heals half again
-    as fast), Jack of all trades (every trained skill counts 5
-    higher, as a skill bonus in `Actor::skill_effect`), Virtuoso (Inspire gives Inspired greatly, to
-    hit +2 and Dodge +2 for 10 minutes, for nothing: neither mana nor inspiration).
+    `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Travelled hands
+    (the bard's at 3, in Blessing's place, #871: a hand-out once, `weapon_ranks { to = 1 }`:
+    every weapon skill and fighting style the bard holds at rank 0, whatever rows the content
+    has, but the schools of magic and hidden styles, rises to rank 1 by
+    `WeaponSkills::raise_to`, its defaults with it; "Your hands know every weapon a little.";
+    the optional `skills` names the rows instead, for a later class's trade); Fast healer
+    (the Vigour talent, given at 6; its copy Song of rest until #790: resting heals half again
+    as fast), Jack of all trades (two ranks, #872; the class table names the rank,
+    `{ level = 25, talent = "jack_of_all_trades", rank = 2 }`: rank 1 at 12, a hand-out once,
+    `take_up_skills { dice = "1d4+1", except = ["sneak_attack"] }`: every skill of the content
+    the bard is not trained in, but Sneak attack, trained at 1d4+1 from the `levels` stream in
+    file order, `world/jack.rs`, "You find you know a little of everything."; rank 2 at 25,
+    "Your Jack of all trades grows.": every trained skill counts 5 higher, as a skill bonus in
+    `Actor::skill_effect`), Virtuoso (30, #874: every song costs nothing and gives a
+    degree more; Inspire gives Inspired greatly, to hit +2 and Dodge +2 for 10 minutes, for
+    nothing: neither mana nor inspiration).
   - **Resources**: the ranger's Focus (R2, #250), the thief's Openings (R3, #251), and the
     bard's Inspiration (R4, #252) are in.
   - **Saves change**: `Quests::prey`, the tally of every type, the statuses `inspired` and

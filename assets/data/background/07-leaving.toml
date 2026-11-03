@@ -30,7 +30,7 @@ id = "for_the_stories"
 tier = "common"
 weight = 3
 text = "You left because the stories were all somewhere else."
-when = { class = ["warrior", "barbarian", "bard", "aristocrat", "ranger"] }
+when = { class = ["warrior", "berserker", "bard", "aristocrat", "ranger"] }
 
 [[line]]
 id = "the_quarrel"

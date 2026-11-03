@@ -1,0 +1,8 @@
+[[talent]]
+id = "merchants_eye"
+name = "Merchant's eye"
+tree = "class"
+granted = true
+description = "You know goods when you see them (an ability): a careful look tells you what a thing you carry is, as a scroll of identify would, for the time it takes to read one."
+effects = [{ kind = "merchants_eye" }]
+systems = ["magic_items"]

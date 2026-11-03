@@ -3,9 +3,10 @@ id = "perfect_self"
 name = "Perfect self"
 tree = "class"
 granted = true
-description = "Body and mind made perfect: your bare hands strike harder still, and find the telling spot more often and more cruelly."
+description = "Body and mind made perfect: your bare hands strike harder still, and find the telling spot more often and more cruelly, and your ki comes back faster."
 effects = [
     { kind = "unarmed_die", sides = 8 },
     { kind = "weapon", role = "unarmed", threat = 1, crit = 1 },
+    { kind = "resource_rate", resource = "ki", value = 100 },
 ]
-systems = ["kicks", "combat"]
+systems = ["kicks", "combat", "resources"]

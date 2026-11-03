@@ -1,0 +1,42 @@
+[[class]]
+id = "berserker"
+name = "Berserker"
+description = "A warrior of the wild lands who fights in a fury: mighty and hardy, quicker to rage than to read."
+stats = { strength = "1d3+1", dexterity = 1, toughness = "1d3", intelligence = "-1d2", presence = -1 }
+hp = 8
+mana = 1
+casting = 25
+experience = 90
+skills = { athletics = "2d6+10", survival = "2d6+10", initiative = "2d4+4", intimidate = "2d4+4", listen = "2d4+4", swim = "2d4+4" }
+known_for = ["athletics", "survival"]
+optional_skills = { handle_animal = { chance = 20, dice = "2d4" }, spot = { chance = 30, dice = "2d4" } }
+rolls = 2
+weapon_skills = { unarmed = 1 }
+weapon_skill_choice = [{ axes = 2 }, { great_blades = 2 }]
+styles = { great_weapon = 1 }
+# The wild lands' arms: a great weapon of the kind the berserker learned, and furs.
+kit = [
+    { wield = "great_axe", trained = "axes" },
+    { wield = "great_sword", trained = "great_blades" },
+    { wear = "fur_cloak" },
+    { wear = "bone_amulet", magic = "any" },
+    "dried_meat*3",
+    "gold_coin*4",
+]
+# Bonus talents from Might and Vigour.
+bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["might", "vigour"] }
+# The level table (spec §8 "Class abilities"). The rage and the three that build on it move onto
+# a Rage pool with the alternative resources (#225).
+abilities = [
+    { level = 1, talent = "rage" },
+    { level = 1, talent = "trained_wind" },
+    { level = 6, talent = "battle_scarred" },
+    { level = 12, talent = "headlong" },
+    { level = 18, talent = "brutal_critical" },
+    { level = 25, talent = "war_cry" },
+    { level = 32, talent = "mighty_thews" },
+    { level = 40, talent = "blood_frenzy" },
+    { level = 50, talent = "mighty_rage" },
+    { level = 50, talent = "hardened" },
+    { level = 60, talent = "unstoppable" },
+]

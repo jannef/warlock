@@ -2,12 +2,16 @@
 //! registry (`warlock_core::ability`).
 
 use super::actions::at_normal_pace;
-use super::text::{Term, anchored};
+use super::combat::percent;
+use super::text::{Term, anchored, link};
 use std::fmt::Write as _;
-use warlock_core::ability::{Ability, Aim};
+use warlock_core::ability::{Ability, Aim, Source};
+use warlock_core::check;
 use warlock_core::content::{
-    BASE_TURN, ClassActive, Content, Offer, SignActive, TalentEffect, price,
+    BASE_TURN, ClassActive, Content, Offer, SignActive, SongOn, TalentEffect, price,
 };
+use warlock_core::skills::Effect;
+use warlock_core::stats::Stat;
 
 /// Every ability, grouped as the menu groups them (by where they come from) and by name within a
 /// group: who has it, what it asks for, what it does, and how long it takes at a normal pace. A
@@ -42,6 +46,7 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Disarm => "everyone trained in Disable device".into(),
             Ability::PickLock => "everyone trained in Open lock".into(),
             Ability::Steal => "everyone trained in Steal".into(),
+            Ability::Intimidate => "everyone trained in Intimidate".into(),
             Ability::Heal => "everyone trained in Heal (with something to treat)".into(),
             Ability::Forage => {
                 "everyone trained in Survival (usable in the wild: the overworld's land and its \
@@ -61,10 +66,17 @@ pub(super) fn abilities(content: &Content) -> String {
                 "everyone beside a forge's anvil (tempering takes ten minutes)".into()
             }
             Ability::Drink => "everyone beside a healing spring (a drink takes ten seconds)".into(),
+            Ability::Heel | Ability::Hold | Ability::SetOn => {
+                "everyone with an ally (usable while one is on the level)".into()
+            }
             // Weapon abilities have a table of their own (`weapon_abilities.rs`).
             Ability::Weapon(..) => continue,
         };
         let (asks, takes) = match a.cost() {
+            // The breath between actions (Step of the wind).
+            Some(_) if matches!(a, Ability::Class(active) if active.takes_no_time()) => {
+                (aim(a.aim(content)), "no time".to_string())
+            }
             // A long action: its prayer's time, whatever the pace.
             Some(_) if a == Ability::Class(ClassActive::Consecrate) => {
                 let book = content.talents();
@@ -76,6 +88,18 @@ pub(super) fn abilities(content: &Content) -> String {
                     })
                     .unwrap_or_default();
                 (aim(a.aim(content)), format!("{time} (a prayer)"))
+            }
+            // A long action too: the rite's kneeling.
+            Some(_) if a == Ability::Class(ClassActive::Sanctuary) => {
+                let book = content.talents();
+                let time = (book.id("sanctuary").into_iter())
+                    .flat_map(|t| book.get(t).effects.iter())
+                    .find_map(|e| match e {
+                        TalentEffect::Sanctuary { time, .. } => Some(time.clone()),
+                        _ => None,
+                    })
+                    .unwrap_or_default();
+                (aim(a.aim(content)), format!("{time} (a rite)"))
             }
             // A place's: its outcome table's time.
             Some(_) if place_seconds(content, a).is_some() => {
@@ -91,6 +115,8 @@ pub(super) fn abilities(content: &Content) -> String {
                 let cost = content.action_costs().cost(kind);
                 (aim(a.aim(content)), at_normal_pace(price(cost, BASE_TURN)))
             }
+            // An order is a shout: no time at all.
+            None if a.source() == Source::Ally => (aim(a.aim(content)), "no time".to_string()),
             None => ("—", "not usable yet".to_string()),
         };
         let _ = writeln!(
@@ -126,21 +152,36 @@ fn class_holders(content: &Content, active: ClassActive) -> String {
 }
 
 /// The classes whose table gives a talent with an effect `has` says yes to, from which level, by
-/// name ("bards from level 32").
+/// name ("bards from level 16").
 fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> String {
     let book = content.talents();
     let mut who: Vec<(String, u8)> = (content.classes().iter())
         .filter_map(|c| {
-            let (level, _) = c.abilities.iter().find(|(_, talent)| {
+            let (level, _, _) = c.abilities.iter().find(|(_, talent, _)| {
                 (book.id(talent)).is_some_and(|t| (book.get(t).effects.iter()).any(&has))
             })?;
             Some((c.name.to_lowercase(), *level))
         })
         .collect();
     who.sort();
-    let parts: Vec<String> = (who.iter())
+    let mut parts: Vec<String> = (who.iter())
         .map(|(class, level)| format!("{class}s from level {level}"))
         .collect();
+    // A prestige class's table counts its own levels (Hunter 1 is the level after its base
+    // class's highest).
+    let mut prestige: Vec<(String, u8)> = (content.prestiges().iter())
+        .filter_map(|p| {
+            let (level, _, _) = p.abilities.iter().find(|(_, talent, _)| {
+                (book.id(talent)).is_some_and(|t| (book.get(t).effects.iter()).any(&has))
+            })?;
+            Some((p.name.clone(), *level))
+        })
+        .collect();
+    prestige.sort();
+    parts.extend(
+        (prestige.iter())
+            .map(|(class, level)| format!("{}s from {class} level {level}", class.to_lowercase())),
+    );
     parts.join(", ")
 }
 
@@ -173,5 +214,188 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Cell => "a place you see",
         Aim::Ailment => "what to treat, when there is more than one",
         Aim::Item => "an item you carry",
+        Aim::Shape => "a weapon's shape, from every melee weapon",
+    }
+}
+
+/// The songs (spec §8 "Class abilities", the bard's songs): every talent with a `song` effect,
+/// by name, with who sings it, what it is paid in, whom it is sung over, the status it brings,
+/// and the check its hearers make.
+pub(super) fn songs(content: &Content) -> String {
+    let mut rows: Vec<(String, String)> = Vec::new();
+    for (_, def) in content.talents().iter() {
+        for effect in &def.effects {
+            let TalentEffect::Song {
+                id,
+                on,
+                status,
+                severity,
+                resource,
+                cost,
+                mana,
+                check,
+                difficulty,
+            } = effect
+            else {
+                continue;
+            };
+            let who = table_holders(
+                content,
+                |e| matches!(e, TalentEffect::Song { id: other, .. } if other == id),
+            );
+            let paid = match resource {
+                Some(r) => {
+                    let name = (content.resource_id(r))
+                        .map_or(r.as_str(), |r| content.resource(r).name.as_str());
+                    format!("{cost} {}", link(Term::Resource, r, &name.to_lowercase()))
+                }
+                None => format!("{mana} [mana](mana.md#spending-it)"),
+            };
+            let status_name = (content.status_id(status))
+                .map_or(status.as_str(), |s| content.status(s).name.as_str());
+            let brings = format!(
+                "{} at {severity}",
+                link(Term::Status, status, &status_name.to_lowercase())
+            );
+            let (over, against) = match (on, check) {
+                (SongOn::Singer, _) => ("you".to_string(), "—".to_string()),
+                (SongOn::Hearers, Some(stat)) => (
+                    "every hostile creature that hears it".to_string(),
+                    format!(
+                        "{} against {difficulty} + Music's",
+                        link(Term::Stat, &stat.name().to_lowercase(), stat.name())
+                    ),
+                ),
+                (SongOn::Hearers, None) => ("its hearers".to_string(), "—".to_string()),
+            };
+            let row = format!(
+                "| {} | {who} | {paid} | {over} | {brings} | {against} |",
+                link(Term::Ability, id, &def.name)
+            );
+            rows.push((def.name.clone(), row));
+        }
+    }
+    if rows.is_empty() {
+        return "Nobody sings yet.\n".into();
+    }
+    rows.sort();
+    let mut out = String::from(
+        "| Song | Who sings it | Paid in | Sung over | Brings (degrees) | Their check |\n\
+         |---|---|---|---|---|---|\n",
+    );
+    for (_, row) in rows {
+        out.push_str(&row);
+        out.push('\n');
+    }
+    out
+}
+
+/// The Music values the song tables show.
+const MUSIC_VALUES: [u16; 6] = [0, 50, 100, 150, 200, 300];
+
+/// What Music adds to every song (`skills.toml`'s `song_degrees` and `song_craft`), by value.
+pub(super) fn song_music(content: &Content) -> String {
+    let Some(music) = content.skills().iter().find(|s| s.id == "music") else {
+        return "Nothing makes a song better.\n".into();
+    };
+    let at = |effect: Effect, value: u16| {
+        (music.benefits.iter())
+            .find(|b| b.effect == effect)
+            .map_or(0, |b| b.at(value))
+    };
+    let mut out = String::from(
+        "| [Music](skills.md#skill-music) | Degrees added to every song | Added to the hearers' \
+         difficulty |\n|---:|:---:|:---:|\n",
+    );
+    for value in MUSIC_VALUES {
+        let _ = writeln!(
+            out,
+            "| {value} | +{} | +{} |",
+            at(Effect::SongDegrees, value),
+            at(Effect::SongCraft, value)
+        );
+    }
+    out
+}
+
+/// The chance a hearer shakes off each song sung over its hearers, by its edge (its modifier of
+/// the stat the song checks) and the singer's Music: 2d12 + the edge against the song's
+/// difficulty plus Music's craft (`check::ways`, as the surprise table's).
+pub(super) fn song_odds(content: &Content) -> String {
+    let Some(music) = content.skills().iter().find(|s| s.id == "music") else {
+        return String::new();
+    };
+    let craft = |value: u16| {
+        (music.benefits.iter())
+            .find(|b| b.effect == Effect::SongCraft)
+            .map_or(0, |b| b.at(value))
+    };
+    let values: Vec<u16> = (MUSIC_VALUES.into_iter())
+        .filter(|v| v % 100 == 0)
+        .collect();
+    let mut songs: Vec<(&str, Stat, i32)> = Vec::new();
+    for (_, def) in content.talents().iter() {
+        for effect in &def.effects {
+            if let TalentEffect::Song {
+                on: SongOn::Hearers,
+                check: Some(stat),
+                difficulty,
+                ..
+            } = effect
+            {
+                songs.push((def.name.as_str(), *stat, *difficulty));
+            }
+        }
+    }
+    songs.sort_by_key(|s| s.0);
+    let mut out = String::new();
+    for (name, stat, difficulty) in songs {
+        let _ = write!(
+            out,
+            "**{name}**, shaken off:\n\n| Their {} edge |",
+            stat.name()
+        );
+        for v in &values {
+            let _ = write!(out, " Music {v} ({}) |", difficulty + craft(*v));
+        }
+        out.push_str("\n|:---:|");
+        out.push_str(&":---:|".repeat(values.len()));
+        out.push('\n');
+        for edge in -2..=8 {
+            let sign = if edge < 0 { "\u{2212}" } else { "+" };
+            let _ = write!(out, "| {sign}{} |", i32::abs(edge));
+            for v in &values {
+                let ways = check::ways(edge, difficulty + craft(*v));
+                let _ = write!(out, " {} |", percent(ways, 144));
+            }
+            out.push('\n');
+        }
+        out.push('\n');
+    }
+    if out.is_empty() {
+        out.push_str("No song is sung against anyone yet.\n");
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_song_tables_read_the_data() {
+        let content = Content::builtin().expect("content");
+        let songs = songs(&content);
+        assert!(
+            songs.contains("[Inspire](abilities.md#ability-inspire)"),
+            "{songs}"
+        );
+        assert!(songs.contains("bards from level 20"), "{songs}");
+        assert!(songs.contains("6 [mana]"), "{songs}");
+        let music = song_music(&content);
+        assert!(music.contains("| 100 | +2 | +4 |"), "{music}");
+        let odds = song_odds(&content);
+        assert!(odds.contains("Music 100 (17)"), "{odds}");
+        assert!(odds.contains("| +0 | 54% | 25% |"), "{odds}");
     }
 }

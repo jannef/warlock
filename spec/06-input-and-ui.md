@@ -216,8 +216,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   a dagger.` for one stack, `There are several objects here.` for more. A special feature of the
   ground (terrain with `announce`: an altar, a faint rune) is named first, once each time the
   player arrives on it, however they came (a step, stairs, a fall, a teleport, the start of a
-  run): `There is an altar here.`, with the terrain's look-mode description after if it has one;
-  waiting, resting, or searching there says nothing more. Look mode names what lies
+  run): `There is an altar here.`, with the terrain's look-mode description after if it has one,
+  then the note of a named place on the cell (§7 "Named places"); waiting, resting, or searching
+  there says nothing more. One that cannot be stood on (a worn statue) is named so when the
+  player arrives beside it, and not again while they move from cell to cell beside it: `There is
+  a worn statue here. Stone, old, … Letters are cut deep into the plinth, …`. Look mode names what lies
   on a cell, seen or remembered: `a dagger`, `a dagger and 12 arrows`, up to three stacks, then a
   count (`17 objects`). A stack is some number of one object: stackable objects (coins, arrows,
   potions) join a stack of the same object wherever they go; any other object is a stack of one.
@@ -405,7 +408,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     direction ("Disarm in which direction? (Esc to cancel)"); **Pick lock** (`Ability::PickLock`,
     §8 "Doors", #233), Open lock's use, which whoever is trained in it has (thieves), in a
     direction; **Steal** (`Ability::Steal`, §8 "Stealing"), the Steal skill's use, which whoever
-    is trained in Steal has, in a direction, in that skill's place; **Forage** (`Ability::Forage`,
+    is trained in Steal has, in a direction, in that skill's place; **Intimidate**
+    (`Ability::Intimidate`, §8 "Skills"), the Intimidate skill's use, which whoever is trained in
+    it has, at a place they see (the aiming mode), in that skill's place; **Forage** (`Ability::Forage`,
     §8 "Foraging"), Survival's use, which whoever is trained in it has, asking for nothing, in
     that skill's place, greyed out "not usable here" (`Unavailable::NotHere`) outside the wild;
     and each other skill used as
@@ -414,12 +419,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     its own with its action, listed in the skill's place: `Ability::use_of`); **Second wind**
     (`Ability::SecondWind`, under Talents, §8 "Talents"), which the Second wind talent gives,
     asking for nothing, greyed out while Winded; the **class actives** (`Ability::Class`,
-    under Class, §8 "Class abilities": Rage, Veteran's wind, Whirlwind, Lay on hands, Smite,
-    Holy radiance, Quivering palm, Inspire, Consecrate, Knock; Volley at a cell, aimed as a shot is), each from the level its class's table gives it, Smite,
-    Quivering palm, and Knock in a direction, greyed out during their cooldowns (Rage while raging and
+    under Class, §8 "Class abilities": Rage, War cry (greyed "you have not the rage for it"
+    until the rage is up), Veteran's wind, Whirlwind, Lay on hands, Smite,
+    Holy radiance, Patient defence, Stunning strike, Quivering palm, Step of the wind, Stillness (greyed "your mind is already still" with nothing to end), Inspire, Consecrate, Knock; Volley at a cell, aimed as a shot is; Merchant's eye on a thing carried, from the identify list; Spirit weapon in a weapon's shape, from the **shape list**: every melee weapon in the one paged list grouped by weapon skill, each with its glyph, its plain name and numbers, and its weight, a letter or Enter calling it, `use:spirit_weapon:ID`, Esc back, its keys fixed; `--screen shape`; #881), each from the level its class's table gives it, Smite,
+    Stunning strike, Quivering palm, and Knock in a direction, greyed out during their cooldowns (Rage while raging and
     exhausted); throwing one's voice (Class; #235,
     `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's (Throw
-    your voice, level 32: a talent with the `throw_voice` effect gives it); and what a place offers, last, under **Here**
+    your voice, level 16: a talent with the `throw_voice` effect gives it); and what a place offers, last, under **Here**
     (`Source::Place`): Pray (`Ability::Pray`, `pray`, nothing to aim), listed only while the
     player stands beside a forgotten altar not yet spent, and Drink (`Ability::Drink`, `drink`,
     nothing to aim), listed only while they stand beside a healing spring (`Ability::here`, §7
@@ -560,7 +566,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
   numbered 1 to 9 with a `>` marker on the selected one; a topic's number, or Enter on the
   selected one (the arrows move it), asks about it, which takes no time: the screen closes, the
   answer is said, and the screen opens again with it, on the topic asked (also when nothing is
-  left to ask: a quest handed in to someone without other topics). Esc (or `C`) leaves. Quest
+  left to ask: a quest handed in to someone without other topics). Where the speaker knows
+  words (§8 "Dialogue", "Saying words") a fixed row `s  Say something…` follows the topics (the
+  arrows reach it too), and the hint line names `s  say`: `s` (a fixed key, not rebindable)
+  opens in the panel the question "What do you say to the old hermit?" and a text field of 40
+  characters (the Name step's field); Enter says it (`say:DIR:WORDS`, a chat's time; the screen
+  closes and the reply reopens it), an empty line closes the field, Esc goes back to the
+  topics. The screen also opens for someone with words and no topics. Esc (or `C`) leaves. Quest
   topics (§8 "Quests") come first, one per quest: asking gives it (no accept or decline
   topic), and the screen reopens on it, now its reminder.
   Chatting takes the time of `chat` (§7 "Action costs"); with no creature the player sees there,

@@ -3,6 +3,6 @@ id = "miracle"
 name = "Miracle"
 tree = "class"
 granted = true
-description = "Once in your life, a blow that would kill you leaves you standing at the edge of death, worn thin for a day."
-effects = [{ kind = "reprieve", once = "miracle", status = "worn_thin", message = "A miracle! You do not fall." }]
-systems = ["hit_points"]
+description = "Everything that ails you is answered at once: wounds, hunger, sickness and poison, hexes and holds, what was taken, and your mana and every pool you hold, filled."
+effects = [{ kind = "prayer", tier = 5, title = { holy = "Miracle", dark = "Miracle" }, all = true }]
+systems = ["hit_points", "status", "diseases", "mana", "hunger", "resources"]

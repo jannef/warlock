@@ -48,10 +48,10 @@ fn the_fighting_classes_hold_it_from_level_one_and_the_others_do_not() {
     };
     for class in [
         "warrior",
-        "barbarian",
+        "berserker",
         "paladin",
         "ranger",
-        "monk",
+        "ascetic",
         "thief",
         "bard",
     ] {
@@ -71,8 +71,8 @@ fn the_fighting_classes_hold_it_from_level_one_and_the_others_do_not() {
 }
 
 #[test]
-fn a_barbarian_holds_rage_and_stamina_at_once() {
-    let mut w = world("barbarian");
+fn a_berserker_holds_rage_and_stamina_at_once() {
+    let mut w = world("berserker");
     run(&mut w, "use:rage");
     let rage = w.content().resource_id("rage").expect("rage");
     assert!(w.state.player().resources.get(rage).is_some(), "raging");

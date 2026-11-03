@@ -1,0 +1,8 @@
+[[talent]]
+id = "sanctuary"
+name = "Sanctuary"
+tree = "class"
+granted = true
+description = "Kneel a minute to hallow the ground about you (for mana): an hour no foe sets foot within two paces, and wounds and mind mend fast. Striking from it breaks it."
+effects = [{ kind = "sanctuary", mana = 30, time = "1m", radius = 2, lasts = "1h", regen = 300 }]
+systems = ["special_rooms", "hit_points", "mana"]

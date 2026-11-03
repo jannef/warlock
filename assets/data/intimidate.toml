@@ -1,0 +1,24 @@
+# Intimidating (#868; spec §8 "Skills": Intimidate): a threat at one foe, the Intimidate skill's
+# use, chosen from the abilities menu (`a`, then a place you see).
+#
+# Whoever is trained in Intimidate (skills.toml: the skill with the `intimidate` benefit) can
+# threaten a hostile creature they see within `range`, one with a heart to quail (not the bones,
+# the spirits, or the animated). It takes a turn (actions.toml `intimidate`) and is spoken aloud
+# (a voice, heard about you), and trains Intimidate, whatever comes of it. War cry's check
+# (talents/war_cry.toml): the foe rolls 2d12 + its Willpower modifier against `difficulty` + your
+# Strength modifier + what your Intimidate adds (skills.toml: +8 at 100). A foe that does not
+# hear you or does not see you pays no heed; one that fails is `status` for the degrees below.
+#
+# Refused, taking no time: untrained, at nobody you see, out of range, at someone not hostile to
+# you, or at something with no heart to quail.
+
+# How far the foe may stand from you, in cells.
+range = 6
+# The check's base difficulty (War cry's).
+difficulty = 10
+# What a foe that fails suffers: a status that makes it flee from you.
+status = "frightened"
+# The degrees of it (a degree, a few moments' flight), by what your Intimidate adds to the
+# difficulty: [points, degrees], the highest reached. A little skill frightens a foe a moment;
+# 3 points (Intimidate 38) two degrees; 6 points (Intimidate 75) War cry's three.
+degrees = [[0, 1], [3, 2], [6, 3]]

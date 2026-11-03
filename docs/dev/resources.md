@@ -38,7 +38,10 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   group, after the damage types). `Build` is the closed list of events (`kill`, `hit`,
   `critical`, `struck`, `sneak_attack`; `Build::ALL` in wiki order). Loaded before the talents,
   whose class actives may cost one (`TalentDef::resource: Option<ResourceCost>`, data `resource =
-  { id, cost }`, checked: a known id, a talent with a class active, a cost no more than `max`).
+  { id, cost }`, checked: a known id, a talent with a class active, a cost no more than
+  `ResourceDef::most`, the data's `max` with what `max_from` adds at the highest level for
+  average stats (ki: 20, so Quivering palm's 5 stands although `max` is 4); the effects'
+  `flurry_cost`, `catch_missiles`, and `rapid_shot` costs are checked against it too).
 - **State**: `Actor::resources: Pools` (`resource.rs`): `Pool { resource, value, progress }` in
   resource order (`Pools::set` keeps it sorted), saved and hashed, skipped in the JSON while
   empty. Creatures never get any; nothing stops one but nothing grants one.
@@ -49,8 +52,10 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   - `World::gain_resource(id, on)`: every pool held that builds on `on` gains its amount (its
     `builds`, plus the talents' `resource_build`s, `TalentMods::resource_builds`), up to the
     maximum. Called in `fight.rs::dies` (`Kill`, for `by`, creatures' deaths only),
-    `fight.rs::resolve` (`Hit` and `Critical` for the attacker, `Struck` for the target, on a
-    `Strike::Hit`, before the damage, so a killing blow counts), and `ambush.rs::ambushed`
+    `fight.rs::resolve` (`Hit` and `Critical` for the attacker on a `Strike::Hit`, `Struck` for
+    the target on every strike that `is_hit()`, `Soaked` and `Resisted` too (#842: the rage
+    builds on hits taken before mitigation; no other pool builds on `Struck`), before the
+    damage, so a killing blow counts), and `ambush.rs::ambushed`
     (`SneakAttack`, when the sneak attack's dice are added). A new event is a `Build` variant and
     one call where it happens.
   - `World::spend_resource(id, resource, amount, events) -> bool`: refused when not held or
@@ -103,27 +108,64 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
 - **Rage** (R1, #249; `world/rage.rs`): the talent effect `rage { resource = "rage" }`
   (`TalentMods::rage: Option<ResourceId>`, `rage_status` its resource's status) makes the Rage
   ability grant the pool with Raging (`World::rage`); the cooldown is Raging and what it `follows`
-  (`ability.rs::class_cooldown`). Blood frenzy is a `resource_build`, Mighty rage a
+  (`ability.rs::class_cooldown`). The pool's own `builds` (#842) are `struck` 1, `critical` 2,
+  and `kill` 3, and its `lacking` is "you have not the rage for it"; Exhausted `eases = 150`,
+  and Hardened is the level-50 row beside Mighty rage. Battle-scarred, Headlong, and Blood
+  frenzy's attack price read the rage through the talents' `while = "raging"` (#843,
+  `docs/dev/progression.md` "The hooks"). Blood frenzy is also a `resource_build`, Mighty rage a
   `resource_max` beside its `raise_percent` and `status_eases`, Unstoppable `unstoppable {
   statuses, cost }`: `World::unstoppable` spends `cost` rage for the last hit point
   (`spend_resource`, so the rage ends at 0), and `World::live` numbs the statuses while Raging
   lasts. Raging `blocks` `cast`, so `World::spend_mana` refuses while it lasts. While the
-  player's own Raging lasts they are in the berserker stance and cannot leave it, and its end
-  leaves them aggressive (`world/berserker.rs`, #680; spec §8 "Stances"): `berserker::settle`
-  runs where a status begins or ends and on load; `world/berserker_tests.rs` covers it.
-- **Ki** (R4, #252): Flurry grants it (`grants_resource`) and carries
+  player's own Raging lasts they are in the frenzy stance and cannot leave it, and its end
+  leaves them aggressive (`world/frenzy.rs`, #680; spec §8 "Stances"): `frenzy::settle`
+  runs where a status begins or ends; `world/frenzy_tests.rs` covers it. War cry
+  (#844, `world/war_cry.rs`) is a class active paid in rage (`resource = { id = "rage", cost =
+  4 }` on its talent): `short_of` greys it with the pool's `lacking`, and `World::may_use_class`
+  says a pool's `lacking` words, capitalized, when it has them ("You have not the rage for
+  it."), else "You have too little X.".
+- **Ki** (R4, #252; the ki tricks design S2, #846): Martial arts (level 1) grants it
+  (`grants_resource`), full; `max = 4`, `max_from = { stat = "willpower", per_levels = 6,
+  least = 3 }` (no code: stamina's field), `lacking = "your ki is spent"`. Perfect self (60)
+  carries `resource_rate` +100 (read in `World::resource_rate`). Flurry (level 1) carries
   `TalentEffect::FlurryCost { resource, cost }` (`TalentMods::flurry_cost`), read in one place,
   `World::flurry` (`free_blow.rs`, from `second_blow` on `Cue::First`, which now takes `events`
-  for the spend): the second blow is decided only once its cost is spent; short, none. Quivering
+  for the spend): the second blow is decided only once its cost is spent; short, none. Patient
+  defence (level 18, S5, #849) costs `resource = { id = "ki", cost = 1 }` on its talent
+  (`TalentEffect::PatientDefence { status }`, `TalentMods::patient_defence`): `World::patient_defence`
+  (`world/ascetic.rs`) gives a degree of Poised for a wait's price; refused only by
+  `may_use_class` with no ki. Given during the priced action, the status sits on `World::fresh`,
+  so the creatures' turns meet it and the next action eases it. Tests: `world/ascetic_tests.rs`.
+  Quivering
   palm costs `resource = { id = "ki", cost = 5 }` on its talent and lost its cooldown
   (`TalentEffect::QuiveringPalm { status, severity }`); `use_class` refuses it with a weapon in
-  hand before the spend. Tests: `world/ki_tests.rs`.
-- **Inspiration** (R4, #252): Inspire grants it and its effect names what it spends instead of
-  mana, `inspire { status, mana, resource, cost }` (`talent::Inspire::instead`, a
-  `ResourceCost`; Virtuoso's `inspiring()` clears it, so its song costs nothing).
-  `World::inspire` spends the resource when held (`spend_resource`), else the mana;
-  `Ability::unavailable` checks mana (and the casting block) only when the resource falls
-  short. Tests: `world/ki_tests.rs`.
+  hand before the spend (`ClassActive::bare_handed`). Stunning strike (12, #848) costs
+  `resource = { id = "ki", cost = 1 }` on its talent (`TalentEffect::StunningStrike { status,
+  severity }`), refused the same way; both blows are `World::palm_blow` (`world/ascetic.rs`).
+  Tests: `world/ki_tests.rs`, `world/stunning_strike_tests.rs`. Step of the wind (level 6, S3, #847) costs `resource = { id = "ki",
+  cost = 1 }` on its talent (`TalentEffect::WindStep { status }`, `TalentMods::wind_step`):
+  `World::wind_step` (`world/ascetic.rs`) gives a degree of Light-footed and returns
+  `Spent::NoTime`; `World::may_wind_step` refuses it before the spend while Light-footed already.
+  The status is taken off `World::fresh` (a status given in a priced action is not eased by it):
+  no time passed, so the next action eases it. Tests: `world/ki_tests.rs`,
+  `world/ascetic_tests.rs`. Stillness (Still mind, level 25, S6, #850) costs `resource = { id =
+  "ki", cost = 2 }` on Still mind (`TalentEffect::Stillness { name, statuses }`,
+  `TalentMods::stillness`): `World::stillness` ends every listed status the ascetic suffers and
+  returns `Spent::NoTime`; with none of them to end `Unavailable::Still` refuses it before the
+  spend ("Your mind is already still."), and so does too little ki.
+  Diamond soul (level 40, S7, #851) carries
+  `TalentEffect::CatchMissiles { resource, cost }` (`TalentMods::catch_missiles`), a passive
+  spend like Flurry's: `World::caught_missile` (`world/ascetic.rs`) spends it by itself when a
+  missile (`resolve` for a shot or throw, `trap_strikes` for a trap's) hits a holder with no
+  weapon and no shield in hand, and the hit becomes `Blow::missed(None)`; the transient
+  `World::caught` stops the flight there (`fly`, `trap_shot`) so the missile falls on that
+  cell; the player is told through `news`, after the attack's own words. Tests:
+  `world/ki_tests.rs`, `world/ascetic_tests.rs`.
+- **Inspiration** (R4, #252): Inspire grants it, and its `song` effect (#870) costs `cost` of
+  it and nothing else (`talent::SongCost::Resource`; Virtuoso's `TalentMods::song` clears the
+  cost, so its songs are free). `World::sing` (`world/song.rs`) spends it (`spend_resource`);
+  `Ability::unavailable` greys it out `Unavailable::Short` while short. Tests:
+  `world/ki_tests.rs`, `world/song_tests.rs`.
 - **Openings** (R3, #251; `world/openings.rs`): the thief's Sneak attack (level 1, #682) grants the pool
   (`grants_resource`); its build is the data's `sneak_attack`; Master thief's `finisher` effect is
   the class active `ClassActive::MasterThief` (`use:master_thief:E`, aimed, the cost `resource = {
@@ -135,7 +177,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   `resources.toml` (file order is save order), `short = "Sta"`, `max = 10`, `max_from = { stat =
   "toughness", per_levels = 10, least = 5 }`, `regenerates = 12`, resting too, starting full.
   The granted talent `trained_wind` (`grants_resource`) is in the level-1 row of the warrior's,
-  barbarian's, paladin's, ranger's, monk's, thief's, and bard's tables (`data/classes/`), so
+  berserker's, paladin's, ranger's, ascetic's, thief's, and bard's tables (`data/classes/`), so
   `class::grant` holds it at creation and `World::grant_class` on load. The weapon actives
   spend it (#564, `world/weapon_active.rs::pay_active`, through `spend_resource`, after their
   refusals); its `lacking` words ("you are short of breath") are how `Unavailable::Short` reads

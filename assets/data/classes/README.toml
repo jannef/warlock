@@ -3,7 +3,7 @@
 # up), gives hit points, trains the character in skills and weapon skills, and gives a starting
 # kit: no spells come with it. This file holds only the notes below: a file of comments defines nothing.
 #
-# The classes are offered in path order, so the files are named `NN-id.toml` (`01-barbarian.toml`):
+# The classes are offered in path order, so the files are named `NN-id.toml` (`01-berserker.toml`):
 # the number keeps the order. The adventurers come first, then everyday folk; a new class takes
 # the number of its place and the ones after it move up. Saves name the class by id, so a renamed
 # file keeps saves; the same id in two files is a load error naming both (docs/dev/content.md).
@@ -27,7 +27,7 @@
 #   casting       the class's casting percent (spec §8 "Spells"; 1 to 100, default 25): a
 #                 character's caster level is this percent of their level, rounded down, before
 #                 talents and items. Full casters 100, the bard and the aristocrat 75, the
-#                 paladin, the ranger, and the monk 50, everyone else 25: nobody casts at 0
+#                 paladin, the ranger, and the ascetic 50, everyone else 25: nobody casts at 0
 #   affinity      the class's affinity with the schools of magic (spec §8 "Spells"): a table of
 #                 school = points (-10 to 10), taken off the difficulty of studying a spell of
 #                 that school (a malus when negative); schools left out are 0
@@ -60,7 +60,7 @@
 #                 race's (at most 10). Each starting rank then raises the weapon skills it
 #                 defaults to
 #   weapon_skill_choice  two or more such sets, of which one is picked at random when the
-#                 character is made (the barbarian's axes or great blades)
+#                 character is made (the berserker's axes or great blades)
 #   styles, style_choice  the same for fighting styles (spec §8 "Fighting styles"; the styles in
 #                 weapon_skills.toml), rolled after everything else (the thief's Twin Blades or
 #                 Duelist)
@@ -78,7 +78,7 @@
 #                 and may add:
 #                   trained = "id"     only if the class trained that weapon skill or fighting
 #                                      style: its weapon_skills or styles, or the set of its
-#                                      choice that was picked (the barbarian's great axe with
+#                                      choice that was picked (the berserker's great axe with
 #                                      axes, the thief's second dagger with Twin Blades)
 #                   gender = "female"  only for that gender (male, female, or other)
 #                   magic = "any"      a base item (one with a `kind`) made as loot makes it, its
@@ -92,9 +92,16 @@
 #                 rows, lowest level first, each a talent the class gives at that level (a talent
 #                 of the `class` tree, ../talents/, or an ordinary one it hands out: the
 #                 aristocrat's Riposte); given at rank 1 as the level comes, never picked, and
-#                 not given again to one who holds it already (default none)
+#                 not given again to one who holds it already (default none). `rank = 2`
+#                 gives that rank of it (`{ level = 25, talent = "jack_of_all_trades", rank = 2
+#                 }`; default 1): within the talent's ranks, after its lower ranks, never twice;
+#                 one who lacks a rank below is given it too
 #   bonus_talents `{ levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }`: a bonus talent
 #                 pick at each of those levels besides the usual ones, of a talent from those
 #                 trees (no `trees`: any tree, the commoner's gift; default none)
+#   max_level     the class's last level (spec §8 "Prestige classes"): 2 to the curve's top
+#                 (../experience.toml), default `[levels] class_max` (60); every `abilities` row
+#                 and bonus level within it. Experience past it counts and buys nothing until a
+#                 calling opens a prestige class (the bard's 30)
 #
 # Balance is not a goal: some choices are poor on purpose.

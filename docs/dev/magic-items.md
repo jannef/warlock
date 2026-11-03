@@ -38,7 +38,8 @@ the material first, then the gem. Creature drops try `gem::find` before the magi
 its rung last (`Stack::draw_wand_rung`, `Stack::wand_rung`, S5 #752: one draw, a wand's only;
 the other makers of wands and the fallback streams are docs/dev/spells.md "Wands").
 `world/loot.rs` has `World::identify` (the API the scroll of identify calls from its read action,
-`docs/dev/scrolls.md`; it identifies a labelled scroll's or wand's type too, `World::learn_scroll`,
+`docs/dev/scrolls.md`, the Identify spell, and the merchant's class active Merchant's eye,
+`world/merchants_eye.rs`, #816; it identifies a labelled scroll's or wand's type too, `World::learn_scroll`,
 and a wand's charges, `Stack::identify_charges`; wands and rods are docs/dev/spells.md "Wands" and "Rods"),
 creature drops (`drop/<actor id>` stream), and the hit-point clamp after equipment changes
 (to `Actor::lasting_max_hp`: a penalty's lower maximum passes). Stats raised by magic are
@@ -79,16 +80,11 @@ variant of `Effect` (id, value range, local/global, `allowed_on`; `index()` and 
 it by group, never at the end), its reader in one rule, a
 phrase in `describe.rs`, and a wiki word and tier form in `xtask/src/wiki/magic.rs`
 (`effect_words`, `tier_value`). Affixes are saved by id, so
-adding affixes keeps saves; their values and tiers are checked on load, leniently (#637): a
-ladder regraded since a save was made may move the range a saved tier holds, so
-`World::from_state` first re-tiers every magic stack (`world/retier.rs`: what actors carry, the
-levels' piles, remembered piles, and chests) with `Magic::retier`, which moves an affix whose value
-its tier no longer holds to the first tier that holds it, the value kept, or the nearest when
-none does, the value then held to that tier's range (S2, the spell scaling design §7.3: an old
-Potent of 4 to 15 becomes the top tier's +3; save compatibility for a stored number, not a limit
-on spells; before S2 the value was kept and `Magic::check` accepted it on its nearest tier). Each move is a line in
-`World::retiered`, which the game logs (`crates/warlock/src/save.rs`); nothing is refused and the
-content fingerprint (which leaves affixes out) is unchanged (`world/retier_tests.rs`).
+adding affixes keeps saves; their values and tiers are checked on load, strictly
+(`Magic::check`: each tier one the affix has, each value within its tier's range). The lenient
+read of #637 (`world/retier.rs`, `Magic::retier`, re-tiering a save's affixes after a ladder was
+regraded) is gone with #840: saves are pinned to the version that wrote them
+(docs/dev/saves.md), so a regraded ladder needs nothing for saves.
 
 **The system effects** (#628, docs/design/affixes-systems.md §4–§6): `Effect` holds, by group,
 the spell ones (`mana_cost`, `spell_ease`, `spell_to_hit`, `spell_threat`, `spell_rungs`,
@@ -219,7 +215,11 @@ the item's id (saved, hashed; `skip_serializing_if` none, so other items' saves 
   `magic::worn_powers` lists the powers of what an actor has equipped.
 - **Description**: `describe::lines` adds `LineKind::Power` (the `phrase`) and
   `LineKind::Lore` after the affixes, only through `known_magic`; the UI labels the first
-  "Power" and dims the lore in a section of its own.
+  "Power" and dims the lore in a section of its own. A spirit weapon (`Stack::spirit`, the
+  Hunter's Spirit weapon, #881; plain, never magic) gets a power line too: the `spirit_weapon`
+  effect's `phrase` (`world::spirit_gift`), with its gifts folded into its numbers
+  (`Numbers::of`: `+3 hit`), its critical range, and "Pierces armour"; `Lore::listed` marks it
+  `(spirit)`.
 - **Adding a power**: a `Power` variant, its parse in `unique::power`, its one read, and its
   words in `xtask/src/wiki/uniques.rs` (`power_text`); the item's own words are its `phrase`.
 - **Tests**: `world/unique_tests.rs` (the table, hiding until identified, one placement,

@@ -20,7 +20,7 @@
 
 use super::{ActorId, World};
 use crate::action::{AttackKind, Event};
-use crate::content::{ActionKind, CreatureId, CreatureSpawn, Summon, and_list, counted, the_start};
+use crate::content::{ActionKind, CreatureId, CreatureSpawn, and_list, counted, the_start};
 use crate::geom::Pos;
 use crate::noise::Act;
 use crate::sight::LineOfSight;
@@ -40,7 +40,7 @@ impl World {
                 .is_none()
             && me.mana >= me.mana_cost(&self.content, summon.mana)
             && self.live_summons(id) < usize::from(summon.most)
-            && !self.summon_cells(id, summon).is_empty()
+            && !self.summon_cells(id, summon.spread).is_empty()
     }
 
     /// How many creatures summoned by `id` live.
@@ -50,13 +50,13 @@ impl World {
             .count()
     }
 
-    /// Where creature `id`'s summoned may appear: the cells within its `spread` (Chebyshev) it has
-    /// a line of sight to, walkable, with no one there, and not a sanctuary it would shun; nearest
-    /// first (Chebyshev distance, then squared distance, then row order).
-    fn summon_cells(&self, id: ActorId, summon: &Summon) -> Vec<Pos> {
+    /// Where creature `id`'s summoned may appear: the cells within `spread` (Chebyshev) it has a
+    /// line of sight to, walkable, with no one there, and not a sanctuary it would shun; nearest
+    /// first (Chebyshev distance, then squared distance, then row order). The dev `ally:` places
+    /// the player's allies with it too (`ally.rs`).
+    pub(super) fn summon_cells(&self, id: ActorId, spread: i32) -> Vec<Pos> {
         let me = &self.state.actors[&id];
         let level = self.state.current();
-        let spread = summon.spread;
         let radius = LineOfSight::radius_for(2 * spread * spread);
         let los = LineOfSight::compute(me.pos, radius, |p| level.is_opaque(&self.content, p));
         let shuns = self.shuns(id);
@@ -71,6 +71,46 @@ impl World {
         cells
     }
 
+    /// One creature drawn from summoning pool `pool` (not empty) on the gameplay stream, shared
+    /// by the enemy summoner and the player's summon spells (`summon_spell.rs`). Without a
+    /// `bias`, or with one that matches nothing, one `below(pool.len())`, each entry as likely.
+    /// With one (the owner's Q9 of #828: `TalentMods::summon_bias`), an entry whose type
+    /// carries a bias's tag weighs that bias's weight (several multiply), the rest 1, and the
+    /// draw is one `below(total)`; a total of 0 falls back to the plain draw.
+    pub(super) fn summon_draw(
+        &mut self,
+        pool: &[CreatureId],
+        bias: &[(String, u32)],
+    ) -> CreatureId {
+        let plain = |w: &mut World| {
+            let len = u32::try_from(pool.len()).unwrap_or(u32::MAX);
+            pool[w.state.rng.below(len) as usize]
+        };
+        if bias.is_empty() {
+            return plain(self);
+        }
+        let weights: Vec<u32> = (pool.iter())
+            .map(|&c| {
+                let tags = &self.content.creature(c).tags;
+                (bias.iter())
+                    .filter(|(tag, _)| tags.contains(tag))
+                    .fold(1u32, |w, &(_, by)| w.saturating_mul(by))
+            })
+            .collect();
+        let total = weights.iter().fold(0u32, |t, &w| t.saturating_add(w));
+        if total == 0 || weights.iter().all(|&w| w == 1) {
+            return plain(self);
+        }
+        let mut roll = self.state.rng.below(total);
+        for (i, &w) in weights.iter().enumerate() {
+            if roll < w {
+                return pool[i];
+            }
+            roll -= w;
+        }
+        pool[pool.len() - 1]
+    }
+
     /// Creature `id` summons (its AI saw to it that it can). Returns the price: a `cast`.
     pub(super) fn creature_summons(&mut self, id: ActorId, events: &mut Vec<Event>) -> i64 {
         let content = self.content.clone();
@@ -79,7 +119,7 @@ impl World {
         let Some(summon) = content.creature(me.creature).summon.as_ref() else {
             return price;
         };
-        let cells = self.summon_cells(id, summon);
+        let cells = self.summon_cells(id, summon.spread);
         if !self.spend_mana(id, summon.mana) {
             return price;
         }
@@ -95,8 +135,7 @@ impl World {
         let level = self.state.current_level.clone();
         let mut came: Vec<(CreatureId, Pos)> = Vec::new();
         for &at in cells.iter().take(count) {
-            let len = u32::try_from(summon.pool.len()).unwrap_or(u32::MAX);
-            let creature = summon.pool[self.state.rng.below(len) as usize];
+            let creature = self.summon_draw(&summon.pool, &[]);
             let own = content.creature(creature).faction;
             let spawn = CreatureSpawn {
                 creature,

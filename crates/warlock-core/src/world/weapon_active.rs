@@ -36,7 +36,7 @@ use crate::geom::{Dir, Pos};
 
 /// The penetration an `ignore_protection` blow or shot has: more than any Protection, so none
 /// of it soaks (and no soak is drawn).
-const ALL_PROTECTION: i32 = 1_000;
+pub(super) const ALL_PROTECTION: i32 = 1_000;
 
 /// The least an active's time may be cut to by talents, in percent of the action's price.
 const LEAST_PERCENT: i64 = 50;

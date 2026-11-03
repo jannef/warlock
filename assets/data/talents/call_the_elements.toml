@@ -1,0 +1,8 @@
+[[talent]]
+id = "call_the_elements"
+name = "Call the elements"
+tree = "class"
+granted = true
+description = "Call the elements to your side (a spell, paid in mana): earth, water, air, or fire, as the wild chooses, rises as a great elemental to fight beside you for a few minutes."
+effects = [{ kind = "spell", spell = "call_the_elements" }]
+systems = ["spells", "mana", "allies"]

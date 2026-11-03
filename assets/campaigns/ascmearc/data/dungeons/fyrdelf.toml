@@ -95,10 +95,19 @@ temperature = 16
 
 [[dungeon.levels]]
 from = 9
-to = 11
+to = 10
 generator = "caves"
 size = [120, 60]
 temperature = 20
+
+# The second floor from the bottom: a worn statue of a hunter, its plinth inscribed
+# (docs/design/prestige-classes.md §8).
+[[dungeon.levels]]
+from = 11
+generator = "caves"
+size = [120, 60]
+temperature = 20
+vaults = ["hunters_statue"]
 
 # The bottom: the fire drake on its hoard.
 [[dungeon.levels]]

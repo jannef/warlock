@@ -85,16 +85,20 @@
 mod actor;
 mod ai;
 mod alignment;
+mod ally;
+#[cfg(test)]
+mod ally_tests;
 mod ambush;
 mod animated;
 mod appraise;
+mod ascetic;
 mod attacks;
 mod background;
 mod beast_friend;
-mod berserker;
 mod bleed;
 mod boons;
 mod buff;
+mod calling;
 mod carry;
 mod cast;
 mod caster;
@@ -108,6 +112,7 @@ mod consecrate;
 mod court;
 mod creation;
 mod curse;
+mod dark_face;
 mod den;
 mod dev;
 mod dig;
@@ -131,6 +136,7 @@ mod flavour;
 mod focus;
 mod forage;
 mod free_blow;
+mod frenzy;
 mod gifts;
 mod glare;
 mod guild;
@@ -145,6 +151,8 @@ mod hunger;
 mod hurl;
 mod ice;
 mod incorporeal;
+mod intimidate;
+mod jack;
 mod knock;
 mod knowledge;
 mod lamp;
@@ -155,9 +163,11 @@ mod loot;
 mod lucky;
 mod lurk;
 mod mana;
+mod merchants_eye;
 mod mimic;
 pub(crate) mod mirrors;
 mod openings;
+mod orison;
 mod outcome;
 mod path;
 mod perceive;
@@ -172,12 +182,13 @@ mod read;
 mod reflect;
 mod resource;
 mod rest;
-mod retier;
+mod restore;
 mod reveal;
 mod rod;
 mod rooms;
 mod rot;
 mod rumour;
+mod sanctuary;
 mod schedule;
 mod search;
 mod second_wind;
@@ -190,12 +201,14 @@ mod sign_picks;
 mod siphon;
 mod skill_roll;
 mod slip;
+mod song;
 mod spawn;
 mod spell;
 mod spell_aim;
 mod spell_mods;
 mod spell_rung;
 mod spell_words;
+mod spirit_weapon;
 mod stars;
 mod stat_deeds;
 mod stat_training;
@@ -203,6 +216,7 @@ mod status;
 mod steal;
 mod stride;
 mod summon;
+mod summon_spell;
 pub(crate) mod surprise;
 mod talent;
 mod talk;
@@ -215,15 +229,19 @@ mod treasury;
 mod two_shields;
 mod voice;
 mod volley;
+mod war_cry;
 mod wares;
 mod warp;
 mod weapon_ability;
 mod weapon_active;
+mod words;
 mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
+pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
 pub use attacks::{AttackSource, OwnAttack};
+pub use calling::CallingStatus;
 pub use cast::Reach;
 pub use caster_level::casting_percent;
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
@@ -246,8 +264,10 @@ pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
 pub use mirrors::Image;
+pub use orison::PrayerState;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
+pub use sanctuary::Hallow;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
 pub use siphon::SIPHON_RANGE;
@@ -256,6 +276,7 @@ pub use spell::cone_cells;
 pub use spell_aim::SpellAim;
 pub use spell_rung::CastBy;
 pub use spell_words::{SpellRoll, reach_words, reroll_words, roll_words};
+pub use spirit_weapon::{gift as spirit_gift, pierces_all, shapes as weapon_shapes};
 pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
@@ -464,10 +485,12 @@ impl WorldState {
             .expect("current level is instantiated")
     }
 
+    /// Who stands on `p` of level `level`, if anyone: never an ally in the retinue, which stands
+    /// in no one's way (`ally.rs`).
     fn actor_at(&self, level: &str, p: Pos) -> Option<&Actor> {
         self.actors
             .values()
-            .find(|a| a.level == level && a.pos == p)
+            .find(|a| a.level == level && a.pos == p && !a.in_retinue())
     }
 
     fn check(&self) -> Result<(), WorldError> {
@@ -532,13 +555,12 @@ pub struct World {
     /// Notes the current action earned (not saved): said after its own messages and the news,
     /// as notes that do not stop a rest (an alignment band crossed, `alignment.rs`).
     notes: Vec<String>,
-    /// What loading re-tiered (not saved): a line per affix of a saved item moved to the tier of
-    /// a regraded ladder that holds its value (`retier.rs`), and per actor whose stance broke
-    /// the berserker's rule (`berserker.rs`), for the game's log.
-    retiered: Vec<String>,
     /// While the player strikes a free blow in another's turn (not saved): what is said
     /// meanwhile, to join the news (`free_blow.rs`).
     held: Option<Vec<String>>,
+    /// Whether the missile that just reached someone was caught (not saved; Diamond soul,
+    /// `ascetic.rs`): its flight ends there, and it falls.
+    caught: bool,
     /// Traps sprung since this world was created or loaded (not saved): a rest perceives every
     /// turn in which one went off (a teleport moves someone farther than a step).
     sprung: u64,
@@ -601,6 +623,8 @@ enum Spent {
     Study(learn::Lesson),
     /// Praying to consecrate a place until this moment (see [`World::consecrate`]).
     Consecrate(GameTime),
+    /// Kneeling to hallow the ground until this moment (see [`World::sanctuary`]).
+    Sanctuary(GameTime),
     /// Praying at a forgotten altar (see [`World::pray`]).
     Pray(pray::Prayer),
     /// Drinking at a healing spring (see [`World::drink`]).
@@ -829,6 +853,7 @@ impl World {
             weapon_skills,
             faction_override: None,
             summoner: None,
+            ally: None,
             alignment: content.alignment().map(|_| alignment),
             alignment_override: None,
             npc: None,
@@ -845,8 +870,7 @@ impl World {
         };
         stars::grant(&content, state.character.as_ref(), &[], &mut player.talents);
         // The class abilities of level 1 (spec §8 "Class abilities").
-        let class = (state.character.as_ref()).map(|c| c.spec.class.clone());
-        class::grant(&content, class.as_deref(), &mut player, 1);
+        class::grant(&content, state.character.as_ref(), &mut player, 1);
         player.hp = player.max_hp(&content);
         player.mana = player.max_mana(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
@@ -868,7 +892,7 @@ impl World {
         if let Some(text) = enter_room(&mut state, &content) {
             state.messages.push(0, text);
         }
-        if let Some(text) = feature::feature_line(&state, &content) {
+        for text in feature::feature_lines(&state, &content, None) {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);
@@ -889,7 +913,6 @@ impl World {
     /// (`world/stars.rs`), as the content now has them.
     pub fn from_state(content: Arc<Content>, mut state: WorldState) -> Result<Self, WorldError> {
         state.check()?;
-        let retiered = retier::retier(&mut state, &content);
         let Some(scenario) = content.scenario(&state.scenario) else {
             return Err(WorldError::UnknownScenario(state.scenario.clone()));
         };
@@ -912,6 +935,20 @@ impl World {
             character
                 .check(&content)
                 .map_err(|m| WorldError::InconsistentState(format!("character: {m}")))?;
+        }
+        if let Some(line) = (state.character.as_ref())
+            .and_then(|c| crate::background::unknown_line(&content, &state.campaign, c))
+        {
+            return Err(WorldError::InconsistentState(format!(
+                "story line `{line}` is not in this content"
+            )));
+        }
+        if let Some((actor, id)) = (state.actors.values())
+            .find_map(|a| a.talents.unknown_to(&content).map(|id| (a.id, id)))
+        {
+            return Err(WorldError::InconsistentState(format!(
+                "actor {actor} holds talent `{id}`, which this content does not have"
+            )));
         }
         if let Some(id) = state.quests.unknown_to(&content) {
             return Err(WorldError::InconsistentState(format!(
@@ -980,41 +1017,8 @@ impl World {
             );
             player.boons = boons;
         }
-        let mut retiered = retiered;
-        if let Some(character) = &state.character {
-            retiered.extend(crate::background::missing(
-                &content,
-                &state.campaign,
-                character,
-            ));
-        }
-        // A talent the content no longer has (the thief's Trapfinding, Pick lock, and Light
-        // fingers, #684; the cull's filler and duplicates, #774) is let go, and said in the log.
-        for actor in state.actors.values_mut() {
-            for id in actor.talents.drop_unknown(&content) {
-                retiered.push(format!(
-                    "actor {} held talent `{id}`, which this content does not have: dropped",
-                    actor.id
-                ));
-            }
-        }
-        // The berserker stance exactly while raging (`berserker.rs`): a save that broke the rule
-        // is put right.
-        for actor in state.actors.values_mut() {
-            if let Some(was) = berserker::settle(actor, &content) {
-                let why = match actor.stance {
-                    CombatStance::Berserker => "raging",
-                    _ => "not raging",
-                };
-                retiered.push(format!(
-                    "actor {} {why} in the {was} stance: now in the {} stance",
-                    actor.id, actor.stance
-                ));
-            }
-        }
         let mut world = Self::assemble(content, state);
         world.grant_class(world.player_level(), false);
-        world.retiered = retiered;
         Ok(world)
     }
 
@@ -1037,8 +1041,8 @@ impl World {
             fallen: Vec::new(),
             news: Vec::new(),
             notes: Vec::new(),
-            retiered: Vec::new(),
             held: None,
+            caught: false,
             sprung: 0,
             spawned: 0,
             reshaped: 0,
@@ -1053,12 +1057,6 @@ impl World {
             technique: weapon_active::Technique::default(),
             encounter: Default::default(),
         }
-    }
-
-    /// What loading re-tiered: a line per affix of a saved item that a regraded ladder moved
-    /// (`retier.rs`), for the log; empty for a world made new.
-    pub fn retiered(&self) -> &[String] {
-        &self.retiered
     }
 
     pub fn content(&self) -> &Arc<Content> {
@@ -1126,12 +1124,7 @@ impl World {
     /// or if they are a Beast-friend and an animal they befriended ([`beast_friend::befriended`]).
     pub fn stance(&self, a: ActorId, b: ActorId) -> Stance {
         match (self.state.actors.get(&a), self.state.actors.get(&b)) {
-            (Some(a), Some(b)) if beast_friend::befriended(&self.state, &self.content, a, b) => {
-                Stance::Neutral
-            }
-            (Some(a), Some(b)) => self
-                .content
-                .stance_of(a.faction(&self.content), b.faction(&self.content)),
+            (Some(a), Some(b)) => stance_between(&self.state, &self.content, a, b),
             _ => Stance::Neutral,
         }
     }
@@ -1258,6 +1251,7 @@ impl World {
             Spent::Search(turns) => self.search(turns, &mut events),
             Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Consecrate(until) => self.consecrate(until, &mut events),
+            Spent::Sanctuary(until) => self.sanctuary(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Drink(draught) => self.drink(draught, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
@@ -1372,8 +1366,11 @@ impl World {
             Action::Encounter(choice) => return self.answer_encounter(*choice),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
+            Action::Say { dir, words } => return self.say_to(*dir, words, events),
             Action::Steal(dir) => return self.steal(*dir),
+            Action::Intimidate(at) => return self.intimidate(*at, events),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
+            Action::Order(command) => return self.order(*command, events),
             Action::Eat(meal) => return self.eat(*meal, events),
             Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Study { item } => return self.start_study(*item),
@@ -1389,6 +1386,8 @@ impl World {
             Action::UseTalent(TalentActive::BloodMagic) => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
+            Action::UseOn(active, item) => return self.use_class_on(*active, *item),
+            Action::Shape(active, shape) => return self.use_class_shape(*active, shape),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
             // A `use:ID` that names no spell but a weapon active is that active.
             Action::Cast(id, at)
@@ -1416,6 +1415,11 @@ impl World {
             Action::SetWeather(weather) => return self.set_weather_dev(*weather),
             Action::SkipTime(duration) => return self.skip_time_dev(*duration),
             Action::Spawn => return self.spawn_dev(),
+            Action::Ally {
+                creature,
+                count,
+                lasts,
+            } => return self.ally_dev(creature, *count, *lasts),
             Action::Meet { entry, outcome } => return self.meet_dev(entry, *outcome),
             Action::Effect { effect, at, to } => {
                 return self.show_effect(effect, *at, *to, events);
@@ -1431,6 +1435,7 @@ impl World {
             Action::QuestRoll { quest, target } => return self.quest_roll_dev(quest, target),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
+            Action::Call(id) => return self.call_dev(id),
             Action::SetRank { skill, rank } => return self.set_rank_dev(skill, *rank),
         };
         self.took(done, kind)
@@ -1438,8 +1443,8 @@ impl World {
 
     /// The player takes combat stance `stance` (spec §8 "Stances"). Takes no time, but a wait's
     /// for those set in their ways (spec §8 "Birth sign").
-    /// The berserker's stance is refused, and so is any while rage holds the player in it
-    /// (`berserker.rs`).
+    /// The frenzy stance is refused, and so is any while rage holds the player in it
+    /// (`frenzy.rs`).
     fn set_stance(&mut self, stance: CombatStance) -> Spent {
         if let Some(refused) = self.stance_refused(stance) {
             return refused;
@@ -1486,6 +1491,8 @@ mod animated_tests;
 #[cfg(test)]
 mod appraise_tests;
 #[cfg(test)]
+mod ascetic_tests;
+#[cfg(test)]
 mod ascmearc_encounter_tests;
 #[cfg(test)]
 mod ascmearc_tests;
@@ -1495,8 +1502,6 @@ mod attacks_tests;
 mod balance_probe;
 #[cfg(test)]
 mod beast_den_tests;
-#[cfg(test)]
-mod berserker_tests;
 #[cfg(test)]
 mod bestiary_tests;
 #[cfg(test)]
@@ -1509,6 +1514,8 @@ mod branch_tests;
 mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
+#[cfg(test)]
+mod calling_tests;
 #[cfg(test)]
 mod cast_tests;
 #[cfg(test)]
@@ -1556,6 +1563,8 @@ mod damage_talent_tests;
 #[cfg(test)]
 mod damage_tests;
 #[cfg(test)]
+mod dark_face_tests;
+#[cfg(test)]
 mod den_tests;
 #[cfg(test)]
 mod dig_tests;
@@ -1600,6 +1609,8 @@ mod forage_tests;
 #[cfg(test)]
 mod free_blow_tests;
 #[cfg(test)]
+mod frenzy_tests;
+#[cfg(test)]
 mod gear_tests;
 #[cfg(test)]
 mod gem_tests;
@@ -1636,6 +1647,8 @@ mod identify_spell_tests;
 #[cfg(test)]
 mod incorporeal_tests;
 #[cfg(test)]
+mod intimidate_tests;
+#[cfg(test)]
 mod ki_tests;
 #[cfg(test)]
 mod knowledge_tests;
@@ -1652,6 +1665,8 @@ mod lockpick_tests;
 #[cfg(test)]
 mod lucky_tests;
 #[cfg(test)]
+mod lullaby_tests;
+#[cfg(test)]
 mod lurk_tests;
 #[cfg(test)]
 mod magic_tests;
@@ -1659,6 +1674,8 @@ mod magic_tests;
 mod mana_talent_tests;
 #[cfg(test)]
 mod mana_tests;
+#[cfg(test)]
+mod merchants_eye_tests;
 #[cfg(test)]
 mod mimic_tests;
 #[cfg(test)]
@@ -1671,6 +1688,8 @@ mod numbers_tests;
 mod object_tests;
 #[cfg(test)]
 mod openings_tests;
+#[cfg(test)]
+mod orison_tests;
 #[cfg(test)]
 mod outcome_tests;
 #[cfg(test)]
@@ -1702,8 +1721,6 @@ mod resource_talent_tests;
 #[cfg(test)]
 mod resource_tests;
 #[cfg(test)]
-mod retier_tests;
-#[cfg(test)]
 mod reveal_tests;
 #[cfg(test)]
 mod rod_tests;
@@ -1715,6 +1732,8 @@ mod room_tests;
 mod rot_tests;
 #[cfg(test)]
 mod rumour_tests;
+#[cfg(test)]
+mod sanctuary_tests;
 #[cfg(test)]
 mod school_ability_tests;
 #[cfg(test)]
@@ -1748,6 +1767,8 @@ mod skills_tests;
 #[cfg(test)]
 mod slip_tests;
 #[cfg(test)]
+mod song_tests;
+#[cfg(test)]
 mod spawn_tests;
 #[cfg(test)]
 mod speed_tests;
@@ -1755,6 +1776,8 @@ mod speed_tests;
 mod spell_list_tests;
 #[cfg(test)]
 mod spell_talent_tests;
+#[cfg(test)]
+mod spirit_weapon_tests;
 #[cfg(test)]
 mod spring_tests;
 #[cfg(test)]
@@ -1776,9 +1799,15 @@ mod status_tests;
 #[cfg(test)]
 mod steal_tests;
 #[cfg(test)]
+mod strange_spirit_tests;
+#[cfg(test)]
 mod stride_tests;
 #[cfg(test)]
+mod stunning_strike_tests;
+#[cfg(test)]
 mod style_tests;
+#[cfg(test)]
+mod summon_spell_tests;
 #[cfg(test)]
 mod summon_tests;
 #[cfg(test)]
@@ -1818,6 +1847,8 @@ mod vitals_tests;
 #[cfg(test)]
 mod voice_tests;
 #[cfg(test)]
+mod war_cry_tests;
+#[cfg(test)]
 mod wares_tests;
 #[cfg(test)]
 mod weapon_ability_tests;
@@ -1828,4 +1859,20 @@ mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
 #[cfg(test)]
+mod words_tests;
+#[cfg(test)]
 mod zap_tests;
+
+/// How actors `a` and `b` stand toward each other ([`World::stance`], for a borrowed state): the
+/// stance of their factions, [`Stance::Neutral`] for a Beast-friend and an animal they befriended.
+pub(crate) fn stance_between(
+    state: &WorldState,
+    content: &Content,
+    a: &Actor,
+    b: &Actor,
+) -> Stance {
+    if beast_friend::befriended(state, content, a, b) {
+        return Stance::Neutral;
+    }
+    content.stance_of(a.faction(content), b.faction(content))
+}

@@ -18,7 +18,7 @@ use crate::object::{Stack, format_weight};
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
 use crate::weather::Weather;
-use crate::world::{Cause, LevelState, World};
+use crate::world::{CallingStatus, Cause, LevelState, World};
 use serde_json::{Value, json};
 use std::fmt::Write;
 use std::str::FromStr;
@@ -235,6 +235,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
             encounter_header(world),
             truth_rows(world),
             chest_rows(world),
+            hallow_rows(world),
         ]
         .concat(),
         Layer::Actors => [spawn_header(world), actor_rows(world), rising_rows(world)].concat(),
@@ -439,6 +440,25 @@ fn truth_rows(world: &World) -> Vec<String> {
                 .map_or(' ', |t| content.terrain(t).glyph),
         }
     })
+}
+
+/// Dev: the hallowed ground on the current level (Sanctuary; `world/sanctuary.rs`), one a line
+/// in the order laid: `hallow at (12, 5) r2 until 09:15:00` (`, dark` for dreaded ground).
+fn hallow_rows(world: &World) -> Vec<String> {
+    (world.hallows().iter())
+        .map(|h| {
+            let until = h.until();
+            format!(
+                "hallow at {} r{} until {:02}:{:02}:{:02}{}",
+                h.at(),
+                h.radius(),
+                until.hour(),
+                until.minute(),
+                until.second(),
+                if h.dark() { ", dark" } else { "" }
+            )
+        })
+        .collect()
 }
 
 /// Dev: the chests on the current level (spec §8 "Chests"; ground truth), one a line by
@@ -733,9 +753,9 @@ fn stat_rows(view: &PerceptionView<'_>) -> Vec<String> {
         let race = spec
             .race(content)
             .map_or(spec.race.as_str(), |r| r.name.as_str());
-        let class = spec
-            .class(content)
-            .map_or(spec.class.as_str(), |k| k.name.as_str());
+        // The classes as the character screen's Class row says them (spec §8 "Prestige
+        // classes"): `Bard`, `Bard 30` at the cap, `Bard 30, Hunter 4` once called.
+        let class = c.class_text(content, view.own_experience().level);
         rows.push(format!("Race {race}"));
         rows.push(match spec.gender {
             Gender::Other => format!("Gender Other ({} +1)", c.raised.name()),
@@ -916,6 +936,31 @@ fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
 
 /// The player's progression (dev): the choices due, the talents they may take now with the
 /// choices each may be taken for, and the creature types whose first kill has paid.
+/// Each calling a run of the campaign may walk through and where the player stands with it
+/// (`progress`, dev-only; spec §8 "Prestige classes").
+fn calling_rows(world: &World) -> Vec<String> {
+    let content = world.content();
+    (content.callings_of(world.campaign()))
+        .map(|c| match world.calling_status(c) {
+            CallingStatus::Open => format!("calling {}: open", c.class),
+            CallingStatus::LevelNotMet => format!("calling {}: level {} not met", c.class, c.level),
+            CallingStatus::NotFrom => {
+                let class = (world.character())
+                    .and_then(|k| k.spec.class(content).ok())
+                    .map_or("nobody".to_string(), |k| {
+                        format!(
+                            "{} {}",
+                            crate::content::article(&k.name),
+                            k.name.to_lowercase()
+                        )
+                    });
+                format!("calling {}: not for {class}", c.class)
+            }
+            CallingStatus::Called => format!("called {} at {}", c.class, c.level),
+        })
+        .collect()
+}
+
 fn progress_rows(world: &World) -> Vec<String> {
     let view = world.perception();
     let content = view.content();
@@ -977,6 +1022,10 @@ fn progress_rows(world: &World) -> Vec<String> {
     if !takeable.is_empty() {
         rows.push(format!("takeable {}", takeable.join(", ")));
     }
+    // The callings of the run's campaign and where the player stands with each (spec §8
+    // "Prestige classes"): `calling hunter: open`, `calling hunter: level 30 not met`,
+    // `calling hunter: not for a thief`, and once called `called hunter at 30`.
+    rows.extend(calling_rows(world));
     let kills: Vec<&str> = progress
         .discovered
         .kills
@@ -1004,6 +1053,18 @@ fn progress_rows(world: &World) -> Vec<String> {
     let slain: Vec<&str> = world.quests().slain().collect();
     if !slain.is_empty() {
         rows.push(format!("slain {}", slain.join(", ")));
+    }
+    // The prayer's strain (the priest's, hidden in the game), its face, and what it answers.
+    if let Some(prayer) = world.prayer_state() {
+        let locked = if prayer.locked { " (locked)" } else { "" };
+        let uses: Vec<&str> = prayer.uses.iter().map(|u| u.id()).collect();
+        let answers = prayer.answers.map_or("all".to_string(), |n| n.to_string());
+        rows.push(format!(
+            "prayer strain {}{locked}, face {}, answers {answers}, uses {}",
+            prayer.strain,
+            prayer.face.id(),
+            uses.join(", ")
+        ));
     }
     // Each stat's pile with the price in force: the rise's, or the drop's for a negative pile.
     let player = world.state().player();
@@ -1130,7 +1191,8 @@ fn spell_does(view: &PerceptionView<'_>, spell: crate::content::SpellId) -> Vec<
 }
 
 /// The spells the player knows (`[{"id", "level", "cost", "roll", "damage_type", "reach"}]`:
-/// the roll's text as the abilities menu shows it, `"healed"` for a heal's type, `reach` with
+/// the roll's text as the abilities menu shows it, `"healed"` for a heal's type, `"called"` for
+/// a summon's count, `reach` with
 /// `range`, `length`, `radius`; each null where none) and the scrolls they could study
 /// (`[{"letter", "spell", "chance"}]`).
 fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
@@ -1142,6 +1204,7 @@ fn spells_json(view: &PerceptionView<'_>) -> (Value, Value) {
             let roll = view.own_spell_roll(spell);
             let damage_type = roll.as_ref().map(|r| match r.damage_type {
                 Some(kind) => content.damage_type(kind).id.clone(),
+                None if def.kind == crate::content::SpellPurpose::Summon => "called".into(),
                 None => "healed".into(),
             });
             let reach = view.own_spell_reach(spell).unwrap_or_default();
@@ -1183,7 +1246,7 @@ fn ability_rows(view: &PerceptionView<'_>) -> Vec<String> {
                 None => aim_word(a.aim(content)).into(),
             };
             let source = a.source().id().replace('_', " ");
-            format!("{} ({source}): {state}", a.name(content))
+            format!("{} ({source}): {state}", view.ability_name(a))
         })
         .collect()
 }
@@ -1196,6 +1259,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Cell => "a cell",
         Aim::Ailment => "what to treat",
         Aim::Item => "an item you carry",
+        Aim::Shape => "a weapon's shape",
     }
 }
 
@@ -1412,6 +1476,28 @@ fn actor_rows(world: &World) -> Vec<String> {
                 Some(by) => format!("{court}; summoned by {by}"),
                 None => court,
             };
+            // Whose ally it is, what made it one, how long it stays, and its order (spec §8
+            // "Allies"): `; ally of #0 (summoned, 4 min; follow)`, `(companion; stay at (12, 5))`,
+            // `(summoned; follow; retinue)`.
+            let court = match &a.ally {
+                Some(ally) => {
+                    let lasts = match ally.until {
+                        Some(until) => {
+                            let seconds = until.since(world.time()).as_seconds();
+                            format!(", {} min", seconds.div_ceil(60))
+                        }
+                        None => String::new(),
+                    };
+                    let order = match ally.order.at() {
+                        Some(at) => format!("{} at ({}, {})", ally.order.id(), at.x, at.y),
+                        None => ally.order.id().to_string(),
+                    };
+                    let retinue = if ally.retinue { "; retinue" } else { "" };
+                    let source = ally.source.id();
+                    format!("{court}; ally of {} ({source}{lasts}; {order}{retinue})", ally.master)
+                }
+                None => court,
+            };
             // The overworld encounter that made it (spec §7 "Overworld encounters").
             let court = match world.party_of(a.id) {
                 Some(entry) => format!("{court}; of encounter {entry}"),
@@ -1611,13 +1697,18 @@ fn summary(world: &World) -> String {
         .filter(|h| *h != Hunger::NotHungry)
         .map_or(String::new(), |h| format!(" hunger {}", h.id()));
     let dazzled = if view.dazzled() { " dazzled" } else { "" };
+    // The allies with the player: on the level or in the retinue (spec §8 "Allies").
+    let allies = match view.allies_with() {
+        0 => String::new(),
+        n => format!(" allies {n}"),
+    };
     // An overworld encounter to answer (spec §7 "Overworld encounters").
     let encounter = view.encounter().map_or(String::new(), |e| {
         let choices: Vec<&str> = e.choices.iter().map(|(_, c)| c.id()).collect();
         format!(" encounter pending: {} ({})", e.name, choices.join(", "))
     });
     format!(
-        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{encounter}{weather} \
+        "turn {} time {} level {} viewer {} hp {hp}/{max} mp {mp}/{max_mp}{resources}{dead}{hunger}{dazzled}{allies}{encounter}{weather} \
          temperature {temperature} hash {:016x}",
         world.turn(),
         world.time(),
@@ -1684,6 +1775,10 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             // Stalker's eye: it has not noticed the player (never told without the talent).
             if a.unaware {
                 seen["unaware"] = json!(true);
+            }
+            // An ally of the player's (spec §8 "Allies").
+            if a.ally {
+                seen["ally"] = json!(true);
             }
             seen
         })
@@ -1863,6 +1958,16 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             if let Some(title) = c.title(content) {
                 character["lucky"] = json!(title);
             }
+            // The prestige class once called, and every class with its own level (spec §8
+            // "Prestige classes").
+            if let Some(prestige) = &c.prestige {
+                character["prestige"] = json!(prestige);
+            }
+            let level = view.own_experience().level;
+            let classes: Vec<Value> = (c.class_levels(content, level).into_iter())
+                .map(|(table, own)| json!({ "class": table.id(), "level": own }))
+                .collect();
+            character["classes"] = json!(classes);
             // The background story's lines by id (spec §8 "Background story"), if told.
             if !c.story.is_empty() {
                 character["story"] = c.story.iter().map(|t| t.id()).collect();
@@ -1910,6 +2015,21 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         "hunger": view.own_hunger(),
         "stance": view.own_stance().id(),
         "dazzled": view.dazzled(),
+        // The player's allies, wherever they are (spec §8 "Allies").
+        "allies": (view.allies().iter())
+            .map(|a| json!({
+                "id": a.id,
+                "creature": content.creature(a.creature).id,
+                "name": a.name,
+                "health": a.health,
+                "order": a.order.id(),
+                "at": a.order.at(),
+                "source": a.source.id(),
+                "lasts": a.lasts,
+                "retinue": a.retinue,
+                "here": a.here,
+            }))
+            .collect::<Vec<_>>(),
         // The overworld encounter to answer (spec §7 "Overworld encounters"), or null.
         "encounter": view.encounter().map(|e| {
             let (entry, outcome) = view.encounter_pending().expect("pending");
@@ -1944,6 +2064,40 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
         out["danger"] = json!(world.danger(&world.state().current_level));
         // The encounter tables matching the player's overworld cell (ground truth).
         out["encounter_tables"] = json!(world.encounter_tables_here());
+        // The callings of the campaign and where the player stands with each.
+        let callings: Vec<Value> = (world.content().callings_of(world.campaign()))
+            .map(|c| {
+                let status = match world.calling_status(c) {
+                    CallingStatus::Open => "open",
+                    CallingStatus::LevelNotMet => "level_not_met",
+                    CallingStatus::NotFrom => "not_from",
+                    CallingStatus::Called => "called",
+                };
+                json!({ "class": c.class, "level": c.level, "from": c.from, "status": status })
+            })
+            .collect();
+        out["callings"] = json!(callings);
+        // The priest's prayer: its strain, lock, face, and uses (ground truth).
+        if let Some(p) = world.prayer_state() {
+            out["prayer"] = json!({
+                "strain": p.strain,
+                "locked": p.locked,
+                "face": p.face.id(),
+                "uses": p.uses.iter().map(|u| u.id()).collect::<Vec<_>>(),
+                "answers": p.answers,
+            });
+        }
+        // The current level's hallowed ground (Sanctuary; ground truth).
+        out["hallows"] = (world.hallows().iter())
+            .map(|h| {
+                json!({
+                    "pos": h.at(),
+                    "radius": h.radius(),
+                    "until": h.until().seconds(),
+                    "dark": h.dark(),
+                })
+            })
+            .collect();
     }
     out
 }
@@ -2067,7 +2221,8 @@ mod tests {
             json!({ "name": "Tamsin", "race": "human", "gender": "female", "class": "thief",
                     "raised": "dexterity", "age": 34,
                     "born": { "year": 1410, "month": 5, "day": 29 },
-                    "sign": { "animal": "basilisk", "element": "water" } })
+                    "sign": { "animal": "basilisk", "element": "water" },
+                    "classes": [{ "class": "thief", "level": 1 }] })
         );
         assert_eq!(
             value["stats"],

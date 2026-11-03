@@ -96,9 +96,10 @@ fn inner_calm_holds_more_ki_and_brings_it_back_faster() {
     let mut twin = plain(&w);
     run(&mut w, "resource:ki");
     run(&mut twin, "resource:ki");
-    assert_eq!(held(&twin, "ki"), Some(5));
-    assert_eq!(held(&w, "ki"), Some(5), "it starts at the data's start");
-    assert_eq!(w.state.player().resource_max(&CONTENT, id("ki"), 1), 7);
+    // Willpower 10 at level 1: 4.
+    assert_eq!(held(&twin, "ki"), Some(4));
+    assert_eq!(held(&w, "ki"), Some(4), "it starts at the data's start");
+    assert_eq!(w.state.player().resource_max(&CONTENT, id("ki"), 1), 6);
     set(&mut w, "ki", 0);
     set(&mut twin, "ki", 0);
     // A point every three base turns, half again as fast: every two.
@@ -107,7 +108,7 @@ fn inner_calm_holds_more_ki_and_brings_it_back_faster() {
     assert_eq!(held(&twin, "ki"), Some(2));
     assert_eq!(held(&w, "ki"), Some(3));
     run(&mut w, "wait*20");
-    assert_eq!(held(&w, "ki"), Some(7), "up to its larger maximum");
+    assert_eq!(held(&w, "ki"), Some(6), "up to its larger maximum");
 }
 
 #[test]
@@ -212,18 +213,18 @@ fn the_resource_talents_need_their_class_and_level() {
         run(&mut w, &format!("talent:{talent}"));
         w.state.player().talents.rank_of(talent, None) == 1
     };
-    assert!(pick("human,male,barbarian", 6, "battle_trance"));
+    assert!(pick("human,male,berserker", 6, "battle_trance"));
     assert!(
-        !pick("human,male,barbarian", 5, "battle_trance"),
+        !pick("human,male,berserker", 5, "battle_trance"),
         "too early"
     );
     assert!(
         !pick("human,male,warrior", 6, "battle_trance"),
-        "not a barbarian"
+        "not a berserker"
     );
     assert!(pick("human,male,ranger", 12, "steady_hand"));
     assert!(!pick("human,male,thief", 12, "steady_hand"));
-    assert!(pick("human,male,monk", 18, "inner_calm"));
+    assert!(pick("human,male,ascetic", 18, "inner_calm"));
     assert!(!pick("human,male,ranger", 18, "inner_calm"));
     assert!(pick("human,male,thief", 32, "patient_blade"));
     assert!(!pick("human,male,thief", 31, "patient_blade"));

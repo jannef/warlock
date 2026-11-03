@@ -29,16 +29,24 @@ use crate::hunger::Hunger;
 use crate::mana;
 use crate::skills::{Effect, Use};
 use crate::stats::Stat;
+use crate::time::GameTime;
 
 impl World {
-    /// How fast actor `id` gets mana back now, in percent of the normal pace (spec §8 "Mana"):
-    /// the slowest `mana_regen` of its statuses and of the diseases that show (100 without
-    /// any), times `[healing] mana_resting` while the player rests (Meditation adds its percent
-    /// to that), times the `mana_regen` of a special room it stands in, times what the mana
-    /// regeneration affixes of what it wears and wields and its talents add (+50 % is half
+    /// [`World::mana_rate_at`] now.
+    #[cfg(test)]
+    pub(crate) fn mana_rate(&self, id: ActorId) -> u32 {
+        self.mana_rate_at(id, self.state.time)
+    }
+
+    /// How fast actor `id` gets mana back at `now` (a moment of `World::live`), in percent of
+    /// the normal pace (spec §8 "Mana"): the slowest `mana_regen` of its statuses and of the
+    /// diseases that show (100 without any), times `[healing] mana_resting` while the player
+    /// rests (Meditation adds its percent to that), times the `mana_regen` of a special room it
+    /// stands in or the pace of hallowed ground (`sanctuary.rs`), the larger, times what the
+    /// mana regeneration affixes of what it wears and wields and its talents add (+50 % is half
     /// again as fast; Tidal's and Clear mind's +25 %). None for a Starving player (spec §8
     /// "Hunger"). The one place that decides it.
-    pub(crate) fn mana_rate(&self, id: ActorId) -> u32 {
+    pub(crate) fn mana_rate_at(&self, id: ActorId, now: GameTime) -> u32 {
         let Some(actor) = self.state.actors.get(&id) else {
             return 0;
         };
@@ -57,6 +65,8 @@ impl World {
         let room = (self.state.levels.get(&actor.level)).map_or(100, |level| {
             level.effects_at(&self.content, actor.pos).mana_regen()
         });
+        // Hallowed ground's pace or the room's, the larger (`sanctuary.rs`).
+        let room = room.max(self.hallow_pace(actor, now));
         let rate = rate * self.room_pace(actor, room) / 100;
         let faster = actor
             .mods(&self.content)
@@ -73,7 +83,7 @@ impl World {
     /// The cost is what its talents make of `base` ([`Actor::mana_cost`]: Frugal caster's fifth
     /// less). Refused, spending nothing, when it has less than that (or `base` is below 0);
     /// returns whether it was spent, and while a status of theirs blocks casting (a raging
-    /// barbarian spends none). The player's spending of any is a `cast` use of their
+    /// berserker spends none). The player's spending of any is a `cast` use of their
     /// stats (spec §8 "Stats": it trains Willpower). Says nothing: the spell or ability that
     /// spends it does.
     pub(crate) fn spend_mana(&mut self, id: ActorId, base: i32) -> bool {
@@ -116,23 +126,25 @@ impl World {
     pub(super) fn level_up_mana(&mut self, before: u8, after: u8) {
         let content = self.content.clone();
         let rules = content.experience();
-        let grown = (before + 1..=after)
+        let mana: i32 = (before + 1..=after)
             .filter(|&l| l <= rules.mana_level())
-            .count();
-        let mana = i32::try_from(grown).unwrap_or(0) * self.level_mana(&content);
+            .map(|l| self.level_mana(&content, l))
+            .sum();
         if let Some(player) = self.state.actors.get_mut(&self.state.player) {
             player.grow_mana_base(&content, mana);
         }
     }
 
-    /// What one level adds to the player's mana: half the class's mana (the scenario's `mana`
-    /// without a character) plus the better of the Intelligence and Willpower modifiers, at
-    /// least 0 (the progression design, `docs/design/progression.md` §3.7). The stats as what
-    /// the player wears raises them, not as a status lowers them: the penalty passes, this mana
-    /// stays.
-    pub(super) fn level_mana(&self, content: &Content) -> i32 {
+    /// What total level `level` adds to the player's mana: half the mana of the class the
+    /// level falls in (spec §8 "Prestige classes"; the scenario's `mana` without a character)
+    /// plus the better of the Intelligence and Willpower modifiers, at least 0 (the progression
+    /// design, `docs/design/progression.md` §3.7). The stats as what the player wears raises
+    /// them, not as a status lowers them: the penalty passes, this mana stays.
+    pub(super) fn level_mana(&self, content: &Content, level: u8) -> i32 {
         let class_mana = match &self.state.character {
-            Some(c) => c.spec.class(content).map_or(0, |class| class.mana),
+            Some(c) => c
+                .class_of(content, level)
+                .map_or(0, |(table, _)| table.mana()),
             None => content
                 .scenario(&self.state.scenario)
                 .map_or(0, |s| i32::from(s.mana)),

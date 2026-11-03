@@ -222,7 +222,10 @@ pub(super) fn track(
             | Event::FellThroughIce { .. }
             | Event::TrapSprung { .. }
             | Event::TrapStruck { .. }
-            | Event::VoiceThrown { .. } => {}
+            | Event::VoiceThrown { .. }
+            // An order and an ally's departure (spec §8 "Allies"): the A3 slice gives them looks.
+            | Event::Ordered { .. }
+            | Event::Departed { .. } => {}
             Event::LevelChanged { .. } => {
                 bursts.list.clear();
                 tints.clear();

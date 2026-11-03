@@ -251,7 +251,7 @@ rises. A [corpse](food.md#corpses) carried out of the room and dropped elsewhere
 leave stays as it was until you come back, and whatever was due to rise meanwhile rises as you
 return.
 
-**Consecrate.** A Good [priest](classes.md#priest) (from level 9) or [paladin](classes.md#paladin) (from level 12) can lift the curse:
+**Consecrate.** A [priest](classes.md#priest) (from level 9) or [paladin](classes.md#paladin) (from level 12) of [Neutral or better](alignment.md) can lift the curse:
 standing inside a [cursed](special-rooms.md#room-cursed), a [draining](special-rooms.md#room-draining), or a [haunted](special-rooms.md#room-haunted) room, they spend 15 [mana](mana.md#how-much) and pray for a minute (from the
 [abilities menu](abilities.md#the-abilities-menu)). If nothing disturbs the prayer (anything that would stop a [rest](resting.md#how-resting-works) stops it, and
 then the mana and the time are lost), the room becomes a plain room for good: the dead no longer
@@ -271,6 +271,23 @@ room has such a place, else anywhere free in the room, and it comes straight for
 stops as soon as it comes into view, as it would for anyone. It carries nothing and is worth its
 own [experience](experience.md). Rest outside the room, even just beside its door, and nothing comes. [Consecrate](abilities.md#ability-consecrate)
 (above) lifts the haunting for good.
+
+## Hallowed ground
+
+Not a room but a place a [priest](classes.md#priest) makes: [Sanctuary](abilities.md#ability-sanctuary), the priest's ability at level 50, is a
+minute's kneeling for 30 [mana](mana.md#spending-it) (anything that would stop a [rest](resting.md#how-resting-works) stops it, and then nothing
+is hallowed, the mana spent). Done, every cell within 2 of where you knelt (a 5 by 5 square) is
+hallowed ground for an hour. Creatures [hostile](creatures.md#factions) to you do not step onto it, as into a
+sanctuary: one already standing on it when it was laid may move about on it and leave, but not
+come back. Nothing new comes to the level there. Arrows and spells still cross it. Whoever stands
+on it [heals](healing.md#how-fast) and gets [mana back](mana.md#how-fast-it-comes-back) three times as fast (in a sanctuary room, the faster of the two:
+they do not add up). Strike from it (a blow, a shot, a throw, or a spell that hits someone) and
+the peace is broken: the ground is ordinary again; so is it when a [dark prayer's twist](prayer.md#the-holy-and-the-dark) reaches a
+creature. Being struck while on it breaks nothing.
+Look at a cell of it and it reads "on hallowed ground"; a priest answered by the dark powers
+(see [Prayer](prayer.md#the-holy-and-the-dark)) lays "dreaded ground" instead, which works the same. It gives no light, and
+it cannot be laid on the overworld, in water, in a shop, or on ground already hallowed (no time
+or mana spent).
 
 ## Forgotten altars
 

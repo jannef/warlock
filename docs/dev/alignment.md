@@ -59,13 +59,18 @@ play.
 greyed out, refused, or taken away by alignment, and no state remembers a drop in band (the
 paladin's class `alignment` of 550 is only where they start).
 A holy gift (`ClassActive::holy`: Lay on hands, Smite, Holy radiance, Consecrate) may name the
-bands it works for, `alignment = { min = "kind" }` on its talent (`TalentDef::alignment`, checked
-on load: only a holy active's talent may have one). Its function in `world/class_ability.rs`
+bands it works for, `alignment = { min = "kind" }` on its talent (Consecrate's `neutral`, the
+priest design's Q3; `TalentDef::alignment`, checked
+on load: only a holy active's talent or a band-gated passive's may have one). Its function in `world/class_ability.rs`
 (`consecrate.rs` for Consecrate) asks `World::answered(active)` after its free refusals (nobody
 there, nothing to consecrate); outside the bands `World::unanswered(active)` says the gift's line
 ("You call for holy wrath, but none answers.") and takes the time of a cast, spending no cooldown,
 mana, or resource. Putting Holy radiance out always works. Without alignment rules every gift
-works. The alignment talents proposed in the spec (Righteous fury, Hardened heart, The middle
+works. A **band-gated passive** (`TalentEffect::band_gated`: Communion with the dark, the
+priest's 9, `alignment = { max = "callous" }`) is read the same way, by band at the moment of
+use: `World::communes` (`world/dark_face.rs`) asks the talent's bands (and the Dark prayer face)
+where it would act, and outside them the passive does nothing, saying nothing
+(`docs/dev/prayer.md`). The alignment talents proposed in the spec (Righteous fury, Hardened heart, The middle
 way) would work the same way, by band at the moment of use, hooking into `attack_with` (the
 target's `nature`), `shift_alignment` (by `cause`), and `Actor::defence`/`check`. Mana reads
 nothing of alignment.
@@ -77,5 +82,6 @@ after the deed that do not count as said, cold greetings, quest gating (`require
 only: a scorning giver still offers a good quest) and shifts, a good keeper's
 prices, eating kin, a paladin's start inside their gifts' bands under any star, save and
 replay), `class_active_tests.rs` and `curse_tests.rs` (the holy gifts unanswered outside their
-bands: their time, nothing spent, no effect; Holy radiance put out after a fall). The wiki's tables are
+bands: their time, nothing spent, no effect; Holy radiance put out after a fall),
+`dark_face_tests.rs` (Communion doing nothing for a priest the holy powers answer). The wiki's tables are
 `xtask/src/wiki/alignment.rs`.

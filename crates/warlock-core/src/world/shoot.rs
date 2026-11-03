@@ -157,6 +157,11 @@ impl World {
             self.say("You carry no such thing.");
             return Spent::Nothing;
         };
+        // A spirit weapon is not thrown: it would fade as it left the hand.
+        if stack.is_spirit() {
+            self.say("It will not leave your hand.");
+            return Spent::Nothing;
+        }
         let (Some(range), Some(profile)) =
             (me.throw_range(item, &content), me.thrown(item, &content))
         else {
@@ -413,11 +418,16 @@ impl World {
                         struck = true;
                         break;
                     }
+                    // Caught (Diamond soul, `ascetic.rs`): it falls here.
+                    if std::mem::take(&mut self.caught) {
+                        break;
+                    }
                 }
                 None if cell == at && !through => break,
                 None => {}
             }
         }
+        self.caught = false;
         let end = path.last().copied().unwrap_or(from);
         let broke = struck && flight.breaks > 0 && self.state.rng.chance(flight.breaks);
         if let Some(lands) = flight.lands

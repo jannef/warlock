@@ -5,7 +5,7 @@
 
 use super::*;
 use crate::ability::Ability;
-use crate::action::{Positions, parse_actions};
+use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::{Category, Defence, Target};
 use crate::content::{Factor, MAX_FAVOUR};
@@ -134,19 +134,6 @@ fn a_talent_already_picked_is_not_given_again_but_brings_a_pick_in_its_place() {
     assert_eq!(w.due().map(|d| d.level), None);
 }
 
-/// A save from before a table named the pickable (#790: the druid's Wild empathy, now
-/// Beast-friend) loads with the clone dropped and the pickable given in its place.
-#[test]
-fn a_save_holding_a_cut_clone_is_given_the_pickable() {
-    let mut w = world("druid");
-    assert!(holds(&w, "beast_friend"));
-    w.player_mut().talents.forget("beast_friend");
-    give(&mut w, "wild_empathy");
-    let back = World::from_state(w.content().clone(), w.state().clone()).expect("it loads");
-    assert!(holds(&back, "beast_friend") && !holds(&back, "wild_empathy"));
-    assert!(mods(&back).beast_friend);
-}
-
 #[test]
 fn stat_gifts_raise_score_and_potential_once() {
     let mut w = world("aristocrat");
@@ -197,7 +184,7 @@ fn a_restore_gives_what_a_grown_table_gives_and_nothing_else_changes() {
     let mut state = w.state.as_ref().clone();
     let player = state.player;
     let picked: Vec<_> = (state.actors[&player].talents.iter())
-        .filter(|t| !["haggler", "deep_pockets", "eye_for_quality"].contains(&t.id.as_str()))
+        .filter(|t| !["haggler", "deep_pockets", "merchants_eye"].contains(&t.id.as_str()))
         .cloned()
         .collect();
     let actor = state.actors.get_mut(&player).expect("player");
@@ -208,7 +195,7 @@ fn a_restore_gives_what_a_grown_table_gives_and_nothing_else_changes() {
         }
     }
     let back = World::from_state(BUILTIN.clone(), state).expect("restore");
-    for id in ["haggler", "deep_pockets", "eye_for_quality"] {
+    for id in ["haggler", "deep_pockets", "merchants_eye"] {
         assert!(holds(&back, id), "{id}");
     }
     let _ = hash;
@@ -254,7 +241,7 @@ fn a_level_with_both_picks_spends_the_bonus_on_a_talent_of_its_trees() {
         "{rows:?}"
     );
     // A talent of no bonus tree fills the ordinary pick; the bonus waits for its trees.
-    let trees = w.bonus_trees().expect("the aristocrat's trees");
+    let trees = w.bonus_trees_at(30).expect("the aristocrat's trees");
     let book = BUILTIN.talents();
     for _ in 0..2 {
         let (other, _) = (crate::talent::offers(w.content(), &w.candidate()).into_iter())
@@ -453,14 +440,14 @@ fn tinkerer_lets_the_untrained_disarm() {
 }
 
 #[test]
-fn lore_identifies_a_magic_item_carried_a_day() {
+fn old_lore_identifies_a_magic_item_carried_a_day() {
     let mut w = world("warrior");
     w.player_mut().inventory.push(magic_sword(&BUILTIN));
     let item = w.state.player().inventory.len() - 1;
     // Without the ability a day of carrying teaches nothing.
     run(&mut w, "rest:24h");
     assert!(!w.state.player().inventory[item].is_identified());
-    give(&mut w, "lore");
+    give(&mut w, "old_lore");
     // An hour of rest counts (the time passing for the player), then the rest of the day.
     run(&mut w, "rest:1h");
     w.appraise_carried(22 * crate::time::HOUR);
@@ -480,11 +467,8 @@ fn lore_identifies_a_magic_item_carried_a_day() {
 #[test]
 fn trade_talents_sum_into_the_mods() {
     let mut w = world("warrior");
-    for id in ["haggler", "eye_for_quality"] {
-        give(&mut w, id);
-    }
-    let m = mods(&w);
-    assert_eq!((m.favour_percent, m.identify_trades), (15, true));
+    give(&mut w, "haggler");
+    assert_eq!(mods(&w).favour_percent, 15);
 }
 
 /// A magic long sword, unidentified, set with no gem (one the store can afford).
@@ -504,39 +488,4 @@ fn magic_sword(content: &Content) -> Stack {
         })
         .find(|s| !s.is_identified() && s.own_parts().is_none())
         .expect("a magic sword")
-}
-
-#[test]
-fn a_merchant_knows_what_they_sell() {
-    let into = "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
-                move:E*5";
-    let sale = |talents: &[&str]| {
-        let mut w = World::new(BUILTIN.clone(), "courtyard", None).expect("courtyard");
-        run(&mut w, into);
-        for id in talents {
-            give(&mut w, id);
-        }
-        w.player_mut().inventory.push(magic_sword(&BUILTIN));
-        let item = w.state.player().inventory.len() - 1;
-        let offer = w.perception().sale(&Positions::of([item])).map(|s| s.offer);
-        run(&mut w, &format!("sell:{item}"));
-        (w, offer.expect("the store buys swords"))
-    };
-    let (plain, offer) = sale(&[]);
-    assert!(!said(&plain).iter().any(|m| m.starts_with("That was")));
-    let (w, known) = sale(&["eye_for_quality"]);
-    assert_eq!(known, offer, "knowing it is no better price");
-    assert!(
-        said(&w).iter().any(|m| m.starts_with("That was ")),
-        "{:?}",
-        said(&w)
-    );
-    let sold = said(&w)
-        .iter()
-        .position(|m| m.starts_with("You sell"))
-        .expect("sold");
-    assert!(
-        said(&w)[sold].contains("(magic)"),
-        "the sale names it as it was known"
-    );
 }

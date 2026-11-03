@@ -1381,7 +1381,7 @@ mod tests {
 
     #[test]
     fn hit_points_and_regeneration_follow_toughness() {
-        // #113: a dwarf barbarian (6 + 8) with To 16 has 30; a human warrior (4 + 7) with To 12
+        // #113: a dwarf berserker (6 + 8) with To 16 has 30; a human warrior (4 + 7) with To 12
         // has 23; an elf wizard (2 + 0) with To 8 has 10; a giant rat (0) with To 8 has 8.
         assert_eq!(max_hp(16, 14), 30);
         assert_eq!(max_hp(12, 11), 23);

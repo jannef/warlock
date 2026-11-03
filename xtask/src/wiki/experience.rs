@@ -23,10 +23,10 @@ fn extremes(content: &Content) -> Option<[(String, Factor); 2]> {
     Some([named(quick_race, quick_class), named(slow_race, slow_class)])
 }
 
-/// The XP needed for each level (spec §8 "Experience"), every level to 20 and then every fifth:
-/// the kills of the player's own level the level costs, its XP, the total for a character of
-/// 100 %, the totals for the quickest and the slowest race and class, and whether it grows hit
-/// points.
+/// The XP needed for each level (spec §8 "Experience"), every level to the curve's top: the
+/// kills of the player's own level the level costs, its XP, the total for a character of 100 %,
+/// the totals for the quickest and the slowest race and class, whether it grows hit points and
+/// mana, and the classes whose last level it is (`ClassDef::max_level`).
 pub(super) fn experience_levels(content: &Content) -> String {
     let rules = content.experience();
     let examples = extremes(content);
@@ -36,8 +36,12 @@ pub(super) fn experience_levels(content: &Content) -> String {
         let _ = write!(out, " {name} ({} %) |", factor.percent());
         align.push_str("---:|");
     }
-    let _ = writeln!(out, " Hit points gained |\n{align}:---:|");
-    for level in (2..=rules.max_level()).filter(|l| *l <= 20 || l % 5 == 0) {
+    let _ = writeln!(
+        out,
+        " Hit points gained | Mana gained | The last level of |\n{align}:---:|:---:|---|"
+    );
+    let yes = |grows: bool| if grows { "yes" } else { "no" };
+    for level in 2..=rules.max_level() {
         let _ = write!(
             out,
             "| {level} | {} | {} | {} |",
@@ -48,14 +52,28 @@ pub(super) fn experience_levels(content: &Content) -> String {
         for (_, factor) in examples.iter().flatten() {
             let _ = write!(out, " {} |", thousands(rules.threshold_for(level, *factor)));
         }
-        let hp = if level <= rules.hp_level() {
-            "yes"
-        } else {
-            "no"
-        };
-        let _ = writeln!(out, " {hp} |");
+        let _ = writeln!(
+            out,
+            " {} | {} | {} |",
+            yes(level <= rules.hp_level()),
+            yes(level <= rules.mana_level()),
+            last_level_of(content, level)
+        );
     }
     out
+}
+
+/// The classes whose last level is `level`, by name: "every class" when it is all of them.
+fn last_level_of(content: &Content, level: u8) -> String {
+    let mut names: Vec<&str> = (content.classes().iter())
+        .filter(|c| c.max_level == level)
+        .map(|c| c.name.as_str())
+        .collect();
+    if !names.is_empty() && names.len() == content.classes().len() {
+        return "every class".to_string();
+    }
+    names.sort_unstable();
+    names.join(", ")
 }
 
 /// The race's and the class's experience factors, with what the game says of them.

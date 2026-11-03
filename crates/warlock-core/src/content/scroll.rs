@@ -1,6 +1,8 @@
 //! What reading does (`read` in an object's file, spec §8 "Scrolls"): a scroll casts a spell
 //! of `data/spells/` through the one cast path at its own rungs, free of mana, and teaches it
-//! (`study:b`). Every scroll teaches a spell.
+//! (`study:b`). The one other kind, `cleanse`, has no spell behind it and teaches nothing: the
+//! scroll of restoration mends the reader's stat damage and gives back what drains took (the
+//! priest design §11).
 //!
 //! ```toml
 //! [object.read]
@@ -8,6 +10,11 @@
 //! spell = "fireball"
 //! rungs = 1             # the rung of the spell's damage or heal ladder it casts at (default 0,
 //!                       # the base; at most the ladder's length); the reader's Scroll adept adds
+//!
+//! [object.read]
+//! kind = "cleanse"      # no spell: read on oneself
+//! mends = true          # every point of stat damage mends (default false)
+//! restores = true       # every point drains took comes back (default false); one of the two
 //! ```
 //!
 //! The older `burst` and `bolt` readings are gone (the spell scaling design §7.4): the three
@@ -24,6 +31,7 @@ enum Kind {
     Burst,
     Bolt,
     Spell,
+    Cleanse,
 }
 
 /// `read` as an object's file writes it.
@@ -35,6 +43,12 @@ pub(super) struct ReadSpec {
     spell: Option<String>,
     /// The rung of the spell's roll ladder a read casts at (default 0).
     rungs: Option<u8>,
+    /// A `cleanse` reading's: it mends stat damage.
+    #[serde(default)]
+    mends: bool,
+    /// A `cleanse` reading's: it restores drained points.
+    #[serde(default)]
+    restores: bool,
 }
 
 /// What reading a scroll does.
@@ -42,6 +56,17 @@ pub(super) struct ReadSpec {
 pub enum Reading {
     /// It casts a spell of `data/spells/` through the one cast path, and teaches it.
     Cast(SpellScroll),
+    /// No spell: it cleanses its reader (the scroll of restoration), and teaches nothing.
+    Cleanse(Cleansing),
+}
+
+/// What a `cleanse` reading does to its reader (one of the two at least).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cleansing {
+    /// Every point of stat damage mends.
+    pub mends: bool,
+    /// Every point drains took comes back.
+    pub restores: bool,
 }
 
 /// A scroll of a spell of `data/spells/` (spec §8 "Scrolls", "Spells"): read, it casts the
@@ -62,35 +87,49 @@ pub struct SpellScroll {
 
 impl Reading {
     /// How far the reader may aim it; `None` for what is not aimed (identify, a spell on
-    /// oneself).
+    /// oneself, a cleansing).
     pub fn range(&self) -> Option<i32> {
-        match self {
-            Reading::Cast(scroll) => scroll.reach,
-        }
+        self.scroll().and_then(|scroll| scroll.reach)
     }
 
     /// Whether it is read on a stack the reader carries (the scroll of identify).
     pub fn on_item(&self) -> bool {
-        matches!(self, Reading::Cast(scroll) if scroll.on_item)
+        self.scroll().is_some_and(|scroll| scroll.on_item)
     }
 
-    /// The spell scroll it is.
-    pub fn scroll(&self) -> &SpellScroll {
+    /// The spell scroll it is, if it is one.
+    pub fn scroll(&self) -> Option<&SpellScroll> {
         match self {
-            Reading::Cast(scroll) => scroll,
+            Reading::Cast(scroll) => Some(scroll),
+            Reading::Cleanse(_) => None,
         }
     }
 
-    /// The spell of `data/spells/` studying it teaches (spec §8 "Spells").
+    /// The spell of `data/spells/` studying it teaches (spec §8 "Spells"); none for a
+    /// cleansing.
     pub fn teaches(&self) -> Option<SpellId> {
-        Some(self.scroll().spell)
+        self.scroll().map(|scroll| scroll.spell)
     }
 }
 
 impl ReadSpec {
     /// Checks the spec: a `spell` reading of a spell of `data/spells/` (spells load before
-    /// objects), its `rungs` within the spell's roll ladder.
+    /// objects), its `rungs` within the spell's roll ladder; a `cleanse` reading with no spell
+    /// and something to do.
     pub(super) fn resolve(self, content: &Content) -> Result<Reading, String> {
+        if self.kind == Kind::Cleanse {
+            if self.spell.is_some() || self.rungs.is_some() {
+                return Err("`read`: a `cleanse` reading has no `spell` or `rungs`".into());
+            }
+            if !self.mends && !self.restores {
+                return Err("`read`: a `cleanse` reading `mends` or `restores`, or both".into());
+            }
+            let (mends, restores) = (self.mends, self.restores);
+            return Ok(Reading::Cleanse(Cleansing { mends, restores }));
+        }
+        if self.mends || self.restores {
+            return Err("`read`: `mends` and `restores` belong to a `cleanse` reading".into());
+        }
         if self.kind != Kind::Spell {
             return Err(
                 "`read`: `burst` and `bolt` readings are gone: name a spell of data/spells/ \

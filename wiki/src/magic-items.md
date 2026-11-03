@@ -49,8 +49,9 @@ Magic and rare items are **unidentified** when you find them. You see their rari
 (magic)", "an iron helm (rare)"), not their affixes or a rare item's name. Their magic works all
 the same while you wear or wield them, as in ADOM and Path of Exile: an unknown [ring](objects.md#class-rings) of [Strength](stats.md#stat-strength)
 makes you stronger, and one that glows lights your way. Wearing it for a while does not tell you
-what it is. A [scroll of identify](scrolls.md#the-scroll-of-identify) will, and so does carrying
-it for a day if you have the [talent](talents.md) [Lore](talents.md#talent-lore), and so does Factor Wulfrun in Cēaptūn,
+what it is. A [scroll of identify](scrolls.md#the-scroll-of-identify) will, and so does a
+[merchant](classes.md#merchant)'s [Merchant's eye](talents.md#talent-merchants-eye) (from level 12: a careful look, for the time it takes to read a scroll),
+carrying it for a day if you were born to [Old lore](talents.md#talent-old-lore), and Factor Wulfrun in Cēaptūn,
 for 100 [gold](shops.md#money) per unidentified [stack](objects.md#piles) you carry ([Services](npcs.md#services)); once identified, an
 item stays known
 wherever it goes: "This is a Sharp long sword of the Bear!"
@@ -140,7 +141,7 @@ Wands) are told on the [Magic](magic.md) and [Mana](mana.md) pages: *of Wands* m
 rung or two higher, and *of the Adept* raises your [caster level](magic.md#caster-level), which is how far your learning
 reaches (it never changes what a spell does or costs); of Breath, of Ease, and of the
 Hunt help [stamina](resources.md#resource-stamina). *Of Fury*, *of Steadiness*, *of Stillness*, *of Guile*, and *of the Muse* raise
-the most [rage](resources.md#rage), [focus](resources.md#resource-focus), [ki](resources.md#resource-ki), [openings](resources.md#resource-openings), or [inspiration](resources.md#resource-inspiration) you can hold: only [barbarians](classes.md#barbarian), [rangers](classes.md#ranger), [monks](classes.md#monk),
+the most [rage](resources.md#rage), [focus](resources.md#resource-focus), [ki](resources.md#resource-ki), [openings](resources.md#resource-openings), or [inspiration](resources.md#resource-inspiration) you can hold: only [berserkers](classes.md#berserker), [rangers](classes.md#ranger), [ascetics](classes.md#ascetic),
 [thieves](classes.md#thief), and [bards](classes.md#bard) hold those (see [Resources](resources.md)), so to anyone else they are of no
 use. *Of Siphoning* and *of the Hunt* give their [mana](mana.md#mana-on-a-kill) or [stamina](resources.md#resource-stamina) only for a kill of your own blow,
 shot, or spell, the slain within three cells. *Of Sustenance* slows [hunger](hunger.md#how-hungry-you-are), *of Wariness* softens

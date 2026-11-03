@@ -38,9 +38,9 @@
 
 use super::path::{Cost, Search};
 use super::stride::Coarse;
-use super::{ActorId, Mind, World, beast_friend};
+use super::{Actor, ActorId, Mind, World, WorldState, beast_friend};
 use crate::action::{AttackKind, Event};
-use crate::content::{ActionKind, Combat, Stance};
+use crate::content::{ActionKind, Combat, Content, Stance};
 use crate::fov::radius2;
 use crate::geom::{Dir, Pos};
 use crate::noise::Heard;
@@ -74,7 +74,7 @@ pub(super) enum Plan {
 
 /// Where a path query leaves a creature.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Route {
+pub(super) enum Route {
     /// It is already where it wants to be.
     There,
     Step(Dir),
@@ -174,6 +174,10 @@ impl World {
     fn decide(&mut self, id: ActorId, heard: &[Heard]) -> Plan {
         // A slip past that has lasted its time is over (`slip.rs`).
         self.slip_lapses(id);
+        // An ally has a mind of its own (`ally.rs`): its master's enemies, then its order.
+        if self.state.actors[&id].ally.is_some() {
+            return self.ally_plan(id);
+        }
         let seen = self.nearest_hostile_in_sight(id);
         let mut mind = self.state.actors[&id].mind;
         let pos = self.state.actors[&id].pos;
@@ -237,6 +241,20 @@ impl World {
     /// Sight is computed only if a hostile is within the creature's sight radius, nearest first,
     /// and only as far as the first one it sees: line of sight only out to its distance.
     fn nearest_hostile_in_sight(&mut self, id: ActorId) -> Option<(ActorId, Pos)> {
+        self.nearest_in_sight(id, &|state, content, me, a| {
+            content.stance_of(me.faction(content), a.faction(content)) == Stance::Hostile
+                && !beast_friend::befriended(state, content, me, a)
+        })
+    }
+
+    /// The nearest actor creature `id` sees that `wanted` (of the state, the content, the
+    /// creature, and the other) says it is after (ties: the lower id), and where it stands; a
+    /// disguised mimic never. Sight as [`World::nearest_hostile_in_sight`] computes it.
+    pub(super) fn nearest_in_sight(
+        &mut self,
+        id: ActorId,
+        wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
+    ) -> Option<(ActorId, Pos)> {
         let World {
             state,
             content,
@@ -250,12 +268,8 @@ impl World {
         let from = me.pos;
         let mut hostiles: Vec<(i32, ActorId, Pos)> = (state.actors.values())
             .filter(|a| a.level == me.level && a.id != id && a.pos.dist2(me.pos) <= reach2)
-            .filter(|a| {
-                content.stance_of(me.faction(content), a.faction(content)) == Stance::Hostile
-                    && !beast_friend::befriended(state, content, me, a)
-                    // A disguised mimic is a chest to every eye (`mimic.rs`).
-                    && !a.effects.hides(content)
-            })
+            // A disguised mimic is a chest to every eye (`mimic.rs`).
+            .filter(|a| !a.effects.hides(content) && wanted(state, content, me, a))
             .map(|a| (a.pos.dist2(me.pos), a.id, a.pos))
             .collect();
         if hostiles.is_empty() {
@@ -286,7 +300,7 @@ impl World {
     /// Step 2: attack the target at `at`, or get where the creature can. A ranged creature
     /// with nothing to shoot (no missile weapon ready, or no ammunition for it left) fights in
     /// melee; it shoots no farther than its missile weapon does.
-    fn fight(&self, id: ActorId, target: ActorId, at: Pos) -> Plan {
+    pub(super) fn fight(&self, id: ActorId, target: ActorId, at: Pos) -> Plan {
         let me = &self.state.actors[&id];
         let def = self.content.creature(me.creature);
         let attack = |kind| Plan::Attack { target, kind };
@@ -378,7 +392,13 @@ impl World {
     /// How creature `id` gets to a cell `goal` accepts, all of which lie within `reach` of
     /// `target`: a shortest path over walkable cells (and closed doors, if it opens them) that
     /// no one else stands on.
-    fn route(&self, id: ActorId, target: Pos, reach: i32, goal: impl Fn(Pos) -> bool) -> Route {
+    pub(super) fn route(
+        &self,
+        id: ActorId,
+        target: Pos,
+        reach: i32,
+        goal: impl Fn(Pos) -> bool,
+    ) -> Route {
         let level = self.state.current();
         let me = &self.state.actors[&id];
         let opens_doors = self.content.creature(me.creature).opens_doors;
@@ -435,15 +455,17 @@ impl World {
     /// Which cells creature `id` keeps out of on the current level: a creature hostile to the
     /// player does not step into a special room whose effect it shuns (a sanctuary, spec §7
     /// "Special rooms") from outside it; one already inside may move about in it, and leave.
+    /// Hallowed ground (Sanctuary, `sanctuary.rs`) is shunned the same way.
     pub(super) fn shuns(&self, id: ActorId) -> impl Fn(Pos) -> bool + '_ {
         let level = self.state.current();
         let hostile = self.stance(id, self.state.player) == Stance::Hostile;
-        let inside = (self.state.actors.get(&id)).and_then(|me| level.room_at(me.pos));
+        let from = self.state.actors.get(&id).map(|me| me.pos);
+        let inside = from.and_then(|from| level.room_at(from));
         move |p: Pos| {
             hostile
-                && level.room_at(p).is_some_and(|room| {
+                && (level.room_at(p).is_some_and(|room| {
                     inside != Some(room) && self.content.room_effect(room.effect).shunned
-                })
+                }) || level.shuts_out(from, p, self.state.time))
         }
     }
 

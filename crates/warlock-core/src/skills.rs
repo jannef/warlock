@@ -78,6 +78,15 @@ pub const MAX_SNEAK_DICE: i32 = 25;
 /// The most a skill adds to the initiative check, or to its difficulty for those its holder
 /// catches unawares (spec §8 "Surprise and sneak attacks").
 pub const MAX_SURPRISE_BONUS: i32 = 20;
+/// The most a skill adds to the difficulty of the check a war cry asks of those who hear it
+/// (spec §8 "Skills": Intimidate).
+pub const MAX_INTIMIDATE_BONUS: i32 = 20;
+/// The most degrees a skill adds to a song (spec §8 "Class abilities", the bard's songs), before
+/// the status's own `max`.
+pub const MAX_SONG_DEGREES: i32 = 10;
+/// The most a skill adds to the difficulty of the check a song asks of those who hear it against
+/// them (spec §8 "Class abilities", the bard's songs).
+pub const MAX_SONG_CRAFT: i32 = 20;
 /// The most a skill adds to treating bleeding, poison, or a disease (spec §8 "Skills": Heal).
 pub const MAX_HEAL_BONUS: i32 = 20;
 /// The most a skill adds to picking a lock (spec §8 "Doors").
@@ -196,6 +205,18 @@ pub enum Effect {
     /// poison, a disease; a skill with it, trained, lets the actor treat at all (the Heal
     /// ability).
     Heal,
+    /// Points added to the difficulty of the Willpower check the actor's war cry asks of those
+    /// who hear and see it (spec §8 "Class abilities": War cry; `world/war_cry.rs`), and their
+    /// threat at one foe (spec §8 "Skills": Intimidate; `world/intimidate.rs`), whose degrees of
+    /// fear the points also set; a skill with it, trained, lets the actor intimidate at all (the
+    /// Intimidate ability).
+    Intimidate,
+    /// Degrees added to what a song gives (spec §8 "Class abilities", the bard's songs;
+    /// `world/song.rs`), before the status's `max`.
+    SongDegrees,
+    /// Points added to the difficulty of the check a song asks of those who hear it against them
+    /// (spec §8 "Class abilities", the bard's songs: the Lullaby's, #873).
+    SongCraft,
     /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
     /// "Doors"; `world/door.rs`).
     Kick,
@@ -242,6 +263,9 @@ impl Effect {
             Effect::Lookout | Effect::Stalk | Effect::Evade => MAX_ENCOUNTER_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
             Effect::Heal => MAX_HEAL_BONUS,
+            Effect::Intimidate => MAX_INTIMIDATE_BONUS,
+            Effect::SongDegrees => MAX_SONG_DEGREES,
+            Effect::SongCraft => MAX_SONG_CRAFT,
             Effect::Disarm => MAX_DISARM_BONUS,
             Effect::Pick => MAX_PICK_BONUS,
             Effect::Forage => MAX_FORAGE_BONUS,
@@ -295,6 +319,13 @@ pub enum Use {
     Surprise,
     /// A try at treating oneself (spec §8 "Skills": Heal), whatever comes of it.
     Heal,
+    /// An order given to one's allies, or an ally's kill (spec §8 "Allies": Handle animal).
+    Handle,
+    /// A war cry roared (spec §8 "Class abilities": War cry) or a foe threatened (spec §8
+    /// "Skills": Intimidate), whatever comes of it.
+    Intimidate,
+    /// A song sung (spec §8 "Class abilities", the bard's songs), whatever it does.
+    Song,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
@@ -335,6 +366,9 @@ impl Use {
             Use::SneakAttack => "a sneak attack that hits",
             Use::Surprise => "being caught unawares (the initiative check, whatever comes of it)",
             Use::Heal => "trying to treat bleeding, poison, or a disease",
+            Use::Handle => "giving your allies an order, or a kill of theirs",
+            Use::Intimidate => "roaring a war cry, or threatening a foe",
+            Use::Song => "singing a song",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
@@ -452,6 +486,9 @@ impl Use {
             Use::SneakAttack => "sneak_attack",
             Use::Surprise => "surprise",
             Use::Heal => "heal",
+            Use::Handle => "handle",
+            Use::Intimidate => "intimidate",
+            Use::Song => "song",
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Temper => "temper",
@@ -491,6 +528,9 @@ impl Effect {
             Effect::Initiative => "initiative",
             Effect::SurpriseEase => "surprise_ease",
             Effect::Heal => "heal",
+            Effect::Intimidate => "intimidate",
+            Effect::SongDegrees => "song_degrees",
+            Effect::SongCraft => "song_craft",
             Effect::Kick => "kick",
             Effect::Pick => "pick",
             Effect::Temper => "temper",

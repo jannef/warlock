@@ -30,6 +30,11 @@ Walls block movement, [sight](sight.md#line-of-sight), [light](light.md#what-lig
 slowly, and a big [explosion](digging.md#explosions) blows the softer ones apart; a broken wall becomes [rubble](#terrain-rubble). The edge of
 a level never breaks. See [Digging and walls](digging.md).
 
+A [worn statue](#terrain-statue) stands in the way as a wall does, but you see past it. Step up
+beside one and you are told what it is, and what is cut into it, if anything: some carry words
+in the old tongue worth reading (one deep in Fyrdelf keeps an oath; see
+[Prestige classes](classes.md#prestige-classes)).
+
 ## Water
 
 Still water (ponds and pools) and running water (streams) are both wadeable but slow: a step into

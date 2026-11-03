@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content.clone())"
+---
+ You feel at peace here.
+ The old hermit says: "Hm? A visitor. Sit, if you can find a stone nobody's sitting on."
+
+
+
+
+
+
+
+
+                  ┌─ The old hermit ─────────────────────────────────────────────┐
+                  │                                                              │
+                  │ "Hm? A visitor. Sit, if you can find a stone nobody's        │
+                  │ sitting on."                                                 │
+                  │                                                              │
+                  │   What do you say to the old hermit?                         │
+                  │   [Hel_                                     ]                │
+                  │                                                              │
+                  │ Enter  say    Backspace  erase    Esc  back                  │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 18/18  ·  MP 2/2  ·  Openings 0/5  ·  Sta 10/10  ·  Lv 1  ·  08:08       ? controls

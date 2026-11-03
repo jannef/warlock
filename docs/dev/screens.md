@@ -196,7 +196,9 @@ to open, read keys for, or draw one:
   `Panel`, main and pause menu), `ui/new_run_screen.rs`, `ui/settings_screen.rs`,
   `ui/controls_screen.rs` (commands grouped by `Context` under headings, notes on Esc and list
   letters, Reset all keys, Export keys…, Import keys…; also the `?` help: the same list,
-  read-only, the developer keys only where they work), `ui/object_screen.rs` (inventory, pick up,
+  read-only, the developer keys only where they work), `ui/shape_screen.rs` (the shape list of the Hunter's Spirit weapon, `Aim::Shape`, opened by
+  `use_ability`: every melee weapon, `PerceptionView::weapon_shapes`, in a `PagedList` grouped by
+  weapon skill; a letter or Enter sends `Action::Shape`; `--screen shape`), `ui/object_screen.rs` (inventory, pick up,
   drop, throw, consume (the eat command renamed, key and id `eat` unchanged); in the choices letters always name stacks, even `h j k l`; the consume choice
   lists food lying here first ("lying here"), then the pack's; in the inventory a letter opens
   the stack's description, and `I` closes it; marks belong to stacks
@@ -218,7 +220,7 @@ to open, read keys for, or draw one:
   (`SignScreen`, *Born under the stars* after the race: the birth, the sign, its legend, a
   lucky day's line, the gifts in words with flaws as "but …", the adjustments; no rows, no
   choice: Enter opens the gender, Esc closes), `ui/name_screen.rs`
-  (`NameScreen`, the Name step and the game's text field: typed text literal while the font draws
+  (`NameScreen`, the Name step on the game's text field, `TextField`: typed text literal while the font draws
   it (`render::atlas::draws`) and there is room; the `Context::Text` keys accept, erase, put in the
   next of the race's random names (never the one shown; not on a held key), and back out; an empty
   field shows, dimmed, the name it gives), `ui/characters_screen.rs` (`CharactersScreen`: the saved
@@ -233,8 +235,10 @@ to open, read keys for, or draw one:
   keeps, scrolled in lines from the newest at the bottom by `Nav::Up`/`Down` and a panel's height
   by `Nav::PrevPage`/`NextPage`; no info page, and no `PagedList`, whose rows are lettered single
   lines to choose from; the stack calls its `fit` before a press), `ui/dialogue_screen.rs`
-  (the speaker, their last line, numbered topics; built from the last `Event::Talked`, so it never
-  shows more than the player was told), `ui/abilities_screen.rs` (`AbilitiesScreen`, below),
+  (the speaker, their last line, numbered topics, and the fixed `s` Say row and its field where
+  `Conversation::words`; built from the last `Event::Talked`, so it never shows more than the
+  player was told), `ui/text_field.rs` (`TextField`: the game's one text field, the Name step's
+  and the Say field's), `ui/abilities_screen.rs` (`AbilitiesScreen`, below),
   `ui/level_up_screen.rs` (`LevelUpScreen`: the first `Due`'s step, rolls, then a bonus pick of
   `PerceptionView::bonus_trees`, then the talent, each a `PagedList` whose letters are `Act`s; a
   talent with several openings lists them in its place; Esc only says what is left, in the panel;
@@ -271,12 +275,16 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   `docs/dev/status-effects.md`; alignment never makes one unavailable, `docs/dev/alignment.md`;
   `reason`/`id` take the content). `PerceptionView::abilities` is what presentation reads (`OwnAbility`: the ability and
   why it cannot be used now); the `abilities` dump layer and JSON key show the same, and the
-  wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. Skills used as actions are
+  wiki's table (`xtask/src/wiki/abilities.rs`) lists `Ability::every`. The orders to one's allies
+  (`Ability::Heel`, `Hold`, `SetOn`, `Source::Ally`, the Allies group after Here) are had by nobody
+  and listed by `Ability::orders` while the player has an ally anywhere, greyed `NoAllies` with
+  none on the level (docs/dev/allies.md). Skills used as actions are
   `Ability::Skill(id)` until their use exists (never available); a use, when it comes, is a
   variant of its own, listed in its skill's place (`Ability::use_of`: the skill's benefit effect
   names it, so `had_by` asks `Skills::trains_effect`): `Ability::Disarm`, Disable device's
   (`docs/dev/traps.md`), `Ability::PickLock`, Open lock's (`docs/dev/doors.md`), and
-  `Ability::Steal`, the `steal` benefit's (`docs/dev/stealing.md`).
+  `Ability::Steal`, the `steal` benefit's (`docs/dev/stealing.md`), and `Ability::Intimidate`, the
+  `intimidate` benefit's, aimed at a cell (`docs/dev/skills.md`).
   `Ability::SecondWind` (`Source::Talent`, the menu's Talents group between Class and Skills) is
   the first active talent's (`docs/dev/progression.md`): listed while the content has a talent
   with the `second_wind` effect, had by whoever holds one, `While(winded)` during its cooldown.

@@ -37,7 +37,6 @@ abilities = [
     { level = 1, talent = "arcane_training" },
     { level = 3, talent = "magic_missile" },
     { level = 4, talent = "knock" },
-    { level = 6, talent = "arcane_lore" },
     { level = 12, talent = "burning_hands" },
     { level = 18, talent = "arcane_bolt" },
     { level = 25, talent = "mage_armour" },

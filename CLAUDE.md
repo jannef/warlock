@@ -83,7 +83,7 @@ Game flags (`cargo run -p warlock -- --help`):
   sign's reveal), `gender`, `class`, `chargen-talents` (the creation picks), `name`, and
   `summary` over New run and the steps before
   them (each on its preselection: the first scenario's character, the Ascmearc's, an empty name);
-  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `magic` (the Magic page, page 6), `quests`, `talents` (the Talents page), `story` (the background story as it opens when a run begins; over a `--character` run or a `--replay` with `kit`; page 9 is reached with `--keys 9` from another page), `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `study` (the scrolls one could study), `identify` (for the first stack's scroll), `temper` (the weapons and armour carried, as the Temper ability asks), and `abilities` (the abilities menu) over a run
+  `pause`, `help`, `inventory`, `equipment`, `character`, `weapon-skills`, `magic` (the Magic page, page 6), `quests`, `talents` (the Talents page), `story` (the background story as it opens when a run begins; over a `--character` run or a `--replay` with `kit`; page 9 is reached with `--keys 9` from another page), `messages` (the message history), `pick-up` (the pile on the player's cell), `drop`, `eat`, `read`, `study` (the scrolls one could study), `identify` (for the first stack's scroll), `temper` (the weapons and armour carried, as the Temper ability asks), `shape` (the Spirit weapon's shape list), and `abilities` (the abilities menu) over a run
   (e.g. after a `--replay` that walks onto a pile), `dialogue` over a run whose last action was
   talk with topics (a `--replay` ending in `chat:SE` or `ask:SE:rooms` next to the hub's hermit),
   `equip-item` (the choice for the first slot, Head) over the equipment screen; `settings`,
@@ -121,11 +121,11 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend use_tool
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC steal:DIR throw_voice:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
-talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N rank:SKILL:N
-skip:DURATION weather:KIND spawn meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
+eat:LETTER eat:floor:LETTER read:LETTER[:X,Y|:LETTER] study:LETTER dig:DIR search search:N disarm:DIR heal[:ID] intimidate:X,Y pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC say:DIR:WORDS steal:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
+talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N call:ID rank:SKILL:N
+skip:DURATION weather:KIND spawn ally:CREATURE[:N[:DURATION]] meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
-NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`; `berserker` is refused: only rage gives it); `LETTERS` = stacks by position, as letters
+NE E SE S SW W NW; `NAME` = aggressive, neutral, defensive, or coward (a stance, no time; `assets/data/stances.toml`; `frenzy` is refused: only rage gives it); `LETTERS` = stacks by position, as letters
 for the first 26 (`a` = 0, the first) or numbers for any (`0,2,30`; mixed works too, `ac,30`),
 e.g. `pickup:ac` (the pile on the player's cell, `a` its top) or `drop:b` (the inventory), none
 = everything; `LETTER` = one position, `b` or `27` (`equip:body:27`, `eat:floor:30`); positions
@@ -138,40 +138,53 @@ cell (X, Y), `throw:c:X,Y` throws one of
 inventory stack `c` there (any weapon is thrown whole, badly: `t` in the game sends `fire` for a launcher, else `throw` for what the Missile weapon slot holds); `eat:b` eats one of inventory stack `b`, `eat:floor:a` one of the top
 stack underfoot; `read:b:12,5` reads scroll stack `b` at level cell (12, 5) (a spell scroll:
 fireball, lightning, frost, or any scroll of an aimed spell), `read:b` a scroll of a spell on
-oneself (haste), `read:b:c` reads it on inventory stack `c` (the scroll of
+oneself (haste) or the scroll of restoration, `read:b:c` reads it on inventory stack `c` (the scroll of
 identify); `study:c` studies scroll stack `c` to learn the spell it teaches
 (docs/dev/spells.md "Learning"); `dig:E` digs into the wall east with the tool in the Tool slot, turn
 after turn until it gives way or something interrupts; `search` searches the cells around the
 player for secret doors and hidden traps, `search:N` for up to N turns (1 to 100), stopping when
-something is found; `pray` prays at the forgotten altar beside the player (the Pray ability, the abilities menu's Here group: a minute, then an outcome from `data/outcomes/forgotten_altar.toml`, and perhaps the altar spent; refused, with no time, with no altar beside them; docs/dev/special-rooms.md); `drink` drinks at the healing spring beside the player (the Drink ability, Here too: ten seconds, then an outcome from `data/outcomes/spring.toml`; a spring never runs dry; refused, with no time, with no spring beside them); `temper:c` tempers inventory stack `c` at the anvil beside the player (the Temper ability, the Here group: ten minutes, then a Strength check plus Metalcraft leans an outcome from `data/outcomes/forge.toml`: improved, nothing, flawed, or ruined; refused, with no time, with no anvil beside them or a stack that is not a weapon or armour); `use:second_wind` uses the Second wind talent (hit points back at once, then Winded) and `use:blood_magic` the Blood magic talent (hit points for mana, never the last), a talent's own active; `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm, master_thief, inspire, knock (`use:knock:E`, a lock); `use:volley:12,5` one aimed at a cell; a birth sign's active the same way, `use:horns_grace`, `use:blaze`, `use:hounds_bay`, or aimed at a cell, `use:transfixing_stare:12,5`, `use:fire_breath:12,5`; a spell the player knows too, by its id in `assets/data/spells/`, paid in mana, `use:haste`, or aimed at a cell, `use:magic_missile:12,5`, or cast on inventory stack `c`, `use:identify:c` (any `use:ID` that is no class or birth sign ability is a spell); and a weapon active after those, for its stamina and time, `use:lunge:E` aimed in a direction (in upper case: a lower-case letter is a stack), `use:shield_wall`, or aimed at a cell, `use:piercing_shot:12,5`, docs/dev/weapon-abilities.md); `disarm:E` tries to disarm the trap the player knows of east of them (the
+something is found; `pray` prays at the forgotten altar beside the player (the Pray ability, the abilities menu's Here group: a minute, then an outcome from `data/outcomes/forgotten_altar.toml`, and perhaps the altar spent; refused, with no time, with no altar beside them; docs/dev/special-rooms.md); `drink` drinks at the healing spring beside the player (the Drink ability, Here too: ten seconds, then an outcome from `data/outcomes/spring.toml`; a spring never runs dry; refused, with no time, with no spring beside them); `temper:c` tempers inventory stack `c` at the anvil beside the player (the Temper ability, the Here group: ten minutes, then a Strength check plus Metalcraft leans an outcome from `data/outcomes/forge.toml`: improved, nothing, flawed, or ruined; refused, with no time, with no anvil beside them or a stack that is not a weapon or armour); `use:second_wind` uses the Second wind talent (hit points back at once, then Winded) and `use:blood_magic` the Blood magic talent (hit points for mana, never the last), a talent's own active; `use:rage` uses a class ability (spec §8 "Class abilities"; `use:smite:E` one aimed in a direction: rage, veterans_wind, whirlwind, lay_on_hands, smite, holy_radiance, quivering_palm, master_thief, inspire, lullaby (the bard's song over every hostile that hears it, docs/dev/hearing.md), knock (`use:knock:E`, a lock), orison (the priest's prayer at every tier, `docs/dev/prayer.md`), sanctuary (the priest's hallowed ground, `docs/dev/special-rooms.md`); `use:volley:12,5` one aimed at a cell; a birth sign's active the same way, `use:horns_grace`, `use:blaze`, `use:hounds_bay`, or aimed at a cell, `use:transfixing_stare:12,5`, `use:fire_breath:12,5`; a spell the player knows too, by its id in `assets/data/spells/`, paid in mana, `use:haste`, or aimed at a cell, `use:magic_missile:12,5`, or cast on inventory stack `c`, `use:identify:c` (any `use:ID` that is no class or birth sign ability is a spell); a class active in a weapon's shape by the object's id, `use:spirit_weapon:long_sword` (the Hunter's Spirit weapon: a weapon of spirit-stuff in the main hand, for a wield; it fades when it leaves the hand, `docs/dev/equipment.md`); and a weapon active after those, for its stamina and time, `use:lunge:E` aimed in a direction (in upper case: a lower-case letter is a stack), `use:shield_wall`, or aimed at a cell, `use:piercing_shot:12,5`, docs/dev/weapon-abilities.md); `disarm:E` tries to disarm the trap the player knows of east of them (the
 Disarm ability, for those trained in Disable device; refused, with no time, without the skill
 or a known trap there); `heal:bleeding` treats the player's own bleeding with the Heal skill (the
 Heal ability: a status id with a `treat` table, `heal:poisoned`, or a showing disease's id,
 `heal:filth_fever`; bare `heal` the first there is; refused, with no time, untrained, with
 nothing to treat, or for a poison or disease already tried; docs/dev/status-effects.md);
-`chat:E` talks to the creature east of
+`intimidate:X,Y` threatens the hostile creature on level cell (X, Y), one the player sees within
+6 (the Intimidate ability, for those trained in it: War cry's check at one foe, Frightened for
+more degrees the better their Intimidate; refused, with no time, without the skill or a hostile
+with vitals there; `data/intimidate.toml`, docs/dev/skills.md); `chat:E` talks to the creature east of
 the player, `ask:E:rooms` asks it about topic `rooms` (an id in a campaign's `data/dialogue/`;
 quest topics are `quest-ID`, ids in a campaign's `data/quests/`: asking gives the quest, there is
 no accepting or declining (#422); a
 service is asked for by its id the same way, `ask:E:cure`, paid in gold and taking a chat's time,
 and a trader's one offer too, `ask:E:wares` buying it (the pedlar's; docs/dev/npcs.md "A trader's offer"),
 docs/dev/npcs.md);
+`say:E:life_before_death` says words to the creature east (normalised: lower case, letters and
+digits, joined by `_`; it answers what its dialogue's `[[dialogue.word]]`s know, else its
+`unheard` line; a chat's time either way; docs/dev/npcs.md "Saying words"; in the game the
+dialogue screen's `s` row, so `--keys "s h e l l o Enter"` types and says it);
 `use_tool` uses the light ready in the Tool slot (a lantern: unlit, lit, hooded, unlit again; `u`
 in the game, which asks for a direction to dig instead without one), `throw_voice:X,Y`
 throws the player's voice to level cell (X, Y) (one they see, within 6; the bard's, refused without the ability);
+`order:follow`, `order:stay`, and `order:hunt:X,Y` give every ally of the player's on the level an order (Come to heel, Hold here, Set on a cell the player sees: the Allies group of the abilities menu; no time, a voice's noise; refused with no ally on the level; docs/dev/allies.md);
 `talent:hardy` takes a talent (an id in `assets/data/talents/`; `talent:weapon_focus:long_blades`
 with its choice) when a level's pick is due (every third level; until it is made every other
 action is refused), `advance:stealth` spends one of a level's skill rolls (on a trained skill; `world/skill_roll.rs`), `levelup:auto`
 is the dev action that spends every choice due with the first the player may take, and `xp:2500`
 the dev experience grant (no time; `xp:691` brings a 100 % character to level 3); `rank:long_blades:5`
 the dev weapon rank (a weapon skill or style at that rank, 0 to 10, raising its defaults and
-saying what it teaches, as a rank risen would; no time; docs/dev/weapon-abilities.md);
+saying what it teaches, as a rank risen would; no time; docs/dev/weapon-abilities.md); `call:hunter`
+the dev calling (the player is called into prestige class `hunter`, an id in `assets/data/prestige/`,
+whatever their level, through the calling of the run's campaign that opens it to their class: the
+class is theirs and exactly the experience the first prestige level costs with it, so the level-up
+comes at once; refused with no such class, one held already, or no calling open to their class;
+no time; docs/dev/experience.md "Prestige classes");
 
 `PROFILE` = an id in
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `spawn` is the dev spawn: one attempt to bring a creature to the
 current level now, whatever its cap and chance (refused at danger 0; no time; spec §7 "Danger
-levels"); `encounter:fight` answers the overworld encounter pending (`CHOICE` = `ambush`, `evade`,
+levels"); `ally:wolf`, `ally:wolf:2`, `ally:wolf:2:10m` is the dev ally: N (1 to 12) allies of the type beside the player, following, on their side, their stay ending after the duration if given (on the overworld they join the retinue at once); no time; refused without `data/allies.toml`, at the cap (`[allies] most`), or with no free cell (docs/dev/allies.md); `encounter:fight` answers the overworld encounter pending (`CHOICE` = `ambush`, `evade`,
 `fight`, `hail`, `hunt`, `pass`, as its outcome offers; while one pends every other action that
 takes time is refused; docs/dev/encounters.md), and `meet:kobolds:ambushed` is the dev meeting:
 entry `ENTRY` of the run's campaign's encounter tables met now on the player's overworld cell,
@@ -209,13 +222,14 @@ player sees or remembers as a digit over the view, `1` a few drops to `9` soaked
 (what the player
 carries, grouped by item class under `Class:` header lines as the screens group it, each stack by
 its position as action text names it with its numbers as the lists show them, `a long sword (+0
-hit, 1d8)`, a wand whose type is known with its rung, `(rung 2)`, and weighs, worn and wielded things marked, their burden
+hit, 1d8)`, a spirit weapon marked `(spirit)`, a wand whose type is known with its rung, `(rung 2)`, and weighs, worn and wielded things marked, their burden
 and its thresholds),
 `equipment` (the player's slots), `stats`
-(the player's name, race, gender, and class, age, birth date, and sign with a lucky day's title,
+(the player's name, race, gender, and class (`Class Bard`; `Class Bard 30` at the class's cap;
+`Class Bard 30, Hunter 4` once called into a prestige class), age, birth date, and sign with a lucky day's title,
 `Sign Wood Salamander, the Racer`, then their own scores as the rules read them, then
 their caster level, `Caster level 3`, then their alignment band, `Alignment Kind`, then their combat stance when it is not neutral,
-`Stance Berserker`, then each guild they belong to with their rank, `Guild
+`Stance Frenzy`, then each guild they belong to with their rank, `Guild
 Weyfarers' Gilde, Tin`, then
 `Effects Bleeding, Diseased` when they suffer any, then `Diseases filth fever`, the diseases they
 know they have, then what they resist in words, `Resistant to cold`, `Vulnerable to fire`,
@@ -223,7 +237,7 @@ know they have, then what they resist in words, `Resistant to cold`, `Vulnerable
 ranks and progress toward the next, `Long blades 2 (40%)`, fighting styles too, those in use
 marked `Duelist 1 (0%), in use`), `attacks` (the player's ready attacks as the character
 screen shows them: `Main hand long sword: +4 to hit, 1d9+2 slashing`, `Off hand dagger: ...`,
-`Missile short bow: +3 to hit, 1d6 piercing, range 10`; unidentified magic left out), `talents` (the player's talents in the order taken, `Hardy
+`Missile short bow: +3 to hit, 1d6 piercing, range 10`, a spirit weapon's ending `, pierces armour`; unidentified magic left out), `talents` (the player's talents in the order taken, `Hardy
 2/3`, `Weapon focus (long blades)`, a birth sign's gifts first, `Fleet-footed (sign)`, `Slight (sign, flaw)`, those their class gives marked `Haggler (class)`), `spells` (the spells the player knows with spell level and cost and what each does now, its roll and reach as they would cast it, `Fireball (level 11, 26 mana): 4d6 fire, range 11, radius 2`, then the
 scrolls they could study with the chance in words: `study c, a scroll of frost: Frost, a
 struggle`), `abilities` (the player's abilities in the abilities menu's
@@ -241,13 +255,15 @@ Defence and Protection, its alignment (`alignment evil`; the player's score and 
 are, "(unidentified)" marked, a wand's rung `(rung 2)`), what its magic items do to it (`magic strength +1`), its burden
 and carrying limit, its weapon skills with marks, its stats as score/potential, its status
 effects with severities, its diseases (progressions, checks won in a row, time to their next
-turn), stat damage, and drained points (`drained St 2`), the player's nutrition, its npc id and talk counts, if any, and what it resists in percent (`resists fire 25`); then
+turn), stat damage, and drained points (`drained St 2`), the player's nutrition, its npc id and talk counts, if any, whose ally it is with what made it one, its minutes left, and its order (`; ally of #0 (summoned, 4 min; follow)`, `(summoned; stay at (12, 5))`, `; retinue` while travelling with the player), and what it resists in percent (`resists fire 25`); then
 all food on the level and in the packs of those on it with when it was made (a corpse: when it
 died) and its stage, `fresh`, `old`, `rotten`, or `gone`, which the player is never shown,
 **dev-only**), `progress` (the level-up choices due, `due level 3: 1 talent`, `due level 30: 1
 talent, 1 bonus talent`, the talents the
 player may take now by id with their choices, the first kills that paid, each rolled quest's
-draw and the size of its pool now, `roll slug_charm scroll_of_lightning x1 of 4`, the named
+draw and the size of its pool now, `roll slug_charm scroll_of_lightning x1 of 4`, each calling of
+the run's campaign and where the player stands with it, `calling hunter: open`, `calling hunter:
+level 30 not met`, `calling hunter: not for a thief`, `called hunter at 30`, the named
 monsters dead, `slain fire_drake`, the stat training
 marks with the price in force (the drop's for a negative pile), `stat marks St 120/160, To -30/75`,
 each school of magic's marks of the next rank's need, `evocation marks 312/630`, each known spell's rung of its roll's ladder with the score and the outside rungs, `fireball rung 2/4 (In 16; +1 Empower)`, and the exact study odds, `study c frost: overreach 5, +0
@@ -257,21 +273,21 @@ against 17, 36/144` (the overreach in spell levels), **dev-only**),
 **dev-only**), `ice` (the level's temperature and the thickness of the ice on its water in cm,
 `0`-`9`, `a`-`z` for 10-35, `#` beyond, **dev-only**). The header line has the player's `hp
 17/17` and `mp 3/3`, each resource they hold (`rage 11/20`), (and `dead` once the run has ended), `hunger hungry` unless Not hungry, `dazzled` while
-strong light dazzles light-blind eyes, `encounter pending: a band of kobolds (ambush, evade,
+strong light dazzles light-blind eyes, `allies 2` while the player has allies on the level or in their retinue, `encounter pending: a band of kobolds (ambush, evade,
 fight)` while an overworld encounter waits for an answer, and the
 `temperature`; JSON dumps add `hp`, `mana` (`current`, `max`), `caster_level`, `resources` (the
 ones held: `id`, `current`, `max`), `defence`, `protection`, `resistances` (by damage type id, the
-word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `guilds` (`id`, `name`, `rank`; left out before joining one), `hunger`, `stance` (the combat stance's id), `dazzled`, `encounter` (the overworld encounter pending: `entry`, `name`, `outcome`, `title`, `text`, `choices` (`id`, `label`), or null; with `--state` also the dev `encounter_tables`, those matching the player's cell), `effects`
+word: `{"cold": "resistant"}`), `burden` (`level`, `limit`), `alignment` (the band's id), `guilds` (`id`, `name`, `rank`; left out before joining one), `hunger`, `stance` (the combat stance's id), `dazzled`, `encounter` (the overworld encounter pending: `entry`, `name`, `outcome`, `title`, `text`, `choices` (`id`, `label`), or null; with `--state` also the dev `encounter_tables`, those matching the player's cell, and the dev `callings`, each of the campaign's with its `class`, `level`, `from`, and `status`: `open`, `level_not_met`, `not_from`, `called`), `effects`
 (status ids), `diseases` (the known ones' ids), `death` (with `of`, the status that killed,
 `cause`, starving, choking, or a trap, and `trap`, the id of the trap that killed),
-`spells` (the spells known: `id`, `level`, `cost`, `roll` (the menu's text, `4d6 fire`, or null), `damage_type` (`healed` for a heal, or null), `reach` (`range`, `length`, `radius`, each null where none)), `known_traps`, `known_hollows` (the hollow walls found: positions), `known_locations` (`pos`, `name`), `chests` (seen or remembered: `pos`, `band`, `state`, `locked` with Chest-wise, else null), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
+`spells` (the spells known: `id`, `level`, `cost`, `roll` (the menu's text, `4d6 fire`, or null), `damage_type` (`healed` for a heal, `called` for a summon's count, or null), `reach` (`range`, `length`, `radius`, each null where none)), `known_traps`, `known_hollows` (the hollow walls found: positions), `known_locations` (`pos`, `name`), `chests` (seen or remembered: `pos`, `band`, `state`, `locked` with Chest-wise, else null), `temperature` (°C to a tenth), `weapon_skills` (by skill id:
 `rank`, `progress`), `styles_in_use` (style ids), `attacks` (`source`, `kind`, `name`, `to_hit`, `damage` (the text),
 `range`), `talents` (in the order taken: `id`, `name`,
 `rank`, `ranks`, `choice`, `class`, `granted`, `flaw`), `character` (`name`, `race`, `gender`, `class`,
-`raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it), `due` (the level-up choices due: `level`, `talents`,
+`raised`, `age`, `born`, `sign`, and `lucky`, a lucky day's title, only for one born on it, `prestige`, the prestige class once called, and `classes`, every class with its own level, `[{ class, level }]`), `due` (the level-up choices due: `level`, `talents`,
 `rolls`, `bonus`, or null), `abilities` (in menu order: `id`, `source`,
 `aim`, and `unavailable`, the reason's id or null), `quests` (the log: `id`, `name`, `kind`, `active`, `completed`, `giver`, `target` (what a rolled quest drew, else null),
-`objective`, `status`), `story` (the background story's lines: `chapter`, `line`, `text`; `character.story` the ids, `parents/plain_folk`), each seen actor's `health` and `effects` (those that show) and a composite animated thing's `bands` (its colours, top first), `room` (the
+`objective`, `status`), `story` (the background story's lines: `chapter`, `line`, `text`; `character.story` the ids, `parents/plain_folk`), each seen actor's `health` and `effects` (those that show), `ally` (true for an ally of the player's), and a composite animated thing's `bands` (its colours, top first), `allies` (the player's allies wherever they are: `id`, `creature`, `name`, `health`, `order`, `at`, `source`, `lasts` (minutes, or null), `retinue`, `here`), `room` (the
 special room the player stands in, if they know it), and per inventory stack (in position
 order) its `letter` (the position as action text), `class` (item class id), `name`, `rarity`,
 `identified`, `magic` (affixes only once identified), and `numbers` (what it gives as the
@@ -350,6 +366,7 @@ file). Topics:
 - `docs/dev/blood.md` — wounds and stains, bleeding, how blood is drawn
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
+- `docs/dev/allies.md` — allies: `Actor::ally`, the side, the ally arm of the AI, the three orders, following across levels and the retinue, the clock, an ally's kill, Beast-bond, the dev `ally:`
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log
@@ -364,6 +381,7 @@ file). Topics:
 - `docs/dev/searching.md` — secret doors, the active and passive checks, who notices, the secrets stream
 - `docs/dev/magic-items.md` — affixes, rarities, base items, loot, identification, the item description
 - `docs/dev/potions.md` — potions: the drink kinds, drinking through Consume, words and colours, sources, their talents
+- `docs/dev/prayer.md` — the priest's prayer: `data/prayer.toml`, the prayer talents and `TalentMods::prayer`, the face, the problems in priority order, the strain and its lock, the fixes, the dumps
 - `docs/dev/scrolls.md` — reading, spell scrolls on the traps' shared spell code, the scroll of identify, the read and identify lists
 - `docs/dev/overworld.md` — the overworld level, locations, sight at map scale, generated local areas
 - `docs/dev/encounters.md` — overworld encounters: the rules file and the campaigns' tables, the roll, the lookouts, the pending choice, evading, where everyone stands by outcome, known parties
@@ -416,7 +434,9 @@ long water takes to freeze, terrain, footstep loudness in words, vision profiles
 them), creatures, factions, objects, materials, equipment slots and what fits them, scenarios,
 action costs, sight radii, item classes and
 what is in each, the stats' names, races (stat adjustments as written, dice included, vision, starting
-ages, hit points), classes (stat adjustments, hit points, level tables), what each gender raises, the horoscope
+ages, hit points), classes (stat adjustments, hit points, level tables), prestige classes (their tables, and each
+world's callings with the words that make them), the bard's songs (what Music adds, the odds of shaking one off),
+what each gender raises, the horoscope
 (animals, elements, and the great cycle's signs and years), background stories (the kinds' odds and
 worth, the points, every chapter's lines with their conditions and effects), combat (weapons, armour and shields,
 the 2d12 hit chances and threat ranges, regeneration by Toughness), status effects (what causes
@@ -520,7 +540,7 @@ A successful compile does not verify anything visual. Before opening a PR:
   overlap: at most about three PRs at once that add actions or save state.
 - **Hot files**: new entries in registries go where they belong (by group or alphabetically),
   never at the end; generated files are never hand-merged (take one side, regenerate);
-  `FORMAT_VERSION` is bumped by the integrator once per release, never in a feature PR; a
+  saves are pinned to the game version (no format number, no load-time id maps); a
   feature's dispatch lives in its own module with one line in each hot file; churning content
   tables are directories, one file per entity. All in the playbook.
 - **Design documents** pending the owner's approval are draft PRs that add

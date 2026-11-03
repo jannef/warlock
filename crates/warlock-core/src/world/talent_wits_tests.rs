@@ -10,7 +10,7 @@ use crate::character::CharacterSpec;
 use crate::content::{ContentFiles, Need};
 use crate::damage::Damage;
 use crate::hunger::Hunger;
-use crate::magic::{LootGrade, Rarity, loot};
+use crate::magic::{LootGrade, loot};
 use crate::noise::{self, Act};
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -70,39 +70,6 @@ fn said(world: &World) -> Vec<String> {
 /// The player takes talent `id` (one rank more), without a level to pick it at.
 fn give(world: &mut World, id: &str) {
     world.player_mut().talents.take(id, None);
-}
-
-/// One unidentified magic item, rolled from `seed`.
-fn magic_item(world: &World, seed: u64) -> Stack {
-    let mut rng = Rng::gameplay(seed);
-    loop {
-        let stack = loot::roll(world.content(), &mut rng, 5, LootGrade::Magic).expect("loot");
-        if stack.rarity() != Rarity::Normal && !stack.is_identified() {
-            return stack;
-        }
-    }
-}
-
-#[test]
-fn lore_identifies_what_has_been_carried_for_a_day() {
-    let mut w = world();
-    let item = magic_item(&w, 3);
-    w.player_mut().inventory.push(item);
-    let at = w.state.player().inventory.len() - 1;
-    // Without the talent a day of carrying teaches nothing.
-    run(&mut w, "rest:24h");
-    assert!(!w.state.player().inventory[at].is_identified());
-    give(&mut w, "lore");
-    run(&mut w, "rest:1h");
-    w.appraise_carried(22 * crate::time::HOUR);
-    assert!(!w.state.player().inventory[at].is_identified(), "23 hours");
-    w.appraise_carried(crate::time::HOUR);
-    assert!(w.state.player().inventory[at].is_identified());
-    assert!(
-        said(&w).iter().any(|m| m.starts_with("This is ")),
-        "{:?}",
-        said(&w)
-    );
 }
 
 #[test]
@@ -218,9 +185,9 @@ fn treasure_hunter_asks_for_either_of_two() {
 #[test]
 fn quick_learner_brings_a_roll_more_every_level() {
     let mut w = world();
-    let rolls = w.level_rolls();
+    let rolls = w.level_rolls(w.player_level());
     give(&mut w, "quick_learner");
-    assert_eq!(w.level_rolls(), rolls + 1);
+    assert_eq!(w.level_rolls(w.player_level()), rolls + 1);
 }
 
 #[test]

@@ -6,7 +6,7 @@ stats = { toughness = "1d2", willpower = "2d2", presence = -1 }
 hp = 4
 mana = 9
 casting = 100
-affinity = { restoration = 2, transmutation = 2, evocation = 1 }
+affinity = { restoration = 2, transmutation = 2, evocation = 1, enchantment = 1 }
 experience = 115
 skills = { handle_animal = "2d6+10", survival = "2d6+10", concentration = "2d4+4", heal = "2d4+4", listen = "2d4+4" }
 known_for = ["handle_animal", "survival"]
@@ -30,11 +30,19 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["wayfarer", "vigour"] 
 # Call lightning and Flame and frost are spells paid in mana (the placeholders until the
 # spell system). Beast-friend is the Wayfarer talent, given (#790: a table names the pickable,
 # never a clone). Woodland stride (6) and Winter's friend (25) were cut by #791: outdoors only.
+# The calls (6, 25, 40; #839, docs/design/druid-and-summons.md §6) bring allies, one of each at
+# once: Pack leader (32) and Lord of the wild (60) raise that, and Lord of the wild's calls last
+# until slain.
 abilities = [
     { level = 1, talent = "beast_friend" },
     { level = 1, talent = "spark" },
     { level = 3, talent = "barkskin" },
+    { level = 6, talent = "call_of_the_wild" },
     { level = 12, talent = "call_lightning" },
     { level = 18, talent = "natures_ward" },
+    { level = 25, talent = "call_of_the_forest" },
+    { level = 32, talent = "pack_leader" },
+    { level = 40, talent = "call_the_elements" },
     { level = 50, talent = "flame_and_frost" },
+    { level = 60, talent = "lord_of_the_wild" },
 ]

@@ -1,0 +1,8 @@
+[[talent]]
+id = "orison"
+name = "Orison"
+tree = "class"
+granted = true
+description = "Pray (a cast's time, no mana): what ails you most is answered, as far as your prayers reach; for now, your wounds. Pray too often and nothing answers a while."
+effects = [{ kind = "prayer", tier = 1, title = { holy = "Orison", dark = "Whisper" }, uses = ["wounds"] }]
+systems = ["hit_points", "status"]

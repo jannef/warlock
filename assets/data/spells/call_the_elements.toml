@@ -1,0 +1,22 @@
+# The druid's Call the elements (spec §8 "Class abilities", "Allies"; #839): a greater elemental
+# comes to the caster's side for a few minutes, of the element the wild chooses (one draw from
+# the pool: earth, water, air, or fire; the owner's Q9 of #828). One at a time: Pack leader and
+# Lord of the wild raise the druid's cap. Very hard to learn from its scroll (the owner's Q7).
+[[spell]]
+id = "call_the_elements"
+name = "Call the elements"
+description = "Call the elements to your side: earth, water, air, or fire, as the wild chooses, rises as a great elemental to fight beside you for a few minutes."
+level = 35
+school = "enchantment"
+kind = "summon"
+shape = "self"
+resolution = "auto"
+study_difficulty = 12
+effect = { summon = { creatures = ["greater_earth_elemental", "greater_water_elemental", "greater_air_elemental", "greater_fire_elemental"], count = "1", most = 1, minutes = 5 } }
+
+[spell.cast]
+message = "You call, and the elements answer."
+noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+degrees = "presence 14 8, 18 12, 22 16"

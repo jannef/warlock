@@ -14,6 +14,7 @@
 mod abilities;
 mod actions;
 mod alignment;
+mod allies;
 mod animated;
 mod background;
 mod burden;
@@ -48,6 +49,7 @@ mod order;
 mod outcomes;
 mod overworld;
 mod potions;
+mod prayer;
 mod resources;
 mod rooms;
 mod scenarios;
@@ -192,6 +194,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("draw-odds.md", dungeons::draw_odds),
         ("dialogue.md", dialogue::dialogue),
         ("rumoured-ways.md", dialogue::rumoured_ways),
+        ("words.md", dialogue::words),
         ("quests.md", dialogue::quests),
         ("guild-ranks.md", guild::guild_ranks),
         ("guild-draws.md", guild::guild_draws),
@@ -229,6 +232,9 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("races.md", character::races),
         ("race-traits.md", character::race_traits),
         ("classes.md", character::classes),
+        ("prestige-classes.md", character::prestige_classes),
+        ("prestige-levels.md", talents::prestige_levels),
+        ("callings.md", dialogue::callings),
         ("horoscope.md", character::horoscope),
         ("horoscope-animals.md", horoscope::animals),
         ("horoscope-elements.md", horoscope::elements),
@@ -259,6 +265,11 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("talents-heirlooms.md", talents::heirlooms),
         ("talents-by-system.md", talents::by_system),
         ("class-levels.md", talents::class_levels),
+        ("prayer-strain.md", prayer::prayer_strain),
+        ("prayer-fizzle.md", prayer::prayer_fizzle),
+        ("prayer-uses.md", prayer::prayer_uses),
+        ("prayer-levels.md", prayer::prayer_levels),
+        ("prayer-rites.md", prayer::prayer_rites),
         ("foraging.md", skills::foraging),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),
@@ -268,8 +279,12 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("skill-rolls.md", skills::skill_rolls),
         ("slipping-past.md", skills::slipping_past),
         ("stealing.md", skills::stealing),
+        ("intimidating.md", skills::intimidating),
         ("heal-targets.md", skills::heal_targets),
         ("abilities.md", abilities::abilities),
+        ("songs.md", abilities::songs),
+        ("song-music.md", abilities::song_music),
+        ("song-odds.md", abilities::song_odds),
         ("weapons.md", combat::weapons),
         ("light-weapons.md", combat::light_weapons),
         ("launchers.md", combat::launchers),
@@ -308,6 +323,8 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("wands.md", spells::wands),
         ("rods.md", spells::rods),
         ("spell-circles.md", spells::circles),
+        ("ally-rules.md", allies::rules),
+        ("summon-spells.md", allies::summon_spells),
         ("school-skills.md", schools::skills),
         ("school-benefits.md", schools::benefits),
         ("school-abilities.md", schools::abilities),
@@ -1136,7 +1153,7 @@ mod tests {
                  Balance: Burdened / Strained | Concentration: mana back | Concentration: mana pool | \
                  Decipher script: study check | Detect traps: finding traps | Disable device: disarming traps | \
                  Heal: treating | Initiative: initiative check | Initiative: surprise's extra cost | \
-                 Listen: hears fainter by | Metalcraft: tempering | Negotiation: prices | Open lock: picking locks | Search: searching | \
+                 Intimidate: threat's difficulty | Listen: hears fainter by | Metalcraft: tempering | Music: song degrees | Music: song's difficulty | Negotiation: prices | Open lock: picking locks | Search: searching | \
                  Search: search reaches | Sneak attack: sneak attack dice | Sneak attack: their check's difficulty | \
                  Spellcraft: study check | Spot: noticing | Spot: lookout | Steal: \
                  stealing | Stealth: noise | Stealth: slipping past | Stealth: their lookout | Survival: journeys | \
@@ -1159,11 +1176,11 @@ mod tests {
         );
         assert!(benefits.contains(
             "| 100 | 12% | +8 Strength | +5% | ×1.1 / ×1.2 | +40% | +5 mana | +10 | +8 | +8 | +8 | +8 | \u{2212}50% \
-             | 10 | +8 | 20% better | +8 | +8 | +1 cell | 5d6 | +8 | +10 | +8 | +8 | +8 | \u{2212}60% | +8 | +8 | \u{2212}20% | +15% | +4 | +8 | +5 |"
+             | +8 | 10 | +8 | +2 | +4 | 20% better | +8 | +8 | +1 cell | 5d6 | +8 | +10 | +8 | +8 | +8 | \u{2212}60% | +8 | +8 | \u{2212}20% | +15% | +4 | +8 | +5 |"
         ));
         assert!(benefits.contains(
             "| 150 | 16% | +10 Strength | +7% | ×1.08 / ×1.15 | +50% | +6 mana | +15 | +10 | +10 | +10 | +10 \
-             | \u{2212}62% | 15 | +10 | 25% better | +10 | +10 | +1 cell | 6d6 | +10 | +15 | +10 | +10 | +10 | \u{2212}75% | +10 | +10 | \u{2212}20% | +22% | +5 | +10 | +7 |"
+             | \u{2212}62% | +10 | 15 | +10 | +2 | +6 | 25% better | +10 | +10 | +1 cell | 6d6 | +10 | +15 | +10 | +10 | +10 | \u{2212}75% | +10 | +10 | \u{2212}20% | +22% | +5 | +10 | +7 |"
         ));
         // Treating oneself: the difficulty and odds of each ailment.
         let heal = text("heal-targets.md");
@@ -1179,6 +1196,20 @@ mod tests {
         let stealing = text("stealing.md");
         assert!(stealing.contains("| +0 | 53% | 47% |"), "{stealing}");
         assert!(stealing.contains("| \u{2212}6 | 22% | 78% |"), "{stealing}");
+        // Intimidating: the ladder of degrees, from a little skill to War cry's three.
+        let intimidating = text("intimidating.md");
+        assert!(
+            intimidating.contains("| 0+ | +0 | 1 degree |"),
+            "{intimidating}"
+        );
+        assert!(
+            intimidating.contains("| 38+ | +3 | 2 degrees |"),
+            "{intimidating}"
+        );
+        assert!(
+            intimidating.contains("| 75+ | +6 | 3 degrees |"),
+            "{intimidating}"
+        );
         // Searching: the hidden things' chances for an average character, deeper down, and who
         // notices in passing.
         let features = text("search-features.md");
@@ -1282,7 +1313,7 @@ mod tests {
         // Combat: race and class hit points, weapons, armour, the rules' odds.
         assert!(text("races.md").contains("| Normal | 16–35 | 4 |"));
         assert!(
-            text("classes.md").contains("| Barbarian |") && text("classes.md").contains(" 8 |")
+            text("classes.md").contains("| Berserker |") && text("classes.md").contains(" 8 |")
         );
         assert!(text("hit-points.md").contains("| Dwarf | 6 |"));
         assert!(text("hit-points.md").contains("| Wizard | 0 |"));
@@ -1395,8 +1426,8 @@ mod tests {
         let resources = text("resources.md");
         assert!(
             resources.contains(
-                "| Rage | 20 | 12 | a point lost every 6 seconds | - | ends, and its bar goes, and \
-                 Raging with it |"
+                "| Rage | 20 | 12 | a point lost every 6 seconds | +3 for a kill, +2 for a critical, +1 \
+                 for being hit | ends, and its bar goes, and Raging with it |"
             ),
             "{resources}"
         );
@@ -1453,7 +1484,7 @@ mod tests {
              page) |",
             "| Strength +2, Toughness +2, Intelligence \u{2212}2 | — | You cannot read, study, or \
              cast spells; Exhausted follows it |",
-            "| Exhausted | no | The end of Raging | Nothing |",
+            "| Exhausted | no | The end of Raging | Nothing | After 2 minutes and 30 seconds |",
         ] {
             assert!(statuses.contains(row), "{row} in {statuses}");
         }

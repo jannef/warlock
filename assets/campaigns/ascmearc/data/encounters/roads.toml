@@ -34,6 +34,18 @@ weight = 3
 stance = "peaceful"
 group = [{ creature = "pedlar", count = "1" }]
 
+# The Strange Spirit (docs/design/prestige-classes.md §7; data/creatures/strange_spirit.toml):
+# met by day, only while the Hunter's calling is open to the player (a bard whose class is
+# full, not yet called; data/callings/hunter.toml). Rare: weight 2. Its party forgotten (the
+# spirit called away, or killed), the road may bring it again while the calling stays open.
+[[table.entry]]
+id = "strange_spirit_roads"
+name = "a strange spirit"
+weight = 2
+stance = "peaceful"
+when = { phase = ["day"], calling = "hunter" }
+group = [{ creature = "strange_spirit", count = "1" }]
+
 # The vale's villagers on their way to market: the road's own lines (data/dialogue/road.toml).
 [[table.entry]]
 id = "road_villagers"

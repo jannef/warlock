@@ -35,7 +35,8 @@
 #                                                        such a choice)
 #                   level = 9                            the character level
 #                   race = "dwarf", class = "warrior"    the character's
-#                   eyes = "darkvision"                  the race's vision profile
+#                   eyes = "darkvision"                  the race's vision profile; a list,
+#                                                        any one of them
 #                   animal = "roc", element = "fire"     the birth sign's (horoscope.toml)
 #                   lucky = true                         born on a lucky day
 #                   creation = true                      only at character creation (the
@@ -46,7 +47,11 @@
 #                   either = { stats = { intelligence = 12 }, skills = { appraise = 20 } }
 #                                                        any one of what it asks (at least two;
 #                                                        no `either` within it)
-#   effects       what every rank held adds: a list of { kind = ..., ... } (below)
+#   effects       what every rank held adds: a list of { kind = ..., ... } (below); any effect
+#                 the talents' sum reads (not an active, a spell given, or what is rolled or
+#                 handed down when it is taken) may also say
+#                   while = "raging"   it counts only while its holder suffers that status
+#                                      (../status.toml); left out, always
 #   [[talent.rank]]  one per rank, in order (as many as `ranks`, or none): its own `needs`
 #                 besides the talent's, and its own `effects` besides the per-rank ones
 #   granted       true: given (by a race, a birth sign, a class), never on a pick list; a birth sign's
@@ -59,9 +64,10 @@
 #                 it is held): unavailable while short, spent when used
 #   alignment     `{ min = "kind" }`: the alignment bands (alignment.toml; `min` the worst, `max`
 #                 the best, either or both) a holy class active works for (lay_on_hands, smite,
-#                 holy_radiance, consecrate): it bars nothing (the ability is had, listed, and used
-#                 whatever the band), but outside them it does nothing: a line, the time of a
-#                 cast, no cooldown or mana spent
+#                 holy_radiance, consecrate) or a band-gated passive (communion): it bars nothing
+#                 (the ability is had, listed, and used whatever the band), but outside them it
+#                 does nothing: a line, the time of a cast, no cooldown or mana spent (a passive:
+#                 nothing at all)
 #
 # Effects (each read by one rule; a new kind is a variant in content/talent.rs, a field in
 # talent.rs's TalentMods, and one read):
@@ -72,6 +78,16 @@
 #                                 points
 #   threat { value }              every attack threatens a critical that many points lower
 #   reroll_fumble                 a natural 2 on an attack roll is rolled again, once
+#   ally_mod { to_hit, protection, count, duration_percent, lasting, most }   what its allies
+#                                 get (allies.toml; spec §8 "Allies"): that to-hit on their
+#                                 attacks and that Protection, read through their master; and its
+#                                 summon spells: `count` (0 to 6) more come every call, a call
+#                                 lasts `duration_percent` (0 to 500) longer, `lasting = true`
+#                                 calls stay until slain, `most` (0 to 6) more of each spell's
+#                                 kept at once; any may be left out, not all
+#   summon_bias { tag, weight }   a creature of a summon spell's pool carrying the tag is that
+#                                 many times as likely to come (0: never while another may; 2 to
+#                                 100 otherwise)
 #   streak { max, damage_every }  each melee blow at the creature its last blow was at (in its
 #                                 turn or the next) +1 to hit per blow before it, to max (1 to 10);
 #                                 with damage_every (0 to 10), +1 damage per that many blows before
@@ -160,6 +176,17 @@
 #   extra_pick { level }          one more talent pick at that character level (1: at creation)
 #   train_skill { dice }          the chosen skill (choice skill) trained at those dice, or
 #                                 raised by them, as the rank is taken (the levels stream)
+#   weapon_ranks { to, skills, news }   handed out once, as the rank is taken or given:
+#                                 every weapon skill and style of `skills` (left out: every row
+#                                 of ../weapon_skills.toml but the schools of magic and hidden
+#                                 styles, whatever the content holds) held below rank `to` rises
+#                                 to it, its defaults with it; `news`, if any, said when a class
+#                                 table gives it
+#   take_up_skills { dice, except, news }   handed out once, as the rank is taken or given:
+#                                 every skill of ../skills.toml it is not trained in, but those
+#                                 `except` names, whatever the content holds, is trained at
+#                                 `dice` (1 to 100), rolled from the levels stream in file order;
+#                                 `news`, if any, said when a class table gives it
 #   starting_gold { percent, at_least, at_most }   handed out once, as it is taken (with
 #                                 `creation = true`): gold coins, that percent of those carried
 #                                 (kit and scenario), at least at_least, at most at_most
@@ -184,7 +211,6 @@
 #                                 least 1)
 #   quest_gold_percent { value }  the gold a quest gives, that percent more
 #   favour_percent { value }      shop favour, that many percent more (before the cap)
-#   identify_trades               what it buys or sells in a shop is identified
 #   pilgrim                       temple services cost half (rounded up), and a cure also mends
 #                                 a point of each damaged stat (Pious)
 #   devout                        at a forgotten altar of its own side the side's lean counts
@@ -295,6 +321,8 @@
 #   dig_percent { value }         its digging does that percent more work a turn
 #   two_handed_price { value }    its blows with a two-handed weapon cost that percent more
 #                                 (negative: cheaper)
+#   attack_price_percent { value }   its melee attacks cost that percent more (negative:
+#                                 cheaper); shots and throws are not melee
 #   critical_status { status }    a critical it confirms in melee leaves the target that status
 #   grip { status }               a creature it hits in melee suffers that status, caused by it
 #                                 (one that `blocks` steps: held), until it misses that creature,
@@ -322,7 +350,6 @@
 #                                 (negative: less)
 #   Class abilities' own (spec §8 "Class abilities"; the actives are used from the abilities
 #   menu, each one's id the ability's id, `use:rage`):
-#   natural_unarmoured { value }  natural armour, only while nothing is worn in a body armour slot
 #   weapon_marks { role, value }  the marks its attacks earn in that role's weapon skills, that
 #                                 percent more; without `role`, in every weapon skill and style
 #                                 (never a school of magic: those are `school_marks_percent`'s)
@@ -366,9 +393,24 @@
 #                                 with one die of `sides` more per `per_levels` levels
 #   radiance { status, light }    the active Holy radiance: while it suffers the status it sheds
 #                                 the light
+#   patient_defence { status }    the active Patient defence (`use:patient_defence`, a wait;
+#                                 what it costs is the talent's `resource`: a point of ki): the
+#                                 status (Poised) until its next action; its own `combat` gives
+#                                 the Dodge, and while it lasts a melee blow it dodges or parries
+#                                 is answered with a riposte
 #   quivering_palm { status, severity }   the active Quivering palm: a bare-handed blow in a
 #                                 direction (what it costs is the talent's `resource`: five ki)
 #                                 that leaves the status
+#   stunning_strike { status, severity }  the active Stunning strike: Quivering palm's blow
+#                                 (what it costs is the talent's `resource`: a point of ki) that
+#                                 leaves its status (Stunned) where it wounds
+#   stillness { name, statuses }  the active Stillness (Still mind's; `name` the menu's): every
+#                                 status of the list the player suffers ends, for no time (what
+#                                 it costs is the talent's `resource`: two ki); refused with
+#                                 none of them to end. Each id is checked at load
+#   wind_step { status }          the active Step of the wind: a degree of the status
+#                                 (Light-footed) for no time (what it costs is the talent's
+#                                 `resource`: a point of ki); refused while it lasts
 #   The casters' (spec §8 "Class abilities"; the priest's, druid's, wizard's, witch's):
 #   spell_mod { ... }             what it does to its spells through the six hooks (the spell
 #                                 scaling design §7.1; docs/dev/spells.md "The hooks"), each
@@ -441,21 +483,68 @@
 #                                 time; with less, an ordinary shot
 #   flurry_cost { resource, cost }   each second blow of its flurry spends `cost` of the
 #                                 resource; with less, it strikes none
+#   catch_missiles { resource, cost }   a missile (a shot, a throw, a trap's) that would hit it
+#                                 while it holds no weapon and no shield spends `cost` of the
+#                                 resource by itself and misses, falling on its cell; with
+#                                 less, it hits (Diamond soul)
 #   volley { shots }              the active Volley, aimed at a cell (`use:volley:12,5`): shots
 #                                 (2 to 5) of the readied missile weapon there for the price of
 #                                 one; what it costs is the talent's `resource`
-#   inspire { status, mana, resource, cost }   the active Inspire: it suffers the status, for
-#                                 `cost` of the resource while it holds that much (optional),
-#                                 else for that mana (no cooldown: the cost is the price)
-#   virtuoso { status }           Inspire gives that status instead, and costs nothing
+#   song { id, on, status, severity, resource, cost, mana, check, difficulty }   a song (spec §8
+#                                 "Class abilities", the bard's songs): the class active `id`
+#                                 (`use:inspire`, `use:lullaby`; an active that sings), sung aloud (heard as a
+#                                 voice, louder than a chat) for the time of a `song`, refused on
+#                                 the overworld and while Silenced. It costs ONE thing: `cost`
+#                                 of `resource` (unusable while short) or `mana` (1 to 100); no
+#                                 cooldown, the cost is the price. `on = "self"`: the singer
+#                                 suffers `status` at `severity` (default 1, 1 to 10) degrees
+#                                 plus the singer's Music's song degrees (skills.toml), at most
+#                                 the status's `max`. `on = "hearers"`: each hostile creature
+#                                 that hears it rolls `check` (a stat) against `difficulty` (0 to
+#                                 30) plus the singer's Music's song craft, and failed, suffers
+#                                 the status so (the Lullaby); a song on the singer has neither
+#   virtuoso { status }           every song costs nothing and gives a degree more, and a song
+#                                 on the singer gives that status instead
 #   consecrate { mana, time }     the active Consecrate: standing in an unholy special room (or
 #                                 on a level an unholy effect covers), it prays for `time` (1s
 #                                 to 1h) for that mana (0 to 100), and the room's effect (the
 #                                 level's) is lifted for good; refused, no time, elsewhere
+#   communion                     Communion with the dark (a band-gated passive: give it an
+#                                 `alignment`): standing in an unholy special room (or on a
+#                                 level an unholy effect covers), its prayers add no strain and
+#                                 the place's status never touches it, while the dark answers
+#                                 its prayers (docs/dev/prayer.md)
+#   sanctuary { mana, time, radius, lasts, regen }   the active Sanctuary (`use:sanctuary`;
+#                                 world/sanctuary.rs): kneels `time` (10s to 1h) for that mana
+#                                 (1 to 500), then the ground within `radius` (1 to 5) is
+#                                 hallowed for `lasts` (10m to 12h): no hostile steps onto it
+#                                 from outside, and those on it heal and regain mana at `regen`
+#                                 percent (100 to 1000); the player striking from it breaks it;
+#                                 refused, no time, on the overworld, in water, in a shop, or
+#                                 on hallowed ground
+#   prayer { tier, title, uses, answers, all }   the priest's prayer (`use:orison` at every
+#                                 tier; data/prayer.toml, docs/dev/prayer.md): `tier` (1 to 5)
+#                                 with its `title = { holy, dark }` (the tier-1 talent carries
+#                                 the ability), `uses` it may answer (disease, poison, wounds,
+#                                 release, mana, hunger, restoration), `answers` problems a
+#                                 prayer (1 to 7, the largest held), `all` every problem and
+#                                 every resource pool at once; at least one of them
 #   knock { mana }                the active Knock (aimed in a direction, `use:knock:E`): for
 #                                 that mana (0 to 100) the lock of the locked door or shut
 #                                 chest there springs open; refused, no time, where nothing
 #                                 locked stands
+#   merchants_eye                 the active Merchant's eye (on a stack carried,
+#                                 `use:merchants_eye:c`): the stack is identified as the scroll
+#                                 of identify would, for the time of a `read`; refused, no
+#                                 time, for one already known
+#   spirit_weapon { to_hit, threat, ignores_protection, phrase }   the active Spirit weapon (a
+#                                 prestige class's, `use:spirit_weapon:long_sword`): a weapon of
+#                                 spirit-stuff in the shape of any melee weapon is called into
+#                                 the main hand for the time of a wield (one held fades first);
+#                                 in the hand it strikes to_hit (0 to 10) surer, threatens
+#                                 `threat` (0 to 10) lower, and ignores all Protection if
+#                                 ignores_protection; it fades the moment it leaves the hand
+#                                 and is never thrown. `phrase` is its description's power line
 #   A birth sign's actives (spec §8 "Birth sign"; the abilities menu's Birth sign group, the
 #   talent's id the ability's id, `use:horns_grace`):
 #   horns_grace { cures, diseases, cooldown, degrees }   the active Horn's grace: the statuses

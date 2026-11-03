@@ -1,5 +1,5 @@
-//! Class abilities in the world (spec §8 "Class abilities"; #243): the warrior's, barbarian's,
-//! paladin's, and monk's level tables. A level brings its abilities and says so, the bonus picks
+//! Class abilities in the world (spec §8 "Class abilities"; #243): the warrior's, berserker's,
+//! paladin's, and ascetic's level tables. A level brings its abilities and says so, the bonus picks
 //! come from the class's trees, each passive changes the rule it names, and each active is used
 //! from the abilities menu with its cooldown.
 
@@ -8,7 +8,7 @@ use crate::ability::{Ability, Unavailable};
 use crate::action::parse_actions;
 use crate::character::CharacterSpec;
 use crate::combat::Category;
-use crate::content::{Build, ClassActive, Factor, StatusId};
+use crate::content::{Build, ClassActive, Factor, StatusId, percent_of};
 use crate::dump::{self, Layer};
 use crate::replay::Replay;
 use crate::stats::{PerStat, Stat, Stats};
@@ -124,6 +124,7 @@ pub(super) fn beside(world: &mut World, creature: &str, hp: i32) -> ActorId {
         npc: None,
         faction_override: None,
         summoner: None,
+        ally: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),
@@ -203,8 +204,8 @@ fn the_bonus_picks_come_from_the_classs_trees() {
         !progress.iter().any(|r| r.contains("bonus")),
         "{progress:?}"
     );
-    // A barbarian has none until 10, then from Might and Vigour; levelup:auto spends it there.
-    let mut b = world("barbarian");
+    // A berserker has none until 10, then from Might and Vigour; levelup:auto spends it there.
+    let mut b = world("berserker");
     reach(&mut b, 9);
     let need = (b.content().experience()).threshold_for(
         10,
@@ -278,7 +279,7 @@ fn veterans_wind_heals_by_the_level_then_winds() {
 
 #[test]
 fn rage_raises_strength_blocks_reading_and_exhausts() {
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     let content = w.content().clone();
     let player = w.state.player;
     let strength = |w: &World| (w.state.player().effective_stats(&content)).score(Stat::Strength);
@@ -312,7 +313,7 @@ fn rage_raises_strength_blocks_reading_and_exhausts() {
     run(&mut w, "use:rage");
     assert_eq!(last(&w), "You are still exhausted.");
     // Mighty rage: twice the Strength, and room for ten more rage.
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     let rage_id = content.resource_id("rage").expect("rage");
     assert_eq!(w.state.player().resource_max(&content, rage_id, 1), 20);
     reach(&mut w, 50);
@@ -340,7 +341,7 @@ fn set_rage(w: &mut World, value: u16) {
 
 #[test]
 fn raging_ended_otherwise_takes_the_rage_with_it() {
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     let player = w.state.player;
     run(&mut w, "use:rage");
     let raging = status(&w, "raging");
@@ -354,7 +355,7 @@ fn raging_ended_otherwise_takes_the_rage_with_it() {
 
 #[test]
 fn a_rage_spends_no_mana() {
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     let player = w.state.player;
     w.player_mut().mana = 5;
     run(&mut w, "use:rage");
@@ -363,23 +364,87 @@ fn a_rage_spends_no_mana() {
     assert_eq!(w.state.player().mana, 5);
 }
 
-#[test]
-fn thick_hide_fast_movement_hardened_and_mighty_thews() {
-    let mut w = world("barbarian");
-    let content = w.content().clone();
-    let natural = |w: &World| {
-        let me = w.state.player();
-        (me.defence(&content, crate::burden::Burden::Unburdened, None)).bonus(Category::Natural)
-    };
-    assert_eq!(natural(&w), 0);
-    reach(&mut w, 6);
-    assert_eq!(natural(&w), 2, "Thick hide: furs are no body armour");
+/// What the player's Protection, a step on the floor, and a blow with the wielded weapon come
+/// to now, each as the rules read it (no burden: the tests set the scores to carry plate).
+fn soak_step_blow(w: &World) -> (i32, i64, i64) {
+    let content = w.content();
     let player = w.state.player;
+    assert_eq!(
+        w.load_of(player).penalty(),
+        crate::burden::Burden::Unburdened
+    );
+    let me = w.state.player();
     let floor = content.terrain(content.terrain_id("floor").expect("floor"));
-    let step = |w: &World| w.step_price(player, floor, false);
-    let before = step(&w);
-    reach(&mut w, 12);
-    assert_eq!(step(&w), before * 9 / 10, "Fast movement");
+    let with = me.weapon_item(content);
+    let weapon = with.map(|i| me.inventory[i].object);
+    let skills = me.attack_skills(content, crate::action::AttackKind::Melee, weapon);
+    (
+        me.protection(content, None).against(None),
+        w.step_price(player, floor, false),
+        w.attack_price(player, crate::content::ActionKind::Melee, with, skills),
+    )
+}
+
+/// Battle-scarred, Headlong, and Blood frenzy (#843): each reads the rage through the talents'
+/// `while`, in any armour. A level-40 berserker, bare and in plate, measured calm and raging,
+/// against the same berserker without the three.
+#[test]
+fn battle_scarred_headlong_and_blood_frenzy_count_while_raging_in_any_armour() {
+    for plate in [false, true] {
+        let mut w = world("berserker");
+        reach(&mut w, 40);
+        at_normal_speed(&mut w);
+        // Strong enough that plate is no burden, raging or not.
+        w.player_mut().stats = Stats::new(PerStat::splat(25), PerStat::splat(40));
+        let body = w.content().slot_id("body").expect("body");
+        if plate {
+            let object = w.content().object_id("plate_armour").expect("plate");
+            let at = w.state.player().inventory.len();
+            (w.player_mut().inventory).push(crate::object::Stack::new(object, 1));
+            run(&mut w, &format!("equip:body:{at}"));
+            assert!(w.state.player().equipment.get(body).is_some(), "in plate");
+        } else {
+            assert!(w.state.player().equipment.get(body).is_none(), "bare");
+        }
+        let without = |w: &World| {
+            let mut plain = w.clone();
+            for id in ["battle_scarred", "headlong", "blood_frenzy"] {
+                plain.player_mut().talents.forget(id);
+            }
+            soak_step_blow(&plain)
+        };
+        let (soak, step, blow) = soak_step_blow(&w);
+        let (soak0, step0, blow0) = without(&w);
+        let shown = w.perception().own_protection();
+        assert_eq!(
+            soak,
+            soak0 + 1,
+            "calm, Battle-scarred's one point (plate {plate})"
+        );
+        assert_eq!(
+            (step, blow),
+            (step0, blow0),
+            "calm, no speed (plate {plate})"
+        );
+        run(&mut w, "use:rage");
+        assert!(suffers(&w, w.state.player, "raging"));
+        let (soak, step, blow) = soak_step_blow(&w);
+        let (soak0, step0, blow0) = without(&w);
+        assert_eq!(soak, soak0 + 3, "raging, three in all (plate {plate})");
+        assert_eq!(
+            w.perception().own_protection(),
+            shown + 2,
+            "the character screen's Pv while raging"
+        );
+        assert_eq!(step, percent_of(step0, 80), "Headlong (plate {plate})");
+        assert_eq!(blow, percent_of(blow0, 80), "Blood frenzy (plate {plate})");
+    }
+}
+
+#[test]
+fn hardened_and_mighty_thews() {
+    let mut w = world("berserker");
+    let content = w.content().clone();
     // Mighty thews: scores and potentials, once.
     w.player_mut().stats = Stats::new(PerStat::splat(14), PerStat::splat(20));
     let stats = w.state.player().stats;
@@ -392,29 +457,36 @@ fn thick_hide_fast_movement_hardened_and_mighty_thews() {
             "{stat:?}"
         );
     }
-    // Hardened: past level 50 levels add hit points again, three more each.
+    // Hardened: the level-50 row (#842), not before; past level 50 levels add hit points
+    // again, three more each.
+    reach(&mut w, 49);
+    assert!(
+        !w.state.player().talents.has("hardened", 1),
+        "not at 25 any more"
+    );
     reach(&mut w, 50);
+    assert!(w.state.player().talents.has("hardened", 1));
     let at_50 = w.state.player().max_hp(&content);
     reach(&mut w, 51);
-    let per_level = w.level_hp(&content);
+    let per_level = w.level_hp(&content, 51);
     assert_eq!(w.state.player().max_hp(&content), at_50 + per_level + 3);
 }
 
 #[test]
 fn blood_frenzy_and_unstoppable_keep_the_rage() {
-    // Before Blood frenzy a kill builds no rage.
-    let mut w = world("barbarian");
+    // Before Blood frenzy a kill builds the pool's own three rage.
+    let mut w = world("berserker");
     let player = w.state.player;
     run(&mut w, "use:rage");
     w.gain_resource(player, Build::Kill);
-    assert_eq!(rage(&w), Some(11));
-    // With it, five rage a kill (up to Mighty rage's thirty).
-    let mut w = world("barbarian");
+    assert_eq!(rage(&w), Some(14));
+    // With it, five more a kill, eight in all (up to Mighty rage's thirty).
+    let mut w = world("berserker");
     reach(&mut w, 60);
     at_normal_speed(&mut w);
     run(&mut w, "use:rage");
     w.gain_resource(player, Build::Kill);
-    assert_eq!(rage(&w), Some(16));
+    assert_eq!(rage(&w), Some(19));
     set_rage(&mut w, 28);
     w.gain_resource(player, Build::Kill);
     assert_eq!(rage(&w), Some(30), "never past the maximum");
@@ -422,7 +494,7 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
     let hp = w.state.player().hp;
     run(&mut w, "afflict:bleeding wait*4");
     assert_eq!(w.state.player().hp, hp, "no blood lost while raging");
-    // A blow that would fell the raging barbarian leaves 1 hit point for ten rage.
+    // A blow that would fell the raging berserker leaves 1 hit point for ten rage.
     set_rage(&mut w, 25);
     let kobold = beside(&mut w, "kobold", 5);
     let mut events = Vec::new();
@@ -432,7 +504,7 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
     assert!(suffers(&w, player, "raging"), "the rage goes on");
     assert!(!w.hurt(player, 999, fight::Harm::Actor(kobold), &mut events));
     assert_eq!(rage(&w), Some(5));
-    // (This barbarian is a Phoenix: its one rising spent, nothing more stands between.)
+    // (This berserker is a Phoenix: its one rising spent, nothing more stands between.)
     w.state
         .progress
         .once
@@ -442,7 +514,7 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
         "too little rage left to hold on"
     );
     // Spending the last of it ends the rage: exhaustion follows.
-    let mut w = world("barbarian");
+    let mut w = world("berserker");
     reach(&mut w, 60);
     at_normal_speed(&mut w);
     run(&mut w, "use:rage");
@@ -562,9 +634,9 @@ fn purity_of_body_and_avatar() {
 
 #[test]
 fn martial_arts_flurry_still_mind_and_quivering_palm() {
-    let mut w = world("monk");
+    let mut w = world("ascetic");
     let content = w.content().clone();
-    // The monk's own kit: gloves (Brawler) or a staff (Staff fighter); bare hands either way.
+    // The ascetic's own kit: gloves (Brawler) or a staff (Staff fighter); bare hands either way.
     w.player_mut().equipment = Default::default();
     let fists = |w: &World| w.state.player().melee(&content).damage.to_string();
     assert_eq!(fists(&w), "1d6", "Martial arts");
@@ -641,7 +713,7 @@ fn whirlwind_strikes_every_hostile_beside_for_one_attack() {
 
 #[test]
 fn class_actives_replay_and_dump_the_same() {
-    let spec: CharacterSpec = "human,male,barbarian".parse().expect("a character");
+    let spec: CharacterSpec = "human,male,berserker".parse().expect("a character");
     let mut w = World::start_run(
         BUILTIN.clone(),
         "showcase",

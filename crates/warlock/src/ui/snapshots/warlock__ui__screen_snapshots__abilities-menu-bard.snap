@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Mighty kick (1).
- You spend 156 mana ┌─ Abilities ──────────────────────────────────────────────┐
-                    │                                                          │
+ You learn Sworn foe┌─ Abilities ─────────────────────────────────── Page 1/2 ─┐
+ You spend 106 mana │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Class                                                    │
                     │   b  Throw your voice   at a place you see               │
-                    │   c  Inspire            you have too little mana         │
+                    │   c  Inspire            not enough inspiration           │
+                    │   d  Lullaby            you have too little mana         │
                     │ Spells                                                   │
-                    │   d  Mend               1d3 healed, 1 mana, aimed        │
-                    │   e  Blessing           3 mana: you have 2               │
+                    │   e  Mend               1d3 healed, 1 mana, aimed        │
                     │ Skills                                                   │
                     │   f  Bluff              not usable yet                   │
                     │   g  Decipher script    not usable yet                   │
-                    │   h  Heal               nothing to treat                 │
-                    │   i  Knowledge          not usable yet                   │
-                    │   j  Music              not usable yet                   │
-                    │   k  Pick lock          in a direction                   │
-                    │   l  Steal              in a direction                   │
-                    │ Weapon skills                                            │
-                    │   m  Shield bash        you hold no shield               │
+                    │   h  Disarm a trap      in a direction                   │
+                    │   i  Handle animal      not usable yet                   │
+                    │   j  Heal               nothing to treat                 │
+                    │   k  Intimidate         at a place you see               │
+                    │   l  Knowledge          not usable yet                   │
+                    │   m  Metalcraft         not usable yet                   │
+                    │   n  Pick lock          in a direction                   │
+                    │   o  Steal              in a direction                   │
+                    │   p  Forage             not usable here                  │
+                    │   q  Woodcraft          not usable yet                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-m or Enter use   Esc close                             │
-                    └──────────────────────────────────────────────────────────┘
-
- The Hub  ·  HP 50/50  ·  MP 2/158  ·  Inspiration 0/5  ·  Sta 9/15  ·  Lv 38            ? controls
+                    │ a-q or Enter use   > < page   Esc close                  │
+ The Hub  ·  HP 38/3└──────────────────────────────────────────────────────────┘         ? controls

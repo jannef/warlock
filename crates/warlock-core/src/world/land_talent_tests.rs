@@ -1,5 +1,5 @@
 //! The Shadow and Wayfarer talents (spec §8 "Talents"; #239): effective eyes (Night eyes, Dark
-//! adaptation, Owl eyes), Blood scent, Lamplighter, Ambusher, and the land's: Swimmer, Marsh
+//! adaptation, which took in Owl eyes, #817), Blood scent, Lamplighter, Ambusher, and the land's: Swimmer, Marsh
 //! walker, Beast-friend. Each changes the one rule it names.
 
 use super::*;
@@ -114,11 +114,35 @@ fn the_eyes_are_the_profile_as_the_talents_change_it() {
         "normal",
         "named as the base profile"
     );
-    // Owl eyes give low-light eyes darkvision of their own.
+    // Dark adaptation gives low-light eyes darkvision of their own.
     let mut w = world("den");
     w.state.vision = "low_light".into();
-    give(&mut w, "owl_eyes");
+    give(&mut w, "dark_adaptation");
     assert_eq!((w.eyes().threshold, w.eyes().darkvision), (12, 2));
+}
+
+#[test]
+fn dark_adaptation_is_for_darkvision_or_low_light_eyes() {
+    let w = world("den");
+    let book = CONTENT.talents();
+    let def = book.get(book.id("dark_adaptation").expect("the talent"));
+    let player = w.state.player();
+    let who = |eyes| crate::talent::Candidate {
+        eyes,
+        ..crate::talent::Candidate::player(&CONTENT, player, None, 3)
+    };
+    for eyes in ["darkvision", "low_light"] {
+        let may = crate::talent::may_take(&CONTENT, &who(Some(eyes)), def, None);
+        assert_eq!(may, Ok(1), "{eyes}");
+    }
+    let refused = crate::talent::may_take(&CONTENT, &who(Some("normal")), def, None);
+    let Err(refusal) = refused else {
+        panic!("normal eyes may not take it");
+    };
+    assert_eq!(
+        refusal.words(&CONTENT, &def.name),
+        "You cannot take Dark adaptation: you need darkvision or low-light eyes."
+    );
 }
 
 #[test]

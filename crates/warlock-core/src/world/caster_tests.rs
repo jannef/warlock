@@ -129,6 +129,7 @@ pub(super) fn kobold_at(world: &mut World, (dx, dy): (i32, i32), hp: i32) -> Act
         npc: None,
         faction_override: None,
         summoner: None,
+        ally: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),
@@ -153,18 +154,22 @@ fn every_caster_has_its_table_by_level_sixty() {
     let tables = [
         (
             "priest",
-            1,
+            2,
             vec![
                 "Mend",
+                "Orison",
                 "Blessing",
                 "Cure wounds",
+                "Daily bread",
                 "Consecrate",
-                "Remove disease",
-                "Purify",
-                "Purity of body",
-                "Smite",
+                "Communion with the dark",
+                "Prayer",
+                "Prayer of release",
+                "Litany",
+                "Litany of the mind",
+                "Benediction",
+                "Sanctuary",
                 "Miracle",
-                "Saint",
             ],
         ),
         (
@@ -174,9 +179,14 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Beast-friend",
                 "Spark",
                 "Barkskin",
+                "Call of the wild",
                 "Call lightning",
                 "Nature's ward",
+                "Call of the forest",
+                "Pack leader",
+                "Call the elements",
                 "Flame and frost",
+                "Lord of the wild",
             ],
         ),
         (
@@ -214,7 +224,6 @@ fn every_caster_has_its_table_by_level_sixty() {
             "Arcane training",
             "Magic missile",
             "Knock",
-            "Arcane lore",
             "Burning hands"
         ]
     );
@@ -248,6 +257,8 @@ fn the_spells_are_abilities_by_level() {
             // Level 4.
             "Burning hands",
             "Cause wounds",
+            // Level 5.
+            "Call of the wild",
             // Level 6.
             "Arcane bolt",
             "Frost",
@@ -264,7 +275,11 @@ fn the_spells_are_abilities_by_level() {
             "Lightning bolt",
             "Remove disease",
             // Level 12.
-            "Flame"
+            "Flame",
+            // Level 20.
+            "Call of the forest",
+            // Level 35.
+            "Call the elements",
         ]
     );
     let bolt = Ability::Spell(sp("arcane_bolt"));
@@ -357,6 +372,8 @@ fn cure_wounds_heals_by_touch_in_two_casts() {
 fn remove_disease_ends_diseases_and_poison() {
     let mut w = world("priest");
     reach(&mut w, 12);
+    // The priest's table no longer gives it (the prayer does its work); its scroll teaches it.
+    w.player_mut().spells.insert(sp("remove_disease"));
     run(&mut w, "use:remove_disease");
     assert_eq!(last(&w), "There is nothing to cure.");
     assert_eq!(w.state.player().mana, 40);
@@ -466,6 +483,95 @@ fn call_lightning_wants_the_open_sky() {
     assert_eq!(w.state.player().mana, 20, "level 11 × 1.8");
 }
 
+/// The player's allies, by id.
+fn pack(world: &World) -> Vec<&Actor> {
+    (world.state.actors.values())
+        .filter(|a| a.master() == Some(world.state.player))
+        .collect()
+}
+
+/// How many of the player's allies are of creature type `id`.
+fn of_kind(world: &World, id: &str) -> usize {
+    (pack(world).into_iter())
+        .filter(|a| world.content().creature(a.creature).id == id)
+        .count()
+}
+
+#[test]
+fn the_druids_calls_bring_one_of_each_until_its_abilities_raise_that() {
+    let mut w = world("druid");
+    assert_eq!(
+        own(&w, sp("call_of_the_wild")),
+        None,
+        "a druid calls from 6"
+    );
+    reach(&mut w, 6);
+    assert_eq!(own(&w, sp("call_of_the_wild")), Some(None));
+    run(&mut w, "use:call_of_the_wild");
+    assert!(
+        said(&w)
+            .iter()
+            .any(|m| m == "You call, and the wild answers.")
+    );
+    assert_eq!(last(&w), "A wolf comes to your call.");
+    let first = pack(&w)[0].id;
+    assert_eq!(of_kind(&w, "wolf"), 1);
+    assert!(pack(&w)[0].ally.as_ref().expect("an ally").until.is_some());
+    // One at a time: a second call, and the first gives way.
+    w.player_mut().mana = 40;
+    run(&mut w, "use:call_of_the_wild");
+    assert_eq!(of_kind(&w, "wolf"), 1);
+    assert!(!w.state.actors.contains_key(&first));
+    // A bear beside the wolf: the cap is each call's.
+    reach(&mut w, 25);
+    run(&mut w, "use:call_of_the_forest");
+    assert_eq!((of_kind(&w, "wolf"), of_kind(&w, "bear")), (1, 1));
+    // Pack leader: two at once, both from one call.
+    reach(&mut w, 32);
+    run(&mut w, "use:call_of_the_wild");
+    assert_eq!(of_kind(&w, "wolf"), 2);
+    // Greater elementals of the elements the wild chooses, two with Pack leader.
+    reach(&mut w, 40);
+    w.player_mut().mana = 100;
+    run(&mut w, "use:call_the_elements");
+    let elementals = (pack(&w).into_iter())
+        .filter(|a| w.content().has_tag(a.creature, "elemental"))
+        .count();
+    assert_eq!(elementals, 2);
+    // Lord of the wild: three at once, and they stay until slain.
+    reach(&mut w, 60);
+    run(&mut w, "use:call_of_the_wild");
+    assert_eq!(of_kind(&w, "wolf"), 3);
+    assert!(
+        (pack(&w).iter()).any(|a| a.ally.as_ref().is_some_and(|x| x.until.is_none())),
+        "a lasting call"
+    );
+}
+
+#[test]
+fn a_called_wolf_fights_as_yours_and_slips_back_into_the_dark() {
+    let mut w = world("druid");
+    reach(&mut w, 6);
+    let foe = kobold(&mut w, 3, 500);
+    run(&mut w, "use:call_of_the_wild wait*6");
+    assert!(
+        said(&w).iter().any(|m| m.starts_with("Your wolf ")),
+        "{:?}",
+        said(&w)
+    );
+    w.state.actors.remove(&foe);
+    // Presence 14: eight minutes; then it goes, said by its type's own words.
+    run(&mut w, "wait*90");
+    assert_eq!(of_kind(&w, "wolf"), 0);
+    assert!(
+        said(&w)
+            .iter()
+            .any(|m| m == "The wolf slips back into the dark."),
+        "{:?}",
+        said(&w)
+    );
+}
+
 #[test]
 fn blight_poisons_everyone_it_reaches() {
     let mut w = world("witch");
@@ -513,6 +619,7 @@ fn a_spell_is_paid_through_the_talents_mana_cost() {
     let mut w = world("priest");
     reach(&mut w, 12);
     let content = w.content().clone();
+    w.player_mut().spells.insert(sp("remove_disease"));
     w.player_mut().talents.take("frugal_caster", None);
     let cleanse = content
         .class_spell(sp("remove_disease"))
@@ -544,20 +651,6 @@ fn mage_armour_deflects_only_without_body_armour() {
     let before = deflection(&w);
     reach(&mut w, 25);
     assert_eq!(deflection(&w), before + 2, "a wizard wears no body armour");
-}
-
-#[test]
-fn miracle_saves_the_priest_once() {
-    let mut w = world("priest");
-    reach(&mut w, 50);
-    let player = w.state.player;
-    let mut events = Vec::new();
-    w.player_mut().hp = 3;
-    assert!(!w.hurt(player, 10, fight::Harm::Barbs, &mut events));
-    assert_eq!(w.state.player().hp, 1);
-    assert!(suffers(&w, player, "worn_thin"));
-    assert!(said(&w).contains(&"A miracle! You do not fall.".to_string()));
-    assert!(w.hurt(player, 10, fight::Harm::Barbs, &mut events), "once");
 }
 
 #[test]

@@ -173,6 +173,7 @@ fn damage_reads_dice_bonus_kinds_and_riders() {
         kinds: crate::damage::Kinds::of(&[slashing, piercing]).expect("two"),
         riders: Vec::new(),
         range: None,
+        pierces: false,
     };
     assert_eq!(
         attack.summary(content),

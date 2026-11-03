@@ -221,7 +221,7 @@ fn every_class_has_mana_and_its_guaranteed_spells_within_its_caster_level() {
     for class in content.classes() {
         assert!(class.mana >= 1, "{} has mana", class.id);
         let mut spells = Vec::new();
-        for (level, talent) in &class.abilities {
+        for (level, talent, _) in &class.abilities {
             let def = book.get(book.id(talent).expect("a talent"));
             for effect in &def.effects {
                 let TalentEffect::Spell { spell } = effect else {
@@ -240,14 +240,19 @@ fn every_class_has_mana_and_its_guaranteed_spells_within_its_caster_level() {
                 spells.push((*level, s.level, s.kind));
             }
         }
-        // A full caster: a cantrip at level 1 and about four spells in all.
+        // A full caster: a cantrip at level 1 and three to six spells in all (the priest's
+        // three: their rite is the Orison, docs/dev/prayer.md), the druid's calls (summons,
+        // #839) counted apart: they are its pack, not its spellbook.
         if class.casting == 100 {
             assert!(
                 spells.iter().any(|&(l, t, _)| l == 1 && t <= 1),
                 "{}'s cantrip",
                 class.id
             );
-            assert!((4..=6).contains(&spells.len()), "{}: {spells:?}", class.id);
+            let book = (spells.iter())
+                .filter(|&&(_, _, k)| k != SpellPurpose::Summon)
+                .count();
+            assert!((3..=6).contains(&book), "{}: {spells:?}", class.id);
         }
         // Only the casters and the hybrids have any, and a hybrid's are low boons.
         if class.casting < 100 {

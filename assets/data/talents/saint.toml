@@ -1,8 +1,0 @@
-[[talent]]
-id = "saint"
-name = "Saint"
-tree = "class"
-granted = true
-description = "Your wounds heal twice as fast, always."
-effects = [{ kind = "healing_percent", value = 100 }]
-systems = ["hit_points"]

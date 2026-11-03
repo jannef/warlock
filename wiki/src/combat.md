@@ -152,7 +152,11 @@ amount in between as likely:
 
 - **Every piece adds up**: body armour, helm, gloves, boots, and cloak each add their
   Protection (the armour table above), and so does the magic of armour that is
-  *[Hardened](magic-items.md#prefixes)* (see [Magic items](magic-items.md)). A [shield](objects.md#class-shields) gives [Defence](combat.md#defence) only. Creatures have
+  *[Hardened](magic-items.md#prefixes)* (see [Magic items](magic-items.md)). Some [talents](talents.md) add to it too:
+  [Bulwark](talents.md#talent-bulwark) 2, and the [berserker's](classes.md#berserker)
+  [Battle-scarred](talents.md#talent-battle-scarred) 1, and 3 while
+  [raging](status-effects.md#status-raging), in any armour; the `Pv` on the character screen shows
+  it as it is now. A [shield](objects.md#class-shields) gives [Defence](combat.md#defence) only. Creatures have
   their own: a [cave beetle's](creatures.md#creature-beetle) shell turns aside much of what hits it.
 - **[Criticals](combat.md#criticals) punch through**: a confirmed critical rolls its damage twice (or more) first, and
   the Protection comes off only once.
@@ -188,13 +192,13 @@ always does. The game never shows what a stance adds: you feel it in the fight.
   your weapon does not already turn blows aside as well.
 - **Coward**: you hit much less often and softer, and your attacks take longer, but you [dodge](combat.md#defence)
   best, and stepping away from a hostile creature next to you is quicker and quieter.
-- **Berserker**: a [barbarian's](classes.md#barbarian) alone, and only while they rage. Flying into a
+- **Frenzy**: a [berserker's](classes.md#berserker) alone, and only while they rage. Flying into a
   [rage](resources.md#rage) puts you in it at once, whatever your stance was, and `+` and `-` cannot
-  take you out of it ("Your rage holds you in the berserker's stance."); no other class, talent,
+  take you out of it ("Your rage holds you in the frenzy."); no other class, talent,
   item, or creature ever has it. You hit more often and harder than an aggressive fighter, at a
   greater cost to your guard, and stepping away from a foe beside you takes longer. When the rage
   ends, however it ends, you fall back into the aggressive stance, not the one you had before.
-  The barbarian's [Wild guard](talents.md#talent-wild-guard) talent halves its cost to your [Dodge](combat.md#defence).
+  The berserker's [Wild guard](talents.md#talent-wild-guard) talent halves its cost to your [Dodge](combat.md#defence).
 
 A stance changes how long every attack takes: a blow, a [shield bash](abilities.md#ability-shield-bash), a [kick](doors.md#kicking), a [shot](ranged.md#shooting-and-throwing), or a [throw](ranged.md#shooting-and-throwing);
 never reloading or kicking a [door](doors.md). Each attack takes the time it would as you begin it: a rank of
@@ -218,6 +222,8 @@ ranks of weapon skills and fighting styles teach them (see
   cleave), again after every cleave that kills.
 - **[Riposte](talents.md#talent-riposte)**: when your Parry turns a blow aside, you strike back once the attack is over (once
   per attack, however many of its blows you parried). Shots and throws are never riposted.
+  While you are [poised](status-effects.md#status-poised) (the [ascetic](classes.md#ascetic)'s [patient defence](abilities.md#ability-patient-defence)) you riposte
+  whatever your talents, and a blow that misses by your Dexterity or Dodge is answered too.
 - **[Opportunist](talents.md#talent-opportunist)**: a [hostile](creatures.md#factions) creature that steps away from beside you is struck as it turns to
   go; it may not live to take the step. A creature that fights this way strikes you the same
   way when you step away from it.
@@ -228,7 +234,7 @@ skill](weapon-skills.md). It never brings another free blow, except a cleave aft
 ## Stamina
 
 **Stamina** is the breath a fighter has for weapon feats (a [resource](resources.md), shown as
-`Sta 7/12` on the status bar). Every [warrior](classes.md#warrior), [barbarian](classes.md#barbarian), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [monk](classes.md#monk), [thief](classes.md#thief), and [bard](classes.md#bard)
+`Sta 7/12` on the status bar). Every [warrior](classes.md#warrior), [berserker](classes.md#berserker), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [ascetic](classes.md#ascetic), [thief](classes.md#thief), and [bard](classes.md#bard)
 holds it from [level](experience.md#levels) 1. Its most is
 
 > 10 + your [Toughness](stats.md#stat-toughness) [modifier](stats.md#modifiers) + 1 per 10 [levels](experience.md#levels), at least 5
@@ -250,7 +256,7 @@ Your **hit points** are your [Toughness](stats.md#stat-toughness) plus what your
 
 {{#include generated/hit-points.md}}
 
-A [dwarf](races.md#race-dwarf) [barbarian](classes.md#barbarian) with Toughness 16 has 6 + 8 + 16 = 30 hit points; an [elf](races.md#race-elf) [wizard](classes.md#wizard) with Toughness
+A [dwarf](races.md#race-dwarf) [berserker](classes.md#berserker) with Toughness 16 has 6 + 8 + 16 = 30 hit points; an [elf](races.md#race-elf) [wizard](classes.md#wizard) with Toughness
 8 has 10. You start every run unhurt. The [status bar](controls.md#the-screen) shows your hit points (`HP 18/24`), and so
 does the character screen.
 

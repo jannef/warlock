@@ -14,7 +14,9 @@
 //!   check; anyone else makes the initiative check (two gameplay draws) and suffers Surprised if
 //!   it fails.
 //! - Surprised (and unaware, for the surprising attack itself) is flat-footed
-//!   ([`World::flat_footed`]); it makes no free blow out of its turn
+//!   ([`World::flat_footed`]), as is any status with `flat_footed` in data (Stunned, the
+//!   ascetic's Stunning strike; read by the field, [`World::off_guard`], never the id); it
+//!   makes no free blow out of its turn
 //!   (`free_blow.rs::free_blows_of`, `weapon_ability.rs::approached`); its next action is priced
 //!   by [`World::status_cost`].
 //!
@@ -170,10 +172,18 @@ impl World {
         (self.state.actors.get(&id)).is_some_and(|a| a.effects.has(status))
     }
 
+    /// Whether actor `id` suffers a flat-footed status now (`flat_footed` in data: Surprised,
+    /// Stunned). The one read of the field: Defence ([`World::flat_footed`]), free blows
+    /// (`free_blow.rs`, `weapon_ability.rs::approached`), and sneak dice (`ambush.rs::sneaks`).
+    pub(super) fn off_guard(&self, id: ActorId) -> bool {
+        (self.state.actors.get(&id)).is_some_and(|a| a.effects.flat_footed(&self.content))
+    }
+
     /// `struck`, actor `target`'s Defence against an attack, flat-footed (nothing of its
-    /// Dexterity or Dodge) when it is `unaware` of the attacker or Surprised.
+    /// Dexterity or Dodge) when it is `unaware` of the attacker or suffers a flat-footed status
+    /// (Surprised, Stunned: [`World::off_guard`]).
     pub(super) fn flat_footed(&self, target: ActorId, unaware: bool, struck: Target) -> Target {
-        let caught = (unaware && self.content.surprise().is_some()) || self.surprised(target);
+        let caught = (unaware && self.content.surprise().is_some()) || self.off_guard(target);
         if caught {
             struck.without(FLAT_FOOTED)
         } else {
