@@ -16,7 +16,7 @@ expression: "render(case, content.clone())"
                     │   f  Bluff              not usable yet                   │
                     │   g  Decipher script    not usable yet                   │
                     │   h  Disarm a trap      in a direction                   │
-                    │   i  Handle animal      not usable yet                   │
+                    │   i  Tame               in a direction                   │
                     │   j  Heal               nothing to treat                 │
                     │   k  Intimidate         at a place you see               │
                     │   l  Knowledge          not usable yet                   │

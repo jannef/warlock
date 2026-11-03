@@ -89,7 +89,11 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   for nothing: you spend ten minutes searching the wild around you for food. Only in the wild,
   on the [overworld](overworld.md#travel) and in its [local areas](overworld.md#local-areas); elsewhere it is greyed out, "not usable here" (see
   [Foraging](skills.md#foraging)).
-- **Other skills used as actions** ([Handle animal](skills.md#skill-handle-animal), ...): each is in the menu once you are trained
+- **Tame**: anyone trained in [Handle animal](skills.md#skill-handle-animal) has it, in the skill's place among the Skills. It
+  asks for the direction of a beast next to you, and a while beside it decides whether it is your
+  [companion](allies.md#companions) for good (see [Taming](allies.md#taming)). Greyed out "you already have a companion" while
+  you have one.
+- **Other skills used as actions** ([Knowledge](skills.md#skill-knowledge), ...): each is in the menu once you are trained
   in it (see [Skills](skills.md)), greyed out until its use comes to the game.
 - **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Lullaby](abilities.md#ability-lullaby), [Cackle](abilities.md#ability-cackle), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
   [Step of the wind](abilities.md#ability-step-of-the-wind), [Stunning strike](abilities.md#ability-stunning-strike), [Patient defence](abilities.md#ability-patient-defence), [Stillness](abilities.md#ability-stillness), [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Orison](abilities.md#ability-orison), [Sanctuary](abilities.md#ability-sanctuary), [Knock](abilities.md#ability-knock)): your [class](classes.md)'s level table gives them (see [Classes](classes.md#levels)),
@@ -118,7 +122,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   what threatens you (the default), hold where they stand, or go to a place you see and fight
   what is near it, then come back. An order takes no time, but it is a shout: anything near
   enough hears it (see [Hearing](hearing.md)). Greyed out "no allies here" while none of them is
-  on the level with you. Each order, and each kill of theirs, trains [Handle animal](skills.md#skill-handle-animal).
+  on the level with you. Each order, and each kill of theirs, trains [Handle animal](skills.md#skill-handle-animal), as does a try at [taming](allies.md#taming).
   Set on asks for the place as aiming a shot does; Tab skips your own allies. On the map an ally
   of yours has a short, faint green line under it, and looking at one says it is yours ("Your
   wolf (unhurt)").

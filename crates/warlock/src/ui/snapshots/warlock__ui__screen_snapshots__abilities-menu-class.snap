@@ -16,7 +16,7 @@ expression: "render(case, content.clone())"
                     │ Spells                                                   │
                     │   f  Blessing        3 mana                              │
                     │ Skills                                                   │
-                    │   g  Handle animal   not usable yet                      │
+                    │   g  Tame            in a direction                      │
                     │   h  Heal            nothing to treat                    │
                     │   i  Intimidate      at a place you see                  │
                     │   j  Forage          not usable here                     │
