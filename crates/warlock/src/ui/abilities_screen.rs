@@ -314,7 +314,7 @@ pub(super) fn needs(aim: Aim) -> &'static str {
         Aim::Nothing => "",
         Aim::Direction => "in a direction",
         Aim::Cell => "at a place you see",
-        Aim::Ailment => "on yourself",
+        Aim::Ailment => "on yourself or an ally",
         Aim::Item => "on something you carry",
         Aim::Shape => "in a weapon's shape",
         Aim::Spell => "a scroll of a spell you know",

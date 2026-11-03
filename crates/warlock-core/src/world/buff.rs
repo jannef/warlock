@@ -77,7 +77,7 @@ impl World {
             Action::Forage => ActionKind::Forage,
             Action::Temper { .. } => ActionKind::Temper,
             Action::Disarm(_) => ActionKind::Disarm,
-            Action::Heal(_) => ActionKind::Heal,
+            Action::Heal { .. } => ActionKind::Heal,
             Action::Use(active, _)
             | Action::UseAt(active, _)
             | Action::UseOn(active, _)

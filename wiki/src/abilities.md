@@ -82,7 +82,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   there: unless it keeps its nerve it is [frightened](status-effects.md#status-frightened) and
   flees, longer the better your skill (see [Intimidating](skills.md#intimidating)).
 - **Heal**: anyone trained in the [Heal](skills.md#skill-heal) skill has it, in the skill's place among the Skills. It
-  treats you: your [bleeding](status-effects.md#bleeding), a [poison](status-effects.md#poisoned), or a [disease](diseases.md#how-a-disease-goes) that shows, asking which when there is more
+  treats you, or an [ally](allies.md) beside you: [bleeding](status-effects.md#bleeding), a [poison](status-effects.md#poisoned), or a [disease](diseases.md#how-a-disease-goes) that shows, asking which when there is more
   than one; greyed out "nothing to treat" otherwise (see
   [Treating yourself](skills.md#treating-yourself)).
 - **Forage**: anyone trained in [Survival](skills.md#skill-survival) has it, in the skill's place among the Skills. It asks

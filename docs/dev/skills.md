@@ -86,7 +86,7 @@ hidden traps, whose checks read it in place of Search and Spot, `Skills::trains_
 `world/disarm.rs` (`disarm_modifier`; trained at all, Disable device gives the Disarm ability,
 `Ability::had_by`), slip (Stealth: points added to slipping past a creature's darkvision) in
 `world/slip.rs` (docs/dev/surprise.md), steal in `world/steal.rs` (trained at all lets the player steal,
-`docs/dev/stealing.md`), heal in `world/heal.rs` (trained at all gives the Heal ability;
+`docs/dev/stealing.md`), heal in `world/heal.rs` (trained at all gives the Heal ability, on oneself or an ally beside one;
 `docs/dev/status-effects.md` "Treating oneself"), forage (Survival: percent added to a forage's chance; trained at all,
 the Forage ability) in `world/forage.rs`, study (Spellcraft and Decipher script: points off the study check) in
 `world/learn.rs::study_odds` (docs/dev/spells.md "Learning"; its use `Use::Study`, reported

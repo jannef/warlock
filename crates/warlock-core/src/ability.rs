@@ -79,10 +79,11 @@ pub enum Ability {
     /// exists). Had by whoever is trained in it; unavailable ([`Unavailable::NotHere`]) anywhere
     /// but on land of the overworld or a local area of it.
     Forage,
-    /// Treat oneself (spec §8 "Skills": Heal): [`Action::Heal`], the Heal skill's use (the skill
-    /// with the `heal` effect, listed as this in its place). Had by whoever is trained in it;
-    /// unavailable while there is nothing to treat ([`crate::heal::treatable`]). It asks which
-    /// ailment when there are several ([`Aim::Ailment`]).
+    /// Treat oneself or an ally beside one (spec §8 "Skills": Heal): [`Action::Heal`], the Heal
+    /// skill's use (the skill with the `heal` effect, listed as this in its place). Had by
+    /// whoever is trained in it; unavailable while there is nothing to treat on either
+    /// ([`crate::heal::treatable`]). It asks which ailment when there are several
+    /// ([`Aim::Ailment`]).
     Heal,
     /// Catch a second wind (spec §8 "Talents"): [`Action::UseTalent`], the active of the
     /// Second wind talent (a talent with the `second_wind` effect). Had by whoever holds it;
@@ -216,8 +217,9 @@ pub enum Aim {
     Direction,
     /// A cell, in the aiming mode, as a shot does ([`Ability::action_at`]).
     Cell,
-    /// What to treat, of what the player may treat now ([`crate::heal::treatable`]): asked
-    /// only when there is more than one (the Heal ability).
+    /// What to treat, of what the player may treat now on themselves and their allies beside
+    /// them ([`crate::heal::treatable`]): asked only when there is more than one (the Heal
+    /// ability).
     Ailment,
     /// A stack the player carries, from a list of those it may work on (the Identify spell on
     /// the identify list; Temper: a weapon or armour, [`crate::world::temperable`];
@@ -577,8 +579,8 @@ impl Ability {
                  nuts, mushrooms, roots."
             }
             Ability::Heal => {
-                "Tend your own hurts: bind a bleeding wound, or try to ease a poison or a \
-                 disease (once each)."
+                "Tend your own hurts or an ally's beside you: bind a bleeding wound, or try to \
+                 ease a poison or a disease (once each)."
             }
             Ability::SecondWind => {
                 "Catch your breath in the thick of it: some of your hit points come back at \
@@ -780,7 +782,10 @@ impl Ability {
             }
             (Ability::Skill(_) | Ability::ThrowVoice | Ability::Intimidate, _) => None,
             // The first thing there is to treat; the menu names one when there are several.
-            (Ability::Heal, _) => Some(Action::Heal(None)),
+            (Ability::Heal, _) => Some(Action::Heal {
+                what: None,
+                ally: None,
+            }),
             (Ability::SecondWind, _) => Some(Action::UseTalent(TalentActive::SecondWind)),
             (Ability::BloodMagic, _) => Some(Action::UseTalent(TalentActive::BloodMagic)),
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
