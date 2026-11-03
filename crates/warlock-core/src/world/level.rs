@@ -118,6 +118,10 @@ pub struct LevelState {
     /// `world/curse.rs`), in the order they died.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) risings: Vec<Rising>,
+    /// The ground hallowed by Sanctuary (spec §7 "Special rooms": hallowed ground;
+    /// `world/sanctuary.rs`), in the order laid; one past its end is dropped at the end of a turn.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) hallows: Vec<super::Hallow>,
     /// Traps, by position (spec §8 "Traps"), hidden or known; a spent one is gone.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) traps: BTreeMap<Pos, Trap>,
@@ -190,6 +194,7 @@ impl LevelState {
             rooms: template.rooms.clone(),
             pervading: template.pervading,
             risings: Vec::new(),
+            hallows: Vec::new(),
             shops: Vec::new(),
             traps: template.traps.clone(),
             trap_memory: BTreeMap::new(),
@@ -435,6 +440,7 @@ impl LevelState {
             && (self.shops.iter()).all(|s| s.is_valid_for(content, self.width(), self.height()))
             && (self.hidden.iter()).all(|(p, h)| known(&h.terrain) && self.terrain.in_bounds(*p))
             && (self.risings.iter()).all(|r| r.is_valid_for(content))
+            && (self.hallows.iter()).all(|h| self.terrain.in_bounds(h.at))
             && (self.chests.keys()).all(|p| self.terrain.in_bounds(*p))
     }
 }

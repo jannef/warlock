@@ -624,7 +624,8 @@ pub enum ClassActive {
     /// A blow in a direction that is a critical if it hits, for openings (the Master thief's
     /// finisher).
     MasterThief,
-    /// A song that lifts the player's fighting a while, for mana (the bard's Inspire).
+    /// A song that lifts the player's fighting a while, for inspiration (the bard's Inspire,
+    /// `world/song.rs`).
     Inspire,
     /// A minute's prayer that lifts an unholy room's effect for good, for mana (the priest's and
     /// the paladin's Consecrate).
@@ -632,6 +633,9 @@ pub enum ClassActive {
     /// A prayer that answers what ails the priest most, as far as their prayers reach, under a
     /// hidden strain (the priest's Orison and the tiers after it, `world/orison.rs`).
     Orison,
+    /// A minute's kneeling rite that hallows the ground about the priest for an hour, for mana:
+    /// no foe sets foot in it and wounds and mind mend there faster (`world/sanctuary.rs`).
+    Sanctuary,
     /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
     Knock,
     /// A careful look that tells a thing the player carries for what it is, as the scroll of
@@ -664,6 +668,7 @@ impl ClassActive {
         ClassActive::Inspire,
         ClassActive::Consecrate,
         ClassActive::Orison,
+        ClassActive::Sanctuary,
         ClassActive::Knock,
         ClassActive::MerchantsEye,
         ClassActive::SpiritWeapon,
@@ -691,6 +696,7 @@ impl ClassActive {
             ClassActive::Inspire => "inspire",
             ClassActive::Consecrate => "consecrate",
             ClassActive::Orison => "orison",
+            ClassActive::Sanctuary => "sanctuary",
             ClassActive::Knock => "knock",
             ClassActive::MerchantsEye => "merchants_eye",
             ClassActive::SpiritWeapon => "spirit_weapon",
@@ -742,6 +748,12 @@ impl ClassActive {
         )
     }
 
+    /// Whether it is a song (`world/song.rs`): a talent's `song` effect names it, and it is
+    /// sung aloud.
+    pub const fn sings(self) -> bool {
+        matches!(self, ClassActive::Inspire)
+    }
+
     /// Whether it asks for a cell before it is used (`use:volley:12,5`).
     pub const fn aims_cell(self) -> bool {
         matches!(self, ClassActive::Volley)
@@ -786,9 +798,10 @@ impl ClassActive {
             | ClassActive::HolyRadiance
             | ClassActive::Consecrate
             | ClassActive::Orison
+            | ClassActive::Sanctuary
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
-            ClassActive::Inspire => ActionKind::Chat,
+            ClassActive::Inspire => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
             // A weapon taken in hand, as wielding one is.
             ClassActive::SpiritWeapon => ActionKind::Wield,
@@ -939,7 +952,7 @@ mod tests {
             (format!("{ONE}rolls = 11\n"), "rolls 11 is more than 10"),
             (
                 format!("{ONE}max_level = 1\n"),
-                "max_level 1 is not 2 to 99",
+                "max_level 1 is not 2 to 100",
             ),
             (
                 format!(
@@ -1116,7 +1129,7 @@ mod tests {
             // Its table reaches 50 and its bonus picks 55: a lower cap leaves a row past it.
             (30, "`iron_will` at level 32 is past its highest level, 30"),
             (50, "bonus_talents: level 55 is past its highest level, 50"),
-            (61, "max_level 61 is more than the curve's 60"),
+            (101, "max_level 101 is not 2 to 100"),
         ] {
             let e = with_aristocrat(|t| format!("{t}max_level = {cap}\n")).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);

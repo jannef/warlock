@@ -90,6 +90,13 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let room = (view.room(p))
         .filter(|_| walkable)
         .map(|r| format!("in {}", r.with_article()));
+    // Ground hallowed by Sanctuary: "on hallowed ground" (the dark powers': "on dreaded ground").
+    let hallow = (view.hallow(p).filter(|_| walkable))
+        .map(|dark| format!("on {} ground", if dark { "dreaded" } else { "hallowed" }));
+    let room = match (room, hallow) {
+        (Some(room), Some(hallow)) => Some(format!("{room}, {hallow}")),
+        (room, hallow) => room.or(hallow),
+    };
     let ground = |t| match (&room, view.leads_to(p)) {
         (Some(room), Some(_)) => format!("{}, {room}", named(t)),
         (Some(room), None) => format!("{} {room}", named(t)),
@@ -482,6 +489,34 @@ mod tests {
         assert_eq!(
             describe(&w.perception(), Pos::new(27, 25), true),
             "Sister Hild (unhurt), who cures and mends for gold, on plank floor in a sanctuary."
+        );
+    }
+
+    #[test]
+    fn hallowed_ground_says_so() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let spec: warlock_core::character::CharacterSpec =
+            "human,female,priest".parse().expect("a character");
+        let mut w = World::start_run(
+            content.clone(),
+            "showcase",
+            Some(7),
+            Some(&spec),
+            None,
+            true,
+        )
+        .expect("world");
+        let factor = warlock_core::content::Factor::of(&content, Some(&spec));
+        let need = content.experience().threshold_for(50, factor);
+        let actions = format!("xp:{need} levelup:auto use:sanctuary");
+        for action in warlock_core::action::parse_actions(&actions).expect("actions") {
+            w.apply(&action);
+        }
+        let me = w.player_pos();
+        assert_eq!(w.hallows().len(), 1, "hallowed");
+        assert_eq!(
+            describe(&w.perception(), me, true),
+            "You, on stone floor on hallowed ground."
         );
     }
 

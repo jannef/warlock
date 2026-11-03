@@ -627,7 +627,7 @@ fn costs_and_speeds_are_deterministic_saved_and_replayed() {
 #[test]
 fn costs_come_from_data_and_are_validated() {
     // The built-in content: every action a normal one but strapping on body armor (3000), a chat
-    // (500), the lantern's hood (500), climbing out of the water onto ice (2000), trying to
+    // and a song (500), the lantern's hood (500), climbing out of the water onto ice (2000), trying to
     // disarm a trap (2000), a try at picking a lock (2000), and treating oneself (2500); of the creatures only the
     // marilith's six blades (500), the balor's sword and whip (700), and the two-headed troll's
     // attacks (700: one head bites while the other looks, #456) have a cost of their own.
@@ -635,7 +635,7 @@ fn costs_come_from_data_and_are_validated() {
     for &kind in ActionKind::ALL {
         let expected = match kind {
             ActionKind::BodyArmor => 3 * NORMAL_COST,
-            ActionKind::Chat | ActionKind::Hood => NORMAL_COST / 2,
+            ActionKind::Chat | ActionKind::Song | ActionKind::Hood => NORMAL_COST / 2,
             ActionKind::Climb | ActionKind::Disarm | ActionKind::PickLock => 2 * NORMAL_COST,
             ActionKind::Heal => 5 * NORMAL_COST / 2,
             _ => NORMAL_COST,

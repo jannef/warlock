@@ -80,14 +80,20 @@ impl World {
     /// anew (`stacking = "refresh"`), so it lasts while the actor stays and eases by its own pace
     /// once it leaves. Everyone inside, creatures too (`World::pass_time`, at the start of each
     /// stretch of time, so a long action and a coarse turn hold it all along), but one whose
-    /// talents spare them (Old delver: Ebbing), and one with no mana for a status that only
+    /// talents spare them (Old delver: Ebbing; Communion with the dark: an unholy place's
+    /// status), and one with no mana for a status that only
     /// touches mana; one immune to its kind of damage never takes it (`World::afflict`).
     pub(super) fn dwell(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let Some(actor) = self.state.actors.get(&id) else {
             return;
         };
         let here = self.state.current().effects_at(&self.content, actor.pos);
-        let statuses: Vec<StatusId> = here.statuses().collect();
+        // Communion with the dark (`dark_face.rs`): an unholy place's status spares one in it.
+        let communes = here.each().any(|e| e.unholy) && self.communes(id);
+        let statuses: Vec<StatusId> = (here.each())
+            .filter(|e| !(communes && e.unholy))
+            .filter_map(|e| e.status)
+            .collect();
         for status in statuses {
             let actor = &self.state.actors[&id];
             if !actor.talents.is_empty()

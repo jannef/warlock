@@ -6,8 +6,9 @@
 //! time lowers.
 //!
 //! - **The face**: the player's band at the moment picks who answers ([`Actor::prayer_face`]):
-//!   the holy powers or the dark ones, each with its own words and titles. (The dark powers'
-//!   twists are #884's; until then they answer as the holy ones do.)
+//!   the holy powers or the dark ones, each with its own words and titles. The dark powers
+//!   answer the same problems with a twist (`dark_face.rs`: a plague and a poison passed on, a
+//!   hex turned back, a meal to the brim).
 //! - **Refused** (no time, no strain): without a prayer talent, without the file, or with nothing
 //!   among the unlocked uses to answer (the face's `nothing`). A disease still brewing is no
 //!   problem of its own, so a prayer tells the player nothing of one.
@@ -17,6 +18,9 @@
 //!   prayer until the strain has passed to 0. Answered, the first `answers` problems (every one
 //!   with `all`, and every resource pool filled) are fixed, each through its one place, each
 //!   said in the face's words; the statuses and diseases it ends say nothing of their own.
+//!
+//! Communion with the dark (`dark_face.rs`): standing in an unholy place, a dark priest's
+//! prayers add no strain.
 //!
 //! The strain is lazy: its value at a moment, less a point for every `decay` since; reading it
 //! writes nothing, so however time is cut it passes the same. Nothing trains, and no score moves.
@@ -146,8 +150,13 @@ impl World {
         let locked = strain.is_some_and(|s| s.locked_at(rules, time));
         let chance = rules.fizzle_chance(now);
         let fizzled = locked || (chance > 0 && self.state.rng.chance(chance));
+        let added = if self.communing_here() {
+            0
+        } else {
+            rules.strain
+        };
         self.state.progress.prayer = Some(Strain {
-            value: now.saturating_add(rules.strain),
+            value: now.saturating_add(added),
             at: time,
             locked: fizzled,
         });
@@ -164,7 +173,7 @@ impl World {
         };
         let mut quiet = Vec::new();
         for answer in problems.into_iter().take(answers) {
-            self.answer_prayer(rules, answer, &mut quiet);
+            self.answer_prayer(rules, answer, face, &mut quiet);
             if let Some(line) = rules.use_words(answer) {
                 self.say(line.of(face).to_string());
             }
@@ -204,20 +213,36 @@ impl World {
         }
     }
 
-    /// Use `id` answered: its problem fixed through its one place.
-    fn answer_prayer(&mut self, rules: &PrayerRules, id: PrayerUse, events: &mut Vec<Event>) {
+    /// Use `id` answered by `face`: its problem fixed through its one place, and the dark
+    /// face's twist (`dark_face.rs`).
+    fn answer_prayer(
+        &mut self,
+        rules: &PrayerRules,
+        id: PrayerUse,
+        face: Face,
+        events: &mut Vec<Event>,
+    ) {
         let content = self.content.clone();
         let player = self.state.player;
+        let dark = face == Face::Dark;
         match id {
             PrayerUse::Disease => {
                 let diseases: Vec<_> = (self.state.player().diseases.iter())
                     .map(|i| i.disease)
                     .collect();
-                for disease in diseases {
+                for &disease in &diseases {
                     self.end_disease(player, disease, events);
                 }
+                if dark {
+                    self.pass_on_diseases(&diseases);
+                }
             }
-            PrayerUse::Poison => self.end_statuses(&[content.status_id(POISONED)], events),
+            PrayerUse::Poison => {
+                let ended = self.end_statuses(&[content.status_id(POISONED)], events);
+                if dark {
+                    self.pass_on_poison(&ended, events);
+                }
+            }
             PrayerUse::Wounds => {
                 self.end_statuses(&[content.status_id(BLEEDING)], events);
                 let max = self.state.player().max_hp(&content);
@@ -226,7 +251,10 @@ impl World {
             }
             PrayerUse::Release => {
                 let release: Vec<_> = rules.release.iter().copied().map(Some).collect();
-                self.end_statuses(&release, events);
+                let ended = self.end_statuses(&release, events);
+                if dark {
+                    self.turn_hexes_back(&ended, events);
+                }
             }
             PrayerUse::Mana => {
                 let max = self.state.player().max_mana(&content);
@@ -237,20 +265,26 @@ impl World {
                 let Some(hunger) = content.hunger() else {
                     return;
                 };
+                // The dark feeds to the brim: one short of Bloated.
+                let to = if dark {
+                    hunger.states.bloated - 1
+                } else {
+                    hunger.states.satiated
+                };
                 if let Some(satiation) = self.player_mut().satiation.as_mut() {
-                    satiation.nutrition = satiation.nutrition.max(hunger.states.satiated);
+                    satiation.nutrition = satiation.nutrition.max(to);
                 }
             }
             PrayerUse::Restoration => self.mend(player),
         }
     }
 
-    /// Every status of `statuses` the player suffers ends.
+    /// Every status of `statuses` the player suffers ends; returns what ended.
     fn end_statuses(
         &mut self,
         statuses: &[Option<crate::content::StatusId>],
         events: &mut Vec<Event>,
-    ) {
+    ) -> Vec<crate::status::Effect> {
         let player = self.state.player;
         let me = self.player_mut();
         let ended: Vec<crate::status::Effect> = (statuses.iter().flatten())
@@ -260,6 +294,7 @@ impl World {
             me.effects.remove(e.status);
         }
         self.ended(player, &ended, events);
+        ended
     }
 
     /// Every resource pool the player holds fills to its maximum (Miracle's).

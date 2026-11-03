@@ -1195,7 +1195,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Priest** (the priest design, `docs/design/priest.md`; #883): Mend (level 1, at 1: a
     touch, 1d3 back; 1 mana), Blessing (level 3, at 3: Blessed 10 min a degree: +1 to hit,
     Willpower +1; 3 mana), Cure wounds (level 3, at 3: a touch, 2d6; 2 casts; 2 mana),
-    Consecrate (9), and **the prayer** (`use:orison` at every tier; `docs/dev/prayer.md`): one
+    Consecrate (9), Communion with the dark (9: Consecrate's dark twin, a passive working only
+    for a Callous or worse priest: in an unholy place, a room's or a whole level's, their prayers
+    add no strain and the place's status, Ebbing, never touches them), and **the prayer** (`use:orison` at every tier; `docs/dev/prayer.md`): one
     class active given at 1 that answers what ails the priest most, in a fixed priority order
     (disease, poison, wounds, release, mana, hunger, restoration; `data/prayer.toml`), as far as
     its uses reach: wounds at 1 (Orison: bleeding stops, hit points to full), hunger at 6 (Daily
@@ -1210,8 +1212,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     has passed to 0 (the same words for both). With nothing to answer (a brewing disease alone is
     nothing) it is refused, with no time or strain. The band at the moment picks who answers:
     Neutral and better the holy powers (Orison, Prayer, Litany, Benediction, Miracle), Callous
-    and worse the dark ones (Whisper, Invocation, Rite, Pact, Miracle), each with its own words;
-    the dark powers' twists come with #884. Remove disease, Purify, Purity of body, Smite, the
+    and worse the dark ones (Whisper, Invocation, Rite, Pact, Miracle), each with its own words.
+    The dark ones answer with a twist (`docs/dev/prayer.md` "The dark face"): the diseases cured
+    pass to the nearest creature the priest sees (incubating, unchecked), the poison cured is
+    laid on it at its degrees, a released hex is laid on its caster if seen (a hold's holder is
+    Webbed), and the hunger use feeds to one short of Bloated. **Sanctuary** (50; `use:sanctuary`, #885): the
+    priest kneels a minute for 30 mana (interrupted as a rest is, nothing is laid) and the
+    ground within two cells of where they knelt is hallowed for an hour: no creature hostile to
+    them steps onto it from outside (one already on it may move about and leave; nothing spawns
+    there; missiles and spells cross it), and whoever stands on it heals and regains mana three
+    times as fast (or a special room's pace, the larger). A blow, shot, throw, or harmful spell
+    of the priest's from on it breaks it ("The peace is broken."); being struck does not. The
+    same rule for both faces, the words differing ("The ground about you is hallowed." / "A
+    dread settles on the ground about you."); no light. Refused, with no time or mana, on the
+    overworld, in water, in a shop, or on hallowed ground. Remove disease, Purify, Purity of body, Smite, the
     reprieve, and Saint left the table (the spell and its scroll stay).
   - **Druid**: Beast-friend (the Wayfarer talent, given; its copy Wild empathy until #790), Spark (level 1, at 1: a bolt, 1d4 electricity;
     1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Nature's ward
@@ -1278,10 +1292,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     focus" while short, "You have too little focus." if used), spent as it is loosed and priced
     as one ordinary shot (Rapid shot does not touch it); refused as a shot is, spending
     nothing), Inspire
-    (the bard's, 18: grants Inspiration, §8 "Resources"; Inspired, to hit +1 and Dodge +1 for 5
-    minutes, for 3 inspiration while the bard holds 3, else 3 mana, the time of a chat; no
-    cooldown, the cost is the price: greyed out "you have too little mana",
-    `Unavailable::NoMana`, while the player has neither). Throw your voice (the bard's, 32) is no
+    (the bard's, 18: grants Inspiration, §8 "Resources"; a **song**, #870: Inspired, to hit +1
+    and Dodge +1 for 5 minutes a degree, for 3 inspiration and nothing else (no mana fallback:
+    each song costs one thing), the time of a `song` (500, a chat's); no cooldown, the cost is the
+    price: greyed out "you have too little inspiration", `Unavailable::Short`, while short).
+    **Songs** (`world/song.rs::sing`, the one place a song is sung; the `song` talent effect
+    `{ id, on, status, severity, resource, cost | mana, check, difficulty }`, an active that
+    `ClassActive::sings`): paid in their one cost, heard (`Act::Sing`, a voice of `SONG_NOISE`
+    80 where the singer stands: those who hear it come to look), then the status, `severity`
+    degrees plus Music's `song_degrees` (one more at 50 and at 100, then one more every 100), at
+    most the status's `max` (Inspired and Inspired greatly are `max = 3`: the degrees are time,
+    the bonus stays), then a Presence mark (inspired) and a Music mark (`song`). Refused, no time,
+    on the overworld and while Silenced (`silenced` blocks the `song` action). A song `on =
+    "hearers"` (every hostile hearer checks `check` against `difficulty` plus Music's
+    `song_craft`, +4 at 100, +8 at 200) is data-ready for the Lullaby (#873). Music is
+    `kind = "rules"` (no "not usable yet" row). Throw your voice (the bard's, 32) is no
     longer everyone's: the ability is had by a talent with the `throw_voice` effect (the
     action is refused, "You do not know how to throw your voice.", without it). The thief's
     Lurk (6, #684: `use:lurk`, the time of a wait, no cost and no cooldown: the thief suffers
@@ -1326,8 +1351,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the bard is not trained in, but Sneak attack, trained at 1d4+1 from the `levels` stream in
     file order, `world/jack.rs`, "You find you know a little of everything."; rank 2 at 50,
     "Your Jack of all trades grows.": every trained skill counts 5 higher, as a skill bonus in
-    `Actor::skill_effect`), Virtuoso (Inspire gives Inspired greatly, to
-    hit +2 and Dodge +2 for 10 minutes, for nothing: neither mana nor inspiration).
+    `Actor::skill_effect`), Virtuoso (every song costs nothing and gives a
+    degree more; Inspire gives Inspired greatly, to hit +2 and Dodge +2 for 10 minutes, for
+    nothing: neither mana nor inspiration).
   - **Resources**: the ranger's Focus (R2, #250), the thief's Openings (R3, #251), and the
     bard's Inspiration (R4, #252) are in.
   - **Saves change**: `Quests::prey`, the tally of every type, the statuses `inspired` and

@@ -100,7 +100,7 @@ Time never wakes it; noise loud enough, any harm, or a waking neighbour's cry do
 
 A [silent vault](special-rooms.md#room-silent) swallows every sound. While you stand in one, and ten seconds
 after you leave, you are **Silenced** ("The silence closes around you."): you cannot cast a
-[spell](magic.md#the-spells) (nor spend [mana](mana.md#spending-it) on anything), read a [scroll](scrolls.md), or [throw your voice](hearing.md#throwing-your-voice); trying takes no time.
+[spell](magic.md#the-spells) (nor spend [mana](mana.md#spending-it) on anything), read a [scroll](scrolls.md), sing a song ([inspire](abilities.md#ability-inspire)), or [throw your voice](hearing.md#throwing-your-voice); trying takes no time.
 Out of the vault sound comes back: "Sound returns." Creatures inside are silenced just as you
 are, and you can see it on them ("silenced"): a caster that cannot cast closes in to fight
 hand to hand.

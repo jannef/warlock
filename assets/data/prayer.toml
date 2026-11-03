@@ -31,17 +31,18 @@ holy = { pray = "You kneel and pray.", fizzle = "You pray, but nothing answers."
 dark = { pray = "You whisper to the dark.", fizzle = "The dark is silent.", nothing = "You have nothing to ask of the dark." }
 
 # The order is the priority: the first that ails the priest is answered first. Every use once.
-# The dark powers' twists (a plague passed on, a hex turned back, a feast) are to come (#884);
-# until then their lines promise none.
+# The dark powers answer with a twist (docs/dev/prayer.md "The dark face"): the diseases and the
+# poison cured pass to the nearest creature the priest sees, a hex released is laid on its caster
+# if seen (a hold's holder is webbed), and the hunger use feeds to the brim, one short of Bloated.
 [[use]]
 id = "disease"
 holy = "The sickness leaves you."
-dark = "The sickness is drawn out of you."
+dark = "The sickness leaves you, and finds another."
 
 [[use]]
 id = "poison"
 holy = "The poison leaves you."
-dark = "The poison is drawn out of you."
+dark = "The poison leaves you, and finds another."
 
 [[use]]
 id = "wounds"
@@ -51,7 +52,7 @@ dark = "Your wounds close, cold to the touch."
 [[use]]
 id = "release"
 holy = "You are released."
-dark = "What held you lets go."
+dark = "You are released, and it is returned."
 
 [[use]]
 id = "mana"
@@ -61,7 +62,7 @@ dark = "Your mind is filled with a cold clarity."
 [[use]]
 id = "hunger"
 holy = "You feel fed."
-dark = "You feel fed, and cold within."
+dark = "You feel glutted."
 
 [[use]]
 id = "restoration"

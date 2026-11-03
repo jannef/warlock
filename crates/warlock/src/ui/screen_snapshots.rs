@@ -664,7 +664,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A bard of level 32 with too little mana (#244): Throw your voice aimed at a place, Inspire
-    // greyed out for mana.
+    // greyed out for inspiration (a song costs one thing, #870), Music no row (read by rules).
     Case {
         name: "abilities-menu-bard",
         character: Some("human,female,bard"),

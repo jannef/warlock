@@ -529,7 +529,7 @@ its `alignment` names, `World::unanswered` (a cast's time, no mana, nothing lift
 from `LevelState::rooms` or clears `pervading`, keeps only the risings still under a `rise`, says
 so, and `player_did(Deed::Consecrated)` (`[shift] consecrate`, 20). Interrupted: "You stop your
 prayer." (or who came into view), nothing lifted. The abilities menu greys it out without its
-mana (`Ability::unavailable`'s class branch: Consecrate's mana with Inspire's).
+mana (`Ability::unavailable`'s class branch: Consecrate's mana with a song's).
 
 ## Haunted rooms
 
@@ -547,12 +547,59 @@ the player's cell (it comes for the sleeper), and bumps `spawned`, so the rest l
 and stops when it comes into view (the usual "comes into view; you stop resting" line); nothing
 is said otherwise. Consecrate lifts it (`unholy`).
 
+## Hallowed ground
+
+`world/sanctuary.rs` (#885, the priest design §6.4): the priest's level-50 class active
+Sanctuary (`ClassActive::Sanctuary`, `use:sanctuary`; `TalentEffect::Sanctuary { mana, time,
+radius, lasts, regen }` → `TalentMods::sanctuary`; the `sanctuary` talent, `classes/03-priest.toml`
+50, load checks: mana 1–500, time 10 s–1 h, radius 1–5, lasts 10 min–12 h, regen 100–1000).
+Not a special room: no effect id, no `effects_at`, so nothing that folds `Here` changes.
+
+- **The rite**: `use_class` → `begin_sanctuary`: refused with no time or mana on the overworld,
+  in open water (`is_open_water`), in a shop, or on ground already hallowed; the menu's
+  `NoMana` (`Ability::unavailable`'s class branch, Consecrate's pattern) refuses first without its
+  mana. Then `spend_mana` and `Spent::Sanctuary(until)`; `World::sanctuary` keeps at it through
+  `keep_at` exactly as Consecrate (interrupted: "You rise from your knees.", the mana spent,
+  nothing laid); done, `hallow` pushes a `Hallow { at, radius, until, regen, dark }` on the
+  current level (`dark`: `Actor::prayer_face` is Dark at that moment; the words alone: "The
+  ground about you is hallowed." / "A dread settles on the ground about you.").
+- **State**: `LevelState::hallows: Vec<Hallow>` (saved and hashed, left out while empty; the
+  save guard checks `at` in bounds). Kept on the level rather than in `WorldState` (the design's
+  sketch) because every reader asks of a level: `shuns`, the spawner, the paces by the actor's
+  level, and perception's `self.level`. Every reader asks `Hallow::covers(p, now)` (`now <
+  until`, Chebyshev within `radius`), so a hallow past its end does nothing even before it is
+  dropped.
+- **Who keeps out**: one clause in `World::shuns` (`ai.rs`): a hostile keeps out of `p` when
+  `LevelState::shuts_out(from, p, now)`: `p` in a hallow its own cell is not in (one inside may
+  move about and leave, as in a sanctuary room). `spawn.rs`'s free cell leaves hallowed cells out.
+  Missiles and spells cross it.
+- **The pace**: one term each in `World::healing_rate_at` and `World::mana_rate_at` (the latter
+  new, `mana_rate` its test-only shorthand): the room's pace is `max(room, hallow_pace)`, so the
+  larger of the two, never both, and Old delver's `room_pace` applies to either. `World::live`
+  takes `until_unhallowed` as a moment (the fast path and the step), so the pace ends exactly
+  at `until` however time is cut.
+- **The break**: `World::break_hallow` (removes every hallow covering the player, "The peace is
+  broken.") is one call in `fight.rs::resolve` (attacker the player: a blow, shot, or throw)
+  and one in `spell.rs::spell_strikes` (the player's spell striking another). Being struck
+  breaks nothing. The dark prayer's twists (#884) harm too and should call it from inside.
+- **The end**: `World::hallows_fade(began)`, one line at the end of `schedule.rs::run_turn`
+  (after `haunt_tick`): the current level's hallows with `until <= now` are dropped; "The
+  hallowing fades." (a `note`: it does not stop a rest) only for one that faded during that
+  turn (one that faded while the player was away goes quietly). Leaving the level keeps it.
+- **What the player sees**: `PerceptionView::hallow(p)` (`Some(dark)` on a seen or remembered
+  cell; the player laid it), look mode's "on hallowed ground" / "on dreaded ground"
+  (`ui/look.rs`, after a room's name). No light, no status bar. Dumps: `truth` (dev) lists
+  `hallow at (12, 5) r2 until 09:15:00` (`, dark`), JSON with `--state` `hallows: [{ pos,
+  radius, until, dark }]`.
+- Nothing draws at random. Tests: `world/sanctuary_tests.rs`.
+
 ## Statuses while inside
 
 `World::dwell(id)` (`world/rooms.rs`): every status `Here::statuses` gives at the actor's cell (the
 room's, then the level's) is given at one degree through `World::afflict` (so `refresh` stacking
 renews its easing; immunity to its `damage_type` refuses it). Skipped for an actor whose
-`TalentMods::room_status_immune` lists it (Old delver) and, for a status that only touches mana
+`TalentMods::room_status_immune` lists it (Old delver), for an unholy effect's status for one that
+`World::communes` (Communion with the dark, `docs/dev/prayer.md`), and, for a status that only touches mana
 (`StatusDef::touches_only_mana`), for one whose `max_mana` is 0 (no rat shows "ebbing", and a
 quiet creature stays quiet in `untouched_by`). The one call is in `World::pass_time`, before each
 actor lives through a stretch of time, when `World::dwelling_here` says the current level has an

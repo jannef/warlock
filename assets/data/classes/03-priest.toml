@@ -30,7 +30,8 @@ bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["vigour", "grit"] }
 # The level table (spec §8 "Class abilities"; docs/design/priest.md). Mend, Blessing, and Cure
 # wounds are spells, paid in mana; the rest is the one prayer (`use:orison`, docs/dev/prayer.md)
 # deepening: its tiers (Orison, Prayer, Litany, Benediction, Miracle) and the uses between them.
-# Consecrate is shared with the paladin.
+# Consecrate is shared with the paladin; Communion with the dark is its dark twin, a passive
+# that works only for a priest the dark answers (`alignment`, docs/dev/alignment.md).
 abilities = [
     { level = 1, talent = "mend" },
     { level = 1, talent = "orison" },
@@ -38,10 +39,12 @@ abilities = [
     { level = 3, talent = "cure_wounds" },
     { level = 6, talent = "daily_bread" },
     { level = 9, talent = "consecrate" },
+    { level = 9, talent = "communion" },
     { level = 12, talent = "prayer_of_cleansing" },
     { level = 18, talent = "prayer_of_release" },
     { level = 25, talent = "litany_of_restoring" },
     { level = 32, talent = "litany_of_the_mind" },
     { level = 40, talent = "benediction" },
+    { level = 50, talent = "sanctuary" },
     { level = 60, talent = "miracle" },
 ]

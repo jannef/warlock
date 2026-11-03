@@ -203,6 +203,7 @@ impl World {
                     let effect = content.room_effect(r.effect);
                     effect.shunned || effect.sealed.is_some()
                 })
+                && level.hallows_at(p, self.state.time).next().is_none()
         };
         let (w, h) = (level.width(), level.height());
         let mut cell = None;

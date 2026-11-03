@@ -393,6 +393,8 @@ impl World {
         self.rise_tick();
         // What haunts a rest (spec §7 "Special rooms": a haunted room).
         self.haunt_tick(began);
+        // Hallowed ground that fades meanwhile (`sanctuary.rs`).
+        self.hallows_fade(began);
     }
 
     /// How long from now no creature on the current level that disturbs a rest

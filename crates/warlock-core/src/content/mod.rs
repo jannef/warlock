@@ -310,8 +310,8 @@ pub use surprise::SurpriseRules;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
-    ResourceCost, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
-    TreeDef, TreeId,
+    ResourceCost, SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect,
+    TalentId, TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -5638,8 +5638,8 @@ mod tests {
                 "mana = 1001",
                 "creature `rat`: mana 1001 is more than 1000",
             ),
-            ("rat", "level = 0", "`level` must be 1 to 99"),
-            ("rat", "level = 100", "`level` must be 1 to 99"),
+            ("rat", "level = 0", "`level` must be 1 to 100"),
+            ("rat", "level = 101", "`level` must be 1 to 100"),
             ("rat", "xp = 100001", "`xp` at most 100000"),
             (
                 "rat",
