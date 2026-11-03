@@ -382,8 +382,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (§7 "Shops": Saintly 10 % better, Evil 10 % worse, Wicked 20 % worse); the prices shown
     include it. **Alignment bars nothing** (#642): no class, talent, or ability asks for a
     band, nothing is greyed out or refused by it, and nothing remembers a drop in band. A
-    **holy gift** (Lay on hands, Smite, Holy radiance, Consecrate) may name the bands it works
-    for (`alignment = { min = "kind" }` on its talent; Lay on hands, Smite, and Holy radiance
+    **holy gift** (Lay on hands, the smites, Holy radiance, Consecrate) may name the bands it works
+    for (`alignment = { min = "kind" }` on its talent; Lay on hands, the smites, and Holy radiance
     are Kind or better, the good side, and Consecrate Neutral or better): outside them it is still listed and used, and does nothing ("You call for holy
     wrath, but none answers."), taking the time of a cast and spending no cooldown, mana, or
     resource; putting Holy radiance out always works. **A sin empties zeal** (#910): a deed
@@ -1109,7 +1109,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `data/smite.toml`'s `unholy` list: the undead and the fiends, never read by alignment; the
     paladin's Presence modifier added to hit; a magic weapon's extra die folded into the bonus at
     its average; for 3 zeal, granted by the talent, no cooldown; works for Kind or better,
-    unanswered it spends no zeal), Holy radiance (on and off: Radiant, with no end of its
+    unanswered it spends no zeal), the **modes of smiting** (the paladin's, #911,
+    `docs/design/paladin-smites.md` §6; each its own row and `use:ID:DIR`, Smite's blow, then a
+    rider on a hit that did damage; a rider with nothing to do still spends its zeal; works for
+    Kind or better): Branding smite (level 12, 3 zeal: the foe is Branded, five minutes of the
+    faint item glow shed wherever it goes, so it is seen in the dark and lights its fellows) and
+    Wrathful smite (level 32, 4 zeal: the foe makes a Willpower check against 13 plus the
+    paladin's Presence modifier, everyone alike, and failing is Frightened by the paladin for 2d3
+    turns, fleeing them), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
     glowing item's; a cast; works for Kind or better), Patient defence (the ascetic's at 18, #849: for a
     point of Ki and a wait's time, Poised until their next action: Dodge +4 from the status's own

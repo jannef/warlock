@@ -87,7 +87,7 @@ and `follows` (`Option<StatusId>`, resolved after the whole file, `resolve_follo
 to itself; a status with it must end; nothing follows into or out of the disease status,
 checked in `Content::load_diseases`), and `light` (`Option<LightId>`, a light of
 `data/lights.toml` its bearer sheds while it lasts, the brightest of several: Lit, the Light
-spell's, #589; read by `LightCache` sources in `light/cache.rs`), `vision` (`Option<usize>`, a
+spell's, #589, and Branded, Branding smite's on the foe it wounds, #911; read by `LightCache` sources in `light/cache.rs`), `vision` (`Option<usize>`, a
 profile of `data/vision.toml` lent while it lasts, read in `Actor::eyes` beside `worn_vision`,
 bettering part by part; a potion's Owl-eyed, #567), and `resist` (`Vec<(DamageTypeId, i32)>`,
 −100 to 75 and not 0, counted as gear in `Actor::resistances`; a potion's Warmed, #567).

@@ -4,8 +4,8 @@
 use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Faced, Need, OverTime, PrayerUse, Role, SignActive, SongOn, SpellData, SpellModSpec,
-    StatusId, Table, TalentDef, TalentEffect, TreeId,
+    Content, Faced, Need, OverTime, PrayerUse, Role, SignActive, SmiteRiderKind, SongOn, SpellData,
+    SpellModSpec, StatusId, Table, TalentDef, TalentEffect, TreeId,
 };
 use warlock_core::noise::SONG_NOISE;
 
@@ -1331,6 +1331,32 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             format!(
                 "active (the time of a melee attack), in a direction: a blow with 1d{sides} \
                  more damage per {per_levels} levels (at least 1d{sides}){unholy}{aim}"
+            )
+        }
+        TalentEffect::SmiteMode {
+            mode,
+            status: id,
+            severity,
+            turns,
+            check,
+            difficulty,
+        } => {
+            let rider = match (mode, turns, check) {
+                (SmiteRiderKind::Fear, Some(turns), Some(stat)) => format!(
+                    "the foe checks {} (2d12 + its modifier) against {difficulty} plus your \
+                     Smite's aim modifier; failed, it is {} by you for {turns} turns, fleeing \
+                     you",
+                    stat.name(),
+                    status(&id)
+                ),
+                _ => {
+                    let degrees = if severity == 1 { "degree" } else { "degrees" };
+                    format!("the foe suffers {severity} {degrees} of {}", status(&id))
+                }
+            };
+            format!(
+                "active (the time of a melee attack), in a direction: your Smite's blow (its \
+                 dice, aim, and unholy dice), and on a hit that does damage {rider}"
             )
         }
         TalentEffect::Radiance { status: id, light } => {
