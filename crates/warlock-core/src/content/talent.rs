@@ -1038,6 +1038,10 @@ pub enum TalentEffect {
     /// Each second blow of its flurry spends `cost` of `resource`; holding less, it strikes
     /// none (Flurry, on Ki).
     FlurryCost { resource: String, cost: u16 },
+    /// A hostile's melee attack beside it that lands a blow on it is answered by its smite at
+    /// once, free, spending `cost` of `resource`; with less, nothing (Retribution, the
+    /// paladin's at 25, on zeal; `world/smite.rs`).
+    Retribution { resource: String, cost: u16 },
     /// A missile (a shot, a throw, a trap's) that would hit it while its hands hold no weapon
     /// and no shield spends `cost` of `resource` by itself and misses; holding less, it hits
     /// (Diamond soul's catch, on Ki; `world/ascetic.rs`).
@@ -1246,9 +1250,12 @@ impl TalentEffect {
     }
 
     /// Whether it is a passive that works only within its talent's `alignment` bands (Communion
-    /// with the dark; `docs/dev/alignment.md`), as a holy active's gift does.
+    /// with the dark, Retribution; `docs/dev/alignment.md`), as a holy active's gift does.
     pub fn band_gated(&self) -> bool {
-        matches!(self, TalentEffect::Communion)
+        matches!(
+            self,
+            TalentEffect::Communion | TalentEffect::Retribution { .. }
+        )
     }
 
     /// Whether it may carry a `while` condition: only a kind the one sum reads
@@ -1489,6 +1496,9 @@ impl TalentEffect {
             }
             TalentEffect::FlurryCost { resource: id, cost } => {
                 resource_cost("flurry_cost", id, *cost)
+            }
+            TalentEffect::Retribution { resource: id, cost } => {
+                resource_cost("retribution", id, *cost)
             }
             TalentEffect::CatchMissiles { resource: id, cost } => {
                 resource_cost("catch_missiles", id, *cost)
@@ -3375,7 +3385,7 @@ pub(super) fn parse<'a>(
             if !(effects.iter()).any(|e| e.band_gated() || e.active().is_some_and(|a| a.holy())) {
                 return Err(err(
                     "an `alignment` is for a holy class active (lay_on_hands, smite, \
-                     holy_radiance, consecrate) or a band-gated passive (communion)"
+                     holy_radiance, consecrate) or a band-gated passive (communion, retribution)"
                         .into(),
                 ));
             }

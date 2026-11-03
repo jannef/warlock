@@ -1159,7 +1159,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (while raging bleeding and poison tick nothing, and a blow that would take the last hit point
     leaves it for 10 rage, while that much is held); Divine grace
     (disease checks +2, poison eases twice as fast), Purity of body (no
-    disease is ever caught: `World::expose` refuses, nothing rolled), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
+    disease is ever caught: `World::expose` refuses, nothing rolled), Retribution (the paladin's
+    at 25, #912: a hostile beside them whose melee attack lands a blow takes their smite back at
+    once, free, for 4 zeal; works for Kind or better, a band-gated passive; §8 "Free blows"), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
     status that ticks and every disease, for half its zeal: 3); Martial arts (bare hands and
     kicks roll 1d6; grants Ki, §8 "Resources"), Flurry (level 1 beside it: a melee attack
     with nothing in hand strikes twice, the second at −2, for a point of ki; with none, once),

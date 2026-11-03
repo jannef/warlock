@@ -71,7 +71,9 @@ works. A **band-gated passive** (`TalentEffect::band_gated`: Communion with the 
 priest's 9, `alignment = { max = "callous" }`) is read the same way, by band at the moment of
 use: `World::communes` (`world/dark_face.rs`) asks the talent's bands (and the Dark prayer face)
 where it would act, and outside them the passive does nothing, saying nothing
-(`docs/dev/prayer.md`). The alignment talents proposed in the spec (Righteous fury, Hardened heart, The middle
+(`docs/dev/prayer.md`). Retribution (the paladin's at 25, `alignment = { min = "kind" }`, #912) is
+the other: `World::retribution` (`world/smite.rs`) asks its talent's bands at each blow it would
+answer, and outside them answers none, saying nothing and spending no zeal. The alignment talents proposed in the spec (Righteous fury, Hardened heart, The middle
 way) would work the same way, by band at the moment of use, hooking into `attack_with` (the
 target's `nature`), `shift_alignment` (by `cause`), and `Actor::defence`/`check`. Mana reads
 nothing of alignment.

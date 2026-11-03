@@ -40,6 +40,7 @@ abilities = [
     { level = 6, talent = "blessing" },
     { level = 12, talent = "consecrate" },
     { level = 18, talent = "purity_of_body" },
+    { level = 25, talent = "retribution" },
     { level = 40, talent = "holy_radiance" },
     { level = 50, talent = "bulwark" },
     { level = 60, talent = "avatar" },

@@ -148,8 +148,13 @@ Free blows (spec §8 "Free blows", #228; design `docs/design/progression.md` §4
 `world/free_blow.rs`. **`World::second_blow(striker, target, Cue)` (`fight.rs`) is the one place
 every blow beyond an attack's first is decided**; a new kind of extra blow is a `Cue` (or a case
 of one) there and a `Free` kind, never a second mechanism. Cues: `First(blow)` (the off hand's or
-Sword and Board's bash, `off_hand_or_bash`, unchanged), `Attacked { parried, dodged }` (the end of a
-melee attack: `World::cleave` if the target is gone, else `World::riposte`; `dodged`, a blow
+Sword and Board's bash, `off_hand_or_bash`, unchanged), `Attacked { parried, dodged, hit }` (the end of a
+melee attack: `World::cleave` if the target is gone, else, when a blow of it `hit` the player,
+their Retribution (`World::retribution`, `world/smite.rs`, the paladin's at 25, #912: their smite
+back for its zeal, `Free::Retribution`, held as a riposte is and said "You answer the blow with
+holy wrath!"; an attack it answers is not also riposted: one free blow an attack), else
+`World::riposte`; `hit` is raised only by `World::attack`, a creature's or the player's melee
+attack, never by `after_attack`; `dodged`, a blow
 missed by the target's Dexterity or Dodge, is answered only while the target is Poised, the
 ascetic's Patient defence, `world/ascetic.rs`, #849, and is raised only by `World::attack`, through
 `World::after_melee`: the player's attacks call `after_attack`, never dodged), `Cleaved` (great
