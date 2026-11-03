@@ -696,6 +696,10 @@ pub enum TalentEffect {
         severity: u16,
         difficulty: i32,
     },
+    /// The class active Cackle: a voice `noise` loud; every hex of the player's on a creature
+    /// they see grows `degrees` and starts its degree afresh, to its status's `max`
+    /// (`world/witch.rs`).
+    Cackle { degrees: u16, noise: u16 },
     /// Event `on` builds `resource` this much more while it is held, beside what the resource's
     /// own `builds` give (Blood frenzy: 5 rage a kill).
     ResourceBuild {
@@ -1094,6 +1098,10 @@ pub enum TalentEffect {
     /// The class active Knock: for `mana` mana, the lock of the locked door or chest in a
     /// direction springs open (`world/knock.rs`; spec §8 "Chests").
     Knock { mana: i32 },
+    /// The class active Scribe: a scroll of a spell the player knows written on a blank scroll,
+    /// for `mana_times` the spell's mana and a study's time (`world/scribe.rs`; spec §8
+    /// "Scrolls").
+    Scribe { mana_times: u8 },
     /// The class active Merchant's eye: a stack the player carries is identified, for the time of
     /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
     MerchantsEye,
@@ -1192,6 +1200,7 @@ impl TalentEffect {
         Some(match self {
             TalentEffect::Rage { .. } => A::Rage,
             TalentEffect::WarCry { .. } => A::WarCry,
+            TalentEffect::Cackle { .. } => A::Cackle,
             TalentEffect::VeteransWind { .. } => A::VeteransWind,
             TalentEffect::Whirlwind => A::Whirlwind,
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
@@ -1211,6 +1220,7 @@ impl TalentEffect {
             TalentEffect::Sanctuary { .. } => A::Sanctuary,
             TalentEffect::Prayer { tier: Some(1), .. } => A::Orison,
             TalentEffect::Knock { .. } => A::Knock,
+            TalentEffect::Scribe { .. } => A::Scribe,
             TalentEffect::MerchantsEye => A::MerchantsEye,
             TalentEffect::SpiritWeapon { .. } => A::SpiritWeapon,
             _ => return None,
@@ -1537,6 +1547,12 @@ impl TalentEffect {
                 }
                 Ok(())
             }
+            TalentEffect::Scribe { mana_times } => {
+                if !(1..=10).contains(mana_times) {
+                    return Err("`scribe`: mana_times is 1 to 10".into());
+                }
+                Ok(())
+            }
             TalentEffect::SpiritWeapon {
                 to_hit,
                 threat,
@@ -1793,6 +1809,12 @@ impl TalentEffect {
                     return Err("`war_cry`: severity is at least 1, difficulty 0 to 30".into());
                 }
                 status(id)
+            }
+            TalentEffect::Cackle { degrees, noise } => {
+                if !(1..=6).contains(degrees) || !(1..=crate::noise::MAX_LOUDNESS).contains(noise) {
+                    return Err("`cackle`: degrees 1 to 6, noise 1 to 300".into());
+                }
+                Ok(())
             }
             TalentEffect::ResourceBuild {
                 resource: id,

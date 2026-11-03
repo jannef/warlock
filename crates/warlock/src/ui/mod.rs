@@ -59,6 +59,7 @@ mod rain;
 #[cfg(test)]
 mod screen_snapshots;
 mod screens;
+mod scribe_screen;
 mod settings_screen;
 mod shape_screen;
 mod sign_screen;

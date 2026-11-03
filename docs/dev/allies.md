@@ -42,7 +42,9 @@ as the player's with no branch of their own. Two reads needed a line: `talk.rs::
 `assets/data/allies.toml` → `content/ally.rs::AllyRules` (`Content::allies()`, `None` without
 the file: then no ally can be made, and fixtures without it hash as before): `[follow] heel`
 (2), `leash` (8), `comes_along` (3; the owner's Q5), `[stay] reach` (1), `[hunt] reach` (3),
-`[orders] noise` (60), `[allies] most` (8), `[xp] ally_percent` (100; the owner's Q1). Checks:
+`[orders] noise` (60), `[allies] most` (8), `[xp] ally_percent` (50: what a master whose class
+has no `ally_share` is paid; the ranger's and the druid's `ally_share = 100` in
+`data/classes/`, `ClassDef::ally_share`, checked 0 to 100; #915). Checks:
 distances 1 to 20, the leash at least the heel, the noise 1 to `MAX_LOUDNESS`, `most` 1 to 24,
 the percent 0 to 100.
 
@@ -231,10 +233,13 @@ apart from a full caster's four to six spells). The balance probe's "Summons" ta
 ## Experience, quests, resources
 
 `fight.rs::dies`: the killer's master, if the killer is an ally of the player's, is credited as
-the player would be: `World::earn_kill_at(creature, percent)` at `[xp] ally_percent` of what
-the player's own blow pays (the first-kill bonus and the level scaling included; `earn_kill` is
+the player would be: `World::earn_kill_at(creature, percent)` at `World::ally_share()` (the
+player's class's `ally_share`, else `[xp] ally_percent`, else 100 without the file; the rule is
+the master's class, never the ally's source) of what the player's own blow pays (the first-kill bonus and the level scaling included; `earn_kill` is
 the test-only 100 % form), `tally_kill` (the quest log and Favoured prey's record), `judge_kill`
-(alignment), `gain_resource(master, Build::Kill)`, and a Handle animal mark. `creature_dies`
+(alignment), `gain_resource(master, Build::Kill)`, and a Handle animal mark, all in full.
+**Tending**: the Heal ability treats an ally beside the player (`world/heal.rs::allies_beside`,
+`heal::of_allies`, the snapshot's `ally_ailments`; `heal:ID:DIR`; `docs/dev/status-effects.md`). `creature_dies`
 takes `credited` for its by-player rules (a cursed room's rising). A death of a status an ally
 caused (`Effect::by`) credits the same way. `docs/dev/experience.md`'s "award only where the
 attacker is the player" has this one exception. An ally's own death pays no one.
@@ -291,7 +296,9 @@ All read from the perception snapshot; nothing in core.
 `allies.toml` and `experience.toml`; the shipped content for the retinue, Beast-bond, and the
 Handle animal marks): the dev action and its refusals (the cap), following within heel, the
 master's stance (the kobold slain, the deer untouched), an ally's kill paying the master what
-their own blow pays (and half at `ally_percent = 50`) and tallying the quest log, orders' time,
+their own blow pays at `ally_percent = 100` and half at the shipped 50, tallying the quest log
+in full either way, the share by class on the shipped content (the druid's and the ranger's 100,
+the commoner's and the wizard's 50, a wolf's kill paying the druid twice the commoner), orders' time,
 noise, words, and refusals, holding and Set on (there and back to heel; at an enemy), coming
 along and being left behind, the clock here and on a level left, a rest undisturbed, a save
 round trip, Beast-bond through the master (and nobody else), the Handle animal mark, the

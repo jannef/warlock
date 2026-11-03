@@ -866,11 +866,13 @@ impl ObjectSpec {
         let rod = self.rod_of(content).map_err(err)?;
         let drink = self.drink_of(content).map_err(err)?;
         let plural = self.plural.unwrap_or_else(|| content.plural(&self.name));
+        // A blank scroll (nothing to read, `blank_scroll`) is loot as the scrolls are.
         let loot = self.kind.is_some()
             || read.is_some()
             || wand.is_some()
             || rod.is_some()
-            || drink.is_some();
+            || drink.is_some()
+            || (self.class == "scrolls" && self.frequency.is_some());
         let def = ObjectDef {
             id: self.id,
             written_name: self.name.clone(),
@@ -1045,8 +1047,8 @@ impl ObjectSpec {
     }
 
     /// The fields of a base item: its `kind` fits what it is (a weapon has an attack and goes in
-    /// a hand, ...), and `level` and `frequency` are for loot: things with a kind, scrolls, and
-    /// wands.
+    /// a hand, ...), and `level` and `frequency` are for loot: things with a kind, scrolls (the
+    /// `scrolls` class, a blank one too), wands, rods, and potions.
     fn check_base(&self, weapon: bool) -> Result<(), String> {
         if let Some(kind) = self.kind {
             let fits = match kind {
@@ -1068,13 +1070,14 @@ impl ObjectSpec {
             }
         } else if (self.level.is_some() || self.frequency.is_some())
             && self.read.is_none()
+            && self.class != "scrolls"
             && self.wand.is_none()
             && self.rod.is_none()
             && self.drink.is_none()
         {
             return Err(
                 "`level` and `frequency` are for loot: base items, which have a `kind`, scrolls \
-                 (`read`), wands (`wand`), rods (`rod`), and potions (`drink`)"
+                 (`read`, or of the `scrolls` class), wands (`wand`), rods (`rod`), and potions (`drink`)"
                     .into(),
             );
         }

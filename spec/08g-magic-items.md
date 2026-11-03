@@ -309,6 +309,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
     feel your strength return."). With neither to mend it is refused, takes no time, and keeps
     the scroll ("There is nothing to restore."). It teaches nothing, so study refuses it
     ("There is no spell in a scroll of restoration to learn."). Rare and dear: item level 8, frequency 10, 300 gold.
+  - **Blank scrolls** (`blank_scroll`; #906, the witch and wizard design §6.1): paper with
+    nothing on it (the scrolls class, no `read`: never labelled, known on sight). Read, it is
+    refused, takes no time, and keeps the scroll ("There is nothing written on it."); there is
+    nothing in it to study. Loot and general-store stock as the scrolls are (item level 1,
+    frequency 30, 15 gold).
+  - **Writing scrolls** (`world/scribe.rs`): the wizard's **Scribe** (§8 "Class abilities", at
+    12; `Action::Scribe`, replay text `scribe:SPELL`, `scribe:fireball`) writes a scroll of a
+    spell the player knows on the first blank scroll they carry. The price is the talent's
+    `mana_times` (3) times the spell's mana before Frugal caster (`Actor::spell_base`: the cost
+    table with the armour worn, School focus, Empower, Archmage), spent through the one mana
+    spend (Frugal caster's cut, the marks); the time is a study's of the spell (`study.toml`'s
+    `turns_base + turns_per_level × level` turns of the `scribe` action; Quick study's cut not
+    applied), turn after turn like a study, stopping early as one does ("You stop writing.":
+    the time lost, the blank and the mana kept). The mana is spent and the blank used up only
+    at the end: "You write a scroll of fireball." The scroll is the spell's ordinary
+    `scroll_of_ID` (`Content::scroll_of`), at its own rung, its type known (the writer knows
+    what he wrote); it reads, studies, and sells as any (shops buy it at the usual offer).
+    Refused, no time or mana, without the ability, for a spell not known or no scroll holds,
+    with no blank scroll ("You have nothing to write on."), while a status blocks casting
+    (Raging), or short of the price ("You lack the mana to write it."); nothing about light or
+    place. It trains Intelligence (`scribe`, §8 "Stats") besides the spend's own marks. No
+    draws.
   - **Where**: loot (by `level` and `frequency`, never magic), general stores' stock (they sell
     and buy the scrolls class, and a generated one always lays out scrolls of identify, §7
     "Shops"; Cēaptūn's has three), and the trap hall beside its arrival (two each of fireball,

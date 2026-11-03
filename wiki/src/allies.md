@@ -33,8 +33,14 @@ behind, or on the road too long, is gone when you next look for it.
 
 ## Experience
 
-An ally's kill is yours: it pays you the experience your own blow would, counts for your
-[quests](quests.md), and builds what a kill of yours builds. The ally itself gains nothing.
+An ally's kill is yours: it counts for your [quests](quests.md) in full, and builds what a kill
+of yours builds. It pays you **half** the experience your own blow would, but the classes that
+live with beasts, the [ranger](classes.md#ranger) and the [druid](classes.md#druid), are paid in
+full (see [The rules](#the-rules)). The share goes by your class, whatever brought the ally.
+The ally itself gains nothing.
+
+If you are trained in [Heal](skills.md#skill-heal), you can tend an ally beside you as you tend
+yourself (see [Treating yourself](skills.md#treating-yourself)).
 
 ## Summons
 

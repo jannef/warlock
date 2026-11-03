@@ -69,6 +69,7 @@ impl World {
             Action::Eat(_) => ActionKind::Eat,
             Action::Read { .. } => ActionKind::Read,
             Action::Study { .. } => ActionKind::Study,
+            Action::Scribe { .. } => ActionKind::Scribe,
             Action::Dig(_) => ActionKind::Dig,
             Action::Search(_) => ActionKind::Search,
             Action::Pray => ActionKind::Pray,
@@ -76,7 +77,7 @@ impl World {
             Action::Forage => ActionKind::Forage,
             Action::Temper { .. } => ActionKind::Temper,
             Action::Disarm(_) => ActionKind::Disarm,
-            Action::Heal(_) => ActionKind::Heal,
+            Action::Heal { .. } => ActionKind::Heal,
             Action::Use(active, _)
             | Action::UseAt(active, _)
             | Action::UseOn(active, _)

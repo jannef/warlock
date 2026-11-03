@@ -141,6 +141,16 @@ pub struct OwnStudy {
     pub chance: &'static str,
 }
 
+/// A spell the player could write a scroll of (spec §8 "Scrolls": the wizard's Scribe), as the
+/// scribe list shows it: what it costs them in mana (they know their own costs) and how long it
+/// takes at a normal pace.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OwnScribe {
+    pub spell: crate::content::SpellId,
+    pub mana: i32,
+    pub time: crate::time::Duration,
+}
+
 /// One of the player's own talents (spec §8 "Talents"), as the Talents page and the character
 /// screen list it: its name for its choice, its rank of how many, and what it does in the
 /// game's words. Never a rule's number.
@@ -509,6 +519,9 @@ pub(crate) struct Perception {
     /// The player's allies, wherever they are (`world/ally.rs`), in actor id order: the player
     /// knows their own.
     allies: Vec<AllyView>,
+    /// What the player may treat on their allies beside them (`world/heal.rs`): they know their
+    /// own allies' hurts.
+    ally_ailments: Vec<crate::heal::OwnAilment>,
 }
 
 /// A disguised mimic as the snapshot hides it: a shut chest of its level's band at its cell.
@@ -954,6 +967,7 @@ impl Perception {
             dazzled: dazzled.is_some(),
             disguises,
             allies: allies_of(state, content),
+            ally_ailments: crate::heal::of_allies(&crate::world::allies_beside(state), content),
         }
     }
 
@@ -1589,9 +1603,12 @@ impl<'a> PerceptionView<'a> {
 
     /// What the player may treat now with the Heal skill (spec §8 "Skills"), each by how they
     /// know it ("Sickness" for a disease they cannot name yet) and the action that treats it:
-    /// the Heal ability's choice.
+    /// the Heal ability's choice. Their own first, then their allies' beside them ("Your
+    /// wolf's bleeding").
     pub fn own_ailments(&self) -> Vec<crate::heal::OwnAilment> {
-        crate::heal::own(self.player, self.content)
+        let mut list = crate::heal::own(self.player, self.content);
+        list.extend(self.snapshot.ally_ailments.iter().cloned());
+        list
     }
 
     /// The status effects that show on seen creature `actor` (`seen` in `data/status.toml`:
@@ -1629,6 +1646,10 @@ impl<'a> PerceptionView<'a> {
                     Ability::Spell(spell) => {
                         crate::ability::spell_unavailable(self.player, self.content, spell)
                     }
+                    // An ally beside the player may need tending (`world/heal.rs`).
+                    Ability::Heal if !self.snapshot.ally_ailments.is_empty() => (ability
+                        .unavailable(self.player, self.content))
+                    .filter(|&why| why != crate::ability::Unavailable::NothingToTreat),
                     // Foraging asks for the wild underfoot (spec §8 "Foraging").
                     Ability::Forage
                         if crate::world::forage_ground(
@@ -1710,6 +1731,40 @@ impl<'a> PerceptionView<'a> {
                 })
             })
             .collect()
+    }
+
+    /// The spells the player could write a scroll of (spec §8 "Scrolls": Scribe), in menu
+    /// order: those they know that a scroll holds, each with its price and time; empty without
+    /// Scribe. What the scribe list offers.
+    pub fn scribes(&self) -> Vec<OwnScribe> {
+        let costs = self.content.action_costs();
+        let turn = crate::content::price(
+            costs.cost(crate::content::ActionKind::Scribe),
+            crate::content::BASE_TURN,
+        );
+        (self.own_spells().into_iter())
+            .filter(|&spell| self.content.scroll_of(spell).is_some())
+            .filter_map(|spell| {
+                let def = self.content.spell_of(spell)?;
+                let mana = self.player.scribe_cost(self.content, def)?;
+                let turns = crate::world::scribe_turns(self.content, def)?;
+                let seconds = u64::try_from(turn).unwrap_or(0) * u64::from(turns) / 1000;
+                Some(OwnScribe {
+                    spell,
+                    mana,
+                    time: crate::time::Duration::seconds(seconds),
+                })
+            })
+            .collect()
+    }
+
+    /// How many blank scrolls the player carries (spec §8 "Scrolls"): what Scribe writes on.
+    pub fn blank_scrolls(&self) -> u32 {
+        let blank = self.content.blank_scroll();
+        (self.player.inventory.iter())
+            .filter(|s| Some(s.object) == blank)
+            .map(|s| s.count)
+            .sum()
     }
 
     /// What the player's spell `spell` costs them now, in mana (spec §8 "Spells": they know

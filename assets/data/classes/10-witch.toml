@@ -34,6 +34,7 @@ abilities = [
     { level = 1, talent = "herb_lore" },
     { level = 1, talent = "evil_eye" },
     { level = 3, talent = "hex_of_weakness" },
+    { level = 6, talent = "cackle" },
     { level = 12, talent = "poison_lore" },
     { level = 12, talent = "cause_wounds" },
     { level = 25, talent = "second_sight" },

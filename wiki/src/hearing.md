@@ -28,6 +28,9 @@ around you hear too.
 - **Songs.** A [bard](classes.md#bard)'s song ([inspire](abilities.md#ability-inspire), the [lullaby](abilities.md#ability-lullaby)) is sung aloud, a voice louder
   than muttering, heard where the bard stands: creatures that hear it and cannot see the singer
   come to look. [Stealth](skills.md#what-skills-give) does not quiet it.
+- **A cackle.** A [witch](classes.md#witch)'s [cackle](abilities.md#ability-cackle) is a voice
+  louder than muttering (60), heard where she stands; those who hear it come to look. Stealth does
+  not quiet it either.
 
 How loud a step is also depends on what you step onto. Wading through [water](terrain.md#water) splashes, and
 crashing through [bushes](terrain.md#terrain-bush) or over loose [rubble](terrain.md#terrain-rubble) is loud. [Grass](terrain.md#terrain-grass), [flowers](terrain.md#terrain-flowers), the [forest floor](terrain.md#terrain-forest-floor), a [dirt

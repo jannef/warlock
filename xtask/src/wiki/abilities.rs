@@ -8,7 +8,7 @@ use std::fmt::Write as _;
 use warlock_core::ability::{Ability, Aim, Source};
 use warlock_core::check;
 use warlock_core::content::{
-    BASE_TURN, ClassActive, Content, Offer, SignActive, SongOn, TalentEffect, price,
+    ActionKind, BASE_TURN, ClassActive, Content, Offer, SignActive, SongOn, TalentEffect, price,
 };
 use warlock_core::skills::Effect;
 use warlock_core::stats::Stat;
@@ -105,6 +105,18 @@ pub(super) fn abilities(content: &Content) -> String {
             Some(_) if place_seconds(content, a).is_some() => {
                 let seconds = place_seconds(content, a).unwrap_or_default();
                 (aim(a.aim(content)), format!("{seconds} seconds"))
+            }
+            // A long action too: a study's turns of writing, by the spell's level.
+            Some(_) if a == Ability::Class(ClassActive::Scribe) => {
+                let study = content.study_rules();
+                let (base, per) = study.map_or((0, 0), |r| (r.turns_base, r.turns_per_level));
+                let turn = at_normal_pace(price(
+                    content.action_costs().cost(ActionKind::Scribe),
+                    BASE_TURN,
+                ));
+                let time =
+                    format!("{base} turns and {per} more a spell level, each {turn} (a study's)");
+                (aim(a.aim(content)), time)
             }
             // A long action too: the forage's time.
             Some(_) if a == Ability::Forage => {
@@ -215,6 +227,7 @@ fn aim(aim: Aim) -> &'static str {
         Aim::Ailment => "what to treat, when there is more than one",
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape, from every melee weapon",
+        Aim::Spell => "a spell you know, from the list of them with their prices",
     }
 }
 

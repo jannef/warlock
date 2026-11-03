@@ -103,6 +103,7 @@ struct ClassSpec {
     abilities: Vec<AbilitySpec>,
     bonus_talents: Option<BonusSpec>,
     max_level: Option<u8>,
+    ally_share: Option<u8>,
 }
 
 /// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent;
@@ -325,6 +326,10 @@ pub struct ClassDef {
     /// ([`ClassDef::settle_cap`]; 0 until then). A character's level stops here until a prestige
     /// class takes them on.
     pub max_level: u8,
+    /// What an ally's kill pays a character of the class, in percent of their own kill (spec §8
+    /// "Allies"): the pet classes' 100 (the ranger, the druid); `None` for `[xp] ally_percent`
+    /// of `data/allies.toml`, everyone else's.
+    pub ally_share: Option<u8>,
     /// The file it was read from, for the errors of [`ClassDef::check_table`].
     pub(super) file: String,
 }
@@ -475,6 +480,9 @@ impl ClassDef {
                 "{what}: max_level {cap} is not 2 to {MAX_LEVEL}"
             )));
         }
+        if let Some(share) = spec.ally_share.filter(|&s| s > 100) {
+            return Err(err(format!("{what}: ally_share {share} is not 0 to 100")));
+        }
         Ok(ClassDef {
             id: spec.id,
             name: spec.name,
@@ -500,6 +508,7 @@ impl ClassDef {
             abilities,
             bonus_talents,
             max_level: spec.max_level.unwrap_or(0),
+            ally_share: spec.ally_share,
             file: file.to_string(),
         })
     }
@@ -639,8 +648,14 @@ pub enum ClassActive {
     /// A minute's kneeling rite that hallows the ground about the priest for an hour, for mana:
     /// no foe sets foot in it and wounds and mind mend there faster (`world/sanctuary.rs`).
     Sanctuary,
+    /// A loud cackle that holds every hex of the witch's on the creatures she sees a degree
+    /// longer (the witch's Cackle, `world/witch.rs`).
+    Cackle,
     /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
     Knock,
+    /// A scroll of a spell the player knows written on a blank scroll, for three casts' worth of
+    /// mana and a study's time (the wizard's Scribe, `world/scribe.rs`).
+    Scribe,
     /// A careful look that tells a thing the player carries for what it is, as the scroll of
     /// identify would (the merchant's Merchant's eye).
     MerchantsEye,
@@ -673,7 +688,9 @@ impl ClassActive {
         ClassActive::Consecrate,
         ClassActive::Orison,
         ClassActive::Sanctuary,
+        ClassActive::Cackle,
         ClassActive::Knock,
+        ClassActive::Scribe,
         ClassActive::MerchantsEye,
         ClassActive::SpiritWeapon,
     ];
@@ -702,7 +719,9 @@ impl ClassActive {
             ClassActive::Consecrate => "consecrate",
             ClassActive::Orison => "orison",
             ClassActive::Sanctuary => "sanctuary",
+            ClassActive::Cackle => "cackle",
             ClassActive::Knock => "knock",
+            ClassActive::Scribe => "scribe",
             ClassActive::MerchantsEye => "merchants_eye",
             ClassActive::SpiritWeapon => "spirit_weapon",
         }
@@ -776,6 +795,12 @@ impl ClassActive {
         matches!(self, ClassActive::SpiritWeapon)
     }
 
+    /// Whether it asks for a spell the player knows before it is used (the wizard's Scribe,
+    /// [`crate::action::Action::Scribe`], `scribe:fireball`).
+    pub const fn aims_spell(self) -> bool {
+        matches!(self, ClassActive::Scribe)
+    }
+
     /// Whether it takes no time at all (Step of the wind, Stillness): its [`ClassActive::cost`]
     /// then names only the statuses that block it.
     pub const fn takes_no_time(self) -> bool {
@@ -804,10 +829,13 @@ impl ClassActive {
             | ClassActive::Consecrate
             | ClassActive::Orison
             | ClassActive::Sanctuary
+            | ClassActive::Cackle
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
+            // A turn of it; a scroll takes a study's turns (`world/scribe.rs`).
+            ClassActive::Scribe => ActionKind::Scribe,
             // A weapon taken in hand, as wielding one is.
             ClassActive::SpiritWeapon => ActionKind::Wield,
         }
@@ -958,6 +986,10 @@ mod tests {
             (
                 format!("{ONE}max_level = 1\n"),
                 "max_level 1 is not 2 to 100",
+            ),
+            (
+                format!("{ONE}ally_share = 101\n"),
+                "class `wizard`: ally_share 101 is not 0 to 100",
             ),
             (
                 format!(

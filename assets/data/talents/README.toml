@@ -532,10 +532,19 @@
 #                                 release, mana, hunger, restoration), `answers` problems a
 #                                 prayer (1 to 7, the largest held), `all` every problem and
 #                                 every resource pool at once; at least one of them
+#   cackle { degrees, noise }     the active Cackle (`use:cackle`, the time of a cast): a voice
+#                                 that loud (1 to 300); every hex of its own on a creature it
+#                                 sees grows that many degrees (1 to 6) to its max and starts
+#                                 afresh; refused, no time, with no hex of its own in sight
 #   knock { mana }                the active Knock (aimed in a direction, `use:knock:E`): for
 #                                 that mana (0 to 100) the lock of the locked door or shut
 #                                 chest there springs open; refused, no time, where nothing
 #                                 locked stands
+#   scribe { mana_times }         the active Scribe (a spell known, `scribe:fireball`): on the
+#                                 first blank scroll carried, a scroll of the spell is written
+#                                 for mana_times (1 to 10) its mana and a study's time
+#                                 (study.toml's turns, no Quick study), the mana spent and the
+#                                 blank used up at the end; stopped early, nothing is spent
 #   merchants_eye                 the active Merchant's eye (on a stack carried,
 #                                 `use:merchants_eye:c`): the stack is identified as the scroll
 #                                 of identify would, for the time of a `read`; refused, no

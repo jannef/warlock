@@ -62,7 +62,8 @@ pub(super) fn rules(content: &Content) -> String {
         (
             "Experience",
             format!(
-                "an ally's kill pays you {} % of what your own blow would",
+                "an ally's kill pays you {} % of what your own blow would, unless your class has \
+                 a share of its own (below)",
                 r.ally_percent
             ),
         ),
@@ -70,6 +71,19 @@ pub(super) fn rules(content: &Content) -> String {
     let mut out = String::from("| Rule | What it is |\n|---|---|\n");
     for (name, text) in rows {
         let _ = writeln!(out, "| {name} | {text} |");
+    }
+    // The classes with a share of their own (`ally_share`: the pet classes), by name.
+    let mut shares: Vec<(&str, &str, u8)> = (content.classes().iter())
+        .filter_map(|c| Some((c.name.as_str(), c.id.as_str(), c.ally_share?)))
+        .collect();
+    shares.sort();
+    for (name, id, share) in shares {
+        let _ = writeln!(
+            out,
+            "| Experience: [{name}](classes.md#{id}) | an ally's kill pays a {} {share} % of what \
+             their own blow would |",
+            name.to_lowercase()
+        );
     }
     out
 }

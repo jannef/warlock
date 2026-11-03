@@ -570,6 +570,8 @@ pub struct TalentMods {
     pub rage: Option<ResourceId>,
     /// The active War cry, if it has it.
     pub war_cry: Option<WarCry>,
+    /// The active Cackle, if it has it.
+    pub cackle: Option<Cackle>,
     /// What events build resources beyond the resources' own `builds`: `(resource, on,
     /// amount)` (Blood frenzy's rage a kill).
     pub resource_builds: Vec<(ResourceId, Build, u16)>,
@@ -699,6 +701,8 @@ pub struct TalentMods {
     pub sanctuary: Option<Sanctuary>,
     /// The active Knock, if it has it.
     pub knock: Option<Knock>,
+    /// The active Scribe, if it has it: how many times a spell's mana a scroll of it costs.
+    pub scribe: Option<u8>,
     /// The priest's prayer, its talents summed (`world/orison.rs`), if it has any.
     pub prayer: Option<Prayer>,
 }
@@ -777,6 +781,14 @@ pub struct WarCry {
     pub status: StatusId,
     pub severity: u16,
     pub difficulty: i32,
+}
+
+/// The active Cackle (spec §8 "Class abilities"; `world/witch.rs`): how many degrees it adds
+/// to each hex of its holder's in sight, and how loud it is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cackle {
+    pub degrees: u16,
+    pub noise: u16,
 }
 
 /// The active Consecrate (spec §8 "Class abilities"): its mana and how long the prayer takes.
@@ -1084,6 +1096,7 @@ impl TalentMods {
         match active {
             A::Rage => self.rage.is_some(),
             A::WarCry => self.war_cry.is_some(),
+            A::Cackle => self.cackle.is_some(),
             A::VeteransWind => self.veterans_wind.is_some(),
             A::Whirlwind => self.whirlwind,
             A::LayOnHands => self.lay_on_hands.is_some(),
@@ -1104,6 +1117,7 @@ impl TalentMods {
             A::Consecrate => self.consecrate.is_some(),
             A::Sanctuary => self.sanctuary.is_some(),
             A::Knock => self.knock.is_some(),
+            A::Scribe => self.scribe.is_some(),
             A::Orison => self.prayer.as_ref().is_some_and(|p| p.tier > 0),
         }
     }
@@ -1824,6 +1838,9 @@ impl TalentMods {
                     });
                 }
             }
+            TalentEffect::Cackle { degrees, noise } => {
+                self.cackle = Some(Cackle { degrees, noise });
+            }
             TalentEffect::ResourceBuild {
                 resource,
                 on,
@@ -2037,6 +2054,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::Knock { mana } => self.knock = Some(Knock { mana }),
+            TalentEffect::Scribe { mana_times } => self.scribe = Some(mana_times),
             TalentEffect::Communion => self.communion = true,
             TalentEffect::Prayer {
                 tier,

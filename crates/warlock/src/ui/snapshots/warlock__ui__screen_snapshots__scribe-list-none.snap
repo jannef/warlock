@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Welcome to Showcase. Press ? for controls.
+
+
+
+
+
+
+
+
+
+
+                  ┌─ Scribe: which spell? ───────────────────────────────────────┐
+                  │                                                              │
+                  │   You carry no blank scroll to write on.                     │
+                  │                                                              │
+                  │   You know no spell to write.                                │
+                  │                                                              │
+                  │ Esc back                                                     │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 25/25  ·  MP 3/3  ·  Sta 10/10  ·  Lv 1  ·  08:00  ·  11 Darkening       ? controls
