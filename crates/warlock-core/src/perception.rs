@@ -1648,6 +1648,10 @@ impl<'a> PerceptionView<'a> {
                     Ability::Heel | Ability::Hold | Ability::SetOn if !allies_here => {
                         Some(crate::ability::Unavailable::NoAllies)
                     }
+                    // A companion is one at a time (spec §8 "Allies": Tame).
+                    Ability::Tame if self.companion().is_some() => {
+                        Some(crate::ability::Unavailable::HaveCompanion)
+                    }
                     Ability::Spell(spell) => {
                         crate::ability::spell_unavailable(self.player, self.content, spell)
                     }

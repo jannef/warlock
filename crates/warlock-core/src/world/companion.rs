@@ -171,6 +171,40 @@ impl World {
         self.say(format!("{name}, your {kind}, pads at your heel."));
     }
 
+    /// Creature `id` becomes the player's companion where it stands (Tame, `tame.rs`): it keeps
+    /// its actor (hit points, statuses, its place), takes the player's side (their faction as
+    /// its `faction_override`, as [`World::make_ally`] gives a made one), forgets what it was
+    /// about (`Mind` cleared), and is graded at the player's level (its hit points rising with
+    /// its maximum) and named (one draw on `companion/name/<id>`). Returns its name; `None`
+    /// without the data or the actor.
+    pub(super) fn adopt(&mut self, id: ActorId) -> Option<String> {
+        let content = self.content.clone();
+        let rules = content.companions()?;
+        let player = self.state.player;
+        let faction = self.state.player().faction(&content);
+        let level = self.player_level();
+        let name = name_for(&content, self.state.seed, id);
+        let actor = self.state.actors.get_mut(&id)?;
+        let before = actor.max_hp(&content);
+        let grade = (rules.growth).grade(level, content.creature(actor.creature).level);
+        actor.faction_override = faction;
+        actor.mind = super::Mind::default();
+        actor.ally = Some(super::Ally {
+            master: player,
+            source: AllySource::Companion(CompanionData {
+                name: name.clone(),
+                grade,
+                scent: None,
+            }),
+            order: super::Order::Follow,
+            retinue: false,
+            until: None,
+        });
+        let after = actor.max_hp(&content);
+        actor.hp += (after - before).max(0);
+        Some(name)
+    }
+
     /// The player's level changed: their companion's grade follows it (never down), its hit
     /// points rising with its maximum; "Snel grows stronger." among the level's news.
     pub(super) fn grow_companion(&mut self) {

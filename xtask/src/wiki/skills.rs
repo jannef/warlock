@@ -63,6 +63,7 @@ pub(super) fn gated_effect(effect: Effect) -> bool {
             | Effect::Pick
             | Effect::Steal
             | Effect::Heal
+            | Effect::Tame
             | Effect::Forage
             | Effect::ManaRegen
             | Effect::MaxMana
@@ -103,6 +104,7 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Initiative => "keeping your wits when caught unawares",
         Effect::SurpriseEase => "less time lost when you are surprised",
         Effect::Heal => "treating your bleeding, poison, and diseases",
+        Effect::Tame => "taming beasts at all, and better",
         Effect::Pick => "picking locks",
         Effect::Intimidate => {
             "your threats and your war cry are harder to stand against, and a threat frightens longer"
@@ -155,6 +157,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Initiative => "initiative check",
             Effect::SurpriseEase => "surprise's extra cost",
             Effect::Heal => "treating",
+            Effect::Tame => "taming",
             Effect::Pick => "picking locks",
             Effect::Intimidate => "threat's difficulty",
             Effect::SongDegrees => "song degrees",
@@ -187,6 +190,7 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Evade
                 | Effect::Steal
                 | Effect::Heal
+                | Effect::Tame
                 | Effect::Disarm
                 | Effect::Pick
                 | Effect::Intimidate

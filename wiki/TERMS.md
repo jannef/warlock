@@ -245,6 +245,7 @@ above.
 | Ally, your wolf, orders (Come to heel, Hold here, Set on) | `allies.md`, `allies.md#orders` |
 | Summon, summon spell, a call (the druid's) | `allies.md#summons`, `allies.md#the-druids-calls` |
 | Companion, animal companion, the nose, a companion's level (grade) | `allies.md#companions`, `allies.md#starting-companions`, `allies.md#growth` |
+| Tame, taming | `allies.md#taming` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
 | Saying words, passwords, riddles | `npcs.md#saying-words` |
 | Services (cure, mending, identification) | `npcs.md#services` |

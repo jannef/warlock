@@ -178,3 +178,60 @@ pub(super) fn rules(content: &Content) -> String {
     }
     out
 }
+
+/// The modifiers the taming table is printed at: a little of everything up to a master's.
+const TAME_EDGES: [i32; 7] = [0, 2, 4, 6, 8, 10, 15];
+
+/// Taming (`world/tame.rs`): the check in words, then every tameable beast by level with its
+/// difficulty and the chance at a range of modifiers (2d12 + the modifier against it,
+/// `check::ways`).
+pub(super) fn taming(content: &Content) -> String {
+    let Some(rules) = content.companions() else {
+        return String::new();
+    };
+    let t = rules.tame;
+    let handle = (content.skills().iter())
+        .find(|s| (s.benefits.iter()).any(|b| b.effect == warlock_core::skills::Effect::Tame));
+    let at = |value: u16| {
+        handle
+            .and_then(|s| {
+                (s.benefits.iter()).find(|b| b.effect == warlock_core::skills::Effect::Tame)
+            })
+            .map_or(0, |b| b.at(value))
+    };
+    let mut out = format!(
+        "A try is {} turns beside the beast, then one check: 2d12 + your Willpower modifier + \
+         Handle animal's taming bonus (+{} at 50, +{} at 100, +{} at 200) + {} if you carry food \
+         (one of the first food you carry is eaten) + the ranger's Animal companion bonus, against \
+         {} + {} × the beast's level. A natural 2 always fails and a natural 24 always succeeds. \
+         The chance of a try, by the modifier:\n\n| Beast (level) | Difficulty |",
+        t.turns,
+        at(50),
+        at(100),
+        at(200),
+        signed(t.food),
+        t.difficulty,
+        t.per_level
+    );
+    for edge in TAME_EDGES {
+        let _ = write!(out, " {} |", signed(edge));
+    }
+    out.push_str("\n|---|---:|");
+    out.push_str(&"---:|".repeat(TAME_EDGES.len()));
+    out.push('\n');
+    let mut beasts: Vec<(CreatureId, &warlock_core::content::CreatureDef)> =
+        (order::creatures(content).into_iter())
+            .filter(|(_, c)| c.tameable)
+            .collect();
+    beasts.sort_by(|a, b| a.1.level.cmp(&b.1.level).then(a.1.name.cmp(&b.1.name)));
+    for (id, def) in beasts {
+        let difficulty = t.difficulty + t.per_level * i32::from(def.level);
+        let _ = write!(out, "| {} | {difficulty} |", beast(content, id));
+        for edge in TAME_EDGES {
+            let ways = warlock_core::check::ways(edge, difficulty);
+            let _ = write!(out, " {} |", super::combat::percent(ways, 144));
+        }
+        out.push('\n');
+    }
+    out
+}
