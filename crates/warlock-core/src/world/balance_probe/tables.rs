@@ -668,12 +668,12 @@ pub(super) fn zeal(p: &Probe, rng: &mut Rng, out: &mut String) {
     writeln!(out, "\n## Zeal\n").unwrap();
     writeln!(
         out,
-        "The paladin in plain gear (a long sword; from level 5 a shield and the warrior's armour), trained stats, against the monsters within two levels. The pool's maximum as Smite grants it (the seeds' mean: Presence and the level) and the zeal back a round with time; the fight cells as in \"Fights\", with plain blows, with every blow a smite (an upper bound: a smite costs its zeal), and with every blow a smite on the unholy among those monsters (the smite's die more); then the zeal a round of plain blows builds (the paladin's hits and the foe's, at their chances, plus the time's) against a smite's cost: the rounds of fighting a smite takes to earn.\n"
+        "The paladin in plain gear (a long sword; from level 5 a shield and the warrior's armour), trained stats, against the monsters within two levels. The pool's maximum as Smite grants it (the seeds' mean: Presence and the level) and the zeal back a round with time; the fight cells as in \"Fights\", with plain blows, with every blow a smite (an upper bound: a smite costs its zeal), with every blow a smite on the unholy among those monsters (the smite's die more), and from level 50 with every blow a Banishing smite on them (its dice twice over; the summoned are unmade instead, whatever their hit points, which no cell shows). From level 40 every cell has Holy wrath's die where it lands, on the unholy, and at 60 (Avatar) on every foe. Then the zeal a round of plain blows builds (the paladin's hits and the foe's, at their chances, plus the time's) against a smite's cost: the rounds of fighting a smite takes to earn, and the same with Zealot.\n"
     )
     .unwrap();
     writeln!(
         out,
-        "| L | zeal | back a round | Blow | Smite | Smite on the unholy | built a round · rounds a smite |\n|---|---|---|---|---|---|---|"
+        "| L | zeal | back a round | Blow | Smite | Smite on the unholy | Banishing on the unholy | built a round · rounds a smite | with Zealot |\n|---|---|---|---|---|---|---|---|---|"
     )
     .unwrap();
     for &level in &LEVELS {
@@ -695,6 +695,12 @@ pub(super) fn zeal(p: &Probe, rng: &mut Rng, out: &mut String) {
         } else {
             fight_cell(&super::fight_sides(&holy, &unholy, None, rng))
         };
+        let banishing: Vec<&Side> = zeal.iter().filter_map(|z| z.banishing.as_ref()).collect();
+        let banish = if banishing.is_empty() || unholy.is_empty() {
+            "-".to_string()
+        } else {
+            fight_cell(&super::fight_sides(&banishing, &unholy, None, rng))
+        };
         let max = avg(zeal.iter().map(|z| f64::from(z.max)));
         let back = avg(zeal.iter().map(|z| z.back));
         // The paladin's blows a round at their chance, the foe's (one) at theirs.
@@ -702,12 +708,14 @@ pub(super) fn zeal(p: &Probe, rng: &mut Rng, out: &mut String) {
         let built = blows * plain.hit / 100.0 * first.builds[0]
             + plain.struck / 100.0 * first.builds[1]
             + back;
+        let zealot = built + plain.struck / 100.0 * (first.zealot - first.builds[1]);
         writeln!(
             out,
-            "| {level} | {max:.1} | {back:.2} | {} | {} | {on_unholy} | {built:.2} · {} |",
+            "| {level} | {max:.1} | {back:.2} | {} | {} | {on_unholy} | {banish} | {built:.2} · {} | {zealot:.2} · {} |",
             fight_cell(&plain),
             fight_cell(&smite),
             r(f64::from(first.cost) / built.max(0.01)),
+            r(f64::from(first.cost) / zealot.max(0.01)),
         )
         .unwrap();
     }

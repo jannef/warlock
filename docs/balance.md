@@ -460,36 +460,53 @@ What the run shows:
 
 ## Zeal
 
-Added with the paladin's Zeal and Smite (#910; `docs/design/paladin-smites.md` §5); the other
+Added with the paladin's Zeal and Smite (#910; `docs/design/paladin-smites.md` §5), and rerun with
+Zealot (#914) to take in Holy wrath's die, Banishing smite's doubling, and Zealot; the other
 sections were not rerun for it (the probe's draws after this table shift, so a rerun moves the
 "Summons" cells by noise).
 
-The paladin in plain gear (a long sword; from level 5 a shield and the warrior's armour), trained stats, against the monsters within two levels. The pool's maximum as Smite grants it (the seeds' mean: Presence and the level) and the zeal back a round with time; the fight cells as in "Fights", with plain blows, with every blow a smite (an upper bound: a smite costs its zeal), and with every blow a smite on the unholy among those monsters (the smite's die more); then the zeal a round of plain blows builds (the paladin's hits and the foe's, at their chances, plus the time's) against a smite's cost: the rounds of fighting a smite takes to earn.
+The paladin in plain gear (a long sword; from level 5 a shield and the warrior's armour), trained stats, against the monsters within two levels. The pool's maximum as Smite grants it (the seeds' mean: Presence and the level) and the zeal back a round with time; the fight cells as in "Fights", with plain blows, with every blow a smite (an upper bound: a smite costs its zeal), with every blow a smite on the unholy among those monsters (the smite's die more), and from level 50 with every blow a Banishing smite on them (its dice twice over; the summoned are unmade instead, whatever their hit points, which no cell shows). From level 40 every cell has Holy wrath's die where it lands, on the unholy, and at 60 (Avatar) on every foe. Then the zeal a round of plain blows builds (the paladin's hits and the foe's, at their chances, plus the time's) against a smite's cost: the rounds of fighting a smite takes to earn, and the same with Zealot.
 
-| L | zeal | back a round | Blow | Smite | Smite on the unholy | built a round · rounds a smite |
-|---|---|---|---|---|---|---|
-| 1 | 10.7 | 0.10 | 83/41 · 6.9:0.1 · 1.8 / 734 | 86/41 · 10.4:0.1 · 1.2 / 685 | 87/34 · 13.5:0.6 · 1.2 / 37 | 1.33 · 2.3 |
-| 5 | 10.7 | 0.10 | 84/34 · 6.7:0.6 · 3.6 / 60 | 87/34 · 9.8:0.6 · 2.4 / 63 | 91/37 · 12.8:0.7 · 2.2 / 48 | 1.16 · 2.6 |
-| 10 | 11.7 | 0.10 | 92/24 · 10.1:1.2 · 4.3 / 53 | 94/24 · 13.5:1.2 · 3.2 / 56 | 93/16 · 16.7:1.0 · 3.1 / 63 | 1.13 · 2.6 |
-| 15 | 11.8 | 0.10 | 95/14 · 11.6:0.7 · 5.4 / 166 | 97/14 · 15.2:0.8 · 4.1 / 152 | 96/9 · 19.7:0.7 · 3.0 / 166 | 1.06 · 2.8 |
-| 20 | 13.0 | 0.10 | 98/8 · 13.7:0.3 · 6.1 / 689 | 99/8 · 20.9:0.3 · 3.8 / 622 | 99/8 · 24.7:0.6 · 3.3 / 284 | 1.03 · 2.9 |
-| 30 | 14.2 | 0.10 | 98/8 · 16.2:1.1 · 8.8 / 271 | 99/8 · 27.4:1.2 · 5.4 / 245 | 99/6 · 31.0:0.9 · 3.2 / 285 | 1.04 · 2.9 |
-| 40 | 15.8 | 0.10 | 98/5 · 19.4:1.2 · 9.4 / 525 | 99/5 · 34.5:1.0 · 5.4 / 426 | 98/5 · 37.7:1.1 · 3.5 / 743 | 1.01 · 3.0 |
-| 50 | 17.2 | 0.10 | 98/15 · 20.6:2.5 · 11 / 183 | 99/15 · 39.8:2.7 · 6.0 / 173 | 99/27 · 43.5:6.5 · 5.5 / 59 | 1.12 · 2.7 |
-| 60 | 18.8 | 0.10 | 85/20 · 15.8:5.6 · 14 / 72 | 95/20 · 34.1:5.1 · 6.5 / 76 | 97/18 · 43.7:6.7 · 4.0 / 57 | 1.05 · 2.8 |
+| L | zeal | back a round | Blow | Smite | Smite on the unholy | Banishing on the unholy | built a round · rounds a smite | with Zealot |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 10.7 | 0.10 | 78/41 · 6.8:0.1 · 1.8 / 594 | 82/41 · 10.3:0.0 · 1.2 / 749 | 87/34 · 13.2:0.6 · 1.2 / 35 | - | 1.29 · 2.3 | 1.70 · 1.8 |
+| 5 | 10.7 | 0.10 | 84/34 · 6.8:0.7 · 3.6 / 54 | 87/34 · 9.8:0.6 · 2.4 / 56 | 91/37 · 12.7:0.7 · 2.2 / 47 | - | 1.16 · 2.6 | 1.49 · 2.0 |
+| 10 | 11.7 | 0.10 | 92/26 · 10.1:1.3 · 4.3 / 48 | 94/26 · 13.3:1.3 · 3.2 / 52 | 93/18 · 16.8:1.1 · 3.2 / 58 | - | 1.15 · 2.6 | 1.41 · 2.1 |
+| 15 | 11.7 | 0.10 | 94/15 · 11.5:0.8 · 5.4 / 153 | 96/15 · 14.8:0.8 · 4.2 / 161 | 95/10 · 19.6:0.7 · 3.0 / 136 | - | 1.07 · 2.8 | 1.22 · 2.5 |
+| 20 | 13.0 | 0.10 | 98/8 · 13.8:0.4 · 6.1 / 525 | 99/8 · 20.9:0.5 · 4.0 / 604 | 99/8 · 24.1:0.7 · 3.3 / 239 | - | 1.03 · 2.9 | 1.11 · 2.7 |
+| 30 | 14.2 | 0.10 | 98/7 · 15.9:1.0 · 8.9 / 302 | 99/7 · 26.7:1.0 · 5.4 / 297 | 99/6 · 31.0:0.9 · 3.3 / 290 | - | 1.02 · 2.9 | 1.09 · 2.8 |
+| 40 | 15.8 | 0.10 | 98/5 · 20.3:1.0 · 8.9 / 432 | 99/5 · 35.3:1.1 · 5.3 / 354 | 98/5 · 41.3:1.2 · 3.2 / >999 | - | 1.01 · 3.0 | 1.06 · 2.8 |
+| 50 | 17.2 | 0.10 | 98/13 · 20.6:2.6 · 11 / 179 | 99/13 · 38.6:2.5 · 5.8 / 193 | 99/27 · 45.9:6.3 · 5.2 / 62 | 99/27 · 67.4:6.6 · 3.6 / 60 | 1.09 · 2.7 | 1.22 · 2.5 |
+| 60 | 18.5 | 0.10 | 94/18 · 19.4:4.5 · 11 / 90 | 98/18 · 39.6:4.1 · 5.9 / 104 | 97/18 · 46.5:6.9 · 3.7 / 59 | 97/18 · 71.9:6.8 · 2.4 / 58 | 1.12 · 2.7 | 1.30 · 2.3 |
 
-- **Not in the table**: Holy wrath's die (1d6, 3.5 on a hit, at 40; on every foe at 60, #913) is
-  no part of `World::smite_profile`, so the "Blow" and "Smite" columns from level 40 are that much
-  low on the unholy, and at 60 on anyone; nor is Banishing smite's doubling (50).
+What the table shows; none of it is tuned, tuning is the owner's call (Zealot, Smite's dice, and
+every cost are data):
+
 - **A smite every third blow is what the fight pays for**: a round of plain blows builds about
   one zeal (1.0 to 1.3: the paladin's hits nearly every blow, the foe's far fewer, a tenth from
   time), so a smite (3) comes about every three rounds, the design's "a smite every third blow".
-- **A smite is worth 1.3 to 2.2 blows**: +3.5 at level 1 on 6.9, +7 at 20 on 13.7, +18 at 60
-  on 15.8 (the smite's dice are rolled on top of a blow's, and Presence surer to hit), and the
+- **A smite is worth 1.3 to 2.0 blows**: +3.5 at level 1 on 6.8, +7 at 20 on 13.8, +20 at 60 on
+  19.4 (the smite's dice are rolled on top of a blow's, and Presence surer to hit), and the
   unholy die adds about 3 to 4 more. With a smite every third blow that is a sixth more damage
-  than plain blows at level 1 to two fifths more at 60, about the design's "a quarter to a
-  third"; Smite's dice and cost are data.
-- **The pool covers a held smite and a heal**: 10.7 at level 1 to 18.8 at 60 (Presence and the
+  than plain blows at level 1 to a third more at 60, about the design's "a quarter to a third".
+- **Holy wrath is worth what its die says**: from level 40 the unholy take about 3.5 more a hit
+  (41.3 on 37.7 at 40 against this table's first run, which left it out), and the "Blow" column
+  moves little (its median monster is mostly not unholy) until Avatar puts the die on every foe at
+  60 (19.4 on 15.8; other content has moved the cells a little since, the paladin's hit chance
+  there too). It costs no zeal, so it is pure gain, and small beside a smite's dice, as the design
+  meant.
+- **Banishing smite is dear on the unholy**: 67.4 on 45.9 a blow at level 50, 71.9 on 46.5 at
+  60: half as much again for twice a smite's zeal (6 against 3), and the pool holds about three.
+  It is the most damage the paladin has, and on the summoned it does what no cell shows: they die
+  whatever their hit points.
+- **Zealot is worth most where the paladin is hit most**: it adds the foe's chance to hit to a
+  round's zeal, so a smite comes every 1.8 rounds instead of 2.3 at level 1, 2.0 instead of 2.6
+  at 5, but 2.8 instead of 2.9 at 30 and 2.8 instead of 3.0 at 40, where one foe of the
+  paladin's level hits one blow in fifteen or twenty. At 50 and 60 (hit 13 to 18 in a hundred)
+  it is 2.5 and 2.3 instead of 2.7. This table is one foe at a time; the design's case for
+  Zealot is the doorway, several foes hitting, and each adds its own chance (Retribution, 25,
+  spends what those blows build). In armour against level-mates at 20 to 40 that case is thin.
+- **The pool covers a held smite and a heal**: 10.7 at level 1 to 18.5 at 60 (Presence and the
   level), so a full pool is three smites, or a smite and Lay on hands (6).
 
 ## Summons
