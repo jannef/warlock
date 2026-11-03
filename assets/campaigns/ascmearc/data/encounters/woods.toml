@@ -13,6 +13,15 @@ weight = 4
 stance = "wildlife"
 group = [{ creature = "deer", count = "1d4+1" }]
 
+# The forest's pig, rooting by day (the ranger companion design's C7).
+[[table.entry]]
+id = "woods_boar"
+name = "a wild boar"
+weight = 2
+stance = "wildlife"
+when = { phase = ["day"] }
+group = [{ creature = "boar", count = "1" }]
+
 [[table.entry]]
 id = "woods_goblins"
 name = "goblin raiders"

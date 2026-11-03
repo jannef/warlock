@@ -6,6 +6,15 @@
 id = "deep_woods"
 when = { regions = ["Dēopholt", "Deorcholt"] }
 
+# The wood's cat, hunting at dusk (the ranger companion design's C7).
+[[table.entry]]
+id = "deep_lynx"
+name = "a lynx"
+weight = 2
+stance = "wildlife"
+when = { phase = ["twilight"] }
+group = [{ creature = "lynx", count = "1" }]
+
 [[table.entry]]
 id = "deep_orcs"
 name = "orc runts"
