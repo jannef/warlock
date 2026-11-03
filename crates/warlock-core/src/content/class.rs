@@ -609,6 +609,9 @@ pub enum ClassActive {
     BrandingSmite,
     /// A smite whose foe flees unless its will holds, for zeal (the paladin's Wrathful smite).
     WrathfulSmite,
+    /// A smite that unmakes the summoned and falls twice on the unholy, for zeal (the paladin's
+    /// Banishing smite).
+    BanishingSmite,
     /// A light of your own, on and off (a status that sheds light while it lasts).
     HolyRadiance,
     /// A breath taken in the guard, for ki and a wait: Poised until the next action, Dodge up
@@ -679,6 +682,7 @@ impl ClassActive {
         ClassActive::Smite,
         ClassActive::BrandingSmite,
         ClassActive::WrathfulSmite,
+        ClassActive::BanishingSmite,
         ClassActive::HolyRadiance,
         ClassActive::PatientDefence,
         ClassActive::StunningStrike,
@@ -712,6 +716,7 @@ impl ClassActive {
             ClassActive::Smite => "smite",
             ClassActive::BrandingSmite => "branding_smite",
             ClassActive::WrathfulSmite => "wrathful_smite",
+            ClassActive::BanishingSmite => "banishing_smite",
             ClassActive::HolyRadiance => "holy_radiance",
             ClassActive::PatientDefence => "patient_defence",
             ClassActive::StunningStrike => "stunning_strike",
@@ -747,6 +752,7 @@ impl ClassActive {
             ClassActive::Smite
                 | ClassActive::BrandingSmite
                 | ClassActive::WrathfulSmite
+                | ClassActive::BanishingSmite
                 | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
                 | ClassActive::LowBlow
@@ -779,6 +785,7 @@ impl ClassActive {
                 | ClassActive::Smite
                 | ClassActive::BrandingSmite
                 | ClassActive::WrathfulSmite
+                | ClassActive::BanishingSmite
                 | ClassActive::HolyRadiance
                 | ClassActive::Consecrate
         )
@@ -834,6 +841,7 @@ impl ClassActive {
             | ClassActive::Smite
             | ClassActive::BrandingSmite
             | ClassActive::WrathfulSmite
+            | ClassActive::BanishingSmite
             | ClassActive::StunningStrike
             | ClassActive::QuiveringPalm
             | ClassActive::LowBlow

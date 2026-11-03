@@ -1794,6 +1794,8 @@ mod smite_mode_tests;
 #[cfg(test)]
 mod smite_tests;
 #[cfg(test)]
+mod smite_wrath_tests;
+#[cfg(test)]
 mod song_tests;
 #[cfg(test)]
 mod spawn_tests;
