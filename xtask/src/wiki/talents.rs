@@ -475,7 +475,10 @@ fn buff(content: &Content, id: &str) -> String {
         .map(|(what, v)| format!("{what} {}", signed(*v)))
         .collect();
     let each = if s.max > 1 { " a degree" } else { "" };
-    said.extend(s.eases.map(|e| format!("{} min{each}", e / 60)));
+    said.extend(s.eases.map(|e| match e {
+        e if e % 60 == 0 => format!("{} min{each}", e / 60),
+        e => format!("{e} s{each}"),
+    }));
     format!("{} ({})", s.name, said.join(", "))
 }
 
