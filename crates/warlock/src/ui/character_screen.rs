@@ -86,6 +86,8 @@ pub struct CharacterScreen {
     /// The birth sign's gifts and flaw by name, in grant order (spec §8 "Birth sign"): the
     /// dimmed Stars line; empty without any.
     stars: Vec<String>,
+    /// The companion by name and kind, "Snel, a hound" (spec §8 "Allies"); none without one.
+    companion: Option<String>,
     scores: PerStat<u8>,
     /// The scores without status effects: a score below its own is lowered.
     base: PerStat<u8>,
@@ -139,6 +141,7 @@ impl CharacterScreen {
                 identity: Vec::new(),
                 birth: Vec::new(),
                 stars: Vec::new(),
+                companion: None,
                 scores: PerStat::splat(warlock_core::stats::AVERAGE),
                 base: PerStat::splat(warlock_core::stats::AVERAGE),
                 effects: Vec::new(),
@@ -195,11 +198,20 @@ impl CharacterScreen {
                 false => t.name,
             })
             .collect();
+        let companion = view.companion().map(|(ally, data)| {
+            let kind = &content.creature(ally.creature).name;
+            format!(
+                "{}, {} {kind}",
+                data.name,
+                warlock_core::content::article(kind)
+            )
+        });
         Self {
             name,
             identity,
             birth,
             stars,
+            companion,
             scores: view.own_scores(),
             base: view.own_base_scores(),
             effects: (view.own_effects())
@@ -285,7 +297,7 @@ impl CharacterScreen {
         let stars = stars_lines(&self.stars, width);
         let identity_rows = match self.identity.len() {
             0 => 0,
-            n => (n + birth.len() + stars.len()) as i32 + 1,
+            n => (n + birth.len() + stars.len()) as i32 + i32::from(self.companion.is_some()) + 1,
         };
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
         let status_rows = self.resources.len() as i32
@@ -326,6 +338,14 @@ impl CharacterScreen {
                     console.print(x, y, "Stars", TEXT_DIM);
                 }
                 console.print(x + 8, y, line, TEXT_DIM);
+            }
+            y += 1;
+        }
+        if let Some(companion) = &self.companion {
+            // `With    Snel, a hound`: the beast at the character's side (spec §8 "Allies").
+            if fits(y) {
+                console.print(x, y, "With", TEXT_DIM);
+                console.print(x + 8, y, companion, TEXT);
             }
             y += 1;
         }

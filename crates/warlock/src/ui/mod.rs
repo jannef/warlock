@@ -715,6 +715,15 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         Segment::new(1, text)
     });
     let effects = (view.own_effects()).map(|s| Segment::new(1, content.status(s).name.clone()));
+    // The companion (spec §8 "Allies"): its name and how it looks, in words ("Snel: unhurt"), or
+    // "Snel: with you" while it travels in the retinue; cut down to its name before it is dropped.
+    let companion = view.companion().map(|(ally, data)| {
+        let how = match ally.retinue {
+            true => "with you".to_string(),
+            false => ally.health.word().to_string(),
+        };
+        Segment::new(2, format!("{}: {how}", data.name)).or_short(data.name.clone())
+    });
     let stance = view.own_stance();
     let head = [
         Segment::new(0, view.level_name()),
@@ -730,6 +739,7 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
             format!("Lv {}", view.own_experience().level),
         )),
         (!stance.is_neutral()).then(|| Segment::new(1, content.stance_def(stance).name.clone())),
+        companion,
         view.region().map(|r| Segment::new(4, r)),
         Some(Segment::new(1, clock.format(time))),
         Some(Segment::new(3, calendar.full_date(time)).or_short(calendar.date(time))),

@@ -1399,9 +1399,15 @@ fn an_encounter_row_answers_it() {
     assert!(!app.world().resource::<ScreenStack>().asks_required());
     let game = app.world().resource::<Game>();
     assert!(game.world.perception().encounter().is_none());
-    assert_eq!(
-        game.world.messages().iter().last().map(|m| m.text.as_str()),
-        Some("You stand your ground.")
+    // Osric's companion steps out of the retinue after the answer's own line.
+    assert!(
+        (game.world.messages().iter()).any(|m| m.text == "You stand your ground."),
+        "{:?}",
+        game.world
+            .messages()
+            .iter()
+            .map(|m| m.text.as_str())
+            .collect::<Vec<_>>()
     );
 }
 
