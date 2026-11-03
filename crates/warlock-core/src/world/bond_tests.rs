@@ -18,9 +18,14 @@ static BUILTIN: LazyLock<Arc<Content>> =
 /// (human eyes), the east room for the hound (low-light eyes) to see, and a kobold behind the
 /// door when `kobold`.
 fn world(kobold: bool) -> World {
+    hall(kobold, '+')
+}
+
+/// The fixture with `door` (`+` a closed door, `#` a wall) in the wall between the rooms.
+fn hall(kobold: bool, door: char) -> World {
     let k = if kobold { "k" } else { "." };
     let map = format!(
-        "##############\n#@....#......#\n#.....+..{k}...#\n#.....#......#\n##############\n"
+        "##############\n#@....#......#\n#.....{door}..{k}...#\n#.....#......#\n##############\n"
     );
     let level = format!(
         "name = \"Bond\"\nambient = [20, 20, 20, 0]\nmap = '''\n{map}'''\n[legend]\n\
@@ -155,6 +160,22 @@ fn the_nose_shows_a_hostile_behind_a_closed_door() {
     );
     // The cells beside it stay unseen: the nose shows the foe, not the room.
     assert!(!shared.in_sight(Pos::new(at.x + 1, at.y)));
+}
+
+#[test]
+fn the_nose_stops_at_a_wall() {
+    let mut w = hall(true, '#');
+    let hound = w.companion().expect("the companion");
+    put(&mut w, hound, Pos::new(5, 2));
+    let at = (w.state.actors.values())
+        .find(|a| w.content().creature(a.creature).id == "kobold")
+        .map(|a| a.pos)
+        .expect("the kobold");
+    bond(&mut w);
+    assert!(
+        !compute(&mut w).in_sight(at),
+        "no smell comes through a wall"
+    );
 }
 
 #[test]

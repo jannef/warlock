@@ -205,7 +205,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   its own (it eases by its own clock), whatever laid it (a spell, a scroll, a potion, a boon):
   a buff is a buff spell's status or one a potion lends; a hex, a harm, a cooldown never
   crosses, and the shared one does not cross back. "Snel is bark-skinned too." Taming (C2), the
-  collar (C3), and the ranger's other abilities (C4, C6) are the design's next slices.
+  collar (C3), and the ranger's last ability (C6) are the design's next slices.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

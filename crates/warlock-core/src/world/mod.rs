@@ -172,6 +172,7 @@ pub(crate) mod mirrors;
 mod openings;
 mod orison;
 mod outcome;
+mod pack;
 mod path;
 mod perceive;
 mod potion;
@@ -1717,6 +1718,8 @@ mod outlaw_tests;
 #[cfg(test)]
 mod overworld_tests;
 #[cfg(test)]
+mod pack_tests;
+#[cfg(test)]
 mod parts_tests;
 #[cfg(test)]
 mod potion_status_tests;
@@ -1740,6 +1743,8 @@ mod read_tests;
 mod resource_talent_tests;
 #[cfg(test)]
 mod resource_tests;
+#[cfg(test)]
+mod retribution_tests;
 #[cfg(test)]
 mod reveal_tests;
 #[cfg(test)]

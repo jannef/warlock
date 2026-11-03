@@ -90,6 +90,8 @@ wiki's effect text appends "while raging".
 | `ally_mod` (`to_hit`, `protection`) | `World::ally_blow` (`fight.rs::resolve`) and `World::ally_protection` (`World::protection_of`), through an ally's *master's* mods (`world/ally.rs::ally_mods`; Beast-bond, docs/dev/allies.md) |
 | `ally_mod` (`count`, `duration_percent`, `lasting`, `most`) | `World::cast_summon` (`world/summon_spell.rs`): more come, a longer `Ally::until`, none, each spell's `most` raised (docs/dev/allies.md "Summons") |
 | `summon_bias` (`tag`, `weight`) | `World::summon_draw` (`world/summon.rs`), from `cast_summon`: the pool's weights (no item or talent yet; the owner's Q9 of #828) |
+| `shared_sight` | `Perception::compute` (`perception.rs`): the companion's second viewpoint, its eyes and nose (Hunter's bond, `docs/dev/companion.md`) |
+| `shared_buffs` | `World::afflict` → `World::share_buff` (`world/bond.rs`): a buff lands on the player and their companion both (Hunter's bond) |
 | `sees_unaware` | `Perception::compute` (`perception.rs`): `SeenActor::unaware` from `surprise::creature_unaware` for each creature in view, false for all without it; read by look mode ("unaware of you") and `ui/glyphs.rs` (the unaware mark) (Stalker's eye, the ranger's at level 2) |
 | `startled_blow` | `World::startle` → `World::hair_trigger` (`world/free_blow.rs`): a check made against a hostile attacker beside the holder is answered by `Cue::Startled`'s free blow before the attack is rolled; `resolve` (and `cast.rs::spell_attack`) stop when it fells the attacker (Hair trigger) |
 | `carry_percent` | `burden::load` (the limit before the affixes' kilograms, kept a multiple of 3) |
@@ -141,6 +143,7 @@ wiki's effect text appends "while raging".
 | `no_penalty_to`, `raise_percent` | `TalentMods::penalty(status, stat, by)` in `Effects::penalty_for` |
 | `free_blow` `flurry` | `World::second_blow` on `Cue::First` (`World::flurry`), after the off hand and the bash; two `cleave` sources make `great_cleave` |
 | `flurry_cost` | `World::flurry`: the second blow spends its cost (Ki) first, else none (`TalentMods::flurry_cost`; `docs/dev/resources.md`) |
+| `retribution { resource, cost }` (the paladin's at 25, #912; band-gated) | `World::retribution` (`world/smite.rs`), from `World::second_blow`'s `Cue::Attacked { hit }` arm before the riposte: a hostile beside the player whose melee attack hit them takes their smite (`smite_profile`) as `Free::Retribution`, its cost (zeal) spent first, else none (`TalentMods::retribution`; `docs/dev/combat.md`, `docs/dev/resources.md`) |
 | `hardened` | `World::level_up`, as the level comes (a level's hit points again, and `bonus` more, past `hp_level`) |
 | `resource_build` (Blood frenzy, Patient blade), `resource_max` (Mighty rage, Inner calm), `resource_start` (Battle trance), `resource_rate` (Battle trance, Inner calm, Steady hand, Patient blade) | `World::gain_resource` (beside the resource's own `builds`), `Actor::resource_max`, `Actor::resource_start` (`World::grant_resource`, `focus::hold`), `World::resource_rate` |
 | `unstoppable` | `World::unstoppable` (`hurt`, `Harm::Actor`: `cost` of the rage via `spend_resource`), `World::live` (the numb statuses tick nothing while Raging lasts) |
