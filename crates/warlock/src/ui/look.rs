@@ -380,6 +380,29 @@ mod tests {
     }
 
     #[test]
+    fn a_companion_is_seen_wearing_its_collar() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let spec = "human,male,ranger".parse().expect("a character");
+        let mut w = World::start_run(content, "showcase", None, Some(&spec), None, true)
+            .expect("a ranger's run");
+        // To the darkness chamber's amulet and out to the hound, in the light of the lantern.
+        let walk = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W use_tool give:j";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            w.apply(&action);
+        }
+        let view = w.perception();
+        let (ally, data) = view.companion().expect("a companion");
+        assert_eq!(ally.wears.len(), 1, "it took the amulet");
+        let seen = (view.actors().iter()).find(|a| a.id == ally.id);
+        let at = seen.expect("the hound is in sight").pos;
+        let line = describe(&view, at, false);
+        assert!(
+            line.starts_with(&format!("{}, your hound (unhurt), wearing a ", data.name)),
+            "{line}"
+        );
+    }
+
+    #[test]
     fn named_places_say_their_name_and_note() {
         let content = Arc::new(Content::builtin().expect("content"));
         let mut w = World::new(content, "ascmearc", None).expect("the Ascmearc");

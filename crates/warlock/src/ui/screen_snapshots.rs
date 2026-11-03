@@ -631,6 +631,22 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger beside their hound with the darkness chamber's amulet: Give in the Allies group,
+    // asking for something carried, then its list, what fits a neck only.
+    Case {
+        name: "abilities-menu-give",
+        character: Some("human,male,ranger"),
+        actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    Case {
+        name: "give-list",
+        character: Some("human,male,ranger"),
+        actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W",
+        screen: Some("give"),
+        ..BASE
+    },
     // An ally in the retinue on the overworld, none on the level: the orders greyed.
     Case {
         name: "abilities-menu-allies-none",

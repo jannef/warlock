@@ -1221,10 +1221,14 @@ impl Gameplay<'_> {
         match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
-            // Temper's list; the identify list asks which stack (`identify_by`, before this).
+            // Temper's and Give's lists; the identify list asks which stack (`identify_by`,
+            // before this).
             (true, ability::Aim::Item) => {
                 if ability == Ability::Temper {
                     return Some(ScreenAction::Open(ScreenName::Temper));
+                }
+                if ability == Ability::Give {
+                    return Some(ScreenAction::Open(ScreenName::Give));
                 }
             }
             (true, ability::Aim::Nothing) => {
