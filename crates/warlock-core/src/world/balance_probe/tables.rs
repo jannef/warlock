@@ -2,7 +2,7 @@
 //! `docs/balance.md` as Markdown.
 
 use super::{
-    Cast, Gear, LEVELS, Probe, STRIKES, Side, Snap, armoured, avg, bony, dice_text, fight,
+    Cast, Gear, LEVELS, Monster, Probe, STRIKES, Side, Snap, armoured, avg, bony, dice_text, fight,
     fight_cell, hide, hit_mean, hit_pct, median, r, roll_mean, strike_mean,
 };
 use crate::combat::{self, Category, Profile, Strike, Target};
@@ -656,6 +656,58 @@ pub(super) fn ki(p: &Probe, rng: &mut Rng, out: &mut String) {
             "| {level} | {max:.1} | {back:.2} | {} | {} | {spent:.2} − {back:.2} = {net:.2} · {lasts} |",
             fight_cell(&one),
             fight_cell(&two),
+        )
+        .unwrap();
+    }
+}
+
+/// The paladin's zeal (#910): the pool by level, the fight with plain blows against the fight
+/// with every blow a smite (on the monsters within two levels, and on the unholy among them),
+/// and what a round of the plain fight builds against what a smite costs.
+pub(super) fn zeal(p: &Probe, rng: &mut Rng, out: &mut String) {
+    writeln!(out, "\n## Zeal\n").unwrap();
+    writeln!(
+        out,
+        "The paladin in plain gear (a long sword; from level 5 a shield and the warrior's armour), trained stats, against the monsters within two levels. The pool's maximum as Smite grants it (the seeds' mean: Presence and the level) and the zeal back a round with time; the fight cells as in \"Fights\", with plain blows, with every blow a smite (an upper bound: a smite costs its zeal), and with every blow a smite on the unholy among those monsters (the smite's die more); then the zeal a round of plain blows builds (the paladin's hits and the foe's, at their chances, plus the time's) against a smite's cost: the rounds of fighting a smite takes to earn.\n"
+    )
+    .unwrap();
+    writeln!(
+        out,
+        "| L | zeal | back a round | Blow | Smite | Smite on the unholy | built a round · rounds a smite |\n|---|---|---|---|---|---|---|"
+    )
+    .unwrap();
+    for &level in &LEVELS {
+        let w = p.window(level, -2, 2);
+        let unholy: Vec<&Monster> = (w.iter().copied())
+            .filter(|m| p.content.unholy(m.creature))
+            .collect();
+        let snaps = p.of("paladin", level, Gear::Plain, true);
+        let zeal: Vec<_> = snaps.iter().filter_map(|s| s.zeal.as_ref()).collect();
+        let Some(first) = zeal.first() else {
+            continue;
+        };
+        let plain = fight(&snaps, &w, None, rng);
+        let smites: Vec<&Side> = zeal.iter().map(|z| &z.smite).collect();
+        let smite = super::fight_sides(&smites, &w, None, rng);
+        let holy: Vec<&Side> = zeal.iter().map(|z| &z.unholy).collect();
+        let on_unholy = if unholy.is_empty() {
+            "none".to_string()
+        } else {
+            fight_cell(&super::fight_sides(&holy, &unholy, None, rng))
+        };
+        let max = avg(zeal.iter().map(|z| f64::from(z.max)));
+        let back = avg(zeal.iter().map(|z| z.back));
+        // The paladin's blows a round at their chance, the foe's (one) at theirs.
+        let blows = avg(snaps.iter().map(|s| s.side.blows));
+        let built = blows * plain.hit / 100.0 * first.builds[0]
+            + plain.struck / 100.0 * first.builds[1]
+            + back;
+        writeln!(
+            out,
+            "| {level} | {max:.1} | {back:.2} | {} | {} | {on_unholy} | {built:.2} · {} |",
+            fight_cell(&plain),
+            fight_cell(&smite),
+            r(f64::from(first.cost) / built.max(0.01)),
         )
         .unwrap();
     }

@@ -458,6 +458,37 @@ What the run shows:
   (Inner calm included where the picks took it), so the later tricks (S3 to S7) have points to
   draw on beside the flurry.
 
+## Zeal
+
+Added with the paladin's Zeal and Smite (#910; `docs/design/paladin-smites.md` §5); the other
+sections were not rerun for it (the probe's draws after this table shift, so a rerun moves the
+"Summons" cells by noise).
+
+The paladin in plain gear (a long sword; from level 5 a shield and the warrior's armour), trained stats, against the monsters within two levels. The pool's maximum as Smite grants it (the seeds' mean: Presence and the level) and the zeal back a round with time; the fight cells as in "Fights", with plain blows, with every blow a smite (an upper bound: a smite costs its zeal), and with every blow a smite on the unholy among those monsters (the smite's die more); then the zeal a round of plain blows builds (the paladin's hits and the foe's, at their chances, plus the time's) against a smite's cost: the rounds of fighting a smite takes to earn.
+
+| L | zeal | back a round | Blow | Smite | Smite on the unholy | built a round · rounds a smite |
+|---|---|---|---|---|---|---|
+| 1 | 10.7 | 0.10 | 83/41 · 6.9:0.1 · 1.8 / 734 | 86/41 · 10.4:0.1 · 1.2 / 685 | 87/34 · 13.5:0.6 · 1.2 / 37 | 1.33 · 2.3 |
+| 5 | 10.7 | 0.10 | 84/34 · 6.7:0.6 · 3.6 / 60 | 87/34 · 9.8:0.6 · 2.4 / 63 | 91/37 · 12.8:0.7 · 2.2 / 48 | 1.16 · 2.6 |
+| 10 | 11.7 | 0.10 | 92/24 · 10.1:1.2 · 4.3 / 53 | 94/24 · 13.5:1.2 · 3.2 / 56 | 93/16 · 16.7:1.0 · 3.1 / 63 | 1.13 · 2.6 |
+| 15 | 11.8 | 0.10 | 95/14 · 11.6:0.7 · 5.4 / 166 | 97/14 · 15.2:0.8 · 4.1 / 152 | 96/9 · 19.7:0.7 · 3.0 / 166 | 1.06 · 2.8 |
+| 20 | 13.0 | 0.10 | 98/8 · 13.7:0.3 · 6.1 / 689 | 99/8 · 20.9:0.3 · 3.8 / 622 | 99/8 · 24.7:0.6 · 3.3 / 284 | 1.03 · 2.9 |
+| 30 | 14.2 | 0.10 | 98/8 · 16.2:1.1 · 8.8 / 271 | 99/8 · 27.4:1.2 · 5.4 / 245 | 99/6 · 31.0:0.9 · 3.2 / 285 | 1.04 · 2.9 |
+| 40 | 15.8 | 0.10 | 98/5 · 19.4:1.2 · 9.4 / 525 | 99/5 · 34.5:1.0 · 5.4 / 426 | 98/5 · 37.7:1.1 · 3.5 / 743 | 1.01 · 3.0 |
+| 50 | 17.2 | 0.10 | 98/15 · 20.6:2.5 · 11 / 183 | 99/15 · 39.8:2.7 · 6.0 / 173 | 99/27 · 43.5:6.5 · 5.5 / 59 | 1.12 · 2.7 |
+| 60 | 18.8 | 0.10 | 85/20 · 15.8:5.6 · 14 / 72 | 95/20 · 34.1:5.1 · 6.5 / 76 | 97/18 · 43.7:6.7 · 4.0 / 57 | 1.05 · 2.8 |
+
+- **A smite every third blow is what the fight pays for**: a round of plain blows builds about
+  one zeal (1.0 to 1.3: the paladin's hits nearly every blow, the foe's far fewer, a tenth from
+  time), so a smite (3) comes about every three rounds, the design's "a smite every third blow".
+- **A smite is worth 1.3 to 2.2 blows**: +3.5 at level 1 on 6.9, +7 at 20 on 13.7, +18 at 60
+  on 15.8 (the smite's dice are rolled on top of a blow's, and Presence surer to hit), and the
+  unholy die adds about 3 to 4 more. With a smite every third blow that is a sixth more damage
+  than plain blows at level 1 to two fifths more at 60, about the design's "a quarter to a
+  third"; Smite's dice and cost are data.
+- **The pool covers a held smite and a heal**: 10.7 at level 1 to 18.8 at 60 (Presence and the
+  level), so a full pool is three smites, or a smite and Lay on hands (6).
+
 ## Summons
 
 The druid's calls (#839), cast by a human druid (untrained stats, every score as rolled, seed 1) at each level a call comes or Pack leader (32) and Lord of the wild (60) change them: what comes of one cast (each type's count), for how many minutes (`lasting`: until slain), the mana over the pool, and each called type against the monsters within two levels of the druid, as in "Fights" (the beast's side bare: P(it hits) / P(it is hit) % · damage a round · rounds to kill / rounds to die).

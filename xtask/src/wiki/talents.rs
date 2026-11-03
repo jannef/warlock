@@ -1160,15 +1160,9 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              least {at_least}; then {}",
             status(&cooldown)
         ),
-        TalentEffect::LayOnHands {
-            per_level,
-            cooldown,
-            degrees,
-        } => format!(
-            "active (the time of a cast): {per_level} hit points per level back at once; then \
-             {degrees} degrees of {}",
-            status(&cooldown)
-        ),
+        TalentEffect::LayOnHands { per_level } => {
+            format!("active (the time of a cast): {per_level} hit points per level back at once")
+        }
         TalentEffect::Blaze {
             radius,
             damage,
@@ -1194,9 +1188,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 status(&cooldown)
             )
         }
-        TalentEffect::Avatar => "Lay on hands heals every hit point and cures every status that \
-             ticks (bleeding, poison) and every disease, and its cooldown is half as long"
-            .to_string(),
+        TalentEffect::Avatar { hands_cost_percent } => format!(
+            "Lay on hands heals every hit point and cures every status that ticks (bleeding, \
+             poison) and every disease, for {hands_cost_percent} % of its cost (at least 1)"
+        ),
         TalentEffect::Rage { resource: id } => {
             let rage = content.resource_id(&id).map(|r| content.resource(r));
             let gain = rage.map_or(id.clone(), |r| {
@@ -1304,13 +1299,24 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Smite {
             per_levels,
             sides,
-            cooldown,
-            degrees,
-        } => format!(
-            "active (the time of a melee attack), in a direction: a blow with 1d{sides} more \
-             damage per {per_levels} levels (at least 1d{sides}); then {degrees} degree of {}",
-            status(&cooldown)
-        ),
+            aim,
+            unholy,
+        } => {
+            let aim = aim.map_or_else(String::new, |stat| {
+                format!(", your {} modifier added to hit", stat.name())
+            });
+            let unholy = match (unholy, content.smite()) {
+                (0, _) | (_, None) => String::new(),
+                (n, Some(rules)) => format!(
+                    ", and {n}d{sides} more against the unholy (a creature tagged {})",
+                    rules.unholy.join(", ")
+                ),
+            };
+            format!(
+                "active (the time of a melee attack), in a direction: a blow with 1d{sides} \
+                 more damage per {per_levels} levels (at least 1d{sides}){unholy}{aim}"
+            )
+        }
         TalentEffect::Radiance { status: id, light } => {
             let reach = (content.light_id(&light)).map_or(0, |l| content.light(l).radius);
             format!(

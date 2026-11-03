@@ -385,12 +385,15 @@
 #   veterans_wind { per_level, at_least, cooldown }   the active Veteran's wind (as second_wind)
 #   whirlwind                     the active Whirlwind: a blow at every hostile beside, for the
 #                                 price of one attack
-#   lay_on_hands { per_level, cooldown, degrees }   the active Lay on hands: hit points back by
-#                                 the level, then that many degrees of the cooldown status
-#   avatar                        Lay on hands heals fully, cures what ticks and every disease,
-#                                 and its cooldown is half as long
-#   smite { per_levels, sides, cooldown, degrees }   the active Smite: a blow in a direction
-#                                 with one die of `sides` more per `per_levels` levels
+#   lay_on_hands { per_level }    the active Lay on hands: hit points back by the level (its
+#                                 cost is the talent's `resource`: zeal)
+#   avatar { hands_cost_percent } Lay on hands heals fully, cures what ticks and every disease,
+#                                 for that percent of its cost (at least 1)
+#   smite { per_levels, sides, aim, unholy }   the active Smite: a blow in a direction with one
+#                                 die of `sides` more per `per_levels` levels (at least one),
+#                                 `unholy` dice more on a creature smite.toml calls unholy, and
+#                                 the `aim` stat's modifier added to hit (its cost is the
+#                                 talent's `resource`: zeal)
 #   radiance { status, light }    the active Holy radiance: while it suffers the status it sheds
 #                                 the light
 #   patient_defence { status }    the active Patient defence (`use:patient_defence`, a wait;

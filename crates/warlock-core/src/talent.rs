@@ -562,8 +562,9 @@ pub struct TalentMods {
     pub lay_on_hands: Option<LayOnHands>,
     /// The birth sign's active Blaze, if it has it.
     pub blaze: Option<Blaze>,
-    /// Lay on hands heals fully, cures, and its cooldown is halved.
-    pub avatar: bool,
+    /// Lay on hands heals fully and cures, for this percent of its cost (Avatar); `None`
+    /// without Avatar.
+    pub avatar: Option<u8>,
     /// The active Rage: the resource it grants (Rage, which brings the Raging status), if it
     /// has it.
     pub rage: Option<ResourceId>,
@@ -867,28 +868,32 @@ pub struct StepBonus {
     pub no_shield: bool,
 }
 
-/// The active Lay on hands (spec §8 "Class abilities").
+/// The active Lay on hands (spec §8 "Class abilities"): hit points a character level; paid for
+/// by its talent's `resource` (Zeal).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct LayOnHands {
     pub per_level: u8,
-    pub cooldown: StatusId,
-    pub degrees: u16,
 }
 
-/// The active Smite (spec §8 "Class abilities").
+/// The active Smite (spec §8 "Class abilities"; `world/smite.rs`): paid for by its talent's
+/// `resource` (Zeal).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Smite {
     pub per_levels: u8,
     pub sides: u8,
-    pub cooldown: StatusId,
-    pub degrees: u16,
+    /// The stat whose modifier is added to the smite's to-hit (Presence).
+    pub aim: Option<Stat>,
+    /// Dice more against an unholy foe (`Content::unholy`).
+    pub unholy: u8,
 }
 
 impl Smite {
-    /// The extra dice at character `level`: one die per `per_levels` levels, at least one.
-    pub fn dice_at(self, level: u8) -> crate::dice::Dice {
+    /// The extra dice at character `level`: one die per `per_levels` levels, at least one, and
+    /// `unholy` more against an unholy foe.
+    pub fn dice_at(self, level: u8, unholy: bool) -> crate::dice::Dice {
         let count = (u32::from(level) / u32::from(self.per_levels.max(1))).max(1);
-        crate::dice::Dice::of(count, u32::from(self.sides))
+        let more = if unholy { u32::from(self.unholy) } else { 0 };
+        crate::dice::Dice::of(count + more, u32::from(self.sides))
     }
 }
 
@@ -1759,18 +1764,8 @@ impl TalentMods {
                     });
                 }
             }
-            TalentEffect::LayOnHands {
-                per_level,
-                cooldown,
-                degrees,
-            } => {
-                if let Some(cooldown) = content.status_id(&cooldown) {
-                    self.lay_on_hands = Some(LayOnHands {
-                        per_level,
-                        cooldown,
-                        degrees,
-                    });
-                }
+            TalentEffect::LayOnHands { per_level } => {
+                self.lay_on_hands = Some(LayOnHands { per_level });
             }
             TalentEffect::Blaze {
                 radius,
@@ -1795,7 +1790,9 @@ impl TalentMods {
                     });
                 }
             }
-            TalentEffect::Avatar => self.avatar = true,
+            TalentEffect::Avatar { hands_cost_percent } => {
+                self.avatar = Some(hands_cost_percent);
+            }
             TalentEffect::HornsGrace {
                 cures,
                 diseases,
@@ -1882,17 +1879,15 @@ impl TalentMods {
             TalentEffect::Smite {
                 per_levels,
                 sides,
-                cooldown,
-                degrees,
+                aim,
+                unholy,
             } => {
-                if let Some(cooldown) = content.status_id(&cooldown) {
-                    self.smite = Some(Smite {
-                        per_levels,
-                        sides,
-                        cooldown,
-                        degrees,
-                    });
-                }
+                self.smite = Some(Smite {
+                    per_levels,
+                    sides,
+                    aim,
+                    unholy,
+                });
             }
             TalentEffect::Radiance { status, light } => {
                 if let (Some(status), Some(light)) =

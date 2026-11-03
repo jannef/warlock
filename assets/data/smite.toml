@@ -1,0 +1,10 @@
+# Smiting (spec §8 "Class abilities": "Smite"; docs/design/paladin-smites.md). Optional: without
+# it nothing is unholy and no sin empties a pool (fixtures).
+[smite]
+# What holy wrath falls hardest on: a creature type carrying any of these tags takes the smite's
+# `unholy` dice more (talents/smite.toml). Checked on load: each tag is carried by some type.
+# Read by tags, never by a creature's alignment, which the player is never shown.
+unholy = ["undead", "fiend", "demon", "devil", "yugoloth"]
+# A deed that moves the player toward evil empties this pool (resources.toml): "Your zeal
+# deserts you." It bars nothing; the pool fills again.
+sin_empties = "zeal"

@@ -529,19 +529,21 @@ fn blood_frenzy_and_unstoppable_keep_the_rage() {
 fn lay_on_hands_smite_and_radiance_work_for_the_good_side_only() {
     let mut w = world("paladin");
     let content = w.content().clone();
+    let zeal = content.resource_id("zeal").expect("zeal");
+    let set_zeal = |w: &mut World, value: u16| w.player_mut().resources.set(zeal, value);
+    let zeal_of = |w: &World| w.state.player().resources.get(zeal).map(|p| p.value);
     w.player_mut().hp = 1;
+    set_zeal(&mut w, 6);
     run(&mut w, "use:lay_on_hands");
     assert!(said(&w).contains(&"Warmth flows from your hands.".to_string()));
     assert_eq!(w.state.player().hp, 3, "2 a level at level 1");
-    let drained = status(&w, "drained");
+    assert_eq!(zeal_of(&w), Some(0), "six zeal spent");
     assert_eq!(
         own(&w, ClassActive::LayOnHands),
-        Some(Some(Unavailable::While(drained)))
+        Some(Some(Unavailable::Short(zeal)))
     );
-    // Ten minutes later it answers again.
-    run(&mut w, "wait*101");
-    assert_eq!(own(&w, ClassActive::LayOnHands), Some(None));
-    // Neutral: nothing bars it, and it does nothing: a cast's time, no healing, no cooldown.
+    // Neutral: nothing bars it, and it does nothing: a cast's time, no healing, no zeal spent.
+    set_zeal(&mut w, 6);
     w.player_mut().alignment = Some(crate::alignment::Score::new(0));
     assert_eq!(own(&w, ClassActive::LayOnHands), Some(None), "usable");
     w.player_mut().hp = 1;
@@ -553,36 +555,38 @@ fn lay_on_hands_smite_and_radiance_work_for_the_good_side_only() {
     );
     assert_eq!(w.state.turn, turn + 1, "it takes its time");
     assert_eq!(w.state.player().hp, 1, "nothing healed");
-    assert!(!suffers(&w, w.state.player, "drained"), "no cooldown");
+    assert_eq!(zeal_of(&w), Some(6), "no zeal spent");
     // Kind is enough (`alignment = { min = "kind" }` in its data).
     w.player_mut().alignment = Some(crate::alignment::Score::new(200));
     run(&mut w, "use:lay_on_hands");
     assert!(said(&w).contains(&"Warmth flows from your hands.".to_string()));
-    run(&mut w, "wait*101");
-    // Smite: a blow with more dice, then spent.
-    reach(&mut w, 12);
+    // Smite (`smite_tests.rs` has its numbers): a blow with more dice, for three zeal.
     let smite = w.state.player().talent_mods(&content).smite.expect("smite");
-    assert_eq!(smite.dice_at(12).to_string(), "1d6");
-    assert_eq!(smite.dice_at(35).to_string(), "3d6");
+    assert_eq!(smite.dice_at(12, false).to_string(), "1d6");
+    assert_eq!(smite.dice_at(35, false).to_string(), "3d6");
     let kobold = beside(&mut w, "kobold", 500);
+    set_zeal(&mut w, 3);
     let turn = w.state.turn;
     run(&mut w, "use:smite:E");
     assert!(said(&w).contains(&"You smite!".to_string()));
     assert_eq!(w.state.turn, turn + 1);
-    assert!(suffers(&w, w.state.player, "spent"));
     assert!(w.state.actors.contains_key(&kobold));
+    assert!(zeal_of(&w) < Some(3), "three zeal spent");
+    set_zeal(&mut w, 2);
     run(&mut w, "use:smite:E");
-    assert_eq!(last(&w), "You are still spent.");
-    // Callous: the smite is still used, and no wrath answers it: no blow, no cooldown.
-    run(&mut w, "wait*200");
-    assert!(!suffers(&w, w.state.player, "spent"));
+    assert_eq!(last(&w), "Your zeal is not enough.");
+    // Callous: the smite is still used, and no wrath answers it: no blow, no zeal spent.
+    set_zeal(&mut w, 3);
     w.player_mut().alignment = Some(crate::alignment::Score::new(-200));
     let (turn, hp) = (w.state.turn, w.state.actors[&kobold].hp);
     run(&mut w, "use:smite:E");
     assert!(said(&w).contains(&"You call for holy wrath, but none answers.".to_string()));
     assert_eq!(w.state.turn, turn + 1);
     assert_eq!(w.state.actors[&kobold].hp, hp, "no blow");
-    assert!(!suffers(&w, w.state.player, "spent"));
+    assert!(
+        zeal_of(&w) >= Some(3),
+        "no zeal spent (the kobold's blows may build it)"
+    );
     w.state.actors.remove(&kobold);
     // Holy radiance: a light of the paladin's own, on and off.
     reach(&mut w, 40);
@@ -622,13 +626,27 @@ fn purity_of_body_and_avatar() {
     let max = w.state.player().max_hp(&content);
     assert_eq!(w.state.player().hp, max);
     assert!(!suffers(&w, player, "poisoned") && !suffers(&w, player, "bleeding"));
+}
+
+#[test]
+fn avatar_lays_on_hands_for_half_the_zeal() {
+    let mut w = world("paladin");
+    let content = w.content().clone();
+    let zeal = content.resource_id("zeal").expect("zeal");
+    reach(&mut w, 60);
+    w.player_mut().resources.set(zeal, 3);
+    assert_eq!(own(&w, ClassActive::LayOnHands), Some(None), "3 is enough");
+    w.player_mut().hp = 1;
+    run(&mut w, "use:lay_on_hands");
+    let max = w.state.player().max_hp(&content);
+    assert_eq!(w.state.player().hp, max);
     assert_eq!(
-        w.state
-            .player()
-            .effects
-            .get(status(&w, "drained"))
-            .map(|e| e.severity),
-        Some(1)
+        w.state.player().resources.get(zeal).map(|p| p.value),
+        Some(0)
+    );
+    assert_eq!(
+        own(&w, ClassActive::LayOnHands),
+        Some(Some(Unavailable::Short(zeal)))
     );
 }
 
@@ -666,10 +684,6 @@ fn martial_arts_flurry_still_mind_and_quivering_palm() {
     // Quivering palm: a wounding blow leaves the foe bleeding three degrees.
     reach(&mut w, 50);
     run(&mut w, "use:quivering_palm:E");
-    assert!(
-        !suffers(&w, player, "spent"),
-        "no cooldown: ki is the price"
-    );
     let bleeding = status(&w, "bleeding");
     let wounded =
         (w.state.actors.get(&kobold)).map(|k| (k.hp, k.effects.get(bleeding).map(|e| e.severity)));

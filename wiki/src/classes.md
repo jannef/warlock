@@ -41,8 +41,8 @@ you a talent pick in its place.
 
 A [paladin](classes.md#paladin)'s holy abilities used from the menu ([Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance))
 work only while you are on the good side, Kind or better ([Consecrate](abilities.md#ability-consecrate) Neutral or better; see [Alignment](alignment.md)):
-otherwise you can still use them, and nothing happens. The passives do not care. [Lay on hands](abilities.md#ability-lay-on-hands) drains you instead of costing
-[mana](mana.md#how-much). The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
+otherwise you can still use them, and nothing happens (no [zeal](resources.md#resource-zeal) spent). The passives do not care. [Smite](abilities.md#ability-smite) and
+[Lay on hands](abilities.md#ability-lay-on-hands) are paid in [zeal](resources.md#resource-zeal), not [mana](mana.md#how-much). The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
 [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
 [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend; the
 [ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry), [stunning strike](abilities.md#ability-stunning-strike), and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends

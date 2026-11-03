@@ -155,7 +155,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     **Fire breath** (Wyvern, 15: an active, `use:fire_breath:X,Y`, aimed at a cell within 8, the
     time of a `cast`, refused on the overworld: a bolt along the line toward it and on, 4 cells
     or to the first wall, one roll of 2d6 fire for everyone on it through the scrolls' cast code,
-    the `fire_breath` effect; then two degrees of Drained, ten minutes, shared with Lay on hands),
+    the `fire_breath` effect; then two degrees of Drained, ten minutes),
     Petrifying gaze (Basilisk, 12: the stare leaves 4 degrees of Transfixed and one of
     Spent-eyed, an hour), Roc's grip (Roc, Strength 14: carrying +25 % more, Burdened costs
     nothing), Dragon's hoard (Griffin, 12: Hoard sense's odds half again, loot +25 % and gems
@@ -386,7 +386,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     for (`alignment = { min = "kind" }` on its talent; Lay on hands, Smite, and Holy radiance
     are Kind or better, the good side, and Consecrate Neutral or better): outside them it is still listed and used, and does nothing ("You call for holy
     wrath, but none answers."), taking the time of a cast and spending no cooldown, mana, or
-    resource; putting Holy radiance out always works. Mana reads nothing of it, for now. Gods
+    resource; putting Holy radiance out always works. **A sin empties zeal** (#910): a deed
+    that moves the player's score down empties the pool `data/smite.toml`'s `sin_empties` names
+    (the paladin's zeal), if held, "Your zeal deserts you.", with the deed's own lines; it bars
+    nothing, the pool fills again. Mana reads nothing of it, for now. Gods
     and prayer, holy and unholy damage and items, and artifacts that work only for some bands
     (as the holy gifts do) will read the same band.
   - **Talents** (proposed for the talents PR, on hooks that exist): *Righteous fury* (while Good or
@@ -1100,10 +1103,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Veteran's wind (1 hit point a level back, at least 10, then Winded; a wait), Whirlwind (a
     blow at every hostile beside, clockwise from the north, each with the free blows the end of
     an attack brings, for one melee attack's price and one exertion), Lay on hands (2 hit
-    points a level, then two degrees of Drained, 10 minutes, standing in for its mana until
-    the mana PR; a cast; works for Kind or better), Smite (a blow in a direction with 1d6 more per 10
-    levels, at least 1d6, a magic weapon's extra die folded into the bonus at its average; then
-    Spent, 5 minutes; works for Kind or better), Holy radiance (on and off: Radiant, with no end of its
+    points a level, for 6 zeal, §8 "Resources"; a cast; works for Kind or better), Smite (the
+    paladin's at level 1, #910, `world/smite.rs`: a blow in a direction with 1d6 more per 10
+    levels, at least 1d6, and a die more against the unholy, a creature type carrying a tag of
+    `data/smite.toml`'s `unholy` list: the undead and the fiends, never read by alignment; the
+    paladin's Presence modifier added to hit; a magic weapon's extra die folded into the bonus at
+    its average; for 3 zeal, granted by the talent, no cooldown; works for Kind or better,
+    unanswered it spends no zeal), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
     glowing item's; a cast; works for Kind or better), Patient defence (the ascetic's at 18, #849: for a
     point of Ki and a wait's time, Poised until their next action: Dodge +4 from the status's own
@@ -1154,7 +1160,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     leaves it for 10 rage, while that much is held); Divine grace
     (disease checks +2, poison eases twice as fast), Purity of body (no
     disease is ever caught: `World::expose` refuses, nothing rolled), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
-    status that ticks and every disease, one degree of Drained); Martial arts (bare hands and
+    status that ticks and every disease, for half its zeal: 3); Martial arts (bare hands and
     kicks roll 1d6; grants Ki, §8 "Resources"), Flurry (level 1 beside it: a melee attack
     with nothing in hand strikes twice, the second at −2, for a point of ki; with none, once),
     Step of the wind's passive half (level 6: steps 10 % cheaper in no body armour and with no

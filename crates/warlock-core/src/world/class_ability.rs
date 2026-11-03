@@ -1,6 +1,6 @@
 //! The class actives in the world (spec §8 "Class abilities"): what a class's level table gives
 //! that is used from the abilities menu ([`crate::ability::Ability::Class`]) as [`Action::Use`]
-//! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Whirlwind, Lay on hands, Smite, Holy
+//! (`use:rage`, `use:smite:E`): Rage, War cry (for rage, `world/war_cry.rs`), Veteran's wind, Whirlwind, Lay on hands, Smite (for zeal, `world/smite.rs`), Holy
 //! radiance, Stunning strike, Quivering palm and Step of the wind (for ki, `world/ascetic.rs`; the last takes no time), the songs (Inspire, for inspiration, `world/song.rs`), the thief's
 //! Lurk and Low blow (`world/thief.rs`), Master thief's finisher (for openings,
 //! `world/openings.rs`; the ranger's Volley, aimed at a cell, is `world/volley.rs`). The
@@ -14,10 +14,11 @@
 //! radiance, Consecrate: [`ClassActive::holy`]) whose talent names the bands it works for
 //! (`alignment = { min = "kind" }` in data) asks [`World::answered`] after its free refusals:
 //! outside those bands it is used and does nothing ([`World::unanswered`]: its line, the time of
-//! a cast, no cooldown, mana, or resource spent). Nothing remembers it; the next use asks again.
+//! a cast, no cooldown, mana, or resource spent: `use_class` asks before it spends a cost). Nothing remembers it; the next use asks again.
 //!
 //! [`Action::Use`]: crate::action::Action::Use
 
+use super::smite::SmiteMode;
 use super::{ActorId, Spent, World};
 use crate::ability::{Ability, Unavailable};
 use crate::action::{AttackKind, Event};
@@ -62,9 +63,14 @@ impl World {
             return Spent::Nothing;
         }
         // Its cost in an alternative resource (spec §8 "Resources"), if it has one: what
-        // `unavailable` checked is there to spend.
+        // `unavailable` checked is there to spend. A holy gift paid so is asked the bands first:
+        // unanswered, it spends nothing.
         let player = self.state.player;
-        if let Some(cost) = self.content.class_active(active).and_then(|a| a.resource) {
+        let content = self.content.clone();
+        if let Some(cost) = crate::ability::class_cost(self.state.player(), &content, active) {
+            if active.holy() && !self.answered(active) {
+                return self.unanswered(active);
+            }
             self.spend_resource(player, cost.resource, cost.amount, events);
         }
         match (active, dir) {
@@ -83,7 +89,7 @@ impl World {
             (ClassActive::Orison, _) => self.orison(events),
             (ClassActive::Sanctuary, _) => self.begin_sanctuary(),
             (ClassActive::Cackle, _) => self.cackle(events),
-            (ClassActive::Smite, Some(dir)) => self.smite(dir, events),
+            (ClassActive::Smite, Some(dir)) => self.smite(SmiteMode::Plain, dir, events),
             (ClassActive::StunningStrike, Some(dir)) => self.stunning_strike(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
             (ClassActive::LowBlow, Some(dir)) => self.low_blow(dir, events),
@@ -168,9 +174,9 @@ impl World {
         Spent::Turn(self.price_of(player, ActionKind::Wait))
     }
 
-    /// Lay on hands: hit points back by the level, then its cooldown; with Avatar every hit
-    /// point, every status that harms as it ticks and every disease cured, and half the
-    /// cooldown. Takes the time of a `cast`.
+    /// Lay on hands: hit points back by the level; with Avatar every hit point, every status
+    /// that harms as it ticks and every disease cured. Its zeal (Avatar's share of it) was spent
+    /// by `use_class`. Takes the time of a `cast`.
     fn lay_on_hands(&mut self, events: &mut Vec<Event>) -> Spent {
         let content = self.content.clone();
         let player = self.state.player;
@@ -181,8 +187,7 @@ impl World {
         if !self.answered(ClassActive::LayOnHands) {
             return self.unanswered(ClassActive::LayOnHands);
         }
-        let mut degrees = hands.degrees;
-        if mods.avatar {
+        if mods.avatar.is_some() {
             let me = self.state.player();
             let max = me.max_hp(&content);
             let harms: Vec<Effect> = (me.effects.iter())
@@ -198,13 +203,11 @@ impl World {
             for disease in diseases {
                 self.end_disease(player, disease, events);
             }
-            degrees = (degrees / 2).max(1);
         } else {
             let back = i32::from(hands.per_level) * i32::from(self.player_level());
             self.heal_player(back);
         }
         self.say("Warmth flows from your hands.");
-        self.afflict(player, hands.cooldown, degrees, None, events);
         Spent::Turn(self.price_of(player, ActionKind::Cast))
     }
 
@@ -255,39 +258,6 @@ impl World {
             self.after_attack(player, target, super::free_blow::parried(first), events);
         }
         self.exert(ActionKind::Melee);
-        Spent::Turn(price)
-    }
-
-    /// Smite: a blow with what the player wields at the hostile in `dir`, with the smite's dice
-    /// more damage, then its cooldown. Refused (no time) with no hostile there.
-    fn smite(&mut self, dir: Dir, events: &mut Vec<Event>) -> Spent {
-        let content = self.content.clone();
-        let player = self.state.player;
-        let Some(smite) = self.state.player().talent_mods(&content).smite else {
-            return Spent::Nothing;
-        };
-        let Some((target, seen)) = self.hostile_toward(dir) else {
-            return Spent::Nothing;
-        };
-        if !self.answered(ClassActive::Smite) {
-            return self.unanswered(ClassActive::Smite);
-        }
-        let me = self.state.player();
-        let melee = me.attack_skills(&content, AttackKind::Melee, None);
-        let with = me.weapon_item(&content);
-        let price = self.attack_price(player, ActionKind::Melee, with, melee);
-        let mut profile = me.melee(&content);
-        let dice = smite.dice_at(self.player_level());
-        // A magic weapon's extra die is folded into the bonus at its average.
-        if let Some(more) = profile.extra {
-            profile.bonus += (more.min() + more.max()) / 2;
-        }
-        profile.extra = Some(dice);
-        self.say("You smite!");
-        let blow = self.player_blow_with(target, seen, profile, events);
-        self.after_attack(player, target, super::free_blow::parried(blow), events);
-        self.exert(ActionKind::Melee);
-        self.afflict(player, smite.cooldown, smite.degrees, None, events);
         Spent::Turn(price)
     }
 

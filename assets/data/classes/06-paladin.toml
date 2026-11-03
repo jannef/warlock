@@ -30,14 +30,14 @@ kit = [
 # Bonus talents from Guard and Vigour.
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }
 # The level table (spec §8 "Class abilities"). The holy gifts used from the abilities menu work
-# only for the good side (their talents' `alignment`); they bar nothing. Lay on hands waits for
-# its mana (the mana PR) with a cooldown.
+# only for the good side (their talents' `alignment`); they bar nothing. Smite grants zeal, the
+# pool Smite and Lay on hands are paid from (docs/design/paladin-smites.md).
 abilities = [
+    { level = 1, talent = "smite" },
     { level = 1, talent = "lay_on_hands" },
     { level = 1, talent = "trained_wind" },
     { level = 6, talent = "divine_grace" },
     { level = 6, talent = "blessing" },
-    { level = 12, talent = "smite" },
     { level = 12, talent = "consecrate" },
     { level = 18, talent = "purity_of_body" },
     { level = 40, talent = "holy_radiance" },
