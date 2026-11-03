@@ -24,7 +24,7 @@ common the rest) and `[points]` (what each effect kind is worth: only for the ti
 and the wiki; nothing counts a story's total). Its comments document every field.
 `assets/data/background/NN-<chapter>.toml` is one chapter a file in file-name order (`[chapter]`
 `id`, `name`, `paragraph` 1 to 4, slot `defaults`, and `when = { companion = true }` for a chapter
-told only to a witness with a companion (`false`: without one; `Chapter::when`, `ChapterWhen::fits`);
+told only to a witness with a kept beast, a companion or a familiar (`Witness::kept`; `false`: without one; `Chapter::when`, `ChapterWhen::fits`);
 `[[line]]`s), then a campaign's own in
 `assets/campaigns/<id>/data/background/` (read by `ContentFiles::table("background")` after the
 shared ones; `Chapter::campaign` from the path). A story told in campaign `c` is the shared

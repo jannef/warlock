@@ -193,7 +193,28 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Snel: with you"), in look mode ("Snel, your hound (unhurt), …"), on the Character screen
   ("With    Snel, a hound"), and in the `companion` dump; the wiki states the lists, the odds,
   and the growth table exactly. Taming (C2), the collar (C3), and the ranger's later abilities
-  (C4–C6) are the design's next slices.
+  (C4–C6) are the design's next slices. **The familiar** (`warlock-core/src/world/familiar.rs`,
+  `content/familiar.rs` and `data/familiars.toml`; #929, design `docs/design/witch-familiar.md`,
+  `docs/dev/familiar.md`): the witch's small beast, an ally with `source =
+  Familiar(CompanionData)`, `until = None`, at most one at a time; with a companion it is one of
+  the player's **kept** beasts (`AllySource::kept`), and a witch may have both. A kept beast is
+  named, grows, always comes along, leaves a corpse, and is shown by the rules above. Her
+  **Familiar** (level 1) brings one as the run begins: drawn from her race's list
+  (`[start.by_race]`: one to three beasts of level at most `most_level` 2: cat, toad, raven, hare,
+  bat, and the small beasts the ranger's lists give a race where they fit a witch), or at
+  `rare_per_mille` (50) one of the rares (a black hound, a panther), two draws on its own stream;
+  named from `names` (the English witch trials' Tibb, Fancie, Pyewacket, …; one draw on its own
+  stream); "Tibb, your cat, winds about your ankles." (`[arrives]`, a line a kind). **The touch**: a
+  familiar's melee hit that leaves its target alive lays its master's hex (`touch`, Evil eye's
+  Hexed) at the degrees she would cast it now, **with her as the giver**, so Cackle and Malison see
+  it as hers, and starts every other hex of hers on the target afresh at its own degree (those that
+  stack by refreshing). No mana, none of her turns, no marks, no draws, no message: a creature's
+  statuses are silent. **The harrying**: its target is the nearest creature it sees under a hex of
+  its master's, within its order's reach, before any other; else the nearest as any ally's. **Two
+  kept beasts beside the player**, with something to treat on one: Heal asks a direction first (the
+  wait key: the player); with one beside, nothing is asked. Calling a new one (F2, #930) and the
+  familiar's story lines (F3, #931; until then the companion chapter's plain line) are the design's
+  next slices.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

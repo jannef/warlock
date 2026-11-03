@@ -34,6 +34,10 @@ tameable, and a `depart` line. The vermin and the orcs' wolves that are tameable
 | `black_hound` | 5 | 35 | 1250 | 24 | bite 1d8 piercing | 10 | darkvision, hearing 22, footsteps 40; the best nose; a rare start |
 | `great_boar` | 6 | 40 | 1100 | 30 | tusks 2d6 piercing | 6 | low-light, a thick hide (Defence 2), footsteps 70; a rare start |
 | `panther` | 6 | 40 | 1400 | 24 | claws 1d8 slashing | — | darkvision, hearing 20, footsteps 10 (the quietest feet); a rare start |
+| `cat` | 1 | 15 | 1300 | 10 | claws 1d2 slashing | — | darkvision, hearing 6, footsteps 10, small; a familiar's kind only, in no population |
+| `toad` | 1 | 15 | 900 | 10 | bite 1d2 piercing | — | low-light, hearing 15, silent, small; a familiar's kind only; its flesh poisons |
+| `raven` | 1 | 15 | 1300 | 9 | beak 1d3 piercing | — | normal eyes, sight 12, hearing 8, silent (it flies), small; a familiar's kind only |
+| `hare` | 1 | 15 | 1600 | 10 | kick 1d2 bludgeoning | — | low-light, hearing 4, footsteps 20, small; a familiar's kind only |
 | `bear` | 12 | 70 | 1000 | 60 | claws 2d6 slashing | 6 | low-light eyes, a thick hide (Defence 1; the body rule's Protection 0 at 12), footsteps 70; Call of the forest's |
 
 Call the elements draws from the elemental roster (`elementals.md`): the greater earth (24),

@@ -191,10 +191,11 @@ fn every_caster_has_its_table_by_level_sixty() {
         ),
         (
             "witch",
-            2,
+            3,
             vec![
                 "Herb lore",
                 "Evil eye",
+                "Familiar",
                 "Hex of weakness",
                 "Cackle",
                 "Poison lore",

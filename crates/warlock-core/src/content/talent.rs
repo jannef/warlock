@@ -346,6 +346,10 @@ pub enum TalentEffect {
     /// An animal companion from the first turn (Animal companion, the ranger's level 1; spec §8
     /// "Allies": `World::bring_companion`): a beast of its race's list, or rarely a rare one.
     Companion,
+    /// A familiar from the first turn (Familiar, the witch's level 1; spec §8 "Allies":
+    /// `World::bring_familiar`): a small beast of its race's list, or rarely a rare one, whose
+    /// touch is her evil eye.
+    Familiar,
     /// `bonus` on its taming checks (Animal companion's edge; the Tame skill ability reads it).
     Tame { bonus: i32 },
     /// An initiative check it makes against a hostile attacker beside it is answered with a
@@ -2301,6 +2305,7 @@ impl TalentEffect {
             | TalentEffect::GemWorth
             | TalentEffect::SeesUnaware
             | TalentEffect::Companion
+            | TalentEffect::Familiar
             | TalentEffect::StartledBlow
             | TalentEffect::Distrusted
             | TalentEffect::ExactSounds

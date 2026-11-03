@@ -277,8 +277,8 @@ pub struct SeenActor {
     /// It is an ally of the player's (spec §8 "Allies"), which they know by sight.
     #[serde(skip)]
     pub ally: bool,
-    /// It is the player's companion (`world/companion.rs`): its name is in
-    /// [`PerceptionView::allies`] under its id.
+    /// It is the player's kept beast, a companion or a familiar (`world/companion.rs`,
+    /// `familiar.rs`): its name is in [`PerceptionView::allies`] under its id.
     #[serde(skip)]
     pub companion: bool,
 }
@@ -526,6 +526,8 @@ pub(crate) struct Perception {
     /// What the player may treat on their allies beside them (`world/heal.rs`): they know their
     /// own allies' hurts.
     ally_ailments: Vec<crate::heal::OwnAilment>,
+    /// The ways to the player's kept beasts beside them (`world/heal.rs`), in direction order.
+    kept_beside: Vec<crate::geom::Dir>,
 }
 
 /// A disguised mimic as the snapshot hides it: a shut chest of its level's band at its cell.
@@ -858,7 +860,7 @@ impl Perception {
                 shape: shape(a, content),
                 unaware: false,
                 ally: a.master() == Some(state.player),
-                companion: a.master() == Some(state.player) && a.companion().is_some(),
+                companion: a.master() == Some(state.player) && a.kept().is_some(),
             })
             .collect();
         // Stalker's eye: which of them have not noticed the player.
@@ -973,6 +975,10 @@ impl Perception {
             disguises,
             allies: allies_of(state, content),
             ally_ailments: crate::heal::of_allies(&crate::world::allies_beside(state), content),
+            kept_beside: (crate::world::allies_beside(state).into_iter())
+                .filter(|(_, a)| a.kept().is_some())
+                .map(|(d, _)| d)
+                .collect(),
         }
     }
 
@@ -2179,8 +2185,29 @@ impl<'a> PerceptionView<'a> {
     pub fn companion(&self) -> Option<(&AllyView, &crate::world::CompanionData)> {
         (self.snapshot.allies.iter()).find_map(|a| match &a.source {
             crate::world::AllySource::Companion(data) => Some((a, data)),
-            crate::world::AllySource::Summoned { .. } => None,
+            _ => None,
         })
+    }
+
+    /// The player's familiar among their allies (`world/familiar.rs`), with its name and
+    /// grade; `None` without one.
+    pub fn familiar(&self) -> Option<(&AllyView, &crate::world::CompanionData)> {
+        (self.snapshot.allies.iter()).find_map(|a| match &a.source {
+            crate::world::AllySource::Familiar(data) => Some((a, data)),
+            _ => None,
+        })
+    }
+
+    /// The player's kept beasts (a companion, a familiar; `AllySource::kept`), with their names
+    /// and grades, in actor id order: what the status bar shows a line of each.
+    pub fn kept(&self) -> impl Iterator<Item = (&AllyView, &crate::world::CompanionData)> {
+        (self.snapshot.allies.iter()).filter_map(|a| a.source.data().map(|d| (a, d)))
+    }
+
+    /// The ways to the player's kept beasts beside them, in direction order: with two or more,
+    /// tending one asks which way first (spec §8 "Allies"; the owner, #907 Q4).
+    pub fn kept_beside(&self) -> &[crate::geom::Dir] {
+        &self.snapshot.kept_beside
     }
 
     /// How many allies are with the player: on their level or in their retinue.

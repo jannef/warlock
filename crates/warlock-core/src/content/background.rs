@@ -217,14 +217,15 @@ struct WhenSpec {
 #[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
 #[serde(default, deny_unknown_fields)]
 pub struct ChapterWhen {
-    /// With a companion as the run begins (`true`), or without one (`false`).
+    /// With a kept beast, a companion or a familiar, as the run begins (`true`), or without one
+    /// (`false`).
     pub companion: Option<bool>,
 }
 
 impl ChapterWhen {
-    /// Whether the chapter is told to a witness with (`has`) a companion or without.
-    pub fn fits(&self, has_companion: bool) -> bool {
-        self.companion.is_none_or(|c| c == has_companion)
+    /// Whether the chapter is told to a witness with (`has`) a kept beast or without.
+    pub fn fits(&self, has_kept: bool) -> bool {
+        self.companion.is_none_or(|c| c == has_kept)
     }
 }
 

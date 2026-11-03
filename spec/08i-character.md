@@ -1370,7 +1370,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     short; refused with no time, "There is no one there to blind.", without a hostile there).
     Trapfinding, Pick lock, and Light fingers, which only gave what the class's skills give,
     are gone from the table (#684); a save holding one loads without it (said in the log).
-  - **Passives**, each one read: Animal companion (the ranger's level 1, #916: a beast of the
+  - **Passives**, each one read: Familiar (the witch's level 1, #929: a small beast of her race's
+    list, or rarely a rare one, at her heel from the first turn, whose touch lays her evil eye and
+    which goes for what she has hexed, §8 "Allies": "The familiar"; `TalentEffect::Familiar` read
+    by `World::bring_familiar`), Animal companion (the ranger's level 1, #916: a beast of the
     race's kind, or rarely a rare one, at their side from the first turn, that grows with their
     level and always comes along, §8 "Allies": "The animal companion"; `TalentEffect::Companion`
     read by `World::bring_companion`; and `tame = 2`, `TalentMods::tame`, the ranger's edge at

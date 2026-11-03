@@ -57,6 +57,10 @@ yours; a [hex](magic.md#shapes) falls on a [hostile](creatures.md#factions) you 
 open sky. The [druid](classes.md#druid)'s calls bring wolves, bears, and elementals to fight beside them
 as [allies](allies.md).
 
+**The witch's familiar** ([Familiar](talents.md#talent-familiar), from level 1) is a small beast at
+her heel whose [touch](allies.md#the-touch) lays her [evil eye](magic.md#spell-evil_eye) and which
+[goes for what she has hexed](allies.md#what-it-goes-for).
+
 **The witch's cackle** ([Cackle](abilities.md#ability-cackle), from level 6) keeps her hexes on.
 It costs no [mana](mana.md#spending-it) and takes the time of a spell: every hex she laid herself
 ([hexed](status-effects.md#status-ill-wished), [weakened](status-effects.md#status-weakened),
