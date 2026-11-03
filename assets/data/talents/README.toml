@@ -491,7 +491,7 @@
 #                                 one; what it costs is the talent's `resource`
 #   song { id, on, status, severity, resource, cost, mana, check, difficulty }   a song (spec §8
 #                                 "Class abilities", the bard's songs): the class active `id`
-#                                 (`use:inspire`; an active that sings), sung aloud (heard as a
+#                                 (`use:inspire`, `use:lullaby`; an active that sings), sung aloud (heard as a
 #                                 voice, louder than a chat) for the time of a `song`, refused on
 #                                 the overworld and while Silenced. It costs ONE thing: `cost`
 #                                 of `resource` (unusable while short) or `mana` (1 to 100); no
@@ -500,8 +500,8 @@
 #                                 plus the singer's Music's song degrees (skills.toml), at most
 #                                 the status's `max`. `on = "hearers"`: each hostile creature
 #                                 that hears it rolls `check` (a stat) against `difficulty` (0 to
-#                                 30) plus the singer's Music's song craft (the Lullaby's, to
-#                                 come); a song on the singer has neither
+#                                 30) plus the singer's Music's song craft, and failed, suffers
+#                                 the status so (the Lullaby); a song on the singer has neither
 #   virtuoso { status }           every song costs nothing and gives a degree more, and a song
 #                                 on the singer gives that status instead
 #   consecrate { mana, time }     the active Consecrate: standing in an unholy special room (or

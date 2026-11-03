@@ -1659,6 +1659,8 @@ mod lockpick_tests;
 #[cfg(test)]
 mod lucky_tests;
 #[cfg(test)]
+mod lullaby_tests;
+#[cfg(test)]
 mod lurk_tests;
 #[cfg(test)]
 mod magic_tests;
