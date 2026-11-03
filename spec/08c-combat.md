@@ -214,7 +214,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   their character (M30, #226; the design is `docs/design/progression.md` §3). **The curve is
   written in kills** of the player's own level (`[kills]`): with m = n − 1 a level n costs
   `k(n) = plateau × m ÷ (m + ramp) + slope_per_100 ÷ 100 × m` kills (213, 5, 285: 38 for level
-  2, 163 for level 10, 223 for 20, 365 for 60, before the early discount), each worth the
+  2, 163 for level 10, 223 for 20, 365 for 60, 485 for 100, before the early discount), each worth the
   **creature XP guideline**
   `per_level × n + base` (5 and 10, which the creature data follows: a content test fails for a
   type more than three times off it either way, but for the listed outliers, the bat, the deer,
@@ -223,12 +223,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   to 11, 100 % from level 12 on; the list may cover levels 2 to the cap, each value 1 to 100, never
   decreasing, else the file is refused), rounded once from the exact fraction, and the threshold
   of level n is the sum over levels 2 to n (192 for level 2, 691 for 3, 1 619 for 4, 3 104 for 5,
-  29 715 for 10, 52 688 for 12, 205 205 for 20, 2 845 856 for the cap, level 60; from level 12 on
+  29 715 for 10, 52 688 for 12, 205 205 for 20, 2 845 856 for 60, 9 966 935 for the curve's top,
+  level 100 (`max_level`, #877; `docs/design/prestige-classes.md` §5); from level 12 on
   each level costs what it would undiscounted, so the totals are 15 892 lower than without the
   discount: about 2 600 such kills to reach level 20 and 14 600 to reach 60; a test pins the
   table's hash; XP beyond the cap counts but buys nothing). The level also stops at the
   character's **class cap** (`ClassDef::max_level`, default `[levels] class_max`, 60: every class
-  today) until a prestige class raises it (§8 "Prestige classes"; `Experience::level_for(xp,
+  today; a run without a character stops there too) until a prestige class raises it, at most to
+  100; hit points still grow to level 50 and mana to 60 (`hp_level`, `mana_level`), so levels 61 to
+  100 add neither (but Hardened's hit points; Q14 of the design) (§8 "Prestige classes"; `Experience::level_for(xp,
   factor, cap)`, the cap `Character::level_cap`): XP past it banks the same way. **Race and class factors**: races and classes have `experience`, a percent of the
   XP a level needs (50 to 200, default 100: elf 140, gnome 120, dwarf 115, half-elf 105, human
   100, halfling 95, half-orc 90; wizard 125, ascetic 120, priest, druid, and witch 115, paladin 110,
@@ -241,7 +244,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   % for each level of difference up to 4 (+20 %), rounded; below it `xp × (ZD − d) ÷ ZD` rounded,
   with `d` the levels below and `ZD` the "zero difference" for the player's level (5 at levels 1 to
   7, 6 at 8–9, 7 at 10–11, 8 at 12–15, 9 at 16–19, 11 at 20–29, 12 at 30–39, 13 at 40–44, 14 at
-  45–49, 15 at 50–54, 16 at 55–59, 17 at 60); a monster `d ≥ ZD` below is grey and gives 0, any other kill at least 1, and a creature worth
+  45–49, 15 at 50–54, 16 at 55–59, 17 at 60–64, and one more every five levels to 25 at 100); a monster `d ≥ ZD` below is grey and gives 0, any other kill at least 1, and a creature worth
   0 XP gives 0. The `xp` a kill starts from is the creature's `xp` times its hand-set `xp_percent`
   (§7, default 100; `CreatureDef::kill_xp`, the one place it is read), so the modifier scales the
   level scaling and the first-kill bonus alike. Only kills by the player count: `World::dies` awards the XP when the one who

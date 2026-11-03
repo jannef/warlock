@@ -939,7 +939,7 @@ mod tests {
             (format!("{ONE}rolls = 11\n"), "rolls 11 is more than 10"),
             (
                 format!("{ONE}max_level = 1\n"),
-                "max_level 1 is not 2 to 99",
+                "max_level 1 is not 2 to 100",
             ),
             (
                 format!(
@@ -1116,7 +1116,7 @@ mod tests {
             // Its table reaches 50 and its bonus picks 55: a lower cap leaves a row past it.
             (30, "`iron_will` at level 32 is past its highest level, 30"),
             (50, "bonus_talents: level 55 is past its highest level, 50"),
-            (61, "max_level 61 is more than the curve's 60"),
+            (101, "max_level 101 is not 2 to 100"),
         ] {
             let e = with_aristocrat(|t| format!("{t}max_level = {cap}\n")).unwrap_err();
             assert!(e.message.contains(why), "{why}: {}", e.message);

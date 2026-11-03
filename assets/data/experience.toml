@@ -8,8 +8,8 @@
 # level 3, ...; 100 % after the list; values 1 to 100, never decreasing), rounded once, and the
 # XP total needed to reach level n is the sum of those for levels 2 to n. With 213, 5, and 285
 # and the discount below: 10 kills for level 2 (192 XP; 38 and 767 undiscounted), 146 for level
-# 10 (29 715 XP in all), 365 for level 60 (2 845 856 XP in all); about 2 600 kills of your own
-# level to reach level 20 and 14 600 to reach level 60. From level 12 on every level costs what
+# 10 (29 715 XP in all), 365 for level 60 (2 845 856 XP in all), 485 for level 100 (9 966 935
+# XP in all); about 2 600 kills of your own level to reach level 20 and 14 600 to reach level 60. From level 12 on every level costs what
 # it would without the discount, so later totals are 15 892 XP lower. The first term ramps
 # quickly toward a plateau, the second keeps every level costlier than the last. A character's thresholds are these times their race's and their
 # class's `experience` percents (races.toml, classes/), rounded: an elf wizard needs 175 %,
@@ -17,11 +17,13 @@
 #
 # Hit points: each level gained up to hp_level (inclusive) adds max(1, class hp ÷ 2 + the
 # Toughness modifier) to the maximum, and the same to the current hit points. No runaway pools:
-# 50, not the 60 of max_level, leaves the last ten levels to Hardened (the berserker's talent).
+# 50, not the 60 of class_max, leaves the last ten levels of a class to Hardened (the
+# berserker's talent); levels 61 to 100, a prestige class's, add none either.
 #
 # Mana: each level gained up to mana_level (inclusive; default 0, none) adds max(0, class mana ÷ 2
 # + the better of the Intelligence and Willpower modifiers) to the maximum, and the same to the
-# current mana. It runs past hp_level, so casters keep growing after hit points stop.
+# current mana. It runs past hp_level, so casters keep growing after hit points stop; it stops
+# at 60, class_max, so a prestige class's levels add none.
 #
 # Scaling (classic World of Warcraft), for the player's own kills. A monster above the player is
 # worth bonus_percent more per level of difference, up to bonus_levels levels. A monster below
@@ -42,9 +44,9 @@
 # class_max is the highest level a class reaches unless its file says otherwise (classes/
 # `max_level`; spec §8 "Prestige classes"): a character's level is read off the curve as ever but
 # stops at their class's cap, plus a prestige class's levels once they are called; 0, or none,
-# is max_level.
+# is max_level. A run without a character stops at class_max too.
 
-max_level = 60
+max_level = 100
 hp_level = 50
 mana_level = 60
 bonus_percent = 5
@@ -72,7 +74,7 @@ talent_every = 3
 class_max = 60
 creation_talents = 2
 
-# ZD from each player level on, in order.
+# ZD from each player level on, in order; from 30 on, one more every five levels or so.
 [[zero_difference]]
 from = 1
 zd = 5
@@ -120,3 +122,35 @@ zd = 16
 [[zero_difference]]
 from = 60
 zd = 17
+
+[[zero_difference]]
+from = 65
+zd = 18
+
+[[zero_difference]]
+from = 70
+zd = 19
+
+[[zero_difference]]
+from = 75
+zd = 20
+
+[[zero_difference]]
+from = 80
+zd = 21
+
+[[zero_difference]]
+from = 85
+zd = 22
+
+[[zero_difference]]
+from = 90
+zd = 23
+
+[[zero_difference]]
+from = 95
+zd = 24
+
+[[zero_difference]]
+from = 100
+zd = 25
