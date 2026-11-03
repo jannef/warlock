@@ -218,7 +218,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   adds a pond and ruins (outdoor vaults) where they fit on open land; grows the landscape; then
   joins every walkable pocket to the start (small ones are grown over with what surrounds them,
   larger ones get a way cleared through the cheapest obstacles) and opens every side. A few deer
-  graze on looping patrols in meadows and woods. Validation: the start is walkable, every walkable
+  graze on looping patrols in meadows and woods, and a land's wild beast may roam the same way:
+  a boar in a forest, a lynx in a dense forest, a badger in the hills (none or one each). Validation: the start is walkable, every walkable
   cell is reachable from it (4-connected), every side has at least 3 walkable cells, running water
   and only running water has a flow, and patrols are valid.
 - **Vaults** (`assets/vaults/*.toml`): hand-made pieces in the level-file format, stamped verbatim

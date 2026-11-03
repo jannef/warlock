@@ -603,8 +603,12 @@ pub enum ClassActive {
     Whirlwind,
     /// Hit points back by the level, then a cooldown (the paladin's Lay on hands).
     LayOnHands,
-    /// A blow in a direction with dice more damage, then a cooldown.
+    /// A blow of holy wrath in a direction with dice more damage, for zeal (`world/smite.rs`).
     Smite,
+    /// A smite whose foe sheds holy light a while, for zeal (the paladin's Branding smite).
+    BrandingSmite,
+    /// A smite whose foe flees unless its will holds, for zeal (the paladin's Wrathful smite).
+    WrathfulSmite,
     /// A light of your own, on and off (a status that sheds light while it lasts).
     HolyRadiance,
     /// A breath taken in the guard, for ki and a wait: Poised until the next action, Dodge up
@@ -673,6 +677,8 @@ impl ClassActive {
         ClassActive::Whirlwind,
         ClassActive::LayOnHands,
         ClassActive::Smite,
+        ClassActive::BrandingSmite,
+        ClassActive::WrathfulSmite,
         ClassActive::HolyRadiance,
         ClassActive::PatientDefence,
         ClassActive::StunningStrike,
@@ -704,6 +710,8 @@ impl ClassActive {
             ClassActive::Whirlwind => "whirlwind",
             ClassActive::LayOnHands => "lay_on_hands",
             ClassActive::Smite => "smite",
+            ClassActive::BrandingSmite => "branding_smite",
+            ClassActive::WrathfulSmite => "wrathful_smite",
             ClassActive::HolyRadiance => "holy_radiance",
             ClassActive::PatientDefence => "patient_defence",
             ClassActive::StunningStrike => "stunning_strike",
@@ -737,6 +745,8 @@ impl ClassActive {
         matches!(
             self,
             ClassActive::Smite
+                | ClassActive::BrandingSmite
+                | ClassActive::WrathfulSmite
                 | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
                 | ClassActive::LowBlow
@@ -767,6 +777,8 @@ impl ClassActive {
             self,
             ClassActive::LayOnHands
                 | ClassActive::Smite
+                | ClassActive::BrandingSmite
+                | ClassActive::WrathfulSmite
                 | ClassActive::HolyRadiance
                 | ClassActive::Consecrate
         )
@@ -820,6 +832,8 @@ impl ClassActive {
             | ClassActive::Stillness => ActionKind::Wait,
             ClassActive::Whirlwind
             | ClassActive::Smite
+            | ClassActive::BrandingSmite
+            | ClassActive::WrathfulSmite
             | ClassActive::StunningStrike
             | ClassActive::QuiveringPalm
             | ClassActive::LowBlow

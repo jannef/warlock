@@ -15,6 +15,15 @@ weight = 4
 stance = "wildlife"
 group = [{ creature = "deer", count = "1d4+1" }]
 
+# The hills' digger, out of its sett (the ranger companion design's C7).
+[[table.entry]]
+id = "vale_badger"
+name = "a badger"
+weight = 2
+stance = "wildlife"
+when = { landscapes = ["hills"] }
+group = [{ creature = "badger", count = "1" }]
+
 [[table.entry]]
 id = "vale_rats"
 name = "a pack of giant rats"

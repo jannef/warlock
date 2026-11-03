@@ -338,6 +338,19 @@ stacking = "refresh"
 start = "A soft light shines about you."
 end = "Your light fades."
 
+# Branding smite's (the paladin's): holy light clings to the foe for five minutes, and it sheds
+# the faint item glow wherever it goes.
+[[status]]
+id = "branded"
+name = "Branded"
+seen = "shining"
+max = 1
+stacking = "refresh"
+eases = 300
+light = "item_glow"
+start = "Holy light clings to you."
+end = "The holy light about you fades."
+
 # Light's (the spell, and the scroll of light that casts it): a pale light about the caster,
 # half an hour a degree; the caster's Presence lengthens it (spells.toml).
 [[status]]

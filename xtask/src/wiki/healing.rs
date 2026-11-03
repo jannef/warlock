@@ -193,6 +193,28 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             })
             .map(|t| format!("a wounding hit of {} (a class ability)", t.name)),
     );
+    // The modes of smiting (the paladin's): a wounding smite, with a check failed for fear.
+    for (_, t) in content.talents().iter() {
+        for e in &t.effects {
+            if let warlock_core::content::TalentEffect::SmiteMode {
+                status: s, check, ..
+            } = e
+                && content
+                    .status_id(s)
+                    .is_some_and(|s| usize::from(s.0) == status)
+            {
+                causes.push(match check {
+                    Some(stat) => format!(
+                        "a wounding hit of {} (a class ability) and failing the check: 2d12 + \
+                         the {} modifier against its difficulty plus the smiter's aim",
+                        t.name,
+                        stat.name()
+                    ),
+                    None => format!("a wounding hit of {} (a class ability)", t.name),
+                });
+            }
+        }
+    }
     // The songs sung over their hearers (the bard's Lullaby): a check failed.
     for (_, t) in content.talents().iter() {
         for e in &t.effects {
