@@ -98,12 +98,12 @@ impl World {
     }
 
     /// The highest level the player may reach now (spec §8 "Prestige classes"): their class's
-    /// `max_level` plus a prestige class's levels once called; the curve's top without a
-    /// character.
+    /// `max_level` plus a prestige class's levels once called; the default class cap
+    /// (`[levels] class_max`) without a character.
     pub fn level_cap(&self) -> u8 {
         match &self.state.character {
             Some(c) => c.level_cap(&self.content),
-            None => self.content.experience().max_level(),
+            None => self.content.experience().class_max(),
         }
     }
 

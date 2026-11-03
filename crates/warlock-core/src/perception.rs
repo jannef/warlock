@@ -1808,7 +1808,7 @@ impl<'a> PerceptionView<'a> {
         let factor = Factor::of(self.content, self.character.map(|c| &c.spec));
         // The level stops at the classes' cap (spec §8 "Prestige classes"): no next level
         // there, as at the curve's top.
-        let cap = (self.character).map_or(rules.max_level(), |c| c.level_cap(self.content));
+        let cap = (self.character).map_or(rules.class_max(), |c| c.level_cap(self.content));
         let level = rules.level_for(self.experience, factor, cap);
         Progress {
             level,

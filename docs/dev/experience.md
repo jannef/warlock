@@ -4,7 +4,8 @@ Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185)
 rules it implements are in spec/08c-combat.md. Keep it current with the code, as CLAUDE.md says.
 
 Experience (spec §8 "Experience", M21; to 60 in M30, #226, design `docs/design/progression.md`
-§3): `content/experience.rs` holds the rules from `data/experience.toml`: the level curve in
+§3; to 100 in #877, `docs/design/prestige-classes.md` §5, `max_level` 100 = `MAX_LEVEL`, the
+classes' default cap `class_max` 60): `content/experience.rs` holds the rules from `data/experience.toml`: the level curve in
 kills (`[kills]`: `plateau`, `ramp`, `slope_per_100`, and the creature XP `guideline`), turned
 into a threshold table once at load with exact integer math (`Experience::threshold`, rounded
 once per level from the exact fraction; a test pins the table's hash, so a deliberate change to
@@ -48,6 +49,7 @@ progression state of the design's later items (talents, due choices) goes.
 One level, two classes. `Experience::level_for(xp, factor, cap)` stops at `cap`,
 `World::level_cap` = `Character::level_cap`: the class's `ClassDef::max_level` (the class file's
 `max_level`, else `[levels] class_max` of `data/experience.toml`, `Experience::class_max`, 60;
+a run without a character stops at `class_max` too;
 filled in by `ClassDef::settle_cap` right after the experience file loads, which also checks the
 table's levels within it) plus a prestige class's `levels` once called. XP past the cap banks as
 it does at the curve's top (`PerceptionView::own_experience` shows no next level at a cap).
