@@ -892,6 +892,16 @@ impl Gameplay<'_> {
             }
             (InputMode::Look(at), _) => InputMode::Look(at),
             (InputMode::Normal, KeyCommand::Look) => InputMode::Look(game.world.player_pos()),
+            // Heal with two kept beasts beside the player asked which way first (`tend_way`):
+            // the one there, or, at the wait key, the player themselves.
+            (InputMode::Ability(Ability::Heal), KeyCommand::Move(dir)) => {
+                open = self.tend(Some(dir));
+                InputMode::Normal
+            }
+            (InputMode::Ability(Ability::Heal), KeyCommand::Wait) => {
+                open = self.tend(None);
+                InputMode::Normal
+            }
             (InputMode::Ability(ability), KeyCommand::Move(dir)) => {
                 let content = game.world.content().clone();
                 if let Some(action) = ability.action(&content, Some(dir)) {
@@ -1241,7 +1251,14 @@ impl Gameplay<'_> {
             // The scribe list asks which spell (the wizard's Scribe).
             (true, ability::Aim::Spell) => return Some(ScreenAction::Open(ScreenName::Scribe)),
             (true, ability::Aim::Ailment) => {
-                let ailments = game.world.perception().own_ailments();
+                let view = game.world.perception();
+                let ailments = view.own_ailments();
+                // Two kept beasts beside the player (a companion and a familiar), one of them in
+                // need: which is asked first, by the way to it (the owner, #907 Q4).
+                if ability == Ability::Heal && tend_way(view.kept_beside(), &ailments) {
+                    *self.mode = InputMode::Ability(Ability::Heal);
+                    return None;
+                }
                 if ailments.len() > 1 {
                     return Some(treat_dialog(&ailments).into());
                 }
@@ -1260,6 +1277,28 @@ impl Gameplay<'_> {
                 }
             }
         }
+        None
+    }
+
+    /// Heal on the patient the way `dir` (the player with none), once the way is asked
+    /// ([`tend_way`]): its one ailment at once, the choice of several in the dialog (returned to
+    /// open), or, with none, the bare action, so the rules say why.
+    fn tend(&mut self, dir: Option<Dir>) -> Option<ScreenAction> {
+        let game = self.game.as_ref()?;
+        let ailments: Vec<_> = (game.world.perception().own_ailments().into_iter())
+            .filter(|a| matches!(a.action, Action::Heal { ally, .. } if ally == dir))
+            .collect();
+        if ailments.len() > 1 {
+            return Some(treat_dialog(&ailments).into());
+        }
+        let action = (ailments.into_iter().next()).map_or(
+            Action::Heal {
+                what: None,
+                ally: dir,
+            },
+            |a| a.action,
+        );
+        self.actions.write(PlayerAction(action));
         None
     }
 
@@ -1393,6 +1432,15 @@ fn command_in(
         })
 }
 
+/// Whether Heal asks which way first: more than one kept beast beside the player (`ways`), and
+/// something to treat on one of them among `ailments` (spec §8 "Allies"; the owner, #907 Q4:
+/// "need to select direction if both adjacent"). One kept beast beside needs no asking.
+pub(crate) fn tend_way(ways: &[Dir], ailments: &[warlock_core::heal::OwnAilment]) -> bool {
+    ways.len() > 1
+        && (ailments.iter())
+            .any(|a| matches!(a.action, Action::Heal { ally: Some(d), .. } if ways.contains(&d)))
+}
+
 /// The Heal ability's choice when the player may treat several things (spec §8 "Skills"): one
 /// option for each, in the order the rules list them, and a way out.
 pub(crate) fn treat_dialog(ailments: &[warlock_core::heal::OwnAilment]) -> Dialog {
@@ -1475,6 +1523,28 @@ fn next_vision(profiles: &[VisionProfile], current: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn ailment(ally: Option<Dir>) -> warlock_core::heal::OwnAilment {
+        warlock_core::heal::OwnAilment {
+            name: "Bleeding".into(),
+            action: Action::Heal { what: None, ally },
+        }
+    }
+
+    #[test]
+    fn heal_asks_the_way_only_with_two_kept_beasts_beside_and_something_to_treat_on_one() {
+        let two = [Dir::E, Dir::S];
+        // Two kept beasts, one hurt: asked.
+        assert!(tend_way(&two, &[ailment(Some(Dir::E))]));
+        // ... and with the player's own among the rows.
+        assert!(tend_way(&two, &[ailment(None), ailment(Some(Dir::S))]));
+        // One beside: no asking.
+        assert!(!tend_way(&[Dir::E], &[ailment(Some(Dir::E))]));
+        // Nothing on either (the player's own, a summon's the other way): no asking.
+        assert!(!tend_way(&two, &[ailment(None)]));
+        assert!(!tend_way(&two, &[ailment(Some(Dir::W))]));
+        assert!(!tend_way(&[], &[]));
+    }
 
     fn keys(b: &Bindings, command: KeyCommand) -> Vec<String> {
         b.keys_of(command).iter().map(|k| k.display()).collect()

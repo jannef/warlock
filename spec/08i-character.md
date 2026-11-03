@@ -1379,7 +1379,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     short; refused with no time, "There is no one there to blind.", without a hostile there).
     Trapfinding, Pick lock, and Light fingers, which only gave what the class's skills give,
     are gone from the table (#684); a save holding one loads without it (said in the log).
-  - **Passives**, each one read: Animal companion (the ranger's level 1, #916: a beast of the
+  - **Passives**, each one read: Familiar (the witch's level 1, #929: a small beast of her race's
+    list, or rarely a rare one, at her heel from the first turn, whose touch lays her evil eye and
+    which goes for what she has hexed, §8 "Allies": "The familiar"; `TalentEffect::Familiar` read
+    by `World::bring_familiar`), Animal companion (the ranger's level 1, #916: a beast of the
     race's kind, or rarely a rare one, at their side from the first turn, that grows with their
     level and always comes along, §8 "Allies": "The animal companion"; `TalentEffect::Companion`
     read by `World::bring_companion`; and `tame = 2`, `TalentMods::tame`, the ranger's edge at
@@ -1393,7 +1396,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creatures in view have not noticed it, `sees_unaware`, above), Tracker (hears 3 fainter; every sound it hears placed at its
     own cell, `noise::Exact::All`), Rapid shot (grants Focus, §8 "Resources"; a shot loosed
     with `fire` while the ranger holds 2 focus spends them and takes 10 % less time, the whole
-    shot's price; with less it is an ordinary shot; `world/focus.rs`), Master hunter (bows and crossbows threat +1; Favoured
+    shot's price; with less it is an ordinary shot; `world/focus.rs`), Hunter's bond (the
+    ranger's at 25, #920: shared sight and shared buffs with the companion, §8 "Allies";
+    `TalentEffect::SharedSight` read in `Perception::compute`, `TalentEffect::SharedBuffs` in
+    `World::afflict`, `world/bond.rs`), Master hunter (bows and crossbows threat +1; Favoured
     prey +1 and +2 more); Sneak attack (#682: the class passive beside the Sneak attack skill,
     whose dice the thief trains, `2d6+10` and known for: it grants the Openings pool from level
     1, and those the thief catches unawares make their initiative check 2 harder,

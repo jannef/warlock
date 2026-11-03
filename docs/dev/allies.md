@@ -6,7 +6,8 @@ core, §14 the owner's decisions, which override the rest). Slices: **A1** (#836
 core), A2 (#837, "Summons" below: the spell kind, `Ally::until` set from the spell's degrees), A3 (the UI: the
 Allies group's rows, Set on's aim, the friendly mark, look mode's "(your wolf)"), D1 (#839, "The druid's
 calls" below), and the ranger's companion (#916, `docs/dev/companion.md`) on
-`AllySource::Companion(CompanionData)`. Keep it current with the code, as CLAUDE.md says.
+`AllySource::Companion(CompanionData)`, and the witch's familiar (#929, `docs/dev/familiar.md`) on
+`AllySource::Familiar(CompanionData)`, both **kept** beasts (`AllySource::kept`). Keep it current with the code, as CLAUDE.md says.
 
 ## What an ally is
 
@@ -17,7 +18,7 @@ as before, old saves load, and `World::state_hash` covers it as every field):
 ```rust
 pub struct Ally {
     pub master: ActorId,          // the player, today; the field makes no assumption
-    pub source: AllySource,       // Summoned { spell: Option<SpellId> } | Companion(CompanionData)
+    pub source: AllySource,       // Summoned { spell: Option<SpellId> } | Companion(CompanionData) | Familiar(CompanionData)
     pub order: Order,             // Follow (default) | Stay { at } | Hunt { at }
     pub retinue: bool,            // travelling with the master off any level
     pub until: Option<GameTime>,  // when its stay ends, on the clock; None: until slain
@@ -62,7 +63,8 @@ still wrap it. In order:
    leaves the rats alone as the druid does, and a shopkeeper or a quest-giver is never an
    ally's idea). With *Stay*, only one within `stay.reach` of its post; with *Hunt*, one within
    `hunt.reach` of the hunt cell, else the nearest anywhere in sight. Seeing none, a type with a
-   `nose` takes the nearest it smells instead (`World::senses` → `companion.rs::smelled`).
+   `nose` takes the nearest it smells instead (`World::senses` → `companion.rs::smelled`). A familiar
+   takes the nearest it sees under a hex of its master's before any of that (`familiar.rs::quarry`).
 2. **Fight** it: `ai.rs::fight` as a creature would (melee closes in; a type that throws or
    shoots does; a summoner summons).
 3. **Its order**: *Follow*: `route` toward the master to within `heel`, else wait; *Stay*: back
@@ -109,7 +111,7 @@ stands on `to` (after `arrive_spawner`, before the arrival lines), with the play
 
 - every ally of the player's on `from` within `comes_along` (Chebyshev) of `old` and not held
   fast (a status that `blocks` steps) comes along, and the player's **companion** wherever it
-  stands, held fast or not (`companion.rs`); the rest stay, frozen as another level's actors are,
+  stands, and their familiar likewise (every kept beast), held fast or not (`companion.rs`); the rest stay, frozen as another level's actors are,
   and those the last perception saw are said left behind ("Your wolf is left behind."). A
   follower's `order` becomes *Follow* (a post on another level means nothing), its `heard` and
   `Mind` are cleared, its energy kept;

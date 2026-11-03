@@ -128,8 +128,8 @@ pub fn own(actor: &Actor, content: &Content) -> Vec<OwnAilment> {
 /// direction order), each ally's in [`treatable`]'s order: "Your wolf's bleeding", and the way
 /// to it after when two allies beside them go by the same name ("Your wolf's bleeding (east)").
 pub fn of_allies(allies: &[(Dir, &Actor)], content: &Content) -> Vec<OwnAilment> {
-    // A companion by its name ("Snel's bleeding"; `world/companion.rs`), the rest "Your wolf's".
-    let named = |ally: &Actor| match ally.companion() {
+    // A kept beast by its name ("Snel's bleeding"; `world/companion.rs`), the rest "Your wolf's".
+    let named = |ally: &Actor| match ally.kept() {
         Some(data) => data.name.clone(),
         None => format!("Your {}", content.creature(ally.creature).name),
     };

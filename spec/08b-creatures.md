@@ -192,7 +192,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   creature's: a companion is no summon). The player sees it in the status bar ("Snel: unhurt",
   "Snel: with you"), in look mode ("Snel, your hound (unhurt), …"), on the Character screen
   ("With    Snel, a hound"), and in the `companion` dump; the wiki states the lists, the odds,
-  and the growth table exactly. **The collar** (`world/collar.rs`; #918): a companion wears one
+  and the growth table exactly. **Hunter's bond** (the ranger's level 25, #920; passive):
+  *shared sight*: while the companion stands on the player's level (not in the retinue), the
+  player also sees every cell it sees by its own line of sight and eyes (creature sight's rule,
+  §5: its sight radius, its vision profile, the light as it reaches the cell; wall completion
+  around them), and the cell of every hostile its nose finds (within its `nose`, however dark,
+  through a closed door, never through a wall); these are seen cells like any other (memory,
+  look mode, Set on, targeting, the dumps), shown in the light the player's eyes perceive; it
+  finds no hidden trap or secret door, shows no disguised mimic, and a dazzled player keeps it.
+  *Shared buffs*: a buff status that lands on the player lands on the companion too (on the
+  level or in the retinue), and one on the companion on the player, at the same severity, each
+  its own (it eases by its own clock), whatever laid it (a spell, a scroll, a potion, a boon):
+  a buff is a buff spell's status or one a potion lends; a hex, a harm, a cooldown never
+  crosses, and the shared one does not cross back. "Snel is bark-skinned too."
+  **The collar** (`world/collar.rs`; #918): a companion wears one
   thing, on its neck. The **Give** ability (the Allies group, listed with a companion, greyed out
   "not beside you" with it away; `give:LETTER[:DIR]`) asks for a stack the player carries that
   fits a neck; one of it leaves the pack, taken off first if it was on the player, and goes on the
@@ -202,8 +215,30 @@ developer notes (CLAUDE.md, `docs/dev/`).
   no use for that."); goods unpaid for. Its magic works on the beast as on any wearer, and wearing
   it on the beast teaches the player nothing. There is no taking one back but giving another or
   its death, when the collar is in its pile. Look mode says "Snel, your hound (unhurt), wearing a
-  jade amulet, ...". Taming (C2) and the ranger's later abilities (C5, C6) are the design's next
-  slices.
+  jade amulet, ...".
+  Taming (C2) and the ranger's Sic 'em (C6) are the design's next slices.
+  **The familiar** (`warlock-core/src/world/familiar.rs`,
+  `content/familiar.rs` and `data/familiars.toml`; #929, design `docs/design/witch-familiar.md`,
+  `docs/dev/familiar.md`): the witch's small beast, an ally with `source =
+  Familiar(CompanionData)`, `until = None`, at most one at a time; with a companion it is one of
+  the player's **kept** beasts (`AllySource::kept`), and a witch may have both. A kept beast is
+  named, grows, always comes along, leaves a corpse, and is shown by the rules above. Her
+  **Familiar** (level 1) brings one as the run begins: drawn from her race's list
+  (`[start.by_race]`: one to three beasts of level at most `most_level` 2: cat, toad, raven, hare,
+  bat, and the small beasts the ranger's lists give a race where they fit a witch), or at
+  `rare_per_mille` (50) one of the rares (a black hound, a panther), two draws on its own stream;
+  named from `names` (the English witch trials' Tibb, Fancie, Pyewacket, …; one draw on its own
+  stream); "Tibb, your cat, winds about your ankles." (`[arrives]`, a line a kind). **The touch**: a
+  familiar's melee hit that leaves its target alive lays its master's hex (`touch`, Evil eye's
+  Hexed) at the degrees she would cast it now, **with her as the giver**, so Cackle and Malison see
+  it as hers, and starts every other hex of hers on the target afresh at its own degree (those that
+  stack by refreshing). No mana, none of her turns, no marks, no draws, no message: a creature's
+  statuses are silent. **The harrying**: its target is the nearest creature it sees under a hex of
+  its master's, within its order's reach, before any other; else the nearest as any ally's. **Two
+  kept beasts beside the player**, with something to treat on one: Heal asks a direction first (the
+  wait key: the player); with one beside, nothing is asked. Calling a new one (F2, #930) and the
+  familiar's story lines (F3, #931; until then the companion chapter's plain line) are the design's
+  next slices.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

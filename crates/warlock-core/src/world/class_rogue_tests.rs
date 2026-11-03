@@ -149,6 +149,7 @@ fn the_three_tables_come_with_the_levels() {
             "Barkskin",
             "Rapid shot",
             "Pack tactics",
+            "Hunter's bond",
             "Evasion",
             "Volley",
             "Master hunter"

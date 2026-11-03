@@ -223,6 +223,14 @@ const CASES: &[Case] = &[
         size: (100, 36),
         ..BASE
     },
+    // A witch and her familiar: the With row and the status bar's segment (#929).
+    Case {
+        name: "character-screen-familiar",
+        character: Some("human,female,witch"),
+        run: true,
+        screen: Some("character"),
+        ..BASE
+    },
     Case {
         name: "character-screen-lucky",
         // Seed 440 gives Tamsin a lucky day (#269): the Deep One, the title after the name.

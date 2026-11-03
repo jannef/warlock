@@ -131,7 +131,7 @@ impl World {
         let noun = heal::noun(&self.content, actor, d);
         if patient == self.state.player {
             format!("the {noun}")
-        } else if let Some(data) = actor.companion() {
+        } else if let Some(data) = actor.kept() {
             format!("{}'s {noun}", data.name)
         } else {
             let name = &self.content.creature(actor.creature).name;

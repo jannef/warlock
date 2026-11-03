@@ -1,0 +1,28 @@
+# The beasts (docs/dev/creatures/beasts.md; content::beast_roster_tests checks them): the
+# witch's toad, *tādige* (#929; docs/design/witch-familiar.md §6). Silent and slow; it lived
+# under the step and was fed crumbs and then better things, and its flesh poisons. A familiar's
+# kind (familiars.toml), called, never tamed. Wildlife: it fights no one unless it is someone's.
+[[creature]]
+id = "toad"
+level = 1
+xp = 15
+name = "toad"
+glyph = "R"
+fg = "#7a6a3a"
+speed = 900
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+vision = "low_light"
+sight = 6
+hearing = 15
+weight = 300
+size = "small"
+stats = { strength = 2, dexterity = 15, toughness = 10, intelligence = 2, willpower = 14, presence = 4 }
+depart = "crawls away under a stone"
+on_eat = { message = "Bitter and foul: your mouth goes numb.", harm = "1d4" }
+[creature.attack]
+damage = "1d2"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"

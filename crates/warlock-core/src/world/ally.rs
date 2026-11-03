@@ -21,8 +21,8 @@
 //!
 //! **Following across levels** ([`World::follow_along`], from `World::travel`): allies within
 //! `comes_along` cells of the player as they leave come with them, placed beside their arrival;
-//! the rest stay where they are, frozen as another level's actors are. A **companion** comes
-//! wherever it stands, held fast or not (`companion.rs`). Onto the **overworld**,
+//! the rest stay where they are, frozen as another level's actors are. A **kept** beast (a
+//! companion, a familiar) comes wherever it stands, held fast or not (`companion.rs`). Onto the **overworld**,
 //! which has no creatures, they join the **retinue** instead ([`Ally::retinue`]: on the
 //! overworld's level, never drawn, never acting, never standing in anyone's way), and step out
 //! beside the player at the next level.
@@ -40,7 +40,9 @@
 //!
 //! A **companion** (`companion.rs`) is an ally with `source = Companion(CompanionData)`: named
 //! ("Snel" where the words would say "your hound"), graded, always along, and with a nose the
-//! arm reads when its eyes find nothing.
+//! arm reads when its eyes find nothing. A **familiar** (`familiar.rs`, the witch's) is
+//! `Familiar(CompanionData)`: the same **kept** beast ([`AllySource::kept`]) by every one of
+//! those rules, whose blow lays its master's evil eye and which goes for what she hexed.
 //!
 //! Nothing here draws from any stream, and a run with no allies calls none of it.
 
@@ -95,6 +97,8 @@ pub enum AllySource {
     },
     /// A companion of the master's (the ranger's, #916; `companion.rs`): its name and grade.
     Companion(CompanionData),
+    /// A familiar of the master's (the witch's, #929; `familiar.rs`): its name and grade.
+    Familiar(CompanionData),
 }
 
 impl AllySource {
@@ -103,6 +107,28 @@ impl AllySource {
         match self {
             AllySource::Summoned { .. } => "summoned",
             AllySource::Companion(_) => "companion",
+            AllySource::Familiar(_) => "familiar",
+        }
+    }
+
+    /// A beast kept for good (a companion, a familiar): it is named, grows, always comes along,
+    /// and leaves a corpse. A summon is none of these.
+    pub const fn kept(&self) -> bool {
+        self.data().is_some()
+    }
+
+    /// The kept beast's name and grade; `None` for a summon.
+    pub const fn data(&self) -> Option<&CompanionData> {
+        match self {
+            AllySource::Companion(data) | AllySource::Familiar(data) => Some(data),
+            AllySource::Summoned { .. } => None,
+        }
+    }
+
+    pub(super) const fn data_mut(&mut self) -> Option<&mut CompanionData> {
+        match self {
+            AllySource::Companion(data) | AllySource::Familiar(data) => Some(data),
+            AllySource::Summoned { .. } => None,
         }
     }
 }
@@ -327,7 +353,8 @@ impl World {
         else {
             return Plan::Wait;
         };
-        // 1. A target: the nearest hostile of its master's it sees, within its order's reach.
+        // 1. A target: the nearest hostile of its master's it sees, within its order's reach (a
+        // familiar's, what its master hexed first: `familiar.rs::quarry`).
         let hostile = move |state: &WorldState, content: &Content, _me: &Actor, a: &Actor| {
             let master = &state.actors[&master];
             stance_between(state, content, master, a) == Stance::Hostile
@@ -341,10 +368,10 @@ impl World {
         let target = match order {
             // 4. On the leash: drawn too far from its master, it breaks off and heels.
             Order::Follow if leashed => None,
-            Order::Follow => self.senses(id, &hostile),
-            Order::Stay { at } => self.senses(id, &near(at, rules.stay_reach)),
+            Order::Follow => self.quarry(id, &hostile),
+            Order::Stay { at } => self.quarry(id, &near(at, rules.stay_reach)),
             Order::Hunt { at } => {
-                (self.senses(id, &near(at, rules.hunt_reach))).or_else(|| self.senses(id, &hostile))
+                (self.quarry(id, &near(at, rules.hunt_reach))).or_else(|| self.quarry(id, &hostile))
             }
         };
         // 2. Fight it as a creature would.
@@ -384,8 +411,9 @@ impl World {
     }
 
     /// What ally `id` finds to fight: the nearest `wanted` it sees (`ai.rs::nearest_in_sight`),
-    /// else, with a nose, the nearest it smells (`companion.rs::smelled`), flagged so.
-    fn senses(
+    /// else, with a nose, the nearest it smells (`companion.rs::smelled`), flagged so. A
+    /// familiar asks [`World::quarry`] first (`familiar.rs`: what its master hexed).
+    pub(super) fn senses(
         &mut self,
         id: ActorId,
         wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
@@ -465,7 +493,7 @@ impl World {
             let Some(a) = self.state.actors.get(id) else {
                 continue;
             };
-            if let Some(data) = a.companion() {
+            if let Some(data) = a.kept() {
                 names.push(data.name.clone());
                 continue;
             }
@@ -519,8 +547,8 @@ impl World {
                 coming.push(a.id);
             } else if a.level == from {
                 let held = a.effects.blocking(&content, ActionKind::Step).is_some();
-                let companion = a.companion().is_some();
-                if companion || (a.pos.chebyshev(old) <= rules.comes_along && !held) {
+                let kept = a.kept().is_some();
+                if kept || (a.pos.chebyshev(old) <= rules.comes_along && !held) {
                     coming.push(a.id);
                 } else {
                     left.push(a.id);

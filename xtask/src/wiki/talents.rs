@@ -746,7 +746,20 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                     that fights for you, always comes along, and grows with \
                                     your level"
             .into(),
+        TalentEffect::Familiar => "a [familiar](allies.md#familiars) from the first turn: a \
+                                   small beast whose touch is your [evil eye](allies.md#the-touch), \
+                                   that goes for what you have hexed, always comes along, and \
+                                   grows with your level"
+            .into(),
         TalentEffect::Tame { bonus } => format!("{} on your taming checks", signed(bonus)),
+        TalentEffect::SharedSight => "you see what your [companion](allies.md#hunters-bond) \
+                                      sees, by its own eyes, and the foes its nose finds, \
+                                      through the dark and closed doors"
+            .into(),
+        TalentEffect::SharedBuffs => "a [buff](allies.md#hunters-bond) that lands on you or \
+                                      your companion lands on the other too, at the same \
+                                      strength; a hex never does"
+            .into(),
         TalentEffect::PackTactics { to_hit } => format!(
             "a creature beside both you and your [companion](allies.md#companions) is flanked: \
              your melee attacks and your companion's at it, to hit {} (not shots, throws, or \

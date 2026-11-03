@@ -522,10 +522,15 @@ fn draw_messages(
     }
     if let InputMode::Ability(ability) = mode {
         let prompt = match ability {
-            Ability::Disarm => "Disarm in which direction? (Esc to cancel)",
-            _ => "In which direction? (Esc to cancel)",
+            Ability::Disarm => "Disarm in which direction? (Esc to cancel)".to_string(),
+            // Two kept beasts beside: which is tended, or the player (`input.rs::tend_way`).
+            Ability::Heal => match bindings.key_name(KeyCommand::Wait) {
+                Some(key) => format!("Tend to which side? ({key} yourself, Esc to cancel)"),
+                None => "Tend to which side? (Esc to cancel)".to_string(),
+            },
+            _ => "In which direction? (Esc to cancel)".to_string(),
         };
-        console.print(1, 0, prompt, ACCENT);
+        console.print(1, 0, &prompt, ACCENT);
         return;
     }
     if mode == InputMode::Rest {
@@ -715,15 +720,18 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         Segment::new(1, text)
     });
     let effects = (view.own_effects()).map(|s| Segment::new(1, content.status(s).name.clone()));
-    // The companion (spec §8 "Allies"): its name and how it looks, in words ("Snel: unhurt"), or
-    // "Snel: with you" while it travels in the retinue; cut down to its name before it is dropped.
-    let companion = view.companion().map(|(ally, data)| {
-        let how = match ally.retinue {
-            true => "with you".to_string(),
-            false => ally.health.word().to_string(),
-        };
-        Segment::new(2, format!("{}: {how}", data.name)).or_short(data.name.clone())
-    });
+    // The kept beasts (spec §8 "Allies": a companion, a familiar), each its name and how it
+    // looks, in words ("Snel: unhurt"), or "Snel: with you" while it travels in the retinue, in
+    // actor id order; cut down to its name before it is dropped.
+    let kept: Vec<Segment> = (view.kept())
+        .map(|(ally, data)| {
+            let how = match ally.retinue {
+                true => "with you".to_string(),
+                false => ally.health.word().to_string(),
+            };
+            Segment::new(2, format!("{}: {how}", data.name)).or_short(data.name.clone())
+        })
+        .collect();
     let stance = view.own_stance();
     let head = [
         Segment::new(0, view.level_name()),
@@ -739,7 +747,8 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
             format!("Lv {}", view.own_experience().level),
         )),
         (!stance.is_neutral()).then(|| Segment::new(1, content.stance_def(stance).name.clone())),
-        companion,
+    ];
+    let tail = [
         view.region().map(|r| Segment::new(4, r)),
         Some(Segment::new(1, clock.format(time))),
         Some(Segment::new(3, calendar.full_date(time)).or_short(calendar.date(time))),
@@ -757,6 +766,8 @@ fn status_segments(world: &World, clock: Clock, unit: TemperatureUnit) -> Vec<Se
         .chain(resources)
         .chain(effects)
         .chain(rest.into_iter().flatten())
+        .chain(kept)
+        .chain(tail.into_iter().flatten())
         .collect()
 }
 

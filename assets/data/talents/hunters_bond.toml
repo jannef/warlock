@@ -1,0 +1,11 @@
+# The ranger's level 25 (#920; docs/design/ranger-companion.md §11.2): the bond with their
+# companion. Its sight and nose are the ranger's too (`shared_sight`), and a buff that lands on
+# either lands on the other (`shared_buffs`; never a hex).
+[[talent]]
+id = "hunters_bond"
+name = "Hunter's bond"
+tree = "class"
+granted = true
+description = "You and your companion are one hunt: you see what it sees, and smell through its nose what lurks in the dark or behind a door. A blessing, a draught, or a spell that strengthens one of you strengthens the other too, though no curse crosses."
+effects = [{ kind = "shared_sight" }, { kind = "shared_buffs" }]
+systems = ["vision", "allies", "status"]

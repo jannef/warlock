@@ -194,10 +194,12 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                         services(content, actor),
                         terrain(t)
                     ),
-                    // The player's companion by its name: "Snel, your hound (unhurt), ...".
+                    // The player's kept beast by its name: "Snel, your hound (unhurt), ...".
                     None if actor.companion => format!(
                         "{}, your {name}{} ({health}{effects}){gear}, on {}{here}.",
-                        (view.companion()).map_or("Your companion", |(_, c)| c.name.as_str()),
+                        (view.kept())
+                            .find(|(a, _)| a.id == actor.id)
+                            .map_or("Your companion", |(_, c)| c.name.as_str()),
                         made_of(content, actor).0,
                         terrain(t)
                     ),
