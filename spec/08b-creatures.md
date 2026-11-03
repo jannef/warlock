@@ -241,7 +241,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   statuses are silent. **The harrying**: its target is the nearest creature it sees under a hex of
   its master's, within its order's reach, before any other; else the nearest as any ally's. **Two
   kept beasts beside the player**, with something to treat on one: Heal asks a direction first (the
-  wait key: the player); with one beside, nothing is asked. Calling a new one (F2, #930) and the
+  wait key: the player); with one beside, nothing is asked. **Familiar's sight** (the witch's level
+  25, #932; passive): the shared sight of Hunter's bond with the familiar as its viewpoint, by the
+  same rules, its nose reaching `nose` cells of `familiars.toml` (6) or its type's where that is
+  farther (the type's alone still decides how the beast itself hunts); no buff is shared, and a
+  companion she keeps lends her nothing. Calling a new one (F2, #930) and the
   familiar's story lines (F3, #931; until then the companion chapter's plain line) are the design's
   next slices.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what

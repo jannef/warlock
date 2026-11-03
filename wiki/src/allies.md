@@ -190,6 +190,17 @@ A familiar **goes for what she has hexed**: the nearest creature it sees under a
 within its [order](#orders)'s reach, comes before any other, however much nearer the others stand.
 With nothing hexed in sight it fights as any ally does, and its first hit hexes what it bit.
 
+### Familiar's sight
+
+From level 25 the witch's **[Familiar's sight](talents.md#talent-familiars-sight)** lets her share
+what her familiar has, while it stands on the same level (not while it rides with her across the
+overworld). This is the [shared sight](#hunters-bond) of Hunter's bond, by the same rules: she sees
+every cell it sees, by its own eyes, and the cell of every foe its nose finds, through the dark and
+a **closed door**, never a wall. A familiar's nose reaches for her at least as far as the rules
+below say, even a kind with no nose of its own; it still hunts by eye. No
+[buff](status-effects.md#buffs-and-cooldowns) is shared, and a companion she keeps lends her
+nothing.
+
 ### Starting familiars
 
 The kind is drawn by chance as the run begins. [Creatures in

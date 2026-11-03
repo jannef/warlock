@@ -355,6 +355,9 @@ pub enum TalentEffect {
     /// It sees what its companion sees, by its companion's eyes and nose (Hunter's bond; the
     /// second viewpoint in `Perception::compute`).
     SharedSight,
+    /// It sees what its familiar sees, by its familiar's eyes and nose (Familiar's sight; the same
+    /// second viewpoint, `familiars.toml`'s `nose` at the least); no buff crosses.
+    FamiliarSight,
     /// A buff status that lands on it or its companion lands on the other too (Hunter's bond;
     /// `world/bond.rs`); never a hex.
     SharedBuffs,
@@ -2423,6 +2426,7 @@ impl TalentEffect {
             | TalentEffect::Companion
             | TalentEffect::Familiar
             | TalentEffect::SharedSight
+            | TalentEffect::FamiliarSight
             | TalentEffect::SharedBuffs
             | TalentEffect::SharesFavouredPrey
             | TalentEffect::StartledBlow
