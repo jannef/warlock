@@ -1232,6 +1232,21 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 status(&id),
             )
         }
+        TalentEffect::Cackle { degrees, noise } => {
+            let hexes: Vec<String> = (content.hex_statuses().iter())
+                .map(|&s| content.status(s).name.clone())
+                .collect();
+            format!(
+                "active (the time of a spell; no mana, cooldown, or check, as often as you like): \
+                 a cackle, a voice of loudness {noise}; every hex you laid ({}) on a creature you \
+                 see grows {degrees} degree{}, up to its maximum, and its degree's time starts \
+                 again (one at its maximum only starts again). Another's hex and a creature out \
+                 of sight are untouched. With no creature in sight under a hex of yours it is \
+                 refused, with no time spent",
+                hexes.join(", "),
+                if degrees == 1 { "" } else { "s" },
+            )
+        }
         TalentEffect::ResourceBuild {
             resource: id,
             on,

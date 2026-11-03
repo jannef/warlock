@@ -184,6 +184,9 @@ pub enum Act {
     Dig,
     /// Mutters to itself, where it stands; or speaks a threat aloud (the player's Intimidate).
     Mutter,
+    /// Cackles, where it stands (the witch's Cackle, `world/witch.rs`): a voice, as loud as its
+    /// talent's `noise`.
+    Cackle,
     /// Throws its voice to this cell: a voice sounds there.
     ThrowVoice(Pos),
     /// Howls, where it stands (Hound's bay).
@@ -295,7 +298,7 @@ pub fn noise(
     }
     if matches!(
         act,
-        Act::Mutter | Act::ThrowVoice(_) | Act::Howl | Act::Sing | Act::Order
+        Act::Mutter | Act::Cackle | Act::ThrowVoice(_) | Act::Howl | Act::Sing | Act::Order
     ) {
         return Some(plain);
     }
@@ -361,6 +364,11 @@ pub fn plain_noise(
             (sound, actor.pos, u32::from(loudness))
         }
         Act::Mutter => (SoundKind::Voice, actor.pos, u32::from(VOICE_NOISE)),
+        Act::Cackle => {
+            let cackle = actor.talent_mods(content).cackle;
+            let loudness = cackle.map_or(VOICE_NOISE, |c| c.noise);
+            (SoundKind::Voice, actor.pos, u32::from(loudness))
+        }
         Act::ThrowVoice(at) => (SoundKind::Voice, at, u32::from(VOICE_NOISE)),
         Act::Howl => (SoundKind::Howl, actor.pos, u32::from(HOWL_NOISE)),
         Act::Sing => (SoundKind::Voice, actor.pos, u32::from(SONG_NOISE)),
