@@ -11,8 +11,13 @@
 //!   One still incubating is not known to its sufferer, so it is not offered.
 //!
 //! In status order, then disease order: what a bare `heal` treats is the first of them.
+//!
+//! The patient is the player or an **ally of theirs beside them** (design ranger-companion.md §9,
+//! "Tending"): the same rules on the ally's own ailments, for anyone trained in Heal. The
+//! player knows their own allies' hurts, poison and sickness too, as they know their own.
 
 use crate::content::{Content, DiseaseId, StatusId};
+use crate::geom::Dir;
 use crate::world::Actor;
 
 /// Something the Heal skill treats.
@@ -94,21 +99,58 @@ pub fn treatable(actor: &Actor, content: &Content) -> Vec<Ailment> {
         .collect()
 }
 
-/// One thing the player may treat now, as the Heal ability's choice offers it.
+/// One thing the player may treat now, on themselves or an ally beside them, as the Heal
+/// ability's choice offers it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OwnAilment {
-    /// How they know it: "Bleeding", "Filth fever", "Sickness".
+    /// How they know it: "Bleeding", "Filth fever", "Sickness"; an ally's "Your wolf's
+    /// bleeding".
     pub name: String,
-    /// The action that treats it: `heal:ID`.
+    /// The action that treats it: `heal:ID`, an ally's `heal:ID:DIR`.
     pub action: crate::action::Action,
 }
 
-/// What `actor` may treat now, each with its name and action, in [`treatable`]'s order.
+/// What `actor` may treat now on themselves, each with its name and action, in [`treatable`]'s
+/// order.
 pub fn own(actor: &Actor, content: &Content) -> Vec<OwnAilment> {
     (treatable(actor, content).into_iter())
         .map(|a| OwnAilment {
             name: a.name(content, actor),
-            action: crate::action::Action::Heal(Some(a.id(content).to_string())),
+            action: crate::action::Action::Heal {
+                what: Some(a.id(content).to_string()),
+                ally: None,
+            },
         })
         .collect()
+}
+
+/// What the player may treat on their allies beside them (`allies`: each by the way to it, in
+/// direction order), each ally's in [`treatable`]'s order: "Your wolf's bleeding", and the way
+/// to it after when two allies beside them go by the same name ("Your wolf's bleeding (east)").
+pub fn of_allies(allies: &[(Dir, &Actor)], content: &Content) -> Vec<OwnAilment> {
+    let named = |ally: &Actor| content.creature(ally.creature).name.clone();
+    let mut list = Vec::new();
+    for &(dir, ally) in allies {
+        let name = named(ally);
+        let twin = (allies.iter()).any(|&(d, other)| d != dir && named(other) == name);
+        for a in treatable(ally, content) {
+            let what = match a {
+                Ailment::Status(s) => content.status(s).name.to_lowercase(),
+                Ailment::Disease(d) => noun(content, ally, d),
+            };
+            let way = if twin {
+                format!(" ({})", dir.compass_name())
+            } else {
+                String::new()
+            };
+            list.push(OwnAilment {
+                name: format!("Your {name}'s {what}{way}"),
+                action: crate::action::Action::Heal {
+                    what: Some(a.id(content).to_string()),
+                    ally: Some(dir),
+                },
+            });
+        }
+    }
+    list
 }

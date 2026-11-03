@@ -1142,10 +1142,7 @@ impl World {
                 self.gain_resource(by, Build::Kill);
             }
             if credited {
-                let percent = match master {
-                    Some(_) => self.content.allies().map_or(100, |r| r.ally_percent),
-                    None => 100,
-                };
+                let percent = master.map_or(100, |_| self.ally_share());
                 self.earn_kill_at(creature, percent);
                 let level = self.state.current_level.clone();
                 self.tally_kill(creature, &level);

@@ -171,12 +171,17 @@ pub enum Action {
     /// it away; a bad failure sets it off at the player. Takes the time of `disarm`, whatever
     /// comes of it; refused (no time) without the skill or a known trap there.
     Disarm(Dir),
-    /// Treat oneself with the Heal skill (spec §8 "Skills"; the Heal ability): the ailment named
-    /// (a status id, `heal:bleeding`, or a disease id, `heal:filth_fever`), else the first there
-    /// is to treat (`heal`). An Intelligence check plus Heal: bleeding stops, a poison eases a
-    /// degree, a disease is eased. Takes the time of `heal` whatever comes of it; refused (no
-    /// time) without the skill, with nothing to treat, or for a poison or disease already tried.
-    Heal(Option<String>),
+    /// Treat oneself, or an ally beside one, with the Heal skill (spec §8 "Skills"; the Heal
+    /// ability): the ailment named (a status id, `heal:bleeding`, or a disease id,
+    /// `heal:filth_fever`), else the player's first there is to treat (`heal`); `ally` the
+    /// player's ally that way (`heal:bleeding:E`), which needs an ailment named. An Intelligence
+    /// check plus Heal: bleeding stops, a poison eases a degree, a disease is eased. Takes the
+    /// time of `heal` whatever comes of it; refused (no time) without the skill, with nothing to
+    /// treat, with no ally of the player's that way, or for a poison or disease already tried.
+    Heal {
+        what: Option<String>,
+        ally: Option<Dir>,
+    },
     /// Pray at the forgotten altar next to the player (spec §7 "Special rooms"; the Pray
     /// ability, the abilities menu's Here group): a minute of turns of the `pray` action, then one
     /// outcome drawn from the altar's table, and perhaps the altar spent. Interrupted, it gives
@@ -860,8 +865,15 @@ impl fmt::Display for Action {
             Action::Search(1) => f.write_str("search"),
             Action::Search(turns) => write!(f, "search:{turns}"),
             Action::Disarm(d) => write!(f, "disarm:{d}"),
-            Action::Heal(None) => f.write_str("heal"),
-            Action::Heal(Some(id)) => write!(f, "heal:{id}"),
+            Action::Heal { what: None, .. } => f.write_str("heal"),
+            Action::Heal {
+                what: Some(id),
+                ally: None,
+            } => write!(f, "heal:{id}"),
+            Action::Heal {
+                what: Some(id),
+                ally: Some(d),
+            } => write!(f, "heal:{id}:{d}"),
             Action::Pray => f.write_str("pray"),
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
@@ -984,16 +996,30 @@ impl FromStr for Action {
             "bash" => dir().map(Action::Bash),
             "dig" => dir().map(Action::Dig),
             "disarm" => dir().map(Action::Disarm),
-            "heal" => match arg {
-                None => Ok(Action::Heal(None)),
-                Some(id)
-                    if !id.is_empty()
-                        && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') =>
-                {
-                    Ok(Action::Heal(Some(id.to_string())))
+            "heal" => {
+                let usage = || {
+                    "`heal:ID[:DIR]` names what to treat, e.g. `heal:bleeding` or \
+                     `heal:bleeding:E` (an ally's)"
+                        .to_string()
+                };
+                let Some(arg) = arg else {
+                    return Ok(Action::Heal {
+                        what: None,
+                        ally: None,
+                    });
+                };
+                let (id, ally) = match arg.split_once(':') {
+                    Some((id, d)) => (id, Some(d.parse::<Dir>().map_err(|_| usage())?)),
+                    None => (arg, None),
+                };
+                if id.is_empty() || !id.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+                    return Err(usage());
                 }
-                Some(_) => Err("`heal:ID` names what to treat, e.g. `heal:bleeding`".to_string()),
-            },
+                Ok(Action::Heal {
+                    what: Some(id.to_string()),
+                    ally,
+                })
+            }
             "search" => match arg.map(str::parse::<u8>) {
                 None => Ok(Action::Search(1)),
                 Some(Ok(turns)) if (1..=MAX_SEARCH).contains(&turns) => Ok(Action::Search(turns)),
@@ -1650,8 +1676,18 @@ mod tests {
             Action::Forage,
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },
-            Action::Heal(None),
-            Action::Heal(Some("bleeding".into())),
+            Action::Heal {
+                what: None,
+                ally: None,
+            },
+            Action::Heal {
+                what: Some("bleeding".into()),
+                ally: None,
+            },
+            Action::Heal {
+                what: Some("bleeding".into()),
+                ally: Some(Dir::E),
+            },
             Action::Drink,
             Action::UseTalent(TalentActive::SecondWind),
             Action::UseTalent(TalentActive::BloodMagic),

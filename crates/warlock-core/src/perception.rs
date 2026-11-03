@@ -509,6 +509,9 @@ pub(crate) struct Perception {
     /// The player's allies, wherever they are (`world/ally.rs`), in actor id order: the player
     /// knows their own.
     allies: Vec<AllyView>,
+    /// What the player may treat on their allies beside them (`world/heal.rs`): they know their
+    /// own allies' hurts.
+    ally_ailments: Vec<crate::heal::OwnAilment>,
 }
 
 /// A disguised mimic as the snapshot hides it: a shut chest of its level's band at its cell.
@@ -954,6 +957,7 @@ impl Perception {
             dazzled: dazzled.is_some(),
             disguises,
             allies: allies_of(state, content),
+            ally_ailments: crate::heal::of_allies(&crate::world::allies_beside(state), content),
         }
     }
 
@@ -1589,9 +1593,12 @@ impl<'a> PerceptionView<'a> {
 
     /// What the player may treat now with the Heal skill (spec §8 "Skills"), each by how they
     /// know it ("Sickness" for a disease they cannot name yet) and the action that treats it:
-    /// the Heal ability's choice.
+    /// the Heal ability's choice. Their own first, then their allies' beside them ("Your
+    /// wolf's bleeding").
     pub fn own_ailments(&self) -> Vec<crate::heal::OwnAilment> {
-        crate::heal::own(self.player, self.content)
+        let mut list = crate::heal::own(self.player, self.content);
+        list.extend(self.snapshot.ally_ailments.iter().cloned());
+        list
     }
 
     /// The status effects that show on seen creature `actor` (`seen` in `data/status.toml`:
@@ -1629,6 +1636,10 @@ impl<'a> PerceptionView<'a> {
                     Ability::Spell(spell) => {
                         crate::ability::spell_unavailable(self.player, self.content, spell)
                     }
+                    // An ally beside the player may need tending (`world/heal.rs`).
+                    Ability::Heal if !self.snapshot.ally_ailments.is_empty() => (ability
+                        .unavailable(self.player, self.content))
+                    .filter(|&why| why != crate::ability::Unavailable::NothingToTreat),
                     // Foraging asks for the wild underfoot (spec §8 "Foraging").
                     Ability::Forage
                         if crate::world::forage_ground(

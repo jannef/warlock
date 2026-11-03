@@ -103,6 +103,7 @@ struct ClassSpec {
     abilities: Vec<AbilitySpec>,
     bonus_talents: Option<BonusSpec>,
     max_level: Option<u8>,
+    ally_share: Option<u8>,
 }
 
 /// `{ level = 6, talent = "fencing" }`: at that level the class gives that talent;
@@ -325,6 +326,10 @@ pub struct ClassDef {
     /// ([`ClassDef::settle_cap`]; 0 until then). A character's level stops here until a prestige
     /// class takes them on.
     pub max_level: u8,
+    /// What an ally's kill pays a character of the class, in percent of their own kill (spec §8
+    /// "Allies"): the pet classes' 100 (the ranger, the druid); `None` for `[xp] ally_percent`
+    /// of `data/allies.toml`, everyone else's.
+    pub ally_share: Option<u8>,
     /// The file it was read from, for the errors of [`ClassDef::check_table`].
     pub(super) file: String,
 }
@@ -475,6 +480,9 @@ impl ClassDef {
                 "{what}: max_level {cap} is not 2 to {MAX_LEVEL}"
             )));
         }
+        if let Some(share) = spec.ally_share.filter(|&s| s > 100) {
+            return Err(err(format!("{what}: ally_share {share} is not 0 to 100")));
+        }
         Ok(ClassDef {
             id: spec.id,
             name: spec.name,
@@ -500,6 +508,7 @@ impl ClassDef {
             abilities,
             bonus_talents,
             max_level: spec.max_level.unwrap_or(0),
+            ally_share: spec.ally_share,
             file: file.to_string(),
         })
     }
@@ -958,6 +967,10 @@ mod tests {
             (
                 format!("{ONE}max_level = 1\n"),
                 "max_level 1 is not 2 to 100",
+            ),
+            (
+                format!("{ONE}ally_share = 101\n"),
+                "class `wizard`: ally_share 101 is not 0 to 100",
             ),
             (
                 format!(

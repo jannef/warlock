@@ -341,19 +341,75 @@ fn an_allys_kill_pays_its_master_as_their_own_blow_would() {
     assert!(first_of(&own, "kobold").is_none(), "the player killed it");
     let paid = own.state.experience;
     assert!(paid > 0);
-    // The wolf's kill pays the same, tallies the quest log, and marks nothing of the wolf's.
-    let mut w = world_of(FOES, Some(ALLIES));
+    // At full pay the wolf's kill pays the same, tallies the quest log, and marks nothing of
+    // the wolf's.
+    let full = ALLIES.replace("ally_percent = 50 ", "ally_percent = 100 ");
+    assert_ne!(full, ALLIES, "the shipped share is half");
+    let mut w = world_of(FOES, Some(&full));
     run(&mut w, "ally:wolf wait*12");
     assert!(first_of(&w, "kobold").is_none());
     assert_eq!(w.state.experience, paid);
     assert_eq!(w.state.quests.killed("kobold"), 1);
     assert_eq!(own.state.quests.killed("kobold"), 1);
-    // At half pay, half.
-    let half = ALLIES.replace("ally_percent = 100", "ally_percent = 50");
-    let mut w = world_of(FOES, Some(&half));
+    // At the shipped half pay (a run without a class), half; the quest tally in full.
+    let mut w = world_of(FOES, Some(ALLIES));
     run(&mut w, "ally:wolf wait*12");
     assert!(first_of(&w, "kobold").is_none());
     assert_eq!(w.state.experience, paid / 2);
+    assert_eq!(w.state.quests.killed("kobold"), 1);
+}
+
+/// A run of the built-in content in the hall with the kobold and the deer, as `character`.
+fn built_in_as(character: &str) -> World {
+    let mut files = ContentFiles::builtin();
+    files.insert("levels/hall.toml", FOES);
+    files.insert("levels/below.toml", BELOW);
+    files.insert(
+        "scenarios/hall.toml",
+        "name = \"Hall\"\nstart_level = \"hall\"\nhp = 1000\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("valid content"));
+    let spec = character.parse().expect("a character");
+    World::with_character(content, "hall", None, Some(&spec)).expect("world")
+}
+
+#[test]
+fn the_pet_classes_take_an_allys_kill_in_full_and_everyone_else_half() {
+    // The share by class (design ranger-companion.md §9): the ranger's and the druid's 100,
+    // everyone else's `[xp] ally_percent`, 50.
+    for (character, share) in [
+        ("human,female,druid", 100),
+        ("human,female,ranger", 100),
+        ("human,female,commoner", 50),
+        ("human,female,wizard", 50),
+    ] {
+        assert_eq!(built_in_as(character).ally_share(), share, "{character}");
+    }
+    // A wolf's kill: the druid is paid in full, the commoner half; both tally it in full.
+    let mut paid = Vec::new();
+    for character in ["human,female,druid", "human,female,commoner"] {
+        let mut w = built_in_as(character);
+        let kobold = first_of(&w, "kobold").expect("a kobold").id;
+        run(&mut w, "ally:wolf");
+        for _ in 0..60 {
+            if !w.state.actors.contains_key(&kobold) {
+                break;
+            }
+            run(&mut w, "wait");
+        }
+        assert!(
+            !w.state.actors.contains_key(&kobold),
+            "{character}: the wolf kills it"
+        );
+        assert_eq!(w.state.quests.killed("kobold"), 1, "{character}");
+        paid.push(w.state.experience);
+    }
+    assert!(paid[0] > 0);
+    // Half, give or take the rounding of what talents add to experience after it.
+    assert!(
+        paid[1] < paid[0] && (paid[0] / 2).abs_diff(paid[1]) <= 1,
+        "{paid:?}"
+    );
 }
 
 #[test]

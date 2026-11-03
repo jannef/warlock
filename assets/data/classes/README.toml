@@ -34,6 +34,9 @@
 #   experience   how much experience a level needs, in percent (spec §8 "Experience"; 50 to 200,
 #                 default 100), multiplied with the race's onto every threshold in
 #                 experience.toml: the patient callings pay more, everyday folk less
+#   ally_share    what an ally's kill pays a character of the class (spec §8 "Allies"), in percent
+#                 of their own kill, 0 to 100: the pet classes' 100 (the ranger, the druid);
+#                 default `[xp] ally_percent` of ../allies.toml (50)
 #   alignment     the class's part of a new character's hidden alignment score (spec §8
 #                 "Alignment"; alignment.toml; -1000 evil to 1000 good, default 0), added to the
 #                 race's: paladins start Good, thieves and witches Callous, everyone else Neutral
