@@ -134,8 +134,8 @@ to yourself, and the **[Lullaby](abilities.md#ability-lullaby)**, sung against y
   out ("not enough inspiration", "you have too little mana") and choosing it costs
   nothing.
 - **Heard.** A song takes as long as a chat (3 seconds at a [normal pace](turns.md#what-actions-cost)) and is
-  [heard](hearing.md#what-makes-noise) as a voice of loudness 80 where you stand: it wakes
-  sleepers and draws the curious, as any loud voice does. You cannot sing on the
+  [heard](hearing.md#what-makes-noise) as a voice of loudness 80 where you stand: those who
+  hear it and cannot see you come to look. You cannot sing on the
   [overworld](overworld.md#travel), or while [silenced](status-effects.md#status-silenced); trying
   takes no time.
 - **Lengthened by [Music](skills.md#skill-music).** Each song brings its status at one degree, and

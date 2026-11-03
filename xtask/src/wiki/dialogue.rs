@@ -2,7 +2,7 @@
 
 use super::text::{capital, yes};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, Reward, Speaker};
+use warlock_core::content::{Content, Dialogue, Reward, Speaker};
 use warlock_core::world::quest_asks;
 
 /// Who talks (`data/dialogue.toml` and the campaigns' `data/dialogue/`, those the wiki
@@ -106,15 +106,7 @@ pub(super) fn words(content: &Content) -> String {
             (Speaker::Npc(_), Some(name)) => name.clone(),
             (Speaker::Npc(npc), None) => format!("`{npc}`"),
         };
-        let speaks_to = d.speaks_to.map_or_else(
-            || "anyone".to_string(),
-            |r| match (r.min, r.max) {
-                (Some(min), Some(max)) => format!("{} to {}", min.name(), max.name()),
-                (Some(min), None) => format!("{} or better", min.name()),
-                (None, Some(max)) => format!("{} or worse", max.name()),
-                (None, None) => "anyone".to_string(),
-            },
-        );
+        let speaks_to = speaks_to_text(d);
         for w in &d.words {
             let mut does: Vec<String> = Vec::new();
             if let Some(class) = &w.does.calls {
@@ -142,6 +134,97 @@ pub(super) fn words(content: &Content) -> String {
     let mut out = String::from("| Who | Words | Speaks to | Saying them |\n|---|---|---|---|\n");
     for (who, phrase, speaks_to, does) in rows {
         let _ = writeln!(out, "| {who} | *{phrase}* | {speaks_to} | {does} |");
+    }
+    out
+}
+
+/// Whom dialogue `d` speaks to at all, by alignment band: "Kind or better", or "anyone".
+fn speaks_to_text(d: &Dialogue) -> String {
+    d.speaks_to.map_or_else(
+        || "anyone".to_string(),
+        |r| match (r.min, r.max) {
+            (Some(min), Some(max)) => format!("{} to {}", min.name(), max.name()),
+            (Some(min), None) => format!("{} or better", min.name()),
+            (None, Some(max)) => format!("{} or worse", max.name()),
+            (None, None) => "anyone".to_string(),
+        },
+    )
+}
+
+/// Each campaign's callings (spec §8 "Prestige classes"), stated plain: who the calling is
+/// open to, the words that make it and to whom they are said (the dialogue words whose `does`
+/// `calls` it, in the calling's campaign), whom the speaker speaks to, and the encounter tables
+/// that bring the speaker (entries whose `when.calling` is the class). By campaign, then class.
+pub(super) fn callings(content: &Content) -> String {
+    let mut rows: Vec<(String, String, String)> = Vec::new();
+    for c in content.callings() {
+        let Some(campaign) = c.campaign.as_deref() else {
+            continue;
+        };
+        if !super::order::described(content, Some(campaign)) {
+            continue;
+        }
+        let place = (content.campaigns().iter())
+            .find(|k| k.id == campaign)
+            .map_or(campaign, |k| k.name.as_str());
+        let who = calling_text(content, Some(campaign), &c.class);
+        let mut ways: Vec<String> = Vec::new();
+        for d in (content.dialogues().iter()).filter(|d| d.campaign.as_deref() == Some(campaign)) {
+            let speaker = match (&d.speaker, &d.name) {
+                (Speaker::Creature(id), _) => {
+                    let def = content.creature(*id);
+                    format!(
+                        "the [{}](creatures.md#creature-{})",
+                        def.name,
+                        def.id.replace('_', "-")
+                    )
+                }
+                (Speaker::Npc(_), Some(name)) => name.clone(),
+                (Speaker::Npc(npc), None) => format!("`{npc}`"),
+            };
+            let band = match d.speaks_to {
+                Some(_) => format!(" (who speaks only to the {})", speaks_to_text(d)),
+                None => String::new(),
+            };
+            for w in (d.words.iter()).filter(|w| w.does.calls.as_deref() == Some(c.class.as_str()))
+            {
+                ways.push(format!("say *{}* to {speaker}{band}", w.phrase));
+            }
+        }
+        let tables: Vec<String> = (content.encounter_tables(campaign))
+            .filter(|t| {
+                (t.entries.iter()).any(|e| e.when.calling.as_deref() == Some(c.class.as_str()))
+            })
+            .map(|t| {
+                format!(
+                    "[{}](encounters.md#encounter-table-{})",
+                    t.id,
+                    t.id.replace('_', "-")
+                )
+            })
+            .collect();
+        let met = match tables.is_empty() {
+            true => String::new(),
+            false => format!(", met on the way ({})", tables.join(", ")),
+        };
+        let how = match ways.is_empty() {
+            true => "nothing there calls you yet".to_string(),
+            false => ways.join(", or "),
+        };
+        let line = format!(
+            "- **{place}**, for {who}: {how}{met}. You are told: \"{}\"",
+            c.message
+        );
+        rows.push((place.to_string(), c.class.clone(), line));
+    }
+    if rows.is_empty() {
+        return "No world calls anyone into a prestige class yet.\n".into();
+    }
+    rows.sort();
+    let mut out = String::new();
+    for (_, _, line) in rows {
+        out.push_str(&line);
+        out.push('\n');
     }
     out
 }
