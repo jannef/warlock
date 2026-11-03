@@ -1379,7 +1379,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     creatures in view have not noticed it, `sees_unaware`, above), Tracker (hears 3 fainter; every sound it hears placed at its
     own cell, `noise::Exact::All`), Rapid shot (grants Focus, §8 "Resources"; a shot loosed
     with `fire` while the ranger holds 2 focus spends them and takes 10 % less time, the whole
-    shot's price; with less it is an ordinary shot; `world/focus.rs`), Master hunter (bows and crossbows threat +1; Favoured
+    shot's price; with less it is an ordinary shot; `world/focus.rs`), Hunter's bond (the
+    ranger's at 25, #920: shared sight and shared buffs with the companion, §8 "Allies";
+    `TalentEffect::SharedSight` read in `Perception::compute`, `TalentEffect::SharedBuffs` in
+    `World::afflict`, `world/bond.rs`), Master hunter (bows and crossbows threat +1; Favoured
     prey +1 and +2 more); Sneak attack (#682: the class passive beside the Sneak attack skill,
     whose dice the thief trains, `2d6+10` and known for: it grants the Openings pool from level
     1, and those the thief catches unawares make their initiative check 2 harder,
