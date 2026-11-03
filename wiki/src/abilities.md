@@ -33,6 +33,14 @@ menu).
 
 {{#include generated/abilities.md}}
 
+[Spirit weapon](#ability-spirit-weapon) asks for a weapon's shape: a list of every melee weapon,
+grouped by [weapon skill](weapon-skills.md), each with the numbers a plain one has. The weapon it
+calls into your hand is that plain weapon in every way (its damage, weight, and how it is
+[held](equipment.md#what-fits-where)) with the talent's gifts besides: +3 to hit, a
+[threat](combat.md#criticals) 2 lower (a long sword's criticals on 18 or better instead of 20),
+and every point of the target's [Protection](combat.md#protection) ignored. Calling it again
+reshapes it; it fades the moment it leaves your hands, and it cannot be thrown.
+
 What the ranks of [weapon skills](weapon-skills.md) and [fighting styles](fighting-styles.md) teach is listed in the menu too, under
 *Weapon skills* after the skill's name ("Long blades: Deep cut"), greyed with `fires by itself`:
 those abilities are never chosen, they work by themselves as you fight. They have tables of their

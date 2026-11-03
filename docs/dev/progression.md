@@ -29,6 +29,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley and Rage (Inspire, #244, among them); Hardened's hit points are `level_up`'s. |
 | `world/rage.rs` | The berserker's Rage on the Rage resource (R1, #249): `World::rage` (`grant_resource_with_status`), `World::unstoppable` (from `hurt`). |
 | `world/volley.rs` | `use_class_at` (`Action::UseAt`, a class active aimed at a cell: `use:volley:12,5`) and the ranger's Volley (#244), on 6 Focus (#250). |
+| `world/spirit_weapon.rs` | `use_class_shape` (`Action::Shape`, a class active in a weapon's shape: `use:spirit_weapon:long_sword`) and the Hunter's Spirit weapon (#881): `shapes` (every `melee_weapons` object with an attack that a hand holds, by weapon skill then id), `World::call_weapon` (a `Stack::spirit` into the pack, wielded through `World::equip_saying`, one held faded first; priced by the swap: a wield plus what the hands held), `gifts` (read in `Actor::melee`/`off_hand_blow`), `World::fade_spirit` and `release_spirit` (the invariant, `docs/dev/equipment.md`), `gift` (the content's numbers and phrase, for the description). |
 | `world/merchants_eye.rs` | `use_class_on` (`Action::UseOn`, a class active on a stack carried: `use:merchants_eye:c`) and the merchant's Merchant's eye (#816): `World::identify` on the stack for the time of a `read`; no mana, cooldown, check, or limit; refused, no time, for a stack not carried or already known. |
 | `world/focus.rs` | The ranger's Focus (R2, #250): `hold` (what a talent's `grants_resource` grants, from `class::hand_out` and `World::grant_class`), `World::rapid_shot` (from `shoot.rs::fire`). `docs/dev/resources.md`. |
 | `world/quest.rs` | `tally_kill` (every kill of the player's, by level and type; `Quests::prey`, `killed`): the design's B6. |
@@ -161,6 +162,7 @@ wiki's effect text appends "while raging".
 | `reprieve` | `World::hurt` → `World::reprieve` (after Rise from the ashes; `Progress::once`) |
 | `inspire`, `virtuoso` | `world/class_ability.rs` (`World::inspire`: `TalentMods::inspiring`, its `instead` resource via `World::spend_resource`, else `World::spend_mana`); `Ability::unavailable` (`Unavailable::NoMana` when the resource falls short too) |
 | `volley` | `world/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
+| `spirit_weapon` | `world/spirit_weapon.rs` (`Action::Shape`, `World::use_class_shape`; `ClassActive::aims_shape`, `Aim::Shape`; the UI opens the shape list, `ui/shape_screen.rs`); the gifts in `Actor::melee` and `Actor::off_hand_blow` (`spirit_weapon::gifts`: `to_hit`, `threat` lower, `penetration = ALL_PROTECTION`); `magic::Numbers::of` and `describe::lines` (`spirit_gift`) |
 | `merchants_eye` | `world/merchants_eye.rs` (`Action::UseOn`, `World::use_class_on`; `ClassActive::aims_item`, `Aim::Item`, `Ability::action_on`; the UI opens the identify list, `IdentifyBy::Class`) |
 | `favoured_prey` | `World::resolve` → `World::favoured` (`world/ambush.rs`), against `Quests::prey` |
 | `ambush` (summed), `ambush_threat` | `World::resolve` → `World::sneaks` (before the strike), `sneak_threat`, `ambushed`; `Dice::and` adds the dice of the same sides |
@@ -603,8 +605,11 @@ classes"): `class::grant` walks `Character::class_levels` (every table with the 
 it), `held_already` and the bonus pick of a level read `Character::class_of`, and each `Due`'s
 bonus trees are the class of its level's (`World::bonus_trees_at`). A prestige class's abilities
 are class abilities to the coverage check (`Content::check_class_tables` counts both tables) and
-are marked `(class)` in the dumps like a class's. No prestige class ships yet; the tests' Warden
-(`world/calling_tests.rs`) gives Fencing at its level 1 and Riposte at 2.
+are marked `(class)` in the dumps like a class's. One ships, the Hunter (`data/prestige/hunter.toml`,
+#881): the warrior's hit points, two rolls, Athletics and Survival known for, bonus picks at its 5,
+10, 15, 23, and 28 from Weaponcraft and Guard, and one row, Spirit weapon at its level 1; its door
+is a campaign's calling. The tests' Warden (`world/calling_tests.rs`) gives Fencing at its level 1
+and Riposte at 2.
 
 ## The trees so far
 
