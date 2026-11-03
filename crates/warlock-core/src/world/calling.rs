@@ -11,8 +11,10 @@
 //! (`World::add_xp`'s rule, not `grant_xp`'s), and nothing is drawn: the level-up's stat checks
 //! draw from the levels stream as any level-up's do.
 //!
-//! Who calls: the dev action `call:ID` ([`crate::action::Action::Call`]) here, whatever the
-//! level (for tests and captures); a dialogue word's `calls` later (the design's W1 and C1).
+//! Who calls: a dialogue word's `calls` (`world/words.rs`, heard only while the calling is open:
+//! the Strange Spirit's oath in the Ascmearc, the hermit's in the test world), and the dev action
+//! `call:ID` ([`crate::action::Action::Call`]) here, whatever the level (for tests and captures).
+//! An encounter entry's `when = { calling = "ID" }` holds while it is open.
 //! There is no `from_state`: a restore grants both tables' abilities (`World::grant_class`).
 
 use super::{Spent, World};

@@ -28,9 +28,12 @@ pedlar's offer: "The pedlar's offer" below). Keep it current with the code, as C
   (no minimum: the owner, Q5), `quest_active`, `quest_done`, `quest_not`, `quest_variant = {
   quest, variant }` (the rolled quest's record drew that variant, `QuestRecord::roll`, any stage:
   pair it with `quest_active`; #806, the owner's Q6), `revealed`, `hidden`, `after_days`,
-  `before_days`. Load checks (`content/encounter_tests.rs`): regions of the
+  `before_days`, `calling` (a prestige class's id: holds while `World::calling_open` says its
+  calling is open to the player, their class, their level, and not called yet; #879, the
+  Strange Spirit's entries `strange_spirit_<table>` on the Ascmearc's roads, vale, downs, and
+  woods, by day, weight 2). Load checks (`content/encounter_tests.rs`): regions of the
   campaign's overworld, landscapes, terrain ids, quests of the campaign, a variant of that quest,
-  hidden locations of its overworld, creature types of the campaign or shared, no unique, a
+  hidden locations of its overworld, a calling of the campaign (or of none), creature types of the campaign or shared, no unique, a
   hostile entry of hostile types and a peaceful or wildlife one of types not hostile to the
   player, the first row's dice at least 1, at most 12 a row, `lead` one of the group,
   `replaces` another table, entry ids unique in the campaign; a `draw` only on a hostile entry,

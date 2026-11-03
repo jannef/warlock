@@ -449,7 +449,7 @@ fn words_are_validated() {
         ),
         (
             word("x", "does = { calls = \"hunter\" }\n"),
-            "no callings yet",
+            "no calling `hunter` in its campaign",
         ),
         (
             word("x", "does = { quest = \"well\" }\n"),

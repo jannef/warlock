@@ -59,8 +59,11 @@ Press `s` (or choose the row and press `Enter`) and type what you say, up to 40 
 
 - Only the words count: capitals, punctuation, and extra spaces are ignored, so *Life before
   death!* and *life, before death* are the same words.
-- If they know the words they answer, a line at a time, and saying them may do something: give
-  you a [quest](quests.md), or send the speaker on their way.
+- If they know the words they answer, a line at a time, and saying them may do something: call
+  you into a new class (below), give you a [quest](quests.md), or send the speaker on their way.
+- Words that would call you into a new class are heard only from someone that class is open to,
+  at the level it asks, who has not been called before; anyone else is answered as if they had
+  said the wrong words.
 - If they do not, they say so in their own way, or say nothing.
 - Saying something takes a chat's time ([3 seconds](turns.md#what-actions-cost)), heard or not.
   You may try as often as you like.
@@ -68,6 +71,21 @@ Press `s` (or choose the row and press `Enter`) and type what you say, up to 40 
   that turns them away, and no topics to ask about and nothing to say.
 
 {{#include generated/words.md}}
+
+### The Strange Spirit
+
+In the Ascmearc a **[strange spirit](creatures.md#creature-strange-spirit)** may be met by day on
+the roads, in the vales, on the downs, and in the woods (see [Encounters](encounters.md)), but
+only by a [bard](classes.md#bard) whose class is full and who has not yet been called into
+another. It is [peaceful](encounters.md): hail it and it stands where it is and waits. It
+speaks only to the good (Kind or better on the [alignment](alignment.md) scale); anyone else it
+looks through. It has nothing to ask about: the `Say something…` row is the whole of its talk.
+Say *life before death* to it and it echoes the whole oath, a line at a time, calls you to be a
+Hunter, and fades. You are given the experience the next level costs if you have less, so the
+first Hunter level comes at once. Wrong words cost a chat's time and nothing more, and it waits
+until you leave. It has one hit point and never fights back: killed, it leaves no corpse and is
+worth no experience, and killing it is killing a peaceful good soul. The road may bring it again
+while the class is still open to you. The words are cut into a statue deep in Fyrdelf.
 
 ## Services
 

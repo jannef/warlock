@@ -1,0 +1,31 @@
+# Campaign-owned (docs/design/campaign.md §3.6): the Ascmearc's own type, which only its files
+# may name.
+#
+# The Strange Spirit (docs/design/prestige-classes.md §7; spec §8 "Prestige classes"): a pale
+# figure that stands on the march's roads and waits for one who knows the old oath. Met only by a
+# bard whose class is full and who has not been called (the encounter entries
+# `strange_spirit_*`, `when = { calling = "hunter" }`); it talks only to the good (its dialogue's
+# `speaks_to`, data/dialogue/spirit.toml), and when the oath is said to it, it echoes it, calls
+# the bard into the Hunter, and fades (`does = { calls = "hunter", departs = true }`).
+#
+# It never fights: hostile to no one (the `spirits` faction), rooted where it stands. Struck, it
+# dies as any peaceful creature does, with one hit point, leaving no corpse, no blood, and no
+# experience, and the killer's alignment pays a peaceful kill of the good (Q10: no flag makes it
+# unkillable); its party is forgotten, and the road may bring it again.
+[[creature]]
+id = "strange_spirit"
+level = 1
+xp = 0
+name = "strange spirit"
+glyph = "S"
+fg = "#d8e6ff"
+faction = "spirits"
+alignment = "good"
+budge = "never"
+corpse = false
+blood = "none"
+sight = 12
+hearing = 10
+weight = 1000
+stats = { strength = 3, dexterity = 10, toughness = 1, intelligence = 16, willpower = 18, presence = 18 }
+depart = "fades, and is gone"

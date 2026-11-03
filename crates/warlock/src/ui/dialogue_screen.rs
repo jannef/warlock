@@ -551,6 +551,9 @@ mod tests {
         assert_eq!(press(Press::nav(Nav::Enter)), ask("rooms"));
         assert_eq!(press(Press::nav(Nav::Up)), ScreenAction::Stay);
         assert_eq!(press(Press::nav(Nav::Enter)), ask("quest-rats"));
+        // Up from the top wraps to the last row: the hermit knows words (the oath, the test
+        // world's door into the Hunter), so it is the Say row; one more is the last topic.
+        assert_eq!(press(Press::nav(Nav::Up)), ScreenAction::Stay);
         assert_eq!(press(Press::nav(Nav::Up)), ScreenAction::Stay);
         assert_eq!(press(Press::nav(Nav::Enter)), ask("stairs"));
         assert_eq!(press(Press::nav(Nav::Back)), ScreenAction::Close);
