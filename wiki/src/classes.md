@@ -80,6 +80,11 @@ three times as fast, until the priest strikes from it (see [Special rooms](speci
 The [wizard](classes.md#wizard)'s **[Knock](abilities.md#ability-knock)** (from level 4, 5 [mana](mana.md#spending-it)) springs the lock of the [locked door](doors.md#locked-doors) or chest in a
 direction; nothing opens by itself (see [Chests](chests.md#locked-chests)).
 
+The [wizard](classes.md#wizard)'s **[Scribe](abilities.md#ability-scribe)** (from level 12) writes a scroll of a spell he knows on a
+blank scroll, for three times the spell's [mana](mana.md#spending-it) and a study's time (see
+[Scrolls](scrolls.md#writing-scrolls)): mana banked between fights, read in the next. His
+**[Magister](talents.md#talent-magister)** comes at level 40.
+
 The [ranger](classes.md#ranger)'s **favoured prey** is the kind of [creature](creatures.md) you have killed most, counted over every
 [level](experience.md#levels); when two are tied, the one that got there first stays favoured until another is killed
 more often. A **[volley](abilities.md#ability-volley)** looses three shots of your [readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming)
