@@ -188,9 +188,10 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
                         terrain(t)
                     ),
                     None => format!(
-                        "{} {name}{} ({stance}{health}{effects}){gear}, on {}{here}.",
+                        "{} {name}{} ({stance}{health}{effects}){}{gear}, on {}{here}.",
                         if actor.ally { "Your" } else { article(name) },
                         made_of(content, actor).0,
+                        waits(content, actor),
                         terrain(t)
                     ),
                 }
@@ -231,6 +232,20 @@ fn services(content: &Content, actor: &SeenActor) -> String {
         [] => String::new(),
         [one] => format!(", who {one} for gold"),
         [rest @ .., last] => format!(", who {} and {last} for gold", rest.join(", ")),
+    }
+}
+
+/// ", who waits" after a seen creature's name when its dialogue knows words and offers nothing
+/// else, no topic, service, or wares (the Strange Spirit: "a strange spirit (unhurt), who waits";
+/// docs/design/prestige-classes.md §7); nothing for any other.
+fn waits(content: &Content, actor: &SeenActor) -> &'static str {
+    let Some(dialogue) = actor.dialogue else {
+        return "";
+    };
+    let d = content.dialogue(dialogue);
+    match !d.words.is_empty() && d.topics.is_empty() && d.services.is_empty() && d.offer.is_none() {
+        true => ", who waits",
+        false => "",
     }
 }
 
@@ -482,6 +497,29 @@ mod tests {
         assert_eq!(
             describe(&w.perception(), Pos::new(27, 25), true),
             "Sister Hild (unhurt), who cures and mends for gold, on plank floor in a sanctuary."
+        );
+    }
+
+    /// One who knows words and has nothing else to offer waits (the Strange Spirit,
+    /// docs/design/prestige-classes.md §7); the encounter is forced, whoever the player is.
+    #[test]
+    fn one_with_words_and_nothing_to_ask_waits() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content.clone(), "ascmearc", None).expect("the Ascmearc");
+        let walk = "move:E*7 skip:4h meet:strange_spirit_roads encounter:hail";
+        for action in warlock_core::action::parse_actions(walk).expect("actions") {
+            w.apply(&action);
+        }
+        let spirit = content.creature_id("strange_spirit").expect("the spirit");
+        let view = w.perception();
+        let at = (view.actors().iter())
+            .find(|a| a.creature == spirit)
+            .map(|a| a.pos)
+            .expect("hailed, and in sight");
+        let seen = describe(&w.perception(), at, true);
+        assert!(
+            seen.starts_with("A strange spirit (unhurt), who waits, on "),
+            "{seen}"
         );
     }
 

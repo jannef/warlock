@@ -29,8 +29,8 @@ pub(super) struct WordSpec {
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Does {
-    /// A calling of the dialogue's campaign (prestige classes, #876): refused when content loads
-    /// until callings exist.
+    /// A calling of the dialogue's campaign, by its prestige class's id (spec §8 "Prestige
+    /// classes"): the word is heard only while the calling is open to the player.
     pub calls: Option<String>,
     /// A quest of the dialogue's campaign, given as asking its topic would give it.
     pub quest: Option<String>,
@@ -87,11 +87,6 @@ pub(super) fn resolve(
             return Err(bad(format!("`reply` is 1 to {MAX_REPLY_LINES} lines")));
         }
         check_lines(&spec.reply, MAX_LINE).map_err(bad)?;
-        if spec.does.calls.is_some() {
-            return Err(bad(
-                "`calls`: there are no callings yet (prestige classes, #876)".into(),
-            ));
-        }
         if spec.does.departs && matches!(speaker, Speaker::Npc(_)) {
             return Err(bad(
                 "`departs` is only for a creature type's dialogue: an npc leaving is a level's"
@@ -124,19 +119,28 @@ pub(super) fn resolve(
 }
 
 impl Content {
-    /// Checks every word's `quest` once the quests have loaded: a quest of the dialogue's own
-    /// campaign.
+    /// Checks every word's `quest` and `calls` once the quests and callings have loaded: a quest
+    /// of the dialogue's own campaign, and a calling of it (or, for a dialogue outside every
+    /// campaign, one outside every campaign too).
     pub(super) fn check_words(&self) -> Result<(), ContentError> {
         for dialogue in self.dialogues() {
+            let campaign = dialogue.campaign.as_deref();
             for word in &dialogue.words {
-                let Some(quest) = &word.does.quest else {
-                    continue;
+                let quest = (word.does.quest.as_ref()).filter(|quest| {
+                    let found = self.quest_id(quest).map(|q| self.quest(q));
+                    !found.is_some_and(|q| q.campaign.as_deref() == campaign)
+                });
+                let calls = (word.does.calls.as_ref()).filter(|class| {
+                    !(self.callings.iter()).any(|c| {
+                        &c.class == *class
+                            && (c.campaign.as_deref() == campaign || c.campaign.is_none())
+                    })
+                });
+                let why = match (quest, calls) {
+                    (Some(quest), _) => format!("no quest `{quest}` in its campaign"),
+                    (None, Some(class)) => format!("no calling `{class}` in its campaign"),
+                    (None, None) => continue,
                 };
-                let campaign = dialogue.campaign.as_deref();
-                let found = self.quest_id(quest).map(|q| self.quest(q));
-                if found.is_some_and(|q| q.campaign.as_deref() == campaign) {
-                    continue;
-                }
                 let file = match campaign {
                     Some(c) => format!("campaigns/{c}/data/dialogue"),
                     None => "data/dialogue.toml".into(),
@@ -147,10 +151,7 @@ impl Content {
                 };
                 return Err(ContentError::new(
                     &file,
-                    format!(
-                        "dialogue of {who}: word `{}`: no quest `{quest}` in its campaign",
-                        word.phrase
-                    ),
+                    format!("dialogue of {who}: word `{}`: {why}", word.phrase),
                 ));
             }
         }

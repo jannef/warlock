@@ -387,6 +387,9 @@ pub struct When {
     /// Whole days since the run began: at least, and fewer than.
     pub after_days: Option<u32>,
     pub before_days: Option<u32>,
+    /// A calling of the campaign (spec §8 "Prestige classes"), by its prestige class's id, open
+    /// to the player now (`World::calling_open`): their class, their level, and not called yet.
+    pub calling: Option<String>,
 }
 
 #[derive(Default, Deserialize)]
@@ -411,6 +414,7 @@ struct WhenSpec {
     hidden: Option<String>,
     after_days: Option<u32>,
     before_days: Option<u32>,
+    calling: Option<String>,
 }
 
 /// `level = { max = 8 }`: only a ceiling (the owner, #796 Q5: no level gates).
@@ -834,6 +838,13 @@ fn when(spec: WhenSpec, campaign: &str, content: &Content) -> Result<When, Strin
             return Err("`when.after_days` and `before_days` are 0 to 3600".into());
         }
     }
+    if let Some(class) = &spec.calling
+        && content.calling(campaign, class).is_none()
+    {
+        return Err(format!(
+            "`when.calling`: no calling `{class}` of the campaign"
+        ));
+    }
     Ok(When {
         regions: spec.regions,
         landscapes,
@@ -849,6 +860,7 @@ fn when(spec: WhenSpec, campaign: &str, content: &Content) -> Result<When, Strin
         hidden: spec.hidden,
         after_days: spec.after_days,
         before_days: spec.before_days,
+        calling: spec.calling,
     })
 }
 
