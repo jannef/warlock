@@ -148,6 +148,7 @@ fn the_three_tables_come_with_the_levels() {
             "Tracker",
             "Barkskin",
             "Rapid shot",
+            "Hunter's bond",
             "Evasion",
             "Volley",
             "Master hunter"

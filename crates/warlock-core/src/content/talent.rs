@@ -348,6 +348,12 @@ pub enum TalentEffect {
     Companion,
     /// `bonus` on its taming checks (Animal companion's edge; the Tame skill ability reads it).
     Tame { bonus: i32 },
+    /// It sees what its companion sees, by its companion's eyes and nose (Hunter's bond; the
+    /// second viewpoint in `Perception::compute`).
+    SharedSight,
+    /// A buff status that lands on it or its companion lands on the other too (Hunter's bond;
+    /// `world/bond.rs`); never a hex.
+    SharedBuffs,
     /// An initiative check it makes against a hostile attacker beside it is answered with a
     /// free blow at once (Hair trigger; `Cue::Startled`, `world/free_blow.rs`).
     StartledBlow,
@@ -2301,6 +2307,8 @@ impl TalentEffect {
             | TalentEffect::GemWorth
             | TalentEffect::SeesUnaware
             | TalentEffect::Companion
+            | TalentEffect::SharedSight
+            | TalentEffect::SharedBuffs
             | TalentEffect::StartledBlow
             | TalentEffect::Distrusted
             | TalentEffect::ExactSounds

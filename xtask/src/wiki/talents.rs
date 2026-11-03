@@ -747,6 +747,14 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                     your level"
             .into(),
         TalentEffect::Tame { bonus } => format!("{} on your taming checks", signed(bonus)),
+        TalentEffect::SharedSight => "you see what your [companion](allies.md#hunters-bond) \
+                                      sees, by its own eyes, and the foes its nose finds, \
+                                      through the dark and closed doors"
+            .into(),
+        TalentEffect::SharedBuffs => "a [buff](allies.md#hunters-bond) that lands on you or \
+                                      your companion lands on the other too, at the same \
+                                      strength; a hex never does"
+            .into(),
         TalentEffect::SeesUnaware => "you see which creatures in view have not noticed you: \
                                       look mode says \"unaware of you\", and their glyphs are \
                                       drawn a shade cooler, breathing slowly (standing still \
