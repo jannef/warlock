@@ -108,10 +108,11 @@ enters `InputMode::Ability(Ability::Heal)` and asks "Tend to which side?"; a dir
 at once or the treat dialog of several, and a bare `heal::DIR` for nothing to treat, so the rules
 say why. With one way the old rows hold.
 
-**A note for the collar (C3, #918):** Give is to ask the same way: read `kept_beside()` and, with
-more than one, enter the direction ask (the owner, §16 Q4). The reads go through `kept()`, so the
-collar works on a familiar as on a companion without more. Tame is not built either (C2): until it
-is, no character has two kept beasts in play, and only tests reach the ask.
+The collar (C3, #918, `docs/dev/companion.md`) reads the same `kept_beside()`: Give works on a
+familiar as on a companion, and with more than one beside the player its list's choice then asks
+the way (`InputMode::GiveWay`). A witch trained in Handle animal has both once she tames a beast
+(`collar_tests::a_witch_who_tames_a_beast_names_the_way_to_each_and_it_replays`, the screen case
+`giving_with_two_kept_beasts_beside`).
 
 ## Familiar's sight (#932)
 

@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ You see here a bone amulet.
+ You pick up a bone amulet.
+
+
+
+
+
+
+
+
+
+           ┌─ Give ─────────────────────────────────────────────────────────────────────┐
+           │                                                                            │
+           │ Amulets                                                                    │
+           │ > a - " a bone amulet                                                60 g  │
+           │                                                                            │
+           │ a or Enter give   Esc cancel                                               │
+           └────────────────────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 23/23  ·  MP 4/4  ·  Sta 10/10  ·  Lv 1  ·  Brūn: unhurt  ·  08:06       ? controls

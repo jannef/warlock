@@ -3,8 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  Your appraise improves. (×236) You learn Early mastery. You learn Far shot. You learn Steady hand.
- You learn Sworn foe (air). You learn Sworn foe (animated). You learn Sworn foe (archer). --more--
-                    ┌─ Abilities ──────────────────────────────────────────────┐
+ You learn Sworn foe┌─ Abilities ──────────────────────────────────────────────┐(archer). --more--
                     │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
@@ -23,12 +22,13 @@ expression: "render(case, content.clone())"
                     │   i  Come to heel                                        │
                     │   j  Hold here                                           │
                     │   k  Set on             at a place you see               │
+                    │   l  Give               on something you carry           │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-l or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
  The Hub  ·  HP 133/133  ·  MP 181/181  ·  Focus 10/10  ·  Sta 10/16  ·  Lv 60           ? controls

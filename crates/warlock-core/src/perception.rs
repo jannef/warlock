@@ -310,6 +310,9 @@ pub struct AllyView {
     pub retinue: bool,
     /// On the level the player is on, acting.
     pub here: bool,
+    /// What it wears (a companion's collar, `world/collar.rs`), which the player knows wherever
+    /// it is: they fastened it.
+    pub wears: Vec<Stack>,
 }
 
 /// The player's allies ([`AllyView`]), in actor id order.
@@ -333,6 +336,9 @@ fn allies_of(state: &WorldState, content: &Content) -> Vec<AllyView> {
                 lasts,
                 retinue: ally.retinue,
                 here: a.level == state.current_level && !ally.retinue,
+                wears: (a.equipment.items().into_iter())
+                    .filter_map(|(_, item)| a.inventory.get(item).cloned())
+                    .collect(),
             })
         })
         .collect()
@@ -1752,7 +1758,10 @@ impl<'a> PerceptionView<'a> {
     /// what they can do and what they hold.
     pub fn abilities(&self) -> Vec<OwnAbility> {
         let here = Ability::here(self.level, self.content, self.player.pos);
-        let orders = Ability::orders(!self.snapshot.allies.is_empty());
+        let orders = Ability::orders(
+            !self.snapshot.allies.is_empty(),
+            self.kept().next().is_some(),
+        );
         let allies_here = self.snapshot.allies.iter().any(|a| a.here);
         let companion_here = (self.snapshot.allies.iter())
             .any(|a| a.here && matches!(a.source, crate::world::AllySource::Companion(_)));
@@ -1765,6 +1774,10 @@ impl<'a> PerceptionView<'a> {
                     // An order needs someone on the level to hear it (spec §8 "Allies").
                     Ability::Heel | Ability::Hold | Ability::SetOn if !allies_here => {
                         Some(crate::ability::Unavailable::NoAllies)
+                    }
+                    // Give needs the beast at hand (`world/collar.rs`).
+                    Ability::Give if self.snapshot.kept_beside.is_empty() => {
+                        Some(crate::ability::Unavailable::NotBeside)
                     }
                     // Sic 'em needs its beast on the level (`world/sic.rs`).
                     Ability::Class(crate::content::ClassActive::Sic) if !companion_here => {
@@ -2340,7 +2353,7 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The ways to the player's kept beasts beside them, in direction order: with two or more,
-    /// tending one asks which way first (spec §8 "Allies"; the owner, #907 Q4).
+    /// tending one or giving one a collar asks which way (spec §8 "Allies"; the owner, #907 Q4).
     pub fn kept_beside(&self) -> &[crate::geom::Dir] {
         &self.snapshot.kept_beside
     }

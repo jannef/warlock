@@ -35,6 +35,9 @@
 //!
 //! The temper screen (the Temper ability beside a forge's anvil, spec §7 "Special rooms") lists
 //! the weapons and armour the player carries; choosing one tempers it ([`Action::Temper`]).
+//! The give screen (the Give ability, spec §8 "Allies") lists what fits a neck; choosing one
+//! fastens it on the player's kept beast beside them ([`Action::Give`]; with two, input asks
+//! which way first).
 
 use super::character_screen::{fit_joined, thresholds};
 use super::menu::{Hints, Nav, Panel, Press};
@@ -74,6 +77,8 @@ pub enum ObjectList {
     Identify(IdentifyBy),
     /// The weapons and armour in the pack: choose one to temper at the anvil beside the player.
     Temper,
+    /// What fits a neck, for a kept beast of the player's (the Give ability; `world/collar.rs`).
+    Give,
 }
 
 /// What the identify list identifies with.
@@ -99,6 +104,7 @@ impl ObjectList {
             ObjectList::Study => " Study ",
             ObjectList::Identify(_) => " Identify ",
             ObjectList::Temper => " Temper ",
+            ObjectList::Give => " Give ",
         }
     }
 
@@ -112,6 +118,7 @@ impl ObjectList {
             ObjectList::Study => "You carry no scroll whose spell you could learn.",
             ObjectList::Identify(_) => "You carry nothing unidentified.",
             ObjectList::Temper => "You carry no weapon or armour to temper.",
+            ObjectList::Give => "You carry nothing for a beast's neck.",
         }
     }
 
@@ -128,7 +135,8 @@ impl ObjectList {
             // Room for a name with its numbers and its marks (`a chain mail shirt (Dv +2,
             // Pv 3) (being worn)`).
             | ObjectList::Identify(_)
-            | ObjectList::Temper => 78,
+            | ObjectList::Temper
+            | ObjectList::Give => 78,
             // Room for the spell each teaches and the chance.
             ObjectList::Study => 80,
         }
@@ -144,6 +152,7 @@ impl ObjectList {
                 | ObjectList::Study
                 | ObjectList::Identify(_)
                 | ObjectList::Temper
+                | ObjectList::Give
         )
     }
 }
@@ -258,6 +267,10 @@ impl ObjectScreen {
                 .collect(),
             ObjectList::Temper => (0..pack.len())
                 .filter(|&i| warlock_core::world::temperable(content, &pack[i]))
+                .map(Item::Pack)
+                .collect(),
+            ObjectList::Give => (0..pack.len())
+                .filter(|&i| warlock_core::world::fits_neck(content, &pack[i]))
                 .map(Item::Pack)
                 .collect(),
         };
@@ -404,6 +417,10 @@ impl ObjectScreen {
             (ObjectList::Temper, item) => ScreenAction::Act(Action::Temper {
                 item: item.position(),
             }),
+            (ObjectList::Give, item) => ScreenAction::Act(Action::Give {
+                item: item.position(),
+                ally: None,
+            }),
             (_, item) => ScreenAction::Aim(AimKind::Throw(item.position())),
         }
     }
@@ -501,7 +518,8 @@ impl ObjectScreen {
                     | ObjectList::Read
                     | ObjectList::Study
                     | ObjectList::Identify(_)
-                    | ObjectList::Temper => Action::Drop(chosen),
+                    | ObjectList::Temper
+                    | ObjectList::Give => Action::Drop(chosen),
                 });
             }
             nav => {
@@ -677,6 +695,7 @@ impl ObjectScreen {
             ObjectList::Study => format!("{}   {page}Esc cancel", either("study")),
             ObjectList::Identify(_) => format!("{}   {page}Esc cancel", either("identify")),
             ObjectList::Temper => format!("{}   {page}Esc cancel", either("temper")),
+            ObjectList::Give => format!("{}   {page}Esc cancel", either("give")),
             ObjectList::PickUp | ObjectList::Drop => {
                 let verb = if self.list == ObjectList::PickUp {
                     "pick up"

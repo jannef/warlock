@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content.clone())"
+---
+ You crouch by the hound and hold out a strip of dried meat. The hound comes to your hand. You call
+ it Græg.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Nook  ·  HP 15/15  ·  MP 13/13  ·  Lv 1  ·  Græg: unhurt  ·  Tyffin: unhurt  ·  08:01   ? controls

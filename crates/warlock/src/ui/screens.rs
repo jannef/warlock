@@ -157,6 +157,9 @@ pub enum ScreenName {
     /// Choose what to temper at a forge's anvil (the Temper ability, spec §7 "Special rooms"):
     /// the weapons and armour carried.
     Temper,
+    /// Choose what to give a kept beast of the player's for its neck (the Give ability, spec §8
+    /// "Allies"): what fits a neck, carried.
+    Give,
     /// The abilities menu (`a` in play): racial, class, skill, weapon skill, and item
     /// abilities, to choose one to use.
     Abilities,
@@ -210,6 +213,7 @@ impl ScreenName {
                 | ScreenName::Study
                 | ScreenName::Identify
                 | ScreenName::Temper
+                | ScreenName::Give
                 | ScreenName::Abilities
                 | ScreenName::Shape
                 | ScreenName::Scribe
@@ -433,6 +437,7 @@ impl Screen {
                 beneath.item.unwrap_or(0),
             ))),
             ScreenName::Temper => objects(ObjectList::Temper),
+            ScreenName::Give => objects(ObjectList::Give),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Shape => Screen::Shape(ShapeScreen::new(run)),
             ScreenName::Scribe => Screen::Scribe(ScribeScreen::new(run)),
@@ -468,6 +473,7 @@ impl Screen {
                 ObjectList::Study => ScreenName::Study,
                 ObjectList::Identify(_) => ScreenName::Identify,
                 ObjectList::Temper => ScreenName::Temper,
+                ObjectList::Give => ScreenName::Give,
             },
             Screen::Equipment(_) => ScreenName::Equipment,
             Screen::EquipItem(_) => ScreenName::EquipItem,

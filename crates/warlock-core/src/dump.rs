@@ -655,7 +655,13 @@ fn kept_json(view: &PerceptionView<'_>, kept: Kept) -> Value {
         "at": ally.order.at(),
         "pos": pos,
         "retinue": ally.retinue,
+        "wears": wears(view, ally),
     })
+}
+
+/// What a companion wears as it reads (`an amber amulet`; `world/collar.rs`), or null.
+fn wears(view: &PerceptionView<'_>, ally: &crate::perception::AllyView) -> Option<String> {
+    (!ally.wears.is_empty()).then(|| crate::object::phrase(&ally.wears, view.lore()))
 }
 
 fn kept_rows(view: &PerceptionView<'_>, kept: Kept) -> Vec<String> {
@@ -670,8 +676,9 @@ fn kept_rows(view: &PerceptionView<'_>, kept: Kept) -> Vec<String> {
         article(kind),
         data.grade
     );
+    let collar = wears(view, ally).map_or(String::new(), |w| format!(", wearing {w}"));
     if ally.retinue {
-        return vec![format!("{head}: with you")];
+        return vec![format!("{head}: with you{collar}")];
     }
     let seen = (view.actors().iter()).find(|a| a.id == ally.id);
     let at = seen.map_or(String::new(), |a| format!(" at ({}, {})", a.pos.x, a.pos.y));
@@ -679,7 +686,10 @@ fn kept_rows(view: &PerceptionView<'_>, kept: Kept) -> Vec<String> {
         Some(at) => format!("{} at ({}, {})", ally.order.id(), at.x, at.y),
         None => ally.order.id().to_string(),
     };
-    vec![format!("{head}{at}: {}, order {order}", ally.health.word())]
+    vec![format!(
+        "{head}{at}: {}, order {order}{collar}",
+        ally.health.word()
+    )]
 }
 
 /// The overworld locations the player knows, one a line by position: `(45, 23) The Hall`; `no

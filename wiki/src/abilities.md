@@ -123,6 +123,8 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   what is near it, then come back. An order takes no time, but it is a shout: anything near
   enough hears it (see [Hearing](hearing.md)). Greyed out "no allies here" while none of them is
   on the level with you. Each order, and each kill of theirs, trains [Handle animal](skills.md#skill-handle-animal), as does a try at [taming](allies.md#taming).
+  [Give](abilities.md#ability-give) is no order: it joins them with a companion, takes time, and
+  asks for [something for its neck](allies.md#the-collar); greyed out "not beside you" while it is away.
   Set on asks for the place as aiming a shot does; Tab skips your own allies. On the map an ally
   of yours has a short, faint green line under it, and looking at one says it is yours ("Your
   wolf (unhurt)").

@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content.clone())"
+---
+ Give it to which side? (Esc to cancel)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ Nook  ·  HP 15/15  ·  MP 13/13  ·  Lv 1  ·  Græg: unhurt  ·  Tyffin: unhurt  ·  08:01   ? controls

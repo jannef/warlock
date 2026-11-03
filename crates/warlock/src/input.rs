@@ -588,6 +588,9 @@ pub enum InputMode {
     /// Waiting for a direction to use an ability in (one whose [`ability::Aim`] is a direction:
     /// a shield bash).
     Ability(Ability),
+    /// Waiting for the way to the kept beast this stack goes on: Give, with more than one beside
+    /// the player (the owner, #907 Q4; [`PerceptionView::kept_beside`]).
+    GiveWay(usize),
     /// Asking how long to rest ([`REST_CHOICES`]).
     Rest,
     /// Look mode: a cursor at this level position.
@@ -910,6 +913,14 @@ impl Gameplay<'_> {
                 InputMode::Normal
             }
             (InputMode::Ability(_), _) => InputMode::Normal,
+            (InputMode::GiveWay(item), KeyCommand::Move(dir)) => {
+                self.actions.write(PlayerAction(Action::Give {
+                    item,
+                    ally: Some(dir),
+                }));
+                InputMode::Normal
+            }
+            (InputMode::GiveWay(_), _) => InputMode::Normal,
             (InputMode::Direction(cmd), KeyCommand::Move(dir)) => {
                 let action = match cmd {
                     KeyCommand::Open => Action::Open(dir),
@@ -1200,6 +1211,13 @@ impl Gameplay<'_> {
         {
             return Some(dialog);
         }
+        // The stack is chosen; two kept beasts beside the player: on which is asked next.
+        if let (Action::Give { item, ally: None }, Some(game)) = (&action, &self.game)
+            && game.world.perception().kept_beside().len() > 1
+        {
+            *self.mode = InputMode::GiveWay(*item);
+            return None;
+        }
         self.actions.write(PlayerAction(action));
         None
     }
@@ -1231,10 +1249,14 @@ impl Gameplay<'_> {
         match (usable, ability.aim(&content)) {
             (true, ability::Aim::Direction) => *self.mode = InputMode::Ability(ability),
             (true, ability::Aim::Cell) => self.aim(AimKind::Ability(ability)),
-            // Temper's list; the identify list asks which stack (`identify_by`, before this).
+            // Temper's and Give's lists; the identify list asks which stack (`identify_by`,
+            // before this).
             (true, ability::Aim::Item) => {
                 if ability == Ability::Temper {
                     return Some(ScreenAction::Open(ScreenName::Temper));
+                }
+                if ability == Ability::Give {
+                    return Some(ScreenAction::Open(ScreenName::Give));
                 }
             }
             (true, ability::Aim::Nothing) => {
@@ -1418,6 +1440,7 @@ fn command_in(
         InputMode::Normal
         | InputMode::Direction(_)
         | InputMode::Ability(_)
+        | InputMode::GiveWay(_)
         | InputMode::Look(_) => None,
     };
     (own.and_then(|context| bindings.lookup_in(context, key)))

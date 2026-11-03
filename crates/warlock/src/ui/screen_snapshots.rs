@@ -648,6 +648,22 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger beside their hound with the darkness chamber's amulet: Give in the Allies group,
+    // asking for something carried, then its list, what fits a neck only.
+    Case {
+        name: "abilities-menu-give",
+        character: Some("human,male,ranger"),
+        actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    Case {
+        name: "give-list",
+        character: Some("human,male,ranger"),
+        actions: "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W",
+        screen: Some("give"),
+        ..BASE
+    },
     // An ally in the retinue on the overworld, none on the level: the orders greyed.
     Case {
         name: "abilities-menu-allies-none",
@@ -1344,6 +1360,55 @@ fn saying_words() {
             name,
             actions: concat!(hermit!(), " chat:SE"),
             screen: Some("dialogue"),
+            keys,
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
+}
+
+/// A witch who tames a hound beside her familiar (a witch's Handle animal is one draw in four:
+/// here the content gives it): Give's list, then the way it asks with both beside her, and the
+/// fastening once the way is told (the owner, #907 Q4).
+#[test]
+fn giving_with_two_kept_beasts_beside() {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    let witch = include_str!("../../../../assets/data/classes/10-witch.toml");
+    let trained = witch
+        .replacen("handle_animal = { chance = 25, dice = \"2d4\" }, ", "", 1)
+        .replacen(
+            "skills = { heal",
+            "skills = { handle_animal = \"+100\", heal",
+            1,
+        );
+    assert_ne!(trained, witch, "the witch's skills");
+    files.insert("data/classes/10-witch.toml", &trained);
+    files.insert(
+        "levels/nook.toml",
+        "name = \"Nook\"\nambient = [255, 255, 255, 0]\nmap = '''\n#####\n##b##\n#.@.#\n#...#\n#####\n'''\n\
+         [legend]\n\".\" = \"floor\"\n\"#\" = \"wall\"\n\
+         \"@\" = { terrain = \"floor\", spawn = \"player\" }\n\
+         \"b\" = { terrain = \"floor\", creature = \"hound\" }\n",
+    );
+    files.insert(
+        "scenarios/nook.toml",
+        "name = \"Nook\"\nstart_level = \"nook\"\n\
+         character = { race = \"human\", gender = \"female\", class = \"witch\" }\n\
+         carry = [\"jade_amulet*3\", \"dried_meat*3\"]\n",
+    );
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let cases = [
+        ("give-list-two-kept", None),
+        ("give-way", Some("a")),
+        ("give-way-told", Some("a Up")),
+        ("give-way-cancelled", Some("a Esc")),
+    ];
+    for (name, keys) in cases {
+        let case = Case {
+            name,
+            scenario: "nook",
+            actions: "tame:N",
+            screen: Some("give"),
             keys,
             ..BASE
         };

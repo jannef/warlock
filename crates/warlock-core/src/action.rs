@@ -221,6 +221,15 @@ pub enum Action {
     Temper {
         item: usize,
     },
+    /// Give the carried stack at this position (one of it) to the player's companion beside them,
+    /// for its neck (spec §8 "Allies"; the Give ability, the abilities menu's Allies group;
+    /// `world/collar.rs`): priced as a `wear`, and what it wore falls on its cell. `ally` is the
+    /// way to the beast when one is named, `give:b:E`; with none, the first beside the player.
+    /// Refused (no time) with none beside them or a stack that does not fit a neck.
+    Give {
+        item: usize,
+        ally: Option<Dir>,
+    },
     /// Use a talent's own active (spec §8 "Talents"; the abilities menu's Talents group), with
     /// the verb every ability use has (#644). `use:second_wind` catches a second wind: hit
     /// points back at once, then Winded for a while; refused (no time) without the talent or
@@ -895,6 +904,13 @@ impl fmt::Display for Action {
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
+            Action::Give { item, ally } => {
+                write!(f, "give:{}", position_text(*item))?;
+                match ally {
+                    Some(dir) => write!(f, ":{dir}"),
+                    None => Ok(()),
+                }
+            }
             Action::UseTalent(active) => write!(f, "use:{}", active.id()),
             Action::Use(active, None) => write!(f, "use:{}", active.id()),
             Action::Use(active, Some(d)) => write!(f, "use:{}:{d}", active.id()),
@@ -1053,6 +1069,16 @@ impl FromStr for Action {
                 let usage = || "`temper` needs a letter, e.g. `temper:b`".to_string();
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
                 Ok(Action::Temper { item })
+            }
+            "give" => {
+                let usage = || "`give:LETTER[:DIR]` names a stack, e.g. `give:b`".to_string();
+                let arg = arg.ok_or_else(usage)?;
+                let (item, ally) = match arg.split_once(':') {
+                    Some((item, d)) => (item, Some(d.parse::<Dir>().map_err(|_| usage())?)),
+                    None => (arg, None),
+                };
+                let item = parse_position(item).ok_or_else(usage)?;
+                Ok(Action::Give { item, ally })
             }
             "use" => {
                 let usage = || {
@@ -1711,6 +1737,14 @@ mod tests {
             Action::Forage,
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },
+            Action::Give {
+                item: 1,
+                ally: None,
+            },
+            Action::Give {
+                item: 27,
+                ally: Some(Dir::E),
+            },
             Action::Heal {
                 what: None,
                 ally: None,

@@ -246,6 +246,7 @@ above.
 | Ally, your wolf, orders (Come to heel, Hold here, Set on) | `allies.md`, `allies.md#orders` |
 | Summon, summon spell, a call (the druid's) | `allies.md#summons`, `allies.md#the-druids-calls` |
 | Companion, animal companion, the nose, a companion's level (grade) | `allies.md#companions`, `allies.md#starting-companions`, `allies.md#growth` |
+| The collar, Give | `allies.md#the-collar` |
 | Tame, taming | `allies.md#taming` |
 | Familiar, a familiar's touch, what it goes for, calling one | `allies.md#familiars`, `allies.md#the-touch`, `allies.md#what-it-goes-for`, `allies.md#call-familiar` |
 | Familiar's sight | `allies.md#familiars-sight` |
