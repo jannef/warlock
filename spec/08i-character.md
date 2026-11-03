@@ -1307,8 +1307,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     most the status's `max` (Inspired and Inspired greatly are `max = 3`: the degrees are time,
     the bonus stays), then a Presence mark (inspired) and a Music mark (`song`). Refused, no time,
     on the overworld and while Silenced (`silenced` blocks the `song` action). A song `on =
-    "hearers"` (every hostile hearer checks `check` against `difficulty` plus Music's
-    `song_craft`, +4 at 100, +8 at 200) is data-ready for the Lullaby (#873). Music is
+    "hearers"` is sung over every creature that hears it (the Sing noise's hearers on ground
+    truth, asked before it is made: an unseen foe in earshot is checked like any other) and is
+    hostile to the singer; friends, allies, and the peaceful only hear it. Each, in actor-id
+    order, checks `check` (its modifier and its talents' checks of that stat) against
+    `difficulty` plus Music's `song_craft` (+4 at 100, +8 at 200), two gameplay draws apiece;
+    failed, it suffers the song's status at the song's degrees, caused by the singer. "You sing a
+    lullaby.", then for each seen "The kobold's eyes grow heavy." or "The kobold shakes off the
+    song."; nothing of the unseen. Sung to an empty room all the same (no refusal: who hears is
+    the world's). The **Lullaby** (the bard's, 40, #873: `use:lullaby`, nothing to aim): Drowsy
+    (everything costs 300 %, a degree easing every 12 s) to hostile hearers who fail Willpower
+    against 13 plus the craft, for 6 mana and the time of a song, no cooldown; greyed out "you
+    have too little mana" while short. Music is
     `kind = "rules"` (no "not usable yet" row). Throw your voice (the bard's, 32) is no
     longer everyone's: the ability is had by a talent with the `throw_voice` effect (the
     action is refused, "You do not know how to throw your voice.", without it). The thief's

@@ -99,7 +99,9 @@ at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and 
 as long as a chat, is [heard](hearing.md#what-makes-noise) as a voice of loudness 80 where you stand, and is refused on the
 [overworld](overworld.md#travel) and while [silenced](status-effects.md#status-silenced). It lifts you for 5 minutes a degree: one degree, two with
 [Music](skills.md#skill-music) 50, three with Music 100 (more degrees last longer; the bonus stays the same). It can be
-sung again while it lasts (it starts over). A [virtuoso](talents.md#talent-virtuoso)'s songs cost nothing at all and give a
+sung again while it lasts (it starts over). The **[lullaby](abilities.md#ability-lullaby)** is the bard's song against
+foes, for 6 [mana](mana.md#spending-it): every [hostile](creatures.md#factions) creature that hears it checks its
+[Willpower](stats.md#stat-willpower) against it, and those that fail are [drowsy](status-effects.md#status-drowsy). A [virtuoso](talents.md#talent-virtuoso)'s songs cost nothing at all and give a
 degree more.
 
 The bard knows a little of everything. **[Travelled hands](talents.md#talent-travelled-hands)** raises every

@@ -193,6 +193,29 @@ fn causes(content: &Content, status: usize, def: &StatusDef) -> String {
             })
             .map(|t| format!("a wounding hit of {} (a class ability)", t.name)),
     );
+    // The songs sung over their hearers (the bard's Lullaby): a check failed.
+    for (_, t) in content.talents().iter() {
+        for e in &t.effects {
+            if let warlock_core::content::TalentEffect::Song {
+                on: warlock_core::content::SongOn::Hearers,
+                status: s,
+                check: Some(stat),
+                difficulty,
+                ..
+            } = e
+                && content
+                    .status_id(s)
+                    .is_some_and(|s| usize::from(s.0) == status)
+            {
+                causes.push(format!(
+                    "hearing {} (a class ability's song) and failing the check: 2d12 + the \
+                     {} modifier against {difficulty} plus the singer's Music",
+                    t.name,
+                    stat.name()
+                ));
+            }
+        }
+    }
     // Being caught unawares (the surprise rules, spec §8 "Surprise and sneak attacks").
     if let Some(rules) = content
         .surprise()

@@ -91,7 +91,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   [Foraging](skills.md#foraging)).
 - **Other skills used as actions** ([Handle animal](skills.md#skill-handle-animal), ...): each is in the menu once you are trained
   in it (see [Skills](skills.md)), greyed out until its use comes to the game.
-- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
+- **[Class abilities](talents.md#class-abilities)** ([Rage](abilities.md#ability-rage), [War cry](abilities.md#ability-war-cry), [Lullaby](abilities.md#ability-lullaby), [Veteran's wind](abilities.md#ability-veterans-wind), [Whirlwind](abilities.md#ability-whirlwind), [Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance),
   [Step of the wind](abilities.md#ability-step-of-the-wind), [Stunning strike](abilities.md#ability-stunning-strike), [Patient defence](abilities.md#ability-patient-defence), [Stillness](abilities.md#ability-stillness), [Quivering palm](abilities.md#ability-quivering-palm), [Consecrate](abilities.md#ability-consecrate), [Orison](abilities.md#ability-orison), [Sanctuary](abilities.md#ability-sanctuary), [Knock](abilities.md#ability-knock)): your [class](classes.md)'s level table gives them (see [Classes](classes.md#levels)),
   each under Class from the level that brings it. Most leave you [spent](status-effects.md#status-spent), [winded](status-effects.md#status-winded), or [drained](status-effects.md#status-drained) for a
   while afterwards, greyed out until it passes; a [paladin](classes.md#paladin)'s holy gifts are never greyed out by
@@ -110,6 +110,19 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   Intimidate, stands on 14 or more: it flees 54 % of the time; at Intimidate 100 it flees
   96 %. A roar with nobody near is still a roar: the turn, the rage, and the noise are spent.
   Every cry trains Intimidate.
+- **[Lullaby](abilities.md#ability-lullaby)**, the [bard](classes.md#bard)'s at level 40, is a song paid in
+  [mana](mana.md#spending-it): 6 of it and as long as a chat, greyed out "you have too little
+  mana" while short. It is [heard](hearing.md#what-makes-noise) as any song is, and every
+  [hostile](creatures.md#factions) creature that hears it, seen or not, rolls its
+  [Willpower](stats.md#stat-willpower) modifier on 2d12 against 13 + what your
+  [Music](skills.md#skill-music) adds (+4 at 100, +8 at 200); short of it, it is
+  [drowsy](status-effects.md#status-drowsy) (everything it does takes three times as long) for one
+  degree, plus the degrees Music adds to every song, at most three. There is no level cut. A
+  creature of Willpower 10 to 11 (+0) shakes it off 54 % of the time (78 in 144) against 13,
+  25 % (36 in 144) against 17 (Music 100), and 7 % (10 in 144) against 21 (Music 200); one of
+  Willpower 18 (+4) against 17 shakes it off 54 %. Friendly and peaceful creatures only hear
+  it. A song with nobody to hear it is still sung: the mana and the time are spent and the
+  noise made.
 - **Allies** ([Come to heel](abilities.md#ability-heel), [Hold here](abilities.md#ability-hold), [Set on](abilities.md#ability-set-on)): once a creature fights on your side (the
   druid's calls and the ranger's companion are on their way), the Allies group appears, and the
   three orders tell every ally of yours on the level at once what to do: follow you and fight

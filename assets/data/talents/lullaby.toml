@@ -1,0 +1,8 @@
+[[talent]]
+id = "lullaby"
+name = "Lullaby"
+tree = "class"
+granted = true
+description = "A slow song for those who mean you harm (an ability, paid in mana, and heard): every foe that hears it and cannot shake it off grows drowsy, slow in all it does, a while."
+effects = [{ kind = "song", id = "lullaby", on = "hearers", status = "drowsy", mana = 6, check = "willpower", difficulty = 13 }]
+systems = ["status", "mana", "hearing"]

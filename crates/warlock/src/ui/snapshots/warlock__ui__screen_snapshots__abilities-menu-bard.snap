@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Mighty ki┌─ Abilities ─────────────────────────────────── Page 1/2 ─┐
- You spend 156 mana │                                                          │
+ You learn Opportuni┌─ Abilities ─────────────────────────────────── Page 1/2 ─┐
+ You spend 180 mana │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Class                                                    │
                     │   b  Throw your voice   at a place you see               │
                     │   c  Inspire            not enough inspiration           │
+                    │   d  Lullaby            you have too little mana         │
                     │ Spells                                                   │
-                    │   d  Mend               1d3 healed, 1 mana, aimed        │
+                    │   e  Mend               1d3 healed, 1 mana, aimed        │
                     │ Skills                                                   │
-                    │   e  Bluff              not usable yet                   │
-                    │   f  Decipher script    not usable yet                   │
-                    │   g  Disarm a trap      in a direction                   │
-                    │   h  Handle animal      not usable yet                   │
-                    │   i  Heal               nothing to treat                 │
-                    │   j  Intimidate         at a place you see               │
-                    │   k  Knowledge          not usable yet                   │
-                    │   l  Metalcraft         not usable yet                   │
-                    │   m  Pick lock          in a direction                   │
-                    │   n  Steal              in a direction                   │
-                    │   o  Forage             not usable here                  │
-                    │   p  Woodcraft          not usable yet                   │
+                    │   f  Bluff              not usable yet                   │
+                    │   g  Decipher script    not usable yet                   │
+                    │   h  Disarm a trap      in a direction                   │
+                    │   i  Handle animal      not usable yet                   │
+                    │   j  Heal               nothing to treat                 │
+                    │   k  Intimidate         at a place you see               │
+                    │   l  Knowledge          not usable yet                   │
+                    │   m  Metalcraft         not usable yet                   │
+                    │   n  Pick lock          in a direction                   │
+                    │   o  Steal              in a direction                   │
+                    │   p  Forage             not usable here                  │
+                    │   q  Woodcraft          not usable yet                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-p or Enter use   > < page   Esc close                  │
-                    └──────────────────────────────────────────────────────────┘
- The Hub  ·  HP 50/50  ·  MP 2/158  ·  Inspiration 0/5  ·  Sta 9/15  ·  Lv 38            ? controls
+                    │ a-q or Enter use   > < page   Esc close                  │
+ The Hub  ·  HP 56/5└──────────────────────────────────────────────────────────┘         ? controls

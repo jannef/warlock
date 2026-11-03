@@ -627,6 +627,9 @@ pub enum ClassActive {
     /// A song that lifts the player's fighting a while, for inspiration (the bard's Inspire,
     /// `world/song.rs`).
     Inspire,
+    /// A song that leaves the foes who hear it and cannot shake it off drowsy, for mana (the
+    /// bard's Lullaby, `world/song.rs`).
+    Lullaby,
     /// A minute's prayer that lifts an unholy room's effect for good, for mana (the priest's and
     /// the paladin's Consecrate).
     Consecrate,
@@ -666,6 +669,7 @@ impl ClassActive {
         ClassActive::LowBlow,
         ClassActive::MasterThief,
         ClassActive::Inspire,
+        ClassActive::Lullaby,
         ClassActive::Consecrate,
         ClassActive::Orison,
         ClassActive::Sanctuary,
@@ -694,6 +698,7 @@ impl ClassActive {
             ClassActive::LowBlow => "low_blow",
             ClassActive::MasterThief => "master_thief",
             ClassActive::Inspire => "inspire",
+            ClassActive::Lullaby => "lullaby",
             ClassActive::Consecrate => "consecrate",
             ClassActive::Orison => "orison",
             ClassActive::Sanctuary => "sanctuary",
@@ -751,7 +756,7 @@ impl ClassActive {
     /// Whether it is a song (`world/song.rs`): a talent's `song` effect names it, and it is
     /// sung aloud.
     pub const fn sings(self) -> bool {
-        matches!(self, ClassActive::Inspire)
+        matches!(self, ClassActive::Inspire | ClassActive::Lullaby)
     }
 
     /// Whether it asks for a cell before it is used (`use:volley:12,5`).
@@ -801,7 +806,7 @@ impl ClassActive {
             | ClassActive::Sanctuary
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
-            ClassActive::Inspire => ActionKind::Song,
+            ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
             // A weapon taken in hand, as wielding one is.
             ClassActive::SpiritWeapon => ActionKind::Wield,

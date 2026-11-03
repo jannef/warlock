@@ -12,7 +12,7 @@ use crate::skills::{Effect, Trained, Use};
 use crate::stats::{PerStat, Stat, Stats};
 
 /// A creature of type `creature` placed at `at`, every score `score`, awake and hostile; its id.
-fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {
+pub(super) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {
     let content = w.content().clone();
     // The level is emptied of its creatures (`crier`): a fresh showcase lends one to copy.
     let fresh = world("berserker");
