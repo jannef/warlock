@@ -14,7 +14,7 @@ expression: "render(case, content.clone())"
                     │ Spells                                                   │
                     │   d  Barkskin           3 mana                           │
                     │ Skills                                                   │
-                    │   e  Handle animal      not usable yet                   │
+                    │   e  Tame               you already have a companion     │
                     │   f  Forage             not usable here                  │
                     │   g  Woodcraft          not usable yet                   │
                     │ Weapon skills                                            │
