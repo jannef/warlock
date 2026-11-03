@@ -226,6 +226,9 @@ pub enum Aim {
     /// A weapon's shape, from the list of every one there is (the Hunter's Spirit weapon:
     /// [`crate::world::weapon_shapes`], `use:spirit_weapon:long_sword`).
     Shape,
+    /// A spell the player knows, from the list of them with each one's price (the wizard's
+    /// Scribe: [`crate::perception::PerceptionView::scribes`], `scribe:fireball`).
+    Spell,
 }
 
 /// Why an ability cannot be used now: the abilities menu shows it beside the greyed-out row.
@@ -647,6 +650,7 @@ impl Ability {
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
             Ability::Class(active) if active.aims_item() => Aim::Item,
             Ability::Class(active) if active.aims_shape() => Aim::Shape,
+            Ability::Class(active) if active.aims_spell() => Aim::Spell,
             Ability::Weapon(_, id) => match content.weapon_ability(id).active.map(|a| a.aim) {
                 Some(ActiveAim::Direction) => Aim::Direction,
                 Some(ActiveAim::Cell) => Aim::Cell,
@@ -894,6 +898,13 @@ impl Ability {
                         (blocked.map(Unavailable::While))
                             .or((actor.mana < cost).then_some(Unavailable::NoMana))
                     })
+                    // Scribe spends mana, which a status that blocks casting keeps (Raging).
+                    .or_else(|| {
+                        (active == ClassActive::Scribe)
+                            .then(|| actor.effects.blocking(content, ActionKind::Cast))
+                            .flatten()
+                            .map(Unavailable::While)
+                    })
             }
             // Its mana is asked by [`spell_unavailable`].
             Ability::Spell(_) => None,
@@ -966,6 +977,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Orison
         | ClassActive::Sanctuary
         | ClassActive::Knock
+        | ClassActive::Scribe
         | ClassActive::MerchantsEye
         | ClassActive::SpiritWeapon
         | ClassActive::Volley => Vec::new(),

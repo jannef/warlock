@@ -49,6 +49,11 @@ impl World {
             return Spent::Nothing;
         };
         let def = content.object(stack.object);
+        // A blank scroll is paper, until a wizard writes on it (`scribe.rs`).
+        if content.blank_scroll() == Some(stack.object) {
+            self.say("There is nothing written on it.");
+            return Spent::Nothing;
+        }
         let Some(reading) = &def.read else {
             let what = self.lore().describe(&stack.single());
             self.say(format!("You cannot read {what}."));
