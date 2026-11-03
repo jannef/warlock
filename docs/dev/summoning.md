@@ -41,6 +41,10 @@ creatures of its side, with no ability in the abilities menu, no action, no key,
   decided without drawing.
 - **Experience**: nothing special: `World::creature_dies` pays a summoned creature's kill like
   any other's (first-kill bonus included).
+- **Banishing** (#913, `docs/dev/progression.md` "`smite_mode`"): the paladin's Banishing smite
+  reads `Actor::summoner`: a hostile that has one, and a smite that wounds it, and it is unmade
+  (`World::unmake`, `world/smite.rs`: a kill like any other, whatever its hit points). A summoner
+  already dead changes nothing: the record stands.
 - **Dumps**: the dev `actors` layer adds `; summoned by #N` to a summoned actor.
 - **Wiki**: `xtask/src/wiki/creatures.rs::creature_summons` (`creature-summons.md`, the
   "Summoning" section of `wiki/src/creature-numbers.md`); the tag in `creature-tags.md`.

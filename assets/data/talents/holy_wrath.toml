@@ -1,0 +1,8 @@
+[[talent]]
+id = "holy_wrath"
+name = "Holy wrath"
+tree = "class"
+granted = true
+description = "Every blow of yours that lands on the unholy carries a die of your god's wrath."
+effects = [{ kind = "holy_wrath", dice = "1d6" }]
+systems = ["combat"]

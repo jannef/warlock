@@ -10,13 +10,19 @@
 //! did damage (§6): Branding smite's foe is Branded (it sheds light a while); Wrathful smite's
 //! makes a check of its Willpower against the mode's difficulty plus the smiter's `aim`
 //! modifier (two gameplay draws) and, failing, is Frightened for the mode's `turns` degrees (one
-//! draw), caused by the smiter. A rider's zeal is spent whatever it finds to do. Nothing else
-//! here draws at random but the blow itself.
+//! draw), caused by the smiter; Banishing smite's, if it was summoned (`Actor::summoner`), is
+//! unmade whatever its hit points, a kill of the player's as any other, and one that is unholy
+//! and not summoned took the smite's dice twice (no draw beyond the blow's). A rider's zeal is
+//! spent whatever it finds to do. Nothing else here draws at random but the blow itself.
+//!
+//! Holy wrath ([`World::holy_wrathed`]) is no mode but a passive on every blow in `resolve`: one
+//! draw on a hit by its holder on an unholy target (with Avatar, any target).
 
 use super::{ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
-use crate::combat::Profile;
+use crate::combat::{Blow, Profile};
 use crate::content::{ActionKind, ClassActive};
+use crate::damage::Damage;
 use crate::geom::Dir;
 use crate::talent::SmiteRider;
 
@@ -29,6 +35,8 @@ pub(super) enum SmiteMode {
     Branding,
     /// Wrathful smite: the foe hit is Frightened unless its will holds.
     Wrathful,
+    /// Banishing smite: the summoned foe hit is unmade, the unholy takes the dice twice.
+    Banishing,
 }
 
 impl SmiteMode {
@@ -38,6 +46,7 @@ impl SmiteMode {
             SmiteMode::Plain => None,
             SmiteMode::Branding => Some(ClassActive::BrandingSmite),
             SmiteMode::Wrathful => Some(ClassActive::WrathfulSmite),
+            SmiteMode::Banishing => Some(ClassActive::BanishingSmite),
         }
     }
 }
@@ -52,7 +61,7 @@ impl World {
         let Some((target, seen)) = self.hostile_toward(dir) else {
             return Spent::Nothing;
         };
-        let Some(profile) = self.smite_profile(target) else {
+        let Some(profile) = self.mode_profile(mode, target) else {
             return Spent::Nothing;
         };
         let me = self.state.player();
@@ -68,24 +77,24 @@ impl World {
         let price = self.attack_price(player, ActionKind::Melee, with, melee);
         self.say("You smite!");
         let blow = self.player_blow_with(target, seen, profile, events);
-        let wounded = blow.is_some_and(|b| b.damage > 0);
         if let Some(rider) = rider
-            && wounded
+            && let Some(blow) = blow.filter(|b| b.damage > 0)
             && self.state.actors.contains_key(&target)
         {
-            self.smite_rider(target, rider, events);
+            self.smite_rider(target, rider, blow, events);
         }
         self.after_attack(player, target, super::free_blow::parried(blow), events);
         self.exert(ActionKind::Melee);
         Spent::Turn(price)
     }
 
-    /// Mode of smiting `rider` on `target`, wounded by the smite and alive (module docs). The
-    /// player is told how it took it if they see it.
+    /// Mode of smiting `rider` on `target`, wounded by the smite's `blow` and alive (module
+    /// docs). The player is told how it took it if they see it.
     pub(super) fn smite_rider(
         &mut self,
         target: ActorId,
         rider: SmiteRider,
+        blow: Blow,
         events: &mut Vec<Event>,
     ) {
         let content = self.content.clone();
@@ -128,6 +137,94 @@ impl World {
                     self.say(format!("{who} quails!"));
                 }
             }
+            SmiteRider::Banish => {
+                let who = super::talk::capitalized(&name);
+                if them.summoner.is_some() {
+                    if seen {
+                        self.say(format!("{who} is unmade!"));
+                    }
+                    self.unmake(target, blow, seen, events);
+                } else if seen && content.unholy(them.creature) {
+                    self.say(format!("{who} reels under holy wrath!"));
+                }
+            }
+        }
+    }
+
+    /// Summoned `target` dies of Banishing smite's `blow`, whatever its hit points: the player's
+    /// kill as if the blow had done it (`World::resolve`'s arm of a kill), the events shown only
+    /// if `seen`.
+    fn unmake(&mut self, target: ActorId, blow: Blow, seen: bool, events: &mut Vec<Event>) {
+        let player = self.state.player;
+        let Some(at) = self.state.actors.get(&target).map(|a| a.pos) else {
+            return;
+        };
+        let kind = AttackKind::Melee;
+        let skills = (self.state.player()).attack_skills(&self.content, kind, None);
+        let mut made = Vec::new();
+        self.dies(target, Some(player), None, self.state.time, &mut made);
+        self.train_kill((player, target), kind);
+        self.siphon(player, (target, at));
+        let fired = super::weapon_ability::Fired {
+            other: target,
+            kind,
+            skills,
+            blow: Some(blow),
+        };
+        self.weapon_trigger(player, crate::content::Trigger::Kill, fired, &mut made);
+        self.say_news();
+        if seen {
+            events.extend(made);
+        }
+    }
+
+    /// The smite of `mode` at `target`: [`World::smite_profile`], and Banishing smite's dice
+    /// twice over on an unholy foe not summoned (the bonus once).
+    pub(super) fn mode_profile(&self, mode: SmiteMode, target: ActorId) -> Option<Profile> {
+        let mut profile = self.smite_profile(target)?;
+        let them = self.state.actors.get(&target);
+        if mode == SmiteMode::Banishing
+            && them.is_some_and(|a| a.summoner.is_none() && self.content.unholy(a.creature))
+        {
+            profile.extra = profile.extra.map(|dice| dice.and(dice));
+        }
+        Some(profile)
+    }
+
+    /// `blow` by `attacker` on `target` with Holy wrath's die added when it hit and its holder's
+    /// wrath falls there (the unholy; with Avatar, any target): of the blow's kind, resisted but
+    /// never soaked, as an `extra_damage`'s, and no zeal.
+    pub(super) fn holy_wrathed(&mut self, attacker: ActorId, target: ActorId, blow: Blow) -> Blow {
+        if !blow.strike.is_hit() {
+            return blow;
+        }
+        let (Some(by), Some(them)) = (
+            self.state.actors.get(&attacker),
+            self.state.actors.get(&target),
+        ) else {
+            return blow;
+        };
+        if by.talents.is_empty() {
+            return blow;
+        }
+        let mods = by.talent_mods(&self.content);
+        let Some(dice) = mods.holy_wrath else {
+            return blow;
+        };
+        if mods.avatar.is_none() && !self.content.unholy(them.creature) {
+            return blow;
+        }
+        let amount = dice.roll(&mut self.state.rng).max(0);
+        let amount = self.resisted(
+            target,
+            Damage {
+                amount,
+                kind: blow.kind,
+            },
+        );
+        Blow {
+            damage: blow.damage + amount,
+            ..blow
         }
     }
 
