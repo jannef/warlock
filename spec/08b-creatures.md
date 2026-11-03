@@ -141,7 +141,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   pet classes, the ranger and the druid: 100) or else `[xp] ally_percent` (50; #915, the owner:
   "pet classes get 100% of xp share, but others get 50%"), whatever the ally's source; the quest
   log, Favoured prey, the named monsters slain, the alignment, and what a kill builds are
-  credited in full ("Credit is still shared fully for quests"); the ally gets nothing. Handle animal earns its marks from an order given and an ally's kill. At most
+  credited in full ("Credit is still shared fully for quests"); the ally gets nothing. Handle animal earns its marks from an order given, an ally's kill, and a try at taming. At most
   `[allies] most` (8) allies on one level. **Beast-bond** (Wayfarer; Handle animal 20): your
   allies strike +1 to hit and take Protection +1, read through you. The messages never say a
   number. The dev `ally:CREATURE[:N[:DURATION]]` makes allies for tests and captures.
@@ -192,7 +192,24 @@ developer notes (CLAUDE.md, `docs/dev/`).
   creature's: a companion is no summon). The player sees it in the status bar ("Snel: unhurt",
   "Snel: with you"), in look mode ("Snel, your hound (unhurt), …"), on the Character screen
   ("With    Snel, a hound"), and in the `companion` dump; the wiki states the lists, the odds,
-  and the growth table exactly. **Hunter's bond** (the ranger's level 25, #920; passive):
+  and the growth table exactly. **Tame** (`world/tame.rs`; #917; the abilities menu, a skill
+  ability of Handle animal, `tame:DIR`): anyone trained in Handle animal, at any level, without a
+  companion ("You already have a companion."; a summon is no companion), may try a `tameable`
+  beast they see next to them that is no one's ally and is not hostile to them (wildlife, or an
+  animal a Beast-friend calmed) or has not seen them (`World::unaware`: asleep, say); else
+  refused, taking no time ("The warg has seen you: it will not be tamed now."). `[tame] turns`
+  (10) actions of `tame`'s price beside it, silent, stopped by a creature coming into view, a
+  message, the player being hurt, or the beast leaving their side, with nothing lost but the time.
+  Then the check, with no level gate: Willpower modifier (and what talents add to Willpower
+  checks) + Handle animal's `tame` benefit (+10 at 100, +20 at 200) + `[tame] food` (2) if food
+  is carried (one of the first food stack, eaten as the check is made) + `TalentMods::tame` (the
+  ranger's 2), against `[tame] difficulty` (10) + `per_level` (2) × the beast's level. Made, the
+  beast keeps its actor and its place and is the player's companion, its mind cleared, graded at
+  their level, named: "The wolf comes to your hand. You call it Græg." Failed: "The wolf snaps at
+  you and backs away."; a hostile one has seen the player now, so it may not be tried again until
+  it loses them, one not hostile may be tried again at once. A sleeper wakes either way. A mark of
+  Handle animal, made or failed.
+  **Hunter's bond** (the ranger's level 25, #920; passive):
   *shared sight*: while the companion stands on the player's level (not in the retinue), the
   player also sees every cell it sees by its own line of sight and eyes (creature sight's rule,
   §5: its sight radius, its vision profile, the light as it reaches the cell; wall completion
@@ -212,8 +229,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Hunt whose target is that creature before any nearer while the beast sees or smells it, its
   cell following it where the player sees that (a new order ends it), and **Savage** on the beast
   (3 degrees, half again as fast, a degree a minute): each blow that hits is a critical with no
-  confirmation roll and spends a degree. It is neither a buff spell's status nor a potion's, so Taming (C2) and the
-  collar (C3) are the design's next slices.
+  confirmation roll and spends a degree. It is neither a buff spell's status nor a potion's, so Hunter's bond's shared buffs never carry it. The collar (C3) is the design's next slice.
   **The familiar** (`warlock-core/src/world/familiar.rs`,
   `content/familiar.rs` and `data/familiars.toml`; #929, design `docs/design/witch-familiar.md`,
   `docs/dev/familiar.md`): the witch's small beast, an ally with `source =

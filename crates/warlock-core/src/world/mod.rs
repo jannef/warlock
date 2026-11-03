@@ -228,6 +228,7 @@ mod summon_spell;
 pub(crate) mod surprise;
 mod talent;
 mod talk;
+mod tame;
 mod temper;
 mod thief;
 mod train;
@@ -649,6 +650,8 @@ enum Spent {
     Forage(u32),
     /// Tempering an item at a forge's anvil (see [`World::temper`]).
     Temper(temper::Tempering),
+    /// Taming a beast beside the player (see [`World::tame`]).
+    Tame(tame::Taming),
     /// Dev: the clock jumps ahead; nobody acts, then perception is recomputed.
     Skip(Duration),
 }
@@ -1278,6 +1281,7 @@ impl World {
             Spent::Drink(draught) => self.drink(draught, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
+            Spent::Tame(taming) => self.tame(taming, &mut events),
             Spent::Skip(duration) => {
                 // Nobody acts or gains energy.
                 self.state.time += duration;
@@ -1390,6 +1394,7 @@ impl World {
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Say { dir, words } => return self.say_to(*dir, words, events),
             Action::Steal(dir) => return self.steal(*dir),
+            Action::Tame(dir) => return self.start_tame(*dir),
             Action::Intimidate(at) => return self.intimidate(*at, events),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
             Action::Order(command) => return self.order(*command, events),
@@ -1865,6 +1870,8 @@ mod talent_tests;
 mod talent_wits_tests;
 #[cfg(test)]
 mod talk_tests;
+#[cfg(test)]
+mod tame_tests;
 #[cfg(test)]
 mod temper_tests;
 #[cfg(test)]

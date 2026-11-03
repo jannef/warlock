@@ -103,6 +103,23 @@ to be yours is told with the rest of your background.
 
 {{#include generated/companion-starts.md}}
 
+### Taming
+
+Anyone trained in [Handle animal](skills.md#skill-handle-animal) may **tame** a beast, at any
+level: choose **Tame** in the [abilities menu](abilities.md) and the direction of a beast next to
+you. Only some kinds can be tamed (the Tameable column of
+[Creatures in numbers](creature-numbers.md#pace-senses-and-size)), and only one that is not your
+foe (wildlife, or an animal a [Beast-friend](talents.md#talent-beast-friend) has calmed) or that
+has not seen you (asleep, say). You crouch beside it for a while, holding out food if you carry
+any; if you are hurt, or it leaves your side, or someone comes into view, you stop, and nothing
+is lost but the time. Then one check decides: made, it comes to your hand and is your companion,
+named, at your level; failed, it snaps at you and backs away, and a foe among beasts has seen
+you now. Try again as often as you like: time is the only price. While you have a companion you
+cannot tame another. The ranger's Animal companion makes them a little better at it. The exact
+check and the chances:
+
+{{#include generated/companion-taming.md}}
+
 ### Growth
 
 A companion's level is **yours**: whatever its kind's own level, it is raised to your level when

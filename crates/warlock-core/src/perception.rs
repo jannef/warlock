@@ -1754,6 +1754,10 @@ impl<'a> PerceptionView<'a> {
                     Ability::Class(crate::content::ClassActive::Sic) if !companion_here => {
                         Some(crate::ability::Unavailable::NoCompanion)
                     }
+                    // A companion is one at a time (spec §8 "Allies": Tame).
+                    Ability::Tame if self.companion().is_some() => {
+                        Some(crate::ability::Unavailable::HaveCompanion)
+                    }
                     Ability::Spell(spell) => {
                         crate::ability::spell_unavailable(self.player, self.content, spell)
                     }
