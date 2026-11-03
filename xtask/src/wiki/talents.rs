@@ -747,6 +747,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                     your level"
             .into(),
         TalentEffect::Tame { bonus } => format!("{} on your taming checks", signed(bonus)),
+        TalentEffect::PackTactics { to_hit } => format!(
+            "a creature beside both you and your [companion](allies.md#companions) is flanked: \
+             your melee attacks and your companion's at it, to hit {} (not shots, throws, or \
+             spells)",
+            signed(to_hit)
+        ),
+        TalentEffect::SharesFavouredPrey => "your companion's attacks at your favoured prey \
+                                             carry your Favoured prey bonus, to hit and damage \
+                                             (Master hunter's too)"
+            .into(),
         TalentEffect::SeesUnaware => "you see which creatures in view have not noticed you: \
                                       look mode says \"unaware of you\", and their glyphs are \
                                       drawn a shade cooler, breathing slowly (standing still \
