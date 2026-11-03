@@ -7,6 +7,9 @@
 //! - a **cleave**: when an attack's blows kill its target, a blow at another hostile beside the
 //!   striker, the next clockwise from where the target fell; one per attack, or with great
 //!   cleave another after each cleave that kills;
+//! - **Retribution** (the paladin's, `smite.rs::retribution`): when a hostile's melee attack on
+//!   the player landed a blow, the player's smite back at the attacker once the attack is over,
+//!   for its zeal; an attack it answers is not also riposted;
 //! - a **riposte**: when a blow of a melee attack missed by its target's Parry, a blow back at
 //!   the attacker once the attack is over;
 //! - an **opportunist's blow**: a hostile stepping away from beside the striker is struck as it
@@ -91,10 +94,14 @@ pub(super) enum Cue {
     /// was rolled): the second blow.
     First(Option<Blow>),
     /// The striker's melee attack on the target is over, `parried` if one of its blows missed by
-    /// the target's Parry, `dodged` if one missed by its Dexterity or Dodge: a cleave if it
-    /// killed the target, else the target's riposte (a dodged blow is answered only while the
-    /// target is Poised, `ascetic.rs`).
-    Attacked { parried: bool, dodged: bool },
+    /// the target's Parry, `dodged` if one missed by its Dexterity or Dodge, `hit` if one hit: a
+    /// cleave if it killed the target, else the target's Retribution (on a hit), else its
+    /// riposte (a dodged blow is answered only while the target is Poised, `ascetic.rs`).
+    Attacked {
+        parried: bool,
+        dodged: bool,
+        hit: bool,
+    },
     /// The striker's cleave at the target is over: another, with great cleave, if it killed.
     Cleaved,
     /// The target is about to step away from beside the striker, out of its reach.
@@ -115,6 +122,8 @@ pub(super) enum Free {
     Cleave,
     /// Back at a blow the striker's Parry made miss.
     Riposte,
+    /// The player's smite back at a hostile's blow that landed (Retribution).
+    Retribution,
     /// At a hostile stepping away.
     Opportunist,
     /// At a hostile stepping up beside (Gatekeeper).
@@ -133,7 +142,11 @@ impl Free {
     fn out_of_turn(self) -> bool {
         matches!(
             self,
-            Free::Riposte | Free::Opportunist | Free::Gatekeeper | Free::Startled
+            Free::Riposte
+                | Free::Retribution
+                | Free::Opportunist
+                | Free::Gatekeeper
+                | Free::Startled
         )
     }
 }
@@ -214,20 +227,26 @@ impl World {
         parried: bool,
         events: &mut Vec<Event>,
     ) {
-        self.after_melee(attacker, target, (parried, false), events);
+        // The player's attacks are on creatures, whose blows Retribution never answers: no hit.
+        self.after_melee(attacker, target, (parried, false, false), events);
     }
 
-    /// As [`World::after_attack`], with whether a blow of it missed by the target's Parry and
-    /// whether one missed by its Dexterity or Dodge ([`dodged`]): a dodged blow is answered by a
-    /// Poised target's riposte (`ascetic.rs`).
+    /// As [`World::after_attack`], with whether a blow of it missed by the target's Parry,
+    /// whether one missed by its Dexterity or Dodge ([`dodged`]), and whether one hit: a dodged
+    /// blow is answered by a Poised target's riposte (`ascetic.rs`), a hit by the player's
+    /// Retribution (`smite.rs`).
     pub(super) fn after_melee(
         &mut self,
         attacker: ActorId,
         target: ActorId,
-        (parried, dodged): (bool, bool),
+        (parried, dodged, hit): (bool, bool, bool),
         events: &mut Vec<Event>,
     ) {
-        let cue = Cue::Attacked { parried, dodged };
+        let cue = Cue::Attacked {
+            parried,
+            dodged,
+            hit,
+        };
         let mut next = self.second_blow(attacker, target, cue, events);
         while let Some(blow) = next {
             let (by, at, kind) = (blow.by, blow.at, blow.kind);
@@ -486,6 +505,9 @@ impl World {
         }
         let earlier = std::mem::take(&mut self.news);
         self.held = Some(Vec::new());
+        if blow.kind == Free::Retribution {
+            self.say("You answer the blow with holy wrath!");
+        }
         let struck = self.player_blow(at, seen, Some(blow), events);
         let held = self.held.take().unwrap_or_default();
         self.news = earlier;

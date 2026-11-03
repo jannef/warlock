@@ -686,6 +686,9 @@ pub struct TalentMods {
     pub rapid_shot: Option<RapidShot>,
     /// What each second blow of its flurry costs, if anything (Flurry, on Ki).
     pub flurry_cost: Option<ResourceCost>,
+    /// What each smite Retribution answers a blow with costs (the paladin's, on zeal); `None`
+    /// without it.
+    pub retribution: Option<ResourceCost>,
     /// What a missile caught costs, if it catches them (Diamond soul, on Ki; `world/ascetic.rs`).
     pub catch_missiles: Option<ResourceCost>,
     /// The active Volley, if it has it.
@@ -2021,6 +2024,14 @@ impl TalentMods {
             TalentEffect::FlurryCost { resource, cost } => {
                 if let Some(resource) = content.resource_id(&resource) {
                     self.flurry_cost = Some(ResourceCost {
+                        resource,
+                        amount: cost,
+                    });
+                }
+            }
+            TalentEffect::Retribution { resource, cost } => {
+                if let Some(resource) = content.resource_id(&resource) {
+                    self.retribution = Some(ResourceCost {
                         resource,
                         amount: cost,
                     });

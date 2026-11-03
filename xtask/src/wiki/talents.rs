@@ -1840,6 +1840,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "each second blow of the flurry spends {cost} {}; with less, there is none",
             resource_name(content, &resource).to_lowercase()
         ),
+        TalentEffect::Retribution { resource, cost } => format!(
+            "a hostile beside you whose melee attack lands a blow on you takes your plain smite \
+             back at once (its dice, its aim, and its unholy die), free but for an exertion, spending {cost} {}; with less, or outside the talent's alignment, \
+             nothing; an attack it answers is not also riposted",
+            resource_name(content, &resource).to_lowercase()
+        ),
         TalentEffect::CatchMissiles { resource, cost } => format!(
             "a shot or throw (a trap's too) that would hit you while you hold no weapon and no \
              shield spends {cost} {} by itself and misses, the missile falling at your feet; \

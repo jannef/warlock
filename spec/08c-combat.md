@@ -322,6 +322,14 @@ developer notes (CLAUDE.md, `docs/dev/`).
     beside it: the next one clockwise from where the target fell (decided: no draw, and a sweep
     reads naturally). One per attack; with **great cleave** (`great_cleave`, which cleaves as
     `cleave` does) each cleave that kills gives another, so at most once per hostile around.
+  - **Retribution** (the paladin's at 25, #912, `docs/design/paladin-smites.md` §6.4;
+    `world/smite.rs::retribution`): when a hostile's melee attack on the player is over and at
+    least one of its blows hit, the attacker stands beside them and lives, they hold the talent
+    and its 4 zeal (§8 "Resources"; the blow taken has built its point already), are Kind or
+    better (unanswered: nothing, no line), and are not flat-footed, the zeal is spent and their
+    smite (§8 "Class abilities": its dice, Presence to hit, the unholy die) strikes the attacker,
+    free but for one exertion, held as a riposte is ("You answer the blow with holy wrath!").
+    An attack it answers is not also riposted (one free blow an attack); creatures never have it.
   - **Riposte** (`riposte`): when a blow of a melee attack on the actor missed by its Parry
     (`Strike::Missed { by: Parry }`, `Defence::why_missed`), a blow back with what it wields
     once the attack is over (decided: one per attack however many of its blows were parried,
