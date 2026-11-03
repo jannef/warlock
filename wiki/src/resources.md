@@ -58,7 +58,7 @@ blow that hits you; it comes back a point every 10 base turns (a minute) besides
 an empty pool is full again in about ten minutes. [Smite](abilities.md#ability-smite) spends 3,
 [Branding smite](abilities.md#ability-branding-smite) 3, [Wrathful smite](abilities.md#ability-wrathful-smite) 4, [Banishing smite](abilities.md#ability-banishing-smite) 6, and
 [Lay on hands](abilities.md#ability-lay-on-hands) 6 ([Avatar](talents.md#talent-avatar): 3), and [Retribution](talents.md#talent-retribution) (level 25) 4 for every blow it
-answers, so wrath and mercy are paid from the one pool. The blow that hits you builds its point first, so 3 zeal is enough to answer it. A
+answers, so wrath and mercy are paid from the one pool. The blow that hits you builds its point first, so 3 zeal is enough to answer it ([Zealot](talents.md#talent-zealot): 2 zeal, and every blow that hits you builds 2). A
 holy gift that does not answer (you are not Kind or better, see [Alignment](alignment.md)) spends none. **A deed that moves
 you toward evil** (see [Alignment](alignment.md)) empties it at once: "Your zeal deserts you."
 
@@ -124,7 +124,7 @@ add to it (see [Talents](talents.md)):
 
 ## Talents on resources
 
-Four [talents](talents.md) change a resource, and only the class that has it may take them (a
+Five [talents](talents.md) change a resource, and only the class that has it may take them (a
 pick from their trees, from the level given):
 
 - **[Battle trance](talents.md#talent-battle-trance)** (Might; [berserker](classes.md#berserker), level 6): your rage starts at 18 instead of 12 (never
@@ -137,5 +137,7 @@ pick from their trees, from the level given):
 - **[Patient blade](talents.md#talent-patient-blade)** (Shadow; [thief](classes.md#thief), level 32): openings slip away half as fast, a point every 40
   base turns instead of every 20, and a [sneak attack](talents.md#talent-sneak-attack) that kills gives two openings instead of
   one.
+- **[Zealot](talents.md#talent-zealot)** (Grit; whoever holds [Smite](talents.md#talent-smite), so the [paladin](classes.md#paladin), level 6): every blow that hits you
+  builds 2 [zeal](resources.md#resource-zeal) instead of 1. A blow you give still builds 1, and the pool holds no more.
 
 Inner calm changes nothing until something grants the [ascetic](classes.md#ascetic) [ki](resources.md#resource-ki).

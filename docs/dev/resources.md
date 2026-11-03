@@ -84,7 +84,7 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   resource)` (the pace in percent: 0 while resting for `resting = false`, else 100 plus the
   talents' `resource_rate`, never below 0: Battle trance's −33, Inner calm's and Steady hand's
   +50, Patient blade's −50). A talent's `resource_build { resource, on, amount }` is a build only
-  its holder has (Blood frenzy's 5 rage a kill; Patient blade's opening on `sneak_kill`, which
+  its holder has (Blood frenzy's 5 rage a kill; Zealot's second zeal on `struck`; Patient blade's opening on `sneak_kill`, which
   `World::resolve` raises after a sneak attack's blow kills, after `sneak_attack`'s).
 - **Affixes** (B1, #630; docs/design/affixes-systems.md §5): the same two hooks read what the
   actor wears for the pool an affix names (`Mods::resource(effect, id)`, `Actor::mods`, so an
@@ -213,8 +213,8 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   stance. Dumps: the header's `rage 11/20`, JSON `resources: [{id, current, max}]`, the dev
   `actors` layer's `resources rage 11/20 (progress)`. Never a creature's, never a pace.
 - **Talents**: `[[system]] id = "resources"` in `data/talents.toml`, held to the coverage bar
-  since R5 (#253): Battle trance, Inner calm, Steady hand, and Patient blade (the only
-  class-limited picks), and the class abilities Rage, Blood frenzy, Mighty rage, Unstoppable,
+  since R5 (#253): Battle trance, Inner calm, Steady hand, Patient blade, and Zealot (#914; the
+  only class-limited picks, Zealot by its prerequisite), and the class abilities Rage, Blood frenzy, Mighty rage, Unstoppable,
   Rapid shot, Volley, Improved sneak attack, Master thief, Smite, Lay on hands, and Avatar. Tests:
   `world/resource_talent_tests.rs`.
 - **Wiki**: `xtask/src/wiki/resources.rs` (the table) for `wiki/src/resources.md`.
