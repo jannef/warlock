@@ -46,6 +46,11 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Disarm => "everyone trained in Disable device".into(),
             Ability::PickLock => "everyone trained in Open lock".into(),
             Ability::Steal => "everyone trained in Steal".into(),
+            Ability::Tame => {
+                "everyone trained in Handle animal, at any level (not while they have a companion; \
+                 see [Taming](allies.md#taming))"
+                    .into()
+            }
             Ability::Intimidate => "everyone trained in Intimidate".into(),
             Ability::Heal => "everyone trained in Heal (with something to treat)".into(),
             Ability::Forage => {
@@ -189,7 +194,7 @@ fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> Stri
         .collect();
     who.sort();
     let mut parts: Vec<String> = (who.iter())
-        .map(|(class, level)| format!("{class}s from level {level}"))
+        .map(|(class, level)| format!("{} from level {level}", plural(class)))
         .collect();
     // A prestige class's table counts its own levels (Hunter 1 is the level after its base
     // class's highest).
@@ -204,7 +209,7 @@ fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> Stri
     prestige.sort();
     parts.extend(
         (prestige.iter())
-            .map(|(class, level)| format!("{}s from {class} level {level}", class.to_lowercase())),
+            .map(|(class, level)| format!("{} from {class} level {level}", plural(&class.to_lowercase()))),
     );
     parts.join(", ")
 }
@@ -422,5 +427,16 @@ mod tests {
         let odds = song_odds(&content);
         assert!(odds.contains("Music 100 (17)"), "{odds}");
         assert!(odds.contains("| +0 | 54% | 25% |"), "{odds}");
+    }
+}
+
+/// A class name in the plural: "witch" is "witches", "thief" "thieves", "mystic" "mystics".
+fn plural(name: &str) -> String {
+    if let Some(stem) = name.strip_suffix("ief") {
+        format!("{stem}ieves")
+    } else if ["s", "x", "z", "ch", "sh"].iter().any(|e| name.ends_with(e)) {
+        format!("{name}es")
+    } else {
+        format!("{name}s")
     }
 }

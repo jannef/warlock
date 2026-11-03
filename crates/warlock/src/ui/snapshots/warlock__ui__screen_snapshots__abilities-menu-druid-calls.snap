@@ -14,7 +14,7 @@ expression: "render(case, content.clone())"
                     │   e  Call lightning      3d6 electricity, 20 mana, aimed │
                     │   f  Call of the forest  2 called, 20 mana               │
                     │ Skills                                                   │
-                    │   g  Handle animal       not usable yet                  │
+                    │   g  Tame                in a direction                  │
                     │   h  Heal                nothing to treat                │
                     │   i  Pick lock           in a direction                  │
                     │   j  Forage              not usable here                 │

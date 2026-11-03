@@ -93,6 +93,9 @@ impl World {
             (ClassActive::Smite, Some(dir)) => self.smite(SmiteMode::Plain, dir, events),
             (ClassActive::BrandingSmite, Some(dir)) => self.smite(SmiteMode::Branding, dir, events),
             (ClassActive::WrathfulSmite, Some(dir)) => self.smite(SmiteMode::Wrathful, dir, events),
+            (ClassActive::BanishingSmite, Some(dir)) => {
+                self.smite(SmiteMode::Banishing, dir, events)
+            }
             (ClassActive::StunningStrike, Some(dir)) => self.stunning_strike(dir, events),
             (ClassActive::QuiveringPalm, Some(dir)) => self.quivering_palm(dir, events),
             (ClassActive::LowBlow, Some(dir)) => self.low_blow(dir, events),
@@ -102,6 +105,7 @@ impl World {
                 ClassActive::Smite
                 | ClassActive::BrandingSmite
                 | ClassActive::WrathfulSmite
+                | ClassActive::BanishingSmite
                 | ClassActive::StunningStrike
                 | ClassActive::QuiveringPalm
                 | ClassActive::LowBlow
@@ -333,9 +337,10 @@ impl World {
     pub(super) fn unanswered(&mut self, active: ClassActive) -> Spent {
         self.say(match active {
             ClassActive::LayOnHands => "You lay on your hands, but no warmth flows from them.",
-            ClassActive::Smite | ClassActive::BrandingSmite | ClassActive::WrathfulSmite => {
-                "You call for holy wrath, but none answers."
-            }
+            ClassActive::Smite
+            | ClassActive::BrandingSmite
+            | ClassActive::WrathfulSmite
+            | ClassActive::BanishingSmite => "You call for holy wrath, but none answers.",
             ClassActive::HolyRadiance => "You will a holy light, but none comes.",
             _ => "You kneel and pray, but no holy power answers you.",
         });

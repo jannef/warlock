@@ -10,6 +10,13 @@ use crate::replay::Replay;
 use crate::stats::Stat;
 use crate::talent::SmiteRider;
 
+/// A blow that hit, as a rider asks for one.
+const A_HIT: crate::combat::Blow = crate::combat::Blow {
+    strike: crate::combat::Strike::Hit { critical: false },
+    damage: 1,
+    kind: None,
+};
+
 fn zeal(w: &World) -> ResourceId {
     w.content().resource_id("zeal").expect("zeal")
 }
@@ -123,7 +130,7 @@ fn the_brand_lasts_five_minutes() {
     let branded = status(&w, "branded");
     let brand = rider(&w, ClassActive::BrandingSmite);
     let mut events = Vec::new();
-    w.smite_rider(kobold, brand, &mut events);
+    w.smite_rider(kobold, brand, A_HIT, &mut events);
     assert!(w.state.actors[&kobold].effects.has(branded));
     // The kobold fights on: the paladin outlasts it.
     w.player_mut().hp = 100_000;
@@ -162,7 +169,7 @@ fn a_wrathful_smite_frightens_unless_the_will_holds() {
             .effects
             .remove(frightened);
         let mut events = Vec::new();
-        w.smite_rider(kobold, fear, &mut events);
+        w.smite_rider(kobold, fear, A_HIT, &mut events);
         // The same line again in the same turn is counted on the last, not logged anew.
         let said = last(&w);
         match w.state.actors[&kobold].effects.get(frightened) {

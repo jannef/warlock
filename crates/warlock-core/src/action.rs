@@ -118,6 +118,12 @@ pub enum Action {
     /// Willpower; caught, it turns on them. Takes the time of `steal`; refused (no time) when the
     /// player sees no one there, or someone hostile.
     Steal(Dir),
+    /// Tame the beast in a direction (spec §8 "Allies": Tame; `world/tame.rs`): `[tame] turns`
+    /// actions beside it (`data/companions.toml`), each the time of `tame`, then a Willpower
+    /// check; made, it is the player's companion. Refused (no time) untrained, with a companion
+    /// already, at no beast seen there, at one that cannot be tamed, or at one hostile that has
+    /// seen them.
+    Tame(Dir),
     /// Intimidate the creature on a cell the player sees within the `range` of
     /// `data/intimidate.toml` (spec §8 "Skills": Intimidate; `world/intimidate.rs`): a hostile
     /// one that hears and sees them checks its nerve, and failed, is frightened. Takes the time
@@ -865,6 +871,7 @@ impl fmt::Display for Action {
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
             Action::Say { dir, words } => write!(f, "say:{dir}:{}", words.replace(' ', "_")),
             Action::Steal(d) => write!(f, "steal:{d}"),
+            Action::Tame(d) => write!(f, "tame:{d}"),
             Action::Intimidate(at) => write!(f, "intimidate:{},{}", at.x, at.y),
             Action::ThrowVoice(at) => write!(f, "throw_voice:{},{}", at.x, at.y),
             Action::Order(Command::Heel) => f.write_str("order:follow"),
@@ -1001,6 +1008,7 @@ impl FromStr for Action {
                 })
             }
             "steal" => dir().map(Action::Steal),
+            "tame" => dir().map(Action::Tame),
             "kick" => dir().map(Action::Kick),
             "pick" => dir().map(Action::PickLock),
             "bash" => dir().map(Action::Bash),
@@ -1482,7 +1490,7 @@ impl FromStr for Action {
                  sell[:LETTERS], pay[:DIR], equip:SLOT:LETTER, remove:SLOT, bash:DIR, fire:X,Y, \
                  throw:LETTER:X,Y, dig:DIR, eat:LETTER, eat:floor:LETTER, \
                  read:LETTER[:X,Y|:LETTER], chat:DIR, \
-                 ask:DIR:TOPIC, steal:DIR, throw_voice:X,Y, pray, stance:NAME, vision:ID, skip:DURATION, \
+                 ask:DIR:TOPIC, steal:DIR, tame:DIR, throw_voice:X,Y, pray, stance:NAME, vision:ID, skip:DURATION, \
                  weather:clear|overcast|rain|heavy, effect:ID@X,Y[>X,Y], identify[:LETTERS], \
                  afflict:STATUS, drain:N, infect:DISEASE, reveal:ID, quest_roll:ID:TARGET, \
                  rank:SKILL:N, freeze:X,Y,R, thaw:X,Y,R)"
@@ -1771,6 +1779,7 @@ mod tests {
                 Action::Close(d),
                 Action::Chat(d),
                 Action::Steal(d),
+                Action::Tame(d),
                 Action::Kick(d),
                 Action::PickLock(d),
                 Action::Bash(d),
@@ -1799,6 +1808,8 @@ mod tests {
         assert!(parse_actions("bash").is_err());
         assert_eq!(parse_actions("Steal:N"), Ok(vec![Action::Steal(Dir::N)]));
         assert!(parse_actions("steal").is_err());
+        assert_eq!(parse_actions("TAME:sw"), Ok(vec![Action::Tame(Dir::SW)]));
+        assert!(parse_actions("tame").is_err());
         assert_eq!(
             parse_actions("DISARM:ne"),
             Ok(vec![Action::Disarm(Dir::NE)])

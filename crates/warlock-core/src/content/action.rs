@@ -118,6 +118,9 @@ pub enum ActionKind {
     Song,
     /// Trying to steal from a creature (spec §8 "Stealing"), whatever comes of it.
     Steal,
+    /// One turn of taming a beast (spec §8 "Allies": Tame): the try takes `[tame] turns` of
+    /// them.
+    Tame,
     /// Threatening a foe (spec §8 "Skills": Intimidate), whatever comes of it.
     Intimidate,
     /// Throwing one's voice to a cell (spec §5 "Hearing").
@@ -167,6 +170,7 @@ impl ActionKind {
         ActionKind::Chat,
         ActionKind::Song,
         ActionKind::Steal,
+        ActionKind::Tame,
         ActionKind::Intimidate,
         ActionKind::ThrowVoice,
         ActionKind::Climb,
@@ -213,6 +217,7 @@ impl ActionKind {
             ActionKind::Chat => "chat",
             ActionKind::Song => "song",
             ActionKind::Steal => "steal",
+            ActionKind::Tame => "tame",
             ActionKind::Intimidate => "intimidate",
             ActionKind::ThrowVoice => "throw_voice",
             ActionKind::Climb => "climb",
@@ -278,6 +283,7 @@ impl ActionKind {
             ActionKind::Chat => "talk",
             ActionKind::Song => "sing",
             ActionKind::Steal => "steal",
+            ActionKind::Tame => "tame",
             ActionKind::Intimidate => "intimidate",
             ActionKind::ThrowVoice => "throw your voice",
             ActionKind::Climb => "climb",
