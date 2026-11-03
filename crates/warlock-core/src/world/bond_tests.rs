@@ -1,7 +1,8 @@
 //! Hunter's bond (spec §8 "Allies"; docs/design/ranger-companion.md §11.2): the shared sight
 //! (the second viewpoint in `Perception::compute`: the companion's eyes plus its nose, memory,
 //! the retinue) and the shared buffs (`bond.rs`: a buff both ways, a hex and a harm never, the
-//! retinue, no echo).
+//! retinue, no echo). The witch's Familiar's sight (#932): the same viewpoint on the familiar, a
+//! nose of its own for her, no buffs.
 
 use super::*;
 use crate::action::parse_actions;
@@ -23,6 +24,34 @@ fn world(kobold: bool) -> World {
 
 /// The fixture with `door` (`+` a closed door, `#` a wall) in the wall between the rooms.
 fn hall(kobold: bool, door: char) -> World {
+    let mut w = hall_with(kobold, door, "hound");
+    let id = w.allies_of(w.state.player)[0];
+    keep(&mut w, id, AllySource::Companion(snel()));
+    w
+}
+
+fn snel() -> CompanionData {
+    CompanionData {
+        name: "Snel".into(),
+        grade: 1,
+        scent: None,
+        quarry: None,
+    }
+}
+
+fn keep(w: &mut World, id: ActorId, source: AllySource) {
+    w.state
+        .actors
+        .get_mut(&id)
+        .unwrap()
+        .ally
+        .as_mut()
+        .unwrap()
+        .source = source;
+}
+
+/// The fixture with an ally of type `beast`, a summon as yet.
+fn hall_with(kobold: bool, door: char, beast: &str) -> World {
     let k = if kobold { "k" } else { "." };
     let map = format!(
         "##############\n#@....#......#\n#.....{door}..{k}...#\n#.....#......#\n##############\n"
@@ -40,14 +69,7 @@ fn hall(kobold: bool, door: char) -> World {
     );
     let content = Arc::new(Content::load(&files).expect("the fixture content loads"));
     let mut w = World::new(content, "bond_hall", Some(7)).expect("world");
-    run(&mut w, "ally:hound");
-    let id = w.allies_of(w.state.player)[0];
-    let ally = w.state.actors.get_mut(&id).unwrap().ally.as_mut().unwrap();
-    ally.source = AllySource::Companion(CompanionData {
-        name: "Snel".into(),
-        grade: 1,
-        scent: None,
-    });
+    run(&mut w, &format!("ally:{beast}"));
     w
 }
 
@@ -111,7 +133,7 @@ fn the_shared_sight_is_the_companions_eyes_plus_its_nose() {
         level.is_opaque(&w.content, p)
     });
     let eye = w.content().vision_profiles()[def.vision].clone();
-    let nose: Vec<Pos> = super::smelt(
+    let nose: Vec<Pos> = super::companion::smelt(
         &w.state,
         &w.content,
         &w.state.actors[&hound],
@@ -246,6 +268,142 @@ fn a_companion_in_the_retinue_lends_no_eyes() {
             assert_eq!(alone.in_sight(p), shared.in_sight(p), "cell {p:?}");
         }
     }
+}
+
+// ---- Familiar's sight ------------------------------------------------------------------------
+
+/// The fixture with a familiar of type `beast`, the player holding Familiar's sight when `sight`.
+fn familiar_hall(door: char, beast: &str, sight: bool) -> (World, ActorId, Pos) {
+    let mut w = hall_with(true, door, beast);
+    let id = w.allies_of(w.state.player)[0];
+    keep(&mut w, id, AllySource::Familiar(snel()));
+    if sight {
+        w.player_mut().talents.take("familiars_sight", None);
+    }
+    let at = (w.state.actors.values())
+        .find(|a| w.content().creature(a.creature).id == "kobold")
+        .map(|a| a.pos)
+        .expect("the kobold");
+    (w, id, at)
+}
+
+#[test]
+fn a_witch_comes_into_her_familiars_sight_at_25() {
+    let content = BUILTIN.clone();
+    let spec = "human,female,witch".parse().expect("a character");
+    let mut w = World::start_run(content, "showcase", Some(7), Some(&spec), None, true).unwrap();
+    assert!(w.familiar().is_some());
+    crate::world::caster_tests::reach(&mut w, 24);
+    assert!(!w.state.player().talent_mods(&w.content).familiar_sight);
+    crate::world::caster_tests::reach(&mut w, 25);
+    let mods = w.state.player().talent_mods(&w.content);
+    assert!(mods.familiar_sight);
+    assert!(!mods.shared_sight && !mods.shared_buffs, "the sight alone");
+}
+
+#[test]
+fn a_familiars_sight_is_its_own_eyes() {
+    let (mut w, cat, _) = familiar_hall('#', "cat", false);
+    put(&mut w, cat, Pos::new(9, 1));
+    let far = Pos::new(12, 3);
+    assert!(!compute(&mut w).in_sight(far), "not without the talent");
+    w.player_mut().talents.take("familiars_sight", None);
+    assert!(compute(&mut w).in_sight(far), "the room behind the wall");
+    run(&mut w, "wait");
+    assert!(w.state.current().memory[far].is_some(), "and remembered");
+}
+
+#[test]
+fn a_familiar_without_a_nose_of_its_own_smells_for_her() {
+    let (mut w, cat, at) = familiar_hall('+', "cat", false);
+    assert_eq!(
+        w.content().creature(w.state.actors[&cat].creature).nose,
+        None
+    );
+    // Before the door: a cat sees nothing through it.
+    put(&mut w, cat, Pos::new(5, 2));
+    assert!(!compute(&mut w).in_sight(at));
+    w.player_mut().talents.take("familiars_sight", None);
+    let shared = compute(&mut w);
+    assert!(shared.in_sight(at), "through the closed door");
+    assert!(shared.sees_actors_at(at));
+    assert!(
+        !shared.in_sight(Pos::new(at.x + 1, at.y)),
+        "the foe's cell only"
+    );
+    // A wall stops it, and it is hers alone: the cat itself has nothing to hunt by.
+    let (mut w, cat, at) = familiar_hall('#', "cat", true);
+    put(&mut w, cat, Pos::new(5, 2));
+    assert!(!compute(&mut w).in_sight(at), "no smell through a wall");
+    let any = |_: &WorldState, _: &Content, _: &Actor, _: &Actor| true;
+    assert!(super::companion::smelt(&w.state, &w.content, &w.state.actors[&cat], &any).is_empty());
+}
+
+#[test]
+fn a_familiars_nose_reaches_the_rules_or_its_kinds_if_farther() {
+    let nose = BUILTIN.familiars().expect("the data").nose;
+    let smells = |beast: &str, gap: i32| {
+        let (mut w, id, at) = familiar_hall('+', beast, true);
+        put(&mut w, id, Pos::new(at.x - gap, at.y));
+        compute(&mut w).in_sight(at)
+    };
+    assert!(smells("cat", nose));
+    assert!(!smells("cat", nose + 1));
+    assert!(smells("rat", nose), "a rat's own nose is shorter");
+    assert!(smells("black_hound", nose + 1), "a black hound's is longer");
+}
+
+#[test]
+fn a_familiar_in_the_retinue_lends_no_eyes() {
+    let spec = "human,female,witch".parse().expect("a character");
+    let content = BUILTIN.clone();
+    let mut w = World::start_run(content, "world", Some(7), Some(&spec), None, true).unwrap();
+    let beast = w.familiar().expect("her familiar");
+    assert!(w.state.actors[&beast].in_retinue());
+    let alone = compute(&mut w);
+    w.player_mut().talents.take("familiars_sight", None);
+    let shared = compute(&mut w);
+    let level = w.state.current();
+    for y in 0..level.height() {
+        for x in 0..level.width() {
+            let p = Pos::new(x, y);
+            assert_eq!(alone.in_sight(p), shared.in_sight(p), "cell {p:?}");
+        }
+    }
+}
+
+#[test]
+fn each_talent_reads_its_own_beast() {
+    let far = Pos::new(12, 3);
+    // A companion lends the witch nothing, and a familiar the ranger nothing.
+    let (mut w, cat, _) = familiar_hall('#', "cat", true);
+    put(&mut w, cat, Pos::new(1, 2));
+    run(&mut w, "ally:hound");
+    let hound = (w.allies_of(w.state.player).into_iter())
+        .find(|&id| id != cat)
+        .expect("the hound");
+    keep(&mut w, hound, AllySource::Companion(snel()));
+    put(&mut w, hound, Pos::new(9, 1));
+    assert!(
+        !compute(&mut w).in_sight(far),
+        "Familiar's sight, a companion"
+    );
+
+    let (mut w, cat, _) = familiar_hall('#', "cat", false);
+    put(&mut w, cat, Pos::new(9, 1));
+    bond(&mut w);
+    assert!(!compute(&mut w).in_sight(far), "Hunter's bond, a familiar");
+}
+
+#[test]
+fn familiars_sight_shares_no_buff() {
+    let (mut w, cat, _) = familiar_hall('.', "cat", true);
+    let player = w.state.player;
+    afflict(&mut w, player, "hasted", 2);
+    assert!(has(&w, player, "hasted").is_some());
+    assert_eq!(has(&w, cat, "hasted"), None);
+    afflict(&mut w, cat, "fortified", 1);
+    assert_eq!(has(&w, player, "fortified"), None);
 }
 
 // ---- shared buffs ----------------------------------------------------------------------------

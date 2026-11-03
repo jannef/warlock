@@ -370,9 +370,9 @@ impl World {
             Order::Follow if leashed => None,
             Order::Follow => self.quarry(id, &hostile),
             Order::Stay { at } => self.quarry(id, &near(at, rules.stay_reach)),
-            Order::Hunt { at } => {
-                (self.quarry(id, &near(at, rules.hunt_reach))).or_else(|| self.quarry(id, &hostile))
-            }
+            Order::Hunt { at } => (self.quarry_sensed(id, &hostile))
+                .or_else(|| self.quarry(id, &near(at, rules.hunt_reach)))
+                .or_else(|| self.quarry(id, &hostile)),
         };
         // 2. Fight it as a creature would.
         if let Some((target, at, by_nose)) = target {
@@ -425,9 +425,13 @@ impl World {
         Some((target, at, true))
     }
 
-    fn set_order(&mut self, id: ActorId, order: Order) {
+    pub(super) fn set_order(&mut self, id: ActorId, order: Order) {
         if let Some(ally) = (self.state.actors.get_mut(&id)).and_then(|a| a.ally.as_mut()) {
             ally.order = order;
+        }
+        // A new order ends a hunt Sic 'em began (`sic.rs`).
+        if let Some(data) = (self.state.actors.get_mut(&id)).and_then(Actor::companion_mut) {
+            data.quarry = None;
         }
     }
 

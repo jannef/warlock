@@ -88,8 +88,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       burden and Bloated (`World::burdened`, the one place every price passes); several multiply.
       Only a spell's buff on its caster may hasten (Haste's Hasted, 75; #397), the potion of
       quickness the same Hasted on the player who drinks it (§8 "Potions"), and Light-footed
-      (50, the skirmisher's Hit and run, a weapon ability: one action), so a creature's quickest
-      step stays what a rest's batching counts on;
+      (50, the skirmisher's Hit and run, a weapon ability: one action), and Savage on a companion
+      (67, Sic 'em's, §8 "Allies"; an ally never disturbs a rest), so the quickest step of a
+      creature that disturbs a rest stays what a rest's batching counts on;
     - **lend eyes** (`vision`, an id of `data/vision.toml`): `Actor::eyes` betters its sufferer's
       profile by it part by part, as a unique item's Vision power (the lower threshold, the
       farther darkvision, ultraviolet if any sees it), so what the player sees in the dark
@@ -607,8 +608,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Focus** (the ranger's; R2, #250): Rapid shot (level 12) grants it (10, full); it comes
     back a point a base turn but not while resting, and never ends. A shot loosed with `fire`
     while the ranger holds 2 spends them and takes 10 % less time (the whole price, reloading
-    too; with less it is an ordinary shot, `World::rapid_shot`); Volley (level 50) costs 6 and
-    has no cooldown.
+    too; with less it is an ordinary shot, `World::rapid_shot`); Sic 'em (level 40) costs 5 and
+    Volley (level 50) 6, neither with a cooldown.
   - **Openings** (the thief's; R3, #251, `world/openings.rs`): Sneak attack (level 1; #682)
     grants them at 0 (`grants_resource`); each sneak attack that hits builds one (to 5), one
     slips away every 120 s (20 base turns), and at 0 they stay, held. Master thief (level 60)
@@ -636,7 +637,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     every blow that hits them (`hit`, `struck`); it comes back a point every 60 s (10 base
     turns), resting too, and sits at 0, never ending. Smite costs 3, Branding smite 3,
     Wrathful smite 4 (#911), Banishing smite 6 (#913), and Lay on hands 6 (Avatar: half, 3), and Retribution (level 25, §8 "Free blows") 4 a blow it answers; a holy gift unanswered outside its bands spends none. A deed that moves
-    the player toward evil empties it (§8 "Alignment"). Shown as `Zeal 7/12`.
+    the player toward evil empties it (§8 "Alignment"). Shown as `Zeal 7/12`. Zealot (the one
+    pickable on it, #914, below) makes a blow taken build two.
   - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives pay
     from (§8 "Weapon abilities", #564). The granted talent **Trained wind**
     (`grants_resource`) is in the level-1 row of the warrior's, berserker's, paladin's,
@@ -672,12 +674,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     holds; spent to nothing, the rage ends and Exhausted follows. While raging no mana is spent
     (Raging blocks `cast`).
   - **Talents** (R5, #253): the `resources` system is in the coverage list, held to its bar by
-    the four resource talents, the only picks limited to a class (a resource belongs to the class
-    that has it): **Battle trance** (Might; berserker, level 6): rage starts 6 higher (18) and
+    the five resource talents, the only picks limited to a class (a resource belongs to the class
+    that has it; Zealot by its prerequisite, Smite): **Battle trance** (Might; berserker, level 6): rage starts 6 higher (18) and
     decays at 67 % of its pace; **Inner calm** (Finesse; ascetic, level 18): ki holds 2 more (7) and
     comes back at 150 %; **Steady hand** (Weaponcraft; ranger, level 12): focus comes back at
     150 % (still not while resting); **Patient blade** (Shadow; thief, level 32): openings decay
-    at 50 %, and a sneak attack that kills builds one more (two in all). Rage, Blood frenzy,
+    at 50 %, and a sneak attack that kills builds one more (two in all); **Zealot** (Grit; who
+    holds Smite, level 6; #914): a blow that hits them builds a second zeal. Rage, Blood frenzy,
     Mighty rage, Unstoppable, Rapid shot, Volley, Improved sneak attack, and Master thief carry
     it too. **Saves change** (a new id group in the fingerprint).
 - **Checks** (`warlock-core/src/check.rs`; M24, #139): a stat put to the test, rolled like an

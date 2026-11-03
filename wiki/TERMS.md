@@ -33,6 +33,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A spell | `magic.md#spell-ID` | `magic.md#spell-fireball` |
 | A damage type (fire, slashing, …) | `damage-types.md#damage-ID` | `damage-types.md#damage-fire` |
 | A resource (Rage, Stamina, Ki, Focus, Inspiration, Openings, Zeal) | `resources.md#resource-ID` | `resources.md#resource-ki` |
+| The unholy (what holy wrath falls hardest on) | `classes.md#the-paladin` | |
 | A stance | `combat.md#stance-NAME` | `combat.md#stance-frenzy` |
 | A stat | `stats.md#stat-NAME` | `stats.md#stat-toughness` |
 | A race | `races.md#race-ID` | `races.md#race-half-elf` |
@@ -247,7 +248,8 @@ above.
 | Companion, animal companion, the nose, a companion's level (grade) | `allies.md#companions`, `allies.md#starting-companions`, `allies.md#growth` |
 | The collar, Give | `allies.md#the-collar` |
 | Tame, taming | `allies.md#taming` |
-| Familiar, a familiar's touch, what it goes for | `allies.md#familiars`, `allies.md#the-touch`, `allies.md#what-it-goes-for` |
+| Familiar, a familiar's touch, what it goes for, calling one | `allies.md#familiars`, `allies.md#the-touch`, `allies.md#what-it-goes-for`, `allies.md#call-familiar` |
+| Familiar's sight | `allies.md#familiars-sight` |
 | Hunter's bond, shared sight, shared buffs | `allies.md#hunters-bond` |
 | People, townsfolk, chatting, topics | `npcs.md#chatting` |
 | Saying words, passwords, riddles | `npcs.md#saying-words` |

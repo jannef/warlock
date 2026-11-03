@@ -59,12 +59,16 @@
 //!
 //! - **Zeal** (#910): the paladin with plain blows and with every blow a smite
 //!   (`zeal_of`: `World::smite_profile`, and its unholy dice on the unholy among the monsters),
-//!   the pool's maximum, and what a round builds against a smite's cost.
+//!   with Banishing smite's doubled dice on the unholy from level 50 and Holy wrath's die on every
+//!   blow it reaches from level 40 (`Side::wrath`, as `World::holy_wrathed` rolls it, #914), the
+//!   pool's maximum, and what a round builds against a smite's cost, with Zealot too.
 //!
 //! Not modelled: triggered and active weapon abilities, stances (but the rage table's), talents chosen for a build
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
 //! blow, potions, and resistances against spells.
 
+mod familiar;
+mod ranger;
 mod schools;
 mod summons;
 mod tables;
@@ -407,6 +411,26 @@ fn strike_mean(p: &Profile, t: &Target, rng: &mut Rng) -> f64 {
     total as f64 / f64::from(STRIKES)
 }
 
+/// [`strike_mean`] with `wrath`, Holy wrath's die, on every hit as `World::holy_wrathed` adds
+/// it: of the blow's kind, resisted, never soaked, rolled once whatever a critical does.
+fn wrathed_mean(p: &Profile, wrath: Option<Dice>, t: &Target, rng: &mut Rng) -> f64 {
+    let Some(dice) = wrath else {
+        return strike_mean(p, t, rng);
+    };
+    let total: i64 = (0..STRIKES)
+        .map(|_| {
+            let blow = combat::strike(p, t, rng);
+            let more = if blow.strike.is_hit() {
+                crate::damage::resist(dice.roll(rng).max(0), t.resistances.get(blow.kind))
+            } else {
+                0
+            };
+            i64::from(blow.damage + more)
+        })
+        .sum();
+    total as f64 / f64::from(STRIKES)
+}
+
 /// The chance in percent that a blow at `to_hit` lands on `defence`.
 fn hit_pct(to_hit: i32, defence: &Defence) -> f64 {
     f64::from(combat::hit_ways(to_hit, defence.total())) * 100.0 / 144.0
@@ -425,6 +449,8 @@ struct Side {
     /// Blows a round (a normal turn).
     blows: f64,
     hp: i32,
+    /// Holy wrath's die on its hits, and whether on every foe (Avatar) or the unholy alone.
+    wrath: Option<(Dice, bool)>,
 }
 
 /// Actor `id`'s side in `w`.
@@ -438,6 +464,7 @@ fn side_of(w: &World, id: ActorId) -> Side {
     let cost = w.attack_price(id, ActionKind::Melee, with, skills);
     let turn = price(NORMAL_SPEED, BASE_TURN) as f64;
     let blows = f64::from(a.speed(content)) / f64::from(NORMAL_SPEED) * turn / cost as f64;
+    let mods = a.talent_mods(content);
     Side {
         blow: a.melee(content),
         off: a.off_hand_blow(content).map(|(_, p)| p),
@@ -446,6 +473,7 @@ fn side_of(w: &World, id: ActorId) -> Side {
         missile: w.target_against(id, true).defence,
         blows,
         hp: a.max_hp(content),
+        wrath: mods.holy_wrath.map(|dice| (dice, mods.avatar.is_some())),
     }
 }
 
@@ -453,6 +481,8 @@ fn side_of(w: &World, id: ActorId) -> Side {
 struct Monster {
     creature: CreatureId,
     level: u8,
+    /// Its type is one holy wrath falls on (`Content::unholy`).
+    unholy: bool,
     bare: Side,
     geared: Vec<Side>,
 }
@@ -499,6 +529,7 @@ fn monsters(content: &Arc<Content>) -> Vec<Monster> {
         out.push(Monster {
             creature: cid,
             level: def.level,
+            unholy: content.unholy(cid),
             bare,
             geared: sides,
         });
@@ -693,22 +724,27 @@ fn ki_of(w: &World, id: ActorId) -> Option<Ki> {
 }
 
 /// A smiting player (#910): their side with every blow a smite, on a foe and on an unholy one,
-/// the zeal pool, what comes back a round, what a smite costs, and what a blow that hits and a
-/// blow taken build.
+/// and a Banishing smite on an unholy one if they have it, the zeal pool, what comes back a round,
+/// what a smite costs, and what a blow that hits and a blow taken build, and a blow taken with
+/// Zealot.
 #[derive(Clone)]
 struct Zeal {
     smite: Side,
     unholy: Side,
+    banishing: Option<Side>,
     max: u16,
     /// Zeal back a round (a normal turn), at its pace.
     back: f64,
     cost: u16,
     /// Zeal a blow of theirs that hits (`hit`) and a blow taken (`struck`) build.
     builds: [f64; 2],
+    /// Zeal a blow taken builds with Zealot.
+    zealot: f64,
 }
 
 /// Player `id`'s zeal in `w`, if they have Smite: the smite as `World::smite_profile` makes it
-/// (the player's own type is not unholy), and again with the unholy dice.
+/// (the player's own type is not unholy), again with the unholy dice, and with those twice over as
+/// `World::mode_profile` makes Banishing smite's on an unholy foe not summoned.
 fn zeal_of(w: &World, id: ActorId) -> Option<Zeal> {
     use crate::content::{Build as Event, ClassActive};
     let content = w.content.clone();
@@ -720,21 +756,34 @@ fn zeal_of(w: &World, id: ActorId) -> Option<Zeal> {
     let def = content.resource(zeal);
     let side = side_of(w, id);
     let blow = w.smite_profile(id)?;
+    let dice = smite.dice_at(w.holder_level(id), true);
     let unholy = Profile {
-        extra: Some(smite.dice_at(w.holder_level(id), true)),
+        extra: Some(dice),
         ..blow.clone()
     };
+    let banishing = mods
+        .smite_mode(ClassActive::BanishingSmite)
+        .map(|_| Profile {
+            extra: Some(dice.and(dice)),
+            ..blow.clone()
+        })
+        .map(|blow| Side {
+            blow,
+            ..side.clone()
+        });
     let every = match def.over_time {
         Some(crate::content::OverTime::Regenerates { every }) => f64::from(every),
         _ => f64::INFINITY,
     };
-    let built = |on: Event| {
+    let built = |mods: &crate::talent::TalentMods, on: Event| {
         let more: u16 = (mods.resource_builds.iter())
             .filter(|(r, b, _)| *r == zeal && *b == on)
             .map(|(_, _, n)| *n)
             .sum();
         f64::from(def.built_by(on) + more)
     };
+    let mut twin = me.clone();
+    twin.talents.take("zealot", None);
     let turn = BASE_TURN.as_seconds() as f64;
     Some(Zeal {
         smite: Side {
@@ -745,10 +794,12 @@ fn zeal_of(w: &World, id: ActorId) -> Option<Zeal> {
             blow: unholy,
             ..side
         },
+        banishing,
         max: me.resource_max(&content, zeal, w.holder_level(id)),
         back: turn / every * f64::from(w.resource_rate(id, zeal)) / 100.0,
         cost: cost.amount,
-        builds: [built(Event::Hit), built(Event::Struck)],
+        builds: [built(&mods, Event::Hit), built(&mods, Event::Struck)],
+        zealot: built(&twin.talent_mods(&content), Event::Struck),
     })
 }
 
@@ -1008,9 +1059,12 @@ fn fight_sides(
             if let Some(pv) = pv {
                 target = Target::protected(target.defence, pv(m.level));
             }
-            let mut dealt = strike_mean(&me.blow, &target, rng);
+            let wrath = (me.wrath)
+                .filter(|&(_, every_foe)| every_foe || m.unholy)
+                .map(|(dice, _)| dice);
+            let mut dealt = wrathed_mean(&me.blow, wrath, &target, rng);
             if let Some(off) = &me.off {
-                dealt += strike_mean(off, &target, rng);
+                dealt += wrathed_mean(off, wrath, &target, rng);
             }
             let dealt = dealt * me.blows;
             let taken = strike_mean(&them.blow, &me.target, rng) * them.blows;
@@ -1135,7 +1189,9 @@ fn balance_probe() {
     tables::rage(&p, &mut rng, &mut out);
     tables::ki(&p, &mut rng, &mut out);
     tables::zeal(&p, &mut rng, &mut out);
+    ranger::ranger_and_hound(&p, &mut rng, &mut out);
     summons::summons(&p, &mut rng, &mut out);
+    familiar::familiar(&p, &mut out);
     tables::stats(&p, &mut out);
     tables::stat_sweep(&p, &mut out);
     println!("{out}");

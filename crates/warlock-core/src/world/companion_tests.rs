@@ -261,6 +261,7 @@ fn adopt(w: &mut World, kind: &str, name: &str) -> ActorId {
         .expect("an ally of that type");
     let ally = w.state.actors.get_mut(&id).unwrap().ally.as_mut().unwrap();
     ally.source = AllySource::Companion(CompanionData {
+        quarry: None,
         name: name.into(),
         grade: 1,
         scent: None,

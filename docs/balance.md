@@ -29,8 +29,9 @@ seventy careers to level 60). It prints the Markdown tables of the sections from
 After a PR that tunes combat data (weapon skills, creatures, classes, spells, stats, items), run
 it again and replace those sections, then revisit the tuning notes. The code is
 `crates/warlock-core/src/world/balance_probe.rs` (the measuring, with the method in its module
-docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/schools.rs`
-(the casters' school pace), and `balance_probe/tables.rs` (the tables).
+docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/ranger.rs`
+(the ranger and their companion), `balance_probe/familiar.rs` (the witch's familiar),
+`balance_probe/schools.rs` (the casters' school pace), and `balance_probe/tables.rs` (the tables).
 
 ## Method
 
@@ -460,37 +461,71 @@ What the run shows:
 
 ## Zeal
 
-Added with the paladin's Zeal and Smite (#910; `docs/design/paladin-smites.md` §5); the other
+Added with the paladin's Zeal and Smite (#910; `docs/design/paladin-smites.md` §5), and rerun with
+Zealot (#914) to take in Holy wrath's die, Banishing smite's doubling, and Zealot; the other
 sections were not rerun for it (the probe's draws after this table shift, so a rerun moves the
 "Summons" cells by noise).
 
-The paladin in plain gear (a long sword; from level 5 a shield and the warrior's armour), trained stats, against the monsters within two levels. The pool's maximum as Smite grants it (the seeds' mean: Presence and the level) and the zeal back a round with time; the fight cells as in "Fights", with plain blows, with every blow a smite (an upper bound: a smite costs its zeal), and with every blow a smite on the unholy among those monsters (the smite's die more); then the zeal a round of plain blows builds (the paladin's hits and the foe's, at their chances, plus the time's) against a smite's cost: the rounds of fighting a smite takes to earn.
+The paladin in plain gear (a long sword; from level 5 a shield and the warrior's armour), trained stats, against the monsters within two levels. The pool's maximum as Smite grants it (the seeds' mean: Presence and the level) and the zeal back a round with time; the fight cells as in "Fights", with plain blows, with every blow a smite (an upper bound: a smite costs its zeal), with every blow a smite on the unholy among those monsters (the smite's die more), and from level 50 with every blow a Banishing smite on them (its dice twice over; the summoned are unmade instead, whatever their hit points, which no cell shows). From level 40 every cell has Holy wrath's die where it lands, on the unholy, and at 60 (Avatar) on every foe. Then the zeal a round of plain blows builds (the paladin's hits and the foe's, at their chances, plus the time's) against a smite's cost: the rounds of fighting a smite takes to earn, and the same with Zealot.
 
-| L | zeal | back a round | Blow | Smite | Smite on the unholy | built a round · rounds a smite |
-|---|---|---|---|---|---|---|
-| 1 | 10.7 | 0.10 | 83/41 · 6.9:0.1 · 1.8 / 734 | 86/41 · 10.4:0.1 · 1.2 / 685 | 87/34 · 13.5:0.6 · 1.2 / 37 | 1.33 · 2.3 |
-| 5 | 10.7 | 0.10 | 84/34 · 6.7:0.6 · 3.6 / 60 | 87/34 · 9.8:0.6 · 2.4 / 63 | 91/37 · 12.8:0.7 · 2.2 / 48 | 1.16 · 2.6 |
-| 10 | 11.7 | 0.10 | 92/24 · 10.1:1.2 · 4.3 / 53 | 94/24 · 13.5:1.2 · 3.2 / 56 | 93/16 · 16.7:1.0 · 3.1 / 63 | 1.13 · 2.6 |
-| 15 | 11.8 | 0.10 | 95/14 · 11.6:0.7 · 5.4 / 166 | 97/14 · 15.2:0.8 · 4.1 / 152 | 96/9 · 19.7:0.7 · 3.0 / 166 | 1.06 · 2.8 |
-| 20 | 13.0 | 0.10 | 98/8 · 13.7:0.3 · 6.1 / 689 | 99/8 · 20.9:0.3 · 3.8 / 622 | 99/8 · 24.7:0.6 · 3.3 / 284 | 1.03 · 2.9 |
-| 30 | 14.2 | 0.10 | 98/8 · 16.2:1.1 · 8.8 / 271 | 99/8 · 27.4:1.2 · 5.4 / 245 | 99/6 · 31.0:0.9 · 3.2 / 285 | 1.04 · 2.9 |
-| 40 | 15.8 | 0.10 | 98/5 · 19.4:1.2 · 9.4 / 525 | 99/5 · 34.5:1.0 · 5.4 / 426 | 98/5 · 37.7:1.1 · 3.5 / 743 | 1.01 · 3.0 |
-| 50 | 17.2 | 0.10 | 98/15 · 20.6:2.5 · 11 / 183 | 99/15 · 39.8:2.7 · 6.0 / 173 | 99/27 · 43.5:6.5 · 5.5 / 59 | 1.12 · 2.7 |
-| 60 | 18.8 | 0.10 | 85/20 · 15.8:5.6 · 14 / 72 | 95/20 · 34.1:5.1 · 6.5 / 76 | 97/18 · 43.7:6.7 · 4.0 / 57 | 1.05 · 2.8 |
+| L | zeal | back a round | Blow | Smite | Smite on the unholy | Banishing on the unholy | built a round · rounds a smite | with Zealot |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 10.7 | 0.10 | 78/41 · 6.8:0.1 · 1.8 / 594 | 82/41 · 10.3:0.0 · 1.2 / 749 | 87/34 · 13.2:0.6 · 1.2 / 35 | - | 1.29 · 2.3 | 1.70 · 1.8 |
+| 5 | 10.7 | 0.10 | 84/34 · 6.8:0.7 · 3.6 / 54 | 87/34 · 9.8:0.6 · 2.4 / 56 | 91/37 · 12.7:0.7 · 2.2 / 47 | - | 1.16 · 2.6 | 1.49 · 2.0 |
+| 10 | 11.7 | 0.10 | 92/26 · 10.1:1.3 · 4.3 / 48 | 94/26 · 13.3:1.3 · 3.2 / 52 | 93/18 · 16.8:1.1 · 3.2 / 58 | - | 1.15 · 2.6 | 1.41 · 2.1 |
+| 15 | 11.7 | 0.10 | 94/15 · 11.5:0.8 · 5.4 / 153 | 96/15 · 14.8:0.8 · 4.2 / 161 | 95/10 · 19.6:0.7 · 3.0 / 136 | - | 1.07 · 2.8 | 1.22 · 2.5 |
+| 20 | 13.0 | 0.10 | 98/8 · 13.8:0.4 · 6.1 / 525 | 99/8 · 20.9:0.5 · 4.0 / 604 | 99/8 · 24.1:0.7 · 3.3 / 239 | - | 1.03 · 2.9 | 1.11 · 2.7 |
+| 30 | 14.2 | 0.10 | 98/7 · 15.9:1.0 · 8.9 / 302 | 99/7 · 26.7:1.0 · 5.4 / 297 | 99/6 · 31.0:0.9 · 3.3 / 290 | - | 1.02 · 2.9 | 1.09 · 2.8 |
+| 40 | 15.8 | 0.10 | 98/5 · 20.3:1.0 · 8.9 / 432 | 99/5 · 35.3:1.1 · 5.3 / 354 | 98/5 · 41.3:1.2 · 3.2 / >999 | - | 1.01 · 3.0 | 1.06 · 2.8 |
+| 50 | 17.2 | 0.10 | 98/13 · 20.6:2.6 · 11 / 179 | 99/13 · 38.6:2.5 · 5.8 / 193 | 99/27 · 45.9:6.3 · 5.2 / 62 | 99/27 · 67.4:6.6 · 3.6 / 60 | 1.09 · 2.7 | 1.22 · 2.5 |
+| 60 | 18.5 | 0.10 | 94/18 · 19.4:4.5 · 11 / 90 | 98/18 · 39.6:4.1 · 5.9 / 104 | 97/18 · 46.5:6.9 · 3.7 / 59 | 97/18 · 71.9:6.8 · 2.4 / 58 | 1.12 · 2.7 | 1.30 · 2.3 |
 
-- **Not in the table**: Holy wrath's die (1d6, 3.5 on a hit, at 40; on every foe at 60, #913) is
-  no part of `World::smite_profile`, so the "Blow" and "Smite" columns from level 40 are that much
-  low on the unholy, and at 60 on anyone; nor is Banishing smite's doubling (50).
+What the table shows; none of it is tuned, tuning is the owner's call (Zealot, Smite's dice, and
+every cost are data):
+
 - **A smite every third blow is what the fight pays for**: a round of plain blows builds about
   one zeal (1.0 to 1.3: the paladin's hits nearly every blow, the foe's far fewer, a tenth from
   time), so a smite (3) comes about every three rounds, the design's "a smite every third blow".
-- **A smite is worth 1.3 to 2.2 blows**: +3.5 at level 1 on 6.9, +7 at 20 on 13.7, +18 at 60
-  on 15.8 (the smite's dice are rolled on top of a blow's, and Presence surer to hit), and the
+- **A smite is worth 1.3 to 2.0 blows**: +3.5 at level 1 on 6.8, +7 at 20 on 13.8, +20 at 60 on
+  19.4 (the smite's dice are rolled on top of a blow's, and Presence surer to hit), and the
   unholy die adds about 3 to 4 more. With a smite every third blow that is a sixth more damage
-  than plain blows at level 1 to two fifths more at 60, about the design's "a quarter to a
-  third"; Smite's dice and cost are data.
-- **The pool covers a held smite and a heal**: 10.7 at level 1 to 18.8 at 60 (Presence and the
+  than plain blows at level 1 to a third more at 60, about the design's "a quarter to a third".
+- **Holy wrath is worth what its die says**: from level 40 the unholy take about 3.5 more a hit
+  (41.3 on 37.7 at 40 against this table's first run, which left it out), and the "Blow" column
+  moves little (its median monster is mostly not unholy) until Avatar puts the die on every foe at
+  60 (19.4 on 15.8; other content has moved the cells a little since, the paladin's hit chance
+  there too). It costs no zeal, so it is pure gain, and small beside a smite's dice, as the design
+  meant.
+- **Banishing smite is dear on the unholy**: 67.4 on 45.9 a blow at level 50, 71.9 on 46.5 at
+  60: half as much again for twice a smite's zeal (6 against 3), and the pool holds about three.
+  It is the most damage the paladin has, and on the summoned it does what no cell shows: they die
+  whatever their hit points.
+- **Zealot is worth most where the paladin is hit most**: it adds the foe's chance to hit to a
+  round's zeal, so a smite comes every 1.8 rounds instead of 2.3 at level 1, 2.0 instead of 2.6
+  at 5, but 2.8 instead of 2.9 at 30 and 2.8 instead of 3.0 at 40, where one foe of the
+  paladin's level hits one blow in fifteen or twenty. At 50 and 60 (hit 13 to 18 in a hundred)
+  it is 2.5 and 2.3 instead of 2.7. This table is one foe at a time; the design's case for
+  Zealot is the doorway, several foes hitting, and each adds its own chance (Retribution, 25,
+  spends what those blows build). In armour against level-mates at 20 to 40 that case is thin.
+- **The pool covers a held smite and a heal**: 10.7 at level 1 to 18.5 at 60 (Presence and the
   level), so a full pool is three smites, or a smite and Lay on hands (6).
+
+
+The ranger (#923) and their starting beast, in the starting kit (the short sword: the probe's blows are melee, so the bow is not measured), stats as rolled, short blades at the rank the other tables assume for the level, seeds 1 to 6 (each draws its own beast), against the monsters within two levels. Fight cells as in "Fights" (P(it hits) / P(it is hit) % · damage a round · rounds to kill / rounds to die) for the ranger alone and the companion alone (its grade is the ranger's level: its hit points, to-hit, damage, Defence and Protection raised by `[growth]`); together, the rounds to kill with both striking (the monster's hit points over the two damages added); the last column is the ranger alone's rounds over those.
+
+| L | beasts | its hp | Ranger | Companion | Together: rounds to kill | alone over together |
+|---|---|---|---|---|---|---|
+| 1 | hound, boar | 17 | 75/54 · 4.6:0.8 · 2.8 / 27 | 71/71 · 4.4:1.6 · 3.7 / 10 | 1.6 | x1.7 |
+| 5 | hound, boar | 24 | 80/62 · 4.6:2.3 · 5.2 / 14 | 73/77 · 4.0:3.8 · 7.9 / 6.3 | 3.1 | x1.7 |
+| 10 | hound, boar | 35 | 81/65 · 6.2:4.9 · 7.5 / 8.9 | 83/76 · 6.8:6.4 · 7.7 / 5.5 | 3.8 | x2.0 |
+| 15 | hound, boar | 46 | 83/67 · 7.3:7.4 · 8.6 / 7.6 | 85/78 · 10.5:9.8 · 7.1 / 4.7 | 3.9 | x2.2 |
+| 20 | hound, boar | 57 | 87/74 · 7.6:9.1 · 11 / 7.7 | 91/78 · 12.6:9.7 · 7.4 / 6.0 | 4.4 | x2.5 |
+| 30 | hound, boar | 79 | 80/85 · 8.0:19.0 · 15 / 5.0 | 96/81 · 19.6:17.6 · 7.2 / 4.5 | 4.9 | x3.1 |
+| 40 | hound, boar | 101 | 75/92 · 10.4:18.7 · 15 / 7.1 | 98/79 · 27.4:15.2 · 6.6 / 6.7 | 4.6 | x3.3 |
+| 50 | hound, boar | 124 | 69/98 · 7.5:29.4 · 32 / 4.9 | 99/81 · 34.0:23.1 · 6.7 / 5.4 | 5.5 | x5.8 |
+| 60 | hound, boar | 145 | 46/99 · 3.8:34.6 · 83 / 4.3 | 99/84 · 34.8:26.4 · 6.9 / 5.8 | 6.3 | x13.1 |
+
+What it says (2026-11-03, C8): the hound (grade the ranger's level) out-damages the melee ranger from level 5 on and by level 60 deals about nine times the short sword's damage a round (34.8 against 3.8; the ranger's real weapon is the bow, which this probe does not measure, so read the ranger column as a floor). It hits 71 to 99 % of the time against monsters of the ranger's level and kills one in about seven rounds at every level, and it lasts about five to six rounds against them, the same as the ranger does. The two together kill 1.6 to 6.3 rounds; the companion is the larger half of the pair from level 5. `grade_percent = 100` (the design's Q1) stands (the beast's level is the ranger's); whether a hound that out-damages its melee master nine to one at level 60 is too much is the owner's call (a tamed wolf is not measured here: it is the same growth from a higher base, and the probe's seeds draw only the hound and the boar).
 
 ## Summons
 
@@ -512,6 +547,70 @@ The druid's calls (#839), cast by a human druid (untrained stats, every score as
 | Call of the wild (5) | 60 | 2 wolves | lasting | 5 / 374 (75 casts) | wolf 4: 7/99 · 0.1:35.4 · >999 / 0.5 |
 | Call of the forest (20) | 60 | 2 bears | lasting | 20 / 374 (19 casts) | bear 12: 25/99 · 1.4:37.2 · 136 / 1.6 |
 | Call the elements (35) | 60 | 1 greater air elemental, 1 greater fire elemental | lasting | 35 / 374 (11 casts) | greater earth elemental 24: 62/99 · 8.5:26.0 · 24 / 4.7; greater water elemental 26: 38/99 · 5.7:30.0 · 42 / 2.9; greater air elemental 31: 54/98 · 16.5:25.2 · 13 / 3.7; greater fire elemental 38: 69/99 · 18.9:32.3 · 12 / 3.8 |
+
+## Familiar
+
+The witch's familiar (#929, #933), a human witch (untrained stats, every score as rolled, seed 1) with each of the five kinds a run may draw in turn, at its grade (her level). Its touch is her Evil eye and needs a blow that lands, so the table is the familiar's side bare against the monsters within two levels of the witch's (as in "Fights", the monsters' gear left out): **hit** the chance a blow lands, lowest / median / highest over the window; **blows** a round (a normal turn); **hexes** laid a round (blows × median hit); **rounds to the first** hex (one over the hexes a round); **degrees** her Evil eye lays; **eye** the mana one cast of it costs over her pool, which every landed blow saves her; the familiar's hit points, mean damage of a hit, and to-hit.
+
+| L | familiar | hit % (low / median / high) | blows | hexes a round | rounds to the first | degrees | eye (mana / pool) | hp · mean hit · to hit |
+|---|---|---|---|---|---|---|---|---|
+| 1 | cat | 19 / 31 / 69 | 1.30 | 0.41 | 2.5 | 1 | 1 / 15 | 10 · 1.0 · -4 |
+| 1 | toad | 19 / 31 / 69 | 0.90 | 0.28 | 3.6 | 1 | 1 / 15 | 10 · 1.0 · -4 |
+| 1 | raven | 19 / 31 / 69 | 1.30 | 0.41 | 2.5 | 1 | 1 / 15 | 9 · 1.0 · -4 |
+| 1 | hare | 25 / 38 / 75 | 1.60 | 0.61 | 1.6 | 1 | 1 / 15 | 10 · 1.0 · -3 |
+| 1 | bat | 15 / 25 / 62 | 2.00 | 0.50 | 2.0 | 1 | 1 / 15 | 10 · 1.0 · -5 |
+| 5 | cat | 1 / 38 / 75 | 1.30 | 0.50 | 2.0 | 1 | 1 / 44 | 18 · 1.0 · -3 |
+| 5 | toad | 1 / 38 / 75 | 0.90 | 0.34 | 2.9 | 1 | 1 / 44 | 18 · 1.0 · -3 |
+| 5 | raven | 1 / 38 / 75 | 1.30 | 0.50 | 2.0 | 1 | 1 / 44 | 17 · 1.0 · -3 |
+| 5 | hare | 2 / 46 / 81 | 1.60 | 0.73 | 1.4 | 1 | 1 / 44 | 18 · 1.0 · -2 |
+| 5 | bat | 1 / 31 / 69 | 2.00 | 0.62 | 1.6 | 1 | 1 / 44 | 18 · 1.0 · -4 |
+| 10 | cat | 7 / 62 / 85 | 1.30 | 0.80 | 1.2 | 1 | 1 / 80 | 29 · 1.0 · -1 |
+| 10 | toad | 4 / 54 / 81 | 0.90 | 0.49 | 2.1 | 1 | 1 / 80 | 29 · 1.0 · -2 |
+| 10 | raven | 4 / 54 / 81 | 1.30 | 0.70 | 1.4 | 1 | 1 / 80 | 28 · 1.0 · -2 |
+| 10 | hare | 7 / 62 / 85 | 1.60 | 0.99 | 1.0 | 1 | 1 / 80 | 29 · 1.0 · -1 |
+| 10 | bat | 4 / 54 / 81 | 2.00 | 1.08 | 0.9 | 1 | 1 / 80 | 29 · 1.0 · -2 |
+| 15 | cat | 15 / 62 / 85 | 1.30 | 0.80 | 1.2 | 1 | 1 / 118 | 40 · 2.0 · +0 |
+| 15 | toad | 15 / 62 / 85 | 0.90 | 0.56 | 1.8 | 1 | 1 / 118 | 40 · 2.0 · +0 |
+| 15 | raven | 15 / 62 / 85 | 1.30 | 0.80 | 1.2 | 1 | 1 / 118 | 39 · 3.0 · +0 |
+| 15 | hare | 19 / 69 / 90 | 1.60 | 1.10 | 0.9 | 1 | 1 / 118 | 40 · 3.0 · +1 |
+| 15 | bat | 10 / 54 / 81 | 2.00 | 1.08 | 0.9 | 1 | 1 / 118 | 40 · 2.0 · -1 |
+| 20 | cat | 4 / 69 / 81 | 1.30 | 0.89 | 1.1 | 1 | 1 / 156 | 51 · 4.0 · +2 |
+| 20 | toad | 2 / 62 / 75 | 0.90 | 0.56 | 1.8 | 1 | 1 / 156 | 51 · 3.0 · +1 |
+| 20 | raven | 2 / 62 / 75 | 1.30 | 0.80 | 1.2 | 1 | 1 / 156 | 50 · 4.0 · +1 |
+| 20 | hare | 4 / 69 / 81 | 1.60 | 1.10 | 0.9 | 1 | 1 / 156 | 51 · 4.0 · +2 |
+| 20 | bat | 2 / 62 / 75 | 2.00 | 1.24 | 0.8 | 1 | 1 / 156 | 51 · 4.0 · +1 |
+| 30 | cat | 10 / 81 / 93 | 1.30 | 1.05 | 1.0 | 1 | 1 / 229 | 73 · 7.5 · +6 |
+| 30 | toad | 7 / 75 / 90 | 0.90 | 0.68 | 1.5 | 1 | 1 / 229 | 73 · 6.5 · +5 |
+| 30 | raven | 7 / 75 / 90 | 1.30 | 0.97 | 1.0 | 1 | 1 / 229 | 72 · 8.0 · +5 |
+| 30 | hare | 10 / 81 / 93 | 1.60 | 1.29 | 0.8 | 1 | 1 / 229 | 73 · 7.5 · +6 |
+| 30 | bat | 7 / 75 / 90 | 2.00 | 1.50 | 0.7 | 1 | 1 / 229 | 73 · 8.0 · +5 |
+| 40 | cat | 54 / 85 / 98 | 1.30 | 1.11 | 0.9 | 1 | 1 / 303 | 95 · 12.0 · +9 |
+| 40 | toad | 46 / 81 / 96 | 0.90 | 0.72 | 1.4 | 1 | 1 / 303 | 95 · 11.0 · +8 |
+| 40 | raven | 46 / 81 / 96 | 1.30 | 1.05 | 1.0 | 1 | 1 / 303 | 94 · 13.0 · +8 |
+| 40 | hare | 54 / 85 / 98 | 1.60 | 1.37 | 0.7 | 1 | 1 / 303 | 95 · 12.0 · +9 |
+| 40 | bat | 46 / 81 / 96 | 2.00 | 1.61 | 0.6 | 1 | 1 / 303 | 95 · 13.0 · +8 |
+| 50 | cat | 62 / 93 / 99 | 1.30 | 1.21 | 0.8 | 1 | 1 / 376 | 117 · 16.5 · +13 |
+| 50 | toad | 54 / 90 / 99 | 0.90 | 0.81 | 1.2 | 1 | 1 / 376 | 117 · 15.5 · +12 |
+| 50 | raven | 54 / 90 / 99 | 1.30 | 1.16 | 0.9 | 1 | 1 / 376 | 116 · 18.0 · +12 |
+| 50 | hare | 62 / 93 / 99 | 1.60 | 1.49 | 0.7 | 1 | 1 / 376 | 117 · 16.5 · +13 |
+| 50 | bat | 54 / 90 / 99 | 2.00 | 1.79 | 0.6 | 1 | 1 / 376 | 117 · 18.0 · +12 |
+| 60 | cat | 54 / 96 / 99 | 1.30 | 1.25 | 0.8 | 1 | 1 / 449 | 139 · 18.5 · +16 |
+| 60 | toad | 46 / 93 / 99 | 0.90 | 0.84 | 1.2 | 1 | 1 / 449 | 139 · 17.5 · +15 |
+| 60 | raven | 46 / 93 / 99 | 1.30 | 1.21 | 0.8 | 1 | 1 / 449 | 138 · 20.0 · +15 |
+| 60 | hare | 54 / 96 / 99 | 1.60 | 1.53 | 0.7 | 1 | 1 / 449 | 139 · 18.5 · +16 |
+| 60 | bat | 46 / 93 / 99 | 2.00 | 1.86 | 0.5 | 1 | 1 / 449 | 139 · 20.0 · +15 |
+
+**Reading it.** The touch needs a blow that lands, and a grade-1 familiar is the weakest
+attacker in the game: the cat is -4 to hit with a 1d2-4 scratch, so at level 1 it lands about 31 %
+of its blows against level 1 to 3 monsters (19 % against the best-defended, 69 % against the
+worst) and lays the hex 0.41 times a round, the first after 2.5 rounds on average (the hare 38 %
+and 0.61, the bat 25 % and 0.50). The design assumed a hex that sticks; at level 1 the cat is a
+slow way to lay one, and the witch's own Evil eye (1 mana of a 15 pool) is the faster. The
+familiar's hit rate catches up as it grows (+1 to hit per 4 levels of grade): 62 % median at level
+10, 81 % at 30, 93 % at 50. Not tuned (an owner call). The window is the monsters' bare Defence, so
+a geared monster is a little harder; and the table says nothing of the familiar reaching its
+target, only that it is beside it.
+
 
 ## Stat training
 

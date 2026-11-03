@@ -90,8 +90,9 @@ wiki's effect text appends "while raging".
 | `ally_mod` (`to_hit`, `protection`) | `World::ally_blow` (`fight.rs::resolve`) and `World::ally_protection` (`World::protection_of`), through an ally's *master's* mods (`world/ally.rs::ally_mods`; Beast-bond, docs/dev/allies.md) |
 | `ally_mod` (`count`, `duration_percent`, `lasting`, `most`) | `World::cast_summon` (`world/summon_spell.rs`): more come, a longer `Ally::until`, none, each spell's `most` raised (docs/dev/allies.md "Summons") |
 | `summon_bias` (`tag`, `weight`) | `World::summon_draw` (`world/summon.rs`), from `cast_summon`: the pool's weights (no item or talent yet; the owner's Q9 of #828) |
-| `familiar` | `World::bring_familiar` (`world/familiar.rs`, from `World::begin`): a familiar as the run begins (`docs/dev/familiar.md`) |
+| `familiar` | `World::bring_familiar` (`world/familiar.rs`, from `World::begin`): a familiar as the run begins; `has_active` for Call familiar, `World::start_calling` (`docs/dev/familiar.md`) |
 | `shared_sight` | `Perception::compute` (`perception.rs`): the companion's second viewpoint, its eyes and nose (Hunter's bond, `docs/dev/companion.md`) |
+| `familiar_sight` | `Perception::compute` (`perception.rs`): the same viewpoint on the familiar, its nose at least `familiars.toml`'s `nose`; no buffs (Familiar's sight, `docs/dev/familiar.md`) |
 | `shared_buffs` | `World::afflict` → `World::share_buff` (`world/bond.rs`): a buff lands on the player and their companion both (Hunter's bond) |
 | `sees_unaware` | `Perception::compute` (`perception.rs`): `SeenActor::unaware` from `surprise::creature_unaware` for each creature in view, false for all without it; read by look mode ("unaware of you") and `ui/glyphs.rs` (the unaware mark) (Stalker's eye, the ranger's at level 2) |
 | `startled_blow` | `World::startle` → `World::hair_trigger` (`world/free_blow.rs`): a check made against a hostile attacker beside the holder is answered by `Cue::Startled`'s free blow before the attack is rolled; `resolve` (and `cast.rs::spell_attack`) stop when it fells the attacker (Hair trigger) |
@@ -146,7 +147,7 @@ wiki's effect text appends "while raging".
 | `flurry_cost` | `World::flurry`: the second blow spends its cost (Ki) first, else none (`TalentMods::flurry_cost`; `docs/dev/resources.md`) |
 | `retribution { resource, cost }` (the paladin's at 25, #912; band-gated) | `World::retribution` (`world/smite.rs`), from `World::second_blow`'s `Cue::Attacked { hit }` arm before the riposte: a hostile beside the player whose melee attack hit them takes their smite (`smite_profile`) as `Free::Retribution`, its cost (zeal) spent first, else none (`TalentMods::retribution`; `docs/dev/combat.md`, `docs/dev/resources.md`) |
 | `hardened` | `World::level_up`, as the level comes (a level's hit points again, and `bonus` more, past `hp_level`) |
-| `resource_build` (Blood frenzy, Patient blade), `resource_max` (Mighty rage, Inner calm), `resource_start` (Battle trance), `resource_rate` (Battle trance, Inner calm, Steady hand, Patient blade) | `World::gain_resource` (beside the resource's own `builds`), `Actor::resource_max`, `Actor::resource_start` (`World::grant_resource`, `focus::hold`), `World::resource_rate` |
+| `resource_build` (Blood frenzy, Patient blade, Zealot), `resource_max` (Mighty rage, Inner calm), `resource_start` (Battle trance), `resource_rate` (Battle trance, Inner calm, Steady hand, Patient blade) | `World::gain_resource` (beside the resource's own `builds`), `Actor::resource_max`, `Actor::resource_start` (`World::grant_resource`, `focus::hold`), `World::resource_rate` |
 | `unstoppable` | `World::unstoppable` (`hurt`, `Harm::Actor`: `cost` of the rage via `spend_resource`), `World::live` (the numb statuses tick nothing while Raging lasts) |
 | `radiance` | `LightCache::sources` (a carried source, `RADIANCE` tag, while its status lasts) |
 | `inner_light` | `LightCache::sources` (a carried source, `INNER` tag, always: the player and the creatures see by it alike) |
@@ -172,6 +173,7 @@ wiki's effect text appends "while raging".
 | `song`, `virtuoso` | `world/song.rs` (`World::sing`: `TalentMods::song`, Virtuoso's free and a degree greater; its one cost via `World::spend_resource` or `World::spend_mana`; `Act::Sing`; the status at `severity` plus Music's `Effect::SongDegrees`, on the singer or, `on = "hearers"`, on each hostile hearer who fails `check` against `difficulty` plus Music's `Effect::SongCraft`: `World::lull`, the Lullaby's); `Ability::unavailable` (`Unavailable::Short` or `NoMana` by its cost) |
 | `cackle` | `world/witch.rs` (`World::cackle`, from `use_class`: the time of a cast; `World::own_hexes_in_sight`, the player's hexes, `Content::hex_statuses()` with `Effect::by` the player, on the creatures `perception` sees; each re-`afflict`ed at its severity plus `degrees`; refused, no time, with none; `Act::Cackle` at the talent's `noise`) |
 | `volley` | `world/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
+| `sic` | `world/sic.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; `Content::sic_range` the aiming mode's reach; `docs/dev/companion.md`) |
 | `spirit_weapon` | `world/spirit_weapon.rs` (`Action::Shape`, `World::use_class_shape`; `ClassActive::aims_shape`, `Aim::Shape`; the UI opens the shape list, `ui/shape_screen.rs`); the gifts in `Actor::melee` and `Actor::off_hand_blow` (`spirit_weapon::gifts`: `to_hit`, `threat` lower, `penetration = ALL_PROTECTION`); `magic::Numbers::of` and `describe::lines` (`spirit_gift`) |
 | `scribe` | `world/scribe.rs` (`Action::Scribe`, `World::start_scribe`; `ClassActive::aims_spell`, `Aim::Spell`; the UI opens the scribe list, `ui/scribe_screen.rs`, from `PerceptionView::scribes` and `blank_scrolls`); `Ability::unavailable` (a status blocking `cast` greys it) |
 | `merchants_eye` | `world/merchants_eye.rs` (`Action::UseOn`, `World::use_class_on`; `ClassActive::aims_item`, `Aim::Item`, `Ability::action_on`; the UI opens the identify list, `IdentifyBy::Class`) |
@@ -651,12 +653,13 @@ hash differently from before. The dump's `talents` layer marks it `(race)`, the 
 "race", and the character screen's birth-sign list leaves it out (`OwnTalent::race`).
 `racial_tests.rs` covers each rule, the prerequisites, the picks, and a replay.
 
-The `resources` system (#225, `docs/dev/resources.md`) is in the list: its four talents (R5,
-#253) are Battle trance (Might, berserker 6: rage starts 6 higher, decays at 67 %), Inner calm
+The `resources` system (#225, `docs/dev/resources.md`) is in the list: its five talents (R5,
+#253; Zealot, #914) are Battle trance (Might, berserker 6: rage starts 6 higher, decays at 67 %), Inner calm
 (Finesse, ascetic 18: ki +2 at most, back at 150 %), Steady hand (Weaponcraft, ranger 12: focus back
 at 150 %), and Patient blade (Shadow, thief 32: openings decay at 50 %, and a sneak attack that
-kills builds one more, the `sneak_kill` event); the only class-limited picks
-(`needs = { class, level }`). `world/resource_talent_tests.rs` covers each rule and the
+kills builds one more, the `sneak_kill` event), and Zealot (Grit, who holds Smite from level 6: a
+blow taken builds a second zeal); the only class-limited picks (`needs = { class, level }`, Zealot's
+by `needs = { talents = { smite = 1 }, level = 6 }`, the paladin alone holding Smite since #891). `world/resource_talent_tests.rs` covers each rule and the
 prerequisites. A talent of a resource the class has not been granted yet holds the change until
 it is (Martial arts grants ki at level 1, so Inner calm, at 18, always finds it). Wild guard (Might, berserker 6; #680) halves
 the frenzy stance's Dodge penalty (`stance_dodge`), the stance a berserker's rage holds them

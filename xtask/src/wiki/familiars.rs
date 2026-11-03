@@ -2,10 +2,11 @@
 //! the rares with their odds, the growth table of the small beasts only a familiar is, and the
 //! rules in words.
 
+use super::actions::at_normal_pace;
 use super::companions::{beast, growth_table};
 use super::text::{Term, link};
 use std::fmt::Write as _;
-use warlock_core::content::{Content, CreatureId};
+use warlock_core::content::{ActionKind, BASE_TURN, Content, CreatureId, price};
 
 /// Every race's starting beasts, then the rares with the odds.
 pub(super) fn starts(content: &Content) -> String {
@@ -41,7 +42,7 @@ pub(super) fn growth(content: &Content) -> String {
     let Some(rules) = content.familiars() else {
         return String::new();
     };
-    let mut beasts: Vec<CreatureId> = (rules.every_start().into_iter())
+    let mut beasts: Vec<CreatureId> = (rules.every_kind().into_iter())
         .filter(|&id| !content.creature(id).tameable)
         .collect();
     beasts.sort_by_key(|&id| {
@@ -61,6 +62,16 @@ pub(super) fn rules(content: &Content) -> String {
         .effect
         .status
         .map(|(status, _)| content.status(status));
+    let bargain: Vec<String> = (r.bargain_kinds.iter())
+        .map(|&id| {
+            let def = content.creature(id);
+            link(Term::Creature, &def.id, &def.name)
+        })
+        .collect();
+    let turn = at_normal_pace(price(
+        content.action_costs().cost(ActionKind::CallFamiliar),
+        BASE_TURN,
+    ));
     let rows = [
         (
             "The start",
@@ -84,6 +95,31 @@ pub(super) fn rules(content: &Content) -> String {
             "each on the creature it hit starts afresh at its own degree, when it is one that \
              stacks by refreshing"
                 .to_string(),
+        ),
+        (
+            "The calling",
+            format!(
+                "{} turns of sitting, each {turn}, and nothing else; the beast is drawn as at \
+                 the start, by chance",
+                r.call_turns
+            ),
+        ),
+        (
+            "The bargain's",
+            format!(
+                "from level {} of her class a calling's draw holds {} as well, one more beast \
+                 of her race's list; a start never does",
+                r.bargain_level,
+                bargain.join(", ")
+            ),
+        ),
+        (
+            "Her familiar's nose",
+            format!(
+                "with [Familiar's sight](#familiars-sight), it finds foes for her within {} cells, \
+                 or its kind's Nose where that is farther",
+                r.nose
+            ),
         ),
         (
             "Names",

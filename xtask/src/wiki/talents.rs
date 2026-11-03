@@ -756,6 +756,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                       sees, by its own eyes, and the foes its nose finds, \
                                       through the dark and closed doors"
             .into(),
+        TalentEffect::FamiliarSight => "you see what your [familiar](allies.md#familiars-sight) \
+                                        sees, by its own eyes, and the foes its nose finds, \
+                                        through the dark and closed doors"
+            .into(),
         TalentEffect::SharedBuffs => "a [buff](allies.md#hunters-bond) that lands on you or \
                                       your companion lands on the other too, at the same \
                                       strength; a hex never does"
@@ -1921,6 +1925,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         TalentEffect::Volley { shots } => format!(
             "active (the time of one shot, one exertion), at a cell: {shots} shots of the readied \
              missile weapon"
+        ),
+        TalentEffect::Sic {
+            status: id,
+            blows,
+            range,
+        } => format!(
+            "active (the time of a wait), at a creature you see within {range} cells that is \
+             hostile to you: your companion hunts it, and is {} ({blows} degrees): half again as \
+             fast, and each hit a critical with no confirmation, a degree each",
+            status(&id)
         ),
         TalentEffect::Song {
             on,

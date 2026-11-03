@@ -299,6 +299,8 @@ pub struct TalentMods {
     pub tame: i32,
     /// It sees what its companion sees (Hunter's bond; `Perception::compute`).
     pub shared_sight: bool,
+    /// It sees what its familiar sees (Familiar's sight; `Perception::compute`).
+    pub familiar_sight: bool,
     /// Its buffs and its companion's are shared (Hunter's bond; `world/bond.rs`).
     pub shared_buffs: bool,
     /// To hit on its melee blows and its companion's at a creature beside them both (Pack
@@ -714,6 +716,8 @@ pub struct TalentMods {
     pub catch_missiles: Option<ResourceCost>,
     /// The active Volley, if it has it.
     pub volley: Option<Volley>,
+    /// The active Sic 'em, if it has it (`world/sic.rs`).
+    pub sic: Option<Sic>,
     /// The songs it sings (Inspire), in the order first named: one a class active.
     pub songs: Vec<Song>,
     /// The status a song on the singer gives instead, every song free and a degree greater
@@ -781,6 +785,15 @@ pub struct FireBreath {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Volley {
     pub shots: u8,
+}
+
+/// The active Sic 'em (spec §8 "Class abilities"; `world/sic.rs`): the companion is set on a
+/// creature the player sees within `range`, suffering `blows` degrees of `status`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Sic {
+    pub status: StatusId,
+    pub blows: u16,
+    pub range: i32,
 }
 
 /// Rapid shot (spec §8 "Resources"): a shot spends `cost` of `resource` (Focus), when there is
@@ -1167,12 +1180,14 @@ impl TalentMods {
             A::StepOfTheWind => self.wind_step.is_some(),
             A::Stillness => self.stillness.is_some(),
             A::Volley => self.volley.is_some(),
+            A::Sic => self.sic.is_some(),
             A::Lurk => self.lurk.is_some(),
             A::LowBlow => self.low_blow,
             A::MerchantsEye => self.merchants_eye,
             A::SpiritWeapon => self.spirit_weapon.is_some(),
             A::MasterThief => self.finisher,
             A::Inspire | A::Lullaby => self.songs.iter().any(|s| s.active == active),
+            A::CallFamiliar => self.familiar,
             A::Consecrate => self.consecrate.is_some(),
             A::Sanctuary => self.sanctuary.is_some(),
             A::Knock => self.knock.is_some(),
@@ -1398,6 +1413,7 @@ impl TalentMods {
             TalentEffect::Familiar => self.familiar = true,
             TalentEffect::Tame { bonus } => self.tame += bonus,
             TalentEffect::SharedSight => self.shared_sight = true,
+            TalentEffect::FamiliarSight => self.familiar_sight = true,
             TalentEffect::SharedBuffs => self.shared_buffs = true,
             TalentEffect::PackTactics { to_hit } => self.pack_tactics += to_hit,
             TalentEffect::SharesFavouredPrey => self.shares_favoured_prey = true,
@@ -2078,6 +2094,19 @@ impl TalentMods {
                 }
             }
             TalentEffect::Volley { shots } => self.volley = Some(Volley { shots }),
+            TalentEffect::Sic {
+                status,
+                blows,
+                range,
+            } => {
+                if let Some(status) = content.status_id(&status) {
+                    self.sic = Some(Sic {
+                        status,
+                        blows,
+                        range,
+                    });
+                }
+            }
             TalentEffect::Song {
                 id,
                 on,

@@ -324,12 +324,12 @@ const CASES: &[Case] = &[
         ..BASE
     },
     Case {
-        // A band crossed (the `fall` line) and the Alignment row: seed 9's Basilisk-born paladin
-        // (#272) starts at 475 with his story's nudge, Good, so the kick takes him down to Kind
-        // and empties his zeal (#910; the Zeal row holds what the blows built back since).
+        // A band crossed (the `fall` line) and the Alignment row: seed 9's Basilisk-born warrior
+        // (#272) starts Neutral, so the kick takes him down to Callous. A warrior, as a paladin's
+        // zeal deserting him pushes the line behind the pager (#910, #914).
         name: "alignment-band-character",
         scenario: "courtyard",
-        character: Some("human,male,paladin"),
+        character: Some("human,male,warrior"),
         seed: Some(9),
         actions: "move:E*36 move:S pickup move:NE move:NE pickup:b move:SE move:E*5 move:S*5 \
             move:E*5 kick:N",
@@ -495,6 +495,15 @@ const CASES: &[Case] = &[
         character: Some("human,male,wizard"),
         kit: true,
         actions: "xp:3000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A ranger at level 40 (#921): Sic 'em among the class abilities, asking for a cell.
+    Case {
+        name: "abilities-menu-sic",
+        character: Some("human,male,ranger"),
+        kit: true,
+        actions: "xp:90000000 levelup:auto",
         screen: Some("abilities"),
         ..BASE
     },

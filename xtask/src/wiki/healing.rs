@@ -296,6 +296,12 @@ fn also(content: &Content, def: &StatusDef) -> String {
                 .to_string(),
         );
     }
+    if def.auto_critical {
+        parts.push(
+            "every hit is a critical with no confirmation roll, and each hit spends a degree"
+                .to_string(),
+        );
+    }
     if def.cost != 100 {
         parts.push(format!("every action takes {}% of the time", def.cost));
     }

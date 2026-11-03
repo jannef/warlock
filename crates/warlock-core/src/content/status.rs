@@ -39,9 +39,10 @@ pub const MAX_REGEN: u16 = 1000;
 /// The most hit points one tick may cost.
 pub const MAX_TICK_DAMAGE: u16 = 1000;
 /// What a status may make every action cost, in percent: half as much (Hasted) to ten times as
-/// much. Only a spell's buff on its caster, the player, may hasten (`spell_def` refuses a hex's
-/// or a damage spell's that would), so a creature's quickest step is what it always was (a
-/// rest's batching counts on it, `World::out_of_view_for`).
+/// much. Only a spell's buff on its caster, the player, and Sic 'em's Savage on their companion
+/// may hasten (`spell_def` refuses a hex's or a damage spell's that would), so the quickest step
+/// of a creature that disturbs a rest is what it always was (a rest's batching counts on it,
+/// `World::out_of_view_for`; an ally never disturbs one).
 pub const COST_PERCENT: RangeInclusive<u32> = 50..=1000;
 
 /// What makes a status a **hold** (`hold` in data; Held, spec §8 "Status effects"): the actor
@@ -470,6 +471,8 @@ struct StatusSpec {
     #[serde(default)]
     flat_footed: bool,
     #[serde(default)]
+    auto_critical: bool,
+    #[serde(default)]
     per_action: bool,
     follows: Option<String>,
     wound: Option<WoundSpec>,
@@ -565,6 +568,9 @@ pub struct StatusDef {
     /// sneak attacks"): its Dexterity and Dodge count nothing toward its Defence, it makes no
     /// free blow out of its turn, and sneak dice land on it (`world/surprise.rs`).
     pub flat_footed: bool,
+    /// Its sufferer's blows that hit are criticals without the confirmation roll, and each such
+    /// hit spends a degree (Savage, Sic 'em's; `world/sic.rs`).
+    pub auto_critical: bool,
     /// It eases a degree with each action its sufferer takes, instead of with time (Staggered,
     /// Pinned, Light-footed; the combat progression design §6): at one degree it is the next
     /// action's, which is priced with it. One given during an action is not eased by that
@@ -638,6 +644,7 @@ impl StatusDef {
             && !self.sleeps
             && !self.hides
             && !self.flat_footed
+            && !self.auto_critical
             && !self.per_action
             && self.follows.is_none()
             && self.wound.is_none()
@@ -867,6 +874,7 @@ fn resolve(
         sleeps: spec.sleeps,
         hides: spec.hides,
         flat_footed: spec.flat_footed,
+        auto_critical: spec.auto_critical,
         per_action: spec.per_action,
         follows: None,
         wound,

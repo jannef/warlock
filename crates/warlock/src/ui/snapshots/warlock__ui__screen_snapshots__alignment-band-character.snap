@@ -2,39 +2,39 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You kick the shopkeeper hard! "You will pay for that!" shouts Grimbold. You feel your
+ You kick the shopkeeper hard! "You will pay for that!" shouts Grimbold. You feel your heart
+ harden. The shopkeeper stabs you.
 ┌─ Character ──────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                  │
 │ Aldric                                                                                           │
 │                                                                                                  │
 │ Race    Human                                                                                    │
 │ Gender  Male                                                                                     │
-│ Class   Paladin                                                                                  │
+│ Class   Warrior                                                                                  │
 │ Age 33 · born 22 Deepwinter 1410 · year of the Water Basilisk                                    │
 │ Stars   Unblinking, Transfixing stare, Trusted by none, Always a way, Tidal                      │
 │                                                                                                  │
 │ St  Strength      14   Main hand  long sword                                                     │
-│ Dx  Dexterity     10              +3 to hit, 1d9+3 slashing or piercing                          │
-│ To  Toughness      9                                                                             │
+│ Dx  Dexterity     12              +3 to hit, 1d9+3 slashing or piercing                          │
+│ To  Toughness     14                                                                             │
 │ In  Intelligence  10                                                                             │
-│ Wi  Willpower     15                                                                             │
-│ Pr  Presence      11                                                                             │
+│ Wi  Willpower     13                                                                             │
+│ Pr  Presence       9                                                                             │
 │                                                                                                  │
 │ Lv  Level         1                                                                              │
-│ XP  Experience    0 / 211                                                                        │
+│ XP  Experience    0 / 192                                                                        │
 │     Talents       9                                                                              │
-│ HP  Hit points    13/19   MP  Mana       6/6                                                     │
-│ Dv  Defence       15      Pv  Protection  4                                                      │
+│ HP  Hit points    19/25   MP  Mana       2/2                                                     │
+│ Dv  Defence       16      Pv  Protection  3                                                      │
 │     Stance        Neutral                                                                        │
-│     Stamina       9/9                                                                            │
-│     Zeal          2/10                                                                           │
-│     Alignment     Kind                                                                           │
+│     Stamina       12/12                                                                          │
+│     Alignment     Callous                                                                        │
 │     Resistant to  acid                                                                           │
 │                                                                                                  │
-│ Weight 83.9 kg (you 70 kg, carrying 13.9 kg)                                                     │
-│ Burdened over 18.5 kg, strained over 37 kg, overloaded over 55.5 kg                              │
+│ Weight 84.2 kg (you 70 kg, carrying 14.2 kg)                                                     │
+│ Burdened over 21 kg, strained over 42 kg, overloaded over 63 kg                                  │
 │                                                                                                  │
 │ @ or Esc close   A skills                                                                        │
 └─ 1 Char · 2 Inv · 3 Eqp · 4 Skl · 5 Weap · 6 Mag · 7 Qst · 8 Tal · 9 Story ──────────────────────┘
 
- The Courtyard  ·  HP 13/19  ·  MP 6/6  ·  Sta 9/9  ·  Zeal 2/10  ·  Lv 1  ·  06:35      ? controls
+ The Courtyard  ·  HP 19/25  ·  MP 2/2  ·  Sta 12/12  ·  Lv 1  ·  06:35  ·  Overcast     ? controls

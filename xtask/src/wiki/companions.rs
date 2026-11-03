@@ -97,6 +97,7 @@ pub(super) fn growth_table(content: &Content, beasts: &[CreatureId]) -> String {
                     name: String::new(),
                     grade: rules.growth.grade(grade, def.level),
                     scent: None,
+                    quarry: None,
                 }),
                 order: Order::Follow,
                 retinue: false,

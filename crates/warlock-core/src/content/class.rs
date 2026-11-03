@@ -631,6 +631,9 @@ pub enum ClassActive {
     Stillness,
     /// Shots at a cell, several for the price of one, then a cooldown (the ranger's Volley).
     Volley,
+    /// The companion set on a creature the player sees, savage, for focus (the ranger's Sic 'em,
+    /// `world/sic.rs`).
+    Sic,
     /// A wait in ambush: a hostile stepping up beside you takes your blow at once (the
     /// thief's Lurk).
     Lurk,
@@ -658,6 +661,9 @@ pub enum ClassActive {
     /// A loud cackle that holds every hex of the witch's on the creatures she sees a degree
     /// longer (the witch's Cackle, `world/witch.rs`).
     Cackle,
+    /// An hour's sitting that brings a new familiar when the witch has none (the witch's Call
+    /// familiar, given by Familiar, `world/familiar.rs`).
+    CallFamiliar,
     /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
     Knock,
     /// A scroll of a spell the player knows written on a blank scroll, for three casts' worth of
@@ -690,6 +696,7 @@ impl ClassActive {
         ClassActive::StepOfTheWind,
         ClassActive::Stillness,
         ClassActive::Volley,
+        ClassActive::Sic,
         ClassActive::Lurk,
         ClassActive::LowBlow,
         ClassActive::MasterThief,
@@ -699,6 +706,7 @@ impl ClassActive {
         ClassActive::Orison,
         ClassActive::Sanctuary,
         ClassActive::Cackle,
+        ClassActive::CallFamiliar,
         ClassActive::Knock,
         ClassActive::Scribe,
         ClassActive::MerchantsEye,
@@ -724,6 +732,7 @@ impl ClassActive {
             ClassActive::StepOfTheWind => "step_of_the_wind",
             ClassActive::Stillness => "stillness",
             ClassActive::Volley => "volley",
+            ClassActive::Sic => "sic",
             ClassActive::Lurk => "lurk",
             ClassActive::LowBlow => "low_blow",
             ClassActive::MasterThief => "master_thief",
@@ -733,6 +742,7 @@ impl ClassActive {
             ClassActive::Orison => "orison",
             ClassActive::Sanctuary => "sanctuary",
             ClassActive::Cackle => "cackle",
+            ClassActive::CallFamiliar => "call_familiar",
             ClassActive::Knock => "knock",
             ClassActive::Scribe => "scribe",
             ClassActive::MerchantsEye => "merchants_eye",
@@ -797,9 +807,9 @@ impl ClassActive {
         matches!(self, ClassActive::Inspire | ClassActive::Lullaby)
     }
 
-    /// Whether it asks for a cell before it is used (`use:volley:12,5`).
+    /// Whether it asks for a cell before it is used (`use:volley:12,5`, `use:sic:12,5`).
     pub const fn aims_cell(self) -> bool {
-        matches!(self, ClassActive::Volley)
+        matches!(self, ClassActive::Volley | ClassActive::Sic)
     }
 
     /// Whether it asks for a stack the player carries before it is used
@@ -834,6 +844,7 @@ impl ClassActive {
             | ClassActive::VeteransWind
             | ClassActive::PatientDefence
             | ClassActive::Lurk
+            | ClassActive::Sic
             // It takes no time (`takes_no_time`): none block a wait.
             | ClassActive::StepOfTheWind
             | ClassActive::Stillness => ActionKind::Wait,
@@ -858,6 +869,8 @@ impl ClassActive {
             ClassActive::MerchantsEye => ActionKind::Read,
             // A turn of it; a scroll takes a study's turns (`world/scribe.rs`).
             ClassActive::Scribe => ActionKind::Scribe,
+            // A turn of it; the ritual takes `call_turns` of them (`world/familiar.rs`).
+            ClassActive::CallFamiliar => ActionKind::CallFamiliar,
             // A weapon taken in hand, as wielding one is.
             ClassActive::SpiritWeapon => ActionKind::Wield,
         }

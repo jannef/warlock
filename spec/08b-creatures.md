@@ -163,7 +163,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   out goes in its type's words ("The wolf slips back into the dark."). **The animal companion**
   (`warlock-core/src/world/companion.rs`, `content/companion.rs` and `data/companions.toml`;
   #916, design `docs/design/ranger-companion.md`, `docs/dev/companion.md`): an ally that is the
-  player's for good, `source = Companion(CompanionData { name, grade })`, `until = None`; at most
+  player's for good, `source = Companion(CompanionData { name, grade, .. })`, `until = None`; at most
   one at a time. The ranger's **Animal companion** (level 1) brings one as the run begins: a
   beast drawn from the character's race's list (`[start.by_race]`: a human's hound or boar, an
   elf's lynx or hound, a goblin's large spider, rat, or bat, …; one to three a race, of level at
@@ -234,7 +234,15 @@ developer notes (CLAUDE.md, `docs/dev/`).
   neck ("Snel has no use for that."); goods unpaid for. Its magic works on the beast as on any
   wearer, and wearing it on the beast teaches the player nothing. There is no taking one back but
   giving another or its death, when the collar is in its pile. Look mode says "Snel, your hound
-  (unhurt), wearing a jade amulet, ...". The ranger's last ability (C6) is the design's next slice.
+  (unhurt), wearing a jade amulet, ...".
+  **Sic 'em** (the ranger's level 40, #921; `use:sic:X,Y`,
+  `world/sic.rs`, 5 Focus, the time of a wait, no cooldown): aimed at a creature the player sees
+  within 10 cells that is hostile to them, it sets the companion on it ("Snel goes for the
+  kobold's throat."; refused, no time, with no companion on the level or no such creature): a
+  Hunt whose target is that creature before any nearer while the beast sees or smells it, its
+  cell following it where the player sees that (a new order ends it), and **Savage** on the beast
+  (3 degrees, half again as fast, a degree a minute): each blow that hits is a critical with no
+  confirmation roll and spends a degree. It is neither a buff spell's status nor a potion's, so Hunter's bond's shared buffs never carry it. The ranger's companion design is complete (C1 to C6).
   **The familiar** (`warlock-core/src/world/familiar.rs`,
   `content/familiar.rs` and `data/familiars.toml`; #929, design `docs/design/witch-familiar.md`,
   `docs/dev/familiar.md`): the witch's small beast, an ally with `source =
@@ -254,9 +262,23 @@ developer notes (CLAUDE.md, `docs/dev/`).
   statuses are silent. **The harrying**: its target is the nearest creature it sees under a hex of
   its master's, within its order's reach, before any other; else the nearest as any ally's. **Two
   kept beasts beside the player**, with something to treat on one: Heal asks a direction first (the
-  wait key: the player); Give asks too, as the collar says; with one beside, nothing is asked. Calling a new one (F2, #930) and the
-  familiar's story lines (F3, #931; until then the companion chapter's plain line) are the design's
-  next slices.
+  wait key: the player); Give asks too, as the collar says; with one beside, nothing is asked. **Call familiar** (#930,
+  `use:call_familiar`, a class active Familiar gives, the abilities menu's Class group, nothing to
+  aim): `call_turns` (600: an hour) turns of the `call_familiar` action through `World::keep_at`,
+  for nothing but the time: no mana, cooldown, count, or marks. Refused with no time with a familiar
+  alive anywhere, the retinue too ("Your familiar lives yet."; the menu: "your familiar lives"), with
+  a hostile the player sees ("Not with that watching."; "something is watching"), while a status
+  blocks a cast, and without the data ("Nothing comes."). What would stop a rest breaks it off: the
+  time is spent, nothing else lost. At the end two draws on the gameplay stream, the start's draw,
+  with `bargain_kinds` (the imp) in the race's list from `bargain_level` (30) of the character's
+  class level; "Something comes out of the dark and sits at your feet." and the kind's arrival, the
+  name on the same stream as a start's, at the player's grade; on the overworld in the retinue; with
+  no free cell "Nothing comes." and the hour spent. **Familiar's sight** (the witch's level
+  25, #932; passive): the shared sight of Hunter's bond with the familiar as its viewpoint, by the
+  same rules, its nose reaching `nose` cells of `familiars.toml` (6) or its type's where that is
+  farther (the type's alone still decides how the beast itself hunts); no buff is shared, and a
+  companion she keeps lends her nothing. The familiar's story lines (F3, #931; until then
+  the companion chapter's plain line) are the design's next slice.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

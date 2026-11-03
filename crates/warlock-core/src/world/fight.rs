@@ -801,6 +801,8 @@ impl World {
         let profile = profile.map(|p| self.ally_blow(attacker, p));
         // Pack tactics: a flanked creature, the companion's share of the prey (`pack.rs`).
         let profile = profile.map(|p| self.pack_blow(attacker, target, kind, p));
+        // Sic 'em's Savage: a sure critical, a degree for each hit (`sic.rs`).
+        let profile = profile.map(|p| self.savage_blow(attacker, p));
         // Caught unawares (`surprise.rs`): the initiative check, before the strike's draws.
         let missile = matches!(kind, AttackKind::Ranged | AttackKind::Thrown);
         // A lurk's blow finds a creature not hunting the player unawares; a low blow is a sneak
@@ -842,6 +844,9 @@ impl World {
         let blow = blow.map(|b| self.lore_blow(attacker, target, b));
         // Holy wrath's die (`smite.rs`).
         let blow = blow.map(|b| self.holy_wrathed(attacker, target, b));
+        if blow.is_some_and(|b| b.strike.is_hit()) {
+            self.savage_spent(attacker, events);
+        }
         // Diamond soul's catch (`ascetic.rs`): a missile's hit undone for a point of ki.
         let blow = self.caught_shot(target, (missile, with), blow, events);
         events.push(Event::Attacked {

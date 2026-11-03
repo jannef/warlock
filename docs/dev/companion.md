@@ -4,8 +4,8 @@ Developer notes for the companion, a beast that is the player's for good (spec �
 animal companion"; the design is `docs/design/ranger-companion.md`, §18 and §20 the owner's
 decisions, which override the rest). Slices **C1** (#916: the starting beast, the story's chapter,
 growth, always along, the nose), **C2** Tame (#917, "Taming" below), **C3** the collar (#918,
-below), **C4** Pack tactics (#919, below), and **C5** Hunter's bond (#920, below) are this file;
-C6 Sic 'em, C7 the wild beasts, C8 the probe build on it. The ally core it uses as
+below), **C4** Pack tactics (#919, below), **C5** Hunter's bond (#920, below), and **C6** Sic 'em
+(#921, below) are this file; the design is complete, C7 the wild beasts and C8 the probe aside. The ally core it uses as
 it is (the side, the arm, the orders, the retinue, the kill credit) is `docs/dev/allies.md`.
 The witch's familiar (`docs/dev/familiar.md`) is the same **kept** beast: what here is the name,
 growth, always along, the words, the status bar, and the Character screen's row reads
@@ -22,6 +22,7 @@ pub struct CompanionData {
     pub name: String,            // "Snel", said without an article
     pub grade: u8,               // its own level: its master's, never below its type's
     pub scent: Option<ActorId>,  // what its nose is on (the growl is said once per thing)
+    pub quarry: Option<ActorId>, // what Sic 'em set it on, until a new order
 }
 ```
 
@@ -230,7 +231,9 @@ flanked too, and another type nothing).
 
 The ranger's level 25 (`assets/data/talents/hunters_bond.toml`: tree `class`, `granted`, effects
 `shared_sight` and `shared_buffs`, systems `vision`, `allies`, `status`). Two separate effects, so
-the witch's familiar (#932) can take the sight and the nose without the buffs.
+the witch's familiar takes the sight and the nose without the buffs (`TalentEffect::FamiliarSight`,
+the same viewpoint, `docs/dev/familiar.md` "Familiar's sight"; `shared_sight` itself reads only the
+companion).
 
 **Shared sight** (`TalentEffect::SharedSight` → `TalentMods::shared_sight`), a second viewpoint in
 `Perception::compute` (`perception.rs::BondView`, `bond_view`), only while the companion stands on
@@ -267,10 +270,50 @@ closed door, and not behind a wall; memory; dazzle; the retinue lends no eyes; a
 and a hex never; a buff reaches a companion in the retinue). `class_rogue_tests.rs` pins the
 table's row.
 
+## Sic 'em (C6, #921)
+
+The ranger's level 40 (`assets/data/talents/sic.toml`: tree `class`, `granted`, effect `sic` with
+`status = "savage"`, `blows = 3`, `range = 10`, `resource = { id = "focus", cost = 5 }`, systems
+`combat`, `resources`, `allies`). `TalentEffect::Sic` (checked: a known status with
+`auto_critical` and no tick, `blows` 1 to its `max`, `range` 1 to 20) → `TalentMods::sic`;
+`ClassActive::Sic` (`aims_cell`, so `Aim::Cell` and `use:sic:12,5`, through `World::use_class_at`;
+the cost a wait's). `Content::sic_range` is `Ability::reach` for the aiming mode. The code is
+`world/sic.rs`:
+
+- **Refused**, no time, nothing spent: short of focus (`may_use_class`); no companion on the level
+  or it is in the retinue ("You have no companion here."; the menu's `Unavailable::NoCompanion`,
+  "no companion here", read from `AllyView` in `PerceptionView::abilities`); out of reach; no
+  creature the player sees on the cell (a disguised mimic is none; nor is the beast); one not
+  hostile to the player.
+- **The hunt**: `set_order(Hunt { at })` then `CompanionData::quarry`. `ally_plan`'s Hunt arm asks
+  `World::quarry_sensed` first: the quarry by `senses` (sight, then the nose), so it goes for that
+  creature before a nearer one. The hunt's cell follows it **where the player sees that cell**:
+  the dumps print the order's cell (`allies`, `companion`), and hidden information cannot leak, so
+  an unseen quarry's cell stays the last the player saw. (A ranger of this level has Hunter's bond,
+  so they see what the beast senses and the gate rarely bites.) Lost, it is the ordinary hunt: what
+  is near the last cell, then "looks back at you". `set_order` clears the quarry, so any order, and
+  the hunt's own end, end it.
+- **Savage** (`data/status.toml`): degrees 3, `refresh`, `eases` 60, `cost` 67 (half again as fast;
+  allies never disturb a rest, so `World::out_of_view_for` stays exact), `auto_critical`
+  (`StatusDef::auto_critical`). `World::savage_blow`, a hook in `fight.rs::resolve` after
+  `pack_blow`, sets `Profile::sure_critical` while the attacker suffers one, the read
+  `combat::strike_with` has for the finisher: no confirmation roll, and a target with no vitals
+  still takes a plain hit. `World::savage_spent`, after the strike, spends a degree for each blow
+  that hits (`Strike::is_hit`: soaked or resisted too), the status gone at none.
+
+**Hunter's bond** never carries Savage to the ranger: its door (`bond.rs::is_buff`) passes only
+what a buff spell's circle row or a potion lends, and Savage is neither (nor does `circles.toml`
+list it). It reads only on the companion's blows and is the price of Focus.
+
+Tests: `world/sic_tests.rs` (the table's row and data; the set-on, its focus and time; the
+refusals; a neutral creature; the menu; every hit a critical and a degree, gone at three; speed;
+easing by the minute; the quarry before a nearer foe, the cell following only where seen, the nose
+through a door; a new order and a dead quarry; no crossing; a save and a replay).
+
 ## What the player sees
 
 - **Messages**: above; the start's "Snel, your hound, pads at your heel.", growth's "Snel grows
-  stronger.", the nose's growl.
+  stronger.", the nose's growl, Sic 'em's "Snel goes for the kobold's throat."
 - **The status bar** (`ui/mod.rs::status_segments`): "Snel: unhurt" (`Health::word`), "Snel: with
   you" in the retinue; priority 2, after the stance.
 - **Look mode** (`ui/look.rs`): "Snel, your hound (unhurt), on grass." (`SeenActor::companion`

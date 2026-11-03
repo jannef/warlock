@@ -202,6 +202,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Cause wounds",
                 "Malison",
                 "Second sight",
+                "Familiar's sight",
                 "Curse of sloth",
                 "Blight",
                 "Cauldron",

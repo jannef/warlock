@@ -1,6 +1,7 @@
 //! The resource talents (spec §8 "Talents" and "Resources"; #253): Battle trance's higher start
 //! and slower decay of rage, Inner calm's larger and quicker ki, Steady hand's quicker focus,
-//! and Patient blade's slower openings and the second opening of a sneak attack that kills.
+//! Patient blade's slower openings and the second opening of a sneak attack that kills, and
+//! Zealot's second zeal a blow taken (#914).
 //! Each reads the one hook it names: `Actor::resource_start`, `Actor::resource_max`,
 //! `World::resource_rate`, and `World::gain_resource`.
 
@@ -194,6 +195,47 @@ fn a_sneak_attack_that_kills_builds_the_second_opening_in_a_fight() {
 }
 
 #[test]
+fn zealot_builds_two_zeal_a_blow_taken_and_no_more_a_blow_given() {
+    let spec: CharacterSpec = "human,male,paladin".parse().expect("a character");
+    let mut w = World::with_character(CONTENT.clone(), "den", Some(1), Some(&spec)).expect("world");
+    let mut twin = World::from_state(CONTENT.clone(), w.state().clone()).expect("restores");
+    give(&mut w, "zealot");
+    set(&mut w, "zeal", 0);
+    set(&mut twin, "zeal", 0);
+    let player = w.state.player;
+    w.gain_resource(player, Build::Struck);
+    twin.gain_resource(player, Build::Struck);
+    assert_eq!(held(&w, "zeal"), Some(2));
+    assert_eq!(held(&twin, "zeal"), Some(1));
+    w.gain_resource(player, Build::Hit);
+    twin.gain_resource(player, Build::Hit);
+    assert_eq!(held(&w, "zeal"), Some(3), "a blow given builds its one");
+    assert_eq!(held(&twin, "zeal"), Some(2));
+}
+
+#[test]
+fn a_rats_bites_build_a_zealot_more_zeal_in_the_same_fight() {
+    let spec: CharacterSpec = "human,male,paladin".parse().expect("a character");
+    let mut more = 0;
+    for seed in 0..20 {
+        let mut w =
+            World::with_character(CONTENT.clone(), "den", Some(seed), Some(&spec)).expect("world");
+        let mut twin = World::from_state(CONTENT.clone(), w.state().clone()).expect("restores");
+        give(&mut w, "zealot");
+        for w in [&mut w, &mut twin] {
+            set(w, "zeal", 0);
+            run(w, "wait*5");
+        }
+        // Zeal draws nothing, so the twins fight the same fight.
+        assert_eq!(w.state.player().hp, twin.state.player().hp, "seed {seed}");
+        let (zealous, plain) = (held(&w, "zeal"), held(&twin, "zeal"));
+        assert!(zealous >= plain, "seed {seed}");
+        more += u32::from(zealous > plain);
+    }
+    assert!(more > 0, "some bite built the second point");
+}
+
+#[test]
 fn the_resource_talents_need_their_class_and_level() {
     let pick = |spec: &str, level: u8, talent: &str| {
         let spec: CharacterSpec = spec.parse().expect("a character");
@@ -228,4 +270,7 @@ fn the_resource_talents_need_their_class_and_level() {
     assert!(!pick("human,male,ranger", 18, "inner_calm"));
     assert!(pick("human,male,thief", 32, "patient_blade"));
     assert!(!pick("human,male,thief", 31, "patient_blade"));
+    assert!(pick("human,male,paladin", 6, "zealot"));
+    assert!(!pick("human,male,paladin", 5, "zealot"), "too early");
+    assert!(!pick("human,male,warrior", 6, "zealot"), "holds no Smite");
 }

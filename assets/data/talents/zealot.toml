@@ -1,0 +1,8 @@
+[[talent]]
+id = "zealot"
+name = "Zealot"
+tree = "grit"
+description = "Every blow that lands on you stokes your zeal the more."
+needs = { talents = { smite = 1 }, level = 6 }
+effects = [{ kind = "resource_build", resource = "zeal", on = "struck", amount = 1 }]
+systems = ["resources"]

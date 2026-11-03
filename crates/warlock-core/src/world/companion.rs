@@ -42,6 +42,9 @@ pub struct CompanionData {
     /// once per thing scented.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scent: Option<ActorId>,
+    /// What Sic 'em set it on, while that hunt lasts (`sic.rs`): an order clears it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quarry: Option<ActorId>,
 }
 
 impl Actor {
@@ -49,6 +52,13 @@ impl Actor {
     /// rules read this).
     pub fn companion(&self) -> Option<&CompanionData> {
         match &self.ally.as_ref()?.source {
+            AllySource::Companion(data) => Some(data),
+            AllySource::Summoned { .. } | AllySource::Familiar(_) => None,
+        }
+    }
+
+    pub(super) fn companion_mut(&mut self) -> Option<&mut CompanionData> {
+        match &mut self.ally.as_mut()?.source {
             AllySource::Companion(data) => Some(data),
             AllySource::Summoned { .. } | AllySource::Familiar(_) => None,
         }
@@ -158,6 +168,7 @@ impl World {
             name: String::new(),
             grade,
             scent: None,
+            quarry: None,
         };
         let id = self.make_ally(creature, at, AllySource::Companion(data), None);
         let name = name_for(&content, self.state.seed, id);
@@ -200,6 +211,7 @@ impl World {
                 name: name.clone(),
                 grade,
                 scent: None,
+                quarry: None,
             }),
             order: super::Order::Follow,
             retinue: false,
@@ -285,9 +297,21 @@ pub(crate) fn smelt(
     me: &Actor,
     wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
 ) -> Vec<(ActorId, Pos)> {
-    let Some(nose) = content.creature(me.creature).nose else {
-        return Vec::new();
-    };
+    match content.creature(me.creature).nose {
+        Some(nose) => smelt_within(state, content, me, nose, wanted),
+        None => Vec::new(),
+    }
+}
+
+/// [`smelt`] with a reach of `nose` cells, whatever `me`'s type has (a familiar's for Familiar's
+/// sight, `Perception::compute`).
+pub(crate) fn smelt_within(
+    state: &WorldState,
+    content: &Content,
+    me: &Actor,
+    nose: i32,
+    wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
+) -> Vec<(ActorId, Pos)> {
     let mut near: Vec<(i32, ActorId, Pos)> = (state.actors.values())
         .filter(|a| a.level == me.level && a.id != me.id && !a.in_retinue())
         .filter(|a| a.pos.chebyshev(me.pos) <= nose)
