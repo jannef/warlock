@@ -326,3 +326,16 @@ fn a_tame_replays() {
     assert!(divergence.is_none(), "{divergence:?}");
     assert_eq!(played.state_hash(), w.state_hash());
 }
+
+#[test]
+fn a_witch_with_a_familiar_may_still_tame_a_companion() {
+    let mut w = world_with("hound", None, "witch", "\"dried_meat*2\"");
+    train(&mut w, Some(200));
+    let hound = beast(&w);
+    assert!(w.familiar().is_some(), "the witch begins with a familiar");
+    assert!(w.companion().is_none());
+    assert!(tame(&mut w).took_turn);
+    assert_eq!(w.companion(), Some(hound), "{:?}", said(&w));
+    assert!(w.familiar().is_some(), "the familiar stays");
+    assert_eq!(w.perception().kept().count(), 2);
+}
