@@ -206,6 +206,17 @@ comes and the hour is lost. On the overworld it joins her at once and steps out 
 From level 30 of her class the draw may answer with an [imp](creatures.md#creature-imp), one more
 beast of her race's list: it stings and it poisons, and its touch is the same evil eye.
 
+### Familiar's sight
+
+From level 25 the witch's **[Familiar's sight](talents.md#talent-familiars-sight)** lets her share
+what her familiar has, while it stands on the same level (not while it rides with her across the
+overworld). This is the [shared sight](#hunters-bond) of Hunter's bond, by the same rules: she sees
+every cell it sees, by its own eyes, and the cell of every foe its nose finds, through the dark and
+a **closed door**, never a wall. A familiar's nose reaches for her at least as far as the rules
+below say, even a kind with no nose of its own; it still hunts by eye. No
+[buff](status-effects.md#buffs-and-cooldowns) is shared, and a companion she keeps lends her
+nothing.
+
 ### Starting familiars
 
 The kind is drawn by chance as the run begins. [Creatures in

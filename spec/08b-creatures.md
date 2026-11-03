@@ -252,7 +252,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   with `bargain_kinds` (the imp) in the race's list from `bargain_level` (30) of the character's
   class level; "Something comes out of the dark and sits at your feet." and the kind's arrival, the
   name on the same stream as a start's, at the player's grade; on the overworld in the retinue; with
-  no free cell "Nothing comes." and the hour spent. The familiar's story lines (F3, #931; until then
+  no free cell "Nothing comes." and the hour spent. **Familiar's sight** (the witch's level
+  25, #932; passive): the shared sight of Hunter's bond with the familiar as its viewpoint, by the
+  same rules, its nose reaching `nose` cells of `familiars.toml` (6) or its type's where that is
+  farther (the type's alone still decides how the beast itself hunts); no buff is shared, and a
+  companion she keeps lends her nothing. The familiar's story lines (F3, #931; until then
   the companion chapter's plain line) are the design's next slice.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design

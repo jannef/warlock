@@ -1,0 +1,11 @@
+# The witch's level 25 (#932; docs/design/witch-familiar.md §16 Q3): her familiar's sight and nose
+# are hers too (`familiar_sight`, the second viewpoint Hunter's bond opens for the companion). No
+# buffs cross: that is the ranger's alone.
+[[talent]]
+id = "familiars_sight"
+name = "Familiar's sight"
+tree = "class"
+granted = true
+description = "You look out through your familiar's eyes, and smell through its nose what lurks in the dark or behind a door."
+effects = [{ kind = "familiar_sight" }]
+systems = ["vision", "allies"]

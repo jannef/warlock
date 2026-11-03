@@ -2,9 +2,8 @@
 
 Developer notes for the familiar, the witch's small beast (spec §8 "Allies": "The familiar"; the
 design is `docs/design/witch-familiar.md`, its §16 the owner's round overrides §15's defaults).
-Slices **F1** (#929) and **F2** Call familiar and the imp from level 30 (#930, this file); F3 the
-story's lines (#931), the sight and nose shared at 25 (design §16 Q3, with Hunter's bond), and the
-probe's row (#933) build on them. It stands on the ally core (`docs/dev/allies.md`) and the companion
+Slices **F1** (#929) and **F2** Call familiar and the imp from level 30 (#930); the sight and nose shared at 25 (#932, below) are in; F3 the
+story's lines (#931) and the probe's row (#933) build on them. It stands on the ally core (`docs/dev/allies.md`) and the companion
 (`docs/dev/companion.md`). Keep it current with the code, as CLAUDE.md says.
 
 ## What a familiar is
@@ -114,6 +113,24 @@ more than one, enter the direction ask (the owner, §16 Q4). The reads go throug
 collar works on a familiar as on a companion without more. Tame is not built either (C2): until it
 is, no character has two kept beasts in play, and only tests reach the ask.
 
+## Familiar's sight (#932)
+
+The witch's level 25, beside Second sight (design §16 Q3; `assets/data/talents/familiars_sight.toml`:
+tree `class`, `granted`, systems `vision`, `allies`). Its one effect, `TalentEffect::FamiliarSight`
+→ `TalentMods::familiar_sight`, opens Hunter's bond's second viewpoint on the familiar
+(`perception.rs::bond_view`; the viewpoint's rules, `docs/dev/companion.md` "Hunter's bond", stand
+unchanged: creature sight's rule by its own eyes, cells lit as the player's eyes perceive them, the
+nose shows only the foe's cell, no hidden trap or secret door, a dazzled player keeps it, nothing
+from the retinue). Each talent reads its own beast: a witch's tamed companion lends no eyes, and
+no ranger's bond reads a familiar. No `shared_buffs`: no buff crosses.
+
+**The nose.** Of the beasts a familiar may be only `rat`, `polecat`, and `black_hound` have a
+`nose`, and `nose` is only for a `tameable` type, which cat, toad, raven, and hare are not. Giving
+them one would also set them hunting by scent and growling from level 1. So the file has one number,
+`nose` (`familiars.toml`, 1 to 20; 6, a hound's): what the viewpoint uses when its kind's reaches
+less or it has none (`bond_view`, `world::smelt_within`). It is read here alone: `ally_plan` and
+the growl still read the type's `nose` through `smelt`, so her cat hunts by eye all its life.
+
 ## What the player sees
 
 As the companion's (`docs/dev/companion.md`), a row or a segment per kept beast in actor id order.
@@ -136,6 +153,8 @@ new creatures and the new action change the content fingerprint: development sav
 touch (giver, degrees, the other hexes kept going), a summoned cat, the harrying, growth and always
 along, both kept beasts at once, the save round trip. `world/familiar_call_tests.rs`: the refusals
 and the menu's reasons, the hour, the interruption, no free cell, the overworld, the draw's odds with
-and without the imp, an imp as a familiar, determinism. `content/familiar.rs`'s load checks.
+and without the imp, an imp as a familiar, determinism. `world/bond_tests.rs`, Familiar's sight: the
+talent at 25, its eyes, the nose through a door and not a wall, its reach by the rules or the kind,
+the retinue, each talent its own beast, no buff. `content/familiar.rs`'s load checks.
 `caster_tests`'s witch table. `input.rs::tend_way`. The screen snapshots `abilities-menu-witch` (the
 status bar) and `character-screen-familiar`.

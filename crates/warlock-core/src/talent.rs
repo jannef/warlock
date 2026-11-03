@@ -299,6 +299,8 @@ pub struct TalentMods {
     pub tame: i32,
     /// It sees what its companion sees (Hunter's bond; `Perception::compute`).
     pub shared_sight: bool,
+    /// It sees what its familiar sees (Familiar's sight; `Perception::compute`).
+    pub familiar_sight: bool,
     /// Its buffs and its companion's are shared (Hunter's bond; `world/bond.rs`).
     pub shared_buffs: bool,
     /// To hit on its melee blows and its companion's at a creature beside them both (Pack
@@ -1399,6 +1401,7 @@ impl TalentMods {
             TalentEffect::Familiar => self.familiar = true,
             TalentEffect::Tame { bonus } => self.tame += bonus,
             TalentEffect::SharedSight => self.shared_sight = true,
+            TalentEffect::FamiliarSight => self.familiar_sight = true,
             TalentEffect::SharedBuffs => self.shared_buffs = true,
             TalentEffect::PackTactics { to_hit } => self.pack_tactics += to_hit,
             TalentEffect::SharesFavouredPrey => self.shares_favoured_prey = true,

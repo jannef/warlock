@@ -5,7 +5,10 @@
 //! constants `allies.toml`. The file is optional: without it no familiar can be made, and nothing
 //! here is read.
 
-use super::{Content, ContentError, CreatureId, SpellId, SpellPurpose, creature::Combat};
+use super::{
+    Content, ContentError, CreatureId, SpellId, SpellPurpose,
+    creature::{Combat, NOSES},
+};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
@@ -32,6 +35,8 @@ pub struct FamiliarRules {
     pub by_race: Vec<(String, Vec<CreatureId>)>,
     /// The hex spell whose status a familiar's blow lays (`kind = "hex"`, with a status).
     pub touch: SpellId,
+    /// How far its nose reaches for a master with Familiar's sight, at the least.
+    pub nose: i32,
     /// What a familiar may be called.
     pub names: Vec<String>,
     /// How each kind arrives ("winds about your ankles"), by creature.
@@ -52,6 +57,7 @@ struct File {
     call_turns: u32,
     bargain_kinds: Vec<String>,
     bargain_level: u8,
+    nose: i32,
     start: Start,
     arrives: BTreeMap<String, String>,
 }
@@ -157,6 +163,14 @@ impl FamiliarRules {
         let bargain_kinds = (file.bargain_kinds.iter())
             .map(|n| plain("`bargain_kinds`", n, true))
             .collect::<Result<Vec<_>, _>>()?;
+        if !NOSES.contains(&file.nose) {
+            return Err(err(format!(
+                "`nose` is {} to {} cells, not {}",
+                NOSES.start(),
+                NOSES.end(),
+                file.nose
+            )));
+        }
         if !(0..=1000).contains(&file.start.rare_per_mille) {
             return Err(err(format!(
                 "`start.rare_per_mille` is 0 to 1000, not {}",
@@ -240,6 +254,7 @@ impl FamiliarRules {
             most_level: file.start.most_level,
             by_race,
             touch,
+            nose: file.nose,
             names: file.names,
             arrives,
             call_turns: file.call_turns,
@@ -356,6 +371,7 @@ mod tests {
             ))
             .contains("0 to 1000")
         );
+        assert!(err(familiars(|t| t.replace("nose = 6", "nose = 21"))).contains("1 to 20 cells"));
         assert!(
             err(familiars(|t| t.replace(
                 "touch = \"evil_eye\"",
