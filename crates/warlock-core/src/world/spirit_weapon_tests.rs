@@ -389,7 +389,7 @@ static CALLED: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = ContentFiles::builtin();
     crate::content::strip_class_tables(&mut files);
     files.edit_table("classes", |text| match text.contains("id = \"bard\"") {
-        true => format!("{text}max_level = 12\n"),
+        true => text.replace("max_level = 30", "max_level = 12"),
         false => text.to_string(),
     });
     files.insert(
