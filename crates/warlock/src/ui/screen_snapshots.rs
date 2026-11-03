@@ -490,6 +490,15 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger at level 40 (#921): Sic 'em among the class abilities, asking for a cell.
+    Case {
+        name: "abilities-menu-sic",
+        character: Some("human,male,ranger"),
+        kit: true,
+        actions: "xp:90000000 levelup:auto",
+        screen: Some("abilities"),
+        ..BASE
+    },
     // A merchant past level 12 (#816): Merchant's eye among the class abilities, asking for
     // something carried.
     Case {

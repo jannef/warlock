@@ -42,6 +42,9 @@ pub struct CompanionData {
     /// once per thing scented.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub scent: Option<ActorId>,
+    /// What Sic 'em set it on, while that hunt lasts (`sic.rs`): an order clears it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quarry: Option<ActorId>,
 }
 
 impl Actor {
@@ -53,7 +56,7 @@ impl Actor {
         }
     }
 
-    fn companion_mut(&mut self) -> Option<&mut CompanionData> {
+    pub(super) fn companion_mut(&mut self) -> Option<&mut CompanionData> {
         match &mut self.ally.as_mut()?.source {
             AllySource::Companion(data) => Some(data),
             AllySource::Summoned { .. } => None,
@@ -154,6 +157,7 @@ impl World {
             name: String::new(),
             grade,
             scent: None,
+            quarry: None,
         };
         let id = self.make_ally(creature, at, AllySource::Companion(data), None);
         let name = name_for(&content, self.state.seed, id);

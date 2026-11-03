@@ -120,6 +120,14 @@ hunt as one: a creature beside you both is flanked, +2 [to hit](combat.md#hittin
 attacks and your companion's at it, and your companion shares your
 [favoured prey](classes.md#ranger) bonus.
 
+From level 40 **[Sic 'em](abilities.md#ability-sic)** sets your companion on a [hostile](creatures.md) creature
+you see, within 10 cells, for 5 [focus](resources.md#resource-focus) and the [time](turns.md#what-actions-cost)
+of a wait. It goes for that creature before any other and follows it as long as it sees or smells it,
+and it is [Savage](status-effects.md#status-savage): half again as fast, and each of its next three
+[hits](combat.md#hitting) is a critical with no confirmation roll, each hit spending a degree (else a
+degree a minute). Give it another order and the chase is over. Savage is its own: it never crosses
+to you.
+
 ### The companion's rules
 
 {{#include generated/companion-rules.md}}

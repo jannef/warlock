@@ -343,9 +343,9 @@ impl World {
             Order::Follow if leashed => None,
             Order::Follow => self.senses(id, &hostile),
             Order::Stay { at } => self.senses(id, &near(at, rules.stay_reach)),
-            Order::Hunt { at } => {
-                (self.senses(id, &near(at, rules.hunt_reach))).or_else(|| self.senses(id, &hostile))
-            }
+            Order::Hunt { at } => (self.quarry_sensed(id, &hostile))
+                .or_else(|| self.senses(id, &near(at, rules.hunt_reach)))
+                .or_else(|| self.senses(id, &hostile)),
         };
         // 2. Fight it as a creature would.
         if let Some((target, at, by_nose)) = target {
@@ -385,7 +385,7 @@ impl World {
 
     /// What ally `id` finds to fight: the nearest `wanted` it sees (`ai.rs::nearest_in_sight`),
     /// else, with a nose, the nearest it smells (`companion.rs::smelled`), flagged so.
-    fn senses(
+    pub(super) fn senses(
         &mut self,
         id: ActorId,
         wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
@@ -397,9 +397,13 @@ impl World {
         Some((target, at, true))
     }
 
-    fn set_order(&mut self, id: ActorId, order: Order) {
+    pub(super) fn set_order(&mut self, id: ActorId, order: Order) {
         if let Some(ally) = (self.state.actors.get_mut(&id)).and_then(|a| a.ally.as_mut()) {
             ally.order = order;
+        }
+        // A new order ends a hunt Sic 'em began (`sic.rs`).
+        if let Some(data) = (self.state.actors.get_mut(&id)).and_then(Actor::companion_mut) {
+            data.quarry = None;
         }
     }
 

@@ -510,6 +510,10 @@
 #   volley { shots }              the active Volley, aimed at a cell (`use:volley:12,5`): shots
 #                                 (2 to 5) of the readied missile weapon there for the price of
 #                                 one; what it costs is the talent's `resource`
+#   sic { status, blows, range }  the active Sic 'em, aimed at a creature the player sees within
+#                                 `range` (1 to 20; `use:sic:12,5`): the companion hunts it and
+#                                 suffers `blows` degrees of `status` (`auto_critical`, no tick);
+#                                 what it costs is the talent's `resource`
 #   song { id, on, status, severity, resource, cost, mana, check, difficulty }   a song (spec §8
 #                                 "Class abilities", the bard's songs): the class active `id`
 #                                 (`use:inspire`, `use:lullaby`; an active that sings), sung aloud (heard as a

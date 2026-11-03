@@ -1073,6 +1073,14 @@ pub enum TalentEffect {
     /// The class active Volley: `shots` shots at a cell for the price of one (what it costs is
     /// the talent's `resource`, if anything).
     Volley { shots: u8 },
+    /// The class active Sic 'em (`world/sic.rs`): the companion is set on a creature the player
+    /// sees within `range`, and suffers `blows` degrees of `status`, one that makes its hits
+    /// criticals (`auto_critical`; what it costs is the talent's `resource`).
+    Sic {
+        status: String,
+        blows: u16,
+        range: i32,
+    },
     /// A song (spec §8 "Class abilities", the bard's songs; `world/song.rs`): class active `id`
     /// (`use:inspire`), sung aloud. Who it is `on` suffers `severity` degrees of `status`, and the
     /// singer's Music's `song_degrees` more; it costs **one** thing, `cost` of `resource`
@@ -1271,6 +1279,7 @@ impl TalentEffect {
             TalentEffect::WindStep { .. } => A::StepOfTheWind,
             TalentEffect::Stillness { .. } => A::Stillness,
             TalentEffect::Volley { .. } => A::Volley,
+            TalentEffect::Sic { .. } => A::Sic,
             TalentEffect::Lurk { .. } => A::Lurk,
             TalentEffect::LowBlow => A::LowBlow,
             TalentEffect::Finisher => A::MasterThief,
@@ -1503,6 +1512,25 @@ impl TalentEffect {
             TalentEffect::Volley { shots } => {
                 if !(2..=5).contains(shots) {
                     return Err("`volley`: shots is 2 to 5".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Sic {
+                status: id,
+                blows,
+                range,
+            } => {
+                status(id)?;
+                if !(1..=20).contains(range) {
+                    return Err("`sic`: range is 1 to 20".into());
+                }
+                // Its degrees are its blows: no tick to hurt the beast, and enough to hold them.
+                if let Some(def) = content.status_id(id).map(|s| content.status(s))
+                    && (!def.auto_critical || def.tick.is_some() || !(1..=def.max).contains(blows))
+                {
+                    return Err(format!(
+                        "`sic`: `{id}` is `auto_critical` with no tick, and blows is 1 to its max"
+                    ));
                 }
                 Ok(())
             }

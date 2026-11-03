@@ -1332,7 +1332,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     all trades 12 and its second rank 25, Throw your voice 16, Lullaby 20, Virtuoso 30), and the
     class ends there, `max_level = 30` ("Prestige classes" above): experience past it counts and
     buys nothing until the Hunter's calling, when Hunter 1 comes at total level 31.
-  - **Actives**: Volley (the ranger's, 50: `Action::UseAt`, `use:volley:X,Y`, aimed at a cell
+  - **Actives**: Sic 'em (the ranger's, 40, #921: `use:sic:X,Y`, §8 "Allies": "Sic 'em"), Volley (the ranger's, 50: `Action::UseAt`, `use:volley:X,Y`, aimed at a cell
     as a shot is; the readied missile weapon's three shots there, one after another, each its
     own flight and attack, for the price of one shot and one exertion; it stops when the
     ammunition runs out; it costs 6 Focus (§8 "Resources"; no cooldown: greyed out "not enough

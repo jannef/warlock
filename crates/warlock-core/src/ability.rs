@@ -262,6 +262,8 @@ pub enum Unavailable {
     NotSoHeld,
     /// An order with no ally of the player's on the level to hear it (spec §8 "Allies").
     NoAllies,
+    /// Sic 'em with no companion of the player's on the level (`world/sic.rs`).
+    NoCompanion,
     /// Stillness with nothing to end: none of the statuses it ends is suffered.
     Still,
 }
@@ -288,6 +290,7 @@ impl Unavailable {
             }
             Unavailable::NotSoHeld => "your hands are not so held".into(),
             Unavailable::NoAllies => "no allies here".into(),
+            Unavailable::NoCompanion => "no companion here".into(),
             Unavailable::Still => "your mind is already still".into(),
         }
     }
@@ -303,6 +306,7 @@ impl Unavailable {
             Unavailable::FiresByItself => "fires_by_itself".into(),
             Unavailable::NotSoHeld => "not_so_held".into(),
             Unavailable::NoAllies => "no_allies".into(),
+            Unavailable::NoCompanion => "no_companion".into(),
             Unavailable::Still => "still".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
@@ -740,6 +744,7 @@ impl Ability {
         match self {
             Ability::Spell(spell) => content.spell_of(spell).and_then(|s| s.base_range()),
             Ability::Intimidate => content.intimidate().map(|r| r.range),
+            Ability::Class(ClassActive::Sic) => content.sic_range(),
             other => other.range(),
         }
     }
@@ -987,6 +992,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Scribe
         | ClassActive::MerchantsEye
         | ClassActive::SpiritWeapon
+        | ClassActive::Sic
         | ClassActive::Volley => Vec::new(),
     };
     cooldowns.into_iter().find(|&s| actor.effects.has(s))

@@ -1898,6 +1898,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "active (the time of one shot, one exertion), at a cell: {shots} shots of the readied \
              missile weapon"
         ),
+        TalentEffect::Sic {
+            status: id,
+            blows,
+            range,
+        } => format!(
+            "active (the time of a wait), at a creature you see within {range} cells that is \
+             hostile to you: your companion hunts it, and is {} ({blows} degrees): half again as \
+             fast, and each hit a critical with no confirmation, a degree each",
+            status(&id)
+        ),
         TalentEffect::Song {
             on,
             status: id,

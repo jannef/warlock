@@ -163,7 +163,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   out goes in its type's words ("The wolf slips back into the dark."). **The animal companion**
   (`warlock-core/src/world/companion.rs`, `content/companion.rs` and `data/companions.toml`;
   #916, design `docs/design/ranger-companion.md`, `docs/dev/companion.md`): an ally that is the
-  player's for good, `source = Companion(CompanionData { name, grade })`, `until = None`; at most
+  player's for good, `source = Companion(CompanionData { name, grade, .. })`, `until = None`; at most
   one at a time. The ranger's **Animal companion** (level 1) brings one as the run begins: a
   beast drawn from the character's race's list (`[start.by_race]`: a human's hound or boar, an
   elf's lynx or hound, a goblin's large spider, rat, or bat, …; one to three a race, of level at
@@ -192,8 +192,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
   creature's: a companion is no summon). The player sees it in the status bar ("Snel: unhurt",
   "Snel: with you"), in look mode ("Snel, your hound (unhurt), …"), on the Character screen
   ("With    Snel, a hound"), and in the `companion` dump; the wiki states the lists, the odds,
-  and the growth table exactly. Taming (C2), the collar (C3), and the ranger's later abilities
-  (C4–C6) are the design's next slices.
+  and the growth table exactly. **Sic 'em** (the ranger's level 40, #921; `use:sic:X,Y`,
+  `world/sic.rs`, 5 Focus, the time of a wait, no cooldown): aimed at a creature the player sees
+  within 10 cells that is hostile to them, it sets the companion on it ("Snel goes for the
+  kobold's throat."; refused, no time, with no companion on the level or no such creature): a
+  Hunt whose target is that creature before any nearer while the beast sees or smells it, its
+  cell following it where the player sees that (a new order ends it), and **Savage** on the beast
+  (3 degrees, half again as fast, a degree a minute): each blow that hits is a critical with no
+  confirmation roll and spends a degree. It is neither a buff spell's status nor a potion's, so
+  Hunter's bond's shared buffs never carry it. Taming (C2), the collar (C3), and Hunter's bond
+  (C5) are the design's next slices.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

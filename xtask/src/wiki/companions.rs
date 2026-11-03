@@ -87,6 +87,7 @@ pub(super) fn growth(content: &Content) -> String {
                     name: String::new(),
                     grade: rules.growth.grade(grade, def.level),
                     scent: None,
+                    quarry: None,
                 }),
                 order: Order::Follow,
                 retinue: false,

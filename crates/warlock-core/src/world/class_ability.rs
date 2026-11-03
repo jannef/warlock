@@ -108,7 +108,7 @@ impl World {
                 | ClassActive::Knock,
                 None,
             ) => Spent::Nothing,
-            (ClassActive::Volley, _) => {
+            (ClassActive::Volley | ClassActive::Sic, _) => {
                 self.say("Where?");
                 Spent::Nothing
             }

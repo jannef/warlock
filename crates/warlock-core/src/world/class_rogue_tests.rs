@@ -150,6 +150,7 @@ fn the_three_tables_come_with_the_levels() {
             "Rapid shot",
             "Pack tactics",
             "Evasion",
+            "Sic 'em",
             "Volley",
             "Master hunter"
         ]

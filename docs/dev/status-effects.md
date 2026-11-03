@@ -81,8 +81,8 @@ Buffs, hexes, and cooldowns (spec §8 "Status effects"; #227, design
 `docs/design/progression.md` §4.1 B1) are statuses too, with four more optional fields
 (`StatusDef`): `combat` (`CombatBonus { to_hit, damage, dodge, parry }`, the stances' numbers
 and ranges), `cost` (percent of every price, `COST_PERCENT` 50 to 1000: below 100 only a spell's buff on
-its caster may be (and the potion of quickness's Hasted on the player), `spell_def` refusing a hex's or a damage spell's, so creatures are never
-hastened and `World::out_of_view_for` stays exact), `blocks` (`Vec<ActionKind>`, ids from `data/actions.toml`),
+its caster may be (and the potion of quickness's Hasted on the player, and Sic 'em's Savage on a companion), `spell_def` refusing a hex's or a damage spell's, so creatures that disturb a rest are never
+hastened and `World::out_of_view_for` stays exact), `auto_critical` (hits are criticals with no confirmation, a degree each: Savage, `world/sic.rs`), `blocks` (`Vec<ActionKind>`, ids from `data/actions.toml`),
 and `follows` (`Option<StatusId>`, resolved after the whole file, `resolve_follows`: no chain back
 to itself; a status with it must end; nothing follows into or out of the disease status,
 checked in `Content::load_diseases`), and `light` (`Option<LightId>`, a light of
