@@ -1219,7 +1219,8 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         }
         TalentEffect::Avatar { hands_cost_percent } => format!(
             "Lay on hands heals every hit point and cures every status that ticks (bleeding, \
-             poison) and every disease, for {hands_cost_percent} % of its cost (at least 1)"
+             poison) and every disease, for {hands_cost_percent} % of its cost (at least 1); \
+             and Holy wrath's die lands on every creature you hit, not only the unholy"
         ),
         TalentEffect::Rage { resource: id } => {
             let rage = content.resource_id(&id).map(|r| content.resource(r));
@@ -1355,6 +1356,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             difficulty,
         } => {
             let rider = match (mode, turns, check) {
+                (SmiteRiderKind::Banish, ..) => "a creature that was summoned is unmade, dying \
+                     there whatever its hit points, your kill as any other; an unholy creature \
+                     not summoned takes the Smite's dice twice over (the rest of the blow once); \
+                     anyone else, a plain smite"
+                    .to_string(),
                 (SmiteRiderKind::Fear, Some(turns), Some(stat)) => format!(
                     "the foe checks {} (2d12 + its modifier) against {difficulty} plus your \
                      Smite's aim modifier; failed, it is {} by you for {turns} turns, fleeing \
@@ -1372,6 +1378,11 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                  dice, aim, and unholy dice), and on a hit that does damage {rider}"
             )
         }
+        TalentEffect::HolyWrath { dice } => format!(
+            "every melee blow, shot, or throw of yours that hits an unholy creature (the undead \
+             and the fiends) rolls {dice} more, of the blow's kind of damage, resisted but never \
+             soaked, for no zeal"
+        ),
         TalentEffect::Radiance { status: id, light } => {
             let reach = (content.light_id(&light)).map_or(0, |l| content.light(l).radius);
             format!(

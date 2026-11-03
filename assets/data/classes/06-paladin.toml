@@ -44,6 +44,8 @@ abilities = [
     { level = 25, talent = "retribution" },
     { level = 32, talent = "wrathful_smite" },
     { level = 40, talent = "holy_radiance" },
+    { level = 40, talent = "holy_wrath" },
+    { level = 50, talent = "banishing_smite" },
     { level = 50, talent = "bulwark" },
     { level = 60, talent = "avatar" },
 ]

@@ -1,0 +1,10 @@
+[[talent]]
+id = "banishing_smite"
+name = "Banishing smite"
+tree = "class"
+granted = true
+description = "A smite that sends the summoned back whence they came (an ability, paid in zeal): what was called is unmade outright, and the unholy take your wrath twice over."
+effects = [{ kind = "smite_mode", mode = "banish" }]
+resource = { id = "zeal", cost = 6 }
+systems = ["combat", "resources"]
+alignment = { min = "kind" }

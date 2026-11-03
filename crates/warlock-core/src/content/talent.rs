@@ -702,7 +702,7 @@ pub enum TalentEffect {
     /// (what it costs is the talent's `resource`: Zeal).
     LayOnHands { per_level: u8 },
     /// Lay on hands heals fully and cures every status that may be cured and every disease, for
-    /// `hands_cost_percent` of its cost (Avatar).
+    /// `hands_cost_percent` of its cost; and Holy wrath's die lands on every foe (Avatar).
     Avatar { hands_cost_percent: u8 },
     /// The class active Rage: the player is granted `resource` (Rage, spec §8 "Resources") and
     /// suffers its status (Raging) while it lasts; no rage while that or the status it `follows`
@@ -759,9 +759,12 @@ pub enum TalentEffect {
     /// with a rider on a hit that did damage (what it costs is the talent's `resource`: Zeal).
     /// `brand`: the foe suffers `severity` degrees of `status`. `fear`: the foe makes a `check`
     /// of that stat against `difficulty` plus the smiter's Smite `aim` modifier, and failing
-    /// suffers `status` (one that flees) at `turns` degrees, caused by the smiter.
+    /// suffers `status` (one that flees) at `turns` degrees, caused by the smiter. `banish`
+    /// takes nothing more: a summoned foe is unmade, and an unholy one takes the smite's dice
+    /// twice (the rule's, `world/smite.rs`).
     SmiteMode {
         mode: SmiteRiderKind,
+        #[serde(default)]
         status: String,
         #[serde(default)]
         severity: u16,
@@ -772,6 +775,10 @@ pub enum TalentEffect {
         #[serde(default)]
         difficulty: i32,
     },
+    /// Every blow, shot, or throw that hits an unholy target (`Content::unholy`; with Avatar any
+    /// target) rolls `dice` more, after the blow's own damage, of its kind, resisted but never
+    /// soaked (the paladin's Holy wrath, `world/smite.rs`).
+    HolyWrath { dice: Dice },
     /// The class active Holy radiance: a toggle; while it suffers `status` it sheds light
     /// `light` (an id in `data/lights.toml`).
     Radiance { status: String, light: String },
@@ -1233,6 +1240,8 @@ pub enum SmiteRiderKind {
     Brand,
     /// The foe hit checks its nerve or flees (Frightened; Wrathful smite).
     Fear,
+    /// The summoned foe hit is unmade, the unholy takes the dice twice (Banishing smite).
+    Banish,
 }
 
 impl SmiteRiderKind {
@@ -1241,6 +1250,7 @@ impl SmiteRiderKind {
         match self {
             SmiteRiderKind::Brand => super::ClassActive::BrandingSmite,
             SmiteRiderKind::Fear => super::ClassActive::WrathfulSmite,
+            SmiteRiderKind::Banish => super::ClassActive::BanishingSmite,
         }
     }
 }
@@ -1866,13 +1876,19 @@ impl TalentEffect {
                 difficulty,
             } => {
                 match (mode, turns, check) {
+                    (SmiteRiderKind::Banish, None, None)
+                        if id.is_empty() && *severity == 0 && *difficulty == 0 =>
+                    {
+                        return Ok(());
+                    }
                     (SmiteRiderKind::Brand, None, None)
                         if (1..=10).contains(severity) && *difficulty == 0 => {}
                     (SmiteRiderKind::Fear, Some(_), Some(_))
                         if *severity == 0 && (0..=30).contains(difficulty) => {}
                     _ => {
                         return Err("`smite_mode`: `brand` takes a severity of 1 to 10; `fear` \
-                                    `turns`, a `check`, and a `difficulty` of 0 to 30"
+                                    `turns`, a `check`, and a `difficulty` of 0 to 30; `banish` \
+                                    nothing more"
                             .into());
                     }
                 }
@@ -1882,6 +1898,12 @@ impl TalentEffect {
                     return Err(format!(
                         "`smite_mode`: `fear`'s status `{id}` does not flee"
                     ));
+                }
+                Ok(())
+            }
+            TalentEffect::HolyWrath { dice } => {
+                if dice.max() < 1 || dice.min() < 0 {
+                    return Err("`holy_wrath`: dice that harm".into());
                 }
                 Ok(())
             }

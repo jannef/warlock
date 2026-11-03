@@ -478,6 +478,9 @@ The paladin in plain gear (a long sword; from level 5 a shield and the warrior's
 | 50 | 17.2 | 0.10 | 98/15 · 20.6:2.5 · 11 / 183 | 99/15 · 39.8:2.7 · 6.0 / 173 | 99/27 · 43.5:6.5 · 5.5 / 59 | 1.12 · 2.7 |
 | 60 | 18.8 | 0.10 | 85/20 · 15.8:5.6 · 14 / 72 | 95/20 · 34.1:5.1 · 6.5 / 76 | 97/18 · 43.7:6.7 · 4.0 / 57 | 1.05 · 2.8 |
 
+- **Not in the table**: Holy wrath's die (1d6, 3.5 on a hit, at 40; on every foe at 60, #913) is
+  no part of `World::smite_profile`, so the "Blow" and "Smite" columns from level 40 are that much
+  low on the unholy, and at 60 on anyone; nor is Banishing smite's doubling (50).
 - **A smite every third blow is what the fight pays for**: a round of plain blows builds about
   one zeal (1.0 to 1.3: the paladin's hits nearly every blow, the foe's far fewer, a tenth from
   time), so a smite (3) comes about every three rounds, the design's "a smite every third blow".

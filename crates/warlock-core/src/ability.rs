@@ -971,6 +971,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Smite
         | ClassActive::BrandingSmite
         | ClassActive::WrathfulSmite
+        | ClassActive::BanishingSmite
         | ClassActive::Whirlwind
         | ClassActive::WarCry
         | ClassActive::HolyRadiance
