@@ -57,11 +57,10 @@ fn degrees(w: &World, id: &str) -> u16 {
     (w.state.player().effects.get(status)).map_or(0, |e| e.severity)
 }
 
-/// A bard of level 9 (Inspire's, #870's design §5; level 18 on today's table), holding three
-/// inspiration and some mana.
+/// A bard of level 9 (Inspire's), holding three inspiration and some mana.
 fn bard() -> World {
     let mut w = bard_in("showcase");
-    reach(&mut w, 18);
+    reach(&mut w, 9);
     set(&mut w, 3);
     w.player_mut().mana = 10;
     w
@@ -70,7 +69,7 @@ fn bard() -> World {
 #[test]
 fn inspire_is_paid_in_inspiration_alone() {
     let mut w = bard_in("showcase");
-    reach(&mut w, 18);
+    reach(&mut w, 9);
     w.player_mut().mana = 10;
     let pool = inspiration(&w);
     assert_eq!(held(&w), Some(0));
@@ -141,7 +140,7 @@ fn silence_and_the_overworld_refuse_a_song() {
     assert_eq!((w.state.turn, held(&w)), (turn, Some(3)));
     // On the overworld, which is silent.
     let mut w = bard_in("world");
-    reach(&mut w, 18);
+    reach(&mut w, 9);
     set(&mut w, 3);
     let turn = w.state.turn;
     run(&mut w, "use:inspire");
@@ -152,7 +151,7 @@ fn silence_and_the_overworld_refuse_a_song() {
 #[test]
 fn a_virtuoso_sings_greater_for_nothing() {
     let mut w = bard();
-    reach(&mut w, 60);
+    reach(&mut w, 30);
     train(&mut w, "music", 10);
     set(&mut w, 0);
     w.player_mut().mana = 0;

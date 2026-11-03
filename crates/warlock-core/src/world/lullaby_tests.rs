@@ -1,5 +1,5 @@
 //! The Lullaby (spec §8 "Class abilities", the bard's songs; #873; `world/song.rs`): the bard's
-//! song at 40, for 6 mana and a song's time; every hostile that hears it, seen or not, checks
+//! song at 20, for 6 mana and a song's time; every hostile that hears it, seen or not, checks
 //! Willpower against 13 plus Music's craft, and the failed are Drowsy; friends and the peaceful
 //! draw nothing; sung to an empty room all the same.
 
@@ -42,9 +42,9 @@ fn bard_at(level: u8) -> World {
     w
 }
 
-/// A bard of 40 with the Lullaby and 20 mana, alone on the level.
+/// A bard of 20 with the Lullaby and 20 mana, alone on the level.
 fn singer() -> World {
-    let mut w = bard_at(40);
+    let mut w = bard_at(20);
     let player = w.state.player;
     w.state.actors.retain(|&id, _| id == player);
     w.player_mut().mana = 20;
@@ -77,10 +77,10 @@ fn sing(w: &mut World) -> Outcome {
 }
 
 #[test]
-fn the_lullaby_comes_at_40_and_wants_mana() {
-    let mut w = bard_at(39);
-    assert_eq!(own(&w), None, "not before 40");
-    reach(&mut w, 40);
+fn the_lullaby_comes_at_20_and_wants_mana() {
+    let mut w = bard_at(19);
+    assert_eq!(own(&w), None, "not before 20");
+    reach(&mut w, 20);
     assert!(said(&w, "You gain Lullaby."), "{}", last(&w));
     let rows: Vec<_> = (w.perception().abilities().into_iter())
         .filter_map(|a| match a.ability {

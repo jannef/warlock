@@ -685,13 +685,13 @@ const CASES: &[Case] = &[
         keys: Some("Down Down"),
         ..BASE
     },
-    // A bard of level 40 with too little mana (#244): Throw your voice aimed at a place, Inspire
+    // A bard of level 25 with too little mana (#244): Throw your voice aimed at a place, Inspire
     // greyed out for inspiration (a song costs one thing, #870), the Lullaby for mana (#873),
     // Music no row (read by rules).
     Case {
         name: "abilities-menu-bard",
         character: Some("human,female,bard"),
-        actions: "xp:1400000 levelup:auto drain:180",
+        actions: "xp:400000 levelup:auto drain:106",
         screen: Some("abilities"),
         ..BASE
     },

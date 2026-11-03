@@ -2,8 +2,8 @@
 //! level, a calling opens to the right class at the right level, `World::call` gives the class
 //! and exactly the experience the first prestige level costs, and every level past the cap is
 //! the prestige class's: its hit points, rolls, bonus picks, and class abilities. On a fixture
-//! prestige class, the Warden, called from a bard capped at 12 (the shipped bard is not capped
-//! yet: the bard design's B5).
+//! prestige class, the Warden, called from a bard capped at 12 (the shipped bard ends at 30;
+//! a short class keeps these tests small).
 
 use super::*;
 use crate::action::parse_actions;
@@ -46,7 +46,7 @@ static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = ContentFiles::builtin();
     crate::content::strip_class_tables(&mut files);
     files.edit_table("classes", |text| match text.contains("id = \"bard\"") {
-        true => format!("{text}max_level = {CAP}\n"),
+        true => text.replace("max_level = 30", &format!("max_level = {CAP}")),
         false => text.to_string(),
     });
     files.insert("data/prestige/warden.toml", WARDEN);

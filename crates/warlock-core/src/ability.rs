@@ -36,7 +36,7 @@ use std::borrow::Cow;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Ability {
     /// Throw your voice (spec §5 "Hearing"; #235): [`Action::ThrowVoice`] at a cell the player
-    /// sees. The bard's (design §4.8, at level 32): had by whoever holds a talent with the
+    /// sees. The bard's (design §4.8, at level 16): had by whoever holds a talent with the
     /// `throw_voice` effect.
     ThrowVoice,
     /// A birth sign's active gift (spec §8 "Birth sign"): [`Action::Gift`], had by whoever's

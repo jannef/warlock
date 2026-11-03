@@ -2188,7 +2188,7 @@ mod tests {
         assert_eq!(actions(&app), [Action::Bash(Dir::E), Action::Bash(Dir::W)]);
     }
 
-    /// A run of a bard of level 32, who throws their voice (#244), with a key bound for it (`B`:
+    /// A run of a bard of level 16, who throws their voice (#244), with a key bound for it (`B`:
     /// unbound by default).
     fn bard() -> App {
         let content = content();

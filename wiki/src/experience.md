@@ -53,8 +53,10 @@ So a [kobold shaman](creatures.md#creature-kobold-shaman) is worth less every le
 
 ## Levels
 
-Every [class](classes.md) stops at level 60, its last (the table below says so for each), and the
-road there is long. The curve itself runs on to level 100, for levels a class does not give.
+Every [class](classes.md) stops at level 60, its last, but the [bard](classes.md#bard), who stops at
+30 (the table below says so for each), and the road there is long. A bard at 30 keeps every point
+of XP earned after it; one who becomes a hunter gains at once every level that XP buys, from
+level 31 on. The curve itself runs on to level 100, for levels a class does not give.
 Each level costs a number of kills of [creatures](creatures.md) of your own level: 38 for level 2,
 about 160 a level by level 10, and more for every level after that, up to 365 for level 60 and
 485 for level 100. The first levels come faster: level 2 costs only 25 %

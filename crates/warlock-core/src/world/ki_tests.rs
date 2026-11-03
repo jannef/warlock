@@ -195,13 +195,13 @@ fn quivering_palm_costs_five_ki_and_no_cooldown() {
 #[test]
 fn inspire_spends_inspiration() {
     let mut w = fresh("bard");
-    reach(&mut w, 17);
+    reach(&mut w, 8);
     assert_eq!(
         held(&w, "inspiration"),
         None,
         "no inspiration before Inspire"
     );
-    reach(&mut w, 18);
+    reach(&mut w, 9);
     assert_eq!(
         held(&w, "inspiration"),
         Some(0),
@@ -230,7 +230,7 @@ fn inspire_spends_inspiration() {
     let short = Unavailable::Short(resource(&w, "inspiration"));
     assert_eq!(own(&w, inspire), Some(Some(short)));
     // Virtuoso: a greater song for nothing, the inspiration kept.
-    reach(&mut w, 60);
+    reach(&mut w, 30);
     set(&mut w, "inspiration", 5);
     w.player_mut().mana = 0;
     run(&mut w, "use:inspire");

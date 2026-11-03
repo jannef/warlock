@@ -50,7 +50,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
 - **Throw your voice**: a voice sounds at a place you choose that you see, not solid, within 6
   cells (the [aiming](controls.md#aiming) cursor, as for a shot). It is as loud there as someone talking, and it is
   made there, not where you stand, so [creatures](creatures.md) that hear it and cannot see that spot go to have
-  a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. [Bards](classes.md#bard) learn it at level 32
+  a look (see [Hearing](hearing.md#throwing-your-voice)). It takes a normal action. [Bards](classes.md#bard) learn it at level 16
   (see [Classes](classes.md)).
 - **Lurk**: the [thief](classes.md#thief)'s, from level 6. You wait in ambush, in the time of a
   wait, and are [Lurking](status-effects.md#status-lurking) until your next action. A hostile
@@ -110,7 +110,7 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   Intimidate, stands on 14 or more: it flees 54 % of the time; at Intimidate 100 it flees
   96 %. A roar with nobody near is still a roar: the turn, the rage, and the noise are spent.
   Every cry trains Intimidate.
-- **[Lullaby](abilities.md#ability-lullaby)**, the [bard](classes.md#bard)'s at level 40, is a song paid in
+- **[Lullaby](abilities.md#ability-lullaby)**, the [bard](classes.md#bard)'s at level 20, is a song paid in
   [mana](mana.md#spending-it): 6 of it and as long as a chat, greyed out "you have too little
   mana" while short. It is [heard](hearing.md#what-makes-noise) as any song is, and every
   [hostile](creatures.md#factions) creature that hears it, seen or not, rolls its

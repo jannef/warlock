@@ -327,7 +327,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Blessing (3), Cure wounds (3) (their rite is the prayer, §8i). Druid: Spark (1), Barkskin (3), Call of
     the wild (6), Call lightning (12), Call of the forest (25), Call the elements (40), Flame and
     frost (50). Witch: Evil eye (1), Hex of weakness (3), Cause wounds
-    (12), Curse of sloth (32), Blight (40). Bard: Mend (1), Blessing (6). Paladin: Blessing
+    (12), Curse of sloth (32), Blight (40). Bard: Mend (1). Paladin: Blessing
     (6). Ranger: Barkskin (6). Every other class none. Every class has some mana (the
     berserker and the warrior 1); a race adds none unless its data says so.
   - **Spell scrolls** (§8 "Scrolls"): every spell comes on one scroll (`scroll_of_ID`, a
@@ -626,7 +626,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     with a cooldown; with a weapon in hand either is refused before the ki is spent. Patient defence (level 18) costs 1 and
     a wait's time (#849). Stillness (Still mind's, level 25, #850) costs 2 and no time, refused before the spend with
     nothing to end. The ascetic's mana stays theirs, separate.
-  - **Inspiration** (the bard's; R4, #252): Inspire (level 18) grants it at 0; each kill credited
+  - **Inspiration** (the bard's; R4, #252): Inspire (level 9) grants it at 0; each kill credited
     to the bard builds one (to 5), one fades every 180 s (30 base turns), and at 0 it stays,
     held. Inspire, a song (§8 "Class abilities"), costs 3 inspiration and nothing else
     (#870: no mana fallback); a Virtuoso's song costs nothing.
