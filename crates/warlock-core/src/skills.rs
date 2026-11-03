@@ -89,6 +89,8 @@ pub const MAX_SONG_DEGREES: i32 = 10;
 pub const MAX_SONG_CRAFT: i32 = 20;
 /// The most a skill adds to treating bleeding, poison, or a disease (spec §8 "Skills": Heal).
 pub const MAX_HEAL_BONUS: i32 = 20;
+/// The most a skill adds to taming a beast (spec §8 "Allies": Tame).
+pub const MAX_TAME_BONUS: i32 = 20;
 /// The most a skill adds to picking a lock (spec §8 "Doors").
 pub const MAX_PICK_BONUS: i32 = 20;
 /// The most percent a skill adds to the chance of a forage finding food (spec §8 "Foraging").
@@ -211,6 +213,10 @@ pub enum Effect {
     /// fear the points also set; a skill with it, trained, lets the actor intimidate at all (the
     /// Intimidate ability).
     Intimidate,
+    /// Points added to the Willpower check that tames a beast (spec §8 "Allies": Tame;
+    /// `world/tame.rs`); a skill with it, trained, lets the actor tame at all (the Tame
+    /// ability).
+    Tame,
     /// Degrees added to what a song gives (spec §8 "Class abilities", the bard's songs;
     /// `world/song.rs`), before the status's `max`.
     SongDegrees,
@@ -264,6 +270,7 @@ impl Effect {
             Effect::Steal => MAX_STEAL_BONUS,
             Effect::Heal => MAX_HEAL_BONUS,
             Effect::Intimidate => MAX_INTIMIDATE_BONUS,
+            Effect::Tame => MAX_TAME_BONUS,
             Effect::SongDegrees => MAX_SONG_DEGREES,
             Effect::SongCraft => MAX_SONG_CRAFT,
             Effect::Disarm => MAX_DISARM_BONUS,
@@ -319,7 +326,8 @@ pub enum Use {
     Surprise,
     /// A try at treating oneself (spec §8 "Skills": Heal), whatever comes of it.
     Heal,
-    /// An order given to one's allies, or an ally's kill (spec §8 "Allies": Handle animal).
+    /// An order given to one's allies, an ally's kill, or a try at taming a beast (spec §8
+    /// "Allies": Handle animal, Tame).
     Handle,
     /// A war cry roared (spec §8 "Class abilities": War cry) or a foe threatened (spec §8
     /// "Skills": Intimidate), whatever comes of it.
@@ -366,7 +374,9 @@ impl Use {
             Use::SneakAttack => "a sneak attack that hits",
             Use::Surprise => "being caught unawares (the initiative check, whatever comes of it)",
             Use::Heal => "trying to treat bleeding, poison, or a disease",
-            Use::Handle => "giving your allies an order, or a kill of theirs",
+            Use::Handle => {
+                "giving your allies an order, a kill of theirs, or a try at taming a beast"
+            }
             Use::Intimidate => "roaring a war cry, or threatening a foe",
             Use::Song => "singing a song",
             Use::Kick => "kicking at a closed door",
@@ -529,6 +539,7 @@ impl Effect {
             Effect::SurpriseEase => "surprise_ease",
             Effect::Heal => "heal",
             Effect::Intimidate => "intimidate",
+            Effect::Tame => "tame",
             Effect::SongDegrees => "song_degrees",
             Effect::SongCraft => "song_craft",
             Effect::Kick => "kick",

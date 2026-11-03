@@ -1761,6 +1761,10 @@ impl<'a> PerceptionView<'a> {
                     Ability::Give if self.snapshot.kept_beside.is_empty() => {
                         Some(crate::ability::Unavailable::NotBeside)
                     }
+                    // A companion is one at a time (spec §8 "Allies": Tame).
+                    Ability::Tame if self.companion().is_some() => {
+                        Some(crate::ability::Unavailable::HaveCompanion)
+                    }
                     Ability::Spell(spell) => {
                         crate::ability::spell_unavailable(self.player, self.content, spell)
                     }

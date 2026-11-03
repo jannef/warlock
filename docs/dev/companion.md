@@ -2,8 +2,9 @@
 
 Developer notes for the companion, a beast that is the player's for good (spec §8 "Allies": "The
 animal companion"; the design is `docs/design/ranger-companion.md`, §18 and §20 the owner's
-decisions, which override the rest). Slice **C1** (#916, this file: the starting beast, the
-story's chapter, growth, always along, the nose), **C3** the collar (#918, below), **C4** Pack tactics (#919, below), and **C5** Hunter's bond (#920, below); C2 Tame,
+decisions, which override the rest). Slices **C1** (#916: the starting beast, the story's chapter,
+growth, always along, the nose), **C2** Tame (#917, "Taming" below), **C3** the collar (#918,
+below), **C4** Pack tactics (#919, below), and **C5** Hunter's bond (#920, below) are this file;
 C6 Sic 'em, C7 the wild beasts, C8 the probe build on it. The ally core it uses as
 it is (the side, the arm, the orders, the retinue, the kill credit) is `docs/dev/allies.md`.
 The witch's familiar (`docs/dev/familiar.md`) is the same **kept** beast: what here is the name,
@@ -26,7 +27,7 @@ pub struct CompanionData {
 
 `World::companion()` is the player's one ally of that source, on any level or in the retinue
 (`Actor::companion()` its data). A character has at most one: Animal companion makes none with
-one at hand, and Tame (C2) is refused with one. Nothing is kept on `WorldState`: the companion is
+one at hand, and Tame is refused with one. Nothing is kept on `WorldState`: the companion is
 derived from the actors, saved and hashed with its actor as every ally is. The code is
 `world/companion.rs`; the data `assets/data/companions.toml` → `content/companion.rs::CompanionRules`
 (`Content::companions()`, `None` without the file: then no companion can be made, and fixtures
@@ -37,7 +38,7 @@ without it hash as before).
 **Animal companion** (`assets/data/talents/animal_companion.toml`: tree `class`, `granted`,
 effects `companion` and `tame = 2`, system `allies`) is the ranger's level 1
 (`data/classes/07-ranger.toml`). `TalentEffect::Companion` → `TalentMods::companion`;
-`TalentEffect::Tame { bonus }` → `TalentMods::tame`, read by the Tame skill ability (C2). The
+`TalentEffect::Tame { bonus }` → `TalentMods::tame`, read by the Tame skill ability ("Taming" below). The
 check: a `tame` bonus of 1 to 10.
 
 `World::bring_companion()` runs in `World::begin` once the level is laid and the player stands on
@@ -63,10 +64,33 @@ nothing on `from_state` (a saved run has its own, or lost it).
 `tameable` beasts, `most_level` (2); `[start.by_race]` a list of 1 to 3 known `tameable` beasts
 of level at most `most_level` per race (a race the content lacks is refused; a shipped race
 without a list is a test's failure, `content/companion.rs::tests`, not a load error, so fixtures
-that add races load); `[tame]` (C2's numbers: `turns` 1 to 100, the rest 0 or more);
+that add races load); `[tame]` ("Taming" below: `turns` 1 to 100, the rest 0 or more);
 `[growth]` (`grade_percent` 1 to 300, `hp_per_level` 0 or more, every `every` 1 to 60); `names`
 at least one, none empty. When the content tells stories and has the `companion` chapter, every
 beast a start may draw has an `only` line in it with `when = { companion = ["<id>"] }`.
+
+## Taming
+
+`Ability::Tame` (`Source::Skill`, `Aim::Direction`; Handle animal's use, listed in its place,
+`Ability::use_of`, while `companions.toml` and `allies.toml` exist; had by whoever is trained in
+a skill with the `tame` benefit) → `Action::Tame(dir)` (`tame:DIR`) → `world/tame.rs`, whose
+module docs are the rules. `start_tame` refuses without time or a draw (untrained, a companion
+already, no beast seen there, one that is an ally or not `tameable`, one hostile that has seen
+the player); the menu greys the row with `Unavailable::HaveCompanion` (the perception's
+`companion()`), the only refusal it can know up front. `Spent::Tame(Taming { beast })` runs
+`World::tame` on `World::keep_at`, as a dig does: `[tame] turns` of `ActionKind::Tame`, stopped by
+keep_at's own interruptions, hit points falling (compared turn by turn, so regeneration hides no
+blow), or `taming_holds` going false. The last turn's action is `tame_check` (before that turn's
+creatures and perception, so both know what came of it): the food (one of the first food
+stack, `first_food`; an interrupted try eats none), `tame_odds`, `check::check` on the gameplay
+stream (two draws), the mark (`Use::Handle`, made or failed), `wake`, and `World::adopt`
+(`companion.rs`: the player's faction as `faction_override`, `Mind` cleared, `Ally` with
+`Companion(CompanionData)`, the grade and the risen hit points, the name's one draw on its own
+stream) or the snap. Failed and hostile, the beast's `Mind::last_seen` is set, which is what
+`creature_unaware` reads (the design said `noticed`; that field is when the player last perceived the creature, and
+does not refuse a try), so it may not be tried again until it loses the player. No state beyond
+the actors; no cooldown (time is the price). Tests: `world/tame_tests.rs`; the odds in the wiki,
+`xtask/src/wiki/companions.rs::taming` (`companion-taming.md`).
 
 ## Creature types: `tameable` and `nose`
 
@@ -274,7 +298,7 @@ screen snapshot built on a ranger run; no non-ranger run's hash moved.
 
 ## Tests
 
-`world/companion_tests.rs`: the draw over every shipped race and 400 seeds (its list or the
+Taming's are `world/tame_tests.rs`. `world/companion_tests.rs`: the draw over every shipped race and 400 seeds (its list or the
 rares, the rare odds, determinism, the names); a kitted ranger's beast (named, whole, for good,
 on the player's side, said, its `only` line told, the dumps) and a warrior's none; the
 scenarios' rangers (Maren's beside her, Osric's in the retinue), a restored run making no

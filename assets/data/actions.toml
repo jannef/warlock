@@ -101,6 +101,9 @@ song = 500
 # Trying to steal from someone next to you (the abilities menu's Steal; spec §8 "Stealing"),
 # whether it works or you are caught.
 steal = 1000
+# One turn of taming a beast beside you (the abilities menu's Tame; spec §8 "Allies"): a try
+# takes companions.toml's [tame] turns of them.
+tame = 1000
 # Threatening a foe you see (the abilities menu's Intimidate; spec §8 "Skills"), whether it quails or
 # not.
 intimidate = 1000

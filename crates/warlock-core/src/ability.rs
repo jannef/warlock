@@ -69,6 +69,13 @@ pub enum Ability {
     /// skill's use. Whoever is trained in a skill with the `steal` benefit has it, in that
     /// skill's place among the skills.
     Steal,
+    /// Tame a beast next to you (spec §8 "Allies": Tame; `world/tame.rs`): [`Action::Tame`],
+    /// Handle animal's use (the skill with the `tame` benefit, listed as this in its place while
+    /// `data/companions.toml` and `data/allies.toml` exist). Had by whoever is trained in it, at
+    /// any level; unavailable ([`Unavailable::HaveCompanion`]) while the player has a companion
+    /// (the perception knows); otherwise the rules refuse, taking no time, without a beast there
+    /// that may be tamed now.
+    Tame,
     /// Threaten a foe you see (spec §8 "Skills": Intimidate; #868): [`Action::Intimidate`] at
     /// its cell, the Intimidate skill's use (the skill with the `intimidate` benefit, listed as
     /// this in its place while `data/intimidate.toml` exists). Had by whoever is trained in it;
@@ -271,6 +278,9 @@ pub enum Unavailable {
     NotBeside,
     /// Stillness with nothing to end: none of the statuses it ends is suffered.
     Still,
+    /// Tame with a companion already (spec §8 "Allies": a companion is for good, and one at a
+    /// time).
+    HaveCompanion,
 }
 
 impl Unavailable {
@@ -297,6 +307,7 @@ impl Unavailable {
             Unavailable::NoAllies => "no allies here".into(),
             Unavailable::NotBeside => "not beside you".into(),
             Unavailable::Still => "your mind is already still".into(),
+            Unavailable::HaveCompanion => "you already have a companion".into(),
         }
     }
 
@@ -313,6 +324,7 @@ impl Unavailable {
             Unavailable::NoAllies => "no_allies".into(),
             Unavailable::NotBeside => "not_beside".into(),
             Unavailable::Still => "still".into(),
+            Unavailable::HaveCompanion => "have_companion".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
                 format!("short:{}", content.resource(resource).id).into()
@@ -401,7 +413,9 @@ impl Ability {
     /// The ability that is the use of skill `def`, once that use is in the game: Disable device's
     /// (the disarm effect's) is [`Ability::Disarm`], Open lock's (the pick effect's)
     /// [`Ability::PickLock`], the Steal skill's (the `steal` benefit, with `data/steal.toml`)
-    /// [`Ability::Steal`], Heal's (the heal effect's) [`Ability::Heal`], Intimidate's (the
+    /// [`Ability::Steal`], Heal's (the heal effect's) [`Ability::Heal`], Handle animal's (the
+    /// `tame` benefit, with `data/companions.toml` and `data/allies.toml`) [`Ability::Tame`],
+    /// Intimidate's (the
     /// `intimidate` benefit, with `data/intimidate.toml`) [`Ability::Intimidate`], Survival's (the
     /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`]. `None` for a skill whose
     /// use is to come, or that has none.
@@ -410,6 +424,12 @@ impl Ability {
         (gives(Effect::Disarm).then_some(Ability::Disarm))
             .or_else(|| gives(Effect::Pick).then_some(Ability::PickLock))
             .or_else(|| gives(Effect::Heal).then_some(Ability::Heal))
+            .or_else(|| {
+                (gives(Effect::Tame)
+                    && content.companions().is_some()
+                    && content.allies().is_some())
+                .then_some(Ability::Tame)
+            })
             .or_else(|| {
                 (gives(Effect::Intimidate) && content.intimidate().is_some())
                     .then_some(Ability::Intimidate)
@@ -487,6 +507,7 @@ impl Ability {
                     || actor.talent_mods(content).steal
             }
             Ability::Forage => actor.skills.trains_effect(content, Effect::Forage),
+            Ability::Tame => actor.skills.trains_effect(content, Effect::Tame),
             Ability::Heal => actor.skills.trains_effect(content, Effect::Heal),
             Ability::Intimidate => actor.skills.trains_effect(content, Effect::Intimidate),
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
@@ -512,6 +533,7 @@ impl Ability {
             Ability::Disarm => "disarm",
             Ability::PickLock => "pick_lock",
             Ability::Steal => "steal",
+            Ability::Tame => "tame",
             Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
             Ability::Heal => "heal",
@@ -548,6 +570,7 @@ impl Ability {
             Ability::Disarm => "Disarm a trap",
             Ability::PickLock => "Pick lock",
             Ability::Steal => "Steal",
+            Ability::Tame => "Tame",
             Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
             Ability::Heal => "Heal",
@@ -582,6 +605,11 @@ impl Ability {
             Ability::Steal => {
                 "Lift a purse or a trinket from someone next to you who is not hostile; caught, \
                  they turn on you."
+            }
+            Ability::Tame => {
+                "Spend a while beside a beast next to you that is not your foe, or has not seen \
+                 you, to win it over, with food if you carry some: won, it is your companion for \
+                 good."
             }
             Ability::Intimidate => {
                 "Threaten a foe you see nearby: unless it keeps its nerve, it flees from you a \
@@ -646,6 +674,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
             | Ability::Heal => Source::Skill,
@@ -687,9 +716,11 @@ impl Ability {
             Ability::Temper | Ability::Give => Aim::Item,
             Ability::ThrowVoice | Ability::SetOn | Ability::Intimidate => Aim::Cell,
             Ability::Heal => Aim::Ailment,
-            Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash => {
-                Aim::Direction
-            }
+            Ability::Disarm
+            | Ability::PickLock
+            | Ability::Steal
+            | Ability::Tame
+            | Ability::ShieldBash => Aim::Direction,
         }
     }
 
@@ -705,6 +736,7 @@ impl Ability {
             Ability::Disarm => Some(ActionKind::Disarm),
             Ability::PickLock => Some(ActionKind::PickLock),
             Ability::Steal => Some(ActionKind::Steal),
+            Ability::Tame => Some(ActionKind::Tame),
             Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
             Ability::Heal => Some(ActionKind::Heal),
@@ -735,6 +767,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
             | Ability::Heal
@@ -810,10 +843,16 @@ impl Ability {
             (Ability::Disarm, Some(dir)) => Some(Action::Disarm(dir)),
             (Ability::PickLock, Some(dir)) => Some(Action::PickLock(dir)),
             (Ability::Steal, Some(dir)) => Some(Action::Steal(dir)),
+            (Ability::Tame, Some(dir)) => Some(Action::Tame(dir)),
             (Ability::ShieldBash, Some(dir)) => Some(Action::Bash(dir)),
-            (Ability::Disarm | Ability::PickLock | Ability::Steal | Ability::ShieldBash, None) => {
-                None
-            }
+            (
+                Ability::Disarm
+                | Ability::PickLock
+                | Ability::Steal
+                | Ability::Tame
+                | Ability::ShieldBash,
+                None,
+            ) => None,
             (Ability::Pray, _) => Some(Action::Pray),
             (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
@@ -864,6 +903,7 @@ impl Ability {
             | Ability::Disarm
             | Ability::PickLock
             | Ability::Steal
+            | Ability::Tame
             | Ability::Forage
             | Ability::Heal
             | Ability::SecondWind
@@ -947,6 +987,8 @@ impl Ability {
             | Ability::Intimidate
             | Ability::Forage
             | Ability::BloodMagic
+            // Whether the player has a companion is the perception's to say.
+            | Ability::Tame
             | Ability::Pray
             | Ability::Temper
             | Ability::Drink
@@ -988,6 +1030,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Smite
         | ClassActive::BrandingSmite
         | ClassActive::WrathfulSmite
+        | ClassActive::BanishingSmite
         | ClassActive::Whirlwind
         | ClassActive::WarCry
         | ClassActive::HolyRadiance
@@ -1160,7 +1203,7 @@ mod tests {
                 "bluff",
                 "decipher_script",
                 "disarm",
-                "handle_animal",
+                "tame",
                 "heal",
                 "intimidate",
                 "knowledge",

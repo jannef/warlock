@@ -608,6 +608,8 @@ pub struct TalentMods {
     /// The modes of smiting it has (Branding smite, Wrathful smite; `world/smite.rs`): each
     /// the Smite blow with its rider.
     pub smite_modes: Vec<SmiteRider>,
+    /// Holy wrath's dice (`world/smite.rs`), if it has it.
+    pub holy_wrath: Option<Dice>,
     /// The active Holy radiance: its status and the light it sheds while it lasts.
     pub radiance: Option<(StatusId, LightId)>,
     /// The active Patient defence, if it has it: the status it gives (Poised).
@@ -923,6 +925,8 @@ pub enum SmiteRider {
         check: Stat,
         difficulty: i32,
     },
+    /// Banishing smite's: a summoned foe is unmade (an unholy one took the dice twice).
+    Banish,
 }
 
 impl SmiteRider {
@@ -931,6 +935,7 @@ impl SmiteRider {
         match self {
             SmiteRider::Brand { .. } => crate::content::ClassActive::BrandingSmite,
             SmiteRider::Fear { .. } => crate::content::ClassActive::WrathfulSmite,
+            SmiteRider::Banish => crate::content::ClassActive::BanishingSmite,
         }
     }
 }
@@ -1152,7 +1157,9 @@ impl TalentMods {
             A::Whirlwind => self.whirlwind,
             A::LayOnHands => self.lay_on_hands.is_some(),
             A::Smite => self.smite.is_some(),
-            A::BrandingSmite | A::WrathfulSmite => self.smite_mode(active).is_some(),
+            A::BrandingSmite | A::WrathfulSmite | A::BanishingSmite => {
+                self.smite_mode(active).is_some()
+            }
             A::HolyRadiance => self.radiance.is_some(),
             A::PatientDefence => self.patient_defence.is_some(),
             A::StunningStrike => self.stunning_strike.is_some(),
@@ -1962,6 +1969,7 @@ impl TalentMods {
                 difficulty,
             } => {
                 let rider = match (mode, content.status_id(&status), turns, check) {
+                    (SmiteRiderKind::Banish, ..) => Some(SmiteRider::Banish),
                     (SmiteRiderKind::Brand, Some(status), ..) => {
                         Some(SmiteRider::Brand { status, severity })
                     }
@@ -1979,6 +1987,7 @@ impl TalentMods {
                     self.smite_modes.push(rider);
                 }
             }
+            TalentEffect::HolyWrath { dice } => self.holy_wrath = Some(dice),
             TalentEffect::Radiance { status, light } => {
                 if let (Some(status), Some(light)) =
                     (content.status_id(&status), content.light_id(&light))

@@ -121,7 +121,7 @@ log, active first) from perception;
 
 Action text syntax: whitespace-separated `move:DIR wait open:DIR close:DIR kick:DIR pick:DIR ascend descend use_tool
 pickup[:LETTERS] drop[:LETTERS] sell[:LETTERS] pay[:DIR] equip:SLOT:LETTER remove:SLOT bash:DIR fire:X,Y throw:LETTER:X,Y
-eat:LETTER eat:floor:LETTER give:LETTER[:DIR] read:LETTER[:X,Y|:LETTER] study:LETTER scribe:SPELL dig:DIR search search:N disarm:DIR heal[:ID[:DIR]] intimidate:X,Y pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC say:DIR:WORDS steal:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
+eat:LETTER eat:floor:LETTER give:LETTER[:DIR] read:LETTER[:X,Y|:LETTER] study:LETTER scribe:SPELL dig:DIR search search:N disarm:DIR heal[:ID[:DIR]] intimidate:X,Y pray temper:LETTER drink use:ID[:DIR|:X,Y] chat:DIR ask:DIR:TOPIC say:DIR:WORDS steal:DIR tame:DIR throw_voice:X,Y order:follow|stay|hunt:X,Y rest:GOAL encounter:CHOICE stance:NAME vision:PROFILE
 talent:ID[:CHOICE] advance:SKILL levelup:auto xp:N call:ID rank:SKILL:N
 skip:DURATION weather:KIND spawn ally:CREATURE[:N[:DURATION]] meet:ENTRY[:OUTCOME] effect:ID@X,Y[>X,Y] identify[:LETTERS] afflict:STATUS drain:N resource:ID infect:DISEASE reveal:ID quest_roll:ID:TARGET`
 (`DIR` = N
@@ -159,6 +159,7 @@ no accepting or declining (#422); a
 service is asked for by its id the same way, `ask:E:cure`, paid in gold and taking a chat's time,
 and a trader's one offer too, `ask:E:wares` buying it (the pedlar's; docs/dev/npcs.md "A trader's offer"),
 docs/dev/npcs.md);
+`tame:N` tames the beast north of the player (the Tame ability, for those trained in Handle animal: ten turns beside it, then a Willpower check; refused, with no time, with a companion already or no beast there that may be tamed now; docs/dev/companion.md "Taming");
 `say:E:life_before_death` says words to the creature east (normalised: lower case, letters and
 digits, joined by `_`; it answers what its dialogue's `[[dialogue.word]]`s know, else its
 `unheard` line; a chat's time either way; docs/dev/npcs.md "Saying words"; in the game the
@@ -371,7 +372,7 @@ file). Topics:
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
 - `docs/dev/allies.md` — allies: `Actor::ally`, the side, the ally arm of the AI, the three orders, following across levels and the retinue, the clock, an ally's kill, Beast-bond, the dev `ally:`
-- `docs/dev/companion.md` — the animal companion: `AllySource::Companion(CompanionData)`, the starting beast by race and the rares (`data/companions.toml`), the name, growth with the master's level (the hooks in `actor.rs`), always along, the nose, `CreatureDef::{tameable, nose}`, the story's chapter, the `companion` dump
+- `docs/dev/companion.md` — the animal companion: `AllySource::Companion(CompanionData)`, the starting beast by race and the rares (`data/companions.toml`), taming (`world/tame.rs`), the name, growth with the master's level (the hooks in `actor.rs`), always along, the nose, `CreatureDef::{tameable, nose}`, the story's chapter, the `companion` dump
 - `docs/dev/familiar.md` — the witch's familiar: `AllySource::Familiar(CompanionData)` and `kept()`, the starting beast by race (`data/familiars.toml`), the touch, the harrying, the direction asked with two kept beasts beside, the `familiar` dump
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
