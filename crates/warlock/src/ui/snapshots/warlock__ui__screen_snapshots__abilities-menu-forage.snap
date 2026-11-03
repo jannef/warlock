@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Blæc, your boar, pads at your heel.
+ Beald, your boar, pads at your heel.
  You search the land about you for something to eat. You find nothing worth eating.
 
 
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
 
 
 
- Forest  ·  HP 20/20  ·  MP 3/3  ·  Sta 10/10  ·  Lv 1  ·  Blæc: unhurt  ·  06:40        ? controls
+ Forest  ·  HP 20/20  ·  MP 3/3  ·  Sta 10/10  ·  Lv 1  ·  Beald: unhurt  ·  06:40       ? controls

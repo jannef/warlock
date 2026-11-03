@@ -5,6 +5,7 @@ expression: "describe(&area(1, 25, 20))"
 Forest (local:25,20) 80x40
 edges -> overworld at (25, 20)
 deer at (74, 23) route N N E W E W S S
+boar at (60, 7) route E E W W E E W W
 0 placed lights, flow speeds {}
 ..........PPPP.....PPP.bb.TTTTTTTTTTPPPTTTT......b,,,,,,,*******,,,,,,,,,,.TTTTT
 ,,,,,,,,,......,,,..PPP..bTTTTTTTTTTTTTTTTTTTTbTT.b,,,****,,,,,,,,,,,,,,,,.TTTTT
@@ -13,7 +14,7 @@ deer at (74, 23) route N N E W E W S S
 ,,,,,,,,,,,,,,,,,,,,.b.TTTTTTTTTTTTTTTTTTTTTTTTTPPPPPTTTTT...........bTTTT..T..T
 *,,,,,,,,,,,,,,,,...TTTTTTTTTTTTTTTTTTTTTTTTTTPPPPPPP...TT..T....,,,..TTT.......
 ..,,,,,,,,,,,,,,...bTTTTTTTTTTTTTTT.b..TTTTTTTPPPPP....TTTT.TTT..**,,....b...,,,
-,,,,,,,,,,,,,,,,,..T.TTTTTTTTTTTT....TTT.TT..bTPPPPPTTb....b...T.....PPPPP...,,,
+,,,,,,,,,,,,,,,,,..T.TTTTTTTTTTTT....TTT.TT..bTPPPPPTTb....bd..T.....PPPPP...,,,
 ,,,,,,,,,,,,,,,,,,...PPTTTTTTTTTPbT..b...........TTTT.%..b..T...TTTPPP..........
 ,,,,,,,,,,,,,***,,%b.PPPTTTTTTTTbb..b.TTTTT..b.....%.....bTbTTTTTTTPP.,,,,,.....
 ....,,,,,,,,,,,,,,..%.bbPPPPTTTTT...b.TTTTTTTT%TT..T.TTTTTTTTTTTTTTPP..,,,.....P
