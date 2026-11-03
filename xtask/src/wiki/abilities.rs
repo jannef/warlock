@@ -46,6 +46,11 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Disarm => "everyone trained in Disable device".into(),
             Ability::PickLock => "everyone trained in Open lock".into(),
             Ability::Steal => "everyone trained in Steal".into(),
+            Ability::Tame => {
+                "everyone trained in Handle animal, at any level (not while they have a companion; \
+                 see [Taming](allies.md#taming))"
+                    .into()
+            }
             Ability::Intimidate => "everyone trained in Intimidate".into(),
             Ability::Heal => "everyone trained in Heal (with something to treat)".into(),
             Ability::Forage => {

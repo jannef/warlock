@@ -840,6 +840,8 @@ impl World {
         let blow = profile.map(|profile| combat::strike_with(&profile, &struck, rng, lucky));
         let blow = blow.map(|b| self.ambushed(attacker, unseen, b));
         let blow = blow.map(|b| self.lore_blow(attacker, target, b));
+        // Holy wrath's die (`smite.rs`).
+        let blow = blow.map(|b| self.holy_wrathed(attacker, target, b));
         // Diamond soul's catch (`ascetic.rs`): a missile's hit undone for a point of ki.
         let blow = self.caught_shot(target, (missile, with), blow, events);
         events.push(Event::Attacked {

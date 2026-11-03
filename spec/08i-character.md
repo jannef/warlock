@@ -1113,10 +1113,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     `docs/design/paladin-smites.md` §6; each its own row and `use:ID:DIR`, Smite's blow, then a
     rider on a hit that did damage; a rider with nothing to do still spends its zeal; works for
     Kind or better): Branding smite (level 12, 3 zeal: the foe is Branded, five minutes of the
-    faint item glow shed wherever it goes, so it is seen in the dark and lights its fellows) and
+    faint item glow shed wherever it goes, so it is seen in the dark and lights its fellows),
     Wrathful smite (level 32, 4 zeal: the foe makes a Willpower check against 13 plus the
     paladin's Presence modifier, everyone alike, and failing is Frightened by the paladin for 2d3
-    turns, fleeing them), Holy radiance (on and off: Radiant, with no end of its
+    turns, fleeing them), and Banishing smite (level 50, 6 zeal, #913: a foe that was summoned is
+    unmade, dying there whatever its hit points, the paladin's kill as any other; an unholy foe
+    not summoned takes the smite's dice twice over, the rest of the blow once; anyone else, a
+    plain smite), Holy radiance (on and off: Radiant, with no end of its
     own, sheds the faint item glow, reaching 3 cells, from the player, a light source like a
     glowing item's; a cast; works for Kind or better), Patient defence (the ascetic's at 18, #849: for a
     point of Ki and a wait's time, Poised until their next action: Dodge +4 from the status's own
@@ -1168,8 +1171,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (disease checks +2, poison eases twice as fast), Purity of body (no
     disease is ever caught: `World::expose` refuses, nothing rolled), Retribution (the paladin's
     at 25, #912: a hostile beside them whose melee attack lands a blow takes their smite back at
-    once, free, for 4 zeal; works for Kind or better, a band-gated passive; §8 "Free blows"), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
-    status that ticks and every disease, for half its zeal: 3); Martial arts (bare hands and
+    once, free, for 4 zeal; works for Kind or better, a band-gated passive; §8 "Free blows"), Holy wrath (the paladin's at 40, #913: every melee blow, shot, or throw of
+    theirs that hits an unholy target rolls 1d6 more, after the blow's own damage, of its kind,
+    resisted but never soaked, for no zeal; no bands), Bulwark (Protection +2), Avatar (Lay on
+    hands heals fully, cures every status that ticks and every disease, for half its zeal: 3; and
+    Holy wrath's die lands on every foe, not only the unholy); Martial arts (bare hands and
     kicks roll 1d6; grants Ki, §8 "Resources"), Flurry (level 1 beside it: a melee attack
     with nothing in hand strikes twice, the second at −2, for a point of ki; with none, once),
     Step of the wind's passive half (level 6: steps 10 % cheaper in no body armour and with no
@@ -1386,7 +1392,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     race's kind, or rarely a rare one, at their side from the first turn, that grows with their
     level and always comes along, §8 "Allies": "The animal companion"; `TalentEffect::Companion`
     read by `World::bring_companion`; and `tame = 2`, `TalentMods::tame`, the ranger's edge at
-    taming, read by the Tame skill ability when it comes), Pack tactics (the ranger's level
+    taming, read by the Tame skill ability, `world/tame.rs`), Pack tactics (the ranger's level
     18, #919: a creature beside both the ranger and their companion is flanked, the ranger's
     melee blows and the companion's at it +2 to hit, never a shot, a throw, or a spell; and the
     companion's attacks at the favoured prey carry the ranger's Favoured prey, Master hunter's

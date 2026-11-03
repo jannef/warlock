@@ -29,8 +29,9 @@ seventy careers to level 60). It prints the Markdown tables of the sections from
 After a PR that tunes combat data (weapon skills, creatures, classes, spells, stats, items), run
 it again and replace those sections, then revisit the tuning notes. The code is
 `crates/warlock-core/src/world/balance_probe.rs` (the measuring, with the method in its module
-docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/schools.rs`
-(the casters' school pace), `balance_probe/familiar.rs` (the witch's familiar), and `balance_probe/tables.rs` (the tables).
+docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/ranger.rs`
+(the ranger and their companion), `balance_probe/familiar.rs` (the witch's familiar),
+`balance_probe/schools.rs` (the casters' school pace), and `balance_probe/tables.rs` (the tables).
 
 ## Method
 
@@ -478,6 +479,9 @@ The paladin in plain gear (a long sword; from level 5 a shield and the warrior's
 | 50 | 17.2 | 0.10 | 98/15 · 20.6:2.5 · 11 / 183 | 99/15 · 39.8:2.7 · 6.0 / 173 | 99/27 · 43.5:6.5 · 5.5 / 59 | 1.12 · 2.7 |
 | 60 | 18.8 | 0.10 | 85/20 · 15.8:5.6 · 14 / 72 | 95/20 · 34.1:5.1 · 6.5 / 76 | 97/18 · 43.7:6.7 · 4.0 / 57 | 1.05 · 2.8 |
 
+- **Not in the table**: Holy wrath's die (1d6, 3.5 on a hit, at 40; on every foe at 60, #913) is
+  no part of `World::smite_profile`, so the "Blow" and "Smite" columns from level 40 are that much
+  low on the unholy, and at 60 on anyone; nor is Banishing smite's doubling (50).
 - **A smite every third blow is what the fight pays for**: a round of plain blows builds about
   one zeal (1.0 to 1.3: the paladin's hits nearly every blow, the foe's far fewer, a tenth from
   time), so a smite (3) comes about every three rounds, the design's "a smite every third blow".
@@ -488,6 +492,23 @@ The paladin in plain gear (a long sword; from level 5 a shield and the warrior's
   third"; Smite's dice and cost are data.
 - **The pool covers a held smite and a heal**: 10.7 at level 1 to 18.8 at 60 (Presence and the
   level), so a full pool is three smites, or a smite and Lay on hands (6).
+
+
+The ranger (#923) and their starting beast, in the starting kit (the short sword: the probe's blows are melee, so the bow is not measured), stats as rolled, short blades at the rank the other tables assume for the level, seeds 1 to 6 (each draws its own beast), against the monsters within two levels. Fight cells as in "Fights" (P(it hits) / P(it is hit) % · damage a round · rounds to kill / rounds to die) for the ranger alone and the companion alone (its grade is the ranger's level: its hit points, to-hit, damage, Defence and Protection raised by `[growth]`); together, the rounds to kill with both striking (the monster's hit points over the two damages added); the last column is the ranger alone's rounds over those.
+
+| L | beasts | its hp | Ranger | Companion | Together: rounds to kill | alone over together |
+|---|---|---|---|---|---|---|
+| 1 | hound, boar | 17 | 75/54 · 4.6:0.8 · 2.8 / 27 | 71/71 · 4.4:1.6 · 3.7 / 10 | 1.6 | x1.7 |
+| 5 | hound, boar | 24 | 80/62 · 4.6:2.3 · 5.2 / 14 | 73/77 · 4.0:3.8 · 7.9 / 6.3 | 3.1 | x1.7 |
+| 10 | hound, boar | 35 | 81/65 · 6.2:4.9 · 7.5 / 8.9 | 83/76 · 6.8:6.4 · 7.7 / 5.5 | 3.8 | x2.0 |
+| 15 | hound, boar | 46 | 83/67 · 7.3:7.4 · 8.6 / 7.6 | 85/78 · 10.5:9.8 · 7.1 / 4.7 | 3.9 | x2.2 |
+| 20 | hound, boar | 57 | 87/74 · 7.6:9.1 · 11 / 7.7 | 91/78 · 12.6:9.7 · 7.4 / 6.0 | 4.4 | x2.5 |
+| 30 | hound, boar | 79 | 80/85 · 8.0:19.0 · 15 / 5.0 | 96/81 · 19.6:17.6 · 7.2 / 4.5 | 4.9 | x3.1 |
+| 40 | hound, boar | 101 | 75/92 · 10.4:18.7 · 15 / 7.1 | 98/79 · 27.4:15.2 · 6.6 / 6.7 | 4.6 | x3.3 |
+| 50 | hound, boar | 124 | 69/98 · 7.5:29.4 · 32 / 4.9 | 99/81 · 34.0:23.1 · 6.7 / 5.4 | 5.5 | x5.8 |
+| 60 | hound, boar | 145 | 46/99 · 3.8:34.6 · 83 / 4.3 | 99/84 · 34.8:26.4 · 6.9 / 5.8 | 6.3 | x13.1 |
+
+What it says (2026-11-03, C8): the hound (grade the ranger's level) out-damages the melee ranger from level 5 on and by level 60 deals about nine times the short sword's damage a round (34.8 against 3.8; the ranger's real weapon is the bow, which this probe does not measure, so read the ranger column as a floor). It hits 71 to 99 % of the time against monsters of the ranger's level and kills one in about seven rounds at every level, and it lasts about five to six rounds against them, the same as the ranger does. The two together kill 1.6 to 6.3 rounds; the companion is the larger half of the pair from level 5. `grade_percent = 100` (the design's Q1) stands (the beast's level is the ranger's); whether a hound that out-damages its melee master nine to one at level 60 is too much is the owner's call (a tamed wolf is not measured here: it is the same growth from a higher base, and the probe's seeds draw only the hound and the boar).
 
 ## Summons
 
