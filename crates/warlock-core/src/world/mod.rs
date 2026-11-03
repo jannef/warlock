@@ -107,6 +107,7 @@ mod chest;
 mod class;
 mod class_ability;
 mod collapse;
+mod collar;
 mod companion;
 mod concentration;
 mod consecrate;
@@ -250,6 +251,7 @@ pub use attacks::{AttackSource, OwnAttack};
 pub use calling::CallingStatus;
 pub use cast::Reach;
 pub use caster_level::casting_percent;
+pub use collar::fits_neck;
 pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use curse::{Rising, rise_candidates, rises_as};
@@ -1397,6 +1399,7 @@ impl World {
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
             Action::Temper { item } => return self.start_temper(*item),
+            Action::Give { item, ally } => return self.give_collar(*item, *ally),
             Action::UseTalent(TalentActive::SecondWind) => return self.second_wind(events),
             Action::UseTalent(TalentActive::BloodMagic) => return self.blood_magic(),
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
@@ -1561,6 +1564,8 @@ mod class_rogue_tests;
 mod class_tests;
 #[cfg(test)]
 mod collapse_tests;
+#[cfg(test)]
+mod collar_tests;
 #[cfg(test)]
 mod concentration_tests;
 #[cfg(test)]

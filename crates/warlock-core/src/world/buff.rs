@@ -76,6 +76,7 @@ impl World {
             Action::Drink => ActionKind::Drink,
             Action::Forage => ActionKind::Forage,
             Action::Temper { .. } => ActionKind::Temper,
+            Action::Give { .. } => ActionKind::Wear,
             Action::Disarm(_) => ActionKind::Disarm,
             Action::Heal { .. } => ActionKind::Heal,
             Action::Use(active, _)
