@@ -86,8 +86,9 @@ pub struct CharacterScreen {
     /// The birth sign's gifts and flaw by name, in grant order (spec §8 "Birth sign"): the
     /// dimmed Stars line; empty without any.
     stars: Vec<String>,
-    /// The companion by name and kind, "Snel, a hound" (spec §8 "Allies"); none without one.
-    companion: Option<String>,
+    /// The kept beasts by name and kind, "Snel, a hound", "Tibb, a cat" (spec §8 "Allies": a
+    /// companion, a familiar), in actor id order; none without one.
+    kept: Vec<String>,
     scores: PerStat<u8>,
     /// The scores without status effects: a score below its own is lowered.
     base: PerStat<u8>,
@@ -141,7 +142,7 @@ impl CharacterScreen {
                 identity: Vec::new(),
                 birth: Vec::new(),
                 stars: Vec::new(),
-                companion: None,
+                kept: Vec::new(),
                 scores: PerStat::splat(warlock_core::stats::AVERAGE),
                 base: PerStat::splat(warlock_core::stats::AVERAGE),
                 effects: Vec::new(),
@@ -198,7 +199,7 @@ impl CharacterScreen {
                 false => t.name,
             })
             .collect();
-        let companion = view.companion().map(|(ally, data)| {
+        let kept = (view.kept()).map(|(ally, data)| {
             let kind = &content.creature(ally.creature).name;
             format!(
                 "{}, {} {kind}",
@@ -206,12 +207,13 @@ impl CharacterScreen {
                 warlock_core::content::article(kind)
             )
         });
+        let kept = kept.collect();
         Self {
             name,
             identity,
             birth,
             stars,
-            companion,
+            kept,
             scores: view.own_scores(),
             base: view.own_base_scores(),
             effects: (view.own_effects())
@@ -297,7 +299,7 @@ impl CharacterScreen {
         let stars = stars_lines(&self.stars, width);
         let identity_rows = match self.identity.len() {
             0 => 0,
-            n => (n + birth.len() + stars.len()) as i32 + i32::from(self.companion.is_some()) + 1,
+            n => (n + birth.len() + stars.len()) as i32 + self.kept.len() as i32 + 1,
         };
         let thresholds = (self.load.as_ref()).map_or(Vec::new(), |l| thresholds(l, width));
         let status_rows = self.resources.len() as i32
@@ -341,11 +343,14 @@ impl CharacterScreen {
             }
             y += 1;
         }
-        if let Some(companion) = &self.companion {
-            // `With    Snel, a hound`: the beast at the character's side (spec §8 "Allies").
+        for (i, beast) in self.kept.iter().enumerate() {
+            // `With    Snel, a hound`: the beasts at the character's side (spec §8 "Allies"), a
+            // companion and a familiar each on its own row.
             if fits(y) {
-                console.print(x, y, "With", TEXT_DIM);
-                console.print(x + 8, y, companion, TEXT);
+                if i == 0 {
+                    console.print(x, y, "With", TEXT_DIM);
+                }
+                console.print(x + 8, y, beast, TEXT);
             }
             y += 1;
         }

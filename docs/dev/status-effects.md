@@ -19,7 +19,8 @@ effects (`Actor::effects: Effects`, at most one `Effect { status, severity, tick
 status in status order; `Effects::add` applies the stacking rule, `penalty`, `regen`,
 `is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank
 `seconds × severity` degree-seconds). `world/status.rs` applies them: `World::afflict(actor,
-status, severity, by, events)` (**the one way to give an actor a status**: food poisoning
+status, severity, by, events)` (**the one way to give an actor a status**; Hunter's bond shares a
+buff from it, `afflict_one` being the unshared door, `docs/dev/companion.md`: food poisoning
 from what the player eats (#137), traps, diseases call it; a status with a `damage_type`
 (poisoned: poison) meets the actor's resistance there as a dose, docs/dev/combat.md "Damage
 types": immune refuses it, else `damage::resist` on the severity; a creature type's `immune`
@@ -137,6 +138,7 @@ Silenced also blocks `song` (the bard's songs, `world/song.rs`, #870). A song's 
 degrees are time, the combat bonus stays. The Lullaby (#873) gives `drowsy` (`max = 3`,
 `stacking = "refresh"`) to the hostile hearers who fail its check, caused by the singer.
 **Under a hex**: an actor has an effect whose status a `kind = "hex"` spell lays;
+A familiar's touch gives hexes too, with its master as the giver (`docs/dev/familiar.md`).
 `Content::hex_statuses()` (computed at load from the spells, in status order; `ill_wished`,
 `weakened`, `sluggish`, `drowsy`, `webbed`) is the one definition, "of hers" adds `Effect::by`
 the player. The witch's Cackle (#904, `world/witch.rs`) reads it: each such hex on a creature

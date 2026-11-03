@@ -47,6 +47,7 @@ mod encounter;
 mod encounter_tests;
 mod experience;
 mod faction;
+mod familiar;
 #[cfg(test)]
 mod fey_roster_tests;
 #[cfg(test)]
@@ -214,6 +215,7 @@ pub use experience::{
     Discovery, Experience, FACTORS, Factor, Guideline, Kills, Levels, MAX_LEVEL, MAX_XP, pace_words,
 };
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
+pub use familiar::FamiliarRules;
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use forage::{ForageGround, ForageRules};
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
@@ -672,6 +674,9 @@ pub struct Content {
     /// The animal companion's data (`data/companions.toml`, spec §8 "Allies"); none without
     /// the file, when no companion can be made.
     companions: Option<CompanionRules>,
+    /// The witch's familiar's data (`data/familiars.toml`, spec §8 "Allies"); none without the
+    /// file, when no familiar can be made.
+    familiars: Option<FamiliarRules>,
     /// The rules of stat training (`data/stats.toml`, spec §8 "Stats").
     stat_training: StatTraining,
     factions: Factions,
@@ -825,6 +830,7 @@ impl Content {
             prayer: None,
             allies: None,
             companions: None,
+            familiars: None,
             stat_training: StatTraining::default(),
             factions: Factions::default(),
             lights: Vec::new(),
@@ -1238,6 +1244,11 @@ impl Content {
         let path = "data/companions.toml";
         if let Some(text) = files.get_optional(path) {
             content.companions = Some(CompanionRules::parse(path, text, &content)?);
+        }
+        // The familiar's names creatures, races, and a hex spell.
+        let path = "data/familiars.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.familiars = Some(FamiliarRules::parse(path, text, &content)?);
         }
         let mut seen: BTreeMap<String, &str> = BTreeMap::new();
         for (path, id, text) in files.in_dir("scenarios") {
@@ -3145,6 +3156,12 @@ impl Content {
     /// the file, when no companion can be made.
     pub fn companions(&self) -> Option<&CompanionRules> {
         self.companions.as_ref()
+    }
+
+    /// The witch's familiar's data (spec §8 "Allies"; `data/familiars.toml`); `None` without
+    /// the file, when no familiar can be made.
+    pub fn familiars(&self) -> Option<&FamiliarRules> {
+        self.familiars.as_ref()
     }
 
     /// The rules of stat training (spec §8 "Stats"; `data/stats.toml`, else

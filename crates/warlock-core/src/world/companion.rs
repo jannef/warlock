@@ -48,25 +48,36 @@ pub struct CompanionData {
 }
 
 impl Actor {
-    /// Its companion data, if it is someone's companion.
+    /// Its companion data, if it is someone's companion (not a familiar: the ranger's own
+    /// rules read this).
     pub fn companion(&self) -> Option<&CompanionData> {
         match &self.ally.as_ref()?.source {
             AllySource::Companion(data) => Some(data),
-            AllySource::Summoned { .. } => None,
+            AllySource::Summoned { .. } | AllySource::Familiar(_) => None,
         }
     }
 
     pub(super) fn companion_mut(&mut self) -> Option<&mut CompanionData> {
         match &mut self.ally.as_mut()?.source {
             AllySource::Companion(data) => Some(data),
-            AllySource::Summoned { .. } => None,
+            AllySource::Summoned { .. } | AllySource::Familiar(_) => None,
         }
     }
 
+    /// Its data, if it is someone's **kept** beast, a companion or a familiar
+    /// ([`AllySource::kept`]): what the shared rules read (the name, growth, always along).
+    pub fn kept(&self) -> Option<&CompanionData> {
+        self.ally.as_ref()?.source.data()
+    }
+
+    pub(super) fn kept_mut(&mut self) -> Option<&mut CompanionData> {
+        self.ally.as_mut()?.source.data_mut()
+    }
+
     /// How far its grade stands above its type's level (`[growth]`'s `above`), 0 for anyone
-    /// that is not a companion.
+    /// that is not a kept beast.
     pub fn grade_above(&self, content: &Content) -> i32 {
-        match self.companion() {
+        match self.kept() {
             Some(data) => CompanionGrowth::above(data.grade, content.creature(self.creature).level),
             None => 0,
         }
@@ -105,10 +116,10 @@ impl World {
             .find(|id| self.state.actors[id].companion().is_some())
     }
 
-    /// The companion's name and type, as the words say them: `("Snel", "hound")`.
+    /// A kept beast's name and type, as the words say them: `("Snel", "hound")`.
     pub(super) fn companion_words(&self, id: ActorId) -> Option<(String, String)> {
         let actor = self.state.actors.get(&id)?;
-        let data = actor.companion()?;
+        let data = actor.kept()?;
         Some((
             data.name.clone(),
             self.content.creature(actor.creature).name.clone(),
@@ -162,7 +173,7 @@ impl World {
         let id = self.make_ally(creature, at, AllySource::Companion(data), None);
         let name = name_for(&content, self.state.seed, id);
         if let Some(actor) = self.state.actors.get_mut(&id) {
-            if let Some(data) = actor.companion_mut() {
+            if let Some(data) = actor.kept_mut() {
                 data.name = name.clone();
             }
             // Its grade raised its maximum: it starts whole.
@@ -175,31 +186,31 @@ impl World {
         self.say(format!("{name}, your {kind}, pads at your heel."));
     }
 
-    /// The player's level changed: their companion's grade follows it (never down), its hit
-    /// points rising with its maximum; "Snel grows stronger." among the level's news.
+    /// The player's level changed: the grade of each kept beast of theirs (a companion, a
+    /// familiar) follows it (never down), its hit points rising with its maximum; "Snel grows
+    /// stronger." among the level's news, in actor id order.
     pub(super) fn grow_companion(&mut self) {
         let content = self.content.clone();
-        let Some(id) = self.companion() else {
-            return;
-        };
         let Some(rules) = content.companions() else {
             return;
         };
         let level = self.player_level();
-        let Some(actor) = self.state.actors.get_mut(&id) else {
-            return;
-        };
-        let own = content.creature(actor.creature).level;
-        let grade = rules.growth.grade(level, own);
-        let before = actor.max_hp(&content);
-        let Some(data) = actor.companion_mut().filter(|d| grade > d.grade) else {
-            return;
-        };
-        data.grade = grade;
-        let name = data.name.clone();
-        let after = actor.max_hp(&content);
-        actor.hp += after - before;
-        self.news.push(format!("{name} grows stronger."));
+        for id in self.allies_of(self.state.player) {
+            let Some(actor) = self.state.actors.get_mut(&id) else {
+                continue;
+            };
+            let own = content.creature(actor.creature).level;
+            let grade = rules.growth.grade(level, own);
+            let before = actor.max_hp(&content);
+            let Some(data) = actor.kept_mut().filter(|d| grade > d.grade) else {
+                continue;
+            };
+            data.grade = grade;
+            let name = data.name.clone();
+            let after = actor.max_hp(&content);
+            actor.hp += after - before;
+            self.news.push(format!("{name} grows stronger."));
+        }
     }
 
     /// The nearest actor ally `id`'s nose finds (the module docs): one `wanted` within its
@@ -210,27 +221,10 @@ impl World {
         id: ActorId,
         wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
     ) -> Option<(ActorId, Pos)> {
-        let World { state, content, .. } = self;
-        let me = &state.actors[&id];
-        let nose = content.creature(me.creature).nose?;
-        let mut near: Vec<(i32, ActorId, Pos)> = (state.actors.values())
-            .filter(|a| a.level == me.level && a.id != id && !a.in_retinue())
-            .filter(|a| a.pos.chebyshev(me.pos) <= nose)
-            .filter(|a| !a.effects.hides(content) && wanted(state, content, me, a))
-            .map(|a| (a.pos.dist2(me.pos), a.id, a.pos))
-            .collect();
-        if near.is_empty() {
-            return None;
-        }
-        near.sort_unstable();
-        let level: &LevelState = state.current();
-        // A smell passes a closed door; the radius covers the Chebyshev square's corners.
-        let los = LineOfSight::compute(me.pos, nose * 3 / 2 + 1, |q| {
-            level.is_opaque(content, q) && !level.is_closed_door(content, q)
-        });
-        (near.into_iter())
-            .find(|&(_, _, p)| los.contains(p))
-            .map(|(_, other, p)| (other, p))
+        let me = &self.state.actors[&id];
+        smelt(&self.state, &self.content, me, wanted)
+            .into_iter()
+            .next()
     }
 
     /// Ally `id` scented `target` without seeing it (`ally.rs::ally_plan`): a companion growls,
@@ -241,11 +235,11 @@ impl World {
             return;
         };
         let pos = me.pos;
-        let Some(data) = me.companion() else {
+        let Some(data) = me.kept() else {
             return;
         };
         let fresh = data.scent != Some(target);
-        if let Some(data) = (self.state.actors.get_mut(&id)).and_then(Actor::companion_mut) {
+        if let Some(data) = (self.state.actors.get_mut(&id)).and_then(Actor::kept_mut) {
             data.scent = Some(target);
         }
         if fresh && self.perception.sees_actors_at(pos) && !self.perception.sees_actors_at(at) {
@@ -253,6 +247,42 @@ impl World {
             self.say(format!("{who} growls at the dark."));
         }
     }
+}
+
+/// Every actor `me`'s nose finds, nearest first (ties by lower id): each `wanted` one on its
+/// level, not in the retinue nor disguised (a mimic smells of nothing), within its type's `nose`
+/// (Chebyshev) and reached by a smell (a line of sight from `me` with closed doors counted open,
+/// whatever the light; never through a wall). Empty for a type without a nose. The ally's arm
+/// takes the first ([`World::smelled`]); Hunter's bond shows the player them all
+/// (`Perception::compute`). Pure: nothing drawn, nothing changed.
+pub(crate) fn smelt(
+    state: &WorldState,
+    content: &Content,
+    me: &Actor,
+    wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
+) -> Vec<(ActorId, Pos)> {
+    let Some(nose) = content.creature(me.creature).nose else {
+        return Vec::new();
+    };
+    let mut near: Vec<(i32, ActorId, Pos)> = (state.actors.values())
+        .filter(|a| a.level == me.level && a.id != me.id && !a.in_retinue())
+        .filter(|a| a.pos.chebyshev(me.pos) <= nose)
+        .filter(|a| !a.effects.hides(content) && wanted(state, content, me, a))
+        .map(|a| (a.pos.dist2(me.pos), a.id, a.pos))
+        .collect();
+    if near.is_empty() {
+        return Vec::new();
+    }
+    near.sort_unstable();
+    let level: &LevelState = state.current();
+    // A smell passes a closed door; the radius covers the Chebyshev square's corners.
+    let los = LineOfSight::compute(me.pos, nose * 3 / 2 + 1, |q| {
+        level.is_opaque(content, q) && !level.is_closed_door(content, q)
+    });
+    (near.into_iter())
+        .filter(|&(_, _, p)| los.contains(p))
+        .map(|(_, other, p)| (other, p))
+        .collect()
 }
 
 /// The growth hooks (`data/companions.toml [growth]`; the module docs): what a companion's grade
@@ -294,7 +324,7 @@ impl Actor {
     /// 1, by what its hide is called; a body with none, none), for the type's own to be taken
     /// over when it is more ([`Actor::protection_plus`]); 0 for anyone else.
     pub(super) fn growth_protection(&self, content: &Content) -> i32 {
-        let Some(data) = self.companion() else {
+        let Some(data) = self.kept() else {
             return 0;
         };
         let hide = (content.creature(self.creature).natural.as_ref()).map(|h| h.name.as_str());

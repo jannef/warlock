@@ -30,6 +30,13 @@
 //! [`LightBlind`](crate::content::LightBlind): drow) whose own cell is lit at least to its
 //! `glare` is dazzled: they see nothing farther than its `sight`.
 //!
+//! **Hunter's bond** (spec §8 "Allies"; `TalentMods::shared_sight`): with the player's companion
+//! on their level, a **second viewpoint** ([`BondView`]): the cells the companion sees by its own
+//! line of sight and eyes ([`crate::sight::sees_by`], creature sight's rule) are seen, with wall
+//! completion around them, and so are the cells of the hostiles its nose finds
+//! ([`crate::world::smelt`]: within its `nose`, through the dark and closed doors). The light grid
+//! covers its line of sight too, perceived by the player's eye. Dazzle does not touch it.
+//!
 //! The overworld is seen at map scale instead: a cell is visible iff it is in line of sight
 //! within the daylight sight radius ([`daylight::overworld_sight`]: day 9, twilight 5, night 2,
 //! more under a bright moon, less in rain; Moon-eyed adds its cells at night), whatever its
@@ -91,6 +98,7 @@ use crate::light::{
 };
 use crate::noise::{self, PerceivedSound};
 use crate::object::{Stack, Weight};
+use crate::sight::{self, LineOfSight};
 use crate::skills::{self, SkillId};
 use crate::stats::PerStat;
 use crate::talent::{self, Candidate};
@@ -277,8 +285,8 @@ pub struct SeenActor {
     /// It is an ally of the player's (spec §8 "Allies"), which they know by sight.
     #[serde(skip)]
     pub ally: bool,
-    /// It is the player's companion (`world/companion.rs`): its name is in
-    /// [`PerceptionView::allies`] under its id.
+    /// It is the player's kept beast, a companion or a familiar (`world/companion.rs`,
+    /// `familiar.rs`): its name is in [`PerceptionView::allies`] under its id.
     #[serde(skip)]
     pub companion: bool,
 }
@@ -526,6 +534,38 @@ pub(crate) struct Perception {
     /// What the player may treat on their allies beside them (`world/heal.rs`): they know their
     /// own allies' hurts.
     ally_ailments: Vec<crate::heal::OwnAilment>,
+    /// The ways to the player's kept beasts beside them (`world/heal.rs`), in direction order.
+    kept_beside: Vec<crate::geom::Dir>,
+}
+
+/// Hunter's bond's second viewpoint (the module docs): the player's companion on their level,
+/// its line of sight within its type's sight (on the overworld no farther than daylight allows),
+/// and its eyes.
+struct BondView<'a> {
+    companion: &'a Actor,
+    los: LineOfSight,
+    eye: VisionProfile,
+}
+
+/// The [`BondView`] of the player's companion, if it stands on their level (not in the
+/// retinue).
+fn bond_view<'a>(state: &'a WorldState, content: &Content) -> Option<BondView<'a>> {
+    let level = state.current();
+    let companion = (state.actors.values()).find(|a| {
+        a.master() == Some(state.player)
+            && a.companion().is_some()
+            && a.level == level.id
+            && !a.in_retinue()
+    })?;
+    let def = content.creature(companion.creature);
+    let radius = sight::sight_radius(state, content, def.sight);
+    let los = LineOfSight::compute(companion.pos, radius, |p| level.is_opaque(content, p));
+    let eye = (companion.eyes(content, &content.vision_profiles()[def.vision])).into_owned();
+    Some(BondView {
+        companion,
+        los,
+        eye,
+    })
 }
 
 /// A disguised mimic as the snapshot hides it: a shut chest of its level's band at its cell.
@@ -584,12 +624,35 @@ impl Perception {
                 los_cells.push(p);
             }
         });
+        // Hunter's bond: the companion's line of sight is lit as the player's is (`lit_los`;
+        // without the bond the same as the player's).
+        let bond = talents
+            .shared_sight
+            .then(|| bond_view(state, content))
+            .flatten();
+        let both = bond.as_ref().map(|bond| {
+            let (mut lit_los, mut lit_cells) = (los.clone(), los_cells.clone());
+            for p in bond.los.cells() {
+                if let Some(seen) = lit_los.get_mut(p)
+                    && !*seen
+                {
+                    *seen = true;
+                    lit_cells.push(p);
+                }
+            }
+            (lit_los, lit_cells)
+        });
+        let (lit_los, lit_cells) = both.as_ref().map_or((&los, &los_cells), |(g, c)| (g, c));
+        let light_reach = bond.as_ref().map_or(VIEW_RADIUS, |bond| {
+            let apart = bond.companion.pos.dist2(viewer).isqrt() + 1;
+            VIEW_RADIUS.max(apart + bond.los.radius())
+        });
 
         // Sources that can light a cell in view, or a surface whose bounce light reaches one (a
         // bounce step moves at most √2 < 2 cells; wall faces are within a cell of view).
-        let near = lights.near(state, content, viewer, VIEW_RADIUS + 1 + 2 * BOUNCE_STEPS);
+        let near = lights.near(state, content, viewer, light_reach + 1 + 2 * BOUNCE_STEPS);
         // Direct light is needed on everything in sight and within bounce reach of it.
-        let area = Area::around(los_cells.iter().copied(), BOUNCE_STEPS, width, height);
+        let area = Area::around(lit_cells.iter().copied(), BOUNCE_STEPS, width, height);
 
         // Under the open sky: the sun and each moon that shines where no taller terrain shades a
         // cell, the sky everywhere (none of them under a roof).
@@ -654,7 +717,7 @@ impl Perception {
         // source's contribution alike, so they still add up to the whole.
         let shade = |p: Pos, light: Light| level.room_shade(content, p, light);
         let mut base = Grid::new(width, height, Light::DARK);
-        for &p in &los_cells {
+        for &p in lit_cells {
             base[p] = shade(p, ambient.saturating_add(indirect(p)));
         }
 
@@ -668,12 +731,12 @@ impl Perception {
                     pos: source.pos,
                     preset: source.preset,
                 };
-                let cells = lit_in_sight(&mask.cells, &los, |q, l| shade(q, eye.perceive(l)));
+                let cells = lit_in_sight(&mask.cells, lit_los, |q, l| shade(q, eye.perceive(l)));
                 (source.key, emitter, cells)
             })
             .collect();
         for (key, emitter, beam) in &beams {
-            let cells = lit_in_sight(&beam.cells, &los, |q, l| shade(q, eye.perceive(l)));
+            let cells = lit_in_sight(&beam.cells, lit_los, |q, l| shade(q, eye.perceive(l)));
             lit.push((*key, *emitter, cells));
         }
         for (_, _, cells) in &lit {
@@ -740,12 +803,45 @@ impl Perception {
             }
         }
 
-        // Wall completion: opaque cells bounding a transparent cell seen by eye.
+        // Hunter's bond: what the companion sees by its eyes, and the hostiles its nose finds.
+        let mut bond_seen = Vec::new();
+        if let Some(bond) = &bond {
+            for p in bond.los.cells().filter(|p| !is_opaque(*p)) {
+                if sight.get(p) != Some(&Sight::Hidden) {
+                    continue;
+                }
+                if sight::sees_by(state, content, lights, &bond.los, &bond.eye, p).is_some() {
+                    sight[p] = Sight::Seen;
+                    visible_cells.push(p);
+                    bond_seen.push(p);
+                }
+            }
+            let hostile = |s: &WorldState, c: &Content, _: &Actor, a: &Actor| {
+                world::stance_between(s, c, s.player(), a) == Stance::Hostile
+            };
+            for (_, p) in world::smelt(state, content, bond.companion, &hostile) {
+                if sight.get(p) == Some(&Sight::Hidden) {
+                    sight[p] = Sight::Seen;
+                    visible_cells.push(p);
+                }
+            }
+        }
+
+        // Wall completion: opaque cells bounding a transparent cell seen by eye (the companion's
+        // too, within its own sight).
         for q in seen {
             for w in Dir::ALL.map(|d| q.step(d)) {
                 if sight.get(w) == Some(&Sight::Hidden) && is_opaque(w) && w.dist2(viewer) <= reach2
                 {
                     sight[w] = if los[w] { Sight::Seen } else { Sight::Edge };
+                    visible_cells.push(w);
+                }
+            }
+        }
+        for q in bond_seen {
+            for w in Dir::ALL.map(|d| q.step(d)) {
+                if sight.get(w) == Some(&Sight::Hidden) && is_opaque(w) {
+                    sight[w] = if lit_los[w] { Sight::Seen } else { Sight::Edge };
                     visible_cells.push(w);
                 }
             }
@@ -757,9 +853,9 @@ impl Perception {
         // lights.
         let is_seen = |q: Pos| sight.get(q) == Some(&Sight::Seen);
         let is_face = |w: Pos| {
-            is_opaque(w) && (los.get(w) == Some(&true) || sight.get(w) == Some(&Sight::Edge))
+            is_opaque(w) && (lit_los.get(w) == Some(&true) || sight.get(w) == Some(&Sight::Edge))
         };
-        for &w in los_cells.iter().chain(&visible_cells) {
+        for &w in lit_cells.iter().chain(&visible_cells) {
             if is_face(w) {
                 let from_neighbors = Dir::ALL
                     .map(|d| w.step(d))
@@ -858,7 +954,7 @@ impl Perception {
                 shape: shape(a, content),
                 unaware: false,
                 ally: a.master() == Some(state.player),
-                companion: a.master() == Some(state.player) && a.companion().is_some(),
+                companion: a.master() == Some(state.player) && a.kept().is_some(),
             })
             .collect();
         // Stalker's eye: which of them have not noticed the player.
@@ -973,6 +1069,10 @@ impl Perception {
             disguises,
             allies: allies_of(state, content),
             ally_ailments: crate::heal::of_allies(&crate::world::allies_beside(state), content),
+            kept_beside: (crate::world::allies_beside(state).into_iter())
+                .filter(|(_, a)| a.kept().is_some())
+                .map(|(d, _)| d)
+                .collect(),
         }
     }
 
@@ -2185,8 +2285,29 @@ impl<'a> PerceptionView<'a> {
     pub fn companion(&self) -> Option<(&AllyView, &crate::world::CompanionData)> {
         (self.snapshot.allies.iter()).find_map(|a| match &a.source {
             crate::world::AllySource::Companion(data) => Some((a, data)),
-            crate::world::AllySource::Summoned { .. } => None,
+            _ => None,
         })
+    }
+
+    /// The player's familiar among their allies (`world/familiar.rs`), with its name and
+    /// grade; `None` without one.
+    pub fn familiar(&self) -> Option<(&AllyView, &crate::world::CompanionData)> {
+        (self.snapshot.allies.iter()).find_map(|a| match &a.source {
+            crate::world::AllySource::Familiar(data) => Some((a, data)),
+            _ => None,
+        })
+    }
+
+    /// The player's kept beasts (a companion, a familiar; `AllySource::kept`), with their names
+    /// and grades, in actor id order: what the status bar shows a line of each.
+    pub fn kept(&self) -> impl Iterator<Item = (&AllyView, &crate::world::CompanionData)> {
+        (self.snapshot.allies.iter()).filter_map(|a| a.source.data().map(|d| (a, d)))
+    }
+
+    /// The ways to the player's kept beasts beside them, in direction order: with two or more,
+    /// tending one asks which way first (spec §8 "Allies"; the owner, #907 Q4).
+    pub fn kept_beside(&self) -> &[crate::geom::Dir] {
+        &self.snapshot.kept_beside
     }
 
     /// How many allies are with the player: on their level or in their retinue.

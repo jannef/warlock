@@ -96,6 +96,7 @@ mod attacks;
 mod background;
 mod beast_friend;
 mod bleed;
+mod bond;
 mod boons;
 mod buff;
 mod calling;
@@ -131,6 +132,7 @@ mod encounter_area;
 mod equip;
 mod experience;
 mod eyes;
+mod familiar;
 mod feature;
 mod fight;
 mod flavour;
@@ -251,6 +253,7 @@ pub use attacks::{AttackSource, OwnAttack};
 pub use calling::CallingStatus;
 pub use cast::Reach;
 pub use caster_level::casting_percent;
+pub(crate) use companion::smelt;
 pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
 pub use curse::{Rising, rise_candidates, rises_as};
@@ -262,6 +265,7 @@ pub use encounter::{
     Outcome as EncounterOutcome, PENDING_REFUSED, Party, Pending,
 };
 pub use experience::{Discovered, Progress};
+pub use familiar::{draw as familiar_draw, name_for as familiar_name};
 pub use fight::{Cause, Death};
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
@@ -908,9 +912,12 @@ impl World {
             state.messages.push(0, text);
         }
         let mut world = Self::assemble(content, state);
-        // Animal companion's beast (spec §8 "Allies"; `companion.rs`), before the story knows it.
+        // Animal companion's beast and the witch's familiar (spec §8 "Allies"; `companion.rs`,
+        // `familiar.rs`), before the story knows them.
         world.bring_companion();
-        if world.settle_in() || world.companion().is_some() {
+        world.bring_familiar();
+        let kept = world.companion().is_some() || world.familiar().is_some();
+        if world.settle_in() || kept {
             *world.perception =
                 Perception::compute(&world.state, &world.content, &mut world.lights);
         }
@@ -1524,6 +1531,8 @@ mod bestiary_tests;
 mod blood_tests;
 #[cfg(test)]
 mod body_talent_tests;
+#[cfg(test)]
+mod bond_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]

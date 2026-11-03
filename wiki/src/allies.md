@@ -120,6 +120,25 @@ hunt as one: a creature beside you both is flanked, +2 [to hit](combat.md#hittin
 attacks and your companion's at it, and your companion shares your
 [favoured prey](classes.md#ranger) bonus.
 
+### Hunter's bond
+
+From level 25 the ranger's **[Hunter's bond](talents.md#talent-hunters-bond)** lets them share what
+their companion has, while it stands on the same level (not while it rides with you across the
+overworld):
+
+- **Shared sight.** You see every cell it sees, by its own eyes: as far as its kind sees, in the
+  dark as its [vision](vision.md) allows, and around the corner you cannot see past. You also see
+  the cell of every foe its [nose](#companions) finds, however dark, **through a closed door**,
+  never through a wall. These are seen cells like any other: you remember them, can look at them,
+  and can aim at them. It finds no hidden [trap](traps.md) or
+  [secret door](searching.md) for you and smells nothing of a disguised
+  [mimic](chests.md), and being dazzled leaves its view untouched.
+- **Shared buffs.** A [buff](status-effects.md#buffs-and-cooldowns) that lands on either of
+  you lands on the other too, at the same strength, and each of you wears it off alone: any
+  [status](status-effects.md) that a buff [spell](magic.md) lays or a [potion](potions.md) lends, whatever laid it ("Snel is bark-skinned
+  too."; it reaches your companion on the overworld too). A hex, a harm, or a cooldown never
+  crosses.
+
 From level 40 **[Sic 'em](abilities.md#ability-sic)** sets your companion on a [hostile](creatures.md) creature
 you see, within 10 cells, for 5 [focus](resources.md#resource-focus) and the [time](turns.md#what-actions-cost)
 of a wait. It goes for that creature before any other and follows it as long as it sees or smells it,
@@ -131,6 +150,59 @@ to you.
 ### The companion's rules
 
 {{#include generated/companion-rules.md}}
+
+## Familiars
+
+A **familiar** is the [witch](classes.md#witch)'s small beast of the old craft, hers from the
+first turn by her [Familiar](talents.md#talent-familiar) (level 1): a cat (*catt*), a toad
+(*tādige*), a raven (*hræfn*), a hare (*hara*), a bat (*hrēremūs*), or another small beast her
+race's list holds. She has one at a time, and she may keep a [companion](#companions) beside it:
+they are different things. It is a **kept** beast by the companions' rules: it has a
+name, drawn from those the English witch trials recorded ("Tibb, your cat, winds about your
+ankles."), it stays until it is slain, its level is hers ([growth](#growth)), it
+[always comes along](#companions), and it dies as a companion does, leaving a corpse. It obeys the
+[orders](#orders), and its kills pay as any ally's. It is not a fighter: its blow is a scratch, and
+what the blow carries is the hex.
+
+### The touch
+
+When a familiar's melee blow hits a creature and leaves it alive, the creature is
+[hexed](status-effects.md#status-ill-wished) as if she had cast
+[Evil eye](magic.md#spell-evil-eye) on it, at the degrees she would cast it now, for no
+[mana](mana.md) and none of her turns. **She is the hex's giver**, so what reads a hex of hers
+reads this one: her [cackle](abilities.md#ability-cackle) keeps it on and her
+[malison](talents.md#talent-malison) bites through it. The same touch starts every other
+[hex](status-effects.md) of hers on that creature afresh at its own degree: while the familiar
+scratches, her hexes stick. Any other ally's blow does none of this, a cat's included: the touch is a familiar's.
+
+### What it goes for
+
+A familiar **goes for what she has hexed**: the nearest creature it sees under a hex of hers,
+within its [order](#orders)'s reach, comes before any other, however much nearer the others stand.
+With nothing hexed in sight it fights as any ally does, and its first hit hexes what it bit.
+
+### Starting familiars
+
+The kind is drawn by chance as the run begins. [Creatures in
+numbers](creature-numbers.md#pace-senses-and-size) has their speed, eyes, and feet; they differ in
+those, never in the hex.
+
+{{#include generated/familiar-starts.md}}
+
+### A familiar's rules
+
+{{#include generated/familiar-rules.md}}
+
+The beasts only a familiar may be, at her level, by the same [growth](#growth) rules as a
+companion's (the rest are in that table):
+
+{{#include generated/familiar-growth.md}}
+
+### Two kept beasts beside you
+
+With a companion and a familiar both beside you, and something to treat on one of them, the
+[Heal](skills.md#skill-heal) ability first asks **which way**: a direction, or the wait key for
+yourself. With one beside you it asks nothing.
 
 ## The rules
 

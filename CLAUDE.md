@@ -249,7 +249,8 @@ first: name, stage, giver, objective, and status), `story` (the player's backgro
 a paragraph a line as the story screen tells it, `no story` without one), `companion` (the
 player's animal companion as they know it, `Snel, a hound (grade 12) at (12, 5): unhurt, order
 follow`, the cell only where they see it, `Snel, a hound (grade 12): with you` in the retinue,
-`no companion` without one; docs/dev/companion.md), `truth`
+`no companion` without one; docs/dev/companion.md), `familiar` (the witch's familiar, in the same
+words; `no familiar` without one; docs/dev/familiar.md), `truth`
 (ground truth, hidden traps and secret doors (`S`) too, a sealed room's standing breach (`H`), a line per chest after the map, `chest 7 (hutch) at (12, 5): shut, locked, holds 3 stacks`, and hidden locations by their entrance's
 glyph, **dev-only**; on a level with a danger
 it and `actors` start with `danger 3 population 2/6 spawn next 08:15:00`), `actors` (every actor on the level with its hit points, mana (and, with any, its caster level, `cl 8`), its resources (`resources rage
@@ -371,6 +372,7 @@ file). Topics:
 - `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
 - `docs/dev/allies.md` — allies: `Actor::ally`, the side, the ally arm of the AI, the three orders, following across levels and the retinue, the clock, an ally's kill, Beast-bond, the dev `ally:`
 - `docs/dev/companion.md` — the animal companion: `AllySource::Companion(CompanionData)`, the starting beast by race and the rares (`data/companions.toml`), the name, growth with the master's level (the hooks in `actor.rs`), always along, the nose, `CreatureDef::{tameable, nose}`, the story's chapter, the `companion` dump
+- `docs/dev/familiar.md` — the witch's familiar: `AllySource::Familiar(CompanionData)` and `kept()`, the starting beast by race (`data/familiars.toml`), the touch, the harrying, the direction asked with two kept beasts beside, the `familiar` dump
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log

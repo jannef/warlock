@@ -293,8 +293,14 @@ pub struct TalentMods {
     pub sees_unaware: bool,
     /// An animal companion from the first turn (Animal companion; `world/companion.rs`).
     pub companion: bool,
+    /// A familiar from the first turn (Familiar; `world/familiar.rs`).
+    pub familiar: bool,
     /// Added to its taming checks (Animal companion's edge; the Tame skill ability reads it).
     pub tame: i32,
+    /// It sees what its companion sees (Hunter's bond; `Perception::compute`).
+    pub shared_sight: bool,
+    /// Its buffs and its companion's are shared (Hunter's bond; `world/bond.rs`).
+    pub shared_buffs: bool,
     /// To hit on its melee blows and its companion's at a creature beside them both (Pack
     /// tactics; `world/pack.rs`).
     pub pack_tactics: i32,
@@ -1394,7 +1400,10 @@ impl TalentMods {
             TalentEffect::SneakReach { value } => self.sneak_reach += value,
             TalentEffect::SeesUnaware => self.sees_unaware = true,
             TalentEffect::Companion => self.companion = true,
+            TalentEffect::Familiar => self.familiar = true,
             TalentEffect::Tame { bonus } => self.tame += bonus,
+            TalentEffect::SharedSight => self.shared_sight = true,
+            TalentEffect::SharedBuffs => self.shared_buffs = true,
             TalentEffect::PackTactics { to_hit } => self.pack_tactics += to_hit,
             TalentEffect::SharesFavouredPrey => self.shares_favoured_prey = true,
             TalentEffect::StartledBlow => self.startled_blow = true,
