@@ -1,7 +1,7 @@
 # The overworld at map scale.
 
 # The overworld (`world` scenario): along the road from the Hall to the bridge over the Wendle,
-# at 12:12, sunlit.
+# at 12:07, sunlit (the clock after these steps; a ranger's, as the scenario's character).
 [[golden]]
 name = "overworld-noon"
 scenario = "world"

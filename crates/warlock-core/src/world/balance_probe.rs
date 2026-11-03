@@ -65,6 +65,7 @@
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
 //! blow, potions, and resistances against spells.
 
+mod ranger;
 mod schools;
 mod summons;
 mod tables;
@@ -1135,6 +1136,7 @@ fn balance_probe() {
     tables::rage(&p, &mut rng, &mut out);
     tables::ki(&p, &mut rng, &mut out);
     tables::zeal(&p, &mut rng, &mut out);
+    ranger::ranger_and_hound(&p, &mut rng, &mut out);
     summons::summons(&p, &mut rng, &mut out);
     tables::stats(&p, &mut out);
     tables::stat_sweep(&p, &mut out);
