@@ -75,6 +75,15 @@ familiar". `world/familiar.rs`:
 No `watch_roll`: an encounter on the overworld does not come upon a calling as it does a camp (nor a
 study). A start never draws the bargain's: `draw` is unchanged.
 
+## The story
+
+The companion chapter (`data/background/08-companion.toml`, `docs/dev/background.md`) is told to a
+witch because `Witness::kept` holds; her beast's tale is the `only` line whose
+`when = { familiar = [kind] }` fits `Witness::familiar` (`World::tell_background` reads
+`World::familiar()`), one for every beast a race's list may give. `FamiliarRules::parse` refuses a
+list beast without one; the rare black hound and panther are told the plain line. A companion and a
+familiar at once: each `only` line fits by its own condition, the chapter drawing among those that fit.
+
 ## The touch
 
 `World::familiar_touch`, from `fight.rs::resolve` when a blow hit: a melee hit of a familiar's that

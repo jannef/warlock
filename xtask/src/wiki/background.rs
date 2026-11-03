@@ -274,6 +274,18 @@ fn when_text(content: &Content, line: &StoryLine) -> String {
     if !beasts.is_empty() {
         parts.push(format!("with {} at your side", any_of(&beasts)));
     }
+    let familiars: Vec<String> = (w.familiar.iter())
+        .map(|&c| {
+            link(
+                Term::Creature,
+                &content.creature(c).id,
+                &content.creature(c).name,
+            )
+        })
+        .collect();
+    if !familiars.is_empty() {
+        parts.push(format!("with {} as your familiar", any_of(&familiars)));
+    }
     parts.retain(|p| !p.is_empty());
     dash(parts.join("; "))
 }

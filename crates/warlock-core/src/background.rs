@@ -68,9 +68,11 @@ pub struct Witness<'a> {
     /// The type of the companion at their side as the run begins, if any (spec §8 "Allies":
     /// made before the story is told).
     pub companion: Option<CreatureId>,
+    /// The type of the familiar at their side as the run begins, if any (spec §8 "Allies": the
+    /// witch's, made before the story is told).
+    pub familiar: Option<CreatureId>,
     /// A kept beast at their side as the run begins, a companion or a familiar (spec §8
-    /// "Allies"): what the companion chapter's `when` reads. A familiar's own lines are #931's
-    /// (F3); until then a familiar is told the chapter's plain line.
+    /// "Allies"): what the companion chapter's `when` reads.
     pub kept: bool,
 }
 
@@ -97,6 +99,7 @@ impl Witness<'_> {
             && w.age.is_none_or(|a| a.holds(self.age))
             && any(&w.campaign, self.campaign)
             && (w.companion.is_empty() || self.companion.is_some_and(|c| w.companion.contains(&c)))
+            && (w.familiar.is_empty() || self.familiar.is_some_and(|c| w.familiar.contains(&c)))
     }
 }
 

@@ -24,7 +24,7 @@ common the rest) and `[points]` (what each effect kind is worth: only for the ti
 and the wiki; nothing counts a story's total). Its comments document every field.
 `assets/data/background/NN-<chapter>.toml` is one chapter a file in file-name order (`[chapter]`
 `id`, `name`, `paragraph` 1 to 4, slot `defaults`, and `when = { companion = true }` for a chapter
-told only to a witness with a kept beast, a companion or a familiar (`Witness::kept`; `false`: without one; `Chapter::when`, `ChapterWhen::fits`);
+told only to a witness with a kept beast, a companion or a familiar (`Witness::kept`; `false`: without one; a line's `when.familiar` reads `Witness::familiar`, the familiar's type, as `companion` reads the companion's; `Chapter::when`, `ChapterWhen::fits`);
 `[[line]]`s), then a campaign's own in
 `assets/campaigns/<id>/data/background/` (read by `ContentFiles::table("background")` after the
 shared ones; `Chapter::campaign` from the path). A story told in campaign `c` is the shared
@@ -56,8 +56,8 @@ the built-in content without it, for tests of what a story would add to).
 The shared chapters (`assets/data/background/01-parents.toml` to `08-companion.toml`) and the
 Ascmearc's `road` hold 141 lines, written by the implementers (decision 13 of the design; the
 owner reviews the texts after the wave): Parents 18, Birth 12, Childhood 17, Youth 27, The trial
-15, Fortune 15, Leaving 15, The companion 15 (#916: told only with a starting beast, one `only`
-line a beast and the plain line; `docs/dev/companion.md`), the road 7. Of them 17 are uncommon, 11 rare, and 5
+15, Fortune 15, Leaving 15, The companion 24 (#916, #931: told only with a starting beast, one `only`
+line a beast, `companion = [...]` for a ranger's and `familiar = [...]` for a witch's, and the plain line; `docs/dev/companion.md`), the road 7. Of them 17 are uncommon, 11 rare, and 5
 fateful (`the_comet`, `the_master`, `the_flux`, `the_named_blade`, `the_hollow_tree`). How
 they are spread:
 

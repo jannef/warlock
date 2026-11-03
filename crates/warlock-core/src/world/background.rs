@@ -40,6 +40,7 @@ impl World {
             return;
         }
         let companion = (self.companion()).map(|id| self.state.actors[&id].creature);
+        let familiar = (self.familiar()).map(|id| self.state.actors[&id].creature);
         let player = self.state.player();
         let band = (content.alignment())
             .zip(player.alignment)
@@ -58,7 +59,8 @@ impl World {
             trained: &trained,
             campaign: &self.state.campaign,
             companion,
-            kept: companion.is_some() || self.familiar().is_some(),
+            familiar,
+            kept: companion.is_some() || familiar.is_some(),
         };
         let story = background::tell(&content, self.state.seed, &witness);
         for effect in story.effects {

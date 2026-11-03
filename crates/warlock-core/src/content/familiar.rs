@@ -95,6 +95,18 @@ impl FamiliarRules {
         out
     }
 
+    /// Every beast the races' lists may give, each once (the rares have no story line of their
+    /// own: the companion chapter's plain line tells them).
+    pub fn common_starts(&self) -> Vec<CreatureId> {
+        let mut out: Vec<CreatureId> = Vec::new();
+        for id in self.by_race.iter().flat_map(|(_, l)| l.iter()) {
+            if !out.contains(id) {
+                out.push(*id);
+            }
+        }
+        out
+    }
+
     /// How a familiar of type `creature` arrives ("winds about your ankles").
     pub fn arrives(&self, creature: CreatureId) -> Option<&str> {
         (self.arrives.iter())
@@ -250,6 +262,22 @@ impl FamiliarRules {
                 "`arrives.{}`: nothing draws it",
                 content.creature(*id).id
             )));
+        }
+        // The story's chapter: every beast a race's list may give has its `only` line.
+        if let Some(chapter) = (content.background()).and_then(|b| {
+            b.chapters
+                .iter()
+                .find(|c| c.id == super::companion::CHAPTER && c.campaign.is_none())
+        }) {
+            for id in rules.common_starts() {
+                if !(chapter.lines.iter()).any(|l| l.only && l.when.familiar == [id]) {
+                    let name = &content.creature(id).id;
+                    return Err(err(format!(
+                        "the `{}` chapter has no `only` line for `{name}` (`when = {{ familiar = [\"{name}\"] }}`)",
+                        super::companion::CHAPTER
+                    )));
+                }
+            }
         }
         Ok(rules)
     }
