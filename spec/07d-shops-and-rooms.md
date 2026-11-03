@@ -704,7 +704,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     box, a blob's cells, whether the player has seen a cell of it (`glimpsed`) and been inside
     (`entered`), a sealed room's `breach`; and the hollow walls found, `LevelState::hollows`)
     and the effect covering it (`LevelState::pervading`); saved and hashed, each
-    left out while empty. The rules ask one question, `World::effects_at(level, pos)` (inside the
+    left out while empty.
+  - **Hallowed ground** (the priest's Sanctuary, §8 "Class abilities"; #885): a place of
+    peace laid by a rite, not a room. `LevelState::hallows` (saved and hashed, left out while
+    empty) holds each: the cell knelt on, its radius (Chebyshev), when it fades, its pace, and
+    whether the dark powers laid it. While it lasts a creature hostile to the player does not
+    step onto it unless it stands on it already (a sanctuary's rule, `World::shuns`), nothing
+    spawns there, and whoever stands on it heals and regains mana at its pace or a special
+    room's, the larger (never both). The player's blow, shot, throw, or harmful spell from on it
+    breaks it; its end is a moment of the time that passes, and the turn that passes it drops
+    it ("The hallowing fades."). Look mode says "on hallowed ground" ("on dreaded ground" for
+    the dark powers'). It sheds no light. The rules ask one question, `World::effects_at(level, pos)` (inside the
     core the level state's `effects_at`), which gives the room's effect and the level's, folded
     the same way by every reader (percents multiply, glows add, flags hold if either does): light
     and creature sight, noise, regeneration and mana, and creatures that shun a sanctuary (by the

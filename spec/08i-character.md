@@ -1185,7 +1185,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing) it is refused, with no time or strain. The band at the moment picks who answers:
     Neutral and better the holy powers (Orison, Prayer, Litany, Benediction, Miracle), Callous
     and worse the dark ones (Whisper, Invocation, Rite, Pact, Miracle), each with its own words;
-    the dark powers' twists come with #884. Remove disease, Purify, Purity of body, Smite, the
+    the dark powers' twists come with #884. **Sanctuary** (50; `use:sanctuary`, #885): the
+    priest kneels a minute for 30 mana (interrupted as a rest is, nothing is laid) and the
+    ground within two cells of where they knelt is hallowed for an hour: no creature hostile to
+    them steps onto it from outside (one already on it may move about and leave; nothing spawns
+    there; missiles and spells cross it), and whoever stands on it heals and regains mana three
+    times as fast (or a special room's pace, the larger). A blow, shot, throw, or harmful spell
+    of the priest's from on it breaks it ("The peace is broken."); being struck does not. The
+    same rule for both faces, the words differing ("The ground about you is hallowed." / "A
+    dread settles on the ground about you."); no light. Refused, with no time or mana, on the
+    overworld, in water, in a shop, or on hallowed ground. Remove disease, Purify, Purity of body, Smite, the
     reprieve, and Saint left the table (the spell and its scroll stay).
   - **Druid**: Beast-friend (the Wayfarer talent, given; its copy Wild empathy until #790), Spark (level 1, at 1: a bolt, 1d4 electricity;
     1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Nature's ward

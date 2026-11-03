@@ -796,6 +796,10 @@ impl World {
             return None;
         }
         self.attacked_near(attacker, target);
+        // The player strikes from hallowed ground: the peace is broken (`sanctuary.rs`).
+        if attacker == self.state.player {
+            self.break_hallow();
+        }
         // A blow at a disguised mimic finds it out (`mimic.rs`), after the sneak attack is
         // decided: it was unaware.
         if self.disguised(target) {

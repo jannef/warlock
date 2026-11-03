@@ -395,6 +395,8 @@ impl World {
         if by == self.state.player && target != by {
             self.provoke(target);
             self.provoke_court(target);
+            // A harmful spell from hallowed ground breaks the peace (`sanctuary.rs`).
+            self.break_hallow();
         }
         if taken <= 0 {
             return;

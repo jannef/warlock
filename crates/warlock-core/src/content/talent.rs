@@ -1048,6 +1048,16 @@ pub enum TalentEffect {
     /// The class active Consecrate: `time` (a duration) of prayer, for `mana` mana, lifts an
     /// unholy special room (or a whole level's unholy effect) for good (`world/consecrate.rs`).
     Consecrate { mana: i32, time: String },
+    /// The class active Sanctuary: `time` (a duration) of a kneeling rite, for `mana` mana,
+    /// hallows the ground within `radius` of the player for `lasts`: no hostile sets foot in it,
+    /// and those in it heal and regain mana `regen` percent as fast (`world/sanctuary.rs`).
+    Sanctuary {
+        mana: i32,
+        time: String,
+        radius: u8,
+        lasts: String,
+        regen: u16,
+    },
     /// The priest's prayer (the class active Orison, `world/orison.rs`; `data/prayer.toml`):
     /// a prayer talent of `tier` (1 to 5, its `title` for each face) or a use added between
     /// them; `uses` it may answer, `answers` problems a prayer (the largest held), `all` every
@@ -1159,6 +1169,7 @@ impl TalentEffect {
             TalentEffect::Finisher => A::MasterThief,
             TalentEffect::Inspire { .. } => A::Inspire,
             TalentEffect::Consecrate { .. } => A::Consecrate,
+            TalentEffect::Sanctuary { .. } => A::Sanctuary,
             TalentEffect::Prayer { tier: Some(1), .. } => A::Orison,
             TalentEffect::Knock { .. } => A::Knock,
             TalentEffect::MerchantsEye => A::MerchantsEye,
@@ -1398,6 +1409,32 @@ impl TalentEffect {
                 let time: crate::time::Duration = time.parse()?;
                 if !(1..=3600).contains(&time.as_seconds()) {
                     return Err("`consecrate`: time is 1s to 1h".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Sanctuary {
+                mana,
+                time,
+                radius,
+                lasts,
+                regen,
+            } => {
+                if !(1..=500).contains(mana) {
+                    return Err("`sanctuary`: mana is 1 to 500".into());
+                }
+                let time: crate::time::Duration = time.parse()?;
+                if !(10..=3600).contains(&time.as_seconds()) {
+                    return Err("`sanctuary`: time is 10s to 1h".into());
+                }
+                if !(1..=5).contains(radius) {
+                    return Err("`sanctuary`: radius is 1 to 5".into());
+                }
+                let lasts: crate::time::Duration = lasts.parse()?;
+                if !(600..=12 * 3600).contains(&lasts.as_seconds()) {
+                    return Err("`sanctuary`: lasts is 10m to 12h".into());
+                }
+                if !(100..=1000).contains(regen) {
+                    return Err("`sanctuary`: regen is 100 to 1000".into());
                 }
                 Ok(())
             }
