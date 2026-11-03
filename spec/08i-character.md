@@ -1383,7 +1383,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     race's kind, or rarely a rare one, at their side from the first turn, that grows with their
     level and always comes along, §8 "Allies": "The animal companion"; `TalentEffect::Companion`
     read by `World::bring_companion`; and `tame = 2`, `TalentMods::tame`, the ranger's edge at
-    taming, read by the Tame skill ability when it comes), Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
+    taming, read by the Tame skill ability when it comes), Pack tactics (the ranger's level
+    18, #919: a creature beside both the ranger and their companion is flanked, the ranger's
+    melee blows and the companion's at it +2 to hit, never a shot, a throw, or a spell; and the
+    companion's attacks at the favoured prey carry the ranger's Favoured prey, Master hunter's
+    half too; `TalentEffect::{PackTactics, SharesFavouredPrey}`, one hook in `World::resolve`,
+    `world/pack.rs`), Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
     attack, in `World::resolve`), Stalker's eye (the ranger's at 2, #788: it sees which
     creatures in view have not noticed it, `sees_unaware`, above), Tracker (hears 3 fainter; every sound it hears placed at its
     own cell, `noise::Exact::All`), Rapid shot (grants Focus, §8 "Resources"; a shot loosed

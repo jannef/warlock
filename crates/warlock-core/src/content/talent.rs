@@ -348,6 +348,12 @@ pub enum TalentEffect {
     Companion,
     /// `bonus` on its taming checks (Animal companion's edge; the Tame skill ability reads it).
     Tame { bonus: i32 },
+    /// A creature beside both it and its companion is flanked: its melee blows and the
+    /// companion's at it are `to_hit` likelier to hit (Pack tactics; `world/pack.rs`).
+    PackTactics { to_hit: i32 },
+    /// Its companion's attacks carry its Favoured prey bonus against its favoured prey (Pack
+    /// tactics; `world/pack.rs`).
+    SharesFavouredPrey,
     /// An initiative check it makes against a hostile attacker beside it is answered with a
     /// free blow at once (Hair trigger; `Cue::Startled`, `world/free_blow.rs`).
     StartledBlow,
@@ -1453,6 +1459,10 @@ impl TalentEffect {
                 1..=10 => Ok(()),
                 _ => Err("`tame`: a bonus of 1 to 10".into()),
             },
+            TalentEffect::PackTactics { to_hit } => match to_hit {
+                1..=10 => Ok(()),
+                _ => Err("`pack_tactics`: to_hit is 1 to 10".into()),
+            },
             TalentEffect::AllyMod {
                 to_hit,
                 protection,
@@ -2379,6 +2389,7 @@ impl TalentEffect {
             | TalentEffect::GemWorth
             | TalentEffect::SeesUnaware
             | TalentEffect::Companion
+            | TalentEffect::SharesFavouredPrey
             | TalentEffect::StartledBlow
             | TalentEffect::Distrusted
             | TalentEffect::ExactSounds

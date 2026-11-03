@@ -295,6 +295,11 @@ pub struct TalentMods {
     pub companion: bool,
     /// Added to its taming checks (Animal companion's edge; the Tame skill ability reads it).
     pub tame: i32,
+    /// To hit on its melee blows and its companion's at a creature beside them both (Pack
+    /// tactics; `world/pack.rs`).
+    pub pack_tactics: i32,
+    /// Its companion's attacks carry its Favoured prey (Pack tactics; `world/pack.rs`).
+    pub shares_favoured_prey: bool,
     /// An initiative check it makes against a hostile attacker beside it strikes back (Hair
     /// trigger).
     pub startled_blow: bool,
@@ -1378,6 +1383,8 @@ impl TalentMods {
             TalentEffect::SeesUnaware => self.sees_unaware = true,
             TalentEffect::Companion => self.companion = true,
             TalentEffect::Tame { bonus } => self.tame += bonus,
+            TalentEffect::PackTactics { to_hit } => self.pack_tactics += to_hit,
+            TalentEffect::SharesFavouredPrey => self.shares_favoured_prey = true,
             TalentEffect::StartledBlow => self.startled_blow = true,
             TalentEffect::SneakKillStatus { status } => {
                 self.sneak_kill_status = content.status_id(&status).or(self.sneak_kill_status);
