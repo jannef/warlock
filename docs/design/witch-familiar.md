@@ -554,3 +554,18 @@ Only what genuinely needs the owner; everything else above is decided with a rea
 | Q6 | **The names**: the trial records' (Tibb, Pyewacket, Greedigut, …: Middle and early-modern English), or Old English like the companions' (Blæc, Græg, Scead, Deorc)? | **the trial names**: the one place the game's witch meets the English witch of record, and a pet name is an old woman's, not a chronicle's; #378 may rename | the companions' register throughout: safer, and the familiar sounds like a hound |
 | Q7 | **Hag's bargain (60) and the imp**: from the bargain, may a calling answer with an **imp** (`imp.toml`: "the familiar of those who bargain with hell", level 9, a poisoned sting), one line of data (`[familiar] bargain_kinds = ["imp"]`, drawn with the five from level 60)? | **yes**: one line, the imp exists in no population, and the capstone's pact gains a face; at grade 60 its sting is still a small thing beside Blight, and the touch is the same evil eye | no: the bargain stays a reprieve, the imp waits for the devil roster's dungeon |
 | Q8 | **The familiar beside a companion**: both at once (a witch with Handle animal tames a hound too), or one kept beast of any kind? | **both**: they are different things, each read by its own `companion()`/`familiar()`; a witch with a hound and a cat is a rare build, not a problem | one kept beast: Tame refuses with a familiar ("You have your familiar.") |
+
+## 16. Decisions: the owner's round (2026-11-03, approving)
+
+Recorded verbatim from PR #924, with what each changes. Where an answer departs from §15's default, the implementation issues carry the change; the sections above stand otherwise.
+
+| # | The owner | What it means |
+|---|---|---|
+| Q1 | "level 1" | as proposed |
+| Q2 | "race lists + jackpot" | **not the default**: `data/familiars.toml` holds 1–3 kinds per race (from cat, toad, raven, hare, bat, and the race-fitting beasts the ranger's list already has where they fit a witch) and a shared rare list drawn at the ranger's 50 ‰, as `companions.toml` does; the draw is the companion's draw on its own stream |
+| Q3 | "shared sight + nose at some level" | **not the default**: the witch shares her familiar's sight and nose from **level 25**, beside Second sight, reusing the ranger's Hunter's bond reads (C5, #920: the second viewpoint and the nose's cells; buffs not shared); a granted rider, no new pickable |
+| Q4 | "need to select direction if both adjacent" | **not the default**: Give (and Heal on an ally) asks for a direction when more than one kept beast is adjacent; one adjacent needs none |
+| Q5 | "hour" | as proposed: the calling is an hour, nothing else |
+| Q6 | "trial records" | as proposed |
+| Q7 | "sure, you can put the imp in - but perhaps a little earlier? 60 capstone for a shitty imp seems weak." | the imp joins the calling's draw **from witch level 30** (`[familiar] bargain_kinds = ["imp"]`, `bargain_level = 30`), not tied to Hag's bargain; Hag's bargain stays as it is |
+| Q8 | "can have both" | as proposed: a familiar and a tamed companion at once |
