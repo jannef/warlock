@@ -49,6 +49,7 @@ progression state of the design's later items (talents, due choices) goes.
 One level, two classes. `Experience::level_for(xp, factor, cap)` stops at `cap`,
 `World::level_cap` = `Character::level_cap`: the class's `ClassDef::max_level` (the class file's
 `max_level`, else `[levels] class_max` of `data/experience.toml`, `Experience::class_max`, 60;
+the bard's is 30, #874, the one class that names one;
 a run without a character stops at `class_max` too;
 filled in by `ClassDef::settle_cap` right after the experience file loads, which also checks the
 table's levels within it) plus a prestige class's `levels` once called. XP past the cap banks as
@@ -82,5 +83,7 @@ rows (`dump::calling_rows`), JSON `character.prestige`, `character.classes`, and
 capped at 12, the Warden prestige class of 5 levels and its calling in the showcase):
 the cap and the bank, open and not, the exact XP and the first level's hit points and rolls,
 the bonus trees per due, a full bank spent, the dev call, Unmade's lost level, a restore, a
-replay; `content::prestige`, `content::calling`, and `content::class` tests the loading and every
+replay; `world/strange_spirit_tests.rs` on the shipped cap and callings (both 30, kept together
+by `the_callings_ask_for_the_bards_full_class`), a new bard to Hunter 1 at 31 by replay;
+`content::prestige`, `content::calling`, and `content::class` tests the loading and every
 refusal; `content::experience` the capped `level_for` and `class_max`.

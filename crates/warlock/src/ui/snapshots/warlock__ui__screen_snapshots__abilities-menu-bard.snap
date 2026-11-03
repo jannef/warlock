@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Opportuni┌─ Abilities ─────────────────────────────────── Page 1/2 ─┐
- You spend 180 mana │                                                          │
+ You learn Sworn foe┌─ Abilities ─────────────────────────────────── Page 1/2 ─┐
+ You spend 106 mana │                                                          │
                     │ Birth sign                                               │
                     │ > a  Transfixing stare  at a place you see               │
                     │ Class                                                    │
@@ -31,4 +31,4 @@ expression: "render(case, content.clone())"
                     │                                                          │
                     │                                                          │
                     │ a-q or Enter use   > < page   Esc close                  │
- The Hub  ·  HP 56/5└──────────────────────────────────────────────────────────┘         ? controls
+ The Hub  ·  HP 38/3└──────────────────────────────────────────────────────────┘         ? controls

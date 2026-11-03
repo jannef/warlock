@@ -155,7 +155,7 @@ fn the_three_tables_come_with_the_levels() {
     assert!(said(&t).contains(&"You gain Evasion.".to_string()));
     let mut b = world("bard");
     assert_eq!(class_rows(&b), ["Mend", "Trained wind"]);
-    reach(&mut b, 6);
+    reach(&mut b, 3);
     assert_eq!(class_rows(&b), ["Mend", "Trained wind", "Travelled hands"]);
     let restored = World::from_state(b.content().clone(), b.state().clone()).expect("restored");
     assert_eq!(class_rows(&restored), class_rows(&b));
@@ -176,9 +176,9 @@ fn travelled_hands_raises_every_weapon_skill_and_style_held_at_nothing_to_one() 
     let before = held(&b);
     assert_eq!(rank(&b, "long_blades"), 0);
     assert_eq!(rank(&b, "marksman"), 0);
-    reach(&mut b, 5);
-    assert_eq!(held(&b), before, "nothing before level 6");
-    reach(&mut b, 6);
+    reach(&mut b, 2);
+    assert_eq!(held(&b), before, "nothing before level 3");
+    reach(&mut b, 3);
     for ((id, skill), was) in table.ids().zip(&before) {
         let now = b.state.player().weapon_skills.rank(id);
         let left = skill.role == Role::School || skill.hidden;
@@ -221,7 +221,7 @@ fn weapon_ranks_walks_the_content_or_the_rows_it_names() {
     let state = world("bard").state().clone();
     let mut b = World::from_state(content.clone(), state).expect("restores");
     let flails = table.id("flails").expect("flails");
-    reach(&mut b, 6);
+    reach(&mut b, 3);
     assert_eq!(b.state.player().weapon_skills.rank(flails), 1);
     let mut actor = b.state.player().clone();
     actor.weapon_skills = Default::default();
@@ -646,7 +646,7 @@ fn uncanny_dodge_fast_healer_and_jack_of_all_trades() {
     let mut b = world("bard");
     // Fast healer, the Vigour talent the table gives (Song of rest before #790): resting's pace
     // half again (`healing_rate` reads it).
-    reach(&mut b, 12);
+    reach(&mut b, 6);
     let after = b.state.player().talent_mods(&content).resting_percent;
     // Measured against a twin without it (the level's own pick may move the pace too).
     let mut twin = b.state().clone();
@@ -667,12 +667,12 @@ fn uncanny_dodge_fast_healer_and_jack_of_all_trades() {
         let bonus: Vec<_> = me.skills.iter().map(|(s, _)| (s, 5)).collect();
         me.skills.effect_with(&content, effect, &bonus)
     };
-    // Its first rank (25) takes skills up and adds nothing to them; its second (50) does.
-    reach(&mut b, 25);
+    // Its first rank (12) takes skills up and adds nothing to them; its second (25) does.
+    reach(&mut b, 12);
     let plain = b.state.player().skills.effect(&content, effect);
     assert_eq!(b.state.player().skill_effect(&content, effect), plain);
     assert_eq!(b.state.player().talent_mods(&content).trained_skills, 0);
-    reach(&mut b, 50);
+    reach(&mut b, 25);
     assert_eq!(b.state.player().skill_effect(&content, effect), raised(&b));
     assert_eq!(b.state.player().talent_mods(&content).trained_skills, 5);
 }
@@ -687,10 +687,10 @@ fn skill_values(w: &World) -> Vec<(String, u16)> {
 #[test]
 fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_raises_them() {
     let mut b = world("bard");
-    reach(&mut b, 24);
+    reach(&mut b, 11);
     let before = skill_values(&b);
     assert!(!b.state.player().talents.has("jack_of_all_trades", 1));
-    reach(&mut b, 25);
+    reach(&mut b, 12);
     assert_eq!(
         b.state.player().talents.rank_of("jack_of_all_trades", None),
         1
@@ -717,9 +717,9 @@ fn jack_of_all_trades_takes_up_every_skill_but_sneak_attack_then_raises_them() {
         rows.iter().any(|r| r == "Jack of all trades 1/2 (class)"),
         "{rows:?}"
     );
-    reach(&mut b, 49);
+    reach(&mut b, 24);
     let kept = skill_values(&b);
-    reach(&mut b, 50);
+    reach(&mut b, 25);
     assert_eq!(
         b.state.player().talents.rank_of("jack_of_all_trades", None),
         2
@@ -741,7 +741,7 @@ fn a_restored_bard_past_both_ranks_is_given_each_and_a_skill_added_later_is_take
     });
     let content = Arc::new(Content::load(&files).expect("test content is valid"));
     let mut b = world("bard");
-    reach(&mut b, 50);
+    reach(&mut b, 25);
     let mut state = b.state().clone();
     let player = state.player;
     let me = state.actors.get_mut(&player).expect("player");
@@ -768,7 +768,7 @@ fn inspire_costs_inspiration_and_virtuoso_sings_longer_for_none() {
     let mut w = world("bard");
     let inspire = Ability::Class(ClassActive::Inspire);
     assert_eq!(own(&w, inspire), None);
-    reach(&mut w, 18);
+    reach(&mut w, 9);
     let pool = w.content().resource_id("inspiration").expect("inspiration");
     assert_eq!(own(&w, inspire), Some(Some(Unavailable::Short(pool))));
     run(&mut w, "use:inspire");
@@ -787,7 +787,7 @@ fn inspire_costs_inspiration_and_virtuoso_sings_longer_for_none() {
         me.effects.sharpen(&content, profile.clone()).to_hit,
         profile.to_hit + 1
     );
-    reach(&mut w, 60);
+    reach(&mut w, 30);
     w.player_mut().resources.set(pool, 0);
     assert_eq!(own(&w, inspire), Some(None), "Virtuoso: free");
     run(&mut w, "use:inspire");
@@ -802,7 +802,7 @@ fn throw_your_voice_is_the_bards_alone() {
     run(&mut w, &format!("throw_voice:{},{}", at.x, at.y));
     assert_eq!(last(&w), "You do not know how to throw your voice.");
     let mut b = world("bard");
-    reach(&mut b, 32);
+    reach(&mut b, 16);
     assert_eq!(own(&b, Ability::ThrowVoice), Some(None));
 }
 

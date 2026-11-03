@@ -4,11 +4,8 @@
 //! oath in any case and punctuation calls the bard and sends the spirit away; wrong words cost a
 //! chat's time and nothing else; killed, it leaves nothing but the stain on the killer, and the
 //! road may bring it again. End to end by replay, from a new bard to Hunter 1. The test world's
-//! door, the hermit's word, too.
-//!
-//! The shipped bard is not capped at 30 yet (the bard design's B5, #874): until it is, the
-//! callings ask for level 60, the curve's top, and a calling there gives the class but no level.
-//! The fixture caps the bard at 30 (and asks 30 of the Ascmearc's calling), as B5 will.
+//! door, the hermit's word, too. The bard's cap and the callings' level are the shipped ones, 30
+//! (#874).
 
 use super::*;
 use crate::action::parse_actions;
@@ -19,7 +16,7 @@ use crate::daylight::{self, DayPhase};
 use crate::replay::Replay;
 use std::sync::LazyLock;
 
-/// The bard's cap in the fixture, and the level its calling asks.
+/// The bard's cap, and the level its calling asks.
 const CAP: u8 = 30;
 /// The road one cell east of Cēaptūn: seven steps east of the pass.
 const ROAD: Pos = Pos::new(19, 28);
@@ -27,18 +24,15 @@ const TO_THE_ROAD: &str = "move:E*7 skip:4h";
 const ENTRY: &str = "strange_spirit_roads";
 const OATH: &str = "LIFE, before... death!";
 
-/// The built-in content, nobody hungering, the class tables stripped, the bard capped at 30 and
-/// started Good (so a test's replay need not do good deeds first), and the callings asking 30.
+/// The built-in content, nobody hungering, the class tables stripped, and the bard started Good
+/// (so a test's replay need not do good deeds first).
 static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
     let mut files = ContentFiles::builtin();
     files.remove("data/hunger.toml");
     crate::content::strip_class_tables(&mut files);
     files.edit_table("classes", |text| match text.contains("id = \"bard\"") {
-        true => format!("{text}max_level = {CAP}\nalignment = 500\n"),
+        true => format!("{text}alignment = 500\n"),
         false => text.to_string(),
-    });
-    files.edit_table("callings", |t| {
-        t.replace("level = 60", &format!("level = {CAP}"))
     });
     Arc::new(Content::load(&files).expect("fixture content"))
 });
@@ -170,9 +164,9 @@ fn hailed(score_value: i32) -> World {
 
 #[test]
 fn the_callings_ask_for_the_bards_full_class() {
-    // Whoever lands second of this and the bard's cap (#874) keeps the two together: the
-    // spirit comes the moment the class is full, never before and never after.
+    // The spirit comes the moment the class is full, never before and never after.
     let bard = SHIPPED.class("bard").expect("the bard").max_level;
+    assert_eq!(bard, CAP);
     for campaign in ["ascmearc", "showcase"] {
         let calling = SHIPPED.calling(campaign, "hunter").expect("a door");
         assert_eq!(calling.campaign.as_deref(), Some(campaign));
@@ -420,13 +414,15 @@ fn the_hermit_hears_the_oath_from_a_full_bard_only() {
         // Saying it below the full class: nothing.
         run(&mut w, &format!("say:{dir:?}:life_before_death"));
         assert_eq!(last_message(&w), "The old hermit says nothing.", "{class}");
-        reach(&mut w, 60, &mut None);
+        reach(&mut w, CAP, &mut None);
         run(&mut w, &format!("say:{dir:?}:life_before_death"));
         assert_eq!(prestige(&w).is_some(), called, "{class}");
         if called {
             assert!(said(&w, "You are a hunter."));
             assert!(said(&w, "Go on, then, hunter."));
             assert!(w.state.actors.contains_key(&id), "the hermit stays");
+            // The shipped bard, called at its cap: Hunter 1 at once, at total level 31.
+            assert_eq!(w.player_level(), CAP + 1);
         } else {
             assert_eq!(last_message(&w), "The old hermit says nothing.");
         }

@@ -45,7 +45,7 @@ the attack is one blow; [step of the wind](abilities.md#ability-step-of-the-wind
 turns (18 seconds), resting too; [perfect self](talents.md#talent-perfect-self) (level 60) brings it back twice as fast, a point
 every 9 seconds. [Patient defence](abilities.md#ability-patient-defence) (level 18) spends 1, with a wait's time.
 
-The [bard](classes.md#bard)'s **inspiration** comes with [inspire](talents.md#talent-inspire) (level 18), starting at 0. Every kill of your own
+The [bard](classes.md#bard)'s **inspiration** comes with [inspire](talents.md#talent-inspire) (level 9), starting at 0. Every kill of your own
 gives one, up to 5, and one fades every 30 base turns (3 minutes); empty, it stays with you.
 [Inspire](abilities.md#ability-inspire) spends 3 inspiration and nothing else: with less you cannot sing it. A
 [virtuoso](talents.md#talent-virtuoso)'s inspire spends none.
@@ -77,7 +77,7 @@ Such an item never **grants** a pool: it does nothing for one who does not hold 
 which: stamina, every [warrior](classes.md#warrior), [berserker](classes.md#berserker), [paladin](classes.md#paladin), [ranger](classes.md#ranger), [ascetic](classes.md#ascetic), [thief](classes.md#thief), and [bard](classes.md#bard), and anyone
 else once a [weapon rank](weapon-skills.md#marks-and-ranks) teaches an active; rage, a [raging](status-effects.md#status-raging) [berserker](classes.md#berserker) (only while the rage
 lasts); focus, a [ranger](classes.md#ranger) from level 12; ki, an [ascetic](classes.md#ascetic) from level 1; inspiration, a [bard](classes.md#bard) from level
-18; openings, a [thief](classes.md#thief) from level 1. A ring of rage on a [wizard](classes.md#wizard) is dead weight, and [creatures](creatures.md)
+9; openings, a [thief](classes.md#thief) from level 1. A ring of rage on a [wizard](classes.md#wizard) is dead weight, and [creatures](creatures.md)
 never hold a pool, so their gear does nothing for them, only for whoever takes it from them.
 
 {{#include generated/resources.md}}

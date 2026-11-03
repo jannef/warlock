@@ -5,10 +5,10 @@
 # the spirit's word, `does = { calls = "hunter" }`; this file is the door.
 #
 # `level` is the bard's highest level (classes/ `max_level`): the calling comes the moment the
-# class is full, 60 until the bard's cap (#874) makes both 30. world/strange_spirit_tests.rs checks
-# the two stay together (so does the test world's calling).
+# class is full, 30. world/strange_spirit_tests.rs checks the two stay together (so does the test
+# world's calling).
 [[calling]]
 class = "hunter"
 from = ["bard"]
-level = 60
+level = 30
 message = "The oath is in you now, as a blade is in its sheath. You are a hunter."

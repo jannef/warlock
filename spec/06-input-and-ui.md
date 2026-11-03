@@ -425,7 +425,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Stunning strike, Quivering palm, and Knock in a direction, greyed out during their cooldowns (Rage while raging and
     exhausted); throwing one's voice (Class; #235,
     `throw_voice:X,Y`, the `throw_voice` action, a cell, §5 "Hearing"), the bard's (Throw
-    your voice, level 32: a talent with the `throw_voice` effect gives it); and what a place offers, last, under **Here**
+    your voice, level 16: a talent with the `throw_voice` effect gives it); and what a place offers, last, under **Here**
     (`Source::Place`): Pray (`Ability::Pray`, `pray`, nothing to aim), listed only while the
     player stands beside a forgotten altar not yet spent, and Drink (`Ability::Drink`, `drink`,
     nothing to aim), listed only while they stand beside a healing spring (`Ability::here`, §7

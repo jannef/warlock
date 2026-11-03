@@ -5,5 +5,5 @@
 [[calling]]
 class = "hunter"
 from = ["bard"]
-level = 60
+level = 30
 message = "The oath is in you now, as a blade is in its sheath. You are a hunter."

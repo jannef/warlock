@@ -207,8 +207,8 @@ mod tests {
                 "unknown class `skald`",
             ),
             (
-                "[[calling]]\nclass = \"hunter\"\nfrom = [\"bard\"]\nlevel = 30\nmessage = \"x\"\n",
-                "below `bard`'s highest level, 60",
+                "[[calling]]\nclass = \"hunter\"\nfrom = [\"bard\"]\nlevel = 20\nmessage = \"x\"\n",
+                "below `bard`'s highest level, 30",
             ),
             (
                 "[[calling]]\nclass = \"hunter\"\nfrom = [\"bard\"]\nlevel = 60\nmessage = \"\"\n",

@@ -788,8 +788,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     "not going to be a general multiclass thing. More like prestige classes achievable by
     finding a 'hidden' mechanism"): a character has **one level**, read off the one curve from
     their XP as ever, but it stops at their class's **cap**, `ClassDef::max_level`
-    (`data/classes/`, default `data/experience.toml` `[levels] class_max`, 60, so no class
-    changes yet; checked at load: 2 to the curve's top, every `abilities` row and `bonus_talents`
+    (`data/classes/`, default `data/experience.toml` `[levels] class_max`, 60; the bard's
+    30, #874, the only class below it; checked at load: 2 to the curve's top, every `abilities` row and `bonus_talents`
     level within it), plus a **prestige class's** `levels` once they are called
     (`Character::level_cap`). A prestige class (`data/prestige/`, `PrestigeDef`: `id`, `name`,
     `description`, `levels` 1 to 60, `hp`, `mana`, `rolls`, `known_for`, `abilities`,
@@ -821,7 +821,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     class), and a dialogue word's `calls` (§8 "Dialogue", "Saying words": the Ascmearc's
     Strange Spirit, §8 "Creatures"; the test world's hermit); an encounter entry's `when = {
     calling }` holds while a calling is open. Both worlds' Hunter callings ask for the bard's
-    `max_level` (60 until the bard's cap, #874, lowers both to 30). The character screen's Class row:
+    `max_level`, 30 (#874). The character screen's Class row:
     `Bard`, `Bard 30` at the cap, `Bard 30, Hunter 4` after; the Characters list's summary the
     same; the death screen "Here lies Brakka, / a bard and hunter,"; the XP row shows no next
     level at a cap. Dumps: `stats` `Class Bard 30, Hunter 4`, `progress` (dev) `calling hunter:
@@ -1260,8 +1260,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     tallied by level and creature type, whatever the type (kill quests read the same tally);
     `Quests::prey` is the type killed most, the first to get there of those tied (it changes
     only when another is killed more often). Saved, hashed, left out while empty.
-  - **Bonus picks**: ranger (Weaponcraft, Wayfarer) and bard (Scholar, Delver) at 10, 20, 30,
-    45, 55; thief (Finesse, Shadow, Delver) at 4, 10, 16, 22, 28, 34, 46, 58.
+  - **Bonus picks**: ranger (Weaponcraft, Wayfarer) at 10, 20, 30, 45, 55; bard (any tree) at
+    5, 10, 15, 23, 28 (#874); thief (Finesse, Shadow, Delver) at 4, 10, 16, 22, 28, 34, 46, 58.
+  - **The bard's 30 levels** (#874; the bard design §5): its table is the old one halved, every
+    ability by 30 (Mend and Trained wind 1, Travelled hands 3, Fast healer 6, Inspire 9, Jack of
+    all trades 12 and its second rank 25, Throw your voice 16, Lullaby 20, Virtuoso 30), and the
+    class ends there, `max_level = 30` ("Prestige classes" above): experience past it counts and
+    buys nothing until the Hunter's calling, when Hunter 1 comes at total level 31.
   - **Actives**: Volley (the ranger's, 50: `Action::UseAt`, `use:volley:X,Y`, aimed at a cell
     as a shot is; the readied missile weapon's three shots there, one after another, each its
     own flight and attack, for the price of one shot and one exertion; it stops when the
@@ -1269,7 +1274,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     focus" while short, "You have too little focus." if used), spent as it is loosed and priced
     as one ordinary shot (Rapid shot does not touch it); refused as a shot is, spending
     nothing), Inspire
-    (the bard's, 18: grants Inspiration, §8 "Resources"; a **song**, #870: Inspired, to hit +1
+    (the bard's, 9: grants Inspiration, §8 "Resources"; a **song**, #870: Inspired, to hit +1
     and Dodge +1 for 5 minutes a degree, for 3 inspiration and nothing else (no mana fallback:
     each song costs one thing), the time of a `song` (500, a chat's); no cooldown, the cost is the
     price: greyed out "you have too little inspiration", `Unavailable::Short`, while short).
@@ -1289,11 +1294,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     failed, it suffers the song's status at the song's degrees, caused by the singer. "You sing a
     lullaby.", then for each seen "The kobold's eyes grow heavy." or "The kobold shakes off the
     song."; nothing of the unseen. Sung to an empty room all the same (no refusal: who hears is
-    the world's). The **Lullaby** (the bard's, 40, #873: `use:lullaby`, nothing to aim): Drowsy
+    the world's). The **Lullaby** (the bard's, 20, #873: `use:lullaby`, nothing to aim): Drowsy
     (everything costs 300 %, a degree easing every 12 s) to hostile hearers who fail Willpower
     against 13 plus the craft, for 6 mana and the time of a song, no cooldown; greyed out "you
     have too little mana" while short. Music is
-    `kind = "rules"` (no "not usable yet" row). Throw your voice (the bard's, 32) is no
+    `kind = "rules"` (no "not usable yet" row). Throw your voice (the bard's, 16) is no
     longer everyone's: the ability is had by a talent with the `throw_voice` effect (the
     action is refused, "You do not know how to throw your voice.", without it). The thief's
     Lurk (6, #684: `use:lurk`, the time of a wait, no cost and no cooldown: the thief suffers
@@ -1326,19 +1331,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
     2 lower, never below 3; and its finisher, an active aimed in a direction, `use:master_thief:E`,
     for 5 openings: a melee blow that is a critical whenever it hits, with no confirmation roll,
     `Profile::sure_critical`, for a melee attack's time; `world/openings.rs`); Travelled hands
-    (the bard's at 6, in Blessing's place, #871: a hand-out once, `weapon_ranks { to = 1 }`:
+    (the bard's at 3, in Blessing's place, #871: a hand-out once, `weapon_ranks { to = 1 }`:
     every weapon skill and fighting style the bard holds at rank 0, whatever rows the content
     has, but the schools of magic and hidden styles, rises to rank 1 by
     `WeaponSkills::raise_to`, its defaults with it; "Your hands know every weapon a little.";
     the optional `skills` names the rows instead, for a later class's trade); Fast healer
-    (the Vigour talent, given at 12; its copy Song of rest until #790: resting heals half again
+    (the Vigour talent, given at 6; its copy Song of rest until #790: resting heals half again
     as fast), Jack of all trades (two ranks, #872; the class table names the rank,
-    `{ level = 50, talent = "jack_of_all_trades", rank = 2 }`: rank 1 at 25, a hand-out once,
+    `{ level = 25, talent = "jack_of_all_trades", rank = 2 }`: rank 1 at 12, a hand-out once,
     `take_up_skills { dice = "1d4+1", except = ["sneak_attack"] }`: every skill of the content
     the bard is not trained in, but Sneak attack, trained at 1d4+1 from the `levels` stream in
-    file order, `world/jack.rs`, "You find you know a little of everything."; rank 2 at 50,
+    file order, `world/jack.rs`, "You find you know a little of everything."; rank 2 at 25,
     "Your Jack of all trades grows.": every trained skill counts 5 higher, as a skill bonus in
-    `Actor::skill_effect`), Virtuoso (every song costs nothing and gives a
+    `Actor::skill_effect`), Virtuoso (30, #874: every song costs nothing and gives a
     degree more; Inspire gives Inspired greatly, to hit +2 and Dodge +2 for 10 minutes, for
     nothing: neither mana nor inspiration).
   - **Resources**: the ranger's Focus (R2, #250), the thief's Openings (R3, #251), and the

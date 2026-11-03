@@ -1106,10 +1106,14 @@ mod tests {
     #[test]
     fn max_level_defaults_to_the_class_cap_and_bounds_the_table() {
         let content = with_aristocrat(|t| t.to_string()).expect("built-in");
-        assert!(
-            (content.classes().iter()).all(|c| c.max_level == content.experience().class_max()),
-            "every shipped class is at the default, 60"
-        );
+        // The bard alone ends early (the bard design §5); every other class at the default.
+        for class in content.classes() {
+            let cap = match class.id.as_str() {
+                "bard" => 30,
+                _ => content.experience().class_max(),
+            };
+            assert_eq!(class.max_level, cap, "{}", class.id);
+        }
         assert_eq!(content.experience().class_max(), 60);
         // A class capped at 60 names it: the same.
         let capped = with_aristocrat(|t| format!("{t}max_level = 60\n")).expect("valid");

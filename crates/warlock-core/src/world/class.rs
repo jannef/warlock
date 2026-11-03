@@ -3,7 +3,7 @@
 //! (level 1's), as each level comes ([`World::level_up`] calls [`World::grant_class`] with its
 //! news), and again when a run is restored, so a table that grew reaches saved characters (never
 //! taking anything away). A given talent is held like a picked one, at the rank the table names
-//! (`{ level = 50, talent = "jack_of_all_trades", rank = 2 }`; 1 by default), so every rule
+//! (`{ level = 25, talent = "jack_of_all_trades", rank = 2 }`; 1 by default), so every rule
 //! reads it through `Actor::talent_mods`; what a rank hands out once (hit points by level, a stat
 //! gift, weapon ranks, skills taken up) is handed out as it is given ([`hand_out`]). A talent already held (a pickable the
 //! table names, which the player picked before their class gave it) is not given again: the

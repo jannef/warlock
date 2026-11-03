@@ -587,7 +587,7 @@ characters are thieves, the forest's and the world's rangers: their runs start w
 or Favoured prey. `world/class_tests.rs` covers the grants, bonus picks,
 restores, replays, and every hook; `content::class::tests` the table checks.
 
-A table row may name a **rank** (#872): `{ level = 50, talent = "jack_of_all_trades", rank = 2 }`
+A table row may name a **rank** (#872): `{ level = 25, talent = "jack_of_all_trades", rank = 2 }`
 (`ClassDef::abilities` and `PrestigeDef::abilities` hold `(level, talent, rank)`, default 1; `Table::ranks_to`; the shared `class::table_rows` and `check_rows`, so a prestige table names ranks too). The
 loader refuses rank 0, a rank past the talent's `ranks` (`check_table`), and a rank of a talent
 named before at the same or a higher rank. `class::grant` gives each rank the table names up to

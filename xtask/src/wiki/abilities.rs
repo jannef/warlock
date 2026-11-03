@@ -148,7 +148,7 @@ fn class_holders(content: &Content, active: ClassActive) -> String {
 }
 
 /// The classes whose table gives a talent with an effect `has` says yes to, from which level, by
-/// name ("bards from level 32").
+/// name ("bards from level 16").
 fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> String {
     let book = content.talents();
     let mut who: Vec<(String, u8)> = (content.classes().iter())
