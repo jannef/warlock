@@ -317,7 +317,8 @@ const CASES: &[Case] = &[
     },
     Case {
         // A band crossed (the `fall` line) and the Alignment row: seed 9's Basilisk-born paladin
-        // (#272) starts at 475 with his story's nudge, Good, so the kick takes him down to Kind.
+        // (#272) starts at 475 with his story's nudge, Good, so the kick takes him down to Kind
+        // and empties his zeal (#910; the Zeal row holds what the blows built back since).
         name: "alignment-band-character",
         scenario: "courtyard",
         character: Some("human,male,paladin"),
@@ -644,7 +645,8 @@ const CASES: &[Case] = &[
         keys: Some("a f"),
         ..BASE
     },
-    // A paladin of some level: the Class group, Lay on hands drained, Smite ready.
+    // A paladin of some level: the Class group, Lay on hands refused and greyed out short of
+    // zeal (it costs six; the pool was granted at five), Smite ready (three).
     Case {
         name: "abilities-menu-class",
         character: Some("human,male,paladin"),
