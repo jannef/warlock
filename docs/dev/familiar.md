@@ -128,3 +128,7 @@ talent at 25, its eyes, the nose through a door and not a wall, its reach by the
 the retinue, each talent its own beast, no buff. `content/familiar.rs`'s load checks.
 `caster_tests`'s witch table. `input.rs::tend_way`. The screen snapshots `abilities-menu-witch` (the
 status bar) and `character-screen-familiar`.
+
+## The probe
+
+`balance_probe/familiar.rs` (#933, `docs/balance.md` "Familiar"): a human witch at each probe level with each of the five kinds in turn, set in place of the run's draw at its grade; the table is the familiar's hit chance against the monsters within two levels of hers, the hexes it lays a round, and what the same Evil eye costs her.
