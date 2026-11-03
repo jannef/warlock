@@ -2,8 +2,9 @@
 
 Developer notes for the companion, a beast that is the player's for good (spec §8 "Allies": "The
 animal companion"; the design is `docs/design/ranger-companion.md`, §18 and §20 the owner's
-decisions, which override the rest). Slices **C1** (#916: the starting beast, the
-story's chapter, growth, always along, the nose) and **C2** (#917: Tame) are this file; C3 the collar, C4 Pack tactics, C5
+decisions, which override the rest). Slices **C1** (#916: the starting beast, the story's chapter,
+growth, always along, the nose), **C2** Tame (#917, "Taming" below), and **C4** Pack tactics (#919,
+below) are this file; C3 the collar, C5
 Hunter's bond, C6 Sic 'em, C7 the wild beasts, C8 the probe build on it. The ally core it uses as
 it is (the side, the arm, the orders, the retinue, the kill credit) is `docs/dev/allies.md`.
 Keep it current with the code, as CLAUDE.md says.
@@ -171,6 +172,29 @@ stream is drawn**, so a story without a companion hashes as before) and fourteen
 ids checked at load: known and `tameable`; `Witness::companion` is the companion's type, filled by
 `World::tell_background` from `World::companion()`), plus the plain line, the net for a beast
 without one. Details in `docs/dev/background.md`.
+
+## Pack tactics (C4, #919)
+
+The ranger's level 18 (`assets/data/talents/pack_tactics.toml`: tree `class`, `granted`, effects
+`pack_tactics` with `to_hit = 2` and `shares_favoured_prey`, systems `combat` and `allies`).
+`TalentEffect::PackTactics { to_hit }` (checked 1 to 10) → `TalentMods::pack_tactics`;
+`TalentEffect::SharesFavouredPrey` → `TalentMods::shares_favoured_prey`. One hook,
+`World::pack_blow` in `world/pack.rs`, called in `fight.rs::resolve` after `ally_blow` (Beast-bond):
+
+- **flanked**: the target stands beside (Chebyshev 1) both the player and `World::companion()`,
+  the companion on the current level and not in the retinue. The player's `Melee` attacks and the
+  companion's at it get `+pack_tactics` to hit; `Ranged`, `Thrown`, and `Spell` never;
+- **the shared prey**: the companion's attacks (any kind) at a creature of `Quests::prey()` (by
+  `family_key`, as `ambush.rs::favoured`) carry the player's `TalentMods::favoured_prey`, to hit
+  and damage (Favoured prey's +1/+2, Master hunter's adding +1/+2). The player's own prey bonus
+  stays `favoured`'s.
+
+Only the player's talents are read (a companion is the player's). Nothing is said and nothing is
+saved: the flank is read from where everyone stands at the blow. It is no clone of Beast-bond
+(`ally_mod`): the alike check compares effect kinds. Tests: `world/pack_tests.rs` (the table's
+row and the mods; flanking both ways, diagonals, not for shots, throws, spells, or the kobold's
+blows; one side only or the retinue, nothing; the shared prey with and without Master hunter,
+flanked too, and another type nothing).
 
 ## What the player sees
 

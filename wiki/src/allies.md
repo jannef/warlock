@@ -132,6 +132,11 @@ power is their spell's. The exact table, as the game computes it:
 
 {{#include generated/companion-growth.md}}
 
+From level 18 the ranger's **[Pack tactics](talents.md#talent-pack-tactics)** makes the two of you
+hunt as one: a creature beside you both is flanked, +2 [to hit](combat.md#hitting) for your melee
+attacks and your companion's at it, and your companion shares your
+[favoured prey](classes.md#ranger) bonus.
+
 ### The companion's rules
 
 {{#include generated/companion-rules.md}}

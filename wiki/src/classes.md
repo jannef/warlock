@@ -41,7 +41,8 @@ you a talent pick in its place.
 
 A [paladin](classes.md#paladin)'s holy abilities used from the menu ([Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance))
 work only while you are on the good side, Kind or better ([Consecrate](abilities.md#ability-consecrate) Neutral or better; see [Alignment](alignment.md)):
-otherwise you can still use them, and nothing happens (no [zeal](resources.md#resource-zeal) spent). The passives do not care. [Smite](abilities.md#ability-smite) and
+otherwise you can still use them, and nothing happens (no [zeal](resources.md#resource-zeal) spent). The passives do not care, but for
+[Retribution](talents.md#talent-retribution), which answers no blow outside them. [Smite](abilities.md#ability-smite) and
 [Lay on hands](abilities.md#ability-lay-on-hands) are paid in [zeal](resources.md#resource-zeal), not [mana](mana.md#how-much). The [berserker](classes.md#berserker)'s [rage](abilities.md#ability-rage) runs on a pool of its own, [Rage](resources.md#rage), and the
 [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
 [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend; the
@@ -105,7 +106,11 @@ blank scroll, for three times the spell's [mana](mana.md#spending-it) and a stud
 
 The [ranger](classes.md#ranger)'s **favoured prey** is the kind of [creature](creatures.md) you have killed most, counted over every
 [level](experience.md#levels); when two are tied, the one that got there first stays favoured until another is killed
-more often. A **[volley](abilities.md#ability-volley)** looses three shots of your [readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming)
+more often. From level 18 **[Pack tactics](talents.md#talent-pack-tactics)** makes you and your
+[companion](allies.md#companions) hunt as one: a creature standing beside you both is
+**flanked**, and your melee attacks and your companion's at it get +2 [to hit](combat.md#hitting)
+(not shots, throws, or spells), and your companion's attacks at your favoured prey carry your
+favoured prey's bonus, to hit and damage ([Master hunter](talents.md#talent-master-hunter)'s too). A **[volley](abilities.md#ability-volley)** looses three shots of your [readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming)
 at, one after another, for the time of one ordinary shot; it stops early when you run out, and
 costs 6 [focus](resources.md#resource-focus). **[Rapid shot](talents.md#talent-rapid-shot)** gives you focus (10, full); every shot you loose while you have
 at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and with less it is an ordinary shot.

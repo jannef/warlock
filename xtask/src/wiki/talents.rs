@@ -747,6 +747,16 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                                     your level"
             .into(),
         TalentEffect::Tame { bonus } => format!("{} on your taming checks", signed(bonus)),
+        TalentEffect::PackTactics { to_hit } => format!(
+            "a creature beside both you and your [companion](allies.md#companions) is flanked: \
+             your melee attacks and your companion's at it, to hit {} (not shots, throws, or \
+             spells)",
+            signed(to_hit)
+        ),
+        TalentEffect::SharesFavouredPrey => "your companion's attacks at your favoured prey \
+                                             carry your Favoured prey bonus, to hit and damage \
+                                             (Master hunter's too)"
+            .into(),
         TalentEffect::SeesUnaware => "you see which creatures in view have not noticed you: \
                                       look mode says \"unaware of you\", and their glyphs are \
                                       drawn a shade cooler, breathing slowly (standing still \
@@ -1844,6 +1854,12 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         ),
         TalentEffect::FlurryCost { resource, cost } => format!(
             "each second blow of the flurry spends {cost} {}; with less, there is none",
+            resource_name(content, &resource).to_lowercase()
+        ),
+        TalentEffect::Retribution { resource, cost } => format!(
+            "a hostile beside you whose melee attack lands a blow on you takes your plain smite \
+             back at once (its dice, its aim, and its unholy die), free but for an exertion, spending {cost} {}; with less, or outside the talent's alignment, \
+             nothing; an attack it answers is not also riposted",
             resource_name(content, &resource).to_lowercase()
         ),
         TalentEffect::CatchMissiles { resource, cost } => format!(
