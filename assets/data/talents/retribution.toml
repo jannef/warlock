@@ -1,0 +1,9 @@
+[[talent]]
+id = "retribution"
+name = "Retribution"
+tree = "class"
+granted = true
+description = "A foe beside you that lands a blow on you takes your smite at once, while your zeal lasts."
+effects = [{ kind = "retribution", resource = "zeal", cost = 4 }]
+systems = ["combat", "resources", "free_blows"]
+alignment = { min = "kind" }

@@ -1733,6 +1733,8 @@ mod resource_talent_tests;
 #[cfg(test)]
 mod resource_tests;
 #[cfg(test)]
+mod retribution_tests;
+#[cfg(test)]
 mod reveal_tests;
 #[cfg(test)]
 mod rod_tests;
