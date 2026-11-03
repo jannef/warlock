@@ -39,7 +39,7 @@ you a talent pick in its place.
 
 {{#include generated/class-levels.md}}
 
-A [paladin](classes.md#paladin)'s holy abilities used from the menu ([Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite), [Holy radiance](abilities.md#ability-holy-radiance))
+A [paladin](classes.md#paladin)'s holy abilities used from the menu ([Lay on hands](abilities.md#ability-lay-on-hands), [Smite](abilities.md#ability-smite) and its modes, [Holy radiance](abilities.md#ability-holy-radiance))
 work only while you are on the good side, Kind or better ([Consecrate](abilities.md#ability-consecrate) Neutral or better; see [Alignment](alignment.md)):
 otherwise you can still use them, and nothing happens (no [zeal](resources.md#resource-zeal) spent). The passives do not care, but for
 [Retribution](talents.md#talent-retribution), which answers no blow outside them. [Smite](abilities.md#ability-smite) and

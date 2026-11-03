@@ -16,7 +16,8 @@
 //! Each attempt lays water and the road, keeps a glade clear around the middle (the arrival when
 //! the player did not come from a side), adds ponds, a brook, and sometimes ruins (outdoor
 //! vaults), grows the land, then joins every walkable pocket to the middle and opens every side
-//! (`reach.rs`); deer may graze. An attempt that fails validation is discarded and the next
+//! (`reach.rs`); deer may graze, and a wild beast of the land roam (a forest's boar, a dense
+//! forest's lynx, the hills' badger). An attempt that fails validation is discarded and the next
 //! attempt's stream used. Integer-only; no hash-map iteration.
 
 mod cover;
@@ -32,7 +33,8 @@ pub use reach::arrival;
 
 use super::{GenError, MAX_ATTEMPTS, out_and_back};
 use crate::content::{
-    Content, CreatureSpawn, EdgeExit, Landscape, LevelKind, LevelTemplate, LocalArea, TerrainId,
+    Content, CreatureId, CreatureSpawn, EdgeExit, Landscape, LevelKind, LevelTemplate, LocalArea,
+    TerrainId,
 };
 use crate::geom::{Dir, Pos};
 use crate::rng::Rng;
@@ -131,6 +133,8 @@ struct Features {
     brook: u32,
     ruins: u32,
     deer: (i32, i32),
+    /// The land's wild beast and how many roam (as the deer graze), if it has one.
+    beast: Option<(fn(&Kit) -> CreatureId, (i32, i32))>,
     /// Half-width of the glade kept clear around the middle, in columns.
     glade: (i32, i32),
 }
@@ -141,13 +145,23 @@ fn features(landscape: Landscape) -> Features {
         brook,
         ruins,
         deer,
+        beast: None,
         glade,
     };
     match landscape {
         Landscape::Grassland => f(45, 25, 15, (1, 2), (4, 6)),
-        Landscape::Forest => f(25, 35, 15, (0, 2), (7, 10)),
-        Landscape::DenseForest => f(15, 25, 10, (0, 1), (6, 8)),
-        Landscape::Hills => f(15, 25, 30, (0, 0), (4, 6)),
+        Landscape::Forest => Features {
+            beast: Some((|k| k.boar, (0, 1))),
+            ..f(25, 35, 15, (0, 2), (7, 10))
+        },
+        Landscape::DenseForest => Features {
+            beast: Some((|k| k.lynx, (0, 1))),
+            ..f(15, 25, 10, (0, 1), (6, 8))
+        },
+        Landscape::Hills => Features {
+            beast: Some((|k| k.badger, (0, 1))),
+            ..f(15, 25, 30, (0, 0), (4, 6))
+        },
         Landscape::Swamp => f(0, 0, 10, (0, 0), (4, 6)),
         Landscape::Plains | Landscape::Road | Landscape::River | Landscape::Lake => {
             f(25, 10, 15, (0, 1), (4, 6))
@@ -245,7 +259,12 @@ fn build<'c>(
     let start = reach::start(&land)?;
     reach::join(&mut land, start)?;
     let deer = rng.range(features.deer.0, features.deer.1);
-    graze(&mut land, rng, deer, start);
+    graze(&mut land, rng, kit.deer, deer, start);
+    // After the deer, so an area's land and herd are what they were before the beasts came.
+    if let Some((beast, (lo, hi))) = features.beast {
+        let count = rng.range(lo, hi);
+        graze(&mut land, rng, beast(&kit), count, start);
+    }
     Some((land, start))
 }
 
@@ -328,8 +347,9 @@ fn ruins(land: &mut Land, rng: &mut Rng) {
     }
 }
 
-/// Deer grazing to and fro on open ground, away from the middle.
-fn graze(land: &mut Land, rng: &mut Rng, count: i32, start: Pos) {
+/// `count` of `creature` (deer, a wild beast) grazing to and fro on open ground, away from the
+/// middle.
+fn graze(land: &mut Land, rng: &mut Rng, creature: CreatureId, count: i32, start: Pos) {
     let (w, h) = (land.width(), land.height());
     for _ in 0..count {
         for _ in 0..30 {
@@ -345,7 +365,7 @@ fn graze(land: &mut Land, rng: &mut Rng, count: i32, start: Pos) {
                 continue;
             };
             land.creatures.push(CreatureSpawn {
-                creature: land.kit.deer,
+                creature,
                 faction: None,
                 alignment: None,
                 npc: None,

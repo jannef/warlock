@@ -210,27 +210,10 @@ impl World {
         id: ActorId,
         wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
     ) -> Option<(ActorId, Pos)> {
-        let World { state, content, .. } = self;
-        let me = &state.actors[&id];
-        let nose = content.creature(me.creature).nose?;
-        let mut near: Vec<(i32, ActorId, Pos)> = (state.actors.values())
-            .filter(|a| a.level == me.level && a.id != id && !a.in_retinue())
-            .filter(|a| a.pos.chebyshev(me.pos) <= nose)
-            .filter(|a| !a.effects.hides(content) && wanted(state, content, me, a))
-            .map(|a| (a.pos.dist2(me.pos), a.id, a.pos))
-            .collect();
-        if near.is_empty() {
-            return None;
-        }
-        near.sort_unstable();
-        let level: &LevelState = state.current();
-        // A smell passes a closed door; the radius covers the Chebyshev square's corners.
-        let los = LineOfSight::compute(me.pos, nose * 3 / 2 + 1, |q| {
-            level.is_opaque(content, q) && !level.is_closed_door(content, q)
-        });
-        (near.into_iter())
-            .find(|&(_, _, p)| los.contains(p))
-            .map(|(_, other, p)| (other, p))
+        let me = &self.state.actors[&id];
+        smelt(&self.state, &self.content, me, wanted)
+            .into_iter()
+            .next()
     }
 
     /// Ally `id` scented `target` without seeing it (`ally.rs::ally_plan`): a companion growls,
@@ -253,6 +236,42 @@ impl World {
             self.say(format!("{who} growls at the dark."));
         }
     }
+}
+
+/// Every actor `me`'s nose finds, nearest first (ties by lower id): each `wanted` one on its
+/// level, not in the retinue nor disguised (a mimic smells of nothing), within its type's `nose`
+/// (Chebyshev) and reached by a smell (a line of sight from `me` with closed doors counted open,
+/// whatever the light; never through a wall). Empty for a type without a nose. The ally's arm
+/// takes the first ([`World::smelled`]); Hunter's bond shows the player them all
+/// (`Perception::compute`). Pure: nothing drawn, nothing changed.
+pub(crate) fn smelt(
+    state: &WorldState,
+    content: &Content,
+    me: &Actor,
+    wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
+) -> Vec<(ActorId, Pos)> {
+    let Some(nose) = content.creature(me.creature).nose else {
+        return Vec::new();
+    };
+    let mut near: Vec<(i32, ActorId, Pos)> = (state.actors.values())
+        .filter(|a| a.level == me.level && a.id != me.id && !a.in_retinue())
+        .filter(|a| a.pos.chebyshev(me.pos) <= nose)
+        .filter(|a| !a.effects.hides(content) && wanted(state, content, me, a))
+        .map(|a| (a.pos.dist2(me.pos), a.id, a.pos))
+        .collect();
+    if near.is_empty() {
+        return Vec::new();
+    }
+    near.sort_unstable();
+    let level: &LevelState = state.current();
+    // A smell passes a closed door; the radius covers the Chebyshev square's corners.
+    let los = LineOfSight::compute(me.pos, nose * 3 / 2 + 1, |q| {
+        level.is_opaque(content, q) && !level.is_closed_door(content, q)
+    });
+    (near.into_iter())
+        .filter(|&(_, _, p)| los.contains(p))
+        .map(|(_, other, p)| (other, p))
+        .collect()
 }
 
 /// The growth hooks (`data/companions.toml [growth]`; the module docs): what a companion's grade

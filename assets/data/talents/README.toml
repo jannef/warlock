@@ -394,6 +394,14 @@
 #                                 `unholy` dice more on a creature smite.toml calls unholy, and
 #                                 the `aim` stat's modifier added to hit (its cost is the
 #                                 talent's `resource`: zeal)
+#   smite_mode { mode, status, severity, turns, check, difficulty }   a mode of smiting, its own
+#                                 active (Branding smite `brand`, Wrathful smite `fear`): the
+#                                 Smite talent's blow (the smiter needs it), then on a hit that
+#                                 did damage `brand` gives the foe `severity` degrees of the
+#                                 status (Branded); `fear` asks the foe a `check` of that stat
+#                                 against `difficulty` plus the smiter's Smite `aim` modifier,
+#                                 and failing it suffers the status (one that flees: Frightened)
+#                                 at `turns` degrees (its cost is the talent's `resource`: zeal)
 #   radiance { status, light }    the active Holy radiance: while it suffers the status it sheds
 #                                 the light
 #   patient_defence { status }    the active Patient defence (`use:patient_defence`, a wait;

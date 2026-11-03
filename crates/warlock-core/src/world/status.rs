@@ -73,8 +73,22 @@ impl World {
     /// actor never suffers it, and a resistance takes its share off the dose (rounded to the
     /// nearest, half up; a dose shrunk to nothing is no dose). The player is told when it
     /// begins. A unique item the actor wears that wards off the status (spec §8 "Magic items":
-    /// Ward) refuses it, and the player is told so.
+    /// Ward) refuses it, and the player is told so. With Hunter's bond a buff on the player or
+    /// their companion lands on the other too (`bond.rs`).
     pub(crate) fn afflict(
+        &mut self,
+        id: ActorId,
+        status: StatusId,
+        severity: u16,
+        by: Option<ActorId>,
+        events: &mut Vec<Event>,
+    ) {
+        self.afflict_one(id, status, severity, by, events);
+        self.share_buff(id, status, severity, by, events);
+    }
+
+    /// [`World::afflict`] on `id` alone, never shared.
+    pub(super) fn afflict_one(
         &mut self,
         id: ActorId,
         status: StatusId,

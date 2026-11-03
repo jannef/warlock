@@ -19,7 +19,8 @@ effects (`Actor::effects: Effects`, at most one `Effect { status, severity, tick
 status in status order; `Effects::add` applies the stacking rule, `penalty`, `regen`,
 `is_valid_for`; `Effect::until_tick`/`until_eases`/`advance` are the timer math: ticks bank
 `seconds × severity` degree-seconds). `world/status.rs` applies them: `World::afflict(actor,
-status, severity, by, events)` (**the one way to give an actor a status**: food poisoning
+status, severity, by, events)` (**the one way to give an actor a status**; Hunter's bond shares a
+buff from it, `afflict_one` being the unshared door, `docs/dev/companion.md`: food poisoning
 from what the player eats (#137), traps, diseases call it; a status with a `damage_type`
 (poisoned: poison) meets the actor's resistance there as a dose, docs/dev/combat.md "Damage
 types": immune refuses it, else `damage::resist` on the severity; a creature type's `immune`
@@ -87,7 +88,7 @@ and `follows` (`Option<StatusId>`, resolved after the whole file, `resolve_follo
 to itself; a status with it must end; nothing follows into or out of the disease status,
 checked in `Content::load_diseases`), and `light` (`Option<LightId>`, a light of
 `data/lights.toml` its bearer sheds while it lasts, the brightest of several: Lit, the Light
-spell's, #589; read by `LightCache` sources in `light/cache.rs`), `vision` (`Option<usize>`, a
+spell's, #589, and Branded, Branding smite's on the foe it wounds, #911; read by `LightCache` sources in `light/cache.rs`), `vision` (`Option<usize>`, a
 profile of `data/vision.toml` lent while it lasts, read in `Actor::eyes` beside `worn_vision`,
 bettering part by part; a potion's Owl-eyed, #567), and `resist` (`Vec<(DamageTypeId, i32)>`,
 −100 to 75 and not 0, counted as gear in `Actor::resistances`; a potion's Warmed, #567).

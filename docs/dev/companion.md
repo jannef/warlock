@@ -3,8 +3,8 @@
 Developer notes for the companion, a beast that is the player's for good (spec §8 "Allies": "The
 animal companion"; the design is `docs/design/ranger-companion.md`, §18 and §20 the owner's
 decisions, which override the rest). Slice **C1** (#916, this file: the starting beast, the
-story's chapter, growth, always along, the nose) and **C4** Pack tactics (#919, below); C2 Tame, C3 the collar, C5
-Hunter's bond, C6 Sic 'em, C7 the wild beasts, C8 the probe build on it. The ally core it uses as
+story's chapter, growth, always along, the nose) **C4** Pack tactics (#919, below), and **C5** Hunter's bond (#920, below); C2 Tame, C3 the
+collar, C6 Sic 'em, C7 the wild beasts, C8 the probe build on it. The ally core it uses as
 it is (the side, the arm, the orders, the retinue, the kill credit) is `docs/dev/allies.md`.
 The witch's familiar (`docs/dev/familiar.md`) is the same **kept** beast: what here is the name,
 growth, always along, the words, the status bar, and the Character screen's row reads
@@ -174,6 +174,47 @@ saved: the flank is read from where everyone stands at the blow. It is no clone 
 row and the mods; flanking both ways, diagonals, not for shots, throws, spells, or the kobold's
 blows; one side only or the retinue, nothing; the shared prey with and without Master hunter,
 flanked too, and another type nothing).
+
+## Hunter's bond (C5, #920)
+
+The ranger's level 25 (`assets/data/talents/hunters_bond.toml`: tree `class`, `granted`, effects
+`shared_sight` and `shared_buffs`, systems `vision`, `allies`, `status`). Two separate effects, so
+the witch's familiar (#932) can take the sight and the nose without the buffs.
+
+**Shared sight** (`TalentEffect::SharedSight` → `TalentMods::shared_sight`), a second viewpoint in
+`Perception::compute` (`perception.rs::BondView`, `bond_view`), only while the companion stands on
+the player's level (nothing from the retinue):
+
+- `sight::LineOfSight::cells` of the companion's line of sight within its type's sight
+  (`sight::sight_radius`), each seen iff `sight::sees_by` says so with its own eyes
+  (`Actor::eyes`: creature sight's rule, so a dark cell beyond its darkvision stays hidden);
+- `world::smelt` (`companion.rs`, what `World::smelled` takes the first of): the cell of every
+  hostile its nose finds, by the player's stance, through the dark and closed doors, never a wall
+  and never a disguised mimic (`hides`). A scented cell is seen; no wall completion round it;
+- wall completion around the cells seen by its eyes (no reach limit from the player; `Seen` in
+  line of sight, else `Edge`);
+- the light grid covers the union of both lines of sight (`lit_los`, `lit_cells`; `near` reaches
+  far enough, `light_reach`), perceived by the **player's** eye, so what the screen shows is in
+  the player's colours; without the bond the two are the player's own and nothing changes.
+
+They are ordinary `Sight::Seen` cells: memory, look mode, targeting, Set on, the seen actors, and
+the dumps read them with no other change. Hidden traps and secret doors stay hidden (searching is
+the player's own), the pass runs after the dazzle cut so a dazzled player keeps the companion's
+view, and it draws nothing and changes nothing (perception is a pure read of the state).
+
+**Shared buffs** (`TalentEffect::SharedBuffs` → `TalentMods::shared_buffs`), `world/bond.rs`, one
+hook: `World::afflict`, the one door of every status (`status-effects.md`), calls `afflict_one`
+and then `share_buff`. With the talent, a **buff** (`bond::is_buff`: a status of a buff spell, a
+`circles` row that is not a hex, or one a potion lends, `Draught::lends`) on the player lands on
+`World::companion()` (on the level or in the retinue) and one on the companion on the player, by
+`afflict_one`, so at the same severity, with no echo; each is its own `Effect`, easing by its own
+clock. A hex, a harm, a cooldown, Winded, Raging never cross. "Snel is bark-skinned too." when it
+begins on the companion (the status's `seen` word). Nothing drawn.
+
+Tests: `world/bond_tests.rs` (the sight is exactly the eyes plus the nose; a hostile behind a
+closed door, and not behind a wall; memory; dazzle; the retinue lends no eyes; a buff both ways
+and a hex never; a buff reaches a companion in the retinue). `class_rogue_tests.rs` pins the
+table's row.
 
 ## What the player sees
 

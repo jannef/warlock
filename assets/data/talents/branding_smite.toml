@@ -1,0 +1,10 @@
+[[talent]]
+id = "branding_smite"
+name = "Branding smite"
+tree = "class"
+granted = true
+description = "A smite that leaves holy light clinging to the foe (an ability, paid in zeal): it shines for all to see, and the dark hides it from you no more."
+effects = [{ kind = "smite_mode", mode = "brand", status = "branded", severity = 1 }]
+resource = { id = "zeal", cost = 3 }
+systems = ["combat", "resources", "status", "light"]
+alignment = { min = "kind" }

@@ -257,7 +257,9 @@ rate or animation.
   player's own cell is always visible. Creatures are seen iff their cell is visible: creatures in
   darkness are hidden (unless within darkvision), creatures carrying light are seen. A Blood scent
   talent (§8 "Talents") sees the cell of a bleeding creature in line of sight within its radius as
-  darkvision would. A **light-blind** player (their race's `light_blind`: drow) whose own cell is
+  darkvision would. **Hunter's bond** (§8 "Allies") adds a second viewpoint, the companion's: the
+  cells it sees by creature sight's rule and the cells of the hostiles its nose finds. A
+  **light-blind** player (their race's `light_blind`: drow) whose own cell is
   lit at least to its `glare` is dazzled and sees nothing farther than its `sight` (§8 "Character
   creation").
 - **Overworld sight** is at map scale: a cell of the overworld is visible iff it is in line of

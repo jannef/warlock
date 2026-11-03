@@ -352,6 +352,12 @@ pub enum TalentEffect {
     Familiar,
     /// `bonus` on its taming checks (Animal companion's edge; the Tame skill ability reads it).
     Tame { bonus: i32 },
+    /// It sees what its companion sees, by its companion's eyes and nose (Hunter's bond; the
+    /// second viewpoint in `Perception::compute`).
+    SharedSight,
+    /// A buff status that lands on it or its companion lands on the other too (Hunter's bond;
+    /// `world/bond.rs`); never a hex.
+    SharedBuffs,
     /// A creature beside both it and its companion is flanked: its melee blows and the
     /// companion's at it are `to_hit` likelier to hit (Pack tactics; `world/pack.rs`).
     PackTactics { to_hit: i32 },
@@ -747,6 +753,24 @@ pub enum TalentEffect {
         aim: Option<Stat>,
         #[serde(default)]
         unholy: u8,
+    },
+    /// A mode of smiting (the paladin's; `world/smite.rs`, docs/design/paladin-smites.md §6):
+    /// the class active of its `mode` (Branding smite, Wrathful smite), the Smite talent's blow
+    /// with a rider on a hit that did damage (what it costs is the talent's `resource`: Zeal).
+    /// `brand`: the foe suffers `severity` degrees of `status`. `fear`: the foe makes a `check`
+    /// of that stat against `difficulty` plus the smiter's Smite `aim` modifier, and failing
+    /// suffers `status` (one that flees) at `turns` degrees, caused by the smiter.
+    SmiteMode {
+        mode: SmiteRiderKind,
+        status: String,
+        #[serde(default)]
+        severity: u16,
+        #[serde(default)]
+        turns: Option<Dice>,
+        #[serde(default)]
+        check: Option<Stat>,
+        #[serde(default)]
+        difficulty: i32,
     },
     /// The class active Holy radiance: a toggle; while it suffers `status` it sheds light
     /// `light` (an id in `data/lights.toml`).
@@ -1192,6 +1216,27 @@ pub enum FreeBlowTrigger {
     Gatekeeper,
 }
 
+/// What a mode of smiting does besides the blow ([`TalentEffect::SmiteMode`]): each is its own
+/// class active.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SmiteRiderKind {
+    /// The foe hit suffers a status (Branded: it sheds light; Branding smite).
+    Brand,
+    /// The foe hit checks its nerve or flees (Frightened; Wrathful smite).
+    Fear,
+}
+
+impl SmiteRiderKind {
+    /// The class active of this mode.
+    pub const fn active(self) -> super::ClassActive {
+        match self {
+            SmiteRiderKind::Brand => super::ClassActive::BrandingSmite,
+            SmiteRiderKind::Fear => super::ClassActive::WrathfulSmite,
+        }
+    }
+}
+
 /// Whom a song is sung on ([`TalentEffect::Song`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -1228,6 +1273,7 @@ impl TalentEffect {
             TalentEffect::Whirlwind => A::Whirlwind,
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
             TalentEffect::Smite { .. } => A::Smite,
+            TalentEffect::SmiteMode { mode, .. } => mode.active(),
             TalentEffect::Radiance { .. } => A::HolyRadiance,
             TalentEffect::PatientDefence { .. } => A::PatientDefence,
             TalentEffect::StunningStrike { .. } => A::StunningStrike,
@@ -1783,6 +1829,34 @@ impl TalentEffect {
                 }
                 Ok(())
             }
+            TalentEffect::SmiteMode {
+                mode,
+                status: id,
+                severity,
+                turns,
+                check,
+                difficulty,
+            } => {
+                match (mode, turns, check) {
+                    (SmiteRiderKind::Brand, None, None)
+                        if (1..=10).contains(severity) && *difficulty == 0 => {}
+                    (SmiteRiderKind::Fear, Some(_), Some(_))
+                        if *severity == 0 && (0..=30).contains(difficulty) => {}
+                    _ => {
+                        return Err("`smite_mode`: `brand` takes a severity of 1 to 10; `fear` \
+                                    `turns`, a `check`, and a `difficulty` of 0 to 30"
+                            .into());
+                    }
+                }
+                status(id)?;
+                let flees = content.status_id(id).map(|s| content.status(s).flees);
+                if *mode == SmiteRiderKind::Fear && flees == Some(false) {
+                    return Err(format!(
+                        "`smite_mode`: `fear`'s status `{id}` does not flee"
+                    ));
+                }
+                Ok(())
+            }
             TalentEffect::Lurk { status: id }
             | TalentEffect::SneakKillStatus { status: id }
             | TalentEffect::WindStep { status: id } => status(id),
@@ -2326,6 +2400,8 @@ impl TalentEffect {
             | TalentEffect::SeesUnaware
             | TalentEffect::Companion
             | TalentEffect::Familiar
+            | TalentEffect::SharedSight
+            | TalentEffect::SharedBuffs
             | TalentEffect::SharesFavouredPrey
             | TalentEffect::StartledBlow
             | TalentEffect::Distrusted
