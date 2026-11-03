@@ -192,7 +192,7 @@ seen = "silenced"
 max = 1
 stacking = "refresh"
 eases = 10
-blocks = ["cast", "read", "throw_voice"]
+blocks = ["cast", "read", "song", "throw_voice"]
 start = "The silence closes around you."
 end = "Sound returns."
 
@@ -376,25 +376,26 @@ penalty = { from = 1, willpower = 1 }
 start = "You feel blessed."
 end = "Your blessing fades."
 
-# Inspire (the bard's song, spec §8 "Class abilities"): five minutes of a lifted heart, a little
-# surer to hit and quicker to dodge. Its price is mana, not a cooldown.
+# Inspire (the bard's song, spec §8 "Class abilities"): five minutes of a lifted heart a degree,
+# a little surer to hit and quicker to dodge. The degrees are time, not strength: one more at
+# Music 50 and at 100 (skills.toml). Its price is inspiration, not a cooldown.
 [[status]]
 id = "inspired"
 name = "Inspired"
 seen = "inspired"
-max = 1
+max = 3
 stacking = "refresh"
 eases = 300
 combat = { to_hit = 1, dodge = 1 }
 start = "Your song lifts your heart."
 end = "The song fades from your heart."
 
-# Inspire as a Virtuoso sings it: ten minutes, and more of it.
+# Inspire as a Virtuoso sings it: ten minutes a degree, and more of it.
 [[status]]
 id = "inspired_greatly"
 name = "Inspired"
 seen = "inspired"
-max = 1
+max = 3
 stacking = "refresh"
 eases = 600
 combat = { to_hit = 2, dodge = 2 }

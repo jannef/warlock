@@ -32,7 +32,8 @@
 #                 whatever comes of it), "pick" (a try at picking a
 #                 lock), "deal" (a deal made in a shop: goods paid for, or your own sold),
 #                 "appraise" (something you carry told for what it is: "identify" below),
-#                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it). Marks gather until a level-up roll on the skill spends them ([ladder]
+#                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
+#                 "song" (a song sung, whatever it does). Marks gather until a level-up roll on the skill spends them ([ladder]
 #                 below). Only the player trains, for now.
 #   benefit       what it gives, by its value: a list of { effect = EFFECT, ... } growing either
 #                 by `steps` (one for each value reached, then one more for every `every` points
@@ -64,7 +65,10 @@
 #                 picking a lock, at most 20; trained, a skill with it
 #                 lets you pick locks at all: the Pick lock ability), "intimidate" (points added to
 #                 the difficulty of the Willpower check your war cry asks of those who hear and
-#                 see you, at most 20), "study"(points off the
+#                 see you, at most 20), "song_degrees" (degrees added to what your songs give,
+#                 up to the status's own most, at most 10), "song_craft" (points added to the
+#                 difficulty of the check your songs ask of those who hear them against them, at
+#                 most 20), "study"(points off the
 #                 difficulty of studying a spell, spec §8 "Spells", at most 20). The percent effects stay
 #                 within 0 to 100.
 #
@@ -288,8 +292,16 @@ benefit = [{ effect = "temper", curve = [[0, 0], [100, 8], [200, 12]] }]
 [[skill]]
 id = "music"
 name = "Music"
-description = "Singing and playing an instrument."
-kind = "action"
+description = "Singing: how far your songs carry into a heart, and how long they stay there."
+kind = "rules"
+mark = [{ on = "song", chance = 100 }]
+# A song's degrees (spec §8 "Class abilities", the bard's songs): one more at 50 and at 100,
+# then one more for every 100 past it, up to what the status takes. And how hard those who hear a
+# song against them find it to resist: +4 to the check's difficulty at 100, +8 at 200.
+benefit = [
+    { effect = "song_degrees", steps = [50, 100], every = 100 },
+    { effect = "song_craft", curve = [[0, 0], [100, 4], [200, 8]] },
+]
 
 [[skill]]
 id = "negotiation"

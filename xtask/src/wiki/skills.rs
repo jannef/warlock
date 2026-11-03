@@ -107,6 +107,8 @@ fn effect_name(effect: Effect) -> &'static str {
         Effect::Intimidate => {
             "your threats and your war cry are harder to stand against, and a threat frightens longer"
         }
+        Effect::SongDegrees => "your songs last longer",
+        Effect::SongCraft => "your songs are harder to shake off",
         Effect::Temper => "tempering at a forge's anvil",
         Effect::ManaRegen => "mana back faster",
         Effect::MaxMana => "a slightly larger mana pool (at most a fifth more)",
@@ -155,6 +157,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
             Effect::Heal => "treating",
             Effect::Pick => "picking locks",
             Effect::Intimidate => "threat's difficulty",
+            Effect::SongDegrees => "song degrees",
+            Effect::SongCraft => "song's difficulty",
             Effect::Temper => "tempering",
             Effect::ManaRegen => "mana back",
             Effect::MaxMana => "mana pool",
@@ -186,6 +190,8 @@ pub(super) fn skill_benefits(content: &Content) -> String {
                 | Effect::Disarm
                 | Effect::Pick
                 | Effect::Intimidate
+                | Effect::SongDegrees
+                | Effect::SongCraft
                 | Effect::Temper
                 | Effect::Surprise
                 | Effect::Initiative

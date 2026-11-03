@@ -465,7 +465,8 @@ fn the_first_chat_with_someone_trains_presence_twice_and_later_ones_once() {
 fn inspiring_song_trains_presence() {
     let mut w = yard();
     w.player_mut().talents.take("inspire", None);
-    w.player_mut().mana = 100;
+    let pool = w.content().resource_id("inspiration").expect("inspiration");
+    w.player_mut().resources.set(pool, 3);
     let got = earned(&mut w, |w| run(w, "use:inspire"));
     assert_eq!(got[Stat::Presence], 1, "{:#?}", w.messages());
 }

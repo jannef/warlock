@@ -529,7 +529,7 @@ its `alignment` names, `World::unanswered` (a cast's time, no mana, nothing lift
 from `LevelState::rooms` or clears `pervading`, keeps only the risings still under a `rise`, says
 so, and `player_did(Deed::Consecrated)` (`[shift] consecrate`, 20). Interrupted: "You stop your
 prayer." (or who came into view), nothing lifted. The abilities menu greys it out without its
-mana (`Ability::unavailable`'s class branch: Consecrate's mana with Inspire's).
+mana (`Ability::unavailable`'s class branch: Consecrate's mana with a song's).
 
 ## Haunted rooms
 

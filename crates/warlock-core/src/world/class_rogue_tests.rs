@@ -764,20 +764,21 @@ fn a_restored_bard_past_both_ranks_is_given_each_and_a_skill_added_later_is_take
 }
 
 #[test]
-fn inspire_costs_mana_and_virtuoso_sings_longer_for_none() {
+fn inspire_costs_inspiration_and_virtuoso_sings_longer_for_none() {
     let mut w = world("bard");
     let inspire = Ability::Class(ClassActive::Inspire);
     assert_eq!(own(&w, inspire), None);
     reach(&mut w, 18);
-    w.player_mut().mana = 2;
-    assert_eq!(own(&w, inspire), Some(Some(Unavailable::NoMana)));
+    let pool = w.content().resource_id("inspiration").expect("inspiration");
+    assert_eq!(own(&w, inspire), Some(Some(Unavailable::Short(pool))));
     run(&mut w, "use:inspire");
-    assert_eq!(last(&w), "You have too little mana.");
+    assert_eq!(last(&w), "You have too little inspiration.");
+    w.player_mut().resources.set(pool, 3);
     w.player_mut().mana = 10;
     let turn = w.state.turn;
     run(&mut w, "use:inspire");
-    assert!(w.state.turn > turn, "a chat's time");
-    assert_eq!(w.state.player().mana, 7);
+    assert!(w.state.turn > turn, "a song's time");
+    assert_eq!(w.state.player().mana, 10);
     assert!(suffers(&w, "inspired"));
     let content = w.content().clone();
     let me = w.state.player();
@@ -787,8 +788,8 @@ fn inspire_costs_mana_and_virtuoso_sings_longer_for_none() {
         profile.to_hit + 1
     );
     reach(&mut w, 60);
-    w.player_mut().mana = 0;
-    assert_eq!(own(&w, inspire), Some(None), "Virtuoso: no mana");
+    w.player_mut().resources.set(pool, 0);
+    assert_eq!(own(&w, inspire), Some(None), "Virtuoso: free");
     run(&mut w, "use:inspire");
     assert!(suffers(&w, "inspired_greatly"));
 }

@@ -108,6 +108,8 @@ pub enum ActionKind {
     Heal,
     /// Chatting with a creature (spec §8 "Dialogue"): a short action.
     Chat,
+    /// Singing a song (spec §8 "Class abilities", the bard's songs; `world/song.rs`): Inspire.
+    Song,
     /// Trying to steal from a creature (spec §8 "Stealing"), whatever comes of it.
     Steal,
     /// Threatening a foe (spec §8 "Skills": Intimidate), whatever comes of it.
@@ -155,6 +157,7 @@ impl ActionKind {
         ActionKind::Disarm,
         ActionKind::Heal,
         ActionKind::Chat,
+        ActionKind::Song,
         ActionKind::Steal,
         ActionKind::Intimidate,
         ActionKind::ThrowVoice,
@@ -198,6 +201,7 @@ impl ActionKind {
             ActionKind::Disarm => "disarm",
             ActionKind::Heal => "heal",
             ActionKind::Chat => "chat",
+            ActionKind::Song => "song",
             ActionKind::Steal => "steal",
             ActionKind::Intimidate => "intimidate",
             ActionKind::ThrowVoice => "throw_voice",
@@ -260,6 +264,7 @@ impl ActionKind {
             ActionKind::Disarm => "disarm traps",
             ActionKind::Heal => "tend your hurts",
             ActionKind::Chat => "talk",
+            ActionKind::Song => "sing",
             ActionKind::Steal => "steal",
             ActionKind::Intimidate => "intimidate",
             ActionKind::ThrowVoice => "throw your voice",

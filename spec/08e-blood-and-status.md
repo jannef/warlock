@@ -193,8 +193,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   "Magic items"). `World::healing_rate` is the one place that decides the pace.
 - **Mana** (`warlock-core/src/mana.rs`, the pure rules; `world/mana.rs`, applying them; #223):
   a second pool beside hit points, built the same way. Spells spend it ("Spells" below: the
-  casters' class spells and those learned from scrolls), as do rods (§8 "Rods"), the bard's
-  inspire when short of inspiration, and a summoner's summons (§8 "Creatures"); Blood magic
+  casters' class spells and those learned from scrolls), as do rods (§8 "Rods") and a summoner's summons (§8 "Creatures"); Blood magic
   refills it. Every
   new system says in its issue how it interacts with mana, if at all.
   - **The maximum** (`Actor::max_mana`): `mana_base` (the race's and the class's `mana`, §7; a
@@ -539,8 +538,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   berserker's Rage, the ranger's Focus, the thief's Openings, the ascetic's Ki, the bard's
   Inspiration) move onto them in follow-up changes (R1–R5); the berserker's Rage has (R1,
   "Rage" below), and the ranger's Focus (R2), the thief's Openings (R3), and the ascetic's Ki and
-  the bard's Inspiration (R4) have (below). Mana is separate: nothing converts between them;
-  Inspiration is the one resource spent in place of mana.
+  the bard's Inspiration (R4) have (below). Mana is separate: nothing converts between them,
+  and nothing is paid in one else the other (a song costs one thing, #870).
   - **Data** (`data/resources.toml`, §7): each resource's maximum, start, whether the status bar
     shows its maximum, how it changes over time (it **regenerates** toward its maximum or
     **decays** toward 0, a point every so many seconds, while resting too or not), whether it
@@ -629,9 +628,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing to end. The ascetic's mana stays theirs, separate.
   - **Inspiration** (the bard's; R4, #252): Inspire (level 18) grants it at 0; each kill credited
     to the bard builds one (to 5), one fades every 180 s (30 base turns), and at 0 it stays,
-    held. Inspire spends 3 inspiration **in place of** its 3 mana while the bard holds 3 (then
-    no mana is spent, and nothing blocks it as casting), else its mana as before; Virtuoso's
-    song costs neither.
+    held. Inspire, a song (§8 "Class abilities"), costs 3 inspiration and nothing else
+    (#870: no mana fallback); a Virtuoso's song costs nothing.
   - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives pay
     from (§8 "Weapon abilities", #564). The granted talent **Trained wind**
     (`grants_resource`) is in the level-1 row of the warrior's, berserker's, paladin's,

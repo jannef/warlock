@@ -8,7 +8,7 @@ expression: "render(case, content.clone())"
                     │ > a  Transfixing stare  at a place you see               │
                     │ Class                                                    │
                     │   b  Throw your voice   at a place you see               │
-                    │   c  Inspire            you have too little mana         │
+                    │   c  Inspire            not enough inspiration           │
                     │ Spells                                                   │
                     │   d  Mend               1d3 healed, 1 mana, aimed        │
                     │ Skills                                                   │
@@ -20,15 +20,15 @@ expression: "render(case, content.clone())"
                     │   j  Intimidate         at a place you see               │
                     │   k  Knowledge          not usable yet                   │
                     │   l  Metalcraft         not usable yet                   │
-                    │   m  Music              not usable yet                   │
-                    │   n  Pick lock          in a direction                   │
-                    │   o  Steal              in a direction                   │
-                    │   p  Forage             not usable here                  │
-                    │   q  Woodcraft          not usable yet                   │
+                    │   m  Pick lock          in a direction                   │
+                    │   n  Steal              in a direction                   │
+                    │   o  Forage             not usable here                  │
+                    │   p  Woodcraft          not usable yet                   │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-q or Enter use   > < page   Esc close                  │
- The Hub  ·  HP 50/5└──────────────────────────────────────────────────────────┘         ? controls
+                    │ a-p or Enter use   > < page   Esc close                  │
+                    └──────────────────────────────────────────────────────────┘
+ The Hub  ·  HP 50/50  ·  MP 2/158  ·  Inspiration 0/5  ·  Sta 9/15  ·  Lv 38            ? controls

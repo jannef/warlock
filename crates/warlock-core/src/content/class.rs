@@ -624,7 +624,8 @@ pub enum ClassActive {
     /// A blow in a direction that is a critical if it hits, for openings (the Master thief's
     /// finisher).
     MasterThief,
-    /// A song that lifts the player's fighting a while, for mana (the bard's Inspire).
+    /// A song that lifts the player's fighting a while, for inspiration (the bard's Inspire,
+    /// `world/song.rs`).
     Inspire,
     /// A minute's prayer that lifts an unholy room's effect for good, for mana (the priest's and
     /// the paladin's Consecrate).
@@ -742,6 +743,12 @@ impl ClassActive {
         )
     }
 
+    /// Whether it is a song (`world/song.rs`): a talent's `song` effect names it, and it is
+    /// sung aloud.
+    pub const fn sings(self) -> bool {
+        matches!(self, ClassActive::Inspire)
+    }
+
     /// Whether it asks for a cell before it is used (`use:volley:12,5`).
     pub const fn aims_cell(self) -> bool {
         matches!(self, ClassActive::Volley)
@@ -783,7 +790,7 @@ impl ClassActive {
             | ClassActive::Sanctuary
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
-            ClassActive::Inspire => ActionKind::Chat,
+            ClassActive::Inspire => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
         }
     }

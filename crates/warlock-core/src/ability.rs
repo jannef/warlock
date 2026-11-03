@@ -28,6 +28,7 @@ use crate::content::{
 };
 use crate::geom::{Dir, Pos};
 use crate::skills::{Effect, SkillId};
+use crate::talent::SongCost;
 use crate::world::{Actor, BREATH_RANGE, LevelState, STARE_RANGE, VOICE_RANGE};
 use std::borrow::Cow;
 
@@ -853,15 +854,20 @@ impl Ability {
                     .or_else(|| short_of(actor, def?.resource?))
                     .or_else(|| still(actor, content, active))
                     .or_else(|| {
-                        // Inspire costs its inspiration while that is held, else mana
-                        // (Virtuoso's none), which a status that blocks casting (Raging) keeps
-                        // from being spent.
-                        let inspire = (active == ClassActive::Inspire)
-                            .then(|| actor.talent_mods(content).inspiring())
+                        // A song costs one thing (a Virtuoso's nothing): its resource
+                        // (Inspire's inspiration), or its mana, which a status that blocks
+                        // casting (Raging) keeps from being spent.
+                        let song = (active.sings())
+                            .then(|| actor.talent_mods(content).song(active))
                             .flatten();
-                        let inspired = (inspire.and_then(|i| i.instead))
-                            .is_some_and(|c| short_of(actor, c).is_none());
-                        let mana = inspire.filter(|_| !inspired).map_or(0, |i| i.mana);
+                        let (pool, mana) = match song.and_then(|s| s.cost) {
+                            Some(SongCost::Resource(cost)) => (Some(cost), 0),
+                            Some(SongCost::Mana(mana)) => (None, mana),
+                            None => (None, 0),
+                        };
+                        if let Some(short) = pool.and_then(|cost| short_of(actor, cost)) {
+                            return Some(short);
+                        }
                         // Consecrate costs its mana.
                         let consecrate = (active == ClassActive::Consecrate)
                             .then(|| actor.talent_mods(content).consecrate)
@@ -1094,7 +1100,6 @@ mod tests {
                 "intimidate",
                 "knowledge",
                 "metalcraft",
-                "music",
                 "pick_lock",
                 "steal",
                 "forage",

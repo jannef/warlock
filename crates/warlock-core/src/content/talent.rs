@@ -1033,17 +1033,31 @@ pub enum TalentEffect {
     /// The class active Volley: `shots` shots at a cell for the price of one (what it costs is
     /// the talent's `resource`, if anything).
     Volley { shots: u8 },
-    /// The class active Inspire: it suffers `status` (Inspired), for `mana` mana; or, while it
-    /// holds `cost` of `resource` (Inspiration), for those in place of the mana.
-    Inspire {
+    /// A song (spec §8 "Class abilities", the bard's songs; `world/song.rs`): class active `id`
+    /// (`use:inspire`), sung aloud. Who it is `on` suffers `severity` degrees of `status`, and the
+    /// singer's Music's `song_degrees` more; it costs **one** thing, `cost` of `resource`
+    /// (Inspire's 3 Inspiration) or `mana`. A song on its hearers asks each hostile one a
+    /// `check` of that stat against `difficulty` plus the singer's `song_craft` (the Lullaby's,
+    /// #873).
+    Song {
+        id: String,
+        on: SongOn,
         status: String,
-        mana: i32,
+        #[serde(default = "one_degree")]
+        severity: u16,
         #[serde(default)]
         resource: Option<String>,
         #[serde(default)]
         cost: u16,
+        #[serde(default)]
+        mana: i32,
+        #[serde(default)]
+        check: Option<Stat>,
+        #[serde(default)]
+        difficulty: i32,
     },
-    /// Inspire gives `status` instead, and costs no mana (Virtuoso).
+    /// Every song costs nothing and gives a degree more; a song on the singer gives `status`
+    /// instead (Virtuoso: Inspired greatly).
     Virtuoso { status: String },
     /// The class active Consecrate: `time` (a duration) of prayer, for `mana` mana, lifts an
     /// unholy special room (or a whole level's unholy effect) for good (`world/consecrate.rs`).
@@ -1133,6 +1147,17 @@ pub enum FreeBlowTrigger {
     Gatekeeper,
 }
 
+/// Whom a song is sung on ([`TalentEffect::Song`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SongOn {
+    /// The singer suffers its status (Inspire).
+    #[serde(rename = "self")]
+    Singer,
+    /// Every hostile creature that hears it checks against it (the Lullaby, #873).
+    Hearers,
+}
+
 impl TalentEffect {
     /// The birth sign's active it is, if it is one (spec §8 "Birth sign").
     pub fn sign_active(&self) -> Option<super::SignActive> {
@@ -1167,7 +1192,7 @@ impl TalentEffect {
             TalentEffect::Lurk { .. } => A::Lurk,
             TalentEffect::LowBlow => A::LowBlow,
             TalentEffect::Finisher => A::MasterThief,
-            TalentEffect::Inspire { .. } => A::Inspire,
+            TalentEffect::Song { id, .. } => return A::from_id(id).filter(|a| a.sings()),
             TalentEffect::Consecrate { .. } => A::Consecrate,
             TalentEffect::Sanctuary { .. } => A::Sanctuary,
             TalentEffect::Prayer { tier: Some(1), .. } => A::Orison,
@@ -1379,21 +1404,43 @@ impl TalentEffect {
                 }
                 Ok(())
             }
-            TalentEffect::Inspire {
-                status: id,
-                mana,
-                resource: instead,
+            TalentEffect::Song {
+                id,
+                on,
+                status: status_id,
+                severity,
+                resource: pool,
                 cost,
+                mana,
+                check,
+                difficulty,
             } => {
-                if !(0..=100).contains(mana) {
-                    return Err("`inspire`: mana is 0 to 100".into());
+                if (super::ClassActive::from_id(id)).is_none_or(|a| !a.sings()) {
+                    return Err(format!("`song`: `{id}` is no song's active"));
                 }
-                if let Some(instead) = instead {
-                    resource_cost("inspire", instead, *cost)?;
-                } else if *cost != 0 {
-                    return Err("`inspire`: a `cost` needs its `resource`".into());
+                match (pool, *mana) {
+                    (Some(pool), 0) => resource_cost("song", pool, *cost)?,
+                    (None, 1..=100) if *cost == 0 => {}
+                    _ => {
+                        return Err(
+                            "`song`: costs one thing, `cost` of a `resource` or 1 to 100 `mana`"
+                                .into(),
+                        );
+                    }
                 }
-                status(id)
+                if !(1..=10).contains(severity) {
+                    return Err("`song`: severity is 1 to 10".into());
+                }
+                match (on, check) {
+                    (SongOn::Hearers, Some(_)) if (0..=30).contains(difficulty) => {}
+                    (SongOn::Singer, None) if *difficulty == 0 => {}
+                    _ => {
+                        return Err("`song`: a song on its hearers asks a `check` against a \
+                                    `difficulty` of 0 to 30; one on the singer neither"
+                            .into());
+                    }
+                }
+                status(status_id)
             }
             TalentEffect::FlurryCost { resource: id, cost } => {
                 resource_cost("flurry_cost", id, *cost)
@@ -3460,6 +3507,45 @@ needs = { stats = { toughness = 17 }, talents = { healthy = 1 } }
             ))
             .contains("only for an effect the talents' sum reads")
         );
+    }
+
+    #[test]
+    fn a_song_names_a_song_and_costs_one_thing() {
+        let song = |fields: &str| {
+            let text = format!(
+                "[[talent]]\nid = \"x\"\nname = \"X\"\ntree = \"vigour\"\n\
+                 description = \"d\"\nsystems = [\"hit_points\"]\n\
+                 effects = [{{ kind = \"song\", status = \"inspired\", {fields} }}]\n"
+            );
+            load(
+                SETTINGS,
+                &[("healthy", HEALTHY), ("hardy", HARDY), ("x", &text)],
+            )
+        };
+        let inspire = "id = \"inspire\", on = \"self\"";
+        song(&format!("{inspire}, resource = \"inspiration\", cost = 3")).expect("a pool");
+        song(&format!("{inspire}, mana = 6")).expect("mana");
+        let refused = |fields: &str| err(song(fields));
+        assert!(
+            refused(&format!("{inspire}, mana = 6, resource = \"x\", cost = 3"))
+                .contains("one thing")
+        );
+        assert!(refused(inspire).contains("one thing"), "free");
+        assert!(refused(&format!("{inspire}, mana = 6, cost = 3")).contains("one thing"));
+        assert!(refused("id = \"rage\", on = \"self\", mana = 6").contains("no song"));
+        assert!(refused(&format!("{inspire}, mana = 6, severity = 0")).contains("severity"));
+        // A song on the singer asks no check; one on its hearers asks one.
+        assert!(
+            refused(&format!(
+                "{inspire}, mana = 6, check = \"willpower\", difficulty = 13"
+            ))
+            .contains("neither")
+        );
+        assert!(refused("id = \"inspire\", on = \"hearers\", mana = 6").contains("asks a `check`"));
+        song(
+            "id = \"inspire\", on = \"hearers\", mana = 6, check = \"willpower\", difficulty = 13",
+        )
+        .expect("data-ready for the Lullaby");
     }
 
     #[test]
