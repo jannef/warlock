@@ -201,7 +201,7 @@ pub(super) fn taming(content: &Content) -> String {
     };
     let mut out = format!(
         "A try is {} turns beside the beast, then one check: 2d12 + your Willpower modifier + \
-         Handle animal's taming bonus (+{} at 50, +{} at 100, +{} at 200) + {} if you carry food \
+         Handle animal's taming bonus (+{} at 50, +{} at 100, +{} at 200), {} if you carry food \
          (one of the first food you carry is eaten) + the ranger's Animal companion bonus, against \
          {} + {} × the beast's level. A natural 2 always fails and a natural 24 always succeeds. \
          The chance of a try, by the modifier:\n\n| Beast (level) | Difficulty |",

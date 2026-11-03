@@ -174,8 +174,8 @@ impl World {
     /// Creature `id` becomes the player's companion where it stands (Tame, `tame.rs`): it keeps
     /// its actor (hit points, statuses, its place), takes the player's side (their faction as
     /// its `faction_override`, as [`World::make_ally`] gives a made one), forgets what it was
-    /// about (`Mind` cleared), and is graded at the player's level (its hit points rising with
-    /// its maximum) and named (one draw on `companion/name/<id>`). Returns its name; `None`
+    /// about (`Mind` and its patrol cleared), and is graded at the player's level (its hit
+    /// points rising with its maximum) and named (one draw on `companion/name/<id>`). Returns its name; `None`
     /// without the data or the actor.
     pub(super) fn adopt(&mut self, id: ActorId) -> Option<String> {
         let content = self.content.clone();
@@ -189,6 +189,7 @@ impl World {
         let grade = (rules.growth).grade(level, content.creature(actor.creature).level);
         actor.faction_override = faction;
         actor.mind = super::Mind::default();
+        actor.patrol = None;
         actor.ally = Some(super::Ally {
             master: player,
             source: AllySource::Companion(CompanionData {

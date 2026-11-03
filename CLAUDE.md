@@ -371,7 +371,7 @@ file). Topics:
 - `docs/dev/creatures.md` — factions and stance, the AI, paths, creature sight, spawning, gear (a stable index: roster PRs edit only their own `docs/dev/creatures/<tribe>.md`, e.g. `undead.md`, never this file)
 - `docs/dev/summoning.md` — creatures' summoning (enemy-only): the `summon` table, the cooldown status, who summoned whom, the AI hook, the words
 - `docs/dev/allies.md` — allies: `Actor::ally`, the side, the ally arm of the AI, the three orders, following across levels and the retinue, the clock, an ally's kill, Beast-bond, the dev `ally:`
-- `docs/dev/companion.md` — the animal companion: `AllySource::Companion(CompanionData)`, the starting beast by race and the rares (`data/companions.toml`), the name, growth with the master's level (the hooks in `actor.rs`), always along, the nose, `CreatureDef::{tameable, nose}`, the story's chapter, the `companion` dump
+- `docs/dev/companion.md` — the animal companion: `AllySource::Companion(CompanionData)`, the starting beast by race and the rares (`data/companions.toml`), taming (`world/tame.rs`), the name, growth with the master's level (the hooks in `actor.rs`), always along, the nose, `CreatureDef::{tameable, nose}`, the story's chapter, the `companion` dump
 - `docs/dev/animated.md` — animated objects: creature types generated at load, their bodies and streams, drops, immunities, the look
 - `docs/dev/npcs.md` — unique characters, chat and ask, rotation lines and mutters, displacement
 - `docs/dev/quests.md` — quest data and stages, hooks in kills, travel, and talk, the quest log
