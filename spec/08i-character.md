@@ -1370,7 +1370,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     short; refused with no time, "There is no one there to blind.", without a hostile there).
     Trapfinding, Pick lock, and Light fingers, which only gave what the class's skills give,
     are gone from the table (#684); a save holding one loads without it (said in the log).
-  - **Passives**, each one read: Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
+  - **Passives**, each one read: Animal companion (the ranger's level 1, #916: a beast of the
+    race's kind, or rarely a rare one, at their side from the first turn, that grows with their
+    level and always comes along, §8 "Allies": "The animal companion"; `TalentEffect::Companion`
+    read by `World::bring_companion`; and `tame = 2`, `TalentMods::tame`, the ranger's edge at
+    taming, read by the Tame skill ability when it comes), Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
     attack, in `World::resolve`), Stalker's eye (the ranger's at 2, #788: it sees which
     creatures in view have not noticed it, `sees_unaware`, above), Tracker (hears 3 fainter; every sound it hears placed at its
     own cell, `noise::Exact::All`), Rapid shot (grants Focus, §8 "Resources"; a shot loosed

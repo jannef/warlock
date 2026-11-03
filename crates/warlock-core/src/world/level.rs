@@ -400,6 +400,14 @@ impl LevelState {
             .is_some_and(|t| content.terrain(*t).is_door())
     }
 
+    /// Whether a closed door is at `p` ([`crate::content::TerrainDef::is_closed_door`]): a
+    /// companion's nose smells through one (`world/companion.rs`).
+    pub(crate) fn is_closed_door(&self, content: &Content, p: Pos) -> bool {
+        self.terrain
+            .get(p)
+            .is_some_and(|t| content.terrain(*t).is_closed_door())
+    }
+
     /// Whether a shut chest is at `p` ([`crate::content::TerrainDef::is_shut_chest`]).
     pub(crate) fn is_shut_chest(&self, content: &Content, p: Pos) -> bool {
         self.terrain

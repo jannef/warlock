@@ -8,7 +8,7 @@ use crate::ability::Aim;
 use crate::action::{letter, position_text};
 use crate::blood::{self, Stain};
 use crate::character::Gender;
-use crate::content::{Content, Role, SpecialRoom, WeaponSkillId};
+use crate::content::{Content, Role, SpecialRoom, WeaponSkillId, article};
 use crate::equipment;
 use crate::geom::Pos;
 use crate::hunger::Hunger;
@@ -18,7 +18,7 @@ use crate::object::{Stack, format_weight};
 use crate::perception::{CellView, PerceivedLight, PerceptionView};
 use crate::stats::Stat;
 use crate::weather::Weather;
-use crate::world::{CallingStatus, Cause, LevelState, World};
+use crate::world::{AllySource, CallingStatus, Cause, LevelState, World};
 use serde_json::{Value, json};
 use std::fmt::Write;
 use std::str::FromStr;
@@ -98,6 +98,9 @@ pub enum Layer {
     /// Not a map: the player's background story (spec §8 "Background story"), a paragraph a
     /// line as the story screen tells it, a blank line between; `no story` without one.
     Story,
+    /// The player's companion as they know it (spec §8 "Allies"): its name, type, grade, cell
+    /// (where seen), health in words, and order; `no companion` without one.
+    Companion,
     /// Not a map: the player's quest log, one quest a line, active first (`Rats in the arena
     /// (active, from the old hermit): Kill 3 giant rats in the Arena. 2 / 3 killed.`).
     Quests,
@@ -157,6 +160,7 @@ impl Layer {
         Layer::Locations,
         Layer::Quests,
         Layer::Story,
+        Layer::Companion,
         Layer::Truth,
         Layer::Actors,
         Layer::Progress,
@@ -187,6 +191,7 @@ impl Layer {
             Layer::Locations => "locations",
             Layer::Quests => "quests",
             Layer::Story => "story",
+            Layer::Companion => "companion",
             Layer::Truth => "truth",
             Layer::Actors => "actors",
             Layer::Progress => "progress",
@@ -216,7 +221,8 @@ impl FromStr for Layer {
                 format!(
                     "unknown layer `{s}` (expected view, fov, memory, light, sound, blood, \
                      inventory, equipment, stats, skills, weapon_skills, schools, attacks, talents, \
-                     abilities, traps, locations, quests, story, truth, actors, progress, rooms, ice)"
+                     abilities, traps, locations, quests, story, companion, truth, actors, progress, \
+                     rooms, ice)"
                 )
             })
     }
@@ -256,6 +262,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
         Layer::Locations => location_rows(&world.perception()),
         Layer::Quests => quest_rows(&world.perception()),
         Layer::Story => story_rows(world),
+        Layer::Companion => companion_rows(&world.perception()),
         _ => {
             let view = world.perception();
             rows(view.width(), view.height(), |p| {
@@ -315,6 +322,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
         | Layer::Locations
         | Layer::Quests
         | Layer::Story
+        | Layer::Companion
         | Layer::Truth
         | Layer::Actors
         | Layer::Progress
@@ -588,6 +596,54 @@ fn story_rows(world: &World) -> Vec<String> {
         rows.push(p);
     }
     rows
+}
+
+/// The player's companion as they know it (spec §8 "Allies"): `Snel, a hound (grade 12) at
+/// (12, 5): unhurt, order follow`, `Snel, a hound (grade 12): with you` in the retinue (a cell
+/// only where the player sees it); `no companion` without one.
+fn companion_json(view: &PerceptionView<'_>) -> Value {
+    let content = view.content();
+    let Some((ally, data)) = view.companion() else {
+        return Value::Null;
+    };
+    let pos = (view.actors().iter())
+        .find(|a| a.id == ally.id)
+        .map(|a| a.pos);
+    json!({
+        "id": ally.id,
+        "name": data.name,
+        "creature": content.creature(ally.creature).id,
+        "grade": data.grade,
+        "health": ally.health,
+        "order": ally.order.id(),
+        "at": ally.order.at(),
+        "pos": pos,
+        "retinue": ally.retinue,
+    })
+}
+
+fn companion_rows(view: &PerceptionView<'_>) -> Vec<String> {
+    let content = view.content();
+    let Some((ally, data)) = view.companion() else {
+        return vec!["no companion".into()];
+    };
+    let kind = &content.creature(ally.creature).name;
+    let head = format!(
+        "{}, {} {kind} (grade {})",
+        data.name,
+        article(kind),
+        data.grade
+    );
+    if ally.retinue {
+        return vec![format!("{head}: with you")];
+    }
+    let seen = (view.actors().iter()).find(|a| a.id == ally.id);
+    let at = seen.map_or(String::new(), |a| format!(" at ({}, {})", a.pos.x, a.pos.y));
+    let order = match ally.order.at() {
+        Some(at) => format!("{} at ({}, {})", ally.order.id(), at.x, at.y),
+        None => ally.order.id().to_string(),
+    };
+    vec![format!("{head}{at}: {}, order {order}", ally.health.word())]
 }
 
 /// The overworld locations the player knows, one a line by position: `(45, 23) The Hall`; `no
@@ -1495,7 +1551,15 @@ fn actor_rows(world: &World) -> Vec<String> {
                     };
                     let retinue = if ally.retinue { "; retinue" } else { "" };
                     let source = ally.source.id();
-                    format!("{court}; ally of {} ({source}{lasts}; {order}{retinue})", ally.master)
+                    // A companion's name and grade (`world/companion.rs`).
+                    let named = match &ally.source {
+                        AllySource::Companion(c) => format!("; named {}, grade {}", c.name, c.grade),
+                        AllySource::Summoned { .. } => String::new(),
+                    };
+                    format!(
+                        "{court}; ally of {} ({source}{lasts}; {order}{retinue}{named})",
+                        ally.master
+                    )
                 }
                 None => court,
             };
@@ -2031,6 +2095,8 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "here": a.here,
             }))
             .collect::<Vec<_>>(),
+        // The player's companion (spec §8 "Allies"; `world/companion.rs`), or null.
+        "companion": companion_json(&view),
         // The overworld encounter to answer (spec §7 "Overworld encounters"), or null.
         "encounter": view.encounter().map(|e| {
             let (entry, outcome) = view.encounter_pending().expect("pending");

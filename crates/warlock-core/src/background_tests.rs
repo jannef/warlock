@@ -52,6 +52,7 @@ impl Seen {
             talents: &self.talents,
             trained: &self.trained,
             campaign,
+            companion: None,
         }
     }
 }

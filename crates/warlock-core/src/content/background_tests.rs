@@ -50,15 +50,16 @@ fn the_built_in_stories_load_with_every_effect_kind_and_tier() {
             "youth",
             "trial",
             "fortune",
-            "leaving"
+            "leaving",
+            "companion"
         ]
     );
     let road: Vec<&str> = b.chapters_for("ascmearc").map(|c| c.id.as_str()).collect();
-    assert_eq!(road.len(), 8);
+    assert_eq!(road.len(), 9);
     assert_eq!(road.last(), Some(&"road"));
     assert_eq!(
         b.chapters_for("").count(),
-        7,
+        8,
         "a story outside every campaign"
     );
     let lines: Vec<&Line> = b.chapters.iter().flat_map(|c| &c.lines).collect();

@@ -138,6 +138,8 @@ impl World {
                 self.check_stats();
             }
         }
+        // The companion's grade follows its master's level (spec §8 "Allies"; `companion.rs`).
+        self.grow_companion();
         self.settle_due();
     }
 

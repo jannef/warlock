@@ -5,8 +5,8 @@ spec/08b-creatures.md ("Allies"), the design is `docs/design/druid-and-summons.m
 core, §14 the owner's decisions, which override the rest). Slices: **A1** (#836, this file: the
 core), A2 (#837, "Summons" below: the spell kind, `Ally::until` set from the spell's degrees), A3 (the UI: the
 Allies group's rows, Set on's aim, the friendly mark, look mode's "(your wolf)"), D1 (#839, "The druid's
-calls" below), and the ranger's companion (#825) on `AllySource::Companion`. Keep it current with the
-code, as CLAUDE.md says.
+calls" below), and the ranger's companion (#916, `docs/dev/companion.md`) on
+`AllySource::Companion(CompanionData)`. Keep it current with the code, as CLAUDE.md says.
 
 ## What an ally is
 
@@ -17,7 +17,7 @@ as before, old saves load, and `World::state_hash` covers it as every field):
 ```rust
 pub struct Ally {
     pub master: ActorId,          // the player, today; the field makes no assumption
-    pub source: AllySource,       // Summoned { spell: Option<SpellId> } | Companion
+    pub source: AllySource,       // Summoned { spell: Option<SpellId> } | Companion(CompanionData)
     pub order: Order,             // Follow (default) | Stay { at } | Hunt { at }
     pub retinue: bool,            // travelling with the master off any level
     pub until: Option<GameTime>,  // when its stay ends, on the clock; None: until slain
@@ -61,7 +61,8 @@ still wrap it. In order:
    borrowed-state form of `World::stance`: Beast-friend is the *master's*, so a druid's wolf
    leaves the rats alone as the druid does, and a shopkeeper or a quest-giver is never an
    ally's idea). With *Stay*, only one within `stay.reach` of its post; with *Hunt*, one within
-   `hunt.reach` of the hunt cell, else the nearest anywhere in sight.
+   `hunt.reach` of the hunt cell, else the nearest anywhere in sight. Seeing none, a type with a
+   `nose` takes the nearest it smells instead (`World::senses` → `companion.rs::smelled`).
 2. **Fight** it: `ai.rs::fight` as a creature would (melee closes in; a type that throws or
    shoots does; a summoner summons).
 3. **Its order**: *Follow*: `route` toward the master to within `heel`, else wait; *Stay*: back
@@ -83,7 +84,8 @@ cell), **no time** (`Spent::NoTime`), a voice's noise where the player stands
 (`noise::Act::Order`: `SoundKind::Voice` at `[orders] noise`, never quietened by stealth, as a
 mutter or a thrown voice is not), `Event::Ordered { at }` for presentation, the message ("Your
 wolf comes to heel." / "Your wolves hold." / "You set your wolf on the kobold." or "... on that
-spot."; `pack_words`: by type, "wolf", "wolves", "wolves and bear"), and a Handle animal mark
+spot."; `pack_phrase`: "your wolf", "your wolves", "your wolves and bear" by type, a companion by
+its name first, "Snel and your wolves"), and a Handle animal mark
 (`Use::Handle`, `skills.toml` `handle_animal`'s `mark`, 50 %: the skill's first; the owner's
 Q10). Refused, no time and no noise, with no ally on the level ("You have no one to call.") and
 Set on at a cell the player does not see (`Perception::is_visible`). `buff.rs::kind_of` prices
@@ -106,10 +108,11 @@ time runs out or it is slain.
 stands on `to` (after `arrive_spawner`, before the arrival lines), with the player's old cell:
 
 - every ally of the player's on `from` within `comes_along` (Chebyshev) of `old` and not held
-  fast (a status that `blocks` steps) comes along; the rest stay, frozen as another level's
-  actors are, and those the last perception saw are said left behind ("Your wolf is left
-  behind."). A follower's `order` becomes *Follow* (a post on another level means nothing), its
-  `heard` and `Mind` are cleared, its energy kept;
+  fast (a status that `blocks` steps) comes along, and the player's **companion** wherever it
+  stands, held fast or not (`companion.rs`); the rest stay, frozen as another level's actors are,
+  and those the last perception saw are said left behind ("Your wolf is left behind."). A
+  follower's `order` becomes *Follow* (a post on another level means nothing), its `heard` and
+  `Mind` are cleared, its energy kept;
 - onto a level of `LevelKind::Overworld`, which has no creatures, they join the **retinue**:
   `retinue = true`, `level` the overworld's, `pos` the arrival (in bounds for `WorldState::check`,
   never read). Three places must not see a retinue actor, and are the only ones:
@@ -222,7 +225,8 @@ and the `spells` dump's count (`spell_words.rs`) adds `ally_mod`'s `count` as th
 
 **Fights**: `fight::End::Yours(name)` is an ally of the player's they see: "Your wolf bites the
 kobold.", "The kobold claws your wolf.", "Your wolf dies." (`perceive_events`' ends; the
-player's own blow at one, `fight.rs`; a throw's, `hurl.rs`); unseen it is "something" as ever.
+player's own blow at one, `fight.rs`; a throw's, `hurl.rs`); a companion is `End::Named`, "Snel
+bites the kobold."; unseen it is "something" as ever.
 
 Tests: `world/caster_tests.rs` (the table to 60 by `levelup:auto`, the calls one of each and
 the raises, the fight words and the departure), `content/beast_roster_tests.rs`,
@@ -260,11 +264,14 @@ it (`xtask/src/wiki/talents.rs::effect_text`).
 - The header line: `allies N` while the player has any on the level or in the retinue
   (`PerceptionView::allies_with`).
 - `actors` (dev): `; ally of #0 (summoned, 4 min; follow)`, `(summoned; stay at (12, 5))`,
-  `(summoned; follow; retinue)`; the minutes are rounded up.
+  `(summoned; follow; retinue)`, `(companion; follow; named Snel, grade 12)`; the minutes are
+  rounded up.
 - JSON: `allies` (`id`, `creature`, `name`, `health`, `order`, `at` (the order's cell or null),
   `source`, `lasts` (minutes, or null), `retinue`, `here`), from `PerceptionView::allies()`
-  (`AllyView`, the snapshot's `allies`: the player knows their own); each seen actor's `ally:
-  true` (`SeenActor::ally`, for A3's mark and look mode); the `abilities` layer's Allies rows.
+  (`AllyView`, the snapshot's `allies`: the player knows their own; its `source` carries a
+  companion's data, `PerceptionView::companion()`); each seen actor's `ally: true`
+  (`SeenActor::ally`, for A3's mark and look mode; `companion` for the player's own); the
+  `abilities` layer's Allies rows; the `companion` layer and JSON (`docs/dev/companion.md`).
 
 ## The app (A3, #838)
 

@@ -1,0 +1,34 @@
+# The beasts (docs/dev/creatures/beasts.md; content::beast_roster_tests checks them): a spider
+# the size of a dog, the warren's and the under-dark's companion (#916): the goblins', drow's,
+# kobolds', and duergar's. Its bite poisons as the barrow spider's does. Wildlife: it fights no
+# one unless it is someone's.
+[[creature]]
+id = "large_spider"
+level = 2
+xp = 20
+name = "large spider"
+glyph = "s"
+fg = "#7a7a9a"
+speed = 1100
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+vision = "darkvision"
+sight = 8
+footsteps = 20
+hearing = 10
+weight = 8000
+size = "small"
+stats = { strength = 10, dexterity = 14, toughness = 11, intelligence = 1, willpower = 10, presence = 3 }
+base_hp = 2
+tameable = true
+depart = "scuttles back into the dark"
+on_eat = { message = "Bitter, and it disagrees with you.", vomit = 25 }
+# Greenish ichor.
+blood = "#3a4a2a"
+[creature.attack]
+damage = "1d4"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
+on_hit = [{ status = "poisoned", chance = 25, severity = 2 }]

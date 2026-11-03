@@ -1,0 +1,11 @@
+# The ranger's level 1 (#916; docs/design/ranger-companion.md §5.1): a beast of their race's
+# kind, or rarely a rarer one, at their side from the first turn (`companion`), and a small
+# edge at taming another (`tame`, read by the Tame skill ability).
+[[talent]]
+id = "animal_companion"
+name = "Animal companion"
+tree = "class"
+granted = true
+description = "A beast of the wild took to you long ago and has not left your side since: it fights for you, comes wherever you go, and grows as you do. Taming another comes a little easier to you."
+effects = [{ kind = "companion" }, { kind = "tame", bonus = 2 }]
+systems = ["allies"]

@@ -91,7 +91,9 @@ everything in half the time (see [Turns and movement](turns.md#creatures-act-at-
 It sees as far as its **[sight](sight.md)**, by its [vision](vision.md), under the same [light](light.md#what-light-is) as you. Its
 **[hearing](hearing.md)** is the faintest sound it notices (lower hears more, its [listen skill](skills.md#skill-listen) counted), and
 its **[footsteps](hearing.md#what-makes-noise)** how loud its steps are on normal ground, more or less on other terrain (see
-[Hearing](hearing.md)). It is [burdened](burden.md#burden-1) past a third of its **[carrying limit](burden.md#how-much-you-can-carry)**, as you are (see
+[Hearing](hearing.md)). Its **nose** is how far it smells a foe as someone's
+[companion](allies.md#companions), through the dark and a closed door; **tameable** says whether
+it may be one at all. It is [burdened](burden.md#burden-1) past a third of its **[carrying limit](burden.md#how-much-you-can-carry)**, as you are (see
 [Burden](burden.md)).
 
 {{#include generated/creature-senses.md}}

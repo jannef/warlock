@@ -628,7 +628,14 @@ fn an_order_and_an_allys_kill_mark_handle_animal() {
 #[test]
 fn the_retinue_crosses_the_overworld_and_steps_out_at_the_next_level() {
     let content = Arc::new(crate::content::Content::builtin().expect("content"));
-    let mut w = World::new(content.clone(), "world", None).expect("world");
+    // A commoner, not the scenario's ranger: no companion in the retinue (`companion_tests.rs`).
+    let spec = crate::character::CharacterSpec {
+        race: "human".into(),
+        gender: crate::character::Gender::Male,
+        class: "commoner".into(),
+        talents: Vec::new(),
+    };
+    let mut w = World::with_character(content.clone(), "world", None, Some(&spec)).expect("world");
     assert_eq!(w.state.current_level, "overworld");
     // Two rats join the retinue at once; a third has a minute, which the road spends.
     run(&mut w, "ally:rat:2 ally:rat:1:1m");

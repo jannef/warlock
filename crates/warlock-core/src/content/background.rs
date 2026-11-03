@@ -15,7 +15,7 @@
 //! `data/background.toml` tells no story.
 
 use super::kit::{self, KitLineSpec};
-use super::{Content, ContentError, KitItem, WeaponSkillId, campaign};
+use super::{Content, ContentError, CreatureId, KitItem, WeaponSkillId, campaign};
 use crate::alignment::Requirement;
 use crate::character::Gender;
 use crate::dice::Dice;
@@ -209,6 +209,23 @@ struct WhenSpec {
     not_tags: Vec<String>,
     age: Option<AgeRange>,
     campaign: Vec<String>,
+    companion: Vec<String>,
+}
+
+/// What must hold of the witness for a whole chapter to be told (`[chapter] when`): a chapter
+/// whose `when` does not fit is skipped before its stream is drawn.
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(default, deny_unknown_fields)]
+pub struct ChapterWhen {
+    /// With a companion as the run begins (`true`), or without one (`false`).
+    pub companion: Option<bool>,
+}
+
+impl ChapterWhen {
+    /// Whether the chapter is told to a witness with (`has`) a companion or without.
+    pub fn fits(&self, has_companion: bool) -> bool {
+        self.companion.is_none_or(|c| c == has_companion)
+    }
 }
 
 /// What must hold for a line to be told: every field given (a list: any of its ids; `talents`,
@@ -237,6 +254,8 @@ pub struct When {
     pub age: Option<AgeRange>,
     /// The run's campaign (any of them).
     pub campaign: Vec<String>,
+    /// A companion of one of these types as the run begins (any of them; spec §8 "Allies").
+    pub companion: Vec<CreatureId>,
 }
 
 impl When {
@@ -350,6 +369,8 @@ struct ChapterHead {
     paragraph: u8,
     #[serde(default)]
     defaults: BTreeMap<String, String>,
+    #[serde(default)]
+    when: ChapterWhen,
 }
 
 #[derive(Deserialize)]
@@ -406,6 +427,8 @@ pub struct Chapter {
     pub defaults: BTreeMap<String, String>,
     /// The campaign it belongs to (`None`: shared, told in every run).
     pub campaign: Option<String>,
+    /// What must hold of the witness for the chapter to be told at all.
+    pub when: ChapterWhen,
     pub lines: Vec<Line>,
 }
 
@@ -526,6 +549,7 @@ impl Content {
             paragraph: head.paragraph,
             defaults: head.defaults,
             campaign,
+            when: head.when,
             lines,
         })
     }
@@ -626,6 +650,13 @@ impl Content {
             self.campaign(c)
                 .ok_or_else(|| format!("`when.campaign`: unknown campaign `{c}`"))?;
         }
+        let companion = (spec.companion.iter())
+            .map(|c| {
+                (self.creature_id(c))
+                    .filter(|&id| self.creature(id).tameable)
+                    .ok_or_else(|| format!("`when.companion`: `{c}` is no tameable creature"))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(When {
             race: spec.race,
             class: spec.class,
@@ -641,6 +672,7 @@ impl Content {
             not_tags: spec.not_tags,
             age: spec.age,
             campaign: spec.campaign,
+            companion,
         })
     }
 

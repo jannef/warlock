@@ -117,7 +117,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
 - **Allies** (`warlock-core/src/world/ally.rs`, the rules; `content/ally.rs` and
   `data/allies.toml`, the numbers; #836, design `docs/design/druid-and-summons.md` §4 and §14):
   creatures on the player's side, a summon (the druid's calls, #839) or a companion (the
-  ranger's, to come). An ally is an ordinary creature of its type (stats, speed, eyes, attacks,
+  ranger's, #916, below). An ally is an ordinary creature of its type (stats, speed, eyes, attacks,
   hit points, statuses, death) made with the player's faction, so every rule that reads stances
   (hostile creatures, the spawn cap, the quick leave, resting, swapping places) treats it as the
   player's. **Its mind**: it attacks the nearest actor it sees that its *master* is hostile to
@@ -160,7 +160,40 @@ developer notes (CLAUDE.md, `docs/dev/`).
   elemental, the element drawn), one of each at once until Pack leader and Lord of the wild
   raise it. The beasts (`wolf`, `bear`) are wildlife, never strays. The messages call an ally
   the player sees "your": "Your wolf bites the kobold.", "Your wolf dies."; one whose time runs
-  out goes in its type's words ("The wolf slips back into the dark.").
+  out goes in its type's words ("The wolf slips back into the dark."). **The animal companion**
+  (`warlock-core/src/world/companion.rs`, `content/companion.rs` and `data/companions.toml`;
+  #916, design `docs/design/ranger-companion.md`, `docs/dev/companion.md`): an ally that is the
+  player's for good, `source = Companion(CompanionData { name, grade })`, `until = None`; at most
+  one at a time. The ranger's **Animal companion** (level 1) brings one as the run begins: a
+  beast drawn from the character's race's list (`[start.by_race]`: a human's hound or boar, an
+  elf's lynx or hound, a goblin's large spider, rat, or bat, …; one to three a race, of level at
+  most `most_level` 2), or at `rare_per_mille` (50) one of the rares shared by every race (a
+  wolf, a black hound, a great boar, a panther), on its own stream (two draws); named from
+  `names` (Old English: Snel, Brūn, Græg, …; one draw on its own stream); "Snel, your hound, pads
+  at your heel." A character with a starting beast is told a line of it in the story's
+  **companion** chapter (§8 "Background story"). Only `tameable` creature types may be
+  companions (a beast: never a unique, an animated object, a summoner, one that opens doors, one
+  of the peoples, one that fights from afar, or one that carries gear); a type's `nose` (1 to
+  20 cells) is how far it smells. **Growth**: the companion's `grade` is its master's level
+  (`[growth] grade_percent` 100 of it, never below its type's own), re-set at every level-up
+  ("Snel grows stronger."); above its type's level each level adds `hp_per_level` (2) hit points,
+  and every `to_hit_every` (4) +1 to hit, `damage_bonus_every` (6) +1 damage, `damage_dice_every`
+  (12) one more die of its attack, `defence_every` (6) +1 natural Defence, `stat_every` (5) +1
+  Strength, Dexterity, and Toughness; its natural Protection is its body's at its grade (the body
+  rule above), never below its type's; speed, senses, size, and resistances stay the type's;
+  summons have no grade. **Always along**: a companion comes with the player on every level
+  change wherever it stands on the level, held fast or holding or not ("Snel comes with you."),
+  rides in the retinue on the overworld and steps out at the next level ("Snel follows you
+  in."); nothing but death keeps it from a level. **The nose**: a companion whose type has a
+  `nose` smells a hostile of its master's within that many cells, however dark and **through a
+  closed door** (never through a wall), and goes for it when its eyes find nothing; "Snel growls
+  at the dark." once per thing scented unseen. The words say its name where they would say "your
+  hound": "Snel bites the kobold.", "Snel comes to heel.", "Snel dies." (a corpse, as any
+  creature's: a companion is no summon). The player sees it in the status bar ("Snel: unhurt",
+  "Snel: with you"), in look mode ("Snel, your hound (unhurt), …"), on the Character screen
+  ("With    Snel, a hound"), and in the `companion` dump; the wiki states the lists, the odds,
+  and the growth table exactly. Taming (C2), the collar (C3), and the ranger's later abilities
+  (C4–C6) are the design's next slices.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

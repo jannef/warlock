@@ -97,7 +97,7 @@ pub(super) fn throw_messages(
     }
     let noun = throw.attack.name.as_str();
     let mut said = Vec::new();
-    if let End::Seen(_) | End::Yours(_) = thrower {
+    if let End::Seen(_) | End::Yours(_) | End::Named(_) = thrower {
         let verb = &throw.attack.verb;
         said.push(format!(
             "{} {verb} {} {noun}.",

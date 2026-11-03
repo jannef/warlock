@@ -429,7 +429,8 @@ impl Actor {
     }
 
     fn stats_with(&self, content: &Content, mods: &Mods) -> Stats {
-        let raised = self.raised_with(mods);
+        // A companion's grade raises its Strength, Dexterity, and Toughness (`companion.rs`).
+        let raised = (self.raised_with(mods)).raised(|stat| self.growth_stat(content, stat));
         match self.penalty(content) {
             Some(by) => raised.adjusted_by(&by),
             None => raised,
@@ -498,9 +499,14 @@ impl Actor {
     pub fn max_hp(&self, content: &Content) -> i32 {
         let mods = self.mods(content);
         let toughness = self.stats_with(content, &mods).score(Stat::Toughness);
+        // A companion's grade above its type (spec §8 "Allies"; `companion.rs`).
+        let grown = self.growth_hp(content);
         self.frail(
             content,
-            combat::max_hp(toughness, self.hp_base + mods.get(ItemEffect::MaxHp)),
+            combat::max_hp(
+                toughness,
+                self.hp_base + mods.get(ItemEffect::MaxHp) + grown,
+            ),
         )
     }
 
@@ -641,7 +647,14 @@ impl Actor {
         // Talents (spec §8 "Talents"): Dodge adds up like any Dodge; natural armour (Thick
         // skin) comes on top of whichever natural armour is best, the race's or creature type's
         // hide ([`Actor::hide`]) or a magic item's, or stands alone.
-        let own = self.hide(content, race).map(|hide| hide.defence);
+        // A companion's grade adds natural Defence to its hide's, or stands as one (`companion.rs`).
+        let own = match (
+            self.hide(content, race).map(|hide| hide.defence),
+            self.growth_defence(content),
+        ) {
+            (None, 0) => None,
+            (own, grown) => Some(own.unwrap_or(0) + grown),
+        };
         let magic_natural = Some(mods.get(ItemEffect::Natural)).filter(|&n| n != 0);
         let added = talents.natural;
         let natural: Vec<(Category, i32)> = match (own, magic_natural) {
@@ -712,7 +725,9 @@ impl Actor {
             .filter_map(|(_, item)| self.inventory.get(item))
             .collect();
         let base: i32 = worn.iter().map(|s| s.protection(content)).sum();
-        let natural = self.hide(content, race).map_or(0, |h| h.protection);
+        // A companion's body at its grade, when that is more than its type's own (`companion.rs`).
+        let natural = (self.hide(content, race).map_or(0, |h| h.protection))
+            .max(self.growth_protection(content));
         let base = base + self.talent_protection(content) + more;
         let adjustments = (worn.iter()).flat_map(|s| s.protects(content).iter().copied());
         if content.damage_types().is_empty() {
@@ -1240,6 +1255,8 @@ impl Actor {
         let benefit = self.attack_benefit(content, AttackKind::Melee, None);
         let mut profile = Profile::melee(&attack, &self.stats_with(content, &mods)).with(&benefit);
         profile.penetration = penetration;
+        // A companion's grade sharpens its blow (spec §8 "Allies"; `companion.rs`).
+        profile = self.grown(content, profile);
         if self.off_hand(content).is_some() {
             let main = content.weapon_skills().two_weapons().main;
             profile.to_hit += TwoWeapons::eased(main, benefit.ease_main);

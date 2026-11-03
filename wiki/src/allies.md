@@ -1,8 +1,9 @@
 # Allies
 
 An **ally** is a creature on your side: it follows you, fights what you are hostile to, and comes
-along when you move on. Today allies are **summons**, called by a spell for a while, such as the
-[druid](classes.md#druid)'s wolves; companions that stay for good are still to come.
+along when you move on. Allies are **summons**, called by a spell for a while, such as the
+[druid](classes.md#druid)'s wolves, and **[companions](#companions)**, beasts that are yours for
+good, such as the [ranger](classes.md#ranger)'s hound.
 
 An ally is an ordinary creature of its kind, with its own eyes, speed, attacks, and hit points. It
 fights only what *you* are hostile to: with [Beast-friend](talents.md#talent-beast-friend) your
@@ -27,9 +28,10 @@ slain.
 ## Following you
 
 Allies close to you when you take stairs or leave an area come along and appear beside you;
-those farther away stay where they were, and wait. On the overworld they travel with you unseen
-and step out beside you at the next place. A summon's time runs on wherever it is: one left
-behind, or on the road too long, is gone when you next look for it.
+those farther away stay where they were, and wait (your [companion](#companions) comes along
+wherever it stands). On the overworld they travel with you unseen and step out beside you at
+the next place. A summon's time runs on wherever it is: one left behind, or on the road too long,
+is gone when you next look for it.
 
 ## Experience
 
@@ -69,6 +71,53 @@ wild](talents.md#talent-lord-of-the-wild) (level 60) keeps three of each, and wh
 stays until it is slain. [Beast-bond](talents.md#talent-beast-bond), a Wayfarer talent for those
 with some [Handle animal](skills.md#skill-handle-animal), makes every ally of yours strike surer
 and take less harm.
+
+## Companions
+
+A **companion** is a beast that is yours for good: it stays until it is slain, and there is no
+sending it away. You have at most one at a time. It is an ally like any other, with the same
+[orders](#orders), the same side, and the same share of its kills, and the messages call it by
+its **name**, drawn when it becomes yours ("Snel bites the kobold.", "Snel comes to heel.",
+"Snel dies."). The [status bar](controls.md) says how it fares ("Snel: unhurt", or "Snel: with
+you" while it travels with you on the overworld), [look mode](controls.md#look-mode) names it
+("Snel, your hound"), and the Character screen lists it under your class.
+
+A companion **always comes along**: wherever it stands when you take the stairs or leave an area,
+held fast or holding its place or not, it arrives beside you ("Snel comes with you."), rides with
+you unseen across the overworld, and steps out beside you at the next place ("Snel follows you
+in."). Nothing but death keeps it from you. When it dies it leaves a corpse like any creature,
+and nothing else happens to you: find another to tame.
+
+Beasts that hunt by scent have a **nose**: within so many cells (see the Nose column of
+[Creatures in numbers](creature-numbers.md#pace-senses-and-size)) your companion smells a foe of
+yours however dark it is, and **through a closed door**, though never through a wall, and goes
+for it when its eyes find nothing. When it scents something you cannot see, it growls, once
+("Snel growls at the dark."). A door it cannot open keeps it from what it smells: open it.
+
+### Starting companions
+
+The [ranger](classes.md#ranger)'s **Animal companion** (level 1) means a beast at their side from
+the first turn: one of their race's kinds, drawn by chance as the run begins, or rarely one of
+the rares that any race may begin with. The [story](background.md#the-companion) of how it came
+to be yours is told with the rest of your background.
+
+{{#include generated/companion-starts.md}}
+
+### Growth
+
+A companion's level is **yours**: whatever its kind's own level, it is raised to your level when
+it becomes yours and every time you gain a level ("Snel grows stronger."), and never falls. Above
+its kind's level it gains hit points every level, and now and then a surer bite, more damage and
+another die of it, natural armour, tougher hide (its body's Protection at its level, as the
+[hide rule](creatures.md#hides-and-bodies) gives every creature), and Strength, Dexterity, and
+Toughness. Its speed, senses, size, and resistances stay its kind's. Summons do not grow: their
+power is their spell's. The exact table, as the game computes it:
+
+{{#include generated/companion-growth.md}}
+
+### The companion's rules
+
+{{#include generated/companion-rules.md}}
 
 ## The rules
 

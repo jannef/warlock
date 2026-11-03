@@ -28,8 +28,10 @@ kit = [
 bonus_talents = { levels = [10, 20, 30, 45, 55], trees = ["weaponcraft", "wayfarer"] }
 # The level table (spec §8 "Class abilities"). Evasion is the Finesse talent, given; Stalker's
 # eye is the ranger's own (#788). Rapid shot and Volley move onto a Focus pool with the
-# alternative resources (#225).
+# alternative resources (#225). Animal companion is the pet class's signature (#916): a beast
+# from the first turn.
 abilities = [
+    { level = 1, talent = "animal_companion" },
     { level = 1, talent = "favoured_prey" },
     { level = 1, talent = "trained_wind" },
     { level = 2, talent = "stalkers_eye" },

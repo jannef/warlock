@@ -39,6 +39,7 @@ impl World {
         if content.background().is_none() {
             return;
         }
+        let companion = (self.companion()).map(|id| self.state.actors[&id].creature);
         let player = self.state.player();
         let band = (content.alignment())
             .zip(player.alignment)
@@ -56,6 +57,7 @@ impl World {
             talents: &player.talents,
             trained: &trained,
             campaign: &self.state.campaign,
+            companion,
         };
         let story = background::tell(&content, self.state.seed, &witness);
         for effect in story.effects {

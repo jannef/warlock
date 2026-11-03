@@ -56,6 +56,8 @@ pub fn the_start(name: &str) -> String {
 pub const SPEEDS: RangeInclusive<u32> = 100..=10_000;
 /// How far a creature sees unless its type says otherwise, in cells (spec §5 "Creature sight").
 pub const DEFAULT_SIGHT: i32 = 10;
+/// A `nose`'s reach, in cells (spec §8 "Allies": the companion's nose).
+pub const NOSES: RangeInclusive<i32> = 1..=20;
 
 fn normal_speed() -> u32 {
     NORMAL_SPEED
@@ -251,6 +253,14 @@ pub(super) struct CreatureSpec {
     /// The words of its departure, an ally whose time has run out ("The wolf slips back into
     /// the dark."; `docs/dev/allies.md`); none: "fades away".
     pub depart: Option<String>,
+    /// Whether it may be tamed and kept as a companion (spec §8 "Allies"; `docs/dev/companion.md`):
+    /// never a unique, an animated object, a summoner, one that opens doors, or one of a faction
+    /// that is not `animal`.
+    #[serde(default)]
+    pub tameable: bool,
+    /// Its nose: it smells a hostile within this many cells, however dark and through a closed
+    /// door (1 to 20; only on a `tameable` type; a companion's reads it).
+    pub nose: Option<i32>,
     /// Its ranks in weapon skills (spec §8 "Weapon skills"), by skill id.
     #[serde(default)]
     pub weapon_skills: BTreeMap<String, u8>,
@@ -658,6 +668,8 @@ impl CreatureSpec {
             immune: r.immune,
             dies: self.dies,
             depart: self.depart,
+            tameable: self.tameable,
+            nose: self.nose,
             animated: self.animated,
             mimic: self.mimic,
             weapon_skills: r.weapon_skills,
@@ -825,6 +837,13 @@ pub struct CreatureDef {
     pub immune: Vec<StatusId>,
     /// Presentation-only: the verb of its death line ("splinters"); `None`: "dies".
     pub dies: Option<String>,
+    /// Gameplay: whether it may be tamed and kept as a companion (spec §8 "Allies"; the ranger's
+    /// starting beast is drawn from the `tameable` types; `world/companion.rs`).
+    pub tameable: bool,
+    /// Gameplay: its nose, in cells: a companion of this type smells a hostile of its master's
+    /// within so many cells (Chebyshev), however dark and through a closed door (`docs/dev/companion.md`);
+    /// `None`: it hunts by eye alone. Rules only (the wiki states it).
+    pub nose: Option<i32>,
     /// Presentation-only: the words of its departure as an ally whose time ran out ("slips back
     /// into the dark"); `None`: "fades away".
     pub depart: Option<String>,

@@ -1,0 +1,32 @@
+# The beasts (docs/dev/creatures/beasts.md; content::beast_roster_tests checks them): the deep
+# halls' digger, slow, thick-hided, and stubborn, a companion of the dwarves', gnomes', and
+# duergar's (#916). Wildlife: it fights no one unless it is someone's.
+[[creature]]
+id = "badger"
+level = 2
+xp = 20
+name = "badger"
+glyph = "q"
+fg = "#8a8a90"
+speed = 900
+faction = "wildlife"
+tags = ["beast"]
+alignment = "neutral"
+vision = "low_light"
+sight = 8
+footsteps = 40
+hearing = 15
+weight = 12000
+size = "small"
+stats = { strength = 13, dexterity = 10, toughness = 13, intelligence = 2, willpower = 13, presence = 4 }
+base_hp = 6
+natural = { defence = 1, protection = 0, name = "thick hide" }
+tameable = true
+nose = 6
+depart = "shuffles off into the dark"
+on_eat = { message = "Fatty badger meat, better than it sounds.", satiation = 300 }
+[creature.attack]
+damage = "1d6"
+damage_type = "piercing"
+name = "bite"
+verb = "bites"
