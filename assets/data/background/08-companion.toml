@@ -127,3 +127,79 @@ weight = 1
 only = true
 text = "A black cat the length of a man came down from the hills in a hard winter and chose your hearth over every other; it moves without a sound."
 when = { companion = ["panther"] }
+
+# A witch's familiar (docs/design/witch-familiar.md §11.1, #931): the same chapter, told with
+# `familiar = [...]` where the lines above are told with `companion = [...]`. One `only` line for
+# every beast a race's list may give (content/familiar.rs checks it); the rare black hound and
+# panther are told the plain line.
+[[line]]
+id = "familiar_cat"
+tier = "common"
+weight = 1
+only = true
+text = "A cat came to your door one winter and would not be put out; it sat and watched you at your work, and you came to understand each other."
+when = { familiar = ["cat"] }
+
+[[line]]
+id = "familiar_toad"
+tier = "common"
+weight = 1
+only = true
+text = "A toad lived under the step of {home}, and you fed it crumbs and then better things, and it took to following you."
+when = { familiar = ["toad"] }
+
+[[line]]
+id = "familiar_raven"
+tier = "common"
+weight = 1
+only = true
+text = "A raven with a broken wing mended on your sill and never flew far again; it knows your voice from the dark."
+when = { familiar = ["raven"] }
+
+[[line]]
+id = "familiar_hare"
+tier = "common"
+weight = 1
+only = true
+text = "A hare sat in your path one dusk and did not run, and the next dusk, and the next, until it came in."
+when = { familiar = ["hare"] }
+
+[[line]]
+id = "familiar_bat"
+tier = "common"
+weight = 1
+only = true
+text = "A bat hung in the rafters above your bed and came down to your hand when you whispered."
+when = { familiar = ["bat"] }
+
+[[line]]
+id = "familiar_rat"
+tier = "common"
+weight = 1
+only = true
+text = "A rat came out of the thatch of {home} when you were ill and sat on your pillow till you mended; you have not had the heart to be rid of it."
+when = { familiar = ["rat"] }
+
+[[line]]
+id = "familiar_polecat"
+tier = "common"
+weight = 1
+only = true
+text = "A polecat crept in at your window on a hard night, and in the morning would not go; it has kept your bed and your secrets since."
+when = { familiar = ["polecat"] }
+
+[[line]]
+id = "familiar_large_spider"
+tier = "common"
+weight = 1
+only = true
+text = "A spider spun in the corner of {home} until its web hung with dew like a chain of beads, and one night it let you stroke it, and you knew it for yours."
+when = { familiar = ["large_spider"] }
+
+[[line]]
+id = "familiar_cave_lizard"
+tier = "common"
+weight = 1
+only = true
+text = "A cave lizard lay on your hearth-stone through a whole winter, and when the thaw came it did not go, and you did not ask it to."
+when = { familiar = ["cave_lizard"] }

@@ -47,6 +47,15 @@ with a familiar already; nothing on `from_state`. `familiar::draw` is two draws 
 the familiars' names); on the overworld it starts in the retinue. "Tibb, your cat, winds about your
 ankles."
 
+## The story
+
+The companion chapter (`data/background/08-companion.toml`, `docs/dev/background.md`) is told to a
+witch because `Witness::kept` holds; her beast's tale is the `only` line whose
+`when = { familiar = [kind] }` fits `Witness::familiar` (`World::tell_background` reads
+`World::familiar()`), one for every beast a race's list may give. `FamiliarRules::parse` refuses a
+list beast without one; the rare black hound and panther are told the plain line. A companion and a
+familiar at once: each `only` line fits by its own condition, the chapter drawing among those that fit.
+
 ## The touch
 
 `World::familiar_touch`, from `fight.rs::resolve` when a blow hit: a melee hit of a familiar's that

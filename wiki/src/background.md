@@ -136,8 +136,9 @@ dice start the [skill](skills.md) if you were not trained in it, or raise it if 
 ### The companion
 
 Told only to one who begins with an [animal companion](allies.md#companions) or a
-[familiar](allies.md#familiars): one sentence for each beast a companion's start may bring, and a
-plain one for a beast with no tale of its own.
+[familiar](allies.md#familiars): one sentence for each beast a companion's start may bring, one for each
+beast a familiar's start may bring (the witch's own tales, apart from the ranger's), and a plain one
+for a beast with no tale of its own (the rare black hound and panther of a witch's start).
 
 {{#include generated/background-companion.md}}
 
