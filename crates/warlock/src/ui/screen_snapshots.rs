@@ -519,6 +519,28 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A priest at level 1 (#886): the prayer by its first tier's title, Orison, chosen, its
+    // description below.
+    Case {
+        name: "abilities-priest-1",
+        character: Some("human,male,priest"),
+        kit: true,
+        run: true,
+        screen: Some("abilities"),
+        keys: Some("Down"),
+        ..BASE
+    },
+    // A priest at level 60 (#886): the prayer by its last tier's title, Miracle, chosen,
+    // between Consecrate and Sanctuary.
+    Case {
+        name: "abilities-priest-60",
+        character: Some("human,male,priest"),
+        kit: true,
+        actions: "xp:30000000 levelup:auto",
+        screen: Some("abilities"),
+        keys: Some("Down Down"),
+        ..BASE
+    },
     // Beside a forgotten altar (spec §7 "Special rooms"): Pray in the Here group, last.
     Case {
         name: "abilities-menu-here",

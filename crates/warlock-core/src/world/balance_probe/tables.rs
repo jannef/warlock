@@ -371,7 +371,32 @@ pub(super) fn spells(p: &Probe, out: &mut String) {
                 .unwrap();
             }
         }
+        prayer_rows(p, class, out);
         writeln!(out).unwrap();
+    }
+}
+
+/// A caster's prayer (the priest's Orison, `world/orison.rs`) in the spell table: no roll and no
+/// mana, so each level's row says its name, how many things one prayer answers, and the uses it
+/// has reached (seed 1's; the table is the same for every seed).
+fn prayer_rows(p: &Probe, class: &str, out: &mut String) {
+    for level in SPELL_LEVELS {
+        let snaps = p.of(class, level, Gear::Plain, true);
+        let Some((title, state)) = snaps.iter().find_map(|s| s.prayer.as_ref()) else {
+            continue;
+        };
+        let answers = state
+            .answers
+            .map_or_else(|| "all".to_string(), |n| n.to_string());
+        let uses: Vec<&str> = state.uses.iter().map(|u| u.id()).collect();
+        let mana = avg(snaps.iter().map(|s| f64::from(s.mana)));
+        writeln!(
+            out,
+            "| {title} (prayer) | {level} | – | – | no roll: answers {answers} of {} ({}) | 0 (0) / {mana:.0} |",
+            uses.len(),
+            uses.join(", "),
+        )
+        .unwrap();
     }
 }
 

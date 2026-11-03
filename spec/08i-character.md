@@ -1174,7 +1174,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Willpower +1; 3 mana), Cure wounds (level 3, at 3: a touch, 2d6; 2 casts; 2 mana),
     Consecrate (9), Communion with the dark (9: Consecrate's dark twin, a passive working only
     for a Callous or worse priest: in an unholy place, a room's or a whole level's, their prayers
-    add no strain and the place's status, Ebbing, never touches them), and **the prayer** (`use:orison` at every tier; `docs/dev/prayer.md`): one
+    add no strain and the place's status, Ebbing, never touches them), and **the prayer** (`use:orison` at every tier; `docs/dev/prayer.md`; the wiki's Prayer page states its numbers): one
     class active given at 1 that answers what ails the priest most, in a fixed priority order
     (disease, poison, wounds, release, mana, hunger, restoration; `data/prayer.toml`), as far as
     its uses reach: wounds at 1 (Orison: bleeding stops, hit points to full), hunger at 6 (Daily
@@ -1199,7 +1199,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     them steps onto it from outside (one already on it may move about and leave; nothing spawns
     there; missiles and spells cross it), and whoever stands on it heals and regains mana three
     times as fast (or a special room's pace, the larger). A blow, shot, throw, or harmful spell
-    of the priest's from on it breaks it ("The peace is broken."); being struck does not. The
+    of the priest's from on it breaks it ("The peace is broken."), and so does a dark twist that
+    reaches a creature; being struck does not. The
     same rule for both faces, the words differing ("The ground about you is hallowed." / "A
     dread settles on the ground about you."); no light. Refused, with no time or mana, on the
     overworld, in water, in a shop, or on hallowed ground. Remove disease, Purify, Purity of body, Smite, the
