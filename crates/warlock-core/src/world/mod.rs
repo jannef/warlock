@@ -636,6 +636,8 @@ enum Spent {
     Study(learn::Lesson),
     /// Writing a scroll of a spell (see [`World::scribe`]).
     Scribe(scribe::Writing),
+    /// Calling a familiar for this many turns (see [`World::calling`]).
+    Calling(u32),
     /// Praying to consecrate a place until this moment (see [`World::consecrate`]).
     Consecrate(GameTime),
     /// Kneeling to hallow the ground until this moment (see [`World::sanctuary`]).
@@ -1271,6 +1273,7 @@ impl World {
             Spent::Search(turns) => self.search(turns, &mut events),
             Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Scribe(writing) => self.scribe(writing, &mut events),
+            Spent::Calling(turns) => self.calling(turns, &mut events),
             Spent::Consecrate(until) => self.consecrate(until, &mut events),
             Spent::Sanctuary(until) => self.sanctuary(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),

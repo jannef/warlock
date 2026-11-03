@@ -118,6 +118,18 @@ pub(super) fn abilities(content: &Content) -> String {
                     format!("{base} turns and {per} more a spell level, each {turn} (a study's)");
                 (aim(a.aim(content)), time)
             }
+            // A long action too: the calling's turns.
+            Some(_) if a == Ability::Class(ClassActive::CallFamiliar) => {
+                let turns = content.familiars().map_or(0, |r| r.call_turns);
+                let turn = at_normal_pace(price(
+                    content.action_costs().cost(ActionKind::CallFamiliar),
+                    BASE_TURN,
+                ));
+                (
+                    aim(a.aim(content)),
+                    format!("{turns} turns, each {turn} (a ritual)"),
+                )
+            }
             // A long action too: the forage's time.
             Some(_) if a == Ability::Forage => {
                 let minutes = content.forage().map_or(0, |r| r.seconds / 60);

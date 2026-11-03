@@ -60,7 +60,8 @@ as [allies](allies.md).
 
 **The witch's familiar** ([Familiar](talents.md#talent-familiar), from level 1) is a small beast at
 her heel whose [touch](allies.md#the-touch) lays her [evil eye](magic.md#spell-evil-eye) and which
-[goes for what she has hexed](allies.md#what-it-goes-for).
+[goes for what she has hexed](allies.md#what-it-goes-for). Lost, another comes to an hour's
+[calling](allies.md#call-familiar), and from level 30 that may be an [imp](creatures.md#creature-imp).
 
 **The witch's cackle** ([Cackle](abilities.md#ability-cackle), from level 6) keeps her hexes on.
 It costs no [mana](mana.md#spending-it) and takes the time of a spell: every hex she laid herself

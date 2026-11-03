@@ -264,6 +264,10 @@ pub enum Unavailable {
     NoAllies,
     /// Stillness with nothing to end: none of the statuses it ends is suffered.
     Still,
+    /// Call familiar with a familiar alive, wherever it is.
+    FamiliarLives,
+    /// Call familiar with a hostile in sight.
+    Watched,
 }
 
 impl Unavailable {
@@ -289,6 +293,8 @@ impl Unavailable {
             Unavailable::NotSoHeld => "your hands are not so held".into(),
             Unavailable::NoAllies => "no allies here".into(),
             Unavailable::Still => "your mind is already still".into(),
+            Unavailable::FamiliarLives => "your familiar lives".into(),
+            Unavailable::Watched => "something is watching".into(),
         }
     }
 
@@ -304,6 +310,8 @@ impl Unavailable {
             Unavailable::NotSoHeld => "not_so_held".into(),
             Unavailable::NoAllies => "no_allies".into(),
             Unavailable::Still => "still".into(),
+            Unavailable::FamiliarLives => "familiar_lives".into(),
+            Unavailable::Watched => "watched".into(),
             Unavailable::While(status) => format!("while:{}", content.status(status).id).into(),
             Unavailable::Short(resource) => {
                 format!("short:{}", content.resource(resource).id).into()
@@ -902,9 +910,10 @@ impl Ability {
                         (blocked.map(Unavailable::While))
                             .or((actor.mana < cost).then_some(Unavailable::NoMana))
                     })
-                    // Scribe spends mana, which a status that blocks casting keeps (Raging).
+                    // Scribe spends mana, which a status that blocks casting keeps (Raging);
+                    // the same status keeps a witch from her calling.
                     .or_else(|| {
-                        (active == ClassActive::Scribe)
+                        matches!(active, ClassActive::Scribe | ClassActive::CallFamiliar)
                             .then(|| actor.effects.blocking(content, ActionKind::Cast))
                             .flatten()
                             .map(Unavailable::While)
@@ -983,6 +992,7 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
         | ClassActive::Orison
         | ClassActive::Sanctuary
         | ClassActive::Cackle
+        | ClassActive::CallFamiliar
         | ClassActive::Knock
         | ClassActive::Scribe
         | ClassActive::MerchantsEye

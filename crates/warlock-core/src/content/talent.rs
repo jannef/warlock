@@ -1269,6 +1269,7 @@ impl TalentEffect {
             TalentEffect::Rage { .. } => A::Rage,
             TalentEffect::WarCry { .. } => A::WarCry,
             TalentEffect::Cackle { .. } => A::Cackle,
+            TalentEffect::Familiar => A::CallFamiliar,
             TalentEffect::VeteransWind { .. } => A::VeteransWind,
             TalentEffect::Whirlwind => A::Whirlwind,
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
@@ -1297,10 +1298,11 @@ impl TalentEffect {
     }
 
     /// The name of the class active it is, where that is not its talent's (Stillness, on Still
-    /// mind).
+    /// mind; Call familiar, on Familiar).
     pub fn active_name(&self) -> Option<&str> {
         match self {
             TalentEffect::Stillness { name, .. } => Some(name),
+            TalentEffect::Familiar => Some("Call familiar"),
             _ => None,
         }
     }

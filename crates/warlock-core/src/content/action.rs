@@ -88,6 +88,9 @@ pub enum ActionKind {
     /// A turn of writing a scroll of a spell one knows (spec §8 "Scrolls": the wizard's Scribe):
     /// a scroll takes as many of them as a study of its spell.
     Scribe,
+    /// A turn of calling a familiar (spec §8 "Class abilities": the witch's Call familiar): the
+    /// ritual takes `data/familiars.toml`'s `call_turns` of them.
+    CallFamiliar,
     /// A turn of digging into a wall with a digging tool (spec §8 "Digging"): a dig takes many
     /// of them.
     Dig,
@@ -152,6 +155,7 @@ impl ActionKind {
         ActionKind::Read,
         ActionKind::Study,
         ActionKind::Scribe,
+        ActionKind::CallFamiliar,
         ActionKind::Dig,
         ActionKind::Search,
         ActionKind::Pray,
@@ -197,6 +201,7 @@ impl ActionKind {
             ActionKind::Read => "read",
             ActionKind::Study => "study",
             ActionKind::Scribe => "scribe",
+            ActionKind::CallFamiliar => "call_familiar",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Pray => "pray",
@@ -261,6 +266,7 @@ impl ActionKind {
             ActionKind::Read => "read",
             ActionKind::Study => "study",
             ActionKind::Scribe => "write scrolls",
+            ActionKind::CallFamiliar => "call a familiar",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Pray => "pray",

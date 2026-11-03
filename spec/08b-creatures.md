@@ -225,9 +225,19 @@ developer notes (CLAUDE.md, `docs/dev/`).
   statuses are silent. **The harrying**: its target is the nearest creature it sees under a hex of
   its master's, within its order's reach, before any other; else the nearest as any ally's. **Two
   kept beasts beside the player**, with something to treat on one: Heal asks a direction first (the
-  wait key: the player); with one beside, nothing is asked. Calling a new one (F2, #930) and the
-  familiar's story lines (F3, #931; until then the companion chapter's plain line) are the design's
-  next slices.
+  wait key: the player); with one beside, nothing is asked. **Call familiar** (#930,
+  `use:call_familiar`, a class active Familiar gives, the abilities menu's Class group, nothing to
+  aim): `call_turns` (600: an hour) turns of the `call_familiar` action through `World::keep_at`,
+  for nothing but the time: no mana, cooldown, count, or marks. Refused with no time with a familiar
+  alive anywhere, the retinue too ("Your familiar lives yet."; the menu: "your familiar lives"), with
+  a hostile the player sees ("Not with that watching."; "something is watching"), while a status
+  blocks a cast, and without the data ("Nothing comes."). What would stop a rest breaks it off: the
+  time is spent, nothing else lost. At the end two draws on the gameplay stream, the start's draw,
+  with `bargain_kinds` (the imp) in the race's list from `bargain_level` (30) of the character's
+  class level; "Something comes out of the dark and sits at your feet." and the kind's arrival, the
+  name on the same stream as a start's, at the player's grade; on the overworld in the retinue; with
+  no free cell "Nothing comes." and the hour spent. The familiar's story lines (F3, #931; until then
+  the companion chapter's plain line) are the design's next slice.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

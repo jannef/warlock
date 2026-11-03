@@ -2,9 +2,9 @@
 
 Developer notes for the familiar, the witch's small beast (spec §8 "Allies": "The familiar"; the
 design is `docs/design/witch-familiar.md`, its §16 the owner's round overrides §15's defaults).
-Slice **F1** (#929, this file); F2 Call familiar and the imp from level 30 (#930), F3 the story's
-lines (#931), the sight and nose shared at 25 (design §16 Q3, with Hunter's bond), and the probe's
-row (#933) build on it. It stands on the ally core (`docs/dev/allies.md`) and the companion
+Slices **F1** (#929) and **F2** Call familiar and the imp from level 30 (#930, this file); F3 the
+story's lines (#931), the sight and nose shared at 25 (design §16 Q3, with Hunter's bond), and the
+probe's row (#933) build on them. It stands on the ally core (`docs/dev/allies.md`) and the companion
 (`docs/dev/companion.md`). Keep it current with the code, as CLAUDE.md says.
 
 ## What a familiar is
@@ -26,10 +26,12 @@ or in the retinue. A familiar's kill pays as any ally's (`[xp] ally_percent`): t
 
 `assets/data/familiars.toml` → `content/familiar.rs::FamiliarRules` (`Content::familiars()`,
 `None` without the file: no familiar can be made, and fixtures without it hash as before):
-`names`, `touch` (a `kind = "hex"` spell with a status), `[start]` (`rare_per_mille` 50, `rare`,
-`most_level` 2, `[start.by_race]` one to three beasts a race, as `companions.toml`'s), `[arrives]`
-(a line for every beast a start may draw). The load checks: known creatures of the plain-beast
-shape (`content/familiar.rs`), an `arrives` for each kind drawn, names of at most 20 characters.
+`names`, `touch` (a `kind = "hex"` spell with a status), `call_turns` (600), `bargain_kinds`
+(`["imp"]`) and `bargain_level` (30), `[start]` (`rare_per_mille` 50, `rare`, `most_level` 2,
+`[start.by_race]` one to three beasts a race, as `companions.toml`'s), `[arrives]` (a line for every
+beast a start or a calling may draw, `every_kind()`). The load checks: known creatures of the
+plain-beast shape (`content/familiar.rs`; the bargain's may open doors), an `arrives` for each kind
+drawn, `call_turns` 1 to 6000, names of at most 20 characters.
 Its growth is `companions.toml`'s `[growth]`, one table. The new creatures are `cat`, `toad`,
 `raven`, `hare` (`docs/dev/creatures/beasts.md`), wildlife in no population: **not** `tameable`,
 since a familiar is called, not tamed.
@@ -46,6 +48,32 @@ with a familiar already; nothing on `from_state`. `familiar::draw` is two draws 
 `familiar/<spec>`; `familiar::name_for` one on `companion/name/<id>` (the kept beasts' stream, of
 the familiars' names); on the overworld it starts in the retinue. "Tibb, your cat, winds about your
 ankles."
+
+## Call familiar
+
+`ClassActive::CallFamiliar`, `use:call_familiar`, `Aim::Nothing`, had by whoever holds `familiar`:
+`TalentEffect::Familiar` is its active as well as the passive that brings the first, so
+`Content::class_active` finds the Familiar talent, and `active_name` calls the menu's row "Call
+familiar". `world/familiar.rs`:
+
+- `World::start_calling`, from `use_class`, after its checks (the ability, a status blocking `cast`,
+  as Scribe's in `Ability::unavailable`): "Nothing comes." without `familiars.toml` or `allies.toml`;
+  then `PerceptionView::calling_barred`, the one read the rules and the menu share:
+  `Unavailable::FamiliarLives` (`snapshot.allies` holds a `Familiar`, any level or the retinue: "Your
+  familiar lives yet.") and `Unavailable::Watched` (a creature the player sees whose stance as the
+  view knows it is hostile: "Not with that watching."). All with no time. Else `Spent::Calling(turns)`.
+- `World::calling`: `call_turns` turns of `ActionKind::CallFamiliar` through `keep_at`, as a study.
+  `Ended::Came`/`Said` break it off, the time spent and nothing else lost; there is nothing in
+  flight between actions, nothing saved.
+- `finish_calling`: `calling_draw` on the **gameplay** stream (two draws: the jackpot, then the pick;
+  `bargain_kinds` join the race's list, never the rares, from `bargain_level` of the character's
+  class level, the first of `Character::class_levels`). `familiar_cell` (the player's cell on the
+  overworld, where `make_familiar` puts it in the retinue; else `free_cell_near`, `None` when that
+  has only the player's own cell: "Nothing comes.", the hour spent; `bring_familiar` then makes none
+  either). The last turn's perception did not know the new actor, so it perceives once more.
+
+No `watch_roll`: an encounter on the overworld does not come upon a calling as it does a camp (nor a
+study). A start never draws the bargain's: `draw` is unchanged.
 
 ## The touch
 
@@ -87,15 +115,18 @@ Dumps: the `familiar` layer and JSON `familiar`, one function with the companion
 
 ## Determinism, saves, replays
 
-Streams above; the touch, the harrying, and growth draw nothing. A run without a witch hashes as
-before; no shipped scenario, replay, or golden has a witch. Saved: the variant inside `Actor::ally`.
-The new creatures change the content fingerprint: development saves are invalidated (the owner,
-#834: no aliases, no shims).
+Streams above; the touch, the harrying, and growth draw nothing; a calling draws on the gameplay
+stream at its end. A run without a witch hashes as before; no shipped scenario, replay, or golden
+has a witch. Saved: the variant inside `Actor::ally`; a calling is one action, nothing in flight. The
+new creatures and the new action change the content fingerprint: development saves are invalidated
+(the owner, #834: no aliases, no shims).
 
 ## Tests
 
 `world/familiar_tests.rs`: the draw's odds and lists, the start and its words, a restored run, the
 touch (giver, degrees, the other hexes kept going), a summoned cat, the harrying, growth and always
-along, both kept beasts at once, the save round trip. `content/familiar.rs`'s load checks.
+along, both kept beasts at once, the save round trip. `world/familiar_call_tests.rs`: the refusals
+and the menu's reasons, the hour, the interruption, no free cell, the overworld, the draw's odds with
+and without the imp, an imp as a familiar, determinism. `content/familiar.rs`'s load checks.
 `caster_tests`'s witch table. `input.rs::tend_way`. The screen snapshots `abilities-menu-witch` (the
 status bar) and `character-screen-familiar`.

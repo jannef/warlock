@@ -16,6 +16,8 @@ pub const LIST_SIZES: RangeInclusive<usize> = 1..=3;
 pub const RARE_SIZES: RangeInclusive<usize> = 1..=8;
 /// The longest name (a character's own longest).
 pub const NAME_CHARS: usize = 20;
+/// The calling's turns.
+pub const CALL_TURNS: RangeInclusive<u32> = 1..=6000;
 
 /// The numbers of the familiar.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -34,6 +36,12 @@ pub struct FamiliarRules {
     pub names: Vec<String>,
     /// How each kind arrives ("winds about your ankles"), by creature.
     pub arrives: Vec<(CreatureId, String)>,
+    /// Call familiar's ritual, in turns of the `call_familiar` action.
+    pub call_turns: u32,
+    /// What a calling may also draw from `bargain_level` of her class on.
+    pub bargain_kinds: Vec<CreatureId>,
+    /// The level of her class that opens `bargain_kinds`.
+    pub bargain_level: u8,
 }
 
 #[derive(Deserialize)]
@@ -41,6 +49,9 @@ pub struct FamiliarRules {
 struct File {
     names: Vec<String>,
     touch: String,
+    call_turns: u32,
+    bargain_kinds: Vec<String>,
+    bargain_level: u8,
     start: Start,
     arrives: BTreeMap<String, String>,
 }
@@ -60,6 +71,17 @@ impl FamiliarRules {
         (self.by_race.iter())
             .find(|(r, _)| r == race)
             .map(|(_, list)| list.as_slice())
+    }
+
+    /// Every beast a start or a calling may draw: [`Self::every_start`], then the bargain's.
+    pub fn every_kind(&self) -> Vec<CreatureId> {
+        let mut out = self.every_start();
+        for id in &self.bargain_kinds {
+            if !out.contains(id) {
+                out.push(*id);
+            }
+        }
+        out
     }
 
     /// Every beast a start may draw, the races' lists and the rares, each once, in file order.
@@ -85,12 +107,14 @@ impl FamiliarRules {
     /// `most_level` (a race without a list draws no familiar: test fixtures add races;
     /// `familiar_tests` asks every shipped race for one), the rares 1 to 8 plain beasts,
     /// `touch` a hex spell with a status, at least one name and none longer than a character's,
-    /// and an `arrives` line for every beast a start may draw and for nothing else.
+    /// `call_turns` 1 to 6000, `bargain_kinds` plain beasts that may open doors, and an `arrives`
+    /// line for every beast a start or a calling may draw and for nothing else.
     pub(super) fn parse(path: &str, text: &str, content: &Content) -> Result<Self, ContentError> {
         let err = |m: String| ContentError::new(path, m);
         let file: File = toml::from_str(text).map_err(|e| err(e.to_string()))?;
-        // A plain beast: what a tameable type must be (`content/mod.rs`), whatever its flag.
-        let beast = |where_: &str, name: &str| -> Result<CreatureId, ContentError> {
+        // A plain beast: what a tameable type must be (`content/mod.rs`), whatever its flag; one
+        // of the bargain's may have hands.
+        let plain = |where_: &str, name: &str, doors: bool| -> Result<CreatureId, ContentError> {
             let id = (content.creature_id(name))
                 .filter(|_| name != "player")
                 .ok_or_else(|| err(format!("{where_}: unknown creature `{name}`")))?;
@@ -99,7 +123,7 @@ impl FamiliarRules {
                 _ if def.unique => Some("a unique"),
                 _ if def.animated.is_some() => Some("an animated object"),
                 _ if def.summon.is_some() => Some("a summoner"),
-                _ if def.opens_doors => Some("one that opens doors"),
+                _ if def.opens_doors && !doors => Some("one that opens doors"),
                 _ if def.race.is_some() => Some("one of the peoples"),
                 _ if def.combat != Combat::Melee => Some("one that fights from afar"),
                 _ => None,
@@ -109,6 +133,18 @@ impl FamiliarRules {
                 None => Ok(id),
             }
         };
+        let beast = |where_: &str, name: &str| plain(where_, name, false);
+        if !CALL_TURNS.contains(&file.call_turns) {
+            return Err(err(format!(
+                "`call_turns` is {} to {}, not {}",
+                CALL_TURNS.start(),
+                CALL_TURNS.end(),
+                file.call_turns
+            )));
+        }
+        let bargain_kinds = (file.bargain_kinds.iter())
+            .map(|n| plain("`bargain_kinds`", n, true))
+            .collect::<Result<Vec<_>, _>>()?;
         if !(0..=1000).contains(&file.start.rare_per_mille) {
             return Err(err(format!(
                 "`start.rare_per_mille` is 0 to 1000, not {}",
@@ -194,8 +230,11 @@ impl FamiliarRules {
             touch,
             names: file.names,
             arrives,
+            call_turns: file.call_turns,
+            bargain_kinds,
+            bargain_level: file.bargain_level,
         };
-        let starts = rules.every_start();
+        let starts = rules.every_kind();
         if let Some(&id) = starts.iter().find(|&&c| rules.arrives(c).is_none()) {
             return Err(err(format!(
                 "`arrives`: no line for `{}`",
@@ -208,7 +247,7 @@ impl FamiliarRules {
             && let Some((id, _)) = (rules.arrives.iter()).find(|(c, _)| !starts.contains(c))
         {
             return Err(err(format!(
-                "`arrives.{}`: no start draws it",
+                "`arrives.{}`: nothing draws it",
                 content.creature(*id).id
             )));
         }
@@ -243,6 +282,11 @@ mod tests {
         assert_eq!(content.spell(rules.touch).id, "evil_eye");
         let cat = content.creature_id("cat").unwrap();
         assert_eq!(rules.arrives(cat), Some("winds about your ankles"));
+        assert_eq!(rules.call_turns, 600);
+        assert_eq!(rules.bargain_level, 30);
+        let imp = content.creature_id("imp").unwrap();
+        assert_eq!(rules.bargain_kinds, [imp]);
+        assert!(rules.every_kind().contains(&imp) && !rules.every_start().contains(&imp));
         // The old craft's five are all drawn somewhere.
         for kind in ["cat", "toad", "raven", "hare", "bat"] {
             let id = content.creature_id(kind).unwrap();
@@ -300,7 +344,34 @@ mod tests {
             ))
             .contains("no line for `cat`")
         );
-        assert!(err(familiars(|t| format!("{t}wolf = \"howls\"\n"))).contains("no start draws it"));
+        assert!(err(familiars(|t| format!("{t}wolf = \"howls\"\n"))).contains("nothing draws it"));
+        assert!(
+            err(familiars(
+                |t| t.replace("call_turns = 600", "call_turns = 0")
+            ))
+            .contains("`call_turns` is 1 to 6000")
+        );
+        assert!(
+            err(familiars(|t| t.replace(
+                "bargain_kinds = [\"imp\"]",
+                "bargain_kinds = [\"nothing\"]"
+            )))
+            .contains("`bargain_kinds`: unknown creature")
+        );
+        assert!(
+            err(familiars(|t| t.replace(
+                "bargain_kinds = [\"imp\"]",
+                "bargain_kinds = [\"dark_wizard\"]"
+            )))
+            .contains("`bargain_kinds`: `dark_wizard`")
+        );
+        assert!(
+            err(familiars(|t| t.replace(
+                "imp = \"grins up at you with too many teeth\"\n",
+                ""
+            )))
+            .contains("no line for `imp`")
+        );
         // Without the file, no familiar at all, and nothing else minds.
         let mut files = ContentFiles::builtin();
         files.remove("data/familiars.toml");

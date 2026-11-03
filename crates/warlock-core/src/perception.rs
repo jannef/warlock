@@ -1755,6 +1755,10 @@ impl<'a> PerceptionView<'a> {
                     Ability::Heal if !self.snapshot.ally_ailments.is_empty() => (ability
                         .unavailable(self.player, self.content))
                     .filter(|&why| why != crate::ability::Unavailable::NothingToTreat),
+                    // Calling a familiar asks for none alive and no hostile in sight.
+                    Ability::Class(crate::content::ClassActive::CallFamiliar) => self
+                        .calling_barred()
+                        .or_else(|| ability.unavailable(self.player, self.content)),
                     // Foraging asks for the wild underfoot (spec §8 "Foraging").
                     Ability::Forage
                         if crate::world::forage_ground(
@@ -1770,6 +1774,17 @@ impl<'a> PerceptionView<'a> {
                 },
             })
             .collect()
+    }
+
+    /// What keeps the player from calling a familiar now (`world/familiar.rs`): one alive,
+    /// wherever it is (they know their own), or a hostile they see.
+    pub(crate) fn calling_barred(&self) -> Option<crate::ability::Unavailable> {
+        use crate::ability::Unavailable;
+        let lives = (self.snapshot.allies.iter())
+            .any(|a| matches!(a.source, crate::world::AllySource::Familiar(_)));
+        let watched = (self.actors().iter())
+            .any(|a| a.kind == ActorKind::Creature && self.stance(a) == Stance::Hostile);
+        (lives.then_some(Unavailable::FamiliarLives)).or(watched.then_some(Unavailable::Watched))
     }
 
     /// The name the abilities menu gives `ability`: its own, but the priest's prayer by its
