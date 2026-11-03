@@ -1,0 +1,60 @@
+# The animal companion (spec §8 "Class abilities", "Allies"; docs/design/ranger-companion.md;
+# docs/dev/companion.md): a beast that is yours for good, an ally of `allies.toml`'s core with
+# data of its own. This file holds only the companion's own numbers; the allies' rules (heel,
+# leash, orders, the cap, the kill's share) are allies.toml. Without this file no companion can
+# be made: the ranger's Animal companion then gives nothing.
+
+# What a companion is called (Old English, the world's register for old things; #378 may
+# rename), one drawn on the stream `companion/name/<actor id>`.
+names = ["Snel", "Brūn", "Græg", "Blæc", "Hwīt", "Lēof", "Hræfn", "Wulf", "Fæger", "Beald", "Hraþe", "Fugol"]
+
+# The starting beast (the ranger's Animal companion), drawn as the run begins on the stream
+# `companion/<race>,<gender>,<class>`: at `rare_per_mille` in a thousand a beast of `rare`,
+# else one of the race's list. A race's list holds beasts of level at most `most_level`; the
+# rares are free of it. Every beast listed must be `tameable` (creatures/).
+[start]
+rare_per_mille = 50
+rare = ["wolf", "black_hound", "great_boar", "panther"]
+most_level = 2
+
+# Every race of races.toml has one to three beasts here (the loader refuses a race without).
+[start.by_race]
+human = ["hound", "boar"]
+elf = ["lynx", "hound"]
+half_elf = ["hound", "lynx", "polecat"]
+dwarf = ["badger", "hound"]
+halfling = ["hound", "polecat"]
+gnome = ["badger", "polecat"]
+half_orc = ["boar", "hound"]
+goblin = ["large_spider", "rat", "bat"]
+drow = ["large_spider", "bat"]
+kobold = ["cave_lizard", "large_spider", "rat"]
+lizardfolk = ["cave_lizard", "boar"]
+duergar = ["beetle", "large_spider", "badger"]
+ratfolk = ["rat", "polecat", "hound"]
+
+# Taming (the Tame skill ability of Handle animal, for anyone trained; the design's C2): `turns`
+# actions beside the beast before the one check, against `difficulty` + `per_level` × the
+# beast's level (no level gate: odds only), `food` the bonus for food offered.
+[tame]
+turns = 10
+difficulty = 10
+per_level = 2
+food = 2
+
+# Growth: a companion's grade is `grade_percent` of its master's level (never below its type's
+# own level), re-set at every level-up; `above` is the grade less the type's level. Its hit
+# points rise `hp_per_level` a level above; its blows gain +1 to hit per `to_hit_every` levels
+# above, +1 damage per `damage_bonus_every`, and one more die of its attack's kind per
+# `damage_dice_every`; its Defence +1 per `defence_every` (natural armour); its Strength,
+# Dexterity, and Toughness +1 per `stat_every`; its natural Protection is its body's at the
+# grade (the body rule of spec §8 "Creatures"), never below its type's own. Speed, senses, size,
+# and resistances stay the type's. Summons have no grade.
+[growth]
+grade_percent = 100
+hp_per_level = 2
+to_hit_every = 4
+damage_bonus_every = 6
+damage_dice_every = 12
+defence_every = 6
+stat_every = 5

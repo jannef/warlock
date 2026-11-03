@@ -290,6 +290,10 @@ pub struct TalentMods {
     pub sneak_kill_status: Option<StatusId>,
     /// It sees which creatures in view have not noticed it (Stalker's eye).
     pub sees_unaware: bool,
+    /// An animal companion from the first turn (Animal companion; `world/companion.rs`).
+    pub companion: bool,
+    /// Added to its taming checks (Animal companion's edge; the Tame skill ability reads it).
+    pub tame: i32,
     /// An initiative check it makes against a hostile attacker beside it strikes back (Hair
     /// trigger).
     pub startled_blow: bool,
@@ -1322,6 +1326,8 @@ impl TalentMods {
             TalentEffect::SurpriseDifficulty { value } => self.surprise_difficulty += value,
             TalentEffect::SneakReach { value } => self.sneak_reach += value,
             TalentEffect::SeesUnaware => self.sees_unaware = true,
+            TalentEffect::Companion => self.companion = true,
+            TalentEffect::Tame { bonus } => self.tame += bonus,
             TalentEffect::StartledBlow => self.startled_blow = true,
             TalentEffect::SneakKillStatus { status } => {
                 self.sneak_kill_status = content.status_id(&status).or(self.sneak_kill_status);

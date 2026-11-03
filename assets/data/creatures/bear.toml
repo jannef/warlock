@@ -21,6 +21,9 @@ weight = 300000
 stats = { strength = 21, dexterity = 11, toughness = 18, intelligence = 2, willpower = 12, presence = 6 }
 base_hp = 42
 natural = { defence = 1, protection = 0, name = "thick hide" }
+# Tameable, for a master of Handle animal with a great deal of patience (spec §8 "Allies").
+tameable = true
+nose = 6
 depart = "lumbers back into the shadows"
 on_eat = { message = "Rich, fatty bear meat.", satiation = 1500 }
 [creature.attack]

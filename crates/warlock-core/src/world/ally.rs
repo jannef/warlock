@@ -21,7 +21,8 @@
 //!
 //! **Following across levels** ([`World::follow_along`], from `World::travel`): allies within
 //! `comes_along` cells of the player as they leave come with them, placed beside their arrival;
-//! the rest stay where they are, frozen as another level's actors are. Onto the **overworld**,
+//! the rest stay where they are, frozen as another level's actors are. A **companion** comes
+//! wherever it stands, held fast or not (`companion.rs`). Onto the **overworld**,
 //! which has no creatures, they join the **retinue** instead ([`Ally::retinue`]: on the
 //! overworld's level, never drawn, never acting, never standing in anyone's way), and step out
 //! beside the player at the next level.
@@ -37,9 +38,14 @@
 //! monsters slain, the alignment, and the resources a kill builds are credited in full. The
 //! ally gets nothing.
 //!
+//! A **companion** (`companion.rs`) is an ally with `source = Companion(CompanionData)`: named
+//! ("Snel" where the words would say "your hound"), graded, always along, and with a nose the
+//! arm reads when its eyes find nothing.
+//!
 //! Nothing here draws from any stream, and a run with no allies calls none of it.
 
 use super::ai::{Plan, Route};
+use super::companion::CompanionData;
 use super::{Actor, ActorId, Mind, Spent, World, WorldState, stance_between};
 use crate::action::{Command, Event};
 use crate::combat::Profile;
@@ -87,8 +93,8 @@ pub enum AllySource {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         spell: Option<SpellId>,
     },
-    /// A companion of the master's (the ranger's, #825): its data is that design's.
-    Companion,
+    /// A companion of the master's (the ranger's, #916; `companion.rs`): its name and grade.
+    Companion(CompanionData),
 }
 
 impl AllySource {
@@ -96,7 +102,7 @@ impl AllySource {
     pub const fn id(&self) -> &'static str {
         match self {
             AllySource::Summoned { .. } => "summoned",
-            AllySource::Companion => "companion",
+            AllySource::Companion(_) => "companion",
         }
     }
 }
@@ -335,13 +341,17 @@ impl World {
         let target = match order {
             // 4. On the leash: drawn too far from its master, it breaks off and heels.
             Order::Follow if leashed => None,
-            Order::Follow => self.nearest_in_sight(id, &hostile),
-            Order::Stay { at } => self.nearest_in_sight(id, &near(at, rules.stay_reach)),
-            Order::Hunt { at } => (self.nearest_in_sight(id, &near(at, rules.hunt_reach)))
-                .or_else(|| self.nearest_in_sight(id, &hostile)),
+            Order::Follow => self.senses(id, &hostile),
+            Order::Stay { at } => self.senses(id, &near(at, rules.stay_reach)),
+            Order::Hunt { at } => {
+                (self.senses(id, &near(at, rules.hunt_reach))).or_else(|| self.senses(id, &hostile))
+            }
         };
         // 2. Fight it as a creature would.
-        if let Some((target, at)) = target {
+        if let Some((target, at, by_nose)) = target {
+            if by_nose {
+                self.scented(id, target, at);
+            }
             return self.fight(id, target, at);
         }
         // 3. Its order.
@@ -364,17 +374,27 @@ impl World {
                 Route::There | Route::Unreachable => {
                     self.set_order(id, Order::Follow);
                     if self.perception.sees_actors_at(pos) {
-                        let name = self
-                            .content
-                            .creature(self.state.actors[&id].creature)
-                            .name
-                            .clone();
-                        self.say(format!("Your {name} looks back at you."));
+                        let who = self.ally_subject(id);
+                        self.say(format!("{who} looks back at you."));
                     }
                     Plan::Wait
                 }
             },
         }
+    }
+
+    /// What ally `id` finds to fight: the nearest `wanted` it sees (`ai.rs::nearest_in_sight`),
+    /// else, with a nose, the nearest it smells (`companion.rs::smelled`), flagged so.
+    fn senses(
+        &mut self,
+        id: ActorId,
+        wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
+    ) -> Option<(ActorId, Pos, bool)> {
+        if let Some((target, at)) = self.nearest_in_sight(id, wanted) {
+            return Some((target, at, false));
+        }
+        let (target, at) = self.smelled(id, wanted)?;
+        Some((target, at, true))
     }
 
     fn set_order(&mut self, id: ActorId, order: Order) {
@@ -399,7 +419,7 @@ impl World {
             self.say("You can set them on only a place you see.");
             return Spent::Nothing;
         }
-        let pack = self.pack_words(&allies);
+        let pack = self.pack_phrase(&allies);
         let one = allies.len() == 1;
         for &id in &allies {
             let order = match command {
@@ -412,16 +432,16 @@ impl World {
             self.set_order(id, order);
         }
         let line = match command {
-            Command::Heel if one => format!("Your {pack} comes to heel."),
-            Command::Heel => format!("Your {pack} come to heel."),
-            Command::Hold if one => format!("Your {pack} holds."),
-            Command::Hold => format!("Your {pack} hold."),
+            Command::Heel if one => format!("{} comes to heel.", capital(&pack)),
+            Command::Heel => format!("{} come to heel.", capital(&pack)),
+            Command::Hold if one => format!("{} holds.", capital(&pack)),
+            Command::Hold => format!("{} hold.", capital(&pack)),
             Command::SetOn(at) => {
                 let target = (self.state.actor_at(&self.state.current_level, at))
                     .filter(|a| a.id != player && self.perception.sees_actors_at(at))
                     .map(|a| the_start(&self.content.creature(a.creature).name).to_lowercase());
                 let on = target.as_deref().unwrap_or("that spot");
-                format!("You set your {pack} on {on}.")
+                format!("You set {pack} on {on}.")
             }
         };
         self.make_noise(player, Act::Order);
@@ -435,14 +455,20 @@ impl World {
         Spent::NoTime
     }
 
-    /// The allies `ids` as the player's words name them, after "your": "wolf", "wolves",
-    /// "wolves and bear" (by type, in the order the ids run; a possessive takes no count).
-    fn pack_words(&self, ids: &[ActorId]) -> String {
+    /// The allies `ids` as the player's words name them: "your wolf", "your wolves", "your
+    /// wolves and bear" (by type, in the order the ids run; a possessive takes no count), a
+    /// companion by its name first ("Snel", "Snel and your wolves"; `companion.rs`).
+    fn pack_phrase(&self, ids: &[ActorId]) -> String {
+        let mut names: Vec<String> = Vec::new();
         let mut kinds: Vec<(CreatureId, u32)> = Vec::new();
         for id in ids {
             let Some(a) = self.state.actors.get(id) else {
                 continue;
             };
+            if let Some(data) = a.companion() {
+                names.push(data.name.clone());
+                continue;
+            }
             match kinds.iter_mut().find(|(c, _)| *c == a.creature) {
                 Some((_, n)) => *n += 1,
                 None => kinds.push((a.creature, 1)),
@@ -458,12 +484,17 @@ impl World {
                 }
             })
             .collect();
-        and_list(&words.iter().map(String::as_str).collect::<Vec<_>>())
+        if !words.is_empty() {
+            let yours = and_list(&words.iter().map(String::as_str).collect::<Vec<_>>());
+            names.push(format!("your {yours}"));
+        }
+        and_list(&names.iter().map(String::as_str).collect::<Vec<_>>())
     }
 
     /// The player left `from` at `old` for `to`, arriving at `arrival` (the module docs): their
     /// allies within `comes_along` of `old`, not held fast, come along (into the retinue, when
-    /// `to` is the overworld), and the retinue steps out around them on any other level; the
+    /// `to` is the overworld), and their companion wherever it stands, held fast or not
+    /// (`companion.rs`), and the retinue steps out around them on any other level; the
     /// rest stay. A summon whose time ran out on the way is removed silently, and so is one
     /// left on `to` earlier whose time has passed. Called by `World::travel` once the player
     /// stands on `to`.
@@ -488,7 +519,8 @@ impl World {
                 coming.push(a.id);
             } else if a.level == from {
                 let held = a.effects.blocking(&content, ActionKind::Step).is_some();
-                if a.pos.chebyshev(old) <= rules.comes_along && !held {
+                let companion = a.companion().is_some();
+                if companion || (a.pos.chebyshev(old) <= rules.comes_along && !held) {
                     coming.push(a.id);
                 } else {
                     left.push(a.id);
@@ -500,9 +532,9 @@ impl World {
             .filter(|id| self.perception.sees_actors_at(self.state.actors[id].pos))
             .collect();
         if !seen.is_empty() {
-            let words = self.pack_words(&seen);
+            let words = capital(&self.pack_phrase(&seen));
             let verb = if seen.len() == 1 { "is" } else { "are" };
-            self.say(format!("Your {words} {verb} left behind."));
+            self.say(format!("{words} {verb} left behind."));
         }
         let mut came: Vec<ActorId> = Vec::new();
         for id in coming {
@@ -531,13 +563,13 @@ impl World {
             came.push(id);
         }
         if !came.is_empty() {
-            let words = self.pack_words(&came);
+            let words = capital(&self.pack_phrase(&came));
             let one = came.len() == 1;
             let line = match (from_overworld, one) {
-                (true, true) => format!("Your {words} follows you in."),
-                (true, false) => format!("Your {words} follow you in."),
-                (false, true) => format!("Your {words} comes with you."),
-                (false, false) => format!("Your {words} come with you."),
+                (true, true) => format!("{words} follows you in."),
+                (true, false) => format!("{words} follow you in."),
+                (false, true) => format!("{words} comes with you."),
+                (false, false) => format!("{words} come with you."),
             };
             self.say(line);
         }

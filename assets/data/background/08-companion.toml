@@ -1,0 +1,129 @@
+# The companion (#916; docs/design/ranger-companion.md §5.2): how the beast at your side came to
+# be yours. Told only to a character who begins with one (`when = { companion = true }`: the
+# chapter is skipped before its stream is drawn for everyone else, so their stories hash as
+# before). Every beast a start may draw has an `only` line here (content/companion.rs checks
+# it), common, worth nothing: the beast itself is Animal companion's gift. The plain line is the
+# net for a beast without one.
+[chapter]
+id = "companion"
+name = "The companion"
+paragraph = 4
+when = { companion = true }
+
+[[line]]
+id = "plain_companion"
+tier = "common"
+weight = 1
+text = "A beast of the wild had taken to you, and came when you left."
+
+[[line]]
+id = "the_hound"
+tier = "common"
+weight = 1
+only = true
+text = "A hound followed you home one winter and would not be sent back, and it has not left your heel since."
+when = { companion = ["hound"] }
+
+[[line]]
+id = "the_boar"
+tier = "common"
+weight = 1
+only = true
+text = "You raised a boar from a piglet the sounder had abandoned, and it grew into something the dogs give room to."
+when = { companion = ["boar"] }
+
+[[line]]
+id = "the_lynx"
+tier = "common"
+weight = 1
+only = true
+text = "A lynx kitten, found mewling under a dead mother, learned to hunt at your side and never learned to leave."
+when = { companion = ["lynx"] }
+
+[[line]]
+id = "the_badger"
+tier = "common"
+weight = 1
+only = true
+text = "A badger dug under the wall of {home} and stayed, and in time it was yours, as much as a badger is anyone's."
+when = { companion = ["badger"] }
+
+[[line]]
+id = "the_polecat"
+tier = "common"
+weight = 1
+only = true
+text = "A polecat you took from a trapper's sack rides your shoulder and kills what moves in the straw."
+when = { companion = ["polecat"] }
+
+[[line]]
+id = "the_spider"
+tier = "common"
+weight = 1
+only = true
+text = "A spider the size of a dog hatched in the dark corner you slept in, and grew up thinking you its kin."
+when = { companion = ["large_spider"] }
+
+[[line]]
+id = "the_rat"
+tier = "common"
+weight = 1
+only = true
+text = "A rat too clever for the traps took your bread for a year, then your side, and keeps both."
+when = { companion = ["rat"] }
+
+[[line]]
+id = "the_bat"
+tier = "common"
+weight = 1
+only = true
+text = "A bat that roosted over your bed came to your whistle, and now comes to your hand."
+when = { companion = ["bat"] }
+
+[[line]]
+id = "the_lizard"
+tier = "common"
+weight = 1
+only = true
+text = "A cave lizard warmed itself on your hearth-stone so often that it forgot it was wild."
+when = { companion = ["cave_lizard"] }
+
+[[line]]
+id = "the_beetle"
+tier = "common"
+weight = 1
+only = true
+text = "A beetle of the deep roads, armoured like a shield, took to following your lantern, and then to following you."
+when = { companion = ["beetle"] }
+
+[[line]]
+id = "the_wolf"
+tier = "common"
+weight = 1
+only = true
+text = "A wolf cub, the last of a litter the hunters took, grew up at your fire, and the village never quite forgave you for it."
+when = { companion = ["wolf"] }
+
+[[line]]
+id = "the_black_hound"
+tier = "common"
+weight = 1
+only = true
+text = "A great black dog came out of the fog one night and sat at your door, and the old folk crossed themselves; it is still there."
+when = { companion = ["black_hound"] }
+
+[[line]]
+id = "the_great_boar"
+tier = "common"
+weight = 1
+only = true
+text = "The boar that killed two hounds and a huntsman let you walk up to it, nobody knows why, and has let nobody else near since."
+when = { companion = ["great_boar"] }
+
+[[line]]
+id = "the_panther"
+tier = "common"
+weight = 1
+only = true
+text = "A black cat the length of a man came down from the hills in a hard winter and chose your hearth over every other; it moves without a sound."
+when = { companion = ["panther"] }

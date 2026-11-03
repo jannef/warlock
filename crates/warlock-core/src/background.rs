@@ -19,7 +19,7 @@
 
 use crate::alignment::Band;
 use crate::character::{Character, Gender};
-use crate::content::{Content, Keep, Marks, StoryEffect, StoryLine, WeaponSkillId};
+use crate::content::{Content, CreatureId, Keep, Marks, StoryEffect, StoryLine, WeaponSkillId};
 use crate::magic::loot;
 use crate::object::Stack;
 use crate::rng::Rng;
@@ -65,6 +65,9 @@ pub struct Witness<'a> {
     pub trained: &'a [WeaponSkillId],
     /// The run's campaign (`""` outside every campaign).
     pub campaign: &'a str,
+    /// The type of the companion at their side as the run begins, if any (spec §8 "Allies":
+    /// made before the story is told).
+    pub companion: Option<CreatureId>,
 }
 
 impl Witness<'_> {
@@ -89,6 +92,7 @@ impl Witness<'_> {
             && !w.not_tags.iter().any(|t| tags.contains(t))
             && w.age.is_none_or(|a| a.holds(self.age))
             && any(&w.campaign, self.campaign)
+            && (w.companion.is_empty() || self.companion.is_some_and(|c| w.companion.contains(&c)))
     }
 }
 
@@ -131,6 +135,11 @@ pub fn tell(content: &Content, seed: u64, witness: &Witness) -> Story {
     // The talents and flaws earlier lines gave: a line never gives one again.
     let mut given: Vec<(String, Option<String>)> = Vec::new();
     for chapter in background.chapters_for(witness.campaign) {
+        // A chapter that is not this witness's is skipped before its stream is drawn: its own
+        // stream, so no other chapter moves (the companion's chapter, `docs/dev/companion.md`).
+        if !chapter.when.fits(witness.companion.is_some()) {
+            continue;
+        }
         let mut rng = Rng::background(seed, &witness.character.spec, &chapter.id);
         let mut tier = Some(background.tiers.of(rng.below(1000)));
         let fits = |l: &&StoryLine| {
