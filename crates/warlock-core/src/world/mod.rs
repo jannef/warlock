@@ -1779,6 +1779,8 @@ mod status_tests;
 #[cfg(test)]
 mod steal_tests;
 #[cfg(test)]
+mod strange_spirit_tests;
+#[cfg(test)]
 mod stride_tests;
 #[cfg(test)]
 mod stunning_strike_tests;

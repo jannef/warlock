@@ -339,7 +339,17 @@ developer notes (CLAUDE.md, `docs/dev/`).
     player not too green; else the reply is all); `departs` sends the speaker away after the
     reply (`World::departs`, as an ally whose time is up: no corpse, no pile, no experience, no
     kill; the screen does not reopen); `calls` (a prestige class's calling, §8 "Prestige
-    classes") is refused when content loads until callings exist (#876). No match: the
+    classes", one of the dialogue's campaign) makes the calling after the reply, before
+    `quest` and `departs`, and the word is heard only while the calling is open (anyone else
+    gets `unheard`). The Ascmearc's **Strange Spirit** (`strange_spirit`, faction `spirits`,
+    hostile to no one; good; one hit point, no corpse, no blood, no experience; rooted,
+    `budge = never`) is met on the roads, vale, downs, and woods by day (`when = { calling =
+    "hunter" }`, weight 2), speaks only to the Kind or better (`speaks_to`), has no topics, and
+    knows one word, *life before death*: it echoes the oath's six lines, calls the bard into
+    the Hunter, and departs ("The strange spirit fades, and is gone."). Killed, it is a
+    peaceful good soul killed; its party is forgotten and it may be met again while the calling
+    is open. Look mode says ", who waits" after one whose dialogue has words and nothing else
+    to offer. No match: the
     dialogue's `unheard` line (without one, "The sage says nothing.", told plainly, the
     screen's line "…"). Either way it takes the time
     of `chat`: no count of tries, no lock-out. Nothing is drawn, trained, or saved; others hear

@@ -741,7 +741,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   player may say to it, §8 "Dialogue", "Saying words": a `phrase` of 1 to 40 characters with a
   letter or digit, no two alike once normalised; a `reply` of 1 to 9 lines; an optional
   `does = { calls, quest, departs }`: `quest` a quest of the dialogue's campaign, `departs` only
-  on a creature type's dialogue, `calls` refused until prestige classes' callings exist), an
+  on a creature type's dialogue, `calls` a calling of the dialogue's campaign), an
   optional `unheard` (said to words it does not know), an optional `speaks_to` (an alignment
   range, `{ min, max }` bands as a quest's `requires_alignment`) with the `silent` line it
   needs (said instead of anything to a character outside it), and

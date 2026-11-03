@@ -818,7 +818,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     lost level lowers the total and so the prestige level, and gives back as it returns; the
     choices were made the first time. Who calls: the dev action `call:ID` (`Action::Call`, no
     time, whatever the level; refused with no such class, one held, or no calling open to the
-    class) now, a dialogue word's `calls` with W1 and C1. The character screen's Class row:
+    class), and a dialogue word's `calls` (§8 "Dialogue", "Saying words": the Ascmearc's
+    Strange Spirit, §8 "Creatures"; the test world's hermit); an encounter entry's `when = {
+    calling }` holds while a calling is open. Both worlds' Hunter callings ask for the bard's
+    `max_level` (60 until the bard's cap, #874, lowers both to 30). The character screen's Class row:
     `Bard`, `Bard 30` at the cap, `Bard 30, Hunter 4` after; the Characters list's summary the
     same; the death screen "Here lies Brakka, / a bard and hunter,"; the XP row shows no next
     level at a cap. Dumps: `stats` `Class Bard 30, Hunter 4`, `progress` (dev) `calling hunter:

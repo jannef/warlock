@@ -50,6 +50,12 @@ static FIXTURE: LazyLock<Arc<Content>> = LazyLock::new(|| {
         false => text.to_string(),
     });
     files.insert("data/prestige/warden.toml", WARDEN);
+    // The test world's own door into the Hunter, from the bard too, makes way for the Warden's
+    // (one door a class), and the hermit's word calls the Warden instead.
+    files.remove("campaigns/showcase/data/callings/hunter.toml");
+    files.edit_table("dialogue", |t| {
+        t.replace("calls = \"hunter\" }", "calls = \"warden\" }")
+    });
     files.insert("campaigns/showcase/data/callings/warden.toml", CALLING);
     Arc::new(Content::load(&files).expect("fixture content"))
 });
@@ -272,8 +278,16 @@ fn a_full_bank_is_spent_at_the_calling_and_nothing_is_given() {
 #[test]
 fn the_dev_call_comes_whatever_the_level_and_refuses_what_is_not_there() {
     let mut w = world("bard");
-    run(&mut w, "call:hunter");
+    run(&mut w, "call:skald");
     assert!(said(&w).last().expect("said").contains("no prestige class"));
+    // The Hunter is a class, but this fixture's world opens no door into it.
+    run(&mut w, "call:hunter");
+    assert!(
+        said(&w)
+            .last()
+            .expect("said")
+            .contains("No calling of this world")
+    );
     assert!(w.character().expect("character").prestige.is_none());
     // At level 1 the calling is not open, but the dev action makes it: Warden 1 at once.
     run(&mut w, "call:warden");
