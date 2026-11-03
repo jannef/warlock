@@ -30,7 +30,7 @@ After a PR that tunes combat data (weapon skills, creatures, classes, spells, st
 it again and replace those sections, then revisit the tuning notes. The code is
 `crates/warlock-core/src/world/balance_probe.rs` (the measuring, with the method in its module
 docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/schools.rs`
-(the casters' school pace), and `balance_probe/tables.rs` (the tables).
+(the casters' school pace), `balance_probe/familiar.rs` (the witch's familiar), and `balance_probe/tables.rs` (the tables).
 
 ## Method
 
@@ -509,6 +509,70 @@ The druid's calls (#839), cast by a human druid (untrained stats, every score as
 | Call of the wild (5) | 60 | 2 wolves | lasting | 5 / 374 (75 casts) | wolf 4: 7/99 · 0.1:35.4 · >999 / 0.5 |
 | Call of the forest (20) | 60 | 2 bears | lasting | 20 / 374 (19 casts) | bear 12: 25/99 · 1.4:37.2 · 136 / 1.6 |
 | Call the elements (35) | 60 | 1 greater air elemental, 1 greater fire elemental | lasting | 35 / 374 (11 casts) | greater earth elemental 24: 62/99 · 8.5:26.0 · 24 / 4.7; greater water elemental 26: 38/99 · 5.7:30.0 · 42 / 2.9; greater air elemental 31: 54/98 · 16.5:25.2 · 13 / 3.7; greater fire elemental 38: 69/99 · 18.9:32.3 · 12 / 3.8 |
+
+## Familiar
+
+The witch's familiar (#929, #933), a human witch (untrained stats, every score as rolled, seed 1) with each of the five kinds a run may draw in turn, at its grade (her level). Its touch is her Evil eye and needs a blow that lands, so the table is the familiar's side bare against the monsters within two levels of the witch's (as in "Fights", the monsters' gear left out): **hit** the chance a blow lands, lowest / median / highest over the window; **blows** a round (a normal turn); **hexes** laid a round (blows × median hit); **rounds to the first** hex (one over the hexes a round); **degrees** her Evil eye lays; **eye** the mana one cast of it costs over her pool, which every landed blow saves her; the familiar's hit points, mean damage of a hit, and to-hit.
+
+| L | familiar | hit % (low / median / high) | blows | hexes a round | rounds to the first | degrees | eye (mana / pool) | hp · mean hit · to hit |
+|---|---|---|---|---|---|---|---|---|
+| 1 | cat | 19 / 31 / 69 | 1.30 | 0.41 | 2.5 | 1 | 1 / 15 | 10 · 1.0 · -4 |
+| 1 | toad | 19 / 31 / 69 | 0.90 | 0.28 | 3.6 | 1 | 1 / 15 | 10 · 1.0 · -4 |
+| 1 | raven | 19 / 31 / 69 | 1.30 | 0.41 | 2.5 | 1 | 1 / 15 | 9 · 1.0 · -4 |
+| 1 | hare | 25 / 38 / 75 | 1.60 | 0.61 | 1.6 | 1 | 1 / 15 | 10 · 1.0 · -3 |
+| 1 | bat | 15 / 25 / 62 | 2.00 | 0.50 | 2.0 | 1 | 1 / 15 | 10 · 1.0 · -5 |
+| 5 | cat | 1 / 38 / 75 | 1.30 | 0.50 | 2.0 | 1 | 1 / 44 | 18 · 1.0 · -3 |
+| 5 | toad | 1 / 38 / 75 | 0.90 | 0.34 | 2.9 | 1 | 1 / 44 | 18 · 1.0 · -3 |
+| 5 | raven | 1 / 38 / 75 | 1.30 | 0.50 | 2.0 | 1 | 1 / 44 | 17 · 1.0 · -3 |
+| 5 | hare | 2 / 46 / 81 | 1.60 | 0.73 | 1.4 | 1 | 1 / 44 | 18 · 1.0 · -2 |
+| 5 | bat | 1 / 31 / 69 | 2.00 | 0.62 | 1.6 | 1 | 1 / 44 | 18 · 1.0 · -4 |
+| 10 | cat | 7 / 62 / 85 | 1.30 | 0.80 | 1.2 | 1 | 1 / 80 | 29 · 1.0 · -1 |
+| 10 | toad | 4 / 54 / 81 | 0.90 | 0.49 | 2.1 | 1 | 1 / 80 | 29 · 1.0 · -2 |
+| 10 | raven | 4 / 54 / 81 | 1.30 | 0.70 | 1.4 | 1 | 1 / 80 | 28 · 1.0 · -2 |
+| 10 | hare | 7 / 62 / 85 | 1.60 | 0.99 | 1.0 | 1 | 1 / 80 | 29 · 1.0 · -1 |
+| 10 | bat | 4 / 54 / 81 | 2.00 | 1.08 | 0.9 | 1 | 1 / 80 | 29 · 1.0 · -2 |
+| 15 | cat | 15 / 62 / 85 | 1.30 | 0.80 | 1.2 | 1 | 1 / 118 | 40 · 2.0 · +0 |
+| 15 | toad | 15 / 62 / 85 | 0.90 | 0.56 | 1.8 | 1 | 1 / 118 | 40 · 2.0 · +0 |
+| 15 | raven | 15 / 62 / 85 | 1.30 | 0.80 | 1.2 | 1 | 1 / 118 | 39 · 3.0 · +0 |
+| 15 | hare | 19 / 69 / 90 | 1.60 | 1.10 | 0.9 | 1 | 1 / 118 | 40 · 3.0 · +1 |
+| 15 | bat | 10 / 54 / 81 | 2.00 | 1.08 | 0.9 | 1 | 1 / 118 | 40 · 2.0 · -1 |
+| 20 | cat | 4 / 69 / 81 | 1.30 | 0.89 | 1.1 | 1 | 1 / 156 | 51 · 4.0 · +2 |
+| 20 | toad | 2 / 62 / 75 | 0.90 | 0.56 | 1.8 | 1 | 1 / 156 | 51 · 3.0 · +1 |
+| 20 | raven | 2 / 62 / 75 | 1.30 | 0.80 | 1.2 | 1 | 1 / 156 | 50 · 4.0 · +1 |
+| 20 | hare | 4 / 69 / 81 | 1.60 | 1.10 | 0.9 | 1 | 1 / 156 | 51 · 4.0 · +2 |
+| 20 | bat | 2 / 62 / 75 | 2.00 | 1.24 | 0.8 | 1 | 1 / 156 | 51 · 4.0 · +1 |
+| 30 | cat | 10 / 81 / 93 | 1.30 | 1.05 | 1.0 | 1 | 1 / 229 | 73 · 7.5 · +6 |
+| 30 | toad | 7 / 75 / 90 | 0.90 | 0.68 | 1.5 | 1 | 1 / 229 | 73 · 6.5 · +5 |
+| 30 | raven | 7 / 75 / 90 | 1.30 | 0.97 | 1.0 | 1 | 1 / 229 | 72 · 8.0 · +5 |
+| 30 | hare | 10 / 81 / 93 | 1.60 | 1.29 | 0.8 | 1 | 1 / 229 | 73 · 7.5 · +6 |
+| 30 | bat | 7 / 75 / 90 | 2.00 | 1.50 | 0.7 | 1 | 1 / 229 | 73 · 8.0 · +5 |
+| 40 | cat | 54 / 85 / 98 | 1.30 | 1.11 | 0.9 | 1 | 1 / 303 | 95 · 12.0 · +9 |
+| 40 | toad | 46 / 81 / 96 | 0.90 | 0.72 | 1.4 | 1 | 1 / 303 | 95 · 11.0 · +8 |
+| 40 | raven | 46 / 81 / 96 | 1.30 | 1.05 | 1.0 | 1 | 1 / 303 | 94 · 13.0 · +8 |
+| 40 | hare | 54 / 85 / 98 | 1.60 | 1.37 | 0.7 | 1 | 1 / 303 | 95 · 12.0 · +9 |
+| 40 | bat | 46 / 81 / 96 | 2.00 | 1.61 | 0.6 | 1 | 1 / 303 | 95 · 13.0 · +8 |
+| 50 | cat | 62 / 93 / 99 | 1.30 | 1.21 | 0.8 | 1 | 1 / 376 | 117 · 16.5 · +13 |
+| 50 | toad | 54 / 90 / 99 | 0.90 | 0.81 | 1.2 | 1 | 1 / 376 | 117 · 15.5 · +12 |
+| 50 | raven | 54 / 90 / 99 | 1.30 | 1.16 | 0.9 | 1 | 1 / 376 | 116 · 18.0 · +12 |
+| 50 | hare | 62 / 93 / 99 | 1.60 | 1.49 | 0.7 | 1 | 1 / 376 | 117 · 16.5 · +13 |
+| 50 | bat | 54 / 90 / 99 | 2.00 | 1.79 | 0.6 | 1 | 1 / 376 | 117 · 18.0 · +12 |
+| 60 | cat | 54 / 96 / 99 | 1.30 | 1.25 | 0.8 | 1 | 1 / 449 | 139 · 18.5 · +16 |
+| 60 | toad | 46 / 93 / 99 | 0.90 | 0.84 | 1.2 | 1 | 1 / 449 | 139 · 17.5 · +15 |
+| 60 | raven | 46 / 93 / 99 | 1.30 | 1.21 | 0.8 | 1 | 1 / 449 | 138 · 20.0 · +15 |
+| 60 | hare | 54 / 96 / 99 | 1.60 | 1.53 | 0.7 | 1 | 1 / 449 | 139 · 18.5 · +16 |
+| 60 | bat | 46 / 93 / 99 | 2.00 | 1.86 | 0.5 | 1 | 1 / 449 | 139 · 20.0 · +15 |
+
+**Reading it.** The touch needs a blow that lands, and a grade-1 familiar is the weakest
+attacker in the game: the cat is -4 to hit with a 1d2-4 scratch, so at level 1 it lands about 31 %
+of its blows against level 1 to 3 monsters (19 % against the best-defended, 69 % against the
+worst) and lays the hex 0.41 times a round, the first after 2.5 rounds on average (the hare 38 %
+and 0.61, the bat 25 % and 0.50). The design assumed a hex that sticks; at level 1 the cat is a
+slow way to lay one, and the witch's own Evil eye (1 mana of a 15 pool) is the faster. The
+familiar's hit rate catches up as it grows (+1 to hit per 4 levels of grade): 62 % median at level
+10, 81 % at 30, 93 % at 50. Not tuned (an owner call). The window is the monsters' bare Defence, so
+a geared monster is a little harder; and the table says nothing of the familiar reaching its
+target, only that it is beside it.
+
 
 ## Stat training
 
