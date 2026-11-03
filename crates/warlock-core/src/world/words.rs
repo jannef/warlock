@@ -2,7 +2,7 @@
 //! one place words are said. The player says something ([`Action::Say`](crate::Action::Say)) to
 //! the creature beside them; if its dialogue knows the words (`[[dialogue.word]]`, matched
 //! normalised: `words::normalise`), it replies with the word's lines and does what the word
-//! `does` (a quest given, the speaker departing); if not, it says its `unheard` line. Either way
+//! `does` (a calling made, a quest given, the speaker departing); if not, it says its `unheard` line. Either way
 //! it takes a chat's time: no count of tries and no lock-out. Nothing is drawn, nothing is
 //! trained, and nothing new is saved.
 
@@ -52,16 +52,16 @@ impl World {
         Spent::Turn(price)
     }
 
-    /// Whether what `word` does can be done now: a word whose calling is not open is not heard.
-    /// No calling can be named yet (content refuses `calls` until prestige classes, #876), so
-    /// every word can.
+    /// Whether what `word` does can be done now: a word whose calling is not open to the player
+    /// is not heard (a warrior saying the oath hears the `unheard` line).
     fn can_do(&self, word: &Word) -> bool {
-        word.does.calls.is_none()
+        (word.does.calls.as_ref()).is_none_or(|class| self.calling_open(class))
     }
 
     /// Creature `id` heard `word`: its reply, a message a line, the last also the dialogue
-    /// screen's line (unless it departs); then the quest given, if the word gives one that could
-    /// be given now; then its departure.
+    /// screen's line (unless it departs); then the calling made, if the word calls (`can_do`
+    /// saw it open); then the quest given, if the word gives one that could be given now; then
+    /// its departure, last, so the farewell is heard.
     fn do_word(&mut self, id: ActorId, word: &Word, events: &mut Vec<Event>) {
         let departs = word.does.departs;
         let (last, before) = word.reply.split_last().expect("a reply has a line");
@@ -73,6 +73,11 @@ impl World {
             self.say(format!("{who} says: \"{last}\""));
         } else {
             self.answer(id, last.clone(), None, events);
+        }
+        if let Some(class) = &word.does.calls
+            && let Some(calling) = self.content.calling(self.campaign(), class).cloned()
+        {
+            self.call(&calling);
         }
         if let Some(quest) = &word.does.quest {
             self.word_quest(id, quest, events);

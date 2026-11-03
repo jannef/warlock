@@ -1147,6 +1147,7 @@ mod tests {
         };
         files.edit_table("races", untrained);
         files.edit_table("classes", untrained);
+        files.edit_table("prestige", untrained);
         files.edit_table("creatures", untrained);
         // A trader's offer names no unique then (the pedlar's, #808).
         files.edit_table("dialogue", |text| {

@@ -117,8 +117,9 @@ pub(super) fn words(content: &Content) -> String {
         );
         for w in &d.words {
             let mut does: Vec<String> = Vec::new();
-            if let Some(calling) = &w.does.calls {
-                does.push(format!("calls to the `{calling}` calling"));
+            if let Some(class) = &w.does.calls {
+                let who = calling_text(content, d.campaign.as_deref(), class);
+                does.push(format!("calls {who}"));
             }
             if let Some(q) = (w.does.quest.as_deref()).and_then(|q| content.quest_id(q)) {
                 does.push(format!("gives the quest {}", content.quest(q).name));
@@ -143,6 +144,32 @@ pub(super) fn words(content: &Content) -> String {
         let _ = writeln!(out, "| {who} | *{phrase}* | {speaks_to} | {does} |");
     }
     out
+}
+
+/// Who a calling (spec §8 "Prestige classes") is open to, and into what, by the prestige class
+/// `class` it opens, as the wiki says it: "a [bard](classes.md#bard) of level 60 or more, not
+/// yet called, to be a Hunter". The calling of `campaign` (or of none) if there is one, else the
+/// first of that class.
+pub(super) fn calling_text(content: &Content, campaign: Option<&str>, class: &str) -> String {
+    let callings = content.callings();
+    let calling = (callings.iter())
+        .find(|c| c.class == class && (c.campaign.as_deref() == campaign || c.campaign.is_none()))
+        .or_else(|| callings.iter().find(|c| c.class == class));
+    let Some(calling) = calling else {
+        return format!("into `{class}`");
+    };
+    let from: Vec<String> = (calling.from.iter())
+        .map(|f| {
+            let name = content.class(f).map_or(f.as_str(), |c| c.name.as_str());
+            format!("[{}](classes.md#{f})", name.to_lowercase())
+        })
+        .collect();
+    let name = content.prestige(class).map_or(class, |p| p.name.as_str());
+    format!(
+        "a {} of level {} or more, not yet called, to be a {name}",
+        from.join(" or "),
+        calling.level
+    )
 }
 
 /// Who gives quests (`data/quests.toml` and the campaigns' `data/quests/`, those the wiki

@@ -175,13 +175,17 @@ mod tests {
         assert_eq!(calling.campaign.as_deref(), Some("showcase"));
         assert!(calling.is_from("bard") && !calling.is_from("thief"));
         assert_eq!(calling.level, 60);
-        assert!(
-            content.calling("ascmearc", "hunter").is_none(),
-            "another campaign's door is shut"
+        let theirs = content
+            .calling("ascmearc", "hunter")
+            .expect("the Ascmearc's own");
+        assert_eq!(
+            theirs.campaign.as_deref(),
+            Some("ascmearc"),
+            "another campaign's door is its own"
         );
         let loose = load(text, "data/callings/hunter.toml").expect("valid");
         assert!(
-            loose.calling("ascmearc", "hunter").is_some(),
+            (loose.callings_of("ascmearc")).any(|c| c.campaign.is_none()),
             "a calling outside every campaign is any run's"
         );
     }

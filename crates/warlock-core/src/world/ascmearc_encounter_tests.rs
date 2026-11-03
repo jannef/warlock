@@ -120,7 +120,10 @@ fn the_road_is_the_safest_way() {
     let (table, _) = CONTENT
         .encounter_entry("ascmearc", "road_pedlar")
         .expect("the pedlar");
-    let by_day = |e: &&crate::content::EncounterEntry| !e.when.phase.contains(&DayPhase::Night);
+    // (The Strange Spirit, met only while a calling is open, is no one's ordinary road.)
+    let by_day = |e: &&crate::content::EncounterEntry| {
+        !e.when.phase.contains(&DayPhase::Night) && e.when.calling.is_none()
+    };
     let day: Vec<_> = (table.entries.iter()).filter(by_day).collect();
     let all: u32 = day.iter().map(|e| e.weight).sum();
     let hostile: u32 = (day.iter())

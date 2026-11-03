@@ -452,6 +452,11 @@ mod tests {
         files.remove("data/background.toml");
         files.remove("campaigns/ascmearc/");
         files.remove("campaigns/showcase/scenarios/");
+        // The Hunter's calling (and the hermit's word that makes it) asks for a bard.
+        files.remove("campaigns/showcase/data/callings/");
+        files.edit_table("dialogue", |t| {
+            t.replace("does = { calls = \"hunter\" }", "")
+        });
         files.insert(
             "campaigns/showcase/scenarios/plain.toml",
             "name = \"Plain\"\nstart_level = \"hub\"\n",

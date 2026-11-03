@@ -127,10 +127,16 @@ either way). `speaks_to` lives in `talk.rs`: `World::speaks_to(dialogue)` (the p
 against the range); outside it `listens` says `silent` (so `chat`, `ask`, and `say_to` all
 refuse alike) and `World::topics` is empty. `Conversation::words` (an event, not saved) is set
 by `answer` when the dialogue has words and speaks to the player; `screens::converse` opens the
-dialogue screen on it too. `calls` is refused at load ("there are no callings yet") until the
-prestige system (#876, `World::call`) lands: the follow-up drops that refusal for a check that
-the calling is the dialogue campaign's (and its `from` could meet the dialogue), makes
-`World::can_do` ask `World::calling_open`, and calls `World::call` first in `do_word`. Nothing
+dialogue screen on it too. `calls` (#879): `Content::check_words` checks it names a calling of
+the dialogue's campaign (or, for a dialogue outside every campaign, one outside every campaign);
+`World::can_do` asks `World::calling_open`, so a word whose calling is not open is unheard (a
+warrior saying the oath gets the `unheard` line); `do_word` makes the call (`World::call`) after
+the reply, before `quest` and `departs`. The level-up's news ("Welcome to level 31.") is said as
+the action ends, after the departure line. The words in content: the Strange Spirit's oath
+(`campaigns/ascmearc/data/dialogue/spirit.toml`, `does = { calls = "hunter", departs = true }`,
+`speaks_to = { min = "kind" }`) and the test world's hermit (`calls = "hunter"`, no `departs`).
+Look mode says ", who waits" after a creature whose dialogue has words and no topic, service, or
+offer (`ui/look.rs::waits`: "a strange spirit (unhurt), who waits"). Nothing
 new is saved; nothing is drawn; no marks. The app: `ui/text_field.rs` (`TextField`, out of the
 Name step), `DialogueScreen`'s fixed `s` row and field (`SAY_KEY`; no `KeyCommand`). Tests:
 `words.rs`, `world/words_tests.rs` (fixture content: a match in any case, unheard and no

@@ -554,6 +554,7 @@ impl World {
             && (when.hidden.as_ref()).is_none_or(|h| !self.state.revealed.contains(h))
             && when.after_days.is_none_or(|d| here.days >= d)
             && when.before_days.is_none_or(|d| here.days < d)
+            && (when.calling.as_ref()).is_none_or(|c| self.calling_open(c))
     }
 
     /// The ids of the tables that match the player's overworld cell now (dev dumps).
@@ -564,6 +565,22 @@ impl World {
                 .matching(&content, &self.state.campaign, &here)
                 .into_iter())
             .map(|t| t.id.clone())
+            .collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    /// The ids of the entries a roll on the player's overworld cell could draw now: the
+    /// matching tables' entries whose own `when` holds (dev; tests).
+    pub fn encounter_entries_here(&self) -> Vec<String> {
+        let content = self.content.clone();
+        match self.here(self.player_pos()) {
+            Some(here) if self.state.current().kind == LevelKind::Overworld => (self
+                .matching(&content, &self.state.campaign, &here)
+                .into_iter())
+            .flat_map(|t| &t.entries)
+            .filter(|e| self.when_holds(&e.when, &here))
+            .map(|e| e.id.clone())
             .collect(),
             _ => Vec::new(),
         }
