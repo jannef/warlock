@@ -784,6 +784,49 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Trade routes, Credit, Magnate, Golden tongue), and left their levels empty. The adventurers'
     tables come with I1–I3 (#243–#245). Dumps mark them `Haggler (class)`;
     JSON `talents[].class`, `due.bonus`. **Saves change** (`Due::bonus`, `Magic::carried`).
+  - **Prestige classes** (#876, P1 of `docs/design/prestige-classes.md` §4; the owner, PR #835:
+    "not going to be a general multiclass thing. More like prestige classes achievable by
+    finding a 'hidden' mechanism"): a character has **one level**, read off the one curve from
+    their XP as ever, but it stops at their class's **cap**, `ClassDef::max_level`
+    (`data/classes/`, default `data/experience.toml` `[levels] class_max`, 60, so no class
+    changes yet; checked at load: 2 to the curve's top, every `abilities` row and `bonus_talents`
+    level within it), plus a **prestige class's** `levels` once they are called
+    (`Character::level_cap`). A prestige class (`data/prestige/`, `PrestigeDef`: `id`, `name`,
+    `description`, `levels` 1 to 60, `hp`, `mana`, `rolls`, `known_for`, `abilities`,
+    `bonus_talents` at its own levels; never a class's id) is a class in everything a level
+    reads and nothing a creation reads. Levels up to the cap are the class's; each level past
+    it is the prestige class's at its own level (`Character::class_of`: a bard capped at 30
+    called becomes Hunter 1 at total 31, Hunter 30 at 60). **Every per-level read goes through
+    the class of the level** (`content::Table`, the one view of either): hit points (half its
+    `hp` plus Toughness, `World::level_hp(content, level)`), mana (`level_mana`), skill rolls
+    (`roll_count(.., level)`), the bonus pick and its trees (`Table::bonus_at`,
+    `World::bonus_trees_at(level)`: each `Due` keeps its level's trees), and the class abilities
+    table by table (`class::grant` over `Character::class_levels`, at creation, as each level
+    comes, and on a restore); a level-up roll steps up the ladder for a skill **either** class is
+    known for; talent picks (every third level), stat checks, casting (the class's percent of
+    the total level), and the experience factor are unchanged. **The calling** is the door:
+    `CallingDef` (a campaign's `data/callings/`, `content/calling.rs`: `class` a prestige id,
+    `from` the base classes, each named by one calling of a campaign, `level` at least each
+    one's cap, `message`; one outside every campaign is a fixture's and any run's). It is
+    **open** (`World::calling_open`) to a character of a `from` class at that level with no
+    prestige class yet; `World::call` (`world/calling.rs`, the one place a prestige class is
+    given) sets `Character::prestige` (saved, hashed, left out while none; never cleared),
+    says the `message`, and gives **exactly the XP the next level costs** if the bank is short
+    (`add_xp`'s rule, never `grant_xp`'s scaling; a full bank is spent as it is and gives every
+    level it buys), then the level-up (`World::rise_from`) with its hit points, rolls, picks,
+    and the new class's abilities ("Welcome to level 31.", "You gain Spirit weapon."). Unmade's
+    lost level lowers the total and so the prestige level, and gives back as it returns; the
+    choices were made the first time. Who calls: the dev action `call:ID` (`Action::Call`, no
+    time, whatever the level; refused with no such class, one held, or no calling open to the
+    class) now, a dialogue word's `calls` with W1 and C1. The character screen's Class row:
+    `Bard`, `Bard 30` at the cap, `Bard 30, Hunter 4` after; the Characters list's summary the
+    same; the death screen "Here lies Brakka, / a bard and hunter,"; the XP row shows no next
+    level at a cap. Dumps: `stats` `Class Bard 30, Hunter 4`, `progress` (dev) `calling hunter:
+    open` / `level 30 not met` / `not for a thief` / `called hunter at 30`, JSON
+    `character.prestige`, `character.classes`, and with `--state` `callings`. No prestige class
+    ships yet (the Hunter is H1): `data/prestige/README.toml` has the format; the tests'
+    fixture is the Warden, called from a bard capped at 12 (`world/calling_tests.rs`). No new
+    `[[system]]` and no talent: a prestige class is a class. **Saves change** (`Character::prestige`).
   - **Scholar, Grit, Delver** (#240; the design's §7.5 but for the five mana talents, which
     came with #242: Deep well, Clear mind, Meditation, Frugal caster, Blood magic, §8 "Mana"). Their effects share what the class abilities use where the rules
     are the same (`checks` and `stat`: Iron will, +2 on Willpower checks and Presence +1). Iron will is a Grit talent the
@@ -1147,7 +1190,16 @@ developer notes (CLAUDE.md, `docs/dev/`).
     The dark ones answer with a twist (`docs/dev/prayer.md` "The dark face"): the diseases cured
     pass to the nearest creature the priest sees (incubating, unchecked), the poison cured is
     laid on it at its degrees, a released hex is laid on its caster if seen (a hold's holder is
-    Webbed), and the hunger use feeds to one short of Bloated. Remove disease, Purify, Purity of body, Smite, the
+    Webbed), and the hunger use feeds to one short of Bloated. **Sanctuary** (50; `use:sanctuary`, #885): the
+    priest kneels a minute for 30 mana (interrupted as a rest is, nothing is laid) and the
+    ground within two cells of where they knelt is hallowed for an hour: no creature hostile to
+    them steps onto it from outside (one already on it may move about and leave; nothing spawns
+    there; missiles and spells cross it), and whoever stands on it heals and regains mana three
+    times as fast (or a special room's pace, the larger). A blow, shot, throw, or harmful spell
+    of the priest's from on it breaks it ("The peace is broken."); being struck does not. The
+    same rule for both faces, the words differing ("The ground about you is hallowed." / "A
+    dread settles on the ground about you."); no light. Refused, with no time or mana, on the
+    overworld, in water, in a shop, or on hallowed ground. Remove disease, Purify, Purity of body, Smite, the
     reprieve, and Saint left the table (the spell and its scroll stay).
   - **Druid**: Beast-friend (the Wayfarer talent, given; its copy Wild empathy until #790), Spark (level 1, at 1: a bolt, 1d4 electricity;
     1 mana), Barkskin (level 3, at 3: Dodge +2 a minute a degree; 3 mana), Nature's ward
@@ -1214,10 +1266,21 @@ developer notes (CLAUDE.md, `docs/dev/`).
     focus" while short, "You have too little focus." if used), spent as it is loosed and priced
     as one ordinary shot (Rapid shot does not touch it); refused as a shot is, spending
     nothing), Inspire
-    (the bard's, 18: grants Inspiration, §8 "Resources"; Inspired, to hit +1 and Dodge +1 for 5
-    minutes, for 3 inspiration while the bard holds 3, else 3 mana, the time of a chat; no
-    cooldown, the cost is the price: greyed out "you have too little mana",
-    `Unavailable::NoMana`, while the player has neither). Throw your voice (the bard's, 32) is no
+    (the bard's, 18: grants Inspiration, §8 "Resources"; a **song**, #870: Inspired, to hit +1
+    and Dodge +1 for 5 minutes a degree, for 3 inspiration and nothing else (no mana fallback:
+    each song costs one thing), the time of a `song` (500, a chat's); no cooldown, the cost is the
+    price: greyed out "you have too little inspiration", `Unavailable::Short`, while short).
+    **Songs** (`world/song.rs::sing`, the one place a song is sung; the `song` talent effect
+    `{ id, on, status, severity, resource, cost | mana, check, difficulty }`, an active that
+    `ClassActive::sings`): paid in their one cost, heard (`Act::Sing`, a voice of `SONG_NOISE`
+    80 where the singer stands: those who hear it come to look), then the status, `severity`
+    degrees plus Music's `song_degrees` (one more at 50 and at 100, then one more every 100), at
+    most the status's `max` (Inspired and Inspired greatly are `max = 3`: the degrees are time,
+    the bonus stays), then a Presence mark (inspired) and a Music mark (`song`). Refused, no time,
+    on the overworld and while Silenced (`silenced` blocks the `song` action). A song `on =
+    "hearers"` (every hostile hearer checks `check` against `difficulty` plus Music's
+    `song_craft`, +4 at 100, +8 at 200) is data-ready for the Lullaby (#873). Music is
+    `kind = "rules"` (no "not usable yet" row). Throw your voice (the bard's, 32) is no
     longer everyone's: the ability is had by a talent with the `throw_voice` effect (the
     action is refused, "You do not know how to throw your voice.", without it). The thief's
     Lurk (6, #684: `use:lurk`, the time of a wait, no cost and no cooldown: the thief suffers
@@ -1262,8 +1325,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the bard is not trained in, but Sneak attack, trained at 1d4+1 from the `levels` stream in
     file order, `world/jack.rs`, "You find you know a little of everything."; rank 2 at 50,
     "Your Jack of all trades grows.": every trained skill counts 5 higher, as a skill bonus in
-    `Actor::skill_effect`), Virtuoso (Inspire gives Inspired greatly, to
-    hit +2 and Dodge +2 for 10 minutes, for nothing: neither mana nor inspiration).
+    `Actor::skill_effect`), Virtuoso (every song costs nothing and gives a
+    degree more; Inspire gives Inspired greatly, to hit +2 and Dodge +2 for 10 minutes, for
+    nothing: neither mana nor inspiration).
   - **Resources**: the ranger's Focus (R2, #250), the thief's Openings (R3, #251), and the
     bard's Inspiration (R4, #252) are in.
   - **Saves change**: `Quests::prey`, the tally of every type, the statuses `inspired` and

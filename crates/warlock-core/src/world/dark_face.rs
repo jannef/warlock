@@ -12,7 +12,8 @@
 //! - **The brim**: the hunger use feeds to one short of Bloated (in `orison.rs`).
 //!
 //! Every twist is caused by the player (`by`), so a creature that dies of it is a kill of
-//! theirs. Nothing here is a blow.
+//! theirs. Nothing here is a blow, but a twist that reaches a creature breaks the hallow the
+//! player stands in (design §6.4: `World::break_hallow`).
 //!
 //! **Communion** ([`World::communes`]): a holder of the Communion talent within its bands, whom
 //! the dark answers, standing where an unholy effect lies (a cursed, draining, or haunted room,
@@ -53,6 +54,7 @@ impl World {
         for &disease in diseases {
             self.infect(target, disease, Some(self.state.player));
         }
+        self.break_hallow();
     }
 
     /// The poison the prayer cured (`ended`) goes to the nearest creature the player sees, at
@@ -70,6 +72,7 @@ impl World {
                 events,
             );
         }
+        self.break_hallow();
     }
 
     /// The hexes and holds the prayer released (`ended`) are turned on their causes the player
@@ -94,6 +97,7 @@ impl World {
             };
             if let Some(status) = status {
                 self.afflict(by, status, e.severity, Some(player), events);
+                self.break_hallow();
             }
         }
     }

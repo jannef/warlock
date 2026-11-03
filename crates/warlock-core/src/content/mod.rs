@@ -16,6 +16,7 @@ mod background;
 #[cfg(test)]
 mod beast_roster_tests;
 mod calendar;
+mod calling;
 mod campaign;
 mod chest;
 mod circles;
@@ -86,6 +87,7 @@ mod particles;
 mod plural;
 mod potion;
 mod prayer;
+mod prestige;
 mod quest;
 mod quest_roll;
 mod race;
@@ -154,6 +156,7 @@ mod wand;
 mod weapon_ability;
 mod weapon_skill;
 mod weather;
+mod word;
 #[cfg(test)]
 mod yugoloth_roster_tests;
 
@@ -171,6 +174,7 @@ pub use background::{
     Tier as StoryTier, Tiers, When,
 };
 pub use calendar::Calendar;
+pub use calling::{CallingDef, MAX_MESSAGE as MAX_CALLING_MESSAGE};
 pub use campaign::{CAMPAIGNS, CampaignDef, CampaignKind};
 pub use chest::{ChestBand, ChestGold, ChestLoot, ChestRules};
 pub use circles::{CircleStatuses, CircledStatus, school_index};
@@ -246,6 +250,7 @@ pub use particles::{ParticleEmitter, ParticleTrigger};
 pub use plural::{MAX_WORD, Plurals};
 pub use potion::{Draught, Drink, MAX_POTION_MARKS};
 pub use prayer::{Face, FaceWords, Faced, PrayerRules, PrayerUse, UseDef};
+pub use prestige::{MAX_PRESTIGE_LEVELS, PrestigeDef, Table};
 pub use quest::{
     GOLD, Goal, KillTarget, MAX_COUNT, MAX_NAME, MAX_QUEST_XP, MAX_TAG_COUNT, QuestDef, QuestId,
     QuestKind, QuestTexts, Reveal, RevealWhen, Reward,
@@ -269,7 +274,7 @@ pub use room_shrine::{Regard, Shrine};
 pub(crate) use room_treasury::breach_fault;
 pub use room_treasury::{Heaps, MAX_COINS_EACH, MAX_TREASURE, Sealed, SecretDoors, Treasury};
 pub use scenario::ScenarioDef;
-pub use scroll::{Reading, SpellScroll};
+pub use scroll::{Cleansing, Reading, SpellScroll};
 pub use scroll_label::ScrollLabelDef;
 pub use search::{
     PASSIVE_PENALTIES, PassiveSearch, SEARCH_TURNS, SearchRules, Secret, secret_look,
@@ -305,8 +310,8 @@ pub use surprise::SurpriseRules;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
     AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
-    ResourceCost, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
-    TreeDef, TreeId,
+    ResourceCost, SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect,
+    TalentId, TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -328,6 +333,7 @@ pub use weapon_skill::{
 pub use weather::{
     Climate, MAX_CHILL, MAX_SIGHT_LOSS, MAX_SWING, MILD, MILD_SWING, MONTH_TEMPERATURES, WeatherDef,
 };
+pub use word::{Does, MAX_REPLY_LINES, MAX_WORDS, Word};
 
 use crate::dice::Dice;
 use crate::noise::MAX_LOUDNESS;
@@ -687,6 +693,8 @@ pub struct Content {
     /// Names offered to new characters, by race (`data/names.toml`): flavour, not fingerprinted.
     names: Names,
     classes: Vec<ClassDef>,
+    /// The prestige classes (`data/prestige/`), in table order (spec §8 "Prestige classes").
+    prestige: Vec<PrestigeDef>,
     /// The alignment rules (`data/alignment.toml`): none without it.
     alignment: Option<AlignmentRules>,
     experience: Experience,
@@ -757,6 +765,8 @@ pub struct Content {
     quests: Vec<QuestDef>,
     /// Guilds and their ranks (`data/guilds/`, each campaign's too), in table order.
     guilds: Vec<GuildDef>,
+    /// The callings into prestige classes (each campaign's `data/callings/`), in table order.
+    callings: Vec<CallingDef>,
     /// Shops (`data/shops.toml`); none without the file.
     shops: Option<Shops>,
 }
@@ -822,6 +832,7 @@ impl Content {
             races: Races::default(),
             names: Names::default(),
             classes: Vec::new(),
+            prestige: Vec::new(),
             alignment: None,
             experience: Experience::default(),
             horoscope: None,
@@ -857,6 +868,7 @@ impl Content {
             plurals: Plurals::default(),
             quests: Vec::new(),
             guilds: Vec::new(),
+            callings: Vec::new(),
             shops: None,
         };
         content.campaigns = campaign::parse(files)?;
@@ -945,6 +957,13 @@ impl Content {
             let table = files.table("classes");
             content.classes = ClassDef::parse(table, skill_id, &content.weapon_skills)?;
         }
+        // Prestige classes (spec §8 "Prestige classes"): a class in what a level reads.
+        {
+            let skill_id = |id: &str| content.skill_id(id);
+            let is_class = |id: &str| content.class(id).is_some();
+            let table = files.table("prestige");
+            content.prestige = PrestigeDef::parse(table, skill_id, is_class)?;
+        }
         let path = "data/alignment.toml";
         if let Some(text) = files.get_optional(path) {
             content.alignment = Some(AlignmentRules::parse(path, text)?);
@@ -952,6 +971,14 @@ impl Content {
         let path = "data/experience.toml";
         if let Some(text) = files.get_optional(path) {
             content.experience = Experience::parse(path, text)?;
+        }
+        // Each class's highest level: its own, else the experience file's default.
+        let (default, highest) = (
+            content.experience.class_max(),
+            content.experience.max_level(),
+        );
+        for class in &mut content.classes {
+            class.settle_cap(default, highest)?;
         }
         // Statuses before talents, which may name them (a cooldown, a critical's status).
         content.load_statuses(files)?;
@@ -1232,9 +1259,11 @@ impl Content {
         }
         content.quests = quest::parse(files.table("quests"), &content)?;
         content.guilds = guild::parse(files.table("guilds"), &content)?;
+        content.callings = calling::parse(files.table("callings"), &content)?;
         content.encounter_tables = encounter::parse(files.table("encounters"), &content)?;
         content.validate()?;
         content.check_topic_routes()?;
+        content.check_words()?;
         offer::check_placements(&content)?;
         content.check_campaigns()?;
         Ok(content)
@@ -3409,6 +3438,16 @@ impl Content {
         self.classes.iter().find(|c| c.id == id)
     }
 
+    /// The prestige classes of `data/prestige/`, in table order (spec §8 "Prestige classes").
+    pub fn prestiges(&self) -> &[PrestigeDef] {
+        &self.prestige
+    }
+
+    /// The prestige class with id `id`.
+    pub fn prestige(&self, id: &str) -> Option<&PrestigeDef> {
+        self.prestige.iter().find(|p| p.id == id)
+    }
+
     /// The birth sign's gift that is active `active`: the talent of the stars tree with its
     /// effect (its name and description are the abilities menu's; spec §8 "Birth sign").
     pub fn sign_active(&self, active: SignActive) -> Option<&TalentDef> {
@@ -3458,9 +3497,15 @@ impl Content {
         for class in &self.classes {
             class.check_table(&self.talents)?;
         }
+        for prestige in &self.prestige {
+            prestige.check_table(&self.talents)?;
+        }
         let book = &self.talents;
-        let mut given: Vec<TalentId> = (self.classes.iter())
-            .flat_map(|c| c.abilities_to(book, MAX_LEVEL))
+        // A prestige class's abilities are class abilities too.
+        let tables = (self.classes.iter().map(Table::Class))
+            .chain(self.prestige.iter().map(Table::Prestige));
+        let mut given: Vec<TalentId> = tables
+            .flat_map(|t| t.abilities_to(book, MAX_LEVEL))
             .collect();
         given.sort();
         given.dedup();

@@ -26,7 +26,7 @@ hit points a level gives) is `docs/dev/experience.md`.
 | `content/class.rs` (#243) | `ClassActive`, the actives (id = the ability's id, aim, cost); `strip_tables` (tests that load talents of their own). |
 | `world/caster.rs` | `cast_spell` (`Action::Cast`, `use:blessing`, `use:arcane_bolt:12,5`), `Actor::spell_cost`, the strike on the scrolls' shared code, `reprieve` (Hag's bargain, from `hurt`), `lore_blow` (Poison lore, from `resolve`). |
 | `world/racial.rs` | The racial talents (#241): `grants` (a race's `talents`, `data/races.toml`, put in by `stars::grant` before the sign's gifts, through `Talents::regrant`, which now replaces every granted talent outside a class tree), `World::small_target` (Small target's Dodge, from `resolve` after `target_against`, when the attacker's `size_of` is larger). `content/race.rs::check_talents` (at load): a race grants only `granted` talents of the `racial` tree. |
-| `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley and Rage (Inspire, #244, among them); Hardened's hit points are `level_up`'s. |
+| `world/class_ability.rs` | `use_class` (`Action::Use`, `use:rage`, `use:smite:E`), `may_use_class`, and the actives but Volley and Rage (the songs are `world/song.rs`, #870); Hardened's hit points are `level_up`'s. |
 | `world/rage.rs` | The berserker's Rage on the Rage resource (R1, #249): `World::rage` (`grant_resource_with_status`), `World::unstoppable` (from `hurt`). |
 | `world/volley.rs` | `use_class_at` (`Action::UseAt`, a class active aimed at a cell: `use:volley:12,5`) and the ranger's Volley (#244), on 6 Focus (#250). |
 | `world/merchants_eye.rs` | `use_class_on` (`Action::UseOn`, a class active on a stack carried: `use:merchants_eye:c`) and the merchant's Merchant's eye (#816): `World::identify` on the stack for the time of a `read`; no mana, cooldown, check, or limit; refused, no time, for a stack not carried or already known. |
@@ -159,7 +159,7 @@ wiki's effect text appends "while raging".
 | `purify`, `corpse_harmless`, `meal_heals` | `eat.rs`: `eat_rotten` (no sickness, no exposure, no draw), `eat_fresh` (no `on_eat` harm or vomiting, no draw), `meal_heals` from `finish` (an object, or a fresh corpse) |
 | `status_damage` | `World::resolve` → `World::lore_blow` (a hit at a creature suffering the status) |
 | `reprieve` | `World::hurt` → `World::reprieve` (after Rise from the ashes; `Progress::once`) |
-| `inspire`, `virtuoso` | `world/class_ability.rs` (`World::inspire`: `TalentMods::inspiring`, its `instead` resource via `World::spend_resource`, else `World::spend_mana`); `Ability::unavailable` (`Unavailable::NoMana` when the resource falls short too) |
+| `song`, `virtuoso` | `world/song.rs` (`World::sing`: `TalentMods::song`, Virtuoso's free and a degree greater; its one cost via `World::spend_resource` or `World::spend_mana`; `Act::Sing`; the status at `severity` plus Music's `Effect::SongDegrees`); `Ability::unavailable` (`Unavailable::Short` or `NoMana` by its cost) |
 | `volley` | `world/volley.rs` (`Action::UseAt`, `World::use_class_at`; `ClassActive::aims_cell`, `Aim::Cell`; the UI aims it as a shot, `ui/target.rs`) |
 | `merchants_eye` | `world/merchants_eye.rs` (`Action::UseOn`, `World::use_class_on`; `ClassActive::aims_item`, `Aim::Item`, `Ability::action_on`; the UI opens the identify list, `IdentifyBy::Class`) |
 | `favoured_prey` | `World::resolve` → `World::favoured` (`world/ambush.rs`), against `Quests::prey` |
@@ -588,7 +588,7 @@ or Favoured prey. `world/class_tests.rs` covers the grants, bonus picks,
 restores, replays, and every hook; `content::class::tests` the table checks.
 
 A table row may name a **rank** (#872): `{ level = 50, talent = "jack_of_all_trades", rank = 2 }`
-(`ClassDef::abilities` holds `(level, talent, rank)`, default 1; `ClassDef::ranks_to`). The
+(`ClassDef::abilities` and `PrestigeDef::abilities` hold `(level, talent, rank)`, default 1; `Table::ranks_to`; the shared `class::table_rows` and `check_rows`, so a prestige table names ranks too). The
 loader refuses rank 0, a rank past the talent's `ranks` (`check_table`), and a rank of a talent
 named before at the same or a higher rank. `class::grant` gives each rank the table names up to
 the level that the player does not hold, every missing rank below it too (a restore), each with
@@ -596,6 +596,16 @@ its hand-out; the news is "You gain Jack of all trades." for rank 1, "Your Jack 
 grows." for a later one, then the hand-out's own `news`. `held_already` counts a pickable held at
 the rank named or higher. `class_rogue_tests.rs` covers the bard's two ranks, a restore past both,
 and a skill the content adds being taken up.
+
+A class's table stops at its `max_level` (`ClassDef::settle_cap` refuses a row or a bonus level
+past it), and a **prestige class's** table (`data/prestige/`, `PrestigeDef`, #876) is a second
+one at its own levels, read once the character is called (`docs/dev/experience.md` "Prestige
+classes"): `class::grant` walks `Character::class_levels` (every table with the level reached in
+it), `held_already` and the bonus pick of a level read `Character::class_of`, and each `Due`'s
+bonus trees are the class of its level's (`World::bonus_trees_at`). A prestige class's abilities
+are class abilities to the coverage check (`Content::check_class_tables` counts both tables) and
+are marked `(class)` in the dumps like a class's. No prestige class ships yet; the tests' Warden
+(`world/calling_tests.rs`) gives Fencing at its level 1 and Riposte at 2.
 
 ## The trees so far
 

@@ -490,10 +490,21 @@
 #   volley { shots }              the active Volley, aimed at a cell (`use:volley:12,5`): shots
 #                                 (2 to 5) of the readied missile weapon there for the price of
 #                                 one; what it costs is the talent's `resource`
-#   inspire { status, mana, resource, cost }   the active Inspire: it suffers the status, for
-#                                 `cost` of the resource while it holds that much (optional),
-#                                 else for that mana (no cooldown: the cost is the price)
-#   virtuoso { status }           Inspire gives that status instead, and costs nothing
+#   song { id, on, status, severity, resource, cost, mana, check, difficulty }   a song (spec §8
+#                                 "Class abilities", the bard's songs): the class active `id`
+#                                 (`use:inspire`; an active that sings), sung aloud (heard as a
+#                                 voice, louder than a chat) for the time of a `song`, refused on
+#                                 the overworld and while Silenced. It costs ONE thing: `cost`
+#                                 of `resource` (unusable while short) or `mana` (1 to 100); no
+#                                 cooldown, the cost is the price. `on = "self"`: the singer
+#                                 suffers `status` at `severity` (default 1, 1 to 10) degrees
+#                                 plus the singer's Music's song degrees (skills.toml), at most
+#                                 the status's `max`. `on = "hearers"`: each hostile creature
+#                                 that hears it rolls `check` (a stat) against `difficulty` (0 to
+#                                 30) plus the singer's Music's song craft (the Lullaby's, to
+#                                 come); a song on the singer has neither
+#   virtuoso { status }           every song costs nothing and gives a degree more, and a song
+#                                 on the singer gives that status instead
 #   consecrate { mana, time }     the active Consecrate: standing in an unholy special room (or
 #                                 on a level an unholy effect covers), it prays for `time` (1s
 #                                 to 1h) for that mana (0 to 100), and the room's effect (the
@@ -503,6 +514,14 @@
 #                                 level an unholy effect covers), its prayers add no strain and
 #                                 the place's status never touches it, while the dark answers
 #                                 its prayers (docs/dev/prayer.md)
+#   sanctuary { mana, time, radius, lasts, regen }   the active Sanctuary (`use:sanctuary`;
+#                                 world/sanctuary.rs): kneels `time` (10s to 1h) for that mana
+#                                 (1 to 500), then the ground within `radius` (1 to 5) is
+#                                 hallowed for `lasts` (10m to 12h): no hostile steps onto it
+#                                 from outside, and those on it heal and regain mana at `regen`
+#                                 percent (100 to 1000); the player striking from it breaks it;
+#                                 refused, no time, on the overworld, in water, in a shop, or
+#                                 on hallowed ground
 #   prayer { tier, title, uses, answers, all }   the priest's prayer (`use:orison` at every
 #                                 tier; data/prayer.toml, docs/dev/prayer.md): `tier` (1 to 5)
 #                                 with its `title = { holy, dark }` (the tier-1 talent carries

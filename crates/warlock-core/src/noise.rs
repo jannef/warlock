@@ -163,6 +163,9 @@ pub const VOICE_NOISE: u16 = 50;
 /// How loud a howl is where the howler stands (spec §8 "Birth sign": Hound's bay): it carries
 /// well beyond a fight's noise.
 pub const HOWL_NOISE: u16 = 150;
+/// How loud a song is where the singer stands (spec §8 "Class abilities", the bard's songs):
+/// farther than a voice, well short of a howl.
+pub const SONG_NOISE: u16 = 80;
 
 /// Something an actor does that makes noise.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -185,6 +188,8 @@ pub enum Act {
     ThrowVoice(Pos),
     /// Howls, where it stands (Hound's bay).
     Howl,
+    /// Sings a song, where it stands (the bard's songs, `world/song.rs`): a voice.
+    Sing,
     /// Calls an order to its allies, where it stands (spec §8 "Allies"): a voice, as loud as
     /// `[orders] noise` of `data/allies.toml` says.
     Order,
@@ -290,7 +295,7 @@ pub fn noise(
     }
     if matches!(
         act,
-        Act::Mutter | Act::ThrowVoice(_) | Act::Howl | Act::Order
+        Act::Mutter | Act::ThrowVoice(_) | Act::Howl | Act::Sing | Act::Order
     ) {
         return Some(plain);
     }
@@ -358,6 +363,7 @@ pub fn plain_noise(
         Act::Mutter => (SoundKind::Voice, actor.pos, u32::from(VOICE_NOISE)),
         Act::ThrowVoice(at) => (SoundKind::Voice, at, u32::from(VOICE_NOISE)),
         Act::Howl => (SoundKind::Howl, actor.pos, u32::from(HOWL_NOISE)),
+        Act::Sing => (SoundKind::Voice, actor.pos, u32::from(SONG_NOISE)),
         Act::Order => {
             let loudness = content.allies().map_or(VOICE_NOISE, |r| r.order_noise);
             (SoundKind::Voice, actor.pos, u32::from(loudness))

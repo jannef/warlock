@@ -185,9 +185,9 @@ fn treasure_hunter_asks_for_either_of_two() {
 #[test]
 fn quick_learner_brings_a_roll_more_every_level() {
     let mut w = world();
-    let rolls = w.level_rolls();
+    let rolls = w.level_rolls(w.player_level());
     give(&mut w, "quick_learner");
-    assert_eq!(w.level_rolls(), rolls + 1);
+    assert_eq!(w.level_rolls(w.player_level()), rolls + 1);
 }
 
 #[test]

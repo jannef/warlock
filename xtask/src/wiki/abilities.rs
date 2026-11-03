@@ -85,6 +85,18 @@ pub(super) fn abilities(content: &Content) -> String {
                     .unwrap_or_default();
                 (aim(a.aim(content)), format!("{time} (a prayer)"))
             }
+            // A long action too: the rite's kneeling.
+            Some(_) if a == Ability::Class(ClassActive::Sanctuary) => {
+                let book = content.talents();
+                let time = (book.id("sanctuary").into_iter())
+                    .flat_map(|t| book.get(t).effects.iter())
+                    .find_map(|e| match e {
+                        TalentEffect::Sanctuary { time, .. } => Some(time.clone()),
+                        _ => None,
+                    })
+                    .unwrap_or_default();
+                (aim(a.aim(content)), format!("{time} (a rite)"))
+            }
             // A place's: its outcome table's time.
             Some(_) if place_seconds(content, a).is_some() => {
                 let seconds = place_seconds(content, a).unwrap_or_default();

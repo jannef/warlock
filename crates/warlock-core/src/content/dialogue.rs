@@ -12,7 +12,8 @@
 //! as they ask) asked about on the dialogue screen, optional `[[dialogue.service]]`s (`id`, `name`,
 //! `price`, `does`, `reply`, `nothing`: a cure or a mending for gold, asked for like a topic;
 //! `world/service.rs`), an optional `[dialogue.offer]` (one item at a fixed price, asked for
-//! like a topic; `content/offer.rs`, `world/wares.rs`), and an optional `mutter`: the percent chance per
+//! like a topic; `content/offer.rs`, `world/wares.rs`), optional `[[dialogue.word]]`s with
+//! `unheard`, `speaks_to`, and `silent` (words the player may say to it; `content/word.rs`), and an optional `mutter`: the percent chance per
 //! action that it mutters one of the mutter's `lines` (with a `verb`, "mutters" by default) while
 //! the player is near enough to hear it.
 
@@ -63,6 +64,11 @@ struct DialogueSpec {
     #[serde(default)]
     service: Vec<Service>,
     offer: Option<super::offer::OfferSpec>,
+    #[serde(default)]
+    word: Vec<super::word::WordSpec>,
+    unheard: Option<String>,
+    speaks_to: Option<crate::alignment::Requirement>,
+    silent: Option<String>,
     mutter: Option<MutterSpec>,
 }
 
@@ -192,6 +198,14 @@ pub struct Dialogue {
     pub services: Vec<Service>,
     /// The one item it offers for a fixed price, listed after the services (`world/wares.rs`).
     pub offer: Option<super::TradeOffer>,
+    /// The words the player may say to it (`content/word.rs`, `world/words.rs`).
+    pub words: Vec<super::Word>,
+    /// What it says to words it does not know; `None`: "NAME says nothing."
+    pub unheard: Option<String>,
+    /// The alignment bands it talks to; `None`: everyone. Outside them it says `silent`.
+    pub speaks_to: Option<crate::alignment::Requirement>,
+    /// What it does for a character outside `speaks_to`: "The spirit looks through you."
+    pub silent: Option<String>,
     pub mutter: Option<Mutter>,
     /// The campaign whose `data/dialogue/` it is in; `None` for shared ones (the shopkeeper's)
     /// and those outside every campaign.
@@ -394,6 +408,14 @@ fn parse_file<'a>(
             }
             None => None,
         };
+        let words = super::word::resolve(
+            spec.word,
+            spec.unheard,
+            spec.speaks_to,
+            spec.silent,
+            &speaker,
+        )
+        .map_err(bad)?;
         let mutter = match spec.mutter {
             Some(m) => {
                 if !MUTTER_CHANCES.contains(&m.chance) {
@@ -429,6 +451,10 @@ fn parse_file<'a>(
             topics: spec.topic,
             services: spec.service,
             offer,
+            words: words.words,
+            unheard: words.unheard,
+            speaks_to: words.speaks_to,
+            silent: words.silent,
             mutter,
             campaign: campaign.clone(),
         });

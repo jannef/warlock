@@ -81,7 +81,9 @@ last (`docs/dev/merging.md`). An incompatible `WorldState` change, or adding or 
 terrain, creatures, lights, levels, objects, equipment slots, skills, weapon skills (fighting
 styles too), statuses, diseases, traps, or dungeon branches, invalidates development saves of
 the same version too (affixes are saved by id: adding them does not, removing one a save uses
-does); say so in the PR.
+does); say so in the PR. A new optional field (`Character::prestige`, #876: `#[serde(default,
+skip_serializing_if)]`) changes nothing a save from before holds; prestige classes and callings
+are not fingerprinted (they are read by id).
 
 **Permadeath**: when the player dies, `screens::on_death` deletes that character's files, and no
 other character's (`SaveStore::delete_character(&game.save_id)`: its save, summary, and snapshot)

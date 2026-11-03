@@ -468,7 +468,7 @@ fn hardened_and_mighty_thews() {
     assert!(w.state.player().talents.has("hardened", 1));
     let at_50 = w.state.player().max_hp(&content);
     reach(&mut w, 51);
-    let per_level = w.level_hp(&content);
+    let per_level = w.level_hp(&content, 51);
     assert_eq!(w.state.player().max_hp(&content), at_50 + per_level + 3);
 }
 

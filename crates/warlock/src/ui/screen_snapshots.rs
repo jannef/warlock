@@ -649,7 +649,7 @@ const CASES: &[Case] = &[
         ..BASE
     },
     // A bard of level 32 with too little mana (#244): Throw your voice aimed at a place, Inspire
-    // greyed out for mana.
+    // greyed out for inspiration (a song costs one thing, #870), Music no row (read by rules).
     Case {
         name: "abilities-menu-bard",
         character: Some("human,female,bard"),
@@ -1236,6 +1236,36 @@ fn quest_refused_as_too_early() {
         ..BASE
     };
     insta::assert_snapshot!(case.name, render(&case, content));
+}
+
+/// The hermit knowing a word (`[[dialogue.word]]`, #878), which the showcase's content does
+/// not give him: the dialogue screen's Say row under his topics, the say field open, the field
+/// with words typed in it, and his reply once they are said.
+#[test]
+fn saying_words() {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    let path = "campaigns/showcase/data/dialogue/showcase.toml";
+    let dialogue =
+        include_str!("../../../../assets/campaigns/showcase/data/dialogue/showcase.toml");
+    let word = "\n[[dialogue.word]]\nphrase = \"Hello\"\nreply = [\"Hm. Hello yourself.\"]\n";
+    files.insert(path, &format!("{dialogue}{word}"));
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let cases = [
+        ("dialogue-say-row", None),
+        ("dialogue-say-field", Some("s")),
+        ("dialogue-say-field-typed", Some("s H e l")),
+        ("dialogue-say-reply", Some("s H e l l o Enter")),
+    ];
+    for (name, keys) in cases {
+        let case = Case {
+            name,
+            actions: concat!(hermit!(), " chat:SE"),
+            screen: Some("dialogue"),
+            keys,
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
 }
 
 /// The built-in content with an encounter table in the showcase campaign (which ships none):

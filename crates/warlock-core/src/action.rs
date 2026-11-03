@@ -105,6 +105,14 @@ pub enum Action {
         dir: Dir,
         topic: String,
     },
+    /// Say words to the creature in a direction (spec §8 "Dialogue", "Saying words";
+    /// `world/words.rs`): it answers what it knows of them, or its `unheard` line. `words` are
+    /// normalised (`words::normalise`); the text joins them with `_` (`say:E:life_before_death`).
+    /// Takes the time of `chat` whether heard or not; refused (no time) as a chat is.
+    Say {
+        dir: Dir,
+        words: String,
+    },
     /// Try to steal from the creature in a direction (spec §8 "Stealing"): one stack of what it
     /// carries and neither wears nor wields, if the player's Dexterity and Steal skill beat its
     /// Willpower; caught, it turns on them. Takes the time of `steal`; refused (no time) when the
@@ -332,6 +340,13 @@ pub enum Action {
     /// Dev command: the player gains this much experience, and any levels it brings (spec §8
     /// "Experience"), for tests and captures. Takes no game time; recorded in replays.
     GrantXp(u32),
+    /// Dev command: the player is called into prestige class `ID` (spec §8 "Prestige
+    /// classes") now, whatever their level, through the calling of the run's campaign that
+    /// opens it to their class, as saying its words would: the class is theirs, and the
+    /// experience the first prestige level costs with it. Refused with no such prestige class,
+    /// one held already, or no calling open to their class. For tests and captures. Takes no
+    /// game time; recorded in replays.
+    Call(String),
     /// Dev command: the player's rank in weapon skill or fighting style `skill` (an id in
     /// `data/weapon_skills.toml`) becomes `rank` (0 to 10), its marks starting from 0, as a
     /// rank risen would (the skills it raises by default rise too, and what the ranks teach is
@@ -828,6 +843,7 @@ impl fmt::Display for Action {
             Action::Encounter(choice) => write!(f, "encounter:{}", choice.id()),
             Action::Chat(d) => write!(f, "chat:{d}"),
             Action::Ask { dir, topic } => write!(f, "ask:{dir}:{topic}"),
+            Action::Say { dir, words } => write!(f, "say:{dir}:{}", words.replace(' ', "_")),
             Action::Steal(d) => write!(f, "steal:{d}"),
             Action::Intimidate(at) => write!(f, "intimidate:{},{}", at.x, at.y),
             Action::ThrowVoice(at) => write!(f, "throw_voice:{},{}", at.x, at.y),
@@ -864,6 +880,7 @@ impl fmt::Display for Action {
             Action::Advance(skill) => write!(f, "advance:{skill}"),
             Action::LevelUpAuto => f.write_str("levelup:auto"),
             Action::GrantXp(xp) => write!(f, "xp:{xp}"),
+            Action::Call(id) => write!(f, "call:{id}"),
             Action::SetRank { skill, rank } => write!(f, "rank:{skill}:{rank}"),
             Action::SetVision(id) => write!(f, "vision:{id}"),
             Action::SkipTime(d) => write!(f, "skip:{d}"),
@@ -941,6 +958,18 @@ impl FromStr for Action {
                 Ok(Action::Ask {
                     dir: dir.parse().map_err(|_| usage())?,
                     topic: topic.to_string(),
+                })
+            }
+            "say" => {
+                let usage = || "`say` needs a direction and words, e.g. `say:E:hello`".to_string();
+                let (dir, words) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
+                let words = crate::words::normalise(&words.replace('_', " "));
+                if words.is_empty() {
+                    return Err(usage());
+                }
+                Ok(Action::Say {
+                    dir: dir.parse().map_err(|_| usage())?,
+                    words,
                 })
             }
             "steal" => dir().map(Action::Steal),
@@ -1290,6 +1319,10 @@ impl FromStr for Action {
                 Some(xp) if xp > 0 => Ok(Action::GrantXp(xp)),
                 _ => Err("`xp` needs a number of experience points, e.g. `xp:2500`".into()),
             },
+            "call" => match s.split_once(':').map(|(_, id)| id) {
+                Some(id) if !id.is_empty() && !id.contains(':') => Ok(Action::Call(id.to_string())),
+                _ => Err("`call` needs a prestige class id, e.g. `call:hunter`".into()),
+            },
             "vision" => match s.split_once(':').map(|(_, id)| id) {
                 Some(id) if !id.is_empty() => Ok(Action::SetVision(id.to_string())),
                 _ => Err("`vision` needs a profile id, e.g. `vision:darkvision`".into()),
@@ -1617,6 +1650,7 @@ mod tests {
             Action::CastOn("identify".into(), 30),
             Action::LevelUpAuto,
             Action::GrantXp(2500),
+            Action::Call("hunter".into()),
             Action::SetRank {
                 skill: "twin_blades".into(),
                 rank: 4,
@@ -1632,6 +1666,14 @@ mod tests {
             Action::Ask {
                 dir: Dir::S,
                 topic: "quest-rats".into(),
+            },
+            Action::Say {
+                dir: Dir::E,
+                words: "life before death".into(),
+            },
+            Action::Say {
+                dir: Dir::NW,
+                words: "ǣþelstān".into(),
             },
             Action::Search(1),
             Action::Search(10),
@@ -1843,6 +1885,14 @@ mod tests {
                 }
             ])
         );
+        // Words are normalised as they are parsed, so any spelling of them is one action.
+        assert_eq!(
+            parse_actions("SAY:e:Life_BEFORE__death!"),
+            Ok(vec![Action::Say {
+                dir: Dir::E,
+                words: "life before death".into()
+            }])
+        );
         assert_eq!(
             parse_actions("FIRE:3,4 throw:B:10,2"),
             Ok(vec![
@@ -1972,6 +2022,11 @@ mod tests {
             "ask:E:",
             "ask:up:rooms",
             "ask:E:a:b",
+            "say",
+            "say:E",
+            "say:E:",
+            "say:E:_!_",
+            "say:up:hello",
             "dig",
             "dig:",
             "dig:down",

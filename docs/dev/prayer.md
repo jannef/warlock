@@ -3,7 +3,8 @@
 The priest's one prayer (#883, the priest design `docs/design/priest.md` §5, §6.1; spec §8i
 "Class abilities"): a class active given at level 1 that answers what ails the priest most, as
 far as their prayer talents reach, under a hidden strain. The dark powers' twists (§6.2) and
-Communion with the dark (§6.3) came with #884; Sanctuary (§6.4) is a later slice.
+Communion with the dark (§6.3) came with #884; Sanctuary (§6.4, #885), the priest's 50, is
+hallowed ground: `docs/dev/special-rooms.md` "Hallowed ground".
 
 ## Modules
 

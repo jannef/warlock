@@ -44,7 +44,7 @@ otherwise you can still use them, and nothing happens. The passives do not care.
 [ranger](classes.md#ranger)'s [rapid shot](talents.md#talent-rapid-shot) and [volley](abilities.md#ability-volley) on [focus](resources.md#resource-focus) (see [Resources](resources.md)); the
 [thief](classes.md#thief)'s [sneak attacks](talents.md#talent-sneak-attack) build [openings](resources.md#resource-openings), which [low blow](abilities.md#ability-low-blow) and [master thief](abilities.md#ability-master-thief)'s finisher spend; the
 [ascetic](classes.md#ascetic)'s [flurry](talents.md#talent-flurry), [stunning strike](abilities.md#ability-stunning-strike), and [quivering palm](abilities.md#ability-quivering-palm) run on [ki](resources.md#resource-ki), and the [bard](classes.md#bard)'s [inspire](abilities.md#ability-inspire) spends
-[inspiration](resources.md#resource-inspiration) when the bard has enough.
+[inspiration](resources.md#resource-inspiration).
 
 The spells a class gives (the [priest](classes.md#priest)'s, [druid](classes.md#druid)'s, [wizard](classes.md#wizard)'s, and [witch](classes.md#witch)'s few, a [bard](classes.md#bard)'s, a
 [paladin](classes.md#paladin)'s, or a [ranger](classes.md#ranger)'s one or two; see [What your class gives](magic.md#what-your-class-gives))
@@ -82,6 +82,10 @@ while you are Callous or worse: standing in a [cursed](special-rooms.md#room-cur
 [draining](special-rooms.md#room-draining), or [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over,
 your prayers add no strain, and the place's drain ([Ebbing](status-effects.md#status-ebbing)) never touches you.
 
+The priest's **[Sanctuary](abilities.md#ability-sanctuary)** (level 50, 30 [mana](mana.md#spending-it), a minute's kneeling) hallows the ground about them
+for an hour: hostile creatures keep off it and whoever stands on it heals and gets mana back
+three times as fast, until the priest strikes from it (see [Special rooms](special-rooms.md#hallowed-ground)).
+
 The [wizard](classes.md#wizard)'s **[Knock](abilities.md#ability-knock)** (from level 4, 5 [mana](mana.md#spending-it)) springs the lock of the [locked door](doors.md#locked-doors) or chest in a
 direction; nothing opens by itself (see [Chests](chests.md#locked-chests)).
 
@@ -91,8 +95,12 @@ more often. A **[volley](abilities.md#ability-volley)** looses three shots of yo
 at, one after another, for the time of one ordinary shot; it stops early when you run out, and
 costs 6 [focus](resources.md#resource-focus). **[Rapid shot](talents.md#talent-rapid-shot)** gives you focus (10, full); every shot you loose while you have
 at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and with less it is an ordinary shot. The [bard](classes.md#bard)'s
-**[inspire](abilities.md#ability-inspire)** costs 3 [inspiration](resources.md#resource-inspiration) when you hold 3, else 3 [mana](mana.md#spending-it), and can be sung again while it
-lasts (it starts over); a virtuoso's costs nothing at all, and keeps the inspiration.
+**[inspire](abilities.md#ability-inspire)** is a song: it costs 3 [inspiration](resources.md#resource-inspiration) and nothing else (with less you cannot sing it), takes
+as long as a chat, is [heard](hearing.md#what-makes-noise) as a voice of loudness 80 where you stand, and is refused on the
+[overworld](overworld.md#travel) and while [silenced](status-effects.md#status-silenced). It lifts you for 5 minutes a degree: one degree, two with
+[Music](skills.md#skill-music) 50, three with Music 100 (more degrees last longer; the bonus stays the same). It can be
+sung again while it lasts (it starts over). A [virtuoso](talents.md#talent-virtuoso)'s songs cost nothing at all and give a
+degree more.
 
 The bard knows a little of everything. **[Travelled hands](talents.md#talent-travelled-hands)** raises every
 [weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) the bard has at rank 0 to rank 1, once (never a

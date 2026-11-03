@@ -5,8 +5,8 @@ spec/08e-blood-and-status.md ("Mana"). Keep it current with the code, as CLAUDE.
 
 Mana (spec §8 "Mana", #223) is a second pool beside hit points, built the same way, for magic to
 spend (the progression design, #220, gives classes mana values, per-level gains, and talents that
-cost or raise it, #242). Spells (`world/cast.rs`, docs/dev/spells.md), rods, the bard's inspire,
-and creatures' summons spend it, all through `World::spend_mana`. **Every new system says in its
+cost or raise it, #242). Spells (`world/cast.rs`, docs/dev/spells.md), rods, a song paid in mana
+(none yet; the Lullaby's, #873), and creatures' summons spend it, all through `World::spend_mana`. **Every new system says in its
 issue how it interacts with mana**, and hooks in at the one place below.
 
 - **Pure rules**: `warlock-core/src/mana.rs`: `max_mana(stats, base)` (base plus the mental

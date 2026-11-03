@@ -4,9 +4,10 @@
 use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
-    Content, Faced, Need, OverTime, PrayerUse, Role, SignActive, SpellData, SpellModSpec, StatusId,
-    TalentDef, TalentEffect, TreeId,
+    Content, Faced, Need, OverTime, PrayerUse, Role, SignActive, SongOn, SpellData, SpellModSpec,
+    StatusId, TalentDef, TalentEffect, TreeId,
 };
+use warlock_core::noise::SONG_NOISE;
 
 /// Every tree in display order: a heading, its description, and its talents (name, ranks, what
 /// each rank needs, what it does as the rule, and the systems it touches).
@@ -473,7 +474,8 @@ fn buff(content: &Content, id: &str) -> String {
         .filter(|(_, v)| *v != 0)
         .map(|(what, v)| format!("{what} {}", signed(*v)))
         .collect();
-    said.extend(s.eases.map(|e| format!("{} min", e / 60)));
+    let each = if s.max > 1 { " a degree" } else { "" };
+    said.extend(s.eases.map(|e| format!("{} min{each}", e / 60)));
     format!("{} ({})", s.name, said.join(", "))
 }
 
@@ -1801,32 +1803,66 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "active (the time of one shot, one exertion), at a cell: {shots} shots of the readied \
              missile weapon"
         ),
-        TalentEffect::Inspire {
+        TalentEffect::Song {
+            on,
             status: id,
-            mana,
+            severity,
             resource,
             cost,
+            mana,
+            check,
+            difficulty,
+            ..
         } => {
             let price = match resource {
-                Some(r) => format!(
-                    "{cost} {} while you hold that much, else {mana} mana",
-                    resource_name(content, &r).to_lowercase()
-                ),
+                Some(r) => format!("{cost} {}", resource_name(content, &r).to_lowercase()),
                 None => format!("{mana} mana"),
             };
+            let degrees = match severity {
+                1 => "1 degree".to_string(),
+                n => format!("{n} degrees"),
+            };
+            let whom = match (on, check) {
+                (SongOn::Hearers, Some(stat)) => format!(
+                    "each hostile creature that hears it checks {} against {difficulty} plus \
+                     your Music's song difficulty; failed, it suffers",
+                    stat.name()
+                ),
+                _ => "you suffer".to_string(),
+            };
             format!(
-                "active (the time of a chat), {price}: {}",
+                "active, a song (the time of a song, heard as a voice of loudness {SONG_NOISE}; \
+                 not on the overworld or while silenced), {price}: {whom} {} at {degrees}, plus \
+                 your Music's song degrees",
                 buff(content, &id)
             )
         }
-        TalentEffect::Virtuoso { status: id } => {
-            format!("Inspire gives {} instead, for nothing", buff(content, &id))
-        }
+        TalentEffect::Virtuoso { status: id } => format!(
+            "every song costs nothing and gives a degree more; a song on yourself gives {} instead",
+            buff(content, &id)
+        ),
         TalentEffect::Consecrate { mana, time } => format!(
             "active ({time} of prayer, for {mana} mana; interrupted as a rest is, it lifts \
              nothing): standing in a cursed or draining room, it becomes a plain room for good; \
              on a level a curse or a drain covers whole, the whole level's is lifted instead. \
              A good deed (see Alignment). Anywhere else it is refused, with no time spent"
+        ),
+        TalentEffect::Sanctuary {
+            mana,
+            time,
+            radius,
+            lasts,
+            regen,
+        } => format!(
+            "active ({time} of kneeling, for {mana} mana; interrupted as a rest is, it lays \
+             nothing): the ground within {radius} cells of where the player knelt is hallowed \
+             for {lasts}. No creature hostile to them steps onto it from outside (one already \
+             on it may move about and leave; nothing spawns there; missiles and spells cross \
+             it), and whoever stands on it heals and regains mana at {regen} % of the pace, or \
+             a special room's, the larger. A blow, shot, throw, or harmful spell of the \
+             player's from on it breaks it; being struck does not. The same for either face of \
+             the prayer (dreaded ground for the dark: the words alone). Refused, with no time \
+             spent, on the overworld, in water, in a shop, or on hallowed ground"
         ),
         TalentEffect::Prayer {
             tier,

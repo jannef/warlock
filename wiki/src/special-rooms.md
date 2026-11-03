@@ -272,6 +272,22 @@ stops as soon as it comes into view, as it would for anyone. It carries nothing 
 own [experience](experience.md). Rest outside the room, even just beside its door, and nothing comes. [Consecrate](abilities.md#ability-consecrate)
 (above) lifts the haunting for good.
 
+## Hallowed ground
+
+Not a room but a place a [priest](classes.md#priest) makes: [Sanctuary](abilities.md#ability-sanctuary), the priest's ability at level 50, is a
+minute's kneeling for 30 [mana](mana.md#spending-it) (anything that would stop a [rest](resting.md#how-resting-works) stops it, and then nothing
+is hallowed, the mana spent). Done, every cell within 2 of where you knelt (a 5 by 5 square) is
+hallowed ground for an hour. Creatures [hostile](creatures.md#factions) to you do not step onto it, as into a
+sanctuary: one already standing on it when it was laid may move about on it and leave, but not
+come back. Nothing new comes to the level there. Arrows and spells still cross it. Whoever stands
+on it [heals](healing.md#how-fast) and gets [mana back](mana.md#how-fast-it-comes-back) three times as fast (in a sanctuary room, the faster of the two:
+they do not add up). Strike from it (a blow, a shot, a throw, or a spell that hits someone) and
+the peace is broken: the ground is ordinary again. Being struck while on it breaks nothing.
+Look at a cell of it and it reads "on hallowed ground"; a priest answered by the dark powers
+(see [Classes](classes.md#priest)) lays "dreaded ground" instead, which works the same. It gives no light, and
+it cannot be laid on the overworld, in water, in a shop, or on ground already hallowed (no time
+or mana spent).
+
 ## Forgotten altars
 
 An altar room holds a **forgotten altar**: worn stone, its carvings rubbed smooth, its god's name

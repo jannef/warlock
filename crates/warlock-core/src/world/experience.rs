@@ -90,10 +90,21 @@ impl Discovered {
 }
 
 impl World {
-    /// The player's level (spec §8 "Experience").
+    /// The player's level (spec §8 "Experience"): off the curve, at most their classes' cap
+    /// ([`World::level_cap`]).
     pub fn player_level(&self) -> u8 {
         let factor = self.experience_factor();
-        (self.content.experience()).level_for(self.state.experience, factor)
+        (self.content.experience()).level_for(self.state.experience, factor, self.level_cap())
+    }
+
+    /// The highest level the player may reach now (spec §8 "Prestige classes"): their class's
+    /// `max_level` plus a prestige class's levels once called; the curve's top without a
+    /// character.
+    pub fn level_cap(&self) -> u8 {
+        match &self.state.character {
+            Some(c) => c.level_cap(&self.content),
+            None => self.content.experience().max_level(),
+        }
     }
 
     /// The player's experience total.
@@ -185,18 +196,26 @@ impl World {
     /// The player gains exactly `gain` experience, and any levels that earns (no talent
     /// scales it: [`World::grant_xp`] has).
     pub(super) fn add_xp(&mut self, gain: u32) {
-        let content = self.content.clone();
-        let rules = content.experience();
         let before = self.player_level();
         self.state.experience = self.state.experience.saturating_add(gain);
+        self.rise_from(before);
+    }
+
+    /// The player was at level `before` and their experience or their cap has changed: every
+    /// level they have now reached beyond it comes, with its hit points (up to `hp_level`, each
+    /// by the class of the level), its mana, its news, and what the level hands out
+    /// ([`World::level_up`]). Nothing when they are still at `before`.
+    pub(super) fn rise_from(&mut self, before: u8) {
+        let content = self.content.clone();
+        let rules = content.experience();
         let after = self.player_level();
-        if after == before {
+        if after <= before {
             return;
         }
-        let grown = (before + 1..=after)
+        let hp: i32 = (before + 1..=after)
             .filter(|&l| l <= rules.hp_level())
-            .count();
-        let hp = i32::try_from(grown).unwrap_or(0) * self.level_hp(&content);
+            .map(|l| self.level_hp(&content, l))
+            .sum();
         if let Some(player) = self.state.actors.get_mut(&self.state.player) {
             player.hp_base += hp;
             player.hp += hp;
@@ -207,11 +226,14 @@ impl World {
         self.level_up(before, after);
     }
 
-    /// What one level adds to the player's hit points: half the class's hit points (the
-    /// scenario's `hp` without a character) plus the Toughness modifier, at least 1.
-    pub(super) fn level_hp(&self, content: &Content) -> i32 {
+    /// What total level `level` adds to the player's hit points: half the hit points of the
+    /// class the level falls in (spec §8 "Prestige classes"; the scenario's `hp` without a
+    /// character) plus the Toughness modifier, at least 1.
+    pub(super) fn level_hp(&self, content: &Content, level: u8) -> i32 {
         let class_hp = match &self.state.character {
-            Some(c) => c.spec.class(content).map_or(0, |class| class.hp),
+            Some(c) => c
+                .class_of(content, level)
+                .map_or(0, |(table, _)| table.hp()),
             None => content
                 .scenario(&self.state.scenario)
                 .map_or(0, |s| i32::from(s.hp)),

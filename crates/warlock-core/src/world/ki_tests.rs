@@ -2,7 +2,7 @@
 //! R4, #252; the ki tricks design, #846): Martial arts grants Ki at level 1, its maximum grows
 //! with Willpower and the level, Flurry's second blows spend a point each from level 1, Quivering
 //! palm costs five instead of a cooldown, Perfect self brings it back twice as fast, Inspire
-//! grants Inspiration and spends three of it in place of its mana when they are held, and
+//! grants Inspiration and spends three of it (the songs themselves are `song_tests.rs`'s), and
 //! Virtuoso's song costs nothing.
 
 use super::class_active_tests::{at_normal_speed, beside, last, reach, run, suffers, world};
@@ -193,7 +193,7 @@ fn quivering_palm_costs_five_ki_and_no_cooldown() {
 }
 
 #[test]
-fn inspire_spends_inspiration_in_place_of_mana() {
+fn inspire_spends_inspiration() {
     let mut w = fresh("bard");
     reach(&mut w, 17);
     assert_eq!(
@@ -208,11 +208,6 @@ fn inspire_spends_inspiration_in_place_of_mana() {
         "Inspire: Inspiration, empty"
     );
     let inspire = Ability::Class(ClassActive::Inspire);
-    // Without enough inspiration it costs mana, as before.
-    w.player_mut().mana = 10;
-    run(&mut w, "use:inspire");
-    assert_eq!(w.state.player().mana, 7);
-    assert!(suffers(&w, w.state.player, "inspired"));
     // A kill of the bard's own builds a point.
     let player = w.state.player;
     w.gain_resource(player, Build::Kill);
@@ -228,10 +223,12 @@ fn inspire_spends_inspiration_in_place_of_mana() {
         (held(&w, "inspiration"), w.state.player().mana),
         (Some(0), 0)
     );
-    // Two inspiration and too little mana: neither pays.
+    assert!(suffers(&w, w.state.player, "inspired"));
+    // Two inspiration and plenty of mana: no song (one cost, no fallback).
     set(&mut w, "inspiration", 2);
-    w.player_mut().mana = 2;
-    assert_eq!(own(&w, inspire), Some(Some(Unavailable::NoMana)));
+    w.player_mut().mana = 20;
+    let short = Unavailable::Short(resource(&w, "inspiration"));
+    assert_eq!(own(&w, inspire), Some(Some(short)));
     // Virtuoso: a greater song for nothing, the inspiration kept.
     reach(&mut w, 60);
     set(&mut w, "inspiration", 5);

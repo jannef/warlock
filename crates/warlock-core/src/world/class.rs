@@ -13,6 +13,7 @@
 //! is identified ([`World::appraise_carried`]).
 
 use super::{Actor, World, focus};
+use crate::character::Character;
 use crate::content::{Content, Role, TalentDef, TalentEffect, TalentId};
 use crate::talent::TalentMods;
 
@@ -68,51 +69,55 @@ fn handed_news(def: &TalentDef, rank: u8) -> Vec<String> {
         .collect()
 }
 
-/// Gives `actor` the talents `class` (an id; none without a class) gives up to `level` at the
-/// ranks it names that it does not hold yet, each rank with what it hands out: a rank the table
-/// names comes to one holding the rank below, and every rank missing below it comes with it (a
-/// restore); returns each rank given, `(talent, rank)`, in table order.
+/// Gives `actor` (of `character`; none without one) the talents their classes give up to total
+/// level `level` at the ranks they name that it does not hold yet, table by table (the class's
+/// to its cap, a prestige class's to its own level; spec §8 "Prestige classes"), each rank with
+/// what it hands out: a rank a table names comes to one holding the rank below, and every rank
+/// missing below it comes with it (a restore); returns each rank given, `(talent, rank)`, in
+/// table order.
 pub(super) fn grant(
     content: &Content,
-    class: Option<&str>,
+    character: Option<&Character>,
     actor: &mut Actor,
     level: u8,
 ) -> Vec<(TalentId, u8)> {
-    let Some(class) = class.and_then(|c| content.class(c)) else {
+    let Some(character) = character else {
         return Vec::new();
     };
     let book = content.talents();
     let mut given = Vec::new();
-    for (id, rank) in class.ranks_to(book, level) {
-        let def = book.get(id);
-        for r in actor.talents.rank_of(&def.id, None) + 1..=rank {
-            actor.talents.take(&def.id, None);
-            hand_out(content, actor, def, r, level);
-            given.push((id, r));
+    for (table, own) in character.class_levels(content, level) {
+        for (id, rank) in table.ranks_to(book, own) {
+            let def = book.get(id);
+            for r in actor.talents.rank_of(&def.id, None) + 1..=rank {
+                actor.talents.take(&def.id, None);
+                hand_out(content, actor, def, r, level);
+                given.push((id, r));
+            }
         }
     }
     given
 }
 
-/// The talents `class` (an id) gives at exactly `level` that `actor` already holds: a pickable
-/// the table names (Fast healer, Beast-friend, Evasion, Riposte) that the player took as a pick
-/// before the class gave it. Each brings a talent pick in its place (#790), so a pick made
-/// early is never lost to the table.
+/// The talents the class of total level `level` gives at exactly that level that `actor`
+/// already holds: a pickable the table names (Fast healer, Beast-friend, Evasion, Riposte) that
+/// the player took as a pick before the class gave it. Each brings a talent pick in its place
+/// (#790), so a pick made early is never lost to the table.
 pub(super) fn held_already(
     content: &Content,
-    class: Option<&str>,
+    character: Option<&Character>,
     actor: &Actor,
     level: u8,
 ) -> Vec<TalentId> {
-    let Some(class) = class.and_then(|c| content.class(c)) else {
+    let Some((table, own)) = character.and_then(|c| c.class_of(content, level)) else {
         return Vec::new();
     };
     let book = content.talents();
     if !book.has_class_tree() {
         return Vec::new();
     }
-    (class.abilities.iter())
-        .filter(|(l, _, _)| *l == level)
+    (table.abilities().iter())
+        .filter(|(l, _, _)| *l == own)
         .filter_map(|(_, id, rank)| book.id(id).map(|t| (t, *rank)))
         .filter(|&(id, rank)| actor.talents.rank_of(&book.get(id).id, None) >= rank)
         .map(|(id, _)| id)
@@ -120,17 +125,12 @@ pub(super) fn held_already(
 }
 
 impl World {
-    /// The player's class's id, if the run has a character.
-    fn class_id(&self) -> Option<String> {
-        (self.state.character.as_ref()).map(|c| c.spec.class.clone())
-    }
-
-    /// Gives the player what their class gives up to `level` that they lack ([`grant`]); with
+    /// Gives the player what their classes give up to `level` that they lack ([`grant`]); with
     /// `news`, each is news of the level ("You gain Fencing.").
     pub(super) fn grant_class(&mut self, level: u8, news: bool) {
         let content = self.content.clone();
-        let class = self.class_id();
-        let given = grant(&content, class.as_deref(), self.player_mut(), level);
+        let character = self.state.character.clone();
+        let given = grant(&content, character.as_ref(), self.player_mut(), level);
         // A run restored keeps what its talents grant (spec §8 "Resources").
         let grants = self
             .state
@@ -155,12 +155,12 @@ impl World {
         }
     }
 
-    /// The trees a bonus talent pick of the player's class may come from, in display order;
-    /// `None`: any tree.
-    pub(crate) fn bonus_trees(&self) -> Option<Vec<crate::content::TreeId>> {
-        let class = self.class_id();
-        (class.and_then(|c| self.content.class(&c)))
-            .and_then(|c| c.bonus_trees(self.content.talents()))
+    /// The trees a bonus talent pick brought by total level `level` may come from (the class of
+    /// that level's `bonus_talents`), in display order; `None`: any tree.
+    pub(crate) fn bonus_trees_at(&self, level: u8) -> Option<Vec<crate::content::TreeId>> {
+        let character = self.state.character.as_ref()?;
+        let (table, _) = character.class_of(&self.content, level)?;
+        table.bonus_trees(self.content.talents())
     }
 
     /// `seconds` of carrying pass for the player (spec §8 "Class abilities": Connoisseur): with

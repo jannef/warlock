@@ -682,15 +682,18 @@ pub struct TalentMods {
     pub catch_missiles: Option<ResourceCost>,
     /// The active Volley, if it has it.
     pub volley: Option<Volley>,
-    /// The active Inspire, if it has it.
-    pub inspire: Option<Inspire>,
-    /// The status Inspire gives instead, for no mana (Virtuoso).
+    /// The songs it sings (Inspire), in the order first named: one a class active.
+    pub songs: Vec<Song>,
+    /// The status a song on the singer gives instead, every song free and a degree greater
+    /// (Virtuoso).
     pub virtuoso: Option<StatusId>,
     /// The active Consecrate, if it has it.
     pub consecrate: Option<Consecrate>,
     /// Communion with the dark: in an unholy place its prayers add no strain and the place's
     /// status never touches it, within its talent's bands (`World::communes`).
     pub communion: bool,
+    /// The active Sanctuary, if it has it.
+    pub sanctuary: Option<Sanctuary>,
     /// The active Knock, if it has it.
     pub knock: Option<Knock>,
     /// The priest's prayer, its talents summed (`world/orison.rs`), if it has any.
@@ -780,19 +783,44 @@ pub struct Consecrate {
     pub time: crate::time::Duration,
 }
 
+/// The active Sanctuary (spec §8 "Class abilities", §7 "Special rooms"; `world/sanctuary.rs`):
+/// its mana, how long the rite takes, and the hallow it lays: its radius, how long it lasts,
+/// and the healing and mana pace inside it, in percent.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Sanctuary {
+    pub mana: i32,
+    pub time: crate::time::Duration,
+    pub radius: u8,
+    pub lasts: crate::time::Duration,
+    pub regen: u16,
+}
+
 /// The active Knock (spec §8 "Class abilities", "Chests"): its mana.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Knock {
     pub mana: i32,
 }
 
-/// The active Inspire (spec §8 "Class abilities"): the status it gives, its mana, and what it
-/// spends in place of the mana while that is held (Inspiration).
+/// A song (spec §8 "Class abilities", the bard's songs; `world/song.rs`): the class active it
+/// is, whom it is sung on, the status it gives at its base degrees, what it costs (`None`:
+/// nothing, a Virtuoso's), and for a song on its hearers the stat they check and its difficulty.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct Inspire {
+pub struct Song {
+    pub active: crate::content::ClassActive,
+    pub on: crate::content::SongOn,
     pub status: StatusId,
-    pub mana: i32,
-    pub instead: Option<ResourceCost>,
+    pub severity: u16,
+    pub cost: Option<SongCost>,
+    pub check: Option<(Stat, i32)>,
+}
+
+/// What a song costs: one thing (the owner: no dual costs).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SongCost {
+    /// So much of an alternative resource (Inspire's Inspiration).
+    Resource(ResourceCost),
+    /// So much mana.
+    Mana(i32),
 }
 
 /// Rise from the ashes (spec §8 "Birth sign"): what rising gives back, the burst it rises in,
@@ -1055,23 +1083,29 @@ impl TalentMods {
             A::LowBlow => self.low_blow,
             A::MerchantsEye => self.merchants_eye,
             A::MasterThief => self.finisher,
-            A::Inspire => self.inspire.is_some(),
+            A::Inspire => self.songs.iter().any(|s| s.active == active),
             A::Consecrate => self.consecrate.is_some(),
+            A::Sanctuary => self.sanctuary.is_some(),
             A::Knock => self.knock.is_some(),
             A::Orison => self.prayer.as_ref().is_some_and(|p| p.tier > 0),
         }
     }
 
-    /// What Inspire gives and costs, if it has it: Virtuoso's status for no mana, else its own.
-    pub fn inspiring(&self) -> Option<Inspire> {
-        let inspire = self.inspire?;
+    /// Song `active` as it is sung, if it has it: a Virtuoso's free, a degree greater, and on the
+    /// singer giving the Virtuoso's status; else as its data says.
+    pub fn song(&self, active: crate::content::ClassActive) -> Option<Song> {
+        let song = *self.songs.iter().find(|s| s.active == active)?;
         Some(match self.virtuoso {
-            Some(status) => Inspire {
-                status,
-                mana: 0,
-                instead: None,
+            Some(status) => Song {
+                status: match song.on {
+                    crate::content::SongOn::Singer => status,
+                    crate::content::SongOn::Hearers => song.status,
+                },
+                severity: song.severity + 1,
+                cost: None,
+                ..song
             },
-            None => inspire,
+            None => song,
         })
     }
 
@@ -1905,25 +1939,43 @@ impl TalentMods {
                 }
             }
             TalentEffect::Volley { shots } => self.volley = Some(Volley { shots }),
-            TalentEffect::Inspire {
+            TalentEffect::Song {
+                id,
+                on,
                 status,
-                mana,
+                severity,
                 resource,
                 cost,
+                mana,
+                check,
+                difficulty,
             } => {
-                if let Some(status) = content.status_id(&status) {
-                    let instead =
-                        (resource.and_then(|r| content.resource_id(&r))).map(|resource| {
-                            ResourceCost {
-                                resource,
-                                amount: cost,
-                            }
-                        });
-                    self.inspire = Some(Inspire {
+                let active = crate::content::ClassActive::from_id(&id);
+                // A pool content lacks cannot pay for it: no song (content without resources).
+                let cost = match resource {
+                    Some(r) => (content.resource_id(&r)).map(|resource| {
+                        SongCost::Resource(ResourceCost {
+                            resource,
+                            amount: cost,
+                        })
+                    }),
+                    None => Some(SongCost::Mana(mana)),
+                };
+                let status = content.status_id(&status);
+                if let (Some(active), Some(status), Some(cost)) = (active, status, cost) {
+                    let cost = Some(cost);
+                    let song = Song {
+                        active,
+                        on,
                         status,
-                        mana,
-                        instead,
-                    });
+                        severity,
+                        cost,
+                        check: check.map(|stat| (stat, difficulty)),
+                    };
+                    match self.songs.iter_mut().find(|s| s.active == active) {
+                        Some(held) => *held = song,
+                        None => self.songs.push(song),
+                    }
                 }
             }
             TalentEffect::FlurryCost { resource, cost } => {
@@ -1946,6 +1998,23 @@ impl TalentMods {
             TalentEffect::Consecrate { mana, time } => {
                 if let Ok(time) = time.parse() {
                     self.consecrate = Some(Consecrate { mana, time });
+                }
+            }
+            TalentEffect::Sanctuary {
+                mana,
+                time,
+                radius,
+                lasts,
+                regen,
+            } => {
+                if let (Ok(time), Ok(lasts)) = (time.parse(), lasts.parse()) {
+                    self.sanctuary = Some(Sanctuary {
+                        mana,
+                        time,
+                        radius,
+                        lasts,
+                        regen,
+                    });
                 }
             }
             TalentEffect::Knock { mana } => self.knock = Some(Knock { mana }),

@@ -69,6 +69,7 @@ mod stale_list_tests;
 mod story_screen;
 mod talents_screen;
 mod target;
+mod text_field;
 mod weapon_skills_screen;
 
 pub use dialog_screen::Dialog;

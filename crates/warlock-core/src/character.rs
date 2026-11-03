@@ -57,7 +57,9 @@
 //! (and its replay) is reproduced by its scenario, seed, and character.
 
 use crate::alignment::Score;
-use crate::content::{Calendar, ClassDef, Content, RaceDef, ScenarioDef, Sign, WeaponSkillId};
+use crate::content::{
+    Calendar, ClassDef, Content, PrestigeDef, RaceDef, ScenarioDef, Sign, Table, WeaponSkillId,
+};
 use crate::kit::{self, Pack};
 use crate::rng::Rng;
 use crate::skills::{self, Skills};
@@ -195,12 +197,96 @@ pub struct Character {
     /// nobody chose and for one saved before stories.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub story: Vec<crate::background::Told>,
+    /// The prestige class the character has been called into (spec §8 "Prestige classes"), by
+    /// id (`data/prestige/`): set once by the calling (`World::call`), never cleared. Left out
+    /// of the JSON while none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub prestige: Option<String>,
 }
 
 impl Character {
     /// Age in whole years on `date`.
     pub fn age_on(&self, date: GameTime) -> u32 {
         self.born.age_on(date)
+    }
+
+    /// The prestige class the character has been called into, if any.
+    pub fn prestige<'c>(&self, content: &'c Content) -> Option<&'c PrestigeDef> {
+        content.prestige(self.prestige.as_deref()?)
+    }
+
+    /// The highest level the character's class reaches (its `max_level`; the curve's top for a
+    /// class the content lacks): their levels past it are the prestige class's.
+    pub fn class_cap(&self, content: &Content) -> u8 {
+        (self.spec.class(content))
+            .map_or_else(|_| content.experience().max_level(), |c| c.max_level)
+    }
+
+    /// The highest level the character may reach now (spec §8 "Prestige classes"): their
+    /// class's `max_level`, plus their prestige class's `levels` once called, never past the
+    /// curve's top.
+    pub fn level_cap(&self, content: &Content) -> u8 {
+        let base = self.class_cap(content);
+        let more = self.prestige(content).map_or(0, |p| p.levels);
+        base.saturating_add(more)
+            .min(content.experience().max_level())
+    }
+
+    /// The class total level `level` falls in and its level in that class: the character's
+    /// own class up to its `max_level`, then the prestige class from its level 1 (total 31 is
+    /// Hunter 1 after a bard's 30). `None` for a class the content lacks.
+    pub fn class_of<'c>(&self, content: &'c Content, level: u8) -> Option<(Table<'c>, u8)> {
+        let class = self.spec.class(content).ok()?;
+        match self.prestige(content) {
+            Some(p) if level > class.max_level => {
+                Some((Table::Prestige(p), level - class.max_level))
+            }
+            _ => Some((Table::Class(class), level)),
+        }
+    }
+
+    /// Every class table the character has levels in at total `level`, each with its own level
+    /// reached: the class at `min(level, max_level)`, then the prestige class at what is past
+    /// the cap (0 while none is). Class abilities are granted table by table from this.
+    pub fn class_levels<'c>(&self, content: &'c Content, level: u8) -> Vec<(Table<'c>, u8)> {
+        let Ok(class) = self.spec.class(content) else {
+            return Vec::new();
+        };
+        let mut tables = vec![(Table::Class(class), level.min(class.max_level))];
+        if let Some(p) = self.prestige(content) {
+            tables.push((Table::Prestige(p), level.saturating_sub(class.max_level)));
+        }
+        tables
+    }
+
+    /// The Class row of the character screen at total `level`: `Bard` until the class is full,
+    /// `Bard 30` at its cap, `Bard 30, Hunter 4` once the prestige class has levels.
+    pub fn class_text(&self, content: &Content, level: u8) -> String {
+        let Ok(class) = self.spec.class(content) else {
+            return self.spec.class.clone();
+        };
+        let mut text = class.name.clone();
+        if level >= class.max_level {
+            text.push_str(&format!(" {}", class.max_level));
+        }
+        if let Some(p) = self.prestige(content) {
+            match level.saturating_sub(class.max_level) {
+                0 => text.push_str(&format!(", {}", p.name)),
+                n => text.push_str(&format!(", {} {n}", p.name)),
+            }
+        }
+        text
+    }
+
+    /// The character's classes as an epitaph says them: `a bard`, `a bard and hunter`.
+    pub fn class_phrase(&self, content: &Content) -> String {
+        let class =
+            (self.spec.class(content)).map_or(self.spec.class.clone(), |c| c.name.to_lowercase());
+        let text = match self.prestige(content) {
+            Some(p) => format!("{class} and {}", p.name.to_lowercase()),
+            None => class,
+        };
+        format!("{} {text}", crate::content::article(&text))
     }
 
     /// Whether the character was born in a year of `element` (an id: "is this character
@@ -440,6 +526,7 @@ impl CharacterSpec {
             born,
             sign,
             story: Vec::new(),
+            prestige: None,
         };
         Ok(Start {
             stats: starting_stats(by, potential, content.races().base_potential),

@@ -168,6 +168,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Litany",
                 "Litany of the mind",
                 "Benediction",
+                "Sanctuary",
                 "Miracle",
             ],
         ),

@@ -226,7 +226,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   29 715 for 10, 52 688 for 12, 205 205 for 20, 2 845 856 for the cap, level 60; from level 12 on
   each level costs what it would undiscounted, so the totals are 15 892 lower than without the
   discount: about 2 600 such kills to reach level 20 and 14 600 to reach 60; a test pins the
-  table's hash; XP beyond the cap counts but buys nothing). **Race and class factors**: races and classes have `experience`, a percent of the
+  table's hash; XP beyond the cap counts but buys nothing). The level also stops at the
+  character's **class cap** (`ClassDef::max_level`, default `[levels] class_max`, 60: every class
+  today) until a prestige class raises it (§8 "Prestige classes"; `Experience::level_for(xp,
+  factor, cap)`, the cap `Character::level_cap`): XP past it banks the same way. **Race and class factors**: races and classes have `experience`, a percent of the
   XP a level needs (50 to 200, default 100: elf 140, gnome 120, dwarf 115, half-elf 105, human
   100, halfling 95, half-orc 90; wizard 125, ascetic 120, priest, druid, and witch 115, paladin 110,
   ranger 105, warrior and bard 100, thief 95, berserker, craftsperson, aristocrat, and merchant

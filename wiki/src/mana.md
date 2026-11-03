@@ -71,7 +71,7 @@ three pieces of 20 % and the talent still take only 50 %, so 10 becomes 5. It wo
 item you have not identified, and stops when you take it off. This cut comes last, after
 everything else that changes a spell's or a rod's cost (see
 [What a spell costs](magic.md#what-a-spell-costs)), and it is the one for every ability that
-costs mana: spells, [rods](magic.md#rods), *[Inspire](abilities.md#ability-inspire)*, a summoning.
+costs mana: spells, [rods](magic.md#rods), a summoning.
 
 The talent *[Blood magic](talents.md#talent-blood-magic)* gives you an ability (in the [abilities menu](abilities.md#the-abilities-menu)) that turns 5 of your [hit
 points](combat.md#hit-points) into 3 mana at once, for the time of a wait. It never takes your last [hit point](combat.md#hit-points) (with 5

@@ -45,5 +45,6 @@ abilities = [
     { level = 25, talent = "litany_of_restoring" },
     { level = 32, talent = "litany_of_the_mind" },
     { level = 40, talent = "benediction" },
+    { level = 50, talent = "sanctuary" },
     { level = 60, talent = "miracle" },
 ]

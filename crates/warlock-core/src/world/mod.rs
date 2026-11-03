@@ -98,6 +98,7 @@ mod beast_friend;
 mod bleed;
 mod boons;
 mod buff;
+mod calling;
 mod carry;
 mod cast;
 mod caster;
@@ -181,11 +182,13 @@ mod read;
 mod reflect;
 mod resource;
 mod rest;
+mod restore;
 mod reveal;
 mod rod;
 mod rooms;
 mod rot;
 mod rumour;
+mod sanctuary;
 mod schedule;
 mod search;
 mod second_wind;
@@ -198,6 +201,7 @@ mod sign_picks;
 mod siphon;
 mod skill_roll;
 mod slip;
+mod song;
 mod spawn;
 mod spell;
 mod spell_aim;
@@ -229,12 +233,14 @@ mod wares;
 mod warp;
 mod weapon_ability;
 mod weapon_active;
+mod words;
 mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
 pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
 pub use attacks::{AttackSource, OwnAttack};
+pub use calling::CallingStatus;
 pub use cast::Reach;
 pub use caster_level::casting_percent;
 pub use creation::{chosen_with_talents, creation_count, parse_talents, pick_text};
@@ -260,6 +266,7 @@ pub use mirrors::Image;
 pub use orison::PrayerState;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
+pub use sanctuary::Hallow;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
 pub use siphon::SIPHON_RANGE;
@@ -614,6 +621,8 @@ enum Spent {
     Study(learn::Lesson),
     /// Praying to consecrate a place until this moment (see [`World::consecrate`]).
     Consecrate(GameTime),
+    /// Kneeling to hallow the ground until this moment (see [`World::sanctuary`]).
+    Sanctuary(GameTime),
     /// Praying at a forgotten altar (see [`World::pray`]).
     Pray(pray::Prayer),
     /// Drinking at a healing spring (see [`World::drink`]).
@@ -859,8 +868,7 @@ impl World {
         };
         stars::grant(&content, state.character.as_ref(), &[], &mut player.talents);
         // The class abilities of level 1 (spec §8 "Class abilities").
-        let class = (state.character.as_ref()).map(|c| c.spec.class.clone());
-        class::grant(&content, class.as_deref(), &mut player, 1);
+        class::grant(&content, state.character.as_ref(), &mut player, 1);
         player.hp = player.max_hp(&content);
         player.mana = player.max_mana(&content);
         crate::rot::made_at(&mut player.inventory, &content, def.start);
@@ -1241,6 +1249,7 @@ impl World {
             Spent::Search(turns) => self.search(turns, &mut events),
             Spent::Study(lesson) => self.study(lesson, &mut events),
             Spent::Consecrate(until) => self.consecrate(until, &mut events),
+            Spent::Sanctuary(until) => self.sanctuary(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Drink(draught) => self.drink(draught, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
@@ -1355,6 +1364,7 @@ impl World {
             Action::Encounter(choice) => return self.answer_encounter(*choice),
             Action::Chat(dir) => return self.chat(*dir, events),
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
+            Action::Say { dir, words } => return self.say_to(*dir, words, events),
             Action::Steal(dir) => return self.steal(*dir),
             Action::Intimidate(at) => return self.intimidate(*at, events),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
@@ -1422,6 +1432,7 @@ impl World {
             Action::QuestRoll { quest, target } => return self.quest_roll_dev(quest, target),
             Action::LevelUpAuto => return self.level_up_auto(),
             Action::GrantXp(xp) => return self.grant_xp_dev(*xp),
+            Action::Call(id) => return self.call_dev(id),
             Action::SetRank { skill, rank } => return self.set_rank_dev(skill, *rank),
         };
         self.took(done, kind)
@@ -1500,6 +1511,8 @@ mod branch_tests;
 mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
+#[cfg(test)]
+mod calling_tests;
 #[cfg(test)]
 mod cast_tests;
 #[cfg(test)]
@@ -1715,6 +1728,8 @@ mod rot_tests;
 #[cfg(test)]
 mod rumour_tests;
 #[cfg(test)]
+mod sanctuary_tests;
+#[cfg(test)]
 mod school_ability_tests;
 #[cfg(test)]
 mod school_skill_tests;
@@ -1746,6 +1761,8 @@ mod skill_roll_tests;
 mod skills_tests;
 #[cfg(test)]
 mod slip_tests;
+#[cfg(test)]
+mod song_tests;
 #[cfg(test)]
 mod spawn_tests;
 #[cfg(test)]
@@ -1832,6 +1849,8 @@ mod weapon_active_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+#[cfg(test)]
+mod words_tests;
 #[cfg(test)]
 mod zap_tests;
 
