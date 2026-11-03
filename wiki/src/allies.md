@@ -96,11 +96,13 @@ for it when its eyes find nothing. When it scents something you cannot see, it g
 
 ### The collar
 
-Your companion wears one thing, on its neck. [Give](abilities.md#ability-give), in the Allies
-group, fastens something of yours that goes on a neck, an amulet, on the companion beside you,
-for the time wearing it would take you ([What takes time](time.md#what-takes-time)): one of a stack, and taken off you first if
-you wore it. Whatever it wore before falls to the floor beneath it. The magic works on the beast
-as it would on you: its [resistances](damage-types.md#armour-and-resistance), its armour, its eyes. You learn nothing about
+A beast you keep, a companion or a [familiar](#familiars), wears one thing, on its neck.
+[Give](abilities.md#ability-give), in the Allies group, fastens something of yours that goes on a
+neck, an amulet, on the beast beside you, for the time wearing it would take you
+([What takes time](time.md#what-takes-time)): one of a stack, and taken off you first if you wore
+it. With two of them beside you, you are asked which way. Whatever it wore before falls to the
+floor beneath it. The magic works on the beast as it would on you: its
+[resistances](damage-types.md#armour-and-resistance), its armour, its eyes. You learn nothing about
 what you give by the beast's wearing it. You cannot take a collar back: give another and pick up
 the old one, or find it among the beast's remains. Goods you have not paid for stay with you.
 
@@ -159,7 +161,7 @@ A **familiar** is the [witch](classes.md#witch)'s small beast of the old craft, 
 first turn by her [Familiar](talents.md#talent-familiar) (level 1): a cat (*catt*), a toad
 (*tādige*), a raven (*hræfn*), a hare (*hara*), a bat (*hrēremūs*), or another small beast her
 race's list holds. She has one at a time, and she may keep a [companion](#companions) beside it:
-they are different things. It is a **kept** beast by the companions' rules: it has a
+they are different things. It is a **kept** beast by the companions' rules: it wears a [collar](#the-collar), it has a
 name, drawn from those the English witch trials recorded ("Tibb, your cat, winds about your
 ankles."), it stays until it is slain, its level is hers ([growth](#growth)), it
 [always comes along](#companions), and it dies as a companion does, leaving a corpse. It obeys the

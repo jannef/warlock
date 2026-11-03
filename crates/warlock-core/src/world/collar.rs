@@ -1,5 +1,6 @@
 //! The collar (spec §8 "Allies": "The collar"; docs/design/ranger-companion.md §10;
-//! `docs/dev/companion.md`): a companion wears one thing, on its neck, and the player gives it.
+//! `docs/dev/companion.md`): a kept beast, a companion or a familiar, wears one thing, on its
+//! neck, and the player gives it.
 //!
 //! [`Action::Give`] (the Give ability, the abilities menu's Allies group, `give:LETTER`): one of
 //! the stack leaves the player's pack (taken off first if it was on them, which takes its time
@@ -9,12 +10,13 @@
 //! falls to the floor of its cell. Priced as a `wear`. There is no taking one back but these. The
 //! player learns nothing of what they give by the beast's wearing it.
 //!
-//! Refused, taking no time: with no companion, with it not beside the player (a companion in the
-//! retinue is on no cell), with goods unpaid for, and with a stack that does not fit a neck.
+//! Refused, taking no time: with no kept beast, with none beside the player (one in the retinue
+//! is on no cell) or none the way named, with goods unpaid for, and with a stack that does not fit
+//! a neck.
 //!
-//! `ally` names the way to the beast, for when two of them may stand beside the player; with none,
-//! the first beside them, by direction ([`World::collar_wearer`], the one place that says which
-//! beasts wear collars).
+//! `ally` names the way to the beast: with two beside the player the game asks it (the owner,
+//! #907 Q4). With none named, the first beside them, by direction ([`World::collar_wearer`], the
+//! one place that says which beasts wear collars).
 //!
 //! [`Action::Give`]: crate::action::Action::Give
 
@@ -41,22 +43,30 @@ impl World {
     /// way named).
     fn collar_wearer(&self, way: Option<Dir>) -> Option<ActorId> {
         (allies_beside(&self.state).into_iter())
-            .filter(|(_, ally)| ally.companion().is_some())
+            .filter(|(_, ally)| ally.kept().is_some())
             .find(|(d, _)| way.is_none_or(|w| w == *d))
             .map(|(_, ally)| ally.id)
     }
 
-    /// The player gives one of the stack at `item` to their companion (the module docs).
+    /// The player gives one of the stack at `item` to a kept beast of theirs (the module docs).
     pub(super) fn give_collar(&mut self, item: usize, way: Option<Dir>) -> Spent {
-        let Some(known) = self.companion() else {
-            self.say("You have no companion to give it to.");
+        let player = self.state.player;
+        let Some(known) =
+            (self.allies_of(player).into_iter()).find(|id| self.state.actors[id].kept().is_some())
+        else {
+            self.say("You keep no beast to give it to.");
             return Spent::Nothing;
         };
-        let name = self.ally_subject(known);
         let Some(beast) = self.collar_wearer(way) else {
-            self.say(format!("{name} is not beside you."));
+            if way.is_some() {
+                self.say("No beast of yours stands that way.");
+            } else {
+                let name = self.ally_subject(known);
+                self.say(format!("{name} is not beside you."));
+            }
             return Spent::Nothing;
         };
+        let name = self.ally_subject(beast);
         let Some(stack) = self.state.player().inventory.get(item).cloned() else {
             self.say("You carry no such thing.");
             return Spent::Nothing;

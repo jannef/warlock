@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content.clone())"
+---
+ Give it to which side? (Esc to cancel)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 13/13  ·  MP 15/15  ·  Lv 1  ·  Brūn: unhurt  ·  Fancie  ·  08:00        ? controls

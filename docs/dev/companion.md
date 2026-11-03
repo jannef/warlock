@@ -155,9 +155,9 @@ without one. Details in `docs/dev/background.md`.
 ## The collar (C3, #918)
 
 `world/collar.rs`, `Action::Give { item, ally }`, `give:LETTER[:DIR]`, `Ability::Give`
-(`Source::Ally`, `Aim::Item`; the last row of the Allies group, listed while the player has a
-companion, `Ability::orders(any, kept)`; unavailable `NotBeside`, from the snapshot's
-`companion_beside`). One of the stack goes from the player's pack to the end of the beast's
+(`Source::Ally`, `Aim::Item`; the last row of the Allies group, listed while the player keeps a
+beast, a companion or a familiar, `Ability::orders(any, kept)`; unavailable `NotBeside`, from the
+snapshot's `kept_beside`). One of the stack goes from the player's pack to the end of the beast's
 `Actor::inventory` and into its `neck` slot; a last one worn by the player comes off first, paying
 for that too (`take_off_before_dropping`). Priced as a `wear`. The old one leaves the beast's
 inventory for the pile on its cell, with the ordinary rules (standing in an open shop, that makes
@@ -167,14 +167,17 @@ and the rule's. Unpaid goods are refused (`may_loose`).
 Nothing new is saved: the collar is an ordinary stack in the beast's equipment, so `Mods::worn`,
 `Actor::eyes`, and the regeneration affixes read it, `SeenGear` shows it (look mode's `wearing`),
 `World::creature_dies` drops it, and the `actors` layer lists it. `AllyView::wears` carries it to
-the `companion` dump wherever the beast is (`, wearing a jade amulet`; JSON `wears`, null with
+the `companion` and `familiar` dumps wherever the beast is (`, wearing a jade amulet`; JSON `wears`, null with
 none): the player fastened it. No identification: nothing reads the beast's wearing for lore.
 
-**More kept beasts.** `World::collar_wearer` is the one place that says which ally wears a collar
-(`Actor::companion()`), and `ally` picks the way: when the familiar lands (#929: `Actor::kept()`,
-`PerceptionView::kept_beside()`), Give goes to it by changing that predicate, and the UI's ask
-(two kept beasts beside the player: a direction first, `input.rs::tend_way`'s pattern, the owner's
-#907 Q4) only has to send `ally: Some(dir)`.
+**Kept beasts.** `World::collar_wearer` is the one place that says which ally wears a collar
+(`Actor::kept()`: a companion or a familiar), and `ally` picks the way. With more than one kept
+beast beside the player (`PerceptionView::kept_beside()`; the owner's #907 Q4) the game asks: the
+Give list's choice reaches `Gameplay::act`, which enters `InputMode::GiveWay(item)` instead of
+sending it, "Give it to which side?" in the message line, and a direction sends `ally: Some(dir)`
+(any other key cancels, nothing spent). The list comes first, unlike Heal's way
+(`input.rs::tend_way`), so a player with nothing for a neck is never asked. A way with no kept beast
+is the rules' to refuse, no time: "No beast of yours stands that way."
 
 ## Pack tactics (C4, #919)
 

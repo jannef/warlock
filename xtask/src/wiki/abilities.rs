@@ -69,7 +69,7 @@ pub(super) fn abilities(content: &Content) -> String {
             Ability::Heel | Ability::Hold | Ability::SetOn => {
                 "everyone with an ally (usable while one is on the level)".into()
             }
-            Ability::Give => "everyone with a companion (usable while it is beside them)".into(),
+            Ability::Give => "everyone who keeps a beast, a companion or a familiar (usable while one is beside them)".into(),
             // Weapon abilities have a table of their own (`weapon_abilities.rs`).
             Ability::Weapon(..) => continue,
         };

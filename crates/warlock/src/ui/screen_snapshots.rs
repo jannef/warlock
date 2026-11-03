@@ -1358,6 +1358,41 @@ fn saying_words() {
     }
 }
 
+/// A witch who keeps a companion too, as Tame (C2) will let her; in the shipped classes no
+/// character starts with both: Give's list, then the way it asks with both beside her, and the
+/// fastening once the way is told (the owner, #907 Q4).
+#[test]
+fn giving_with_two_kept_beasts_beside() {
+    let mut files = warlock_core::content::ContentFiles::builtin();
+    let path = "data/classes/10-witch.toml";
+    let witch = include_str!("../../../../assets/data/classes/10-witch.toml");
+    let both = witch.replacen(
+        "{ level = 1, talent = \"familiar\" },",
+        "{ level = 1, talent = \"familiar\" },\n    { level = 1, talent = \"animal_companion\" },",
+        1,
+    );
+    assert_ne!(both, witch, "the witch's table gives the familiar");
+    files.insert(path, &both);
+    let content = Arc::new(Content::load(&files).expect("content"));
+    let cases = [
+        ("give-list-two-kept", None),
+        ("give-way", Some("a")),
+        ("give-way-told", Some("a Up")),
+        ("give-way-cancelled", Some("a Esc")),
+    ];
+    for (name, keys) in cases {
+        let case = Case {
+            name,
+            character: Some("human,female,witch"),
+            run: true,
+            screen: Some("give"),
+            keys,
+            ..BASE
+        };
+        insta::assert_snapshot!(case.name, render(&case, content.clone()));
+    }
+}
+
 /// The built-in content with an encounter table in the showcase campaign (which ships none):
 /// kobolds (hostile), deer (wildlife), and the hermit (peaceful), met by the dev `meet`.
 fn encounter_content() -> Arc<Content> {

@@ -1742,7 +1742,10 @@ impl<'a> PerceptionView<'a> {
     /// what they can do and what they hold.
     pub fn abilities(&self) -> Vec<OwnAbility> {
         let here = Ability::here(self.level, self.content, self.player.pos);
-        let orders = Ability::orders(!self.snapshot.allies.is_empty(), self.companion().is_some());
+        let orders = Ability::orders(
+            !self.snapshot.allies.is_empty(),
+            self.kept().next().is_some(),
+        );
         let allies_here = self.snapshot.allies.iter().any(|a| a.here);
         (Ability::of(self.player, self.content).into_iter())
             .chain(here)
@@ -2309,7 +2312,7 @@ impl<'a> PerceptionView<'a> {
     }
 
     /// The ways to the player's kept beasts beside them, in direction order: with two or more,
-    /// tending one asks which way first (spec §8 "Allies"; the owner, #907 Q4).
+    /// tending one or giving one a collar asks which way (spec §8 "Allies"; the owner, #907 Q4).
     pub fn kept_beside(&self) -> &[crate::geom::Dir] {
         &self.snapshot.kept_beside
     }

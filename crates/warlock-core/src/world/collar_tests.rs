@@ -209,6 +209,111 @@ fn the_refusals_take_no_time() {
     assert_eq!(w.time(), time);
 }
 
+/// A kitted witch's run, her familiar beside her.
+fn witch() -> World {
+    let w = kitted("human,female,witch");
+    assert!(w.familiar().is_some(), "she starts with one");
+    w
+}
+
+#[test]
+fn a_familiar_wears_a_collar_as_a_companion_does() {
+    let mut w = witch();
+    assert!(
+        (w.perception().abilities().iter())
+            .any(|a| a.ability == Ability::Give && a.unavailable.is_none()),
+        "listed, the familiar beside her"
+    );
+    let id = w.familiar().expect("a familiar");
+    let amulet = carry(&mut w, plain("jade_amulet"));
+    let time = w.time();
+    w.apply(&give(amulet));
+    assert_eq!(w.time().since(time), wearing());
+    let familiar = &w.state.actors[&id];
+    let slot = w.content.slot_id("neck").expect("the neck slot");
+    let on = familiar.equipment.get(slot).expect("worn");
+    let worn = w.content.object(familiar.inventory[on].object);
+    assert_eq!(worn.id, "jade_amulet");
+    let name = familiar.kept().expect("kept").name.clone();
+    let line = format!("You fasten the jade amulet about {name}'s neck.");
+    assert!(said(&w).contains(&line), "{:?}", said(&w));
+    // The dumps show it, by the familiar's own layer.
+    let layers = crate::dump::parse_layers("familiar").unwrap();
+    let dump = crate::dump::ascii(&w, &layers);
+    assert!(dump.contains("wearing a jade amulet"), "{dump}");
+    assert_eq!(
+        crate::dump::json(&w, &[], false)["familiar"]["wears"],
+        "a jade amulet"
+    );
+    // With her familiar away, the row is greyed, and the rules name it.
+    let actor = w.state.actors.get_mut(&id).expect("the familiar");
+    actor.ally.as_mut().expect("an ally").retinue = true;
+    actor.pos = Pos::new(0, 0);
+    *w.perception = Perception::compute(&w.state, &w.content, &mut w.lights);
+    let row = (w.perception().abilities().into_iter())
+        .find(|a| a.ability == Ability::Give)
+        .expect("listed");
+    assert_eq!(row.unavailable, Some(Unavailable::NotBeside));
+}
+
+#[test]
+fn with_two_kept_beasts_beside_the_way_says_which_wears_it() {
+    let mut w = witch();
+    run(&mut w, "ally:hound");
+    let hound = w.content.creature_id("hound").expect("hounds");
+    let snel = (w.allies_of(w.state.player).into_iter())
+        .find(|id| w.state.actors[id].creature == hound)
+        .expect("the hound");
+    (w.state
+        .actors
+        .get_mut(&snel)
+        .unwrap()
+        .ally
+        .as_mut()
+        .unwrap())
+    .source = AllySource::Companion(CompanionData {
+        name: "Snel".into(),
+        grade: 1,
+        scent: None,
+    });
+    let tibb = w.familiar().expect("a familiar");
+    let me = w.state.player().pos;
+    for (id, d) in [(tibb, Dir::S), (snel, Dir::E)] {
+        let at = me.step(d);
+        if let Some(there) = w.state.actor_at(&w.state.current_level, at).map(|a| a.id) {
+            w.state.actors.get_mut(&there).unwrap().pos = Pos::new(0, 0);
+        }
+        w.state.actors.get_mut(&id).unwrap().pos = at;
+    }
+    *w.perception = Perception::compute(&w.state, &w.content, &mut w.lights);
+    assert_eq!(w.perception().kept_beside(), [Dir::E, Dir::S]);
+    let slot = w.content.slot_id("neck").expect("the neck slot");
+    let wearing_it = |w: &World, id| w.state.actors[&id].equipment.get(slot).is_some();
+    let on_tibb = carry(&mut w, plain("jade_amulet"));
+    w.apply(&Action::Give {
+        item: on_tibb,
+        ally: Some(Dir::S),
+    });
+    assert!(wearing_it(&w, tibb) && !wearing_it(&w, snel));
+    let on_snel = carry(&mut w, plain("jade_amulet"));
+    w.apply(&Action::Give {
+        item: on_snel,
+        ally: Some(Dir::E),
+    });
+    assert!(wearing_it(&w, snel), "{:?}", said(&w));
+    assert!(said(&w).contains(&"You fasten the jade amulet about Snel's neck.".to_string()));
+    // A way with no beast of theirs: refused, no time, the stack kept.
+    let spare = carry(&mut w, plain("jade_amulet"));
+    let (time, count) = (w.time(), w.state.player().inventory[spare].count);
+    w.apply(&Action::Give {
+        item: spare,
+        ally: Some(Dir::NW),
+    });
+    assert_eq!(w.time(), time);
+    assert_eq!(w.state.player().inventory[spare].count, count);
+    assert!(said(&w).contains(&"No beast of yours stands that way.".to_string()));
+}
+
 #[test]
 fn a_character_with_no_companion_is_refused_and_has_no_give() {
     let mut w = kitted("human,male,warrior");

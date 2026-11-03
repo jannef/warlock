@@ -157,7 +157,7 @@ pub enum ScreenName {
     /// Choose what to temper at a forge's anvil (the Temper ability, spec §7 "Special rooms"):
     /// the weapons and armour carried.
     Temper,
-    /// Choose what to give the player's companion for its neck (the Give ability, spec §8
+    /// Choose what to give a kept beast of the player's for its neck (the Give ability, spec §8
     /// "Allies"): what fits a neck, carried.
     Give,
     /// The abilities menu (`a` in play): racial, class, skill, weapon skill, and item

@@ -130,10 +130,10 @@ pub enum Ability {
     /// sees, every ally goes there and fights what is near it. Listed and available as
     /// [`Ability::Heel`]; it asks for the cell in the aiming mode.
     SetOn,
-    /// Give (spec §8 "Allies"): [`Action::Give`], a stack the player carries for their
-    /// companion's neck (`world/collar.rs`). Not an order, it takes a `wear`'s time; the Allies
-    /// group all the same, listed while the player has a companion ([`Ability::orders`]),
-    /// unavailable ([`Unavailable::NotBeside`]) with it not beside them.
+    /// Give (spec §8 "Allies"): [`Action::Give`], a stack the player carries for the neck of a
+    /// kept beast of theirs (`world/collar.rs`). Not an order, it takes a `wear`'s time; the Allies
+    /// group all the same, listed while the player keeps a beast ([`Ability::orders`]),
+    /// unavailable ([`Unavailable::NotBeside`]) with none beside them.
     Give,
 }
 
@@ -630,8 +630,8 @@ impl Ability {
                  then come back to heel. A shout; it takes no time."
             }
             Ability::Give => {
-                "Fasten something for the neck about your companion's, beside you: its magic \
-                 works on the beast, and what it wore before falls to the floor."
+                "Fasten something for the neck about that of a beast you keep, beside you: its \
+                 magic works on the beast, and what it wore before falls to the floor."
             }
         }
     }

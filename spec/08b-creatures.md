@@ -205,24 +205,26 @@ developer notes (CLAUDE.md, `docs/dev/`).
   its own (it eases by its own clock), whatever laid it (a spell, a scroll, a potion, a boon):
   a buff is a buff spell's status or one a potion lends; a hex, a harm, a cooldown never
   crosses, and the shared one does not cross back. "Snel is bark-skinned too."
-  **The collar** (`world/collar.rs`; #918): a companion wears one
-  thing, on its neck. The **Give** ability (the Allies group, listed with a companion, greyed out
-  "not beside you" with it away; `give:LETTER[:DIR]`) asks for a stack the player carries that
-  fits a neck; one of it leaves the pack, taken off first if it was on the player, and goes on the
-  beast, a wear's time ("You fasten the jade amulet about Snel's neck."), and what it wore falls
-  on its cell ("Snel's bone amulet falls to the floor."). Refused, no time: with it not beside
-  the player ("Snel is not beside you."), in the retinue too; a stack that fits no neck ("Snel has
-  no use for that."); goods unpaid for. Its magic works on the beast as on any wearer, and wearing
-  it on the beast teaches the player nothing. There is no taking one back but giving another or
-  its death, when the collar is in its pile. Look mode says "Snel, your hound (unhurt), wearing a
-  jade amulet, ...".
-  Taming (C2) and the ranger's Sic 'em (C6) are the design's next slices.
+  **The collar** (`world/collar.rs`; #918): a kept beast wears one
+  thing, on its neck. The **Give** ability (the Allies group, listed while the player keeps a beast,
+  greyed out "not beside you" with none beside them; `give:LETTER[:DIR]`) asks for a stack the
+  player carries that fits a neck; one of it leaves the pack, taken off first if it was on the
+  player, and goes on the beast, a wear's time ("You fasten the jade amulet about Snel's neck."),
+  and what it wore falls on its cell ("Snel's bone amulet falls to the floor."). With two kept
+  beasts beside the player, it then asks which way ("Give it to which side?"); with one beside,
+  nothing is asked. Refused, no time: with it not beside the player ("Snel is not beside you."),
+  in the retinue too; a way with none ("No beast of yours stands that way."); a stack that fits no
+  neck ("Snel has no use for that."); goods unpaid for. Its magic works on the beast as on any
+  wearer, and wearing it on the beast teaches the player nothing. There is no taking one back but
+  giving another or its death, when the collar is in its pile. Look mode says "Snel, your hound
+  (unhurt), wearing a jade amulet, ...". Taming (C2) and the ranger's Sic 'em (C6) are the design's
+  next slices.
   **The familiar** (`warlock-core/src/world/familiar.rs`,
   `content/familiar.rs` and `data/familiars.toml`; #929, design `docs/design/witch-familiar.md`,
   `docs/dev/familiar.md`): the witch's small beast, an ally with `source =
   Familiar(CompanionData)`, `until = None`, at most one at a time; with a companion it is one of
   the player's **kept** beasts (`AllySource::kept`), and a witch may have both. A kept beast is
-  named, grows, always comes along, leaves a corpse, and is shown by the rules above. Her
+  named, grows, always comes along, wears a collar, leaves a corpse, and is shown by the rules above. Her
   **Familiar** (level 1) brings one as the run begins: drawn from her race's list
   (`[start.by_race]`: one to three beasts of level at most `most_level` 2: cat, toad, raven, hare,
   bat, and the small beasts the ranger's lists give a race where they fit a witch), or at
@@ -236,7 +238,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   statuses are silent. **The harrying**: its target is the nearest creature it sees under a hex of
   its master's, within its order's reach, before any other; else the nearest as any ally's. **Two
   kept beasts beside the player**, with something to treat on one: Heal asks a direction first (the
-  wait key: the player); with one beside, nothing is asked. Calling a new one (F2, #930) and the
+  wait key: the player); Give asks too, as the collar says; with one beside, nothing is asked. Calling a new one (F2, #930) and the
   familiar's story lines (F3, #931; until then the companion chapter's plain line) are the design's
   next slices.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what

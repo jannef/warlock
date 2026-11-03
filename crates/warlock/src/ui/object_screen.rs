@@ -36,7 +36,8 @@
 //! The temper screen (the Temper ability beside a forge's anvil, spec §7 "Special rooms") lists
 //! the weapons and armour the player carries; choosing one tempers it ([`Action::Temper`]).
 //! The give screen (the Give ability, spec §8 "Allies") lists what fits a neck; choosing one
-//! fastens it on the player's companion ([`Action::Give`]).
+//! fastens it on the player's kept beast beside them ([`Action::Give`]; with two, input asks
+//! which way first).
 
 use super::character_screen::{fit_joined, thresholds};
 use super::menu::{Hints, Nav, Panel, Press};
@@ -76,7 +77,7 @@ pub enum ObjectList {
     Identify(IdentifyBy),
     /// The weapons and armour in the pack: choose one to temper at the anvil beside the player.
     Temper,
-    /// What fits a neck, for the player's companion (the Give ability; `world/collar.rs`).
+    /// What fits a neck, for a kept beast of the player's (the Give ability; `world/collar.rs`).
     Give,
 }
 
