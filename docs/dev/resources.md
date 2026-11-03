@@ -177,15 +177,15 @@ statuses, refused if it `eases`). `ResourceId` is an index, in `Content::fingerp
   The paladin's Smite (level 1) grants it (`grants_resource`) at `start = 5`; `max = 10`,
   `max_from = { stat = "presence", per_levels = 10, least = 6 }`, `regenerates = 60` (resting
   too), `builds` `hit` 1 and `struck` 1 (no code: the events `resolve` already raises), `lacking
-  = "your zeal is not enough"`. Smite costs `resource = { id = "zeal", cost = 3 }` and Lay on
-  hands `cost = 6` on their talents; both lost their cooldowns (Spent is deleted; Drained stays,
+  = "your zeal is not enough"`. Smite costs `resource = { id = "zeal", cost = 3 }`, Branding
+  smite 3 and Wrathful smite 4 (#911), and Lay on hands `cost = 6` on their talents; both lost their cooldowns (Spent is deleted; Drained stays,
   Fire breath's). The cost is read in one place, `ability.rs::class_cost` (the talent's
   `resource`, with Avatar's `hands_cost_percent` of it for Lay on hands, `percent_of`, at least
   1), by `Ability::unavailable` and by `use_class`, which, for a holy gift (`ClassActive::holy`),
   asks `World::answered` before it spends, so an unanswered smite or heal spends nothing. A deed
   toward evil empties it (`World::shift_alignment`, `docs/dev/alignment.md`). The priest no
   longer has Smite (#891), so the paladin alone holds it. Tests: `world/smite_tests.rs`,
-  `world/class_active_tests.rs`.
+  `world/smite_mode_tests.rs`, `world/class_active_tests.rs`.
 - **Stamina** (SP1, #560; the combat progression design §4.5): the entry of
   `resources.toml` (file order is save order), `short = "Sta"`, `max = 10`, `max_from = { stat =
   "toughness", per_levels = 10, least = 5 }`, `regenerates = 12`, resting too, starting full.

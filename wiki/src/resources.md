@@ -55,7 +55,8 @@ The [paladin](classes.md#paladin)'s **zeal** comes with [Smite](talents.md#talen
 your [Presence](stats.md#stat-presence) [modifier](stats.md#modifiers), plus a point per 10 [levels](experience.md#levels), never less than 6 (Presence 12 holds 11 at
 level 1, Presence 16 holds 16 at level 30). Every blow, shot, or throw of yours that hits builds a point, and so does every
 blow that hits you; it comes back a point every 10 base turns (a minute) besides, resting too, and sits at 0 when spent:
-an empty pool is full again in about ten minutes. [Smite](abilities.md#ability-smite) spends 3 and
+an empty pool is full again in about ten minutes. [Smite](abilities.md#ability-smite) spends 3,
+[Branding smite](abilities.md#ability-branding-smite) 3, [Wrathful smite](abilities.md#ability-wrathful-smite) 4, and
 [Lay on hands](abilities.md#ability-lay-on-hands) 6 ([Avatar](talents.md#talent-avatar): 3), so wrath and mercy are paid from the one pool. A
 holy gift that does not answer (you are not Kind or better, see [Alignment](alignment.md)) spends none. **A deed that moves
 you toward evil** (see [Alignment](alignment.md)) empties it at once: "Your zeal deserts you."
