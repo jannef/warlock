@@ -277,11 +277,14 @@ You may threaten as often as you like; every threat trains Intimidate, whatever 
 ## Treating yourself
 
 If you are trained in **[Heal](skills.md#skill-heal)** ([priests](classes.md#priest), [witches](classes.md#witch), [druids](classes.md#druid), and [paladins](classes.md#paladin) are), **[Heal](abilities.md#ability-heal)** is in your
-[abilities menu](abilities.md), under Skills. It treats you, never anyone else (for now): your
+[abilities menu](abilities.md), under Skills. It treats you: your
 **[bleeding](status-effects.md#bleeding)**, your **[poison](status-effects.md#poisoned)**, and a **[disease](diseases.md#how-a-disease-goes)** that shows (one you have caught but that has not
-shown yet is unknown to you, so you cannot treat it). With nothing to treat it is greyed out,
+shown yet is unknown to you, so you cannot treat it). It treats an [ally](allies.md) of yours
+standing beside you the same way, from the start: you know your own allies' hurts, and they are
+listed after yours ("Your wolf's bleeding"). With nothing to treat it is greyed out,
 "nothing to treat"; with more than one thing, it asks which ("Sickness" is a [disease](diseases.md#how-a-disease-goes) you cannot
-name yet). Every try takes about a quarter of a minute, whatever comes of it, and makes no noise.
+name yet). The try is yours ([Intelligence](stats.md#stat-intelligence) and your skill); the
+difficulty is the patient's. Every try takes about a quarter of a minute, whatever comes of it, and makes no noise.
 
 A try is a check (see [Diseases](diseases.md#checks)): 2d12 plus your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers) plus
 what your [Heal](skills.md#skill-heal) skill gives (the benefits table above) against the difficulty below; a roll of 2

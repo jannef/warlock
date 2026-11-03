@@ -542,14 +542,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
     merchant is known for both. Gnomes keep Appraise alone.
 - **Treating oneself** (`heal.rs`, `world/heal.rs`; #549, the owner 2026-10-27): the Heal
   skill's use, the abilities menu's **Heal** (`Ability::Heal`, in the skill's place among the
-  Skills; `Action::Heal`, replay text `heal` or `heal:ID`; cost `heal`, 2500: a quarter of a
-  minute; no key of its own). Anyone trained in a skill with the `heal` effect has it; it is
-  greyed out "nothing to treat" while there is nothing they may treat. For now the patient is
-  always the player. What may be treated (`heal::treatable`, in status order, then disease
+  Skills; `Action::Heal`, replay text `heal`, `heal:ID`, or `heal:ID:DIR`; cost `heal`, 2500: a
+  quarter of a minute; no key of its own). Anyone trained in a skill with the `heal` effect has
+  it; it is greyed out "nothing to treat" while there is nothing they may treat. The patient is
+  the player, or **an ally of theirs beside them** (#915; design ranger-companion.md §9,
+  "Tending": from level 1, for anyone with the skill, whatever the ally's source): its ailments
+  are offered after the player's own, in direction order, as "Your wolf's bleeding" (the way
+  after, "(east)", when two allies beside them go by one name), and `heal:ID:DIR` treats the
+  ally that way; the healer's check, the patient's ailment and degrees, the same time and marks.
+  The player knows their own allies' hurts, poison and sickness too; "You have no ally there."
+  refuses a direction with none, with no time. What may be treated (`heal::treatable`, in status order, then disease
   order): a status with a `treat` table (`data/status.toml`: bleeding, poisoned), and a disease
   that shows (one still incubating is unknown to its sufferer). With more than one, the menu
   asks which in the dialog (§6), each by the name the player knows it by ("Sickness" for a
-  disease not yet known by name); a bare `heal` treats the first. A try is a check (§8 "Checks"):
+  disease not yet known by name); a bare `heal` treats the player's first. A try is a check (§8 "Checks"):
   2d12 plus the Intelligence modifier (effective score, and talents' Intelligence check bonus)
   plus Heal's `heal` benefit (+8 at 100, +12 at 200, at most 20) against the status's
   `treat.difficulty + treat.per_degree × severity` (bleeding 6 + 2 a degree, poisoned 8 + 1 a

@@ -146,7 +146,10 @@ fn only_those_trained_in_heal_may_treat_and_only_with_something_to_treat() {
     let mut w = world("room");
     afflict(&mut w, "bleeding", 5);
     assert_eq!(heal_in_menu(&w), None, "untrained: not in the menu");
-    let out = w.apply(&Action::Heal(None));
+    let out = w.apply(&Action::Heal {
+        what: None,
+        ally: None,
+    });
     assert!(!out.took_turn && out.elapsed.is_zero());
     assert_eq!(last_message(&w), "You know nothing of healing.");
     assert_eq!(severity(&w, "bleeding"), Some(5));
@@ -183,7 +186,10 @@ fn only_those_trained_in_heal_may_treat_and_only_with_something_to_treat() {
     );
     assert_eq!(
         Ability::Heal.action(w.content(), None),
-        Some(Action::Heal(None))
+        Some(Action::Heal {
+            what: None,
+            ally: None
+        })
     );
     assert_eq!(Ability::Heal.aim(w.content()), crate::ability::Aim::Ailment);
     // A priest is trained in it from the start.
@@ -241,7 +247,11 @@ fn bleeding_is_an_intelligence_check_and_stops_or_may_be_tried_again() {
     while severity(&w, "bleeding").is_some() {
         assert!(tries < 100, "bleeding stops within 100 tries");
         assert!(
-            w.apply(&Action::Heal(None)).took_turn,
+            w.apply(&Action::Heal {
+                what: None,
+                ally: None
+            })
+            .took_turn,
             "each try takes its time"
         );
         tries += 1;
@@ -279,7 +289,10 @@ fn a_poison_is_tried_once_eased_a_degree_and_tried_again_once_it_ends() {
         let out = w.apply(&"heal:poisoned".parse().expect("action"));
         assert!(!out.took_turn && out.elapsed.is_zero());
         assert_eq!(last_message(&w), "You can do no more for the poison.");
-        let out = w.apply(&Action::Heal(None));
+        let out = w.apply(&Action::Heal {
+            what: None,
+            ally: None,
+        });
         assert!(!out.took_turn);
         assert_eq!(last_message(&w), "There is nothing to treat.");
         // A new dose after it ended may be tried again.
@@ -311,7 +324,13 @@ fn a_disease_is_tried_once_eased_never_cured_and_tried_again_when_caught_again()
         let difficulty = w.content().disease(fever).difficulty;
         let mut rng = w.state.rng.clone();
         let expected = check::check(&mut rng, modifier(&w), difficulty);
-        assert!(w.apply(&Action::Heal(None)).took_turn);
+        assert!(
+            w.apply(&Action::Heal {
+                what: None,
+                ally: None
+            })
+            .took_turn
+        );
         let after = *w
             .state
             .player()
@@ -328,7 +347,10 @@ fn a_disease_is_tried_once_eased_never_cured_and_tried_again_when_caught_again()
             assert_eq!(last_message(&w), "You can do no more for the sickness.");
             assert_eq!(after.streak, before.streak);
         }
-        let out = w.apply(&Action::Heal(Some("filth_fever".into())));
+        let out = w.apply(&Action::Heal {
+            what: Some("filth_fever".into()),
+            ally: None,
+        });
         assert!(!out.took_turn);
         assert_eq!(last_message(&w), "You can do no more for the sickness.");
         // Rid of it and caught again, it may be tried again.
@@ -355,7 +377,10 @@ fn a_disease_that_never_recovers_or_is_one_check_from_it_has_its_next_turn_put_o
                 .expect("it");
             infection.streak = streak;
             infection.left = 100;
-            w.apply(&Action::Heal(Some(id.into())));
+            w.apply(&Action::Heal {
+                what: Some(id.into()),
+                ally: None,
+            });
             if last_message(&w).starts_with("You ease") {
                 let after = *w.state.player().diseases.get(disease).expect("not cured");
                 let interval = w.content().disease(disease).interval_seconds();
@@ -395,7 +420,10 @@ fn a_try_may_earn_heal_a_mark() {
     let mut w = World::new(content(true), "room", None).expect("world");
     train(&mut w, 0);
     afflict(&mut w, "bleeding", 5);
-    w.apply(&Action::Heal(None));
+    w.apply(&Action::Heal {
+        what: None,
+        ally: None,
+    });
     let heal = heal_skill(&w);
     let marks = w.state.player().skills.get(heal).map(|t| t.marks);
     assert_eq!(marks, Some(1), "a try, whatever came of it");
@@ -434,4 +462,68 @@ fn treated_flags_save_replay_and_hash() {
     let me = loaded.state.player();
     assert!(me.effects.get(poisoned).is_some_and(|e| e.treated));
     assert!(me.diseases.get(fever).is_some_and(|i| i.treated));
+}
+
+/// The player's one ally beside them: its id and the way to it.
+fn ally_beside(w: &World) -> Option<(ActorId, crate::geom::Dir)> {
+    (super::allies_beside(&w.state).first()).map(|&(d, a)| (a.id, d))
+}
+
+#[test]
+fn heal_tends_an_ally_beside_the_player_and_not_a_far_one() {
+    // Design ranger-companion.md §9, "Tending": anyone trained in Heal, from the start.
+    let mut w = world("sage");
+    train(&mut w, 100);
+    w.apply(&parse_actions("ally:wolf").expect("action")[0]);
+    let (wolf, dir) = ally_beside(&w).expect("the wolf beside the player");
+    let bleeding = status(&w, "bleeding");
+    w.afflict(wolf, bleeding, 2, None, &mut Vec::new());
+    w.perceive(&mut Vec::new());
+    // Offered by name and way, though the player has nothing of their own to treat.
+    let offered = w.perception().own_ailments();
+    assert_eq!(offered.len(), 1, "{offered:?}");
+    assert_eq!(offered[0].name, "Your wolf's bleeding");
+    assert_eq!(
+        offered[0].action.to_string(),
+        format!("heal:bleeding:{dir}")
+    );
+    assert_eq!(heal_in_menu(&w), Some(None), "usable for the ally's sake");
+    // A bare `heal` is the player's own: nothing.
+    let out = w.apply(&Action::Heal {
+        what: None,
+        ally: None,
+    });
+    assert!(!out.took_turn);
+    assert_eq!(last_message(&w), "There is nothing to treat.");
+    // The try takes the time and stops the bleeding sooner or later.
+    let mut stopped = false;
+    for _ in 0..20 {
+        let Some((_, dir)) = ally_beside(&w) else {
+            break;
+        };
+        let text = format!("heal:bleeding:{dir}");
+        let out = w.apply(&parse_actions(&text).expect("action")[0]);
+        assert!(out.took_turn, "{text}");
+        if !w.state.actors[&wolf].effects.has(bleeding) {
+            stopped = true;
+            break;
+        }
+    }
+    assert!(stopped, "the wolf's bleeding stopped: {:?}", messages(&w));
+    assert!(messages(&w).iter().any(|m| m == "You bind the wound."));
+    // An ally two cells off is not tended: refused, no time.
+    w.afflict(wolf, bleeding, 2, None, &mut Vec::new());
+    let me = w.state.player().pos;
+    let far = Pos::new(me.x + 2, me.y);
+    w.state.actors.get_mut(&wolf).expect("the wolf").pos = far;
+    for action in parse_actions("order:stay wait").expect("actions") {
+        w.apply(&action);
+    }
+    assert_eq!(w.state.actors[&wolf].pos, far, "it holds there");
+    assert!(ally_beside(&w).is_none());
+    assert!(w.perception().own_ailments().is_empty());
+    assert_eq!(heal_in_menu(&w), Some(Some(Unavailable::NothingToTreat)));
+    let out = w.apply(&parse_actions("heal:bleeding:E").expect("action")[0]);
+    assert!(!out.took_turn && out.elapsed.is_zero());
+    assert_eq!(last_message(&w), "You have no ally there.");
 }

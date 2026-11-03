@@ -263,6 +263,7 @@ pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
 pub use guild::GuildRank;
 pub(crate) use hash::fnv1a;
+pub(crate) use heal::allies_beside;
 pub use learn::{Odds, study_odds, study_turns};
 pub use level::{Fire, LevelState};
 pub use loot::Identified;
@@ -1385,7 +1386,7 @@ impl World {
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
-            Action::Heal(what) => return self.heal(what.as_deref(), events),
+            Action::Heal { what, ally } => return self.heal(what.as_deref(), *ally, events),
             Action::Pray => return self.start_prayer(),
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),

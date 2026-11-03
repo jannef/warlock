@@ -31,9 +31,11 @@
 //! its time departs at the end of the turn where the player is ([`World::allies_lapse`]), and is
 //! removed silently where they are not: on return to its level, or as the retinue steps out.
 //!
-//! **Experience**: an ally's kill pays its master as their own blow would, at `[xp]
-//! ally_percent` (`fight.rs::dies`): the first-kill bonus, the quest tally, Favoured prey, the
-//! named monsters slain, the resources a kill builds. The ally gets nothing.
+//! **Experience** ([`World::ally_share`], `fight.rs::dies`): an ally's kill pays its master's
+//! experience, the first-kill bonus too, at their class's `ally_share` (the ranger's and the
+//! druid's 100), else `[xp] ally_percent` (50); the quest tally, Favoured prey, the named
+//! monsters slain, the alignment, and the resources a kill builds are credited in full. The
+//! ally gets nothing.
 //!
 //! Nothing here draws from any stream, and a run with no allies calls none of it.
 
@@ -164,6 +166,17 @@ impl World {
     /// Whose ally actor `id` is, if anyone's.
     pub(super) fn master_of(&self, id: ActorId) -> Option<ActorId> {
         self.state.actors.get(&id).and_then(Actor::master)
+    }
+
+    /// What an ally's kill pays the player, in percent of their own kill (spec §8 "Allies";
+    /// design ranger-companion.md §9): their class's `ally_share` (the pet classes' 100), else
+    /// `[xp] ally_percent` (50), else, with no allies data, in full. The rule is the master's
+    /// class, whatever the ally's source.
+    pub(super) fn ally_share(&self) -> u8 {
+        let class = (self.state.character.as_ref()).and_then(|c| self.content.class(&c.spec.class));
+        (class.and_then(|c| c.ally_share))
+            .or_else(|| self.content.allies().map(|r| r.ally_percent))
+            .unwrap_or(100)
     }
 
     /// Makes an ally of type `creature` for the player at `at` on the current level, following,
