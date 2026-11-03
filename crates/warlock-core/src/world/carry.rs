@@ -94,16 +94,21 @@ impl World {
         if let Some(spent) = self.trade(positions, false) {
             return spent;
         }
-        let inventory = self.state.player().inventory.clone();
-        if inventory.is_empty() {
+        let len = self.state.player().inventory.len();
+        if len == 0 {
             self.say("You are not carrying anything.");
             return Spent::Nothing;
         }
-        let Some(chosen) = self.chosen(positions, inventory.len(), "You carry no such thing.")
-        else {
+        let Some(chosen) = self.chosen(positions, len, "You carry no such thing.") else {
             return Spent::Nothing;
         };
-        let mut kinds = self.take_off_before_dropping(chosen.iter());
+        // A spirit weapon is not let go: it fades (`spirit_weapon.rs`).
+        let (chosen, mut kinds) = self.release_spirit(&chosen);
+        if chosen.is_empty() {
+            return self.price_for(&kinds);
+        }
+        let inventory = self.state.player().inventory.clone();
+        kinds.extend(self.take_off_before_dropping(chosen.iter()));
         kinds.push(ActionKind::Drop);
         // Priced at the load the player has as they begin.
         let spent = self.price_for(&kinds);

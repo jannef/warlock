@@ -157,6 +157,11 @@ impl World {
             self.say("You carry no such thing.");
             return Spent::Nothing;
         };
+        // A spirit weapon is not thrown: it would fade as it left the hand.
+        if stack.is_spirit() {
+            self.say("It will not leave your hand.");
+            return Spent::Nothing;
+        }
         let (Some(range), Some(profile)) =
             (me.throw_range(item, &content), me.thrown(item, &content))
         else {

@@ -205,6 +205,7 @@ mod spell_aim;
 mod spell_mods;
 mod spell_rung;
 mod spell_words;
+mod spirit_weapon;
 mod stars;
 mod stat_deeds;
 mod stat_training;
@@ -271,6 +272,7 @@ pub use spell::cone_cells;
 pub use spell_aim::SpellAim;
 pub use spell_rung::CastBy;
 pub use spell_words::{SpellRoll, reach_words, reroll_words, roll_words};
+pub use spirit_weapon::{gift as spirit_gift, pierces_all, shapes as weapon_shapes};
 pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
@@ -1378,6 +1380,7 @@ impl World {
             Action::Use(active, dir) => return self.use_class(*active, *dir, events),
             Action::UseAt(active, at) => return self.use_class_at(*active, *at, events),
             Action::UseOn(active, item) => return self.use_class_on(*active, *item),
+            Action::Shape(active, shape) => return self.use_class_shape(*active, shape),
             Action::Gift(active, at) => return self.use_gift(*active, *at, events),
             // A `use:ID` that names no spell but a weapon active is that active.
             Action::Cast(id, at)
@@ -1758,6 +1761,8 @@ mod speed_tests;
 mod spell_list_tests;
 #[cfg(test)]
 mod spell_talent_tests;
+#[cfg(test)]
+mod spirit_weapon_tests;
 #[cfg(test)]
 mod spring_tests;
 #[cfg(test)]

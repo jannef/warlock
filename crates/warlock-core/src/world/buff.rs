@@ -77,9 +77,10 @@ impl World {
             Action::Temper { .. } => ActionKind::Temper,
             Action::Disarm(_) => ActionKind::Disarm,
             Action::Heal(_) => ActionKind::Heal,
-            Action::Use(active, _) | Action::UseAt(active, _) | Action::UseOn(active, _) => {
-                active.cost()
-            }
+            Action::Use(active, _)
+            | Action::UseAt(active, _)
+            | Action::UseOn(active, _)
+            | Action::Shape(active, _) => active.cost(),
             Action::Gift(active, _) => active.cost(),
             // A `use:ID` of a weapon active (no spell's id) is the action its energy names.
             Action::Cast(id, _) | Action::Act(id, _)

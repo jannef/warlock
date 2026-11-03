@@ -1,6 +1,7 @@
 # Prestige classes (spec §8 "Prestige classes"; docs/design/prestige-classes.md): one file per
 # class holding one `[[prestige]]`. This file holds only the notes below: a file of comments
-# defines nothing, and the game ships no prestige class yet (the Hunter is the design's H1).
+# defines nothing. The game ships one, the Hunter (hunter.toml), whose door is a campaign's
+# calling.
 #
 # A character has one level, read off experience.toml's curve as ever, but it stops at their
 # class's highest level (classes/ `max_level`, default experience.toml's `[levels] class_max`).

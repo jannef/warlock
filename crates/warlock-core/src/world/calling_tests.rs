@@ -272,7 +272,7 @@ fn a_full_bank_is_spent_at_the_calling_and_nothing_is_given() {
 #[test]
 fn the_dev_call_comes_whatever_the_level_and_refuses_what_is_not_there() {
     let mut w = world("bard");
-    run(&mut w, "call:hunter");
+    run(&mut w, "call:ranger");
     assert!(said(&w).last().expect("said").contains("no prestige class"));
     assert!(w.character().expect("character").prestige.is_none());
     // At level 1 the calling is not open, but the dev action makes it: Warden 1 at once.

@@ -669,6 +669,8 @@ pub struct TalentMods {
     pub low_blow: bool,
     /// The active Merchant's eye: a stack it carries identified, for the time of a reading.
     pub merchants_eye: bool,
+    /// The active Spirit weapon, and what a spirit weapon in its hand gives, if it has it.
+    pub spirit_weapon: Option<SpiritWeapon>,
     /// How much higher every skill it is trained in counts (Jack of all trades).
     pub trained_skills: i32,
     /// The alternative resources its talents grant it, in the order first named (Rapid shot's
@@ -775,6 +777,15 @@ pub struct WarCry {
 pub struct Consecrate {
     pub mana: i32,
     pub time: crate::time::Duration,
+}
+
+/// The active Spirit weapon (spec §8 "Prestige classes"; `world/spirit_weapon.rs`): what a
+/// spirit weapon in the hand gives, more to hit, a threat lower, and Protection ignored.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SpiritWeapon {
+    pub to_hit: i32,
+    pub threat: u8,
+    pub ignores_protection: bool,
 }
 
 /// The active Knock (spec §8 "Class abilities", "Chests"): its mana.
@@ -1051,6 +1062,7 @@ impl TalentMods {
             A::Lurk => self.lurk.is_some(),
             A::LowBlow => self.low_blow,
             A::MerchantsEye => self.merchants_eye,
+            A::SpiritWeapon => self.spirit_weapon.is_some(),
             A::MasterThief => self.finisher,
             A::Inspire => self.inspire.is_some(),
             A::Consecrate => self.consecrate.is_some(),
@@ -1880,6 +1892,18 @@ impl TalentMods {
             }
             TalentEffect::LowBlow => self.low_blow = true,
             TalentEffect::MerchantsEye => self.merchants_eye = true,
+            TalentEffect::SpiritWeapon {
+                to_hit,
+                threat,
+                ignores_protection,
+                ..
+            } => {
+                self.spirit_weapon = Some(SpiritWeapon {
+                    to_hit,
+                    threat,
+                    ignores_protection,
+                });
+            }
             TalentEffect::TrainedSkills { value } => self.trained_skills += value,
             TalentEffect::GrantsResource { resource } => {
                 if let Some(resource) = content.resource_id(&resource)

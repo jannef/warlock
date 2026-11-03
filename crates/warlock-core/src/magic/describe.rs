@@ -294,10 +294,13 @@ fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String
             format!("{}: {gem}", capitalized(kind)),
         ));
     }
-    // Its own stats as it is made: another material's damage and Protection (#193).
+    // Its own stats as it is made: another material's damage and Protection (#193); a spirit
+    // weapon's with its gifts' threat and piercing (spec §8 "Prestige classes").
+    let gift = crate::world::spirit_gift(content).filter(|_| stack.is_spirit());
+    let spirit = gift.map(|(_, threat, pierces, _)| Spirit { threat, pierces });
     let (_, damage) = crate::variant::weapon(def, &parts, content);
     out.extend(
-        stats(def, content, damage, stack.base_protection(content))
+        stats(def, content, damage, stack.base_protection(content), spirit)
             .into_iter()
             .map(|t| line(LineKind::Stat, t)),
     );
@@ -305,6 +308,10 @@ fn lines_named(stack: &Stack, content: &Content, (name, plural): (String, String
     // damage with its material and known affixes, Dv and Pv.
     let numbers = super::Numbers::of(stack, content).lines(content);
     out.extend(numbers.into_iter().map(|t| line(LineKind::Stat, t)));
+    // A spirit weapon's power, as a unique's is said.
+    if let Some((_, _, _, phrase)) = gift {
+        out.push(line(LineKind::Power, phrase));
+    }
     if stack.rarity() == Rarity::Normal {
         return out;
     }
@@ -478,21 +485,37 @@ fn dice(n: i32) -> &'static str {
 /// The base stats of `def` in words: how it is held or worn, its damage and criticals, how far it
 /// shoots or is thrown, what it needs, how quick it is, its Defence, and whether it breaks.
 pub fn base_stats(def: &ObjectDef, content: &Content) -> Vec<String> {
-    stats(def, content, 0, def.protection)
+    stats(def, content, 0, def.protection, None)
+}
+
+/// What a spirit weapon's gifts change in its own stats: the threat lowered, and whether it
+/// pierces armour.
+#[derive(Clone, Copy)]
+struct Spirit {
+    threat: u8,
+    pierces: bool,
 }
 
 /// [`base_stats`] of one made of another material: `damage` more to its damage dice and
 /// `protection` its Protection.
-fn stats(def: &ObjectDef, content: &Content, damage: i32, protection: i32) -> Vec<String> {
+fn stats(
+    def: &ObjectDef,
+    content: &Content,
+    damage: i32,
+    protection: i32,
+    spirit: Option<Spirit>,
+) -> Vec<String> {
     let mut out = Vec::new();
     if let Some(held) = how_held(def, content) {
         out.push(held);
     }
     if let Some(attack) = &def.attack {
-        let critical = if i32::from(attack.threat) >= SURE_HIT {
+        let less = spirit.map_or(0, |s| i32::from(s.threat));
+        let threat = (i32::from(attack.threat) - less).max(crate::combat::FUMBLE + 1);
+        let critical = if threat >= SURE_HIT {
             format!("{SURE_HIT}")
         } else {
-            format!("{}–{SURE_HIT}", attack.threat)
+            format!("{threat}–{SURE_HIT}")
         };
         let shot = if def.launches.is_some() {
             " a shot"
@@ -546,7 +569,7 @@ fn stats(def: &ObjectDef, content: &Content, damage: i32, protection: i32) -> Ve
         out.push(format!("Adds {} {kind} damage", added.dice));
     }
     // How much armour it ignores stays hidden, as the soak does: only that it does.
-    if def.penetration > 0 {
+    if def.penetration > 0 || spirit.is_some_and(|s| s.pierces) {
         out.push("Pierces armour".into());
     }
     if def.parry > 0 {

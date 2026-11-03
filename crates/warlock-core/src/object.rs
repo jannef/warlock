@@ -77,6 +77,11 @@ pub struct Stack {
     /// (`WorldState::carried_light`). Unlit for everything else.
     #[serde(default, skip_serializing_if = "LightMode::is_unlit")]
     light: LightMode,
+    /// A weapon of spirit-stuff (spec §8 "Prestige classes": the Hunter's Spirit weapon), made
+    /// only by `World::call_weapon` and only ever in a hand: it fades the moment it leaves one
+    /// (`world/spirit_weapon.rs`). Otherwise it is its base object in every rule.
+    #[serde(default, skip_serializing_if = "is_false")]
+    spirit: bool,
 }
 
 /// The mode of a carried light ([`Stack`]'s `light`; spec §5 "Light sources"): what `u`, the
@@ -143,6 +148,7 @@ impl Stack {
             charges: None,
             wand_rung: None,
             light: LightMode::Unlit,
+            spirit: false,
         }
     }
 
@@ -156,6 +162,19 @@ impl Stack {
             died: Some(died),
             ..Self::new(object, 1)
         }
+    }
+
+    /// One `object` of spirit-stuff (`World::call_weapon`'s): plain, and known for what it is.
+    pub(crate) fn spirit(object: ObjectId) -> Self {
+        Self {
+            spirit: true,
+            ..Self::one(object)
+        }
+    }
+
+    /// Whether it is a weapon of spirit-stuff, which fades when it leaves the hand.
+    pub fn is_spirit(&self) -> bool {
+        self.spirit
     }
 
     /// `count` of `object` that rolled `magic`.
@@ -536,6 +555,7 @@ impl Stack {
             && (self.charges).is_none_or(|c| def.wand.is_some_and(|w| c.used <= w.charges))
             && (self.wand_rung.is_none() || def.wand.is_some())
             && (self.light.is_unlit() || def.carried_light.is_some())
+            && (!self.spirit || (self.count == 1 && def.attack.is_some()))
     }
 
     /// The same goods as `other`: the same object made the same way (what a shop's bill counts
