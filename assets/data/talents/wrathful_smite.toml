@@ -1,0 +1,10 @@
+[[talent]]
+id = "wrathful_smite"
+name = "Wrathful smite"
+tree = "class"
+granted = true
+description = "A smite that breaks the foe's nerve (an ability, paid in zeal): unless its will holds, it runs from you a while."
+effects = [{ kind = "smite_mode", mode = "fear", status = "frightened", turns = "2d3", check = "willpower", difficulty = 13 }]
+resource = { id = "zeal", cost = 4 }
+systems = ["combat", "resources", "status"]
+alignment = { min = "kind" }

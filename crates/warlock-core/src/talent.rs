@@ -16,7 +16,8 @@
 use crate::character::Character;
 use crate::content::{
     Benefit, Build, Choice, CombatStance, Content, DamageTypeId, LightId, MAX_RANK, Need,
-    ResourceCost, ResourceId, Role, Sign, StatusId, TalentDef, TalentEffect, TalentId, TerrainId,
+    ResourceCost, ResourceId, Role, Sign, SmiteRiderKind, StatusId, TalentDef, TalentEffect,
+    TalentId, TerrainId,
 };
 use crate::damage::Kinds;
 use crate::dice::Dice;
@@ -589,6 +590,9 @@ pub struct TalentMods {
     pub whirlwind: bool,
     /// The active Smite, if it has it.
     pub smite: Option<Smite>,
+    /// The modes of smiting it has (Branding smite, Wrathful smite; `world/smite.rs`): each
+    /// the Smite blow with its rider.
+    pub smite_modes: Vec<SmiteRider>,
     /// The active Holy radiance: its status and the light it sheds while it lasts.
     pub radiance: Option<(StatusId, LightId)>,
     /// The active Patient defence, if it has it: the status it gives (Poised).
@@ -887,6 +891,32 @@ pub struct Smite {
     pub unholy: u8,
 }
 
+/// A mode of smiting's rider (`TalentEffect::SmiteMode`; `world/smite.rs`), on a hit that did
+/// damage.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SmiteRider {
+    /// Branding smite's: `severity` degrees of `status` (Branded) on the foe.
+    Brand { status: StatusId, severity: u16 },
+    /// Wrathful smite's: a `check` of the foe's against `difficulty` plus the smiter's Smite
+    /// `aim` modifier; failed, `status` (Frightened) at `turns` degrees.
+    Fear {
+        status: StatusId,
+        turns: Dice,
+        check: Stat,
+        difficulty: i32,
+    },
+}
+
+impl SmiteRider {
+    /// The class active whose rider it is.
+    pub const fn active(self) -> crate::content::ClassActive {
+        match self {
+            SmiteRider::Brand { .. } => crate::content::ClassActive::BrandingSmite,
+            SmiteRider::Fear { .. } => crate::content::ClassActive::WrathfulSmite,
+        }
+    }
+}
+
 impl Smite {
     /// The extra dice at character `level`: one die per `per_levels` levels, at least one, and
     /// `unholy` more against an unholy foe.
@@ -1104,6 +1134,7 @@ impl TalentMods {
             A::Whirlwind => self.whirlwind,
             A::LayOnHands => self.lay_on_hands.is_some(),
             A::Smite => self.smite.is_some(),
+            A::BrandingSmite | A::WrathfulSmite => self.smite_mode(active).is_some(),
             A::HolyRadiance => self.radiance.is_some(),
             A::PatientDefence => self.patient_defence.is_some(),
             A::StunningStrike => self.stunning_strike.is_some(),
@@ -1123,6 +1154,14 @@ impl TalentMods {
             A::Scribe => self.scribe.is_some(),
             A::Orison => self.prayer.as_ref().is_some_and(|p| p.tier > 0),
         }
+    }
+
+    /// The rider of mode of smiting `active` (Branding smite, Wrathful smite), if it has it.
+    pub fn smite_mode(&self, active: crate::content::ClassActive) -> Option<SmiteRider> {
+        self.smite_modes
+            .iter()
+            .copied()
+            .find(|r| r.active() == active)
     }
 
     /// Song `active` as it is sung, if it has it: a Virtuoso's free, a degree greater, and on the
@@ -1888,6 +1927,32 @@ impl TalentMods {
                     aim,
                     unholy,
                 });
+            }
+            TalentEffect::SmiteMode {
+                mode,
+                status,
+                severity,
+                turns,
+                check,
+                difficulty,
+            } => {
+                let rider = match (mode, content.status_id(&status), turns, check) {
+                    (SmiteRiderKind::Brand, Some(status), ..) => {
+                        Some(SmiteRider::Brand { status, severity })
+                    }
+                    (SmiteRiderKind::Fear, Some(status), Some(turns), Some(check)) => {
+                        Some(SmiteRider::Fear {
+                            status,
+                            turns,
+                            check,
+                            difficulty,
+                        })
+                    }
+                    _ => None,
+                };
+                if let Some(rider) = rider.filter(|r| self.smite_mode(r.active()).is_none()) {
+                    self.smite_modes.push(rider);
+                }
             }
             TalentEffect::Radiance { status, light } => {
                 if let (Some(status), Some(light)) =

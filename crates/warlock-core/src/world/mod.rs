@@ -1781,6 +1781,8 @@ mod skills_tests;
 #[cfg(test)]
 mod slip_tests;
 #[cfg(test)]
+mod smite_mode_tests;
+#[cfg(test)]
 mod smite_tests;
 #[cfg(test)]
 mod song_tests;

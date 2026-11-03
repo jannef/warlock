@@ -7,19 +7,39 @@
 //! modifier in the talent's `aim` stat (Presence) added to hit. `use_class` has already refused
 //! it with nobody hostile there, asked the bands (`World::answered`), and spent its zeal. Every
 //! mode of smiting resolves here ([`SmiteMode`]): the blow, then the mode's rider on a hit that
-//! did damage. Nothing here draws at random but the blow itself.
+//! did damage (§6): Branding smite's foe is Branded (it sheds light a while); Wrathful smite's
+//! makes a check of its Willpower against the mode's difficulty plus the smiter's `aim`
+//! modifier (two gameplay draws) and, failing, is Frightened for the mode's `turns` degrees (one
+//! draw), caused by the smiter. A rider's zeal is spent whatever it finds to do. Nothing else
+//! here draws at random but the blow itself.
 
 use super::{ActorId, Spent, World};
 use crate::action::{AttackKind, Event};
 use crate::combat::Profile;
-use crate::content::ActionKind;
+use crate::content::{ActionKind, ClassActive};
 use crate::geom::Dir;
+use crate::talent::SmiteRider;
 
-/// The modes of smiting: the plain smite, and (later slices) the smites with a rider.
+/// The modes of smiting: the plain smite, and the smites with a rider.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum SmiteMode {
     /// The Smite ability itself: the blow and nothing more.
     Plain,
+    /// Branding smite: the foe hit is Branded.
+    Branding,
+    /// Wrathful smite: the foe hit is Frightened unless its will holds.
+    Wrathful,
+}
+
+impl SmiteMode {
+    /// The class active of a mode with a rider; `None` for the plain smite.
+    const fn active(self) -> Option<ClassActive> {
+        match self {
+            SmiteMode::Plain => None,
+            SmiteMode::Branding => Some(ClassActive::BrandingSmite),
+            SmiteMode::Wrathful => Some(ClassActive::WrathfulSmite),
+        }
+    }
 }
 
 impl World {
@@ -36,16 +56,79 @@ impl World {
             return Spent::Nothing;
         };
         let me = self.state.player();
+        let rider = match mode.active() {
+            Some(active) => match me.talent_mods(&content).smite_mode(active) {
+                Some(rider) => Some(rider),
+                None => return Spent::Nothing,
+            },
+            None => None,
+        };
         let melee = me.attack_skills(&content, AttackKind::Melee, None);
         let with = me.weapon_item(&content);
         let price = self.attack_price(player, ActionKind::Melee, with, melee);
-        match mode {
-            SmiteMode::Plain => self.say("You smite!"),
-        }
+        self.say("You smite!");
         let blow = self.player_blow_with(target, seen, profile, events);
+        let wounded = blow.is_some_and(|b| b.damage > 0);
+        if let Some(rider) = rider
+            && wounded
+            && self.state.actors.contains_key(&target)
+        {
+            self.smite_rider(target, rider, events);
+        }
         self.after_attack(player, target, super::free_blow::parried(blow), events);
         self.exert(ActionKind::Melee);
         Spent::Turn(price)
+    }
+
+    /// Mode of smiting `rider` on `target`, wounded by the smite and alive (module docs). The
+    /// player is told how it took it if they see it.
+    pub(super) fn smite_rider(
+        &mut self,
+        target: ActorId,
+        rider: SmiteRider,
+        events: &mut Vec<Event>,
+    ) {
+        let content = self.content.clone();
+        let player = self.state.player;
+        let Some(them) = self.state.actors.get(&target) else {
+            return;
+        };
+        let seen = self.perception.sees_actors_at(them.pos);
+        let name = self.called(them);
+        match rider {
+            SmiteRider::Brand { status, severity } => {
+                self.afflict(target, status, severity, Some(player), events);
+                let took = (self.state.actors.get(&target)).is_some_and(|a| a.effects.has(status));
+                if seen && took {
+                    self.say(format!("Holy light clings to {name}."));
+                }
+            }
+            SmiteRider::Fear {
+                status,
+                turns,
+                check,
+                difficulty,
+            } => {
+                let me = self.state.player();
+                let aim = (me.talent_mods(&content).smite)
+                    .and_then(|s| s.aim)
+                    .map_or(0, |stat| me.effective_stats(&content).modifier(stat));
+                let nerve = them.effective_stats(&content).modifier(check)
+                    + them.talent_mods(&content).check(check);
+                let who = super::talk::capitalized(&name);
+                if crate::check::check(&mut self.state.rng, nerve, difficulty + aim) {
+                    if seen {
+                        self.say(format!("{who}'s will holds."));
+                    }
+                    return;
+                }
+                let degrees = u16::try_from(turns.roll(&mut self.state.rng).max(1)).unwrap_or(1);
+                self.afflict(target, status, degrees, Some(player), events);
+                if seen {
+                    self.say(format!("{who} quails!"));
+                }
+            }
+        }
     }
 
     /// The player's smite at `target`: their melee profile with the smite's dice (its unholy
