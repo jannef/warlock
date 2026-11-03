@@ -154,6 +154,32 @@ fn road_snapshot() {
     insta::assert_snapshot!("road_seed_2", describe(&area(2, 40, 23)));
 }
 
+#[test]
+fn each_land_has_its_own_wild_beast() {
+    // (cell, the creatures it may hold, the beast it must hold in some seed).
+    let lands = [
+        ((25, 20), ["deer", "boar"].as_slice(), "boar"),
+        ((10, 20), ["deer", "lynx"].as_slice(), "lynx"),
+        ((20, 40), ["badger"].as_slice(), "badger"),
+        ((60, 44), [].as_slice(), ""),
+    ];
+    for ((x, y), allowed, beast) in lands {
+        let mut seen = false;
+        for seed in 0..24 {
+            let level = area(seed, x, y);
+            let start = level.player_start.expect("start");
+            for c in &level.creatures {
+                let id = CONTENT.creature(c.creature).id.as_str();
+                assert!(allowed.contains(&id), "{id} in ({x}, {y}) seed {seed}");
+                let (dx, dy) = (c.pos.x - start.x, 2 * (c.pos.y - start.y));
+                assert!(dx * dx + dy * dy >= 20 * 20, "{id} too near the middle");
+                seen |= id == beast;
+            }
+        }
+        assert!(beast.is_empty() || seen, "no {beast} in ({x}, {y})");
+    }
+}
+
 /// Cells the player can walk to from `from` (8-way moves).
 fn player_reach(level: &LevelTemplate, from: Pos) -> Grid<bool> {
     let terrain = &level.terrain;

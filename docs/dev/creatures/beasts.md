@@ -37,7 +37,9 @@ tameable, and a `depart` line. The vermin and the orcs' wolves that are tameable
 | `bear` | 12 | 70 | 1000 | 60 | claws 2d6 slashing | 6 | low-light eyes, a thick hide (Defence 1; the body rule's Protection 0 at 12), footsteps 70; Call of the forest's |
 
 Call the elements draws from the elemental roster (`elementals.md`): the greater earth (24),
-water (26), air (31), and fire (38) elementals. Follow-ups: a wolf-pack row in the Ascmearc's
-woods encounters as wildlife ("Hunt them" / "Let them be"); the boar, the lynx, and the badger in
-the forest and hill local areas and the Ascmearc's wildlife encounters (the companion design's
-C7).
+water (26), air (31), and fire (38) elementals. In the land (#922, the companion design's C7): the boar
+roams the forest local areas, the lynx the dense forest's, the badger the hills' (`mapgen/local`,
+`Features::beast`), and the Ascmearc's encounter tables meet them as wildlife: `woods_boar` by day
+in the woods, `deep_lynx` at twilight in the deep woods, `vale_badger` on the vales' hills.
+Follow-up: a wolf-pack row in the Ascmearc's woods encounters as wildlife ("Hunt them" / "Let
+them be").

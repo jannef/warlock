@@ -29,6 +29,11 @@ pub(crate) struct Kit {
     /// Where a road crosses water.
     pub bridge: TerrainId,
     pub deer: CreatureId,
+    /// The wild beasts, one landscape's each: the forest's boar, the deep wood's lynx, the
+    /// hills' badger.
+    pub boar: CreatureId,
+    pub lynx: CreatureId,
+    pub badger: CreatureId,
 }
 
 impl Kit {
@@ -38,6 +43,11 @@ impl Kit {
             content
                 .terrain_id(id)
                 .ok_or_else(|| format!("local areas need terrain `{id}`"))
+        };
+        let creature = |id: &str| {
+            content
+                .creature_id(id)
+                .ok_or_else(|| format!("local areas need creature `{id}`"))
         };
         let kit = Kit {
             void: terrain("void")?,
@@ -58,9 +68,10 @@ impl Kit {
             running_water: terrain("running_water")?,
             road: terrain("dirt_road")?,
             bridge: terrain("bridge")?,
-            deer: content
-                .creature_id("deer")
-                .ok_or("local areas need creature `deer`")?,
+            deer: creature("deer")?,
+            boar: creature("boar")?,
+            lynx: creature("lynx")?,
+            badger: creature("badger")?,
         };
         let def = |t: TerrainId| content.terrain(t);
         let walkable = [

@@ -80,6 +80,9 @@ explore that cell on foot. You enter an outdoor area, 80 by 40 cells, made for t
 - What it looks like follows the terrain of the cell and its neighbors: meadows, woods with
   clearings, rocky hills with crags, [marsh](terrain.md#terrain-marsh) with pools and [reeds](terrain.md#terrain-reeds), roads, riverbanks or lake shores
   along the sides where the overworld has them, and now and then ponds, brooks, ruins, or [deer](creatures.md#creature-deer).
+  A wood may hide a [boar](creatures.md#creature-boar), a deep wood a [lynx](creatures.md#creature-lynx),
+  and the hills a [badger](creatures.md#creature-badger): wild beasts that leave you be unless you
+  fall on them, the kinds a ranger may keep as a [companion](allies.md#companions).
   Woods blend towards the neighboring cells so areas side by side fit together.
 - You arrive on the side you walked onto the cell from (on the road if you came along one), or in a
   clearing in the middle if you did not walk there.

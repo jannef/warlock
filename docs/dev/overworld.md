@@ -49,7 +49,9 @@ inside a region; a test checks).
 
 Local areas (spec §3, §7) are generated in `mapgen/local/`: `mod.rs` (`Setting`: the cell's
 landscape and its neighbors' roads, rivers, lakes, and land, read from the overworld; per-landscape
-feature chances; the attempt loop, glade, ruins, deer), `kit.rs` (the terrain and creature ids it
+feature chances; the attempt loop, glade, ruins, deer, and each land's wild beast, `Features::beast`:
+a forest's boar, a dense forest's lynx, the hills' badger, none or one, grazed as the deer after
+them so the land and herd are unchanged), `kit.rs` (the terrain and creature ids it
 builds with, checked when content with an overworld loads), `noise.rs` (integer value noise and
 quantiles: "this share of the area"), `land.rs` (the canvas with per-cell `Claim`s: `Fixed` water,
 roads, ruins; `Clear` glade, banks, roadsides, no obstacles; `Free`), `water.rs` (river and lake
