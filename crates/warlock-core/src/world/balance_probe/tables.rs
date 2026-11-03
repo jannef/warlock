@@ -314,13 +314,13 @@ pub(super) fn spells(p: &Probe, out: &mut String) {
     writeln!(out, "\n## Spells\n").unwrap();
     writeln!(
         out,
-        "Each spell that rolls (harm or healing) of the schools the trained caster knows or has an affinity with, as `Actor::spell_roll` makes it in plain gear, per cast on one target: the rung of its ladder the stats reach (the seeds' range), the school's rank the pace below reached (and the rank of the caster style it is cast in from where the caster stands), the roll (seed 1's dice, the seeds' mean) and the same roll at rank 0 (the ladder alone), and its mana (the cost table's price with no rank's cut in brackets) over the pool.\n"
+        "Each spell that rolls (harm or healing) of the schools the trained caster knows or has an affinity with, as `Actor::spell_roll` makes it in plain gear, per cast on one target: the rung of its ladder the stats reach (the seeds' range), the school's rank the pace below reached (and the rank of the caster style it is cast in from where the caster stands), the roll (seed 1's dice, the seeds' mean) and the same roll at rank 0 (the ladder alone), its mean on a target under a hex (Malison's bite; `–` without it), and its mana (the cost table's price with no rank's cut in brackets) over the pool.\n"
     )
     .unwrap();
     for (class, title, _) in CASTERS {
         writeln!(
             out,
-            "**{title}**\n\n| Spell (level, res) | L | rung | school rank | roll | mana / pool |\n|---|---|---|---|---|---|"
+            "**{title}**\n\n| Spell (level, res) | L | rung | school rank | roll | hexed | mana / pool |\n|---|---|---|---|---|---|---|"
         )
         .unwrap();
         let mut names: Vec<String> = Vec::new();
@@ -334,7 +334,7 @@ pub(super) fn spells(p: &Probe, out: &mut String) {
         if names.is_empty() {
             writeln!(
                 out,
-                "| none: no spell that rolls it knows or has an affinity with ||||||"
+                "| none: no spell that rolls it knows or has an affinity with |||||||"
             )
             .unwrap();
         }
@@ -353,15 +353,19 @@ pub(super) fn spells(p: &Probe, out: &mut String) {
                     rank = format!("{rank} ({style} {ranks})");
                 }
                 let mana = avg(s.iter().map(|s| f64::from(s.mana)));
+                let mean = avg(c.iter().map(|c| roll_mean(c.dice, c.reroll)));
+                let hexed = match first.hexed {
+                    0 => "–".to_string(),
+                    bite => format!("{:.1}", mean + f64::from(bite)),
+                };
                 writeln!(
                     out,
-                    "| {name} ({}, {}) | {level} | {} | {rank} | {}{}, {:.1} (rank 0: {}{}, {:.1}) | {} ({}) / {mana:.0} |",
+                    "| {name} ({}, {}) | {level} | {} | {rank} | {}{}, {mean:.1} (rank 0: {}{}, {:.1}) | {hexed} | {} ({}) / {mana:.0} |",
                     first.level,
                     format!("{:?}", first.resolution).to_lowercase(),
                     span(c.iter().map(|c| c.rung)),
                     first.dice,
                     again(first.reroll),
-                    avg(c.iter().map(|c| roll_mean(c.dice, c.reroll))),
                     first.bare,
                     again(first.bare_reroll),
                     avg(c.iter().map(|c| roll_mean(c.bare, c.bare_reroll))),
@@ -392,7 +396,7 @@ fn prayer_rows(p: &Probe, class: &str, out: &mut String) {
         let mana = avg(snaps.iter().map(|s| f64::from(s.mana)));
         writeln!(
             out,
-            "| {title} (prayer) | {level} | – | – | no roll: answers {answers} of {} ({}) | 0 (0) / {mana:.0} |",
+            "| {title} (prayer) | {level} | – | – | no roll: answers {answers} of {} ({}) | – | 0 (0) / {mana:.0} |",
             uses.len(),
             uses.join(", "),
         )

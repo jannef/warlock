@@ -444,7 +444,11 @@
 #   purify                        rotten food neither sickens it nor exposes it to a disease
 #   corpse_harmless               a fresh corpse's own harm (on_eat sickness, vomiting) never
 #   meal_heals { object, dice }   eating that object (no object: a fresh corpse) heals dice too
-#   status_damage { status, value }   its hits on a creature suffering that status do value more
+#   status_damage { status, value }   its hits and its spells' damage on a creature suffering
+#                                 that status do value more
+#   hex_tithe { per_levels }      a creature dying under a hex it laid (any kill, any cause)
+#                                 gives it the creature's level / per_levels (1 to 10) in mana,
+#                                 at least 1, never past its maximum
 #   reprieve { once, status, stat, by, message }   once in its life (`once` names it), what
 #                                 would kill it (not starving or choking) leaves it at 1 hit
 #                                 point with the status, stat by lower for good, message said

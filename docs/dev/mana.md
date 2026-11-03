@@ -98,6 +98,12 @@ issue how it interacts with mana**, and hooks in at the one place below.
   are still announced only, so its caster level is read by nothing in play yet; the dev
   `actors` layer shows it. Creature gear never changes after it is made (stealing takes no worn
   thing), so no creature's mana needs `keep_mana_within_max`.
+- **A hex's tithe** (Malison, #905): `World::hex_tithe(slain)` (`world/malison.rs`), from
+  `World::dies` for any creature's death (every cause, anyone's hand, no range), before the
+  creature leaves: if it is under a hex of the player's (`Content::hex_statuses()`, `Effect::by`
+  the player) and the player holds `hex_tithe`, their mana rises by the creature type's level /
+  `per_levels` (2), at least 1, never past `max_mana`. It runs before `siphon`'s callers return,
+  so a death that pays both pays the tithe first.
 - **On a kill** (E1, #632; the affixes design §4, decision 7): `World::siphon(by, (slain, at))`
   (`world/siphon.rs`) raises the slayer's mana by its worn `mana_on_kill` (of Siphoning), never
   past `max_mana` (never lowering it either), and adds its worn `resource_on_kill` to each pool

@@ -199,6 +199,7 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Cackle",
                 "Poison lore",
                 "Cause wounds",
+                "Malison",
                 "Second sight",
                 "Curse of sloth",
                 "Blight",

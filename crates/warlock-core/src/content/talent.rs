@@ -971,6 +971,10 @@ pub enum TalentEffect {
     },
     /// Its blows that hit a creature suffering `status` do `value` more damage (Poison lore).
     StatusDamage { status: String, value: i32 },
+    /// When a creature dies under a hex its holder laid (`Content::hex_statuses`), whoever
+    /// killed it, the holder's mana rises by the dead creature's level divided by `per_levels`,
+    /// at least 1, never past its maximum (Malison; `world/malison.rs`).
+    HexTithe { per_levels: u8 },
     /// Once in its life (`once` names it), what would kill it does not (not starving or
     /// choking): it is left at 1 hit point, suffers `status`, and `stat` is `by` lower for good;
     /// `message` is said (Miracle, Hag's bargain).
@@ -1856,6 +1860,12 @@ impl TalentEffect {
             TalentEffect::StatusDamage { status: id, value } => {
                 bonus(*value)?;
                 status(id)
+            }
+            TalentEffect::HexTithe { per_levels } => {
+                if !(1..=10).contains(per_levels) {
+                    return Err("`hex_tithe`: per_levels 1 to 10".into());
+                }
+                Ok(())
             }
             TalentEffect::Radiance { status: id, light } => {
                 status(id)?;

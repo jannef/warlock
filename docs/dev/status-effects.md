@@ -141,7 +141,9 @@ degrees are time, the combat bonus stays. The Lullaby (#873) gives `drowsy` (`ma
 `weakened`, `sluggish`, `drowsy`, `webbed`) is the one definition, "of hers" adds `Effect::by`
 the player. The witch's Cackle (#904, `world/witch.rs`) reads it: each such hex on a creature
 the player sees is `afflict`ed again at its severity plus a degree (`refresh`: higher, clamped,
-`wear` 0).
+`wear` 0). Malison (#905) reads it twice: its bite is `status_damage` rows naming the five
+(any giver's hex; `malison.toml` lists them, a test checks it against `hex_statuses()`), and its
+tithe (`world/malison.rs`, from `dies`) checks a dying creature for a hex of the player's.
 Built-in example: `raging` (penalty St +2, To +2, In −2; `blocks = ["read", "cast"]`; `follows =
 "exhausted"`; no `eases`: the Rage resource brings it and ends it, `docs/dev/resources.md`) and
 `exhausted` (St −1). A followed status must end: it eases, is cured, or a resource brings it
