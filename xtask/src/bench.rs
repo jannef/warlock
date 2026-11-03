@@ -42,6 +42,13 @@ room_effects = { chance = 100, per_level = 1, favoured = { teeming = 100 } }
 const DELF_SCENARIO: &str = "name = \"Bench delf\"\nstart_level = \"bench_delf:1\"\nseed = 1\n\
                              wield = [\"lantern\"]\nhp = 900\n";
 
+/// The same cave floor with a high-level ranger and their companion (spec §8 "Allies", #923): the beast an
+/// ally in every turn of the floor, the coarse turns of a rest included (it follows the
+/// player, so it is never far). A ranger has the hit points of their level: a walk that
+/// gets them killed starts over, untimed. The budget is the vast level's.
+const PET_SCENARIO: &str = "name = \"Bench pet\"\nstart_level = \"bench_delf:1\"\nseed = 1\n\
+                            character = { race = \"human\", gender = \"male\", class = \"ranger\" }\n";
+
 /// The same cave floor with every creature but the torch-bearing kobolds circled (spec §4.8
 /// "Spell circles"): each sheds a spell circle's light, radius 1, as a hexed creature does
 /// (bench copies, `bench_hexed_<id>`, carrying the light as a creature's own: the same one
@@ -87,7 +94,7 @@ const PANOPLY_SCENARIO: &str = "name = \"Bench panoply\"\nstart_level = \"bench_
                                 seed = 1\nwield = [\"lantern\"]\nhp = 900\n";
 
 /// (scenario, level label, budget in ms, minutes skipped before the walk)
-const CASES: [(&str, &str, f64, u64); 12] = [
+const CASES: [(&str, &str, f64, u64); 13] = [
     ("showcase", "hub", 5.0, 0),
     ("vast", "vast", 16.0, 0),
     ("depths", "depths", 5.0, 0),
@@ -104,6 +111,8 @@ const CASES: [(&str, &str, f64, u64); 12] = [
     ("arena", "arena", 5.0, 0),
     // A generated 120×60 cave floor at full population (`DELF_BRANCH`).
     ("bench_delf", "delf", 16.0, 0),
+    // The same with a ranger and their companion beside the player (`PET_SCENARIO`).
+    ("bench_pet", "d-pet", 16.0, 0),
     // The same with every creature but the kobolds circled (`HEXED_BRANCH`).
     ("bench_hexed", "d-hex", 16.0, 0),
     // The same at danger 40, of panoplies (`PANOPLY_BRANCH`).
@@ -121,6 +130,7 @@ fn content() -> Result<Content, String> {
     files.insert("scenarios/bench_delf.toml", DELF_SCENARIO);
     files.insert("scenarios/bench_panoply.toml", PANOPLY_SCENARIO);
     files.insert("scenarios/bench_hexed.toml", HEXED_SCENARIO);
+    files.insert("scenarios/bench_pet.toml", PET_SCENARIO);
     for (id, text) in [
         ("bat", include_str!("../../assets/data/creatures/bat.toml")),
         (
@@ -171,10 +181,21 @@ fn measure(content: &Arc<Content>, scenario: &str, skip: u64) -> Result<Stats, S
         if skip > 0 {
             world.apply(&Action::SkipTime(Duration::minutes(skip)));
         }
+        if scenario == "bench_pet" {
+            // A ranger of a high level (the companion grown with them, hit points enough to
+            // walk among the cave's creatures for a while).
+            for text in ["xp:300000", "levelup:auto", "levelup:auto", "levelup:auto"] {
+                world.apply(&text.parse::<Action>().map_err(|e| e.to_string())?);
+            }
+        }
         Ok(world)
     };
     let mut world = fresh()?;
     let level = world.perception().level_id().to_string();
+    let mut deaths = 0;
+    if scenario == "bench_pet" {
+        eprintln!("{scenario}: companion {}", world.companion().is_some());
+    }
     if scenario == "bench_hexed" {
         // How many are circled: all but the kobolds (the dev `actors` layer, a row an actor).
         let layer = warlock_core::dump::parse_layers("actors")?;
@@ -217,8 +238,12 @@ fn measure(content: &Arc<Content>, scenario: &str, skip: u64) -> Result<Stats, S
         }
         // Killed (the walk blunders into fights): the run starts over, untimed.
         if world.death().is_some() {
+            deaths += 1;
             world = fresh()?;
         }
+    }
+    if deaths > 0 {
+        eprintln!("{scenario}: the walk was killed {deaths} times (restarted, untimed)");
     }
     if times.is_empty() {
         return Err(format!("no turns taken in scenario `{scenario}`"));
