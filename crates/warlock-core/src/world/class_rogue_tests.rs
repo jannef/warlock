@@ -826,7 +826,6 @@ fn a_volley_looses_three_shots_for_one_then_spends() {
     assert_eq!(count(&w), arrows - 3, "three arrows loosed");
     assert!(said(&w).contains(&"You loose a volley!".to_string()));
     // It costs Focus, not a cooldown (spec §8 "Resources"): 6 of the 10, one back since.
-    assert!(!suffers(&w, "spent"));
     assert!(!out.events.is_empty());
     let focus = content.resource_id("focus").expect("focus");
     let held = w.state.player().resources.get(focus).map(|p| p.value);

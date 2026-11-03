@@ -57,6 +57,10 @@
 //!   attack and with the flurry's second (`World::flurry`'s profile), the pool's maximum
 //!   (`Actor::resource_max`), and its pace a round (`World::resource_rate`).
 //!
+//! - **Zeal** (#910): the paladin with plain blows and with every blow a smite
+//!   (`zeal_of`: `World::smite_profile`, and its unholy dice on the unholy among the monsters),
+//!   the pool's maximum, and what a round builds against a smite's cost.
+//!
 //! Not modelled: triggered and active weapon abilities, stances (but the rage table's), talents chosen for a build
 //! (`levelup:auto` takes the first it may), the initiative check's Surprised after the first
 //! blow, potions, and resistances against spells.
@@ -136,7 +140,7 @@ struct Build {
     gear: fn(u8) -> Vec<(&'static str, &'static str)>,
 }
 
-const BUILDS: [Build; 7] = [
+const BUILDS: [Build; 8] = [
     Build {
         class: "warrior",
         skills: &[
@@ -211,6 +215,20 @@ const BUILDS: [Build; 7] = [
         school: None,
         fights_with_spells: false,
         gear: ascetic,
+    },
+    // Measured for the zeal table alone (#910).
+    Build {
+        class: "paladin",
+        skills: &[
+            ("long_blades", 0),
+            ("sword_and_board", 0),
+            ("shield_block", 0),
+        ],
+        extras: &[(StatUse::Exerted, 4.0)],
+        casts_a_kill: false,
+        school: None,
+        fights_with_spells: false,
+        gear: warrior,
     },
 ];
 
@@ -612,6 +630,8 @@ struct Snap {
     rage: Option<Rage>,
     /// Its ki, bare-handed in plain gear (a class whose Flurry spends ki).
     ki: Option<Ki>,
+    /// Its zeal and smites, in plain gear (a class with Smite).
+    zeal: Option<Zeal>,
     /// Its prayer's name in the menu and its state, in plain gear (a class that prays): no roll,
     /// so the spell table prints what it answers.
     prayer: Option<(String, super::orison::PrayerState)>,
@@ -656,6 +676,66 @@ fn ki_of(w: &World, id: ActorId) -> Option<Ki> {
         single,
         max: me.resource_max(&content, ki, w.holder_level(id)),
         back: turn / every * f64::from(w.resource_rate(id, ki)) / 100.0,
+    })
+}
+
+/// A smiting player (#910): their side with every blow a smite, on a foe and on an unholy one,
+/// the zeal pool, what comes back a round, what a smite costs, and what a blow that hits and a
+/// blow taken build.
+#[derive(Clone)]
+struct Zeal {
+    smite: Side,
+    unholy: Side,
+    max: u16,
+    /// Zeal back a round (a normal turn), at its pace.
+    back: f64,
+    cost: u16,
+    /// Zeal a blow of theirs that hits (`hit`) and a blow taken (`struck`) build.
+    builds: [f64; 2],
+}
+
+/// Player `id`'s zeal in `w`, if they have Smite: the smite as `World::smite_profile` makes it
+/// (the player's own type is not unholy), and again with the unholy dice.
+fn zeal_of(w: &World, id: ActorId) -> Option<Zeal> {
+    use crate::content::{Build as Event, ClassActive};
+    let content = w.content.clone();
+    let me = &w.state.actors[&id];
+    let mods = me.talent_mods(&content);
+    let smite = mods.smite?;
+    let cost = content.class_active(ClassActive::Smite)?.resource?;
+    let zeal = cost.resource;
+    let def = content.resource(zeal);
+    let side = side_of(w, id);
+    let blow = w.smite_profile(id)?;
+    let unholy = Profile {
+        extra: Some(smite.dice_at(w.holder_level(id), true)),
+        ..blow.clone()
+    };
+    let every = match def.over_time {
+        Some(crate::content::OverTime::Regenerates { every }) => f64::from(every),
+        _ => f64::INFINITY,
+    };
+    let built = |on: Event| {
+        let more: u16 = (mods.resource_builds.iter())
+            .filter(|(r, b, _)| *r == zeal && *b == on)
+            .map(|(_, _, n)| *n)
+            .sum();
+        f64::from(def.built_by(on) + more)
+    };
+    let turn = BASE_TURN.as_seconds() as f64;
+    Some(Zeal {
+        smite: Side {
+            blow,
+            ..side.clone()
+        },
+        unholy: Side {
+            blow: unholy,
+            ..side
+        },
+        max: me.resource_max(&content, zeal, w.holder_level(id)),
+        back: turn / every * f64::from(w.resource_rate(id, zeal)) / 100.0,
+        cost: cost.amount,
+        builds: [built(Event::Hit), built(Event::Struck)],
     })
 }
 
@@ -843,6 +923,9 @@ fn career(
                     .then(|| rage_of(&w2, player))
                     .flatten(),
                 ki: (gear == Gear::Plain).then(|| ki_of(&w2, player)).flatten(),
+                zeal: (gear == Gear::Plain)
+                    .then(|| zeal_of(&w2, player))
+                    .flatten(),
                 prayer: (gear == Gear::Plain)
                     .then(|| {
                         let title = me.prayer_title(content)?.0.to_string();
@@ -1038,6 +1121,7 @@ fn balance_probe() {
     tables::sneak_attacks(&p, &mut rng, &mut out);
     tables::rage(&p, &mut rng, &mut out);
     tables::ki(&p, &mut rng, &mut out);
+    tables::zeal(&p, &mut rng, &mut out);
     summons::summons(&p, &mut rng, &mut out);
     tables::stats(&p, &mut out);
     tables::stat_sweep(&p, &mut out);

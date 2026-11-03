@@ -188,7 +188,6 @@ fn quivering_palm_costs_five_ki_and_no_cooldown() {
     run(&mut w, "use:quivering_palm:E");
     assert!(w.state.turn > turn);
     assert_eq!(held(&w, "ki"), Some(0));
-    assert!(!suffers(&w, w.state.player, "spent"));
     assert!(w.state.actors.contains_key(&kobold));
 }
 

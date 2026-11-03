@@ -3,6 +3,6 @@ id = "avatar"
 name = "Avatar"
 tree = "class"
 granted = true
-description = "Your touch heals fully and cures poison, bleeding, and disease, and drains you half as long."
-effects = [{ kind = "avatar" }]
-systems = ["hit_points", "status", "diseases"]
+description = "Your touch heals fully and cures poison, bleeding, and disease, for half the zeal."
+effects = [{ kind = "avatar", hands_cost_percent = 50 }]
+systems = ["hit_points", "status", "diseases", "resources"]

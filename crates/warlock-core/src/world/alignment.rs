@@ -100,6 +100,24 @@ impl World {
         if let Some(text) = news.filter(|_| actor == self.state.player) {
             self.notes.push(text);
         }
+        if shifted.value() < score.value() && actor == self.state.player {
+            self.sin_empties_zeal();
+        }
+    }
+
+    /// A deed of the player's moved them toward evil: the pool `data/smite.toml` names (Zeal),
+    /// if they hold any of it, is emptied, and they are told (spec §8 "Alignment"). It bars
+    /// nothing: the pool fills again.
+    fn sin_empties_zeal(&mut self) {
+        let Some(pool) = self.content.smite().and_then(|rules| rules.sin_empties) else {
+            return;
+        };
+        let held = self.player_mut().resources.get_mut(pool);
+        if let Some(held) = held.filter(|p| p.value > 0) {
+            held.value = 0;
+            let name = self.content.resource(pool).name.to_lowercase();
+            self.notes.push(format!("Your {name} deserts you."));
+        }
     }
 
     /// The player did `deed`, whose worth the alignment rules fix (attacking a shopkeeper,

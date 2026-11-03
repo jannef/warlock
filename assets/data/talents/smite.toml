@@ -3,7 +3,11 @@ id = "smite"
 name = "Smite"
 tree = "class"
 granted = true
-description = "A blow of holy wrath in a direction (an ability), harder as you grow; then you are spent a while."
-effects = [{ kind = "smite", per_levels = 10, sides = 6, cooldown = "spent", degrees = 1 }]
-systems = ["combat"]
+description = "A blow of holy wrath in a direction (an ability, paid in zeal): surer for your presence, harder as you grow, and harder still on the unholy. Your zeal rises as you give and take blows."
+effects = [
+    { kind = "smite", per_levels = 10, sides = 6, aim = "presence", unholy = 1 },
+    { kind = "grants_resource", resource = "zeal" },
+]
+resource = { id = "zeal", cost = 3 }
+systems = ["combat", "resources"]
 alignment = { min = "kind" }

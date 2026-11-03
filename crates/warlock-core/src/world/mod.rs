@@ -201,6 +201,7 @@ mod sign_picks;
 mod siphon;
 mod skill_roll;
 mod slip;
+mod smite;
 mod song;
 mod spawn;
 mod spell;
@@ -1766,6 +1767,8 @@ mod skill_roll_tests;
 mod skills_tests;
 #[cfg(test)]
 mod slip_tests;
+#[cfg(test)]
+mod smite_tests;
 #[cfg(test)]
 mod song_tests;
 #[cfg(test)]

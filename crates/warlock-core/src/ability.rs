@@ -853,9 +853,8 @@ impl Ability {
     pub(crate) fn unavailable(self, actor: &Actor, content: &Content) -> Option<Unavailable> {
         let own = match self {
             Ability::Class(active) => {
-                let def = content.class_active(active);
                 (class_cooldown(actor, content, active).map(Unavailable::While))
-                    .or_else(|| short_of(actor, def?.resource?))
+                    .or_else(|| short_of(actor, class_cost(actor, content, active)?))
                     .or_else(|| still(actor, content, active))
                     .or_else(|| {
                         // A song costs one thing (a Virtuoso's nothing): its resource
@@ -944,12 +943,12 @@ fn class_cooldown(actor: &Actor, content: &Content, active: ClassActive) -> Opti
             .flatten()
             .collect(),
         ClassActive::VeteransWind => mods.veterans_wind.map(|w| w.cooldown).into_iter().collect(),
-        ClassActive::LayOnHands => mods.lay_on_hands.map(|h| h.cooldown).into_iter().collect(),
-        ClassActive::Smite => mods.smite.map(|s| s.cooldown).into_iter().collect(),
-        // Volley costs Focus, Low blow and Master thief Openings, and Stunning strike and
-        // Quivering palm Ki instead
+        // Volley costs Focus, Low blow and Master thief Openings, Stunning strike and Quivering
+        // palm Ki, and Smite and Lay on hands Zeal instead
         // (their talents' `resource`, [`short_of`]), as War cry Rage; Lurk only its time.
-        ClassActive::Whirlwind
+        ClassActive::LayOnHands
+        | ClassActive::Smite
+        | ClassActive::Whirlwind
         | ClassActive::WarCry
         | ClassActive::HolyRadiance
         | ClassActive::PatientDefence
@@ -1032,6 +1031,24 @@ pub fn spell_unavailable(actor: &Actor, content: &Content, spell: SpellId) -> Op
         let def = content.spell_of(spell)?;
         (actor.mana < actor.spell_cost(content, def)).then_some(Unavailable::NoMana)
     })
+}
+
+/// What class active `active` costs `actor` in an alternative resource (spec §8 "Resources"):
+/// its talent's `resource`, with Avatar's share of it for Lay on hands (`percent_of`, at least
+/// 1); `None` when it costs none. The one reading of the cost: `use_class` spends it.
+pub(crate) fn class_cost(
+    actor: &Actor,
+    content: &Content,
+    active: ClassActive,
+) -> Option<ResourceCost> {
+    let mut cost = content.class_active(active)?.resource?;
+    if active == ClassActive::LayOnHands
+        && let Some(percent) = actor.talent_mods(content).avatar
+    {
+        let share = crate::content::percent_of(i64::from(cost.amount), u32::from(percent));
+        cost.amount = u16::try_from(share).unwrap_or(cost.amount).max(1);
+    }
+    Some(cost)
 }
 
 /// Why `actor` cannot use an ability that costs `cost` (spec §8 "Resources"):

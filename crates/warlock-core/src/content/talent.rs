@@ -677,16 +677,12 @@ pub enum TalentEffect {
         at_least: i32,
         cooldown: String,
     },
-    /// The class active Lay on hands: `per_level` hit points per character level back at once,
-    /// then `degrees` of the `cooldown` status.
-    LayOnHands {
-        per_level: u8,
-        cooldown: String,
-        degrees: u16,
-    },
-    /// Lay on hands heals fully and cures every status that may be cured and every disease, and
-    /// its cooldown is half as long (Avatar).
-    Avatar,
+    /// The class active Lay on hands: `per_level` hit points per character level back at once
+    /// (what it costs is the talent's `resource`: Zeal).
+    LayOnHands { per_level: u8 },
+    /// Lay on hands heals fully and cures every status that may be cured and every disease, for
+    /// `hands_cost_percent` of its cost (Avatar).
+    Avatar { hands_cost_percent: u8 },
     /// The class active Rage: the player is granted `resource` (Rage, spec §8 "Resources") and
     /// suffers its status (Raging) while it lasts; no rage while that or the status it `follows`
     /// into lasts.
@@ -722,13 +718,16 @@ pub enum TalentEffect {
     /// attack.
     Whirlwind,
     /// The class active Smite: a melee blow in a direction with one die of `sides` more damage
-    /// per `per_levels` character levels (at least one), then `degrees` of the `cooldown`
-    /// status.
+    /// per `per_levels` character levels (at least one), `unholy` dice more against an unholy
+    /// foe (`data/smite.toml`), and the smiter's modifier in `aim` added to hit (what it costs
+    /// is the talent's `resource`: Zeal; `world/smite.rs`).
     Smite {
         per_levels: u8,
         sides: u8,
-        cooldown: String,
-        degrees: u16,
+        #[serde(default)]
+        aim: Option<Stat>,
+        #[serde(default)]
+        unholy: u8,
     },
     /// The class active Holy radiance: a toggle; while it suffers `status` it sheds light
     /// `light` (an id in `data/lights.toml`).
@@ -1706,28 +1705,30 @@ impl TalentEffect {
                 }
                 status(cooldown)
             }
-            TalentEffect::LayOnHands {
-                per_level,
-                cooldown,
-                degrees,
-            } => {
-                if !(1..=20).contains(per_level) || *degrees == 0 {
-                    return Err("`lay_on_hands`: per_level is 1 to 20, degrees at least 1".into());
+            TalentEffect::LayOnHands { per_level } => {
+                if !(1..=20).contains(per_level) {
+                    return Err("`lay_on_hands`: per_level is 1 to 20".into());
                 }
-                status(cooldown)
+                Ok(())
+            }
+            TalentEffect::Avatar { hands_cost_percent } => {
+                if !(1..=100).contains(hands_cost_percent) {
+                    return Err("`avatar`: hands_cost_percent is 1 to 100".into());
+                }
+                Ok(())
             }
             TalentEffect::Smite {
                 per_levels,
                 sides,
-                cooldown,
-                degrees,
+                unholy,
+                ..
             } => {
-                if !(1..=20).contains(per_levels) || !(2..=20).contains(sides) || *degrees == 0 {
-                    return Err("`smite`: per_levels is 1 to 20, sides 2 to 20, degrees at \
-                                least 1"
-                        .into());
+                if !(1..=20).contains(per_levels) || !(2..=20).contains(sides) || *unholy > 5 {
+                    return Err(
+                        "`smite`: per_levels is 1 to 20, sides 2 to 20, unholy 0 to 5".into(),
+                    );
                 }
-                status(cooldown)
+                Ok(())
             }
             TalentEffect::Lurk { status: id }
             | TalentEffect::SneakKillStatus { status: id }
@@ -2253,7 +2254,6 @@ impl TalentEffect {
             | TalentEffect::Stout
             | TalentEffect::DiseaseImmune
             | TalentEffect::NoPenaltyTo { .. }
-            | TalentEffect::Avatar
             | TalentEffect::Whirlwind
             | TalentEffect::WeightlessCoins
             | TalentEffect::Pilgrim

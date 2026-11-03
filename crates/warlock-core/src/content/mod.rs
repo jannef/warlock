@@ -127,6 +127,7 @@ mod size;
 mod skill;
 mod sky;
 mod slot;
+mod smite;
 mod spell;
 mod spell_def;
 mod spell_ladder;
@@ -286,6 +287,7 @@ pub use size::{CARRY, MEDIUM, SizeDef};
 pub use skill::{OPTIONAL_CHANCE, OptionalSkill, SkillBook, SkillDef};
 pub use sky::{MAX_MOONS, MAX_SIZE, MoonDef, PHASE_ONE, STANDARD_SIZE};
 pub use slot::{MAX_SLOTS, SlotDef, SlotId};
+pub use smite::SmiteRules;
 pub use spell::{BOLT_LENGTHS, BURST_RADII, Bolt, Burst, BurstIce};
 pub use spell_def::{
     Grows, MAX_CASTS, MAX_CONE, MAX_REACH, MAX_SPELL_LEVEL, MAX_SUMMON_MINUTES, Ratio, Resolution,
@@ -646,6 +648,9 @@ pub struct Content {
     /// The numbers of being caught unawares (`data/surprise.toml`, spec §8 "Surprise and sneak
     /// attacks"); none without the file, when nobody is surprised.
     surprise: Option<SurpriseRules>,
+    /// What holy wrath falls hardest on, and the pool a sin empties (`data/smite.toml`, spec §8
+    /// "Class abilities": "Smite"); none without the file, when nothing is unholy.
+    smite: Option<SmiteRules>,
     /// The campaigns' encounter tables (`campaigns/<id>/data/encounters/`), by campaign and id.
     encounter_tables: Vec<EncounterTable>,
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
@@ -804,6 +809,7 @@ impl Content {
             encounters: EncounterRules::default(),
             steal: None,
             surprise: None,
+            smite: None,
             encounter_tables: Vec::new(),
             forage: None,
             intimidate: None,
@@ -1131,6 +1137,10 @@ impl Content {
         let path = "data/surprise.toml";
         if let Some(text) = files.get_optional(path) {
             content.surprise = Some(SurpriseRules::parse(path, text, &content)?);
+        }
+        let path = "data/smite.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.smite = Some(SmiteRules::parse(path, text, &content)?);
         }
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3038,6 +3048,12 @@ impl Content {
     /// `data/surprise.toml`); `None` without the file, when nobody is surprised.
     pub fn surprise(&self) -> Option<&SurpriseRules> {
         self.surprise.as_ref()
+    }
+
+    /// The rules of smiting that live in data (spec §8 "Class abilities": "Smite";
+    /// `data/smite.toml`); `None` without the file, when nothing is unholy.
+    pub fn smite(&self) -> Option<&SmiteRules> {
+        self.smite.as_ref()
     }
 
     /// What foraging in the wild gives (spec §8 "Foraging"; `data/forage.toml`); `None` without
