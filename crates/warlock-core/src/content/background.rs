@@ -210,6 +210,7 @@ struct WhenSpec {
     age: Option<AgeRange>,
     campaign: Vec<String>,
     companion: Vec<String>,
+    familiar: Vec<String>,
 }
 
 /// What must hold of the witness for a whole chapter to be told (`[chapter] when`): a chapter
@@ -257,6 +258,8 @@ pub struct When {
     pub campaign: Vec<String>,
     /// A companion of one of these types as the run begins (any of them; spec §8 "Allies").
     pub companion: Vec<CreatureId>,
+    /// A familiar of one of these types as the run begins (any of them; the witch's).
+    pub familiar: Vec<CreatureId>,
 }
 
 impl When {
@@ -658,6 +661,13 @@ impl Content {
                     .ok_or_else(|| format!("`when.companion`: `{c}` is no tameable creature"))
             })
             .collect::<Result<Vec<_>, _>>()?;
+        let familiar = (spec.familiar.iter())
+            .map(|c| {
+                (self.creature_id(c))
+                    .filter(|_| c != "player")
+                    .ok_or_else(|| format!("`when.familiar`: unknown creature `{c}`"))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(When {
             race: spec.race,
             class: spec.class,
@@ -674,6 +684,7 @@ impl Content {
             age: spec.age,
             campaign: spec.campaign,
             companion,
+            familiar,
         })
     }
 

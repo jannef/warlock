@@ -156,6 +156,45 @@ fn every_race_draws_from_its_list_or_the_rares_at_the_rare_odds() {
 
 // ---- the start -----------------------------------------------------------------------------
 
+/// The id of the line the companion chapter told.
+fn companion_line(w: &World) -> String {
+    let story = &w.state.character.as_ref().unwrap().story;
+    (story.iter())
+        .find(|t| t.chapter == "companion")
+        .expect("the companion chapter")
+        .line
+        .clone()
+}
+
+#[test]
+fn a_familiar_is_told_its_own_line_and_a_rare_the_plain_one() {
+    let content = &*BUILTIN;
+    let chapter = (content
+        .background()
+        .unwrap()
+        .chapter("ascmearc", "companion"))
+    .unwrap();
+    let (mut own, mut plain) = (0, 0);
+    for seed in 0..120 {
+        let w = kitted("human,female,witch", seed);
+        let (beast, _) = familiar_of(&w);
+        let line = chapter.line(&companion_line(&w)).expect("a line");
+        if content.familiars().unwrap().rare.contains(&beast.creature) {
+            assert_eq!(line.id, "plain_companion");
+            plain += 1;
+        } else {
+            assert!(
+                line.only && line.when.familiar == [beast.creature],
+                "{}",
+                line.id
+            );
+            assert!(line.when.companion.is_empty());
+            own += 1;
+        }
+    }
+    assert!(own > 100 && plain > 0, "{own} {plain}");
+}
+
 #[test]
 fn a_witch_begins_with_a_named_familiar_and_a_warrior_without() {
     let content = &*BUILTIN;
@@ -176,12 +215,8 @@ fn a_witch_begins_with_a_named_familiar_and_a_warrior_without() {
         rules.arrives(beast.creature).unwrap()
     );
     assert!(said(&w).contains(&line), "{:?}", said(&w));
-    // The companion chapter is told to a kept beast: its plain line until the familiar's own.
-    let story = &w.state.character.as_ref().unwrap().story;
-    let told = (story.iter())
-        .find(|t| t.chapter == "companion")
-        .expect("the companion chapter");
-    assert_eq!(told.line, "plain_companion");
+    // The companion chapter is told to a kept beast, with the familiar's own line.
+    assert_eq!(companion_line(&w), format!("familiar_{}", kind.id));
     // The dumps.
     let layers = crate::dump::parse_layers("familiar").unwrap();
     let text = crate::dump::ascii(&w, &layers);
