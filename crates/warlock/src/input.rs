@@ -1234,6 +1234,8 @@ impl Gameplay<'_> {
             }
             // The shape list asks which weapon (the Hunter's Spirit weapon).
             (true, ability::Aim::Shape) => return Some(ScreenAction::Open(ScreenName::Shape)),
+            // The scribe list asks which spell (the wizard's Scribe).
+            (true, ability::Aim::Spell) => return Some(ScreenAction::Open(ScreenName::Scribe)),
             (true, ability::Aim::Ailment) => {
                 let ailments = game.world.perception().own_ailments();
                 if ailments.len() > 1 {

@@ -27,7 +27,7 @@
 # The uses (`on`): burdened, blow, critical, block, dig, kick, forged, struggled, waded, hauled,
 # dodge, parry, shot, sneak, sneak_attack, climb, picked, disarmed, stole, kept_wits, aimed, hurt,
 # big_hit, killed, resisted, plunge, marched, hungry_step, shook_off, exerted, chilled, found,
-# read, identified, study, discovered, spell, explored, appraised, searched, foraged, spot,
+# read, identified, study, scribe, discovered, spell, explored, appraised, searched, foraged, spot,
 # endured, resisted_will, hungry_fight, cast, prayed, held_out, steadied, chat, trade, quest,
 # swapped, inspired, promoted, bargained, greeted, drank, elixir (the wiki's Stats page says each
 # in words). A use may train several stats, a rule each (disarmed, struggled); `spell` trains
@@ -223,6 +223,11 @@ chance = 100
 [[training.use]]
 stat = "intelligence"
 on = "study"
+chance = 100
+
+[[training.use]]
+stat = "intelligence"
+on = "scribe"
 chance = 100
 
 [[training.use]]

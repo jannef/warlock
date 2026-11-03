@@ -72,6 +72,28 @@ new saved. Adding it moved every label drawn after the scrolls (wands', rods', p
 wand words. `read_tests.rs::the_scroll_of_restoration_mends_and_restores`;
 `every_builtin_scroll_can_be_read` expects its refusal on a hale reader.
 
+**Blank scrolls and writing** (#906, the witch and wizard design §6.1): `blank_scroll`
+(`data/objects/blank_scroll.toml`, `Content::blank_scroll`) is of the scrolls class with no
+`read`, so it is never labelled (labels are drawn for readable types only: adding it moved no
+label) and known on sight; `content/object.rs` lets a scrolls-class object without a `read` be
+loot (`level`, `frequency`: a `frequency` given makes it loot, so the sealed letter, which has
+none, stays out). `World::read` refuses it before anything else ("There is nothing written on
+it."), study finds nothing in it to teach. **Writing scrolls** is `world/scribe.rs`, the
+wizard's Scribe (`scribe` talent at 12, `TalentEffect::Scribe { mana_times }`,
+`TalentMods::scribe`): `Action::Scribe { spell }` (`scribe:fireball`, its own action, as the
+active asks for a spell: `ClassActive::aims_spell`, `Aim::Spell`), `World::start_scribe`
+refusing with no time (`may_use_class`; an unknown id, a spell not known, `Content::scroll_of`
+none, no blank, `scribe_cost` above the mana), then `Spent::Scribe(Writing)` → `World::scribe`
+through `keep_at` (`scribe_turns`: `study_turns` at 0 %, Quick study left out), interrupted as
+a study ("You stop writing.", nothing spent), and `finish_scribe`: `spend_mana(scribe_base)`
+(three times `spell_base`, Frugal caster's cut on the whole), one blank taken (the equipment's
+letters followed), `Stack::one(scroll_of)` added, `learn_scroll`, `StatUse::Scribe`. Nothing
+new is saved (the writing runs inside one action); no draws but the spend's training. The
+scribe list is `ui/scribe_screen.rs` (`ScreenName::Scribe`, `--screen scribe`), from
+`PerceptionView::scribes` (each spell's price and nominal time, `OwnScribe`) and
+`blank_scrolls`. Tests: `world/scribe_tests.rs`; the list's snapshots `scribe-list` and
+`scribe-list-none`.
+
 **Unidentified scrolls** (#393, `scroll_label.rs`): every readable object type (`read`) has a
 label for the run, "a scroll labelled ZUNBAR". `content/scroll_label.rs` reads
 `data/scroll_labels.toml` (`ScrollLabelDef`: `name`/`plural` with `{label}`, the one `fg` of

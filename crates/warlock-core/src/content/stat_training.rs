@@ -115,6 +115,8 @@ pub enum StatUse {
     Identified,
     /// A spell studied from a scroll, whatever comes of it (Spellcraft's use too).
     Study,
+    /// A scroll written to its end (the wizard's Scribe).
+    Scribe,
     /// The first kill of a creature type.
     Discovered,
     /// A spell the player knows cast (not a scroll's, not a class or sign ability): trains the
@@ -242,6 +244,7 @@ impl StatUse {
             StatUse::Read => "reading a scroll",
             StatUse::Identified => "identifying an item",
             StatUse::Study => "studying a spell from a scroll",
+            StatUse::Scribe => "writing a scroll of a spell you know",
             StatUse::Discovered => "your first kill of a kind of creature",
             StatUse::Spell => {
                 "casting a spell you know whose damage, reach, or duration grows with this stat \

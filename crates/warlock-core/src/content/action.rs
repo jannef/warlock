@@ -85,6 +85,9 @@ pub enum ActionKind {
     /// A turn of studying a spell from a scroll (spec §8 "Spells"): a study takes many of them,
     /// by the spell's level (`data/study.toml`).
     Study,
+    /// A turn of writing a scroll of a spell one knows (spec §8 "Scrolls": the wizard's Scribe):
+    /// a scroll takes as many of them as a study of its spell.
+    Scribe,
     /// A turn of digging into a wall with a digging tool (spec §8 "Digging"): a dig takes many
     /// of them.
     Dig,
@@ -148,6 +151,7 @@ impl ActionKind {
         ActionKind::Eat,
         ActionKind::Read,
         ActionKind::Study,
+        ActionKind::Scribe,
         ActionKind::Dig,
         ActionKind::Search,
         ActionKind::Pray,
@@ -192,6 +196,7 @@ impl ActionKind {
             ActionKind::Eat => "eat",
             ActionKind::Read => "read",
             ActionKind::Study => "study",
+            ActionKind::Scribe => "scribe",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Pray => "pray",
@@ -255,6 +260,7 @@ impl ActionKind {
             ActionKind::Eat => "eat",
             ActionKind::Read => "read",
             ActionKind::Study => "study",
+            ActionKind::Scribe => "write scrolls",
             ActionKind::Dig => "dig",
             ActionKind::Search => "search",
             ActionKind::Pray => "pray",

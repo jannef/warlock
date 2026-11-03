@@ -141,6 +141,16 @@ pub struct OwnStudy {
     pub chance: &'static str,
 }
 
+/// A spell the player could write a scroll of (spec §8 "Scrolls": the wizard's Scribe), as the
+/// scribe list shows it: what it costs them in mana (they know their own costs) and how long it
+/// takes at a normal pace.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OwnScribe {
+    pub spell: crate::content::SpellId,
+    pub mana: i32,
+    pub time: crate::time::Duration,
+}
+
 /// One of the player's own talents (spec §8 "Talents"), as the Talents page and the character
 /// screen list it: its name for its choice, its rank of how many, and what it does in the
 /// game's words. Never a rule's number.
@@ -1710,6 +1720,40 @@ impl<'a> PerceptionView<'a> {
                 })
             })
             .collect()
+    }
+
+    /// The spells the player could write a scroll of (spec §8 "Scrolls": Scribe), in menu
+    /// order: those they know that a scroll holds, each with its price and time; empty without
+    /// Scribe. What the scribe list offers.
+    pub fn scribes(&self) -> Vec<OwnScribe> {
+        let costs = self.content.action_costs();
+        let turn = crate::content::price(
+            costs.cost(crate::content::ActionKind::Scribe),
+            crate::content::BASE_TURN,
+        );
+        (self.own_spells().into_iter())
+            .filter(|&spell| self.content.scroll_of(spell).is_some())
+            .filter_map(|spell| {
+                let def = self.content.spell_of(spell)?;
+                let mana = self.player.scribe_cost(self.content, def)?;
+                let turns = crate::world::scribe_turns(self.content, def)?;
+                let seconds = u64::try_from(turn).unwrap_or(0) * u64::from(turns) / 1000;
+                Some(OwnScribe {
+                    spell,
+                    mana,
+                    time: crate::time::Duration::seconds(seconds),
+                })
+            })
+            .collect()
+    }
+
+    /// How many blank scrolls the player carries (spec §8 "Scrolls"): what Scribe writes on.
+    pub fn blank_scrolls(&self) -> u32 {
+        let blank = self.content.blank_scroll();
+        (self.player.inventory.iter())
+            .filter(|s| Some(s.object) == blank)
+            .map(|s| s.count)
+            .sum()
     }
 
     /// What the player's spell `spell` costs them now, in mana (spec §8 "Spells": they know

@@ -1913,6 +1913,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
              the locked door or shut chest there springs open; nothing opens and no trap \
              springs. Where nothing locked stands it is refused, with no time or mana spent"
         ),
+        TalentEffect::Scribe { mana_times } => format!(
+            "active (a spell you know, from the scribe list): on the first [blank \
+             scroll](scrolls.md#writing-scrolls) you carry, a scroll of the spell is written, for \
+             {mana_times} times the spell's mana (what casting it would cost before Frugal \
+             caster's cut; Frugal caster then cuts the whole) and as many turns of writing as a \
+             study of the spell takes (Quick study does not shorten it). The mana is spent and \
+             the blank used up only at the end; interrupted, nothing is spent. Refused, with no \
+             time spent, without a blank scroll or the mana"
+        ),
         TalentEffect::MerchantsEye => format!(
             "active (on a thing you carry, for the time of reading a scroll, {} at normal pace; \
              no mana, cooldown, or check, as often as you like): the thing is identified as a \

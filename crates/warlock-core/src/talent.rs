@@ -700,6 +700,8 @@ pub struct TalentMods {
     pub sanctuary: Option<Sanctuary>,
     /// The active Knock, if it has it.
     pub knock: Option<Knock>,
+    /// The active Scribe, if it has it: how many times a spell's mana a scroll of it costs.
+    pub scribe: Option<u8>,
     /// The priest's prayer, its talents summed (`world/orison.rs`), if it has any.
     pub prayer: Option<Prayer>,
 }
@@ -1110,6 +1112,7 @@ impl TalentMods {
             A::Consecrate => self.consecrate.is_some(),
             A::Sanctuary => self.sanctuary.is_some(),
             A::Knock => self.knock.is_some(),
+            A::Scribe => self.scribe.is_some(),
             A::Orison => self.prayer.as_ref().is_some_and(|p| p.tier > 0),
         }
     }
@@ -2056,6 +2059,7 @@ impl TalentMods {
                 }
             }
             TalentEffect::Knock { mana } => self.knock = Some(Knock { mana }),
+            TalentEffect::Scribe { mana_times } => self.scribe = Some(mana_times),
             TalentEffect::Communion => self.communion = true,
             TalentEffect::Prayer {
                 tier,

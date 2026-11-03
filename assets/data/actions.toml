@@ -61,6 +61,9 @@ read = 1000
 # turns_base of them and turns_per_level more for each level of the spell (100 and 20: 10
 # minutes and 2 a level).
 study = 1000
+# A turn of writing a scroll (the wizard's Scribe ability; spec §8 "Scrolls"): a scroll takes as
+# many turns as a study of its spell would (study.toml's turns_base and turns_per_level).
+scribe = 1000
 # A turn of digging into a wall with a digging tool ready (spec §8 "Digging"): digging goes on
 # turn after turn until the wall gives way or something interrupts it.
 dig = 1000

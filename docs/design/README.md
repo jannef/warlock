@@ -14,7 +14,10 @@ documents".
   every spell's own file, six named hooks for talents and items, caster level for learning
   only, school skills, and a Magic page. The owner's decisions are its §16; its plan is §15,
   twelve slices S0 to S11 tracked in #759 (S0 #747, S1 #748, S2 #749 built; the rest in
-  progress). Where it revises `magic.md`, it wins.
+  progress). Where it revises `magic.md`, it wins. Its §8.6 placed Magister at level 45;
+  `witch-and-wizard.md` §6.2 moved it to 40 (Z1, #906).
+- `witch-and-wizard.md` (#826): the witch's hex loop (Cackle at 6, Malison at 18: W1, W2) and
+  the wizard's preparation (Scribe at 12, Magister to 40: Z1, #906).
 
 ## Built
 

@@ -105,6 +105,37 @@ disease may damage the stat again. With nothing to restore it is not read ("Ther
 restore."), and you keep it. As no spell is behind it, there is nothing in it to
 [study](magic.md#learning-spells-from-scrolls). It is rare: from [item level](magic-items.md#base-items) 8, and dear (the table above).
 
+## Writing scrolls
+
+A **blank scroll** is paper with nothing on it: never labelled, known on sight, 50 g, worth 15
+gold. Read it and nothing happens ("There is nothing written on it."), and you keep it; there is
+nothing in it to [study](magic.md#learning-spells-from-scrolls).
+
+The [wizard](classes.md#wizard)'s **[Scribe](abilities.md#ability-scribe)** (from level 12) writes on one. Choose it in the
+abilities menu, and a list opens of the spells you know, by school, each with what writing it
+costs you in [mana](mana.md#spending-it) and how long it takes; choose one, and you write its scroll on the first
+blank scroll you carry:
+
+- **The price** is three times the spell's mana: what casting it would cost you before
+  [Frugal caster](talents.md#talent-frugal-caster) (your armour, School focus, Empower, and Archmage counted), then cut
+  by Frugal caster as a whole. Fireball's 26 is 78, Magic missile's 3 is 9, Identify's 60 is
+  180.
+- **The time** is a study's of the spell: 100 turns and 20 more for each spell level (10 minutes
+  and 2 a level at a normal pace: Magic missile 16 minutes, Fireball 32).
+  [Quick study](talents.md#talent-quick-study) does not shorten it.
+- **Interrupted** (a creature coming into view, anything said, a blow), you stop writing: the time
+  is lost, and the blank and the mana are kept. The mana is spent and the blank used up only
+  when the scroll is done: "You write a scroll of fireball."
+- **The scroll** is the ordinary scroll of that spell, at its own [rung](scrolls.md#spell-scrolls) (as one found would
+  be), and you know what it is. It reads, studies, and sells as any other (a shop buys it at
+  its usual offer); [Scroll adept](talents.md#talent-scroll-adept) adds its rung when you read it.
+- **Refused**, with no time or mana spent: for a spell you do not know, with no blank scroll ("You
+  have nothing to write on."), while raging, or with too little mana ("You lack the mana to
+  write it."). Light and place do not matter.
+
+Each scroll written trains [Intelligence](stats.md#training) (always, as a study does) besides what spending
+the mana trains. There is no roll: a scroll begun and finished is a scroll made.
+
 ## Where scrolls are
 
 - **Loot**: scrolls lie about as [loot](magic-items.md#finding-them) on the floors of generated dungeon levels (see [Dungeons and danger](dungeons.md)), from the item
@@ -112,4 +143,6 @@ restore."), and you keep it. As no spell is behind it, there is nothing in it to
   magic things never leave one.
 - **Shops**: a general store sells and buys scrolls (see [Shops](shops.md)); one in the
   dungeons always has scrolls of identify among its goods, and so does Ælfric's in Cēaptūn.
+- **Blank scrolls** are loot and general-store stock as the scrolls are, from item level 1
+  (frequency 30).
 

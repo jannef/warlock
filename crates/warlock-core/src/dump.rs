@@ -1260,6 +1260,7 @@ fn aim_word(aim: Aim) -> &'static str {
         Aim::Ailment => "what to treat",
         Aim::Item => "an item you carry",
         Aim::Shape => "a weapon's shape",
+        Aim::Spell => "a spell you know",
     }
 }
 

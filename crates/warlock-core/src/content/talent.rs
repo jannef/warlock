@@ -1099,6 +1099,10 @@ pub enum TalentEffect {
     /// The class active Knock: for `mana` mana, the lock of the locked door or chest in a
     /// direction springs open (`world/knock.rs`; spec §8 "Chests").
     Knock { mana: i32 },
+    /// The class active Scribe: a scroll of a spell the player knows written on a blank scroll,
+    /// for `mana_times` the spell's mana and a study's time (`world/scribe.rs`; spec §8
+    /// "Scrolls").
+    Scribe { mana_times: u8 },
     /// The class active Merchant's eye: a stack the player carries is identified, for the time of
     /// a reading (`world/merchants_eye.rs`; spec §8 "Class abilities").
     MerchantsEye,
@@ -1217,6 +1221,7 @@ impl TalentEffect {
             TalentEffect::Sanctuary { .. } => A::Sanctuary,
             TalentEffect::Prayer { tier: Some(1), .. } => A::Orison,
             TalentEffect::Knock { .. } => A::Knock,
+            TalentEffect::Scribe { .. } => A::Scribe,
             TalentEffect::MerchantsEye => A::MerchantsEye,
             TalentEffect::SpiritWeapon { .. } => A::SpiritWeapon,
             _ => return None,
@@ -1540,6 +1545,12 @@ impl TalentEffect {
             TalentEffect::Knock { mana } => {
                 if !(0..=100).contains(mana) {
                     return Err("`knock`: mana is 0 to 100".into());
+                }
+                Ok(())
+            }
+            TalentEffect::Scribe { mana_times } => {
+                if !(1..=10).contains(mana_times) {
+                    return Err("`scribe`: mana_times is 1 to 10".into());
                 }
                 Ok(())
             }

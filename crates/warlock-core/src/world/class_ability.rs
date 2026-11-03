@@ -110,6 +110,10 @@ impl World {
                 self.say("Call it in what shape?");
                 Spent::Nothing
             }
+            (ClassActive::Scribe, _) => {
+                self.say("Write which spell? Name one you know: `scribe:fireball`.");
+                Spent::Nothing
+            }
         }
     }
 

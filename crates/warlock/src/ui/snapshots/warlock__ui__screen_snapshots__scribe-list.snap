@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Your concentration improves. (×68) You learn Apprentice (appraise) (1). You learn Apprentice
+ (appraise) (2). You learn Apprentice (appraise) (3). You learn Apprentice (athletics) --more--
+
+
+
+
+
+
+
+                  ┌─ Scribe: which spell? ───────────────────────────────────────┐
+                  │                                                              │
+                  │   You carry no blank scroll to write on.                     │
+                  │                                                              │
+                  │ Evocation                                                    │
+                  │ > a - Ray of frost               3 mana    about 12 minutes  │
+                  │   b - Magic missile              9 mana    about 16 minutes  │
+                  │   c - Burning hands             18 mana    about 18 minutes  │
+                  │   d - Arcane bolt               33 mana    about 22 minutes  │
+                  │                                                              │
+                  │ a-d or Enter write   Esc back                                │
+                  └──────────────────────────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+ The Hub  ·  HP 29/29  ·  MP 153/158  ·  Lv 18  ·  08:00  ·  11 Darkening, Year 1444     ? controls

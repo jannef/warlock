@@ -62,6 +62,9 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Study => {
                 "A turn of studying a spell from a scroll (a study takes many, by the spell's level)"
             }
+            ActionKind::Scribe => {
+                "A turn of writing a scroll (the wizard's Scribe: as many as a study of its spell)"
+            }
             ActionKind::Dig => "A turn of digging (digging through a wall takes many)",
             ActionKind::Search => "A turn of searching (searching for a while takes several)",
             ActionKind::Pray => "A turn of praying at a forgotten altar (a prayer takes a minute)",
