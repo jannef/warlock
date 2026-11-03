@@ -3,6 +3,6 @@ id = "sanctuary"
 name = "Sanctuary"
 tree = "class"
 granted = true
-description = "Kneel and hallow the ground about you (an ability, paid in mana; a minute's rite): for an hour no foe will set foot within two paces of where you knelt, and your wounds and your mind mend there as in a sanctuary. The peace breaks if you strike from within it."
+description = "Kneel a minute to hallow the ground about you (for mana): an hour no foe sets foot within two paces, and wounds and mind mend fast. Striking from it breaks it."
 effects = [{ kind = "sanctuary", mana = 30, time = "1m", radius = 2, lasts = "1h", regen = 300 }]
 systems = ["special_rooms", "hit_points", "mana"]

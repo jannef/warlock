@@ -49,6 +49,7 @@ table on its page, or grep the built page: `grep -o 'id="status-[a-z-]*"' wiki/b
 | A creature | `creatures.md#creature-ID` | `creatures.md#creature-kobold` |
 | An item class | `objects.md#class-ID` | `objects.md#class-melee-weapons` |
 | A potion | `potions.md#potion-ID` | `potions.md#potion-of-healing` |
+| A use of the priest's prayer (disease, poison, wounds, release, mana, hunger, restoration) | `prayer.md#prayer-ID` | `prayer.md#prayer-wounds` |
 | A scroll | `scrolls.md#scroll-ID` | `scrolls.md#scroll-of-identify` |
 | A terrain | `terrain.md#terrain-ID` | `terrain.md#terrain-shallow-water` |
 
@@ -158,6 +159,11 @@ above.
 | Racial talents | `talents.md#racial-talents` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
+| The priest's prayer (Orison, Prayer, Litany, Benediction, Miracle), what it answers | `prayer.md`, `prayer.md#what-it-answers` (a use: its row) |
+| Strain, a fizzled prayer | `prayer.md#strain` |
+| The holy and the dark powers, the dark face's twists (Whisper, Invocation, Rite, Pact) | `prayer.md#the-holy-and-the-dark` |
+| Communion with the dark | `talents.md#talent-communion`, `prayer.md#communion-and-sanctuary` |
+| Hallowed ground, dreaded ground (Sanctuary) | `special-rooms.md#hallowed-ground` |
 | Stats (Strength, Dexterity, …), score | `stats.md` (a stat: its row) |
 | Modifier | `stats.md#modifiers` |
 | Potential | `stats.md#potentials` |

@@ -49,6 +49,7 @@ mod order;
 mod outcomes;
 mod overworld;
 mod potions;
+mod prayer;
 mod resources;
 mod rooms;
 mod scenarios;
@@ -261,6 +262,11 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("talents-heirlooms.md", talents::heirlooms),
         ("talents-by-system.md", talents::by_system),
         ("class-levels.md", talents::class_levels),
+        ("prayer-strain.md", prayer::prayer_strain),
+        ("prayer-fizzle.md", prayer::prayer_fizzle),
+        ("prayer-uses.md", prayer::prayer_uses),
+        ("prayer-levels.md", prayer::prayer_levels),
+        ("prayer-rites.md", prayer::prayer_rites),
         ("foraging.md", skills::foraging),
         ("skills.md", skills::skills),
         ("skill-benefits.md", skills::skill_benefits),

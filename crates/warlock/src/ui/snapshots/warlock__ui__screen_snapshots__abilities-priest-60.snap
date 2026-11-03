@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(case, content.clone())"
+---
+ Your athletics improves. (×177) You learn Deep lungs. You learn Healthy. You learn Cool head. You
+ learn Iron will. You learn Lean. You learn Long fast. You learn Unbroken soul. You learn --more--
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │   a  Transfixing stare  at a place you see               │
+                    │ Class                                                    │
+                    │   b  Consecrate                                          │
+                    │ > c  Miracle                                             │
+                    │   d  Sanctuary                                           │
+                    │ Spells                                                   │
+                    │   e  Mend               1d4 healed, 1 mana, aimed        │
+                    │   f  Blessing           3 mana                           │
+                    │   g  Cure wounds        3d6 healed, 2 mana, aimed        │
+                    │ Skills                                                   │
+                    │   h  Decipher script    not usable yet                   │
+                    │   i  Heal               nothing to treat                 │
+                    │   j  Knowledge          not usable yet                   │
+                    │ Weapon skills                                            │
+                    │   k  Shield bash        in a direction                   │
+                    │                                                          │
+                    │ Everything that ails you is answered at once: wounds,    │
+                    │ hunger, sickness and poison, hexes and holds, what was   │
+                    │ taken, and your mana and every pool you hold, filled.    │
+                    │                                                          │
+                    │ a-k or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
+
+
+ The Hub  ·  HP 66/66  ·  MP 427/427  ·  Lv 60  ·  08:00  ·  11 Darkening, Year 1444     ? controls

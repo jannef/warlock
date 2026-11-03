@@ -282,9 +282,10 @@ sanctuary: one already standing on it when it was laid may move about on it and 
 come back. Nothing new comes to the level there. Arrows and spells still cross it. Whoever stands
 on it [heals](healing.md#how-fast) and gets [mana back](mana.md#how-fast-it-comes-back) three times as fast (in a sanctuary room, the faster of the two:
 they do not add up). Strike from it (a blow, a shot, a throw, or a spell that hits someone) and
-the peace is broken: the ground is ordinary again. Being struck while on it breaks nothing.
+the peace is broken: the ground is ordinary again; so is it when a [dark prayer's twist](prayer.md#the-holy-and-the-dark) reaches a
+creature. Being struck while on it breaks nothing.
 Look at a cell of it and it reads "on hallowed ground"; a priest answered by the dark powers
-(see [Classes](classes.md#priest)) lays "dreaded ground" instead, which works the same. It gives no light, and
+(see [Prayer](prayer.md#the-holy-and-the-dark)) lays "dreaded ground" instead, which works the same. It gives no light, and
 it cannot be laid on the overworld, in water, in a shop, or on ground already hallowed (no time
 or mana spent).
 

@@ -56,23 +56,12 @@ open sky. The [druid](classes.md#druid)'s calls bring wolves, bears, and element
 as [allies](allies.md).
 
 **The priest's prayer** ([Orison](abilities.md#ability-orison), from level 1) costs no [mana](mana.md#spending-it) and takes the time of a spell:
-it answers the worst thing that ails you, in this order: a [disease](diseases.md) that shows, [poison](status-effects.md#status-poisoned), wounds
-([bleeding](status-effects.md#status-bleeding) and lost [hit points](combat.md#hit-points)), hexes and holds, [mana](mana.md), [hunger](hunger.md), and [stat damage](diseases.md#stat-damage) or drained points.
-At first it answers wounds only; the priest's levels add the rest (hunger at 6, disease and
-poison at 12, hexes and holds at 18, stat damage and drain at 25, mana at 32), two answers a
-prayer at 40, and at 60 everything at once with every pool filled. Its name grows with it:
-Orison, Prayer, Litany, Benediction, Miracle, while you are [Neutral or better](alignment.md); a priest fallen to
-Callous or worse is answered by the dark powers instead, and prays a Whisper, an Invocation, a
-Rite, a Pact, a Miracle. The dark powers answer the same things, with a twist: the diseases
-they cure (the brewing ones too) are caught by the nearest [creature](creatures.md) you see, as if it had failed to
-resist them, and the poison they cure is laid on it at the same degrees (a creature immune or
-resistant to [poison](damage-types.md) takes less or none); a hex or hold they release is laid back on whoever cast it,
-if you see them, at the degrees it had, and whoever held you is caught [in a web](status-effects.md#status-webbed) instead; and
-they feed you to the brim, one short of [Bloated](hunger.md), where the holy ones feed you to
-Satiated. A creature that dies of a sickness or poison passed on is your kill. Every prayer adds 100 to a hidden **strain**, answered or not, and a
-point of it passes each minute; a prayer fizzles with a chance of 10 % for every 100 strain, and
-once one has fizzled every prayer fizzles until the strain is gone. A prayer with nothing to
-answer (a disease still brewing is not yet anything) costs nothing.
+it answers the worst thing that ails you, as far as your prayers reach ([wounds](prayer.md#prayer-wounds) at first; [hunger](prayer.md#prayer-hunger),
+[disease](prayer.md#prayer-disease) and [poison](prayer.md#prayer-poison), [hexes and holds](prayer.md#prayer-release), [stat damage](prayer.md#prayer-restoration), and [mana](prayer.md#prayer-mana) as the levels come; two answers a
+prayer at 40, everything at 60), under a hidden [strain](prayer.md#strain) that makes prayers too close together
+fizzle. A priest fallen to Callous or worse ([alignment](alignment.md)) is answered by the dark powers instead, with a
+twist: the sicknesses and poisons they cure pass to the nearest [creature](creatures.md) you see. See
+[Prayer](prayer.md) for every use, the names, the strain, and [the dark powers' answers](prayer.md#the-holy-and-the-dark).
 
 **[Consecrate](abilities.md#ability-consecrate)** (the [priest](classes.md#priest)'s at level 9, the [paladin](classes.md#paladin)'s at 12) works only while you are Neutral
 or better: a minute's prayer, for 15 [mana](mana.md#spending-it), that lifts a cursed, draining, or haunted room's curse for good
@@ -80,7 +69,7 @@ or better: a minute's prayer, for 15 [mana](mana.md#spending-it), that lifts a c
 Its dark twin, **[Communion with the dark](talents.md#talent-communion)** (the priest's at level 9), works only
 while you are Callous or worse: standing in a [cursed](special-rooms.md#room-cursed),
 [draining](special-rooms.md#room-draining), or [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over,
-your prayers add no strain, and the place's drain ([Ebbing](status-effects.md#status-ebbing)) never touches you.
+your prayers add no [strain](prayer.md#strain), and the place's drain ([Ebbing](status-effects.md#status-ebbing)) never touches you.
 
 The priest's **[Sanctuary](abilities.md#ability-sanctuary)** (level 50, 30 [mana](mana.md#spending-it), a minute's kneeling) hallows the ground about them
 for an hour: hostile creatures keep off it and whoever stands on it heals and gets mana back

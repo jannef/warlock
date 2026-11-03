@@ -39,7 +39,9 @@
 //!   their school's and caster style's ranks, the talents' and items' hooks, nothing holding the
 //!   roll; beside it the same roll at rank 0 (the ladder alone). The ranks are not set by level:
 //!   each level's days are cast through `World::practise`, a pool a day (`schools`), so the pace
-//!   is the real curve's. No casts to kill: the probe prints the roll and the pool.
+//!   is the real curve's. No casts to kill: the probe prints the roll and the pool. The
+//!   priest's prayer (#886, `world/orison.rs`) has no roll: a line a level says its name and
+//!   what one prayer answers (`World::prayer_state`).
 //!
 //! - **Sneak attacks** (#688): the thief's first blow on a foe unaware of them against its
 //!   plain blow. Its Sneak attack skill is set by level (`sneak_value`), as it rises by use and
@@ -610,6 +612,9 @@ struct Snap {
     rage: Option<Rage>,
     /// Its ki, bare-handed in plain gear (a class whose Flurry spends ki).
     ki: Option<Ki>,
+    /// Its prayer's name in the menu and its state, in plain gear (a class that prays): no roll,
+    /// so the spell table prints what it answers.
+    prayer: Option<(String, super::orison::PrayerState)>,
 }
 
 /// A bare-handed player's ki (#846): their side with one blow an attack and with the flurry's
@@ -838,6 +843,12 @@ fn career(
                     .then(|| rage_of(&w2, player))
                     .flatten(),
                 ki: (gear == Gear::Plain).then(|| ki_of(&w2, player)).flatten(),
+                prayer: (gear == Gear::Plain)
+                    .then(|| {
+                        let title = me.prayer_title(content)?.0.to_string();
+                        Some((title, w2.prayer_state()?))
+                    })
+                    .flatten(),
             });
         }
     }

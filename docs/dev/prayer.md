@@ -108,6 +108,20 @@ is unlocked. Replays: `use:orison` at every tier, no new syntax.
 `prayer strain 180 (locked), face holy, answers 1, uses wounds, hunger`. JSON with `--state`:
 `prayer: { strain, locked, face, uses, answers }` (`answers` null with `all`).
 
+## Wiki, probe
+
+`wiki/src/prayer.md` (#886) states the numbers exactly from `xtask/src/wiki/prayer.rs`:
+`prayer-strain` (the file's strain, decay, and fizzle), `prayer-fizzle` (the chance the 2nd, 3rd,
+5th, and 10th prayer fizzles prayed at a fixed gap, worked out from the same numbers; the gap
+that lets a prayer's strain pass whole is the last row), `prayer-uses` (the file's order, each
+use's problem and both faces' fixes in the rules' words, `use_text` the one `match` on
+`PrayerUse`, the lines, and the level and talent of each class table that gives it),
+`prayer-levels` (every class table's prayer talents: the uses, the answers, the titles), and
+`prayer-rites` (the praying class's Consecrate, Communion, and Sanctuary with their bands and
+numbers). A use's row anchors as `prayer-ID` (`text::Term::PrayerUse`). The balance probe's
+spell table gives the priest a line a level for the prayer (`balance_probe/tables.rs::
+prayer_rows`): no roll, its title and what it answers.
+
 ## Tests
 
 `world/dark_face_tests.rs`: the plague passed to the nearest seen creature (brewing ones too),

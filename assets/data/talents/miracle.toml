@@ -3,6 +3,6 @@ id = "miracle"
 name = "Miracle"
 tree = "class"
 granted = true
-description = "Everything that ails you is answered at once: wounds, hunger, sickness and poison, hexes and holds, what was taken from you, your mana, and every other pool you hold, filled."
+description = "Everything that ails you is answered at once: wounds, hunger, sickness and poison, hexes and holds, what was taken, and your mana and every pool you hold, filled."
 effects = [{ kind = "prayer", tier = 5, title = { holy = "Miracle", dark = "Miracle" }, all = true }]
 systems = ["hit_points", "status", "diseases", "mana", "hunger", "resources"]

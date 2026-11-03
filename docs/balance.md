@@ -70,7 +70,8 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/s
   the roll (decision 16). Beside it the same roll with the school and the style at rank 0 (the
   ladder alone), and the mean of a roll counts its rerolls exactly. No casts to kill: what a
   spell is worth against a monster is the content's question; the probe's is the roll and the
-  pool.
+  pool. The priest's prayer (#886; `docs/dev/prayer.md`) has no roll and no mana: its line a
+  level gives the name the menu shows and what one prayer answers of the uses reached.
 - **School pace**: before each level, each of its days the caster spends one pool on the
   spell of their school they cast most (of the most mean roll among those costing at most a
   fifth of the pool; none cast only under the open sky; the priest's a heal, at most one a
@@ -272,6 +273,13 @@ Each spell that rolls (harm or healing) of the schools the trained caster knows 
 | Cure wounds (3, touch) | 20 | 1 | 10 (Battle caster 10) | 4d8+3 1s and 2s again, 24.0 (rank 0: 3d6, 10.5) | 2 (2) / 162 |
 | Cure wounds (3, touch) | 30 | 1–2 | 10 (Battle caster 10) | 4d8+3 1s and 2s again, 24.5 (rank 0: 3d6, 11.0) | 2 (2) / 251 |
 | Cure wounds (3, touch) | 60 | 1–2 | 10 (Battle caster 10) | 4d8+6 1s and 2s again, 26.5 (rank 0: 3d6+3, 13.0) | 2 (2) / 543 |
+| Orison (prayer) | 10 | – | – | no roll: answers 1 of 2 (wounds, hunger) | 0 (0) / 77 |
+| Prayer (prayer) | 20 | – | – | no roll: answers 1 of 5 (disease, poison, wounds, release, hunger) | 0 (0) / 161 |
+| Litany (prayer) | 30 | – | – | no roll: answers 1 of 6 (disease, poison, wounds, release, hunger, restoration) | 0 (0) / 252 |
+| Miracle (prayer) | 60 | – | – | no roll: answers all of 7 (disease, poison, wounds, release, mana, hunger, restoration) | 0 (0) / 545 |
+
+The prayer's rows are #886's run (on `main` after the priest's P1 to P3); its pools differ from
+the spells' above by the content merged since #754.
 
 **Witch**
 
