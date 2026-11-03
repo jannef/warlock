@@ -317,6 +317,7 @@ pub(super) fn needs(aim: Aim) -> &'static str {
         Aim::Ailment => "on yourself or an ally",
         Aim::Item => "on something you carry",
         Aim::Shape => "in a weapon's shape",
+        Aim::Spell => "a scroll of a spell you know",
     }
 }
 

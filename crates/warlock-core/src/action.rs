@@ -155,6 +155,15 @@ pub enum Action {
     Study {
         item: usize,
     },
+    /// Write a scroll of `spell` (a spell's id), one the player knows, on the first blank scroll
+    /// they carry (spec §8 "Scrolls": the wizard's Scribe, `scribe:fireball`): turn after turn of
+    /// the `scribe` action, as many as a study of the spell takes, stopping early like a rest
+    /// (the blank and the mana kept); at the end the blank is used up, three times the spell's
+    /// mana spent, and the scroll made, its type known. Refused (no time) without the ability, a
+    /// spell they know, a blank scroll, or the mana.
+    Scribe {
+        spell: String,
+    },
     /// Take a combat stance (spec §8 "Stances"). Takes no game time, but changes state, so
     /// replays record it.
     SetStance(CombatStance),
@@ -847,6 +856,7 @@ impl fmt::Display for Action {
                 }
             }
             Action::Study { item } => write!(f, "study:{}", position_text(*item)),
+            Action::Scribe { spell } => write!(f, "scribe:{spell}"),
             Action::Rest(Rest::For(d)) => write!(f, "rest:{d}"),
             Action::Rest(Rest::Dawn) => f.write_str("rest:dawn"),
             Action::Rest(Rest::Dusk) => f.write_str("rest:dusk"),
@@ -1300,6 +1310,17 @@ impl FromStr for Action {
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
                 Ok(Action::Study { item })
             }
+            "scribe" => {
+                let usage = || "`scribe` needs a spell's id, e.g. `scribe:fireball`".to_string();
+                let spell = arg.filter(|s| {
+                    !s.is_empty()
+                        && (s.chars())
+                            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+                });
+                Ok(Action::Scribe {
+                    spell: spell.ok_or_else(usage)?.to_string(),
+                })
+            }
             "throw" => {
                 let usage = || "`throw` needs a letter and a cell, e.g. `throw:c:12,5`".to_string();
                 let (item, at) = arg.and_then(|a| a.split_once(':')).ok_or_else(usage)?;
@@ -1640,6 +1661,12 @@ mod tests {
             },
             Action::Study { item: 1 },
             Action::Study { item: 30 },
+            Action::Scribe {
+                spell: "fireball".into(),
+            },
+            Action::Scribe {
+                spell: "magic_missile".into(),
+            },
             Action::Throw {
                 item: 40,
                 at: Pos::new(1, 2),
@@ -2023,6 +2050,10 @@ mod tests {
             "study",
             "study:",
             "study:ab",
+            "scribe",
+            "scribe:",
+            "scribe:fire-ball",
+            "scribe:a:b",
             "fire",
             "fire:",
             "fire:3",

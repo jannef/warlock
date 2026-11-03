@@ -514,6 +514,23 @@ const CASES: &[Case] = &[
         keys: Some(">"),
         ..BASE
     },
+    // The wizard's Scribe asks for a spell (#906): the spells known by school, each with its
+    // price and its time in words; no blank scroll carried, which the line above says.
+    Case {
+        name: "scribe-list",
+        character: Some("human,female,wizard"),
+        actions: "xp:200000 levelup:auto",
+        screen: Some("scribe"),
+        ..BASE
+    },
+    // Without Scribe (a warrior), nothing to write.
+    Case {
+        name: "scribe-list-none",
+        character: Some("human,male,warrior"),
+        run: true,
+        screen: Some("scribe"),
+        ..BASE
+    },
     // An ascetic past level 12 (#848): Stunning strike among the class abilities, asking for
     // a direction, paid in ki.
     Case {
@@ -682,7 +699,7 @@ const CASES: &[Case] = &[
         character: Some("gnome,male,wizard"),
         actions: "xp:1000000 levelup:auto afflict:keen",
         screen: Some("abilities"),
-        keys: Some("Down Down"),
+        keys: Some("Down Down Down"),
         ..BASE
     },
     // A bard of level 25 with too little mana (#244): Throw your voice aimed at a place, Inspire
@@ -692,6 +709,15 @@ const CASES: &[Case] = &[
         name: "abilities-menu-bard",
         character: Some("human,female,bard"),
         actions: "xp:400000 levelup:auto drain:106",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A witch past level 6 (#904): Cackle under Class, nothing to aim, listed usable (the rules
+    // refuse it with no hex of hers in sight), beside her hexes in Spells.
+    Case {
+        name: "abilities-menu-witch",
+        character: Some("human,female,witch"),
+        actions: "xp:20000 levelup:auto",
         screen: Some("abilities"),
         ..BASE
     },

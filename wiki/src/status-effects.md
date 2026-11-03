@@ -142,6 +142,12 @@ The bard's [songs](abilities.md#songs) give three more: [Inspired](status-effect
 those who fail to shake it off; each goes up to three degrees, as many as a song with
 [Music](skills.md#skill-music) gives.
 
+A **hex** is a status a [hex spell](magic.md#shapes) lays: [Hexed](status-effects.md#status-ill-wished),
+[Weakened](status-effects.md#status-weakened), [Sluggish](status-effects.md#status-sluggish),
+[Drowsy](status-effects.md#status-drowsy), and [Webbed](status-effects.md#status-webbed). A
+[witch](classes.md#witch)'s [cackle](abilities.md#ability-cackle) keeps the hexes she laid on: each
+on a creature she sees grows a degree, to its maximum, and its degree's time starts again.
+
 A **cooldown** is a status effect that only waits to wear off: while you are, say, [winded](status-effects.md#status-winded), the
 [ability](abilities.md) that winded you cannot be used again (`you are winded`). Time is the only price; nothing
 counts how often you use an ability.

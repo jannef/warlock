@@ -190,6 +190,7 @@ mod rot;
 mod rumour;
 mod sanctuary;
 mod schedule;
+mod scribe;
 mod search;
 mod second_wind;
 mod service;
@@ -234,6 +235,7 @@ mod wares;
 mod warp;
 mod weapon_ability;
 mod weapon_active;
+mod witch;
 mod words;
 mod zap;
 
@@ -269,6 +271,7 @@ pub use orison::PrayerState;
 pub use quest::{QuestRecord, QuestView, Quests, Stage, asks as quest_asks, wants as quest_wants};
 use rest::Ended;
 pub use sanctuary::Hallow;
+pub use scribe::scribe_turns;
 pub use shop::{Shop, ShopStatus, count_of, favour, part_of, unpaid_parts};
 pub use sign_picks::BREATH_RANGE;
 pub use siphon::SIPHON_RANGE;
@@ -622,6 +625,8 @@ enum Spent {
     Search(u8),
     /// Studying a spell from a scroll (see [`World::study`]).
     Study(learn::Lesson),
+    /// Writing a scroll of a spell (see [`World::scribe`]).
+    Scribe(scribe::Writing),
     /// Praying to consecrate a place until this moment (see [`World::consecrate`]).
     Consecrate(GameTime),
     /// Kneeling to hallow the ground until this moment (see [`World::sanctuary`]).
@@ -1251,6 +1256,7 @@ impl World {
             Spent::Dig(at) => self.dig(at, &mut events),
             Spent::Search(turns) => self.search(turns, &mut events),
             Spent::Study(lesson) => self.study(lesson, &mut events),
+            Spent::Scribe(writing) => self.scribe(writing, &mut events),
             Spent::Consecrate(until) => self.consecrate(until, &mut events),
             Spent::Sanctuary(until) => self.sanctuary(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
@@ -1375,6 +1381,7 @@ impl World {
             Action::Eat(meal) => return self.eat(*meal, events),
             Action::Read { item, target } => return self.read(*item, *target, events),
             Action::Study { item } => return self.start_study(*item),
+            Action::Scribe { spell } => return self.start_scribe(spell),
             Action::Dig(dir) => return self.start_dig(*dir),
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
@@ -1740,6 +1747,8 @@ mod school_ability_tests;
 #[cfg(test)]
 mod school_skill_tests;
 #[cfg(test)]
+mod scribe_tests;
+#[cfg(test)]
 mod scriptorium_tests;
 #[cfg(test)]
 mod scroll_label_tests;
@@ -1859,6 +1868,8 @@ mod weapon_active_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+#[cfg(test)]
+mod witch_tests;
 #[cfg(test)]
 mod words_tests;
 #[cfg(test)]

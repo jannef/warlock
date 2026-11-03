@@ -648,8 +648,14 @@ pub enum ClassActive {
     /// A minute's kneeling rite that hallows the ground about the priest for an hour, for mana:
     /// no foe sets foot in it and wounds and mind mend there faster (`world/sanctuary.rs`).
     Sanctuary,
+    /// A loud cackle that holds every hex of the witch's on the creatures she sees a degree
+    /// longer (the witch's Cackle, `world/witch.rs`).
+    Cackle,
     /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
     Knock,
+    /// A scroll of a spell the player knows written on a blank scroll, for three casts' worth of
+    /// mana and a study's time (the wizard's Scribe, `world/scribe.rs`).
+    Scribe,
     /// A careful look that tells a thing the player carries for what it is, as the scroll of
     /// identify would (the merchant's Merchant's eye).
     MerchantsEye,
@@ -682,7 +688,9 @@ impl ClassActive {
         ClassActive::Consecrate,
         ClassActive::Orison,
         ClassActive::Sanctuary,
+        ClassActive::Cackle,
         ClassActive::Knock,
+        ClassActive::Scribe,
         ClassActive::MerchantsEye,
         ClassActive::SpiritWeapon,
     ];
@@ -711,7 +719,9 @@ impl ClassActive {
             ClassActive::Consecrate => "consecrate",
             ClassActive::Orison => "orison",
             ClassActive::Sanctuary => "sanctuary",
+            ClassActive::Cackle => "cackle",
             ClassActive::Knock => "knock",
+            ClassActive::Scribe => "scribe",
             ClassActive::MerchantsEye => "merchants_eye",
             ClassActive::SpiritWeapon => "spirit_weapon",
         }
@@ -785,6 +795,12 @@ impl ClassActive {
         matches!(self, ClassActive::SpiritWeapon)
     }
 
+    /// Whether it asks for a spell the player knows before it is used (the wizard's Scribe,
+    /// [`crate::action::Action::Scribe`], `scribe:fireball`).
+    pub const fn aims_spell(self) -> bool {
+        matches!(self, ClassActive::Scribe)
+    }
+
     /// Whether it takes no time at all (Step of the wind, Stillness): its [`ClassActive::cost`]
     /// then names only the statuses that block it.
     pub const fn takes_no_time(self) -> bool {
@@ -813,10 +829,13 @@ impl ClassActive {
             | ClassActive::Consecrate
             | ClassActive::Orison
             | ClassActive::Sanctuary
+            | ClassActive::Cackle
             | ClassActive::Knock => ActionKind::Cast,
             ClassActive::Volley => ActionKind::Shoot,
             ClassActive::Inspire | ClassActive::Lullaby => ActionKind::Song,
             ClassActive::MerchantsEye => ActionKind::Read,
+            // A turn of it; a scroll takes a study's turns (`world/scribe.rs`).
+            ClassActive::Scribe => ActionKind::Scribe,
             // A weapon taken in hand, as wielding one is.
             ClassActive::SpiritWeapon => ActionKind::Wield,
         }

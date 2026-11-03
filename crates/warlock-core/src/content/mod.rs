@@ -723,6 +723,8 @@ pub struct Content {
     rod_effects: Vec<RodEffect>,
     /// Spells (`data/spells/`, spec §8 "Spells"), in path order; none without the files.
     spells: Vec<SpellData>,
+    /// The statuses `kind = "hex"` spells lay, in status order (computed from `spells`).
+    hex_statuses: Vec<StatusId>,
     /// Talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"); none without the
     /// files.
     talents: TalentBook,
@@ -850,6 +852,7 @@ impl Content {
             rod_effects: Vec::new(),
             weapon_abilities: Vec::new(),
             spells: Vec::new(),
+            hex_statuses: Vec::new(),
             talents: TalentBook::default(),
             affixes: Affixes::default(),
             stances: Stances::default(),
@@ -1011,6 +1014,12 @@ impl Content {
         let rules = files.get_optional(path).map(|text| (path, text));
         let table = files.table("spells").filter(|(p, _)| *p != path);
         (content.spell_rules, content.spells) = spell_def::parse(rules, table, &content)?;
+        content.hex_statuses = (content.spells.iter())
+            .filter(|s| s.kind == SpellPurpose::Hex)
+            .filter_map(|s| s.effect.status.map(|(status, _)| status))
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
         // A school of magic cannot be forgotten: every spell's school has its skill's row
         // (spec §8 "Weapon skills": "Schools of magic"), once there are weapon skills at all.
         if !content.weapon_skills.is_empty()
@@ -3640,6 +3649,13 @@ impl Content {
         &self.spells[usize::from(id.0)]
     }
 
+    /// The statuses a hex lays (spec §8 "Status effects"): those of every `kind = "hex"` spell,
+    /// in status order. An actor with one of them is "under a hex" (the witch's Cackle reads it,
+    /// `world/witch.rs`).
+    pub fn hex_statuses(&self) -> &[StatusId] {
+        &self.hex_statuses
+    }
+
     /// Every spell, lowest spell level first, each level in path order (the abilities menu's
     /// order).
     pub fn spells_by_level(&self) -> Vec<SpellId> {
@@ -3653,6 +3669,21 @@ impl Content {
     pub fn spell_id(&self, name: &str) -> Option<SpellId> {
         let i = self.spells.iter().position(|s| s.id == name)?;
         Some(SpellId(u16::try_from(i).ok()?))
+    }
+
+    /// The scroll of `spell` (spec §8 "Scrolls"): the first object, by id, whose `read` casts it
+    /// (`scroll_of_ID`; every shipped spell has one). What the wizard's Scribe writes.
+    pub fn scroll_of(&self, spell: SpellId) -> Option<ObjectId> {
+        let i = (self.objects.iter()).position(
+            |o| matches!(&o.read, Some(Reading::Cast(scroll)) if scroll.spell == spell),
+        )?;
+        Some(ObjectId(u16::try_from(i).ok()?))
+    }
+
+    /// The blank scroll (`blank_scroll`, spec §8 "Scrolls"): what a scroll is written on, and
+    /// nothing to read.
+    pub fn blank_scroll(&self) -> Option<ObjectId> {
+        self.object_id("blank_scroll")
     }
 
     /// The talents (`data/talents.toml` and `data/talents/`, spec §8 "Talents"): none without

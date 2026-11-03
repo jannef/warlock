@@ -69,6 +69,7 @@ impl World {
             Action::Eat(_) => ActionKind::Eat,
             Action::Read { .. } => ActionKind::Read,
             Action::Study { .. } => ActionKind::Study,
+            Action::Scribe { .. } => ActionKind::Scribe,
             Action::Dig(_) => ActionKind::Dig,
             Action::Search(_) => ActionKind::Search,
             Action::Pray => ActionKind::Pray,

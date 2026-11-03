@@ -1,0 +1,8 @@
+[[talent]]
+id = "scribe"
+name = "Scribe"
+tree = "class"
+granted = true
+description = "Given a blank scroll, time, and three casts' worth of mana, you write a scroll of a spell you know (an ability). The mana is spent and the blank used up only once the scroll is done."
+effects = [{ kind = "scribe", mana_times = 3 }]
+systems = ["scrolls", "spells", "mana"]
