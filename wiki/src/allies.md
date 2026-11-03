@@ -137,6 +137,25 @@ hunt as one: a creature beside you both is flanked, +2 [to hit](combat.md#hittin
 attacks and your companion's at it, and your companion shares your
 [favoured prey](classes.md#ranger) bonus.
 
+### Hunter's bond
+
+From level 25 the ranger's **[Hunter's bond](talents.md#talent-hunters-bond)** lets them share what
+their companion has, while it stands on the same level (not while it rides with you across the
+overworld):
+
+- **Shared sight.** You see every cell it sees, by its own eyes: as far as its kind sees, in the
+  dark as its [vision](vision.md) allows, and around the corner you cannot see past. You also see
+  the cell of every foe its [nose](#companions) finds, however dark, **through a closed door**,
+  never through a wall. These are seen cells like any other: you remember them, can look at them,
+  and can aim at them. It finds no hidden [trap](traps.md) or
+  [secret door](searching.md) for you and smells nothing of a disguised
+  [mimic](chests.md), and being dazzled leaves its view untouched.
+- **Shared buffs.** A [buff](status-effects.md#buffs-and-cooldowns) that lands on either of
+  you lands on the other too, at the same strength, and each of you wears it off alone: any
+  [status](status-effects.md) that a buff [spell](magic.md) lays or a [potion](potions.md) lends, whatever laid it ("Snel is bark-skinned
+  too."; it reaches your companion on the overworld too). A hex, a harm, or a cooldown never
+  crosses.
+
 ### The companion's rules
 
 {{#include generated/companion-rules.md}}

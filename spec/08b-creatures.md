@@ -208,8 +208,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
   their level, named: "The wolf comes to your hand. You call it Græg." Failed: "The wolf snaps at
   you and backs away."; a hostile one has seen the player now, so it may not be tried again until
   it loses them, one not hostile may be tried again at once. A sleeper wakes either way. A mark of
-  Handle animal, made or failed. The collar (C3) and the ranger's later abilities (C5, C6) are
-  the design's next slices.
+  Handle animal, made or failed.
+  **Hunter's bond** (the ranger's level 25, #920; passive):
+  *shared sight*: while the companion stands on the player's level (not in the retinue), the
+  player also sees every cell it sees by its own line of sight and eyes (creature sight's rule,
+  §5: its sight radius, its vision profile, the light as it reaches the cell; wall completion
+  around them), and the cell of every hostile its nose finds (within its `nose`, however dark,
+  through a closed door, never through a wall); these are seen cells like any other (memory,
+  look mode, Set on, targeting, the dumps), shown in the light the player's eyes perceive; it
+  finds no hidden trap or secret door, shows no disguised mimic, and a dazzled player keeps it.
+  *Shared buffs*: a buff status that lands on the player lands on the companion too (on the
+  level or in the retinue), and one on the companion on the player, at the same severity, each
+  its own (it eases by its own clock), whatever laid it (a spell, a scroll, a potion, a boon):
+  a buff is a buff spell's status or one a potion lends; a hex, a harm, a cooldown never
+  crosses, and the shared one does not cross back. "Snel is bark-skinned too." The collar (C3) and the ranger's last ability (C6) are the design's next slices.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature

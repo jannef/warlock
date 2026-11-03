@@ -64,6 +64,20 @@ impl LineOfSight {
         self.radius
     }
 
+    /// Every cell in line of sight, row by row (may lie off the level: callers bound it).
+    pub(crate) fn cells(&self) -> impl Iterator<Item = Pos> + '_ {
+        let side = 2 * self.radius + 1;
+        (self.seen.iter().enumerate())
+            .filter(|(_, seen)| **seen)
+            .map(move |(i, _)| {
+                let i = i as i32;
+                Pos::new(
+                    self.origin.x - self.radius + i % side,
+                    self.origin.y - self.radius + i / side,
+                )
+            })
+    }
+
     /// The smallest radius that reaches squared distance `d2` (`r² + r ≥ d2`). Line of sight
     /// within a radius is the same whatever the radius it was computed with, as long as it
     /// reaches: shadows are cast only by nearer cells.
