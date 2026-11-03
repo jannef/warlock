@@ -277,8 +277,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   25, #932; passive): the shared sight of Hunter's bond with the familiar as its viewpoint, by the
   same rules, its nose reaching `nose` cells of `familiars.toml` (6) or its type's where that is
   farther (the type's alone still decides how the beast itself hunts); no buff is shared, and a
-  companion she keeps lends her nothing. The familiar's story lines (F3, #931; until then
-  the companion chapter's plain line) are the design's next slice.
+  companion she keeps lends her nothing. The companion chapter tells each beast of a race's list
+  its own line (#931); a rare or a bargain's beast gets the chapter's plain line.
 - **Animated objects** (`warlock-core/src/content/animated.rs`, the types; `animated.rs`, what
   one is made of; `world/animated.rs`, the drops and the talents; #483, design
   `docs/design/animated-objects.md`): things a will set moving, each an **ordinary creature
