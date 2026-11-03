@@ -165,7 +165,9 @@ to open, read keys for, or draw one:
   (`at_letter`), a class split across pages repeats its header, and the frame shows `Page 2/3`
   (`draw_label`). The list's cursor picks the page shown; Up/Down move it across pages, and the
   `Context::Menu` commands `NextListPage` (`>`, PageDown) and `PrevListPage` (`<`, PageUp),
-  `Nav::NextPage`/`PrevPage`, turn the page (cursor to its first item; no wrapping). Drawing knows
+  `Nav::NextPage`/`PrevPage`, turn the page (cursor to its first item; no wrapping). The inventory
+  shows no cursor, so there the arrows turn the page too (Up and Left back, Down and Right on).
+  Drawing knows
   the console, presses do not: `route_keys` keeps `ScreenStack::console` current and the stack
   calls the screen's `fit` before each press, so a letter names what is drawn even before the
   first draw (`--keys`). Screens hold stack positions (`Item::position`), never letters, and

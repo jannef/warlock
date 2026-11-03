@@ -129,7 +129,8 @@ throw, or eat, what to put on in an equipment slot) work the same way:
 - the letters `a` to `z` name the stacks of the page you see and start again at `a` on every
   page; a class that goes on over the next page shows its heading there again;
 - `>` or `PageDown` turns to the next page, `<` or `PageUp` to the one before (you can change
-  these keys in Controls); the arrow keys move the `>` cursor from page to page.
+  these keys in Controls); the arrow keys move the `>` cursor from page to page, and on the
+  inventory screen, which has no cursor, they turn the pages.
 
 The inventory screen lists each stack's weight, marks what you wear or wield ("(being worn)",
 "(wielded)", and so on; see [Equipment](equipment.md)), then:

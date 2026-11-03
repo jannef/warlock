@@ -76,7 +76,7 @@ On every menu and screen:
 | Back | `Esc`, always |
 | Reset a key (Controls), delete a saved [character](saving.md#when-the-game-saves) (Characters) | `Delete` or `Backspace` |
 | Mark a [stack](objects.md#piles), mark everything ([picking up](objects.md#picking-up), [dropping](objects.md#dropping)) | `Space`, `,` |
-| Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp` |
+| Next / previous page of a list of items | `>` or `PageDown` / `<` or `PageUp`; on the [inventory](objects.md#your-pack) the arrow keys too |
 
 ## Text fields
 

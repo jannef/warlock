@@ -965,7 +965,7 @@ const CASES: &[Case] = &[
         name: "inventory-page-2",
         actions: HOARD,
         screen: Some("inventory"),
-        keys: Some(">"),
+        keys: Some("Down"),
         size: (80, 24),
         ..BASE
     },

@@ -4,7 +4,8 @@
 //!
 //! Each is the one paged list (`paged_list`, spec §6 "Item lists"): stacks grouped by item class
 //! under a header per class, lettered down each page from `a`, with their glyph, name, and
-//! weight; `>` and `<` (PageDown, PageUp) turn the pages. The inventory and the drop screen mark
+//! weight; `>` and `<` (PageDown, PageUp) turn the pages, and in the inventory, which has no
+//! cursor for them to move, the arrows do too. The inventory and the drop screen mark
 //! what is worn or wielded ("(being worn)", "(wielded)"; dropping it takes it off first). Names
 //! are in their rarity's color (spec §8 "Magic items"): magic blue, rare yellow. The inventory
 //! takes no action and also shows what the player carries and weighs, their burden when they
@@ -441,7 +442,8 @@ impl ObjectScreen {
     }
 
     /// Applies a key press. Letters name the stacks of the page shown (never commands, even
-    /// `h j k l`), and the list keys turn its pages. In the inventory a stack's letter opens its
+    /// `h j k l`), and the list keys turn its pages, the arrows too in the inventory, which has
+    /// no cursor for them to move. In the inventory a stack's letter opens its
     /// description (spec §6 "Item description"); it closes on Esc, Enter, or its own key when
     /// that names no stack.
     pub fn handle(&mut self, press: &Press, bindings: &Bindings) -> ScreenAction {
@@ -458,9 +460,9 @@ impl ObjectScreen {
             match press.nav {
                 _ if own_key => return ScreenAction::Close,
                 Nav::Back | Nav::Enter => return ScreenAction::Close,
-                Nav::NextPage | Nav::PrevPage => {
-                    self.entries.navigate(press.nav);
-                }
+                _ if letter.is_some() => {}
+                Nav::Down | Nav::Right | Nav::NextPage => self.entries.turn(true),
+                Nav::Up | Nav::Left | Nav::PrevPage => self.entries.turn(false),
                 _ => {}
             }
             return ScreenAction::Stay;
@@ -686,6 +688,10 @@ impl ObjectScreen {
                 let close = match bindings.keys_of(KeyCommand::Inventory).first() {
                     Some(key) => format!("{} or Esc close", key.display()),
                     None => "Esc close".to_string(),
+                };
+                let page = match self.entries.page_count() {
+                    1 => String::new(),
+                    _ => format!("{} page   ", keys.up_down()),
                 };
                 format!("{page}{}{close}", with("look"))
             }
@@ -1110,6 +1116,38 @@ mod tests {
     }
 
     #[test]
+    fn the_arrows_turn_the_inventorys_pages() {
+        let mut world = on_the_pile();
+        world.apply(&Action::PickUp(Positions::default()));
+        let b = Bindings::default();
+        let mut screen = ObjectScreen::new(ObjectList::Inventory, Some(&world.perception()));
+        // A header and a stack to a page.
+        screen.entries.set_room(2);
+        assert_eq!(screen.entries.page_count(), 3);
+        let page = |screen: &ObjectScreen| screen.entries.page_label().unwrap();
+        for (nav, expected) in [
+            (Nav::Up, "Page 1/3"),
+            (Nav::Down, "Page 2/3"),
+            (Nav::Right, "Page 3/3"),
+            (Nav::Down, "Page 3/3"),
+            (Nav::Up, "Page 2/3"),
+            (Nav::Left, "Page 1/3"),
+            (Nav::NextPage, "Page 2/3"),
+            (Nav::PrevPage, "Page 1/3"),
+        ] {
+            assert_eq!(screen.handle(&Press::nav(nav), &b), ScreenAction::Stay);
+            assert_eq!(page(&screen), expected, "after {nav:?}");
+        }
+        // `j` is a letter, never the arrow it also stands for, even naming no stack here.
+        let j = Press {
+            nav: Nav::Down,
+            ..typed('j')
+        };
+        assert_eq!(screen.handle(&j, &b), ScreenAction::Stay);
+        assert_eq!(page(&screen), "Page 1/3");
+    }
+
+    #[test]
     fn the_inventory_shows_the_burden_and_where_it_changes() {
         let b = Bindings::default();
         let draw = |world: &World, cols: u32| {
@@ -1253,7 +1291,7 @@ mod tests {
         assert!(has(&text, "t - ) a dagger") && !has(&text, "u - "));
         assert!(!has(&text, "leather cap"));
         assert!(
-            has(&text, "> < page   a-t look   I or Esc close"),
+            has(&text, "↑↓ page   a-t look   I or Esc close"),
             "{text:#?}"
         );
         // `>` (the next list page) turns it: the caps and the cloaks, each under its header (no

@@ -237,7 +237,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   split across pages repeats its header there. The frame says `Page 2/3`, and `>` or PageDown
   turns to the next page, `<` or PageUp to the previous (rebindable list commands; not Tab, which
   switches info pages); the `>` cursor moves across pages with the arrows, and the page follows
-  it. There is no scrolling. Letters always name stacks on a list, never commands. Marks belong
+  it. The inventory has no cursor, so there the arrows turn the pages (up and left back, down and
+  right on). There is no scrolling. Letters always name stacks on a list, never commands. Marks belong
   to stacks, not letters, so they stay as the pages turn. Actions name stacks by where they are
   stored (their position), never by a page's letter, and no message names a letter.
   **Numbers** (#552; the owner's exception to hidden numbers, 2026-10-27: "player just needs to
