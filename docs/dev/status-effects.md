@@ -185,8 +185,11 @@ Tests: `check.rs`, `disease.rs`, `content/disease.rs`,
 
 Treating oneself (spec §8 "Treating oneself", #549): the Heal skill's use. `crate::heal` holds
 what may be treated (`Ailment::{Status, Disease}`, `treatable` in status then disease order,
-`may_treat`, `own` for `PerceptionView::own_ailments`, `noun`: a disease's name once known, else
-"sickness"); `world/heal.rs` the try (`World::heal`, dispatched from `player_acts`; `kind_of`
+`may_treat`, `own` and `of_allies` for `PerceptionView::own_ailments`, `noun`: a disease's name
+once known, else "sickness"); `world/heal.rs` the try (`World::heal`, dispatched from
+`player_acts`; the patient the player or, with `heal:ID:DIR`, the ally beside them that way,
+`allies_beside`, #915: the healer's check, the patient's effect; the snapshot's `ally_ailments`
+are the allies' list, computed each turn; `kind_of`
 maps it to `ActionKind::Heal`, so a status may block it). A status is treatable by its `treat`
 table (`content::Treat`: `difficulty`, `per_degree`, `stops`, `made`, `failed`; parse checks 0
 to 40, 0 to 10, non-empty words): `stops` (bleeding) ends it through `ended` on a made check and

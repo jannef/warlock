@@ -137,9 +137,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   **Time**: a summon's stay ends by the clock, wherever it is: one whose time has passed departs
   where the player is ("The wolf fades away.", nothing left behind), and is gone when they
   return to a level they left it on, or when the retinue steps out. **Experience**: an ally's
-  kill pays its master as their own blow would, at `[xp] ally_percent` (100): the first-kill
-  bonus, the quest log, Favoured prey, the named monsters slain, what a kill builds; the ally
-  gets nothing. Handle animal earns its marks from an order given and an ally's kill. At most
+  kill pays its master's experience, the first-kill bonus too, at their class's `ally_share` (the
+  pet classes, the ranger and the druid: 100) or else `[xp] ally_percent` (50; #915, the owner:
+  "pet classes get 100% of xp share, but others get 50%"), whatever the ally's source; the quest
+  log, Favoured prey, the named monsters slain, the alignment, and what a kill builds are
+  credited in full ("Credit is still shared fully for quests"); the ally gets nothing. Handle animal earns its marks from an order given and an ally's kill. At most
   `[allies] most` (8) allies on one level. **Beast-bond** (Wayfarer; Handle animal 20): your
   allies strike +1 to hit and take Protection +1, read through you. The messages never say a
   number. The dev `ally:CREATURE[:N[:DURATION]]` makes allies for tests and captures.
