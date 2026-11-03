@@ -207,10 +207,12 @@ fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> Stri
         })
         .collect();
     prestige.sort();
-    parts.extend(
-        (prestige.iter())
-            .map(|(class, level)| format!("{} from {class} level {level}", plural(&class.to_lowercase()))),
-    );
+    parts.extend((prestige.iter()).map(|(class, level)| {
+        format!(
+            "{} from {class} level {level}",
+            plural(&class.to_lowercase())
+        )
+    }));
     parts.join(", ")
 }
 
@@ -408,6 +410,20 @@ pub(super) fn song_odds(content: &Content) -> String {
     out
 }
 
+/// A class name in the plural: "witch" is "witches", "thief" "thieves", "mystic" "mystics".
+fn plural(name: &str) -> String {
+    if let Some(stem) = name.strip_suffix("ief") {
+        format!("{stem}ieves")
+    } else if ["s", "x", "z", "ch", "sh"]
+        .iter()
+        .any(|e| name.ends_with(e))
+    {
+        format!("{name}es")
+    } else {
+        format!("{name}s")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -427,16 +443,5 @@ mod tests {
         let odds = song_odds(&content);
         assert!(odds.contains("Music 100 (17)"), "{odds}");
         assert!(odds.contains("| +0 | 54% | 25% |"), "{odds}");
-    }
-}
-
-/// A class name in the plural: "witch" is "witches", "thief" "thieves", "mystic" "mystics".
-fn plural(name: &str) -> String {
-    if let Some(stem) = name.strip_suffix("ief") {
-        format!("{stem}ieves")
-    } else if ["s", "x", "z", "ch", "sh"].iter().any(|e| name.ends_with(e)) {
-        format!("{name}es")
-    } else {
-        format!("{name}s")
     }
 }
