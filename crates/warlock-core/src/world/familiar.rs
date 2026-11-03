@@ -16,17 +16,25 @@
 //!   hers on the target at its own degree (a hex that stacks by refreshing): her hexes stick, and
 //!   everything that reads "a hex of hers" (Cackle, Malison) sees them;
 //! - **the harrying** ([`World::quarry`], from `ally.rs::ally_plan`): a familiar picks the nearest
-//!   creature under a hex of its master's before any other, under its order's reach.
+//!   creature under a hex of its master's before any other, under its order's reach;
+//! - **Call familiar** ([`World::start_calling`], `use:call_familiar`): with none alive and no
+//!   hostile in sight, an hour's sitting (`call_turns` turns of the `call_familiar` action through
+//!   [`World::keep_at`]: anything that would stop a rest stops it, the time spent and nothing
+//!   else lost), and a new beast at her feet. No mana, no cooldown, no count, no marks.
+//!   [`calling_draw`] is the start's draw, on the gameplay stream, with `bargain_kinds` (the imp)
+//!   in her race's list from `bargain_level` of her class on.
 //!
-//! Nothing here draws from any stream but the start's. A run without a familiar calls none of it
-//! to any effect.
+//! Nothing here draws from any stream but the start's, a kept beast's name's, and a calling's. A
+//! run without a familiar calls none of it to any effect.
 
-use super::{Actor, ActorId, AllySource, CompanionData, World, WorldState};
+use super::rest::Ended;
+use super::{Actor, ActorId, AllySource, CompanionData, Spent, World, WorldState};
 use crate::action::{AttackKind, Event};
 use crate::character::CharacterSpec;
-use crate::content::{Content, CreatureId, LevelKind, Stacking};
+use crate::content::{ActionKind, Content, CreatureId, LevelKind, Stacking};
 use crate::geom::Pos;
 use crate::rng::Rng;
+use std::cell::Cell;
 
 impl Actor {
     /// Its familiar data, if it is someone's familiar.
@@ -47,6 +55,25 @@ pub fn draw(content: &Content, seed: u64, spec: &CharacterSpec) -> Option<Creatu
     let mut rng = Rng::stream(seed, &format!("familiar/{spec}"));
     let rare = rng.below(1000) < rules.rare_per_mille;
     let pool = if rare { rules.rare.as_slice() } else { list };
+    let at = rng.below(u32::try_from(pool.len()).unwrap_or(u32::MAX));
+    pool.get(at as usize).copied()
+}
+
+/// What a calling brings a character of race `race` at `level` of their class: at `rare_per_mille`
+/// one of the rares, else one of the race's list, with `bargain_kinds` among them from
+/// `bargain_level` on (`None` without the data or a list for the race). Two draws on `rng`.
+pub fn calling_draw(content: &Content, rng: &mut Rng, race: &str, level: u8) -> Option<CreatureId> {
+    let rules = content.familiars()?;
+    let list = rules.list_of(race)?;
+    let rare = rng.below(1000) < rules.rare_per_mille;
+    let mut pool = if rare {
+        rules.rare.clone()
+    } else {
+        list.to_vec()
+    };
+    if !rare && level >= rules.bargain_level {
+        pool.extend_from_slice(&rules.bargain_kinds);
+    }
     let at = rng.below(u32::try_from(pool.len()).unwrap_or(u32::MAX));
     pool.get(at as usize).copied()
 }
@@ -85,18 +112,30 @@ impl World {
         if !self.state.player().talent_mods(&content).familiar {
             return;
         }
-        let Some(rules) = content.familiars() else {
-            return;
-        };
         let Some(creature) = draw(&content, self.state.seed, &character.spec) else {
             return;
         };
-        let level = self.state.current_level.clone();
+        if let Some(at) = self.familiar_cell() {
+            self.make_familiar(creature, at);
+        }
+    }
+
+    /// Where a new familiar comes: a free cell near the player, or their own on the overworld,
+    /// where it joins the retinue; `None` with no free cell.
+    fn familiar_cell(&self) -> Option<Pos> {
+        let here = self.player_pos();
+        if self.state.current().kind == LevelKind::Overworld {
+            return Some(here);
+        }
+        let at = self.free_cell_near(&self.state.current_level, here);
+        (at != here).then_some(at)
+    }
+
+    /// Makes a familiar of type `creature` at `at`, at the player's grade, whole, named, and
+    /// said: "Tibb, your cat, winds about your ankles." On the overworld it is in the retinue.
+    fn make_familiar(&mut self, creature: CreatureId, at: Pos) {
+        let content = self.content.clone();
         let overworld = self.state.current().kind == LevelKind::Overworld;
-        let at = match overworld {
-            true => self.player_pos(),
-            false => self.free_cell_near(&level, self.player_pos()),
-        };
         let own = content.creature(creature).level;
         let master = self.player_level();
         let grade = (content.companions()).map_or(master.max(own), |r| r.growth.grade(master, own));
@@ -119,8 +158,81 @@ impl World {
             }
         }
         let kind = &content.creature(creature).name;
-        let line = rules.arrives(creature).unwrap_or("keeps to your heel");
+        let line = (content.familiars())
+            .and_then(|rules| rules.arrives(creature))
+            .unwrap_or("keeps to your heel");
         self.say(format!("{name}, your {kind}, {line}."));
+    }
+
+    /// `use:call_familiar`: the player sits down to call, or is refused with no time (module
+    /// docs). The ability itself and the statuses that block it are `use_class`'s.
+    pub(super) fn start_calling(&mut self) -> Spent {
+        use crate::ability::Unavailable;
+        let turns = (self.content.familiars())
+            .filter(|_| self.content.allies().is_some())
+            .map(|rules| rules.call_turns);
+        let Some(turns) = turns else {
+            self.say("Nothing comes.");
+            return Spent::Nothing;
+        };
+        match self.perception().calling_barred() {
+            Some(Unavailable::FamiliarLives) => self.say("Your familiar lives yet."),
+            Some(_) => self.say("Not with that watching."),
+            None => {
+                self.say("You sit down in the dark and call, under your breath.");
+                return Spent::Calling(turns);
+            }
+        }
+        Spent::Nothing
+    }
+
+    /// Calls turn after turn until the ritual is done or something interrupts (module docs).
+    pub(super) fn calling(&mut self, turns: u32, events: &mut Vec<Event>) {
+        let left = Cell::new(turns);
+        let ended = self.keep_at(
+            events,
+            |_| left.get() > 0,
+            |w, _| {
+                left.set(left.get() - 1);
+                w.price_of(w.state.player, ActionKind::CallFamiliar)
+            },
+        );
+        match ended {
+            Ended::Died => {}
+            _ if left.get() == 0 => self.finish_calling(events),
+            Ended::Came(id) => {
+                let text = format!(
+                    "{} comes into view; you break off your calling.",
+                    self.creature_called(id)
+                );
+                self.say(text);
+            }
+            Ended::Said | Ended::Done => self.say("You break off your calling."),
+        }
+    }
+
+    /// The hour is up: the draw on the gameplay stream, and a new familiar at her feet, or
+    /// nothing with no list for her race or no free cell (the hour is spent either way).
+    fn finish_calling(&mut self, events: &mut Vec<Event>) {
+        let content = self.content.clone();
+        let total = self.player_level();
+        let drawn = self.state.character.clone().and_then(|character| {
+            // Her class's own level, not what a prestige class adds to it.
+            let tables = character.class_levels(&content, total);
+            let level = tables.first().map_or(total, |&(_, level)| level);
+            let race = &character.spec.race;
+            calling_draw(&content, &mut self.state.rng, race, level)
+        });
+        let (Some(creature), Some(at)) = (drawn, self.familiar_cell()) else {
+            self.say("Nothing comes.");
+            return;
+        };
+        self.say("Something comes out of the dark and sits at your feet.");
+        self.make_familiar(creature, at);
+        // The last turn's perception did not know it.
+        let mut seen = Vec::new();
+        self.perceive(&mut seen);
+        events.append(&mut seen);
     }
 
     /// The touch (the module docs): `attacker`'s melee hit landed on `target`, who lives. When
@@ -201,3 +313,7 @@ impl World {
 #[cfg(test)]
 #[path = "familiar_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "familiar_call_tests.rs"]
+mod call_tests;

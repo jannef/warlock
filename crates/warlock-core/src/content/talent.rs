@@ -355,6 +355,9 @@ pub enum TalentEffect {
     /// It sees what its companion sees, by its companion's eyes and nose (Hunter's bond; the
     /// second viewpoint in `Perception::compute`).
     SharedSight,
+    /// It sees what its familiar sees, by its familiar's eyes and nose (Familiar's sight; the same
+    /// second viewpoint, `familiars.toml`'s `nose` at the least); no buff crosses.
+    FamiliarSight,
     /// A buff status that lands on it or its companion lands on the other too (Hunter's bond;
     /// `world/bond.rs`); never a hex.
     SharedBuffs,
@@ -1287,6 +1290,7 @@ impl TalentEffect {
             TalentEffect::Rage { .. } => A::Rage,
             TalentEffect::WarCry { .. } => A::WarCry,
             TalentEffect::Cackle { .. } => A::Cackle,
+            TalentEffect::Familiar => A::CallFamiliar,
             TalentEffect::VeteransWind { .. } => A::VeteransWind,
             TalentEffect::Whirlwind => A::Whirlwind,
             TalentEffect::LayOnHands { .. } => A::LayOnHands,
@@ -1316,10 +1320,11 @@ impl TalentEffect {
     }
 
     /// The name of the class active it is, where that is not its talent's (Stillness, on Still
-    /// mind).
+    /// mind; Call familiar, on Familiar).
     pub fn active_name(&self) -> Option<&str> {
         match self {
             TalentEffect::Stillness { name, .. } => Some(name),
+            TalentEffect::Familiar => Some("Call familiar"),
             _ => None,
         }
     }
@@ -2451,6 +2456,7 @@ impl TalentEffect {
             | TalentEffect::Companion
             | TalentEffect::Familiar
             | TalentEffect::SharedSight
+            | TalentEffect::FamiliarSight
             | TalentEffect::SharedBuffs
             | TalentEffect::SharesFavouredPrey
             | TalentEffect::StartledBlow

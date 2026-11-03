@@ -204,7 +204,9 @@ flanked too, and another type nothing).
 
 The ranger's level 25 (`assets/data/talents/hunters_bond.toml`: tree `class`, `granted`, effects
 `shared_sight` and `shared_buffs`, systems `vision`, `allies`, `status`). Two separate effects, so
-the witch's familiar (#932) can take the sight and the nose without the buffs.
+the witch's familiar takes the sight and the nose without the buffs (`TalentEffect::FamiliarSight`,
+the same viewpoint, `docs/dev/familiar.md` "Familiar's sight"; `shared_sight` itself reads only the
+companion).
 
 **Shared sight** (`TalentEffect::SharedSight` → `TalentMods::shared_sight`), a second viewpoint in
 `Perception::compute` (`perception.rs::BondView`, `bond_view`), only while the companion stands on

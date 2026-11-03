@@ -89,6 +89,7 @@ impl World {
             (ClassActive::Orison, _) => self.orison(events),
             (ClassActive::Sanctuary, _) => self.begin_sanctuary(),
             (ClassActive::Cackle, _) => self.cackle(events),
+            (ClassActive::CallFamiliar, _) => self.start_calling(),
             (ClassActive::Smite, Some(dir)) => self.smite(SmiteMode::Plain, dir, events),
             (ClassActive::BrandingSmite, Some(dir)) => self.smite(SmiteMode::Branding, dir, events),
             (ClassActive::WrathfulSmite, Some(dir)) => self.smite(SmiteMode::Wrathful, dir, events),

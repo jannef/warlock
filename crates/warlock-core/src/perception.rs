@@ -36,6 +36,8 @@
 //! completion around them, and so are the cells of the hostiles its nose finds
 //! ([`crate::world::smelt`]: within its `nose`, through the dark and closed doors). The light grid
 //! covers its line of sight too, perceived by the player's eye. Dazzle does not touch it.
+//! **Familiar's sight** (`TalentMods::familiar_sight`) opens the same viewpoint on the player's
+//! familiar, its nose reaching at least `familiars.toml`'s `nose`.
 //!
 //! The overworld is seen at map scale instead: a cell is visible iff it is in line of sight
 //! within the daylight sight radius ([`daylight::overworld_sight`]: day 9, twilight 5, night 2,
@@ -101,7 +103,7 @@ use crate::object::{Stack, Weight};
 use crate::sight::{self, LineOfSight};
 use crate::skills::{self, SkillId};
 use crate::stats::PerStat;
-use crate::talent::{self, Candidate};
+use crate::talent::{self, Candidate, TalentMods};
 use crate::temperature::Temperature;
 use crate::time::GameTime;
 use crate::weapon_skills::WeaponSkills;
@@ -538,33 +540,47 @@ pub(crate) struct Perception {
     kept_beside: Vec<crate::geom::Dir>,
 }
 
-/// Hunter's bond's second viewpoint (the module docs): the player's companion on their level,
-/// its line of sight within its type's sight (on the overworld no farther than daylight allows),
-/// and its eyes.
+/// The second viewpoint of Hunter's bond and Familiar's sight (the module docs): the kept beast
+/// on the player's level, its line of sight within its type's sight (on the overworld no farther
+/// than daylight allows), its eyes, and how far its nose reaches for them.
 struct BondView<'a> {
-    companion: &'a Actor,
+    beast: &'a Actor,
     los: LineOfSight,
     eye: VisionProfile,
+    nose: Option<i32>,
 }
 
-/// The [`BondView`] of the player's companion, if it stands on their level (not in the
-/// retinue).
-fn bond_view<'a>(state: &'a WorldState, content: &Content) -> Option<BondView<'a>> {
+/// The [`BondView`] of the beast the player's talents share, Hunter's bond the companion's and
+/// Familiar's sight the familiar's, if it stands on their level (not in the retinue). No class
+/// holds both talents; were one to, the lower id's would be the viewpoint.
+fn bond_view<'a>(
+    state: &'a WorldState,
+    content: &Content,
+    talents: &TalentMods,
+) -> Option<BondView<'a>> {
+    if !talents.shared_sight && !talents.familiar_sight {
+        return None;
+    }
     let level = state.current();
-    let companion = (state.actors.values()).find(|a| {
+    let beast = (state.actors.values()).find(|a| {
         a.master() == Some(state.player)
-            && a.companion().is_some()
+            && ((talents.shared_sight && a.companion().is_some())
+                || (talents.familiar_sight && a.familiar().is_some()))
             && a.level == level.id
             && !a.in_retinue()
     })?;
-    let def = content.creature(companion.creature);
+    let def = content.creature(beast.creature);
     let radius = sight::sight_radius(state, content, def.sight);
-    let los = LineOfSight::compute(companion.pos, radius, |p| level.is_opaque(content, p));
-    let eye = (companion.eyes(content, &content.vision_profiles()[def.vision])).into_owned();
+    let los = LineOfSight::compute(beast.pos, radius, |p| level.is_opaque(content, p));
+    let eye = (beast.eyes(content, &content.vision_profiles()[def.vision])).into_owned();
+    let least = (beast.familiar())
+        .and_then(|_| content.familiars())
+        .map(|rules| rules.nose);
     Some(BondView {
-        companion,
+        beast,
         los,
         eye,
+        nose: def.nose.max(least),
     })
 }
 
@@ -624,12 +640,9 @@ impl Perception {
                 los_cells.push(p);
             }
         });
-        // Hunter's bond: the companion's line of sight is lit as the player's is (`lit_los`;
-        // without the bond the same as the player's).
-        let bond = talents
-            .shared_sight
-            .then(|| bond_view(state, content))
-            .flatten();
+        // Hunter's bond, Familiar's sight: the beast's line of sight is lit as the player's is
+        // (`lit_los`; without either the same as the player's).
+        let bond = bond_view(state, content, &talents);
         let both = bond.as_ref().map(|bond| {
             let (mut lit_los, mut lit_cells) = (los.clone(), los_cells.clone());
             for p in bond.los.cells() {
@@ -644,7 +657,7 @@ impl Perception {
         });
         let (lit_los, lit_cells) = both.as_ref().map_or((&los, &los_cells), |(g, c)| (g, c));
         let light_reach = bond.as_ref().map_or(VIEW_RADIUS, |bond| {
-            let apart = bond.companion.pos.dist2(viewer).isqrt() + 1;
+            let apart = bond.beast.pos.dist2(viewer).isqrt() + 1;
             VIEW_RADIUS.max(apart + bond.los.radius())
         });
 
@@ -803,7 +816,7 @@ impl Perception {
             }
         }
 
-        // Hunter's bond: what the companion sees by its eyes, and the hostiles its nose finds.
+        // The beast's viewpoint: what it sees by its eyes, and the hostiles its nose finds.
         let mut bond_seen = Vec::new();
         if let Some(bond) = &bond {
             for p in bond.los.cells().filter(|p| !is_opaque(*p)) {
@@ -819,7 +832,10 @@ impl Perception {
             let hostile = |s: &WorldState, c: &Content, _: &Actor, a: &Actor| {
                 world::stance_between(s, c, s.player(), a) == Stance::Hostile
             };
-            for (_, p) in world::smelt(state, content, bond.companion, &hostile) {
+            let smelt = bond.nose.map_or_else(Vec::new, |nose| {
+                world::smelt_within(state, content, bond.beast, nose, &hostile)
+            });
+            for (_, p) in smelt {
                 if sight.get(p) == Some(&Sight::Hidden) {
                     sight[p] = Sight::Seen;
                     visible_cells.push(p);
@@ -1765,6 +1781,10 @@ impl<'a> PerceptionView<'a> {
                     Ability::Heal if !self.snapshot.ally_ailments.is_empty() => (ability
                         .unavailable(self.player, self.content))
                     .filter(|&why| why != crate::ability::Unavailable::NothingToTreat),
+                    // Calling a familiar asks for none alive and no hostile in sight.
+                    Ability::Class(crate::content::ClassActive::CallFamiliar) => self
+                        .calling_barred()
+                        .or_else(|| ability.unavailable(self.player, self.content)),
                     // Foraging asks for the wild underfoot (spec §8 "Foraging").
                     Ability::Forage
                         if crate::world::forage_ground(
@@ -1780,6 +1800,17 @@ impl<'a> PerceptionView<'a> {
                 },
             })
             .collect()
+    }
+
+    /// What keeps the player from calling a familiar now (`world/familiar.rs`): one alive,
+    /// wherever it is (they know their own), or a hostile they see.
+    pub(crate) fn calling_barred(&self) -> Option<crate::ability::Unavailable> {
+        use crate::ability::Unavailable;
+        let lives = (self.snapshot.allies.iter())
+            .any(|a| matches!(a.source, crate::world::AllySource::Familiar(_)));
+        let watched = (self.actors().iter())
+            .any(|a| a.kind == ActorKind::Creature && self.stance(a) == Stance::Hostile);
+        (lives.then_some(Unavailable::FamiliarLives)).or(watched.then_some(Unavailable::Watched))
     }
 
     /// The name the abilities menu gives `ability`: its own, but the priest's prayer by its

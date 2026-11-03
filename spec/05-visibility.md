@@ -258,7 +258,8 @@ rate or animation.
   darkness are hidden (unless within darkvision), creatures carrying light are seen. A Blood scent
   talent (§8 "Talents") sees the cell of a bleeding creature in line of sight within its radius as
   darkvision would. **Hunter's bond** (§8 "Allies") adds a second viewpoint, the companion's: the
-  cells it sees by creature sight's rule and the cells of the hostiles its nose finds. A
+  cells it sees by creature sight's rule and the cells of the hostiles its nose finds; **Familiar's
+  sight** adds the same viewpoint, the familiar's. A
   **light-blind** player (their race's `light_blind`: drow) whose own cell is
   lit at least to its `glare` is dazzled and sees nothing farther than its `sight` (§8 "Character
   creation").

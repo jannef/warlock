@@ -1308,7 +1308,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     player its level / 2 in mana, at least 1, never past their maximum, `World::hex_tithe` from
     `dies`; "The hex comes home." when any came; never for the player's own death; no draws),
     Second sight (noticing
-    as Spot +2, searching +2), Curse of sloth (level 3: Sluggish 1 min a degree: every action
+    as Spot +2, searching +2), Familiar's sight (#932: her familiar's sight and nose, §8 "Allies":
+    "The familiar"; `TalentEffect::FamiliarSight` read in `Perception::compute`), Curse of sloth (level 3: Sluggish 1 min a degree: every action
     costs 150 %; 3 mana), Blight (level 7: a burst of 2d6 poison, radius 2, and two degrees of
     Poisoned on everyone it harms; 17 mana), Cauldron (a corpse's harm never; its stat marks and widening chances doubled; a fresh one heals 1d4),
     Hag's bargain.
@@ -1388,7 +1389,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Passives**, each one read: Familiar (the witch's level 1, #929: a small beast of her race's
     list, or rarely a rare one, at her heel from the first turn, whose touch lays her evil eye and
     which goes for what she has hexed, §8 "Allies": "The familiar"; `TalentEffect::Familiar` read
-    by `World::bring_familiar`), Animal companion (the ranger's level 1, #916: a beast of the
+    by `World::bring_familiar`; with it the active Call familiar, #930, `use:call_familiar`: an
+    hour's sitting brings another when hers is dead, the imp among the draw from her level 30), Animal companion (the ranger's level 1, #916: a beast of the
     race's kind, or rarely a rare one, at their side from the first turn, that grows with their
     level and always comes along, §8 "Allies": "The animal companion"; `TalentEffect::Companion`
     read by `World::bring_companion`; and `tame = 2`, `TalentMods::tame`, the ranger's edge at

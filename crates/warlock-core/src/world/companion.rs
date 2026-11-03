@@ -297,9 +297,21 @@ pub(crate) fn smelt(
     me: &Actor,
     wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
 ) -> Vec<(ActorId, Pos)> {
-    let Some(nose) = content.creature(me.creature).nose else {
-        return Vec::new();
-    };
+    match content.creature(me.creature).nose {
+        Some(nose) => smelt_within(state, content, me, nose, wanted),
+        None => Vec::new(),
+    }
+}
+
+/// [`smelt`] with a reach of `nose` cells, whatever `me`'s type has (a familiar's for Familiar's
+/// sight, `Perception::compute`).
+pub(crate) fn smelt_within(
+    state: &WorldState,
+    content: &Content,
+    me: &Actor,
+    nose: i32,
+    wanted: &dyn Fn(&WorldState, &Content, &Actor, &Actor) -> bool,
+) -> Vec<(ActorId, Pos)> {
     let mut near: Vec<(i32, ActorId, Pos)> = (state.actors.values())
         .filter(|a| a.level == me.level && a.id != me.id && !a.in_retinue())
         .filter(|a| a.pos.chebyshev(me.pos) <= nose)

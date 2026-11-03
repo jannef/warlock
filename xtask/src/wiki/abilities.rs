@@ -123,6 +123,18 @@ pub(super) fn abilities(content: &Content) -> String {
                     format!("{base} turns and {per} more a spell level, each {turn} (a study's)");
                 (aim(a.aim(content)), time)
             }
+            // A long action too: the calling's turns.
+            Some(_) if a == Ability::Class(ClassActive::CallFamiliar) => {
+                let turns = content.familiars().map_or(0, |r| r.call_turns);
+                let turn = at_normal_pace(price(
+                    content.action_costs().cost(ActionKind::CallFamiliar),
+                    BASE_TURN,
+                ));
+                (
+                    aim(a.aim(content)),
+                    format!("{turns} turns, each {turn} (a ritual)"),
+                )
+            }
             // A long action too: the forage's time.
             Some(_) if a == Ability::Forage => {
                 let minutes = content.forage().map_or(0, |r| r.seconds / 60);
@@ -182,7 +194,7 @@ fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> Stri
         .collect();
     who.sort();
     let mut parts: Vec<String> = (who.iter())
-        .map(|(class, level)| format!("{class}s from level {level}"))
+        .map(|(class, level)| format!("{} from level {level}", plural(class)))
         .collect();
     // A prestige class's table counts its own levels (Hunter 1 is the level after its base
     // class's highest).
@@ -195,10 +207,12 @@ fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> Stri
         })
         .collect();
     prestige.sort();
-    parts.extend(
-        (prestige.iter())
-            .map(|(class, level)| format!("{}s from {class} level {level}", class.to_lowercase())),
-    );
+    parts.extend((prestige.iter()).map(|(class, level)| {
+        format!(
+            "{} from {class} level {level}",
+            plural(&class.to_lowercase())
+        )
+    }));
     parts.join(", ")
 }
 
@@ -394,6 +408,20 @@ pub(super) fn song_odds(content: &Content) -> String {
         out.push_str("No song is sung against anyone yet.\n");
     }
     out
+}
+
+/// A class name in the plural: "witch" is "witches", "thief" "thieves", "mystic" "mystics".
+fn plural(name: &str) -> String {
+    if let Some(stem) = name.strip_suffix("ief") {
+        format!("{stem}ieves")
+    } else if ["s", "x", "z", "ch", "sh"]
+        .iter()
+        .any(|e| name.ends_with(e))
+    {
+        format!("{name}es")
+    } else {
+        format!("{name}s")
+    }
 }
 
 #[cfg(test)]
