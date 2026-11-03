@@ -7,6 +7,6 @@ id = "familiar"
 name = "Familiar"
 tree = "class"
 granted = true
-description = "A small beast of the old craft keeps to your heel. Its touch is your evil eye, and it goes for what you have hexed."
+description = "A small beast of the old craft keeps to your heel. Its touch is your evil eye, and it goes for what you have hexed. Lost, it is called again in an hour's sitting."
 effects = [{ kind = "familiar" }]
 systems = ["allies", "status", "spells"]

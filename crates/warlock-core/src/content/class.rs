@@ -658,6 +658,9 @@ pub enum ClassActive {
     /// A loud cackle that holds every hex of the witch's on the creatures she sees a degree
     /// longer (the witch's Cackle, `world/witch.rs`).
     Cackle,
+    /// An hour's sitting that brings a new familiar when the witch has none (the witch's Call
+    /// familiar, given by Familiar, `world/familiar.rs`).
+    CallFamiliar,
     /// A word that springs the lock of a door or chest open, for mana (the wizard's Knock).
     Knock,
     /// A scroll of a spell the player knows written on a blank scroll, for three casts' worth of
@@ -699,6 +702,7 @@ impl ClassActive {
         ClassActive::Orison,
         ClassActive::Sanctuary,
         ClassActive::Cackle,
+        ClassActive::CallFamiliar,
         ClassActive::Knock,
         ClassActive::Scribe,
         ClassActive::MerchantsEye,
@@ -733,6 +737,7 @@ impl ClassActive {
             ClassActive::Orison => "orison",
             ClassActive::Sanctuary => "sanctuary",
             ClassActive::Cackle => "cackle",
+            ClassActive::CallFamiliar => "call_familiar",
             ClassActive::Knock => "knock",
             ClassActive::Scribe => "scribe",
             ClassActive::MerchantsEye => "merchants_eye",
@@ -858,6 +863,8 @@ impl ClassActive {
             ClassActive::MerchantsEye => ActionKind::Read,
             // A turn of it; a scroll takes a study's turns (`world/scribe.rs`).
             ClassActive::Scribe => ActionKind::Scribe,
+            // A turn of it; the ritual takes `call_turns` of them (`world/familiar.rs`).
+            ClassActive::CallFamiliar => ActionKind::CallFamiliar,
             // A weapon taken in hand, as wielding one is.
             ClassActive::SpiritWeapon => ActionKind::Wield,
         }

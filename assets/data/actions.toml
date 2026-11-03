@@ -64,6 +64,9 @@ study = 1000
 # A turn of writing a scroll (the wizard's Scribe ability; spec §8 "Scrolls"): a scroll takes as
 # many turns as a study of its spell would (study.toml's turns_base and turns_per_level).
 scribe = 1000
+# A turn of calling a familiar (the witch's Call familiar; spec §8 "Class abilities"): the ritual
+# takes familiars.toml's call_turns of these.
+call_familiar = 1000
 # A turn of digging into a wall with a digging tool ready (spec §8 "Digging"): digging goes on
 # turn after turn until the wall gives way or something interrupts it.
 dig = 1000

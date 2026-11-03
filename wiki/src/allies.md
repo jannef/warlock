@@ -190,6 +190,22 @@ A familiar **goes for what she has hexed**: the nearest creature it sees under a
 within its [order](#orders)'s reach, comes before any other, however much nearer the others stand.
 With nothing hexed in sight it fights as any ally does, and its first hit hexes what it bit.
 
+### Call familiar
+
+A familiar stays until it is slain. When hers is dead she may call another:
+[Call familiar](abilities.md#ability-call-familiar), which comes with her Familiar, is **an hour's
+sitting** and costs nothing but the hour: no [mana](mana.md), no gold, no cooldown, no limit on how
+often. Refused, for no time, while her familiar lives, wherever it is, with a hostile in her sight,
+and while a [status](status-effects.md) keeps her from casting
+([Silenced](status-effects.md#status-silenced), [Raging](status-effects.md#status-raging)). A
+creature coming into view, a blow, or any news breaks the sitting off: the time spent is spent,
+and she may begin again. At its end "Something comes out of the dark and sits at your feet.": a new
+beast, drawn as at the start, with a new name and her level. With nowhere near her to stand, nothing
+comes and the hour is lost. On the overworld it joins her at once and steps out at the next place.
+
+From level 30 of her class the draw may answer with an [imp](creatures.md#creature-imp), one more
+beast of her race's list: it stings and it poisons, and its touch is the same evil eye.
+
 ### Familiar's sight
 
 From level 25 the witch's **[Familiar's sight](talents.md#talent-familiars-sight)** lets her share

@@ -1175,6 +1175,7 @@ impl TalentMods {
             A::SpiritWeapon => self.spirit_weapon.is_some(),
             A::MasterThief => self.finisher,
             A::Inspire | A::Lullaby => self.songs.iter().any(|s| s.active == active),
+            A::CallFamiliar => self.familiar,
             A::Consecrate => self.consecrate.is_some(),
             A::Sanctuary => self.sanctuary.is_some(),
             A::Knock => self.knock.is_some(),

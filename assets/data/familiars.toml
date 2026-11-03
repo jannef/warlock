@@ -13,6 +13,16 @@ names = ["Tibb", "Fancie", "Dandy", "Tyffin", "Pigin", "Tittey", "Suckin", "Robb
 # would cast it now, with its master as the giver (`world/familiar.rs::familiar_touch`).
 touch = "evil_eye"
 
+# Call familiar (the witch's, `world/familiar.rs`): the ritual of an hour, this many turns of the
+# `call_familiar` action (actions.toml), for nothing but the hour (the owner, #907 Q5).
+call_turns = 600
+
+# From this level of her class, a calling's draw may also answer with one of these, as one more
+# beast of her race's list (the owner, #907 Q7). The start never draws them. They are plain beasts
+# as the rest are, but may open doors: the imp has hands.
+bargain_kinds = ["imp"]
+bargain_level = 30
+
 # How far a familiar's nose reaches for its master once she has Familiar's sight (#932), when its
 # kind's own `nose` reaches less or it has none: most of the old craft's beasts hunt by eye, and
 # this gives them no scent of their own to hunt by.
@@ -49,7 +59,7 @@ duergar = ["bat", "large_spider", "toad"]
 ratfolk = ["rat", "polecat", "toad"]
 
 # How each kind arrives, said with its name and kind: "Tibb, your cat, winds about your
-# ankles." Every beast a start may draw has its line.
+# ankles." Every beast a start or a calling may draw has its line.
 [arrives]
 cat = "winds about your ankles"
 toad = "squats in your shadow"
@@ -62,3 +72,4 @@ large_spider = "spins a thread from your sleeve"
 cave_lizard = "flicks its tongue at your heel"
 black_hound = "pads out of your shadow"
 panther = "pads out of the dark to your side"
+imp = "grins up at you with too many teeth"
