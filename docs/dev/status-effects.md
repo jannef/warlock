@@ -136,6 +136,12 @@ Silenced also blocks `song` (the bard's songs, `world/song.rs`, #870). A song's 
 (`inspired`, `inspired_greatly`) are `max = 3`, `stacking = "refresh"`: Music adds degrees, and
 degrees are time, the combat bonus stays. The Lullaby (#873) gives `drowsy` (`max = 3`,
 `stacking = "refresh"`) to the hostile hearers who fail its check, caused by the singer.
+**Under a hex**: an actor has an effect whose status a `kind = "hex"` spell lays;
+`Content::hex_statuses()` (computed at load from the spells, in status order; `ill_wished`,
+`weakened`, `sluggish`, `drowsy`, `webbed`) is the one definition, "of hers" adds `Effect::by`
+the player. The witch's Cackle (#904, `world/witch.rs`) reads it: each such hex on a creature
+the player sees is `afflict`ed again at its severity plus a degree (`refresh`: higher, clamped,
+`wear` 0).
 Built-in example: `raging` (penalty St +2, To +2, In −2; `blocks = ["read", "cast"]`; `follows =
 "exhausted"`; no `eases`: the Rage resource brings it and ends it, `docs/dev/resources.md`) and
 `exhausted` (St −1). A followed status must end: it eases, is cured, or a resource brings it

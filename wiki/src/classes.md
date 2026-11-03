@@ -57,6 +57,17 @@ yours; a [hex](magic.md#shapes) falls on a [hostile](creatures.md#factions) you 
 open sky. The [druid](classes.md#druid)'s calls bring wolves, bears, and elementals to fight beside them
 as [allies](allies.md).
 
+**The witch's cackle** ([Cackle](abilities.md#ability-cackle), from level 6) keeps her hexes on.
+It costs no [mana](mana.md#spending-it) and takes the time of a spell: every hex she laid herself
+([hexed](status-effects.md#status-ill-wished), [weakened](status-effects.md#status-weakened),
+[sluggish](status-effects.md#status-sluggish), [drowsy](status-effects.md#status-drowsy),
+[webbed](status-effects.md#status-webbed)) on a creature she sees grows a degree, up to its
+maximum, and its degree's time starts again; one already at its maximum only starts again.
+Another's hex and a creature out of sight are untouched, and with no creature in sight under a
+hex of hers she does not cackle at all (no time is spent). The cackle is loud, a voice of
+[loudness](hearing.md#how-loud) 60, louder than talk: whoever [hears it](hearing.md#creatures-hear-you)
+comes to look.
+
 **The priest's prayer** ([Orison](abilities.md#ability-orison), from level 1) costs no [mana](mana.md#spending-it) and takes the time of a spell:
 it answers the worst thing that ails you, as far as your prayers reach ([wounds](prayer.md#prayer-wounds) at first; [hunger](prayer.md#prayer-hunger),
 [disease](prayer.md#prayer-disease) and [poison](prayer.md#prayer-poison), [hexes and holds](prayer.md#prayer-release), [stat damage](prayer.md#prayer-restoration), and [mana](prayer.md#prayer-mana) as the levels come; two answers a
@@ -79,6 +90,11 @@ three times as fast, until the priest strikes from it (see [Special rooms](speci
 
 The [wizard](classes.md#wizard)'s **[Knock](abilities.md#ability-knock)** (from level 4, 5 [mana](mana.md#spending-it)) springs the lock of the [locked door](doors.md#locked-doors) or chest in a
 direction; nothing opens by itself (see [Chests](chests.md#locked-chests)).
+
+The [wizard](classes.md#wizard)'s **[Scribe](abilities.md#ability-scribe)** (from level 12) writes a scroll of a spell he knows on a
+blank scroll, for three times the spell's [mana](mana.md#spending-it) and a study's time (see
+[Scrolls](scrolls.md#writing-scrolls)): mana banked between fights, read in the next. His
+**[Magister](talents.md#talent-magister)** comes at level 40.
 
 The [ranger](classes.md#ranger)'s **favoured prey** is the kind of [creature](creatures.md) you have killed most, counted over every
 [level](experience.md#levels); when two are tied, the one that got there first stays favoured until another is killed

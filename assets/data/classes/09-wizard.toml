@@ -38,10 +38,11 @@ abilities = [
     { level = 3, talent = "magic_missile" },
     { level = 4, talent = "knock" },
     { level = 12, talent = "burning_hands" },
+    { level = 12, talent = "scribe" },
     { level = 18, talent = "arcane_bolt" },
     { level = 25, talent = "mage_armour" },
     { level = 32, talent = "empower" },
-    { level = 45, talent = "magister" },
+    { level = 40, talent = "magister" },
     { level = 50, talent = "arcane_mastery" },
     { level = 60, talent = "archmage" },
 ]

@@ -1,0 +1,15 @@
+# A blank scroll (spec §8 "Scrolls"): paper and nothing on it, until a wizard writes a spell on
+# it (the Scribe ability). Read it (`r`) and nothing happens: there is nothing to read.
+[[object]]
+id = "blank_scroll"
+name = "blank scroll"
+plural = "blank scrolls"
+glyph = "?"
+fg = "#d8d0c0"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 15
+stackable = true
+level = 1
+frequency = 30

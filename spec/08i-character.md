@@ -987,7 +987,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     the seven schools' skills, `needs = { chosen = 2 }`: `weapon { ranks = 1 }`, the chosen
     school's benefits read a rank higher), **Devotee** (Spellcraft, level 9:
     `school_marks_percent = 50`, every school's marks half again; Forge-born's marks in every
-    skill leave the schools out), and the wizard's class ability **Magister** (level 45:
+    skill leave the schools out), and the wizard's class ability **Magister** (level 40, moved
+    from 45 by the witch and wizard design §6.2:
     `weapon { role = "school", ranks = 1 }`, every school a rank higher); Early mastery's
     description names the schools too (their abilities, a later slice).
     The Defence by attack kind of the design's B5 landed with Deflect missiles (#237,
@@ -1133,7 +1134,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
     mana, where nothing locked stands; §8 "Chests"), Merchant's eye (the merchant's at 12, #816:
     on a stack carried, `use:merchants_eye:c`, chosen from the identify list; it is identified as
     the scroll of identify would identify it, for the time of a `read` and nothing else, no mana,
-    cooldown, check, or limit; refused, no time, for one already known).
+    cooldown, check, or limit; refused, no time, for one already known), Scribe (the wizard's
+    at 12, #906: `scribe:SPELL`, chosen from the scribe list, a scroll of a spell known written
+    on a blank scroll for three times its mana and a study's time; §8 "Scrolls": "Writing
+    scrolls").
   - **Passives**, each one read: Weapon drill (melee weapon skill marks +25 %, `practise`),
     Shield line (Shield +1), Cleaving strike (the cleave free blow; with the Cleave talent too, great
     cleave), Armour drill (worn armour's Dexterity cap +1, Protection +1 while wearing any),
@@ -1258,7 +1262,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
     mana), Burning hands (level
     4, at 12: a cone of 3 cells, 1d4 fire, its ladder to 3d4+2; 6 mana), Arcane bolt (level 6, at
-    18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Mage armour (Deflection +2 in no body armour),
+    18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Scribe (at 12: a scroll of
+    a spell known written on a blank scroll, three times its mana; §8 "Scrolls"), Mage armour (Deflection +2 in no body armour),
     Empower (`spell_mod { rungs = 1 }`: its spells a rung higher on their ladders; spells' mana
     −10 %), Arcane mastery (mana +100 %), Archmage (two rungs; spells' mana −50 %, at least 1).
     The rungs never pass a ladder's last; nothing holds the roll after (the spell scaling
@@ -1266,7 +1271,13 @@ developer notes (CLAUDE.md, `docs/dev/`).
     come from the Scholar and Spellcraft trees.
   - **Witch**: Herb lore (rotten food −50 %, a corpse's `on_eat` harm and vomiting never, the
     angelica root heals 1d6), Evil eye (level 0, at 1: Hexed 1 min a degree: −2 to hit; 1 mana),
-    Hex of weakness (level 3, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Poison lore
+    Hex of weakness (level 3, at 3: Weakened 2 min a degree: St −2, Dx −2; 3 mana), Cackle (at
+    6, #904: `use:cackle`, nothing to aim, the time of a cast, no mana or cooldown; a voice 60
+    loud, `Act::Cackle`; every effect on a creature the player's perception sees whose status a
+    hex lays, `Content::hex_statuses()`, and whose giver is the player grows a degree, to its
+    max, and starts its degree afresh, in actor-id order; refused with no time when no creature
+    in sight is under a hex of hers, "No one you see is under your hex.", and while a status
+    blocks a cast; "You cackle." "Your hexes hold."; no draws, no marks), Poison lore
     (poison eases twice as fast; +2 damage on hits at a Poisoned creature, `World::lore_blow`),
     Cause wounds (level 4, at 12: a touch that rolls to hit, 1d6 necrotic, to 2d6; 3 mana),
     Second sight (noticing
