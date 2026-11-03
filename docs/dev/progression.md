@@ -268,7 +268,8 @@ menu shows; a holy gift's talent may name the bands it works for (`alignment`; o
 is used and does nothing, `docs/dev/alignment.md`). The priest's prayer (`prayer`, #883,
 `docs/dev/prayer.md`) is one active, `orison`, carried by its tier-1 talent (`active` maps only
 `tier = 1`); the later prayer talents add uses, answers, and titles to `TalentMods::prayer`, and
-the menu names it by its highest tier and the face that answers (`PerceptionView::ability_name`).
+the menu names it by its highest tier and the face that answers (`PerceptionView::ability_name`). Communion with the dark (`communion`, #884) is a band-gated passive beside Consecrate: its
+`alignment` (`max = "callous"`) is read where it acts (`World::communes`), as a holy gift's is.
 A shared entry is one talent the tables
 name alike (`purity_of_body`, the paladin's and the ascetic's, the priest's too until #883: #790 cut its copy
 `divine_health`); Deflect missiles left the ascetic's table for Stunning strike (#848) and stays

@@ -63,7 +63,13 @@ poison at 12, hexes and holds at 18, stat damage and drain at 25, mana at 32), t
 prayer at 40, and at 60 everything at once with every pool filled. Its name grows with it:
 Orison, Prayer, Litany, Benediction, Miracle, while you are [Neutral or better](alignment.md); a priest fallen to
 Callous or worse is answered by the dark powers instead, and prays a Whisper, an Invocation, a
-Rite, a Pact, a Miracle. Every prayer adds 100 to a hidden **strain**, answered or not, and a
+Rite, a Pact, a Miracle. The dark powers answer the same things, with a twist: the diseases
+they cure (the brewing ones too) are caught by the nearest [creature](creatures.md) you see, as if it had failed to
+resist them, and the poison they cure is laid on it at the same degrees (a creature immune or
+resistant to [poison](damage-types.md) takes less or none); a hex or hold they release is laid back on whoever cast it,
+if you see them, at the degrees it had, and whoever held you is caught [in a web](status-effects.md#status-webbed) instead; and
+they feed you to the brim, one short of [Bloated](hunger.md), where the holy ones feed you to
+Satiated. A creature that dies of a sickness or poison passed on is your kill. Every prayer adds 100 to a hidden **strain**, answered or not, and a
 point of it passes each minute; a prayer fizzles with a chance of 10 % for every 100 strain, and
 once one has fizzled every prayer fizzles until the strain is gone. A prayer with nothing to
 answer (a disease still brewing is not yet anything) costs nothing.
@@ -71,6 +77,10 @@ answer (a disease still brewing is not yet anything) costs nothing.
 **[Consecrate](abilities.md#ability-consecrate)** (the [priest](classes.md#priest)'s at level 9, the [paladin](classes.md#paladin)'s at 12) works only while you are Neutral
 or better: a minute's prayer, for 15 [mana](mana.md#spending-it), that lifts a cursed, draining, or haunted room's curse for good
 (see [Special rooms](special-rooms.md#cursed-rooms)).
+Its dark twin, **[Communion with the dark](talents.md#talent-communion)** (the priest's at level 9), works only
+while you are Callous or worse: standing in a [cursed](special-rooms.md#room-cursed),
+[draining](special-rooms.md#room-draining), or [haunted](special-rooms.md#room-haunted) room, or on a level such a curse lies over,
+your prayers add no strain, and the place's drain ([Ebbing](status-effects.md#status-ebbing)) never touches you.
 
 The priest's **[Sanctuary](abilities.md#ability-sanctuary)** (level 50, 30 [mana](mana.md#spending-it), a minute's kneeling) hallows the ground about them
 for an hour: hostile creatures keep off it and whoever stands on it heals and gets mana back

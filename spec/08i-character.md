@@ -1169,7 +1169,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Priest** (the priest design, `docs/design/priest.md`; #883): Mend (level 1, at 1: a
     touch, 1d3 back; 1 mana), Blessing (level 3, at 3: Blessed 10 min a degree: +1 to hit,
     Willpower +1; 3 mana), Cure wounds (level 3, at 3: a touch, 2d6; 2 casts; 2 mana),
-    Consecrate (9), and **the prayer** (`use:orison` at every tier; `docs/dev/prayer.md`): one
+    Consecrate (9), Communion with the dark (9: Consecrate's dark twin, a passive working only
+    for a Callous or worse priest: in an unholy place, a room's or a whole level's, their prayers
+    add no strain and the place's status, Ebbing, never touches them), and **the prayer** (`use:orison` at every tier; `docs/dev/prayer.md`): one
     class active given at 1 that answers what ails the priest most, in a fixed priority order
     (disease, poison, wounds, release, mana, hunger, restoration; `data/prayer.toml`), as far as
     its uses reach: wounds at 1 (Orison: bleeding stops, hit points to full), hunger at 6 (Daily
@@ -1184,8 +1186,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
     has passed to 0 (the same words for both). With nothing to answer (a brewing disease alone is
     nothing) it is refused, with no time or strain. The band at the moment picks who answers:
     Neutral and better the holy powers (Orison, Prayer, Litany, Benediction, Miracle), Callous
-    and worse the dark ones (Whisper, Invocation, Rite, Pact, Miracle), each with its own words;
-    the dark powers' twists come with #884. **Sanctuary** (50; `use:sanctuary`, #885): the
+    and worse the dark ones (Whisper, Invocation, Rite, Pact, Miracle), each with its own words.
+    The dark ones answer with a twist (`docs/dev/prayer.md` "The dark face"): the diseases cured
+    pass to the nearest creature the priest sees (incubating, unchecked), the poison cured is
+    laid on it at its degrees, a released hex is laid on its caster if seen (a hold's holder is
+    Webbed), and the hunger use feeds to one short of Bloated. **Sanctuary** (50; `use:sanctuary`, #885): the
     priest kneels a minute for 30 mana (interrupted as a rest is, nothing is laid) and the
     ground within two cells of where they knelt is hallowed for an hour: no creature hostile to
     them steps onto it from outside (one already on it may move about and leave; nothing spawns
