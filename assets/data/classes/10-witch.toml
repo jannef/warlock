@@ -37,6 +37,7 @@ abilities = [
     { level = 6, talent = "cackle" },
     { level = 12, talent = "poison_lore" },
     { level = 12, talent = "cause_wounds" },
+    { level = 18, talent = "malison" },
     { level = 25, talent = "second_sight" },
     { level = 32, talent = "curse_of_sloth" },
     { level = 40, talent = "blight" },

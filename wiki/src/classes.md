@@ -68,6 +68,13 @@ hex of hers she does not cackle at all (no time is spent). The cackle is loud, a
 [loudness](hearing.md#how-loud) 60, louder than talk: whoever [hears it](hearing.md#creatures-hear-you)
 comes to look.
 
+**The witch's malison** ([Malison](talents.md#talent-malison), from level 18) is a passive. A
+creature under a hex (anyone's) takes 3 more [damage](combat.md) from her blows, shots, and
+spells for each hex it is under, before its [resistances](damage-types.md#armour-and-resistance). And when a
+creature dies under a hex she laid herself, whatever killed it and wherever it is, she gains
+[mana](mana.md) equal to half its level (rounded down, at least 1), never past her maximum:
+"The hex comes home."
+
 **The priest's prayer** ([Orison](abilities.md#ability-orison), from level 1) costs no [mana](mana.md#spending-it) and takes the time of a spell:
 it answers the worst thing that ails you, as far as your prayers reach ([wounds](prayer.md#prayer-wounds) at first; [hunger](prayer.md#prayer-hunger),
 [disease](prayer.md#prayer-disease) and [poison](prayer.md#prayer-poison), [hexes and holds](prayer.md#prayer-release), [stat damage](prayer.md#prayer-restoration), and [mana](prayer.md#prayer-mana) as the levels come; two answers a

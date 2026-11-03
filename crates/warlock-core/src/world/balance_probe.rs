@@ -514,6 +514,9 @@ struct Cast {
     /// (the ranks' mana off) and no talent.
     cost: i32,
     base_cost: i32,
+    /// What its harm does more to a target under one hex (Malison's bite, `status_damage` on a
+    /// hex status; `World::lore_blow`), 0 for none.
+    hexed: i32,
 }
 
 /// The spells that roll (harm or healing) `w`'s player would cast at their caster level: those
@@ -528,6 +531,11 @@ fn casts(w: &World) -> Vec<Cast> {
     let mut out = Vec::new();
     let table = content.weapon_skills();
     let rules = content.spell_rules().expect("spell rules");
+    let bite = (me.talent_mods(content).status_damage.iter())
+        .filter(|(status, _)| content.hex_statuses().contains(status))
+        .map(|(_, v)| *v)
+        .max()
+        .unwrap_or(0);
     for spell in content.spells_by_level() {
         let def = content.spell(spell);
         let Some(rolled) = me.spell_roll(content, def, CastBy::Own) else {
@@ -576,6 +584,11 @@ fn casts(w: &World) -> Vec<Cast> {
             aim: Profile::bare(&attack).with(&benefit),
             cost: me.spell_cost(content, def),
             base_cost: rules.mana(def, 0),
+            hexed: if def.kind == SpellPurpose::Damage {
+                bite
+            } else {
+                0
+            },
         });
     }
     out

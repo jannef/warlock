@@ -202,97 +202,121 @@ Rounds for the plain warrior (trained) to kill the monsters of their level: as s
 
 ## Spells
 
-Each spell that rolls (harm or healing) of the schools the trained caster knows or has an affinity with, as `Actor::spell_roll` makes it in plain gear, per cast on one target: the rung of its ladder the stats reach (the seeds' range), the school's rank the pace below reached (and the rank of the caster style it is cast in from where the caster stands), the roll (seed 1's dice, the seeds' mean) and the same roll at rank 0 (the ladder alone), and its mana (the cost table's price with no rank's cut in brackets) over the pool.
+Each spell that rolls (harm or healing) of the schools the trained caster knows or has an affinity with, as `Actor::spell_roll` makes it in plain gear, per cast on one target: the rung of its ladder the stats reach (the seeds' range), the school's rank the pace below reached (and the rank of the caster style it is cast in from where the caster stands), the roll (seed 1's dice, the seeds' mean) and the same roll at rank 0 (the ladder alone), its mean on a target under a hex (Malison's bite; `–` without it), and its mana (the cost table's price with no rank's cut in brackets) over the pool.
 
 **Wizard**
 
-| Spell (level, res) | L | rung | school rank | roll | mana / pool |
-|---|---|---|---|---|---|
-| Ray of frost (1, attack) | 10 | 1 | 5–6 (Sniper 5–6) | 1d9 1s again, 7.3 (rank 0: 1d8, 4.5) | 1 (1) / 102 |
-| Ray of frost (1, attack) | 20 | 1 | 7 (Sniper 7) | 2d9 1s again, 11.0 (rank 0: 1d8, 4.5) | 1 (1) / 214 |
-| Ray of frost (1, attack) | 30 | 1 | 8 (Sniper 8) | 2d9 1s and 2s again, 12.5 (rank 0: 1d8, 4.5) | 1 (1) / 337 |
-| Ray of frost (1, attack) | 60 | 1 | 10 (Sniper 10) | 3d10 1s and 2s again, 18.9 (rank 0: 1d8, 4.5) | 1 (1) / 752 |
-| Spark (1, auto) | 10 | 1 | 5–6 (Sniper 5–6) | 1d7 1s again, 5.9 (rank 0: 1d6, 3.5) | 1 (1) / 102 |
-| Spark (1, auto) | 20 | 1 | 7 (Sniper 7) | 2d7 1s again, 9.0 (rank 0: 1d6, 3.5) | 1 (1) / 214 |
-| Spark (1, auto) | 30 | 1 | 8 (Sniper 8) | 2d7 1s and 2s again, 10.2 (rank 0: 1d6, 3.5) | 1 (1) / 337 |
-| Spark (1, auto) | 60 | 1 | 10 (Sniper 10) | 3d8 1s and 2s again, 15.8 (rank 0: 1d6, 3.5) | 1 (1) / 752 |
-| Magic missile (3, auto) | 10 | 2 | 5–6 (Sniper 5–6) | 3d5 1s again, 11.3 (rank 0: 3d4, 7.5) | 2 (3) / 102 |
-| Magic missile (3, auto) | 20 | 2 | 7 (Sniper 7) | 4d5 1s again, 13.7 (rank 0: 3d4, 7.5) | 2 (3) / 214 |
-| Magic missile (3, auto) | 30 | 2–3 | 8 (Sniper 8) | 4d5 1s and 2s again, 15.2 (rank 0: 3d4, 7.7) | 2 (3) / 337 |
-| Magic missile (3, auto) | 60 | 3 | 10 (Sniper 10) | 5d6+1 1s and 2s again, 21.8 (rank 0: 3d4+1, 8.5) | 1 (3) / 752 |
-| Burning hands (4, area) | 10 | 2 | 5–6 (Sniper 5–6) | 3d5 1s again, 11.3 (rank 0: 3d4, 7.5) | 5 (6) / 102 |
-| Burning hands (4, area) | 20 | 2 | 7 (Sniper 7) | 4d5 1s again, 13.7 (rank 0: 3d4, 7.5) | 5 (6) / 214 |
-| Burning hands (4, area) | 30 | 2–3 | 8 (Sniper 8) | 4d5 1s and 2s again, 15.3 (rank 0: 3d4, 7.8) | 5 (6) / 337 |
-| Burning hands (4, area) | 60 | 3 | 10 (Sniper 10) | 5d6+2 1s and 2s again, 22.8 (rank 0: 3d4+2, 9.5) | 1 (6) / 752 |
-| Cause wounds (4, touch) | 10 | 1–2 | 0 (Toucher 1–2) | 2d8, 7.7 (rank 0: 2d8, 7.7) | 3 (3) / 102 |
-| Cause wounds (4, touch) | 20 | 2 | 0 (Toucher 3) | 2d8, 9.0 (rank 0: 2d8, 9.0) | 3 (3) / 214 |
-| Cause wounds (4, touch) | 30 | 2 | 0 (Toucher 4) | 2d8+1, 10.0 (rank 0: 2d8, 9.0) | 3 (3) / 337 |
-| Cause wounds (4, touch) | 60 | 3 | 0 (Toucher 6) | 2d8+3, 12.0 (rank 0: 2d8+2, 11.0) | 1 (3) / 752 |
-| Arcane bolt (6, area) | 10 | 1 | 5–6 (Sniper 5–6) | 3d7 1s again, 14.8 (rank 0: 3d6, 10.5) | 10 (11) / 102 |
-| Arcane bolt (6, area) | 20 | 2 | 7 (Sniper 7) | 4d7+2 1s again, 19.9 (rank 0: 3d6+2, 12.5) | 9 (11) / 214 |
-| Arcane bolt (6, area) | 30 | 2 | 8 (Sniper 8) | 4d7+2 1s and 2s again, 21.6 (rank 0: 3d6+2, 12.5) | 9 (11) / 337 |
-| Arcane bolt (6, area) | 60 | 3 | 10 (Sniper 10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | 2 (11) / 752 |
-| Frost (6, area) | 10 | 1 | 5–6 (Sniper 5–6) | 3d7 1s again, 14.8 (rank 0: 3d6, 10.5) | 13 (14) / 102 |
-| Frost (6, area) | 20 | 2 | 7 (Sniper 7) | 4d7+2 1s again, 19.9 (rank 0: 3d6+2, 12.5) | 12 (14) / 214 |
-| Frost (6, area) | 30 | 2 | 8 (Sniper 8) | 4d7+2 1s and 2s again, 21.6 (rank 0: 3d6+2, 12.5) | 12 (14) / 337 |
-| Frost (6, area) | 60 | 3 | 10 (Sniper 10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | 3 (14) / 752 |
-| Blight (7, area) | 10 | 1 | 0 (Sniper 5–6) | 3d6, 10.5 (rank 0: 3d6, 10.5) | 17 (17) / 102 |
-| Blight (7, area) | 20 | 1–2 | 0 (Sniper 7) | 3d6+3, 12.5 (rank 0: 3d6+3, 12.5) | 17 (17) / 214 |
-| Blight (7, area) | 30 | 2 | 0 (Sniper 8) | 3d6+3, 13.5 (rank 0: 3d6+3, 13.5) | 17 (17) / 337 |
-| Blight (7, area) | 60 | 2 | 0 (Sniper 10) | 3d6+3, 13.5 (rank 0: 3d6+3, 13.5) | 6 (17) / 752 |
-| Scorching ray (7, attack) | 10 | 2 | 5–6 (Sniper 5–6) | 3d7 1s again, 14.8 (rank 0: 3d6, 10.5) | 6 (7) / 102 |
-| Scorching ray (7, attack) | 20 | 3 | 7 (Sniper 7) | 5d7 1s again, 22.4 (rank 0: 4d6, 14.0) | 6 (7) / 214 |
-| Scorching ray (7, attack) | 30 | 3 | 8 (Sniper 8) | 5d7 1s and 2s again, 24.4 (rank 0: 4d6, 14.0) | 6 (7) / 337 |
-| Scorching ray (7, attack) | 60 | 4 | 10 (Sniper 10) | 5d8+1d12 1s and 2s again, 33.6 (rank 0: 3d6+1d10, 16.0) | 1 (7) / 752 |
-| Call lightning (11, area) | 10 | 2–3 | 5–6 (Sniper 5–6) | 5d7 1s again, 20.7 (rank 0: 5d6, 15.2) | 19 (20) / 102 |
-| Call lightning (11, area) | 20 | 3 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | 18 (20) / 214 |
-| Call lightning (11, area) | 30 | 3 | 8 (Sniper 8) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | 18 (20) / 337 |
-| Call lightning (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | 5 (20) / 752 |
-| Fireball (11, area) | 10 | 2 | 5–6 (Sniper 5–6) | 4d7 1s again, 19.2 (rank 0: 4d6, 14.0) | 24 (26) / 102 |
-| Fireball (11, area) | 20 | 3 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | 23 (26) / 214 |
-| Fireball (11, area) | 30 | 3 | 8 (Sniper 8) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | 23 (26) / 337 |
-| Fireball (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | 6 (26) / 752 |
-| Lightning bolt (11, area) | 10 | 2 | 5–6 (Sniper 5–6) | 4d7 1s again, 19.2 (rank 0: 4d6, 14.0) | 19 (20) / 102 |
-| Lightning bolt (11, area) | 20 | 3 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | 18 (20) / 214 |
-| Lightning bolt (11, area) | 30 | 3 | 8 (Sniper 8) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | 18 (20) / 337 |
-| Lightning bolt (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | 5 (20) / 752 |
-| Flame (12, area) | 10 | 1 | 5–6 (Sniper 5–6) | 4d7 1s again, 19.2 (rank 0: 4d6, 14.0) | 27 (29) / 102 |
-| Flame (12, area) | 20 | 2 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | 26 (29) / 214 |
-| Flame (12, area) | 30 | 2 | 8 (Sniper 8) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | 26 (29) / 337 |
-| Flame (12, area) | 60 | 3 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | 7 (29) / 752 |
+| Spell (level, res) | L | rung | school rank | roll | hexed | mana / pool |
+|---|---|---|---|---|---|---|
+| Ray of frost (1, attack) | 10 | 1 | 5–6 (Sniper 5–6) | 1d9 1s again, 7.3 (rank 0: 1d8, 4.5) | – | 1 (1) / 103 |
+| Ray of frost (1, attack) | 20 | 1 | 7 (Sniper 7) | 2d9 1s again, 11.0 (rank 0: 1d8, 4.5) | – | 1 (1) / 213 |
+| Ray of frost (1, attack) | 30 | 1 | 8 (Sniper 8–9) | 2d9 1s and 2s again, 12.5 (rank 0: 1d8, 4.5) | – | 1 (1) / 334 |
+| Ray of frost (1, attack) | 60 | 1 | 10 (Sniper 10) | 3d10 1s and 2s again, 18.9 (rank 0: 1d8, 4.5) | – | 1 (1) / 743 |
+| Spark (1, auto) | 10 | 1 | 5–6 (Sniper 5–6) | 1d7 1s again, 5.9 (rank 0: 1d6, 3.5) | – | 1 (1) / 103 |
+| Spark (1, auto) | 20 | 1 | 7 (Sniper 7) | 2d7 1s again, 9.0 (rank 0: 1d6, 3.5) | – | 1 (1) / 213 |
+| Spark (1, auto) | 30 | 1 | 8 (Sniper 8–9) | 2d7 1s and 2s again, 10.2 (rank 0: 1d6, 3.5) | – | 1 (1) / 334 |
+| Spark (1, auto) | 60 | 1 | 10 (Sniper 10) | 3d8 1s and 2s again, 15.8 (rank 0: 1d6, 3.5) | – | 1 (1) / 743 |
+| Magic missile (3, auto) | 10 | 2 | 5–6 (Sniper 5–6) | 3d5 1s again, 11.3 (rank 0: 3d4, 7.5) | – | 2 (3) / 103 |
+| Magic missile (3, auto) | 20 | 2 | 7 (Sniper 7) | 4d5 1s again, 13.7 (rank 0: 3d4, 7.5) | – | 2 (3) / 213 |
+| Magic missile (3, auto) | 30 | 2–3 | 8 (Sniper 8–9) | 4d5 1s and 2s again, 15.2 (rank 0: 3d4, 7.7) | – | 2 (3) / 334 |
+| Magic missile (3, auto) | 60 | 3 | 10 (Sniper 10) | 5d6+1 1s and 2s again, 21.8 (rank 0: 3d4+1, 8.5) | – | 1 (3) / 743 |
+| Burning hands (4, area) | 10 | 2 | 5–6 (Sniper 5–6) | 3d5 1s again, 11.3 (rank 0: 3d4, 7.5) | – | 5 (6) / 103 |
+| Burning hands (4, area) | 20 | 2 | 7 (Sniper 7) | 4d5 1s again, 13.7 (rank 0: 3d4, 7.5) | – | 5 (6) / 213 |
+| Burning hands (4, area) | 30 | 2–3 | 8 (Sniper 8–9) | 4d5 1s and 2s again, 15.3 (rank 0: 3d4, 7.8) | – | 5 (6) / 334 |
+| Burning hands (4, area) | 60 | 3 | 10 (Sniper 10) | 5d6+2 1s and 2s again, 22.8 (rank 0: 3d4+2, 9.5) | – | 1 (6) / 743 |
+| Cause wounds (4, touch) | 10 | 1–2 | 0 (Toucher 1–2) | 2d8, 7.7 (rank 0: 2d8, 7.7) | – | 3 (3) / 103 |
+| Cause wounds (4, touch) | 20 | 2 | 0 (Toucher 3) | 2d8, 9.0 (rank 0: 2d8, 9.0) | – | 3 (3) / 213 |
+| Cause wounds (4, touch) | 30 | 2–3 | 0 (Toucher 4–5) | 2d8+1, 10.3 (rank 0: 2d8, 9.3) | – | 3 (3) / 334 |
+| Cause wounds (4, touch) | 60 | 3 | 0 (Toucher 6) | 2d8+3, 12.0 (rank 0: 2d8+2, 11.0) | – | 1 (3) / 743 |
+| Call of the wild (5, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 103 |
+| Call of the wild (5, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 213 |
+| Call of the wild (5, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 334 |
+| Call of the wild (5, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 2 (5) / 743 |
+| Arcane bolt (6, area) | 10 | 1–2 | 5–6 (Sniper 5–6) | 3d7 1s again, 15.1 (rank 0: 3d6, 10.8) | – | 10 (11) / 103 |
+| Arcane bolt (6, area) | 20 | 2 | 7 (Sniper 7) | 4d7+2 1s again, 19.9 (rank 0: 3d6+2, 12.5) | – | 9 (11) / 213 |
+| Arcane bolt (6, area) | 30 | 2 | 8 (Sniper 8–9) | 4d7+2 1s and 2s again, 21.6 (rank 0: 3d6+2, 12.5) | – | 9 (11) / 334 |
+| Arcane bolt (6, area) | 60 | 3 | 10 (Sniper 10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | – | 2 (11) / 743 |
+| Frost (6, area) | 10 | 1–2 | 5–6 (Sniper 5–6) | 3d7 1s again, 15.1 (rank 0: 3d6, 10.8) | – | 13 (14) / 103 |
+| Frost (6, area) | 20 | 2 | 7 (Sniper 7) | 4d7+2 1s again, 19.9 (rank 0: 3d6+2, 12.5) | – | 12 (14) / 213 |
+| Frost (6, area) | 30 | 2 | 8 (Sniper 8–9) | 4d7+2 1s and 2s again, 21.6 (rank 0: 3d6+2, 12.5) | – | 12 (14) / 334 |
+| Frost (6, area) | 60 | 3 | 10 (Sniper 10) | 5d8+4 1s and 2s again, 30.2 (rank 0: 3d6+4, 14.5) | – | 3 (14) / 743 |
+| Blight (7, area) | 10 | 1 | 0 (Sniper 5–6) | 3d6, 10.5 (rank 0: 3d6, 10.5) | – | 17 (17) / 103 |
+| Blight (7, area) | 20 | 1–2 | 0 (Sniper 7) | 3d6+3, 12.0 (rank 0: 3d6+3, 12.0) | – | 17 (17) / 213 |
+| Blight (7, area) | 30 | 1–2 | 0 (Sniper 8–9) | 3d6+3, 13.0 (rank 0: 3d6+3, 13.0) | – | 17 (17) / 334 |
+| Blight (7, area) | 60 | 2 | 0 (Sniper 10) | 3d6+3, 13.5 (rank 0: 3d6+3, 13.5) | – | 6 (17) / 743 |
+| Scorching ray (7, attack) | 10 | 2–3 | 5–6 (Sniper 5–6) | 3d7 1s again, 15.5 (rank 0: 3d6, 11.1) | – | 6 (7) / 103 |
+| Scorching ray (7, attack) | 20 | 3 | 7 (Sniper 7) | 5d7 1s again, 22.4 (rank 0: 4d6, 14.0) | – | 6 (7) / 213 |
+| Scorching ray (7, attack) | 30 | 3 | 8 (Sniper 8–9) | 5d7 1s and 2s again, 24.4 (rank 0: 4d6, 14.0) | – | 6 (7) / 334 |
+| Scorching ray (7, attack) | 60 | 4 | 10 (Sniper 10) | 5d8+1d12 1s and 2s again, 33.6 (rank 0: 3d6+1d10, 16.0) | – | 1 (7) / 743 |
+| Call lightning (11, area) | 10 | 2–3 | 5–6 (Sniper 5–6) | 5d7 1s again, 20.7 (rank 0: 5d6, 15.2) | – | 19 (20) / 103 |
+| Call lightning (11, area) | 20 | 3 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | – | 18 (20) / 213 |
+| Call lightning (11, area) | 30 | 3–4 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.4 (rank 0: 5d6, 17.8) | – | 18 (20) / 334 |
+| Call lightning (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 5 (20) / 743 |
+| Fireball (11, area) | 10 | 2–3 | 5–6 (Sniper 5–6) | 4d7 1s again, 19.9 (rank 0: 4d6, 14.6) | – | 24 (26) / 103 |
+| Fireball (11, area) | 20 | 3 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | – | 23 (26) / 213 |
+| Fireball (11, area) | 30 | 3 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | – | 23 (26) / 334 |
+| Fireball (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 6 (26) / 743 |
+| Lightning bolt (11, area) | 10 | 2–3 | 5–6 (Sniper 5–6) | 4d7 1s again, 19.9 (rank 0: 4d6, 14.6) | – | 19 (20) / 103 |
+| Lightning bolt (11, area) | 20 | 3 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | – | 18 (20) / 213 |
+| Lightning bolt (11, area) | 30 | 3 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | – | 18 (20) / 334 |
+| Lightning bolt (11, area) | 60 | 4 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 5 (20) / 743 |
+| Flame (12, area) | 10 | 1–2 | 5–6 (Sniper 5–6) | 4d7 1s again, 19.9 (rank 0: 4d6, 14.6) | – | 27 (29) / 103 |
+| Flame (12, area) | 20 | 2 | 7 (Sniper 7) | 6d7 1s again, 26.9 (rank 0: 5d6, 17.5) | – | 26 (29) / 213 |
+| Flame (12, area) | 30 | 2 | 8 (Sniper 8–9) | 6d7 1s and 2s again, 29.1 (rank 0: 5d6, 17.5) | – | 26 (29) / 334 |
+| Flame (12, area) | 60 | 3 | 10 (Sniper 10) | 7d8+2 1s and 2s again, 38.8 (rank 0: 5d6+2, 19.5) | – | 7 (29) / 743 |
+| Call of the forest (20, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 103 |
+| Call of the forest (20, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 213 |
+| Call of the forest (20, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 334 |
+| Call of the forest (20, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 8 (20) / 743 |
+| Call the elements (35, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 103 |
+| Call the elements (35, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 213 |
+| Call the elements (35, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 334 |
+| Call the elements (35, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 14 (35) / 743 |
 
 **Priest**
 
-| Spell (level, res) | L | rung | school rank | roll | mana / pool |
-|---|---|---|---|---|---|
-| Mend (1, touch) | 10 | 0–1 | 7 (Battle caster 4–5) | 2d5+2 1s again, 8.6 (rank 0: 1d4, 2.4) | 1 (1) / 78 |
-| Mend (1, touch) | 20 | 1 | 10 (Battle caster 10) | 2d6+3 1s and 2s again, 11.3 (rank 0: 1d4, 2.5) | 1 (1) / 162 |
-| Mend (1, touch) | 30 | 1–2 | 10 (Battle caster 10) | 2d6+3 1s and 2s again, 11.7 (rank 0: 1d4, 2.7) | 1 (1) / 251 |
-| Mend (1, touch) | 60 | 1–2 | 10 (Battle caster 10) | 2d8+3 1s and 2s again, 13.1 (rank 0: 1d6, 3.3) | 1 (1) / 543 |
-| Cure wounds (3, touch) | 10 | 0–1 | 7 (Battle caster 4–5) | 4d7+2 1s again, 19.0 (rank 0: 3d6, 9.9) | 1 (2) / 78 |
-| Cure wounds (3, touch) | 20 | 1 | 10 (Battle caster 10) | 4d8+3 1s and 2s again, 24.0 (rank 0: 3d6, 10.5) | 2 (2) / 162 |
-| Cure wounds (3, touch) | 30 | 1–2 | 10 (Battle caster 10) | 4d8+3 1s and 2s again, 24.5 (rank 0: 3d6, 11.0) | 2 (2) / 251 |
-| Cure wounds (3, touch) | 60 | 1–2 | 10 (Battle caster 10) | 4d8+6 1s and 2s again, 26.5 (rank 0: 3d6+3, 13.0) | 2 (2) / 543 |
-| Orison (prayer) | 10 | – | – | no roll: answers 1 of 2 (wounds, hunger) | 0 (0) / 77 |
-| Prayer (prayer) | 20 | – | – | no roll: answers 1 of 5 (disease, poison, wounds, release, hunger) | 0 (0) / 161 |
-| Litany (prayer) | 30 | – | – | no roll: answers 1 of 6 (disease, poison, wounds, release, hunger, restoration) | 0 (0) / 252 |
-| Miracle (prayer) | 60 | – | – | no roll: answers all of 7 (disease, poison, wounds, release, mana, hunger, restoration) | 0 (0) / 545 |
+| Spell (level, res) | L | rung | school rank | roll | hexed | mana / pool |
+|---|---|---|---|---|---|---|
+| Mend (1, touch) | 10 | 0–1 | 7 (Battle caster 4–5) | 2d5+2 1s again, 8.6 (rank 0: 1d4, 2.4) | – | 1 (1) / 77 |
+| Mend (1, touch) | 20 | 1 | 10 (Battle caster 10) | 2d6+3 1s and 2s again, 11.3 (rank 0: 1d4, 2.5) | – | 1 (1) / 161 |
+| Mend (1, touch) | 30 | 1–2 | 10 (Battle caster 10) | 2d6+3 1s and 2s again, 11.7 (rank 0: 1d4, 2.7) | – | 1 (1) / 252 |
+| Mend (1, touch) | 60 | 1–2 | 10 (Battle caster 10) | 2d8+3 1s and 2s again, 13.1 (rank 0: 1d6, 3.3) | – | 1 (1) / 545 |
+| Cure wounds (3, touch) | 10 | 0–1 | 7 (Battle caster 4–5) | 4d7+2 1s again, 19.0 (rank 0: 3d6, 9.9) | – | 1 (2) / 77 |
+| Cure wounds (3, touch) | 20 | 1 | 10 (Battle caster 10) | 4d8+3 1s and 2s again, 24.0 (rank 0: 3d6, 10.5) | – | 2 (2) / 161 |
+| Cure wounds (3, touch) | 30 | 1–2 | 10 (Battle caster 10) | 4d8+3 1s and 2s again, 24.5 (rank 0: 3d6, 11.0) | – | 2 (2) / 252 |
+| Cure wounds (3, touch) | 60 | 1–2 | 10 (Battle caster 10) | 4d8+6 1s and 2s again, 26.5 (rank 0: 3d6+3, 13.0) | – | 2 (2) / 545 |
+| Orison (prayer) | 10 | – | – | no roll: answers 1 of 2 (wounds, hunger) | – | 0 (0) / 77 |
+| Prayer (prayer) | 20 | – | – | no roll: answers 1 of 5 (disease, poison, wounds, release, hunger) | – | 0 (0) / 161 |
+| Litany (prayer) | 30 | – | – | no roll: answers 1 of 6 (disease, poison, wounds, release, hunger, restoration) | – | 0 (0) / 252 |
+| Miracle (prayer) | 60 | – | – | no roll: answers all of 7 (disease, poison, wounds, release, mana, hunger, restoration) | – | 0 (0) / 545 |
 
-The prayer's rows are #886's run (on `main` after the priest's P1 to P3); its pools differ from
-the spells' above by the content merged since #754.
+The three tables are #905's run (Malison's hexed column: a damage spell's mean on a target under one hex, from the witch's level 18), on `main` after W1 (#908).
 
 **Witch**
 
-| Spell (level, res) | L | rung | school rank | roll | mana / pool |
-|---|---|---|---|---|---|
-| Cause wounds (4, touch) | 10 | 1–2 | 6–7 (Toucher 6–7) | 2d8+3 1s again, 12.4 (rank 0: 2d8, 8.3) | 2 (3) / 89 |
-| Cause wounds (4, touch) | 20 | 2 | 7–10 (Toucher 6–10) | 2d8+3 1s again, 17.1 (rank 0: 2d8, 9.0) | 2 (3) / 194 |
-| Cause wounds (4, touch) | 30 | 2–3 | 9–10 (Toucher 6–10) | 3d8+4 1s and 2s again, 21.2 (rank 0: 2d8, 9.3) | 2 (3) / 308 |
-| Cause wounds (4, touch) | 60 | 3 | 10 (Toucher 6–10) | 3d8+7 1s and 2s again, 23.8 (rank 0: 2d8+2, 11.0) | 2 (3) / 703 |
-| Blight (7, area) | 10 | 1 | 6–7 (Sniper 2–4) | 3d6+2 1s again, 13.8 (rank 0: 3d6, 10.5) | 16 (17) / 89 |
-| Blight (7, area) | 20 | 1–2 | 7–10 (Sniper 5–7) | 3d6+5 1s again, 18.9 (rank 0: 3d6+3, 12.5) | 15 (17) / 194 |
-| Blight (7, area) | 30 | 1–2 | 9–10 (Sniper 6–9) | 4d6+6 1s and 2s again, 22.5 (rank 0: 3d6+3, 13.0) | 15 (17) / 308 |
-| Blight (7, area) | 60 | 2 | 10 (Sniper 9–10) | 4d6+7 1s and 2s again, 23.7 (rank 0: 3d6+3, 13.5) | 14 (17) / 703 |
+| Spell (level, res) | L | rung | school rank | roll | hexed | mana / pool |
+|---|---|---|---|---|---|---|
+| Cause wounds (4, touch) | 10 | 1–2 | 6–7 (Toucher 6–7) | 2d8+3 1s again, 12.4 (rank 0: 2d8, 8.3) | – | 2 (3) / 89 |
+| Cause wounds (4, touch) | 20 | 2 | 7–9 (Toucher 6–9) | 2d8+3 1s again, 16.6 (rank 0: 2d8, 9.0) | 19.6 | 2 (3) / 193 |
+| Cause wounds (4, touch) | 30 | 2–3 | 9–10 (Toucher 6–10) | 3d8+4 1s and 2s again, 21.6 (rank 0: 2d8, 10.0) | 24.6 | 2 (3) / 308 |
+| Cause wounds (4, touch) | 60 | 3 | 10 (Toucher 6–10) | 3d8+7 1s and 2s again, 23.4 (rank 0: 2d8+2, 11.0) | 26.4 | 2 (3) / 702 |
+| Call of the wild (5, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 89 |
+| Call of the wild (5, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 193 |
+| Call of the wild (5, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 308 |
+| Call of the wild (5, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 5 (5) / 702 |
+| Blight (7, area) | 10 | 1 | 6–7 (Sniper 2–3) | 3d6+2 1s again, 13.8 (rank 0: 3d6, 10.5) | – | 16 (17) / 89 |
+| Blight (7, area) | 20 | 1–2 | 7–9 (Sniper 5–7) | 3d6+5 1s again, 19.2 (rank 0: 3d6+3, 13.0) | 22.2 | 15 (17) / 193 |
+| Blight (7, area) | 30 | 2 | 9–10 (Sniper 7–9) | 4d6+6 1s and 2s again, 23.0 (rank 0: 3d6+3, 13.5) | 26.0 | 15 (17) / 308 |
+| Blight (7, area) | 60 | 2 | 10 (Sniper 9–10) | 4d6+7 1s and 2s again, 23.7 (rank 0: 3d6+3, 13.5) | 26.7 | 14 (17) / 702 |
+| Call of the forest (20, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 89 |
+| Call of the forest (20, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 193 |
+| Call of the forest (20, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 308 |
+| Call of the forest (20, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 20 (20) / 702 |
+| Call the elements (35, auto) | 10 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 89 |
+| Call the elements (35, auto) | 20 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 193 |
+| Call the elements (35, auto) | 30 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 308 |
+| Call the elements (35, auto) | 60 | 0 | 0 | +1, 1.0 (rank 0: +1, 1.0) | – | 35 (35) / 702 |
+
 
 ## School pace
 

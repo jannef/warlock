@@ -1740,11 +1740,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
         }
         TalentEffect::StatusDamage { status: id, value } => {
             format!(
-                "{} damage on hits against a creature {}",
+                "{} damage on hits and spells against a creature {}",
                 signed(value),
                 status(&id)
             )
         }
+        TalentEffect::HexTithe { per_levels } => format!(
+            "when a creature dies under a hex you laid, whoever killed it, your mana rises by its \
+             level divided by {per_levels} (rounded down, at least 1), never past your maximum"
+        ),
         TalentEffect::Reprieve {
             status: id,
             stat,

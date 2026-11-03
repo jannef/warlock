@@ -1,0 +1,17 @@
+[[talent]]
+id = "malison"
+name = "Malison"
+tree = "class"
+granted = true
+description = "A creature under a hex suffers more from your blows and your spells, and when one dies under your hex the hex comes home to you as mana."
+# One row per hex status (the statuses `kind = "hex"` spells lay, `Content::hex_statuses`): a
+# hex spell added later adds its row here (a test checks they agree).
+effects = [
+    { kind = "status_damage", status = "ill_wished", value = 3 },
+    { kind = "status_damage", status = "weakened", value = 3 },
+    { kind = "status_damage", status = "sluggish", value = 3 },
+    { kind = "status_damage", status = "drowsy", value = 3 },
+    { kind = "status_damage", status = "webbed", value = 3 },
+    { kind = "hex_tithe", per_levels = 2 },
+]
+systems = ["status", "combat", "spells", "mana"]
