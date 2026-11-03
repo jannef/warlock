@@ -47,7 +47,8 @@ every 9 seconds. [Patient defence](abilities.md#ability-patient-defence) (level 
 
 The [bard](classes.md#bard)'s **inspiration** comes with [inspire](talents.md#talent-inspire) (level 9), starting at 0. Every kill of your own
 gives one, up to 5, and one fades every 30 base turns (3 minutes); empty, it stays with you.
-[Inspire](abilities.md#ability-inspire) spends 3 inspiration and nothing else: with less you cannot sing it. A
+[Inspire](abilities.md#ability-inspire) alone spends it (the [lullaby](abilities.md#ability-lullaby) is paid in
+[mana](mana.md#spending-it); see [Songs](abilities.md#songs)): 3 inspiration and nothing else, and with less you cannot sing it. A
 [virtuoso](talents.md#talent-virtuoso)'s inspire spends none.
 
 **Stamina** is the fighter's breath, the pool active weapon abilities are paid from (see

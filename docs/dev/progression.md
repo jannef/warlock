@@ -352,12 +352,16 @@ cut them). The owner: "Modify the talent rule to prevent this type of talent cre
   - an effect another talent, a class ability, or a skill rank already gives (extend that one or
     add a rank to it instead; #774 kept one of each duplicate group);
   - something that only matters in a rare room or against one rare creature.
-- **Capstones are not economy, quests, or XP** (#776's rule 1, #789). From class level 40 on, a
-  class ability changes what the character can do in a fight or a dungeon: never one that pays
-  only in gold, favour, quest rewards, or experience, nor one that works only outside the
-  dungeon. And no XP or quest-reward effect (`xp_percent`, `quest_gold_percent`) at or above
-  level 30, pickable or class: past `max_level` (60) XP buys nothing, and the quest pool is spent
-  by then. Such a half of an otherwise good ability is dropped and the rest kept.
+- **Capstones are not economy, quests, or XP** (#776's rule 1, #789; widened to any table's
+  length by the bard design's Q19, #875). In the last third of a class's table (from level 40 of
+  a sixty-level table, from 20 of the bard's thirty, and so of a prestige class's at its own
+  levels), a class ability changes what the character can do in a fight or a dungeon: never one
+  that pays only in gold, favour, quest rewards, or experience, nor one that works only outside
+  the dungeon. And no XP or quest-reward effect (`xp_percent`, `quest_gold_percent`) in the last
+  half of a class's table (from level 30 of sixty, from 15 of thirty), class or pickable (a
+  pickable by the level it is first open at): past the class's `max_level` XP buys nothing until
+  a calling, and the quest pool is spent by then. Such a half of an otherwise good ability is
+  dropped and the rest kept.
 - **A fixed pool is no scaling** (#776's rule 2). Quest gold and quest XP are finite and small
   (the Ascmearc's 12 stages pay about 2,200 gold and 3,700 XP, none repeatable): a
   `quest_*_percent` effect is judged by its total over a campaign (+25 % is about 550 gold),

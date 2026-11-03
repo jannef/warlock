@@ -60,7 +60,7 @@ Press `s` (or choose the row and press `Enter`) and type what you say, up to 40 
 - Only the words count: capitals, punctuation, and extra spaces are ignored, so *Life before
   death!* and *life, before death* are the same words.
 - If they know the words they answer, a line at a time, and saying them may do something: call
-  you into a new class (below), give you a [quest](quests.md), or send the speaker on their way.
+  you into a new class (below, and [Prestige classes](classes.md#prestige-classes)), give you a [quest](quests.md), or send the speaker on their way.
 - Words that would call you into a new class are heard only from someone that class is open to,
   at the level it asks, who has not been called before; anyone else is answered as if they had
   said the wrong words.

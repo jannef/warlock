@@ -53,6 +53,10 @@ The passive skills help you more the higher they are:
   never drops below 1).
 - **[Balance](skills.md#skill-balance)** takes some of the slowdown of a heavy load away (see [Burden](burden.md)): a
   [burdened](burden.md#burden-1) master is slowed by a tenth, not a quarter.
+- **[Music](skills.md#skill-music)** makes your [songs](abilities.md#songs) last longer (a
+  degree more at 50, at 100, and every 100 after) and harder for those they are sung against to
+  shake off (+4 to their difficulty at 100, +8 at 200); its two columns in the table below are
+  its ladders. Every song trains it.
 - **[Athletics](skills.md#skill-athletics)** makes you quicker in everything you do, a twentieth at 100 and a tenth at 200
   (it adds to the quickness of [talents](talents.md) such as [Fleet-footed](talents.md#talent-fleet-footed) and [Quick](talents.md#talent-quick); see
   [Burden](burden.md) for the load, which slows you on top of it). It also helps you kick [doors](doors.md)

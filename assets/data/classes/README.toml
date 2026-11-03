@@ -93,11 +93,15 @@
 #                 of the `class` tree, ../talents/, or an ordinary one it hands out: the
 #                 aristocrat's Riposte); given at rank 1 as the level comes, never picked, and
 #                 not given again to one who holds it already (default none). `rank = 2`
-#                 gives that rank of it (`{ level = 50, talent = "jack_of_all_trades", rank = 2
+#                 gives that rank of it (`{ level = 25, talent = "jack_of_all_trades", rank = 2
 #                 }`; default 1): within the talent's ranks, after its lower ranks, never twice;
 #                 one who lacks a rank below is given it too
 #   bonus_talents `{ levels = [10, 20, 30, 45, 55], trees = ["guard", "vigour"] }`: a bonus talent
 #                 pick at each of those levels besides the usual ones, of a talent from those
 #                 trees (no `trees`: any tree, the commoner's gift; default none)
+#   max_level     the class's last level (spec §8 "Prestige classes"): 2 to the curve's top
+#                 (../experience.toml), default `[levels] class_max` (60); every `abilities` row
+#                 and bonus level within it. Experience past it counts and buys nothing until a
+#                 calling opens a prestige class (the bard's 30)
 #
 # Balance is not a goal: some choices are poor on purpose.

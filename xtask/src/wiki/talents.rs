@@ -5,7 +5,7 @@ use super::text::{Term, anchored, link, signed};
 use std::fmt::Write as _;
 use warlock_core::content::{
     Content, Faced, Need, OverTime, PrayerUse, Role, SignActive, SongOn, SpellData, SpellModSpec,
-    StatusId, TalentDef, TalentEffect, TreeId,
+    StatusId, Table, TalentDef, TalentEffect, TreeId,
 };
 use warlock_core::noise::SONG_NOISE;
 
@@ -141,49 +141,68 @@ pub(super) fn racial(content: &Content) -> String {
 /// The classes' level tables (spec §8 "Class abilities"), in the order New run offers them:
 /// each class with a table, its bonus talent picks, and every level's ability with its rule.
 pub(super) fn class_levels(content: &Content) -> String {
-    let book = content.talents();
     let mut out = String::new();
     for class in content.classes() {
-        if class.abilities.is_empty() && class.bonus_talents.levels.is_empty() {
-            continue;
-        }
-        let _ = writeln!(out, "### {}\n", class.name);
-        let bonus = &class.bonus_talents;
-        if !bonus.levels.is_empty() {
-            let levels: Vec<String> = bonus.levels.iter().map(u8::to_string).collect();
-            let trees = match class.bonus_trees(book) {
-                None => "any tree".to_string(),
-                Some(trees) => (trees.iter())
-                    .map(|&t| book.tree(t).name.clone())
-                    .collect::<Vec<_>>()
-                    .join(" or "),
-            };
-            let _ = writeln!(
-                out,
-                "A bonus talent at levels {}, from {trees}.\n",
-                levels.join(", ")
-            );
-        }
-        out.push_str("| Level | Ability | Effect |\n|---:|---|---|\n");
-        for (level, id, rank) in &class.abilities {
-            let Some(talent) = book.id(id) else { continue };
-            let def = book.get(talent);
-            // A talent of ranks the table hands out rank by rank: each row that rank's.
-            let (name, effects) = match def.rank_count() > 1 {
-                true => (
-                    format!("{} {rank}/{}", def.name, def.rank_count()),
-                    rank_text(content, def, *rank),
-                ),
-                false => (def.name.clone(), effects_text(content, def)),
-            };
-            let _ = writeln!(out, "| {level} | {name} | {effects} |");
-        }
-        out.push('\n');
+        level_table(content, Table::Class(class), &mut out);
     }
     if out.is_empty() {
         out.push_str("No class has a level table yet.\n");
     }
     out
+}
+
+/// Every prestige class's level table (spec §8 "Prestige classes"), at its own levels, as
+/// [`class_levels`] shows a class's.
+pub(super) fn prestige_levels(content: &Content) -> String {
+    let mut out = String::new();
+    for prestige in content.prestiges() {
+        level_table(content, Table::Prestige(prestige), &mut out);
+    }
+    if out.is_empty() {
+        out.push_str("No prestige class has a level table yet.\n");
+    }
+    out
+}
+
+/// One class's (or prestige class's) table: a heading, its bonus picks, then each row's
+/// ability with what it does (a talent handed out rank by rank, that rank's).
+fn level_table(content: &Content, table: Table, out: &mut String) {
+    let book = content.talents();
+    let bonus = table.bonus_talents();
+    if table.abilities().is_empty() && bonus.levels.is_empty() {
+        return;
+    }
+    let _ = writeln!(out, "### {}\n", table.name());
+    if !bonus.levels.is_empty() {
+        let levels: Vec<String> = bonus.levels.iter().map(u8::to_string).collect();
+        let trees = match table.bonus_trees(book) {
+            None => "any tree".to_string(),
+            Some(trees) => (trees.iter())
+                .map(|&t| book.tree(t).name.clone())
+                .collect::<Vec<_>>()
+                .join(" or "),
+        };
+        let _ = writeln!(
+            out,
+            "A bonus talent at levels {}, from {trees}.\n",
+            levels.join(", ")
+        );
+    }
+    out.push_str("| Level | Ability | Effect |\n|---:|---|---|\n");
+    for (level, id, rank) in table.abilities() {
+        let Some(talent) = book.id(id) else { continue };
+        let def = book.get(talent);
+        // A talent of ranks the table hands out rank by rank: each row that rank's.
+        let (name, effects) = match def.rank_count() > 1 {
+            true => (
+                format!("{} {rank}/{}", def.name, def.rank_count()),
+                rank_text(content, def, *rank),
+            ),
+            false => (def.name.clone(), effects_text(content, def)),
+        };
+        let _ = writeln!(out, "| {level} | {name} | {effects} |");
+    }
+    out.push('\n');
 }
 
 /// The coverage matrix: every system of the closed list with the talents that touch it, and

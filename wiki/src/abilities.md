@@ -110,19 +110,8 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   Intimidate, stands on 14 or more: it flees 54 % of the time; at Intimidate 100 it flees
   96 %. A roar with nobody near is still a roar: the turn, the rage, and the noise are spent.
   Every cry trains Intimidate.
-- **[Lullaby](abilities.md#ability-lullaby)**, the [bard](classes.md#bard)'s at level 20, is a song paid in
-  [mana](mana.md#spending-it): 6 of it and as long as a chat, greyed out "you have too little
-  mana" while short. It is [heard](hearing.md#what-makes-noise) as any song is, and every
-  [hostile](creatures.md#factions) creature that hears it, seen or not, rolls its
-  [Willpower](stats.md#stat-willpower) modifier on 2d12 against 13 + what your
-  [Music](skills.md#skill-music) adds (+4 at 100, +8 at 200); short of it, it is
-  [drowsy](status-effects.md#status-drowsy) (everything it does takes three times as long) for one
-  degree, plus the degrees Music adds to every song, at most three. There is no level cut. A
-  creature of Willpower 10 to 11 (+0) shakes it off 54 % of the time (78 in 144) against 13,
-  25 % (36 in 144) against 17 (Music 100), and 7 % (10 in 144) against 21 (Music 200); one of
-  Willpower 18 (+4) against 17 shakes it off 54 %. Friendly and peaceful creatures only hear
-  it. A song with nobody to hear it is still sung: the mana and the time are spent and the
-  noise made.
+- **[Inspire](abilities.md#ability-inspire)** and the **[Lullaby](abilities.md#ability-lullaby)**,
+  the [bard](classes.md#bard)'s at levels 9 and 20, are songs: see [Songs](#songs) below.
 - **Allies** ([Come to heel](abilities.md#ability-heel), [Hold here](abilities.md#ability-hold), [Set on](abilities.md#ability-set-on)): once a creature fights on your side (the
   druid's calls and the ranger's companion are on their way), the Allies group appears, and the
   three orders tell every ally of yours on the level at once what to do: follow you and fight
@@ -134,6 +123,49 @@ own: [Weapon skills](weapon-skills.md#what-a-rank-teaches) and
   of yours has a short, faint green line under it, and looking at one says it is yours ("Your
   wolf (unhurt)").
 - No [race](races.md) gives an ability yet.
+
+## Songs
+
+A [bard](classes.md#bard) sings two songs, both from the menu, under Class: **[Inspire](abilities.md#ability-inspire)**, sung
+to yourself, and the **[Lullaby](abilities.md#ability-lullaby)**, sung against your foes.
+
+- **Paid in one thing each.** Inspire costs 3 [inspiration](resources.md#resource-inspiration) and nothing
+  else, the Lullaby 6 [mana](mana.md#spending-it) and nothing else. With less, the song is greyed
+  out ("not enough inspiration", "you have too little mana") and choosing it costs
+  nothing.
+- **Heard.** A song takes as long as a chat (3 seconds at a [normal pace](turns.md#what-actions-cost)) and is
+  [heard](hearing.md#what-makes-noise) as a voice of loudness 80 where you stand: those who
+  hear it and cannot see you come to look. You cannot sing on the
+  [overworld](overworld.md#travel), or while [silenced](status-effects.md#status-silenced); trying
+  takes no time.
+- **Lengthened by [Music](skills.md#skill-music).** Each song brings its status at one degree, and
+  your Music adds degrees to every song (more degrees last longer; what a degree does stays the
+  same), up to three, the most these statuses take. Sung again while it lasts, a song starts over at the
+  degrees it brings now. Every song you sing trains Music, once you are trained in it, and your
+  [Presence](stats.md#stat-presence).
+- **Shaken off.** A song sung against foes is heard by every [hostile](creatures.md#factions)
+  creature in earshot, seen or not, and each rolls its stat's modifier on 2d12 against the
+  song's difficulty plus what your Music adds; short of it, it suffers the song. Friendly and
+  peaceful creatures only hear it. There is no level cut: a troll checks as a kobold does, only
+  with more nerve. A song with nobody to hear it is still sung: its price and its time are spent,
+  and the noise made.
+- **[Virtuoso](talents.md#talent-virtuoso)** (the bard's at 30): every song costs nothing at all and
+  brings a degree more, and Inspire lifts you higher, [greatly inspired](status-effects.md#status-inspired-greatly)
+  (+2 to hit and +2 [Dodge](combat.md#defence), 10 minutes a degree) instead of
+  [inspired](status-effects.md#status-inspired) (+1 and +1, 5 minutes a degree).
+
+{{#include generated/songs.md}}
+
+What Music adds to every song, by its value (see [Skills](skills.md#what-skills-give)):
+
+{{#include generated/song-music.md}}
+
+The chance a hostile creature shakes a song off, by its edge (its modifier of the stat the song
+checks; see [Stats](stats.md)) and your Music, the difficulty in brackets. A
+[drowsy](status-effects.md#status-drowsy) creature does everything three times as slowly, 12
+seconds a degree.
+
+{{#include generated/song-odds.md}}
 
 ## Keys of their own
 

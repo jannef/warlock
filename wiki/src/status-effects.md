@@ -136,6 +136,12 @@ The [potions](potions.md) that work for a while give the boosts ([Fortified](sta
 [Steadfast](status-effects.md#status-steadfast), [Imposing](status-effects.md#status-imposing): a [stat](stats.md) +2 a degree), the visions ([Cat-eyed](status-effects.md#status-cat-eyed), [Owl-eyed](status-effects.md#status-owl-eyed), [Moth-eyed](status-effects.md#status-moth-eyed)), and the
 resistances ([Warmed](status-effects.md#status-warmed), [Chill-proof](status-effects.md#status-chill-proof), [Earthed](status-effects.md#status-earthed), [Proof against poison](status-effects.md#status-poison-proof)).
 
+The bard's [songs](abilities.md#songs) give three more: [Inspired](status-effects.md#status-inspired)
+(and a [virtuoso](talents.md#talent-virtuoso)'s greater inspired) lifts the singer, and
+[Drowsy](status-effects.md#status-drowsy), from the [lullaby](abilities.md#ability-lullaby), slows
+those who fail to shake it off; each goes up to three degrees, as many as a song with
+[Music](skills.md#skill-music) gives.
+
 A **cooldown** is a status effect that only waits to wear off: while you are, say, [winded](status-effects.md#status-winded), the
 [ability](abilities.md) that winded you cannot be used again (`you are winded`). Time is the only price; nothing
 counts how often you use an ability.

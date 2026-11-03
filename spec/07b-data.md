@@ -578,7 +578,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
   (`{ kind = "dodge", value = 1 }`: `dodge`, `natural`, `melee_damage`, `max_hp_per_levels
   { per_levels, at_least }`, `healing_percent`, `footsteps_percent`, `silent_doors`, `hearing`,
   `carry_percent`, `travel_percent`, `hunger_percent`, `no_exertion`, `xp_percent`, `notice`,
-  `free_blow { trigger }`; bonuses −20 to 20, percents −100 to 100, never 0), `[[talent.rank]]`
+  `free_blow { trigger }`; bonuses −20 to 20, percents −100 to 100, never 0; every kind is in
+  `talents/README.toml`, among them the bard's `song`, `virtuoso`, `weapon_ranks`, and
+  `take_up_skills` and the Hunter's `spirit_weapon`), `[[talent.rank]]`
   (a rank's own `needs` and `effects`, as many as `ranks` or none), `systems` (at least one),
   `granted`, `resource` (a class active's cost), `alignment` (`{ min = "kind" }`: the bands a holy
   class active works for; it bars nothing, §8 "Alignment"). Talents are saved by id (not in the content fingerprint); without skills content a

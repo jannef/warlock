@@ -322,6 +322,53 @@ pub(super) fn classes(content: &Content) -> String {
     out
 }
 
+/// The prestige classes (spec §8 "Prestige classes", `data/prestige/`), in file order as the
+/// classes are: how many levels each has, what each level adds to the hit points and mana (half
+/// of it a level, as a class's), its skill rolls, the skills it is known for; then each one's
+/// description.
+pub(super) fn prestige_classes(content: &Content) -> String {
+    let all = content.prestiges();
+    if all.is_empty() {
+        return "There are no prestige classes yet.\n".into();
+    }
+    let mut out = String::from(
+        "| Prestige class | Levels | Hit points | Mana | Skill rolls a level | Known for |\n\
+         |---|:---:|:---:|:---:|:---:|---|\n",
+    );
+    for p in all {
+        let known: Vec<String> = (p.known_for.iter())
+            .map(|&s| {
+                let def = content.skill(s);
+                format!(
+                    "[{}](skills.md#skill-{})",
+                    def.name,
+                    def.id.replace('_', "-")
+                )
+            })
+            .collect();
+        let known = if known.is_empty() {
+            "—".to_string()
+        } else {
+            known.join(", ")
+        };
+        let _ = writeln!(
+            out,
+            "| <a id=\"prestige-{}\"></a>{} | {} | {} | {} | {} | {known} |",
+            p.id.replace('_', "-"),
+            p.name,
+            p.levels,
+            p.hp,
+            p.mana,
+            p.rolls
+        );
+    }
+    out.push('\n');
+    for p in all {
+        let _ = writeln!(out, "- **{}**: {}", p.name, p.description);
+    }
+    out
+}
+
 /// The horoscope: the animals in the order of the Great Race and the elements, each with its
 /// stat adjustments and what it means; then the great cycle, sign by sign, with its years in the
 /// great cycle of the showcase's start and the two before it.
@@ -381,4 +428,30 @@ pub(super) fn horoscope(content: &Content) -> String {
         );
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_prestige_tables_read_the_data() {
+        let content = Content::builtin().expect("content");
+        let classes = prestige_classes(&content);
+        assert!(
+            classes.contains("<a id=\"prestige-hunter\"></a>Hunter | 30 | 7 |"),
+            "{classes}"
+        );
+        let levels = super::super::talents::prestige_levels(&content);
+        assert!(levels.contains("### Hunter"), "{levels}");
+        assert!(levels.contains("| 1 | Spirit weapon |"), "{levels}");
+        let callings = super::super::dialogue::callings(&content);
+        assert!(callings.contains("*Life before death*"), "{callings}");
+        assert!(
+            callings.contains("[strange spirit](creatures.md#creature-strange-spirit)"),
+            "{callings}"
+        );
+        assert!(callings.contains("Kind or better"), "{callings}");
+        assert!(callings.contains("encounter-table-roads"), "{callings}");
+    }
 }
