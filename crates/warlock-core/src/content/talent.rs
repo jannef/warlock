@@ -352,6 +352,12 @@ pub enum TalentEffect {
     Familiar,
     /// `bonus` on its taming checks (Animal companion's edge; the Tame skill ability reads it).
     Tame { bonus: i32 },
+    /// A creature beside both it and its companion is flanked: its melee blows and the
+    /// companion's at it are `to_hit` likelier to hit (Pack tactics; `world/pack.rs`).
+    PackTactics { to_hit: i32 },
+    /// Its companion's attacks carry its Favoured prey bonus against its favoured prey (Pack
+    /// tactics; `world/pack.rs`).
+    SharesFavouredPrey,
     /// An initiative check it makes against a hostile attacker beside it is answered with a
     /// free blow at once (Hair trigger; `Cue::Startled`, `world/free_blow.rs`).
     StartledBlow,
@@ -1042,6 +1048,10 @@ pub enum TalentEffect {
     /// Each second blow of its flurry spends `cost` of `resource`; holding less, it strikes
     /// none (Flurry, on Ki).
     FlurryCost { resource: String, cost: u16 },
+    /// A hostile's melee attack beside it that lands a blow on it is answered by its smite at
+    /// once, free, spending `cost` of `resource`; with less, nothing (Retribution, the
+    /// paladin's at 25, on zeal; `world/smite.rs`).
+    Retribution { resource: String, cost: u16 },
     /// A missile (a shot, a throw, a trap's) that would hit it while its hands hold no weapon
     /// and no shield spends `cost` of `resource` by itself and misses; holding less, it hits
     /// (Diamond soul's catch, on Ki; `world/ascetic.rs`).
@@ -1250,9 +1260,12 @@ impl TalentEffect {
     }
 
     /// Whether it is a passive that works only within its talent's `alignment` bands (Communion
-    /// with the dark; `docs/dev/alignment.md`), as a holy active's gift does.
+    /// with the dark, Retribution; `docs/dev/alignment.md`), as a holy active's gift does.
     pub fn band_gated(&self) -> bool {
-        matches!(self, TalentEffect::Communion)
+        matches!(
+            self,
+            TalentEffect::Communion | TalentEffect::Retribution { .. }
+        )
     }
 
     /// Whether it may carry a `while` condition: only a kind the one sum reads
@@ -1410,6 +1423,10 @@ impl TalentEffect {
                 1..=10 => Ok(()),
                 _ => Err("`tame`: a bonus of 1 to 10".into()),
             },
+            TalentEffect::PackTactics { to_hit } => match to_hit {
+                1..=10 => Ok(()),
+                _ => Err("`pack_tactics`: to_hit is 1 to 10".into()),
+            },
             TalentEffect::AllyMod {
                 to_hit,
                 protection,
@@ -1493,6 +1510,9 @@ impl TalentEffect {
             }
             TalentEffect::FlurryCost { resource: id, cost } => {
                 resource_cost("flurry_cost", id, *cost)
+            }
+            TalentEffect::Retribution { resource: id, cost } => {
+                resource_cost("retribution", id, *cost)
             }
             TalentEffect::CatchMissiles { resource: id, cost } => {
                 resource_cost("catch_missiles", id, *cost)
@@ -2306,6 +2326,7 @@ impl TalentEffect {
             | TalentEffect::SeesUnaware
             | TalentEffect::Companion
             | TalentEffect::Familiar
+            | TalentEffect::SharesFavouredPrey
             | TalentEffect::StartledBlow
             | TalentEffect::Distrusted
             | TalentEffect::ExactSounds
@@ -3380,7 +3401,7 @@ pub(super) fn parse<'a>(
             if !(effects.iter()).any(|e| e.band_gated() || e.active().is_some_and(|a| a.holy())) {
                 return Err(err(
                     "an `alignment` is for a holy class active (lay_on_hands, smite, \
-                     holy_radiance, consecrate) or a band-gated passive (communion)"
+                     holy_radiance, consecrate) or a band-gated passive (communion, retribution)"
                         .into(),
                 ));
             }

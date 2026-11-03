@@ -296,6 +296,11 @@ pub struct TalentMods {
     pub familiar: bool,
     /// Added to its taming checks (Animal companion's edge; the Tame skill ability reads it).
     pub tame: i32,
+    /// To hit on its melee blows and its companion's at a creature beside them both (Pack
+    /// tactics; `world/pack.rs`).
+    pub pack_tactics: i32,
+    /// Its companion's attacks carry its Favoured prey (Pack tactics; `world/pack.rs`).
+    pub shares_favoured_prey: bool,
     /// An initiative check it makes against a hostile attacker beside it strikes back (Hair
     /// trigger).
     pub startled_blow: bool,
@@ -692,6 +697,9 @@ pub struct TalentMods {
     pub rapid_shot: Option<RapidShot>,
     /// What each second blow of its flurry costs, if anything (Flurry, on Ki).
     pub flurry_cost: Option<ResourceCost>,
+    /// What each smite Retribution answers a blow with costs (the paladin's, on zeal); `None`
+    /// without it.
+    pub retribution: Option<ResourceCost>,
     /// What a missile caught costs, if it catches them (Diamond soul, on Ki; `world/ascetic.rs`).
     pub catch_missiles: Option<ResourceCost>,
     /// The active Volley, if it has it.
@@ -1339,6 +1347,8 @@ impl TalentMods {
             TalentEffect::Companion => self.companion = true,
             TalentEffect::Familiar => self.familiar = true,
             TalentEffect::Tame { bonus } => self.tame += bonus,
+            TalentEffect::PackTactics { to_hit } => self.pack_tactics += to_hit,
+            TalentEffect::SharesFavouredPrey => self.shares_favoured_prey = true,
             TalentEffect::StartledBlow => self.startled_blow = true,
             TalentEffect::SneakKillStatus { status } => {
                 self.sneak_kill_status = content.status_id(&status).or(self.sneak_kill_status);
@@ -2030,6 +2040,14 @@ impl TalentMods {
             TalentEffect::FlurryCost { resource, cost } => {
                 if let Some(resource) = content.resource_id(&resource) {
                     self.flurry_cost = Some(ResourceCost {
+                        resource,
+                        amount: cost,
+                    });
+                }
+            }
+            TalentEffect::Retribution { resource, cost } => {
+                if let Some(resource) = content.resource_id(&resource) {
+                    self.retribution = Some(ResourceCost {
                         resource,
                         amount: cost,
                     });

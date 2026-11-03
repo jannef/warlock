@@ -115,6 +115,11 @@ power is their spell's. The exact table, as the game computes it:
 
 {{#include generated/companion-growth.md}}
 
+From level 18 the ranger's **[Pack tactics](talents.md#talent-pack-tactics)** makes the two of you
+hunt as one: a creature beside you both is flanked, +2 [to hit](combat.md#hitting) for your melee
+attacks and your companion's at it, and your companion shares your
+[favoured prey](classes.md#ranger) bonus.
+
 ### The companion's rules
 
 {{#include generated/companion-rules.md}}
@@ -136,7 +141,7 @@ what the blow carries is the hex.
 
 When a familiar's melee blow hits a creature and leaves it alive, the creature is
 [hexed](status-effects.md#status-ill-wished) as if she had cast
-[Evil eye](magic.md#spell-evil_eye) on it, at the degrees she would cast it now, for no
+[Evil eye](magic.md#spell-evil-eye) on it, at the degrees she would cast it now, for no
 [mana](mana.md) and none of her turns. **She is the hex's giver**, so what reads a hex of hers
 reads this one: her [cackle](abilities.md#ability-cackle) keeps it on and her
 [malison](talents.md#talent-malison) bites through it. The same touch starts every other

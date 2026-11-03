@@ -635,7 +635,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     6 (`max_from`); a blow, shot, or throw of the holder's that hits builds one, and so does
     every blow that hits them (`hit`, `struck`); it comes back a point every 60 s (10 base
     turns), resting too, and sits at 0, never ending. Smite costs 3 and Lay on hands 6
-    (Avatar: half, 3); a holy gift unanswered outside its bands spends none. A deed that moves
+    (Avatar: half, 3), and Retribution (level 25, §8 "Free blows") 4 a blow it answers; a holy gift unanswered outside its bands spends none. A deed that moves
     the player toward evil empties it (§8 "Alignment"). Shown as `Zeal 7/12`.
   - **Stamina** (#560, the combat progression design §4.5): the pool weapon actives pay
     from (§8 "Weapon abilities", #564). The granted talent **Trained wind**

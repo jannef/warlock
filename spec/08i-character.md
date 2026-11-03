@@ -1159,7 +1159,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (while raging bleeding and poison tick nothing, and a blow that would take the last hit point
     leaves it for 10 rage, while that much is held); Divine grace
     (disease checks +2, poison eases twice as fast), Purity of body (no
-    disease is ever caught: `World::expose` refuses, nothing rolled), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
+    disease is ever caught: `World::expose` refuses, nothing rolled), Retribution (the paladin's
+    at 25, #912: a hostile beside them whose melee attack lands a blow takes their smite back at
+    once, free, for 4 zeal; works for Kind or better, a band-gated passive; §8 "Free blows"), Bulwark (Protection +2), Avatar (Lay on hands heals fully, cures every
     status that ticks and every disease, for half its zeal: 3); Martial arts (bare hands and
     kicks roll 1d6; grants Ki, §8 "Resources"), Flurry (level 1 beside it: a melee attack
     with nothing in hand strikes twice, the second at −2, for a point of ki; with none, once),
@@ -1377,7 +1379,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     race's kind, or rarely a rare one, at their side from the first turn, that grows with their
     level and always comes along, §8 "Allies": "The animal companion"; `TalentEffect::Companion`
     read by `World::bring_companion`; and `tame = 2`, `TalentMods::tame`, the ranger's edge at
-    taming, read by the Tame skill ability when it comes), Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
+    taming, read by the Tame skill ability when it comes), Pack tactics (the ranger's level
+    18, #919: a creature beside both the ranger and their companion is flanked, the ranger's
+    melee blows and the companion's at it +2 to hit, never a shot, a throw, or a spell; and the
+    companion's attacks at the favoured prey carry the ranger's Favoured prey, Master hunter's
+    half too; `TalentEffect::{PackTactics, SharesFavouredPrey}`, one hook in `World::resolve`,
+    `world/pack.rs`), Favoured prey (+1 to hit, +2 damage against `Quests::prey`, any
     attack, in `World::resolve`), Stalker's eye (the ranger's at 2, #788: it sees which
     creatures in view have not noticed it, `sees_unaware`, above), Tracker (hears 3 fainter; every sound it hears placed at its
     own cell, `noise::Exact::All`), Rapid shot (grants Focus, §8 "Resources"; a shot loosed
