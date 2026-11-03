@@ -25,7 +25,9 @@ each other, and some are poor choices on purpose.
 ## Levels
 
 Each class's level table gives an ability at levels 1, 6, 12, 18, 25, 32, 40, 50, and 60, and
-a bonus [talent](talents.md) at a few levels between, from the trees it names. An ability comes the moment
+a bonus [talent](talents.md) at a few levels between, from the trees it names. The
+[bard](classes.md#bard)'s is shorter: it stops at level 30 (see [The bard](#the-bard) below),
+with its abilities at 1, 3, 6, 9, 12, 16, 20, 25, and 30. An ability comes the moment
 you reach its level ("You gain Fencing."), and works from then on; in the game each is told in
 words, here exactly. A stat it raises rises for good, score and potential. Some abilities are
 used from the [abilities menu](abilities.md); the rest simply work. So far the [warrior](classes.md#warrior), the
@@ -83,23 +85,7 @@ The [ranger](classes.md#ranger)'s **favoured prey** is the kind of [creature](cr
 more often. A **[volley](abilities.md#ability-volley)** looses three shots of your [readied missile weapon](ranged.md#getting-ready) at the place you [aim](controls.md#aiming)
 at, one after another, for the time of one ordinary shot; it stops early when you run out, and
 costs 6 [focus](resources.md#resource-focus). **[Rapid shot](talents.md#talent-rapid-shot)** gives you focus (10, full); every shot you loose while you have
-at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and with less it is an ordinary shot. The [bard](classes.md#bard)'s
-**[inspire](abilities.md#ability-inspire)** is a song: it costs 3 [inspiration](resources.md#resource-inspiration) and nothing else (with less you cannot sing it), takes
-as long as a chat, is [heard](hearing.md#what-makes-noise) as a voice of loudness 80 where you stand, and is refused on the
-[overworld](overworld.md#travel) and while [silenced](status-effects.md#status-silenced). It lifts you for 5 minutes a degree: one degree, two with
-[Music](skills.md#skill-music) 50, three with Music 100 (more degrees last longer; the bonus stays the same). It can be
-sung again while it lasts (it starts over). The **[lullaby](abilities.md#ability-lullaby)** is the bard's song against
-foes, for 6 [mana](mana.md#spending-it): every [hostile](creatures.md#factions) creature that hears it checks its
-[Willpower](stats.md#stat-willpower) against it, and those that fail are [drowsy](status-effects.md#status-drowsy). A [virtuoso](talents.md#talent-virtuoso)'s songs cost nothing at all and give a
-degree more.
-
-The bard knows a little of everything. **[Travelled hands](talents.md#talent-travelled-hands)** raises every
-[weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) the bard has at rank 0 to rank 1, once (never a
-[school of magic](schools.md), and never a hidden style): a point surer with whatever comes to hand.
-**[Jack of all trades](talents.md#talent-jack-of-all-trades)** comes in two ranks: the first trains every [skill](skills.md) the bard
-lacks (but Sneak attack, the thief's) at 1d4+1, whatever skills there are; from then on they are
-skills like any other, used, marked, and raised at a level. The second makes every skill count 5
-higher. A class table may give a talent rank by rank like this; a rank missed comes with the next.
+at least 2 spends 2 and takes 10 % less [time](turns.md#what-actions-cost), and with less it is an ordinary shot.
 
 The [ascetic](classes.md#ascetic)'s **[martial arts](talents.md#talent-martial-arts)** gives you [ki](resources.md#resource-ki) at level 1, full (5 with
 [Willpower](stats.md#stat-willpower) 12, growing with Willpower and your [level](experience.md#levels)), and **[flurry](talents.md#talent-flurry)**, from level 1
@@ -127,3 +113,26 @@ spent by itself: the hit is a miss, and the missile falls at your feet. With no 
 blasts are never caught.
 **[Quivering palm](abilities.md#ability-quivering-palm)** (level 50) costs 5 ki and has no other wait; it cannot be used with a weapon in hand.
 
+### The bard
+
+The bard knows a little of everything and masters nothing: a wandering singer who has handled
+every weapon once, picked up every trade a little, and sings. Their table is shorter than the
+others': it gives its last ability at level 30 and stops there. A bard learns nothing new past
+30; experience earned after it still counts, but buys no level, and what comes after is found,
+not given (see [Prestige classes](#prestige-classes)). The bard's two
+**[songs](abilities.md#songs)**, **[inspire](abilities.md#ability-inspire)** (level 9, paid in
+[inspiration](resources.md#resource-inspiration), lifting you) and the
+**[lullaby](abilities.md#ability-lullaby)** (level 20, paid in [mana](mana.md#spending-it), making
+[hostile](creatures.md#factions) hearers [drowsy](status-effects.md#status-drowsy)), are told in
+full under [Songs](abilities.md#songs): what they cost, how far they are heard, how
+[Music](skills.md#skill-music) lengthens them, and the odds of shaking the lullaby off. A
+[virtuoso](talents.md#talent-virtuoso) (level 30) sings for nothing, a degree longer.
+
+**[Travelled hands](talents.md#talent-travelled-hands)** (level 3) raises every
+[weapon skill](weapon-skills.md) and [fighting style](fighting-styles.md) the bard has at rank 0 to rank 1, once (never a
+[school of magic](schools.md), and never a hidden style): a point surer with whatever comes to hand.
+**[Jack of all trades](talents.md#talent-jack-of-all-trades)** comes in two ranks, at levels 12
+and 25: the first trains every [skill](skills.md) the bard
+lacks (but Sneak attack, the thief's) at 1d4+1, whatever skills there are; from then on they are
+skills like any other, used, marked, and raised at a level. The second makes every skill count 5
+higher. A class table may give a talent rank by rank like this; a rank missed comes with the next.

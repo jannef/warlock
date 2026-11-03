@@ -1304,7 +1304,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (the bard's, 9: grants Inspiration, §8 "Resources"; a **song**, #870: Inspired, to hit +1
     and Dodge +1 for 5 minutes a degree, for 3 inspiration and nothing else (no mana fallback:
     each song costs one thing), the time of a `song` (500, a chat's); no cooldown, the cost is the
-    price: greyed out "you have too little inspiration", `Unavailable::Short`, while short).
+    price: greyed out "not enough inspiration", `Unavailable::Short`, while short; "You have
+    too little inspiration." if used).
     **Songs** (`world/song.rs::sing`, the one place a song is sung; the `song` talent effect
     `{ id, on, status, severity, resource, cost | mana, check, difficulty }`, an active that
     `ClassActive::sings`): paid in their one cost, heard (`Act::Sing`, a voice of `SONG_NOISE`

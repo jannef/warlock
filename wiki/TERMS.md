@@ -159,6 +159,8 @@ above.
 | Racial talents | `talents.md#racial-talents` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |
+| The bard, a bard's cap at 30, Travelled hands, Jack of all trades | `classes.md#the-bard` |
+| Songs (Inspire, the Lullaby), singing, a song's degrees, shaking a song off, Virtuoso | `abilities.md#songs` |
 | The priest's prayer (Orison, Prayer, Litany, Benediction, Miracle), what it answers | `prayer.md`, `prayer.md#what-it-answers` (a use: its row) |
 | Strain, a fizzled prayer | `prayer.md#strain` |
 | The holy and the dark powers, the dark face's twists (Whisper, Invocation, Rite, Pact) | `prayer.md#the-holy-and-the-dark` |
@@ -172,6 +174,7 @@ above.
 | Drained stats, stat damage | `stats.md#drained-stats`, `diseases.md#stat-damage` |
 | Skills, trained and untrained | `skills.md`, `skills.md#what-skills-give` (a skill: its row) |
 | Skill rolls, skill marks | `skills.md#getting-better` |
+| A skill's ladder (what it gives by value: Music's song degrees and difficulty, …) | `skills.md#what-skills-give` |
 | Slipping past (a creature with darkvision, unlit) | `skills.md#slipping-past` |
 | Stealing | `skills.md#stealing` |
 | Intimidating (a threat at one foe) | `skills.md#intimidating` |

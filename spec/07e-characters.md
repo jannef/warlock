@@ -165,8 +165,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `style_choice` (the same for fighting styles, §8 "Fighting styles"; `weapon_skills` names no
   style and `styles` nothing but styles), `abilities` (the level table: `{ level, talent }`
   rows, lowest level first, each a talent of `data/talents/` the class gives at that level, §8
-  "Class abilities"; `rank`, default 1, gives that rank of it, after its lower ranks), and `bonus_talents` (`{ levels, trees }`: a bonus talent pick at each of
-  those levels from those trees, none named: any). Each class rolls
+  "Class abilities"; `rank`, default 1, gives that rank of it, after its lower ranks), `bonus_talents` (`{ levels, trees }`: a bonus talent pick at each of
+  those levels from those trees, none named: any), and `max_level` (the class's last level, 2
+  to the curve's top, default `data/experience.toml` `[levels] class_max`, 60; the bard's is
+  30; every row and bonus level within it; §8 "Prestige classes"). Each class rolls
   its key stats (the warrior St `1d3+1` and To `1d3`, the wizard In `2d2+1` and To `-1d2`, the
   commoner To `1d3-1`); the rest are fixed. Adventurers: berserker (8 hit points), bard (2),
   priest (4), druid (4), ascetic (5), paladin (6), ranger (5), thief (3), wizard (0), witch (1),
