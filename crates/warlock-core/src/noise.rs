@@ -304,7 +304,7 @@ pub fn noise(
     }
     let quiet = actor.skill_effect(content, Effect::Quiet).clamp(0, 100) as u16;
     let loudness = u32::from(plain.loudness) * u32::from(100 - quiet) / 100;
-    // Then its talents (spec §8 "Talents": Silent feet's quieter steps and silent doors,
+    // Then its talents (spec §8 "Talents": Light step's quieter steps and silent doors,
     // Lockbreaker's quieter kicks).
     let talents = actor.talent_mods(content);
     let loudness = match act {

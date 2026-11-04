@@ -706,7 +706,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     (`burden::load`), `travel_percent` (overworld steps), `hunger_percent` and `no_exertion`,
     `xp_percent` (every gain), `notice` (noticing in passing as if trained in Spot, with a
     bonus), `free_blow` (a switch of `World::free_blows_of`). The first twelve: Healthy, Hardy,
-    Dodge, Brawn, Silent feet, Keen ears, Pack mule, Long strider (cut in #787), Lean, Good
+    Dodge, Brawn, Silent feet (since folded into Light step), Keen ears, Pack mule, Long strider (cut in #787), Lean, Good
     learner (cut in #774), Alert, Thick skin.
   - **Weaponcraft and Guard** (#238): `weapon` adds to the benefits of the chosen weapon skill
     or style (no `role`) or of every skill of a role, read in `Actor::benefit`, so every
@@ -752,7 +752,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     that can do bludgeoning damage); `burden_dex` (Nimble: the burden's Dexterity cap +1);
     `sure_step` and `pit_proof` (Light step: a trap stepped onto gets a Dexterity check against
     its difficulty first, two draws only with the talent; made, it does not go off and is found;
-    at rank 2 pits never catch you; steps only, never a door's trap); `speed_percent` (Quick:
+    pits never catch you; steps only, never a door's trap; the talent also has Silent feet's
+    effects, folded into it: `footsteps_percent` -40 and `silent_doors`); `speed_percent` (Quick:
     +5 % a rank, every price divided by it in `World::burdened`, as a higher speed; hidden in the
     game); `missile_dodge` (Deflect missiles: Dodge +2 against shots, throws, and trap missiles,
     `World::target_against`); `spell_damage_percent` (Evasion: bursts and bolts, traps' and
@@ -937,8 +938,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     saved; read by `World::stance`, the AI's choice of a hostile, and look mode). #787 cut
     Pathfinder, Winter-born, and Sun-blessed (`sun_healing` with it), and folded the `weather`
     system into `travel`, the outdoors; #791 cut Marsh walker (outdoors only; `wading_proof` is
-    Nature's ward's now). Silent feet also counts toward
-    the hearing system. The light and factions systems are held to the bar since it is one
+    Nature's ward's now). Light step also counts toward
+    the stealth and hearing systems. The light and factions systems are held to the bar since it is one
     talent (#773). The `awareness` system came off `pending` with
     surprise (#681, §8 "Surprise and sneak attacks"): Wary (Delver, Willpower 12,
     `initiative_bonus = 4`: added to the initiative check) and Cool head (Grit, Willpower 14,

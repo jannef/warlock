@@ -30,11 +30,11 @@ expression: "render(case, content.clone())"
               │   p  Keen ears        You hear fainter sounds, fainter still at the… │
               │   q  Lamplighter      You tend your lantern well: it burns brighter… │
               │   r  Night eyes       Your eyes grow used to the dark: you see by h… │
-              │   s  Silent feet      Your footsteps are a fifth quieter for each r… │
               │ Wayfarer                                                             │
-              │   t  Pious            You keep the old observances: an altar of you… │
+              │   s  Pious            You keep the old observances: an altar of you… │
               │ Scholar                                                              │
-              │   u  Apprentice       You take up a skill you lack, or get better a… │
+              │   t  Apprentice       You take up a skill you lack, or get better a… │
+              │   u  Deep well        Your power runs deep: more mana for each rank… │
               │                                                                      │
               │ You were born to money: you set out with far more gold than most,    │
               │ and a few gems besides.                                              │

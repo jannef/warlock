@@ -400,25 +400,15 @@ fn each_talent_changes_the_rule_it_names() {
         passive + 2
     );
 
-    // Silent feet: steps a fifth quieter per rank; at rank 2 (Stealth 25) silent doors.
+    // Light step: steps two fifths quieter, and silent doors.
     let level = w.state.current().clone();
     let step = Act::Step(w.player_pos());
     let loud = |w: &World| {
         noise::noise(&content, &level, player(w), Burden::Unburdened, step).map(|n| n.loudness)
     };
     let plain = loud(&w).expect("a step is heard");
-    take(&mut w, 30, "silent_feet");
-    assert_eq!(loud(&w), Some(plain * 80 / 100));
-    reach(&mut w, 33);
-    run(&mut w, "talent:silent_feet");
-    assert_eq!(
-        last(&w),
-        "You cannot take Silent feet: you need Stealth 25."
-    );
-    let stealth = content.skill_id("stealth").expect("stealth");
-    w.player_mut().skills.add(stealth, 25);
-    run(&mut w, "talent:silent_feet");
-    assert_eq!(last(&w), "You learn Silent feet (2).");
+    take(&mut w, 30, "light_step");
+    assert_eq!(loud(&w), Some(plain * 60 / 100));
     let door = Act::OpenDoor(w.player_pos());
     let mods = player(&w).talent_mods(&content);
     assert!(mods.silent_doors);
