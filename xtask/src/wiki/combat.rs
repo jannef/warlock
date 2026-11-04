@@ -98,6 +98,21 @@ pub(super) fn light_weapons(content: &Content) -> String {
     }
 }
 
+/// The finesse weapons, in name order, as a sentence (spec §7: `finesse`).
+pub(super) fn finesse_weapons(content: &Content) -> String {
+    let mut names: Vec<&str> = (order::objects(content).into_iter())
+        .filter(|(_, o)| o.attack.is_some_and(|attack| attack.finesse))
+        .map(|(_, o)| o.name.as_str())
+        .collect();
+    names.sort_unstable();
+    let the: Vec<String> = names.iter().map(|n| format!("the {n}")).collect();
+    match the.as_slice() {
+        [] => "No weapon is a finesse weapon.\n".into(),
+        [one] => format!("The one finesse weapon is {one}.\n"),
+        [rest @ .., last] => format!("The finesse weapons are {}, and {last}.\n", rest.join(", ")),
+    }
+}
+
 /// What a launcher kind of ammunition is called: every object of that kind, in the plural, in
 /// name order ("arrows, flaming arrows").
 fn ammunition_of(content: &Content, kind: &str) -> String {

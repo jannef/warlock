@@ -192,6 +192,7 @@ above.
 | A level-up, what a level gives | `experience.md#what-a-level-gives` |
 | **Fighting** | |
 | To hit, the 2d12 roll | `combat.md#hitting` |
+| Finesse weapon | `combat.md#finesse-weapons` |
 | Defence (Dodge, Parry, Armour, Shield, Natural, Deflection) | `combat.md#defence` |
 | Critical, threat, confirmed critical | `combat.md#criticals` |
 | Damage | `combat.md#damage` |

@@ -11,6 +11,7 @@ weight = 300
 value = 20
 slot = "main_hand"
 light_weapon = true
+finesse = true
 damage = "1d4"
 threat = 19
 penetration = 2

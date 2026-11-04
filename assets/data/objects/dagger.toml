@@ -10,6 +10,7 @@ weight = 450
 value = 30
 slot = "main_hand"
 light_weapon = true
+finesse = true
 damage = "1d4"
 category = "daggers"
 damage_type = "piercing"

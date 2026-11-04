@@ -6,7 +6,6 @@ expression: "render(case, content.clone())"
  This is Stonebiter, a dagger!
 
 
-
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
                   │ ) Stonebiter                                                 │
@@ -17,6 +16,7 @@ expression: "render(case, content.clone())"
                   │ Damage 1d4; criticals on 20–24, ×2 damage                    │
                   │ Piercing damage                                              │
                   │ Thrown up to 5 cells                                         │
+                  │ Finesse: Dexterity guides its blows, not Strength            │
                   │ To hit +0, damage 1d4+2, range 5                             │
                   │                                                              │
                   │ Prefix  Sharp: +2 damage                                     │

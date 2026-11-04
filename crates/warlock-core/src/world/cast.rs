@@ -944,6 +944,7 @@ impl World {
                     threat: shot.threat,
                     crit: combat::DEFAULT_CRIT,
                     strength: None,
+                    finesse: false,
                     kinds: Kinds::NONE,
                 };
                 let missile = def.shape != Shape::Touch;

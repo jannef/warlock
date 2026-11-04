@@ -289,6 +289,7 @@ fn generate(content: &Content) -> Vec<(String, String)> {
         ("song-music.md", abilities::song_music),
         ("song-odds.md", abilities::song_odds),
         ("weapons.md", combat::weapons),
+        ("finesse-weapons.md", combat::finesse_weapons),
         ("light-weapons.md", combat::light_weapons),
         ("launchers.md", combat::launchers),
         ("ammunition.md", combat::ammunition),

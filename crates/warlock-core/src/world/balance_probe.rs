@@ -615,6 +615,7 @@ fn casts(w: &World) -> Vec<Cast> {
             threat: combat::DEFAULT_THREAT,
             crit: combat::DEFAULT_CRIT,
             strength: None,
+            finesse: false,
             kinds: Kinds::NONE,
         };
         out.push(Cast {

@@ -620,6 +620,9 @@ fn stats(
     if def.breaks > 0 {
         out.push(format!("Breaks on a hit {}% of the time", def.breaks));
     }
+    if def.attack.is_some_and(|attack| attack.finesse) {
+        out.push("Finesse: Dexterity guides its blows, not Strength".to_string());
+    }
     out
 }
 

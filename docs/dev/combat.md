@@ -32,7 +32,7 @@ after it. Healing and status ticks run as the scheduler moves the clock (`World:
 (`player_attacks`, by what they see as they strike); a creature's in `World::perceive_events`
 (`fight::attack_message`, `death_message`; actors that died this action are in the unsaved
 `World::fallen`, so their names and words still resolve). Data: objects `damage`, `threat`,
-`crit`, `to_hit`, `strength`, `parry`, `armour`, `max_dex`, `shield` (`content/object.rs`);
+`crit`, `to_hit`, `strength`, `finesse` (`Attack::finesse`: `Profile::melee` adds Dexterity to hit instead of Strength, the damage keeps Strength; thrown it changes nothing), `parry`, `armour`, `max_dex`, `shield` (`content/object.rs`);
 creatures `base_hp`, `attack` (`NaturalAttack`), `natural` (`Hide`; a race's `natural` is the
 player's instead, `Actor::hide(content, race)`, and a race's `resist` adds to the creature
 type's, `docs/dev/character-creation.md`); races and classes `hp`; a
