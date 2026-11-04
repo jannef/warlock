@@ -588,6 +588,7 @@ impl NaturalAttackSpec {
                 threat,
                 crit,
                 strength: None,
+                finesse: false,
                 kinds,
             },
             name: self.name,

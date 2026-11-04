@@ -287,6 +287,7 @@ fn nothing() -> Attack {
         threat: DEFAULT_THREAT,
         crit: DEFAULT_CRIT,
         strength: None,
+        finesse: false,
         kinds: Kinds::NONE,
     }
 }

@@ -196,6 +196,9 @@ pub(super) struct ObjectSpec {
     /// A light one-handed weapon: it goes in any hand, the off hand too (two-weapon fighting).
     #[serde(default)]
     pub light_weapon: bool,
+    /// A finesse weapon: in melee, Dexterity adds to hit instead of Strength.
+    #[serde(default)]
+    pub finesse: bool,
     /// The kind of ammunition it is ("arrow"), for launchers of that kind.
     pub ammo: Option<String>,
     /// The kind of ammunition it shoots, if it is a missile weapon ("arrow").
@@ -740,6 +743,15 @@ impl ObjectSpec {
                 ));
             }
         }
+        if self.finesse {
+            let in_hand = (slots.iter()).any(|s| s.hand && Some(&s.fits) == self.slot.as_ref());
+            if !in_hand || self.damage.is_none() || self.launches.is_some() {
+                return Err(err(
+                    "`finesse` is for melee weapons wielded in a hand (`damage`, a hand `slot`)"
+                        .into(),
+                ));
+            }
+        }
         for (field, kind) in [("ammo", &self.ammo), ("launches", &self.launches)] {
             if kind.as_ref().is_some_and(|k| k.trim().is_empty()) {
                 return Err(err(format!("`{field}` must not be empty")));
@@ -1190,6 +1202,7 @@ impl ObjectSpec {
             threat,
             crit,
             strength: self.strength,
+            finesse: self.finesse,
             kinds,
         }))
     }

@@ -399,6 +399,7 @@ impl TrapSpec {
             threat: DEFAULT_THREAT,
             crit: DEFAULT_CRIT,
             strength: None,
+            finesse: false,
             kinds: damage_kind.map_or(crate::damage::Kinds::NONE, crate::damage::Kinds::one),
         };
         let fields = SpellFields {

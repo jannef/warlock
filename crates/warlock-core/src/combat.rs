@@ -293,6 +293,8 @@ pub struct Attack {
     pub crit: u8,
     /// The Strength a bow needs (`None`: any).
     pub strength: Option<u8>,
+    /// A finesse weapon: in melee, Dexterity adds to hit instead of Strength.
+    pub finesse: bool,
     /// The kinds of damage it does (spec §8 "Damage types"): one, or two of which a blow does
     /// the better; none without damage types in content.
     pub kinds: Kinds,
@@ -308,6 +310,7 @@ impl Attack {
             threat: DEFAULT_THREAT,
             crit: DEFAULT_CRIT,
             strength: None,
+            finesse: false,
             kinds: unarmed.map_or(Kinds::NONE, Kinds::one),
         }
     }
@@ -321,10 +324,16 @@ pub const IMPROVISED_RANGE: i32 = 3;
 
 impl Profile {
     /// A melee attack with `attack` (a weapon, a natural attack, bare hands): to-hit and damage
-    /// both add the Strength modifier.
+    /// both add the Strength modifier, but a finesse weapon's to-hit adds the Dexterity modifier
+    /// instead, better or worse.
     pub fn melee(attack: &Attack, stats: &Stats) -> Self {
         let strength = stats.modifier(Stat::Strength);
-        Self::of(attack, attack.to_hit + strength, strength)
+        let aim = if attack.finesse {
+            stats.modifier(Stat::Dexterity)
+        } else {
+            strength
+        };
+        Self::of(attack, attack.to_hit + aim, strength)
     }
 
     /// A thrown weapon (ranged combat, #117): to-hit adds the Dexterity modifier, damage the
@@ -1349,11 +1358,21 @@ mod tests {
             threat: 20,
             crit: 2,
             strength: None,
+            finesse: false,
             kinds: Kinds::NONE,
         };
         // Melee: Strength to hit and to damage.
         let melee = Profile::melee(&sword, &stats(16, 18));
         assert_eq!((melee.to_hit, melee.bonus, melee.threat), (4, 3, 20));
+        // A finesse weapon: Dexterity to hit, Strength to damage, whichever is the better.
+        let rapier = Attack {
+            finesse: true,
+            ..sword
+        };
+        let deft = Profile::melee(&rapier, &stats(16, 18));
+        assert_eq!((deft.to_hit, deft.bonus), (5, 3));
+        let clumsy = Profile::melee(&rapier, &stats(18, 8));
+        assert_eq!((clumsy.to_hit, clumsy.bonus), (0, 4));
         // Thrown: Dexterity to hit, Strength to damage.
         let thrown = Profile::thrown(&sword, &stats(16, 18));
         assert_eq!((thrown.to_hit, thrown.bonus), (5, 3));
@@ -1364,6 +1383,7 @@ mod tests {
             threat: 22,
             crit: 3,
             strength: Some(14),
+            finesse: false,
             kinds: Kinds::NONE,
         };
         let strong = Profile::ranged(&bow, &stats(16, 14));

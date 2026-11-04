@@ -10,6 +10,7 @@ weight = 1100
 value = 50
 slot = "main_hand"
 light_weapon = true
+finesse = true
 damage = "1d6"
 category = "short_blades"
 damage_type = ["slashing", "piercing"]

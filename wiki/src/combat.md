@@ -17,7 +17,8 @@ the exception: casters only announce them for now, and nothing is hurt by a spel
 An attack rolls two twelve-sided dice and adds them: 2 to 24, most often around 13. It hits when
 that roll, plus the attacker's bonus to hit, reaches the target's **[Defence](combat.md#defence)**.
 
-- Fighting up close, your **[Strength](stats.md#stat-strength)** helps you hit; shooting, your **[Dexterity](stats.md#stat-dexterity)** does. Some
+- Fighting up close, your **[Strength](stats.md#stat-strength)** helps you hit; shooting, your **[Dexterity](stats.md#stat-dexterity)** does. With a
+  [finesse weapon](#finesse-weapons) up close, Dexterity helps you hit and Strength does not, even if your Strength is the better. Some
   weapons are easier to hit with than others, and your [rank](weapon-skills.md#marks-and-ranks) in the weapon's
   [skill](weapon-skills.md) helps the more you have trained.
 - **Two ones always miss, two twelves always hit**, whatever the odds.
@@ -43,6 +44,12 @@ Exactly, this is how an attack is rolled, and what adds up to its bonus to hit a
 
 A creature's attacks add up the same way; their numbers are on
 [Creatures in numbers](creature-numbers.md#attacks).
+
+## Finesse weapons
+
+A finesse weapon's blows are guided by [Dexterity](stats.md#stat-dexterity) rather than [Strength](stats.md#stat-strength): its bonus to [hit](#hitting) up close is your Dexterity modifier, even when your Strength is the higher. [Strength](stats.md#stat-strength) still adds to its [damage](#damage).
+
+{{#include generated/finesse-weapons.md}}
 
 ## Defence
 
@@ -119,7 +126,7 @@ spirit, or construct (the mud golem; [elementals](creatures.md#elementals)). The
 
 A hit does the weapon's damage dice, at least 1:
 
-- **Up close**, your **[Strength](stats.md#stat-strength)** adds to the damage, as it does to hitting. With nothing in your
+- **Up close**, your **[Strength](stats.md#stat-strength)** adds to the damage, a [finesse weapon's](#finesse-weapons) too. With nothing in your
   hands you hit with your [fists](weapon-skills.md#weapon-skill-unarmed).
 - **Shots** do the bow's own damage: [Dexterity](stats.md#stat-dexterity) aims them, but adds nothing to the damage. A bow
   is drawn by strength, though: each point of [Strength](stats.md#stat-strength) you lack of what the bow needs costs you

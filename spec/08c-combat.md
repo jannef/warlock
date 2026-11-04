@@ -10,7 +10,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Hitting**: an attack hits when 2d12 (its *natural* roll, 2 to 24, average 13) plus its
     to-hit is at least the target's **Defence** ("Dv"). A natural 2 always misses (and is a plain
     miss), a natural 24 always hits. To-hit is the attack's own (`to_hit`, default 0) plus, in
-    melee, the attacker's Strength modifier, and for a shot the Dexterity modifier. At +0 against
+    melee, the attacker's Strength modifier (with a `finesse` weapon, §7, the Dexterity modifier
+    instead, even when it is the lower), and for a shot the Dexterity modifier. At +0 against
     Defence 10 an attack hits 75 % of the time; each point is worth about 7–8 points of chance
     near the middle and much less at the ends.
   - **Criticals** (3.5's threat range and confirmation): a hit whose natural roll is at least

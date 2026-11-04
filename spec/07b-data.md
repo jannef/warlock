@@ -408,7 +408,10 @@ developer notes (CLAUDE.md, `docs/dev/`).
   Things that can be worn or wielded (M16) say where they go: `slot`, a slot's id or what it
   `fits` (`slot = "body"`, `slot = "ring"` for either ring slot; an unknown one is a content
   error), `two_handed` (default false; only with a hand slot's `slot`, and there must be two
-  hand slots: it takes both), `light_weapon` (default false; only for a one-handed weapon with a
+  hand slots: it takes both), `finesse` (default false; only for a melee weapon with a hand
+  slot's `slot`: Dexterity adds to its to-hit instead of Strength, §8 "Combat"; Strength
+  still adds to its damage; the built-in ones are the dagger, stiletto, short sword, and rapier),
+  `light_weapon` (default false; only for a one-handed weapon with a
   hand slot's `slot`, not two-handed: it fits every hand slot, the off hand too, for fighting
   with two weapons, §8 "Fighting styles"; `Content::fits`; a shield, an object with `bash`,
   fits every hand slot too, for fighting with two shields; the built-in light weapons are the

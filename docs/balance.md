@@ -40,6 +40,10 @@ docs), `balance_probe/training.rs` (the trained careers' days), `balance_probe/r
   rolls at its own level. Its side of a fight is `World::target_of` (Defence, Protection,
   resistances), its blow is `Actor::melee`, and its blows a round are its speed over its
   `World::attack_price`.
+- **Finesse** (not yet in the tables below): the dagger, stiletto, short sword, and rapier aim with
+  Dexterity instead of Strength. The thief's plain to-hit moved +1 at level 1, 0 at level 10, and
+  -2 at level 60 (+18 to +16: they train more Strength than Dexterity), and the toughest
+  weapon-carrying monsters lost under 1 to hit on average. The witch's dagger changes too.
 - **Players**: a human male warrior (long sword, sword and board, shield block), thief (dagger,
   twin blades), wizard (staff; evocation), and priest (mace, sword and board, shield block;
   restoration), six seeds each, and a witch (dagger; necromancy) measured for the spell tables
