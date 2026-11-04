@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Your athletics improves. (×36) You learn Deep lungs. You learn Dodge. You learn Light step (1).
- You learn Nimble. You learn Petrifying gaze.
+ Your athletics improves. (×36) You learn Deep lungs. You learn Dodge. You learn Light step. You
+ learn Nimble. You learn Petrifying gaze.
 
 
 

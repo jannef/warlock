@@ -319,6 +319,10 @@ fn nimble_raises_the_burden_cap_on_dexterity() {
 
 /// The world with a pit next to the player; returns the way to it.
 fn beside_a_pit(w: &mut World) -> Dir {
+    beside_a_trap(w, "pit")
+}
+
+fn beside_a_trap(w: &mut World, id: &str) -> Dir {
     let content = w.content().clone();
     let here = w.player_pos();
     let level = w.state.current();
@@ -330,8 +334,8 @@ fn beside_a_pit(w: &mut World) -> Dir {
                 && !level.traps.contains_key(&to)
         })
         .expect("room to step");
-    let pit = content.trap_id("pit").expect("a pit");
-    let trap = Trap::new(pit, content.trap(pit), false, None);
+    let kind = content.trap_id(id).expect("a trap");
+    let trap = Trap::new(kind, content.trap(kind), false, None);
     w.state.current_mut().traps.insert(here.step(dir), trap);
     dir
 }
@@ -343,21 +347,20 @@ fn light_step_keeps_traps_from_going_off_under_the_player() {
     let dir = beside_a_pit(&mut w);
     run(&mut w, &format!("move:{dir}"));
     assert!(!said(&w).iter().any(|m| m.contains("step lightly")));
-    // Rank 1: a Dexterity check (this nimble a character makes it).
+    // Another trap: a Dexterity check (this nimble a character makes it).
     let mut w = world();
     set_scores(&mut w, 40);
     give(&mut w, "light_step");
-    let dir = beside_a_pit(&mut w);
+    let dir = beside_a_trap(&mut w, "arrow");
     let hp = w.state.player().hp;
     run(&mut w, &format!("move:{dir}"));
-    assert_eq!(last(&w), "You step lightly off a pit.");
+    assert_eq!(last(&w), "You step lightly off an arrow trap.");
     assert_eq!(w.state.player().hp, hp);
     let at = w.player_pos();
     assert!(w.state.current().traps[&at].known, "found");
-    // Rank 2: pits never catch them, however clumsy.
+    // Pits never catch them, however clumsy.
     let mut w = world();
     set_scores(&mut w, 3);
-    give(&mut w, "light_step");
     give(&mut w, "light_step");
     let dir = beside_a_pit(&mut w);
     run(&mut w, &format!("move:{dir}"));

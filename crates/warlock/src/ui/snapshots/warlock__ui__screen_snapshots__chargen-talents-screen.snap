@@ -29,12 +29,12 @@ expression: "render(case, content.clone())"
               │   o  Keen ears        You hear fainter sounds, fainter still at the… │
               │   p  Lamplighter      You tend your lantern well: it burns brighter… │
               │   q  Night eyes       Your eyes grow used to the dark: you see by h… │
-              │   r  Silent feet      Your footsteps are a fifth quieter for each r… │
               │ Wayfarer                                                             │
-              │   s  Pious            You keep the old observances: an altar of you… │
+              │   r  Pious            You keep the old observances: an altar of you… │
               │ Scholar                                                              │
-              │   t  Apprentice       You take up a skill you lack, or get better a… │
-              │   u  Deep well        Your power runs deep: more mana for each rank… │
+              │   s  Apprentice       You take up a skill you lack, or get better a… │
+              │   t  Deep well        Your power runs deep: more mana for each rank… │
+              │   u  Treasure hunter  The loot you find, and what creatures drop, i… │
               │                                                                      │
               │ Let chance pick your talents.                                        │
               │                                                                      │
