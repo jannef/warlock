@@ -2,7 +2,7 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Wat One-Eye says: "There's a price on a goblin archer, see. Bring the beast down, wherever you
+ Wat One-Eye says: "There's a price on a goblin, see. Bring the beast down, wherever you find it,
 ┌─ Character ──────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                  │
 │ Wulfstan                                                                                         │
