@@ -113,7 +113,7 @@ above.
 | Grundlēas, floors forgotten | `dungeons.md#grundlēas` |
 | Special room | `special-rooms.md` (a room: its row) |
 | Forgotten altar, praying | `special-rooms.md#forgotten-altars` |
-| Forge, tempering | `special-rooms.md#forges` |
+| Forge, tempering, Fine, Marvellous, Masterwork, damaged items | `special-rooms.md#forges` |
 | Healing spring | `special-rooms.md#healing-springs` |
 | Trap, hidden trap, known trap | `traps.md#finding-traps` |
 | Disarming | `traps.md#disarming-traps` |
@@ -125,6 +125,7 @@ above.
 | Material, pieces | `objects.md#materials`, `objects.md#pieces` |
 | Gem, size and cut | `gems.md`, `gems.md#size-and-cut` |
 | Scroll, reading, unknown scrolls | `scrolls.md`, `scrolls.md#unknown-scrolls` |
+| Making out a scroll, the check to read one (Decipher script's use) | `scrolls.md#making-out-a-scroll` |
 | Potion, elixir | `potions.md`, `potions.md#elixirs` |
 | Equipment, slots, wielding and wearing | `equipment.md#what-fits-where` |
 | The equipment screen | `equipment.md#the-equipment-screen` |
@@ -232,6 +233,7 @@ above.
 | What talents and items do to a spell (a rung, bigger dice, a bonus, a reroll, a rider) | `magic.md#how-a-spell-grows` |
 | Spell shape (bolt, burst, cone, …) | `magic.md#shapes` |
 | Spell type, what a spell of a damage type does beyond its damage | `magic.md#spell-types` |
+| Arc, conducting through water, what an electricity spell does | `magic.md#spell-types` |
 | Burning | `status-effects.md#burning` |
 | Corroded | `status-effects.md#corroded` |
 | How a spell resolves (attack, auto, area, touch) | `magic.md#how-a-spell-finds-its-target` |

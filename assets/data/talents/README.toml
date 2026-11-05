@@ -424,6 +424,9 @@
 #                                 (Light-footed) for no time (what it costs is the talent's
 #                                 `resource`: a point of ki); refused while it lasts
 #   The casters' (spec §8 "Class abilities"; the priest's, druid's, wizard's, witch's):
+#   spell_type { arc_chance, when }   the percent its spells of the damage types `when` arc at
+#                                 (`arc` in `[types]`, ../spells.toml; docs/dev/spells.md "Spell
+#                                 types"): Conductor
 #   spell_mod { ... }             what it does to its spells through the six hooks (the spell
 #                                 scaling design §7.1; docs/dev/spells.md "The hooks"), each
 #                                 field optional, at least one given: rungs (higher on an own

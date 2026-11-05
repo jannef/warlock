@@ -877,10 +877,9 @@ impl Actor {
     }
 
     /// The weapon it wields, if any: the first hand that holds one, and what it is.
-    pub fn weapon<'c>(&self, content: &'c Content) -> Option<(ObjectId, &'c Attack)> {
+    pub fn weapon(&self, content: &Content) -> Option<(ObjectId, Attack)> {
         let stack = self.inventory.get(self.weapon_item(content)?)?;
-        let def = content.object(stack.object);
-        def.attack.as_ref().map(|a| (stack.object, a))
+        stack.attack(content).map(|a| (stack.object, a))
     }
 
     /// Where in its inventory the shield it can bash with lies: the first hand that holds one.
@@ -1119,9 +1118,11 @@ impl Actor {
     /// The weapon in its off hand while it holds a weapon in each of two hands (spec §8
     /// "Fighting styles"): the second, in hand order, where in its inventory it is, and what it
     /// is.
-    pub fn off_hand<'c>(&self, content: &'c Content) -> Option<(usize, &'c Attack)> {
+    pub fn off_hand(&self, content: &Content) -> Option<(usize, Attack)> {
         match self.in_hands(content).as_slice() {
-            [(_, main), (off, def)] if main.attack.is_some() => Some((*off, def.attack.as_ref()?)),
+            [(_, main), (off, _)] if main.attack.is_some() => {
+                Some((*off, self.inventory[*off].attack(content)?))
+            }
             _ => None,
         }
     }
@@ -1259,11 +1260,11 @@ impl Actor {
             fists
         };
         let (attack, local, penetration, added) = match (weapon, natural) {
-            (Some(stack), _) => match &content.object(stack.object).attack {
+            (Some(stack), _) => match stack.attack(content) {
                 Some(attack) => {
                     let def = content.object(stack.object);
                     (
-                        *attack,
+                        attack,
                         Mods::local(stack, content),
                         def.penetration,
                         def.added,
@@ -1346,7 +1347,7 @@ impl Actor {
         let stack = &self.inventory[item];
         let mods = self.mods(content);
         let benefit = self.attack_benefit(content, AttackKind::Melee, Some(stack.object));
-        let mut profile = Profile::melee(attack, &self.stats_with(content, &mods)).with(&benefit);
+        let mut profile = Profile::melee(&attack, &self.stats_with(content, &mods)).with(&benefit);
         profile.penetration = content.object(stack.object).penetration;
         let penalty = content.weapon_skills().two_weapons().off;
         profile.to_hit += TwoWeapons::eased(penalty, benefit.ease_off);
@@ -1370,7 +1371,7 @@ impl Actor {
         let mods = self.mods(content);
         let launcher = &self.inventory[self.launcher_item(content)?];
         let def = content.object(launcher.object);
-        let mut attack = def.attack?;
+        let mut attack = launcher.attack(content)?;
         let local = Mods::local(launcher, content);
         let draw = local.get(ItemEffect::Draw);
         attack.strength =
@@ -1399,7 +1400,7 @@ impl Actor {
     pub fn thrown(&self, item: usize, content: &Content) -> Option<Profile> {
         let stack = self.inventory.get(item)?;
         let def = content.object(stack.object);
-        let attack = def.attack.filter(|_| def.can_throw())?;
+        let attack = stack.attack(content).filter(|_| def.can_throw())?;
         let mods = self.mods(content);
         let benefit = self.attack_benefit(content, AttackKind::Thrown, Some(stack.object));
         let mut profile = Profile::thrown(&attack, &self.stats_with(content, &mods));

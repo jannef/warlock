@@ -106,6 +106,8 @@ pub const MAX_PICK_BONUS: i32 = 20;
 pub const MAX_FORAGE_BONUS: i32 = 30;
 /// The most a skill adds to tempering an item at an anvil (spec §7 "Special rooms": the forge).
 pub const MAX_TEMPER_BONUS: i32 = 20;
+/// The most a skill adds to reading a scroll (spec §8 "Scrolls"; `world/decipher.rs`).
+pub const MAX_DECIPHER_BONUS: i32 = 20;
 /// The most a skill adds to a Swim check (spec §8 "Skills": a plunge through the ice).
 pub const MAX_SWIM_BONUS: i32 = 20;
 /// The most a skill adds to resisting a creature's ability (spec §8 "Skills": Knowledge): kept
@@ -172,6 +174,9 @@ pub enum Effect {
     /// The spell level up to which a scroll teaches for certain (spec §8 "Spells": "Learning";
     /// `world/learn.rs`); a skill with it, trained, lets the actor learn from a scroll at all.
     Learn,
+    /// Points added to reading a scroll one cannot simply read (spec §8 "Scrolls";
+    /// `world/decipher.rs`). The check is everyone's: none of it asks for the skill.
+    Decipher,
     /// Points added to disarming a trap (spec §8 "Disarming traps"; `world/disarm.rs`); a skill
     /// with it, trained, lets the actor disarm traps at all (the Disarm ability).
     Disarm,
@@ -183,6 +188,9 @@ pub enum Effect {
     /// Percent of what wading adds to a step that is spared (spec §8 "Skills": Swim;
     /// `World::step_price`), under the talents that spare all of it.
     Wade,
+    /// Percent of what rough ground (bush, reeds, rubble, ice: not water) adds to a step that is
+    /// spared (spec §8 "Skills": Balance; `World::step_price`).
+    Footing,
     /// Percent added to the chance of a forage finding food (spec §8 "Foraging";
     /// `world/forage.rs`); a skill with it, trained, lets the actor forage at all (the abilities
     /// menu's Forage).
@@ -220,6 +228,9 @@ pub enum Effect {
     /// Percent of the extra cost of the action the actor takes Surprised that is spared
     /// (`World::status_cost`), with its talents' at most all of it.
     SurpriseEase,
+    /// Percent of the extra cost of the action the actor takes Staggered that is spared
+    /// (`World::status_cost`).
+    SteadyEase,
     /// Points added to treating oneself (spec §8 "Skills": Heal; `world/heal.rs`): bleeding,
     /// poison, a disease; a skill with it, trained, lets the actor treat at all (the Heal
     /// ability).
@@ -252,8 +263,8 @@ pub enum Effect {
     /// Points added to picking a lock (spec §8 "Doors"; `world/lockpick.rs`); a skill with it,
     /// trained, lets the actor pick locks at all (the Pick lock ability).
     Pick,
-    /// Points added to the check that leans a forge's outcome (spec §7 "Special rooms": Temper
-    /// at an anvil; `world/temper.rs`). Anyone may temper; the skill only leans it.
+    /// Points added to the check of an attempt at an anvil (spec §7 "Special rooms": Temper;
+    /// `world/temper.rs`). Anyone may temper; the skill only helps.
     Temper,
     /// Points added to a Swim check (spec §8 "Skills": Swim; `world/ice.rs`, a plunge through the
     /// ice; `world/swim.rs`, a step in deep water); only a skill with it, trained, asks the check
@@ -285,6 +296,8 @@ impl Effect {
             | Effect::Burden
             | Effect::Travel
             | Effect::Wade
+            | Effect::Footing
+            | Effect::SteadyEase
             | Effect::Bargain
             | Effect::Identify
             | Effect::SurpriseEase => 100,
@@ -294,6 +307,7 @@ impl Effect {
             Effect::Search | Effect::Spot | Effect::DetectTraps => MAX_SEARCH_BONUS,
             Effect::Study => MAX_STUDY_BONUS,
             Effect::Learn => MAX_LEARNING,
+            Effect::Decipher => MAX_DECIPHER_BONUS,
             Effect::Slip => MAX_SLIP_BONUS,
             Effect::Lookout | Effect::Stalk | Effect::Evade => MAX_ENCOUNTER_BONUS,
             Effect::Steal => MAX_STEAL_BONUS,
@@ -334,6 +348,8 @@ pub enum Use {
     FindTrap,
     /// A spell studied (spec §8 "Spells"), whatever comes of it.
     Study,
+    /// A check made to read a scroll (spec §8 "Scrolls"), whatever comes of it.
+    Decipher,
     /// Mana spent (spec §8 "Mana"): a spell cast, an ability paid in mana, whatever it costs.
     Cast,
     /// An attempt to disarm a trap (spec §8 "Disarming traps"), whatever comes of it.
@@ -374,11 +390,16 @@ pub enum Use {
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
     Pick,
-    /// An item worked at a forge's anvil to the end (spec §7 "Special rooms"), whatever comes of
+    /// An attempt on an item at a forge's anvil done (spec §7 "Special rooms"), whatever comes of
     /// it.
     Temper,
     /// A step onto wading terrain (spec §8 "Skills": Swim; `World::wade`).
     Wade,
+    /// A step onto rough ground that is not water (spec §8 "Skills": Balance;
+    /// `World::train_rough_step`).
+    RoughStep,
+    /// An action taken Staggered (spec §8 "Skills": Balance; `World::spend_actions`).
+    Staggered,
     /// A Swim check, whatever comes of it (spec §8 "Skills": Swim; a plunge through the ice).
     Swim,
     /// A step in deep water, whatever comes of it (spec §8 "Skills": Swim; `world/swim.rs`).
@@ -413,6 +434,7 @@ impl Use {
             Use::Spot => "noticing something hidden in passing",
             Use::FindTrap => "finding a hidden trap, searching or in passing",
             Use::Study => "studying a spell from a scroll",
+            Use::Decipher => "making out a scroll you cannot simply read",
             Use::Cast => "spending mana: a spell, or an ability paid in it",
             Use::Disarm => "trying to disarm a trap",
             Use::Dodge => "dodging an attack or a known trap",
@@ -435,6 +457,8 @@ impl Use {
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
             Use::Wade => "a step wading through water or marsh",
+            Use::RoughStep => "a step onto rough ground that slows (bush, reeds, rubble, ice)",
+            Use::Staggered => "acting while Staggered",
             Use::Swim => "a plunge through the ice",
             Use::Stroke => "a step in deep water",
             Use::Deal => "a deal made in a shop",
@@ -543,6 +567,7 @@ impl Use {
             Use::Spot => "spot",
             Use::FindTrap => "find_trap",
             Use::Study => "study",
+            Use::Decipher => "decipher",
             Use::Cast => "cast",
             Use::Disarm => "disarm",
             Use::Dodge => "dodge",
@@ -563,6 +588,8 @@ impl Use {
             Use::Pick => "pick",
             Use::Temper => "temper",
             Use::Wade => "wade",
+            Use::RoughStep => "rough_step",
+            Use::Staggered => "staggered",
             Use::Swim => "swim",
             Use::Stroke => "stroke",
             Use::Deal => "deal",
@@ -589,10 +616,13 @@ impl Effect {
             Effect::DetectTraps => "detect_traps",
             Effect::Study => "study",
             Effect::Learn => "learn",
+            Effect::Decipher => "decipher",
             Effect::Disarm => "disarm",
             Effect::Burden => "burden",
             Effect::Travel => "travel",
             Effect::Wade => "wade",
+            Effect::Footing => "footing",
+            Effect::SteadyEase => "steady_ease",
             Effect::Forage => "forage",
             Effect::Bargain => "bargain",
             Effect::Identify => "identify",

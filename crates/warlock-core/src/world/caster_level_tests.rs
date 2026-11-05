@@ -1,5 +1,5 @@
 //! Caster level (spec §8 "Spells"; #394): the class's casting percent of the player's level,
-//! what talents and magic items add, at least 1 with mana; a creature's at its level; and what
+//! what talents add, at least 1 with mana; a creature's at its level; and what
 //! the dumps say of it.
 
 use super::*;
@@ -28,12 +28,11 @@ fn at_level(w: &mut World, level: u8) {
 
 #[test]
 fn caster_level_is_the_class_casting_percent_of_the_level() {
-    // (class, casting, level, caster level): rounded down, at least 1 with mana; the wizard
-    // with Arcane training's +1 per 5 levels.
+    // (class, casting, level, caster level): rounded down, at least 1 with mana.
     for (class, level, expected) in [
         ("wizard", 1, 1),
-        ("wizard", 30, 36),
-        ("wizard", 60, 72),
+        ("wizard", 30, 30),
+        ("wizard", 60, 60),
         ("bard", 30, 22),
         ("paladin", 30, 15),
         ("warrior", 30, 7),
@@ -66,7 +65,7 @@ fn without_mana_nobody_is_lifted_to_caster_level_1() {
 }
 
 #[test]
-fn talents_and_magic_items_add_to_caster_level() {
+fn talents_add_to_caster_level() {
     let mut files = ContentFiles::builtin();
     files.insert(
         "data/talents/zz_spell_test.toml",
@@ -74,42 +73,17 @@ fn talents_and_magic_items_add_to_caster_level() {
          description = \"x\"\neffects = [{ kind = \"caster_level\", value = 3 }]\n\
          systems = [\"mana\"]\n",
     );
-    files.insert(
-        "data/affixes/zz_spell_test.toml",
-        "[[prefix]]\nid = \"zz_spell_test\"\nname = \"Testing\"\n\
-         effect = \"caster_level\"\ncategory = \"caster_level\"\nbases = [\"ring\"]\n\
-         tiers = [{ level = 1, min = 1, max = 2 }]\n",
-    );
     let content = Arc::new(Content::load(&files).expect("content"));
     let mut w = world_on(&content, "wizard");
     let player = w.state.player;
     at_level(&mut w, 10);
     assert_eq!(
         w.caster_level(player),
-        12,
-        "Arcane training's +1 per 5 levels"
+        10,
+        "a wizard casts at the whole of their level"
     );
     w.player_mut().talents.take("zz_spell_test", None);
-    assert_eq!(w.caster_level(player), 15, "the talent's +3");
-    let magic = crate::magic::Magic {
-        rarity: crate::magic::Rarity::Magic,
-        level: 1,
-        affixes: vec![crate::magic::Affix {
-            id: "zz_spell_test".into(),
-            tier: 1,
-            value: 2,
-        }],
-        name: None,
-        identified: true,
-        carried: 0,
-        unique: None,
-    };
-    let ring = content.object_id("gold_ring").expect("a ring");
-    let at = w.state().player().inventory.len();
-    (w.player_mut().inventory).push(Stack::with_magic(ring, 1, magic));
-    let wear = format!("equip:left_ring:{at}");
-    w.apply(&wear.parse().expect("action"));
-    assert_eq!(w.caster_level(player), 17, "and the ring's +2");
+    assert_eq!(w.caster_level(player), 13, "the talent's +3");
     // A creature's is its type's level, all of it.
     let (id, level) = (w.state.actors.iter())
         .find(|(id, a)| **id != player && content.creature(a.creature).level > 0)
@@ -123,9 +97,9 @@ fn the_dumps_say_the_caster_level() {
     let mut w = world_on(&BUILTIN, "wizard");
     at_level(&mut w, 12);
     let rows = dump::ascii(&w, &[Layer::Stats]);
-    assert!(rows.contains("Caster level 14\n"), "{rows}");
+    assert!(rows.contains("Caster level 12\n"), "{rows}");
     let json = dump::json(&w, &[], false);
-    assert_eq!(json["caster_level"], 14);
+    assert_eq!(json["caster_level"], 12);
 }
 
 /// The mana the player's base gains as they go from level `level - 1` to `level`.

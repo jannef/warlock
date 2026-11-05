@@ -222,6 +222,7 @@ impl World {
             u64::try_from(step).unwrap_or(0) / u64::from(speed.max(1)),
         );
         self.train_wade(onto, footing);
+        self.train_rough_step(onto);
         if let Some((other, seen)) = swap {
             self.swap_places(other, to, from, seen, events);
         }

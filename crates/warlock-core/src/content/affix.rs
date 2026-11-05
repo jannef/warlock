@@ -206,8 +206,6 @@ pub enum Effect {
     MaxMana,
     /// Percent faster mana regeneration.
     ManaRegeneration,
-    /// Caster level (spec §8 "Spells").
-    CasterLevel,
     /// Percent off every mana cost (spec §8 "Mana").
     ManaCost,
     /// Points off this piece's spell cost surcharge (its `spell_cost_percent`; local).
@@ -297,7 +295,6 @@ impl Effect {
             Effect::Regeneration,
             Effect::MaxMana,
             Effect::ManaRegeneration,
-            Effect::CasterLevel,
             Effect::ManaCost,
             Effect::SpellEase,
             Effect::SpellToHit,
@@ -360,7 +357,6 @@ impl Effect {
             Effect::Regeneration => "regeneration",
             Effect::MaxMana => "max_mana",
             Effect::ManaRegeneration => "mana_regeneration",
-            Effect::CasterLevel => "caster_level",
             Effect::ManaCost => "mana_cost",
             Effect::SpellEase => "spell_ease",
             Effect::SpellToHit => "spell_to_hit",
@@ -399,7 +395,7 @@ impl Effect {
     }
 
     /// How many effects there are.
-    pub const COUNT: usize = 53 + Stat::COUNT;
+    pub const COUNT: usize = 52 + Stat::COUNT;
 
     /// Its place in [`Effect::all`].
     pub const fn index(self) -> usize {
@@ -427,37 +423,36 @@ impl Effect {
             Effect::Regeneration => 20,
             Effect::MaxMana => 21,
             Effect::ManaRegeneration => 22,
-            Effect::CasterLevel => 23,
-            Effect::ManaCost => 24,
-            Effect::SpellEase => 25,
-            Effect::SpellToHit => 26,
-            Effect::SpellThreat => 27,
-            Effect::SpellRungs => 28,
-            Effect::SpellBonus => 29,
-            Effect::SpellSides => 30,
-            Effect::SpellDice => 31,
-            Effect::SpellReroll => 32,
-            Effect::SpellReach => 33,
-            Effect::SpellDuration => 34,
-            Effect::ManaOnKill => 35,
-            Effect::WandRungs => 36,
-            Effect::ResourceMax => 37,
-            Effect::ResourceRate => 38,
-            Effect::ActiveStamina => 39,
-            Effect::ResourceOnKill => 40,
-            Effect::Resistance => 41,
-            Effect::Stat(stat) => 42 + stat as usize,
-            Effect::MoveSpeed => 42 + Stat::COUNT,
-            Effect::Carry => 43 + Stat::COUNT,
-            Effect::Stealth => 44 + Stat::COUNT,
-            Effect::DoorKick => 45 + Stat::COUNT,
-            Effect::DigPercent => 46 + Stat::COUNT,
-            Effect::Hunger => 47 + Stat::COUNT,
-            Effect::TrapDamage => 48 + Stat::COUNT,
-            Effect::DiseaseCheck => 49 + Stat::COUNT,
-            Effect::PotionKept => 50 + Stat::COUNT,
-            Effect::Light => 51 + Stat::COUNT,
-            Effect::Skill => 52 + Stat::COUNT,
+            Effect::ManaCost => 23,
+            Effect::SpellEase => 24,
+            Effect::SpellToHit => 25,
+            Effect::SpellThreat => 26,
+            Effect::SpellRungs => 27,
+            Effect::SpellBonus => 28,
+            Effect::SpellSides => 29,
+            Effect::SpellDice => 30,
+            Effect::SpellReroll => 31,
+            Effect::SpellReach => 32,
+            Effect::SpellDuration => 33,
+            Effect::ManaOnKill => 34,
+            Effect::WandRungs => 35,
+            Effect::ResourceMax => 36,
+            Effect::ResourceRate => 37,
+            Effect::ActiveStamina => 38,
+            Effect::ResourceOnKill => 39,
+            Effect::Resistance => 40,
+            Effect::Stat(stat) => 41 + stat as usize,
+            Effect::MoveSpeed => 41 + Stat::COUNT,
+            Effect::Carry => 42 + Stat::COUNT,
+            Effect::Stealth => 43 + Stat::COUNT,
+            Effect::DoorKick => 44 + Stat::COUNT,
+            Effect::DigPercent => 45 + Stat::COUNT,
+            Effect::Hunger => 46 + Stat::COUNT,
+            Effect::TrapDamage => 47 + Stat::COUNT,
+            Effect::DiseaseCheck => 48 + Stat::COUNT,
+            Effect::PotionKept => 49 + Stat::COUNT,
+            Effect::Light => 50 + Stat::COUNT,
+            Effect::Skill => 51 + Stat::COUNT,
         }
     }
 

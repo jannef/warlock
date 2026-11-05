@@ -447,10 +447,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
     spent, a spell or an ability paid in it (`cast`; Concentration, 25 %, #668), discovery
     experience gained (`discover`: a first kill of a kind, an arrival that pays; Experience §8), a
     check rolled to resist a creature's ability, whatever comes of it (`resist`; "Knowledge"
-    below), a step wading (`wade`; Swim, below), a Swim check, whatever comes of it (`swim`), a step in deep water (`stroke`). Only
+    below), a step wading (`wade`; Swim, below), a Swim check, whatever comes of it (`swim`), a step in deep water (`stroke`), a step onto rough ground (`rough_step`; Balance), an action
+    taken Staggered (`staggered`; Balance). Only
     the player trains for now; creatures keep their type's
     skills. Marks are a **reservoir**: they raise nothing by
     themselves and nothing is said; they gather until a level-up roll on the skill spends them.
+  - **Balance** (#1029): sure footing under a load, on bad ground, and after a stagger. Besides
+    the burden's slowdown (`burden`), a step onto rough ground (off the overworld, `move_cost` over
+    100 and not wading: bush, reeds, rubble, ice) spares a percent of what the terrain adds over
+    a plain step (`footing`: 60 % at 100, all at 200; rounded up), and a Staggered actor's
+    extra cost (`cost = 150`) is eased by a percent (`steady_ease`: half of the extra at 100, three
+    quarters at 200, as Initiative's `surprise_ease` is for Surprised). Marks: `burdened` 5 %,
+    `rough_step` 10 % per step onto such ground, `staggered` 20 % per action taken Staggered.
   - **Swim** (#1018): wading is quicker. A step onto wading terrain (`stars::wading`: water that
     freezes, ground a disease is caught wading in; `move_cost` above 100, off the overworld) has
     a percent of what it adds to a plain step spared: 60 at 100, all of it at 200
@@ -894,7 +902,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     swapped for steel, moved to the missile weapon slot) it fades at once ("The long sword fades
     from your hand."); a drop or a sale takes it off and lets it fade instead of letting it go
     (the shop never sees it, the floor never holds it); a throw is refused with no time ("It will
-    not leave your hand."); quests never count it; a tithe or a forge's ruin takes spirit-stuff,
+    not leave your hand."); quests never count it; a tithe takes spirit-stuff,
     which is called again. Its description adds the effect's `phrase` as a power line, its
     numbers and critical range fold the gifts in, and "Pierces armour"; item lists mark it
     `(spirit)`; the character screen's attack says `pierces armour`. Creatures never hold one.
@@ -1312,7 +1320,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Ray of frost (level 1, at 1: a ray that rolls to hit, 1d6 cold; 1 mana), Burning hands
     (level 1, at 1, #979: a cone of 3 cells, no hit roll, 1d4 fire, its ladder Intelligence 13:
     1d6 to 22: 2d4+2; 3 mana, its own price), Arcane training
-    (at 1: caster level +1 per 5 character levels, `caster_level` with `per_levels`), Magic missile
+    (at 1: Spellcraft +10, a `skill` effect: it helps only a character trained in it), Magic missile
     (level 3, at 3: never misses, 1d4 force, its ladder Intelligence 13: 2d4 to 22: 3d4+1; 3
     mana), Arcane bolt (level 6, at
     18: a line of 6 cells, 2d6 force, its ladder to 3d6+4; 11 mana), Scribe (at 12: a scroll of

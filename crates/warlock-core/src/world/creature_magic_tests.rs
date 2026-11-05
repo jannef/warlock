@@ -1,6 +1,6 @@
 //! Creatures honour the mana affixes of what they wear and wield (#525, spec §8 "Mana"): a
-//! larger pool, a faster pace, and a higher caster level, read by the same hooks as the
-//! player's (`Mods::worn`: `Actor::max_mana`, `World::mana_rate`, `World::caster_level`), and a
+//! larger pool and a faster pace, read by the same hooks as the
+//! player's (`Mods::worn`: `Actor::max_mana`, `World::mana_rate`), and a
 //! summoner spends from the larger pool. A creature without them is unchanged.
 
 use super::*;
@@ -8,16 +8,9 @@ use crate::action::parse_actions;
 use crate::content::ContentFiles;
 use crate::equipment::Equipment;
 
-/// The shipped content with a test affix that adds to caster level (none ships yet).
+/// The shipped content.
 fn content() -> Arc<Content> {
-    let mut files = ContentFiles::builtin();
-    files.insert(
-        "data/affixes/zz_creature_magic.toml",
-        "[[prefix]]\nid = \"zz_creature_magic\"\nname = \"Testing\"\n\
-         effect = \"caster_level\"\ncategory = \"caster_level\"\nbases = [\"ring\"]\n\
-         tiers = [{ level = 1, min = 1, max = 2 }]\n",
-    );
-    Arc::new(Content::load(&files).expect("content"))
+    Arc::new(Content::load(&ContentFiles::builtin()).expect("content"))
 }
 
 /// The showcase's summoning hall, its goblin wizard stripped of whatever gear it rolled.
@@ -58,14 +51,10 @@ fn wear(w: &mut World, actor: ActorId, (object, slot): (&str, &str), (id, value)
     me.equipment.put(&[slot], me.inventory.len() - 1);
 }
 
-/// The wizard's maximum mana, mana pace, and caster level.
-fn numbers(w: &World, id: ActorId) -> (i32, u32, i32) {
+/// The wizard's maximum mana and mana pace.
+fn numbers(w: &World, id: ActorId) -> (i32, u32) {
     let me = &w.state.actors[&id];
-    (
-        me.max_mana(w.content()),
-        w.mana_rate(id),
-        w.caster_level(id),
-    )
+    (me.max_mana(w.content()), w.mana_rate(id))
 }
 
 /// Mana it gets back over `seconds` from none.
@@ -78,7 +67,7 @@ fn regained(w: &mut World, id: ActorId, seconds: u64) -> i32 {
 }
 
 #[test]
-fn a_creature_wearing_mana_affixes_has_more_mana_sooner_and_a_higher_caster_level() {
+fn a_creature_wearing_mana_affixes_has_more_mana_sooner() {
     let content = content();
     let (mut plain, id) = hall(&content);
     let (mut worn, _) = hall(&content);
@@ -89,22 +78,15 @@ fn a_creature_wearing_mana_affixes_has_more_mana_sooner_and_a_higher_caster_leve
     }
     wear(&mut worn, id, ("gold_ring", "left_ring"), ("mystic", 5));
     wear(&mut worn, id, ("jade_amulet", "neck"), ("of_clarity", 50));
-    wear(
-        &mut worn,
-        id,
-        ("gold_ring", "right_ring"),
-        ("zz_creature_magic", 2),
-    );
 
-    // Without them it is as its type makes it: its mana and mind, its level, the normal pace.
+    // Without them it is as its type makes it: its mana and mind, the normal pace.
     let def = content.creature(content.creature_id("goblin_wizard").expect("type"));
     let me = &plain.state.actors[&id];
     let stats = me.effective_stats(&content);
     let base = crate::mana::max_mana(&stats, def.base_mana);
-    assert_eq!(numbers(&plain, id), (base, 100, i32::from(def.level)));
-    // With them: five more, half again as fast, two levels higher.
-    let level = i32::from(def.level) + 2;
-    assert_eq!(numbers(&worn, id), (base + 5, 150, level));
+    assert_eq!(numbers(&plain, id), (base, 100));
+    // With them: five more, half again as fast.
+    assert_eq!(numbers(&worn, id), (base + 5, 150));
 
     // Half an hour from nothing: a point every `regen_seconds` of its Willpower at its pace.
     let willpower = stats.score(crate::stats::Stat::Willpower);

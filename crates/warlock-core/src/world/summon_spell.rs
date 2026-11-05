@@ -72,7 +72,9 @@ impl World {
             self.say("You cannot lead more than this.");
             return false;
         }
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         if let Some(text) = &cast.def.look.message {
             self.say(text.clone());
         }

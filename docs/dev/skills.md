@@ -89,10 +89,10 @@ hidden traps, whose checks read it in place of Search and Spot, `Skills::trains_
 `world/slip.rs` (docs/dev/surprise.md), steal in `world/steal.rs` (trained at all lets the player steal,
 `docs/dev/stealing.md`), heal in `world/heal.rs` (trained at all gives the Heal ability, on oneself or an ally beside one;
 `docs/dev/status-effects.md` "Treating oneself"), forage (Survival: percent added to a forage's chance; trained at all,
-the Forage ability) in `world/forage.rs`, study (Spellcraft and Decipher script: points off the study check) in
-`world/learn.rs::study_odds` and learn (Spellcraft: the spell level a scroll teaches for certain, at least 1; trained at all lets
+the Forage ability) in `world/forage.rs`, study (Spellcraft: points off the study check) in
+`world/learn.rs::study_odds` and learn (Spellcraft: the spell level a scroll teaches for certain, at least 1, and reads with no check; trained at all lets
 the player learn from a scroll) in `Actor::learning` (docs/dev/spells.md "Learning"; their use `Use::Study`, reported
-when a study ends, is also `StatUse::Study`); each use
+when a study ends, is also `StatUse::Study`), decipher (Decipher script: points on the check of reading a scroll, read by anyone, but untrained it is 0: the skill does nothing without the skill, whatever raises it) in `World::deciphers`, `world/decipher.rs` (docs/dev/scrolls.md "Making out a scroll"; its use `Use::Decipher`, reported per check, trains no stat, as a made read's Intelligence mark comes of `use_up`); each use
 is reported where it happens (`make_noise`, `hear`, `fight.rs::resolve`, `apply`, `player_moves`,
 `kick_door`, `search_turn` for `search`, `notice_hidden` for `spot`, both for `find_trap` (a
 trap found), `World::disarm` for
@@ -115,7 +115,8 @@ reads `Actor::known_resistances` (`world/knowledge.rs`), the type's `resist` in 
 never gear or statuses, no marks; JSON dumps carry it as a seen actor's `known`; `ui/look.rs::known`
 writes the line. Tests `world/knowledge_tests.rs`.
 Metalcraft's `temper` benefit is read in
-`world/temper.rs::tempered` (the forge's Strength check, docs/dev/special-rooms.md); Metalcraft
+`world/temper.rs::tempered` (the Strength check of an attempt at an anvil, whose difficulty rises
+with every attempt on the item, docs/dev/special-rooms.md); Metalcraft
 stays a skill "not usable yet" in the abilities menu, since Temper is offered by the anvil to
 anyone. A new
 effect or use is a variant there plus its one hook. The player sees values only
@@ -129,6 +130,16 @@ Steal `Ability::Steal` (`docs/dev/stealing.md`), Heal `Ability::Heal` (`docs/dev
 Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from the data).
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
 `Ability::use_of` of every skill): Survival is `Ability::Forage` (below).
+
+**Balance** (spec §8 "Skills", #1029, `docs/design/skill-uses.md` §6.13): besides `burden`,
+`Effect::Footing` is read in `World::step_price` (`world/schedule.rs`) in the `else` of the wading
+branch, on a step `World::rough_step` (`world/footing.rs`) calls rough: off the overworld,
+`move_cost` above 100, not `wading_step`; the same `surcharge_spared`. `Use::RoughStep` is marked by
+`World::train_rough_step` after `wade` in the step (`world/travel.rs`). `Effect::SteadyEase` is read
+in `World::status_cost` (`world/surprise.rs`) for the status `footing::STAGGERED` (`"staggered"`),
+beside Initiative's ease of Surprised; `Use::Staggered` is marked in `spend_actions`
+(`world/weapon_ability.rs`) for the player's action that eases Staggered (not the one that gave it).
+Tests `world/footing_tests.rs`.
 
 **Swim** (spec §8 "Skills", #1018, `docs/design/skill-uses.md` §6.4; `kind = "rules"`, no menu
 row): `Effect::Wade` is read in `World::step_price` (`world/schedule.rs`), on a step

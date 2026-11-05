@@ -617,10 +617,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 signed(value)
             )
         }
-        TalentEffect::AttunedPercent { value } => format!(
-            "the caster level your magic items give counts {value} % more (rounded up: +1 is +2, \
-             +3 is +5)"
-        ),
         TalentEffect::BloodMagic { hp, mana } => format!(
             "active (the time of a wait): give {hp} hit points (never your last) for {mana} \
              mana, up to your maximum; not while your mana is full"
@@ -1727,6 +1723,10 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             .map(|id| content.spell(id))
             .map_or_else(|| spell.clone(), |def| spell_text(content, def)),
         TalentEffect::SpellMod(spec) => spell_mod_text(content, &spec, false),
+        TalentEffect::SpellType { arc_chance, when } => format!(
+            "your {} spells arc {arc_chance} % of the time",
+            when.join(", ")
+        ),
         TalentEffect::SpellManaPercent { value } => {
             format!("your spells' mana {} (at least 1)", percent(value))
         }

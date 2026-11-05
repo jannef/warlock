@@ -17,6 +17,8 @@ const HALL: &str = "#########\n#.......#\n#..@.r..#\n#.......#\n#########\n";
 
 fn world() -> World {
     let mut files = ContentFiles::builtin();
+    // Reads without the check (`decipher_tests.rs` has it): these are about what a read does.
+    files.remove("data/decipher.toml");
     files.insert(
         "levels/hall.toml",
         &format!(

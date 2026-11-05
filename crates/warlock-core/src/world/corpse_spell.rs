@@ -100,7 +100,9 @@ impl World {
             return false;
         }
         let corpse = self.state.current().objects_at(at)[index].object;
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         self.use_corpse(cast.def, at);
         let back = heal.roll(&mut self.state.rng, cast.reroll).max(0);
         let mana = (cast.def.effect.mana).map_or(0, |m| m.roll(&mut self.state.rng, 0).max(0));
@@ -166,7 +168,9 @@ impl World {
             self.say("You cannot lead more than this.");
             return false;
         }
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         self.use_corpse(cast.def, at);
         self.sound_at(cast.def.look.noise, self.player_pos());
         let minutes = i64::from(cast.degrees.unwrap_or(rise.minutes));

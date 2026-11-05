@@ -202,9 +202,12 @@ fn every_caster_has_its_table_by_level_sixty() {
                 "Cackle",
                 "Poison lore",
                 "Cause wounds",
+                "Grave feast",
                 "Malison",
+                "Charnel burst",
                 "Second sight",
                 "Familiar's sight",
+                "Rouse the dead",
                 "Curse of sloth",
                 "Blight",
                 "Cauldron",
@@ -329,12 +332,15 @@ fn the_spells_are_abilities_by_level() {
             // Level 6.
             "Arcane bolt",
             "Frost",
+            "Grave feast",
             "Identify",
             "Sleep",
             // Level 7.
             "Blight",
             "Scorching ray",
             "Web",
+            // Level 9.
+            "Charnel burst",
             // Level 11.
             "Call lightning",
             "Fireball",
@@ -345,6 +351,9 @@ fn the_spells_are_abilities_by_level() {
             "Flame",
             // Level 20.
             "Call of the forest",
+            "Chain lightning",
+            // Level 24.
+            "Rouse the dead",
             // Level 35.
             "Call the elements",
         ]
@@ -509,6 +518,9 @@ fn hexes_fall_on_a_foe_the_witch_sees_within_reach() {
 fn bolts_and_bursts_strike_as_scrolls_do_and_cost_mana() {
     let mut w = world("wizard");
     reach(&mut w, 18);
+    // `levelup:auto` takes Frugal caster at 18 (it took Attuned before it went); these tests
+    // read the plain costs.
+    w.player_mut().talents.forget("frugal_caster");
     let target = kobold(&mut w, 2, 500);
     let here = w.player_pos();
     let at = Pos::new(here.x + 2, here.y);

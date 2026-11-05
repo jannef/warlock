@@ -28,6 +28,8 @@ fn world_with(map: &str, hp: u16) -> World {
 fn hall(map: &str, hp: u16, ambient: u16) -> World {
     let mut files = ContentFiles::builtin();
     make_peace(&mut files);
+    // Reads without the check (`decipher_tests.rs` has it): these are about what a read does.
+    files.remove("data/decipher.toml");
     files.insert("data/creatures/dummy.toml", DUMMY);
     files.insert(
         "levels/hall.toml",
@@ -150,6 +152,16 @@ fn every_builtin_scroll_can_be_read() {
     // Wounded, so a healing scroll has something to heal.
     let dummy = at(&base, Pos::new(2, 1));
     base.state.actors.get_mut(&dummy).expect("dummy").hp -= 10;
+    base.player_mut().hp -= 10;
+    // A corpse beside the reader, for the scrolls aimed at one.
+    let rat = content.creature_id("rat").expect("rats");
+    let corpse = content.corpse_of(rat).expect("a rat leaves a corpse");
+    let stack = Stack::corpse(corpse, base.state.time);
+    base.state
+        .current_mut()
+        .set_pile(Pos::new(2, 1), vec![stack]);
+    *base.perception =
+        crate::perception::Perception::compute(&base.state, &base.content, &mut base.lights);
     for object in (0..content.object_defs().len()).map(|i| ObjectId(i as u16)) {
         let def = content.object(object);
         if content.item_class(def.class).id != "scrolls" || !def.id.starts_with("scroll_of_") {
@@ -194,7 +206,7 @@ fn every_builtin_scroll_can_be_read() {
         }
         let target = match reading {
             _ if reading.on_item() => format!(":{}", letter(0)),
-            _ if reading.range().is_some() => ":2,1".to_string(),
+            _ if reading.aimed() => ":2,1".to_string(),
             _ => String::new(),
         };
         let action = format!("read:{}{target}", letter(item));
