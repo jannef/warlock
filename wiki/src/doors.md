@@ -118,5 +118,5 @@ the key to the room it guards will walk right through. No creature kicks doors o
 - In a [generated dungeon](dungeons.md), a few rooms with a single door are locked. The level's [rusty key](#keys)
   always lies somewhere you can reach without opening a locked door, and you never need one to
   find the [stairs](terrain.md#stairs).
-- A guard post in a dungeon keeps its store room locked; the [kobold](creatures.md#creature-kobold) on guard carries the brass
+- A guard post in a dungeon, its guard in company, keeps its store room locked; the [kobold](creatures.md#creature-kobold) on guard carries the brass
   key. A [skeleton key](#keys) lies in the store room.
