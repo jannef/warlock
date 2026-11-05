@@ -1808,7 +1808,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     action). An optional per-ability `cooldown` status exists in data; none is used. Effects:
     `reach_blow` (Lunge: the first hostile within `reach` along the direction, the cells between
     empty and walkable, nothing sprung; a foe beyond the first cell brings no free blows),
-    `sure_critical` (Vital strike), `ignore_defence` (Feint: rolled without the target's Parry and
+    `sure_critical` (Vital strike), `ignore_defence` (False lead: rolled without the target's Parry and
     Shield, read in `resolve` through the transient `Technique`), `ignore_protection` (Sunder,
     Gap shot: a penetration above any Protection), `sweep` (Whirl, Staff sweep: a blow at each
     hostile beside, clockwise from the north or the direction given, −2 each, the blades taking
@@ -1820,7 +1820,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     twice, bonus and riders once, −2 to hit). The catalogue (data; first guesses): Vital strike
     (blades 9; 4 stamina, a blow's time), Sunder (axes, maces, polearms 9; 4, 125 %), Lunge
     (spears, staves 9; 3, 100 %), Piercing shot (bows, crossbows, slings 9; 4, a shot's), Shield
-    wall (shield blocking 9; 5, a wait's), Feint (Duelist 7; 2, 100 %), Whirl (Twin Blades 7; 6,
+    wall (shield blocking 9; 5, a wait's), False lead (Duelist 7; 2, 100 %), Whirl (Twin Blades 7; 6,
     150 %), Mighty swing (Great Weapon 7; 5, 150 %), Shield rush (Sword and Board 7; 4, 125 %),
     Gap shot (Marksman 7; 4, 150 % of a shot), Hip throw (Brawler 7; 4, 125 %), Staff sweep
     (Staff Fighter 7; 5, 150 %). Each is its own action (no stacking of actives on one blow);
