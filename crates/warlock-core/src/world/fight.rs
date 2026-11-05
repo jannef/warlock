@@ -1222,9 +1222,11 @@ impl World {
             let slain = def.id.clone();
             self.state.quests.slay(&slain);
         }
-        // A summoned ally leaves nothing: no corpse, no pile (spec §8 "Allies": "Summons").
-        if (actor.ally.as_ref())
-            .is_some_and(|a| matches!(a.source, super::AllySource::Summoned { .. }))
+        // A summoned ally leaves nothing: no corpse, no pile (spec §8 "Allies": "Summons"). Nor
+        // does one risen berserk (`corpse_spell.rs`).
+        if actor.risen.is_some()
+            || (actor.ally.as_ref())
+                .is_some_and(|a| matches!(a.source, super::AllySource::Summoned { .. }))
         {
             self.fallen.push(actor);
             return Vec::new();

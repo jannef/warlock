@@ -136,6 +136,7 @@ fn actor(content: &Content, creature: &str) -> Actor {
         faction_override: None,
         summoner: None,
         ally: None,
+        risen: None,
         alignment: None,
         alignment_override: None,
         npc: None,

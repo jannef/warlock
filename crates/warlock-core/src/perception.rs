@@ -1427,6 +1427,23 @@ impl<'a> PerceptionView<'a> {
         pile.map_or(&[], Vec::as_slice)
     }
 
+    /// Whether a corpse lies at `p` where the player sees it now (what a spell aimed at a corpse
+    /// asks, `world/corpse_spell.rs`).
+    pub fn corpse_at(&self, p: Pos) -> bool {
+        self.snapshot.sees_actors_at(p)
+            && (self.objects(p).iter()).any(|s| self.content.object(s.object).corpse.is_some())
+    }
+
+    /// The cells where the player sees a corpse now, nearest first (ties: row order).
+    pub fn corpses_in_sight(&self) -> Vec<Pos> {
+        let me = self.viewer();
+        let mut cells: Vec<Pos> = (self.level.objects.keys().copied())
+            .filter(|&p| self.corpse_at(p))
+            .collect();
+        cells.sort_by_key(|p| (p.dist2(me), p.y, p.x));
+        cells
+    }
+
     /// The blood at `p` as the player knows it (spec §8 "Blood"): what is there now where they
     /// see it (an open cell in sight, a wall's stained face), as last seen on a cell out of
     /// sight; `None` where they know of none (a visible wall seen only from its clean side

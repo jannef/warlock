@@ -35,6 +35,7 @@ fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {
         faction_override: None,
         summoner: None,
         ally: None,
+        risen: None,
         alignment_override: None,
         inventory: Vec::new(),
         equipment: Default::default(),

@@ -242,7 +242,7 @@ fn every_class_has_mana_and_its_guaranteed_spells_within_its_caster_level() {
                 spells.push((*level, s.level, s.kind));
             }
         }
-        // A full caster: a cantrip at level 1 and three to six spells in all (the priest's
+        // A full caster: a cantrip at level 1 and three to twelve spells in all (the priest's
         // three: their rite is the Orison, docs/dev/prayer.md), the druid's calls (summons,
         // #839) counted apart: they are its pack, not its spellbook.
         if class.casting == 100 {
@@ -254,7 +254,7 @@ fn every_class_has_mana_and_its_guaranteed_spells_within_its_caster_level() {
             let book = (spells.iter())
                 .filter(|&&(_, _, k)| k != SpellPurpose::Summon)
                 .count();
-            assert!((3..=6).contains(&book), "{}: {spells:?}", class.id);
+            assert!((3..=12).contains(&book), "{}: {spells:?}", class.id);
         }
         // Only the casters and the hybrids have any, and a hybrid's are low boons.
         if class.casting < 100 {

@@ -768,6 +768,7 @@ fn search_the_last_seen_spot_then_go_back_and_patrol_on() {
             faction_override: None,
             summoner: None,
             ally: None,
+            risen: None,
             alignment: None,
             alignment_override: None,
             npc: None,

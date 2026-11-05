@@ -430,6 +430,24 @@ struct EffectSpec {
     #[serde(default)]
     identify: bool,
     summon: Option<SummonSpellSpec>,
+    /// `"consumed"` or `"kept"`: it is aimed at a corpse the caster sees.
+    corpse: Option<String>,
+    rise: Option<RiseSpec>,
+    /// A heal's mana back: a roll.
+    mana: Option<toml::Value>,
+}
+
+/// A rising spell's `rise = { most, minutes, hit_points, berserk, berserk_faction,
+/// berserk_message }` as written.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RiseSpec {
+    most: u8,
+    minutes: u16,
+    hit_points: u8,
+    berserk: u8,
+    berserk_faction: String,
+    berserk_message: String,
 }
 
 /// A summon spell's `summon = { creatures, count, most, minutes, spread }` as written.
@@ -522,6 +540,42 @@ pub struct SpellEffect {
     pub identify: bool,
     /// A `summon`'s call.
     pub summon: Option<SpellSummon>,
+    /// That it is aimed at a corpse the caster sees, and what becomes of the corpse
+    /// (`world/corpse_spell.rs`).
+    pub corpse: Option<CorpseUse>,
+    /// A `summon` that raises the corpse it is aimed at, in place of `summon`.
+    pub rise: Option<SpellRise>,
+    /// A `heal`'s mana back, never past the maximum.
+    pub mana: Option<Roll>,
+}
+
+/// What a spell aimed at a corpse does to it (`[spell.effect] corpse`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CorpseUse {
+    /// The corpse is used up: no meal, no second use.
+    Consumed,
+    /// The corpse stays where it lies.
+    Kept,
+}
+
+/// A summon spell's raising of a corpse (`[spell.effect] rise`; `world/corpse_spell.rs`): the
+/// corpse's own creature type stands up.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SpellRise {
+    /// How many of this spell's risen the caster keeps at once: past it the oldest departs.
+    pub most: u8,
+    /// How long one stays at its base, in minutes (its `degrees` ladder grows it).
+    pub minutes: u16,
+    /// The hit points it stands at, in percent of its maximum (rounded up).
+    pub hit_points: u8,
+    /// The percent chance it rises berserk.
+    pub berserk: u8,
+    /// The faction one that rises berserk belongs to. Read at the cast: a world without it has
+    /// no berserk, and the shipped data's is checked by a test (a fixture's own factions need
+    /// not hold it).
+    pub berserk_faction: String,
+    /// Said in place of the spell's `message` when it rises berserk.
+    pub berserk_message: String,
 }
 
 /// A summon spell's call (`[spell.effect] summon`; spec §8 "Allies": "Summons";
@@ -619,7 +673,13 @@ impl SpellData {
 
     /// Whether it asks for a cell when cast: anything but a spell on oneself.
     pub fn aimed(&self) -> bool {
-        self.shape != Shape::Myself
+        self.shape != Shape::Myself || self.aims_corpse()
+    }
+
+    /// Whether it is aimed at a corpse the caster sees (Charnel burst, Rouse the dead, Grave
+    /// feast).
+    pub fn aims_corpse(&self) -> bool {
+        self.effect.corpse.is_some()
     }
 
     /// Whether it asks for a stack the caster carries when cast (Identify).
@@ -637,7 +697,9 @@ impl SpellData {
     /// The base its degrees ladder grows: a buff's, a hex's, or a damage spell's status's
     /// severity, or a summon's minutes.
     pub fn base_degrees(&self) -> Option<u16> {
-        (self.effect.status.map(|(_, n)| n)).or(self.effect.summon.as_ref().map(|s| s.minutes))
+        (self.effect.status.map(|(_, n)| n))
+            .or(self.effect.summon.as_ref().map(|s| s.minutes))
+            .or(self.effect.rise.as_ref().map(|r| r.minutes))
     }
 
     /// Its roll at rung `rung` of its damage or heal ladder, before any hook: the rung's value,
@@ -872,7 +934,9 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             (effect.cures.is_empty() && !effect.diseases).then_some("`cures` or `diseases`")
         }
         SpellPurpose::Utility => (!effect.identify).then_some("`identify`"),
-        SpellPurpose::Summon => effect.summon.is_none().then_some("`summon`"),
+        SpellPurpose::Summon => {
+            (effect.summon.is_none() && effect.rise.is_none()).then_some("`summon` or `rise`")
+        }
         SpellPurpose::Damage => None,
     };
     if effect.identify && shape != Shape::Myself {
@@ -886,6 +950,7 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
             spec.kind.id()
         ));
     }
+    corpse_fits(&effect, spec.kind, shape)?;
     let attack = spec.kind == SpellPurpose::Damage
         && matches!(spec.resolution, Resolution::Attack | Resolution::Touch);
     let aim = match &spec.aim {
@@ -903,7 +968,9 @@ fn resolve(spec: SpellSpec, rules: &SpellRules, content: &Content) -> Result<Spe
         .then_some(effect.status)
         .flatten()
         .map(|(s, n)| (n, content.status(s).max.min(MAX_SEVERITY)));
-    let summon_minutes = (effect.summon.as_ref()).map(|s| (s.minutes, MAX_SUMMON_MINUTES));
+    let summon_minutes = (effect.summon.as_ref().map(|s| s.minutes))
+        .or(effect.rise.as_ref().map(|r| r.minutes))
+        .map(|minutes| (minutes, MAX_SUMMON_MINUTES));
     let bases = Bases {
         damage,
         heal: effect.heal,
@@ -1200,8 +1267,32 @@ fn effect(e: EffectSpec, kind: SpellPurpose, content: &Content) -> Result<SpellE
     only("diseases", e.diseases, &[SpellPurpose::Cleanse])?;
     only("identify", e.identify, &[SpellPurpose::Utility])?;
     only("summon", e.summon.is_some(), &[SpellPurpose::Summon])?;
+    only("rise", e.rise.is_some(), &[SpellPurpose::Summon])?;
+    only("mana", e.mana.is_some(), &[SpellPurpose::Heal])?;
     let summon = match e.summon {
         Some(s) => Some(summon_call(s)?),
+        None => None,
+    };
+    let rise = match e.rise {
+        Some(r) => Some(spell_rise(r)?),
+        None => None,
+    };
+    let corpse = match e.corpse.as_deref() {
+        None => None,
+        Some("consumed") => Some(CorpseUse::Consumed),
+        Some("kept") => Some(CorpseUse::Kept),
+        Some(other) => {
+            return Err(format!("`corpse` is `consumed` or `kept`, not `{other}`"));
+        }
+    };
+    let mana = match &e.mana {
+        Some(m) => {
+            let roll = base_roll("mana", m)?;
+            if roll.max() > MAX_HEAL_MANA {
+                return Err(format!("`mana` rolls at most {MAX_HEAL_MANA}"));
+            }
+            Some(roll)
+        }
         None => None,
     };
     let status = |name: &str| {
@@ -1242,6 +1333,61 @@ fn effect(e: EffectSpec, kind: SpellPurpose, content: &Content) -> Result<SpellE
         diseases: e.diseases,
         identify: e.identify,
         summon,
+        corpse,
+        rise,
+        mana,
+    })
+}
+
+/// The most a heal's `mana` may roll.
+const MAX_HEAL_MANA: i32 = 500;
+
+/// A spell's `corpse` and `rise` fit together and with its kind and shape: `corpse` on a burst of
+/// harm, a touch that heals, or a summon on `self` that raises (`rise`, which asks for `corpse`
+/// and stands in for `summon`).
+fn corpse_fits(effect: &SpellEffect, kind: SpellPurpose, shape: Shape) -> Result<(), String> {
+    if effect.rise.is_some() && effect.summon.is_some() {
+        return Err("a spell has `summon` or `rise`, not both".into());
+    }
+    if effect.rise.is_some() && effect.corpse.is_none() {
+        return Err("`rise` raises a corpse: it needs `corpse`".into());
+    }
+    let fits = match kind {
+        SpellPurpose::Damage => shape == Shape::Burst,
+        SpellPurpose::Heal => shape == Shape::Touch,
+        SpellPurpose::Summon => shape == Shape::Myself && effect.rise.is_some(),
+        _ => false,
+    };
+    if effect.corpse.is_some() && !fits {
+        return Err(
+            "`corpse` is a burst's of harm, a touch's that heals, or a `rise`'s on `self`".into(),
+        );
+    }
+    Ok(())
+}
+
+/// A rising spell's `rise` table, checked: `most` and `minutes` as a summon's, `hit_points` 1 to
+/// 100, `berserk` 0 to 100.
+fn spell_rise(r: RiseSpec) -> Result<SpellRise, String> {
+    if !(1..=summon::MAX_COUNT).contains(&i32::from(r.most)) {
+        return Err(format!("rise: `most` is 1 to {}", summon::MAX_COUNT));
+    }
+    if !(1..=MAX_SUMMON_MINUTES).contains(&r.minutes) {
+        return Err(format!("rise: `minutes` is 1 to {MAX_SUMMON_MINUTES}"));
+    }
+    if !(1..=100).contains(&r.hit_points) {
+        return Err("rise: `hit_points` is 1 to 100".into());
+    }
+    if r.berserk > 100 {
+        return Err("rise: `berserk` is 0 to 100".into());
+    }
+    Ok(SpellRise {
+        most: r.most,
+        minutes: r.minutes,
+        hit_points: r.hit_points,
+        berserk: r.berserk,
+        berserk_faction: r.berserk_faction,
+        berserk_message: r.berserk_message,
     })
 }
 

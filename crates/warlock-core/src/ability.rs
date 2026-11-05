@@ -229,6 +229,8 @@ pub enum Aim {
     Direction,
     /// A cell, in the aiming mode, as a shot does ([`Ability::action_at`]).
     Cell,
+    /// A cell in sight with a corpse on it, in the aiming mode (`world/corpse_spell.rs`).
+    Corpse,
     /// What to treat, of what the player may treat now on themselves and their allies beside
     /// them ([`crate::heal::treatable`]): asked only when there is more than one (the Heal
     /// ability).
@@ -705,6 +707,7 @@ impl Ability {
             Ability::Sign(_) => Aim::Nothing,
             Ability::Class(active) if active.aimed() => Aim::Direction,
             Ability::Spell(spell) if aims_item(content, spell) => Aim::Item,
+            Ability::Spell(spell) if aims_corpse(content, spell) => Aim::Corpse,
             Ability::Spell(spell) if aimed(content, spell) => Aim::Cell,
             Ability::Spell(_) => Aim::Nothing,
             Ability::Class(active) if active.aims_cell() => Aim::Cell,
@@ -1112,6 +1115,11 @@ fn weapon_unavailable(
 /// Whether `spell` asks for a cell before it is cast: anything but a spell on oneself.
 fn aimed(content: &Content, spell: SpellId) -> bool {
     content.spell_of(spell).is_some_and(|s| s.aimed())
+}
+
+/// Whether `spell` is aimed at a corpse the caster sees.
+fn aims_corpse(content: &Content, spell: SpellId) -> bool {
+    content.spell_of(spell).is_some_and(|s| s.aims_corpse())
 }
 
 /// Whether `spell` is cast on a stack the caster carries (Identify).

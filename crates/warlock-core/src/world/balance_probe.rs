@@ -569,7 +569,8 @@ struct Cast {
 }
 
 /// The spells that roll (harm or healing) `w`'s player would cast at their caster level: those
-/// they know, and those of the schools their class has an affinity with.
+/// they know, and those of the schools their class has an affinity with, but those aimed at a
+/// corpse.
 fn casts(w: &World) -> Vec<Cast> {
     let content = &w.content;
     if content.spell_rules().is_none() {
@@ -587,6 +588,10 @@ fn casts(w: &World) -> Vec<Cast> {
         .unwrap_or(0);
     for spell in content.spells_by_level() {
         let def = content.spell(spell);
+        // A spell aimed at a corpse wants one the probe never lays (Charnel burst, Grave feast).
+        if def.aims_corpse() {
+            continue;
+        }
         let Some(rolled) = me.spell_roll(content, def, CastBy::Own) else {
             continue;
         };

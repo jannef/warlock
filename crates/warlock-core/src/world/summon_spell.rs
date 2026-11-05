@@ -123,7 +123,7 @@ impl World {
 
     /// The player's allies called by spell `spell`, on any level and in the retinue, oldest
     /// (lowest id) first.
-    fn calls_of(&self, spell: SpellId) -> Vec<ActorId> {
+    pub(super) fn calls_of(&self, spell: SpellId) -> Vec<ActorId> {
         let player = self.state.player;
         (self.allies_of(player).into_iter())
             .filter(|id| {
@@ -135,7 +135,7 @@ impl World {
 
     /// Ally `id` gives way to a new call of its spell: it departs as a lapsed one does where the
     /// player is, and is removed silently on another level or in the retinue.
-    fn gives_way(&mut self, id: ActorId, events: &mut Vec<Event>) {
+    pub(super) fn gives_way(&mut self, id: ActorId, events: &mut Vec<Event>) {
         let Some(a) = self.state.actors.get(&id) else {
             return;
         };
