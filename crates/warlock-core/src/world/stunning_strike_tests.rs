@@ -69,13 +69,13 @@ fn stunning_strike_comes_at_level_twelve_in_place_of_deflect_missiles() {
     let w = ascetic(12);
     assert_eq!(own(&w), Some(None));
     let talents = &w.state.player().talents;
-    assert!(talents.has("stunning_strike", 1));
+    assert!(talents.has("stunning_strike"));
     // Deflect missiles left the table (a Finesse pick now); a bonus pick may still take it.
     assert!(w.content().classes().iter().all(|c| {
         c.id != "ascetic"
             || c.abilities
                 .iter()
-                .all(|(_, talent, _)| talent != "deflect_missiles")
+                .all(|(_, talent)| talent != "deflect_missiles")
     }));
 }
 

@@ -158,11 +158,11 @@ whatever tier was drawn, so the heritage talents always force their lines.
 | skill | `Skills::add` (trained at the roll, or raised) |
 | weapon marks | `WeaponSkills::add_marks` (never a rank: stops one short of the next); `best` is the weapon skill (not a style) at the highest rank, ties by data order, none without a rank |
 | alignment | `Score::new(score + by)`: the start's fourth term, never `shift_alignment` |
-| talent, flaw | `World::bestow(id, choice)` (`world/boons.rs`, the body of the altar's Chosen and Forsaken with the id fixed, now `pub(super)`): `Talents::take`, `class::hand_out` at rank 1 (Hardy's hit points), `Actor::boons`, `stars::grant`'s order; no message (the story is shown, never told) |
+| talent, flaw | `World::bestow(id, choice)` (`world/boons.rs`, the body of the altar's Chosen and Forsaken with the id fixed, now `pub(super)`): `Talents::take`, `class::hand_out` (Hardy's hit points), `Actor::boons`, `stars::grant`'s order; no message (the story is shown, never told) |
 
 ## Talents and flaws (B5, #707)
 
-A line that gives a talent or a flaw is never drawn for one who holds it (any rank; a talent
+A line that gives a talent or a flaw is never drawn for one who holds it (a talent
 with a choice for that choice) or whose earlier line gave it: `tell` filters the pool by
 `gifts_of(line)` against `Witness::talents` and the gifts drawn so far, beside `Witness::fits`,
 so a line's `when` need not say `not_talents`. A boon is saved already (`Actor::boons`), so
@@ -224,7 +224,7 @@ class on a thousand stories, the fall to the plain line, the heritage talents' f
 defaults, pronouns, a missing line, each condition, determinism. `world/background_tests.rs`:
 each effect lands (fixture chapters of one forced line), gold down to none, the story after the
 picks (Hardy's Toughness), who has one (and unchanged hashes), a replay and a save keep it, an
-edited text reaches a save, a lost line is skipped and logged; B5's: a story talent at rank 1
+edited text reaches a save, a lost line is skipped and logged; B5's: a story talent
 with its hit points, through a save and a restore, "(story)"; a held talent (picked, or given
 by an earlier line) never given again; Evasion from a story and the thief's table at 18
 (a talent pick in its place, #790); a flaw "(story, flaw)" (a sign's own flaw is skipped: the warrior of

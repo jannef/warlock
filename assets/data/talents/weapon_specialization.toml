@@ -6,6 +6,6 @@ name = "Weapon specialization"
 tree = "weaponcraft"
 choice = "weapon_skill"
 description = "You fight with your chosen weapon as one a rank more practised than you are."
-needs = { talents = { weapon_focus = 1 }, chosen = 5 }
+needs = { talents = ["weapon_focus"], chosen = 5 }
 effects = [{ kind = "weapon", ranks = 1 }]
 systems = ["combat", "weapon_skills"]

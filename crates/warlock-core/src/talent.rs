@@ -2,9 +2,9 @@
 //! [`crate::content::TalentBook`].
 //!
 //! [`Talents`] is what an actor has taken, saved by talent id (like affixes: adding talents to
-//! the data keeps saves) with the rank reached and the choice made, on `Actor::talents`; the
+//! the data keeps saves) with the choice made, on `Actor::talents`; the
 //! player's are picked at level-ups, creatures' are empty until data gives them some.
-//! [`TalentMods`] is the one aggregation every rule reads: the typed effects of every rank held,
+//! [`TalentMods`] is the one aggregation every rule reads: the typed effects of every talent held,
 //! summed, read where the rules already read what magic items do (`Actor::defence`, `melee`,
 //! `hearing`, `World::healing_rate`, `burden::load`, `noise::noise`, `step_price`, hunger,
 //! experience, searching, free blows). A new effect is a variant of
@@ -33,12 +33,11 @@ use serde::{Deserialize, Serialize};
 /// [`crate::content::MAX_SPEED`].
 pub const MAX_MANA_CUT: i32 = 50;
 
-/// A talent an actor has taken: by id, at this rank, for this choice (a talent with a `choice`
-/// is taken once per choice, each with its own rank).
+/// A talent an actor has taken: by id, for this choice (a talent with a `choice` is taken once
+/// per choice, any other once).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Taken {
     pub id: String,
-    pub rank: u8,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub choice: Option<String>,
 }
@@ -77,44 +76,29 @@ impl Talents {
             .map(|t| t.id.as_str())
     }
 
-    /// The rank held of talent `id` taken for `choice` (0: not held).
-    pub fn rank_of(&self, id: &str, choice: Option<&str>) -> u8 {
-        (self.0.iter())
-            .find(|t| t.id == id && t.choice.as_deref() == choice)
-            .map_or(0, |t| t.rank)
+    /// Whether talent `id` is held for `choice`.
+    pub fn holds(&self, id: &str, choice: Option<&str>) -> bool {
+        (self.0.iter()).any(|t| t.id == id && t.choice.as_deref() == choice)
     }
 
-    /// Whether talent `id` is held at `rank` at least, for any choice.
-    pub fn has(&self, id: &str, rank: u8) -> bool {
-        self.0.iter().any(|t| t.id == id && t.rank >= rank)
+    /// Whether talent `id` is held, for any choice.
+    pub fn has(&self, id: &str) -> bool {
+        self.0.iter().any(|t| t.id == id)
     }
 
-    /// Takes talent `id` for `choice`: one rank more. Returns the rank reached.
-    pub(crate) fn take(&mut self, id: &str, choice: Option<&str>) -> u8 {
-        if let Some(taken) =
-            (self.0.iter_mut()).find(|t| t.id == id && t.choice.as_deref() == choice)
-        {
-            taken.rank += 1;
-            return taken.rank;
-        }
-        self.0.push(Taken {
-            id: id.to_string(),
-            rank: 1,
-            choice: choice.map(str::to_string),
-        });
-        1
-    }
-
-    /// Holds talent `id` for `choice` at rank 1 at least: taken once if it is not held.
-    pub(crate) fn hold(&mut self, id: &str, choice: Option<&str>) {
-        if self.rank_of(id, choice) == 0 {
-            self.take(id, choice);
+    /// Takes talent `id` for `choice`, if it is not held already.
+    pub(crate) fn take(&mut self, id: &str, choice: Option<&str>) {
+        if !self.holds(id, choice) {
+            self.0.push(Taken {
+                id: id.to_string(),
+                choice: choice.map(str::to_string),
+            });
         }
     }
 
     /// Replaces the granted talents held (those `content` marks `granted` outside a class tree:
     /// a race's, the birth sign's; a class's abilities are left alone) with `ids`, first and in
-    /// that order, each at rank 1 (spec §8 "Birth sign": a sign's gifts are computed, never
+    /// that order (spec §8 "Birth sign": a sign's gifts are computed, never
     /// chosen; a race's likewise). Picked talents keep their order after them; ids the content
     /// lacks are skipped.
     pub(crate) fn regrant(&mut self, content: &Content, ids: &[&str]) {
@@ -128,13 +112,12 @@ impl Talents {
         self.0.retain(|t| !is_granted(&t.id));
         let given = (ids.iter()).filter(|id| is_granted(id)).map(|id| Taken {
             id: id.to_string(),
-            rank: 1,
             choice: None,
         });
         self.0.splice(0..0, given);
     }
 
-    /// What every rank held does, summed ([`TalentMods`]), with the effects that count only
+    /// What every talent held does, summed ([`TalentMods`]), with the effects that count only
     /// under a status (`while`) counted while its holder suffers it (`effects`, its statuses):
     /// the one place the condition is read, so no rule knows it exists. Talents the content no
     /// longer has do nothing.
@@ -151,17 +134,15 @@ impl Talents {
             };
             let def = book.get(id);
             let gift = stars.is_some_and(|t| t == def.tree);
-            for rank in 1..=taken.rank.min(def.rank_count()) {
-                for effect in def.effects_at(rank) {
-                    if gift {
-                        mods.gift_reach.note(content, &effect);
-                    }
-                    mods.add(content, effect, taken.choice.as_deref());
+            for effect in &def.effects {
+                if gift {
+                    mods.gift_reach.note(content, effect);
                 }
-                for (status, effect) in def.effects_while_at(rank) {
-                    if effects.has(status) {
-                        mods.add(content, effect, taken.choice.as_deref());
-                    }
+                mods.add(content, effect.clone(), taken.choice.as_deref());
+            }
+            for (status, effect) in &def.effects_while {
+                if effects.has(*status) {
+                    mods.add(content, effect.clone(), taken.choice.as_deref());
                 }
             }
         }
@@ -220,7 +201,7 @@ pub struct TalentMods {
     /// How many natural points lower its attacks with its best weapon skill threaten a
     /// critical (Tempered).
     pub best_skill_threat: i32,
-    /// Hit points by level, one entry per rank held: `(per_levels, at_least)`
+    /// Hit points by level, one entry per talent: `(per_levels, at_least)`
     /// ([`TalentMods::hp_at`]).
     pub hp_per_levels: Vec<(u8, i32)>,
     /// What its stat gifts add to scores and potentials: handed out when a talent is taken or
@@ -230,7 +211,7 @@ pub struct TalentMods {
     pub healing_percent: i32,
     /// Percent faster mana comes back.
     pub mana_regen_percent: i32,
-    /// Mana by level, one entry per rank held: `(per_levels, at_least)`
+    /// Mana by level, one entry per talent: `(per_levels, at_least)`
     /// ([`TalentMods::mana_at`]).
     pub mana_per_levels: Vec<(u8, i32)>,
     /// Percent faster resting brings mana back, on top of resting's own pace.
@@ -241,11 +222,11 @@ pub struct TalentMods {
     pub rod_cost_percent: i32,
     /// Added to its caster level (spec §8 "Spells").
     pub caster_level: i32,
-    /// Caster level by character level, one entry per rank held: `(per_levels, value)`
+    /// Caster level by character level, one entry per talent: `(per_levels, value)`
     /// ([`TalentMods::caster_level_at`]; Arcane training).
     pub caster_per_levels: Vec<(u8, i32)>,
     /// What it does to its spells through the six hooks (spec §8 "Spells": "Hooks"), one entry
-    /// per `spell_mod` effect and rank held, each with its tag filter
+    /// per `spell_mod` effect, each with its tag filter
     /// ([`TalentMods::spell_mods`]).
     pub spell: Vec<crate::content::SpellMod>,
     /// Percent more the caster level its magic items give counts (Attuned;
@@ -1220,7 +1201,7 @@ impl TalentMods {
         })
     }
 
-    /// The effects of one rank, summed (what taking it adds); the statuses and damage types
+    /// The effects of one talent, summed (what taking it adds); the statuses and damage types
     /// they name are looked up in `content`.
     pub fn of(content: &Content, effects: impl IntoIterator<Item = TalentEffect>) -> Self {
         let mut mods = TalentMods::default();
@@ -1447,7 +1428,7 @@ impl TalentMods {
             TalentEffect::XpPercent { value } => self.xp_percent += value,
             TalentEffect::SkillRolls { value } => self.skill_rolls += value,
             TalentEffect::ExtraPick { level } => self.extra_picks.push(level),
-            // Handed out as the rank is taken (`World::take_talent`), never read after.
+            // Handed out as the talent is taken (`World::take_talent`), never read after.
             TalentEffect::WeaponRanks { .. }
             | TalentEffect::TakeUpSkills { .. }
             | TalentEffect::StartingGold { .. }
@@ -2296,7 +2277,7 @@ impl TalentMods {
         self.launcher_range + own
     }
 
-    /// The hit points the per-level effects give at character `level`: for each rank held,
+    /// The hit points the per-level effects give at character `level`: for each talent,
     /// one per `per_levels` levels, at least `at_least`.
     pub fn hp_at(&self, level: u8) -> i32 {
         per_levels_at(&self.hp_per_levels, level)
@@ -2402,13 +2383,13 @@ impl<'a> Candidate<'a> {
         chosen: Option<&str>,
     ) -> bool {
         match need {
-            Need::Talent(id, rank) => {
+            Need::Talent(id) => {
                 let other = content.talents().get(*id);
                 // A chain of talents with a choice runs through the same choice.
                 if other.choice.is_some() && other.choice == choice {
-                    self.talents.rank_of(&other.id, chosen) >= *rank
+                    self.talents.holds(&other.id, chosen)
                 } else {
-                    self.talents.has(&other.id, *rank)
+                    self.talents.has(&other.id)
                 }
             }
             Need::Stat(stat, score) => self.stats.score(*stat) >= *score,
@@ -2449,8 +2430,8 @@ pub enum Refusal {
     TakesNoChoice,
     /// The choice names nothing of its kind.
     BadChoice(Choice, String),
-    /// Every rank is held already.
-    AtTop,
+    /// It is held already.
+    Held,
     /// These prerequisites do not hold.
     Unmet(Vec<Need>),
 }
@@ -2464,7 +2445,7 @@ impl Refusal {
             Refusal::NeedsChoice(kind) => format!("{name} needs a choice: {}.", kind.words()),
             Refusal::TakesNoChoice => format!("{name} takes no choice."),
             Refusal::BadChoice(kind, id) => format!("`{id}` is not {}.", kind.words()),
-            Refusal::AtTop => format!("You already have all of {name}."),
+            Refusal::Held => format!("You have {name} already."),
             Refusal::Unmet(needs) => {
                 let words: Vec<String> = needs.iter().map(|n| n.words(content)).collect();
                 format!("You cannot take {name}: you need {}.", list(&words))
@@ -2488,27 +2469,26 @@ pub(crate) fn list_with(words: &[String], joint: &str) -> String {
     }
 }
 
-/// The prerequisites of taking `rank` (1 first) of `def` for `chosen` that `who` does not
-/// meet, in the order they are shown.
+/// The prerequisites of taking `def` for `chosen` that `who` does not meet, in the order they
+/// are shown.
 pub fn unmet(
     content: &Content,
     who: &Candidate<'_>,
     def: &TalentDef,
-    rank: u8,
     chosen: Option<&str>,
 ) -> Vec<Need> {
-    (def.needs_at(rank))
+    (def.needs.iter())
         .filter(|need| !who.meets(content, need, def.choice, chosen))
         .collect()
 }
 
-/// Whether `who` may take `def` for `chosen` now: the rank it would reach, or why not.
+/// Whether `who` may take `def` for `chosen` now, or why not.
 pub fn may_take(
     content: &Content,
     who: &Candidate<'_>,
     def: &TalentDef,
     chosen: Option<&str>,
-) -> Result<u8, Refusal> {
+) -> Result<(), Refusal> {
     if def.granted {
         return Err(Refusal::Granted);
     }
@@ -2534,13 +2514,12 @@ pub fn may_take(
         }
         _ => {}
     }
-    let rank = who.talents.rank_of(&def.id, chosen) + 1;
-    if rank > def.rank_count() {
-        return Err(Refusal::AtTop);
+    if who.talents.holds(&def.id, chosen) {
+        return Err(Refusal::Held);
     }
-    let missing = unmet(content, who, def, rank, chosen);
+    let missing = unmet(content, who, def, chosen);
     if missing.is_empty() {
-        Ok(rank)
+        Ok(())
     } else {
         Err(Refusal::Unmet(missing))
     }
@@ -2646,22 +2625,22 @@ mod tests {
     }
 
     #[test]
-    fn taking_counts_ranks_per_choice() {
+    fn a_talent_is_taken_once_per_choice() {
         let mut talents = Talents::default();
-        assert_eq!(talents.take("hardy", None), 1);
-        assert_eq!(talents.take("hardy", None), 2);
-        assert_eq!(talents.take("weapon_focus", Some("bows")), 1);
-        assert_eq!(talents.take("weapon_focus", Some("slings")), 1);
-        assert_eq!(talents.rank_of("hardy", None), 2);
-        assert_eq!(talents.rank_of("weapon_focus", Some("bows")), 1);
-        assert_eq!(talents.rank_of("weapon_focus", None), 0);
-        assert!(talents.has("weapon_focus", 1));
-        assert!(!talents.has("hardy", 3));
-        assert_eq!(talents.len(), 3);
+        talents.take("hardy", None);
+        talents.take("hardy", None);
+        talents.take("weapon_focus", Some("bows"));
+        talents.take("weapon_focus", Some("slings"));
+        assert!(talents.holds("hardy", None));
+        assert!(talents.holds("weapon_focus", Some("bows")));
+        assert!(!talents.holds("weapon_focus", None));
+        assert!(talents.has("weapon_focus"));
+        assert!(!talents.has("lean"));
+        assert_eq!(talents.len(), 3, "hardy once");
         let json = serde_json::to_string(&talents).expect("json");
         assert_eq!(
             json,
-            r#"[{"id":"hardy","rank":2},{"id":"weapon_focus","rank":1,"choice":"bows"},{"id":"weapon_focus","rank":1,"choice":"slings"}]"#
+            r#"[{"id":"hardy"},{"id":"weapon_focus","choice":"bows"},{"id":"weapon_focus","choice":"slings"}]"#
         );
         let back: Talents = serde_json::from_str(&json).expect("back");
         assert_eq!(back, talents);

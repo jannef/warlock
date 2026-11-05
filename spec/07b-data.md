@@ -572,19 +572,18 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `wield`/`wear` name it the same way to wear the one carried.
 - **Talents** (`data/talents.toml`, the settings; `data/talents/`, one talent a file, read in
   path order; optional, without them no level asks for a pick; M30, #229; §8 "Talents"):
-  `max_ranks` (3), `[coverage]` (`min_talents`, `min_class`, `free_per_tree`), `[[tree]]`s
+  `[coverage]` (`min_talents`, `min_class`, `free_per_tree`), `[[tree]]`s
   (`id`, `name`, `description`, `pending`, `no_free`) in display order, and `[[system]]`s (`id`,
   `name`, `pending`), the closed list a talent's `systems` may name. A `[[talent]]`: `id`,
-  `name`, `tree`, `description`, `ranks`, `choice` (`weapon_skill`, `style`, `skill`, `element`, `school`, `school_skill`, `tag`), `needs`
-  (`talents = { dodge = 1 }`, `stats = { toughness = 14 }`, `skills = { stealth = 25 }`,
+  `name`, `tree`, `description`, `choice` (`weapon_skill`, `style`, `skill`, `element`, `school`, `school_skill`, `tag`), `needs`
+  (`talents = ["dodge"]`, `stats = { toughness = 14 }`, `skills = { stealth = 25 }`,
   `weapon_skills = { bows = 3 }`, `chosen`, `level`, `race`, `class`, `eyes`), `effects`
   (`{ kind = "dodge", value = 1 }`: `dodge`, `natural`, `melee_damage`, `max_hp_per_levels
   { per_levels, at_least }`, `healing_percent`, `footsteps_percent`, `silent_doors`, `hearing`,
   `carry_percent`, `travel_percent`, `hunger_percent`, `no_exertion`, `xp_percent`, `notice`,
   `free_blow { trigger }`; bonuses −20 to 20, percents −100 to 100, never 0; every kind is in
   `talents/README.toml`, among them the bard's `song`, `virtuoso`, `weapon_ranks`, and
-  `take_up_skills` and the Hunter's `spirit_weapon`), `[[talent.rank]]`
-  (a rank's own `needs` and `effects`, as many as `ranks` or none), `systems` (at least one),
+  `take_up_skills` and the Hunter's `spirit_weapon`), `systems` (at least one),
   `granted`, `resource` (a class active's cost), `alignment` (`{ min = "kind" }`: the bands a holy
   class active works for; it bars nothing, §8 "Alignment"). Talents are saved by id (not in the content fingerprint); without skills content a
   skill need is left out, as skill affixes are. Load fails on a coverage gap (§8 "Talents").

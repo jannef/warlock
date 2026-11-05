@@ -363,11 +363,16 @@ impl World {
             return false;
         }
         let from = self.state.current_level.clone();
+        // Those beside the player and after them come too (`stair_followers.rs`).
+        let followers = self.stair_followers();
         if let Err(err) = self.travel(&to, None) {
             self.say(format!("The stairs are blocked ({err})."));
             return false;
         }
-        events.push(Event::LevelChanged { from, to });
+        events.push(Event::LevelChanged {
+            from: from.clone(),
+            to,
+        });
         let level = self.state.current();
         // A revealed location goes by its own name (spec §7 "Hidden locations").
         let name = link.name.unwrap_or_else(|| level.name.clone());
@@ -378,6 +383,7 @@ impl World {
             (_, _, StairsDir::Up) => format!("You climb the stairs to {name}."),
         };
         self.say(text);
+        self.followers_arrive(&followers, &from, way);
         true
     }
 
@@ -459,24 +465,56 @@ impl World {
 
     /// `p` if no actor stands there, else the nearest walkable unoccupied cell (ring search).
     pub(super) fn free_cell_near(&self, level_id: &str, p: Pos) -> Pos {
-        let level = &self.state.levels[level_id];
-        let free = |q: Pos| {
-            level.is_walkable(&self.content, q) && self.state.actor_at(level_id, q).is_none()
-        };
         if self.state.actor_at(level_id, p).is_none() {
             return p;
         }
-        for r in 1..level.width().max(level.height()) {
+        let level = &self.state.levels[level_id];
+        let reach = level.width().max(level.height()) - 1;
+        self.free_cell_within(level_id, p, reach, |_| true)
+            .unwrap_or(p)
+    }
+
+    /// The nearest walkable unoccupied cell around `p` that `allowed` lets in, from one cell
+    /// away out to `reach` (ring search, in row order); `None` if there is none.
+    pub(super) fn free_cell_within(
+        &self,
+        level_id: &str,
+        p: Pos,
+        reach: i32,
+        allowed: impl Fn(Pos) -> bool,
+    ) -> Option<Pos> {
+        let level = &self.state.levels[level_id];
+        let free = |q: Pos| {
+            level.is_walkable(&self.content, q)
+                && self.state.actor_at(level_id, q).is_none()
+                && allowed(q)
+        };
+        for r in 1..=reach {
             for dy in -r..=r {
                 for dx in -r..=r {
                     let q = Pos::new(p.x + dx, p.y + dy);
                     if q.chebyshev(p) == r && free(q) {
-                        return q;
+                        return Some(q);
                     }
                 }
             }
         }
-        p
+        None
+    }
+
+    /// Actor `id` crosses to level `to` with the player, onto `pos`; what it heard stays behind.
+    /// The one way an actor changes level but the player (`World::follow_along`,
+    /// `World::followers_arrive`); each says what else it keeps of its mind.
+    pub(super) fn cross_to(&mut self, id: ActorId, to: &str, pos: Pos) {
+        if let Some(a) = self.state.actors.get_mut(&id) {
+            // A vault's monster pool stands outside its level's cap; on another level it counts.
+            let from = std::mem::replace(&mut a.level, to.to_string());
+            a.pos = pos;
+            a.heard.clear();
+            if let Some(s) = (self.state.levels.get_mut(&from)).and_then(|l| l.spawner.as_mut()) {
+                s.outside.remove(&id);
+            }
+        }
     }
 }
 
@@ -623,6 +661,7 @@ pub(super) fn make_creature(
         alignment_override: spawn.alignment,
         npc: spawn.npc.clone(),
         talk: Talk::default(),
+        home: None,
         spells: Default::default(),
         streak: None,
         satiation: None,

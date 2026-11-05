@@ -441,6 +441,25 @@ fn the_opportunist_strikes_a_hostile_stepping_away_before_it_steps() {
 }
 
 #[test]
+fn a_creature_struck_down_stepping_away_is_dead_and_its_turn_goes_on() {
+    // Regression (#1007): the blow removes the actor, and the step was priced as a blocked one.
+    let mut w = world("######\n#....#\n#.@k.#\n#....#\n######\n");
+    arm(&mut w, "axe");
+    let player = w.player_id();
+    let kobold = at(&w, 3, 2);
+    switch(&mut w, player, |f| f.opportunist = true);
+    w.state.actors.get_mut(&kobold).expect("kobold").hp = 1;
+    let mut events = Vec::new();
+    for _ in 0..20 {
+        if !w.state.actors.contains_key(&kobold) {
+            break;
+        }
+        w.step_or_wait(kobold, Dir::E, &mut events);
+    }
+    assert!(!w.state.actors.contains_key(&kobold), "the blow killed it");
+}
+
+#[test]
 fn the_player_strikes_a_hostile_stepping_away_and_says_it_last() {
     let mut w = world("######\n#....#\n#.@k.#\n#....#\n######\n");
     arm(&mut w, "axe");

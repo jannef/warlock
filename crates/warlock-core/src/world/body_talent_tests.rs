@@ -43,7 +43,7 @@ fn set_scores(world: &mut World, score: u8) {
     world.player_mut().stats = Stats::new(PerStat::splat(score), PerStat::splat(40));
 }
 
-/// The player takes talent `id` (one rank more), without a level to pick it at.
+/// The player takes talent `id`, without a level to pick it at.
 fn give(world: &mut World, id: &str) {
     world.player_mut().talents.take(id, None);
 }

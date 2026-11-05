@@ -67,18 +67,18 @@ fn cackle(w: &mut World) -> Outcome {
 fn the_witch_gains_it_at_six_and_on_load() {
     let mut w = world("witch");
     let def = w.content().class("witch").expect("witch");
-    let at = (def.abilities.iter()).find(|(_, t, _)| t == "cackle");
-    assert_eq!(at.map(|(level, _, _)| *level), Some(6));
+    let at = (def.abilities.iter()).find(|(_, t)| t == "cackle");
+    assert_eq!(at.map(|(level, _)| *level), Some(6));
     let id = w.content().talents().id("cackle").expect("the talent");
     assert!(w.content().talents().get(id).granted, "never picked");
     reach(&mut w, 5);
-    assert!(!w.state.player().talents.has("cackle", 1), "not before 6");
+    assert!(!w.state.player().talents.has("cackle"), "not before 6");
     reach(&mut w, 6);
     assert!(said(&w, "You gain Cackle."), "{}", last(&w));
     // A save of a witch of 6 made before the table had it gains it on load.
     w.player_mut().talents.forget("cackle");
     let w = World::from_state(w.content().clone(), w.state().clone()).expect("restores");
-    assert!(w.state.player().talents.has("cackle", 1));
+    assert!(w.state.player().talents.has("cackle"));
     assert_eq!(
         (w.perception().abilities().into_iter())
             .find(|a| a.ability == Ability::Class(CACKLE))

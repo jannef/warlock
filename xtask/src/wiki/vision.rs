@@ -100,12 +100,7 @@ fn light_name(content: &Content, id: LightId) -> String {
     }
     let tended: Vec<&str> = (content.talents().iter())
         .filter(|(_, t)| {
-            let effects = t
-                .effects
-                .iter()
-                .chain(t.ranks.iter().flat_map(|r| &r.effects));
-            effects
-                .into_iter()
+            (t.effects.iter())
                 .any(|e| matches!(e, TalentEffect::LanternLight { light } if *light == preset.id))
         })
         .map(|(_, t)| t.name.as_str())

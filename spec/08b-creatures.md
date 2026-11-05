@@ -62,6 +62,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
   ("Displacement" below). Creatures neither flee nor
   fight differently when hurt. What a creature has in mind (last seen, noise to look into, post)
   is part of the world state.
+- **Stair followers** (`warlock-core/src/world/stair_followers.rs`; #985): stairs are no free
+  escape. A creature beside the player (Chebyshev distance 1) as they take a staircase, hostile
+  to them and aware of them, comes along and arrives beside them; several are told in one line
+  when the player saw them as they left ("The kobold follows you down the stairs.", "Three
+  kobolds follow you up the stairs."). Those the rules keep still or out of action do not come:
+  one asleep or disguised, one whose steps a status blocks (Held, Webbed, Pinned), one
+  flat-footed (Stunned, Surprised), one fleeing (Frightened), one unaware of the player. Nor one
+  that keeps its place (a `budge` other than `always`, a mimic even found out, a lurker unhurt),
+  an NPC, a shop's keeper, or an ally. **Where**: on free walkable cells beside the player's
+  arrival, in id order, after the player's allies have stepped out, and never on ground a
+  hostile shuns; with no such cell left it stays behind, frozen on the old level. **What it
+  keeps**: hit points, statuses, gear, and awareness (it knows where the player arrived); its
+  post, noises, and patrol route, which belonged to the old level, are gone. **Timing**: it pays
+  the stairs' price from its own energy as the player does, so it gets no blow out of their
+  climb: at equal speed the player acts first. It counts as a hostile of the new level toward
+  the spawn cap. Its kill counts for a kill quest of the level it first left (`Actor::home`). No
+  draws. **Only stairs**: a staircase between levels, not one out to the overworld (which has
+  no creatures: it stays behind). Walking off an outdoor level's edge and the quick leave are
+  refused with enemies near (§7 "Leaving an outdoor area"); a fall (a collapsing floor), entering a
+  local area from the overworld, and an encounter's area bring no one. Stealth counts only as
+  far as a creature slipped past is unaware; no talent reads it.
 - **Incorporeal creatures** (`warlock-core/src/world/incorporeal.rs`; #381): a creature type
   with `incorporeal = { wall_defence = N }` (N 0 to 20) passes through **solid** terrain (neither
   walkable nor transparent: walls, rock, trees, closed doors, locked or not) and may stand inside

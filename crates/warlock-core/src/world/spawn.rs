@@ -91,7 +91,7 @@ impl World {
 
     /// The creatures on the current level hostile to the player that its cap counts (a vault's
     /// monster pool stands outside it, [`Spawner::outside`]).
-    fn hostiles_here(&self) -> u32 {
+    pub(super) fn hostiles_here(&self) -> u32 {
         let (player, level) = (self.state.player, &self.state.current_level);
         let here = (self.state.actors.values()).filter(|a| a.level == *level && a.id != player);
         let spawner = self.state.current().spawner.as_ref();

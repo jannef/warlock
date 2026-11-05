@@ -34,7 +34,6 @@ fn grant(w: &mut World, id: &str) {
     let mut talents: Vec<crate::talent::Taken> = me.talents.iter().cloned().collect();
     talents.push(crate::talent::Taken {
         id: id.into(),
-        rank: 1,
         choice: None,
     });
     me.talents =
@@ -92,9 +91,9 @@ fn added(w: &World, attacker: ActorId, target: ActorId, kind: AttackKind) -> (i3
 fn the_ranger_gains_pack_tactics_at_level_18() {
     let class = BUILTIN.class("ranger").expect("the ranger");
     let row = (class.abilities.iter())
-        .find(|(_, id, _)| id == "pack_tactics")
+        .find(|(_, id)| id == "pack_tactics")
         .expect("Pack tactics in the table");
-    assert_eq!((row.0, row.2), (18, 1));
+    assert_eq!(row.0, 18);
     let mut w = ranger();
     assert!(
         !w.state

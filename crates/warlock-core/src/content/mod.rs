@@ -322,9 +322,9 @@ pub use summon::Summon;
 pub use surprise::SurpriseRules;
 pub use tag::{MAX_TAG, TAG_TARGET, spoken};
 pub use talent::{
-    AnyWeaponSkill, Choice, Coverage, DEFAULT_MAX_RANKS, FreeBlowTrigger, Need, Needs, Rank,
-    ResourceCost, SmiteRiderKind, SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef,
-    TalentEffect, TalentId, TreeDef, TreeId,
+    AnyWeaponSkill, Choice, Coverage, FreeBlowTrigger, Need, Needs, ResourceCost, SmiteRiderKind,
+    SongOn, SystemDef, SystemId, TalentActive, TalentBook, TalentDef, TalentEffect, TalentId,
+    TreeDef, TreeId,
 };
 pub use terrain::{
     Breakable, Freeze, FreezeSpec, MAX_HARDNESS, MAX_HEIGHT, StairsDir, TerrainDef, TerrainId,
@@ -3634,10 +3634,7 @@ impl Content {
             return false;
         };
         (self.talents.iter()).any(|(_, def)| {
-            (def.effects
-                .iter()
-                .chain(def.ranks.iter().flat_map(|r| r.effects.iter())))
-            .any(|e| matches!(e, TalentEffect::Spell { spell: s } if s == name))
+            (def.effects.iter()).any(|e| matches!(e, TalentEffect::Spell { spell: s } if s == name))
         })
     }
 

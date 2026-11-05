@@ -48,6 +48,48 @@ pub(super) fn pace_spell(w: &World, build: &Build) -> Option<Cast> {
     }
 }
 
+/// The level 1 row (#979): no level has gone before it and nothing is practised, so it says what a
+/// starting caster's first pool buys of what they know: of their school's spells (a healer's
+/// heals), an area before a single target, then the most mean roll.
+pub(super) fn first_spell(w: &World, build: &Build, seed: u64) -> Paced {
+    let Some(school) = build.school else {
+        return Paced::default();
+    };
+    let mut dressed = w.clone();
+    dress(&mut dressed, build, 1, Gear::Plain, seed);
+    let content = &dressed.content;
+    let school = content.weapon_skills().id(school);
+    let me = dressed.state.player();
+    let best = (casts(&dressed).into_iter())
+        .filter(|c| c.cost > 0 && c.heals == build.casts_a_kill)
+        .filter(|c| me.knows_spell(content, c.spell))
+        .filter(|c| {
+            content
+                .weapon_skills()
+                .of_school(content.spell(c.spell).school)
+                == school
+        })
+        .max_by(|a, b| {
+            let area = |c: &Cast| content.spell(c.spell).shape.is_area();
+            let mean = |c: &Cast| roll_mean(c.dice, c.reroll);
+            (area(a).cmp(&area(b))).then(mean(a).total_cmp(&mean(b)))
+        });
+    let Some(spell) = best else {
+        return Paced::default();
+    };
+    let def = content.spell(spell.spell);
+    let skills = me.spell_skills(content, def, me.standing_aim(content, def));
+    let pool = me.max_mana(content);
+    Paced {
+        casts_a_day: f64::from(pool / spell.cost.max(1)),
+        spell: Some((spell.name.clone(), spell.cost)),
+        style: skills
+            .style
+            .map(|id| content.weapon_skills().skill(id).name.clone()),
+        style_id: skills.style,
+    }
+}
+
 /// Casts the days that bring `w`'s player (of `build`, at level `level`) to the next level, each
 /// day's pool on the pace spell, practising its school and caster style.
 pub(super) fn cast_level(w: &mut World, build: &Build, level: u8, seed: u64) -> Paced {
