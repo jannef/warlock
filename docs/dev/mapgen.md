@@ -16,7 +16,7 @@ validation is regenerated from the next derived stream. A valid branch level the
 branch's traps (`mapgen::hide_traps`, from the stream `traps/<level id>`, so the map is the same
 with or without them), then a few of its doors (`mapgen::hide_secrets`, secret doors, from the
 stream `secrets/<level id>`, only where `connect::validate` still reaches the stairs and every key
-without them; `docs/dev/searching.md`). The insta snapshots in
+without them; `docs/dev/searching.md`). On about one `caves` floor in six a pool has a deep middle (`mapgen/deep.rs`, #1020: stream `deep_water/<level id>`, `Rng::deep_water`, drawn once the cave is built and before `build_walls`, so a floor without it is exactly its old self; a blob of 40 to 70 free floor cells becomes water, those with all eight neighbours in it `deep_water`; kept off creature routes and special rooms, and undone if it would cut any walkable cell off). Rooms floors, vaults, special rooms and hand-made levels never have it. The insta snapshots in
 `src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
 review the maps in the diff, then accept them deliberately. Loot (`mapgen::place_loot`: floor
 items by the branch's `loot`, vault `loot` cells, each a grade or a pool of item classes,
