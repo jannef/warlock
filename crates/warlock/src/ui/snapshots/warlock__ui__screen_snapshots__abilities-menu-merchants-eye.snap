@@ -7,26 +7,26 @@ expression: "render(case, content.clone())"
 
 
 
-                    ┌─ Abilities ──────────────────────────────────────────────┐
-                    │                                                          │
-                    │ Birth sign                                               │
-                    │ > a  Transfixing stare  at a place you see               │
-                    │ Class                                                    │
-                    │   b  Merchant's eye     on something you carry           │
-                    │ Skills                                                   │
-                    │   c  Bluff              not usable yet                   │
-                    │   d  Intimidate         at a place you see               │
-                    │   e  Knowledge          not usable yet                   │
-                    │ Weapon skills                                            │
-                    │   f  Shield bash        you hold no shield               │
-                    │                                                          │
-                    │ The basilisk's stare: a foe nearby that sees you slows   │
-                    │ to a crawl a moment; your eyes then rest two hours.      │
-                    │                                                          │
-                    │                                                          │
-                    │ a-f or Enter use   Esc close                             │
-                    └──────────────────────────────────────────────────────────┘
-
+                   ┌─ Abilities ───────────────────────────────────────────────┐
+                   │                                                           │
+                   │ Birth sign                                                │
+                   │ > a  Transfixing stare  at a place you see                │
+                   │ Class                                                     │
+                   │   b  Merchant's eye     on something you carry            │
+                   │ Skills                                                    │
+                   │   c  Bluff              not usable yet                    │
+                   │   d  Intimidate         at a place you see                │
+                   │   e  Knowledge          not usable yet                    │
+                   │   f  Fletch             you have no bow or crossbow ready │
+                   │ Weapon skills                                             │
+                   │   g  Shield bash        you hold no shield                │
+                   │                                                           │
+                   │ The basilisk's stare: a foe nearby that sees you slows to │
+                   │ a crawl a moment; your eyes then rest two hours.          │
+                   │                                                           │
+                   │                                                           │
+                   │ a-g or Enter use   Esc close                              │
+                   └───────────────────────────────────────────────────────────┘
 
 
 

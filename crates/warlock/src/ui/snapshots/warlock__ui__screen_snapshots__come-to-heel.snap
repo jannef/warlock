@@ -2,32 +2,32 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
+ Welcome to Showcase. Press ? for controls.
  Two dire wargs come to your side.
- Your dire wargs come to heel.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                    ┌─ Abilities ──────────────────────────────────────────────┐
+                    │                                                          │
+                    │ Birth sign                                               │
+                    │   a  Transfixing stare  at a place you see               │
+                    │ Skills                                                   │
+                    │   b  Disarm a trap      in a direction                   │
+                    │   c  Pick lock          in a direction                   │
+                    │   d  Steal              in a direction                   │
+                    │   e  Fletch             you have no knife                │
+                    │ Weapon skills                                            │
+                    │ > f  Shield bash        you hold no shield               │
+                    │ Allies                                                   │
+                    │   g  Come to heel                                        │
+                    │   h  Hold here                                           │
+                    │   i  Set on             at a place you see               │
+                    │                                                          │
+                    │ Shield bash: you hold no shield.                         │
+                    │                                                          │
+                    │                                                          │
+                    │                                                          │
+                    │ a-i or Enter use   Esc close                             │
+                    └──────────────────────────────────────────────────────────┘
 
 
 

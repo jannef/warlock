@@ -340,6 +340,14 @@ pub enum TalentEffect {
     /// The perception snapshot tells which creatures in view have not noticed it, and they are
     /// drawn with the unaware mark (Stalker's eye; `SeenActor::unaware`).
     SeesUnaware,
+    /// A batch of arrows or bolts (Fletcher, the ranger's level 1; spec §8 "Fletching"): `check`
+    /// more on its check, `count_times` the count after the margin, `time_percent` of its time,
+    /// and plain at any Woodcraft.
+    Fletcher {
+        check: i32,
+        count_times: i32,
+        time_percent: u32,
+    },
     /// An animal companion from the first turn (Animal companion, the ranger's level 1; spec §8
     /// "Allies": `World::bring_companion`): a beast of its race's list, or rarely a rare one.
     Companion,
@@ -2359,6 +2367,22 @@ impl TalentEffect {
             TalentEffect::NoPenalty { status: id }
             | TalentEffect::CriticalStatus { status: id }
             | TalentEffect::Grip { status: id } => status(id),
+            TalentEffect::Fletcher {
+                check,
+                count_times,
+                time_percent,
+            } => {
+                if !(0..=20).contains(check)
+                    || !(1..=10).contains(count_times)
+                    || !(1..=100).contains(time_percent)
+                {
+                    return Err(
+                        "`fletcher`: check is 0 to 20, count_times 1 to 10, time_percent 1 to 100"
+                            .into(),
+                    );
+                }
+                Ok(())
+            }
             TalentEffect::SecondWind {
                 per_level,
                 at_least,

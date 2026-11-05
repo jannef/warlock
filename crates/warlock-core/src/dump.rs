@@ -2525,12 +2525,18 @@ mod tests {
                 "Disarm a trap (skill): a direction",
                 "Pick lock (skill): a direction",
                 "Steal (skill): a direction",
+                "Fletch (skill): you have no knife",
                 "Shield bash (weapon skill): you hold no shield",
             ]
         );
         let value = json(&world, &[], false);
         assert_eq!(
             value["abilities"][4],
+            json!({"id": "fletch", "source": "skill", "aim": "nothing",
+                   "unavailable": "no_knife"})
+        );
+        assert_eq!(
+            value["abilities"][5],
             json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
                    "unavailable": "no_shield"})
         );
@@ -2555,9 +2561,9 @@ mod tests {
             world.apply(&action);
         }
         let rows = layer_rows(&world, Layer::Abilities);
-        assert_eq!(rows[4], "Shield bash (weapon skill): a direction");
+        assert_eq!(rows[5], "Shield bash (weapon skill): a direction");
         assert_eq!(
-            json(&world, &[], false)["abilities"][4]["unavailable"],
+            json(&world, &[], false)["abilities"][5]["unavailable"],
             Value::Null
         );
         assert!(!Layer::Abilities.is_dev_only());

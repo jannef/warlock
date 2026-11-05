@@ -15,7 +15,7 @@ expression: "render(case, content.clone())"
                     │ Skills                                                   │
                     │   e  Tame               you already have a companion     │
                     │   f  Forage             not usable here                  │
-                    │   g  Woodcraft          not usable yet                   │
+                    │   g  Fletch                                              │
                     │ Weapon skills                                            │
                     │   h  Shield bash        you hold no shield               │
                     │ Allies                                                   │

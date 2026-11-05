@@ -137,6 +137,7 @@ mod familiar;
 mod feature;
 mod fight;
 mod flavour;
+mod fletch;
 mod focus;
 mod forage;
 mod free_blow;
@@ -271,6 +272,7 @@ pub use encounter::{
 pub use experience::{Discovered, Progress};
 pub use familiar::{draw as familiar_draw, name_for as familiar_name};
 pub use fight::{Cause, Death};
+pub(crate) use fletch::fletch_lack;
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
@@ -651,6 +653,8 @@ enum Spent {
     Pray(pray::Prayer),
     /// Drinking at a healing spring (see [`World::drink`]).
     Drink(drink::Draught),
+    /// Fletching for this many seconds (see [`World::fletch`]).
+    Fletch(u32),
     /// Foraging in the wild for this many seconds (see [`World::forage`]).
     Forage(u32),
     /// Tempering an item at a forge's anvil (see [`World::temper`]).
@@ -1286,6 +1290,7 @@ impl World {
             Spent::Sanctuary(until) => self.sanctuary(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Drink(draught) => self.drink(draught, &mut events),
+            Spent::Fletch(seconds) => self.fletch(seconds, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
             Spent::Tame(taming) => self.tame(taming, &mut events),
@@ -1416,6 +1421,7 @@ impl World {
             Action::Pray => return self.start_prayer(),
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
+            Action::Fletch => return self.start_fletch(),
             Action::Temper { item } => return self.start_temper(*item),
             Action::Give { item, ally } => return self.give_collar(*item, *ally),
             Action::UseTalent(TalentActive::SecondWind) => return self.second_wind(events),
@@ -1642,6 +1648,8 @@ mod fight_tests;
 mod fixture_factions;
 #[cfg(test)]
 mod flavour_tests;
+#[cfg(test)]
+mod fletch_tests;
 #[cfg(test)]
 mod focus_tests;
 #[cfg(test)]

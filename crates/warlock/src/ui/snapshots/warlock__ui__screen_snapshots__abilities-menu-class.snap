@@ -20,15 +20,15 @@ expression: "render(case, content.clone())"
                     │   h  Heal            nothing to treat                    │
                     │   i  Intimidate      at a place you see                  │
                     │   j  Forage          not usable here                     │
+                    │   k  Fletch          you have no knife                   │
                     │ Weapon skills                                            │
-                    │   k  Shield bash     in a direction                      │
+                    │   l  Shield bash     in a direction                      │
                     │                                                          │
                     │ The unicorn's grace: your bleeding and poison end, and a │
                     │ disease is shaken off; then it rests a day.              │
                     │                                                          │
                     │                                                          │
-                    │ a-k or Enter use   Esc close                             │
+                    │ a-l or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
  The Hub  ·  HP 59/59  ·  MP 33/33  ·  Sta 9/15  ·  Zeal 5/13  ·  Lv 14  ·  08:00        ? controls

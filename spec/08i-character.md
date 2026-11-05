@@ -439,7 +439,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     something hidden in passing, not a trap (`spot`; §8 "Searching"), finding a hidden trap,
     searching or in passing (`find_trap`, Detect traps' use), an attempt to steal, whatever comes of
     it (`steal`; "Stealing" below), a try at treating oneself, whatever comes of it (`heal`;
-    "Treating oneself" below), a forage that ran its time, whatever it found (`forage`;
+    "Treating oneself" below), a batch of arrows or bolts that ran its time, whatever it made (`fletch`; "Fletching" below),
+    a forage that ran its time, whatever it found (`forage`;
     "Foraging" below), a deal made in a shop: goods paid for or the player's own sold (`deal`;
     Negotiation), something carried told for what it is (`appraise`; "Appraise" below), mana
     spent, a spell or an ability paid in it (`cast`; Concentration, 25 %, #668), discovery
@@ -605,6 +606,27 @@ developer notes (CLAUDE.md, `docs/dev/`).
     from a keeper takes from its pack: its purse.
   - No limit on trying again (the owner's rule): a victim that caught the player stays angry,
     and that is the price. Presentation shows only what comes of it, never a modifier or a roll.
+- **Fletching** (`world/fletch.rs`, data `data/fletch.toml`; #1021; the owner: "Do not require
+  small blade in hand, just in inventory is fine"): the abilities menu's **Fletch** (`Ability::Fletch`,
+  in Woodcraft's place among the Skills; nothing to aim; `Action::Fletch`, replay text `fletch`; no
+  key of its own). Anyone, anywhere, trained in Woodcraft or not.
+  - **Needs**: a knife carried, in the pack, worn or wielded or neither (`Content::is_knife`: an
+    object of the `daggers` weapon skill: a dagger, a stiletto, a knife; a short blade is none), and
+    a launcher ready whose `launches` has a row in the file (a bow, a crossbow; not a sling). The
+    menu greys it out "you have no knife" or "you have no bow or crossbow ready", and the rules
+    refuse in the same words, taking no time. No material is used up.
+  - **Time**: `seconds` (600: ten minutes), in turns of the `fletch` action, stopped like a rest
+    ("You put down the knife."): the time is spent and nothing is made. On the overworld the
+    encounter roll runs as for a forage.
+  - **The check**, at the end: 2d12 + Dexterity's modifier + talents + Woodcraft's `fletch` points
+    (curve `[[0, 0], [100, 8], [200, 12]]`) against `difficulty` (12). The count is `1d4` + Woodcraft's
+    value ÷ 25. Margin 0 or more makes the whole count; −1 to −3 half, rounded up; −4 to −6 one; below
+    −6 none. Gameplay stream. Woodcraft earns a mark on every batch that ran its time (`Use::Fletch`).
+  - **What**: under Woodcraft 25 `brittle_arrow` or `brittle_bolt` (`breaks = 100`, value 0, never in
+    loot or shops); from 25 `arrow` or `bolt`.
+  - **Fletcher** (`talents/fletcher.toml`, effect `fletcher`, `TalentMods::fletcher`): the ranger's at
+    level 1, nobody else's; five minutes, +4 to the check, twice the count after the margin, plain at
+    any Woodcraft. The ranger's kit has a knife, carried, not wielded.
 - **Foraging** (`world/forage.rs`, data `data/forage.toml`, §7; #547; the owner, 2026-10-27:
   "survival can be used on wilderness map, some chance to gather food items"): Survival's use,
   the abilities menu's **Forage** (`Ability::Forage`, in the skill's place among the Skills;

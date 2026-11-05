@@ -683,6 +683,15 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
             "a sneak attack of yours that kills leaves you {} (1 degree)",
             status(&id)
         ),
+        TalentEffect::Fletcher {
+            check,
+            count_times,
+            time_percent,
+        } => format!(
+            "[fletching](skills.md#fletching) takes {time_percent} % of its time, +{check} on its \
+             check, {count_times} times the arrows or bolts after the check, and they are plain \
+             at any Woodcraft"
+        ),
         TalentEffect::Companion => "an [animal companion](allies.md#companions) from the first \
                                     turn: a beast of your race's kind, or rarely a rarer one, \
                                     that fights for you, always comes along, and grows with \

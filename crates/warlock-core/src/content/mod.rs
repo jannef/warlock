@@ -52,6 +52,7 @@ mod familiar;
 mod fey_roster_tests;
 #[cfg(test)]
 mod fiend_roster_tests;
+mod fletch;
 mod flow;
 mod forage;
 #[cfg(test)]
@@ -218,6 +219,7 @@ pub use experience::{
 };
 pub use faction::{FactionDef, FactionId, Factions, PLAYER_FACTION, Stance};
 pub use familiar::FamiliarRules;
+pub use fletch::{FletchMakes, FletchRules};
 pub use flow::{FLOW_SPEEDS, Flow};
 pub use forage::{ForageGround, ForageRules};
 pub use gear::{Gear, GearLine, RACIAL_CHANCE};
@@ -663,6 +665,9 @@ pub struct Content {
     smite: Option<SmiteRules>,
     /// The campaigns' encounter tables (`campaigns/<id>/data/encounters/`), by campaign and id.
     encounter_tables: Vec<EncounterTable>,
+    /// How arrows and bolts are made (`data/fletch.toml`, spec §8 "Fletching"); without it
+    /// nobody fletches.
+    fletch: Option<FletchRules>,
     /// What foraging in the wild gives (`data/forage.toml`, spec §8 "Foraging"); none without
     /// the file.
     forage: Option<ForageRules>,
@@ -832,6 +837,7 @@ impl Content {
             surprise: None,
             smite: None,
             encounter_tables: Vec::new(),
+            fletch: None,
             forage: None,
             intimidate: None,
             ranged: RangedRules::default(),
@@ -1172,6 +1178,10 @@ impl Content {
         let path = "data/smite.toml";
         if let Some(text) = files.get_optional(path) {
             content.smite = Some(SmiteRules::parse(path, text, &content)?);
+        }
+        let path = "data/fletch.toml";
+        if let Some(text) = files.get_optional(path) {
+            content.fletch = Some(FletchRules::parse(path, text, &content)?);
         }
         let path = "data/forage.toml";
         if let Some(text) = files.get_optional(path) {
@@ -3157,6 +3167,19 @@ impl Content {
     /// `data/smite.toml`); `None` without the file, when nothing is unholy.
     pub fn smite(&self) -> Option<&SmiteRules> {
         self.smite.as_ref()
+    }
+
+    /// How arrows and bolts are made (spec §8 "Fletching"; `data/fletch.toml`); `None` without the
+    /// file, when nobody fletches.
+    pub fn fletch(&self) -> Option<&FletchRules> {
+        self.fletch.as_ref()
+    }
+
+    /// Whether `object` is a knife, to fletch with (`data/fletch.toml`'s `knives`, a weapon
+    /// skill: "Daggers and knives", so a dagger, a stiletto, or a knife; a short sword is not).
+    pub fn is_knife(&self, object: ObjectId) -> bool {
+        let knives = self.fletch().map(|f| f.knives);
+        knives.is_some() && self.object(object).skill == knives
     }
 
     /// What foraging in the wild gives (spec §8 "Foraging"; `data/forage.toml`); `None` without

@@ -19,16 +19,16 @@ expression: "render(case, content.clone())"
                     │   g  Decipher script  not usable yet                     │
                     │   h  Heal             nothing to treat                   │
                     │   i  Knowledge        not usable yet                     │
+                    │   j  Fletch           you have no knife                  │
                     │ Weapon skills                                            │
-                    │   j  Shield bash      you hold no shield                 │
+                    │   k  Shield bash      you hold no shield                 │
                     │                                                          │
                     │ A dart of force toward a place you aim at: it never      │
                     │ misses the first creature in its way. Range 8.           │
                     │                                                          │
                     │                                                          │
-                    │ a-j or Enter use   Esc close                             │
+                    │ a-k or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
 
 
  The Hub  ·  HP 43/43  ·  MP 306/308  ·  Keen  ·  Lv 32  ·  08:00  ·  11 Darkening       ? controls

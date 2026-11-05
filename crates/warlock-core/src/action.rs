@@ -212,6 +212,12 @@ pub enum Action {
     /// landscape and Survival. Interrupted, it finds nothing. Refused (no time) untrained, or
     /// anywhere but on land of the overworld or a local area of it.
     Forage,
+    /// Make arrows or bolts for the launcher ready (spec §8 "Fletching"; the Fletch ability, in
+    /// Woodcraft's place in the abilities menu): turns of the `fletch` action for
+    /// `data/fletch.toml`'s time, then a Dexterity check plus Woodcraft whose margin scales what
+    /// is made. Interrupted, it makes nothing. Refused (no time) with no knife carried, or no bow
+    /// or crossbow ready.
+    Fletch,
     /// Temper the carried stack at this position at the anvil next to the player (spec §7
     /// "Special rooms"; the Temper ability, the abilities menu's Here group): ten minutes of turns
     /// of the `temper` action, then a Strength check plus Metalcraft that leans the forge's table,
@@ -903,6 +909,7 @@ impl fmt::Display for Action {
             Action::Pray => f.write_str("pray"),
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
+            Action::Fletch => f.write_str("fletch"),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::Give { item, ally } => {
                 write!(f, "give:{}", position_text(*item))?;
@@ -1065,6 +1072,7 @@ impl FromStr for Action {
             "pray" => bare(Action::Pray),
             "drink" => bare(Action::Drink),
             "forage" => bare(Action::Forage),
+            "fletch" => bare(Action::Fletch),
             "temper" => {
                 let usage = || "`temper` needs a letter, e.g. `temper:b`".to_string();
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
@@ -1735,6 +1743,7 @@ mod tests {
             Action::Advance("stealth".into()),
             Action::Pray,
             Action::Forage,
+            Action::Fletch,
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },
             Action::Give {

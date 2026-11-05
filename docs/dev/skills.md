@@ -122,7 +122,24 @@ becomes an ability of its own in the skill's place (`Ability::use_of`): Disable 
 Steal `Ability::Steal` (`docs/dev/stealing.md`), Heal `Ability::Heal` (`docs/dev/status-effects.md`),
 Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from the data).
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
-`Ability::use_of` of every skill): Survival is `Ability::Forage` (below).
+`Ability::use_of` of every skill): Survival is `Ability::Forage` (below). Woodcraft is
+`Ability::Fletch`, which anyone has, trained or not (below).
+
+**Fletching** (spec §8 "Fletching", #1021, design `docs/design/skill-uses.md` §6.5 W1):
+`Action::Fletch` (replay text `fletch`, cost `fletch` a turn, `ActionKind::Fletch`), dispatched by
+one arm in `World::player_acts` to `World::start_fletch` in `world/fletch.rs` (`Spent::Fletch(seconds)`,
+then `World::fletch`, a `keep_at` loop with the forage's `Watch::Forage`; tests
+`world/fletch_tests.rs`). Data `data/fletch.toml` (`content/fletch.rs`, `FletchRules`,
+`Content::fletch`; optional: without it Woodcraft is a skill with no use): `seconds`, `difficulty`,
+`count`, `value_per_count`, `half_within`, `one_within` (`FletchRules::made`, the margin's bands),
+`plain_from`, `knives` (a weapon skill: `Content::is_knife`), and `[[makes]]` by what a launcher's
+`launches` is. `world::fletch_lack` is the one place that says what is missing: the abilities row's
+`Unavailable::NoKnife` / `NoLauncher` (`Ability::unavailable`) and the rules' refusal, in the same
+words. The check reads Dexterity's modifier, `TalentMods::check`, `skill_effect(Effect::Fletch)`
+(Woodcraft's curve, Skill focus through it), and `TalentMods::fletcher`; the count and the brittle
+line read the trained value, `Skills::value_of_effect`, so no item or talent bonus moves them.
+Marks: `Use::Fletch` for every batch that ran its time, whatever it made. Fletcher's numbers are
+its effect's (`talents/fletcher.toml`).
 
 **Foraging** (spec §8 "Foraging", #547): `Action::Forage` (replay text `forage`, cost `forage`
 a turn, `ActionKind::Forage`), dispatched by one arm in `World::player_acts` to

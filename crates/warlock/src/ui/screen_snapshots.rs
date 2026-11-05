@@ -632,6 +632,32 @@ const CASES: &[Case] = &[
         screen: Some("abilities"),
         ..BASE
     },
+    // A ranger after a batch (spec §8 "Fletching"): Fletch in Woodcraft's place, usable; the
+    // message line says what was made.
+    Case {
+        name: "abilities-menu-fletch",
+        character: Some("human,male,ranger"),
+        run: true,
+        actions: "fletch",
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A warrior carries no knife: Fletch greyed out, with the reason.
+    Case {
+        name: "abilities-menu-fletch-no-knife",
+        character: Some("human,male,warrior"),
+        run: true,
+        screen: Some("abilities"),
+        ..BASE
+    },
+    // A thief's dagger is a knife, but no bow is ready.
+    Case {
+        name: "abilities-menu-fletch-no-launcher",
+        character: Some("human,male,thief"),
+        run: true,
+        screen: Some("abilities"),
+        ..BASE
+    },
     // Beside a healing spring (spec §7 "Special rooms"): Drink in the Here group, last.
     Case {
         name: "abilities-menu-spring",

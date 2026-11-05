@@ -1,0 +1,19 @@
+# A plain working knife: for whittling and for meat, and only then for a fight. Any weapon of the
+# "Daggers and knives" skill will fletch (fletch.toml); this is the one that is for it.
+[[object]]
+id = "knife"
+name = "knife"
+glyph = ")"
+fg = "#b8bcc4"
+class = "melee_weapons"
+materials = ["steel"]
+made_of = ["metal", "bone", "stone"]
+weight = 200
+value = 5
+slot = "main_hand"
+light_weapon = true
+finesse = true
+damage = "1d3"
+category = "daggers"
+damage_type = "slashing"
+kind = "weapon"

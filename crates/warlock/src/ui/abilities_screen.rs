@@ -370,9 +370,10 @@ mod tests {
             "  b  Disarm a trap      in a direction",
             "  c  Pick lock          in a direction",
             "  d  Steal              in a direction",
+            "  e  Fletch             you have no knife",
             "Weapon skills",
-            "  e  Shield bash        you hold no shield",
-            "a-e or Enter use   Esc close",
+            "  f  Shield bash        you hold no shield",
+            "a-f or Enter use   Esc close",
         ] {
             assert!(text.contains(expected), "{expected:?} in\n{text}");
         }
@@ -388,7 +389,7 @@ mod tests {
         let b = Bindings::default();
         let world = thief(false);
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), None);
-        assert_eq!(screen.handle(&Press::typed('e'), &b), ScreenAction::Stay);
+        assert_eq!(screen.handle(&Press::typed('f'), &b), ScreenAction::Stay);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(text.contains("Shield bash: you hold no shield."), "{text}");
@@ -410,12 +411,12 @@ mod tests {
         let mut screen = AbilitiesScreen::new(Some(&world.perception()), last);
         assert_eq!(screen.selected(), Some(Ability::ShieldBash));
         assert_eq!(
-            screen.handle(&Press::typed('e'), &b),
+            screen.handle(&Press::typed('f'), &b),
             ScreenAction::UseAbility(Ability::ShieldBash)
         );
         let text = drawn(&screen, 80, 30).join("\n");
         assert!(
-            text.contains("> e  Shield bash        in a direction"),
+            text.contains("> f  Shield bash        in a direction"),
             "{text}"
         );
         assert!(text.contains("Strike someone next to you with the shield you hold."));

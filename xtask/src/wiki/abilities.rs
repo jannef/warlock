@@ -53,6 +53,9 @@ pub(super) fn abilities(content: &Content) -> String {
             }
             Ability::Intimidate => "everyone trained in Intimidate".into(),
             Ability::Heal => "everyone trained in Heal (with something to treat)".into(),
+            Ability::Fletch => {
+                "everyone (usable with a knife carried and a bow or a crossbow ready)".into()
+            }
             Ability::Forage => {
                 "everyone trained in Survival (usable in the wild: the overworld's land and its \
                  local areas)"
@@ -135,6 +138,11 @@ pub(super) fn abilities(content: &Content) -> String {
                     aim(a.aim(content)),
                     format!("{turns} turns, each {turn} (a ritual)"),
                 )
+            }
+            // A long action too: the batch's time.
+            Some(_) if a == Ability::Fletch => {
+                let minutes = content.fletch().map_or(0, |r| r.seconds / 60);
+                (aim(a.aim(content)), format!("{minutes} minutes (a batch)"))
             }
             // A long action too: the forage's time.
             Some(_) if a == Ability::Forage => {

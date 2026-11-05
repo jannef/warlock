@@ -97,6 +97,12 @@ same parts (`Stack::same_goods`), and a shop's bill counts goods, object and par
 (`docs/dev/shops.md`). Variants (below) are own parts of a non-gem material in place of a base
 part: `ItemPart::material`; `check` keeps them on their part's construction list.
 
+**Fletching's objects** (#1021; `docs/dev/skills.md` "Fletching"): `knife` is a plain weapon of
+the `daggers` skill, which is what a knife is to `Content::is_knife` (a dagger and a stiletto count;
+`short_blades` do not). `brittle_arrow` and `brittle_bolt` break on every hit (`breaks = 100`) and,
+with no `kind` or `frequency`, are never in loot or shops; `Content::ammunition`'s lowest id keeps
+`arrow` and `bolt` the names of their kinds.
+
 **Materials and variants** (spec §7 "Materials", #193, #194). `content/material.rs`:
 `MaterialDef` gains `group`, `color`, `weight` (percent of steel's), `to_hit` and `damage`
 (`MaterialDef::weapon`: `None` when neither is given, it cannot be a weapon's working part),

@@ -63,7 +63,7 @@ orc_shaman at (105, 44) route N N S S S N N N S S carrying a quarterstaff (wield
 spark_mote at (50, 45) route N N N N N S S S S S
 water_elemental at (55, 14) route N N N W E S S S
 hobgoblin_warcaster at (111, 51) route E E E S S W S W E N E N N W W W carrying a hardwood quarterstaff (wielded in both hands), 20 copper coins
-animated_blade_15 at (51, 15) route N N N N S S S S carrying a chromium morning star (magic) (wielded)
+animated_blade_15 at (51, 15) route N N N N S S S S carrying a chromium maul (magic) (wielded in both hands)
 fire_salamander at (111, 18) route N N N N E E E S N S N W W W S S S S
 hill_troll at (8, 11) route W W W E W W W W N S E E E E W E E E carrying a steel maul (wielded in both hands)
 hill_troll at (58, 26) route N N N N N N N N E S N W S S S S S S S S carrying a steel maul (wielded in both hands)
@@ -125,10 +125,10 @@ place a hooded figure at (46, 54): Its empty hands are held as if about a hilt t
  #.................................###  ##......Z.hhhhhhhTo#                     #..E..................###..........E.#
  #..........A..E.....................####..........hhhhhhhh#              ########......................E.............##
  #..................................................hhhhhhh#            ###............................................#
- #............[........................o...###...*...hhhhh.#           ##..............[..........##...................#
+ #............)........................o...###...*...hhhhh.#           ##..............[..........##...................#
  #...............................O........## ######........#          ##.........................####..............o...#
  #...............................#.........####  ##........##         #..........................## ##................##
- #...............[..............###...........####..........##        #...................T.......## ##...#....*......#
+ #...............=..............###...........####..........##        #...................T.......## ##...#....*......#
  #....###.............#.)......####............E........#....####     #................###..O......## ######.........z#
 ##...## ##...........###.......###.....................###......####  #....##..........####.........##     #....h.....##
 #....#  ##...........# #.......##..................................## ##..####...u......####......)..#######...........#
