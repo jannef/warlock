@@ -176,6 +176,10 @@ pub(super) fn make(canvas: &mut Canvas, room: SpecialRoom) -> bool {
     {
         return false;
     }
+    // A room with dressing and no wall to stand it by (a cave chamber in the open) stays plain.
+    if effect.dressing.is_some() && super::dress::spots(canvas, &room).is_empty() {
+        return false;
+    }
     let feature = match effect.feature {
         Some(terrain) => match feature_cell(canvas, &room) {
             Some(at) => Some((at, terrain)),

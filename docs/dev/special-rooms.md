@@ -191,7 +191,10 @@ workshop, teeming dens with two additions any den kind may use.
   of its walkable cells; candidates are its cells of free plain floor (`is_free_floor`, no
   patrol, trap, or object) with a cardinal neighbour that is not walkable and no door among the
   eight; each is drawn (`swap_remove`), skipped if the room's walkable cells would no longer be
-  joined without it (`special::joined`), else set to the terrain. The den's fill runs after the
+  joined without it (`special::joined`), else set to the terrain. A room with `dressing` and no
+  candidate at all (`dress::spots` empty: a cave chamber in the open, no wall by any of its
+  floor) is never made (`special::make` refuses it, with no draw, as it does a `feature` with no
+  cell), so no armoury stands bare. The den's fill runs after the
   map, so racks are never a sleeper's or a hoard's cell (they are not plain floor). A hand-made
   level's `[[room]]` gets no dressing and no sleepers.
 
