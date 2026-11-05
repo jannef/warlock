@@ -1,0 +1,20 @@
+# O6 (docs/design/generic-vaults.md §4): a ring of bluebells, three sprites of either court in it,
+# a jewel in the grass. The decision: whether to step in among them for it. The sprites are
+# flavour (level 2, each rolls its court), not a guard.
+name = "The Fairy Ring"
+kind = "outdoor"
+map = '''
+  ,,,  
+ ,s.s, 
+,.....,
+,..$..,
+,..s..,
+ ,..., 
+  ,,,  
+'''
+
+[legend]
+"," = "bluebells"
+"." = "grass"
+"s" = { terrain = "grass", creature = "sprite" }
+"$" = { terrain = "grass", loot = { pool = "jewellery" } }

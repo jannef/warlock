@@ -58,7 +58,12 @@ roads, ruins; `Clear` glade, banks, roadsides, no obstacles; `Free`), `water.rs`
 bands, ponds, brooks, winding courses; a lake's still water more than 3 columns in is `deep_water` where all eight neighbours are still water, so never on the map's edge and the shore stays wadeable; ponds, rivers and brooks have none; #1020), `road.rs`, `cover.rs` (one function per landscape; wood
 share blends towards the neighbors), and `reach.rs` (trails, joining pockets, ways out,
 validation, `arrival`). Overworld terrain picks its generator with `landscape` in
-`data/terrain.toml`; outdoor vaults are vault files with `kind = "outdoor"`. Tune by eye:
+`data/terrain.toml`; outdoor vaults are vault files with `kind = "outdoor"` (nine: Burnt Steading,
+Drowned Mill, Fairy Ring, Hermit's Hut, Hoar-stone, Old Battle, Ruined chapel, Ruined tower, Stone
+circle; `docs/design/generic-vaults.md` §4). The generator joins what it cannot walk to, so a ruin
+cannot hold a shut door (a closed door is not walkable: the Hermit's Hut's stands open), and a
+ruin's own water is laid for good (`cover::shores` leaves it, so a mill-pond keeps its shape).
+Tune by eye:
 `WARLOCK_AREAS="25,20 60,44" cargo test -p warlock-core --lib print_areas -- --ignored
 --nocapture` prints areas with one character per terrain (`WARLOCK_SEED` for the seed), and the
 `forest` scenario or `--content-dir` scenarios with `start_level = "local:x,y"` capture them.

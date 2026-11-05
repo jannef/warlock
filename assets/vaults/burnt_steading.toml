@@ -1,0 +1,19 @@
+# O3 (docs/design/generic-vaults.md §4): a burnt farmhouse, half its roof still on, its goods inside.
+# The decision: whether to shelter here (the roofed halves keep the rain off).
+name = "The Burnt Steading"
+kind = "outdoor"
+map = '''
+ WWWWW,WWW 
+ W=h=,=f=W 
+ W===,===, 
+ W=t=,=,=W 
+ WW,WW,WWW 
+'''
+
+[legend]
+"W" = "timber_wall"
+"=" = "plank_floor"
+"," = "rubble"
+"h" = { terrain = "plank_floor", objects = ["cooking_pot", "kettle"] }
+"f" = { terrain = "plank_floor", objects = ["bread", "apple*2"] }
+"t" = { terrain = "plank_floor", loot = { pool = "tools" } }
