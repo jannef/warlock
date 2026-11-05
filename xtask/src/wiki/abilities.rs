@@ -187,7 +187,7 @@ fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> Stri
     let book = content.talents();
     let mut who: Vec<(String, u8)> = (content.classes().iter())
         .filter_map(|c| {
-            let (level, _, _) = c.abilities.iter().find(|(_, talent, _)| {
+            let (level, _) = c.abilities.iter().find(|(_, talent)| {
                 (book.id(talent)).is_some_and(|t| (book.get(t).effects.iter()).any(&has))
             })?;
             Some((c.name.to_lowercase(), *level))
@@ -201,7 +201,7 @@ fn table_holders(content: &Content, has: impl Fn(&TalentEffect) -> bool) -> Stri
     // class's highest).
     let mut prestige: Vec<(String, u8)> = (content.prestiges().iter())
         .filter_map(|p| {
-            let (level, _, _) = p.abilities.iter().find(|(_, talent, _)| {
+            let (level, _) = p.abilities.iter().find(|(_, talent)| {
                 (book.id(talent)).is_some_and(|t| (book.get(t).effects.iter()).any(&has))
             })?;
             Some((p.name.clone(), *level))

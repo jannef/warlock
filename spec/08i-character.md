@@ -89,7 +89,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     nothing twice); then the line's dice. Its effects: stat points (the score and its potential
     together, a score never below 1), gold (given, or taken down to none), items as kit lines (a
     magic one identified, a scroll or potion known), skill starts, weapon-skill marks (never a
-    rank), the starting alignment, and (#707, B5) a talent at rank 1 or a birth sign's flaw,
+    rank), the starting alignment, and (#707, B5) a talent or a birth sign's flaw,
     each with what it hands out and kept in `Actor::boons` as the forgotten altar's Chosen and
     Forsaken are (`World::bestow`), so every restore puts it back; never a given, class, or flaw
     talent as a `talent`, and never one held (the roll skips a line that would give one held or
@@ -633,11 +633,11 @@ developer notes (CLAUDE.md, `docs/dev/`).
   `world/talent.rs`, the picks; M30, #229; design `docs/design/progression.md` §7, §10): knacks
   a character picks as they level, each a typed effect read where the rules already read what
   magic items do.
-  - **Data** (§7): `data/talents.toml` (the settings: `max_ranks`, `[coverage]`, the `[[tree]]`s
+  - **Data** (§7): `data/talents.toml` (the settings: `[coverage]`, the `[[tree]]`s
     in display order, the closed `[[system]]` list) and `data/talents/<id>.toml`, one `[[talent]]`
-    a file (`id`, `name`, `tree`, `description` in the game's words, `ranks` 1 to `max_ranks`,
-    `choice` (`weapon_skill`, `style`, `skill`, `element`, `stat`), `needs`, `effects` per rank held,
-    `[[rank]]` with each rank's own `needs` and `effects`, `systems` from the list, `granted`:
+    a file (`id`, `name`, `tree`, `description` in the game's words,
+    `choice` (`weapon_skill`, `style`, `skill`, `element`, `stat`), `needs`, `effects`,
+    `systems` from the list, `granted`:
     given, never picked; `flaw`: a birth sign's flaw, granted, never a prerequisite). The first
     tree, **Stars** (`no_free`), holds the birth signs' gifts (§8 "Birth sign"). Without the
     files there are no talents and no level asks for one.
@@ -684,7 +684,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     child, which doubled the background story's luckier odds, was cut in #787 with its
     `background` system: no talent is left on the story's draw.)
   - **Prerequisites** (`Needs`; all must hold at the pick and are never checked again: a score
-    lowered later keeps the talent): other talents at a rank (a talent with a choice may be
+    lowered later keeps the talent): other talents (a talent with a choice may be
     needed only by one of the same choice, taken for the same), stat **scores** (the stored
     score, never the effective one), skill values, weapon skill or style ranks, any one of
     several weapon skills at a rank (`any_weapon_skill = { roles = ["melee", "unarmed"], of =
@@ -768,12 +768,12 @@ developer notes (CLAUDE.md, `docs/dev/`).
     Stalker's eye came at 2 with #788): a talent of the **Class abilities** tree (`class = true` in
     `data/talents.toml`; `granted`, never on a pick list) or an ordinary talent it hands out
     (the aristocrat's Riposte at 18, the commoner's Second wind at 32). The player is given each
-    at rank 1 as they reach its level ("You gain Fencing." with the level's news), level 1's at
+    as they reach its level ("You gain Fencing." with the level's news), level 1's at
     creation, and again whatever is missing when a run is restored, so a grown table reaches a
     save; one already held (picked earlier, or a story's boon) is not given again: its level
     brings a talent pick in its place instead ("You know Second wind already: choose a talent in
     its place.", #790; not on a restore), and nothing is taken away. What
-    a rank hands out once comes with it: hit points by level, and **stat gifts** (`stat`: score
+    a talent hands out once comes with it: hit points by level, and **stat gifts** (`stat`: score
     and potential, Iron will's Presence +1; a Toughness gift raises the hit points with the
     maximum). Its `bonus_talents` (`levels`, `trees`) add a **bonus pick** at those levels
     (`Due::bonus`), of a talent from those trees (none named: any, the commoner); a talent of
@@ -1066,7 +1066,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     and the stream are left out of the JSON while unused, so runs without talents hash as
     before. **Saves change.**
   - **What the player sees**: `PerceptionView::due`, `own_talents` (names for their choice,
-    the rank of how many, the description), `talents` (every talent with the next rank's
+    the description), `talents` (every talent with its
     prerequisites and whether each holds, and the ways it may be taken now); the dumps'
     `talents` and dev `progress` layers; JSON `talents`, `due`. Never a rule's number: the
     wiki's Talents page states them.

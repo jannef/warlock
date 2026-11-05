@@ -3,6 +3,6 @@ id = "unbowed"
 name = "Unbowed"
 tree = "vigour"
 description = "Pain and poison bend you less: what your afflictions take from your strength, nimbleness, and the rest is halved."
-needs = { talents = { hardy = 1 }, level = 20 }
+needs = { talents = ["hardy"], level = 20 }
 effects = [{ kind = "penalty_percent", value = -50 }]
 systems = ["status"]

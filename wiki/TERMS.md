@@ -156,7 +156,7 @@ above.
 | Horoscope, animal, element, lucky day | `horoscope.md`, `horoscope.md#animals`, `horoscope.md#elements`, `horoscope.md#lucky-days` |
 | The great cycle | `horoscope.md#the-great-cycle` |
 | Alignment, good, evil, band | `alignment.md`, `alignment.md#what-moves-you` |
-| Talent, talent ranks, prerequisites | `talents.md`, `talents.md#ranks-choices-prerequisites` (a talent: its row) |
+| Talent, prerequisites | `talents.md`, `talents.md#choices-and-prerequisites` (a talent: its row) |
 | Racial talents | `talents.md#racial-talents` |
 | A talent tree (Vigour, Shadow, Delver, …) | its heading, `talents.md#delver` |
 | Class abilities | `talents.md#class-abilities`, `abilities.md` |

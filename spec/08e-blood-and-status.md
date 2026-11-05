@@ -259,8 +259,8 @@ developer notes (CLAUDE.md, `docs/dev/`).
     action `drain:N`, which stands in for an ability's cost ("You spend 5 mana (dev).",
     the cost as spent; refused, "You have only 3 mana (dev).", when short; no game time; recorded
     in replays).
-  - **Talents** (#242, the Scholar tree, §8 "Talents"): Deep well (`max_mana_per_levels`, 3
-    ranks: 1 mana per 4 character levels, at least 2, a rank; handed out into `mana_base` and
+  - **Talents** (#242, the Scholar tree, §8 "Talents"): Deep well (`max_mana_per_levels`:
+    1 mana per 4 character levels, at least 2; handed out into `mana_base` and
     the mana at the pick and as each later level comes, as Hardy's hit points, past `mana_level`
     too), Clear mind (`mana_regen_percent` +25), Meditation (`mana_resting_percent` +50, on
     resting's pace), Frugal caster (`mana_cost_percent` −20), and Blood magic (`blood_magic`, an

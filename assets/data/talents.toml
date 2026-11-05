@@ -6,12 +6,8 @@
 # The game shows a talent's `description` and its prerequisites in words; the wiki shows the
 # rules (cargo xtask wiki).
 
-# The most ranks a talent may have ("Name 2/3").
-max_ranks = 3
-
 # The identical-effects check (#790; docs/dev/progression.md "Coverage policy", the #776
-# review's rule 3): the game refuses to load when two talents do the same at every rank the
-# shorter has (a class table names the pickable's id, never a clone). The pairs here are kept on purpose; a pair that is no longer alike is an error too.
+# review's rule 3): the game refuses to load when two talents do the same (a class table names the pickable's id, never a clone). The pairs here are kept on purpose; a pair that is no longer alike is an error too.
 alike = [
     # Two cleave sources together cleave on and on (`TalentMods`: the warrior's Cleaving strike
     # beside the pickable Cleave is a great cleave).

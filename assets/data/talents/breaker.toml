@@ -3,6 +3,6 @@ id = "breaker"
 name = "Breaker"
 tree = "might"
 description = "Your kicks send a foe reeling: one your kick lands on is driven a cell back, when there is room; and you dig a quarter faster."
-needs = { talents = { mighty_kick = 1 }, stats = { strength = 14 } }
+needs = { talents = ["mighty_kick"], stats = { strength = 14 } }
 effects = [{ kind = "kick_back" }, { kind = "dig_percent", value = 25 }]
 systems = ["kicks", "digging"]

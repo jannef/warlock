@@ -23,7 +23,7 @@
 #   rolls         the skill rolls each of its levels gives (0 to 10, default 2)
 #   known_for     the skills it is known for, by skill id (skills.toml; default none)
 #   abilities     its level table, at its *own* levels 1 to `levels`: `{ level = 1, talent = "x" }`
-#                 rows, lowest first, each a talent given at rank 1 as the level comes (a talent of
+#                 rows, lowest first, each a talent given as the level comes (a talent of
 #                 the `class` tree, ../talents/, or an ordinary one), as a class's (classes/README)
 #   bonus_talents `{ levels = [5, 10], trees = ["guard"] }`: a bonus talent pick at each of those
 #                 of its own levels, from those trees (none: any)

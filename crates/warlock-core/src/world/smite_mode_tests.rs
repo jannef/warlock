@@ -237,7 +237,7 @@ fn a_replay_of_the_modes_verifies() {
         w.apply(&action);
         replay.push(&action, &w);
     }
-    assert!(w.state.player().talents.has("wrathful_smite", 1));
+    assert!(w.state.player().talents.has("wrathful_smite"));
     Replay::from_json(&replay.to_json())
         .expect("json")
         .run(content)

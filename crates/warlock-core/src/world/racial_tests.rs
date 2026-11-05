@@ -92,7 +92,7 @@ fn every_racial_talent_asks_for_its_race_and_only_that_race_is_offered_it() {
 fn humans_are_granted_versatile_and_pick_one_more_at_creation_and_at_level_30() {
     let human = kitted("human,male,warrior");
     let book = human.content().talents();
-    assert!(human.state.player().talents.has("versatile", 1));
+    assert!(human.state.player().talents.has("versatile"));
     let own = human.perception().own_talents();
     let versatile = own.iter().find(|t| t.name == "Versatile").expect("held");
     assert!(versatile.granted && versatile.race && !versatile.class);
@@ -103,7 +103,7 @@ fn humans_are_granted_versatile_and_pick_one_more_at_creation_and_at_level_30() 
     assert_eq!(creation_count(&CONTENT, &spec("elf,other,bard")), 3);
     let dwarf = kitted("dwarf,male,warrior");
     assert_eq!(picked(&dwarf), 2);
-    assert!(!dwarf.state.player().talents.has("versatile", 1));
+    assert!(!dwarf.state.player().talents.has("versatile"));
     let versatile = book.id("versatile").expect("versatile");
     assert!(book.get(versatile).granted, "never on a pick list");
     // Level 30 brings two picks to a human, one to anyone else.
@@ -129,7 +129,7 @@ fn versatile_is_granted_again_on_a_restore_and_saves_keep_it() {
     let json = serde_json::to_string(&w.state).expect("serializes");
     let restored = World::from_state(CONTENT.clone(), serde_json::from_str(&json).expect("loads"))
         .expect("restores");
-    assert!(restored.state.player().talents.has("versatile", 1));
+    assert!(restored.state.player().talents.has("versatile"));
     assert_eq!(restored.state_hash(), w.state_hash());
 }
 
@@ -334,7 +334,7 @@ fn a_replay_that_takes_a_racial_talent_verifies() {
         w.apply(&action);
         replay.push(&action, &w);
     }
-    assert!(w.state.player().talents.has("lucky", 1));
+    assert!(w.state.player().talents.has("lucky"));
     assert!(mods(&w).reroll_fumble);
     let verified = (crate::replay::Replay::from_json(&replay.to_json()).expect("json"))
         .run(CONTENT.clone())

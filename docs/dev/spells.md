@@ -101,7 +101,7 @@ cast path shares.
   (`{ kind = "spell_mod", rungs = 1 }`), checked by `SpellModSpec::check` (something to do, the
   rider's status known and its severity 1 to `MAX_SEVERITY`, `when` tags known schools, kinds,
   shapes, or damage types, `cost` a percent, and on a talent chosen for a school or an element
-  no `when`: the choice is its filter), resolved into `TalentMods::spell` per rank held
+  no `when`: the choice is its filter), resolved into `TalentMods::spell`
   (`TalentMods::spell_mods(tags)` sums them). Items: `Effect::{SpellRungs, SpellBonus,
   SpellSides, SpellDice, SpellReroll, WandRungs}` and `SpellReach` (cells), `SpellDuration`
   (degrees), worn, unidentified too, with no tag filter (no shipped affix needs one; one is a

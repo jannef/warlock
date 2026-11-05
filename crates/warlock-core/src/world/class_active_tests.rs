@@ -238,7 +238,7 @@ fn weapon_drill_shield_wall_armour_drill_and_iron_stance() {
     // makes on the way may add to Defence too).
     let book = content.talents();
     let line = book.get(book.id("shield_line").expect("shield line"));
-    let line = crate::talent::TalentMods::of(&content, line.effects_at(1));
+    let line = crate::talent::TalentMods::of(&content, line.effects.iter().cloned());
     let (benefit, _) = line.weapon_benefit("", crate::content::Role::ShieldBlock, 0);
     assert_eq!(benefit.shield, 1, "Shield line");
     let protection = w.state.player().protection(&content, None).against(None);
@@ -461,11 +461,11 @@ fn hardened_and_mighty_thews() {
     // again, three more each.
     reach(&mut w, 49);
     assert!(
-        !w.state.player().talents.has("hardened", 1),
+        !w.state.player().talents.has("hardened"),
         "not at 25 any more"
     );
     reach(&mut w, 50);
-    assert!(w.state.player().talents.has("hardened", 1));
+    assert!(w.state.player().talents.has("hardened"));
     let at_50 = w.state.player().max_hp(&content);
     reach(&mut w, 51);
     let per_level = w.level_hp(&content, 51);

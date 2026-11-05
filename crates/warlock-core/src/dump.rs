@@ -76,8 +76,8 @@ pub enum Layer {
     /// comes from, what it is made with, its to-hit, damage, and range (`Main hand long sword: +4
     /// to hit, 1d8+2 slashing`, `Missile short bow: +3 to hit, 1d6 piercing, range 10`).
     Attacks,
-    /// Not a map: the player's talents in the order taken, one a line with its rank of how many
-    /// and its choice (`Skill focus (stealth)`, `Weapon focus (long blades)`); never what a rank gives.
+    /// Not a map: the player's talents in the order taken, one a line with its choice
+    /// (`Skill focus (stealth)`, `Weapon focus (long blades)`).
     Talents,
     /// Not a map: the player's abilities in the abilities menu's order, one a line with its
     /// source and what it asks for, or why it cannot be used now (`Shield bash (weapon skill):
@@ -1008,18 +1008,13 @@ fn attacks_json(view: &PerceptionView<'_>) -> Value {
         .collect()
 }
 
-/// The player's talents in the order taken, one a line: its name for its choice and, for a
-/// ranked talent, the rank held of how many (`Name 2/3`; none has ranks now, #966); a race's and a birth sign's gifts
-/// first, marked `(race)` and `(sign)`, the sign's flaw `(sign, flaw)`; a forgotten altar's
+/// The player's talents in the order taken, one a line: its name for its choice; a race's and a
+/// birth sign's gifts first, marked `(race)` and `(sign)`, the sign's flaw `(sign, flaw)`; a forgotten altar's
 /// `(altar)` and `(altar, flaw)`; the background story's `(story)` and `(story, flaw)`.
 fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
     (view.own_talents().iter())
         .map(|t| {
-            let name = if t.ranks > 1 {
-                format!("{} {}/{}", t.name, t.rank, t.ranks)
-            } else {
-                t.name.clone()
-            };
+            let name = &t.name;
             match (t.granted, t.flaw, t.class) {
                 _ if t.story && t.flaw => format!("{name} (story, flaw)"),
                 _ if t.story => format!("{name} (story)"),
@@ -1030,7 +1025,7 @@ fn talent_rows(view: &PerceptionView<'_>) -> Vec<String> {
                 (true, false, _) if t.spent => format!("{name} (sign, spent)"),
                 (true, false, _) => format!("{name} (sign)"),
                 (false, false, true) => format!("{name} (class)"),
-                _ => name,
+                _ => name.clone(),
             }
         })
         .collect()
@@ -2020,8 +2015,6 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
             json!({
                 "id": content.talents().get(t.id).id,
                 "name": t.name,
-                "rank": t.rank,
-                "ranks": t.ranks,
                 "choice": t.choice,
                 "granted": t.granted,
                 "flaw": t.flaw,

@@ -1,7 +1,6 @@
 //! A forgotten altar's great boons and banes (spec §7 "Special rooms"; `world/boons.rs`): Gift
 //! and Wrath of the forgotten, Exalted and Unmade (a level gained again gives no choices),
-//! Chosen and Forsaken (kept for life through a save), the relic, the horde, Pious's second
-//! rank, and the great tier's share of the draw.
+//! Chosen and Forsaken (kept for life through a save), the relic, the horde, and the great tier's share of the draw.
 
 use super::super::World;
 use crate::Pos;
@@ -249,13 +248,13 @@ fn chosen_gives_a_talent_for_life_outside_the_picks() {
     assert_eq!(me.talents.len(), held + 1);
     assert_eq!(me.boons.len(), 1);
     let boon = me.boons[0].clone();
-    assert_eq!(me.talents.rank_of(&boon.id, boon.choice.as_deref()), 1);
+    assert!(me.talents.holds(&boon.id, boon.choice.as_deref()));
     assert!(w.due().is_none(), "no pick spent or owed");
     assert!(talent_rows(&w).contains("(altar)"), "{}", talent_rows(&w));
     // Restored, it is held still.
     let loaded = World::from_state(w.content.clone(), w.state().clone()).expect("loaded");
     let me = loaded.state.player();
-    assert_eq!(me.talents.rank_of(&boon.id, boon.choice.as_deref()), 1);
+    assert!(me.talents.holds(&boon.id, boon.choice.as_deref()));
     assert_eq!(loaded.state_hash(), w.state_hash());
 }
 
@@ -269,7 +268,7 @@ fn forsaken_marks_with_a_flaw_kept_through_a_save() {
     let flaw = me.boons[0].id.clone();
     let book = w.content.talents();
     assert!(book.get(book.id(&flaw).expect("talent")).flaw);
-    assert!(me.talents.has(&flaw, 1));
+    assert!(me.talents.has(&flaw));
     assert!(
         talent_rows(&w).contains("(altar, flaw)"),
         "{}",
@@ -277,7 +276,7 @@ fn forsaken_marks_with_a_flaw_kept_through_a_save() {
     );
     // Restored, the granted talents are put back: the flaw with them.
     let loaded = World::from_state(w.content.clone(), w.state().clone()).expect("loaded");
-    assert!(loaded.state.player().talents.has(&flaw, 1));
+    assert!(loaded.state.player().talents.has(&flaw));
     assert_eq!(loaded.state_hash(), w.state_hash());
     // Every flaw held: nothing more to mark.
     let mut w = world();
@@ -286,7 +285,7 @@ fn forsaken_marks_with_a_flaw_kept_through_a_save() {
         .map(|(_, d)| d.id.clone())
         .collect();
     for f in &flaws {
-        w.player_mut().talents.hold(f, None);
+        w.player_mut().talents.take(f, None);
     }
     befall(&mut w, "forsaken");
     assert!(said(

@@ -244,7 +244,7 @@ fn skill_focus_counts_the_chosen_trained_skill_higher_past_100_too() {
     // One pick per skill.
     assert!(matches!(
         talent::may_take(&content, &w.candidate(), def, Some("athletics")),
-        Err(talent::Refusal::AtTop)
+        Err(talent::Refusal::Held)
     ));
     // It sums with Master of none (5 for every trained skill).
     give(&mut w, "master_of_none");

@@ -1,9 +1,8 @@
 //! The Talents page (spec §6 "Talents", §8 "Talents"; #236): page 8 of the info pages, also
 //! reached by its own rebindable command (`KeyCommand::Talents`, `G` by default). First the
-//! player's talents, grouped by tree, each with its rank (`Name 2/3`, where one has ranks) and where it came from
-//! when they did not pick it (their class, their birth sign); then, dimmer, every other talent
-//! they could still pick, by tree, with what its next rank needs ("Needs: Toughness 14,
-//! Healthy"), each part met in the normal colour and each part not met dimmed, so a build can be
+//! player's talents, grouped by tree, each with where it came from when they did not pick it
+//! (their class, their birth sign); then, dimmer, every other talent they could still pick, by
+//! tree, with what it needs ("Needs: Toughness 14, Healthy"), each part met in the normal colour and each part not met dimmed, so a build can be
 //! planned without the wiki. The class's coming abilities are not listed (they are learnt by
 //! levelling). The selected talent's description shows below. Words only: a talent's rule
 //! numbers are the wiki's.
@@ -30,12 +29,10 @@ const EXTRA: i32 = 9;
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Item {
     name: String,
-    /// "2/3" for a ranked one: the rank held (one of the player's) or the next.
-    rank: String,
     /// Where one of the player's came from, if they did not pick it: "class", "birth sign".
     from: Option<&'static str>,
     description: String,
-    /// What the next rank needs (another talent's), each part met or not.
+    /// What it needs (another talent's), each part met or not.
     needs: Vec<NeedView>,
     /// One of the player's own.
     own: bool,
@@ -98,18 +95,17 @@ impl TalentsScreen {
             screen.lines.push(Line::Name(screen.items.len()));
             screen.items.push(Item {
                 name: talent.name,
-                rank: rank(talent.rank, talent.ranks),
                 from,
                 description: talent.description,
                 needs: Vec::new(),
                 own: true,
             });
         }
-        // Every other talent that may still be picked: not given, not held to its last rank.
+        // Every other talent that may still be picked: not given, not held.
         let mut tree: Option<TreeId> = None;
         let mut section = false;
         for talent in view.talents() {
-            if talent.granted || book.tree(talent.tree).class || talent.held >= talent.ranks {
+            if talent.granted || book.tree(talent.tree).class || talent.held {
                 continue;
             }
             if !section {
@@ -127,10 +123,6 @@ impl TalentsScreen {
             screen.lines.push(Line::Needs(index));
             screen.items.push(Item {
                 name: talent.name,
-                rank: match talent.held {
-                    0 => String::new(),
-                    held => rank(held + 1, talent.ranks),
-                },
                 from: None,
                 description: talent.description,
                 needs: talent.needs,
@@ -212,7 +204,7 @@ impl TalentsScreen {
         panel.footer(console, &footer);
     }
 
-    /// A talent's name line: the `>` marker, the name and rank, and where it came from.
+    /// A talent's name line: the `>` marker, the name, and where it came from.
     fn draw_name(&self, console: &mut Console, x: i32, y: i32, i: usize) {
         let item = &self.items[i];
         let selected = i == self.selected;
@@ -224,23 +216,11 @@ impl TalentsScreen {
         if selected {
             console.print(x, y, ">", ACCENT);
         }
-        let mut name = item.name.clone();
-        if !item.rank.is_empty() {
-            name = format!("{name} {}", item.rank);
-        }
-        console.print(x + 4, y, &name, color);
+        console.print(x + 4, y, &item.name, color);
         if let Some(from) = item.from {
-            let at = x + 4 + name.chars().count() as i32 + 2;
+            let at = x + 4 + item.name.chars().count() as i32 + 2;
             console.print(at, y, &format!("({from})"), TEXT_DIM);
         }
-    }
-}
-
-/// "2/3": rank `rank` of `ranks`, for a talent with more than one; else nothing.
-fn rank(rank: u8, ranks: u8) -> String {
-    match ranks {
-        0 | 1 => String::new(),
-        _ => format!("{rank}/{ranks}"),
     }
 }
 

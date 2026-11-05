@@ -90,7 +90,7 @@ struct DumpArgs {
     /// and wield), stats (the player's race, gender, class, and scores), skills (the player's
     /// trained skills and their values), weapon_skills (the player's weapon skills: rank and
     /// progress toward the next), schools (the schools of magic and the caster styles: rank and
-    /// progress), talents (the player's talents with their ranks and choices),
+    /// progress), talents (the player's talents with their choices),
     /// abilities (the player's abilities in the abilities menu's
     /// order: what each asks for, or why it cannot be used now), quests (the player's quest
     /// log: what each asks and how far it

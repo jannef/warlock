@@ -2,10 +2,9 @@
 //! class gives the talents its table names as the player reaches their levels: at creation
 //! (level 1's), as each level comes ([`World::level_up`] calls [`World::grant_class`] with its
 //! news), and again when a run is restored, so a table that grew reaches saved characters (never
-//! taking anything away). A given talent is held like a picked one, at the rank the table names
-//! (`{ level = 25, talent = "jack_of_all_trades", rank = 2 }`; 1 by default), so every rule
-//! reads it through `Actor::talent_mods`; what a rank hands out once (hit points by level, a stat
-//! gift, weapon ranks, skills taken up) is handed out as it is given ([`hand_out`]). A talent already held (a pickable the
+//! taking anything away). A given talent is held like a picked one, so every rule reads it through
+//! `Actor::talent_mods`; what it hands out once (hit points by level, a stat gift, weapon ranks,
+//! skills taken up) is handed out as it is given ([`hand_out`]). A talent already held (a pickable the
 //! table names, which the player picked before their class gave it) is not given again: the
 //! level brings a talent pick in its place instead ([`held_already`], #790).
 //!
@@ -17,12 +16,12 @@ use crate::character::Character;
 use crate::content::{Content, Role, TalentDef, TalentEffect, TalentId};
 use crate::talent::TalentMods;
 
-/// Hands out what holding rank `rank` of `def` gives once, as it is taken or given at character
+/// Hands out what holding `def` gives once, as it is taken or given at character
 /// `level`: its hit points by level, into `actor`'s base hit points and hit points, its mana by
 /// level likewise (Deep well), and its stat gifts, into its scores and potentials (a gift of
 /// Toughness raises its hit points with its maximum).
-pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, rank: u8, level: u8) {
-    let mods = TalentMods::of(content, def.effects_at(rank));
+pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, level: u8) {
+    let mods = TalentMods::of(content, def.effects.iter().cloned());
     let before = actor.max_hp(content);
     for (stat, by) in mods.stats.iter().filter(|&(_, by)| by != 0) {
         actor.stats.gift(stat, by);
@@ -32,9 +31,9 @@ pub(super) fn hand_out(content: &Content, actor: &mut Actor, def: &TalentDef, ra
     actor.hp += hp;
     actor.grow_mana_base(content, mods.mana_at(level));
     focus::hold(content, actor, &mods.grants, level);
-    for effect in def.effects_at(rank) {
+    for effect in &def.effects {
         if let TalentEffect::WeaponRanks { to, skills, .. } = effect {
-            raise_ranks(content, actor, to, &skills);
+            raise_ranks(content, actor, *to, skills);
         }
     }
 }
@@ -56,13 +55,13 @@ fn raise_ranks(content: &Content, actor: &mut Actor, to: u8, skills: &[String]) 
     }
 }
 
-/// What the hand-outs of rank `rank` of `def` say as a class table gives it (Travelled hands:
+/// What the hand-outs of `def` say as a class table gives it (Travelled hands:
 /// one line, never one per skill).
-fn handed_news(def: &TalentDef, rank: u8) -> Vec<String> {
-    (def.effects_at(rank))
+fn handed_news(def: &TalentDef) -> Vec<String> {
+    (def.effects.iter())
         .filter_map(|e| match e {
             TalentEffect::WeaponRanks { news, .. } | TalentEffect::TakeUpSkills { news, .. } => {
-                news
+                news.clone()
             }
             _ => None,
         })
@@ -70,29 +69,27 @@ fn handed_news(def: &TalentDef, rank: u8) -> Vec<String> {
 }
 
 /// Gives `actor` (of `character`; none without one) the talents their classes give up to total
-/// level `level` at the ranks they name that it does not hold yet, table by table (the class's
-/// to its cap, a prestige class's to its own level; spec §8 "Prestige classes"), each rank with
-/// what it hands out: a rank a table names comes to one holding the rank below, and every rank
-/// missing below it comes with it (a restore); returns each rank given, `(talent, rank)`, in
-/// table order.
+/// level `level` that it does not hold yet, table by table (the class's to its cap, a prestige
+/// class's to its own level; spec §8 "Prestige classes"), each with what it hands out; returns
+/// each talent given, in table order.
 pub(super) fn grant(
     content: &Content,
     character: Option<&Character>,
     actor: &mut Actor,
     level: u8,
-) -> Vec<(TalentId, u8)> {
+) -> Vec<TalentId> {
     let Some(character) = character else {
         return Vec::new();
     };
     let book = content.talents();
     let mut given = Vec::new();
     for (table, own) in character.class_levels(content, level) {
-        for (id, rank) in table.ranks_to(book, own) {
+        for id in table.abilities_to(book, own) {
             let def = book.get(id);
-            for r in actor.talents.rank_of(&def.id, None) + 1..=rank {
+            if !actor.talents.holds(&def.id, None) {
                 actor.talents.take(&def.id, None);
-                hand_out(content, actor, def, r, level);
-                given.push((id, r));
+                hand_out(content, actor, def, level);
+                given.push(id);
             }
         }
     }
@@ -117,10 +114,9 @@ pub(super) fn held_already(
         return Vec::new();
     }
     (table.abilities().iter())
-        .filter(|(l, _, _)| *l == own)
-        .filter_map(|(_, id, rank)| book.id(id).map(|t| (t, *rank)))
-        .filter(|&(id, rank)| actor.talents.rank_of(&book.get(id).id, None) >= rank)
-        .map(|(id, _)| id)
+        .filter(|(l, _)| *l == own)
+        .filter_map(|(_, id)| book.id(id))
+        .filter(|&id| actor.talents.holds(&book.get(id).id, None))
         .collect()
 }
 
@@ -139,18 +135,15 @@ impl World {
             .into_owned()
             .grants;
         focus::hold(&content, self.player_mut(), &grants, level);
-        for &(id, rank) in &given {
+        for &id in &given {
             // Jack of all trades: the skills it takes up, from the levels stream.
-            self.take_up_skills(content.talents().get(id).effects_at(rank));
+            self.take_up_skills(content.talents().get(id).effects.iter().cloned());
         }
         if news {
-            for (id, rank) in given {
+            for id in given {
                 let def = content.talents().get(id);
-                self.news.push(match rank {
-                    1 => format!("You gain {}.", def.name),
-                    _ => format!("Your {} grows.", def.name),
-                });
-                self.news.extend(handed_news(def, rank));
+                self.news.push(format!("You gain {}.", def.name));
+                self.news.extend(handed_news(def));
             }
         }
     }

@@ -29,7 +29,7 @@ better of your [Intelligence](stats.md#stat-intelligence) and [Willpower](stats.
 [Experience](experience.md#what-a-level-gives)): a wizard keeps growing it after [hit points](combat.md#hit-points) stop
 at level 20; a [warrior](classes.md#warrior) with ordinary wits gains none. [Magic items](magic-items.md) that add to it
 ("+5 to maximum mana") raise your most, not what you have. The talent *[Deep well](talents.md#talent-deep-well)* raises both,
-by 1 for every 4 [character levels](experience.md#levels) and at least 2 for each of its three ranks, as you take it and
+by 1 for every 4 [character levels](experience.md#levels) and at least 2, as you take it and
 as each level after comes (see [Talents](talents.md)).
 
 The skill *[Concentration](skills.md#skill-concentration)*, once you are trained in it, deepens your pool a little: +1 mana at 25,
