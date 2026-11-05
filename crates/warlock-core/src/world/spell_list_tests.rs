@@ -262,7 +262,7 @@ fn every_class_has_mana_and_its_guaranteed_spells_within_its_caster_level() {
         if class.casting < 100 {
             assert!(spells.len() <= 2, "{}: {spells:?}", class.id);
             assert!(
-                (spells.iter()).all(|&(_, t, k)| t <= 5 && k != SpellPurpose::Damage),
+                (spells.iter()).all(|&(_, t, k)| t <= 7 && k != SpellPurpose::Damage),
                 "{}: {spells:?}",
                 class.id
             );

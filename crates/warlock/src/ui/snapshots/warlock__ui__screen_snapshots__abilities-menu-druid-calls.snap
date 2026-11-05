@@ -10,12 +10,12 @@ expression: "render(case, content.clone())"
           │   b  Spark               1d4 electricity, may arc, conducts, 1 mana, aimed  │
           │   c  Barkskin            3 mana                                             │
           │   d  Call of the wild    2 called, 5 mana                                   │
-          │   e  Call lightning      3d6 electricity, may arc, conducts, 20 mana, aimed │
-          │   f  Call of the forest  2 called, 20 mana                                  │
+          │   e  Water walking       5 mana                                             │
+          │   f  Call lightning      3d6 electricity, may arc, conducts, 20 mana, aimed │
+          │   g  Call of the forest  2 called, 20 mana                                  │
           │ Skills                                                                      │
-          │   g  Tame                in a direction                                     │
-          │   h  Heal                nothing to treat                                   │
-          │   i  Listen at a door    in a direction                                     │
+          │   h  Tame                in a direction                                     │
+          │   i  Heal                nothing to treat                                   │
           │   j  Pick lock           in a direction                                     │
           │   k  Forage              not usable here                                    │
           │ Weapon skills                                                               │

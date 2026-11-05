@@ -256,6 +256,7 @@ mod weapon_ability;
 mod weapon_active;
 mod witch;
 mod words;
+mod wriggle;
 mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
@@ -1584,6 +1585,8 @@ mod bond_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]
+mod buff_field_tests;
+#[cfg(test)]
 mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
@@ -1983,6 +1986,8 @@ mod weather_tests;
 mod witch_tests;
 #[cfg(test)]
 mod words_tests;
+#[cfg(test)]
+mod wriggle_tests;
 #[cfg(test)]
 mod zap_tests;
 

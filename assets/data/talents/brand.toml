@@ -1,0 +1,8 @@
+[[talent]]
+id = "brand"
+name = "Brand"
+tree = "class"
+granted = true
+description = "Your held weapon burns a while (a spell, paid in mana): your blows do fire besides, and the blade lights your way a little."
+effects = [{ kind = "spell", spell = "brand" }]
+systems = ["spells", "mana", "combat", "light"]

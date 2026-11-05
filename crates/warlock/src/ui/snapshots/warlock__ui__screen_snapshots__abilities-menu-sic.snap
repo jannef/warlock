@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
                     │   c  Sic 'em            at a place you see               │
                     │ Spells                                                   │
                     │   d  Barkskin           3 mana                           │
+                    │   e  Water walking      5 mana                           │
                     │ Skills                                                   │
-                    │   e  Tame               you already have a companion     │
-                    │   f  Listen at a door   in a direction                   │
+                    │   f  Tame               you already have a companion     │
                     │   g  Forage             not usable here                  │
                     │   h  Woodcraft          not usable yet                   │
                     │ Weapon skills                                            │

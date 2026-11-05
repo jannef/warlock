@@ -160,7 +160,7 @@ Tests `world/footing_tests.rs`.
 row): `Effect::Wade` is read in `World::step_price` (`world/schedule.rs`), on a step
 `World::wading_step` calls wading (off the overworld, `move_cost` above 100, `stars::wading`): a
 percent of what the terrain adds over a plain step is spared (`surcharge_spared`, rounded up), 100
-for `swimmer` and `wades_free`, so Swim never goes past them. Its use `wade` is reported at the
+for `swimmer` and `Actor::wades_free`, so Swim never goes past them. Its use `wade` is reported at the
 head of `World::wade` (`world/disease.rs`), before the talents' early return: a wader whom a
 talent spares still trains. `Effect::Swim` is read in `World::keeps_afloat` (`world/ice.rs`,
 `docs/dev/temperature.md`), which marks `swim` once a check; it is `Skills::trains_effect`-gated, so
@@ -230,7 +230,9 @@ Escape artist (#1015) has no action and no ability row. `Effect::Escape` is read
 50 and 100: halved, then skipped) in `World::climb_price` (`world/trap.rs`, the pit's one arm);
 both only for those trained (`trains_effect`). `Use::Escape` is marked per check whatever came of
 it, `Use::Climb` per climb out (Escape artist 100 %, Athletics 50 % and no effect). Tests:
-`world/escape_tests.rs`.
+`world/escape_tests.rs`. `Effect::Escape` is also read by `World::wriggle` (`world/wriggle.rs`,
+#1032: a step into a neutral creature that keeps its post, an automatic Dexterity check against
+11 plus its Willpower modifier, one more `Use::Wriggle` at 50 %; tests `wriggle_tests.rs`).
 
 ## Tumble: plain misses
 
