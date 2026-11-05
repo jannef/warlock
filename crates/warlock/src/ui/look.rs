@@ -4,7 +4,7 @@
 use crate::render::console::{Cell, Console};
 use warlock_core::Pos;
 use warlock_core::color::Rgb;
-use warlock_core::content::{ActionKind, Content, ServiceKind, Stance, and_list};
+use warlock_core::content::{ActionKind, Content, ServiceKind, Stance, ZoneKind, and_list};
 use warlock_core::damage::ResistanceWord;
 use warlock_core::magic::Numbers;
 use warlock_core::object::{Stack, phrase, phrase_with};
@@ -81,6 +81,16 @@ pub fn known(view: &PerceptionView<'_>, p: Pos) -> Option<String> {
     Some(format!("You know {who} is {}.", and_list(&parts)))
 }
 
+/// What look mode says of a zone on a cell (`world/zone.rs`).
+fn zone_words(kind: ZoneKind) -> &'static str {
+    match kind {
+        ZoneKind::Fire => "wreathed in fire",
+        ZoneKind::Fouled => "under a foul reek",
+        ZoneKind::Slick => "slick underfoot",
+        ZoneKind::Dark => "under a pall of dark",
+    }
+}
+
 /// [`describe`] without a place's note.
 fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let content = view.content();
@@ -133,6 +143,11 @@ fn describe_cell(view: &PerceptionView<'_>, p: Pos, blood: bool) -> String {
     let room = match (room, hallow) {
         (Some(room), Some(hallow)) => Some(format!("{room}, {hallow}")),
         (room, hallow) => room.or(hallow),
+    };
+    // A zone lying on it: "stone floor under a foul reek".
+    let room = match (room, view.zone_at(p).map(zone_words)) {
+        (Some(room), Some(zone)) => Some(format!("{room}, {zone}")),
+        (room, zone) => room.or(zone.map(str::to_string)),
     };
     let ground = |t| match (&room, view.leads_to(p)) {
         (Some(room), Some(_)) => format!("{}, {room}", named(t)),
@@ -436,7 +451,7 @@ mod tests {
         let mut w = World::start_run(content, "showcase", None, Some(&spec), None, true)
             .expect("a ranger's run");
         // To the darkness chamber's amulet and out to the hound, in the light of the lantern.
-        let walk = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W use_tool give:j";
+        let walk = "move:N*3 open:N move:N*2 move:E*30 open:N move:N*3 move:W*6 move:N*5 move:E*6 move:S*2 move:W*2 pickup move:E*2 move:N*2 wait*2 move:W use_tool give:k";
         for action in warlock_core::action::parse_actions(walk).expect("actions") {
             w.apply(&action);
         }
@@ -651,6 +666,22 @@ mod tests {
             seen.starts_with("A strange spirit (unhurt), who waits, on "),
             "{seen}"
         );
+    }
+
+    #[test]
+    fn a_zone_says_what_lies_on_the_ground() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let mut w = World::new(content, "showcase", None).expect("the hub");
+        let me = w.player_pos();
+        let spot = warlock_core::geom::Pos::new(me.x + 1, me.y);
+        let words: Vec<(ZoneKind, String)> = (ZoneKind::ALL.iter())
+            .map(|&kind| {
+                let lay = format!("zone:{}@{},{},0", kind.id(), spot.x, spot.y);
+                w.apply(&lay.parse().expect("parses"));
+                (kind, describe(&w.perception(), spot, true))
+            })
+            .collect();
+        insta::assert_debug_snapshot!(words);
     }
 
     #[test]

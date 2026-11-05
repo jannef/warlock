@@ -1,0 +1,8 @@
+[[talent]]
+id = "cloudburst"
+name = "Cloudburst"
+tree = "class"
+granted = true
+description = "Under the open sky you call the rain for an hour (paid in mana): it puts out what burns."
+effects = [{ kind = "spell", spell = "cloudburst" }]
+systems = ["spells", "mana"]

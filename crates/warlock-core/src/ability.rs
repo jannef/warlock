@@ -91,6 +91,9 @@ pub enum Ability {
     /// this in its place while `data/intimidate.toml` exists). Had by whoever is trained in it;
     /// usable whenever they have it (the rules refuse, taking no time, without a foe there).
     Intimidate,
+    /// Make arrows or bolts (spec §8 "Fletching"): [`Action::Fletch`], in Woodcraft's place,
+    /// though anyone has it.
+    Fletch,
     /// Forage for food in the wild (spec §8 "Foraging"): [`Action::Forage`], Survival's use (the
     /// skill with the `forage` benefit, listed as this in its place, while `data/forage.toml`
     /// exists). Had by whoever is trained in it; unavailable ([`Unavailable::NotHere`]) anywhere
@@ -269,6 +272,10 @@ pub enum Aim {
 pub enum Unavailable {
     /// A shield bash without a shield to bash with.
     NoShield,
+    /// Fletch without a knife carried (spec §8 "Fletching").
+    NoKnife,
+    /// Fletch without a bow or a crossbow ready (spec §8 "Fletching").
+    NoLauncher,
     /// A skill whose use is not in the game yet.
     NotYet,
     /// Decipher with no scroll of an unidentified type in the pack.
@@ -314,6 +321,8 @@ impl Unavailable {
     pub fn reason(self, content: &Content) -> Cow<'static, str> {
         match self {
             Unavailable::NoShield => "you hold no shield".into(),
+            Unavailable::NoKnife => "you have no knife".into(),
+            Unavailable::NoLauncher => "you have no bow or crossbow ready".into(),
             Unavailable::NotYet => "not usable yet".into(),
             Unavailable::NoUnknownScroll => "no unknown scroll".into(),
             Unavailable::NoMana => "you have too little mana".into(),
@@ -345,6 +354,8 @@ impl Unavailable {
     pub fn id(self, content: &Content) -> Cow<'static, str> {
         match self {
             Unavailable::NoShield => "no_shield".into(),
+            Unavailable::NoKnife => "no_knife".into(),
+            Unavailable::NoLauncher => "no_launcher".into(),
             Unavailable::NotYet => "not_yet".into(),
             Unavailable::NoUnknownScroll => "no_unknown_scroll".into(),
             Unavailable::NoMana => "no_mana".into(),
@@ -448,7 +459,9 @@ impl Ability {
     /// `tame` benefit, with `data/companions.toml` and `data/allies.toml`) [`Ability::Tame`],
     /// Intimidate's (the
     /// `intimidate` benefit, with `data/intimidate.toml`) [`Ability::Intimidate`], Survival's (the
-    /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`], Decipher script's (the `decipher` benefit, with `data/decipher.toml`) [`Ability::Decipher`]. `None` for a skill whose
+    /// `forage` benefit, with `data/forage.toml`) [`Ability::Forage`], Woodcraft's (the `fletch`
+    /// benefit, with `data/fletch.toml`) [`Ability::Fletch`], Decipher script's (the `decipher`
+    /// benefit, with `data/decipher.toml`) [`Ability::Decipher`]. `None` for a skill whose
     /// use is to come, or that has none.
     fn use_of(def: &SkillDef, content: &Content) -> Option<Ability> {
         let gives = |effect| def.benefits.iter().any(|b| b.effect == effect);
@@ -478,6 +491,9 @@ impl Ability {
             })
             .or_else(|| {
                 (gives(Effect::Forage) && content.forage().is_some()).then_some(Ability::Forage)
+            })
+            .or_else(|| {
+                (gives(Effect::Fletch) && content.fletch().is_some()).then_some(Ability::Fletch)
             })
     }
 
@@ -530,7 +546,7 @@ impl Ability {
     /// oneself, if they are trained in a skill with the `heal` effect; foraging, if they are
     /// trained in Survival (the forage benefit's); second wind,
     /// if they hold the talent; throwing one's voice, if a talent gives it (the bard's); the
-    /// shield bash, everyone.
+    /// shield bash and fletching, everyone.
     pub(crate) fn had_by(self, actor: &Actor, content: &Content) -> bool {
         match self {
             Ability::Sign(active) => actor.talent_mods(content).has_sign_active(active),
@@ -560,7 +576,7 @@ impl Ability {
             Ability::SecondWind => actor.talent_mods(content).second_wind.is_some(),
             Ability::BloodMagic => actor.talent_mods(content).blood_magic.is_some(),
             Ability::ThrowVoice => actor.talent_mods(content).throw_voice,
-            Ability::ShieldBash => true,
+            Ability::ShieldBash | Ability::Fletch => true,
             Ability::Weapon(skill, id) => actor.weapon_abilities(content).contains(&(skill, id)),
             // A place offers it, not who one is ([`Ability::here`]); an order needs allies
             // ([`Ability::orders`]).
@@ -585,6 +601,7 @@ impl Ability {
             Ability::Tame => "tame",
             Ability::Intimidate => "intimidate",
             Ability::Forage => "forage",
+            Ability::Fletch => "fletch",
             Ability::Decipher => "decipher",
             Ability::Heal => "heal",
             Ability::SecondWind => "second_wind",
@@ -625,6 +642,7 @@ impl Ability {
             Ability::Tame => "Tame",
             Ability::Intimidate => "Intimidate",
             Ability::Forage => "Forage",
+            Ability::Fletch => "Fletch",
             Ability::Decipher => "Decipher",
             Ability::Heal => "Heal",
             Ability::SecondWind => "Second wind",
@@ -679,6 +697,10 @@ impl Ability {
             Ability::Forage => {
                 "Spend a while searching the wild around you for something to eat: berries, \
                  nuts, mushrooms, roots."
+            }
+            Ability::Fletch => {
+                "Spend a while with a knife and a bow to hand, cutting arrows or bolts for it \
+                 from what wood there is. Anyone can, after a fashion."
             }
             Ability::Decipher => {
                 "Pore over a scroll you carry, of a kind you have not identified, for ten \
@@ -747,6 +769,7 @@ impl Ability {
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
+            | Ability::Fletch
             | Ability::Decipher
             | Ability::Heal => Source::Skill,
             Ability::ThrowVoice => Source::Class,
@@ -781,6 +804,7 @@ impl Ability {
             | Ability::SecondWind
             | Ability::BloodMagic
             | Ability::Forage
+            | Ability::Fletch
             | Ability::Pray
             | Ability::Heel
             | Ability::Hold
@@ -816,6 +840,7 @@ impl Ability {
             Ability::Tame => Some(ActionKind::Tame),
             Ability::Intimidate => Some(ActionKind::Intimidate),
             Ability::Forage => Some(ActionKind::Forage),
+            Ability::Fletch => Some(ActionKind::Fletch),
             Ability::Decipher => Some(ActionKind::Decipher),
             Ability::Heal => Some(ActionKind::Heal),
             Ability::SecondWind | Ability::BloodMagic => Some(ActionKind::Wait),
@@ -850,6 +875,7 @@ impl Ability {
             | Ability::Tame
             | Ability::Intimidate
             | Ability::Forage
+            | Ability::Fletch
             | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
@@ -942,6 +968,7 @@ impl Ability {
             (Ability::Pray, _) => Some(Action::Pray),
             (Ability::Drink, _) => Some(Action::Drink),
             (Ability::Forage, _) => Some(Action::Forage),
+            (Ability::Fletch, _) => Some(Action::Fletch),
             // It asks for an item ([`Ability::action_on`]).
             (Ability::Temper | Ability::Decipher, _) => None,
             (Ability::Heel, _) => Some(Action::Order(Command::Heel)),
@@ -994,6 +1021,7 @@ impl Ability {
             | Ability::Feint
             | Ability::Tame
             | Ability::Forage
+            | Ability::Fletch
             | Ability::Decipher
             | Ability::Heal
             | Ability::SecondWind
@@ -1068,6 +1096,7 @@ impl Ability {
                 .filter(|&cooldown| actor.effects.has(cooldown))
                 .map(Unavailable::While),
             Ability::Skill(_) => Some(Unavailable::NotYet),
+            Ability::Fletch => crate::world::fletch_lack(actor, content),
             Ability::Weapon(_, id) => weapon_unavailable(actor, content, id),
             Ability::Heal => (crate::heal::treatable(actor, content).is_empty())
                 .then_some(Unavailable::NothingToTreat),
@@ -1314,7 +1343,7 @@ mod tests {
                 "pick_lock",
                 "steal",
                 "forage",
-                "woodcraft",
+                "fletch",
             ]
         );
         let last: Vec<Ability> = every.iter().rev().take(7).rev().copied().collect();

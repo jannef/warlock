@@ -54,6 +54,10 @@ Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebu
    with `ACTOR_FLOOR` at the creature's sliding position. The creature's colour is left alone
    (it tells the type; a tint would read as another creature, and the unaware mark already
    tints). Still: no switch needs to stop it, so reduced effects show the same mark.
+   **Zones** (`docs/dev/spells.md` "Zones"): `ui/zone_tint.rs` leans a cell's background toward the
+   kind's colour in `draw_map`, after blood, for what `PerceptionView::zone_at` shows, on seen and
+   remembered cells alike. Still: no particles, no animation, so reduced effects show the same. A
+   fire zone's light is an ordinary point source and flickers by its preset (`arrow_fire`).
    **Spell circles** (spec §4.8 "Spell circles", `docs/design/buff-circles.md`; between the map
    grid and the free glyphs, `render/circles.rs::LAYER_Z` 0.5): `ui/circles.rs::emit` (in the
    map chain after `lighting::update`) builds, when `Game` changes, the list of circled actors

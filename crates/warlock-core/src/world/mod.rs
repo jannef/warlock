@@ -140,6 +140,7 @@ mod feature;
 mod feint;
 mod fight;
 mod flavour;
+mod fletch;
 mod focus;
 mod footing;
 mod forage;
@@ -222,6 +223,7 @@ mod spell;
 mod spell_aim;
 mod spell_arc;
 mod spell_mods;
+mod spell_rule;
 mod spell_rung;
 mod spell_type;
 mod spell_words;
@@ -259,6 +261,7 @@ mod witch;
 mod words;
 mod wriggle;
 mod zap;
+mod zone;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
 pub use alignment::Deed;
@@ -282,6 +285,7 @@ pub use encounter::{
 pub use experience::{Discovered, Progress};
 pub use familiar::{draw as familiar_draw, name_for as familiar_name};
 pub use fight::{Cause, Death};
+pub(crate) use fletch::fletch_lack;
 pub(crate) use forage::forage_ground;
 pub use free_blow::FreeBlows;
 pub use gifts::{STARE_RANGE, Streak};
@@ -314,6 +318,7 @@ pub(crate) use talk_past::offered as encounter_choices;
 pub use temper::{temperable, workable};
 use travel::{enter_room, instantiate_level, level_template};
 pub use voice::VOICE_RANGE;
+pub use zone::Zone;
 
 use crate::action::{Action, Event, Outcome, Rest};
 use crate::alignment::Score;
@@ -674,6 +679,8 @@ enum Spent {
     Pray(pray::Prayer),
     /// Drinking at a healing spring (see [`World::drink`]).
     Drink(drink::Draught),
+    /// Fletching for this many seconds (see [`World::fletch`]).
+    Fletch(u32),
     /// Foraging in the wild for this many seconds (see [`World::forage`]).
     Forage(u32),
     /// Making out a labelled scroll (see [`World::decipher`]).
@@ -1322,6 +1329,7 @@ impl World {
             Spent::Sanctuary(until) => self.sanctuary(until, &mut events),
             Spent::Pray(prayer) => self.pray(prayer, &mut events),
             Spent::Drink(draught) => self.drink(draught, &mut events),
+            Spent::Fletch(seconds) => self.fletch(seconds, &mut events),
             Spent::Forage(seconds) => self.forage(seconds, &mut events),
             Spent::Decipher(work) => self.decipher(work, &mut events),
             Spent::Temper(work) => self.temper(work, &mut events),
@@ -1459,6 +1467,7 @@ impl World {
             Action::Pray => return self.start_prayer(),
             Action::Drink => return self.start_drink(),
             Action::Forage => return self.start_forage(),
+            Action::Fletch => return self.start_fletch(),
             Action::Decipher { item } => return self.start_decipher(*item),
             Action::Temper { item } => return self.start_temper(*item),
             Action::Give { item, ally } => return self.give_collar(*item, *ally),
@@ -1507,6 +1516,9 @@ impl World {
             Action::Identify(positions) => return self.identify_dev(positions),
             Action::Freeze { at, radius } => return self.freeze_dev(*at, *radius, events),
             Action::Thaw { at, radius } => return self.thaw_dev(*at, *radius, events),
+            Action::Zone { kind, at, radius } => {
+                return self.zone_dev(*kind, *at, *radius, events);
+            }
             Action::Afflict(id) => return self.afflict_dev(id, events),
             Action::Drain(amount) => return self.drain_dev(*amount),
             Action::Resource(id) => return self.grant_resource_dev(id, events),
@@ -1695,6 +1707,8 @@ mod fight_tests;
 mod fixture_factions;
 #[cfg(test)]
 mod flavour_tests;
+#[cfg(test)]
+mod fletch_tests;
 #[cfg(test)]
 mod focus_tests;
 #[cfg(test)]
@@ -1894,6 +1908,8 @@ mod spell_arc_tests;
 #[cfg(test)]
 mod spell_list_tests;
 #[cfg(test)]
+mod spell_rule_tests;
+#[cfg(test)]
 mod spell_talent_tests;
 #[cfg(test)]
 mod spell_type_force_tests;
@@ -1997,6 +2013,8 @@ mod words_tests;
 mod wriggle_tests;
 #[cfg(test)]
 mod zap_tests;
+#[cfg(test)]
+mod zone_tests;
 
 /// How actors `a` and `b` stand toward each other ([`World::stance`], for a borrowed state): the
 /// stance of their factions, [`Stance::Neutral`] for a Beast-friend and an animal they befriended.

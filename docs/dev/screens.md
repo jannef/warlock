@@ -358,6 +358,10 @@ owner's rule, #156) get no key of their own: they go into the one abilities menu
   every context's group, under "Ability keys" (`controls_screen::Row::AbilityKeys`; text
   snapshot `controls-screen-bottom`).
 
+**Fletch** (#1021) is the one skill's use anyone has: its row stands in Woodcraft's place, greyed
+out "you have no knife" or "you have no bow or crossbow ready" (`abilities-menu-fletch`, `-no-knife`,
+`-no-launcher`).
+
 **Text snapshots** (#301): `ui/screen_snapshots.rs` (test only) checks the screens as text, in
 place of golden screenshots. Each `Case` starts a run the way a golden entry does (scenario,
 `character`, `kit`, action text, `screen` as `--screen`, `keys` as `--keys`, `save_dir`, the

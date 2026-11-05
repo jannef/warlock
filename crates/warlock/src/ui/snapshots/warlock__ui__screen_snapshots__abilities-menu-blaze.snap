@@ -7,7 +7,6 @@ expression: "render(case, content.clone())"
 
 
 
-
                     ┌─ Abilities ──────────────────────────────────────────────┐
                     │                                                          │
                     │ Birth sign                                               │
@@ -17,14 +16,15 @@ expression: "render(case, content.clone())"
                     │   c  Heal         nothing to treat                       │
                     │   d  Intimidate   at a place you see                     │
                     │   e  Metalcraft   not usable yet                         │
+                    │   f  Fletch       you have no knife                      │
                     │ Weapon skills                                            │
-                    │   f  Shield bash  in a direction                         │
+                    │   g  Shield bash  in a direction                         │
                     │                                                          │
                     │ Make a lying move at a foe next to you: fooled, it is    │
                     │ off its guard for your next blow.                        │
                     │                                                          │
                     │                                                          │
-                    │ a-f or Enter use   Esc close                             │
+                    │ a-g or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
 
 

@@ -67,6 +67,12 @@
 #     arcs        a `damage` ray's, bolt's, touch's, or line's, of a type that arcs (`[types]` in
 #                 ../spells.toml), 1 to 12: that many jumps are taken without a draw, every jump of
 #                 it reaching 2 cells rather than the arc's one
+#     zone        `{ kind = "fire", turns = 10 }`: an area that stays on the cells of a burst's or
+#                 a line's shape for that many of the player's turns (1 to 600; the turn is 6 s;
+#                 docs/dev/spells.md "Zones"): `fire` (a `damage` spell of fire: burns who starts
+#                 a turn on it or steps onto it, one roll as it is laid), `fouled` (a `damage` spell
+#                 of poison: poisons who starts a turn in it), `slick` and `dark` (a `hex`, then
+#                 with no `status`: trips who steps on it or off it; no light reaches it)
 #   [spell.cast]  how it shows and sounds (needed by a `damage` spell cast at a distance):
 #     effect      the effect presentation shows (../effects.toml): a burst's for a burst or a
 #                 cone, a bolt's for a ray, a bolt, or a line; none for touch or self

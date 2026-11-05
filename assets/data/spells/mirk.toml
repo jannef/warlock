@@ -1,0 +1,21 @@
+# Mirk (the spell types design §7 entry 14, §7 "Zones"; #1000): a pall of darkness that lies where
+# it is aimed: no light reaches into it. Cast it on the archers, not on oneself. Scroll only.
+[[spell]]
+id = "mirk"
+name = "Mirk"
+description = "A pall of darkness bursts where you aim it and lies there a while: no light reaches into it, and eyes that need light see nothing in it."
+level = 12
+school = "evocation"
+kind = "hex"
+shape = "burst"
+resolution = "area"
+range = 8
+radius = 2
+effect = { zone = { kind = "dark", turns = 30 } }
+
+[spell.cast]
+noise = { sound = "chanting", loudness = 20 }
+
+[spell.grows]
+range = "willpower 14 9, 18 10"
+radius = "willpower 18 3"

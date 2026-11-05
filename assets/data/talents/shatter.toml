@@ -1,0 +1,8 @@
+[[talent]]
+id = "shatter"
+name = "Shatter"
+tree = "class"
+granted = true
+description = "A clap of force where you aim it (paid in mana): it breaks walls, ice, shut doors, and shut chests."
+effects = [{ kind = "spell", spell = "shatter" }]
+systems = ["spells", "mana", "combat"]

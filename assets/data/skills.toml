@@ -26,6 +26,7 @@
 #                 stepped past), "burdened"
 #                 (an action, not waiting, while your load slows you), "travel" (a journey: a step
 #                 on the overworld), "forage" (a forage that ran its time, whatever it found),
+#                 "fletch" (a batch of arrows or bolts that ran its time, whatever came of it),
 #                 "steal" (an attempt to steal from someone, whatever comes of
 #                 it), "heal" (a try at treating yourself, whatever comes of it), "kick" (a kick
 #                 at a closed door), "study" (a spell studied from a scroll,
@@ -66,7 +67,8 @@
 #                 Staggered's extra cost that is spared), "travel"
 #                 (percent less time a journey on the overworld takes), "wade" (percent of what
 #                 wading adds to a step that is spared), "swim" (points added to a Swim check, at
-#                 most 20; only trained is one asked), "forage" (percent added
+#                 most 20; only trained is one asked), "fletch" (points added
+#                 to the check of a batch of arrows or bolts, at most 12: fletch.toml), "forage" (percent added
 #                 to a forage's chance of finding food, at most 30; trained, a skill with it lets
 #                 you forage at all: forage.toml), "bargain" (percent better
 #                 prices in shops, together with Presence at most half; shops.toml), "identify"
@@ -530,5 +532,9 @@ benefit = [{ effect = "dodge", steps = [20, 40, 60, 80, 100], every = 25 }]
 [[skill]]
 id = "woodcraft"
 name = "Woodcraft"
-description = "Working wood: carving, carpentry, and the making of bows."
+description = "Working wood: carving, carpentry, and the making of bows, arrows, and bolts."
 kind = "action"
+mark = [{ on = "fletch", chance = 100 }]
+# Fletching (spec §8 "Fletching", fletch.toml; the Fletch ability, which anyone has): +8 to the
+# check at 100, +12 at 200; the value also adds to the count and makes them plain (fletch.toml).
+benefit = [{ effect = "fletch", curve = [[0, 0], [100, 8], [200, 12]] }]

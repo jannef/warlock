@@ -122,6 +122,13 @@ pub struct LevelState {
     /// `world/sanctuary.rs`), in the order laid; one past its end is dropped at the end of a turn.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) hallows: Vec<super::Hallow>,
+    /// The zones spells laid here (`world/zone.rs`), in the order laid, their cells never shared;
+    /// one past its end is dropped at the end of a turn.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) zones: Vec<super::Zone>,
+    /// The zones as the player last saw them, by position: a cell seen clear is forgotten.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
+    pub(crate) zone_memory: BTreeMap<Pos, crate::content::ZoneKind>,
     /// Traps, by position (spec §8 "Traps"), hidden or known; a spent one is gone.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty", with = "by_pos")]
     pub(crate) traps: BTreeMap<Pos, Trap>,
@@ -195,6 +202,8 @@ impl LevelState {
             pervading: template.pervading,
             risings: Vec::new(),
             hallows: Vec::new(),
+            zones: Vec::new(),
+            zone_memory: BTreeMap::new(),
             shops: Vec::new(),
             traps: template.traps.clone(),
             trap_memory: BTreeMap::new(),
@@ -449,6 +458,10 @@ impl LevelState {
             && (self.hidden.iter()).all(|(p, h)| known(&h.terrain) && self.terrain.in_bounds(*p))
             && (self.risings.iter()).all(|r| r.is_valid_for(content))
             && (self.hallows.iter()).all(|h| self.terrain.in_bounds(h.at))
+            && (self.zones.iter()).all(|z| {
+                z.cells.iter().all(|p| self.terrain.in_bounds(*p))
+                    && z.light.is_none_or(|l| usize::from(l.0) < lights)
+            })
             && (self.chests.keys()).all(|p| self.terrain.in_bounds(*p))
     }
 }

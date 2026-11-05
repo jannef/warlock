@@ -1,0 +1,20 @@
+# A scroll of mirk (spec §8 "Scrolls", "Spells"): read it (`r`) and aim, and it casts Mirk, free of
+# mana, at its base: a pall of darkness lies where it was aimed. Study it (`L`), and you may learn
+# the spell for good.
+[[object]]
+id = "scroll_of_mirk"
+name = "scroll of mirk"
+plural = "scrolls of mirk"
+glyph = "?"
+fg = "#7d7796"
+class = "scrolls"
+materials = ["paper"]
+weight = 50
+value = 200
+stackable = true
+level = 6
+frequency = 20
+
+[object.read]
+kind = "spell"
+spell = "mirk"

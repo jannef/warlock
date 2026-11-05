@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Your athletics improves. (×177) You learn Deep lungs. You learn Healthy. You learn Cool head. You
- learn Iron will. You learn Lean. You learn Long fast. You learn Unbroken soul. You learn --more--
-                    ┌─ Abilities ──────────────────────────────────────────────┐
-                    │                                                          │
-                    │ Birth sign                                               │
-                    │   a  Transfixing stare  at a place you see               │
-                    │ Class                                                    │
-                    │   b  Consecrate                                          │
-                    │ > c  Miracle                                             │
-                    │   d  Sanctuary                                           │
-                    │ Spells                                                   │
-                    │   e  Mend               1d4 healed, 1 mana, aimed        │
-                    │   f  Blessing           3 mana                           │
-                    │   g  Cure wounds        3d6 healed, 2 mana, aimed        │
-                    │ Skills                                                   │
-                    │   h  Decipher           no unknown scroll                │
-                    │   i  Heal               nothing to treat                 │
-                    │   j  Knowledge          not usable yet                   │
-                    │   k  Listen at a door   in a direction                   │
-                    │ Weapon skills                                            │
-                    │   l  Shield bash        in a direction                   │
-                    │                                                          │
-                    │ Everything that ails you is answered at once: wounds,    │
-                    │ hunger, sickness and poison, hexes and holds, what was   │
-                    │ taken, and your mana and every pool you hold, filled.    │
-                    │                                                          │
-                    │ a-l or Enter use   Esc close                             │
-                    └──────────────────────────────────────────────────────────┘
-
+ Your athletic┌─ Abilities ─────────────────────────────────────────────────────────┐ool head. You
+ learn Iron wi│                                                                     │earn --more--
+              │ Birth sign                                                          │
+              │   a  Transfixing stare  at a place you see                          │
+              │ Class                                                               │
+              │   b  Consecrate                                                     │
+              │ > c  Miracle                                                        │
+              │   d  Sanctuary                                                      │
+              │ Spells                                                              │
+              │   e  Mend               1d4 healed, 1 mana, aimed                   │
+              │   f  Blessing           3 mana                                      │
+              │   g  Cure wounds        3d6 healed, 2 mana, aimed                   │
+              │   h  Benison            3d6 healed, 22 mana                         │
+              │   i  Rebuke             4d6 fire, burns one in four, 34 mana, aimed │
+              │ Skills                                                              │
+              │   j  Decipher           no unknown scroll                           │
+              │   k  Heal               nothing to treat                            │
+              │   l  Knowledge          not usable yet                              │
+              │   m  Listen at a door   in a direction                              │
+              │   n  Fletch             you have no knife                           │
+              │ Weapon skills                                                       │
+              │   o  Shield bash        in a direction                              │
+              │                                                                     │
+              │ Everything that ails you is answered at once: wounds, hunger,       │
+              │ sickness and poison, hexes and holds, what was taken, and your mana │
+              │ and every pool you hold, filled.                                    │
+              │                                                                     │
+              │ a-o or Enter use   Esc close                                        │
+              └─────────────────────────────────────────────────────────────────────┘
  The Hub  ·  HP 66/66  ·  MP 427/427  ·  Lv 60  ·  08:00  ·  11 Darkening, Year 1444     ? controls

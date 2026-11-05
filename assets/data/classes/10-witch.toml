@@ -41,6 +41,7 @@ abilities = [
     { level = 14, talent = "grave_feast" },
     { level = 18, talent = "malison" },
     { level = 18, talent = "charnel_burst" },
+    { level = 24, talent = "leech" },
     { level = 25, talent = "second_sight" },
     { level = 25, talent = "familiars_sight" },
     { level = 28, talent = "rouse_the_dead" },

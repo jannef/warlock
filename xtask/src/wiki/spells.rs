@@ -6,6 +6,7 @@ use super::text::{Term, anchored, damage_link, link};
 use std::fmt::Write as _;
 use warlock_core::content::{
     BurstIce, Content, Resolution, RodDoes, RodShape, Shape, SpellData, SpellPurpose, TalentEffect,
+    ZoneKind,
 };
 
 /// What each shape multiplies the base cost by; a burst by radius.
@@ -276,6 +277,7 @@ fn reach(spell: &SpellData) -> String {
         Shape::Myself if spell.aims_corpse() => "a corpse you see".into(),
         Shape::Myself => "—".into(),
         Shape::Touch => "next to you".into(),
+        Shape::Burst if spell.about_caster() => format!("about you, radius {}", n(spell.radius)),
         Shape::Burst => format!("range {}, radius {}", n(spell.range), n(spell.radius)),
         Shape::Cone | Shape::Line => n(spell.length),
         Shape::Ray | Shape::Bolt => n(spell.range),
@@ -298,9 +300,14 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
                 .effect
                 .heal
                 .map_or_else(String::new, |r| r.to_string());
-            match spell.effect.mana {
+            let back = match spell.effect.mana {
                 Some(mana) => format!("{healed} hit points and {mana} mana back"),
                 None => format!("{healed} hit points back"),
+            };
+            if spell.about_caster() {
+                format!("{back}, one roll, to you and each ally of yours in it")
+            } else {
+                back
             }
         }
         SpellPurpose::Buff | SpellPurpose::Hex => match spell.effect.status {
@@ -314,7 +321,14 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
                 };
                 format!("{who} {} ({n})", status(s))
             }
-            None => String::new(),
+            None => match spell.effect.push {
+                Some(n) => format!(
+                    "everyone on it, nearest first, is driven {n} cell{} on, unless held or \
+                     blocked",
+                    if n == 1 { "" } else { "s" }
+                ),
+                None => String::new(),
+            },
         },
         SpellPurpose::Cleanse => {
             let mut ends: Vec<String> = spell.effect.cures.iter().map(|&s| status(s)).collect();
@@ -354,6 +368,21 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
     if spell.kind == SpellPurpose::Heal && spell.aims_corpse() {
         text.push_str(", from a corpse beside you, used up");
     }
+    if let Some(zone) = spell.effect.zone {
+        let what = match zone.kind {
+            ZoneKind::Fire => "fire that burns",
+            ZoneKind::Fouled => "a cloud that poisons",
+            ZoneKind::Slick => "slick ground that trips",
+            ZoneKind::Dark => "a darkness no light reaches into",
+        };
+        let then = if text.is_empty() { "" } else { "; then " };
+        let _ = write!(
+            text,
+            "{then}[{what}](#zones) for {} turns ({} seconds)",
+            zone.turns,
+            u32::from(zone.turns) * 6
+        );
+    }
     if spell.kind == SpellPurpose::Damage
         && let Some((s, n)) = spell.effect.status
     {
@@ -375,6 +404,39 @@ pub(super) fn does(content: &Content, spell: &SpellData) -> String {
     }
     if spell.look.blast > 0 {
         text.push_str("; it breaks walls");
+    }
+    if !spell.effect.only_tags.is_empty() {
+        let _ = write!(
+            text,
+            "; it reaches only the {}, friend or foe",
+            spell.effect.only_tags.join(" and the ")
+        );
+    }
+    if spell.effect.only_terrain.is_some() {
+        text.push_str("; only those on ground where things grow");
+    }
+    if let Some(percent) = spell.effect.leech {
+        let _ = write!(
+            text,
+            "; {percent} % of the hit points it takes come back to you"
+        );
+    }
+    if spell.effect.douses {
+        text.push_str("; it puts out the fires on its cells");
+    }
+    if !spell.effect.clears.is_empty() {
+        let kinds: Vec<&str> = (spell.effect.clears.iter())
+            .map(|k| match k {
+                ZoneKind::Fire => "fire",
+                ZoneKind::Fouled => "foul cloud",
+                ZoneKind::Slick => "slick ground",
+                ZoneKind::Dark => "darkness",
+            })
+            .collect();
+        let _ = write!(text, "; it clears its cells of {} zones", kinds.join(", "));
+    }
+    if spell.about_caster() && spell.kind == SpellPurpose::Damage {
+        text.push_str("; you are in it");
     }
     if spell.open_sky {
         text.push_str("; only under the open sky");

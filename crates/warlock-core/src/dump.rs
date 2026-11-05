@@ -237,6 +237,30 @@ pub fn parse_layers(text: &str) -> Result<Vec<Layer>, String> {
     text.split(',').map(|l| l.trim().parse()).collect()
 }
 
+/// Dev: the zones on the current level (`world/zone.rs`), one a line in the order laid:
+/// `zone fire by #0 until 09:15:00, harm 4: (12, 5) (13, 5)`.
+fn zone_rows(world: &World) -> Vec<String> {
+    (world.zones().iter())
+        .map(|z| {
+            let until = z.until();
+            let cells: Vec<String> = z.cells().map(|p| p.to_string()).collect();
+            let harm = match z.harm() {
+                0 => String::new(),
+                harm => format!(", harm {harm}"),
+            };
+            format!(
+                "zone {} by #{} until {:02}:{:02}:{:02}{harm}: {}",
+                z.kind().id(),
+                z.by().0,
+                until.hour(),
+                until.minute(),
+                until.second(),
+                cells.join(" ")
+            )
+        })
+        .collect()
+}
+
 /// Renders one layer as rows of text with trailing spaces trimmed.
 pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
     match layer {
@@ -246,6 +270,7 @@ pub fn layer_rows(world: &World, layer: Layer) -> Vec<String> {
             truth_rows(world),
             chest_rows(world),
             hallow_rows(world),
+            zone_rows(world),
         ]
         .concat(),
         Layer::Actors => [spawn_header(world), actor_rows(world), rising_rows(world)].concat(),
@@ -345,7 +370,7 @@ fn perceived_glyph(view: &PerceptionView<'_>, layer: Layer, p: Pos) -> char {
 
 /// A heard sound in the `sound` layer: `f` footsteps, `o` a door opening, `c` a door closing,
 /// `x` fighting, `b` a bowstring, `m` chanting (magic), `k` banging (a door kicked), `d` digging,
-/// `v` a voice, `h` a howl, `a` an alarm bell, `e` an explosion, `t` a thunderclap; upper case
+/// `v` a voice, `h` a howl, `q` a heartbeat, `a` an alarm bell, `e` an explosion, `t` a thunderclap; upper case
 /// when loud.
 pub fn sound_char(sound: &PerceivedSound) -> char {
     let c = match sound.kind {
@@ -359,6 +384,7 @@ pub fn sound_char(sound: &PerceivedSound) -> char {
         SoundKind::Digging => 'd',
         SoundKind::Voice => 'v',
         SoundKind::Howl => 'h',
+        SoundKind::Heartbeat => 'q',
         SoundKind::Bell => 'a',
         SoundKind::Explosion => 'e',
         SoundKind::Thunder => 't',
@@ -2235,6 +2261,18 @@ pub fn json(world: &World, layers: &[Layer], include_state: bool) -> Value {
                 "answers": p.answers,
             });
         }
+        // The current level's zones (ground truth).
+        out["zones"] = (world.zones().iter())
+            .map(|z| {
+                json!({
+                    "kind": z.kind().id(),
+                    "cells": z.cells().collect::<Vec<_>>(),
+                    "until": z.until().seconds(),
+                    "by": z.by().0,
+                    "harm": z.harm(),
+                })
+            })
+            .collect();
         // The current level's hallowed ground (Sanctuary; ground truth).
         out["hallows"] = (world.hallows().iter())
             .map(|h| {
@@ -2559,12 +2597,18 @@ mod tests {
                 "Listen at a door (skill): a direction",
                 "Pick lock (skill): a direction",
                 "Steal (skill): a direction",
+                "Fletch (skill): you have no knife",
                 "Shield bash (weapon skill): you hold no shield",
             ]
         );
         let value = json(&world, &[], false);
         assert_eq!(
             value["abilities"][5],
+            json!({"id": "fletch", "source": "skill", "aim": "nothing",
+                   "unavailable": "no_knife"})
+        );
+        assert_eq!(
+            value["abilities"][6],
             json!({"id": "shield_bash", "source": "weapon_skill", "aim": "a direction",
                    "unavailable": "no_shield"})
         );
@@ -2589,9 +2633,9 @@ mod tests {
             world.apply(&action);
         }
         let rows = layer_rows(&world, Layer::Abilities);
-        assert_eq!(rows[5], "Shield bash (weapon skill): a direction");
+        assert_eq!(rows[6], "Shield bash (weapon skill): a direction");
         assert_eq!(
-            json(&world, &[], false)["abilities"][5]["unavailable"],
+            json(&world, &[], false)["abilities"][6]["unavailable"],
             Value::Null
         );
         assert!(!Layer::Abilities.is_dev_only());
