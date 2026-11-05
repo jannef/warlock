@@ -10,6 +10,8 @@ an upper-case slot letter on the equipment screen), the character screen (`@`), 
 screen (`W`), the quest log (`q`), the message history (`v`), choosing what to
 pick up (`,`/`;` on several stacks), drop (`d`), eat (`e`), or read (`r`; then, for the scroll of
 identify, what to read it on, `ScreenName::Identify`, which takes the read list's place), the
+Decipher ability's list (`ScreenName::Decipher`, `ObjectList::Decipher`: the scrolls carried of a type
+not yet identified, `world::undeciphered`; choosing one sends `Action::Decipher`), the
 abilities menu (`a`), the
 dialogue screen (opened by
 `screens::converse` after an action this frame whose outcome is talk with topics,

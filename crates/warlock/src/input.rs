@@ -1269,6 +1269,9 @@ impl Gameplay<'_> {
                 if ability == Ability::Give {
                     return Some(ScreenAction::Open(ScreenName::Give));
                 }
+                if ability == Ability::Decipher {
+                    return Some(ScreenAction::Open(ScreenName::Decipher));
+                }
             }
             (true, ability::Aim::Nothing) => {
                 if let Some(action) = ability.action(&content, None) {

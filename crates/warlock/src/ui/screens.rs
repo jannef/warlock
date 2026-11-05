@@ -157,6 +157,9 @@ pub enum ScreenName {
     /// Choose what to temper at a forge's anvil (the Temper ability, spec §7 "Special rooms"):
     /// the weapons and armour carried.
     Temper,
+    /// Choose a scroll to make out unread (the Decipher ability, spec §8 "Scrolls"): those of a
+    /// type not yet identified.
+    Decipher,
     /// Choose what to give a kept beast of the player's for its neck (the Give ability, spec §8
     /// "Allies"): what fits a neck, carried.
     Give,
@@ -213,6 +216,7 @@ impl ScreenName {
                 | ScreenName::Study
                 | ScreenName::Identify
                 | ScreenName::Temper
+                | ScreenName::Decipher
                 | ScreenName::Give
                 | ScreenName::Abilities
                 | ScreenName::Shape
@@ -437,6 +441,7 @@ impl Screen {
                 beneath.item.unwrap_or(0),
             ))),
             ScreenName::Temper => objects(ObjectList::Temper),
+            ScreenName::Decipher => objects(ObjectList::Decipher),
             ScreenName::Give => objects(ObjectList::Give),
             ScreenName::Abilities => Screen::Abilities(AbilitiesScreen::new(run, beneath.ability)),
             ScreenName::Shape => Screen::Shape(ShapeScreen::new(run)),
@@ -473,6 +478,7 @@ impl Screen {
                 ObjectList::Study => ScreenName::Study,
                 ObjectList::Identify(_) => ScreenName::Identify,
                 ObjectList::Temper => ScreenName::Temper,
+                ObjectList::Decipher => ScreenName::Decipher,
                 ObjectList::Give => ScreenName::Give,
             },
             Screen::Equipment(_) => ScreenName::Equipment,

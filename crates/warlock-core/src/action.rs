@@ -227,6 +227,14 @@ pub enum Action {
     /// is made. Interrupted, it makes nothing. Refused (no time) with no knife carried, or no bow
     /// or crossbow ready.
     Fletch,
+    /// Make out the carried stack at this position, a scroll of a type not yet identified,
+    /// without reading it (spec §8 "Scrolls"; the Decipher ability, Decipher script's use;
+    /// `world/decipher.rs`): `data/decipher.toml`'s time of turns of the `decipher` action, then
+    /// the reading's check; made, the type is learned. Interrupted, nothing comes of it. Refused
+    /// (no time) with a stack that is no scroll of a type not yet known.
+    Decipher {
+        item: usize,
+    },
     /// Temper the carried stack at this position at the anvil next to the player (spec §7
     /// "Special rooms"; the Temper ability, the abilities menu's Here group): ten minutes of turns
     /// of the `temper` action, then a Strength check plus Metalcraft, harder for every attempt
@@ -923,6 +931,7 @@ impl fmt::Display for Action {
             Action::Drink => f.write_str("drink"),
             Action::Forage => f.write_str("forage"),
             Action::Fletch => f.write_str("fletch"),
+            Action::Decipher { item } => write!(f, "decipher:{}", position_text(*item)),
             Action::Temper { item } => write!(f, "temper:{}", position_text(*item)),
             Action::Give { item, ally } => {
                 write!(f, "give:{}", position_text(*item))?;
@@ -1088,6 +1097,11 @@ impl FromStr for Action {
             "drink" => bare(Action::Drink),
             "forage" => bare(Action::Forage),
             "fletch" => bare(Action::Fletch),
+            "decipher" => {
+                let usage = || "`decipher` needs a letter, e.g. `decipher:b`".to_string();
+                let item = arg.and_then(parse_position).ok_or_else(usage)?;
+                Ok(Action::Decipher { item })
+            }
             "temper" => {
                 let usage = || "`temper` needs a letter, e.g. `temper:b`".to_string();
                 let item = arg.and_then(parse_position).ok_or_else(usage)?;
@@ -1759,6 +1773,7 @@ mod tests {
             Action::Pray,
             Action::Forage,
             Action::Fletch,
+            Action::Decipher { item: 1 },
             Action::Temper { item: 0 },
             Action::Temper { item: 27 },
             Action::Give {

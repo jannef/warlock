@@ -17,7 +17,7 @@ expression: "render(case, content.clone())"
              │ Talents                                                               │
              │   g  Blood magic                                                      │
              │ Skills                                                                │
-             │   h  Decipher script    not usable yet                                │
+             │   h  Decipher           no unknown scroll                             │
              │   i  Knowledge          not usable yet                                │
              │   j  Listen at a door   in a direction                                │
              │   k  Fletch             you have no knife                             │
