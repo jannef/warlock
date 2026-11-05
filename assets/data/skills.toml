@@ -123,12 +123,12 @@ kind = "rules"
 # overworld, so the speed below grows with plain play.
 mark = [
     { on = "kick", chance = 20 },
+    { on = "climb", chance = 50 },
     { on = "burdened", chance = 5 },
     { on = "travel", chance = 5 },
 ]
 # Kicking a door in (spec §8 "Doors"): added to the Strength the kick is rolled against, +8 at 100
-# (a closed door: 33 % at Strength 10 becomes 60 %), +12 at 200. Pending: climbing out of pits
-# (#128) will read it too. Speed (spec §8 "Speed", #548): percent quicker in everything, +5 at
+# (a closed door: 33 % at Strength 10 becomes 60 %), +12 at 200. Speed (spec §8 "Speed", #548): percent quicker in everything, +5 at
 # 100, +10 at 200, added to the talents' percent (Fleet-footed, Quick); the burden's slowdown is
 # applied to prices after, independently.
 benefit = [
@@ -203,7 +203,20 @@ id = "escape_artist"
 name = "Escape artist"
 description = "Slipping out of bonds, grabs, and tight places."
 kind = "rules"
-# Pending: getting out of pits (#128) will read it (a benefit and a mark rule here then).
+# Marks: every automatic check against bonds, whatever comes of it (world/hold.rs), and every climb
+# out of a pit.
+mark = [
+    { on = "escape", chance = 100 },
+    { on = "climb", chance = 100 },
+]
+# Effect "escape": points added to the check against bonds (better of Strength and Dexterity
+# against a hold's grip or a status's `escape`), +8 at 100, +12 at 200; trained at all, an action
+# that Webbed or Pinned stops is that check, and untrained it is refused. Effect "climb": a pit's
+# climb halved from 50 and skipped from 100 (world/trap.rs). No ability: the check is automatic.
+benefit = [
+    { effect = "escape", curve = [[0, 0], [100, 8], [200, 12]] },
+    { effect = "climb", steps = [50, 100] },
+]
 
 [[skill]]
 id = "handle_animal"

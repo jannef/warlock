@@ -118,7 +118,20 @@ developer notes (CLAUDE.md, `docs/dev/`).
       the hold's own `difficulty` (13). Made, "You break free of the ghast." and the step goes
       ahead; failed, "You struggle, but the ghast holds you fast." and the turn is spent (a
       step's price). Creatures never struggle. A hold no one caused (`afflict:held`) ends only by
-      its turns or a struggle. Drowning grip's Held is the same status;
+      its turns or a struggle. Drowning grip's Held is the same status. A trained **Escape
+      artist** (no action, no ability row, no key: the check is part of the attempt, #1015) takes
+      the better of Strength and Dexterity, each with what talents add to its checks, plus the
+      skill's `escape` (+8 at 100, +12 at 200, at most 20) in this check, and the same, without
+      Knowledge, against other **bonds**: a status with `escape = DIFFICULTY` (Webbed, Pinned: 13;
+      Staggered, Stunned, Surprised, Transfixed, Sluggish, and Drowsy are no bonds). The first
+      status blocking the action's kind asks: made, it ends with its own `end` line and the
+      action goes ahead at its price; failed, the action's price, "You struggle, but you are still
+      caught in a web." (its `seen`). A second status blocking the same action asks on the next
+      attempt, and `refuse_blocked` refuses this one. Untrained, Webbed and Pinned refuse the
+      action, no time, as any blocking status does. A marked status that only slows (none in the
+      data today) takes the same check as the action is tried: made, it ends and the action costs
+      its plain price; failed, the action goes ahead slowed, at no extra cost. Two draws of the
+      gameplay stream a check; each marks `escape` (100 %) and `struggled`;
     - **be followed** (`follows = "exhausted"`): as it ends, worn off or cured, the status it names
       begins at one degree, caused by whoever caused the one that ended (Raging, then Exhausted:
       the ending's message, then the beginning's). A chain never leads back to where it began, a

@@ -63,6 +63,9 @@ on hidden traps too (see [Talents](talents.md)).
   [Temperature and ice](temperature.md)). The [lightning](traps.md#trap-lightning-bolt) runs one way, along the longest clear
   line from the trap unless the place says otherwise.
 - **[A pit](traps.md#trap-pit)** costs you your next action as you climb out, as well as the fall.
+  Trained in [Escape artist](skills.md#skill-escape-artist), the climb takes half that from 50 and
+  nothing from 100. Each climb trains that skill, and [Athletics](skills.md#skill-athletics) half
+  the time, though Athletics does not shorten it.
 - **[An alarm](traps.md#trap-alarm)** rings a bell that every creature within [earshot](hearing.md#what-makes-noise) hears; the ones who have [enemies](creatures.md#factions)
   come to look (see [Hearing](hearing.md)).
 - **[A teleport trap](traps.md#trap-teleport)** moves you to another free place on the same level, somewhere you may never

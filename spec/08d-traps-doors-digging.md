@@ -46,7 +46,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
       cell, at most its `length` cells in all: every actor on it, from the trap outward, takes
       one roll of the damage.
     - **pit**: the victim takes the damage and loses its next action climbing out: its step
-      costs a `wait` more (6 s at normal speed; a creature's too).
+      costs a `wait` more (6 s at normal speed; a creature's too). Trained Escape artist halves
+      that from 50 and skips it from 100 (`climb`, #1015); each climb out marks `climb` (Escape
+      artist 100 %, Athletics 50 %, which gets no cut from it).
     - Every trap's damage is of a kind (`damage_type`, §8 "Damage types"): the arrow's and the
       spears' piercing (soaked by Protection like any blow), the fireball's fire, the frost's
       cold, the lightning's electricity, the pit's bludgeoning (a fall meets no armour, but the

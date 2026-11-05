@@ -159,5 +159,9 @@ through `Actor::skill_effect`, a party's lead type's through `Skills::effect`); 
 Listen's `hearing` (with Keen ears, capped at `MAX_ENCOUNTER_BONUS`) instead and reports
 `Use::Hear`.
 
-Pending hooks:
-athletics (climbing out of pits, #128) and escape artist (pits, #128).
+Escape artist (#1015) has no action and no ability row. `Effect::Escape` is read in
+`World::slipping` (`world/hold.rs`, docs/dev/status-effects.md "Holds"), `Effect::Climb` (steps at
+50 and 100: halved, then skipped) in `World::climb_price` (`world/trap.rs`, the pit's one arm);
+both only for those trained (`trains_effect`). `Use::Escape` is marked per check whatever came of
+it, `Use::Climb` per climb out (Escape artist 100 %, Athletics 50 % and no effect). Tests:
+`world/escape_tests.rs`.

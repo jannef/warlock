@@ -25,11 +25,9 @@
 //! What the player sees: their own trained skills with their values, and a coarse sense of how
 //! practised each is (its ladder step, [`progress`]). Never a benefit's number, a mark, or a chance.
 //!
-//! **Pending hooks** (extension points for rules not on main yet): athletics will shorten the
-//! turns stuck in a pit (#128), and escape artist will take a turn off being stuck per 33 points
-//! (#128). Each becomes one more [`Effect`] (and a [`Use`] for its marks: a climb) read in that
-//! one place, with its numbers in `data/skills.toml`; until then escape artist is trained and
-//! shown but gives nothing. Athletics already adds to the Strength a kick at a door is rolled
+//! Escape artist adds to the automatic check against bonds ([`Effect::Escape`], [`Use::Escape`];
+//! `world/hold.rs`) and shortens a pit's climb ([`Effect::Climb`], [`Use::Climb`], which Athletics
+//! takes marks from too, and no effect; `world/trap.rs`). Athletics adds to the Strength a kick at a door is rolled
 //! against ([`Effect::Kick`], [`Use::Kick`]) and makes the actor quicker ([`Effect::Speed`],
 //! marked by [`Use::Burdened`] and [`Use::Travel`] too), Open lock to picking a lock
 //! ([`Effect::Pick`], [`Use::Pick`]), and Metalcraft to tempering at a forge's anvil
@@ -58,6 +56,12 @@ pub const MAX_SEARCH_BONUS: i32 = 20;
 
 /// The most a skill adds to disarming a trap (spec §8 "Disarming traps").
 pub const MAX_DISARM_BONUS: i32 = 20;
+
+/// The most a skill adds to the check against bonds (spec §8 "Status effects"; `world/hold.rs`).
+pub const MAX_ESCAPE_BONUS: i32 = 20;
+
+/// The most a skill cuts a pit's climb: 1 halves it, 2 skips it (spec §8 "Traps"; `world/trap.rs`).
+pub const MAX_CLIMB_CUT: i32 = 2;
 
 /// The most a skill takes off the difficulty of studying a spell (spec §8 "Spells").
 pub const MAX_STUDY_BONUS: i32 = 20;
@@ -226,6 +230,12 @@ pub enum Effect {
     /// Points added to the Strength score a kick at a closed door is rolled against (spec §8
     /// "Doors"; `world/door.rs`).
     Kick,
+    /// Points added to the check against bonds (spec §8 "Status effects"; `world/hold.rs`); a
+    /// skill with it, trained, makes an action that bonds stop that check at all.
+    Escape,
+    /// How far a pit's climb is cut (spec §8 "Traps"; `world/trap.rs`): 1 halves it, 2 skips it.
+    /// For those trained in the skill only.
+    Climb,
     /// Points added to picking a lock (spec §8 "Doors"; `world/lockpick.rs`); a skill with it,
     /// trained, lets the actor pick locks at all (the Pick lock ability).
     Pick,
@@ -274,6 +284,8 @@ impl Effect {
             Effect::SongDegrees => MAX_SONG_DEGREES,
             Effect::SongCraft => MAX_SONG_CRAFT,
             Effect::Disarm => MAX_DISARM_BONUS,
+            Effect::Escape => MAX_ESCAPE_BONUS,
+            Effect::Climb => MAX_CLIMB_CUT,
             Effect::Pick => MAX_PICK_BONUS,
             Effect::Forage => MAX_FORAGE_BONUS,
             Effect::Temper => MAX_TEMPER_BONUS,
@@ -334,6 +346,10 @@ pub enum Use {
     Intimidate,
     /// A song sung (spec §8 "Class abilities", the bard's songs), whatever it does.
     Song,
+    /// A check against bonds (spec §8 "Status effects"; `world/hold.rs`), whatever came of it.
+    Escape,
+    /// A climb out of a pit (spec §8 "Traps"; `world/trap.rs`).
+    Climb,
     /// A kick at a closed door (spec §8 "Doors").
     Kick,
     /// A try at picking a lock (spec §8 "Doors"), whatever comes of it.
@@ -379,6 +395,8 @@ impl Use {
             }
             Use::Intimidate => "roaring a war cry, or threatening a foe",
             Use::Song => "singing a song",
+            Use::Escape => "struggling against bonds, whatever comes of it",
+            Use::Climb => "climbing out of a pit",
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Temper => "tempering an item at an anvil",
@@ -499,6 +517,8 @@ impl Use {
             Use::Handle => "handle",
             Use::Intimidate => "intimidate",
             Use::Song => "song",
+            Use::Escape => "escape",
+            Use::Climb => "climb",
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Temper => "temper",
@@ -542,6 +562,8 @@ impl Effect {
             Effect::Tame => "tame",
             Effect::SongDegrees => "song_degrees",
             Effect::SongCraft => "song_craft",
+            Effect::Escape => "escape",
+            Effect::Climb => "climb",
             Effect::Kick => "kick",
             Effect::Pick => "pick",
             Effect::Temper => "temper",
