@@ -12,23 +12,23 @@ expression: "render(case, content.clone())"
                     │   c  Sic 'em            at a place you see               │
                     │ Spells                                                   │
                     │   d  Barkskin           3 mana                           │
+                    │   e  Water walking      5 mana                           │
                     │ Skills                                                   │
-                    │   e  Tame               you already have a companion     │
-                    │   f  Forage             not usable here                  │
-                    │   g  Woodcraft          not usable yet                   │
+                    │   f  Tame               you already have a companion     │
+                    │   g  Forage             not usable here                  │
+                    │   h  Woodcraft          not usable yet                   │
                     │ Weapon skills                                            │
-                    │   h  Shield bash        you hold no shield               │
+                    │   i  Shield bash        you hold no shield               │
                     │ Allies                                                   │
-                    │   i  Come to heel                                        │
-                    │   j  Hold here                                           │
-                    │   k  Set on             at a place you see               │
-                    │   l  Give               on something you carry           │
+                    │   j  Come to heel                                        │
+                    │   k  Hold here                                           │
+                    │   l  Set on             at a place you see               │
+                    │   m  Give               on something you carry           │
                     │                                                          │
                     │ The basilisk's stare: a foe nearby that sees you slows   │
                     │ to a crawl a moment; your eyes then rest two hours.      │
                     │                                                          │
                     │                                                          │
-                    │ a-l or Enter use   Esc close                             │
+                    │ a-m or Enter use   Esc close                             │
                     └──────────────────────────────────────────────────────────┘
-
  The Hub  ·  HP 133/133  ·  MP 181/181  ·  Focus 10/10  ·  Sta 10/16  ·  Lv 60           ? controls

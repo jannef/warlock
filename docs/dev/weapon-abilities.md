@@ -156,8 +156,8 @@ in `base` (statuses' `cost` in `burdened`, Walled's `attack_cost` in `attack_pri
 
 **Effects**: `active_blow` (a blow with `me.melee()`, its profile changed: `sure_critical`,
 `penetration = ALL_PROTECTION` (1000, above any Pv: no soak drawn), `twice` the dice with the
-to-hit; Feint's categories on `Technique::ignores`, which `fight.rs::resolve` takes through
-`World::feinted` for the next attack the player makes; `after_attack` only for a foe beside;
+to-hit; False lead's categories on `Technique::ignores`, which `fight.rs::resolve` takes through
+`World::misled` for the next attack the player makes; `after_attack` only for a foe beside;
 `knock_back` after it), `rush` (a bash via `player_strikes` with the shield's skills), `sweep`
 (`hostiles_beside` sorted clockwise from the direction given or north; odd targets take the off
 hand's `off_hand_blow` when there is one), `active_shot` (`player_looses`; Piercing shot sets

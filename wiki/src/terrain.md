@@ -62,7 +62,7 @@ Still water (ponds and pools) and running water (streams) are both wadeable but 
 either takes twice as long as a step on dry ground, and [splashes loudly](hearing.md#how-loud). Running water flows in a
 direction you can see in the ripples, and foams where it meets a bank or rock. The current does
 not push you yet. Water glints with nearby [light](light.md#what-light-is). [Swim](skills.md#skill-swim) spares some of the extra time of
-wading, here and in a marsh.
+wading, here and in a marsh; [Water walking](magic.md#spell-water-walking) spares all of it while it lasts.
 
 [Shallow water](#terrain-shallow-water), ankle-deep over a stone floor, covers the floor of a [flooded room](special-rooms.md#room-flooded) (see
 [Special rooms](special-rooms.md)). It is paler than a pool. Wading through it is slower than

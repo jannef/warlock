@@ -1,5 +1,5 @@
 # A scroll of curse of sloth (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Curse of sloth, a
-# level-3 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# level-3 spell, at its own rungs, free of mana; study it (`L`), and you may learn the spell for
 # good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_curse_of_sloth"

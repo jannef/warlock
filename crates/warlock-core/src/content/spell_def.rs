@@ -5,7 +5,7 @@
 //! traps cast (`content/spell.rs`), whose code the cast path shares.
 //!
 //! - **Spell levels**: a spell has a level, 0 to [`MAX_SPELL_LEVEL`]: its base mana (at least
-//!   one) and the caster level at which a scroll of it teaches for certain. A spell of level 0
+//!   one) and the learning at which a scroll of it teaches for certain. A spell of level 0
 //!   or 1 is a cantrip. Nothing says how much a spell of a level may do (decision 16).
 //! - **The base and the ladders**: a spell's own roll and reach are its **base**, what anyone
 //!   who casts it does; `[spell.grows]` may give each dimension a ladder of the caster's
@@ -338,8 +338,8 @@ impl SpellRules {
     /// What `spell` costs a caster wearing armour that adds `armour` percent (the spell scaling
     /// design §5.3), before its talents: its base mana (its level, at least 1, unless it names
     /// `mana`) × its shape's percent (a burst's at its own `radius`) × its resolution's `cost`
-    /// percent × (100 + `armour`) %, rounded to the nearest once at the end, at least 1. No
-    /// caster level counts: a known spell costs the same whoever casts it.
+    /// percent × (100 + `armour`) %, rounded to the nearest once at the end, at least 1: a known
+    /// spell costs the same whoever casts it.
     pub fn mana(&self, spell: &SpellData, armour: u32) -> i32 {
         // An explicit cost (Identify's) stands in for the level's, the shape's, and the
         // resolution's: only the armour is added.
@@ -635,7 +635,7 @@ pub struct SpellData {
     /// One line.
     pub description: String,
     /// Its spell level, 0 to [`MAX_SPELL_LEVEL`] (0 and 1: a cantrip): its base mana, and the
-    /// caster level at which a scroll of it teaches for certain.
+    /// learning at which a scroll of it teaches for certain.
     pub level: u8,
     pub school: School,
     pub kind: SpellPurpose,
@@ -668,7 +668,7 @@ pub struct SpellData {
     /// Dexterity; a scroll's or a wand's always Dexterity).
     pub aim: Stat,
     /// Added to the study check's difficulty (0: none); a positive one makes the study a check
-    /// at any caster level (`world/learn.rs`).
+    /// at any learning (`world/learn.rs`).
     pub study_difficulty: i32,
 }
 
@@ -2095,6 +2095,7 @@ damage = "2d6"
             ("barkskin", 3, None, 3, true),
             ("blessing", 3, None, 3, true),
             ("blight", 7, Some("2d6"), 17, true),
+            ("brand", 7, None, 7, true),
             ("burning_hands", 1, Some("1d4"), 3, true),
             ("call_lightning", 11, Some("2d6"), 20, true),
             ("call_of_the_forest", 20, Some("+1"), 20, true),
@@ -2106,6 +2107,7 @@ damage = "2d6"
             ("cure_wounds", 3, Some("2d6"), 2, true),
             ("curse_of_sloth", 3, None, 3, true),
             ("evil_eye", 0, None, 1, true),
+            ("fire_cloak", 12, None, 12, false),
             ("fireball", 11, Some("2d6"), 26, false),
             ("flame", 12, Some("3d6"), 29, true),
             ("frost", 6, Some("2d6"), 14, true),
@@ -2124,6 +2126,7 @@ damage = "2d6"
             ("scorching_ray", 7, Some("1d6"), 7, false),
             ("sleep", 6, None, 11, false),
             ("spark", 1, Some("1d4"), 1, true),
+            ("water_walking", 5, None, 5, true),
             ("web", 7, None, 13, false),
         ];
         for (id, level, roll, mana, given) in table {
@@ -2153,10 +2156,11 @@ damage = "2d6"
         let p23 = "presence 14 2, 18 3";
         let mm = "intelligence 13 3d6, 16 4d6, 19 5d6, 25 5d6+2";
         let bolt = "intelligence 13 3d6, 19 3d6+2, 25 3d6+4";
-        let table: [(&str, &[(&str, &str)]); 27] = [
+        let table: [(&str, &[(&str, &str)]); 30] = [
             ("arcane_bolt", &[("damage", bolt), ("length", w78)]),
             ("barkskin", &[("degrees", p23)]),
             ("blessing", &[("degrees", p23)]),
+            ("brand", &[("degrees", p23)]),
             (
                 "blight",
                 &[("damage", "willpower 16 3d6, 22 3d6+3"), ("range", w910)],
@@ -2179,6 +2183,7 @@ damage = "2d6"
             ("cure_wounds", &[("heal", "willpower 16 3d6, 22 3d6+3")]),
             ("curse_of_sloth", &[("range", w78), ("degrees", p23)]),
             ("evil_eye", &[("range", w78), ("degrees", p23)]),
+            ("fire_cloak", &[("degrees", p23)]),
             ("fireball", &[("damage", mm), ("range", w1112)]),
             (
                 "flame",
@@ -2231,6 +2236,7 @@ damage = "2d6"
                     ("range", "willpower 14 6"),
                 ],
             ),
+            ("water_walking", &[("degrees", p23)]),
             (
                 "web",
                 &[("range", w910), ("degrees", "presence 14 4, 18 5, 22 6")],

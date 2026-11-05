@@ -71,7 +71,7 @@ fn the_skills_split_appraise_identifies_and_negotiation_bargains() {
     let effects = |s: &crate::content::SkillDef| -> Vec<Effect> {
         s.benefits.iter().map(|b| b.effect).collect()
     };
-    assert_eq!(effects(appraise), [Effect::Identify]);
+    assert_eq!(effects(appraise), [Effect::Identify, Effect::Freshness]);
     assert_eq!(effects(negotiation), [Effect::Bargain]);
     // Every class trained in Appraise has Negotiation at the same dice, so prices stay as they
     // were.

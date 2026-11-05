@@ -13,8 +13,9 @@
 #   grows.range   its reach's ladder, as a spell's (data/spells/README.toml, `[spell.grows]`):
 #                 a stat, then `AT CELLS` rungs, `"willpower 14 4, 18 5"`; the user whose
 #                 effective score reaches a rung reaches its cells. Rungs rise strictly from
-#                 `range` to at most 20. Left out, the reach never grows. No caster level is
-#                 read (`max_range`, `per_levels`, `up_to_caster_level` are gone, refused)
+#                 `range` to at most 20. Left out, the reach never grows. Nothing of the user's
+#                 level is read (`max_range`, `per_levels`, `up_to_caster_level` are gone,
+#                 refused)
 #   noise         { sound, loudness }: the noise it makes (a burst's centre, else the user)
 #   kind          what it does, each on existing code, with only its own fields:
 #                 dig       (a line) every wall on it whose hardness (terrain.toml) is below

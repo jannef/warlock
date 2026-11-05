@@ -1,6 +1,6 @@
 //! Rods (spec §8 "Magic items": "Rods"; #399): a rod in the missile weapon slot does its effect
 //! for the user's mana (Channeler and Frugal caster cut it), reaching by the user's Willpower
-//! (a ladder, as a spell's; no caster level read: the spell scaling design §7.5); sleep and
+//! (a ladder, as a spell's; the spell scaling design §7.5); sleep and
 //! terror take creatures up to the rod's own level; no mana, no use; a rod type is unknown until used or identified; the effects dig, teleport,
 //! and put to sleep or to flight; rod labels leave the scrolls' and wands' as they were.
 
@@ -86,7 +86,6 @@ fn a_rod_of_digging_breaks_a_line_for_mana_and_names_itself() {
     let mut w = world();
     let first = w.lore().describe(&w.state.player().inventory[0]);
     assert!(first.ends_with(" rod"), "{first}");
-    assert_eq!(w.caster_level(w.state.player), 1);
     run(&mut w, "equip:missile_weapon:a");
     let mana = w.state.player().mana;
     let out = run(&mut w, "fire:12,2").remove(0);
@@ -138,7 +137,7 @@ fn set_willpower(w: &mut World, willpower: u8) {
 }
 
 #[test]
-fn reach_climbs_the_willpower_ladder_and_reads_no_caster_level() {
+fn reach_climbs_the_willpower_ladder_and_reads_no_level() {
     let mut w = world();
     run(&mut w, "equip:missile_weapon:a");
     assert_eq!(
@@ -158,12 +157,12 @@ fn reach_climbs_the_willpower_ladder_and_reads_no_caster_level() {
         [3, 3, 4, 4, 5, 6, 6, 7, 7].map(Some),
         "the base below the first rung, the top rung's 7 past it"
     );
-    // Two users of the same Willpower and different caster levels reach the same.
+    // Two users of the same Willpower and different levels reach the same.
     set_willpower(&mut w, 18);
-    let level_one = w.caster_level(w.state.player);
+    let level_one = w.player_level();
     let before = w.perception().own_rod(0);
     run(&mut w, "xp:100000");
-    assert!(w.caster_level(w.state.player) > level_one + 5);
+    assert!(w.player_level() > level_one + 5);
     set_willpower(&mut w, 18);
     assert_eq!(w.perception().own_rod(0), before);
     assert_eq!(before, Some((6, 5)));
@@ -195,7 +194,6 @@ fn rods_of_sleep_and_terror_take_creatures_up_to_their_own_level() {
     let twenty_one = creature(&w, "brute_twenty_one");
     place(&mut w, twenty, 6, 4);
     place(&mut w, twenty_one, 6, 5);
-    assert_eq!(w.caster_level(w.state.player), 1, "no caster level read");
     run(&mut w, "equip:missile_weapon:b");
     let out = run(&mut w, "fire:6,4").remove(0);
     assert!(out.took_turn);

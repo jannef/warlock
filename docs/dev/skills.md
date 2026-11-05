@@ -65,7 +65,21 @@ status, the message) with `World::war_cry`. Its numbers are data, `data/intimida
 `IntimidateRules::degrees_at`); without the file the skill stays "not usable yet". It is
 marked once a threat, refused or not reached (no hearing, no sight) aside. Tests:
 `world/intimidate_tests.rs` (the menu row, refusals with no time and no draw, the turn and the
-voice and the mark, the check, the ladder), `content/intimidate.rs` (parsing, refusals). Music's
+voice and the mark, the check, the ladder), `content/intimidate.rs` (parsing, refusals). Bluff's
+`feint` (#1016; `docs/design/skill-uses.md` §6.2 B1) is read in `World::feint` (`world/feint.rs`),
+Bluff's use: `Action::Feint(Dir)` (replay text `feint:DIR`, cost `feint`, `ActionKind::Feint`),
+`Ability::Feint`, data `data/feint.toml` (`content/feint.rs`, `FeintRules`: `difficulty`, `status`,
+one that is `flat_footed` and `per_action` with `max = 1`). The foe's nerve (its Willpower modifier
+and talents' checks, two gameplay draws, `check::check`) against `difficulty` + the player's Presence
+modifier + the points; failed, Surprised, caused by the player. No noise, no need of being heard
+or seen. Marked by `Use::Feint` at 50 %, on the training stream, whatever came of it. Surprised
+would end with the foe's next action, which falls between the feint and the blow, so `World::feint`
+puts it on `World::fresh` (`weapon_ability.rs::spend_actions`): the foe's first action in the
+feint's turn does not ease it. `fresh` is emptied as a turn ends, so it is never saved across
+one. The foe's second action ends it; both cost it dear. The ability's id is `feint`, as the
+Duelist's weapon active, False lead, is (`Ability::Weapon`, `use:false_lead:E`): the two rows are told apart by
+`Source`, and nothing looks an ability up by id. No caught-out check (the owner): `World::steal`
+and the shops read nothing of Bluff. Tests: `world/feint_tests.rs`, `content/feint.rs`. Music's
 `song_degrees` (#870) is read in `World::sing` (`world/song.rs`): the degrees a song adds to its
 status, capped by the status's `max`; `song_craft`, the difficulty a song on its hearers adds to
 their check, is read there too (the Lullaby's, #873). Its use `song` is marked once a song,
@@ -127,7 +141,8 @@ there (`warlock_core::ability`), unavailable ("not usable yet") until its use ex
 becomes an ability of its own in the skill's place (`Ability::use_of`): Disable device is
 `Ability::Disarm` (`docs/dev/traps.md`), Open lock `Ability::PickLock` (`docs/dev/doors.md`),
 Steal `Ability::Steal` (`docs/dev/stealing.md`), Heal `Ability::Heal` (`docs/dev/status-effects.md`),
-Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from the data).
+Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from the data),
+Bluff `Ability::Feint` (above; in a direction).
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
 `Ability::use_of` of every skill): Survival is `Ability::Forage` (below).
 
@@ -145,7 +160,7 @@ Tests `world/footing_tests.rs`.
 row): `Effect::Wade` is read in `World::step_price` (`world/schedule.rs`), on a step
 `World::wading_step` calls wading (off the overworld, `move_cost` above 100, `stars::wading`): a
 percent of what the terrain adds over a plain step is spared (`surcharge_spared`, rounded up), 100
-for `swimmer` and `wades_free`, so Swim never goes past them. Its use `wade` is reported at the
+for `swimmer` and `Actor::wades_free`, so Swim never goes past them. Its use `wade` is reported at the
 head of `World::wade` (`world/disease.rs`), before the talents' early return: a wader whom a
 talent spares still trains. `Effect::Swim` is read in `World::keeps_afloat` (`world/ice.rs`,
 `docs/dev/temperature.md`), which marks `swim` once a check; it is `Skills::trains_effect`-gated, so
@@ -199,7 +214,8 @@ draws from its own stateless stream `Rng::stream(seed, "appraise/<hour>")`: `cha
 `skill_effect(Identify)` percent, then `index` for the stack. No state is saved, so how the time
 is cut never changes the outcome. `World::learn_item` (`world/loot.rs`) is `World::identify`
 without its "This is ...!" line; Appraise says "You realise your X is Y." and reports
-`Use::Appraise`. Tests: `world/appraise_tests.rs` (the split, prices, the line, untrained,
+`Use::Appraise`. Appraise also carries `Effect::Freshness` (with Survival's, #1031: the tell of how fresh
+food is, `world/freshness.rs`, docs/dev/hunger.md) and the mark `judged`. Tests: `world/appraise_tests.rs` (the split, prices, the line, untrained,
 cutting time, rest and skip, replays), `world/shop_tests.rs::deals_train_negotiation`.
 
 Overworld encounters (#804; `docs/dev/encounters.md`): Spot's and Survival's `lookout`,
@@ -214,7 +230,9 @@ Escape artist (#1015) has no action and no ability row. `Effect::Escape` is read
 50 and 100: halved, then skipped) in `World::climb_price` (`world/trap.rs`, the pit's one arm);
 both only for those trained (`trains_effect`). `Use::Escape` is marked per check whatever came of
 it, `Use::Climb` per climb out (Escape artist 100 %, Athletics 50 % and no effect). Tests:
-`world/escape_tests.rs`.
+`world/escape_tests.rs`. `Effect::Escape` is also read by `World::wriggle` (`world/wriggle.rs`,
+#1032: a step into a neutral creature that keeps its post, an automatic Dexterity check against
+11 plus its Willpower modifier, one more `Use::Wriggle` at 50 %; tests `wriggle_tests.rs`).
 
 ## Tumble: plain misses
 

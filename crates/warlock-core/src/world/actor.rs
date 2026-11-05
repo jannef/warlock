@@ -1289,6 +1289,8 @@ impl Actor {
         profile.riders.extend(added);
         local.sharpen(&mut profile);
         mods.sharpen(&mut profile);
+        // A status's fire on the blade (Brand), a rider beside the affixes'.
+        profile.riders.extend(self.effects.blows(content));
         profile.bonus += talents.melee_damage;
         profile.penetration += talents.penetration_for(&profile.kinds);
         // A spirit weapon's gifts (the Hunter's Spirit weapon, `spirit_weapon.rs`).
@@ -1303,6 +1305,18 @@ impl Actor {
                 .min(*crate::combat::CRITS.end());
         }
         self.stanced(content, profile)
+    }
+
+    /// Whether it wades as if on dry land: Undertow's talent, or a status's (Water walking).
+    pub fn wades_free(&self, content: &Content) -> bool {
+        self.effects.any(content, |s| s.wades_free)
+            || (!self.talents.is_empty() && self.talent_mods(content).wades_free)
+    }
+
+    /// Whether ice never gives way under it: a status's (Water walking; `World::tread` and
+    /// `World::shock`).
+    pub fn ice_holds(&self, content: &Content) -> bool {
+        self.effects.any(content, |s| s.ice_holds)
     }
 
     /// `profile` with the to-hit and damage of its combat stance, and of its status effects
@@ -1354,6 +1368,7 @@ impl Actor {
         profile.riders.extend(content.object(stack.object).added);
         Mods::local(stack, content).sharpen(&mut profile);
         mods.sharpen(&mut profile);
+        profile.riders.extend(self.effects.blows(content));
         let talents = self.talent_mods(content);
         // Tentacles (a Kraken's pick): the off hand's blows harder.
         profile.bonus += talents.melee_damage + talents.off_hand_damage;

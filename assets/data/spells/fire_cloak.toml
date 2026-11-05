@@ -1,0 +1,14 @@
+# Fire cloak (spec §8 "Spells"): found on scrolls only, the light its price.
+[[spell]]
+id = "fire_cloak"
+name = "Fire cloak"
+description = "Flames wrap you a while without burning you: whoever strikes you in melee is burnt, and you shed a little light."
+level = 12
+school = "abjuration"
+kind = "buff"
+shape = "self"
+resolution = "auto"
+effect = { status = "fire_cloaked" }
+
+[spell.grows]
+degrees = "presence 14 2, 18 3"

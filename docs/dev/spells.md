@@ -6,7 +6,7 @@ the spell scaling design `docs/design/spell-scaling.md` (its slices S0 to S6, tr
 Keep it current with the code, as CLAUDE.md says.
 
 The spell system is built in waves (design §13). This file covers what is built: the **data
-foundation** (#394: the cost table, the spell files, the tags, caster level; spell levels in
+foundation** (#394: the cost table, the spell files, the tags; spell levels in
 place of the tier table since S1, #748), the **one cast path** (#395: cost, reach, dice,
 resolution, the shapes, and the casters' placeholder spells migrated onto it), **learning**
 (#396: the learned set, study, the check, mishaps; "Learning" below), the **first spell list**
@@ -18,7 +18,7 @@ cast path shares.
 
 - **Spell levels** (S1, #748; the spell scaling design §5, decisions 1, 9, 10, 16): every spell
   has `level = N`, 0 to `MAX_SPELL_LEVEL` (70), one number with two meanings: its **base mana**
-  (`max(1, level)`) and the **caster level at which a scroll of it teaches for certain**. A
+  (`max(1, level)`) and the **learning at which a scroll of it teaches for certain**. A
   spell of level 0 or 1 is a cantrip (a spell's own `mana` still replaces the base: Burning
   hands and Grave breath, level 1 for the class tables' guard, cost 3, #979). There is no table of levels, no ceiling, no cap, and no
   load-time check on how much a spell does, now or in any later slice (decision 16): authors
@@ -30,9 +30,9 @@ cast path shares.
   to 16): a spell's growth is written in its own file as **ladders** (`[spell.grows]`,
   `content/spell_ladder.rs`), and talents and items act on it through **six named hooks**
   (`content/spell_mod.rs`'s `SpellMods`, summed by `Actor::spell_mods`, `world/spell_mods.rs`;
-  read by `world/spell_rung.rs` and the cast path). The S1 bridge (dice by caster level, the
-  lift, `SpellDice`, `[spell.scales]`, `max_range`/`max_length`/`max_radius`, `spell_scale.rs`)
-  is gone. Caster level grows nothing: it is learning only.
+  read by `world/spell_rung.rs` and the cast path). The S1 bridge (dice by the caster's
+  level, the lift, `SpellDice`, `[spell.scales]`, `max_range`/`max_length`/`max_radius`,
+  `spell_scale.rs`) is gone. Nothing of the caster's level grows a spell.
 - **Data**:
   - `assets/data/spells.toml` (`SpellRules`, `content/spell_def.rs`): the cost table:
     `[shapes]` (cost percents: `ray`, `bolt`, `touch`, `self`, `cone`, `line`, and `burst` a
@@ -47,11 +47,7 @@ cast path shares.
     is an error. Ids are `SpellId` indices in path order and enter the content fingerprint (saves
     name them: `Actor::spells`); a spell file added, removed, or renamed changes saves (S1
     edits the 26 in place: `tier = N` became `level = N`, path order kept).
-  - `casting` on classes (`ClassDef::casting`, 1 to 100, default 25, `content::CASTING`).
-  - `caster_level`: the talent effect `TalentEffect::CasterLevel { value, per_levels }` (a bonus,
-    ±20; flat into `TalentMods::caster_level`, or with `per_levels` 1 to 20 that much per that
-    many character levels, `TalentMods::caster_level_at`: used by no shipped talent since #988). The affix effect (of the Adept) is gone (#988); Arcane
-    training is now `skill { spellcraft, 10 }`.
+  - Arcane training, the wizard's, is `skill { spellcraft, 10 }` (#988).
   - `mana_level = 60` in `data/experience.toml` (the last level), and the
     damage types `force` and `necrotic` at the end of `data/damage_types.toml` (non-physical:
     `Choice::Element` offers them, so Elemental ward may be taken for them).
@@ -127,8 +123,7 @@ cast path shares.
   2/4 (In 16; +1 Empower)` (`Actor::spell_rung_sources`).
 - **The one cast path** (`world/cast.rs`, `World::cast_spell` from `Action::Cast`; decisions the
   design left open are under "Choices" below):
-  - **Cost**, the one hook `Actor::spell_cost(content, spell)` (no caster level, decisions 1
-    and 10): `SpellRules::mana` (`max(1, level)`, or the spell's own `mana`, ×
+  - **Cost**, the one hook `Actor::spell_cost(content, spell)` (decisions 1 and 10): `SpellRules::mana` (`max(1, level)`, or the spell's own `mana`, ×
     `shape_cost(shape, its own radius)` × the resolution's `cost` ×
     (100 + `Actor::armour_spell_cost`, the summed `spell_cost_percent` of what is worn, each
     piece's less its own Mage-wrought `spell_ease`, never below 0: `Actor::worn_spell_cost`) / 100³,
@@ -275,7 +270,8 @@ cast path shares.
     the id string (checked against `data/spells/` at load, resolved in `TalentMods::spells`).
     `Content::spells_by_level` is the menu's order (spell level, then path), `Ability::every`'s
     too.
-  - **The list** (30 spells, by spell level, the spell scaling design §5.8): 0 Evil eye, Light
+  - **The list** (33 spells, by spell level, the spell scaling design §5.8; Water walking 5, Brand
+    7, and Fire cloak 12, #1002, are buffs of status fields, docs/dev/status-effects.md): 0 Evil eye, Light
     (self buff: Lit, whose `light` the light cache sheds about the caster; #589, the scroll of
     light's); 1 Burning hands (cone 3, `mana = 3`, #979), Grave breath (the same, necrotic, #979), Mend
     (touch heal), Ray of frost (ray, attack), Spark (bolt, auto); 3 Barkskin
@@ -330,26 +326,19 @@ cast path shares.
     11–12 (6, 20, 200). Shops draw their goods by loot frequency (`mapgen/shop.rs`, `pick_weighted`).
   - **Guaranteed spells**: class abilities in the class tables, one talent file per spell
     (`assets/data/talents/`, `tree = "class"`, `granted`, systems `spells` first), shared by
-    the classes that give it. The content test holds every given spell's level at most the
-    class's caster level at the level it comes (`level × casting ÷ 100`, at least 1; S1, §5.6),
-    a full caster to a cantrip (level 0 or 1) at 1 and three to twelve spells (the priest's three:
+    the classes that give it. A spell a class gives is its holder's at that level, whatever
+    their Spellcraft: its level is the author's call (`docs/design/no-caster-level.md` §4). The
+    content test (`every_class_has_mana_and_its_guaranteed_spells`) holds a full caster (its
+    `FULL` list: druid, priest, witch, wizard) to a cantrip (level 0 or 1) at 1 and three to twelve spells (the priest's three:
     their rite is the Orison, `docs/dev/prayer.md`), and the others to at
     most two boons of level 5 or less. Every class has `mana`
     at least 1 (the berserker and the warrior gained theirs); races keep their own.
   - **Choices** (design §14, the defaults): q1, q2, q3, q5, q7 as above (interrupted study
     keeps the scroll; Dexterity aims; no talent lifts a cap (since S1 there is none); `force` and `necrotic` stay; Scroll savant
-    never keeps a studied scroll); q4: the casting percents as §3 and the guaranteed lists as
-    §8, the paladin's and ranger's boons Blessing and Barkskin at 6, the bard's Mend and
+    never keeps a studied scroll); q4: the guaranteed lists as §8, the paladin's and ranger's boons Blessing and Barkskin at 6, the bard's Mend and
     Blessing; q6: the mishap table unchanged. Sleep has no level limit (the design's "creatures
     of low level"): it slows rather than stops, so any creature may be caught.
-- **Caster level** (`world/caster_level.rs`): `Actor::caster_level(content, level, casting)`
-  (`level × casting ÷ 100` rounded down, plus `TalentMods::caster_level`, at least 0, at least 1 while `max_mana` is above 0),
-  `World::caster_level(id)` (the player at `player_level` and `casting_percent`: the class's,
-  100 without a class; a creature at its type's level and 100, plus what it wears, #525),
-  `casting_percent(content, character)`. Derived, never stored: nothing in saves or the state
-  hash changes. The dev `actors` layer shows each actor's with mana as `cl N`.
-- **Presentation**: `PerceptionView::own_caster_level()`; the dump `stats` layer's
-  `Caster level N` after the scores, JSON dumps' `caster_level`; `own_spell_cost(spell)` and
+- **Presentation**: `own_spell_cost(spell)` and
   `own_spell_reach(spell)` (the menu's mana and the description's reach, the aiming mode's
   reach), `own_spell_roll(spell)` (a `SpellRoll`, `world/spell_words.rs`: `Actor::spell_roll`
   for an own cast, its damage type or "healed", and the text, `4d6 fire`; the menu's row and the
@@ -357,8 +346,8 @@ cast path shares.
   holds it to `Actor::spell_roll`), and `own_spell_reroll(spell)` (Sure hand's faces, the
   description's "Your 1s are rolled again."). `spell_words.rs` also says a reach
   (`reach_words`: `range 11`, `length 3`, `radius 2`) and a reroll (`reroll_words`) for the
-  menu, the wand's description, and the dump. The character screen does not show caster level
-  yet, nor spells (its attacks column holds three).
+  menu, the wand's description, and the dump. The character screen does not show spells (its
+  attacks column holds three).
 - **UI**: the abilities menu's **Spells** group (`Source::Spell`) with the roll now, its type,
   and the mana (`4d6 fire, 26 mana, aimed`; the spell scaling design decision 11, the owner's
   exception to hidden numbers; `ui/abilities_screen.rs`, snapshots `abilities-menu-spells` and
@@ -407,8 +396,7 @@ cast path shares.
     empty words), `start_study` refuses with `UNTRAINED` after the other refusals and before any
     time. The dev `progress` layer prints `learning 36 (Spellcraft 108)` (the trained value,
     before what items and talents add) or `cannot learn: not trained in Spellcraft`. Study is no
-    ability, so the `abilities` layer and `Unavailable` have no row for it. Caster level is not
-    read here any more; a class's granted spells (`TalentMods::has_spell`) never read this.
+    ability, so the `abilities` layer and `Unavailable` have no row for it. A class's granted spells (`TalentMods::has_spell`) never read this.
     Starting Spellcraft is the class files' (`docs/dev/character-creation.md`).
   - **Odds** (`study_odds(actor, content, character, spell) -> Option<Odds>`, pure;
     `World::player_study_odds`): `Odds::overreach` = the spell's level − the learning; at 0
@@ -524,8 +512,8 @@ cast path shares.
     creature level of 1 or more). The retired `max_range`, `per_levels`, and
     `up_to_caster_level` are refused naming their replacements. `RodEffect::reach(stats)` = the
     ladder's value at the rung the score in its stat reaches, `range` below the first;
-    `Actor::rod_reach` reads it at `effective_stats`. No caster level is read anywhere in rods
-    (decision 10). No visual effect yet (no `Event::Spell`).
+    `Actor::rod_reach` reads it at `effective_stats`. Nothing of the user's level is read
+    anywhere in rods (decision 10). No visual effect yet (no `Event::Spell`).
   - **Rods**: `[object.rod]` (`RodSpec` → `Rod { effect, mana }` on `ObjectDef::rod`): `mana` 1
     to `MAX_ROD_MANA` (100); a rod has a `slot`, is not `stackable`, and has no attack,
     `launches`, range, food, `read`, `wand`, or `kind`; it may have `level` and `frequency`
@@ -557,7 +545,7 @@ cast path shares.
     teleport other, sleep, terror) on the dig, teleport, and status hooks; summoning is left out
     (there are no allies to summon, and a hostile summon is a curse, not a rod); the user's
     Willpower sets reach (a ladder, S3), and sleep and terror take creatures to their own
-    `up_to_level` (20), never by caster level; the cost is fixed per rod; a rod type is identified by use or identification, as a wand's;
+    `up_to_level` (20), never by the user's level; the cost is fixed per rod; a rod type is identified by use or identification, as a wand's;
     an unknown rod still costs its mana when used; teleport other provokes as a blow does, the
     status bursts do not (as an area hex); a use takes the `cast` action's time.
 - **Talents** (#400; design §10; the spell scaling design §7.2; tests
@@ -579,8 +567,8 @@ cast path shares.
   --character human,male,CLASS --actions "xp:N levelup:auto" --format json`, N the human
   threshold times the class's experience factor):
   1. **Pools** (the stats the seed rolls, so a +1 or +2 mental modifier; `levelup:auto` may
-     take Deep well): wizard 33 / 106 / 254 / 502 at levels 3 / 12 / 30 / 60 (caster level 3,
-     14, 36, 72), priest, druid, and witch about 27 / 90 / 216 / 426 (caster level = level),
+     take Deep well): wizard 33 / 106 / 254 / 502 at levels 3 / 12 / 30 / 60, priest, druid,
+     and witch about 27 / 90 / 216 / 426,
      bard and aristocrat 17 / 45–53 / 103–125 / 201–246, ascetic, paladin, and ranger 9–14 /
      27–50 / 63–122 / 123–242, the 25 % classes 4 / 13 / 31 / 61. A full caster's pool is about
      ten casts of a spell of the caster's own level at every level (the design's aim; the spell
@@ -592,13 +580,13 @@ cast path shares.
      design's "a few hours": left for the owner (raising `[healing] mana_resting` would shorten
      it at every level).
   3. **Ceilings against hit points** (history: S1 deleted the ceilings, decision 16; common
-     and uncommon creatures, levels within each tier's caster levels): the median creature takes 1.3 to 3.1 casts at a tier's ceiling and
+     and uncommon creatures, levels within each tier's): the median creature takes 1.3 to 3.1 casts at a tier's ceiling and
      2.4 to 5.7 at an average roll; none of a tier's median dies to one cast. Passes.
   4. **Weapon parity**: a level-12 warrior's great axe does 1d12 + Strength + the Axes rank
      (about 12 on average, 18 at most) a blow; a level-12 wizard's best single target is
-     Scorching ray (2d6 at caster level 14, at most 12) for 6 mana, about 17 casts from the
+     Scorching ray (2d6 then, at most 12) for 6 mana, about 17 casts from the
      pool, and an area (Fireball, 26 mana) four. Passes: spells cost real mana. No spell
-     above tier 3 exists yet, so a caster past caster level 18 reaches no higher ceiling.
+     above tier 3 exists yet, so a caster past level 18 reached no higher ceiling.
   5. **The probe** (the spell scaling design §12.4, S7, #754; `docs/balance.md` "Spells" and
      "School pace"; `world/balance_probe.rs`, `balance_probe/schools.rs`): the trained
      wizard's, priest's, and witch's roll of every spell that rolls, `Actor::spell_roll` in
@@ -618,7 +606,7 @@ cast path shares.
     tier's item level and frequency but kept their M29 values, so a scroll of fireball sold for
     less than a scroll of flame, which does the same.
 - **Wiki**: `xtask/src/wiki/spells.rs` (`spell-shapes.md`, `spell-resolutions.md` (resolution,
-  roll, cost), `spell-casting.md`, `spell-list.md` (spell, level, school, shape and resolution,
+  roll, cost), `spell-list.md` (spell, level, school, shape and resolution,
   the base reach, what the base does, **Grows with**: each ladder in words, `grows_with`, the
   roll's first and unnamed: `Intelligence 13: 3d6, 16: 4d6; range Willpower 14: 11, 18: 12`,
   mana, casts), `spell-armour.md`; `does` is shared with the talents' table) for
@@ -640,9 +628,9 @@ cast path shares.
   with `caster_level`, or with `rungs` past its ladder refused; a zap at the stack's own rung,
   Wand mastery a rung more; the draw even over the range, once, the same for the same seed; a
   non-wand drawing nothing and saving as before; a wand saved without a rung read as 0; the
-  rung shown with the type and not before), `content/class.rs` (`casting`), `content/mod.rs` (spells in the
-  fingerprint), `content/experience.rs` (`mana_level` 60), `world/caster_level_tests.rs` (by
-  class and level, no mana, talents and a ring, a creature, the dumps, mana to level 60),
+  rung shown with the type and not before), `content/mod.rs` (spells in the
+  fingerprint), `content/experience.rs` (`mana_level` 60), `world/mana_tests.rs` (mana to
+  level 60),
   `world/cast_tests.rs` (an attack can miss and critical with nothing holding it, auto and area
   never critical, Empower's rung, Evasion halving an area only, line against bolt, the cone,
   touch, armour, Willpower's reach ladder at 13, 14, 17, 18, no draws without a roll; S2: the
@@ -658,9 +646,9 @@ cast path shares.
   ladder's last rung and the other hooks after, Keen mind on its school only, Brimming's die
   and cost, Sure hand's hook, Scroll adept's scroll rung past the scroll's
   own roll), `world/learn_tests.rs` (study turns by level and Quick study, certain at or below the
-  caster level, the difficulty by levels and known levels, the dumps), `world/spell_list_tests.rs` (#397:
+  learning, the difficulty by levels and known levels, the dumps), `world/spell_list_tests.rs` (#397:
   scrolls of spells read, the area hexes, Haste, one scroll a spell, the scrolls' loot by spell
-  level, the classes' guaranteed spells within their caster level, mana for every class),
+  level, the classes' guaranteed spells, mana for every class),
   `magic/tests.rs` (`spell_scrolls_drop_by_level`),
   `world/spell.rs` (cone geometry),
   `ui/target.rs` (aiming by shape).

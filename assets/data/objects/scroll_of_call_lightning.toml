@@ -1,5 +1,5 @@
 # A scroll of call lightning (spec §8 "Scrolls", "Spells"): read it (`r`), and it casts Call lightning, a
-# level-11 spell, at its own caster level, free of mana; study it (`L`), and you may learn the spell for
+# level-11 spell, at its own rungs, free of mana; study it (`L`), and you may learn the spell for
 # good. Level and frequency by its spell's level (README.toml): the lower, the commoner the scroll.
 [[object]]
 id = "scroll_of_call_lightning"

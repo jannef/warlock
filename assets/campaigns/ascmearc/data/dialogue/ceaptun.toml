@@ -74,6 +74,7 @@ id = "cure"
 name = "A cure for what ails you"
 price = 60
 does = "cure"
+temple = true
 reply = "Go in health, child. And keep out of the fen."
 nothing = "Nothing ails you, child."
 
@@ -82,6 +83,7 @@ id = "mend"
 name = "A mending of body"
 price = 40
 does = "mend"
+temple = true
 reply = "There. Whole again, as you were made."
 nothing = "You are whole, child. Go with my blessing."
 

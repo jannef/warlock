@@ -134,6 +134,50 @@ fn the_road_is_the_safest_way() {
 }
 
 #[test]
+fn exactly_the_footpads_the_duergar_and_the_cultists_are_talked_past() {
+    // The owner: "be careful what to flag" (#1017; docs/design/skill-uses.md §6.2 B3).
+    let mut flagged: Vec<_> = (CONTENT.encounter_tables("ascmearc"))
+        .flat_map(|t| &t.entries)
+        .filter(|e| e.talk_past)
+        .map(|e| e.id.as_str())
+        .collect();
+    flagged.sort_unstable();
+    assert_eq!(
+        flagged,
+        [
+            "ascdun_duergar",
+            "fen_cultists",
+            "road_footpads",
+            "road_footpads_night",
+            "vale_footpad",
+            "woods_footpads",
+        ]
+    );
+}
+
+#[test]
+fn a_bard_may_talk_past_footpads_on_the_road() {
+    let spec: crate::character::CharacterSpec = "human,male,bard".parse().expect("a bard");
+    let mut w = World::with_character(CONTENT.clone(), "ascmearc", None, Some(&spec)).expect("w");
+    let mut replay = Replay::new(&w);
+    for action in parse_actions(&format!(
+        "{WALK_TO_ROAD} meet:road_footpads:met encounter:bluff"
+    ))
+    .expect("actions")
+    {
+        w.apply(&action);
+        replay.push(&action, &w);
+    }
+    assert!(said(&w, "past.") || said(&w, "fooled."));
+    assert!(w.state.encounter.is_none());
+    let verified = Replay::from_json(&replay.to_json())
+        .expect("json")
+        .run(CONTENT.clone())
+        .expect("the replay verifies");
+    assert_eq!(verified.state_hash(), w.state_hash());
+}
+
+#[test]
 fn a_forced_encounter_of_each_outcome_replays_exactly() {
     for (actions, party_made) in [
         ("meet:road_footpads:drop encounter:ambush wait*2", true),

@@ -3,7 +3,7 @@
 //!
 //! - **Cost** ([`Actor::spell_cost`], the one hook): the cost table's price
 //!   ([`crate::content::SpellRules::mana`]: the spell's level, at least 1, × shape × resolution × the armour
-//!   worn's `spell_cost_percent`, rounded once; no caster level), then Archmage's
+//!   worn's `spell_cost_percent`, rounded once), then Archmage's
 //!   `spell_mana_percent`
 //!   ([`Actor::spell_base`], what [`World::spend_mana`] is given), then the talents' cut there
 //!   (Frugal caster). Spent only once the cast is sure to go off.
@@ -130,7 +130,7 @@ impl Actor {
     /// ([`crate::content::SpellRules::mana`], with its armour), then the cost hook's percent
     /// (School focus's, [`Actor::spell_mods`]) and Archmage's, Empower's, and Brimming's
     /// (`spell_mana_percent`), at least 1. What a cast gives [`World::spend_mana`],
-    /// which takes [`Actor::mana_cost`] (Frugal caster) off it. No caster level counts.
+    /// which takes [`Actor::mana_cost`] (Frugal caster) off it.
     pub fn spell_base(&self, content: &Content, spell: &SpellData) -> i32 {
         let Some(rules) = content.spell_rules() else {
             return 1;

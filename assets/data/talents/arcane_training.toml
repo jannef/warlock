@@ -1,4 +1,4 @@
-# Arcane training (the no-caster-level design §5.2; #988): the wizard's class ability, ten
+# Arcane training (the learning design §5.2; #988): the wizard's class ability, ten
 # points deeper in Spellcraft (a bonus alone never trains it).
 [[talent]]
 id = "arcane_training"

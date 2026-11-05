@@ -10,7 +10,7 @@ use crate::skills::{Effect, Trained};
 use crate::stats::{PerStat, Stat, Stats};
 
 /// A creature of type `creature` placed at `at`, every score `score`, awake and hostile; its id.
-fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {
+pub(super) fn foe_at(w: &mut World, creature: &str, at: Pos, score: u8) -> ActorId {
     let content = w.content().clone();
     let template = (w.state.actors.values())
         .find(|a| a.id != w.state.player)

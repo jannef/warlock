@@ -542,7 +542,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
   - **Forges and tempering** (`offers = { temper = true }`, #418, #1022; `world/temper.rs`,
     `magic/worked.rs`, `data/temper.toml`; the owner's rule, `docs/design/skill-uses.md` §6.7 M0):
     the forge's feature is an **anvil** (terrain `anvil`, `π`, cold, no light; look mode adds its
-    description). **Temper** (`Action::Temper { item }`, `temper:LETTER` in action text) is offered
+    description); Cēaptūn's Forge (the weaponsmith's shop) has one too, beside the smith's fire (#1023), free to use. **Temper** (`Action::Temper { item }`, `temper:LETTER` in action text) is offered
     in the abilities menu's *Here* group while the player stands next to an anvil, to anyone; it
     asks for an item (`Aim::Item`: the Temper list, what the anvil accepts now). It takes a weapon,
     missile weapon, armour, or shield whose main part (the first of `Stack::parts`) is of a

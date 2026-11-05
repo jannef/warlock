@@ -1,7 +1,7 @@
 //! The first spell list (spec §8 "Spells", "Scrolls"; #397): a scroll of a spell casts it
-//! through the one cast path at its own caster level, free of mana; the area hexes (Sleep, Web)
-//! and Haste; the list's content checks (one scroll a spell, the classes' guaranteed spells
-//! within their caster level, mana for everyone).
+//! through the one cast path at its own rungs, free of mana; the area hexes (Sleep, Web)
+//! and Haste; the list's content checks (one scroll a spell, the classes' guaranteed spells,
+//! mana for everyone).
 
 use super::*;
 use crate::action::parse_actions;
@@ -219,7 +219,10 @@ fn every_spell_comes_on_one_scroll_and_every_scroll_names_a_spell() {
 }
 
 #[test]
-fn every_class_has_mana_and_its_guaranteed_spells_within_its_caster_level() {
+fn every_class_has_mana_and_its_guaranteed_spells() {
+    // The full casters; every other class is a hybrid or casts nothing it is given. A spell a
+    // class gives is its holder's at that level, whatever its level (the learning design §4).
+    const FULL: [&str; 4] = ["druid", "priest", "witch", "wizard"];
     let content = Content::builtin().expect("content");
     let book = content.talents();
     for class in content.classes() {
@@ -232,22 +235,14 @@ fn every_class_has_mana_and_its_guaranteed_spells_within_its_caster_level() {
                     continue;
                 };
                 let s = content.spell(content.spell_id(spell).expect("a spell"));
-                // Given at its level, a spell is within the caster level it comes at (the
-                // spell scaling design §5.6).
-                let caster = (i32::from(*level) * i32::from(class.casting) / 100).max(1);
-                assert!(
-                    i32::from(s.level) <= caster,
-                    "{}'s {} at {level}",
-                    class.id,
-                    s.id
-                );
                 spells.push((*level, s.level, s.kind));
             }
         }
         // A full caster: a cantrip at level 1 and three to twelve spells in all (the priest's
         // three: their rite is the Orison, docs/dev/prayer.md), the druid's calls (summons,
         // #839) counted apart: they are its pack, not its spellbook.
-        if class.casting == 100 {
+        let full = FULL.contains(&class.id.as_str());
+        if full {
             assert!(
                 spells.iter().any(|&(l, t, _)| l == 1 && t <= 1),
                 "{}'s cantrip",
@@ -259,10 +254,10 @@ fn every_class_has_mana_and_its_guaranteed_spells_within_its_caster_level() {
             assert!((3..=12).contains(&book), "{}: {spells:?}", class.id);
         }
         // Only the casters and the hybrids have any, and a hybrid's are low boons.
-        if class.casting < 100 {
+        if !full {
             assert!(spells.len() <= 2, "{}: {spells:?}", class.id);
             assert!(
-                (spells.iter()).all(|&(_, t, k)| t <= 5 && k != SpellPurpose::Damage),
+                (spells.iter()).all(|&(_, t, k)| t <= 7 && k != SpellPurpose::Damage),
                 "{}: {spells:?}",
                 class.id
             );

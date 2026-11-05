@@ -83,6 +83,7 @@ pub(super) fn action_costs(content: &Content) -> String {
             ActionKind::Chat => "Chatting with someone (asking about a topic takes no time)",
             ActionKind::Song => "Singing a song (a bard's inspire)",
             ActionKind::Steal => "Trying to steal from someone, whatever comes of it",
+            ActionKind::Feint => "Feinting at a foe, whatever comes of it",
             ActionKind::Tame => "One turn of taming a beast (a try takes several)",
             ActionKind::Intimidate => "Intimidating a foe, whatever comes of it",
             ActionKind::ThrowVoice => "Throwing your voice",

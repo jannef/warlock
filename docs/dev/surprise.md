@@ -83,7 +83,7 @@ Keep it current with the code, as CLAUDE.md says.
 - `combat::Target::no_criticals`: `strike_with` makes a threat a plain hit with no confirmation
   draw, and a sure critical a plain hit.
 - `combat::Target::without(categories)`: the strip of positive Defence bonuses, shared with
-  Feint (`weapon_active.rs::feinted`).
+  False lead (`weapon_active.rs::misled`).
 
 - `xtask/src/wiki/surprise.rs`, the player wiki's tables (#688; `wiki/src/surprise.md`, under
   Combat): `surprise-rules.md` (`difficulty`, `missile_reach` with Long reach, `memory_turns`,
@@ -114,6 +114,7 @@ Keep it current with the code, as CLAUDE.md says.
 | `weapon_ability.rs::spend_actions` | a `per_action` status that ends pushes `Event::Status { began: false }` (its `end` line: "You recover your wits.", Staggered's and Pinned's too) |
 | `fight.rs::resolve` (#684) | `lurked` (a lurk's blow on a creature not hunting the player is unaware: `startle`, flat-footed, dice) and `low_blow_taken` (a low blow passes `sneaks` as unaware: dice only); `vanishing_act` beside `Build::SneakKill` |
 | `free_blow.rs::free_blows_of`, `step_up` (#684) | Lurking switches the gatekeeper's blow on; `lie_in_wait` flags the player's blow from a lurk (`Technique::lurk`, cleared after) |
+| `feint.rs::feint` (#1016) | Bluff's use: a failed Willpower check is `afflict(surprised)` with no initiative check, and on `World::fresh`, so the foe's first action in that turn does not ease it (`docs/dev/skills.md`) |
 | `perceive.rs::perceive` | `mark_noticed` |
 | `perception.rs::Perception::compute` (#687) | `SeenActor::unaware` from `creature_unaware` for each creature in view, only with `sees_unaware` (Stalker's eye); false for all otherwise |
 | `ui/look.rs`, `ui/glyphs.rs` (#687) | "unaware of you" after the seen statuses; the unaware mark (`unaware_tint`, `unaware_mix`; docs/dev/rendering.md) |

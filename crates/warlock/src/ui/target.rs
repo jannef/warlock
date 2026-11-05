@@ -185,7 +185,7 @@ impl Aim {
             // A volley flies as far as a shot.
             AimKind::Ability(VOLLEY) => view.ready_to_fire().map(|(_, _, range)| range),
             // A wand's spell reaches as far as the player casts it, once they know what it is.
-            // A rod's effect reaches as far as the player's caster level carries it, once they
+            // A rod's effect reaches as far as the player's Willpower carries it, once they
             // know what it is.
             AimKind::Zap(item) => match spell_of(view, self.kind) {
                 Some(s) => view.own_spell_reach(s)?.range,

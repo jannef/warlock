@@ -18,7 +18,7 @@
 //!
 //! **What its blow or shot does beyond a plain one** is set on its profile (a sure critical,
 //! Protection ignored, the dice twice, a sweep's to-hit), or, where the profile cannot carry it,
-//! on the transient [`Technique`] read where the attack is resolved (Feint's Defence categories,
+//! on the transient [`Technique`] read where the attack is resolved (False lead's Defence categories,
 //! `fight.rs::resolve`; Piercing shot's flight, `shoot.rs::fly`) and cleared after it. Creatures
 //! use no actives. Deciding never draws: the blows draw as any blow does.
 
@@ -45,7 +45,7 @@ const LEAST_PERCENT: i64 = 50;
 /// that its profile cannot carry, read where the attack is resolved, cleared after it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(super) struct Technique {
-    /// The Defence categories the next attack the player makes is rolled without (Feint): taken
+    /// The Defence categories the next attack the player makes is rolled without (False lead): taken
     /// by that attack.
     pub(super) ignores: Categories,
     /// The next shot the player looses flies on past the first it hits (Piercing shot): taken
@@ -217,7 +217,7 @@ impl World {
         percent_of(base, u32::try_from(percent).unwrap_or(u32::MAX))
     }
 
-    /// A weapon active's blow at the hostile in `dir`: Vital strike, Sunder, Feint, Mighty swing,
+    /// A weapon active's blow at the hostile in `dir`: Vital strike, Sunder, False lead, Mighty swing,
     /// Hip throw (with what is held), Shield rush (a bash), and Lunge (reaching on). Refused (no
     /// time, nothing spent) with nobody hostile there.
     fn active_blow(
@@ -554,10 +554,10 @@ impl World {
         Spent::Turn(self.active_price(id, base))
     }
 
-    /// The side of a target the player's attack strikes, without the Defence categories Feint
+    /// The side of a target the player's attack strikes, without the Defence categories False lead
     /// ignores (each positive bonus there taken away), which this attack takes: the one place
     /// [`Technique::ignores`] is read (`fight.rs::resolve`).
-    pub(super) fn feinted(&mut self, attacker: ActorId, target: Target) -> Target {
+    pub(super) fn misled(&mut self, attacker: ActorId, target: Target) -> Target {
         if attacker != self.state.player || self.technique.ignores == Categories::default() {
             return target;
         }

@@ -1,5 +1,5 @@
 # Overreach (the magic design §10; #400; the spell scaling design §7.2): the Spellcraft tree. A
-# spell above the caster level counts a third fewer levels beyond the caster in the study check.
+# spell above the learning counts a third fewer levels beyond it in the study check.
 [[talent]]
 id = "overreach"
 name = "Overreach"

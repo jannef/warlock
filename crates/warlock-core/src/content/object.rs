@@ -439,7 +439,7 @@ pub struct ObjectDef {
     pub corpse: Option<CreatureId>,
     /// What reading it does, if it is a scroll (spec §8 "Scrolls").
     pub read: Option<Reading>,
-    /// The spell it holds, its charges, and its caster level, if it is a wand (spec §8 "Magic
+    /// The spell it holds, its charges, and its rungs, if it is a wand (spec §8 "Magic
     /// items": "Wands").
     pub wand: Option<Wand>,
     /// The effect it holds and what a use costs in mana, if it is a rod (spec §8 "Magic items":

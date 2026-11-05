@@ -103,7 +103,6 @@ mod calling;
 mod carry;
 mod cast;
 mod caster;
-mod caster_level;
 mod chest;
 mod class;
 mod class_ability;
@@ -138,6 +137,7 @@ mod experience;
 mod eyes;
 mod familiar;
 mod feature;
+mod feint;
 mod fight;
 mod flavour;
 mod focus;
@@ -145,6 +145,7 @@ mod footing;
 mod forage;
 mod free_blow;
 mod frenzy;
+pub(crate) mod freshness;
 mod gifts;
 mod glare;
 mod guild;
@@ -237,6 +238,7 @@ pub(crate) mod surprise;
 mod swim;
 mod talent;
 mod talk;
+mod talk_past;
 mod tame;
 mod temper;
 mod thief;
@@ -254,6 +256,7 @@ mod weapon_ability;
 mod weapon_active;
 mod witch;
 mod words;
+mod wriggle;
 mod zap;
 
 pub use actor::{Actor, ActorId, ActorKind, AttackSkills, Mind, Patrol};
@@ -262,7 +265,6 @@ pub use ally::{Ally, AllySource, MAX_DEV_ALLIES, Order};
 pub use attacks::{AttackSource, OwnAttack};
 pub use calling::CallingStatus;
 pub use cast::Reach;
-pub use caster_level::casting_percent;
 pub use collar::fits_neck;
 pub(crate) use companion::smelt_within;
 pub use companion::{CompanionData, draw as companion_draw, name_for as companion_name};
@@ -306,6 +308,7 @@ pub(crate) use stars::{RISEN, RISEN_TWICE};
 pub(crate) use swim::shore_refusal;
 pub use talent::Due;
 pub use talk::{Conversation, Talk, TopicView};
+pub(crate) use talk_past::offered as encounter_choices;
 pub use temper::{temperable, workable};
 use travel::{enter_room, instantiate_level, level_template};
 pub use voice::VOICE_RANGE;
@@ -1199,6 +1202,7 @@ impl World {
             lore: self.lore(),
             snapshot: &self.perception,
             encounter: self.state.encounter.as_ref(),
+            seed: self.state.seed,
         }
     }
 
@@ -1423,6 +1427,7 @@ impl World {
             Action::Ask { dir, topic } => return self.ask(*dir, topic, events),
             Action::Say { dir, words } => return self.say_to(*dir, words, events),
             Action::Steal(dir) => return self.steal(*dir),
+            Action::Feint(dir) => return self.feint(*dir, events),
             Action::Tame(dir) => return self.start_tame(*dir),
             Action::Intimidate(at) => return self.intimidate(*at, events),
             Action::ThrowVoice(at) => return self.throw_voice(*at, events),
@@ -1573,6 +1578,8 @@ mod bond_tests;
 #[cfg(test)]
 mod branch_tests;
 #[cfg(test)]
+mod buff_field_tests;
+#[cfg(test)]
 mod buff_tests;
 #[cfg(test)]
 mod burden_tests;
@@ -1580,8 +1587,6 @@ mod burden_tests;
 mod calling_tests;
 #[cfg(test)]
 mod cast_tests;
-#[cfg(test)]
-mod caster_level_tests;
 #[cfg(test)]
 mod caster_style_tests;
 #[cfg(test)]
@@ -1669,6 +1674,8 @@ mod experience_tests;
 #[cfg(test)]
 mod feature_tests;
 #[cfg(test)]
+mod feint_tests;
+#[cfg(test)]
 mod fight_tests;
 #[cfg(test)]
 mod fixture_factions;
@@ -1684,6 +1691,8 @@ mod forage_tests;
 mod free_blow_tests;
 #[cfg(test)]
 mod frenzy_tests;
+#[cfg(test)]
+mod freshness_tests;
 #[cfg(test)]
 mod gear_tests;
 #[cfg(test)]
@@ -1827,6 +1836,8 @@ mod scroll_label_tests;
 #[cfg(test)]
 mod search_tests;
 #[cfg(test)]
+mod service_haggle_tests;
+#[cfg(test)]
 mod service_tests;
 #[cfg(test)]
 mod shoot_tests;
@@ -1968,6 +1979,8 @@ mod weather_tests;
 mod witch_tests;
 #[cfg(test)]
 mod words_tests;
+#[cfg(test)]
+mod wriggle_tests;
 #[cfg(test)]
 mod zap_tests;
 
