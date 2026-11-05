@@ -13,7 +13,7 @@ weight = 50
 value = 320
 stackable = true
 level = 8
-frequency = 10
+frequency = 15
 
 [object.read]
 kind = "spell"

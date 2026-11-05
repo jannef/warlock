@@ -313,8 +313,9 @@ cast path shares.
     `silenced`, `transfixed`, `asleep`), so it sheds its school's faint light whatever laid it
     (a Trip's Pinned, Intimidate's Frightened too), and Malison's `status_damage` rows name the
     five new hex statuses. `spell_list_tests`' class check: a full caster three to twelve spells
-    (Q13), a hybrid (bard, paladin, ranger) up to four, each at most level 10 and none a damage
-    spell.
+    (Q13), a hybrid (bard, paladin, ranger) up to five (the bard's: Mend, Mesmerise,
+    Thunderclap, Bind, Sense the quick), of any level or kind: spells are not class-specific
+    (the spell types design's Decisions), so Thunderclap, a damage spell, is the bard's.
   - **Identify** (#592; tests `world/identify_spell_tests.rs`): divination, `utility`, `self`,
     `[spell.effect] identify = true` (`SpellEffect::identify`, `SpellData::aims_item`; only a
     `utility` spell on `self` may have it, and a `utility` spell needs it). It asks for a stack,
