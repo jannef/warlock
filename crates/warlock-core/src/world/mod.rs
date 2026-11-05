@@ -256,6 +256,7 @@ mod wares;
 mod warp;
 mod weapon_ability;
 mod weapon_active;
+mod wedge;
 mod witch;
 mod words;
 mod wriggle;
@@ -1461,6 +1462,7 @@ impl World {
             Action::Search(turns) => return Spent::Search(*turns),
             Action::Disarm(dir) => return self.disarm(*dir, events),
             Action::Listen(dir) => return self.listen(*dir),
+            Action::Wedge(dir) => return self.wedge(*dir),
             Action::Heal { what, ally } => return self.heal(what.as_deref(), *ally, events),
             Action::Pray => return self.start_prayer(),
             Action::Drink => return self.start_drink(),
@@ -2001,6 +2003,9 @@ mod weapon_active_tests;
 mod weapon_skill_tests;
 #[cfg(test)]
 mod weather_tests;
+
+#[cfg(test)]
+mod wedge_tests;
 #[cfg(test)]
 mod witch_tests;
 #[cfg(test)]

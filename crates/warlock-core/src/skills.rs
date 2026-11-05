@@ -107,6 +107,8 @@ pub const MAX_TAME_BONUS: i32 = 20;
 pub const MAX_PICK_BONUS: i32 = 20;
 /// The most a skill adds to the check of a batch of arrows (spec §8 "Fletching").
 pub const MAX_FLETCH_BONUS: i32 = 12;
+/// The most a skill adds to the sturdiness of a wedged door (spec §8 "Doors").
+pub const MAX_WEDGE_BONUS: i32 = 12;
 /// The most percent a skill adds to the chance of a forage finding food (spec §8 "Foraging").
 pub const MAX_FORAGE_BONUS: i32 = 30;
 /// The most a skill adds to tempering an item at an anvil (spec §7 "Special rooms": the forge).
@@ -279,6 +281,10 @@ pub enum Effect {
     /// Points added to the check of a batch of arrows or bolts (spec §8 "Fletching";
     /// `world/fletch.rs`). Anyone may fletch; the skill only helps.
     Fletch,
+    /// Points added to the sturdiness of a door the actor wedges shut (spec §8 "Doors";
+    /// `world/wedge.rs`); a skill with it, trained, lets the actor wedge doors at all (the Wedge
+    /// ability).
+    Wedge,
     /// Points added to the check of an attempt at an anvil (spec §7 "Special rooms": Temper;
     /// `world/temper.rs`). Anyone may temper; the skill only helps.
     Temper,
@@ -340,6 +346,7 @@ impl Effect {
             Effect::Pick => MAX_PICK_BONUS,
             Effect::Forage => MAX_FORAGE_BONUS,
             Effect::Fletch => MAX_FLETCH_BONUS,
+            Effect::Wedge => MAX_WEDGE_BONUS,
             Effect::Temper => MAX_TEMPER_BONUS,
             Effect::Swim => MAX_SWIM_BONUS,
             Effect::ManaRegen => MAX_MANA_REGEN_BONUS,
@@ -420,6 +427,8 @@ pub enum Use {
     Pick,
     /// A batch of arrows or bolts that ran its time (spec §8 "Fletching"), whatever came of it.
     Fletch,
+    /// A door wedged shut (spec §8 "Doors").
+    Wedge,
     /// An attempt on an item at a forge's anvil done (spec §7 "Special rooms"), whatever comes of
     /// it.
     Temper,
@@ -493,6 +502,7 @@ impl Use {
             Use::Kick => "kicking at a closed door",
             Use::Pick => "a try at picking a lock",
             Use::Fletch => "fletching a batch of arrows or bolts",
+            Use::Wedge => "wedging a door shut",
             Use::Temper => "tempering an item at an anvil",
             Use::Wade => "a step wading through water or marsh",
             Use::RoughStep => "a step onto rough ground that slows (bush, reeds, rubble, ice)",
@@ -630,6 +640,7 @@ impl Use {
             Use::Kick => "kick",
             Use::Pick => "pick",
             Use::Fletch => "fletch",
+            Use::Wedge => "wedge",
             Use::Temper => "temper",
             Use::Wade => "wade",
             Use::RoughStep => "rough_step",
@@ -693,6 +704,7 @@ impl Effect {
             Effect::Kick => "kick",
             Effect::Pick => "pick",
             Effect::Fletch => "fletch",
+            Effect::Wedge => "wedge",
             Effect::Temper => "temper",
             Effect::Swim => "swim",
             Effect::ManaRegen => "mana_regen",

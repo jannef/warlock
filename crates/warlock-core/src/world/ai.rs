@@ -53,6 +53,8 @@ const CROWD: u32 = 4;
 const DOOR: u32 = 1;
 /// Extra cost of a locked door on top of [`DOOR`], for a creature with the key: unlocking it.
 const UNLOCK: u32 = 1;
+/// Extra cost of a wedged door on top of [`DOOR`]: kicking it in takes several actions.
+const WEDGE: u32 = 6;
 /// Path searches look this many cells beyond the distance to their target...
 const SEARCH_MARGIN: i32 = 12;
 /// ...and at most this far from the creature.
@@ -440,6 +442,7 @@ impl World {
                 1 + super::incorporeal::WALL
             } else if opens_doors && def.is_closed_door() {
                 match level.locks.get(&p) {
+                    None if level.wedged.contains_key(&p) => 1 + DOOR + WEDGE,
                     None => 1 + DOOR,
                     Some(lock) if me.key_for(&self.content, lock).is_some() => 1 + DOOR + UNLOCK,
                     Some(_) => return Cost::Impassable,
@@ -510,6 +513,15 @@ impl World {
         let through = phases && level.phaseable(&self.content, to);
         if !through && def.is_closed_door() && self.content.creature(actor.creature).opens_doors {
             let open = self.price_of(id, ActionKind::OpenDoor);
+            // A wedged door it cannot open: it kicks at it (`wedge.rs`).
+            let openable = level
+                .locks
+                .get(&to)
+                .is_none_or(|lock| actor.key_for(&self.content, lock).is_some());
+            if level.wedged.contains_key(&to) && openable {
+                let price = self.creature_kicks_wedge(id, to, events);
+                return Stepped::Opened(price);
+            }
             let stepped = match level.locks.get(&to) {
                 None => Stepped::Opened(open),
                 Some(lock) if actor.key_for(&self.content, lock).is_some() => {

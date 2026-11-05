@@ -145,7 +145,9 @@ Intimidate `Ability::Intimidate` (above; aimed at a cell, `Ability::reach` from 
 Bluff `Ability::Feint` (above; in a direction).
 A passive skill with a use of its own is listed as that use too (`Ability::every` asks
 `Ability::use_of` of every skill): Survival is `Ability::Forage` (below). Woodcraft is
-`Ability::Fletch`, which anyone has, trained or not (below).
+`Ability::Fletch`, which anyone has, trained or not (below), and `Ability::Wedge` for those trained
+(`Ability::every` adds it right after the skills while some skill gives `Effect::Wedge`; see
+`docs/dev/doors.md` "Wedging").
 
 **Fletching** (spec §8 "Fletching", #1021, design `docs/design/skill-uses.md` §6.5 W1):
 `Action::Fletch` (replay text `fletch`, cost `fletch` a turn, `ActionKind::Fletch`), dispatched by
