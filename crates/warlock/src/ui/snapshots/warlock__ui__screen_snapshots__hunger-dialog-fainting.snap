@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, hunger_content(nutrition))"
+---
+ Welcome to World. Press ? for controls.
+ Lēof, your hound, pads at your heel.
+
+
+
+
+
+
+
+                              ┌─ Fainting ──────────────────────────┐
+                              │                                     │
+                              │ You are faint from hunger, and this │
+                              │ journey may kill you. Go on without │
+                              │               eating?               │
+                              │                                     │
+                              │            Go on  (y)               │
+                              │          > Stay  (n, Esc)           │
+                              │                                     │
+                              │ ↑/↓ choose  Enter select            │
+                              └─────────────────────────────────────┘
+
+
+
+
+
+
+
+
+
+ The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/10  ·  Fainting  ·  Lv 1  ·  08:00     ? controls

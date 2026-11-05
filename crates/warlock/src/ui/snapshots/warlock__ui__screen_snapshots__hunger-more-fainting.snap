@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, hunger_content(nutrition))"
+---
+ You feel faint from hunger. Eat now, or you will starve! --more--
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/10  ·  Fainting  ·  Lv 1  ·  08:19     ? controls

@@ -242,8 +242,8 @@ mod tests {
         files.insert("data/hunger.toml", &hunger);
         let content = Arc::new(Content::load(&files).expect("content"));
         let mut w = World::new(content, "showcase", None).expect("world");
-        // Starving stops the first rest; the next lasts until the end.
-        for _ in 0..3 {
+        // Starving stops the first rest, and every hit point it costs stops the next.
+        for _ in 0..100 {
             w.apply(&Action::Rest(warlock_core::Rest::Dusk));
         }
         assert!(w.death().is_some(), "starved");

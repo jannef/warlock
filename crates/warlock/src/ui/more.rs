@@ -12,6 +12,9 @@
 //! keeps the end of this turn's messages; rows they leave free show earlier messages, one a
 //! row, as before.
 //!
+//! A turn that left the player hungrier ([`Game::hunger_stop`], spec §8 "Hunger") waits at its
+//! last page too, however little it said, so the news cannot scroll past.
+//!
 //! Presentation only: the rules, replays, and dumps never see pages. The whole log is on the
 //! message history screen (`ui::messages_screen`).
 
@@ -27,8 +30,9 @@ pub const MORE: &str = "--more--";
 
 /// `texts` run on one after another in lines of at most `width` cells, split at word
 /// boundaries (a word longer than a line where the line ends), in pages of `rows` lines. Every
-/// page but the last leaves room on its last line for ` --more--`. No pages for no text.
-pub fn pages(texts: &[String], width: usize, rows: usize) -> Vec<Vec<String>> {
+/// page but the last leaves room on its last line for ` --more--`, and so does the last if
+/// `last_waits`. No pages for no text.
+pub fn pages(texts: &[String], width: usize, rows: usize, last_waits: bool) -> Vec<Vec<String>> {
     let (width, rows) = (width.max(1), rows.max(1));
     let narrow = width.saturating_sub(MORE.chars().count() + 1).max(1);
     let mut words: VecDeque<String> = (texts.iter())
@@ -37,9 +41,11 @@ pub fn pages(texts: &[String], width: usize, rows: usize) -> Vec<Vec<String>> {
         .collect();
     let (mut pages, mut page) = (Vec::new(), Vec::new());
     while !words.is_empty() {
-        // A page's last line is cut short for `--more--` when more is left than it holds.
+        // A page's last line is cut short for `--more--` when more is left than it holds, and
+        // so is the very last line when it waits too.
         let last_row = page.len() + 1 == rows;
-        let room = if last_row && !fits(&words, width) {
+        let fit = fits(&words, width);
+        let room = if (last_row && !fit) || (last_waits && fit) {
             narrow
         } else {
             width
@@ -106,18 +112,23 @@ fn turn_pages(game: &Game, cols: u32, bindings: &Bindings) -> Vec<Vec<String>> {
     let texts: Vec<String> = (game.unread().iter())
         .map(|msg| msg.display_with(|id| message_key(bindings, id)))
         .collect();
-    pages(&texts, width(cols), MESSAGE_ROWS as usize)
+    pages(&texts, width(cols), MESSAGE_ROWS as usize, game.hunger_stop)
 }
 
-/// How many pages this turn's messages take in the message line of a console `cols` wide.
-pub fn page_count(game: &Game, cols: u32, bindings: &Bindings) -> usize {
-    turn_pages(game, cols, bindings).len()
+/// How many pages of this turn's messages wait at `--more--` in the message line of a console
+/// `cols` wide: all but the last, or all of them after a turn that left the player hungrier.
+pub fn stops(game: &Game, cols: u32, bindings: &Bindings) -> usize {
+    let count = turn_pages(game, cols, bindings).len();
+    match game.hunger_stop {
+        true => count,
+        false => count.saturating_sub(1),
+    }
 }
 
-/// The mode after `MoreNext` on page `page` of `count`: the next page, or play when that is the
-/// last (it has no `--more--` to wait at).
-pub fn advance(page: usize, count: usize) -> InputMode {
-    if page + 2 < count {
+/// The mode after `MoreNext` on page `page`, of the `stops` pages that wait: the next that does,
+/// or play.
+pub fn advance(page: usize, stops: usize) -> InputMode {
+    if page + 1 < stops {
         InputMode::More(page + 1)
     } else {
         InputMode::Normal
@@ -141,11 +152,11 @@ pub(super) fn wait(
         return;
     }
     *paged = Some(key);
-    let count = page_count(&game, console.cols(), &bindings);
+    let stops = stops(&game, console.cols(), &bindings);
     let next = match *mode {
-        InputMode::Normal | InputMode::More(_) if turn && count > 1 => InputMode::More(0),
-        InputMode::More(_) if turn || count < 2 => InputMode::Normal,
-        InputMode::More(page) => InputMode::More(page.min(count - 2)),
+        InputMode::Normal | InputMode::More(_) if turn && stops > 0 => InputMode::More(0),
+        InputMode::More(_) if turn || stops == 0 => InputMode::Normal,
+        InputMode::More(page) => InputMode::More(page.min(stops - 1)),
         other => other,
     };
     if *mode != next {
@@ -250,8 +261,8 @@ mod tests {
     #[test]
     fn a_long_turn_shows_a_page_with_more_then_its_end() {
         let game = game(NOOK, "ask:SE:quest-rats");
-        let pages = page_count(&game, 80, &Bindings::default());
-        assert!(pages >= 2, "{pages}");
+        let waits = stops(&game, 80, &Bindings::default());
+        assert!(waits >= 1, "{waits}");
         let first = line(&game, InputMode::More(0), 80);
         assert!(first[0].starts_with(" The old hermit says: \"Here we don't fight."));
         assert!(first[1].ends_with(" --more--"), "{first:?}");
@@ -264,7 +275,7 @@ mod tests {
         );
         assert!(!end.iter().any(|l| l.contains(MORE)));
         // A wider line takes fewer pages.
-        assert!(page_count(&game, 400, &Bindings::default()) < pages);
+        assert!(stops(&game, 400, &Bindings::default()) < waits);
     }
 
     fn texts(list: &[&str]) -> Vec<String> {
@@ -273,7 +284,7 @@ mod tests {
 
     #[test]
     fn messages_run_on_and_wrap_at_words() {
-        let pages = pages(&texts(&["You hit the rat.", "The rat dies."]), 20, 2);
+        let pages = pages(&texts(&["You hit the rat.", "The rat dies."]), 20, 2, false);
         assert_eq!(
             pages,
             vec![vec![
@@ -281,13 +292,13 @@ mod tests {
                 "rat dies.".to_string()
             ]]
         );
-        assert!(super::pages(&[], 20, 2).is_empty());
+        assert!(super::pages(&[], 20, 2, false).is_empty());
     }
 
     #[test]
     fn more_than_the_line_holds_goes_on_pages_with_room_for_more() {
         let words = "one two three four five six seven eight nine ten eleven twelve";
-        let pages = pages(&texts(&[words]), 16, 2);
+        let pages = pages(&texts(&[words]), 16, 2, false);
         // Every line fits; the last line of every page but the last leaves room for ` --more--`.
         for (i, page) in pages.iter().enumerate() {
             for line in page {
@@ -308,7 +319,7 @@ mod tests {
     #[test]
     fn the_last_page_takes_the_whole_line() {
         // Exactly two full lines: one page, no `--more--` to make room for.
-        let pages = pages(&texts(&["aaaa bbbb", "cccc dddd"]), 9, 2);
+        let pages = pages(&texts(&["aaaa bbbb", "cccc dddd"]), 9, 2, false);
         assert_eq!(
             pages,
             vec![vec!["aaaa bbbb".to_string(), "cccc dddd".to_string()]]
@@ -316,22 +327,38 @@ mod tests {
     }
 
     #[test]
+    fn a_last_page_that_waits_leaves_room_for_more() {
+        let words = ["aaaa bbbb", "cccc dddd"];
+        // Too full to wait: the rest goes on a page of its own, which has room.
+        let pages = pages(&texts(&words), 16, 2, true);
+        for page in &pages {
+            let last = page.last().expect("a line");
+            assert!(last.chars().count() + 1 + MORE.len() <= 16, "{last:?}");
+        }
+        assert_eq!(pages.concat().join(" "), words.join(" "));
+        // Nothing to say, nothing to wait at.
+        assert!(super::pages(&[], 16, 2, true).is_empty());
+    }
+
+    #[test]
     fn a_word_longer_than_a_line_is_split_where_the_line_ends() {
-        let pages = pages(&texts(&["abcdefghijkl"]), 5, 1);
+        let pages = pages(&texts(&["abcdefghijkl"]), 5, 1, false);
         assert_eq!(pages.concat().concat(), "abcdefghijkl");
         assert!(pages.iter().flatten().all(|l| l.chars().count() <= 5));
         // Tiny lines still make progress.
         assert_eq!(
-            super::pages(&texts(&["abc"]), 0, 0).concat().concat(),
+            super::pages(&texts(&["abc"]), 0, 0, false)
+                .concat()
+                .concat(),
             "abc"
         );
     }
 
     #[test]
     fn advancing_stops_at_the_last_page() {
-        assert_eq!(advance(0, 3), InputMode::More(1));
-        assert_eq!(advance(1, 3), InputMode::Normal);
-        assert_eq!(advance(0, 2), InputMode::Normal);
-        assert_eq!(advance(5, 2), InputMode::Normal);
+        assert_eq!(advance(0, 2), InputMode::More(1));
+        assert_eq!(advance(1, 2), InputMode::Normal);
+        assert_eq!(advance(0, 1), InputMode::Normal);
+        assert_eq!(advance(5, 1), InputMode::Normal);
     }
 }

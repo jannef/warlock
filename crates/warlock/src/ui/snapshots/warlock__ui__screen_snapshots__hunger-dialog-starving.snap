@@ -1,0 +1,34 @@
+---
+source: crates/warlock/src/ui/screen_snapshots.rs
+expression: "render(&case, content)"
+---
+ You are starving! Eat, or you will die!
+ You stop resting after 1 minute.
+
+
+
+
+
+
+
+                            ┌─ Starving ───────────────────────────────┐
+                            │                                          │
+                            │   You are starving to death, and every   │
+                            │ step takes what life you have left. This │
+                            │   journey may well be your last. Go on   │
+                            │             without eating?              │
+                            │                                          │
+                            │               Go on  (y)                 │
+                            │             > Stay  (n, Esc)             │
+                            │                                          │
+                            │ ↑/↓ choose  Enter select                 │
+                            └──────────────────────────────────────────┘
+
+
+
+
+
+
+
+
+ The Wildlands  ·  HP 20/20  ·  MP 4/4  ·  Sta 10/10  ·  Starving  ·  Lv 1  ·  08:01     ? controls
