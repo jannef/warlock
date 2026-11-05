@@ -94,7 +94,9 @@ impl World {
             self.say("No one here is hurt.");
             return false;
         }
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         if let Some(text) = &cast.def.look.message {
             self.say(text.clone());
         }
@@ -122,7 +124,9 @@ impl World {
             return false;
         }
         let here = self.player_pos();
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         if let Some(text) = &cast.def.look.message {
             self.say(text.clone());
         }
@@ -193,7 +197,9 @@ impl World {
             self.say("There is nowhere to go.");
             return false;
         }
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         if let Some(text) = &cast.def.look.message {
             self.say(text.clone());
         }
@@ -248,7 +254,9 @@ impl World {
             self.say("You need the open sky above you for that.");
             return false;
         }
-        self.pay_cast(cast);
+        if !self.pay_cast(cast) {
+            return true;
+        }
         if let Some(text) = &cast.def.look.message {
             self.say(text.clone());
         }

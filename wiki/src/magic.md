@@ -73,8 +73,8 @@ spells, the soft cap of 100 reaches level 30, and 150 the last spell level:
 **A character not trained in Spellcraft cannot learn a spell from a scroll at all**, cantrips
 included: the study is refused, and takes no time. Trained means the skill is among your
 [skills](skills.md); an item's or a talent's bonus to a skill you do not have does not train you.
-You can still read a scroll to [cast it](scrolls.md#spell-scrolls), and your class's own spells
-still come at their levels.
+You can still read a scroll to [cast it](scrolls.md#spell-scrolls), [by a check](scrolls.md#making-out-a-scroll) (your learning reads a scroll at or
+below it with none), and your class's own spells still come at their levels.
 
 Every class that casts starts trained, and [its dice are in the class table](skills.md):
 [wizards](classes.md#wizard), [witches](classes.md#witch), [priests](classes.md#priest), and
@@ -87,7 +87,7 @@ and an [ascetic](classes.md#ascetic) one in five (20 %, 2d4). Other classes do n
 
 Your caster level no longer decides what you can learn. It is your
 [level](experience.md#levels) times your class's **casting** share, rounded down, plus what
-[talents](talents.md) and [magic items](magic-items.md) (*of the Adept*) add; nothing in play
+[talents](talents.md) add; nothing in play
 reads it now, and it is on its way out of the game.
 
 {{#include generated/spell-casting.md}}
@@ -173,6 +173,23 @@ fire, and it never spreads.
 **Cold slows the blood.** Every creature a cold spell harms is [Sluggish](status-effects.md#status-sluggish) besides, and whatever burned on it goes
 out; nothing on a miss. A cold burst freezes the [water](terrain.md#water) on the cells it reaches, into ice that holds a
 laden person, and puts out the fires there.
+
+**Lightning seeks the nearest path.** A ray, a bolt, a touch, or a line of electricity that harms a creature
+strikes once more, one time in four, at the nearest creature beside it not yet struck (ties go to the one that
+came into the world first), at the same roll, and no roll to hit nor [Evasion](talents.md#talent-evasion) saves anyone from it. That one may arc again, and
+so on. It is not choosy: [Spark](#the-spells) at a rat beside you may jump back into you, or into your [ally](allies.md).
+
+**Water carries it.** A creature harmed while standing in [water](terrain.md#water) is one of its whole body, every
+cell of open water connected to it, diagonals too: everyone standing in that body not yet struck is struck at the same
+roll, you too if you wade, one after another in the order they came into the world, and each of them may arc. Every
+electricity spell does this, whatever its shape. [Ice](temperature.md#water-freezes) is not water: it carries nothing, and a frozen band parts a
+pond in two. Each creature only ever takes a cast once. Aiming shows you none of this.
+
+**Chain lightning** takes its first jumps for certain, three at first and up to six as your
+[Willpower](stats.md#stat-willpower) grows, and any jump of it reaches two cells instead of one, so long as nothing
+that stops sight stands between. Past those, a jump is one time in four as usual. **[Conductor](talents.md#talent-conductor)** makes
+every arc of your electricity spells happen, and you resist electricity 25 %: it spares you nothing, it only bites less. A chain ends
+when no creature not yet struck is within reach of the last, or the last took no harm.
 
 **A ray, a bolt, or a touch** does to one cell what a burst does to all of its own: the cell of the creature it
 strikes, else the cell you aimed at. So [Ray of frost](#the-spells) makes a bridge across a lake, a cell a cast.
@@ -285,7 +302,7 @@ A spell of a level at most your [learning](#learning) is learned for certain. Ab
 high (the **overreach**) makes it harder: a roll of 2d12 plus your bonus must reach the difficulty,
 12 + 1 per level of overreach (*[Overreach](talents.md#talent-overreach)* counts a third fewer, rounded down), a point more for
 every 20 levels of the spells you already know, added up. Your bonus is your [Intelligence](stats.md#stat-intelligence) [modifier](stats.md#modifiers), a tenth of your
-*[Spellcraft](skills.md#skill-spellcraft)* and of your *[Decipher script](skills.md#skill-decipher-script)* (each at most +20), your class's affinity with the
+*[Spellcraft](skills.md#skill-spellcraft)* (at most +20), your class's affinity with the
 spell's school, and *[Quick study](talents.md#talent-quick-study)*'s +2. A natural 24 always succeeds and a natural 2 always fails.
 A few spells are harder to learn than their level says: their own difficulty is added to the
 check, and a spell made harder this way is never learned for certain, however high your
@@ -303,10 +320,9 @@ the spell may come your way again.
 
 {{#include generated/mishaps.md}}
 
-Studying trains *[Spellcraft](skills.md#skill-spellcraft)*, *[Decipher script](skills.md#skill-decipher-script)*, and your [Intelligence](stats.md#stat-intelligence), whatever comes of it.
+Studying trains *[Spellcraft](skills.md#skill-spellcraft)* and your [Intelligence](stats.md#stat-intelligence), whatever comes of it. *[Decipher script](skills.md#skill-decipher-script)* has no part in a
+study: it is for [making out a scroll](scrolls.md#making-out-a-scroll) you only want to read.
 Spending [mana](mana.md) on a spell also trains *[Spellcraft](skills.md#skill-spellcraft)*, one time in four.
-In a [scriptorium](special-rooms.md#room-scriptorium) ([Special rooms](special-rooms.md)) [Decipher script](skills.md#skill-decipher-script)'s mark is twice as likely,
-so certain.
 
 ## Wands
 

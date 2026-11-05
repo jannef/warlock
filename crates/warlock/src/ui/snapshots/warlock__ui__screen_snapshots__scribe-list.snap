@@ -2,8 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- Your concentration improves. (×68) You learn Attuned. You learn Blood magic. You learn Clear mind.
- You learn Deep well. You learn Petrifying gaze. You learn Undertow. You learn Deep lungs.
+ Your concentration improves. (×68) You learn Blood magic. You learn Clear mind. You learn Deep
+ well. You learn Frugal caster. You learn Petrifying gaze. You learn Undertow. You learn --more--
 
 
 
@@ -14,13 +14,13 @@ expression: "render(case, content.clone())"
                   │   You carry no blank scroll to write on.                     │
                   │                                                              │
                   │ Evocation                                                    │
-                  │ > a - Burning hands              9 mana    about 12 minutes  │
-                  │   b - Ray of frost               3 mana    about 12 minutes  │
-                  │   c - Magic missile              9 mana    about 16 minutes  │
-                  │   d - Arcane bolt               33 mana    about 22 minutes  │
-                  │   e - Shatter                   42 mana    about 26 minutes  │
+                  │ > a - Burning hands              7 mana    about 12 minutes  │
+                  │   b - Ray of frost               2 mana    about 12 minutes  │
+                  │   c - Magic missile              7 mana    about 16 minutes  │
+                  │   d - Arcane bolt               26 mana    about 22 minutes  │
+                  │   e - Shatter                   34 mana    about 26 minutes  │
                   │ Transmutation                                                │
-                  │   f - Blink                     18 mana    about 22 minutes  │
+                  │   f - Blink                     14 mana    about 22 minutes  │
                   │                                                              │
                   │ a-f or Enter write   Esc back                                │
                   └──────────────────────────────────────────────────────────────┘

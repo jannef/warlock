@@ -5,148 +5,148 @@ expression: "describe(&level(1, 11))"
 Fyrdelf 11 (fyrdelf:11) 120x60
 stairs Up at (5, 50) -> fyrdelf:10
 stairs Down at (93, 50) -> fyrdelf:12
-hobgoblin_legionnaire at (19, 15) route S S S S N N N N carrying a steel spear (wielded), an iron large shield (in off hand), a steel chain mail shirt (being worn), a bone helm (being worn)
-duergar_warrior at (29, 6) route S N S S E E E W W W N N S N carrying a zinc hand axe (wielded), an iron small shield (in off hand), a gold chain mail shirt (being worn)
-lesser_fire_elemental at (77, 7) route E E E E S S S S W W E E N N N N W W W W
-water_elemental at (33, 5) route S S S S W E N N N N
-dretch at (110, 26) route W N N N N N E N N N S S S W S S S S S E
-charred_dead at (113, 19) route W W W W W W E E E E E E
-charred_dead at (117, 39) route N S S S E S W W W E E E N W N N N S
-charred_dead at (4, 19) route E E E E E E E E E W W W W W W W W W
-hobgoblin_archer at (58, 51) route E E E S S S N N N W W W carrying a hardwood long war bow (readied), 25 steel arrows (quivered), a hardened leather cap (being worn)
-hill_troll at (65, 42) route N E W W W W E W E E E E W S carrying a maul (wielded in both hands)
-ember_beetle at (59, 9) route W W W W W W E E E E E E
-hill_troll at (36, 43) route S E S N N S N S S N W N
-orc_raider at (115, 36) route E E E W E W W W carrying a steel battle axe (wielded)
-knocker at (19, 22) route S W W W E E E N
-hell_hound at (78, 11) route S S S S N N N N
-animated_blade_15 at (98, 41) route S S S N S N N N carrying a flint spear (wielded)
+hobgoblin_legionnaire at (6, 15) route S S S S N N N N carrying a steel spear (wielded), an iron large shield (in off hand), a steel chain mail shirt (being worn), a bone helm (being worn)
+duergar_warrior at (25, 6) route S N S S E E E W W W N N S N carrying a zinc hand axe (wielded), an iron small shield (in off hand), a gold chain mail shirt (being worn)
+lesser_fire_elemental at (71, 7) route E E E E E E E E W W E E W W W W W W W W
+water_elemental at (29, 5) route E E S S W E N N W W
+dretch at (29, 27) route W W W W N N E N S S N N S W S S E E E E
+charred_dead at (61, 20) route E E E E W W E E W W W W
+charred_dead at (20, 40) route N S S S S W W N N S S E E N N N N S
+charred_dead at (54, 19) route E E E E E E E E E W W W W W W W W W
+hobgoblin_archer at (79, 51) route E E E E E E W W W W W W carrying a hardwood long war bow (readied), 25 steel arrows (quivered), a hardened leather cap (being worn)
+hill_troll at (86, 42) route N E W W W W E W E E E E W S carrying a maul (wielded in both hands)
+ember_beetle at (50, 9) route W W W N N N S S S E E E
+hill_troll at (52, 43) route S E W N N S N S S E W N
+orc_raider at (15, 37) route E E E E W W W W carrying a steel battle axe (wielded)
+knocker at (88, 22) route S W W W E E E N
+hell_hound at (60, 11) route S S W W E E N N
+animated_blade_15 at (117, 41) route S S W S N E N N carrying a flint spear (wielded)
 water_elemental at (87, 2) route W W W E E W W E W E E W W E E E
-hill_troll at (55, 18) route W S S S N S N N N E carrying a bendalloy maul (wielded in both hands)
-duergar_crossbowman at (112, 40) route E S S W W W W N N S S E E E E N N W carrying a crossbow (readied), 12 chromium crossbow bolts (quivered), a studded hardened leather jerkin (being worn)
-ogre_zombie at (48, 32) route W W E E E S S W W E W E E N N W W W E E
+hill_troll at (113, 18) route W S S W W E E N N E carrying a bendalloy maul (wielded in both hands)
+duergar_crossbowman at (13, 41) route E S S W W W W N N S S E E E E N N W carrying a crossbow (readied), 12 chromium crossbow bolts (quivered), a studded hardened leather jerkin (being worn)
+ogre_zombie at (95, 32) route W W E E E S S S S S N N N N N W W W E E
 hobgoblin_legionnaire at (106, 55) route W W W W W W W W W E E E E E E E E E carrying a horn spear (wielded), a hardwood large shield (in off hand), a suit of scale mail (being worn), a leather helm (being worn)
-duergar_crossbowman at (71, 18) route E E E N N S S W W W carrying a hardwood crossbow (readied), 12 flint crossbow bolts (quivered), an aluminium hand axe (wielded), a studded hardened leather jerkin (being worn)
-hill_troll at (90, 38) route N N N N N N S S S S S S carrying a maul (wielded in both hands)
-hill_troll at (15, 19) route S S S S S S W W W W E E E E N N N N N N carrying a maul (wielded in both hands)
+duergar_crossbowman at (6, 19) route W W N N N S S S E E carrying a hardwood crossbow (readied), 12 flint crossbow bolts (quivered), an aluminium hand axe (wielded), a studded hardened leather jerkin (being worn)
+hill_troll at (113, 38) route N N N N N N S S S S S S carrying a maul (wielded in both hands)
+hill_troll at (65, 19) route S S S S S S N N N N S S S S N N N N N N carrying a maul (wielded in both hands)
 hill_troll at (105, 56) route N E E E E E E W W W W W W S carrying a maul (wielded in both hands)
-spark_mote at (60, 22) route S S W W W E E E N N
-water_elemental at (14, 47) route W N N N S S S E
-hill_troll at (80, 11) route W W W S S S N N N E E E carrying a maul (wielded in both hands)
-orc_veteran at (39, 35) route W W W W W W S W E N E E E E E E carrying an iron scimitar (wielded), a leather helm (being worn)
-duergar_crossbowman at (30, 9) route N N N N N S S S S S carrying a crossbow (readied), 12 steel crossbow bolts (quivered), a hand axe (wielded), a studded hardened leather jerkin (being worn)
-lesser_fire_elemental at (116, 32) route W W W W W W W W W E E E E E E E E E
-charred_dead at (102, 44) route N N E E E S N S N W W W S S
-orc_veteran at (86, 22) route E E E E W W W W carrying an iron scimitar (wielded), a chromium suit of scale mail (being worn), an iron helm (being worn), a hardened leather small shield (in off hand)
-ember_beetle at (8, 30) route W W W W W N N N E W S S S E E E E E
-lesser_lightning_elemental at (85, 15) route N N W W E E S S
-orc_veteran at (67, 48) route S W N W W E E S E N carrying a copper scimitar (wielded), a leather helm (being worn)
-duergar_miner at (115, 25) route W W W W W E E E E E carrying a bone cap (being worn)
-animated_blade_15 at (24, 39) route N N W W E E S S carrying a stiletto (magic) (wielded)
-lesser_fire_elemental at (47, 39) route S S W E W E N N
-hobgoblin_legionnaire at (58, 10) route E E E W E W W W carrying a bone spear (wielded), a fur large shield (in off hand)
-animated_blade_15 at (31, 29) route W W W N S E E E carrying a steel spear (magic) (wielded)
-hell_hound at (33, 24) route S E E W W E E W W N
-charred_dead at (84, 47) route W W W W W W W W W S N E E E E E E E E E
-ogre_mauler at (33, 36) route W W W W W N N N N S S S S E E E E E carrying 25 copper coins
-orc_berserker at (58, 32) route N N S S S S S N N N N N S S carrying a tin great axe (wielded in both hands)
-hobgoblin_archer at (40, 42) route E E E S W W E E N W W W carrying a hardwood long war bow (readied), 25 aluminium arrows (quivered), a hardened leather cap (being worn)
-lesser_air_elemental at (15, 33) route S S S S S S S N N N N N N N
-hobgoblin_warcaster at (6, 25) route W N S S S S S N N N N N S E carrying a hardwood quarterstaff (wielded in both hands)
-ogre at (75, 50) route N N N N N S S S N N N S S S S S carrying a duralumin maul (wielded in both hands)
-lesser_lightning_elemental at (103, 17) route N W W E E E E E E W W W W W W E E S
-orc_veteran at (22, 48) route S S S S W W E E N N N N carrying an electrum scimitar (wielded), a fur small shield (in off hand)
-hobgoblin_legionnaire at (11, 17) route E N E S N W S W carrying a chitin spear (wielded), a hardwood large shield (in off hand), a chain mail shirt (being worn), a bone helm (being worn)
-charred_dead at (7, 14) route E E W N N N N N N S S S S S S E W W
-duergar_skeleton at (14, 54) route N N N N N N N N N N S S S S S S S S S S carrying an iron helm (being worn)
-orc_shaman at (105, 44) route N N S S S N N N S S carrying a quarterstaff (wielded in both hands)
-spark_mote at (50, 45) route N N N N N S S S S S
-water_elemental at (55, 14) route N N N W E S S S
-hobgoblin_warcaster at (111, 51) route E E E S S W S W E N E N N W W W carrying a hardwood quarterstaff (wielded in both hands), 20 copper coins
-animated_blade_15 at (51, 15) route N N N N S S S S carrying a chromium morning star (magic) (wielded)
-fire_salamander at (111, 18) route N N N N E E E S N S N W W W S S S S
-hill_troll at (8, 11) route W W W E W W W W N S E E E E W E E E carrying a steel maul (wielded in both hands)
-hill_troll at (58, 26) route N N N N N N N N E S N W S S S S S S S S carrying a steel maul (wielded in both hands)
-animated_armour_16 at (107, 22) route E E E N N N E S N W S S S W W W carrying a chain mail shirt (being worn), a leather cap (being worn), a leather tower shield (in off hand), a pair of gauntlets (being worn)
-duergar_skeleton at (5, 29) route S W W N N S S E E N carrying a war hammer (wielded), a leather helm (being worn)
-spectre at (18, 57) route W N S N E S N N S S N W S N S E
-hobgoblin_legionnaire at (63, 3) route W W W W E E E E W W W W E E E E carrying an obsidian spear (wielded), an electrum chain mail shirt (being worn)
-lesser_lightning_elemental at (104, 33) route W E E E W W E E W W W E
+spark_mote at (107, 22) route S W W W W E E E E N
+water_elemental at (30, 47) route W E E E W W W E
+hill_troll at (62, 11) route W W W S S S N N N E E E carrying a maul (wielded in both hands)
+orc_veteran at (77, 35) route W W W W E E S S N N W W E E E E carrying an iron scimitar (wielded), a leather helm (being worn)
+duergar_crossbowman at (18, 9) route N N N E E W W S S S carrying a crossbow (readied), 12 steel crossbow bolts (quivered), a hand axe (wielded), a studded hardened leather jerkin (being worn)
+lesser_fire_elemental at (23, 33) route W W W W W W W W W E E E E E E E E E
+charred_dead at (15, 45) route S S N N S N S N S N S S N N
+orc_veteran at (15, 23) route E E E E W W W W carrying an iron scimitar (wielded), a chromium suit of scale mail (being worn), an iron helm (being worn), a hardened leather small shield (in off hand)
+ember_beetle at (49, 30) route W W E E E E E E E W W W W W W W E E
+lesser_lightning_elemental at (90, 15) route N N W W E E S S
+orc_veteran at (73, 48) route S W W W W E E E E N carrying a copper scimitar (wielded), a leather helm (being worn)
+duergar_miner at (41, 26) route W N N N N S S S S E carrying a bone cap (being worn)
+animated_blade_15 at (42, 39) route N N W W E E S S carrying a stiletto (magic) (wielded)
+lesser_fire_elemental at (72, 39) route S S N E W S N N
+hobgoblin_legionnaire at (48, 10) route E E E W E W W W carrying a bone spear (wielded), a fur large shield (in off hand)
+animated_blade_15 at (109, 29) route W N E N S W S E carrying a steel spear (magic) (wielded)
+hell_hound at (91, 24) route S E E W W E E W W N
+charred_dead at (13, 48) route W N N N N N W W W S N E E E S S S S S E
+ogre_mauler at (73, 36) route W E E E E N N E E W W S S W W W W E carrying 25 copper coins
+orc_berserker at (108, 32) route N N N N E E E W W W S S S S carrying a tin great axe (wielded in both hands)
+hobgoblin_archer at (53, 42) route E E E S S S N N N W W W carrying a hardwood long war bow (readied), 25 aluminium arrows (quivered), a hardened leather cap (being worn)
+lesser_air_elemental at (42, 33) route S S W W W W W E E E E E N N
+hobgoblin_warcaster at (50, 25) route E N S S S S S N N N N N S W carrying a hardwood quarterstaff (wielded in both hands)
+ogre at (79, 50) route N N N E E N N N S S S W W S S S carrying a duralumin maul (wielded in both hands)
+lesser_lightning_elemental at (10, 18) route N W W W E E E E E W W W W W E E E S
+orc_veteran at (31, 48) route E E E E W W E E W W W W carrying an electrum scimitar (wielded), a fur small shield (in off hand)
+hobgoblin_legionnaire at (22, 17) route N N N E W S S S carrying a chitin spear (wielded), a hardwood large shield (in off hand), a chain mail shirt (being worn), a bone helm (being worn)
+charred_dead at (96, 13) route W W W N N N N N E W S S S S S E E E
+duergar_skeleton at (16, 54) route N E E E E E E E E S N W W W W W W W W S carrying an iron helm (being worn)
+orc_shaman at (26, 45) route N N N N N S S S S S carrying a quarterstaff (wielded in both hands)
+spark_mote at (62, 45) route N N N N N S S S S S
+water_elemental at (50, 14) route N N N W E S S S
+hobgoblin_warcaster at (114, 51) route E S S W W W S S N N E E E N N W carrying a hardwood quarterstaff (wielded in both hands), 20 copper coins
+animated_blade_15 at (52, 15) route N N N N S S S S carrying a chromium morning star (magic) (wielded)
+fire_salamander at (51, 19) route N N N N N N E E N S W W S S S S S S
+hill_troll at (106, 10) route W W W E W W W W N S E E E E W E E E carrying a steel maul (wielded in both hands)
+hill_troll at (4, 27) route N N E E E N N N E E W W S S S W W W S S carrying a steel maul (wielded in both hands)
+animated_armour_16 at (45, 23) route E S W N N S E S N W N S S E N W carrying a hardened leather jerkin (being worn)
+duergar_skeleton at (32, 29) route S W W W W E E E E N carrying a war hammer (wielded), a leather helm (being worn)
+spectre at (86, 2) route S S S S E S N N S S N W N N N N
+hobgoblin_legionnaire at (62, 3) route W W W W E E E E W W W W E E E E carrying an obsidian spear (wielded), an electrum chain mail shirt (being worn)
+lesser_lightning_elemental at (10, 34) route W E E E W W E E W W W E
 ogre at (19, 56) route E W W W W E E E E W carrying a nicrosil maul (wielded in both hands)
-duergar_skeleton at (88, 10) route E E E E E E E E E W E W W W W W W W W W carrying a war hammer (wielded), a horn helm (being worn)
-hill_troll at (113, 16) route S S W E S N W E N N carrying a maul (wielded in both hands)
-lesser_lightning_elemental at (12, 18) route W W W W E E E W E E W W E W W W E E E E
-knocker at (79, 10) route N E E E E W W W W S
-animated_armour_15 at (12, 33) route W N N N N N N N S S S S S S S E carrying a studded hardened leather jerkin (being worn), a hardened leather cap (being worn)
-lesser_air_elemental at (84, 32) route S S S S S S S S N N N N N N N N
-dretch at (81, 41) route E E W S S S S S W E N N N N N E W W
-hill_troll at (57, 32) route S S S S S S S N N S S N N N N N N N
-ogre at (92, 39) route S S N N S S N N carrying a steel maul (wielded in both hands)
-ash_wraith at (63, 19) route W W W W W W E E E E W W W W E E E E E E
-hill_troll at (59, 8) route N N S S S S E W N N N N S S carrying a maul (wielded in both hands)
-magma_crawler at (68, 6) route S S S N N S S N N N
-alarm trap at (4, 43)
-spear trap at (40, 50)
+duergar_skeleton at (78, 10) route E E E E E E E E E S N W W W W W W W W W carrying a war hammer (wielded), a horn helm (being worn)
+hill_troll at (9, 17) route S S W E E W W E N N carrying a maul (wielded in both hands)
+lesser_lightning_elemental at (40, 18) route W W W W E E E W E E W W E W W W E E E E
+knocker at (65, 10) route N E E E E W W W W S
+animated_armour_15 at (34, 33) route W N N N N N N N S S S S S S S E carrying a studded leather jerkin (being worn), a horn great helm (being worn)
+lesser_air_elemental at (111, 32) route S S S S S W W S N E E N N N N N
+dretch at (95, 41) route E E W S W W W N W E S E E E N E W W
+hill_troll at (107, 32) route S S S S S S N N N S S S N N N N N N
+ogre at (114, 39) route S S S S N N N N carrying a steel maul (wielded in both hands)
+ash_wraith at (106, 19) route W W W W W N N N E E W W S S S E E E E E
+hill_troll at (51, 8) route N N S S S S E W N N N N S S carrying a maul (wielded in both hands)
+magma_crawler at (61, 6) route S S S N N S S N N N
+alarm trap at (25, 43)
+spear trap at (57, 50)
 9 placed lights
 special room hushed at (49, 24)-(59, 35)
 place a hooded figure at (46, 54): Its empty hands are held as if about a hilt that is not there. Letters are cut deep into the plinth, in the old tongue: LĪF ÆR DĒAÞE. Below, in a later hand: 'Life before death. So the hunters swore, to the one who waited for them on the road; and the road gave them each a blade.'
 
         ####          ##########                       ######## ###   ##########   #######     ########  ########
-  #### ##..##        ##....##..##     #######    #### ##......###.## ##........## ##...E.##   ##......####.}....##
- ##..###....##      ##..........##   ##.....#   ##..###........g...###..........# #.......#   #........##........###
+  #### ##..##        ##....##..##     #######    #### ##......###.## ##........## ##..GE.##   ##......####......##
+ ##..###....##      ##..........##   ##.....#   ##..###.......g....###..........# #.......#   #........##........###
  #...........#    ###............##  #......# ###....##...........###...........# #....~..#   #........##........".##
- #...........#   ##.............*E## #......###......###.........###............####~~~~~.#   ##......###........"..#
- #...........#  ##...........h.....# #.....###.......###.."......##.w............####~~~~.#   ##......####..........#
- #..........## ##..................# #.....# #......###..."..................E....####~~~.#####........##......##...#
- #..........#  #......##...........####....# #.......#.....T.......................###.~...##.................#######
- #..........#  #.....####.....h.....####...####............a........................#.........................#
- #..........## ##...##  ##............###...####..........g.......####.........G........z.........##..........#
- #......T....#  #####    ##............##....# #.................##  ##.......C.T.......*........####..##.....#
- #...........#           ##............##....###.................##   ##..##.....................#  ######....##
- #..........##    ########......###...##......##..................#    #####.....................#      ##.....#####
- #.....z..###    ##............## #####................E....####.##     ####....................##     ##..........##
- #........#####  #.g............######.............)....#####  ###     ##............E###...#####   ####............#
- #........##..####...................................".##              #.............## #####      ##............T..#
- ##........g...##....................................."######         ##...........###             #...E...........##
-  #.........E...............................##.......".T##..###########h...........#############   #...........S..##
-  ##z..........T......###........####......#######.............W...........##..................##  ##............z#
-   #.................## ###.....##  ##.....##    ##.............".........#####.................## ##............##
+ #...........#   ##..........E..*.## #......###......###.........###............####~~~~~.#   ##......###........"..#
+ #...........#  ##.......h.........# #.....###.......###.."..w...##..............####~~~~.#   ##......####..........#
+ #..........## ##..................# #.....# #......###..."............E..........####~~~.#####........##......##...#
+ #..........#  #......##...........####....# #.....T.#.............................###.~...##.................#######
+ #..........#  #..h..####...........####...####...a.................................#.........................#
+ #..........## ##...##  ##............###...####g................G####........z...................##......T...#
+ #...........#  #####    ##............##....# #............C.T..##  ##.................*........####..##.....#
+ #...........#           ##...~........##....###....)............##   ##..##.....................#  ######....##
+ #..........##    ########...~~.###...##......##..................#    #####....................z#      ##.....#####
+ #........###    ##.....~~~~~~~## #####...........E.........####.##     ####....................##     ##..........##
+ #....g...#####  #.......~~~~~~~######..............)...#####  ###     ##.............###.E.#####   ####............#
+ #........##..####......~~~~~~~~~~...................".##              #.............## #####      ##...............#
+ ##......T.....##.....g..~~~~~~~~~~..................."######         ##...........###             #...............##
+  #.......E..............~~~~~~~~~~.....E...##......."..##..###########............#############   #.............T##
+  ##..h...............###~~~~~~~~####......#######.S..z..........T.........##..................##  ##.....W.......#
+   #.................## ###.~~~.##  ##.....##    ##..........z..".........#####.................## ##............##
    ##...............##    ###....## ##......###   ####..........."......###   ###................###............##
-    ##.............G##      ##....###.........##     ##.....e..........##       ###...o....................A....#####
-    ##...............#  #### ##................#  ######..............##          ##.............................#..##
-   ##................# ##..####..C.............# ##..###......###....##            #.....................###.........#
-   #..g..............# #....##.......###......## #...h###....## #....#             #....................## ##......h.#
-  ##.................####...........## #.....##  #..hhh###T.##  ##..##             #.........###.......##   #.u......##
-  #...................###..........##  ##...##  ##.hhhhh#####    ####              #.......### ##..*...#   ##.........#
-  #................................#    #####  ##.hhhhhhh##                       ##.......#    #.....##   #..-.......#
-  #..z.........................)..##          ##..hhhhhhhh##                     ##........######.....#    #......"...#
- ##.....a....""...................#       #####...hhhhhhhhh#                     #............##......#   ##.........##
+    ##..............##      ##....###.........##     ##................##       ###.....G..................e....#####
+    ##.........o.....#  #### ##..............A.#  ######..............##          ##.............................#..##
+   ##................# ##..####................# ##..###......###....##            #.......C.............###.........#
+   #.................# #....##.......###......## #g..h###....## #....#             #....................## ##........#
+  ##.................####...........## #.h...##  #..hhh###..##  ##..##             #.........###.......##   #........##
+  #.T.................###....u.....##  ##...##  ##.hhhhh#####    ####              #.......### ##..*...#   ##.........#
+  #................................#    #####  ##.hhhhhhh##                       ##.......#    #.....##   #..........#
+  #.............................z.##          ##..hhhhhhhh##                     ##........######.....#    #.)...."...#
+ ##..........""...................#       #####..ahhhhhhhhh#                     #............##......#   ##.........##
  #...........""...................##     ##.......hhhhhhhhh#                     #....................## ##..........##
- #.................................###  ##......Z.hhhhhhhTo#                     #..E..................###..........E.#
- #..........A..E.....................####..........hhhhhhhh#              ########......................E.............##
- #..................................................hhhhhhh#            ###............................................#
- #............[........................o...###...*...hhhhh.#           ##.........................##...................#
- #...............................O........## ######........#          ##.........................####..............o...#
- #...............................#.........####  ##........##         #..........................## ##................##
- #...............=..............###...........####..........##        #...................T.......## ##...#....*......#
- #....###.............#.)......####............E........#....####     #................###..O......## ######.........z#
-##...## ##...........###.......###.....................###......####  #....##..........####.........##     #....h.....##
-#....#  ##...........# #.......##..................................## ##..####...u......####......)..#######...........#
-#....####............# #......###.......g.....###................T..## ##.## ###.........# ##.............#............#
-#...^.##.......###...# #.....## #...T........## ##...................####..#   ##........#  #####..............###....##
-#..............####.## ##...##  #..........###   #....................##...##   #.......##      ##....z..o.##### ##..##
-#...............#####   #...## ##.........##     #e.####....................## ##......## #####  ##........##     ####
+ #.................................###  ##........hhhhhhhhh#                     #.............Z.......###.To..E......#
+ #.....................E?.........A..####.E........hhhhhhhh#              ########....................................##
+ #........E.........................................hhhhhhh#            ###............................................#
+ #.........................................###...*...hhhhh.#           ##....o....................##...................#
+ #........................................## ######........#          ##.O.......................####..................#
+ #.............o.................#.........####  ##........##         #..........................## ##................##
+ #..............................###....[......####..........##        #...........................## ##...#....*.T....#
+ #....###.............#........####.......).............#....####     #.E..............###.........## ######......O...#
+##...## ##..........z###.......###.....................###......####  #....##..........####.........##     #..........##
+#....#  ##...h.......# #.......##..................................## ##..####..........####...u.....#######.........).#
+#....####............# #......###.............###....g..............## ##.## ###......T..# ##.............#............#
+#.....##.......###...# #.^...## #............## ##..T................####..#   ##........#  #####..............###....##
+#..............####.## ##...##  #..........###   #....................##...##   #.......##      ##.........##### ##..##
+#..............z#####   #.o.## ##.........##     #..####......e.............## ##......## #####  ##........##     ####
 ##...............#      #....###..........#      #..#  ##....................###......##  #...##  #####.....#
- ###......##..E..#  #####............."...##     ####  ##...........................z.#   #....##     ##....#
-   ##....###.....# ##.o###........"""......#          ##.........."o..................#   ##....##     #....##
+ ###......##.....#  #####.....E......."...##     ####  ##.............................#   #....##     ##....#
+   ##....###.z...# ##..###.....o.."""...*..#          ##.........."......o............#   ##....##     #....##
   ##....####....####....###........".......#        ###........###....................#    #.....##### #.....###
-  #..<..###....## #......###........###.^..# ###  ###.".......## ###...###.O..........#    #.>.......####......######
-  #..*.*##.....####......# #....~~~## ####.###¡####...""..g...#    ##### #####........#   ##..........#####....g....##
+  #..<..###....## #......###........###....# ###  ###."..^....## ###...###.....O......#    #.>.......####......######
+  #..*.*##.....####......# #....~~~## ####.###¡####...""......#    ##### #####.g......#   ##..........#####.......g.##
   #....###......##.......# #....~~~###   #.#.....##...."......#              #........## ##~~..........## ##..*......#
  ##...## ##..............###....~~~~~##  #.#.....##...........#             ##.........# #~~~~..........####........##
- #....#   ##..z..........##.....~~~~..#  #.+..Ω..###..........#             #..........# #~~~............##.......###
+ #....#   ##....z........##.....~~~~..#  #.+..Ω..###..........#             #..........# #~~~............##.......###
  #....#    ##............##......~....#  ###.....# ##.........#             #.........## ##~~.............g......##
  ##..##     ##.....O.....###...*......#    #.....#  ######...##             ##..#######   ##.............T......##
-  ####       ####.G.....## ##..###....#    ###¡###       #####               ####          ##..############...###
+  ####       ####.......## ##..###....#    ###¡###       #####               ####          ##..############...###
                 #########   #### ##..##      ###                                            ####          #####
                                   ####

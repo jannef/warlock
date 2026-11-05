@@ -249,7 +249,7 @@ developer notes (CLAUDE.md, `docs/dev/`).
     *haunted room* (5, #417; only on a level with a danger; unholy) haunts a rest inside (below;
     "You hear a whisper, and then nothing." when glimpsed, "It is very quiet here. Too quiet to
     sleep." on entering); a *scriptorium* (5, #414; only in a room of at least 9 floor cells) holds
-    shelves of rotting scrolls and a few scrolls, and trains Decipher script faster ("You smell dust
+    shelves of rotting scrolls and a few scrolls, and gives two marks of Decipher script for a check, not one ("You smell dust
     and old vellum." when glimpsed, "Shelves of rotting scrolls line the walls." on entering;
     below); an
     *armoury* (4, #487; as a teeming den) has weapon racks along its walls and hollow armour,
@@ -539,32 +539,43 @@ developer notes (CLAUDE.md, `docs/dev/`).
       gutters and dies."); Pray is offered there no more. Nothing new is saved: the terrain
       grid is the record, and the `rooms` dev layer marks such a room `spent` (or `destroyed`).
       No other place offers prayer (the design's decision 14).
-  - **Forges and tempering** (`offers = { temper = "forge" }`, #418; `world/temper.rs`,
-    `magic/temper.rs`): the forge's feature is an **anvil** (terrain `anvil`, `π`, cold, no
-    light; look mode adds its description). **Temper** (`Action::Temper { item }`,
-    `temper:LETTER` in action text) is offered in the abilities menu's *Here* group while the
-    player stands next to an anvil, to anyone; it asks for an item (`Aim::Item`: the Temper
-    list, the weapons, missile weapons, armour, and shields carried, never ammunition, rings, or
-    amulets). Refused, taking no time, with no anvil beside the player ("There is no anvil
-    here.") or a stack that cannot be tempered ("Only weapons and armour can be tempered.").
-    - **Time**: the table's `seconds` (600: ten minutes), in turns of the `temper` action (1000)
-      through `keep_at`; interrupted as a rest is ("You put down the hammer."), it does nothing
-      to the item, but the time is spent.
+  - **Forges and tempering** (`offers = { temper = true }`, #418, #1022; `world/temper.rs`,
+    `magic/worked.rs`, `data/temper.toml`; the owner's rule, `docs/design/skill-uses.md` §6.7 M0):
+    the forge's feature is an **anvil** (terrain `anvil`, `π`, cold, no light; look mode adds its
+    description). **Temper** (`Action::Temper { item }`, `temper:LETTER` in action text) is offered
+    in the abilities menu's *Here* group while the player stands next to an anvil, to anyone; it
+    asks for an item (`Aim::Item`: the Temper list, what the anvil accepts now). It takes a weapon,
+    missile weapon, armour, or shield whose main part (the first of `Stack::parts`) is of a
+    material of `group = "metal"`. Refused, taking no time: no anvil beside the player ("There is
+    no anvil here."), no arms or armour ("Only weapons and armour can be tempered."), not metal, or
+    a spirit weapon ("Only metal can be worked at an anvil."), or three improvements ("It can be
+    made no finer.").
+    - **Time**: `seconds` (600: ten minutes), in turns of the `temper` action (1000) through
+      `keep_at`; interrupted as a rest is ("You put down the hammer."), it does nothing to the item
+      and counts no attempt, but the time is spent.
     - **The check**: done, one Strength check (2d12 plus the Strength modifier, Metalcraft's
-      `temper` benefit, +8 at 100 and +12 at 200, and the talents' Strength checks): its margin
-      over 13, times 2, held to the table's `lean` (20), moves that many points from the bane to
-      the boon, or the other way below 13.
-    - **The outcome** (`data/outcomes/forge.toml`, kinds boon 35, nothing 30, bane 35; the
-      outcomes' `work` hook): **improved** (boon, 35: an affix the item may roll added, of a kind
-      its rarity has room for, a plain item becoming magic; with no room or nothing to add, its
-      strongest affix a tier up, its value rolled anew; "The metal rings true."), **nothing**
-      (30, "Nothing changes."), **flawed** (bane, 25: one affix drawn and lost, its last making
-      it plain, a unique keeping its last; "Something in the metal is lost."), **ruined** (bane,
-      10: the item breaks and is gone, from the hand too; "It shatters under the hammer!"). A
-      stack of several is worked one at a time. What survives is identified ("This is ...!"),
-      and every finished tempering marks Metalcraft. `exhaust = 0`: the anvil is never spent
-      (the owner's no-limit rule; the rarity's room is the natural cap). Every draw is from the
-      gameplay stream; nothing new is saved.
+      `temper` benefit, +8 at 100 and +12 at 200, and the talents' Strength checks) against
+      `difficulty + per_attempt × attempts` (13 + 2 × attempts). A natural 2 always fails, a
+      natural 24 always succeeds. **Every attempt on the item, made or failed, counts, for the
+      item's whole life.**
+    - **The outcome**: not damaged and made, one improvement, in an aspect drawn evenly among those
+      the base item has, the same one possibly twice ("The metal rings true."): damage die
+      (anything with an `attack`: +2 sides on its dice), to hit (+1), plus damage (+1), Defence (a
+      non-zero `armour`, `shield`, or `parry`: +1 of that kind), Protection (a non-zero
+      `protection`: +1). Not damaged and failed, **damaged**: all improvements gone, and no other
+      penalty ("The metal cracks under the hammer."). Damaged and made, the damaged condition goes,
+      a base item with its attempts ("You hammer the damage out."). Damaged and failed, **destroyed**,
+      from the hand too, a unique also ("It shatters under the hammer!"). The anvil adds, raises,
+      and removes no affix; they stay through all of it and go only with the item. A stack of
+      several is worked one at a time. What survives is identified and says what it is ("This is
+      ...!"), and every finished attempt marks Metalcraft. The anvil is never spent. Every draw is
+      from the gameplay stream.
+    - **The item**: `Stack::worked` (`Worked { improved, attempts, damaged }`, saved, none on an
+      item never worked); a worked item is like no other and never stacks. Names, ahead of the rest,
+      whatever is identified: 1 Fine, 2 Marvellous, 3 Masterwork ("a Marvellous Sharp long sword of
+      the Bear", "Grim Bite, a Fine long sword"), or "a damaged long sword". Numbers show as any
+      item's; the attempts are hidden, printed by the dev `actors` dump. Worth (`Stack::value`):
+      Fine ×2, Marvellous ×3, Masterwork ×5, damaged ×½ rounded up.
 
   - **Healing springs** (`feature = "spring"`, `offers = { drink = "spring" }`, #416;
     `world/drink.rs`, the design's §9.10): the spring is its own terrain, `spring` ("spring", a
@@ -595,8 +606,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     identified), on a plain floor cell of the room drawn anew (no stairs, light, or trap), all
     from the level's stream `swarm/<level id>`, so the rest of the level is the same; it needs
     no danger. While the player stands inside, each training mark of a skill the effect names
-    in `train` comes with that percent of its usual chance (at most certain): Decipher script's
-    mark for studying a spell (§8 "Spells", 50 %) is certain. Effects at a cell multiply, as
+    in `train` comes with that percent of its usual chance (each whole hundred a mark for
+    certain, the rest a chance of one more): Decipher script's mark for a check to read a scroll
+    (§8 "Scrolls") is one mark anywhere and two in a scriptorium. Effects at a cell multiply, as
     other percents do. Nothing is saved. A room with `loot` never covers a whole level.
   - **A status while inside** (`status`, #403): as time passes, at the start of each stretch of
     it (`World::pass_time`: so after every action, the player's and each creature's, at every

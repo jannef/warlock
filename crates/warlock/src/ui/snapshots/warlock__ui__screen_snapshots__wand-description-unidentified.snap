@@ -3,7 +3,7 @@ source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
  There are several objects here. (×2)
- You pick up a silver wand and an ash wand.
+ You pick up an iron wand and a silver wand.
 
 
 
@@ -12,9 +12,9 @@ expression: "render(case, content.clone())"
 
                   ┌─ Item ───────────────────────────────────────────────────────┐
                   │                                                              │
-                  │ - Silver wand                                                │
+                  │ - Iron wand                                                  │
                   │                                                              │
-                  │ Silver wand · wood · 200 g                                   │
+                  │ Iron wand · wood · 200 g                                     │
                   │                                                              │
                   │ Readied: missile weapon                                      │
                   │                                                              │

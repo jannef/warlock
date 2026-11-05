@@ -60,6 +60,10 @@ touch = { cost = 70 }
 #   douses = true           puts out the fires on those cells
 #   fire = { light = "arrow_fire", burns = 60 }   a burst leaves a fire on its centre cell: light
 #            only, on that cell only (it never spreads)
+#   arc = { chance = 25 }   a ray, bolt, touch, or line strike that harms a creature jumps to the
+#            nearest beside it not yet struck, at the same roll, in percent, one draw a creature
+#   conducts = true         everyone standing in the body of water of a creature it harmed is
+#            struck at the same roll
 #   shove = true            a blow of at least a third of the target's maximum hit points, or a
 #                           critical, knocks it a cell away from the cast's origin
 #   shatter = true          a burst's `blast` shatters ice thinner than a tenth of a mm per point
@@ -75,3 +79,4 @@ force = { words = "shoves on a big hit", shove = true, shatter = true, doors = t
 poison = { words = "poisons", rider = { status = "poisoned", severity = 1 } }
 necrotic = { words = "bites the wounded", bite = { below_percent = 50, percent = 150 }, immune_tags = ["undead"] }
 acid = { words = "keeps eating", rider = { status = "corroded", severity = 1 } }
+electricity = { words = "may arc, conducts", arc = { chance = 25 }, conducts = true }

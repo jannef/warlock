@@ -33,6 +33,8 @@
 #                 lock), "deal" (a deal made in a shop: goods paid for, or your own sold),
 #                 "appraise" (something you carry told for what it is: "identify" below),
 #                 "intimidate" (a war cry roared or a foe threatened, whatever comes of it),
+#                 "rough_step" (a step onto ground that slows and is not water: bush, reeds,
+#                 rubble, ice), "staggered" (an action taken Staggered),
 #                 "song" (a song sung, whatever it does), "wade" (a step wading through water
 #                 or marsh), "swim" (a Swim check, whatever comes of it), "stroke" (a step in deep
 #                 water, whatever comes of it), "sight" (a creature
@@ -54,7 +56,9 @@
 #                 searching and in passing alike, in place of "search" and "spot", at most 20;
 #                 trained, a skill with it lets you notice traps in passing at all), "disarm" (points added to disarming a trap, spec §8 "Disarming
 #                 traps", at most 20; trained, a skill with it lets you disarm traps at all),
-#                 "burden" (percent less of your burden's slowdown), "travel"
+#                 "burden" (percent less of your burden's slowdown), "footing" (percent of what
+#                 rough ground adds to a step that is spared), "steady_ease" (percent of
+#                 Staggered's extra cost that is spared), "travel"
 #                 (percent less time a journey on the overworld takes), "wade" (percent of what
 #                 wading adds to a step that is spared), "swim" (points added to a Swim check, at
 #                 most 20; only trained is one asked), "forage" (percent added
@@ -148,9 +152,19 @@ id = "balance"
 name = "Balance"
 description = "Sure footing under a heavy load or on bad ground."
 kind = "passive"
-mark = [{ on = "burdened", chance = 5 }]
-# Burdened ×1.25 becomes ×1.10 at 100 (Strained ×1.5, ×1.2).
-benefit = [{ effect = "burden", curve = [[0, 0], [100, 60], [200, 80]] }]
+mark = [
+    { on = "burdened", chance = 5 },
+    { on = "rough_step", chance = 10 },
+    { on = "staggered", chance = 20 },
+]
+# Burdened ×1.25 becomes ×1.10 at 100 (Strained ×1.5, ×1.2). Footing: percent of what rough
+# ground (bush, reeds, rubble, ice; not water) adds to a step that is spared. Steady ease:
+# percent of Staggered's extra cost (150) that is spared (`world/footing.rs`).
+benefit = [
+    { effect = "burden", curve = [[0, 0], [100, 60], [200, 80]] },
+    { effect = "footing", curve = [[0, 0], [100, 60], [200, 100]] },
+    { effect = "steady_ease", curve = [[0, 0], [100, 50], [200, 75]] },
+]
 
 [[skill]]
 id = "bluff"
@@ -178,9 +192,10 @@ id = "decipher_script"
 name = "Decipher script"
 description = "Making sense of old writing, strange alphabets, and codes."
 kind = "action"
-mark = [{ on = "study", chance = 50 }]
-# A spell's scroll is old writing too: its value / 10 off the study check's difficulty.
-benefit = [{ effect = "study", curve = [[0, 0], [200, 20]] }]
+mark = [{ on = "decipher", chance = 100 }]
+# How those who cannot simply read a scroll read it (spec §8 "Scrolls", `data/decipher.toml`):
+# points on the check, +8 at 100, +12 at 200.
+benefit = [{ effect = "decipher", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
 id = "detect_traps"
@@ -315,8 +330,8 @@ name = "Metalcraft"
 description = "Working metal: smithing, mending arms and armour."
 kind = "action"
 mark = [{ on = "temper", chance = 100 }]
-# Tempering an item at a forge's anvil (spec §7 "Special rooms"; the Temper ability, offered there
-# to anyone): added to the Strength check whose margin leans the outcome, +8 at 100, +12 at 200.
+# Working an item at a forge's anvil (spec §7 "Special rooms"; the Temper ability, offered there
+# to anyone): added to the Strength check of an attempt, +8 at 100, +12 at 200.
 benefit = [{ effect = "temper", curve = [[0, 0], [100, 8], [200, 12]] }]
 
 [[skill]]
@@ -395,7 +410,7 @@ mark = [{ on = "study", chance = 100 }, { on = "cast", chance = 25 }]
 # Learning a spell from a scroll (spec §8 "Spells": "Learning"): `learn` is the spell level up to
 # which a scroll teaches for certain, 10 at 60, 30 at the soft cap, the last spell level at 150
 # (at least 1 for anyone trained in the skill; those who are not cannot learn from a scroll at
-# all). `study` is the skill's value / 10 off the check above that, +10 at 100, +20 at 200.
+# all), and up to which a scroll is read with no check (spec §8 "Scrolls"). `study` is the skill's value / 10 off the check above that, +10 at 100, +20 at 200.
 benefit = [
     { effect = "learn", curve = [[0, 0], [10, 0], [60, 10], [100, 30], [150, 70]] },
     { effect = "study", curve = [[0, 0], [200, 20]] },

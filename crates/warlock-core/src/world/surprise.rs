@@ -298,20 +298,25 @@ impl World {
     }
 
     /// The `cost` percent status `status` puts on actor `id`'s actions: its data's, but
-    /// Surprised's extra eased by the actor's Initiative skill and talents (Cool head), together
-    /// at most all of it.
+    /// Surprised's extra eased by the actor's Initiative skill and talents (Cool head), and
+    /// Staggered's by its Balance ([`Effect::SteadyEase`]), together at most all of it.
     pub(super) fn status_cost(&self, id: ActorId, status: StatusId) -> u32 {
         let cost = self.content.status(status).cost;
-        if self.surprise_status() != Some(status) || cost <= 100 {
+        if cost <= 100 {
             return cost;
         }
-        let ease = (self.state.actors.get(&id))
-            .map_or(0, |a| {
-                a.talent_mods(&self.content).surprise_ease
-                    + a.skill_effect(&self.content, Effect::SurpriseEase)
-            })
-            .clamp(0, 100);
-        let ease = u32::try_from(ease).unwrap_or(0);
+        let Some(actor) = self.state.actors.get(&id) else {
+            return cost;
+        };
+        let ease = if self.surprise_status() == Some(status) {
+            actor.talent_mods(&self.content).surprise_ease
+                + actor.skill_effect(&self.content, Effect::SurpriseEase)
+        } else if self.content.status_id(super::footing::STAGGERED) == Some(status) {
+            actor.skill_effect(&self.content, Effect::SteadyEase)
+        } else {
+            return cost;
+        };
+        let ease = u32::try_from(ease.clamp(0, 100)).unwrap_or(0);
         100 + (cost - 100) * (100 - ease) / 100
     }
 }

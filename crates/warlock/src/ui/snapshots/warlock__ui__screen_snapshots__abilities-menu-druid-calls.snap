@@ -2,33 +2,33 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Sworn foe┌─ Abilities ─────────────────────────────────── Page 1/2 ─┐
- You call, and the w│                                                          │
-                    │ Birth sign                                               │
-                    │ > a  Transfixing stare   at a place you see              │
-                    │ Spells                                                   │
-                    │   b  Spark               1d4 electricity, 1 mana, aimed  │
-                    │   c  Barkskin            3 mana                          │
-                    │   d  Call of the wild    2 called, 5 mana                │
-                    │   e  Bramble             19 mana, aimed                  │
-                    │   f  Call lightning      3d6 electricity, 20 mana, aimed │
-                    │   g  Gale                20 mana, aimed                  │
-                    │   h  Call of the forest  2 called, 20 mana               │
-                    │   i  Cloudburst          20 mana                         │
-                    │ Skills                                                   │
-                    │   j  Tame                in a direction                  │
-                    │   k  Heal                nothing to treat                │
-                    │   l  Pick lock           in a direction                  │
-                    │   m  Forage              not usable here                 │
-                    │ Weapon skills                                            │
-                    │   n  Shield bash         you hold no shield              │
-                    │ Allies                                                   │
-                    │   o  Come to heel                                        │
-                    │   p  Hold here                                           │
-                    │                                                          │
-                    │ The basilisk's stare: a foe nearby that sees you slows   │
-                    │ to a crawl a moment; your eyes then rest two hours.      │
-                    │                                                          │
-                    │                                                          │
-                    │ a-p or Enter use   > < page   Esc close                  │
- The Hub  ·  HP 98/9└──────────────────────────────────────────────────────────┘1444     ? controls
+ You learn┌─ Abilities ────────────────────────────────────────────────────── Page 1/2 ─┐
+ You call,│                                                                             │
+          │ Birth sign                                                                  │
+          │ > a  Transfixing stare   at a place you see                                 │
+          │ Spells                                                                      │
+          │   b  Spark               1d4 electricity, may arc, conducts, 1 mana, aimed  │
+          │   c  Barkskin            3 mana                                             │
+          │   d  Call of the wild    2 called, 5 mana                                   │
+          │   e  Bramble             19 mana, aimed                                     │
+          │   f  Call lightning      3d6 electricity, may arc, conducts, 20 mana, aimed │
+          │   g  Gale                20 mana, aimed                                     │
+          │   h  Call of the forest  2 called, 20 mana                                  │
+          │   i  Cloudburst          20 mana                                            │
+          │ Skills                                                                      │
+          │   j  Tame                in a direction                                     │
+          │   k  Heal                nothing to treat                                   │
+          │   l  Pick lock           in a direction                                     │
+          │   m  Forage              not usable here                                    │
+          │ Weapon skills                                                               │
+          │   n  Shield bash         you hold no shield                                 │
+          │ Allies                                                                      │
+          │   o  Come to heel                                                           │
+          │   p  Hold here                                                              │
+          │                                                                             │
+          │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
+          │ your eyes then rest two hours.                                              │
+          │                                                                             │
+          │                                                                             │
+          │ a-p or Enter use   > < page   Esc close                                     │
+ The Hub  └─────────────────────────────────────────────────────────────────────────────┘? controls

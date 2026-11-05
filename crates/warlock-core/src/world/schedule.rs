@@ -234,6 +234,11 @@ impl World {
             };
             let plain = crate::content::price(step, BASE_TURN).max(1);
             price = surcharge_spared(price, plain, spared);
+        } else if self.rough_step(to) {
+            // Rough ground that is not water: Balance spares a part of what it adds.
+            let spared = actor.skill_effect(&self.content, Effect::Footing);
+            let plain = crate::content::price(step, BASE_TURN).max(1);
+            price = surcharge_spared(price, plain, spared);
         }
         if level.kind == LevelKind::Overworld {
             price = shortened(price, actor.skill_effect(&self.content, Effect::Travel));

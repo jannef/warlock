@@ -1,0 +1,11 @@
+# Conductor (the spell types design docs/design/spell-types-and-new-spells.md §5, Q14, as the owner
+# set it): every arc of the player's electricity spells happens, and what comes back at them bites
+# less. No protection: arcs may jump back, and water still conducts to them.
+[[talent]]
+id = "conductor"
+name = "Conductor"
+tree = "spellcraft"
+description = "Lightning knows your hand: your electricity spells arc every time, and what comes back at you bites less."
+needs = { level = 12 }
+effects = [{ kind = "spell_type", arc_chance = 100, when = ["electricity"] }, { kind = "resist", damage = "electricity", value = 25 }]
+systems = ["spells"]
