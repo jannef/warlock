@@ -49,7 +49,7 @@ first; only `QuestDef::rolled(content, roll)`, the quest as given (goal after th
 variant's texts, `reveals`, `where`, every placeholder filled, `roll` cleared), is read for a
 given quest: `Quests::given` makes it (a `Cow`, borrowed for every quest not rolled), and
 `progress`, the log, `ask_quest`'s reminder, `complete`, and `quest_news` go through it.
-`Rolled::candidates(content, campaign, open)` is the pool in content order (creature and
+`Rolled::candidates(content, campaign, open)` is the pool in content order, animated objects left out (creature and
 object ids, sorted tags, variants in file order); `quest_roll::check` fills every text for
 every candidate at load (280 characters, no unknown or unclosed placeholder; a quest not rolled
 may hold none) and checks a unique kill asks for 1. `Roll { target, variant, count }`
