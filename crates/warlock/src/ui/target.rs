@@ -19,7 +19,9 @@
 //! "Spells") is aimed by its shape: a burst, a ray, or a bolt as a scroll's burst (stopped by
 //! the first creature in the way), a line as a scroll's bolt (through creatures), a cone as the
 //! fan of cells it would reach, a touch at the cell next to the player; its reach is the
-//! player's own, Willpower counted. Any other ability (and a hex) flies nowhere: it draws no
+//! player's own, Willpower counted. A spell aimed at a corpse flies nowhere: its cursor starts
+//! on the nearest corpse the player sees, Tab cycles the corpses, and a cell without one says
+//! so. Any other ability (and a hex) flies nowhere: it draws no
 //! line, and a cell the player does not see (or a solid one) is the muted red of a blocked
 //! target, "You do not see there.". Everything here reads the perception snapshot only.
 
@@ -125,6 +127,10 @@ impl Aim {
     /// Starts aiming `kind`: on the last target if it is still there, else on the nearest hostile
     /// creature in view, else on the player.
     pub fn start(kind: AimKind, view: &PerceptionView<'_>, last: &LastTarget) -> Self {
+        if aims_corpse(view, kind) {
+            let at = (view.corpses_in_sight().first().copied()).unwrap_or(view.viewer());
+            return Self { kind, at };
+        }
         let hostile = targets(view)
             .into_iter()
             .find(|(_, stance)| *stance == Stance::Hostile)
@@ -146,19 +152,23 @@ impl Aim {
     /// The cursor on the next creature in view (`forward`), or the one before: from the one it
     /// is on, else the nearest (or the farthest going back).
     pub fn cycle(self, view: &PerceptionView<'_>, forward: bool) -> Self {
-        let targets = targets(view);
+        let targets: Vec<Pos> = if aims_corpse(view, self.kind) {
+            view.corpses_in_sight()
+        } else {
+            targets(view).into_iter().map(|(p, _)| p).collect()
+        };
         if targets.is_empty() {
             return self;
         }
         let n = targets.len();
-        let i = match targets.iter().position(|(p, _)| *p == self.at) {
+        let i = match targets.iter().position(|p| *p == self.at) {
             Some(i) if forward => (i + 1) % n,
             Some(i) => (i + n - 1) % n,
             None if forward => 0,
             None => n - 1,
         };
         Self {
-            at: targets[i].0,
+            at: targets[i],
             ..self
         }
     }
@@ -221,6 +231,12 @@ impl Aim {
     fn spell_line(&self, view: &PerceptionView<'_>, spell: &SpellData) -> Line {
         let range = self.range(view);
         let me = view.viewer();
+        if spell.aims_corpse() {
+            return Line {
+                no_corpse: !view.corpse_at(self.at),
+                ..sight_line(view, self.at, range)
+            };
+        }
         match spell.shape {
             // A hex falls on whom the player sees there; a touch reaches the next cell.
             _ if spell.kind == SpellPurpose::Hex => sight_line(view, self.at, range),
@@ -239,6 +255,7 @@ impl Aim {
                     blocked: false,
                     out_of_range: false,
                     unseen: self.at == me,
+                    no_corpse: false,
                 }
             }
             Shape::Burst | Shape::Ray | Shape::Bolt => line_of(view, me, self.at, range, true),
@@ -282,6 +299,10 @@ impl Aim {
                 break;
             }
         }
+        // A corpse burst flies nowhere: it goes off where the corpse lies.
+        if aims_corpse(view, self.kind) {
+            center = self.at;
+        }
         (me.dist2(center) <= radius2(radius)).then_some(noun)
     }
 
@@ -315,6 +336,8 @@ impl Line {
             Some("Out of range.")
         } else if self.unseen {
             Some("You do not see there.")
+        } else if self.no_corpse {
+            Some("There is no corpse there.")
         } else if self.blocked {
             Some("The way is blocked.")
         } else {
@@ -337,6 +360,8 @@ pub struct Line {
     /// For an ability that aims at a cell: the player does not see the cursor's cell, or it is
     /// solid.
     pub unseen: bool,
+    /// For a spell aimed at a corpse: the player sees none on the cursor's cell.
+    pub no_corpse: bool,
 }
 
 /// The spell of `data/spells/` `kind` casts: one of the player's spells, a scroll of one read
@@ -357,6 +382,11 @@ fn spell_of(view: &PerceptionView<'_>, kind: AimKind) -> Option<SpellId> {
         }
         _ => None,
     }
+}
+
+/// Whether `kind` casts a spell aimed at a corpse.
+fn aims_corpse(view: &PerceptionView<'_>, kind: AimKind) -> bool {
+    cast_spell(view, kind).is_some_and(SpellData::aims_corpse)
 }
 
 /// The spell `kind` casts when it is one of the player's spells or a scroll of one.
@@ -582,7 +612,8 @@ mod tests {
                 cells,
                 blocked: false,
                 out_of_range: false,
-                unseen: false
+                unseen: false,
+                no_corpse: false,
             }
         );
         assert_eq!(line(&view, me, east, Some(4)).cells.len(), 4);
@@ -653,6 +684,29 @@ mod tests {
             w.apply(&action);
         }
         w
+    }
+
+    #[test]
+    fn a_spell_aimed_at_a_corpse_says_when_there_is_none() {
+        let content = Arc::new(Content::builtin().expect("content"));
+        let spell = |id: &str| content.spell_id(id).expect("a spell");
+        let w = caster(content.clone(), "witch");
+        let view = w.perception();
+        assert!(view.corpses_in_sight().is_empty());
+        for id in ["charnel_burst", "rouse_the_dead", "grave_feast"] {
+            let kind = AimKind::Ability(Ability::Spell(spell(id)));
+            // No corpse in sight: the cursor starts on the player, Tab finds nothing.
+            let aim = Aim::start(kind, &view, &LastTarget::default());
+            assert_eq!(aim.at, view.viewer(), "{id}");
+            assert_eq!(aim.cycle(&view, true).at, view.viewer(), "{id}");
+            let line = aim.line(&view);
+            assert!(line.cells.is_empty(), "{id}: it flies nowhere");
+            assert_eq!(line.status(), Some("There is no corpse there."), "{id}");
+            assert_eq!(
+                aim.action(view.content()),
+                Some(Action::Cast(id.into(), Some(aim.at)))
+            );
+        }
     }
 
     #[test]
