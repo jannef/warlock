@@ -563,7 +563,9 @@ developer notes (CLAUDE.md, `docs/dev/`).
     in its Defence, Sneak attack's dice); its action after that ends it. Made, the turn is spent
     ("The kobold is not fooled."); try again. Refused, with no time and no draw: untrained, at no
     creature seen, at one not hostile, or at one without vitals (`Content::has_vitals`). There
-    is no Bluff check when caught: a caught thief stays caught (the owner).
+    is no Bluff check when caught: a caught thief stays caught (the owner). Its other use is
+    **talking past** a party met face to face on the overworld (#1017; §7 "Overworld
+    encounters"), marked by `talk_past` (100 %: every try).
   - **Active uses**: skills get no keys of their own. Racial, class, skill, and style abilities
     are chosen from one abilities menu (§6 "Abilities", #156), unlike ADOM: each trained skill
     with an active use (`kind = "action"`) is an ability there (`warlock_core::ability`,

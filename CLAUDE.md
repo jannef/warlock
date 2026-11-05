@@ -188,8 +188,8 @@ no time; docs/dev/experience.md "Prestige classes");
 `assets/data/vision.toml`; `GOAL` = `dawn`, `dusk`, or a duration up to `24h`; durations are
 `30s`, `10m`, `2h`; `skip` is the dev hour skip; `spawn` is the dev spawn: one attempt to bring a creature to the
 current level now, whatever its cap and chance (refused at danger 0; no time; spec §7 "Danger
-levels"); `ally:wolf`, `ally:wolf:2`, `ally:wolf:2:10m` is the dev ally: N (1 to 12) allies of the type beside the player, following, on their side, their stay ending after the duration if given (on the overworld they join the retinue at once); no time; refused without `data/allies.toml`, at the cap (`[allies] most`), or with no free cell (docs/dev/allies.md); `encounter:fight` answers the overworld encounter pending (`CHOICE` = `ambush`, `evade`,
-`fight`, `hail`, `hunt`, `pass`, as its outcome offers; while one pends every other action that
+levels"); `ally:wolf`, `ally:wolf:2`, `ally:wolf:2:10m` is the dev ally: N (1 to 12) allies of the type beside the player, following, on their side, their stay ending after the duration if given (on the overworld they join the retinue at once); no time; refused without `data/allies.toml`, at the cap (`[allies] most`), or with no free cell (docs/dev/allies.md); `encounter:fight` answers the overworld encounter pending (`CHOICE` = `ambush`, `bluff`, `evade`,
+`fight`, `hail`, `hunt`, `pass`, as its outcome offers; `bluff` talks past a party flagged `talk_past` when met, for one trained in Bluff; while one pends every other action that
 takes time is refused; docs/dev/encounters.md), and `meet:kobolds:ambushed` is the dev meeting:
 entry `ENTRY` of the run's campaign's encounter tables met now on the player's overworld cell,
 by the lookouts or with `OUTCOME` (`drop`, `met`, `ambushed`, `pass`) forced (no time; refused

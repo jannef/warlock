@@ -46,6 +46,8 @@ id = "woods_footpads"
 name = "a band of footpads"
 weight = 1
 group = [{ creature = "footpad", count = "1d3+1" }]
+# Talked past as on the roads (roads.toml).
+talk_past = true
 
 # The Strange Spirit, as on the roads (roads.toml): by day, while the Hunter's calling is open.
 [[table.entry]]
