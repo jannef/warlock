@@ -18,9 +18,9 @@
 # 4. Two entrances only for a vault that is a route by design (a kennel, a catacomb, a
 #    mead-hall); one for every other.
 # 5. `count` is at most two thirds of the cells it marks, so the empty cells move.
-# 6. A tag pool whose shallowest type is above danger 1 stamps an empty room above it. Use
-#    `level`, or a list with a shallow tribe in it, or accept the empty room and say so in
-#    the file (until #1073 lands).
+# 6. A deep vault gets its `danger`. A tag pool whose shallowest type is above danger 1
+#    stamps an empty room above it, so give the vault `danger = { from = N }` and the draw
+#    keeps it off the floors where the pool would be empty (#1073).
 # 7. Nothing names a direction: no `note`, `name`, or comment says north, left, or far end.
 #    Routes, bolt `dir`s, `flow`, and piles turn with the vault. A vault whose text must name
 #    a direction says `turns = false` at the top of its file, and why in its comment.
