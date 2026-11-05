@@ -1,10 +1,10 @@
-# Arcane training (the magic design §10; #400): the wizard's class ability, the "ability that
-# grows caster level": one caster level more every five character levels.
+# Arcane training (the no-caster-level design §5.2; #988): the wizard's class ability, ten
+# points deeper in Spellcraft (a bonus alone never trains it).
 [[talent]]
 id = "arcane_training"
 name = "Arcane training"
 tree = "class"
 granted = true
-description = "Your learning outruns your years: spells of a higher level come within your certain reach sooner."
-effects = [{ kind = "caster_level", value = 1, per_levels = 5 }]
+description = "Your learning outruns your training: you read spells as one ten points deeper in Spellcraft."
+effects = [{ kind = "skill", skill = "spellcraft", value = 10 }]
 systems = ["spells"]

@@ -554,11 +554,6 @@ mod tests {
         );
         row_has(&table, "| Tireless |", &["prefix", "Stamina", "Deep lungs"]);
         row_has(&table, "| of Fury |", &["Resources", "maximum rage"]);
-        row_has(
-            &table,
-            "| of the Adept |",
-            &["Spells", "Arcane training, Attuned"],
-        );
         row_has(&table, "| Delving |", &["Digging", "Tunneler"]);
         row_has(&table, "| of the Eagle |", &["Skills", "Spot (a skill)"]);
     }

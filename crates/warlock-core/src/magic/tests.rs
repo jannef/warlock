@@ -723,10 +723,6 @@ fn reader(effect: Effect) -> (&'static str, &'static str) {
         }
         Effect::Carry => ("burden.rs", include_str!("../burden.rs")),
         Effect::Stealth => ("noise.rs", include_str!("../noise.rs")),
-        Effect::CasterLevel => (
-            "world/caster_level.rs",
-            include_str!("../world/caster_level.rs"),
-        ),
         Effect::SpellEase => ("world/cast.rs", include_str!("../world/cast.rs")),
         Effect::SpellToHit | Effect::SpellThreat => (
             "world/spell_rung.rs",

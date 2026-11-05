@@ -617,10 +617,6 @@ pub(super) fn effect_text(content: &Content, effect: &TalentEffect) -> String {
                 signed(value)
             )
         }
-        TalentEffect::AttunedPercent { value } => format!(
-            "the caster level your magic items give counts {value} % more (rounded up: +1 is +2, \
-             +3 is +5)"
-        ),
         TalentEffect::BloodMagic { hp, mana } => format!(
             "active (the time of a wait): give {hp} hit points (never your last) for {mana} \
              mana, up to your maximum; not while your mana is full"

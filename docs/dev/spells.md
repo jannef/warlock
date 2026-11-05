@@ -50,8 +50,8 @@ cast path shares.
   - `casting` on classes (`ClassDef::casting`, 1 to 100, default 25, `content::CASTING`).
   - `caster_level`: the talent effect `TalentEffect::CasterLevel { value, per_levels }` (a bonus,
     ±20; flat into `TalentMods::caster_level`, or with `per_levels` 1 to 20 that much per that
-    many character levels, `TalentMods::caster_level_at`: the wizard's Arcane training, +1 per
-    5, #400) and the affix effect `Effect::CasterLevel` (of the Adept).
+    many character levels, `TalentMods::caster_level_at`: used by no shipped talent since #988). The affix effect (of the Adept) is gone (#988); Arcane
+    training is now `skill { spellcraft, 10 }`.
   - `mana_level = 60` in `data/experience.toml` (the last level), and the
     damage types `force` and `necrotic` at the end of `data/damage_types.toml` (non-physical:
     `Choice::Element` offers them, so Elemental ward may be taken for them).
@@ -320,8 +320,7 @@ cast path shares.
     Blessing; q6: the mishap table unchanged. Sleep has no level limit (the design's "creatures
     of low level"): it slows rather than stops, so any creature may be caught.
 - **Caster level** (`world/caster_level.rs`): `Actor::caster_level(content, level, casting)`
-  (`level × casting ÷ 100` rounded down, plus `TalentMods::caster_level` and the worn
-  `Effect::CasterLevel`, half again with Attuned, rounded up (`TalentMods::attuned`), at least 0, at least 1 while `max_mana` is above 0),
+  (`level × casting ÷ 100` rounded down, plus `TalentMods::caster_level`, at least 0, at least 1 while `max_mana` is above 0),
   `World::caster_level(id)` (the player at `player_level` and `casting_percent`: the class's,
   100 without a class; a creature at its type's level and 100, plus what it wears, #525),
   `casting_percent(content, character)`. Derived, never stored: nothing in saves or the state
@@ -547,8 +546,7 @@ cast path shares.
   (each hook ships with a user, but the rider: "Spell types" below took Numbing cold's): Sure
   hand (level 12, `spell_mod { reroll = 1 }`), Brimming (level 25, `spell_mod { dice = 1 }` and `spell_mana_percent` +10; systems `spells`
   and `mana`). The wizard's class talents: Scroll adept (at 1, reading −50 % and `spell_mod {
-  scroll_rungs = 1 }`: scrolls only, decision 12), Arcane training (at 1: `caster_level` +1 per
-  5 levels: learning only), Empower (at 32, `spell_mod { rungs = 1 }`, mana −10 %), Archmage
+  scroll_rungs = 1 }`: scrolls only, decision 12), Arcane training (at 1: Spellcraft +10), Empower (at 32, `spell_mod { rungs = 1 }`, mana −10 %), Archmage
   (at 60, `spell_mod { rungs = 2 }`, mana −50 %); its bonus talents from Scholar and
   Spellcraft. Empower, Archmage, and Frugal caster name `spells` beside `mana` (Empower and
   Archmage no longer touch scrolls, so no longer `scrolls`); Scroll savant (which took in
