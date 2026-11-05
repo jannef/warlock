@@ -3,6 +3,11 @@
 Developer notes for working on this part of Warlock (moved from CLAUDE.md, #185); the
 rules it implements are in spec/04-rendering.md. Keep it current with the code, as CLAUDE.md says.
 
+Stairs and locations (terrain with `stairs`) under a pile: `ui/mod.rs::draw_map` draws the
+terrain's glyph in the top object's colour (remembered cells dimmed as any), and the dump's
+`view`/`memory` layers (`dump.rs::perceived_glyph`) show the stairs' glyph; a known trap still wins
+over both (#983).
+
 Rendering (spec §4.2) is three layers, bottom to top, all positioned in framebuffer pixels:
 1. **Map grid** (`render/grid.rs`): a `Console` (`render/console.rs`) drawn by one quad with the
    console `Material2d` (`render/console.wesl`). Each fragment finds its cell from its framebuffer
