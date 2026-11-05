@@ -68,8 +68,8 @@ pub fn roll_words(content: &Content, spell: &SpellData, roll: Roll) -> SpellRoll
 }
 
 /// A spell of `shape`'s `reach` in words, each a part: `range 11` (a ray's, bolt's, or burst's),
-/// `length 9` (a cone's or a line's), `radius 2` (a burst's). A touch's reach of 1 and a spell
-/// on oneself say nothing.
+/// `length 9` (a cone's or a line's), `radius 2` (a burst's), `jumps 3` (Chain lightning's). A
+/// touch's reach of 1 and a spell on oneself say nothing.
 pub fn reach_words(shape: Shape, reach: Reach) -> Vec<String> {
     let mut parts = Vec::new();
     match (shape, reach.range) {
@@ -79,6 +79,9 @@ pub fn reach_words(shape: Shape, reach: Reach) -> Vec<String> {
     }
     if let Some(r) = reach.radius {
         parts.push(format!("radius {r}"));
+    }
+    if let Some(n) = reach.jumps {
+        parts.push(format!("jumps {n}"));
     }
     parts
 }
@@ -195,7 +198,11 @@ mod tests {
 
     #[test]
     fn reach_says_range_length_and_radius_by_shape() {
-        let reach = |range, radius| Reach { range, radius };
+        let reach = |range, radius| Reach {
+            range,
+            radius,
+            ..Reach::default()
+        };
         assert_eq!(
             reach_words(Shape::Burst, reach(Some(11), Some(2))),
             ["range 11", "radius 2"]
@@ -203,5 +210,10 @@ mod tests {
         assert_eq!(reach_words(Shape::Cone, reach(Some(3), None)), ["length 3"]);
         assert!(reach_words(Shape::Touch, reach(Some(1), None)).is_empty());
         assert!(reach_words(Shape::Myself, reach(None, None)).is_empty());
+        let chain = Reach {
+            jumps: Some(3),
+            ..reach(Some(8), None)
+        };
+        assert_eq!(reach_words(Shape::Bolt, chain), ["range 8", "jumps 3"]);
     }
 }

@@ -215,6 +215,7 @@ mod song;
 mod spawn;
 mod spell;
 mod spell_aim;
+mod spell_arc;
 mod spell_mods;
 mod spell_rung;
 mod spell_type;
@@ -1854,6 +1855,8 @@ mod song_tests;
 mod spawn_tests;
 #[cfg(test)]
 mod speed_tests;
+#[cfg(test)]
+mod spell_arc_tests;
 #[cfg(test)]
 mod spell_list_tests;
 #[cfg(test)]
