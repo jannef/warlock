@@ -71,8 +71,8 @@ pub(super) fn stamp(canvas: &mut Canvas, vault: &Vault, at: Pos) -> Vec<(Pos, Di
     for (p, trap) in &template.traps {
         canvas.traps.insert(offset(*p), *trap);
     }
-    for &(p, grade) in &template.loot {
-        canvas.loot.push((offset(p), grade));
+    for (p, pool) in &template.loot {
+        canvas.loot.push((offset(*p), pool.clone()));
     }
     for (p, lock) in &template.locks {
         canvas.locks.insert(offset(*p), lock.clone());

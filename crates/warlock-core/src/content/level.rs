@@ -63,7 +63,7 @@ use crate::geom::{Dir, Pos};
 use crate::grid::Grid;
 use crate::item_parts::{self, ItemPart};
 use crate::light::Light;
-use crate::magic::{Affix, LootGrade, Magic};
+use crate::magic::{Affix, LootGrade, LootPool, Magic};
 use crate::object::{Stack, add_to_pile};
 use crate::temperature::{LEVEL_TEMPERATURES, Temperature};
 use serde::{Deserialize, Serialize};
@@ -299,9 +299,9 @@ pub(super) struct LegendDetail {
     ice: Option<u16>,
     /// Objects lying on this cell, top first, e.g. `["dagger", "arrow*12"]`.
     objects: Option<Vec<String>>,
-    /// Vaults only: an item of loot rolled here when a level is generated, at least of this
-    /// grade (`any`, `magic`, `rare`; spec §8 "Magic items").
-    loot: Option<LootGrade>,
+    /// Vaults only: an item of loot rolled here when a level is generated: at least of a grade
+    /// (`any`, `magic`, `rare`; spec §8 "Magic items"), or from a pool of item classes.
+    loot: Option<LootSpec>,
     /// Objects the creature on this cell carries.
     carry: Option<Vec<String>>,
     /// Objects of what it carries that it wields (weapons, shields, missile weapons and
@@ -394,6 +394,33 @@ pub(super) struct HiddenSpec {
     #[serde(default)]
     to: Option<String>,
     name: String,
+}
+
+/// A legend's `loot`: a grade, or a pool.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(untagged)]
+enum LootSpec {
+    Grade(LootGrade),
+    Pool(LootPoolSpec),
+}
+
+/// `loot = { pool = "jewellery", grade = "magic" }`: item class ids and class groups
+/// (`data/item_classes.toml`), and the least it may be (default `any`).
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LootPoolSpec {
+    pool: OneOrMany,
+    #[serde(default)]
+    grade: LootGrade,
+}
+
+impl LootSpec {
+    fn resolve(&self, content: &Content) -> Result<LootPool, String> {
+        match self {
+            LootSpec::Grade(grade) => Ok((*grade).into()),
+            LootSpec::Pool(spec) => LootPool::named(content, spec.pool.ids(), spec.grade),
+        }
+    }
 }
 
 /// One object id or a list of them.
@@ -557,8 +584,8 @@ pub struct LevelTemplate {
     /// (default 1), a branch level's depth.
     pub item_level: u8,
     /// Vaults: cells where loot is rolled when they are stamped into a generated level, each
-    /// with the least it may be. Empty on levels.
-    pub loot: Vec<(Pos, LootGrade)>,
+    /// with what it may be. Empty on levels.
+    pub loot: Vec<(Pos, LootPool)>,
     /// The temperature underground (spec §5 "Temperature"); `None`: the dungeon default (or,
     /// under the open sky, the weather's).
     pub temperature: Option<Temperature>,
@@ -805,14 +832,17 @@ pub(super) fn parse_level(
             {
                 traps.insert(pos, trap);
             }
-            if let Some(grade) = detail.loot {
+            if let Some(spec) = &detail.loot {
                 if !content.terrain(terrain).walkable {
                     return Err(err(format!(
                         "legend `{ch}` places loot on terrain `{}`, which is not walkable",
                         entry.terrain()
                     )));
                 }
-                loot.push((pos, grade));
+                let pool = spec
+                    .resolve(content)
+                    .map_err(|m| err(format!("legend `{ch}`: {m}")))?;
+                loot.push((pos, pool));
             }
             if let Some(creature) = &detail.creature {
                 let id = content.creature_id(creature).ok_or_else(|| {

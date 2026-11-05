@@ -19,8 +19,12 @@ stream `secrets/<level id>`, only where `connect::validate` still reaches the st
 without them; `docs/dev/searching.md`). The insta snapshots in
 `src/mapgen/snapshots/` and `src/mapgen/local/snapshots/` flag any change in generator output:
 review the maps in the diff, then accept them deliberately. Loot (`mapgen::place_loot`: floor
-items by the branch's `loot`, vault `loot` cells) is rolled once a map is valid, from its own
-stream `loot/<level id>`, so adding loot never changes the terrain of a generated level. On a
+items by the branch's `loot`, vault `loot` cells, each a grade or a pool of item classes,
+`magic/loot.rs::roll_pool` at the floor's item level, `docs/dev/magic-items.md`) is rolled once a
+map is valid, from its own stream `loot/<level id>`, so adding loot never changes the terrain of a
+generated level. It does shift what follows on that stream, and `hide_traps` avoids a vault's
+`[[pile]]` but not a `loot` cell, so turning a pile into a loot cell moves the floor's items and
+may move a hidden trap (a trap may lie under a loot cell). On a
 branch with a danger the initial population follows (`mapgen/population.rs`, stream
 `population/<level id>`; `docs/dev/creatures.md`: its own folk, now and then a stray from every
 hostile type of the campaign, populations or none, unless the branch's `stray_pool` says

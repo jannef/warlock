@@ -29,7 +29,7 @@ pub mod numbers;
 pub mod temper;
 
 pub use crate::content::{AffixKind, Effect, ItemKind, Rarity};
-pub use loot::LootGrade;
+pub use loot::{LootGrade, LootPool};
 pub use mods::Mods;
 pub use numbers::Numbers;
 
@@ -200,6 +200,8 @@ pub fn may_roll(a: &AffixDef, kind: ItemKind, def: &ObjectDef) -> bool {
     has && a.bases.contains(&kind)
 }
 
+#[cfg(test)]
+mod pool_tests;
 #[cfg(test)]
 mod shares_tests;
 #[cfg(test)]

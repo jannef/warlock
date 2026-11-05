@@ -156,7 +156,14 @@ been (none over, none starved), and every rolled tier is in the window (`--nocap
 shares). **The tier window** (`loot::tier_window`, `TIER_WINDOW` = 4): loot draws a
 tier evenly among those found at the item level whose level is within 3 below it, the top one
 alone once the item level is past the last tier (or when none is that close), one draw as before
-(`magic/tests.rs`, `tiers_roll_from_a_window_below_the_item_level`). **A drop's item level**
+(`magic/tests.rs`, `tiers_roll_from_a_window_below_the_item_level`). **A vault's loot pool**
+(`magic/loot.rs`: `LootPool`, `roll_pool`; the legend's syntax in `docs/dev/content.md`): a cell's
+pool is a grade and item classes. With no classes (`loot = "magic"`) it is `roll_with`, the same
+draws. With classes: one draw among those that hold something at the item level (`holds`), then
+coins (`chest::purse`, the purse of a chest of that level), a loose gem (`gem::loose`; which
+classes these are comes from the currency's and the gem object's `class`, never `Luck::gems`), or
+the base and the rest of `roll_with`'s draws among the class's objects, with the finder's
+`Luck::magic`. Tests: `magic/pool_tests.rs`. **A drop's item level**
 (`world/loot.rs::drop_level`): the creature type's level, at least the floor's item level, at
 most `MAX_ITEM_LEVEL`; floor loot keeps the floor's (`world/magic_tests.rs`,
 `a_drop_rolls_at_the_creatures_level_at_least_the_floors`).
