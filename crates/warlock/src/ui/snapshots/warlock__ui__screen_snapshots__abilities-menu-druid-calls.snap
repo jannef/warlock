@@ -2,9 +2,8 @@
 source: crates/warlock/src/ui/screen_snapshots.rs
 expression: "render(case, content.clone())"
 ---
- You learn Sworn foe (archer).
- You call,┌─ Abilities ─────────────────────────────────────────────────────────────────┐
-          │                                                                             │
+ You learn┌─ Abilities ─────────────────────────────────────────────────────────────────┐
+ You call,│                                                                             │
           │ Birth sign                                                                  │
           │ > a  Transfixing stare   at a place you see                                 │
           │ Spells                                                                      │
@@ -18,17 +17,18 @@ expression: "render(case, content.clone())"
           │   h  Heal                nothing to treat                                   │
           │   i  Pick lock           in a direction                                     │
           │   j  Forage              not usable here                                    │
+          │   k  Fletch              you have no knife                                  │
           │ Weapon skills                                                               │
-          │   k  Shield bash         you hold no shield                                 │
+          │   l  Shield bash         you hold no shield                                 │
           │ Allies                                                                      │
-          │   l  Come to heel                                                           │
-          │   m  Hold here                                                              │
-          │   n  Set on              at a place you see                                 │
+          │   m  Come to heel                                                           │
+          │   n  Hold here                                                              │
+          │   o  Set on              at a place you see                                 │
           │                                                                             │
           │ The basilisk's stare: a foe nearby that sees you slows to a crawl a moment; │
           │ your eyes then rest two hours.                                              │
           │                                                                             │
           │                                                                             │
-          │ a-n or Enter use   Esc close                                                │
+          │ a-o or Enter use   Esc close                                                │
           └─────────────────────────────────────────────────────────────────────────────┘
  The Hub  ·  HP 98/98  ·  MP 217/228  ·  Lv 36  ·  08:00  ·  11 Darkening, Year 1444     ? controls
